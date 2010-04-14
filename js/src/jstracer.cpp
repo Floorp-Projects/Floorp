@@ -8660,7 +8660,7 @@ TraceRecorder::equality(bool negate, bool tryBranchAfterCond)
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
+TraceRecorder::equalityHelper(jsval& l, jsval& r, LIns* l_ins, LIns* r_ins,
                               bool negate, bool tryBranchAfterCond,
                               jsval& rval)
 {
@@ -8720,24 +8720,28 @@ TraceRecorder::equalityHelper(jsval l, jsval r, LIns* l_ins, LIns* r_ins,
         cond = (js_StringToNumber(cx, JSVAL_TO_STRING(l)) == asNumber(r));
         op = LIR_feq;
     } else {
+        // Below we may assign to l or r, which modifies the interpreter state.
+        // This is fine as long as we also update the tracker.
         if (JSVAL_IS_BOOLEAN(l)) {
             l_ins = i2f(l_ins);
+            set(&l, l_ins);
             l = INT_TO_JSVAL(l == JSVAL_TRUE);
             return equalityHelper(l, r, l_ins, r_ins, negate,
                                   tryBranchAfterCond, rval);
         }
         if (JSVAL_IS_BOOLEAN(r)) {
             r_ins = i2f(r_ins);
+            set(&r, r_ins);
             r = INT_TO_JSVAL(r == JSVAL_TRUE);
             return equalityHelper(l, r, l_ins, r_ins, negate,
                                   tryBranchAfterCond, rval);
         }
         if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r)) {
-            RETURN_IF_XML_A(r);
+            CHECK_STATUS_A(guardNativeConversion(r));
             return InjectStatus(call_imacro(equality_imacros.any_obj));
         }
         if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r))) {
-            RETURN_IF_XML_A(l);
+            CHECK_STATUS_A(guardNativeConversion(l));
             return InjectStatus(call_imacro(equality_imacros.obj_any));
         }
 
@@ -8799,15 +8803,15 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
      * properties, abort.
      */
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        RETURN_IF_XML_A(l);
+        CHECK_STATUS_A(guardNativeConversion(l));
         if (!JSVAL_IS_PRIMITIVE(r)) {
-            RETURN_IF_XML_A(r);
+            CHECK_STATUS_A(guardNativeConversion(r));
             return InjectStatus(call_imacro(binary_imacros.obj_obj));
         }
         return InjectStatus(call_imacro(binary_imacros.obj_any));
     }
     if (!JSVAL_IS_PRIMITIVE(r)) {
-        RETURN_IF_XML_A(r);
+        CHECK_STATUS_A(guardNativeConversion(r));
         return InjectStatus(call_imacro(binary_imacros.any_obj));
     }
 
@@ -8948,15 +8952,15 @@ TraceRecorder::binary(LOpcode op)
     jsval& l = stackval(-2);
 
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        RETURN_IF_XML(l);
+        CHECK_STATUS(guardNativeConversion(l));
         if (!JSVAL_IS_PRIMITIVE(r)) {
-            RETURN_IF_XML(r);
+            CHECK_STATUS(guardNativeConversion(r));
             return call_imacro(binary_imacros.obj_obj);
         }
         return call_imacro(binary_imacros.obj_any);
     }
     if (!JSVAL_IS_PRIMITIVE(r)) {
-        RETURN_IF_XML(r);
+        CHECK_STATUS(guardNativeConversion(r));
         return call_imacro(binary_imacros.any_obj);
     }
 
@@ -9586,6 +9590,39 @@ TraceRecorder::guardPrototypeHasNoIndexedProperties(JSObject* obj, LIns* obj_ins
     return RECORD_CONTINUE;
 }
 
+/*
+ * Guard that the object stored in v has the ECMA standard [[DefaultValue]]
+ * method. Several imacros require this.
+ */
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::guardNativeConversion(jsval& v)
+{
+    JSObject* obj = JSVAL_TO_OBJECT(v);
+    LIns* obj_ins = get(&v);
+
+    if (obj->map->ops->defaultValue != js_DefaultValue)
+        RETURN_STOP("operand has non-native defaultValue op");
+    JSConvertOp convert = obj->getClass()->convert;
+    if (convert != JS_ConvertStub && convert != js_TryValueOf)
+        RETURN_STOP("operand has convert hook");
+
+    VMSideExit* exit = snapshot(BRANCH_EXIT);
+    if (obj->isNative()) {
+        // The common case. Guard on shape rather than class because it'll
+        // often be free: we're about to do a shape guard anyway to get the
+        // .valueOf property of this object, and this guard will be cached.
+        CHECK_STATUS(guardShape(obj_ins, obj, obj->shape(),
+                                "guardNativeConversion", exit));
+    } else {
+        // Guard that the defaultValue hook is native at run time,
+        // even though other ops are not. This has overhead.
+        LIns* ops_ins;
+        JS_ALWAYS_TRUE(map_is_native(obj->map, map(obj_ins), ops_ins,
+                                     offsetof(JSObjectOps, defaultValue)));
+    }
+    return RECORD_CONTINUE;
+}
+
 // Helper for clearXEntryFrameSlotsFromTracker.
 // Clear out slots of the given frame in the NativeFrameTracker. All argument slots
 // are cleared. |nslots| local slots are cleared.
@@ -10147,15 +10184,15 @@ TraceRecorder::record_JSOP_ADD()
     jsval& l = stackval(-2);
 
     if (!JSVAL_IS_PRIMITIVE(l)) {
-        RETURN_IF_XML_A(l);
+        CHECK_STATUS_A(guardNativeConversion(l));
         if (!JSVAL_IS_PRIMITIVE(r)) {
-            RETURN_IF_XML_A(r);
+            CHECK_STATUS_A(guardNativeConversion(r));
             return InjectStatus(call_imacro(add_imacros.obj_obj));
         }
         return InjectStatus(call_imacro(add_imacros.obj_any));
     }
     if (!JSVAL_IS_PRIMITIVE(r)) {
-        RETURN_IF_XML_A(r);
+        CHECK_STATUS_A(guardNativeConversion(r));
         return InjectStatus(call_imacro(add_imacros.any_obj));
     }
 
@@ -10230,7 +10267,7 @@ TraceRecorder::record_JSOP_NEG()
     jsval& v = stackval(-1);
 
     if (!JSVAL_IS_PRIMITIVE(v)) {
-        RETURN_IF_XML_A(v);
+        CHECK_STATUS_A(guardNativeConversion(v));
         return InjectStatus(call_imacro(unary_imacros.sign));
     }
 
@@ -10290,7 +10327,7 @@ TraceRecorder::record_JSOP_POS()
     jsval& v = stackval(-1);
 
     if (!JSVAL_IS_PRIMITIVE(v)) {
-        RETURN_IF_XML_A(v);
+        CHECK_STATUS_A(guardNativeConversion(v));
         return InjectStatus(call_imacro(unary_imacros.sign));
     }
 
@@ -10407,7 +10444,7 @@ TraceRecorder::newString(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
     JS_ASSERT(argc == 1);
 
     if (!JSVAL_IS_PRIMITIVE(argv[0])) {
-        RETURN_IF_XML(argv[0]);
+        CHECK_STATUS(guardNativeConversion(argv[0]));
         return call_imacro(new_imacros.String);
     }
 
@@ -10976,7 +11013,7 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
             if (mode == JSOP_NEW)
                 return newString(JSVAL_TO_OBJECT(fval), 1, argv, &fval);
             if (!JSVAL_IS_PRIMITIVE(argv[0])) {
-                RETURN_IF_XML(argv[0]);
+                CHECK_STATUS(guardNativeConversion(argv[0]));
                 return call_imacro(call_imacros.String);
             }
             set(&fval, stringify(argv[0]));
@@ -15096,6 +15133,7 @@ TraceRecorder::record_JSOP_OBJTOSTR()
                                  *cx->fp->imacpc == JSOP_OBJTOSTR);
     if (JSVAL_IS_PRIMITIVE(v))
         return ARECORD_CONTINUE;
+    CHECK_STATUS_A(guardNativeConversion(v));
     return InjectStatus(call_imacro(objtostr_imacros.toString));
 }
 
