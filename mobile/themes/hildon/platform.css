@@ -525,21 +525,18 @@ menulist.button-dark[disabled="true"] {
 }
 
 menulist > dropmarker {
-  width: 16px;
-  height: 16px;
+  height: 30px;
+  width: 38px;
+  margin-left: 5px;
   -moz-box-align: center;
   -moz-box-pack: center;
-  background-color: transparent;
-  padding: 1px;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  list-style-image: url("chrome://browser/skin/images/dropmarker-30.png");
   -moz-image-region: auto;
   display: block;
-  border-left: 1px inset gray;
 }
 
-menulist > dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
-  padding: 1px !important;
+menulist[disabled="true"] > dropmarker {
+  list-style-image: url("chrome://browser/skin/images/dropmarker-disabled-30.png");
 }
 
 /* progressmeter ----------------------------------------------------------- */

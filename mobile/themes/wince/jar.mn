@@ -24,6 +24,8 @@ chrome.jar:
   images/arrowdown-16.png              (images/arrowdown-16.png)
   images/arrowleftdark-16.png          (images/arrowleftdark-16.png)
   images/arrowrightdark-16.png         (images/arrowrightdark-16.png)
+  images/dropmarker-30.png             (images/dropmarker-30.png)
+  images/dropmarker-disabled-30.png    (images/dropmarker-disabled-30.png)
   images/ratings-18.png                (images/ratings-18.png)
   images/favicon-default-30.png        (images/favicon-default-30.png)
   images/star-40.png                   (images/star-40.png)
