@@ -114,7 +114,7 @@ string
 MungePluginDsoPath(const string& path)
 {
 #if defined(XP_WIN)
-  return "\""+ mPluginFilePath +"\"";
+  return "\""+ path +"\"";
 #elif defined(OS_LINUX)
   // https://bugzilla.mozilla.org/show_bug.cgi?id=519601
   return ReplaceAll(path, "netscape", "netsc@pe");
