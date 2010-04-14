@@ -45,6 +45,8 @@
 #include "PluginScriptableObjectParent.h"
 #include "PluginScriptableObjectChild.h"
 
+using std::string;
+
 using mozilla::ipc::RPCChannel;
 
 namespace {
@@ -93,6 +95,44 @@ MediateRace(const RPCChannel::Message& parent,
     return RPCChannel::RRPChildWins;
   }
 }
+
+static string
+ReplaceAll(const string& haystack, const string& needle, const string& with)
+{
+  string munged = haystack;
+  string::size_type i = 0;
+
+  while (string::npos != (i = munged.find(needle, i))) {
+    munged.replace(i, needle.length(), with);
+    i += with.length();
+  }
+
+  return munged;
+}
+
+string
+MungePluginDsoPath(const string& path)
+{
+#if defined(XP_WIN)
+  return "\""+ mPluginFilePath +"\"";
+#elif defined(OS_LINUX)
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=519601
+  return ReplaceAll(path, "netscape", "netsc@pe");
+#else
+  return path;
+#endif
+}
+
+string
+UnmungePluginDsoPath(const string& munged)
+{
+#if defined(OS_LINUX)
+  return ReplaceAll(munged, "netsc@pe", "netscape");
+#else
+  return path;
+#endif
+}
+
 
 PRLogModuleInfo* gPluginLog = PR_NewLogModule("IPCPlugins");
 
