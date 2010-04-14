@@ -455,7 +455,7 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
     if (!JSVAL_IS_PRIMITIVE(*vp)) {
         JSClass *clasp = JSVAL_TO_OBJECT(*vp)->getClass();
         if (clasp == &js_StringClass || clasp == &js_NumberClass)
-            *vp = JSVAL_TO_OBJECT(*vp)->fslots[JSSLOT_PRIMITIVE_THIS];
+            *vp = JSVAL_TO_OBJECT(*vp)->getPrimitiveThis();
     }
 
     if (JSVAL_IS_STRING(*vp)) {
@@ -521,7 +521,7 @@ InitializeGap(JSContext *cx, jsval space, JSCharBuffer &cb)
         JSObject *obj = JSVAL_TO_OBJECT(space);
         JSClass *clasp = obj->getClass();
         if (clasp == &js_NumberClass || clasp == &js_StringClass)
-            *gap.addr() = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+            *gap.addr() = obj->getPrimitiveThis();
     }
 
     if (JSVAL_IS_STRING(gap.value())) {
