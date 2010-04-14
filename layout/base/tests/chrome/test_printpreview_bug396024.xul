@@ -19,6 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396024
 <script type="application/javascript">
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
-window.open("bug396024_helper.xul", "bug396024", "chrome,width=100,height=100");
+window.open("printpreview_bug396024_helper.xul", "bug396024", "chrome,width=100,height=100");
 ]]></script>
 </window>

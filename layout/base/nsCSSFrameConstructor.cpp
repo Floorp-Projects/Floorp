@@ -4794,7 +4794,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
       }
     }
   }
-  else if (aTag == nsGkAtoms::tspan) {
+  else if (aTag == nsGkAtoms::tspan || aTag == nsGkAtoms::altGlyph) {
     NS_ASSERTION(aParentFrame, "Should have aParentFrame here");
     nsIFrame *ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
@@ -4830,6 +4830,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
       FULL_CTOR_FCDATA(FCDATA_DISALLOW_OUT_OF_FLOW,
                        &nsCSSFrameConstructor::ConstructSVGForeignObjectFrame) },
     SIMPLE_SVG_CREATE(a, NS_NewSVGAFrame),
+    SIMPLE_SVG_CREATE(altGlyph, NS_NewSVGTSpanFrame),
     SIMPLE_SVG_CREATE(text, NS_NewSVGTextFrame),
     SIMPLE_SVG_CREATE(tspan, NS_NewSVGTSpanFrame),
     SIMPLE_SVG_CREATE(linearGradient, NS_NewSVGLinearGradientFrame),

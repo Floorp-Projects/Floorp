@@ -50,6 +50,8 @@
 nsresult
 NS_NewSVGAElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
+NS_NewSVGAltGlyphElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
 NS_NewSVGPolylineElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGPolygonElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
@@ -189,6 +191,8 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo,
   
   if (name == nsGkAtoms::a)
     return NS_NewSVGAElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::altGlyph)
+    return NS_NewSVGAltGlyphElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::polyline)
     return NS_NewSVGPolylineElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::polygon)

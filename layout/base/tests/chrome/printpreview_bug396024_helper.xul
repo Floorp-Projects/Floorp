@@ -13,6 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=396024
 <![CDATA[
 var is = window.opener.wrappedJSObject.is;
 var ok = window.opener.wrappedJSObject.ok;
+var todo = window.opener.wrappedJSObject.todo;
 var SimpleTest = window.opener.wrappedJSObject.SimpleTest;
 var gWbp;
 function printpreview() {
@@ -54,12 +55,12 @@ function run()
                                .getService(Components.interfaces.nsIPrintSettingsService);
 
   try {
-     var printerEnumerator = Components.classes["@mozilla.org/gfx/printerenumerator;1"]
-                             .getService(Components.interfaces.nsIPrinterEnumerator);
+    Components.classes["@mozilla.org/gfx/printerenumerator;1"]
+              .getService(Components.interfaces.nsIPrinterEnumerator);
   } catch(e) {
-     //don't try to test on Mac, since the print preview code doesn't work there
-     SimpleTest.finish();
-     return;
+    todo(false, "Test skipped on MacOSX, as the print preview code doesn't work there");
+    SimpleTest.finish();
+    return;
   }
 
   if (printService.defaultPrinterName != '') {

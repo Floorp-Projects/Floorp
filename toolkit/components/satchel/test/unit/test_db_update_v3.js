@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is JavaScript Engine testing utilities.
+ * The Original Code is Satchel Test Code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
+ * Contributor(s):
+ *   Justin Dolske <dolske@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,28 +35,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351116.js';
-//-----------------------------------------------------------------------------
-var BUGNUMBER = 351116;
-var summary = 'formal parameter and inner function have same name';
-var actual = 'No Crash';
-var expect = 'No Crash';
+var testnum = 0;
+var fh;
 
-//-----------------------------------------------------------------------------
-test();
-//-----------------------------------------------------------------------------
-
-function test()
+function run_test()
 {
-  enterFunc ('test');
-  printBugNumber(BUGNUMBER);
-  printStatus (summary);
- 
-  var f = function (s) { function s() { } };
+  try {
 
-  function g(s) { function s() { } }
+  // ===== test init =====
+  var testfile = do_get_file("formhistory_v2.sqlite");
+  var profileDir = dirSvc.get("ProfD", Ci.nsIFile);
 
-  reportCompare(expect, actual, summary);
+  // Cleanup from any previous tests or failures.
+  var destFile = profileDir.clone();
+  destFile.append("formhistory.sqlite");
+  if (destFile.exists())
+    destFile.remove(false);
 
-  exitFunc ('test');
+  testfile.copyTo(profileDir, "formhistory.sqlite");
+  do_check_eq(2, getDBVersion(testfile));
+
+  fh = Cc["@mozilla.org/satchel/form-history;1"].
+       getService(Ci.nsIFormHistory2);
+
+
+  // ===== 1 =====
+  testnum++;
+
+  // Check that the index was added
+  do_check_true(fh.DBConnection.indexExists("moz_formhistory_guid_index"));
+  // check for upgraded schema.
+  do_check_eq(CURRENT_SCHEMA, fh.DBConnection.schemaVersion);
+
+  do_check_true(fh.entryExists("name-A", "value-A"));
+  var guid = getGUIDforID(fh.DBConnection, 1);
+  do_check_true(isGUID.test(guid));
+
+  // Add a new entry and check that it gets a GUID
+  do_check_false(fh.entryExists("name-B", "value-B"));
+  fh.addEntry("name-B", "value-B");
+  do_check_true(fh.entryExists("name-B", "value-B"));
+
+  guid = getGUIDforID(fh.DBConnection, 2);
+  do_check_true(isGUID.test(guid));
+
+  } catch (e) {
+    throw "FAILED in test #" + testnum + " -- " + e;
+  }
 }
