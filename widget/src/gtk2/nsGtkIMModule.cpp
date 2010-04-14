@@ -493,6 +493,10 @@ nsGtkIMModule::CancelIMEComposition(nsWindow* aCaller)
         return NS_OK;
     }
 
+    if (!mIsComposing) {
+        return NS_OK;
+    }
+
     GtkIMContext *im = GetContext();
     if (NS_UNLIKELY(!im)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
