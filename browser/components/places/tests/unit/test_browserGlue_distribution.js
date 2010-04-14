@@ -50,9 +50,6 @@ const TOPIC_FINAL_UI_STARTUP = "final-ui-startup";
 const TOPIC_CUSTOMIZATION_COMPLETE = "distribution-customization-complete";
 
 function run_test() {
-  // TODO: re-enable when bug 523936 is fixed.
-  return;
-
   do_test_pending();
 
   // Copy distribution.ini file to our app dir.
@@ -145,8 +142,6 @@ function continue_test() {
 }
 
 do_register_cleanup(function() {
-  // TODO: re-enable when bug 523936 is fixed.
-  return;
   // Remove the distribution file, even if the test failed, otherwise all
   // next tests will import it.
   let iniFile = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
