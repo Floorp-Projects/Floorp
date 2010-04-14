@@ -530,6 +530,12 @@ NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 
 NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
 {
+  // This is used during startup (outside the event loop) when creating
+  // the add-ons compatibility checking dialog and the profile manager UI;
+  // therefore, it needs to provide an autorelease pool to avoid cocoa
+  // objects leaking.
+  nsAutoreleasePool localPool;
+
   mModal = aState;
   nsCocoaWindow *aParent = static_cast<nsCocoaWindow*>(mParent);
   if (aState) {
