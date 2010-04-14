@@ -2232,18 +2232,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_TRUE;
         if (level >= JS_DISPLAY_SIZE)
             return JS_TRUE;
-
-        /* FIXME: bug 545575 will make this all better. */
         if (cg->flags & TCF_FUN_HEAVYWEIGHT)
             return JS_TRUE;
-        {
-            JSTreeContext *tc = cg;
-            do {
-                tc = tc->parent;
-                if (tc->flags & TCF_FUN_HEAVYWEIGHT)
-                    return JS_TRUE;
-            } while (tc->staticLevel != level);
-        }
 
         if (FUN_FLAT_CLOSURE(cg->fun)) {
             op = JSOP_GETDSLOT;
