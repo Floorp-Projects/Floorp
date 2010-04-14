@@ -48,6 +48,7 @@
  * values, called slots.  The map/slot pointer pair is GC'ed, while the map
  * is reference counted and the slot vector is malloc'ed.
  */
+#include "jsapi.h"
 #include "jshash.h" /* Added by JSIFY */
 #include "jspubtd.h"
 #include "jsprvtd.h"
@@ -210,8 +211,6 @@ const uint32 JSSLOT_PARENT  = 1;
  * JSObject.
  */
 const uint32 JSSLOT_PRIVATE = 2;
-
-const uint32 JSSLOT_PRIMITIVE_THIS = JSSLOT_PRIVATE;
 
 const uintptr_t JSSLOT_CLASS_MASK_BITS = 3;
 
@@ -391,6 +390,17 @@ struct JSObject {
     }
 
     /*
+     * Primitive-specific getters and setters.
+     */
+
+  private:
+    static const uint32 JSSLOT_PRIMITIVE_THIS = JSSLOT_PRIVATE;
+
+  public:
+    inline jsval getPrimitiveThis() const;
+    inline void setPrimitiveThis(jsval pthis);
+
+    /*
      * Array-specific getters and setters (for both dense and slow arrays).
      */
 
@@ -448,6 +458,40 @@ struct JSObject {
 
     inline jsval getArgsCallee() const;
     inline void setArgsCallee(jsval callee);
+
+    /*
+     * Date-specific getters and setters.
+     */
+
+  private:
+    // The second slot caches the local time;  it's initialized to NaN.
+    static const uint32 JSSLOT_DATE_UTC_TIME   = JSSLOT_PRIVATE;
+    static const uint32 JSSLOT_DATE_LOCAL_TIME = JSSLOT_PRIVATE + 1;
+
+  public:
+    static const uint32 DATE_FIXED_RESERVED_SLOTS = 2;
+
+    inline jsval getDateLocalTime() const;
+    inline jsval *addressOfDateLocalTime();
+    inline void setDateLocalTime(jsval pthis);
+
+    inline jsval getDateUTCTime() const;
+    inline jsval *addressOfDateUTCTime();
+    inline void setDateUTCTime(jsval pthis);
+
+    /*
+     * RegExp-specific getters and setters.
+     */
+
+  private:
+    static const uint32 JSSLOT_REGEXP_LAST_INDEX = JSSLOT_PRIVATE + 1;
+
+  public:
+    static const uint32 REGEXP_FIXED_RESERVED_SLOTS = 1;
+
+    inline jsval getRegExpLastIndex() const;
+    inline jsval *addressOfRegExpLastIndex();
+    inline void zeroRegExpLastIndex();
 
     /*
      * Back to generic stuff.
@@ -553,6 +597,11 @@ struct JSObject {
     inline bool isArray() const;
     inline bool isDenseArray() const;
     inline bool isSlowArray() const;
+    inline bool isNumber() const;
+    inline bool isBoolean() const;
+    inline bool isString() const;
+    inline bool isPrimitive() const;
+    inline bool isDate() const;
     inline bool isFunction() const;
     inline bool isRegExp() const;
     inline bool isXML() const;

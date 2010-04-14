@@ -195,16 +195,6 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp);
 extern JS_FRIEND_API(JSObject *) JS_FASTCALL
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto);
 
-const uint32 JSSLOT_REGEXP_LAST_INDEX = JSSLOT_PRIVATE + 1;
-const uint32 REGEXP_CLASS_FIXED_RESERVED_SLOTS = 1;
-
-static inline void
-js_ClearRegExpLastIndex(JSObject *obj)
-{
-    JS_ASSERT(obj->getClass() == &js_RegExpClass);
-    obj->fslots[JSSLOT_REGEXP_LAST_INDEX] = JSVAL_ZERO;
-}
-
 /* Return whether the given character array contains RegExp meta-characters. */
 extern bool
 js_ContainsRegExpMetaChars(const jschar *chars, size_t length);

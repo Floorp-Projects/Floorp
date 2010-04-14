@@ -54,6 +54,8 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
+#include "jsobjinlines.h"
+
 /* Check pseudo-booleans values. */
 JS_STATIC_ASSERT(!(JSVAL_TRUE & JSVAL_HOLE_FLAG));
 JS_STATIC_ASSERT(!(JSVAL_FALSE & JSVAL_HOLE_FLAG));
@@ -139,7 +141,7 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JS_IsConstructing(cx))
         *rval = bval;
     else
-        obj->fslots[JSSLOT_PRIMITIVE_THIS] = bval;
+        obj->setPrimitiveThis(bval);
     return true;
 }
 
@@ -152,7 +154,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
                         NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;
-    proto->fslots[JSSLOT_PRIMITIVE_THIS] = JSVAL_FALSE;
+    proto->setPrimitiveThis(JSVAL_FALSE);
     return proto;
 }
 
