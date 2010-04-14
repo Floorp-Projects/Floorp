@@ -6558,9 +6558,10 @@ if test $MOZ_PLATFORM_MAEMO; then
    if test -z "$MOZ_ENABLE_DBUS"; then
        AC_MSG_ERROR([DBus is required when building for Maemo])
    fi
-   
+
    MOZ_GFX_OPTIMIZE_MOBILE=1
    MOZ_WEBGL_GLX=
+   MOZ_MAEMO_LIBLOCATION=
 
    if test $MOZ_PLATFORM_MAEMO = 5; then
       dnl if we have Xcomposite we should also have Xdamage and Xfixes
@@ -6593,13 +6594,18 @@ if test $MOZ_PLATFORM_MAEMO; then
          AC_MSG_ERROR([Hildon FM-2 is required when building for Maemo])
       fi
 
-      PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
-      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBLOCATION_LIBS"
-      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBLOCATION_CFLAGS"
-      if test -z "$_LIB_FOUND"; then
-         AC_MSG_ERROR([liblocation is required when building for Maemo])
-      fi
    fi
+
+   PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
+   MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBLOCATION_LIBS"
+   MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBLOCATION_CFLAGS"
+   if test "$_LIB_FOUND"; then
+      MOZ_MAEMO_LIBLOCATION=1
+      AC_DEFINE(MOZ_MAEMO_LIBLOCATION)
+   else
+      AC_MSG_WARN([Cannot liblocation-dev. Disabling Maemo geolocation.])
+   fi
+   AC_SUBST(MOZ_MAEMO_LIBLOCATION)
 
    AC_SUBST(MOZ_PLATFORM_MAEMO_LIBS)
    AC_SUBST(MOZ_PLATFORM_MAEMO_CFLAGS)
