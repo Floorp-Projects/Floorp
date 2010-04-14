@@ -1185,7 +1185,7 @@ class TraceRecorder
 
     JS_REQUIRES_STACK void strictEquality(bool equal, bool cmpCase);
     JS_REQUIRES_STACK AbortableRecordingStatus equality(bool negate, bool tryBranchAfterCond);
-    JS_REQUIRES_STACK AbortableRecordingStatus equalityHelper(jsval l, jsval r,
+    JS_REQUIRES_STACK AbortableRecordingStatus equalityHelper(jsval& l, jsval& r,
                                                                 nanojit::LIns* l_ins, nanojit::LIns* r_ins,
                                                                 bool negate, bool tryBranchAfterCond,
                                                                 jsval& rval);
@@ -1305,6 +1305,7 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus guardPrototypeHasNoIndexedProperties(JSObject* obj,
                                                                              nanojit::LIns* obj_ins,
                                                                              ExitType exitType);
+    JS_REQUIRES_STACK RecordingStatus guardNativeConversion(jsval& v);
     JS_REQUIRES_STACK JSStackFrame* entryFrame() const;
     JS_REQUIRES_STACK void clearEntryFrameSlotsFromTracker(Tracker& which);
     JS_REQUIRES_STACK void clearCurrentFrameSlotsFromTracker(Tracker& which);
