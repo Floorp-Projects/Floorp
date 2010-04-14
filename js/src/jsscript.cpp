@@ -69,9 +69,6 @@
 
 using namespace js;
 
-const uint32 JSSLOT_EXEC_DEPTH          = JSSLOT_PRIVATE + 1;
-const uint32 JSSCRIPT_RESERVED_SLOTS    = 1;
-
 static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
 
 /* static */ const JSScript JSScript::emptyScriptConst = {
@@ -404,7 +401,7 @@ script_trace(JSTracer *trc, JSObject *obj)
 
 JSClass js_ScriptClass = {
     "Script",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSCRIPT_RESERVED_SLOTS) |
+    JSCLASS_HAS_PRIVATE |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   script_finalize,
