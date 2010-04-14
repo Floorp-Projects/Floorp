@@ -58,8 +58,6 @@ public:
     enum RenderMode {
         /* Use QPainter surfaces */
         RENDER_QPAINTER = 0,
-        /* Use Xlib surface to render and wrap as QPixmap */
-        RENDER_XLIB,
         /* Use image surfaces and XShmPutImage to QPixmap */
         RENDER_SHARED_IMAGE,
         /* max */

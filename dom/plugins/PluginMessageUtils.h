@@ -76,6 +76,11 @@ mozilla::ipc::RPCChannel::RacyRPCPolicy
 MediateRace(const mozilla::ipc::RPCChannel::Message& parent,
             const mozilla::ipc::RPCChannel::Message& child);
 
+std::string
+MungePluginDsoPath(const std::string& path);
+std::string
+UnmungePluginDsoPath(const std::string& munged);
+
 extern PRLogModuleInfo* gPluginLog;
 
 #if defined(_MSC_VER)

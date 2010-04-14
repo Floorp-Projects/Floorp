@@ -119,8 +119,13 @@ public:
    */
   bool Init(const gfxIntSize& aSize,
             gfxImageFormat aFormat = ImageFormatUnknown,
-            int aShmId = -1,
-            Display *aDisplay = NULL);
+            int aDepth = 0,
+            int aShmId = -1);
+
+  /**
+   * Returns the depth of image surface 
+  */
+  int Depth() const { return mDepth; }
 
 private:
   bool CreateInternal(int aShmid);

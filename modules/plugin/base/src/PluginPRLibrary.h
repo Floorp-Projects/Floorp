@@ -120,111 +120,27 @@ public:
     }
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
-    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs, NPError* error) {
-        if (mNP_Initialize) {
-            *error = mNP_Initialize(bFuncs, pFuncs);
-        } else {
-            NP_InitializeFunc pfNP_Initialize = (NP_InitializeFunc)
-                PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
-            if (!pfNP_Initialize)
-                return NS_ERROR_FAILURE;
-            *error = pfNP_Initialize(bFuncs, pFuncs);
-        }
-
-        // save NPP_New
-        mNPP_New = pFuncs->newp;
-        return NS_OK;
-    }
+    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs,
+                                   NPPluginFuncs* pFuncs, NPError* error);
 #else
-    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs, NPError* error) {
-        if (mNP_Initialize) {
-            *error = mNP_Initialize(bFuncs);
-        } else {
-            NP_InitializeFunc pfNP_Initialize = (NP_InitializeFunc)
-                PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
-            if (!pfNP_Initialize)
-                return NS_ERROR_FAILURE;
-            *error = pfNP_Initialize(bFuncs);
-        }
-
-        return NS_OK;
-    }
+    virtual nsresult NP_Initialize(NPNetscapeFuncs* bFuncs,
+                                   NPError* error);
 #endif
 
-    virtual nsresult NP_Shutdown(NPError* error) {
-        if (mNP_Shutdown) {
-            *error = mNP_Shutdown();
-        } else {
-            NP_ShutdownFunc pfNP_Shutdown = (NP_ShutdownFunc)
-                PR_FindFunctionSymbol(mLibrary, "NP_Shutdown");
-            if (!pfNP_Shutdown)
-                return NS_ERROR_FAILURE;
-            *error = pfNP_Shutdown();
-        }
-
-        return NS_OK;
-    }
-
-    virtual nsresult NP_GetMIMEDescription(const char** mimeDesc) {
-        if (mNP_GetMIMEDescription) {
-            *mimeDesc = mNP_GetMIMEDescription();
-        }
-        else {
-            NP_GetMIMEDescriptionFunc pfNP_GetMIMEDescription =
-                (NP_GetMIMEDescriptionFunc)
-                PR_FindFunctionSymbol(mLibrary, "NP_GetMIMEDescription");
-            if (!pfNP_GetMIMEDescription) {
-                *mimeDesc = "";
-                return NS_ERROR_FAILURE;
-            }
-            *mimeDesc = pfNP_GetMIMEDescription();
-        }
-
-        return NS_OK;
-    }
+    virtual nsresult NP_Shutdown(NPError* error);
+    virtual nsresult NP_GetMIMEDescription(const char** mimeDesc);
 
     virtual nsresult NP_GetValue(void *future, NPPVariable aVariable,
-                                 void *aValue, NPError* error) {
-        if (mNP_GetValue) {
-            *error = mNP_GetValue(future, aVariable, aValue);
-        } else {
-            NP_GetValueFunc pfNP_GetValue = (NP_GetValueFunc)
-                PR_FindFunctionSymbol(mLibrary, "NP_GetValue");
-            if (!pfNP_GetValue)
-                return NS_ERROR_FAILURE;
-            *error = pfNP_GetValue(future, aVariable, aValue);
-        }
-
-        return NS_OK;
-    }
+                                 void *aValue, NPError* error);
 
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
-    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error) {
-        if (mNP_GetEntryPoints) {
-            *error = mNP_GetEntryPoints(pFuncs);
-        } else {
-            NP_GetEntryPointsFunc pfNP_GetEntryPoints = (NP_GetEntryPointsFunc)
-                PR_FindFunctionSymbol(mLibrary, "NP_GetEntryPoints");
-            if (!pfNP_GetEntryPoints)
-                return NS_ERROR_FAILURE;
-            *error = pfNP_GetEntryPoints(pFuncs);
-        }
-
-        // save NPP_New
-        mNPP_New = pFuncs->newp;
-        return NS_OK;
-    }
+    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error);
 #endif
 
     virtual nsresult NPP_New(NPMIMEType pluginType, NPP instance,
                              uint16_t mode, int16_t argc, char* argn[],
                              char* argv[], NPSavedData* saved,
-                             NPError* error) {
-        if (!mNPP_New)
-            return NS_ERROR_FAILURE;
-        *error = mNPP_New(pluginType, instance, mode, argc, argn, argv, saved);
-        return NS_OK;
-    }
+                             NPError* error);
 
 private:
     NP_InitializeFunc mNP_Initialize;
