@@ -369,6 +369,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug541937.html \
 		file_bug541937.html \
 		file_bug541937.xhtml \
+		test_bug558726.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason
