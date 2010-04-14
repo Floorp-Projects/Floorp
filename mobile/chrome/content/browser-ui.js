@@ -928,7 +928,7 @@ var PageActions = {
     }
 
     let siteLogins = [];
-    let allLogins = lm.getAllLogins({});
+    let allLogins = lm.findLogins({}, host.prePath, "", null);
     for (let i = 0; i < allLogins.length; i++) {
       let login = allLogins[i];
       if (login.hostname != host.prePath)
