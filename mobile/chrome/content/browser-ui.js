@@ -1264,6 +1264,7 @@ var BookmarkList = {
 
 var FormHelper = {
   _open: false,
+  _utils: null,
   _nodes: null,
   get _container() {
     delete this._container;
@@ -1490,6 +1491,14 @@ var FormHelper = {
 
     let previousElement = this._currentElement;
     this._currentElement = aElement;
+    this._utils = aElement.ownerDocument.defaultView
+                                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                                        .getInterface(Ci.nsIDOMWindowUtils);
+    try {
+      this._utils.QueryInterface(Ci.nsIDOMWindowUtils_1_9_2);
+    }
+    catch(e) {}
+
     this._update(previousElement, aElement);
 
     let containerHeight = this._container.getBoundingClientRect().height;
@@ -1555,6 +1564,7 @@ var FormHelper = {
     window.removeEventListener("keyup", this, false);
     this._container.hidden = true;
     this._currentElement = null;
+    this._utils = null;
 
     if (gPrefService.getBoolPref("formhelper.restore") && this._restore) {
       bv.setZoomLevel(this._restore.zoom);
@@ -1603,6 +1613,23 @@ var FormHelper = {
         break;
 
       default:
+        let caret = this._getRectForCaret();
+        if (caret) {
+          let bv = Browser._browserView;
+
+          // If the caret is not into view we need to scroll to it
+          let visible = bv.getVisibleRect();
+          caret = bv.browserToViewportRect(caret);
+    
+          let [deltaX, deltaY] = this._getOffsetForCaret(caret, visible);
+    
+          // Scroll by the delta if we need to
+          if (deltaX != 0 || deltaY != 0) {
+            Browser.contentScrollboxScroller.scrollBy(deltaX, deltaY);
+            bv.onAfterVisibleMove();
+          }
+        }
+
         let target = aEvent.target;
         if (currentElement instanceof HTMLInputElement && currentElement.type == "text") {
           let suggestions = this._getSuggestions();
@@ -1611,7 +1638,7 @@ var FormHelper = {
           let height = Math.floor(this._container.getBoundingClientRect().height);
           this._container.top = window.innerHeight - height;
           this._helperSpacer.setAttribute("height", height);
-        
+
           // XXX if we are at the bottom of the page we need to give back the content
           // area by refreshing it
           if (suggestions.length == 0) {
@@ -1637,8 +1664,54 @@ var FormHelper = {
 
     let elRect = this._getRectForElement(aElement);
     let zoomRect = Browser._getZoomRectForPoint(elRect.center().x, elRect.y, zoomLevel);
+    
+    let caretRect = this._getRectForCaret();
+    if (caretRect) {
+      caretRect = Browser._browserView.browserToViewportRect(caretRect);
+      if (!zoomRect.contains(caretRect)) {
+        let [deltaX, deltaY] = this._getOffsetForCaret(caretRect, zoomRect);
+        zoomRect.translate(deltaX, deltaY);
+      }
+    }
 
     Browser.setVisibleRect(zoomRect);
+  },
+  
+  _getRectForCaret: function formHelper_getRectForCaret() {
+    let currentElement = this.getCurrentElement();
+    if ((currentElement instanceof HTMLTextAreaElement ||
+        (currentElement instanceof HTMLInputElement && currentElement.type == "text")) &&
+        gFocusManager.focusedElement == this._currentElement) {
+
+      let rect = this._utils.sendQueryContentEvent(this._utils.QUERY_CARET_RECT, currentElement.selectionEnd, 0, 0, 0);
+      if (!rect)
+        return null;
+
+      let bv = Browser._browserView;
+      let scroll = BrowserView.Util.getContentScrollOffset(Browser.selectedBrowser);
+      let caret = new Rect(scroll.x + rect.left, scroll.y + rect.top, rect.width, rect.height);
+      return caret;
+    }
+    
+    return null;
+  },
+  
+  _getOffsetForCaret: function formHelper_getOffsetForCaret(aCaretRect, aRect) {
+    // Determine if we need to move left or right to bring the caret into view
+    let deltaX = 0;
+    if (aCaretRect.right > aRect.right)
+      deltaX = aCaretRect.right - aRect.right;
+    if (aCaretRect.left < aRect.left)
+      deltaX = aCaretRect.left - aRect.left;
+      
+    // Determine if we need to move up or down to bring the caret into view
+    let deltaY = 0;
+    if (aCaretRect.bottom > aRect.bottom)
+      deltaY = aCaretRect.bottom - aRect.bottom;
+    if (aCaretRect.top < aRect.top)
+      deltaY = aCaretRect.top - aRect.top;
+
+    return [deltaX, deltaY];
   },
 
   canShowUIFor: function(aElement) {
