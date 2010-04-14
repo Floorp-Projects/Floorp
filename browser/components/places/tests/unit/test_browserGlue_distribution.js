@@ -50,6 +50,10 @@ const TOPIC_FINAL_UI_STARTUP = "final-ui-startup";
 const TOPIC_CUSTOMIZATION_COMPLETE = "distribution-customization-complete";
 
 function run_test() {
+  // This is needed but we still have to investigate the reason, could just be
+  // we try to act too late in the game, moving our shutdown earlier will help.
+  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
+         getService(Ci.nsINavHistoryService);
   // TODO: re-enable when bug 523936 is fixed.
   return;
 
