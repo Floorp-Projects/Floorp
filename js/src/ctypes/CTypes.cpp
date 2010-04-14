@@ -5183,7 +5183,7 @@ CData::Finalize(JSContext* cx, JSObject* obj)
   char** buffer = static_cast<char**>(JSVAL_TO_PRIVATE(slot));
 
   if (owns)
-    delete *buffer;
+    delete[] *buffer;
   delete buffer;
 }
 
