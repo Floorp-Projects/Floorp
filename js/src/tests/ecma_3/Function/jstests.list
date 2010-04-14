@@ -9,6 +9,7 @@ script regress-137181.js
 script regress-193555.js
 script regress-313570.js
 script regress-49286.js
+script regress-558720.js
 script regress-58274.js
 script regress-85880.js
 script regress-94506.js
