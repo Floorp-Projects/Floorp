@@ -5594,7 +5594,7 @@ Int64::Construct(JSContext* cx,
     return JS_FALSE;
   }
 
-  JSInt64 i;
+  JSInt64 i = 0;
   if (!jsvalToBigInteger(cx, argv[0], true, &i))
     return TypeError(cx, "int64", argv[0]);
 
@@ -5767,7 +5767,7 @@ UInt64::Construct(JSContext* cx,
     return JS_FALSE;
   }
 
-  JSUint64 u;
+  JSUint64 u = 0;
   if (!jsvalToBigInteger(cx, argv[0], true, &u))
     return TypeError(cx, "uint64", argv[0]);
 
