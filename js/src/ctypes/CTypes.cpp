@@ -5077,7 +5077,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
 //   a CData object; merely an object we want to keep alive.
 //   * If 'refObj' is a CData object, 'ownResult' must be false.
 //   * Otherwise, 'refObj' is a Library or CClosure object, and 'ownResult'
-//     must be true.
+//     may be true or false.
 // * Otherwise 'refObj' is NULL. In this case, 'ownResult' may be true or false.
 //
 // * If 'ownResult' is true, the CData object will allocate an appropriately
@@ -5085,7 +5085,7 @@ CClosure::ClosureStub(ffi_cif* cif, void* result, void** args, void* userData)
 //   supplied, the data will be copied from 'source' into the buffer;
 //   otherwise, the entirety of the new buffer will be initialized to zero.
 // * If 'ownResult' is false, the new CData's buffer refers to a slice of
-//   another CData's buffer given by 'refObj'. 'source' data must be provided,
+//   another buffer kept alive by 'refObj'. 'source' data must be provided,
 //   and the new CData's buffer will refer to 'source'.
 JSObject*
 CData::Create(JSContext* cx,
@@ -5098,9 +5098,7 @@ CData::Create(JSContext* cx,
   JS_ASSERT(CType::IsCType(cx, typeObj));
   JS_ASSERT(CType::IsSizeDefined(cx, typeObj));
   JS_ASSERT(ownResult || source);
-  if (refObj) {
-    JS_ASSERT(CData::IsCData(cx, refObj) ? !ownResult : ownResult);
-  }
+  JS_ASSERT_IF(refObj && CData::IsCData(cx, refObj), !ownResult);
 
   // Get the 'prototype' property from the type.
   jsval slot;
