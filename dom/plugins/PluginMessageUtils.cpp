@@ -129,7 +129,7 @@ UnmungePluginDsoPath(const string& munged)
 #if defined(OS_LINUX)
   return ReplaceAll(munged, "netsc@pe", "netscape");
 #else
-  return path;
+  return munged;
 #endif
 }
 
