@@ -8503,6 +8503,16 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     return PR_TRUE;
   }
 
+#ifdef MOZ_XUL
+  if (aFrame->GetType() == nsGkAtoms::popupSetFrame) {
+    nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
+    if (rootBox && rootBox->GetPopupSetFrame() == aFrame) {
+      *aResult = ReconstructDocElementHierarchy();
+      return PR_TRUE;
+    }
+  }
+#endif
+
   // We might still need to reconstruct things if the parent of inFlowFrame is
   // special, since in that case the removal of aFrame might affect the
   // splitting of its parent.
