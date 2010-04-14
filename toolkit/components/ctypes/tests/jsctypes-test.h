@@ -202,4 +202,6 @@ NS_EXTERN_C
   EXPORT_CDECL(PRInt32*) test_vector_add_va_cdecl(PRUint8 num_vecs,
                                                   PRUint8 vec_len,
                                                   PRInt32* result, ...);
+
+  NS_EXPORT extern RECT data_rect;
 }

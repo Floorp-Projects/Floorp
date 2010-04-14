@@ -192,6 +192,7 @@ function run_test()
   run_function_tests(library);
   run_closure_tests(library);
   run_variadic_tests(library);
+  run_static_data_tests(library);
 
   // test library.close
   let test_void_t = library.declare("test_void_t_cdecl", ctypes.default_abi, ctypes.void_t);
@@ -2082,6 +2083,13 @@ function run_function_tests(library)
     "ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.char.ptr])");
   do_check_throws(function() { test_ansi_len.value = null; }, Error);
   do_check_eq(ptrValue(test_ansi_len), ptrValue(ptr));
+
+  // Test that the library.declare(name, functionType) form works.
+  let test_ansi_len_2 = library.declare("test_ansi_len", fn_t);
+  do_check_true(test_ansi_len_2.constructor === fn_t);
+  do_check_eq(ptrValue(test_ansi_len), ptrValue(test_ansi_len_2));
+  do_check_throws(function() { test_ansi_len_2.value = null; }, Error);
+  do_check_eq(ptrValue(test_ansi_len_2), ptrValue(ptr));
 }
 
 function run_closure_tests(library)
@@ -2209,6 +2217,42 @@ function run_variadic_tests(library) {
   do_check_throws(function() {
     sum_va_type().value = sum_notva_type();
   }, Error);
+}
+
+function run_static_data_tests(library)
+{
+  const rect_t = new ctypes.StructType("RECT",
+                       [{ top   : ctypes.int32_t },
+                        { left  : ctypes.int32_t },
+                        { bottom: ctypes.int32_t },
+                        { right : ctypes.int32_t }]);
+
+  let data_rect = library.declare("data_rect", rect_t);
+
+  // Test reading static data.
+  do_check_true(data_rect.constructor === rect_t);
+  do_check_eq(data_rect.top, -1);
+  do_check_eq(data_rect.left, -2);
+  do_check_eq(data_rect.bottom, 3);
+  do_check_eq(data_rect.right, 4);
+
+  // Test writing.
+  data_rect.top = 9;
+  data_rect.left = 8;
+  data_rect.bottom = -11;
+  data_rect.right = -12;
+  do_check_eq(data_rect.top, 9);
+  do_check_eq(data_rect.left, 8);
+  do_check_eq(data_rect.bottom, -11);
+  do_check_eq(data_rect.right, -12);
+
+  // Make sure it's been written, not copied.
+  let data_rect_2 = library.declare("data_rect", rect_t);
+  do_check_eq(data_rect_2.top, 9);
+  do_check_eq(data_rect_2.left, 8);
+  do_check_eq(data_rect_2.bottom, -11);
+  do_check_eq(data_rect_2.right, -12);
+  do_check_eq(ptrValue(data_rect.address()), ptrValue(data_rect_2.address()));
 }
 
 // bug 522360 - try loading system library without full path
