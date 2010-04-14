@@ -1,4 +1,4 @@
-Patch libffi to fix bug 550602, bug 528129, bug 538216, and bug 556902.
+Patch libffi to fix bug 550602, bug 528129, bug 538216, bug 556902, and bug 538002.
 
 diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
 --- a/js/src/ctypes/libffi/Makefile.in
@@ -107,6 +107,25 @@ diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
  
    archive_cmds_need_lc=no
    hardcode_direct=no
+@@ -12179,17 +12179,17 @@ case "$host" in
+ 	;;
+   hppa*-*-hpux*)
+ 	TARGET=PA_HPUX; TARGETDIR=pa
+ 	;;
+ 
+   i?86-*-freebsd* | i?86-*-openbsd*)
+ 	TARGET=X86_FREEBSD; TARGETDIR=x86
+ 	;;
+-  i?86-win32* | i?86-*-cygwin* | i?86-*-mingw*)
++  i?86-win32* | i?86-*-cygwin* | i?86-*-mingw* | i?86-*-os2*)
+ 	TARGET=X86_WIN32; TARGETDIR=x86
+ 	# All mingw/cygwin/win32 builds require this for sharedlib
+ 	AM_LTLDFLAGS="-no-undefined"
+ 	;;
+   i?86-*-darwin*)
+ 	TARGET=X86_DARWIN; TARGETDIR=x86
+ 	;;
+   i?86-*-solaris2.1[0-9]*)
 diff --git a/js/src/ctypes/libffi/msvcc.sh b/js/src/ctypes/libffi/msvcc.sh
 --- a/js/src/ctypes/libffi/msvcc.sh
 +++ b/js/src/ctypes/libffi/msvcc.sh
@@ -341,3 +360,351 @@ diff --git a/js/src/ctypes/libffi/src/x86/ffitarget.h b/js/src/ctypes/libffi/src
  #ifdef X86_WIN64
  #ifdef _MSC_VER
  typedef unsigned __int64       ffi_arg;
+diff --git a/js/src/ctypes/libffi/src/closures.c b/js/src/ctypes/libffi/src/closures.c
+--- a/js/src/ctypes/libffi/src/closures.c
++++ b/js/src/ctypes/libffi/src/closures.c
+@@ -39,17 +39,17 @@
+    option is defined will attempt to map such pages once, but if it
+    fails, it falls back to creating a temporary file in a writable and
+    executable filesystem and mapping pages from it into separate
+    locations in the virtual memory space, one location writable and
+    another executable.  */
+ #  define FFI_MMAP_EXEC_WRIT 1
+ #  define HAVE_MNTENT 1
+ # endif
+-# if defined(X86_WIN32) || defined(X86_WIN64)
++# if defined(X86_WIN32) || defined(X86_WIN64) || defined(__OS2__)
+ /* Windows systems may have Data Execution Protection (DEP) enabled, 
+    which requires the use of VirtualMalloc/VirtualFree to alloc/free
+    executable memory. */
+ #  define FFI_MMAP_EXEC_WRIT 1
+ # endif
+ #endif
+ 
+ #if FFI_MMAP_EXEC_WRIT && !defined FFI_MMAP_EXEC_SELINUX
+@@ -188,31 +188,31 @@ static size_t dlmalloc_footprint(void) M
+ static size_t dlmalloc_max_footprint(void) MAYBE_UNUSED;
+ static void** dlindependent_calloc(size_t, size_t, void**) MAYBE_UNUSED;
+ static void** dlindependent_comalloc(size_t, size_t*, void**) MAYBE_UNUSED;
+ static void *dlpvalloc(size_t) MAYBE_UNUSED;
+ static int dlmalloc_trim(size_t) MAYBE_UNUSED;
+ static size_t dlmalloc_usable_size(void*) MAYBE_UNUSED;
+ static void dlmalloc_stats(void) MAYBE_UNUSED;
+ 
+-#if !(defined(X86_WIN32) || defined(X86_WIN64)) || defined (__CYGWIN__)
++#if !(defined(X86_WIN32) || defined(X86_WIN64) || defined(__OS2__)) || defined (__CYGWIN__)
+ /* Use these for mmap and munmap within dlmalloc.c.  */
+ static void *dlmmap(void *, size_t, int, int, int, off_t);
+ static int dlmunmap(void *, size_t);
+-#endif /* !(defined(X86_WIN32) || defined(X86_WIN64)) || defined (__CYGWIN__) */
++#endif /* !(defined(X86_WIN32) || defined(X86_WIN64) || defined(__OS2__)) || defined (__CYGWIN__) */
+ 
+ #define mmap dlmmap
+ #define munmap dlmunmap
+ 
+ #include "dlmalloc.c"
+ 
+ #undef mmap
+ #undef munmap
+ 
+-#if !(defined(X86_WIN32) || defined(X86_WIN64)) || defined (__CYGWIN__)
++#if !(defined(X86_WIN32) || defined(X86_WIN64) || defined(__OS2__)) || defined (__CYGWIN__)
+ 
+ /* A mutex used to synchronize access to *exec* variables in this file.  */
+ static pthread_mutex_t open_temp_exec_file_mutex = PTHREAD_MUTEX_INITIALIZER;
+ 
+ /* A file descriptor of a temporary file from which we'll map
+    executable pages.  */
+ static int execfd = -1;
+ 
+@@ -517,17 +517,17 @@ segment_holding_code (mstate m, char* ad
+ 	&& addr < add_segment_exec_offset (sp->base, sp) + sp->size)
+       return sp;
+     if ((sp = sp->next) == 0)
+       return 0;
+   }
+ }
+ #endif
+ 
+-#endif /* !(defined(X86_WIN32) || defined(X86_WIN64)) || defined (__CYGWIN__) */
++#endif /* !(defined(X86_WIN32) || defined(X86_WIN64) || defined(__OS2__)) || defined (__CYGWIN__) */
+ 
+ /* Allocate a chunk of memory with the given size.  Returns a pointer
+    to the writable address, and sets *CODE to the executable
+    corresponding virtual address.  */
+ void *
+ ffi_closure_alloc (size_t size, void **code)
+ {
+   void *ptr;
+diff --git a/js/src/ctypes/libffi/src/dlmalloc.c b/js/src/ctypes/libffi/src/dlmalloc.c
+--- a/js/src/ctypes/libffi/src/dlmalloc.c
++++ b/js/src/ctypes/libffi/src/dlmalloc.c
+@@ -454,16 +454,24 @@ DEFAULT_MMAP_THRESHOLD       default: 25
+ #define LACKS_STRING_H
+ #define LACKS_STRINGS_H
+ #define LACKS_SYS_TYPES_H
+ #define LACKS_ERRNO_H
+ #define MALLOC_FAILURE_ACTION
+ #define MMAP_CLEARS 0 /* WINCE and some others apparently don't clear */
+ #endif  /* WIN32 */
+ 
++#ifdef __OS2__
++#define INCL_DOS
++#include <os2.h>
++#define HAVE_MMAP 1
++#define HAVE_MORECORE 0
++#define LACKS_SYS_MMAN_H
++#endif  /* __OS2__ */
++
+ #if defined(DARWIN) || defined(_DARWIN)
+ /* Mac OSX docs advise not to use sbrk; it seems better to use mmap */
+ #ifndef HAVE_MORECORE
+ #define HAVE_MORECORE 0
+ #define HAVE_MMAP 1
+ #endif  /* HAVE_MORECORE */
+ #endif  /* DARWIN */
+ 
+@@ -1283,17 +1291,17 @@ extern void*     sbrk(ptrdiff_t);
+ #define CALL_MMAP(s)         MFAIL
+ #define CALL_MUNMAP(a, s)    (-1)
+ #define DIRECT_MMAP(s)       MFAIL
+ 
+ #else /* HAVE_MMAP */
+ #define IS_MMAPPED_BIT       (SIZE_T_ONE)
+ #define USE_MMAP_BIT         (SIZE_T_ONE)
+ 
+-#ifndef WIN32
++#if !defined(WIN32) && !defined (__OS2__)
+ #define CALL_MUNMAP(a, s)    munmap((a), (s))
+ #define MMAP_PROT            (PROT_READ|PROT_WRITE)
+ #if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
+ #define MAP_ANONYMOUS        MAP_ANON
+ #endif /* MAP_ANON */
+ #ifdef MAP_ANONYMOUS
+ #define MMAP_FLAGS           (MAP_PRIVATE|MAP_ANONYMOUS)
+ #define CALL_MMAP(s)         mmap(0, (s), MMAP_PROT, MMAP_FLAGS, -1, 0)
+@@ -1306,16 +1314,52 @@ extern void*     sbrk(ptrdiff_t);
+ static int dev_zero_fd = -1; /* Cached file descriptor for /dev/zero. */
+ #define CALL_MMAP(s) ((dev_zero_fd < 0) ? \
+            (dev_zero_fd = open("/dev/zero", O_RDWR), \
+             mmap(0, (s), MMAP_PROT, MMAP_FLAGS, dev_zero_fd, 0)) : \
+             mmap(0, (s), MMAP_PROT, MMAP_FLAGS, dev_zero_fd, 0))
+ #endif /* MAP_ANONYMOUS */
+ 
+ #define DIRECT_MMAP(s)       CALL_MMAP(s)
++
++#elif defined(__OS2__)
++
++/* OS/2 MMAP via DosAllocMem */
++static void* os2mmap(size_t size) {
++  void* ptr;
++  if (DosAllocMem(&ptr, size, OBJ_ANY|PAG_COMMIT|PAG_READ|PAG_WRITE) &&
++      DosAllocMem(&ptr, size, PAG_COMMIT|PAG_READ|PAG_WRITE))
++    return MFAIL;
++  return ptr;
++}
++
++#define os2direct_mmap(n)     os2mmap(n)
++
++/* This function supports releasing coalesed segments */
++static int os2munmap(void* ptr, size_t size) {
++  while (size) {
++    ULONG ulSize = size;
++    ULONG ulFlags = 0;
++    if (DosQueryMem(ptr, &ulSize, &ulFlags) != 0)
++      return -1;
++    if ((ulFlags & PAG_BASE) == 0 ||(ulFlags & PAG_COMMIT) == 0 ||
++        ulSize > size)
++      return -1;
++    if (DosFreeMem(ptr) != 0)
++      return -1;
++    ptr = ( void * ) ( ( char * ) ptr + ulSize );
++    size -= ulSize;
++  }
++  return 0;
++}
++
++#define CALL_MMAP(s)         os2mmap(s)
++#define CALL_MUNMAP(a, s)    os2munmap((a), (s))
++#define DIRECT_MMAP(s)       os2direct_mmap(s)
++
+ #else /* WIN32 */
+ 
+ /* Win32 MMAP via VirtualAlloc */
+ static void* win32mmap(size_t size) {
+   void* ptr = VirtualAlloc(0, size, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+   return (ptr != 0)? ptr: MFAIL;
+ }
+ 
+@@ -1382,30 +1426,40 @@ static int win32munmap(void* ptr, size_t
+     protect against direct calls to MORECORE by other threads not
+     using this lock, so there is still code to cope the best we can on
+     interference.
+ 
+   * magic_init_mutex ensures that mparams.magic and other
+     unique mparams values are initialized only once.
+ */
+ 
+-#ifndef WIN32
++#if !defined(WIN32) && !defined(__OS2__)
+ /* By default use posix locks */
+ #include <pthread.h>
+ #define MLOCK_T pthread_mutex_t
+ #define INITIAL_LOCK(l)      pthread_mutex_init(l, NULL)
+ #define ACQUIRE_LOCK(l)      pthread_mutex_lock(l)
+ #define RELEASE_LOCK(l)      pthread_mutex_unlock(l)
+ 
+ #if HAVE_MORECORE
+ static MLOCK_T morecore_mutex = PTHREAD_MUTEX_INITIALIZER;
+ #endif /* HAVE_MORECORE */
+ 
+ static MLOCK_T magic_init_mutex = PTHREAD_MUTEX_INITIALIZER;
+ 
++#elif defined(__OS2__)
++#define MLOCK_T HMTX
++#define INITIAL_LOCK(l)      DosCreateMutexSem(0, l, 0, FALSE)
++#define ACQUIRE_LOCK(l)      DosRequestMutexSem(*l, SEM_INDEFINITE_WAIT)
++#define RELEASE_LOCK(l)      DosReleaseMutexSem(*l)
++#if HAVE_MORECORE
++static MLOCK_T morecore_mutex;
++#endif /* HAVE_MORECORE */
++static MLOCK_T magic_init_mutex;
++
+ #else /* WIN32 */
+ /*
+    Because lock-protected regions have bounded times, and there
+    are no recursive lock calls, we can use simple spinlocks.
+ */
+ 
+ #define MLOCK_T long
+ static int win32_acquire_lock (MLOCK_T *sl) {
+@@ -2487,20 +2541,25 @@ static int init_mparams(void) {
+     if (mparams.magic == 0) {
+       mparams.magic = s;
+       /* Set up lock for main malloc area */
+       INITIAL_LOCK(&gm->mutex);
+       gm->mflags = mparams.default_mflags;
+     }
+     RELEASE_MAGIC_INIT_LOCK();
+ 
+-#ifndef WIN32
++#if !defined(WIN32) && !defined(__OS2__)
+     mparams.page_size = malloc_getpagesize;
+     mparams.granularity = ((DEFAULT_GRANULARITY != 0)?
+                            DEFAULT_GRANULARITY : mparams.page_size);
++#elif defined (__OS2__)
++ /* if low-memory is used, os2munmap() would break
++    if it were anything other than 64k */
++    mparams.page_size = 4096u;
++    mparams.granularity = 65536u;
+ #else /* WIN32 */
+     {
+       SYSTEM_INFO system_info;
+       GetSystemInfo(&system_info);
+       mparams.page_size = system_info.dwPageSize;
+       mparams.granularity = system_info.dwAllocationGranularity;
+     }
+ #endif /* WIN32 */
+diff --git a/js/src/ctypes/libffi/src/x86/win32.S b/js/src/ctypes/libffi/src/x86/win32.S
+--- a/js/src/ctypes/libffi/src/x86/win32.S
++++ b/js/src/ctypes/libffi/src/x86/win32.S
+@@ -390,17 +390,19 @@ END
+ 
+ #else
+ 
+ 	.text
+  
+         # This assumes we are using gas.
+         .balign 16
+ 	.globl	_ffi_call_win32
++#ifndef __OS2__
+ 	.def	_ffi_call_win32;	.scl	2;	.type	32;	.endef
++#endif
+ _ffi_call_win32:
+ .LFB1:
+         pushl %ebp
+ .LCFI0:
+         movl  %esp,%ebp
+ .LCFI1:
+         # Make room for all of the new args.
+         movl  16(%ebp),%ecx                                                     
+@@ -542,17 +544,19 @@ 1:
+         popl %ebp
+         ret
+ .ffi_call_win32_end:
+ .LFE1:
+ 
+         # This assumes we are using gas.
+         .balign 16
+ 	.globl	_ffi_closure_SYSV
++#ifndef __OS2__
+ 	.def	_ffi_closure_SYSV;	.scl	2;	.type	32;	.endef
++#endif
+ _ffi_closure_SYSV:
+ .LFB3:
+ 	pushl	%ebp
+ .LCFI4:
+ 	movl	%esp, %ebp
+ .LCFI5:
+ 	subl	$40, %esp
+ 	leal	-24(%ebp), %edx
+@@ -663,17 +667,19 @@ 1:
+ #define RAW_CLOSURE_CIF_OFFSET ((FFI_TRAMPOLINE_SIZE + 3) & ~3)
+ #define RAW_CLOSURE_FUN_OFFSET (RAW_CLOSURE_CIF_OFFSET + 4)
+ #define RAW_CLOSURE_USER_DATA_OFFSET (RAW_CLOSURE_FUN_OFFSET + 4)
+ #define CIF_FLAGS_OFFSET 20
+ 
+         # This assumes we are using gas.
+         .balign 16
+ 	.globl	_ffi_closure_raw_SYSV
++#ifndef __OS2__
+ 	.def	_ffi_closure_raw_SYSV;	.scl	2;	.type	32;	.endef
++#endif
+ _ffi_closure_raw_SYSV:
+ .LFB4:
+ 	pushl	%ebp
+ .LCFI6:
+ 	movl	%esp, %ebp
+ .LCFI7:
+ 	pushl	%esi
+ .LCFI8:
+@@ -779,17 +785,19 @@ 1:
+ .ffi_closure_raw_SYSV_end:
+ .LFE4:
+ 
+ #endif /* !FFI_NO_RAW_API */
+ 
+         # This assumes we are using gas.
+ 	.balign	16
+ 	.globl	_ffi_closure_STDCALL
++#ifndef __OS2__
+ 	.def	_ffi_closure_STDCALL;	.scl	2;	.type	32;	.endef
++#endif
+ _ffi_closure_STDCALL:
+ .LFB5:
+ 	pushl	%ebp
+ .LCFI9:
+ 	movl	%esp, %ebp
+ .LCFI10:
+ 	subl	$40, %esp
+ 	leal	-24(%ebp), %edx
+@@ -885,17 +893,19 @@ 1:
+ .Lscls_noretval:
+ .Lscls_epilogue:
+ 	movl	%ebp, %esp
+ 	popl	%ebp
+ 	ret
+ .ffi_closure_STDCALL_end:
+ .LFE5:
+ 
++#ifndef __OS2__
+ 	.section	.eh_frame,"w"
++#endif
+ .Lframe1:
+ .LSCIE1:
+ 	.long	.LECIE1-.LASCIE1  /* Length of Common Information Entry */
+ .LASCIE1:
+ 	.long	0x0	/* CIE Identifier Tag */
+ 	.byte	0x1	/* CIE Version */
+ #ifdef __PIC__
+ 	.ascii "zR\0"	/* CIE Augmentation */
