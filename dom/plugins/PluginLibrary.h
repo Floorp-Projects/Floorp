@@ -41,6 +41,7 @@
 
 #include "prlink.h"
 #include "npapi.h"
+#include "npfunctions.h"
 #include "nscore.h"
 
 class nsNPAPIPlugin;

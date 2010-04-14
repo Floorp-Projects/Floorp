@@ -519,6 +519,11 @@ nsresult nsChildView::Create(nsIWidget *aParent,
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
+  // Because the hidden window is created outside of an event loop,
+  // we need to provide an autorelease pool to avoid leaking cocoa objects
+  // (see bug 559075).
+  nsAutoreleasePool localPool;
+
   // See NSView (MethodSwizzling) below.
   if (!gChildViewMethodsSwizzled) {
     nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
@@ -882,6 +887,11 @@ NS_IMETHODIMP nsChildView::Show(PRBool aState)
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   if (aState != mVisible) {
+    // Provide an autorelease pool because this gets called during startup
+    // on the "hidden window", resulting in cocoa object leakage if there's
+    // no pool in place.
+    nsAutoreleasePool localPool;
+
     [mView setHidden:!aState];
     mVisible = aState;
     if (!mVisible)
@@ -6254,11 +6264,10 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* anEvent)
 OSStatus PluginKeyEventsHandler(EventHandlerCallRef inHandlerRef,
                                 EventRef inEvent, void *userData)
 {
-  id arp = [[NSAutoreleasePool alloc] init];
+  nsAutoreleasePool localPool;
 
   TSMDocumentID activeDoc = ::TSMGetActiveDocument();
   if (!activeDoc) {
-    [arp release];
     return eventNotHandledErr;
   }
 
@@ -6268,7 +6277,6 @@ OSStatus PluginKeyEventsHandler(EventHandlerCallRef inHandlerRef,
   if (status != noErr)
     target = nil;
   if (!target) {
-    [arp release];
     return eventNotHandledErr;
   }
 
@@ -6276,13 +6284,11 @@ OSStatus PluginKeyEventsHandler(EventHandlerCallRef inHandlerRef,
   status = ::GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent,
                                typeEventRef, NULL, sizeof(EventRef), NULL, &keyEvent);
   if ((status != noErr) || !keyEvent) {
-    [arp release];
     return eventNotHandledErr;
   }
 
   [target processPluginKeyEvent:keyEvent];
 
-  [arp release];
   return noErr;
 }
 

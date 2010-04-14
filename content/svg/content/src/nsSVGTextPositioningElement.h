@@ -12,18 +12,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is JavaScript Engine testing utilities.
+ * The Original Code is the Mozilla SVG project.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Robert Longson <longsonr@gmail.com>
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s): Jesse Ruderman
- *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,28 +33,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gTestfile = 'regress-351116.js';
-//-----------------------------------------------------------------------------
-var BUGNUMBER = 351116;
-var summary = 'formal parameter and inner function have same name';
-var actual = 'No Crash';
-var expect = 'No Crash';
+#ifndef __NS_SVGTEXTPOSITIONINGELEMENTBASE_H__
+#define __NS_SVGTEXTPOSITIONINGELEMENTBASE_H__
 
-//-----------------------------------------------------------------------------
-test();
-//-----------------------------------------------------------------------------
+#include "nsIDOMSVGTextPositionElem.h"
+#include "nsSVGTextContentElement.h"
+#include "nsIDOMSVGAnimatedLengthList.h"
+#include "nsIDOMSVGAnimatedNumberList.h"
 
-function test()
+class nsSVGTextPositioningElement : public nsSVGTextContentElement
 {
-  enterFunc ('test');
-  printBugNumber(BUGNUMBER);
-  printStatus (summary);
- 
-  var f = function (s) { function s() { } };
+public:
+  NS_DECL_NSIDOMSVGTEXTPOSITIONINGELEMENT
 
-  function g(s) { function s() { } }
+protected:
+  nsresult Initialise(nsSVGElement *aSVGElement);
 
-  reportCompare(expect, actual, summary);
+  // nsIDOMSVGTextPositioning properties:
+  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mX;
+  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mY;
+  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mdX;
+  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mdY;
+  nsCOMPtr<nsIDOMSVGAnimatedNumberList> mRotate;
+};
 
-  exitFunc ('test');
-}
+#endif

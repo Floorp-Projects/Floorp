@@ -166,30 +166,46 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
   return res;
 }
 
+static PRInt32 sNewlineHandlingPref = -1,
+               sCaretStylePref = -1;
+
+static int
+EditorPrefsChangedCallback(const char *aPrefName, void *)
+{
+  if (nsCRT::strcmp(aPrefName, "editor.singleLine.pasteNewlines") == 0) {
+    sNewlineHandlingPref = nsContentUtils::GetIntPref("editor.singleLine.pasteNewlines",
+                                                      nsIPlaintextEditor::eNewlinesPasteToFirst);
+  } else if (nsCRT::strcmp(aPrefName, "layout.selection.caret_style") == 0) {
+    sCaretStylePref = nsContentUtils::GetIntPref("layout.selection.caret_style",
+#ifdef XP_WIN
+                                                 1);
+    if (sCaretStylePref == 0)
+      sCaretStylePref = 1;
+#else
+                                                 0);
+#endif
+  }
+  return 0;
+}
+
 // static
 void
 nsPlaintextEditor::GetDefaultEditorPrefs(PRInt32 &aNewlineHandling,
                                          PRInt32 &aCaretStyle)
 {
-  // set default values
-  aNewlineHandling = nsIPlaintextEditor::eNewlinesPasteToFirst;
-#ifdef XP_WIN
-  aCaretStyle = 1;
-#else
-  aCaretStyle = 0;
-#endif
-
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefBranch)
-  {
-    prefBranch->GetIntPref("editor.singleLine.pasteNewlines",
-                           &aNewlineHandling);
-    prefBranch->GetIntPref("layout.selection.caret_style", &aCaretStyle);
-#ifdef XP_WIN
-    if (aCaretStyle == 0)
-      aCaretStyle = 1;
-#endif
+  if (sNewlineHandlingPref == -1) {
+    nsContentUtils::RegisterPrefCallback("editor.singleLine.pasteNewlines",
+                                         EditorPrefsChangedCallback,
+                                         nsnull);
+    EditorPrefsChangedCallback("editor.singleLine.pasteNewlines", nsnull);
+    nsContentUtils::RegisterPrefCallback("layout.selection.caret_style",
+                                         EditorPrefsChangedCallback,
+                                         nsnull);
+    EditorPrefsChangedCallback("layout.selection.caret_style", nsnull);
   }
+
+  aNewlineHandling = sNewlineHandlingPref;
+  aCaretStyle = sCaretStylePref;
 }
 
 void 

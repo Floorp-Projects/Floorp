@@ -57,7 +57,7 @@
 #include "WinMobileLocationProvider.h"
 #endif
 
-#ifdef MOZ_PLATFORM_MAEMO
+#ifdef MOZ_MAEMO_LIBLOCATION
 #include "MaemoLocationProvider.h"
 #endif
 
@@ -420,7 +420,7 @@ nsresult nsGeolocationService::Init()
     mProviders.AppendObject(provider);
 #endif
 
-#ifdef MOZ_PLATFORM_MAEMO
+#ifdef MOZ_MAEMO_LIBLOCATION
   provider = new MaemoLocationProvider();
   if (provider)
     mProviders.AppendObject(provider);
