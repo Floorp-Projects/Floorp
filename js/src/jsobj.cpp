@@ -5351,7 +5351,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
 
                     if (FUN_FAST_NATIVE(fun) == js_str_toString) {
                         JS_UNLOCK_SCOPE(cx, scope);
-                        *vp = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+                        *vp = obj->getPrimitiveThis();
                         return JS_TRUE;
                     }
                 }
@@ -6091,7 +6091,7 @@ js_PrimitiveToObject(JSContext *cx, jsval *vp)
     obj = NewObject(cx, clasp, NULL, NULL);
     if (!obj)
         return JS_FALSE;
-    obj->fslots[JSSLOT_PRIMITIVE_THIS] = *vp;
+    obj->setPrimitiveThis(*vp);
     *vp = OBJECT_TO_JSVAL(obj);
     return JS_TRUE;
 }
