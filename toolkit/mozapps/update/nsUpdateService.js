@@ -44,6 +44,7 @@
 */
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
+Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -1462,33 +1463,25 @@ UpdateService.prototype = {
   },
 
   _checkAddonCompatibility: function AUS__checkAddonCompatibility() {
-    var em = Cc["@mozilla.org/extensions/manager;1"].
-               getService(Ci.nsIExtensionManager);
-    // Get the add-ons that are incompatible with the update's application
-    // version and toolkit version.
-    var currentAddons = em.getIncompatibleItemList(this._update.appVersion,
-                                                   this._update.platformVersion,
-                                                   Ci.nsIUpdateItem.TYPE_ANY,
-                                                   false);
-    if (currentAddons.length > 0) {
-      // Get the add-ons that are incompatible with the current application
-      // version and toolkit version.
-      var previousAddons = em.getIncompatibleItemList(null, null,
-                                                      Ci.nsIUpdateItem.TYPE_ANY,
-                                                      false);
-      // Don't include add-ons that are already incompatible with the current
-      // application version and toolkit version.
-      for (var i = 0; i < previousAddons.length; ++i) {
-        for (var j = 0; j < currentAddons.length; ++j) {
-          if (previousAddons[i].id === currentAddons[j].id) {
-            currentAddons.splice(j, 1);
-            break;
-          }
-        }
-      }
-    }
+    // Get all the installed add-ons
+    var self = this;
+    AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(addons) {
+      self._incompatibleAddons = [];
+      addons.forEach(function(addon) {
+        // If an add-on isn't appDisabled and isn't userDisabled then it is
+        // either active now or the user expects it to be active after the
+        // restart. If that is the case and the add-on is not installed by the
+        // application and is not compatible with the new application version
+        // then the user should be warned that the add-on will become
+        // incompatible.
+        if (!addon.appDisabled && !addon.userDisabled &&
+            addon.scope != AddonManager.SCOPE_APPLICATION &&
+            !addon.isCompatibleWith(self._update.appVersion,
+                                    self._update.platformVersion))
+          self._incompatibleAddons.push(addon);
+      });
 
-    if (currentAddons.length > 0) {
+      if (self._incompatibleAddons.length > 0) {
       /**
 #        PREF_APP_UPDATE_INCOMPATIBLE_MODE
 #        Controls the mode in which we check for updates as follows.
@@ -1509,37 +1502,62 @@ UpdateService.prototype = {
 #          required after the update. This is not the default and is supplied
 #          only as a hidden option for those that want it.
        */
-      this._incompatAddonsCount = currentAddons.length;
-      LOG("UpdateService:_checkAddonCompatibility - checking for " +
-          "incompatible add-ons");
-      var updateIncompatMode = getPref("getIntPref", PREF_APP_UPDATE_INCOMPATIBLE_MODE, 0);
-      var mode = (updateIncompatMode == 1) ? Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY :
-                                             Ci.nsIExtensionManager.UPDATE_NOTIFY_NEWVERSION;
-      em.update(currentAddons, currentAddons.length, mode, this,
-                Ci.nsIExtensionManager.UPDATE_WHEN_NEW_APP_DETECTED,
-                this._update.appVersion, this._update.platformVersion);
-    }
-    else {
-      LOG("UpdateService:_checkAddonCompatibility - no need to show prompt, " +
-          "just download the update");
-      var status = this.downloadUpdate(this._update, true);
-      if (status == STATE_NONE)
-        cleanupActiveUpdate();
-      this._update = null;
+        self._updateCheckCount = self._incompatibleAddons.length;
+        LOG("UpdateService:_checkAddonCompatibility - checking for " +
+            "incompatible add-ons");
+
+        self._incompatibleAddons.forEach(function(addon) {
+          addon.findUpdates(this, AddonManager.UPDATE_WHEN_NEW_APP_DETECTED,
+                            this._update.appVersion, this._update.platformVersion);
+        }, self);
+      }
+      else {
+        LOG("UpdateService:_checkAddonCompatibility - no need to show prompt, " +
+            "just download the update");
+        var status = self.downloadUpdate(self._update, true);
+        if (status == STATE_NONE)
+          cleanupActiveUpdate();
+        self._update = null;
+      }
+    });
+  },
+
+  // AddonUpdateListener
+  onCompatibilityUpdateAvailable: function(addon) {
+    // Remove the add-on from the list of add-ons that will become incompatible
+    // with the new version of the application.
+    for (var i = 0; i < this._incompatibleAddons.length; ++i) {
+      if (this._incompatibleAddons[i].id == addon.id) {
+        LOG("UpdateService:onAddonUpdateEnded - found update for add-on ID: " +
+            addon.id);
+        this._incompatibleAddons.splice(i, 1);
+      }
     }
   },
 
-  /**
-   * See nsIExtensionManager.idl
-   */
-  onUpdateStarted: function AUS_onUpdateStarted() {
+  onUpdateAvailable: function(addon, install) {
+    if (getPref("getIntPref", PREF_APP_UPDATE_INCOMPATIBLE_MODE, 0) == 1)
+      return;
+
+    // If the new version of this add-on is blocklisted for the new application
+    // then it isn't a valid update and the user should still be warned that
+    // the add-on will become incompatible.
+    let bs = Cc["@mozilla.org/extensions/blocklist;1"].
+             getService(Ci.nsIBlocklistService);
+    if (bs.isAddonBlocklisted(addon.id, install.version,
+                              gUpdates.update.appVersion,
+                              gUpdates.update.platformVersion))
+      return;
+
+    // Compatibility or new version updates mean the same thing here.
+    this.onCompatibilityUpdateAvailable(addon);
   },
 
-  /**
-   * See nsIExtensionManager.idl
-   */
-  onUpdateEnded: function AUS_onUpdateEnded() {
-    if (this._incompatAddonsCount > 0 || !gCanApplyUpdates) {
+  onUpdateFinished: function(addon) {
+    if (--this._updateCheckCount > 0)
+      return;
+
+    if (this._incompatibleAddons.length > 0 || !gCanApplyUpdates) {
       LOG("Checker:onUpdateEnded - prompting because there are incompatible " +
           "add-ons");
       this._showPrompt(this._update);
@@ -1552,25 +1570,6 @@ UpdateService.prototype = {
         cleanupActiveUpdate();
     }
     this._update = null;
-  },
-
-  /**
-   * See nsIExtensionManager.idl
-   */
-  onAddonUpdateStarted: function AUS_onAddonUpdateStarted(addon) {
-  },
-
-  /**
-   * See nsIExtensionManager.idl
-   */
-  onAddonUpdateEnded: function AUS_onAddonUpdateEnded(addon, status) {
-    if (status != Ci.nsIAddonUpdateCheckListener.STATUS_UPDATE &&
-        status != Ci.nsIAddonUpdateCheckListener.STATUS_VERSIONINFO)
-      return;
-
-    LOG("UpdateService:onAddonUpdateEnded - found update for add-on ID: " +
-        addon.id);
-    --this._incompatAddonsCount;
   },
 
   /**
