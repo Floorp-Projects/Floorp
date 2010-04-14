@@ -688,14 +688,14 @@ var BrowserUI = {
         break;
       case "TabOpen":
       {
-        if (!this.isTabsVisible() && Browser.selectedTab.chromeTab != aEvent.target)
+        let [tabsVisibility,,,] = Browser.computeSidebarVisibility();
+        if (!(tabsVisibility == 1.0) && Browser.selectedTab.chromeTab != aEvent.target)
           NewTabPopup.show(aEvent.target);
 
-          // Workaround to hide the tabstrip if it is partially visible
-          // See bug 524469
-          let [tabstripV,,,] = Browser.computeSidebarVisibility();
-          if (tabstripV > 0 && tabstripV < 1)
-            Browser.hideSidebars();
+        // Workaround to hide the tabstrip if it is partially visible
+        // See bug 524469
+        if (tabsVisibility > 0.0 && tabsVisibility < 1.0)
+          Browser.hideSidebars();
 
         break;
       }
