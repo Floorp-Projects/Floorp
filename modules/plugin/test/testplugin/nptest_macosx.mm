@@ -64,6 +64,7 @@ pluginInstanceInit(InstanceData* instanceData)
     return NPERR_INCOMPATIBLE_VERSION_ERROR;
   }
 
+#ifndef NP_NO_CARBON
   // The test plugin will test using Carbon NPAPI if it is available. This
   // is simply because we want to test Gecko's Carbon NPAPI support. You can
   // override this behavior with an environment variable.
@@ -74,6 +75,7 @@ pluginInstanceInit(InstanceData* instanceData)
       sCurrentEventModel = NPEventModelCarbon;
     }
   }
+#endif
 
   if (sCurrentEventModel == NPEventModelCocoa) {
     NPBool supportsCocoaEvents = false;
