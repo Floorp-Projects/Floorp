@@ -39,14 +39,14 @@
     function switchTabSelectChecker(aInvoker)
     {
       this.type = "select";
-      this.target getter = function() { return aInvoker.getTabsElm(); }
+      Object.defineProperty(this, "target", { get: function() { return aInvoker.getTabsElm(); }});
       this.getID = function() { return "switch tab, select event"; }
     }
 
     function switchTabFocusChecker(aInvoker)
     {
       this.type = gOpenerWnd.EVENT_FOCUS;
-      this.target getter = function() { return aInvoker.getContentDoc(); }
+      Object.defineProperty(this, "target", { get: function() { return aInvoker.getContentDoc(); }});
       this.check = function(aEvent)
       {
         is(gOpenerWnd.getAccessible(document).name, "about:mozilla" + aEvent.accessible.name,
