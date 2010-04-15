@@ -30,7 +30,7 @@ window.Page = {
     
     Tabs.onClose(function(){
       Utils.homeTab.focus();
-      Toolbar.unread = 0;      
+      Toolbar.unread = 0;    
       return false;
     });
     
