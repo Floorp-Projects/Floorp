@@ -1434,7 +1434,7 @@ namespace nanojit
         }
 
         if (branchOnFalse) {
-            // op == LIR_xf
+            // op == LIR_xf/LIR_jf
             switch (condop) {
             case LIR_eq:    JNE(targ);      break;
             case LIR_lt:    JNL(targ);      break;
@@ -1448,7 +1448,7 @@ namespace nanojit
             default:        NanoAssert(0);  break;
             }
         } else {
-            // op == LIR_xt
+            // op == LIR_xt/LIR_jt
             switch (condop) {
             case LIR_eq:    JE(targ);       break;
             case LIR_lt:    JL(targ);       break;

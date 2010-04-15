@@ -874,22 +874,18 @@ namespace nanojit
             if (c->isconst()) {
                 if ((v == LIR_xt && !c->imm32()) || (v == LIR_xf && c->imm32())) {
                     return 0; // no guard needed
-                }
-                else {
+                } else {
 #ifdef JS_TRACER
                     // We're emitting a guard that will always fail. Any code
-                    // emitted after this guard is dead code. We could
-                    // silently optimize out the rest of the emitted code, but
-                    // this could indicate a performance problem or other bug,
-                    // so assert in debug builds.
+                    // emitted after this guard is dead code.  But it won't be
+                    // optimized away, and it could indicate a performance
+                    // problem or other bug, so assert in debug builds.
                     NanoAssertMsg(0, "Constantly false guard detected");
 #endif
                     return out->insGuard(LIR_x, NULL, gr);
                 }
-            }
-            else {
-                while (c->isop(LIR_eq) && c->oprnd1()->isCmp() &&
-                    c->oprnd2()->isconstval(0)) {
+            } else {
+                while (c->isop(LIR_eq) && c->oprnd1()->isCmp() && c->oprnd2()->isconstval(0)) {
                     // xt(eq(cmp,0)) => xf(cmp)   or   xf(eq(cmp,0)) => xt(cmp)
                     v = invertCondGuardOpcode(v);
                     c = c->oprnd1();
@@ -955,17 +951,28 @@ namespace nanojit
 
     LIns* ExprFilter::insBranch(LOpcode v, LIns *c, LIns *t)
     {
-        switch (v) {
-        case LIR_jt:
-        case LIR_jf:
-            while (c->isop(LIR_eq) && c->oprnd1()->isCmp() && c->oprnd2()->isconstval(0)) {
-                // jt(eq(cmp,0)) => jf(cmp)   or   jf(eq(cmp,0)) => jt(cmp)
-                v = invertCondJmpOpcode(v);
-                c = c->oprnd1();
+        if (v == LIR_jt || v == LIR_jf) {
+            if (c->isconst()) {
+                if ((v == LIR_jt && !c->imm32()) || (v == LIR_jf && c->imm32())) {
+                    return 0; // no jump needed
+                } else {
+#ifdef JS_TRACER
+                    // We're emitting a guard that will always fail. Any code
+                    // between here and the target is dead (if it's a forward
+                    // jump).  But it won't be optimized away, and it could
+                    // indicate a performance problem or other bug, so assert
+                    // in debug builds.
+                    NanoAssertMsg(0, "Constantly false guard detected");
+#endif
+                    return out->insBranch(LIR_j, NULL, t);
+                }
+            } else {
+                while (c->isop(LIR_eq) && c->oprnd1()->isCmp() && c->oprnd2()->isconstval(0)) {
+                    // jt(eq(cmp,0)) => jf(cmp)   or   jf(eq(cmp,0)) => jt(cmp)
+                    v = invertCondJmpOpcode(v);
+                    c = c->oprnd1();
+                }
             }
-            break;
-        default:
-            ;
         }
         return out->insBranch(v, c, t);
     }
