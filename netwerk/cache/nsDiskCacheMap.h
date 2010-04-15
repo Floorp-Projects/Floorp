@@ -90,7 +90,7 @@ struct nsDiskCacheEntry;
 #define kMinRecordCount    512
 
 #define kSeparateFile      0
-#define kMaxDataFileSize   0x4000000   // 64 MiB
+#define kMaxDataFileSize   0x3FFFC00   // 65535 KiB (see bug #443067)
 #define kBuckets           (1 << 5)    // must be a power of 2!
 
 class nsDiskCacheRecord {
@@ -334,7 +334,7 @@ class nsDiskCacheRecordVisitor {
 
 struct nsDiskCacheHeader {
     PRUint32    mVersion;                           // cache version.
-    PRUint32    mDataSize;                          // size of cache in units of 256bytes.
+    PRUint32    mDataSize;                          // size of cache in units of 1024bytes.
     PRInt32     mEntryCount;                        // number of entries stored in cache.
     PRUint32    mIsDirty;                           // dirty flag.
     PRInt32     mRecordCount;                       // Number of records
