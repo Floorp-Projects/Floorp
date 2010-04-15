@@ -60,6 +60,8 @@
 #include "jsversion.h"
 #include "jsstrinlines.h"
 
+using namespace js;
+
 /*
  * ATOM_HASH assumes that JSHashNumber is 32-bit even on 64-bit systems.
  */
@@ -136,7 +138,6 @@ const char *const js_common_atom_names[] = {
     js_eval_str,                /* evalAtom                     */
     js_fileName_str,            /* fileNameAtom                 */
     js_get_str,                 /* getAtom                      */
-    js_getter_str,              /* getterAtom                   */
     js_index_str,               /* indexAtom                    */
     js_input_str,               /* inputAtom                    */
     js_iterator_str,            /* iteratorAtom                 */
@@ -149,7 +150,6 @@ const char *const js_common_atom_names[] = {
     js_parent_str,              /* parentAtom                   */
     js_proto_str,               /* protoAtom                    */
     js_set_str,                 /* setAtom                      */
-    js_setter_str,              /* setterAtom                   */
     js_stack_str,               /* stackAtom                    */
     js_toLocaleString_str,      /* toLocaleStringAtom           */
     js_toSource_str,            /* toSourceAtom                 */
@@ -958,23 +958,23 @@ JS_STATIC_ASSERT(TEMP_SIZE_START >= sizeof(JSHashTable));
 static void *
 js_alloc_temp_space(void *priv, size_t size)
 {
-    JSCompiler *jsc = (JSCompiler *) priv;
+    Parser *parser = (Parser *) priv;
 
     void *space;
     if (size < TEMP_SIZE_LIMIT) {
         int bin = JS_CeilingLog2(size) - TEMP_SIZE_START_LOG2;
         JS_ASSERT(unsigned(bin) < NUM_TEMP_FREELISTS);
 
-        space = jsc->tempFreeList[bin];
+        space = parser->tempFreeList[bin];
         if (space) {
-            jsc->tempFreeList[bin] = *(void **)space;
+            parser->tempFreeList[bin] = *(void **)space;
             return space;
         }
     }
 
-    JS_ARENA_ALLOCATE(space, &jsc->context->tempPool, size);
+    JS_ARENA_ALLOCATE(space, &parser->context->tempPool, size);
     if (!space)
-        js_ReportOutOfScriptQuota(jsc->context);
+        js_ReportOutOfScriptQuota(parser->context);
     return space;
 }
 
@@ -984,29 +984,29 @@ js_free_temp_space(void *priv, void *item, size_t size)
     if (size >= TEMP_SIZE_LIMIT)
         return;
 
-    JSCompiler *jsc = (JSCompiler *) priv;
+    Parser *parser = (Parser *) priv;
     int bin = JS_CeilingLog2(size) - TEMP_SIZE_START_LOG2;
     JS_ASSERT(unsigned(bin) < NUM_TEMP_FREELISTS);
 
-    *(void **)item = jsc->tempFreeList[bin];
-    jsc->tempFreeList[bin] = item;
+    *(void **)item = parser->tempFreeList[bin];
+    parser->tempFreeList[bin] = item;
 }
 
 static JSHashEntry *
 js_alloc_temp_entry(void *priv, const void *key)
 {
-    JSCompiler *jsc = (JSCompiler *) priv;
+    Parser *parser = (Parser *) priv;
     JSAtomListElement *ale;
 
-    ale = jsc->aleFreeList;
+    ale = parser->aleFreeList;
     if (ale) {
-        jsc->aleFreeList = ALE_NEXT(ale);
+        parser->aleFreeList = ALE_NEXT(ale);
         return &ale->entry;
     }
 
-    JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &jsc->context->tempPool);
+    JS_ARENA_ALLOCATE_TYPE(ale, JSAtomListElement, &parser->context->tempPool);
     if (!ale) {
-        js_ReportOutOfScriptQuota(jsc->context);
+        js_ReportOutOfScriptQuota(parser->context);
         return NULL;
     }
     return &ale->entry;
@@ -1015,11 +1015,11 @@ js_alloc_temp_entry(void *priv, const void *key)
 static void
 js_free_temp_entry(void *priv, JSHashEntry *he, uintN flag)
 {
-    JSCompiler *jsc = (JSCompiler *) priv;
+    Parser *parser = (Parser *) priv;
     JSAtomListElement *ale = (JSAtomListElement *) he;
 
-    ALE_SET_NEXT(ale, jsc->aleFreeList);
-    jsc->aleFreeList = ale;
+    ALE_SET_NEXT(ale, parser->aleFreeList);
+    parser->aleFreeList = ale;
 }
 
 static JSHashAllocOps temp_alloc_ops = {
@@ -1055,7 +1055,7 @@ JSAtomList::rawLookup(JSAtom *atom, JSHashEntry **&hep)
 #define ATOM_LIST_HASH_THRESHOLD        12
 
 JSAtomListElement *
-JSAtomList::add(JSCompiler *jsc, JSAtom *atom, AddHow how)
+JSAtomList::add(Parser *parser, JSAtom *atom, AddHow how)
 {
     JS_ASSERT(!set);
 
@@ -1066,7 +1066,7 @@ JSAtomList::add(JSCompiler *jsc, JSAtom *atom, AddHow how)
     if (!ale || how != UNIQUE) {
         if (count < ATOM_LIST_HASH_THRESHOLD && !table) {
             /* Few enough for linear search and no hash table yet needed. */
-            ale = (JSAtomListElement *)js_alloc_temp_entry(jsc, atom);
+            ale = (JSAtomListElement *)js_alloc_temp_entry(parser, atom);
             if (!ale)
                 return NULL;
             ALE_SET_ATOM(ale, atom);
@@ -1092,7 +1092,7 @@ JSAtomList::add(JSCompiler *jsc, JSAtom *atom, AddHow how)
                 JS_ASSERT(!hep);
                 table = JS_NewHashTable(count + 1, js_hash_atom_ptr,
                                         JS_CompareValues, JS_CompareValues,
-                                        &temp_alloc_ops, jsc);
+                                        &temp_alloc_ops, parser);
                 if (!table)
                     return NULL;
 
@@ -1152,7 +1152,7 @@ JSAtomList::add(JSCompiler *jsc, JSAtom *atom, AddHow how)
 }
 
 void
-JSAtomList::rawRemove(JSCompiler *jsc, JSAtomListElement *ale, JSHashEntry **hep)
+JSAtomList::rawRemove(Parser *parser, JSAtomListElement *ale, JSHashEntry **hep)
 {
     JS_ASSERT(!set);
     JS_ASSERT(count != 0);
@@ -1168,7 +1168,7 @@ JSAtomList::rawRemove(JSCompiler *jsc, JSAtomListElement *ale, JSHashEntry **hep
             hep = &(*hep)->next;
         }
         *hep = ale->entry.next;
-        js_free_temp_entry(jsc, &ale->entry, HT_FREE_ENTRY);
+        js_free_temp_entry(parser, &ale->entry, HT_FREE_ENTRY);
     }
 
     --count;
@@ -1182,7 +1182,7 @@ JSAutoAtomList::~JSAutoAtomList()
         JSHashEntry *hep = list; 
         while (hep) {
             JSHashEntry *next = hep->next;
-            js_free_temp_entry(compiler, hep, HT_FREE_ENTRY);
+            js_free_temp_entry(parser, hep, HT_FREE_ENTRY);
             hep = next;
         }
     }

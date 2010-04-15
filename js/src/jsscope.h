@@ -278,7 +278,11 @@ struct JSScope : public JSObjectMap
     bool createTable(JSContext *cx, bool report);
     bool changeTable(JSContext *cx, int change);
     void reportReadOnlyScope(JSContext *cx);
+
+    void setOwnShape()          { flags |= OWN_SHAPE; }
+    void clearOwnShape()        { flags &= ~OWN_SHAPE; }
     void generateOwnShape(JSContext *cx);
+
     JSScopeProperty **searchTable(jsid id, bool adding);
     inline JSScopeProperty **search(jsid id, bool adding);
     inline JSEmptyScope *createEmptyScope(JSContext *cx, JSClass *clasp);
@@ -373,6 +377,7 @@ struct JSScope : public JSObjectMap
     bool methodShapeChange(JSContext *cx, uint32 slot, jsval toval);
     void protoShapeChange(JSContext *cx);
     void shadowingShapeChange(JSContext *cx, JSScopeProperty *sprop);
+    bool globalObjectOwnShapeChange(JSContext *cx);
 
 /* By definition, hashShift = JS_DHASH_BITS - log2(capacity). */
 #define SCOPE_CAPACITY(scope)   JS_BIT(JS_DHASH_BITS-(scope)->hashShift)
@@ -436,8 +441,6 @@ struct JSScope : public JSObjectMap
     void setIndexedProperties() { flags |= INDEXED_PROPERTIES; }
 
     bool hasOwnShape()          { return flags & OWN_SHAPE; }
-    void setOwnShape()          { flags |= OWN_SHAPE; }
-    void clearOwnShape()        { flags &= ~OWN_SHAPE; }
 
     bool hasRegenFlag(uint8 regenFlag) { return (flags & SHAPE_REGEN) == regenFlag; }
 
@@ -541,17 +544,31 @@ JS_IS_SCOPE_LOCKED(JSContext *cx, JSScope *scope)
 }
 
 inline JSScope *
-OBJ_SCOPE(JSObject *obj)
+JSObject::scope() const
 {
-    JS_ASSERT(obj->isNative());
-    return (JSScope *) obj->map;
+    JS_ASSERT(isNative());
+    return (JSScope *) map;
 }
 
 inline uint32
-OBJ_SHAPE(JSObject *obj)
+JSObject::shape() const
 {
-    JS_ASSERT(obj->map->shape != JSObjectMap::SHAPELESS);
-    return obj->map->shape;
+    JS_ASSERT(map->shape != JSObjectMap::SHAPELESS);
+    return map->shape;
+}
+
+inline jsval
+JSObject::lockedGetSlot(uintN slot) const
+{
+    OBJ_CHECK_SLOT(this, slot);
+    return this->getSlot(slot);
+}
+
+inline void
+JSObject::lockedSetSlot(uintN slot, jsval value)
+{
+    OBJ_CHECK_SLOT(this, slot);
+    this->setSlot(slot, value);
 }
 
 /*
@@ -973,7 +990,7 @@ JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
     if (isMethod()) {
         *vp = methodValue();
 
-        JSScope *scope = OBJ_SCOPE(pobj);
+        JSScope *scope = pobj->scope();
         JS_ASSERT(scope->object == pobj);
         return scope->methodReadBarrier(cx, this, vp);
     }

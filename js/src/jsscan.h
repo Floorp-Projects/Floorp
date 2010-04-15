@@ -308,6 +308,7 @@ class TokenStream
     static const size_t ntokens = 4;                /* 1 current + 2 lookahead, rounded
                                                        to power of 2 to avoid divmod by 3 */
     static const uintN ntokensMask = ntokens - 1;
+
   public:
     /*
      * To construct a TokenStream, first call the constructor, which is
@@ -333,23 +334,62 @@ class TokenStream
     JSContext *getContext() const { return cx; }
     bool onCurrentLine(const TokenPos &pos) const { return lineno == pos.end.lineno; }
     const Token &currentToken() const { return tokens[cursor]; }
-    const Token &getTokenAt(size_t index) const {
-        JS_ASSERT(index < ntokens);
-        return tokens[index];
-    }
     const JSCharBuffer &getTokenbuf() const { return tokenbuf; }
     const char *getFilename() const { return filename; }
     uintN getLineno() const { return lineno; }
 
-    /* Mutators. */
-    Token *mutableCurrentToken() { return &tokens[cursor]; }
-    bool reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
+    /* Flag methods. */
+    void setStrictMode(bool enabled = true) { setFlag(enabled, TSF_STRICT_MODE_CODE); }
+    void setXMLTagMode(bool enabled = true) { setFlag(enabled, TSF_XMLTAGMODE); }
+    void setXMLOnlyMode(bool enabled = true) { setFlag(enabled, TSF_XMLONLYMODE); }
+    void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
+    bool isStrictMode() { return flags & TSF_STRICT_MODE_CODE; }
+    bool isXMLTagMode() { return flags & TSF_XMLTAGMODE; }
+    bool isXMLOnlyMode() { return flags & TSF_XMLONLYMODE; }
+    bool isUnexpectedEOF() { return flags & TSF_UNEXPECTED_EOF; }
+    bool isEOF() const { return flags & TSF_EOF; }
+    bool isError() const { return flags & TSF_ERROR; }
 
+    /* Mutators. */
+    bool reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
+    void mungeCurrentToken(TokenKind newKind) { tokens[cursor].type = newKind; }
+    void mungeCurrentToken(JSOp newOp) { tokens[cursor].t_op = newOp; }
+    void mungeCurrentToken(TokenKind newKind, JSOp newOp) {
+        mungeCurrentToken(newKind);
+        mungeCurrentToken(newOp);
+    }
+
+  private:
+    /*
+     * Enables flags in the associated tokenstream for the object lifetime.
+     * Useful for lexically-scoped flag toggles.
+     */
+    class Flagger {
+        TokenStream * const parent;
+        uintN       flags;
+      public:
+        Flagger(TokenStream *parent, uintN withFlags) : parent(parent), flags(withFlags) {
+            parent->flags |= flags;
+        }
+
+        ~Flagger() { parent->flags &= ~flags; }
+    };
+    friend class Flagger;
+
+    void setFlag(bool enabled, TokenStreamFlags flag) {
+        if (enabled)
+            flags |= flag;
+        else
+            flags &= ~flag;
+    }
+
+  public:
     /*
      * Get the next token from the stream, make it the current token, and
      * return its kind.
      */
-    TokenKind getToken() {
+    TokenKind getToken(uintN withFlags = 0) {
+        Flagger flagger(this, withFlags);
         /* Check for a pushed-back token resulting from mismatching lookahead. */
         while (lookahead != 0) {
             JS_ASSERT(!(flags & TSF_XMLTEXTMODE));
@@ -363,13 +403,8 @@ class TokenStream
         /* If there was a fatal error, keep returning TOK_ERROR. */
         if (flags & TSF_ERROR)
             return TOK_ERROR;
-        
-        return getTokenInternal();
-    }
 
-    Token *getMutableTokenAt(size_t index) {
-        JS_ASSERT(index < ntokens);
-        return &tokens[index];
+        return getTokenInternal();
     }
 
     /*
@@ -381,7 +416,8 @@ class TokenStream
         cursor = (cursor - 1) & ntokensMask;
     }
 
-    TokenKind peekToken() {
+    TokenKind peekToken(uintN withFlags = 0) {
+        Flagger flagger(this, withFlags);
         if (lookahead != 0) {
             return tokens[(cursor + lookahead) & ntokensMask].type;
         }
@@ -390,19 +426,19 @@ class TokenStream
         return tt;
     }
 
-    TokenKind peekTokenSameLine() {
+    TokenKind peekTokenSameLine(uintN withFlags = 0) {
+        Flagger flagger(this, withFlags);
         if (!onCurrentLine(currentToken().pos))
             return TOK_EOL;
-        flags |= TSF_NEWLINES;
-        TokenKind tt = peekToken();
-        flags &= ~TSF_NEWLINES;
+        TokenKind tt = peekToken(TSF_NEWLINES);
         return tt;
     }
 
     /*
      * Get the next token from the stream if its kind is |tt|.
      */
-    JSBool matchToken(TokenKind tt) {
+    JSBool matchToken(TokenKind tt, uintN withFlags = 0) {
+        Flagger flagger(this, withFlags);
         if (getToken() == tt)
             return JS_TRUE;
         ungetToken();
@@ -447,17 +483,13 @@ class TokenStream
     Token               tokens[ntokens];/* circular token buffer */
     uintN               cursor;         /* index of last parsed token */
     uintN               lookahead;      /* count of lookahead tokens */
-
     uintN               lineno;         /* current line number */
     uintN               ungetpos;       /* next free char slot in ungetbuf */
     jschar              ungetbuf[6];    /* at most 6, for \uXXXX lookahead */
-  public:
     uintN               flags;          /* flags -- see above */
-  private:
     uint32              linelen;        /* physical linebuf segment length */
     uint32              linepos;        /* linebuf offset in physical line */
     TokenBuf            linebuf;        /* line buffer for diagnostics */
-
     TokenBuf            userbuf;        /* user input buffer if !file */
     const char          *filename;      /* input filename or null */
     FILE                *file;          /* stdio stream if reading from file */
