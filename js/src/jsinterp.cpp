@@ -366,7 +366,7 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
         obj = JS_THIS_OBJECT(cx, vp);
         if (!JS_InstanceOf(cx, obj, clasp, vp + 2))
             return JS_FALSE;
-        v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+        v = obj->getPrimitiveThis();
     }
     *thisvp = v;
     return JS_TRUE;

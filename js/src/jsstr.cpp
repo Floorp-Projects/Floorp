@@ -77,6 +77,8 @@
 #include "jsbit.h"
 #include "jsvector.h"
 #include "jsversion.h"
+
+#include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
 using namespace js;
@@ -553,7 +555,7 @@ str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
         if (obj->getClass() == &js_StringClass) {
             /* Follow ECMA-262 by fetching intrinsic length of our string. */
-            v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+            v = obj->getPrimitiveThis();
             JS_ASSERT(JSVAL_IS_STRING(v));
             str = JSVAL_TO_STRING(v);
         } else {
@@ -578,7 +580,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
     JSString *str, *str1;
     size_t i, length;
 
-    v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+    v = obj->getPrimitiveThis();
     JS_ASSERT(JSVAL_IS_STRING(v));
     str = JSVAL_TO_STRING(v);
 
@@ -606,7 +608,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     if (!JSVAL_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
         return JS_TRUE;
 
-    v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+    v = obj->getPrimitiveThis();
     JS_ASSERT(JSVAL_IS_STRING(v));
     str = JSVAL_TO_STRING(v);
 
@@ -661,7 +663,7 @@ NormalizeThis(JSContext *cx, jsval *vp)
     if (!JSVAL_IS_PRIMITIVE(vp[1])) {
         JSObject *obj = JSVAL_TO_OBJECT(vp[1]);
         if (obj->getClass() == &js_StringClass) {
-            vp[1] = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+            vp[1] = obj->getPrimitiveThis();
             return JSVAL_TO_STRING(vp[1]);
         }
     }
@@ -799,7 +801,7 @@ String_p_toString(JSContext* cx, JSObject* obj)
 {
     if (!JS_InstanceOf(cx, obj, &js_StringClass, NULL))
         return NULL;
-    jsval v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+    jsval v = obj->getPrimitiveThis();
     JS_ASSERT(JSVAL_IS_STRING(v));
     return JSVAL_TO_STRING(v);
 }
@@ -1537,7 +1539,7 @@ DoMatch(JSContext *cx, jsval *vp, JSString *str, const RegExpGuard &g,
         /* global matching ('g') */
         bool testGlobal = flags & TEST_GLOBAL_BIT;
         if (g.reobj())
-            js_ClearRegExpLastIndex(g.reobj());
+            g.reobj()->zeroRegExpLastIndex();
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
             if (!js_ExecuteRegExp(cx, g.re(), str, &i, testGlobal, vp))
                 return false;
@@ -2956,7 +2958,7 @@ js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         *rval = STRING_TO_JSVAL(str);
         return JS_TRUE;
     }
-    obj->fslots[JSSLOT_PRIMITIVE_THIS] = STRING_TO_JSVAL(str);
+    obj->setPrimitiveThis(STRING_TO_JSVAL(str));
     return JS_TRUE;
 }
 
@@ -3051,7 +3053,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
                          NULL, string_static_methods);
     if (!proto)
         return NULL;
-    proto->fslots[JSSLOT_PRIMITIVE_THIS] = STRING_TO_JSVAL(cx->runtime->emptyString);
+    proto->setPrimitiveThis(STRING_TO_JSVAL(cx->runtime->emptyString));
     if (!js_DefineNativeProperty(cx, proto, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
                                  JSVAL_VOID, NULL, NULL,
                                  JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,
