@@ -420,6 +420,10 @@ public:
       return NS_ERROR_NULL_POINTER;
     }
 
+    if (IsNodeOfType(eDATA_NODE)) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+
     PRInt32 index = IndexOf(aOldChild);
     if (index == -1) {
       // aOldChild isn't one of our children.
