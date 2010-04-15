@@ -84,7 +84,7 @@ var PreferencesView = {
 
     if (this._msg) {
       let strings = Elements.browserBundle;
-      this.showMessage(strings.getString("notificationRestart.label"), "restart-app",
+      this.showMessage(strings.getString("notificationRestart.normal"), "restart-app",
                        strings.getString("notificationRestart.button"), false, "prefs-restart-app");
     }
   },
