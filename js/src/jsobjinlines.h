@@ -41,10 +41,8 @@
 #ifndef jsobjinlines_h___
 #define jsobjinlines_h___
 
-#include "jsbool.h"
-#include "jsdate.h"
-#include "jsiter.h"
 #include "jsobj.h"
+#include "jsiter.h"
 #include "jsscope.h"
 
 #ifdef INCLUDE_MOZILLA_DTRACE
@@ -90,26 +88,6 @@ JSObject::setSlotMT(JSContext *cx, uintN slot, jsval value)
 #endif
 }
 
-inline bool
-JSObject::isPrimitive() const
-{
-    return isNumber() || isString() || isBoolean();
-}
-
-inline jsval
-JSObject::getPrimitiveThis() const
-{
-    JS_ASSERT(isPrimitive());
-    return fslots[JSSLOT_PRIMITIVE_THIS];
-}
-
-inline void 
-JSObject::setPrimitiveThis(jsval pthis)
-{
-    JS_ASSERT(isPrimitive());
-    fslots[JSSLOT_PRIMITIVE_THIS] = pthis;
-}
-
 inline void JSObject::staticAssertArrayLengthIsInPrivateSlot()
 {
     JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH == JSSLOT_PRIVATE);
@@ -122,18 +100,18 @@ JSObject::getArrayLength() const
     return uint32(fslots[JSSLOT_ARRAY_LENGTH]);
 }
 
-inline void 
-JSObject::setArrayLength(uint32 length)
-{
-    JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_LENGTH] = length;
-}
-
 inline uint32 
 JSObject::getArrayCount() const
 {
     JS_ASSERT(isArray());
     return uint32(fslots[JSSLOT_ARRAY_COUNT]);
+}
+
+inline void 
+JSObject::setArrayLength(uint32 length)
+{
+    JS_ASSERT(isArray());
+    fslots[JSSLOT_ARRAY_LENGTH] = length;
 }
 
 inline void 
@@ -219,69 +197,6 @@ JSObject::setArgsCallee(jsval callee)
 {
     JS_ASSERT(isArguments());
     fslots[JSSLOT_ARGS_CALLEE] = callee;
-}
-
-inline jsval
-JSObject::getDateLocalTime() const
-{
-    JS_ASSERT(isDate());
-    return fslots[JSSLOT_DATE_LOCAL_TIME];
-}
-
-inline jsval *
-JSObject::addressOfDateLocalTime()
-{
-    JS_ASSERT(isDate());
-    return &fslots[JSSLOT_DATE_LOCAL_TIME];
-}
-
-inline void 
-JSObject::setDateLocalTime(jsval time)
-{
-    JS_ASSERT(isDate());
-    fslots[JSSLOT_DATE_LOCAL_TIME] = time;
-}
-
-inline jsval
-JSObject::getDateUTCTime() const
-{
-    JS_ASSERT(isDate());
-    return fslots[JSSLOT_DATE_UTC_TIME];
-}
-
-inline jsval *
-JSObject::addressOfDateUTCTime()
-{
-    JS_ASSERT(isDate());
-    return &fslots[JSSLOT_DATE_UTC_TIME];
-}
-
-inline void 
-JSObject::setDateUTCTime(jsval time)
-{
-    JS_ASSERT(isDate());
-    fslots[JSSLOT_DATE_UTC_TIME] = time;
-}
-
-inline jsval
-JSObject::getRegExpLastIndex() const
-{
-    JS_ASSERT(isRegExp());
-    return fslots[JSSLOT_REGEXP_LAST_INDEX];
-}
-
-inline jsval *
-JSObject::addressOfRegExpLastIndex()
-{
-    JS_ASSERT(isRegExp());
-    return &fslots[JSSLOT_REGEXP_LAST_INDEX];
-}
-
-inline void 
-JSObject::zeroRegExpLastIndex()
-{
-    JS_ASSERT(isRegExp());
-    fslots[JSSLOT_REGEXP_LAST_INDEX] = JSVAL_ZERO;
 }
 
 inline void

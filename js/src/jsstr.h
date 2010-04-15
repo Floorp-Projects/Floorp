@@ -53,7 +53,6 @@
 #include "jsprvtd.h"
 #include "jshashtable.h"
 #include "jslock.h"
-#include "jsobj.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -473,12 +472,6 @@ JS_ISSPACE(jschar c)
 
 /* Initialize the String class, returning its prototype object. */
 extern JSClass js_StringClass;
-
-inline bool
-JSObject::isString() const
-{
-    return getClass() == &js_StringClass;
-}
 
 extern JSObject *
 js_InitStringClass(JSContext *cx, JSObject *obj);
