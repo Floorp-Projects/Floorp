@@ -1,0 +1,2 @@
+button { visibility: hidden; }
+button:default { visibility: visible; }

@@ -164,7 +164,7 @@ nsHTMLSharedListElement::ParseAttribute(PRInt32 aNamespaceID,
     if (mNodeInfo->Equals(nsGkAtoms::ol) ||
         mNodeInfo->Equals(nsGkAtoms::ul)) {
       if (aAttribute == nsGkAtoms::type) {
-        return aResult.ParseEnumValue(aValue, kListTypeTable) ||
+        return aResult.ParseEnumValue(aValue, kListTypeTable, PR_FALSE) ||
                aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE);
       }
       if (aAttribute == nsGkAtoms::start) {
