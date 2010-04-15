@@ -31,20 +31,21 @@ window.Group = function(listOfEls, options) {
     options = {};
 
   this._children = []; // an array of Items
-  this._padding = 30;
   this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
-  this.title = '';
 
   var self = this;
 
-  var boundingBox = this._getBoundingBox(listOfEls);
-  var padding = 30;
-  var rectToBe = new Rect(
-    boundingBox.left-padding,
-    boundingBox.top-padding,
-    boundingBox.width+padding*2,
-    boundingBox.height+padding*2
-  );
+  var rectToBe = options.bounds;
+  if(!rectToBe) {
+    var boundingBox = this._getBoundingBox(listOfEls);
+    var padding = 30;
+    rectToBe = new Rect(
+      boundingBox.left-padding,
+      boundingBox.top-padding,
+      boundingBox.width+padding*2,
+      boundingBox.height+padding*2
+    );
+  }
 
   var $container = options.container; 
   if(!$container) {
@@ -69,9 +70,13 @@ window.Group = function(listOfEls, options) {
     .hide();
 
   // ___ Titlebar
-    this.$titlebar = $("<div class='titlebar'><input class='name' value=''/><div class='close'>x</div></div>")
-    .appendTo($container)
-  
+  var html = "<div class='titlebar'><input class='name' value='"
+      + (options.title || "")
+      + "'/><div class='close'></div></div>";
+       
+  this.$titlebar = $(html)        
+    .appendTo($container);
+    
   this.$titlebar.css({
       position: "absolute",
     });
@@ -79,23 +84,8 @@ window.Group = function(listOfEls, options) {
   $('.close', this.$titlebar).click(function() {
     self.close();
   });
-
-  // On delay, show the title bar.
-  var shouldShow = false;
-  $container.mouseover(function(){
-    shouldShow = true;
-    setTimeout(function(){
-      if( shouldShow == false ) return;
-      $container.find("input").focus();
-      self.$titlebar
-        .css({width: $container.width()})
-        .animate({ opacity: 1}).dequeue();        
-    }, 500);
-  }).mouseout(function(e){
-    shouldShow = false;
-    if( isEventOverElement(e, $container.get(0) )) return;
-    self.$titlebar.animate({opacity:0}).dequeue();
-  })
+  
+  this.$title = $('.name', this.$titlebar);
 
   // ___ Content
   this.$content = $('<div class="group-content"/>')
@@ -132,6 +122,16 @@ window.Group = function(listOfEls, options) {
 
 // ----------
 window.Group.prototype = $.extend(new Item(), new Subscribable(), {  
+  // ----------  
+  getTitle: function() {
+    return (this.$title ? this.$title.val() : '');
+  },
+
+  // ----------  
+  setValue: function(value) {
+    this.$title.val(value); 
+  },
+
   // ----------  
   _getBoundingBox: function(els) {
     var el;
@@ -366,71 +366,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
   // ----------  
   arrange: function(options) {
-    var animate;
-    if(!options || typeof(options.animate) == 'undefined') 
-      animate = true;
-    else 
-      animate = options.animate;
-
-    if(typeof(options) == 'undefined')
-      options = {};
-    
     var bb = this.getContentBounds();
     bb.inset(6, 6);
-    
-    var tabAspect = TabItems.tabHeight / TabItems.tabWidth;
-    var count = this._children.length;
-    if(!count)
-      return;
-      
-    var columns = 1;
-    var padding = 0;
-    var rows;
-    var tabWidth;
-    var tabHeight;
 
-    function figure() {
-      rows = Math.ceil(count / columns);          
-      tabWidth = (bb.width / columns) - padding;
-      tabHeight = tabWidth * tabAspect; 
-    } 
-    
-    figure();
-    
-    while(rows > 1 && tabHeight * rows > bb.height) {
-      columns++; 
-      figure();
-    }
-    
-    if(rows == 1) {
-      tabWidth = Math.min(bb.width / count, bb.height / tabAspect);
-      tabHeight = tabWidth * tabAspect;
-    }
-    
-    var box = new Rect(bb.left, bb.top, tabWidth, tabHeight);
-    var row = 0;
-    var column = 0;
-    var immediately;
-    
-    $.each(this._children, function(index, child) {
-      if(animate == 'sometimes')
-        immediately = (typeof(child.groupData.row) == 'undefined' || child.groupData.row == row);
-      else
-        immediately = !animate;
-        
-      child.setBounds(box, immediately);
-      child.groupData.column = column;
-      child.groupData.row = row;
-      
-      box.left += box.width + padding;
-      column++;
-      if(column == columns) {
-        box.left = bb.left;
-        box.top += box.height + padding;
-        column = 0;
-        row++;
-      }
-    });
+    Items.arrange(this._children, bb, options);
   },
   
   // ----------  
@@ -601,6 +540,21 @@ window.Groups = {
     }
   }, 
   
+  // ----------
+  init: function() {
+    var self = this;
+    setTimeout(function() {
+      // we do this in a timeout, as window.innerHeight hasn't adjusted for Firebug initially
+      var pad = 5;
+      var sw = window.innerWidth;
+      var sh = window.innerHeight;
+      var w = sw - (pad * 2);
+      var h = TabItems.tabHeight;
+      var box = new Rect(pad, sh - (h + pad), w, h);
+      self.newTabGroup = new Group([], {bounds: box, title: 'New Tabs'}); 
+    }, 1000);
+  },
+
   // ----------  
   register: function(group) {
     Utils.assert('only register once per group', $.inArray(group, this.groups) == -1);
@@ -651,20 +605,17 @@ window.Groups = {
   newTab: function(tabItem) {
     var groupTitle = 'New Tabs';
     var array = jQuery.grep(this.groups, function(group) {
-      return group.title == groupTitle;
+      return group.getTitle() == groupTitle;
     });
     
     var $el = $(tabItem.container);
     if(array.length) 
       array[0].add($el);
-    else {
-      var p = Page.findOpenSpaceFor($el); // TODO shouldn't know about Page
-      tabItem.setPosition(p.x, p.y, true);
-      var group = new Group([$el]); 
-      group.title = groupTitle;
-    }
   }
 };
+
+// ----------
+Groups.init();
 
 // ##########
 $(".tab").data('isDragging', false)
