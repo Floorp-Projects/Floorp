@@ -77,6 +77,8 @@
 #include "jsbit.h"
 #include "jsvector.h"
 #include "jsversion.h"
+
+#include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
 using namespace js;
@@ -357,8 +359,7 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
     mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
     if (argc > 1) {
-        d = js_ValueToNumber(cx, &argv[1]);
-        if (JSVAL_IS_NULL(argv[1]))
+        if (!ValueToNumber(cx, argv[1], &d))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(d) ||
             (mask = (jsint)d) != d ||
@@ -552,9 +553,9 @@ str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     JSString *str;
 
     if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
-        if (OBJ_GET_CLASS(cx, obj) == &js_StringClass) {
+        if (obj->getClass() == &js_StringClass) {
             /* Follow ECMA-262 by fetching intrinsic length of our string. */
-            v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+            v = obj->getPrimitiveThis();
             JS_ASSERT(JSVAL_IS_STRING(v));
             str = JSVAL_TO_STRING(v);
         } else {
@@ -579,7 +580,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
     JSString *str, *str1;
     size_t i, length;
 
-    v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+    v = obj->getPrimitiveThis();
     JS_ASSERT(JSVAL_IS_STRING(v));
     str = JSVAL_TO_STRING(v);
 
@@ -607,7 +608,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     if (!JSVAL_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
         return JS_TRUE;
 
-    v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+    v = obj->getPrimitiveThis();
     JS_ASSERT(JSVAL_IS_STRING(v));
     str = JSVAL_TO_STRING(v);
 
@@ -662,7 +663,7 @@ NormalizeThis(JSContext *cx, jsval *vp)
     if (!JSVAL_IS_PRIMITIVE(vp[1])) {
         JSObject *obj = JSVAL_TO_OBJECT(vp[1]);
         if (obj->getClass() == &js_StringClass) {
-            vp[1] = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+            vp[1] = obj->getPrimitiveThis();
             return JSVAL_TO_STRING(vp[1]);
         }
     }
@@ -774,16 +775,14 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
 
     NORMALIZE_THIS(cx, vp, str);
     if (argc != 0) {
-        d = js_ValueToNumber(cx, &vp[2]);
-        if (JSVAL_IS_NULL(vp[2]))
+        if (!ValueToNumber(cx, vp[2], &d))
             return JS_FALSE;
         length = str->length();
         begin = js_DoubleToInteger(d);
         if (argc == 1) {
             end = length;
         } else {
-            d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            if (!ValueToNumber(cx, vp[3], &d))
                 return JS_FALSE;
             end = js_DoubleToInteger(d);
         }
@@ -802,7 +801,7 @@ String_p_toString(JSContext* cx, JSObject* obj)
 {
     if (!JS_InstanceOf(cx, obj, &js_StringClass, NULL))
         return NULL;
-    jsval v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+    jsval v = obj->getPrimitiveThis();
     JS_ASSERT(JSVAL_IS_STRING(v));
     return JSVAL_TO_STRING(v);
 }
@@ -951,8 +950,7 @@ str_charAt(JSContext *cx, uintN argc, jsval *vp)
         if (argc == 0) {
             d = 0.0;
         } else {
-            d = js_ValueToNumber(cx, &vp[2]);
-            if (JSVAL_IS_NULL(vp[2]))
+            if (!ValueToNumber(cx, vp[2], &d))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
         }
@@ -993,8 +991,7 @@ str_charCodeAt(JSContext *cx, uintN argc, jsval *vp)
         if (argc == 0) {
             d = 0.0;
         } else {
-            d = js_ValueToNumber(cx, &vp[2]);
-            if (JSVAL_IS_NULL(vp[2]))
+            if (!ValueToNumber(cx, vp[2], &d))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
         }
@@ -1250,8 +1247,8 @@ str_indexOf(JSContext *cx, uintN argc, jsval *vp)
                 textlen -= start;
             }
         } else {
-            jsdouble d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            jsdouble d;
+            if (!ValueToNumber(cx, vp[3], &d))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
             if (d <= 0) {
@@ -1310,8 +1307,7 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
             else if (j < i)
                 i = j;
         } else {
-            d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            if (!ValueToNumber(cx, vp[3], &d))
                 return JS_FALSE;
             if (!JSDOUBLE_IS_NaN(d)) {
                 d = js_DoubleToInteger(d);
@@ -1543,7 +1539,7 @@ DoMatch(JSContext *cx, jsval *vp, JSString *str, const RegExpGuard &g,
         /* global matching ('g') */
         bool testGlobal = flags & TEST_GLOBAL_BIT;
         if (g.reobj())
-            js_ClearRegExpLastIndex(g.reobj());
+            g.reobj()->zeroRegExpLastIndex();
         for (size_t count = 0, i = 0, length = str->length(); i <= length; ++count) {
             if (!js_ExecuteRegExp(cx, g.re(), str, &i, testGlobal, vp))
                 return false;
@@ -2187,8 +2183,8 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
     uint32 limit = 0; /* Avoid warning. */
     bool limited = (argc > 1) && !JSVAL_IS_VOID(vp[3]);
     if (limited) {
-        jsdouble d = js_ValueToNumber(cx, &vp[3]);
-        if (JSVAL_IS_NULL(vp[3]))
+        jsdouble d;
+        if (!ValueToNumber(cx, vp[3], &d))
             return false;
 
         /* Clamp limit between 0 and 1 + string length. */
@@ -2250,8 +2246,7 @@ str_substr(JSContext *cx, uintN argc, jsval *vp)
 
     NORMALIZE_THIS(cx, vp, str);
     if (argc != 0) {
-        d = js_ValueToNumber(cx, &vp[2]);
-        if (JSVAL_IS_NULL(vp[2]))
+        if (!ValueToNumber(cx, vp[2], &d))
             return JS_FALSE;
         length = str->length();
         begin = js_DoubleToInteger(d);
@@ -2266,8 +2261,7 @@ str_substr(JSContext *cx, uintN argc, jsval *vp)
         if (argc == 1) {
             end = length;
         } else {
-            d = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            if (!ValueToNumber(cx, vp[3], &d))
                 return JS_FALSE;
             end = js_DoubleToInteger(d);
             if (end < 0)
@@ -2353,8 +2347,7 @@ str_slice(JSContext *cx, uintN argc, jsval *vp)
     if (argc != 0) {
         double begin, end, length;
 
-        begin = js_ValueToNumber(cx, &vp[2]);
-        if (JSVAL_IS_NULL(vp[2]))
+        if (!ValueToNumber(cx, vp[2], &begin))
             return JS_FALSE;
         begin = js_DoubleToInteger(begin);
         length = str->length();
@@ -2369,8 +2362,7 @@ str_slice(JSContext *cx, uintN argc, jsval *vp)
         if (argc == 1) {
             end = length;
         } else {
-            end = js_ValueToNumber(cx, &vp[3]);
-            if (JSVAL_IS_NULL(vp[3]))
+            if (!ValueToNumber(cx, vp[3], &end))
                 return JS_FALSE;
             end = js_DoubleToInteger(end);
             if (end < 0) {
@@ -2966,7 +2958,7 @@ js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         *rval = STRING_TO_JSVAL(str);
         return JS_TRUE;
     }
-    obj->fslots[JSSLOT_PRIMITIVE_THIS] = STRING_TO_JSVAL(str);
+    obj->setPrimitiveThis(STRING_TO_JSVAL(str));
     return JS_TRUE;
 }
 
@@ -2988,26 +2980,30 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval *argv;
     uintN i;
-    uint16 code;
     jschar *chars;
     JSString *str;
 
     argv = vp + 2;
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
-    if (argc == 1 &&
-        (code = js_ValueToUint16(cx, &argv[0])) < UNIT_STRING_LIMIT) {
-        str = JSString::unitString(code);
-        if (!str)
+    if (argc == 1) {
+        uint16_t code;
+        if (!ValueToUint16(cx, argv[0], &code))
             return JS_FALSE;
-        *vp = STRING_TO_JSVAL(str);
-        return JS_TRUE;
+        if (code < UNIT_STRING_LIMIT) {
+            str = JSString::unitString(code);
+            if (!str)
+                return JS_FALSE;
+            *vp = STRING_TO_JSVAL(str);
+            return JS_TRUE;
+        }
+        argv[0] = INT_TO_JSVAL(code);
     }
     chars = (jschar *) cx->malloc((argc + 1) * sizeof(jschar));
     if (!chars)
         return JS_FALSE;
     for (i = 0; i < argc; i++) {
-        code = js_ValueToUint16(cx, &argv[i]);
-        if (JSVAL_IS_NULL(argv[i])) {
+        uint16_t code;
+        if (!ValueToUint16(cx, argv[i], &code)) {
             cx->free(chars);
             return JS_FALSE;
         }
@@ -3057,7 +3053,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
                          NULL, string_static_methods);
     if (!proto)
         return NULL;
-    proto->fslots[JSSLOT_PRIMITIVE_THIS] = STRING_TO_JSVAL(cx->runtime->emptyString);
+    proto->setPrimitiveThis(STRING_TO_JSVAL(cx->runtime->emptyString));
     if (!js_DefineNativeProperty(cx, proto, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
                                  JSVAL_VOID, NULL, NULL,
                                  JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,

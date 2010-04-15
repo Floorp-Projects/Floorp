@@ -72,6 +72,8 @@
 #include "jsxml.h"
 #endif
 
+#include "jsobjinlines.h"
+
 using namespace js;
 
 JS_STATIC_ASSERT(JSSLOT_ITER_FLAGS < JS_INITIAL_NSLOTS);
@@ -87,17 +89,21 @@ CloseGenerator(JSContext *cx, JSObject *genobj);
  * Shared code to close iterator's state either through an explicit call or
  * when GC detects that the iterator is no longer reachable.
  */
-void
-js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
+static void
+CloseNativeIterator(JSContext *cx, JSObject *iterobj)
 {
     jsval state;
     JSObject *iterable;
 
     JS_ASSERT(iterobj->getClass() == &js_IteratorClass);
 
-    /* Avoid double work if js_CloseNativeIterator was called on obj. */
+    /* Avoid double work if CloseNativeIterator was called on obj. */
     state = iterobj->getSlot(JSSLOT_ITER_STATE);
     if (JSVAL_IS_NULL(state))
+        return;
+
+    /* Avoid misinterpreting default-void slots in a stillborn iterator. */
+    if (JSVAL_IS_VOID(state))
         return;
 
     /* Protect against failure to fully initialize obj. */
@@ -113,6 +119,12 @@ js_CloseNativeIterator(JSContext *cx, JSObject *iterobj)
             iterable->enumerate(cx, JSENUMERATE_DESTROY, &state, NULL);
     }
     iterobj->setSlot(JSSLOT_ITER_STATE, JSVAL_NULL);
+}
+
+static void
+iterator_finalize(JSContext *cx, JSObject *obj)
+{
+    CloseNativeIterator(cx, obj);
 }
 
 static void
@@ -138,9 +150,9 @@ JSClass js_IteratorClass = {
     JSCLASS_HAS_RESERVED_SLOTS(2) | /* slots for state and flags */
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
     JSCLASS_MARK_IS_TRACE,
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
-    NULL,             NULL,            NULL,            NULL,
+    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub,  JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,   iterator_finalize,
+    NULL,             NULL,            NULL,             NULL,
     NULL,             NULL,            JS_CLASS_TRACE(iterator_trace), NULL
 };
 
@@ -156,8 +168,6 @@ InitNativeIterator(JSContext *cx, JSObject *iterobj, JSObject *obj, uintN flags)
     iterobj->setParent(obj);
     iterobj->setSlot(JSSLOT_ITER_STATE, JSVAL_NULL);
     iterobj->setSlot(JSSLOT_ITER_FLAGS, INT_TO_JSVAL(flags));
-    if (!js_RegisterCloseableIterator(cx, iterobj))
-        return JS_FALSE;
     if (!obj)
         return JS_TRUE;
 
@@ -196,15 +206,10 @@ Iterator(JSContext *cx, JSObject *iterobj, uintN argc, jsval *argv, jsval *rval)
     flags = keyonly ? 0 : JSITER_FOREACH;
 
     if (JS_IsConstructing(cx)) {
-        /* XXX work around old valueOf call hidden beneath js_ValueToObject */
-        if (!JSVAL_IS_PRIMITIVE(argv[0])) {
-            obj = JSVAL_TO_OBJECT(argv[0]);
-        } else {
-            obj = js_ValueToNonNullObject(cx, argv[0]);
-            if (!obj)
-                return JS_FALSE;
-            argv[0] = OBJECT_TO_JSVAL(obj);
-        }
+        obj = js_ValueToNonNullObject(cx, argv[0]);
+        if (!obj)
+            return false;
+        argv[0] = OBJECT_TO_JSVAL(obj);
         return InitNativeIterator(cx, iterobj, obj, flags);
     }
 
@@ -327,7 +332,7 @@ static JSFunctionSpec iterator_methods[] = {
 uintN
 js_GetNativeIteratorFlags(JSContext *cx, JSObject *iterobj)
 {
-    if (OBJ_GET_CLASS(cx, iterobj) != &js_IteratorClass)
+    if (iterobj->getClass() != &js_IteratorClass)
         return 0;
     return JSVAL_TO_INT(iterobj->getSlot(JSSLOT_ITER_FLAGS));
 }
@@ -353,15 +358,16 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
 
     AutoValueRooter tvr(cx);
 
-    /* XXX work around old valueOf call hidden beneath js_ValueToObject */
     if (!JSVAL_IS_PRIMITIVE(*vp)) {
+        /* Common case. */
         obj = JSVAL_TO_OBJECT(*vp);
     } else {
         /*
          * Enumerating over null and undefined gives an empty enumerator.
          * This is contrary to ECMA-262 9.9 ToObject, invoked from step 3 of
          * the first production in 12.6.4 and step 4 of the second production,
-         * but it's "web JS" compatible.
+         * but it's "web JS" compatible. ES5 fixed for-in to match this de-facto
+         * standard.
          */
         if ((flags & JSITER_ENUMERATE)) {
             if (!js_ValueToObject(cx, *vp, &obj))
@@ -377,7 +383,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
 
     tvr.setObject(obj);
 
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = obj->getClass();
     if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
         (xclasp = (JSExtendedClass *) clasp)->iteratorObject) {
         iterobj = xclasp->iteratorObject(cx, obj, !(flags & JSITER_FOREACH));
@@ -392,15 +398,28 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
           default_iter:
             /*
              * Fail over to the default enumerating native iterator.
-             *
-             * Create iterobj with a NULL parent to ensure that we use the
-             * correct scope chain to lookup the iterator's constructor. Since
-             * we use the parent slot to keep track of the iterable, we must
-             * fix it up after.
              */
-            iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL);
-            if (!iterobj)
-                return false;
+            if (flags & JSITER_ENUMERATE) {
+                /*
+                 * The iterator object for JSITER_ENUMERATE never escapes, so we
+                 * don't care for the proper parent/proto to be set. This also
+                 * allows us to re-use a previous iterator object that was freed
+                 * by JSOP_ENDITER.
+                 */
+                if ((iterobj = JS_THREAD_DATA(cx)->cachedIteratorObject) != NULL) {
+                    JS_THREAD_DATA(cx)->cachedIteratorObject = NULL;
+                } else {
+                    if (!(iterobj = NewObjectWithGivenProto(cx, &js_IteratorClass, NULL, NULL)))
+                        return false;
+                }
+            } else {
+                /*
+                 * These iterator objects can escape, so we have to construct
+                 * them with the proper proto and parent.
+                 */
+                if (!(iterobj = NewObject(cx, &js_IteratorClass, NULL, NULL)))
+                    return false;
+            }
 
             /* Store in *vp to protect it from GC (callers must root vp). */
             *vp = OBJECT_TO_JSVAL(iterobj);
@@ -430,10 +449,17 @@ js_CloseIterator(JSContext *cx, jsval v)
 
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
     obj = JSVAL_TO_OBJECT(v);
-    clasp = OBJ_GET_CLASS(cx, obj);
+    clasp = obj->getClass();
 
     if (clasp == &js_IteratorClass) {
-        js_CloseNativeIterator(cx, obj);
+        CloseNativeIterator(cx, obj);
+
+        /*
+         * Note that we don't care what kind of iterator we close here. Even if it
+         * is not JSITER_ENUMERATE, it is safe to re-use the object later on for a
+         * JSITER_ENUMERATE iteration.
+         */
+        JS_THREAD_DATA(cx)->cachedIteratorObject = obj;
     }
 #if JS_HAS_GENERATORS
     else if (clasp == &js_GeneratorClass) {
@@ -539,7 +565,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
          */
         if (obj != obj2) {
             cond = JS_FALSE;
-            clasp = OBJ_GET_CLASS(cx, obj2);
+            clasp = obj2->getClass();
             if (clasp->flags & JSCLASS_IS_EXTENDED) {
                 xclasp = (JSExtendedClass *) clasp;
                 cond = xclasp->outerObject &&
@@ -582,7 +608,7 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
     uintN flags;
 
     /* Fast path for native iterators */
-    if (OBJ_GET_CLASS(cx, iterobj) == &js_IteratorClass) {
+    if (iterobj->getClass() == &js_IteratorClass) {
         flags = JSVAL_TO_INT(iterobj->getSlot(JSSLOT_ITER_FLAGS));
         if (flags & JSITER_ENUMERATE)
             return CallEnumeratorNext(cx, iterobj, flags, rval);
@@ -702,7 +728,7 @@ js_NewGenerator(JSContext *cx)
     JSGenerator *gen;
     jsval *slots;
 
-    obj = js_NewObject(cx, &js_GeneratorClass, NULL, NULL);
+    obj = NewObject(cx, &js_GeneratorClass, NULL, NULL);
     if (!obj)
         return NULL;
 

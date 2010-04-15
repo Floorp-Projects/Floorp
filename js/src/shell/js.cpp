@@ -49,6 +49,7 @@
 #include <signal.h>
 #include <locale.h>
 #include "jstypes.h"
+#include "jsstdint.h"
 #include "jsarena.h"
 #include "jsutil.h"
 #include "jsprf.h"
@@ -82,6 +83,8 @@
 #include "jsdb.h"
 #endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
+
+#include "jsworkers.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -164,36 +167,19 @@ static PRIntervalTime gWatchdogTimeout = 0;
 
 static PRCondVar *gSleepWakeup = NULL;
 
-/*
- * Holding the gcLock already guarantees that the context list is locked when
- * the watchdog thread walks it.
- */
-
-#define WITH_LOCKED_CONTEXT_LIST(x)             \
-    JS_BEGIN_MACRO                              \
-        x;                                      \
-    JS_END_MACRO
-
 #else
 
 static JSRuntime *gRuntime = NULL;
 
-/* 
- * Since signal handlers can't block, we must disable them before manipulating
- * the context list.
- */
-#define WITH_LOCKED_CONTEXT_LIST(x)                                           \
-    JS_BEGIN_MACRO                                                            \
-        ScheduleWatchdog(gRuntime, -1);                                       \
-        x;                                                                    \
-        ScheduleWatchdog(gRuntime, gTimeoutInterval);                         \
-    JS_END_MACRO
 #endif
 
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
 FILE *gErrFile = NULL;
 FILE *gOutFile = NULL;
+#ifdef JS_THREADSAFE
+JSObject *gWorkers = NULL;
+#endif
 
 static JSBool reportWarnings = JS_TRUE;
 static JSBool compileOnly = JS_FALSE;
@@ -206,6 +192,12 @@ typedef enum JSShellErrNum {
     JSShellErr_Limit
 #undef MSGDEF
 } JSShellErrNum;
+
+static JSContext *
+NewContext(JSRuntime *rt);
+
+static void
+DestroyContext(JSContext *cx, bool withGC);
 
 static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber);
@@ -372,12 +364,15 @@ SetThreadStackLimit(JSContext *cx)
 #else
         stackBase = gStackBase;
 #endif
-        JS_ASSERT(stackBase != 0);
+        if (stackBase) {
 #if JS_STACK_GROWTH_DIRECTION > 0
-        stackLimit = stackBase + gMaxStackSize;
+            stackLimit = stackBase + gMaxStackSize;
 #else
-        stackLimit = stackBase - gMaxStackSize;
+            stackLimit = stackBase - gMaxStackSize;
 #endif
+        } else {
+            stackLimit = 0;
+        }
     }
     JS_SetThreadStackLimit(cx, stackLimit);
 
@@ -1084,6 +1079,10 @@ Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JS_ConvertArguments(cx, argc, argv,"/ i", &gExitCode);
 
     gQuitting = JS_TRUE;
+#ifdef JS_THREADSAFE
+    if (gWorkers)
+        js::workers::terminateAll(cx, gWorkers);
+#endif
     return JS_FALSE;
 }
 
@@ -2970,9 +2969,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!JS_ConvertArguments(cx, argc, argv, "S / o", &str, &sobj))
         return JS_FALSE;
 
-    WITH_LOCKED_CONTEXT_LIST(
-        scx = JS_NewContext(JS_GetRuntime(cx), gStackChunkSize)
-    );
+    scx = NewContext(JS_GetRuntime(cx));
     if (!scx) {
         JS_ReportOutOfMemory(cx);
         return JS_FALSE;
@@ -3040,9 +3037,7 @@ out:
     else if (!ok)
         JS_ClearPendingException(cx);
 
-    WITH_LOCKED_CONTEXT_LIST(
-        JS_DestroyContextNoGC(scx)
-    );
+    DestroyContext(scx, false);
     return ok;
 }
 
@@ -3111,7 +3106,7 @@ ShapeOf(JSContext *cx, uintN argc, jsval *vp)
         *vp = INT_TO_JSVAL(-1);
         return JS_TRUE;
     }
-    return JS_NewNumberValue(cx, OBJ_SHAPE(obj), vp);
+    return JS_NewNumberValue(cx, obj->shape(), vp);
 }
 
 #ifdef JS_THREADSAFE
@@ -3324,10 +3319,7 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
 
     global = JS_GetGlobalObject(cx);
     for (i = 1; i < n; i++) {
-        JSContext *newcx;
-        WITH_LOCKED_CONTEXT_LIST(
-            newcx = JS_NewContext(JS_GetRuntime(cx), 8192)
-        );
+        JSContext *newcx = NewContext(JS_GetRuntime(cx));
         if (!newcx)
             goto fail;
 
@@ -3390,9 +3382,7 @@ out:
             acx = sd.threads[i].cx;
             if (acx) {
                 JS_SetContextThread(acx);
-                WITH_LOCKED_CONTEXT_LIST(
-                    JS_DestroyContext(acx)
-                );
+                DestroyContext(acx, true);
             }
         }
         free(sd.threads);
@@ -3598,6 +3588,14 @@ CancelExecution(JSRuntime *rt)
     gCanceled = true;
     if (gExitCode == 0)
         gExitCode = EXITCODE_TIMEOUT;
+#ifdef JS_THREADSAFE
+    if (gWorkers) {
+        JSContext *cx = JS_NewContext(rt, 8192);
+        if (cx)
+            js::workers::terminateAll(cx, gWorkers);
+        JS_DestroyContextNoGC(cx);
+    }
+#endif
     JS_TriggerAllOperationCallbacks(rt);
 
     static const char msg[] = "Script runs for too long, terminating.\n";
@@ -4803,34 +4801,111 @@ Evaluate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 #endif /* NARCISSUS */
 
-static JSBool
-ContextCallback(JSContext *cx, uintN contextOp)
-{
-    JSShellContextData *data;
-    
-    switch (contextOp) {
-      case JSCONTEXT_NEW: {
-        data = NewContextData();
-        if (!data)
-            return JS_FALSE;
-        JS_SetContextPrivate(cx, data);
-        JS_SetErrorReporter(cx, my_ErrorReporter);
-        JS_SetVersion(cx, JSVERSION_LATEST);
-        SetContextOptions(cx);
-        if (enableJit)
-            JS_ToggleOptions(cx, JSOPTION_JIT);
-        break;
-      case JSCONTEXT_DESTROY:
-        data = GetContextData(cx);
-        JS_SetContextPrivate(cx, NULL);
-        free(data);
-        break;
-      }
+/*
+ * Avoid a reentrancy hazard.
+ *
+ * The non-JS_THREADSAFE shell uses a signal handler to implement timeout().
+ * The JS engine is not really reentrant, but JS_TriggerAllOperationCallbacks
+ * is mostly safe--the only danger is that we might interrupt JS_NewContext or
+ * JS_DestroyContext while the context list is being modified. Therefore we
+ * disable the signal handler around calls to those functions.
+ */
+#ifdef JS_THREADSAFE
+# define WITH_SIGNALS_DISABLED(x)  x
+#else
+# define WITH_SIGNALS_DISABLED(x)                                               \
+    JS_BEGIN_MACRO                                                              \
+        ScheduleWatchdog(gRuntime, -1);                                         \
+        x;                                                                      \
+        ScheduleWatchdog(gRuntime, gTimeoutInterval);                           \
+    JS_END_MACRO
+#endif
 
-      default:
-        break;
+static JSContext *
+NewContext(JSRuntime *rt)
+{
+    JSContext *cx;
+    WITH_SIGNALS_DISABLED(cx = JS_NewContext(rt, gStackChunkSize));
+    if (!cx)
+        return NULL;
+
+    JSShellContextData *data = NewContextData();
+    if (!data) {
+        DestroyContext(cx, false);
+        return NULL;
     }
-    return JS_TRUE;
+
+    JS_SetContextPrivate(cx, data);
+    JS_SetErrorReporter(cx, my_ErrorReporter);
+    JS_SetVersion(cx, JSVERSION_LATEST);
+    SetContextOptions(cx);
+    if (enableJit)
+        JS_ToggleOptions(cx, JSOPTION_JIT);
+    return cx;
+}
+
+static void
+DestroyContext(JSContext *cx, bool withGC)
+{
+    JSShellContextData *data = GetContextData(cx);
+    JS_SetContextPrivate(cx, NULL);
+    free(data);
+    WITH_SIGNALS_DISABLED(withGC ? JS_DestroyContext(cx) : JS_DestroyContextNoGC(cx));
+}
+
+static JSObject *
+NewGlobalObject(JSContext *cx)
+{
+    JSObject *glob = JS_NewObject(cx, &global_class, NULL, NULL);
+#ifdef LAZY_STANDARD_CLASSES
+    JS_SetGlobalObject(cx, glob);
+#else
+    if (!JS_InitStandardClasses(cx, glob))
+        return NULL;
+#endif
+#ifdef JS_HAS_CTYPES
+    if (!JS_InitCTypesClass(cx, glob))
+        return NULL;
+#endif
+    if (!JS_DefineFunctions(cx, glob, shell_functions))
+        return NULL;
+
+    JSObject *it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
+    if (!it)
+        return NULL;
+    if (!JS_DefineProperties(cx, it, its_props))
+        return NULL;
+    if (!JS_DefineFunctions(cx, it, its_methods))
+        return NULL;
+
+    if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
+                           its_setter, 0))
+        return NULL;
+    if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
+                           its_setter, JSPROP_READONLY))
+        return NULL;
+
+#ifdef NARCISSUS
+    {
+        jsval v;
+        static const char Object_prototype[] = "Object.prototype";
+
+        if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
+            return NULL;
+
+        if (!JS_EvaluateScript(cx, glob,
+                               Object_prototype, sizeof Object_prototype - 1,
+                               NULL, 0, &v)) {
+            return NULL;
+        }
+        if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
+                               defineProperty, 5, 0)) {
+            return NULL;
+        }
+    }
+#endif
+
+    return glob;
 }
 
 int
@@ -4839,7 +4914,6 @@ main(int argc, char **argv, char **envp)
     int stackDummy;
     JSRuntime *rt;
     JSContext *cx;
-    JSObject *glob, *it, *envobj;
     int result;
 #ifdef JSDEBUGGER
     JSDContext *jsdc;
@@ -4886,11 +4960,7 @@ main(int argc, char **argv, char **envp)
     if (!InitWatchdog(rt))
         return 1;
 
-    JS_SetContextCallback(rt, ContextCallback);
-
-    WITH_LOCKED_CONTEXT_LIST(
-        cx = JS_NewContext(rt, gStackChunkSize)
-    );
+    cx = NewContext(rt);
     if (!cx)
         return 1;
 
@@ -4898,35 +4968,12 @@ main(int argc, char **argv, char **envp)
 
     JS_BeginRequest(cx);
 
-    glob = JS_NewObject(cx, &global_class, NULL, NULL);
+    JSObject *glob = NewGlobalObject(cx);
     if (!glob)
         return 1;
-#ifdef LAZY_STANDARD_CLASSES
-    JS_SetGlobalObject(cx, glob);
-#else
-    if (!JS_InitStandardClasses(cx, glob))
-        return 1;
-#endif
-#ifdef JS_HAS_CTYPES
-    if (!JS_InitCTypesClass(cx, glob))
-        return 1;
-#endif
-    if (!JS_DefineFunctions(cx, glob, shell_functions))
-        return 1;
 
-    it = JS_DefineObject(cx, glob, "it", &its_class, NULL, 0);
-    if (!it)
-        return 1;
-    if (!JS_DefineProperties(cx, it, its_props))
-        return 1;
-    if (!JS_DefineFunctions(cx, it, its_methods))
-        return 1;
-
-    if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,
-                           its_setter, 0))
-        return 1;
-    if (!JS_DefineProperty(cx, glob, "customRdOnly", JSVAL_VOID, its_getter,
-                           its_setter, JSPROP_READONLY))
+    JSObject *envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
+    if (!envobj || !JS_SetPrivate(cx, envobj, envp))
         return 1;
 
 #ifdef JSDEBUGGER
@@ -4957,31 +5004,26 @@ main(int argc, char **argv, char **envp)
 #endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
 
-    envobj = JS_DefineObject(cx, glob, "environment", &env_class, NULL, 0);
-    if (!envobj || !JS_SetPrivate(cx, envobj, envp))
+#ifdef JS_THREADSAFE
+    class ShellWorkerHooks : public js::workers::WorkerHooks {
+    public:
+        JSObject *newGlobalObject(JSContext *cx) { return NewGlobalObject(cx); }
+    };
+    ShellWorkerHooks hooks;
+    if (!JS_AddNamedRoot(cx, &gWorkers, "Workers") ||
+        !js::workers::init(cx, &hooks, glob, &gWorkers)) {
         return 1;
-
-#ifdef NARCISSUS
-    {
-        jsval v;
-        static const char Object_prototype[] = "Object.prototype";
-
-        if (!JS_DefineFunction(cx, glob, "evaluate", Evaluate, 3, 0))
-            return 1;
-
-        if (!JS_EvaluateScript(cx, glob,
-                               Object_prototype, sizeof Object_prototype - 1,
-                               NULL, 0, &v)) {
-            return 1;
-        }
-        if (!JS_DefineFunction(cx, JSVAL_TO_OBJECT(v), "__defineProperty__",
-                               defineProperty, 5, 0)) {
-            return 1;
-        }
     }
 #endif
 
     result = ProcessArgs(cx, glob, argv, argc);
+
+#ifdef JS_THREADSAFE
+    js::workers::finish(cx, gWorkers);
+    JS_RemoveRoot(cx, &gWorkers);
+    if (result == 0)
+        result = gExitCode;
+#endif
 
 #ifdef JSDEBUGGER
     if (jsdc) {
@@ -4997,9 +5039,7 @@ main(int argc, char **argv, char **envp)
 
     JS_CommenceRuntimeShutDown(rt);
 
-    WITH_LOCKED_CONTEXT_LIST( 
-        JS_DestroyContext(cx)
-    );
+    DestroyContext(cx, true);
 
     KillWatchdog();
 

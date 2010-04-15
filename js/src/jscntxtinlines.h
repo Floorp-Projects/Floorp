@@ -81,8 +81,8 @@ AutoGCRooter::trace(JSTracer *trc)
         static_cast<AutoSaveWeakRoots *>(this)->savedRoots.mark(trc);
         return;
 
-      case COMPILER:
-        static_cast<JSCompiler *>(this)->trace(trc);
+      case PARSER:
+        static_cast<Parser *>(this)->trace(trc);
         return;
 
       case SCRIPT:
