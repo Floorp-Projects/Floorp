@@ -687,6 +687,7 @@ if test -n "$_WIN32_MSVC"; then
     # Common to all MSVC environments:
     # Windows lacks <stdint.h>, but has __int8, and so on.
     AC_DEFINE(JS_HAVE___INTN)
+    AC_DEFINE(HAVE_LOCALECONV)
 
     case "$target" in
     *-wince|*-winmo)
