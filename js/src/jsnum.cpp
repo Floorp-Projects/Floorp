@@ -70,10 +70,8 @@
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jsvector.h"
-
-#include "jsobjinlines.h"
 #include "jsstrinlines.h"
+#include "jsvector.h"
 
 using namespace js;
 
@@ -290,7 +288,7 @@ Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JS_IsConstructing(cx))
         *rval = v;
     else
-        obj->setPrimitiveThis(v);
+        obj->fslots[JSSLOT_PRIMITIVE_THIS] = v;
     return true;
 }
 
@@ -528,7 +526,7 @@ num_valueOf(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_NumberClass, vp + 2))
         return JS_FALSE;
-    *vp = obj->getPrimitiveThis();
+    *vp = obj->fslots[JSSLOT_PRIMITIVE_THIS];
     return JS_TRUE;
 }
 
@@ -782,7 +780,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
-    proto->setPrimitiveThis(JSVAL_ZERO);
+    proto->fslots[JSSLOT_PRIMITIVE_THIS] = JSVAL_ZERO;
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return NULL;
 
