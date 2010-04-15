@@ -295,8 +295,13 @@ promptService.prototype = {
         let button = doc.createElement("button");
         this.setLabelForNode(button, bTitle);
         button.setAttribute("class", "button-dark");
-        button.setAttribute("oncommand",
-          "document.getElementById('prompt-confirm-dialog').PromptHelper.closeConfirm(" + i + ")");
+        if (i == defaultButton) {
+          button.setAttribute("command", "cmd_ok"); 
+        }
+        else {
+          button.setAttribute("oncommand",
+            "document.getElementById('prompt-confirm-dialog').PromptHelper.closeConfirm(" + i + ")");
+        }
         bbox.appendChild(button);
       }
       

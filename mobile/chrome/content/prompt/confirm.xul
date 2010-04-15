@@ -2,7 +2,7 @@
 <!DOCTYPE vbox SYSTEM "chrome://browser/locale/prompt.dtd">
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       id="prompt-confirm-dialog"
-      onload="document.getElementById('prompt-confirm-button-ok').focus()"
+      onload="document.getElementsByAttribute('command', 'cmd_ok')[0].focus()"
       onclose="this.PromptHelper.onCloseConfirm(this)"
       script="chrome://browser/content/prompt/prompt.js">
   <keyset>
