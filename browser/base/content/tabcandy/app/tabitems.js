@@ -214,13 +214,24 @@ window.TabItems = {
       $("<div class='close'></div>").appendTo($div);
       $("<div class='expander'></div>").appendTo($div);
   
+      var items = [];
       $div.each(function() {
         var tab = Tabs.tab(this);
-        $(this).data('tabItem', new TabItem(this, tab));     
+        var item = new TabItem(this, tab);
+        $(this).data('tabItem', item);    
+        items.push(item); 
       });
       
       if($div.length == 1)
         Groups.newTab($div.data('tabItem'));
+      else {
+        var top = 20;
+        var bottom = TabItems.tabHeight + 10; // MAGIC NUMBER: giving room for the "new tabs" group
+        var box = new Rect(0, top, window.innerWidth, window.innerHeight - (top + bottom));
+        box.inset(20, 20);
+        
+        Items.arrange(items, box, {padding: 10});
+      }
       
       // TODO: Figure out this really weird bug?
       // Why is that:
