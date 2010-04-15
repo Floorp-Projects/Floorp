@@ -558,10 +558,6 @@ nsWindow::SetSizeMode(PRInt32 aMode)
         widget->showMinimized();
         break;
     case nsSizeMode_Fullscreen:
-        // Some versions of Qt (4.6.x) crash in XSetInputFocus due to
-        // unsynchronized window activation.  Sync here to avoid such
-        // cases.
-        XSync(QX11Info().display(), False);
         widget->showFullScreen();
         break;
 
@@ -1936,10 +1932,6 @@ nsWindow::MakeFullScreen(PRBool aFullScreen)
             mLastSizeMode = mSizeMode;
 
         mSizeMode = nsSizeMode_Fullscreen;
-        // Some versions of Qt (4.6.x) crash in XSetInputFocus due to
-        // unsynchronized window activation.  Sync here to avoid such
-        // cases.
-        XSync(QX11Info().display(), False);
         widget->showFullScreen();
     }
     else {
