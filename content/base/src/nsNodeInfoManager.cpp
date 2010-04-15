@@ -138,32 +138,6 @@ nsNodeInfoManager::~nsNodeInfoManager()
 }
 
 
-nsrefcnt
-nsNodeInfoManager::AddRef()
-{
-  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
-
-  nsrefcnt count = PR_AtomicIncrement((PRInt32*)&mRefCnt);
-  NS_LOG_ADDREF(this, count, "nsNodeInfoManager", sizeof(*this));
-
-  return count;
-}
-
-nsrefcnt
-nsNodeInfoManager::Release()
-{
-  NS_PRECONDITION(0 != mRefCnt, "dup release");
-
-  nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
-  NS_LOG_RELEASE(this, count, "nsNodeInfoManager");
-  if (count == 0) {
-    mRefCnt = 1; /* stabilize */
-    delete this;
-  }
-
-  return count;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsNodeInfoManager)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsNodeInfoManager, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsNodeInfoManager, Release)
