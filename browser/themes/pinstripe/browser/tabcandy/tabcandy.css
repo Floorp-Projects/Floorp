@@ -140,11 +140,8 @@ body {
 .group .expander {
 }
 
-// -----------------------------------------------------
-// Other
-// -----------------------------------------------------
-
-
+/* Other
+----------------------------------*/
 
 .active{
   -moz-box-shadow: 5px 5px 4px rgba(0,0,0,.5);
@@ -183,6 +180,32 @@ input.name{
 .ui-resizable-handle { position: absolute;font-size: 0.1px;z-index: 99999; display: block;}
 .ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
 .ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
+
+/* Action
+----------------------------------*/
+#actions{
+  position: fixed;
+  top:      0;
+  left:     0;
+  height: 4px;
+  width: 100%;
+  background-image: url(../img/tabbar-toggle.png);
+}
+
+#tabbar-toggle{
+  position: fixed;
+  top:     0px;
+  right:  15px;
+  height: 26px;
+  width:  38px;
+  background-image: url(../img/tabbar-toggle.png);
+  background-position: 0px -30px;
+  cursor: pointer;
+}
+
+.tabbar-off{
+  background-position: 0px -4px !important;
+}
 
 /* Utils
 ----------------------------------*/

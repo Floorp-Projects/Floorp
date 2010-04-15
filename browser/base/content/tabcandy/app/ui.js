@@ -14,8 +14,9 @@ Navbar = {
 // ##########
 var Tabbar = {
   get el(){ return window.Tabs[0].raw.parentNode; },
-  hide: function(){ this.el.collapsed = true },
-  show: function(){ this.el.collapsed = false }
+  hide: function(){ this.el.collapsed = true; },
+  show: function(){ this.el.collapsed = false; },
+  get isHidden(){ return this.el.collapsed; }
 }
 
 // ##########
@@ -72,10 +73,19 @@ window.Page = {
       lastTab = this;
     });
     
-    $("#tabbar").toggle(
-      function(){Tabbar.hide()},
-      function(){Tabbar.show()}      
-    );
+    $("#tabbar-toggle").click(function(){
+      if( Tabbar.isHidden ){
+        Tabbar.show();
+        $(this).removeClass("tabbar-off");        
+      }
+      else {
+        Tabbar.hide();
+        $(this).addClass("tabbar-off");        
+      }
+    });
+    
+    
+    
   },
   
   // ----------  
