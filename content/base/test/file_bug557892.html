@@ -1,0 +1,28 @@
+<html><head>
+<title>Crash [@ nsGenericElement::SetAttr] with classList.toggle</title>
+<script>
+var classList;
+var interval;
+function run() {
+  classList = window.frames[0].document.documentElement.classList;
+  window.frames[0].location.reload();
+  interval = setInterval(function(aClassList) {aClassList.toggle('a'); forcegc();}, 10, classList);
+  // Let the interval run for awhile and close the window after 2 seconds.
+  setTimeout(function() { clearInterval(interval); window.opener.done(); window.close(); }, 2000);
+}
+
+function forcegc(){
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  Components.utils.forceGC();
+  var wu =  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIDOMWindowUtils);
+  wu.garbageCollect();
+}
+
+    </script>
+  </head>
+  <body onload="run()">
+    <iframe></iframe>
+  </body>
+</html>
+
