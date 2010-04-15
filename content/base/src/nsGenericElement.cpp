@@ -3751,6 +3751,14 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     return NS_ERROR_NULL_POINTER;
   }
 
+  if (IsNodeOfType(eDATA_NODE)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  if (IsNodeOfType(eATTRIBUTE)) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   nsIContent* refContent;
   nsresult res = NS_OK;
   PRInt32 insPos;

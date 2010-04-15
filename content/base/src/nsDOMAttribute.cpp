@@ -375,13 +375,13 @@ nsDOMAttribute::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 NS_IMETHODIMP
 nsDOMAttribute::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return ReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, aReturn);
 }
 
 NS_IMETHODIMP
 nsDOMAttribute::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return ReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, aReturn);
 }
 
 NS_IMETHODIMP
@@ -393,7 +393,7 @@ nsDOMAttribute::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsDOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return InsertBefore(aNewChild, nsnull, aReturn);
 }
 
 nsresult
