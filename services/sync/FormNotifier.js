@@ -35,8 +35,12 @@ function FormNotifier() {
       };
 
       notify("before");
-      val.apply(this, arguments);
-      notify("after");
+      try {
+        return val.apply(this, arguments);
+      }
+      finally {
+        notify("after");
+      }
     };
   }
 }
