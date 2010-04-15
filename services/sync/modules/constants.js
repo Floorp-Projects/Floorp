@@ -37,6 +37,7 @@
 // Process each item in the "constants hash" to add to "global" and give a name
 let EXPORTED_SYMBOLS = [((this[key] = val), key) for ([key, val] in Iterator({
 
+WEAVE_CHANNEL:                         "@xpi_type@",
 WEAVE_VERSION:                         "@weave_version@",
 WEAVE_ID:                              "@weave_id@",
 
@@ -46,6 +47,7 @@ WEAVE_ID:                              "@weave_id@",
 STORAGE_VERSION:                       @storage_version@,
 
 DEFAULT_SERVER:                        "@server_url@",
+UPDATED_URL:                           "https://services.mozilla.com/sync/updated/?version=@weave_version@&channel=@xpi_type@",
 
 PREFS_BRANCH:                          "extensions.weave.",
 
