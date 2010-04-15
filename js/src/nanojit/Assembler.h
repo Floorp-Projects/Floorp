@@ -425,6 +425,10 @@ namespace nanojit
 
             verbose_only( void asm_inc_m32(uint32_t*); )
             void        asm_mmq(Register rd, int dd, Register rs, int ds);
+            void        asm_jmp(LInsp ins, InsList& pending_lives);
+            void        asm_jcc(LInsp ins, InsList& pending_lives);
+            void        asm_x(LInsp ins);
+            void        asm_xcc(LInsp ins);
             NIns*       asm_exit(LInsp guard);
             NIns*       asm_leave_trace(LInsp guard);
             void        asm_store32(LOpcode op, LIns *val, int d, LIns *base);

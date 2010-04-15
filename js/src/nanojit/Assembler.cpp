@@ -1204,6 +1204,107 @@ namespace nanojit
 #define countlir_jtbl()
 #endif
 
+    void Assembler::asm_jmp(LInsp ins, InsList& pending_lives)
+    {
+        NanoAssert((ins->isop(LIR_j) && !ins->oprnd1()) ||
+                   (ins->isop(LIR_jf) && ins->oprnd1()->isconstval(0)) ||
+                   (ins->isop(LIR_jt) && ins->oprnd1()->isconstval(1)));
+
+        countlir_jmp();
+        LInsp to = ins->getTarget();
+        LabelState *label = _labels.get(to);
+        // The jump is always taken so whatever register state we
+        // have from downstream code, is irrelevant to code before
+        // this jump.  So clear it out.  We will pick up register
+        // state from the jump target, if we have seen that label.
+        releaseRegisters();
+        if (label && label->addr) {
+            // Forward jump - pick up register state from target.
+            unionRegisterState(label->regs);
+            JMP(label->addr);
+        }
+        else {
+            // Backwards jump.
+            handleLoopCarriedExprs(pending_lives);
+            if (!label) {
+                // save empty register state at loop header
+                _labels.add(to, 0, _allocator);
+            }
+            else {
+                intersectRegisterState(label->regs);
+            }
+            JMP(0);
+            _patches.put(_nIns, to);
+        }
+    }
+
+    void Assembler::asm_jcc(LInsp ins, InsList& pending_lives)
+    {
+        bool branchOnFalse = (ins->opcode() == LIR_jf);
+        LIns* cond = ins->oprnd1();
+        if (cond->isconst()) {
+            if ((!branchOnFalse && !cond->imm32()) || (branchOnFalse && cond->imm32())) {
+                // jmp never taken, not needed
+            } else {
+                asm_jmp(ins, pending_lives);    // jmp always taken
+            }
+            return;
+        }
+
+        countlir_jcc();
+        LInsp to = ins->getTarget();
+        LabelState *label = _labels.get(to);
+        if (label && label->addr) {
+            // Forward jump to known label.  Need to merge with label's register state.
+            unionRegisterState(label->regs);
+            asm_branch(branchOnFalse, cond, label->addr);
+        }
+        else {
+            // Back edge.
+            handleLoopCarriedExprs(pending_lives);
+            if (!label) {
+                // Evict all registers, most conservative approach.
+                evictAllActiveRegs();
+                _labels.add(to, 0, _allocator);
+            }
+            else {
+                // Evict all registers, most conservative approach.
+                intersectRegisterState(label->regs);
+            }
+            NIns *branch = asm_branch(branchOnFalse, cond, 0);
+            _patches.put(branch,to);
+        }
+    }
+
+    void Assembler::asm_x(LInsp ins)
+    {
+        verbose_only( _thisfrag->nStaticExits++; )
+        countlir_x();
+        // Generate the side exit branch on the main trace.
+        NIns *exit = asm_exit(ins);
+        JMP(exit);
+    }
+
+    void Assembler::asm_xcc(LInsp ins)
+    {
+        LIns* cond = ins->oprnd1();
+        if (cond->isconst()) {
+            if ((ins->isop(LIR_xt) && !cond->imm32()) || (ins->isop(LIR_xf) && cond->imm32())) {
+                // guard never taken, not needed
+            } else {
+                asm_x(ins);     // guard always taken
+            }
+            return;
+        }
+
+        verbose_only( _thisfrag->nStaticExits++; )
+        countlir_xcc();
+        // We only support cmp with guard right now, also assume it is 'close'
+        // and only emit the branch.
+        NIns* exit = asm_exit(ins); // does intersectRegisterState()
+        asm_branch(ins->opcode() == LIR_xf, cond, exit);
+    }
+
     void Assembler::gen(LirFilter* reader)
     {
         NanoAssert(_thisfrag->nStaticExits == 0);
@@ -1542,65 +1643,13 @@ namespace nanojit
                 }
 
                 case LIR_j:
-                {
-                    countlir_jmp();
-                    LInsp to = ins->getTarget();
-                    LabelState *label = _labels.get(to);
-                    // the jump is always taken so whatever register state we
-                    // have from downstream code, is irrelevant to code before
-                    // this jump.  so clear it out.  we will pick up register
-                    // state from the jump target, if we have seen that label.
-                    releaseRegisters();
-                    if (label && label->addr) {
-                        // forward jump - pick up register state from target.
-                        unionRegisterState(label->regs);
-                        JMP(label->addr);
-                    }
-                    else {
-                        // backwards jump
-                        handleLoopCarriedExprs(pending_lives);
-                        if (!label) {
-                            // save empty register state at loop header
-                            _labels.add(to, 0, _allocator);
-                        }
-                        else {
-                            intersectRegisterState(label->regs);
-                        }
-                        JMP(0);
-                        _patches.put(_nIns, to);
-                    }
+                    asm_jmp(ins, pending_lives);
                     break;
-                }
 
                 case LIR_jt:
                 case LIR_jf:
-                {
-                    countlir_jcc();
-                    LInsp to = ins->getTarget();
-                    LIns* cond = ins->oprnd1();
-                    LabelState *label = _labels.get(to);
-                    if (label && label->addr) {
-                        // forward jump to known label.  need to merge with label's register state.
-                        unionRegisterState(label->regs);
-                        asm_branch(op == LIR_jf, cond, label->addr);
-                    }
-                    else {
-                        // back edge.
-                        handleLoopCarriedExprs(pending_lives);
-                        if (!label) {
-                            // evict all registers, most conservative approach.
-                            evictAllActiveRegs();
-                            _labels.add(to, 0, _allocator);
-                        }
-                        else {
-                            // evict all registers, most conservative approach.
-                            intersectRegisterState(label->regs);
-                        }
-                        NIns *branch = asm_branch(op == LIR_jf, cond, 0);
-                        _patches.put(branch,to);
-                    }
+                    asm_jcc(ins, pending_lives);
                     break;
-                }
 
                 #if NJ_JTBL_SUPPORTED
                 case LIR_jtbl:
@@ -1704,24 +1753,13 @@ namespace nanojit
 #endif
                 case LIR_xt:
                 case LIR_xf:
-                {
-                    verbose_only( _thisfrag->nStaticExits++; )
-                    countlir_xcc();
-                    // we only support cmp with guard right now, also assume it is 'close' and only emit the branch
-                    NIns* exit = asm_exit(ins); // does intersectRegisterState()
-                    LIns* cond = ins->oprnd1();
-                    asm_branch(op == LIR_xf, cond, exit);
+                    asm_xcc(ins);
                     break;
-                }
+
                 case LIR_x:
-                {
-                    verbose_only( _thisfrag->nStaticExits++; )
-                    countlir_x();
-                    // generate the side exit branch on the main trace.
-                    NIns *exit = asm_exit(ins);
-                    JMP( exit );
+                    asm_x(ins);
                     break;
-                }
+
                 case LIR_addxov:
                 case LIR_subxov:
                 case LIR_mulxov:
