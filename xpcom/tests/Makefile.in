@@ -206,11 +206,11 @@ endif
 check::
 	@echo "Running XPIDL tests"
 	$(XPIDL_COMPILE) -m header $(srcdir)/TestScriptable.idl
-	@if grep Notscriptable TestScriptable.h | grep -q NS_SCRIPTABLE ; then \
+	@if grep Notscriptable TestScriptable.h | grep NS_SCRIPTABLE >/dev/null 2>&1 ; then \
 		echo "Nonscriptable object marked scriptable by xpidl"; \
 		exit 1; \
 	fi
-	@if test $$( grep 'NS_IMETHOD[^I].*Scriptable' TestScriptable.h | grep -v -c NS_SCRIPTABLE ) != 0 ; then \
+	@if test `grep 'NS_IMETHOD[^I].*Scriptable' TestScriptable.h | grep -v -c NS_SCRIPTABLE` -ne 0 ; then \
 		echo "Scriptable object marked nonscriptable by xpidl"; \
 		exit 1; \
 	fi
