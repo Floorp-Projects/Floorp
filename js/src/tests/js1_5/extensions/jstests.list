@@ -34,7 +34,6 @@ script regress-311792-01.js
 script regress-311792-02.js
 script regress-312278.js
 script regress-313500.js
-script regress-313630.js
 script regress-313763.js
 script regress-313803.js
 script regress-313938.js
@@ -67,7 +66,6 @@ script regress-346494-01.js
 script regress-346494.js
 random script regress-347306-02.js # BigO
 script regress-348986.js
-script regress-349616.js
 script regress-350312-01.js
 script regress-350312-02.js
 script regress-350312-03.js
@@ -78,13 +76,10 @@ script regress-351102-06.js
 script regress-351448.js
 script regress-351463-01.js
 script regress-351973.js
-script regress-352060.js
-script regress-352094.js
 script regress-352261.js
 skip script regress-352281.js # obsolete test
 script regress-352291.js
 script regress-352372.js
-script regress-352455.js
 script regress-352604.js
 script regress-353214.js
 script regress-354297.js
@@ -99,9 +94,6 @@ script regress-355655.js
 script regress-355736.js
 script regress-355820.js
 script regress-355982.js
-script regress-356085.js
-script regress-356106.js
-script regress-356378.js
 script regress-356402.js
 script regress-358594-01.js
 script regress-358594-02.js
@@ -153,13 +145,10 @@ script regress-375801.js
 script regress-376052.js
 script regress-379523.js
 script regress-380581.js
-script regress-380831.js
 script regress-380889.js
-script regress-381205.js
 script regress-381211.js
 script regress-381304.js
 script regress-382509.js
-script regress-383965.js
 script regress-384680.js
 script regress-385134.js
 script regress-385393-02.js
@@ -183,7 +172,6 @@ script regress-420869-01.js
 skip script regress-421621.js # obsolete test
 script regress-422137.js
 script regress-422592.js
-script regress-424257.js
 script regress-424683-01.js
 script regress-426711.js
 script regress-427196-01.js

@@ -55,7 +55,13 @@ function test()
   printStatus (summary);
  
   var f = (function(){}); 
-  var y = ({p getter: f}); 
+  var y =
+    Object.defineProperty({}, "p",
+    {
+      get: f,
+      enumerable: true,
+      configurable: true
+    });
   f.__proto__ = []; 
 
   expect = /TypeError: Array.prototype.toSource called on incompatible Function/;

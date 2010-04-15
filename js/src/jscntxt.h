@@ -567,6 +567,12 @@ struct JSThreadData {
 
     jsuword             nativeEnumCache[NATIVE_ENUM_CACHE_SIZE];
 
+    /*
+     * One-entry deep cache of iterator objects. We deposit here the last
+     * iterator that was freed in JSOP_ENDITER.
+     */
+    JSObject           *cachedIteratorObject;
+
     bool init();
     void finish();
     void mark(JSTracer *trc);
@@ -715,6 +721,8 @@ struct JSClassProtoCache {
 #endif
 };
 
+typedef js::Vector<JSGCChunkInfo*, 0, js::SystemAllocPolicy> GCEmptyChunks;
+
 struct JSRuntime {
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
@@ -738,6 +746,7 @@ struct JSRuntime {
 
     /* Garbage collector state, used by jsgc.c. */
     JSGCChunkInfo       *gcChunkList;
+    GCEmptyChunks       gcEmptyChunks;
     JSGCArenaList       gcArenaList[FINALIZE_LIMIT];
     JSGCDoubleArenaList gcDoubleArenaList;
     JSDHashTable        gcRootsHash;
@@ -794,12 +803,6 @@ struct JSRuntime {
 #ifdef DEBUG
     size_t              gcMarkLaterCount;
 #endif
-
-    /*
-     * Table for tracking iterators to ensure that we close iterator's state
-     * before finalizing the iterable object.
-     */
-    js::Vector<JSObject*, 0, js::SystemAllocPolicy> gcIteratorTable;
 
     /*
      * The trace operation and its data argument to trace embedding-specific
@@ -1649,7 +1652,7 @@ class AutoGCRooter {
         JSVAL =        -1, /* js::AutoValueRooter */
         SPROP =        -2, /* js::AutoScopePropertyRooter */
         WEAKROOTS =    -3, /* js::AutoSaveWeakRoots */
-        COMPILER =     -4, /* JSCompiler */
+        PARSER =       -4, /* js::Parser */
         SCRIPT =       -5, /* js::AutoScriptRooter */
         ENUMERATOR =   -6, /* js::AutoEnumStateRooter */
         IDARRAY =      -7, /* js::AutoIdArray */
@@ -1945,6 +1948,29 @@ class AutoXMLRooter : private AutoGCRooter {
     JSXML * const xml;
 };
 #endif /* JS_HAS_XML_SUPPORT */
+
+class AutoLockGC {
+private:
+    JSRuntime *rt;
+public:
+    explicit AutoLockGC(JSRuntime *rt) : rt(rt) { JS_LOCK_GC(rt); }
+    ~AutoLockGC() { JS_UNLOCK_GC(rt); }
+};
+
+class AutoUnlockGC {
+private:
+    JSRuntime *rt;
+public:
+    explicit AutoUnlockGC(JSRuntime *rt) : rt(rt) { JS_UNLOCK_GC(rt); }
+    ~AutoUnlockGC() { JS_LOCK_GC(rt); }
+};
+
+class AutoKeepAtoms {
+    JSRuntime *rt;
+  public:
+    explicit AutoKeepAtoms(JSRuntime *rt) : rt(rt) { JS_KEEP_ATOMS(rt); }
+    ~AutoKeepAtoms() { JS_UNKEEP_ATOMS(rt); }
+};
 
 } /* namespace js */
 
@@ -2412,12 +2438,8 @@ class AutoValueVector : private AutoGCRooter
     void pop() { vector.popBack(); }
 
     bool resize(size_t newLength) {
-        size_t oldLength = vector.length();
         if (!vector.resize(newLength))
             return false;
-        JS_STATIC_ASSERT(JSVAL_NULL == 0);
-        if (newLength > oldLength)
-            PodZero(vector.begin(), newLength - oldLength);
         return true;
     }
 
@@ -2425,11 +2447,11 @@ class AutoValueVector : private AutoGCRooter
         return vector.reserve(newLength);
     }
 
-    jsval & operator[](size_t i) { return vector[i]; }
+    jsval &operator[](size_t i) { return vector[i]; }
     jsval operator[](size_t i) const { return vector[i]; }
 
-    const jsval * buffer() const { return vector.begin(); }
-    jsval * buffer() { return vector.begin(); }
+    const jsval *buffer() const { return vector.begin(); }
+    jsval *buffer() { return vector.begin(); }
 
     friend void AutoGCRooter::trace(JSTracer *trc);
 

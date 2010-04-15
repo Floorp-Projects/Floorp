@@ -766,6 +766,17 @@ function outputscripttag(src, properties, e4x)
   document.write(s);
 }
 
+var JSTest = {
+  waitForExplicitFinish: function () {
+    gDelayTestDriverEnd = true;
+  },
+
+  testFinished: function () {
+    gDelayTestDriverEnd = false;
+    jsTestDriverEnd();
+  }
+};
+
 function jsTestDriverEnd()
 {
   // gDelayTestDriverEnd is used to

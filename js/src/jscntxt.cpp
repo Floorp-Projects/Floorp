@@ -155,6 +155,8 @@ JSThreadData::mark(JSTracer *trc)
 void
 JSThreadData::purge(JSContext *cx)
 {
+    cachedIteratorObject = NULL;
+
     purgeGCFreeLists();
 
     js_PurgeGSNCache(&gsnCache);
@@ -569,10 +571,9 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             return NULL;
         }
 
-        JS_LOCK_GC(rt);
+        AutoLockGC lock(rt);
         rt->state = JSRTS_UP;
         JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
-        JS_UNLOCK_GC(rt);
     }
 
     cxCallback = rt->cxCallback;
@@ -892,14 +893,11 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
 {
     JSContext *cx = *iterp;
 
-    if (unlocked)
-        JS_LOCK_GC(rt);
+    Conditionally<AutoLockGC> lockIf(unlocked, rt);
     cx = js_ContextFromLinkField(cx ? cx->link.next : rt->contextList.next);
     if (&cx->link == &rt->contextList)
         cx = NULL;
     *iterp = cx;
-    if (unlocked)
-        JS_UNLOCK_GC(rt);
     return cx;
 }
 
@@ -1867,18 +1865,12 @@ js_InvokeOperationCallback(JSContext *cx)
 void
 js_TriggerAllOperationCallbacks(JSRuntime *rt, JSBool gcLocked)
 {
-    JSContext *acx, *iter;
 #ifdef JS_THREADSAFE
-    if (!gcLocked)
-        JS_LOCK_GC(rt);
+    Conditionally<AutoLockGC> lockIf(!gcLocked, rt);
 #endif
-    iter = NULL;
-    while ((acx = js_ContextIterator(rt, JS_FALSE, &iter)))
+    JSContext *iter = NULL;
+    while (JSContext *acx = js_ContextIterator(rt, JS_FALSE, &iter))
         JS_TriggerOperationCallback(acx);
-#ifdef JS_THREADSAFE
-    if (!gcLocked)
-        JS_UNLOCK_GC(rt);
-#endif
 }
 
 JSStackFrame *
@@ -1981,7 +1973,7 @@ JSContext::checkMallocGCPressure(void *p)
     ptrdiff_t n = JS_GC_THREAD_MALLOC_LIMIT - thread->gcThreadMallocBytes;
     thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
 
-    JS_LOCK_GC(runtime);
+    AutoLockGC lock(runtime);
     runtime->gcMallocBytes -= n;
     if (runtime->isGCMallocLimitReached())
 #endif
@@ -1999,7 +1991,6 @@ JSContext::checkMallocGCPressure(void *p)
         JS_THREAD_DATA(this)->purgeGCFreeLists();
         js_TriggerGC(this, true);
     }
-    JS_UNLOCK_GC(runtime);
 }
 
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,6 +40,7 @@
 #define jsbit_h___
 
 #include "jstypes.h"
+#include "jscompat.h"
 #include "jsutil.h"
 
 JS_BEGIN_EXTERN_C
@@ -47,7 +48,7 @@ JS_BEGIN_EXTERN_C
 /*
 ** A jsbitmap_t is a long integer that can be used for bitmaps
 */
-typedef JSUword     jsbitmap_t;     /* NSPR name, a la Unix system types */
+typedef jsuword     jsbitmap_t;     /* NSPR name, a la Unix system types */
 typedef jsbitmap_t  jsbitmap;       /* JS-style scalar typedef name */
 
 #define JS_BITMAP_SIZE(bits)    (JS_HOWMANY(bits, JS_BITS_PER_WORD) *         \
@@ -213,8 +214,8 @@ __BitScanReverse64(unsigned __int64 val)
 
 /*
  * Internal function.
- * Compute the log of the least power of 2 greater than or equal to n.
- * This is a version of JS_CeilingLog2 that operates on jsuword with
+ * Compute the log of the least power of 2 greater than or equal to n. This is
+ * a version of JS_CeilingLog2 that operates on unsigned integers with
  * CPU-dependant size.
  */
 #define JS_CEILING_LOG2W(n) ((n) <= 1 ? 0 : 1 + JS_FLOOR_LOG2W((n) - 1))
@@ -222,7 +223,7 @@ __BitScanReverse64(unsigned __int64 val)
 /*
  * Internal function.
  * Compute the log of the greatest power of 2 less than or equal to n.
- * This is a version of JS_FloorLog2 that operates on jsuword with
+ * This is a version of JS_FloorLog2 that operates on unsigned integers with
  * CPU-dependant size and requires that n != 0.
  */
 #define JS_FLOOR_LOG2W(n) (JS_ASSERT((n) != 0), js_FloorLog2wImpl(n))
@@ -231,18 +232,18 @@ __BitScanReverse64(unsigned __int64 val)
 
 # ifdef JS_HAS_BUILTIN_BITSCAN32
 #  define js_FloorLog2wImpl(n)                                                \
-    ((JSUword)(JS_BITS_PER_WORD - 1 - js_bitscan_clz32(n)))
+    ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz32(n)))
 # else
-#  define js_FloorLog2wImpl(n) ((JSUword)JS_FloorLog2(n))
+#  define js_FloorLog2wImpl(n) ((size_t)JS_FloorLog2(n))
 #endif
 
 #elif JS_BYTES_PER_WORD == 8
 
 # ifdef JS_HAS_BUILTIN_BITSCAN64
 #  define js_FloorLog2wImpl(n)                                                \
-    ((JSUword)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64(n)))
+    ((size_t)(JS_BITS_PER_WORD - 1 - js_bitscan_clz64(n)))
 # else
-extern JSUword js_FloorLog2wImpl(JSUword n);
+extern size_t js_FloorLog2wImpl(size_t n);
 # endif
 
 #else
@@ -250,6 +251,36 @@ extern JSUword js_FloorLog2wImpl(JSUword n);
 # error "NOT SUPPORTED"
 
 #endif
+
+namespace js {
+
+inline size_t
+CountTrailingZeros(size_t n)
+{
+    JS_ASSERT(n != 0);
+#if JS_BYTES_PER_WORD != 4 && JS_BYTES_PER_WORD != 8
+# error "NOT SUPPORTED"
+#endif
+
+#if JS_BYTES_PER_WORD == 4 && defined JS_HAS_BUILTIN_BITSCAN32
+    return js_bitscan_ctz32(n);
+#elif JS_BYTES_PER_WORD == 8 && defined JS_HAS_BUILTIN_BITSCAN64
+    return js_bitscan_ctz64(n);
+#else
+    size_t count = 0;
+# if JS_BYTES_PER_WORD == 8
+    if (!(n & size_t(0xFFFFFFFFU))) { count += 32; n >>= 32; }
+# endif
+    if (!(n & 0xFFFF)) { count += 16; n >>= 16; }
+    if (!(n & 0xFF))   { count += 8;  n >>= 8; }
+    if (!(n & 0xF))    { count += 4;  n >>= 4; }
+    if (!(n & 0x3))    { count += 2;  n >>= 2; }
+    if (!(n & 0x1))    { count += 1;  n >>= 1; }
+    return count + 1 - (n & 0x1);
+#endif
+}
+
+}
 
 /*
  * Macros for rotate left. There is no rotate operation in the C Language so

@@ -121,6 +121,12 @@ namespace nanojit
         CodeList* availblocks;
         size_t totalAllocated;
 
+        /** Cached value of VMPI_getVMPageSize */
+        const size_t bytesPerPage;
+        
+        /** Number of bytes to request from VMPI layer, always a multiple of the page size */
+        const size_t bytesPerAlloc;
+
         /** remove one block from a list */
         static CodeList* removeBlock(CodeList* &list);
 
@@ -137,7 +143,7 @@ namespace nanojit
         void sanity_check();
 
         /** find the beginning of the heapblock terminated by term */
-        static CodeList* firstBlock(CodeList* term);
+        CodeList* firstBlock(CodeList* term);
 
         //
         // CodeAlloc's SPI.  Implementations must be defined by nanojit embedder.

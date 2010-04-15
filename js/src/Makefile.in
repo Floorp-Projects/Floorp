@@ -139,6 +139,7 @@ CPPSRCS		= \
 		jsexn.cpp \
 		jsfun.cpp \
 		jsgc.cpp \
+		jsgcchunk.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -290,14 +291,15 @@ LOCAL_INCLUDES = \
     $(NULL)
 
 ifeq ($(OS_ARCH),OS2)
-# libffi builds an aout lib on OS/2; convert it to an OMF lib.
-ctypes/libffi/.libs/libffi.$(LIB_SUFFIX): ctypes/libffi/.libs/libffi.a
-	emxomf $<
-endif
-
+SHARED_LIBRARY_LIBS += \
+    ctypes/libffi/.libs/ffi.a \
+    $(NULL)
+else
 SHARED_LIBRARY_LIBS += \
     ctypes/libffi/.libs/libffi.$(LIB_SUFFIX) \
     $(NULL)
+endif
+
 endif # JS_HAS_CTYPES
 
 ifdef HAVE_DTRACE

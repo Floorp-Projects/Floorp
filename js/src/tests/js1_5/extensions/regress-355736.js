@@ -59,7 +59,7 @@ function test()
   compareSource(expect, actual, summary + ': 1');
 
   f = function() { return { get super() { } } };
-  expect = 'function() { return { super getter : function() { } }; }';
+  expect = 'function() { return { get super() { } }; }';
   actual = f + '';
   compareSource(expect, actual, summary + ': 2');
 

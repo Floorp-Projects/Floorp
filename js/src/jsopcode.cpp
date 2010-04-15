@@ -275,11 +275,11 @@ ToDisassemblySource(JSContext *cx, jsval v)
 {
     if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *obj = JSVAL_TO_OBJECT(v);
-        JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+        JSClass *clasp = obj->getClass();
 
         if (clasp == &js_BlockClass) {
             char *source = JS_sprintf_append(NULL, "depth %d {", OBJ_BLOCK_DEPTH(cx, obj));
-            for (JSScopeProperty *sprop = OBJ_SCOPE(obj)->lastProperty();
+            for (JSScopeProperty *sprop = obj->scope()->lastProperty();
                  sprop;
                  sprop = sprop->parent) {
                 const char *bytes = js_AtomToPrintableString(cx, JSID_TO_ATOM(sprop->id));
@@ -1315,7 +1315,7 @@ GetLocal(SprintStack *ss, jsint i)
         if (j == n)
             return GetStr(ss, i);
         obj = script->getObject(j);
-        if (OBJ_GET_CLASS(cx, obj) == &js_BlockClass) {
+        if (obj->getClass() == &js_BlockClass) {
             depth = OBJ_BLOCK_DEPTH(cx, obj);
             count = OBJ_BLOCK_COUNT(cx, obj);
             if ((jsuint)(i - depth) < (jsuint)count)
@@ -1324,7 +1324,7 @@ GetLocal(SprintStack *ss, jsint i)
     }
 
     i -= depth;
-    for (sprop = OBJ_SCOPE(obj)->lastProperty(); sprop; sprop = sprop->parent) {
+    for (sprop = obj->scope()->lastProperty(); sprop; sprop = sprop->parent) {
         if (sprop->shortid == i)
             break;
     }
@@ -2645,7 +2645,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 MUST_FLOW_THROUGH("enterblock_out");
 #define LOCAL_ASSERT_OUT(expr) LOCAL_ASSERT_CUSTOM(expr, ok = JS_FALSE; \
                                                    goto enterblock_out)
-                for (sprop = OBJ_SCOPE(obj)->lastProperty(); sprop;
+                for (sprop = obj->scope()->lastProperty(); sprop;
                      sprop = sprop->parent) {
                     if (!sprop->hasShortID())
                         continue;
@@ -3447,12 +3447,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 }
                 break;
 
-#if JS_HAS_GETTER_SETTER
               case JSOP_GETTER:
               case JSOP_SETTER:
                 todo = -2;
                 break;
-#endif
 
               case JSOP_DUP2:
                 rval = GetStr(ss, ss->top-2);
@@ -3553,7 +3551,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 ok = JS_FALSE;
 
                 for (i = argc - 1; i >= 0; i--) {
-                    argv[i] = JS_strdup(cx, POP_STR());
+                    argv[i] = JS_strdup(cx, POP_STR_PREC(cs->prec + 1));
                     if (!argv[i])
                         goto out;
                 }
@@ -4190,7 +4188,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_OBJECT:
                 LOAD_OBJECT(0);
-                LOCAL_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_RegExpClass);
+                LOCAL_ASSERT(obj->getClass() == &js_RegExpClass);
                 goto do_regexp;
 
               case JSOP_REGEXP:
@@ -4553,8 +4551,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_INITMETHOD:
                 LOAD_ATOM(0);
                 xval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom),
-                                   (jschar)
-                                   (ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
+                                   jschar(ATOM_IS_IDENTIFIER(atom) ? 0 : '\''));
                 if (!xval)
                     return NULL;
                 isFirst = (ss->opcodes[ss->top - 2] == JSOP_NEWINIT);
@@ -4564,56 +4561,27 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               do_initprop:
                 maybeComma = isFirst ? "" : ", ";
-#ifdef OLD_GETTER_SETTER
-                todo = Sprint(&ss->sprinter, "%s%s%s%s%s%s%s:%s",
-                              lval,
-                              maybeComma,
-                              xval,
-                              (lastop == JSOP_GETTER || lastop == JSOP_SETTER)
-                              ? " " : "",
-                              (lastop == JSOP_GETTER) ? js_getter_str :
-                              (lastop == JSOP_SETTER) ? js_setter_str :
-                              "",
-                              rval);
-#else
                 if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
-                    if (!atom ||
-                        !ATOM_IS_STRING(atom) ||
-                        !ATOM_IS_IDENTIFIER(atom) ||
-                        ATOM_IS_KEYWORD(atom) ||
-                        (ss->opcodes[ss->top+1] != JSOP_LAMBDA &&
-                         ss->opcodes[ss->top+1] != JSOP_LAMBDA_FC)) {
-                        todo = Sprint(&ss->sprinter, "%s%s%s %s: %s",
-                                      lval,
-                                      maybeComma,
-                                      xval,
-                                      (lastop == JSOP_GETTER) ? js_getter_str :
-                                      (lastop == JSOP_SETTER) ? js_setter_str :
-                                      "",
-                                      rval);
-                    } else {
-                        const char *end = rval + strlen(rval);
+                    const char *end = rval + strlen(rval);
 
-                        if (*rval == '(')
-                            ++rval, --end;
-                        LOCAL_ASSERT(strncmp(rval, js_function_str, 8) == 0);
-                        LOCAL_ASSERT(rval[8] == ' ');
-                        rval += 8 + 1;
-                        LOCAL_ASSERT(*end ? *end == ')' : end[-1] == '}');
-                        todo = Sprint(&ss->sprinter, "%s%s%s %s%s%.*s",
-                                      lval,
-                                      maybeComma,
-                                      (lastop == JSOP_GETTER)
-                                      ? js_get_str : js_set_str,
-                                      xval,
-                                      (rval[0] != '(') ? " " : "",
-                                      end - rval, rval);
-                    }
+                    if (*rval == '(')
+                        ++rval, --end;
+                    LOCAL_ASSERT(strncmp(rval, js_function_str, 8) == 0);
+                    LOCAL_ASSERT(rval[8] == ' ');
+                    rval += 8 + 1;
+                    LOCAL_ASSERT(*end ? *end == ')' : end[-1] == '}');
+                    todo = Sprint(&ss->sprinter, "%s%s%s %s%s%.*s",
+                                    lval,
+                                    maybeComma,
+                                    (lastop == JSOP_GETTER)
+                                    ? js_get_str : js_set_str,
+                                    xval,
+                                    (rval[0] != '(') ? " " : "",
+                                    end - rval, rval);
                 } else {
                     todo = Sprint(&ss->sprinter, "%s%s%s: %s",
                                   lval, maybeComma, xval, rval);
                 }
-#endif
                 break;
               }
 

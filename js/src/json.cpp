@@ -64,6 +64,7 @@
 #include "json.h"
 
 #include "jsatominlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 
@@ -392,6 +393,9 @@ JA(JSContext *cx, jsval *vp, StringifyContext *scx)
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
 
+    if (length != 0 && !WriteIndent(cx, scx, scx->depth))
+        return JS_FALSE;
+
     AutoValueRooter outputValue(cx, JSVAL_NULL);
 
     jsid id;
@@ -441,9 +445,6 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
 {
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    if (!holder->getProperty(cx, id, vp))
-        return JS_FALSE;
-
     if (!JSVAL_IS_PRIMITIVE(*vp) && !js_TryJSON(cx, vp))
         return JS_FALSE;
 
@@ -452,9 +453,9 @@ Str(JSContext *cx, jsid id, JSObject *holder, StringifyContext *scx, jsval *vp, 
 
     // catches string and number objects with no toJSON
     if (!JSVAL_IS_PRIMITIVE(*vp)) {
-        JSClass *clasp = OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(*vp));
+        JSClass *clasp = JSVAL_TO_OBJECT(*vp)->getClass();
         if (clasp == &js_StringClass || clasp == &js_NumberClass)
-            *vp = JSVAL_TO_OBJECT(*vp)->fslots[JSSLOT_PRIMITIVE_THIS];
+            *vp = JSVAL_TO_OBJECT(*vp)->getPrimitiveThis();
     }
 
     if (JSVAL_IS_STRING(*vp)) {
@@ -518,9 +519,9 @@ InitializeGap(JSContext *cx, jsval space, JSCharBuffer &cb)
 
     if (!JSVAL_IS_PRIMITIVE(space)) {
         JSObject *obj = JSVAL_TO_OBJECT(space);
-        JSClass *clasp = OBJ_GET_CLASS(cx, obj);
+        JSClass *clasp = obj->getClass();
         if (clasp == &js_NumberClass || clasp == &js_StringClass)
-            *gap.addr() = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+            *gap.addr() = obj->getPrimitiveThis();
     }
 
     if (JSVAL_IS_STRING(gap.value())) {
@@ -555,7 +556,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
     if (!InitializeGap(cx, space, scx.gap))
         return JS_FALSE;
 
-    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+    JSObject *obj = NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!obj)
         return JS_FALSE;
 
@@ -646,7 +647,7 @@ static bool
 Revive(JSContext *cx, jsval reviver, jsval *vp)
 {
 
-    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+    JSObject *obj = NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!obj)
         return false;
 
@@ -838,7 +839,7 @@ PushObject(JSContext *cx, JSONParser *jp, JSObject *obj)
 static JSBool
 OpenObject(JSContext *cx, JSONParser *jp)
 {
-    JSObject *obj = js_NewObject(cx, &js_ObjectClass, NULL, NULL);
+    JSObject *obj = NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!obj)
         return JS_FALSE;
 
