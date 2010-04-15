@@ -663,6 +663,19 @@ protected:
   NS_HIDDEN_(nsresult) GetURIListAttr(nsIAtom* aAttr, nsAString& aResult);
 
   /**
+   * Helper method for NS_IMPL_ENUM_ATTR_DEFAULT_VALUE.
+   * Gets the enum value string of an attribute and using a default value if
+   * the attribute is missing or the string is an invalid enum value.
+   *
+   * @param aType     the name of the attribute.
+   * @param aDefault  the default value if the attribute is missing or invalid.
+   * @param aResult   string corresponding to the value [out].
+   */
+  NS_HIDDEN_(nsresult) GetEnumAttr(nsIAtom* aAttr,
+                                   const char* aDefault,
+                                   nsAString& aResult);
+
+  /**
    * Locates the nsIEditor associated with this node.  In general this is
    * equivalent to GetEditorInternal(), but for designmode or contenteditable,
    * this may need to get an editor that's not actually on this element's
@@ -1061,6 +1074,23 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
       return NS_ERROR_DOM_INDEX_SIZE_ERR;                                 \
     }                                                                     \
     return SetIntAttr(nsGkAtoms::_atom, aValue);                          \
+  }
+
+/**
+ * A macro to implement the getter and setter for a given content
+ * property that needs to set an enumerated string. The method
+ * uses a specific GetEnumAttr and the generic SetAttrHelper methods.
+ */
+#define NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
+  NS_IMETHODIMP                                                           \
+  _class::Get##_method(nsAString& aValue)                                 \
+  {                                                                       \
+    return GetEnumAttr(nsGkAtoms::_atom, _default, aValue);               \
+  }                                                                       \
+  NS_IMETHODIMP                                                           \
+  _class::Set##_method(const nsAString& aValue)                           \
+  {                                                                       \
+    return SetAttrHelper(nsGkAtoms::_atom, aValue);                       \
   }
 
 /**

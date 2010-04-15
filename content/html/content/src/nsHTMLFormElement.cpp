@@ -436,10 +436,10 @@ nsHTMLFormElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::method) {
-      return aResult.ParseEnumValue(aValue, kFormMethodTable);
+      return aResult.ParseEnumValue(aValue, kFormMethodTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::enctype) {
-      return aResult.ParseEnumValue(aValue, kFormEnctypeTable);
+      return aResult.ParseEnumValue(aValue, kFormEnctypeTable, PR_FALSE);
     }
   }
 
