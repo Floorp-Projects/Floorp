@@ -5074,32 +5074,11 @@ out:
 
 /************************************************************************/
 
-static jsdouble
-GetRegExpLastIndex(JSObject *obj)
-{
-    JS_ASSERT(obj->getClass() == &js_RegExpClass);
-
-    jsval v = obj->fslots[JSSLOT_REGEXP_LAST_INDEX];
-    if (JSVAL_IS_INT(v))
-        return JSVAL_TO_INT(v);
-    JS_ASSERT(JSVAL_IS_DOUBLE(v));
-    return *JSVAL_TO_DOUBLE(v);
-}
-
-static jsval
-GetRegExpLastIndexValue(JSObject *obj)
-{
-    JS_ASSERT(obj->getClass() == &js_RegExpClass);
-    return obj->fslots[JSSLOT_REGEXP_LAST_INDEX];
-}
-
 static JSBool
 SetRegExpLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
 {
-    JS_ASSERT(obj->getClass() == &js_RegExpClass);
-
-    return JS_NewNumberValue(cx, lastIndex,
-                             &obj->fslots[JSSLOT_REGEXP_LAST_INDEX]);
+    JS_ASSERT(obj->isRegExp());
+    return JS_NewNumberValue(cx, lastIndex, obj->addressOfRegExpLastIndex());
 }
 
 static JSBool
@@ -5117,7 +5096,7 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     }
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX) {
-        *vp = GetRegExpLastIndexValue(obj);
+        *vp = obj->getRegExpLastIndex();
         return JS_TRUE;
     }
 
@@ -5439,7 +5418,7 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
         if (!re)
             return JS_FALSE;
         obj->setPrivate(re);
-        js_ClearRegExpLastIndex(obj);
+        obj->zeroRegExpLastIndex();
         *objp = obj;
     }
     return JS_TRUE;
@@ -5462,7 +5441,7 @@ regexp_trace(JSTracer *trc, JSObject *obj)
 JSClass js_RegExpClass = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_RESERVED_SLOTS(REGEXP_CLASS_FIXED_RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::REGEXP_FIXED_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_RegExp),
     JS_PropertyStub,    JS_PropertyStub,
     JS_PropertyStub,    JS_PropertyStub,
@@ -5651,7 +5630,7 @@ created:
     JS_LOCK_OBJ(cx, obj);
     oldre = (JSRegExp *) obj->getPrivate();
     obj->setPrivate(re);
-    js_ClearRegExpLastIndex(obj);
+    obj->zeroRegExpLastIndex();
     JS_UNLOCK_OBJ(cx, obj);
     if (oldre)
         js_DestroyRegExp(cx, oldre);
@@ -5691,9 +5670,17 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     /* NB: we must reach out: after this paragraph, in order to drop re. */
     HOLD_REGEXP(cx, re);
     sticky = (re->flags & JSREG_STICKY) != 0;
-    lastIndex = (re->flags & (JSREG_GLOB | JSREG_STICKY))
-                ? GetRegExpLastIndex(obj)
-                : 0;
+    if (re->flags & (JSREG_GLOB | JSREG_STICKY)) {
+        jsval v = obj->getRegExpLastIndex();
+        if (JSVAL_IS_INT(v)) {
+            lastIndex = JSVAL_TO_INT(v);
+        } else {
+            JS_ASSERT(JSVAL_IS_DOUBLE(v));
+            lastIndex = *JSVAL_TO_DOUBLE(v);
+        }
+    } else {
+        lastIndex = 0;
+    }
     JS_UNLOCK_OBJ(cx, obj);
 
     /* Now that obj is unlocked, it's safe to (potentially) grab the GC lock. */
@@ -5724,7 +5711,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     if (lastIndex < 0 || str->length() < lastIndex) {
-        js_ClearRegExpLastIndex(obj);
+        obj->zeroRegExpLastIndex();
         *rval = JSVAL_NULL;
     } else {
         i = (size_t) lastIndex;
@@ -5732,7 +5719,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         if (ok &&
             ((re->flags & JSREG_GLOB) || (*rval != JSVAL_NULL && sticky))) {
             if (*rval == JSVAL_NULL)
-                js_ClearRegExpLastIndex(obj);
+                obj->zeroRegExpLastIndex();
             else
                 ok = SetRegExpLastIndex(cx, obj, i);
         }
@@ -5850,7 +5837,7 @@ js_NewRegExpObject(JSContext *cx, TokenStream *ts,
         return NULL;
     }
     obj->setPrivate(re);
-    js_ClearRegExpLastIndex(obj);
+    obj->zeroRegExpLastIndex();
     return obj;
 }
 
@@ -5865,7 +5852,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
         return NULL;
     JSRegExp *re = static_cast<JSRegExp *>(obj->getPrivate());
     clone->setPrivate(re);
-    js_ClearRegExpLastIndex(clone);
+    clone->zeroRegExpLastIndex();
     HOLD_REGEXP(cx, re);
     return clone;
 }
