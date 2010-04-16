@@ -710,8 +710,6 @@ pref("network.http.prompt-temp-redirect", true);
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
 // Section 4.8 "High-Throughput Data Service Class"
 pref("network.http.qos", 0);
-// ditto for Gopher
-pref("network.gopher.qos", 0);
 
 // default values for FTP
 // in a DSCP environment this should be 40 (0x28, or AF11), per RFC-4594,
@@ -907,8 +905,6 @@ pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAccep
 pref("network.proxy.type",                  5);
 pref("network.proxy.ftp",                   "");
 pref("network.proxy.ftp_port",              0);
-pref("network.proxy.gopher",                "");
-pref("network.proxy.gopher_port",           0);
 pref("network.proxy.http",                  "");
 pref("network.proxy.http_port",             0);
 pref("network.proxy.ssl",                   "");
