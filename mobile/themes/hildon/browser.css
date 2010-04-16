@@ -875,7 +875,7 @@ pageaction {
   width :100%;
 }
 
-@media all and (orientation: landscape) {
+@media (min-width: 500px) {
   pageaction {
     width: 50%;
   }
@@ -902,7 +902,7 @@ pageaction {
   }
 }
 
-@media all and (orientation: portrait) {
+@media (max-width: 499px) {
   pageaction:last-child {
     -moz-border-radius-bottomleft: 8px;
     -moz-border-radius-bottomright: 8px;
