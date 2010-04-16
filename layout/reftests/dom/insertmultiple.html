@@ -1,0 +1,28 @@
+<html class="reftest-wait">
+<head>
+
+<script>
+function boom()
+{
+  document.body.offsetHeight;
+
+  var lastdiv = document.getElementById("last");
+  var parent = lastdiv.parentNode;
+
+  for (var i = 2; i <= 4; i++) {
+    var newdiv = document.createElement("div");
+    newdiv.appendChild(document.createTextNode(i));
+    parent.insertBefore(newdiv, lastdiv);
+  }
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+</script>
+
+</head>
+<body onload="boom();">
+<div>1</div>
+<div id="last">5</div>
+</body>
+</html>
