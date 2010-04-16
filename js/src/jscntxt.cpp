@@ -1844,11 +1844,27 @@ js_InvokeOperationCallback(JSContext *cx)
      * not yield. Operation callbacks are supposed to happen rarely (seconds,
      * not milliseconds) so it is acceptable to yield at every callback.
      */
-    if (cx->runtime->gcIsNeeded)
+    JSRuntime *rt = cx->runtime;
+    if (rt->gcIsNeeded) {
         js_GC(cx, GC_NORMAL);
+
+        /*
+         * On trace we can exceed the GC quota, see comments in NewGCArena. So
+         * we check the quota and report OOM here when we are off trace.
+         */
+        bool delayedOutOfMemory;
+        JS_LOCK_GC(rt);
+        delayedOutOfMemory = (rt->gcBytes > rt->gcMaxBytes);
+        JS_UNLOCK_GC(rt);
+        if (delayedOutOfMemory) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+    }
 #ifdef JS_THREADSAFE
-    else
+    else {
         JS_YieldRequest(cx);
+    }
 #endif
 
     JSOperationCallback cb = cx->operationCallback;
