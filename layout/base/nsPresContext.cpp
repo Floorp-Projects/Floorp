@@ -1333,6 +1333,7 @@ void
 nsPresContext::SetContainer(nsISupports* aHandler)
 {
   mContainer = do_GetWeakReference(aHandler);
+  mIsChromeIsCached = PR_FALSE;
   if (mContainer) {
     GetDocumentColorPreferences();
   }
@@ -1647,7 +1648,7 @@ nsPresContext::CountReflows(const char * aName, nsIFrame * aFrame)
 #endif
 
 PRBool
-nsPresContext::IsChrome() const
+nsPresContext::IsChromeSlow()
 {
   PRBool isChrome = PR_FALSE;
   nsCOMPtr<nsISupports> container = GetContainer();
@@ -1662,11 +1663,25 @@ nsPresContext::IsChrome() const
       }
     }
   }
-  return isChrome;
+  mIsChrome = isChrome;
+  mIsChromeIsCached = PR_TRUE;
+  return mIsChrome;
+}
+
+void
+nsPresContext::InvalidateIsChromeCacheInternal()
+{
+  mIsChromeIsCached = PR_FALSE;
+}
+
+void
+nsPresContext::InvalidateIsChromeCacheExternal()
+{
+  InvalidateIsChromeCacheInternal();
 }
 
 /* virtual */ PRBool
-nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const
+nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask)
 {
   return
     nsRuleNode::HasAuthorSpecifiedRules(aFrame->GetStyleContext(),
@@ -1844,13 +1859,8 @@ nsPresContext::GetUserFontSetInternal()
     // that's a bad thing to do, and the caller was responsible for
     // flushing first.  If we're not (e.g., in frame construction), it's
     // ok.
-#ifdef DEBUG
-    {
-      PRBool inReflow;
-      NS_ASSERTION(!userFontSetGottenBefore || !mShell->IsReflowLocked(),
-                   "FlushUserFontSet should have been called first");
-    }
-#endif
+    NS_ASSERTION(!userFontSetGottenBefore || !mShell->IsReflowLocked(),
+                 "FlushUserFontSet should have been called first");
     FlushUserFontSet();
   }
 

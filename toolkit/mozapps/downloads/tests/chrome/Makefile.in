@@ -66,7 +66,7 @@ _CHROME_FILES = \
   test_space_key_pauses_resumes.xul \
   test_privatebrowsing_title.xul \
   test_ui_stays_open_on_alert_clickback.xul \
-  test_unkownContentType_dialog_layout.xul \
+  test_unknownContentType_dialog_layout.xul \
   test_bug_412360.xul \
   test_bug_429247.xul \
   test_bug_462172.xul \
@@ -79,6 +79,13 @@ _CHROME_FILES = \
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
 _CHROME_FILES += \
   test_backspace_key_removes.xul \
+  $(NULL)
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+_CHROME_FILES += \
+  test_taskbarprogress_downloadstates.xul \
+  test_taskbarprogress_service.xul \
   $(NULL)
 endif
 

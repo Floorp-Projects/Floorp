@@ -45,6 +45,8 @@ relativesrcdir  = browser/components/sessionstore/test/browser
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+# browser_506482.js is disabled because of frequent failures (bug 538672)
+# browser_524745.js is disabled because of frequent failures (bug 539002)
 # browser_526613.js is disabled because of frequent failures (bug 534489)
 
 _BROWSER_TEST_FILES = \
@@ -109,10 +111,8 @@ _BROWSER_TEST_FILES = \
 	browser_493467.js \
 	browser_495495.js \
 	browser_500328.js \
-	browser_506482.js \
 	browser_514751.js \
 	browser_522545.js \
-	browser_524745.js \
 	browser_528776.js \
 	$(NULL)
 

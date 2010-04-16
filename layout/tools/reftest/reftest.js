@@ -167,7 +167,7 @@ function OnRefTestLoad()
     }
 
 
-    /* Support for running a chunk (subset) of tests.  In seperate try as this is optional */
+    /* Support for running a chunk (subset) of tests.  In separate try as this is optional */
     try {
       gTotalChunks = prefs.getIntPref("reftest.totalChunks");
       gThisChunk = prefs.getIntPref("reftest.thisChunk");
@@ -374,9 +374,11 @@ function ReadManifest(aURL)
 
     new XPCSafeJSObjectWrapper(sandbox).prefs = {
       __exposedProps__: {
+        getBoolPref: 'r',
         getIntPref: 'r',
       },
       _prefs:      prefs,
+      getBoolPref: function(p) { return this._prefs.getBoolPref(p); },
       getIntPref:  function(p) { return this._prefs.getIntPref(p) }
     }
 

@@ -58,6 +58,7 @@
 #include "nsIDOMStorageEventObsolete.h"
 #include "nsIDOMStorageManager.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIObserver.h"
 
 #ifdef MOZ_STORAGE
 #include "nsDOMStorageDBWrapper.h"

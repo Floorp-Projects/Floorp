@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIDOMSVGTSpanElement.h"
+#include "nsIDOMSVGAltGlyphElement.h"
 #include "nsSVGTSpanFrame.h"
 #include "nsSVGUtils.h"
 #include "nsSVGTextFrame.h"
@@ -91,7 +92,8 @@ nsSVGTSpanFrame::Init(nsIContent* aContent,
                  "container");
 
     nsCOMPtr<nsIDOMSVGTSpanElement> tspan = do_QueryInterface(aContent);
-    NS_ASSERTION(tspan, "Content is not an SVG tspan");
+    nsCOMPtr<nsIDOMSVGAltGlyphElement> altGlyph = do_QueryInterface(aContent);
+    NS_ASSERTION(tspan || altGlyph, "Content is not an SVG tspan or altGlyph");
   }
 
   return nsSVGTSpanFrameBase::Init(aContent, aParent, aPrevInFlow);

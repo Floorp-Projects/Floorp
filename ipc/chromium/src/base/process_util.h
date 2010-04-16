@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #endif
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -132,6 +133,14 @@ typedef std::vector<std::pair<int, int> > file_handle_mapping_vector;
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
                bool wait, ProcessHandle* process_handle);
+
+#if defined(CHROMIUM_MOZILLA_BUILD) && defined(OS_LINUX)
+typedef std::map<std::string, std::string> environment_map;
+bool LaunchApp(const std::vector<std::string>& argv,
+               const file_handle_mapping_vector& fds_to_remap,
+               const environment_map& env_vars_to_set,
+               bool wait, ProcessHandle* process_handle);
+#endif
 #endif
 
 // Executes the application specified by cl. This function delegates to one

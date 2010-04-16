@@ -885,8 +885,9 @@ void nsDisplayList::DeleteAll() {
   }
 }
 
-nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
-                                 nsDisplayItem::HitTestState* aState) const {
+void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                            nsDisplayItem::HitTestState* aState,
+                            nsTArray<nsIFrame*> *aOutFrames) const {
   PRInt32 itemBufferStart = aState->mItemBuffer.Length();
   nsDisplayItem* item;
   for (item = GetBottom(); item; item = item->GetAbove()) {
@@ -898,21 +899,23 @@ nsIFrame* nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
     item = aState->mItemBuffer[i];
     aState->mItemBuffer.SetLength(i);
 
-    if (item->GetBounds(aBuilder).Contains(aPt)) {
-      nsIFrame* f = item->HitTest(aBuilder, aPt, aState);
-      // Handle the XUL 'mousethrough' feature and 'pointer-events'.
-      if (f) {
+    if (aRect.Intersects(item->GetBounds(aBuilder))) {
+      nsTArray<nsIFrame*> outFrames;
+      item->HitTest(aBuilder, aRect, aState, &outFrames);
+
+      for (PRUint32 j = 0; j < outFrames.Length(); j++) {
+        nsIFrame *f = outFrames.ElementAt(j);
+        // Handle the XUL 'mousethrough' feature and 'pointer-events'.
         if (!f->GetMouseThrough() &&
             f->GetStyleVisibility()->mPointerEvents != NS_STYLE_POINTER_EVENTS_NONE) {
-          aState->mItemBuffer.SetLength(itemBufferStart);
-          return f;
+          aOutFrames->AppendElement(f);
         }
       }
+
     }
   }
   NS_ASSERTION(aState->mItemBuffer.Length() == PRUint32(itemBufferStart),
                "How did we forget to pop some elements?");
-  return nsnull;
 }
 
 static void Sort(nsDisplayList* aList, PRInt32 aCount, nsDisplayList::SortLEQ aCmp,
@@ -1386,10 +1389,10 @@ nsDisplayWrapList::~nsDisplayWrapList() {
   mList.DeleteAll();
 }
 
-nsIFrame*
-nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
-                           HitTestState* aState) {
-  return mList.HitTest(aBuilder, aPt, aState);
+void
+nsDisplayWrapList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                           HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
+  mList.HitTest(aBuilder, aRect, aState, aOutFrames);
 }
 
 nsRect
@@ -1885,23 +1888,24 @@ PRBool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,
 #endif
 
 /* HitTest does some fun stuff with matrix transforms to obtain the answer. */
-nsIFrame *nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
-                                      nsPoint aPt,
-                                      HitTestState *aState)
+void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
+                                 const nsRect& aRect,
+                                 HitTestState *aState,
+                                 nsTArray<nsIFrame*> *aOutFrames)
 {
   /* Here's how this works:
    * 1. Get the matrix.  If it's singular, abort (clearly we didn't hit
    *    anything).
    * 2. Invert the matrix.
-   * 3. Use it to transform the point into the correct space.
-   * 4. Pass that point down through to the list's version of HitTest.
+   * 3. Use it to transform the rect into the correct space.
+   * 4. Pass that rect down through to the list's version of HitTest.
    */
   float factor = nsPresContext::AppUnitsPerCSSPixel();
   gfxMatrix matrix =
     GetResultingTransformMatrix(mFrame, aBuilder->ToReferenceFrame(mFrame),
                                 factor, nsnull);
   if (matrix.IsSingular())
-    return nsnull;
+    return;
 
   /* We want to go from transformed-space to regular space.
    * Thus we have to invert the matrix, which normally does
@@ -1910,27 +1914,45 @@ nsIFrame *nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
   matrix.Invert();
 
   /* Now, apply the transform and pass it down the channel. */
-  gfxPoint result = matrix.Transform(gfxPoint(NSAppUnitsToFloatPixels(aPt.x, factor),
-                                              NSAppUnitsToFloatPixels(aPt.y, factor)));
+  nsRect resultingRect;
+  if (aRect.width == 1 && aRect.height == 1) {
+    gfxPoint point = matrix.Transform(gfxPoint(NSAppUnitsToFloatPixels(aRect.x, factor),
+                                               NSAppUnitsToFloatPixels(aRect.y, factor)));
+
+    resultingRect = nsRect(NSFloatPixelsToAppUnits(float(point.x), factor),
+                           NSFloatPixelsToAppUnits(float(point.y), factor),
+                           1, 1);
+
+  } else {
+    gfxRect originalRect(NSAppUnitsToFloatPixels(aRect.x, factor),
+                         NSAppUnitsToFloatPixels(aRect.y, factor),
+                         NSAppUnitsToFloatPixels(aRect.width, factor),
+                         NSAppUnitsToFloatPixels(aRect.height, factor));
+
+    gfxRect rect = matrix.TransformBounds(originalRect);
+
+    resultingRect = nsRect(NSFloatPixelsToAppUnits(float(rect.X()), factor),
+                           NSFloatPixelsToAppUnits(float(rect.Y()), factor),
+                           NSFloatPixelsToAppUnits(float(rect.Width()), factor),
+                           NSFloatPixelsToAppUnits(float(rect.Height()), factor));
+  }
+  
 
 #ifdef DEBUG_HIT
   printf("Frame: %p\n", dynamic_cast<void *>(mFrame));
-  printf("  Untransformed point: (%f, %f)\n", result.x, result.y);
+  printf("  Untransformed point: (%f, %f)\n", resultingRect.X(), resultingRect.Y());
+  PRUint32 originalFrameCount = aOutFrames.Length();
 #endif
 
-  nsIFrame* resultFrame =
-    mStoredList.HitTest(aBuilder,
-                        nsPoint(NSFloatPixelsToAppUnits(float(result.x), factor),
-                                NSFloatPixelsToAppUnits(float(result.y), factor)), aState);
-  
+  mStoredList.HitTest(aBuilder, resultingRect, aState, aOutFrames);
+
 #ifdef DEBUG_HIT
-  if (resultFrame)
-    printf("  Hit!  Time: %f, frame: %p\n", static_cast<double>(clock()),
-           dynamic_cast<void *>(resultFrame));
+  if (originalFrameCount != aOutFrames.Length())
+    printf("  Hit! Time: %f, first frame: %p\n", static_cast<double>(clock()),
+           dynamic_cast<void *>(aOutFrames.ElementAt(0)));
   printf("=== end of hit test ===\n");
 #endif
 
-  return resultFrame;
 }
 
 /* The bounding rectangle for the object is the overflow rectangle translated
@@ -2085,14 +2107,15 @@ PRBool nsDisplaySVGEffects::IsOpaque(nsDisplayListBuilder* aBuilder)
   return PR_FALSE;
 }
 
-nsIFrame*
-nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
-                             HitTestState* aState)
+void
+nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                             HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
 {
-  if (!nsSVGIntegrationUtils::HitTestFrameForEffects(mEffectsFrame,
-          aPt - aBuilder->ToReferenceFrame(mEffectsFrame)))
-    return nsnull;
-  return mList.HitTest(aBuilder, aPt, aState);
+  nsPoint rectCenter(aRect.x + aRect.width / 2, aRect.y + aRect.height / 2);
+  if (nsSVGIntegrationUtils::HitTestFrameForEffects(mEffectsFrame,
+      rectCenter - aBuilder->ToReferenceFrame(mEffectsFrame))) {
+    mList.HitTest(aBuilder, aRect, aState, aOutFrames);
+  }
 }
 
 void nsDisplaySVGEffects::Paint(nsDisplayListBuilder* aBuilder,

@@ -47,8 +47,7 @@
 
 class nsDOMUIEvent : public nsDOMEvent,
                      public nsIDOMUIEvent,
-                     public nsIDOMNSUIEvent,
-                     public nsIPrivateCompositionEvent
+                     public nsIDOMNSUIEvent
 {
 public:
   nsDOMUIEvent(nsPresContext* aPresContext, nsGUIEvent* aEvent);
@@ -68,8 +67,6 @@ public:
   virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
   virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
 #endif
-  // nsIPrivateCompositionEvent interface
-  NS_IMETHOD GetCompositionReply(nsTextEventReply** aReply);
   
   // Forward to nsDOMEvent
   NS_FORWARD_TO_NSDOMEVENT

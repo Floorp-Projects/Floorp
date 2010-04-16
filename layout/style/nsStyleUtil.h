@@ -38,10 +38,13 @@
 #define nsStyleUtil_h___
 
 #include "nsCoord.h"
-#include "nsPresContext.h"
 #include "nsCSSProperty.h"
 
+class nsPresContext;
 struct nsStyleBackground;
+class nsString;
+class nsStringComparator;
+class nsIContent;
 
 enum nsFontSizeType {
   eFontSize_HTML = 1,

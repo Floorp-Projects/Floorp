@@ -1,0 +1,217 @@
+<?xml version="1.0"?>
+<!--
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Windows Download Taskbar Progress.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Felipe Gomes <felipc@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/**
+ * This tests that the Windows 7 Taskbar Progress is correctly updated when
+ * windows are opened and closed.
+ */
+-->
+
+<window title="Win7 Taskbar Progress"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome/toolkit/mozapps/downloads/tests/chrome/utils.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+const kTaskbarID = "@mozilla.org/windows-taskbar;1";
+const DOWNLOAD_MANAGER_URL = "chrome://mozapps/content/downloads/downloads.xul";
+const DLMGR_UI_DONE = "download-manager-ui-done";
+
+let DownloadTaskbarProgress, TaskbarService, observerService, wwatch, chromeWindow;
+let gGen = null;
+
+function test() {
+  let isWin7OrHigher = false;
+  try {
+    let version = Cc["@mozilla.org/system-info;1"]
+                    .getService(Ci.nsIPropertyBag2)
+                    .getProperty("version");
+    isWin7OrHigher = (parseFloat(version) >= 6.1);
+  } catch (ex) { }
+
+  if (!isWin7OrHigher) {
+    return;
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  gGen = doTest();
+  gGen.next();
+}
+
+function continueTest() {
+  gGen.next();
+}
+
+function doTest() {
+
+  let tempScope = {};
+  Components.utils.import("resource://gre/modules/DownloadTaskbarProgress.jsm", tempScope);
+
+  DownloadTaskbarProgress = tempScope.DownloadTaskbarProgress;
+  TaskbarService =  Cc[kTaskbarID].getService(Ci.nsIWinTaskbar);
+
+  observerService = Cc["@mozilla.org/observer-service;1"].
+                      getService(Ci.nsIObserverService);
+
+  wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+             getService(Ci.nsIWindowWatcher);
+
+  isnot(DownloadTaskbarProgress, null, "Download taskbar progress service exists");
+  is(TaskbarService.available, true, "Taskbar Service is available");
+
+  let DMWindow = getDMWindow();
+  if (DMWindow)
+    DMWindow.close();
+
+  //Manually call onBrowserWindowLoad because this is delayed in 10sec
+  chromeWindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                   getInterface(Components.interfaces.nsIWebNavigation).
+                   QueryInterface(Components.interfaces.nsIDocShellTreeItem).
+                   rootTreeItem.
+                   QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                   getInterface(Components.interfaces.nsIDOMWindow);
+
+  DownloadTaskbarProgress.onBrowserWindowLoad(chromeWindow);
+
+  is(DownloadTaskbarProgress.activeWindowIsDownloadWindow, false,
+     "DownloadTaskbarProgress window is not the Download window");
+
+  checkActiveTaskbar(false, window);
+  openDownloadManager(continueTest);
+  yield;
+
+  let DMWindow = getDMWindow();
+
+  ok(DMWindow, "Download Manager window was opened");
+  checkActiveTaskbar(true, DMWindow);
+
+  DMWindow.close();
+  setTimeout(continueTest, 100);
+  yield;
+
+  checkActiveTaskbar(false, window);
+
+  let browserWindow = openBrowserWindow(continueTest);
+  yield;
+
+  ok(browserWindow, "Browser window was opened");
+  DownloadTaskbarProgress.onBrowserWindowLoad(browserWindow);
+
+  // The owner window should not have changed, since our
+  // original window still exists
+  checkActiveTaskbar(false, window);
+
+  browserWindow.close();
+  SimpleTest.finish();
+  yield;
+}
+
+function checkActiveTaskbar(isDownloadManager, ownerWindow) {
+
+  isnot(DownloadTaskbarProgress.activeTaskbarProgress, null, "DownloadTaskbarProgress has an active taskbar");
+
+  is(DownloadTaskbarProgress.activeWindowIsDownloadWindow, isDownloadManager,
+     "The active taskbar progress " + (isDownloadManager ? "is" : "is not") + " the Download Manager");
+
+  if (ownerWindow) {
+    let ownerWindowDocShell = ownerWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+                                getInterface(Ci.nsIWebNavigation).
+                                QueryInterface(Ci.nsIDocShellTreeItem).treeOwner.
+                                QueryInterface(Ci.nsIInterfaceRequestor).
+                                getInterface(Ci.nsIXULWindow).docShell;
+
+    let windowTaskbarProgress = TaskbarService.getTaskbarProgress(ownerWindowDocShell);
+
+    is(DownloadTaskbarProgress.activeTaskbarProgress, windowTaskbarProgress,
+       "DownloadTaskbarProgress has the expected taskbar as active");
+  }
+
+}
+
+function openBrowserWindow(callback) {
+
+  let browserWindow = openDialog(chromeWindow.location, "_blank",
+                                 "chrome,all,dialog=no", "about:blank");
+ 
+  let helperFunc = function() {
+    callback();
+    browserWindow.removeEventListener("load", helperFunc, false);
+  }
+
+  browserWindow.addEventListener("load", helperFunc, false);
+
+  return browserWindow;
+}
+
+function openDownloadManager(callback) {
+
+  let testObs = {
+    observe: function(aSubject, aTopic, aData) {
+      if (aTopic != DLMGR_UI_DONE) {
+        return;
+      }
+
+      callback();
+      observerService.removeObserver(testObs, DLMGR_UI_DONE);
+    }
+  };
+
+  observerService.addObserver(testObs, DLMGR_UI_DONE, false);
+
+  Cc["@mozilla.org/download-manager-ui;1"].
+    getService(Ci.nsIDownloadManagerUI).show();
+
+}
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+</window>

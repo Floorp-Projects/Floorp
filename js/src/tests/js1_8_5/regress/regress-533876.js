@@ -16,5 +16,7 @@ try {
 
 delete eval;  // force dictionary scope for global
 gc();
-var f = eval("function () { return /x/; }");
+var f = eval("(function () { return /x/; })");
 x.watch('x', f);  // clone property from global to x, including SPROP_IN_DICTIONARY flag
+
+reportCompare("ok", "ok", "bug 533876");

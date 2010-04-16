@@ -1434,11 +1434,7 @@ OnChildProcessDumpRequested(void* aContext,
 static bool
 OOPInitialized()
 {
-#if defined(XP_MACOSX)
-  return true;
-#else
-  return crashServer != NULL;
-#endif
+  return pidToMinidump != NULL;
 }
 
 static void
@@ -1592,6 +1588,14 @@ SetRemoteExceptionHandler()
   return gExceptionHandler->IsOutOfProcess();
 }
 
+//--------------------------------------------------
+#elif defined(XP_MACOSX)
+void
+CreateNotificationPipeForChild()
+{
+  if (GetEnabled() && !OOPInitialized())
+    OOPInit();
+}
 #endif  // XP_WIN
 
 

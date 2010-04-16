@@ -2035,11 +2035,11 @@ namespace nanojit
                     return i;
                 }
             }
-            uint32_t const spaceLeft = NJ_MAX_STACK_ENTRY - _highWaterMark - 1;
-            if (spaceLeft >= 1)
+            if (_highWaterMark < NJ_MAX_STACK_ENTRY - 1)
             {
-                 NanoAssert(_entries[_highWaterMark+1] == BAD_ENTRY);
-                _entries[++_highWaterMark] = ins;
+                NanoAssert(_entries[_highWaterMark+1] == BAD_ENTRY);
+                _highWaterMark++;
+                _entries[_highWaterMark] = ins;
                 return _highWaterMark;
              }
         }

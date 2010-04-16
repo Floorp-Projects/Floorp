@@ -305,10 +305,8 @@ STATIC_LIBS += gfxpsshar
 endif
 
 ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
-ifndef MOZ_ENABLE_GTK2
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
-endif
 endif
 
 STATIC_LIBS += thebes layers

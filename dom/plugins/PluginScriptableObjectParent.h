@@ -41,6 +41,7 @@
 
 #include "mozilla/plugins/PPluginScriptableObjectParent.h"
 
+#include "jsapi.h"
 #include "npfunctions.h"
 #include "npruntime.h"
 
@@ -96,9 +97,9 @@ public:
                     bool* aHasProperty);
 
   virtual bool
-  AnswerGetProperty(PPluginIdentifierParent* aId,
-                    Variant* aResult,
-                    bool* aSuccess);
+  AnswerGetParentProperty(PPluginIdentifierParent* aId,
+                          Variant* aResult,
+                          bool* aSuccess);
 
   virtual bool
   AnswerSetProperty(PPluginIdentifierParent* aId,
@@ -167,6 +168,11 @@ public:
   Type() const {
     return mType;
   }
+
+  JSBool GetPropertyHelper(NPIdentifier aName,
+                           PRBool* aHasProperty,
+                           PRBool* aHasMethod,
+                           NPVariant* aResult);
 
 private:
   static NPObject*

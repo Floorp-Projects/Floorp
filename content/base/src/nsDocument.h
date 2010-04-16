@@ -704,6 +704,7 @@ public:
                                 nsIStyleRule* aStyleRule);
 
   virtual void FlushPendingNotifications(mozFlushType aType);
+  virtual void FlushExternalResources(mozFlushType aType);
   virtual nsIScriptEventManager* GetScriptEventManager();
   virtual void SetXMLDeclaration(const PRUnichar *aVersion,
                                  const PRUnichar *aEncoding,
@@ -877,6 +878,13 @@ public:
                                                       PRBool aIgnoreRootScrollFrame,
                                                       PRBool aFlushLayout,
                                                       nsIDOMElement** aReturn);
+
+  virtual NS_HIDDEN_(nsresult) NodesFromRectHelper(float aX, float aY,
+                                                   float aTopSize, float aRightSize,
+                                                   float aBottomSize, float aLeftSize,
+                                                   PRBool aIgnoreRootScrollFrame,
+                                                   PRBool aFlushLayout,
+                                                   nsIDOMNodeList** aReturn);
 
   virtual NS_HIDDEN_(void) FlushSkinBindings();
 

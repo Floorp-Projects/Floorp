@@ -47,6 +47,13 @@
 #endif // if defined(MALLOC_H)
 #include <stddef.h>             // for size_t
 #include <stdlib.h>             // for malloc, free
+#if defined(XP_UNIX)
+#  include <unistd.h>           // for valloc on *BSD
+#endif //if defined(XP_UNIX)
+
+#if defined(XP_WIN) || (defined(XP_OS2) && defined(__declspec))
+#  define MOZALLOC_EXPORT __declspec(dllexport)
+#endif
 
 // Make sure that "malloc" et al. resolve to their libc variants.
 #define MOZALLOC_DONT_DEFINE_MACRO_WRAPPERS

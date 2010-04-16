@@ -199,7 +199,7 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  -I$(topsrcdir)/xpcom/idl-parser \
 	  $(srcdir)/qsgen.py \
 	  --idlpath=$(DEPTH)/dist/idl \
-	  --cachedir=$(DEPTH)/xpcom/idl-parser \
+	  --cachedir=$(DEPTH)/xpcom/idl-parser/cache \
 	  --header-output dom_quickstubs.h \
 	  --stub-output dom_quickstubs.cpp \
 	  --makedepend-output $(MDDEPDIR)/dom_qsgen.pp \
@@ -209,5 +209,10 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 GARBAGE += \
 		dom_quickstubs.h \
 		dom_quickstubs.cpp \
+		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \
+		$(wildcard $(topsrcdir)/other-licenses/ply/ply/*.pyc) \
+		$(wildcard $(topsrcdir)/xpcom/idl-parser/*.pyc) \
 		$(NULL)
+
+GARBAGE_DIRS += $(DEPTH)/xpcom/idl-parser/cache

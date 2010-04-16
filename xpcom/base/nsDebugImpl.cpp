@@ -357,7 +357,9 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
      return;
 
    case NS_ASSERT_TRAP:
+   case NS_ASSERT_UNINITIALIZED: // Default to "trap" behavior
      Break(buf.buffer);
+     return;
    }   
 }
 

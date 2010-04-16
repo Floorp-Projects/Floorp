@@ -46,13 +46,13 @@ function test() {
     ok(preview.visible, "Preview is shown as expected after re-enabling");
 
   [1,2,3,4].forEach(function (idx) {
-    gBrowser.selectedTab = gBrowser.mTabs[idx];
+    gBrowser.selectedTab = gBrowser.tabs[idx];
     ok(checkSelectedTab(), "Current tab is correctly selected");
   });
 
   let currentSelectedTab = gBrowser.selectedTab;
   for each (let idx in [1,2,3,4]) {
-    let preview = getPreviewForTab(gBrowser.mTabs[0]);
+    let preview = getPreviewForTab(gBrowser.tabs[0]);
     let canvas = createThumbnailSurface(preview);
     let ctx = canvas.getContext("2d");
     preview.controller.drawThumbnail(ctx, canvas.width, canvas.height);
@@ -66,11 +66,11 @@ function test() {
   // Close #4
   getPreviewForTab(gBrowser.selectedTab).controller.onClose();
   checkPreviews(3, "Expected number of previews after closing selected tab via controller");
-  ok(gBrowser.mTabs.length == 3, "Successfully closed a tab");
+  ok(gBrowser.tabs.length == 3, "Successfully closed a tab");
 
   // Select #1
-  ok(getPreviewForTab(gBrowser.mTabs[0]).controller.onActivate(), "Activation was accepted");
-  ok(gBrowser.mTabs[0] == gBrowser.selectedTab, "Correct tab was selected");
+  ok(getPreviewForTab(gBrowser.tabs[0]).controller.onActivate(), "Activation was accepted");
+  ok(gBrowser.tabs[0] == gBrowser.selectedTab, "Correct tab was selected");
   checkSelectedTab();
 
   // Remove #3 (non active)
@@ -88,10 +88,10 @@ function test() {
   checkSelectedTab();
 
   // Change selection
-  gBrowser.selectedTab = gBrowser.mTabs[0];
+  gBrowser.selectedTab = gBrowser.tabs[0];
   checkSelectedTab();
   // Close nonselected tab via controller
-  getPreviewForTab(gBrowser.mTabs[1]).controller.onClose();
+  getPreviewForTab(gBrowser.tabs[1]).controller.onClose();
   checkPreviews(1);
 
   if (gPrefService.prefHasUserValue(ENABLE_PREF_NAME))
@@ -101,8 +101,8 @@ function test() {
 
   function checkPreviews(aPreviews, msg) {
     let nPreviews = AeroPeek.previews.length;
-    is(aPreviews, gBrowser.mTabs.length, "Browser has expected number of tabs");
-    is(nPreviews, gBrowser.mTabs.length, "Browser has one preview per tab");
+    is(aPreviews, gBrowser.tabs.length, "Browser has expected number of tabs");
+    is(nPreviews, gBrowser.tabs.length, "Browser has one preview per tab");
     is(nPreviews, aPreviews, msg || "Got expected number of previews");
   }
 
@@ -113,7 +113,7 @@ function test() {
     getPreviewForTab(gBrowser.selectedTab).active;
 
   function isTabSelected(idx)
-    gBrowser.selectedTab == gBrowser.mTabs[idx];
+    gBrowser.selectedTab == gBrowser.tabs[idx];
 
   function createThumbnailSurface(p) {
     let thumbnailWidth = 200,

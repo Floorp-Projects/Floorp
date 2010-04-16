@@ -1013,12 +1013,27 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
                                 PRBool aShouldIgnoreSuppression,
                                 PRBool aIgnoreRootScrollFrame)
 {
+  nsresult rv;
+  nsTArray<nsIFrame*> outFrames;
+  rv = GetFramesForArea(aFrame, nsRect(aPt, nsSize(1, 1)), outFrames,
+                        aShouldIgnoreSuppression, aIgnoreRootScrollFrame);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  return outFrames.Length() ? outFrames.ElementAt(0) : nsnull;
+}
+
+nsresult
+nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
+                                nsTArray<nsIFrame*> &aOutFrames,
+                                PRBool aShouldIgnoreSuppression,
+                                PRBool aIgnoreRootScrollFrame)
+{
   nsDisplayListBuilder builder(aFrame, PR_TRUE, PR_FALSE);
   nsDisplayList list;
-  nsRect target(aPt, nsSize(1, 1));
+  nsRect target(aRect);
 
-  if (aShouldIgnoreSuppression)
+  if (aShouldIgnoreSuppression) {
     builder.IgnorePaintSuppression();
+  }
 
   if (aIgnoreRootScrollFrame) {
     nsIFrame* rootScrollFrame =
@@ -1034,19 +1049,19 @@ nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
     aFrame->BuildDisplayListForStackingContext(&builder, target, &list);
 
   builder.LeavePresShell(aFrame, target);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
   if (gDumpEventList) {
-    fprintf(stderr, "Event handling --- (%d,%d):\n", aPt.x, aPt.y);
+    fprintf(stderr, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
     nsFrame::PrintDisplayList(&builder, list);
   }
 #endif
 
   nsDisplayItem::HitTestState hitTestState;
-  nsIFrame* result = list.HitTest(&builder, aPt, &hitTestState);
+  list.HitTest(&builder, target, &hitTestState, &aOutFrames);
   list.DeleteAll();
-  return result;
+  return NS_OK;
 }
 
 /**

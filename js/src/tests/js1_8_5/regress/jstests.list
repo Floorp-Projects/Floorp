@@ -1,6 +1,6 @@
 url-prefix ../../jsreftest.html?test=js1_8_5/regress/
 script regress-500528.js
-fails script regress-533876.js
+script regress-533876.js
 script regress-541255-0.js
 script regress-541255-1.js
 script regress-541255-2.js
@@ -10,3 +10,4 @@ script regress-541455.js
 script regress-546615.js
 script regress-555246-0.js
 fails script regress-555246-1.js
+script regress-559438.js

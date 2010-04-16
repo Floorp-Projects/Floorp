@@ -46,11 +46,11 @@
 #include "nsIListBoxObject.h"
 #include "nsIScrollbarMediator.h"
 #include "nsIReflowCallback.h"
-#include "nsPresContext.h"
 #include "nsBoxLayoutState.h"
 #include "nsThreadUtils.h"
 #include "nsPIBoxObject.h"
 
+class nsPresContext;
 class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);

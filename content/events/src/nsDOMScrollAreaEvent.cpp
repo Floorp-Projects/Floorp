@@ -43,6 +43,9 @@
 #include "nsDOMScrollAreaEvent.h"
 #include "nsGUIEvent.h"
 #include "nsClientRect.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIClassInfo.h"
+#include "nsIXPCScriptable.h"
 
 nsDOMScrollAreaEvent::nsDOMScrollAreaEvent(nsPresContext *aPresContext,
                                            nsScrollAreaEvent *aEvent)

@@ -83,12 +83,6 @@ js_CloseIterator(JSContext *cx, jsval v);
 extern JS_FRIEND_API(JSBool)
 js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval);
 
-/*
- * Close iterobj, whose class must be js_IteratorClass.
- */
-extern void
-js_CloseNativeIterator(JSContext *cx, JSObject *iterobj);
-
 extern JSBool
 js_ThrowStopIteration(JSContext *cx);
 

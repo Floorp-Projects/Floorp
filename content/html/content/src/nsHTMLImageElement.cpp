@@ -42,7 +42,6 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsMappedAttributes.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsSize.h"

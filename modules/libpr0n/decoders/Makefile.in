@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-TOOL_DIRS = icon/gtk icon
+DIRS = icon/gtk icon
 endif
 ifneq (,$(filter qt,$(MOZ_WIDGET_TOOLKIT)))
 DIRS = icon/qt icon

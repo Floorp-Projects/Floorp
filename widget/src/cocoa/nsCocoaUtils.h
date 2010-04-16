@@ -64,6 +64,21 @@ private:
   id mObject;  // [STRONG]
 };
 
+// Provide a local autorelease pool for the remainder of a method's execution.
+class nsAutoreleasePool {
+public:
+  nsAutoreleasePool()
+  {
+    mLocalPool = [[NSAutoreleasePool alloc] init];
+  }
+  ~nsAutoreleasePool()
+  {
+    [mLocalPool release];
+  }
+private:
+  NSAutoreleasePool *mLocalPool;
+};
+
 @interface NSApplication (Undocumented)
 
 // Present in all versions of OS X from (at least) 10.2.8 through 10.5.

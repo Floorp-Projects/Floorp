@@ -47,46 +47,56 @@ extern "C" {
 #include "cairoint.h"
 }
 
+#include "cairo-win32-refptr.h"
+
 struct _cairo_d2d_surface {
+    _cairo_d2d_surface() : clipRect(NULL), clipping(false), isDrawing(false),
+	textRenderingInit(true)
+    { }
+    ~_cairo_d2d_surface()
+    {
+	delete clipRect;
+    }
+
     cairo_surface_t base;
     /** Render target of the texture we render to */
-    ID2D1RenderTarget *rt;
+    RefPtr<ID2D1RenderTarget> rt;
     /** Surface containing our backstore */
-    ID3D10Resource *surface;
+    RefPtr<ID3D10Resource> surface;
     /** 
      * Surface used to temporarily store our surface if a bitmap isn't available
      * straight from our render target surface.
      */
-    ID3D10Texture2D *bufferTexture;
+    RefPtr<ID3D10Texture2D> bufferTexture;
     /** Backbuffer surface hwndrt renders to (NULL if not a window surface) */
-    IDXGISurface *backBuf;
+    RefPtr<IDXGISurface> backBuf;
     /** Bitmap shared with texture and rendered to by rt */
-    ID2D1Bitmap *surfaceBitmap;
+    RefPtr<ID2D1Bitmap> surfaceBitmap;
     /** Swap chain holding our backbuffer (NULL if not a window surface) */
-    IDXGISwapChain *dxgiChain;
+    RefPtr<IDXGISwapChain> dxgiChain;
     /** Window handle of the window we belong to */
     HWND hwnd;
     /** Format of the surface */
     cairo_format_t format;
     /** Geometry used for clipping when complex clipping is required */
-    ID2D1Geometry *clipMask;
+    RefPtr<ID2D1Geometry> clipMask;
     /** Clip rectangle for axis aligned rectangular clips */
     D2D1_RECT_F *clipRect;
     /** Clip layer used for pushing geometry clip mask */
-    ID2D1Layer *clipLayer;
+    RefPtr<ID2D1Layer> clipLayer;
     /** Mask layer used by surface_mask to push opacity masks */
-    ID2D1Layer *maskLayer;
+    RefPtr<ID2D1Layer> maskLayer;
     /**
      * Layer used for clipping when tiling, and also for clearing out geometries
      * - lazily initialized 
      */
-    ID2D1Layer *helperLayer;
+    RefPtr<ID2D1Layer> helperLayer;
     /** If this layer currently is clipping, used to prevent excessive push/pops */
     bool clipping;
     /** Brush used for bitmaps */
-    ID2D1BitmapBrush *bitmapBrush;
+    RefPtr<ID2D1BitmapBrush> bitmapBrush;
     /** Brush used for solid colors */
-    ID2D1SolidColorBrush *solidColorBrush;
+    RefPtr<ID2D1SolidColorBrush> solidColorBrush;
     /** Indicates if our render target is currently in drawing mode */
     bool isDrawing;
     /** Indicates if text rendering is initialized */
@@ -210,7 +220,7 @@ private:
 };
 
 
-ID2D1Brush*
+RefPtr<ID2D1Brush>
 _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf, 
 			            const cairo_pattern_t *pattern,
 				    unsigned int lastrun,

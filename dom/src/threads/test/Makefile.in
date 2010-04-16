@@ -105,6 +105,8 @@ _TEST_FILES = \
   testXHR.txt \
   test_fibonacci.html \
   fibonacci_worker.js \
+  test_newError.html \
+  newError_worker.js \
   $(NULL)
 
 _SUBDIR_TEST_FILES = \

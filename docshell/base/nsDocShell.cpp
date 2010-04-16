@@ -2415,6 +2415,12 @@ nsDocShell::SetItemType(PRInt32 aItemType)
     // disable auth prompting for anything but content
     mAllowAuth = mItemType == typeContent; 
 
+    nsRefPtr<nsPresContext> presContext = nsnull;
+    GetPresContext(getter_AddRefs(presContext));
+    if (presContext) {
+        presContext->InvalidateIsChromeCache();
+    }
+
     return NS_OK;
 }
 
@@ -10647,7 +10653,7 @@ PRBool
 nsDocShell::URIIsLocalFile(nsIURI *aURI)
 {
     PRBool isFile;
-    nsCOMPtr<nsINetUtil> util = do_GetIOService();
+    nsCOMPtr<nsINetUtil> util = do_GetNetUtil();
 
     return util && NS_SUCCEEDED(util->ProtocolHasFlags(aURI,
                                     nsIProtocolHandler::URI_IS_LOCAL_FILE,

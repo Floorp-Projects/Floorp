@@ -1639,7 +1639,7 @@ struct kernel_statfs {
                              : "i"(-EINVAL),
                                "r"(fn), "r"(__stack), "r"(__flags), "r"(arg),
                                "r"(__ptid), "r"(__tls), "r"(__ctid)
-                             : "lr", "memory");
+                             : "cc", "lr", "memory");
       }
       LSS_RETURN(int, __res);
     }
@@ -1768,7 +1768,7 @@ struct kernel_statfs {
                                "r"(fn), "r"(__stack), "r"(__flags), "r"(arg),
                                "r"(__ptid), "r"(__tls), "r"(__ctid),
                                "i"(__NR_clone), "i"(__NR_exit)
-                             : "lr", "memory");
+                             : "cc", "r7", "lr", "memory");
       }
       LSS_RETURN(int, __res);
     }
@@ -2726,16 +2726,16 @@ struct kernel_statfs {
   #endif
   #if defined(__ARM_EABI__)
     LSS_INLINE _syscall3(ssize_t, recvmsg, int, s, struct kernel_msghdr*, msg,
-                         int, flags);
+                         int, flags)
     LSS_INLINE _syscall3(ssize_t, sendmsg, int, s, const struct kernel_msghdr*,
-                         msg, int, flags);
+                         msg, int, flags)
     LSS_INLINE _syscall6(ssize_t, sendto, int, s, const void*, buf, size_t, len,
                          int, falgs, const struct kernel_sockaddr*, to,
-                         unsigned int, tolen);
-    LSS_INLINE _syscall2(int, shutdown, int, s, int, how);
-    LSS_INLINE _syscall3(int, socket, int, domain, int, type, int, protocol);
+                         unsigned int, tolen)
+    LSS_INLINE _syscall2(int, shutdown, int, s, int, how)
+    LSS_INLINE _syscall3(int, socket, int, domain, int, type, int, protocol)
     LSS_INLINE _syscall4(int, socketpair, int, d, int, type, int, protocol, 
-                         int*, sv);
+                         int*, sv)
   #endif
   #if defined(__i386__) || defined(__ARM_ARCH_3__) ||                      \
       (defined(__mips__) && _MIPS_SIM == _MIPS_SIM_ABI32)

@@ -46,6 +46,9 @@
 
 #include "glWrapper.h"
 
+#include "nsIServiceManager.h"
+#include "nsIConsoleService.h"
+
 static const GLint VERTEX_ATTRIB_LOCATION = 0;
 
 namespace mozilla {
@@ -170,6 +173,24 @@ LayerManagerOGL::Initialize()
   mYCbCrLayerProgram->SetYTexture(0);
   mYCbCrLayerProgram->SetCbTexture(1);
   mYCbCrLayerProgram->SetCrTexture(2);
+
+  nsCOMPtr<nsIConsoleService> 
+    console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+
+  if (console) {
+    nsString msg;
+    msg +=
+      NS_LITERAL_STRING("OpenGL LayerManager Initialized Succesfully.\nVersion: ");
+    msg += NS_ConvertUTF8toUTF16(
+      nsDependentCString((const char*)sglWrapper.GetString(LOCAL_GL_VERSION)));
+    msg += NS_LITERAL_STRING("\nVendor: ");
+    msg += NS_ConvertUTF8toUTF16(
+      nsDependentCString((const char*)sglWrapper.GetString(LOCAL_GL_VENDOR)));
+    msg += NS_LITERAL_STRING("\nRenderer: ");
+    msg += NS_ConvertUTF8toUTF16(
+      nsDependentCString((const char*)sglWrapper.GetString(LOCAL_GL_RENDERER)));
+    console->LogStringMessage(msg.get());
+  }
 
   return true;
 }
