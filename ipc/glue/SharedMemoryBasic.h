@@ -18,7 +18,7 @@
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009-2010
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -37,8 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_ipc_SharedMemory_h
-#define mozilla_ipc_SharedMemory_h
+#ifndef mozilla_ipc_SharedMemoryBasic_h
+#define mozilla_ipc_SharedMemoryBasic_h
+
+#include "base/shared_memory.h"
+#include "SharedMemory.h"
 
 #include "nsDebug.h"
 
@@ -46,64 +49,87 @@
 // This is a low-level wrapper around platform shared memory.  Don't
 // use it directly; use Shmem allocated through IPDL interfaces.
 //
-namespace {
-enum Rights {
-  RightsNone = 0,
-  RightsRead = 1 << 0,
-  RightsWrite = 1 << 1
-};
-}
 
 namespace mozilla {
 namespace ipc {
 
-class SharedMemory
+class SharedMemoryBasic : public SharedMemory
 {
 public:
-  enum SharedMemoryType {
-    TYPE_BASIC,
-    TYPE_SYSV,
-    TYPE_UNKNOWN
-  };
+  typedef base::SharedMemoryHandle Handle;
 
-  virtual ~SharedMemory() { }
-
-  virtual size_t Size() const = 0;
-
-  virtual void* memory() const = 0;
-
-  virtual bool Create(size_t size) = 0;
-  virtual bool Map(size_t nBytes) = 0;
-
-  virtual SharedMemoryType Type() const = 0;
-
-  void
-  Protect(char* aAddr, size_t aSize, int aRights)
+  SharedMemoryBasic() :
+    mSize(0)
   {
-    char* memStart = reinterpret_cast<char*>(memory());
-    if (!memStart)
-      NS_RUNTIMEABORT("SharedMemory region points at NULL!");
-    char* memEnd = memStart + Size();
-
-    char* protStart = aAddr;
-    if (!protStart)
-      NS_RUNTIMEABORT("trying to Protect() a NULL region!");
-    char* protEnd = protStart + aSize;
-
-    if (!(memStart <= protStart
-          && protEnd <= memEnd))
-      NS_RUNTIMEABORT("attempt to Protect() a region outside this SharedMemory");
-
-    // checks alignment etc.
-    SystemProtect(aAddr, aSize, aRights);
   }
 
-  static void SystemProtect(char* aAddr, size_t aSize, int aRights);
-  static size_t SystemPageSize();
+  SharedMemoryBasic(const Handle& aHandle) :
+    mSharedMemory(aHandle, false),
+    mSize(0)
+  {
+  }
+
+  NS_OVERRIDE
+  virtual bool Create(size_t aNbytes)
+  {
+    return mSharedMemory.Create("", false, false, aNbytes);
+  }
+
+  NS_OVERRIDE
+  virtual bool Map(size_t nBytes)
+  {
+    bool ok = mSharedMemory.Map(nBytes);
+    if (ok)
+      mSize = nBytes;
+    return ok;
+  }
+
+  NS_OVERRIDE
+  virtual size_t Size() const
+  {
+    return mSize;
+  }
+
+  NS_OVERRIDE
+  virtual void* memory() const
+  {
+    return mSharedMemory.memory();
+  }
+
+  NS_OVERRIDE
+  virtual SharedMemoryType Type() const
+  {
+    return TYPE_BASIC;
+  }
+
+  static Handle NULLHandle()
+  {
+    return base::SharedMemory::NULLHandle();
+  }
+
+  static bool IsHandleValid(const Handle &aHandle)
+  {
+    return base::SharedMemory::IsHandleValid(aHandle);
+  }
+
+  bool ShareToProcess(base::ProcessHandle process,
+                      Handle* new_handle)
+  {
+    base::SharedMemoryHandle handle;
+    bool ret = mSharedMemory.ShareToProcess(process, &handle);
+    if (ret)
+      *new_handle = handle;
+    return ret;
+  }
+
+private:
+  base::SharedMemory mSharedMemory;
+  // NB: we have to track this because shared_memory_win.cc doesn't
+  size_t mSize;
 };
 
 } // namespace ipc
 } // namespace mozilla
 
 
-#endif // ifndef mozilla_ipc_SharedMemory_h
+#endif // ifndef mozilla_ipc_SharedMemoryBasic_h
