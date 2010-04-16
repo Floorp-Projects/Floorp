@@ -3864,7 +3864,7 @@ nsHtml5TreeBuilder::snapshotMatches(nsAHtml5TreeBuilderState* snapshot)
   jArray<nsHtml5StackNode*,PRInt32> stackCopy = snapshot->getStack();
   PRInt32 stackLen = snapshot->getStackLength();
   jArray<nsHtml5StackNode*,PRInt32> listCopy = snapshot->getListOfActiveFormattingElements();
-  PRInt32 listLen = snapshot->getListLength();
+  PRInt32 listLen = snapshot->getListOfActiveFormattingElementsLength();
   if (stackLen != currentPtr + 1 || listLen != listPtr + 1 || formPointer != snapshot->getFormPointer() || headPointer != snapshot->getHeadPointer() || mode != snapshot->getMode() || originalMode != snapshot->getOriginalMode() || framesetOk != snapshot->isFramesetOk() || foreignFlag != snapshot->getForeignFlag() || needToDropLF != snapshot->isNeedToDropLF() || quirks != snapshot->isQuirks()) {
     return PR_FALSE;
   }
@@ -3892,7 +3892,7 @@ nsHtml5TreeBuilder::loadState(nsAHtml5TreeBuilderState* snapshot, nsHtml5AtomTab
   jArray<nsHtml5StackNode*,PRInt32> stackCopy = snapshot->getStack();
   PRInt32 stackLen = snapshot->getStackLength();
   jArray<nsHtml5StackNode*,PRInt32> listCopy = snapshot->getListOfActiveFormattingElements();
-  PRInt32 listLen = snapshot->getListLength();
+  PRInt32 listLen = snapshot->getListOfActiveFormattingElementsLength();
   for (PRInt32 i = 0; i <= listPtr; i++) {
     if (!!listOfActiveFormattingElements[i]) {
       listOfActiveFormattingElements[i]->release();
@@ -4017,7 +4017,7 @@ nsHtml5TreeBuilder::isQuirks()
 }
 
 PRInt32 
-nsHtml5TreeBuilder::getListLength()
+nsHtml5TreeBuilder::getListOfActiveFormattingElementsLength()
 {
   return listPtr + 1;
 }

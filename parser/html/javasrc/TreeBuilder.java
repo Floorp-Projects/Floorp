@@ -5353,7 +5353,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         StackNode<T>[] stackCopy = snapshot.getStack();
         int stackLen = snapshot.getStackLength();
         StackNode<T>[] listCopy = snapshot.getListOfActiveFormattingElements();
-        int listLen = snapshot.getListLength();
+        int listLen = snapshot.getListOfActiveFormattingElementsLength();
 
         if (stackLen != currentPtr + 1
                 || listLen != listPtr + 1
@@ -5394,7 +5394,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         StackNode<T>[] stackCopy = snapshot.getStack();
         int stackLen = snapshot.getStackLength();
         StackNode<T>[] listCopy = snapshot.getListOfActiveFormattingElements();
-        int listLen = snapshot.getListLength();
+        int listLen = snapshot.getListOfActiveFormattingElementsLength();
         
         for (int i = 0; i <= listPtr; i++) {
             if (listOfActiveFormattingElements[i] != null) {
@@ -5552,9 +5552,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     /**
-     * @see nu.validator.htmlparser.impl.TreeBuilderState#getListLength()
+     * @see nu.validator.htmlparser.impl.TreeBuilderState#getListOfActiveFormattingElementsLength()
      */
-    public int getListLength() {
+    public int getListOfActiveFormattingElementsLength() {
         return listPtr + 1;
     }
 
