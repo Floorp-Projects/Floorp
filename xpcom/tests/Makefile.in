@@ -150,8 +150,6 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),FreeBSD2)
 LIBS		+= -lpcap
 endif
 
-ENABLE_CXX_EXCEPTIONS = 1
-
 XPCSHELL_TESTS = unit
 
 # Make sure we have symbols in case we need to debug these.
