@@ -1,3 +1,4 @@
+// Title: groups.js (revision-a)
 (function(){
 
 var numCmp = function(a,b){ return a-b; }
@@ -26,6 +27,9 @@ function isEventOverElement(event, el){
 }
 
 // ##########
+// Class: Group
+// A single group in the tab candy window. Descended from <Item>.
+// Note that it implements the <Subscribable> interface.
 window.Group = function(listOfEls, options) {
   if(typeof(options) == 'undefined')
     options = {};
@@ -85,7 +89,35 @@ window.Group = function(listOfEls, options) {
     self.close();
   });
   
-  this.$title = $('.name', this.$titlebar);
+  // ___ Title 
+  var titleUnfocus = function() {
+    if(!self.getTitle()) {
+      self.$title
+        .css({
+          fontStyle: 'italic',
+          backgroundImage: 'url(img/edit.png)',
+          paddingLeft: 15
+        })
+        .val('group name');
+    }
+  };
+  
+  this.$title = $('.name', this.$titlebar)
+    .css({backgroundRepeat: 'no-repeat'})
+    .blur(titleUnfocus)
+    .focus(function() {
+      if(!self.getTitle()) {
+        self.$title
+          .css({
+            fontStyle: 'normal',
+            backgroundImage: '',
+            paddingLeft: 0
+          })
+          .val('');
+      }
+    });
+  
+  titleUnfocus();
 
   // ___ Content
   this.$content = $('<div class="group-content"/>')
@@ -124,7 +156,8 @@ window.Group = function(listOfEls, options) {
 window.Group.prototype = $.extend(new Item(), new Subscribable(), {  
   // ----------  
   getTitle: function() {
-    return (this.$title ? this.$title.val() : '');
+    var value = (this.$title ? this.$title.val() : '');
+    return (value == 'group name' ? '' : value);
   },
 
   // ----------  

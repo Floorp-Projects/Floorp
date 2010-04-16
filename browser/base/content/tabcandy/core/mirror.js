@@ -1,3 +1,4 @@
+// Title: mirror.js
 (function(){
 
 const Cc = Components.classes;
@@ -107,6 +108,9 @@ TabCanvas.prototype = {
 }
 
 // ##########
+// Class: Mirror
+// A single tab in the browser and its visual representation in the tab candy window. 
+// Note that it implements the <Subscribable> interface.
 function Mirror(tab, manager) {
   this.tab = tab;
   this.manager = manager;
@@ -145,12 +149,17 @@ function Mirror(tab, manager) {
 
 Mirror.prototype = $.extend(new Subscribable(), {  
   // ----------
+  // Function: triggerPaint
+  // Forces the mirror in question to update its thumbnail. 
   triggerPaint: function() {
   	var date = new Date();
   	this.needsPaint = date.getTime();
   },
   
   // ----------
+  // Function: foreceCanvasSize
+  // Repaints the thumbnail with the given resolution, and forces it 
+  // to stay that resolution until unforceCanvasSize is called. 
   forceCanvasSize: function(w, h) {
     this.canvasSizeForced = true;
     var $canvas = $(this.canvasEl);
@@ -160,17 +169,34 @@ Mirror.prototype = $.extend(new Subscribable(), {
   },
   
   // ----------
+  // Function: unforceCanvasSize
+  // Stops holding the thumbnail resolution; allows it to shift to the
+  // size of thumbnail on screen. Note that this call does not nest, unlike
+  // <TabMirror.resumePainting>; if you call forceCanvasSize multiple 
+  // times, you just need a single unforce to clear them all. 
   unforceCanvasSize: function() {
     this.canvasSizeForced = false;
   }
 });
 
 // ##########
+// Class: TabMirror
+// A singleton that manages all of the <Mirror>s in the system.
 var TabMirror = function( ){ this.init() }
 TabMirror.prototype = {
+  // ----------
+  // Function: init
+  // Set up the necessary tracking to maintain the <Mirror>s.
   init: function(){
     var self = this;
     
+/*
+    // When a tab is opened, create the mirror
+    Tabs.onOpen(function() {
+      self.update(this);
+    });
+*/
+
     // When a tab is updated, update the mirror
     Tabs.onReady( function(evt){
       self.update(evt.tab);
@@ -305,6 +331,15 @@ TabMirror.prototype = {
 window.TabMirror = {
   _private: new TabMirror(), 
   
+  // Function: customize
+  // Allows you to customize the tab representations as they are created. 
+  // 
+  // Parameters: 
+  //   func - a callback function that will be called every time a new 
+  //     tab or tabs are created. func should take in one parameter, a 
+  //     jQuery object representing the div enclosing the tab in question. 
+  //     This jQuery object may be singular or multiple, depending on 
+  //     the number of tabs being created. 
   customize: function(func) {
     // Apply the custom handlers to all existing elements
     // TODO: Make this modular: so that it only exists in one place.
@@ -315,10 +350,19 @@ window.TabMirror = {
     TabMirror.prototype._customize = func;
   },
 
+  // Function: pausePainting
+  // Tells the TabMirror to stop updating thumbnails (so you can do
+  // animations without thumbnail paints causing stutters). 
+  // pausePainting can be called multiple times, but every call to 
+  // pausePainting needs to be mirrored with a call to <resumePainting>. 
   pausePainting: function() {
     this._private.paintingPaused++;
   },
   
+  // Function: resumePainting
+  // Undoes a call to <pausePainting>. For instance, if you called 
+  // pausePainting three times in a row, you'll need to call resumePainting
+  // three times before the TabMirror will start updating thumbnails again. 
   resumePainting: function() {
     this._private.paintingPaused--;
   }
