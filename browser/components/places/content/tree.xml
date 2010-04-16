@@ -98,7 +98,7 @@
         <parameter name="folderRestrict"/>
         <body><![CDATA[
           // preserve grouping
-          var queryNode = asQuery(this.getResultNode());
+          var queryNode = PlacesUtils.asQuery(this.getResultNode());
           var options = queryNode.queryOptions.clone();
 
           // Make sure we're getting uri results.
@@ -214,7 +214,7 @@
               if (childURI == placeURI)
                 return child;
               else if (PlacesUtils.nodeIsContainer(child)) {
-                var nested = findNode(asContainer(child), placeURI, nodesURIChecked);
+                var nested = findNode(PlacesUtils.asContainer(child), placeURI, nodesURIChecked);
                 if (nested)
                   return nested;
               }
@@ -442,7 +442,7 @@
           // so bail out now and save a lot of work when updating commands
           var resultNode = this.getResultNode();
           if (PlacesUtils.nodeIsQuery(resultNode) &&
-              asQuery(resultNode).queryOptions.queryType ==
+              PlacesUtils.asQuery(resultNode).queryOptions.queryType ==
                 Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY)
               return this._cachedInsertionPoint = null;
 
@@ -535,7 +535,7 @@
               if (PlacesControllerDragHelper.disallowInsertion(container))
                 return null;
 
-              var queryOptions = asQuery(result.root).queryOptions;
+              var queryOptions = PlacesUtils.asQuery(result.root).queryOptions;
               if (queryOptions.sortingMode !=
                     Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
                 // If we are within a sorted view, insert at the end
@@ -618,7 +618,7 @@
             var index = ids.indexOf(node.itemId);
             if (index == -1 &&
                 node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT)
-              index = ids.indexOf(asQuery(node).folderItemId);
+              index = ids.indexOf(PlacesUtils.asQuery(node).folderItemId);
 
             if (index != -1) {
               nodes.push(node);
@@ -630,7 +630,7 @@
                 nodesURIChecked.indexOf(node.uri) != -1)
               return foundOne;
 
-            asContainer(node);
+            PlacesUtils.asContainer(node);
             if (!aOpenContainers && !node.containerOpen)
               return foundOne;
 

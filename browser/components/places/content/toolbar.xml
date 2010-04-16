@@ -250,7 +250,7 @@
               var popup = document.createElement("menupopup");
               popup.setAttribute("placespopup", "true");
               button.appendChild(popup);
-              popup._resultNode = asContainer(aChild);
+              popup._resultNode = PlacesUtils.asContainer(aChild);
 #ifndef XP_MACOSX
               popup.setAttribute("context", "placesContext");
 #endif
