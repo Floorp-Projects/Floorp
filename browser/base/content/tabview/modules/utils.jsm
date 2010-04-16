@@ -1,3 +1,4 @@
+// Title: utils.js
 (function(){
 
 const Cc = Components.classes;
@@ -132,6 +133,9 @@ window.Rect.prototype = {
 };
 
 // ##########
+// Class: Subscribable
+// A mix-in for allowing objects to collect subscribers for custom events. 
+// Currently supports only onClose. 
 // TODO generalize for any number of events
 window.Subscribable = function() {
   this.onCloseSubscribers = null;
@@ -139,6 +143,9 @@ window.Subscribable = function() {
 
 window.Subscribable.prototype = {
   // ----------
+  // Function: addOnClose
+  // The given callback will be called when the Subscribable fires its onClose.
+  // The referenceElement is used to facilitate removal if necessary. 
   addOnClose: function(referenceElement, callback) {
     if(!this.onCloseSubscribers)
       this.onCloseSubscribers = [];
@@ -159,6 +166,8 @@ window.Subscribable.prototype = {
   },
   
   // ----------
+  // Function: removeOnClose
+  // Removes the callback associated with referenceElement for onClose notification. 
   removeOnClose: function(referenceElement) {
     if(!this.onCloseSubscribers)
       return;
@@ -169,6 +178,8 @@ window.Subscribable.prototype = {
   },
   
   // ----------
+  // Function: _sendOnClose
+  // Internal routine. Used by the Subscribable to fire onClose events.
   _sendOnClose: function() {
     if(!this.onCloseSubscribers)
       return;
