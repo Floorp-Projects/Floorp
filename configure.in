@@ -2193,9 +2193,6 @@ ia64*-hpux*)
     XARGS=xargs
     XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     ZIP=zip
-    LIBIDL_CFLAGS="-I$MOZ_TOOLS_DIR/include ${GLIB_CFLAGS}"
-    LIBIDL_LIBS="$MOZ_TOOLS_DIR/lib/libidl-0.6_s.lib $MOZ_TOOLS_DIR/lib/glib-1.2_s.lib"
-    STATIC_LIBIDL=1
     MOZ_TREE_FREETYPE=1
 
     AC_DEFINE(HAVE_SNPRINTF)
@@ -7835,6 +7832,13 @@ dnl ========================================================
 case "$target_os" in
 msvc*|mks*|cygwin*|mingw*|wince*|winmo*)
     SKIP_IDL_CHECK="yes"
+    ;;
+darwin*)
+    if test -n "$CROSS_COMPILE"; then
+        SKIP_IDL_CHECK="yes"
+    else
+        SKIP_IDL_CHECK="no"
+    fi
     ;;
 *)
     SKIP_IDL_CHECK="no"
