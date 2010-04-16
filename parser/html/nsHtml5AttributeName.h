@@ -44,7 +44,6 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
-#include "nsAHtml5EncodingDeclarationHandler.h"
 
 class nsHtml5StreamParser;
 
