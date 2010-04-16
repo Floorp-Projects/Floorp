@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=533596
+-->
+<window title="Mozilla Bug 533596"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+      function checkWrapped(obj) {
+          var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                            .getInterface(Components.interfaces.nsIDOMWindowUtils);
+          is(utils.getClassName(obj), "XPCSafeJSObjectWrapper", "right type of wrapper");
+      }
+
+      var sandbox = new Components.utils.Sandbox("about:blank");
+      sandbox.importFunction(function() "PASS", "foo");
+      sandbox.importFunction(function bar() "PASS");
+      sandbox.importFunction(checkWrapped);
+      is(Components.utils.evalInSandbox("foo()", sandbox), "PASS", "importFunction works");
+      is(Components.utils.evalInSandbox("bar()", sandbox), "PASS", "importFunction works");
+      Components.utils.evalInSandbox("checkWrapped({})", sandbox);
+
+  ]]></script>
+</window>

@@ -59,7 +59,6 @@ class nsIDocument;
 class nsIUnicharInputStream;
 class nsCSSParser;
 class nsMediaList;
-class nsPresContext;
 
 namespace mozilla {
 

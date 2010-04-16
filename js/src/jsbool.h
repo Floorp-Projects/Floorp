@@ -44,6 +44,7 @@
  */
 
 #include "jsapi.h"
+#include "jsobj.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -66,6 +67,12 @@ JS_BEGIN_EXTERN_C
 #define JSVAL_ARETURN   SPECIAL_TO_JSVAL(8)
 
 extern JSClass js_BooleanClass;
+
+inline bool
+JSObject::isBoolean() const
+{
+    return getClass() == &js_BooleanClass;
+}
 
 extern JSObject *
 js_InitBooleanClass(JSContext *cx, JSObject *obj);

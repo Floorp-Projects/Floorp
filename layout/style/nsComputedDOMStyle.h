@@ -48,13 +48,14 @@
 #include "nsDOMCSSValueList.h"
 #include "nsCSSProps.h"
 
-#include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include "nsAutoPtr.h"
 #include "nsStyleStruct.h"
+
+class nsIPresShell;
 
 class nsComputedDOMStyle : public nsICSSDeclaration,
                            public nsWrapperCache

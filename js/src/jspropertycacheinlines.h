@@ -50,7 +50,7 @@ using namespace js;
 /* static */ inline bool
 PropertyCache::matchShape(JSContext *cx, JSObject *obj, uint32 shape)
 {
-    return CX_OWNS_OBJECT_TITLE(cx, obj) && OBJ_SHAPE(obj) == shape;
+    return CX_OWNS_OBJECT_TITLE(cx, obj) && obj->shape() == shape;
 }
 
 /*

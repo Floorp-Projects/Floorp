@@ -3087,18 +3087,16 @@ nsTextPaintStyle::InitCommonColors()
   if (mInitCommonColors)
     return;
 
-  nsStyleContext* sc = mFrame->GetStyleContext();
-
-  nsStyleContext* bgContext =
-    nsCSSRendering::FindNonTransparentBackground(sc);
-  NS_ASSERTION(bgContext, "Cannot find NonTransparentBackground.");
+  nsIFrame* bgFrame =
+    nsCSSRendering::FindNonTransparentBackgroundFrame(mFrame);
+  NS_ASSERTION(bgFrame, "Cannot find NonTransparentBackgroundFrame.");
   nscolor bgColor =
-    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
+    bgFrame->GetVisitedDependentColor(eCSSProperty_background_color);
 
   nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
   mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
 
-  if (bgContext->GetStyleDisplay()->mAppearance) {
+  if (bgFrame->IsThemed()) {
     // Assume a native widget has sufficient contrast always
     mSufficientContrast = 0;
     mInitCommonColors = PR_TRUE;
@@ -3879,9 +3877,11 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
     return mFrame->GetOverflowRect() + aBuilder->ToReferenceFrame(mFrame);
   }
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
-                            HitTestState* aState) {
-    return nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize()).Contains(aPt) ? mFrame : nsnull;
+  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) {
+    if (nsRect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize()).Intersects(aRect)) {
+      aOutFrames->AppendElement(mFrame);
+    }
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);

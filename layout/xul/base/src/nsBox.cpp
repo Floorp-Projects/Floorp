@@ -43,7 +43,6 @@
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIPresShell.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"

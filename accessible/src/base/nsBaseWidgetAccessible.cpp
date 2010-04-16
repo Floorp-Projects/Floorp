@@ -49,8 +49,6 @@
 #include "nsILink.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
 

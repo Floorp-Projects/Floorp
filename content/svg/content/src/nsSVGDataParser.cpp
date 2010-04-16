@@ -61,8 +61,6 @@
 nsresult
 nsSVGDataParser::Parse(const nsAString &aValue)
 {
-  nsresult rv = NS_OK;
-
   char *str = ToNewUTF8String(aValue);
   if (!str)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -70,7 +68,7 @@ nsSVGDataParser::Parse(const nsAString &aValue)
   mInputPos = str;
 
   GetNextToken();
-  rv = Match();
+  nsresult rv = Match();
   if (mTokenType != END)
     rv = NS_ERROR_FAILURE; // not all tokens were consumed
 
@@ -85,8 +83,8 @@ nsSVGDataParser::Parse(const nsAString &aValue)
 
 void nsSVGDataParser::GetNextToken()
 {
-  mTokenPos  = mInputPos;
-  mTokenVal  = *mInputPos;
+  mTokenPos = mInputPos;
+  mTokenVal = *mInputPos;
   
   switch (mTokenVal) {
     case '0': case '1': case '2': case '3': case '4':
@@ -127,12 +125,6 @@ void nsSVGDataParser::RewindTo(const char* aPos)
 {
   mInputPos = aPos;
   GetNextToken();
-}
-
-
-nsresult nsSVGDataParser::Match()
-{
-   return NS_OK;
 }
 
 //----------------------------------------------------------------------

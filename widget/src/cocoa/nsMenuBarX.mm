@@ -101,6 +101,10 @@ nsMenuBarX::~nsMenuBarX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // During shutdown, this is called outside the event loop;
+  // provide an autorelease pool to prevent cocoa object leakage.
+  nsAutoreleasePool localPool;
+
   if (nsMenuBarX::sLastGeckoMenuBarPainted == this)
     nsMenuBarX::sLastGeckoMenuBarPainted = nsnull;
 

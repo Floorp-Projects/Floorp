@@ -52,12 +52,9 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  var f = function (s) { function s() { } }
+  var f = function (s) { function s() { } };
 
-  if (typeof window != 'undefined')
-  {
-    window.open('javascript:function (s) { function s() { } }');
-  }
+  function g(s) { function s() { } }
 
   reportCompare(expect, actual, summary);
 

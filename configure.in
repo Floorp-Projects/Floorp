@@ -2646,6 +2646,8 @@ alpha*-*-osf*)
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
        CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic -norunpath"
+       _MOZ_EXCEPTIONS_FLAGS_ON='-features=except'
+       _MOZ_EXCEPTIONS_FLAGS_OFF='-features=no%except'
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -5872,7 +5874,7 @@ i?86-*-mingw*)
 i?86-apple-darwin*|powerpc-apple-darwin*)
   MOZ_CRASHREPORTER=1
   ;;
-i?86-*-linux*|x86_64-*-linux*)
+i?86-*-linux*|x86_64-*-linux*|arm-*-linux*)
   MOZ_CRASHREPORTER=1
   ;;
 *solaris*)
@@ -6376,7 +6378,7 @@ else
             #include "sqlite3.h"
 
             int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_SECURE_DELETE=1");
+              return !sqlite3_compileoption_used("SQLITE_SECURE_DELETE");
             }],
             ac_cv_sqlite_secure_delete=yes,
             ac_cv_sqlite_secure_delete=no,
@@ -6434,7 +6436,7 @@ else
             #include "sqlite3.h"
 
             int main(int argc, char **argv){
-              return !sqlite3_compileoption_used("SQLITE_ENABLE_FTS3=1");
+              return !sqlite3_compileoption_used("SQLITE_ENABLE_FTS3");
             }],
             ac_cv_sqlite_enable_fts3=yes,
             ac_cv_sqlite_enable_fts3=no,
@@ -6556,9 +6558,10 @@ if test $MOZ_PLATFORM_MAEMO; then
    if test -z "$MOZ_ENABLE_DBUS"; then
        AC_MSG_ERROR([DBus is required when building for Maemo])
    fi
-   
+
    MOZ_GFX_OPTIMIZE_MOBILE=1
    MOZ_WEBGL_GLX=
+   MOZ_MAEMO_LIBLOCATION=
 
    if test $MOZ_PLATFORM_MAEMO = 5; then
       dnl if we have Xcomposite we should also have Xdamage and Xfixes
@@ -6591,13 +6594,18 @@ if test $MOZ_PLATFORM_MAEMO; then
          AC_MSG_ERROR([Hildon FM-2 is required when building for Maemo])
       fi
 
-      PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
-      MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBLOCATION_LIBS"
-      MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBLOCATION_CFLAGS"
-      if test -z "$_LIB_FOUND"; then
-         AC_MSG_ERROR([liblocation is required when building for Maemo])
-      fi
    fi
+
+   PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
+   MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBLOCATION_LIBS"
+   MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBLOCATION_CFLAGS"
+   if test "$_LIB_FOUND"; then
+      MOZ_MAEMO_LIBLOCATION=1
+      AC_DEFINE(MOZ_MAEMO_LIBLOCATION)
+   else
+      AC_MSG_WARN([Cannot liblocation-dev. Disabling Maemo geolocation.])
+   fi
+   AC_SUBST(MOZ_MAEMO_LIBLOCATION)
 
    AC_SUBST(MOZ_PLATFORM_MAEMO_LIBS)
    AC_SUBST(MOZ_PLATFORM_MAEMO_CFLAGS)
@@ -7522,7 +7530,7 @@ fi
 AC_SUBST(_MOZ_RTTI_FLAGS_ON)
 
 dnl ========================================================
-dnl C++ exceptions (g++/egcs only - for now)
+dnl C++ exceptions (g++/VC/irix6/Sun only - for now)
 dnl Should be smarter and check that the compiler does indeed have exceptions
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
@@ -7532,6 +7540,7 @@ MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
 
 if test "$_MOZ_CPP_EXCEPTIONS"; then
     _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_ON
+    AC_DEFINE(MOZ_CPP_EXCEPTIONS)
 else
     _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_OFF
 fi

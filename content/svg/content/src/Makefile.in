@@ -52,6 +52,7 @@ CPPSRCS		= \
 		nsDOMSVGZoomEvent.cpp \
 		nsDOMSVGEvent.cpp \
 		nsSVGAElement.cpp \
+		nsSVGAltGlyphElement.cpp \
 		nsSVGAngle.cpp \
 		nsSVGAnimatedLengthList.cpp \
 		nsSVGAnimatedNumberList.cpp \
@@ -113,6 +114,7 @@ CPPSRCS		= \
 		nsSVGTextContentElement.cpp \
 		nsSVGTextElement.cpp \
 		nsSVGTextPathElement.cpp \
+		nsSVGTextPositioningElement.cpp \
 		nsSVGTitleElement.cpp \
 		nsSVGTransform.cpp \
 		nsSVGTransformList.cpp \

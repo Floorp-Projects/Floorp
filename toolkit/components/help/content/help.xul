@@ -150,7 +150,7 @@
   <stringbundle id="bundle_help"
                 src="chrome://help/locale/help.properties"/>
 
-    <toolbox id="help-toolbox" class="toolbox-top">
+    <toolbox id="help-toolbox">
       <toolbar id="HelpToolbar" class="chromeclass-toolbar">
         <toolbarbutton id="help-back-button" type="menu-button"
                        label="&backButton.label;"

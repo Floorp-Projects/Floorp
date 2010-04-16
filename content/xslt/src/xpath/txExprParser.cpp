@@ -470,6 +470,7 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
         fnCall = new txCoreFunctionCall(type);
         NS_ENSURE_TRUE(fnCall, NS_ERROR_OUT_OF_MEMORY);
     }
+
     // check extension functions and xslt
     if (!fnCall) {
         rv = aContext->resolveFunctionCall(lName, namespaceID,
@@ -480,16 +481,15 @@ txExprParser::createFunctionCall(txExprLexer& lexer, txIParseContext* aContext,
             NS_ASSERTION(!fnCall, "Now is it implemented or not?");
             rv = parseParameters(0, lexer, aContext);
             NS_ENSURE_SUCCESS(rv, rv);
+
             *aResult = new txLiteralExpr(tok->Value() +
                                          NS_LITERAL_STRING(" not implemented."));
             NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
+
             return NS_OK;
         }
 
-        if (NS_FAILED(rv)) {
-            NS_ERROR("Creation of FunctionCall failed");
-            return rv;
-        }
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     //-- handle parametes

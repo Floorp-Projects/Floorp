@@ -211,8 +211,8 @@ def _rawShmemType(ptr=0):
 def _shmemIdType(ptr=0):
     return Type('Shmem::id_t', ptr=ptr)
 
-def _shmemHandleType():
-    return Type('Shmem::SharedMemoryHandle')
+def _shmemTypeType():
+    return Type('Shmem::SharedMemory::SharedMemoryType')
 
 def _shmemBackstagePass():
     return ExprCall(ExprVar(
@@ -226,17 +226,22 @@ def _shmemId(shmemexpr):
     return ExprCall(ExprSelect(shmemexpr, '.', 'Id'),
                     args=[ _shmemBackstagePass() ])
 
-def _shmemAlloc(size):
+def _shmemAlloc(size, type):
     # starts out UNprotected
     return ExprCall(ExprVar('Shmem::Alloc'),
-                    args=[ _shmemBackstagePass(), size ])
+                    args=[ _shmemBackstagePass(), size, type ])
 
-def _shmemOpenExisting(size, handle):
+def _shmemShareTo(shmemvar, processvar, route):
+    return ExprCall(ExprSelect(shmemvar, '.', 'ShareTo'),
+                    args=[ _shmemBackstagePass(),
+                           processvar, route ])
+
+def _shmemOpenExisting(descriptor, outid):
     # starts out protected
     return ExprCall(ExprVar('Shmem::OpenExisting'),
                     args=[ _shmemBackstagePass(),
                            # true => protect
-                           handle, size, ExprLiteral.TRUE ])
+                           descriptor, outid, ExprLiteral.TRUE ])
 
 def _shmemForget(shmemexpr):
     return ExprCall(ExprSelect(shmemexpr, '.', 'forget'),
@@ -245,9 +250,6 @@ def _shmemForget(shmemexpr):
 def _shmemRevokeRights(shmemexpr):
     return ExprCall(ExprSelect(shmemexpr, '.', 'RevokeRights'),
                     args=[ _shmemBackstagePass() ])
-
-def _shmemCreatedMsgVar():
-    return ExprVar('mozilla::ipc::__internal__ipdl__ShmemCreated')
 
 def _lookupShmem(idexpr):
     return ExprCall(ExprVar('LookupSharedMemory'), args=[ idexpr ])
@@ -326,6 +328,9 @@ def _runtimeAbort(msg):
 
 def _autoptr(T):
     return Type('nsAutoPtr', T=T)
+
+def _autoptrGet(expr):
+    return ExprCall(ExprSelect(expr, '.', 'get'))
 
 def _autoptrForget(expr):
     return ExprCall(ExprSelect(expr, '.', 'forget'))
@@ -2422,7 +2427,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Typedef(Type('IPC::Message'), 'Message'),
             Typedef(Type(self.protocol.channelName()), 'Channel'),
             Typedef(Type(self.protocol.fqListenerName()), 'ChannelListener'),
-            Typedef(Type('base::ProcessHandle'), 'ProcessHandle')
+            Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
+            Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory')
         ]
 
 
@@ -3140,6 +3146,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         routedvar = ExprVar('aRouted')
         idvar = ExprVar('aId')
         sizevar = ExprVar('aSize')
+        typevar = ExprVar('type')
         listenertype = Type('ChannelListener', ptr=1)
 
         register = MethodDefn(MethodDecl(
@@ -3165,6 +3172,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             p.createSharedMemory().name,
             ret=_rawShmemType(ptr=1),
             params=[ Decl(Type.SIZE, sizevar.name),
+                     Decl(_shmemTypeType(), typevar.name),
                      Decl(_shmemIdType(ptr=1), idvar.name) ],
             virtual=1))
         lookupshmem = MethodDefn(MethodDecl(
@@ -3181,6 +3189,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         if p.decl.type.isToplevel():
             tmpvar = ExprVar('tmp')
+            
             register.addstmts([
                 StmtDecl(Decl(_actorIdType(), tmpvar.name),
                          p.nextActorIdExpr(self.side)),
@@ -3202,62 +3211,58 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprCall(ExprSelect(p.actorMapVar(), '.', 'Remove'),
                          [ idvar ])))
 
-            # SharedMemory* CreateSharedMemory(size, id_t*):
-            #   nsAutoPtr<shmem_t> shmem(Shmem::Alloc(size));
+            # SharedMemory* CreateSharedMemory(size, type, id_t*):
+            #   nsAutoPtr<SharedMemory> seg(Shmem::Alloc(size, type));
             #   if (!shmem)
             #     return false
-            #   shmemhandle_t handle;
-            #   if (!shmem->ShareToProcess(subprocess, &handle))
+            #   Shmem s(seg, [nextshmemid]);
+            #   Message descriptor;
+            #   if (!s->ShareTo(subprocess, mId, descriptor))
             #     return false;
-            #   Shmem::id_t id = [nextshmemid];
-            #   mShmemMap.Add(rawshmem, id);
-            #   Message* msg = new __internal__ipdl__ShmemCreated(
-            #      mRoutingId, handle, id, size);
-            #   if (!Send(msg))
+            #   if (!Send(descriptor))
             #     return false;
+            #   mShmemMap.Add(seg, id);
             #   return shmem.forget();
-            rawvar = ExprVar('rawshmem')
-            handlevar = ExprVar('handle')
+            rawvar = ExprVar('segment')
 
             createshmem.addstmt(StmtDecl(
                 Decl(_autoptr(_rawShmemType()), rawvar.name),
-                initargs=[ _shmemAlloc(sizevar) ]))
+                initargs=[ _shmemAlloc(sizevar, typevar) ]))
             failif = StmtIf(ExprNot(rawvar))
             failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
             createshmem.addstmt(failif)
 
-            createshmem.addstmt(StmtDecl(
-                Decl(_shmemHandleType(), handlevar.name)))
-            failif = StmtIf(ExprNot(ExprCall(
-                ExprSelect(rawvar, '->', 'ShareToProcess'),
-                args=[ ExprCall(p.otherProcessMethod()),
-                       ExprAddrOf(handlevar) ])))
+            shmemvar = ExprVar('shmem')
+            descriptorvar = ExprVar('descriptor')
+            createshmem.addstmts([
+                StmtDecl(
+                    Decl(_shmemType(), shmemvar.name),
+                    initargs=[ _shmemBackstagePass(),
+                               _autoptrGet(rawvar),
+                               p.nextShmemIdExpr(self.side) ]),
+                StmtDecl(Decl(Type('Message', ptr=1), descriptorvar.name),
+                         init=_shmemShareTo(shmemvar,
+                                            ExprCall(p.otherProcessMethod()),
+                                            p.routingId()))
+            ])
+            failif = StmtIf(ExprNot(descriptorvar))
             failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
             createshmem.addstmt(failif)
 
-            createshmem.addstmts([
-                StmtExpr(ExprAssn(
-                    ExprDeref(idvar),
-                    p.nextShmemIdExpr(self.side))),
-                StmtDecl(ExprCall(
-                    ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
-                    args=[ rawvar, ExprDeref(idvar) ]))
-            ])
+            failif = StmtIf(ExprNot(ExprCall(
+                ExprSelect(p.channelVar(), p.channelSel(), 'Send'),
+                args=[ descriptorvar ])))
+            createshmem.addstmt(failif)
 
-            msgvar = ExprVar('msg')
             createshmem.addstmts([
-                StmtDecl(
-                    Decl(Type('Message', ptr=1), msgvar.name),
-                    ExprNew(Type(_shmemCreatedMsgVar().name),
-                            args=[ p.routingId(), handlevar,
-                                   ExprDeref(idvar), sizevar ])),
-                # TODO handle failed sends
+                StmtExpr(ExprAssn(ExprDeref(idvar), _shmemId(shmemvar))),
                 StmtExpr(ExprCall(
-                    ExprSelect(p.channelVar(), p.channelSel(), 'Send'),
-                    args=[ msgvar ])),
+                    ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
+                    args=[ rawvar, ExprDeref(idvar) ])),
                 StmtReturn(_autoptrForget(rawvar))
             ])
 
+            # SharedMemory* Lookup(id)
             lookupshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.shmemMapVar(), '.', 'Lookup'),
                 args=[ idvar ])))
@@ -3286,7 +3291,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 [ idvar ])))
             createshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->', p.createSharedMemory().name),
-                [ sizevar, idvar ])))
+                [ sizevar, typevar, idvar ])))
             lookupshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->', p.lookupSharedMemory().name),
                 [ idvar ])))
@@ -3347,6 +3352,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         p = self.protocol
         idvar = ExprVar('aId')
         sizevar = ExprVar('aSize')
+        typevar = ExprVar('aType')
         memvar = ExprVar('aMem')
         rawvar = ExprVar('rawmem')
 
@@ -3360,6 +3366,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         allocShmem = MethodDefn(MethodDecl(
             'AllocShmem',
             params=[ Decl(Type.SIZE, sizevar.name),
+                     Decl(_shmemTypeType(), typevar.name),
                      Decl(_shmemType(ptr=1), memvar.name) ],
             ret=Type.BOOL))
 
@@ -3371,6 +3378,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtDecl(Decl(_autoptr(_rawShmemType()), rawvar.name),
                      initargs=[ ExprCall(p.createSharedMemory(),
                                          args=[ sizevar,
+                                                typevar,
                                                 ExprAddrOf(idvar) ]) ]),
             ifallocfails,
             Whitespace.NL,
@@ -3389,31 +3397,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         
         case = StmtBlock()                                          
 
-        handlevar = ExprVar('handle')
-        idvar = ExprVar('id')
-        sizevar = ExprVar('size')
         rawvar = ExprVar('rawmem')
-        failif = StmtIf(ExprNot(ExprCall(
-            ExprVar(_shmemCreatedMsgVar().name +'::Read'),
-            args=[ ExprAddrOf(self.msgvar),
-                   ExprAddrOf(handlevar),
-                   ExprAddrOf(idvar),
-                   ExprAddrOf(sizevar) ])))
-        failif.addifstmt(StmtReturn(_Result.PayloadError))
-
+        idvar = ExprVar('id')
         case.addstmts([
-            StmtDecl(Decl(_shmemHandleType(), handlevar.name)),
             StmtDecl(Decl(_shmemIdType(), idvar.name)),
-            StmtDecl(Decl(Type.SIZE, sizevar.name)),
-            Whitespace.NL,
-            failif,
-            Whitespace.NL,
             StmtDecl(Decl(_autoptr(_rawShmemType()), rawvar.name),
-                     initargs=[ _shmemOpenExisting(sizevar, handlevar) ])
+                     initargs=[ _shmemOpenExisting(self.msgvar,
+                                                   ExprAddrOf(idvar)) ])
         ])
-
         failif = StmtIf(ExprNot(rawvar))
-        failif.addifstmt(StmtReturn(_Result.ValuError))
+        failif.addifstmt(StmtReturn(_Result.PayloadError))
 
         case.addstmts([
             failif,

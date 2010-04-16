@@ -743,9 +743,6 @@ public:
 
   virtual NS_HIDDEN_(void) UnsuppressPainting();
 
-  virtual NS_HIDDEN_(void) DisableThemeSupport();
-  virtual PRBool IsThemeSupportEnabled();
-
   virtual nsresult GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets);
   virtual nsresult SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets);
 
@@ -1177,8 +1174,6 @@ protected:
   nsCallbackEventRequest* mLastCallbackEventRequest;
 
   PRPackedBool      mSuppressInterruptibleReflows;
-
-  PRPackedBool      mIsThemeSupportDisabled;  // Whether or not form controls should use nsITheme in this shell.
 
   PRPackedBool      mIsDocumentGone;      // We've been disconnected from the document.
                                           // We will refuse to paint the document until either
@@ -4426,19 +4421,6 @@ PresShell::UnsuppressPainting()
     UnsuppressAndInvalidate();
 }
 
-void
-PresShell::DisableThemeSupport()
-{
-  // Doesn't have to be dynamic.  Just set the bool.
-  mIsThemeSupportDisabled = PR_TRUE;
-}
-
-PRBool 
-PresShell::IsThemeSupportEnabled()
-{
-  return !mIsThemeSupportDisabled;
-}
-
 // Post a request to handle an arbitrary callback after reflow has finished.
 nsresult
 PresShell::PostReflowCallback(nsIReflowCallback* aCallback)
@@ -4588,6 +4570,14 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
     // painting or geometry changes, so don't bother with view update
     // batching if we only have style reresolve
     nsIViewManager::UpdateViewBatch batch(mViewManager);
+
+    // We need to make sure external resource documents are flushed too (for
+    // example, svg filters that reference a filter in an external document
+    // need the frames in the external document to be constructed for the
+    // filter to work). We only need external resources to be flushed when the
+    // main document is flushing >= Flush_Frames, so we flush external
+    // resources here instead of nsDocument::FlushPendingNotifications.
+    mDocument->FlushExternalResources(aType);
 
     // Force flushing of any pending content notifications that might have
     // queued up while our event was pending.  That will ensure that we don't

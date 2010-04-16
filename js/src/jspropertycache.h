@@ -252,7 +252,7 @@ class PropertyCache
     /*
      * Fill property cache entry for key cx->fp->pc, optimized value word
      * computed from obj and sprop, and entry capability forged from 24-bit
-     * OBJ_SHAPE(obj), 4-bit scopeIndex, and 4-bit protoIndex.
+     * obj->shape(), 4-bit scopeIndex, and 4-bit protoIndex.
      *
      * Return the filled cache entry or JS_NO_PROP_CACHE_FILL if caching was
      * not possible.

@@ -4794,7 +4794,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
       }
     }
   }
-  else if (aTag == nsGkAtoms::tspan) {
+  else if (aTag == nsGkAtoms::tspan || aTag == nsGkAtoms::altGlyph) {
     NS_ASSERTION(aParentFrame, "Should have aParentFrame here");
     nsIFrame *ancestorFrame =
       nsSVGUtils::GetFirstNonAAncestorFrame(aParentFrame);
@@ -4830,6 +4830,7 @@ nsCSSFrameConstructor::FindSVGData(nsIContent* aContent,
       FULL_CTOR_FCDATA(FCDATA_DISALLOW_OUT_OF_FLOW,
                        &nsCSSFrameConstructor::ConstructSVGForeignObjectFrame) },
     SIMPLE_SVG_CREATE(a, NS_NewSVGAFrame),
+    SIMPLE_SVG_CREATE(altGlyph, NS_NewSVGTSpanFrame),
     SIMPLE_SVG_CREATE(text, NS_NewSVGTextFrame),
     SIMPLE_SVG_CREATE(tspan, NS_NewSVGTSpanFrame),
     SIMPLE_SVG_CREATE(linearGradient, NS_NewSVGLinearGradientFrame),
@@ -8501,6 +8502,16 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
     *aResult = RecreateFramesForContent(parent->GetContent(), PR_TRUE);
     return PR_TRUE;
   }
+
+#ifdef MOZ_XUL
+  if (aFrame->GetType() == nsGkAtoms::popupSetFrame) {
+    nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
+    if (rootBox && rootBox->GetPopupSetFrame() == aFrame) {
+      *aResult = ReconstructDocElementHierarchy();
+      return PR_TRUE;
+    }
+  }
+#endif
 
   // We might still need to reconstruct things if the parent of inFlowFrame is
   // special, since in that case the removal of aFrame might affect the

@@ -50,6 +50,7 @@
 #   Rob Arnold <robarnold@cmu.edu>
 #   Dietrich Ayala <dietrich@mozilla.com>
 #   Gavin Sharp <gavin@gavinsharp.com>
+#   Justin Dolske <dolske@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1340,6 +1341,13 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 
     // Initialize the downloads monitor panel listener
     DownloadMonitorPanel.init();
+
+    if (Win7Features) {
+      let tempScope = {};
+      Cu.import("resource://gre/modules/DownloadTaskbarProgress.jsm",
+                tempScope);
+      tempScope.DownloadTaskbarProgress.onBrowserWindowLoad(window);
+    }
   }, 10000);
 
   // Delayed initialization of PlacesDBUtils.
@@ -2606,7 +2614,7 @@ function getMarkupDocumentViewer()
  *       browser.js with functionality that can be encapsulated into
  *       browser widget. TEMPORARY!
  *
- * NOTE: Any changes to this routine need to be mirrored in ChromeListener::FindTitleText()
+ * NOTE: Any changes to this routine need to be mirrored in DefaultTooltipTextProvider::GetNodeText()
  *       (located in mozilla/embedding/browser/webBrowser/nsDocShellTreeOwner.cpp)
  *       which performs the same function, but for embedded clients that
  *       don't use a XUL/JS layer. It is important that the logic of
@@ -2616,7 +2624,9 @@ function getMarkupDocumentViewer()
 function FillInHTMLTooltip(tipElement)
 {
   var retVal = false;
-  if (tipElement.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul")
+  // Don't show the tooltip if the tooltip node is a XUL element or a document.
+  if (tipElement.namespaceURI == "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" ||
+      !tipElement.ownerDocument)
     return retVal;
 
   const XLinkNS = "http://www.w3.org/1999/xlink";
@@ -5934,6 +5944,17 @@ var gMissingPluginInstaller = {
     return this.crashReportHelpURL;
   },
 
+  // Map the plugin's name to a filtered version more suitable for user UI.
+  makeNicePluginName : function (aName, aFilename) {
+    if (aName == "Shockwave Flash")
+      return "Adobe Flash";
+
+    // Clean up the plugin name by stripping off any trailing version numbers
+    // or "plugin". EG, "Foo Bar Plugin 1.23_02" --> "Foo Bar"
+    let newName = aName.replace(/\bplug-?in\b/i, "").replace(/[\s\d\.\-\_\(\)]+$/, "");
+    return newName;
+  },
+
   addLinkClickCallback: function (linkNode, callbackName /*callbackArgs...*/) {
     // XXX just doing (callback)(arg) was giving a same-origin error. bug?
     let self = this;
@@ -6173,20 +6194,22 @@ var gMissingPluginInstaller = {
     if (!aEvent.isTrusted)
       return;
 
-    if (!(aEvent instanceof Ci.nsIDOMDataContainerEvent))
+    // Ensure the plugin and event are of the right type.
+    let plugin = aEvent.target;
+    if (!(aEvent instanceof Ci.nsIDOMDataContainerEvent) ||
+        !(plugin instanceof Ci.nsIObjectLoadingContent))
       return;
 
     let submittedReport = aEvent.getData("submittedCrashReport");
     let doPrompt        = true; // XXX followup for .getData("doPrompt");
     let submitReports   = true; // XXX followup for .getData("submitReports");
     let pluginName      = aEvent.getData("pluginName");
+    let pluginFilename  = aEvent.getData("pluginFilename");
     let pluginDumpID    = aEvent.getData("pluginDumpID");
     let browserDumpID   = aEvent.getData("browserDumpID");
 
-    // We're expecting this to be a plugin.
-    let plugin = aEvent.target;
-    if (!(plugin instanceof Ci.nsIObjectLoadingContent))
-      return;
+    // Remap the plugin name to a more user-presentable form.
+    pluginName = self.makeNicePluginName(pluginName, pluginFilename);
 
     // Force a style flush, so that we ensure our binding is attached.
     plugin.clientTop;
@@ -6204,17 +6227,19 @@ var gMissingPluginInstaller = {
     // for the plugin-crashed UI, because we use actual HTML links in the text.
     overlay.removeAttribute("role");
 
+    let statusDiv = doc.getAnonymousElementByAttribute(plugin, "class", "submitStatus");
 #ifdef MOZ_CRASHREPORTER
+    let status;
+
     // Determine which message to show regarding crash reports.
-    let helpClass, showClass;
     if (submittedReport) { // submitReports && !doPrompt, handled in observer
-      showClass = "msg msgSubmitted";
+      status = "submitted";
     }
     else if (!submitReports && !doPrompt) {
-      showClass = "msg msgNotSubmitted";
+      status = "noSubmit";
     }
     else { // doPrompt
-      showClass = "msg msgPleaseSubmit";
+      status = "please";
       // XXX can we make the link target actually be blank?
       let pleaseLink = doc.getAnonymousElementByAttribute(
                             plugin, "class", "pleaseSubmitLink");
@@ -6225,11 +6250,10 @@ var gMissingPluginInstaller = {
     // If we don't have a minidumpID, we can't (or didn't) submit anything.
     // This can happen if the plugin is killed from the task manager.
     if (!pluginDumpID) {
-        showClass = "msg msgNoCrashReport";
+        status = "noReport";
     }
 
-    let textToShow = doc.getAnonymousElementByAttribute(plugin, "class", showClass);
-    textToShow.style.display = "block";
+    statusDiv.setAttribute("status", status);
 
     let bottomLinks = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgBottomLinks");
     bottomLinks.style.display = "block";
@@ -6250,7 +6274,7 @@ var gMissingPluginInstaller = {
           // Ignore notifications for other crashes.
           if (propertyBag.get("minidumpID") != pluginDumpID)
             return;
-          self.updateSubmissionStatus(plugin, propertyBag, data);
+          statusDiv.setAttribute("status", data);
         },
 
         handleEvent : function(event) {
@@ -6334,7 +6358,7 @@ var gMissingPluginInstaller = {
         popup: null,
           callback: function() { gMissingPluginInstaller.submitReport(pluginDumpID, browserDumpID); },
       };
-      if (minidumpID)
+      if (pluginDumpID)
         buttons.push(submitButton);
 #endif
 
@@ -6351,32 +6375,6 @@ var gMissingPluginInstaller = {
       description.appendChild(link);
     }
 
-  },
-
-  updateSubmissionStatus : function (plugin, propBag, status) {
-    let doc = plugin.ownerDocument;
-
-    // One of these two may already be visible, reset them to be hidden.
-    let pleaseText     = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgPleaseSubmit");
-    let submittingText = doc.getAnonymousElementByAttribute(plugin, "class", "msg msgSubmitting");
-    pleaseText.style.display = "";
-    submittingText.style.display = "";
-
-    let msgClass;
-    switch (status) {
-      case "submitting":
-        msgClass = "msg msgSubmitting";
-        break;
-      case "success":
-        msgClass = "msg msgSubmitted";
-        break;
-      case "failed":
-        msgClass = "msg msgSubmitFailed";
-        break;
-    }
-
-    let textToShow = doc.getAnonymousElementByAttribute(plugin, "class", msgClass);
-    textToShow.style.display = "block";
   },
 
   refreshBrowser: function (aEvent) {

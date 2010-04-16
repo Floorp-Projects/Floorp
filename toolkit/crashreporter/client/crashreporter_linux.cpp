@@ -35,66 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "crashreporter.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <dlfcn.h>
-
-#include <algorithm>
-#include <cctype>
-
-#include <signal.h>
-
-#include <gtk/gtk.h>
+#include <fcntl.h>
 #include <glib.h>
+#include <gtk/gtk.h>
 #include <string.h>
 
-#include "common/linux/http_upload.h"
+#include <cctype>
+
+#include "crashreporter.h"
+#include "crashreporter_gtk_common.h"
 
 using std::string;
 using std::vector;
 
 using namespace CrashReporter;
 
-static GtkWidget* gWindow = 0;
-static GtkWidget* gSubmitReportCheck = 0;
 static GtkWidget* gViewReportButton = 0;
 static GtkWidget* gCommentText = 0;
-static GtkWidget* gIncludeURLCheck = 0;
 static GtkWidget* gEmailMeCheck = 0;
 static GtkWidget* gEmailEntry = 0;
-static GtkWidget* gThrobber = 0;
-static GtkWidget* gProgressLabel = 0;
-static GtkWidget* gCloseButton = 0;
-static GtkWidget* gRestartButton = 0;
-
-static bool gInitialized = false;
-static bool gDidTrySend = false;
-static string gDumpFile;
-static StringTable gQueryParameters;
-static string gSendURL;
-static string gHttpProxy;
-static string gAuth;
-static vector<string> gRestartArgs;
-static string gURLParameter;
 
 static bool gEmailFieldHint = true;
 static bool gCommentFieldHint = true;
-
-static GThread* gSendThreadID;
 
 // handle from dlopen'ing libgnome
 static void* gnomeLib = NULL;
 // handle from dlopen'ing libgnomeui
 static void* gnomeuiLib = NULL;
-
-static const char kIniFile[] = "crashreporter.ini";
 
 static void LoadSettings()
 {
@@ -128,7 +96,7 @@ static void LoadSettings()
   }
 }
 
-static void SaveSettings()
+void SaveSettings()
 {
   /*
    * NOTE! This code needs to stay in sync with the preference setting
@@ -157,159 +125,7 @@ static void SaveSettings()
                      "Crash Reporter", settings, true);
 }
 
-static bool RestartApplication()
-{
-  char** argv = reinterpret_cast<char**>(
-    malloc(sizeof(char*) * (gRestartArgs.size() + 1)));
-
-  if (!argv) return false;
-
-  unsigned int i;
-  for (i = 0; i < gRestartArgs.size(); i++) {
-    argv[i] = (char*)gRestartArgs[i].c_str();
-  }
-  argv[i] = 0;
-
-  pid_t pid = fork();
-  if (pid == -1)
-    return false;
-  else if (pid == 0) {
-    (void)execv(argv[0], argv);
-    _exit(1);
-  }
-
-  free(argv);
-
-  return true;
-}
-
-// Quit the app, used as a timeout callback
-static gboolean CloseApp(gpointer data)
-{
-  gtk_main_quit();
-  g_thread_join(gSendThreadID);
-  return FALSE;
-}
-
-static gboolean ReportCompleted(gpointer success)
-{
-  gtk_widget_hide_all(gThrobber);
-  string str = success ? gStrings[ST_REPORTSUBMITSUCCESS]
-                       : gStrings[ST_SUBMITFAILED];
-  gtk_label_set_text(GTK_LABEL(gProgressLabel), str.c_str());
-  g_timeout_add(5000, CloseApp, 0);
-  return FALSE;
-}
-
-#ifdef MOZ_ENABLE_GCONF
-#define HTTP_PROXY_DIR "/system/http_proxy"
-
-static void LoadProxyinfo()
-{
-  class GConfClient;
-  typedef GConfClient * (*_gconf_default_fn)();
-  typedef gboolean (*_gconf_bool_fn)(GConfClient *, const gchar *, GError **);
-  typedef gint (*_gconf_int_fn)(GConfClient *, const gchar *, GError **);
-  typedef gchar * (*_gconf_string_fn)(GConfClient *, const gchar *, GError **);
-
-  if (getenv ("http_proxy"))
-    return; // libcurl can use the value from the environment
-
-  static void* gconfLib = dlopen("libgconf-2.so.4", RTLD_LAZY);
-  if (!gconfLib)
-    return;
-
-  _gconf_default_fn gconf_client_get_default =
-    (_gconf_default_fn)dlsym(gconfLib, "gconf_client_get_default");
-  _gconf_bool_fn gconf_client_get_bool =
-    (_gconf_bool_fn)dlsym(gconfLib, "gconf_client_get_bool");
-  _gconf_int_fn gconf_client_get_int =
-    (_gconf_int_fn)dlsym(gconfLib, "gconf_client_get_int");
-  _gconf_string_fn gconf_client_get_string =
-    (_gconf_string_fn)dlsym(gconfLib, "gconf_client_get_string");
-
-  if(!(gconf_client_get_default &&
-       gconf_client_get_bool &&
-       gconf_client_get_int &&
-       gconf_client_get_string)) {
-    dlclose(gconfLib);
-    return;
-  }
-
-  GConfClient *conf = gconf_client_get_default();
-
-  if (gconf_client_get_bool(conf, HTTP_PROXY_DIR "/use_http_proxy", NULL)) {
-    gint port;
-    gchar *host = NULL, *httpproxy = NULL;
-
-    host = gconf_client_get_string(conf, HTTP_PROXY_DIR "/host", NULL);
-    port = gconf_client_get_int(conf, HTTP_PROXY_DIR "/port", NULL);
-
-    if (port && host && host != '\0') {
-      httpproxy = g_strdup_printf("http://%s:%d/", host, port);
-      gHttpProxy = httpproxy;
-    }
-
-    g_free(host);
-    g_free(httpproxy);
-
-    if(gconf_client_get_bool(conf, HTTP_PROXY_DIR "/use_authentication", NULL)) {
-      gchar *user, *password, *auth = NULL;
-
-      user = gconf_client_get_string(conf,
-                                     HTTP_PROXY_DIR "/authentication_user",
-                                     NULL);
-      password = gconf_client_get_string(conf,
-                                         HTTP_PROXY_DIR
-                                         "/authentication_password",
-                                         NULL);
-
-      if (user && password) {
-        auth = g_strdup_printf("%s:%s", user, password);
-        gAuth = auth;
-      }
-
-      g_free(user);
-      g_free(password);
-      g_free(auth);
-    }
-  }
-
-  g_object_unref(conf);
-
-  // Don't dlclose gconfLib as libORBit-2 uses atexit().
-}
-#endif
-
-static gpointer SendThread(gpointer args)
-{
-  string response, error;
-
-  bool success = google_breakpad::HTTPUpload::SendRequest
-    (gSendURL,
-     gQueryParameters,
-     gDumpFile,
-     "upload_file_minidump",
-     gHttpProxy, gAuth,
-     &response,
-     &error);
-  if (success) {
-    LogMessage("Crash report submitted successfully");
-  }
-  else {
-    LogMessage("Crash report submission failed: " + error);
-  }
-
-  SendCompleted(success, response);
-  // Apparently glib is threadsafe, and will schedule this
-  // on the main thread, see:
-  // http://library.gnome.org/devel/gtk-faq/stable/x499.html
-  g_idle_add(ReportCompleted, (gpointer)success);
-
-  return NULL;
-}
-
-static void SendReport()
+void SendReport()
 {
   // disable all our gui controls, show the throbber + change the progress text
   gtk_widget_set_sensitive(gSubmitReportCheck, FALSE);
@@ -360,41 +176,7 @@ static void ShowReportInfo(GtkTextView* viewReportTextView)
                          gStrings[ST_EXTRAREPORTINFO].c_str(), -1);
 }
 
-static gboolean WindowDeleted(GtkWidget* window,
-                              GdkEvent* event,
-                              gpointer userData)
-{
-  SaveSettings();
-  gtk_main_quit();
-  return TRUE;
-}
-
-static void MaybeSubmitReport()
-{
-  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
-    gDidTrySend = true;
-    SendReport();
-  } else {
-    gtk_main_quit();
-  }
-}
-
-static void CloseClicked(GtkButton* button,
-                         gpointer userData)
-{
-  SaveSettings();
-  MaybeSubmitReport();
-}
-
-static void RestartClicked(GtkButton* button,
-                           gpointer userData)
-{
-  SaveSettings();
-  RestartApplication();
-  MaybeSubmitReport();
-}
-
-static void UpdateSubmit()
+void UpdateSubmit()
 {
   if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gSubmitReportCheck))) {
     gtk_widget_set_sensitive(gViewReportButton, TRUE);
@@ -415,11 +197,6 @@ static void UpdateSubmit()
     gtk_widget_set_sensitive(gEmailEntry, FALSE);
     gtk_label_set_text(GTK_LABEL(gProgressLabel), "");
   }
-}
-
-static void SubmitReportChecked(GtkButton* sender, gpointer userData)
-{
-  UpdateSubmit();
 }
 
 static void ViewReportClicked(GtkButton* button,
@@ -542,15 +319,6 @@ static gboolean CommentFocusChange(GtkWidget* widget, GdkEventFocus* event,
   return FALSE;
 }
 
-static void UpdateURL()
-{
-  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(gIncludeURLCheck))) {
-    gQueryParameters["URL"] = gURLParameter;
-  } else {
-    gQueryParameters.erase("URL");
-  }
-}
-
 static void UpdateEmail()
 {
   const char* email = gtk_entry_get_text(GTK_ENTRY(gEmailEntry));
@@ -564,11 +332,6 @@ static void UpdateEmail()
     gQueryParameters.erase("Email");
   else
     gQueryParameters["Email"] = email;
-}
-
-static void IncludeURLClicked(GtkButton* sender, gpointer userData)
-{
-  UpdateURL();
 }
 
 static void EmailMeClicked(GtkButton* sender, gpointer userData)
@@ -597,7 +360,7 @@ typedef GnomeProgram * (*_gnome_program_init_fn)(const char *, const char *,
                                                  char **, const char *, ...);
 typedef const GnomeModuleInfo * (*_libgnomeui_module_info_get_fn)();
 
-static void TryInitGnome()
+void TryInitGnome()
 {
   gnomeLib = dlopen("libgnome-2.so.0", RTLD_LAZY);
   if (!gnomeLib)
@@ -621,48 +384,26 @@ static void TryInitGnome()
 
 /* === Crashreporter UI Functions === */
 
-bool UIInit()
-{
-  // breakpad probably left us with blocked signals, unblock them here
-  sigset_t signals, old;
-  sigfillset(&signals);
-  sigprocmask(SIG_UNBLOCK, &signals, &old);
-
-  // tell glib we're going to use threads
-  g_thread_init(NULL);
-
-  if (gtk_init_check(&gArgc, &gArgv)) {
-    gInitialized = true;
-
-    if (gStrings.find("isRTL") != gStrings.end() &&
-        gStrings["isRTL"] == "yes")
-      gtk_widget_set_default_direction(GTK_TEXT_DIR_RTL);
-
-    TryInitGnome();
-    return true;
-  }
-
-  return false;
-}
+/*
+ * Anything not listed here is in crashreporter_gtk_common.cpp:
+ *  UIInit
+ *  UIShowDefaultUI
+ *  UIError_impl
+ *  UIGetIniPath
+ *  UIGetSettingsPath
+ *  UIEnsurePathExists
+ *  UIFileExists
+ *  UIMoveFile
+ *  UIDeleteFile
+ *  UIOpenRead
+ *  UIOpenWrite
+ */
 
 void UIShutdown()
 {
   if (gnomeuiLib)
     dlclose(gnomeuiLib);
   // Don't dlclose gnomeLib as libgnomevfs and libORBit-2 use atexit().
-}
-
-void UIShowDefaultUI()
-{
-  GtkWidget* errorDialog =
-    gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL,
-                           GTK_MESSAGE_ERROR,
-                           GTK_BUTTONS_CLOSE,
-                           "%s", gStrings[ST_CRASHREPORTERDEFAULT].c_str());
-
-  gtk_window_set_title(GTK_WINDOW(errorDialog),
-                       gStrings[ST_CRASHREPORTERTITLE].c_str());
-  gtk_dialog_run(GTK_DIALOG(errorDialog));
 }
 
 bool UIShowCrashUI(const string& dumpfile,
@@ -841,129 +582,4 @@ bool UIShowCrashUI(const string& dumpfile,
   gtk_main();
 
   return gDidTrySend;
-}
-
-void UIError_impl(const string& message)
-{
-  if (!gInitialized) {
-    // Didn't initialize, this is the best we can do
-    printf("Error: %s\n", message.c_str());
-    return;
-  }
-
-  GtkWidget* errorDialog =
-    gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL,
-                           GTK_MESSAGE_ERROR,
-                           GTK_BUTTONS_CLOSE,
-                           "%s", message.c_str());
-
-  gtk_window_set_title(GTK_WINDOW(errorDialog),
-                       gStrings[ST_CRASHREPORTERTITLE].c_str());
-  gtk_dialog_run(GTK_DIALOG(errorDialog));
-}
-
-bool UIGetIniPath(string& path)
-{
-  path = gArgv[0];
-  path.append(".ini");
-
-  return true;
-}
-
-/*
- * Settings are stored in ~/.vendor/product, or
- * ~/.product if vendor is empty.
- */
-bool UIGetSettingsPath(const string& vendor,
-                       const string& product,
-                       string& settingsPath)
-{
-  char* home = getenv("HOME");
-
-  if (!home)
-    return false;
-
-  settingsPath = home;
-  settingsPath += "/.";
-  if (!vendor.empty()) {
-    string lc_vendor;
-    std::transform(vendor.begin(), vendor.end(), back_inserter(lc_vendor),
-                   (int(*)(int)) std::tolower);
-    settingsPath += lc_vendor + "/";
-  }
-  string lc_product;
-  std::transform(product.begin(), product.end(), back_inserter(lc_product),
-                 (int(*)(int)) std::tolower);
-  settingsPath += lc_product + "/Crash Reports";
-  return true;
-}
-
-bool UIEnsurePathExists(const string& path)
-{
-  int ret = mkdir(path.c_str(), S_IRWXU);
-  int e = errno;
-  if (ret == -1 && e != EEXIST)
-    return false;
-
-  return true;
-}
-
-bool UIFileExists(const string& path)
-{
-  struct stat sb;
-  int ret = stat(path.c_str(), &sb);
-  if (ret == -1 || !(sb.st_mode & S_IFREG))
-    return false;
-
-  return true;
-}
-
-bool UIMoveFile(const string& file, const string& newfile)
-{
-  if (!rename(file.c_str(), newfile.c_str()))
-    return true;
-  if (errno != EXDEV)
-    return false;
-
-  // use system /bin/mv instead, time to fork
-  pid_t pID = vfork();
-  if (pID < 0) {
-    // Failed to fork
-    return false;
-  }
-  if (pID == 0) {
-    char* const args[4] = {
-      "mv",
-      strdup(file.c_str()),
-      strdup(newfile.c_str()),
-      0
-    };
-    if (args[1] && args[2])
-      execve("/bin/mv", args, 0);
-    if (args[1])
-      free(args[1]);
-    if (args[2])
-      free(args[2]);
-    exit(-1);
-  }
-  int status;
-  waitpid(pID, &status, 0);
-  return UIFileExists(newfile);
-}
-
-bool UIDeleteFile(const string& file)
-{
-  return (unlink(file.c_str()) != -1);
-}
-
-std::ifstream* UIOpenRead(const string& filename)
-{
-  return new std::ifstream(filename.c_str(), std::ios::in);
-}
-
-std::ofstream* UIOpenWrite(const string& filename, bool append) // append=false
-{
-  return new std::ofstream(filename.c_str(),
-                           append ? std::ios::out | std::ios::app
-                                  : std::ios::out);
 }

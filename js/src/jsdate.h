@@ -44,9 +44,17 @@
 #ifndef jsdate_h___
 #define jsdate_h___
 
+#include "jsobj.h"
+
 JS_BEGIN_EXTERN_C
 
 extern JSClass js_DateClass;
+
+inline bool
+JSObject::isDate() const
+{
+    return getClass() == &js_DateClass;
+}
 
 extern JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj);

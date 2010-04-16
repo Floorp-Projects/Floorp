@@ -878,10 +878,8 @@ nsSVGPathDataParserToInternal::Parse(const nsAString &aValue)
   mPrevSeg = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
 
   nsresult rv = nsSVGPathDataParser::Parse(aValue);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = PathFini();
-  NS_ENSURE_SUCCESS(rv, rv);
+  PathFini();
 
   return rv;
 }
@@ -1214,7 +1212,7 @@ nsSVGPathDataParserToInternal::PathClose()
   return NS_OK;
 }
 
-nsresult
+void
 nsSVGPathDataParserToInternal::PathFini()
 {
   // We're done adding data to the arrays - copy to a straight array
@@ -1226,7 +1224,7 @@ nsSVGPathDataParserToInternal::PathFini()
   argArraySize = mArguments.Length() * sizeof(float);
   mPathData->mArguments = (float *)malloc(argArraySize + mCommands.Length());
   if (!mPathData->mArguments)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return;
 
   memcpy(mPathData->mArguments, mArguments.Elements(), argArraySize);
   memcpy(mPathData->mArguments + mNumArguments,
@@ -1234,8 +1232,6 @@ nsSVGPathDataParserToInternal::PathFini()
          mCommands.Length());
   mPathData->mNumArguments = mNumArguments;
   mPathData->mNumCommands = mNumCommands;
-
-  return NS_OK;
 }
 
 // ---------------------------------------------------------------

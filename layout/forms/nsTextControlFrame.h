@@ -62,6 +62,7 @@ class nsIAccessible;
 #endif
 class nsTextInputSelectionImpl;
 class nsTextControlFrame;
+class EditorInitializerEntryTracker;
 
 class nsAnonDivObserver : public nsStubMutationObserver
 {
@@ -175,6 +176,13 @@ public:
 
   nsresult GetPhonetic(nsAString& aPhonetic);
 
+  /**
+   * Ensure mEditor is initialized with the proper flags and the default value.
+   * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
+   * @throws various and sundry other things
+   */
+  virtual nsresult EnsureEditorInitialized();
+
 //==== END NSITEXTCONTROLFRAME
 //==== OVERLOAD of nsIFrame
   virtual nsIAtom* GetType() const;
@@ -248,7 +256,7 @@ protected:
           mWeakFrame.GetFrame()->PresContext()->GetPresShell();
         PRBool observes = shell->ObservesNativeAnonMutationsForPrint();
         shell->ObserveNativeAnonMutationsForPrint(PR_TRUE);
-        mFrame->DelayedEditorInit();
+        mFrame->EnsureEditorInitializedInternal();
         shell->ObserveNativeAnonMutationsForPrint(observes);
       }
       return NS_OK;
@@ -259,10 +267,6 @@ protected:
     nsTextControlFrame* mFrame;
   };
 
-  // Init our editor and then make sure to focus our text input
-  // listener if our content node has focus.
-  void DelayedEditorInit();
-
   nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResult);
   nsresult OffsetToDOMPoint(PRInt32 aOffset, nsIDOMNode** aResult, PRInt32* aPosition);
 
@@ -272,23 +276,23 @@ protected:
    * @return whether this control is scrollable
    */
   PRBool IsScrollable() const;
+
   /**
-   * Initialize mEditor with the proper flags and the default value.
-   * @throws NS_ERROR_NOT_INITIALIZED if mEditor has not been created
-   * @throws various and sundry other things
+   * Update the textnode under our anonymous div to show the new
+   * value. This should only be called when we have no editor yet.
+   * @throws NS_ERROR_UNEXPECTED if the div has no text content
    */
-  nsresult InitEditor();
-  /**
-   * Strip all \n, \r and nulls from the given string
-   * @param aString the string to remove newlines from [in/out]
-   */
-  void RemoveNewlines(nsString &aString);
+  nsresult UpdateValueDisplay(PRBool aNotify,
+                              PRBool aBeforeEditorInit = PR_FALSE,
+                              const nsAString *aValue = nsnull);
+
   /**
    * Get the maxlength attribute
    * @param aMaxLength the value of the max length attr
    * @returns PR_FALSE if attr not defined
    */
   PRBool GetMaxLength(PRInt32* aMaxLength);
+
   /**
    * Find out whether an attribute exists on the content or not.
    * @param aAtt the attribute to determine the existence of
@@ -302,9 +306,6 @@ protected:
    * @param aPresContext the current pres context
    */
   void PreDestroy();
-  /**
-   * Fire the onChange event.
-   */
 
   // Helper methods
   /**
@@ -312,10 +313,12 @@ protected:
    * @return the number of columns to use
    */
   PRInt32 GetCols();
+
   /**
    * Get the column index to wrap at, or -1 if we shouldn't wrap
    */
   PRInt32 GetWrapCols();
+
   /**
    * Get the rows attribute (if textarea) or a default
    * @return the number of rows to use
@@ -342,6 +345,11 @@ private:
   nsresult SetPlaceholderClass(PRBool aVisible, PRBool aNotify);
   nsresult UpdatePlaceholderText(PRBool aNotify); 
 
+  // This method performs the actual tasks of initializing the editor.
+  // EnsureEditorInitialized is a wrapper of this method which wraps it with
+  // a weak frame check.
+  virtual nsresult EnsureEditorInitializedInternal();
+
 private:
   nsCOMPtr<nsIContent> mValueDiv;
   nsCOMPtr<nsIContent> mPlaceholderDiv;
@@ -357,6 +365,11 @@ private:
   // eventually) when mFireChangeEventState==true, this is used by nsFileControlFrame.
   PRPackedBool mFireChangeEventState;
   PRPackedBool mInSecureKeyboardInputMode;
+
+#ifdef DEBUG
+  PRPackedBool mInEditorInitialization;
+  friend class EditorInitializerEntryTracker;
+#endif
 
   nsRefPtr<nsTextInputSelectionImpl> mSelCon;
   nsCOMPtr<nsFrameSelection> mFrameSel;

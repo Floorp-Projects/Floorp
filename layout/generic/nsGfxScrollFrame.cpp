@@ -2694,6 +2694,12 @@ PRBool
 nsGfxScrollFrameInner::IsScrollbarOnRight() const
 {
   nsPresContext *presContext = mOuter->PresContext();
+
+  // The position of the scrollbar in top-level windows depends on the pref
+  // layout.scrollbar.side. For non-top-level elements, it depends only on the
+  // directionaliy of the element (equivalent to a value of "1" for the pref).
+  if (!mIsRoot)
+    return IsLTR();
   switch (presContext->GetCachedIntPref(kPresContext_ScrollbarSide)) {
     default:
     case 0: // UI directionality

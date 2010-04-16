@@ -621,6 +621,21 @@ nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
                                      aReturn);
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::NodesFromRect(float aX, float aY,
+                                float aTopSize, float aRightSize,
+                                float aBottomSize, float aLeftSize,
+                                PRBool aIgnoreRootScrollFrame,
+                                PRBool aFlushLayout,
+                                nsIDOMNodeList** aReturn)
+{
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
+  NS_ENSURE_STATE(doc);
+
+  return doc->NodesFromRectHelper(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize, 
+                                  aIgnoreRootScrollFrame, aFlushLayout, aReturn);
+}
+
 static already_AddRefed<gfxImageSurface>
 CanvasToImageSurface(nsIDOMHTMLCanvasElement *canvas)
 {
@@ -1012,7 +1027,7 @@ nsDOMWindowUtils::SendTextEvent(const nsAString& aCompositionString,
   AppendClause(aSecondClauseLength, aSecondClauseAttr, &textRanges);
   AppendClause(aThirdClauseLength,  aThirdClauseAttr, &textRanges);
   PRInt32 len = aFirstClauseLength + aSecondClauseLength + aThirdClauseLength;
-  NS_ENSURE_TRUE(len == 0 || len == aCompositionString.Length(),
+  NS_ENSURE_TRUE(len == 0 || PRUint32(len) == aCompositionString.Length(),
                  NS_ERROR_FAILURE);
 
   if (aCaretStart >= 0) {
@@ -1074,6 +1089,7 @@ nsDOMWindowUtils::SendQueryContentEvent(PRUint32 aType,
 
     nsIntRect widgetBounds;
     nsresult rv = widget->GetClientBounds(widgetBounds);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // There is no popup frame at the point and the point isn't in our widget,
     // we cannot process this request.

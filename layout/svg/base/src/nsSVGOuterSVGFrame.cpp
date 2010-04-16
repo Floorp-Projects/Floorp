@@ -430,19 +430,30 @@ public:
   }
 #endif
 
-  virtual nsIFrame* HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
-                            HitTestState* aState);
+  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("SVGEventReceiver")
 };
 
-nsIFrame*
-nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, nsPoint aPt,
-                      HitTestState* aState)
+void
+nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
+                      HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
 {
-  return static_cast<nsSVGOuterSVGFrame*>(mFrame)->
-    GetFrameForPoint(aPt - aBuilder->ToReferenceFrame(mFrame));
+  nsRect rectAtOrigin = aRect - aBuilder->ToReferenceFrame(mFrame);
+  nsRect thisRect(nsPoint(0,0), static_cast<nsSVGOuterSVGFrame*>(mFrame)->GetSize());
+  if (!thisRect.Intersects(rectAtOrigin))
+    return;
+
+  nsPoint rectCenter(rectAtOrigin.x + rectAtOrigin.width / 2,
+                     rectAtOrigin.y + rectAtOrigin.height / 2);
+
+  nsIFrame* frame = nsSVGUtils::HitTestChildren(static_cast<nsSVGOuterSVGFrame*>(mFrame),
+                                                rectCenter);
+  if (frame) {
+    aOutFrames->AppendElement(frame);
+  }
 }
 
 void

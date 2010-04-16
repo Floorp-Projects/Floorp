@@ -48,6 +48,7 @@
 #include "nsCRT.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsURLHelper.h"
+#include "nsIStreamConverterService.h"
 
 //
 // Helper function for determining the length of data bytes up to
@@ -67,7 +68,10 @@ LengthToToken(const char *cursor, const char *token)
     return len;
 }
 
-nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID) :
+nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel, PRUint32 aPartID,
+                             nsIStreamListener* aListener) :
+  mMultipartChannel(aMultipartChannel),
+  mListener(aListener),
   mStatus(NS_OK),
   mContentLength(LL_MAXUINT),
   mIsByteRangeRequest(PR_FALSE),
@@ -96,6 +100,26 @@ void nsPartChannel::InitializeByteRange(PRInt64 aStart, PRInt64 aEnd)
     mByteRangeEnd   = aEnd;
 }
 
+nsresult nsPartChannel::SendOnStartRequest(nsISupports* aContext)
+{
+    return mListener->OnStartRequest(this, aContext);
+}
+
+nsresult nsPartChannel::SendOnDataAvailable(nsISupports* aContext,
+                                            nsIInputStream* aStream,
+                                            PRUint32 aOffset, PRUint32 aLen)
+{
+    return mListener->OnDataAvailable(this, aContext, aStream, aOffset, aLen);
+}
+
+nsresult nsPartChannel::SendOnStopRequest(nsISupports* aContext,
+                                          nsresult aStatus)
+{
+    // Drop the listener
+    nsCOMPtr<nsIStreamListener> listener;
+    listener.swap(mListener);
+    return listener->OnStopRequest(this, aContext, aStatus);
+}
 
 //
 // nsISupports implementation...
@@ -734,15 +758,30 @@ nsresult
 nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     nsresult rv = NS_OK;
 
-    if (mContentType.IsEmpty())
+    nsCOMPtr<nsIStreamListener> partListener(mFinalListener);
+    if (mContentType.IsEmpty()) {
         mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
+        nsCOMPtr<nsIStreamConverterService> serv =
+            do_GetService(NS_STREAMCONVERTERSERVICE_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIStreamListener> converter;
+            rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE,
+                                        "*/*",
+                                        mFinalListener,
+                                        mContext,
+                                        getter_AddRefs(converter));
+            if (NS_SUCCEEDED(rv)) {
+                partListener = converter;
+            }
+        }
+    }
 
     // if we already have an mPartChannel, that means we never sent a Stop()
     // before starting up another "part." that would be bad.
     NS_ASSERTION(!mPartChannel, "tisk tisk, shouldn't be overwriting a channel");
 
     nsPartChannel *newChannel;
-    newChannel = new nsPartChannel(aChannel, mCurrentPartID++);
+    newChannel = new nsPartChannel(aChannel, mCurrentPartID++, partListener);
     if (!newChannel)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -780,7 +819,7 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
 
     // Let's start off the load. NOTE: we don't forward on the channel passed
     // into our OnDataAvailable() as it's the root channel for the raw stream.
-    return mFinalListener->OnStartRequest(mPartChannel, mContext);
+    return mPartChannel->SendOnStartRequest(mContext);
 }
 
 
@@ -789,7 +828,7 @@ nsMultiMixedConv::SendStop(nsresult aStatus) {
     
     nsresult rv = NS_OK;
     if (mPartChannel) {
-        rv = mFinalListener->OnStopRequest(mPartChannel, mContext, aStatus);
+        rv = mPartChannel->SendOnStopRequest(mContext, aStatus);
         // don't check for failure here, we need to remove the channel from 
         // the loadgroup.
 
@@ -836,7 +875,7 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
     nsCOMPtr<nsIInputStream> inStream(do_QueryInterface(ss, &rv));
     if (NS_FAILED(rv)) return rv;
 
-    return mFinalListener->OnDataAvailable(mPartChannel, mContext, inStream, offset, aLen);
+    return mPartChannel->SendOnDataAvailable(mContext, inStream, offset, aLen);
 }
 
 PRInt32
