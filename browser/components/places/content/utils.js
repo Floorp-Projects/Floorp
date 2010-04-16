@@ -57,13 +57,10 @@ __defineGetter__("PlacesUtils", function() {
 
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
-const GUID_ANNO = "placesInternal/GUID";
-const LMANNO_FEEDURI = "livemark/feedURI";
-const LMANNO_SITEURI = "livemark/siteURI";
+
 const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
 const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
 const ORGANIZER_LEFTPANE_VERSION = 6;
-const EXCLUDE_FROM_BACKUP_ANNO = "places/excludeFromBackup";
 
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
@@ -74,24 +71,7 @@ const NEWLINE= "\n";
 const NEWLINE = "\r\n";
 #endif
 
-function QI_node(aNode, aIID) {
-  return aNode.QueryInterface(aIID);
-}
-function asVisit(aNode)    { return QI_node(aNode, Ci.nsINavHistoryVisitResultNode);    }
-function asFullVisit(aNode){ return QI_node(aNode, Ci.nsINavHistoryFullVisitResultNode);}
-function asContainer(aNode){ return QI_node(aNode, Ci.nsINavHistoryContainerResultNode);}
-function asQuery(aNode)    { return QI_node(aNode, Ci.nsINavHistoryQueryResultNode);    }
-
 var PlacesUIUtils = {
-  /**
-   * The Microsummary Service
-   */
-  get microsummaries() {
-    delete this.microsummaries;
-    return this.microsummaries = Cc["@mozilla.org/microsummary/service;1"].
-                                 getService(Ci.nsIMicrosummaryService);
-  },
-
   get RDF() {
     delete this.RDF;
     return this.RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
@@ -216,7 +196,7 @@ var PlacesUIUtils = {
     var keyword = aData.keyword || null;
     var annos = aData.annos || [];
     // always exclude GUID when copying any item
-    var excludeAnnos = [GUID_ANNO];
+    var excludeAnnos = [PlacesUtils.GUID_ANNO];
     if (aExcludeAnnotations)
       excludeAnnos = excludeAnnos.concat(aExcludeAnnotations);
     annos = annos.filter(function(aValue, aIndex, aArray) {
@@ -314,7 +294,7 @@ var PlacesUIUtils = {
       var annos = aData.annos || [];
       annos = annos.filter(function(aAnno) {
         // always exclude GUID when copying any item
-        return aAnno.name != GUID_ANNO;
+        return aAnno.name != PlacesUtils.GUID_ANNO;
       });
       return this.ptm.createFolder(aData.title, aContainer, aIndex, annos, childItems);
     }
@@ -327,16 +307,16 @@ var PlacesUIUtils = {
     var feedURI = null;
     var siteURI = null;
     aData.annos = aData.annos.filter(function(aAnno) {
-      if (aAnno.name == LMANNO_FEEDURI) {
+      if (aAnno.name == PlacesUtils.LMANNO_FEEDURI) {
         feedURI = PlacesUtils._uri(aAnno.value);
         return false;
       }
-      else if (aAnno.name == LMANNO_SITEURI) {
+      else if (aAnno.name == PlacesUtils.LMANNO_SITEURI) {
         siteURI = PlacesUtils._uri(aAnno.value);
         return false;
       }
       // always exclude GUID when copying any item
-      return aAnno.name != GUID_ANNO;
+      return aAnno.name != PlacesUtils.GUID_ANNO;
     });
     return this.ptm.createLivemark(feedURI, siteURI, aData.title, aContainer,
                                    aIndex, aData.annos);
@@ -1044,7 +1024,7 @@ var PlacesUIUtils = {
 
         var popup = document.createElement("menupopup");
         popup.setAttribute("placespopup", "true");
-        popup._resultNode = asContainer(aNode);
+        popup._resultNode = PlacesUtils.asContainer(aNode);
 #ifdef XP_MACOSX
         // Binding on Mac native menus is lazy attached, so onPopupShowing,
         // in the capturing phase, fields are not yet initialized.
@@ -1301,7 +1281,7 @@ var PlacesUIUtils = {
         as.setItemAnnotation(itemId, ORGANIZER_QUERY_ANNO, aQueryName,
                              0, as.EXPIRE_NEVER);
         // We should never backup this, since it changes between profiles.
-        as.setItemAnnotation(itemId, EXCLUDE_FROM_BACKUP_ANNO, 1,
+        as.setItemAnnotation(itemId, PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, 1,
                              0, as.EXPIRE_NEVER);
         // Add to the queries map.
         self.leftPaneQueries[aQueryName] = itemId;
@@ -1315,7 +1295,7 @@ var PlacesUIUtils = {
                                        queries[aFolderName].title,
                                        bs.DEFAULT_INDEX);
         // We should never backup this, since it changes between profiles.
-        as.setItemAnnotation(folderId, EXCLUDE_FROM_BACKUP_ANNO, 1,
+        as.setItemAnnotation(folderId, PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, 1,
                              0, as.EXPIRE_NEVER);
         // Disallow manipulating this folder within the organizer UI.
         bs.setFolderReadonly(folderId, true);
