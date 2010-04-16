@@ -82,10 +82,6 @@ var gTabsListener = {
     if (gCurrentTest.URIs.indexOf(spec) != -1 )
       this._loadedURIs.push(spec);
 
-    var fm = Components.classes["@mozilla.org/focus-manager;1"].
-               getService(Components.interfaces.nsIFocusManager);
-    is(fm.activeWindow, gBrowser.ownerDocument.defaultView, "window made active");
-
     if (this._loadedURIs.length == gCurrentTest.URIs.length) {
       // We have correctly opened all URIs.
 
@@ -97,7 +93,7 @@ var gTabsListener = {
       this._openTabsCount = 0;
 
       // Test finished.  This will move to the next one.
-      gCurrentTest.finish();
+      waitForFocus(gCurrentTest.finish, gBrowser.ownerDocument.defaultView);
     }
   },
 
@@ -252,6 +248,8 @@ gTests.push({
 
 function test() {
   waitForExplicitFinish();
+  // Increase timeout, this test can be quite slow due to waitForFocus calls.
+  requestLongerTimeout(2);
 
   // Sanity checks.
   ok(PlacesUtils, "PlacesUtils in context");
@@ -302,8 +300,10 @@ function runNextTest() {
     gCurrentTest.setup();
 
     // Middle click on first node in the content tree of the Library.
-    gLibrary.PlacesOrganizer._content.focus();
-    mouseEventOnCell(gLibrary.PlacesOrganizer._content, 0, 0, { button: 1 });
+    gLibrary.focus();
+    waitForFocus(function() {
+      mouseEventOnCell(gLibrary.PlacesOrganizer._content, 0, 0, { button: 1 });
+    }, gLibrary);
   }
   else {
     // No more tests.
