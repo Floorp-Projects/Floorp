@@ -13017,29 +13017,31 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         }
 
         /* If not idx < length, stay on trace (and read value as undefined). */
-        LIns* br2 = lir->insBranch(LIR_jf,
-                                   lir->ins2(LIR_pult,
-                                             pidx_ins,
-                                             stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)),
-                                   NULL);
+        LIns* length = stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH);
+        if (pidx_ins != length) {
+            LIns* br2 = lir->insBranch(LIR_jf,
+                                       lir->ins2(LIR_pult, pidx_ins, length),
+                                       NULL);
 
-        /* If dslots is NULL, stay on trace (and read value as undefined). */
-        LIns* br3 = lir->insBranch(LIR_jt, lir->ins_peq0(dslots_ins), NULL);
+            /* If dslots is NULL, stay on trace (and read value as undefined). */
+            LIns* br3 = lir->insBranch(LIR_jt, lir->ins_peq0(dslots_ins), NULL);
 
-        /* If not idx < capacity, stay on trace (and read value as undefined). */
-        LIns* br4 = lir->insBranch(LIR_jf,
-                                   lir->ins2(LIR_pult,
-                                             pidx_ins,
-                                             lir->insLoad(LIR_ldp, dslots_ins,
-                                                          -(int)sizeof(jsval), ACC_OTHER)),
-                                   NULL);
-        lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
-        LIns* label = lir->ins0(LIR_label);
-        if (br1)
-            br1->setTarget(label);
-        br2->setTarget(label);
-        br3->setTarget(label);
-        br4->setTarget(label);
+            /* If not idx < capacity, stay on trace (and read value as undefined). */
+            LIns* br4 = lir->insBranch(LIR_jf,
+                                       lir->ins2(LIR_pult,
+                                                 pidx_ins,
+                                                 lir->insLoad(LIR_ldp, dslots_ins,
+                                                              -(int)sizeof(jsval), ACC_OTHER)),
+                                       NULL);
+
+            lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+            LIns* label = lir->ins0(LIR_label);
+            if (br1)
+                br1->setTarget(label);
+            br2->setTarget(label);
+            br3->setTarget(label);
+            br4->setTarget(label);
+        }
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
