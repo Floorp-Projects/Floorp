@@ -12,15 +12,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is SimpleTest stubs for MochiKit v1.4.2 tests.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Serge Gautherie <sgautherie.bz@free.fr>.
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#	Serge Gautherie <sgautherie.bz@free.fr>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,50 +35,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+
+#
+# We want to run the tests in our own (modified) harness.
+#
+
+DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-relativesrcdir  = testing/mochitest/tests
+relativesrcdir  = testing/mochitest/tests/MochiKit-1.4.2/tests/SimpleTest
 
 include $(DEPTH)/config/autoconf.mk
-
-PARALLEL_DIRS = \
-	MochiKit-1.4.2 \
-	SimpleTest \
-	browser \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-_TEST_FILES = test_MochiKit-Async.html \
-		test_MochiKit-Base.html \
-		test_MochiKit-DateTime.html \
-		test_MochiKit-DOM.html \
-		test_MochiKit-Style.html \
-		test_MochiKit-Format.html \
-		test_MochiKit-Iter.html \
-		test_MochiKit-Logging.html \
-		test_MochiKit-MochiKit.html \
-		test_MochiKit-Color.html \
-		test_MochiKit-Signal.html \
-		test_Base.js \
-		test_Color.js \
-		test_DateTime.js \
-		test_DragAndDrop.js \
-		test_Format.js \
-		test_Iter.js \
-		test_Logging.js \
-		test_Signal.js \
-		cli.js \
-		FakeJSAN.js \
-		standalone.js \
-		test_MochiKit-Async.json \
-		test_sanity.html \
-		$(NULL)
+_STUBS_FILES = \
+	SimpleTest.js \
+	test.css \
+	$(NULL)
 
-# Copy the MochiKit tests into subdirectory, so the top level is all dirs
-# in the test screen. We leave them in tests/ in the src tree to mirror
-# the upstream MochiKit repository
-libs:: $(_TEST_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)/MochiKit_Unit_Tests
+libs:: $(_STUBS_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)
