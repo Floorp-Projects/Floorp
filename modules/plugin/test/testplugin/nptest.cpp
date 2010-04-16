@@ -201,7 +201,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getClipboardText",
   "callOnDestroy",
   "reinitWidget",
-  "propertyAndMethod"
+  "propertyAndMethod",
   "crashInNestedLoop",
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
