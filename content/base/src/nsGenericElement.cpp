@@ -631,6 +631,23 @@ nsIContent::FindFirstNonNativeAnonymous() const
   return nsnull;
 }
 
+nsIContent*
+nsIContent::GetFlattenedTreeParent() const
+{
+  nsIContent *parent = GetParent();
+  if (parent && parent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsIDocument *doc = parent->GetOwnerDoc();
+    if (doc) {
+      nsIContent* insertionElement =
+        doc->BindingManager()->GetNestedInsertionPoint(parent, this);
+      if (insertionElement) {
+        parent = insertionElement;
+      }
+    }
+  }
+  return parent;
+}
+
 //----------------------------------------------------------------------
 
 NS_IMPL_ADDREF(nsChildContentList)
