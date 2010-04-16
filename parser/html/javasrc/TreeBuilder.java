@@ -1958,14 +1958,14 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         eltPos = findLastInScope(name);
                                         if (eltPos != TreeBuilder.NOT_FOUND_ON_STACK) {
                                             err("\u201Cbutton\u201D start tag seen when there was an open \u201Cbutton\u201D element in scope.");
+
                                             generateImpliedEndTags();
-                                            if (!isCurrent("button")) {
-                                                err("There was an open \u201Cbutton\u201D element in scope with unclosed children.");
+                                            if (!isCurrent(name)) {
+                                                err("End tag \u201Cbutton\u201D seen but there were unclosed elements.");
                                             }
                                             while (currentPtr >= eltPos) {
                                                 pop();
                                             }
-                                            clearTheListOfActiveFormattingElementsUpToTheLastMarker();
                                             continue starttagloop;
                                         } else {
                                             reconstructTheActiveFormattingElements();
@@ -1973,7 +1973,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                                     "http://www.w3.org/1999/xhtml",
                                                     elementName, attributes,
                                                     formPointer);
-                                            insertMarker();
                                             attributes = null; // CPP
                                             break starttagloop;
                                         }
@@ -3375,6 +3374,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case UL_OR_OL_OR_DL:
                         case PRE_OR_LISTING:
                         case FIELDSET:
+                        case BUTTON:
                         case ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION:
                             eltPos = findLastInScope(name);
                             if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
@@ -3495,7 +3495,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         case NOBR:
                             adoptionAgencyEndTag(name);
                             break endtagloop;
-                        case BUTTON:
                         case OBJECT:
                         case MARQUEE_OR_APPLET:
                             eltPos = findLastInScope(name);
