@@ -168,6 +168,14 @@ try {
     is(pos.x, 0, 'test getViewportPosition x');
     is(pos.y, 0, 'test getViewportPosition y');
 
+    // The 3(+3) following |is(dims.w, 80, ...);| need a width of at least 652px to pass.
+    // Our SimpleTest/TestRunner.js runs tests inside an |iframe.width = "500";| only.
+    // Work around that.
+    // NB: This test already passes without this workaround when run alone.
+    setElementPosition('testTable', {'x': dims.w - (3 * (2 + 80 + 2))});
+    pos = getElementPosition('testTable');
+    is(dims.w - pos.x >= (3 * (2 + 80 + 2)), true, 'Is viewport width enough to display \'testTable\' at expected size?');
+
     dims = getElementDimensions('testCell1', true);
     is(dims.w, 80, 'default left table cell content w ok');
     is(dims.h, 30, 'default left table cell content h ok');
