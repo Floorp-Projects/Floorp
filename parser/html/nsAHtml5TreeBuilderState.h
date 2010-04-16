@@ -47,7 +47,7 @@ class nsAHtml5TreeBuilderState {
     
     virtual PRInt32 getStackLength() = 0;
 
-    virtual PRInt32 getListLength() = 0;
+    virtual PRInt32 getListOfActiveFormattingElementsLength() = 0;
 
     virtual nsIContent** getFormPointer() = 0;
     
