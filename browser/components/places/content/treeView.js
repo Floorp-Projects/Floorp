@@ -653,7 +653,7 @@ PlacesTreeView.prototype = {
     this._rows.splice(row, 0, aNode);
     this._tree.rowCountChanged(row, 1);
 
-    if (PlacesUtils.nodeIsContainer(aNode) && asContainer(aNode).containerOpen)
+    if (PlacesUtils.nodeIsContainer(aNode) && PlacesUtils.asContainer(aNode).containerOpen)
       this.invalidateContainer(aNode);
   },
 
@@ -1124,7 +1124,7 @@ PlacesTreeView.prototype = {
         if ((PlacesUtils.nodeIsQuery(parent) ||
              PlacesUtils.nodeIsFolder(parent)) &&
             !node.hasChildren)
-          return asQuery(parent).queryOptions.expandQueries;
+          return PlacesUtils.asQuery(parent).queryOptions.expandQueries;
       }
       return true;
     }
@@ -1210,7 +1210,7 @@ PlacesTreeView.prototype = {
         if (PlacesControllerDragHelper.disallowInsertion(container))
           return null;
 
-        let queryOptions = asQuery(this._result.root).queryOptions;
+        let queryOptions = PlacesUtils.asQuery(this._result.root).queryOptions;
         if (queryOptions.sortingMode !=
               Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
           // If we are within a sorted view, insert at the end.
