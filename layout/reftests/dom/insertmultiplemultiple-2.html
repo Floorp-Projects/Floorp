@@ -1,0 +1,39 @@
+<html class="reftest-wait">
+<head>
+
+<script>
+function boom()
+{
+  document.body.offsetHeight;
+
+  var ninediv = document.getElementById("nine");
+  var parent = ninediv.parentNode;
+
+  for (var i = 4; i <= 8; i++) {
+    var newdiv = document.createElement("div");
+    newdiv.appendChild(document.createTextNode(i));
+    parent.insertBefore(newdiv, ninediv);
+  }
+
+  for (var i = 13; i <= 15; i++) {
+    var newdiv = document.createElement("div");
+    newdiv.appendChild(document.createTextNode(i));
+    parent.appendChild(newdiv);
+  }
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+</script>
+
+</head>
+<body onload="boom();">
+<div>1</div>
+<div>2</div>
+<div>3</div>
+<div id="nine">9</div>
+<div>10</div>
+<div>11</div>
+<div>12</div>
+</body>
+</html>
