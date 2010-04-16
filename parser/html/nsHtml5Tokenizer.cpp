@@ -46,7 +46,6 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
-#include "nsAHtml5EncodingDeclarationHandler.h"
 
 #include "nsHtml5TreeBuilder.h"
 #include "nsHtml5MetaScanner.h"
@@ -3925,7 +3924,7 @@ nsHtml5Tokenizer::initializeWithoutStarting()
 }
 
 void 
-nsHtml5Tokenizer::setEncodingDeclarationHandler(nsAHtml5EncodingDeclarationHandler* encodingDeclarationHandler)
+nsHtml5Tokenizer::setEncodingDeclarationHandler(nsHtml5StreamParser* encodingDeclarationHandler)
 {
   this->encodingDeclarationHandler = encodingDeclarationHandler;
 }
