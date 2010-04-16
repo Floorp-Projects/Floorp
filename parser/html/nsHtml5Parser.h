@@ -304,7 +304,10 @@ class nsHtml5Parser : public nsIParser,
     void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine);
 
     void DropStreamParser() {
-      mStreamParser = nsnull;
+      if (mStreamParser) {
+        mStreamParser->DropTimer();
+        mStreamParser = nsnull;
+      }
     }
     
     void StartTokenizer(PRBool aScriptingEnabled);
