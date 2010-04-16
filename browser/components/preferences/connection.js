@@ -52,7 +52,7 @@ var gConnectionsDialog = {
     var httpProxyPortPref = document.getElementById("network.proxy.http_port");
     var shareProxiesPref = document.getElementById("network.proxy.share_proxy_settings");
     if (shareProxiesPref.value) {
-      var proxyPrefs = ["ssl", "ftp", "socks", "gopher"];
+      var proxyPrefs = ["ssl", "ftp", "socks"];
       for (var i = 0; i < proxyPrefs.length; ++i) {
         var proxyServerURLPref = document.getElementById("network.proxy." + proxyPrefs[i]);
         var proxyPortPref = document.getElementById("network.proxy." + proxyPrefs[i] + "_port");
@@ -134,7 +134,7 @@ var gConnectionsDialog = {
   {
     var proxyTypePref = document.getElementById("network.proxy.type");
     var shareProxiesPref = document.getElementById("network.proxy.share_proxy_settings");
-    var proxyPrefs = ["ssl", "ftp", "socks", "gopher"];
+    var proxyPrefs = ["ssl", "ftp", "socks"];
     for (var i = 0; i < proxyPrefs.length; ++i) {
       var proxyServerURLPref = document.getElementById("network.proxy." + proxyPrefs[i]);
       var proxyPortPref = document.getElementById("network.proxy." + proxyPrefs[i] + "_port");

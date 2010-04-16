@@ -4620,7 +4620,6 @@ nsHttpChannel::SetReferrer(nsIURI *referrer)
         "http",
         "https",
         "ftp",
-        "gopher",
         nsnull
     };
     match = PR_FALSE;

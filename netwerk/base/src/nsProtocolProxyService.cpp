@@ -301,7 +301,6 @@ nsProtocolProxyService::nsProtocolProxyService()
     , mProxyConfig(eProxyConfig_Direct)
     , mHTTPProxyPort(-1)
     , mFTPProxyPort(-1)
-    , mGopherProxyPort(-1)
     , mHTTPSProxyPort(-1)
     , mSOCKSProxyPort(-1)
     , mSOCKSProxyVersion(4)
@@ -429,12 +428,6 @@ nsProtocolProxyService::PrefsChanged(nsIPrefBranch *prefBranch,
 
     if (!pref || !strcmp(pref, PROXY_PREF("ftp_port")))
         proxy_GetIntPref(prefBranch, PROXY_PREF("ftp_port"), mFTPProxyPort);
-
-    if (!pref || !strcmp(pref, PROXY_PREF("gopher")))
-        proxy_GetStringPref(prefBranch, PROXY_PREF("gopher"), mGopherProxyHost);
-
-    if (!pref || !strcmp(pref, PROXY_PREF("gopher_port")))
-        proxy_GetIntPref(prefBranch, PROXY_PREF("gopher_port"), mGopherProxyPort);
 
     if (!pref || !strcmp(pref, PROXY_PREF("socks")))
         proxy_GetStringPref(prefBranch, PROXY_PREF("socks"), mSOCKSProxyHost);
@@ -1298,12 +1291,6 @@ nsProtocolProxyService::Resolve_Internal(nsIURI *uri,
         host = &mFTPProxyHost;
         type = kProxyType_HTTP;
         port = mFTPProxyPort;
-    }
-    else if (!mGopherProxyHost.IsEmpty() && mGopherProxyPort > 0 &&
-             info.scheme.EqualsLiteral("gopher")) {
-        host = &mGopherProxyHost;
-        type = kProxyType_HTTP;
-        port = mGopherProxyPort;
     }
     else if (!mSOCKSProxyHost.IsEmpty() && mSOCKSProxyPort > 0) {
         host = &mSOCKSProxyHost;

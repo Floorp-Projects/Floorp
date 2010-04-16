@@ -374,7 +374,6 @@ MAKEFILES_netwerk="
   netwerk/protocol/data/Makefile
   netwerk/protocol/file/Makefile
   netwerk/protocol/ftp/Makefile
-  netwerk/protocol/gopher/Makefile
   netwerk/protocol/http/Makefile
   netwerk/protocol/res/Makefile
   netwerk/protocol/viewsource/Makefile
