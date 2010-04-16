@@ -17,6 +17,9 @@ include abs-pos/reftest.list
 # backgrounds/
 include backgrounds/reftest.list
 
+# dom/
+include dom/reftest.list
+
 # bidi/
 include bidi/reftest.list
 
