@@ -47,7 +47,7 @@ printStatus (summary);
  
 expect = actual = 'No Crash';
 
-this.x setter= new Function;
+Object.defineProperty(this, "x", { set: new Function, enumerable: true, configurable: true });
 this.watch('x', function(){});
 gc();
 x = {};

@@ -204,7 +204,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     JS_LOCK_OBJ(cx, obj);
 
     uint32 slot = sprop->slot;
-    JSScope* scope = OBJ_SCOPE(obj);
+    JSScope* scope = obj->scope();
     if (slot != scope->freeslot)
         goto exit_trace;
     JS_ASSERT(sprop->parent == scope->lastProperty());
@@ -218,7 +218,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     }
 
     if (!scope->table) {
-        if (slot < obj->numSlots() && !OBJ_GET_CLASS(cx, obj)->reserveSlots) {
+        if (slot < obj->numSlots() && !obj->getClass()->reserveSlots) {
             JS_ASSERT(JSVAL_IS_VOID(obj->getSlot(scope->freeslot)));
             ++scope->freeslot;
         } else {
@@ -260,7 +260,7 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id)
     for (JSObject* pobj = obj; pobj; pobj = pobj->getProto()) {
         if (pobj->map->ops->lookupProperty != js_LookupProperty)
             return JSVAL_TO_SPECIAL(JSVAL_VOID);
-        JSClass* clasp = OBJ_GET_CLASS(cx, pobj);
+        JSClass* clasp = pobj->getClass();
         if (clasp->resolve != JS_ResolveStub && clasp != &js_StringClass)
             return JSVAL_TO_SPECIAL(JSVAL_VOID);
     }

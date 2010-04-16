@@ -2398,6 +2398,8 @@ alpha*-*-osf*)
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
        CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic -norunpath"
+       _MOZ_EXCEPTIONS_FLAGS_ON='-features=except'
+       _MOZ_EXCEPTIONS_FLAGS_OFF='-features=no%except'
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -2634,6 +2636,19 @@ AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
+AC_MSG_CHECKING(for ssize_t)
+AC_CACHE_VAL(ac_cv_type_ssize_t,
+ [AC_TRY_COMPILE([#include <stdio.h>
+                  #include <sys/types.h>],
+                 [ssize_t foo = 0;],
+                 [ac_cv_type_ssize_t=true],
+                 [ac_cv_type_ssize_t=false])])
+if test "$ac_cv_type_ssize_t" = true ; then
+  AC_DEFINE(HAVE_SSIZE_T)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
 AC_STRUCT_ST_BLKSIZE
 AC_MSG_CHECKING(for siginfo_t)
 AC_CACHE_VAL(ac_cv_siginfo_t,
@@ -4780,7 +4795,7 @@ fi
 AC_SUBST(_MOZ_RTTI_FLAGS_ON)
 
 dnl ========================================================
-dnl C++ exceptions (g++/egcs only - for now)
+dnl C++ exceptions (g++/VC/irix6/Sun only - for now)
 dnl Should be smarter and check that the compiler does indeed have exceptions
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
@@ -4790,6 +4805,7 @@ MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
 
 if test "$_MOZ_CPP_EXCEPTIONS"; then
     _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_ON
+    AC_DEFINE(MOZ_CPP_EXCEPTIONS)
 else
     _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_OFF
 fi
@@ -5363,6 +5379,9 @@ if test "$JS_HAS_CTYPES"; then
   if test "$SOLARIS_SUNPRO_CC"; then
     # Always use gcc for libffi on Solaris
     ac_configure_args="$ac_configure_args CC=gcc"
+  fi
+  if test "$OS_ARCH" = "OS2"; then
+    ac_configure_args="$ac_configure_args CFLAGS=-Zomf AR=emxomfar"
   fi
 
   # Use a separate cache file for libffi, since it does things differently

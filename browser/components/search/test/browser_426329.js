@@ -37,7 +37,7 @@ function test() {
   var preSelectedBrowser, preTabNo;
   function init() {
     preSelectedBrowser = gBrowser.selectedBrowser;
-    preTabNo = gBrowser.mTabs.length;
+    preTabNo = gBrowser.tabs.length;
     searchBar.focus();
   }
 
@@ -46,7 +46,7 @@ function test() {
     EventUtils.synthesizeKey("VK_RETURN", {});
     doOnloadOnce(function(event) {
 
-      is(gBrowser.mTabs.length, preTabNo, "Return key did not open new tab");
+      is(gBrowser.tabs.length, preTabNo, "Return key did not open new tab");
       is(event.originalTarget, preSelectedBrowser.contentDocument,
          "Return key loaded results in current tab");
 
@@ -59,7 +59,7 @@ function test() {
     EventUtils.synthesizeKey("VK_RETURN", { altKey: true });
     doOnloadOnce(function(event) {
 
-      is(gBrowser.mTabs.length, preTabNo + 1, "Alt+Return key added new tab");
+      is(gBrowser.tabs.length, preTabNo + 1, "Alt+Return key added new tab");
       isnot(event.originalTarget, preSelectedBrowser.contentDocument,
             "Alt+Return key loaded results in new tab");
       is(event.originalTarget, gBrowser.contentDocument,
@@ -76,7 +76,7 @@ function test() {
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true, altKey: true });
     doOnloadOnce(function(event) {
 
-      is(gBrowser.mTabs.length, preTabNo + 1, "Shift+Alt+Return key added new tab");
+      is(gBrowser.tabs.length, preTabNo + 1, "Shift+Alt+Return key added new tab");
       isnot(event.originalTarget, preSelectedBrowser.contentDocument,
             "Shift+Alt+Return key loaded results in new tab");
       isnot(event.originalTarget, gBrowser.contentDocument,
@@ -91,7 +91,7 @@ function test() {
     simulateClick({ button: 0 }, searchButton);
     doOnloadOnce(function(event) {
 
-      is(gBrowser.mTabs.length, preTabNo, "LeftClick did not open new tab");
+      is(gBrowser.tabs.length, preTabNo, "LeftClick did not open new tab");
       is(event.originalTarget, preSelectedBrowser.contentDocument,
          "LeftClick loaded results in current tab");
 
@@ -104,7 +104,7 @@ function test() {
     simulateClick({ button: 1 }, searchButton);
     doOnloadOnce(function(event) {
 
-      is(gBrowser.mTabs.length, preTabNo + 1, "MiddleClick added new tab");
+      is(gBrowser.tabs.length, preTabNo + 1, "MiddleClick added new tab");
       isnot(event.originalTarget, preSelectedBrowser.contentDocument,
             "MiddleClick loaded results in new tab");
       is(event.originalTarget, gBrowser.contentDocument,
@@ -119,7 +119,7 @@ function test() {
     simulateClick({ button: 1, shiftKey: true }, searchButton);
     doOnloadOnce(function(event) {
 
-      is(gBrowser.mTabs.length, preTabNo + 1, "Shift+MiddleClick added new tab");
+      is(gBrowser.tabs.length, preTabNo + 1, "Shift+MiddleClick added new tab");
       isnot(event.originalTarget, preSelectedBrowser.contentDocument,
             "Shift+MiddleClick loaded results in new tab");
       isnot(event.originalTarget, gBrowser.contentDocument,
@@ -135,7 +135,7 @@ function test() {
     simulateClick({ button: 2 }, searchButton);
     setTimeout(function() {
 
-      is(gBrowser.mTabs.length, preTabNo, "RightClick did not open new tab");
+      is(gBrowser.tabs.length, preTabNo, "RightClick did not open new tab");
       is(gBrowser.currentURI.spec, "about:blank", "RightClick did nothing");
 
       finalize();
@@ -144,8 +144,8 @@ function test() {
 
   function finalize() {
     searchBar.value = "";
-    while (gBrowser.mTabs.length != 1) {
-      gBrowser.removeTab(gBrowser.mTabs[0]);
+    while (gBrowser.tabs.length != 1) {
+      gBrowser.removeTab(gBrowser.tabs[0]);
     }
     content.location.href = "about:blank";
     var engine = ss.getEngineByName("Bug 426329");

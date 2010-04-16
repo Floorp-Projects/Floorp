@@ -3050,23 +3050,6 @@ SandboxDebug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-SandboxFunForwarder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                    jsval *rval)
-{
-    jsval v;
-    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &v) ||
-        !JS_CallFunctionValue(cx, obj, v, argc, argv, rval)) {
-        return JS_FALSE;
-    }
-
-    if (JSVAL_IS_PRIMITIVE(*rval))
-        return JS_TRUE; // nothing more to do.
-
-    XPCThrower::Throw(NS_ERROR_NOT_IMPLEMENTED, cx);
-    return JS_FALSE;
-}
-
-static JSBool
 SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
@@ -3097,39 +3080,10 @@ SandboxImport(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
     }
 
-    nsresult rv = NS_ERROR_FAILURE;
-    JSObject *oldfunobj = JS_GetFunctionObject(fun);
-    nsXPConnect *xpc = nsXPConnect::GetXPConnect();
-
-    if (xpc && oldfunobj) {
-        nsIXPCSecurityManager *secman = xpc->GetDefaultSecurityManager();
-        if (secman) {
-            rv = secman->CanAccess(nsIXPCSecurityManager::ACCESS_CALL_METHOD,
-                                   nsnull, cx, oldfunobj, nsnull, nsnull,
-                                   STRING_TO_JSVAL(funname), nsnull);
-        }
-    }
-
-    if (NS_FAILED(rv)) {
-        if (rv == NS_ERROR_FAILURE)
-            XPCThrower::Throw(NS_ERROR_XPC_SECURITY_MANAGER_VETO, cx);
+    jsid id;
+    if (!JS_ValueToId(cx, STRING_TO_JSVAL(funname), &id))
         return JS_FALSE;
-    }
-
-    JSFunction *newfun = JS_DefineUCFunction(cx, obj,
-            JS_GetStringChars(funname), JS_GetStringLength(funname),
-            SandboxFunForwarder, JS_GetFunctionArity(fun), 0);
-
-    if (!newfun)
-        return JS_FALSE;
-
-    JSObject *newfunobj = JS_GetFunctionObject(newfun);
-    if (!newfunobj)
-        return JS_FALSE;
-
-    // Functions come with two extra reserved slots on them. Use the 0-th slot
-    // to communicate the wrapped function to our forwarder.
-    return JS_SetReservedSlot(cx, newfunobj, 0, argv[0]);
+    return JS_SetPropertyById(cx, obj, id, &argv[0]);
 }
 
 static JSBool
@@ -3139,10 +3093,58 @@ sandbox_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-sandbox_resolve(JSContext *cx, JSObject *obj, jsval id)
+sandbox_getProto(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
+{
+    jsid id;
+    if (!JS_ValueToId(cx, idval, &id)) {
+        return JS_FALSE;
+    }
+
+    uintN attrs;
+    return JS_CheckAccess(cx, obj, id, JSACC_PROTO, vp, &attrs);
+}
+
+static JSBool
+sandbox_setProto(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+    if (!JSVAL_IS_OBJECT(*vp)) {
+        return JS_TRUE;
+    }
+
+    JSObject *pobj = JSVAL_TO_OBJECT(*vp);
+    if (pobj) {
+        if (pobj->getClass() == &XPCCrossOriginWrapper::XOWClass.base &&
+            !XPCWrapper::RewrapObject(cx, obj, pobj,
+                                      XPCWrapper::XPCNW_EXPLICIT, vp)) {
+            return JS_FALSE;
+        }
+    }
+
+    return JS_SetPrototype(cx, obj, JSVAL_TO_OBJECT(*vp));
+}
+
+static JSBool
+sandbox_resolve(JSContext *cx, JSObject *obj, jsval idval)
 {
     JSBool resolved;
-    return JS_ResolveStandardClass(cx, obj, id, &resolved);
+    if (!JS_ResolveStandardClass(cx, obj, idval, &resolved)) {
+        return JS_FALSE;
+    }
+    if (resolved) {
+        return JS_TRUE;
+    }
+
+    jsid id;
+    if (!JS_ValueToId(cx, idval, &id)) {
+        return JS_FALSE;
+    }
+
+    if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTO)) {
+        return JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, sandbox_getProto,
+                                     sandbox_setProto, JSPROP_SHARED);
+    }
+
+    return JS_TRUE;
 }
 
 static void
@@ -3234,9 +3236,10 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
                          "Bad return from do_CreateInstance");
 
             if (!principal || NS_FAILED(rv)) {
-                if (NS_SUCCEEDED(rv))
+                if (NS_SUCCEEDED(rv)) {
                     rv = NS_ERROR_FAILURE;
-                
+                }
+
                 return rv;
             }
         }
@@ -3248,14 +3251,8 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
 
     // Pass on ownership of sop to |sandbox|.
 
-    {
-        nsIScriptObjectPrincipal *tmp = sop;
-
-        if (!JS_SetPrivate(cx, sandbox, tmp)) {
-            return NS_ERROR_XPC_UNEXPECTED;
-        }
-
-        NS_ADDREF(tmp);
+    if (!JS_SetPrivate(cx, sandbox, sop.forget().get())) {
+        return NS_ERROR_XPC_UNEXPECTED;
     }
 
     rv = xpc->InitClasses(cx, sandbox);
@@ -3266,8 +3263,14 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop)
     if (NS_FAILED(rv))
         return NS_ERROR_XPC_UNEXPECTED;
 
-    if (vp)
+    if (vp) {
         *vp = OBJECT_TO_JSVAL(sandbox);
+        JSObject *scope;
+        if (!(scope = JS_GetScopeChain(cx)) ||
+            !XPCWrapper::RewrapObject(cx, scope, sandbox, XPCWrapper::NONE, vp)) {
+            return NS_ERROR_FAILURE;
+        }
+    }
 
     return NS_OK;
 }
@@ -3548,8 +3551,23 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo,
                   JSVersion jsVersion, PRBool returnStringOnly, jsval *rval)
 {
-    if (sandbox->getClass() != &SandboxClass)
+#ifdef DEBUG
+    // NB: The "unsafe" unwrap here is OK because we must be called from chrome.
+    {
+        nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
+        if (ssm) {
+            nsIPrincipal *subjectPrincipal = ssm->GetCxSubjectPrincipal(cx);
+            PRBool system;
+            ssm->IsSystemPrincipal(subjectPrincipal, &system);
+            NS_ASSERTION(system, "Bad caller!");
+        }
+    }
+#endif
+
+    sandbox = XPCWrapper::UnsafeUnwrapSecurityWrapper(cx, sandbox);
+    if (!sandbox || sandbox->getClass() != &SandboxClass) {
         return NS_ERROR_INVALID_ARG;
+    }
 
     nsIScriptObjectPrincipal *sop =
         (nsIScriptObjectPrincipal*)xpc_GetJSPrivate(sandbox);
@@ -3562,6 +3580,17 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
         NS_FAILED(prin->GetJSPrincipals(cx, &jsPrincipals)) ||
         !jsPrincipals) {
         return NS_ERROR_FAILURE;
+    }
+
+    JSObject *callingScope;
+    {
+        JSAutoRequest req(cx);
+
+        callingScope = JS_GetScopeChain(cx);
+        if (!callingScope) {
+            return NS_ERROR_FAILURE;
+        }
+        callingScope = JS_GetGlobalForObject(cx, callingScope);
     }
 
     nsRefPtr<ContextHolder> sandcx = new ContextHolder(cx, sandbox);
@@ -3596,22 +3625,36 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     {
         JSAutoRequest req(sandcx->GetJSContext());
         JSString *str = nsnull;
-        if (!JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
-                                              jsPrincipals,
-                                              reinterpret_cast<const jschar *>
-                                                              (PromiseFlatString(source).get()),
-                                              source.Length(), filename, lineNo,
-                                              rval) ||
-            (returnStringOnly &&
-             !JSVAL_IS_VOID(*rval) &&
-             !(str = JS_ValueToString(sandcx->GetJSContext(), *rval)))) {
+
+        JSBool ok =
+            JS_EvaluateUCScriptForPrincipals(sandcx->GetJSContext(), sandbox,
+                                             jsPrincipals,
+                                             reinterpret_cast<const jschar *>
+                                                             (PromiseFlatString(source).get()),
+                                             source.Length(), filename, lineNo,
+                                             rval);
+        if (ok && returnStringOnly && !(JSVAL_IS_VOID(*rval))) {
+            ok = !!(str = JS_ValueToString(sandcx->GetJSContext(), *rval));
+        }
+
+        if (!ok) {
+            // The sandbox threw an exception, convert it to a string (if
+            // asked) or convert it to a SJOW.
+
             jsval exn;
             if (JS_GetPendingException(sandcx->GetJSContext(), &exn)) {
                 // Stash the exception in |cx| so we can execute code on
                 // sandcx without a pending exception.
+                // Note that, even if wrapped, |exn| is rooted.
                 {
                     JSAutoTransferRequest transfer(sandcx->GetJSContext(), cx);
-                    JS_SetPendingException(cx, exn);
+
+                    if (!JSVAL_IS_PRIMITIVE(exn) &&
+                        XPCWrapper::RewrapObject(cx, callingScope,
+                                                 JSVAL_TO_OBJECT(exn),
+                                                 XPCWrapper::SJOW, &exn)) {
+                        JS_SetPendingException(cx, exn);
+                    }
                 }
 
                 JS_ClearPendingException(sandcx->GetJSContext());
@@ -3636,10 +3679,18 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
             } else {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }
-        }
-
-        if (str) {
-            *rval = STRING_TO_JSVAL(str);
+        } else {
+            // Convert the result into something safe for our caller.
+            if (str) {
+                *rval = STRING_TO_JSVAL(str);
+            } else if (!JSVAL_IS_PRIMITIVE(*rval)) {
+                if (!XPCWrapper::RewrapObject(sandcx->GetJSContext(),
+                                              callingScope,
+                                              JSVAL_TO_OBJECT(*rval),
+                                              XPCWrapper::SJOW, rval)) {
+                    rv = NS_ERROR_FAILURE;
+                }
+            }
         }
     }
 

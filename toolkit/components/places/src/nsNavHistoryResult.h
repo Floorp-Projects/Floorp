@@ -49,6 +49,8 @@
 #include "nsInterfaceHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/storage.h"
+#include "Helpers.h"
 
 class nsNavHistory;
 class nsNavHistoryQuery;
@@ -456,6 +458,8 @@ public:
 // derived classes each provide their own implementation of has children and
 // forward the rest to us using this macro
 #define NS_FORWARD_CONTAINERNODE_EXCEPT_HASCHILDREN_AND_READONLY \
+  NS_IMETHOD GetState(PRUint16* _state) \
+    { return nsNavHistoryContainerResultNode::GetState(_state); } \
   NS_IMETHOD GetContainerOpen(PRBool *aContainerOpen) \
     { return nsNavHistoryContainerResultNode::GetContainerOpen(aContainerOpen); } \
   NS_IMETHOD SetContainerOpen(PRBool aContainerOpen) \
@@ -531,6 +535,8 @@ public:
   // Overridded by descendents to populate.
   virtual nsresult OpenContainer();
   nsresult CloseContainer(PRBool aSuppressNotifications = PR_FALSE);
+
+  virtual nsresult OpenContainerAsync();
 
   // This points to the result that owns this container. All containers have
   // their result pointer set so we can quickly get to the result without having
@@ -649,6 +655,19 @@ public:
                       void* aClosure);
   nsresult ChangeTitles(nsIURI* aURI, const nsACString& aNewTitle,
                         PRBool aRecursive, PRBool aOnlyOne);
+
+protected:
+
+  enum AsyncCanceledState {
+    NOT_CANCELED, CANCELED, CANCELED_RESTART_NEEDED
+  };
+
+  void CancelAsyncOpen(PRBool aRestart);
+  nsresult NotifyOnStateChange(PRUint16 aOldState);
+
+  PRBool mAsyncEnabled;
+  nsCOMPtr<mozIStoragePendingStatement> mAsyncPendingStmt;
+  PRBool mAsyncCanceledState;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryContainerResultNode,
@@ -736,7 +755,8 @@ public:
 //    of the folder in sync with the bookmark service.
 
 class nsNavHistoryFolderResultNode : public nsNavHistoryContainerResultNode,
-                                     public nsINavHistoryQueryResultNode
+                                     public nsINavHistoryQueryResultNode,
+                                     public mozilla::places::AsyncStatementCallback
 {
 public:
   nsNavHistoryFolderResultNode(const nsACString& aTitle,
@@ -765,13 +785,15 @@ public:
 
   virtual nsresult OpenContainer();
 
+  virtual nsresult OpenContainerAsync();
+  NS_DECL_ASYNCSTATEMENTCALLBACK
+
   // This object implements a bookmark observer interface without deriving from
   // the bookmark observers. This is called from the result's actual observer
   // and it knows all observers are FolderResultNodes
   NS_DECL_NSINAVBOOKMARKOBSERVER
 
   virtual void OnRemoving();
-public:
 
   // this indicates whether the folder contents are valid, they don't go away
   // after the container is closed until a notification comes in
@@ -793,7 +815,12 @@ public:
 
 private:
 
+  nsresult OnChildrenFilled();
+  void EnsureRegisteredAsFolderObserver();
+  nsresult FillChildrenAsync();
+
   PRBool mIsRegisteredFolderObserver;
+  PRInt32 mAsyncBookmarkIndex;
 };
 
 // nsNavHistorySeparatorResultNode

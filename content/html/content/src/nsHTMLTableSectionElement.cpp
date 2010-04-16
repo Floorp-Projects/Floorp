@@ -41,7 +41,6 @@
 #include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsContentList.h"
 #include "nsRuleData.h"
 #include "nsDOMError.h"

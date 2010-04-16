@@ -1322,11 +1322,11 @@ cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
     bool pushed_clip = false;
 
     while (runs_remaining) {
-	ID2D1Brush *brush = _cairo_d2d_create_brush_for_pattern(dst,
-								source,
-								last_run++,
-								&runs_remaining,
-								&pushed_clip);
+	RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(dst,
+								       source,
+								       last_run++,
+								       &runs_remaining,
+								       &pushed_clip);
 	if (!brush) {
 	    delete [] indices;
 	    delete [] offsets;
@@ -1345,7 +1345,6 @@ cairo_dwrite_show_glyphs_on_d2d_surface(void			*surface,
 	    brush->SetTransform(&mat_brush);
 	}
         dst->rt->DrawGlyphRun(D2D1::Point2F(0, 0), &run, brush);
-	brush->Release();
 	if (pushed_clip) {
 	    dst->rt->PopLayer();
 	}

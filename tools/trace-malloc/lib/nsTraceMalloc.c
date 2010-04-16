@@ -1068,8 +1068,8 @@ static PLHashTable *new_allocations(void)
 
 /* from malloc.c in Libc */
 typedef void
-malloc_logger_t(unsigned type, unsigned arg1, unsigned arg2, unsigned arg3,
-                unsigned result, unsigned num_hot_frames_to_skip);
+malloc_logger_t(uint32_t type, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
+                uintptr_t result, uint32_t num_hot_frames_to_skip);
 
 extern malloc_logger_t *malloc_logger;
 
@@ -1079,13 +1079,13 @@ extern malloc_logger_t *malloc_logger;
 #define MALLOC_LOG_TYPE_CLEARED         64
 
 static void
-my_malloc_logger(unsigned type, unsigned arg1, unsigned arg2, unsigned arg3,
-                 unsigned result, unsigned num_hot_frames_to_skip)
+my_malloc_logger(uint32_t type, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3,
+                 uintptr_t result, uint32_t num_hot_frames_to_skip)
 {
-    unsigned all_args[3] = { arg1, arg2, arg3 };
-    unsigned *args = all_args + ((type & MALLOC_LOG_TYPE_HAS_ZONE) ? 1 : 0);
+    uintptr_t all_args[3] = { arg1, arg2, arg3 };
+    uintptr_t *args = all_args + ((type & MALLOC_LOG_TYPE_HAS_ZONE) ? 1 : 0);
 
-    unsigned alloc_type =
+    uint32_t alloc_type =
         type & (MALLOC_LOG_TYPE_ALLOCATE | MALLOC_LOG_TYPE_DEALLOCATE);
     tm_thread *t = tm_get_thread();
 

@@ -41,12 +41,13 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMDocument.h"
 #include "nsBindingManager.h"
+
+class nsIPresShell;
 
 class inLayoutUtils
 {

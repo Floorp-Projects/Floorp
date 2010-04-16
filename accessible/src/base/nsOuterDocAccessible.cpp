@@ -40,7 +40,6 @@
 #include "nsIAccessibilityService.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIContent.h"
 

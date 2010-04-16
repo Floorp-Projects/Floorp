@@ -605,8 +605,9 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
 
   // in NavQuirks mode we want to use the parent's context as a starting point
   // for determining the background color
-  nsStyleContext* bgContext = nsCSSRendering::FindNonTransparentBackground
-    (aStyleContext, compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE);
+  nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame
+    (aForFrame, compatMode == eCompatibility_NavQuirks ? PR_TRUE : PR_FALSE);
+  nsStyleContext* bgContext = bgFrame->GetStyleContext();
   nscolor bgColor =
     bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
 
@@ -732,8 +733,9 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
     return;
   }
 
-  nsStyleContext* bgContext = nsCSSRendering::FindNonTransparentBackground
-    (aStyleContext, PR_FALSE);
+  nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame
+    (aForFrame, PR_FALSE);
+  nsStyleContext* bgContext = bgFrame->GetStyleContext();
   nscolor bgColor =
     bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
 
@@ -942,38 +944,38 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground::Layer& aLayer,
   }
 }
 
-nsStyleContext*
-nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
-                                             PRBool aStartAtParent /*= PR_FALSE*/)
+nsIFrame*
+nsCSSRendering::FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
+                                                  PRBool aStartAtParent /*= PR_FALSE*/)
 {
-  NS_ASSERTION(aContext, "Cannot find NonTransparentBackground in a null context" );
-  
-  nsStyleContext* context = nsnull;
+  NS_ASSERTION(aFrame, "Cannot find NonTransparentBackgroundFrame in a null frame");
+
+  nsIFrame* frame = nsnull;
   if (aStartAtParent) {
-    context = aContext->GetParent();
+    frame = nsLayoutUtils::GetParentOrPlaceholderFor(
+              aFrame->PresContext()->FrameManager(), aFrame);
   }
-  if (!context) {
-    context = aContext;
+  if (!frame) {
+    frame = aFrame;
   }
-  
-  while (context) {
-    const nsStyleBackground* bg = context->GetStyleBackground();
+
+  while (frame) {
     // No need to call GetVisitedDependentColor because it always uses
     // this alpha component anyway.
-    if (NS_GET_A(bg->mBackgroundColor) > 0)
+    if (NS_GET_A(frame->GetStyleBackground()->mBackgroundColor) > 0)
       break;
 
-    const nsStyleDisplay* display = context->GetStyleDisplay();
-    if (display->mAppearance)
+    if (frame->IsThemed())
       break;
 
-    nsStyleContext* parent = context->GetParent();
+    nsIFrame* parent = nsLayoutUtils::GetParentOrPlaceholderFor(
+                         frame->PresContext()->FrameManager(), frame);
     if (!parent)
       break;
 
-    context = parent;
+    frame = parent;
   }
-  return context;
+  return frame;
 }
 
 // Returns true if aFrame is a canvas frame.

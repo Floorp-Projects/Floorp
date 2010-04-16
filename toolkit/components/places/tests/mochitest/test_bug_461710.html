@@ -1,0 +1,234 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=461710
+-->
+<head>
+  <title>Test for Bug 461710</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=461710">Mozilla Bug 461710</a>
+<p id="display"></p>
+<iframe id="iframe"></iframe>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 461710 **/
+
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+const Cr = Components.results;
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+
+const LAZY_ADD_TIMER = 3000;
+
+/**
+ * Helper function which waits until another function returns true, and
+ * then notifies a callback.
+ *
+ * Original function stolen from docshell/test/chrome/docshell_helpers.js.
+ *
+ * Parameters:
+ *
+ *    fn: a function which is evaluated repeatedly, and when it turns true,
+ *        the onWaitComplete callback is notified.
+ *
+ *    onWaitComplete:  a callback which will be notified when fn() returns
+ *        true.
+ */
+function waitForTrue(fn, onWaitComplete) {
+  var start = new Date().valueOf();
+
+  // Loop until the test function returns true, or until a timeout occurs,
+  // if a timeout is defined.
+  var intervalid =
+    setInterval(
+      function() {
+        if (fn.call()) {
+          // Stop calling the test function and notify the callback.
+          clearInterval(intervalid);
+          onWaitComplete.call();
+        }
+      }, 20);
+}
+
+const kRed = "rgb(255, 0, 0)";
+const kBlue = "rgb(0, 0, 255)";
+
+var testpath = document.location.pathname + "/../bug_461710/";
+var prefix = "http://mochi.test:8888" + testpath;
+var subtests = [
+                   "visited_page.html",   // 1
+                   "link_page.html",      // 2
+                   "link_page-2.html",    // 3
+                   "link_page-3.html"     // 4
+               ];
+
+
+var testNum = 0;
+function loadNextTest() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  // run the initialization code for each test
+  switch (++ testNum) {
+    case 1:
+      // nothing to do here
+      break;
+
+    case 2:
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    case 3:
+      pb.privateBrowsingEnabled = true;
+      ok(pb.privateBrowsingEnabled, "Test #" + testNum + " should be run inside of private mode");
+      break;
+
+    case 4:
+      pb.privateBrowsingEnabled = false;
+      ok(!pb.privateBrowsingEnabled, "Test #" + testNum + " should be run outside of private mode");
+      break;
+
+    default:
+      ok(false, "Unexpected call to loadNextTest for test #" + testNum);
+  }
+
+  if (testNum == 1) {
+    // Because of LAZY_ADD, the page won't be marked as visited until three seconds,
+    // so wait for four seconds to be safe
+    setTimeout(handleLoad, LAZY_ADD_TIMER * 2);
+  } else {
+    observer.expectURL(prefix + subtests[0]);
+    waitForTrue(function() observer.resolved, function() {
+      // And the nodes get notified after the "link-visited" topic, so
+      // we need to execute soon...
+      SimpleTest.executeSoon(handleLoad);
+    });
+  }
+  iframe.src = prefix + subtests[testNum-1];
+}
+
+function getColor(doc, win, id) {
+  var elem = doc.getElementById(id);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+                getInterface(Components.interfaces.nsIDOMWindowUtils);
+  return utils.getVisitedDependentComputedStyle(elem, "", "color");
+}
+
+function checkTest() {
+  switch (testNum) {
+    case 1:
+      // nothing to do here, we just want to mark the page as visited
+      break;
+
+    case 2:
+      // run outside of private mode, link should appear as visited
+      var doc = iframe.contentDocument;
+      var win = doc.defaultView;
+      is(getColor(doc, win, "link"), kRed, "Visited link coloring should work outside of private mode");
+      break;
+
+    case 3:
+      // run inside of private mode, link should appear as not visited
+      var doc = iframe.contentDocument;
+      var win = doc.defaultView;
+      is(getColor(doc, win, "link"), kBlue, "Visited link coloring should not work inside of private mode");
+      break;
+
+    case 4:
+      // run outside of private mode, link should appear as visited
+      var doc = iframe.contentDocument;
+      var win = doc.defaultView;
+      is(getColor(doc, win, "link"), kRed, "Visited link coloring should work outside of private mode");
+      break;
+
+    default:
+      ok(false, "Unexpected call to checkTest for test #" + testNum);
+  }
+}
+
+
+var _PBSvc = null;
+function get_PBSvc() {
+  if (_PBSvc)
+    return _PBSvc;
+
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  try {
+    _PBSvc = Cc["@mozilla.org/privatebrowsing;1"].
+             getService(Ci.nsIPrivateBrowsingService);
+    return _PBSvc;
+  } catch (e) {}
+  return null;
+}
+
+
+function handleLoad() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  checkTest();
+
+  if (testNum < subtests.length) {
+    loadNextTest();
+  } else {
+    prefBranch.clearUserPref("browser.privatebrowsing.keep_current_session");
+    SimpleTest.finish();
+  }
+}
+
+const URI_VISITED_RESOLUTION_TOPIC = "visited-status-resolution";
+var os, observer = {
+  uri: null,
+  resolved: true,
+  observe: function (aSubject, aTopic, aData) {
+    SimpleTest.is(aTopic, URI_VISITED_RESOLUTION_TOPIC, "Unexpected topic");
+
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    if (this.uri.equals(aSubject.QueryInterface(Ci.nsIURI))) {
+      this.resolved = true;
+
+      os.removeObserver(this, URI_VISITED_RESOLUTION_TOPIC);
+    }
+  },
+  expectURL: function (url) {
+    ok(this.resolved, "Can't set the expected URL when another is yet to be resolved");
+    this.resolved = false;
+
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+    this.uri = NetUtil.newURI(url);
+    os.addObserver(this, URI_VISITED_RESOLUTION_TOPIC, false);
+  }
+};
+
+var pb = get_PBSvc();
+if (!pb) { // Private Browsing might not be available
+  ok(true, "Private Browsing is not available");
+  SimpleTest.finish();
+} else {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+  var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                   getService(Ci.nsIPrefBranch);
+  prefBranch.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+
+  os = Cc["@mozilla.org/observer-service;1"].
+           getService(Ci.nsIObserverService);
+
+  var iframe = document.getElementById("iframe");
+
+  SimpleTest.waitForExplicitFinish();
+
+  loadNextTest();
+}
+
+</script>
+</pre>
+</body>
+</html>

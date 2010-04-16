@@ -46,6 +46,8 @@ MODULE       = nptest
 LIBRARY_NAME = nptest
 MODULE_NAME  = TestPlugin
 
+# Don't use STL wrappers; nptest isn't Gecko code
+STL_FLAGS =
 
 # Need to custom install plugins
 NO_DIST_INSTALL	= 1

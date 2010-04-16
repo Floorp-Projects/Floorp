@@ -190,6 +190,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "jsarray.h"
 #include "jsdate.h"
 #include "jsregexp.h"
+#include "jstypedarray.h"
 
 const char kLoadAsData[] = "loadAsData";
 
@@ -3735,7 +3736,6 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
       if (!parser) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      document->SetFragmentParser(parser);
     }
     nsCOMPtr<nsIDOMDocumentFragment> frag;
     rv = NS_NewDocumentFragment(getter_AddRefs(frag), document->NodeInfoManager());
@@ -3765,6 +3765,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
     }
   
     NS_ADDREF(*aReturn = frag);
+    document->SetFragmentParser(parser);
     return NS_OK;
   }
 
@@ -5658,7 +5659,30 @@ CloneSimpleValues(JSContext* cx,
                                       robj, rid);
   }
 
-  // ImageData is just a normal JSObject with some properties in our impl.
+  // Typed array objects.
+  if (js_IsTypedArray(obj)) {
+    js::TypedArray* src = js::TypedArray::fromJSObject(obj);
+    JSObject* newTypedArray = js_CreateTypedArrayWithArray(cx, src->type, obj);
+    if (!newTypedArray) {
+      return NS_ERROR_FAILURE;
+    }
+    return SetPropertyOnValueOrObject(cx, OBJECT_TO_JSVAL(newTypedArray), rval,
+                                      robj, rid);
+  }
+
+  // ArrayBuffer objects.
+  if (js_IsArrayBuffer(obj)) {
+    js::ArrayBuffer* src = js::ArrayBuffer::fromJSObject(obj);
+    JSObject* newBuffer = js_CreateArrayBuffer(cx, src->byteLength);
+    if (!newBuffer) {
+      return NS_ERROR_FAILURE;
+    }
+    memcpy(js::ArrayBuffer::fromJSObject(newBuffer)->data, src->data,
+           src->byteLength);
+    return SetPropertyOnValueOrObject(cx, OBJECT_TO_JSVAL(newBuffer), rval,
+                                      robj, rid);
+  }
+
   // Do we support File?
   // Do we support Blob?
   // Do we support FileList?
@@ -5781,23 +5805,29 @@ nsContentUtils::ReparentClonedObjectToScope(JSContext* cx,
     ReparentObjectData& data = objectData[objectData.Length() - 1];
 
     if (!data.ids && !data.index) {
-      // First, fix the prototype of the object.
-      JSClass* clasp = JS_GET_CLASS(cx, data.obj);
-      JSProtoKey protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
-      if (!protoKey) {
+      // Typed arrays are special and don't need to be enumerated.
+      if (js_IsTypedArray(data.obj)) {
+        if (!js_ReparentTypedArrayToScope(cx, data.obj, scope)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        // No need to enumerate anything here.
+        objectData.RemoveElementAt(objectData.Length() - 1);
+        continue;
+      }
+
+      JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(JS_GET_CLASS(cx, data.obj));
+      if (!key) {
         // We should never be reparenting an object that doesn't have a standard
         // proto key.
         return NS_ERROR_FAILURE;
       }
 
+      // Fix the prototype and parent first.
       JSObject* proto;
-      if (!js_GetClassPrototype(cx, scope, protoKey, &proto) ||
-          !JS_SetPrototype(cx, data.obj, proto)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // Adjust the parent.
-      if (!JS_SetParent(cx, data.obj, scope)) {
+      if (!js_GetClassPrototype(cx, scope, key, &proto) ||
+          !JS_SetPrototype(cx, data.obj, proto) ||
+          !JS_SetParent(cx, data.obj, scope)) {
         return NS_ERROR_FAILURE;
       }
 
@@ -5937,3 +5967,24 @@ mozAutoRemovableBlockerRemover::~mozAutoRemovableBlockerRemover()
     }
   }
 }
+
+void nsContentUtils::RemoveNewlines(nsString &aString)
+{
+  // strip CR/LF and null
+  static const char badChars[] = {'\r', '\n', 0};
+  aString.StripChars(badChars);
+}
+
+void nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
+{
+  if (aString.FindChar(PRUnichar('\r')) != -1) {
+    // Windows linebreaks: Map CRLF to LF:
+    aString.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(),
+                             NS_LITERAL_STRING("\n").get());
+
+    // Mac linebreaks: Map any remaining CR to LF:
+    aString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(),
+                             NS_LITERAL_STRING("\n").get());
+  }
+}
+

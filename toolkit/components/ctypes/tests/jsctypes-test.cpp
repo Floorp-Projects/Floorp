@@ -44,6 +44,30 @@
 #include <math.h>
 #include <stdarg.h>
 
+template <typename T> struct ValueTraits {
+  static T literal() { return static_cast<T>(109.25); }
+  static T sum(T a, T b) { return a + b; }
+  static T sum_many(
+    T a, T b, T c, T d, T e, T f, T g, T h, T i,
+    T j, T k, T l, T m, T n, T o, T p, T q, T r)
+  {
+    return a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p + q + r;
+  }
+};
+
+template <> struct ValueTraits<bool> {
+  typedef bool T;
+  static T literal() { return true; }
+  static T sum(T a, T b) { return a || b; }
+  static T sum_many(
+    T a, T b, T c, T d, T e, T f, T g, T h, T i,
+    T j, T k, T l, T m, T n, T o, T p, T q, T r)
+  {
+    return a || b || c || d || e || f || g || h || i ||
+           j || k || l || m || n || o || p || q || r;
+  }
+};
+
 void
 test_void_t_cdecl()
 {
@@ -52,44 +76,65 @@ test_void_t_cdecl()
 }
 
 #define DEFINE_TYPE(name, type, ffiType)                                       \
-type                                                                           \
+type ABI                                                                       \
 get_##name##_cdecl()                                                           \
 {                                                                              \
-  return 109.25;                                                               \
+  return ValueTraits<type>::literal();                                         \
 }                                                                              \
                                                                                \
-type                                                                           \
+type ABI                                                                       \
 set_##name##_cdecl(type x)                                                     \
 {                                                                              \
   return x;                                                                    \
 }                                                                              \
                                                                                \
-type                                                                           \
+type ABI                                                                       \
 sum_##name##_cdecl(type x, type y)                                             \
 {                                                                              \
-  return x + y;                                                                \
+  return ValueTraits<type>::sum(x, y);                                         \
 }                                                                              \
                                                                                \
-type                                                                           \
+type ABI                                                                       \
 sum_alignb_##name##_cdecl(char a, type x, char b, type y, char c)              \
 {                                                                              \
-  return x + y;                                                                \
+  return ValueTraits<type>::sum(x, y);                                         \
 }                                                                              \
                                                                                \
-type                                                                           \
+type ABI                                                                       \
 sum_alignf_##name##_cdecl(float a, type x, float b, type y, float c)           \
 {                                                                              \
-  return x + y;                                                                \
+  return ValueTraits<type>::sum(x, y);                                         \
 }                                                                              \
                                                                                \
-type                                                                           \
+type ABI                                                                       \
 sum_many_##name##_cdecl(                                                       \
   type a, type b, type c, type d, type e, type f, type g, type h, type i,      \
   type j, type k, type l, type m, type n, type o, type p, type q, type r)      \
 {                                                                              \
-  return a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p + q + r;\
-}                                                                              \
-                                                                               \
+  return ValueTraits<type>::sum_many(a, b, c, d, e, f, g, h, i,                \
+                                     j, k, l, m, n, o, p, q, r);               \
+}
+
+#define ABI /* cdecl */
+#include "typedefs.h"
+#undef ABI
+
+#if defined(_WIN32) && !defined(__WIN64)
+
+void NS_STDCALL
+test_void_t_stdcall()
+{
+  // do nothing
+  return;
+}
+
+#define ABI NS_STDCALL
+#include "typedefs.h"
+#undef ABI
+
+#endif /* defined(_WIN32) && !defined(__WIN64) */
+
+#define DEFINE_TYPE(name, type, ffiType)                                       \
 struct align_##name {                                                          \
   char x;                                                                      \
   type y;                                                                      \
@@ -112,60 +157,7 @@ get_##name##_stats(size_t* align, size_t* size, size_t* nalign, size_t* nsize, \
   offsets[1] = offsetof(nested_##name, b);                                     \
   offsets[2] = offsetof(nested_##name, c);                                     \
 }
-
 #include "typedefs.h"
-
-#if defined(_WIN32) && !defined(__WIN64)
-
-#define DEFINE_TYPE(name, type, ffiType)                                       \
-type NS_STDCALL                                                                \
-get_##name##_stdcall()                                                         \
-{                                                                              \
-  return 109.25;                                                               \
-}                                                                              \
-                                                                               \
-type NS_STDCALL                                                                \
-set_##name##_stdcall(type x)                                                   \
-{                                                                              \
-  return x;                                                                    \
-}                                                                              \
-                                                                               \
-type NS_STDCALL                                                                \
-sum_##name##_stdcall(type x, type y)                                           \
-{                                                                              \
-  return x + y;                                                                \
-}                                                                              \
-                                                                               \
-type NS_STDCALL                                                                \
-sum_alignb_##name##_stdcall(char a, type x, char b, type y, char c)            \
-{                                                                              \
-  return x + y;                                                                \
-}                                                                              \
-                                                                               \
-type NS_STDCALL                                                                \
-sum_alignf_##name##_stdcall(float a, type x, float b, type y, float c)         \
-{                                                                              \
-  return x + y;                                                                \
-}                                                                              \
-                                                                               \
-type NS_STDCALL                                                                \
-sum_many_##name##_stdcall(                                                     \
-  type a, type b, type c, type d, type e, type f, type g, type h, type i,      \
-  type j, type k, type l, type m, type n, type o, type p, type q, type r)      \
-{                                                                              \
-  return a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p + q + r;\
-}
-
-#include "typedefs.h"
-
-void NS_STDCALL
-test_void_t_stdcall()
-{
-  // do nothing
-  return;
-}
-
-#endif /* defined(_WIN32) && !defined(__WIN64) */
 
 PRInt32
 test_ansi_len(const char* string)
@@ -318,7 +310,7 @@ test_7_byte_struct_return(RECT r)
 void *
 test_fnptr()
 {
-  return (void*)test_ansi_len;
+  return (void*)(uintptr_t)test_ansi_len;
 }
 
 PRInt32
@@ -399,3 +391,6 @@ test_vector_add_va_cdecl(PRUint8 num_vecs,
   }
   return result;
 }
+
+RECT data_rect = { -1, -2, 3, 4 };
+

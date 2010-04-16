@@ -1205,6 +1205,11 @@ nsContainerFrame::SetPropTableFrames(nsPresContext*                 aPresContext
                                      const FramePropertyDescriptor* aProperty)
 {
   NS_PRECONDITION(aPresContext && aProperty && aFrameList, "null ptr");
+  NS_PRECONDITION(
+    (aProperty != nsContainerFrame::OverflowContainersProperty() &&
+     aProperty != nsContainerFrame::ExcessOverflowContainersProperty()) ||
+    IsFrameOfType(nsIFrame::eCanContainOverflowContainers),
+    "this type of frame can't have overflow containers");
   aPresContext->PropertyTable()->Set(this, aProperty, aFrameList);
   return NS_OK;
 }

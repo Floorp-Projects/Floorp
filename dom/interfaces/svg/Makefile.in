@@ -52,6 +52,7 @@ XPIDL_MODULE	= dom_svg
 XPIDLSRCS	= \
 		nsIDOMGetSVGDocument.idl \
 		nsIDOMSVGAElement.idl \
+		nsIDOMSVGAltGlyphElement.idl \
 		nsIDOMSVGAngle.idl \
 		nsIDOMSVGAnimatedAngle.idl \
 		nsIDOMSVGAnimatedBoolean.idl \
@@ -63,9 +64,9 @@ XPIDLSRCS	= \
 		nsIDOMSVGAnimatedNumberList.idl \
 		nsIDOMSVGAnimatedPathData.idl \
 		nsIDOMSVGAnimatedPoints.idl \
+		nsIDOMSVGAnimatedRect.idl \
 		nsIDOMSVGAnimatedString.idl \
 		nsIDOMSVGAnimPresAspRatio.idl \
-		nsIDOMSVGAnimatedRect.idl \
 		nsIDOMSVGAnimTransformList.idl \
 		nsIDOMSVGCircleElement.idl \
 		nsIDOMSVGClipPathElement.idl \

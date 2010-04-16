@@ -70,6 +70,7 @@ var got_three_bottom = false;
 var got_three_left = false;
 var got_four_root = false;
 var got_body = false;
+var did_stops = false;
 
 document.documentElement.addEventListener("transitionend",
   function(event) {
@@ -105,6 +106,12 @@ document.documentElement.addEventListener("transitionend",
       got_body = true;
       finished_test();
     } else {
+      if (!did_stops &&
+          (event.target == $("five") || event.target == $("six"))) {
+        todo(false,
+             "timeout to stop transitions firing later than it should be");
+        return;
+      }
       ok(false,
          "unexpected event on " + event.target.nodeName +
          " element with id '" + event.target.id + "' " +
@@ -246,6 +253,7 @@ setTimeout(function() {
              $("six").style.MozTransitionDuration = "0s";
              $("six").style.MozTransitionDelay = "0s";
              $("six").style.color = "blue";
+             did_stops = true;
            }, 100);
 function poll_start_reversal() {
   if (cs("four").color != "rgb(0, 0, 255)") {

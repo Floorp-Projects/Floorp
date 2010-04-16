@@ -493,6 +493,8 @@ let (randomFailingSyncTests = [
   "test_containersQueries_sorting.js",
   "test_browserGlue_smartBookmarks.js",
   "test_browserGlue_distribution.js",
+  "test_331487.js",
+  "test_tags.js",
 ]) {
   let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
   if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {

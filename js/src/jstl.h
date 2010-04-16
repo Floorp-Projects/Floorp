@@ -206,7 +206,6 @@ class ReentrancyGuard
 JS_ALWAYS_INLINE size_t
 RoundUpPow2(size_t x)
 {
-    typedef tl::StaticAssert<tl::IsSameType<size_t,JSUword>::result>::result _;
     size_t log2 = JS_CEILING_LOG2W(x);
     JS_ASSERT(log2 < tl::BitSize<size_t>::result);
     size_t result = size_t(1) << log2;
@@ -299,6 +298,18 @@ class LazilyConstructed
         new(bytes) T(t1, t2, t3);
         constructed() = true;
     }
+};
+
+
+template <class T>
+class Conditionally {
+    LazilyConstructed<T> t;
+
+  public:
+    Conditionally(bool b) { if (b) t.construct(); }
+
+    template <class T1>
+    Conditionally(bool b, const T1 &t1) { if (b) t.construct(t1); }
 };
 
 template <class T>

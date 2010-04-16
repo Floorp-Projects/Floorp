@@ -230,6 +230,7 @@ DOMCI_CLASS(SVGDocument)
 
 // SVG element classes
 DOMCI_CLASS(SVGAElement)
+DOMCI_CLASS(SVGAltGlyphElement)
 #ifdef MOZ_SMIL
 DOMCI_CLASS(SVGAnimateElement)
 DOMCI_CLASS(SVGAnimateTransformElement)

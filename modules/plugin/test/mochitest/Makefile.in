@@ -68,6 +68,9 @@ _MOCHITEST_FILES = \
   test_pluginstream_poststream.html \
   test_pluginstream_seek.html \
   test_pluginstream_newstream.html \
+  test_fullpage.html \
+  loremipsum.xtest \
+  loremipsum.xtest^headers^ \
   test_multipleinstanceobjects.html \
   test_streamNotify.html \
   test_instantiation.html \
@@ -85,6 +88,7 @@ _MOCHITEST_FILES = \
   test_hanging.html \
   crashing_subpage.html \
   test_GCrace.html \
+  test_propertyAndMethod.html \
   $(NULL)
 
 #  test_npruntime_npnsetexception.html \ Disabled for e10s
@@ -121,4 +125,4 @@ libs:: $(_MOCHICHROME_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
 libs:: $(_MOCHITEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

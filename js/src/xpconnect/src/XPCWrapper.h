@@ -92,7 +92,8 @@ WrapperMoved(JSContext *cx, XPCWrappedNative *innerObj,
 // If we are "same origin" because UniversalXPConnect is enabled and
 // privilegeEnabled is non-null, then privilegeEnabled is set to true.
 nsresult
-CanAccessWrapper(JSContext *cx, JSObject *wrappedObj, JSBool *privilegeEnabled);
+CanAccessWrapper(JSContext *cx, JSObject *outerObj, JSObject *wrappedObj,
+                 JSBool *privilegeEnabled);
 
 // Some elements can change their principal or otherwise need XOWs, even
 // if they're same origin. This function returns 'true' if the element's
@@ -354,18 +355,20 @@ UnwrapSOW(JSContext *cx, JSObject *wrapper)
 inline JSObject *
 UnwrapXOW(JSContext *cx, JSObject *wrapper)
 {
-  wrapper = UnwrapGeneric(cx, &XPCCrossOriginWrapper::XOWClass, wrapper);
-  if (!wrapper) {
+  JSObject *innerObj =
+    UnwrapGeneric(cx, &XPCCrossOriginWrapper::XOWClass, wrapper);
+  if (!innerObj) {
     return nsnull;
   }
 
-  nsresult rv = XPCCrossOriginWrapper::CanAccessWrapper(cx, wrapper, nsnull);
+  nsresult rv =
+    XPCCrossOriginWrapper::CanAccessWrapper(cx, wrapper, innerObj, nsnull);
   if (NS_FAILED(rv)) {
     JS_ClearPendingException(cx);
-    wrapper = nsnull;
+    return nsnull;
   }
 
-  return wrapper;
+  return innerObj;
 }
 
 inline JSObject *
@@ -376,7 +379,7 @@ UnwrapCOW(JSContext *cx, JSObject *wrapper)
     return nsnull;
   }
 
-  nsresult rv = XPCCrossOriginWrapper::CanAccessWrapper(cx, wrapper, nsnull);
+  nsresult rv = XPCCrossOriginWrapper::CanAccessWrapper(cx, nsnull, wrapper, nsnull);
   if (NS_FAILED(rv)) {
     JS_ClearPendingException(cx);
     wrapper = nsnull;
