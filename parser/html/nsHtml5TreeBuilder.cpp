@@ -97,15 +97,15 @@ nsHtml5TreeBuilder::startTokenization(nsHtml5Tokenizer* self)
     stack[currentPtr] = node;
     resetTheInsertionMode();
     if (nsHtml5Atoms::title == contextName || nsHtml5Atoms::textarea == contextName) {
-      tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RCDATA, contextName);
+      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, contextName);
     } else if (nsHtml5Atoms::style == contextName || nsHtml5Atoms::xmp == contextName || nsHtml5Atoms::iframe == contextName || nsHtml5Atoms::noembed == contextName || nsHtml5Atoms::noframes == contextName || (scriptingEnabled && nsHtml5Atoms::noscript == contextName)) {
-      tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RAWTEXT, contextName);
+      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, contextName);
     } else if (nsHtml5Atoms::plaintext == contextName) {
-      tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_PLAINTEXT, contextName);
+      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_PLAINTEXT, contextName);
     } else if (nsHtml5Atoms::script == contextName) {
-      tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_SCRIPT_DATA, contextName);
+      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, contextName);
     } else {
-      tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_DATA, contextName);
+      tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_DATA, contextName);
     }
     nsHtml5Portability::releaseLocal(contextName);
     contextName = nsnull;
@@ -161,33 +161,25 @@ void
 nsHtml5TreeBuilder::comment(PRUnichar* buf, PRInt32 start, PRInt32 length)
 {
   needToDropLF = PR_FALSE;
-  for (; ; ) {
-    switch(foreignFlag) {
-      case NS_HTML5TREE_BUILDER_IN_FOREIGN: {
-        goto commentloop_end;
+  if (foreignFlag != NS_HTML5TREE_BUILDER_IN_FOREIGN) {
+    switch(mode) {
+      case NS_HTML5TREE_BUILDER_INITIAL:
+      case NS_HTML5TREE_BUILDER_BEFORE_HTML:
+      case NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY:
+      case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET: {
+        appendCommentToDocument(buf, start, length);
+        return;
+      }
+      case NS_HTML5TREE_BUILDER_AFTER_BODY: {
+        flushCharacters();
+        appendComment(stack[0]->node, buf, start, length);
+        return;
       }
       default: {
-        switch(mode) {
-          case NS_HTML5TREE_BUILDER_INITIAL:
-          case NS_HTML5TREE_BUILDER_BEFORE_HTML:
-          case NS_HTML5TREE_BUILDER_AFTER_AFTER_BODY:
-          case NS_HTML5TREE_BUILDER_AFTER_AFTER_FRAMESET: {
-            appendCommentToDocument(buf, start, length);
-            return;
-          }
-          case NS_HTML5TREE_BUILDER_AFTER_BODY: {
-            flushCharacters();
-            appendComment(stack[0]->node, buf, start, length);
-            return;
-          }
-          default: {
-            goto commentloop_end;
-          }
-        }
+        break;
       }
     }
   }
-  commentloop_end: ;
   flushCharacters();
   appendComment(stack[currentPtr]->node, buf, start, length);
   return;
@@ -433,16 +425,12 @@ void
 nsHtml5TreeBuilder::eof()
 {
   flushCharacters();
-  switch(foreignFlag) {
-    case NS_HTML5TREE_BUILDER_IN_FOREIGN: {
+  if (foreignFlag == NS_HTML5TREE_BUILDER_IN_FOREIGN) {
 
-      while (stack[currentPtr]->ns != kNameSpaceID_XHTML) {
-        popOnEof();
-      }
-      foreignFlag = NS_HTML5TREE_BUILDER_NOT_IN_FOREIGN;
+    while (stack[currentPtr]->ns != kNameSpaceID_XHTML) {
+      popOnEof();
     }
-    default:
-      ; // fall through
+    foreignFlag = NS_HTML5TREE_BUILDER_NOT_IN_FOREIGN;
   }
   for (; ; ) {
     switch(mode) {
@@ -774,7 +762,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendToCurrentNodeAndPushElement(kNameSpaceID_XHTML, elementName, attributes);
                   originalMode = mode;
                   mode = NS_HTML5TREE_BUILDER_TEXT;
-                  tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
+                  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
                   attributes = nsnull;
                   goto starttagloop_end;
                 }
@@ -782,7 +770,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendToCurrentNodeAndPushElement(kNameSpaceID_XHTML, elementName, attributes);
                   originalMode = mode;
                   mode = NS_HTML5TREE_BUILDER_TEXT;
-                  tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+                  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
                   attributes = nsnull;
                   goto starttagloop_end;
                 }
@@ -1007,7 +995,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 case NS_HTML5TREE_BUILDER_PLAINTEXT: {
                   implicitlyCloseP();
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
-                  tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_PLAINTEXT, elementName);
+                  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_PLAINTEXT, elementName);
                   attributes = nsnull;
                   goto starttagloop_end;
                 }
@@ -1162,7 +1150,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 }
                 case NS_HTML5TREE_BUILDER_TEXTAREA: {
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes, formPointer);
-                  tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RCDATA, elementName);
+                  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, elementName);
                   originalMode = mode;
                   mode = NS_HTML5TREE_BUILDER_TEXT;
                   needToDropLF = PR_TRUE;
@@ -1175,7 +1163,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   originalMode = mode;
                   mode = NS_HTML5TREE_BUILDER_TEXT;
-                  tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+                  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
                   attributes = nsnull;
                   goto starttagloop_end;
                 }
@@ -1194,7 +1182,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   originalMode = mode;
                   mode = NS_HTML5TREE_BUILDER_TEXT;
-                  tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+                  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
                   attributes = nsnull;
                   goto starttagloop_end;
                 }
@@ -1342,7 +1330,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   originalMode = mode;
                   mode = NS_HTML5TREE_BUILDER_TEXT;
-                  tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RCDATA, elementName);
+                  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, elementName);
                   attributes = nsnull;
                   goto starttagloop_end;
                 }
@@ -1351,7 +1339,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                     appendToCurrentNodeAndPushElement(kNameSpaceID_XHTML, elementName, attributes);
                     originalMode = mode;
                     mode = NS_HTML5TREE_BUILDER_TEXT;
-                    tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+                    tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
                   } else {
                     appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                     mode = NS_HTML5TREE_BUILDER_IN_HEAD_NOSCRIPT;
@@ -1363,7 +1351,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   originalMode = mode;
                   mode = NS_HTML5TREE_BUILDER_TEXT;
-                  tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
+                  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
                   attributes = nsnull;
                   goto starttagloop_end;
                 }
@@ -1372,7 +1360,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                   appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                   originalMode = mode;
                   mode = NS_HTML5TREE_BUILDER_TEXT;
-                  tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+                  tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
                   attributes = nsnull;
                   goto starttagloop_end;
                 }
@@ -1415,7 +1403,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 appendToCurrentNodeAndPushElement(kNameSpaceID_XHTML, elementName, attributes);
                 originalMode = mode;
                 mode = NS_HTML5TREE_BUILDER_TEXT;
-                tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+                tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
                 attributes = nsnull;
                 goto starttagloop_end;
               }
@@ -1545,7 +1533,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                 originalMode = mode;
                 mode = NS_HTML5TREE_BUILDER_TEXT;
-                tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
+                tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
                 attributes = nsnull;
                 goto starttagloop_end;
               }
@@ -1599,7 +1587,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 appendToCurrentNodeAndPushElement(kNameSpaceID_XHTML, elementName, attributes);
                 originalMode = mode;
                 mode = NS_HTML5TREE_BUILDER_TEXT;
-                tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+                tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
                 attributes = nsnull;
                 goto starttagloop_end;
               }
@@ -1713,7 +1701,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 appendToCurrentNodeAndPushElement(kNameSpaceID_XHTML, elementName, attributes);
                 originalMode = mode;
                 mode = NS_HTML5TREE_BUILDER_TEXT;
-                tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
+                tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
                 attributes = nsnull;
                 goto starttagloop_end;
               }
@@ -1724,7 +1712,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 appendToCurrentNodeAndPushElement(kNameSpaceID_XHTML, elementName, attributes);
                 originalMode = mode;
                 mode = NS_HTML5TREE_BUILDER_TEXT;
-                tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RAWTEXT, elementName);
+                tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RAWTEXT, elementName);
                 attributes = nsnull;
                 goto starttagloop_end;
               }
@@ -1734,7 +1722,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 appendToCurrentNodeAndPushElement(kNameSpaceID_XHTML, elementName, attributes);
                 originalMode = mode;
                 mode = NS_HTML5TREE_BUILDER_TEXT;
-                tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_RCDATA, elementName);
+                tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_RCDATA, elementName);
                 attributes = nsnull;
                 goto starttagloop_end;
               }
@@ -1771,7 +1759,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
                 appendToCurrentNodeAndPushElementMayFoster(kNameSpaceID_XHTML, elementName, attributes);
                 originalMode = mode;
                 mode = NS_HTML5TREE_BUILDER_TEXT;
-                tokenizer->setContentModelFlag(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
+                tokenizer->setStateAndEndTagExpectation(NS_HTML5TOKENIZER_SCRIPT_DATA, elementName);
                 attributes = nsnull;
                 goto starttagloop_end;
               }
