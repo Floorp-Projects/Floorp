@@ -124,6 +124,8 @@
 #  include "mozilla/ipc/DocumentRendererShmemParent.h"
 // windows.h (included by chromium code) defines this, in its infinite wisdom
 #  undef DrawText
+
+using mozilla::ipc::SharedMemory;
 #endif
 
 using namespace mozilla;
@@ -977,10 +979,12 @@ nsCanvasRenderingContext2D::CreateShmemSegments(PRInt32 width, PRInt32 height,
                                                 gfxASurface::gfxImageFormat format)
 {
     if (!mozilla::dom::ContentProcessParent::GetSingleton()->
-                AllocShmem(width * height * 4, &mFrontBuffer))
+        AllocShmem(width * height * 4, SharedMemory::TYPE_BASIC,
+                   &mFrontBuffer))
         return false;
     if (!mozilla::dom::ContentProcessParent::GetSingleton()->
-                AllocShmem(width * height * 4, &mBackBuffer))
+                AllocShmem(width * height * 4, SharedMemory::TYPE_BASIC,
+                           &mBackBuffer))
         return false;
 
     mBackSurface = new gfxImageSurface(mBackBuffer.get<unsigned char>(),
