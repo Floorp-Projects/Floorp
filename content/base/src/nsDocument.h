@@ -656,13 +656,6 @@ public:
   virtual nsPIDOMWindow *GetWindow();
 
   /**
-   * Return the inner window used as the script compilation scope for
-   * this document. If you're not absolutely sure you need this, use
-   * GetWindow().
-   */
-  virtual nsPIDOMWindow *GetInnerWindow();
-
-  /**
    * Get the script loader for this document
    */
   virtual nsScriptLoader* ScriptLoader();
@@ -1016,6 +1009,8 @@ protected:
                               const nsAString& aType,
                               PRBool aPersisted);
 
+  virtual nsPIDOMWindow *GetInnerWindowInternal();
+
   // nsContentList match functions for GetElementsByClassName
   static PRBool MatchClassNames(nsIContent* aContent, PRInt32 aNamespaceID,
                                 nsIAtom* aAtom, void* aData);
@@ -1062,9 +1057,6 @@ protected:
   // document can get its script context and scope. This is the
   // *inner* window object.
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
-  // Weak reference to mScriptGlobalObject QI:d to nsPIDOMWindow,
-  // updated on every set of mSecriptGlobalObject.
-  nsPIDOMWindow *mWindow;
 
   // If document is created for example using
   // document.implementation.createDocument(...), mScriptObject points to
