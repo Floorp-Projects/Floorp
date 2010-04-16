@@ -348,6 +348,13 @@ nsPluginTag::GetFilename(nsACString& aFileName)
 }
 
 NS_IMETHODIMP
+nsPluginTag::GetFullpath(nsACString& aFullPath)
+{
+  aFullPath = mFullPath;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPluginTag::GetVersion(nsACString& aVersion)
 {
   aVersion = mVersion;
