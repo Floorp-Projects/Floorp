@@ -3810,11 +3810,10 @@ nsDocument::GetWindow()
 }
 
 nsPIDOMWindow *
-nsDocument::GetInnerWindow()
+nsDocument::GetInnerWindowInternal()
 {
-  if (!mRemovedFromDocShell) {
-    return mWindow;
-  }
+  NS_ASSERTION(mRemovedFromDocShell,
+               "This document should have been removed from docshell!");
 
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(GetScriptGlobalObject()));
 
