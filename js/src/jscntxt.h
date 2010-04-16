@@ -1663,6 +1663,11 @@ class AutoGCRooter {
         ID =          -12, /* js::AutoIdRooter */
         VECTOR =      -13  /* js::AutoValueVector */
     };
+
+    private:
+    /* No copy or assignment semantics. */
+    AutoGCRooter(AutoGCRooter &ida);
+    void operator=(AutoGCRooter &ida);
 };
 
 class AutoSaveWeakRoots : private AutoGCRooter

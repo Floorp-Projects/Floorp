@@ -181,9 +181,11 @@ class ReentrancyGuard
 #endif
   public:
     template <class T>
-    ReentrancyGuard(T &obj)
 #ifdef DEBUG
+    ReentrancyGuard(T &obj)
       : entered(obj.entered)
+#else
+    ReentrancyGuard(T &/*obj*/)
 #endif
     {
 #ifdef DEBUG
