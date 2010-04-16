@@ -1,3 +1,4 @@
+// Title: items.js (revision-a)
 // ##########
 // An Item is an object that adheres to an interface consisting of these methods: 
 //   reloadBounds: function() 

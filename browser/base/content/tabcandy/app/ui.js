@@ -184,7 +184,7 @@ ArrangeClass.prototype = {
   },
   
   _create: function(name){
-    return $("<a class='action' href='#'/>").text(name).appendTo("#actions");
+    return $("<a class='action' href='#'/>").text(name).css({margin:5}).appendTo("#actions");
   }
 }
 
@@ -206,18 +206,22 @@ function UIClass(){
   
   // ___ Dev Mode
   if(this.devMode) {
-    Switch.insert('#nav', '');
+    Switch.insert('body', '');
+    $('<br><br>').appendTo("#actions");
     this._addArrangements();
   }
   
   // ___ Navbar
   this.navBar.hide();
-
-  Utils.homeTab.onFocus(function(){
-    self.navBar.hide();
-  });
   
-  $(window).blur(function(){
+  Tabs.onFocus(function() {
+    if(this.contentWindow.location.host == "tabcandy")
+      self.navBar.hide();
+    else
+      self.navBar.show();
+  });
+
+  Tabs.onOpen(function(a, b) {
     self.navBar.show();
   });
 
@@ -284,6 +288,11 @@ UIClass.prototype = {
       
       Groups.arrange();
     });
+  },
+  
+  // ----------
+  newTab: function(url, inBackground) {
+    Tabs.open(url, inBackground);
   }
 };
 
