@@ -495,6 +495,7 @@ let (randomFailingSyncTests = [
   "test_browserGlue_distribution.js",
   "test_331487.js",
   "test_tags.js",
+  "test_385829.js",
 ]) {
   let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
   if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {
