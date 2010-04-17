@@ -83,9 +83,6 @@ window.Page = {
         $(this).addClass("tabbar-off");        
       }
     });
-    
-    
-    
   },
   
   // ----------  

@@ -585,6 +585,7 @@ window.Groups = {
       var h = TabItems.tabHeight;
       var box = new Rect(pad, sh - (h + pad), w, h);
       self.newTabGroup = new Group([], {bounds: box, title: 'New Tabs'}); 
+      self.newTabGroup.locked = true;
     }, 1000);
   },
 

@@ -24,6 +24,13 @@ window.Point = function(x, y) {
   this.y = (typeof(y) == 'undefined' ? 0 : y);
 }
 
+window.Point.prototype = { 
+  // ---------- 
+  plus: function(point) { 
+    return new Point(this.x + point.x, this.y + point.y);
+  }
+};
+
 // ##########  
 // Class: Rect
 // A simple rectangle. 
