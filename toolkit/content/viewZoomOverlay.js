@@ -47,32 +47,32 @@
  **/
 
 var ZoomManager = {
-  get _prefBranch ZoomManager_get__prefBranch() {
+  get _prefBranch() {
     delete this._prefBranch;
     return this._prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
                                         .getService(Components.interfaces.nsIPrefBranch);
   },
 
-  get MIN ZoomManager_get_MIN() {
+  get MIN() {
     delete this.MIN;
     return this.MIN = this._prefBranch.getIntPref("zoom.minPercent") / 100;
   },
 
-  get MAX ZoomManager_get_MAX() {
+  get MAX() {
     delete this.MAX;
     return this.MAX = this._prefBranch.getIntPref("zoom.maxPercent") / 100;
   },
 
-  get useFullZoom ZoomManager_get_useFullZoom() {
+  get useFullZoom() {
     return this._prefBranch.getBoolPref("browser.zoom.full");
   },
 
-  set useFullZoom ZoomManager_set_useFullZoom(aVal) {
+  set useFullZoom(aVal) {
     this._prefBranch.setBoolPref("browser.zoom.full", aVal);
     return aVal;
   },
 
-  get zoom ZoomManager_get_zoom() {
+  get zoom() {
     return this.getZoomForBrowser(getBrowser());
   },
 
@@ -83,7 +83,7 @@ var ZoomManager = {
                             : markupDocumentViewer.textZoom;
   },
 
-  set zoom ZoomManager_set_zoom(aVal) {
+  set zoom(aVal) {
     this.setZoomForBrowser(getBrowser(), aVal);
     return aVal;
   },
@@ -103,7 +103,7 @@ var ZoomManager = {
     }
   },
 
-  get zoomValues ZoomManager_get_zoomValues() {
+  get zoomValues() {
     var zoomValues = this._prefBranch.getCharPref("toolkit.zoomManager.zoomValues")
                                      .split(",").map(parseFloat);
     zoomValues.sort(function (a, b) a - b);
@@ -152,4 +152,4 @@ var ZoomManager = {
     }
     return values[i - 1];
   }
-}
+};
