@@ -496,6 +496,7 @@ let (randomFailingSyncTests = [
   "test_331487.js",
   "test_tags.js",
   "test_385829.js",
+  "test_405938_restore_queries.js",
 ]) {
   let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
   if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {
