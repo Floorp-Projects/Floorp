@@ -570,11 +570,11 @@ PlacesTreeView.prototype = {
       case Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_DESCENDING:
         return [this.COLUMN_TYPE_KEYWORD, true];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING:
-        if (this._result.sortingAnnotation == DESCRIPTION_ANNO)
+        if (this._result.sortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
           return [this.COLUMN_TYPE_DESCRIPTION, false];
         break;
       case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING:
-        if (this._result.sortingAnnotation == DESCRIPTION_ANNO)
+        if (this._result.sortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
           return [this.COLUMN_TYPE_DESCRIPTION, true];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING:
         return [this.COLUMN_TYPE_DATEADDED, false];
@@ -827,7 +827,7 @@ PlacesTreeView.prototype = {
   },
 
   nodeAnnotationChanged: function PTV_nodeAnnotationChanged(aNode, aAnno) {
-    if (aAnno == DESCRIPTION_ANNO)
+    if (aAnno == PlacesUIUtils.DESCRIPTION_ANNO)
       this._invalidateCellValue(aNode, this.COLUMN_TYPE_DESCRIPTION);
   },
 
@@ -1338,7 +1338,7 @@ PlacesTreeView.prototype = {
         if (node.itemId != -1) {
           try {
             return PlacesUtils.annotations.
-                               getItemAnnotation(node.itemId, DESCRIPTION_ANNO);
+                               getItemAnnotation(node.itemId, PlacesUIUtils.DESCRIPTION_ANNO);
           }
           catch (ex) { /* has no description */ }
         }
@@ -1472,17 +1472,17 @@ PlacesTreeView.prototype = {
         break;
       case this.COLUMN_TYPE_DESCRIPTION:
         if (oldSort == NHQO.SORT_BY_ANNOTATION_ASCENDING &&
-            oldSortingAnnotation == DESCRIPTION_ANNO) {
+            oldSortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO) {
           newSort = NHQO.SORT_BY_ANNOTATION_DESCENDING;
-          newSortingAnnotation = DESCRIPTION_ANNO;
+          newSortingAnnotation = PlacesUIUtils.DESCRIPTION_ANNO;
         }
         else if (allowTriState &&
                  oldSort == NHQO.SORT_BY_ANNOTATION_DESCENDING &&
-                 oldSortingAnnotation == DESCRIPTION_ANNO)
+                 oldSortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
           newSort = NHQO.SORT_BY_NONE;
         else {
           newSort = NHQO.SORT_BY_ANNOTATION_ASCENDING;
-          newSortingAnnotation = DESCRIPTION_ANNO;
+          newSortingAnnotation = PlacesUIUtils.DESCRIPTION_ANNO;
         }
 
         break;

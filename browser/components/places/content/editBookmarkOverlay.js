@@ -174,7 +174,7 @@ var gEditItemOverlay = {
         // Load In Sidebar checkbox
         this._element("loadInSidebarCheckbox").checked =
           PlacesUtils.annotations.itemHasAnnotation(this._itemId,
-                                                    LOAD_IN_SIDEBAR_ANNO);
+                                                    PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
       }
       else {
         if (!this._readOnly) // If readOnly wasn't forced through aInfo
@@ -458,6 +458,7 @@ var gEditItemOverlay = {
       //    content types the service knows how to summarize).
       this._microsummaries = null;
     }
+
     if (this._microsummaries) {
       var enumerator = this._microsummaries.Enumerate();
 
@@ -1122,14 +1123,14 @@ var gEditItemOverlay = {
                           PlacesUtils.bookmarks
                                      .getKeywordForBookmark(this._itemId));
       break;
-    case DESCRIPTION_ANNO:
+    case PlacesUIUtils.DESCRIPTION_ANNO:
       this._initTextField("descriptionField",
                           PlacesUIUtils.getItemDescription(this._itemId));
       break;
-    case LOAD_IN_SIDEBAR_ANNO:
+    case PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO:
       this._element("loadInSidebarCheckbox").checked =
         PlacesUtils.annotations.itemHasAnnotation(this._itemId,
-                                                  LOAD_IN_SIDEBAR_ANNO);
+                                                  PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
       break;
     case PlacesUtils.LMANNO_FEEDURI:
       var feedURISpec = PlacesUtils.livemarks.getFeedURI(this._itemId).spec;
