@@ -826,7 +826,8 @@ nsBindingManager::GetXBLChildNodesFor(nsIContent* aContent)
 }
 
 nsIContent*
-nsBindingManager::GetInsertionPoint(nsIContent* aParent, nsIContent* aChild,
+nsBindingManager::GetInsertionPoint(nsIContent* aParent,
+                                    const nsIContent* aChild,
                                     PRUint32* aIndex)
 {
   nsXBLBinding *binding = GetBinding(aParent);
@@ -1402,7 +1403,8 @@ nsBindingManager::MediumFeaturesChanged(nsPresContext* aPresContext,
 }
 
 nsIContent*
-nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChild)
+nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent,
+                                          const nsIContent* aChild)
 {
   // Check to see if the content is anonymous.
   if (aChild->GetBindingParent() == aParent)

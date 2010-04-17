@@ -330,7 +330,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_APPLET = new nsHtml5ElementName(nsHtml5Atoms::applet, nsHtml5Atoms::applet, NS_HTML5TREE_BUILDER_MARQUEE_OR_APPLET, PR_FALSE, PR_TRUE, PR_FALSE);
   ELT_ARCCOT = new nsHtml5ElementName(nsHtml5Atoms::arccot, nsHtml5Atoms::arccot, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_APPROX = new nsHtml5ElementName(nsHtml5Atoms::approx, nsHtml5Atoms::approx, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
-  ELT_BUTTON = new nsHtml5ElementName(nsHtml5Atoms::button, nsHtml5Atoms::button, NS_HTML5TREE_BUILDER_BUTTON, PR_FALSE, PR_TRUE, PR_FALSE);
+  ELT_BUTTON = new nsHtml5ElementName(nsHtml5Atoms::button, nsHtml5Atoms::button, NS_HTML5TREE_BUILDER_BUTTON, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_CIRCLE = new nsHtml5ElementName(nsHtml5Atoms::circle, nsHtml5Atoms::circle, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_CENTER = new nsHtml5ElementName(nsHtml5Atoms::center, nsHtml5Atoms::center, NS_HTML5TREE_BUILDER_DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU, PR_TRUE, PR_FALSE, PR_FALSE);
   ELT_CURSOR = new nsHtml5ElementName(nsHtml5Atoms::cursor, nsHtml5Atoms::cursor, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
@@ -360,7 +360,7 @@ nsHtml5ElementName::initializeStatics()
   ELT_MERROR = new nsHtml5ElementName(nsHtml5Atoms::merror, nsHtml5Atoms::merror, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_MOMENT = new nsHtml5ElementName(nsHtml5Atoms::moment, nsHtml5Atoms::moment, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_MATRIX = new nsHtml5ElementName(nsHtml5Atoms::matrix, nsHtml5Atoms::matrix, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);
-  ELT_OPTION = new nsHtml5ElementName(nsHtml5Atoms::option, nsHtml5Atoms::option, NS_HTML5TREE_BUILDER_OPTION, PR_TRUE, PR_FALSE, PR_FALSE);
+  ELT_OPTION = new nsHtml5ElementName(nsHtml5Atoms::option, nsHtml5Atoms::option, NS_HTML5TREE_BUILDER_OPTION, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_OBJECT = new nsHtml5ElementName(nsHtml5Atoms::object, nsHtml5Atoms::object, NS_HTML5TREE_BUILDER_OBJECT, PR_FALSE, PR_TRUE, PR_FALSE);
   ELT_OUTPUT = new nsHtml5ElementName(nsHtml5Atoms::output, nsHtml5Atoms::output, NS_HTML5TREE_BUILDER_OUTPUT_OR_LABEL, PR_FALSE, PR_FALSE, PR_FALSE);
   ELT_PRIMES = new nsHtml5ElementName(nsHtml5Atoms::primes, nsHtml5Atoms::primes, NS_HTML5TREE_BUILDER_OTHER, PR_FALSE, PR_FALSE, PR_FALSE);

@@ -480,7 +480,8 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
         // XXX: benwa: OMG MEMORY LEAK! 
         //      There is currently no way dealloc the shmem
         //      so for now we will leak the memory and will fix this ASAP!
-        if (!AllocShmem(window.width * window.height * 4, &mShSurface)) {
+        if (!AllocShmem(window.width * window.height * 4, SharedMemory::TYPE_BASIC,
+                        &mShSurface)) {
             PLUGIN_LOG_DEBUG(("Shared memory could not be allocated."));
             return NPERR_GENERIC_ERROR;
         }

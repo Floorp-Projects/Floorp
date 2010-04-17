@@ -145,8 +145,17 @@ enum {
   NODE_ATTACH_BINDING_ON_POSTCREATE
                                = 0x00040000U,
 
+  // This node needs to go through frame construction to get a frame (or
+  // undisplayed entry).
+  NODE_NEEDS_FRAME =             0x00080000U,
+
+  // At least one descendant in the flattened tree has NODE_NEEDS_FRAME set.
+  // This should be set on every node on the flattened tree path between the
+  // node(s) with NODE_NEEDS_FRAME and the root content.
+  NODE_DESCENDANTS_NEED_FRAMES = 0x00100000U,
+
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               20,
+  NODE_SCRIPT_TYPE_OFFSET =               21,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
@@ -242,9 +251,9 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xe71b48a8, 0xeead, 0x4320, \
- { 0xb4, 0xb0, 0x15, 0xcd, 0x7c, 0x53, 0x96, 0x8c } }
- 
+{ 0xbc347b50, 0xa9b8, 0x419e, \
+ { 0xb1, 0x21, 0x76, 0x8f, 0x90, 0x05, 0x8d, 0xbf } } 
+
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
  * nsIContent and nsIDocument share.  An instance of this interface has a list
@@ -765,7 +774,9 @@ public:
     NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS |
                                   NODE_IS_NATIVE_ANONYMOUS_ROOT |
                                   NODE_IS_IN_ANONYMOUS_SUBTREE |
-                                  NODE_ATTACH_BINDING_ON_POSTCREATE)) ||
+                                  NODE_ATTACH_BINDING_ON_POSTCREATE |
+                                  NODE_DESCENDANTS_NEED_FRAMES |
+                                  NODE_NEEDS_FRAME)) ||
                  IsNodeOfType(eCONTENT),
                  "Flag only permitted on nsIContent nodes");
     PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :

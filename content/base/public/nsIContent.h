@@ -71,8 +71,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x07734640, 0x0900, 0x480d, \
- { 0x97, 0x5a, 0x31, 0xc7, 0x0e, 0xcd, 0x15, 0x2b } }
+{ 0x9d15dea4, 0xa112, 0x40f4, \
+ { 0xbd, 0xa9, 0x23, 0xc0, 0xed, 0xde, 0x08, 0x9c } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -641,6 +641,14 @@ public:
    * @return the binding parent
    */
   virtual nsIContent *GetBindingParent() const = 0;
+
+  /**
+   * Returns the content node that is the parent of this node in the flattened
+   * tree.
+   *
+   * @return the flattened tree parent
+   */
+  nsIContent *GetFlattenedTreeParent() const;
 
   /**
    * Get the base URI for any relative URIs within this piece of

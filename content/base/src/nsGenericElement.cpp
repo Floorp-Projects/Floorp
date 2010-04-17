@@ -631,6 +631,23 @@ nsIContent::FindFirstNonNativeAnonymous() const
   return nsnull;
 }
 
+nsIContent*
+nsIContent::GetFlattenedTreeParent() const
+{
+  nsIContent *parent = GetParent();
+  if (parent && parent->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    nsIDocument *doc = parent->GetOwnerDoc();
+    if (doc) {
+      nsIContent* insertionElement =
+        doc->BindingManager()->GetNestedInsertionPoint(parent, this);
+      if (insertionElement) {
+        parent = insertionElement;
+      }
+    }
+  }
+  return parent;
+}
+
 //----------------------------------------------------------------------
 
 NS_IMPL_ADDREF(nsChildContentList)
@@ -2592,7 +2609,9 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     mParentPtrBits |= PARENT_BIT_INDOCUMENT;
 
     // Unset this flag since we now really are in a document.
-    UnsetFlags(NODE_FORCE_XBL_BINDINGS);
+    UnsetFlags(NODE_FORCE_XBL_BINDINGS |
+               // And clear the lazy frame construction bits.
+               NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES);
   }
 
   // If NODE_FORCE_XBL_BINDINGS was set we might have anonymous children

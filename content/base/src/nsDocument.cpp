@@ -3810,11 +3810,10 @@ nsDocument::GetWindow()
 }
 
 nsPIDOMWindow *
-nsDocument::GetInnerWindow()
+nsDocument::GetInnerWindowInternal()
 {
-  if (!mRemovedFromDocShell) {
-    return mWindow;
-  }
+  NS_ASSERTION(mRemovedFromDocShell,
+               "This document should have been removed from docshell!");
 
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(GetScriptGlobalObject()));
 
@@ -7119,6 +7118,34 @@ nsDocument::GetLayoutHistoryState() const
   }
 
   return state;
+}
+
+void
+nsDocument::EnsureOnloadBlocker()
+{
+  // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
+  // -- it's not ours.
+  if (mOnloadBlockCount != 0 && mScriptGlobalObject) {
+    nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+    if (loadGroup) {
+      // Check first to see if mOnloadBlocker is in the loadgroup.
+      nsCOMPtr<nsISimpleEnumerator> requests;
+      loadGroup->GetRequests(getter_AddRefs(requests));
+
+      PRBool hasMore = PR_FALSE;
+      while (NS_SUCCEEDED(requests->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> elem;
+        requests->GetNext(getter_AddRefs(elem));
+        nsCOMPtr<nsIRequest> request = do_QueryInterface(elem);
+        if (request && request == mOnloadBlocker) {
+          return;
+        }
+      }
+
+      // Not in the loadgroup, so add it.
+      loadGroup->AddRequest(mOnloadBlocker, nsnull);
+    }
+  }
 }
 
 void

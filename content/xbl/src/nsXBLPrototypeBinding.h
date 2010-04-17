@@ -164,7 +164,8 @@ public:
   // XXXbz this aIndex has nothing to do with an index into the child
   // list of the insertion parent or anything.
   nsIContent* GetInsertionPoint(nsIContent* aBoundElement,
-                                nsIContent* aCopyRoot, nsIContent *aChild,
+                                nsIContent* aCopyRoot,
+                                const nsIContent *aChild,
                                 PRUint32* aIndex);
 
   nsIContent* GetSingleInsertionPoint(nsIContent* aBoundElement,
