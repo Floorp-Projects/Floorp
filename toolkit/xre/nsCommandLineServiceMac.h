@@ -59,7 +59,7 @@ public:
                   ~nsMacCommandLine();
 
   nsresult        Initialize(int& argc, char**& argv);
-  void            SetupCommandLine(int& argc, char**& argv);
+  void            SetupCommandLine(int& argc, char**& argv, PRBool forRestart);
   
   nsresult        AddToCommandLine(const char* inArgText);
   nsresult        AddToCommandLine(const char* inOptionString, const CFURLRef file);
@@ -92,6 +92,6 @@ private:
   
 };
 
-void SetupMacCommandLine(int& argc, char**& argv);
+void SetupMacCommandLine(int& argc, char**& argv, PRBool forRestart);
 
 #endif // nsCommandLineServiceMac_h_

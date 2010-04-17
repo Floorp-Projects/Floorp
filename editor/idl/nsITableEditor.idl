@@ -167,7 +167,7 @@ interface nsITableEditor : nsISupports
     * If aTable is null, it uses table enclosing the selection anchor
     * This doesn't doesn't change the selection,
     *   thus it can be used to fixup all tables
-    *   in a page independant of the selection
+    *   in a page independent of the selection
     */
   void normalizeTable(in nsIDOMElement aTable);
 

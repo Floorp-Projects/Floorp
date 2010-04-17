@@ -41,21 +41,24 @@
 let Ci = Components.interfaces;
 let Cc = Components.classes;
 let Cr = Components.results;
+let Cu = Components.utils;
 
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
-const GUID_ANNO = "placesInternal/GUID";
 
 const CLASS_ID = Components.ID("c0844a84-5a12-4808-80a8-809cb002bb4f");
 const CONTRACT_ID = "@mozilla.org/browser/placesTransactionsService;1";
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-__defineGetter__("PlacesUtils", function() {
-  delete this.PlacesUtils
-  var tmpScope = {};
-  Components.utils.import("resource://gre/modules/utils.js", tmpScope);
-  return this.PlacesUtils = tmpScope.PlacesUtils;
+XPCOMUtils.defineLazyGetter(this, "Services", function() {
+  Cu.import("resource://gre/modules/Services.jsm");
+  return Services;
+});
+
+XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
+  Cu.import("resource://gre/modules/utils.js");
+  return PlacesUtils;
 });
 
 // The minimum amount of transactions we should tell our observers to begin
@@ -63,6 +66,7 @@ __defineGetter__("PlacesUtils", function() {
 const MIN_TRANSACTIONS_FOR_BATCH = 5;
 
 function placesTransactionsService() {
+  Services.obs.addObserver(this, "xpcom-shutdown", false);
   this.mTransactionManager = Cc["@mozilla.org/transactionmanager;1"].
                              createInstance(Ci.nsITransactionManager);
 }
@@ -72,8 +76,19 @@ placesTransactionsService.prototype = {
   classID: CLASS_ID,
   contractID: CONTRACT_ID,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPlacesTransactionsService,
-                                         Ci.nsITransactionManager]),
+  QueryInterface: XPCOMUtils.generateQI([
+    Ci.nsIPlacesTransactionsService,
+    Ci.nsITransactionManager,
+    Ci.nsIObserver,
+  ]),
+
+  // nsIObserver
+  observe: function PlacesTxn_observe(aSubject, aTopic, aData) {
+    if (aTopic == "xpcom-shutdown") {
+      Services.obs.removeObserver(this, "xpcom-shutdown");
+      delete this.mTransactionManager;
+    }
+  },
 
   aggregateTransactions:
   function placesTxn_aggregateTransactions(aName, aTransactions) {
@@ -228,9 +243,7 @@ placesTransactionsService.prototype = {
   // Update commands in the undo group of the active window
   // commands in inactive windows will are updated on-focus
   _updateCommands: function placesTxn__updateCommands() {
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-             getService(Ci.nsIWindowMediator);
-    var win = wm.getMostRecentWindow(null);
+    var win = Services.wm.getMostRecentWindow(null);
     if (win)
       win.updateCommands("undo");
   },
@@ -445,7 +458,7 @@ placesCreateFolderTransactions.prototype = {
     }
 
     // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations.itemHasAnnotation(this._id, GUID_ANNO))
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, PlacesUtils.GUID_ANNO))
       this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
 
     // Remove item only after all child transactions have been reverted.
@@ -503,7 +516,7 @@ placesCreateItemTransactions.prototype = {
     }
 
     // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations.itemHasAnnotation(this._id, GUID_ANNO))
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, PlacesUtils.GUID_ANNO))
       this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
 
     // Remove item only after all child transactions have been reverted.
@@ -534,7 +547,7 @@ placesCreateSeparatorTransactions.prototype = {
 
   undoTransaction: function PCST_undoTransaction() {
     // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations.itemHasAnnotation(this._id, GUID_ANNO))
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, PlacesUtils.GUID_ANNO))
       this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
 
     PlacesUtils.bookmarks.removeItem(this._id);
@@ -572,7 +585,7 @@ placesCreateLivemarkTransactions.prototype = {
 
   undoTransaction: function PCLT_undoTransaction() {
     // If a GUID exists for this item, preserve it before removing the item.
-    if (PlacesUtils.annotations.itemHasAnnotation(this._id, GUID_ANNO))
+    if (PlacesUtils.annotations.itemHasAnnotation(this._id, PlacesUtils.GUID_ANNO))
       this._GUID = PlacesUtils.bookmarks.getItemGUID(this._id);
 
     PlacesUtils.bookmarks.removeItem(this._id);
@@ -1134,7 +1147,7 @@ placesTagURITransaction.prototype = {
   undoTransaction: function PTU_undoTransaction() {
     if (this._unfiledItemId != -1) {
       // If a GUID exists for this item, preserve it before removing the item.
-      if (PlacesUtils.annotations.itemHasAnnotation(this._unfiledItemId, GUID_ANNO)) {
+      if (PlacesUtils.annotations.itemHasAnnotation(this._unfiledItemId, PlacesUtils.GUID_ANNO)) {
         this._GUID = PlacesUtils.bookmarks.getItemGUID(this._unfiledItemId);
       }
       PlacesUtils.bookmarks.removeItem(this._unfiledItemId);

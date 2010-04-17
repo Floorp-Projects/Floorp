@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.body.offsetHeight;
+
+  var parent = document.getElementById("parent");
+
+  var newelt = document.createElement("div");
+  newelt.appendChild(document.createTextNode(3));
+  parent.appendChild(newelt);
+
+  newelt = document.createElement("div");
+  newelt.appendChild(document.createTextNode(4));
+  parent.appendChild(newelt);
+
+  var input = document.createElement("input");
+  input.setAttribute("type", "text");
+  parent.appendChild(input);
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+<div id="parent">
+  <div>1</div>
+  <div>2</div>
+</div>
+</body>
+</html>

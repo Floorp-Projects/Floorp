@@ -168,7 +168,7 @@ public final class Portability {
     }
 
     public static char[] isIndexPrompt() {
-        return "This is a searchable index. Insert your search keywords here: ".toCharArray();
+        return "This is a searchable index. Enter search keywords: ".toCharArray();
     }
 
     public static void delete(Object o) {

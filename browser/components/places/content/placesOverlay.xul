@@ -51,8 +51,16 @@
           src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/utilityOverlay.js"/>
-  <script type="application/javascript" 
-          src="chrome://browser/content/places/utils.js"/>
+  <script type="application/javascript"><![CDATA[
+    // TODO: Bug 406371.
+    // A bunch of browser code depends on us defining these, sad but true :(
+    var Cc = Components.classes;
+    var Ci = Components.interfaces;
+    var Cr = Components.results;
+
+    Components.utils.import("resource://gre/modules/utils.js");
+    Components.utils.import("resource://gre/modules/PlacesUIUtils.jsm");
+  ]]></script>
   <script type="application/javascript"
           src="chrome://browser/content/places/controller.js"/>
   <script type="application/javascript"
