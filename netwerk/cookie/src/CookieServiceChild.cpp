@@ -78,35 +78,6 @@ CookieServiceChild::~CookieServiceChild()
   gCookieService = nsnull;
 }
 
-void
-CookieServiceChild::SerializeURIs(nsIURI *aHostURI,
-                                  nsIChannel *aChannel,
-                                  nsCString &aHostSpec,
-                                  nsCString &aHostCharset,
-                                  nsCString &aOriginatingSpec,
-                                  nsCString &aOriginatingCharset)
-{
-  // Serialize the host URI.
-  // TODO: The cookieservice deals exclusively with ASCII hosts, but not paths.
-  // We should fix that, and then we can just serialize the spec as ASCII here.
-  aHostURI->GetSpec(aHostSpec);
-  aHostURI->GetOriginCharset(aHostCharset);
-
-  // Determine and serialize the originating URI. Failure is acceptable.
-  if (!mPermissionService) {
-    NS_WARNING("nsICookiePermission unavailable! Cookie may be rejected");
-    return;
-  }
-
-  nsCOMPtr<nsIURI> originatingURI;
-  mPermissionService->GetOriginatingURI(aChannel,
-                                        getter_AddRefs(originatingURI));
-  if (originatingURI) {
-    originatingURI->GetSpec(aOriginatingSpec);
-    originatingURI->GetOriginCharset(aOriginatingSpec);
-  }
-}
-
 nsresult
 CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
                                             nsIChannel *aChannel,
@@ -118,14 +89,17 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
 
   *aCookieString = NULL;
 
-  nsCAutoString hostSpec, hostCharset, originatingSpec, originatingCharset;
-  SerializeURIs(aHostURI, aChannel, hostSpec, hostCharset,
-                originatingSpec, originatingCharset);
+  // Determine the originating URI. Failure is acceptable.
+  nsCOMPtr<nsIURI> originatingURI;
+  if (!mPermissionService) {
+    NS_WARNING("nsICookiePermission unavailable! Cookie may be rejected");
+    mPermissionService->GetOriginatingURI(aChannel,
+                                          getter_AddRefs(originatingURI));
+  }
 
   // Synchronously call the parent.
   nsCAutoString result;
-  SendGetCookieString(hostSpec, hostCharset,
-                      originatingSpec, originatingCharset,
+  SendGetCookieString(IPC::URI(aHostURI), IPC::URI(originatingURI),
                       aFromHttp, &result);
   if (!result.IsEmpty())
     *aCookieString = ToNewCString(result);
@@ -143,9 +117,13 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   NS_ENSURE_ARG(aHostURI);
   NS_ENSURE_ARG_POINTER(aCookieString);
 
-  nsCAutoString hostSpec, hostCharset, originatingSpec, originatingCharset;
-  SerializeURIs(aHostURI, aChannel, hostSpec, hostCharset,
-                originatingSpec, originatingCharset);
+  // Determine the originating URI. Failure is acceptable.
+  nsCOMPtr<nsIURI> originatingURI;
+  if (!mPermissionService) {
+    NS_WARNING("nsICookiePermission unavailable! Cookie may be rejected");
+    mPermissionService->GetOriginatingURI(aChannel,
+                                          getter_AddRefs(originatingURI));
+  }
 
   nsDependentCString cookieString(aCookieString);
   nsDependentCString serverTime;
@@ -153,8 +131,7 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
     serverTime.Rebind(aServerTime);
 
   // Synchronously call the parent.
-  SendSetCookieString(hostSpec, hostCharset,
-                      originatingSpec, originatingCharset,
+  SendSetCookieString(IPC::URI(aHostURI), IPC::URI(originatingURI),
                       cookieString, serverTime, aFromHttp);
   return NS_OK;
 }

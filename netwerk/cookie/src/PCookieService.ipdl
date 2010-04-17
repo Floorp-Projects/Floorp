@@ -40,6 +40,10 @@
 
 include protocol "PNecko.ipdl";
 
+include "mozilla/net/NeckoMessageUtils.h";
+
+using IPC::URI;
+
 namespace mozilla {
 namespace net {
 
@@ -48,17 +52,13 @@ sync protocol PCookieService
   manager PNecko;
 
 parent:
-  sync GetCookieString(nsCString hostSpec,
-                       nsCString hostCharset,
-                       nsCString originatingSpec,
-                       nsCString originatingCharset,
+  sync GetCookieString(URI host,
+                       URI originating,
                        bool fromHttp)
        returns (nsCString result);
 
-  SetCookieString(nsCString hostSpec,
-                  nsCString hostCharset,
-                  nsCString originatingSpec,
-                  nsCString originatingCharset,
+  SetCookieString(URI host,
+                  URI originating,
                   nsCString cookieString,
                   nsCString serverTime,
                   bool fromHttp);
