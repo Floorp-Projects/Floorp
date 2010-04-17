@@ -116,10 +116,7 @@ function run_test() {
   // We want empty roots.
   remove_all_bookmarks();
 
-  // Import PlacesUIUtils.
-  let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                     getService(Ci.mozIJSSubScriptLoader);
-  scriptLoader.loadSubScript("chrome://browser/content/places/utils.js", this);
+  // Sanity check.
   do_check_true(!!PlacesUIUtils);
 
   // Check getters.
