@@ -612,13 +612,15 @@ BrowserView.prototype = {
     if (!browser)
       return 0;
 
+    let pageZoom = this.getPageZoomLevel();
+    let granularity = gPrefService.getIntPref("browser.ui.zoom.pageFitGranularity");
+    pageZoom = BrowserView.Util.adjustZoomLevel(pageZoom, 1 / granularity);
+
     let metaData = Util.getViewportMetadata(browser);
     if (metaData.reason)
-      return metaData.scale;
+      return Math.max(metaData.scale, pageZoom);
 
-    let zl = this.getPageZoomLevel();
-    let granularity = gPrefService.getIntPref("browser.ui.zoom.pageFitGranularity");
-    return BrowserView.Util.adjustZoomLevel(zl, 1 / granularity);
+    return pageZoom;
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
