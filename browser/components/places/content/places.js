@@ -1324,7 +1324,7 @@ var ViewMenu = {
       lastModified: { key: "LASTMODIFIED", dir: "descending" },
       description:  { key: "ANNOTATION",
                       dir: "ascending",
-                      anno: DESCRIPTION_ANNO }
+                      anno: PlacesUIUtils.DESCRIPTION_ANNO }
     };
 
     // Make sure we have a valid column.

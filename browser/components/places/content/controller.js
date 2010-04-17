@@ -114,6 +114,9 @@ InsertionPoint.prototype = {
 
 function PlacesController(aView) {
   this._view = aView;
+  XPCOMUtils.defineLazyServiceGetter(this, "clipboard",
+                                     "@mozilla.org/widget/clipboard;1",
+                                     "nsIClipboard");
 }
 
 PlacesController.prototype = {
@@ -389,7 +392,7 @@ PlacesController.prototype = {
     // pasteable, with no need to unwrap all the nodes.
 
     var flavors = PlacesControllerDragHelper.placesFlavors;
-    var clipboard = PlacesUIUtils.clipboard;
+    var clipboard = this.clipboard;
     var hasPlacesData =
       clipboard.hasDataMatchingFlavors(flavors, flavors.length,
                                        Ci.nsIClipboard.kGlobalClipboard);
@@ -1216,7 +1219,7 @@ PlacesController.prototype = {
         addData(PlacesUtils.TYPE_HTML, htmlString);
 
       if (placeString || unicodeString || htmlString || mozURLString) {
-        PlacesUIUtils.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
+        this.clipboard.setData(xferable, null, Ci.nsIClipboard.kGlobalClipboard);
       }
     }
     finally {
@@ -1260,7 +1263,7 @@ PlacesController.prototype = {
       return xferable;
     }
 
-    var clipboard = PlacesUIUtils.clipboard;
+    var clipboard = this.clipboard;
 
     var ip = this._view.insertionPoint;
     if (!ip)
