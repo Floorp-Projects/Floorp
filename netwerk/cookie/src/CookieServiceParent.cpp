@@ -53,9 +53,6 @@ CookieServiceParent::CookieServiceParent()
   mCookieService =
     already_AddRefed<nsCookieService>(nsCookieService::GetSingleton());
   NS_ASSERTION(mCookieService, "couldn't get nsICookieService");
-
-  mIOService = do_GetService(NS_IOSERVICE_CONTRACTID);
-  NS_ASSERTION(mIOService, "couldn't get nsIIOService");
 }
 
 CookieServiceParent::~CookieServiceParent()
@@ -63,10 +60,8 @@ CookieServiceParent::~CookieServiceParent()
 }
 
 bool
-CookieServiceParent::RecvGetCookieString(const nsCString& aHostSpec,
-                                         const nsCString& aHostCharset,
-                                         const nsCString& aOriginatingSpec,
-                                         const nsCString& aOriginatingCharset,
+CookieServiceParent::RecvGetCookieString(const IPC::URI& aHost,
+                                         const IPC::URI& aOriginating,
                                          const bool& aFromHttp,
                                          nsCString* aResult)
 {
@@ -75,13 +70,8 @@ CookieServiceParent::RecvGetCookieString(const nsCString& aHostSpec,
 
   // Deserialize URIs. Having a host URI is mandatory and should always be
   // provided by the child; thus we consider failure fatal.
-  nsCOMPtr<nsIURI> hostURI, originatingURI;
-  NS_NewURI(getter_AddRefs(hostURI),
-            aHostSpec, aHostCharset.get(),
-            nsnull, mIOService);
-  NS_NewURI(getter_AddRefs(originatingURI),
-            aOriginatingSpec, aOriginatingCharset.get(),
-            nsnull, mIOService);
+  nsCOMPtr<nsIURI> hostURI = aHost;
+  nsCOMPtr<nsIURI> originatingURI = aOriginating;
   if (!hostURI)
     return false;
 
@@ -91,10 +81,8 @@ CookieServiceParent::RecvGetCookieString(const nsCString& aHostSpec,
 }
 
 bool
-CookieServiceParent::RecvSetCookieString(const nsCString& aHostSpec,
-                                         const nsCString& aHostCharset,
-                                         const nsCString& aOriginatingSpec,
-                                         const nsCString& aOriginatingCharset,
+CookieServiceParent::RecvSetCookieString(const IPC::URI& aHost,
+                                         const IPC::URI& aOriginating,
                                          const nsCString& aCookieString,
                                          const nsCString& aServerTime,
                                          const bool& aFromHttp)
@@ -104,13 +92,8 @@ CookieServiceParent::RecvSetCookieString(const nsCString& aHostSpec,
 
   // Deserialize URIs. Having a host URI is mandatory and should always be
   // provided by the child; thus we consider failure fatal.
-  nsCOMPtr<nsIURI> hostURI, originatingURI;
-  NS_NewURI(getter_AddRefs(hostURI),
-            aHostSpec, aHostCharset.get(),
-            nsnull, mIOService);
-  NS_NewURI(getter_AddRefs(originatingURI),
-            aOriginatingSpec, aOriginatingCharset.get(),
-            nsnull, mIOService);
+  nsCOMPtr<nsIURI> hostURI = aHost;
+  nsCOMPtr<nsIURI> originatingURI = aOriginating;
   if (!hostURI)
     return false;
 

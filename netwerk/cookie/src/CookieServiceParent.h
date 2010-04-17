@@ -54,23 +54,18 @@ public:
   virtual ~CookieServiceParent();
 
 protected:
-  virtual bool RecvGetCookieString(const nsCString& aHostSpec,
-                                   const nsCString& aHostCharset,
-                                   const nsCString& aOriginatingSpec,
-                                   const nsCString& aOriginatingCharset,
+  virtual bool RecvGetCookieString(const IPC::URI& aHost,
+                                   const IPC::URI& aOriginating,
                                    const bool& aFromHttp,
                                    nsCString* aResult);
 
-  virtual bool RecvSetCookieString(const nsCString& aHostSpec,
-                                   const nsCString& aHostCharset,
-                                   const nsCString& aOriginatingSpec,
-                                   const nsCString& aOriginatingCharset,
+  virtual bool RecvSetCookieString(const IPC::URI& aHost,
+                                   const IPC::URI& aOriginating,
                                    const nsCString& aCookieString,
                                    const nsCString& aServerTime,
                                    const bool& aFromHttp);
 
   nsRefPtr<nsCookieService> mCookieService;
-  nsCOMPtr<nsIIOService> mIOService;
 };
 
 }
