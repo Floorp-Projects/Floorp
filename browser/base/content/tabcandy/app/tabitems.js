@@ -225,9 +225,7 @@ window.TabItems = {
       if($div.length == 1)
         Groups.newTab($div.data('tabItem'));
       else {
-        var top = 20;
-        var bottom = TabItems.tabHeight + 10; // MAGIC NUMBER: giving room for the "new tabs" group
-        var box = new Rect(0, top, window.innerWidth, window.innerHeight - (top + bottom));
+        var box = Items.getPageBounds();
         box.inset(20, 20);
         
         Items.arrange(items, box, {padding: 10});
