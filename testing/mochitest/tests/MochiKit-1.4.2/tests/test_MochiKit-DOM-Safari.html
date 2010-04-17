@@ -1,0 +1,48 @@
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/MockDOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>    
+    <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+</head>
+<body>
+
+<pre id="test">
+<script type="text/javascript">
+try {
+
+    for (var i = 0; i < 10000; i++) {
+        var n = document.createElement("DIV");
+        n.appendChild(document.createTextNode(""));
+        var list = MochiKit.Iter.list(n.childNodes);
+        var n2 = document.createElement("DIV");
+        appendChildNodes(n2, n.childNodes);
+        var n3 = document.createElement("DIV");
+        replaceChildNodes(n3, n2.childNodes);
+    }
+    ok( true, "Safari didn't crash! #213" );
+    ok( true, "test suite finished!");
+    
+    
+} catch (err) {
+    
+    var s = "test suite failure!\n";
+    var o = {};
+    var k = null;
+    for (k in err) {
+        // ensure unique keys?!
+        if (!o[k]) {
+            s +=  k + ": " + err[k] + "\n";
+            o[k] = err[k];
+        }
+    }
+    ok ( false, s );
+
+}
+</script>
+</pre>
+</body>
+</html>

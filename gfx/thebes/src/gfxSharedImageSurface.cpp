@@ -152,7 +152,7 @@ gfxSharedImageSurface::CreateInternal(int aShmid)
         mShmId = aShmid;
         mOwnsData = false;
     } else
-        mShmId = shmget(IPC_PRIVATE, GetDataSize(), IPC_CREAT | 0777);
+        mShmId = shmget(IPC_PRIVATE, GetDataSize(), IPC_CREAT | 0600);
 
     if (mShmId == -1)
         return false;

@@ -1939,6 +1939,12 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
 
     nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(shell));
     webnav->Stop(nsIWebNavigation::STOP_NETWORK);
+
+    // The Stop call may have cancelled the onload blocker request or prevented
+    // it from getting added, so we need to make sure it gets added to the
+    // document again otherwise the document could have a non-zero onload block
+    // count without the onload blocker request being in the loadgroup.
+    EnsureOnloadBlocker();
   }
 
   // The open occurred after the document finished loading.

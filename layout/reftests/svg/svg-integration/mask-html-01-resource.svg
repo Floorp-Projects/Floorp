@@ -15,6 +15,9 @@
       rect { fill: url(#g); }
     }
   </style>
+  <!-- so that other documents can svg:use this one and force it to
+       load before onload -->
+  <g id="empty" />
   <mask id="m1" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
     <linearGradient id="g" gradientUnits="objectBoundingBox" x2="0" y2="1">
       <stop stop-color="white" offset="0"/>

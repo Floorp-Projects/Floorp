@@ -20,6 +20,7 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#	Serge Gautherie <sgautherie.bz@free.fr>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,9 +44,11 @@ relativesrcdir  = testing/mochitest/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS =	 SimpleTest \
-	 browser \
-	 $(NULL)
+PARALLEL_DIRS = \
+	MochiKit-1.4.2 \
+	SimpleTest \
+	browser \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

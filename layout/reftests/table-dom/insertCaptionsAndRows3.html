@@ -1,0 +1,48 @@
+<html class="reftest-wait">
+<head>
+
+<style>
+ caption { color: green }
+</style>
+
+<script>
+function boom()
+{
+  document.body.offsetHeight;
+
+  var table = document.getElementById("table");
+  var cap = document.getElementById("cap");
+
+  var newtbody = document.createElement("tbody");
+  var newrow = document.createElement("tr");
+  var newcell = document.createElement("td");
+  newcell.appendChild(document.createTextNode("a new row 1"));
+  newrow.appendChild(newcell);
+  newtbody.appendChild(newrow);
+  table.insertBefore(newtbody, cap);
+
+  var caption = document.createElement("caption");
+  caption.appendChild(document.createTextNode("this is the caption"));
+  table.insertBefore(caption, cap);
+
+  newtbody = document.createElement("tbody");
+  newrow = document.createElement("tr");
+  newcell = document.createElement("td");
+  newcell.appendChild(document.createTextNode("a new row 2"));
+  newrow.appendChild(newcell);
+  newtbody.appendChild(newrow);
+  table.insertBefore(newtbody, cap);
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+</script>
+
+</head>
+<body onload="boom();">
+<table id="table">
+<caption id="cap">this is a caption that you shouldn't see</caption>
+<tbody><tr><td>a row</td></tr></tbody>
+</table>
+</body>
+</html>

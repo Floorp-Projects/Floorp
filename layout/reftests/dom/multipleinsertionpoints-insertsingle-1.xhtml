@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <binding id="a">
+    <content>
+      <xhtml:div>
+        <children includes="span"/>
+      </xhtml:div>
+      <xhtml:div>
+        <children/>
+      </xhtml:div>
+    </content>
+  </binding>  
+</bindings>
+
+<script>
+function boom()
+{
+  document.body.offsetHeight;
+
+  var lastdiv = document.getElementById("last");
+  var parent = lastdiv.parentNode;
+
+  var newelt = document.createElement("span");
+  newelt.appendChild(document.createTextNode(2));
+  parent.insertBefore(newelt, lastdiv);
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+</script>
+
+</head>
+<body onload="boom();">
+<div style="-moz-binding: url(#a);">
+  <div>3</div><span>1</span><div>4</div><div id="last">5</div>
+</div>
+</body>
+</html>

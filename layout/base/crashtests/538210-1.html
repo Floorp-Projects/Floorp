@@ -1,0 +1,16 @@
+<html>
+<head>
+<script>
+function boom()
+{
+  var frameset = document.getElementsByTagName("frameset")[0]
+  var oldFrame = frameset.firstChild;
+  var newFrame = document.createElementNS("http://www.w3.org/1999/xhtml", "frame");
+  frameset.appendChild(newFrame);
+  frameset.removeChild(oldFrame);
+}
+</script>
+</head>
+<frameset onload="boom()"><frame></frame></frameset>
+</html>
+
