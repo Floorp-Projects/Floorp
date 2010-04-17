@@ -3813,28 +3813,35 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
   // Handle certain sync plugin events sent to the parent which
   // trigger ipc calls that result in deadlocks.
 
-  // Plugins taking or losing focus triggering focus app messages.
-  if ((msg == WM_SETFOCUS || msg == WM_KILLFOCUS) &&
-      (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
-    ReplyMessage(0);
-    return;
+  DWORD dwResult = 0;
+  PRBool handled = PR_FALSE;
+
+  switch(msg) {
+    // Windowless flash sending WM_ACTIVATE events to the main window
+    // via calls to ShowWindow.
+    case WM_ACTIVATE:
+      if (lParam != 0 && LOWORD(wParam) == WA_ACTIVE &&
+          IsWindow((HWND)lParam))
+        handled = PR_TRUE;
+    break;
+
+    // Plugins taking or losing focus triggering focus app messages.
+    // dwResult = 0
+    case WM_SETFOCUS:
+    case WM_KILLFOCUS:
+    // Windowed plugins that pass sys key events to defwndproc generate
+    // WM_SYSCOMMAND events to the main window.
+    case WM_SYSCOMMAND:
+    // Windowed plugins that fire context menu selection events to parent
+    // windows.
+    case WM_CONTEXTMENU:
+      handled = PR_TRUE;
+    break;
   }
 
-  // Windowless flash sending WM_ACTIVATE events to the main window
-  // via calls to ShowWindow.
-  if (msg == WM_ACTIVATE && lParam != 0 &&
-      LOWORD(wParam) == WA_ACTIVE && IsWindow((HWND)lParam) &&
+  if (handled &&
       (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
-    ReplyMessage(0);
-    return;
-  }
-
-  // Windowed plugins that pass sys key events to defwndproc generate
-  // WM_SYSCOMMAND events to the main window.
-  if (msg == WM_SYSCOMMAND &&
-      (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
-    ReplyMessage(0);
-    return;
+    ReplyMessage(dwResult);
   }
 }
 
