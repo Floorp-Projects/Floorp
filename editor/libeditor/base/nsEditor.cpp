@@ -374,16 +374,16 @@ nsEditor::InstallEventListeners()
   nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(piTarget));
   if (target) {
     // See bug 455215, we cannot use the standard dragstart event yet
-    rv |= target->AddEventListener(NS_LITERAL_STRING("draggesture"),
-                                   mEventListener, PR_FALSE);
-    rv |= target->AddEventListener(NS_LITERAL_STRING("dragenter"),
-                                   mEventListener, PR_FALSE);
-    rv |= target->AddEventListener(NS_LITERAL_STRING("dragover"),
-                                   mEventListener, PR_FALSE);
-    rv |= target->AddEventListener(NS_LITERAL_STRING("dragleave"),
-                                   mEventListener, PR_FALSE);
-    rv |= target->AddEventListener(NS_LITERAL_STRING("drop"),
-                                   mEventListener, PR_FALSE);
+    rv |= elmP->AddEventListenerByType(mEventListener, NS_LITERAL_STRING("draggesture"),
+                                       NS_EVENT_FLAG_BUBBLE, sysGroup);
+    rv |= elmP->AddEventListenerByType(mEventListener, NS_LITERAL_STRING("dragenter"),
+                                       NS_EVENT_FLAG_BUBBLE, sysGroup);
+    rv |= elmP->AddEventListenerByType(mEventListener, NS_LITERAL_STRING("dragover"),
+                                       NS_EVENT_FLAG_BUBBLE, sysGroup);
+    rv |= elmP->AddEventListenerByType(mEventListener, NS_LITERAL_STRING("dragleave"),
+                                       NS_EVENT_FLAG_BUBBLE, sysGroup);
+    rv |= elmP->AddEventListenerByType(mEventListener, NS_LITERAL_STRING("drop"),
+                                       NS_EVENT_FLAG_BUBBLE, sysGroup);
   }
 
   if (NS_FAILED(rv))
@@ -417,9 +417,17 @@ nsEditor::RemoveEventListeners()
     {
       elmP->RemoveEventListenerByType(mEventListener,
                                       NS_LITERAL_STRING("keypress"),
-                                      NS_EVENT_FLAG_BUBBLE |
-                                      NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
-                                      sysGroup);
+                                      NS_EVENT_FLAG_BUBBLE, sysGroup);
+      elmP->RemoveEventListenerByType(mEventListener, NS_LITERAL_STRING("draggesture"),
+                                      NS_EVENT_FLAG_BUBBLE, sysGroup);
+      elmP->RemoveEventListenerByType(mEventListener, NS_LITERAL_STRING("dragenter"),
+                                      NS_EVENT_FLAG_BUBBLE, sysGroup);
+      elmP->RemoveEventListenerByType(mEventListener, NS_LITERAL_STRING("dragover"),
+                                      NS_EVENT_FLAG_BUBBLE, sysGroup);
+      elmP->RemoveEventListenerByType(mEventListener, NS_LITERAL_STRING("dragleave"),
+                                      NS_EVENT_FLAG_BUBBLE, sysGroup);
+      elmP->RemoveEventListenerByType(mEventListener, NS_LITERAL_STRING("drop"),
+                                      NS_EVENT_FLAG_BUBBLE, sysGroup);
     }
 
     piTarget->RemoveEventListenerByIID(mEventListener,
@@ -434,20 +442,6 @@ nsEditor::RemoveEventListeners()
 
     piTarget->RemoveEventListenerByIID(mEventListener,
                                        NS_GET_IID(nsIDOMCompositionListener));
-
-    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(piTarget));
-    if (target) {
-      target->RemoveEventListener(NS_LITERAL_STRING("draggesture"),
-                                  mEventListener, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("dragenter"),
-                                  mEventListener, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("dragover"),
-                                  mEventListener, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("dragleave"),
-                                  mEventListener, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("drop"),
-                                  mEventListener, PR_FALSE);
-    }
   }
 }
 
