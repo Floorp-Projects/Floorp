@@ -54,7 +54,7 @@ let (commonFile = do_get_file("../../test_places/head_common.js", false)) {
 
 
 XPCOMUtils.defineLazyGetter(this, "PlacesUIUtils", function() {
-  Cu.import("resource://gre/modules/PlacesUIUtils.jsm");
+  Cu.import("resource:///modules/PlacesUIUtils.jsm");
   return PlacesUIUtils;
 });
 
