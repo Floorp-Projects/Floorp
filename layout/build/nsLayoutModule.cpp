@@ -526,7 +526,6 @@ MAKE_CTOR(CreateXMLContentBuilder,        nsIXMLContentBuilder,        NS_NewXML
 MAKE_CTOR(CreateContentDLF,               nsIDocumentLoaderFactory,    NS_NewContentDocumentLoaderFactory)
 MAKE_CTOR(CreateEventListenerService,     nsIEventListenerService,     NS_NewEventListenerService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsContentAreaDragDrop)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDataDocumentContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNoDataProtocolContentPolicy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSyncLoadService)
@@ -1319,11 +1318,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_WYCIWYGPROTOCOLHANDLER_CID,
     NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "wyciwyg",
     nsWyciwygProtocolHandlerConstructor },
-
-  { "Content Area DragDrop",
-    NS_CONTENTAREADRAGDROP_CID,
-    NS_CONTENTAREADRAGDROP_CONTRACTID,
-    nsContentAreaDragDropConstructor },
 
   { "SyncLoad DOM Service",
     NS_SYNCLOADDOMSERVICE_CID,

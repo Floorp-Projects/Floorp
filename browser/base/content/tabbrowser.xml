@@ -1213,6 +1213,7 @@
             this.mTabFilters[position] = filter;
 
             b._fastFind = this.fastFind;
+            b.droppedLinkHandler = handleDroppedLink;
 
             var uniqueId = "panel" + Date.now() + position;
             this.mPanelContainer.lastChild.id = uniqueId;
@@ -2269,6 +2270,7 @@
           this._autoScrollPopup.id = "autoscroller";
           this.appendChild(this._autoScrollPopup);
           this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
+          this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
         ]]>
       </constructor>
 
