@@ -41,6 +41,7 @@
 #include "nsEditor.h"
 #include "nsIPlaintextEditor.h"
 
+#include "nsIDOMDOMStringList.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMDocument.h"
@@ -73,6 +74,7 @@
 #include "nsIDOMDragEvent.h"
 #include "nsIFocusManager.h"
 #include "nsIDOMWindow.h"
+#include "nsContentUtils.h"
 
 nsEditorEventListener::nsEditorEventListener(nsEditor* aEditor) :
   mEditor(aEditor), mCaretDrawn(PR_FALSE), mCommitText(PR_FALSE),
@@ -488,19 +490,14 @@ nsEditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
 nsresult
 nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
 {
-  // XXX cache this between drag events?
-  nsresult rv;
-  nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
-  if (!dragService) return rv;
-
-  // does the drag have flavors we can accept?
-  nsCOMPtr<nsIDragSession> dragSession;
-  dragService->GetCurrentSession(getter_AddRefs(dragSession));
-  if (!dragSession) return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMNode> parent;
   nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent = do_QueryInterface(aDragEvent);
   if (nsuiEvent) {
+    PRBool defaultPrevented;
+    nsuiEvent->GetPreventDefault(&defaultPrevented);
+    if (defaultPrevented)
+      return NS_OK;
+
     nsuiEvent->GetRangeParent(getter_AddRefs(parent));
     nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
     if (!dropParent)
@@ -511,18 +508,14 @@ nsEditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
   }
 
   PRBool canDrop = CanDrop(aDragEvent);
-  dragSession->SetCanDrop(canDrop);
-
   if (canDrop)
   {
-    // We need to consume the event to prevent the browser's
-    // default drag listeners from being fired. (Bug 199133)
     aDragEvent->PreventDefault(); // consumed
 
     if (mCaret && nsuiEvent)
     {
       PRInt32 offset = 0;
-      rv = nsuiEvent->GetRangeOffset(&offset);
+      nsresult rv = nsuiEvent->GetRangeOffset(&offset);
       if (NS_FAILED(rv)) return rv;
 
       // to avoid flicker, we could track the node and offset to see if we moved
@@ -586,6 +579,11 @@ nsEditorEventListener::Drop(nsIDOMDragEvent* aMouseEvent)
 
   nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent = do_QueryInterface(aMouseEvent);
   if (nsuiEvent) {
+    PRBool defaultPrevented;
+    nsuiEvent->GetPreventDefault(&defaultPrevented);
+    if (defaultPrevented)
+      return NS_OK;
+
     nsCOMPtr<nsIDOMNode> parent;
     nsuiEvent->GetRangeParent(getter_AddRefs(parent));
     nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
@@ -628,43 +626,54 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     return PR_FALSE;
   }
 
-  // XXX cache this between drag events?
-  nsresult rv;
-  nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
+  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
+  aEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
+  if (!dataTransfer)
+    return PR_FALSE;
 
-  // does the drag have flavors we can accept?
-  nsCOMPtr<nsIDragSession> dragSession;
-  if (dragService)
-    dragService->GetCurrentSession(getter_AddRefs(dragSession));
-  if (!dragSession) return PR_FALSE;
+  nsCOMPtr<nsIDOMDOMStringList> types;
+  dataTransfer->GetTypes(getter_AddRefs(types));
+  if (!types)
+    return PR_FALSE;
 
-  PRBool flavorSupported = PR_FALSE;
-  dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
-
-  if (!flavorSupported)
-    dragSession->IsDataFlavorSupported(kMozTextInternal, &flavorSupported);
-
-  // if we aren't plaintext editing, we can accept more flavors
-  if (!flavorSupported && !editor->IsPlaintextEditor())
-  {
-    dragSession->IsDataFlavorSupported(kHTMLMime, &flavorSupported);
-    if (!flavorSupported)
-      dragSession->IsDataFlavorSupported(kFileMime, &flavorSupported);
-#if 0
-    if (!flavorSupported)
-      dragSession->IsDataFlavorSupported(kJPEGImageMime, &flavorSupported);
-#endif
+  // Plaintext editors only support dropping text. Otherwise, HTML and files
+  // can be dropped as well.
+  PRBool typeSupported;
+  types->Contains(NS_LITERAL_STRING(kTextMime), &typeSupported);
+  if (!typeSupported) {
+    types->Contains(NS_LITERAL_STRING(kMozTextInternal), &typeSupported);
+    if (!typeSupported && !editor->IsPlaintextEditor()) {
+      types->Contains(NS_LITERAL_STRING(kHTMLMime), &typeSupported);
+      if (!typeSupported) {
+        types->Contains(NS_LITERAL_STRING(kFileMime), &typeSupported);
+      }
+    }
   }
 
-  if (!flavorSupported)
-    return PR_FALSE;     
+  if (!typeSupported)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNSDataTransfer> dataTransferNS(do_QueryInterface(dataTransfer));
+  if (!dataTransferNS)
+    return PR_FALSE;
+
+  // If there is no source node, this is probably an external drag and the
+  // drop is allowed. The later checks rely on checking if the drag target
+  // is the same as the drag source.
+  nsCOMPtr<nsIDOMNode> sourceNode;
+  dataTransferNS->GetMozSourceNode(getter_AddRefs(sourceNode));
+  if (!sourceNode)
+    return PR_TRUE;
+
+  // There is a source node, so compare the source documents and this document.
+  // Disallow drops on the same document.
 
   nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = mEditor->GetDocument(getter_AddRefs(domdoc));
+  nsresult rv = mEditor->GetDocument(getter_AddRefs(domdoc));
   if (NS_FAILED(rv)) return PR_FALSE;
 
   nsCOMPtr<nsIDOMDocument> sourceDoc;
-  rv = dragSession->GetSourceDocument(getter_AddRefs(sourceDoc));
+  rv = sourceNode->GetOwnerDocument(getter_AddRefs(sourceDoc));
   if (NS_FAILED(rv)) return PR_FALSE;
   if (domdoc == sourceDoc)      // source and dest are the same document; disallow drops within the selection
   {
