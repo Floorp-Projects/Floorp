@@ -79,7 +79,7 @@
             src="chrome://browser/content/places/treeView.js"/>
     <script type="application/javascript"><![CDATA[
       Components.utils.import("resource://gre/modules/utils.js");
-      Components.utils.import("resource://gre/modules/PlacesUIUtils.jsm");
+      Components.utils.import("resource:///modules/PlacesUIUtils.jsm");
     ]]></script>
 #endif
 
