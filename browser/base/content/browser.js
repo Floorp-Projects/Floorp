@@ -2697,48 +2697,9 @@ function FillInHTMLTooltip(tipElement)
 }
 
 var browserDragAndDrop = {
-  getDragURLFromDataTransfer : function (dt)
+  dragOver: function (aEvent, statusString)
   {
-    var types = dt.types;
-    for (var t = 0; t < types.length; t++) {
-      var type = types[t];
-      switch (type) {
-        case "text/uri-list":
-          var url = dt.getData("URL").replace(/^\s+|\s+$/g, "");
-          return [url, url];
-        case "text/plain":
-        case "text/x-moz-text-internal":
-          var url = dt.getData(type).replace(/^\s+|\s+$/g, "");
-          return [url, url];
-        case "text/x-moz-url":
-          var split = dt.getData(type).split("\n");
-          return [split[0], split[1]];
-      }
-    }
-
-    // For shortcuts, we want to check for the file type last, so that the
-    // url pointed to in one of the url types is found first before the file
-    // type, which points to the actual file.
-    var file = dt.mozGetDataAt("application/x-moz-file", 0);
-    if (file) {
-      var name = file instanceof Ci.nsIFile ? file.leafName : "";
-      var fileHandler = ContentAreaUtils.ioService
-                                        .getProtocolHandler("file")
-                                        .QueryInterface(Ci.nsIFileProtocolHandler);
-      return [fileHandler.getURLSpecFromFile(file), name];
-    }
-
-    return [ , ];
-  },
-
-  dragOver : function (aEvent, statusString)
-  {
-    var types = aEvent.dataTransfer.types;
-    if (types.contains("application/x-moz-file") ||
-        types.contains("text/x-moz-url") ||
-        types.contains("text/uri-list") ||
-        types.contains("text/x-moz-text-internal") ||
-        types.contains("text/plain")) {
+    if (Services.droppedLinkHandler.canDropLink(aEvent, true)) {
       aEvent.preventDefault();
 
       if (statusString) {
@@ -2746,9 +2707,10 @@ var browserDragAndDrop = {
         statusTextFld.label = gNavigatorBundle.getString(statusString);
       }
     }
-  }
-}
+  },
 
+  drop: function (aEvent, aName) Services.droppedLinkHandler.dropLink(aEvent, aName)
+}
 
 var proxyIconDNDObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
@@ -2771,8 +2733,7 @@ var proxyIconDNDObserver = {
 var homeButtonObserver = {
   onDrop: function (aEvent)
     {
-      let url = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer)[0];
-      setTimeout(openHomeDialog, 0, url);
+      setTimeout(openHomeDialog, 0, browserDragAndDrop.drop(aEvent, { }));
     },
 
   onDragOver: function (aEvent)
@@ -2813,7 +2774,8 @@ function openHomeDialog(aURL)
 var bookmarksButtonObserver = {
   onDrop: function (aEvent)
   {
-    let [url, name] = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer);
+    let name = { };
+    let url = browserDragAndDrop.drop(aEvent, name);
     try {
       PlacesUIUtils.showMinimalAddBookmarkUI(makeURI(url), name);
     } catch(ex) { }
@@ -2846,11 +2808,10 @@ var newTabButtonObserver = {
 
   onDrop: function (aEvent)
   {
-    let url = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer)[0];
+    let url = browserDragAndDrop.drop(aEvent, { });
     var postData = {};
     url = getShortcutOrURI(url, postData);
     if (url) {
-      nsDragAndDrop.dragDropSecurityCheck(aEvent, null, url);
       // allow third-party services to fixup this URL
       openNewTabWith(url, null, postData.value, aEvent, true);
     }
@@ -2869,11 +2830,10 @@ var newWindowButtonObserver = {
   },
   onDrop: function (aEvent)
   {
-    let url = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer)[0];
+    let url = browserDragAndDrop.drop(aEvent, { });
     var postData = {};
     url = getShortcutOrURI(url, postData);
     if (url) {
-      nsDragAndDrop.dragDropSecurityCheck(aEvent, null, url);
       // allow third-party services to fixup this URL
       openNewWindowWith(url, null, postData.value, true);
     }
@@ -2902,9 +2862,10 @@ var DownloadsButtonDNDObserver = {
 
   onDrop: function (aEvent)
   {
-    let [url, name] = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer);
-    nsDragAndDrop.dragDropSecurityCheck(aEvent, null, url);
-    saveURL(url, name, null, true, true);
+    let name = { };
+    let url = browserDragAndDrop.drop(aEvent, name);
+    if (url)
+      saveURL(url, name, null, true, true);
   }
 }
 
@@ -5067,56 +5028,16 @@ function middleMousePaste(event)
   event.stopPropagation();
 }
 
-/*
- * Note that most of this routine has been moved into C++ in order to
- * be available for all <browser> tags as well as gecko embedding. See
- * mozilla/content/base/src/nsContentAreaDragDrop.cpp.
- *
- * Do not add any new fuctionality here other than what is needed for
- * a standalone product.
- */
+function handleDroppedLink(event, url, name)
+{
+  let postData = { };
+  let uri = getShortcutOrURI(url, postData);
+  if (uri)
+    loadURI(uri, null, postData.value, false);
 
-var contentAreaDNDObserver = {
-  onDrop: function (aEvent)
-    {
-      if (aEvent.getPreventDefault())
-        return;
-
-      var types = aEvent.dataTransfer.types;
-      if (!types.contains("application/x-moz-file") &&
-          !types.contains("text/x-moz-url") &&
-          !types.contains("text/uri-list") &&
-          !types.contains("text/plain")) {
-        aEvent.preventDefault();
-        return;
-      }
-
-      let [url, name] = browserDragAndDrop.getDragURLFromDataTransfer(aEvent.dataTransfer);
-
-      // valid urls don't contain spaces ' '; if we have a space it
-      // isn't a valid url, or if it's a javascript: or data: url,
-      // bail out
-      if (!url || !url.length || url.indexOf(" ", 0) != -1 ||
-          /^\s*(javascript|data):/.test(url))
-        return;
-
-      nsDragAndDrop.dragDropSecurityCheck(aEvent, null, url);
-
-      switch (document.documentElement.getAttribute('windowtype')) {
-        case "navigator:browser":
-          var postData = { };
-          var uri = getShortcutOrURI(url, postData);
-          loadURI(uri, null, postData.value, false);
-          break;
-        case "navigator:view-source":
-          viewSource(url);
-          break;
-      }
-
-      // keep the event from being handled by the dragDrop listeners
-      // built-in to gecko if they happen to be above us.
-      aEvent.preventDefault();
-    }
+  // Keep the event from being handled by the dragDrop listeners
+  // built-in to gecko if they happen to be above us.
+  event.preventDefault();
 };
 
 function MultiplexHandler(event)

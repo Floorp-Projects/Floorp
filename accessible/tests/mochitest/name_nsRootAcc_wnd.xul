@@ -22,7 +22,9 @@
       gOpenerWnd.SimpleTest.is(aExpected, aActual, aMsg);
     }
 
-    // Hack to make xul:tabbrowser work.
+    // Hacks to make xul:tabbrowser work.
+    var handleDroppedLink = null; // needed for tabbrowser usage
+
     Components.utils.import("resource://gre/modules/Services.jsm");
     var XULBrowserWindow = {
       isBusy: false,

@@ -65,7 +65,7 @@
 #include "nsITooltipListener.h"
 #include "nsITooltipTextProvider.h"
 #include "nsCTooltipTextProvider.h"
-#include "nsIDragDropHandler.h"
+#include "nsIDroppedLinkHandler.h"
 #include "nsPIDOMEventTarget.h"
 #include "nsCommandHandler.h"
 
@@ -96,6 +96,7 @@ class nsDocShellTreeOwner : public nsIDocShellTreeOwner,
                             public nsIBaseWindow,
                             public nsIInterfaceRequestor,
                             public nsIWebProgressListener,
+                            public nsIDOMEventListener,
                             public nsICDocShellTreeOwner,
                             public nsSupportsWeakReference
 {
@@ -107,6 +108,7 @@ public:
 
     NS_DECL_NSIBASEWINDOW
     NS_DECL_NSIDOCSHELLTREEOWNER
+    NS_DECL_NSIDOMEVENTLISTENER
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIWEBPROGRESSLISTENER
 
@@ -161,7 +163,6 @@ protected:
     // and the DOM. These are strong, owning refs.
    ChromeTooltipListener*         mChromeTooltipListener;
    ChromeContextMenuListener*     mChromeContextMenuListener;
-   nsCOMPtr<nsIDragDropHandler>   mChromeDragHandler;
 
    nsCOMPtr<nsIPrompt>     mPrompter;
    nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
