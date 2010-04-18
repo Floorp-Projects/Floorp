@@ -111,6 +111,7 @@ txResultRecycler::recycle(txAExprResult* aResult)
         }
         case txAExprResult::NODESET:
         {
+            static_cast<txNodeSet*>(aResult)->clear();
             rv = mNodeSetResults.push(static_cast<txNodeSet*>(aResult));
             if (NS_FAILED(rv)) {
                 delete aResult;
@@ -185,7 +186,6 @@ txResultRecycler::getNodeSet(txNodeSet** aResult)
     }
     else {
         *aResult = static_cast<txNodeSet*>(mNodeSetResults.pop());
-        (*aResult)->clear();
         (*aResult)->mRecycler = this;
     }
     NS_ADDREF(*aResult);
@@ -202,7 +202,6 @@ txResultRecycler::getNodeSet(txNodeSet* aNodeSet, txNodeSet** aResult)
     }
     else {
         *aResult = static_cast<txNodeSet*>(mNodeSetResults.pop());
-        (*aResult)->clear();
         (*aResult)->append(*aNodeSet);
         (*aResult)->mRecycler = this;
     }
@@ -220,7 +219,6 @@ txResultRecycler::getNodeSet(const txXPathNode& aNode, txAExprResult** aResult)
     }
     else {
         txNodeSet* nodes = static_cast<txNodeSet*>(mNodeSetResults.pop());
-        nodes->clear();
         nodes->append(aNode);
         nodes->mRecycler = this;
         *aResult = nodes;
@@ -239,7 +237,6 @@ txResultRecycler::getNodeSet(const txXPathNode& aNode, txNodeSet** aResult)
     }
     else {
         *aResult = static_cast<txNodeSet*>(mNodeSetResults.pop());
-        (*aResult)->clear();
         (*aResult)->append(aNode);
         (*aResult)->mRecycler = this;
     }
