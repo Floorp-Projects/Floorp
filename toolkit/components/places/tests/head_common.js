@@ -477,6 +477,26 @@ function check_JSON_backup() {
 }
 
 
+/**
+ * Compares two times in usecs, considering eventual platform timers skews.
+ *
+ * @param aTimeBefore
+ *        The older time in usecs.
+ * @param aTimeAfter
+ *        The newer time in usecs.
+ * @return true if times are ordered, false otherwise.
+ */
+function is_time_ordered(before, after) {
+  // Windows has an estimated 16ms timers precision, since Date.now() and
+  // PR_Now() use different code atm, the results can be unordered by this
+  // amount of time.  See bug 558745 and bug 557406.
+  let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
+  // Just to be safe we consider 20ms.
+  let skew = isWindows ? 20000000 : 0;
+  return after - before > -skew;
+}
+
+
 // These tests are known to randomly fail due to bug 507790 when database
 // flushes are active, so we turn off syncing for them.
 let (randomFailingSyncTests = [
