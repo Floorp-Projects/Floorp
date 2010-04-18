@@ -59,7 +59,7 @@
     var Cr = Components.results;
 
     Components.utils.import("resource://gre/modules/utils.js");
-    Components.utils.import("resource://gre/modules/PlacesUIUtils.jsm");
+    Components.utils.import("resource:///modules/PlacesUIUtils.jsm");
   ]]></script>
   <script type="application/javascript"
           src="chrome://browser/content/places/controller.js"/>
