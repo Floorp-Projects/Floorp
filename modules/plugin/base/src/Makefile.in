@@ -57,6 +57,10 @@ EXPORTS_mozilla = \
   PluginPRLibrary.h \
   $(NULL)
 
+EXPORTS   = \
+    nsCoreAnimationSupport.h \
+    $(NULL)
+
 CPPSRCS		= \
 		nsNPAPIPlugin.cpp \
 		nsNPAPIPluginInstance.cpp \
@@ -83,6 +87,7 @@ else
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	CPPSRCS += nsPluginsDirDarwin.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
+	CMMSRCS += nsCoreAnimationSupport.mm
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	CPPSRCS += nsPluginsDirUnix.cpp
