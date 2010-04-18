@@ -15,11 +15,11 @@
 #
 # The Initial Developer of the Original Code is
 # mozilla.org.
-# Portions created by the Initial Developer are Copyright (C) 2005
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Vladimir Vukicevic <vladimir@pobox.com>
+#   Michael Ventnor <m.ventnor@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,100 +35,36 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# This library can link against both old-gfx and thebes,
+# and is not a component
 MODULE = gfx
-LIBRARY_NAME = gkgfxthebes
-SHORT_LIBNAME = gkgfxthb
+LIBRARY_NAME = gfxutils
 EXPORT_LIBRARY = 1
-IS_COMPONENT = 1
-MODULE_NAME = nsGfxModule
-GRE_MODULE = 1
 LIBXUL_LIBRARY = 1
 
 
-DIRS		= utils
-
 CPPSRCS		= \
-		nsThebesDeviceContext.cpp \
-		nsThebesRegion.cpp \
-		nsThebesGfxFactory.cpp \
-		nsThebesRenderingContext.cpp \
-		nsThebesFontMetrics.cpp \
-		nsThebesFontEnumerator.cpp \
+		gfxThebesUtils.cpp \
+		gfxBlur.cpp \
 		$(NULL)
-
 
 EXTRA_DSO_LIBS	= gkgfx thebes
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += nsSystemFontsQt.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-CPPSRCS		+= nsSystemFontsGTK2.cpp
-
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS		+= nsSystemFontsWin.cpp \
-		   $(NULL)
-
-ifndef WINCE
-_OS_LIBS	= usp10
-endif
-OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
-
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-CPPSRCS		+= nsSystemFontsOS2.cpp \
-		   $(NULL)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-CPPSRCS		+= nsSystemFontsBeOS.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS		= nsSystemFontsMac.mm
-endif
-
-EXPORTS         += nsIThebesFontMetrics.h
-
-LOCAL_INCLUDES	= \
-		-I$(srcdir)/. \
-		-I$(srcdir)/.. \
-		-I$(srcdir)/../shared \
+EXPORTS         += \
+		gfxThebesUtils.h \
+		gfxBlur.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \
-		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_JS_LIBS) \
-		$(TK_LIBS) \
 		$(NULL)
 
-ifdef MOZ_X11
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-CXXFLAGS  += $(TK_CFLAGS) $(MOZ_CAIRO_CFLAGS)
-
-ifdef MOZ_ENABLE_GTK2
-DEFINES += -DMOZ_ENABLE_GTK2
-CXXFLAGS += $(MOZ_PANGO_CFLAGS)
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-CXXFLAGS += $(CAIRO_FT_CFLAGS)
-endif

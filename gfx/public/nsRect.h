@@ -235,6 +235,20 @@ struct NS_GFX nsIntRect {
     height += aMargin.top + aMargin.bottom;
   }
 
+  // Deflate the rect by the specified width/height or margin
+  void Deflate(PRInt32 aDx, PRInt32 aDy) {
+    x += aDx;
+    y += aDy;
+    width -= aDx*2;
+    height -= aDy*2;
+  }
+  void Deflate(const nsIntMargin &aMargin) {
+    x += aMargin.left;
+    y += aMargin.top;
+    width -= (aMargin.left + aMargin.right);
+    height -= (aMargin.top + aMargin.bottom);
+  }
+
   // Overloaded operators. Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator.
   PRBool operator==(const nsIntRect& aRect) const {
