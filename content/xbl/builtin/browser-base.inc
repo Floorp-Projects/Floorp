@@ -1,19 +1,3 @@
-      <handler event="draggesture">
-<!--
-         nsDragAndDrop.startDrag(event, contentAreaDNDObserver);
--->
-      </handler>
-      <handler event="dragover">
-<!--
-         nsDragAndDrop.dragOver(event, contentAreaDNDObserver);
--->
-      </handler>
-      <handler event="dragdrop">
-<!--
-         nsDragAndDrop.drop(event, contentAreaDNDObserver);
--->
-      </handler>
-
       <handler event="keypress" key=" " modifiers="shift" command="cmd_scrollPageUp" />
       <handler event="keypress" key=" " command="cmd_scrollPageDown" />
 

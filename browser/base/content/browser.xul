@@ -665,7 +665,6 @@
                   tabcontainer="tabbrowser-tabs"
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
-                  ondrop="contentAreaDNDObserver.onDrop(event)"
                   onclick="return contentAreaClick(event, false);"/>
     </vbox>
   </hbox>
@@ -677,7 +676,7 @@
 #ifdef WINCE
                hidden="true"
 #endif
-               ondrop="contentAreaDNDObserver.onDrop(event)">
+               >
       <statusbarpanel id="statusbar-display" label="" flex="1"/>
       <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
         <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>

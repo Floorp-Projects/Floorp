@@ -33,6 +33,7 @@
 
     // Hack to make xul:tabbrowser work.
     Components.utils.import("resource://gre/modules/Services.jsm");
+    var handleDroppedLink = null;
     var XULBrowserWindow = {
       isBusy: false,
       setOverLink: function (link, b) {

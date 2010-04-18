@@ -535,10 +535,6 @@
 
       <field name="pageReport">null</field>
 
-      <field name="mDragDropHandler">
-        null
-      </field>
-
       <property name="securityUI">
         <getter>
           <![CDATA[
@@ -621,6 +617,10 @@
         false
       </field>
 
+      <field name="droppedLinkHandler">
+        null
+      </field>
+
       <field name="mIconURL">null</field>
 
       <!-- This is managed by the tabbrowser -->
@@ -645,12 +645,6 @@
           }
           catch (e) {
             Components.utils.reportError(e);
-          }
-          try {
-            this.mDragDropHandler = Components.classes["@mozilla.org:/content/content-area-dragdrop;1"].createInstance(Components.interfaces.nsIDragDropHandler);
-            this.mDragDropHandler.hookupTo(this, null);
-          }
-          catch (e) {
           }
           try {
             var securityUI = this.securityUI;
@@ -689,10 +683,6 @@
               // It's not clear why this sometimes throws an exception.
             }
           }
-
-          if (this.mDragDropHandler)
-            this.mDragDropHandler.detach();
-          this.mDragDropHandler = null;
 
           this.detachFormFill();
           
@@ -1143,6 +1133,43 @@
             this.startScroll(event);
           }
         ]]>
+      </handler>
+      <handler event="dragover" group="system">
+      <![CDATA[
+        if (event.getPreventDefault())
+          return;
+
+        let linkHandler = Components.classes["@mozilla.org/content/dropped-link-handler;1"].
+                            getService(Components.interfaces.nsIDroppedLinkHandler);
+        if (linkHandler.canDropLink(event, false))
+          event.preventDefault();
+      ]]>
+      </handler>
+      <handler event="drop" group="system">
+      <![CDATA[
+        if (event.getPreventDefault())
+          return;
+
+        let name = { };
+        let linkHandler = Components.classes["@mozilla.org/content/dropped-link-handler;1"].
+                            getService(Components.interfaces.nsIDroppedLinkHandler);
+        try {
+          var uri = linkHandler.dropLink(event, name);
+        } catch (ex) {
+          return;
+        }
+
+        // don't allow dropping javascript or data urls
+        if (/^\s*(javascript|data):/.test(uri))
+          return;
+
+        if (uri) {
+          if (this.droppedLinkHandler)
+            this.droppedLinkHandler(event, uri, name.value);
+          else
+            this.loadURI(uri, null, "");
+        }
+      ]]>
       </handler>
     </handlers>
 
