@@ -665,6 +665,14 @@ endif
 endif 
 
 #
+# GNU doesn't have path length limitation
+#
+
+ifeq ($(OS_ARCH),GNU)
+OS_CPPFLAGS += -DPATH_MAX=1024 -DMAXPATHLEN=1024
+endif
+
+#
 # MINGW32
 #
 ifeq ($(OS_ARCH),WINNT)
