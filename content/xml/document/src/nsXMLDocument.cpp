@@ -341,7 +341,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   nsCAutoString charset;
 
   if (callingDoc) {
-    baseURI = callingDoc->GetBaseURI();
+    baseURI = callingDoc->GetDocBaseURI();
     charset = callingDoc->GetDocumentCharacterSet();
   }
 

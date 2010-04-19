@@ -638,16 +638,6 @@ public:
   nsIContent *GetFlattenedTreeParent() const;
 
   /**
-   * Get the base URI for any relative URIs within this piece of
-   * content. Generally, this is the document's base URI, but certain
-   * content carries a local base for backward compatibility, and XML
-   * supports setting a per-node base URI.
-   *
-   * @return the base URI
-   */
-  virtual already_AddRefed<nsIURI> GetBaseURI() const = 0;
-
-  /**
    * API to check if this is a link that's traversed in response to user input
    * (e.g. a click event). Specializations for HTML/SVG/generic XML allow for
    * different types of link in different types of content.
