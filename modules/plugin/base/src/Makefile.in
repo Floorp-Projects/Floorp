@@ -88,6 +88,7 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	CPPSRCS += nsPluginsDirDarwin.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
 	CMMSRCS += nsCoreAnimationSupport.mm
+	OS_LIBS += -framework OpenGL
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	CPPSRCS += nsPluginsDirUnix.cpp
