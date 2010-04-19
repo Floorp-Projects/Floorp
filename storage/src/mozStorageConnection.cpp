@@ -860,11 +860,13 @@ Connection::BeginTransactionAs(PRInt32 aTransactionType)
 NS_IMETHODIMP
 Connection::CommitTransaction()
 {
-  if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
+  if (!mDBConn)
+    return NS_ERROR_NOT_INITIALIZED;
 
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
   if (!mTransactionInProgress)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UNEXPECTED;
+
   nsresult rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("COMMIT TRANSACTION"));
   if (NS_SUCCEEDED(rv))
     mTransactionInProgress = PR_FALSE;
@@ -874,11 +876,13 @@ Connection::CommitTransaction()
 NS_IMETHODIMP
 Connection::RollbackTransaction()
 {
-  if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
+  if (!mDBConn)
+    return NS_ERROR_NOT_INITIALIZED;
 
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
   if (!mTransactionInProgress)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_UNEXPECTED;
+
   nsresult rv = ExecuteSimpleSQL(NS_LITERAL_CSTRING("ROLLBACK TRANSACTION"));
   if (NS_SUCCEEDED(rv))
     mTransactionInProgress = PR_FALSE;

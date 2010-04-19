@@ -185,6 +185,69 @@
 #endif /* ! NS_DEBUG */
 
 /******************************************************************************
+** Macros for static assertions.  These are used by the sixgill tool.
+** When the tool is not running these macros are no-ops.
+******************************************************************************/
+
+#ifdef XGILL_PLUGIN
+
+#define STATIC_PRECONDITION(COND)         __attribute__((precondition(#COND)))
+#define STATIC_PRECONDITION_ASSUME(COND)  __attribute__((precondition_assume(#COND)))
+#define STATIC_POSTCONDITION(COND)        __attribute__((postcondition(#COND)))
+#define STATIC_POSTCONDITION_ASSUME(COND) __attribute__((postcondition_assume(#COND)))
+#define STATIC_INVARIANT(COND)            __attribute__((invariant(#COND)))
+#define STATIC_INVARIANT_ASSUME(COND)     __attribute__((invariant_assume(#COND)))
+
+/* Used to make identifiers for assert/assume annotations in a function. */
+#define STATIC_PASTE2(X,Y) X ## Y
+#define STATIC_PASTE1(X,Y) STATIC_PASTE2(X,Y)
+
+#define STATIC_ASSERT(COND)                          \
+  PR_BEGIN_MACRO                                     \
+    __attribute__((assert(#COND), unused))           \
+    int STATIC_PASTE1(static_assert_, __COUNTER__);  \
+  PR_END_MACRO
+
+#define STATIC_ASSUME(COND)                          \
+  PR_BEGIN_MACRO                                     \
+    __attribute__((assume(#COND), unused))           \
+    int STATIC_PASTE1(static_assume_, __COUNTER__);  \
+  PR_END_MACRO
+
+#define STATIC_ASSERT_RUNTIME(COND)                         \
+  PR_BEGIN_MACRO                                            \
+    __attribute__((assert_runtime(#COND), unused))          \
+    int STATIC_PASTE1(static_assert_runtime_, __COUNTER__); \
+  PR_END_MACRO
+
+/* Redefine runtime assertion macros to perform static assertions, for both
+ * debug and release builds. Don't include the original runtime assertions;
+ * this ensures the tool will consider cases where the assertion fails. */
+
+#undef NS_PRECONDITION
+#undef NS_ASSERTION
+#undef NS_POSTCONDITION
+
+#define NS_PRECONDITION(expr, str)   STATIC_ASSERT_RUNTIME(expr)
+#define NS_ASSERTION(expr, str)      STATIC_ASSERT_RUNTIME(expr)
+#define NS_POSTCONDITION(expr, str)  STATIC_ASSERT_RUNTIME(expr)
+
+#else /* XGILL_PLUGIN */
+
+#define STATIC_PRECONDITION(COND)          /* nothing */
+#define STATIC_PRECONDITION_ASSUME(COND)   /* nothing */
+#define STATIC_POSTCONDITION(COND)         /* nothing */
+#define STATIC_POSTCONDITION_ASSUME(COND)  /* nothing */
+#define STATIC_INVARIANT(COND)             /* nothing */
+#define STATIC_INVARIANT_ASSUME(COND)      /* nothing */
+
+#define STATIC_ASSERT(COND)          PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define STATIC_ASSUME(COND)          PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+#define STATIC_ASSERT_RUNTIME(COND)  PR_BEGIN_MACRO /* nothing */ PR_END_MACRO
+
+#endif /* XGILL_PLUGIN */
+
+/******************************************************************************
 ** Macros for terminating execution when an unrecoverable condition is
 ** reached.  These need to be compiled regardless of the NS_DEBUG flag. 
 ******************************************************************************/

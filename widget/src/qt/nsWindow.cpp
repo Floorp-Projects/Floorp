@@ -72,6 +72,7 @@
 
 #include "nsToolkit.h"
 #include "nsIDeviceContext.h"
+#include "nsIdleService.h"
 #include "nsIRenderingContext.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
@@ -1248,6 +1249,9 @@ nsWindow::InitButtonEvent(nsMouseEvent &aMoveEvent,
 nsEventStatus
 nsWindow::OnButtonPressEvent(QGraphicsSceneMouseEvent *aEvent)
 {
+    // The user has done something.
+    UserActivity();
+
     QPointF pos = aEvent->pos();
 
     // we check against the widgets geometry, so use parent coordinates
@@ -1295,6 +1299,9 @@ nsWindow::OnButtonPressEvent(QGraphicsSceneMouseEvent *aEvent)
 nsEventStatus
 nsWindow::OnButtonReleaseEvent(QGraphicsSceneMouseEvent *aEvent)
 {
+    // The user has done something.
+    UserActivity();
+
     PRUint16 domButton;
 
     switch (aEvent->button()) {
@@ -1392,6 +1399,9 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
 {
     LOGFOCUS(("OnKeyPressEvent [%p]\n", (void *)this));
 
+    // The user has done something.
+    UserActivity();
+
     PRBool setNoDefault = PR_FALSE;
 
     // before we dispatch a key, check if it's the context menu key.
@@ -1446,6 +1456,9 @@ nsEventStatus
 nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
 {
     LOGFOCUS(("OnKeyReleaseEvent [%p]\n", (void *)this));
+
+    // The user has done something.
+    UserActivity();
 
     if (isContextMenuKeyEvent(aEvent)) {
         // er, what do we do here? DoDefault or NoDefault?
@@ -2488,5 +2501,17 @@ nsWindow::GetIMEEnabled(PRUint32* aState)
 
     *aState = mWidget->isVKBOpen() ? IME_STATUS_ENABLED : IME_STATUS_DISABLED;
     return NS_OK;
+}
+
+void
+nsWindow::UserActivity()
+{
+  if (!mIdleService) {
+    mIdleService = do_GetService("@mozilla.org/widget/idleservice;1");
+  }
+
+  if (mIdleService) {
+    mIdleService->ResetIdleTimeOut();
+  }
 }
 

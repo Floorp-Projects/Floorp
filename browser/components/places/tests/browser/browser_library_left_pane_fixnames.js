@@ -81,32 +81,32 @@ function test() {
   // Sanity checks.
   ok(PlacesUtils, "PlacesUtils is running in chrome context");
   ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
-  ok(ORGANIZER_LEFTPANE_VERSION > 0,
-     "Left pane version in chrome context, current version is: " + ORGANIZER_LEFTPANE_VERSION );
+  ok(PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION > 0,
+     "Left pane version in chrome context, current version is: " + PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION );
 
   // Ensure left pane is initialized.
   ok(PlacesUIUtils.leftPaneFolderId > 0, "left pane folder is initialized");
 
   // Get the left pane folder.
   var leftPaneItems = PlacesUtils.annotations
-                                 .getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
+                                 .getItemsWithAnnotation(PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
 
   is(leftPaneItems.length, 1, "We correctly have only 1 left pane folder");
   // Check version.
   var version = PlacesUtils.annotations
                            .getItemAnnotation(leftPaneItems[0],
-                                              ORGANIZER_FOLDER_ANNO);
-  is(version, ORGANIZER_LEFTPANE_VERSION, "Left pane version is actual");
+                                              PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
+  is(version, PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION, "Left pane version is actual");
 
   // Get all left pane queries.
   var items = PlacesUtils.annotations
-                         .getItemsWithAnnotation(ORGANIZER_QUERY_ANNO);
+                         .getItemsWithAnnotation(PlacesUIUtils.ORGANIZER_QUERY_ANNO);
   // Get current queries names.
   for (var i = 0; i < items.length; i++) {
     var itemId = items[i];
     var queryName = PlacesUtils.annotations
                                .getItemAnnotation(items[i],
-                                                  ORGANIZER_QUERY_ANNO);
+                                                  PlacesUIUtils.ORGANIZER_QUERY_ANNO);
     var query = { name: queryName,
                   itemId: itemId,
                   correctTitle: PlacesUtils.bookmarks.getItemTitle(itemId) }
@@ -130,6 +130,8 @@ function test() {
     if ("concreteId" in query)
       PlacesUtils.bookmarks.setItemTitle(query.concreteId, "badName");
   }
+
+  PlacesUIUtils.__defineGetter__("leftPaneFolderId", cachedLeftPaneFolderIdGetter);
 
   // Open Library, this will kick-off left pane code.
   ww.registerNotification(windowObserver);
