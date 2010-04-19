@@ -972,10 +972,10 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aCo
   , mDidPreDestroy(PR_FALSE)
   , mFireChangeEventState(PR_FALSE)
   , mInSecureKeyboardInputMode(PR_FALSE)
-  , mTextListener(nsnull)
 #ifdef DEBUG
   , mInEditorInitialization(PR_FALSE)
 #endif
+  , mTextListener(nsnull)
 {
 }
 
