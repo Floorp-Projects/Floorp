@@ -3735,13 +3735,6 @@ SetupErrorHandling(const char* progname)
 
   SetErrorMode(realMode);
 
-#ifdef DEBUG
-  // Disable small heap allocator to get heapwalk() giving us
-  // accurate heap numbers. Win2k non-debug does not use small heap allocator.
-  // Win2k debug seems to be still using it.
-  // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt__set_sbh_threshold.asp
-  _set_sbh_threshold(0);
-#endif
 #endif
 
 #ifndef XP_OS2
