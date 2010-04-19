@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsHTMLEditorEventListener.h"
+#include "nsHTMLEditor.h"
 #include "nsString.h"
 
 #include "nsIDOMEvent.h"
@@ -53,13 +54,10 @@
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIContent.h"
 
-#include "nsIEditor.h"
-#include "nsIHTMLEditor.h"
 #include "nsIHTMLObjectResizer.h"
 #include "nsEditProperty.h"
 #include "nsTextEditUtils.h"
 #include "nsHTMLEditUtils.h"
-#include "nsIHTMLInlineTableEditor.h"
 
 /*
  * nsHTMLEditorEventListener implementation
@@ -68,31 +66,50 @@
  *  moves the caret or selects an element as it does for normal click
  */
 
+#ifdef DEBUG
+nsresult
+nsHTMLEditorEventListener::Connect(nsEditor* aEditor)
+{
+  nsCOMPtr<nsIHTMLEditor> htmlEditor =
+    do_QueryInterface(static_cast<nsIEditor*>(aEditor));
+  nsCOMPtr<nsIHTMLInlineTableEditor> htmlInlineTableEditor =
+    do_QueryInterface(static_cast<nsIEditor*>(aEditor));
+  NS_PRECONDITION(htmlEditor && htmlInlineTableEditor,
+                  "Set nsHTMLEditor or its sub class");
+  return nsEditorEventListener::Connect(aEditor);
+}
+#endif
+
+nsHTMLEditor*
+nsHTMLEditorEventListener::GetHTMLEditor()
+{
+  // mEditor must be nsHTMLEditor or its subclass.
+  return static_cast<nsHTMLEditor*>(mEditor);
+}
+
 NS_IMETHODIMP
 nsHTMLEditorEventListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
+
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
 
-  // Don't do anything special if not an HTML editor
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-  {
-    nsCOMPtr<nsIDOMEventTarget> target;
-    nsresult res = aMouseEvent->GetTarget(getter_AddRefs(target));
-    if (NS_FAILED(res)) return res;
-    if (!target) return NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
+  nsHTMLEditor* htmlEditor = GetHTMLEditor();
 
-    nsCOMPtr<nsIHTMLObjectResizer> objectResizer = do_QueryInterface(htmlEditor);
-    PRInt32 clientX, clientY;
-    mouseEvent->GetClientX(&clientX);
-    mouseEvent->GetClientY(&clientY);
-    objectResizer->MouseUp(clientX, clientY, element);
-  }
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsresult res = aMouseEvent->GetTarget(getter_AddRefs(target));
+  if (NS_FAILED(res)) return res;
+  if (!target) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
+
+  PRInt32 clientX, clientY;
+  mouseEvent->GetClientX(&clientX);
+  mouseEvent->GetClientY(&clientY);
+  htmlEditor->MouseUp(clientX, clientY, element);
 
   return nsEditorEventListener::MouseUp(aMouseEvent);
 }
@@ -100,174 +117,171 @@ nsHTMLEditorEventListener::MouseUp(nsIDOMEvent* aMouseEvent)
 NS_IMETHODIMP
 nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
 {
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
+
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
 
-  // Don't do anything special if not an HTML editor
-  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
-  if (htmlEditor)
-  {
-    // Detect only "context menu" click
-    //XXX This should be easier to do!
-    // But eDOMEvents_contextmenu and NS_CONTEXTMENU is not exposed in any event interface :-(
-    PRUint16 buttonNumber;
-    nsresult res = mouseEvent->GetButton(&buttonNumber);
-    if (NS_FAILED(res)) return res;
+  nsHTMLEditor* htmlEditor = GetHTMLEditor();
 
-    PRBool isContextClick;
+  // Detect only "context menu" click
+  //XXX This should be easier to do!
+  // But eDOMEvents_contextmenu and NS_CONTEXTMENU is not exposed in any event interface :-(
+  PRUint16 buttonNumber;
+  nsresult res = mouseEvent->GetButton(&buttonNumber);
+  if (NS_FAILED(res)) return res;
+
+  PRBool isContextClick;
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
-    // Ctrl+Click for context menu
-    res = mouseEvent->GetCtrlKey(&isContextClick);
-    if (NS_FAILED(res)) return res;
+  // Ctrl+Click for context menu
+  res = mouseEvent->GetCtrlKey(&isContextClick);
+  if (NS_FAILED(res)) return res;
 #else
-    // Right mouse button for Windows, UNIX
-    isContextClick = buttonNumber == 2;
+  // Right mouse button for Windows, UNIX
+  isContextClick = buttonNumber == 2;
 #endif
-    
-    PRInt32 clickCount;
-    res = mouseEvent->GetDetail(&clickCount);
+  
+  PRInt32 clickCount;
+  res = mouseEvent->GetDetail(&clickCount);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsCOMPtr<nsIDOMNSEvent> internalEvent = do_QueryInterface(aMouseEvent);
+  res = internalEvent->GetExplicitOriginalTarget(getter_AddRefs(target));
+  if (NS_FAILED(res)) return res;
+  if (!target) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
+
+  if (isContextClick || (buttonNumber == 0 && clickCount == 2))
+  {
+    nsCOMPtr<nsISelection> selection;
+    mEditor->GetSelection(getter_AddRefs(selection));
+    if (!selection) return NS_OK;
+
+    // Get location of mouse within target node
+    nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aMouseEvent);
+    if (!uiEvent) return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDOMNode> parent;
+    PRInt32 offset = 0;
+
+    res = uiEvent->GetRangeParent(getter_AddRefs(parent));
+    if (NS_FAILED(res)) return res;
+    if (!parent) return NS_ERROR_FAILURE;
+
+    res = uiEvent->GetRangeOffset(&offset);
     if (NS_FAILED(res)) return res;
 
-    nsCOMPtr<nsIDOMEventTarget> target;
-    nsCOMPtr<nsIDOMNSEvent> internalEvent = do_QueryInterface(aMouseEvent);
-    res = internalEvent->GetExplicitOriginalTarget(getter_AddRefs(target));
-    if (NS_FAILED(res)) return res;
-    if (!target) return NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
-
-    if (isContextClick || (buttonNumber == 0 && clickCount == 2))
+    // Detect if mouse point is within current selection for context click
+    PRBool nodeIsInSelection = PR_FALSE;
+    if (isContextClick)
     {
-      nsCOMPtr<nsISelection> selection;
-      mEditor->GetSelection(getter_AddRefs(selection));
-      if (!selection) return NS_OK;
-
-      // Get location of mouse within target node
-      nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aMouseEvent);
-      if (!uiEvent) return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsIDOMNode> parent;
-      PRInt32 offset = 0;
-
-      res = uiEvent->GetRangeParent(getter_AddRefs(parent));
-      if (NS_FAILED(res)) return res;
-      if (!parent) return NS_ERROR_FAILURE;
-
-      res = uiEvent->GetRangeOffset(&offset);
-      if (NS_FAILED(res)) return res;
-
-      // Detect if mouse point is within current selection for context click
-      PRBool nodeIsInSelection = PR_FALSE;
-      if (isContextClick)
+      PRBool isCollapsed;
+      selection->GetIsCollapsed(&isCollapsed);
+      if (!isCollapsed)
       {
-        PRBool isCollapsed;
-        selection->GetIsCollapsed(&isCollapsed);
-        if (!isCollapsed)
+        PRInt32 rangeCount;
+        res = selection->GetRangeCount(&rangeCount);
+        if (NS_FAILED(res)) return res;
+
+        for (PRInt32 i = 0; i < rangeCount; i++)
         {
-          PRInt32 rangeCount;
-          res = selection->GetRangeCount(&rangeCount);
-          if (NS_FAILED(res)) return res;
+          nsCOMPtr<nsIDOMRange> range;
 
-          for (PRInt32 i = 0; i < rangeCount; i++)
-          {
-            nsCOMPtr<nsIDOMRange> range;
+          res = selection->GetRangeAt(i, getter_AddRefs(range));
+          if (NS_FAILED(res) || !range) 
+            continue;//don't bail yet, iterate through them all
 
-            res = selection->GetRangeAt(i, getter_AddRefs(range));
-            if (NS_FAILED(res) || !range) 
-              continue;//don't bail yet, iterate through them all
+          nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
+          if (NS_FAILED(res) || !nsrange) 
+            continue;//don't bail yet, iterate through them all
 
-            nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
-            if (NS_FAILED(res) || !nsrange) 
-              continue;//don't bail yet, iterate through them all
+          res = nsrange->IsPointInRange(parent, offset, &nodeIsInSelection);
 
-            res = nsrange->IsPointInRange(parent, offset, &nodeIsInSelection);
-
-            // Done when we find a range that we are in
-            if (nodeIsInSelection)
-              break;
-          }
+          // Done when we find a range that we are in
+          if (nodeIsInSelection)
+            break;
         }
       }
-      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
-      if (node && !nodeIsInSelection)
+    }
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
+    if (node && !nodeIsInSelection)
+    {
+      if (!element)
       {
-        if (!element)
+        if (isContextClick)
         {
-          if (isContextClick)
+          // Set the selection to the point under the mouse cursor:
+          selection->Collapse(parent, offset);
+        }
+        else
+        {
+          // Get enclosing link if in text so we can select the link
+          nsCOMPtr<nsIDOMElement> linkElement;
+          res = htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), node, getter_AddRefs(linkElement));
+          if (NS_FAILED(res)) return res;
+          if (linkElement)
+            element = linkElement;
+        }
+      }
+      // Select entire element clicked on if NOT within an existing selection
+      //   and not the entire body, or table-related elements
+      if (element)
+      {
+        nsCOMPtr<nsIDOMNode> selectAllNode =
+          htmlEditor->FindUserSelectAllNode(element);
+
+        if (selectAllNode)
+        {
+          nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(selectAllNode);
+          if (newElement)
           {
-            // Set the selection to the point under the mouse cursor:
-            selection->Collapse(parent, offset);
-          }
-          else
-          {
-            // Get enclosing link if in text so we can select the link
-            nsCOMPtr<nsIDOMElement> linkElement;
-            res = htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), node, getter_AddRefs(linkElement));
-            if (NS_FAILED(res)) return res;
-            if (linkElement)
-              element = linkElement;
+            node = selectAllNode;
+            element = newElement;
           }
         }
-        // Select entire element clicked on if NOT within an existing selection
-        //   and not the entire body, or table-related elements
-        if (element)
-        {
-          // mEditor must be nsHTMLEditor, see the constructor.
-          nsCOMPtr<nsIDOMNode> selectAllNode =
-            reinterpret_cast<nsHTMLEditor*>(mEditor)->FindUserSelectAllNode(element);
-
-          if (selectAllNode)
-          {
-            nsCOMPtr<nsIDOMElement> newElement = do_QueryInterface(selectAllNode);
-            if (newElement)
-            {
-              node = selectAllNode;
-              element = newElement;
-            }
-          }
 
 // XXX: should we call nsHTMLEditUtils::IsTableElement here?
 // that also checks for thead, tbody, tfoot
-          if (nsTextEditUtils::IsBody(node) ||
-              nsHTMLEditUtils::IsTableCellOrCaption(node) ||
-              nsHTMLEditUtils::IsTableRow(node) ||
-              nsHTMLEditUtils::IsTable(node))
-          {
-            // This will place caret just inside table cell or at start of body
-            selection->Collapse(parent, offset);
-          }
-          else
-          {
-            htmlEditor->SelectElement(element);
-          }
+        if (nsTextEditUtils::IsBody(node) ||
+            nsHTMLEditUtils::IsTableCellOrCaption(node) ||
+            nsHTMLEditUtils::IsTableRow(node) ||
+            nsHTMLEditUtils::IsTable(node))
+        {
+          // This will place caret just inside table cell or at start of body
+          selection->Collapse(parent, offset);
+        }
+        else
+        {
+          htmlEditor->SelectElement(element);
         }
       }
-      // HACK !!! Context click places the caret but the context menu consumes
-      // the event; so we need to check resizing state ourselves
-      htmlEditor->CheckSelectionStateForAnonymousButtons(selection);
+    }
+    // HACK !!! Context click places the caret but the context menu consumes
+    // the event; so we need to check resizing state ourselves
+    htmlEditor->CheckSelectionStateForAnonymousButtons(selection);
 
-      // Prevent bubbling if we changed selection or 
-      //   for all context clicks
-      if (element || isContextClick)
-      {
-      #ifndef XP_OS2
-        mouseEvent->PreventDefault();
-      #endif
-        return NS_OK;
-      }
-    }
-    else if (!isContextClick && buttonNumber == 0 && clickCount == 1)
+    // Prevent bubbling if we changed selection or 
+    //   for all context clicks
+    if (element || isContextClick)
     {
-      // if the target element is an image, we have to display resizers
-      nsCOMPtr<nsIHTMLObjectResizer> objectResizer = do_QueryInterface(htmlEditor);
-      PRInt32 clientX, clientY;
-      mouseEvent->GetClientX(&clientX);
-      mouseEvent->GetClientY(&clientY);
-      objectResizer->MouseDown(clientX, clientY, element, aMouseEvent);
+    #ifndef XP_OS2
+      mouseEvent->PreventDefault();
+    #endif
+      return NS_OK;
     }
+  }
+  else if (!isContextClick && buttonNumber == 0 && clickCount == 1)
+  {
+    // if the target element is an image, we have to display resizers
+    PRInt32 clientX, clientY;
+    mouseEvent->GetClientX(&clientX);
+    mouseEvent->GetClientY(&clientY);
+    htmlEditor->MouseDown(clientX, clientY, element, aMouseEvent);
   }
 
   return nsEditorEventListener::MouseDown(aMouseEvent);
@@ -276,24 +290,21 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
 NS_IMETHODIMP
 nsHTMLEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
 {
+  NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
+
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aMouseEvent) );
   if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
 
-  // Don't do anything special if not an HTML inline table editor
-  nsCOMPtr<nsIHTMLInlineTableEditor> inlineTableEditing = do_QueryInterface(mEditor);
-  if (inlineTableEditing)
-  {
-    nsCOMPtr<nsIDOMEventTarget> target;
-    nsresult res = aMouseEvent->GetTarget(getter_AddRefs(target));
-    if (NS_FAILED(res)) return res;
-    if (!target) return NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsresult res = aMouseEvent->GetTarget(getter_AddRefs(target));
+  if (NS_FAILED(res)) return res;
+  if (!target) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
-    inlineTableEditing->DoInlineTableEditingAction(element);
-  }
+  GetHTMLEditor()->DoInlineTableEditingAction(element);
 
   return nsEditorEventListener::MouseClick(aMouseEvent);
 }
