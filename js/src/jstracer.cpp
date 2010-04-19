@@ -2805,6 +2805,7 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
         break;
 
       case TT_SPECIAL:
+        JS_ASSERT(*(JSBool*)slot != JSVAL_TO_SPECIAL(JSVAL_VOID));
         v = SPECIAL_TO_JSVAL(*(JSBool*)slot);
         debug_only_printf(LC_TMTracer, "special<%d> ", *(JSBool*)slot);
         break;
@@ -13092,18 +13093,14 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     v_ins = unbox_jsval(*vp, lir->insLoad(LIR_ldp, addr_ins, 0, ACC_OTHER), exit);
 
     if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp)) {
-        /*
-         * If we read a hole from the array, convert it to undefined and guard
-         * that there are no indexed properties along the prototype chain.
-         */
-        LIns* br = lir->insBranch(LIR_jf,
-                                  lir->ins2i(LIR_eq, v_ins, JSVAL_TO_SPECIAL(JSVAL_HOLE)),
-                                  NULL);
-        CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
-        br->setTarget(lir->ins0(LIR_label));
+        JS_ASSERT_IF(!JSVAL_IS_BOOLEAN(*vp), *vp == JSVAL_HOLE);
+        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_peq, v_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))), exit);
 
         /* Don't let the hole value escape. Turn it into an undefined. */
-        v_ins = lir->ins2i(LIR_and, v_ins, ~(JSVAL_HOLE_FLAG >> JSVAL_TAGBITS));
+        if (*vp == JSVAL_HOLE) {
+            CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
+            v_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        }
     }
     return RECORD_CONTINUE;
 }
