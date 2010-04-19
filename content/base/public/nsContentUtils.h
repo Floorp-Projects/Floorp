@@ -1594,6 +1594,15 @@ public:
   {
     sIsHandlingKeyBoardEvent = aHandling;
   }
+
+  /**
+   * Utility method for getElementsByClassName.  aRootNode is the node (either
+   * document or element), which getElementsByClassName was called on.
+   */
+  static nsresult GetElementsByClassName(nsINode* aRootNode,
+                                         const nsAString& aClasses,
+                                         nsIDOMNodeList** aReturn);
+
 private:
 
   static PRBool InitializeEventTable();
