@@ -195,6 +195,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "jstypedarray.h"
 #include "xpcprivate.h"
 #include "nsScriptSecurityManager.h"
+#include "nsDocument.h"
 
 using namespace mozilla::dom;
 
@@ -1574,118 +1575,6 @@ nsContentUtils::GetCommonAncestor(nsINode* aNode1,
   return parent;
 }
 
-PRUint16
-nsContentUtils::ComparePosition(nsINode* aNode1,
-                                nsINode* aNode2)
-{
-  NS_PRECONDITION(aNode1 && aNode2, "don't pass null");
-
-  if (aNode1 == aNode2) {
-    return 0;
-  }
-
-  nsAutoTPtrArray<nsINode, 32> parents1, parents2;
-
-  // Check if either node is an attribute
-  nsIAttribute* attr1 = nsnull;
-  if (aNode1->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    attr1 = static_cast<nsIAttribute*>(aNode1);
-    nsIContent* elem = attr1->GetContent();
-    // If there is an owner element add the attribute
-    // to the chain and walk up to the element
-    if (elem) {
-      aNode1 = elem;
-      parents1.AppendElement(static_cast<nsINode*>(attr1));
-    }
-  }
-  if (aNode2->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    nsIAttribute* attr2 = static_cast<nsIAttribute*>(aNode2);
-    nsIContent* elem = attr2->GetContent();
-    if (elem == aNode1 && attr1) {
-      // Both nodes are attributes on the same element.
-      // Compare position between the attributes.
-
-      PRUint32 i;
-      const nsAttrName* attrName;
-      for (i = 0; (attrName = elem->GetAttrNameAt(i)); ++i) {
-        if (attrName->Equals(attr1->NodeInfo())) {
-          NS_ASSERTION(!attrName->Equals(attr2->NodeInfo()),
-                       "Different attrs at same position");
-          return nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
-            nsIDOM3Node::DOCUMENT_POSITION_PRECEDING;
-        }
-        if (attrName->Equals(attr2->NodeInfo())) {
-          return nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC |
-            nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING;
-        }
-      }
-      NS_NOTREACHED("neither attribute in the element");
-      return nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED;
-    }
-
-    if (elem) {
-      aNode2 = elem;
-      parents2.AppendElement(static_cast<nsINode*>(attr2));
-    }
-  }
-
-  // We now know that both nodes are either nsIContents or nsIDocuments.
-  // If either node started out as an attribute, that attribute will have
-  // the same relative position as its ownerElement, except if the
-  // ownerElement ends up being the container for the other node
-
-  // Build the chain of parents
-  do {
-    parents1.AppendElement(aNode1);
-    aNode1 = aNode1->GetNodeParent();
-  } while (aNode1);
-  do {
-    parents2.AppendElement(aNode2);
-    aNode2 = aNode2->GetNodeParent();
-  } while (aNode2);
-
-  // Check if the nodes are disconnected.
-  PRUint32 pos1 = parents1.Length();
-  PRUint32 pos2 = parents2.Length();
-  nsINode* top1 = parents1.ElementAt(--pos1);
-  nsINode* top2 = parents2.ElementAt(--pos2);
-  if (top1 != top2) {
-    return top1 < top2 ?
-      (nsIDOM3Node::DOCUMENT_POSITION_PRECEDING |
-       nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
-       nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC) :
-      (nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING |
-       nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
-       nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
-  }
-
-  // Find where the parent chain differs and check indices in the parent.
-  nsINode* parent = top1;
-  PRUint32 len;
-  for (len = NS_MIN(pos1, pos2); len > 0; --len) {
-    nsINode* child1 = parents1.ElementAt(--pos1);
-    nsINode* child2 = parents2.ElementAt(--pos2);
-    if (child1 != child2) {
-      // child1 or child2 can be an attribute here. This will work fine since
-      // IndexOf will return -1 for the attribute making the attribute be
-      // considered before any child.
-      return parent->IndexOf(child1) < parent->IndexOf(child2) ?
-        static_cast<PRUint16>(nsIDOM3Node::DOCUMENT_POSITION_PRECEDING) :
-        static_cast<PRUint16>(nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
-    }
-    parent = child1;
-  }
-
-  // We hit the end of one of the parent chains without finding a difference
-  // between the chains. That must mean that one node is an ancestor of the
-  // other. The one with the shortest chain must be the ancestor.
-  return pos1 < pos2 ?
-    (nsIDOM3Node::DOCUMENT_POSITION_PRECEDING |
-     nsIDOM3Node::DOCUMENT_POSITION_CONTAINS) :
-    (nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING |
-     nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY);    
-}
-
 /* static */
 PRInt32
 nsContentUtils::ComparePoints(nsINode* aParent1, PRInt32 aOffset1,
@@ -2218,42 +2107,6 @@ nsContentUtils::SplitQName(nsIContent* aNamespaceResolver,
   }
   NS_ENSURE_TRUE(aLocalName, NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
-}
-
-// static
-nsresult
-nsContentUtils::LookupNamespaceURI(nsIContent* aNamespaceResolver,
-                                   const nsAString& aNamespacePrefix,
-                                   nsAString& aNamespaceURI)
-{
-  if (aNamespacePrefix.EqualsLiteral("xml")) {
-    // Special-case for xml prefix
-    aNamespaceURI.AssignLiteral("http://www.w3.org/XML/1998/namespace");
-    return NS_OK;
-  }
-
-  if (aNamespacePrefix.EqualsLiteral("xmlns")) {
-    // Special-case for xmlns prefix
-    aNamespaceURI.AssignLiteral("http://www.w3.org/2000/xmlns/");
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIAtom> name;
-  if (!aNamespacePrefix.IsEmpty()) {
-    name = do_GetAtom(aNamespacePrefix);
-    NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
-  }
-  else {
-    name = nsGkAtoms::xmlns;
-  }
-  // Trace up the content parent chain looking for the namespace
-  // declaration that declares aNamespacePrefix.
-  for (nsIContent* content = aNamespaceResolver; content;
-       content = content->GetParent()) {
-    if (content->GetAttr(kNameSpaceID_XMLNS, name, aNamespaceURI))
-      return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
 }
 
 // static
@@ -5906,6 +5759,93 @@ nsContentUtils::ReparentClonedObjectToScope(JSContext* cx,
       objectData.AppendElement(ReparentObjectData(cx, JSVAL_TO_OBJECT(prop)));
     }
   }
+
+  return NS_OK;
+}
+
+struct ClassMatchingInfo {
+  nsCOMArray<nsIAtom> mClasses;
+  nsCaseTreatment mCaseTreatment;
+};
+
+// static
+PRBool
+nsDocument::MatchClassNames(nsIContent* aContent,
+                            PRInt32 aNamespaceID,
+                            nsIAtom* aAtom, void* aData)
+{
+  // We can't match if there are no class names
+  const nsAttrValue* classAttr = aContent->GetClasses();
+  if (!classAttr) {
+    return PR_FALSE;
+  }
+  
+  // need to match *all* of the classes
+  ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
+  PRInt32 length = info->mClasses.Count();
+  PRInt32 i;
+  for (i = 0; i < length; ++i) {
+    if (!classAttr->Contains(info->mClasses.ObjectAt(i),
+                             info->mCaseTreatment)) {
+      return PR_FALSE;
+    }
+  }
+  
+  return PR_TRUE;
+}
+
+// static
+void
+nsDocument::DestroyClassNameArray(void* aData)
+{
+  ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
+  delete info;
+}
+
+// static GetElementsByClassName helpers
+nsresult
+nsDocument::GetElementsByClassNameHelper(nsINode* aRootNode,
+                                         const nsAString& aClasses,
+                                         nsIDOMNodeList** aReturn)
+{
+  NS_PRECONDITION(aRootNode, "Must have root node");
+  
+  nsAttrValue attrValue;
+  attrValue.ParseAtomArray(aClasses);
+  // nsAttrValue::Equals is sensitive to order, so we'll send an array
+  ClassMatchingInfo* info = new ClassMatchingInfo;
+  NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+
+  if (attrValue.Type() == nsAttrValue::eAtomArray) {
+    info->mClasses.AppendObjects(*(attrValue.GetAtomArrayValue()));
+  } else if (attrValue.Type() == nsAttrValue::eAtom) {
+    info->mClasses.AppendObject(attrValue.GetAtomValue());
+  }
+
+  nsBaseContentList* elements;
+  if (info->mClasses.Count() > 0) {
+    info->mCaseTreatment =
+      aRootNode->GetOwnerDoc()->GetCompatibilityMode() ==
+        eCompatibility_NavQuirks ?
+          eIgnoreCase : eCaseMatters;
+
+    elements =
+      NS_GetFuncStringContentList(aRootNode, MatchClassNames,
+                                  DestroyClassNameArray, info,
+                                  aClasses).get();
+  } else {
+    delete info;
+    info = nsnull;
+    elements = new nsBaseContentList();
+    NS_IF_ADDREF(elements);
+  }
+  if (!elements) {
+    delete info;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Transfer ownership
+  *aReturn = elements;
 
   return NS_OK;
 }
