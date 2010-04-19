@@ -95,13 +95,7 @@
 #include "nsGkAtoms.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
-
-// Put these here so all document impls get them automatically
-#include "nsHTMLStyleSheet.h"
-#include "nsHTMLCSSStyleSheet.h"
-
 #include "nsStyleSet.h"
-#include "nsXMLEventsManager.h"
 #include "pldhash.h"
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
@@ -135,6 +129,9 @@ struct nsRadioGroupStruct;
 class nsOnloadBlocker;
 class nsUnblockOnloadEvent;
 class nsChildContentList;
+class nsXMLEventsManager;
+class nsHTMLStyleSheet;
+class nsHTMLCSSStyleSheet;
 
 /**
  * Right now our identifier map entries contain information for 'name'

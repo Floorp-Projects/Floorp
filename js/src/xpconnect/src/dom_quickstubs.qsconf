@@ -501,8 +501,11 @@ customIncludes = [
     'nsIDocument.h',
     'nsINodeList.h',
     'nsCSSPropertiesQS.h',
+    'nsDocument.h',
     'nsGenericDOMDataNode.h',
     'nsGenericElement.h',
+    'nsGenericHTMLElement.h',
+    'nsHTMLDocument.h',
     'nsDOMQS.h',
     ]
 
