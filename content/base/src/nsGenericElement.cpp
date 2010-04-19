@@ -602,6 +602,19 @@ nsINode::GetBaseURI(nsAString &aURI) const
   CopyUTF8toUTF16(spec, aURI);
 }
 
+void
+nsINode::LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix)
+{
+  Element *element = GetNameSpaceElement();
+  nsIAtom *prefix = element ? element->LookupPrefix(aNamespaceURI) : nsnull;
+  if (prefix) {
+    prefix->ToString(aPrefix);
+  }
+  else {
+    SetDOMStringToNull(aPrefix);
+  }
+}
+
 static nsresult
 SetUserDataProperty(PRUint16 aCategory, nsINode *aNode, nsIAtom *aKey,
                     nsISupports* aValue, void** aOldValue)
@@ -773,6 +786,17 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
      nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY);    
 }
 
+void
+nsINode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                            nsAString& aNamespaceURI)
+{
+  Element *element = GetNameSpaceElement();
+  if (!element || NS_FAILED(element->LookupNamespaceURI(aNamespacePrefix,
+                                                        aNamespaceURI))) {
+    SetDOMStringToNull(aNamespaceURI);
+  }
+}
+
 //----------------------------------------------------------------------
 
 PRInt32
@@ -863,11 +887,9 @@ nsIContent::GetDesiredIMEState()
   return state;
 }
 
-// static
 nsresult
-nsContentUtils::LookupNamespaceURI(nsIContent* aNamespaceResolver,
-                                   const nsAString& aNamespacePrefix,
-                                   nsAString& aNamespaceURI)
+nsIContent::LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                               nsAString& aNamespaceURI) const
 {
   if (aNamespacePrefix.EqualsLiteral("xml")) {
     // Special-case for xml prefix
@@ -891,11 +913,11 @@ nsContentUtils::LookupNamespaceURI(nsIContent* aNamespaceResolver,
   }
   // Trace up the content parent chain looking for the namespace
   // declaration that declares aNamespacePrefix.
-  for (nsIContent* content = aNamespaceResolver; content;
-       content = content->GetParent()) {
+  const nsIContent* content = this;
+  do {
     if (content->GetAttr(kNameSpaceID_XMLNS, name, aNamespaceURI))
       return NS_OK;
-  }
+  } while ((content = content->GetParent()));
   return NS_ERROR_FAILURE;
 }
 
@@ -1201,18 +1223,15 @@ nsNode3Tearoff::GetUserData(const nsAString& aKey,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
-                             nsAString& aPrefix)
+nsIAtom*
+nsIContent::LookupPrefix(const nsAString& aNamespaceURI)
 {
-  SetDOMStringToNull(aPrefix);
-
   // XXX Waiting for DOM spec to list error codes.
 
   // Trace up the content parent chain looking for the namespace
   // declaration that defines the aNamespaceURI namespace. Once found,
   // return the prefix (i.e. the attribute localName).
-  for (nsIContent* content = mContent; content;
+  for (nsIContent* content = this; content;
        content = content->GetParent()) {
     PRUint32 attrCount = content->GetAttrCount();
 
@@ -1224,15 +1243,21 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
                                aNamespaceURI, eCaseMatters)) {
         // If the localName is "xmlns", the prefix we output should be
         // null.
-        if (name->LocalName() != nsGkAtoms::xmlns) {
-          name->LocalName()->ToString(aPrefix);
-        }
+        nsIAtom *localName = name->LocalName();
 
-        return NS_OK;
+        return localName == nsGkAtoms::xmlns ? nsnull : localName;
       }
     }
   }
 
+  return nsnull;
+}
+
+NS_IMETHODIMP
+nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
+                             nsAString& aPrefix)
+{
+  static_cast<nsINode*>(mContent)->LookupPrefix(aNamespaceURI, aPrefix);
   return NS_OK;
 }
 
@@ -1240,11 +1265,7 @@ NS_IMETHODIMP
 nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {
-  if (NS_FAILED(nsContentUtils::LookupNamespaceURI(mContent,
-                                                   aNamespacePrefix,
-                                                   aNamespaceURI))) {
-    SetDOMStringToNull(aNamespaceURI);
-  }
+  mContent->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
   return NS_OK;
 }
 
@@ -1252,9 +1273,7 @@ NS_IMETHODIMP
 nsNode3Tearoff::IsDefaultNamespace(const nsAString& aNamespaceURI,
                                    PRBool* aReturn)
 {
-  nsAutoString defaultNamespace;
-  LookupNamespaceURI(EmptyString(), defaultNamespace);
-  *aReturn = aNamespaceURI.Equals(defaultNamespace);
+  *aReturn = mContent->IsDefaultNamespace(aNamespaceURI);
   return NS_OK;
 }
 

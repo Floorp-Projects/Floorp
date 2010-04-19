@@ -582,11 +582,8 @@ NS_IMETHODIMP
 nsDOMAttribute::IsDefaultNamespace(const nsAString& aNamespaceURI,
                                    PRBool* aReturn)
 {
-  *aReturn = PR_FALSE;
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(GetContentInternal()));
-  if (node) {
-    return node->IsDefaultNamespace(aNamespaceURI, aReturn);
-  }
+  *aReturn = nsINode::IsDefaultNamespace(aNamespaceURI);
+
   return NS_OK;
 }
 
@@ -659,11 +656,8 @@ NS_IMETHODIMP
 nsDOMAttribute::LookupPrefix(const nsAString& aNamespaceURI,
                              nsAString& aPrefix)
 {
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(GetContentInternal()));
-  if (node)
-    return node->LookupPrefix(aNamespaceURI, aPrefix);
+  nsINode::LookupPrefix(aNamespaceURI, aPrefix);
 
-  SetDOMStringToNull(aPrefix);
   return NS_OK;
 }
 
@@ -671,11 +665,8 @@ NS_IMETHODIMP
 nsDOMAttribute::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(GetContentInternal()));
-  if (node)
-    return node->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
+  nsINode::LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
 
-  SetDOMStringToNull(aNamespaceURI);
   return NS_OK;
 }
 
