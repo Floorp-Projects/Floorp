@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -11,15 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator.
+ * The Original Code is gfx thebes code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Mike Pinkerton <pinkerton@netscape.com>
+ *   Michael Ventnor <m.ventnor@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,40 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "gfxThebesUtils.h"
 
-interface nsIDOMEventTarget;
-interface nsIWebNavigation;
-
-
-/**
- * @status UNDER_REVIEW
- */
-
-/**
- * Interface for communicating with the built-in drag and drop
- * implementation in the content area. Use this to register where
- * the listeners should attach (something that implements
- * |nsPIDOMEventTarget| which is what we end up using under the hood).
- */
-
-[scriptable,uuid(4f418f58-f834-4736-a755-e0395bedca9d)]
-interface nsIDragDropHandler : nsISupports
+// Converts a gfxRect to an nsIntRect for speed
+nsIntRect
+gfxThebesUtils::GfxRectToIntRect(const gfxRect& aIn)
 {
-  /**
-   * Attach drag handlers to receiver specified by |attachPoint| and
-   * specify callbacks to allow overriding of the built-in behaviors.
-   *
-   * @param attachPoint hookup listeners to this location
-   * @param navigator loads dropped urls via this interface. If NULL, 
-   *                   the client must handle the drop itself, either
-   *                   through the method provided via |overrideDrop| or
-   *                   by letting the event bubble up through the DOM.
-   */
-  void hookupTo(in nsIDOMEventTarget attachPoint, in nsIWebNavigation navigator);
-  
-  /**
-   * Unregister all handlers related to drag&drop
-   */
-  void detach();
-};
+  nsIntRect result(PRInt32(aIn.X()), PRInt32(aIn.Y()),
+                   PRInt32(aIn.Width()), PRInt32(aIn.Height()));
+  NS_ASSERTION(gfxRect(result.x, result.y, result.width, result.height) == aIn,
+               "The given gfxRect isn't rounded properly!");
+  return result;
+}

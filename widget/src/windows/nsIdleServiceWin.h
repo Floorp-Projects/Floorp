@@ -57,7 +57,10 @@ class nsIdleServiceWin : public nsIdleService
 public:
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetIdleTime(PRUint32* idleTime);
+    bool PollIdleTime(PRUint32* aIdleTime);
+
+protected:
+    bool UsePollMode();
 };
 
 #endif // nsIdleServiceWin_h__

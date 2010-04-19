@@ -14,7 +14,7 @@ TestShmemParent::Main()
 {
     Shmem mem;
     size_t size = 12345;
-    if (!AllocShmem(size, &mem))
+    if (!AllocShmem(size, SharedMemory::TYPE_BASIC, &mem))
         fail("can't alloc shmem");
 
     if (mem.Size<char>() != size)

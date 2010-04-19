@@ -93,7 +93,11 @@ function onLoadViewSource()
 {
   viewSource(window.arguments[0]);
   document.commandDispatcher.focusedWindow = content;
-      
+  gBrowser.droppedLinkHandler = function (event, url, name) {
+    viewSource(url)
+    event.preventDefault();
+  }
+
   if (!isHistoryEnabled()) {
     // Disable the BACK and FORWARD commands and hide the related menu items.
     var viewSourceNavigation = document.getElementById("viewSourceNavigation");

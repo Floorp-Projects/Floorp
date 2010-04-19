@@ -53,6 +53,16 @@ let (commonFile = do_get_file("../../test_places/head_common.js", false)) {
 // Put any other stuff relative to this test folder below.
 
 
+XPCOMUtils.defineLazyGetter(this, "PlacesUIUtils", function() {
+  Cu.import("resource:///modules/PlacesUIUtils.jsm");
+  return PlacesUIUtils;
+});
+
+
+const ORGANIZER_FOLDER_ANNO = "PlacesOrganizer/OrganizerFolder";
+const ORGANIZER_QUERY_ANNO = "PlacesOrganizer/OrganizerQuery";
+
+
 // Needed by some test that relies on having an app  registered.
 let (XULAppInfo = {
   vendor: "Mozilla",

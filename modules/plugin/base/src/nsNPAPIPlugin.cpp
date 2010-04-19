@@ -277,7 +277,7 @@ static PRInt32 OSXVersion()
 #endif
 
 inline PRBool
-OOPPluginsEnabled(const char* aFilePath, const nsPluginTag *aPluginTag)
+RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag)
 {
   if (PR_GetEnv("MOZ_DISABLE_OOP_PLUGINS")) {
     return PR_FALSE;
@@ -305,7 +305,6 @@ OOPPluginsEnabled(const char* aFilePath, const nsPluginTag *aPluginTag)
       }
     }
   }
-
 #endif
 
 #ifdef XP_WIN
@@ -355,9 +354,9 @@ GetNewPluginLibrary(const char* aFilePath,
   nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
   nsPluginTag* tag = host->FindTagForLibrary(aLibrary);
   if (tag) {
-    if (aFilePath && OOPPluginsEnabled(aFilePath, tag)) {
+    if (aFilePath && RunPluginOOP(aFilePath, tag)) {
       return PluginModuleParent::LoadModule(aFilePath);
-    }   
+    }
   }
 #endif
   return new PluginPRLibrary(aFilePath, aLibrary);

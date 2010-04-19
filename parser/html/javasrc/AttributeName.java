@@ -508,20 +508,45 @@ public final class AttributeName
     }
 
     // [NOCPP[
+    /**
+     * Creator for use when the XML violation policy requires an attribute name
+     * to be changed.
+     * 
+     * @param name
+     *            the name of the attribute to create
+     */
     static AttributeName create(@Local String name) {
         return new AttributeName(AttributeName.ALL_NO_NS,
                 AttributeName.SAME_LOCAL(name), ALL_NO_PREFIX,
                 AttributeName.ALL_NCNAME, false);
     }
 
+    /**
+     * Queries whether this name is an XML 1.0 4th ed. NCName.
+     * 
+     * @param mode
+     *            the SVG/MathML/HTML mode
+     * @return <code>true</code> if this is an NCName in the given mode
+     */
     public boolean isNcName(int mode) {
         return ncname[mode];
     }
 
+    /**
+     * Queries whether this is an <code>xmlns</code> attribute.
+     * 
+     * @return <code>true</code> if this is an <code>xmlns</code> attribute
+     */
     public boolean isXmlns() {
         return xmlns;
     }
 
+    /**
+     * Queries whether this attribute has a case-folded value in the HTML4 mode
+     * of the parser.
+     * 
+     * @return <code>true</code> if the value is case-folded
+     */
     boolean isCaseFolded() {
         return this == AttributeName.ACTIVE || this == AttributeName.ALIGN
                 || this == AttributeName.ASYNC

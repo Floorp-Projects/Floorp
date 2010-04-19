@@ -83,7 +83,7 @@ class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
     PRInt32 getForeignFlag();
     PRBool isNeedToDropLF();
     PRBool isQuirks();
-    PRInt32 getListLength();
+    PRInt32 getListOfActiveFormattingElementsLength();
     PRInt32 getStackLength();
     ~nsHtml5StateSnapshot();
     static void initializeStatics();

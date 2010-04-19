@@ -57,7 +57,7 @@ function test() {
   var testRootId = PlacesUtils.bookmarks.createFolder(toolbarId, "test root", -1);
   is(toolbarNode.childCount, oldCount+1, "confirm test root node is a container, and is empty");
   var testRootNode = toolbarNode.getChild(toolbarNode.childCount-1);
-  asContainer(testRootNode);
+  PlacesUtils.asContainer(testRootNode);
   testRootNode.containerOpen = true;
   is(testRootNode.childCount, 0, "confirm test root node is a container, and is empty");
 
@@ -120,7 +120,7 @@ function test() {
 }
 
 function getGUIDs(aNode) {
-  asContainer(aNode);
+  PlacesUtils.asContainer(aNode);
   aNode.containerOpen = true;
   var GUIDs = {
     folder: PlacesUtils.bookmarks.getItemGUID(aNode.itemId),
@@ -139,7 +139,7 @@ function checkGUIDs(aFolderNode, aGUIDs, aShouldMatch) {
     return aEquals ? (nodeGUID == aGUID) : (nodeGUID != aGUID);
   }
 
-  asContainer(aFolderNode);
+  PlacesUtils.asContainer(aFolderNode);
   aFolderNode.containerOpen = true;
 
   var allMatch = check(aFolderNode, aGUIDs.folder, aShouldMatch) &&

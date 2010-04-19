@@ -344,7 +344,7 @@ protected:
 
 
   // install the event listeners for the editor 
-  nsresult InstallEventListeners();
+  virtual nsresult InstallEventListeners();
 
   virtual nsresult CreateEventListeners();
 

@@ -42,7 +42,6 @@
 
 #include "nsCOMPtr.h"
 
-#include "nsIDragDropHandler.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
 #include "nsITransferable.h"
@@ -59,33 +58,12 @@ class nsIFile;
 class nsISimpleEnumerator;
 class nsDOMDataTransfer;
 
-// {1f34bc80-1bc7-11d6-a384-d705dd0746fc}
-#define NS_CONTENTAREADRAGDROP_CID             \
-{ 0x1f34bc80, 0x1bc7, 0x11d6, \
-  { 0xa3, 0x84, 0xd7, 0x05, 0xdd, 0x07, 0x46, 0xfc } }
-
-#define NS_CONTENTAREADRAGDROP_CONTRACTID "@mozilla.org:/content/content-area-dragdrop;1"
-
-
 //
-// class nsContentAreaDragDrop
+// class nsContentAreaDragDrop, used to generate the dragdata
 //
-// The class that listens to the chrome events handles anything
-// related to drag and drop. Registers itself with the DOM with
-// AddChromeListeners() and removes itself with
-// RemoveChromeListeners().
-//
-class nsContentAreaDragDrop : public nsIDragDropHandler,
-                              public nsIDOMEventListener
+class nsContentAreaDragDrop
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDRAGDROPHANDLER
-  
-  nsContentAreaDragDrop();
-  virtual ~nsContentAreaDragDrop();
-
-  NS_IMETHOD HandleEvent(nsIDOMEvent *event);
 
   /**
    * Determine what data in the content area, if any, is being dragged.
@@ -113,32 +91,6 @@ public:
                               PRBool* aCanDrag,
                               PRBool* aDragSelection,
                               nsIContent** aDragNode);
-
-private:
-
-  // Add/remove the relevant listeners
-  nsresult AddDragListener();
-  nsresult RemoveDragListener();
-
-  nsresult DragOver(nsIDOMDragEvent* aDragEvent);
-  nsresult Drop(nsIDOMDragEvent* aDragEvent);
-
-  // utility routines
-  static void NormalizeSelection(nsIDOMNode* inBaseNode,
-                                 nsISelection* inSelection);
-  static void GetEventDocument(nsIDOMEvent* inEvent,
-                               nsIDOMDocument** outDocument);
-
-  static void ExtractURLFromData(const nsACString & inFlavor,
-                                 nsISupports* inDataWrapper, PRUint32 inDataLen,
-                                 nsAString & outURL);
-
-  nsCOMPtr<nsIDOMEventTarget> mEventTarget;
-
-  // weak ref, this is probably my owning webshell
-  // FIXME: we set this and never null it out.  That's bad!  See bug 332187.
-  nsIWebNavigation* mNavigator;
-
 };
 
 // this is used to save images to disk lazily when the image data is asked for
