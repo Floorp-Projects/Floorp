@@ -1,0 +1,19 @@
+This color conversion code is from the Chromium open source project available here:
+
+http://code.google.com/chromium/
+
+The code comes from svn revision 40876.
+
+The code was copied from a Chromium svn checkout using the 'update.sh' script which then applies patches for our build and to add dynamic CPU detection.
+
+convert.patch: Change Chromium code to build using Mozilla build system.
+               Add runtime CPU detection for MMX
+               Move default C implementation to work on all platforms.
+
+picture_region.patch: Change Chromium code to allow a picture region.
+                      The YUV conversion will convert within this 
+                      picture region only.
+
+remove_scale.patch: Removes Chromium scaling code.
+export.patch: Fix export for building on comm-central
+win64_mac64.patch: Fallback to C implementation on Windows and Mac OS X 64 bit

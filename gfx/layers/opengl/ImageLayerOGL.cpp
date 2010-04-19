@@ -203,15 +203,53 @@ PlanarYCbCrImageOGL::~PlanarYCbCrImageOGL()
 void
 PlanarYCbCrImageOGL::SetData(const PlanarYCbCrImage::Data &aData)
 {
+  int width_shift = 0;
+  int height_shift = 0;
+  if (aData.mYSize.width == aData.mCbCrSize.width &&
+      aData.mYSize.height == aData.mCbCrSize.height) {
+     // YV24 format
+     width_shift = 0;
+     height_shift = 0;
+  } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
+             aData.mYSize.height == aData.mCbCrSize.height) {
+    // YV16 format
+    width_shift = 1;
+    height_shift = 0;
+  } else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
+             aData.mYSize.height / 2 == aData.mCbCrSize.height ) {
+      // YV12 format
+    width_shift = 1;
+    height_shift = 1;
+  } else {
+    NS_ERROR("YCbCr format not supported");
+  }
+  
   mData = aData;
-  mData.mCbChannel = new PRUint8[aData.mCbCrStride * aData.mCbCrSize.height];
-  mData.mCrChannel = new PRUint8[aData.mCbCrStride * aData.mCbCrSize.height];
-  mData.mYChannel = new PRUint8[aData.mYStride * aData.mYSize.height];
-  memcpy(mData.mCbChannel, aData.mCbChannel, aData.mCbCrStride * aData.mCbCrSize.height);
-  memcpy(mData.mCrChannel, aData.mCrChannel, aData.mCbCrStride * aData.mCbCrSize.height);
-  memcpy(mData.mYChannel, aData.mYChannel, aData.mYStride * aData.mYSize.height);
+  mData.mCbCrStride = mData.mCbCrSize.width = aData.mPicSize.width >> width_shift;
+  mData.mCbCrSize.height = aData.mPicSize.height >> height_shift;
+  mData.mYSize = aData.mPicSize;
+  mData.mYStride = mData.mYSize.width;
+  mData.mCbChannel = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height];
+  mData.mCrChannel = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height];
+  mData.mYChannel = new PRUint8[mData.mYStride * mData.mYSize.height];
+  int cbcr_x = aData.mPicX >> width_shift;
+  int cbcr_y = aData.mPicY >> height_shift;
 
-  mSize = aData.mYSize;
+  for (int i = 0; i < mData.mCbCrSize.height; i++) {
+    memcpy(mData.mCbChannel + i * mData.mCbCrStride,
+           aData.mCbChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x, 
+           mData.mCbCrStride);
+    memcpy(mData.mCrChannel + i * mData.mCbCrStride,
+           aData.mCrChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
+           mData.mCbCrStride);
+  }
+  for (int i = 0; i < mData.mYSize.height; i++) {
+    memcpy(mData.mYChannel + i * mData.mYStride, 
+           aData.mYChannel + ((aData.mPicY + i) * aData.mYStride) + aData.mPicX, 
+           mData.mYStride);
+  }
+ 
+  mSize = aData.mPicSize;
 
   mHasData = PR_TRUE;
 }
