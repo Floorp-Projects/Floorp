@@ -617,11 +617,9 @@ SetUserDataProperty(PRUint16 aCategory, nsINode *aNode, nsIAtom *aKey,
   return NS_OK;
 }
 
-/* static */
 nsresult
-nsNodeUtils::SetUserData(nsINode *aNode, const nsAString &aKey,
-                         nsIVariant *aData, nsIDOMUserDataHandler *aHandler,
-                         nsIVariant **aResult)
+nsINode::SetUserData(const nsAString &aKey, nsIVariant *aData,
+                     nsIDOMUserDataHandler *aHandler, nsIVariant **aResult)
 {
   *aResult = nsnull;
 
@@ -633,11 +631,11 @@ nsNodeUtils::SetUserData(nsINode *aNode, const nsAString &aKey,
   nsresult rv;
   void *data;
   if (aData) {
-    rv = SetUserDataProperty(DOM_USER_DATA, aNode, key, aData, &data);
+    rv = SetUserDataProperty(DOM_USER_DATA, this, key, aData, &data);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
-    data = aNode->UnsetProperty(DOM_USER_DATA, key);
+    data = UnsetProperty(DOM_USER_DATA, key);
   }
 
   // Take over ownership of the old data from the property table.
@@ -645,17 +643,17 @@ nsNodeUtils::SetUserData(nsINode *aNode, const nsAString &aKey,
 
   if (aData && aHandler) {
     nsCOMPtr<nsIDOMUserDataHandler> oldHandler;
-    rv = SetUserDataProperty(DOM_USER_DATA_HANDLER, aNode, key, aHandler,
+    rv = SetUserDataProperty(DOM_USER_DATA_HANDLER, this, key, aHandler,
                              getter_AddRefs(oldHandler));
     if (NS_FAILED(rv)) {
       // We failed to set the handler, remove the data.
-      aNode->DeleteProperty(DOM_USER_DATA, key);
+      DeleteProperty(DOM_USER_DATA, key);
 
       return rv;
     }
   }
   else {
-    aNode->DeleteProperty(DOM_USER_DATA_HANDLER, key);
+    DeleteProperty(DOM_USER_DATA_HANDLER, key);
   }
 
   oldData.swap(*aResult);
@@ -1191,14 +1189,16 @@ nsNode3Tearoff::SetUserData(const nsAString& aKey,
                             nsIDOMUserDataHandler* aHandler,
                             nsIVariant** aResult)
 {
-  return nsNodeUtils::SetUserData(mContent, aKey, aData, aHandler, aResult);
+  return mContent->SetUserData(aKey, aData, aHandler, aResult);
 }
 
 NS_IMETHODIMP
 nsNode3Tearoff::GetUserData(const nsAString& aKey,
                             nsIVariant** aResult)
 {
-  return nsNodeUtils::GetUserData(mContent, aKey, aResult);
+  NS_IF_ADDREF(*aResult = mContent->GetUserData(aKey));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

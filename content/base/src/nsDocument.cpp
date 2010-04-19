@@ -5746,14 +5746,16 @@ nsDocument::SetUserData(const nsAString &aKey,
                         nsIDOMUserDataHandler *aHandler,
                         nsIVariant **aResult)
 {
-  return nsNodeUtils::SetUserData(this, aKey, aData, aHandler, aResult);
+  return nsINode::SetUserData(aKey, aData, aHandler, aResult);
 }
 
 NS_IMETHODIMP
 nsDocument::GetUserData(const nsAString &aKey,
                         nsIVariant **aResult)
 {
-  return nsNodeUtils::GetUserData(this, aKey, aResult);
+  NS_IF_ADDREF(*aResult = nsINode::GetUserData(aKey));
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

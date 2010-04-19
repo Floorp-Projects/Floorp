@@ -277,23 +277,6 @@ nsNodeUtils::LastRelease(nsINode* aNode)
   delete aNode;
 }
 
-/* static */
-nsresult
-nsNodeUtils::GetUserData(nsINode *aNode, const nsAString &aKey,
-                         nsIVariant **aResult)
-{
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aResult = static_cast<nsIVariant*>
-                        (aNode->GetProperty(DOM_USER_DATA, key));
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
 struct NS_STACK_CLASS nsHandlerData
 {
   PRUint16 mOperation;
