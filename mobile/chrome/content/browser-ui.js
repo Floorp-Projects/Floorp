@@ -1766,17 +1766,30 @@ function MenulistWrapper(aControl) {
   this._control = aControl;
 }
 
+// Use wrappedJSObject when control is in content for extra protection
+// See bug 559792
+
 MenulistWrapper.prototype = {
-  get selectedIndex() { return this._control.selectedIndex; },
+  get selectedIndex() {
+    let control = this._control.wrappedJSObject || this._control;
+    return this._control.selectedIndex;
+  },
   get multiple() { return false; },
-  get options() { return this._control.menupopup.children; },
-  get children() { return this._control.menupopup.children; },
+  get options() {
+    let control = this._control.wrappedJSObject || this._control;
+    return control.menupopup.children;
+  },
+  get children() {
+    let control = this._control.wrappedJSObject || this._control;
+    return control.menupopup.children;
+  },
 
   getText: function(aChild) { return aChild.label; },
   isOption: function(aChild) { return aChild instanceof Ci.nsIDOMXULSelectControlItemElement; },
   isGroup: function(aChild) { return false },
   select: function(aIndex, aSelected, aClearAll) {
-    this._control.selectedIndex = aIndex;
+    let control = this._control.wrappedJSObject || this._control;
+    control.selectedIndex = aIndex;
   },
   focus: function() { this._control.focus(); },
   fireOnChange: function() {
