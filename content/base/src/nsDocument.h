@@ -496,7 +496,6 @@ class nsDocument : public nsIDocument,
                    public nsIRadioGroupContainer,
                    public nsIDOMNodeSelector,
                    public nsIApplicationCacheContainer,
-                   public nsIDOMXPathNSResolver,
                    public nsStubMutationObserver
 {
 public:
@@ -767,9 +766,6 @@ public:
 
   // nsIDOMNode
   NS_DECL_NSIDOMNODE
-
-  // nsIDOM3Node
-  NS_DECL_NSIDOM3NODE
 
   // nsIDOMDocument
   NS_DECL_NSIDOMDOCUMENT
@@ -1226,7 +1222,6 @@ protected:
                                      nsDocument)                              \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMEventTarget, nsDocument)   \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNode, nsDocument)          \
-  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOM3Node, nsDocument)         \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOM3Document, nsDocument)
 
 #endif /* nsDocument_h___ */

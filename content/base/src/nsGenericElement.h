@@ -155,7 +155,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsNode3Tearoff, nsIDOM3Node)
 
-  nsNode3Tearoff(nsIContent *aContent) : mContent(aContent)
+  nsNode3Tearoff(nsINode *aNode) : mNode(aNode)
   {
   }
 
@@ -163,7 +163,7 @@ protected:
   virtual ~nsNode3Tearoff() {}
 
 private:
-  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsINode> mNode;
 };
 
 /**
