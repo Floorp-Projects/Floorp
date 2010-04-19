@@ -1967,11 +1967,11 @@ nsDOMEventRTTearoff::AddEventListener(const nsAString& aType,
 
 //----------------------------------------------------------------------
 
-NS_IMPL_CYCLE_COLLECTION_1(nsNodeSelectorTearoff, mContent)
+NS_IMPL_CYCLE_COLLECTION_1(nsNodeSelectorTearoff, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNodeSelectorTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNodeSelector)
-NS_INTERFACE_MAP_END_AGGREGATED(mContent)
+NS_INTERFACE_MAP_END_AGGREGATED(mNode)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNodeSelectorTearoff)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNodeSelectorTearoff)
@@ -1980,14 +1980,16 @@ NS_IMETHODIMP
 nsNodeSelectorTearoff::QuerySelector(const nsAString& aSelector,
                                      nsIDOMElement **aReturn)
 {
-  return nsGenericElement::doQuerySelector(mContent, aSelector, aReturn);
+  nsresult rv;
+  nsIContent* result = nsGenericElement::doQuerySelector(mNode, aSelector, &rv);
+  return result ? CallQueryInterface(result, aReturn) : rv;
 }
 
 NS_IMETHODIMP
 nsNodeSelectorTearoff::QuerySelectorAll(const nsAString& aSelector,
                                         nsIDOMNodeList **aReturn)
 {
-  return nsGenericElement::doQuerySelectorAll(mContent, aSelector, aReturn);
+  return nsGenericElement::doQuerySelectorAll(mNode, aSelector, aReturn);
 }
 
 //----------------------------------------------------------------------
@@ -5485,29 +5487,24 @@ FindFirstMatchingElement(nsIContent* aMatchingElement,
 }
 
 /* static */
-nsresult
+nsIContent*
 nsGenericElement::doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
-                                  nsIDOMElement **aReturn)
+                                  nsresult *aResult)
 {
-  NS_PRECONDITION(aReturn, "Null out param?");
+  NS_PRECONDITION(aResult, "Null out param?");
 
   nsAutoPtr<nsCSSSelectorList> selectorList;
   nsPresContext* presContext;
-  nsresult rv = ParseSelectorList(aRoot, aSelector,
-                                  getter_Transfers(selectorList),
-                                  &presContext);
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aResult = ParseSelectorList(aRoot, aSelector,
+                               getter_Transfers(selectorList),
+                               &presContext);
+  NS_ENSURE_SUCCESS(*aResult, nsnull);
 
   nsIContent* foundElement = nsnull;
   TryMatchingElementsInSubtree(aRoot, nsnull, presContext, selectorList,
                                FindFirstMatchingElement, &foundElement);
 
-  if (foundElement) {
-    return CallQueryInterface(foundElement, aReturn);
-  }
-
-  *aReturn = nsnull;
-  return NS_OK;
+  return foundElement;
 }
 
 static PRBool
