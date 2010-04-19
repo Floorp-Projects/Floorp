@@ -239,6 +239,9 @@ var ExtensionsView = {
     os.addObserver(this, "addon-update-started", false);
     os.addObserver(this, "addon-update-ended", false);
 
+    if (!gPrefService.getBoolPref("extensions.hideUpdateButton"))
+      document.getElementById("addons-update-all").hidden = false;
+
     let self = this;
     let panels = document.getElementById("panel-items");
     panels.addEventListener("select",
@@ -662,6 +665,17 @@ var ExtensionsView = {
     let uri = aItem.getAttribute("url");
     if (uri)
       BrowserUI.newTab(uri);
+  },
+
+  updateAll: function ev_updateAll() {
+    if (!this._isXPInstallEnabled())
+      return;
+ 
+    let aus = Cc["@mozilla.org/browser/addon-update-service;1"].getService(Ci.nsITimerCallback);
+    aus.notify(null);
+ 
+    if (this._list.selectedItem)
+      this._list.selectedItem.focus();
   },
 
   observe: function ev_observe(aSubject, aTopic, aData) {
