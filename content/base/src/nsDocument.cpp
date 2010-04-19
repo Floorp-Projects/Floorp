@@ -5735,8 +5735,7 @@ nsDocument::GetFeature(const nsAString& aFeature,
                        const nsAString& aVersion,
                        nsISupports** aReturn)
 {
-  return nsGenericElement::InternalGetFeature(static_cast<nsIDOMDocument*>(this),
-                                              aFeature, aVersion, aReturn);
+  return nsINode::GetFeature(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
