@@ -78,7 +78,8 @@ DOMCI_CASTABLE_INTERFACE(nsINode, 0, _extra)                                  \
 DOMCI_CASTABLE_INTERFACE(nsIContent, 1, _extra)                               \
 DOMCI_CASTABLE_INTERFACE(nsIDocument, 2, _extra)                              \
 DOMCI_CASTABLE_INTERFACE(nsINodeList, 3, _extra)                              \
-DOMCI_CASTABLE_INTERFACE(nsICSSDeclaration, 4, _extra)
+DOMCI_CASTABLE_INTERFACE(nsICSSDeclaration, 4, _extra)                        \
+DOMCI_CASTABLE_INTERFACE(nsGenericTextNode, 5, _extra)
 
 // Make sure all classes mentioned in DOMCI_CASTABLE_INTERFACES
 // have been declared.

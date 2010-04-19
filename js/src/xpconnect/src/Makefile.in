@@ -120,6 +120,7 @@ LOCAL_INCLUDES = \
 		-I$(topsrcdir)/js/src \
 		-I$(topsrcdir)/js/src/nanojit \
 		-I$(topsrcdir)/caps/include \
+		-I$(topsrcdir)/content/base/src \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \
