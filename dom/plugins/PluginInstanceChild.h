@@ -44,9 +44,6 @@
 #include "mozilla/plugins/StreamNotifyChild.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
-#elif defined(OS_MACOSX)
-#include "nsCoreAnimationSupport.h"
-#include "base/timer.h"
 #endif
 
 #include "npfunctions.h"
@@ -93,8 +90,6 @@ protected:
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
     virtual bool
     AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event, Shmem& mem, int16_t* handled, Shmem* rtnmem);
-    virtual bool
-    AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event, const uint32_t& surface, int16_t* handled);
 
     NS_OVERRIDE
     virtual bool
@@ -328,9 +323,7 @@ private:
 #if defined(OS_MACOSX)
 private:
     CGColorSpaceRef mShColorSpace;
-    CGContextRef    mShContext;
-    int16_t         mDrawingModel;
-    nsCARenderer    mCARenderer;
+    CGContextRef mShContext;
 #endif
 };
 
