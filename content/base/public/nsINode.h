@@ -47,6 +47,7 @@
 #include "nsWrapperCache.h"
 #include "nsIProgrammingLanguage.h" // for ::JAVASCRIPT
 #include "nsDOMError.h"
+#include "nsDOMString.h"
 
 class nsIContent;
 class nsIDocument;
@@ -969,6 +970,15 @@ public:
   virtual already_AddRefed<nsIURI> GetBaseURI() const = 0;
 
   void GetBaseURI(nsAString &aURI) const;
+
+  virtual void GetTextContent(nsAString &aTextContent)
+  {
+    SetDOMStringToNull(aTextContent);
+  }
+  virtual nsresult SetTextContent(const nsAString& aTextContent)
+  {
+    return NS_OK;
+  }
 
   /**
    * Associate an object aData to aKey on this node. If aData is null any
