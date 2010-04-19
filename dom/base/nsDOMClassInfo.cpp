@@ -214,7 +214,7 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMDocumentEvent.h"
-#include "nsIDOMAttr.h"
+#include "nsDOMAttribute.h"
 #include "nsIDOMText.h"
 #include "nsIDOM3Text.h"
 #include "nsIDOMComment.h"
@@ -8361,7 +8361,8 @@ nsNamedNodeMapSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 {
   nsDOMAttributeMap* map = nsDOMAttributeMap::FromSupports(aNative);
 
-  return map->GetItemAt(aIndex, aResult);
+  nsINode *attr = map->GetItemAt(aIndex, aResult);
+  return attr;
 }
 
 nsISupports*
@@ -8370,7 +8371,8 @@ nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
 {
   nsDOMAttributeMap* map = nsDOMAttributeMap::FromSupports(aNative);
 
-  return map->GetNamedItem(aName, aResult);
+  nsINode *attr = map->GetNamedItem(aName, aResult);
+  return attr;
 }
 
 
