@@ -675,33 +675,34 @@ nsINode::SetUserData(const nsAString &aKey, nsIVariant *aData,
 }
 
 PRUint16
-nsContentUtils::ComparePosition(nsINode* aNode1,
-                                nsINode* aNode2)
+nsINode::CompareDocumentPosition(nsINode* aOtherNode)
 {
-  NS_PRECONDITION(aNode1 && aNode2, "don't pass null");
+  NS_PRECONDITION(aOtherNode, "don't pass null");
 
-  if (aNode1 == aNode2) {
+  if (this == aOtherNode) {
     return 0;
   }
 
   nsAutoTPtrArray<nsINode, 32> parents1, parents2;
 
+  nsINode *node1 = aOtherNode, *node2 = this;
+
   // Check if either node is an attribute
   nsIAttribute* attr1 = nsnull;
-  if (aNode1->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    attr1 = static_cast<nsIAttribute*>(aNode1);
+  if (node1->IsNodeOfType(nsINode::eATTRIBUTE)) {
+    attr1 = static_cast<nsIAttribute*>(node1);
     nsIContent* elem = attr1->GetContent();
     // If there is an owner element add the attribute
     // to the chain and walk up to the element
     if (elem) {
-      aNode1 = elem;
+      node1 = elem;
       parents1.AppendElement(static_cast<nsINode*>(attr1));
     }
   }
-  if (aNode2->IsNodeOfType(nsINode::eATTRIBUTE)) {
-    nsIAttribute* attr2 = static_cast<nsIAttribute*>(aNode2);
+  if (node2->IsNodeOfType(nsINode::eATTRIBUTE)) {
+    nsIAttribute* attr2 = static_cast<nsIAttribute*>(node2);
     nsIContent* elem = attr2->GetContent();
-    if (elem == aNode1 && attr1) {
+    if (elem == node1 && attr1) {
       // Both nodes are attributes on the same element.
       // Compare position between the attributes.
 
@@ -724,7 +725,7 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
     }
 
     if (elem) {
-      aNode2 = elem;
+      node2 = elem;
       parents2.AppendElement(static_cast<nsINode*>(attr2));
     }
   }
@@ -736,13 +737,13 @@ nsContentUtils::ComparePosition(nsINode* aNode1,
 
   // Build the chain of parents
   do {
-    parents1.AppendElement(aNode1);
-    aNode1 = aNode1->GetNodeParent();
-  } while (aNode1);
+    parents1.AppendElement(node1);
+    node1 = node1->GetNodeParent();
+  } while (node1);
   do {
-    parents2.AppendElement(aNode2);
-    aNode2 = aNode2->GetNodeParent();
-  } while (aNode2);
+    parents2.AppendElement(node2);
+    node2 = node2->GetNodeParent();
+  } while (node2);
 
   // Check if the nodes are disconnected.
   PRUint32 pos1 = parents1.Length();
@@ -1054,12 +1055,11 @@ NS_IMETHODIMP
 nsNode3Tearoff::CompareDocumentPosition(nsIDOMNode* aOther,
                                         PRUint16* aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aOther);
-
   nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  NS_ENSURE_ARG(other);
 
-  *aReturn = nsContentUtils::ComparePosition(other, mContent);
+  *aReturn = mContent->CompareDocumentPosition(other);
+
   return NS_OK;
 }
 
@@ -1067,30 +1067,29 @@ NS_IMETHODIMP
 nsNode3Tearoff::IsSameNode(nsIDOMNode* aOther,
                            PRBool* aReturn)
 {
-  nsCOMPtr<nsIContent> other(do_QueryInterface(aOther));
-  *aReturn = mContent == other;
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+  *aReturn = mContent->IsSameNode(other);
 
   return NS_OK;
 }
 
 PRBool
-nsNode3Tearoff::AreNodesEqual(nsIContent* aContent1,
-                              nsIContent* aContent2)
+nsIContent::IsEqual(nsIContent* aOther)
 {
   // We use nsIContent instead of nsINode for the attributes of elements.
 
-  NS_PRECONDITION(aContent1 && aContent2, "Who called AreNodesEqual?");
+  NS_PRECONDITION(aOther, "Who called IsEqual?");
 
   nsAutoString string1, string2;
 
   // Prefix, namespace URI, local name, node name check.
-  if (!aContent1->NodeInfo()->Equals(aContent2->NodeInfo())) {
+  if (!NodeInfo()->Equals(aOther->NodeInfo())) {
     return PR_FALSE;
   }
 
-  if (aContent1->Tag() == nsGkAtoms::documentTypeNodeName) {
-    nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(aContent1);
-    nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(aContent2);
+  if (Tag() == nsGkAtoms::documentTypeNodeName) {
+    nsCOMPtr<nsIDOMDocumentType> docType1 = do_QueryInterface(this);
+    nsCOMPtr<nsIDOMDocumentType> docType2 = do_QueryInterface(aOther);
 
     NS_ASSERTION(docType1 && docType2, "Why don't we have a document type node?");
 
@@ -1119,25 +1118,22 @@ nsNode3Tearoff::AreNodesEqual(nsIContent* aContent1,
     }
   }
 
-  if (aContent1->IsElement()) {
-    // aContent1 is an element.  So is aContent2, since the nodeinfos
-    // were equal.  Do the check on attributes.
-    Element* element1 = aContent1->AsElement();
-    Element* element2 = aContent2->AsElement();
-    PRUint32 attrCount = element1->GetAttrCount();
+  if (IsElement()) {
+    // Both are elements (we checked that their nodeinfos are equal). Do the
+    // check on attributes.
+    Element* element2 = aOther->AsElement();
+    PRUint32 attrCount = GetAttrCount();
     if (attrCount != element2->GetAttrCount()) {
       return PR_FALSE;
     }
 
     // Iterate over attributes.
     for (PRUint32 i = 0; i < attrCount; ++i) {
-      const nsAttrName* attrName1 = element1->GetAttrNameAt(i);
+      const nsAttrName* attrName1 = GetAttrNameAt(i);
 #ifdef DEBUG
       PRBool hasAttr =
 #endif
-      element1->GetAttr(attrName1->NamespaceID(),
-                        attrName1->LocalName(),
-                        string1);
+      GetAttr(attrName1->NamespaceID(), attrName1->LocalName(), string1);
       NS_ASSERTION(hasAttr, "Why don't we have an attr?");
 
       if (!element2->AttrValueIs(attrName1->NamespaceID(),
@@ -1149,23 +1145,21 @@ nsNode3Tearoff::AreNodesEqual(nsIContent* aContent1,
     }
 
     // Child nodes count.
-    PRUint32 childCount = element1->GetChildCount();
+    PRUint32 childCount = GetChildCount();
     if (childCount != element2->GetChildCount()) {
       return PR_FALSE;
     }
 
     // Iterate over child nodes.
     for (PRUint32 i = 0; i < childCount; ++i) {
-      nsIContent* child1 = element1->GetChildAt(i);
-      nsIContent* child2 = element2->GetChildAt(i);
-      if (!AreNodesEqual(child1, child2)) {
+      if (!GetChildAt(i)->IsEqual(element2->GetChildAt(i))) {
         return PR_FALSE;
       }
     }
   } else {
-    // aContent1 is not an element.  Node value check.
-    nsCOMPtr<nsIDOMNode> domNode1 = do_QueryInterface(aContent1);
-    nsCOMPtr<nsIDOMNode> domNode2 = do_QueryInterface(aContent2);
+    // Node value check.
+    nsCOMPtr<nsIDOMNode> domNode1 = do_QueryInterface(this);
+    nsCOMPtr<nsIDOMNode> domNode2 = do_QueryInterface(aOther);
     NS_ASSERTION(domNode1 && domNode2, "How'd we get nsIContent without nsIDOMNode?");
     domNode1->GetNodeValue(string1);
     domNode2->GetNodeValue(string2);
@@ -1177,22 +1171,23 @@ nsNode3Tearoff::AreNodesEqual(nsIContent* aContent1,
   return PR_TRUE;
 }
 
+PRBool
+nsIContent::IsEqualNode(nsINode* aOther)
+{
+  if (!aOther || !aOther->IsNodeOfType(eCONTENT))
+    return PR_FALSE;
+
+  return IsEqual(static_cast<nsIContent*>(aOther));
+}
+
 NS_IMETHODIMP
 nsNode3Tearoff::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
 {
-  *aReturn = PR_FALSE;
+  // Since we implement nsINode, aOther must as well.
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
 
-  if (!aOther)
-    return NS_OK;
+  *aReturn = other && mContent->IsEqualNode(other);
 
-  // Since we implement nsIContent, aOther must as well.
-  nsCOMPtr<nsIContent> aOtherContent = do_QueryInterface(aOther);
-  // Documents and attributes don't implement nsIContent.
-  if (!aOtherContent) {
-    return NS_OK;
-  }
-
-  *aReturn = nsNode3Tearoff::AreNodesEqual(mContent, aOtherContent);
   return NS_OK;
 }
 
