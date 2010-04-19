@@ -1772,7 +1772,8 @@ function MenulistWrapper(aControl) {
 MenulistWrapper.prototype = {
   get selectedIndex() {
     let control = this._control.wrappedJSObject || this._control;
-    return this._control.selectedIndex;
+    let result = control.selectedIndex;
+    return (typeof result == "number" && !isNaN(result) ? result : -1);
   },
   get multiple() { return false; },
   get options() {
