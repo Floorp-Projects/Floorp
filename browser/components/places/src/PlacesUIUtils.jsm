@@ -76,6 +76,8 @@ var PlacesUIUtils = {
   LOAD_IN_SIDEBAR_ANNO: "bookmarkProperties/loadInSidebar",
   DESCRIPTION_ANNO: "bookmarkProperties/description",
 
+  TYPE_TAB_DROP: "application/x-moz-tabbrowser-tab",
+
   /**
    * Makes a URI from a spec, and do fixup
    * @param   aSpec
@@ -317,7 +319,7 @@ var PlacesUIUtils = {
       default:
         if (type == PlacesUtils.TYPE_X_MOZ_URL ||
             type == PlacesUtils.TYPE_UNICODE ||
-            type == TAB_DROP_TYPE) {
+            type == this.TYPE_TAB_DROP) {
           var title = (type != PlacesUtils.TYPE_UNICODE) ? data.title :
                                                              data.uri;
           return this.ptm.createItem(PlacesUtils._uri(data.uri),
