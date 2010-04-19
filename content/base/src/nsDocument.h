@@ -494,7 +494,6 @@ class nsDocument : public nsIDocument,
                    public nsIDOMNSEventTarget,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer,
-                   public nsIDOMNodeSelector,
                    public nsIApplicationCacheContainer,
                    public nsStubMutationObserver
 {
@@ -811,9 +810,6 @@ public:
 
   // nsIDOMNSEventTarget
   NS_DECL_NSIDOMNSEVENTTARGET
-
-  // nsIDOMNodeSelector
-  NS_DECL_NSIDOMNODESELECTOR
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
