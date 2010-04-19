@@ -980,12 +980,12 @@ nsChildContentList::IndexOf(nsIContent* aContent)
 
 //----------------------------------------------------------------------
 
-NS_IMPL_CYCLE_COLLECTION_1(nsNode3Tearoff, mContent)
+NS_IMPL_CYCLE_COLLECTION_1(nsNode3Tearoff, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsNode3Tearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathNSResolver)
-NS_INTERFACE_MAP_END_AGGREGATED(mContent)
+NS_INTERFACE_MAP_END_AGGREGATED(mNode)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNode3Tearoff)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNode3Tearoff)
@@ -993,7 +993,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNode3Tearoff)
 NS_IMETHODIMP
 nsNode3Tearoff::GetBaseURI(nsAString& aURI)
 {
-  mContent->GetBaseURI(aURI);
+  mNode->GetBaseURI(aURI);
   
   return NS_OK;
 }
@@ -1019,7 +1019,7 @@ nsNode3Tearoff::CompareDocumentPosition(nsIDOMNode* aOther,
   nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
   NS_ENSURE_ARG(other);
 
-  *aReturn = mContent->CompareDocumentPosition(other);
+  *aReturn = mNode->CompareDocumentPosition(other);
 
   return NS_OK;
 }
@@ -1029,7 +1029,7 @@ nsNode3Tearoff::IsSameNode(nsIDOMNode* aOther,
                            PRBool* aReturn)
 {
   nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  *aReturn = mContent->IsSameNode(other);
+  *aReturn = mNode->IsSameNode(other);
 
   return NS_OK;
 }
@@ -1147,7 +1147,7 @@ nsNode3Tearoff::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
   // Since we implement nsINode, aOther must as well.
   nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
 
-  *aReturn = other && mContent->IsEqualNode(other);
+  *aReturn = other && mNode->IsEqualNode(other);
 
   return NS_OK;
 }
@@ -1157,7 +1157,7 @@ nsNode3Tearoff::GetFeature(const nsAString& aFeature,
                            const nsAString& aVersion,
                            nsISupports** aReturn)
 {
-  return mContent->GetFeature(aFeature, aVersion, aReturn);
+  return mNode->GetFeature(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
@@ -1166,14 +1166,14 @@ nsNode3Tearoff::SetUserData(const nsAString& aKey,
                             nsIDOMUserDataHandler* aHandler,
                             nsIVariant** aResult)
 {
-  return mContent->SetUserData(aKey, aData, aHandler, aResult);
+  return mNode->SetUserData(aKey, aData, aHandler, aResult);
 }
 
 NS_IMETHODIMP
 nsNode3Tearoff::GetUserData(const nsAString& aKey,
                             nsIVariant** aResult)
 {
-  NS_IF_ADDREF(*aResult = mContent->GetUserData(aKey));
+  NS_IF_ADDREF(*aResult = mNode->GetUserData(aKey));
 
   return NS_OK;
 }
@@ -1212,7 +1212,7 @@ NS_IMETHODIMP
 nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
                              nsAString& aPrefix)
 {
-  static_cast<nsINode*>(mContent)->LookupPrefix(aNamespaceURI, aPrefix);
+  mNode->LookupPrefix(aNamespaceURI, aPrefix);
   return NS_OK;
 }
 
@@ -1220,7 +1220,7 @@ NS_IMETHODIMP
 nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {
-  mContent->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
+  mNode->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
   return NS_OK;
 }
 
@@ -1228,7 +1228,7 @@ NS_IMETHODIMP
 nsNode3Tearoff::IsDefaultNamespace(const nsAString& aNamespaceURI,
                                    PRBool* aReturn)
 {
-  *aReturn = mContent->IsDefaultNamespace(aNamespaceURI);
+  *aReturn = mNode->IsDefaultNamespace(aNamespaceURI);
   return NS_OK;
 }
 
