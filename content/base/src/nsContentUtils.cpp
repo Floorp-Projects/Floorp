@@ -3730,6 +3730,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
       if (!parser) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
+      document->SetFragmentParser(parser);
     }
     nsCOMPtr<nsIDOMDocumentFragment> frag;
     rv = NS_NewDocumentFragment(getter_AddRefs(frag), document->NodeInfoManager());
@@ -3759,7 +3760,6 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
     }
   
     NS_ADDREF(*aReturn = frag);
-    document->SetFragmentParser(parser);
     return NS_OK;
   }
 
