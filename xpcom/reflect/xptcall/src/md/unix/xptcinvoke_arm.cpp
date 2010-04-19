@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Mike Hommey <mh@glandium.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -43,84 +44,54 @@
 #error "This code is for Linux ARM only. Check that it works on your system, too.\nBeware that this code is highly compiler dependent."
 #endif
 
-
-
-/* Note that we give a "worst case" estimate of how much stack _might_ be
-* needed (for __ARM_EABI__), rather than the real count - this should be safe */
-
-#ifdef __ARM_EABI__
-#define DOUBLEWORD_ALIGN(p) ((PRUint32 *)((((PRUint32)(p)) + 7) & 0xfffffff8))
-#define VAR_STACK_SIZE_64 3
-#else
-#define DOUBLEWORD_ALIGN(p) (p)
-#define VAR_STACK_SIZE_64 2
-#endif
-
-// Remember that these 'words' are 32bit DWORDS
-
-static PRUint32
-invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
+/* This function copies a 64-bits word from dw to the given pointer in
+ * a buffer delimited by start and end, possibly wrapping around the
+ * buffer boundaries, and/or properly aligning the data at 64-bits word
+ * boundaries (for EABI).
+ * start and end are both assumed to be 64-bits aligned.
+ * Returns a pointer to the second 32-bits word copied (to accomodate
+ * the invoke_copy_to_stack loop).
+ */
+static PRUint32 *
+copy_double_word(PRUint32 *start, PRUint32 *current, PRUint32 *end, PRUint64 *dw)
 {
-    PRUint32 result = 0;
-    for(PRUint32 i = 0; i < paramCount; i++, s++)
-    {
-        if(s->IsPtrData())
-        {
-            result++;
-            continue;
-        }
-        switch(s->type)
-        {
-        case nsXPTType::T_I8     :
-        case nsXPTType::T_I16    :
-        case nsXPTType::T_I32    :
-            result++;
-            break;
-        case nsXPTType::T_I64    :
-            result+=VAR_STACK_SIZE_64;
-            break;
-        case nsXPTType::T_U8     :
-        case nsXPTType::T_U16    :
-        case nsXPTType::T_U32    :
-            result++;
-            break;
-        case nsXPTType::T_U64    :
-            result+=VAR_STACK_SIZE_64;
-            break;
-        case nsXPTType::T_FLOAT  :
-            result++;
-            break;
-        case nsXPTType::T_DOUBLE :
-            result+=VAR_STACK_SIZE_64;
-            break;
-        case nsXPTType::T_BOOL   :
-        case nsXPTType::T_CHAR   :
-        case nsXPTType::T_WCHAR  :
-            result++;
-            break;
-        default:
-            // all the others are plain pointer types
-            result++;
-            break;
-        }
-    }
-
 #ifdef __ARM_EABI__
-    /* Ensure stack is always aligned to doubleword boundary; we take 3 words
-     * off the stack to r1-r3 later, so it must always be on _odd_ word 
-     * boundary after this */
-    if (result % 2 == 0)
-        result++;
+    /* Aligning the pointer for EABI */
+    current = (PRUint32 *)(((PRUint32)current + 7) & ~7);
+    /* Wrap when reaching the end of the buffer */
+    if (current == end) current = start;
+#else
+    /* On non-EABI, 64-bits values are not aligned and when we reach the end
+     * of the buffer, we need to write half of the data at the end, and the
+     * other half at the beginning. */
+    if (current == end - 1) {
+        *current = ((PRUint32*)dw)[0];
+        *start = ((PRUint32*)dw)[1];
+        return start;
+    }
 #endif
 
-    return result;
+    *((PRUint64*) current) = *dw;
+    return current + 1;
 }
 
 static void
-invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
+invoke_copy_to_stack(PRUint32* stk, PRUint32 *end,
+                     PRUint32 paramCount, nsXPTCVariant* s)
 {
+    /* The stack buffer is 64-bits aligned. The end argument points to its end.
+     * The caller is assumed to create a stack buffer of at least four 32-bits
+     * words.
+     * We use the last three 32-bit words to store the values for r1, r2 and r3
+     * for the method call, i.e. the first words for arguments passing.
+     */
+    PRUint32 *d = end - 3;
     for(PRUint32 i = 0; i < paramCount; i++, d++, s++)
     {
+        /* Wrap when reaching the end of the stack buffer */
+        if (d == end) d = stk;
+        NS_ASSERTION(d >= stk && d < end,
+            "invoke_copy_to_stack is copying outside its given buffer");
         if(s->IsPtrData())
         {
             *((void**)d) = s->ptr;
@@ -134,16 +105,19 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
         case nsXPTType::T_I8     : *((PRInt32*) d) = s->val.i8;          break;
         case nsXPTType::T_I16    : *((PRInt32*) d) = s->val.i16;         break;
         case nsXPTType::T_I32    : *((PRInt32*) d) = s->val.i32;         break;
-        case nsXPTType::T_I64    : d = DOUBLEWORD_ALIGN(d);
-                                   *((PRInt64*) d) = s->val.i64; d++;    break;
+        case nsXPTType::T_I64    :
+            d = copy_double_word(stk, d, end, (PRUint64 *)&s->val.i64);
+            break;
         case nsXPTType::T_U8     : *((PRUint32*)d) = s->val.u8;          break;
         case nsXPTType::T_U16    : *((PRUint32*)d) = s->val.u16;         break;
         case nsXPTType::T_U32    : *((PRUint32*)d) = s->val.u32;         break;
-        case nsXPTType::T_U64    : d = DOUBLEWORD_ALIGN(d);
-                                   *((PRUint64*)d) = s->val.u64; d++;    break;
+        case nsXPTType::T_U64    :
+            d = copy_double_word(stk, d, end, (PRUint64 *)&s->val.u64);
+            break;
         case nsXPTType::T_FLOAT  : *((float*)   d) = s->val.f;           break;
-        case nsXPTType::T_DOUBLE : d = DOUBLEWORD_ALIGN(d);
-                                   *((double*)  d) = s->val.d;   d++;    break;
+        case nsXPTType::T_DOUBLE :
+            d = copy_double_word(stk, d, end, (PRUint64 *)&s->val.d);
+            break;
         case nsXPTType::T_BOOL   : *((PRInt32*) d) = s->val.b;           break;
         case nsXPTType::T_CHAR   : *((PRInt32*) d) = s->val.c;           break;
         case nsXPTType::T_WCHAR  : *((PRInt32*) d) = s->val.wc;          break;
@@ -155,48 +129,27 @@ invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount, nsXPTCVariant* s)
     }
 }
 
-extern "C" {
-    struct my_params_struct {
-        nsISupports* that;      
-        PRUint32 Index;         
-        PRUint32 Count;         
-        nsXPTCVariant* params;  
-        PRUint32 fn_count;     
-        PRUint32 fn_copy;      
-    };
-}
+typedef PRUint32 (*vtable_func)(nsISupports *, PRUint32, PRUint32, PRUint32);
 
 EXPORT_XPCOM_API(nsresult)
 NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params)
 {
-    PRUint32 result;
-    struct my_params_struct my_params;
-    my_params.that = that;
-    my_params.Index = methodIndex;
-    my_params.Count = paramCount;
-    my_params.params = params;
-    my_params.fn_copy = (PRUint32) &invoke_copy_to_stack;
-    my_params.fn_count = (PRUint32) &invoke_count_words;
 
 /* This is to call a given method of class that.
  * The parameters are in params, the number is in paramCount.
  * The routine will issue calls to count the number of words
  * required for argument passing and to copy the arguments to
  * the stack.
- * Since APCS passes the first 3 params in r1-r3, we need to
- * load the first three words from the stack and correct the stack
- * pointer (sp) in the appropriate way. This means:
- *
- * 1.) more than 3 arguments: load r1-r3, correct sp and remember No.
- *			      of bytes left on the stack in r4
- *
- * 2.) <= 2 args: load r1-r3 (we won't be causing a stack overflow I hope),
- *		  restore sp as if nothing had happened and set the marker r4 to zero.
- *
- * Afterwards sp will be restored using the value in r4 (which is not a temporary register
- * and will be preserved by the function/method called according to APCS [ARM Procedure
- * Calling Standard]).
+ * ACPS passes the first 3 params in r1-r3 (with exceptions for 64-bits
+ * arguments), and the remaining goes onto the stack.
+ * We allocate a buffer on the stack for a "worst case" estimate of how much
+ * stack might be needed for EABI, i.e. twice the number of parameters.
+ * The end of this buffer will be used to store r1 to r3, so that the start
+ * of the stack is the remaining parameters.
+ * The magic here is to call the method with "that" and three 32-bits
+ * arguments corresponding to r1-r3, so that the compiler generates the
+ * proper function call. The stack will also contain the remaining arguments.
  *
  * !!! IMPORTANT !!!
  * This routine makes assumptions about the vtable layout of the c++ compiler. It's implemented
@@ -204,45 +157,21 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
  *
  */
  
-  __asm__ __volatile__(
-    "ldr	r1, [%1, #12]	\n\t"	/* prepare to call invoke_count_words	*/
-    "ldr	ip, [%1, #16]	\n\t"	/* r0=paramCount, r1=params		*/
-    "ldr	r0, [%1,  #8]	\n\t"
-    "mov	lr, pc		\n\t"	/* call it...				*/
-    "mov	pc, ip		\n\t"
-    "mov	r4, r0, lsl #2	\n\t"	/* This is the amount of bytes needed.	*/
-    "sub	sp, sp, r4	\n\t"	/* use stack space for the args...	*/
-    "mov	r0, sp		\n\t"	/* prepare a pointer an the stack	*/
-    "ldr	r1, [%1,  #8]	\n\t"	/* =paramCount				*/
-    "ldr	r2, [%1, #12]	\n\t"	/* =params				*/
-    "ldr	ip, [%1, #20]	\n\t"	/* =invoke_copy_to_stack		*/
-    "mov	lr, pc		\n\t"	/* copy args to the stack like the	*/
-    "mov	pc, ip		\n\t"	/* compiler would.			*/
-    "ldr	r0, [%1]	\n\t"	/* =that				*/
-    "ldr	r1, [r0, #0]	\n\t"	/* get that->vtable offset		*/
-    "ldr	r2, [%1, #4]	\n\t"
-    "mov	r2, r2, lsl #2	\n\t"	/* a vtable_entry(x)=8 + (4 bytes * x)	*/
+  register vtable_func *vtable, func;
+  register int base_size = (paramCount > 1) ? paramCount : 2;
+  PRUint32 *stack_space = (PRUint32 *) __builtin_alloca(base_size * 8);
+
+  invoke_copy_to_stack(stack_space, &stack_space[base_size * 2],
+                       paramCount, params);
+
+  vtable = *reinterpret_cast<vtable_func **>(that);
 #if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */
-    "ldr        ip, [r1, r2]    \n\t"   /* get method adress from vtable        */
+  func = vtable[methodIndex];
 #else /* non G++ V3 ABI */
-    "add	r2, r2, #8	\n\t"	/* with this compilers			*/
-    "ldr	ip, [r1, r2]	\n\t"	/* get method adress from vtable	*/
+  func = vtable[2 + methodIndex];
 #endif
-    "cmp	r4, #12		\n\t"	/* more than 3 arguments???		*/
-    "ldmgtia	sp!, {r1, r2, r3}\n\t"	/* yes: load arguments for r1-r3	*/
-    "subgt	r4, r4, #12	\n\t"	/*      and correct the stack pointer	*/
-    "ldmleia	sp, {r1, r2, r3}\n\t"	/* no:  load r1-r3 from stack		*/ 
-    "addle	sp, sp, r4	\n\t"	/*      and restore stack pointer	*/
-    "movle	r4, #0		\n\t"	/*	a mark for restoring sp		*/
-    "ldr	r0, [%1, #0]	\n\t"	/* get (self)				*/
-    "mov	lr, pc		\n\t"	/* call mathod				*/
-    "mov	pc, ip		\n\t"
-    "add	sp, sp, r4	\n\t"	/* restore stack pointer		*/
-    "mov	%0, r0		\n\t"	/* the result...			*/
-    : "=r" (result)
-    : "r" (&my_params), "m" (my_params)
-    : "r0", "r1", "r2", "r3", "r4", "ip", "lr", "sp"
-    );
-    
-  return result;
+
+  return func(that, stack_space[base_size * 2 - 3],
+                    stack_space[base_size * 2 - 2],
+                    stack_space[base_size * 2 - 1]);
 }    
