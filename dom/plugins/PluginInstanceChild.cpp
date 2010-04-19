@@ -80,6 +80,7 @@ using mozilla::gfx::SharedDIB;
 #define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
+#include "nsPluginUtilsOSX.h"
 #endif // defined(XP_MACOSX)
 
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
@@ -100,9 +101,8 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
 #if defined(OS_MACOSX)  
-    , mShColorSpace(nsnull)
-    , mShContext(nsnull)
-    , mDrawingModel(NPDrawingModelCoreGraphics)
+    , mShColorSpace(NULL)
+    , mShContext(NULL)
 #endif
 {
     memset(&mWindow, 0, sizeof(mWindow));
@@ -344,7 +344,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     }
 
     case NPNVsupportsCoreAnimationBool: {
-        *((NPBool*)aValue) = true;
+        *((NPBool*)aValue) = false;
         return NPERR_NO_ERROR;
     }
 
@@ -407,7 +407,6 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
 
         if (!CallNPN_SetValue_NPPVpluginDrawingModel(drawingModel, &rv))
             return NPERR_GENERIC_ERROR;
-        mDrawingModel = drawingModel;
 
         return rv;
     }
@@ -590,7 +589,6 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
 }
 
 #ifdef XP_MACOSX
-
 bool
 PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
                                                  Shmem& mem,
@@ -657,65 +655,6 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
     NS_RUNTIMEABORT("not reached.");
     *rtnmem = mem;
     return true;
-}
-#endif
-
-#ifdef XP_MACOSX
-bool
-PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
-                                                     const uint32_t &surfaceid,
-                                                     int16_t* handled)
-{
-    PLUGIN_LOG_DEBUG_FUNCTION;
-    AssertPluginThread();
-
-    NPCocoaEvent evcopy = event.event;
-    nsIOSurface* surf = nsIOSurface::LookupSurface(surfaceid);
-    if (!surf) {
-        NS_ERROR("Invalid IOSurface.\n");
-        *handled = false;
-        return false;
-    }
-
-    if (evcopy.type == NPCocoaEventDrawRect) {
-        mCARenderer.AttachIOSurface(surf);
-        if (!mCARenderer.isInit()) {
-            void *caLayer = nsnull;
-            NPError result = mPluginIface->getvalue(GetNPP(), 
-                                     NPPVpluginCoreAnimationLayer,
-                                     &caLayer);
-            if (result != NPERR_NO_ERROR || !caLayer) {
-                PLUGIN_LOG_DEBUG(("Plugin requested CoreAnimation but did not "
-                                  "provide CALayer."));
-                *handled = false;
-                return false;
-            }
-            mCARenderer.SetupRenderer(caLayer, mWindow.width, mWindow.height);
-            // Flash needs to have the window set again after this step
-            if (mPluginIface->setwindow)
-                (void) mPluginIface->setwindow(&mData, &mWindow);
-        }
-    } else {
-        PLUGIN_LOG_DEBUG(("Invalid event type for "
-                          "AnswerNNP_HandleEvent_IOSurface."));
-        *handled = false;
-        return false;
-    } 
-
-    mCARenderer.Render(mWindow.width, mWindow.height, nsnull);
-
-    return true;
-
-}
-
-#else
-bool
-PluginInstanceChild::AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
-                                                     const uint32_t &surfaceid,
-                                                     int16_t* handled)
-{
-    NS_RUNTIMEABORT("NPP_HandleEvent_IOSurface is a OSX-only message");
-    return false;
 }
 #endif
 
@@ -860,7 +799,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
         // Release the shared context so that it is reallocated
         // with the new size. 
         ::CGContextRelease(mShContext);
-        mShContext = nsnull;
+        mShContext = NULL;
     }
 
     if (mPluginIface->setwindow)
