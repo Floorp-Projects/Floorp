@@ -1232,21 +1232,104 @@ nsNode3Tearoff::IsDefaultNamespace(const nsAString& aNamespaceURI,
   return NS_OK;
 }
 
+nsIContent*
+nsGenericElement::GetFirstElementChild()
+{
+  nsAttrAndChildArray& children = mAttrsAndChildren;
+  PRUint32 i, count = children.ChildCount();
+  for (i = 0; i < count; ++i) {
+    nsIContent* child = children.ChildAt(i);
+    if (child->IsElement()) {
+      return child;
+    }
+  }
+  
+  return nsnull;
+}
+
+nsIContent*
+nsGenericElement::GetLastElementChild()
+{
+  nsAttrAndChildArray& children = mAttrsAndChildren;
+  PRUint32 i = children.ChildCount();
+  while (i > 0) {
+    nsIContent* child = children.ChildAt(--i);
+    if (child->IsElement()) {
+      return child;
+    }
+  }
+  
+  return nsnull;
+}
+
+nsIContent*
+nsGenericElement::GetPreviousElementSibling()
+{
+  nsIContent* parent = GetParent();
+  if (!parent) {
+    return nsnull;
+  }
+
+  NS_ASSERTION(parent->IsElement() ||
+               parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
+               "Parent content must be an element or a doc fragment");
+
+  nsAttrAndChildArray& children =
+    static_cast<nsGenericElement*>(parent)->mAttrsAndChildren;
+  PRInt32 index = children.IndexOfChild(this);
+  if (index < 0) {
+    return nsnull;
+  }
+
+  PRUint32 i = index;
+  while (i > 0) {
+    nsIContent* child = children.ChildAt((PRUint32)--i);
+    if (child->IsElement()) {
+      return child;
+    }
+  }
+  
+  return nsnull;
+}
+
+nsIContent*
+nsGenericElement::GetNextElementSibling()
+{
+  nsIContent* parent = GetParent();
+  if (!parent) {
+    return nsnull;
+  }
+
+  NS_ASSERTION(parent->IsElement() ||
+               parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
+               "Parent content must be an element or a doc fragment");
+
+  nsAttrAndChildArray& children =
+    static_cast<nsGenericElement*>(parent)->mAttrsAndChildren;
+  PRInt32 index = children.IndexOfChild(this);
+  if (index < 0) {
+    return nsnull;
+  }
+
+  PRUint32 i, count = children.ChildCount();
+  for (i = (PRUint32)index + 1; i < count; ++i) {
+    nsIContent* child = children.ChildAt(i);
+    if (child->IsElement()) {
+      return child;
+    }
+  }
+  
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsNSElementTearoff::GetFirstElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
-  nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
-  PRUint32 i, count = children.ChildCount();
-  for (i = 0; i < count; ++i) {
-    nsIContent* child = children.ChildAt(i);
-    if (child->IsElement()) {
-      return CallQueryInterface(child, aResult);
-    }
-  }
-  
-  return NS_OK;
+  nsIContent *result = mContent->GetFirstElementChild();
+
+  return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1254,16 +1337,9 @@ nsNSElementTearoff::GetLastElementChild(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
-  nsAttrAndChildArray& children = mContent->mAttrsAndChildren;
-  PRUint32 i = children.ChildCount();
-  while (i > 0) {
-    nsIContent* child = children.ChildAt(--i);
-    if (child->IsElement()) {
-      return CallQueryInterface(child, aResult);
-    }
-  }
-  
-  return NS_OK;
+  nsIContent *result = mContent->GetLastElementChild();
+
+  return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1271,31 +1347,9 @@ nsNSElementTearoff::GetPreviousElementSibling(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
-  nsIContent* parent = mContent->GetParent();
-  if (!parent) {
-    return NS_OK;
-  }
+  nsIContent *result = mContent->GetPreviousElementSibling();
 
-  NS_ASSERTION(parent->IsElement() ||
-               parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
-               "Parent content must be an element or a doc fragment");
-
-  nsAttrAndChildArray& children =
-    static_cast<nsGenericElement*>(parent)->mAttrsAndChildren;
-  PRInt32 index = children.IndexOfChild(mContent);
-  if (index < 0) {
-    return NS_OK;
-  }
-
-  PRUint32 i = index;
-  while (i > 0) {
-    nsIContent* child = children.ChildAt((PRUint32)--i);
-    if (child->IsElement()) {
-      return CallQueryInterface(child, aResult);
-    }
-  }
-  
-  return NS_OK;
+  return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1303,41 +1357,19 @@ nsNSElementTearoff::GetNextElementSibling(nsIDOMElement** aResult)
 {
   *aResult = nsnull;
 
-  nsIContent* parent = mContent->GetParent();
-  if (!parent) {
-    return NS_OK;
-  }
+  nsIContent *result = mContent->GetNextElementSibling();
 
-  NS_ASSERTION(parent->IsElement() ||
-               parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
-               "Parent content must be an element or a doc fragment");
-
-  nsAttrAndChildArray& children =
-    static_cast<nsGenericElement*>(parent)->mAttrsAndChildren;
-  PRInt32 index = children.IndexOfChild(mContent);
-  if (index < 0) {
-    return NS_OK;
-  }
-
-  PRUint32 i, count = children.ChildCount();
-  for (i = (PRUint32)index + 1; i < count; ++i) {
-    nsIContent* child = children.ChildAt(i);
-    if (child->IsElement()) {
-      return CallQueryInterface(child, aResult);
-    }
-  }
-  
-  return NS_OK;
+  return result ? CallQueryInterface(result, aResult) : NS_OK;
 }
 
 nsContentList*
-nsNSElementTearoff::GetChildrenList()
+nsGenericElement::GetChildrenList()
 {
-  nsGenericElement::nsDOMSlots *slots = mContent->GetDOMSlots();
+  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
   NS_ENSURE_TRUE(slots, nsnull);
 
   if (!slots->mChildrenList) {
-    slots->mChildrenList = new nsContentList(mContent, nsGkAtoms::_asterix,
+    slots->mChildrenList = new nsContentList(this, nsGkAtoms::_asterix,
                                              kNameSpaceID_Wildcard, PR_FALSE);
   }
 
@@ -1347,43 +1379,50 @@ nsNSElementTearoff::GetChildrenList()
 NS_IMETHODIMP
 nsNSElementTearoff::GetChildElementCount(PRUint32* aResult)
 {
-  *aResult = 0;
-
-  nsContentList* list = GetChildrenList();
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-
-  *aResult = list->Length(PR_TRUE);
-
-  return NS_OK;
+  return mContent->GetChildElementCount(aResult);
 }
 
 NS_IMETHODIMP
 nsNSElementTearoff::GetChildren(nsIDOMNodeList** aResult)
 {
-  *aResult = nsnull;
+  return mContent->GetChildren(aResult);
+}
 
-  nsContentList* list = GetChildrenList();
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+nsIDOMDOMTokenList*
+nsGenericElement::GetClassList(nsresult *aResult)
+{
+  *aResult = NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF(*aResult = list);
+  nsGenericElement::nsDOMSlots *slots = GetDOMSlots();
+  NS_ENSURE_TRUE(slots, nsnull);
 
-  return NS_OK;
+  if (!slots->mClassList) {
+    nsCOMPtr<nsIAtom> classAttr = GetClassAttributeName();
+    if (!classAttr) {
+      *aResult = NS_OK;
+
+      return nsnull;
+    }
+
+    slots->mClassList = new nsDOMTokenList(this, classAttr);
+    NS_ENSURE_TRUE(slots->mClassList, nsnull);
+  }
+
+  *aResult = NS_OK;
+
+  return slots->mClassList;
 }
 
 NS_IMETHODIMP
 nsNSElementTearoff::GetClassList(nsIDOMDOMTokenList** aResult)
 {
-  nsGenericElement::nsDOMSlots *slots = mContent->GetDOMSlots();
-  NS_ENSURE_TRUE(slots, nsnull);
+  *aResult = nsnull;
 
-  if (!slots->mClassList) {
-    nsCOMPtr<nsIAtom> classAttr = mContent->GetClassAttributeName();
-    NS_ENSURE_TRUE(classAttr, NS_OK);
-    slots->mClassList = new nsDOMTokenList(mContent, classAttr);
-    NS_ENSURE_TRUE(slots->mClassList, NS_ERROR_OUT_OF_MEMORY);
-  }
+  nsresult rv;
+  nsIDOMDOMTokenList* list = mContent->GetClassList(&rv);
+  NS_ENSURE_TRUE(list, rv);
 
-  NS_ADDREF(*aResult = slots->mClassList);
+  NS_ADDREF(*aResult = list);
 
   return NS_OK;
 }
@@ -1429,7 +1468,7 @@ NS_IMETHODIMP
 nsNSElementTearoff::GetElementsByClassName(const nsAString& aClasses,
                                            nsIDOMNodeList** aReturn)
 {
-  return nsDocument::GetElementsByClassNameHelper(mContent, aClasses, aReturn);
+  return mContent->GetElementsByClassName(aClasses, aReturn);
 }
 
 nsIFrame*
@@ -1465,18 +1504,17 @@ nsGenericElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
 }
 
 nsIScrollableFrame*
-nsNSElementTearoff::GetScrollFrame(nsIFrame **aStyledFrame)
+nsGenericElement::GetScrollFrame(nsIFrame **aStyledFrame)
 {
   // it isn't clear what to return for SVG nodes, so just return nothing
-  if (mContent->IsSVG()) {
+  if (IsSVG()) {
     if (aStyledFrame) {
       *aStyledFrame = nsnull;
     }
     return nsnull;
   }
 
-  nsIFrame* frame =
-    (static_cast<nsGenericElement*>(mContent))->GetStyledFrame();
+  nsIFrame* frame = GetStyledFrame();
 
   if (aStyledFrame) {
     *aStyledFrame = frame;
@@ -1493,11 +1531,11 @@ nsNSElementTearoff::GetScrollFrame(nsIFrame **aStyledFrame)
       return scrollFrame;
   }
 
-  nsIDocument* doc = mContent->GetOwnerDoc();
+  nsIDocument* doc = GetOwnerDoc();
   PRBool quirksMode = doc->GetCompatibilityMode() == eCompatibility_NavQuirks;
   Element* elementWithRootScrollInfo =
     quirksMode ? doc->GetBodyElement() : doc->GetRootElement();
-  if (mContent == elementWithRootScrollInfo) {
+  if (this == elementWithRootScrollInfo) {
     // In quirks mode, the scroll info for the body element should map to the
     // root scrollable frame.
     // In strict mode, the scroll info for the root element should map to the
@@ -1508,23 +1546,26 @@ nsNSElementTearoff::GetScrollFrame(nsIFrame **aStyledFrame)
   return nsnull;
 }
 
-nsresult
+PRInt32
+nsGenericElement::GetScrollTop()
+{
+  nsIScrollableFrame* sf = GetScrollFrame();
+
+  return sf ?
+         nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollPosition().y) :
+         0;
+}
+
+NS_IMETHODIMP
 nsNSElementTearoff::GetScrollTop(PRInt32* aScrollTop)
 {
-  NS_ENSURE_ARG_POINTER(aScrollTop);
-  *aScrollTop = 0;
-
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (sf) {
-    nscoord y = sf->GetScrollPosition().y;
-    *aScrollTop = nsPresContext::AppUnitsToIntCSSPixels(y);
-  }
+  *aScrollTop = mContent->GetScrollTop();
 
   return NS_OK;
 }
 
-nsresult
-nsNSElementTearoff::SetScrollTop(PRInt32 aScrollTop)
+void
+nsGenericElement::SetScrollTop(PRInt32 aScrollTop)
 {
   nsIScrollableFrame* sf = GetScrollFrame();
   if (sf) {
@@ -1532,27 +1573,36 @@ nsNSElementTearoff::SetScrollTop(PRInt32 aScrollTop)
     pt.y = nsPresContext::CSSPixelsToAppUnits(aScrollTop);
     sf->ScrollTo(pt, nsIScrollableFrame::INSTANT);
   }
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::SetScrollTop(PRInt32 aScrollTop)
+{
+  mContent->SetScrollTop(aScrollTop);
 
   return NS_OK;
 }
 
-nsresult
+PRInt32
+nsGenericElement::GetScrollLeft()
+{
+  nsIScrollableFrame* sf = GetScrollFrame();
+
+  return sf ?
+         nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollPosition().x) :
+         0;
+}
+
+NS_IMETHODIMP
 nsNSElementTearoff::GetScrollLeft(PRInt32* aScrollLeft)
 {
-  NS_ENSURE_ARG_POINTER(aScrollLeft);
-  *aScrollLeft = 0;
-
-  nsIScrollableFrame* sf = GetScrollFrame();
-  if (sf) {
-    nscoord x = sf->GetScrollPosition().x;
-    *aScrollLeft = nsPresContext::AppUnitsToIntCSSPixels(x);
-  }
+  *aScrollLeft = mContent->GetScrollLeft();
 
   return NS_OK;
 }
 
-nsresult
-nsNSElementTearoff::SetScrollLeft(PRInt32 aScrollLeft)
+void
+nsGenericElement::SetScrollLeft(PRInt32 aScrollLeft)
 {
   nsIScrollableFrame* sf = GetScrollFrame();
   if (sf) {
@@ -1560,58 +1610,70 @@ nsNSElementTearoff::SetScrollLeft(PRInt32 aScrollLeft)
     pt.x = nsPresContext::CSSPixelsToAppUnits(aScrollLeft);
     sf->ScrollTo(pt, nsIScrollableFrame::INSTANT);
   }
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::SetScrollLeft(PRInt32 aScrollLeft)
+{
+  mContent->SetScrollLeft(aScrollLeft);
 
   return NS_OK;
 }
 
-nsresult
-nsNSElementTearoff::GetScrollHeight(PRInt32* aScrollHeight)
+PRInt32
+nsGenericElement::GetScrollHeight()
 {
-  NS_ENSURE_ARG_POINTER(aScrollHeight);
-  *aScrollHeight = 0;
-
-  if (mContent->IsSVG())
-    return NS_OK;
+  if (IsSVG())
+    return 0;
 
   nsIScrollableFrame* sf = GetScrollFrame();
   if (!sf) {
     nsRect rcFrame;
     nsCOMPtr<nsIContent> parent;
-    (static_cast<nsGenericElement *>(mContent))->GetOffsetRect(rcFrame, getter_AddRefs(parent));
-    *aScrollHeight = rcFrame.height;
-    return NS_OK;
+    GetOffsetRect(rcFrame, getter_AddRefs(parent));
+    return rcFrame.height;
   }
 
   nscoord height = sf->GetScrollRange().height + sf->GetScrollPortRect().height;
-  *aScrollHeight = nsPresContext::AppUnitsToIntCSSPixels(height);
+  return nsPresContext::AppUnitsToIntCSSPixels(height);
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetScrollHeight(PRInt32* aScrollHeight)
+{
+  *aScrollHeight = mContent->GetScrollHeight();
+
   return NS_OK;
 }
 
-nsresult
-nsNSElementTearoff::GetScrollWidth(PRInt32* aScrollWidth)
+PRInt32
+nsGenericElement::GetScrollWidth()
 {
-  NS_ENSURE_ARG_POINTER(aScrollWidth);
-  *aScrollWidth = 0;
-
-  if (mContent->IsSVG())
-    return NS_OK;
+  if (IsSVG())
+    return 0;
 
   nsIScrollableFrame* sf = GetScrollFrame();
   if (!sf) {
     nsRect rcFrame;
     nsCOMPtr<nsIContent> parent;
-    (static_cast<nsGenericElement *>(mContent))->GetOffsetRect(rcFrame, getter_AddRefs(parent));
-    *aScrollWidth = rcFrame.width;
-    return NS_OK;
+    GetOffsetRect(rcFrame, getter_AddRefs(parent));
+    return rcFrame.width;
   }
 
   nscoord width = sf->GetScrollRange().width + sf->GetScrollPortRect().width;
-  *aScrollWidth = nsPresContext::AppUnitsToIntCSSPixels(width);
+  return nsPresContext::AppUnitsToIntCSSPixels(width);
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetScrollWidth(PRInt32 *aScrollWidth)
+{
+  *aScrollWidth = mContent->GetScrollWidth();
+
   return NS_OK;
 }
 
 nsRect
-nsNSElementTearoff::GetClientAreaRect()
+nsGenericElement::GetClientAreaRect()
 {
   nsIFrame* styledFrame;
   nsIScrollableFrame* sf = GetScrollFrame(&styledFrame);
@@ -1632,40 +1694,36 @@ nsNSElementTearoff::GetClientAreaRect()
   return nsRect(0, 0, 0, 0);
 }
 
-nsresult
-nsNSElementTearoff::GetClientTop(PRInt32* aLength)
+NS_IMETHODIMP
+nsNSElementTearoff::GetClientTop(PRInt32 *aClientTop)
 {
-  NS_ENSURE_ARG_POINTER(aLength);
-  *aLength = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().y);
-  return NS_OK;
-}
-
-nsresult
-nsNSElementTearoff::GetClientLeft(PRInt32* aLength)
-{
-  NS_ENSURE_ARG_POINTER(aLength);
-  *aLength = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().x);
-  return NS_OK;
-}
-
-nsresult
-nsNSElementTearoff::GetClientHeight(PRInt32* aLength)
-{
-  NS_ENSURE_ARG_POINTER(aLength);
-  *aLength = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().height);
-  return NS_OK;
-}
-
-nsresult
-nsNSElementTearoff::GetClientWidth(PRInt32* aLength)
-{
-  NS_ENSURE_ARG_POINTER(aLength);
-  *aLength = nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().width);
+  *aClientTop = mContent->GetClientTop();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
+nsNSElementTearoff::GetClientLeft(PRInt32 *aClientLeft)
+{
+  *aClientLeft = mContent->GetClientLeft();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetClientHeight(PRInt32 *aClientHeight)
+{
+  *aClientHeight = mContent->GetClientHeight();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetClientWidth(PRInt32 *aClientWidth)
+{
+  *aClientWidth = mContent->GetClientWidth();
+  return NS_OK;
+}
+
+nsresult
+nsGenericElement::GetBoundingClientRect(nsIDOMClientRect** aResult)
 {
   // Weak ref, since we addref it below
   nsClientRect* rect = new nsClientRect();
@@ -1674,7 +1732,7 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
 
   NS_ADDREF(*aResult = rect);
   
-  nsIFrame* frame = mContent->GetPrimaryFrame(Flush_Layout);
+  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
   if (!frame) {
     // display:none, perhaps? Return the empty rect
     return NS_OK;
@@ -1687,7 +1745,13 @@ nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
 }
 
 NS_IMETHODIMP
-nsNSElementTearoff::GetClientRects(nsIDOMClientRectList** aResult)
+nsNSElementTearoff::GetBoundingClientRect(nsIDOMClientRect** aResult)
+{
+  return mContent->GetBoundingClientRect(aResult);
+}
+
+nsresult
+nsGenericElement::GetClientRects(nsIDOMClientRectList** aResult)
 {
   *aResult = nsnull;
 
@@ -1695,7 +1759,7 @@ nsNSElementTearoff::GetClientRects(nsIDOMClientRectList** aResult)
   if (!rectList)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsIFrame* frame = mContent->GetPrimaryFrame(Flush_Layout);
+  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
   if (!frame) {
     // display:none, perhaps? Return an empty list
     *aResult = rectList.forget().get();
@@ -1709,6 +1773,12 @@ nsNSElementTearoff::GetClientRects(nsIDOMClientRectList** aResult)
     return builder.mRV;
   *aResult = rectList.forget().get();
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::GetClientRects(nsIDOMClientRectList** aResult)
+{
+  return mContent->GetClientRects(aResult);
 }
 
 //----------------------------------------------------------------------
@@ -5540,30 +5610,29 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aReturn)
-{
-  NS_PRECONDITION(aReturn, "Null out param?");
-  *aReturn = nsGenericElement::doMatchesSelector(mContent, aSelector);
-  return NS_OK;
-}
 
-/* static */
 PRBool
-nsGenericElement::doMatchesSelector(Element* aElement,
-                                    const nsAString& aSelector)
+nsGenericElement::MozMatchesSelector(const nsAString& aSelector)
 {
   nsAutoPtr<nsCSSSelectorList> selectorList;
   nsPresContext* presContext;
   PRBool matches = PR_FALSE;
 
-  if (NS_SUCCEEDED(ParseSelectorList(aElement, aSelector,
+  if (NS_SUCCEEDED(ParseSelectorList(this, aSelector,
                                      getter_Transfers(selectorList),
                                      &presContext)))
   {
-    RuleProcessorData data(presContext, aElement, nsnull);
+    RuleProcessorData data(presContext, this, nsnull);
     matches = nsCSSRuleProcessor::SelectorListMatches(data, selectorList);
   }
 
   return matches;
+}
+
+NS_IMETHODIMP
+nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aReturn)
+{
+  NS_PRECONDITION(aReturn, "Null out param?");
+  *aReturn = mContent->MozMatchesSelector(aSelector);
+  return NS_OK;
 }
