@@ -133,7 +133,6 @@ public:
   nsresult IsSupported(const nsAString& aFeature,
                        const nsAString& aVersion,
                        PRBool* aReturn);
-  nsresult GetBaseURI(nsAString& aURI);
 
   nsresult LookupPrefix(const nsAString& aNamespaceURI,
                         nsAString& aPrefix);

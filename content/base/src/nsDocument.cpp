@@ -2298,9 +2298,9 @@ nsDocument::StopDocumentLoad()
 void
 nsDocument::SetDocumentURI(nsIURI* aURI)
 {
-  nsCOMPtr<nsIURI> oldBase = nsIDocument::GetBaseURI();
+  nsCOMPtr<nsIURI> oldBase = GetDocBaseURI();
   mDocumentURI = NS_TryToMakeImmutable(aURI);
-  nsIURI* newBase = nsIDocument::GetBaseURI();
+  nsIURI* newBase = GetDocBaseURI();
 
   PRBool equalBases = PR_FALSE;
   if (oldBase && newBase) {
@@ -4804,7 +4804,7 @@ nsDocument::LoadBindingDocument(const nsAString& aURI)
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI,
                           mCharacterSet.get(),
-                          static_cast<nsIDocument *>(this)->GetBaseURI());
+                          GetDocBaseURI());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Figure out the right principal to use
@@ -5721,12 +5721,7 @@ nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
 NS_IMETHODIMP
 nsDocument::GetBaseURI(nsAString &aURI)
 {
-  nsCAutoString spec;
-  if (nsIDocument::GetBaseURI()) {
-    nsIDocument::GetBaseURI()->GetSpec(spec);
-  }
-
-  CopyUTF8toUTF16(spec, aURI);
+  nsINode::GetBaseURI(aURI);
 
   return NS_OK;
 }

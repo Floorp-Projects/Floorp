@@ -751,7 +751,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
 
     nsCOMPtr<nsIURI> url;
     rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull,
-                   mDocument->GetBaseURI());
+                   mDocument->GetDocBaseURI());
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Do security check

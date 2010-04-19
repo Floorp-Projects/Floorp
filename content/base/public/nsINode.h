@@ -955,6 +955,19 @@ public:
     NS_NOTREACHED("SetScriptTypeID not implemented");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+
+  /**
+   * Get the base URI for any relative URIs within this piece of
+   * content. Generally, this is the document's base URI, but certain
+   * content carries a local base for backward compatibility, and XML
+   * supports setting a per-node base URI.
+   *
+   * @return the base URI
+   */
+  virtual already_AddRefed<nsIURI> GetBaseURI() const = 0;
+
+  void GetBaseURI(nsAString &aURI) const;
+
 protected:
 
   // Override this function to create a custom slots class.

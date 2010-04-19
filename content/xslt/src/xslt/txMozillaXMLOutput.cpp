@@ -265,7 +265,7 @@ txMozillaXMLOutput::endDocument(nsresult aResult)
             nsCOMPtr<nsIRefreshURI> refURI =
                 do_QueryInterface(win->GetDocShell());
             if (refURI) {
-                refURI->SetupRefreshURIFromHeader(mDocument->GetBaseURI(),
+                refURI->SetupRefreshURIFromHeader(mDocument->GetDocBaseURI(),
                                                   mRefreshString);
             }
         }

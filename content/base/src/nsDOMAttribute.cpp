@@ -503,15 +503,20 @@ nsDOMAttribute::IsSupported(const nsAString& aFeature,
                                                aFeature, aVersion, aReturn);
 }
 
+already_AddRefed<nsIURI>
+nsDOMAttribute::GetBaseURI() const
+{
+  nsINode *parent = GetContentInternal();
+
+  return parent ? parent->GetBaseURI() : nsnull;
+}
+
 NS_IMETHODIMP
 nsDOMAttribute::GetBaseURI(nsAString &aURI)
 {
-  aURI.Truncate();
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(GetContentInternal()));
-  if (node)
-    rv = node->GetBaseURI(aURI);
-  return rv;
+  nsINode::GetBaseURI(aURI);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

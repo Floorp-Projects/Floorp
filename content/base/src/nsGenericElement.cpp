@@ -588,6 +588,19 @@ nsINode::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   return rv;
 }
 
+void
+nsINode::GetBaseURI(nsAString &aURI) const
+{
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+
+  nsCAutoString spec;
+  if (baseURI) {
+    baseURI->GetSpec(spec);
+  }
+
+  CopyUTF8toUTF16(spec, aURI);
+}
+
 //----------------------------------------------------------------------
 
 PRInt32
@@ -749,14 +762,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNode3Tearoff)
 NS_IMETHODIMP
 nsNode3Tearoff::GetBaseURI(nsAString& aURI)
 {
-  nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
-  nsCAutoString spec;
-
-  if (baseURI) {
-    baseURI->GetSpec(spec);
-  }
-
-  CopyUTF8toUTF16(spec, aURI);
+  mContent->GetBaseURI(aURI);
   
   return NS_OK;
 }
@@ -3210,10 +3216,7 @@ nsGenericElement::GetBaseURI() const
   GetAttr(kNameSpaceID_XML, nsGkAtoms::base, value);
   if (value.IsEmpty()) {
     // No xml:base, so we just use the parent's base URL
-    nsIURI *base = nsnull;
-    parentBase.swap(base);
-
-    return base;
+    return parentBase.forget();
   }
 
   nsCOMPtr<nsIURI> ourBase;
@@ -3226,16 +3229,7 @@ nsGenericElement::GetBaseURI() const
                                 nsIScriptSecurityManager::STANDARD);
   }
 
-  nsIURI *base;
-  if (NS_FAILED(rv)) {
-    base = parentBase;
-  } else {
-    base = ourBase;
-  }
-
-  NS_IF_ADDREF(base);
-
-  return base;    
+  return NS_SUCCEEDED(rv) ? ourBase.forget() : parentBase.forget();
 }
 
 PRBool

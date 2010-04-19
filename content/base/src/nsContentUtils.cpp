@@ -908,7 +908,8 @@ nsContentUtils::GetOfflineAppManifest(nsIDocument *aDocument, nsIURI **aURI)
   }
 
   nsContentUtils::NewURIWithDocumentCharset(aURI, manifestSpec,
-                                            aDocument, aDocument->GetBaseURI());
+                                            aDocument,
+                                            aDocument->GetDocBaseURI());
 }
 
 /* static */
