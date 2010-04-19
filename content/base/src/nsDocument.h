@@ -930,6 +930,15 @@ public:
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
+  already_AddRefed<nsContentList>
+    GetElementsByTagName(const nsAString& aTagName);
+  already_AddRefed<nsContentList>
+    GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                           const nsAString& aLocalName);
+
+  virtual mozilla::dom::Element *GetElementById(const nsAString& aElementId,
+                                                nsresult *aResult);
+
 protected:
   friend class nsNodeUtils;
   void RegisterNamedItems(nsIContent *aContent);
