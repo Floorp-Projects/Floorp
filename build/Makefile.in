@@ -198,4 +198,6 @@ ifeq ($(OS_ARCH),Linux)
 libs:: $(topsrcdir)/tools/rb/fix-linux-stack.pl
 	$(INSTALL) $< $(DIST)/bin
 endif
+
+GARBAGE += automationutils.pyc
 endif # ENABLE_TESTS
