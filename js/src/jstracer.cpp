@@ -13094,7 +13094,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
 
     if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp)) {
         JS_ASSERT_IF(!JSVAL_IS_BOOLEAN(*vp), *vp == JSVAL_HOLE);
-        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_peq, v_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))), exit);
+        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))), exit);
 
         /* Don't let the hole value escape. Turn it into an undefined. */
         if (*vp == JSVAL_HOLE) {
