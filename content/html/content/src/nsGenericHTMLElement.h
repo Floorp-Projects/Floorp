@@ -1204,6 +1204,14 @@ nsGenericHTMLElement*                                             \
 NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
                                   PRBool aFromParser = PR_FALSE);
 
+#define NS_DECLARE_NS_NEW_HTML_ELEMENT_AS_SHARED(_elementName)    \
+inline nsGenericHTMLElement*                                      \
+NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo,         \
+                                  PRBool aFromParser = PR_FALSE)  \
+{                                                                 \
+  return NS_NewHTMLSharedElement(aNodeInfo, aFromParser);         \
+}
+
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Shared)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedList)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(SharedObject)
@@ -1225,9 +1233,9 @@ NS_DECLARE_NS_NEW_HTML_ELEMENT(Form)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Frame)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(FrameSet)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(HR)
-NS_DECLARE_NS_NEW_HTML_ELEMENT(Head)
+NS_DECLARE_NS_NEW_HTML_ELEMENT_AS_SHARED(Head)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Heading)
-NS_DECLARE_NS_NEW_HTML_ELEMENT(Html)
+NS_DECLARE_NS_NEW_HTML_ELEMENT_AS_SHARED(Html)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(IFrame)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Image)
 NS_DECLARE_NS_NEW_HTML_ELEMENT(Input)
