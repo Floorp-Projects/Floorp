@@ -43,6 +43,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
+#include "nsHtml5Macros.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
@@ -57,7 +58,7 @@
 #include "nsHtml5StateSnapshot.h"
 
 
-nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, PRInt32 mode, PRInt32 originalMode, PRBool framesetOk, PRInt32 foreignFlag, PRBool needToDropLF, PRBool quirks)
+nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, PRInt32 mode, PRInt32 originalMode, PRBool framesetOk, PRBool inForeign, PRBool needToDropLF, PRBool quirks)
   : stack(stack),
     listOfActiveFormattingElements(listOfActiveFormattingElements),
     formPointer(formPointer),
@@ -65,7 +66,7 @@ nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> sta
     mode(mode),
     originalMode(originalMode),
     framesetOk(framesetOk),
-    foreignFlag(foreignFlag),
+    inForeign(inForeign),
     needToDropLF(needToDropLF),
     quirks(quirks)
 {
@@ -114,10 +115,10 @@ nsHtml5StateSnapshot::isFramesetOk()
   return framesetOk;
 }
 
-PRInt32 
-nsHtml5StateSnapshot::getForeignFlag()
+PRBool 
+nsHtml5StateSnapshot::isInForeign()
 {
-  return foreignFlag;
+  return inForeign;
 }
 
 PRBool 
@@ -153,7 +154,7 @@ nsHtml5StateSnapshot::~nsHtml5StateSnapshot()
   }
   stack.release();
   for (PRInt32 i = 0; i < listOfActiveFormattingElements.length; i++) {
-    if (!!listOfActiveFormattingElements[i]) {
+    if (listOfActiveFormattingElements[i]) {
       listOfActiveFormattingElements[i]->release();
     }
   }

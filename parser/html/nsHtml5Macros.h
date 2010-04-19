@@ -15,7 +15,7 @@
  *
  * The Initial Developer of the Original Code is
  * Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,43 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAHtml5TreeBuilderState_h___
-#define nsAHtml5TreeBuilderState_h___
+#ifndef nsHtml5Macros_h_
+#define nsHtml5Macros_h_
 
-/**
- * Interface for exposing the internal state of the HTML5 tree builder.
- * For more documentation, please see
- * http://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/impl/StateSnapshot.java
- */
-class nsAHtml5TreeBuilderState {
-  public:
-  
-    virtual jArray<nsHtml5StackNode*,PRInt32> getStack() = 0;
-    
-    virtual jArray<nsHtml5StackNode*,PRInt32> getListOfActiveFormattingElements() = 0;
-    
-    virtual PRInt32 getStackLength() = 0;
+#define NS_HTML5_CONTINUE(target) \
+  goto target
 
-    virtual PRInt32 getListOfActiveFormattingElementsLength() = 0;
+#define NS_HTML5_BREAK(target) \
+  goto target ## _end
 
-    virtual nsIContent** getFormPointer() = 0;
-    
-    virtual nsIContent** getHeadPointer() = 0;
-
-    virtual PRInt32 getMode() = 0;
-
-    virtual PRInt32 getOriginalMode() = 0;
-
-    virtual PRBool isFramesetOk() = 0;
-
-    virtual PRBool isInForeign() = 0;
-
-    virtual PRBool isNeedToDropLF() = 0;
-
-    virtual PRBool isQuirks() = 0;
-    
-    virtual ~nsAHtml5TreeBuilderState() {
-    }
-};
-
-#endif /* nsAHtml5TreeBuilderState_h___ */
+#endif /* nsHtml5Macros_h_ */
