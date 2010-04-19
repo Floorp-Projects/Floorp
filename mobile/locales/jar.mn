@@ -25,3 +25,5 @@
 # work around for bug 514817
   locale/@AB_CD@/browser/aboutRights.dtd          (%chrome/overrides/aboutRights.dtd)
 % override chrome://global/locale/aboutRights.dtd chrome://browser/locale/aboutRights.dtd
+* locale/@AB_CD@/browser/passwordmgr.properties    (%chrome/overrides/passwordmgr.properties)
+% override chrome://passwordmgr/locale/passwordmgr.properties chrome://browser/locale/passwordmgr.properties

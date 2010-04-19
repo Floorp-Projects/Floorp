@@ -21,16 +21,15 @@
           <xul:hbox anonid="details" align="center" flex="1">
             <xul:description anonid="messageText" class="messageText" flex="1" xbl:inherits="xbl:text=label"/>
             <xul:spacer flex="1"/>
+            <xul:toolbarbutton class="messageCloseButton tabbable" xbl:inherits="hidden=hideclose"
+                               ondblclick="event.stopPropagation();"
+                               oncommand="document.getBindingParent(this).close();"/>
           </xul:hbox>
           <xul:hbox pack="center" class="buttons"
                     oncommand="document.getBindingParent(this)._doButtonCommand(event);">
             <children/>
           </xul:hbox>
         </xul:vbox>
-        <xul:toolbarbutton ondblclick="event.stopPropagation();"
-                           class="messageCloseButton tabbable"
-                           xbl:inherits="hidden=hideclose"
-                           oncommand="document.getBindingParent(this).close();"/>
       </xul:hbox>
     </content>
 
