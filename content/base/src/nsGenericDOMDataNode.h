@@ -321,10 +321,6 @@ protected:
                                                PRInt32 aIndex,
                                                PRUint32 aCount);
 
-  nsresult GetWholeText(nsAString& aWholeText);
-
-  nsresult ReplaceWholeText(const nsAFlatString& aContent, nsIDOMText **aReturn);
-
   nsresult SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
                            const PRUnichar* aBuffer, PRUint32 aLength,
                            PRBool aNotify);
@@ -348,6 +344,23 @@ private:
   already_AddRefed<nsIAtom> GetCurrentValueAtom();
 };
 
+class nsGenericTextNode : public nsGenericDOMDataNode
+{
+public:
+  nsGenericTextNode(nsINodeInfo *aNodeInfo) : nsGenericDOMDataNode(aNodeInfo)
+  {
+  }
+
+  PRBool IsElementContentWhitespace()
+  {
+    return TextIsOnlyWhitespace();
+  }
+  nsresult GetWholeText(nsAString& aWholeText);
+
+  nsIContent* ReplaceWholeText(const nsAFlatString& aContent,
+                               nsresult *aResult);
+};
+
 /** Tearoff class for the nsIDOM3Text portion of nsGenericDOMDataNode. */
 class nsText3Tearoff : public nsIDOM3Text
 {
@@ -358,7 +371,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS(nsText3Tearoff)
 
-  nsText3Tearoff(nsGenericDOMDataNode *aNode) : mNode(aNode)
+  nsText3Tearoff(nsGenericTextNode *aNode) : mNode(aNode)
   {
   }
 
@@ -366,7 +379,7 @@ protected:
   virtual ~nsText3Tearoff() {}
 
 private:
-  nsRefPtr<nsGenericDOMDataNode> mNode;
+  nsRefPtr<nsGenericTextNode> mNode;
 };
 
 //----------------------------------------------------------------------
