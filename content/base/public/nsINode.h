@@ -1009,6 +1009,35 @@ public:
                       const nsAString& aVersion,
                       nsISupports** aReturn);
 
+  /**
+   * Compares the document position of a node to this node.
+   *
+   * @param aOtherNode The node whose position is being compared to this node
+   *
+   * @return  The document position flags of the nodes. aOtherNode is compared
+   *          to this node, i.e. if aOtherNode is before this node then
+   *          DOCUMENT_POSITION_PRECEDING will be set.
+   *
+   * @see nsIDOMNode
+   * @see nsIDOM3Node
+   */
+  PRUint16 CompareDocumentPosition(nsINode* aOtherNode);
+  nsresult CompareDocumentPosition(nsINode* aOtherNode, PRUint16* aResult)
+  {
+    NS_ENSURE_ARG(aOtherNode);
+
+    *aResult = CompareDocumentPosition(aOtherNode);
+
+    return NS_OK;
+  }
+
+  PRBool IsSameNode(nsINode *aOtherNode)
+  {
+    return aOtherNode == this;
+  }
+
+  virtual PRBool IsEqualNode(nsINode *aOtherNode) = 0;
+
   void LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix);
   PRBool IsDefaultNamespace(const nsAString& aNamespaceURI)
   {
