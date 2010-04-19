@@ -1201,8 +1201,7 @@ nsNode3Tearoff::GetFeature(const nsAString& aFeature,
                            const nsAString& aVersion,
                            nsISupports** aReturn)
 {
-  return nsGenericElement::InternalGetFeature(static_cast<nsIDOM3Node*>(this),
-                                              aFeature, aVersion, aReturn);
+  return mContent->GetFeature(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2145,9 +2144,8 @@ nsGenericElement::SetPrefix(const nsAString& aPrefix)
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMNSFeatureFactory>
-nsGenericElement::GetDOMFeatureFactory(const nsAString& aFeature,
-                                       const nsAString& aVersion)
+static already_AddRefed<nsIDOMNSFeatureFactory>
+GetDOMFeatureFactory(const nsAString& aFeature, const nsAString& aVersion)
 {
   nsIDOMNSFeatureFactory *factory = nsnull;
   nsCOMPtr<nsICategoryManager> categoryManager =
@@ -2243,17 +2241,16 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
 }
 
 nsresult
-nsGenericElement::InternalGetFeature(nsISupports* aObject,
-                                    const nsAString& aFeature,
-                                    const nsAString& aVersion,
-                                    nsISupports** aReturn)
+nsINode::GetFeature(const nsAString& aFeature,
+                    const nsAString& aVersion,
+                    nsISupports** aReturn)
 {
   *aReturn = nsnull;
   nsCOMPtr<nsIDOMNSFeatureFactory> factory =
     GetDOMFeatureFactory(aFeature, aVersion);
 
   if (factory) {
-    factory->GetFeature(aObject, aFeature, aVersion, aReturn);
+    factory->GetFeature(this, aFeature, aVersion, aReturn);
   }
 
   return NS_OK;

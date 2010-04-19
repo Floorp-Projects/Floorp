@@ -588,14 +588,6 @@ public:
                                       const nsAString& aVersion,
                                       PRBool* aReturn);
 
-  static nsresult InternalGetFeature(nsISupports* aObject,
-                                     const nsAString& aFeature,
-                                     const nsAString& aVersion,
-                                     nsISupports** aReturn);
-
-  static already_AddRefed<nsIDOMNSFeatureFactory>
-    GetDOMFeatureFactory(const nsAString& aFeature, const nsAString& aVersion);
-
   static PRBool ShouldBlur(nsIContent *aContent);
 
   /**

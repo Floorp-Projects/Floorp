@@ -1005,6 +1005,10 @@ public:
     return static_cast<nsIVariant*>(GetProperty(DOM_USER_DATA, key));
   }
 
+  nsresult GetFeature(const nsAString& aFeature,
+                      const nsAString& aVersion,
+                      nsISupports** aReturn);
+
   void LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix);
   PRBool IsDefaultNamespace(const nsAString& aNamespaceURI)
   {
