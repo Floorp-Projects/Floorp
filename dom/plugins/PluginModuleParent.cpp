@@ -715,8 +715,7 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     }
 
     PluginInstanceParent* parentInstance =
-        new PluginInstanceParent(this, instance,
-                                 nsDependentCString(pluginType), mNPNIface);
+        new PluginInstanceParent(this, instance, mNPNIface);
 
     if (!parentInstance->Init()) {
         delete parentInstance;
@@ -781,37 +780,5 @@ PluginModuleParent::AnswerProcessSomeEvents()
     PLUGIN_LOG_DEBUG(("... quitting mini nested loop; processed %i tasks", i));
 
     return true;
-}
-#endif
-
-#ifdef OS_MACOSX
-#define DEFAULT_REFRESH_MS 20 // CoreAnimation: 50 FPS
-void
-PluginModuleParent::AddToRefreshTimer(PluginInstanceParent *aInstance) {
-    if (mCATimerTargets.Contains(aInstance)) {
-        return;
-    }
-
-    mCATimerTargets.AppendElement(aInstance);
-    if (mCATimerTargets.Length() == 1) {
-        mCATimer.Start(base::TimeDelta::FromMilliseconds(DEFAULT_REFRESH_MS),
-                       this, &PluginModuleParent::CAUpdate);
-    }
-}
-
-void
-PluginModuleParent::RemoveFromRefreshTimer(PluginInstanceParent *aInstance) {
-    PRBool visibleRemoved = mCATimerTargets.RemoveElement(aInstance);
-    if (visibleRemoved && mCATimerTargets.IsEmpty()) {
-        mCATimer.Stop();
-    }
-}
-
-void
-PluginModuleParent::CAUpdate() {
-    nsTObserverArray<PluginInstanceParent*>::ForwardIterator iter(mCATimerTargets);
-    while (iter.HasMore()) {
-        iter.GetNext()->Invalidate();
-    }
 }
 #endif

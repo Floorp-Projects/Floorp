@@ -164,7 +164,6 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #ifdef XP_MACOSX
 #include "gfxQuartzNativeDrawing.h"
 #include "nsPluginUtilsOSX.h"
-#include "nsCoreAnimationSupport.h"
 #endif
 
 #ifdef MOZ_X11
@@ -3592,24 +3591,13 @@ void nsPluginInstanceOwner::SetupCARenderer(int aWidth, int aHeight)
   if (!caLayer) {
     return;
   }
-  nsresult rt = mCARenderer.SetupRenderer(caLayer, aWidth, aHeight);
-  if (rt != NS_OK)
-    return;
+  mCARenderer.SetupRenderer(caLayer, aWidth, aHeight);
   AddToCARefreshTimer(this);
 }
 
 void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext, int aWidth, int aHeight)
 {
-  CGImageRef caImage = NULL;
-  nsresult rt = mCARenderer.Render(aWidth, aHeight, &caImage);
-  if (rt == NS_OK && caImage != NULL) {
-    // Significant speed up by resetting the scaling
-    ::CGContextSetInterpolationQuality(aCGContext, kCGInterpolationNone );
-    ::CGContextTranslateCTM(aCGContext, 0, aHeight);
-    ::CGContextScaleCTM(aCGContext, 1.0, -1.0);
-
-    ::CGContextDrawImage(aCGContext, CGRectMake(0,0,aWidth,aHeight), caImage);
-  }
+  mCARenderer.Render(aCGContext, aWidth, aHeight);
 }
 
 void* nsPluginInstanceOwner::GetPluginPortCopy()

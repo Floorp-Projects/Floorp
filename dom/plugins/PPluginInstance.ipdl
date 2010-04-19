@@ -83,9 +83,6 @@ child:
   // special cases where we need to a shared memory buffer
   rpc NPP_HandleEvent_Shmem(NPRemoteEvent event, Shmem buffer)
     returns (int16_t handled, Shmem rtnbuffer);
-  // special cases where we need an iosurface
-  rpc NPP_HandleEvent_IOSurface(NPRemoteEvent event, uint32_t surfaceid)
-    returns (int16_t handled);
   // special cases of HandleEvent to make mediating races simpler
   rpc Paint(NPRemoteEvent event)
     returns (int16_t handled);
