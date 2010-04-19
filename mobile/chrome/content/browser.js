@@ -1362,8 +1362,8 @@ Browser.MainDragger.prototype = {
           let overflowX = cs.getPropertyValue("overflow-x");
           let overflowY = cs.getPropertyValue("overflow-y");
 
-          let scrollableY = overflowY != "hidden" && overflowY != "visible" && htmlElement.offsetHeight < htmlElement.scrollHeight;
-          let scrollableX = overflowX != "hidden" && overflowX != "visible" && htmlElement.offsetWidth  < htmlElement.scrollWidth
+          let scrollableY = overflowY != "hidden" && overflowY != "visible" && htmlElement.clientHeight < htmlElement.scrollHeight;
+          let scrollableX = overflowX != "hidden" && overflowX != "visible" && htmlElement.clientWidth  < htmlElement.scrollWidth
             && !(htmlElement instanceof HTMLSelectElement); // Bug 295977
 
           if (scrollableX || scrollableY) {
