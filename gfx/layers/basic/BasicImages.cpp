@@ -47,6 +47,8 @@
 
 #include "cairo.h"
 
+#include "yuv_convert.h"
+
 using mozilla::Monitor;
 
 namespace mozilla {
@@ -103,17 +105,14 @@ protected:
 class BasicPlanarYCbCrImage : public PlanarYCbCrImage, public BasicImageImplData {
 public:
   BasicPlanarYCbCrImage() :
-    PlanarYCbCrImage(static_cast<BasicImageImplData*>(this)),
-    mToARGB(nsnull)
+    PlanarYCbCrImage(static_cast<BasicImageImplData*>(this))
     {}
 
-  virtual void SetRGBConverter(ToARGBHook aHook) { mToARGB = aHook; }
   virtual void SetData(const Data& aData);
 
   virtual already_AddRefed<gfxASurface> GetAsSurface();
 
 protected:
-  ToARGBHook                           mToARGB;
   nsAutoArrayPtr<PRUint8>              mBuffer;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
 };
@@ -126,16 +125,44 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
     NS_ERROR("Illegal width or height");
     return;
   }
-  size_t size = aData.mYSize.width*aData.mYSize.height*4;
+  size_t size = aData.mPicSize.width*aData.mPicSize.height*4;
   mBuffer = new PRUint8[size];
   if (!mBuffer) {
     // out of memory
     return;
   }
 
+  gfx::YUVType type = gfx::YV12;
+  if (aData.mYSize.width == aData.mCbCrSize.width &&
+      aData.mYSize.height == aData.mCbCrSize.height) {
+    NS_ERROR("YCbCr 4:4:4 format not supported");
+  }
+  else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
+           aData.mYSize.height == aData.mCbCrSize.height) {
+    type = gfx::YV16;
+  }
+  else if (aData.mYSize.width / 2 == aData.mCbCrSize.width &&
+           aData.mYSize.height / 2 == aData.mCbCrSize.height ) {
+    type = gfx::YV12;
+  }
+  else {
+    NS_ERROR("YCbCr format not supported");
+  }
+ 
   // Convert from YCbCr to RGB now
-  mToARGB(aData, mBuffer);
-  mSize = aData.mYSize;
+  gfx::ConvertYCbCrToRGB32(aData.mYChannel,
+                           aData.mCbChannel,
+                           aData.mCrChannel,
+                           mBuffer,
+                           aData.mPicX,
+                           aData.mPicY,
+                           aData.mPicSize.width,
+                           aData.mPicSize.height,
+                           aData.mYStride,
+                           aData.mCbCrStride,
+                           aData.mPicSize.width*4,
+                           type);                                                          
+  mSize = aData.mPicSize;
 }
 
 static cairo_user_data_key_t imageSurfaceDataKey;
