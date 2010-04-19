@@ -149,19 +149,7 @@ members = [
     'nsIDOM3Document.documentURI',
     'nsIDOM3Document.adoptNode',
     'nsIDOM3Document.renameNode',
-    'nsIDOM3Node.compareDocumentPosition',
-    'nsIDOM3Node.getUserData',
-    'nsIDOM3Node.baseURI',
-    'nsIDOM3Node.textContent',
-    'nsIDOM3Node.isSameNode',
-    'nsIDOM3Node.lookupNamespaceURI',
-    'nsIDOM3Node.setUserData',
-    'nsIDOM3Node.lookupPrefix',
-    'nsIDOM3Node.isDefaultNamespace',
-    'nsIDOM3Node.isEqualNode',
-    'nsIDOM3Text.isElementContentWhitespace',
-    'nsIDOM3Text.replaceWholeText',
-    'nsIDOM3Text.wholeText',
+    'nsIDOM3Node.*',
     'nsIDOMDOMStringList.item',
     'nsIDOMDOMStringList.length',
     'nsIDOMDOMStringList.contains',
@@ -513,6 +501,8 @@ customIncludes = [
     'nsIDocument.h',
     'nsINodeList.h',
     'nsCSSPropertiesQS.h',
+    'nsGenericDOMDataNode.h',
+    'nsGenericElement.h',
     'nsDOMQS.h',
     ]
 
@@ -656,6 +646,130 @@ customMethodCalls = {
     'nsIDOMCanvasRenderingContext2D_FillStyle': { 'skipgen': True },
     'nsIDOMCSS2Properties_': CSS2Properties_,
     'nsIDOMNSCSS2Properties_': CSS2Properties_,
+    'nsIDOMNSElement_GetClientRects': {
+        'thisType': 'nsGenericElement'
+        },
+    'nsIDOMNSElement_GetBoundingClientRect': {
+        'thisType': 'nsGenericElement'
+        },
+    'nsIDOMNSElement_GetElementsByClassName': {
+        'thisType': 'nsGenericElement'
+        },
+    'nsIDOMNSElement_GetScrollWidth': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetScrollWidth();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetClientTop': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetClientTop();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_SetClientTop': {
+        'thisType': 'nsGenericElement',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetClientLeft': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetClientLeft();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_SetClientLeft': {
+        'thisType': 'nsGenericElement',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetClientHeight': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetClientHeight();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_GetClientWidth': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRInt32 result = self->GetClientWidth();',
+        'canFail': False
+        },
+    'nsIDOMNSElement_MozMatchesSelector': {
+        'thisType': 'nsGenericElement',
+        'code': '    PRBool result = self->MozMatchesSelector(arg0);',
+        'canFail': False
+        },
+    'nsIDOM3Text_IsElementContentWhitespace': {
+        'thisType': 'nsGenericTextNode',
+        'code': '    PRBool result = self->IsElementContentWhitespace();',
+        'canFail': False
+        },
+    'nsIDOM3Text_ReplaceWholeText': {
+        'thisType': 'nsGenericTextNode',
+        'code': '    nsIContent* result = '
+                'self->ReplaceWholeText(PromiseFlatString(arg0), &rv);'
+        },
+    'nsIDOM3Text_WholeText': {
+        'thisType': 'nsGenericTextNode'
+        },
+    'nsIDOMNodeSelector_QuerySelector': {
+        'thisType': 'nsINode',
+        'code': '    nsIContent* result = '
+                'nsGenericElement::doQuerySelector(self, arg0, &rv);'
+        },
+    'nsIDOMNodeSelector_QuerySelectorAll': {
+        'thisType': 'nsINode',
+        'code': '    nsCOMPtr<nsIDOMNodeList> result;\n'
+                '    rv = nsGenericElement::doQuerySelectorAll(self, '
+                'arg0, getter_AddRefs(result));'
+        },
+    'nsIDOM3Node_GetBaseURI': {
+        'thisType': 'nsINode',
+        'canFail': False
+        },
+    'nsIDOM3Node_CompareDocumentPosition': {
+        'thisType': 'nsINode',
+        'arg0Type': 'nsINode',
+        'code': '    PRUint16 result = self->CompareDocumentPosition(arg0);',
+        'canFail': False
+        },
+    'nsIDOM3Node_GetTextContent': {
+        'thisType': 'nsINode',
+        'canFail': False
+        },
+    'nsIDOM3Node_SetTextContent': {
+        'thisType': 'nsINode'
+        },
+    'nsIDOM3Node_IsSameNode': {
+        'thisType': 'nsINode',
+        'arg0Type': 'nsINode',
+        'code': '    PRBool result = self->IsSameNode(arg0);',
+        'canFail': False
+        },
+    'nsIDOM3Node_LookupPrefix': {
+        'thisType': 'nsINode',
+        'canFail': False
+        },
+    'nsIDOM3Node_IsDefaultNamespace': {
+        'thisType': 'nsINode',
+        'code': '    PRBool result = self->IsDefaultNamespace(arg0);',
+        'canFail': False
+        },
+    'nsIDOM3Node_LookupNamespaceURI': {
+        'thisType': 'nsINode',
+        'canFail': False
+        },
+    'nsIDOM3Node_IsEqualNode': {
+        'thisType': 'nsINode',
+        'arg0Type': 'nsINode',
+        'code': '    PRBool result = self->IsEqualNode(arg0);',
+        'canFail': False
+        },
+    'nsIDOM3Node_GetFeature': {
+        'thisType': 'nsINode'
+        },
+    'nsIDOM3Node_GetUserData': {
+        'thisType': 'nsINode',
+        'code': '    nsIVariant *result = self->GetUserData(arg0);',
+        'canFail': False
+        },
+    'nsIDOM3Node_SetUserData': {
+        'thisType': 'nsINode'
+        },
     # WebGL
     'nsICanvasRenderingContextWebGL_BufferData': CUSTOM_QS,
     'nsICanvasRenderingContextWebGL_BufferSubData': CUSTOM_QS,
