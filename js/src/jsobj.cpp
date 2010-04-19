@@ -3587,7 +3587,7 @@ js_AllocSlots(JSContext *cx, JSObject *obj, size_t nslots)
     jsval* slots;
     slots = (jsval*) cx->malloc(SLOTS_TO_DYNAMIC_WORDS(nslots) * sizeof(jsval));
     if (!slots)
-        return true;
+        return false;
 
     *slots++ = nslots;
     /* clear the newly allocated cells. */
@@ -3644,6 +3644,9 @@ js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
     size_t oslots = size_t(slots[-1]);
 
     slots = (jsval*) cx->realloc(slots - 1, nwords * sizeof(jsval));
+    if (!slots)
+        return false;
+
     *slots++ = nslots;
     obj->dslots = slots;
 
@@ -3673,6 +3676,8 @@ js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots)
     } else {
         size_t nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);
         slots = (jsval*) cx->realloc(slots - 1, nwords * sizeof(jsval));
+        if (!slots)
+            return;  /* Leave obj->dslots at its old size. */
         *slots++ = nslots;
         obj->dslots = slots;
     }
