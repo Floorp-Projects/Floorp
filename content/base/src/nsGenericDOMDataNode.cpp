@@ -203,21 +203,6 @@ nsGenericDOMDataNode::IsSupported(const nsAString& aFeature,
 }
 
 nsresult
-nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
-{
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-  nsCAutoString spec;
-
-  if (baseURI) {
-    baseURI->GetSpec(spec);
-  }
-
-  CopyUTF8toUTF16(spec, aURI);
-
-  return NS_OK;
-}
-
-nsresult
 nsGenericDOMDataNode::LookupPrefix(const nsAString& aNamespaceURI,
                                    nsAString& aPrefix)
 {
@@ -830,16 +815,9 @@ nsGenericDOMDataNode::GetBaseURI() const
     return parent->GetBaseURI();
   }
 
-  nsIURI *uri;
   nsIDocument *doc = GetOwnerDoc();
-  if (doc) {
-    NS_IF_ADDREF(uri = doc->GetBaseURI());
-  }
-  else {
-    uri = nsnull;
-  }
 
-  return uri;
+  return doc ? doc->GetBaseURI() : nsnull;
 }
 
 PRBool

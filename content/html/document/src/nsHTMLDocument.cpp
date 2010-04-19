@@ -1395,26 +1395,6 @@ nsHTMLDocument::GetElementsByTagName(const nsAString& aTagname,
   return nsDocument::GetElementsByTagName(tmp, aReturn);
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetBaseURI(nsAString &aURI)
-{
-  aURI.Truncate();
-  nsIURI *uri = mDocumentBaseURI; // WEAK
-
-  if (!uri) {
-    uri = mDocumentURI;
-  }
-
-  if (uri) {
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-
-    CopyUTF8toUTF16(spec, aURI);
-  }
-
-  return NS_OK;
-}
-
 // nsIDOM3Document interface implementation
 NS_IMETHODIMP
 nsHTMLDocument::GetXmlEncoding(nsAString& aXmlEncoding)

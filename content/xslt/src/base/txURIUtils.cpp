@@ -238,7 +238,7 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
     }
     aNewDoc->Reset(channel, loadGroup);
     aNewDoc->SetPrincipal(sourcePrincipal);
-    aNewDoc->SetBaseURI(sourceDoc->GetBaseURI());
+    aNewDoc->SetBaseURI(sourceDoc->GetDocBaseURI());
 
     // Copy charset
     aNewDoc->SetDocumentCharacterSetSource(

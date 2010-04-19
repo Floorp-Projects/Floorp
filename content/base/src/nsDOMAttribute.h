@@ -115,6 +115,7 @@ public:
     return nsContentUtils::GetContextForEventHandlers(this, aRv);
   }
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual already_AddRefed<nsIURI> GetBaseURI() const;
 
   static void Initialize();
   static void Shutdown();
