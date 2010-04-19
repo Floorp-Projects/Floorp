@@ -145,7 +145,7 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
       PRInt32 len = strlen(unescaped);
       PRInt32 outlen = 0;
       if (NS_SUCCEEDED(rv = decoder->GetMaxLength(unescaped, len, &outlen))) {
-        pBuf = (PRUnichar *) NS_Alloc((outlen+1)*sizeof(PRUnichar*));
+        pBuf = (PRUnichar *) NS_Alloc((outlen+1)*sizeof(PRUnichar));
         if (nsnull == pBuf)
           rv = NS_ERROR_OUT_OF_MEMORY;
         else {
