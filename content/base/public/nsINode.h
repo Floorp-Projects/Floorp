@@ -65,6 +65,8 @@ class nsChildContentList;
 class nsNodeWeakReference;
 class nsNodeSupportsWeakRefTearoff;
 class nsIEditor;
+class nsIVariant;
+class nsIDOMUserDataHandler;
 
 namespace mozilla {
 namespace dom {
@@ -967,6 +969,41 @@ public:
   virtual already_AddRefed<nsIURI> GetBaseURI() const = 0;
 
   void GetBaseURI(nsAString &aURI) const;
+
+  /**
+   * Associate an object aData to aKey on this node. If aData is null any
+   * previously registered object and UserDataHandler associated to aKey on
+   * this node will be removed.
+   * Should only be used to implement the DOM Level 3 UserData API.
+   *
+   * @param aKey the key to associate the object to
+   * @param aData the object to associate to aKey on this node (may be null)
+   * @param aHandler the UserDataHandler to call when the node is
+   *                 cloned/deleted/imported/renamed (may be null)
+   * @param aResult [out] the previously registered object for aKey on this
+   *                      node, if any
+   * @return whether adding the object and UserDataHandler succeeded
+   */
+  nsresult SetUserData(const nsAString& aKey, nsIVariant* aData,
+                       nsIDOMUserDataHandler* aHandler, nsIVariant** aResult);
+
+  /**
+   * Get the UserData object registered for a Key on this node, if any.
+   * Should only be used to implement the DOM Level 3 UserData API.
+   *
+   * @param aKey the key to get UserData for
+   * @return aResult the previously registered object for aKey on this node, if
+   *                 any
+   */
+  nsIVariant* GetUserData(const nsAString& aKey)
+  {
+    nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
+    if (!key) {
+      return nsnull;
+    }
+
+    return static_cast<nsIVariant*>(GetProperty(DOM_USER_DATA, key));
+  }
 
 protected:
 
