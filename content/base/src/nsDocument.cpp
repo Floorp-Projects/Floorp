@@ -1524,7 +1524,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
 NS_INTERFACE_TABLE_HEAD(nsDocument)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsINode)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3DocumentEvent)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentStyle)
@@ -1540,10 +1539,12 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNodeSelector)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMXPathNSResolver)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
+                                 new nsNode3Tearoff(this))
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
     if (!mXPathEvaluatorTearoff) {
@@ -5631,53 +5632,10 @@ nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
                                                aFeature, aVersion, aReturn);
 }
 
-NS_IMETHODIMP
-nsDocument::GetBaseURI(nsAString &aURI)
-{
-  nsINode::GetBaseURI(aURI);
-
-  return NS_OK;
-}
-
 void
 nsDocument::GetTextContent(nsAString &aTextContent)
 {
   SetDOMStringToNull(aTextContent);
-}
-
-NS_IMETHODIMP
-nsDocument::GetTextContent(nsAString &aTextContent)
-{
-  nsINode::GetTextContent(aTextContent);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetTextContent(const nsAString& aTextContent)
-{
-  return nsINode::SetTextContent(aTextContent);
-}
-
-
-NS_IMETHODIMP
-nsDocument::CompareDocumentPosition(nsIDOMNode* aOther, PRUint16* aReturn)
-{
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-  return nsINode::CompareDocumentPosition(other, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::IsSameNode(nsIDOMNode* aOther, PRBool* aReturn)
-{
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-  *aReturn = nsINode::IsSameNode(other);
-
-  return NS_OK;
 }
 
 PRBool
@@ -5703,68 +5661,6 @@ nsDocument::IsEqualNode(nsINode* aOther)
    */
 
   return PR_TRUE;
-}
-
-NS_IMETHODIMP
-nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
-{
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-
-  *aReturn = other && IsEqualNode(other);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::IsDefaultNamespace(const nsAString& aNamespaceURI,
-                               PRBool* aReturn)
-{
-  *aReturn = nsINode::IsDefaultNamespace(aNamespaceURI);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetFeature(const nsAString& aFeature,
-                       const nsAString& aVersion,
-                       nsISupports** aReturn)
-{
-  return nsINode::GetFeature(aFeature, aVersion, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::SetUserData(const nsAString &aKey,
-                        nsIVariant *aData,
-                        nsIDOMUserDataHandler *aHandler,
-                        nsIVariant **aResult)
-{
-  return nsINode::SetUserData(aKey, aData, aHandler, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::GetUserData(const nsAString &aKey,
-                        nsIVariant **aResult)
-{
-  NS_IF_ADDREF(*aResult = nsINode::GetUserData(aKey));
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::LookupPrefix(const nsAString& aNamespaceURI,
-                         nsAString& aPrefix)
-{
-  nsINode::LookupPrefix(aNamespaceURI, aPrefix);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                               nsAString& aNamespaceURI)
-{
-  nsINode::LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

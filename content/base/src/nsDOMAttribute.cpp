@@ -115,9 +115,8 @@ DOMCI_DATA(Attr, nsDOMAttribute)
 // QueryInterface implementation for nsDOMAttribute
 NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_NODE_INTERFACE_TABLE8(nsDOMAttribute, nsIDOMAttr, nsIAttribute, nsINode,
-                           nsIDOMNode, nsIDOM3Node, nsIDOM3Attr,
-                           nsPIDOMEventTarget, nsIDOMXPathNSResolver)
+  NS_NODE_INTERFACE_TABLE5(nsDOMAttribute, nsIDOMAttr, nsIAttribute, nsIDOMNode,
+                           nsIDOM3Attr, nsPIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDOMAttribute)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsISupportsWeakReference,
                                  new nsNodeSupportsWeakRefTearoff(this))
@@ -127,6 +126,9 @@ NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
                                  nsDOMEventRTTearoff::Create(this))
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSEventTarget,
                                  nsDOMEventRTTearoff::Create(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
+                                 new nsNode3Tearoff(this))
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Attr)
 NS_INTERFACE_MAP_END
 
@@ -511,47 +513,6 @@ nsDOMAttribute::GetBaseURI() const
   return parent ? parent->GetBaseURI() : nsnull;
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::GetBaseURI(nsAString &aURI)
-{
-  nsINode::GetBaseURI(aURI);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
-                                        PRUint16* aReturn)
-{
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-  return nsINode::CompareDocumentPosition(other, aReturn);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::IsSameNode(nsIDOMNode* aOther,
-                           PRBool* aReturn)
-{
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  
-  *aReturn = nsINode::IsSameNode(other);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther,
-                            PRBool* aReturn)
-{
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-
-  *aReturn = other && IsEqualNode(other);
-
-  return NS_OK;
-}
-
 PRBool
 nsDOMAttribute::IsEqualNode(nsINode* aOther)
 {
@@ -574,27 +535,10 @@ nsDOMAttribute::IsEqualNode(nsINode* aOther)
   return ourValue.Equals(otherValue);
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::IsDefaultNamespace(const nsAString& aNamespaceURI,
-                                   PRBool* aReturn)
-{
-  *aReturn = nsINode::IsDefaultNamespace(aNamespaceURI);
-
-  return NS_OK;
-}
-
 void
 nsDOMAttribute::GetTextContent(nsAString &aTextContent)
 {
   GetNodeValue(aTextContent);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetTextContent(nsAString &aTextContent)
-{
-  nsINode::GetTextContent(aTextContent);
-
-  return NS_OK;
 }
 
 nsresult
@@ -603,36 +547,6 @@ nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
   return SetNodeValue(aTextContent);
 }
 
-NS_IMETHODIMP
-nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
-{
-  return nsINode::SetTextContent(aTextContent);
-}
-
-
-NS_IMETHODIMP
-nsDOMAttribute::GetFeature(const nsAString& aFeature,
-                           const nsAString& aVersion,
-                           nsISupports** aReturn)
-{
-  return nsINode::GetFeature(aFeature, aVersion, aReturn);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::SetUserData(const nsAString& aKey, nsIVariant* aData,
-                            nsIDOMUserDataHandler* aHandler,
-                            nsIVariant** aResult)
-{
-  return nsINode::SetUserData(aKey, aData, aHandler, aResult);
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::GetUserData(const nsAString& aKey, nsIVariant** aResult)
-{
-  NS_IF_ADDREF(*aResult = nsINode::GetUserData(aKey));
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsDOMAttribute::GetIsId(PRBool* aReturn)
@@ -659,24 +573,6 @@ NS_IMETHODIMP
 nsDOMAttribute::GetSchemaTypeInfo(nsIDOM3TypeInfo** aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::LookupPrefix(const nsAString& aNamespaceURI,
-                             nsAString& aPrefix)
-{
-  nsINode::LookupPrefix(aNamespaceURI, aPrefix);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                                   nsAString& aNamespaceURI)
-{
-  nsINode::LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
-
-  return NS_OK;
 }
 
 PRBool
