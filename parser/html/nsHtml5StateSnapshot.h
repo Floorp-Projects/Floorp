@@ -44,6 +44,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsAHtml5TreeBuilderState.h"
+#include "nsHtml5Macros.h"
 
 class nsHtml5StreamParser;
 
@@ -67,11 +68,11 @@ class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
     PRInt32 mode;
     PRInt32 originalMode;
     PRBool framesetOk;
-    PRInt32 foreignFlag;
+    PRBool inForeign;
     PRBool needToDropLF;
     PRBool quirks;
   public:
-    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, PRInt32 mode, PRInt32 originalMode, PRBool framesetOk, PRInt32 foreignFlag, PRBool needToDropLF, PRBool quirks);
+    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,PRInt32> stack, jArray<nsHtml5StackNode*,PRInt32> listOfActiveFormattingElements, nsIContent** formPointer, nsIContent** headPointer, PRInt32 mode, PRInt32 originalMode, PRBool framesetOk, PRBool inForeign, PRBool needToDropLF, PRBool quirks);
     jArray<nsHtml5StackNode*,PRInt32> getStack();
     jArray<nsHtml5StackNode*,PRInt32> getListOfActiveFormattingElements();
     nsIContent** getFormPointer();
@@ -79,7 +80,7 @@ class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
     PRInt32 getMode();
     PRInt32 getOriginalMode();
     PRBool isFramesetOk();
-    PRInt32 getForeignFlag();
+    PRBool isInForeign();
     PRBool isNeedToDropLF();
     PRBool isQuirks();
     PRInt32 getListOfActiveFormattingElementsLength();

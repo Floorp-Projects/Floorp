@@ -904,9 +904,7 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
   {
     mozilla::MutexAutoLock speculationAutoLock(mSpeculationMutex);
     if (mSpeculations.IsEmpty()) {
-      // Not quite sure how exactly this happens...
-      // Maybe an artifact of defer scripts?
-      NS_WARNING("ContinueAfterScripts called without speculations.");
+      NS_NOTREACHED("ContinueAfterScripts called without speculations.");
       return;
     }
     nsHtml5Speculation* speculation = mSpeculations.ElementAt(0);
