@@ -68,6 +68,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPrefBranch2.h"
 #include "mozilla/AutoRestore.h"
+#include "nsINode.h"
 
 #include "jsapi.h"
 
@@ -75,7 +76,6 @@ struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will f
 
 class nsIDOMScriptObjectFactory;
 class nsIXPConnect;
-class nsINode;
 class nsIContent;
 class nsIDOMNode;
 class nsIDOMKeyEvent;
@@ -270,30 +270,13 @@ public:
                                     nsINode* aNode2);
 
   /**
-   * Compares the document position of nodes.
-   *
-   * @param aNode1 The node whose position is being compared to the reference
-   *               node
-   * @param aNode2 The reference node
-   *
-   * @return  The document position flags of the nodes. aNode1 is compared to
-   *          aNode2, i.e. if aNode1 is before aNode2 then
-   *          DOCUMENT_POSITION_PRECEDING will be set.
-   *
-   * @see nsIDOMNode
-   * @see nsIDOM3Node
-   */
-  static PRUint16 ComparePosition(nsINode* aNode1,
-                                  nsINode* aNode2);
-
-  /**
    * Returns true if aNode1 is before aNode2 in the same connected
    * tree.
    */
   static PRBool PositionIsBefore(nsINode* aNode1,
                                  nsINode* aNode2)
   {
-    return (ComparePosition(aNode1, aNode2) &
+    return (aNode2->CompareDocumentPosition(aNode1) &
       (nsIDOM3Node::DOCUMENT_POSITION_PRECEDING |
        nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED)) ==
       nsIDOM3Node::DOCUMENT_POSITION_PRECEDING;

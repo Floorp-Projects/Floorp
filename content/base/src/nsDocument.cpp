@@ -5657,59 +5657,38 @@ nsDocument::SetTextContent(const nsAString& aTextContent)
 NS_IMETHODIMP
 nsDocument::CompareDocumentPosition(nsIDOMNode* aOther, PRUint16* aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aOther);
-
-  // We could optimize this by getting the other nodes current document
-  // and comparing with ourself. But then we'd have to deal with the
-  // current document being null and such so it's easier this way.
-  // It's hardly a case to optimize anyway.
-
   nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
   NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
-  *aReturn = nsContentUtils::ComparePosition(other, this);
-  return NS_OK;
+  return nsINode::CompareDocumentPosition(other, aReturn);
 }
 
 NS_IMETHODIMP
 nsDocument::IsSameNode(nsIDOMNode* aOther, PRBool* aReturn)
 {
-  PRBool sameNode = PR_FALSE;
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
-  if (this == aOther) {
-    sameNode = PR_TRUE;
-  }
-
-  *aReturn = sameNode;
+  *aReturn = nsINode::IsSameNode(other);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
+PRBool
+nsDocument::IsEqualNode(nsINode* aOther)
 {
-  *aReturn = PR_FALSE;
-
-  if (!aOther)
-    return NS_OK;
-
-  // Node type check by QI.  We also reuse this later.
-  nsCOMPtr<nsIDocument> aOtherDoc = do_QueryInterface(aOther);
-  if (!aOtherDoc) {
-    return NS_OK;
-  }
+  if (!aOther || !aOther->IsNodeOfType(eDOCUMENT))
+    return PR_FALSE;
 
   // Child nodes check.
   PRUint32 childCount = GetChildCount();
-  if (childCount != aOtherDoc->GetChildCount()) {
-    return NS_OK;
+  if (childCount != aOther->GetChildCount()) {
+    return PR_FALSE;
   }
 
   for (PRUint32 i = 0; i < childCount; i++) {
-    nsIContent* aChild1 = GetChildAt(i);
-    nsIContent* aChild2 = aOtherDoc->GetChildAt(i);
-    if (!nsNode3Tearoff::AreNodesEqual(aChild1, aChild2)) {
-      return NS_OK;
+    if (!GetChildAt(i)->IsEqual(aOther->GetChildAt(i))) {
+      return PR_FALSE;
     }
   }
 
@@ -5717,7 +5696,16 @@ nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
      node value, attributes.
    */
 
-  *aReturn = PR_TRUE;
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
+{
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+
+  *aReturn = other && IsEqualNode(other);
+
   return NS_OK;
 }
 

@@ -523,22 +523,20 @@ NS_IMETHODIMP
 nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
                                         PRUint16* aReturn)
 {
-  NS_ENSURE_ARG_POINTER(aOther);
-
   nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
   NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
-  *aReturn = nsContentUtils::ComparePosition(other, this);
-  return NS_OK;
+  return nsINode::CompareDocumentPosition(other, aReturn);
 }
 
 NS_IMETHODIMP
 nsDOMAttribute::IsSameNode(nsIDOMNode* aOther,
                            PRBool* aReturn)
 {
-  NS_ASSERTION(aReturn, "IsSameNode() called with aReturn == nsnull!");
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
+  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
   
-  *aReturn = SameCOMIdentity(static_cast<nsIDOMNode*>(this), aOther);
+  *aReturn = nsINode::IsSameNode(other);
 
   return NS_OK;
 }
@@ -547,35 +545,33 @@ NS_IMETHODIMP
 nsDOMAttribute::IsEqualNode(nsIDOMNode* aOther,
                             PRBool* aReturn)
 {
-  *aReturn = PR_FALSE;
+  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
 
-  if (!aOther)
-    return NS_OK;
+  *aReturn = other && IsEqualNode(other);
 
-  // Node type check by QI.  We also reuse this later.
-  nsCOMPtr<nsIAttribute> aOtherAttr = do_QueryInterface(aOther);
-  if (!aOtherAttr) {
-    return NS_OK;
-  }
+  return NS_OK;
+}
+
+PRBool
+nsDOMAttribute::IsEqualNode(nsINode* aOther)
+{
+  if (!aOther || !aOther->IsNodeOfType(eATTRIBUTE))
+    return PR_FALSE;
+
+  nsDOMAttribute *other = static_cast<nsDOMAttribute*>(aOther);
 
   // Prefix, namespace URI, local name, node name check.
-  if (!mNodeInfo->Equals(aOtherAttr->NodeInfo())) {
-    return NS_OK;
+  if (!mNodeInfo->Equals(other->NodeInfo())) {
+    return PR_FALSE;
   }
 
   // Value check
-  nsAutoString ourValue, otherValue;
-  nsresult rv = GetValue(ourValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = aOther->GetNodeValue(otherValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!ourValue.Equals(otherValue))
-    return NS_OK;
-
   // Checks not needed:  Child nodes, attributes.
+  nsAutoString ourValue, otherValue;
+  GetValue(ourValue);
+  other->GetValue(otherValue);
 
-  *aReturn = PR_TRUE;
-  return NS_OK;
+  return ourValue.Equals(otherValue);
 }
 
 NS_IMETHODIMP
