@@ -323,8 +323,8 @@ void nsJSScriptTimeoutHandler::SetLateness(PRIntervalTime aHowLate)
   if (jsarray) {
     PRUint32 argc;
     jsval *jsargv;
-    jsarray->GetArgs(&argc, reinterpret_cast<void **>(&jsargv));
-    if (jsargv && argc)
+    nsresult rv = jsarray->GetArgs(&argc, reinterpret_cast<void **>(&jsargv));
+    if (NS_SUCCEEDED(rv) && jsargv && argc)
       jsargv[argc-1] = INT_TO_JSVAL((jsint) aHowLate);
   } else {
     NS_ERROR("How can our argv not handle this?");
