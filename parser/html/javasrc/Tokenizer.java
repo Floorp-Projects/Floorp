@@ -68,7 +68,7 @@ public class Tokenizer implements Locator {
 
     private static final int DATA_AND_RCDATA_MASK = ~1;
 
-	   public static final int DATA = 0;
+    public static final int DATA = 0;
 
     public static final int RCDATA = 1;
 
@@ -2443,7 +2443,7 @@ public class Tokenizer implements Locator {
                                 state = Tokenizer.MARKUP_DECLARATION_OCTYPE;
                                 continue stateloop;
                             case '[':
-                                if (tokenHandler.inForeign()) {
+                                if (tokenHandler.isInForeign()) {
                                     clearLongStrBufAndAppend(c);
                                     index = 0;
                                     state = Tokenizer.CDATA_START;
