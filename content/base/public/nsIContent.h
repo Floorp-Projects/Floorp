@@ -906,6 +906,11 @@ public:
                                             PRBool aNotify) = 0;
 #endif // MOZ_SMIL
 
+  nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                              nsAString& aNamespaceURI) const;
+
+  nsIAtom* LookupPrefix(const nsAString& aNamespaceURI);
+
 private:
   /**
    * Hook for implementing GetClasses.  This is guaranteed to only be

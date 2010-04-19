@@ -1376,6 +1376,11 @@ protected:
   virtual void MutationEventDispatched(nsINode* aTarget) = 0;
   friend class mozAutoSubtreeModified;
 
+  virtual mozilla::dom::Element* GetNameSpaceElement()
+  {
+    return GetRootElement();
+  }
+
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
 

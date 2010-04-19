@@ -2091,8 +2091,8 @@ nsContentUtils::SplitQName(nsIContent* aNamespaceResolver,
     const PRUnichar* end;
     aQName.EndReading(end);
     nsAutoString nameSpace;
-    rv = LookupNamespaceURI(aNamespaceResolver, Substring(aQName.get(), colon),
-                            nameSpace);
+    rv = aNamespaceResolver->LookupNamespaceURI(Substring(aQName.get(), colon),
+                                                nameSpace);
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aNamespace = NameSpaceManager()->GetNameSpaceID(nameSpace);

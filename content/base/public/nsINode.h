@@ -1005,6 +1005,16 @@ public:
     return static_cast<nsIVariant*>(GetProperty(DOM_USER_DATA, key));
   }
 
+  void LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix);
+  PRBool IsDefaultNamespace(const nsAString& aNamespaceURI)
+  {
+    nsAutoString defaultNamespace;
+    LookupNamespaceURI(EmptyString(), defaultNamespace);
+    return aNamespaceURI.Equals(defaultNamespace);
+  }
+  void LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                          nsAString& aNamespaceURI);
+
 protected:
 
   // Override this function to create a custom slots class.
@@ -1080,6 +1090,14 @@ protected:
   virtual nsresult ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
                                          nsINode* aRefChild);
   nsresult RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+
+  /**
+   * Returns the Element that should be used for resolving namespaces
+   * on this node (ie the ownerElement for attributes, the documentElement for
+   * documents, the node itself for elements and for other nodes the parentNode
+   * if it is an element).
+   */
+  virtual mozilla::dom::Element* GetNameSpaceElement() = 0;
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 
