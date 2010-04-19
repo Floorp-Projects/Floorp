@@ -251,7 +251,7 @@ class SystemAllocPolicy
 
 /*
  * This utility pales in comparison to Boost's aligned_storage. The utility
- * simply assumes that uint64_t is enough alignment for anyone. This may need
+ * simply assumes that JSUint64 is enough alignment for anyone. This may need
  * to be extended one day...
  *
  * As an important side effect, pulling the storage into this template is
@@ -264,7 +264,7 @@ struct AlignedStorage
 {
     union U {
         char bytes[nbytes];
-        uint64_t _;
+        JSUint64 _;
     } u;
 
     const void *addr() const { return u.bytes; }
