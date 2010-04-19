@@ -231,7 +231,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 getForeignFlag();
     PRBool isNeedToDropLF();
     PRBool isQuirks();
-    PRInt32 getListLength();
+    PRInt32 getListOfActiveFormattingElementsLength();
     PRInt32 getStackLength();
     static void initializeStatics();
     static void releaseStatics();

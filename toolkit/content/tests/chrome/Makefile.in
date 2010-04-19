@@ -97,6 +97,8 @@ _TEST_FILES = 	findbar_window.xul \
 		window_screenPosSize.xul \
 		test_titlebar.xul \
 		window_titlebar.xul \
+#		test_browser_drop.xul \
+#		window_browser_drop.xul \
 		$(NULL)
 
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to

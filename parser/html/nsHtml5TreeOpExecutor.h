@@ -325,7 +325,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     void StartLayout();
     
-    void DocumentMode(nsHtml5DocumentMode m);
+    void SetDocumentMode(nsHtml5DocumentMode m);
 
     nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
                   nsISupports* aContainer, nsIChannel* aChannel);

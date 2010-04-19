@@ -313,12 +313,10 @@ public:
   nsresult BeginUpdateBatch();
   nsresult EndUpdateBatch();
 
-  // the level of nesting of batches, 0 when no batches are open
+  // The level of batches' nesting, 0 when no batches are open.
   PRInt32 mBatchLevel;
-
-  // true if the outermost batch has an associated transaction that should
-  // be committed when our batch level reaches 0 again.
-  PRBool mBatchHasTransaction;
+  // Current active transaction for a batch.
+  mozStorageTransaction* mBatchDBTransaction;
 
   // better alternative to QueryStringToQueries (in nsNavHistoryQuery.cpp)
   nsresult QueryStringToQueryArray(const nsACString& aQueryString,

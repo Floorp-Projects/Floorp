@@ -153,6 +153,10 @@ void nsCocoaWindow::DestroyNativeWindow()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // During shutdown, this is called outside the event loop;
+  // provide an autorelease pool to prevent cocoa object leakage.
+  nsAutoreleasePool localPool;
+
   CleanUpWindowFilter();
   // We want to unhook the delegate here because we don't want events
   // sent to it after this object has been destroyed.
@@ -526,6 +530,12 @@ NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 
 NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
 {
+  // This is used during startup (outside the event loop) when creating
+  // the add-ons compatibility checking dialog and the profile manager UI;
+  // therefore, it needs to provide an autorelease pool to avoid cocoa
+  // objects leaking.
+  nsAutoreleasePool localPool;
+
   mModal = aState;
   nsCocoaWindow *aParent = static_cast<nsCocoaWindow*>(mParent);
   if (aState) {

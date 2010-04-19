@@ -61,8 +61,12 @@ class nsEditorEventListener : public nsIDOMKeyListener,
                               public nsIDOMFocusListener
 {
 public:
-  nsEditorEventListener(nsEditor* aEditor);
+  nsEditorEventListener();
   virtual ~nsEditorEventListener();
+
+  virtual nsresult Connect(nsEditor* aEditor);
+
+  void Disconnect();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
@@ -92,6 +96,9 @@ public:
   NS_IMETHOD Blur(nsIDOMEvent* aEvent);
 
 protected:
+  nsresult InstallToEditor();
+  void UninstallFromEditor();
+
   PRBool CanDrop(nsIDOMDragEvent* aEvent);
   nsresult DragEnter(nsIDOMDragEvent* aDragEvent);
   nsresult DragOver(nsIDOMDragEvent* aDragEvent);
@@ -101,7 +108,7 @@ protected:
   already_AddRefed<nsIPresShell> GetPresShell();
 
 protected:
-  nsIEditor* mEditor; // weak
+  nsEditor* mEditor; // weak
   nsRefPtr<nsCaret> mCaret;
   PRPackedBool mCaretDrawn;
   PRPackedBool mCommitText;

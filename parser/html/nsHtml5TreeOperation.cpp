@@ -637,7 +637,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return rv;
     }
     case eTreeOpDocumentMode: {
-      aBuilder->DocumentMode(mOne.mode);
+      aBuilder->SetDocumentMode(mOne.mode);
       return rv;
     }
     case eTreeOpSetStyleLineNumber: {

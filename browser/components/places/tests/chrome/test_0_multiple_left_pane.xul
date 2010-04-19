@@ -71,9 +71,9 @@
       // Sanity checks.
       ok(PlacesUtils, "PlacesUtils is running in chrome context");
       ok(PlacesUIUtils, "PlacesUIUtils is running in chrome context");
-      ok(ORGANIZER_LEFTPANE_VERSION > 0,
+      ok(PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION > 0,
          "Left pane version in chrome context, " +
-           "current version is: " + ORGANIZER_LEFTPANE_VERSION );
+           "current version is: " + PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION );
 
       var fakeLeftPanes = [];
       var as = PlacesUtils.annotations;
@@ -81,12 +81,12 @@
 
       // We need 2 left pane folders to simulate a corrupt profile.
       do {
-        let leftPaneItems = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
+        let leftPaneItems = as.getItemsWithAnnotation(PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
         // Create a fake left pane folder.
         let fakeLeftPaneRoot = bs.createFolder(PlacesUtils.placesRootId, "",
                                                bs.DEFAULT_INDEX);
-        as.setItemAnnotation(fakeLeftPaneRoot, ORGANIZER_FOLDER_ANNO,
-                             ORGANIZER_LEFTPANE_VERSION, 0,
+        as.setItemAnnotation(fakeLeftPaneRoot, PlacesUIUtils.ORGANIZER_FOLDER_ANNO,
+                             PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION, 0,
                              as.EXPIRE_NEVER);
         fakeLeftPanes.push(fakeLeftPaneRoot);
       } while (fakeLeftPanes.length < 2);
@@ -97,7 +97,7 @@
       // Check left pane.
       ok(PlacesUIUtils.leftPaneFolderId > 0,
          "Left pane folder correctly created");
-      var leftPaneItems = as.getItemsWithAnnotation(ORGANIZER_FOLDER_ANNO);
+      var leftPaneItems = as.getItemsWithAnnotation(PlacesUIUtils.ORGANIZER_FOLDER_ANNO);
       is(leftPaneItems.length, 1,
          "We correctly have only 1 left pane folder");
 

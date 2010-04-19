@@ -981,7 +981,7 @@
           // so bail out now and save a lot of work when updating commands
           var resultNode = this._resultNode;
           if (PlacesUtils.nodeIsQuery(resultNode) &&
-              asQuery(resultNode).queryOptions.queryType ==
+              PlacesUtils.asQuery(resultNode).queryOptions.queryType ==
                 Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY)
               return null;
 

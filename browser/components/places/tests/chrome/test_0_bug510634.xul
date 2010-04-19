@@ -108,7 +108,7 @@
       tree.place = "place:queryType=1&folder=" + leftPaneFolderId;
 
       // Open All Bookmarks
-      asContainer(tree.view.nodeForTreeIndex(2)).containerOpen = true;
+      PlacesUtils.asContainer(tree.view.nodeForTreeIndex(2)).containerOpen = true;
       
       // The query-property is set on the title column for each row.
       let titleColumn = tree.treeBoxObject.columns.getColumnAt(0);
@@ -126,6 +126,9 @@
 
       // Close the root node
       tree.getResult().root.containerOpen = false;
+
+      // Restore the getter for the next test.
+      PlacesUIUtils.__defineGetter__("leftPaneFolderId", cachedLeftPaneFolderIdGetter);
 
       SimpleTest.finish();
     }

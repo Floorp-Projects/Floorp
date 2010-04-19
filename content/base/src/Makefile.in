@@ -154,6 +154,7 @@ FORCE_STATIC_LIB = 1
 EXTRA_COMPONENTS = \
 		$(srcdir)/nsBadCertHandler.js \
 		contentSecurityPolicy.js \
+		contentAreaDropListener.js \
 		$(NULL)
 
 EXTRA_JS_MODULES = \

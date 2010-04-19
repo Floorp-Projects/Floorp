@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Mozilla Foundation
+ * Copyright (c) 2008-2010 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -24,17 +24,42 @@ package nu.validator.htmlparser.impl;
 
 import nu.validator.htmlparser.annotation.NoLength;
 
+/**
+ * An UTF-16 buffer that knows the start and end indeces of its unconsumed
+ * content.
+ * 
+ * @version $Id$
+ * @author hsivonen
+ */
 public final class UTF16Buffer {
+
+    /**
+     * The backing store of the buffer. May be larger than the logical content
+     * of this <code>UTF16Buffer</code>.
+     */
     private final @NoLength char[] buffer;
 
+    /**
+     * The index of the first unconsumed character in the backing buffer.
+     */
     private int start;
 
+    /**
+     * The index of the slot immediately after the last character in the backing
+     * buffer that is part of the logical content of this
+     * <code>UTF16Buffer</code>.
+     */
     private int end;
 
     /**
+     * Constructor for wrapping an existing UTF-16 code unit array.
+     * 
      * @param buffer
+     *            the backing buffer
      * @param start
+     *            the index of the first character to consume
      * @param end
+     *            the index immediately after the last character to consume
      */
     public UTF16Buffer(@NoLength char[] buffer, int start, int end) {
         this.buffer = buffer;
@@ -43,45 +68,58 @@ public final class UTF16Buffer {
     }
 
     /**
-     * Returns the start.
+     * Returns the start index.
      * 
-     * @return the start
+     * @return the start index
      */
     public int getStart() {
         return start;
     }
 
     /**
-     * Sets the start.
+     * Sets the start index.
      * 
-     * @param start the start to set
+     * @param start
+     *            the start index
      */
     public void setStart(int start) {
         this.start = start;
     }
 
     /**
-     * Returns the buffer.
+     * Returns the backing buffer.
      * 
-     * @return the buffer
+     * @return the backing buffer
      */
     public @NoLength char[] getBuffer() {
         return buffer;
     }
 
     /**
-     * Returns the end.
+     * Returns the end index.
      * 
-     * @return the end
+     * @return the end index
      */
     public int getEnd() {
         return end;
     }
-    
+
+    /**
+     * Checks if the buffer has data left.
+     * 
+     * @return <code>true</code> if there's data left
+     */
     public boolean hasMore() {
         return start < end;
     }
-    
+
+    /**
+     * Adjusts the start index to skip over the first character if it is a line
+     * feed and the previous character was a carriage return.
+     * 
+     * @param lastWasCR
+     *            whether the previous character was a carriage return
+     */
     public void adjust(boolean lastWasCR) {
         if (lastWasCR && buffer[start] == '\n') {
             start++;
@@ -89,9 +127,10 @@ public final class UTF16Buffer {
     }
 
     /**
-     * Sets the end.
+     * Sets the end index.
      * 
-     * @param end the end to set
+     * @param end
+     *            the end index
      */
     public void setEnd(int end) {
         this.end = end;
