@@ -1434,8 +1434,8 @@ if test "$GNU_CC"; then
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, since it's noisy there
-           hppa | ia64 | sparc)
+           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
+           hppa | ia64 | sparc | arm)
            ;;
            *)
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
@@ -1497,8 +1497,8 @@ if test "$GNU_CXX"; then
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, since it's noisy there
-           hppa | ia64 | sparc)
+           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
+           hppa | ia64 | sparc | arm)
            ;;
            *)
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
