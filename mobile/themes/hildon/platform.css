@@ -262,7 +262,6 @@ toolbarbutton.button-dark[disabled="true"] {
 
 toolbarbutton.button-dark[type="checkbox"][checked="true"] {
   /* checked overrides */
-  border: 10px solid transparent !important;
   color: #fff !important;
   background: none !important;
   padding: 2px 4px !important;
