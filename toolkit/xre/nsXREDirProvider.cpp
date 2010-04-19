@@ -1241,9 +1241,6 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsILocalFile** aFile)
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
-  rv = EnsureDirectoryExists(localDir);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   NS_ADDREF(*aFile = localDir);
   return NS_OK;
 }
