@@ -140,7 +140,7 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
 }
 
 nsTextNode::nsTextNode(nsINodeInfo *aNodeInfo)
-  : nsGenericDOMDataNode(aNodeInfo)
+  : nsGenericTextNode(aNodeInfo)
 {
 }
 
