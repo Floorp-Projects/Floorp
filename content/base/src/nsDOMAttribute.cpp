@@ -583,16 +583,30 @@ nsDOMAttribute::IsDefaultNamespace(const nsAString& aNamespaceURI,
   return NS_OK;
 }
 
+void
+nsDOMAttribute::GetTextContent(nsAString &aTextContent)
+{
+  GetNodeValue(aTextContent);
+}
+
 NS_IMETHODIMP
 nsDOMAttribute::GetTextContent(nsAString &aTextContent)
 {
-  return GetNodeValue(aTextContent);
+  nsINode::GetTextContent(aTextContent);
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
+{
+  return SetNodeValue(aTextContent);
 }
 
 NS_IMETHODIMP
 nsDOMAttribute::SetTextContent(const nsAString& aTextContent)
 {
-  return SetNodeValue(aTextContent);
+  return nsINode::SetTextContent(aTextContent);
 }
 
 

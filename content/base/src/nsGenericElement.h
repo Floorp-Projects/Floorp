@@ -360,6 +360,16 @@ public:
   {
     return nsContentUtils::GetContextForEventHandlers(this, aRv);
   }
+  virtual void GetTextContent(nsAString &aTextContent)
+  {
+    nsContentUtils::GetNodeTextContent(this, PR_TRUE, aTextContent);
+  }
+  virtual nsresult SetTextContent(const nsAString& aTextContent)
+  {
+    // Batch possible DOMSubtreeModified events.
+    mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
+    return nsContentUtils::SetNodeTextContent(this, aTextContent, PR_FALSE);
+  }
 
   // nsIContent interface methods
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,

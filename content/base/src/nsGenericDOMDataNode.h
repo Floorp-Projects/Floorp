@@ -169,6 +169,20 @@ public:
   {
     return nsContentUtils::GetContextForEventHandlers(this, aRv);
   }
+  virtual void GetTextContent(nsAString &aTextContent)
+  {
+#ifdef DEBUG
+    nsresult rv =
+#endif
+    GetNodeValue(aTextContent);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "GetNodeValue() failed?");
+  }
+  virtual nsresult SetTextContent(const nsAString& aTextContent)
+  {
+    // Batch possible DOMSubtreeModified events.
+    mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
+    return SetNodeValue(aTextContent);
+  }
 
   // Implementation for nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
