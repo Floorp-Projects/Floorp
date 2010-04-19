@@ -547,7 +547,7 @@ nsIDOMHTMLDocument_Write_customMethodCallCode = """
 """
 
 nsIDOMStorage_Clear_customMethodCallCode = """
-    nsresult rv = self->Clear();
+    rv = self->Clear();
     if (NS_SUCCEEDED(rv))
         JS_ClearScope(cx, obj);
 """
@@ -575,32 +575,37 @@ CUSTOM_QS_TN = {
 customMethodCalls = {
     'nsIDOMNode_GetNextSibling': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetSibling(1);'
+        'code': '    nsINode *result = self->GetSibling(1);',
+        'canFail': False
         },
     'nsIDOMNode_GetFirstChild': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetChildAt(0);'
+        'code': '    nsINode *result = self->GetChildAt(0);',
+        'canFail': False
         },
     'nsIDOMNode_GetChildNodes': {
         'thisType': 'nsINode',
-        'code': nsIDOMNode_GetChildNodes_customMethodCallCode,
-        'canFail': True
+        'code': nsIDOMNode_GetChildNodes_customMethodCallCode
         },
     'nsIDOMNode_GetPreviousSibling': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetSibling(-1);'
+        'code': '    nsINode *result = self->GetSibling(-1);',
+        'canFail': False
         },
     'nsIDOMNode_GetLastChild': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetLastChild();'
+        'code': '    nsINode *result = self->GetLastChild();',
+        'canFail': False
         },
     'nsIDOMNode_GetOwnerDocument': {
         'thisType': 'nsINode',
-        'code': '    nsIDocument *result = self->GetOwnerDocument();'
+        'code': '    nsIDocument *result = self->GetOwnerDocument();',
+        'canFail': False
         },
     'nsIDOMNode_GetParentNode': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetNodeParent();'
+        'code': '    nsINode *result = self->GetNodeParent();',
+        'canFail': False
         },
     'nsIDOMNode_InsertBefore': {
         'thisType': 'nsINode',
@@ -608,8 +613,7 @@ customMethodCalls = {
         'arg1Type': 'nsINode',
         'code': '    nsINode *result = self->InsertBefore(arg0, arg1, &rv);\n'
                 '    if(NS_FAILED(rv))\n'
-                '        result = nsnull;',
-        'canFail': True
+                '        result = nsnull;'
         },
     'nsIDOMNode_ReplaceChild': {
         'thisType': 'nsINode',
@@ -617,35 +621,31 @@ customMethodCalls = {
         'arg1Type': 'nsINode',
         'code': '    nsINode *result = self->ReplaceChild(arg0, arg1, &rv);\n'
                 '    if(NS_FAILED(rv))\n'
-                '        result = nsnull;',
-        'canFail': True
+                '        result = nsnull;'
         },
     'nsIDOMNode_RemoveChild': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
         'code': '    rv = self->RemoveChild(arg0);\n'
-                '    nsINode *result = NS_SUCCEEDED(rv) ? arg0 : nsnull;',
-        'canFail': True
+                '    nsINode *result = NS_SUCCEEDED(rv) ? arg0 : nsnull;'
         },
     'nsIDOMNode_AppendChild': {
         'thisType': 'nsINode',
         'arg0Type': 'nsINode',
         'code': '    nsINode *result = self->AppendChild(arg0, &rv);\n'
                 '    if(NS_FAILED(rv))\n'
-                '        result = nsnull;',
-        'canFail': True
+                '        result = nsnull;'
         },
     'nsIDOMNodeList_Item': {
         'thisType': 'nsINodeList',
-        'code': '    nsINode *result = self->GetNodeAt(arg0);'
+        'code': '    nsINode *result = self->GetNodeAt(arg0);',
+        'canFail': False
         },
     'nsIDOMHTMLDocument_Write': {
-        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write',
-        'canFail': True
+        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Write'
         },
     'nsIDOMHTMLDocument_Writeln': {
-        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Writeln',
-        'canFail': True
+        'code': nsIDOMHTMLDocument_Write_customMethodCallCode % 'Writeln'
         },
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
