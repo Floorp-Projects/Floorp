@@ -2085,14 +2085,15 @@ nsEditor::ForceCompositionEnd()
 // We should use nsILookAndFeel to resolve this
 
 #if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2)
+  // XXXmnakano see bug 558976, ResetInputState() has two meaning which are
+  // "commit the composition" and "cursor is moved".  This method name is
+  // "ForceCompositionEnd", so, ResetInputState() should be used only for the
+  // former here.  However, ResetInputState() is also used for the latter here
+  // because even if we don't have composition, we call ResetInputState() on
+  // Linux.  Currently, nsGtkIMModule can know the timing of the cursor move,
+  // so, the latter meaning should be gone and we should remove this #if.
   if(! mInIMEMode)
     return NS_OK;
-#endif
-
-#ifdef XP_UNIX
-  if(IsPasswordEditor()) {
-    return NS_OK;
-  }
 #endif
 
   nsCOMPtr<nsIWidget> widget;
