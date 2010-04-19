@@ -124,6 +124,11 @@ public:
                                                          nsIAttribute)
 
 protected:
+  virtual mozilla::dom::Element* GetNameSpaceElement()
+  {
+    return GetContentInternal()->AsElement();
+  }
+
   static PRBool sInitialized;
 
 private:

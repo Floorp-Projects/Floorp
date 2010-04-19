@@ -202,41 +202,6 @@ nsGenericDOMDataNode::IsSupported(const nsAString& aFeature,
                                                aFeature, aVersion, aReturn);
 }
 
-nsresult
-nsGenericDOMDataNode::LookupPrefix(const nsAString& aNamespaceURI,
-                                   nsAString& aPrefix)
-{
-  aPrefix.Truncate();
-
-  nsIContent *parent_weak = GetParent();
-
-  // DOM Data Node passes the query on to its parent
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(parent_weak));
-  if (node) {
-    return node->LookupPrefix(aNamespaceURI, aPrefix);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                                         nsAString& aNamespaceURI)
-{
-  aNamespaceURI.Truncate();
-
-  nsIContent *parent_weak = GetParent();
-
-  // DOM Data Node passes the query on to its parent
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(parent_weak));
-
-  if (node) {
-    return node->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
-  }
-
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 
 // Implementation of nsIDOMCharacterData

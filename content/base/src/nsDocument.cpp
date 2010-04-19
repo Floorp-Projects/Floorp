@@ -5725,9 +5725,8 @@ NS_IMETHODIMP
 nsDocument::IsDefaultNamespace(const nsAString& aNamespaceURI,
                                PRBool* aReturn)
 {
-  nsAutoString defaultNamespace;
-  LookupNamespaceURI(EmptyString(), defaultNamespace);
-  *aReturn = aNamespaceURI.Equals(defaultNamespace);
+  *aReturn = nsINode::IsDefaultNamespace(aNamespaceURI);
+
   return NS_OK;
 }
 
@@ -5762,12 +5761,7 @@ NS_IMETHODIMP
 nsDocument::LookupPrefix(const nsAString& aNamespaceURI,
                          nsAString& aPrefix)
 {
-  nsCOMPtr<nsIDOM3Node> root(do_QueryInterface(GetRootElement()));
-  if (root) {
-    return root->LookupPrefix(aNamespaceURI, aPrefix);
-  }
-
-  SetDOMStringToNull(aPrefix);
+  nsINode::LookupPrefix(aNamespaceURI, aPrefix);
   return NS_OK;
 }
 
@@ -5775,11 +5769,8 @@ NS_IMETHODIMP
 nsDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                nsAString& aNamespaceURI)
 {
-  if (NS_FAILED(nsContentUtils::LookupNamespaceURI(GetRootElement(),
-                                                   aNamespacePrefix,
-                                                   aNamespaceURI))) {
-    SetDOMStringToNull(aNamespaceURI);
-  }
+  nsINode::LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
+
   return NS_OK;
 }
 

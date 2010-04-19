@@ -883,6 +883,11 @@ protected:
 
   nsIFrame* GetStyledFrame();
 
+  virtual mozilla::dom::Element* GetNameSpaceElement()
+  {
+    return this;
+  }
+
 public:
   // Because of a bug in MS C++ compiler nsDOMSlots must be declared public,
   // otherwise nsXULElement::nsXULSlots doesn't compile.
