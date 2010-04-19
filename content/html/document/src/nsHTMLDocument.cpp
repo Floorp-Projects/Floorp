@@ -1389,11 +1389,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetElementsByTagName(const nsAString& aTagname,
                                      nsIDOMNodeList** aReturn)
 {
-  nsAutoString tmp(aTagname);
-  if (IsHTML()) {
-    ToLowerCase(tmp); // HTML elements are lower case internally.
-  }
-  return nsDocument::GetElementsByTagName(tmp, aReturn);
+  return nsDocument::GetElementsByTagName(aTagname, aReturn);
 }
 
 // nsIDOM3Document interface implementation
@@ -1581,37 +1577,42 @@ nsHTMLDocument::GetURL(nsAString& aURL)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
+nsIContent*
+nsHTMLDocument::GetBody()
 {
-  *aBody = nsnull;
-
   Element* body = GetBodyElement();
 
   if (body) {
     // There is a body element, return that as the body.
-    return CallQueryInterface(body, aBody);
+    return body;
   }
 
   // The document is most likely a frameset document so look for the
   // outer most frameset element
-  nsCOMPtr<nsIDOMNodeList> nodeList;
+  nsRefPtr<nsContentList> nodeList;
 
-  nsresult rv;
   if (IsHTML()) {
-    rv = GetElementsByTagName(NS_LITERAL_STRING("frameset"),
-                              getter_AddRefs(nodeList));
+    nodeList = nsDocument::GetElementsByTagName(NS_LITERAL_STRING("frameset"));
   } else {
-    rv = GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
-                                NS_LITERAL_STRING("frameset"),
-                                getter_AddRefs(nodeList));
+    nodeList =
+      nsDocument::GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
+                             NS_LITERAL_STRING("frameset"));
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMNode> node;
-  nodeList->Item(0, getter_AddRefs(node));
+  return nodeList ? nodeList->GetNodeAt(0) : nsnull;
+}
 
-  return node ? CallQueryInterface(node, aBody) : NS_OK;
+NS_IMETHODIMP
+nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
+{
+  nsIContent *body = GetBody();
+  if (!body) {
+    *aBody = nsnull;
+
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return CallQueryInterface(body, aBody);
 }
 
 NS_IMETHODIMP
@@ -2287,18 +2288,11 @@ NS_IMETHODIMP
 nsHTMLDocument::GetElementsByName(const nsAString& aElementName,
                                   nsIDOMNodeList** aReturn)
 {
-  nsString* elementNameData = new nsString(aElementName);
-  NS_ENSURE_TRUE(elementNameData, NS_ERROR_OUT_OF_MEMORY);
-  nsContentList* elements =
-    NS_GetFuncStringContentList(this,
-                                MatchNameAttribute,
-                                nsContentUtils::DestroyMatchString,
-                                elementNameData,
-                                *elementNameData).get();
-  NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
+  nsRefPtr<nsContentList> list = GetElementsByName(aElementName);
+  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
   // Transfer ownership
-  *aReturn = elements;
+  list.forget(aReturn);
 
   return NS_OK;
 }
