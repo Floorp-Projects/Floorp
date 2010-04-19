@@ -83,7 +83,7 @@ endif
 endif
 endif
 
-ifneq (,$(filter NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
+ifneq (,$(filter NetBSD OpenBSD BSD_OS GNU,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
