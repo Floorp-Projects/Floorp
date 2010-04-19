@@ -782,9 +782,11 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             else:
                 code = customMethodCall['setter_code']
             stubName = templateName
+        else:
+            code = None
     else:
         callTemplate = ""
-        code = customMethodCall['code']
+        code = customMethodCall.get('code', None)
 
     # Function prolog.
 
@@ -888,16 +890,17 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                                            nullBehavior=member.null,
                                            undefinedBehavior=member.undefined)
 
-    canFail = customMethodCall is None or customMethodCall.get('canFail', False)
+    canFail = customMethodCall is None or customMethodCall.get('canFail', True)
     if canFail and not rvdeclared:
         f.write("    nsresult rv;\n")
         rvdeclared = True
 
-    if customMethodCall is not None:
+    if code is not None:
         f.write("%s\n" % code)
 
-    if customMethodCall is None or (isGetter and callTemplate is ""):
-        if customMethodCall is not None:
+    if code is None or (isGetter and callTemplate is ""):
+        debugGetter = code is not None
+        if debugGetter:
             f.write("#ifdef DEBUG\n")
             f.write("    nsresult debug_rv;\n")
             f.write("    nsCOMPtr<%s> debug_self = do_QueryInterface(self);\n"
@@ -930,10 +933,12 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             else:
                 args = "arg0"
 
-        f.write("    %s = %s->%s(%s);\n"
-                % (nsresultname, selfname, comName, args))
+        f.write("    ")
+        if canFail or debugGetter:
+            f.write("%s = " % nsresultname)
+        f.write("%s->%s(%s);\n" % (selfname, comName, args))
 
-        if customMethodCall is not None:
+        if debugGetter:
             checkSuccess = "NS_SUCCEEDED(debug_rv)"
             if canFail:
                 checkSuccess += " == NS_SUCCEEDED(rv)"
@@ -1275,12 +1280,14 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
                                                       rvdeclared)
         argNames.append(argName)
 
-    if customMethodCall is not None:
+    canFail = customMethodCall is None or customMethodCall.get('canFail', True)
+    if canFail and not rvdeclared:
+        f.write("    nsresult rv;\n")
+        rvdeclared = True
+
+    if customMethodCall is not None and 'code' in customMethodCall:
         f.write("%s\n" % customMethodCall['code'])
     else:
-        if not rvdeclared:
-            f.write("    nsresult rv;\n")
-            rvdeclared = True
         prefix = ''
 
         resultname = prefix + 'result'
@@ -1296,9 +1303,12 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
             argNames.append(outParamForm(resultname, member.realtype))
         args = ', '.join(argNames)
 
-        f.write("    %s = %s->%s(%s);\n"
-                % (nsresultname, selfname, comName, args))
+        f.write("    ")
+        if canFail:
+            f.write("%s = " % nsresultname)
+        f.write("%s->%s(%s);\n" % (selfname, comName, args))
 
+    if canFail:
         # Check for errors.
         f.write("    if (NS_FAILED(rv)) {\n")
         if haveCcx:
