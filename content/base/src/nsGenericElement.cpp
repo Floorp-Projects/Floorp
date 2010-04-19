@@ -1001,26 +1001,7 @@ nsNode3Tearoff::GetBaseURI(nsAString& aURI)
 NS_IMETHODIMP
 nsNode3Tearoff::GetTextContent(nsAString &aTextContent)
 {
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-  NS_ASSERTION(node, "We have an nsIContent which doesn't support nsIDOMNode");
-
-  PRUint16 nodeType;
-  node->GetNodeType(&nodeType);
-  if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||
-      nodeType == nsIDOMNode::NOTATION_NODE) {
-    SetDOMStringToNull(aTextContent);
-
-    return NS_OK;
-  }
-
-  if (nodeType == nsIDOMNode::TEXT_NODE ||
-      nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
-      nodeType == nsIDOMNode::COMMENT_NODE ||
-      nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
-    return node->GetNodeValue(aTextContent);
-  }
-
-  nsContentUtils::GetNodeTextContent(mContent, PR_TRUE, aTextContent);
+  mNode->GetTextContent(aTextContent);
 
   return NS_OK;
 }
@@ -1028,27 +1009,7 @@ nsNode3Tearoff::GetTextContent(nsAString &aTextContent)
 NS_IMETHODIMP
 nsNode3Tearoff::SetTextContent(const nsAString &aTextContent)
 {
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(mContent->GetOwnerDoc(), nsnull);
-
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mContent));
-  NS_ASSERTION(node, "We have an nsIContent which doesn't support nsIDOMNode");
-
-  PRUint16 nodeType;
-  node->GetNodeType(&nodeType);
-  if (nodeType == nsIDOMNode::DOCUMENT_TYPE_NODE ||
-      nodeType == nsIDOMNode::NOTATION_NODE) {
-    return NS_OK;
-  }
-
-  if (nodeType == nsIDOMNode::TEXT_NODE ||
-      nodeType == nsIDOMNode::CDATA_SECTION_NODE ||
-      nodeType == nsIDOMNode::COMMENT_NODE ||
-      nodeType == nsIDOMNode::PROCESSING_INSTRUCTION_NODE) {
-    return node->SetNodeValue(aTextContent);
-  }
-
-  return nsContentUtils::SetNodeTextContent(mContent, aTextContent, PR_FALSE);
+  return mNode->SetTextContent(aTextContent);
 }
 
 NS_IMETHODIMP

@@ -5639,10 +5639,16 @@ nsDocument::GetBaseURI(nsAString &aURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsDocument::GetTextContent(nsAString &aTextContent)
 {
   SetDOMStringToNull(aTextContent);
+}
+
+NS_IMETHODIMP
+nsDocument::GetTextContent(nsAString &aTextContent)
+{
+  nsINode::GetTextContent(aTextContent);
 
   return NS_OK;
 }
@@ -5650,7 +5656,7 @@ nsDocument::GetTextContent(nsAString &aTextContent)
 NS_IMETHODIMP
 nsDocument::SetTextContent(const nsAString& aTextContent)
 {
-  return NS_OK;
+  return nsINode::SetTextContent(aTextContent);
 }
 
 
