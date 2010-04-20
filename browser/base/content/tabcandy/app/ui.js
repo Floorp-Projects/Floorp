@@ -14,8 +14,17 @@ Navbar = {
 // ##########
 var Tabbar = {
   get el(){ return window.Tabs[0].raw.parentNode; },
-  hide: function(){ this.el.collapsed = true; },
-  show: function(){ this.el.collapsed = false; },
+  height: window.Tabs[0].raw.parentNode.getBoundingClientRect().height,
+  hide: function(){
+    var self = this;
+    $(self.el).animate({"marginTop":-self.height}, 150, function(){
+      self.el.collapsed = true;
+    });
+  },
+  show: function(){
+    this.el.collapsed = false;
+    $(this.el).animate({"marginTop":0}, 150);
+  },
   get isHidden(){ return this.el.collapsed; }
 }
 
