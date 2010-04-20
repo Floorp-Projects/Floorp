@@ -950,12 +950,20 @@ var PlacesUIUtils = {
   },
 
   /**
-   * Helper for the toolbar and menu views
+   * Creates a menu item ready to be added to a popup.
+   * Helper for the toolbar and menu views.
+   * @param aNode
+   *        Places node used as source for DOM node.
+   * @param aDocument
+   *        The node will be created in this document.
+   * @return a DOM menuitem node.
    */
   createMenuItemForNode:
-  function PUU_createMenuItemForNode(aNode) {
+  function PUU_createMenuItemForNode(aNode, aDocument) {
     var element;
-    var document = this._getCurrentActiveWin().document;
+    // For add-ons backwards compatibility, if the caller does not provide
+    // a document, we guess one.
+    var document = aDocument || this._getTopBrowserWin().document;
     var type = aNode.type;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
       element = document.createElement("menuseparator");
@@ -1384,7 +1392,7 @@ var PlacesUIUtils = {
 
     if (lmStatus && !aPopup._lmStatusMenuItem) {
       // Create the status menuitem and cache it in the popup object.
-      let document = this._getCurrentActiveWin().document;
+      let document = aPopup.ownerDocument;
       aPopup._lmStatusMenuItem = document.createElement("menuitem");
       aPopup._lmStatusMenuItem.setAttribute("lmStatus", lmStatus);
       aPopup._lmStatusMenuItem.setAttribute("label", this.getString(lmStatus));
