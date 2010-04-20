@@ -39,8 +39,8 @@
 importScripts("xpcshellTestHarnessAdaptor.js");
 
 onmessage = function(event) {
-  _WORKINGDIR_ = event.data[0];
-  importScripts("file://" + event.data[0] + "/" + event.data[1]);
+  _WORKINGDIR_ = event.data;
+  importScripts("test_jsctypes.js");
   run_test();
   postMessage("Done!");
 }
