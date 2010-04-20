@@ -809,7 +809,8 @@
         <parameter name="aParentPopup"/>
         <parameter name="aBefore"/>
         <body><![CDATA[
-          var element = PlacesUIUtils.createMenuItemForNode(aChild);
+          var element = PlacesUIUtils.createMenuItemForNode(aChild,
+                                                            aParentPopup.ownerDocument);
 
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
