@@ -183,6 +183,7 @@ window.TabItems = {
             $("body").css("overflow", "hidden");
             
             function onZoomDone(){
+              TabMirror.resumePainting();
               $(this).find("canvas").data("link").tab.focus();
               $(this).css({
                 top:   orig.pos.top,
@@ -195,6 +196,7 @@ window.TabItems = {
               $("body").css("overflow", overflow);              
             }
   
+            TabMirror.pausePainting();
             $(this)
               .addClass("front")
               .animate({
