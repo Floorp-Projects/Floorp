@@ -1133,6 +1133,11 @@ namespace nanojit
             value, lirNames[value->opcode()], dr, base, lirNames[base->opcode()]);
     }
 
+    bool Assembler::canRemat(LIns* ins)
+    {
+        return ins->isImmAny() || ins->isop(LIR_alloc);
+    }
+
     void Assembler::asm_restore(LIns *i, Register r)
     {
         int d;
