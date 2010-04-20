@@ -2865,6 +2865,11 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
 gfxPattern::GraphicsFilter
 nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  gfxPattern::GraphicsFilter defaultFilter = gfxPattern::FILTER_NEAREST;
+#else
+  gfxPattern::GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
+#endif
 #ifdef MOZ_SVG
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
     nsCSSRendering::FindBackgroundStyleFrame(aForFrame) : aForFrame;
@@ -2877,10 +2882,10 @@ nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
   case NS_STYLE_IMAGE_RENDERING_CRISPEDGES:
     return gfxPattern::FILTER_NEAREST;
   default:
-    return gfxPattern::FILTER_GOOD;
+    return defaultFilter;
   }
 #else
-  return gfxPattern::FILTER_GOOD;
+  return defaultFilter;
 #endif
 }
 
