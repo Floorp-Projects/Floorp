@@ -72,6 +72,13 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CPPSRCS += nptest_qt.cpp
+include $(topsrcdir)/config/config.mk
+CXXFLAGS        += $(MOZ_QT_CFLAGS)
+CFLAGS          += $(MOZ_QT_CFLAGS)
+EXTRA_DSO_LDOPTS = \
+                $(MOZ_QT_LIBS) \
+                $(XLDFLAGS) \
+                $(XLIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
