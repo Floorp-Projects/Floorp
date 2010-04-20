@@ -41,12 +41,12 @@
 #include "gfxColor.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
+#include "gfxXlibSurface.h"
 
-class QWidget;
 class QRect;
 
 /**
- * This class lets us take code that draws into an Qt drawable and lets us
+ * This class lets us take code that draws into an Xlib surface drawable and lets us
  * use it to draw into any Thebes context. The user should subclass this class,
  * override NativeDraw, and then call Draw(). The drawing will be subjected
  * to all Thebes transformations, clipping etc.
@@ -61,7 +61,8 @@ public:
      * @param numClipRects the number of rects in the array, or zero if
      * no clipping is required
      */
-    virtual nsresult NativeDraw(QWidget * drawable, short offsetX, 
+    virtual nsresult NativeDraw(gfxXlibSurface *xsurf,
+            Colormap colormap, short offsetX,
             short offsetY, QRect * clipRects, PRUint32 numClipRects) = 0;
   
     enum {
