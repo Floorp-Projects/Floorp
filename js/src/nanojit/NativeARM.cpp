@@ -1242,9 +1242,6 @@ Assembler::asm_restore(LInsp i, Register r)
     if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, deprecated_disp(i));
     } else if (i->isconst()) {
-        if (!i->deprecated_getArIndex()) {
-            i->deprecated_markAsClear();
-        }
         asm_ld_imm(r, i->imm32());
     }
     else {
