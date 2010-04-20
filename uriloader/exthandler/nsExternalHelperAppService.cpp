@@ -1110,6 +1110,7 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
 , mContentLength(-1)
 , mProgress(0)
 , mRequest(nsnull)
+, mDataBuffer(nsnull)
 {
 
   // make sure the extention includes the '.'
@@ -1138,12 +1139,30 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
   EnsureSuggestedFileName();
 
   gExtProtSvc->AddRef();
+
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!prefs)
+    return;
+
+  mBufferSize = 8192;
+  PRInt32 size;
+  nsresult rv = prefs->GetIntPref("network.buffer.cache.size", &size);
+  if (NS_SUCCEEDED(rv)) {
+    mBufferSize = size;
+  }
+
+  mDataBuffer = (char*) malloc(mBufferSize);
+  if (!mDataBuffer)
+    return;
 }
 
 nsExternalAppHandler::~nsExternalAppHandler()
 {
   // Not using NS_RELEASE, since we don't want to set gExtProtSvc to NULL
   gExtProtSvc->Release();
+
+  if (mDataBuffer)
+    free(mDataBuffer);
 }
 
 NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener2 * aWebProgressListener)
@@ -1758,7 +1777,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
 {
   nsresult rv = NS_OK;
   // first, check to see if we've been canceled....
-  if (mCanceled) // then go cancel our underlying channel too
+  if (mCanceled || !mDataBuffer) // then go cancel our underlying channel too
     return request->Cancel(NS_BINDING_ABORTED);
 
   // read the data out of the stream and write it to the temp file.
@@ -1771,7 +1790,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
     while (NS_SUCCEEDED(rv) && count > 0) // while we still have bytes to copy...
     {
       readError = PR_TRUE;
-      rv = inStr->Read(mDataBuffer, PR_MIN(count, DATA_BUFFER_SIZE - 1), &numBytesRead);
+      rv = inStr->Read(mDataBuffer, PR_MIN(count, mBufferSize - 1), &numBytesRead);
       if (NS_SUCCEEDED(rv))
       {
         if (count >= numBytesRead)

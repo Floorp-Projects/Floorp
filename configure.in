@@ -4816,7 +4816,6 @@ NECKO_WIFI=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
-NECKO_SMALL_BUFFERS=
 BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
 
@@ -8145,19 +8144,6 @@ if test "$NECKO_WIFI"; then
   AC_DEFINE(NECKO_WIFI)
 fi
 AC_SUBST(NECKO_WIFI)
-
-dnl
-dnl option to minimize size of necko's i/o buffers
-dnl
-MOZ_ARG_ENABLE_BOOL(necko-small-buffers,
-[  --enable-necko-small-buffers
-                          Minimize size of necko's i/o buffers],
-    NECKO_SMALL_BUFFERS=1,
-    NECKO_SMALL_BUFFERS=)
-AC_SUBST(NECKO_SMALL_BUFFERS)
-if test "$NECKO_SMALL_BUFFERS"; then
-    AC_DEFINE(NECKO_SMALL_BUFFERS)
-fi 
 
 dnl
 dnl option to disable cookies
