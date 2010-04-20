@@ -673,7 +673,7 @@ nsMediaChannelStream::CacheClientNotifyDataReceived()
     return;
 
   mDataReceivedEvent =
-    new nsRunnableMethod<nsMediaChannelStream, void, false>(this, &nsMediaChannelStream::DoNotifyDataReceived);
+    NS_NewNonOwningRunnableMethod(this, &nsMediaChannelStream::DoNotifyDataReceived);
   NS_DispatchToMainThread(mDataReceivedEvent.get(), NS_DISPATCH_NORMAL);
 }
 
