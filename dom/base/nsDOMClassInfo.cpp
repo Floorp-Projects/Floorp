@@ -548,6 +548,7 @@ DOMCI_DATA(DOMPrototype, void)
 DOMCI_DATA(DOMConstructor, void)
 
 DOMCI_DATA(Worker, void)
+DOMCI_DATA(ChromeWorker, void)
 
 DOMCI_DATA(Notation, void)
 
@@ -562,12 +563,31 @@ DOMCI_DATA(Notation, void)
     _flags,                                                                   \
     PR_TRUE,                                                                  \
     0,                                                                        \
+    PR_FALSE,                                                                 \
+    NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
+  },
+
+#define NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA_WITH_NAME(_class, _name,         \
+                                                       _helper, _flags)       \
+  { #_name,                                                                   \
+    nsnull,                                                                   \
+    { _helper::doCreate },                                                    \
+    nsnull,                                                                   \
+    nsnull,                                                                   \
+    nsnull,                                                                   \
+    _flags,                                                                   \
+    PR_TRUE,                                                                  \
+    0,                                                                        \
+    PR_TRUE,                                                                  \
     NS_DEFINE_CLASSINFO_DATA_DEBUG(_class)                                    \
   },
 
 #define NS_DEFINE_CLASSINFO_DATA(_class, _helper, _flags)                     \
   NS_DEFINE_CLASSINFO_DATA_WITH_NAME(_class, _class, _helper, _flags)
 
+#define NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(_class, _helper, _flags)          \
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA_WITH_NAME(_class, _class, _helper, \
+                                                 _flags)
 
 // This list of NS_DEFINE_CLASSINFO_DATA macros is what gives the DOM
 // classes their correct behavior when used through XPConnect. The
@@ -1317,6 +1337,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(Worker, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeWorker, nsDOMGenericSH,
+                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CanvasRenderingContextWebGL, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1385,6 +1407,7 @@ struct nsConstructorFuncMapData
 static const nsConstructorFuncMapData kConstructorFuncMap[] =
 {
   NS_DEFINE_CONSTRUCTOR_FUNC_DATA(Worker, nsDOMWorker::NewWorker)
+  NS_DEFINE_CONSTRUCTOR_FUNC_DATA(ChromeWorker, nsDOMWorker::NewChromeWorker)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -1800,6 +1823,7 @@ nsDOMClassInfo::RegisterClassName(PRInt32 aClassInfoID)
 
   nameSpaceManager->RegisterClassName(sClassInfoData[aClassInfoID].mName,
                                       aClassInfoID,
+                                      sClassInfoData[aClassInfoID].mChromeOnly,
                                       &sClassInfoData[aClassInfoID].mNameUTF16);
 
   return NS_OK;
@@ -3708,6 +3732,14 @@ nsDOMClassInfo::Init()
 #endif
 
   DOM_CLASSINFO_MAP_BEGIN(Worker, nsIWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ChromeWorker, nsIChromeWorker)
+    DOM_CLASSINFO_MAP_ENTRY(nsIChromeWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIAbstractWorker)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
@@ -6014,6 +6046,12 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
       name_struct->mType == nsGlobalNameStruct::eTypeExternalClassInfo) {
+    // Don't expose chrome only constructors to content windows.
+    if (name_struct->mChromeOnly && aWin->IsChromeWindow()) {
+      NS_ASSERTION(nsContentUtils::IsCallerChrome(), "Uh, bad?!");
+      return NS_OK;
+    }
+
     // Create the XPConnect prototype for our classinfo, PostCreateProto will
     // set up the prototype chain.
     nsCOMPtr<nsIXPConnectJSObjectHolder> proto_holder;
@@ -6107,7 +6145,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeProperty) {
-    if (name_struct->mPrivilegedOnly && !nsContentUtils::IsCallerChrome())
+    if (name_struct->mChromeOnly && !nsContentUtils::IsCallerChrome())
       return NS_OK;
 
     nsCOMPtr<nsISupports> native(do_CreateInstance(name_struct->mCID, &rv));

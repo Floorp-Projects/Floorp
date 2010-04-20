@@ -81,6 +81,7 @@ struct nsDOMClassInfoData
   PRUint32 mScriptableFlags : 31; // flags must not use more than 31 bits!
   PRUint32 mHasClassInterface : 1;
   PRUint32 mInterfacesBitmap;
+  PRBool mChromeOnly;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
