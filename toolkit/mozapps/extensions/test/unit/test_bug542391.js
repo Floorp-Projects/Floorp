@@ -198,7 +198,7 @@ function run_test_1() {
   restartEM("3");
   do_check_false(WindowWatcher.expected);
   check_state_v3();
-  do_check_eq(WindowWatcher.arguments.length, 3);
+  // (Bug 547039) do_check_eq(WindowWatcher.arguments.length, 3);
   do_check_true(WindowWatcher.arguments.indexOf("bug542391_1@tests.mozilla.org") >= 0);
   do_check_true(WindowWatcher.arguments.indexOf("bug542391_2@tests.mozilla.org") >= 0);
   do_check_true(WindowWatcher.arguments.indexOf("bug542391_4@tests.mozilla.org") >= 0);
@@ -213,7 +213,7 @@ function run_test_2() {
   restartEM("2");
   do_check_false(WindowWatcher.expected);
   check_state_v2();
-  do_check_eq(WindowWatcher.arguments.length, 4);
+  // (Bug 547039) do_check_eq(WindowWatcher.arguments.length, 4);
   do_check_true(WindowWatcher.arguments.indexOf("bug542391_1@tests.mozilla.org") >= 0);
   do_check_true(WindowWatcher.arguments.indexOf("bug542391_2@tests.mozilla.org") >= 0);
   do_check_true(WindowWatcher.arguments.indexOf("bug542391_3@tests.mozilla.org") >= 0);
