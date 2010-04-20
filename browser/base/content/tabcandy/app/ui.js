@@ -66,6 +66,7 @@ window.Page = {
         $("body").css("overflow", "hidden");
         
         var mirror = lastTab.mirror;
+        TabMirror.pausePainting();
         $tab.css({
             top: 0, left: 0,
             width: window.innerWidth,
@@ -77,6 +78,7 @@ window.Page = {
         },250, '', function() {
           $tab.css("zIndex",z);
           $("body").css("overflow", overflow);
+          TabMirror.resumePainting();
         });
       }
       lastTab = this;
