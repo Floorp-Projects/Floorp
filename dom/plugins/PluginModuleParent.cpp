@@ -547,10 +547,9 @@ PluginModuleParent::GetIdentifierForNPIdentifier(NPIdentifier aIdentifier)
             string.SetIsVoid(PR_TRUE);
         }
         ident = new PluginIdentifierParent(aIdentifier);
-        if (!SendPPluginIdentifierConstructor(ident, string, intval)) {
-            delete ident;
+        if (!SendPPluginIdentifierConstructor(ident, string, intval))
             return nsnull;
-        }
+
         mIdentifiers.Put(aIdentifier, ident);
     }
     return ident;
