@@ -262,29 +262,46 @@ protected:
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
+template <class ClassType, bool Owning>
+struct RunnableMethodReceiver {
+  ClassType *mObj;
+  RunnableMethodReceiver(ClassType *obj) : mObj(obj) { NS_IF_ADDREF(mObj); }
+ ~RunnableMethodReceiver() { Revoke(); }
+  void Revoke() { NS_IF_RELEASE(mObj); }
+};
+
+template <class ClassType>
+struct RunnableMethodReceiver<ClassType, false> {
+  ClassType *mObj;
+  RunnableMethodReceiver(ClassType *obj) : mObj(obj) {}
+  void Revoke() { mObj = nsnull; }
+};
+
 // An event that can be used to call a method on a class.  The class type must
 // support reference counting. This event supports Revoke for use
 // with nsRevocableEventPtr.
-template <class ClassType, typename ReturnType = void>
+template <class ClassType,
+          typename ReturnType = void,
+          bool Owning = true>
 class nsRunnableMethod : public nsRunnable
 {
 public:
   typedef ReturnType (ClassType::*Method)();
 
   nsRunnableMethod(ClassType *obj, Method method)
-    : mObj(obj), mMethod(method) {
-    NS_ADDREF(mObj);
-  }
+    : mReceiver(obj)
+    , mMethod(method)
+  {}
 
   NS_IMETHOD Run() {
-    if (!mObj)
+    if (!mReceiver.mObj)
       return NS_OK;
-    (mObj->*mMethod)();
+    (mReceiver.mObj->*mMethod)();
     return NS_OK;
   }
 
   void Revoke() {
-    NS_IF_RELEASE(mObj);
+    mReceiver.Revoke();
   }
 
   // These ReturnTypeEnforcer classes set up a blacklist for return types that
@@ -308,11 +325,11 @@ public:
 
 protected:
   virtual ~nsRunnableMethod() {
-    NS_IF_RELEASE(mObj);
+    Revoke();
   }
 
 private:
-  ClassType* mObj;
+  RunnableMethodReceiver<ClassType, Owning> mReceiver;
   Method mMethod;
 };
 
@@ -338,60 +355,6 @@ ns_new_runnable_method(ClassType* obj, ReturnType (ClassType::*method)())
 {
   return new nsRunnableMethod<ClassType, ReturnType>(obj, method);
 }
-
-// An event that can be used to call a method on a class, but holds only
-// a raw pointer to the object on which the method will be called.  This
-// event supports Revoke for use with nsRevocableEventPtr and should
-// almost always be used with it.
-template <class ClassType, typename ReturnType = void>
-class nsNonOwningRunnableMethod : public nsRunnable
-{
-public:
-  typedef ReturnType (ClassType::*Method)();
-
-  nsNonOwningRunnableMethod(ClassType *obj, Method method)
-    : mObj(obj), mMethod(method) {
-  }
-
-  NS_IMETHOD Run() {
-    if (!mObj)
-      return NS_OK;
-    (mObj->*mMethod)();
-    return NS_OK;
-  }
-
-  void Revoke() {
-    mObj = nsnull;
-  }
-
-  // These ReturnTypeEnforcer classes set up a blacklist for return types that
-  // we know are not safe. The default ReturnTypeEnforcer compiles just fine but
-  // already_AddRefed will not.
-  template <typename OtherReturnType>
-  class ReturnTypeEnforcer
-  {
-  public:
-    typedef int ReturnTypeIsSafe;
-  };
-
-  template <class T>
-  class ReturnTypeEnforcer<already_AddRefed<T> >
-  {
-    // No ReturnTypeIsSafe makes this illegal!
-  };
-
-  // Make sure this return type is safe.
-  typedef typename ReturnTypeEnforcer<ReturnType>::ReturnTypeIsSafe check;
-
-protected:
-  virtual ~nsNonOwningRunnableMethod() {
-  }
-
-private:
-  ClassType* mObj;
-  Method mMethod;
-};
-
 
 #endif  // XPCOM_GLUE_AVOID_NSPR
 

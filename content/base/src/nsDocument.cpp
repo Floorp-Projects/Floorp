@@ -5159,9 +5159,9 @@ nsDocument::NotifyPossibleTitleChange(PRBool aBoundTitleElement)
   if (mPendingTitleChangeEvent.IsPending())
     return;
 
-  nsRefPtr<nsNonOwningRunnableMethod<nsDocument> > event =
-      new nsNonOwningRunnableMethod<nsDocument>(this,
-            &nsDocument::DoNotifyPossibleTitleChange);
+  nsRefPtr<nsRunnableMethod<nsDocument, void, false> > event =
+    new nsRunnableMethod<nsDocument, void, false>(this,
+      &nsDocument::DoNotifyPossibleTitleChange);
   nsresult rv = NS_DispatchToCurrentThread(event);
   if (NS_SUCCEEDED(rv)) {
     mPendingTitleChangeEvent = event;
