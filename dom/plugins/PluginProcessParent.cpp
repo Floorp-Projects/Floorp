@@ -79,8 +79,7 @@ void
 PluginProcessParent::Delete()
 {
   MessageLoop* currentLoop = MessageLoop::current();
-  MessageLoop* ioLoop = 
-    BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
 
   if (currentLoop == ioLoop) {
       delete this;
