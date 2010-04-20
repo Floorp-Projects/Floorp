@@ -87,8 +87,12 @@ const KEY_APP_SYSTEM_USER             = "app-system-user";
 const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
 
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
-const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
 const XPI_PERMISSION                  = "install";
+
+const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
+const RDFURI_ITEM_ROOT                = "urn:mozilla:item:root"
+const RDFURI_INSTALL_MANIFEST_ROOT    = "urn:mozilla:install-manifest";
+const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 
 const TOOLKIT_ID                      = "toolkit@mozilla.org";
 
@@ -242,6 +246,48 @@ function isUsableAddon(aAddon) {
   return aAddon.blocklistState != Ci.nsIBlocklistService.STATE_BLOCKED;
 }
 
+this.__defineGetter__("gRDF", function() {
+  delete this.gRDF;
+  return this.gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+                     getService(Ci.nsIRDFService);
+});
+
+function EM_R(aProperty) {
+  return gRDF.GetResource(PREFIX_NS_EM + aProperty);
+}
+
+/**
+ * Converts an RDF literal, resource or integer into a string.
+ *
+ * @param  aLiteral
+ *         The RDF object to convert
+ * @return a string if the object could be converted or null
+ */
+function getRDFValue(aLiteral) {
+  if (aLiteral instanceof Ci.nsIRDFLiteral)
+    return aLiteral.Value;
+  if (aLiteral instanceof Ci.nsIRDFResource)
+    return aLiteral.Value;
+  if (aLiteral instanceof Ci.nsIRDFInt)
+    return aLiteral.Value;
+  return null;
+}
+
+/**
+ * Gets an RDF property as a string
+ *
+ * @param  aDs
+ *         The RDF datasource to read the property from
+ * @param  aResource
+ *         The RDF resource to read the property from
+ * @param  aProperty
+ *         The property to read
+ * @return a string if the property existed or null
+ */
+function getRDFProperty(aDs, aResource, aProperty) {
+  return getRDFValue(aDs.GetTarget(aResource, EM_R(aProperty), true));
+}
+
 /**
  * Reads an AddonInternal object from an RDF stream.
  *
@@ -254,34 +300,11 @@ function isUsableAddon(aAddon) {
  *         be read
  */
 function loadManifestFromRDF(aUri, aStream) {
-  let RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
-            getService(Ci.nsIRDFService);
-  const RDFURI_INSTALL_MANIFEST_ROOT = "urn:mozilla:install-manifest";
-  const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
-
-  function EM_R(aProperty) {
-    return RDF.GetResource(PREFIX_NS_EM + aProperty);
-  }
-
-  function getValue(aLiteral) {
-    if (aLiteral instanceof Ci.nsIRDFLiteral)
-      return aLiteral.Value;
-    if (aLiteral instanceof Ci.nsIRDFResource)
-      return aLiteral.Value;
-    if (aLiteral instanceof Ci.nsIRDFInt)
-      return aLiteral.Value;
-    return null;
-  }
-
-  function getProperty(aDs, aSource, aProperty) {
-    return getValue(aDs.GetTarget(aSource, EM_R(aProperty), true));
-  }
-
   function getPropertyArray(aDs, aSource, aProperty) {
     let values = [];
     let targets = aDs.GetTargets(aSource, EM_R(aProperty), true);
     while (targets.hasMoreElements())
-      values.push(getValue(targets.getNext()));
+      values.push(getRDFValue(targets.getNext()));
 
     return values;
   }
@@ -292,14 +315,14 @@ function loadManifestFromRDF(aUri, aStream) {
       locale.locales = [];
       let targets = ds.GetTargets(aSource, EM_R("locale"), true);
       while (targets.hasMoreElements())
-        locale.locales.push(getValue(targets.getNext()));
+        locale.locales.push(getRDFValue(targets.getNext()));
 
       if (locale.locales.length == 0)
         throw new Error("No locales given for localized properties");
     }
 
     PROP_LOCALE_SINGLE.forEach(function(aProp) {
-      locale[aProp] = getProperty(aDs, aSource, aProp);
+      locale[aProp] = getRDFProperty(aDs, aSource, aProp);
     });
 
     PROP_LOCALE_MULTI.forEach(function(aProp) {
@@ -339,10 +362,10 @@ function loadManifestFromRDF(aUri, aStream) {
     throw e;
   }
 
-  let root = RDF.GetResource(RDFURI_INSTALL_MANIFEST_ROOT);
+  let root = gRDF.GetResource(RDFURI_INSTALL_MANIFEST_ROOT);
   let addon = new AddonInternal();
   PROP_METADATA.forEach(function(aProp) {
-    addon[aProp] = getProperty(ds, root, aProp);
+    addon[aProp] = getRDFProperty(ds, root, aProp);
   });
   if (!addon.id || !addon.version)
     throw new Error("No ID or version in install manifest");
@@ -385,7 +408,7 @@ function loadManifestFromRDF(aUri, aStream) {
     let target = targets.getNext().QueryInterface(Ci.nsIRDFResource);
     let targetAppInfo = {};
     PROP_TARGETAPP.forEach(function(aProp) {
-      targetAppInfo[aProp] = getProperty(ds, target, aProp);
+      targetAppInfo[aProp] = getRDFProperty(ds, target, aProp);
     });
     if (!targetAppInfo.id || !targetAppInfo.minVersion ||
         !targetAppInfo.maxVersion)
@@ -1368,6 +1391,8 @@ var XPIProvider = {
         newAddon.userDisabled = aMigrateData.userDisabled;
         if ("installDate" in aMigrateData)
           newAddon.installDate = aMigrateData.installDate;
+        if ("targetApplications" in aMigrateData)
+          newAddon.applyCompatibilityUpdate(aMigrateData, true);
       }
 
       // Update the database.
@@ -2322,33 +2347,40 @@ var XPIDatabase = {
       // Migrate data from extensions.rdf
       let rdffile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_DATABASE], true);
       if (rdffile.exists()) {
-        let RDF = Cc["@mozilla.org/rdf/rdf-service;1"].
-                  getService(Ci.nsIRDFService);
-        const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
+        let ds = gRDF.GetDataSourceBlocking(Services.io.newFileURI(rdffile).spec);
+        let root = Cc["@mozilla.org/rdf/container;1"].
+                   createInstance(Ci.nsIRDFContainer);
+        root.Init(ds, gRDF.GetResource(RDFURI_ITEM_ROOT));
+        let elements = root.GetElements();
+        while (elements.hasMoreElements()) {
+          let source = elements.getNext().QueryInterface(Ci.nsIRDFResource);
 
-        function EM_R(aProperty) {
-          return RDF.GetResource(PREFIX_NS_EM + aProperty);
-        }
+          let location = getRDFProperty(ds, source, "installLocation");
+          if (location) {
+            if (!(location in migrateData))
+              migrateData[location] = {};
+            let id = source.ValueUTF8.substring(PREFIX_ITEM_URI.length);
+            migrateData[location][id] = {
+              userDisabled: false,
+              targetApplications: []
+            }
 
-        let ds = RDF.GetDataSourceBlocking(Services.io.newFileURI(rdffile).spec);
+            let disabled = getRDFProperty(ds, source, "userDisabled");
+            if (disabled == "true" || disabled == "needs-disable")
+              migrateData[location][id].userDisabled = true;
 
-        // Look for any add-ons that were disabled or going to be disabled
-        ["true", "needs-disable"].forEach(function(val) {
-          let sources = ds.GetSources(EM_R("userDisabled"), RDF.GetLiteral(val),
-                                      true);
-          while (sources.hasMoreElements()) {
-            let source = sources.getNext().QueryInterface(Ci.nsIRDFResource);
-            let location = ds.GetTarget(source, EM_R("installLocation"), true);
-            if (location instanceof Ci.nsIRDFLiteral) {
-              if (!(location.Value in migrateData))
-                migrateData[location.Value] = {};
-              let id = source.ValueUTF8.substring(PREFIX_ITEM_URI.length);
-              migrateData[location.Value][id] = {
-                userDisabled: true
-              }
+            let targetApps = ds.GetTargets(source, EM_R("targetApplication"), true);
+            while (targetApps.hasMoreElements()) {
+              let targetApp = targetApps.getNext().QueryInterface(Ci.nsIRDFResource);
+              let appInfo = {
+                id: getRDFProperty(ds, targetApp, "id"),
+                minVersion: getRDFProperty(ds, targetApp, "minVersion"),
+                maxVersion: getRDFProperty(ds, targetApp, "maxVersion"),
+              };
+              migrateData[location][id].targetApplications.push(appInfo);
             }
           }
-        });
+        }
       }
     }
     else {
