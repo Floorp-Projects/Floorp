@@ -151,12 +151,6 @@ namespace nanojit
     }
 #endif
 
-#ifdef NJ_PROFILE
-    // @todo fixup move to nanojit.h
-    #undef counter_value
-    #define counter_value(x)        x
-#endif /* NJ_PROFILE */
-
     // LCompressedBuffer
     LirBuffer::LirBuffer(Allocator& alloc) :
 #ifdef NJ_VERBOSE
