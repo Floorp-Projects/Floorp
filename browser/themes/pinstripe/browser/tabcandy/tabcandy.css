@@ -215,4 +215,6 @@ input.name{
 
 .front{
   z-index: 999999 !important;
+  -moz-border-radius: 0 !important;
+	-moz-box-shadow: none !important;
 }
