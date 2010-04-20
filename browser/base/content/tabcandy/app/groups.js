@@ -36,6 +36,7 @@ window.Group = function(listOfEls, options) {
 
   this._children = []; // an array of Items
   this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
+  this.locked = options.locked || false;
 
   var self = this;
 
@@ -584,8 +585,7 @@ window.Groups = {
       var w = sw - (pad * 2);
       var h = TabItems.tabHeight;
       var box = new Rect(pad, sh - (h + pad), w, h);
-      self.newTabGroup = new Group([], {bounds: box, title: 'New Tabs'}); 
-      self.newTabGroup.locked = true;
+      self.newTabGroup = new Group([], {bounds: box, title: 'New Tabs', locked: true}); 
     }, 1000);
   },
 

@@ -182,7 +182,7 @@ window.Item.prototype = {
 
     // ___ Squish!
     var pageBounds = Items.getPageBounds();
-    if(true) {
+    if(Items.squishMode == 'squish') {
       $.each(items, function(index, item) {
         var data = item.pushAwayData;
         if(data.generation == 0 || item.locked)
@@ -244,33 +244,66 @@ window.Item.prototype = {
         if(posStep.x || posStep.y || sizeStep.x || sizeStep.y) 
           apply(item, posStep, posStep2, sizeStep);
       });
+    } else if(Items.squishMode == 'all') {
+      var newPageBounds = null;
+      $.each(items, function(index, item) {
+        if(item.locked)
+          return;
+          
+        var data = item.pushAwayData;
+        var bounds = data.bounds;
+        newPageBounds = (newPageBounds ? newPageBounds.union(bounds) : new Rect(bounds));
+      });
+      
+      var wScale = pageBounds.width / newPageBounds.width;
+      var hScale = pageBounds.height / newPageBounds.height;
+      var scale = Math.min(hScale, wScale);
+      $.each(items, function(index, item) {
+        if(item.locked)
+          return;
+          
+        var data = item.pushAwayData;
+        var bounds = data.bounds;
+
+        bounds.left -= newPageBounds.left;
+        bounds.left *= scale;
+        bounds.width *= scale;
+
+        bounds.top -= newPageBounds.top;            
+        bounds.top *= scale;
+        bounds.height *= scale;
+      });
     }
 
     // ___ Unsquish
     $.each(items, function(index, item) {
+      if(item.locked)
+        return;
+        
       var data = item.pushAwayData;
       var bounds = data.bounds;
+      var newBounds = new Rect(bounds);
       if(bounds.width < TabItems.tabWidth) {
-        var available = new Rect(pageBounds);
-        var newBounds = new Rect(bounds);
         newBounds.left -= (TabItems.tabWidth - newBounds.width) / 2;
         newBounds.top -= (TabItems.tabHeight - newBounds.height) / 2;
         newBounds.width = TabItems.tabWidth;
         newBounds.height = TabItems.tabHeight;
+      }
         
-        var offset = new Point();
-        if(newBounds.left < pageBounds.left)
-          offset.x = pageBounds.left - newBounds.left;
-        else if(newBounds.right > pageBounds.right)
-          offset.x = pageBounds.right - newBounds.right;
+      var offset = new Point();
+      if(newBounds.left < pageBounds.left)
+        offset.x = pageBounds.left - newBounds.left;
+      else if(newBounds.right > pageBounds.right)
+        offset.x = pageBounds.right - newBounds.right;
 
-        if(newBounds.top < pageBounds.top)
-          offset.y = pageBounds.top - newBounds.top;
-        else if(newBounds.bottom > pageBounds.bottom)
-          offset.y = pageBounds.bottom - newBounds.bottom;
-          
-        newBounds.offset(offset);
+      if(newBounds.top < pageBounds.top)
+        offset.y = pageBounds.top - newBounds.top;
+      else if(newBounds.bottom > pageBounds.bottom)
+        offset.y = pageBounds.bottom - newBounds.bottom;
         
+      newBounds.offset(offset);
+
+      if(!bounds.equals(newBounds)) {        
         var blocked = false;
         $.each(items, function(index, item2) {
           if(item2 == item)
@@ -319,6 +352,12 @@ window.Item.prototype = {
 // Class: Items
 // Keeps track of all Items. 
 window.Items = {
+  // ----------
+  // Variable: squishMode
+  // How to deal when things go off the edge.
+  // Options include: all, squish, push
+  squishMode: 'squish', 
+  
   // ----------
   // Function: init
   // Initialize the object
