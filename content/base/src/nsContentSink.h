@@ -400,7 +400,7 @@ protected:
 
   PRUint32 mPendingSheetCount;
 
-  nsRevocableEventPtr<nsNonOwningRunnableMethod<nsContentSink> >
+  nsRevocableEventPtr<nsRunnableMethod<nsContentSink, void, false> >
     mProcessLinkHeaderEvent;
 };
 
