@@ -60,13 +60,6 @@
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
-#ifdef NECKO_SMALL_BUFFERS
-#define NS_NECKO_BUFFER_CACHE_COUNT (10)  // Max holdings: 10 * 2k = 20k
-#else
-#define NS_NECKO_BUFFER_CACHE_COUNT (24)  // Max holdings: 24 * 4k = 96k
-#endif
-#define NS_NECKO_15_MINS (15 * 60)
-
 static const char gScheme[][sizeof("resource")] =
     {"chrome", "file", "http", "jar", "resource"};
 
@@ -159,6 +152,8 @@ public:
     // Necko buffer cache. Used for all default buffer sizes that necko
     // allocates.
     static nsIMemory *gBufferCache;
+    static PRUint32   gDefaultSegmentSize;
+    static PRUint32   gDefaultSegmentCount;
 };
 
 /**
