@@ -132,7 +132,8 @@ private:
 class NS_COM FunctionTimer
 {
     static FunctionTimerLog* sLog;
-    static char *sBuf1, *sBuf2;
+    static char *sBuf1;
+    static char *sBuf2;
     static int sBufSize;
 
     enum { BUF_LOG_LENGTH = 256 };
