@@ -55,11 +55,20 @@ CPPSRCS		= \
 		gfxBlur.cpp \
 		$(NULL)
 
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+CMMSRCS   += \
+    nsCoreAnimationSupport.mm \
+    $(NULL)
+
+OS_LIBS += -framework OpenGL -framework QuartzCore
+endif
+
 EXTRA_DSO_LIBS	= gkgfx thebes
 
 EXPORTS         += \
 		gfxThebesUtils.h \
 		gfxBlur.h \
+		nsCoreAnimationSupport.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \
