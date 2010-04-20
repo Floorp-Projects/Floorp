@@ -84,12 +84,15 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	CPPSRCS += nsPluginsDirDarwin.cpp
 	CPPSRCS += nsPluginNativeWindow.cpp
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	CPPSRCS += nsPluginsDirUnix.cpp
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	CPPSRCS += nsPluginNativeWindowGtk2.cpp
 else
-	CPPSRCS += nsPluginsDirUnix.cpp
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+	CPPSRCS += nsPluginNativeWindowQt.cpp
+else
 	CPPSRCS += nsPluginNativeWindow.cpp
+endif
 endif
 endif
 endif
