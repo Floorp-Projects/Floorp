@@ -20,7 +20,7 @@ var addon2 = {
   version: "2.0",
   name: "Test 2",
   targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
+    id: "toolkit@mozilla.org",
     minVersion: "1",
     maxVersion: "1"
   }]
@@ -42,7 +42,7 @@ var addon4 = {
   version: "2.0",
   name: "Test 4",
   targetApplications: [{
-    id: "xpcshell@tests.mozilla.org",
+    id: "toolkit@mozilla.org",
     minVersion: "1",
     maxVersion: "1"
   }]
@@ -53,7 +53,7 @@ profileDir.append("extensions");
 
 function run_test() {
   do_test_pending();
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2", "2");
 
   var dest = profileDir.clone();
   dest.append("addon1@tests.mozilla.org");
@@ -76,18 +76,26 @@ function run_test() {
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
                                "addon4@tests.mozilla.org"], function([a1, a2, a3, a4]) {
-    // addon1 was enabled in the old extensions.rdf
+    // addon1 was user and app enabled in the old extensions.rdf
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
-    // addon1 was disabled in the old extensions.rdf
+    do_check_false(a1.appDisabled);
+
+    // addon2 was user disabled and app enabled in the old extensions.rdf
     do_check_neq(a2, null);
     do_check_true(a2.userDisabled);
-    // addon1 was pending-disable in the old extensions.rdf
+    do_check_false(a2.appDisabled);
+
+    // addon3 was pending user disable and app disabled in the old extensions.rdf
     do_check_neq(a3, null);
     do_check_true(a3.userDisabled);
-    // addon1 was pending-enable in the old extensions.rdf
+    do_check_true(a3.appDisabled);
+
+    // addon4 was pending user enable and app disabled in the old extensions.rdf
     do_check_neq(a4, null);
     do_check_false(a4.userDisabled);
+    do_check_true(a4.appDisabled);
+
     do_test_finished();
   });
 }
