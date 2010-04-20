@@ -84,6 +84,8 @@ function run_test_1() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
+    do_check_true(a1.applyBackgroundUpdates);
+    a1.applyBackgroundUpdates = false;
 
     prepare_test({}, [
       "onNewInstall",
@@ -147,6 +149,7 @@ function check_test_2() {
       do_check_neq(a1, null);
       do_check_eq(a1.version, "2.0");
       do_check_true(isExtensionInAddonsList(profileDir, a1.id));
+      do_check_false(a1.applyBackgroundUpdates);
       a1.uninstall();
       restartManager(0);
 
@@ -577,10 +580,22 @@ function run_test_8() {
                                  function([a1, a2, a3, a4, a5, a6]) {
       let count = 6;
 
+      function run_next_test() {
+        a1.uninstall();
+        a2.uninstall();
+        a3.uninstall();
+        a4.uninstall();
+        a5.uninstall();
+        a6.uninstall();
+
+        restartManager(0);
+        run_test_9();
+      }
+
       let compatListener = {
         onUpdateFinished: function(addon, error) {
           if (--count == 0)
-            end_test();
+            run_next_test();
         }
       };
 
@@ -590,19 +605,8 @@ function run_test_8() {
         },
 
         onUpdateFinished: function(addon, error) {
-          if (--count != 0)
-            return;
-
-          a1.uninstall();
-          a2.uninstall();
-          a3.uninstall();
-          a4.uninstall();
-          a5.uninstall();
-          a6.uninstall();
-
-          restartManager(0);
-
-          run_test_9();
+          if (--count == 0)
+            run_next_test();
         }
       };
 
@@ -740,6 +744,90 @@ function check_test_13() {
     do_check_false(a7.appDisabled);
 
     a7.uninstall();
+    restartManager(0);
+
+    run_test_14();
+  });
+}
+
+// Test that background update checks doesn't update an add-on that isn't
+// allowed to update automatically.
+function run_test_14() {
+  // Have an add-on there that will be updated so we see some events from it
+  var dest = profileDir.clone();
+  dest.append("addon1@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "addon1@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 1",
+  }, dest);
+
+  dest = profileDir.clone();
+  dest.append("addon8@tests.mozilla.org");
+  writeInstallRDFToDir({
+    id: "addon8@tests.mozilla.org",
+    version: "1.0",
+    updateURL: "http://localhost:4444/data/test_update.rdf",
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1"
+    }],
+    name: "Test Addon 8",
+  }, dest);
+  restartManager(1);
+
+  AddonManager.getAddonByID("addon8@tests.mozilla.org", function(a8) {
+    a8.applyBackgroundUpdates = false;
+
+    // Note that the background check will find a new update for both add-ons
+    // but only start installing one of them
+    prepare_test({}, [
+      "onNewInstall",
+      "onDownloadStarted",
+      "onNewInstall",
+      "onDownloadEnded"
+    ], continue_test_14);
+  
+    // Fake a timer event
+    gInternalManager.notify(null);
+  });
+}
+
+function continue_test_14(install) {
+  do_check_neq(install.existingAddon, null);
+  do_check_eq(install.existingAddon.id, "addon1@tests.mozilla.org");
+
+  prepare_test({
+    "addon1@tests.mozilla.org": [
+      "onInstalling"
+    ]
+  }, [
+    "onInstallStarted",
+    "onInstallEnded",
+  ], check_test_14);
+}
+
+function check_test_14(install) {
+  do_check_eq(install.existingAddon.pendingUpgrade.install, install);
+
+  restartManager(1);
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon8@tests.mozilla.org"], function([a1, a8]) {
+    do_check_neq(a1, null);
+    do_check_eq(a1.version, "2.0");
+    a1.uninstall();
+
+    do_check_neq(a8, null);
+    do_check_eq(a8.version, "1.0");
+    a8.uninstall();
+
     restartManager(0);
 
     end_test();

@@ -402,6 +402,8 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.userDisabled = false;
   addon.appDisabled = !isUsableAddon(addon);
 
+  addon.applyBackgroundUpdates = true;
+
   return addon;
 }
 
@@ -1177,8 +1179,6 @@ var XPIProvider = {
 
       // Set the additional properties on the new AddonInternal
       newAddon._installLocation = aInstallLocation;
-      newAddon.userDisabled = aOldAddon.userDisabled;
-      newAddon.installDate = aOldAddon.installDate;
       newAddon.updateDate = aAddonState.mtime;
       newAddon.visible = !(newAddon.id in visibleAddons);
 
@@ -2182,7 +2182,8 @@ var XPIProvider = {
 const FIELDS_ADDON = "internal_id, id, location, version, type, internalName, " +
                      "updateURL, updateKey, optionsURL, aboutURL, iconURL, " +
                      "defaultLocale, visible, active, userDisabled, appDisabled, " +
-                     "pendingUninstall, descriptor, installDate, updateDate";
+                     "pendingUninstall, descriptor, installDate, updateDate, " +
+                     "applyBackgroundUpdates";
 
 // A helper function to simply log any errors that occur during async statements.
 function asyncErrorLogger(aError) {
@@ -2218,7 +2219,7 @@ var XPIDatabase = {
                             ":updateKey, :optionsURL, :aboutURL, :iconURL, " +
                             ":locale, :visible, :active, :userDisabled," +
                             " :appDisabled, 0, :descriptor, :installDate, " +
-                            ":updateDate)",
+                            ":updateDate, :applyBackgroundUpdates)",
     addAddonMetadata_addon_locale: "INSERT INTO addon_locale VALUES " +
                                    "(:internal_id, :name, :locale)",
     addAddonMetadata_locale: "INSERT INTO locale (name, description, creator, " +
@@ -2261,7 +2262,8 @@ var XPIDatabase = {
                      "1 - appDisabled, 1 - pendingUninstall)",
     setAddonProperties: "UPDATE addon SET userDisabled=:userDisabled, " +
                         "appDisabled=:appDisabled, " +
-                        "pendingUninstall=:pendingUninstall WHERE " +
+                        "pendingUninstall=:pendingUninstall, " +
+                        "applyBackgroundUpdates=:applyBackgroundUpdates WHERE " +
                         "internal_id=:internal_id",
     updateTargetApplications: "UPDATE targetApplication SET " +
                               "minVersion=:minVersion, maxVersion=:maxVersion " +
@@ -2430,6 +2432,7 @@ var XPIDatabase = {
                                 "userDisabled INTEGER, appDisabled INTEGER, " +
                                 "pendingUninstall INTEGER, descriptor TEXT, " +
                                 "installDate INTEGER, updateDate INTEGER, " +
+                                "applyBackgroundUpdates INTEGER, " +
                                 "UNIQUE (id, location)");
     this.connection.createTable("targetApplication",
                                 "addon_internal_id INTEGER, " +
@@ -2566,7 +2569,7 @@ var XPIDatabase = {
     addon.installDate = aRow.installDate;
     addon.updateDate = aRow.updateDate;
     ["visible", "active", "userDisabled", "appDisabled",
-     "pendingUninstall"].forEach(function(aProp) {
+     "pendingUninstall", "applyBackgroundUpdates"].forEach(function(aProp) {
       addon[aProp] = aRow[aProp] != 0;
     });
     this.addonCache[aRow.internal_id] = Components.utils.getWeakReference(addon);
@@ -2716,7 +2719,7 @@ var XPIDatabase = {
     addon.installDate = aRow.getResultByName("installDate");
     addon.updateDate = aRow.getResultByName("updateDate");
     ["visible", "active", "userDisabled", "appDisabled",
-     "pendingUninstall"].forEach(function(aProp) {
+     "pendingUninstall", "applyBackgroundUpdates"].forEach(function(aProp) {
       addon[aProp] = aRow.getResultByName(aProp) != 0;
     });
     this.addonCache[internal_id] = Components.utils.getWeakReference(addon);
@@ -2990,7 +2993,8 @@ var XPIDatabase = {
     stmt.params.installDate = aAddon.installDate;
     stmt.params.updateDate = aAddon.updateDate;
     copyProperties(aAddon, PROP_METADATA, stmt.params);
-    ["visible", "userDisabled", "appDisabled"].forEach(function(aProp) {
+    ["visible", "userDisabled", "appDisabled",
+     "applyBackgroundUpdates"].forEach(function(aProp) {
       stmt.params[aProp] = aAddon[aProp] ? 1 : 0;
     });
     stmt.params.active = (aAddon.visible && !aAddon.userDisabled &&
@@ -3034,6 +3038,9 @@ var XPIDatabase = {
   updateAddonMetadata: function XPIDB_updateAddonMetadata(aOldAddon, aNewAddon,
                                                           aDescriptor) {
     this.removeAddonMetadata(aOldAddon);
+    aNewAddon.userDisabled = aOldAddon.userDisabled;
+    aNewAddon.installDate = aOldAddon.installDate;
+    aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
     this.addAddonMetadata(aNewAddon, aDescriptor);
   },
 
@@ -3106,29 +3113,16 @@ var XPIDatabase = {
     let stmt = this.getStatement("setAddonProperties");
     stmt.params.internal_id = aAddon._internal_id;
 
-    if ("userDisabled" in aProperties) {
-      stmt.params.userDisabled = convertBoolean(aProperties.userDisabled);
-      aAddon.userDisabled = aProperties.userDisabled;
-    }
-    else {
-      stmt.params.userDisabled = convertBoolean(aAddon.userDisabled);
-    }
-
-    if ("appDisabled" in aProperties) {
-      stmt.params.appDisabled = convertBoolean(aProperties.appDisabled);
-      aAddon.appDisabled = aProperties.appDisabled;
-    }
-    else {
-      stmt.params.appDisabled = convertBoolean(aAddon.appDisabled);
-    }
-
-    if ("pendingUninstall" in aProperties) {
-      stmt.params.pendingUninstall = convertBoolean(aProperties.pendingUninstall);
-      aAddon.pendingUninstall = aProperties.pendingUninstall;
-    }
-    else {
-      stmt.params.pendingUninstall = convertBoolean(aAddon.pendingUninstall);
-    }
+    ["userDisabled", "appDisabled", "pendingUninstall",
+     "applyBackgroundUpdates"].forEach(function(aProp) {
+      if (aProp in aProperties) {
+        stmt.params[aProp] = convertBoolean(aProperties[aProp]);
+        aAddon[aProp] = aProperties[aProp];
+      }
+      else {
+        stmt.params[aProp] = convertBoolean(aAddon[aProp]);
+      }
+    });
 
     stmt.execute();
   },
@@ -3822,7 +3816,6 @@ AddonInstall.prototype = {
         this.addon.updateDate = dir.lastModifiedTime;
         this.addon.visible = true;
         if (isUpgrade) {
-          this.addon.installDate = this.existingAddon.installDate;
           XPIDatabase.updateAddonMetadata(this.existingAddon, this.addon,
                                           dir.persistentDescriptor);
         }
@@ -4314,12 +4307,13 @@ function AddonWrapper(aAddon) {
     return [];
   });
 
-  this.__defineGetter__("updateAutomatically", function() {
-    return aAddon.updateAutomatically;
+  this.__defineGetter__("applyBackgroundUpdates", function() {
+    return aAddon.applyBackgroundUpdates;
   });
-  this.__defineSetter__("updateAutomatically", function(val) {
-    // TODO store this in the DB (bug 557849)
-    aAddon.updateAutomatically = val;
+  this.__defineSetter__("applyBackgroundUpdates", function(val) {
+    XPIDatabase.setAddonProperties(aAddon, {
+      applyBackgroundUpdates: val
+    });
   });
 
   this.__defineGetter__("install", function() {
