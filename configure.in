@@ -4269,7 +4269,16 @@ AC_CACHE_CHECK(for __thread keyword for TLS variables,
                             ac_cv_thread_keyword=no)])
 LDFLAGS=$_SAVE_LDFLAGS
 if test "$ac_cv_thread_keyword" = yes; then
-  AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
+  # mips builds fail with TLS variables because of a binutils bug.
+  # See bug 528687
+  case "${target_cpu}" in
+    mips*)
+      :
+      ;;
+    *)
+      AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
+      ;;
+  esac
 fi
 
 dnl Check for the existence of various allocation headers/functions
