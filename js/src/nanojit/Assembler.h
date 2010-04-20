@@ -68,8 +68,8 @@ namespace nanojit
     // - 'entry' records the state of the native machine stack at particular
     //   points during assembly.  Each entry represents four bytes.
     //
-    // - Parts of the stack can be allocated by LIR_alloc, in which case each
-    //   slot covered by the allocation contains a pointer to the LIR_alloc
+    // - Parts of the stack can be allocated by LIR_allocp, in which case each
+    //   slot covered by the allocation contains a pointer to the LIR_allocp
     //   LIns.
     //
     // - The stack also holds spilled values, in which case each slot holding
@@ -88,7 +88,7 @@ namespace nanojit
     //   * An LIns can appear in at most one contiguous sequence of slots in
     //     AR, and the length of that sequence depends on the opcode (1 slot
     //     for instructions producing 32-bit values, 2 slots for instructions
-    //     producing 64-bit values, N slots for LIR_alloc).
+    //     producing 64-bit values, N slots for LIR_allocp).
     //
     //   * An LIns named by 'entry[i]' must have an in-use reservation with
     //     arIndex==i (or an 'i' indexing the start of the same contiguous
@@ -153,7 +153,7 @@ namespace nanojit
     inline /*static*/ uint32_t AR::nStackSlotsFor(LIns* ins)
     {
         uint32_t n = 0;
-        if (ins->isop(LIR_alloc)) {
+        if (ins->isop(LIR_allocp)) {
             n = ins->size() >> 2;
         } else {
             switch (ins->retType()) {
@@ -231,7 +231,7 @@ namespace nanojit
      * as we generate machine code.  As part of the prologue, we issue
      * a stack adjustment instruction and then later patch the adjustment
      * value.  Temporary values can be placed into the AR as method calls
-     * are issued.   Also LIR_alloc instructions will consume space.
+     * are issued.   Also LIR_allocp instructions will consume space.
      */
     class Assembler
     {
