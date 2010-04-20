@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=2 et :
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 et :
  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -38,127 +38,116 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_functexcept_h
-#define mozilla_functexcept_h
+#ifndef mozilla_throw_gcc_h
+#define mozilla_throw_gcc_h
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdio.h>              // snprintf
 
 // For gcc, we define these inline to abort so that we're absolutely
 // certain that (i) no exceptions are thrown from Gecko; (ii) these
 // errors are always terminal and caught by breakpad.
 
-// NB: It would be nice to #include "nsDebug.h" and use
-// NS_RUNTIMEABORT(), but because this file is used within chromium,
-// and nsDebug pulls in nscore, and nscore pulls in prtypes, and
-// chromium can't build with prtypes being included before
-// base/basictypes, then we have to roll our own aborting impl.
-
-// Assume that if we're building with gcc, we're on a platform where
-// abort() is fatal and triggers breakpad.
-#define MOZ_FE_ABORT(_msg)                        \
-  do {                                            \
-    fputs(_msg, stderr);                          \
-    fputs("\n", stderr);                          \
-    abort();                                      \
-  } while (0)
+#include "mozilla/mozalloc_abort.h"
 
 namespace std {
+
+// NB: user code is not supposed to touch the std:: namespace.  We're
+// doing this after careful review because we want to define our own
+// exception throwing semantics.  Don't try this at home!
 
 inline void NS_NORETURN
 __throw_bad_exception(void)
 {
-  MOZ_FE_ABORT("fatal: STL threw bad_exception");
+    mozalloc_abort("fatal: STL threw bad_exception");
 }
 
 inline void NS_NORETURN
 __throw_bad_alloc(void)
 {
-  MOZ_FE_ABORT("fatal: STL threw bad_alloc");
+    mozalloc_abort("fatal: STL threw bad_alloc");
 }
 
 inline void NS_NORETURN
 __throw_bad_cast(void)
 {
-  MOZ_FE_ABORT("fatal: STL threw bad_cast");
+    mozalloc_abort("fatal: STL threw bad_cast");
 }
 
 inline void NS_NORETURN
 __throw_bad_typeid(void)
 {
-  MOZ_FE_ABORT("fatal: STL threw bad_typeid");
+    mozalloc_abort("fatal: STL threw bad_typeid");
 }
 
 inline void NS_NORETURN
 __throw_logic_error(const char* msg)
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_domain_error(const char* msg)
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_invalid_argument(const char* msg) 
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_length_error(const char* msg) 
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_out_of_range(const char* msg) 
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_runtime_error(const char* msg) 
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_range_error(const char* msg) 
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_overflow_error(const char* msg) 
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_underflow_error(const char* msg) 
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_ios_failure(const char* msg) 
 {
-  MOZ_FE_ABORT(msg);
+    mozalloc_abort(msg);
 }
 
 inline void NS_NORETURN
 __throw_system_error(int err) 
 {
-  char error[128];
-  snprintf(error, sizeof(error)-1,
-           "fatal: STL threw system_error: %s (%d)", strerror(err), err);
-  MOZ_FE_ABORT(error);
+    char error[128];
+    snprintf(error, sizeof(error)-1,
+             "fatal: STL threw system_error: %s (%d)", strerror(err), err);
+    mozalloc_abort(error);
 }
 
 } // namespace std
 
-#endif  // mozilla_functexcept_h
+#endif  // mozilla_throw_gcc_h
