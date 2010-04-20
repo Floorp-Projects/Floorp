@@ -93,24 +93,26 @@ window.onload = function () {
   document.getElementById("supportLink").href = supportUrl;
 
   // Update the other sections.
-  populateExtensionsSection();
   populatePreferencesSection();
+  populateExtensionsSection();
 }
 
 function populateExtensionsSection() {
-  let extensions = Application.extensions.all;
-  let trExtensions = [];
-  for (let i = 0; i < extensions.length; i++) {
-    let extension = extensions[i];
-    let tr = createParentElement("tr", [
-      createElement("td", extension.name),
-      createElement("td", extension.version),
-      createElement("td", extension.enabled),
-      createElement("td", extension.id),
-    ]);
-    trExtensions.push(tr);
-  }
-  appendChildren(document.getElementById("extensions-tbody"), trExtensions);
+  Application.getExtensions(function (extensions) {
+    let all = extensions.all;
+    let trExtensions = [];
+    for (let i = 0; i < all.length; i++) {
+      let extension = all[i];
+      let tr = createParentElement("tr", [
+        createElement("td", extension.name),
+        createElement("td", extension.version),
+        createElement("td", extension.enabled),
+        createElement("td", extension.id),
+      ]);
+      trExtensions.push(tr);
+    }
+    appendChildren(document.getElementById("extensions-tbody"), trExtensions);
+  });
 }
 
 function populatePreferencesSection() {
