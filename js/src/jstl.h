@@ -264,7 +264,7 @@ struct AlignedStorage
 {
     union U {
         char bytes[nbytes];
-        JSUint64 _;
+        uint64 _;
     } u;
 
     const void *addr() const { return u.bytes; }
