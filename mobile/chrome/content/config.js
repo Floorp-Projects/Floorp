@@ -242,6 +242,7 @@ var ViewConfig = {
 
     row.setAttribute("name", aPref.name);
     row.setAttribute("type", aPref.type);
+    row.setAttribute("role", "button");
     row.setAttribute("default", aPref.default);
 
     let label = document.createElement("label");

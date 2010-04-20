@@ -45,6 +45,7 @@ richlistitem {
 }
 
 richlistitem .preftitle {
+  pointer-events: none;
   min-width: 100px;
   -moz-box-flex: 1;
   margin-right: 1.1mm;
@@ -57,6 +58,7 @@ richlistitem[default="false"] .preftitle {
 
 richlistitem .prefvalue {
   min-width: 100px;
+  pointer-events: none;
   -moz-box-flex: 4;
   text-align: right;
   color: grey;
