@@ -1493,10 +1493,17 @@ var XPIProvider = {
     }
     else {
       // If the database exists then the previous file cache can be trusted
+      // otherwise create an empty database
       let db = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-      if (db.exists())
+      if (db.exists()) {
         cache = Prefs.getCharPref(PREF_INSTALL_CACHE, null);
-    }
+      }
+      else {
+        LOG("Database is missing, recreating");
+        XPIDatabase.openConnection();
+        XPIDatabase.createSchema();
+      }
+     }
 
     // Load the list of bootstrapped add-ons first so processFileChanges can
     // modify it
