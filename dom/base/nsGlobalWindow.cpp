@@ -2464,9 +2464,8 @@ nsGlobalWindow::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
   if (aEnabled && aFireTimeouts) {
     // Scripts are enabled (again?) on this context, run timeouts that
     // fired on this context while scripts were disabled.
-    nsCOMPtr<nsIRunnable> event =
-      NS_NEW_RUNNABLE_METHOD(nsGlobalWindow, this, RunTimeout);
-    NS_DispatchToCurrentThread(event);
+    void (nsGlobalWindow::*run)() = &nsGlobalWindow::RunTimeout;
+    NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, run));
   }
 }
 

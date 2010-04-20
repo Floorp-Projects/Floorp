@@ -229,9 +229,8 @@ nsHTMLObjectElement::BindToTree(nsIDocument *aDocument,
 
   // If we already have all the children, start the load.
   if (mIsDoneAddingChildren) {
-    nsContentUtils::AddScriptRunner(
-      new nsRunnableMethod<nsHTMLObjectElement>(this,
-                                                &nsHTMLObjectElement::StartObjectLoad));
+    void (nsHTMLObjectElement::*start)() = &nsHTMLObjectElement::StartObjectLoad;
+    nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, start));
   }
 
   return NS_OK;

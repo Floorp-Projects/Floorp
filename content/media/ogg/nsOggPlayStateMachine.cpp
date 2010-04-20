@@ -470,13 +470,13 @@ void nsOggPlayStateMachine::UpdatePlaybackPosition(PRInt64 aTime)
                  "CurrentTime must be after duration if aTime > endTime!");
     mEndTime = aTime;
     nsCOMPtr<nsIRunnable> event =
-      NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, DurationChanged);
+      NS_NewRunnableMethod(mDecoder, &nsOggDecoder::DurationChanged);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
   if (!mPositionChangeQueued) {
     mPositionChangeQueued = PR_TRUE;
     nsCOMPtr<nsIRunnable> event =
-      NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, PlaybackPositionChanged);
+      NS_NewRunnableMethod(mDecoder, &nsOggDecoder::PlaybackPositionChanged);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
 }
@@ -656,7 +656,7 @@ nsOggPlayStateMachine::StartDecodeThreads()
       return rv;
     }
     nsCOMPtr<nsIRunnable> event =
-      NS_NEW_RUNNABLE_METHOD(nsOggPlayStateMachine, this, DecodeLoop);
+      NS_NewRunnableMethod(this, &nsOggPlayStateMachine::DecodeLoop);
     mDecodeThread->Dispatch(event, NS_DISPATCH_NORMAL);
   }
   if (HasAudio() && !mAudioThread) {
@@ -666,7 +666,7 @@ nsOggPlayStateMachine::StartDecodeThreads()
       return rv;
     }
     nsCOMPtr<nsIRunnable> event =
-      NS_NEW_RUNNABLE_METHOD(nsOggPlayStateMachine, this, AudioLoop);
+      NS_NewRunnableMethod(this, &nsOggPlayStateMachine::AudioLoop);
     mAudioThread->Dispatch(event, NS_DISPATCH_NORMAL);
   }
   return NS_OK;
@@ -724,7 +724,7 @@ nsresult nsOggPlayStateMachine::Run()
         // Inform the element that we've loaded the Ogg metadata and the
         // first frame.
         nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-          NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, MetadataLoaded);
+          NS_NewRunnableMethod(mDecoder, &nsOggDecoder::MetadataLoaded);
         NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
 
         if (mState == DECODER_STATE_DECODING_METADATA) {
@@ -817,7 +817,7 @@ nsresult nsOggPlayStateMachine::Run()
         {
           MonitorAutoExit exitMon(mDecoder->GetMonitor());
           nsCOMPtr<nsIRunnable> startEvent =
-            NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStarted);
+            NS_NewRunnableMethod(mDecoder, &nsOggDecoder::SeekingStarted);
           NS_DispatchToMainThread(startEvent, NS_DISPATCH_SYNC);
         }
         if (mCurrentFrameTime != mSeekTime - mStartTime) {
@@ -864,12 +864,12 @@ nsresult nsOggPlayStateMachine::Run()
         if (mCurrentFrameTime == mEndTime) {
           LOG(PR_LOG_DEBUG, ("%p Changed state from SEEKING (to %lldms) to COMPLETED",
                              mDecoder, seekTime));
-          stopEvent = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStoppedAtEnd);
+          stopEvent = NS_NewRunnableMethod(mDecoder, &nsOggDecoder::SeekingStoppedAtEnd);
           mState = DECODER_STATE_COMPLETED;
         } else {
           LOG(PR_LOG_DEBUG, ("%p Changed state from SEEKING (to %lldms) to DECODING",
                              mDecoder, seekTime));
-          stopEvent = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, SeekingStopped);
+          stopEvent = NS_NewRunnableMethod(mDecoder, &nsOggDecoder::SeekingStopped);
           mState = DECODER_STATE_DECODING;
         }
         mBufferExhausted = PR_FALSE;
@@ -953,7 +953,7 @@ nsresult nsOggPlayStateMachine::Run()
           {
             MonitorAutoExit exitMon(mDecoder->GetMonitor());
             nsCOMPtr<nsIRunnable> event =
-              NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, PlaybackEnded);
+              NS_NewRunnableMethod(mDecoder, &nsOggDecoder::PlaybackEnded);
             NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
           }
         }
@@ -1203,7 +1203,7 @@ void nsOggPlayStateMachine::LoadOggHeaders()
   if (!mInfo.mHasVideo && !mInfo.mHasAudio) {
     mState = DECODER_STATE_SHUTDOWN;      
     nsCOMPtr<nsIRunnable> event =
-      NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, DecodeError);
+      NS_NewRunnableMethod(mDecoder, &nsOggDecoder::DecodeError);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
     return;
   }
@@ -1295,13 +1295,13 @@ void nsOggPlayStateMachine::UpdateReadyState() {
   nsCOMPtr<nsIRunnable> event;
   switch (GetNextFrameStatus()) {
     case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING:
-      event = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NextFrameUnavailableBuffering);
+      event = NS_NewRunnableMethod(mDecoder, &nsOggDecoder::NextFrameUnavailableBuffering);
       break;
     case nsHTMLMediaElement::NEXT_FRAME_AVAILABLE:
-      event = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NextFrameAvailable);
+      event = NS_NewRunnableMethod(mDecoder, &nsOggDecoder::NextFrameAvailable);
       break;
     case nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE:
-      event = NS_NEW_RUNNABLE_METHOD(nsOggDecoder, mDecoder, NextFrameUnavailable);
+      event = NS_NewRunnableMethod(mDecoder, &nsOggDecoder::NextFrameUnavailable);
       break;
     default:
       PR_NOT_REACHED("unhandled frame state");
