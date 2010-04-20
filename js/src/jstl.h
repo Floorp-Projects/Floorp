@@ -319,6 +319,16 @@ class LazilyConstructed
         new(storage.addr()) T(t1, t2, t3);
         constructed = true;
     }
+
+    T *addr() {
+        JS_ASSERT(constructed);
+        return &asT();
+    }
+
+    T &ref() {
+        JS_ASSERT(constructed);
+        return asT();
+    }
 };
 
 
