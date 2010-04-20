@@ -114,8 +114,10 @@ public:
   NewChromeWorker(JSContext* aCx, JSObject* aObj, uintN aArgc, jsval* aArgv,
                   jsval* aRval);
 
+#ifdef BUILD_CTYPES
   static JSBool
   CTypesLazyGetter(JSContext* aCx, JSObject* aObj, jsval aId, jsval* aVp);
+#endif
 
 private:
   // Internal helper for SetTimeout and SetInterval.
@@ -428,6 +430,7 @@ nsDOMWorkerFunctions::MakeNewWorker(JSContext* aCx,
   return JS_TRUE;
 }
 
+#ifdef BUILD_CTYPES
 JSBool
 nsDOMWorkerFunctions::CTypesLazyGetter(JSContext* aCx,
                                        JSObject* aObj,
@@ -456,6 +459,7 @@ nsDOMWorkerFunctions::CTypesLazyGetter(JSContext* aCx,
          JS_InitCTypesClass(aCx, aObj) &&
          JS_GetPropertyById(aCx, aObj, rooter.id(), aVp);
 }
+#endif
 
 JSFunctionSpec gDOMWorkerFunctions[] = {
   { "dump",                nsDOMWorkerFunctions::Dump,                1, 0, 0 },
@@ -1641,12 +1645,14 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
     success = JS_DefineFunctions(aCx, global, gDOMWorkerChromeFunctions);
     NS_ENSURE_TRUE(success, PR_FALSE);
 
+#ifdef BUILD_CTYPES
     // Add the lazy getter for ctypes.
     success = JS_DefineProperty(aCx, global, "ctypes", JSVAL_VOID,
                                 nsDOMWorkerFunctions::CTypesLazyGetter, nsnull,
                                 0);
     NS_ENSURE_TRUE(success, PR_FALSE);
   }
+#endif
 
   // From here on out we have to remember to null mGlobal, mInnerScope, and
   // mScopeWN if something fails! We really don't need to hang on to mGlobal
