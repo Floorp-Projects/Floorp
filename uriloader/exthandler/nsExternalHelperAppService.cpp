@@ -1144,7 +1144,7 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
   if (!prefs)
     return;
 
-  mBufferSize = 8192;
+  mBufferSize = 4096;
   PRInt32 size;
   nsresult rv = prefs->GetIntPref("network.buffer.cache.size", &size);
   if (NS_SUCCEEDED(rv)) {
