@@ -62,7 +62,7 @@ window.Group = function(listOfEls, options) {
   $container
     .css({zIndex: -100})
     .appendTo("body")
-    .dequeue();    
+    .dequeue();
     
   // ___ Resizer
   this.$resizer = $("<div class='resizer'/>")
@@ -86,7 +86,7 @@ window.Group = function(listOfEls, options) {
       position: "absolute",
     });
     
-  $('.close', this.$titlebar).click(function() {
+  var $close = $('.close', this.$titlebar).click(function() {
     self.close();
   });
   
@@ -129,6 +129,12 @@ window.Group = function(listOfEls, options) {
     })
     .appendTo($container);
   
+  // ___ locking
+  if(this.locked) {
+    $container.css({cursor: 'default'});    
+    $close.hide();
+  }
+    
   // ___ Superclass initialization
   this._init($container.get(0));
 
@@ -410,18 +416,20 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   _addHandlers: function(container){
     var self = this;
     
-    $(container).draggable({
-      start: function(){
-        drag.info = new DragInfo(this);
-      },
-      drag: function(e, ui){
-        drag.info.drag(e, ui);
-      }, 
-      stop: function() {
-        drag.info.stop();
-        drag.info = null;
-      }
-    });
+    if(!this.locked) {
+      $(container).draggable({
+        start: function(){
+          drag.info = new DragInfo(this);
+        },
+        drag: function(e, ui){
+          drag.info.drag(e, ui);
+        }, 
+        stop: function() {
+          drag.info.stop();
+          drag.info = null;
+        }
+      });
+    }
     
     $(container).droppable({
       over: function(){
@@ -437,7 +445,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         drag.info.$el.removeClass("willGroup");
         self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
       },
-      accept: ".tab, .group",
+      accept: ".tab", //".tab, .group",
     });
   },
 
@@ -481,7 +489,10 @@ var DragInfo = function(element) {
 DragInfo.prototype = {
   // ----------  
   drag: function(e, ui) {
-    this.item.reloadBounds();
+    var bb = this.item.getBounds();
+    bb.left = ui.position.left;
+    bb.top = ui.position.top;
+    this.item.setBounds(bb, true);
   },
 
   // ----------  
@@ -512,7 +523,7 @@ window.Groups = {
   
   // ----------  
   dragOptions: {
-    start: function() {
+    start: function(e, ui) {
       drag.info = new DragInfo(this);
     },
     drag: function(e, ui) {
