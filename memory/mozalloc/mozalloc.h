@@ -41,18 +41,16 @@
 #ifndef mozilla_mozalloc_h
 #define mozilla_mozalloc_h
 
-
 /*
  * https://bugzilla.mozilla.org/show_bug.cgi?id=427099
  */
 
-/* 
- * NB: this header depends on the symbols malloc(), free(), and
- * std::bad_alloc.  But because this header is used in situations
- * where malloc/free have different visibility, we rely on code
- * including this header to provide the declarations of malloc/free.
- * I.e., we don't #include <stdlib.h> or <new> on purpose.
- */
+#include <stdlib.h>
+#include <string.h>
+#if defined(__cplusplus)
+#  include <new>
+#endif
+
 
 #if defined(MOZALLOC_EXPORT)
 // do nothing: it's been defined to __declspec(dllexport) by

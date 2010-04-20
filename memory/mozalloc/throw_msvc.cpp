@@ -14,19 +14,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Code
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Chris Jones <jones.chris.g@gmail.com>
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -38,18 +38,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <exception>
+
 #if defined(XP_WIN) || (defined(XP_OS2) && defined(__declspec))
 #  define MOZALLOC_EXPORT __declspec(dllexport)
 #endif
 
 #include "mozilla/mozalloc_abort.h"
-#include "mozilla/mozalloc_oom.h"
+
+namespace std {
+
+// NB: user code is not supposed to touch the std:: namespace.  We're
+// doing this after careful review because we want to define our own
+// exception throwing semantics.  Don't try this at home!
+
+__declspec(dllexport) void mozilla_Throw(const exception& e);
 
 void
-mozalloc_handle_oom()
+mozilla_Throw(const exception& e)
 {
-    // NB: this is handle_oom() stage 1, which simply aborts on OOM.
-    // we might proceed to a stage 2 in which an attempt is made to
-    // reclaim memory
-    mozalloc_abort("out of memory");
+    mozalloc_abort(e.what());
 }
+
+}  // namespace std
