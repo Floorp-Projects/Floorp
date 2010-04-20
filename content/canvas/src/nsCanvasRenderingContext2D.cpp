@@ -713,8 +713,8 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 
     sNumLivingContexts--;
     if (!sNumLivingContexts) {
-        delete sUnpremultiplyTable;
-        delete sPremultiplyTable;
+        delete[] sUnpremultiplyTable;
+        delete[] sPremultiplyTable;
         sUnpremultiplyTable = nsnull;
         sPremultiplyTable = nsnull;
     }
