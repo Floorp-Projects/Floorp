@@ -158,11 +158,6 @@ BrowserView.Util = {
     return (rounded) ? rounded : 1.0;
   },
 
-  /** Force zoom levels "near" 1 to exactly 1.  */
-  adjustZoomLevel: function adjustZoomLevel(zl, threshold) {
-    return (Math.abs(1.0 - zl) < threshold) ? 1.0 : zl;
-  },
-
   pageZoomLevel: function pageZoomLevel(visibleRect, browserW, browserH) {
     return BrowserView.Util.clampZoomLevel(visibleRect.width / browserW);
   },
@@ -613,8 +608,12 @@ BrowserView.prototype = {
       return 0;
 
     let pageZoom = this.getPageZoomLevel();
+
+    // If pageZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
     let granularity = gPrefService.getIntPref("browser.ui.zoom.pageFitGranularity");
-    pageZoom = BrowserView.Util.adjustZoomLevel(pageZoom, 1 / granularity);
+    let threshold = 1 - 1 / granularity;
+    if (threshold < pageZoom && pageZoom < 1)
+      pageZoom = 1;
 
     let metaData = Util.getViewportMetadata(browser);
     if (metaData.reason)
