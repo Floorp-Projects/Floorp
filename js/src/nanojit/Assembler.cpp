@@ -1407,12 +1407,8 @@ namespace nanojit
                 case LIR_alloc: {
                     countlir_alloc();
                     NanoAssert(ins->isInAr());
-                    if (ins->isInReg()) {
-                        Register r = ins->getReg();
-                        asm_restore(ins, r);
-                        _allocator.retire(r);
-                        ins->clearReg();
-                    }
+                    if (ins->isInReg())
+                        evict(ins);
                     freeResourcesOf(ins);
                     break;
                 }

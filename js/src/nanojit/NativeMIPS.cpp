@@ -1151,8 +1151,6 @@ namespace nanojit
             }
         }
         else if (i->isconst()) {
-            if (!i->deprecated_getArIndex())
-                i->deprecated_markAsClear();
             asm_li(r, i->imm32());
         }
         else {

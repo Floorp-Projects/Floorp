@@ -639,9 +639,6 @@ namespace nanojit
             ADDI(r, FP, d);
         }
         else if (i->isconst()) {
-            if (!i->deprecated_getArIndex()) {
-                i->deprecated_markAsClear();
-            }
             asm_li(r, i->imm32());
         }
         // XXX: should really rematerializable isconstf() and isconstq() cases

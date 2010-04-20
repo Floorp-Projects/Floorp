@@ -1382,15 +1382,12 @@ namespace nanojit
             LEAQRM(r, d, FP);
         }
         else if (ins->isconst()) {
-            ins->clearReg();
             asm_immi(r, ins->imm32(), /*canClobberCCs*/false);
         }
         else if (ins->isconstq()) {
-            ins->clearReg();
             asm_immq(r, ins->imm64(), /*canClobberCCs*/false);
         }
         else if (ins->isconstf()) {
-            ins->clearReg();
             asm_immf(r, ins->imm64(), /*canClobberCCs*/false);
         }
         else {
