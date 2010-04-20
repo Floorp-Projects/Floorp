@@ -46,6 +46,7 @@ MODULE		= xpcom
 CPPSRCS		= regxpcom.cpp
 
 DEFINES		+= -DXPCOM_GLUE
+STL_FLAGS	=
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../build \
