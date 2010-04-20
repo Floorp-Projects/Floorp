@@ -66,6 +66,7 @@ XPCSHELL_TESTS = unit
 _CHROME_TEST_FILES = \
   xpcshellTestHarnessAdaptor.js \
   ctypes_worker.js \
+  test_ctypes.xul \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
@@ -82,6 +83,8 @@ libs:: unit/test_jsctypes.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
 	  -DCTYPES_TEST_LIB=\"$(SHARED_LIBRARY)\" $^ > $(xpctestdir)/test_jsctypes.js
 	$(TEST_INSTALLER) $(SHARED_LIBRARY) $(xpctestdir)
+	$(TEST_INSTALLER) $(xpctestdir)/test_jsctypes.js $(chrometestdir)
+	$(TEST_INSTALLER) $(xpctestdir)/$(SHARED_LIBRARY) $(chrometestdir)
 	$(RM) $(xpctestdir)/test_jsctypes.js.in
 
 libs:: $(_CHROME_TEST_FILES)
@@ -90,4 +93,6 @@ libs:: $(_CHROME_TEST_FILES)
 GARBAGE += \
     $(xpctestdir)/test_jsctypes.js \
     $(xpctestdir)/$(SHARED_LIBRARY) \
+    $(chrometestdir)/test_jsctypes.js \
+    $(chrometestdir)/$(SHARED_LIBRARY) \
     $(NULL)
