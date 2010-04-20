@@ -1901,11 +1901,7 @@ nsWindow::GetToplevelWidget(MozQWidget **aWidget)
 void *
 nsWindow::SetupPluginPort(void)
 {
-    if (!mWidget)
-        return nsnull;
-
-    qDebug("FIXME:>>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-
+    NS_WARNING("Not implemented");
     return nsnull;
 }
 
