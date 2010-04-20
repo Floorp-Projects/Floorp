@@ -169,7 +169,7 @@ void nsOggDecoder::Shutdown()
   // So we destroy the decoder on the main thread in an asynchronous event.
   // See bug 468721.
   nsCOMPtr<nsIRunnable> event =
-    NS_NEW_RUNNABLE_METHOD(nsOggDecoder, this, Stop);
+    NS_NewRunnableMethod(this, &nsOggDecoder::Stop);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
   nsContentUtils::UnregisterShutdownObserver(this);

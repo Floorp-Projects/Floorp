@@ -564,7 +564,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       }
 
       if (readyToRun) {
-        nsContentUtils::AddScriptRunner(new nsRunnableMethod<nsScriptLoader>(this,
+        nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this,
           &nsScriptLoader::ProcessPendingRequests));
       }
 
@@ -636,7 +636,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   // If there weren't any pending requests before, and this one is
   // ready to execute, do that as soon as it's safe.
   if (!request->mLoading && !hadPendingRequests && ReadyToExecuteScripts()) {
-    nsContentUtils::AddScriptRunner(new nsRunnableMethod<nsScriptLoader>(this,
+    nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this,
       &nsScriptLoader::ProcessPendingRequests));
   }
 
@@ -794,7 +794,7 @@ void
 nsScriptLoader::ProcessPendingRequestsAsync()
 {
   if (GetFirstPendingRequest() || !mPendingChildLoaders.IsEmpty()) {
-    nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsScriptLoader>(this,
+    nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this,
       &nsScriptLoader::ProcessPendingRequests);
 
     NS_DispatchToCurrentThread(ev);
