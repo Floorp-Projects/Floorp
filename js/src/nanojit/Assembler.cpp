@@ -252,14 +252,6 @@ namespace nanojit
         _allocator.removeActive(r);
         _allocator.addFree(r);
         return r;
-     }
-
-    /**
-     * these instructions don't have to be saved & reloaded to spill,
-     * they can just be recalculated w/out any inputs.
-     */
-    bool Assembler::canRemat(LIns *i) {
-        return i->isImmAny() || i->isop(LIR_alloc);
     }
 
     void Assembler::codeAlloc(NIns *&start, NIns *&end, NIns *&eip

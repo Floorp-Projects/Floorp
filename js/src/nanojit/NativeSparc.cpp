@@ -250,6 +250,11 @@ namespace nanojit
         return 0;
     }
 
+    bool Assembler::canRemat(LIns* ins)
+    {
+        return ins->isImmAny() || ins->isop(LIR_alloc);
+    }
+
     void Assembler::asm_restore(LInsp i, Register r)
     {
         underrunProtect(24);
