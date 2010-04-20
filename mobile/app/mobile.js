@@ -458,3 +458,7 @@ pref("font.default.x-unicode", "SwissA");
 pref("font.default.x-user-def", "SwissA");
 pref("font.default.x-western", "SwissA");
 #endif
+
+// See bug 545869 for details on why these are set the way they are
+pref("network.buffer.cache.count", 24);
+pref("network.buffer.cache.size",  16384);
