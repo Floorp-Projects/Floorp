@@ -47,11 +47,13 @@
 
   <binding id="popup_autocomplete_result">
     <content orient="vertical">
-      <xul:hbox class="autocomplete-item-label" align="center" xbl:inherits="tags, favorite" mousethrough="always">
+      <xul:hbox class="autocomplete-item-label" align="top" xbl:inherits="tags, favorite" mousethrough="always">
         <xul:image xbl:inherits="src"/>
-        <xul:label flex="1" crop="center" xbl:inherits="value"/>
+        <xul:vbox flex="1">
+          <xul:label crop="center" xbl:inherits="value"/>
+          <xul:label class="autocomplete-item-url" xbl:inherits="value=url" crop="center" mousethrough="always"/>
+        </xul:vbox>
       </xul:hbox>
-      <xul:label class="autocomplete-item-url" xbl:inherits="value=url" crop="center" mousethrough="always"/>
     </content>
   </binding>
 
@@ -600,11 +602,13 @@
 
   <binding id="place-item" extends="chrome://browser/content/bindings.xml#place-base">
     <content orient="vertical">
-      <xul:hbox anonid="bookmark-item" class="bookmark-item-label" align="center" flex="1" xbl:inherits="tags" mousethrough="always">
+      <xul:hbox anonid="bookmark-item" class="bookmark-item-label" align="top" flex="1" xbl:inherits="tags" mousethrough="always">
         <xul:image xbl:inherits="src"/>
-        <xul:label flex="1" crop="center" xbl:inherits="value=title"/>
+        <xul:vbox flex="1">
+          <xul:label crop="center" xbl:inherits="value=title"/>
+          <xul:label anonid="bookmark-url" class="bookmark-item-url" xbl:inherits="value=uri" crop="center" mousethrough="always"/>
+        </xul:vbox>
       </xul:hbox>
-      <xul:label anonid="bookmark-url" class="bookmark-item-url" xbl:inherits="value=uri" crop="center" mousethrough="always"/>
 
       <xul:hbox anonid="bookmark-manage" class="bookmark-manage" hidden="true" flex="1">
         <xul:image xbl:inherits="src"/>

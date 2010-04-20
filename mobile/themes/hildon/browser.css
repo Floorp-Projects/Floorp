@@ -508,6 +508,7 @@ placelist[ui="manage"] placeitem[type="folder"] {
 placeitem[type="folder"] > .bookmark-item-label > image,
 placeitem[type="folder"] > .bookmark-manage > image {
   list-style-image: url(images/folder-32.png);
+  margin-top: 0;
 }
 
 placeitem[type="folder"] .bookmark-item-url {
@@ -609,21 +610,22 @@ placeitem > .bookmark-manage > image {
   width: 32px;
   height: 32px;
   max-height: 32px;
-  margin: 0 16px 0 8px;
+  /* margin-top = (1 - title's line-height) * title's font-size */
+  margin: 5px 16px 0 8px;
 }
 
 placeitem[src=""] .bookmark-item-label > image {
   list-style-image: url(chrome://mozapps/skin/places/defaultFavicon.png);
 }
 
-.autocomplete-item-label > label,
-.bookmark-item-label > label {
+.autocomplete-item-label > vbox > label,
+.bookmark-item-label > vbox > label {
   -moz-margin-start: 1px;
 }
 
 .autocomplete-item-label[favorite="true"] {
   padding-right: 30px;
-  background: url(images/star-24.png) no-repeat 100%;
+  background: url(images/star-24.png) no-repeat 100% 2px;
 }
 
 .autocomplete-item-label:not([tags=""]):after,
@@ -640,9 +642,7 @@ placeitem[src=""] .bookmark-item-label > image {
 .bookmark-item-url {
   color: blue;
   font-size: 18px !important;
-  margin-left: 24px;
   margin-right: 24px;
-  padding-left: 34px;
 }
 
 /* special "no results" and "all bookmarks" items */
