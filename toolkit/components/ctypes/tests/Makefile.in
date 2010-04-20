@@ -87,15 +87,7 @@ libs:: unit/test_jsctypes.js.in
 libs:: $(_CHROME_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(chrometestdir)
 
-libs:: test_ctypes.xul.in
-	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) \
-    -DCTYPES_TEST_JS=\"$(call core_abspath,$(xpctestdir))/test_jsctypes.js\" \
-    $^ > $(chrometestdir)/test_ctypes.xul
-	$(TEST_INSTALLER) $(SHARED_LIBRARY) $(chrometestdir)
-	$(RM) $(chrometestdir)/test_ctypes.xul.in
-
 GARBAGE += \
     $(xpctestdir)/test_jsctypes.js \
     $(xpctestdir)/$(SHARED_LIBRARY) \
-    $(chrometestdir)/test_ctypes.xul \
     $(NULL)
