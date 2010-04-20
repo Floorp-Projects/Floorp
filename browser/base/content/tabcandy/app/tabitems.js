@@ -228,7 +228,7 @@ window.TabItems = {
         var box = Items.getPageBounds();
         box.inset(20, 20);
         
-        Items.arrange(items, box, {padding: 10});
+        Items.arrange(items, box, {padding: 10, animate:false});
       }
       
       // TODO: Figure out this really weird bug?

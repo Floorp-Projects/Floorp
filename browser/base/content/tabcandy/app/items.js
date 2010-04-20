@@ -181,14 +181,14 @@ window.Item.prototype = {
       pushOne(itemsToPush.shift());         
 
     // ___ Squish!
-    if(false) {
+    if(true) {
       var pageBounds = Items.getPageBounds();
       $.each(items, function(index, item) {
         var data = item.pushAwayData;
         if(data.generation == 0 || item.locked)
           return;
   
-        function apply(item, postStep, posStep2, sizeStep) {
+        function apply(item, posStep, posStep2, sizeStep) {
           var data = item.pushAwayData;
           if(data.generation == 0)
             return;
@@ -218,6 +218,18 @@ window.Item.prototype = {
         var posStep = new Point();
         var posStep2 = new Point();
         var sizeStep = new Point();
+
+        if(bounds.left < pageBounds.left) {      
+          posStep.x = pageBounds.left - bounds.left;
+          sizeStep.x = posStep.x / data.generation;
+          posStep2.x = -sizeStep.x;                
+        } else if(bounds.right > pageBounds.right) {      
+          posStep.x = pageBounds.right - bounds.right;
+          sizeStep.x = -posStep.x / data.generation;
+          posStep.x += sizeStep.x;
+          posStep2.x = sizeStep.x;
+        }
+
         if(bounds.top < pageBounds.top) {      
           posStep.y = pageBounds.top - bounds.top;
           sizeStep.y = posStep.y / data.generation;
