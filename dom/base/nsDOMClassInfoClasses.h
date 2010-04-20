@@ -443,6 +443,7 @@ DOMCI_CLASS(MathMLElement)
 #endif
 
 DOMCI_CLASS(Worker)
+DOMCI_CLASS(ChromeWorker)
 
 // WebGL
 DOMCI_CLASS(CanvasRenderingContextWebGL)
