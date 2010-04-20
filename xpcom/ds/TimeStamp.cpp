@@ -41,6 +41,18 @@
 
 namespace mozilla {
 
+struct TimeStampInitialization
+{
+  TimeStampInitialization() {
+    TimeStamp::Startup();
+  }
+  ~TimeStampInitialization() {
+    TimeStamp::Shutdown();
+  }
+};
+
+static TimeStampInitialization initOnce;
+
 static PRLock* gTimeStampLock;
 static PRUint32 gRolloverCount;
 static PRIntervalTime gLastNow;
