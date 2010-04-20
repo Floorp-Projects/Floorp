@@ -78,8 +78,7 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
 {
     MOZ_COUNT_CTOR(GeckoChildProcessHost);
     
-    MessageLoop* ioLoop = 
-      BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+    MessageLoop* ioLoop = XRE_GetIOMessageLoop();
     ioLoop->PostTask(FROM_HERE,
                      NewRunnableMethod(this,
                                        &GeckoChildProcessHost::InitializeChannel));
@@ -103,8 +102,7 @@ GeckoChildProcessHost::~GeckoChildProcessHost()
 bool
 GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
 {
-  MessageLoop* ioLoop = 
-    BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   NS_ASSERTION(MessageLoop::current() != ioLoop, "sync launch from the IO thread NYI");
 
   ioLoop->PostTask(FROM_HERE,
@@ -125,8 +123,7 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts)
 bool
 GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 {
-  MessageLoop* ioLoop = 
-    BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
                                      &GeckoChildProcessHost::PerformAsyncLaunch,
