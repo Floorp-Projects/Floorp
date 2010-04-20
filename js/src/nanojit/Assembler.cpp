@@ -313,7 +313,7 @@ namespace nanojit
                 continue;
             uint32_t arIndex = ins->getArIndex();
             NanoAssert(arIndex != 0);
-            if (ins->isop(LIR_alloc)) {
+            if (ins->isop(LIR_allocp)) {
                 int const n = i + (ins->size()>>2);
                 for (int j=i+1; j < n; j++) {
                     NanoAssert(_entries[j]==ins);
@@ -403,18 +403,18 @@ namespace nanojit
 
     // Like findRegFor(), but called when the LIns is used as a pointer.  It
     // doesn't have to be called, findRegFor() can still be used, but it can
-    // optimize the LIR_alloc case by indexing off FP, thus saving the use of
+    // optimize the LIR_allocp case by indexing off FP, thus saving the use of
     // a GpReg.
     //
     Register Assembler::getBaseReg(LInsp base, int &d, RegisterMask allow)
     {
     #if !PEDANTIC
-        if (base->isop(LIR_alloc)) {
-            // The value of a LIR_alloc is a pointer to its stack memory,
+        if (base->isop(LIR_allocp)) {
+            // The value of a LIR_allocp is a pointer to its stack memory,
             // which is always relative to FP.  So we can just return FP if we
             // also adjust 'd' (and can do so in a valid manner).  Or, in the
             // PEDANTIC case, we can just assign a register as normal;
-            // findRegFor() will allocate the stack memory for LIR_alloc if
+            // findRegFor() will allocate the stack memory for LIR_allocp if
             // necessary.
             d += findMemFor(base);
             return FP;
@@ -429,12 +429,12 @@ namespace nanojit
     // same type as the stored value, eg. in asm_store32() on 32-bit platforms
     // and asm_store64() on 64-bit platforms.  Similar to getBaseReg(),
     // findRegFor2() can be called instead, but this function can optimize the
-    // case where the base value is a LIR_alloc.
+    // case where the base value is a LIR_allocp.
     void Assembler::getBaseReg2(RegisterMask allowValue, LIns* value, Register& rv,
                                 RegisterMask allowBase, LIns* base, Register& rb, int &d)
     {
     #if !PEDANTIC
-        if (base->isop(LIR_alloc)) {
+        if (base->isop(LIR_allocp)) {
             rb = FP;
             d += findMemFor(base);
             rv = findRegFor(value, allowValue);
@@ -457,7 +457,7 @@ namespace nanojit
     //
     Register Assembler::findRegFor(LIns* ins, RegisterMask allow)
     {
-        if (ins->isop(LIR_alloc)) {
+        if (ins->isop(LIR_allocp)) {
             // Never allocate a reg for this without stack space too.
             findMemFor(ins);
         }
@@ -524,7 +524,7 @@ namespace nanojit
     // sometimes useful to have it there for assignments.
     Register Assembler::findSpecificRegForUnallocated(LIns* ins, Register r)
     {
-        if (ins->isop(LIR_alloc)) {
+        if (ins->isop(LIR_allocp)) {
             // never allocate a reg for this w/out stack space too
             findMemFor(ins);
         }
@@ -629,7 +629,7 @@ namespace nanojit
         asm_maybe_spill(ins, pop);
 #ifdef NANOJIT_IA32
         if (!ins->isInAr() && pop && r == FST0) {
-            // This can only happen with a LIR_fcall to an impure function
+            // This can only happen with a LIR_calld to an impure function
             // whose return value was ignored (ie. if ins->isInReg() was false
             // prior to the findRegFor() call).
             FSTP(FST0);     // pop the fpu result since it isn't used
@@ -1374,19 +1374,19 @@ namespace nanojit
                     evictAllActiveRegs();
                     break;
 
-                case LIR_live:
-                case LIR_flive:
-                CASE64(LIR_qlive:) {
+                case LIR_livel:
+                case LIR_lived:
+                CASE64(LIR_liveq:) {
                     countlir_live();
                     LInsp op1 = ins->oprnd1();
-                    // alloca's are meant to live until the point of the LIR_live instruction, marking
+                    // allocp's are meant to live until the point of the LIR_livep instruction, marking
                     // other expressions as live ensures that they remain so at loop bottoms.
-                    // alloca areas require special treatment because they are accessed indirectly and
-                    // the indirect accesses are invisible to the assembler, other than via LIR_live.
+                    // allocp areas require special treatment because they are accessed indirectly and
+                    // the indirect accesses are invisible to the assembler, other than via LIR_livep.
                     // other expression results are only accessed directly in ways that are visible to
                     // the assembler, so extending those expression's lifetimes past the last loop edge
                     // isn't necessary.
-                    if (op1->isop(LIR_alloc)) {
+                    if (op1->isop(LIR_allocp)) {
                         findMemFor(op1);
                     } else {
                         pending_lives.add(ins);
@@ -1394,9 +1394,9 @@ namespace nanojit
                     break;
                 }
 
-                case LIR_ret:
-                case LIR_fret:
-                CASE64(LIR_qret:) {
+                case LIR_retl:
+                case LIR_retd:
+                CASE64(LIR_retq:) {
                     countlir_ret();
                     asm_ret(ins);
                     break;
@@ -1404,7 +1404,7 @@ namespace nanojit
 
                 // Allocate some stack space.  The value of this instruction
                 // is the address of the stack space.
-                case LIR_alloc: {
+                case LIR_allocp: {
                     countlir_alloc();
                     NanoAssert(ins->isInAr());
                     if (ins->isInReg())
@@ -1412,34 +1412,34 @@ namespace nanojit
                     freeResourcesOf(ins);
                     break;
                 }
-                case LIR_int:
+                case LIR_imml:
                 {
                     countlir_imm();
                     asm_immi(ins);
                     break;
                 }
 #ifdef NANOJIT_64BIT
-                case LIR_quad:
+                case LIR_immq:
                 {
                     countlir_imm();
                     asm_immq(ins);
                     break;
                 }
 #endif
-                case LIR_float:
+                case LIR_immd:
                 {
                     countlir_imm();
                     asm_immf(ins);
                     break;
                 }
-                case LIR_param:
+                case LIR_paramp:
                 {
                     countlir_param();
                     asm_param(ins);
                     break;
                 }
 #if NJ_SOFTFLOAT_SUPPORTED
-                case LIR_callh:
+                case LIR_hcalll:
                 {
                     // return result of quad-call in register
                     deprecated_prepResultReg(ins, rmask(retRegs[1]));
@@ -1447,53 +1447,53 @@ namespace nanojit
                     findSpecificRegFor(ins->oprnd1(), retRegs[0]);
                     break;
                 }
-                case LIR_qlo:
+                case LIR_dlo2l:
                 {
                     countlir_qlo();
                     asm_qlo(ins);
                     break;
                 }
-                case LIR_qhi:
+                case LIR_dhi2l:
                 {
                     countlir_qhi();
                     asm_qhi(ins);
                     break;
                 }
-                case LIR_qjoin:
+                case LIR_ll2d:
                 {
                     countlir_qjoin();
                     asm_qjoin(ins);
                     break;
                 }
 #endif
-                CASE64(LIR_qcmov:)
-                case LIR_cmov:
+                CASE64(LIR_cmovq:)
+                case LIR_cmovl:
                 {
                     countlir_cmov();
                     asm_cmov(ins);
                     break;
                 }
-                case LIR_ldzb:
-                case LIR_ldzs:
-                case LIR_ldsb:
-                case LIR_ldss:
-                case LIR_ld:
+                case LIR_ldub2ul:
+                case LIR_lduw2ul:
+                case LIR_ldb2l:
+                case LIR_ldw2l:
+                case LIR_ldl:
                 {
                     countlir_ld();
                     asm_load32(ins);
                     break;
                 }
 
-                case LIR_ld32f:
-                case LIR_ldf:
+                case LIR_lds2d:
+                case LIR_ldd:
                 CASE64(LIR_ldq:)
                 {
                     countlir_ldq();
                     asm_load64(ins);
                     break;
                 }
-                case LIR_neg:
-                case LIR_not:
+                case LIR_negl:
+                case LIR_notl:
                 {
                     countlir_alu();
                     asm_neg_not(ins);
@@ -1501,12 +1501,12 @@ namespace nanojit
                 }
 
 #if defined NANOJIT_64BIT
-                case LIR_qiadd:
-                case LIR_qiand:
-                case LIR_qilsh:
-                case LIR_qursh:
-                case LIR_qirsh:
-                case LIR_qior:
+                case LIR_addq:
+                case LIR_andq:
+                case LIR_lshq:
+                case LIR_rshuq:
+                case LIR_rshq:
+                case LIR_orq:
                 case LIR_qxor:
                 {
                     asm_qbinop(ins);
@@ -1514,92 +1514,92 @@ namespace nanojit
                 }
 #endif
 
-                case LIR_add:
-                case LIR_sub:
-                case LIR_mul:
-                case LIR_and:
-                case LIR_or:
-                case LIR_xor:
-                case LIR_lsh:
-                case LIR_rsh:
-                case LIR_ush:
-                CASE86(LIR_div:)
-                CASE86(LIR_mod:)
+                case LIR_addl:
+                case LIR_subl:
+                case LIR_mull:
+                case LIR_andl:
+                case LIR_orl:
+                case LIR_xorl:
+                case LIR_lshl:
+                case LIR_rshl:
+                case LIR_rshul:
+                CASE86(LIR_divl:)
+                CASE86(LIR_modl:)
                 {
                     countlir_alu();
                     asm_arith(ins);
                     break;
                 }
-                case LIR_fneg:
+                case LIR_negd:
                 {
                     countlir_fpu();
                     asm_fneg(ins);
                     break;
                 }
-                case LIR_fadd:
-                case LIR_fsub:
-                case LIR_fmul:
-                case LIR_fdiv:
+                case LIR_addd:
+                case LIR_subd:
+                case LIR_muld:
+                case LIR_divd:
                 {
                     countlir_fpu();
                     asm_fop(ins);
                     break;
                 }
-                case LIR_i2f:
+                case LIR_l2d:
                 {
                     countlir_fpu();
                     asm_i2f(ins);
                     break;
                 }
-                case LIR_u2f:
+                case LIR_ul2d:
                 {
                     countlir_fpu();
                     asm_u2f(ins);
                     break;
                 }
-                case LIR_f2i:
+                case LIR_d2l:
                 {
                     countlir_fpu();
                     asm_f2i(ins);
                     break;
                 }
 #ifdef NANOJIT_64BIT
-                case LIR_i2q:
-                case LIR_u2q:
+                case LIR_l2q:
+                case LIR_ul2uq:
                 {
                     countlir_alu();
                     asm_promote(ins);
                     break;
                 }
-                case LIR_q2i:
+                case LIR_q2l:
                 {
                     countlir_alu();
                     asm_q2i(ins);
                     break;
                 }
 #endif
-                case LIR_stb:
-                case LIR_sts:
-                case LIR_sti:
+                case LIR_stl2b:
+                case LIR_stl2w:
+                case LIR_stl:
                 {
                     countlir_st();
                     asm_store32(op, ins->oprnd1(), ins->disp(), ins->oprnd2());
                     break;
                 }
-                case LIR_st32f:
-                case LIR_stfi:
-                CASE64(LIR_stqi:)
+                case LIR_std2s:
+                case LIR_std:
+                CASE64(LIR_stq:)
                 {
                     countlir_stq();
                     LIns* value = ins->oprnd1();
                     LIns* base = ins->oprnd2();
                     int dr = ins->disp();
 #if NJ_SOFTFLOAT_SUPPORTED
-                    if (value->isop(LIR_qjoin) && op == LIR_stfi)
+                    if (value->isop(LIR_ll2d) && op == LIR_std)
                     {
                         // This is correct for little-endian only.
-                        asm_store32(LIR_sti, value->oprnd1(), dr, base);
-                        asm_store32(LIR_sti, value->oprnd2(), dr+4, base);
+                        asm_store32(LIR_stl, value->oprnd1(), dr, base);
+                        asm_store32(LIR_stl, value->oprnd2(), dr+4, base);
                     }
                     else
 #endif
@@ -1727,9 +1727,9 @@ namespace nanojit
                     asm_x(ins);
                     break;
 
-                case LIR_addxov:
-                case LIR_subxov:
-                case LIR_mulxov:
+                case LIR_addxovl:
+                case LIR_subxovl:
+                case LIR_mulxovl:
                 {
                     verbose_only( _thisfrag->nStaticExits++; )
                     countlir_xcc();
@@ -1740,35 +1740,35 @@ namespace nanojit
                     break;
                 }
 
-                case LIR_feq:
-                case LIR_fle:
-                case LIR_flt:
-                case LIR_fgt:
-                case LIR_fge:
+                case LIR_eqd:
+                case LIR_led:
+                case LIR_ltd:
+                case LIR_gtd:
+                case LIR_ged:
                 {
                     countlir_fpu();
                     asm_fcond(ins);
                     break;
                 }
-                case LIR_eq:
-                case LIR_le:
-                case LIR_lt:
-                case LIR_gt:
-                case LIR_ge:
-                case LIR_ult:
-                case LIR_ule:
-                case LIR_ugt:
-                case LIR_uge:
+                case LIR_eql:
+                case LIR_lel:
+                case LIR_ltl:
+                case LIR_gtl:
+                case LIR_gel:
+                case LIR_ltul:
+                case LIR_leul:
+                case LIR_gtul:
+                case LIR_geul:
 #ifdef NANOJIT_64BIT
-                case LIR_qeq:
-                case LIR_qle:
-                case LIR_qlt:
-                case LIR_qgt:
-                case LIR_qge:
-                case LIR_qult:
-                case LIR_qule:
-                case LIR_qugt:
-                case LIR_quge:
+                case LIR_eqq:
+                case LIR_leq:
+                case LIR_ltq:
+                case LIR_gtq:
+                case LIR_geq:
+                case LIR_ltuq:
+                case LIR_leuq:
+                case LIR_gtuq:
+                case LIR_geuq:
 #endif
                 {
                     countlir_alu();
@@ -1776,11 +1776,11 @@ namespace nanojit
                     break;
                 }
 
-                case LIR_fcall:
+                case LIR_calld:
             #ifdef NANOJIT_64BIT
-                case LIR_qcall:
+                case LIR_callq:
             #endif
-                case LIR_icall:
+                case LIR_calll:
                 {
                     countlir_call();
                     asm_call(ins);
@@ -1845,7 +1845,7 @@ namespace nanojit
 
                 }
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
-                else if (ins->isop(LIR_mod)) {
+                else if (ins->isop(LIR_modl)) {
                     // There's a similar case when a div feeds into a mod.
                     outputf("    %s       # codegen'd with the mod",
                             printer->formatIns(&b, ins->oprnd1()));
@@ -1935,7 +1935,7 @@ namespace nanojit
                 findMemFor(op1);
             }
             if (!op1->isImmAny())
-                findRegFor(op1, ins->isop(LIR_flive) ? FpRegs : GpRegs);
+                findRegFor(op1, ins->isop(LIR_lived) ? FpRegs : GpRegs);
         }
 
         // clear this list since we have now dealt with those lifetimes.  extending
@@ -1975,7 +1975,7 @@ namespace nanojit
                 RefBuf b;
                 const char* n = _thisfrag->lirbuf->printer->formatRef(&b, ins);
 
-                if (ins->isop(LIR_param) && ins->paramKind()==1 &&
+                if (ins->isop(LIR_paramp) && ins->paramKind()==1 &&
                     r == Assembler::savedRegs[ins->paramArg()])
                 {
                     // dont print callee-saved regs that arent used
