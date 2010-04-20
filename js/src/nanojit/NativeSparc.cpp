@@ -264,9 +264,6 @@ namespace nanojit
             SET32(d, L2);
         }
         else if (i->isconst()) {
-            if (!i->deprecated_getArIndex()) {
-                i->deprecated_markAsClear();
-            }
             int v = i->imm32();
             SET32(v, r);
         } else {

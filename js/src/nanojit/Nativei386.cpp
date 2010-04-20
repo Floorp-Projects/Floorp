@@ -1171,11 +1171,9 @@ namespace nanojit
 
         } else if (ins->isconst()) {
             asm_immi(r, ins->imm32(), /*canClobberCCs*/false);
-            ins->clearReg();
 
         } else if (ins->isconstf()) {
             asm_immf(r, ins->imm64(), ins->imm64f(), /*canClobberCCs*/false);
-            ins->clearReg();
 
         } else if (ins->isop(LIR_param) && ins->paramKind() == 0 &&
             (arg = ins->paramArg()) >= (abi_regcount = max_abi_regs[_thisfrag->lirbuf->abi])) {
@@ -1191,7 +1189,6 @@ namespace nanojit
             //
             int d = (arg - abi_regcount) * sizeof(intptr_t) + 8;
             LD(r, d, FP);
-            ins->clearReg();
 
         } else {
             int d = findMemFor(ins);
