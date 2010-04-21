@@ -191,21 +191,6 @@ HttpChannelChild::Resume()
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsIChannel
 //-----------------------------------------------------------------------------
-NS_IMETHODIMP
-HttpChannelChild::GetOwner(nsISupports **result)
-{
-  // FIXME bug 547051
-  NS_ENSURE_ARG_POINTER(result);
-  *result = nsnull;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpChannelChild::SetOwner(nsISupports *aOwner)
-{
-  // FIXME bug 547051
-  DROP_DEAD();
-}
 
 NS_IMETHODIMP
 HttpChannelChild::GetSecurityInfo(nsISupports **aSecurityInfo)

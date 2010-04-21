@@ -108,8 +108,6 @@ public:
   NS_IMETHOD Suspend();
   NS_IMETHOD Resume();
   // nsIChannel
-  NS_IMETHOD GetOwner(nsISupports **aOwner);
-  NS_IMETHOD SetOwner(nsISupports *aOwner);
   NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext);
   // HttpBaseChannel::nsIHttpChannel
