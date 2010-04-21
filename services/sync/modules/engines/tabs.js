@@ -224,7 +224,7 @@ TabTracker.prototype = {
     this._log.trace("Registering tab listeners in new window");
 
     // For each topic, add or remove onTab as the listener
-    let topics = ["TabOpen", "TabClose", "TabSelect"];
+    let topics = ["pageshow", "TabOpen", "TabClose", "TabSelect"];
     let onTab = this.onTab;
     let addRem = function(add) topics.forEach(function(topic) {
       window[(add ? "add" : "remove") + "EventListener"](topic, onTab, false);
@@ -248,12 +248,23 @@ TabTracker.prototype = {
   },
 
   onTab: function onTab(event) {
-    this._log.trace(event.type);
-    this.score += 1;
+    this._log.trace("onTab event: " + event.type);
     this.addChangedID(Clients.localID);
 
-    // Store a timestamp in the tab to track when it was last used
-    Svc.Session.setTabValue(event.originalTarget, "weaveLastUsed",
-                            Math.floor(Date.now() / 1000));
+    // For pageshow events, only give a partial score bump (~.1)
+    let chance = .1;
+
+    // For regular Tab events, do a full score bump and remember when it changed
+    if (event.type != "pageshow") {
+      chance = 1;
+
+      // Store a timestamp in the tab to track when it was last used
+      Svc.Session.setTabValue(event.originalTarget, "weaveLastUsed",
+                              Math.floor(Date.now() / 1000));
+    }
+
+    // Only increase the score by whole numbers, so use random for partial score
+    if (Math.random() < chance)
+      this.score++;
   },
 }
