@@ -142,19 +142,11 @@ NS_IMPL_FRAMEARENA_HELPERS(nsFileControlFrame)
 
 nsFileControlFrame::nsFileControlFrame(nsStyleContext* aContext):
   nsBlockFrame(aContext),
-  mTextFrame(nsnull), 
-  mCachedState(nsnull)
+  mTextFrame(nsnull)
 {
   AddStateBits(NS_BLOCK_FLOAT_MGR);
 }
 
-nsFileControlFrame::~nsFileControlFrame()
-{
-  if (mCachedState) {
-    delete mCachedState;
-    mCachedState = nsnull;
-  }
-}
 
 NS_IMETHODIMP
 nsFileControlFrame::Init(nsIContent* aContent,
@@ -675,11 +667,6 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
   if (mState & NS_FRAME_FIRST_REFLOW) {
     mTextFrame = GetTextControlFrame(aPresContext, this);
     NS_ENSURE_TRUE(mTextFrame, NS_ERROR_UNEXPECTED);
-    if (mCachedState) {
-      mTextFrame->SetFormProperty(nsGkAtoms::value, *mCachedState);
-      delete mCachedState;
-      mCachedState = nsnull;
-    }
   }
 
   // nsBlockFrame takes care of all our reflow
@@ -785,13 +772,11 @@ nsFileControlFrame::SetFormProperty(nsIAtom* aName,
                                     const nsAString& aValue)
 {
   if (nsGkAtoms::value == aName) {
-    if (mTextFrame) {
-      mTextFrame->SetValue(aValue);
-    } else {
-      if (mCachedState) delete mCachedState;
-      mCachedState = new nsString(aValue);
-      NS_ENSURE_TRUE(mCachedState, NS_ERROR_OUT_OF_MEMORY);
-    }
+    nsCOMPtr<nsIDOMHTMLInputElement> textControl =
+      do_QueryInterface(mTextContent);
+    NS_ASSERTION(textControl,
+                 "The text control should exist and be an input element");
+    textControl->SetValue(aValue);
   }
   return NS_OK;
 }      
