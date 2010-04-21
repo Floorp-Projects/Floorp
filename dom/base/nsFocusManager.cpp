@@ -1273,6 +1273,23 @@ nsFocusManager::IsWindowVisible(nsPIDOMWindow* aWindow)
   return visible;
 }
 
+PRBool
+nsFocusManager::IsNonFocusableRoot(nsIContent* aContent)
+{
+  NS_PRECONDITION(aContent, "aContent must not be NULL");
+  NS_PRECONDITION(aContent->IsInDoc(), "aContent must be in a document");
+
+  // If aContent is in designMode, the root element is not focusable.
+  // NOTE: in designMode, most elements are not focusable, just the document is
+  //       focusable.
+  // Also, if aContent is not editable but it isn't in designMode, it's not
+  // focusable.
+  nsIDocument* doc = aContent->GetCurrentDoc();
+  NS_ASSERTION(doc, "aContent must have current document");
+  return aContent == doc->GetRootContent() &&
+           (doc->HasFlag(NODE_IS_EDITABLE) || !aContent->IsEditable());
+}
+
 nsIContent*
 nsFocusManager::CheckIfFocusable(nsIContent* aContent, PRUint32 aFlags)
 {
@@ -1396,9 +1413,11 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
   PRINTTAGF("**Element %s has been blurred\n", content);
 #endif
 
-  PRBool isRootContent = content && content == content->GetCurrentDoc()->GetRootContent();
+  // Don't fire blur event on the root content which isn't editable.
+  PRBool sendBlurEvent =
+    content && content->IsInDoc() && !IsNonFocusableRoot(content);
   if (content) {
-    if (!isRootContent) {
+    if (sendBlurEvent) {
       // unusual to pass a content node to SetContentState on a blur,
       // but we are just calling it to get the ContentStatesChanged notifications
       nsPresContext* presContext = presShell->GetPresContext();
@@ -1427,7 +1446,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
   }
 
   PRBool result = PR_TRUE;
-  if (content && !isRootContent) {
+  if (sendBlurEvent) {
     // if there is an active window, update commands. If there isn't an active
     // window, then this was a blur caused by the active window being lowered,
     // so there is no need to update the commands
@@ -1589,11 +1608,9 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
     mFocusedContent = aContent;
     aWindow->SetFocusedNode(aContent, focusMethod);
 
-    // don't fire events on the root content
-    PRBool isRootContent = aContent &&
-                           aContent->IsInDoc() &&
-                           aContent == aContent->GetCurrentDoc()->GetRootContent();
-    if (!isRootContent) {
+    PRBool sendFocusEvent =
+      aContent && aContent->IsInDoc() && !IsNonFocusableRoot(aContent);
+    if (sendFocusEvent) {
       // if the focused element changed, scroll it into view
       if (aFocusChanged)
         ScrollIntoView(presShell, aContent, aFlags);
@@ -1628,6 +1645,13 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
                            aContent, aFlags & FOCUSMETHOD_MASK, aWindowRaised);
 
       nsIMEStateManager::OnTextStateFocus(presContext, aContent);
+    } else {
+      nsPresContext* presContext = presShell->GetPresContext();
+      nsIMEStateManager::OnTextStateBlur(presContext, nsnull);
+      nsIMEStateManager::OnChangeFocus(presContext, nsnull);
+      if (!aWindowRaised) {
+        aWindow->UpdateCommands(NS_LITERAL_STRING("focus"));
+      }
     }
   }
   else {
@@ -2190,8 +2214,19 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
       rootContent = popupFrame->GetContent();
       NS_ASSERTION(rootContent, "Popup frame doesn't have a content node");
     }
-    else if (!forward && startContent == rootContent) {
-      doNavigation = PR_FALSE;
+    else if (!forward) {
+      // If focus moves backward and when current focused node is root
+      // content or <body> element which is editable by contenteditable
+      // attribute, focus should move to its parent document.
+      if (startContent == rootContent) {
+        doNavigation = PR_FALSE;
+      } else {
+        nsIDocument* doc = startContent->GetCurrentDoc();
+        if (startContent ==
+              nsLayoutUtils::GetEditableRootContentByContentEditable(doc)) {
+          doNavigation = PR_FALSE;
+        }
+      }
     }
   }
   else {
@@ -2463,8 +2498,11 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (iterStartContent == aRootContent) {
-      if (!aForward)
+      if (!aForward) {
         frameTraversal->Last();
+      } else if (aRootContent->IsFocusable()) {
+        frameTraversal->Next();
+      }
     }
     else if (getNextFrame &&
              (!iterStartContent || iterStartContent->Tag() != nsGkAtoms::area ||
@@ -2532,7 +2570,17 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                 // frame so that the canvas becomes focused.
                 nsCOMPtr<nsPIDOMWindow> subframe = subdoc->GetWindow();
                 if (subframe) {
-                  *aResultContent = GetRootForFocus(subframe, subdoc, PR_FALSE, PR_TRUE);
+                  // If the subframe body is editable by contenteditable,
+                  // we should set the editor's root element rather than the
+                  // actual root element.  Otherwise, we should set the focus
+                  // to the root content.
+                  *aResultContent =
+                    nsLayoutUtils::GetEditableRootContentByContentEditable(subdoc);
+                  if (!*aResultContent ||
+                      !((*aResultContent)->GetPrimaryFrame())) {
+                    *aResultContent =
+                      GetRootForFocus(subframe, subdoc, PR_FALSE, PR_TRUE);
+                  }
                   if (*aResultContent) {
                     NS_ADDREF(*aResultContent);
                     return NS_OK;
@@ -2739,10 +2787,8 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
 
   nsIContent *rootContent = aDocument->GetRootContent();
   if (rootContent) {
-    if (aCheckVisibility) {
-      nsIPresShell* presShell = aDocument->GetPrimaryShell();
-      if (!presShell || !rootContent->GetPrimaryFrame())
-        return nsnull;
+    if (aCheckVisibility && !rootContent->GetPrimaryFrame()) {
+      return nsnull;
     }
 
     // Finally, check if this is a frameset

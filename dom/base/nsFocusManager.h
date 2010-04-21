@@ -158,6 +158,15 @@ protected:
   PRBool IsWindowVisible(nsPIDOMWindow* aWindow);
 
   /**
+   * Returns true if aContent is a root element and not focusable.
+   * I.e., even if aContent is editable root element, this returns true when
+   * the document is in designMode.
+   *
+   * @param aContent must not be null and must be in a document.
+   */
+  PRBool IsNonFocusableRoot(nsIContent* aContent);
+
+  /**
    * Checks and returns aContent if it may be focused, another content node if
    * the focus should be retargeted at another node, or null if the node
    * cannot be focused. aFlags are the flags passed to SetFocus and similar
