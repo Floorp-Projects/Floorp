@@ -2211,6 +2211,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
                                                           kCorePboardType_urln,
                                                           nil]];
   [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(windowBecameMain:)
+                                               name:NSWindowDidBecomeMainNotification
+                                             object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
+                                           selector:@selector(windowResignedMain:)
+                                               name:NSWindowDidResignMainNotification
+                                             object:nil];
+  [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(systemMetricsChanged)
                                                name:NSControlTintDidChangeNotification
                                              object:nil];
@@ -2251,6 +2259,43 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // todo: Only do if a Quickdraw plugin is present in the hierarchy!
   ::SetPort(NULL);
 #endif
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)updatePluginTopLevelWindowStatus:(BOOL)hasMain
+{
+  nsGUIEvent pluginEvent(PR_TRUE, NS_NON_RETARGETED_PLUGIN_EVENT, mGeckoChild);
+  NPCocoaEvent cocoaEvent;
+  InitNPCocoaEvent(&cocoaEvent);
+  cocoaEvent.type = NPCocoaEventWindowFocusChanged;
+  cocoaEvent.data.focus.hasFocus = hasMain;
+  pluginEvent.pluginEvent = &cocoaEvent;
+  mGeckoChild->DispatchWindowEvent(pluginEvent);
+}
+
+- (void)windowBecameMain:(NSNotification*)inNotification
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mIsPluginView && mPluginEventModel == NPEventModelCocoa) {
+    if ((NSWindow*)[inNotification object] == [self window]) {
+      [self updatePluginTopLevelWindowStatus:YES];
+    }
+  }
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)windowResignedMain:(NSNotification*)inNotification
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  if (mIsPluginView && mPluginEventModel == NPEventModelCocoa) {
+    if ((NSWindow*)[inNotification object] == [self window]) {
+      [self updatePluginTopLevelWindowStatus:NO];
+    }
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }

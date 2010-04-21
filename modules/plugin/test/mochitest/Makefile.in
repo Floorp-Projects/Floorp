@@ -112,6 +112,11 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _MOCHICHROME_FILES += \
   test_convertpoint.xul \
   $(NULL)
+
+_MOCHITEST_FILES += \
+  test_cocoa_window_focus.html \
+  cocoa_window_focus.html \
+  $(NULL)
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
