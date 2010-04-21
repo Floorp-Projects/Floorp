@@ -1120,12 +1120,8 @@ BEGIN_CASE(JSOP_NEG)
 END_CASE(JSOP_NEG)
 
 BEGIN_CASE(JSOP_POS)
-{
-    rval = FETCH_OPND(-1);
     if (!ValueToNumberValue(cx, &regs.sp[-1]))
         goto error;
-    rval = regs.sp[-1];
-}
 END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
