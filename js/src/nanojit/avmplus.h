@@ -82,12 +82,13 @@
 #define _DEBUG
 #endif
 #define NJ_VERBOSE 1
-#define NJ_PROFILE 1
 #include <stdarg.h>
 #endif
 
 #ifdef _DEBUG
-void NanoAssertFail();
+namespace avmplus {
+    void AvmAssertFail(const char* msg);
+}
 #endif
 
 #if defined(AVMPLUS_IA32)

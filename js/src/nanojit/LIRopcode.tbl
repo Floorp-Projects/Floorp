@@ -152,8 +152,8 @@ OP_64(ldq,      22, Ld,   I64, -1)  // load quad
 OP___(ldd,      23, Ld,   F64, -1)  // load double
 OP___(lds2d,    24, Ld,   F64, -1)  // load single and extend to a double
 
-OP___(stb,      25, Sti,  Void, 0)  // store byte
-OP___(stw,      26, Sti,  Void, 0)  // store word
+OP___(stl2b,    25, Sti,  Void, 0)  // store long truncated to byte
+OP___(stl2w,    26, Sti,  Void, 0)  // store long truncated to word
 OP___(stl,      27, Sti,  Void, 0)  // store long
 OP_64(stq,      28, Sti,  Void, 0)  // store quad
 OP___(std,      29, Sti,  Void, 0)  // store double

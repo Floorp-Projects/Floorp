@@ -112,7 +112,7 @@ namespace nanojit
         #define __NanoAssertMsgf(a, file_, line_, f, ...)  \
             if (!(a)) { \
                 avmplus::AvmLog("Assertion failed: " f "%s (%s:%d)\n", __VA_ARGS__, #a, file_, line_); \
-                NanoAssertFail(); \
+                avmplus::AvmAssertFail(""); \
             }
 
         #define _NanoAssertMsgf(a, file_, line_, f, ...)   __NanoAssertMsgf(a, file_, line_, f, __VA_ARGS__)
@@ -148,12 +148,9 @@ namespace nanojit
 }
 
 #ifdef AVMPLUS_VERBOSE
-#ifndef NJ_VERBOSE_DISABLED
-    #define NJ_VERBOSE 1
-#endif
-#ifndef NJ_PROFILE_DISABLED
-    #define NJ_PROFILE 1
-#endif
+    #ifndef NJ_VERBOSE_DISABLED
+        #define NJ_VERBOSE 1
+    #endif
 #endif
 
 #ifdef NJ_NO_VARIADIC_MACROS
@@ -176,30 +173,6 @@ namespace nanojit
 #else
     #define debug_only(x)
 #endif /* DEBUG */
-
-#ifdef NJ_PROFILE
-    #define counter_struct_begin()  struct {
-    #define counter_struct_end()    } _stats;
-    #define counter_define(x)       int32_t x
-    #define counter_value(x)        _stats.x
-    #define counter_set(x,v)        (counter_value(x)=(v))
-    #define counter_adjust(x,i)     (counter_value(x)+=(int32_t)(i))
-    #define counter_reset(x)        counter_set(x,0)
-    #define counter_increment(x)    counter_adjust(x,1)
-    #define counter_decrement(x)    counter_adjust(x,-1)
-    #define profile_only(x)         x
-#else
-    #define counter_struct_begin()
-    #define counter_struct_end()
-    #define counter_define(x)
-    #define counter_value(x)
-    #define counter_set(x,v)
-    #define counter_adjust(x,i)
-    #define counter_reset(x)
-    #define counter_increment(x)
-    #define counter_decrement(x)
-    #define profile_only(x)
-#endif /* NJ_PROFILE */
 
 #define isS8(i)  ( int32_t(i) == int8_t(i) )
 #define isU8(i)  ( int32_t(i) == uint8_t(i) )
@@ -260,7 +233,10 @@ namespace nanojit {
     public:
         // All Nanojit and jstracer printing should be routed through
         // this function.
-        void printf( const char* format, ... ) PRINTF_CHECK(2,3);
+        virtual ~LogControl() {} 
+        #ifdef NJ_VERBOSE
+        virtual void printf( const char* format, ... ) PRINTF_CHECK(2,3);
+        #endif
 
         // An OR of LC_Bits values, indicating what should be output
         uint32_t lcbits;

@@ -2805,6 +2805,7 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
         break;
 
       case TT_SPECIAL:
+        JS_ASSERT(*(JSBool*)slot != JSVAL_TO_SPECIAL(JSVAL_VOID));
         v = SPECIAL_TO_JSVAL(*(JSBool*)slot);
         debug_only_printf(LC_TMTracer, "special<%d> ", *(JSBool*)slot);
         break;
@@ -6456,11 +6457,6 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
         return false;
     }
 
-    /* Make sure the global object is sane. */
-    JS_ASSERT(f->globalObj->numSlots() <= MAX_GLOBAL_SLOTS);
-    JS_ASSERT(f->nGlobalTypes() == f->globalSlots->length());
-    JS_ASSERT_IF(f->globalSlots->length() != 0,
-                 f->globalObj->shape() == f->globalShape);
     return true;
 }
 
@@ -6479,6 +6475,12 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
 
     if (!ScopeChainCheck(cx, f))
         return NULL;
+
+    /* Make sure the global object is sane. */
+    JS_ASSERT(f->globalObj->numSlots() <= MAX_GLOBAL_SLOTS);
+    JS_ASSERT(f->nGlobalTypes() == f->globalSlots->length());
+    JS_ASSERT_IF(f->globalSlots->length() != 0,
+                 f->globalObj->shape() == f->globalShape);
 
     /* Initialize trace state. */
     InterpState state(cx, tm, f, inlineCallCount, innermostNestedGuardp);
@@ -6949,6 +6951,13 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
         if (++f->hits() < HOTLOOP) {
 #ifdef MOZ_TRACEVIS
             tvso.r = f->hits() < 1 ? R_BACKED_OFF : R_COLD;
+#endif
+            return false;
+        }
+
+        if (!ScopeChainCheck(cx, f)) {
+#ifdef MOZ_TRACEVIS
+            tvso.r = R_FAIL_SCOPE_CHAIN_CHECK;
 #endif
             return false;
         }
@@ -11344,6 +11353,26 @@ TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* spr
 }
 
 JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::setUpwardTrackedVar(jsval* stackVp, jsval v, LIns* v_ins)
+{
+    TraceType stackT = determineSlotType(stackVp);
+    TraceType otherT = getCoercedType(v);
+
+    bool promote = true;
+
+    if (stackT != otherT) {
+        if (stackT == TT_DOUBLE && otherT == TT_INT32 && isPromoteInt(v_ins))
+            promote = false;
+        else
+            RETURN_STOP("can't trace this upvar mutation");
+    }
+
+    set(stackVp, v_ins, promote);
+
+    return RECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty *sprop,
                            LIns *v_ins, jsval v)
 {
@@ -11354,14 +11383,14 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
             JS_ASSERT(sprop->hasShortID());
             uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->argv[slot];
-            set(vp2, v_ins);
+            CHECK_STATUS(setUpwardTrackedVar(vp2, v, v_ins));
             return RECORD_CONTINUE;
         }
         if (sprop->setterOp() == SetCallVar) {
             JS_ASSERT(sprop->hasShortID());
             uintN slot = uint16(sprop->shortid);
             jsval *vp2 = &fp->slots[slot];
-            set(vp2, v_ins);
+            CHECK_STATUS(setUpwardTrackedVar(vp2, v, v_ins));
             return RECORD_CONTINUE;
         }
         RETURN_STOP("can't trace special CallClass setter");
@@ -13017,29 +13046,31 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         }
 
         /* If not idx < length, stay on trace (and read value as undefined). */
-        LIns* br2 = lir->insBranch(LIR_jf,
-                                   lir->ins2(LIR_pult,
-                                             pidx_ins,
-                                             stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)),
-                                   NULL);
+        LIns* length = stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH);
+        if (pidx_ins != length) {
+            LIns* br2 = lir->insBranch(LIR_jf,
+                                       lir->ins2(LIR_pult, pidx_ins, length),
+                                       NULL);
 
-        /* If dslots is NULL, stay on trace (and read value as undefined). */
-        LIns* br3 = lir->insBranch(LIR_jt, lir->ins_peq0(dslots_ins), NULL);
+            /* If dslots is NULL, stay on trace (and read value as undefined). */
+            LIns* br3 = lir->insBranch(LIR_jt, lir->ins_peq0(dslots_ins), NULL);
 
-        /* If not idx < capacity, stay on trace (and read value as undefined). */
-        LIns* br4 = lir->insBranch(LIR_jf,
-                                   lir->ins2(LIR_pult,
-                                             pidx_ins,
-                                             lir->insLoad(LIR_ldp, dslots_ins,
-                                                          -(int)sizeof(jsval), ACC_OTHER)),
-                                   NULL);
-        lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
-        LIns* label = lir->ins0(LIR_label);
-        if (br1)
-            br1->setTarget(label);
-        br2->setTarget(label);
-        br3->setTarget(label);
-        br4->setTarget(label);
+            /* If not idx < capacity, stay on trace (and read value as undefined). */
+            LIns* br4 = lir->insBranch(LIR_jf,
+                                       lir->ins2(LIR_pult,
+                                                 pidx_ins,
+                                                 lir->insLoad(LIR_ldp, dslots_ins,
+                                                              -(int)sizeof(jsval), ACC_OTHER)),
+                                       NULL);
+
+            lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+            LIns* label = lir->ins0(LIR_label);
+            if (br1)
+                br1->setTarget(label);
+            br2->setTarget(label);
+            br3->setTarget(label);
+            br4->setTarget(label);
+        }
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
@@ -13082,18 +13113,14 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     v_ins = unbox_jsval(*vp, lir->insLoad(LIR_ldp, addr_ins, 0, ACC_OTHER), exit);
 
     if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp)) {
-        /*
-         * If we read a hole from the array, convert it to undefined and guard
-         * that there are no indexed properties along the prototype chain.
-         */
-        LIns* br = lir->insBranch(LIR_jf,
-                                  lir->ins2i(LIR_eq, v_ins, JSVAL_TO_SPECIAL(JSVAL_HOLE)),
-                                  NULL);
-        CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
-        br->setTarget(lir->ins0(LIR_label));
+        JS_ASSERT_IF(!JSVAL_IS_BOOLEAN(*vp), *vp == JSVAL_HOLE);
+        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))), exit);
 
         /* Don't let the hole value escape. Turn it into an undefined. */
-        v_ins = lir->ins2i(LIR_and, v_ins, ~(JSVAL_HOLE_FLAG >> JSVAL_TAGBITS));
+        if (*vp == JSVAL_HOLE) {
+            CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
+            v_ins = INS_CONST(JSVAL_TO_SPECIAL(JSVAL_VOID));
+        }
     }
     return RECORD_CONTINUE;
 }
@@ -13708,13 +13735,10 @@ TraceRecorder::record_JSOP_BINDNAME()
             JS_ASSERT(obj);
         }
 
-        if (obj != globalObj) {
-            // If anything other than Block, Call, DeclEnv, and the global
-            // object is on the scope chain, we shouldn't be recording. Of
-            // those, only Block and global can be present in global code.
-            JS_NOT_REACHED("BINDNAME in global code resolved to non-global object");
-            RETURN_STOP_A("BINDNAME in global code resolved to non-global object");
-        }
+        // If anything other than Block, Call, DeclEnv, and the global object
+        // is on the scope chain, we shouldn't be recording. Of those, only
+        // Block and global can be present in global code.
+        JS_ASSERT(obj == globalObj);
 
         /*
          * The trace is specialized to this global object. Furthermore, we know it
@@ -14129,10 +14153,9 @@ TraceRecorder::record_JSOP_ARGSUB()
     JSStackFrame* fp = cx->fp;
     if (!(fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
         uintN slot = GET_ARGNO(fp->regs->pc);
-        if (slot < fp->argc)
-            stack(0, get(&cx->fp->argv[slot]));
-        else
-            stack(0, INS_VOID());
+        if (slot >= fp->argc)
+            RETURN_STOP_A("can't trace out-of-range arguments");
+        stack(0, get(&cx->fp->argv[slot]));
         return ARECORD_CONTINUE;
     }
     RETURN_STOP_A("can't trace JSOP_ARGSUB hard case");
