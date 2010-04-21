@@ -154,13 +154,18 @@ function expectFocusShift(callback, expectedWindow, expectedElement, focusChange
     if (testid == "mouse on html label with content inside")
       expectedEvents += " commandupdate: cu";
 
-    if (expectedElement && expectedElement.id != "t" + kChildDocumentRootIndex &&
+    if (expectedElement &&
         (!gNewExpectedWindow || gNewExpectedWindow.document.documentElement != expectedElement)) {
-      if (expectedEvents)
-        expectedEvents += " ";
-      if (!gNewExpectedWindow)
-        expectedEvents += "commandupdate: cu ";
-      expectedEvents += "focus: " + expectedElement.id;
+      if (!gNewExpectedWindow) {
+        if (expectedEvents)
+          expectedEvents += " ";
+        expectedEvents += "commandupdate: cu";
+      }
+      if (expectedElement.id != "t" + kChildDocumentRootIndex) {
+        if (expectedEvents)
+          expectedEvents += " ";
+        expectedEvents += "focus: " + expectedElement.id;
+      }
     }
     else if (expectedWindow && gLastFocusWindow != expectedWindow &&
              !expectedElement) {
