@@ -97,7 +97,6 @@ nsresult
 nsEditorEventListener::Connect(nsEditor* aEditor)
 {
   NS_ENSURE_ARG(aEditor);
-  NS_ENSURE_TRUE(!mEditor, NS_ERROR_NOT_AVAILABLE);
 
   mEditor = aEditor;
 
