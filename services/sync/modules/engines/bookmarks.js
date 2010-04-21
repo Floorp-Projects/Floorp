@@ -55,6 +55,14 @@ Cu.import("resource://weave/stores.js");
 Cu.import("resource://weave/trackers.js");
 Cu.import("resource://weave/type_records/bookmark.js");
 
+function archiveBookmarks() {
+  // Some nightly builds of 3.7 don't have this function
+  try {
+    PlacesUtils.archiveBookmarksFile(null, true);
+  }
+  catch(ex) {}
+}
+
 // Lazily initialize the special top level folders
 let kSpecialIds = {};
 [["menu", "bookmarksMenuFolder"],
@@ -125,6 +133,10 @@ BookmarksEngine.prototype = {
 
   _syncStartup: function _syncStart() {
     SyncEngine.prototype._syncStartup.call(this);
+
+    // For first-syncs, make a backup for the user to restore
+    if (this.lastSync == 0)
+      archiveBookmarks();
 
     // Lazily create a mapping of folder titles and separator positions to GUID
     this.__defineGetter__("_lazyMap", function() {
@@ -936,10 +948,8 @@ BookmarksStore.prototype = {
   },
 
   wipe: function BStore_wipe() {
-    // some nightly builds of 3.7 don't have this function
-    try {
-      PlacesUtils.archiveBookmarksFile(null, true);
-    } catch(e) {}
+    // Save a backup before clearing out all bookmarks
+    archiveBookmarks();
 
     for (let [guid, id] in Iterator(kSpecialIds))
       if (guid != "places")
