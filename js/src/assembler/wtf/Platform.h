@@ -329,7 +329,7 @@
 /* WTF_CPU_ARMV5_OR_LOWER - ARM instruction set v5 or earlier */
 /* On ARMv5 and below the natural alignment is required. 
    And there are some other differences for v5 or earlier. */
-#if !defined(ARMV5_OR_LOWER) && WTF_CPU_ARM && WTF_ARM_ARCH_VERSION >= 6
+#if !defined(ARMV5_OR_LOWER) && WTF_CPU_ARM && !(WTF_ARM_ARCH_VERSION >= 6)
 #define WTF_CPU_ARMV5_OR_LOWER 1
 #endif
 
@@ -1115,7 +1115,8 @@
 /* Setting this flag prevents the assembler from using RWX memory; this may improve
    security but currectly comes at a significant performance cost. */
 #if WTF_PLATFORM_IOS
-#define ENABLE_ASSEMBLER_WX_EXCLUSIVE 1
+//XXX: this doesn't currently compile in the spidermonkey build
+#define ENABLE_ASSEMBLER_WX_EXCLUSIVE 0
 #endif
 
 /* Pick which allocator to use; we only need an executable allocator if the assembler is compiled in.

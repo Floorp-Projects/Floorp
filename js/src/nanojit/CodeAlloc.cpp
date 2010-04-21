@@ -258,8 +258,12 @@ namespace nanojit
     }
 
 #if defined(AVMPLUS_UNIX) && defined(NANOJIT_ARM)
+#if defined(__APPLE__)
+#include <libkern/OSCacheControl.h>
+#else
 #include <asm/unistd.h>
 extern "C" void __clear_cache(char *BEG, char *END);
+#endif
 #endif
 
 #if defined(AVMPLUS_UNIX) && defined(NANOJIT_MIPS)
@@ -349,6 +353,10 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
     #ifdef ANDROID
     void CodeAlloc::flushICache(void *start, size_t len) {
         cacheflush((int)start, (int)start + len, 0);
+    }
+    #elif defined(AVMPLUS_ARM) && defined(__APPLE__)
+    void CodeAlloc::flushICache(void *start, size_t len) {
+        sys_dcache_flush(start, len);
     }
     #else
     // fixme: __clear_cache is a libgcc feature, test for libgcc or gcc
