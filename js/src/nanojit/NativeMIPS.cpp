@@ -1400,8 +1400,12 @@ namespace nanojit
                 // b(ne|eq)  $ra,$rb,btarg
                 if (branchOnFalse)
                     BNE(ra, rb, btarg);
-                else
-                    BEQ(ra, rb, btarg);
+                else {
+                    if (ra == rb)
+                        B(btarg);
+                    else
+                        BEQ(ra, rb, btarg);
+                }
                 patch = _nIns;
                 break;
             case LIR_lt:
@@ -1502,13 +1506,18 @@ namespace nanojit
 
     void Assembler::asm_j(NIns * const targ, bool bdelay)
     {
-        NanoAssert(targ != NULL);
-        NanoAssert(SEG(targ) == SEG(_nIns));
-        if (bdelay) {
-            underrunProtect(2*4);    // j + delay
-            NOP();
+        if (targ == NULL) {
+            NanoAssert(bdelay);
+            (void) asm_bxx(false, LIR_eq, ZERO, ZERO, targ);
         }
-        J(targ);
+        else {
+            NanoAssert(SEG(targ) == SEG(_nIns));
+            if (bdelay) {
+                underrunProtect(2*4);    // j + delay
+                NOP();
+            }
+            J(targ);
+        }
         TAG("asm_j(targ=%p) bdelay=%d", targ);
     }
 
