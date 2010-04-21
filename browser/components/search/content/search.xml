@@ -723,29 +723,6 @@
           }
         }
       })]]></field>
-
-      <!-- DND Observer -->
-      <field name="searchbarDNDObserver" readonly="true"><![CDATA[({
-        mOuter: this,
-
-        onDrop: function (aEvent, aXferData, aDragSession) {
-          var data = transferUtils.retrieveURLFromData(aXferData.data,
-                         aXferData.flavour.contentType);
-          if (data) {
-            this.mOuter.value = data;
-            this.mOuter.onTextEntered(aEvent);
-          }
-        },
-
-        getSupportedFlavours: function () {
-          var flavourSet = new FlavourSet();
-
-          flavourSet.appendFlavour("text/unicode");
-          flavourSet.appendFlavour("text/x-moz-url");
-          flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
-          return flavourSet;
-        }
-      })]]></field>
     </implementation>
 
     <handlers>
@@ -771,8 +748,26 @@
                action="return this.openSearch();"/>
 #endif
 
-      <handler event="drop" phase="capturing">
-        nsDragAndDrop.drop(event, this.searchbarDNDObserver);
+      <handler event="dragover">
+      <![CDATA[
+        var types = event.dataTransfer.types;
+        if (types.contains("text/plain") || types.contains("text/x-moz-text-internal"))
+          event.preventDefault();
+      ]]>
+      </handler>
+
+      <handler event="drop">
+      <![CDATA[
+        var dataTransfer = event.dataTransfer;
+        var data = dataTransfer.getData("text/plain");
+        if (!data)
+          data = dataTransfer.getData("text/x-moz-text-internal");
+        if (data) {
+          event.preventDefault();
+          this.value = data;
+          this.onTextEntered(event);
+        }
+      ]]>
       </handler>
 
     </handlers>

@@ -760,8 +760,43 @@ EOF
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_LONGHORN, 0x06000000)
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WIN7, 0x06010000)
 
-    STL_FLAGS='-D_HAS_EXCEPTIONS=0 -I$(DIST)/stl_wrappers'
-    WRAP_STL_INCLUDES=1
+    AC_CACHE_CHECK(for std::_Throw, ac_cv_have_std__Throw,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
+            AC_TRY_COMPILE([#include <exception>],
+                        [std::_Throw(std::exception()); return 0;],
+                        ac_cv_have_std__Throw="yes",
+                        ac_cv_have_std__Throw="no")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+
+    if test "$ac_cv_have_std__Throw" = "no"; then
+      AC_MSG_ERROR([Your MSVC/SDK doesn't export std::_Throw.  This breaks assumptions in Gecko.  Please file a bug describing this error along with your build configuration.])
+    fi
+
+    AC_CACHE_CHECK(for |class __declspec(dllimport) exception| bug,
+                   ac_cv_have_dllimport_exception_bug,
+        [
+            AC_LANG_SAVE
+            AC_LANG_CPLUSPLUS
+            _SAVE_CXXFLAGS="$CXXFLAGS"
+            CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
+            AC_TRY_LINK([#include <vector>],
+                        [std::vector<int> v; return v.at(1);],
+                        ac_cv_have_dllimport_exception_bug="no",
+                        ac_cv_have_dllimport_exception_bug="yes")
+            CXXFLAGS="$_SAVE_CXXFLAGS"
+            AC_LANG_RESTORE
+        ])
+
+    if test "$ac_cv_have_dllimport_exception_bug" = "no"; then
+        STL_FLAGS='-D_HAS_EXCEPTIONS=0 -I$(DIST)/stl_wrappers'
+        WRAP_STL_INCLUDES=1
+    fi
     ;;
 esac
 
@@ -1094,6 +1129,7 @@ if test -n "$CROSS_COMPILE"; then
     case "${target_os}" in
         linux*)       OS_ARCH=Linux OS_TARGET=Linux ;;
         kfreebsd*-gnu) OS_ARCH=GNU_kFreeBSD OS_TARGET=GNU_kFreeBSD ;;
+        gnu*)         OS_ARCH=GNU ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
         wince*)       OS_ARCH=WINCE ;;
@@ -1390,9 +1426,7 @@ x86_64 | ia64)
     ;;
 
 arm)
-    if test "$OS_TARGET" = "WINCE"; then
-        CPU_ARCH="$OS_TEST"
-    fi
+    CPU_ARCH=arm
     ;;
 esac
 
@@ -1434,8 +1468,8 @@ if test "$GNU_CC"; then
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, since it's noisy there
-           hppa | ia64 | sparc)
+           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
+           hppa | ia64 | sparc | arm)
            ;;
            *)
         _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wcast-align"
@@ -1497,8 +1531,8 @@ if test "$GNU_CXX"; then
     if test -z "$INTEL_CC"; then
        # Don't use -Wcast-align with ICC
        case "$CPU_ARCH" in
-           # And don't use it on hppa, ia64, sparc, since it's noisy there
-           hppa | ia64 | sparc)
+           # And don't use it on hppa, ia64, sparc, arm, since it's noisy there
+           hppa | ia64 | sparc | arm)
            ;;
            *)
         _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wcast-align"
@@ -1738,7 +1772,7 @@ case "$host" in
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
     ;;
 
-*-linux*|*-kfreebsd*-gnu)
+*-linux*|*-kfreebsd*-gnu|*-gnu*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
@@ -2767,7 +2801,7 @@ dnl ========================================================
 dnl = Flags to strip unused symbols from .so components
 dnl ========================================================
 case "$target" in
-    *-linux*|*-kfreebsd*-gnu)
+    *-linux*|*-kfreebsd*-gnu|*-gnu*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
     *-solaris*)
@@ -3550,7 +3584,7 @@ then
 			fi
 			;;
 
-	    *-*-linux*|*-*-kfreebsd*-gnu)
+	    *-*-linux*|*-*-kfreebsd*-gnu|*-*-gnu*)
 			AC_DEFINE(_REENTRANT) 
 			;;
 
@@ -3947,8 +3981,30 @@ dnl Put your C++ language/feature checks below
 dnl ========================================================
 AC_LANG_CPLUSPLUS
 
+ARM_ABI_PREFIX=
 HAVE_GCC3_ABI=
 if test "$GNU_CC"; then
+  if test "$CPU_ARCH" = "arm" ; then
+    AC_CACHE_CHECK(for ARM EABI,
+        ac_cv_gcc_arm_eabi,
+        [AC_TRY_COMPILE([],
+                        [
+#if defined(__ARM_EABI__)
+  return 0;
+#else
+#error Not ARM EABI.
+#endif
+                        ],
+                        ac_cv_gcc_arm_eabi="yes",
+                        ac_cv_gcc_arm_eabi="no")])
+    if test "$ac_cv_gcc_arm_eabi" = "yes"; then
+        HAVE_ARM_EABI=1
+        ARM_ABI_PREFIX=eabi-
+    else
+        ARM_ABI_PREFIX=oabi-
+    fi
+  fi
+
   AC_CACHE_CHECK(for gcc 3.0 ABI,
       ac_cv_gcc_three_abi,
       [AC_TRY_COMPILE([],
@@ -3962,10 +4018,10 @@ if test "$GNU_CC"; then
                       ac_cv_gcc_three_abi="yes",
                       ac_cv_gcc_three_abi="no")])
   if test "$ac_cv_gcc_three_abi" = "yes"; then
-      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-gcc3}"
+      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
       HAVE_GCC3_ABI=1
   else
-      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-gcc2}"
+      TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc2}"
   fi
 fi
 AC_SUBST(HAVE_GCC3_ABI)
@@ -4268,7 +4324,16 @@ AC_CACHE_CHECK(for __thread keyword for TLS variables,
                             ac_cv_thread_keyword=no)])
 LDFLAGS=$_SAVE_LDFLAGS
 if test "$ac_cv_thread_keyword" = yes; then
-  AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
+  # mips builds fail with TLS variables because of a binutils bug.
+  # See bug 528687
+  case "${target_cpu}" in
+    mips*)
+      :
+      ;;
+    *)
+      AC_DEFINE(HAVE_THREAD_TLS_KEYWORD)
+      ;;
+  esac
 fi
 
 dnl Check for the existence of various allocation headers/functions
@@ -4468,6 +4533,43 @@ else
         NSPR_LIBS='`$(LIBXUL_DIST)/bin/nspr-config --prefix='${LIBXUL_DIST}' --libdir='${LIBXUL_DIST}'/lib --libs`'
     fi
 fi
+
+dnl system libevent Support
+dnl ========================================================
+MOZ_ARG_WITH_STRING(system-libevent,
+[  --with-system-libevent=[PFX]
+                          Use system libevent [installed at prefix PFX]],
+    LIBEVENT_DIR=$withval)
+
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
+if test -z "$LIBEVENT_DIR" -o "$LIBEVENT_DIR" = no; then
+    MOZ_NATIVE_LIBEVENT=
+else
+    if test "${LIBEVENT_DIR}" = "yes"; then
+        LIBEVENT_DIR=/usr
+    fi
+    CFLAGS="-I${LIBEVENT_DIR}/include $CFLAGS"
+    LDFLAGS="-L${LIBEVENT_DIR}/lib $LDFLAGS"
+    AC_CHECK_HEADER(event.h,
+                    [if test ! -f "${LIBEVENT_DIR}/include/event.h"; then
+                         AC_MSG_ERROR([event.h found, but is not in ${LIBEVENT_DIR}/include])
+                     fi],
+                    AC_MSG_ERROR([--with-system-libevent requested but event.h not found]))
+    AC_CHECK_LIB(event, event_init,
+                 [MOZ_NATIVE_LIBEVENT=1
+                  MOZ_LIBEVENT_INCLUDES="${LIBEVENT_DIR}/include"
+                  MOZ_LIBEVENT_LIBS="-L${LIBEVENT_DIR}/lib -levent"],
+                 [MOZ_NATIVE_LIBEVENT= MOZ_LIBEVENT_INCLUDES= MOZ_LIBEVENT_LIBS=])
+fi
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
+
+AC_SUBST(MOZ_NATIVE_LIBEVENT)
+AC_SUBST(MOZ_LIBEVENT_INCLUDES)
+AC_SUBST(MOZ_LIBEVENT_LIBS)
 
 dnl ========================================================
 dnl = If NSS was not detected in the system, 
@@ -4769,7 +4871,6 @@ NECKO_WIFI=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
 NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http res viewsource"
-NECKO_SMALL_BUFFERS=
 BUILD_CTYPES=1
 XPC_IDISPATCH_SUPPORT=
 
@@ -7136,6 +7237,19 @@ if test -n "$MOZ_TIMELINE"; then
 fi
 
 dnl ========================================================
+dnl = Enable NS_FUNCTION_TIMER, which provides Function 
+dnl = timing for identifying code bottlenecks 
+dnl = NS_FUNCTION_TIMER is off by default.
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(functiontimer,
+[  --enable-functiontimer       Enable NS_FUNCTION_TIMER ],
+    NS_FUNCTION_TIMER=1,
+    NS_FUNCTION_TIMER= )
+if test -n "$NS_FUNCTION_TIMER"; then
+    AC_DEFINE(NS_FUNCTION_TIMER)
+fi
+
+dnl ========================================================
 dnl Turn on reflow counting
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(reflow-perf,
@@ -8098,19 +8212,6 @@ if test "$NECKO_WIFI"; then
   AC_DEFINE(NECKO_WIFI)
 fi
 AC_SUBST(NECKO_WIFI)
-
-dnl
-dnl option to minimize size of necko's i/o buffers
-dnl
-MOZ_ARG_ENABLE_BOOL(necko-small-buffers,
-[  --enable-necko-small-buffers
-                          Minimize size of necko's i/o buffers],
-    NECKO_SMALL_BUFFERS=1,
-    NECKO_SMALL_BUFFERS=)
-AC_SUBST(NECKO_SMALL_BUFFERS)
-if test "$NECKO_SMALL_BUFFERS"; then
-    AC_DEFINE(NECKO_SMALL_BUFFERS)
-fi 
 
 dnl
 dnl option to disable cookies

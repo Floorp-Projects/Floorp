@@ -1091,7 +1091,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
     }
 
     BuildTextRunsScanner::FindBoundaryState state = { stopAtFrame, nsnull, nsnull,
-      seenTextRunBoundaryOnLaterLine, PR_FALSE, PR_FALSE };
+      PRPackedBool(seenTextRunBoundaryOnLaterLine), PR_FALSE, PR_FALSE };
     nsIFrame* child = line->mFirstChild;
     PRBool foundBoundary = PR_FALSE;
     PRInt32 i;
@@ -4481,12 +4481,12 @@ nsTextFrame::PaintOneShadow(PRUint32 aOffset, PRUint32 aLength,
   gfxRect shadowGfxRect = shadowMetrics.mBoundingBox +
      gfxPoint(aFramePt.x, aTextBaselinePt.y) + shadowOffset;
   nsRect shadowRect(shadowGfxRect.X(), shadowGfxRect.Y(),
-                    shadowGfxRect.Width(), shadowGfxRect.Height());;
+                    shadowGfxRect.Width(), shadowGfxRect.Height());
 
   nsContextBoxBlur contextBoxBlur;
   gfxContext* shadowContext = contextBoxBlur.Init(shadowRect, blurRadius,
                                                   PresContext()->AppUnitsPerDevPixel(),
-                                                  aCtx, aDirtyRect);
+                                                  aCtx, aDirtyRect, nsnull);
   if (!shadowContext)
     return;
 

@@ -60,7 +60,7 @@ endif
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 LINKSRC = nsGlueLinkingWin.cpp
 endif
-ifneq (,$(filter AIX DragonFly FreeBSD Linux NetBSD OpenBSD SunOS,$(OS_ARCH)))
+ifneq (,$(filter AIX DragonFly FreeBSD GNU GNU_% Linux NetBSD OpenBSD SunOS,$(OS_ARCH)))
 LINKSRC = nsGlueLinkingDlopen.cpp
 endif
 ifeq (OS2,$(OS_ARCH))
@@ -104,6 +104,9 @@ FORCE_USE_PIC	= 1
 # avoids "msvcrp" and assembly dependencies from creeping into the directives
 # for this library on Windows.
 USE_STATIC_LIBS = 1
+
+# Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
+STL_FLAGS	=
 
 GARBAGE         += $(XPCOM_GLUE_SRC_LCSRCS) $(XPCOM_GLUE_SRC_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 

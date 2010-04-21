@@ -185,7 +185,7 @@ nsAccessibleWrap::FirePlatformEvent(nsAccEvent *aEvent)
     return NS_OK;
 
   nsCOMPtr<nsIAccessible> accessible;
-  nsresult rv = aEvent->GetAccessible(getter_AddRefs(accessible));
+  aEvent->GetAccessible(getter_AddRefs(accessible));
   NS_ENSURE_STATE(accessible);
 
   mozAccessible *nativeAcc = nil;
@@ -227,35 +227,34 @@ nsAccessibleWrap::GetUnignoredChildCount(PRBool aDeepCount)
   // if we're flat, we have no children.
   if (nsAccUtils::MustPrune(this))
     return 0;
-  
-  PRInt32 childCount = 0;
-  GetChildCount(&childCount);
-  
-  nsCOMPtr<nsIAccessible> curAcc;
-  
-  while (NextChild(curAcc)) {
-    nsAccessibleWrap *childWrap = static_cast<nsAccessibleWrap*>(curAcc.get());
-    
+
+  PRInt32 resultChildCount = 0;
+
+  PRInt32 childCount = GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessibleWrap *childAcc =
+      static_cast<nsAccessibleWrap*>(GetChildAt(childIdx));
+
     // if the current child is not ignored, count it.
-    if (!childWrap->IsIgnored())
-      ++childCount;
-      
+    if (!childAcc->IsIgnored())
+      ++resultChildCount;
+
     // if it's flat, we don't care to inspect its children.
-    if (nsAccUtils::MustPrune(childWrap))
+    if (nsAccUtils::MustPrune(childAcc))
       continue;
-    
+
     if (aDeepCount) {
       // recursively count the unignored children of our children since it's a deep count.
-      childCount += childWrap->GetUnignoredChildCount(PR_TRUE);
+      resultChildCount += childAcc->GetUnignoredChildCount(PR_TRUE);
     } else {
       // no deep counting, but if the child is ignored, we want to substitute it for its
       // children.
-      if (childWrap->IsIgnored()) 
-        childCount += childWrap->GetUnignoredChildCount(PR_FALSE);
+      if (childAcc->IsIgnored()) 
+        resultChildCount += childAcc->GetUnignoredChildCount(PR_FALSE);
     }
   } 
   
-  return childCount;
+  return resultChildCount;
 }
 
 // if we for some reason have no native accessible, we should be skipped over (and traversed)
@@ -269,19 +268,20 @@ nsAccessibleWrap::IsIgnored()
 void
 nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aChildrenArray)
 {
-  nsCOMPtr<nsIAccessible> curAcc;
-  
   // we're flat; there are no children.
   if (nsAccUtils::MustPrune(this))
     return;
-  
-  while (NextChild(curAcc)) {
-    nsAccessibleWrap *childWrap = static_cast<nsAccessibleWrap*>(curAcc.get());
-    if (childWrap->IsIgnored()) {
+
+  PRInt32 childCount = GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessibleWrap *childAcc =
+      static_cast<nsAccessibleWrap*>(GetChildAt(childIdx));
+
+    if (childAcc->IsIgnored()) {
       // element is ignored, so try adding its children as substitutes, if it has any.
-      if (!nsAccUtils::MustPrune(childWrap)) {
+      if (!nsAccUtils::MustPrune(childAcc)) {
         nsTArray<nsRefPtr<nsAccessibleWrap> > children;
-        childWrap->GetUnignoredChildren(children);
+        childAcc->GetUnignoredChildren(children);
         if (!children.IsEmpty()) {
           // add the found unignored descendants to the array.
           aChildrenArray.AppendElements(children);
@@ -289,7 +289,7 @@ nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aC
       }
     } else
       // simply add the element, since it's not ignored.
-      aChildrenArray.AppendElement(childWrap);
+      aChildrenArray.AppendElement(childAcc);
   }
 }
 

@@ -104,6 +104,21 @@ gfxRect::Round()
 }
 
 void
+gfxRect::RoundIn()
+{
+    gfxFloat x0 = NS_ceil(X());
+    gfxFloat y0 = NS_ceil(Y());
+    gfxFloat x1 = NS_floor(XMost());
+    gfxFloat y1 = NS_floor(YMost());
+
+    pos.x = x0;
+    pos.y = y0;
+
+    size.width = x1 - x0;
+    size.height = y1 - y0;
+}
+
+void
 gfxRect::RoundOut()
 {
     gfxFloat x0 = NS_floor(X());

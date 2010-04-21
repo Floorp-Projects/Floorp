@@ -118,6 +118,7 @@ STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
 	gkgfx \
+	gfxutils \
 	$(NULL)
 
 ifdef MOZ_IPC
@@ -376,6 +377,10 @@ endif
 
 ifdef MOZ_NATIVE_HUNSPELL
 EXTRA_DSO_LDOPTS += $(MOZ_HUNSPELL_LIBS)
+endif
+
+ifdef MOZ_NATIVE_LIBEVENT
+EXTRA_DSO_LDOPTS += $(MOZ_LIBEVENT_LIBS)
 endif
 
 ifdef MOZ_SYDNEYAUDIO

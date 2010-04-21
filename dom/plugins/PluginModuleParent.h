@@ -60,6 +60,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIFileStreams.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla {
 namespace plugins {
@@ -133,6 +134,11 @@ public:
 
     PPluginIdentifierParent*
     GetIdentifierForNPIdentifier(NPIdentifier aIdentifier);
+
+#ifdef OS_MACOSX
+    void AddToRefreshTimer(PluginInstanceParent *aInstance);
+    void RemoveFromRefreshTimer(PluginInstanceParent *aInstance);
+#endif
 
 protected:
     NS_OVERRIDE
@@ -240,6 +246,12 @@ private:
     nsString mPluginDumpID;
     nsString mBrowserDumpID;
     nsString mHangID;
+
+#ifdef OS_MACOSX
+    void CAUpdate();
+    base::RepeatingTimer<PluginModuleParent> mCATimer;
+    nsTObserverArray<PluginInstanceParent*> mCATimerTargets;
+#endif
 };
 
 } // namespace plugins
