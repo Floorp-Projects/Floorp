@@ -1438,7 +1438,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
                 if (!atom)
                     return JS_FALSE;
                 if (idstr == ATOM_TO_STRING(atom)) {
-                    stdnm = &standard_class_names[i];
+                    stdnm = &object_prototype_names[i];
                     break;
                 }
             }
