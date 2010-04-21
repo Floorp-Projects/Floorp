@@ -219,9 +219,6 @@ protected:
  * The Image that is rendered is the picture region defined by
  * mPicX, mPicY and mPicSize. The size of the rendered image is
  * mPicSize, not mYSize or mCbCrSize.
- * 
- * Note: The color-conversion code does not currently support 4:4:4
- * and an error is raised in this case. See bug 551378.
  */
 class THEBES_API PlanarYCbCrImage : public Image {
 public:
