@@ -301,6 +301,7 @@ function ChannelListener(onComplete, onProgress, logger) {
   this._onComplete = onComplete;
   this._onProgress = onProgress;
   this._log = logger;
+  this.delayAbort();
 }
 ChannelListener.prototype = {
   // Wait 5 minutes before killing a request
@@ -317,9 +318,7 @@ ChannelListener.prototype = {
 
     this._log.trace(channel.requestMethod + " " + channel.URI.spec);
     this._data = '';
-
-    // Create an abort timer to kill dangling requests
-    Utils.delay(this.abortRequest, this.ABORT_TIMEOUT, this, "abortTimer");
+    this.delayAbort();
   },
 
   onStopRequest: function Channel_onStopRequest(channel, context, status) {
@@ -343,8 +342,13 @@ ChannelListener.prototype = {
 
     this._data += siStream.read(count);
     this._onProgress();
+    this.delayAbort();
+  },
 
-    // Update the abort timer to wait an extra timeout
+  /**
+   * Create or push back the abort timer that kills this request
+   */
+  delayAbort: function delayAbort() {
     Utils.delay(this.abortRequest, this.ABORT_TIMEOUT, this, "abortTimer");
   },
 
