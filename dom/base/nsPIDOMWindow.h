@@ -49,6 +49,7 @@
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
+#include "nsGUIEvent.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 
@@ -458,6 +459,23 @@ public:
    * should be called once a document has been loaded into the window.
    */
   virtual void SetReadyForFocus() = 0;
+
+  /**
+   * Whether the focused content within the window should show a focus ring.
+   */
+  virtual PRBool ShouldShowFocusRing() = 0;
+
+  /**
+   * Set the keyboard indicator state for accelerators and focus rings.
+   */
+  virtual void SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
+                                     UIStateChangeType aShowFocusRings) = 0;
+
+  /**
+   * Get the keyboard indicator state for accelerators and focus rings.
+   */
+  virtual void GetKeyboardIndicators(PRBool* aShowAccelerators,
+                                     PRBool* aShowFocusRings) = 0;
 
   /**
    * Indicates that the page in the window has been hidden. This is used to
