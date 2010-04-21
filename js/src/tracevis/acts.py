@@ -41,6 +41,7 @@ reasons = [
     'extendMaxBranches',
     'extendStart',
     'extendCold',
+    'scopeChainCheck',
     'extendOuter',
     'mismatchExit',
     'oomExit',

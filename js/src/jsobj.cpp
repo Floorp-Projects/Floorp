@@ -3587,7 +3587,7 @@ js_AllocSlots(JSContext *cx, JSObject *obj, size_t nslots)
     jsval* slots;
     slots = (jsval*) cx->malloc(SLOTS_TO_DYNAMIC_WORDS(nslots) * sizeof(jsval));
     if (!slots)
-        return true;
+        return false;
 
     *slots++ = nslots;
     /* clear the newly allocated cells. */
@@ -3644,6 +3644,9 @@ js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
     size_t oslots = size_t(slots[-1]);
 
     slots = (jsval*) cx->realloc(slots - 1, nwords * sizeof(jsval));
+    if (!slots)
+        return false;
+
     *slots++ = nslots;
     obj->dslots = slots;
 
@@ -3673,6 +3676,8 @@ js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots)
     } else {
         size_t nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);
         slots = (jsval*) cx->realloc(slots - 1, nwords * sizeof(jsval));
+        if (!slots)
+            return;  /* Leave obj->dslots at its old size. */
         *slots++ = nslots;
         obj->dslots = slots;
     }
@@ -4259,9 +4264,6 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     added = false;
     if (!sprop) {
         /* Add a new property, or replace an existing one of the same id. */
-        if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
-            attrs |= JSPROP_SHARED;
-
         if (defineHow & JSDNP_SET_METHOD) {
             JS_ASSERT(clasp == &js_ObjectClass);
             JS_ASSERT(VALUE_IS_FUNCTION(cx, value));
@@ -5125,9 +5127,6 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             JS_UNLOCK_OBJ(cx, obj);
             return JS_FALSE;
         }
-
-        if (clasp->flags & JSCLASS_SHARE_ALL_PROPERTIES)
-            attrs |= JSPROP_SHARED;
 
         /*
          * Check for Object class here to avoid defining a method on a class

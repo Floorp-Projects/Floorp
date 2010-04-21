@@ -154,16 +154,6 @@ enum ReturnType {
 #define FN(name, args) \
     {#name, CI(name, args)}
 
-const ArgType I32 = nanojit::ARGTYPE_LO;
-#ifdef NANOJIT_64BIT
-const ArgType I64 = nanojit::ARGTYPE_Q;
-#endif
-const ArgType F64 = nanojit::ARGTYPE_F;
-const ArgType PTR = nanojit::ARGTYPE_P;
-const ArgType WRD = nanojit::ARGTYPE_P;
-const ArgType VD = nanojit::ARGTYPE_V;  // "VOID" causes problems on Windows!
- 
-
 enum LirTokenType {
     NAME, NUMBER, PUNCT, NEWLINE
 };
@@ -372,10 +362,10 @@ double sinFn(double d) {
 #define sin sinFn
 
 Function functions[] = {
-    FN(puts,   argMask(PTR, 1, 1) | retMask(I32)),
-    FN(sin,    argMask(F64, 1, 1) | retMask(F64)),
-    FN(malloc, argMask(WRD, 1, 1) | retMask(PTR)),
-    FN(free,   argMask(PTR, 1, 1) | retMask(VD))
+    FN(puts,   argMask(ARGTYPE_P, 1, 1) | retMask(ARGTYPE_I)),
+    FN(sin,    argMask(ARGTYPE_F, 1, 1) | retMask(ARGTYPE_F)),
+    FN(malloc, argMask(ARGTYPE_P, 1, 1) | retMask(ARGTYPE_P)),
+    FN(free,   argMask(ARGTYPE_P, 1, 1) | retMask(ARGTYPE_V))
 };
 
 template<typename out, typename in> out
@@ -1249,51 +1239,51 @@ static void f_V_IQF(int32_t, uint64_t, double)
 }
 #endif
 
-const CallInfo ci_I_I1 = CI(f_I_I1, argMask(I32, 1, 1) |
-                                    retMask(I32));
+const CallInfo ci_I_I1 = CI(f_I_I1, argMask(ARGTYPE_I, 1, 1) |
+                                    retMask(ARGTYPE_I));
 
-const CallInfo ci_I_I6 = CI(f_I_I6, argMask(I32, 1, 6) |
-                                    argMask(I32, 2, 6) |
-                                    argMask(I32, 3, 6) |
-                                    argMask(I32, 4, 6) |
-                                    argMask(I32, 5, 6) |
-                                    argMask(I32, 6, 6) |
-                                    retMask(I32));
+const CallInfo ci_I_I6 = CI(f_I_I6, argMask(ARGTYPE_I, 1, 6) |
+                                    argMask(ARGTYPE_I, 2, 6) |
+                                    argMask(ARGTYPE_I, 3, 6) |
+                                    argMask(ARGTYPE_I, 4, 6) |
+                                    argMask(ARGTYPE_I, 5, 6) |
+                                    argMask(ARGTYPE_I, 6, 6) |
+                                    retMask(ARGTYPE_I));
 
 #ifdef NANOJIT_64BIT
-const CallInfo ci_Q_Q2 = CI(f_Q_Q2, argMask(I64, 1, 2) |
-                                    argMask(I64, 2, 2) |
-                                    retMask(I64));
+const CallInfo ci_Q_Q2 = CI(f_Q_Q2, argMask(ARGTYPE_Q, 1, 2) |
+                                    argMask(ARGTYPE_Q, 2, 2) |
+                                    retMask(ARGTYPE_Q));
 
-const CallInfo ci_Q_Q7 = CI(f_Q_Q7, argMask(I64, 1, 7) |
-                                    argMask(I64, 2, 7) |
-                                    argMask(I64, 3, 7) |
-                                    argMask(I64, 4, 7) |
-                                    argMask(I64, 5, 7) |
-                                    argMask(I64, 6, 7) |
-                                    argMask(I64, 7, 7) |
-                                    retMask(I64));
+const CallInfo ci_Q_Q7 = CI(f_Q_Q7, argMask(ARGTYPE_Q, 1, 7) |
+                                    argMask(ARGTYPE_Q, 2, 7) |
+                                    argMask(ARGTYPE_Q, 3, 7) |
+                                    argMask(ARGTYPE_Q, 4, 7) |
+                                    argMask(ARGTYPE_Q, 5, 7) |
+                                    argMask(ARGTYPE_Q, 6, 7) |
+                                    argMask(ARGTYPE_Q, 7, 7) |
+                                    retMask(ARGTYPE_Q));
 #endif
 
-const CallInfo ci_F_F3 = CI(f_F_F3, argMask(F64, 1, 3) |
-                                    argMask(F64, 2, 3) |
-                                    argMask(F64, 3, 3) |
-                                    retMask(F64));
+const CallInfo ci_F_F3 = CI(f_F_F3, argMask(ARGTYPE_F, 1, 3) |
+                                    argMask(ARGTYPE_F, 2, 3) |
+                                    argMask(ARGTYPE_F, 3, 3) |
+                                    retMask(ARGTYPE_F));
 
-const CallInfo ci_F_F8 = CI(f_F_F8, argMask(F64, 1, 8) |
-                                    argMask(F64, 2, 8) |
-                                    argMask(F64, 3, 8) |
-                                    argMask(F64, 4, 8) |
-                                    argMask(F64, 5, 8) |
-                                    argMask(F64, 6, 8) |
-                                    argMask(F64, 7, 8) |
-                                    argMask(F64, 8, 8) |
-                                    retMask(F64));
+const CallInfo ci_F_F8 = CI(f_F_F8, argMask(ARGTYPE_F, 1, 8) |
+                                    argMask(ARGTYPE_F, 2, 8) |
+                                    argMask(ARGTYPE_F, 3, 8) |
+                                    argMask(ARGTYPE_F, 4, 8) |
+                                    argMask(ARGTYPE_F, 5, 8) |
+                                    argMask(ARGTYPE_F, 6, 8) |
+                                    argMask(ARGTYPE_F, 7, 8) |
+                                    argMask(ARGTYPE_F, 8, 8) |
+                                    retMask(ARGTYPE_F));
 
 #ifdef NANOJIT_64BIT
-const CallInfo ci_V_IQF = CI(f_V_IQF, argMask(I32, 1, 3) |
-                                      argMask(I64, 2, 3) |
-                                      argMask(F64, 3, 3) |
+const CallInfo ci_V_IQF = CI(f_V_IQF, argMask(ARGTYPE_I, 1, 3) |
+                                      argMask(ARGTYPE_Q, 2, 3) |
+                                      argMask(ARGTYPE_F, 3, 3) |
                                       retMask(ARGTYPE_V));
 #endif
 

@@ -343,12 +343,12 @@ class TokenStream
     void setXMLTagMode(bool enabled = true) { setFlag(enabled, TSF_XMLTAGMODE); }
     void setXMLOnlyMode(bool enabled = true) { setFlag(enabled, TSF_XMLONLYMODE); }
     void setUnexpectedEOF(bool enabled = true) { setFlag(enabled, TSF_UNEXPECTED_EOF); }
-    bool isStrictMode() { return flags & TSF_STRICT_MODE_CODE; }
-    bool isXMLTagMode() { return flags & TSF_XMLTAGMODE; }
-    bool isXMLOnlyMode() { return flags & TSF_XMLONLYMODE; }
-    bool isUnexpectedEOF() { return flags & TSF_UNEXPECTED_EOF; }
-    bool isEOF() const { return flags & TSF_EOF; }
-    bool isError() const { return flags & TSF_ERROR; }
+    bool isStrictMode() { return !!(flags & TSF_STRICT_MODE_CODE); }
+    bool isXMLTagMode() { return !!(flags & TSF_XMLTAGMODE); }
+    bool isXMLOnlyMode() { return !!(flags & TSF_XMLONLYMODE); }
+    bool isUnexpectedEOF() { return !!(flags & TSF_UNEXPECTED_EOF); }
+    bool isEOF() const { return !!(flags & TSF_EOF); }
+    bool isError() const { return !!(flags & TSF_ERROR); }
 
     /* Mutators. */
     bool reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN errorNumber, va_list ap);
