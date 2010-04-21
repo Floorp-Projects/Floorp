@@ -1351,6 +1351,9 @@ class TraceRecorder
 
     JS_REQUIRES_STACK TraceType determineSlotType(jsval* vp);
 
+    JS_REQUIRES_STACK RecordingStatus setUpwardTrackedVar(jsval* stackVp, jsval v,
+                                                          nanojit::LIns* v_ins);
+
     JS_REQUIRES_STACK AbortableRecordingStatus compile();
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop();
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop(VMSideExit* exit);
