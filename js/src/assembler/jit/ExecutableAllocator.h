@@ -374,7 +374,7 @@ public:
         _flush_cache(reinterpret_cast<char*>(code), size, BCACHE);
 #endif
     }
-#elif WTF_CPU_ARM_THUMB2 && WTF_OS_IOS
+#elif WTF_CPU_ARM && WTF_OS_IOS
     static void cacheFlush(void* code, size_t size)
     {
         sys_dcache_flush(code, size);
