@@ -158,14 +158,19 @@ void FastConvertYUVToRGB32Row_C(const uint8* y_buf,
                               const uint8* u_buf,
                               const uint8* v_buf,
                               uint8* rgb_buf,
-                              int width) {
+                              int width,
+                              unsigned int x_shift) {
   for (int x = 0; x < width; x += 2) {
-    uint8 u = u_buf[x >> 1];
-    uint8 v = v_buf[x >> 1];
+    uint8 u = u_buf[x >> x_shift];
+    uint8 v = v_buf[x >> x_shift];
     uint8 y0 = y_buf[x];
     YuvPixel(y0, u, v, rgb_buf);
     if ((x + 1) < width) {
       uint8 y1 = y_buf[x + 1];
+      if (x_shift == 0) {
+        u = u_buf[x + 1];
+        v = v_buf[x + 1];
+      }
       YuvPixel(y1, u, v, rgb_buf + 4);
     }
     rgb_buf += 8;  // Advance 2 pixels.
