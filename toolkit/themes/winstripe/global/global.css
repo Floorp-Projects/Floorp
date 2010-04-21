@@ -320,7 +320,7 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
   cursor: pointer;
 }
 
-.text-link:focus {
+.text-link:-moz-focusring {
   border: 1px dotted -moz-DialogText;
 }
 

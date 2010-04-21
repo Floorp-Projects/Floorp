@@ -905,8 +905,21 @@
 
               // Change focus to the new browser unless the findbar is focused.
               if (gFindBar.hidden ||
-                  gFindBar.getElement("findbar-textbox").getAttribute("focused") != "true")
-                newBrowser.focus();
+                  gFindBar.getElement("findbar-textbox").getAttribute("focused") != "true") {
+
+                var fm = Components.classes["@mozilla.org/focus-manager;1"].
+                           getService(Components.interfaces.nsIFocusManager);
+                var newFocusedElement = fm.getFocusedElementForWindow(window.content, true, {});
+
+                // for anchors, use FLAG_SHOWRING so that it is clear what link was
+                // last clicked when switching back to that tab
+                var focusFlags = fm.FLAG_NOSCROLL;
+                if (newFocusedElement &&
+                    (newFocusedElement instanceof HTMLAnchorElement ||
+                     newFocusedElement.getAttributeNS("http://www.w3.org/1999/xlink", "type") == "simple"))
+                  focusFlags |= fm.FLAG_SHOWRING;
+                fm.setFocus(newBrowser, focusFlags);
+              }
             }
           ]]>
         </body>

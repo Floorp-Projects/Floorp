@@ -43,6 +43,7 @@
 #include "nsIContent.h"
 
 #define FOCUSMETHOD_MASK 0xF000
+#define FOCUSMETHODANDRING_MASK 0xF0F000
 
 #define FOCUSMANAGER_CONTRACTID "@mozilla.org/focus-manager;1"
 
