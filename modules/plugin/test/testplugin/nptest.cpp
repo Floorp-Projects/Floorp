@@ -60,6 +60,8 @@
 #define PLUGIN_VERSION     "1.0.0.0"
 
 #define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
+#define STATIC_ASSERT(condition)                                \
+    extern void np_static_assert(int arg[(condition) ? 1 : -1])
 
 //
 // Intentional crash
@@ -67,7 +69,7 @@
 
 int gCrashCount = 0;
 
-static void
+void
 NoteIntentionalCrash()
 {
   char* bloatLog = getenv("XPCOM_MEM_BLOAT_LOG");
@@ -157,6 +159,7 @@ static bool hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount
 static bool getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool callOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool reinitWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool propertyAndMethod(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
@@ -200,10 +203,11 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getClipboardText",
   "callOnDestroy",
   "reinitWidget",
+  "crashInNestedLoop",
   "propertyAndMethod"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
-static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMethodIdentifierNames)] = {
+static const ScriptableFunction sPluginMethodFunctions[] = {
   npnEvaluateTest,
   npnInvokeTest,
   npnInvokeDefaultTest,
@@ -244,8 +248,13 @@ static const ScriptableFunction sPluginMethodFunctions[ARRAY_LENGTH(sPluginMetho
   getClipboardText,
   callOnDestroy,
   reinitWidget,
+  crashPluginInNestedLoop,
   propertyAndMethod
 };
+
+STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
+              ARRAY_LENGTH(sPluginMethodFunctions));
+
 static const NPUTF8* sPluginPropertyIdentifierNames[] = {
   "propertyAndMethod"
 };
@@ -2711,12 +2720,29 @@ getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
   return true;
 }
 
+bool
+crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args,
+                        uint32_t argCount, NPVariant* result)
+{
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  return pluginCrashInNestedLoop(id);
+}
+
 #else
 bool
 getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount,
                  NPVariant* result)
 {
-  /// XXX Not implemented!
+  // XXX Not implemented!
+  return false;
+}
+
+bool
+crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args,
+                        uint32_t argCount, NPVariant* result)
+{
+  // XXX Not implemented!
   return false;
 }
 #endif
