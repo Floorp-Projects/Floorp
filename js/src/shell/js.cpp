@@ -3731,6 +3731,30 @@ Compile(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
+Parse(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc < 1) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "compile", "0", "s");
+        return JS_FALSE;
+    }
+    jsval arg0 = JS_ARGV(cx, vp)[0];
+    if (!JSVAL_IS_STRING(arg0)) {
+        const char *typeName = JS_GetTypeName(cx, JS_TypeOfValue(cx, arg0));
+        JS_ReportError(cx, "expected string to parse, got %s", typeName);
+        return JS_FALSE;
+    }
+
+    JSString *scriptContents = JSVAL_TO_STRING(arg0);
+    js::Parser parser(cx);
+    parser.init(JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
+                NULL, "<string>", 0);
+    parser.parse(NULL);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
+static JSBool
 Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
@@ -3883,6 +3907,7 @@ static JSFunctionSpec shell_functions[] = {
 #endif
     JS_FS("snarf",          Snarf,        0,0,0),
     JS_FN("compile",        Compile,        1,0),
+    JS_FN("parse",          Parse,          1,0),
     JS_FN("timeout",        Timeout,        1,0),
     JS_FN("elapsed",        Elapsed,        0,0),
     JS_FS_END
@@ -3987,7 +4012,8 @@ static const char *const shell_help_messages[] = {
 "scatter(fns)             Call functions concurrently (ignoring errors)",
 #endif
 "snarf(filename)          Read filename into returned string",
-"compile(code)            Parses a string, potentially throwing",
+"compile(code)            Compiles a string to bytecode, potentially throwing",
+"parse(code)              Parses a string, potentially throwing",
 "timeout([seconds])\n"
 "  Get/Set the limit in seconds for the execution time for the current context.\n"
 "  A negative value (default) means that the execution time is unlimited.",

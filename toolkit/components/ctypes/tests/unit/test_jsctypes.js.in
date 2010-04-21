@@ -1334,12 +1334,14 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
     do_check_throws(function() { t.prototype[p]; }, Error);
 
   // Test that an instance 'd' of 't' is a CData.
-  let d = t();
-  do_check_class(d, "CData");
-  do_check_true(d.__parent__ === ctypes);
-  do_check_true(d.__proto__ === t.prototype);
-  do_check_true(d instanceof t);
-  do_check_true(d.constructor === t);
+  if (t.__proto__ != ctypes.FunctionType.prototype) {
+    let d = t();
+    do_check_class(d, "CData");
+    do_check_true(d.__parent__ === ctypes);
+    do_check_true(d.__proto__ === t.prototype);
+    do_check_true(d instanceof t);
+    do_check_true(d.constructor === t);
+  }
 }
 
 function run_StructType_tests() {
@@ -1692,16 +1694,19 @@ function run_FunctionType_tests() {
     ctypes.FunctionType(ctypes.default_abi, ctypes.void_t, null);
   }, Error);
   do_check_throws(function() {
-    ctypes.FunctionType(ctypes.default_abi, ctypes.void_t());
+    ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t());
+  }, Error);
+  do_check_throws(function() {
+    ctypes.FunctionType(ctypes.void_t, ctypes.void_t);
   }, Error);
 
   let g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
   let g = g_t(1, 2);
 
   let f_t = ctypes.FunctionType(ctypes.default_abi, g_t);
-  let name = "g_t(*)()";
+  let name = "g_t()()";
   do_check_eq(f_t.name, name);
-  do_check_eq(f_t.size, ctypes.uintptr_t.size);
+  do_check_eq(f_t.size, undefined);
   do_check_true(f_t.abi === ctypes.default_abi);
   do_check_true(f_t.returnType === g_t);
   do_check_true(f_t.argTypes.length == 0);
@@ -1710,13 +1715,25 @@ function run_FunctionType_tests() {
   do_check_eq(f_t.toSource(),
     "ctypes.FunctionType(ctypes.default_abi, g_t)");
 
+  let fp_t = f_t.ptr;
+  name = "g_t(*)()";
+  do_check_eq(fp_t.name, name);
+  do_check_eq(fp_t.size, ctypes.uintptr_t.size);
+
+  do_check_eq(fp_t.toString(), "type " + name);
+  do_check_eq(fp_t.toSource(),
+    "ctypes.FunctionType(ctypes.default_abi, g_t).ptr");
+
+  // Check that constructing a FunctionType CData directly throws.
+  do_check_throws(function() { f_t(); }, Error);
+
   // Test ExplicitConvert.
-  let f = f_t();
+  let f = fp_t();
   do_check_throws(function() { f.value; }, Error);
   do_check_eq(ptrValue(f), 0);
-  f = f_t(5);
+  f = fp_t(5);
   do_check_eq(ptrValue(f), 5);
-  f = f_t(ctypes.UInt64(10));
+  f = fp_t(ctypes.UInt64(10));
   do_check_eq(ptrValue(f), 10);
 
   // Test ImplicitConvert.
@@ -1724,43 +1741,45 @@ function run_FunctionType_tests() {
   do_check_eq(ptrValue(f), 0);
   do_check_throws(function() { f.value = 5; }, Error);
   do_check_eq(f.toSource(),
-    'ctypes.FunctionType(ctypes.default_abi, g_t)(ctypes.UInt64("0x0"))');
+    'ctypes.FunctionType(ctypes.default_abi, g_t).ptr(ctypes.UInt64("0x0"))');
 
   // Test ExplicitConvert from a function pointer of different type.
   let f2_t = ctypes.FunctionType(ctypes.default_abi, g_t, [ ctypes.int32_t ]);
-  let f2 = f2_t();
-  do_check_throws(function() { f_t(f2); }, Error);
+  let f2 = f2_t.ptr();
+  do_check_throws(function() { fp_t(f2); }, Error);
   do_check_throws(function() { f.value = f2; }, Error);
   do_check_throws(function() { f2.value = f; }, Error);
 
-  // Test that converting to a voidptr_t throws.
-  do_check_throws(function() { ctypes.voidptr_t(f2); }, Error);
+  // Test that converting to a voidptr_t works, but not the other way.
+  let v = ctypes.voidptr_t(f2);
+  do_check_eq(v.toSource(), 'ctypes.voidptr_t(ctypes.UInt64("0x0"))');
+  do_check_throws(function() { f2_t.ptr(v); }, TypeError);
 
   // Test some more complex names.
-  do_check_eq(f_t.array().name, "g_t(*[])()");
-  do_check_eq(f_t.array().ptr.name, "g_t(*(*)[])()");
+  do_check_eq(fp_t.array().name, "g_t(*[])()");
+  do_check_eq(fp_t.array().ptr.name, "g_t(*(*)[])()");
 
   let f3_t = ctypes.FunctionType(ctypes.default_abi,
-    ctypes.char.ptr.array().ptr).ptr.array(8).array();
+    ctypes.char.ptr.array().ptr).ptr.ptr.array(8).array();
   do_check_eq(f3_t.name, "char*(*(**[][8])())[]");
 
 #ifdef _WIN32
 #ifndef _WIN64
   f3_t = ctypes.FunctionType(ctypes.stdcall_abi,
     ctypes.char.ptr.array().ptr).ptr.array(8).array();
-  do_check_eq(f3_t.name, "char*(__stdcall *(**[][8])())[]");
+  do_check_eq(f3_t.ptr.name, "char*(__stdcall *(**[][8])())[]");
 #endif
 #endif
 
   let f4_t = ctypes.FunctionType(ctypes.default_abi,
-    ctypes.char.ptr.array().ptr, [ ctypes.int32_t, f_t ]);
+    ctypes.char.ptr.array().ptr, [ ctypes.int32_t, fp_t ]);
   do_check_true(f4_t.argTypes.length == 2);
   do_check_true(f4_t.argTypes[0] === ctypes.int32_t);
-  do_check_true(f4_t.argTypes[1] === f_t);
+  do_check_true(f4_t.argTypes[1] === fp_t);
   do_check_throws(function() { f4_t.argTypes.z = 0; }, Error);
   do_check_throws(function() { f4_t.argTypes[0] = 0; }, Error);
 
-  let t4_t = f4_t.ptr.array(8).array();
+  let t4_t = f4_t.ptr.ptr.array(8).array();
   do_check_eq(t4_t.name, "char*(*(**[][8])(int32_t, g_t(*)()))[]");
 }
 
@@ -1908,7 +1927,7 @@ function run_cast_tests() {
   let g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
   let a_t = ctypes.ArrayType(g_t, 4);
   let p_t = ctypes.PointerType(g_t);
-  let f_t = ctypes.FunctionType(ctypes.default_abi, ctypes.void_t);
+  let f_t = ctypes.FunctionType(ctypes.default_abi, ctypes.void_t).ptr;
 
   let a = a_t();
   a[0] = { a: 5, b: 7.5 };
@@ -2064,7 +2083,7 @@ function run_function_tests(library)
   let test_ansi_len = library.declare("test_ansi_len", ctypes.default_abi,
     ctypes.int32_t, ctypes.char.ptr);
   let fn_t = ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t,
-    [ ctypes.char.ptr ]);
+    [ ctypes.char.ptr ]).ptr;
 
   let test_fnptr = library.declare("test_fnptr", ctypes.default_abi, fn_t);
 
@@ -2076,11 +2095,12 @@ function run_function_tests(library)
   // Test that we can call ptr().
   do_check_eq(ptr("function pointers rule!"), 23);
 
-  // Test that library.declare() returns data of type FunctionType, and that
+  // Test that library.declare() returns data of type FunctionType.ptr, and that
   // it is immutable.
-  do_check_true(test_ansi_len.constructor.__proto__ === ctypes.FunctionType.prototype);
+  do_check_true(test_ansi_len.constructor.targetType.__proto__ ===
+    ctypes.FunctionType.prototype);
   do_check_eq(test_ansi_len.constructor.toSource(),
-    "ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.char.ptr])");
+    "ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.char.ptr]).ptr");
   do_check_throws(function() { test_ansi_len.value = null; }, Error);
   do_check_eq(ptrValue(test_ansi_len), ptrValue(ptr));
 
@@ -2116,7 +2136,7 @@ function run_single_closure_tests(library, abi, suffix)
   do_check_eq(closure_fn.call(thisobj, 7), 7 + thisobj.a);
 
   // Construct a closure, and call it ourselves.
-  let fn_t = ctypes.FunctionType(abi, ctypes.int32_t, [ ctypes.int8_t ]);
+  let fn_t = ctypes.FunctionType(abi, ctypes.int32_t, [ ctypes.int8_t ]).ptr;
   let closure = fn_t(closure_fn);
   do_check_eq(closure(-17), -17 + b);
 
@@ -2134,14 +2154,14 @@ function run_single_closure_tests(library, abi, suffix)
 function run_variadic_tests(library) {
   let sum_va_type = ctypes.FunctionType(ctypes.default_abi,
                                         ctypes.int32_t,
-                                        [ctypes.uint8_t, "..."]),
+                                        [ctypes.uint8_t, "..."]).ptr,
       sum_va = library.declare("test_sum_va_cdecl", ctypes.default_abi, ctypes.int32_t,
                                ctypes.uint8_t, "...");
 
   do_check_eq(sum_va_type.toSource(),
-              'ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.uint8_t, "..."])');
+    'ctypes.FunctionType(ctypes.default_abi, ctypes.int32_t, [ctypes.uint8_t, "..."]).ptr');
   do_check_eq(sum_va.constructor.name, "int32_t(*)(uint8_t, ...)");
-  do_check_true(sum_va.constructor.isVariadic);
+  do_check_true(sum_va.constructor.targetType.isVariadic);
 
   do_check_eq(sum_va(3,
                      ctypes.int32_t(1),
@@ -2211,9 +2231,9 @@ function run_variadic_tests(library) {
   do_check_eq(result[2], 16);
   
   do_check_true(!!(sum_va_type().value = sum_va_type()));
-  let sum_notva_type = ctypes.FunctionType(sum_va_type.abi,
-                                           sum_va_type.returnType,
-                                           [ctypes.uint8_t]);
+  let sum_notva_type = ctypes.FunctionType(sum_va_type.targetType.abi,
+                                           sum_va_type.targetType.returnType,
+                                           [ctypes.uint8_t]).ptr;
   do_check_throws(function() {
     sum_va_type().value = sum_notva_type();
   }, Error);
