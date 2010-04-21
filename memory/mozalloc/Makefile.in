@@ -44,6 +44,10 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 VISIBILITY_FLAGS=
+STL_FLAGS	=
+ifdef _MSC_VER
+STL_FLAGS	= -D_HAS_EXCEPTIONS=0
+endif
 
 MODULE		= mozalloc
 LIBRARY_NAME	= mozalloc
@@ -62,11 +66,27 @@ DEFINES		+= -D_GNU_SOURCE
 endif
 
 EXPORTS_NAMESPACES 	= mozilla
-EXPORTS_mozilla 	= mozalloc.h mozalloc_macro_wrappers.h mozalloc_oom.h
+EXPORTS_mozilla 	=			\
+	mozalloc.h		 		\
+	mozalloc_abort.h			\
+	mozalloc_macro_wrappers.h 		\
+	mozalloc_oom.h				\
+	$(NULL)
 
-CPPSRCS =					\
+CPPSRCS 		=			\
 	mozalloc.cpp				\
+	mozalloc_abort.cpp			\
 	mozalloc_oom.cpp			\
 	$(NULL)
+
+ifdef WRAP_STL_INCLUDES
+ifdef GCC_VERSION
+EXPORTS_mozilla	+= throw_gcc.h
+endif
+ifdef _MSC_VER
+EXPORTS_mozilla	+= throw_msvc.h
+CPPSRCS		+= throw_msvc.cpp
+endif
+endif  # WRAP_STL_INCLUDES
 
 include $(topsrcdir)/config/rules.mk

@@ -146,7 +146,16 @@ def fixSymbols(line):
 
         if os.path.exists(file) and os.path.isfile(file):
             address += address_adjustment(file)
-            info = addressToSymbol(file, address)
+            try:
+                info = addressToSymbol(file, address)
+                if info.startswith("atos cannot"):
+                    # This can happen due to bug 550335 or bug 558947.
+                    sys.stderr.write("fix_macosx_stack will not convert some stack-trace addresses because: " + info + "\n")
+                    return line
+            except IOError:
+                # IOError can be the result of attempting to continue to use an
+                # atos process that has exited (e.g. due to the error above)
+                return line
 
             # atos output seems to have three forms:
             #   address

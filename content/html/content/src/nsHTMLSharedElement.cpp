@@ -40,7 +40,8 @@
 #include "nsIDOMHTMLDirectoryElement.h"
 #include "nsIDOMHTMLMenuElement.h"
 #include "nsIDOMHTMLQuoteElement.h"
-#include "nsIDOMHTMLBaseFontElement.h"
+#include "nsIDOMHTMLHeadElement.h"
+#include "nsIDOMHTMLHtmlElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -59,7 +60,8 @@ class nsHTMLSharedElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLDirectoryElement,
                             public nsIDOMHTMLMenuElement,
                             public nsIDOMHTMLQuoteElement,
-                            public nsIDOMHTMLBaseFontElement
+                            public nsIDOMHTMLHeadElement,
+                            public nsIDOMHTMLHtmlElement
 {
 public:
   nsHTMLSharedElement(nsINodeInfo *aNodeInfo);
@@ -95,8 +97,11 @@ public:
   // nsIDOMHTMLQuoteElement
   NS_DECL_NSIDOMHTMLQUOTEELEMENT
 
-  // nsIDOMHTMLBaseFontElement
-  NS_DECL_NSIDOMHTMLBASEFONTELEMENT
+  // nsIDOMHTMLHeadElement
+  NS_DECL_NSIDOMHTMLHEADELEMENT
+
+  // nsIDOMHTMLHtmlElement
+  NS_DECL_NSIDOMHTMLHTMLELEMENT
 
   // nsIContent
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
@@ -153,7 +158,8 @@ DOMCI_DATA(HTMLSpacerElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLDirectoryElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLMenuElement, nsHTMLSharedElement)
 DOMCI_DATA(HTMLQuoteElement, nsHTMLSharedElement)
-DOMCI_DATA(HTMLBaseFontElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLHeadElement, nsHTMLSharedElement)
+DOMCI_DATA(HTMLHtmlElement, nsHTMLSharedElement)
 
 // QueryInterface implementation for nsHTMLSharedElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLSharedElement)
@@ -170,7 +176,8 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLSharedElement)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLMenuElement, menu)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLQuoteElement, q)
   NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLQuoteElement, blockquote)
-  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLBaseFontElement, basefont)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLHeadElement, head)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLHtmlElement, html)
 
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLParamElement, param)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLWBRElement, wbr)
@@ -181,7 +188,8 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLSharedElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLMenuElement, menu)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLQuoteElement, q)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLQuoteElement, blockquote)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLBaseFontElement, basefont)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLHeadElement, head)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_IF_TAG(HTMLHtmlElement, html)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
@@ -195,6 +203,13 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedElement, ValueType, valuetype)
 
 // nsIDOMHTMLIsIndexElement
 NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Prompt, prompt)
+NS_IMETHODIMP
+nsHTMLSharedElement::GetForm(nsIDOMHTMLFormElement** aForm)
+{
+  NS_IF_ADDREF(*aForm = FindForm());
+
+  return NS_OK;
+}
 
 // nsIDOMHTMLDirectoryElement
 NS_IMPL_BOOL_ATTR(nsHTMLSharedElement, Compact, compact)
@@ -205,18 +220,22 @@ NS_IMPL_BOOL_ATTR(nsHTMLSharedElement, Compact, compact)
 // nsIDOMHTMLQuoteElement
 NS_IMPL_URI_ATTR(nsHTMLSharedElement, Cite, cite)
 
-// nsIDOMHTMLBaseFontElement
-NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Color, color)
-NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Face, face)
-NS_IMPL_INT_ATTR(nsHTMLSharedElement, Size, size)
-
+// nsIDOMHTMLHeadElement
+// Deprecated and not exposed to script, but has to be implemented in order to
+// not break binary compat.
 NS_IMETHODIMP
-nsHTMLSharedElement::GetForm(nsIDOMHTMLFormElement** aForm)
+nsHTMLSharedElement::GetProfile(nsAString& aValue)
 {
-  NS_IF_ADDREF(*aForm = FindForm());
-
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
+NS_IMETHODIMP
+nsHTMLSharedElement::SetProfile(const nsAString& aValue)
+{
+  return NS_ERROR_FAILURE;
+}
+
+// nsIDOMHTMLHtmlElement
+NS_IMPL_STRING_ATTR(nsHTMLSharedElement, Version, version)
 
 // nsIDOMHTMLBaseElement
 NS_IMPL_URI_ATTR(nsHTMLSharedElement, Href, href)
@@ -248,11 +267,6 @@ nsHTMLSharedElement::ParseAttribute(PRInt32 aNamespaceID,
       }
       if (aAttribute == nsGkAtoms::start) {
         return aResult.ParseIntWithBounds(aValue, 1);
-      }
-    }
-    else if (mNodeInfo->Equals(nsGkAtoms::basefont)) {
-      if (aAttribute == nsGkAtoms::size) {
-        return aResult.ParseIntValue(aValue);
       }
     }
   }

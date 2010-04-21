@@ -81,6 +81,7 @@
 #include "base/message_loop.h"
 #include "base/process_util.h"
 #include "chrome/common/child_process.h"
+#include "chrome/common/notification_service.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
@@ -321,6 +322,7 @@ XRE_InitChildProcess(int aArgc,
   NS_ABORT_IF_FALSE(ok, "can't open handle to parent");
 
   base::AtExitManager exitManager;
+  NotificationService notificationService;
 
   NS_LogInit();
 

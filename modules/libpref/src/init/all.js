@@ -2888,3 +2888,6 @@ pref("browser.history.allowPushState", true);
 pref("browser.history.allowReplaceState", true);
 pref("browser.history.allowPopState", true);
 pref("browser.history.maxStateObjectSize", 655360);
+
+pref("network.buffer.cache.count", 24);
+pref("network.buffer.cache.size",  4096);

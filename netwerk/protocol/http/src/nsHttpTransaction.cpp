@@ -38,13 +38,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIOService.h"
 #include "nsHttpHandler.h"
 #include "nsHttpTransaction.h"
 #include "nsHttpConnection.h"
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
 #include "nsHttpChunkedDecoder.h"
-#include "nsNetSegmentUtils.h"
 #include "nsTransportUtils.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -291,7 +291,7 @@ nsHttpTransaction::Init(PRUint8 caps,
         // that we write data in the largest chunks possible.  this is actually
         // necessary to workaround some common server bugs (see bug 137155).
         rv = NS_NewBufferedInputStream(getter_AddRefs(mRequestStream), multi,
-                                       NET_DEFAULT_SEGMENT_SIZE);
+                                       nsIOService::gDefaultSegmentSize);
         if (NS_FAILED(rv)) return rv;
     }
     else
@@ -304,8 +304,8 @@ nsHttpTransaction::Init(PRUint8 caps,
     rv = NS_NewPipe2(getter_AddRefs(mPipeIn),
                      getter_AddRefs(mPipeOut),
                      PR_TRUE, PR_TRUE,
-                     NS_HTTP_SEGMENT_SIZE,
-                     NS_HTTP_SEGMENT_COUNT,
+                     nsIOService::gDefaultSegmentSize,
+                     nsIOService::gDefaultSegmentCount,
                      nsIOService::gBufferCache);
     if (NS_FAILED(rv)) return rv;
 

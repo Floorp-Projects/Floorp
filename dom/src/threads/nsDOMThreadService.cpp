@@ -381,6 +381,13 @@ public:
 
     NS_ASSERTION(!JS_GetGlobalObject(cx), "Shouldn't have a global!");
 
+    if (mWorker->IsPrivileged()) {
+      JS_SetVersion(cx, JSVERSION_LATEST);
+    }
+    else {
+      JS_SetVersion(cx, JSVERSION_DEFAULT);
+    }
+
     JS_SetContextPrivate(cx, mWorker);
 
     // Go ahead and trigger the operation callback for this context before we

@@ -120,8 +120,7 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
     if(!aIOLoop) {
         // parent
         needOpen = false;
-        aIOLoop = BrowserProcessSubThread
-                  ::GetMessageLoop(BrowserProcessSubThread::IO);
+        aIOLoop = XRE_GetIOMessageLoop();
         // FIXME assuming that the parent waits for the OnConnected event.
         // FIXME see GeckoChildProcessHost.cpp.  bad assumption!
         mChannelState = ChannelConnected;

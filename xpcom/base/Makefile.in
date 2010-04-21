@@ -64,6 +64,7 @@ CPPSRCS		= \
 		nsCycleCollector.cpp \
 		nsStackWalk.cpp \
 		nsMemoryReporterManager.cpp \
+		FunctionTimer.cpp \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -83,6 +84,12 @@ EXPORTS		= \
 		nsWeakPtr.h \
 		nsInterfaceRequestorAgg.h \
 		$(NULL)
+
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla = \
+	FunctionTimer.h \
+	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 ifdef MOZ_DEBUG
