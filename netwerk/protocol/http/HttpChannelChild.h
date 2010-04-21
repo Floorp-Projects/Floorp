@@ -58,6 +58,10 @@
 #include "nsIResumableChannel.h"
 #include "nsIProxiedChannel.h"
 #include "nsITraceableChannel.h"
+#include "mozilla/Mutex.h"
+
+class nsIRunnable;
+class Callback;
 
 namespace mozilla {
 namespace net {
@@ -143,6 +147,29 @@ private:
   // FIXME: replace with IPDL states (bug 536319) 
   enum HttpChannelChildState mState;
   bool mIPCOpen;
+
+  // Workaround for Necko re-entrancy dangers. We buffer all messages
+  // received until OnStartRequest completes.
+  nsTArray<nsAutoPtr<Callback> > mBufferedCallbacks;
+  bool mShouldBuffer;
+  mozilla::Mutex mBufferLock;
+
+  bool BufferOrDispatch(Callback* callback);
+
+  // This class does not actually implement the stream listener interface.
+  // These functions actually perform the actions associated with the
+  // corresponding IPDL receivers above.
+  bool OnDataAvailable(const nsCString& data, 
+                       const PRUint32& offset,
+                       const PRUint32& count);
+  bool OnStopRequest(const nsresult& statusCode);
+  bool OnProgress(const PRUint64& progress, const PRUint64& progressMax);
+  bool OnStatus(const nsresult& status, const nsString& statusArg);
+
+  friend class StopRequestEvent;
+  friend class DataAvailableEvent;
+  friend class ProgressEvent;
+  friend class StatusEvent;
 };
 
 } // namespace net
