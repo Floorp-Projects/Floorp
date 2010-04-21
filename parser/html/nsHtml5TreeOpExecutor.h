@@ -368,6 +368,10 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       mOwnedElements.AppendObject(aContent);
     }
 
+    void DropHeldElements() {
+      mOwnedElements.Clear();
+    }
+
     /**
      * Flush the operations from the tree operations from the argument
      * queue unconditionally. (This is for the main thread case.)

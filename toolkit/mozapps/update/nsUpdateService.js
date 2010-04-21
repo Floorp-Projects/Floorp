@@ -1177,16 +1177,11 @@ UpdateService.prototype = {
     }
 
     var status = readStatusFile(getUpdatesDir());
-    /**
-     * STATE_NONE status means the update.status file is not present, because
-     * either:
-     * 1) no update was performed, and so there's no UI to show
-     * 2) an update was attempted but failed during checking, transfer or
-     *    verification, and was cleaned up at that point, and UI notifying of
-     *    that error was shown at that stage.
-     */
+    // STATE_NONE status means that the update.status file is present but a
+    // background download error occured.
     if (status == STATE_NONE) {
       LOG("UpdateService:_postUpdateProcessing - no status, no update");
+      cleanupActiveUpdate();
       return;
     }
 

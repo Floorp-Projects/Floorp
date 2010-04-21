@@ -826,6 +826,7 @@ nsHtml5TreeOpExecutor::GetTokenizer()
 
 void
 nsHtml5TreeOpExecutor::Reset() {
+  DropHeldElements();
   mHasProcessedBase = PR_FALSE;
   mReadingFromStage = PR_FALSE;
   mOpQueue.Clear();

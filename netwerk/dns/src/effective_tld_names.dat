@@ -1136,7 +1136,9 @@ com.iq
 org.iq
 net.iq
 
-// ir : http://www.nic.ir/ascii/Appendix1.htm
+// ir : http://www.nic.ir/Terms_and_Conditions_ir,_Appendix_1_Domain_Rules
+// Also see http://www.nic.ir/Internationalized_Domain_Names
+// Two <iran>.ir entries added at request of <tech-team@nic.ir>, 2010-04-16
 ir
 ac.ir
 co.ir
@@ -1145,6 +1147,10 @@ id.ir
 net.ir
 org.ir
 sch.ir
+// xn--mgba3a4f16a.ir (<iran>.ir, Persian YEH)
+ایران.ir
+// xn--mgba3a4fra.ir (<iran>.ir, Arabic YEH)
+ايران.ir
 
 // is : http://www.isnic.is/domain/rules.php
 // Confirmed by registry <marius@isgate.is> 2008-12-06

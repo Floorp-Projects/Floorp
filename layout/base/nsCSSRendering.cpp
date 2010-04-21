@@ -641,10 +641,10 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   gfxRect oRect(RectToGfxRect(outerRect, twipsPerPixel));
 
   // convert the border widths
-  gfxFloat borderWidths[4] = { border.top / twipsPerPixel,
-                               border.right / twipsPerPixel,
-                               border.bottom / twipsPerPixel,
-                               border.left / twipsPerPixel };
+  gfxFloat borderWidths[4] = { gfxFloat(border.top / twipsPerPixel),
+                               gfxFloat(border.right / twipsPerPixel),
+                               gfxFloat(border.bottom / twipsPerPixel),
+                               gfxFloat(border.left / twipsPerPixel) };
 
   // convert the radii
   gfxCornerSizes borderRadii;
@@ -816,10 +816,10 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                                outlineColor };
 
   // convert the border widths
-  gfxFloat outlineWidths[4] = { width / twipsPerPixel,
-                                width / twipsPerPixel,
-                                width / twipsPerPixel,
-                                width / twipsPerPixel };
+  gfxFloat outlineWidths[4] = { gfxFloat(width / twipsPerPixel),
+                                gfxFloat(width / twipsPerPixel),
+                                gfxFloat(width / twipsPerPixel),
+                                gfxFloat(width / twipsPerPixel) };
 
   // start drawing
   gfxContext *ctx = aRenderingContext.ThebesContext();
@@ -858,10 +858,10 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
     nscoord twipsRadii[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     ComputePixelRadii(twipsRadii, aFocusRect, 0, oneDevPixel, &focusRadii);
   }
-  gfxFloat focusWidths[4] = { oneCSSPixel / oneDevPixel,
-                              oneCSSPixel / oneDevPixel,
-                              oneCSSPixel / oneDevPixel,
-                              oneCSSPixel / oneDevPixel };
+  gfxFloat focusWidths[4] = { gfxFloat(oneCSSPixel / oneDevPixel),
+                              gfxFloat(oneCSSPixel / oneDevPixel),
+                              gfxFloat(oneCSSPixel / oneDevPixel),
+                              gfxFloat(oneCSSPixel / oneDevPixel) };
 
   PRUint8 focusStyles[4] = { NS_STYLE_BORDER_STYLE_DOTTED,
                              NS_STYLE_BORDER_STYLE_DOTTED,
@@ -1319,8 +1319,10 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     ComputePixelRadii(twipsRadii, aFrameArea, sidesToSkip,
                       twipsPerPixel, &borderRadii);
     gfxFloat borderSizes[4] = {
-      border.top / twipsPerPixel, border.right / twipsPerPixel,
-      border.bottom / twipsPerPixel, border.left / twipsPerPixel
+      gfxFloat(border.top / twipsPerPixel),
+      gfxFloat(border.right / twipsPerPixel),
+      gfxFloat(border.bottom / twipsPerPixel),
+      gfxFloat(border.left / twipsPerPixel)
     };
     nsCSSBorderRenderer::ComputeInnerRadii(borderRadii, borderSizes,
                                            &innerRadii);
@@ -1561,8 +1563,10 @@ SetupBackgroundClip(gfxContext *aCtx, PRUint8 aBackgroundClip,
 
     if (aHaveRoundedCorners) {
       gfxFloat borderSizes[4] = {
-        border.top / aAppUnitsPerPixel, border.right / aAppUnitsPerPixel,
-        border.bottom / aAppUnitsPerPixel, border.left / aAppUnitsPerPixel
+        gfxFloat(border.top / aAppUnitsPerPixel),
+        gfxFloat(border.right / aAppUnitsPerPixel),
+        gfxFloat(border.bottom / aAppUnitsPerPixel),
+        gfxFloat(border.left / aAppUnitsPerPixel)
       };
       nsCSSBorderRenderer::ComputeInnerRadii(aBGRadii, borderSizes,
                                              &clippedRadii);

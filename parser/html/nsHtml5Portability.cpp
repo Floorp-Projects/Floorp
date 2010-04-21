@@ -186,7 +186,7 @@ nsHtml5Portability::isIndexPrompt()
   nsXPIDLString prompt;
   nsresult rv =
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                         "IsIndexPrompt", prompt);
+                                         "IsIndexPromptWithSpace", prompt);
   PRUint32 len = prompt.Length();
   if (NS_FAILED(rv) || !len) {
     // jArray doesn't support dynamically-allocated zero-length arrays

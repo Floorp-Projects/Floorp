@@ -492,20 +492,21 @@ nsXULGroupboxAccessible::GetRelationByType(PRUint32 aRelationType,
     // The label for xul:groupbox is generated from xul:label that is
     // inside the anonymous content of the xul:caption.
     // The xul:label has an accessible object but the xul:caption does not
-    nsCOMPtr<nsIAccessible> testLabelAccessible;
-    while (NextChild(testLabelAccessible)) {
-      if (nsAccUtils::Role(testLabelAccessible) == nsIAccessibleRole::ROLE_LABEL) {
+    PRInt32 childCount = GetChildCount();
+    for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+      nsAccessible *childAcc = GetChildAt(childIdx);
+      if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_LABEL) {
         // Ensure that it's our label
         // XXX: we'll fail if group accessible expose more than one relation
         // targets.
         nsCOMPtr<nsIAccessible> testGroupboxAccessible =
-          nsRelUtils::GetRelatedAccessible(testLabelAccessible,
+          nsRelUtils::GetRelatedAccessible(childAcc,
                                            nsIAccessibleRelation::RELATION_LABEL_FOR);
 
         if (testGroupboxAccessible == this) {
           // The <label> points back to this groupbox
           return nsRelUtils::
-            AddTarget(aRelationType, aRelation, testLabelAccessible);
+            AddTarget(aRelationType, aRelation, childAcc);
         }
       }
     }
