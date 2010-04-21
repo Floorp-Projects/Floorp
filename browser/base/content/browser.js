@@ -7149,7 +7149,7 @@ let gPrivateBrowsingUI = {
     Services.obs.removeObserver(this, "private-browsing-transition-complete");
   },
 
-  get _disableUIOnToggle PBUI__disableUIOnTogle() {
+  get _disableUIOnToggle() {
     if (this._privateBrowsingService.autoStarted)
       return false;
 
@@ -7351,7 +7351,7 @@ let gPrivateBrowsingUI = {
       !this.privateBrowsingEnabled;
   },
 
-  get privateBrowsingEnabled PBUI_get_privateBrowsingEnabled() {
+  get privateBrowsingEnabled() {
     return this._privateBrowsingService.privateBrowsingEnabled;
   }
 };
