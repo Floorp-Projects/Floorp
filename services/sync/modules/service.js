@@ -1448,18 +1448,6 @@ WeaveSvc.prototype = {
       // Have each engine drop any temporary meta data
       for each (let engine in engines)
         engine.resetClient();
-
-      // XXX Bug 480448: Delete any snapshots from old code
-      try {
-        let cruft = Svc.Directory.get("ProfD", Ci.nsIFile);
-        cruft.QueryInterface(Ci.nsILocalFile);
-        cruft.append("weave");
-        cruft.append("snapshots");
-        if (cruft.exists())
-          cruft.remove(true);
-      } catch (e) {
-        this._log.debug("Could not remove old snapshots: " + Utils.exceptionStr(e));
-      }
     }))(),
 
   /**
