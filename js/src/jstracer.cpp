@@ -14153,10 +14153,9 @@ TraceRecorder::record_JSOP_ARGSUB()
     JSStackFrame* fp = cx->fp;
     if (!(fp->fun->flags & JSFUN_HEAVYWEIGHT)) {
         uintN slot = GET_ARGNO(fp->regs->pc);
-        if (slot < fp->argc)
-            stack(0, get(&cx->fp->argv[slot]));
-        else
-            stack(0, INS_VOID());
+        if (slot >= fp->argc)
+            RETURN_STOP_A("can't trace out-of-range arguments");
+        stack(0, get(&cx->fp->argv[slot]));
         return ARECORD_CONTINUE;
     }
     RETURN_STOP_A("can't trace JSOP_ARGSUB hard case");
