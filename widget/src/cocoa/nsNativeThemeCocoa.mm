@@ -232,10 +232,6 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // During shutdown, this is called outside the event loop;
-  // provide an autorelease pool to prevent cocoa object leakage.
-  nsAutoreleasePool localPool;
-
   [mPushButtonCell release];
   [mRadioButtonCell release];
   [mCheckboxCell release];
