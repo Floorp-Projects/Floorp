@@ -4088,22 +4088,6 @@ nsHttpChannel::Resume()
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsHttpChannel::GetOwner(nsISupports **owner)
-{
-    NS_ENSURE_ARG_POINTER(owner);
-    *owner = mOwner;
-    NS_IF_ADDREF(*owner);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetOwner(nsISupports *owner)
-{
-    mOwner = owner;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsHttpChannel::GetSecurityInfo(nsISupports **securityInfo)
 {
     NS_ENSURE_ARG_POINTER(securityInfo);

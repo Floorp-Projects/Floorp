@@ -242,6 +242,22 @@ HttpBaseChannel::GetURI(nsIURI **aURI)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetOwner(nsISupports **aOwner)
+{
+  NS_ENSURE_ARG_POINTER(aOwner);
+  *aOwner = mOwner;
+  NS_IF_ADDREF(*aOwner);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetOwner(nsISupports *aOwner)
+{
+  mOwner = aOwner;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks)
 {
   *aCallbacks = mCallbacks;
