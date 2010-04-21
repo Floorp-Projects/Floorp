@@ -4315,8 +4315,7 @@ nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionControl
   while (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION)) {
     nsITextControlFrame *tcf = do_QueryFrame(frame);
     if (tcf) {
-      NS_IF_ADDREF(*aSelCon = tcf->GetOwnedSelectionController());
-      return NS_OK;
+      return tcf->GetOwnedSelectionController(aSelCon);
     }
     frame = frame->GetParent();
   }

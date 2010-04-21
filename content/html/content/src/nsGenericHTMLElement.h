@@ -863,6 +863,8 @@ protected:
 
   void UpdateEditableFormControlState();
 
+  PRBool IsSingleLineTextControlInternal(PRBool aExcludePassword, PRInt32 mType) const;
+
   // The focusability state of this form control.  eUnfocusable means that it
   // shouldn't be focused at all, eInactiveWindow means it's in an inactive
   // window, eActiveWindow means it's in an active window.
