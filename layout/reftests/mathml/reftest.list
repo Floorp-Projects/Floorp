@@ -9,3 +9,11 @@
 == table-width-1.xhtml table-width-1-ref.xhtml
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
 == mathml-type-supported.xhtml mathml-type-supported-ref.xml
+!= mathcolor-1.mml mathcolor-1-ref.mml
+!= mathcolor-2.mml mathcolor-2-ref.mml
+!= mathcolor-3.mml mathcolor-3-ref.mml
+== mathcolor-4.mml mathcolor-4-ref.mml
+!= mathbackground-1.mml mathbackground-1-ref.mml
+!= mathbackground-2.mml mathbackground-2-ref.mml
+!= mathbackground-3.mml mathbackground-3-ref.mml
+== mathbackground-4.mml mathbackground-4-ref.mml
