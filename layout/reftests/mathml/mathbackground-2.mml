@@ -1,0 +1,7 @@
+<!-- test mathbackground on mstyle -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mstyle mathbackground="red">
+    <mtext>□■□■□■□</mtext>
+  </mstyle>
+</math>
+
