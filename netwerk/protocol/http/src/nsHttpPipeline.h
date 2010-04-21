@@ -107,7 +107,7 @@ private:
     nsCOMPtr<nsIInputStream>  mSendBufIn;
     nsCOMPtr<nsIOutputStream> mSendBufOut;
 
-    // the push back buffer.  not exceeding NS_HTTP_SEGMENT_SIZE bytes.
+    // the push back buffer.  not exceeding nsIOService::gDefaultSegmentSize bytes.
     char     *mPushBackBuf;
     PRUint32  mPushBackLen;
     PRUint32  mPushBackMax;

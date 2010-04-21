@@ -68,8 +68,7 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsNodeInfoManager)
 
-  nsrefcnt AddRef(void);
-  nsrefcnt Release(void);
+  NS_INLINE_DECL_REFCOUNTING(nsNodeInfoManager)
 
   /**
    * Initialize the nodeinfo manager with a document.
@@ -153,9 +152,6 @@ protected:
 private:
   static PRIntn NodeInfoInnerKeyCompare(const void *key1, const void *key2);
   static PLHashNumber GetNodeInfoInnerHashValue(const void *key);
-
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 
   PLHashTable *mNodeInfoHash;
   nsIDocument *mDocument; // WEAK

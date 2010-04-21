@@ -107,6 +107,7 @@ _TEST_FILES = \
   fibonacci_worker.js \
   test_newError.html \
   newError_worker.js \
+  test_chromeWorker.html \
   $(NULL)
 
 _SUBDIR_TEST_FILES = \
@@ -115,8 +116,17 @@ _SUBDIR_TEST_FILES = \
   relativeLoad_sub_import.js \
   $(NULL)
 
+_CHROME_TEST_FILES = \
+  test_chromeWorker.xul \
+  chromeWorker_worker.js \
+  chromeWorker_subworker.js \
+  $(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 libs:: $(_SUBDIR_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/subdir
+
+libs:: $(_CHROME_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

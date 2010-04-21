@@ -336,9 +336,19 @@ nsHTMLEditor::CreateEventListeners()
 {
   NS_ENSURE_TRUE(!mEventListener, NS_ERROR_ALREADY_INITIALIZED);
   mEventListener = do_QueryInterface(
-    static_cast<nsIDOMKeyListener*>(new nsHTMLEditorEventListener(this)));
+    static_cast<nsIDOMKeyListener*>(new nsHTMLEditorEventListener()));
   NS_ENSURE_TRUE(mEventListener, NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
+}
+
+nsresult
+nsHTMLEditor::InstallEventListeners()
+{
+  NS_ENSURE_TRUE(mDocWeak && mPresShellWeak && mEventListener,
+                 NS_ERROR_NOT_INITIALIZED);
+  nsHTMLEditorEventListener* listener =
+    reinterpret_cast<nsHTMLEditorEventListener*>(mEventListener.get());
+  return listener->Connect(this);
 }
 
 void

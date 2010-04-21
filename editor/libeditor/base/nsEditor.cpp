@@ -44,9 +44,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
-#include "nsIDOMEventTarget.h"
 #include "nsPIDOMEventTarget.h"
-#include "nsIEventListenerManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
@@ -60,12 +58,6 @@
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
-#include "nsIDOMEventListener.h"
-#include "nsIDOMEventGroup.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMTextListener.h"
-#include "nsIDOMCompositionListener.h"
 #include "nsIDOMHTMLBRElement.h"
 #include "nsIDocument.h"
 #include "nsITransactionManager.h"
@@ -318,7 +310,7 @@ nsEditor::CreateEventListeners()
 {
   NS_ENSURE_TRUE(!mEventListener, NS_ERROR_ALREADY_INITIALIZED);
   mEventListener = do_QueryInterface(
-    static_cast<nsIDOMKeyListener*>(new nsEditorEventListener(this)));
+    static_cast<nsIDOMKeyListener*>(new nsEditorEventListener()));
   NS_ENSURE_TRUE(mEventListener, NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
 }
@@ -328,127 +320,18 @@ nsEditor::InstallEventListeners()
 {
   NS_ENSURE_TRUE(mDocWeak && mPresShellWeak && mEventListener,
                  NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
-
-  if (!piTarget) {
-    RemoveEventListeners();
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult rv = NS_OK;
-
-  // register the event listeners with the listener manager
-  nsCOMPtr<nsIDOMEventGroup> sysGroup;
-  piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
-  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
-
-  if (sysGroup && elmP)
-  {
-    rv = elmP->AddEventListenerByType(mEventListener,
-                                      NS_LITERAL_STRING("keypress"),
-                                      NS_EVENT_FLAG_BUBBLE |
-                                      NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
-                                      sysGroup);
-    NS_ASSERTION(NS_SUCCEEDED(rv),
-                 "failed to register key listener in system group");
-  }
-
-  rv |= piTarget->AddEventListenerByIID(mEventListener,
-                                        NS_GET_IID(nsIDOMMouseListener));
-
-  if (elmP) {
-    // Focus event doesn't bubble so adding the listener to capturing phase.
-    // Make sure this works after bug 235441 gets fixed.
-    rv |= elmP->AddEventListenerByIID(mEventListener,
-                                      NS_GET_IID(nsIDOMFocusListener),
-                                      NS_EVENT_FLAG_CAPTURE);
-  }
-
-  rv |= piTarget->AddEventListenerByIID(mEventListener,
-                                        NS_GET_IID(nsIDOMTextListener));
-
-  rv |= piTarget->AddEventListenerByIID(mEventListener,
-                                        NS_GET_IID(nsIDOMCompositionListener));
-
-  nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(piTarget));
-  if (target) {
-    // See bug 455215, we cannot use the standard dragstart event yet
-    rv |= target->AddEventListener(NS_LITERAL_STRING("draggesture"),
-                                   mEventListener, PR_FALSE);
-    rv |= target->AddEventListener(NS_LITERAL_STRING("dragenter"),
-                                   mEventListener, PR_FALSE);
-    rv |= target->AddEventListener(NS_LITERAL_STRING("dragover"),
-                                   mEventListener, PR_FALSE);
-    rv |= target->AddEventListener(NS_LITERAL_STRING("dragleave"),
-                                   mEventListener, PR_FALSE);
-    rv |= target->AddEventListener(NS_LITERAL_STRING("drop"),
-                                   mEventListener, PR_FALSE);
-  }
-
-  if (NS_FAILED(rv))
-  {
-    NS_ERROR("failed to register some event listeners");
-
-    RemoveEventListeners();
-  }
-
-  return rv;
+  nsEditorEventListener* listener =
+    reinterpret_cast<nsEditorEventListener*>(mEventListener.get());
+  return listener->Connect(this);
 }
 
 void
 nsEditor::RemoveEventListeners()
 {
-  if (!mDocWeak || !mEventListener)
-  {
+  if (!mDocWeak || !mEventListener) {
     return;
   }
-
-  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
-
-  if (piTarget)
-  {
-    // unregister the event listeners with the DOM event target
-    nsCOMPtr<nsIEventListenerManager> elmP =
-      piTarget->GetListenerManager(PR_TRUE);
-    nsCOMPtr<nsIDOMEventGroup> sysGroup;
-    piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
-    if (sysGroup && elmP)
-    {
-      elmP->RemoveEventListenerByType(mEventListener,
-                                      NS_LITERAL_STRING("keypress"),
-                                      NS_EVENT_FLAG_BUBBLE |
-                                      NS_PRIV_EVENT_UNTRUSTED_PERMITTED,
-                                      sysGroup);
-    }
-
-    piTarget->RemoveEventListenerByIID(mEventListener,
-                                       NS_GET_IID(nsIDOMMouseListener));
-
-    elmP->RemoveEventListenerByIID(mEventListener,
-                                   NS_GET_IID(nsIDOMFocusListener),
-                                   NS_EVENT_FLAG_CAPTURE);
-
-    piTarget->RemoveEventListenerByIID(mEventListener,
-                                       NS_GET_IID(nsIDOMTextListener));
-
-    piTarget->RemoveEventListenerByIID(mEventListener,
-                                       NS_GET_IID(nsIDOMCompositionListener));
-
-    nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(piTarget));
-    if (target) {
-      target->RemoveEventListener(NS_LITERAL_STRING("draggesture"),
-                                  mEventListener, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("dragenter"),
-                                  mEventListener, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("dragover"),
-                                  mEventListener, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("dragleave"),
-                                  mEventListener, PR_FALSE);
-      target->RemoveEventListener(NS_LITERAL_STRING("drop"),
-                                  mEventListener, PR_FALSE);
-    }
-  }
+  reinterpret_cast<nsEditorEventListener*>(mEventListener.get())->Disconnect();
 }
 
 PRBool
@@ -2091,14 +1974,15 @@ nsEditor::ForceCompositionEnd()
 // We should use nsILookAndFeel to resolve this
 
 #if defined(XP_MAC) || defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2)
+  // XXXmnakano see bug 558976, ResetInputState() has two meaning which are
+  // "commit the composition" and "cursor is moved".  This method name is
+  // "ForceCompositionEnd", so, ResetInputState() should be used only for the
+  // former here.  However, ResetInputState() is also used for the latter here
+  // because even if we don't have composition, we call ResetInputState() on
+  // Linux.  Currently, nsGtkIMModule can know the timing of the cursor move,
+  // so, the latter meaning should be gone and we should remove this #if.
   if(! mInIMEMode)
     return NS_OK;
-#endif
-
-#ifdef XP_UNIX
-  if(IsPasswordEditor()) {
-    return NS_OK;
-  }
 #endif
 
   nsCOMPtr<nsIWidget> widget;

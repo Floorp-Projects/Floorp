@@ -35,7 +35,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.12 $ $Date: 2008/01/23 07:34:49 $';
+my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.13 $ $Date: 2010/03/26 22:06:47 $';
 use strict;
 
 my %constants;
@@ -101,9 +101,9 @@ while(<>) {
       $fields[2] = "\"" . $fields[2] . "\"";
     }
 
-    my $scratch = $fields[2];
-    $size = $scratch =~ s/[^"\n]//g; # should supposedly handle multilines, too..
-    $size += 1; # null terminate
+    my $scratch = eval($fields[2]);
+
+    $size = length($scratch) + 1; # null terminate
   }
 
   if( $fields[1] =~ /OCTAL/ ) {

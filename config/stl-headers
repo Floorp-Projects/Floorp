@@ -12,8 +12,17 @@
 # safety of <foo> for gcc and MSVC".
 #
 
+new
+
 # FIXME: these headers haven't been reviewed yet, but we use them
-# unsafely in modules/libpr0n, so we might as well prevent it from
+# unsafely in Gecko, so we might as well prevent them from
 # throwing exceptions
 algorithm
+deque
+iostream
+list
+map
+memory
+stack
+string
 vector

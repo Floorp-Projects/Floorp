@@ -98,11 +98,6 @@ extern PRLogModuleInfo *gHttpLog;
 #define LOG4_ENABLED() PR_LOG_TEST(gHttpLog, 4)
 #define LOG_ENABLED() LOG4_ENABLED()
 
-// http default buffer geometry
-#define NS_HTTP_SEGMENT_SIZE  4096
-#define NS_HTTP_SEGMENT_COUNT 16   // 64k maximum
-#define NS_HTTP_MAX_ODA_SIZE  (NS_HTTP_SEGMENT_SIZE * 4) // 16k
-
 // http version codes
 #define NS_HTTP_VERSION_UNKNOWN  0
 #define NS_HTTP_VERSION_0_9      9

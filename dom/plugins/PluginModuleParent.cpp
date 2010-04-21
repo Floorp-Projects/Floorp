@@ -547,10 +547,9 @@ PluginModuleParent::GetIdentifierForNPIdentifier(NPIdentifier aIdentifier)
             string.SetIsVoid(PR_TRUE);
         }
         ident = new PluginIdentifierParent(aIdentifier);
-        if (!SendPPluginIdentifierConstructor(ident, string, intval)) {
-            delete ident;
+        if (!SendPPluginIdentifierConstructor(ident, string, intval))
             return nsnull;
-        }
+
         mIdentifiers.Put(aIdentifier, ident);
     }
     return ident;
@@ -715,7 +714,8 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     }
 
     PluginInstanceParent* parentInstance =
-        new PluginInstanceParent(this, instance, mNPNIface);
+        new PluginInstanceParent(this, instance,
+                                 nsDependentCString(pluginType), mNPNIface);
 
     if (!parentInstance->Init()) {
         delete parentInstance;
@@ -784,5 +784,37 @@ PluginModuleParent::AnswerProcessSomeEvents()
     fflush(stderr);
 
     return true;
+}
+#endif
+
+#ifdef OS_MACOSX
+#define DEFAULT_REFRESH_MS 20 // CoreAnimation: 50 FPS
+void
+PluginModuleParent::AddToRefreshTimer(PluginInstanceParent *aInstance) {
+    if (mCATimerTargets.Contains(aInstance)) {
+        return;
+    }
+
+    mCATimerTargets.AppendElement(aInstance);
+    if (mCATimerTargets.Length() == 1) {
+        mCATimer.Start(base::TimeDelta::FromMilliseconds(DEFAULT_REFRESH_MS),
+                       this, &PluginModuleParent::CAUpdate);
+    }
+}
+
+void
+PluginModuleParent::RemoveFromRefreshTimer(PluginInstanceParent *aInstance) {
+    PRBool visibleRemoved = mCATimerTargets.RemoveElement(aInstance);
+    if (visibleRemoved && mCATimerTargets.IsEmpty()) {
+        mCATimer.Stop();
+    }
+}
+
+void
+PluginModuleParent::CAUpdate() {
+    nsTObserverArray<PluginInstanceParent*>::ForwardIterator iter(mCATimerTargets);
+    while (iter.HasMore()) {
+        iter.GetNext()->Invalidate();
+    }
 }
 #endif

@@ -40,6 +40,7 @@
 #include "nsString.h"
 #include "jArray.h"
 #include "nsHtml5Portability.h"
+#include "nsContentUtils.h"
 
 nsIAtom*
 nsHtml5Portability::newLocalNameFromBuffer(PRUnichar* buf, PRInt32 offset, PRInt32 length, nsHtml5AtomTable* interner)
@@ -182,12 +183,23 @@ nsHtml5Portability::literalEqualsString(const char* literal, nsString* string)
 jArray<PRUnichar,PRInt32>
 nsHtml5Portability::isIndexPrompt()
 {
-  // XXX making this localizable is bug 500631
-  const char* literal = "This is a searchable index. Insert your search keywords here: ";
-  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(62);
-  for (PRInt32 i = 0; i < 62; ++i) {
-    arr[i] = literal[i];
+  nsXPIDLString prompt;
+  nsresult rv =
+      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                         "IsIndexPrompt", prompt);
+  PRUint32 len = prompt.Length();
+  if (NS_FAILED(rv) || !len) {
+    // jArray doesn't support dynamically-allocated zero-length arrays
+    // and this method has no way to signal an error. Let's return
+    // the REPLACEMENT CHARACTER to avoid crashing on null pointer.
+    jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(1);
+    arr[0] = 0xFFFD;
+    return arr;
   }
+  jArray<PRUnichar,PRInt32> arr = jArray<PRUnichar,PRInt32>(len);
+  PRUnichar* arrAsPtr = arr;
+  const PRUnichar* strAsPtr = prompt.BeginReading();
+  memcpy(arrAsPtr, strAsPtr, len * sizeof(PRUnichar));
   return arr;
 }
 

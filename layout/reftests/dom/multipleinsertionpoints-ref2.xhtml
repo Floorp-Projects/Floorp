@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<bindings xmlns="http://www.mozilla.org/xbl"
+          xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <binding id="a">
+    <content>
+      <xhtml:div>
+        <children includes="span"/>
+      </xhtml:div>
+      <xhtml:div>
+        <children/>
+      </xhtml:div>
+    </content>
+  </binding>  
+</bindings>
+
+</head>
+
+<body>
+<div style="-moz-binding: url(#a);">
+  <div>3</div><span>1</span><div>4</div><span>2</span><div>5</div>
+</div>
+</body>
+</html>

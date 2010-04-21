@@ -90,10 +90,11 @@ EXTRA_COMPONENTS += nsPlacesAutoComplete.js
 endif
 
 EXTRA_JS_MODULES = \
-  utils.js \
   PlacesDBUtils.jsm \
   $(NULL)
 
-EXTRA_PP_JS_MODULES = utils.js
+EXTRA_PP_JS_MODULES = \
+  utils.js \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
