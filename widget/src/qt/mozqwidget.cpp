@@ -118,7 +118,9 @@ void MozQWidget::keyReleaseEvent(QKeyEvent* aEvent)
 
 void MozQWidget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* aEvent)
 {
-    mReceiver->mouseDoubleClickEvent(aEvent);
+    // Qt sends double click event, but not second press event.
+    mReceiver->OnButtonPressEvent(aEvent);
+    mReceiver->OnMouseDoubleClickEvent(aEvent);
 }
 
 void MozQWidget::mouseMoveEvent(QGraphicsSceneMouseEvent* aEvent)
