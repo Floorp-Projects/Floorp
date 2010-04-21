@@ -140,22 +140,6 @@ PrefStore.prototype = {
           break;
         case "string":
           this._prefs.setCharPref(values[i]["name"], values[i]["value"]);
-
-          // Notify the lightweight theme manager of the new value
-          if (values[i].name == "lightweightThemes.usedThemes") {
-            try {
-              let ltm = {};
-              Cu.import("resource://gre/modules/LightweightThemeManager.jsm", ltm);
-              ltm = ltm.LightweightThemeManager;
-              if (ltm.currentTheme) {
-                ltm.currentTheme = null;
-                ltm.currentTheme = ltm.usedThemes[0];
-              }
-            }
-            // LightweightThemeManager only exists in Firefox 3.6+
-            catch (ex) {}
-          }
-
           break;
         case "boolean":
           this._prefs.setBoolPref(values[i]["name"], values[i]["value"]);
@@ -164,6 +148,19 @@ PrefStore.prototype = {
           this._log.trace("Unexpected preference type: " + values[i]["type"]);
       }
     }
+
+    // Notify the lightweight theme manager of all the new values
+    try {
+      let ltm = {};
+      Cu.import("resource://gre/modules/LightweightThemeManager.jsm", ltm);
+      ltm = ltm.LightweightThemeManager;
+      if (ltm.currentTheme) {
+        ltm.currentTheme = null;
+        ltm.currentTheme = ltm.usedThemes[0];
+      }
+    }
+    // LightweightThemeManager only exists in Firefox 3.6+
+    catch (ex) {}
   },
 
   getAllIDs: function PrefStore_getAllIDs() {
