@@ -675,7 +675,7 @@ namespace nanojit
     // - Instruction size is always an integral multiple of word size.
     //
     // - Every instruction has at least one word, holding the opcode and the
-    //   reservation info.  That word is in class LIns.
+    //   reservation info ("SharedFields").  That word is in class LIns.
     //
     // - Beyond that, most instructions have 1, 2 or 3 extra words.  These
     //   extra words are in classes LInsOp1, LInsOp2, etc (collectively called
@@ -772,14 +772,14 @@ namespace nanojit
     class LIns
     {
     private:
-        // LastWord: fields shared by all LIns kinds.  The .inReg, .reg,
+        // SharedFields: fields shared by all LIns kinds.  The .inReg, .reg,
         // .inAr and .arIndex fields form a "reservation" that is used
         // temporarily during assembly to record information relating to
         // register allocation.  See class RegAlloc for more details.
         //
         // Note: all combinations of .inReg/.inAr are possible, ie. 0/0, 0/1,
         // 1/0, 1/1.
-        struct LastWord {
+        struct SharedFields {
             uint32_t inReg:1;       // if 1, 'reg' is active
             Register reg:7;
             uint32_t inAr:1;        // if 1, 'arIndex' is active
@@ -789,12 +789,20 @@ namespace nanojit
         };
 
         union {
-            LastWord lastWord;
+            SharedFields sharedFields;
             // Force sizeof(LIns)==8 and 8-byte alignment on 64-bit machines.
-            // This is necessary because sizeof(LastWord)==4 and we want all
+            // This is necessary because sizeof(SharedFields)==4 and we want all
             // instances of LIns to be pointer-aligned.
-            void* dummy;
+            void* wholeWord;
         };
+
+        inline void initSharedFields(LOpcode opcode)
+        {
+            // We must zero .inReg and .inAR, but zeroing the whole word is
+            // easier.  Then we set the opcode.
+            wholeWord = 0;
+            sharedFields.opcode = opcode;
+        }
 
         // LIns-to-LInsXYZ converters.
         inline LInsOp0* toLInsOp0() const;
@@ -829,7 +837,7 @@ namespace nanojit
         inline void initLInsN64(LOpcode opcode, int64_t imm64);
         inline void initLInsJtbl(LIns* index, uint32_t size, LIns** table);
 
-        LOpcode opcode() const { return lastWord.opcode; }
+        LOpcode opcode() const { return sharedFields.opcode; }
 
         // XXX: old reservation manipulating functions.  See bug 538924.
         // Replacement strategy:
@@ -838,8 +846,8 @@ namespace nanojit
         // - deprecated_getReg() --> getReg() after checking isInReg()
         //
         void deprecated_markAsClear() {
-            lastWord.inReg = 0;
-            lastWord.inAr = 0;
+            sharedFields.inReg = 0;
+            sharedFields.inAr = 0;
         }
         bool deprecated_hasKnownReg() {
             NanoAssert(isUsed());
@@ -847,11 +855,11 @@ namespace nanojit
         }
         Register deprecated_getReg() {
             NanoAssert(isUsed());
-            return ( isInReg() ? lastWord.reg : deprecated_UnknownReg );
+            return ( isInReg() ? sharedFields.reg : deprecated_UnknownReg );
         }
         uint32_t deprecated_getArIndex() {
             NanoAssert(isUsed());
-            return ( isInAr() ? lastWord.arIndex : 0 );
+            return ( isInAr() ? sharedFields.arIndex : 0 );
         }
 
         // Reservation manipulation.
@@ -859,35 +867,35 @@ namespace nanojit
             return isInReg() || isInAr();
         }
         bool isInReg() {
-            return lastWord.inReg;
+            return sharedFields.inReg;
         }
         bool isInRegMask(RegisterMask allow) {
             return isInReg() && (rmask(getReg()) & allow);
         }
         Register getReg() {
             NanoAssert(isInReg());
-            return lastWord.reg;
+            return sharedFields.reg;
         }
         void setReg(Register r) {
-            lastWord.inReg = 1;
-            lastWord.reg = r;
+            sharedFields.inReg = 1;
+            sharedFields.reg = r;
         }
         void clearReg() {
-            lastWord.inReg = 0;
+            sharedFields.inReg = 0;
         }
         bool isInAr() {
-            return lastWord.inAr;
+            return sharedFields.inAr;
         }
         uint32_t getArIndex() {
             NanoAssert(isInAr());
-            return lastWord.arIndex;
+            return sharedFields.arIndex;
         }
         void setArIndex(uint32_t arIndex) {
-            lastWord.inAr = 1;
-            lastWord.arIndex = arIndex;
+            sharedFields.inAr = 1;
+            sharedFields.arIndex = arIndex;
         }
         void clearArIndex() {
-            lastWord.inAr = 0;
+            sharedFields.inAr = 0;
         }
 
         // For various instruction kinds.
@@ -1360,39 +1368,29 @@ namespace nanojit
     LInsJtbl*LIns::toLInsJtbl()const { return (LInsJtbl*)(uintptr_t(this+1) - sizeof(LInsJtbl)); }
 
     void LIns::initLInsOp0(LOpcode opcode) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         NanoAssert(isLInsOp0());
     }
     void LIns::initLInsOp1(LOpcode opcode, LIns* oprnd1) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsOp1()->oprnd_1 = oprnd1;
         NanoAssert(isLInsOp1());
     }
     void LIns::initLInsOp2(LOpcode opcode, LIns* oprnd1, LIns* oprnd2) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsOp2()->oprnd_1 = oprnd1;
         toLInsOp2()->oprnd_2 = oprnd2;
         NanoAssert(isLInsOp2());
     }
     void LIns::initLInsOp3(LOpcode opcode, LIns* oprnd1, LIns* oprnd2, LIns* oprnd3) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsOp3()->oprnd_1 = oprnd1;
         toLInsOp3()->oprnd_2 = oprnd2;
         toLInsOp3()->oprnd_3 = oprnd3;
         NanoAssert(isLInsOp3());
     }
     void LIns::initLInsLd(LOpcode opcode, LIns* val, int32_t d, AccSet accSet) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsLd()->oprnd_1 = val;
         NanoAssert(d == int16_t(d));
         toLInsLd()->disp = int16_t(d);
@@ -1400,9 +1398,7 @@ namespace nanojit
         NanoAssert(isLInsLd());
     }
     void LIns::initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d, AccSet accSet) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsSti()->oprnd_1 = val;
         toLInsSti()->oprnd_2 = base;
         NanoAssert(d == int16_t(d));
@@ -1411,48 +1407,36 @@ namespace nanojit
         NanoAssert(isLInsSti());
     }
     void LIns::initLInsSk(LIns* prevLIns) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = LIR_skip;
+        initSharedFields(LIR_skip);
         toLInsSk()->prevLIns = prevLIns;
         NanoAssert(isLInsSk());
     }
     void LIns::initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsC()->args = args;
         toLInsC()->ci = ci;
         NanoAssert(isLInsC());
     }
     void LIns::initLInsP(int32_t arg, int32_t kind) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = LIR_paramp;
+        initSharedFields(LIR_paramp);
         NanoAssert(isU8(arg) && isU8(kind));
         toLInsP()->arg = arg;
         toLInsP()->kind = kind;
         NanoAssert(isLInsP());
     }
     void LIns::initLInsI(LOpcode opcode, int32_t imm32) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsI()->imm32 = imm32;
         NanoAssert(isLInsI());
     }
     void LIns::initLInsN64(LOpcode opcode, int64_t imm64) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsN64()->imm64_0 = int32_t(imm64);
         toLInsN64()->imm64_1 = int32_t(imm64 >> 32);
         NanoAssert(isLInsN64());
     }
     void LIns::initLInsJtbl(LIns* index, uint32_t size, LIns** table) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = LIR_jtbl;
+        initSharedFields(LIR_jtbl);
         toLInsJtbl()->oprnd_1 = index;
         toLInsJtbl()->table = table;
         toLInsJtbl()->size = size;
