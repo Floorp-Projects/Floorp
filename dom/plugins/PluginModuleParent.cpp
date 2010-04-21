@@ -771,8 +771,6 @@ bool
 PluginModuleParent::AnswerProcessSomeEvents()
 {
     PLUGIN_LOG_DEBUG(("Spinning mini nested loop ..."));
-    fprintf(stderr, "Spinning mini nested loop ...\n");
-    fflush(stderr);
 
     int i = 0;
     for (; i < kMaxChancesToProcessEvents; ++i)
@@ -780,8 +778,6 @@ PluginModuleParent::AnswerProcessSomeEvents()
             break;
 
     PLUGIN_LOG_DEBUG(("... quitting mini nested loop; processed %i tasks", i));
-    fprintf(stderr, "... quitting mini nested loop; processed %i tasks\n", i);
-    fflush(stderr);
 
     return true;
 }
