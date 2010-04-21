@@ -280,6 +280,25 @@ function getTopWindow(win)
              getInterface(Components.interfaces.nsIDOMWindow);
 }
 
+function mouseOnElement(element, expectedElement, focusChanged, testid)
+{
+  var expectedWindow = (element.ownerDocument.defaultView == gChildWindow) ? gChildWindow : window;
+  // on Mac, XUL elements are not focused when clicking, except for lists and textboxes.
+  var noFocusOnMouse = (expectedWindow == window && navigator.platform.indexOf("Mac") == 0);
+  if (noFocusOnMouse && element.localName != "listbox") {
+    // no focus so the last focus method will be 0
+    gLastFocusMethod = 0;
+    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+                     expectedWindow, null, true, testid);
+    gLastFocusMethod = fm.FLAG_BYMOUSE;
+  }
+  else {
+    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+                     element.ownerDocument.defaultView,
+                     expectedElement, focusChanged, testid);
+  }
+}
+
 function done()
 {
   var opener = window.opener;
@@ -293,7 +312,10 @@ function setFocusTo(id, fwindow)
 {
   gLastFocus = getById(id);
   gLastFocusWindow = fwindow;
-  gLastFocus.focus();
+  if (gLastFocus)
+    gLastFocus.focus();
+  else
+    fm.clearFocus(fwindow);
   gEvents = "";
 }
 
@@ -406,8 +428,13 @@ function startTest()
     if (element.localName == "area")
       continue;
 
-    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
-                     null, getById("t" + idx), true, "mouse on element t" + idx);
+    mouseOnElement(element, getById("t" + idx), true, "mouse on element t" + idx);
+    var expectedWindow = (element.ownerDocument.defaultView == gChildWindow) ? gChildWindow : window;
+    if (element.localName == "listbox" && expectedWindow == window &&
+        navigator.platform.indexOf("Mac") == 0) {
+      // after focusing a listbox on Mac, clear the focus before continuing.
+      setFocusTo(null, window);
+    }
   }
 
   is(t19.selectionStart, 0, "input focused from mouse selectionStart");
@@ -416,9 +443,9 @@ function startTest()
   // mouse clicking on elements that are not tabbable 
   for (idx = 1; idx <= kFocusSteps; idx++) {
     var element = getById("o" + (idx % 2 ? idx : idx - 1));
-    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
-                     element.ownerDocument.defaultView,
-                     element, idx % 2, "mouse on non-tabbable element o" + idx);
+
+    mouseOnElement(element, element, idx % 2,
+                   "mouse on non-tabbable element o" + idx);
   }
 
   // mouse clicking on elements that are not tabbable and have user-focus: none
@@ -427,9 +454,8 @@ function startTest()
   for (idx = 1; idx <= kNoFocusSteps; idx++) {
     var element = getById("n" + idx);
     gLastFocusMethod = idx % 2 ? 0 : fm.FLAG_BYMOUSE;
-    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
-                     element.ownerDocument.defaultView,
-                     idx % 2 ? null : element, true, "mouse on unfocusable element n" + idx);
+
+    mouseOnElement(element, idx % 2 ? null: element, true, "mouse on unfocusable element n" + idx);
   }
 
   if (idx == kOverflowElementIndex) {
@@ -554,8 +580,8 @@ function startTest()
   // ---- the following checks when the focus changes during a blur or focus event ----
 
   var o5 = $("o5");
-  var o7 = $("o7");
   var o9 = $("o9");
+  var t3 = $("t3");
   var t17 = getById("t17");
   var t19 = getById("t19");
   var shiftFocusParentDocument = function() o9.focus();
@@ -582,15 +608,15 @@ function startTest()
     var mod = (l == 1) ? " with mouse" : "";
 
     // an attempt is made to switch the focus from one element (o5) to another
-    // element (o7) within the same document, yet the focus is shifted to a
+    // element (t3) within the same document, yet the focus is shifted to a
     // third element (o9) in the same document during the blur event for the
     // first element.
-    trapBlur(o5, shiftFocusParentDocument, function () adjustFocus(o7));
+    trapBlur(o5, shiftFocusParentDocument, function () adjustFocus(t3));
     compareEvents("commandupdate: cu blur: o5 commandupdate: cu focus: o9",
                   window, o9, "change focus to sibling during element blur, attempted sibling" + mod);
 
     // similar, but the third element (t17) is in a child document
-    trapBlur(o9, shiftFocusChildDocument, function () adjustFocus(o7));
+    trapBlur(o9, shiftFocusChildDocument, function () adjustFocus(t3));
     compareEvents("commandupdate: cu blur: o9 blur: outer-document blur: outer-window " +
                   "focus: child-document focus: child-window commandupdate: cu focus: t17",
                   gChildWindow, t17, "change focus to child document during element blur, attempted sibling" + mod);
@@ -603,8 +629,8 @@ function startTest()
                   window, o9, "change focus to parent document during element blur, attempted sibling" + mod);
 
     // similar, but blur is called instead of switching focus
-    trapBlur(o7, shiftFocusParentDocument, function () o7.blur());
-    compareEvents("commandupdate: cu blur: o7 commandupdate: cu focus: o9",
+    trapBlur(t3, shiftFocusParentDocument, function () t3.blur());
+    compareEvents("commandupdate: cu blur: t3 commandupdate: cu focus: o9",
                   window, o9, "change focus to same document during clear focus" + mod);
 
     // check when an element in the same document is focused during the
@@ -612,8 +638,8 @@ function startTest()
     // child document. In this case, the focus in the parent document should be
     // what was set during the blur event, but the actual focus should still
     // move to the child document.
-    trapBlur(o7, shiftFocusParentDocument, function () adjustFocus(t17));
-    compareEvents("commandupdate: cu blur: o7 commandupdate: cu focus: o9 " +
+    trapBlur(t3, shiftFocusParentDocument, function () adjustFocus(t17));
+    compareEvents("commandupdate: cu blur: t3 commandupdate: cu focus: o9 " +
                   "blur: outer-document blur: outer-window " +
                   "focus: child-document focus: child-window commandupdate: cu focus: t17",
                   gChildWindow, t17, "change focus to sibling during element blur, attempted child" + mod);
@@ -621,22 +647,22 @@ function startTest()
        "change focus to sibling during element blur, attempted child, focused in parent" + mod);
 
     // similar, but with a parent
-    trapBlur(t19, shiftFocusChildDocument, function () adjustFocus(o7));
+    trapBlur(t19, shiftFocusChildDocument, function () adjustFocus(t3));
     compareEvents("commandupdate: cu blur: t19 commandupdate: cu focus: t17 " +
                   "blur: child-document blur: child-window " +
-                  "focus: outer-document focus: outer-window commandupdate: cu focus: o7",
-                  window, o7, "change focus to sibling during element blur, attempted parent" + mod);
+                  "focus: outer-document focus: outer-window commandupdate: cu focus: t3",
+                  window, t3, "change focus to sibling during element blur, attempted parent" + mod);
     is(fm.getFocusedElementForWindow(gChildWindow, false, {}), t17,
        "change focus to sibling during element blur, attempted child, focused in child" + mod);
 
     // similar, with a child, but the blur event focuses a child element also
-    trapBlur(o7, shiftFocusChildDocument, function () adjustFocus(t19));
-    compareEvents("commandupdate: cu blur: o7 blur: outer-document blur: outer-window " +
+    trapBlur(t3, shiftFocusChildDocument, function () adjustFocus(t19));
+    compareEvents("commandupdate: cu blur: t3 blur: outer-document blur: outer-window " +
                   "focus: child-document focus: child-window commandupdate: cu focus: t17",
                   gChildWindow, t17, "change focus to child during element blur, attempted child" + mod);
 
     // similar, with a parent, where the blur event focuses a parent element also
-    trapBlur(t17, shiftFocusParentDocument, function () adjustFocus(o7));
+    trapBlur(t17, shiftFocusParentDocument, function () adjustFocus(t3));
     compareEvents("commandupdate: cu blur: t17 blur: child-document blur: child-window " +
                   "focus: outer-document focus: outer-window commandupdate: cu focus: o9",
                   window, o9, "change focus to parent during element blur, attempted parent" + mod);
@@ -676,8 +702,8 @@ function startTest()
                 window, o9, "change focus to parent document during element focus");
 
   // clear the focus during the focus event
-  trapFocus(o7, function () fm.clearFocus(window));
-  compareEvents("commandupdate: cu blur: o9 commandupdate: cu focus: o7 commandupdate: cu blur: o7",
+  trapFocus(t3, function () fm.clearFocus(window));
+  compareEvents("commandupdate: cu blur: o9 commandupdate: cu focus: t3 commandupdate: cu blur: t3",
                 window, null, "clear focus during focus event");
 
   if (!gPartialTabbing)
@@ -767,9 +793,9 @@ function startTest()
   var t1 = getById("t1");
   t1.addEventListener("blur", function() t1.focus(), true);
   t1.focus();
-  var t2 = getById("t2");
-  synthesizeMouse(t2, 2, 2, { });
-  is(fm.focusedElement, t2, "focus during blur");
+  var t3 = getById("t3");
+  synthesizeMouse(t3, 2, 2, { });
+  is(fm.focusedElement, t3, "focus during blur");
 
   setFocusTo("t9", window);
   gLastFocusMethod = -1;
@@ -1057,7 +1083,7 @@ function modalWindowOpened(modalWindow)
 {
   var elem = modalWindow.document.getElementById("other");
   if (gPartialTabbing)
-     synthesizeMouse(elem, 4, 4, { }, modalWindow)
+    elem.focus();
   else
     pressTab();
   is(fm.activeWindow, modalWindow, "modal activeWindow");

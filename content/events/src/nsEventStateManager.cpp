@@ -2819,7 +2819,10 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             // focused frame
             EnsureDocument(mPresContext);
             if (mDocument) {
-              fm->ClearFocus(mDocument->GetWindow());
+#ifdef XP_MACOSX
+              if (!activeContent || !activeContent->IsXUL())
+#endif
+                fm->ClearFocus(mDocument->GetWindow());
               fm->SetFocusedWindow(mDocument->GetWindow());
             }
           }
@@ -3999,8 +4002,17 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
   }
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && aContent == fm->GetFocusedContent()) {
+  nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nsnull;
+  if (aContent == focusedContent) {
     aState |= NS_EVENT_STATE_FOCUS;
+
+    nsIDocument* doc = focusedContent->GetOwnerDoc();
+    if (doc) {
+      nsPIDOMWindow* window = doc->GetWindow();
+      if (window && window->ShouldShowFocusRing()) {
+        aState |= NS_EVENT_STATE_FOCUSRING;
+      }
+    }
   }
   if (aContent == mDragOverContent) {
     aState |= NS_EVENT_STATE_DRAGOVER;
@@ -4119,7 +4131,8 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     mHoverContent = aContent;
   }
 
-  if ((aState & NS_EVENT_STATE_FOCUS)) {
+  if (aState & NS_EVENT_STATE_FOCUS) {
+    aState |= NS_EVENT_STATE_FOCUSRING;
     notifyContent[2] = aContent;
     NS_IF_ADDREF(notifyContent[2]);
   }
