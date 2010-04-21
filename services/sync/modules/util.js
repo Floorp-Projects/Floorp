@@ -895,7 +895,6 @@ Svc.Obs = Observers;
  ["KeyFactory", "@mozilla.org/security/keyobjectfactory;1", "nsIKeyObjectFactory"],
  ["Login", "@mozilla.org/login-manager;1", "nsILoginManager"],
  ["Memory", "@mozilla.org/xpcom/memory-service;1", "nsIMemory"],
- ["Observer", "@mozilla.org/observer-service;1", "nsIObserverService"],
  ["Private", "@mozilla.org/privatebrowsing;1", "nsIPrivateBrowsingService"],
  ["Profiles", "@mozilla.org/toolkit/profile-service;1", "nsIToolkitProfileService"],
  ["Prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
