@@ -216,7 +216,7 @@ FormStore.prototype = {
 function FormTracker(name) {
   Tracker.call(this, name);
   Svc.Obs.add("form-notifier", this);
-  Svc.Observer.addObserver(this, "earlyformsubmit", false);
+  Svc.Obs.add("earlyformsubmit", this);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,

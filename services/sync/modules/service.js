@@ -269,12 +269,12 @@ WeaveSvc.prototype = {
                       "Weave, since it will not work correctly.");
     }
 
-    Svc.Observer.addObserver(this, "network:offline-status-changed", true);
-    Svc.Observer.addObserver(this, "private-browsing", true);
-    Svc.Observer.addObserver(this, "weave:service:sync:finish", true);
-    Svc.Observer.addObserver(this, "weave:service:sync:error", true);
-    Svc.Observer.addObserver(this, "weave:service:backoff:interval", true);
-    Svc.Observer.addObserver(this, "weave:engine:score:updated", true);
+    Svc.Obs.add("network:offline-status-changed", this);
+    Svc.Obs.add("private-browsing", this);
+    Svc.Obs.add("weave:service:sync:finish", this);
+    Svc.Obs.add("weave:service:sync:error", this);
+    Svc.Obs.add("weave:service:backoff:interval", this);
+    Svc.Obs.add("weave:engine:score:updated", this);
 
     if (!this.enabled)
       this._log.info("Weave Sync disabled");
@@ -522,7 +522,7 @@ WeaveSvc.prototype = {
       // to succeed, since that probably means we just don't have storage
       if (this.clusterURL == "" && !this._setCluster()) {
         Status.sync = NO_SYNC_NODE_FOUND;
-        Svc.Observer.notifyObservers(null, "weave:service:sync:delayed", "");
+        Svc.Obs.notify("weave:service:sync:delayed");
         return true;
       }
 
@@ -717,7 +717,7 @@ WeaveSvc.prototype = {
     this._checkSyncStatus();
     Svc.Prefs.set("autoconnect", false);
 
-    Svc.Observer.notifyObservers(null, "weave:service:logout:finish", "");
+    Svc.Obs.notify("weave:service:logout:finish");
   },
 
   _errorStr: function WeaveSvc__errorStr(code) {
