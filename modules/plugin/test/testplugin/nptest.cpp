@@ -89,9 +89,11 @@ NoteIntentionalCrash()
   }
 }
 
-void
+static void
 IntentionalCrash()
 {
+  NoteIntentionalCrash();
+
   int *pi = NULL;
   *pi = 55; // Crash dereferencing null pointer
   ++gCrashCount;
@@ -157,8 +159,8 @@ static bool hangPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount
 static bool getClipboardText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool callOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool reinitWidget(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool propertyAndMethod(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool propertyAndMethod(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -201,8 +203,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getClipboardText",
   "callOnDestroy",
   "reinitWidget",
-  "propertyAndMethod",
   "crashInNestedLoop",
+  "propertyAndMethod"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -246,8 +248,8 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getClipboardText,
   callOnDestroy,
   reinitWidget,
-  propertyAndMethod,
   crashPluginInNestedLoop,
+  propertyAndMethod
 };
 
 STATIC_ASSERT(ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -769,7 +771,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
       instanceData->npnNewStream = true;
     }
     if (strcmp(argn[i], "newcrash") == 0) {
-      NoteIntentionalCrash();
       IntentionalCrash();
     }
   }
@@ -849,14 +850,11 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
 NPError
 NPP_Destroy(NPP instance, NPSavedData** save)
 {
+  printf("NPP_Destroy\n");
   InstanceData* instanceData = (InstanceData*)(instance->pdata);
-  fprintf(stderr, "NPP_Destroy.  instanceData = %p\n", instanceData);
-  fflush(stderr);
 
-  if (instanceData->crashOnDestroy) {
-    NoteIntentionalCrash();
+  if (instanceData->crashOnDestroy)
     IntentionalCrash();
-  }
 
   if (instanceData->callOnDestroy) {
     NPVariant result;
@@ -2236,7 +2234,6 @@ streamTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant*
 static bool
 crashPlugin(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
 {
-  NoteIntentionalCrash();
   IntentionalCrash();
   VOID_TO_NPVARIANT(*result);
   return true;
