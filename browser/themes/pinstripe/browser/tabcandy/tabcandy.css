@@ -161,10 +161,34 @@ body {
 
 input.name{
   background: transparent;
-  border: 1px solid #ddd;
+  border: 1px solid transparent;
   color: #999;
   margin: 3px 0px 0px 3px;
   padding: 1px;
+  background-image: url(../img/edit-light.png);  
+  padding-left: 20px;
+}
+
+input.name:hover{
+  border: 1px solid #ddd;
+}
+
+input.name:focus{
+  color: #555;
+}
+
+input.defaultName{
+  font-style: italic !important;
+  background-image-opacity: .1;
+  color: transparent;
+}
+
+input.defaultName:hover{
+  color: #CCC;
+}
+
+.transparentBorder{
+  border: 1px solid transparent !important;  
 }
 
 /* Resizable

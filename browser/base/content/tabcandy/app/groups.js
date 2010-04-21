@@ -94,29 +94,36 @@ window.Group = function(listOfEls, options) {
   var titleUnfocus = function() {
     if(!self.getTitle()) {
       self.$title
-        .css({
-          fontStyle: 'italic',
-          backgroundImage: 'url(img/edit.png)',
-          paddingLeft: 15
-        })
-        .val('group name');
+        .addClass("defaultName")
+        .val(self.defaultName);
+    } else {
+      self.$title.css({"background":"none"})
+        .animate({"paddingLeft":1, "easing":"linear"}, 340);
     }
   };
+  
+  var handleKeyPress = function(e){
+    if( e.which == 13 ) { // return
+      self.$title.blur()
+        .addClass("transparentBorder")
+        .one("mouseout", function(){
+          self.$title.removeClass("transparentBorder");
+        });
+    }
+  }
   
   this.$title = $('.name', this.$titlebar)
     .css({backgroundRepeat: 'no-repeat'})
     .blur(titleUnfocus)
     .focus(function() {
+      self.$title.select();
       if(!self.getTitle()) {
         self.$title
-          .css({
-            fontStyle: 'normal',
-            backgroundImage: '',
-            paddingLeft: 0
-          })
+          .removeClass("defaultName")
           .val('');
       }
-    });
+    })
+    .keydown(handleKeyPress);
   
   titleUnfocus();
 
@@ -160,11 +167,14 @@ window.Group = function(listOfEls, options) {
 };
 
 // ----------
-window.Group.prototype = $.extend(new Item(), new Subscribable(), {  
+window.Group.prototype = $.extend(new Item(), new Subscribable(), {
+  // ----------
+  defaultName: "name this group...",
+  
   // ----------  
   getTitle: function() {
     var value = (this.$title ? this.$title.val() : '');
-    return (value == 'group name' ? '' : value);
+    return (value == this.defaultName ? '' : value);
   },
 
   // ----------  
