@@ -1651,8 +1651,8 @@ nsDOMWorker::CompileGlobalObject(JSContext* aCx)
                                 nsDOMWorkerFunctions::CTypesLazyGetter, nsnull,
                                 0);
     NS_ENSURE_TRUE(success, PR_FALSE);
-  }
 #endif
+  }
 
   // From here on out we have to remember to null mGlobal, mInnerScope, and
   // mScopeWN if something fails! We really don't need to hang on to mGlobal
