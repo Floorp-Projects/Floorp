@@ -1,0 +1,26 @@
+<html>
+<head>
+  <title>NPCocoaEventWindowFocusChanged Tests</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+
+<body onload="runTests()">
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    var gOtherWindow;
+
+    function runTests() {
+      // We have to have two top-level windows in play in order to run these tests.
+      gOtherWindow = window.open("cocoa_window_focus.html", "", "width=200,height=200");
+    }
+
+    function testsFinished() {
+      // Tests have finished running, close the new window and end tests.
+      gOtherWindow.close();
+      SimpleTest.finish();
+    }
+  </script>
+</body>
+</html>
