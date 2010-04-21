@@ -69,7 +69,6 @@ EXPORTS		= \
 		nsIScrollableFrame.h \
 		nsIStatefulFrame.h \
 		nsFrameSelection.h \
-		nsPluginUtilsOSX.h \
 		$(NULL)
 
 ifdef IBMBIDI

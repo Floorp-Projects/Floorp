@@ -151,7 +151,7 @@ function test_commitTransaction_no_transaction()
     msc.commitTransaction();
     do_throw("We should not get here!");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
+    do_check_eq(Cr.NS_ERROR_UNEXPECTED, e.result);
   }
   run_next_test();
 }
@@ -164,7 +164,7 @@ function test_rollbackTransaction_no_transaction()
     msc.rollbackTransaction();
     do_throw("We should not get here!");
   } catch (e) {
-    do_check_eq(Cr.NS_ERROR_FAILURE, e.result);
+    do_check_eq(Cr.NS_ERROR_UNEXPECTED, e.result);
   }
   run_next_test();
 }

@@ -38,11 +38,12 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(13a1b39e-72e5-442d-aa73-5905ffaf837b)]
+[scriptable, uuid(88e03453-a773-47ba-9d84-14f672ac99e2)]
 interface nsIPluginTag : nsISupports
 {
   readonly attribute AUTF8String description;
   readonly attribute AUTF8String filename;
+  readonly attribute AUTF8String fullpath;
   readonly attribute AUTF8String version;
   readonly attribute AUTF8String name;
            attribute boolean  disabled;

@@ -1,0 +1,43 @@
+<html class="reftest-wait">
+<head>
+
+<style>
+ colgroup#s { width: 200px; }
+</style>
+
+<script>
+function boom()
+{
+  document.body.offsetHeight;
+
+  var last = document.getElementById("last");
+  var parent = last.parentNode;
+
+  var colgroup = document.createElement("colgroup");
+  colgroup.setAttribute("id", "s");
+  parent.insertBefore(colgroup, last);
+
+  var newtbody = document.createElement("tbody");
+  var newrow = document.createElement("tr");
+  var newcell = document.createElement("td");
+  newcell.appendChild(document.createTextNode("cell 1,1"));
+  newrow.appendChild(newcell);
+  newcell = document.createElement("td");
+  newcell.appendChild(document.createTextNode("cell 1,2"));
+  newrow.appendChild(newcell);
+  newtbody.appendChild(newrow);
+  parent.insertBefore(newtbody, last);
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+</script>
+
+</head>
+<body onload="boom();">
+<table border="1">
+<colgroup></colgroup>
+<tbody id="last"><tr><td>cell 2,1</td><td>cell 2,2</td></tr></tbody>
+</table>
+</body>
+</html>

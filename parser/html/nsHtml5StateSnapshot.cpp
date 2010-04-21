@@ -134,7 +134,7 @@ nsHtml5StateSnapshot::isQuirks()
 }
 
 PRInt32 
-nsHtml5StateSnapshot::getListLength()
+nsHtml5StateSnapshot::getListOfActiveFormattingElementsLength()
 {
   return listOfActiveFormattingElements.length;
 }

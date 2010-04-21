@@ -72,9 +72,7 @@ CPPSRCS		= \
 		nsHTMLFrameElement.cpp \
 		nsHTMLFrameSetElement.cpp \
 		nsHTMLHRElement.cpp \
-		nsHTMLHeadElement.cpp \
 		nsHTMLHeadingElement.cpp \
-		nsHTMLHtmlElement.cpp \
 		nsHTMLIFrameElement.cpp \
 		nsHTMLImageElement.cpp \
 		nsHTMLInputElement.cpp \

@@ -1,0 +1,27 @@
+<html class="reftest-wait">
+<head>
+
+<script>
+function boom()
+{
+  document.body.offsetHeight;
+
+  var parent = document.getElementById("body");
+
+  var newdiv = document.createElement("div");
+  newdiv.appendChild(document.createTextNode("5"));
+  parent.appendChild(newdiv);
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+</script>
+
+</head>
+<body id="body" onload="boom();">
+<div>1</div>
+<div>2</div>
+<div>3</div>
+<div>4</div>
+</body>
+</html>

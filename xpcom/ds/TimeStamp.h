@@ -56,7 +56,8 @@ class TimeStamp;
  * system-dependent unit must be constant, otherwise the semantics of
  * this class would be broken.
  */
-class NS_COM TimeDuration {
+class NS_COM TimeDuration
+{
 public:
   // The default duration is 0.
   TimeDuration() : mValue(0) {}
@@ -155,7 +156,8 @@ private:
  *   - PRIntervalTime otherwise.  We detect wraparounds of
  *     PRIntervalTime and work around them.
  */
-class NS_COM TimeStamp {
+class NS_COM TimeStamp
+{
 public:
   /**
    * Initialize to the "null" moment

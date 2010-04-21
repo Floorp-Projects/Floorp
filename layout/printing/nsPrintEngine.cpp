@@ -2061,6 +2061,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   // the furthest
   if (mPrt->mShrinkToFit && documentIsTopLevel) {
     nsIPageSequenceFrame* pageSequence = aPO->mPresShell->GetPageSequenceFrame();
+    NS_ENSURE_STATE(pageSequence);
     pageSequence->GetSTFPercent(aPO->mShrinkRatio);
   }
 
