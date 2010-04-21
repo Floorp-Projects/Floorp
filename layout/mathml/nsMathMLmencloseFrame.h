@@ -75,7 +75,6 @@ enum nsMencloseNotation
     NOTATION_DOWNDIAGONALSTRIKE = 0x200,
     NOTATION_VERTICALSTRIKE = 0x400,
     NOTATION_HORIZONTALSTRIKE = 0x800
-    // NOTATION_MADRUWB = 0x1000
   };
 
 class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
