@@ -355,8 +355,6 @@ PluginModuleChild::DetectNestedEventLoop(gpointer data)
                       "not canceled before returning to main event loop!");
 
     PLUGIN_LOG_DEBUG(("Detected nested glib event loop"));
-    fprintf(stderr, "Detected nested glib event loop\n");
-    fflush(stderr);
 
     // just detected a nested loop; start a timer that will
     // periodically rpc-call back into the browser and process some
@@ -379,9 +377,6 @@ PluginModuleChild::ProcessBrowserEvents(gpointer data)
 
     NS_ABORT_IF_FALSE(pmc->mTopLoopDepth < g_main_depth(),
                       "not canceled before returning to main event loop!");
-
-    fprintf(stderr, "Time to process browser events\n");
-    fflush(stderr);
 
     pmc->CallProcessSomeEvents();
 
