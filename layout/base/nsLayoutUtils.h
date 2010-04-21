@@ -1157,6 +1157,29 @@ public:
 
   static SurfaceFromElementResult SurfaceFromElement(nsIDOMElement *aElement,
                                                      PRUint32 aSurfaceFlags = 0);
+
+  /**
+   * When the document is editable by contenteditable attribute of its root
+   * content or body content.
+   *
+   * Be aware, this returns NULL if it's in designMode.
+   *
+   * For example:
+   *
+   *  <html contenteditable="true"><body></body></html>
+   *    returns the <html>.
+   *
+   *  <html><body contenteditable="true"></body></html>
+   *  <body contenteditable="true"></body>
+   *    With these cases, this returns the <body>.
+   *    NOTE: The latter case isn't created normally, however, it can be
+   *          created by script with XHTML.
+   *
+   *  <body><p contenteditable="true"></p></body>
+   *    returns NULL because <body> isn't editable.
+   */
+  static nsIContent*
+    GetEditableRootContentByContentEditable(nsIDocument* aDocument);
 };
 
 class nsSetAttrRunnable : public nsRunnable
