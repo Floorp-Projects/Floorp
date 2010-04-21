@@ -121,8 +121,8 @@ class UpRecursiveSlotMap : public RecursiveSlotMap
 };
 
 #if defined DEBUG
-static JS_REQUIRES_STACK void
-AssertDownFrameIsConsistent(JSContext* cx, VMSideExit* anchor, FrameInfo* fi)
+JS_REQUIRES_STACK void
+TraceRecorder::assertDownFrameIsConsistent(VMSideExit* anchor, FrameInfo* fi)
 {
     JS_ASSERT(anchor->recursive_down);
     JS_ASSERT(anchor->recursive_down->callerHeight == fi->callerHeight);
@@ -130,7 +130,7 @@ AssertDownFrameIsConsistent(JSContext* cx, VMSideExit* anchor, FrameInfo* fi)
     unsigned downPostSlots = fi->callerHeight;
     TraceType* typeMap = fi->get_typemap();
 
-    CaptureStackTypes(cx, 1, typeMap);
+    captureStackTypes(1, typeMap);
     const TraceType* m1 = anchor->recursive_down->get_typemap();
     for (unsigned i = 0; i < downPostSlots; i++) {
         if (m1[i] == typeMap[i])
@@ -258,7 +258,7 @@ TraceRecorder::upRecursion()
          * recursive functions.
          */
 #if defined DEBUG
-        AssertDownFrameIsConsistent(cx, anchor, fi);
+        assertDownFrameIsConsistent(anchor, fi);
 #endif
         fi = anchor->recursive_down;
     } else if (recursive_pc != fragment->root->ip) {
@@ -266,7 +266,7 @@ TraceRecorder::upRecursion()
          * Case 1: Guess that down-recursion has to started back out, infer types
          * from the down frame.
          */
-        CaptureStackTypes(cx, 1, fi->get_typemap());
+        captureStackTypes(1, fi->get_typemap());
     } else {
         /* Case 2: Guess that up-recursion is backing out, infer types from our Tree. */
         JS_ASSERT(tree->nStackTypes == downPostSlots + 1);
@@ -491,7 +491,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     TraceType* typeMap = exit->stackTypeMap();
     jsbytecode* oldpc = cx->fp->regs->pc;
     cx->fp->regs->pc = exit->pc;
-    CaptureStackTypes(cx, frameDepth, typeMap);
+    captureStackTypes(frameDepth, typeMap);
     cx->fp->regs->pc = oldpc;
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
         JS_ASSERT_IF(*cx->fp->regs->pc != JSOP_RETURN, *cx->fp->regs->pc == JSOP_STOP);
