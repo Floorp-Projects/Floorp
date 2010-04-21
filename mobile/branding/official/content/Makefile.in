@@ -14,6 +14,7 @@ LINUX_BRANDING_FILES = \
 	fennec_26x26.png \
 	fennec_40x40.png \
 	fennec_48x48.png \
+	fennec_72x72.png \
 	fennec_scalable.png \
 	fennec_maemo_icon26.txt \
 	$(NULL)
