@@ -103,6 +103,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/TimeStamp.h"
 
 using namespace mozilla;
 
@@ -301,6 +302,8 @@ void XXXNeverCalled()
     Mutex theMutex("dummy");
     Monitor theMonitor("dummy2");
     CondVar theCondVar(theMutex, "dummy3");
+    TimeStamp theTimeStamp;
+    TimeDuration theTimeDuration;
 
     NS_WildCardValid((const char *)nsnull);
     NS_WildCardValid((const PRUnichar *)nsnull);
