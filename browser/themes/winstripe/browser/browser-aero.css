@@ -49,23 +49,22 @@
     background-color: white;
   }
 
-  #TabsToolbar:not(:-moz-lwtheme) {
-    margin-bottom: 0;
-    -moz-box-shadow: ThreeDDarkShadow 0 -1px inset;
-  }
-
   .tabbrowser-tab:not(:-moz-lwtheme),
-  .tabbrowser-arrowscrollbox > .scrollbutton-up:not(:-moz-lwtheme),
-  .tabbrowser-arrowscrollbox > .scrollbutton-down:not(:-moz-lwtheme),
-  .tabs-newtab-button:not(:-moz-lwtheme),
-  .tabs-alltabs-button:not(:-moz-lwtheme) {
-    background-color: rgba(255,255,255,.5);
+  .tabbrowser-arrowscrollbox > .tabs-newtab-button:not(:-moz-lwtheme) {
+    background-image: -moz-linear-gradient(left, transparent, transparent 1px,
+                                                 rgba(255,255,255,.4) 1px, rgba(255,255,255,.4));
     text-shadow: 0 1px 0 rgba(255,255,255,.4);
   }
 
+  .tabbrowser-tab:not(:-moz-lwtheme):not([selected="true"]):hover,
+  .tabbrowser-arrowscrollbox > .tabs-newtab-button:not(:-moz-lwtheme):hover {
+    background-image: -moz-linear-gradient(left, transparent, transparent 1px,
+                                                 rgba(255,255,255,.6) 1px, rgba(255,255,255,.6));
+  }
+
   .tabbrowser-tab[selected="true"]:not(:-moz-lwtheme) {
-    background-color: white;
-    text-shadow: none;
+    background-image: -moz-linear-gradient(left, transparent, transparent 1px,
+                                                 white 1px, white);
   }
 
   #allTabs-panel,

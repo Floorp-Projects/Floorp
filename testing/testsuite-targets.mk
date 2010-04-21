@@ -48,7 +48,8 @@ endif
 SYMBOLS_PATH := --symbols-path=$(DIST)/crashreporter-symbols
 
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] mochitest*|.
-mochitest:: mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins
+MOCHITESTS := mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins
+mochitest:: $(MOCHITESTS)
 
 RUN_MOCHITEST = \
 	rm -f ./$@.log && \
@@ -103,6 +104,8 @@ jstestbrowser: TEST_PATH=js/src/tests/jstests.list
 jstestbrowser:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) --extra-profile-file=$(topsrcdir)/js/src/tests/user.js)
 	$(CHECK_TEST_ERROR)
+
+GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
 
 # Execute all xpcshell tests in the directories listed in the manifest.
 # See also config/rules.mk 'xpcshell-tests' target for local execution.

@@ -424,10 +424,10 @@ class nsHashKey;
 #define NS_SIMPLE_GESTURE_TAP            (NS_SIMPLE_GESTURE_EVENT_START+7)
 #define NS_SIMPLE_GESTURE_PRESSTAP       (NS_SIMPLE_GESTURE_EVENT_START+8)
 
-// Plug-in event. This is used when a plug-in has focus and when the native
-// event needs to be passed to the focused plug-in directly.
+// These are used to send events to plugins.
 #define NS_PLUGIN_EVENT_START   3600
-#define NS_PLUGIN_EVENT         (NS_PLUGIN_EVENT_START)
+#define NS_PLUGIN_EVENT                 (NS_PLUGIN_EVENT_START)
+#define NS_NON_RETARGETED_PLUGIN_EVENT  (NS_PLUGIN_EVENT_START+1)
 
 // Events to manipulate selection (nsSelectionEvent)
 #define NS_SELECTION_EVENT_START        3700
@@ -1444,6 +1444,9 @@ enum nsDragDropEventStatus {
 #define NS_IS_PLUGIN_EVENT(evnt) \
        (((evnt)->message == NS_PLUGIN_EVENT))
 
+#define NS_IS_NON_RETARGETED_PLUGIN_EVENT(evnt) \
+       (((evnt)->message == NS_NON_RETARGETED_PLUGIN_EVENT))
+
 #define NS_IS_TRUSTED_EVENT(event) \
   (((event)->flags & NS_EVENT_FLAG_TRUSTED) != 0)
 
@@ -1648,7 +1651,8 @@ inline PRBool NS_IsEventUsingCoordinates(nsEvent* aEvent)
 {
   return !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_RELATED_EVENT(aEvent) &&
          !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_ACTIVATION_EVENT(aEvent) &&
-         !NS_IS_PLUGIN_EVENT(aEvent) && !NS_IS_CONTENT_COMMAND_EVENT(aEvent) &&
+         !NS_IS_PLUGIN_EVENT(aEvent) && !NS_IS_NON_RETARGETED_PLUGIN_EVENT(aEvent) &&
+         !NS_IS_CONTENT_COMMAND_EVENT(aEvent) &&
          aEvent->eventStructType != NS_ACCESSIBLE_EVENT;
 }
 

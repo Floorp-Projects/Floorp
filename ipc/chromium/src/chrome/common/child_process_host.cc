@@ -120,7 +120,10 @@ bool ChildProcessHost::Send(IPC::Message* msg) {
 
 void ChildProcessHost::Notify(NotificationType type) {
 #ifdef CHROMIUM_MOZILLA_BUILD
-  ChromeThread::GetMessageLoop(ChromeThread::IO)->PostTask(
+  MessageLoop* loop = ChromeThread::GetMessageLoop(ChromeThread::IO);
+  if (!loop)
+      loop = MessageLoop::current();
+  loop->PostTask(
 #else
   resource_dispatcher_host_->ui_loop()->PostTask(
 #endif

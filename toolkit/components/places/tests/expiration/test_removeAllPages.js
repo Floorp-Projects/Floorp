@@ -44,14 +44,9 @@
  * annos.
  */
 
-let os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
-let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
-let as = Cc["@mozilla.org/browser/annotation-service;1"].
-         getService(Ci.nsIAnnotationService);
+let hs = PlacesUtils.history;
+let bs = PlacesUtils.bookmarks;
+let as = PlacesUtils.annotations;
 
 /**
  * Creates an aged annotation.
@@ -77,19 +72,27 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
     as.setItemAnnotation(aIdentifier, aName, aValue, 0, aExpirePolicy);
     // Update dateAdded for the last added annotation.
     sql = "UPDATE moz_items_annos SET dateAdded = :expire_date, lastModified = :last_modified " +
-          "WHERE id = (SELECT id FROM moz_items_annos " +
-                      "WHERE item_id = :id " +
-                      "ORDER BY dateAdded DESC LIMIT 1)";
+          "WHERE id = ( " +
+            "SELECT a.id FROM moz_items_annos a " +
+            "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
+            "WHERE a.item_id = :id " +
+              "AND n.name = :anno_name " +
+            "ORDER BY a.dateAdded DESC LIMIT 1 " +
+          ")";
   }
   else if (aIdentifier instanceof Ci.nsIURI){
     // Page annotation.
     as.setPageAnnotation(aIdentifier, aName, aValue, 0, aExpirePolicy);
     // Update dateAdded for the last added annotation.
     sql = "UPDATE moz_annos SET dateAdded = :expire_date, lastModified = :last_modified " +
-          "WHERE id = (SELECT a.id FROM moz_annos a " +
-                      "LEFT JOIN moz_places_view h on h.id = a.place_id " +
-                      "WHERE h.url = :id " +
-                      "ORDER BY a.dateAdded DESC LIMIT 1)";
+          "WHERE id = ( " +
+            "SELECT a.id FROM moz_annos a " +
+            "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
+            "JOIN moz_places_view h on h.id = a.place_id " +
+            "WHERE h.url = :id " +
+            "AND n.name = :anno_name " +
+            "ORDER BY a.dateAdded DESC LIMIT 1 " +
+          ")";
   }
   else
     do_throw("Wrong identifier type");
@@ -99,6 +102,7 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
                                                      : aIdentifier.spec;
   stmt.params.expire_date = expireDate;
   stmt.params.last_modified = lastModifiedDate;
+  stmt.params.anno_name = aName;
   try {
     stmt.executeStep();
   }
@@ -154,7 +158,7 @@ function run_test() {
   // Observe expirations.
   observer = {
     observe: function(aSubject, aTopic, aData) {
-      os.removeObserver(observer, TOPIC_EXPIRATION_FINISHED);
+      Services.obs.removeObserver(observer, TOPIC_EXPIRATION_FINISHED);
 
       ["expire_days", "expire_weeks", "expire_months", "expire_session",
        "expire"].forEach(function(aAnno) {
@@ -185,7 +189,7 @@ function run_test() {
       do_test_finished();
     }
   };
-  os.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+  Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
 
   // Expire all visits for the bookmarks.
   hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();

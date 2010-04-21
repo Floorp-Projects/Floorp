@@ -1583,18 +1583,21 @@ nsEventStatus nsWindow::OnGestureEvent(QGestureEvent *event, PRBool &handled)
         if (pinch->state() == Qt::GestureStarted) {
             mozGesture.message = NS_SIMPLE_GESTURE_MAGNIFY_START;
             mozGesture.delta = 0.0;
-            mLastPinchDistance = mTouchPointDistance;
             event->accept();
         }
         else if (pinch->state() == Qt::GestureUpdated) {
             mozGesture.message = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
-            //-1 because zoom in is positive
-            mozGesture.delta = -1.0 * (mLastPinchDistance - mTouchPointDistance);
-            mLastPinchDistance = mTouchPointDistance;
+            mozGesture.delta = mTouchPointDistance - mLastPinchDistance;
+        }
+        else if (pinch->state() == Qt::GestureFinished) {
+            mozGesture.message = NS_SIMPLE_GESTURE_MAGNIFY;
+            mozGesture.delta = 0.0;
         }
         else {
             handled = PR_FALSE;
         }
+
+        mLastPinchDistance = mTouchPointDistance;
     }
 
     if (handled) {
@@ -1898,11 +1901,7 @@ nsWindow::GetToplevelWidget(MozQWidget **aWidget)
 void *
 nsWindow::SetupPluginPort(void)
 {
-    if (!mWidget)
-        return nsnull;
-
-    qDebug("FIXME:>>>>>>Func:%s::%d\n", __PRETTY_FUNCTION__, __LINE__);
-
+    NS_WARNING("Not implemented");
     return nsnull;
 }
 

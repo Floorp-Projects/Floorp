@@ -526,10 +526,6 @@ hr[size="1"] {
   border-style: solid none none none;
 }
 
-*|*:-moz-any-link img, img[usemap], object[usemap] {
-  border: 2px solid;
-}
-
 img:-moz-broken::before, input:-moz-broken::before,
 img:-moz-user-disabled::before, input:-moz-user-disabled::before,
 img:-moz-loading::before, input:-moz-loading::before,

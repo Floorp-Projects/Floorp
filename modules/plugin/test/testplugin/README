@@ -4,6 +4,12 @@
 
 The test plugin registers itself for the MIME type "application/x-test".
 
+== Event Model ==
+
+* getEventModel()
+Returns the NPAPI event model in use. On platforms without event models,
+simply returns 0;
+
 == Rendering ==
 
 By default, the plugin fills its rectangle with gray, with a black border, and
@@ -31,6 +37,17 @@ returns true if it succeeds and false if it doesn't. It should never succeed.
 * convertPointY(sourceSpace, sourceX, sourceY, destSpace)
 The plugin uses NPN_ConvertPoint to convert sourceX and sourceY from the source
 to dest space and returns the X or Y result based on the call.
+
+== NPCocoaEventWindowFocusChanged ==
+
+* getTopLevelWindowActivationState()
+Returns the activation state for the top-level window as set by the last
+NPCocoaEventWindowFocusChanged event. Returns true for active, false for
+inactive, and throws an exception if the state is unknown (uninitialized).
+
+* getTopLevelWindowActivationEventCount()
+Returns the number of NPCocoaEventWindowFocusChanged events received by
+the instance.
 
 == NPRuntime testing ==
 

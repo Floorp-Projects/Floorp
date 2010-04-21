@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIOService.h"
 #include "nsBinHexDecoder.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamConverterService.h"
@@ -51,11 +52,6 @@
 #include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
 
-
-#define DATA_BUFFER_SIZE (4096*2)
-
-#define NS_STREAM_CONVERTER_SEGMENT_SIZE   (4*1024)
-#define NS_STREAM_CONVERTER_BUFFER_SIZE    (32*1024)
 
 // sadly I couldn't find char defintions for CR LF elsehwere in the code (they are defined as strings in nsCRT.h)
 #define CR  '\015'
@@ -98,7 +94,7 @@ NS_INTERFACE_MAP_END
 
 // The binhex 4.0 decoder table....
 
-static char binhex_decode[256] =
+static signed char binhex_decode[256] =
 {
   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -167,7 +163,7 @@ nsBinHexDecoder::OnDataAvailable(nsIRequest* request,
     PRUint32 numBytesRead = 0;
     while (aCount > 0) // while we still have bytes to copy...
     {
-      aStream->Read(mDataBuffer, PR_MIN(aCount, DATA_BUFFER_SIZE - 1), &numBytesRead);
+      aStream->Read(mDataBuffer, PR_MIN(aCount, nsIOService::gDefaultSegmentSize - 1), &numBytesRead);
       if (aCount >= numBytesRead)
         aCount -= numBytesRead; // subtract off the number of bytes we just read
       else
@@ -276,7 +272,7 @@ nsresult nsBinHexDecoder::ProcessNextState(nsIRequest * aRequest, nsISupports * 
 
         mInCRC = 1;
       }
-      else if (mPosOutputBuff >= DATA_BUFFER_SIZE)
+      else if (mPosOutputBuff >= (PRInt32) nsIOService::gDefaultSegmentSize)
       {
         if (mState == BINHEX_STATE_DFORK)
         {
@@ -483,14 +479,14 @@ nsBinHexDecoder::OnStartRequest(nsIRequest* request, nsISupports *aCtxt)
 
   NS_ENSURE_TRUE(mNextListener, NS_ERROR_FAILURE);
 
-  mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
-  mOutgoingBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
+  mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * nsIOService::gDefaultSegmentSize));
+  mOutgoingBuffer = (char *) nsMemory::Alloc((sizeof(char) * nsIOService::gDefaultSegmentSize));
   if (!mDataBuffer || !mOutgoingBuffer) return NS_ERROR_FAILURE; // out of memory;
 
   // now we want to create a pipe which we'll use to write our converted data...
   rv = NS_NewPipe(getter_AddRefs(mInputStream), getter_AddRefs(mOutputStream),
-                  NS_STREAM_CONVERTER_SEGMENT_SIZE,
-                  NS_STREAM_CONVERTER_BUFFER_SIZE,
+                  nsIOService::gDefaultSegmentSize,
+                  nsIOService::gDefaultSegmentSize,
                   PR_TRUE, PR_TRUE);
 
   // don't propagate the on start request to mNextListener until we have determined the content type.
