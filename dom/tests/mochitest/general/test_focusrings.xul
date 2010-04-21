@@ -42,7 +42,9 @@ function runTest()
   // the test regardless of which user input last occured.
   var expectedVisible = (!isWin || getComputedStyle($("l1"), "").outlineWidth == "2px");
 
-  checkFocus($("l1"), expectedVisible, "appearance on list after focus() with :moz-focusring");
+  var listExpectedVisible = isMac ? false: expectedVisible;
+
+  checkFocus($("l1"), listExpectedVisible, "appearance on list after focus() with :moz-focusring");
   $("l2").focus();
 
   checkFocus($("l2"), true, "appearance on list after focus() with :focus");
@@ -50,7 +52,7 @@ function runTest()
   is(getComputedStyle($("l1"), "").outlineWidth, "0px", "appearance on previous list after focus() with :focus");
 
   synthesizeMouse($("l1"), 4, 4, { });
-  checkFocus($("l1"), expectedVisible, "appearance on list after mouse focus with :moz-focusring");
+  checkFocus($("l1"), listExpectedVisible, "appearance on list after mouse focus with :moz-focusring");
   synthesizeMouse($("l2"), 4, 4, { });
   checkFocus($("l2"), true, "appearance on list after mouse focus with :focus");
 
