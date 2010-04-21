@@ -18,6 +18,7 @@ HTTP(..) == text-control-baseline-1.html text-control-baseline-1-ref.html
 != textarea-in-ltr-doc-scrollbar.html textarea-in-rtl-doc-scrollbar.html
 != textarea-ltr.html textarea-no-resize.html
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != textarea-rtl.html textarea-no-resize.html # bug 558201
+== textarea-setvalue-framereconstruction-1.html textarea-setvalue-framereconstruction-ref.html
 
 == radio-label-dynamic.html radio-label-dynamic-ref.html
 == out-of-bounds-selectedindex.html out-of-bounds-selectedindex-ref.html # test for bug 471741

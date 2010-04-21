@@ -134,7 +134,6 @@ extern nsIParserService *sParserService;
 nsEditor::nsEditor()
 :  mModCount(0)
 ,  mPresShellWeak(nsnull)
-,  mViewManager(nsnull)
 ,  mUpdateCount(0)
 ,  mSpellcheckCheckboxState(eTriUnset)
 ,  mPlaceHolderTxn(nsnull)
@@ -166,8 +165,6 @@ nsEditor::~nsEditor()
   mTxnMgr = nsnull;
 
   delete mPhonetic;
- 
-  NS_IF_RELEASE(mViewManager);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEditor)
@@ -252,7 +249,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 
   mViewManager = ps->GetViewManager();
   if (!mViewManager) {return NS_ERROR_NULL_POINTER;}
-  NS_ADDREF(mViewManager);
 
   mUpdateCount=0;
 
@@ -280,6 +276,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 #endif
 
   NS_POSTCONDITION(mDocWeak && mPresShellWeak, "bad state");
+
+  // Make sure that the editor will be destroyed properly
+  mDidPreDestroy = PR_FALSE;
 
   return NS_OK;
 }
@@ -318,7 +317,9 @@ nsEditor::PostCreate()
 nsresult
 nsEditor::CreateEventListeners()
 {
-  NS_ENSURE_TRUE(!mEventListener, NS_ERROR_ALREADY_INITIALIZED);
+  // Don't create the handler twice
+  if (mEventListener)
+    return NS_OK;
   mEventListener = do_QueryInterface(
     static_cast<nsIDOMKeyListener*>(new nsEditorEventListener()));
   NS_ENSURE_TRUE(mEventListener, NS_ERROR_OUT_OF_MEMORY);
