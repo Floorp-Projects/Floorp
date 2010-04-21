@@ -302,8 +302,8 @@ void XXXNeverCalled()
     Mutex theMutex("dummy");
     Monitor theMonitor("dummy2");
     CondVar theCondVar(theMutex, "dummy3");
-    TimeStamp theTimeStamp;
-    TimeDuration theTimeDuration;
+    TimeStamp theTimeStamp = TimeStamp::Now();
+    TimeDuration theTimeDuration = TimeDuration::FromMilliseconds(0);
 
     NS_WildCardValid((const char *)nsnull);
     NS_WildCardValid((const PRUnichar *)nsnull);
