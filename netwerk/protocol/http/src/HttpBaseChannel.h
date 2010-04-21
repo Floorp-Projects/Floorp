@@ -108,6 +108,8 @@ public:
   NS_IMETHOD GetOriginalURI(nsIURI **aOriginalURI);
   NS_IMETHOD SetOriginalURI(nsIURI *aOriginalURI);
   NS_IMETHOD GetURI(nsIURI **aURI);
+  NS_IMETHOD GetOwner(nsISupports **aOwner);
+  NS_IMETHOD SetOwner(nsISupports *aOwner);
   NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor **aCallbacks);
   NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks);
   NS_IMETHOD GetContentType(nsACString& aContentType);
@@ -161,6 +163,7 @@ protected:
   nsCOMPtr<nsIStreamListener>       mListener;
   nsCOMPtr<nsISupports>             mListenerContext;
   nsCOMPtr<nsILoadGroup>            mLoadGroup;
+  nsCOMPtr<nsISupports>             mOwner;
   nsCOMPtr<nsIInterfaceRequestor>   mCallbacks;
   nsCOMPtr<nsIProgressEventSink>    mProgressSink;
   nsCOMPtr<nsIURI>                  mReferrer;
