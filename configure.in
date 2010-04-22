@@ -699,6 +699,43 @@ EOF
 
         unset _MSVC_VER_FILTER
 
+        AC_CACHE_CHECK(for std::_Throw, ac_cv_have_std__Throw,
+            [
+                AC_LANG_SAVE
+                AC_LANG_CPLUSPLUS
+                _SAVE_CXXFLAGS="$CXXFLAGS"
+                CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
+                AC_TRY_COMPILE([#include <exception>],
+                            [std::_Throw(std::exception()); return 0;],
+                            ac_cv_have_std__Throw="yes",
+                            ac_cv_have_std__Throw="no")
+                CXXFLAGS="$_SAVE_CXXFLAGS"
+                AC_LANG_RESTORE
+            ])
+
+        if test "$ac_cv_have_std__Throw" = "no"; then
+          AC_MSG_ERROR([Your MSVC/SDK doesn't export std::_Throw.  This breaks assumptions in Gecko.  Please file a bug describing this error along with your build configuration.])
+        fi
+
+        AC_CACHE_CHECK(for |class __declspec(dllimport) exception| bug,
+                       ac_cv_have_dllimport_exception_bug,
+            [
+                AC_LANG_SAVE
+                AC_LANG_CPLUSPLUS
+                _SAVE_CXXFLAGS="$CXXFLAGS"
+                CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
+                AC_TRY_LINK([#include <vector>],
+                            [std::vector<int> v; return v.at(1);],
+                            ac_cv_have_dllimport_exception_bug="no",
+                            ac_cv_have_dllimport_exception_bug="yes")
+                CXXFLAGS="$_SAVE_CXXFLAGS"
+                AC_LANG_RESTORE
+            ])
+
+        if test "$ac_cv_have_dllimport_exception_bug" = "no"; then
+            STL_FLAGS='-D_HAS_EXCEPTIONS=0 -I$(DIST)/stl_wrappers'
+            WRAP_STL_INCLUDES=1
+        fi
     else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
@@ -759,44 +796,6 @@ EOF
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WS03, 0x05020000)
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_LONGHORN, 0x06000000)
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WIN7, 0x06010000)
-
-    AC_CACHE_CHECK(for std::_Throw, ac_cv_have_std__Throw,
-        [
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
-            AC_TRY_COMPILE([#include <exception>],
-                        [std::_Throw(std::exception()); return 0;],
-                        ac_cv_have_std__Throw="yes",
-                        ac_cv_have_std__Throw="no")
-            CXXFLAGS="$_SAVE_CXXFLAGS"
-            AC_LANG_RESTORE
-        ])
-
-    if test "$ac_cv_have_std__Throw" = "no"; then
-      AC_MSG_ERROR([Your MSVC/SDK doesn't export std::_Throw.  This breaks assumptions in Gecko.  Please file a bug describing this error along with your build configuration.])
-    fi
-
-    AC_CACHE_CHECK(for |class __declspec(dllimport) exception| bug,
-                   ac_cv_have_dllimport_exception_bug,
-        [
-            AC_LANG_SAVE
-            AC_LANG_CPLUSPLUS
-            _SAVE_CXXFLAGS="$CXXFLAGS"
-            CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
-            AC_TRY_LINK([#include <vector>],
-                        [std::vector<int> v; return v.at(1);],
-                        ac_cv_have_dllimport_exception_bug="no",
-                        ac_cv_have_dllimport_exception_bug="yes")
-            CXXFLAGS="$_SAVE_CXXFLAGS"
-            AC_LANG_RESTORE
-        ])
-
-    if test "$ac_cv_have_dllimport_exception_bug" = "no"; then
-        STL_FLAGS='-D_HAS_EXCEPTIONS=0 -I$(DIST)/stl_wrappers'
-        WRAP_STL_INCLUDES=1
-    fi
     ;;
 esac
 
