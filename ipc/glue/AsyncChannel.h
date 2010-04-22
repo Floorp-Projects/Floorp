@@ -161,6 +161,8 @@ protected:
 
     // Run on the worker thread
 
+    void SendThroughTransport(Message* msg);
+
     void OnNotifyMaybeChannelError();
     virtual bool ShouldDeferNotifyMaybeError() {
         return false;
@@ -173,7 +175,6 @@ protected:
     // Run on the IO thread
 
     void OnChannelOpened();
-    void OnSend(Message* aMsg);
     void OnCloseChannel();
     void PostErrorNotifyTask();
 
