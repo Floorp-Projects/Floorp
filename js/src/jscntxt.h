@@ -131,7 +131,7 @@ struct REHashKey;
 struct FrameInfo;
 struct VMSideExit;
 struct TreeFragment;
-struct InterpState;
+struct TracerState;
 template<typename T> class Queue;
 typedef Queue<uint16> SlotList;
 class TypeMap;
@@ -165,7 +165,7 @@ class ContextAllocPolicy
 };
 
 /* Holds the execution state during trace execution. */
-struct InterpState
+struct TracerState 
 {
     JSContext*     cx;                  // current VM context handle
     double*        stackBase;           // native stack base
@@ -185,7 +185,7 @@ struct InterpState
     VMSideExit**   innermostNestedGuardp;
     VMSideExit*    innermost;
     uint64         startTime;
-    InterpState*   prev;
+    TracerState*   prev;
 
     // Used by _FAIL builtins; see jsbuiltins.h. The builtin sets the
     // JSBUILTIN_BAILED bit if it bails off trace and the JSBUILTIN_ERROR bit
@@ -199,15 +199,15 @@ struct InterpState
     uintN          nativeVpLen;
     jsval*         nativeVp;
 
-    InterpState(JSContext *cx, TraceMonitor *tm, TreeFragment *ti,
+    TracerState(JSContext *cx, TraceMonitor *tm, TreeFragment *ti,
                 uintN &inlineCallCountp, VMSideExit** innermostNestedGuardp);
-    ~InterpState();
+    ~TracerState();
 };
 
 /*
  * Storage for the execution state and store during trace execution. Generated
  * code depends on the fact that the globals begin |MAX_NATIVE_STACK_SLOTS|
- * doubles after the stack begins. Thus, on trace, |InterpState::eos| holds a
+ * doubles after the stack begins. Thus, on trace, |TracerState::eos| holds a
  * pointer to the first global.
  */
 struct TraceNativeStorage
@@ -1424,7 +1424,7 @@ struct JSContext
      * called back into native code via a _FAIL builtin and has not yet bailed,
      * else garbage (NULL in debug builds).
      */
-    js::InterpState     *interpState;
+    js::TracerState     *tracerState;
     js::VMSideExit      *bailExit;
 
     /*

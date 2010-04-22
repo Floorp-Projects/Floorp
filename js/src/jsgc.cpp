@@ -2457,7 +2457,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
     js_TraceRegExpStatics(trc, acx);
 
 #ifdef JS_TRACER
-    InterpState* state = acx->interpState;
+    TracerState* state = acx->tracerState;
     while (state) {
         if (state->nativeVp)
             TraceValues(trc, state->nativeVpLen, state->nativeVp, "nativeVp");
