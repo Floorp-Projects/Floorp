@@ -3443,6 +3443,53 @@ FireGCEnd(JSContext *cx, JSGCInvocationKind gckind)
 }
 
 /*
+ * Process all JSSetSlotRequests for this runtime. Then, if necessary,
+ * change *gckindp to GC_LOCK_HELD and prepare for GC.
+ */
+static bool
+ProcessAllSetSlotRequests(JSContext *cx, JSGCInvocationKind *gckindp)
+{
+    JSRuntime *rt = cx->runtime;
+
+    while (JSSetSlotRequest *ssr = rt->setSlotRequests) {
+        rt->setSlotRequests = ssr->next;
+        AutoUnlockGC unlock(rt);
+        ssr->next = NULL;
+        ProcessSetSlotRequest(cx, ssr);
+    }
+
+    /*
+     * If another thread has requested GC, modify *gckindp to ensure we do GC
+     * during the current session.
+     *
+     * Note that we have not called the GC callback yet; FireGCBegin does not
+     * call it if gckind == GC_SET_SLOT_REQUEST. So now we have to give up
+     * being the GC thread, call the GC callback, and then call BeginGCSession
+     * again to gather up any other threads that entered requests while we were
+     * in the GC callback.
+     *
+     * But do NOT call EndGCSession; that would cause JS_GC to return in
+     * the other threads without GC having been done.
+     */
+    if (rt->gcLevel > 1 || rt->gcPoke || rt->gcIsNeeded) {
+        rt->gcLevel = 0;
+        rt->gcPoke = JS_FALSE;
+        rt->gcRunning = JS_FALSE;
+#ifdef JS_THREADSAFE
+        rt->gcThread = NULL;
+#endif
+        *gckindp = GC_LOCK_HELD;
+        if (!FireGCBegin(cx, *gckindp)) {  /* GC is vetoed */
+            JS_NOTIFY_GC_DONE(rt);
+            return false;
+        }
+        if (!BeginGCSession(cx, *gckindp))  /* another thread did GC */
+            return false;
+    }
+    return true;
+}
+
+/*
  * The gckind flag bit GC_LOCK_HELD indicates a call from js_NewGCThing with
  * rt->gcLock already held, so the lock should be kept on return.
  */
@@ -3488,41 +3535,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         return;
     }
 
-    if (gckind == GC_SET_SLOT_REQUEST) {
-        while (JSSetSlotRequest *ssr = rt->setSlotRequests) {
-            rt->setSlotRequests = ssr->next;
-            AutoUnlockGC unlock(rt);
-            ssr->next = NULL;
-            ProcessSetSlotRequest(cx, ssr);
-        }
-
-        /*
-         * If another thread has requested GC, we'll do it below. But note that
-         * we didn't call the GC callback in FireGCBegin above.
-         *
-         * So now we have to give up being the GC thread, call the GC callback,
-         * and then call BeginGCSession again to gather up any other threads
-         * that entered requests while we were in the GC callback.
-         *
-         * But do NOT call EndGCSession; that would cause JS_GC to return in
-         * the other threads without GC having been done.
-         */
-        if (rt->gcLevel > 1 || rt->gcPoke || rt->gcIsNeeded) {
-            rt->gcLevel = 0;
-            rt->gcPoke = JS_FALSE;
-            rt->gcRunning = JS_FALSE;
-#ifdef JS_THREADSAFE
-            rt->gcThread = NULL;
-#endif
-            gckind = GC_LOCK_HELD;
-            if (!FireGCBegin(cx, gckind)) {  /* GC is vetoed */
-                JS_NOTIFY_GC_DONE(rt);
-                return;
-            }
-            if (!BeginGCSession(cx, gckind))  /* another thread did GC */
-                return;
-        }
-    }
+    if (gckind == GC_SET_SLOT_REQUEST && !ProcessAllSetSlotRequests(cx, &gckind))
+        return;
 
     if (gckind != GC_SET_SLOT_REQUEST) {
         if (!JS_ON_TRACE(cx))
