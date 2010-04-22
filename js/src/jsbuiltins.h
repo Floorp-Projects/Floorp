@@ -118,8 +118,8 @@ struct JSNativeTraceInfo {
 
 #define _JS_I32_ARGTYPE    nanojit::ARGTYPE_I
 #define _JS_I32_RETTYPE    nanojit::ARGTYPE_I
-#define _JS_F64_ARGTYPE    nanojit::ARGTYPE_F
-#define _JS_F64_RETTYPE    nanojit::ARGTYPE_F
+#define _JS_F64_ARGTYPE    nanojit::ARGTYPE_D
+#define _JS_F64_RETTYPE    nanojit::ARGTYPE_D
 #define _JS_PTR_ARGTYPE    nanojit::ARGTYPE_P
 #define _JS_PTR_RETTYPE    nanojit::ARGTYPE_P
 
