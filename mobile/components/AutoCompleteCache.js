@@ -79,6 +79,7 @@ function getDir(aKey) {
 // -----------------------------------------------------------------------
 
 var AutoCompleteUtils = {
+  cacheFile: null,
   cache: null,
   query: "",
   busy: false,
@@ -146,6 +147,9 @@ var AutoCompleteUtils = {
   },
 
   init: function init() {
+    if (this.cacheFile)
+      return;
+
     this.cacheFile = getDir("ProfD");
     this.cacheFile.append("autocomplete.json");
 
@@ -189,7 +193,7 @@ var AutoCompleteUtils = {
           Cu.reportError("AutoCompleteUtils: failure during asyncCopy: " + rv);
       });
     } catch (ex) {
-      Cu.reportError("AutoCompleteUtils: Could not write to cache file: " + ex);
+      Cu.reportError("AutoCompleteUtils: Could not write to cache file: " + this.cacheFile + " | " + ex);
     }
   },
 
@@ -278,6 +282,7 @@ AutoCompleteCache.prototype = {
 // BookmarkObserver updates the cache when a bookmark is added
 // -----------------------------------------------------------------------
 function BookmarkObserver() {
+  AutoCompleteUtils.init();
   this._batch = false;
 }
 
