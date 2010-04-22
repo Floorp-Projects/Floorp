@@ -111,7 +111,7 @@ CloseNativeIterator(JSContext *cx, JSObject *iterobj)
     if (iterable) {
 #if JS_HAS_XML_SUPPORT
         uintN flags = JSVAL_TO_INT(iterobj->getSlot(JSSLOT_ITER_FLAGS));
-        if ((flags & JSITER_FOREACH) && OBJECT_IS_XML(cx, iterable)) {
+        if ((flags & JSITER_FOREACH) && iterable->isXML()) {
             js_EnumerateXMLValues(cx, iterable, JSENUMERATE_DESTROY, &state,
                                   NULL, NULL);
         } else
@@ -173,7 +173,7 @@ InitNativeIterator(JSContext *cx, JSObject *iterobj, JSObject *obj, uintN flags)
 
     ok =
 #if JS_HAS_XML_SUPPORT
-         ((flags & JSITER_FOREACH) && OBJECT_IS_XML(cx, obj))
+         ((flags & JSITER_FOREACH) && obj->isXML())
          ? js_EnumerateXMLValues(cx, obj, JSENUMERATE_INIT, &state, NULL, NULL)
          :
 #endif
@@ -250,7 +250,7 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
     foreach = (flags & JSITER_FOREACH) != 0;
     ok =
 #if JS_HAS_XML_SUPPORT
-         (foreach && OBJECT_IS_XML(cx, iterable))
+         (foreach && iterable->isXML())
          ? js_EnumerateXMLValues(cx, iterable, JSENUMERATE_NEXT, &state,
                                  &id, rval)
          :
@@ -265,7 +265,7 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
 
     if (foreach) {
 #if JS_HAS_XML_SUPPORT
-        if (!OBJECT_IS_XML(cx, iterable) &&
+        if (!iterable->isXML() &&
             !iterable->getProperty(cx, id, rval)) {
             return JS_FALSE;
         }
@@ -501,7 +501,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
      * Treat an XML object specially only when it starts the prototype chain.
      * Otherwise we need to do the usual deleted and shadowed property checks.
      */
-    if (obj == origobj && OBJECT_IS_XML(cx, obj)) {
+    if (obj == origobj && obj->isXML()) {
         if (foreach) {
             if (!js_EnumerateXMLValues(cx, obj, JSENUMERATE_NEXT, &state,
                                        &id, rval)) {
@@ -524,7 +524,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
         iterobj->setSlot(JSSLOT_ITER_STATE, state);
         if (JSVAL_IS_NULL(state)) {
 #if JS_HAS_XML_SUPPORT
-            if (OBJECT_IS_XML(cx, obj)) {
+            if (obj->isXML()) {
                 /*
                  * We just finished enumerating an XML obj that is present on
                  * the prototype chain of a non-XML origobj. Stop further
@@ -532,7 +532,7 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
                  * enumerate prototypes.
                  */
                 JS_ASSERT(origobj != obj);
-                JS_ASSERT(!OBJECT_IS_XML(cx, origobj));
+                JS_ASSERT(!origobj->isXML());
             } else
 #endif
             {
