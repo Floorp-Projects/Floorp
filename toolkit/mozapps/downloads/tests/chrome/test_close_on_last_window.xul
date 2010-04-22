@@ -81,13 +81,21 @@ function doTest()
 
   // Prepare to close last window
   ok(dmui.visible, "Download Manager wasn't closed");
-  addCloseListener([browserWindow3, DMWindow]);
+
+  let isMac = /Mac/.test(navigator.platform);
+  addCloseListener(isMac ? [browserWindow3] : [browserWindow3, DMWindow]);
   browserWindow3.BrowserTryToCloseWindow();
+  if (isMac) {
+    // Manually continue the test after a moment to make sure the Download Manager
+    // didn't close
+    setTimeout(continueTest, 500);
+  }
   yield; yield;
 
-  // Finally we reach the case where the Download Manager should close
-  if (/Mac/.test(navigator.platform)) {
+  // Finally we reach the case where the Download Manager should have been closed
+  if (isMac) {
     ok(dmui.visible, "Download Manager wasn't closed");
+    DMWindow.close();
   } else {
     ok (!dmui.visible, "Download Manager was closed");
   }
