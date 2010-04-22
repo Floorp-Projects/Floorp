@@ -308,14 +308,19 @@ static MRESULT EXPENTRY PluginWndProc(HWND hWnd, ULONG msg, MPARAM mp1, MPARAM m
       // doesn't receive it, window activation/deactivation won't happen.
       WinDefWindowProc(hWnd, msg, mp1, mp2);
 
-      // If focus is being gained, and the plugin widget neither lost
-      // nor gained the focus, then a child just got it from some other
-      // window.  Post a WM_FOCUSCHANGED msg that identifies the child
-      // as the window losing focus.  After nsWindow::ActivatePlugin()
-      // activates the plugin, it will restore the focus to the child.
+      // If focus is being gained, and the plugin widget neither lost nor
+      // gained the focus, then a child just got it from some other window.
+      // If that other window was neither a child of the widget nor owned
+      // by a child of the widget (e.g. a popup menu), post a WM_FOCUSCHANGED
+      // msg that identifies the child as the window losing focus.  After
+      // nsWindow:: ActivatePlugin() activates the plugin, it will restore
+      // the focus to the child.
       if (SHORT1FROMMP(mp2) && (HWND)mp1 != hWnd) {
         HWND hFocus = WinQueryFocus(HWND_DESKTOP);
-        if (hFocus != hWnd) {
+        if (hFocus != hWnd &&
+            WinIsChild(hFocus, hWnd) &&
+            !WinIsChild((HWND)mp1, hWnd) &&
+            !WinIsChild(WinQueryWindow((HWND)mp1, QW_OWNER), hWnd)) {
           WinPostMsg(hWnd, WM_FOCUSCHANGED, (MPARAM)hFocus, mp2);
         }
       }
