@@ -108,11 +108,16 @@ void MozQWidget::hoverMoveEvent(QGraphicsSceneHoverEvent* aEvent)
 
 void MozQWidget::keyPressEvent(QKeyEvent* aEvent)
 {
-    mReceiver->OnKeyPressEvent(aEvent);
+    // Below removed to prevent invertion of upper and lower case
+    // See bug 561234
+    // mReceiver->OnKeyPressEvent(aEvent);
 }
 
 void MozQWidget::keyReleaseEvent(QKeyEvent* aEvent)
 {
+    // Below line should be removed when bug 561234 is fixed
+    mReceiver->OnKeyPressEvent(aEvent);
+
     mReceiver->OnKeyReleaseEvent(aEvent);
 }
 
