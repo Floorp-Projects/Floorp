@@ -87,10 +87,19 @@ function testTabIndexNavigation() {
   is(FormHelper.getCurrentElement(), element, "Focus should be on element with #id: next");
 
   FormHelper.goToNext();
+  is(FormHelper.getCurrentElement().id, "select",   "Focus should be on element with #id: select");
   FormHelper.goToNext();
+  is(FormHelper.getCurrentElement().id, "dumb",     "Focus should be on element with #id: dumb");
   FormHelper.goToNext();
+  is(FormHelper.getCurrentElement().id, "reset",    "Focus should be on element with #id: reset");
   FormHelper.goToNext();
+  is(FormHelper.getCurrentElement().id, "checkbox", "Focus should be on element with #id: checkbox");
+  FormHelper.goToNext();
+  is(FormHelper.getCurrentElement().id, "radio0",   "Focus should be on element with #id: radio0");
+  FormHelper.goToNext();
+  is(FormHelper.getCurrentElement().id, "radio4",   "Focus should be on element with #id: radio4");
 
+  FormHelper.goToNext();
   element = newTab.browser.contentDocument.getElementById("last");
   is(FormHelper.getCurrentElement(), element, "Focus should be on element with #id: last");
 
