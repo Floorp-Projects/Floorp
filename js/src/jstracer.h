@@ -774,7 +774,7 @@ struct ArgsPrivateNative {
 static JS_INLINE void
 SetBuiltinError(JSContext *cx)
 {
-    cx->interpState->builtinStatus |= BUILTIN_ERROR;
+    cx->tracerState->builtinStatus |= BUILTIN_ERROR;
 }
 
 #ifdef DEBUG_RECORDING_STATUS_NOT_BOOL
@@ -953,7 +953,7 @@ class TraceRecorder
     /* The LIR-generation pipeline used to build |fragment|. */
     nanojit::LirWriter* const       lir;
 
-    /* Instructions yielding the corresponding trace-const members of InterpState. */
+    /* Instructions yielding the corresponding trace-const members of TracerState. */
     nanojit::LIns* const            cx_ins;
     nanojit::LIns* const            eos_ins;
     nanojit::LIns* const            eor_ins;

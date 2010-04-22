@@ -113,10 +113,10 @@ class UpRecursiveSlotMap : public RecursiveSlotMap
 
         lirbuf->sp = lir->ins2(LIR_piadd, lirbuf->sp,
                                lir->insImmWord(-int(downPostSlots) * sizeof(double)));
-        lir->insStore(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp), ACC_OTHER);
+        lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACC_OTHER);
         lirbuf->rp = lir->ins2(LIR_piadd, lirbuf->rp,
                                lir->insImmWord(-int(sizeof(FrameInfo*))));
-        lir->insStore(lirbuf->rp, lirbuf->state, offsetof(InterpState, rp), ACC_OTHER);
+        lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACC_OTHER);
     }
 };
 
@@ -289,7 +289,7 @@ TraceRecorder::upRecursion()
               lir->ins2(LIR_pge, lirbuf->rp,
                         lir->ins2(LIR_piadd,
                                   lir->insLoad(LIR_ldp, lirbuf->state,
-                                               offsetof(InterpState, sor), ACC_OTHER),
+                                               offsetof(TracerState, sor), ACC_OTHER),
                                   INS_CONSTWORD(sizeof(FrameInfo*)))),
               exit);
     }
@@ -703,9 +703,9 @@ TraceRecorder::downRecursion()
 
     /* Add space for a new JIT frame. */
     lirbuf->sp = lir->ins2(LIR_piadd, lirbuf->sp, lir->insImmWord(slots * sizeof(double)));
-    lir->insStore(lirbuf->sp, lirbuf->state, offsetof(InterpState, sp), ACC_OTHER);
+    lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACC_OTHER);
     lirbuf->rp = lir->ins2(LIR_piadd, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
-    lir->insStore(lirbuf->rp, lirbuf->state, offsetof(InterpState, rp), ACC_OTHER);
+    lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACC_OTHER);
     --callDepth;
     clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
 
