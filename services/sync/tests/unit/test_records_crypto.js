@@ -62,7 +62,7 @@ function run_test() {
     keys = PubKeys.createKeypair(passphrase,
                                  "http://localhost:8080/pubkey",
                                  "http://localhost:8080/privkey");
-    let crypto = Cc["@labs.mozilla.com/Weave/Crypto;1"].
+    let crypto = Cc[cryptoContractID].
                  getService(Ci.IWeaveCrypto);
     keys.symkey = crypto.generateRandomKey();
     keys.wrappedkey = crypto.wrapSymmetricKey(keys.symkey, keys.pubkey.keyData);
