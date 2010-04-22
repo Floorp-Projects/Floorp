@@ -298,7 +298,7 @@ namespace nanojit
         LIR_pirsh   = LIR_rshp,
         LIR_pursh   = LIR_rshup,
 
-        LIR_pcmov   = LIR_cmovp,
+        LIR_pcmov   = LIR_cmovp
     };
 
     // 32-bit integer comparisons must be contiguous, as must 64-bit integer
