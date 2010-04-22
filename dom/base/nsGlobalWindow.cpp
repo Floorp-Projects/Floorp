@@ -7480,6 +7480,13 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGlobalWindow::GetIndexedDB(nsIIndexedDatabaseRequest** _indexedDB)
+{
+  *_indexedDB = nsnull;
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsGlobalWindow::nsIInterfaceRequestor
 //*****************************************************************************

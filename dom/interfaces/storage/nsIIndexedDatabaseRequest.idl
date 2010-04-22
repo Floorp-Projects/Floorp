@@ -1,4 +1,5 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 et sw=2 tw=80: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +13,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Indexed Database code.
  *
  * The Initial Developer of the Original Code is
- *   Neil Deakin <enndeakin@sympatico.ca>
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,41 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+#include "nsISupports.idl"
 
 /**
- * Interface for a client side storage. See
- * http://www.whatwg.org/specs/web-apps/current-work/#scs-client-side and
- * http://www.w3.org/TR/IndexedDB/ for more information.
- *
- * Allows access to contextual storage areas.
+ * Interface that defines the indexedDB property on a window.  See
+ * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IndexedDatabaseRequest
+ * for more information.
  */
-
-interface nsIDOMStorageObsolete;
-interface nsIDOMStorage;
-interface nsIDOMStorageList;
-interface nsIIndexedDatabaseRequest;
-
-[scriptable, uuid(b6f6efd8-1bdc-43af-b8ef-6685d6260931)]
-interface nsIDOMStorageWindow : nsISupports
+[scriptable, uuid(043161e0-93b8-43b4-94d8-f34046d679b4)]
+interface nsIIndexedDatabaseRequest : nsISupports
 {
-  /**
-   * Session storage for the current browsing context.
-   */
-  readonly attribute nsIDOMStorage sessionStorage;
-
-  /**
-   * Global storage, accessible by domain.
-   */
-  readonly attribute nsIDOMStorageList globalStorage;
-
-  /**
-   * Local storage for the current browsing context.
-   */
-  readonly attribute nsIDOMStorage localStorage;
-
-  /**
-   * Indexed Databases for the current browsing context.
-   */
-  readonly attribute nsIIndexedDatabaseRequest indexedDB;
 };
