@@ -527,6 +527,8 @@ menulist > dropmarker {
   height: 30px;
   width: 38px;
   margin-left: 5px;
+  background-color: transparent; /* for windows */
+  border: none;                  /* for windows */
   -moz-box-align: center;
   -moz-box-pack: center;
   list-style-image: url("chrome://browser/skin/images/dropmarker-30.png");
