@@ -709,6 +709,9 @@ var BrowserUI = {
         break;
       // URL textbox events
       case "mouseup":
+        if (!this._isEventInsidePopup(aEvent))
+          this._hidePopup();
+
         if (aEvent.detail < 2 && aEvent.button == 0)
           this.doCommand("cmd_openLocation");
         break;
