@@ -1429,8 +1429,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
         nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
         InitKeyEvent(downEvent, aEvent);
 
-        downEvent.charCode = domCharCode;
-        downEvent.keyCode = domCharCode ? 0 : domKeyCode;
+        downEvent.keyCode = domKeyCode;
 
         nsEventStatus status = DispatchEvent(&downEvent);
 
@@ -1465,18 +1464,13 @@ nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
         return nsEventStatus_eConsumeDoDefault;
     }
 
-    PRUint32 domCharCode = 0;
     PRUint32 domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
-
-    if (aEvent->text().length() && aEvent->text()[0].isPrint())
-        domCharCode = (PRInt32) aEvent->text()[0].unicode();
 
     // send the key event as a key up event
     nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
     InitKeyEvent(event, aEvent);
 
-    event.charCode = domCharCode;
-    event.keyCode = domCharCode ? 0 : domKeyCode;
+    event.keyCode = domKeyCode;
 
     // unset the key down flag
     ClearKeyDownFlag(event.keyCode);
