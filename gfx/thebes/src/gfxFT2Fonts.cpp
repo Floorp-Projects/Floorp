@@ -227,7 +227,11 @@ FontEntry::CairoFontFace()
         FT_Face face;
         FT_New_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(), mFilename.get(), mFTFontIndex, &face);
         mFTFace = face;
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+        mFontFace = cairo_ft_font_face_create_for_ft_face(face, FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+#else
         mFontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
+#endif
         FTUserFontData *userFontData = new FTUserFontData(face, nsnull);
         cairo_font_face_set_user_data(mFontFace, &key,
                                       userFontData, FTFontDestroyFunc);
@@ -870,6 +874,11 @@ CreateScaledFont(FontEntry *aFontEntry, const gfxFontStyle *aStyle)
     }
 
     cairo_font_options_t *fontOptions = cairo_font_options_create();
+
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    cairo_font_options_set_hint_metrics(fontOptions, CAIRO_HINT_METRICS_OFF);
+#endif
+
     scaledFont = cairo_scaled_font_create(aFontEntry->CairoFontFace(),
                                           &sizeMatrix,
                                           &identityMatrix, fontOptions);
@@ -932,7 +941,11 @@ gfxFT2Font::FillGlyphDataForChar(PRUint32 ch, CachedGlyphData *gd)
         return;
     }
 
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    FT_Error err = FT_Load_Glyph(face, gid, FT_LOAD_NO_AUTOHINT | FT_LOAD_NO_HINTING);
+#else
     FT_Error err = FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
+#endif
 
     if (err) {
         // hmm, this is weird, we failed to load a glyph that we had?
