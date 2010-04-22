@@ -108,6 +108,7 @@ BrowserGlue.prototype = {
   _isIdleObserver: false,
   _isPlacesInitObserver: false,
   _isPlacesLockedObserver: false,
+  _isPlacesShutdownObserver: false,
   _isPlacesDatabaseLocked: false,
 
   _setPrefToSaveSession: function BG__setPrefToSaveSession(aForce) {
@@ -149,7 +150,6 @@ BrowserGlue.prototype = {
         // This pref must be set here because SessionStore will use its value
         // on quit-application.
         this._setPrefToSaveSession();
-        this._onProfileShutdown();
         break;
 #ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
       case "browser-lastwindow-close-requested":
@@ -185,6 +185,15 @@ BrowserGlue.prototype = {
         Services.obs.removeObserver(this, "places-database-locked");
         this._isPlacesLockedObserver = false;
         break;
+      case "places-shutdown":
+        if (this._isPlacesShutdownObserver) {
+          Services.obs.removeObserver(this, "places-shutdown");
+          this._isPlacesShutdownObserver = false;
+        }
+        // places-shutdown is fired on profile-before-change, but before
+        // Places executes the last flush and closes connection.
+        this._onProfileShutdown();
+        break;
       case "idle":
         if (this._idleService.idleTime > BOOKMARKS_BACKUP_IDLE_TIME * 1000)
           this._backupBookmarks();
@@ -213,47 +222,51 @@ BrowserGlue.prototype = {
 
   // initialization (called on application startup) 
   _init: function BG__init() {
-    // observer registration
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
-    Services.obs.addObserver(this, "prefservice:after-app-defaults", false);
-    Services.obs.addObserver(this, "final-ui-startup", false);
-    Services.obs.addObserver(this, "sessionstore-windows-restored", false);
-    Services.obs.addObserver(this, "browser:purge-session-history", false);
-    Services.obs.addObserver(this, "quit-application-requested", false);
-    Services.obs.addObserver(this, "quit-application-granted", false);
+    let addObserver = Services.obs.addObserver;
+    addObserver(this, "xpcom-shutdown", false);
+    addObserver(this, "prefservice:after-app-defaults", false);
+    addObserver(this, "final-ui-startup", false);
+    addObserver(this, "sessionstore-windows-restored", false);
+    addObserver(this, "browser:purge-session-history", false);
+    addObserver(this, "quit-application-requested", false);
+    addObserver(this, "quit-application-granted", false);
 #ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
-    Services.obs.addObserver(this, "browser-lastwindow-close-requested", false);
-    Services.obs.addObserver(this, "browser-lastwindow-close-granted", false);
+    addObserver(this, "browser-lastwindow-close-requested", false);
+    addObserver(this, "browser-lastwindow-close-granted", false);
 #endif
-    Services.obs.addObserver(this, "session-save", false);
-    Services.obs.addObserver(this, "places-init-complete", false);
+    addObserver(this, "session-save", false);
+    addObserver(this, "places-init-complete", false);
     this._isPlacesInitObserver = true;
-    Services.obs.addObserver(this, "places-database-locked", false);
+    addObserver(this, "places-database-locked", false);
     this._isPlacesLockedObserver = true;
-    Services.obs.addObserver(this, "distribution-customization-complete", false);
+    addObserver(this, "distribution-customization-complete", false);
+    addObserver(this, "places-shutdown", false);
+    this._isPlacesShutdownObserver = true;
   },
 
   // cleanup (called on application shutdown)
   _dispose: function BG__dispose() {
-    // observer removal
-    Services.obs.removeObserver(this, "xpcom-shutdown");
-    Services.obs.removeObserver(this, "prefservice:after-app-defaults");
-    Services.obs.removeObserver(this, "final-ui-startup");
-    Services.obs.removeObserver(this, "sessionstore-windows-restored");
-    Services.obs.removeObserver(this, "browser:purge-session-history");
-    Services.obs.removeObserver(this, "quit-application-requested");
-    Services.obs.removeObserver(this, "quit-application-granted");
+    let removeObserver = Services.obs.removeObserver;
+    removeObserver(this, "xpcom-shutdown");
+    removeObserver(this, "prefservice:after-app-defaults");
+    removeObserver(this, "final-ui-startup");
+    removeObserver(this, "sessionstore-windows-restored");
+    removeObserver(this, "browser:purge-session-history");
+    removeObserver(this, "quit-application-requested");
+    removeObserver(this, "quit-application-granted");
 #ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
-    Services.obs.removeObserver(this, "browser-lastwindow-close-requested");
-    Services.obs.removeObserver(this, "browser-lastwindow-close-granted");
+    removeObserver(this, "browser-lastwindow-close-requested");
+    removeObserver(this, "browser-lastwindow-close-granted");
 #endif
-    Services.obs.removeObserver(this, "session-save");
+    removeObserver(this, "session-save");
     if (this._isIdleObserver)
       this._idleService.removeIdleObserver(this, BOOKMARKS_BACKUP_IDLE_TIME);
     if (this._isPlacesInitObserver)
-      Services.obs.removeObserver(this, "places-init-complete");
+      removeObserver(this, "places-init-complete");
     if (this._isPlacesLockedObserver)
-      Services.obs.removeObserver(this, "places-database-locked");
+      removeObserver(this, "places-database-locked");
+    if (this._isPlacesShutdownObserver)
+      removeObserver(this, "places-shutdown");
   },
 
   _onAppDefaults: function BG__onAppDefaults() {
@@ -309,8 +322,6 @@ BrowserGlue.prototype = {
     } catch (e) { }
 #endif
     this._shutdownPlaces();
-    this._idleService.removeIdleObserver(this, BOOKMARKS_BACKUP_IDLE_TIME);
-    this._isIdleObserver = false;
     this._sanitizer.onShutdown();
   },
 
@@ -859,6 +870,10 @@ BrowserGlue.prototype = {
    *       so replace this method with a no-op when first called.
    */
   _shutdownPlaces: function BG__shutdownPlaces() {
+    if (this._isIdleObserver) {
+      this._idleService.removeIdleObserver(this, BOOKMARKS_BACKUP_IDLE_TIME);
+      this._isIdleObserver = false;
+    }
     this._backupBookmarks();
 
     // Backup bookmarks to bookmarks.html to support apps that depend

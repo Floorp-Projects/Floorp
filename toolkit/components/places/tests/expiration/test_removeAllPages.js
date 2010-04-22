@@ -158,7 +158,7 @@ function run_test() {
   // Observe expirations.
   observer = {
     observe: function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(observer, TOPIC_EXPIRATION_FINISHED);
+      Services.obs.removeObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
 
       ["expire_days", "expire_weeks", "expire_months", "expire_session",
        "expire"].forEach(function(aAnno) {
@@ -189,7 +189,7 @@ function run_test() {
       do_test_finished();
     }
   };
-  Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
   // Expire all visits for the bookmarks.
   hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();

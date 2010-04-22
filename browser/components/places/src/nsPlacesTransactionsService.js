@@ -66,7 +66,7 @@ XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
 const MIN_TRANSACTIONS_FOR_BATCH = 5;
 
 function placesTransactionsService() {
-  Services.obs.addObserver(this, "xpcom-shutdown", false);
+  Services.obs.addObserver(this, PlacesUtils.TOPIC_SHUTDOWN, false);
   this.mTransactionManager = Cc["@mozilla.org/transactionmanager;1"].
                              createInstance(Ci.nsITransactionManager);
 }
@@ -84,8 +84,8 @@ placesTransactionsService.prototype = {
 
   // nsIObserver
   observe: function PlacesTxn_observe(aSubject, aTopic, aData) {
-    if (aTopic == "xpcom-shutdown") {
-      Services.obs.removeObserver(this, "xpcom-shutdown");
+    if (aTopic == PlacesUtils.TOPIC_SHUTDOWN) {
+      Services.obs.removeObserver(this, PlacesUtils.TOPIC_SHUTDOWN);
       delete this.mTransactionManager;
     }
   },
