@@ -317,8 +317,9 @@ window.Item.prototype = {
           }
         });
         
-        if(!blocked)
+        if(!blocked) {
           data.bounds = newBounds;
+        }
       }
     });
 
