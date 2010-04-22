@@ -35,6 +35,7 @@ Group.prototype = {
   _stackAngles: ["rotate(0deg)"],
   _blockResize: false,
   _arrangeSpeed: 170,
+  _shield: null,
   
   // ----------
   _randRotate: function(spread, index){
@@ -334,7 +335,7 @@ Group.prototype = {
     var self = this;
 
     if( self._isStacked ){
-      $("#shield").remove();      
+      $(self._shield).remove();      
       animate = true;
       self._blockResize = true;
       setTimeout(function(){
@@ -402,6 +403,7 @@ Group.prototype = {
     var self = this;
     var aTab = $(self._children[0]);
     zIndex = aTab.css("zIndex");
+    if( zIndex > 99999 ){ zIndex -= 99999; }
     var bb = self._getContainerBox();  
     
     var w = bb.width*.75;
@@ -435,20 +437,78 @@ Group.prototype = {
       i++;
     });
     
-    $("#shield").remove();
-    $("<div id='shield'>").css({
-      "backgroundColor": "rgba(0,0,0,0)",
-      top: bb.top,
-      left: bb.left,
-      width: bb.width,
-      height: bb.height-16,
-      position: "absolute",
-      zIndex: 999999999
-    }).appendTo("body").click(function(){
-      Utils.ilog("Will Expand!")
-    });
+    self._positionStackHandler()
         
     self._isStacked = true;
+  },
+  
+  _positionStackHandler: function(){
+    var self = this;
+    $(self._shield).remove();
+    var aTab = $(self._children[0]);
+    
+    self._shield = $("<div id='shield'>").css({
+      "backgroundColor": "rgba(0,0,0,0)",
+      top: aTab.position().top,
+      left: aTab.position().left,
+      width: aTab.width(),
+      height: aTab.height(),
+      position: "absolute",
+      zIndex: 99999
+    }).appendTo("body").click(function(){
+      var [w,h] = [240,160];
+      var padding = 20;
+      var col = Math.ceil(Math.sqrt(self._children.length));
+      var row = Math.ceil(self._children.length/col);
+
+      var [overlayWidth, overlayHeight] = [w*col + padding*(col+1), h*row + padding*(row+1)];
+      var pos = $(this).position();
+      pos.left -= overlayWidth/3;
+      pos.top  -= overlayHeight/3;      
+      
+      $(this).animate({
+        width:  overlayWidth,
+        height: overlayHeight,
+        top: pos.top,
+        left: pos.left
+      },170).addClass("overlay");
+      
+      var [x,y] = [pos.left + padding, pos.top+padding];
+      var count = 1;
+      for each( var tab in self._children){
+        $(tab).css({"-moz-transform":"rotate(0deg)", zIndex:99999+1});
+        $(tab).animate({
+          top: y,
+          left: x,
+          width: w,
+          height: h
+        },170).dequeue();
+        
+        x += w+padding;
+        if( count >= col ){
+          count = 0;
+          x = pos.left+padding;
+          y += h + padding;
+        }
+        
+        count++;
+      }
+      
+      setTimeout(function(){
+        $(self._shield).mouseout(function(e){
+          zIndex = $(e.relatedTarget).css("zIndex");
+          if( zIndex == "auto" || parseInt(zIndex) <= 9999 ){
+            self._isStacked = false;
+            // TODO: reset the z-index
+            // This does one more arrange after all the animations are done.
+            // A hack, but it works, to get the shield position to be right.
+            self._stackArrange();
+            setTimeout(function(){self._stackArrange();},self._arrangeSpeed+10)
+          }
+        });
+      }, 100);
+      
+    })    
   },
   
   // ----------  
@@ -472,6 +532,7 @@ Group.prototype = {
             top:  $(this).data("origPosition").top + dY
           })
         })
+        self._positionStackHandler();
       }
     });
     
