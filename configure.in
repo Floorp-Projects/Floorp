@@ -4705,7 +4705,7 @@ if test -z "$BZ2_DIR" -o "$BZ2_DIR" = no; then
     SYSTEM_BZ2=
 else
     AC_CHECK_LIB(bz2, BZ2_bzread, [SYSTEM_BZ2=1 BZ2_LIBS="-lbz2"],
-	[SYSTEM_BZ2= BZ2_CFLAGS= BZ2_LIBS=], $BZ2_LIBS)
+	[SYSTEM_BZ2= BZ2_CFLAGS= BZ2_LIBS=])
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -4713,7 +4713,7 @@ LIBS=$_SAVE_LIBS
 
 if test "${BZ2_DIR}" -a -d "${BZ2_DIR}" -a "$SYSTEM_BZ2" = 1; then
     BZ2_CFLAGS="-I${BZ2_DIR}/include"
-    BZ2_LIBS="-L${BZ2_DIR}/lib ${MOZ_BZ2_LIBS}"
+    BZ2_LIBS="-L${BZ2_DIR}/lib ${BZ2_LIBS}"
 fi
 
 dnl system PNG Support
