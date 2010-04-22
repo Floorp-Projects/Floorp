@@ -3831,9 +3831,9 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
           IsWindow((HWND)lParam))
         handled = PR_TRUE;
     break;
-
+    // Wheel events forwarded from the child.
+    case WM_MOUSEWHEEL:
     // Plugins taking or losing focus triggering focus app messages.
-    // dwResult = 0
     case WM_SETFOCUS:
     case WM_KILLFOCUS:
     // Windowed plugins that pass sys key events to defwndproc generate
