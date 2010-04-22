@@ -2985,7 +2985,7 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
 #endif
 
     /* The last ditch GC preserves weak roots. */
-    if (!(gckind & GC_KEEP_ATOMS))
+    if (!rt->gcKeepAtoms)
         JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
 }
 
@@ -2997,7 +2997,7 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
  * to finish. Note that the caller does not hold rt->gcLock.
  */
 static void
-GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
+GC(JSContext *cx  GCTIMER_PARAM)
 {
     JSRuntime *rt = cx->runtime;
     rt->gcNumber++;
@@ -3019,11 +3019,7 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
     }
 
     {
-        /*
-         * Query rt->gcKeepAtoms only when we know that all other threads are
-         * suspended, see bug 541790.
-         */
-        bool keepAtoms = (gckind & GC_KEEP_ATOMS) || rt->gcKeepAtoms != 0;
+        bool keepAtoms = rt->gcKeepAtoms != 0;
         js_TraceRuntime(&trc, keepAtoms);
         js_MarkScriptFilenames(rt, keepAtoms);
     }
@@ -3208,7 +3204,7 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
             TIMESTAMP(startMark);
             firstRun = false;
         }
-        GC(cx, gckind  GCTIMER_ARG);
+        GC(cx  GCTIMER_ARG);
 
         // GC again if:
         //   - another thread, not in a request, called js_GC
@@ -3225,7 +3221,7 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
  * If the latter, wait for the other thread to finish with GC.
  */
 static void
-DelegateGC(JSContext *cx, JSGCInvocationKind gckind)
+DelegateGC(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
     JS_ASSERT(rt->gcThread);
@@ -3271,9 +3267,6 @@ DelegateGC(JSContext *cx, JSGCInvocationKind gckind)
         cx->thread->gcWaiting = true;
         js_ShareWaitingTitles(cx);
 
-        /* Make sure that the GC from another thread respects GC_KEEP_ATOMS. */
-        Conditionally<AutoKeepAtoms> keepIf(!!(gckind & GC_KEEP_ATOMS), rt);
-
         /*
          * Check that we did not release the GC lock above and let the GC to
          * finish before we wait.
@@ -3305,7 +3298,7 @@ DelegateGC(JSContext *cx, JSGCInvocationKind gckind)
  * Otherwise the current thread is already the GC thread. Just return false.
  */
 static bool
-BeginGCSession(JSContext *cx, JSGCInvocationKind gckind)
+BeginGCSession(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
 
@@ -3318,7 +3311,7 @@ BeginGCSession(JSContext *cx, JSGCInvocationKind gckind)
      * delegate the job to it.
      */
     if (rt->gcLevel > 0) {
-        DelegateGC(cx, gckind);
+        DelegateGC(cx);
         return false;
     }
 
@@ -3437,27 +3430,16 @@ FireGCEnd(JSContext *cx, JSGCInvocationKind gckind)
      * interlock mechanism here.
      */
     if (gckind != GC_SET_SLOT_REQUEST && callback) {
-        if (!(gckind & GC_KEEP_ATOMS)) {
-            (void) callback(cx, JSGC_END);
+        Conditionally<AutoUnlockGC> unlockIf(gckind & GC_LOCK_HELD, rt);
 
-            /*
-             * On shutdown, iterate until the JSGC_END callback stops creating
-             * garbage.
-             */
-            if (gckind == GC_LAST_CONTEXT && rt->gcPoke)
-                return false;
-        } else {
-            /*
-             * We allow JSGC_END implementation to force a full GC or allocate
-             * new GC things. Thus we must protect the weak roots from garbage
-             * collection and overwrites.
-             */
-            AutoSaveWeakRoots save(cx);
-            AutoKeepAtoms keep(rt);
-            AutoUnlockGC unlock(rt);
+        (void) callback(cx, JSGC_END);
 
-            (void) callback(cx, JSGC_END);
-        }
+        /*
+         * On shutdown, iterate until the JSGC_END callback stops creating
+         * garbage.
+         */
+        if (gckind == GC_LAST_CONTEXT && rt->gcPoke)
+            return false;
     }
     return true;
 }
@@ -3503,7 +3485,7 @@ ProcessAllSetSlotRequests(JSContext *cx, JSGCInvocationKind *gckindp)
             JS_NOTIFY_GC_DONE(rt);
             return false;
         }
-        if (!BeginGCSession(cx, *gckindp))  /* another thread did GC */
+        if (!BeginGCSession(cx))  /* another thread did GC */
             return false;
     }
     return true;
@@ -3535,6 +3517,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
     GCTIMER_BEGIN();
 
+    Conditionally<AutoKeepAtoms> keepIf(!!(gckind & GC_KEEP_ATOMS), rt);
+
     for (;;) {
         if (!FireGCBegin(cx, gckind))
             return;
@@ -3543,7 +3527,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             /* Lock out other GC allocator and collector invocations. */
             Conditionally<AutoLockGC> lockIf(!(gckind & GC_LOCK_HELD), rt);
 
-            if (!BeginGCSession(cx, gckind)) {
+            if (!BeginGCSession(cx)) {
                 /* We're already doing GC or another thread did GC for us. */
                 return;
             }
