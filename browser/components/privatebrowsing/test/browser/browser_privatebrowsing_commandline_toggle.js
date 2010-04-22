@@ -51,7 +51,7 @@ function test() {
 
     testprivatecl.prototype = {
       _arguments: ["private-toggle"],
-      get length getLength() {
+      get length() {
         return this._arguments.length;
       },
       getArgument: function getArgument(aIndex) {
