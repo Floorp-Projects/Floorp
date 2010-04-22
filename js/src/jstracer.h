@@ -1167,7 +1167,9 @@ class TraceRecorder
 
     JS_REQUIRES_STACK nanojit::LIns* newArguments(nanojit::LIns* callee_ins);
 
-    JS_REQUIRES_STACK RecordingStatus call_imacro(jsbytecode* imacro);
+    JS_REQUIRES_STACK bool canCallImacro() const;
+    JS_REQUIRES_STACK RecordingStatus callImacro(jsbytecode* imacro);
+    JS_REQUIRES_STACK RecordingStatus callImacroInfallibly(jsbytecode* imacro);
 
     JS_REQUIRES_STACK AbortableRecordingStatus ifop();
     JS_REQUIRES_STACK RecordingStatus switchop();
@@ -1244,10 +1246,10 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus prop(JSObject* obj, nanojit::LIns* obj_ins,
                                                     uint32 *slotp, nanojit::LIns** v_insp,
                                                     jsval* outp);
-    JS_REQUIRES_STACK AbortableRecordingStatus propTail(JSObject* obj, nanojit::LIns* obj_ins,
-                                                        JSObject* obj2, PCVal pcval,
-                                                        uint32 *slotp, nanojit::LIns** v_insp,
-                                                        jsval* outp);
+    JS_REQUIRES_STACK RecordingStatus propTail(JSObject* obj, nanojit::LIns* obj_ins,
+                                               JSObject* obj2, PCVal pcval,
+                                               uint32 *slotp, nanojit::LIns** v_insp,
+                                               jsval* outp);
     JS_REQUIRES_STACK RecordingStatus denseArrayElement(jsval& oval, jsval& idx, jsval*& vp,
                                                         nanojit::LIns*& v_ins,
                                                         nanojit::LIns*& addr_ins);
@@ -1265,13 +1267,16 @@ class TraceRecorder
     JS_REQUIRES_STACK void finishGetProp(nanojit::LIns* obj_ins, nanojit::LIns* vp_ins,
                                          nanojit::LIns* ok_ins, jsval* outp);
     JS_REQUIRES_STACK RecordingStatus getPropertyByName(nanojit::LIns* obj_ins, jsval* idvalp,
-                                                          jsval* outp);
+                                                        jsval* outp);
     JS_REQUIRES_STACK RecordingStatus getPropertyByIndex(nanojit::LIns* obj_ins,
-                                                           nanojit::LIns* index_ins, jsval* outp);
+                                                         nanojit::LIns* index_ins, jsval* outp);
     JS_REQUIRES_STACK RecordingStatus getPropertyById(nanojit::LIns* obj_ins, jsval* outp);
     JS_REQUIRES_STACK RecordingStatus getPropertyWithNativeGetter(nanojit::LIns* obj_ins,
-                                                                    JSScopeProperty* sprop,
-                                                                    jsval* outp);
+                                                                  JSScopeProperty* sprop,
+                                                                  jsval* outp);
+    JS_REQUIRES_STACK RecordingStatus getPropertyWithScriptGetter(JSObject *obj,
+                                                                  nanojit::LIns* obj_ins,
+                                                                  JSScopeProperty* sprop);
 
     JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
                                                   JSScopeProperty* sprop,

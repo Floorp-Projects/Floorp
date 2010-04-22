@@ -8335,16 +8335,25 @@ TraceRecorder::stringify(jsval& v)
     return v_ins;
 }
 
+JS_REQUIRES_STACK bool
+TraceRecorder::canCallImacro() const
+{
+    /* We cannot nest imacros. */
+    return !cx->fp->imacpc;
+}
+
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::call_imacro(jsbytecode* imacro)
+TraceRecorder::callImacro(jsbytecode* imacro)
+{
+    return canCallImacro() ? callImacroInfallibly(imacro) : RECORD_STOP;
+}
+
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::callImacroInfallibly(jsbytecode* imacro)
 {
     JSStackFrame* fp = cx->fp;
+    JS_ASSERT(!fp->imacpc);
     JSFrameRegs* regs = fp->regs;
-
-    /* We cannot nest imacros. */
-    if (fp->imacpc)
-        return RECORD_STOP;
-
     fp->imacpc = regs->pc;
     regs->pc = imacro;
     atoms = COMMON_ATOMS_START(&cx->runtime->atomState);
@@ -8747,11 +8756,11 @@ TraceRecorder::equalityHelper(jsval& l, jsval& r, LIns* l_ins, LIns* r_ins,
         }
         if ((JSVAL_IS_STRING(l) || isNumber(l)) && !JSVAL_IS_PRIMITIVE(r)) {
             CHECK_STATUS_A(guardNativeConversion(r));
-            return InjectStatus(call_imacro(equality_imacros.any_obj));
+            return InjectStatus(callImacro(equality_imacros.any_obj));
         }
         if (!JSVAL_IS_PRIMITIVE(l) && (JSVAL_IS_STRING(r) || isNumber(r))) {
             CHECK_STATUS_A(guardNativeConversion(l));
-            return InjectStatus(call_imacro(equality_imacros.obj_any));
+            return InjectStatus(callImacro(equality_imacros.obj_any));
         }
 
         l_ins = lir->insImmI(0);
@@ -8815,13 +8824,13 @@ TraceRecorder::relational(LOpcode op, bool tryBranchAfterCond)
         CHECK_STATUS_A(guardNativeConversion(l));
         if (!JSVAL_IS_PRIMITIVE(r)) {
             CHECK_STATUS_A(guardNativeConversion(r));
-            return InjectStatus(call_imacro(binary_imacros.obj_obj));
+            return InjectStatus(callImacro(binary_imacros.obj_obj));
         }
-        return InjectStatus(call_imacro(binary_imacros.obj_any));
+        return InjectStatus(callImacro(binary_imacros.obj_any));
     }
     if (!JSVAL_IS_PRIMITIVE(r)) {
         CHECK_STATUS_A(guardNativeConversion(r));
-        return InjectStatus(call_imacro(binary_imacros.any_obj));
+        return InjectStatus(callImacro(binary_imacros.any_obj));
     }
 
     /* 11.8.5 steps 3, 16-21. */
@@ -8964,13 +8973,13 @@ TraceRecorder::binary(LOpcode op)
         CHECK_STATUS(guardNativeConversion(l));
         if (!JSVAL_IS_PRIMITIVE(r)) {
             CHECK_STATUS(guardNativeConversion(r));
-            return call_imacro(binary_imacros.obj_obj);
+            return callImacro(binary_imacros.obj_obj);
         }
-        return call_imacro(binary_imacros.obj_any);
+        return callImacro(binary_imacros.obj_any);
     }
     if (!JSVAL_IS_PRIMITIVE(r)) {
         CHECK_STATUS(guardNativeConversion(r));
-        return call_imacro(binary_imacros.any_obj);
+        return callImacro(binary_imacros.any_obj);
     }
 
     bool intop = retTypes[op] == LTy_I;
@@ -10196,13 +10205,13 @@ TraceRecorder::record_JSOP_ADD()
         CHECK_STATUS_A(guardNativeConversion(l));
         if (!JSVAL_IS_PRIMITIVE(r)) {
             CHECK_STATUS_A(guardNativeConversion(r));
-            return InjectStatus(call_imacro(add_imacros.obj_obj));
+            return InjectStatus(callImacro(add_imacros.obj_obj));
         }
-        return InjectStatus(call_imacro(add_imacros.obj_any));
+        return InjectStatus(callImacro(add_imacros.obj_any));
     }
     if (!JSVAL_IS_PRIMITIVE(r)) {
         CHECK_STATUS_A(guardNativeConversion(r));
-        return InjectStatus(call_imacro(add_imacros.any_obj));
+        return InjectStatus(callImacro(add_imacros.any_obj));
     }
 
     if (JSVAL_IS_STRING(l) || JSVAL_IS_STRING(r)) {
@@ -10277,7 +10286,7 @@ TraceRecorder::record_JSOP_NEG()
 
     if (!JSVAL_IS_PRIMITIVE(v)) {
         CHECK_STATUS_A(guardNativeConversion(v));
-        return InjectStatus(call_imacro(unary_imacros.sign));
+        return InjectStatus(callImacro(unary_imacros.sign));
     }
 
     if (isNumber(v)) {
@@ -10337,7 +10346,7 @@ TraceRecorder::record_JSOP_POS()
 
     if (!JSVAL_IS_PRIMITIVE(v)) {
         CHECK_STATUS_A(guardNativeConversion(v));
-        return InjectStatus(call_imacro(unary_imacros.sign));
+        return InjectStatus(callImacro(unary_imacros.sign));
     }
 
     if (isNumber(v))
@@ -10454,7 +10463,7 @@ TraceRecorder::newString(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
 
     if (!JSVAL_IS_PRIMITIVE(argv[0])) {
         CHECK_STATUS(guardNativeConversion(argv[0]));
-        return call_imacro(new_imacros.String);
+        return callImacro(new_imacros.String);
     }
 
     LIns* proto_ins;
@@ -11023,7 +11032,7 @@ TraceRecorder::functionCall(uintN argc, JSOp mode)
                 return newString(JSVAL_TO_OBJECT(fval), 1, argv, &fval);
             if (!JSVAL_IS_PRIMITIVE(argv[0])) {
                 CHECK_STATUS(guardNativeConversion(argv[0]));
-                return call_imacro(call_imacros.String);
+                return callImacro(call_imacros.String);
             }
             set(&fval, stringify(argv[0]));
             pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
@@ -11764,6 +11773,49 @@ TraceRecorder::getPropertyWithNativeGetter(LIns* obj_ins, JSScopeProperty* sprop
     finishGetProp(obj_ins, vp_ins, ok_ins, outp);
     leaveDeepBailCall();
     return RECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::getPropertyWithScriptGetter(JSObject *obj, LIns* obj_ins, JSScopeProperty* sprop)
+{
+    if (!canCallImacro())
+        RETURN_STOP("cannot trace script getter, already in imacro");
+
+    // Rearrange the stack in preparation for the imacro, taking care to adjust
+    // the interpreter state and the tracker in the same way. This adjustment
+    // is noted in imacros.jsasm with .fixup tags.
+    jsval getter = sprop->getterValue();
+    jsval*& sp = cx->fp->regs->sp;
+    switch (*cx->fp->regs->pc) {
+      case JSOP_GETPROP:
+        sp++;
+        sp[-1] = sp[-2];
+        set(&sp[-1], get(&sp[-2]));
+        sp[-2] = getter;
+        set(&sp[-2], INS_CONSTOBJ(JSVAL_TO_OBJECT(getter)));
+        return callImacroInfallibly(getprop_imacros.scriptgetter);
+
+      case JSOP_CALLPROP:
+        sp += 2;
+        sp[-2] = getter;
+        set(&sp[-2], INS_CONSTOBJ(JSVAL_TO_OBJECT(getter)));
+        sp[-1] = sp[-3];
+        set(&sp[-1], get(&sp[-3]));
+        return callImacroInfallibly(callprop_imacros.scriptgetter);
+
+      case JSOP_GETTHISPROP:
+      case JSOP_GETARGPROP:
+      case JSOP_GETLOCALPROP:
+        sp += 2;
+        sp[-2] = getter;
+        set(&sp[-2], INS_CONSTOBJ(JSVAL_TO_OBJECT(getter)));
+        sp[-1] = OBJECT_TO_JSVAL(obj);
+        set(&sp[-1], obj_ins);
+        return callImacroInfallibly(getthisprop_imacros.scriptgetter);
+
+      default:
+        RETURN_STOP("cannot trace script getter for this opcode");
+    }
 }
 
 // Typed array tracing depends on EXPANDED_LOADSTORE and F2I
@@ -12675,13 +12727,13 @@ TraceRecorder::record_JSOP_APPLY()
         if (length >= JS_ARRAY_LENGTH(apply_imacro_table))
             RETURN_STOP_A("too many arguments to apply");
 
-        return InjectStatus(call_imacro(apply_imacro_table[length]));
+        return InjectStatus(callImacro(apply_imacro_table[length]));
     }
 
     if (argc >= JS_ARRAY_LENGTH(call_imacro_table))
         RETURN_STOP_A("too many arguments to call");
 
-    return InjectStatus(call_imacro(call_imacro_table[argc]));
+    return InjectStatus(callImacro(call_imacro_table[argc]));
 }
 
 static JSBool FASTCALL
@@ -12917,10 +12969,10 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
         return ARECORD_CONTINUE;
     }
 
-    return propTail(obj, obj_ins, obj2, pcval, slotp, v_insp, outp);
+    return InjectStatus(propTail(obj, obj_ins, obj2, pcval, slotp, v_insp, outp));
 }
 
-JS_REQUIRES_STACK AbortableRecordingStatus
+JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcval,
                         uint32 *slotp, LIns** v_insp, jsval *outp)
 {
@@ -12937,26 +12989,26 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
         JS_ASSERT(obj2->scope()->hasProperty(sprop));
 
         if (setflags && !sprop->hasDefaultSetter())
-            RETURN_STOP_A("non-stub setter");
+            RETURN_STOP("non-stub setter");
         if (setflags && !sprop->writable())
-            RETURN_STOP_A("writing to a readonly property");
+            RETURN_STOP("writing to a readonly property");
         if (!sprop->hasDefaultGetterOrIsMethod()) {
             if (slotp)
-                RETURN_STOP_A("can't trace non-stub getter for this opcode");
+                RETURN_STOP("can't trace non-stub getter for this opcode");
             if (sprop->hasGetterValue())
-                RETURN_STOP_A("script getter");
+                return getPropertyWithScriptGetter(obj, obj_ins, sprop);
             if (sprop->slot == SPROP_INVALID_SLOT)
-                return InjectStatus(getPropertyWithNativeGetter(obj_ins, sprop, outp));
-            return InjectStatus(getPropertyById(obj_ins, outp));
+                return getPropertyWithNativeGetter(obj_ins, sprop, outp);
+            return getPropertyById(obj_ins, outp);
         }
         if (!SPROP_HAS_VALID_SLOT(sprop, obj2->scope()))
-            RETURN_STOP_A("no valid slot");
+            RETURN_STOP("no valid slot");
         slot = sprop->slot;
         isMethod = sprop->isMethod();
         JS_ASSERT_IF(isMethod, obj2->scope()->hasMethodBarrier());
     } else {
         if (!pcval.isSlot())
-            RETURN_STOP_A("PCE is not a slot");
+            RETURN_STOP("PCE is not a slot");
         slot = pcval.toSlot();
         sprop = NULL;
         isMethod = false;
@@ -12965,7 +13017,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
     /* We have a slot. Check whether it is direct or in a prototype. */
     if (obj2 != obj) {
         if (setflags)
-            RETURN_STOP_A("JOF_INCDEC|JOF_FOR opcode hit prototype chain");
+            RETURN_STOP("JOF_INCDEC|JOF_FOR opcode hit prototype chain");
 
         /*
          * We're getting a prototype property. Two cases:
@@ -13013,7 +13065,7 @@ TraceRecorder::propTail(JSObject* obj, LIns* obj_ins, JSObject* obj2, PCVal pcva
     }
     if (outp)
         set(outp, v_ins);
-    return ARECORD_CONTINUE;
+    return RECORD_CONTINUE;
 }
 
 JS_REQUIRES_STACK RecordingStatus
@@ -13533,14 +13585,14 @@ TraceRecorder::record_JSOP_ITER()
         return InjectStatus(status);
     if (found) {
         if (flags == JSITER_ENUMERATE)
-            return InjectStatus(call_imacro(iter_imacros.for_in));
+            return InjectStatus(callImacro(iter_imacros.for_in));
         if (flags == (JSITER_ENUMERATE | JSITER_FOREACH))
-            return InjectStatus(call_imacro(iter_imacros.for_each));
+            return InjectStatus(callImacro(iter_imacros.for_each));
     } else {
         if (flags == JSITER_ENUMERATE)
-            return InjectStatus(call_imacro(iter_imacros.for_in_native));
+            return InjectStatus(callImacro(iter_imacros.for_in_native));
         if (flags == (JSITER_ENUMERATE | JSITER_FOREACH))
-            return InjectStatus(call_imacro(iter_imacros.for_each_native));
+            return InjectStatus(callImacro(iter_imacros.for_each_native));
     }
     RETURN_STOP_A("unimplemented JSITER_* flags");
 }
@@ -13557,8 +13609,8 @@ TraceRecorder::record_JSOP_NEXTITER()
     LIns* iterobj_ins = get(&iterobj_val);
     guardClass(iterobj, iterobj_ins, clasp, snapshot(BRANCH_EXIT), ACC_OTHER);
     if (clasp == &js_IteratorClass || clasp == &js_GeneratorClass)
-        return InjectStatus(call_imacro(nextiter_imacros.native_iter_next));
-    return InjectStatus(call_imacro(nextiter_imacros.custom_iter_next));
+        return InjectStatus(callImacro(nextiter_imacros.native_iter_next));
+    return InjectStatus(callImacro(nextiter_imacros.custom_iter_next));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -14659,9 +14711,7 @@ TraceRecorder::record_JSOP_CALLPROP()
 
         JS_ASSERT_IF(pcval.isSprop(), !pcval.toSprop()->isMethod());
 
-        AbortableRecordingStatus status = propTail(obj, obj_ins, obj2, pcval, NULL, NULL, &l);
-        if (status != ARECORD_CONTINUE)
-            return status;
+        CHECK_STATUS_A(propTail(obj, obj_ins, obj2, pcval, NULL, NULL, &l));
     }
     stack(0, this_ins);
     return ARECORD_CONTINUE;
@@ -15157,7 +15207,7 @@ TraceRecorder::record_JSOP_OBJTOSTR()
     if (JSVAL_IS_PRIMITIVE(v))
         return ARECORD_CONTINUE;
     CHECK_STATUS_A(guardNativeConversion(v));
-    return InjectStatus(call_imacro(objtostr_imacros.toString));
+    return InjectStatus(callImacro(objtostr_imacros.toString));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
