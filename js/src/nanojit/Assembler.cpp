@@ -66,8 +66,8 @@ namespace nanojit
         , _branchStateMap(alloc)
         , _patches(alloc)
         , _labels(alloc)
-    #if NJ_USES_QUAD_CONSTANTS
-        , _quadConstants(alloc)
+    #if NJ_USES_IMMD_POOL
+        , _immDPool(alloc)
     #endif
         , _epilogue(NULL)
         , _err(None)
@@ -168,8 +168,8 @@ namespace nanojit
         _branchStateMap.clear();
         _patches.clear();
         _labels.clear();
-    #if NJ_USES_QUAD_CONSTANTS
-        _quadConstants.clear();
+    #if NJ_USES_IMMD_POOL
+        _immDPool.clear();
     #endif
     }
 
@@ -321,7 +321,7 @@ namespace nanojit
                 NanoAssert(arIndex == (uint32_t)n-1);
                 i = n-1;
             }
-            else if (ins->isN64()) {
+            else if (ins->isQorD()) {
                 NanoAssert(_entries[i + 1]==ins);
                 i += 1; // skip high word
             }
@@ -539,15 +539,15 @@ namespace nanojit
         return r;
     }
 
-#if NJ_USES_QUAD_CONSTANTS
-    const uint64_t* Assembler::findQuadConstant(uint64_t q)
+#if NJ_USES_IMMD_POOL
+    const uint64_t* Assembler::findImmDFromPool(uint64_t q)
     {
-        uint64_t* p = _quadConstants.get(q);
+        uint64_t* p = _immDPool.get(q);
         if (!p)
         {
             p = new (_dataAlloc) uint64_t;
             *p = q;
-            _quadConstants.put(q, p);
+            _immDPool.put(q, p);
         }
         return p;
     }
@@ -555,8 +555,8 @@ namespace nanojit
 
     int Assembler::findMemFor(LIns *ins)
     {
-#if NJ_USES_QUAD_CONSTANTS
-        NanoAssert(!ins->isconstf());
+#if NJ_USES_IMMD_POOL
+        NanoAssert(!ins->isImmD());
 #endif
         if (!ins->isInAr()) {
             uint32_t const arIndex = arReserve(ins);
@@ -647,7 +647,7 @@ namespace nanojit
                           if (_logc->lcbits & LC_Assembly) {
                              setOutputForEOL("  <= spill %s",
                              _thisfrag->lirbuf->printer->formatRef(&b, ins)); } )
-            asm_spill(r, d, pop, ins->isN64());
+            asm_spill(r, d, pop, ins->isQorD());
         }
     }
 
@@ -1178,8 +1178,8 @@ namespace nanojit
     void Assembler::asm_jmp(LInsp ins, InsList& pending_lives)
     {
         NanoAssert((ins->isop(LIR_j) && !ins->oprnd1()) ||
-                   (ins->isop(LIR_jf) && ins->oprnd1()->isconstval(0)) ||
-                   (ins->isop(LIR_jt) && ins->oprnd1()->isconstval(1)));
+                   (ins->isop(LIR_jf) && ins->oprnd1()->isImmI(0)) ||
+                   (ins->isop(LIR_jt) && ins->oprnd1()->isImmI(1)));
 
         countlir_jmp();
         LInsp to = ins->getTarget();
@@ -1213,8 +1213,8 @@ namespace nanojit
     {
         bool branchOnFalse = (ins->opcode() == LIR_jf);
         LIns* cond = ins->oprnd1();
-        if (cond->isconst()) {
-            if ((!branchOnFalse && !cond->imm32()) || (branchOnFalse && cond->imm32())) {
+        if (cond->isImmI()) {
+            if ((!branchOnFalse && !cond->immI()) || (branchOnFalse && cond->immI())) {
                 // jmp never taken, not needed
             } else {
                 asm_jmp(ins, pending_lives);    // jmp always taken
@@ -1259,8 +1259,8 @@ namespace nanojit
     void Assembler::asm_xcc(LInsp ins)
     {
         LIns* cond = ins->oprnd1();
-        if (cond->isconst()) {
-            if ((ins->isop(LIR_xt) && !cond->imm32()) || (ins->isop(LIR_xf) && cond->imm32())) {
+        if (cond->isImmI()) {
+            if ((ins->isop(LIR_xt) && !cond->immI()) || (ins->isop(LIR_xf) && cond->immI())) {
                 // guard never taken, not needed
             } else {
                 asm_x(ins);     // guard always taken
@@ -1792,7 +1792,7 @@ namespace nanojit
                 {
                     // we traverse backwards so we are now hitting the file
                     // that is associated with a bunch of LIR_lines we already have seen
-                    uintptr_t currentFile = ins->oprnd1()->imm32();
+                    uintptr_t currentFile = ins->oprnd1()->immI();
                     cgen->jitFilenameUpdate(currentFile);
                     break;
                 }
@@ -1801,7 +1801,7 @@ namespace nanojit
                     // add a new table entry, we don't yet knwo which file it belongs
                     // to so we need to add it to the update table too
                     // note the alloc, actual act is delayed; see above
-                    uint32_t currentLine = (uint32_t) ins->oprnd1()->imm32();
+                    uint32_t currentLine = (uint32_t) ins->oprnd1()->immI();
                     cgen->jitLineNumUpdate(currentLine);
                     cgen->jitAddRecord((uintptr_t)_nIns, 0, currentLine, true);
                     break;
@@ -1926,10 +1926,10 @@ namespace nanojit
             // Must findMemFor even if we're going to findRegFor; loop-carried
             // operands may spill on another edge, and we need them to always
             // spill to the same place.
-#if NJ_USES_QUAD_CONSTANTS
+#if NJ_USES_IMMD_POOL
             // Exception: if float constants are true constants, we should
             // never call findMemFor on those ops.
-            if (!op1->isconstf())
+            if (!op1->isImmD())
 #endif
             {
                 findMemFor(op1);
