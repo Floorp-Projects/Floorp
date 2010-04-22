@@ -1,9 +1,12 @@
+<!ENTITY syncBrand.shortName.label  "Weave">
+<!ENTITY syncBrand.fullName.label   "Mozilla Weave">
+
 <!ENTITY weavePrefPane.label        "Sync">
-<!ENTITY accountSetupTitle.label    "Account Setup">
+<!ENTITY accountSetupTitle.label    "&syncBrand.fullName.label; Setup">
 
 <!ENTITY connectTo.label            "Connect to">
 
-<!ENTITY serverType.main.label      "Mozilla Weave Server">
+<!ENTITY serverType.main.label      "&syncBrand.fullName.label; Server">
 <!ENTITY serverType.custom.label    "Use a custom server">
 
 <!ENTITY signIn.username.label      "User Name">
@@ -24,18 +27,28 @@
 <!ENTITY setup.tosAgree2.label      "">
 <!ENTITY setup.tosAgree2.accesskey  "">
 
-<!ENTITY setup.generalTitle.label     "Create your Weave Account">
+<!ENTITY weaveDesc.label            "&brandShortName; can use a &syncBrand.fullName.label; account to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
 
+<!ENTITY setup.choicePage.title.label     "Have you used &syncBrand.shortName.label; before?">
+<!ENTITY setup.choicePage.new.label       "I've never used Weave before">
+<!ENTITY setup.choicePage.existing.label  "I'm already using Weave on another computer">
 
-<!ENTITY weaveDesc.label            "&brandShortName; can use a Mozilla Weave account to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
+<!ENTITY setup.newAccountPage.title.label  "Create your &syncBrand.shortName.label; Account">
+<!ENTITY setup.newPPPage.title.label       "Enter your Secret Phrase">
+<!ENTITY setup.newAccountPrefs.title.label "What do you want &syncBrand.shortName.label; to sync">
+<!ENTITY setup.captchaPage.title.label     "Please confirm you're not a robot ;)">
 
-<!ENTITY setup.page1Title.label     "&setup.generalTitle.label; - Page 1 of 4">
-<!ENTITY setup.page2Title.label     "&setup.generalTitle.label; - Page 2 of 4">
-<!ENTITY setup.page3Title.label     "&setup.generalTitle.label; - Page 3 of 4">
-<!ENTITY setup.page4Title.label     "&setup.generalTitle.label; - Page 4 of 4">
+<!ENTITY setup.mergeChoicePage.title.label "How do you want to start off?">
+<!ENTITY setup.existingAccount.title.label "Enter Account Information">
+
+<!ENTITY setup.successPage.title.label   "Setup Complete!">
+<!ENTITY setup.successPage.desc.label    "You have successfully set up Mozilla Weave to use with &brandShortName;.  Your data will start syncing automatically.">
 
 <!ENTITY signIn.button.label        "Sign In">
 <!ENTITY signIn.button.accesskey    "S">
+
+<!ENTITY setupButton.label          "Set Up Mozilla Weave">
+<!ENTITY setupButton.accesskey      "S">
 
 <!ENTITY createAccountButton.label      "Create Mozilla Weave Account">
 <!ENTITY createAccountButton.accesskey  "C">
@@ -86,6 +99,8 @@
 
 <!ENTITY changePassword.label         "Change Password">
 <!ENTITY resetPassword.label          "Reset Password">
+<!ENTITY updatePass.label             "Update">
+<!ENTITY resetPass.label              "Reset">
 <!ENTITY changePassphrase.label       "Change Secret Phrase">
 <!ENTITY resetSync.label              "Reset Sync">
 <!ENTITY cancelResetSync.label        "Cancel Reset Sync">

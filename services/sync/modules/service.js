@@ -317,15 +317,15 @@ WeaveSvc.prototype = {
   _checkSetup: function WeaveSvc__checkSetup() {
     if (!this.username) {
       this._log.debug("checkSetup: no username set");
-      Status.login = Weave.LOGIN_FAILED_NO_USERNAME;
+      Status.login = LOGIN_FAILED_NO_USERNAME;
     }
     else if (!Utils.mpLocked() && !this.password) {
       this._log.debug("checkSetup: no password set");
-      Status.login = Weave.LOGIN_FAILED_NO_PASSWORD;
+      Status.login = LOGIN_FAILED_NO_PASSWORD;
     }
     else if (!Utils.mpLocked() && !this.passphrase) {
       this._log.debug("checkSetup: no passphrase set");
-      Status.login = Weave.LOGIN_FAILED_NO_PASSPHRASE;
+      Status.login = LOGIN_FAILED_NO_PASSPHRASE;
     }
     else
       Status.service = STATUS_OK;
@@ -626,7 +626,7 @@ WeaveSvc.prototype = {
 
   startOver: function() {
     // Set a username error so the status message shows "set up..."
-    Status.login = Weave.LOGIN_FAILED_NO_USERNAME;
+    Status.login = LOGIN_FAILED_NO_USERNAME;
     this.logout();
     // Reset all engines
     this.resetClient();
@@ -636,6 +636,7 @@ WeaveSvc.prototype = {
     Svc.Login.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
       Svc.Login.removeLogin(login);
     });
+    Svc.Obs.notify("weave:service:start-over");
   },
 
   _autoConnect: let (attempts = 0) function _autoConnect() {
@@ -987,7 +988,6 @@ WeaveSvc.prototype = {
     // if we're in backoff, we'll schedule the next sync
     if (this._checkSync([kSyncBackoffNotMet])) {
       this._clearSyncTriggers();
-      Status.service = STATUS_DISABLED;
       return;
     }
 
@@ -1163,6 +1163,9 @@ WeaveSvc.prototype = {
 
     // Wipe data in the desired direction if necessary
     switch (Svc.Prefs.get("firstSync")) {
+      case "resetClient":
+        this.resetClient(Engines.getEnabled().map(function(e) e.name));
+        break;
       case "wipeClient":
         this.wipeClient(Engines.getEnabled().map(function(e) e.name));
         break;
