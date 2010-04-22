@@ -1359,11 +1359,8 @@ var FormHelper = {
       return this._isElementVisible(aElement);
 
     if (aElement instanceof HTMLInputElement || aElement instanceof HTMLButtonElement) {
-      let ignoreInputElements = ["checkbox", "radio", "hidden", "reset", "button"];
-      let isValidElement = (ignoreInputElements.indexOf(aElement.type) == -1);
-      if (!isValidElement)
+      if (aElement.type == "hidden")
         return false;
-
       return this._isElementVisible(aElement);
     }
 
@@ -1394,12 +1391,8 @@ var FormHelper = {
 
     for (let i = 0; i < documents.length; i++) {
       let nodes = documents[i].querySelectorAll("input, button, select, textarea, [role=button]");
-
-      for (let j =0; j < nodes.length; j++) {
-        let node = nodes[j];
-        if (this._isValidElement(node))
-          elements.push(node);
-      }
+      nodes = this._filterRadioButtons(nodes).filter(this._isValidElement, this);
+      elements = elements.concat(nodes);
     }
 
     function orderByTabIndex(a, b) {
@@ -1412,6 +1405,30 @@ var FormHelper = {
       return a.tabIndex > b.tabIndex;
     }
     return elements.sort(orderByTabIndex);
+  },
+
+  /**
+   * For each radio button group, remove all but the checked button
+   * if there is one, or the first button otherwise.
+   */
+  _filterRadioButtons: function(nodes) {
+    // First pass: Find the checked or first element in each group.
+    let chosenRadios = {};
+    for (let i=0; i < nodes.length; i++) {
+      let node = nodes[i];
+      if (node.type == "radio" && (!chosenRadios.hasOwnProperty(node.name) || node.checked))
+        chosenRadios[node.name] = node;
+    }
+
+    // Second pass: Exclude all other radio buttons from the list.
+    var result = [];
+    for (let i=0; i < nodes.length; i++) {
+      let node = nodes[i];
+      if (node.type == "radio" && chosenRadios[node.name] != node)
+        continue;
+      result.push(node);
+    }
+    return result;
   },
 
   _getPrevious: function() {
@@ -1721,8 +1738,8 @@ var FormHelper = {
     // Some forms elements are valid in the sense that we want the Form
     // Assistant to stop on it, but we don't want it to display when
     // the user clicks on it
-    let formExceptions = ["submit", "image", "file"];
-    if (aElement instanceof HTMLInputElement && formExceptions.indexOf(aElement.type) != -1)
+    let formExceptions = {button: true, checkbox: true, file: true, image: true, radio: true, reset: true, submit: true};
+    if (aElement instanceof HTMLInputElement && formExceptions[aElement.type])
       return false;
 
     if (aElement instanceof HTMLButtonElement || (aElement.getAttribute("role") == "button" && aElement.hasAttribute("tabindex")))
