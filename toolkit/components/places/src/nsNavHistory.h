@@ -88,6 +88,19 @@
 #define URI_LENGTH_MAX 65536
 #define TITLE_LENGTH_MAX 4096
 
+#ifdef MOZ_XUL
+// Fired after autocomplete feedback has been updated.
+#define TOPIC_AUTOCOMPLETE_FEEDBACK_UPDATED "places-autocomplete-feedback-updated"
+#endif
+// Fired when Places is shutting down.
+#define TOPIC_PLACES_SHUTDOWN "places-shutdown"
+// Fired when Places found a locked database while initing.
+#define TOPIC_DATABASE_LOCKED "places-database-locked"
+// Fired after Places inited.
+#define TOPIC_PLACES_INIT_COMPLETE "places-init-complete"
+// Fired before starting a VACUUM operation.
+#define TOPIC_DATABASE_VACUUM_STARTING "places-vacuum-starting"
+
 namespace mozilla {
 namespace places {
 
