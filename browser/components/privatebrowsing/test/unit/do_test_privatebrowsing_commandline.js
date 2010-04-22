@@ -43,7 +43,7 @@ function testprivatecl() {
 
 testprivatecl.prototype = {
   _arguments: ["private", "silent"],
-  get length getLength() {
+  get length() {
     return this._arguments.length;
   },
   getArgument: function getArgument(aIndex) {
