@@ -3,6 +3,23 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+let versSvc = Cc["@mozilla.org/xpcom/version-comparator;1"].
+              getService(Ci.nsIVersionComparator);
+let appinfo = Cc["@mozilla.org/xre/app-info;1"].
+              getService(Ci.nsIXULAppInfo);
+let platVers = appinfo.platformVersion;
+
+let cryptoContractID = "@labs.mozilla.com/Weave/Crypto";
+if (versSvc.compare(platVers, "1.9.3a3") < 0) {
+  // use old binary component
+  cryptoContractID += ";1";
+} else {
+  // use new JS-CTypes component
+  cryptoContractID += ";2";
+}
+dump("Using crypto contract " + cryptoContractID + "\n");
+
+
 // initialize nss
 let ch = Cc["@mozilla.org/security/hash;1"].
          createInstance(Ci.nsICryptoHash);

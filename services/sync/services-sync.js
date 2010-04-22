@@ -28,6 +28,7 @@ pref("extensions.weave.log.logger.engine.history", "Debug");
 pref("extensions.weave.log.logger.engine.passwords", "Debug");
 pref("extensions.weave.log.logger.engine.prefs", "Debug");
 pref("extensions.weave.log.logger.engine.tabs", "Debug");
+pref("extensions.weave.log.cryptoDebug", false);
 
 // Preferences to be synced by default
 pref("extensions.weave.prefs.sync.accessibility.blockautorefresh", true);

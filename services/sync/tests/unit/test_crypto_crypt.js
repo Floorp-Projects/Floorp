@@ -1,5 +1,5 @@
 function run_test() {
-  var cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
+  var cryptoSvc = Cc[cryptoContractID].
                   getService(Ci.IWeaveCrypto);
 
   // First, do a normal run with expected usage... Generate a random key and

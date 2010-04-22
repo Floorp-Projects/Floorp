@@ -14,13 +14,13 @@
 #
 # The Original Code is Weave code.
 #
-# The Initial Developer of the Original Code is
-# Mozilla Corporation
+# The Initial Developer of the Original Code is Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #   Dan Mills <thunder@mozilla.com> (original author)
+#   Justin Dolske <dolske@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,29 +39,62 @@
 stage_dir=../dist/stage
 
 sdkdir ?= ${MOZSDKDIR}
+
+idl = IWeaveCrypto.idl
+idl_typelib = $(idl:.idl=.xpt)
+idl_header = $(idl:.idl=.h)
+
+#
+# The only thing to actually build here is the IDL's .xpt/.h form, which
+# requires an SDK. So don't do that unless explicitly requested, and use
+# the files checked into Mercurial instead.
+#
+all: stage
+
+build: $(idl_typelib) $(idl_header) stage
+
+# No SDK is needed unless you're modifying the IDL interface, in which
+# case we'll need to rebuild the .h and .xpt files.
+xpidl = $(sdkdir)/bin/xpidl
+ifdef CROSS_COMPILE
+xpidl = $(sdkdir)/host/bin/host_xpidl
+endif
+$(idl_typelib): $(idl)
 ifeq ($(sdkdir),)
-  $(warning No 'sdkdir' variable given)
-  $(warning It should point to the location of the Gecko SDK)
-  $(warning For example: "make sdkdir=/foo/bar/baz")
-  $(warning Or set the MOZSDKDIR environment variable to point to it)
-  $(error)
-endif
-
-ifdef platform_target
-  platform=$(platform_target)
+	$(warning No 'sdkdir' variable given)
+	$(warning It should point to the location of the Gecko SDK)
+	$(warning For example: "make sdkdir=/foo/bar/baz")
+	$(warning Or set the MOZSDKDIR environment variable to point to it)
+	$(error)
 else
-  platform=*
+	$(xpidl) -m typelib -I$(sdkdir)/idl $(@:.xpt=.idl)
 endif
 
-all: build
+$(idl_header): $(idl)
+ifeq ($(sdkdir),)
+	$(warning No 'sdkdir' variable given)
+	$(warning It should point to the location of the Gecko SDK)
+	$(warning For example: "make sdkdir=/foo/bar/baz")
+	$(warning Or set the MOZSDKDIR environment variable to point to it)
+	$(error)
+else
+	$(xpidl) -m header -I$(sdkdir)/idl $(@:.h=.idl)
+endif
 
-.PHONY: build crypto rebuild_all
+stage:
+	mkdir -p $(stage_dir)/components
+ifdef NO_SYMLINK
+	cp -v $(idl_typelib) $(stage_dir)/components
+	cp -v $(idl_header)  $(TOPSRCDIR)/crypto-obsolete/src
+	cp -v WeaveCrypto.js $(stage_dir)/components
+else
+	ln -vsf `pwd`/$(idl_typelib) $(stage_dir)/components
+	ln -vsf `pwd`/$(idl_header)  $(TOPSRCDIR)/crypto-obsolete/src
+	ln -vsf `pwd`/WeaveCrypto.js $(stage_dir)/components
+endif
 
-crypto:
-	$(MAKE) -C src install
+clean:
+	rm -f $(TOPSRCDIR)/crypto-obsolete/src/$(idl_header)
+	# maybe hg revert the .xpt/.h?
 
-build:
-	cp -R -v components $(stage_dir)
-	cd platform;mkdir -p ../$(stage_dir)/platform;cp -R -v $(platform) ../$(stage_dir)/platform
-
-rebuild_all: crypto build
+.PHONY: all build stage clean
