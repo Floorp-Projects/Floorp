@@ -222,51 +222,51 @@ BrowserGlue.prototype = {
 
   // initialization (called on application startup) 
   _init: function BG__init() {
-    let addObserver = Services.obs.addObserver;
-    addObserver(this, "xpcom-shutdown", false);
-    addObserver(this, "prefservice:after-app-defaults", false);
-    addObserver(this, "final-ui-startup", false);
-    addObserver(this, "sessionstore-windows-restored", false);
-    addObserver(this, "browser:purge-session-history", false);
-    addObserver(this, "quit-application-requested", false);
-    addObserver(this, "quit-application-granted", false);
+    let os = Services.obs;
+    os.addObserver(this, "xpcom-shutdown", false);
+    os.addObserver(this, "prefservice:after-app-defaults", false);
+    os.addObserver(this, "final-ui-startup", false);
+    os.addObserver(this, "sessionstore-windows-restored", false);
+    os.addObserver(this, "browser:purge-session-history", false);
+    os.addObserver(this, "quit-application-requested", false);
+    os.addObserver(this, "quit-application-granted", false);
 #ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
-    addObserver(this, "browser-lastwindow-close-requested", false);
-    addObserver(this, "browser-lastwindow-close-granted", false);
+    os.addObserver(this, "browser-lastwindow-close-requested", false);
+    os.addObserver(this, "browser-lastwindow-close-granted", false);
 #endif
-    addObserver(this, "session-save", false);
-    addObserver(this, "places-init-complete", false);
+    os.addObserver(this, "session-save", false);
+    os.addObserver(this, "places-init-complete", false);
     this._isPlacesInitObserver = true;
-    addObserver(this, "places-database-locked", false);
+    os.addObserver(this, "places-database-locked", false);
     this._isPlacesLockedObserver = true;
-    addObserver(this, "distribution-customization-complete", false);
-    addObserver(this, "places-shutdown", false);
+    os.addObserver(this, "distribution-customization-complete", false);
+    os.addObserver(this, "places-shutdown", false);
     this._isPlacesShutdownObserver = true;
   },
 
   // cleanup (called on application shutdown)
   _dispose: function BG__dispose() {
-    let removeObserver = Services.obs.removeObserver;
-    removeObserver(this, "xpcom-shutdown");
-    removeObserver(this, "prefservice:after-app-defaults");
-    removeObserver(this, "final-ui-startup");
-    removeObserver(this, "sessionstore-windows-restored");
-    removeObserver(this, "browser:purge-session-history");
-    removeObserver(this, "quit-application-requested");
-    removeObserver(this, "quit-application-granted");
+    let os = Services.obs;
+    os.removeObserver(this, "xpcom-shutdown");
+    os.removeObserver(this, "prefservice:after-app-defaults");
+    os.removeObserver(this, "final-ui-startup");
+    os.removeObserver(this, "sessionstore-windows-restored");
+    os.removeObserver(this, "browser:purge-session-history");
+    os.removeObserver(this, "quit-application-requested");
+    os.removeObserver(this, "quit-application-granted");
 #ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
-    removeObserver(this, "browser-lastwindow-close-requested");
-    removeObserver(this, "browser-lastwindow-close-granted");
+    os.removeObserver(this, "browser-lastwindow-close-requested");
+    os.removeObserver(this, "browser-lastwindow-close-granted");
 #endif
-    removeObserver(this, "session-save");
+    os.removeObserver(this, "session-save");
     if (this._isIdleObserver)
       this._idleService.removeIdleObserver(this, BOOKMARKS_BACKUP_IDLE_TIME);
     if (this._isPlacesInitObserver)
-      removeObserver(this, "places-init-complete");
+      os.removeObserver(this, "places-init-complete");
     if (this._isPlacesLockedObserver)
-      removeObserver(this, "places-database-locked");
+      os.removeObserver(this, "places-database-locked");
     if (this._isPlacesShutdownObserver)
-      removeObserver(this, "places-shutdown");
+      os.removeObserver(this, "places-shutdown");
   },
 
   _onAppDefaults: function BG__onAppDefaults() {
