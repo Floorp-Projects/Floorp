@@ -149,14 +149,14 @@ function run_next_test() {
     // Observe expirations.
     observer = {
       observe: function(aSubject, aTopic, aData) {
-        os.removeObserver(observer, TOPIC_EXPIRATION_FINISHED);
+        os.removeObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
         hs.removeObserver(historyObserver, false);
 
         // This test finished.
         check_result();
       }
     };
-    os.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+    os.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
     setMaxPages(gCurrentTest.maxPages);
     // Expire now, observers will check results.

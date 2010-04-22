@@ -80,7 +80,7 @@ const nsPlacesExpirationFactory = {
 
 const MAX_INT64 = 9223372036854775807;
 
-const TOPIC_XPCOM_SHUTDOWN = "xpcom-shutdown";
+const TOPIC_SHUTDOWN = "places-shutdown";
 const TOPIC_PREF_CHANGED = "nsPref:changed";
 const TOPIC_DEBUG_START_EXPIRATION = "places-debug-start-expiration";
 const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
@@ -468,7 +468,7 @@ function nsPlacesExpiration()
   // Register topic observers.
   this._os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
-  this._os.addObserver(this, TOPIC_XPCOM_SHUTDOWN, false);
+  this._os.addObserver(this, TOPIC_SHUTDOWN, false);
   this._os.addObserver(this, TOPIC_DEBUG_START_EXPIRATION, false);
 
   // Create our expiration timer.
@@ -482,9 +482,9 @@ nsPlacesExpiration.prototype = {
 
   observe: function PEX_observe(aSubject, aTopic, aData)
   {
-    if (aTopic == TOPIC_XPCOM_SHUTDOWN) {
+    if (aTopic == TOPIC_SHUTDOWN) {
       this._shuttingDown = true;
-      this._os.removeObserver(this, TOPIC_XPCOM_SHUTDOWN);
+      this._os.removeObserver(this, TOPIC_SHUTDOWN);
       this._os.removeObserver(this, TOPIC_DEBUG_START_EXPIRATION);
 
       this._prefBranch.removeObserver("", this);
