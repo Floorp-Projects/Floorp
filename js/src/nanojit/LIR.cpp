@@ -362,7 +362,7 @@ namespace nanojit
     {
         LInsI* insI = (LInsI*)_buf->makeRoom(sizeof(LInsI));
         LIns*  ins  = insI->getLIns();
-        ins->initLInsI(LIR_imml, imm);
+        ins->initLInsI(LIR_immi, imm);
         return ins;
     }
 
@@ -423,10 +423,10 @@ namespace nanojit
     LOpcode f64arith_to_i32arith(LOpcode op)
     {
         switch (op) {
-        case LIR_negd:  return LIR_negl;
-        case LIR_addd:  return LIR_addl;
-        case LIR_subd:  return LIR_subl;
-        case LIR_muld:  return LIR_mull;
+        case LIR_negd:  return LIR_negi;
+        case LIR_addd:  return LIR_addi;
+        case LIR_subd:  return LIR_subi;
+        case LIR_muld:  return LIR_muli;
         default:        NanoAssert(0); return LIR_skip;
         }
     }
@@ -435,15 +435,15 @@ namespace nanojit
     LOpcode i32cmp_to_i64cmp(LOpcode op)
     {
         switch (op) {
-        case LIR_eql:    return LIR_eqq;
-        case LIR_ltl:    return LIR_ltq;
-        case LIR_gtl:    return LIR_gtq;
-        case LIR_lel:    return LIR_leq;
-        case LIR_gel:    return LIR_geq;
-        case LIR_ltul:   return LIR_ltuq;
-        case LIR_gtul:   return LIR_gtuq;
-        case LIR_leul:   return LIR_leuq;
-        case LIR_geul:   return LIR_geuq;
+        case LIR_eqi:    return LIR_eqq;
+        case LIR_lti:    return LIR_ltq;
+        case LIR_gti:    return LIR_gtq;
+        case LIR_lei:    return LIR_leq;
+        case LIR_gei:    return LIR_geq;
+        case LIR_ltui:   return LIR_ltuq;
+        case LIR_gtui:   return LIR_gtuq;
+        case LIR_leui:   return LIR_leuq;
+        case LIR_geui:   return LIR_geuq;
         default:        NanoAssert(0); return LIR_skip;
         }
     }
@@ -452,11 +452,11 @@ namespace nanojit
     LOpcode f64cmp_to_i32cmp(LOpcode op)
     {
         switch (op) {
-        case LIR_eqd:    return LIR_eql;
-        case LIR_ltd:    return LIR_ltl;
-        case LIR_gtd:    return LIR_gtl;
-        case LIR_led:    return LIR_lel;
-        case LIR_ged:    return LIR_gel;
+        case LIR_eqd:    return LIR_eqi;
+        case LIR_ltd:    return LIR_lti;
+        case LIR_gtd:    return LIR_gti;
+        case LIR_led:    return LIR_lei;
+        case LIR_ged:    return LIR_gei;
         default:        NanoAssert(0); return LIR_skip;
         }
     }
@@ -464,11 +464,11 @@ namespace nanojit
     LOpcode f64cmp_to_u32cmp(LOpcode op)
     {
         switch (op) {
-        case LIR_eqd:    return LIR_eql;
-        case LIR_ltd:    return LIR_ltul;
-        case LIR_gtd:    return LIR_gtul;
-        case LIR_led:    return LIR_leul;
-        case LIR_ged:    return LIR_geul;
+        case LIR_eqd:    return LIR_eqi;
+        case LIR_ltd:    return LIR_ltui;
+        case LIR_gtd:    return LIR_gtui;
+        case LIR_led:    return LIR_leui;
+        case LIR_ged:    return LIR_geui;
         default:        NanoAssert(0); return LIR_skip;
         }
     }
@@ -535,37 +535,37 @@ namespace nanojit
     {
         switch (v) {
 #ifdef NANOJIT_64BIT
-        case LIR_q2l:
+        case LIR_q2i:
             if (oprnd->isconstq())
                 return insImm(oprnd->imm64_0());
             break;
 #endif
 #if NJ_SOFTFLOAT_SUPPORTED
-        case LIR_dlo2l:
+        case LIR_dlo2i:
             if (oprnd->isconstf())
                 return insImm(oprnd->imm64_0());
-            if (oprnd->isop(LIR_ll2d))
+            if (oprnd->isop(LIR_ii2d))
                 return oprnd->oprnd1();
             break;
-        case LIR_dhi2l:
+        case LIR_dhi2i:
             if (oprnd->isconstf())
                 return insImm(oprnd->imm64_1());
-            if (oprnd->isop(LIR_ll2d))
+            if (oprnd->isop(LIR_ii2d))
                 return oprnd->oprnd2();
             break;
 #endif
-        case LIR_notl:
+        case LIR_noti:
             if (oprnd->isconst())
                 return insImm(~oprnd->imm32());
         involution:
             if (v == oprnd->opcode())
                 return oprnd->oprnd1();
             break;
-        case LIR_negl:
+        case LIR_negi:
             if (oprnd->isconst())
                 return insImm(-oprnd->imm32());
-            if (oprnd->isop(LIR_subl)) // -(a-b) = b-a
-                return out->ins2(LIR_subl, oprnd->oprnd2(), oprnd->oprnd1());
+            if (oprnd->isop(LIR_subi)) // -(a-b) = b-a
+                return out->ins2(LIR_subi, oprnd->oprnd2(), oprnd->oprnd1());
             goto involution;
         case LIR_negd:
             if (oprnd->isconstf())
@@ -573,15 +573,15 @@ namespace nanojit
             if (oprnd->isop(LIR_subd))
                 return out->ins2(LIR_subd, oprnd->oprnd2(), oprnd->oprnd1());
             goto involution;
-        case LIR_l2d:
+        case LIR_i2d:
             if (oprnd->isconst())
                 return insImmf(oprnd->imm32());
             break;
-        case LIR_d2l:
+        case LIR_d2i:
             if (oprnd->isconstf())
                 return insImm(int32_t(oprnd->imm64f()));
             break;
-        case LIR_ul2d:
+        case LIR_ui2d:
             if (oprnd->isconst())
                 return insImmf(uint32_t(oprnd->imm32()));
             break;
@@ -612,20 +612,20 @@ namespace nanojit
         if (oprnd1 == oprnd2)
         {
             switch (v) {
-            case LIR_xorl:
-            case LIR_subl:
-            case LIR_ltul:
-            case LIR_gtul:
-            case LIR_gtl:
-            case LIR_ltl:
+            case LIR_xori:
+            case LIR_subi:
+            case LIR_ltui:
+            case LIR_gtui:
+            case LIR_gti:
+            case LIR_lti:
                 return insImm(0);
-            case LIR_orl:
-            case LIR_andl:
+            case LIR_ori:
+            case LIR_andi:
                 return oprnd1;
-            case LIR_lel:
-            case LIR_leul:
-            case LIR_gel:
-            case LIR_geul:
+            case LIR_lei:
+            case LIR_leui:
+            case LIR_gei:
+            case LIR_geui:
                 // x <= x == 1; x >= x == 1
                 return insImm(1);
             default:
@@ -641,54 +641,54 @@ namespace nanojit
 
             switch (v) {
 #if NJ_SOFTFLOAT_SUPPORTED
-            case LIR_ll2d:
+            case LIR_ii2d:
                 return insImmf(do_join(c1, c2));
 #endif
-            case LIR_eql:
+            case LIR_eqi:
                 return insImm(c1 == c2);
-            case LIR_ltl:
+            case LIR_lti:
                 return insImm(c1 < c2);
-            case LIR_gtl:
+            case LIR_gti:
                 return insImm(c1 > c2);
-            case LIR_lel:
+            case LIR_lei:
                 return insImm(c1 <= c2);
-            case LIR_gel:
+            case LIR_gei:
                 return insImm(c1 >= c2);
-            case LIR_ltul:
+            case LIR_ltui:
                 return insImm(uint32_t(c1) < uint32_t(c2));
-            case LIR_gtul:
+            case LIR_gtui:
                 return insImm(uint32_t(c1) > uint32_t(c2));
-            case LIR_leul:
+            case LIR_leui:
                 return insImm(uint32_t(c1) <= uint32_t(c2));
-            case LIR_geul:
+            case LIR_geui:
                 return insImm(uint32_t(c1) >= uint32_t(c2));
-            case LIR_rshl:
+            case LIR_rshi:
                 return insImm(int32_t(c1) >> int32_t(c2));
-            case LIR_lshl:
+            case LIR_lshi:
                 return insImm(int32_t(c1) << int32_t(c2));
-            case LIR_rshul:
+            case LIR_rshui:
                 return insImm(uint32_t(c1) >> int32_t(c2));
-            case LIR_orl:
+            case LIR_ori:
                 return insImm(uint32_t(c1) | int32_t(c2));
-            case LIR_andl:
+            case LIR_andi:
                 return insImm(uint32_t(c1) & int32_t(c2));
-            case LIR_xorl:
+            case LIR_xori:
                 return insImm(uint32_t(c1) ^ int32_t(c2));
-            case LIR_addl:
+            case LIR_addi:
                 d = double(c1) + double(c2);
             fold:
                 r = int32_t(d);
                 if (r == d)
                     return insImm(r);
                 break;
-            case LIR_subl:
+            case LIR_subi:
                 d = double(c1) - double(c2);
                 goto fold;
-            case LIR_mull:
+            case LIR_muli:
                 d = double(c1) * double(c2);
                 goto fold;
-            CASE86(LIR_divl:)
-            CASE86(LIR_modl:)
+            CASE86(LIR_divi:)
+            CASE86(LIR_modi:)
                 #if defined NANOJIT_IA32 || defined NANOJIT_X64
                 // We can't easily fold div and mod, since folding div makes it
                 // impossible to calculate the mod that refers to it. The
@@ -729,14 +729,14 @@ namespace nanojit
         else if (oprnd1->isconst() && !oprnd2->isconst())
         {
             switch (v) {
-            case LIR_addl:
-            case LIR_mull:
+            case LIR_addi:
+            case LIR_muli:
             case LIR_addd:
             case LIR_muld:
-            case LIR_xorl:
-            case LIR_orl:
-            case LIR_andl:
-            case LIR_eql: {
+            case LIR_xori:
+            case LIR_ori:
+            case LIR_andi:
+            case LIR_eqi: {
                 // move const to rhs
                 LIns* t = oprnd2;
                 oprnd2 = oprnd1;
@@ -759,25 +759,25 @@ namespace nanojit
         {
             int c = oprnd2->imm32();
             switch (v) {
-            case LIR_addl:
-                if (oprnd1->isop(LIR_addl) && oprnd1->oprnd2()->isconst()) {
+            case LIR_addi:
+                if (oprnd1->isop(LIR_addi) && oprnd1->oprnd2()->isconst()) {
                     // add(add(x,c1),c2) => add(x,c1+c2)
                     c += oprnd1->oprnd2()->imm32();
                     oprnd2 = insImm(c);
                     oprnd1 = oprnd1->oprnd1();
                 }
                 break;
-            case LIR_subl:
-                if (oprnd1->isop(LIR_addl) && oprnd1->oprnd2()->isconst()) {
+            case LIR_subi:
+                if (oprnd1->isop(LIR_addi) && oprnd1->oprnd2()->isconst()) {
                     // sub(add(x,c1),c2) => add(x,c1-c2)
                     c = oprnd1->oprnd2()->imm32() - c;
                     oprnd2 = insImm(c);
                     oprnd1 = oprnd1->oprnd1();
-                    v = LIR_addl;
+                    v = LIR_addi;
                 }
                 break;
-            case LIR_rshl:
-                if (c == 16 && oprnd1->isop(LIR_lshl) &&
+            case LIR_rshi:
+                if (c == 16 && oprnd1->isop(LIR_lshi) &&
                     oprnd1->oprnd2()->isconstval(16) &&
                     insIsS16(oprnd1->oprnd1())) {
                     // rsh(lhs(x,16),16) == x, if x is S16
@@ -790,19 +790,19 @@ namespace nanojit
 
             if (c == 0) {
                 switch (v) {
-                case LIR_addl:
-                case LIR_orl:
-                case LIR_xorl:
-                case LIR_subl:
-                case LIR_lshl:
-                case LIR_rshl:
-                case LIR_rshul:
+                case LIR_addi:
+                case LIR_ori:
+                case LIR_xori:
+                case LIR_subi:
+                case LIR_lshi:
+                case LIR_rshi:
+                case LIR_rshui:
                     return oprnd1;
-                case LIR_andl:
-                case LIR_mull:
+                case LIR_andi:
+                case LIR_muli:
                     return oprnd2;
-                case LIR_eql:
-                    if (oprnd1->isop(LIR_orl) &&
+                case LIR_eqi:
+                    if (oprnd1->isop(LIR_ori) &&
                         oprnd1->oprnd2()->isconst() &&
                         oprnd1->oprnd2()->imm32() != 0) {
                         // (x or c) != 0 if c != 0
@@ -813,23 +813,23 @@ namespace nanojit
                 }
             } else if (c == -1 || (c == 1 && oprnd1->isCmp())) {
                 switch (v) {
-                case LIR_orl:
+                case LIR_ori:
                     // x | -1 = -1, cmp | 1 = 1
                     return oprnd2;
-                case LIR_andl:
+                case LIR_andi:
                     // x & -1 = x, cmp & 1 = cmp
                     return oprnd1;
                 default:
                     ;
                 }
-            } else if (c == 1 && v == LIR_mull) {
+            } else if (c == 1 && v == LIR_muli) {
                 return oprnd1;
             }
         }
 
 #if NJ_SOFTFLOAT_SUPPORTED
         LInsp ins;
-        if (v == LIR_ll2d && oprnd1->isop(LIR_dlo2l) && oprnd2->isop(LIR_dhi2l) &&
+        if (v == LIR_ii2d && oprnd1->isop(LIR_dlo2i) && oprnd2->isop(LIR_dhi2i) &&
             (ins = oprnd1->oprnd1()) == oprnd2->oprnd1()) {
             // qjoin(qlo(x),qhi(x)) == x
             return ins;
@@ -851,7 +851,7 @@ namespace nanojit
             // const ? x : y => return x or y depending on const
             return oprnd1->imm32() ? oprnd2 : oprnd3;
         }
-        if (oprnd1->isop(LIR_eql) &&
+        if (oprnd1->isop(LIR_eqi) &&
             ((oprnd1->oprnd2() == oprnd2 && oprnd1->oprnd1() == oprnd3) ||
              (oprnd1->oprnd1() == oprnd2 && oprnd1->oprnd2() == oprnd3))) {
             // (y == x) ? x : y  =>  y
@@ -879,7 +879,7 @@ namespace nanojit
                     return out->insGuard(LIR_x, NULL, gr);
                 }
             } else {
-                while (c->isop(LIR_eql) && c->oprnd1()->isCmp() && c->oprnd2()->isconstval(0)) {
+                while (c->isop(LIR_eqi) && c->oprnd1()->isCmp() && c->oprnd2()->isconstval(0)) {
                     // xt(eq(cmp,0)) => xf(cmp)   or   xf(eq(cmp,0)) => xt(cmp)
                     v = invertCondGuardOpcode(v);
                     c = c->oprnd1();
@@ -897,9 +897,9 @@ namespace nanojit
             double d = 0.0;
 
             switch (op) {
-            case LIR_addxovl:    d = double(c1) + double(c2);    break;
-            case LIR_subxovl:    d = double(c1) - double(c2);    break;
-            case LIR_mulxovl:    d = double(c1) * double(c2);    break;
+            case LIR_addxovi:    d = double(c1) + double(c2);    break;
+            case LIR_subxovi:    d = double(c1) - double(c2);    break;
+            case LIR_mulxovi:    d = double(c1) * double(c2);    break;
             default:            NanoAssert(0);                  break;
             }
             int32_t r = int32_t(d);
@@ -908,15 +908,15 @@ namespace nanojit
 
         } else if (oprnd1->isconst() && !oprnd2->isconst()) {
             switch (op) {
-            case LIR_addxovl:
-            case LIR_mulxovl: {
+            case LIR_addxovi:
+            case LIR_mulxovi: {
                 // move const to rhs
                 LIns* t = oprnd2;
                 oprnd2 = oprnd1;
                 oprnd1 = t;
                 break;
             }
-            case LIR_subxovl:
+            case LIR_subxovi:
                 break;
             default:
                 NanoAssert(0);
@@ -927,15 +927,15 @@ namespace nanojit
             int c = oprnd2->imm32();
             if (c == 0) {
                 switch (op) {
-                case LIR_addxovl:
-                case LIR_subxovl:
+                case LIR_addxovi:
+                case LIR_subxovi:
                     return oprnd1;
-                case LIR_mulxovl:
+                case LIR_mulxovi:
                     return oprnd2;
                 default:
                     ;
                 }
-            } else if (c == 1 && op == LIR_mulxovl) {
+            } else if (c == 1 && op == LIR_mulxovi) {
                 return oprnd1;
             }
         }
@@ -961,7 +961,7 @@ namespace nanojit
                     return out->insBranch(LIR_j, NULL, t);
                 }
             } else {
-                while (c->isop(LIR_eql) && c->oprnd1()->isCmp() && c->oprnd2()->isconstval(0)) {
+                while (c->isop(LIR_eqi) && c->oprnd1()->isCmp() && c->oprnd2()->isconstval(0)) {
                     // jt(eq(cmp,0)) => jf(cmp)   or   jf(eq(cmp,0)) => jt(cmp)
                     v = invertCondJmpOpcode(v);
                     c = c->oprnd1();
@@ -990,7 +990,7 @@ namespace nanojit
         // its type.
         LOpcode op = LOpcode(0);
         switch (value->retType()) {
-        case LTy_I32:   op = LIR_stl;   break;
+        case LTy_I32:   op = LIR_sti;   break;
 #ifdef NANOJIT_64BIT
         case LTy_I64:   op = LIR_stq;  break;
 #endif
@@ -1015,9 +1015,9 @@ namespace nanojit
         }
 
         if (use_cmov) {
-            LOpcode op = LIR_cmovl;
+            LOpcode op = LIR_cmovi;
             if (iftrue->isI32() && iffalse->isI32()) {
-                op = LIR_cmovl;
+                op = LIR_cmovi;
 #ifdef NANOJIT_64BIT
             } else if (iftrue->isI64() && iffalse->isI64()) {
                 op = LIR_cmovq;
@@ -1030,19 +1030,19 @@ namespace nanojit
             return ins3(op, cond, iftrue, iffalse);
         }
 
-        LInsp ncond = ins1(LIR_negl, cond); // cond ? -1 : 0
-        return ins2(LIR_orl,
-                    ins2(LIR_andl, iftrue, ncond),
-                    ins2(LIR_andl, iffalse, ins1(LIR_notl, ncond)));
+        LInsp ncond = ins1(LIR_negi, cond); // cond ? -1 : 0
+        return ins2(LIR_ori,
+                    ins2(LIR_andi, iftrue, ncond),
+                    ins2(LIR_andi, iffalse, ins1(LIR_noti, ncond)));
     }
 
     LIns* LirBufWriter::insCall(const CallInfo *ci, LInsp args[])
     {
         LOpcode op = getCallOpcode(ci);
 #if NJ_SOFTFLOAT_SUPPORTED
-        // SoftFloat: convert LIR_calld to LIR_calll.
+        // SoftFloat: convert LIR_calld to LIR_calli.
         if (_config.soft_float && op == LIR_calld)
-            op = LIR_calll;
+            op = LIR_calli;
 #endif
 
         int32_t argc = ci->count_args();
@@ -1625,25 +1625,25 @@ namespace nanojit
                 case LIR_xbarrier:
                 case LIR_j:
                 case LIR_label:
-                case LIR_imml:
+                case LIR_immi:
                 CASE64(LIR_immq:)
                 case LIR_immd:
                 case LIR_allocp:
                     // No operands, do nothing.
                     break;
 
-                case LIR_ldl:
+                case LIR_ldi:
                 CASE64(LIR_ldq:)
                 case LIR_ldd:
-                case LIR_ldub2ul:
-                case LIR_lduw2ul:
-                case LIR_ldb2l:
-                case LIR_ldw2l:
-                case LIR_lds2d:
-                case LIR_retl:
+                case LIR_lduc2ui:
+                case LIR_ldus2ui:
+                case LIR_ldc2i:
+                case LIR_lds2i:
+                case LIR_ldf2d:
+                case LIR_reti:
                 CASE64(LIR_retq:)
                 case LIR_retd:
-                case LIR_livel:
+                case LIR_livei:
                 CASE64(LIR_liveq:)
                 case LIR_lived:
                 case LIR_xt:
@@ -1652,36 +1652,36 @@ namespace nanojit
                 case LIR_jt:
                 case LIR_jf:
                 case LIR_jtbl:
-                case LIR_negl:
+                case LIR_negi:
                 case LIR_negd:
-                case LIR_notl:
-                CASESF(LIR_dlo2l:)
-                CASESF(LIR_dhi2l:)
-                CASE64(LIR_l2q:)
-                CASE64(LIR_ul2uq:)
-                case LIR_l2d:
-                case LIR_ul2d:
-                CASE64(LIR_q2l:)
-                case LIR_d2l:
-                CASE86(LIR_modl:)
+                case LIR_noti:
+                CASESF(LIR_dlo2i:)
+                CASESF(LIR_dhi2i:)
+                CASE64(LIR_i2q:)
+                CASE64(LIR_ui2uq:)
+                case LIR_i2d:
+                case LIR_ui2d:
+                CASE64(LIR_q2i:)
+                case LIR_d2i:
+                CASE86(LIR_modi:)
                     live.add(ins->oprnd1(), ins);
                     break;
 
-                case LIR_stl:
+                case LIR_sti:
                 CASE64(LIR_stq:)
                 case LIR_std:
-                case LIR_stl2b:
-                case LIR_stl2w:
-                case LIR_std2s:
-                case LIR_eql:
-                case LIR_ltl:
-                case LIR_gtl:
-                case LIR_lel:
-                case LIR_gel:
-                case LIR_ltul:
-                case LIR_gtul:
-                case LIR_leul:
-                case LIR_geul:
+                case LIR_sti2c:
+                case LIR_sti2s:
+                case LIR_std2f:
+                case LIR_eqi:
+                case LIR_lti:
+                case LIR_gti:
+                case LIR_lei:
+                case LIR_gei:
+                case LIR_ltui:
+                case LIR_gtui:
+                case LIR_leui:
+                case LIR_geui:
                 case LIR_eqd:
                 case LIR_ltd:
                 case LIR_gtd:
@@ -1696,45 +1696,45 @@ namespace nanojit
                 CASE64(LIR_gtuq:)
                 CASE64(LIR_leuq:)
                 CASE64(LIR_geuq:)
-                case LIR_lshl:
-                case LIR_rshl:
-                case LIR_rshul:
+                case LIR_lshi:
+                case LIR_rshi:
+                case LIR_rshui:
                 CASE64(LIR_lshq:)
                 CASE64(LIR_rshq:)
                 CASE64(LIR_rshuq:)
-                case LIR_addl:
-                case LIR_subl:
-                case LIR_mull:
-                case LIR_addxovl:
-                case LIR_subxovl:
-                case LIR_mulxovl:
-                CASE86(LIR_divl:)
+                case LIR_addi:
+                case LIR_subi:
+                case LIR_muli:
+                case LIR_addxovi:
+                case LIR_subxovi:
+                case LIR_mulxovi:
+                CASE86(LIR_divi:)
                 case LIR_addd:
                 case LIR_subd:
                 case LIR_muld:
                 case LIR_divd:
                 CASE64(LIR_addq:)
-                case LIR_andl:
-                case LIR_orl:
-                case LIR_xorl:
+                case LIR_andi:
+                case LIR_ori:
+                case LIR_xori:
                 CASE64(LIR_andq:)
                 CASE64(LIR_orq:)
                 CASE64(LIR_qxor:)
-                CASESF(LIR_ll2d:)
+                CASESF(LIR_ii2d:)
                 case LIR_file:
                 case LIR_line:
                     live.add(ins->oprnd1(), ins);
                     live.add(ins->oprnd2(), ins);
                     break;
 
-                case LIR_cmovl:
+                case LIR_cmovi:
                 CASE64(LIR_cmovq:)
                     live.add(ins->oprnd1(), ins);
                     live.add(ins->oprnd2(), ins);
                     live.add(ins->oprnd3(), ins);
                     break;
 
-                case LIR_calll:
+                case LIR_calli:
                 case LIR_calld:
                 CASE64(LIR_callq:)
                     for (int i = 0, argc = ins->argc(); i < argc; i++)
@@ -1742,7 +1742,7 @@ namespace nanojit
                     break;
 
 #if NJ_SOFTFLOAT_SUPPORTED
-                case LIR_hcalll:
+                case LIR_hcalli:
                     live.add(ins->oprnd1(), ins);
                     break;
 #endif
@@ -1837,7 +1837,7 @@ namespace nanojit
     const char* LirNameMap::createName(LInsp ins) {
         if (ins->isCall()) {
 #if NJ_SOFTFLOAT_SUPPORTED
-            if (ins->isop(LIR_hcalll)) {
+            if (ins->isop(LIR_hcalli)) {
                 ins = ins->oprnd1();    // we've presumably seen the other half already
             } else
 #endif
@@ -1953,7 +1953,7 @@ namespace nanojit
         LOpcode op = i->opcode();
         switch (op)
         {
-            case LIR_imml:
+            case LIR_immi:
                 VMPI_snprintf(s, n, "%s = %s %d", formatRef(&b1, i), lirNames[op], i->imm32());
                 break;
 
@@ -1977,7 +1977,7 @@ namespace nanojit
                 VMPI_snprintf(s, n, "%s", lirNames[op]);
                 break;
 
-            case LIR_calll:
+            case LIR_calli:
             case LIR_calld:
             CASE64(LIR_callq:) {
                 const CallInfo* call = i->callInfo();
@@ -2047,28 +2047,28 @@ namespace nanojit
                     i->oprnd2() ? formatRef(&b1, i->oprnd2()) : "unpatched");
                 break;
 
-            case LIR_livel:
+            case LIR_livei:
             case LIR_lived:
             CASE64(LIR_liveq:)
-            case LIR_retl:
+            case LIR_reti:
             CASE64(LIR_retq:)
             case LIR_retd:
                 VMPI_snprintf(s, n, "%s %s", lirNames[op], formatRef(&b1, i->oprnd1()));
                 break;
 
-            CASESF(LIR_hcalll:)
-            case LIR_negl:
+            CASESF(LIR_hcalli:)
+            case LIR_negi:
             case LIR_negd:
-            case LIR_l2d:
-            case LIR_ul2d:
-            CASESF(LIR_dlo2l:)
-            CASESF(LIR_dhi2l:)
-            case LIR_notl:
-            CASE86(LIR_modl:)
-            CASE64(LIR_l2q:)
-            CASE64(LIR_ul2uq:)
-            CASE64(LIR_q2l:)
-            case LIR_d2l:
+            case LIR_i2d:
+            case LIR_ui2d:
+            CASESF(LIR_dlo2i:)
+            CASESF(LIR_dhi2i:)
+            case LIR_noti:
+            CASE86(LIR_modi:)
+            CASE64(LIR_i2q:)
+            CASE64(LIR_ui2uq:)
+            CASE64(LIR_q2i:)
+            case LIR_d2i:
                 VMPI_snprintf(s, n, "%s = %s %s", formatRef(&b1, i), lirNames[op],
                              formatRef(&b2, i->oprnd1()));
                 break;
@@ -2081,42 +2081,42 @@ namespace nanojit
                 formatGuard(buf, i);
                 break;
 
-            case LIR_addxovl:
-            case LIR_subxovl:
-            case LIR_mulxovl:
+            case LIR_addxovi:
+            case LIR_subxovi:
+            case LIR_mulxovi:
                 formatGuardXov(buf, i);
                 break;
 
-            case LIR_addl:       CASE64(LIR_addq:)
-            case LIR_subl:
-            case LIR_mull:
-            CASE86(LIR_divl:)
+            case LIR_addi:       CASE64(LIR_addq:)
+            case LIR_subi:
+            case LIR_muli:
+            CASE86(LIR_divi:)
             case LIR_addd:
             case LIR_subd:
             case LIR_muld:
             case LIR_divd:
-            case LIR_andl:       CASE64(LIR_andq:)
-            case LIR_orl:        CASE64(LIR_orq:)
-            case LIR_xorl:       CASE64(LIR_qxor:)
-            case LIR_lshl:       CASE64(LIR_lshq:)
-            case LIR_rshl:       CASE64(LIR_rshq:)
-            case LIR_rshul:       CASE64(LIR_rshuq:)
-            case LIR_eql:        CASE64(LIR_eqq:)
-            case LIR_ltl:        CASE64(LIR_ltq:)
-            case LIR_lel:        CASE64(LIR_leq:)
-            case LIR_gtl:        CASE64(LIR_gtq:)
-            case LIR_gel:        CASE64(LIR_geq:)
-            case LIR_ltul:       CASE64(LIR_ltuq:)
-            case LIR_leul:       CASE64(LIR_leuq:)
-            case LIR_gtul:       CASE64(LIR_gtuq:)
-            case LIR_geul:       CASE64(LIR_geuq:)
+            case LIR_andi:       CASE64(LIR_andq:)
+            case LIR_ori:        CASE64(LIR_orq:)
+            case LIR_xori:       CASE64(LIR_qxor:)
+            case LIR_lshi:       CASE64(LIR_lshq:)
+            case LIR_rshi:       CASE64(LIR_rshq:)
+            case LIR_rshui:       CASE64(LIR_rshuq:)
+            case LIR_eqi:        CASE64(LIR_eqq:)
+            case LIR_lti:        CASE64(LIR_ltq:)
+            case LIR_lei:        CASE64(LIR_leq:)
+            case LIR_gti:        CASE64(LIR_gtq:)
+            case LIR_gei:        CASE64(LIR_geq:)
+            case LIR_ltui:       CASE64(LIR_ltuq:)
+            case LIR_leui:       CASE64(LIR_leuq:)
+            case LIR_gtui:       CASE64(LIR_gtuq:)
+            case LIR_geui:       CASE64(LIR_geuq:)
             case LIR_eqd:
             case LIR_ltd:
             case LIR_led:
             case LIR_gtd:
             case LIR_ged:
 #if NJ_SOFTFLOAT_SUPPORTED
-            case LIR_ll2d:
+            case LIR_ii2d:
 #endif
                 VMPI_snprintf(s, n, "%s = %s %s, %s", formatRef(&b1, i), lirNames[op],
                     formatRef(&b2, i->oprnd1()),
@@ -2124,33 +2124,33 @@ namespace nanojit
                 break;
 
             CASE64(LIR_cmovq:)
-            case LIR_cmovl:
+            case LIR_cmovi:
                 VMPI_snprintf(s, n, "%s = %s %s ? %s : %s", formatRef(&b1, i), lirNames[op],
                     formatRef(&b2, i->oprnd1()),
                     formatRef(&b3, i->oprnd2()),
                     formatRef(&b4, i->oprnd3()));
                 break;
 
-            case LIR_ldl:
+            case LIR_ldi:
             CASE64(LIR_ldq:)
             case LIR_ldd:
-            case LIR_ldub2ul:
-            case LIR_lduw2ul:
-            case LIR_ldb2l:
-            case LIR_ldw2l:
-            case LIR_lds2d:
+            case LIR_lduc2ui:
+            case LIR_ldus2ui:
+            case LIR_ldc2i:
+            case LIR_lds2i:
+            case LIR_ldf2d:
                 VMPI_snprintf(s, n, "%s = %s.%s %s[%d]", formatRef(&b1, i), lirNames[op],
                     formatAccSet(&b2, i->accSet()),
                     formatRef(&b3, i->oprnd1()),
                     i->disp());
                 break;
 
-            case LIR_stl:
+            case LIR_sti:
             CASE64(LIR_stq:)
             case LIR_std:
-            case LIR_stl2b:
-            case LIR_stl2w:
-            case LIR_std2s:
+            case LIR_sti2c:
+            case LIR_sti2s:
+            case LIR_std2f:
                 VMPI_snprintf(s, n, "%s.%s %s[%d] = %s", lirNames[op],
                     formatAccSet(&b1, i->accSet()),
                     formatRef(&b2, i->oprnd2()),
@@ -2196,7 +2196,7 @@ namespace nanojit
         }
         // We assume that downstream stages do not modify the instruction, so
         // that we can insert 'ins' into slot 'k'.  Check this.
-        NanoAssert(ins->isop(LIR_imml) && ins->imm32() == imm);
+        NanoAssert(ins->isop(LIR_immi) && ins->imm32() == imm);
         return ins;
     }
 
@@ -2456,8 +2456,8 @@ namespace nanojit
     SoftFloatOps::SoftFloatOps()
     {
         memset(opmap, 0, sizeof(opmap));
-        opmap[LIR_l2d] = &i2f_ci;
-        opmap[LIR_ul2d] = &u2f_ci;
+        opmap[LIR_i2d] = &i2f_ci;
+        opmap[LIR_ui2d] = &u2f_ci;
         opmap[LIR_negd] = &fneg_ci;
         opmap[LIR_addd] = &fadd_ci;
         opmap[LIR_subd] = &fsub_ci;
@@ -2476,17 +2476,17 @@ namespace nanojit
     {}
 
     LIns* SoftFloatFilter::split(LIns *a) {
-        if (a->isF64() && !a->isop(LIR_ll2d)) {
+        if (a->isF64() && !a->isop(LIR_ii2d)) {
             // all F64 args must be qjoin's for soft-float
-            a = ins2(LIR_ll2d, ins1(LIR_dlo2l, a), ins1(LIR_dhi2l, a));
+            a = ins2(LIR_ii2d, ins1(LIR_dlo2i, a), ins1(LIR_dhi2i, a));
         }
         return a;
     }
 
     LIns* SoftFloatFilter::split(const CallInfo *call, LInsp args[]) {
         LIns *lo = out->insCall(call, args);
-        LIns *hi = out->ins1(LIR_hcalll, lo);
-        return out->ins2(LIR_ll2d, lo, hi);
+        LIns *hi = out->ins1(LIR_hcalli, lo);
+        return out->ins2(LIR_ii2d, lo, hi);
     }
 
     LIns* SoftFloatFilter::fcall1(const CallInfo *call, LIns *a) {
@@ -2501,7 +2501,7 @@ namespace nanojit
 
     LIns* SoftFloatFilter::fcmp(const CallInfo *call, LIns *a, LIns *b) {
         LIns *args[] = { split(b), split(a) };
-        return out->ins2(LIR_eql, out->insCall(call, args), out->insImm(1));
+        return out->ins2(LIR_eqi, out->insCall(call, args), out->insImm(1));
     }
 
     LIns* SoftFloatFilter::ins1(LOpcode op, LIns *a) {
@@ -2659,7 +2659,7 @@ namespace nanojit
         // We could introduce a LTy_B32 type in the type system but that's a
         // bit weird because its representation is identical to LTy_I32.  It's
         // easier to just do this check structurally.  Also, optimization can
-        // cause the condition to become a LIR_imml.
+        // cause the condition to become a LIR_immi.
         if (!ins->isCmp() && !ins->isconst())
             errorStructureShouldBe(op, "argument", argN, ins, "a condition or 32-bit constant");
     }
@@ -2736,13 +2736,13 @@ namespace nanojit
         LIns* args[1] = { base };
 
         switch (op) {
-        case LIR_ldl:
+        case LIR_ldi:
         case LIR_ldd:
-        case LIR_ldub2ul:
-        case LIR_lduw2ul:
-        case LIR_ldb2l:
-        case LIR_ldw2l:
-        case LIR_lds2d:
+        case LIR_lduc2ui:
+        case LIR_ldus2ui:
+        case LIR_ldc2i:
+        case LIR_lds2i:
+        case LIR_ldf2d:
         CASE64(LIR_ldq:)
             break;
         default:
@@ -2763,9 +2763,9 @@ namespace nanojit
         LIns* args[2] = { value, base };
 
         switch (op) {
-        case LIR_stl2b:
-        case LIR_stl2w:
-        case LIR_stl:
+        case LIR_sti2c:
+        case LIR_sti2s:
+        case LIR_sti:
             formals[0] = LTy_I32;
             break;
 
@@ -2776,7 +2776,7 @@ namespace nanojit
 #endif
 
         case LIR_std:
-        case LIR_std2s:
+        case LIR_std2f:
             formals[0] = LTy_F64;
             break;
 
@@ -2812,22 +2812,22 @@ namespace nanojit
         LIns* args[1] = { a };
 
         switch (op) {
-        case LIR_negl:
-        case LIR_notl:
-        case LIR_l2d:
-        case LIR_ul2d:
-        case LIR_livel:
-        case LIR_retl:
+        case LIR_negi:
+        case LIR_noti:
+        case LIR_i2d:
+        case LIR_ui2d:
+        case LIR_livei:
+        case LIR_reti:
             formals[0] = LTy_I32;
             break;
 
 #ifdef NANOJIT_64BIT
-        case LIR_l2q:
-        case LIR_ul2uq:
+        case LIR_i2q:
+        case LIR_ui2uq:
             formals[0] = LTy_I32;
             break;
 
-        case LIR_q2l:
+        case LIR_q2i:
         case LIR_retq:
         case LIR_liveq:
             formals[0] = LTy_I64;
@@ -2835,22 +2835,22 @@ namespace nanojit
 #endif
 
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
-        case LIR_modl:       // see LIRopcode.tbl for why 'mod' is unary
-            checkLInsHasOpcode(op, 1, a, LIR_divl);
+        case LIR_modi:       // see LIRopcode.tbl for why 'mod' is unary
+            checkLInsHasOpcode(op, 1, a, LIR_divi);
             formals[0] = LTy_I32;
             break;
 #endif
 
 #if NJ_SOFTFLOAT_SUPPORTED
-        case LIR_dlo2l:
-        case LIR_dhi2l:
+        case LIR_dlo2i:
+        case LIR_dhi2i:
             formals[0] = LTy_F64;
             break;
 
-        case LIR_hcalll:
-            // The operand of a LIR_hcalll is LIR_calll, even though the
+        case LIR_hcalli:
+            // The operand of a LIR_hcalli is LIR_calli, even though the
             // function being called has a return type of LTy_F64.
-            checkLInsHasOpcode(op, 1, a, LIR_calll);
+            checkLInsHasOpcode(op, 1, a, LIR_calli);
             formals[0] = LTy_I32;
             break;
 #endif
@@ -2858,7 +2858,7 @@ namespace nanojit
         case LIR_negd:
         case LIR_retd:
         case LIR_lived:
-        case LIR_d2l:
+        case LIR_d2i:
             formals[0] = LTy_F64;
             break;
 
@@ -2884,31 +2884,31 @@ namespace nanojit
         LIns* args[2] = { a, b };
 
         switch (op) {
-        case LIR_addl:
-        case LIR_subl:
-        case LIR_mull:
-        CASE86(LIR_divl:)
-        case LIR_andl:
-        case LIR_orl:
-        case LIR_xorl:
-        case LIR_lshl:
-        case LIR_rshl:
-        case LIR_rshul:
-        case LIR_eql:
-        case LIR_ltl:
-        case LIR_gtl:
-        case LIR_lel:
-        case LIR_gel:
-        case LIR_ltul:
-        case LIR_gtul:
-        case LIR_leul:
-        case LIR_geul:
+        case LIR_addi:
+        case LIR_subi:
+        case LIR_muli:
+        CASE86(LIR_divi:)
+        case LIR_andi:
+        case LIR_ori:
+        case LIR_xori:
+        case LIR_lshi:
+        case LIR_rshi:
+        case LIR_rshui:
+        case LIR_eqi:
+        case LIR_lti:
+        case LIR_gti:
+        case LIR_lei:
+        case LIR_gei:
+        case LIR_ltui:
+        case LIR_gtui:
+        case LIR_leui:
+        case LIR_geui:
             formals[0] = LTy_I32;
             formals[1] = LTy_I32;
             break;
 
 #if NJ_SOFTFLOAT_SUPPORTED
-        case LIR_ll2d:
+        case LIR_ii2d:
             formals[0] = LTy_I32;
             formals[1] = LTy_I32;
             break;
@@ -2969,7 +2969,7 @@ namespace nanojit
         LIns* args[3] = { a, b, c };
 
         switch (op) {
-        case LIR_cmovl:
+        case LIR_cmovi:
             checkLInsIsACondOrConst(op, 1, a);
             formals[1] = LTy_I32;
             formals[2] = LTy_I32;
@@ -3096,9 +3096,9 @@ namespace nanojit
         LIns* args[2] = { a, b };
 
         switch (op) {
-        case LIR_addxovl:
-        case LIR_subxovl:
-        case LIR_mulxovl:
+        case LIR_addxovi:
+        case LIR_subxovi:
+        case LIR_mulxovi:
             break;
 
         default:
