@@ -5004,16 +5004,14 @@ function handleLinkClick(event, href, linkNode)
   return false;
 }
 
-function middleMousePaste(event)
-{
-  var url = readFromClipboard();
-  if (!url)
+function middleMousePaste(event) {
+  var url = getShortcutOrURI(readFromClipboard());
+  try {
+    makeURI(url);
+  } catch (ex) {
+    // Not a valid URI.
     return;
-
-  var postData = { };
-  url = getShortcutOrURI(url, postData);
-  if (!url)
-    return;
+  }
 
   try {
     addToUrlbarHistory(url);
