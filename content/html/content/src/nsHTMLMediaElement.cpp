@@ -441,6 +441,25 @@ nsHTMLMediaElement::OnChannelRedirect(nsIChannel *aChannel,
 {
   NS_ASSERTION(aChannel == mChannel, "Channels should match!");
   mChannel = aNewChannel;
+
+  // Handle forwarding of Range header so that the intial detection
+  // of seeking support (via result code 206) works across redirects.
+  nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);
+  NS_ENSURE_STATE(http);
+
+  NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
+ 
+  nsCAutoString rangeVal;
+  if (NS_SUCCEEDED(http->GetRequestHeader(rangeHdr, rangeVal))) {
+    NS_ENSURE_STATE(!rangeVal.IsEmpty());
+
+    http = do_QueryInterface(aNewChannel);
+    NS_ENSURE_STATE(http);
+ 
+    nsresult rv = http->SetRequestHeader(rangeHdr, rangeVal, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+ 
   return NS_OK;
 }
 
