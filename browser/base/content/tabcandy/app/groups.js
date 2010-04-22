@@ -1,4 +1,3 @@
-// Title: groups.js (revision-a)
 (function(){
 
 var numCmp = function(a,b){ return a-b; }
@@ -27,171 +26,32 @@ function isEventOverElement(event, el){
 }
 
 // ##########
-// Class: Group
-// A single group in the tab candy window. Descended from <Item>.
-// Note that it implements the <Subscribable> interface.
-window.Group = function(listOfEls, options) {
-  if(typeof(options) == 'undefined')
-    options = {};
-
-  this._children = []; // an array of Items
-  this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
-  this.locked = options.locked || false;
-  this.isAGroup = true;
-
-  var self = this;
-
-  var rectToBe = options.bounds;
-  if(!rectToBe) {
-    var boundingBox = this._getBoundingBox(listOfEls);
-    var padding = 30;
-    rectToBe = new Rect(
-      boundingBox.left-padding,
-      boundingBox.top-padding,
-      boundingBox.width+padding*2,
-      boundingBox.height+padding*2
-    );
-  }
-
-  var $container = options.container; 
-  if(!$container) {
-    $container = $('<div class="group" />')
-      .css({position: 'absolute'})
-      .css(rectToBe);
-  }
+function Group(){}
+Group.prototype = {
+  _children: [],
+  _container: null,
+  _padding: 30,
+  _isStacked: false,
+  _stackAngles: ["rotate(0deg)"],
+  _blockResize: false,
+  _arrangeSpeed: 170,
+  _shield: null,
   
-  $container
-    .css({zIndex: -100})
-    .appendTo("body")
-    .dequeue();
-    
-  // ___ Resizer
-  this.$resizer = $("<div class='resizer'/>")
-    .css({
-      position: "absolute",
-      width: 16, height: 16,
-      bottom: 0, right: 0,
-    })
-    .appendTo($container)
-    .hide();
-
-  // ___ Titlebar
-  var html = "<div class='titlebar'><input class='name' value='"
-      + (options.title || "")
-      + "'/><div class='close'></div></div>";
-       
-  this.$titlebar = $(html)        
-    .appendTo($container);
-    
-  this.$titlebar.css({
-      position: "absolute",
-    });
-    
-  var $close = $('.close', this.$titlebar).click(function() {
-    self.close();
-  });
-  
-  // ___ Title 
-  var titleUnfocus = function() {
-    if(!self.getTitle()) {
-      self.$title
-        .addClass("defaultName")
-        .val(self.defaultName);
-    } else {
-      self.$title.css({"background":"none"})
-        .animate({"paddingLeft":1, "easing":"linear"}, 340);
-    }
-  };
-  
-  var handleKeyPress = function(e){
-    if( e.which == 13 ) { // return
-      self.$title.blur()
-        .addClass("transparentBorder")
-        .one("mouseout", function(){
-          self.$title.removeClass("transparentBorder");
-        });
-    }
-  }
-  
-  this.$title = $('.name', this.$titlebar)
-    .css({backgroundRepeat: 'no-repeat'})
-    .blur(titleUnfocus)
-    .focus(function() {
-      if(self.locked) {
-        self.$title.blur();
-        return;
-      }  
-      self.$title.select();
-      if(!self.getTitle()) {
-        self.$title
-          .removeClass("defaultName")
-          .val('');
-      }
-    })
-    .keydown(handleKeyPress);
-  
-  titleUnfocus();
-  
-  if(this.locked)
-    this.$title.addClass('name-locked');
-
-  // ___ Content
-  this.$content = $('<div class="group-content"/>')
-    .css({
-      left: 0,
-      top: this.$titlebar.height(),
-      position: 'absolute'
-    })
-    .appendTo($container);
-  
-  // ___ locking
-  if(this.locked) {
-    $container.css({cursor: 'default'});    
-    $close.hide();
-  }
-    
-  // ___ Superclass initialization
-  this._init($container.get(0));
-
-  if(this.$debug) 
-    this.$debug.css({zIndex: -1000});
-  
-  // ___ Children
-  $.each(listOfEls, function(index, el) {  
-    self.add(el, null, options);
-  });
-
-  // ___ Finish Up
-  this._addHandlers($container);
-  this.setResizable(true);
-  
-  Groups.register(this);
-  
-  this.setBounds(rectToBe);
-  
-  // ___ Push other objects away
-  if(!options.dontPush)
-    this.pushAway();   
-};
-
-// ----------
-window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------
-  defaultName: "name this group...",
+  _randRotate: function(spread, index){
+    if( index >= this._stackAngles.length ){
+      var randAngle = parseInt( ((Math.random()+.6)/1.3)*spread-(spread/2) );
+      var retVal = "rotate(%deg)".replace(/%/, randAngle);
+      this._stackAngles.push(retVal);
+      Utils.log( this._stackAngles );
+      return retVal;          
+    }
+    else return this._stackAngles[index];
+  },
   
   // ----------  
-  getTitle: function() {
-    var value = (this.$title ? this.$title.val() : '');
-    return (value == this.defaultName ? '' : value);
-  },
-
-  // ----------  
-  setValue: function(value) {
-    this.$title.val(value); 
-  },
-
-  // ----------  
-  _getBoundingBox: function(els) {
+  _getBoundingBox: function(){
+    var els = this._children;
     var el;
     var boundingBox = {
       top:    min( [$(el).position().top  for([,el] in Iterator(els))] ),
@@ -205,129 +65,178 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   },
   
   // ----------  
-  getContentBounds: function() {
-    var box = this.getBounds();
-    var titleHeight = this.$titlebar.height();
-    box.top += titleHeight;
-    box.height -= titleHeight;
-    return box;
+  _getContainerBox: function(){
+    var pos = $(this._container).position();
+    var w = $(this._container).width();
+    var h = $(this._container).height();
+    return {
+      top: pos.top,
+      left: pos.left,
+      bottom: pos.top + h,
+      right: pos.left + w,
+      height: h,
+      width: w
+    }
   },
   
   // ----------  
-  reloadBounds: function() {
-    var bb = Utils.getBounds(this.container);
+  create: function(listOfEls, options) {
+    var self = this;
+    this._children = $(listOfEls).toArray();
+
+    var boundingBox = this._getBoundingBox();
+    var padding = 30;
+    var container = $("<div class='group'/>")
+      .css({
+        position: "absolute",
+        top: boundingBox.top-padding,
+        left: boundingBox.left-padding,
+        width: boundingBox.width+padding*2,
+        height: boundingBox.height+padding*2,
+        zIndex: -100,
+        opacity: 0,
+      })
+      .data("group", this)
+      .appendTo("body")
+      .animate({opacity:1.0}).dequeue();
     
-    if(!this.bounds)
-      this.bounds = new Rect(0, 0, 0, 0);
+/*
+    var contentEl = $('<div class="group-content"/>')
+      .appendTo(container);
+*/
     
-    this.setBounds(bb, true);
+    var resizer = $("<div class='resizer'/>")
+      .css({
+        position: "absolute",
+        width: 16, height: 16,
+        bottom: 0, right: 0,
+      }).appendTo(container);
+
+
+    this._container = container;
+    
+    this._addHandlers(container);
+    this._updateGroup();
+
+    var els = this._children;
+    this._children = [];
+    for(var i in els){
+      this.add( els[i] );
+    }
+    
+    // ___ Push other objects away
+    if(!options || !options.suppressPush)
+      this.pushAway(); 
   },
   
   // ----------  
-  setBounds: function(rect, immediately) {
-    var titleHeight = this.$titlebar.height();
+  pushAway: function() {
+  	return; //doesn't work in this version of groups.js
+    var buffer = 10;
     
-    // ___ Determine what has changed
-    var css = {};
-    var titlebarCSS = {};
-    var contentCSS = {};
+    var items = Items.getTopLevelItems();
+    $.each(items, function(index, item) {
+      var data = {};
+      data.bounds = item.getBounds();
+      data.startBounds = new Rect(data.bounds);
+      item.pushAwayData = data;
+    });
+    
+    var itemsToPush = [this];
+    this.pushAwayData.anchored = true;
 
-    if(rect.left != this.bounds.left)
-      css.left = rect.left;
-      
-    if(rect.top != this.bounds.top) 
-      css.top = rect.top;
-      
-    if(rect.width != this.bounds.width) {
-      css.width = rect.width;
-      titlebarCSS.width = rect.width;
-      contentCSS.width = rect.width;
-    }
-
-    if(rect.height != this.bounds.height) {
-      css.height = rect.height; 
-      contentCSS.height = rect.height - titleHeight; 
-    }
-      
-    if($.isEmptyObject(css))
-      return;
-      
-    var offset = new Point(rect.left - this.bounds.left, rect.top - this.bounds.top);
-    this.bounds = new Rect(rect);
-
-    // ___ Deal with children
-    if(this._children.length) {
-      if(css.width || css.height) {
-        this.arrange({animate: !immediately}); //(immediately ? 'sometimes' : true)});
-      } else if(css.left || css.top) {
-        $.each(this._children, function(index, child) {
-          var box = child.getBounds();
-          child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
-        });
-      }
-    }
+    var pushOne = function(baseItem) {
+      var bb = new Rect(baseItem.pushAwayData.bounds);
+      bb.inset(-buffer, -buffer);
+      var bbc = bb.center();
+    
+      $.each(items, function(index, item) {
+        if(item == baseItem)
+          return;
           
-    // ___ Update our representation
-    if(immediately) {
-      $(this.container).css(css);
-      this.$titlebar.css(titlebarCSS);
-      this.$content.css(contentCSS);
-    } else {
-      TabMirror.pausePainting();
-      $(this.container).animate(css, {complete: function() {
-        TabMirror.resumePainting();
-      }}).dequeue();
-      
-      this.$titlebar.animate(titlebarCSS).dequeue();        
-      this.$content.animate(contentCSS).dequeue();        
-    }
-
-    this._updateDebugBounds();
-  },
-  
-  // ----------
-  setZ: function(value) {
-    $(this.container).css({zIndex: value});
-
-    if(this.$debug) 
-      this.$debug.css({zIndex: value + 1});
-
-    $.each(this._children, function(index, child) {
-      child.setZ(value + 1);
-    });
-  },
+        var data = item.pushAwayData;
+        if(data.anchored)
+          return;
+          
+        var bounds = data.bounds;
+        var box = new Rect(bounds);
+        box.inset(-buffer, -buffer);
+        if(box.intersects(bb)) {
+          var offset = new Point();
+          var center = box.center(); 
+          if(Math.abs(center.x - bbc.x) < Math.abs(center.y - bbc.y)) {
+            if(center.y > bbc.y)
+              offset.y = bb.bottom - box.top; 
+            else
+              offset.y = bb.top - box.bottom;
+          } else {
+            if(center.x > bbc.x)
+              offset.x = bb.right - box.left; 
+            else
+              offset.x = bb.left - box.right;
+          }
+          
+          bounds.offset(offset); 
+          itemsToPush.push(item);
+        }
+      });
+    };   
     
-  // ----------  
-  close: function() {
-    var toClose = $.merge([], this._children);
-    $.each(toClose, function(index, child) {
-      child.close();
+    var a;
+    for(a = 0; a < 500 && itemsToPush.length; a++)
+      pushOne(itemsToPush.shift());         
+
+    $.each(items, function(index, item) {
+      var data = item.pushAwayData;
+      if(!data.bounds.equals(data.startBounds))
+        item.setPosition(data.bounds.left, data.bounds.top);
     });
   },
   
   // ----------  
-  add: function($el, dropPos, options) {
+  getBounds: function() {
+    var bb = Utils.getBounds(this._container);
+    return bb;
+  },
+  
+  // ----------  
+  setPosition: function(left, top) {
+    var box = this.getBounds();
+    var offset = new Point(left - box.left, top - box.top);
+    
+    $.each(this._children, function(index, value) {
+      var $el = $(this);
+      box = Utils.getBounds(this);
+      $el.animate({left: box.left + offset.x, top: box.top + offset.y});
+    });
+        
+    var bb = Utils.getBounds(this._container);
+    $(this._container).animate({left: bb.left + offset.x, top: bb.top + offset.y});
+  },
+
+  // ----------  
+  add: function($el, dropPos){
     Utils.assert('add expects jQuery objects', Utils.isJQuery($el));
+    var el = $el.get(0);
     
-    if(!dropPos) 
-      dropPos = {top:window.innerWidth, left:window.innerHeight};
-      
-    if(typeof(options) == 'undefined')
-      options = {};
-      
+    if( typeof(dropPos) == "undefined" ) dropPos = {top:window.innerWidth, left:window.innerHeight};
     var self = this;
     
     // TODO: You should be allowed to drop in the white space at the bottom and have it go to the end
     // (right now it can match the thumbnail above it and go there)
     function findInsertionPoint(dropPos){
-      var best = {dist: Infinity, item: null};
+      // When stacked, the new page always appears on top.
+      // Also, we use the self._isStacked = false to force an animation. Hacky!
+      if(self._isStacked){ self._isStacked = false; return 0; }
+      
+      var best = {dist: Infinity, el: null};
       var index = 0;
-      var box;
       for each(var child in self._children){
-        box = child.getBounds();
-        var dist = Math.sqrt( Math.pow((box.top+box.height/2)-dropPos.top,2) + Math.pow((box.left+box.width/2)-dropPos.left,2) );
+        var pos = $(child).position();
+        var [w, h] = [$(child).width(), $(child).height()];
+        var dist = Math.sqrt( Math.pow((pos.top+h/2)-dropPos.top,2) + Math.pow((pos.left+w/2)-dropPos.left,2) );
         if( dist <= best.dist ){
-          best.item = child;
+          best.el = child;
           best.dist = dist;
           best.index = index;
         }
@@ -335,228 +244,358 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       }
 
       if( self._children.length > 0 ){
-        box = best.item.getBounds();
-        var insertLeft = dropPos.left <= box.left + box.width/2;
-        if( !insertLeft ) 
-          return best.index+1;
-        else 
-          return best.index;
+        var insertLeft = dropPos.left <= $(best.el).position().left + $(best.el).width()/2;
+        if( !insertLeft ) return best.index+1
+        else return best.index
       }
+      return 0;
       
-      return 0;      
     }
     
-    var item = Items.item($el);
-    var oldIndex = $.inArray(item, this._children);
+    var oldIndex = $.inArray(el, this._children);
     if(oldIndex != -1)
       this._children.splice(oldIndex, 1); 
 
-    // Insert the tab into the right position.
     var index = findInsertionPoint(dropPos);
-    this._children.splice( index, 0, item );
+    this._children.splice( index, 0, el );
 
-    $el.droppable("disable");
-    item.setZ(this.getZ() + 1);
-    item.groupData = {};
+    $(el).droppable("disable");
 
-    item.addOnClose(this, function() {
-      self.remove($el);
-    });
+    if( typeof(Tabs) != "undefined" ){
+      var tab = Tabs.tab(el);
+      tab.mirror.addOnClose(el, function() {
+        self.remove($el);
+      });      
+    }
     
-    $el.data("group", this)
-       .addClass("tabInGroup");
-    
-    if(typeof(item.setResizable) == 'function')
-      item.setResizable(false);
-    
-    if(!options.dontArrange)
-      this.arrange();
+    this._updateGroup();
+    var self = this;
+    setTimeout(function(){
+      self.arrange()
+    }, 0)
   },
   
   // ----------  
-  // The argument a can be an Item, a DOM element, or a jQuery object
-  remove: function(a, options) {
-    var $el;  
-    var item;
-     
-    if(a.isAnItem) {
-      item = a;
-      $el = $(item.container);
+  remove: function(el){
+    var self = this;
+    $(el).data("toRemove", true);
+    this._children = this._children.filter(function(child){
+      if( $(child).data("toRemove") == true ){
+        $(child).data("group", null);
+        scaleTab( $(child), 160/$(child).width());
+        $(child).droppable("enable");    
+        if( typeof(Tabs) != "undefined" ){
+          var tab = Tabs.tab(child);
+          tab.mirror.removeOnClose(el);              
+        }
+        return false;
+      }
+      else return true;
+    });
+    
+    $(el).data("toRemove", false);
+    
+    if( this._children.length == 0 ){
+      this._container.fadeOut(function() $(this).remove());
     } else {
-      $el = $(a);  
-      item = Items.item($el);
-    }
-    
-    if(typeof(options) == 'undefined')
-      options = {};
-    
-    var index = $.inArray(item, this._children);
-    if(index != -1)
-      this._children.splice(index, 1); 
-
-    $el.data("group", null).removeClass("tabInGroup");
-    item.setSize(item.defaultSize.x, item.defaultSize.y);
-    $el.droppable("enable");    
-    item.removeOnClose(this);
-    
-    if(typeof(item.setResizable) == 'function')
-      item.setResizable(true);
-
-    if(this._children.length == 0 && !this.locked){  
-      this._sendOnClose();
-      Groups.unregister(this);
-      $(this.container).fadeOut(function() {
-        $(this).remove();
-      });
-    } else if(!options.dontArrange) {
       this.arrange();
     }
+    
   },
   
   // ----------
+  // TODO: could be a lot more efficient by unwrapping the remove routine
   removeAll: function() {
     var self = this;
-    var toRemove = $.merge([], this._children);
-    $.each(toRemove, function(index, child) {
-      self.remove(child, {dontArrange: true});
+    $.each(this._children, function(index, child) {
+      self.remove(child);
     });
   },
-    
+  
   // ----------  
-  arrange: function(options) {
-    var bb = this.getContentBounds();
-    bb.inset(6, 6);
+  _updateGroup: function(){
+    var self = this;
+    this._children.forEach(function(el){
+      $(el).data("group", self);
+    });    
+  },
+  
+  // ----------  
+  arrange: function(options){
+    if( options && options.animate == false ) animate = false;
+    else animate = true;
+    
+    var bb = this._getContainerBox();      
+    if( bb.width > 200 ) this._stackGrid(animate);
+    else this._stackArrange();
+    
+  },
+  
+  _stackGrid: function (animate){    
+    var self = this;
 
-    Items.arrange(this._children, bb, options);
+    if( self._isStacked ){
+      $(self._shield).remove();      
+      animate = true;
+      self._blockResize = true;
+      setTimeout(function(){
+        self._blockResize = false;
+      }, self._arrangeSpeed+25);
+    }
+            
+    var bb = self._getContainerBox();
+    var aTab = $(self._children[0]);
+
+    var count = self._children.length;
+    var bbAspect = bb.width/bb.height;
+    var tabAspect = 4/3; 
+
+    function howManyColumns( numRows, count ){ return Math.ceil(count/numRows) }
+
+    var count = self._children.length;
+    var best = {cols: 0, rows:0, area:0};
+    for(var numRows=1; numRows<=count; numRows++){
+      numCols = howManyColumns( numRows, count);
+      var w = numCols*tabAspect;
+      var h = numRows;
+
+      // We are width constrained
+      if( w/bb.width >= h/bb.height ) var scale = bb.width/w;
+      // We are height constrained
+      else var scale = bb.height/h;
+      var w = w*scale;
+      var h = h*scale;
+
+      if( w*h >= best.area ){
+        best.numRows = numRows;
+        best.numCols = numCols;
+        best.area = w*h;
+        best.w = w;
+        best.h = h;
+      }
+    }
+
+    var padAmount = .1;
+    var pad = padAmount * (best.w/best.numCols);
+    var tabW = (best.w-pad)/best.numCols - pad;
+    var tabH = (best.h-pad)/best.numRows - pad;
+
+    var x = pad; var y=pad; var numInCol = 0;
+    for each(var tab in self._children){
+      var sizeOptions = {width:tabW, height:tabH, top:y+bb.top, left:x+bb.left};
+      $(tab).css({"-moz-transform":"rotate(0deg)"});
+
+      if( !self._blockResize ){
+        if( animate ) $(tab).animate(sizeOptions).dequeue();
+        else $(tab).css(sizeOptions);       
+      } else {
+        $(tab).animate(sizeOptions, self._arrangeSpeed).dequeue();
+      }
+
+      x += tabW + pad;
+      numInCol += 1;
+      if( numInCol >= best.numCols ) [x, numInCol, y] = [pad, 0, y+tabH+pad];
+    }
+    self._isStacked = false;       
+  },
+  
+  _stackArrange: function (){
+    var self = this;
+    var aTab = $(self._children[0]);
+    zIndex = aTab.css("zIndex");
+    if( zIndex > 99999 ){ zIndex -= 99999; }
+    var bb = self._getContainerBox();  
+    
+    var w = bb.width*.75;
+    var h = w*.75;
+    
+    var i = 0;
+    self._children.forEach(function(){
+      var tab = self._children[i];
+     
+      // GRRRRRRRR! HATE. Why is it that this uses the same group
+      // for every group. Man do I hate scopping problems in JS.
+      // TODO: FIX THIS
+      $(tab).css({
+        "-moz-transform": self._randRotate(25, i),
+        zIndex: --zIndex
+      });
+   
+      var options = {
+        top: 1.2*bb.height/2-w/2 + bb.top,
+        left: .8*bb.width/2-h/2 + bb.left,
+        width: w,
+        height: h,
+      }
+      
+      if( !self._isStacked ){
+        self._blockResize = true;
+        $(tab).animate(options, self._arrangeSpeed).dequeue();
+        setTimeout(function(){ self._blockResize = false;}, self._arrangeSpeed+25);
+      }
+      else if(!self._blockResize) $(tab).css(options)
+      i++;
+    });
+    
+    self._positionStackHandler()
+        
+    self._isStacked = true;
+  },
+  
+  _positionStackHandler: function(){
+    var self = this;
+    $(self._shield).remove();
+    var aTab = $(self._children[0]);
+    
+    self._shield = $("<div id='shield'>").css({
+      "backgroundColor": "rgba(0,0,0,0)",
+      top: aTab.position().top,
+      left: aTab.position().left,
+      width: aTab.width(),
+      height: aTab.height(),
+      position: "absolute",
+      zIndex: 99999
+    }).appendTo("body").click(function(){
+      var [w,h] = [240,160];
+      var padding = 20;
+      var col = Math.ceil(Math.sqrt(self._children.length));
+      var row = Math.ceil(self._children.length/col);
+
+      var [overlayWidth, overlayHeight] = [w*col + padding*(col+1), h*row + padding*(row+1)];
+      var pos = $(this).position();
+      pos.left -= overlayWidth/3;
+      pos.top  -= overlayHeight/3;      
+            
+      if( pos.top < 0 )  pos.top = 20;
+      if( pos.left < 0 ) pos.left = 20;      
+      if( pos.top+overlayHeight > window.innerHeight ) pos.top = window.innerHeight-overlayHeight-20;
+      if( pos.left+overlayWidth > window.innerWidth )  pos.left = window.innerWidth-overlayWidth-20;
+
+      
+      $(this).animate({
+        width:  overlayWidth,
+        height: overlayHeight,
+        top: pos.top,
+        left: pos.left
+      },170).addClass("overlay");
+      
+      var [x,y] = [pos.left + padding, pos.top+padding];
+      var count = 1;
+      for each( var tab in self._children){
+        $(tab).css({"-moz-transform":"rotate(0deg)", zIndex:99999+1});
+        $(tab).animate({
+          top: y,
+          left: x,
+          width: w,
+          height: h
+        },170).dequeue();
+        
+        x += w+padding;
+        if( count >= col ){
+          count = 0;
+          x = pos.left+padding;
+          y += h + padding;
+        }
+        
+        count++;
+      }
+      
+      setTimeout(function(){
+        $(self._shield).mouseout(function(e){
+          zIndex = $(e.relatedTarget).css("zIndex");
+          if( zIndex == "auto" || parseInt(zIndex) <= 9999 ){
+            self._isStacked = false;
+            // TODO: reset the z-index
+            // This does one more arrange after all the animations are done.
+            // A hack, but it works, to get the shield position to be right.
+            self._stackArrange();
+            setTimeout(function(){self._stackArrange();},self._arrangeSpeed+10)
+          }
+        });
+      }, 100);
+      
+    })    
   },
   
   // ----------  
   _addHandlers: function(container){
     var self = this;
     
-    if(!this.locked) {
-      $(container).draggable({
-        scroll: false,
-        start: function(){
-          drag.info = new DragInfo(this);
-        },
-        drag: function(e, ui){
-          drag.info.drag(e, ui);
-        }, 
-        stop: function() {
-          drag.info.stop();
-          drag.info = null;
-        }
-      });
-    }
+    $(container).draggable({
+      start: function(){
+        $(container).data("origPosition", $(container).position());
+        self._children.forEach(function(el){
+          $(el).data("origPosition", $(el).position());
+        });
+      },
+      drag: function(e, ui){
+        var origPos = $(container).data("origPosition");
+        dX = ui.offset.left - origPos.left;
+        dY = ui.offset.top - origPos.top;
+        $(self._children).each(function(){
+          $(this).css({
+            left: $(this).data("origPosition").left + dX,
+            top:  $(this).data("origPosition").top + dY
+          })
+        })
+        self._positionStackHandler();
+      }
+    });
+    
     
     $(container).droppable({
       over: function(){
-        drag.info.$el.addClass("willGroup");
+        $dragged.addClass("willGroup");
       },
       out: function(){
-        var $group = drag.info.$el.data("group");
+        var $group = $dragged.data("group");
         if($group)
-          $group.remove(drag.info.$el);
-        drag.info.$el.removeClass("willGroup");
+          $group.remove($dragged);
+        $dragged.removeClass("willGroup");
       },
       drop: function(event){
-        drag.info.$el.removeClass("willGroup");
-        self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
+        $dragged.removeClass("willGroup");
+        self.add( $dragged, {left:event.pageX, top:event.pageY} )
       },
-      accept: ".tab", //".tab, .group",
+      accept: ".tab",
     });
-  },
-
-  // ----------  
-  setResizable: function(value){
-    var self = this;
+        
+    $(container).resizable({
+      handles: "se",
+      aspectRatio: false,
+      resize: function(){
+        if( !self._blockResize )
+          self.arrange({animate: false});
+      },
+      stop: function(){
+        self.arrange();
+      } 
+    })
     
-    if(value) {
-      this.$resizer.fadeIn();
-      $(this.container).resizable({
-        handles: "se",
-        aspectRatio: false,
-        minWidth: 60,
-        minHeight: 90,
-        resize: function(){
-          self.reloadBounds();
-        },
-        stop: function(){
-          self.reloadBounds();
-          self.pushAway();
-        } 
-      });
-    } else {
-      this.$resizer.fadeOut();
-      $(this.container).resizable('disable');
     }
-  }
-});
+}
 
 // ##########
-var DragInfo = function(element) {
-  this.el = element;
-  this.$el = $(this.el);
-  this.item = Items.item(this.el);
-  this.parent = this.$el.data('group');
-  
-  this.$el.data('isDragging', true);
-  this.item.setZ(9999);
-};
+var zIndex = 100;
+var $dragged = null;
+var timeout = null;
 
-DragInfo.prototype = {
-  // ----------  
-  drag: function(e, ui) {
-    if(this.item.isAGroup) {
-      var bb = this.item.getBounds();
-      bb.left = ui.position.left;
-      bb.top = ui.position.top;
-      this.item.setBounds(bb, true);
-    } else
-      this.item.reloadBounds();
-  },
-
-  // ----------  
-  stop: function() {
-    this.$el.data('isDragging', false);    
-    
-    if(this.parent && !this.parent.locked && this.parent != this.$el.data('group') 
-        && this.parent._children.length <= 1) 
-      this.parent.remove(this.parent._children[0]);
-      
-    if(this.item && !this.$el.hasClass('willGroup') && !this.$el.data('group')) {
-      this.item.setZ(drag.zIndex);
-      drag.zIndex++;
-      
-      this.item.reloadBounds();
-      this.item.pushAway();
-    }
-  }
-};
-
-var drag = {
-  info: null,
-  zIndex: 100
-};
-
-// ##########
 window.Groups = {
-  groups: [],
+  Group: Group, 
   
   // ----------  
   dragOptions: {
-    scroll: false,
-    start: function(e, ui) {
-      drag.info = new DragInfo(this);
+    start:function(){
+      $dragged = $(this);
+      $dragged.data('isDragging', true);
     },
-    drag: function(e, ui) {
-      drag.info.drag(e, ui);
+    stop: function(){
+      $dragged.data('isDragging', false);
+      $(this).css({zIndex: zIndex});
+      $dragged = null;          
+      zIndex += 1;
     },
-    stop: function() {
-      drag.info.stop();
-      drag.info = null;
-    }
+    zIndex: 999,
   },
   
   // ----------  
@@ -565,130 +604,127 @@ window.Groups = {
     tolerance: "pointer",
     greedy: true,
     drop: function(e){
-      $target = $(e.target);  
-      drag.info.$el.removeClass("willGroup")   
-      var phantom = $target.data("phantomGroup")
+      $target = $(e.target);
+  
+      // Only drop onto the top z-index
+      if( $target.css("zIndex") < $dragged.data("topDropZIndex") ) return;
+      $dragged.data("topDropZIndex", $target.css("zIndex") );
+      $dragged.data("topDrop", $target);
       
-      var group = $target.data("group");
-      if( group == null ){
-        phantom.removeClass("phantom");
-        phantom.removeClass("group-content");
-        var group = new Group([$target, drag.info.$el], {container:phantom});
-      } else 
-        group.add( drag.info.$el );      
+      // This strange timeout thing solves the problem of when
+      // something is dropped onto multiple potential drop targets.
+      // We wait a little bit to see get all drops, and then we have saved
+      // the top-most one and drop onto that.
+      clearTimeout( timeout );
+      var dragged = $dragged;
+      var target = $target;
+      timeout = setTimeout( function(){
+        dragged.removeClass("willGroup")   
+  
+        dragged.animate({
+          top: target.position().top+15,
+          left: target.position().left+15,      
+        }, 100);
+        
+        setTimeout( function(){
+          var group = $(target).data("group");
+          if( group == null ){
+            var group = new Group();
+            group.create([target, dragged]);            
+          } else {
+            group.add( dragged );
+          }
+          
+        }, 100);
+        
+        
+      }, 10 );
+      
+      
     },
     over: function(e){
-      var $target = $(e.target);
-
-      function elToRect($el){
-       return new Rect( $el.position().left, $el.position().top, $el.width(), $el.height() );
-      }
-
-      var height = elToRect($target).height * 1.5 + 20;
-      var width = elToRect($target).width * 1.5 + 20;
-      var unionRect = elToRect($target).union( elToRect(drag.info.$el) );
-
-      var newLeft = unionRect.left + unionRect.width/2 - width/2;
-      var newTop = unionRect.top + unionRect.height/2 - height/2;
-
-      $(".phantom").remove();
-      var phantom = $("<div class='group phantom group-content'/>").css({
-        width: width,
-        height: height,
-        position:"absolute",
-        top: newTop,
-        left: newLeft,
-        zIndex: -99
-      }).appendTo("body").hide().fadeIn();
-      $target.data("phantomGroup", phantom);      
+      $dragged.addClass("willGroup");
+      $dragged.data("topDropZIndex", 0);    
     },
-    out: function(e){      
-      $(e.target).data("phantomGroup").fadeOut(function(){
-        $(this).remove();
-      });
+    out: function(){      
+      $dragged.removeClass("willGroup");
     }
   }, 
   
-  // ----------
-  init: function() {
-    var self = this;
-    setTimeout(function() {
-      // we do this in a timeout, as window.innerHeight hasn't adjusted for Firebug initially
-      var pad = 5;
-      var sw = window.innerWidth;
-      var sh = window.innerHeight;
-      var w = sw - (pad * 2);
-      var h = TabItems.tabHeight;
-      var box = new Rect(pad, sh - (h + pad), w, h);
-      self.newTabGroup = new Group([], {bounds: box, title: 'New Tabs', locked: true}); 
-    }, 1000);
-  },
-
-  // ----------  
-  register: function(group) {
-    Utils.assert('only register once per group', $.inArray(group, this.groups) == -1);
-    this.groups.push(group);
-  },
-  
-  // ----------  
-  unregister: function(group) {
-    var index = $.inArray(group, this.groups);
-    if(index != -1)
-      this.groups.splice(index, 1);     
-  },
-  
   // ----------  
   arrange: function() {
-    var count = this.groups.length;
+    var $groups = $('.group');
+    var count = $groups.length;
     var columns = Math.ceil(Math.sqrt(count));
     var rows = ((columns * columns) - count >= columns ? columns - 1 : columns); 
     var padding = 12;
     var startX = padding;
-    var startY = Page.startY;
+    var startY = 100;
     var totalWidth = window.innerWidth - startX;
     var totalHeight = window.innerHeight - startY;
-    var box = new Rect(startX, startY, 
-        (totalWidth / columns) - padding,
-        (totalHeight / rows) - padding);
+    var w = (totalWidth / columns) - padding;
+    var h = (totalHeight / rows) - padding;
+    var x = startX;
+    var y = startY;
     
-    $.each(this.groups, function(index, group) {
-      group.setBounds(box, true);
+    $groups.each(function(i) {
+      $(this).css({left: x, top: y, width: w, height: h});
       
-      box.left += box.width + padding;
-      if(index % columns == columns - 1) {
-        box.left = startX;
-        box.top += box.height + padding;
+      $(this).data('group').arrange();
+      
+      x += w + padding;
+      if(i % columns == columns - 1) {
+        x = startX;
+        y += h + padding;
       }
     });
   },
   
   // ----------
   removeAll: function() {
-    var toRemove = $.merge([], this.groups);
-    $.each(toRemove, function(index, group) {
+    var $groups = $('.group');
+    $groups.each(function() {
+      var group = $(this).data('group');
       group.removeAll();
     });
-  },
-  
-  // ----------
-  newTab: function(tabItem) {
-    var groupTitle = 'New Tabs';
-    var array = jQuery.grep(this.groups, function(group) {
-      return group.getTitle() == groupTitle;
-    });
-    
-    var $el = $(tabItem.container);
-    if(array.length) 
-      array[0].add($el);
   }
 };
 
-// ----------
-Groups.init();
+// ##########
+window.Items = {
+  // ----------  
+  getTopLevelItems: function() {
+    var items = [];
+    
+    $('.tab').each(function() {
+      $this = $(this);
+      if(!$this.data('group'))
+        items.push($this.data('tabItem'));
+    });
+    
+    $('.group').each(function() {
+      items.push($(this).data('group'));
+    });
+    
+    return items;
+  }
+};
 
 // ##########
+function scaleTab( el, factor ){  
+  var $el = $(el);
+
+  $el.animate({
+    width: $el.width()*factor,
+    height: $el.height()*factor,
+    fontSize: parseInt($el.css("fontSize"))*factor,
+  },250).dequeue();
+}
+
+
 $(".tab").data('isDragging', false)
   .draggable(window.Groups.dragOptions)
   .droppable(window.Groups.dropOptions);
+
 
 })();
