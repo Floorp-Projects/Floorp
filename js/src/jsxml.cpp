@@ -1120,7 +1120,7 @@ static const char js_prettyIndent_str[]     = "prettyIndent";
 
 /*
  * NB: These XML static property tinyids must
- * (a) not collide with the generic negative tinyids at the top of jsfun.c;
+ * (a) not collide with the generic negative tinyids at the top of jsfun.cpp;
  * (b) index their corresponding xml_static_props array elements.
  * Don't change 'em!
  */
