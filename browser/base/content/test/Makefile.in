@@ -130,6 +130,7 @@ _BROWSER_FILES = \
                  browser_page_style_menu.js \
                  browser_plainTextLinks.js \
                  browser_pluginnotification.js \
+                 browser_popupUI.js \
                  browser_relatedTabs.js \
                  browser_sanitize-passwordDisabledHosts.js \
                  browser_sanitize-sitepermissions.js \
