@@ -226,7 +226,8 @@ Group.prototype = {
     // (right now it can match the thumbnail above it and go there)
     function findInsertionPoint(dropPos){
       // When stacked, the new page always appears on top.
-      if(self._isStacked){ return 0; }
+      // Also, we use the self._isStacked = false to force an animation. Hacky!
+      if(self._isStacked){ self._isStacked = false; return 0; }
       
       var best = {dist: Infinity, el: null};
       var index = 0;
@@ -234,7 +235,6 @@ Group.prototype = {
         var pos = $(child).position();
         var [w, h] = [$(child).width(), $(child).height()];
         var dist = Math.sqrt( Math.pow((pos.top+h/2)-dropPos.top,2) + Math.pow((pos.left+w/2)-dropPos.left,2) );
-/*         Utils.log( index, dist ); */
         if( dist <= best.dist ){
           best.el = child;
           best.dist = dist;
@@ -465,6 +465,12 @@ Group.prototype = {
       var pos = $(this).position();
       pos.left -= overlayWidth/3;
       pos.top  -= overlayHeight/3;      
+            
+      if( pos.top < 0 )  pos.top = 20;
+      if( pos.left < 0 ) pos.left = 20;      
+      if( pos.top+overlayHeight > window.innerHeight ) pos.top = window.innerHeight-overlayHeight-20;
+      if( pos.left+overlayWidth > window.innerWidth )  pos.left = window.innerWidth-overlayWidth-20;
+
       
       $(this).animate({
         width:  overlayWidth,
