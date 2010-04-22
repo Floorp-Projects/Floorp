@@ -2835,44 +2835,64 @@ struct GCTimer {
     uint64 sweepDoubleEnd;
     uint64 sweepDestroyEnd;
     uint64 end;
-};
 
-void dumpGCTimer(GCTimer *gcT, uint64 firstEnter, bool lastGC)
-{
-    static FILE *gcFile;
+    GCTimer() {
+        getFirstEnter();
+        memset(this, 0, sizeof(GCTimer));
+        enter = rdtsc();
+    }
 
-    if (!gcFile) {
-        gcFile = fopen("gcTimer.dat", "w");
+    static uint64 getFirstEnter() {
+        static uint64 firstEnter = rdtsc();
+        return firstEnter;
+    }
+
+    void finish(bool lastGC) {
+        end = rdtsc();
+
+        if (startMark > 0) {
+            static FILE *gcFile;
+
+            if (!gcFile) {
+                gcFile = fopen("gcTimer.dat", "w");
         
-        fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj, ");
-        fprintf(gcFile, "FinStr, FinDbl, Destroy,  newChunks, destoyChunks\n");
-    }
-    JS_ASSERT(gcFile);
-    fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %7.1f, ",
-            (double)(gcT->enter - firstEnter) / 1E6, 
-            (double)(gcT->end-gcT->enter) / 1E6, 
-            (double)(gcT->startSweep - gcT->startMark) / 1E6, 
-            (double)(gcT->sweepDestroyEnd - gcT->startSweep) / 1E6, 
-            (double)(gcT->sweepObjectEnd - gcT->startSweep) / 1E6, 
-            (double)(gcT->sweepStringEnd - gcT->sweepObjectEnd) / 1E6,
-            (double)(gcT->sweepDoubleEnd - gcT->sweepStringEnd) / 1E6,
-            (double)(gcT->sweepDestroyEnd - gcT->sweepDoubleEnd) / 1E6);
-    fprintf(gcFile, "%10d, %10d \n", newChunkCount, destroyChunkCount);
-    fflush(gcFile);
+                fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj, ");
+                fprintf(gcFile, "FinStr, FinDbl, Destroy,  newChunks, destoyChunks\n");
+            }
+            JS_ASSERT(gcFile);
+            fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %7.1f, ",
+                    (double)(enter - getFirstEnter()) / 1e6,
+                    (double)(end - enter) / 1e6,
+                    (double)(startSweep - startMark) / 1e6,
+                    (double)(sweepDestroyEnd - startSweep) / 1e6,
+                    (double)(sweepObjectEnd - startSweep) / 1e6,
+                    (double)(sweepStringEnd - sweepObjectEnd) / 1e6,
+                    (double)(sweepDoubleEnd - sweepStringEnd) / 1e6,
+                    (double)(sweepDestroyEnd - sweepDoubleEnd) / 1e6);
+            fprintf(gcFile, "%10d, %10d \n", newChunkCount, destroyChunkCount);
+            fflush(gcFile);
 
-    if (lastGC) {
-        fclose(gcFile);
-        gcFile = NULL;
+            if (lastGC) {
+                fclose(gcFile);
+                gcFile = NULL;
+            }
+        }
+        newChunkCount = 0;
+        destroyChunkCount = 0;
     }
-}
+};
 
 # define GCTIMER_PARAM      , GCTimer &gcTimer
 # define GCTIMER_ARG        , gcTimer
-# define TIMESTAMP(x)       (x = rdtsc())
+# define TIMESTAMP(x)       (gcTimer.x = rdtsc())
+# define GCTIMER_BEGIN()    GCTimer gcTimer
+# define GCTIMER_END(last)  (gcTimer.finish(last))
 #else
 # define GCTIMER_PARAM
 # define GCTIMER_ARG
 # define TIMESTAMP(x)       ((void) 0)
+# define GCTIMER_BEGIN()    ((void) 0)
+# define GCTIMER_END(last)  ((void) 0)
 #endif
 
 static void
@@ -3043,7 +3063,7 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
      * JSString* assuming that they are unique. This works since the
      * atomization API must not be called during GC.
      */
-    TIMESTAMP(gcTimer.startSweep);
+    TIMESTAMP(startSweep);
     js_SweepAtomState(cx);
 
     /* Finalize watch points associated with unreachable objects. */
@@ -3082,7 +3102,7 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
 #if JS_HAS_XML_SUPPORT
     FinalizeArenaList<JSXML, FinalizeXML>(cx, FINALIZE_XML, &arenaReleaser);
 #endif
-    TIMESTAMP(gcTimer.sweepObjectEnd);
+    TIMESTAMP(sweepObjectEnd);
 
     /*
      * We sweep the deflated cache before we finalize the strings so the
@@ -3098,10 +3118,10 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
         FinalizeArenaList<JSString, FinalizeExternalString>
             (cx, i, &arenaReleaser);
     }
-    TIMESTAMP(gcTimer.sweepStringEnd);
+    TIMESTAMP(sweepStringEnd);
 
     SweepDoubles(rt, &arenaReleaser);
-    TIMESTAMP(gcTimer.sweepDoubleEnd);
+    TIMESTAMP(sweepDoubleEnd);
 
     /*
      * Sweep the runtime's property tree after finalizing objects, in case any
@@ -3123,7 +3143,7 @@ GC(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
      */
     arenaReleaser.freeArenas(rt);
     DestroyEmptyGCChunks(rt, false);
-    TIMESTAMP(gcTimer.sweepDestroyEnd);
+    TIMESTAMP(sweepDestroyEnd);
 
 #ifdef JS_THREADSAFE
     cx->submitDeallocatorTask();
@@ -3185,7 +3205,7 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
         AutoUnlockGC unlock(rt);
         if (firstRun) {
             PreGCCleanup(cx, gckind);
-            TIMESTAMP(gcTimer.startMark);
+            TIMESTAMP(startMark);
             firstRun = false;
         }
         GC(cx, gckind  GCTIMER_ARG);
@@ -3512,13 +3532,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
      */
     if (rt->state != JSRTS_UP && gckind != GC_LAST_CONTEXT)
         return;
-    
-#ifdef MOZ_GCTIMER
-    static uint64 firstEnter = rdtsc();
-    GCTimer gcTimer;
-    memset(&gcTimer, 0, sizeof(GCTimer));
-#endif
-    TIMESTAMP(gcTimer.enter);
+
+    GCTIMER_BEGIN();
 
     for (;;) {
         if (!FireGCBegin(cx, gckind))
@@ -3549,25 +3564,5 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
             break;
     }
 
-    EndGCSession(cx);
-
-#ifdef JS_THREADSAFE
-    /*
-     * Unlock unless we have GC_LOCK_HELD which requires locked GC on return.
-     */
-    if (!(gckind & GC_LOCK_HELD))
-        JS_UNLOCK_GC(rt);
-#endif
-
-    if (!FireGCEnd(cx, gckind))
-        goto restart_at_beginning;
-
-    TIMESTAMP(gcTimer.end);
-
-#ifdef MOZ_GCTIMER
-    if (gcTimer.startMark > 0)
-        dumpGCTimer(&gcTimer, firstEnter, gckind == GC_LAST_CONTEXT);
-    newChunkCount = 0;
-    destroyChunkCount = 0;
-#endif
+    GCTIMER_END(gckind == GC_LAST_CONTEXT);
 }
