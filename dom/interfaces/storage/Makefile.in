@@ -64,6 +64,7 @@ SDK_XPIDLSRCS =                      \
         nsIDOMStorageList.idl    \
         nsIDOMStorageWindow.idl  \
         nsIIndexedDatabaseRequest.idl \
+        nsIIDBRequest.idl \
        $(NULL)
 
 include $(topsrcdir)/config/rules.mk
