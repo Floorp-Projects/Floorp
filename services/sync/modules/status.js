@@ -46,10 +46,12 @@ let Status = {
   set login(code) {
     this._login = code;
 
-    if (code == LOGIN_FAILED_NETWORK_ERROR || code == LOGIN_FAILED_SERVER_ERROR)
+    if (code == LOGIN_FAILED_NO_USERNAME || 
+        code == LOGIN_FAILED_NO_PASSWORD || 
+        code == LOGIN_FAILED_NO_PASSPHRASE)
+      this.service = CLIENT_NOT_CONFIGURED;      
+    else if (code != LOGIN_SUCCEEDED)
       this.service = LOGIN_FAILED;
-    else if (code != LOGIN_SUCCEEDED) // missing/wrong user/pass/pp
-      this.service = CLIENT_NOT_CONFIGURED;
     else
       this.service = STATUS_OK;
   },
