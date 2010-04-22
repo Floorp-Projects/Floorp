@@ -48,13 +48,13 @@ LIBXUL_LIBRARY = 1
 
 
 
-CPPSRCS =                  \
-       nsDOMStorage.cpp    \
-       $(NULL)
-
-ifdef MOZ_STORAGE
-CPPSRCS += nsDOMStorageDBWrapper.cpp nsDOMStoragePersistentDB.cpp nsDOMStorageMemoryDB.cpp
-endif
+CPPSRCS = \
+  nsDOMStorage.cpp \
+  nsDOMStorageDBWrapper.cpp \
+  nsDOMStoragePersistentDB.cpp \
+  nsDOMStorageMemoryDB.cpp \
+  IDBRequest.cpp \
+  $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
