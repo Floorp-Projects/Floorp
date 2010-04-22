@@ -42,6 +42,7 @@
 #define mozilla_throw_gcc_h
 
 #include <stdio.h>              // snprintf
+#include <string.h>             // strerror
 
 // For gcc, we define these inline to abort so that we're absolutely
 // certain that (i) no exceptions are thrown from Gecko; (ii) these
