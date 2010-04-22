@@ -129,7 +129,6 @@ protected:
     bool ShouldContinueFromTimeout();
 
     // Executed on the IO thread.
-    void OnSendReply(Message* msg);
     void NotifyWorkerThread();
 
     // On both
