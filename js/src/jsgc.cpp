@@ -3197,6 +3197,187 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
     } while (rt->gcLevel > 1 || rt->gcPoke);
 }
 
+#ifdef JS_THREADSAFE
+
+/*
+ * Either this thread is doing GC and has reentered js_GC; or another thread is
+ * the GC thread. If the former, schedule another GC cycle after the current one.
+ * If the latter, wait for the other thread to finish with GC.
+ */
+static void
+DelegateGC(JSContext *cx, JSGCInvocationKind gckind)
+{
+    JSRuntime *rt = cx->runtime;
+    JS_ASSERT(rt->gcThread);
+
+    /* Bump gcLevel to restart the current GC, so it finds new garbage. */
+    rt->gcLevel++;
+    METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
+
+    /*
+     * If this thread is already the GC thread, we have reentered js_GC.
+     * Bumping rt->gcLevel above ensures that another GC cycle will happen
+     * after the current one.
+     */
+    if (rt->gcThread == cx->thread)
+        return;
+
+    /*
+     * GC is running on another thread. Temporarily suspend all requests
+     * running on the current thread and wait until the GC is done.
+     */
+    size_t requestDebit = js_CountThreadRequests(cx);
+    JS_ASSERT(requestDebit <= rt->requestCount);
+#ifdef JS_TRACER
+    JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
+#endif
+    if (requestDebit != 0) {
+#ifdef JS_TRACER
+        if (JS_ON_TRACE(cx)) {
+            /*
+             * Leave trace before we decrease rt->requestCount and notify the
+             * GC. Otherwise the GC may start immediately after we unlock while
+             * this thread is still on trace.
+             */
+            AutoUnlockGC unlock(rt);
+            LeaveTrace(cx);
+        }
+#endif
+        rt->requestCount -= requestDebit;
+        if (rt->requestCount == 0)
+            JS_NOTIFY_REQUEST_DONE(rt);
+
+        /* See comments before another call to js_ShareWaitingTitles below. */
+        cx->thread->gcWaiting = true;
+        js_ShareWaitingTitles(cx);
+
+        /* Make sure that the GC from another thread respects GC_KEEP_ATOMS. */
+        Conditionally<AutoKeepAtoms> keepIf(!!(gckind & GC_KEEP_ATOMS), rt);
+
+        /*
+         * Check that we did not release the GC lock above and let the GC to
+         * finish before we wait.
+         */
+        JS_ASSERT(rt->gcLevel > 0);
+        do {
+            JS_AWAIT_GC_DONE(rt);
+        } while (rt->gcLevel > 0);
+
+        cx->thread->gcWaiting = false;
+        rt->requestCount += requestDebit;
+    }
+}
+
+#endif
+
+/*
+ * Start a GC session if one is not already underway. This function contains
+ * the rendezvous algorithm by which we stop the world for GC.
+ *
+ * If a GC session is not already happening, this thread becomes the GC
+ * thread. Wait for all other threads to quiesce. Then set rt->gcRunning to
+ * true and return true. The caller must call EndGCSession when GC work is
+ * done.
+ *
+ * If another thread is already the GC thread, wait for the impending GC
+ * session to finish. Then return false.
+ *
+ * Otherwise the current thread is already the GC thread. Just return false.
+ */
+static bool
+BeginGCSession(JSContext *cx, JSGCInvocationKind gckind)
+{
+    JSRuntime *rt = cx->runtime;
+
+    METER(rt->gcStats.poke++);
+    rt->gcPoke = JS_FALSE;
+
+#ifdef JS_THREADSAFE
+    /*
+     * Check if the GC is already running on this or another thread and
+     * delegate the job to it.
+     */
+    if (rt->gcLevel > 0) {
+        DelegateGC(cx, gckind);
+        return false;
+    }
+
+    /* No other thread is in GC, so indicate that we're now in GC. */
+    rt->gcLevel = 1;
+    rt->gcThread = cx->thread;
+
+    /*
+     * Notify all operation callbacks, which will give them a chance to
+     * yield their current request. Contexts that are not currently
+     * executing will perform their callback at some later point,
+     * which then will be unnecessary, but harmless.
+     */
+    js_NudgeOtherContexts(cx);
+
+    /*
+     * Discount all the requests on the current thread from contributing
+     * to rt->requestCount before we wait for all other requests to finish.
+     * JS_NOTIFY_REQUEST_DONE, which will wake us up, is only called on
+     * rt->requestCount transitions to 0.
+     */
+    size_t requestDebit = js_CountThreadRequests(cx);
+    JS_ASSERT_IF(cx->requestDepth != 0, requestDebit >= 1);
+    JS_ASSERT(requestDebit <= rt->requestCount);
+    if (requestDebit != rt->requestCount) {
+        rt->requestCount -= requestDebit;
+
+        /*
+         * Share any title that is owned by the GC thread before we wait, to
+         * avoid a deadlock with ClaimTitle. We also set the gcWaiting flag so
+         * that ClaimTitle can claim the title ownership from the GC thread if
+         * that function is called while the GC is waiting.
+         */
+        cx->thread->gcWaiting = true;
+        js_ShareWaitingTitles(cx);
+        do {
+            JS_AWAIT_REQUEST_DONE(rt);
+        } while (rt->requestCount > 0);
+        cx->thread->gcWaiting = false;
+        rt->requestCount += requestDebit;
+    }
+
+#else  /* !JS_THREADSAFE */
+
+    /* Bump gcLevel and return rather than nest; the outer gc will restart. */
+    rt->gcLevel++;
+    METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
+    if (rt->gcLevel > 1)
+        return false;
+
+#endif /* !JS_THREADSAFE */
+
+    /*
+     * Set rt->gcRunning here within the GC lock, and after waiting for any
+     * active requests to end, so that new requests that try to JS_AddRoot,
+     * JS_RemoveRoot, or JS_RemoveRootRT block in JS_BeginRequest waiting for
+     * rt->gcLevel to drop to zero, while request-less calls to the *Root*
+     * APIs block in js_AddRoot or js_RemoveRoot (see above in this file),
+     * waiting for GC to finish.
+     */
+    rt->gcRunning = JS_TRUE;
+    return true;
+}
+
+/* End the current GC session and allow other threads to proceed. */
+static void
+EndGCSession(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime;
+
+    rt->gcLevel = 0;
+    rt->gcRunning = rt->gcRegenShapes = false;
+#ifdef JS_THREADSAFE
+    JS_ASSERT(rt->gcThread == cx->thread);
+    rt->gcThread = NULL;
+    JS_NOTIFY_GC_DONE(rt);
+#endif
+}
+
 /*
  * Call the GC callback, if any, to signal that GC is starting. Return false if
  * the callback vetoes GC.
@@ -3269,9 +3450,6 @@ void
 js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
     JSRuntime *rt;
-#ifdef JS_THREADSAFE
-    size_t requestDebit;
-#endif
 
     JS_ASSERT_IF(gckind == GC_LAST_DITCH, !JS_ON_TRACE(cx));
     rt = cx->runtime;
@@ -3319,136 +3497,12 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     if (!(gckind & GC_LOCK_HELD))
         JS_LOCK_GC(rt);
 
-    METER(rt->gcStats.poke++);
-    rt->gcPoke = JS_FALSE;
-
-#ifdef JS_THREADSAFE
-    /*
-     * Check if the GC is already running on this or another thread and
-     * delegate the job to it.
-     */
-    if (rt->gcLevel > 0) {
-        JS_ASSERT(rt->gcThread);
-
-        /* Bump gcLevel to restart the current GC, so it finds new garbage. */
-        rt->gcLevel++;
-        METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
-
-        /*
-         * If the GC runs on another thread, temporarily suspend all requests
-         * running on the current thread and wait until the GC is done.
-         */
-        if (rt->gcThread != cx->thread) {
-            requestDebit = js_CountThreadRequests(cx);
-            JS_ASSERT(requestDebit <= rt->requestCount);
-#ifdef JS_TRACER
-            JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
-#endif
-            if (requestDebit != 0) {
-#ifdef JS_TRACER
-                if (JS_ON_TRACE(cx)) {
-                    /*
-                     * Leave trace before we decrease rt->requestCount and
-                     * notify the GC. Otherwise the GC may start immediately
-                     * after we unlock while this thread is still on trace.
-                     */
-                    AutoUnlockGC unlock(rt);
-                    LeaveTrace(cx);
-                }
-#endif
-                rt->requestCount -= requestDebit;
-                if (rt->requestCount == 0)
-                    JS_NOTIFY_REQUEST_DONE(rt);
-
-                /*
-                 * See comments before another call to js_ShareWaitingTitles
-                 * below.
-                 */
-                cx->thread->gcWaiting = true;
-                js_ShareWaitingTitles(cx);
-
-                /*
-                 * Make sure that the GC from another thread respects
-                 * GC_KEEP_ATOMS.
-                 */
-                Conditionally<AutoKeepAtoms> keepIf(!!(gckind & GC_KEEP_ATOMS), rt);
-
-                /*
-                 * Check that we did not release the GC lock above and let the
-                 * GC to finish before we wait.
-                 */
-                JS_ASSERT(rt->gcLevel > 0);
-                do {
-                    JS_AWAIT_GC_DONE(rt);
-                } while (rt->gcLevel > 0);
-
-                cx->thread->gcWaiting = false;
-                rt->requestCount += requestDebit;
-            }
-        }
+    if (!BeginGCSession(cx, gckind)) {
+        /* We're already doing GC or another thread did GC for us. */
         if (!(gckind & GC_LOCK_HELD))
             JS_UNLOCK_GC(rt);
         return;
     }
-
-    /* No other thread is in GC, so indicate that we're now in GC. */
-    rt->gcLevel = 1;
-    rt->gcThread = cx->thread;
-
-    /*
-     * Notify all operation callbacks, which will give them a chance to
-     * yield their current request. Contexts that are not currently
-     * executing will perform their callback at some later point,
-     * which then will be unnecessary, but harmless.
-     */
-    js_NudgeOtherContexts(cx);
-
-    /*
-     * Discount all the requests on the current thread from contributing
-     * to rt->requestCount before we wait for all other requests to finish.
-     * JS_NOTIFY_REQUEST_DONE, which will wake us up, is only called on
-     * rt->requestCount transitions to 0.
-     */
-    requestDebit = js_CountThreadRequests(cx);
-    JS_ASSERT_IF(cx->requestDepth != 0, requestDebit >= 1);
-    JS_ASSERT(requestDebit <= rt->requestCount);
-    if (requestDebit != rt->requestCount) {
-        rt->requestCount -= requestDebit;
-
-        /*
-         * Share any title that is owned by the GC thread before we wait, to
-         * avoid a deadlock with ClaimTitle. We also set the gcWaiting flag so
-         * that ClaimTitle can claim the title ownership from the GC thread if
-         * that function is called while the GC is waiting.
-         */
-        cx->thread->gcWaiting = true;
-        js_ShareWaitingTitles(cx);
-        do {
-            JS_AWAIT_REQUEST_DONE(rt);
-        } while (rt->requestCount > 0);
-        cx->thread->gcWaiting = false;
-        rt->requestCount += requestDebit;
-    }
-
-#else  /* !JS_THREADSAFE */
-
-    /* Bump gcLevel and return rather than nest; the outer gc will restart. */
-    rt->gcLevel++;
-    METER_UPDATE_MAX(rt->gcStats.maxlevel, rt->gcLevel);
-    if (rt->gcLevel > 1)
-        return;
-
-#endif /* !JS_THREADSAFE */
-
-    /*
-     * Set rt->gcRunning here within the GC lock, and after waiting for any
-     * active requests to end, so that new requests that try to JS_AddRoot,
-     * JS_RemoveRoot, or JS_RemoveRootRT block in JS_BeginRequest waiting for
-     * rt->gcLevel to drop to zero, while request-less calls to the *Root*
-     * APIs block in js_AddRoot or js_RemoveRoot (see above in this file),
-     * waiting for GC to finish.
-     */
-    rt->gcRunning = JS_TRUE;
 
     if (gckind == GC_SET_SLOT_REQUEST) {
         JSSetSlotRequest *ssr;
@@ -3485,13 +3539,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     rt->setGCLastBytes(rt->gcBytes);
 
   done_running:
-    rt->gcLevel = 0;
-    rt->gcRunning = rt->gcRegenShapes = false;
+    EndGCSession(cx);
 
 #ifdef JS_THREADSAFE
-    rt->gcThread = NULL;
-    JS_NOTIFY_GC_DONE(rt);
-
     /*
      * Unlock unless we have GC_LOCK_HELD which requires locked GC on return.
      */
