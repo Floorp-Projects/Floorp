@@ -378,9 +378,6 @@ TabChild::~TabChild()
         JS_DestroyContext(mCx);
       }
     }
-#ifdef MOZ_WIDGET_QT
-    nsQAppInstance::Release();
-#endif
 }
 
 NS_IMETHODIMP
