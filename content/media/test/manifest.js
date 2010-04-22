@@ -75,6 +75,10 @@ var gPlayTests = [
   { name:"audio-overhang.ogg", type:"audio/ogg", duration:2.3 },
   { name:"video-overhang.ogg", type:"audio/ogg", duration:3.966 },
 
+  // Test playback/metadata work after a redirect
+  { name:"redirect.sjs?http://mochi.test:8888/tests/content/media/test/320x240.ogv",
+    type:"video/ogg", duration:0.233 },
+
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
