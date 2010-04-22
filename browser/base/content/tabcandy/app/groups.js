@@ -37,6 +37,7 @@ window.Group = function(listOfEls, options) {
   this._children = []; // an array of Items
   this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
   this.locked = options.locked || false;
+  this.isAGroup = true;
 
   var self = this;
 
@@ -116,6 +117,10 @@ window.Group = function(listOfEls, options) {
     .css({backgroundRepeat: 'no-repeat'})
     .blur(titleUnfocus)
     .focus(function() {
+      if(self.locked) {
+        self.$title.blur();
+        return;
+      }  
       self.$title.select();
       if(!self.getTitle()) {
         self.$title
@@ -126,6 +131,9 @@ window.Group = function(listOfEls, options) {
     .keydown(handleKeyPress);
   
   titleUnfocus();
+  
+  if(this.locked)
+    this.$title.addClass('name-locked');
 
   // ___ Content
   this.$content = $('<div class="group-content"/>')
@@ -370,7 +378,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   remove: function(a, options) {
     var $el;  
     var item;
-
+     
     if(a.isAnItem) {
       item = a;
       $el = $(item.container);
@@ -394,7 +402,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     if(typeof(item.setResizable) == 'function')
       item.setResizable(true);
 
-    if(this._children.length == 0 ){  
+    if(this._children.length == 0 && !this.locked){  
       this._sendOnClose();
       Groups.unregister(this);
       $(this.container).fadeOut(function() {
@@ -499,17 +507,21 @@ var DragInfo = function(element) {
 DragInfo.prototype = {
   // ----------  
   drag: function(e, ui) {
-    var bb = this.item.getBounds();
-    bb.left = ui.position.left;
-    bb.top = ui.position.top;
-    this.item.setBounds(bb, true);
+    if(this.item.isAGroup) {
+      var bb = this.item.getBounds();
+      bb.left = ui.position.left;
+      bb.top = ui.position.top;
+      this.item.setBounds(bb, true);
+    } else
+      this.item.reloadBounds();
   },
 
   // ----------  
   stop: function() {
     this.$el.data('isDragging', false);    
     
-    if(this.parent && this.parent != this.$el.data('group') && this.parent._children.length <= 1) 
+    if(this.parent && !this.parent.locked && this.parent != this.$el.data('group') 
+        && this.parent._children.length <= 1) 
       this.parent.remove(this.parent._children[0]);
       
     if(this.item && !this.$el.hasClass('willGroup') && !this.$el.data('group')) {

@@ -173,6 +173,11 @@ input.name:hover{
   border: 1px solid #ddd;
 }
 
+input.name-locked:hover{
+  border: 1px solid transparent !important;
+  cursor: default;
+}
+
 input.name:focus{
   color: #555;
 }
