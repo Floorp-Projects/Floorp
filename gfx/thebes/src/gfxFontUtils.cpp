@@ -487,7 +487,7 @@ typedef struct {
 
     AutoSwap_PRUint16 arrays[1];
 } Format4Cmap;
-#pragma pack()
+
 PRUint32
 gfxFontUtils::MapCharToGlyphFormat4(const PRUint8 *aBuf, PRUnichar aCh)
 {
@@ -773,7 +773,6 @@ struct KernTableSubtableHeaderVersion1 {
     AutoSwap_PRUint16    tupleIndex;
 };
 
-#pragma pack()
 static PRBool
 IsValidSFNTVersion(PRUint32 version)
 {
