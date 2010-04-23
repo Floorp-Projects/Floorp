@@ -1,3 +1,4 @@
+# vim:set ts=8 sw=8 sts=8 noet:
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -43,39 +44,16 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout_debug
-LIBRARY_NAME	= gkdebug
-EXPORT_LIBRARY	= 1
-IS_COMPONENT	= 1
-MODULE_NAME	= nsLayoutDebugModule
-LIBXUL_LIBRARY	= 1
-GRE_MODULE	= 1
+DIRS		= src ui
 
+# If we have a XULRunner-enabled tree, then build as a standalone XUL app.
+ifdef MOZ_XULRUNNER
 
-XPIDLSRCS	= \
-		nsILayoutRegressionTester.idl \
-		nsILayoutDebuggingTools.idl \
-		$(NULL)
+export XPI_NAME		= layoutdebug
+PREF_JS_EXPORTS		= $(srcdir)/layoutdebug-prefs.js
+DIST_FILES		= application.ini
+DIST_CHROME_FILES	= chrome.manifest
 
-EXPORTS		= \
-		nsLayoutDebugCIID.h \
-		$(NULL)
-
-CPPSRCS		= \
-		nsDebugFactory.cpp \
-		nsLayoutDebugCLH.cpp \
-		nsLayoutDebuggingTools.cpp \
-		nsRegressionTester.cpp \
-		$(NULL)
-
-EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIRS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+endif # MOZ_XULRUNNER
 
 include $(topsrcdir)/config/rules.mk
-
-libs::
-
-clobber::
-				rm -f $(DIST)\lib\library
