@@ -59,6 +59,18 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsApplicationAccessible, nsAccessible,
                              nsIAccessibleApplication)
 
 ////////////////////////////////////////////////////////////////////////////////
+// nsIAccessNode
+
+NS_IMETHODIMP
+nsApplicationAccessible::GetRootDocument(nsIAccessibleDocument **aRootDocument)
+{
+  NS_ENSURE_ARG_POINTER(aRootDocument);
+  *aRootDocument = nsnull;
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
 NS_IMETHODIMP
