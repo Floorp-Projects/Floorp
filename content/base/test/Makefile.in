@@ -373,7 +373,6 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug557892.html \
 		file_bug557892.html \
 		test_bug559526.html \
-		test_bug346485.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason
