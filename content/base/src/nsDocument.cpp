@@ -1786,6 +1786,32 @@ nsDocument::Init()
   return NS_OK;
 }
 
+void 
+nsIDocument::DeleteAllProperties()
+{
+  for (PRUint32 i = 0; i < GetPropertyTableCount(); ++i) {
+    PropertyTable(i)->DeleteAllProperties();
+  }
+}
+
+void
+nsIDocument::DeleteAllPropertiesFor(nsINode* aNode)
+{
+  for (PRUint32 i = 0; i < GetPropertyTableCount(); ++i) {
+    PropertyTable(i)->DeleteAllPropertiesFor(aNode);
+  }
+}
+
+nsPropertyTable*
+nsIDocument::GetExtraPropertyTable(PRUint16 aCategory)
+{
+  NS_ASSERTION(aCategory > 0, "Category 0 should have already been handled");
+  while (aCategory - 1 >= mExtraPropertyTables.Length()) {
+    mExtraPropertyTables.AppendElement(new nsPropertyTable());
+  }
+  return mExtraPropertyTables[aCategory - 1];
+}
+
 nsresult
 nsDocument::AddXMLEventsContent(nsIContent *aXMLEventsElement)
 {
@@ -6120,34 +6146,39 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     BlastSubtreeToPieces(adoptedNode);
 
     if (!sameDocument && oldDocument) {
-      PRUint32 i, count = nodesWithProperties.Count();
-      for (i = 0; i < count; ++i) {
-        // Remove all properties.
-        oldDocument->PropertyTable()->
-          DeleteAllPropertiesFor(nodesWithProperties[i]);
+      PRUint32 count = nodesWithProperties.Count();
+      for (PRUint32 j = 0; j < oldDocument->GetPropertyTableCount(); ++j) {
+        for (PRUint32 i = 0; i < count; ++i) {
+          // Remove all properties.
+          oldDocument->PropertyTable(j)->
+            DeleteAllPropertiesFor(nodesWithProperties[i]);
+        }
       }
     }
 
     return rv;
   }
 
-  PRUint32 i, count = nodesWithProperties.Count();
+  PRUint32 count = nodesWithProperties.Count();
   if (!sameDocument && oldDocument) {
-    nsPropertyTable *oldTable = oldDocument->PropertyTable();
-    nsPropertyTable *newTable = PropertyTable();
-    for (i = 0; i < count; ++i) {
-      rv = oldTable->TransferOrDeleteAllPropertiesFor(nodesWithProperties[i],
-                                                      newTable);
-      if (NS_FAILED(rv)) {
-        while (++i < count) {
+    for (PRUint32 j = 0; j < oldDocument->GetPropertyTableCount(); ++j) {
+      nsPropertyTable *oldTable = oldDocument->PropertyTable(j);
+      nsPropertyTable *newTable = PropertyTable(j);
+      for (PRUint32 i = 0; i < count; ++i) {
+        if (NS_SUCCEEDED(rv)) {
+          rv = oldTable->TransferOrDeleteAllPropertiesFor(nodesWithProperties[i],
+                                                          newTable);
+        } else {
           oldTable->DeleteAllPropertiesFor(nodesWithProperties[i]);
         }
-
-        // Disconnect all nodes from their parents.
-        BlastSubtreeToPieces(adoptedNode);
-
-        return rv;
       }
+    }
+
+    if (NS_FAILED(rv)) {
+      // Disconnect all nodes from their parents.
+      BlastSubtreeToPieces(adoptedNode);
+
+      return rv;
     }
   }
 
