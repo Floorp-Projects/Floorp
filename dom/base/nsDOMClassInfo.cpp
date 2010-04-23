@@ -466,6 +466,11 @@
 
 #include "nsIEventListenerService.h"
 
+#include "mozilla/dom/indexedDB/IndexedDatabaseRequest.h"
+#include "mozilla/dom/indexedDB/IDBRequest.h"
+#include "mozilla/dom/indexedDB/IDBDatabaseError.h"
+#include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
+
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
 static const char kDOMStringBundleURL[] =
@@ -1370,6 +1375,15 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(FormData, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(IndexedDatabaseRequest, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBRequest, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBDatabaseRequest, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBDatabaseError, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -3798,6 +3812,23 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(FormData, nsIDOMFormData)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMFormData)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(IndexedDatabaseRequest, nsIIndexedDatabaseRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIndexedDatabaseRequest)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(IDBRequest, nsIIDBRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBRequest)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(IDBDatabaseRequest, nsIIDBDatabaseRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBDatabaseRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBDatabase)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(IDBDatabaseError, nsIIDBDatabaseError)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBDatabaseError)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG

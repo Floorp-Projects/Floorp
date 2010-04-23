@@ -13,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Indexed Database code.
+ * The Original Code is Indexed Database.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,32 +37,21 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-interface nsIIDBDatabaseError;
-interface nsIVariant;
-interface nsIDOMEventListener;
+#include "nsIIDBTransaction.idl"
+
+interface nsIIDBRequest;
 
 /**
- * IDBReqeust interface.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
- * information.
+ * IDBDTransactionRequest interface.  See
+ * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBDTransactionRequest for
+ * more information.
  */
-[scriptable, uuid(2cff021d-e80e-48a7-bb45-00172df02c1c)]
-// TODO inherit from nsIEventTarget when the spec is updated.
-interface nsIIDBRequest : nsISupports
+[scriptable, uuid(073f5f2e-fecc-4f96-bba2-d8a90532c926)]
+interface nsIIDBTransactionRequest : nsIIDBTransaction
 {
-  void abort();
+  nsIIDBRequest
+  abort();
 
-  const unsigned short INITIAL = 0;
-  const unsigned short LOADING = 1;
-  const unsigned short DONE = 2;
-  readonly attribute unsigned short readyState;
-
-  readonly attribute nsIIDBDatabaseError error;
-
-  readonly attribute nsIVariant result;
-
-  attribute nsIDOMEventListener onsuccess;
-
-  attribute nsIDOMEventListener onerror;
+  nsIIDBRequest
+  commit();
 };

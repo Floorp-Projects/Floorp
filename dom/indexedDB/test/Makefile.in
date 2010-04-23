@@ -14,7 +14,7 @@
 # The Original Code is Indexed Database Test Code.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Foundation.
+# The Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
@@ -35,11 +35,11 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH = ../../../..
+DEPTH = ../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-relativesrcdir = dom/tests/mochitest/indexeddb
+relativesrcdir = dom/src/indexeddb/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk

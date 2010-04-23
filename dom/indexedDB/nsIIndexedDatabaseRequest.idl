@@ -13,15 +13,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Indexed Database code.
+ * The Original Code is Indexed Database.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIIDBRequest;
+
 /**
  * Interface that defines the indexedDB property on a window.  See
  * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IndexedDatabaseRequest
@@ -47,4 +50,9 @@
 [scriptable, uuid(043161e0-93b8-43b4-94d8-f34046d679b4)]
 interface nsIIndexedDatabaseRequest : nsISupports
 {
+  [optional_argc]
+  nsIIDBRequest
+  open(in DOMString name,
+       in DOMString description,
+       [optional /* true */] in boolean modifyDatabase);
 };
