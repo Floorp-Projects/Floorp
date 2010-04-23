@@ -48,7 +48,17 @@ ifdef MOZ_TREE_CAIRO
 DIRS		= cairo
 endif
 
-DIRS		+= thebes public idl src qcms layers ycbcr
+DIRS		+= thebes public idl src qcms
+
+# In static builds, ycbcr must appear after layers in
+# the link line on linux. This order is defined by the
+# order listed in DIRS. On shared builds ycbcr must
+# be built first so the order is reversed.
+ifdef BUILD_STATIC_LIBS
+DIRS		+= layers ycbcr
+else
+DIRS            += ycbcr layers
+endif
 
 ifdef MOZ_IPC
 DIRS		+= ipc
