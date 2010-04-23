@@ -914,7 +914,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
     
-    const char *name;
+    const char *name = nsnull;
     nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
     host->GetPluginName(inst, &name);
 
