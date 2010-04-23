@@ -616,7 +616,7 @@ BrowserView.prototype = {
       pageZoom = 1;
 
     let metaData = Util.getViewportMetadata(browser);
-    if (metaData.reason)
+    if (metaData.scale)
       return Math.max(metaData.scale, pageZoom);
 
     return pageZoom;
