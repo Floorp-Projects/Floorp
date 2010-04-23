@@ -1402,6 +1402,25 @@ GetGCFreeLists(JSContext *cx)
     return &td->localRootStack->gcFreeLists;
 }
 
+static void
+LastDitchGC(JSContext *cx)
+{
+    JS_ASSERT(!JS_ON_TRACE(cx));
+
+    /* The last ditch GC preserves weak roots and all atoms. */
+    AutoSaveWeakRoots save(cx);
+    AutoKeepAtoms keep(cx->runtime);
+
+    /*
+     * Keep rt->gcLock across the call into the GC so we don't starve and
+     * lose to racing threads who deplete the heap just after the GC has
+     * replenished it (or has synchronized with a racing GC that collected a
+     * bunch of garbage).  This unfair scheduling can happen on certain
+     * operating systems. For the gory details, see bug 162779.
+     */
+    js_GC(cx, GC_LOCK_HELD);
+}
+
 static JSGCThing *
 RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
 {
@@ -1423,15 +1442,7 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
         arenaList = &rt->gcArenaList[thingKind];
         for (;;) {
             if (doGC) {
-                /*
-                 * Keep rt->gcLock across the call into js_GC so we don't
-                 * starve and lose to racing threads who deplete the heap just
-                 * after js_GC has replenished it (or has synchronized with a
-                 * racing GC that collected a bunch of garbage).  This unfair
-                 * scheduling can happen on certain operating systems. For the
-                 * gory details, see bug 162779.
-                 */
-                js_GC(cx, GC_LAST_DITCH);
+                LastDitchGC(cx);
                 METER(cx->runtime->gcStats.arenaStats[thingKind].retry++);
                 canGC = false;
 
@@ -1648,7 +1659,7 @@ RefillDoubleFreeList(JSContext *cx)
     JSGCArena *a;
     for (;;) {
         if (doGC) {
-            js_GC(cx, GC_LAST_DITCH);
+            LastDitchGC(cx);
             METER(rt->gcStats.doubleArenaStats.retry++);
             canGC = false;
 
@@ -2397,14 +2408,14 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 }
 
 JS_REQUIRES_STACK void
-js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
+js_TraceRuntime(JSTracer *trc)
 {
     JSRuntime *rt = trc->context->runtime;
     JSContext *iter, *acx;
 
     JS_DHashTableEnumerate(&rt->gcRootsHash, gc_root_traversal, trc);
     JS_DHashTableEnumerate(&rt->gcLocksHash, gc_lock_traversal, trc);
-    js_TraceAtomState(trc, allAtoms);
+    js_TraceAtomState(trc);
     js_TraceRuntimeNumberState(trc);
     js_MarkTraps(trc);
 
@@ -2914,9 +2925,7 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
     }
 #endif
 
-    /* The last ditch GC preserves weak roots. */
-    if (!rt->gcKeepAtoms)
-        JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
+    JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
 }
 
 /*
@@ -2948,11 +2957,8 @@ GC(JSContext *cx  GCTIMER_PARAM)
         a = ainfo->prev;
     }
 
-    {
-        bool keepAtoms = rt->gcKeepAtoms != 0;
-        js_TraceRuntime(&trc, keepAtoms);
-        js_MarkScriptFilenames(rt, keepAtoms);
-    }
+    js_TraceRuntime(&trc);
+    js_MarkScriptFilenames(rt);
 
     /*
      * Mark children of things that caused too deep recursion during the above
@@ -3423,7 +3429,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 {
     JSRuntime *rt = cx->runtime;
 
-    JS_ASSERT_IF(gckind == GC_LAST_DITCH, !JS_ON_TRACE(cx));
 #ifdef JS_THREADSAFE
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
     JS_ASSERT(!JS_IS_RUNTIME_LOCKED(rt));
@@ -3439,8 +3444,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         return;
 
     GCTIMER_BEGIN();
-
-    Conditionally<AutoKeepAtoms> keepIf(!!(gckind & GC_KEEP_ATOMS), rt);
 
     for (;;) {
         if (!FireGCBegin(cx, gckind))

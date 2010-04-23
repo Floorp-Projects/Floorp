@@ -1879,10 +1879,8 @@ JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc)
 {
-    JSBool allAtoms = trc->context->runtime->gcKeepAtoms != 0;
-
     LeaveTrace(trc->context);
-    js_TraceRuntime(trc, allAtoms);
+    js_TraceRuntime(trc);
 }
 
 JS_PUBLIC_API(void)
