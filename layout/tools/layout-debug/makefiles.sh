@@ -37,7 +37,7 @@
 # ***** END LICENSE BLOCK *****
 
 add_makefiles "
-  extensions/layout-debug/Makefile
-  extensions/layout-debug/src/Makefile
-  extensions/layout-debug/ui/Makefile
+  layout/tools/layout-debug/Makefile
+  layout/tools/layout-debug/src/Makefile
+  layout/tools/layout-debug/ui/Makefile
 "
