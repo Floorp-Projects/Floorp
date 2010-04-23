@@ -1120,12 +1120,8 @@ BEGIN_CASE(JSOP_NEG)
 END_CASE(JSOP_NEG)
 
 BEGIN_CASE(JSOP_POS)
-{
-    rval = FETCH_OPND(-1);
     if (!ValueToNumberValue(cx, &regs.sp[-1]))
         goto error;
-    rval = regs.sp[-1];
-}
 END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
@@ -1739,9 +1735,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * inline compensation code here, depending on
                  * real-world workloads.
                  */
-                JS_ASSERT(!(obj->getClass()->flags &
-                            JSCLASS_SHARE_ALL_PROPERTIES));
-
                 PCMETER(cache->pchits++);
                 PCMETER(cache->addpchits++);
 
@@ -3346,7 +3339,6 @@ BEGIN_CASE(JSOP_INITMETHOD)
     obj = JSVAL_TO_OBJECT(lval);
     JS_ASSERT(obj->isNative());
     JS_ASSERT(!obj->getClass()->reserveSlots);
-    JS_ASSERT(!(obj->getClass()->flags & JSCLASS_SHARE_ALL_PROPERTIES));
 
     JSScope *scope = obj->scope();
     PropertyCacheEntry *entry;

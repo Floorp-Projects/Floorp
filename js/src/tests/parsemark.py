@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""%prog [options] dirpath
+"""%prog [options] shellpath dirpath
 
 Pulls performance data on parsing via the js shell.
 Displays the average number of milliseconds it took to parse each file.
@@ -17,6 +17,7 @@ baseline data, we're probably faster. A similar computation is used for
 determining the "slower" designation.
 
 Arguments:
+  shellpath             executable JavaScript shell
   dirpath               directory filled with parsilicious js files
 """
 
@@ -26,41 +27,28 @@ import os
 import subprocess as subp
 import sys
 from string import Template
-from operator import itemgetter
+
+try:
+    import compare_bench
+except ImportError:
+    compare_bench = None
 
 
 _DIR = os.path.dirname(__file__)
 JS_CODE_TEMPLATE = Template("""
-var contents = snarf("$filepath");
-for (let i = 0; i < $warmup_run_count; i++)
-    compile(contents);
+if (typeof snarf !== 'undefined') read = snarf
+var contents = read("$filepath");
+for (var i = 0; i < $warmup_run_count; i++)
+    parse(contents);
 var results = [];
-for (let i = 0; i < $real_run_count; i++) {
+for (var i = 0; i < $real_run_count; i++) {
     var start = new Date();
-    compile(contents);
+    parse(contents);
     var end = new Date();
     results.push(end - start);
 }
 print(results);
 """)
-
-
-def find_shell(filename='js'):
-    """Look around for the js shell. Prefer more obvious places to look.
-    
-    :return: Path if found, else None.
-    """
-    relpaths = ['', 'obj', os.pardir, [os.pardir, 'obj']]
-    for relpath in relpaths:
-        path_parts = [_DIR]
-        if isinstance(relpath, list):
-            path_parts += relpath
-        else:
-            path_parts.append(relpath)
-        path_parts.append(filename)
-        path = os.path.join(*path_parts)
-        if os.path.isfile(path):
-            return path
 
 
 def gen_filepaths(dirpath, target_ext='.js'):
@@ -97,7 +85,7 @@ def bench(shellpath, filepath, warmup_runs, counted_runs, stfu=False):
 
 def parsemark(filepaths, fbench, stfu=False):
     """:param fbench: fbench(filename) -> float"""
-    bench_map = {}
+    bench_map = {} # {filename: (avg, stddev)}
     for filepath in filepaths:
         filename = os.path.split(filepath)[-1]
         if not stfu:
@@ -112,58 +100,31 @@ def parsemark(filepaths, fbench, stfu=False):
         filename_str = '"%s"' % filename
         print fmt % (filename_str, avg, stddev)
     print '}'
-    return bench_map
-
-
-def compare(current, baseline):
-    for key, (avg, stddev) in current.iteritems():
-        try:
-            base_avg, base_stddev = itemgetter('average_ms', 'stddev_ms')(baseline.get(key, None))
-        except TypeError:
-            print key, 'missing from baseline'
-            continue
-        t_best, t_worst = avg - stddev, avg + stddev
-        base_t_best, base_t_worst = base_avg - base_stddev, base_avg + base_stddev
-        fmt = '%30s: %s'
-        if t_worst < base_t_best: # Worst takes less time (better) than baseline's best.
-            speedup = -((t_worst - base_t_best) / base_t_best) * 100
-            result = 'faster: %6.2fms < baseline %6.2fms (%+6.2f%%)' % \
-                    (t_worst, base_t_best, speedup)
-        elif t_best > base_t_worst: # Best takes more time (worse) than baseline's worst.
-            slowdown = -((t_best - base_t_worst) / base_t_worst) * 100
-            result = 'SLOWER: %6.2fms > baseline %6.2fms (%+6.2f%%) ' % \
-                    (t_best, base_t_worst, slowdown)
-        else:
-            result = 'Meh.'
-        print '%30s: %s' % (key, result)
-
-
-def try_import_json():
-    try:
-        import json
-        return json
-    except ImportError:
-        try:
-            import simplejson as json
-            return json
-        except ImportError:
-            pass
+    return dict((filename, dict(average_ms=avg, stddev_ms=stddev))
+            for filename, (avg, stddev) in bench_map.iteritems())
 
 
 def main():
     parser = optparse.OptionParser(usage=__doc__.strip())
     parser.add_option('-w', '--warmup-runs', metavar='COUNT', type=int,
-            default=5, help='used to minimize test instability')
+            default=5, help='used to minimize test instability [%default]')
     parser.add_option('-c', '--counted-runs', metavar='COUNT', type=int,
-            default=20, help='timed data runs that count towards the average')
+            default=50, help='timed data runs that count towards the average [%default]')
     parser.add_option('-s', '--shell', metavar='PATH', help='explicit shell '
             'location; when omitted, will look in likely places')
     parser.add_option('-b', '--baseline', metavar='JSON_PATH',
             dest='baseline_path', help='json file with baseline values to '
             'compare against')
     parser.add_option('-q', '--quiet', dest='stfu', action='store_true',
-            default=False, help='only print JSON to stdout')
+            default=False, help='only print JSON to stdout [%default]')
     options, args = parser.parse_args()
+    try:
+        shellpath = args.pop(0)
+    except IndexError:
+        parser.print_help()
+        print
+        print >> sys.stderr, 'error: shellpath required'
+        return -1
     try:
         dirpath = args.pop(0)
     except IndexError:
@@ -171,26 +132,21 @@ def main():
         print
         print >> sys.stderr, 'error: dirpath required'
         return -1
-    shellpath = options.shell or find_shell()
-    if not shellpath:
-        print >> sys.stderr, 'Could not find shell'
+    if not shellpath or not os.path.exists(shellpath):
+        print >> sys.stderr, 'error: could not find shell:', shellpath
         return -1
     if options.baseline_path:
         if not os.path.isfile(options.baseline_path):
-            print >> sys.stderr, 'Baseline file does not exist'
+            print >> sys.stderr, 'error: baseline file does not exist'
             return -1
-        json = try_import_json()
-        if not json:
-            print >> sys.stderr, 'You need a json lib for baseline comparison'
+        if not compare_bench:
+            print >> sys.stderr, 'error: JSON support is missing, cannot compare benchmarks'
             return -1
     benchfile = lambda filepath: bench(shellpath, filepath,
             options.warmup_runs, options.counted_runs, stfu=options.stfu)
     bench_map = parsemark(gen_filepaths(dirpath), benchfile, options.stfu)
     if options.baseline_path:
-        fh = open(options.baseline_path, 'r') # 2.4 compat, no 'with'.
-        baseline_map = json.load(fh)
-        fh.close()
-        compare(current=bench_map, baseline=baseline_map)
+        compare_bench.compare_immediate(bench_map, options.baseline_path)
     return 0
 
 

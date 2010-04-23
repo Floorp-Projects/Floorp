@@ -1431,8 +1431,7 @@ nsWindow::OnKeyPressEvent(QKeyEvent *aEvent)
         nsKeyEvent downEvent(PR_TRUE, NS_KEY_DOWN, this);
         InitKeyEvent(downEvent, aEvent);
 
-        downEvent.charCode = domCharCode;
-        downEvent.keyCode = domCharCode ? 0 : domKeyCode;
+        downEvent.keyCode = domKeyCode;
 
         nsEventStatus status = DispatchEvent(&downEvent);
 
@@ -1467,18 +1466,13 @@ nsWindow::OnKeyReleaseEvent(QKeyEvent *aEvent)
         return nsEventStatus_eConsumeDoDefault;
     }
 
-    PRUint32 domCharCode = 0;
     PRUint32 domKeyCode = QtKeyCodeToDOMKeyCode(aEvent->key());
-
-    if (aEvent->text().length() && aEvent->text()[0].isPrint())
-        domCharCode = (PRInt32) aEvent->text()[0].unicode();
 
     // send the key event as a key up event
     nsKeyEvent event(PR_TRUE, NS_KEY_UP, this);
     InitKeyEvent(event, aEvent);
 
-    event.charCode = domCharCode;
-    event.keyCode = domCharCode ? 0 : domKeyCode;
+    event.keyCode = domKeyCode;
 
     // unset the key down flag
     ClearKeyDownFlag(event.keyCode);
@@ -1585,18 +1579,21 @@ nsEventStatus nsWindow::OnGestureEvent(QGestureEvent *event, PRBool &handled)
         if (pinch->state() == Qt::GestureStarted) {
             mozGesture.message = NS_SIMPLE_GESTURE_MAGNIFY_START;
             mozGesture.delta = 0.0;
-            mLastPinchDistance = mTouchPointDistance;
             event->accept();
         }
         else if (pinch->state() == Qt::GestureUpdated) {
             mozGesture.message = NS_SIMPLE_GESTURE_MAGNIFY_UPDATE;
-            //-1 because zoom in is positive
-            mozGesture.delta = -1.0 * (mLastPinchDistance - mTouchPointDistance);
-            mLastPinchDistance = mTouchPointDistance;
+            mozGesture.delta = mTouchPointDistance - mLastPinchDistance;
+        }
+        else if (pinch->state() == Qt::GestureFinished) {
+            mozGesture.message = NS_SIMPLE_GESTURE_MAGNIFY;
+            mozGesture.delta = 0.0;
         }
         else {
             handled = PR_FALSE;
         }
+
+        mLastPinchDistance = mTouchPointDistance;
     }
 
     if (handled) {

@@ -87,21 +87,6 @@ extern "C" {
 #endif /* ifdef __cplusplus */
 
 
-/* 
- * If we don't have these system functions, but do have jemalloc
- * replacements, go ahead and declare them independently of jemalloc.
- * Trying to #include the jemalloc header causes redeclaration of some
- * system functions with different visibility.
- */
-/* FIXME/cjones: make something like the following work with jemalloc */
-#if 0
-#if !defined(HAVE_POSIX_MEMALIGN) && defined(HAVE_JEMALLOC_POSIX_MEMALIGN)
-MOZALLOC_IMPORT int posix_memalign(void **, size_t, size_t)
-    NS_WARN_UNUSED_RESULT;
-#endif
-#endif
-
-
 /*
  * Each pair of declarations below is analogous to a "standard"
  * allocation function, except that the out-of-memory handling is made
@@ -156,7 +141,7 @@ MOZALLOC_EXPORT char* moz_strndup(const char* str, size_t strsize)
 #endif /* if defined(HAVE_STRNDUP) */
 
 
-#if defined(HAVE_POSIX_MEMALIGN)
+#if defined(HAVE_POSIX_MEMALIGN) || defined(HAVE_JEMALLOC_POSIX_MEMALIGN)
 MOZALLOC_EXPORT int moz_xposix_memalign(void **ptr, size_t alignment, size_t size)
     NS_WARN_UNUSED_RESULT;
 
@@ -165,7 +150,7 @@ MOZALLOC_EXPORT int moz_posix_memalign(void **ptr, size_t alignment, size_t size
 #endif /* if defined(HAVE_POSIX_MEMALIGN) */
 
 
-#if defined(HAVE_MEMALIGN)
+#if defined(HAVE_MEMALIGN) || defined(HAVE_JEMALLOC_MEMALIGN)
 MOZALLOC_EXPORT void* moz_xmemalign(size_t boundary, size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 

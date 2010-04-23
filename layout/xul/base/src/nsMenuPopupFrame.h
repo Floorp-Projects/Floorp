@@ -158,6 +158,9 @@ public:
 
   virtual PRBool MenuClosed() { return PR_TRUE; }
 
+  virtual void LockMenuUntilClosed(PRBool aLock);
+  virtual PRBool IsMenuLocked() { return mIsMenuLocked; }
+
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
 
   // The dismissal listener gets created and attached to the window.
@@ -395,6 +398,7 @@ protected:
   PRPackedBool mShouldAutoPosition; // Should SetPopupPosition be allowed to auto position popup?
   PRPackedBool mConsumeRollupEvent; // Should the rollup event be consumed?
   PRPackedBool mInContentShell; // True if the popup is in a content shell
+  PRPackedBool mIsMenuLocked; // Should events inside this menu be ignored?
 
   // the flip modes that were used when the popup was opened
   PRPackedBool mHFlip;

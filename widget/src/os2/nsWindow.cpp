@@ -261,6 +261,13 @@ nsWindow::~nsWindow()
     Destroy();
   }
 
+  // Once a plugin window has been destroyed,
+  // its parent, the clipping window, can be destroyed.
+  if (mClipWnd) {
+    WinDestroyWindow(mClipWnd);
+    mClipWnd = 0;
+  }
+ 
   // If it exists, destroy our os2FrameWindow helper object.
   if (mFrame) {
     delete mFrame;
@@ -812,11 +819,11 @@ void nsWindow::Scroll(const nsIntPoint& aDelta,
         // but not the part outside it [at least on Windows].  For
         // these widgets, we have to invalidate them to get both
         // parts updated after the scroll.
-        if (w->mBounds.Intersects(affectedRect)) {
+        if (w->mWnd && w->mBounds.Intersects(affectedRect)) {
           if (!ClipRegionContainedInRect(configuration.mClipRegion,
-                                         affectedRect - (w->mBounds.TopLeft()
-                                                         + aDelta)) && mWnd) {
-            WinInvalidateRect(mWnd, 0, FALSE);
+                                         affectedRect - 
+                                         (w->mBounds.TopLeft() + aDelta))) {
+            WinInvalidateRect(w->mWnd, 0, FALSE);
           }
 
           // Send a WM_VRNDISABLED to the plugin child of this widget.

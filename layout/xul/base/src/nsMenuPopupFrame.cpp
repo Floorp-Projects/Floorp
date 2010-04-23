@@ -121,6 +121,7 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mShouldAutoPosition(PR_TRUE),
   mConsumeRollupEvent(nsIPopupBoxObject::ROLLUP_DEFAULT),
   mInContentShell(PR_TRUE),
+  mIsMenuLocked(PR_FALSE),
   mHFlip(PR_FALSE),
   mVFlip(PR_FALSE)
 {
@@ -689,6 +690,8 @@ nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu, nsPopupState aNewState)
     SetCurrentMenuItem(nsnull);
 
   mIncrementalString.Truncate();
+
+  LockMenuUntilClosed(PR_FALSE);
 
   mIsOpenChanged = PR_FALSE;
   mCurrentMenu = nsnull; // make sure no current menu is set
@@ -1502,6 +1505,21 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
 #endif  // #ifdef XP_WIN
 
   return nsnull;
+}
+
+void
+nsMenuPopupFrame::LockMenuUntilClosed(PRBool aLock)
+{
+  mIsMenuLocked = aLock;
+
+  // Lock / unlock the parent, too.
+  nsIFrame* parent = GetParent();
+  if (parent && parent->GetType() == nsGkAtoms::menuFrame) {
+    nsMenuParent* parentParent = static_cast<nsMenuFrame*>(parent)->GetMenuParent();
+    if (parentParent) {
+      parentParent->LockMenuUntilClosed(aLock);
+    }
+  }
 }
 
 NS_IMETHODIMP

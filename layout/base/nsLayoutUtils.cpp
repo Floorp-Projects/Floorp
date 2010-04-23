@@ -43,6 +43,8 @@
 #include "nsIFormControlFrame.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMHTMLDocument.h"
 #include "nsFrameList.h"
 #include "nsGkAtoms.h"
 #include "nsIAtom.h"
@@ -3548,6 +3550,40 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   result.mIsWriteOnly = PR_FALSE;
 
   return result;
+}
+
+/* static */
+nsIContent*
+nsLayoutUtils::GetEditableRootContentByContentEditable(nsIDocument* aDocument)
+{
+  // If the document is in designMode we should return NULL.
+  if (!aDocument || aDocument->HasFlag(NODE_IS_EDITABLE)) {
+    return nsnull;
+  }
+
+  // contenteditable only works with HTML document.
+  // Note: Use nsIDOMHTMLDocument rather than nsIHTMLDocument for getting the
+  //       body node because nsIDOMHTMLDocument::GetBody() does something
+  //       additional work for some cases and nsEditor uses them.
+  nsCOMPtr<nsIDOMHTMLDocument> domHTMLDoc = do_QueryInterface(aDocument);
+  if (!domHTMLDoc) {
+    return nsnull;
+  }
+
+  nsIContent* rootContent = aDocument->GetRootContent();
+  if (rootContent && rootContent->IsEditable()) {
+    return rootContent;
+  }
+
+  // If there are no editable root element, check its <body> element.
+  // Note that the body element could be <frameset> element.
+  nsCOMPtr<nsIDOMHTMLElement> body;
+  nsresult rv = domHTMLDoc->GetBody(getter_AddRefs(body));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(body);
+  if (NS_SUCCEEDED(rv) && content && content->IsEditable()) {
+    return content;
+  }
+  return nsnull;
 }
 
 nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,

@@ -5923,6 +5923,15 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
 
+  if (aEvent->message == NS_UISTATECHANGED && mDocument) {
+    nsPIDOMWindow* win = mDocument->GetWindow();
+    if (win) {
+      nsUIStateChangeEvent* event = (nsUIStateChangeEvent*)aEvent;
+      win->SetKeyboardIndicators(event->showAccelerators, event->showFocusRings);
+    }
+    return NS_OK;
+  }
+
   // Check for a system color change up front, since the frame type is
   // irrelevant
   if ((aEvent->message == NS_SYSCOLORCHANGED) && mPresContext) {
@@ -5964,7 +5973,7 @@ PresShell::HandleEvent(nsIView         *aView,
   // view that has a frame.
   if (!frame &&
       (dispatchUsingCoordinates || NS_IS_KEY_EVENT(aEvent) ||
-       NS_IS_IME_RELATED_EVENT(aEvent) ||
+       NS_IS_IME_RELATED_EVENT(aEvent) || NS_IS_NON_RETARGETED_PLUGIN_EVENT(aEvent) ||
        aEvent->message == NS_PLUGIN_ACTIVATE)) {
     nsIView* targetView = aView;
     while (targetView && !targetView->GetClientData()) {
@@ -6154,7 +6163,6 @@ PresShell::HandleEvent(nsIView         *aView,
       if (!mCurrentEventContent || !GetCurrentEventFrame())
         mCurrentEventContent = mDocument->GetRootContent();
       mCurrentEventFrame = nsnull;
-
         
       if (!mCurrentEventContent || !GetCurrentEventFrame() ||
           InZombieDocument(mCurrentEventContent)) {

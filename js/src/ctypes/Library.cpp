@@ -252,16 +252,26 @@ Library::Declare(JSContext* cx, uintN argc, jsval* vp)
       return JS_FALSE;
     root.setObject(typeObj);
 
+    // Make a function pointer type.
+    typeObj = PointerType::CreateInternal(cx, NULL, typeObj, NULL);
+    if (!typeObj)
+      return JS_FALSE;
+    root.setObject(typeObj);
+
   } else {
     // Case 2).
     if (JSVAL_IS_PRIMITIVE(argv[1]) ||
-        !CType::IsCType(cx, JSVAL_TO_OBJECT(argv[1]))) {
-      JS_ReportError(cx, "second argument must be a type");
+        !CType::IsCType(cx, JSVAL_TO_OBJECT(argv[1])) ||
+        !CType::IsSizeDefined(cx, JSVAL_TO_OBJECT(argv[1]))) {
+      JS_ReportError(cx, "second argument must be a type of defined size");
       return JS_FALSE;
     }
 
     typeObj = JSVAL_TO_OBJECT(argv[1]);
-    isFunction = CType::GetTypeCode(cx, typeObj) == TYPE_function;
+    if (CType::GetTypeCode(cx, typeObj) == TYPE_pointer) {
+      JSObject* baseType = PointerType::GetBaseType(cx, typeObj);
+      isFunction = baseType && CType::GetTypeCode(cx, baseType) == TYPE_function;
+    }
   }
 
   void* data;
