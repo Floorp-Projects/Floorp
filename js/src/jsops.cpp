@@ -785,10 +785,10 @@ END_CASE(JSOP_BITAND)
 #define XML_EQUALITY_OP(OP)                                                   \
     if ((ltmp == JSVAL_OBJECT &&                                              \
          (obj2 = JSVAL_TO_OBJECT(lval)) &&                                    \
-         OBJECT_IS_XML(cx, obj2)) ||                                          \
+         obj2->isXML()) ||                                                    \
         (rtmp == JSVAL_OBJECT &&                                              \
          (obj2 = JSVAL_TO_OBJECT(rval)) &&                                    \
-         OBJECT_IS_XML(cx, obj2))) {                                          \
+         obj2->isXML())) {                                                    \
         if (JSVAL_IS_OBJECT(rval) && obj2 == JSVAL_TO_OBJECT(rval))           \
             rval = lval;                                                      \
         if (!js_TestXMLEquality(cx, obj2, rval, &cond))                       \
@@ -963,8 +963,8 @@ BEGIN_CASE(JSOP_ADD)
     lval = FETCH_OPND(-2);
 #if JS_HAS_XML_SUPPORT
     if (!JSVAL_IS_PRIMITIVE(lval) &&
-        (obj2 = JSVAL_TO_OBJECT(lval), OBJECT_IS_XML(cx, obj2)) &&
-        VALUE_IS_XML(cx, rval)) {
+        (obj2 = JSVAL_TO_OBJECT(lval), obj2->isXML()) &&
+        VALUE_IS_XML(rval)) {
         if (!js_ConcatenateXML(cx, obj2, rval, &rval))
             goto error;
         regs.sp--;
@@ -3828,7 +3828,7 @@ BEGIN_CASE(JSOP_ENDFILTER)
          * Decrease sp after EnterWith returns as we use sp[-1] there to root
          * temporaries.
          */
-        JS_ASSERT(VALUE_IS_XML(cx, regs.sp[-1]));
+        JS_ASSERT(VALUE_IS_XML(regs.sp[-1]));
         if (!js_EnterWith(cx, -2))
             goto error;
         regs.sp--;
@@ -3865,7 +3865,7 @@ END_CASE(JSOP_XMLTAGEXPR)
 
 BEGIN_CASE(JSOP_XMLELTEXPR)
     rval = FETCH_OPND(-1);
-    if (VALUE_IS_XML(cx, rval)) {
+    if (VALUE_IS_XML(rval)) {
         str = js_ValueToXMLString(cx, rval);
     } else {
         str = js_ValueToString(cx, rval);
