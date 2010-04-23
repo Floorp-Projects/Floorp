@@ -4101,7 +4101,9 @@ PresShell::ScrollFrameRectIntoView(nsIFrame*     aFrame,
       ScrollToShowRect(sf, rect - sf->GetScrolledFrame()->GetPosition(),
                        aVPercent, aHPercent, aFlags);
       nsPoint newPosition = sf->GetScrollPosition();
-      rect += newPosition - oldPosition;
+      // If the scroll position increased, that means our content moved up,
+      // so our rect's offset should decrease
+      rect += oldPosition - newPosition;
 
       if (oldPosition != newPosition) {
         didScroll = PR_TRUE;
