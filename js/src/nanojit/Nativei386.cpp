@@ -1179,6 +1179,12 @@ namespace nanojit
             (arg = ins->paramArg()) >= (abi_regcount = max_abi_regs[_thisfrag->lirbuf->abi])) {
             // Incoming arg is on stack, can restore it from there instead of spilling.
 
+            // this case is intentionally not detected in canRemat(), because we still
+            // emit a load instead of a fast ALU operation.  We don't want parameter
+            // spills to have precedence over immediates & ALU ops, but if one does
+            // spill, we want to load it directly from its stack area, saving a store
+            // in the prolog.
+
             // Compute position of argument relative to ebp.  Higher argument
             // numbers are at higher positive offsets.  The first abi_regcount
             // arguments are in registers, rest on stack.  +8 accomodates the

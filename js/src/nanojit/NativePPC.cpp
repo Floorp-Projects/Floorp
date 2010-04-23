@@ -629,7 +629,7 @@ namespace nanojit
 
     bool Assembler::canRemat(LIns* ins)
     {
-        return ins->isImmAny() || ins->isop(LIR_alloc);
+        return ins->isImmI() || ins->isop(LIR_alloc);
     }
 
     void Assembler::asm_restore(LIns *i, Register r) {
@@ -641,8 +641,6 @@ namespace nanojit
         else if (i->isImmI()) {
             asm_li(r, i->immI());
         }
-        // XXX: should really rematerializable isImmD() and isImmQ() cases
-        // here; canRemat() assumes they will be rematerialized.
         else {
             d = findMemFor(i);
             if (IsFpReg(r)) {
