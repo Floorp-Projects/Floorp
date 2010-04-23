@@ -1149,12 +1149,8 @@ CSPHost.fromString = function(aStr) {
 
   var hObj = new CSPHost();
   hObj._segments = aStr.split(/\./);
-  if (hObj._segments.length < 1 ||
-      hObj._segments.length == 1 && hObj._segments[0] != "*"
-                                 && hObj._segments[0] != "localhost") {
-    // only short hosts allowed are "*" and "localhost"
+  if (hObj._segments.length < 1)
     return null;
-  }
 
   // validate data in segments
   for (var i in hObj._segments) {
