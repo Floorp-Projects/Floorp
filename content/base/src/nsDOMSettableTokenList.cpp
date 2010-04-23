@@ -13,12 +13,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Sylvain Pasche <sylvain.pasche@gmail.com>
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mounir Lamouri <mounir.lamouri@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,44 +35,46 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Implementation of nsIDOMDOMTokenList specified by HTML5.
+ * Implementation of nsIDOMDOMSettableTokenList specified by HTML5.
  */
 
-#ifndef nsDOMTokenList_h___
-#define nsDOMTokenList_h___
+#include "nsDOMSettableTokenList.h"
 
-#include "nsGenericElement.h"
-#include "nsIDOMDOMTokenList.h"
 
-class nsAttrValue;
-
-class nsDOMTokenList : public nsIDOMDOMTokenList
+nsDOMSettableTokenList::nsDOMSettableTokenList(nsGenericElement *aElement, nsIAtom* aAttrAtom)
+  : nsDOMTokenList(aElement, aAttrAtom)
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDOMTOKENLIST
+}
 
-  nsDOMTokenList(nsGenericElement* aElement, nsIAtom* aAttrAtom);
+nsDOMSettableTokenList::~nsDOMSettableTokenList()
+{
+}
 
-  void DropReference();
+DOMCI_DATA(DOMSettableTokenList, nsDOMSettableTokenList)
 
-protected:
-  ~nsDOMTokenList();
+NS_INTERFACE_TABLE_HEAD(nsDOMSettableTokenList)
+  NS_INTERFACE_TABLE1(nsDOMSettableTokenList,
+                      nsIDOMDOMSettableTokenList)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMSettableTokenList)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMTokenList)
 
-  const nsAttrValue* GetParsedAttr() {
-    if (!mElement) {
-      return nsnull;
-    }
-    return mElement->GetParsedAttr(mAttrAtom);
+NS_IMPL_ADDREF_INHERITED(nsDOMSettableTokenList, nsDOMTokenList)
+NS_IMPL_RELEASE_INHERITED(nsDOMSettableTokenList, nsDOMTokenList)
+
+NS_IMETHODIMP
+nsDOMSettableTokenList::GetValue(nsAString& aResult)
+{
+  return ToString(aResult);
+}
+
+NS_IMETHODIMP
+nsDOMSettableTokenList::SetValue(const nsAString& aValue)
+{
+  if (!mElement) {
+    return NS_OK;
   }
 
-  nsresult CheckToken(const nsAString& aStr);
-  PRBool ContainsInternal(const nsAttrValue* aAttr, const nsAString& aToken);
-  void AddInternal(const nsAttrValue* aAttr, const nsAString& aToken);
-  void RemoveInternal(const nsAttrValue* aAttr, const nsAString& aToken);
+  return mElement->SetAttr(kNameSpaceID_None, mAttrAtom, aValue, PR_TRUE);
+}
 
-  nsGenericElement* mElement;
-  nsCOMPtr<nsIAtom> mAttrAtom;
-};
-
-#endif // nsDOMTokenList_h___
