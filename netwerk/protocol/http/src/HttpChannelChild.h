@@ -120,6 +120,7 @@ public:
   NS_IMETHOD SetPriority(PRInt32 value);
 
 protected:
+  void RefcountHitZero();
   bool RecvOnStartRequest(const nsHttpResponseHead& responseHead);
   bool RecvOnDataAvailable(const nsCString& data, 
                            const PRUint32& offset,

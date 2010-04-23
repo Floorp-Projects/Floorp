@@ -67,8 +67,20 @@ HttpChannelChild::~HttpChannelChild()
 // HttpChannelChild::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ADDREF_INHERITED(HttpChannelChild, HttpBaseChannel)
-NS_IMPL_RELEASE_INHERITED(HttpChannelChild, HttpBaseChannel)
+// Override nsHashPropertyBag's AddRef: we don't need thread-safe refcnt
+NS_IMPL_ADDREF(HttpChannelChild)
+NS_IMPL_RELEASE_WITH_DESTROY(HttpChannelChild, RefcountHitZero())
+
+void
+HttpChannelChild::RefcountHitZero()
+{
+  if (mWasOpened) {
+    // NeckoChild::DeallocPHttpChannel will delete this
+    PHttpChannelChild::Send__delete__(this);
+  } else {
+    delete this;    // we never opened IPDL channel
+  }
+}
 
 NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
@@ -158,6 +170,10 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
   nsresult rv = mListener->OnStopRequest(this, mListenerContext, statusCode);
   mListener = 0;
   mListenerContext = 0;
+
+  // Corresponding AddRef in AsyncOpen().
+  this->Release();
+  
   if (!NS_SUCCEEDED(rv)) {
     // TODO: Cancel request: see notes in OnStartRequest
     return false;  
@@ -218,7 +234,8 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   if (NS_FAILED(rv))
     return rv;
 
-  // This corresponds to Release() in DeallocPHttpChannel 
+  // The socket transport layer in the chrome process now has a logical ref to
+  // us, until either OnStopRequest or OnRedirect is called.
   this->AddRef();
 
   // TODO: Combine constructor and AsyncOpen to save one IPC msg
