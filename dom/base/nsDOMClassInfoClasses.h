@@ -466,3 +466,8 @@ DOMCI_CLASS(EventListenerInfo)
 DOMCI_CLASS(TransitionEvent)
 
 DOMCI_CLASS(FormData)
+
+DOMCI_CLASS(IndexedDatabaseRequest)
+DOMCI_CLASS(IDBRequest)
+DOMCI_CLASS(IDBDatabaseRequest)
+DOMCI_CLASS(IDBDatabaseError)

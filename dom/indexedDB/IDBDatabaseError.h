@@ -13,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Indexed Database code.
+ * The Original Code is Indexed Database.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,40 +37,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_idb_request_h__
-#define mozilla_dom_idb_request_h__
+#ifndef mozilla_dom_indexeddb_idbdatabaseerror_h__
+#define mozilla_dom_indexeddb_idbdatabaseerror_h__
 
-#include "nsIIDBRequest.h"
-#include "nsDOMEventTargetHelper.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsCOMPtr.h"
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-namespace mozilla {
-namespace dom {
-namespace idb {
+#include "nsIIDBDatabaseError.h"
 
-class Request : public nsDOMEventTargetHelper
-              , public nsIIDBRequest
+#include "nsStringGlue.h"
 
+BEGIN_INDEXEDDB_NAMESPACE
+
+class IDBRequest;
+
+class IDBDatabaseError : public nsIIDBDatabaseError
 {
+  friend class IDBRequest;
+
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIDBREQUEST
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Request,
-                                           nsDOMEventTargetHelper)
-
-  Request();
+  NS_DECL_NSIIDBDATABASEERROR
 
 protected:
-  PRUint16 mReadyState;
+  // Only called by IDBRequest.
+  IDBDatabaseError(PRUint16 aCode,
+                   const nsAString& aMessage)
+  : mCode(aCode),
+    mMessage(aMessage)
+  { }
 
-private:
-  nsRefPtr<nsDOMEventListenerWrapper> mOnSuccessListener;
-  nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
+protected:
+  PRUint16 mCode;
+  nsString mMessage;
 };
 
-} // namespace idb
-} // namepsace dom
-} // namespace mozilla
+END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_idb_request_h__
+#endif // mozilla_dom_indexeddb_idbdatabaseerror_h__

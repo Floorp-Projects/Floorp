@@ -13,15 +13,16 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Indexed Database code.
+ * The Original Code is Indexed Database.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Foundation.
+ * The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,12 +39,15 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "IDBRequest.h"
-#include "nsString.h"
-#include "nsIScriptContext.h"
 
-namespace mozilla {
-namespace dom {
-namespace idb {
+#include "nsIScriptContext.h"
+#include "nsIVariant.h"
+
+#include "nsComponentManagerUtils.h"
+#include "nsDOMClassInfo.h"
+#include "nsStringGlue.h"
+
+USING_INDEXEDDB_NAMESPACE
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Request
@@ -51,43 +55,86 @@ namespace idb {
 #define SUCCESS_EVT_STR "success"
 #define ERROR_EVT_STR "error"
 
-Request::Request()
-: mReadyState(INITIAL)
+IDBRequest::IDBRequest(nsISupports* aSource)
+: mReadyState(INITIAL),
+  mSource(aSource)
 {
+  NS_ASSERTION(mSource, "Null source!");
+}
+
+IDBRequest::~IDBRequest()
+{
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
+}
+
+nsresult
+IDBRequest::SetResult(nsISupports* aResult)
+{
+  if (!mResult) {
+    mResult = do_CreateInstance(NS_VARIANT_CONTRACTID);
+    NS_ENSURE_TRUE(mResult, NS_ERROR_FAILURE);
+  }
+
+  return mResult->SetAsISupports(aResult);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIIDBRequest
 
 NS_IMETHODIMP
-Request::GetReadyState(PRUint16* aReadyState)
+IDBRequest::Abort()
+{
+  NS_NOTYETIMPLEMENTED("Implement me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+IDBRequest::GetReadyState(PRUint16* aReadyState)
 {
   *aReadyState = mReadyState;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Request::SetOnsuccess(nsIDOMEventListener* aSuccessListener)
+IDBRequest::GetError(nsIIDBDatabaseError** aError)
+{
+  nsCOMPtr<nsIIDBDatabaseError> error(mError);
+  error.forget(aError);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBRequest::GetResult(nsIVariant** aResult)
+{
+  nsCOMPtr<nsIVariant> result(mResult);
+  result.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBRequest::SetOnsuccess(nsIDOMEventListener* aSuccessListener)
 {
   return RemoveAddEventListener(NS_LITERAL_STRING(SUCCESS_EVT_STR),
                                 mOnSuccessListener, aSuccessListener);
 }
 
 NS_IMETHODIMP
-Request::GetOnsuccess(nsIDOMEventListener** aSuccessListener)
+IDBRequest::GetOnsuccess(nsIDOMEventListener** aSuccessListener)
 {
   return GetInnerEventListener(mOnSuccessListener, aSuccessListener);
 }
 
 NS_IMETHODIMP
-Request::SetOnerror(nsIDOMEventListener* aErrorListener)
+IDBRequest::SetOnerror(nsIDOMEventListener* aErrorListener)
 {
   return RemoveAddEventListener(NS_LITERAL_STRING(ERROR_EVT_STR),
                                 mOnErrorListener, aErrorListener);
 }
 
 NS_IMETHODIMP
-Request::GetOnerror(nsIDOMEventListener** aErrorListener)
+IDBRequest::GetOnerror(nsIDOMEventListener** aErrorListener)
 {
   return GetInnerEventListener(mOnErrorListener, aErrorListener);
 }
@@ -95,27 +142,26 @@ Request::GetOnerror(nsIDOMEventListener** aErrorListener)
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(Request)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IDBRequest)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(Request,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(IDBRequest,
                                                   nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnSuccessListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnErrorListener)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Request,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(IDBRequest,
                                                 nsDOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnSuccessListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnErrorListener)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Request)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(IDBRequest)
   NS_INTERFACE_MAP_ENTRY(nsIIDBRequest)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBRequest)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(Request, nsDOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(Request, nsDOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(IDBRequest, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(IDBRequest, nsDOMEventTargetHelper)
 
-} // namespace idb
-} // namepsace dom
-} // namespace mozilla
+DOMCI_DATA(IDBRequest, IDBRequest)

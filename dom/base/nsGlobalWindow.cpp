@@ -209,6 +209,8 @@
 #endif
 #include "prlog.h"
 
+#include "mozilla/dom/indexedDB/IndexedDatabaseRequest.h"
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
@@ -7480,10 +7482,13 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGlobalWindow::GetIndexedDB(nsIIndexedDatabaseRequest** _indexedDB)
+nsGlobalWindow::GetIndexedDB(nsIIndexedDatabaseRequest** _retval)
 {
-  *_indexedDB = nsnull;
+  nsCOMPtr<nsIIndexedDatabaseRequest> indexedDB =
+    mozilla::dom::indexedDB::IndexedDatabaseRequest::Create();
+  NS_ENSURE_TRUE(indexedDB, NS_ERROR_FAILURE);
+
+  indexedDB.forget(_retval);
   return NS_OK;
 }
 
