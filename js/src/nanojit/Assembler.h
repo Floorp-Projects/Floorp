@@ -349,6 +349,13 @@ namespace nanojit
 
             // These instructions don't have to be saved & reloaded to spill,
             // they can just be recalculated cheaply.
+            //
+            // WARNING: this function must match asm_restore() -- it should return
+            // true for the instructions that are handled explicitly without a spill
+            // in asm_restore(), and false otherwise.
+            //
+            // If it doesn't match asm_restore(), the register allocator's decisions
+            // about which values to evict will be suboptimal.
             static bool canRemat(LIns*);
 
             bool deprecated_isKnownReg(Register r) {
@@ -415,7 +422,12 @@ namespace nanojit
             NIns*       asm_leave_trace(LInsp guard);
             void        asm_store32(LOpcode op, LIns *val, int d, LIns *base);
             void        asm_store64(LOpcode op, LIns *val, int d, LIns *base);
+
+            // WARNING: the implementation of asm_restore() should emit fast code
+            // to rematerialize instructions where canRemat() returns true.
+            // Otherwise, register allocation decisions will be suboptimal.
             void        asm_restore(LInsp, Register);
+
             void        asm_maybe_spill(LInsp ins, bool pop);
             void        asm_spill(Register rr, int d, bool pop, bool quad);
             void        asm_load64(LInsp ins);

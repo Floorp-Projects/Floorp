@@ -1136,7 +1136,7 @@ namespace nanojit
 
     bool Assembler::canRemat(LIns* ins)
     {
-        return ins->isImmAny() || ins->isop(LIR_alloc);
+        return ins->isImmI() || ins->isop(LIR_alloc);
     }
 
     void Assembler::asm_restore(LIns *i, Register r)
