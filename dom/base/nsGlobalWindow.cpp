@@ -7482,6 +7482,7 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
   return NS_OK;
 }
 
+NS_IMETHODIMP
 nsGlobalWindow::GetIndexedDB(nsIIndexedDatabaseRequest** _retval)
 {
   nsCOMPtr<nsIIndexedDatabaseRequest> indexedDB =
