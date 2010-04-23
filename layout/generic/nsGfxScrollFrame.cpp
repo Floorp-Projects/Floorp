@@ -1620,9 +1620,13 @@ SortBlitRectsForCopy(nsIntPoint aPixDelta, nsTArray<nsIntRect>* aRects)
 }
 
 static PRBool
-CanScrollWithBlitting(nsIFrame* aFrame)
+CanScrollWithBlitting(nsIFrame* aFrame, nsIFrame* aDisplayRoot, nsRect* aClippedScrollPort)
 {
-  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+  nsPoint offset(0, 0);
+  *aClippedScrollPort = nsRect(nsPoint(0, 0), aFrame->GetSize());
+
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetCrossDocParentFrame(f, &offset)) {
     if (f->GetStyleDisplay()->HasTransform()) {
       return PR_FALSE;
     }
@@ -1632,6 +1636,18 @@ CanScrollWithBlitting(nsIFrame* aFrame)
       return PR_FALSE;
     }
 #endif
+
+    nsIScrollableFrame* sf = do_QueryFrame(f);
+    if (sf) {
+      // Note that this will always happen on the first iteration of the loop,
+      // ensuring that we clip to our own scrollframe's scrollport
+      aClippedScrollPort->IntersectRect(*aClippedScrollPort,
+                                        sf->GetScrollPortRect() - offset);
+    }
+
+    offset += f->GetPosition();
+    if (f == aDisplayRoot)
+      break;
   }
   return PR_TRUE;
 }
@@ -1658,9 +1674,11 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
     rootPresContext->GetPluginGeometryUpdates(mOuter, &configurations);
   }
 
+  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
+  nsRect clippedScrollPort;
   if (!nearestWidget ||
       nearestWidget->GetTransparencyMode() == eTransparencyTransparent ||
-      !CanScrollWithBlitting(mOuter)) {
+      !CanScrollWithBlitting(mOuter, displayRoot, &clippedScrollPort)) {
     // Just invalidate the frame and adjust child widgets
     // Recall that our widget's origin is at our bounds' top-left
     if (nearestWidget) {
@@ -1672,7 +1690,6 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
     mOuter->InvalidateWithFlags(mScrollPort,
                                 nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT);
   } else {
-    nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
     nsRegion blitRegion;
     nsRegion repaintRegion;
     nsPresContext* presContext = mOuter->PresContext();
@@ -1681,7 +1698,7 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
     nsPoint offsetToDisplayRoot = mOuter->GetOffsetTo(displayRoot);
     nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
     nsRect scrollPort =
-      (mScrollPort + offsetToDisplayRoot).ToNearestPixels(appUnitsPerDevPixel).
+      (clippedScrollPort + offsetToDisplayRoot).ToNearestPixels(appUnitsPerDevPixel).
       ToAppUnits(appUnitsPerDevPixel);
     nsresult rv =
       nsLayoutUtils::ComputeRepaintRegionForCopy(displayRoot, mScrolledFrame,
