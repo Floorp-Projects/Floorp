@@ -104,6 +104,10 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #define LOG_EVENT(type, msg)
 #endif
 
+#include "nsIContentSecurityPolicy.h"
+#include "nsIChannelPolicy.h"
+#include "nsChannelPolicy.h"
+
 using namespace mozilla::layers;
 
 // Under certain conditions there may be no-one holding references to
@@ -167,7 +171,6 @@ protected:
   nsRefPtr<nsHTMLMediaElement> mElement;
   PRUint32 mLoadID;
 };
-
 
 class nsAsyncEventRunner : public nsMediaEvent
 {
@@ -657,12 +660,25 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   if (NS_CP_REJECTED(shouldLoad)) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+
+  // check for a Content Security Policy to pass down to the channel
+  // created to load the media content
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (csp) {
+    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_MEDIA);
+  }
   rv = NS_NewChannel(getter_AddRefs(mChannel),
                      aURI,
                      nsnull,
                      loadGroup,
                      nsnull,
-                     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
+                     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY,
+                     channelPolicy);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // The listener holds a strong reference to us.  This creates a reference
