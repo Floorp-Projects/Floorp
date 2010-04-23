@@ -3226,10 +3226,58 @@ OuterLet(JSTreeContext *tc, JSStmtInfo *stmt, JSAtom *atom)
     return false;
 }
 
+/*
+ * If we are generating global or eval-called-from-global code, bind a "gvar"
+ * here, as soon as possible. The JSOP_GETGVAR, etc., ops speed up interpreted
+ * global variable access by memoizing name-to-slot mappings during execution
+ * of the script prolog (via JSOP_DEFVAR/JSOP_DEFCONST). If the memoization
+ * can't be done due to a pre-existing property of the same name as the var or
+ * const but incompatible attributes/getter/setter/etc, these ops devolve to
+ * JSOP_NAME, etc.
+ *
+ * For now, don't try to lookup eval frame variables at compile time. This is
+ * sub-optimal: we could handle eval-called-from-global-code gvars since eval
+ * gets its own script and frame. The eval-from-function-code case is harder,
+ * since functions do not atomize gvars and then reserve their atom indexes as
+ * stack frame slots.
+ */
+static bool
+BindGvar(JSParseNode *pn, JSTreeContext *tc)
+{
+    JS_ASSERT(pn->pn_op == JSOP_NAME);
+    JS_ASSERT(!(tc->flags & TCF_IN_FUNCTION));
+
+    if ((tc->flags & TCF_COMPILING) && !tc->parser->callerFrame) {
+        JSCodeGenerator *cg = (JSCodeGenerator *) tc;
+
+        /* Index pn->pn_atom so we can map fast global number to name. */
+        JSAtomListElement *ale = cg->atomList.add(tc->parser, pn->pn_atom);
+        if (!ale)
+            return false;
+
+        /* Defend against cg->ngvars 16-bit overflow. */
+        uintN slot = ALE_INDEX(ale);
+        if ((slot + 1) >> 16)
+            return true;
+
+        if ((uint16)(slot + 1) > cg->ngvars)
+            cg->ngvars = (uint16)(slot + 1);
+
+        pn->pn_op = JSOP_GETGVAR;
+        pn->pn_cookie = MAKE_UPVAR_COOKIE(tc->staticLevel, slot);
+        pn->pn_dflags |= PND_BOUND | PND_GVAR;
+    }
+
+    return true;
+}
+
 static JSBool
 BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 {
     JSParseNode *pn = data->pn;
+
+    /* Default best op for pn is JSOP_NAME; we'll try to improve below. */
+    pn->pn_op = JSOP_NAME;
 
     if (!CheckStrictBinding(cx, tc, atom, pn))
         return false;
@@ -3237,9 +3285,8 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     JSStmtInfo *stmt = js_LexicalLookup(tc, atom, NULL);
 
     if (stmt && stmt->type == STMT_WITH) {
-        pn->pn_op = JSOP_NAME;
         data->fresh = false;
-        return JS_TRUE;
+        return (tc->flags & TCF_IN_FUNCTION) || BindGvar(pn, tc);
     }
 
     JSAtomListElement *ale = tc->decls.lookup(atom);
@@ -3374,43 +3421,8 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     if (data->op == JSOP_DEFCONST)
         pn->pn_dflags |= PND_CONST;
 
-    if (!(tc->flags & TCF_IN_FUNCTION)) {
-        /*
-         * If we are generating global or eval-called-from-global code, bind a
-         * "gvar" here, as soon as possible. The JSOP_GETGVAR, etc., ops speed
-         * up global variable access by memoizing name-to-slot mappings in the
-         * script prolog (via JSOP_DEFVAR/JSOP_DEFCONST). If the memoization
-         * can't be done due to a pre-existing property of the same name as the
-         * var or const but incompatible attributes/getter/setter/etc, these
-         * ops devolve to JSOP_NAME, etc.
-         *
-         * For now, don't try to lookup eval frame variables at compile time.
-         * Seems sub-optimal: why couldn't we find eval-called-from-a-function
-         * upvars early and possibly simplify jsemit.cpp:BindNameToSlot?
-         */
-        pn->pn_op = JSOP_NAME;
-        if ((tc->flags & TCF_COMPILING) && !tc->parser->callerFrame) {
-            JSCodeGenerator *cg = (JSCodeGenerator *) tc;
-
-            /* Index atom so we can map fast global number to name. */
-            ale = cg->atomList.add(tc->parser, atom);
-            if (!ale)
-                return JS_FALSE;
-
-            /* Defend against cg->ngvars 16-bit overflow. */
-            uintN slot = ALE_INDEX(ale);
-            if ((slot + 1) >> 16)
-                return JS_TRUE;
-
-            if ((uint16)(slot + 1) > cg->ngvars)
-                cg->ngvars = (uint16)(slot + 1);
-
-            pn->pn_op = JSOP_GETGVAR;
-            pn->pn_cookie = MAKE_UPVAR_COOKIE(tc->staticLevel, slot);
-            pn->pn_dflags |= PND_BOUND | PND_GVAR;
-        }
-        return JS_TRUE;
-    }
+    if (!(tc->flags & TCF_IN_FUNCTION))
+        return BindGvar(pn, tc);
 
     if (atom == cx->runtime->atomState.argumentsAtom) {
         pn->pn_op = JSOP_ARGUMENTS;
@@ -3446,7 +3458,6 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         /* Not an argument, must be a redeclared local var. */
         JS_ASSERT(localKind == JSLOCAL_VAR || localKind == JSLOCAL_CONST);
     }
-    pn->pn_op = JSOP_NAME;
     return JS_TRUE;
 }
 
