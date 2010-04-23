@@ -27,18 +27,18 @@ namespace mozilla {
 namespace gfx {
 
 // Convert a frame of YUV to 32 bit ARGB.
-void ConvertYCbCrToRGB32(const uint8* y_buf,
-                         const uint8* u_buf,
-                         const uint8* v_buf,
-                         uint8* rgb_buf,
-                         int pic_x,
-                         int pic_y,
-                         int pic_width,
-                         int pic_height,
-                         int y_pitch,
-                         int uv_pitch,
-                         int rgb_pitch,
-                         YUVType yuv_type) {
+NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,
+                                  const uint8* u_buf,
+                                  const uint8* v_buf,
+                                  uint8* rgb_buf,
+                                  int pic_x,
+                                  int pic_y,
+                                  int pic_width,
+                                  int pic_height,
+                                  int y_pitch,
+                                  int uv_pitch,
+                                  int rgb_pitch,
+                                  YUVType yuv_type) {
   unsigned int y_shift = yuv_type == YV12 ? 1 : 0;
   unsigned int x_shift = yuv_type == YV24 ? 0 : 1;
   // There is no optimized YV24 MMX routine so we check for this and
