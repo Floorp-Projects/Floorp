@@ -96,6 +96,9 @@
 #include "nsIWindowWatcher.h"
 #include "nsCommaSeparatedTokenizer.h"
 #include "nsIConsoleService.h"
+#include "nsIChannelPolicy.h"
+#include "nsChannelPolicy.h"
+#include "nsIContentSecurityPolicy.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -1751,8 +1754,22 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   } else {
     loadFlags = nsIRequest::LOAD_BACKGROUND;
   }
-  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup, nsnull,
-                     loadFlags);
+  // get Content Security Policy from principal to pass into channel
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  mPrincipal->GetCsp(getter_AddRefs(csp));
+  if (csp) {
+    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_XMLHTTPREQUEST);
+  }
+  rv = NS_NewChannel(getter_AddRefs(mChannel),
+                     uri,
+                     nsnull,                    // ioService
+                     loadGroup,
+                     nsnull,                    // callbacks
+                     loadFlags,
+                     channelPolicy);
   if (NS_FAILED(rv)) return rv;
 
   // Check if we're doing a cross-origin request.
