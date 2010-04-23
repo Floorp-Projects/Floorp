@@ -2432,11 +2432,11 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
         if (desc.hasGet)
             getter = desc.getterObject() ? desc.getter() : JS_PropertyStub;
         else
-            getter = sprop->getter();
+            getter = sprop->hasDefaultGetter() ? JS_PropertyStub : sprop->getter();
         if (desc.hasSet)
             setter = desc.setterObject() ? desc.setter() : JS_PropertyStub;
         else
-            setter = sprop->setter();
+            setter = sprop->hasDefaultSetter() ? JS_PropertyStub : sprop->setter();
     }
 
     *rval = true;
@@ -4896,7 +4896,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp)
     }
     JS_ASSERT_IF(getHow & JSGET_CACHE_RESULT, obj->isDenseArray());
 #if JS_HAS_XML_SUPPORT
-    if (OBJECT_IS_XML(cx, obj))
+    if (obj->isXML())
         return js_GetXMLMethod(cx, obj, id, vp);
 #endif
     return obj->getProperty(cx, id, vp);

@@ -1377,7 +1377,7 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
 
 #if JS_HAS_XML_SUPPORT
     if (!JSVAL_IS_PRIMITIVE(idval)) {
-        if (OBJECT_IS_XML(cx, obj)) {
+        if (obj->isXML()) {
             *idp = OBJECT_JSVAL_TO_JSID(idval);
             return JS_TRUE;
         }

@@ -236,11 +236,11 @@ JS_STATIC_ASSERT(sizeof(JSStackHeader) >= 2 * sizeof(jsval));
  * since GC_CHUNK_SIZE and sizeof(JSGCChunkInfo) are at least word-aligned.
  */
 
-static const jsuword GC_ARENA_SHIFT = 12;
-static const jsuword GC_ARENA_MASK = JS_BITMASK(GC_ARENA_SHIFT);
-static const jsuword GC_ARENA_SIZE = JS_BIT(GC_ARENA_SHIFT);
+const jsuword GC_ARENA_SHIFT = 12;
+const jsuword GC_ARENA_MASK = JS_BITMASK(GC_ARENA_SHIFT);
+const jsuword GC_ARENA_SIZE = JS_BIT(GC_ARENA_SHIFT);
 
-static const jsuword GC_MAX_CHUNK_AGE = 3;
+const jsuword GC_MAX_CHUNK_AGE = 3;
 
 const size_t GC_CELL_SHIFT = 3;
 const size_t GC_CELL_SIZE = size_t(1) << GC_CELL_SHIFT;
@@ -326,32 +326,13 @@ struct JSGCArena {
 };
 
 struct JSGCChunkInfo {
-    JSGCChunkInfo   **prevp;
-    JSGCChunkInfo   *next;
+    JSRuntime       *runtime;
     size_t          numFreeArenas;
     size_t          gcChunkAge;
 
     inline void init(JSRuntime *rt);
 
     inline jsbitmap *getFreeArenaBitmap();
-
-    void addToList(JSRuntime *rt) {
-        prevp = &rt->gcChunkList;
-        next = rt->gcChunkList;
-        if (rt->gcChunkList) {
-            JS_ASSERT(rt->gcChunkList->prevp == &rt->gcChunkList);
-            rt->gcChunkList->prevp = &next;
-        }
-        rt->gcChunkList = this;
-    }
-
-    void removeFromList(JSRuntime *rt) {
-        *prevp = next;
-        if (next) {
-            JS_ASSERT(next->prevp == &next);
-            next->prevp = prevp;
-        }
-    }
 
     inline jsuword getChunk();
 
@@ -429,8 +410,9 @@ JSGCChunkInfo::getFreeArenaBitmap()
 inline void
 JSGCChunkInfo::init(JSRuntime *rt)
 {
+    runtime = rt;
     numFreeArenas = GC_ARENAS_PER_CHUNK;
-    jsbitmap *freeArenas = getFreeArenaBitmap();
+    gcChunkAge = 0;
 
     /*
      * For simplicity we set all bits to 1 including the high bits in the
@@ -438,8 +420,7 @@ JSGCChunkInfo::init(JSRuntime *rt)
      * the arena scans the bitmap words from lowest to highest bits and the
      * allocation checks numFreeArenas before doing the search.
      */
-    memset(freeArenas, 0xFF, GC_FREE_ARENA_BITMAP_SIZE);
-    addToList(rt);
+    memset(getFreeArenaBitmap(), 0xFF, GC_FREE_ARENA_BITMAP_SIZE);
 }
 
 inline void
@@ -644,8 +625,9 @@ GetGCChunk(JSRuntime *rt)
 }
 
 inline void
-ReleaseGCChunk(JSRuntime *rt, void *p)
+ReleaseGCChunk(JSRuntime *rt, jsuword chunk)
 {
+    void *p = reinterpret_cast<void *>(chunk);
     JS_ASSERT(p);
 #ifdef MOZ_GCTIMER
     JS_ATOMIC_INCREMENT(&destroyChunkCount);
@@ -670,29 +652,28 @@ NewGCArena(JSContext *cx)
         js_TriggerGC(cx, true);
     }
 
-    JSGCChunkInfo *ci = rt->gcChunkList;
-    jsuword chunk;
-    if (!ci) {
-        GCEmptyChunks *chunks = &rt->gcEmptyChunks;
-        if (!chunks->empty()) {
-            ci = chunks->back();
-            chunks->popBack();
-            JS_ASSERT(ci);
-            chunk = ci->getChunk();
-        } else {
-            void *chunkptr = GetGCChunk(rt);
-            if (!chunkptr)
-                return NULL;
-            chunk = reinterpret_cast<jsuword>(chunkptr);
-            ci = JSGCChunkInfo::fromChunk(chunk);
+    size_t nchunks = rt->gcChunks.length();
+
+    JSGCChunkInfo *ci;
+    for (;; ++rt->gcChunkCursor) {
+        if (rt->gcChunkCursor == nchunks) {
+            ci = NULL;
+            break;
         }
-        ci->gcChunkAge = 0;
-        ci->init(rt);
-    } else {
-        chunk = ci->getChunk();
+        ci = rt->gcChunks[rt->gcChunkCursor];
+        if (ci->numFreeArenas != 0)
+            break;
     }
-    JS_ASSERT(ci->prevp == &rt->gcChunkList);
-    JS_ASSERT(ci->numFreeArenas != 0);
+    if (!ci) {
+        if (!rt->gcChunks.reserve(nchunks + 1))
+            return NULL;
+        void *chunkptr = GetGCChunk(rt);
+        if (!chunkptr)
+            return NULL;
+        ci = JSGCChunkInfo::fromChunk(reinterpret_cast<jsuword>(chunkptr));
+        ci->init(rt);
+        JS_ALWAYS_TRUE(rt->gcChunks.append(ci));
+    }
 
     /* Scan the bitmap for the first non-zero bit. */
     jsbitmap *freeArenas = ci->getFreeArenaBitmap();
@@ -706,92 +687,72 @@ NewGCArena(JSContext *cx)
     JS_ASSERT(arenaIndex < GC_ARENAS_PER_CHUNK);
     JS_ASSERT(*freeArenas & (jsuword(1) << bit));
     *freeArenas &= ~(jsuword(1) << bit);
-
     --ci->numFreeArenas;
-    if (ci->numFreeArenas == 0)
-        ci->removeFromList(rt);
 
     rt->gcBytes += GC_ARENA_SIZE;
     METER(rt->gcStats.nallarenas++);
     METER_UPDATE_MAX(rt->gcStats.maxnallarenas, rt->gcStats.nallarenas);
 
-    return JSGCArena::fromChunkAndIndex(chunk, arenaIndex);
+    return JSGCArena::fromChunkAndIndex(ci->getChunk(), arenaIndex);
 }
 
-namespace js {
+/*
+ * This function does not touch the arena or release its memory so code can
+ * still refer into it.
+ */
+static void
+ReleaseGCArena(JSRuntime *rt, JSGCArena *a)
+{
+    METER(rt->gcStats.afree++);
+    JS_ASSERT(rt->gcBytes >= GC_ARENA_SIZE);
+    rt->gcBytes -= GC_ARENA_SIZE;
+    JS_ASSERT(rt->gcStats.nallarenas != 0);
+    METER(rt->gcStats.nallarenas--);
 
-struct GCArenaReleaser {
-#ifdef DEBUG
-    JSGCArena         *emptyArenaList;
-#endif
+    jsuword chunk = a->getChunk();
+    JSGCChunkInfo *ci = JSGCChunkInfo::fromChunk(chunk);
+    JS_ASSERT(ci->numFreeArenas <= GC_ARENAS_PER_CHUNK - 1);
+    jsbitmap *freeArenas = ci->getFreeArenaBitmap();
+    JS_ASSERT(!JS_TEST_BIT(freeArenas, a->getIndex()));
+    JS_SET_BIT(freeArenas, a->getIndex());
+    ci->numFreeArenas++;
+    if (ci->numFreeArenas == GC_ARENAS_PER_CHUNK)
+        ci->gcChunkAge = 0;
 
-    GCArenaReleaser()
-    {
 #ifdef DEBUG
-        emptyArenaList = NULL;
+    a->getInfo()->prev = rt->gcEmptyArenaList;
+    rt->gcEmptyArenaList = a;
 #endif
+}
+
+static void
+FreeGCChunks(JSRuntime *rt)
+{
+#ifdef DEBUG
+    while (rt->gcEmptyArenaList) {
+        JSGCArena *next = rt->gcEmptyArenaList->getInfo()->prev;
+        memset(rt->gcEmptyArenaList, JS_FREE_PATTERN, GC_ARENA_SIZE);
+        rt->gcEmptyArenaList = next;
     }
+#endif
 
-    /*
-     * The method does not touches the arena or release its memory so code can
-     * still refer into it.
-     */
-    void release(JSRuntime *rt, JSGCArena *a) {
-
-        METER(rt->gcStats.afree++);
-        JS_ASSERT(rt->gcBytes >= GC_ARENA_SIZE);
-        rt->gcBytes -= GC_ARENA_SIZE;
-        JS_ASSERT(rt->gcStats.nallarenas != 0);
-        METER(rt->gcStats.nallarenas--);
-
-        jsuword chunk = a->getChunk();
-        JSGCChunkInfo *ci = JSGCChunkInfo::fromChunk(chunk);
-        JS_ASSERT(ci->numFreeArenas <= GC_ARENAS_PER_CHUNK - 1);
-        if (ci->numFreeArenas == 0)
-            ci->addToList(rt);
-
-        jsbitmap *freeArenas = ci->getFreeArenaBitmap();
-        JS_ASSERT(!JS_TEST_BIT(freeArenas, a->getIndex()));
-        JS_SET_BIT(freeArenas, a->getIndex());
-        ci->numFreeArenas++;
+    /* Remove unused chunks. */
+    size_t available = 0;
+    for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i) {
+        JSGCChunkInfo *ci = *i;
+        JS_ASSERT(ci->runtime == rt);
         if (ci->numFreeArenas == GC_ARENAS_PER_CHUNK) {
-            ci->removeFromList(rt);
-            ci->gcChunkAge = 0;
-            if (!rt->gcEmptyChunks.append(ci)) {
-                jsuword chunk = ci->getChunk();
-                ReleaseGCChunk(rt, (void *)chunk);
+            if (ci->gcChunkAge > GC_MAX_CHUNK_AGE) {
+                ReleaseGCChunk(rt, ci->getChunk());
+                continue;
             }
+            ci->gcChunkAge++;
         }
-
-#ifdef DEBUG
-        a->getInfo()->prev = emptyArenaList;
-        emptyArenaList = a;
-#endif
+        rt->gcChunks[available++] = ci;
     }
-
-    void releaseList(JSRuntime *rt, JSGCArena *arenaList) {
-        for (JSGCArena *prev; arenaList; arenaList = prev) {
-            /*
-             * Read the prev link before we release as that modifies the field
-             * in debug-only builds when assembling the empty arena list.
-             */
-            prev = arenaList->getInfo()->prev;
-            release(rt, arenaList);
-        }
-    }
-
-    void freeArenas(JSRuntime *rt) {
-#ifdef DEBUG
-        while (emptyArenaList) {
-            JSGCArena *next = emptyArenaList->getInfo()->prev;
-            memset(emptyArenaList, JS_FREE_PATTERN, GC_ARENA_SIZE);
-            emptyArenaList = next;
-        }
-#endif
-    }
-};
-
-} /* namespace js */
+    rt->gcChunks.resize(available);
+    rt->gcChunkCursor = 0;
+}
 
 static inline size_t
 GetFinalizableThingSize(unsigned thingKind)
@@ -878,20 +839,19 @@ InitGCArenaLists(JSRuntime *rt)
 static void
 FinishGCArenaLists(JSRuntime *rt)
 {
-    js::GCArenaReleaser arenaReleaser;
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++) {
-        JSGCArenaList *arenaList = &rt->gcArenaList[i];
-        arenaReleaser.releaseList(rt, arenaList->head);
-        arenaList->head = NULL;
-        arenaList->cursor = NULL;
+        rt->gcArenaList[i].head = NULL;
+        rt->gcArenaList[i].cursor = NULL;
     }
-    arenaReleaser.releaseList(rt, rt->gcDoubleArenaList.head);
     rt->gcDoubleArenaList.head = NULL;
     rt->gcDoubleArenaList.cursor = NULL;
 
-    arenaReleaser.freeArenas(rt);
-    JS_ASSERT(rt->gcChunkList == NULL);
     rt->gcBytes = 0;
+
+    for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i)
+        ReleaseGCChunk(rt, (*i)->getChunk());
+    rt->gcChunks.clear();
+    rt->gcChunkCursor = 0;
 }
 
 intN
@@ -917,18 +877,11 @@ js_GetGCThingTraceKind(void *thing)
     return GetFinalizableArenaTraceKind(ainfo);
 }
 
-JSRuntime*
-js_GetGCStringRuntime(JSString *str)
+JSRuntime *
+js_GetGCThingRuntime(void *thing)
 {
-    JSGCArenaList *list = JSGCArenaInfo::fromGCThing(str)->list;
-    JS_ASSERT(list->thingSize == sizeof(JSString));
-
-    unsigned i = list->thingKind;
-    JS_ASSERT(i == FINALIZE_STRING ||
-              (FINALIZE_EXTERNAL_STRING0 <= i &&
-               i < FINALIZE_EXTERNAL_STRING0 + JS_EXTERNAL_STRING_LIMIT));
-    return (JSRuntime *)((uint8 *)(list - i) -
-                         offsetof(JSRuntime, gcArenaList));
+    jsuword chunk = JSGCArena::fromGCThing(thing)->getChunk();
+    return JSGCChunkInfo::fromChunk(chunk)->runtime;
 }
 
 bool
@@ -1187,27 +1140,6 @@ static void
 CheckLeakedRoots(JSRuntime *rt);
 #endif
 
-void DestroyEmptyGCChunks(JSRuntime *rt, bool releaseAll) 
-{
-    size_t newLength = 0;
-    GCEmptyChunks *chunks = &rt->gcEmptyChunks;
-    JSGCChunkInfo **array = chunks->begin();
-
-    for (JSGCChunkInfo **i = chunks->begin(); i != chunks->end(); ++i) {
-        JSGCChunkInfo *ci = *i;
-        JS_ASSERT(ci->numFreeArenas == GC_ARENAS_PER_CHUNK); 
-        if (releaseAll || ci->gcChunkAge > GC_MAX_CHUNK_AGE) {
-            jsuword chunk = ci->getChunk();
-            ReleaseGCChunk(rt, (void *)chunk);
-        } else {
-            ci->gcChunkAge++;
-            array[newLength++] = ci;
-        }
-    }
-
-    rt->gcEmptyChunks.resize(newLength);
-}
-
 void
 js_FinishGC(JSRuntime *rt)
 {
@@ -1220,9 +1152,7 @@ js_FinishGC(JSRuntime *rt)
 #endif
 
     FinishGCArenaLists(rt);
-    DestroyEmptyGCChunks(rt, true);
-    JS_ASSERT(rt->gcEmptyChunks.length() == 0);
-    
+
     if (rt->gcRootsHash.ops) {
 #ifdef DEBUG
         CheckLeakedRoots(rt);
@@ -2719,7 +2649,7 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
 template<typename T,
          void finalizer(JSContext *cx, T *thing, unsigned thingKind)>
 static void
-FinalizeArenaList(JSContext *cx, unsigned thingKind, GCArenaReleaser *releaser)
+FinalizeArenaList(JSContext *cx, unsigned thingKind)
 {
     JS_STATIC_ASSERT(!(sizeof(T) & GC_CELL_MASK));
     JSGCArenaList *arenaList = &cx->runtime->gcArenaList[thingKind];
@@ -2806,7 +2736,7 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind, GCArenaReleaser *releaser)
              */
             JS_ASSERT(nfree == ThingsPerArena(sizeof(T)));
             *ap = ainfo->prev;
-            releaser->release(cx->runtime, a);
+            ReleaseGCArena(cx->runtime, a);
             METER(nkilledarenas++);
         } else {
             JS_ASSERT(nfree < ThingsPerArena(sizeof(T)));
@@ -2896,7 +2826,7 @@ struct GCTimer {
 #endif
 
 static void
-SweepDoubles(JSRuntime *rt, GCArenaReleaser *releaser)
+SweepDoubles(JSRuntime *rt)
 {
 #ifdef JS_GCMETER
     uint32 nlivearenas = 0, nkilledarenas = 0, nthings = 0;
@@ -2907,7 +2837,7 @@ SweepDoubles(JSRuntime *rt, GCArenaReleaser *releaser)
         if (!ainfo->hasMarkedDoubles) {
             /* No marked double values in the arena. */
             *ap = ainfo->prev;
-            releaser->release(rt, a);
+            ReleaseGCArena(rt, a);
             METER(nkilledarenas++);
         } else {
 #ifdef JS_GCMETER
@@ -3071,7 +3001,9 @@ GC(JSContext *cx  GCTIMER_PARAM)
 #endif
 
     /*
-     * We finalize JSObject instances before JSString, double and other GC
+     * We finalize iterators before other objects so the iterator can use the
+     * object which properties it enumerates over to finalize the enumeration
+     * state. We finalize objects before string, double and other GC things
      * things to ensure that object's finalizer can access them even if they
      * will be freed.
      *
@@ -3079,24 +3011,18 @@ GC(JSContext *cx  GCTIMER_PARAM)
      * function we use separated list finalizers when a debug hook is
      * installed.
      */
-    js::GCArenaReleaser arenaReleaser;
+    JS_ASSERT(!rt->gcEmptyArenaList);
     if (!cx->debugHooks->objectHook) {
-        FinalizeArenaList<JSObject, FinalizeObject>
-            (cx, FINALIZE_ITER, &arenaReleaser);
-        FinalizeArenaList<JSObject, FinalizeObject>
-            (cx, FINALIZE_OBJECT, &arenaReleaser);
-        FinalizeArenaList<JSFunction, FinalizeFunction>
-            (cx, FINALIZE_FUNCTION, &arenaReleaser);
+        FinalizeArenaList<JSObject, FinalizeObject>(cx, FINALIZE_ITER);
+        FinalizeArenaList<JSObject, FinalizeObject>(cx, FINALIZE_OBJECT);
+        FinalizeArenaList<JSFunction, FinalizeFunction>(cx, FINALIZE_FUNCTION);
     } else {
-        FinalizeArenaList<JSObject, FinalizeHookedObject>
-            (cx, FINALIZE_ITER, &arenaReleaser);
-        FinalizeArenaList<JSObject, FinalizeHookedObject>
-            (cx, FINALIZE_OBJECT, &arenaReleaser);
-        FinalizeArenaList<JSFunction, FinalizeHookedFunction>
-            (cx, FINALIZE_FUNCTION, &arenaReleaser);
+        FinalizeArenaList<JSObject, FinalizeHookedObject>(cx, FINALIZE_ITER);
+        FinalizeArenaList<JSObject, FinalizeHookedObject>(cx, FINALIZE_OBJECT);
+        FinalizeArenaList<JSFunction, FinalizeHookedFunction>(cx, FINALIZE_FUNCTION);
     }
 #if JS_HAS_XML_SUPPORT
-    FinalizeArenaList<JSXML, FinalizeXML>(cx, FINALIZE_XML, &arenaReleaser);
+    FinalizeArenaList<JSXML, FinalizeXML>(cx, FINALIZE_XML);
 #endif
     TIMESTAMP(sweepObjectEnd);
 
@@ -3106,17 +3032,15 @@ GC(JSContext *cx  GCTIMER_PARAM)
      */
     rt->deflatedStringCache->sweep(cx);
 
-    FinalizeArenaList<JSString, FinalizeString>
-        (cx, FINALIZE_STRING, &arenaReleaser);
+    FinalizeArenaList<JSString, FinalizeString>(cx, FINALIZE_STRING);
     for (unsigned i = FINALIZE_EXTERNAL_STRING0;
          i <= FINALIZE_EXTERNAL_STRING_LAST;
          ++i) {
-        FinalizeArenaList<JSString, FinalizeExternalString>
-            (cx, i, &arenaReleaser);
+        FinalizeArenaList<JSString, FinalizeExternalString>(cx, i);
     }
     TIMESTAMP(sweepStringEnd);
 
-    SweepDoubles(rt, &arenaReleaser);
+    SweepDoubles(rt);
     TIMESTAMP(sweepDoubleEnd);
 
     /*
@@ -3137,8 +3061,7 @@ GC(JSContext *cx  GCTIMER_PARAM)
      * Destroy arenas after we finished the sweeping so finalizers can safely
      * use js_IsAboutToBeFinalized().
      */
-    arenaReleaser.freeArenas(rt);
-    DestroyEmptyGCChunks(rt, false);
+    FreeGCChunks(rt);
     TIMESTAMP(sweepDestroyEnd);
 
 #ifdef JS_THREADSAFE

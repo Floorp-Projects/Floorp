@@ -77,7 +77,7 @@ def bench(shellpath, filepath, warmup_runs, counted_runs, stfu=False):
     mean = avg(milliseconds)
     sigma = stddev(milliseconds, mean)
     if not stfu:
-        print 'Runs:', milliseconds
+        print 'Runs:', [int(ms) for ms in milliseconds]
         print 'Mean:', mean
         print 'Stddev: %.2f (%.2f%% of mean)' % (sigma, sigma / mean * 100)
     return mean, sigma

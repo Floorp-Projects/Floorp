@@ -76,6 +76,14 @@ function test()
   exitFunc('test');
 }
 
+// Normalize filenames so this test can work on Windows. This 
+// function is also used on strings that contain filenames.
+function normalize(filename)
+{
+    // Also convert double-backslash to single-slash to handle
+    // escaped filenames in string literals.
+    return filename.replace(/\\{1,2}/g, '/');
+}
 
 function testRealError()
 {
@@ -91,7 +99,7 @@ function testRealError()
     if (e.fileName.search (/-50447-1\.js$/i) == -1)
       reportCompare('PASS', 'FAIL', "expected fileName to end with '-50447-1.js'");
 
-    reportCompare(87, e.lineNumber,
+    reportCompare(95, e.lineNumber,
 		  "lineNumber property returned unexpected value.");
   }
 
@@ -126,7 +134,7 @@ function test2()
      test file and assumes the path to the test case
      is a subdirectory of the directory containing jsDriver.pl
   */
-  var expectedLine = 141;
+  var expectedLine = 149;
   var expectedFileName = 'js1_5/extensions/regress-50447-1.js';
   if (typeof document == "undefined")
   {
@@ -141,9 +149,9 @@ function test2()
   var e = new InternalError ("msg");
   reportCompare ("(new InternalError(\"msg\", \"" +
 		 expectedFileName + "\", " + expectedLine + "))",
-		 e.toSource(),
+		 normalize(e.toSource()),
 		 "toSource() returned unexpected result.");
-  reportCompare (expectedFileName, e.fileName,
+  reportCompare (expectedFileName, normalize(e.fileName),
 		 "fileName property returned unexpected value.");
   reportCompare (expectedLine, e.lineNumber,
 		 "lineNumber property returned unexpected value.");
@@ -179,9 +187,9 @@ function test3()
   e.lineNumber = 10;
   reportCompare ("(new InternalError(\"msg\", \"" +
 		 expectedFileName + "\", 10))",
-		 e.toSource(),
+		 normalize(e.toSource()),
 		 "toSource() returned unexpected result.");
-  reportCompare (expectedFileName, e.fileName,
+  reportCompare (expectedFileName, normalize(e.fileName),
 		 "fileName property returned unexpected value.");
   reportCompare (10, e.lineNumber,
 		 "lineNumber property returned unexpected value.");
@@ -195,7 +203,7 @@ function test4()
   /* generate an error with only msg and filename properties */
   enterFunc ("test4");
 
-  var expectedLine = 200;
+  var expectedLine = 208;
 
   var e = new InternalError ("msg", "file");
   reportCompare ("(new InternalError(\"msg\", \"file\", " + expectedLine + "))",
