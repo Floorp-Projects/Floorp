@@ -115,8 +115,8 @@ class Link;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0x17e1c0ce, 0x3883, 0x4efc, \
-  { 0xbf, 0xdf, 0x40, 0xa6, 0x26, 0x9f, 0xbd, 0x2c } }
+{ 0x4a0c9bfa, 0xef60, 0x4bb2, \
+  { 0x87, 0x5e, 0xac, 0xdb, 0xe8, 0xfe, 0xa1, 0xb5 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -249,8 +249,7 @@ public:
   /**
    * Get/Set the base target of a link in a document.
    */
-  virtual void GetBaseTarget(nsAString &aBaseTarget) const = 0;
-  virtual void SetBaseTarget(const nsAString &aBaseTarget) = 0;
+  virtual void GetBaseTarget(nsAString &aBaseTarget) = 0;
 
   /**
    * Return a standard name for the document's character set.
@@ -1327,24 +1326,6 @@ public:
    * nsIDocument.h.
    */
   virtual PRInt32 GetDocumentState() = 0;
-
-  /**
-   * Gets the document's cached pointer to the first <base> element in this
-   * document which has an href attribute.  If the document doesn't contain any
-   * <base> elements with an href, returns null.
-   */
-  virtual nsIContent* GetFirstBaseNodeWithHref() = 0;
-
-  /**
-   * Sets the document's cached pointer to the first <base> element with an
-   * href attribute in this document and updates the document's base URI
-   * according to the element's href.
-   *
-   * If the given node is the same as the current first base node, this
-   * function still updates the document's base URI according to the node's
-   * href, if it changed.
-   */
-  virtual nsresult SetFirstBaseNodeWithHref(nsIContent *node) = 0;
 
   virtual nsISupports* GetCurrentContentSink() = 0;
 
