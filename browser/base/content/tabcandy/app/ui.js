@@ -2,30 +2,67 @@
 
 // ##########
 Navbar = {
+  // ----------
   get el(){
     var win = Utils.activeWindow;
-    var navbar = win.gBrowser.ownerDocument.getElementById("navigator-toolbox");
-    return navbar;      
+    if(win) {
+      var navbar = win.gBrowser.ownerDocument.getElementById("navigator-toolbox");
+      return navbar;      
+    }
+
+    return null;
   },
-  show: function(){ this.el.collapsed = false; },
-  hide: function(){ this.el.collapsed = true;}
+
+  // ----------
+  show: function() {
+    var el = this.el;
+    if(el)
+      el.collapsed = false; 
+    else { // needs a little longer to get going
+      var self = this;
+      setTimeout(function() {
+        self.show();
+      }, 300); 
+    }
+  },
+
+  // ----------
+  hide: function() {
+    var el = this.el;
+    if(el)
+      el.collapsed = true; 
+    else { // needs a little longer to get going
+      var self = this;
+      setTimeout(function() {
+        self.hide();
+      }, 300); 
+    }
+  },
 }
 
 // ##########
 var Tabbar = {
+  // ----------
+  // Variable: _hidden
+  // We keep track of whether the tabs are hidden in this (internal) variable
+  // so we still have access to that information during the window's unload event,
+  // when window.Tabs no longer exists.
+  _hidden: false, 
   get el(){ return window.Tabs[0].raw.parentNode; },
   height: window.Tabs[0].raw.parentNode.getBoundingClientRect().height,
-  hide: function(){
+  hide: function() {
+    this._hidden = true;
     var self = this;
     $(self.el).animate({"marginTop":-self.height}, 150, function(){
       self.el.collapsed = true;
     });
   },
-  show: function(){
+  show: function() {
+    this._hidden = false;
     this.el.collapsed = false;
     $(this.el).animate({"marginTop":0}, 150);
   },
-  get isHidden(){ return this.el.collapsed; }
+  get isHidden(){ return this._hidden; }
 }
 
 // ##########
@@ -82,17 +119,6 @@ window.Page = {
         });
       }
       lastTab = this;
-    });
-    
-    $("#tabbar-toggle").click(function(){
-      if( Tabbar.isHidden ){
-        Tabbar.show();
-        $(this).removeClass("tabbar-off");        
-      }
-      else {
-        Tabbar.hide();
-        $(this).addClass("tabbar-off");        
-      }
     });
   },
   
@@ -233,12 +259,49 @@ function UIClass(){
     self.navBar.show();
   });
 
+  // ___ tab bar
+  this.$tabBarToggle = $("#tabbar-toggle")
+    .click(function() {
+      if(self.tabBar.isHidden)
+        self.showTabBar();
+      else
+        self.hideTabBar();
+    });
+
   // ___ Finish up
   Page.init();
+  
+  // ___ Storage
+  var data = Storage.read();
+  if(data.hideTabBar)
+    this.hideTabBar();
+  
+  $(window).unload(function() {
+    var data = {
+      dataVersion: 1,
+      hideTabBar: self.tabBar._hidden,
+      groups: Groups.getStorageData()
+    };
+    
+    Storage.write(data);
+  });
 };
 
 // ----------
 UIClass.prototype = {
+  // ----------
+  showTabBar: function() {
+    this.tabBar.show();
+    this.$tabBarToggle.removeClass("tabbar-off");        
+  },
+
+  // ----------
+  hideTabBar: function() {
+    this.tabBar.hide();
+    this.$tabBarToggle.addClass("tabbar-off");        
+  },
+
+  // ----------
   _addArrangements: function() {
     this.grid = new ArrangeClass("Grid", function(value) {
       if(typeof(Groups) != 'undefined')
