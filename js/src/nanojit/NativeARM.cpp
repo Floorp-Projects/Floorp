@@ -1230,15 +1230,18 @@ Assembler::asm_store32(LOpcode op, LIns *value, int dr, LIns *base)
     }
 }
 
+bool
+Assembler::canRemat(LIns* ins)
+{
+    return ins->isImmAny() || ins->isop(LIR_alloc);
+}
+
 void
 Assembler::asm_restore(LInsp i, Register r)
 {
     if (i->isop(LIR_alloc)) {
         asm_add_imm(r, FP, deprecated_disp(i));
     } else if (i->isconst()) {
-        if (!i->deprecated_getArIndex()) {
-            i->deprecated_markAsClear();
-        }
         asm_ld_imm(r, i->imm32());
     }
     else {
@@ -1277,6 +1280,8 @@ Assembler::asm_spill(Register rr, int d, bool pop, bool quad)
     (void) pop;
     (void) quad;
     NanoAssert(d);
+    // fixme: bug 556175 this code doesn't appear to handle
+    // values of d outside the 12-bit range.
     if (_config.arm_vfp && IsFpReg(rr)) {
         if (isS8(d >> 2)) {
             FSTD(rr, FP, d);

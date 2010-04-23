@@ -80,7 +80,7 @@ button:focus {
   -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight transparent;
 }
 
-button:focus > .button-box {
+button:-moz-focusring > .button-box {
   border: 1px dotted ThreeDDarkShadow;
 }
 

@@ -78,6 +78,8 @@ const MIN_GENERATOR_NAME_LENGTH = 6;
 
 const USER_MICROSUMMARY_GENS_DIR = "microsummary-generators";
 
+const TOPIC_SHUTDOWN = "places-shutdown";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
@@ -88,7 +90,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 Cu.import("resource://gre/modules/Services.jsm");
 
 function MicrosummaryService() {
-  Services.obs.addObserver(this, "xpcom-shutdown", true);
+  Services.obs.addObserver(this, TOPIC_SHUTDOWN, true);
 
   this._ans = Cc["@mozilla.org/browser/annotation-service;1"].
               getService(Ci.nsIAnnotationService);
@@ -142,7 +144,7 @@ MicrosummaryService.prototype = {
   // nsIObserver
   observe: function MSS_observe(subject, topic, data) {
     switch (topic) {
-      case "xpcom-shutdown":
+      case TOPIC_SHUTDOWN:
         this._destroy();
         break;
       case "nsPref:changed":
@@ -173,7 +175,7 @@ MicrosummaryService.prototype = {
   },
 
   _destroy: function MSS__destroy() {
-    Services.obs.removeObserver(this, "xpcom-shutdown", true);
+    Services.obs.removeObserver(this, TOPIC_SHUTDOWN, true);
     this._ans.removeObserver(this);
     Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).
                                              getBranch("browser.microsummary.").

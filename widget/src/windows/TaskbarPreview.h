@@ -74,7 +74,7 @@ protected:
   virtual nsresult Disable();
 
   // Detaches this preview from the nsWindow instance it's tied to
-  virtual void DetachFromNSWindow(PRBool windowIsAlive);
+  virtual void DetachFromNSWindow();
 
   // Marks this preview as being active
   virtual nsresult ShowActive(PRBool active) = 0;

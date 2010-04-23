@@ -68,8 +68,8 @@ namespace nanojit
     // - 'entry' records the state of the native machine stack at particular
     //   points during assembly.  Each entry represents four bytes.
     //
-    // - Parts of the stack can be allocated by LIR_alloc, in which case each
-    //   slot covered by the allocation contains a pointer to the LIR_alloc
+    // - Parts of the stack can be allocated by LIR_allocp, in which case each
+    //   slot covered by the allocation contains a pointer to the LIR_allocp
     //   LIns.
     //
     // - The stack also holds spilled values, in which case each slot holding
@@ -88,7 +88,7 @@ namespace nanojit
     //   * An LIns can appear in at most one contiguous sequence of slots in
     //     AR, and the length of that sequence depends on the opcode (1 slot
     //     for instructions producing 32-bit values, 2 slots for instructions
-    //     producing 64-bit values, N slots for LIR_alloc).
+    //     producing 64-bit values, N slots for LIR_allocp).
     //
     //   * An LIns named by 'entry[i]' must have an in-use reservation with
     //     arIndex==i (or an 'i' indexing the start of the same contiguous
@@ -153,7 +153,7 @@ namespace nanojit
     inline /*static*/ uint32_t AR::nStackSlotsFor(LIns* ins)
     {
         uint32_t n = 0;
-        if (ins->isop(LIR_alloc)) {
+        if (ins->isop(LIR_allocp)) {
             n = ins->size() >> 2;
         } else {
             switch (ins->retType()) {
@@ -180,25 +180,6 @@ namespace nanojit
             #define AVMPLUS_ALIGN16(type) type __attribute__ ((aligned (16)))
         #endif
     #endif
-
-    struct Stats
-    {
-        counter_define(steals;)
-        counter_define(remats;)
-        counter_define(spills;)
-        counter_define(native;)
-        counter_define(exitnative;)
-
-        int32_t pages;
-        NIns* codeStart;
-        NIns* codeExitStart;
-
-        DECLARE_PLATFORM_STATS()
-#ifdef __GNUC__
-        // inexplicably, gnuc gives padding/alignment warnings without this. pacify it.
-        bool pad[4];
-#endif
-    };
 
     // error codes
     enum AssmError
@@ -250,7 +231,7 @@ namespace nanojit
      * as we generate machine code.  As part of the prologue, we issue
      * a stack adjustment instruction and then later patch the adjustment
      * value.  Temporary values can be placed into the AR as method calls
-     * are issued.   Also LIR_alloc instructions will consume space.
+     * are issued.   Also LIR_allocp instructions will consume space.
      */
     class Assembler
     {
@@ -323,8 +304,6 @@ namespace nanojit
             CodeList*   codeList;                   // finished blocks of code.
 
         private:
-            Stats       _stats;
-
             void        gen(LirFilter* toCompile);
             NIns*       genPrologue();
             NIns*       genEpilogue();
@@ -367,7 +346,10 @@ namespace nanojit
 
             void        codeAlloc(NIns *&start, NIns *&end, NIns *&eip
                                   verbose_only(, size_t &nBytes));
-            bool        canRemat(LIns*);
+
+            // These instructions don't have to be saved & reloaded to spill,
+            // they can just be recalculated cheaply.
+            static bool canRemat(LIns*);
 
             bool deprecated_isKnownReg(Register r) {
                 return r != deprecated_UnknownReg;
@@ -425,6 +407,10 @@ namespace nanojit
 
             verbose_only( void asm_inc_m32(uint32_t*); )
             void        asm_mmq(Register rd, int dd, Register rs, int ds);
+            void        asm_jmp(LInsp ins, InsList& pending_lives);
+            void        asm_jcc(LInsp ins, InsList& pending_lives);
+            void        asm_x(LInsp ins);
+            void        asm_xcc(LInsp ins);
             NIns*       asm_exit(LInsp guard);
             NIns*       asm_leave_trace(LInsp guard);
             void        asm_store32(LOpcode op, LIns *val, int d, LIns *base);

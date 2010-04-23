@@ -67,7 +67,7 @@
 static void *
 DefaultAllocTable(void *pool, size_t size)
 {
-    return malloc(size);
+    return js_malloc(size);
 }
 
 static void
@@ -79,7 +79,7 @@ DefaultFreeTable(void *pool, void *item, size_t size)
 static JSHashEntry *
 DefaultAllocEntry(void *pool, const void *key)
 {
-    return (JSHashEntry*) malloc(sizeof(JSHashEntry));
+    return (JSHashEntry*) js_malloc(sizeof(JSHashEntry));
 }
 
 static void

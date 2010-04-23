@@ -40,10 +40,8 @@ const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
 const NS_APP_HISTORY_50_FILE = "UHist";
 const NS_APP_BOOKMARKS_50_FILE = "BMarks";
 
-const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
-const TOPIC_SHUTDOWN = "xpcom-shutdown";
-const TOPIC_PLACES_INIT_COMPLETE = "places-init-complete";
-const TOPIC_PLACES_DATABASE_LOCKED = "places-database-locked";
+// Backwards compatible consts, use PlacesUtils properties if possible.
+const TOPIC_GLOBAL_SHUTDOWN = "profile-before-change";
 
 // Shortcuts to transactions type.
 const TRANSITION_LINK = Ci.nsINavHistoryService.TRANSITION_LINK;
@@ -341,11 +339,11 @@ function setPageTitle(aURI, aTitle) {
 function waitForClearHistory(aCallback) {
   let observer = {
     observe: function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, TOPIC_EXPIRATION_FINISHED);
+      Services.obs.removeObserver(this, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
       aCallback();
     }
   };
-  Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
   PlacesUtils.bhistory.removeAllPages();
 }
@@ -358,15 +356,7 @@ function shutdownPlaces()
 {
   let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
            getService(Ci.nsIObserver);
-  hs.observe(null, TOPIC_SHUTDOWN, null);
-
-  let sync = Cc["@mozilla.org/places/sync;1"].
-             getService(Ci.nsIObserver);
-  sync.observe(null, TOPIC_SHUTDOWN, null);
-
-  let expire = Cc["@mozilla.org/places/expiration;1"].
-               getService(Ci.nsIObserver);
-  expire.observe(null, TOPIC_SHUTDOWN, null);
+  hs.observe(null, TOPIC_GLOBAL_SHUTDOWN, null);
 }
 
 

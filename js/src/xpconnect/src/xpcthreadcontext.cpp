@@ -386,6 +386,11 @@ XPCPerThreadData::Cleanup()
 
 XPCPerThreadData::~XPCPerThreadData()
 {
+    /* Be careful to ensure that both any update to |gThreads| and the
+       decision about whether or not to destroy the lock, are done
+       atomically.  See bug 557586. */
+    PRBool doDestroyLock = PR_FALSE;
+
     MOZ_COUNT_DTOR(xpcPerThreadData);
 
     Cleanup();
@@ -409,9 +414,11 @@ XPCPerThreadData::~XPCPerThreadData()
                 cur = cur->mNextThread;
             }
         }
+        if (!gThreads)
+            doDestroyLock = PR_TRUE;
     }
 
-    if(gLock && !gThreads)
+    if(gLock && doDestroyLock)
     {
         PR_DestroyLock(gLock);
         gLock = nsnull;

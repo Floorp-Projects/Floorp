@@ -162,10 +162,6 @@ nsMenuX::~nsMenuX()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // During shutdown, this is called outside the event loop;
-  // provide an autorelease pool to prevent cocoa object leakage.
-  nsAutoreleasePool localPool;
-
   // Prevent the icon object from outliving us.
   if (mIcon)
     mIcon->Destroy();

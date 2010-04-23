@@ -2843,11 +2843,11 @@ void dumpGCTimer(GCTimer *gcT, uint64 firstEnter, bool lastGC)
 
     if (!gcFile) {
         gcFile = fopen("gcTimer.dat", "w");
-        JS_ASSERT(gcFile);
         
         fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj, ");
         fprintf(gcFile, "FinStr, FinDbl, Destroy,  newChunks, destoyChunks\n");
     }
+    JS_ASSERT(gcFile);
     fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %7.1f, ",
             (double)(gcT->enter - firstEnter) / 1E6, 
             (double)(gcT->end-gcT->enter) / 1E6, 
@@ -2860,8 +2860,10 @@ void dumpGCTimer(GCTimer *gcT, uint64 firstEnter, bool lastGC)
     fprintf(gcFile, "%10d, %10d \n", newChunkCount, destroyChunkCount);
     fflush(gcFile);
 
-    if (lastGC)
+    if (lastGC) {
         fclose(gcFile);
+        gcFile = NULL;
+    }
 }
 
 # define GCTIMER_PARAM      , GCTimer &gcTimer
@@ -3212,7 +3214,7 @@ FireGCBegin(JSContext *cx, JSGCInvocationKind gckind)
      * another thread.
      */
     if (gckind != GC_SET_SLOT_REQUEST && callback) {
-        Conditionally<AutoUnlockGC> unlockIf(gckind & GC_LOCK_HELD, rt);
+        Conditionally<AutoUnlockGC> unlockIf(!!(gckind & GC_LOCK_HELD), rt);
         return callback(cx, JSGC_BEGIN) || gckind == GC_LAST_CONTEXT;
     }
     return true;
@@ -3369,7 +3371,7 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
                  * Make sure that the GC from another thread respects
                  * GC_KEEP_ATOMS.
                  */
-                Conditionally<AutoKeepAtoms> keepIf(gckind & GC_KEEP_ATOMS, rt);
+                Conditionally<AutoKeepAtoms> keepIf(!!(gckind & GC_KEEP_ATOMS), rt);
 
                 /*
                  * Check that we did not release the GC lock above and let the
