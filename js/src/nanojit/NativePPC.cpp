@@ -1207,12 +1207,12 @@ namespace nanojit
     #endif
     }
 
-    void Assembler::asm_cmov(LIns *ins) {
-        LIns* cond    = ins->oprnd1();
+    void Assembler::asm_cmov(LInsp ins)
+    {
+        LIns* condval = ins->oprnd1();
         LIns* iftrue  = ins->oprnd2();
         LIns* iffalse = ins->oprnd3();
 
-        NanoAssert(cond->isCmp());
     #ifdef NANOJIT_64BIT
         NanoAssert((ins->opcode() == LIR_cmov  && iftrue->isI() && iffalse->isI()) ||
                    (ins->opcode() == LIR_qcmov && iftrue->isQ() && iffalse->isQ()));
@@ -1220,14 +1220,30 @@ namespace nanojit
         NanoAssert((ins->opcode() == LIR_cmov  && iftrue->isI() && iffalse->isI()));
     #endif
 
-        // fixme: we could handle fpu registers here, too, since we're just branching
-        Register rr = deprecated_prepResultReg(ins, GpRegs);
-        findSpecificRegFor(iftrue, rr);
+        Register rr = prepareResultReg(ins, GpRegs);
         Register rf = findRegFor(iffalse, GpRegs & ~rmask(rr));
+
+        // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+        Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
+        underrunProtect(16); // make sure branch target and branch are on same page and thus near
         NIns *after = _nIns;
         verbose_only(if (_logc->lcbits & LC_Assembly) outputf("%p:",after);)
-        MR(rr, rf);
-        asm_branch(false, cond, after);
+        MR(rr,rf);
+
+        NanoAssert(isS14(after - (_nIns-1)));
+        asm_branch_near(false, condval, after);
+
+        if (rr != rt)
+            MR(rr, rt);
+
+        freeResourcesOf(ins);
+        if (!iftrue->isInReg()) {
+            NanoAssert(rt == rr);
+            findSpecificRegForUnallocated(iftrue, rr);
+        }
+
+        asm_cmp(condval->opcode(), condval->oprnd1(), condval->oprnd2(), CR7);
     }
 
     RegisterMask Assembler::hint(LIns* ins) {
