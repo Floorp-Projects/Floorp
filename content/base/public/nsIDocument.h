@@ -816,7 +816,16 @@ public:
    */
   virtual PRInt32 GetDefaultNamespaceID() const = 0;
 
-  nsPropertyTable* PropertyTable() { return &mPropertyTable; }
+  void DeleteAllProperties();
+  void DeleteAllPropertiesFor(nsINode* aNode);
+
+  nsPropertyTable* PropertyTable(PRUint16 aCategory) {
+    if (aCategory == 0)
+      return &mPropertyTable;
+    return GetExtraPropertyTable(aCategory);
+  }
+  PRUint32 GetPropertyTableCount()
+  { return mExtraPropertyTables.Length() + 1; }
 
   /**
    * Sets the ID used to identify this part of the multipart document
@@ -1356,6 +1365,8 @@ protected:
     //     want to expose to users of the nsIDocument API outside of Gecko.
   }
 
+  nsPropertyTable* GetExtraPropertyTable(PRUint16 aCategory);
+
   // Never ever call this. Only call GetInnerWindow!
   virtual nsPIDOMWindow *GetInnerWindowInternal() = 0;
 
@@ -1405,6 +1416,7 @@ protected:
 
   // Table of element properties for this document.
   nsPropertyTable mPropertyTable;
+  nsTArray<nsAutoPtr<nsPropertyTable> > mExtraPropertyTables;
 
   // Compatibility mode
   nsCompatibility mCompatMode;
