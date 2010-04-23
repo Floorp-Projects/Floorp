@@ -150,7 +150,6 @@ namespace nanojit {
         // but only outputs if LC_Assembly is set.  Also prepends the output
         // with the address of the current native instruction.
         #define asm_output(...) do { \
-            counter_increment(native); \
             if (_logc->lcbits & LC_Assembly) { \
                 outline[0]='\0'; \
                VMPI_sprintf(outline, "%010lx   ", (unsigned long)_nIns); \

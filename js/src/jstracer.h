@@ -1351,6 +1351,9 @@ class TraceRecorder
 
     JS_REQUIRES_STACK TraceType determineSlotType(jsval* vp);
 
+    JS_REQUIRES_STACK RecordingStatus setUpwardTrackedVar(jsval* stackVp, jsval v,
+                                                          nanojit::LIns* v_ins);
+
     JS_REQUIRES_STACK AbortableRecordingStatus compile();
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop();
     JS_REQUIRES_STACK AbortableRecordingStatus closeLoop(VMSideExit* exit);
@@ -1565,6 +1568,7 @@ enum TraceVisExitReason {
     R_FAIL_EXTEND_MAX_BRANCHES,
     R_FAIL_EXTEND_START,
     R_FAIL_EXTEND_COLD,
+    R_FAIL_SCOPE_CHAIN_CHECK,
     R_NO_EXTEND_OUTER,
     R_MISMATCH_EXIT,
     R_OOM_EXIT,

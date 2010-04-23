@@ -83,6 +83,20 @@ void NS_NPAPI_CocoaWindowFrame(void* aWindow, nsRect& outRect)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+PRBool NS_NPAPI_CocoaWindowIsMain(void* aWindow)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
+  if (!aWindow)
+    return PR_TRUE;
+
+  NSWindow* window = (NSWindow*)aWindow;
+
+  return (PRBool)[window isMainWindow];
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(PR_TRUE);
+}
+
 NPError NS_NPAPI_ShowCocoaContextMenu(void* menu, nsIWidget* widget, NPCocoaEvent* event)
 {
   if (!menu || !widget || !event)

@@ -42,11 +42,6 @@
 
 namespace nanojit
 {
-    /** return true if ptr is in the range [start, end] */
-    inline bool containsPtr(const NIns* start, const NIns* end, const NIns* ptr) {
-        return ptr >= start && ptr <= end;
-    }
-
     /**
      * CodeList is a linked list of non-contigous blocks of code.  Clients use CodeList*
      * to point to a list, and each CodeList instance tracks a single contiguous
@@ -93,9 +88,6 @@ namespace nanojit
 
         /** return the whole size of this block including overhead */
         size_t blockSize() const { return uintptr_t(end) - uintptr_t(this); }
-
-        /** return true if just this block contains p */
-        bool contains(NIns* p) const  { return containsPtr(&code[0], end, p); }
     };
 
     /**
@@ -196,30 +188,11 @@ namespace nanojit
         /** add a block previously returned by alloc(), to code */
         static void add(CodeList* &code, NIns* start, NIns* end);
 
-        /** move all the code in list "from" to list "to", and leave from empty. */
-        static void moveAll(CodeList* &to, CodeList* &from);
-
-        /** return true if any block in list "code" contains the code pointer p */
-        static bool contains(const CodeList* code, NIns* p);
-
-        /** return the number of bytes in all the code blocks in "code", including block overhead */
-        static size_t size(const CodeList* code);
-
         /** return the total number of bytes held by this CodeAlloc. */
         size_t size();
 
         /** print out stats about heap usage */
         void logStats();
-
-        enum CodePointerKind {
-            kUnknown, kFree, kUsed
-        };
-
-        /** determine whether the given address is not code, or is allocated or free */
-        CodePointerKind classifyPtr(NIns *p);
-
-        /** return any completely empty pages */
-        void sweep();
 
         /** protect all code in this code alloc */
         void markAllExec();

@@ -801,9 +801,9 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     } else {
         atom = NULL;
     }
+
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             js_CastAsObject(setter)->getParent(),
-                             atom);
+                             setter ? js_CastAsObject(setter)->getParent() : NULL, atom);
     if (!wrapper)
         return NULL;
     return js_CastAsPropertyOp(FUN_OBJECT(wrapper));

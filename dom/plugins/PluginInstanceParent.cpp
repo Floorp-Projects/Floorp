@@ -705,7 +705,9 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
         // to wait.  A possibly-slightly-better alternative would be to send
         // an X event to the child that the child would wait for.
         XSync(GetXDisplay(), False);
-        break;
+
+        return CallPaint(npremoteevent, &handled) ? handled : 0;
+
     case ButtonPress:
         // Release any active pointer grab so that the plugin X client can
         // grab the pointer if it wishes.
@@ -720,8 +722,6 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
         // Wait for the ungrab to complete.
         XSync(dpy, False);
         break;
-
-        return CallPaint(npremoteevent, &handled) ? handled : 0;
     }
 #endif
 

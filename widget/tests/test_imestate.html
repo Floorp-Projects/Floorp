@@ -477,6 +477,13 @@ function runReadonlyChangingTest()
   }
 }
 
+
+function runEditableSubframeTests()
+{
+  window.open("window_imestate_iframes.html", "_blank",
+              "width=600,height=600");
+}
+
 function runTests()
 {
   if (!kIMEEnabledSupported && !kIMEOpenSupported)
@@ -519,6 +526,17 @@ function runTests()
   // XXX currently, readonly attribute changing doesn't work fine. bug 488420.
   // runReadonlyChangingTest();
 
+  runASyncTests();
+}
+
+function runASyncTests()
+{
+  // The tests must call onFinish() method.
+  runEditableSubframeTests();
+}
+
+function onFinish()
+{
   SimpleTest.finish();
 }
 

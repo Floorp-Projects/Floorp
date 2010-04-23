@@ -2749,9 +2749,33 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           activeContent = mCurrentTarget->GetContent();
         }
 
+        nsIFrame* currFrame = mCurrentTarget;
+
+        // When a root content which isn't editable but has an editable HTML
+        // <body> element is clicked, we should redirect the focus to the
+        // the <body> element.  E.g., when an user click bottom of the editor
+        // where is outside of the <body> element, the <body> should be focused
+        // and the user can edit immediately after that.
+        //
+        // NOTE: The newFocus isn't editable that also means it's not in
+        // designMode.  In designMode, all contents are not focusable.
+        if (newFocus && !newFocus->IsEditable()) {
+          nsIDocument *doc = newFocus->GetCurrentDoc();
+          if (doc && newFocus == doc->GetRootContent()) {
+            nsIContent *bodyContent =
+              nsLayoutUtils::GetEditableRootContentByContentEditable(doc);
+            if (bodyContent) {
+              nsIFrame* bodyFrame = bodyContent->GetPrimaryFrame();
+              if (bodyFrame) {
+                currFrame = bodyFrame;
+                newFocus = bodyContent;
+              }
+            }
+          }
+        }
+
         // When the mouse is pressed, the default action is to focus the
         // target. Look for the nearest enclosing focusable frame.
-        nsIFrame* currFrame = mCurrentTarget;
         while (currFrame) {
           // If the mousedown happened inside a popup, don't
           // try to set focus on one of its containing elements
@@ -2795,7 +2819,10 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             // focused frame
             EnsureDocument(mPresContext);
             if (mDocument) {
-              fm->ClearFocus(mDocument->GetWindow());
+#ifdef XP_MACOSX
+              if (!activeContent || !activeContent->IsXUL())
+#endif
+                fm->ClearFocus(mDocument->GetWindow());
               fm->SetFocusedWindow(mDocument->GetWindow());
             }
           }
@@ -3975,8 +4002,17 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
   }
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && aContent == fm->GetFocusedContent()) {
+  nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nsnull;
+  if (aContent == focusedContent) {
     aState |= NS_EVENT_STATE_FOCUS;
+
+    nsIDocument* doc = focusedContent->GetOwnerDoc();
+    if (doc) {
+      nsPIDOMWindow* window = doc->GetWindow();
+      if (window && window->ShouldShowFocusRing()) {
+        aState |= NS_EVENT_STATE_FOCUSRING;
+      }
+    }
   }
   if (aContent == mDragOverContent) {
     aState |= NS_EVENT_STATE_DRAGOVER;
@@ -4095,7 +4131,8 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     mHoverContent = aContent;
   }
 
-  if ((aState & NS_EVENT_STATE_FOCUS)) {
+  if (aState & NS_EVENT_STATE_FOCUS) {
+    aState |= NS_EVENT_STATE_FOCUSRING;
     notifyContent[2] = aContent;
     NS_IF_ADDREF(notifyContent[2]);
   }

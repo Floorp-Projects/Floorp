@@ -111,7 +111,7 @@
   cursor: pointer;
 }
 
-*|*:-moz-any-link:focus {
+*|*:-moz-any-link:-moz-focusring {
   /* Don't specify the outline-color, we should always use initial value. */
   outline: 1px dotted;
 }

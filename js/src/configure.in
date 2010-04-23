@@ -687,6 +687,7 @@ if test -n "$_WIN32_MSVC"; then
     # Common to all MSVC environments:
     # Windows lacks <stdint.h>, but has __int8, and so on.
     AC_DEFINE(JS_HAVE___INTN)
+    AC_DEFINE(HAVE_LOCALECONV)
 
     case "$target" in
     *-wince|*-winmo)
@@ -5293,8 +5294,6 @@ MAKEFILES="
   Makefile
   shell/Makefile
   lirasm/Makefile
-  ctypes/Makefile
-  ctypes/tests/Makefile
   jsapi-tests/Makefile
   tests/Makefile
   config/Makefile
@@ -5390,8 +5389,9 @@ if test "$JS_HAS_CTYPES"; then
 
   # Use a separate cache file for libffi, since it does things differently
   # from our configure.
+  mkdir -p $_objdir/ctypes/libffi
   old_cache_file=$cache_file
-  cache_file=ctypes/libffi/config.cache
+  cache_file=$_objdir/ctypes/libffi/config.cache
   old_config_files=$CONFIG_FILES
   unset CONFIG_FILES
   AC_OUTPUT_SUBDIRS(ctypes/libffi)

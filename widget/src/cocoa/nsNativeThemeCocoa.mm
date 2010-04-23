@@ -232,10 +232,6 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // During shutdown, this is called outside the event loop;
-  // provide an autorelease pool to prevent cocoa object leakage.
-  nsAutoreleasePool localPool;
-
   [mPushButtonCell release];
   [mRadioButtonCell release];
   [mCheckboxCell release];
@@ -1734,6 +1730,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       // XUL textboxes set the native appearance on the containing box, while
       // concrete focus is set on the html:input element within it. We can
       // though, check the focused attribute of xul textboxes in this case.
+      // On Mac, focus rings are always shown for textboxes, so we do not need
+      // to check the window's focus ring state here
       if (aFrame->GetContent()->IsXUL() && IsFocused(aFrame)) {
         eventState |= NS_EVENT_STATE_FOCUS;
       }

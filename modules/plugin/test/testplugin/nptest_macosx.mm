@@ -36,8 +36,6 @@
 
 using namespace std;
 
-NPEventModel sCurrentEventModel = NPEventModelCocoa;
-
 bool
 pluginSupportsWindowMode()
 {
@@ -72,21 +70,20 @@ pluginInstanceInit(InstanceData* instanceData)
     NPBool supportsCarbonEvents = false;
     if ((NPN_GetValue(npp, NPNVsupportsCarbonBool, &supportsCarbonEvents) == NPERR_NO_ERROR) &&
         supportsCarbonEvents) {
-      sCurrentEventModel = NPEventModelCarbon;
+      instanceData->eventModel = NPEventModelCarbon;
+      return NPERR_NO_ERROR;
     }
   }
 #endif
 
-  if (sCurrentEventModel == NPEventModelCocoa) {
-    NPBool supportsCocoaEvents = false;
-    if ((NPN_GetValue(npp, NPNVsupportsCocoaBool, &supportsCocoaEvents) == NPERR_NO_ERROR) &&
-        supportsCocoaEvents) {
-      NPN_SetValue(npp, NPPVpluginEventModel, (void*)NPEventModelCocoa);
-      sCurrentEventModel = NPEventModelCocoa;
-    } else {
-      printf("Cocoa event model not supported, can't create a plugin instance.\n");
-      return NPERR_INCOMPATIBLE_VERSION_ERROR;
-    }
+  NPBool supportsCocoaEvents = false;
+  if ((NPN_GetValue(npp, NPNVsupportsCocoaBool, &supportsCocoaEvents) == NPERR_NO_ERROR) &&
+      supportsCocoaEvents) {
+    NPN_SetValue(npp, NPPVpluginEventModel, (void*)NPEventModelCocoa);
+    instanceData->eventModel = NPEventModelCocoa;
+  } else {
+    printf("Cocoa event model not supported, can't create a plugin instance.\n");
+    return NPERR_INCOMPATIBLE_VERSION_ERROR;
   }
 
   return NPERR_NO_ERROR;
@@ -154,7 +151,7 @@ pluginDraw(InstanceData* instanceData, NPCocoaEvent* event)
 
   CGContextRef cgContext = NULL;
 #ifndef NP_NO_CARBON
-  if (sCurrentEventModel == NPEventModelCocoa) {
+  if (instanceData->eventModel == NPEventModelCocoa) {
     cgContext = event->data.draw.context;
   } else {
     cgContext = ((NP_CGContext*)(window.window))->context;
@@ -249,7 +246,7 @@ int16_t
 pluginHandleEvent(InstanceData* instanceData, void* event)
 {
 #ifndef NP_NO_CARBON
-  if (sCurrentEventModel == NPEventModelCarbon) {
+  if (instanceData->eventModel == NPEventModelCarbon) {
     EventRecord* carbonEvent = (EventRecord*)event;
     if (!carbonEvent)
       return 1;
@@ -291,6 +288,11 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
     case NPCocoaEventMouseMoved:
       instanceData->lastMouseX = (int32_t)cocoaEvent->data.mouse.pluginX;
       instanceData->lastMouseY = (int32_t)cocoaEvent->data.mouse.pluginY;
+      return 1;
+    case NPCocoaEventWindowFocusChanged:
+      instanceData->topLevelWindowActivationState = cocoaEvent->data.focus.hasFocus ?
+        ACTIVATION_STATE_ACTIVATED : ACTIVATION_STATE_DEACTIVATED;
+      instanceData->topLevelWindowActivationEventCount = instanceData->topLevelWindowActivationEventCount + 1;
       return 1;
     default:
       return 1;
