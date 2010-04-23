@@ -5655,8 +5655,11 @@ PresShell::Paint(nsIView*        aDisplayRoot,
           nsPoint offsetToRoot = aViewToPaint->GetOffsetTo(aDisplayRoot);
           nsRegion dirtyRegion = aDirtyRegion;
           dirtyRegion.MoveBy(offsetToRoot);
+
+          nsPoint translate = -offsetToRoot + aViewToPaint->ViewToWidgetOffset();
           nsIRenderingContext::AutoPushTranslation
-            push(rc, -offsetToRoot.x, -offsetToRoot.y);
+            push(rc, translate.x, translate.y);
+
           nsLayoutUtils::PaintFrame(rc, frame, dirtyRegion, bgcolor);
         }
       } else {
