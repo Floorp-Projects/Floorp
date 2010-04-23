@@ -78,6 +78,8 @@ protected:
                              const PRBool&              forceAllowThirdPartyCookie);
 
   virtual bool RecvSetPriority(const PRUint16& priority);
+
+  nsCOMPtr<nsIChannel> mChannel;
 };
 
 } // namespace net

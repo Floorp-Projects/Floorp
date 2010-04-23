@@ -103,12 +103,11 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
   if (NS_FAILED(rv))
     return false;       // TODO: send fail msg to child, return true
 
-  nsCOMPtr<nsIChannel> chan;
-  rv = NS_NewChannel(getter_AddRefs(chan), uri, ios, nsnull, nsnull, loadFlags);
+  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, ios, nsnull, nsnull, loadFlags);
   if (NS_FAILED(rv))
     return false;       // TODO: send fail msg to child, return true
 
-  nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(chan.get());
+  nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
 
   if (originalUri)
     httpChan->SetOriginalURI(originalUri);
