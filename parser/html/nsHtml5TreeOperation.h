@@ -74,7 +74,6 @@ enum eHtml5TreeOperation {
   eTreeOpSetDocumentCharset,
   eTreeOpNeedsCharsetSwitchTo,
   eTreeOpUpdateStyleSheet,
-  eTreeOpProcessBase,
   eTreeOpProcessMeta,
   eTreeOpProcessOfflineManifest,
   eTreeOpMarkMalformedIfScript,

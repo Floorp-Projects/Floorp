@@ -97,7 +97,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      */
     PRBool                               mSuppressEOF;
     
-    PRBool                               mHasProcessedBase;
     PRBool                               mReadingFromStage;
     nsTArray<nsHtml5TreeOperation>       mOpQueue;
     nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
@@ -188,7 +187,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     virtual nsISupports *GetTarget();
   
     // nsContentSink methods
-    virtual nsresult ProcessBASETag(nsIContent* aContent);
     virtual void UpdateChildCounts();
     virtual nsresult FlushTags();
     virtual void PostEvaluateScript(nsIScriptElement *aElement);
@@ -212,11 +210,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     PRBool IsScriptExecuting() {
       return IsScriptExecutingImpl();
-    }
-    
-    void SetBaseUriFromDocument() {
-      mDocumentBaseURI = mDocument->GetBaseURI();
-      mHasProcessedBase = PR_TRUE;
     }
     
     void SetNodeInfoManager(nsNodeInfoManager* aManager) {
