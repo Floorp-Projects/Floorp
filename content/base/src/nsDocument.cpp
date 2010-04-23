@@ -6795,7 +6795,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       "refresh",
       "x-dns-prefetch-control",
       "x-content-security-policy",
-      "x-content-security-policy-read-only",
+      "x-content-security-policy-report-only",
       // add more http headers if you need
       // XXXbz don't add content-location support without reading bug
       // 238654 and its dependencies/dups first.
