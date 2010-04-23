@@ -366,6 +366,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug545644.html \
 		test_bug545644.xhtml \
 		test_bug553896.xhtml \
+		test_bug515401.html \
 		test_bug541937.html \
 		file_bug541937.html \
 		file_bug541937.xhtml \
