@@ -56,7 +56,7 @@ public:
 
   void DropReference();
 
-protected:
+private:
   ~nsDOMTokenList();
 
   const nsAttrValue* GetParsedAttr() {

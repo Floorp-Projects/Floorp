@@ -87,7 +87,6 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLOptGroupElement.idl		\
 	nsIDOMHTMLOptionElement.idl		\
 	nsIDOMHTMLOptionsCollection.idl		\
-	nsIDOMHTMLOutputElement.idl		\
 	nsIDOMHTMLParagraphElement.idl		\
 	nsIDOMHTMLParamElement.idl		\
 	nsIDOMHTMLPreElement.idl		\
