@@ -85,6 +85,7 @@
 #include "nsVideoFrame.h"
 #include "BasicLayers.h"
 #include <limits>
+#include "nsIDocShellTreeItem.h"
 
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
@@ -1752,26 +1753,42 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
  */
 static already_AddRefed<LayerManager> GetLayerManagerForDoc(nsIDocument* aDoc)
 {
-  while (aDoc) {
-    nsIDocument* displayDoc = aDoc->GetDisplayDocument();
-    if (displayDoc) {
-      aDoc = displayDoc;
-      continue;
-    }
+  nsIDocument* doc = aDoc;
+  nsIDocument* displayDoc = doc->GetDisplayDocument();
+  if (displayDoc) {
+    doc = displayDoc;
+  }
 
-    nsIPresShell* shell = aDoc->GetPrimaryShell();
-    if (shell) {
-      nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
-      if (rootFrame) {
-        nsIWidget* widget =
-          nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetWindow();
-        if (widget) {
-          nsRefPtr<LayerManager> manager = widget->GetLayerManager();
-          return manager.forget();
-        }
+  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
+  while (!shell && docShellTreeItem) {
+    // We may be in a display:none subdocument, or we may not have a presshell
+    // created yet.
+    // Walk the docshell tree to find the nearest container that has a presshell,
+    // and find the root widget from that.
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
+    nsCOMPtr<nsIPresShell> presShell;
+    docShell->GetPresShell(getter_AddRefs(presShell));
+    if (presShell) {
+      shell = presShell;
+    } else {
+      nsCOMPtr<nsIDocShellTreeItem> parent;
+      docShellTreeItem->GetParent(getter_AddRefs(parent));
+      docShellTreeItem = parent;
+    }
+  }
+
+  if (shell) {
+    nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
+    if (rootFrame) {
+      nsIWidget* widget =
+        nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetWindow();
+      if (widget) {
+        nsRefPtr<LayerManager> manager = widget->GetLayerManager();
+        return manager.forget();
       }
     }
-    aDoc = aDoc->GetParentDocument();
   }
 
   nsRefPtr<LayerManager> manager = new BasicLayerManager(nsnull);
