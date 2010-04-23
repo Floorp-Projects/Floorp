@@ -203,9 +203,9 @@ html input[type="radio"]:focus {
   background: -moz-radial-gradient(6px 6px, cover, rgb(255,255,255) 3px, rgba(198,225,246,0.2) 5px, rgb(141,184,216) 100%);
 }
 
-html textarea[disabled="true"],
-html select[disabled="true"],
-html button[disabled="true"],
+html textarea[disabled],
+html select[disabled],
+html button[disabled],
 html input:not([type="image"])[disabled="true"] {
   color: rgba(0,0,0,0.3);
   border-color: rgba(125,125,125,0.4);
@@ -214,20 +214,21 @@ html input:not([type="image"])[disabled="true"] {
   background: transparent -moz-linear-gradient(top, rgba(185,185,185,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(255,255,255,0.4) 100%);
 }
 
-html input[type="button"][disabled="true"],
-html input[type="submit"][disabled="true"],
-html input[type="reset"][disabled="true"],
+html input[type="button"][disabled],
+html input[type="submit"][disabled],
+html input[type="reset"][disabled],
 html button[disabled="true"] {
   padding: 1px 7px 1px 7px;
   background: transparent -moz-linear-gradient(top, rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
 
 
-html input[type="checkbox"][disabled="true"],
-html input[type="radio"][disabled="true"] {
+html input[type="checkbox"][disabled],
+html input[type="radio"][disabled] {
   border:1px solid rgba(125,125,125,0.4) !important;
 }
 
-html select[disabled="true"] input[type="button"] {
+html select[disabled] input[type="button"] {
   opacity: 0.6;
+  padding: 1px 7px 1px 7px;
 }
