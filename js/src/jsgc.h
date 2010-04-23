@@ -75,8 +75,8 @@ js_GetGCThingTraceKind(void *thing);
  * The sole purpose of the function is to preserve public API compatibility
  * in JS_GetStringBytes which takes only single JSString* argument.
  */
-JSRuntime*
-js_GetGCStringRuntime(JSString *str);
+JSRuntime *
+js_GetGCThingRuntime(void *thing);
 
 #if 1
 /*

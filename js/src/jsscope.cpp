@@ -867,8 +867,6 @@ JSScope::putProperty(JSContext *cx, jsid id,
     CHECK_ANCESTOR_LINE(this, true);
 
     JS_ASSERT(!JSVAL_IS_NULL(id));
-    JS_ASSERT_IF(attrs & JSPROP_GETTER, getter);
-    JS_ASSERT_IF(attrs & JSPROP_SETTER, setter);
 
     JS_ASSERT_IF(!cx->runtime->gcRegenShapes,
                  hasRegenFlag(cx->runtime->gcRegenShapesScopeFlag));
