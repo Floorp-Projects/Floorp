@@ -87,16 +87,6 @@ function getTestPairs() {
   var y = new X();
   testPairs.push(['{"a":"b"}', y]);
 
-  // custom iterator: JS 1.7+
-  var x = {
-   "a": "foo",
-   b: "not included",
-   c: "bar",
-   "4": "qux",
-   __iterator__: function() { return (function() { yield "a"; yield "c"; yield 4; })() }
-  }
-  do_check_eq('{"a":"foo","c":"bar","4":"qux"}', JSON.stringify(x));
-
   return testPairs;
 }
 
