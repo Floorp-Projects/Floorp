@@ -73,6 +73,9 @@
 
 using namespace js;
 
+static const size_t ARENA_HEADER_SIZE_HACK = 40;
+static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
+
 static void
 FreeContext(JSContext *cx);
 
@@ -491,9 +494,8 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_InitArenaPool(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval),
                      &cx->scriptStackQuota);
 
-    JS_InitArenaPool(&cx->tempPool, "temp",
-                     1024,  /* FIXME: bug 421435 */
-                     sizeof(jsdouble), &cx->scriptStackQuota);
+    JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble),
+                     &cx->scriptStackQuota);
 
     js_InitRegExpStatics(cx);
     JS_ASSERT(cx->resolveFlags == 0);

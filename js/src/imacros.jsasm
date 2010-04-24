@@ -723,3 +723,27 @@
 
 .end objtostr
 
+.igroup getprop JSOP_GETPROP
+    .imacro scriptgetter        # obj
+        .fixup +1               # getter obj
+        call 0                  # val
+        stop
+    .end
+.end getprop
+
+.igroup callprop JSOP_CALLPROP
+    .imacro scriptgetter        # obj
+        .fixup +2               # obj getter obj
+        call 0                  # obj method
+        swap                    # method obj
+        stop
+    .end
+.end callprop
+
+.igroup getthisprop JSOP_GETTHISPROP,JSOP_GETARGPROP,JSOP_GETLOCALPROP
+    .imacro scriptgetter        #
+        .fixup +2               # getter obj
+        call 0                  # val
+        stop
+    .end
+.end getthisprop

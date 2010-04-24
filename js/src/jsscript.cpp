@@ -704,7 +704,7 @@ js_script_filename_marker(JSHashEntry *he, intN i, void *arg)
 }
 
 void
-js_MarkScriptFilenames(JSRuntime *rt, JSBool keepAtoms)
+js_MarkScriptFilenames(JSRuntime *rt)
 {
     JSCList *head, *link;
     ScriptFilenamePrefix *sfp;
@@ -712,7 +712,7 @@ js_MarkScriptFilenames(JSRuntime *rt, JSBool keepAtoms)
     if (!rt->scriptFilenameTable)
         return;
 
-    if (keepAtoms) {
+    if (rt->gcKeepAtoms) {
         JS_HashTableEnumerateEntries(rt->scriptFilenameTable,
                                      js_script_filename_marker,
                                      rt);
