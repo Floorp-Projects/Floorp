@@ -45,6 +45,9 @@
 #include "nsAccessibilityService.h"
 
 #include "nsIComponentManager.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMWindow.h"
+#include "nsIWindowMediator.h"
 #include "nsServiceManagerUtils.h"
 
 nsApplicationAccessible::nsApplicationAccessible() :
@@ -57,6 +60,18 @@ nsApplicationAccessible::nsApplicationAccessible() :
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsApplicationAccessible, nsAccessible,
                              nsIAccessibleApplication)
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIAccessNode
+
+NS_IMETHODIMP
+nsApplicationAccessible::GetRootDocument(nsIAccessibleDocument **aRootDocument)
+{
+  NS_ENSURE_ARG_POINTER(aRootDocument);
+  *aRootDocument = nsnull;
+
+  return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
@@ -246,8 +261,42 @@ nsApplicationAccessible::InvalidateChildren()
 void
 nsApplicationAccessible::CacheChildren()
 {
-  // Nothing to do. Children are keeped up to dated by Add/RemoveRootAccessible
-  // method calls.
+  // CacheChildren is called only once for application accessible when its
+  // children are requested because empty InvalidateChldren() prevents its
+  // repeated calls.
+
+  // Basically children are kept updated by Add/RemoveRootAccessible method
+  // calls. However if there are open windows before accessibility was started
+  // then we need to make sure root accessibles for open windows are created so
+  // that all root accessibles are stored in application accessible children
+  // array.
+
+  nsCOMPtr<nsIWindowMediator> windowMediator =
+    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
+
+  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+  nsresult rv = windowMediator->GetEnumerator(nsnull,
+                                              getter_AddRefs(windowEnumerator));
+  if (NS_FAILED(rv))
+    return;
+
+  PRBool hasMore = PR_FALSE;
+  windowEnumerator->HasMoreElements(&hasMore);
+  while (hasMore) {
+    nsCOMPtr<nsISupports> window;
+    windowEnumerator->GetNext(getter_AddRefs(window));
+    nsCOMPtr<nsIDOMWindow> DOMWindow = do_QueryInterface(window);
+    if (DOMWindow) {
+      nsCOMPtr<nsIDOMDocument> DOMDocument;
+      DOMWindow->GetDocument(getter_AddRefs(DOMDocument));
+      if (DOMDocument) {
+        nsCOMPtr<nsIAccessible> accessible;
+        GetAccService()->GetAccessibleFor(DOMDocument,
+                                          getter_AddRefs(accessible));
+      }
+    }
+    windowEnumerator->HasMoreElements(&hasMore);
+  }
 }
 
 nsAccessible*

@@ -249,6 +249,14 @@ private:
   static PRUint32 sMutationCount;
 };
 
+// Categories of node properties
+// 0 is global.
+#define DOM_USER_DATA         1
+#define DOM_USER_DATA_HANDLER 2
+#ifdef MOZ_SMIL
+#define SMIL_MAPPED_ATTR_ANIMVAL 3
+#endif // MOZ_SMIL
+
 // IID for the nsINode interface
 #define NS_INODE_IID \
 { 0xbc347b50, 0xa9b8, 0x419e, \

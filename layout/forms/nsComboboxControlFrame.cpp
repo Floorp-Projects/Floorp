@@ -54,6 +54,7 @@
 #include "nsIDOMHTMLSelectElement.h" 
 #include "nsIDOMHTMLOptionElement.h" 
 #include "nsIDOMNSHTMLOptionCollectn.h" 
+#include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
@@ -1354,14 +1355,21 @@ nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsPresContext *presContext = PresContext();
-  const nsStyleDisplay *disp = GetStyleDisplay();
-  if ((!IsThemed(disp) ||
-       !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, this, disp->mAppearance)) &&
-      mDisplayFrame && IsVisibleForPainting(aBuilder)) {
-    nsresult rv = aLists.Content()->AppendNewToTop(new (aBuilder)
-                                                   nsDisplayComboboxFocus(this));
-    NS_ENSURE_SUCCESS(rv, rv);
+  // draw a focus indicator only when focus rings should be drawn
+  nsIDocument* doc = mContent->GetCurrentDoc();
+  if (doc) {
+    nsPIDOMWindow* window = doc->GetWindow();
+    if (window && window->ShouldShowFocusRing()) {
+      nsPresContext *presContext = PresContext();
+      const nsStyleDisplay *disp = GetStyleDisplay();
+      if ((!IsThemed(disp) ||
+           !presContext->GetTheme()->ThemeDrawsFocusForWidget(presContext, this, disp->mAppearance)) &&
+          mDisplayFrame && IsVisibleForPainting(aBuilder)) {
+        nsresult rv = aLists.Content()->AppendNewToTop(new (aBuilder)
+                                                       nsDisplayComboboxFocus(this));
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
   }
 
   return DisplaySelectionOverlay(aBuilder, aLists);

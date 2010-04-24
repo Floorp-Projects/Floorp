@@ -55,7 +55,7 @@ label.findbar-find-fast:-moz-lwtheme,
   color: buttontext;
 }
 
-.findbar-container > toolbarbutton:focus {
+.findbar-container > toolbarbutton:-moz-focusring {
   position: relative;
   -moz-box-shadow: @focusRingShadow@, @roundButtonShadow@;
 }
@@ -76,7 +76,7 @@ label.findbar-find-fast:-moz-lwtheme,
   -moz-box-shadow: @roundButtonPressedShadow@;
 }
 
-.findbar-container > toolbarbutton:hover:active:focus {
+.findbar-container > toolbarbutton:hover:active:-moz-focusring {
   text-shadow: @loweredShadow@;
   background: @roundButtonPressedBackground@;
   -moz-box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
@@ -122,7 +122,7 @@ label.findbar-find-fast:-moz-lwtheme,
   padding-bottom: 1px;
 }
 
-.findbar-container > checkbox:focus > .checkbox-label-box > .checkbox-icon {
+.findbar-container > checkbox:-moz-focusring > .checkbox-label-box > .checkbox-icon {
   -moz-border-radius: 4px;
   -moz-box-shadow: @focusRingShadow@;
 }

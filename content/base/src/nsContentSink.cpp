@@ -232,7 +232,6 @@ nsContentSink::Init(nsIDocument* aDoc,
   mDocument = aDoc;
 
   mDocumentURI = aURI;
-  mDocumentBaseURI = aURI;
   mDocShell = do_QueryInterface(aContainer);
   if (mDocShell) {
     PRUint32 loadType = 0;
@@ -781,7 +780,8 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
   }
 
   nsCOMPtr<nsIURI> url;
-  nsresult rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURI);
+  nsresult rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull,
+                          mDocument->GetBaseURI());
   
   if (NS_FAILED(rv)) {
     // The URI is bad, move along, don't propagate the error (for now)
@@ -890,7 +890,7 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aHref,
               charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
-              mDocumentBaseURI);
+              mDocument->GetBaseURI());
     if (uri) {
       nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
       prefetchService->PrefetchURI(uri, mDocumentURI, domNode, aExplicit);

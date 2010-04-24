@@ -43,6 +43,7 @@
 #include "nsIContent.h"
 
 #define FOCUSMETHOD_MASK 0xF000
+#define FOCUSMETHODANDRING_MASK 0xF0F000
 
 #define FOCUSMANAGER_CONTRACTID "@mozilla.org/focus-manager;1"
 
@@ -156,6 +157,15 @@ protected:
    * Returns true if aWindow is visible.
    */
   PRBool IsWindowVisible(nsPIDOMWindow* aWindow);
+
+  /**
+   * Returns true if aContent is a root element and not focusable.
+   * I.e., even if aContent is editable root element, this returns true when
+   * the document is in designMode.
+   *
+   * @param aContent must not be null and must be in a document.
+   */
+  PRBool IsNonFocusableRoot(nsIContent* aContent);
 
   /**
    * Checks and returns aContent if it may be focused, another content node if

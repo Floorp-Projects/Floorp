@@ -107,7 +107,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessibleWrap)
 NS_IMETHODIMP
 nsLinkableAccessible::TakeFocus()
 {
-  nsCOMPtr<nsIAccessible> actionAcc = GetActionAccessible();
+  nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
   if (actionAcc)
     return actionAcc->TakeFocus();
 
@@ -122,7 +122,7 @@ nsLinkableAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
 
   if (mIsLink) {
     *aState |= nsIAccessibleStates::STATE_LINKED;
-    nsCOMPtr<nsIAccessible> actionAcc = GetActionAccessible();
+    nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
     if (nsAccUtils::State(actionAcc) & nsIAccessibleStates::STATE_TRAVERSED)
       *aState |= nsIAccessibleStates::STATE_TRAVERSED;
   }
@@ -140,7 +140,7 @@ nsLinkableAccessible::GetValue(nsAString& aValue)
     return NS_OK;
 
   if (mIsLink) {
-    nsCOMPtr<nsIAccessible> actionAcc = GetActionAccessible();
+    nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
     if (actionAcc)
       return actionAcc->GetValue(aValue);
   }
@@ -184,7 +184,7 @@ nsLinkableAccessible::DoAction(PRUint8 aIndex)
   if (aIndex != eAction_Jump)
     return NS_ERROR_INVALID_ARG;
   
-  nsCOMPtr<nsIAccessible> actionAcc = GetActionAccessible();
+  nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
   if (actionAcc)
     return actionAcc->DoAction(aIndex);
   
@@ -196,7 +196,7 @@ nsLinkableAccessible::GetKeyboardShortcut(nsAString& aKeyboardShortcut)
 {
   aKeyboardShortcut.Truncate();
 
-  nsCOMPtr<nsIAccessible> actionAcc = GetActionAccessible();
+  nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
   if (actionAcc)
     return actionAcc->GetKeyboardShortcut(aKeyboardShortcut);
 
@@ -210,10 +210,10 @@ NS_IMETHODIMP
 nsLinkableAccessible::GetURI(PRInt32 aIndex, nsIURI **aURI)
 {
   if (mIsLink) {
-    nsCOMPtr<nsIAccessible> actionAcc = GetActionAccessible();
+    nsRefPtr<nsAccessible> actionAcc = GetActionAccessible();
     if (actionAcc) {
       nsCOMPtr<nsIAccessibleHyperLink> hyperLinkAcc =
-        do_QueryInterface(actionAcc);
+        nsAccUtils::QueryObject<nsIAccessibleHyperLink>(actionAcc);
       NS_ASSERTION(hyperLinkAcc,
                    "nsIAccessibleHyperLink isn't implemented.");
 
@@ -262,9 +262,8 @@ nsLinkableAccessible::CacheActionContent()
   
     nsCOMPtr<nsIDOMNode> walkUpNode(do_QueryInterface(walkUpContent));
 
-    nsCOMPtr<nsIAccessible> walkUpAcc;
-    GetAccService()->GetAccessibleInWeakShell(walkUpNode, mWeakShell,
-                                              getter_AddRefs(walkUpAcc));
+    nsRefPtr<nsAccessible> walkUpAcc =
+      GetAccService()->GetAccessibleInWeakShell(walkUpNode, mWeakShell);
 
     if (nsAccUtils::Role(walkUpAcc) == nsIAccessibleRole::ROLE_LINK &&
         nsAccUtils::State(walkUpAcc) & nsIAccessibleStates::STATE_LINKED) {
@@ -281,7 +280,7 @@ nsLinkableAccessible::CacheActionContent()
   }
 }
 
-already_AddRefed<nsIAccessible>
+already_AddRefed<nsAccessible>
 nsLinkableAccessible::GetActionAccessible()
 {
   // Return accessible for the action content if it's different from node of
@@ -292,10 +291,7 @@ nsLinkableAccessible::GetActionAccessible()
   if (!actionNode || mDOMNode == actionNode)
     return nsnull;
 
-  nsIAccessible *accessible = nsnull;
-  GetAccService()->GetAccessibleInWeakShell(actionNode, mWeakShell,
-                                            &accessible);
-  return accessible;
+  return GetAccService()->GetAccessibleInWeakShell(actionNode, mWeakShell);
 }
 
 //---------------------

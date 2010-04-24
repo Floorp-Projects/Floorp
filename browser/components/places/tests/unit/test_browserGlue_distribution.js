@@ -96,7 +96,7 @@ function run_test() {
            getService(Ci.nsIObserverService);
   let observer = {
     observe: function(aSubject, aTopic, aData) {
-      os.removeObserver(this, TOPIC_PLACES_INIT_COMPLETE);
+      os.removeObserver(this, PlacesUtils.TOPIC_INIT_COMPLETE);
 
       // Simulate browser startup.
       bg.QueryInterface(Ci.nsIObserver).observe(null,
@@ -112,7 +112,7 @@ function run_test() {
       os.addObserver(cObserver, TOPIC_CUSTOMIZATION_COMPLETE, false);
     }
   }
-  os.addObserver(observer, TOPIC_PLACES_INIT_COMPLETE, false);
+  os.addObserver(observer, PlacesUtils.TOPIC_INIT_COMPLETE, false);
 }
 
 function continue_test() {

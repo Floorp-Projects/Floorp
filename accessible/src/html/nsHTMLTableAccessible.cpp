@@ -334,16 +334,16 @@ nsHTMLTableCellAccessible::GetHeaderCells(PRInt32 aRowOrColumnHeaderCell,
       nsCOMPtr<nsIDOMNode> headerCellNode;
       for (PRUint32 idx = 0; idx < count; idx++) {
         headerCellNode = do_QueryElementAt(headerCellElms, idx, &rv);
-        nsCOMPtr<nsIAccessible> headerCell;
-        GetAccService()->GetAccessibleInWeakShell(headerCellNode, mWeakShell,
-                                                  getter_AddRefs(headerCell));
+        nsRefPtr<nsAccessible> headerCell =
+          GetAccService()->GetAccessibleInWeakShell(headerCellNode, mWeakShell);
 
         if (headerCell &&
             (aRowOrColumnHeaderCell == nsAccUtils::eRowHeaderCells &&
              nsAccUtils::Role(headerCell) == nsIAccessibleRole::ROLE_ROWHEADER ||
              aRowOrColumnHeaderCell == nsAccUtils::eColumnHeaderCells &&
              nsAccUtils::Role(headerCell) == nsIAccessibleRole::ROLE_COLUMNHEADER))
-          headerCells->AppendElement(headerCell, PR_FALSE);
+          headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell.get()),
+                                     PR_FALSE);
       }
     }
 
@@ -737,10 +737,9 @@ nsHTMLTableAccessible::GetSelectedCells(nsIArray **aCells)
 
       if (NS_SUCCEEDED(rv) && startRowIndex == rowIndex &&
           startColIndex == columnIndex && isSelected) {
-        nsCOMPtr<nsIAccessible> cell;
-        GetAccService()->GetAccessibleInWeakShell(cellElement, mWeakShell,
-                                                  getter_AddRefs(cell));
-        selCells->AppendElement(cell, PR_FALSE);
+        nsRefPtr<nsAccessible> cell =
+          GetAccService()->GetAccessibleInWeakShell(cellElement, mWeakShell);
+        selCells->AppendElement(static_cast<nsIAccessible*>(cell.get()), PR_FALSE);
       }
     }
   }
@@ -911,8 +910,12 @@ nsHTMLTableAccessible::GetCellAt(PRInt32 aRow, PRInt32 aColumn,
   nsresult rv = GetCellAt(aRow, aColumn, *getter_AddRefs(cellElement));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return GetAccService()->GetAccessibleInWeakShell(cellElement, mWeakShell,
-                                                   aTableCellAccessible);
+  nsRefPtr<nsAccessible> cellAcc =
+    GetAccService()->GetAccessibleInWeakShell(cellElement, mWeakShell);
+  if (cellAcc)
+    CallQueryInterface(cellAcc, aTableCellAccessible);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -223,6 +223,8 @@ EventMsgInfo gAllEvents[] = {
   {"WM_MENUGETOBJECT",                    0x0124},
   {"WM_UNINITMENUPOPUP",                  0x0125},
   {"WM_MENUCOMMAND",                      0x0126},
+  {"WM_CHANGEUISTATE",                    0x0127},
+  {"WM_UPDATEUISTATE",                    0x0128},
   {"WM_CTLCOLORMSGBOX",                   0x0132},
   {"WM_CTLCOLOREDIT",                     0x0133},
   {"WM_CTLCOLORLISTBOX",                  0x0134},

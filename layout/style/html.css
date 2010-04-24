@@ -474,35 +474,26 @@ li {
 }
 
 /* nested lists have no top/bottom margins */
-ul ul,   ul ol,   ul dir,   ul menu,   ul dl,
-ol ul,   ol ol,   ol dir,   ol menu,   ol dl,
-dir ul,  dir ol,  dir dir,  dir menu,  dir dl,
-menu ul, menu ol, menu dir, menu menu, menu dl,
-dl ul,   dl ol,   dl dir,   dl menu,   dl dl {
+:-moz-any(ul, ol, dir, menu, dl) ul,
+:-moz-any(ul, ol, dir, menu, dl) ol,
+:-moz-any(ul, ol, dir, menu, dl) dir,
+:-moz-any(ul, ol, dir, menu, dl) menu,
+:-moz-any(ul, ol, dir, menu, dl) dl {
   margin-top: 0;
   margin-bottom: 0;
 }
 
 /* 2 deep unordered lists use a circle */
-ol ul,   ul ul,   menu ul,   dir ul,
-ol menu, ul menu, menu menu, dir menu,
-ol dir,  ul dir,  menu dir,  dir dir {
+:-moz-any(ol, ul, menu, dir) ul,
+:-moz-any(ol, ul, menu, dir) menu,
+:-moz-any(ol, ul, menu, dir) dir {
   list-style-type: circle;
 }
 
 /* 3 deep (or more) unordered lists use a square */
-ol ol ul,     ol ul ul,     ol menu ul,     ol dir ul,
-ol ol menu,   ol ul menu,   ol menu menu,   ol dir menu,
-ol ol dir,    ol ul dir,    ol menu dir,    ol dir dir,
-ul ol ul,     ul ul ul,     ul menu ul,     ul dir ul,
-ul ol menu,   ul ul menu,   ul menu menu,   ul dir menu,
-ul ol dir,    ul ul dir,    ul menu dir,    ul dir dir,
-menu ol ul,   menu ul ul,   menu menu ul,   menu dir ul,
-menu ol menu, menu ul menu, menu menu menu, menu dir menu,
-menu ol dir,  menu ul dir,  menu menu dir,  menu dir dir,
-dir ol ul,    dir ul ul,    dir menu ul,    dir dir ul,
-dir ol menu,  dir ul menu,  dir menu menu,  dir dir menu,
-dir ol dir,   dir ul dir,   dir menu dir,   dir dir dir {
+:-moz-any(ol, ul, menu, dir) :-moz-any(ol, ul, menu, dir) ul,
+:-moz-any(ol, ul, menu, dir) :-moz-any(ol, ul, menu, dir) menu,
+:-moz-any(ol, ul, menu, dir) :-moz-any(ol, ul, menu, dir) dir {
   list-style-type: square;
 }
 
@@ -535,8 +526,7 @@ applet:-moz-empty-except-children-with-localname(param):-moz-user-disabled::befo
   unicode-bidi: embed;
 }
 
-object:-moz-broken > *|*, applet:-moz-broken > *|*
-object:-moz-user-disabled > *|*, applet:-moz-user-disabled > *|* {
+:-moz-any(object,applet):-moz-any(:-moz-broken,:-moz-user-disabled) > *|* {
   /*
     Inherit in the object's alignment so that if we aren't aligned explicitly
     we'll end up in the right place vertically.  See bug 36997.  Note that this
@@ -592,17 +582,26 @@ canvas {
 }
 
 /* focusable content: anything w/ tabindex >=0 is focusable */
-abbr:focus, acronym:focus, address:focus, b:focus,
-base:focus, big:focus, blockquote:focus, br:focus, canvas:focus, caption:focus,
-center:focus, cite:focus, code:focus, col:focus, colgroup:focus, dd:focus,
-del:focus, dfn:focus, dir:focus, div:focus, dl:focus, dt:focus, em:focus,
-fieldset:focus, font:focus, form:focus, h1:focus, h2:focus, h3:focus, h4:focus,
-h5:focus, h6:focus, hr:focus, i:focus, img:focus, ins:focus, 
-kbd:focus, label:focus, legend:focus, li:focus, link:focus, menu:focus, 
-ol:focus, p:focus, pre:focus, q:focus, s:focus, samp:focus, 
-small:focus, span:focus, strike:focus, strong:focus, sub:focus, sup:focus, 
-table:focus, tbody:focus, td:focus, tfoot:focus, th:focus, thead:focus, 
-tr:focus, tt:focus, u:focus, ul:focus, var:focus {
+abbr:-moz-focusring, acronym:-moz-focusring, address:-moz-focusring,
+b:-moz-focusring, base:-moz-focusring, big:-moz-focusring,
+blockquote:-moz-focusring, br:-moz-focusring, canvas:-moz-focusring,
+caption:-moz-focusring, center:-moz-focusring, cite:-moz-focusring,
+code:-moz-focusring, col:-moz-focusring, colgroup:-moz-focusring,
+dd:-moz-focusring, del:-moz-focusring, dfn:-moz-focusring, dir:-moz-focusring,
+div:-moz-focusring, dl:-moz-focusring, dt:-moz-focusring, em:-moz-focusring,
+fieldset:-moz-focusring, font:-moz-focusring, form:-moz-focusring,
+h1:-moz-focusring, h2:-moz-focusring, h3:-moz-focusring, h4:-moz-focusring,
+h5:-moz-focusring, h6:-moz-focusring, hr:-moz-focusring, i:-moz-focusring,
+img:-moz-focusring, ins:-moz-focusring, kbd:-moz-focusring,
+label:-moz-focusring, legend:-moz-focusring, li:-moz-focusring,
+link:-moz-focusring, menu:-moz-focusring, ol:-moz-focusring, p:-moz-focusring,
+pre:-moz-focusring, q:-moz-focusring, s:-moz-focusring, samp:-moz-focusring,
+small:-moz-focusring, span:-moz-focusring, strike:-moz-focusring,
+strong:-moz-focusring, sub:-moz-focusring, sup:-moz-focusring,
+table:-moz-focusring, tbody:-moz-focusring, td:-moz-focusring,
+tfoot:-moz-focusring, th:-moz-focusring, thead:-moz-focusring, 
+tr:-moz-focusring, tt:-moz-focusring, u:-moz-focusring,
+ul:-moz-focusring, var:-moz-focusring {
   /* Don't specify the outline-color, we should always use initial value. */
    outline: 1px dotted;
 }

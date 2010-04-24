@@ -127,7 +127,6 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsIArray **aChildre
   // For XUL multi-select control
   nsCOMPtr<nsIDOMXULMultiSelectControlElement> xulMultiSelect =
     do_QueryInterface(mSelectControl);
-  nsCOMPtr<nsIAccessible> selectedAccessible;
   if (xulMultiSelect) {
     PRInt32 length = 0;
     xulMultiSelect->GetSelectedCount(&length);
@@ -135,10 +134,11 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsIArray **aChildre
       nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
       xulMultiSelect->GetSelectedItem(index, getter_AddRefs(selectedItem));
       nsCOMPtr<nsIDOMNode> selectedNode(do_QueryInterface(selectedItem));
-      GetAccService()->GetAccessibleInWeakShell(selectedNode, mWeakShell,
-                                            getter_AddRefs(selectedAccessible));
-      if (selectedAccessible)
-        selectedAccessibles->AppendElement(selectedAccessible, PR_FALSE);
+      nsRefPtr<nsAccessible> selectedAcc =
+        GetAccService()->GetAccessibleInWeakShell(selectedNode, mWeakShell);
+      if (selectedAcc)
+        selectedAccessibles->AppendElement(static_cast<nsIAccessible*>(selectedAcc),
+                                           PR_FALSE);
     }
   }
   else {  // Single select?
@@ -146,10 +146,11 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsIArray **aChildre
     mSelectControl->GetSelectedItem(getter_AddRefs(selectedItem));
     nsCOMPtr<nsIDOMNode> selectedNode(do_QueryInterface(selectedItem));
     if(selectedNode) {
-      GetAccService()->GetAccessibleInWeakShell(selectedNode, mWeakShell,
-                                            getter_AddRefs(selectedAccessible));
-      if (selectedAccessible)
-        selectedAccessibles->AppendElement(selectedAccessible, PR_FALSE);
+      nsRefPtr<nsAccessible> selectedAcc =
+        GetAccService()->GetAccessibleInWeakShell(selectedNode, mWeakShell);
+      if (selectedAcc)
+        selectedAccessibles->AppendElement(static_cast<nsIAccessible*>(selectedAcc.get()),
+                                           PR_FALSE);
     }
   }
 
@@ -179,11 +180,16 @@ NS_IMETHODIMP nsXULSelectableAccessible::RefSelection(PRInt32 aIndex, nsIAccessi
   if (aIndex == 0)
     mSelectControl->GetSelectedItem(getter_AddRefs(selectedItem));
 
-  if (selectedItem)
-    GetAccService()->GetAccessibleInWeakShell(selectedItem, mWeakShell,
-                                              aAccessible);
+  if (!selectedItem)
+    return NS_ERROR_FAILURE;
 
-  return (*aAccessible) ? NS_OK : NS_ERROR_FAILURE;
+  nsRefPtr<nsAccessible> selectedAcc =
+    GetAccService()->GetAccessibleInWeakShell(selectedItem, mWeakShell);
+  if (!selectedAcc)
+    return NS_ERROR_FAILURE;
+
+  CallQueryInterface(selectedAcc, aAccessible);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULSelectableAccessible::GetSelectionCount(PRInt32 *aSelectionCount)

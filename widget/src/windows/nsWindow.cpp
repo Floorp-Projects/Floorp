@@ -1165,6 +1165,13 @@ NS_METHOD nsWindow::Show(PRBool bState)
           ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
         }
       }
+
+#ifndef WINCE
+      if (!wasVisible && (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog)) {
+        // when a toplevel window or dialog is shown, initialize the UI state
+        ::SendMessageW(mWnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
+      }
+#endif
     } else {
       if (mWindowType != eWindowType_dialog) {
         ::ShowWindow(mWnd, SW_HIDE);
@@ -3824,9 +3831,9 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
           IsWindow((HWND)lParam))
         handled = PR_TRUE;
     break;
-
+    // Wheel events forwarded from the child.
+    case WM_MOUSEWHEEL:
     // Plugins taking or losing focus triggering focus app messages.
-    // dwResult = 0
     case WM_SETFOCUS:
     case WM_KILLFOCUS:
     // Windowed plugins that pass sys key events to defwndproc generate
@@ -4703,6 +4710,27 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
     Invalidate(PR_FALSE);
     break;
 #endif
+
+  case WM_UPDATEUISTATE:
+  {
+    // If the UI state has changed, fire an event so the UI updates the
+    // keyboard cues based on the system setting and how the window was
+    // opened. For example, a dialog opened via a keyboard press on a button
+    // should enable cues, whereas the same dialog opened via a mouse click of
+    // the button should not.
+    PRInt32 action = LOWORD(wParam);
+    if (action == UIS_SET || action == UIS_CLEAR) {
+      nsUIStateChangeEvent event(PR_TRUE, NS_UISTATECHANGED, this);
+      PRInt32 flags = HIWORD(wParam);
+      if (flags & UISF_HIDEACCEL)
+        event.showAccelerators = (action == UIS_SET) ? UIStateChangeType_Clear : UIStateChangeType_Set;
+      if (flags & UISF_HIDEFOCUS)
+        event.showFocusRings = (action == UIS_SET) ? UIStateChangeType_Clear : UIStateChangeType_Set;
+      DispatchWindowEvent(&event);
+    }
+
+    break;
+  }
 
   /* Gesture support events */
   case WM_TABLET_QUERYSYSTEMGESTURESTATUS:

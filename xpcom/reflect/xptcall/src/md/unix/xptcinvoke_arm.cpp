@@ -75,7 +75,12 @@ copy_double_word(PRUint32 *start, PRUint32 *current, PRUint32 *end, PRUint64 *dw
     return current + 1;
 }
 
-static void
+/* See stack_space comment in NS_InvokeByIndex to see why this needs not to
+ * be static on DEBUG builds. */
+#ifndef DEBUG
+static
+#endif
+void
 invoke_copy_to_stack(PRUint32* stk, PRUint32 *end,
                      PRUint32 paramCount, nsXPTCVariant* s)
 {
@@ -159,6 +164,15 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
  
   register vtable_func *vtable, func;
   register int base_size = (paramCount > 1) ? paramCount : 2;
+
+/* !!! IMPORTANT !!!
+ * On DEBUG builds, the NS_ASSERTION used in invoke_copy_to_stack needs to use
+ * the stack to pass the 5th argument to NS_DebugBreak. When invoke_copy_to_stack
+ * is inlined, this can result, depending on the compiler and flags, in the
+ * stack pointer not pointing at stack_space when the method is called at the
+ * end of this function. More generally, any function call requiring stack
+ * allocation of arguments is unsafe to be inlined in this function.
+ */
   PRUint32 *stack_space = (PRUint32 *) __builtin_alloca(base_size * 8);
 
   invoke_copy_to_stack(stack_space, &stack_space[base_size * 2],
