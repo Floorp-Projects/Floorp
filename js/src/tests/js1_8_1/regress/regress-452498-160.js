@@ -65,7 +65,7 @@ function test()
   reportCompare(expect, actual, summary + ': 2');
 
 // Assertion failure: JOF_OPTYPE(op) == JOF_ATOM, at ../jsemit.cpp:5916
-  ({ set z(){},  set y x()--x });
+  ({ set z(){},  set y()--x, set w()--w });
   reportCompare(expect, actual, summary + ': 3');
 
   exitFunc ('test');

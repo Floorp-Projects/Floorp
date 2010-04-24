@@ -675,6 +675,31 @@ static struct {
 /*34*/  JSOP_STOP,
     },
 };
+static struct {
+    jsbytecode scriptgetter[4];
+} getprop_imacros = {
+    {
+/* 0*/  JSOP_CALL, 0, 0,
+/* 3*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode scriptgetter[5];
+} callprop_imacros = {
+    {
+/* 0*/  JSOP_CALL, 0, 0,
+/* 3*/  JSOP_SWAP,
+/* 4*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode scriptgetter[4];
+} getthisprop_imacros = {
+    {
+/* 0*/  JSOP_CALL, 0, 0,
+/* 3*/  JSOP_STOP,
+    },
+};
 uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_NOP */
     0,  /* JSOP_PUSH */
@@ -729,7 +754,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_NAMEDEC */
     0,  /* JSOP_PROPDEC */
     0,  /* JSOP_ELEMDEC */
-    0,  /* JSOP_GETPROP */
+    1,  /* JSOP_GETPROP */
     0,  /* JSOP_SETPROP */
     0,  /* JSOP_GETELEM */
     0,  /* JSOP_SETELEM */
@@ -860,7 +885,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_XMLCDATA */
     0,  /* JSOP_XMLCOMMENT */
     0,  /* JSOP_XMLPI */
-    0,  /* JSOP_CALLPROP */
+    2,  /* JSOP_CALLPROP */
     0,  /* JSOP_GETUPVAR */
     0,  /* JSOP_CALLUPVAR */
     0,  /* JSOP_DELDESC */
@@ -885,9 +910,9 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_GETFUNNS */
     0,  /* JSOP_ENUMCONSTELEM */
     0,  /* JSOP_LEAVEBLOCKEXPR */
-    0,  /* JSOP_GETTHISPROP */
-    0,  /* JSOP_GETARGPROP */
-    0,  /* JSOP_GETLOCALPROP */
+    2,  /* JSOP_GETTHISPROP */
+    2,  /* JSOP_GETARGPROP */
+    2,  /* JSOP_GETLOCALPROP */
     0,  /* JSOP_INDEXBASE1 */
     0,  /* JSOP_INDEXBASE2 */
     0,  /* JSOP_INDEXBASE3 */
@@ -938,11 +963,16 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_MOD \
  || x == JSOP_NEG \
  || x == JSOP_POS \
+ || x == JSOP_GETPROP \
  || x == JSOP_CALL \
  || x == JSOP_ITER \
  || x == JSOP_NEXTITER \
  || x == JSOP_APPLY \
  || x == JSOP_NEW \
+ || x == JSOP_CALLPROP \
+ || x == JSOP_GETTHISPROP \
+ || x == JSOP_GETARGPROP \
+ || x == JSOP_GETLOCALPROP \
  || x == JSOP_OBJTOSTR \
 )
 jsbytecode*
@@ -983,5 +1013,8 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - nextiter_imacros.custom_iter_next) < 12) return nextiter_imacros.custom_iter_next;
     if (size_t(pc - nextiter_imacros.native_iter_next) < 12) return nextiter_imacros.native_iter_next;
     if (size_t(pc - objtostr_imacros.toString) < 35) return objtostr_imacros.toString;
+    if (size_t(pc - getprop_imacros.scriptgetter) < 4) return getprop_imacros.scriptgetter;
+    if (size_t(pc - callprop_imacros.scriptgetter) < 5) return callprop_imacros.scriptgetter;
+    if (size_t(pc - getthisprop_imacros.scriptgetter) < 4) return getthisprop_imacros.scriptgetter;
     return NULL;
 }

@@ -70,8 +70,8 @@
 #error "unknown nanojit architecture"
 #endif
 
-#ifndef NJ_USES_QUAD_CONSTANTS
-#  define NJ_USES_QUAD_CONSTANTS 0
+#ifndef NJ_USES_IMMD_POOL
+#  define NJ_USES_IMMD_POOL 0
 #endif
 
 #ifndef NJ_JTBL_SUPPORTED

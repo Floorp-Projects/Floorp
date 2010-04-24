@@ -157,10 +157,10 @@ namespace nanojit
             n = ins->size() >> 2;
         } else {
             switch (ins->retType()) {
-            case LTy_I32:   n = 1;          break;
-            CASE64(LTy_I64:)
-            case LTy_F64:   n = 2;          break;
-            case LTy_Void:  NanoAssert(0);  break;
+            case LTy_I:   n = 1;          break;
+            CASE64(LTy_Q:)
+            case LTy_D:   n = 2;          break;
+            case LTy_V:  NanoAssert(0);  break;
             default:        NanoAssert(0);  break;
             }
         }
@@ -192,8 +192,8 @@ namespace nanojit
 
     typedef SeqBuilder<NIns*> NInsList;
     typedef HashMap<NIns*, LIns*> NInsMap;
-#if NJ_USES_QUAD_CONSTANTS
-    typedef HashMap<uint64_t, uint64_t*> QuadConstantMap;
+#if NJ_USES_IMMD_POOL
+    typedef HashMap<uint64_t, uint64_t*> ImmDPoolMap;
 #endif
 
 #ifdef VTUNE
@@ -326,9 +326,9 @@ namespace nanojit
             Register    getBaseReg(LIns *ins, int &d, RegisterMask allow);
             void        getBaseReg2(RegisterMask allowValue, LIns* value, Register& rv,
                                     RegisterMask allowBase, LIns* base, Register& rb, int &d);
-#if NJ_USES_QUAD_CONSTANTS
+#if NJ_USES_IMMD_POOL
             const uint64_t*
-                        findQuadConstant(uint64_t q);
+                        findImmDFromPool(uint64_t q);
 #endif
             int         findMemFor(LIns* ins);
             Register    findRegFor(LIns* ins, RegisterMask allow);
@@ -362,8 +362,8 @@ namespace nanojit
             RegAllocMap         _branchStateMap;
             NInsMap             _patches;
             LabelStateMap       _labels;
-        #if NJ_USES_QUAD_CONSTANTS
-            QuadConstantMap     _quadConstants;
+        #if NJ_USES_IMMD_POOL
+            ImmDPoolMap     _immDPool;
         #endif
 
             // We generate code into two places:  normal code chunks, and exit
