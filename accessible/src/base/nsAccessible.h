@@ -361,7 +361,7 @@ protected:
    * @param  aStartNode  [in] the DOM node to start from
    * @return              the resulting accessible
    */   
-  already_AddRefed<nsIAccessible>
+  already_AddRefed<nsAccessible>
     GetFirstAvailableAccessible(nsIDOMNode *aStartNode);
 
   // Hyperlink helpers
