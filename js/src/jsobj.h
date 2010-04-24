@@ -494,41 +494,6 @@ struct JSObject {
     inline void zeroRegExpLastIndex();
 
     /*
-     * XML-related getters and setters.
-     */
-
-    /*
-     * Slots for XML-related classes are as follows:
-     * - js_NamespaceClass.base reserves the *_NAME_* and *_NAMESPACE_* slots.
-     * - js_QNameClass.base, js_AttributeNameClass, js_AnyNameClass reserve
-     *   the *_NAME_* and *_QNAME_* slots.
-     * - Others (js_XMLClass, js_XMLFilterClass) don't reserve any slots.
-     */
-  private:
-    static const uint32 JSSLOT_NAME_PREFIX          = JSSLOT_PRIVATE;       // shared
-    static const uint32 JSSLOT_NAME_URI             = JSSLOT_PRIVATE + 1;   // shared
-
-    static const uint32 JSSLOT_NAMESPACE_DECLARED   = JSSLOT_PRIVATE + 2;
-
-    static const uint32 JSSLOT_QNAME_LOCAL_NAME     = JSSLOT_PRIVATE + 2;
-
-  public:
-    static const uint32 NAMESPACE_FIXED_RESERVED_SLOTS = 3;
-    static const uint32 QNAME_FIXED_RESERVED_SLOTS     = 3;
-
-    inline jsval getNamePrefix() const;
-    inline void setNamePrefix(jsval prefix);
-
-    inline jsval getNameURI() const;
-    inline void setNameURI(jsval uri);
-
-    inline jsval getNamespaceDeclared() const;
-    inline void setNamespaceDeclared(jsval decl);
-
-    inline jsval getQNameLocalName() const;
-    inline void setQNameLocalName(jsval decl);
-
-    /*
      * Back to generic stuff.
      */
 
@@ -640,8 +605,6 @@ struct JSObject {
     inline bool isFunction() const;
     inline bool isRegExp() const;
     inline bool isXML() const;
-    inline bool isNamespace() const;
-    inline bool isQName() const;
 
     inline bool unbrand(JSContext *cx);
 };
