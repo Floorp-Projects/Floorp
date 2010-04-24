@@ -6467,8 +6467,7 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
     uint32 limit = JSCLASS_RESERVED_SLOTS(clasp);
 
     JS_LOCK_OBJ(cx, obj);
-    if (index >= limit && !ReservedSlotIndexOK(cx, obj, clasp, index, limit))
-        return false;
+    JS_ASSERT(index < limit || ReservedSlotIndexOK(cx, obj, clasp, index, limit));
 
     uint32 slot = JSSLOT_START(clasp) + index;
     if (slot >= JS_INITIAL_NSLOTS && !obj->dslots) {
