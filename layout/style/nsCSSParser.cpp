@@ -3087,17 +3087,22 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
   }
   else if (!parsingPseudoElement && isPseudoClass) {
     aDataMask |= SEL_MASK_PCLASS;
-    if (nsCSSPseudoClasses::HasStringArg(pseudo)) {
-      nsSelectorParsingStatus parsingStatus =
-        ParsePseudoClassWithIdentArg(aSelector, pseudo, pseudoClassType);
-      if (eSelectorParsingStatus_Continue != parsingStatus) {
-        return parsingStatus;
+    if (eCSSToken_Function == mToken.mType) {
+      nsSelectorParsingStatus parsingStatus;
+      if (nsCSSPseudoClasses::HasStringArg(pseudo)) {
+        parsingStatus =
+          ParsePseudoClassWithIdentArg(aSelector, pseudo, pseudoClassType);
       }
-    }
-    else if (nsCSSPseudoClasses::HasNthPairArg(pseudo)) {
-      nsSelectorParsingStatus parsingStatus =
-        ParsePseudoClassWithNthPairArg(aSelector, pseudo, pseudoClassType);
+      else {
+        NS_ABORT_IF_FALSE(nsCSSPseudoClasses::HasNthPairArg(pseudo),
+                          "unexpected pseudo with function token");
+        parsingStatus =
+          ParsePseudoClassWithNthPairArg(aSelector, pseudo, pseudoClassType);
+      }
       if (eSelectorParsingStatus_Continue != parsingStatus) {
+        if (eSelectorParsingStatus_Error == parsingStatus) {
+          SkipUntil(')');
+        }
         return parsingStatus;
       }
     }
@@ -3265,15 +3270,14 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
   if (eCSSToken_Ident != mToken.mType) {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotIdent);
     UngetToken();
-    // XXX Call SkipUntil to the next ")"?
-    return eSelectorParsingStatus_Error;
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
 
   // -moz-locale-dir can only have values of 'ltr' or 'rtl'.
   if (aPseudo == nsCSSPseudoClasses::mozLocaleDir) {
     if (!mToken.mIdent.EqualsLiteral("ltr") &&
         !mToken.mIdent.EqualsLiteral("rtl")) {
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
   }
 
@@ -3283,8 +3287,7 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
   // close the parenthesis
   if (!ExpectSymbol(')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoClose);
-    // XXX Call SkipUntil to the next ")"?
-    return eSelectorParsingStatus_Error;
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
 
   return eSelectorParsingStatus_Continue;
@@ -3345,15 +3348,13 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     }
     else {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      // XXX Call SkipUntil to the next ")"?
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
   }
   else if (eCSSToken_Number == mToken.mType) {
     if (!mToken.mIntegerValid) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      // XXX Call SkipUntil to the next ")"?
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
     numbers[1] = mToken.mInteger;
     lookForB = PR_FALSE;
@@ -3361,16 +3362,15 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
   else if (eCSSToken_Dimension == mToken.mType) {
     if (!mToken.mIntegerValid || !mToken.mIdent.EqualsIgnoreCase("n")) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      // XXX Call SkipUntil to the next ")"?
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
     numbers[0] = mToken.mInteger;
   }
   // XXX If it's a ')', is that valid?  (as 0n+0)
   else {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-    // XXX Call SkipUntil to the next ")" (unless this is one already)?
-    return eSelectorParsingStatus_Error;
+    UngetToken();
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
 
   if (! GetToken(PR_TRUE)) {
@@ -3396,8 +3396,7 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     if (eCSSToken_Number != mToken.mType ||
         !mToken.mIntegerValid || mToken.mHasSign == haveSign) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      // XXX Call SkipUntil to the next ")"?
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
     numbers[1] = mToken.mInteger * sign;
     if (! GetToken(PR_TRUE)) {
@@ -3407,8 +3406,7 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
   }
   if (!mToken.IsSymbol(')')) {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoClose);
-    // XXX Call SkipUntil to the next ")"?
-    return eSelectorParsingStatus_Error;
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
   aSelector.AddPseudoClass(aPseudo, aType, numbers);
   return eSelectorParsingStatus_Continue;
