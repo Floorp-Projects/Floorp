@@ -209,8 +209,8 @@ nsINode::GetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
   if (!doc)
     return nsnull;
 
-  return doc->PropertyTable()->GetProperty(this, aCategory, aPropertyName,
-                                           aStatus);
+  return doc->PropertyTable(aCategory)->GetProperty(this, aPropertyName,
+                                                    aStatus);
 }
 
 nsresult
@@ -222,9 +222,9 @@ nsINode::SetProperty(PRUint16 aCategory, nsIAtom *aPropertyName, void *aValue,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsresult rv = doc->PropertyTable()->SetProperty(this, aCategory,
-                                                  aPropertyName, aValue, aDtor,
-                                                  nsnull, aTransfer, aOldValue);
+  nsresult rv = doc->PropertyTable(aCategory)->SetProperty(this,
+                                                           aPropertyName, aValue, aDtor,
+                                                           nsnull, aTransfer, aOldValue);
   if (NS_SUCCEEDED(rv)) {
     SetFlags(NODE_HAS_PROPERTIES);
   }
@@ -239,7 +239,7 @@ nsINode::DeleteProperty(PRUint16 aCategory, nsIAtom *aPropertyName)
   if (!doc)
     return nsnull;
 
-  return doc->PropertyTable()->DeleteProperty(this, aCategory, aPropertyName);
+  return doc->PropertyTable(aCategory)->DeleteProperty(this, aPropertyName);
 }
 
 void*
@@ -250,8 +250,8 @@ nsINode::UnsetProperty(PRUint16 aCategory, nsIAtom *aPropertyName,
   if (!doc)
     return nsnull;
 
-  return doc->PropertyTable()->UnsetProperty(this, aCategory, aPropertyName,
-                                             aStatus);
+  return doc->PropertyTable(aCategory)->UnsetProperty(this, aPropertyName,
+                                                      aStatus);
 }
 
 nsIEventListenerManager*

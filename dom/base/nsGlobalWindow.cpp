@@ -108,8 +108,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMHTMLDocument.h"
-#include "nsIDOMHTMLElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
@@ -221,8 +220,8 @@ static PRInt32              gRefCnt                    = 0;
 static PRInt32              gOpenPopupSpamCount        = 0;
 static PopupControlState    gPopupControlState         = openAbused;
 static PRInt32              gRunningTimeoutDepth       = 0;
-static PRBool               gMouseDown                 = PR_FALSE;
-static PRBool               gDragServiceDisabled       = PR_FALSE;
+static PRPackedBool         gMouseDown                 = PR_FALSE;
+static PRPackedBool         gDragServiceDisabled       = PR_FALSE;
 static FILE                *gDumpFile                  = nsnull;
 
 #ifdef DEBUG
@@ -632,6 +631,15 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mIsChrome(PR_FALSE),
     mNeedsFocus(PR_TRUE),
     mHasFocus(PR_FALSE),
+#if defined(XP_MAC) || defined(XP_MACOSX)
+    mShowAccelerators(PR_FALSE),
+    mShowFocusRings(PR_FALSE),
+#else
+    mShowAccelerators(PR_TRUE),
+    mShowFocusRings(PR_TRUE),
+#endif
+    mShowFocusRingForContent(PR_FALSE),
+    mFocusByKeyOccured(PR_FALSE),
     mHasAcceleration(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
@@ -6926,7 +6934,25 @@ nsGlobalWindow::SetFocusedNode(nsIContent* aNode,
   if (mFocusedNode != aNode) {
     UpdateCanvasFocus(PR_FALSE, aNode);
     mFocusedNode = aNode;
-    mFocusMethod = aFocusMethod;
+    mFocusMethod = aFocusMethod & FOCUSMETHOD_MASK;
+    mShowFocusRingForContent = PR_FALSE;
+  }
+
+  if (mFocusedNode) {
+    // if a node was focused by a keypress, turn on focus rings for the
+    // window. Focus rings are always shown when the FLAG_SHOWRING flag is
+    // used, or for XUL elements on GTK, but in this case we set
+    // mShowFocusRingForContent, as we don't want this to be permanent for
+    // the window.
+    if (mFocusMethod == nsIFocusManager::FLAG_BYKEY) {
+      mFocusByKeyOccured = PR_TRUE;
+    } else if (aFocusMethod & nsIFocusManager::FLAG_SHOWRING
+#ifdef MOZ_WIDGET_GTK2
+             || mFocusedNode->IsXUL()
+#endif
+            ) {
+      mShowFocusRingForContent = PR_TRUE;
+    }
   }
 
   if (aNeedsFocus)
@@ -6942,12 +6968,71 @@ nsGlobalWindow::GetFocusMethod()
 }
 
 PRBool
+nsGlobalWindow::ShouldShowFocusRing()
+{
+  FORWARD_TO_INNER(ShouldShowFocusRing, (), PR_FALSE);
+
+  return mShowFocusRings || mShowFocusRingForContent || mFocusByKeyOccured;
+}
+
+void
+nsGlobalWindow::SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
+                                      UIStateChangeType aShowFocusRings)
+{
+  FORWARD_TO_INNER_VOID(SetKeyboardIndicators, (aShowAccelerators, aShowFocusRings));
+
+  // only change the flags that have been modified
+  if (aShowAccelerators != UIStateChangeType_NoChange)
+    mShowAccelerators = aShowAccelerators == UIStateChangeType_Set;
+  if (aShowFocusRings != UIStateChangeType_NoChange)
+    mShowFocusRings = aShowFocusRings == UIStateChangeType_Set;
+
+  // propagate the indicators to child windows
+  nsCOMPtr<nsIDocShellTreeNode> node = do_QueryInterface(GetDocShell());
+  if (node) {
+    PRInt32 childCount = 0;
+    node->GetChildCount(&childCount);
+
+    for (PRInt32 i = 0; i < childCount; ++i) {
+      nsCOMPtr<nsIDocShellTreeItem> childShell;
+      node->GetChildAt(i, getter_AddRefs(childShell));
+      nsCOMPtr<nsPIDOMWindow> childWindow = do_GetInterface(childShell);
+      if (childWindow) {
+        childWindow->SetKeyboardIndicators(aShowAccelerators, aShowFocusRings);
+      }
+    }
+  }
+
+  if (mHasFocus) {
+    // send content state notifications
+    nsCOMPtr<nsPresContext> presContext;
+    if (mDocShell) {
+      mDocShell->GetPresContext(getter_AddRefs(presContext));
+      if (presContext) {
+        presContext->EventStateManager()->
+          SetContentState(mFocusedNode, NS_EVENT_STATE_FOCUS);
+      }
+    }
+  }
+}
+
+void
+nsGlobalWindow::GetKeyboardIndicators(PRBool* aShowAccelerators,
+                                      PRBool* aShowFocusRings)
+{
+  FORWARD_TO_INNER_VOID(GetKeyboardIndicators, (aShowAccelerators, aShowFocusRings));
+
+  *aShowAccelerators = mShowAccelerators;
+  *aShowFocusRings = mShowFocusRings;
+}
+
+PRBool
 nsGlobalWindow::TakeFocus(PRBool aFocus, PRUint32 aFocusMethod)
 {
   FORWARD_TO_INNER(TakeFocus, (aFocus, aFocusMethod), PR_FALSE);
 
   if (aFocus)
-    mFocusMethod = aFocusMethod;
+    mFocusMethod = aFocusMethod & FOCUSMETHOD_MASK;
 
   if (mHasFocus != aFocus) {
     mHasFocus = aFocus;
@@ -6975,6 +7060,15 @@ nsGlobalWindow::SetReadyForFocus()
 
   PRBool oldNeedsFocus = mNeedsFocus;
   mNeedsFocus = PR_FALSE;
+
+  // update whether focus rings need to be shown using the state from the
+  // root window
+  nsPIDOMWindow* root = GetPrivateRoot();
+  if (root) {
+    PRBool showAccelerators, showFocusRings;
+    root->GetKeyboardIndicators(&showAccelerators, &showFocusRings);
+    mShowFocusRings = showFocusRings;
+  }
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm)
@@ -9001,6 +9095,22 @@ nsGlobalWindow::RestoreWindowState(nsISupports *aState)
 
   // And we're ready to go!
   nsGlobalWindow *inner = GetCurrentInnerWindowInternal();
+
+  // if a link is focused, refocus with the FLAG_SHOWRING flag set. This makes
+  // it easy to tell which link was last clicked when going back a page.
+  nsIContent* focusedNode = inner->GetFocusedNode();
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(focusedNode);
+  if (anchor || (focusedNode &&
+                 focusedNode->AttrValueIs(kNameSpaceID_XLink, nsGkAtoms::type,
+                                          nsGkAtoms::simple, eCaseMatters))) {
+    nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (fm) {
+      nsCOMPtr<nsIDOMElement> focusedElement(do_QueryInterface(focusedNode));
+      fm->SetFocus(focusedElement, nsIFocusManager::FLAG_NOSCROLL |
+                                   nsIFocusManager::FLAG_SHOWRING);
+    }
+  }
+
   inner->Thaw();
 
   holder->DidRestoreWindow();

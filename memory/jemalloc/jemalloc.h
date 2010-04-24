@@ -89,12 +89,12 @@ void	free(void *ptr);
 int	posix_memalign(void **memptr, size_t alignment, size_t size);
 #endif /* MOZ_MEMORY_DARWIN, MOZ_MEMORY_LINUX */
 
-/* Linux has memalign */
+/* Linux has memalign and malloc_usable_size */
 #if !defined(MOZ_MEMORY_LINUX)
 void	*memalign(size_t alignment, size_t size);
+size_t	malloc_usable_size(const void *ptr);
 #endif /* MOZ_MEMORY_LINUX */
 
-size_t	malloc_usable_size(const void *ptr);
 void	jemalloc_stats(jemalloc_stats_t *stats);
 
 #ifdef __cplusplus

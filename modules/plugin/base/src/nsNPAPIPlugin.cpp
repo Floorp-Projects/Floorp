@@ -84,6 +84,8 @@
 
 #ifdef XP_MACOSX
 #include <Carbon/Carbon.h>
+#include <ApplicationServices/ApplicationServices.h>
+#include <OpenGL/OpenGL.h>
 #endif
 
 // needed for nppdf plugin
@@ -278,6 +280,30 @@ static PRInt32 OSXVersion()
   }
   return gOSXVersion;
 }
+
+// Detects machines with Intel GMA9xx GPUs.
+// kCGLRendererIDMatchingMask and kCGLRendererIntel900ID are only defined in the 10.6 SDK.
+#define CGLRendererIDMatchingMask 0x00FE7F00
+#define CGLRendererIntel900ID 0x00024000
+static PRBool GMA9XXGraphics()
+{
+  bool hasIntelGMA9XX = PR_FALSE;
+  CGLRendererInfoObj renderer = 0;
+  GLint rendererCount = 0;
+  if (::CGLQueryRendererInfo(0xffffffff, &renderer, &rendererCount) == kCGLNoError) {
+    for (GLint c = 0; c < rendererCount; c++) {
+      GLint rendProp = 0;
+      if (::CGLDescribeRenderer(renderer, c, kCGLRPRendererID, &rendProp) == kCGLNoError) {
+        if ((rendProp & CGLRendererIDMatchingMask) == CGLRendererIntel900ID) {
+          hasIntelGMA9XX = PR_TRUE;
+          break;
+        }
+      }
+    }
+    ::CGLDestroyRendererInfo(renderer);
+  }
+  return hasIntelGMA9XX;
+}
 #endif
 
 inline PRBool
@@ -293,7 +319,8 @@ RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag)
     return PR_FALSE;
   }
   // Blacklist Flash 10.0 or lower since it may try to negotiate Carbon/Quickdraw
-  // which are not supported out of process.
+  // which are not supported out of process. Also blacklist Flash 10.1 if this
+  // machine has an Intel GMA9XX GPU because Flash will negotiate Quickdraw graphics.
   if (aPluginTag && 
       aPluginTag->mFileName.EqualsIgnoreCase("flash player.plugin")) {
     // If the first '.' is before position 2 or the version 
@@ -307,6 +334,11 @@ RunPluginOOP(const char* aFilePath, const nsPluginTag *aPluginTag)
       if (versionPrefix.EqualsASCII("10.0")) {
         return PR_FALSE;
       }
+    }
+    // At this point we have Flash 10.1+ but now we also need to blacklist
+    // if the machine has a Intel GMA9XX GPU.
+    if (GMA9XXGraphics()) {
+      return PR_FALSE;
     }
   }
 #endif
@@ -882,7 +914,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
     nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *) npp->ndata;
 
     
-    const char *name;
+    const char *name = nsnull;
     nsRefPtr<nsPluginHost> host = dont_AddRef(nsPluginHost::GetInst());
     host->GetPluginName(inst, &name);
 

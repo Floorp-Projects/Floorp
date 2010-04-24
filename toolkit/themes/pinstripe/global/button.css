@@ -114,7 +114,7 @@ button[dlgtype="help"][disabled] {
   opacity: 0.5;
 }
 
-button[dlgtype="help"]:focus {
+button[dlgtype="help"]:-moz-focusring {
   outline: 2px solid -moz-mac-focusring;
   outline-offset: -2px;
   -moz-outline-radius: 100%;

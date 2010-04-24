@@ -527,7 +527,7 @@ public:
 
     virtual nsIContent *GetBindingParent() const;
     virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
-    virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull);
+    virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE);
     virtual nsIAtom* GetID() const;
     virtual const nsAttrValue* DoGetClasses() const;
 

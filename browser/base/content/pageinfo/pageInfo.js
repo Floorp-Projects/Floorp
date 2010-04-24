@@ -825,7 +825,7 @@ function makePreview(row)
   var item = getSelectedImage(imageTree);
   var url = gImageView.data[row][COL_IMAGE_ADDRESS];
   var isBG = gImageView.data[row][COL_IMAGE_BG];
-  var isAudo = false;
+  var isAudio = false;
 
   setItemValue("imageurltext", url);
 
@@ -990,7 +990,7 @@ function makePreview(row)
     newImage.id = "thepreviewimage";
     newImage.src = url;
     newImage.controls = true;
-    isAudo = true;
+    isAudio = true;
 
     document.getElementById("theimagecontainer").collapsed = false;
     document.getElementById("brokenimagecontainer").collapsed = true;
@@ -1004,7 +1004,7 @@ function makePreview(row)
   }
 
   var imageSize = "";
-  if (url && !isAudo) {
+  if (url && !isAudio) {
     if (width != physWidth || height != physHeight) {
       imageSize = gBundle.getFormattedString("mediaDimensionsScaled",
                                              [formatNumber(physWidth),

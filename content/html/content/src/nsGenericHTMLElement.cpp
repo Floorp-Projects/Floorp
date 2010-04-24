@@ -266,23 +266,6 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Copy the baseuri and basetarget
-  void* prop;
-  if ((prop = GetProperty(nsGkAtoms::htmlBaseHref))) {
-    rv = aDst->SetProperty(nsGkAtoms::htmlBaseHref, prop,
-                           nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ADDREF(static_cast<nsIURI*>(prop));
-    }
-  }
-  if ((prop = GetProperty(nsGkAtoms::htmlBaseTarget))) {
-    rv = aDst->SetProperty(nsGkAtoms::htmlBaseTarget, prop,
-                           nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ADDREF(static_cast<nsIAtom*>(prop));
-    }
-  }
-
   return NS_OK;
 }
 
@@ -698,14 +681,12 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     loader->SetEnabled(PR_FALSE);
   }
 
-  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(static_cast<nsIContent *>
-                                                             (this)));
-  nsresult rv = nsContentUtils::CreateContextualFragment(thisNode, aInnerHTML,
+  nsresult rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML,
                                                          PR_FALSE,
                                                          getter_AddRefs(df));
+  nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDOMNode> tmpNode;
-    rv = thisNode->AppendChild(df, getter_AddRefs(tmpNode));
+    static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
   }
 
   if (scripts_enabled) {
@@ -1153,30 +1134,9 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   return NS_OK;
 }
 
-already_AddRefed<nsIURI>
-nsGenericHTMLElement::GetBaseURI() const
-{
-  void* prop;
-  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsGkAtoms::htmlBaseHref))) {
-    nsIURI* uri = static_cast<nsIURI*>(prop);
-    NS_ADDREF(uri);
-    
-    return uri;
-  }
-
-  return nsGenericHTMLElementBase::GetBaseURI();
-}
-
 void
 nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
-  void* prop;
-  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsGkAtoms::htmlBaseTarget))) {
-    static_cast<nsIAtom*>(prop)->ToString(aBaseTarget);
-    
-    return;
-  }
-
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
     ownerDoc->GetBaseTarget(aBaseTarget);

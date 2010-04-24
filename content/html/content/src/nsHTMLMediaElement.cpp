@@ -85,6 +85,7 @@
 #include "nsVideoFrame.h"
 #include "BasicLayers.h"
 #include <limits>
+#include "nsIDocShellTreeItem.h"
 
 #ifdef MOZ_OGG
 #include "nsOggDecoder.h"
@@ -102,6 +103,10 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #define LOG(type, msg)
 #define LOG_EVENT(type, msg)
 #endif
+
+#include "nsIContentSecurityPolicy.h"
+#include "nsIChannelPolicy.h"
+#include "nsChannelPolicy.h"
 
 using namespace mozilla::layers;
 
@@ -166,7 +171,6 @@ protected:
   nsRefPtr<nsHTMLMediaElement> mElement;
   PRUint32 mLoadID;
 };
-
 
 class nsAsyncEventRunner : public nsMediaEvent
 {
@@ -440,6 +444,25 @@ nsHTMLMediaElement::OnChannelRedirect(nsIChannel *aChannel,
 {
   NS_ASSERTION(aChannel == mChannel, "Channels should match!");
   mChannel = aNewChannel;
+
+  // Handle forwarding of Range header so that the intial detection
+  // of seeking support (via result code 206) works across redirects.
+  nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);
+  NS_ENSURE_STATE(http);
+
+  NS_NAMED_LITERAL_CSTRING(rangeHdr, "Range");
+ 
+  nsCAutoString rangeVal;
+  if (NS_SUCCEEDED(http->GetRequestHeader(rangeHdr, rangeVal))) {
+    NS_ENSURE_STATE(!rangeVal.IsEmpty());
+
+    http = do_QueryInterface(aNewChannel);
+    NS_ENSURE_STATE(http);
+ 
+    nsresult rv = http->SetRequestHeader(rangeHdr, rangeVal, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+ 
   return NS_OK;
 }
 
@@ -637,12 +660,25 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   if (NS_CP_REJECTED(shouldLoad)) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
+
+  // check for a Content Security Policy to pass down to the channel
+  // created to load the media content
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv,rv);
+  if (csp) {
+    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_MEDIA);
+  }
   rv = NS_NewChannel(getter_AddRefs(mChannel),
                      aURI,
                      nsnull,
                      loadGroup,
                      nsnull,
-                     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY);
+                     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY,
+                     channelPolicy);
   NS_ENSURE_SUCCESS(rv,rv);
 
   // The listener holds a strong reference to us.  This creates a reference
@@ -1752,26 +1788,42 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
  */
 static already_AddRefed<LayerManager> GetLayerManagerForDoc(nsIDocument* aDoc)
 {
-  while (aDoc) {
-    nsIDocument* displayDoc = aDoc->GetDisplayDocument();
-    if (displayDoc) {
-      aDoc = displayDoc;
-      continue;
-    }
+  nsIDocument* doc = aDoc;
+  nsIDocument* displayDoc = doc->GetDisplayDocument();
+  if (displayDoc) {
+    doc = displayDoc;
+  }
 
-    nsIPresShell* shell = aDoc->GetPrimaryShell();
-    if (shell) {
-      nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
-      if (rootFrame) {
-        nsIWidget* widget =
-          nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetWindow();
-        if (widget) {
-          nsRefPtr<LayerManager> manager = widget->GetLayerManager();
-          return manager.forget();
-        }
+  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
+  while (!shell && docShellTreeItem) {
+    // We may be in a display:none subdocument, or we may not have a presshell
+    // created yet.
+    // Walk the docshell tree to find the nearest container that has a presshell,
+    // and find the root widget from that.
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
+    nsCOMPtr<nsIPresShell> presShell;
+    docShell->GetPresShell(getter_AddRefs(presShell));
+    if (presShell) {
+      shell = presShell;
+    } else {
+      nsCOMPtr<nsIDocShellTreeItem> parent;
+      docShellTreeItem->GetParent(getter_AddRefs(parent));
+      docShellTreeItem = parent;
+    }
+  }
+
+  if (shell) {
+    nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
+    if (rootFrame) {
+      nsIWidget* widget =
+        nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetWindow();
+      if (widget) {
+        nsRefPtr<LayerManager> manager = widget->GetLayerManager();
+        return manager.forget();
       }
     }
-    aDoc = aDoc->GetParentDocument();
   }
 
   nsRefPtr<LayerManager> manager = new BasicLayerManager(nsnull);

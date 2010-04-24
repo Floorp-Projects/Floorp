@@ -121,6 +121,7 @@ MAKEFILES_xmlparser="
 
 MAKEFILES_gfx="
   gfx/Makefile
+  gfx/ycbcr/Makefile
   gfx/idl/Makefile
   gfx/layers/Makefile
   gfx/public/Makefile

@@ -45,6 +45,8 @@ const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const TOPIC_SHUTDOWN = "places-shutdown";
+
 /**
  * The Places Tagging Service
  */
@@ -57,7 +59,7 @@ function TaggingService() {
   // Cleanup on shutdown.
   this._obss = Cc["@mozilla.org/observer-service;1"].
                getService(Ci.nsIObserverService);
-  this._obss.addObserver(this, "xpcom-shutdown", false);
+  this._obss.addObserver(this, TOPIC_SHUTDOWN, false);
 
   XPCOMUtils.defineLazyServiceGetter(this, "_history",
                                      "@mozilla.org/browser/nav-history-service;1",
@@ -335,9 +337,9 @@ TaggingService.prototype = {
 
   // nsIObserver
   observe: function TS_observe(aSubject, aTopic, aData) {
-    if (aTopic == "xpcom-shutdown") {
+    if (aTopic == TOPIC_SHUTDOWN) {
       this._bms.removeObserver(this);
-      this._obss.removeObserver(this, "xpcom-shutdown");
+      this._obss.removeObserver(this, TOPIC_SHUTDOWN);
     }
   },
 
