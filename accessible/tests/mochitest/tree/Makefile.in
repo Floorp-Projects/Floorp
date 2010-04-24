@@ -46,7 +46,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =\
-  $(warning test_applicationacc.xul temporarily disabled) \
+  $(warning test_applicationacc.xul temporarily disabled, see bug 561508) \
 		test_aria_globals.html \
 		test_aria_imgmap.html \
 		test_button.xul \

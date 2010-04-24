@@ -265,10 +265,10 @@ nsApplicationAccessible::CacheChildren()
   // children are requested because empty InvalidateChldren() prevents its
   // repeated calls.
 
-  // Basicly children are kept updated by Add/RemoveRootAccessible method
+  // Basically children are kept updated by Add/RemoveRootAccessible method
   // calls. However if there are open windows before accessibility was started
   // then we need to make sure root accessibles for open windows are created so
-  // that all root accessible are stored in application accessible children
+  // that all root accessibles are stored in application accessible children
   // array.
 
   nsCOMPtr<nsIWindowMediator> windowMediator =
