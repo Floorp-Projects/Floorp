@@ -850,6 +850,34 @@ function run() {
     test_balanced_unparseable(":not(:nth-child(2k))");
     test_balanced_unparseable(":not(:nth-child(()))");
 
+    // :-moz-any()
+    test_balanced_unparseable(":-moz-any()");
+    test_balanced_unparseable(":-moz-any(div p)");
+    test_balanced_unparseable(":-moz-any(div ~ p)");
+    test_balanced_unparseable(":-moz-any(div~p)");
+    test_balanced_unparseable(":-moz-any(div + p)");
+    test_balanced_unparseable(":-moz-any(div+p)");
+    test_balanced_unparseable(":-moz-any(div > p)");
+    test_balanced_unparseable(":-moz-any(div>p)");
+    test_parseable(":-moz-any(div, p)");
+    test_parseable(":-moz-any( div , p  )");
+    test_parseable(":-moz-any(div,p)");
+    test_parseable(":-moz-any(div)");
+    test_parseable(":-moz-any(div,p,:link,span:focus)");
+    test_parseable(":-moz-any(:active,:focus)");
+    test_parseable(":-moz-any(:active,:link:focus)");
+    test_balanced_unparseable(":-moz-any(div,:nonexistentpseudo)");
+    var any_elts = "<input type='text'><a href='http://www.example.com/'></a><div></div><a name='foo'>";
+    test_selector_in_html(":-moz-any(a,input)", any_elts,
+                          bodychildset([0, 1, 3]), bodychildset([2]));
+    test_selector_in_html(":-moz-any(:link,:not(a))", any_elts,
+                          bodychildset([0, 1, 2]), bodychildset([3]));
+    test_selector_in_html(":-moz-any([href],input[type],input[name])", any_elts,
+                          bodychildset([0, 1]), bodychildset([2, 3]));
+    test_selector_in_html(":-moz-any(div,a):-moz-any([type],[href],[name])",
+                          any_elts,
+                          bodychildset([1, 3]), bodychildset([0, 2]));
+
     run_deferred_tests();
 }
 

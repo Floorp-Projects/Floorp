@@ -176,6 +176,21 @@ nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
     static_cast<PRInt32*>(nsMemory::Clone(aIntPair, sizeof(PRInt32) * 2));
 }
 
+// adopts aSelectorList
+nsPseudoClassList::nsPseudoClassList(nsIAtom* aAtom,
+                                     nsCSSPseudoClasses::Type aType,
+                                     nsCSSSelectorList* aSelectorList)
+  : mAtom(aAtom),
+    mType(aType),
+    mNext(nsnull)
+{
+  NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(aAtom),
+               "unexpected pseudo-class");
+  NS_ASSERTION(aSelectorList, "selector list expected");
+  MOZ_COUNT_CTOR(nsPseudoClassList);
+  u.mSelectors = aSelectorList;
+}
+
 nsPseudoClassList*
 nsPseudoClassList::Clone(PRBool aDeep) const
 {
@@ -184,10 +199,13 @@ nsPseudoClassList::Clone(PRBool aDeep) const
     result = new nsPseudoClassList(mAtom, mType);
   } else if (nsCSSPseudoClasses::HasStringArg(mAtom)) {
     result = new nsPseudoClassList(mAtom, mType, u.mString);
-  } else {
-    NS_ASSERTION(nsCSSPseudoClasses::HasNthPairArg(mAtom),
-                 "unexpected pseudo-class");
+  } else if (nsCSSPseudoClasses::HasNthPairArg(mAtom)) {
     result = new nsPseudoClassList(mAtom, mType, u.mNumbers);
+  } else {
+    NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(mAtom),
+                 "unexpected pseudo-class");
+    // This constructor adopts its selector list argument.
+    result = new nsPseudoClassList(mAtom, mType, u.mSelectors->Clone());
   }
 
   if (aDeep)
@@ -200,8 +218,11 @@ nsPseudoClassList::Clone(PRBool aDeep) const
 nsPseudoClassList::~nsPseudoClassList(void)
 {
   MOZ_COUNT_DTOR(nsPseudoClassList);
-  if (u.mMemory)
+  if (nsCSSPseudoClasses::HasSelectorListArg(mAtom)) {
+    delete u.mSelectors;
+  } else if (u.mMemory) {
     NS_Free(u.mMemory);
+  }
   NS_CSS_DELETE_LIST_MEMBER(nsPseudoClassList, this, mNext);
 }
 
@@ -418,6 +439,15 @@ void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
   AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType, aIntPair));
 }
 
+void nsCSSSelector::AddPseudoClass(nsIAtom* aPseudoClass,
+                                   nsCSSPseudoClasses::Type aType,
+                                   nsCSSSelectorList* aSelectorList)
+{
+  // Take ownership of nsCSSSelectorList instead of copying.
+  AddPseudoClassInternal(new nsPseudoClassList(aPseudoClass, aType,
+                                               aSelectorList));
+}
+
 void nsCSSSelector::AddPseudoClassInternal(nsPseudoClassList *aPseudoClass)
 {
   nsPseudoClassList** list = &mPseudoClassList;
@@ -472,6 +502,11 @@ PRInt32 nsCSSSelector::CalcWeightWithoutNegations() const
     weight += 0x000100;
     list = list->mNext;
   }
+  // FIXME (bug 561154):  This is incorrect for :-moz-any(), which isn't
+  // really a pseudo-class.  In order to handle :-moz-any() correctly,
+  // we need to compute specificity after we match, based on which
+  // option we matched with (and thus also need to try the
+  // highest-specificity options first).
   nsPseudoClassList *plist = mPseudoClassList;
   while (nsnull != plist) {
     weight += 0x000100;
@@ -757,9 +792,7 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
         if (nsCSSPseudoClasses::HasStringArg(list->mAtom)) {
           nsStyleUtil::AppendEscapedCSSIdent(
             nsDependentString(list->u.mString), aString);
-        } else {
-          NS_ASSERTION(nsCSSPseudoClasses::HasNthPairArg(list->mAtom),
-                       "unexpected pseudo-class");
+        } else if (nsCSSPseudoClasses::HasNthPairArg(list->mAtom)) {
           PRInt32 a = list->u.mNumbers[0],
                   b = list->u.mNumbers[1];
           temp.Truncate();
@@ -777,6 +810,12 @@ nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
             temp.AppendInt(b);
           }
           aString.Append(temp);
+        } else {
+          NS_ASSERTION(nsCSSPseudoClasses::HasSelectorListArg(list->mAtom),
+                       "unexpected pseudo-class");
+          nsString tmp;
+          list->u.mSelectors->ToString(tmp, aSheet);
+          aString.Append(tmp);
         }
         aString.Append(PRUnichar(')'));
       }
