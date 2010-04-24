@@ -681,6 +681,9 @@ function run() {
 
     test_balanced_unparseable(":-moz-locale-dir(other)");
     test_balanced_unparseable(":-moz-locale-dir()");
+    test_balanced_unparseable(":-moz-locale-dir(())");
+    test_balanced_unparseable(":-moz-locale-dir(3())");
+    test_balanced_unparseable(":-moz-locale-dir(f{})");
     test_balanced_unparseable(":-moz-locale-dir('ltr')");
     test_balanced_unparseable(":-moz-locale-dir(ltr, other)");
     test_balanced_unparseable(":-moz-locale-dir");
@@ -819,6 +822,9 @@ function run() {
     test_balanced_unparseable("p:not( \t\n )");
     test_balanced_unparseable("p:not(/*comment*/)");
     test_balanced_unparseable("p:not( /*comment*/  /* comment */  )");
+
+    test_balanced_unparseable(":not(:nth-child(2k))");
+    test_balanced_unparseable(":not(:nth-child(()))");
 
     run_deferred_tests();
 }
