@@ -270,7 +270,7 @@ BOOLEAN_TO_JSVAL(JSBool b)
 
 /* A private data pointer (2-byte-aligned) can be stored as an int jsval. */
 #define JSVAL_TO_PRIVATE(v)     ((void *)((v) & ~JSVAL_INT))
-#define PRIVATE_TO_JSVAL(p)     ((jsval)(p) | JSVAL_INT)
+#define PRIVATE_TO_JSVAL(p)     ((jsval)(ptrdiff_t)(p) | JSVAL_INT)
 
 /* Property attributes, set in JSPropertySpec and passed to API functions. */
 #define JSPROP_ENUMERATE        0x01    /* property is visible to for/in loop */
