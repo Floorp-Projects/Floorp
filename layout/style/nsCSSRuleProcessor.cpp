@@ -1410,8 +1410,31 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
   }
 }
 
+static PRBool SelectorMatches(RuleProcessorData &data,
+                              nsCSSSelector* aSelector,
+                              NodeMatchContext& aNodeMatchContext,
+                              TreeMatchContext& aTreeMatchContext,
+                              PRBool* const aDependence = nsnull);
+
+static PRBool NS_FASTCALL
+anyMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+           NodeMatchContext& aNodeMatchContext, nsPseudoClassList* pseudoClass)
+{
+  NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::any,
+                  "Unexpected atom");
+  for (nsCSSSelectorList *l = pseudoClass->u.mSelectors; l; l = l->mNext) {
+    nsCSSSelector *s = l->mSelectors;
+    NS_ABORT_IF_FALSE(!s->mNext && !s->IsPseudoElement(), "parser failed");
+    if (SelectorMatches(data, s, aNodeMatchContext, aTreeMatchContext)) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 static PRBool NS_FASTCALL
 firstNodeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                 NodeMatchContext& aNodeMatchContext,
                  nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::firstNode,
@@ -1434,6 +1457,7 @@ firstNodeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 
 static PRBool NS_FASTCALL
 lastNodeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                NodeMatchContext& aNodeMatchContext,
                 nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::lastNode,
@@ -1474,6 +1498,7 @@ edgeChildMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 
 static PRBool NS_FASTCALL
 firstChildMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                  NodeMatchContext& aNodeMatchContext,
                   nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::firstChild,
@@ -1483,6 +1508,7 @@ firstChildMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 
 static PRBool NS_FASTCALL
 lastChildMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                 NodeMatchContext& aNodeMatchContext,
                  nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::lastChild,
@@ -1492,6 +1518,7 @@ lastChildMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 
 static PRBool NS_FASTCALL
 onlyChildMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                 NodeMatchContext& aNodeMatchContext,
                  nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::onlyChild,
@@ -1540,6 +1567,7 @@ nthChildGenericMatches(RuleProcessorData& data,
 
 static PRBool NS_FASTCALL
 nthChildMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                NodeMatchContext& aNodeMatchContext,
                 nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::nthChild,
@@ -1551,6 +1579,7 @@ nthChildMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 static PRBool NS_FASTCALL
 nthLastChildMatches(RuleProcessorData& data,
                     TreeMatchContext& aTreeMatchContext,
+                    NodeMatchContext& aNodeMatchContext,
                     nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::nthLastChild,
@@ -1561,6 +1590,7 @@ nthLastChildMatches(RuleProcessorData& data,
 
 static PRBool NS_FASTCALL
 nthOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                 NodeMatchContext& aNodeMatchContext,
                  nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::nthOfType,
@@ -1572,6 +1602,7 @@ nthOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 static PRBool NS_FASTCALL
 nthLastOfTypeMatches(RuleProcessorData& data,
                      TreeMatchContext& aTreeMatchContext,
+                     NodeMatchContext& aNodeMatchContext,
                      nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::nthLastOfType,
@@ -1604,6 +1635,7 @@ edgeOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 
 static PRBool NS_FASTCALL
 firstOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                   NodeMatchContext& aNodeMatchContext,
                    nsPseudoClassList* pseudoClass)
 { 
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::firstOfType,
@@ -1613,6 +1645,7 @@ firstOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 
 static PRBool NS_FASTCALL
 lastOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                  NodeMatchContext& aNodeMatchContext,
                   nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::lastOfType,
@@ -1622,6 +1655,7 @@ lastOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 
 static PRBool NS_FASTCALL
 onlyOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                  NodeMatchContext& aNodeMatchContext,
                   nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::onlyOfType,
@@ -1651,6 +1685,7 @@ checkGenericEmptyMatches(RuleProcessorData& data,
 
 static PRBool NS_FASTCALL
 emptyMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+             NodeMatchContext& aNodeMatchContext,
              nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::empty,
@@ -1661,6 +1696,7 @@ emptyMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 static PRBool NS_FASTCALL
 mozOnlyWhitespaceMatches(RuleProcessorData& data,
                          TreeMatchContext& aTreeMatchContext,
+                         NodeMatchContext& aNodeMatchContext,
                          nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozOnlyWhitespace,
@@ -1671,6 +1707,7 @@ mozOnlyWhitespaceMatches(RuleProcessorData& data,
 static PRBool NS_FASTCALL
 mozEmptyExceptChildrenWithLocalnameMatches(RuleProcessorData& data,
                                            TreeMatchContext& aTreeMatchContext,
+                                           NodeMatchContext& aNodeMatchContext,
                                            nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom ==
@@ -1696,6 +1733,7 @@ mozEmptyExceptChildrenWithLocalnameMatches(RuleProcessorData& data,
 static PRBool NS_FASTCALL
 mozSystemMetricMatches(RuleProcessorData& data,
                        TreeMatchContext& aTreeMatchContext,
+                       NodeMatchContext& aNodeMatchContext,
                        nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozSystemMetric,
@@ -1708,6 +1746,7 @@ mozSystemMetricMatches(RuleProcessorData& data,
 static PRBool NS_FASTCALL
 mozHasHandlerRefMatches(RuleProcessorData& data,
                         TreeMatchContext& aTreeMatchContext,
+                        NodeMatchContext& aNodeMatchContext,
                         nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozHasHandlerRef,
@@ -1730,7 +1769,7 @@ mozHasHandlerRefMatches(RuleProcessorData& data,
 
 static PRBool NS_FASTCALL
 rootMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
-            nsPseudoClassList* pseudoClass)
+            NodeMatchContext& aNodeMatchContext, nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::root,
                   "Unexpected atom");
@@ -1741,6 +1780,7 @@ rootMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 static PRBool NS_FASTCALL
 mozBoundElementMatches(RuleProcessorData& data,
                        TreeMatchContext& aTreeMatchContext,
+                       NodeMatchContext& aNodeMatchContext,
                        nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozBoundElement,
@@ -1753,7 +1793,7 @@ mozBoundElementMatches(RuleProcessorData& data,
 
 static PRBool NS_FASTCALL
 langMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
-            nsPseudoClassList* pseudoClass)
+            NodeMatchContext& aNodeMatchContext, nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::lang,
                   "Unexpected atom");
@@ -1806,6 +1846,7 @@ langMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 
 static PRBool NS_FASTCALL
 mozIsHTMLMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                 NodeMatchContext& aNodeMatchContext,
                  nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozIsHTML,
@@ -1816,6 +1857,7 @@ mozIsHTMLMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 static PRBool NS_FASTCALL
 mozLocaleDirMatches(RuleProcessorData& data,
                     TreeMatchContext& aTreeMatchContext,
+                    NodeMatchContext& aNodeMatchContext,
                     nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozLocaleDir,
@@ -1832,6 +1874,7 @@ mozLocaleDirMatches(RuleProcessorData& data,
 
 static PRBool NS_FASTCALL
 mozLWThemeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                  NodeMatchContext& aNodeMatchContext,
                   nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom == nsCSSPseudoClasses::mozLWTheme,
@@ -1843,6 +1886,7 @@ mozLWThemeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 static PRBool NS_FASTCALL
 mozLWThemeBrightTextMatches(RuleProcessorData& data,
                             TreeMatchContext& aTreeMatchContext,
+                            NodeMatchContext& aNodeMatchContext,
                             nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom ==
@@ -1855,6 +1899,7 @@ mozLWThemeBrightTextMatches(RuleProcessorData& data,
 static PRBool NS_FASTCALL
 mozLWThemeDarkTextMatches(RuleProcessorData& data,
                           TreeMatchContext& aTreeMatchContext,
+                          NodeMatchContext& aNodeMatchContext,
                           nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom ==
@@ -1867,6 +1912,7 @@ mozLWThemeDarkTextMatches(RuleProcessorData& data,
 static PRBool NS_FASTCALL
 mozWindowInactiveMatches(RuleProcessorData& data,
                          TreeMatchContext& aTreeMatchContext,
+                         NodeMatchContext& aNodeMatchContext,
                          nsPseudoClassList* pseudoClass)
 {
   NS_PRECONDITION(pseudoClass->mAtom ==
@@ -1877,6 +1923,7 @@ mozWindowInactiveMatches(RuleProcessorData& data,
 
 static PRBool NS_FASTCALL
 notPseudoMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
+                 NodeMatchContext& aNodeMatchContext,
                  nsPseudoClassList* pseudoClass)
 {
   NS_NOTREACHED("Why did this get called?");
@@ -1886,6 +1933,7 @@ notPseudoMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
 typedef PRBool
   (NS_FASTCALL * PseudoClassMatcher)(RuleProcessorData&,
                                      TreeMatchContext& aTreeMatchContext,
+                                     NodeMatchContext& aNodeMatchContext,
                                      nsPseudoClassList* pseudoClass);
 // Only one of mFunc or mBits will be set; the other will be null or 0
 // respectively.  We could use a union, but then we'd still need to
@@ -1921,7 +1969,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
                               nsCSSSelector* aSelector,
                               NodeMatchContext& aNodeMatchContext,
                               TreeMatchContext& aTreeMatchContext,
-                              PRBool* const aDependence = nsnull) 
+                              PRBool* const aDependence /* = nsnull */)
 
 {
   NS_PRECONDITION(!aSelector->IsPseudoElement(),
@@ -2016,7 +2064,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
        pseudoClass; pseudoClass = pseudoClass->mNext) {
     const PseudoClassInfo& info = sPseudoClassInfo[pseudoClass->mType];
     if (info.mFunc) {
-      if (!(*info.mFunc)(data, aTreeMatchContext, pseudoClass)) {
+      if (!(*info.mFunc)(data, aTreeMatchContext, aNodeMatchContext,
+                         pseudoClass)) {
         return PR_FALSE;
       }
     } else {
@@ -2641,6 +2690,65 @@ void AddSelectorDocumentStates(nsCSSSelector& aSelector, PRUint32* aStateMask)
 }
 
 static PRBool
+AddSelector(RuleCascadeData* aCascade,
+            // The part between combinators at the top level of the selector
+            nsCSSSelector* aSelectorInTopLevel,
+            // The part we should look through (might be in :not or :-moz-any())
+            nsCSSSelector* aSelectorPart)
+{
+  // Track the selectors that depend on document states.
+  AddSelectorDocumentStates(*aSelectorPart, &aCascade->mSelectorDocumentStates);
+
+  // Build mStateSelectors.
+  if (IsStateSelector(*aSelectorPart))
+    aCascade->mStateSelectors.AppendElement(aSelectorInTopLevel);
+
+  // Build mIDSelectors
+  if (aSelectorPart->mIDList) {
+    aCascade->mIDSelectors.AppendElement(aSelectorInTopLevel);
+  }
+
+  // Build mClassSelectors
+  if (aSelectorPart->mClassList) {
+    aCascade->mClassSelectors.AppendElement(aSelectorInTopLevel);
+  }
+
+  // Build mAttributeSelectors.
+  for (nsAttrSelector *attr = aSelectorPart->mAttrList; attr;
+       attr = attr->mNext) {
+    nsTArray<nsCSSSelector*> *array =
+      aCascade->AttributeListFor(attr->mCasedAttr);
+    if (!array) {
+      return PR_FALSE;
+    }
+    array->AppendElement(aSelectorInTopLevel);
+    if (attr->mLowercaseAttr != attr->mCasedAttr) {
+      nsTArray<nsCSSSelector*> *array =
+        aCascade->AttributeListFor(attr->mLowercaseAttr);
+      if (!array) {
+        return PR_FALSE;
+      }
+      array->AppendElement(aSelectorInTopLevel);
+    }
+  }
+
+  // Recur through any :-moz-any selectors
+  for (nsPseudoClassList* pseudoClass = aSelectorPart->mPseudoClassList;
+       pseudoClass; pseudoClass = pseudoClass->mNext) {
+    if (pseudoClass->mType == nsCSSPseudoClasses::ePseudoClass_any) {
+      for (nsCSSSelectorList *l = pseudoClass->u.mSelectors; l; l = l->mNext) {
+        nsCSSSelector *s = l->mSelectors;
+        if (!AddSelector(aCascade, aSelectorInTopLevel, s)) {
+          return PR_FALSE;
+        }
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
+static PRBool
 AddRule(RuleValue* aRuleInfo, RuleCascadeData* aCascade)
 {
   RuleCascadeData * const cascade = aCascade;
@@ -2694,10 +2802,6 @@ AddRule(RuleValue* aRuleInfo, RuleCascadeData* aCascade)
 #endif
   }
 
-  nsTArray<nsCSSSelector*>* stateArray = &cascade->mStateSelectors;
-  nsTArray<nsCSSSelector*>* classArray = &cascade->mClassSelectors;
-  nsTArray<nsCSSSelector*>* idArray = &cascade->mIDSelectors;
-  
   for (nsCSSSelector* selector = aRuleInfo->mSelector;
            selector; selector = selector->mNext) {
     if (selector->IsPseudoElement()) {
@@ -2717,38 +2821,8 @@ AddRule(RuleValue* aRuleInfo, RuleCascadeData* aCascade)
     // in the future if :not() is extended. 
     for (nsCSSSelector* negation = selector; negation;
          negation = negation->mNegations) {
-      // Track the selectors that depend on document states.
-      AddSelectorDocumentStates(*negation, &cascade->mSelectorDocumentStates);
-
-      // Build mStateSelectors.
-      if (IsStateSelector(*negation))
-        stateArray->AppendElement(selector);
-
-      // Build mIDSelectors
-      if (negation->mIDList) {
-        idArray->AppendElement(selector);
-      }
-      
-      // Build mClassSelectors
-      if (negation->mClassList) {
-        classArray->AppendElement(selector);
-      }
-
-      // Build mAttributeSelectors.
-      for (nsAttrSelector *attr = negation->mAttrList; attr;
-           attr = attr->mNext) {
-        nsTArray<nsCSSSelector*> *array =
-          cascade->AttributeListFor(attr->mCasedAttr);
-        if (!array)
-          return PR_FALSE;
-        array->AppendElement(selector);
-        if (attr->mLowercaseAttr != attr->mCasedAttr) {
-          nsTArray<nsCSSSelector*> *array =
-            cascade->AttributeListFor(attr->mLowercaseAttr);
-          if (!array)
-            return PR_FALSE;
-          array->AppendElement(selector);
-        }          
+      if (!AddSelector(cascade, selector, negation)) {
+        return PR_FALSE;
       }
     }
   }
