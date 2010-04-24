@@ -2124,8 +2124,10 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
       currentNode = relevantNode;
     }
     if (aCanCreate) {
-      GetAccService()->GetAccessibleInWeakShell(currentNode, mWeakShell, 
-                                                aAccessible);
+      nsRefPtr<nsAccessNode> acc =
+        GetAccService()->GetAccessibleInWeakShell(currentNode, mWeakShell);
+      if (acc)
+        CallQueryInterface(acc, aAccessible);
     }
     else { // Only return cached accessibles, don't create anything
       nsAccessNode* accessNode = GetCachedAccessNode(currentNode);

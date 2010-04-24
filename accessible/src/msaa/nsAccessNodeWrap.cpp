@@ -410,14 +410,11 @@ ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
     return NULL;
 
   ISimpleDOMNode *iNode = NULL;
-  nsCOMPtr<nsIAccessible> nsAcc;
-  GetAccService()->GetAccessibleInWeakShell(node, mWeakShell, 
-                                            getter_AddRefs(nsAcc));
-  if (nsAcc) {
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(nsAcc));
-    NS_ASSERTION(accessNode, "nsIAccessible impl does not inherit from nsIAccessNode");
-    IAccessible *msaaAccessible;
-    nsAcc->GetNativeInterface((void**)&msaaAccessible); // addrefs
+  nsRefPtr<nsAccessible> acc =
+    GetAccService()->GetAccessibleInWeakShell(node, mWeakShell);
+  if (acc) {
+    IAccessible *msaaAccessible = nsnull;
+    acc->GetNativeInterface((void**)&msaaAccessible); // addrefs
     msaaAccessible->QueryInterface(IID_ISimpleDOMNode, (void**)&iNode); // addrefs
     msaaAccessible->Release(); // Release IAccessible
   }

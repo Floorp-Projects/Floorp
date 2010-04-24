@@ -506,11 +506,10 @@ nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
     GetAccService()->GetCachedAccessNode(aNode, mWeakShell);
 
   if (!accessNode) {
-    nsCOMPtr<nsIAccessible> accessible;
-    GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell,
-                                              getter_AddRefs(accessible));
+    nsRefPtr<nsAccessible> accessible =
+      GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
 
-    accessNode = do_QueryInterface(accessible);
+    accessNode = accessible;
   }
 
   if (accessNode) {
