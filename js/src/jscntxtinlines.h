@@ -78,7 +78,7 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case WEAKROOTS:
-        static_cast<AutoSaveWeakRoots *>(this)->savedRoots.mark(trc);
+        static_cast<AutoSaveRestoreWeakRoots *>(this)->savedRoots.mark(trc);
         return;
 
       case PARSER:

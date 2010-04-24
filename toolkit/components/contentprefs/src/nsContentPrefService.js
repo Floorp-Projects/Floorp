@@ -69,7 +69,7 @@ ContentPrefService.prototype = {
 
   // Observer Service
   __observerSvc: null,
-  get _observerSvc ContentPrefService_get__observerSvc() {
+  get _observerSvc() {
     if (!this.__observerSvc)
       this.__observerSvc = Cc["@mozilla.org/observer-service;1"].
                            getService(Ci.nsIObserverService);
@@ -78,7 +78,7 @@ ContentPrefService.prototype = {
 
   // Console Service
   __consoleSvc: null,
-  get _consoleSvc ContentPrefService_get__consoleSvc() {
+  get _consoleSvc() {
     if (!this.__consoleSvc)
       this.__consoleSvc = Cc["@mozilla.org/consoleservice;1"].
                           getService(Ci.nsIConsoleService);
@@ -87,7 +87,7 @@ ContentPrefService.prototype = {
 
   // Preferences Service
   __prefSvc: null,
-  get _prefSvc ContentPrefService_get__prefSvc() {
+  get _prefSvc() {
     if (!this.__prefSvc)
       this.__prefSvc = Cc["@mozilla.org/preferences-service;1"].
                        getService(Ci.nsIPrefBranch2);
@@ -399,14 +399,14 @@ ContentPrefService.prototype = {
   },
 
   _grouper: null,
-  get grouper ContentPrefService_get_grouper() {
+  get grouper() {
     if (!this._grouper)
       this._grouper = Cc["@mozilla.org/content-pref/hostname-grouper;1"].
                       getService(Ci.nsIContentURIGrouper);
     return this._grouper;
   },
 
-  get DBConnection ContentPrefService_get_DBConnection() {
+  get DBConnection() {
     return this._dbConnection;
   },
 
@@ -415,7 +415,7 @@ ContentPrefService.prototype = {
   // Data Retrieval & Modification
 
   __stmtSelectPref: null,
-  get _stmtSelectPref ContentPrefService_get__stmtSelectPref() {
+  get _stmtSelectPref() {
     if (!this.__stmtSelectPref)
       this.__stmtSelectPref = this._dbCreateStatement(
         "SELECT prefs.value AS value " +
@@ -449,7 +449,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtSelectGlobalPref: null,
-  get _stmtSelectGlobalPref ContentPrefService_get__stmtSelectGlobalPref() {
+  get _stmtSelectGlobalPref() {
     if (!this.__stmtSelectGlobalPref)
       this.__stmtSelectGlobalPref = this._dbCreateStatement(
         "SELECT prefs.value AS value " +
@@ -481,7 +481,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtSelectGroupID: null,
-  get _stmtSelectGroupID ContentPrefService_get__stmtSelectGroupID() {
+  get _stmtSelectGroupID() {
     if (!this.__stmtSelectGroupID)
       this.__stmtSelectGroupID = this._dbCreateStatement(
         "SELECT groups.id AS id " +
@@ -509,7 +509,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtInsertGroup: null,
-  get _stmtInsertGroup ContentPrefService_get__stmtInsertGroup() {
+  get _stmtInsertGroup() {
     if (!this.__stmtInsertGroup)
       this.__stmtInsertGroup = this._dbCreateStatement(
         "INSERT INTO groups (name) VALUES (:name)"
@@ -525,7 +525,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtSelectSettingID: null,
-  get _stmtSelectSettingID ContentPrefService_get__stmtSelectSettingID() {
+  get _stmtSelectSettingID() {
     if (!this.__stmtSelectSettingID)
       this.__stmtSelectSettingID = this._dbCreateStatement(
         "SELECT id FROM settings WHERE name = :name"
@@ -551,7 +551,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtInsertSetting: null,
-  get _stmtInsertSetting ContentPrefService_get__stmtInsertSetting() {
+  get _stmtInsertSetting() {
     if (!this.__stmtInsertSetting)
       this.__stmtInsertSetting = this._dbCreateStatement(
         "INSERT INTO settings (name) VALUES (:name)"
@@ -567,7 +567,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtSelectPrefID: null,
-  get _stmtSelectPrefID ContentPrefService_get__stmtSelectPrefID() {
+  get _stmtSelectPrefID() {
     if (!this.__stmtSelectPrefID)
       this.__stmtSelectPrefID = this._dbCreateStatement(
         "SELECT id FROM prefs WHERE groupID = :groupID AND settingID = :settingID"
@@ -594,7 +594,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtSelectGlobalPrefID: null,
-  get _stmtSelectGlobalPrefID ContentPrefService_get__stmtSelectGlobalPrefID() {
+  get _stmtSelectGlobalPrefID() {
     if (!this.__stmtSelectGlobalPrefID)
       this.__stmtSelectGlobalPrefID = this._dbCreateStatement(
         "SELECT id FROM prefs WHERE groupID IS NULL AND settingID = :settingID"
@@ -620,7 +620,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtInsertPref: null,
-  get _stmtInsertPref ContentPrefService_get__stmtInsertPref() {
+  get _stmtInsertPref() {
     if (!this.__stmtInsertPref)
       this.__stmtInsertPref = this._dbCreateStatement(
         "INSERT INTO prefs (groupID, settingID, value) " +
@@ -639,7 +639,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtUpdatePref: null,
-  get _stmtUpdatePref ContentPrefService_get__stmtUpdatePref() {
+  get _stmtUpdatePref() {
     if (!this.__stmtUpdatePref)
       this.__stmtUpdatePref = this._dbCreateStatement(
         "UPDATE prefs SET value = :value WHERE id = :id"
@@ -655,7 +655,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtDeletePref: null,
-  get _stmtDeletePref ContentPrefService_get__stmtDeletePref() {
+  get _stmtDeletePref() {
     if (!this.__stmtDeletePref)
       this.__stmtDeletePref = this._dbCreateStatement(
         "DELETE FROM prefs WHERE id = :id"
@@ -670,7 +670,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtDeleteSettingIfUnused: null,
-  get _stmtDeleteSettingIfUnused ContentPrefService_get__stmtDeleteSettingIfUnused() {
+  get _stmtDeleteSettingIfUnused() {
     if (!this.__stmtDeleteSettingIfUnused)
       this.__stmtDeleteSettingIfUnused = this._dbCreateStatement(
         "DELETE FROM settings WHERE id = :id " +
@@ -686,7 +686,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtDeleteGroupIfUnused: null,
-  get _stmtDeleteGroupIfUnused ContentPrefService_get__stmtDeleteGroupIfUnused() {
+  get _stmtDeleteGroupIfUnused() {
     if (!this.__stmtDeleteGroupIfUnused)
       this.__stmtDeleteGroupIfUnused = this._dbCreateStatement(
         "DELETE FROM groups WHERE id = :id " +
@@ -702,7 +702,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtSelectPrefs: null,
-  get _stmtSelectPrefs ContentPrefService_get__stmtSelectPrefs() {
+  get _stmtSelectPrefs() {
     if (!this.__stmtSelectPrefs)
       this.__stmtSelectPrefs = this._dbCreateStatement(
         "SELECT settings.name AS name, prefs.value AS value " +
@@ -734,7 +734,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtSelectGlobalPrefs: null,
-  get _stmtSelectGlobalPrefs ContentPrefService_get__stmtSelectGlobalPrefs() {
+  get _stmtSelectGlobalPrefs() {
     if (!this.__stmtSelectGlobalPrefs)
       this.__stmtSelectGlobalPrefs = this._dbCreateStatement(
         "SELECT settings.name AS name, prefs.value AS value " +
@@ -763,7 +763,7 @@ ContentPrefService.prototype = {
   },
 
   __stmtSelectPrefsByName: null,
-  get _stmtSelectPrefsByName ContentPrefService_get__stmtSelectPrefsByName() {
+  get _stmtSelectPrefsByName() {
     if (!this.__stmtSelectPrefsByName)
       this.__stmtSelectPrefsByName = this._dbCreateStatement(
         "SELECT groups.name AS groupName, prefs.value AS value " +

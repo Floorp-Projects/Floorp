@@ -6268,7 +6268,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_FILTER:
         if (!js_EmitTree(cx, cg, pn->pn_left))
             return JS_FALSE;
-        jmp = js_Emit3(cx, cg, JSOP_FILTER, 0, 0);
+        jmp = EmitJump(cx, cg, JSOP_FILTER, 0);
         if (jmp < 0)
             return JS_FALSE;
         top = js_Emit1(cx, cg, JSOP_TRACE);

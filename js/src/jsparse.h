@@ -945,7 +945,7 @@ struct Parser : private js::AutoGCRooter
     ~Parser();
 
     friend void js::AutoGCRooter::trace(JSTracer *trc);
-    friend struct JSTreeContext;
+    friend struct ::JSTreeContext;
     friend struct Compiler;
 
     /*

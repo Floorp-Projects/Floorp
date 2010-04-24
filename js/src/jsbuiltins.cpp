@@ -347,7 +347,7 @@ JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT,
                      ACC_STORE_ANY)
 
 JS_REQUIRES_STACK JSBool FASTCALL
-js_PopInterpFrame(JSContext* cx, InterpState* state)
+js_PopInterpFrame(JSContext* cx, TracerState* state)
 {
     JS_ASSERT(cx->fp && cx->fp->down);
     JSInlineFrame* ifp = (JSInlineFrame*)cx->fp;
@@ -385,7 +385,7 @@ js_PopInterpFrame(JSContext* cx, InterpState* state)
     *state->inlineCallCountp = *state->inlineCallCountp - 1;
     return JS_TRUE;
 }
-JS_DEFINE_CALLINFO_2(extern, BOOL, js_PopInterpFrame, CONTEXT, INTERPSTATE, 0, ACC_STORE_ANY)
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_PopInterpFrame, CONTEXT, TRACERSTATE, 0, ACC_STORE_ANY)
 
 JSString* FASTCALL
 js_ConcatN(JSContext *cx, JSString **strArray, uint32 size)

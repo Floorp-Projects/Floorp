@@ -7993,7 +7993,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 
                     /* We have to fake a 'function' token here. */
                     tokenStream.mungeCurrentToken(TOK_FUNCTION, JSOP_NOP);
-                    pn2 = functionExpr();
+                    pn2 = functionDef(JSFUN_LAMBDA, false);
                     pn2 = JSParseNode::newBinaryOrAppend(TOK_COLON, op, pn3, pn2, tc);
                     goto skip;
                 }

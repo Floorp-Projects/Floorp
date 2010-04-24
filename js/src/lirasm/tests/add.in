@@ -1,4 +1,4 @@
-two = imml 2
-three = imml 3
-res = addl two three
-retl res
+two = immi 2
+three = immi 3
+res = addi two three
+reti res
