@@ -8,6 +8,19 @@ window.TabItem = function(container, tab) {
 
 window.TabItem.prototype = $.extend(new Item(), {
   // ----------  
+  getStorageData: function() {
+    return {
+      bounds: this.bounds, 
+      url: this.tab.url
+    };
+  },
+  
+  // ----------  
+  getURL: function() {
+    return this.tab.url;
+  },
+  
+  // ----------  
   _getSizeExtra: function() {
     var $container = $(this.container);
 
@@ -153,6 +166,7 @@ window.TabItems = {
   tabHeight: 120, 
   fontSize: 9,
 
+  // ----------
   init: function() {
     var self = this;
     
@@ -237,14 +251,8 @@ window.TabItems = {
         items.push(item); 
       });
       
-      if($div.length == 1)
+      if($div.length == 1 && Groups)
         Groups.newTab($div.data('tabItem'));
-      else {
-        var box = Items.getPageBounds();
-        box.inset(20, 20);
-        
-        Items.arrange(items, box, {padding: 10, animate:false});
-      }
       
       // TODO: Figure out this really weird bug?
       // Why is that:
@@ -263,6 +271,47 @@ window.TabItems = {
     }
     
     window.TabMirror.customize(mod);
+  },
+
+  // ----------
+  getItems: function() {
+    var items = [];
+    $('.tab').each(function() {
+      items.push($(this).data('tabItem'));
+    });
+    
+    return items;
+  },
+  
+  // ----------
+  getStorageData: function() {
+    var data = {tabs: []};
+    var items = this.getItems();
+    $.each(items, function(index, item) {
+      data.tabs.push(item.getStorageData());
+    });
+    
+    return data;
+  },
+  
+  // ----------
+  reconstitute: function(data) {
+    var items = this.getItems();
+    if(data && data.tabs) {
+      $.each(data.tabs, function(index, tab) {
+        $.each(items, function(index, item) {
+          if(item.getURL() == tab.url) {
+            item.setBounds(tab.bounds);
+            return false;
+          }
+        });
+      });
+    } else {
+        var box = Items.getPageBounds();
+        box.inset(20, 20);
+        
+        Items.arrange(items, box, {padding: 10, animate:false});
+    }
   }
 };
 

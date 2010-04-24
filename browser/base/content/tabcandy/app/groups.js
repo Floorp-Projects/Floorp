@@ -41,7 +41,10 @@ window.Group = function(listOfEls, options) {
 
   var self = this;
 
-  var rectToBe = options.bounds;
+  var rectToBe;
+  if(options.bounds)
+    rectToBe = new Rect(options.bounds);
+    
   if(!rectToBe) {
     var boundingBox = this._getBoundingBox(listOfEls);
     var padding = 30;
@@ -622,17 +625,6 @@ window.Groups = {
   
   // ----------
   init: function() {
-    var self = this;
-    setTimeout(function() {
-      // we do this in a timeout, as window.innerHeight hasn't adjusted for Firebug initially
-      var pad = 5;
-      var sw = window.innerWidth;
-      var sh = window.innerHeight;
-      var w = sw - (pad * 2);
-      var h = TabItems.tabHeight;
-      var box = new Rect(pad, sh - (h + pad), w, h);
-      self.newTabGroup = new Group([], {bounds: box, title: 'New Tabs', locked: true}); 
-    }, 1000);
   },
 
   // ----------
@@ -643,6 +635,23 @@ window.Groups = {
     });
     
     return data;
+  },
+  
+  // ----------
+  reconstitute: function(data) {
+    if(data && data.groups) {
+      $.each(data.groups, function(index, group) {
+        new Group([], group); 
+      });
+    } else {
+      var pad = 5;
+      var sw = window.innerWidth;
+      var sh = window.innerHeight;
+      var w = sw - (pad * 2);
+      var h = TabItems.tabHeight;
+      var box = new Rect(pad, sh - (h + pad), w, h);
+      new Group([], {bounds: box, title: 'New Tabs', locked: true}); 
+    }
   },
   
   // ----------  
