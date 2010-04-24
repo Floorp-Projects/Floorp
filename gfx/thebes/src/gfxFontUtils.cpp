@@ -488,6 +488,8 @@ typedef struct {
     AutoSwap_PRUint16 arrays[1];
 } Format4Cmap;
 
+#pragma pack()
+
 PRUint32
 gfxFontUtils::MapCharToGlyphFormat4(const PRUint8 *aBuf, PRUnichar aCh)
 {
@@ -772,6 +774,8 @@ struct KernTableSubtableHeaderVersion1 {
     AutoSwap_PRUint16    coverage;
     AutoSwap_PRUint16    tupleIndex;
 };
+
+#pragma pack()
 
 static PRBool
 IsValidSFNTVersion(PRUint32 version)
@@ -1538,6 +1542,8 @@ gfxFontUtils::ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID,
     return NS_OK;
 }
 
+#ifdef XP_WIN
+
 // Embedded OpenType (EOT) handling
 // needed for dealing with downloadable fonts on Windows
 //
@@ -1550,6 +1556,8 @@ gfxFontUtils::ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID,
 // stored in big-endian format)
 //
 // EOT header is stored in *little* endian order!!
+
+#pragma pack(1)
 
 struct EOTFixedHeader {
 
@@ -1587,9 +1595,9 @@ struct EOTFixedHeader {
 
 };
 
-// EOT headers are only used on Windows
+#pragma pack()
 
-#ifdef XP_WIN
+// EOT headers are only used on Windows
 
 // EOT variable-sized header (version 0x00020001 - contains 4 name
 // fields, each with the structure):
