@@ -41,7 +41,7 @@ window.Point.prototype = {
 window.Rect = function(a, top, width, height) {
   // Note: perhaps 'a' should really be called 'rectOrLeft'
   if(typeof(a.left) != 'undefined' && typeof(a.top) != 'undefined'
-      && typeof(a.right) != 'undefined' && typeof(a.bottom) != 'undefined') {
+      && typeof(a.width) != 'undefined' && typeof(a.height) != 'undefined') {
     this.left = a.left;
     this.top = a.top;
     this.width = a.width;
