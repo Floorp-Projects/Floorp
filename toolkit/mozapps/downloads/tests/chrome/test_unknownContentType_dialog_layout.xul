@@ -86,6 +86,9 @@ let windowObserver = {
   observe: function(aSubject, aTopic, aData) {
     let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
 
+    // Temporary code for debugging bug 538462
+    ok(true, "windowObserver.observe got " + aTopic + " notification for " + win.location);
+
     if (aTopic == "domwindowclosed") {
       if (win.location == UCT_URI)
         loadNextTest();
@@ -94,10 +97,12 @@ let windowObserver = {
 
     // domwindowopened
     win.addEventListener("load", function onLoad(event) {
+      ok(true, "got load event for " + win.location);
       win.removeEventListener("load", onLoad, false);
 
       // Let the dialog initialize
       SimpleTest.executeSoon(function() {
+        ok(true, "running checkWindow on " + win.location);
         checkWindow(win);
       });
     }, false);
