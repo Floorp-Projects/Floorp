@@ -298,8 +298,8 @@ JO(JSContext *cx, jsval *vp, StringifyContext *scx)
         }
 
         // We should have a string id by this point. Either from 
-        // JS_Enumerate's id array, or by converting the values
-        // in the whitelist.
+        // JS_Enumerate's id array, or by converting an element
+        // of the whitelist.
         JS_ASSERT(JSVAL_IS_STRING(ID_TO_VALUE(id)));
 
         if (!JS_GetPropertyById(cx, obj, id, &outputValue))
