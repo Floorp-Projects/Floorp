@@ -54,6 +54,19 @@ function run() {
             namespaces = "";
         }
         style_text.data = namespaces + selector + "{ z-index: " + zi + " }";
+
+        var idx = style_text.parentNode.sheet.cssRules.length - 1;
+        if (namespaces == "") {
+            is(idx, 0, "unexpected rule index");
+        }
+        if (idx < 0 ||
+            style_text.parentNode.sheet.cssRules[idx].type !=
+                CSSRule.STYLE_RULE)
+        {
+            ok(false, "selector " + selector + " could not be parsed");
+            return;
+        }
+
         var should_match = match_fn(ifdoc);
         var should_not_match = notmatch_fn(ifdoc);
         if (should_match.length + should_not_match.length == 0) {
@@ -76,10 +89,6 @@ function run() {
         // but it should produce a selector that matches the same
         // elements.
         zi = ++gCounter;
-        var idx = style_text.parentNode.sheet.cssRules.length - 1;
-        if (namespaces == "") {
-            is(idx, 0, "unexpected rule index");
-        }
         var ser1 = style_text.parentNode.sheet.cssRules[idx].selectorText;
         style_text.data = namespaces + ser1 + "{ z-index: " + zi + " }";
         for (var i = 0; i < should_match.length; ++i) {
@@ -175,8 +184,11 @@ function run() {
         var zi = ++gCounter;
         style_text.data = "p, " + selector + "{ z-index: " + zi + " }";
         var should_match = ifdoc.getElementsByTagName("p")[0];
-        is(ifwin.getComputedStyle(should_match, "").zIndex, zi,
-           "selector " + selector + " was parsed");
+        var parsed = ifwin.getComputedStyle(should_match, "").zIndex == zi;
+        ok(parsed, "selector " + selector + " was parsed");
+        if (!parsed) {
+            return;
+        }
 
         // Test that it serializes to something that is also parseable.
         var ser1 = style_elem.sheet.cssRules[0].selectorText;
@@ -237,6 +249,22 @@ function run() {
         ifdoc.body.innerHTML = "";
         style_text.data = "";
     }
+
+    function test_unbalanced_unparseable(selector)
+    {
+        var zi1 = ++gCounter;
+        var zi2 = ++gCounter;
+        ifdoc.body.innerHTML = "<p></p>";
+        style_text.data = "p, " + selector + "{ z-index: " + zi1 + " }";
+        var should_not_match = ifdoc.getElementsByTagName("p")[0];
+        is(ifwin.getComputedStyle(should_not_match, "").zIndex, "auto",
+           "selector " + selector + " was a parser error");
+        is(style_text.parentNode.sheet.cssRules.length, 0,
+           "sheet should have no rules since " + selector + " is parse error");
+        ifdoc.body.innerHTML = "";
+        style_text.data = "";
+    }
+
 
     // [attr= ] selector
     test_parseable("[attr=\"x\"]");
@@ -768,14 +796,10 @@ function run() {
                           bodychildset([5, 6, 7, 8, 9, 10]));
 
     // bug 528096 (tree pseudos)
-    test_selector_in_html(":-moz-tree-column((){} a", single_a,
-                          empty_set, set_single, html_default_ns);
-    test_selector_in_html(":-moz-tree-column(x(){} a", single_a,
-                          empty_set, set_single, html_default_ns);
-    test_selector_in_html(":-moz-tree-column(a b (){} a", single_a,
-                          empty_set, set_single, html_default_ns);
-    test_selector_in_html(":-moz-tree-column(a, b (){} a", single_a,
-                          empty_set, set_single, html_default_ns);
+    test_unbalanced_unparseable(":-moz-tree-column((){} a");
+    test_unbalanced_unparseable(":-moz-tree-column(x(){} a");
+    test_unbalanced_unparseable(":-moz-tree-column(a b (){} a");
+    test_unbalanced_unparseable(":-moz-tree-column(a, b (){} a");
 
     // Bug 543428 (escaping)
     test_selector_in_html("\\32|a", single_a, set_single, empty_set,
