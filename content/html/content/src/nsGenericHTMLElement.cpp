@@ -681,14 +681,12 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     loader->SetEnabled(PR_FALSE);
   }
 
-  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(static_cast<nsIContent *>
-                                                             (this)));
-  nsresult rv = nsContentUtils::CreateContextualFragment(thisNode, aInnerHTML,
+  nsresult rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML,
                                                          PR_FALSE,
                                                          getter_AddRefs(df));
+  nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDOMNode> tmpNode;
-    rv = thisNode->AppendChild(df, getter_AddRefs(tmpNode));
+    static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
   }
 
   if (scripts_enabled) {
