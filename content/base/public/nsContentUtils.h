@@ -1596,6 +1596,15 @@ public:
    */
   static void PlatformToDOMLineBreaks(nsString &aString);
 
+  static PRBool IsHandlingKeyBoardEvent()
+  {
+    return sIsHandlingKeyBoardEvent;
+  }
+
+  static void SetIsHandlingKeyBoardEvent(PRBool aHandling)
+  {
+    sIsHandlingKeyBoardEvent = aHandling;
+  }
 private:
 
   static PRBool InitializeEventTable();
@@ -1671,6 +1680,8 @@ private:
   static PRUint32 sScriptBlockerCountWhereRunnersPrevented;
 
   static nsIInterfaceRequestor* sSameOriginChecker;
+
+  static PRBool sIsHandlingKeyBoardEvent;
 };
 
 #define NS_HOLD_JS_OBJECTS(obj, clazz)                                         \

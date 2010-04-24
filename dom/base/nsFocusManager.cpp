@@ -82,6 +82,8 @@
 #include "nsImageMapUtils.h"
 #include "nsTreeWalker.h"
 #include "nsIDOMNodeFilter.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsIPrincipal.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
@@ -1044,6 +1046,25 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
 
   // if the new element is in the same window as the currently focused element 
   PRBool isElementInFocusedWindow = (mFocusedWindow == newWindow);
+
+  if (!isElementInFocusedWindow && mFocusedWindow && newWindow &&
+      nsContentUtils::IsHandlingKeyBoardEvent()) {
+    nsCOMPtr<nsIScriptObjectPrincipal> focused =
+      do_QueryInterface(mFocusedWindow);
+    nsCOMPtr<nsIScriptObjectPrincipal> newFocus =
+      do_QueryInterface(newWindow);
+    nsIPrincipal* focusedPrincipal = focused->GetPrincipal();
+    nsIPrincipal* newPrincipal = newFocus->GetPrincipal();
+    if (!focusedPrincipal || !newPrincipal) {
+      return;
+    }
+    PRBool subsumes = PR_FALSE;
+    focusedPrincipal->Subsumes(newPrincipal, &subsumes);
+    if (!subsumes && !nsContentUtils::IsCallerTrustedForWrite()) {
+      NS_WARNING("Not allowed to focus the new window!");
+      return;
+    }
+  }
 
   // to check if the new element is in the active window, compare the
   // new root docshell for the new element with the active window's docshell.
