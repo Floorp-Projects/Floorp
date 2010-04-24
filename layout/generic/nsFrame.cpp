@@ -5969,7 +5969,7 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
         // Pass in default tabindex of -1 for nonfocusable and 0 for focusable
         tabIndex = 0;
       }
-      isFocusable = mContent->IsFocusable(&tabIndex);
+      isFocusable = mContent->IsFocusable(&tabIndex, aWithMouse);
       if (!isFocusable && !aWithMouse &&
           GetType() == nsGkAtoms::scrollFrame &&
           mContent->IsHTML() &&

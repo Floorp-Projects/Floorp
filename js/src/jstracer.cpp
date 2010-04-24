@@ -7333,6 +7333,8 @@ arm_read_auxv()
                 uint32_t hwcap = aux.a_un.a_val;
                 if (getenv("ARM_FORCE_HWCAP"))
                     hwcap = strtoul(getenv("ARM_FORCE_HWCAP"), NULL, 0);
+                else if (getenv("_SBOX_DIR"))
+                    continue;  // Ignore the rest, if we're running in scratchbox
                 // hardcode these values to avoid depending on specific versions
                 // of the hwcap header, e.g. HWCAP_NEON
                 arm_has_vfp = (hwcap & 64) != 0;
@@ -7343,6 +7345,8 @@ arm_read_auxv()
                 const char *plat = (const char*) aux.a_un.a_val;
                 if (getenv("ARM_FORCE_PLATFORM"))
                     plat = getenv("ARM_FORCE_PLATFORM");
+                else if (getenv("_SBOX_DIR"))
+                    continue;  // Ignore the rest, if we're running in scratchbox
                 // The platform string has the form "v[0-9][lb]". The "l" or "b" indicate little-
                 // or big-endian variants and the digit indicates the version of the platform.
                 // We can only accept ARMv4 and above, but allow anything up to ARMv9 for future
@@ -7353,14 +7357,6 @@ arm_read_auxv()
                     ((plat[2] == 'l') || (plat[2] == 'b')))
                 {
                     arm_arch = plat[1] - '0';
-                }
-                else
-                {
-                    // For production code, ignore invalid (or unexpected) platform strings and
-                    // fall back to the default. For debug code, use an assertion to catch this
-                    // when not running in scratchbox.
-                    if (getenv("_SBOX_DIR") == NULL)
-                        JS_ASSERT(false);
                 }
             }
         }

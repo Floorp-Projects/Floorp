@@ -112,9 +112,8 @@ TaskbarPreview::~TaskbarPreview() {
   if (sActivePreview == this)
     sActivePreview = nsnull;
 
-  // Here we remove the hook since this preview is dying before the nsWindow
-  if (mWnd)
-    DetachFromNSWindow(PR_TRUE);
+  // Our subclass should have invoked DetachFromNSWindow already.
+  NS_ASSERTION(!mWnd, "TaskbarPreview::DetachFromNSWindow was not called before destruction");
 
   // Make sure to release before potentially uninitializing COM
   mTaskbar = NULL;
@@ -240,11 +239,9 @@ TaskbarPreview::Disable() {
 }
 
 void
-TaskbarPreview::DetachFromNSWindow(PRBool windowIsAlive) {
-  if (windowIsAlive) {
-    WindowHook &hook = GetWindowHook();
-    hook.RemoveMonitor(WM_DESTROY, MainWindowHook, this);
-  }
+TaskbarPreview::DetachFromNSWindow() {
+  WindowHook &hook = GetWindowHook();
+  hook.RemoveMonitor(WM_DESTROY, MainWindowHook, this);
   mWnd = NULL;
 }
 
@@ -395,9 +392,8 @@ TaskbarPreview::MainWindowHook(void *aContext,
   TaskbarPreview *preview = reinterpret_cast<TaskbarPreview*>(aContext);
   if (nMsg == WM_DESTROY) {
     // nsWindow is being destroyed
-    // Don't remove the hook since it is currently in dispatch
-    // and the window is being destroyed
-    preview->DetachFromNSWindow(PR_FALSE);
+    // We can't really do anything at this point including removing hooks
+    preview->mWnd = NULL;
   } else {
     nsWindow *window = nsWindow::GetNSWindowPtr(preview->mWnd);
     NS_ASSERTION(window, "Cannot use taskbar previews in an embedded context!");

@@ -1730,6 +1730,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
       // XUL textboxes set the native appearance on the containing box, while
       // concrete focus is set on the html:input element within it. We can
       // though, check the focused attribute of xul textboxes in this case.
+      // On Mac, focus rings are always shown for textboxes, so we do not need
+      // to check the window's focus ring state here
       if (aFrame->GetContent()->IsXUL() && IsFocused(aFrame)) {
         eventState |= NS_EVENT_STATE_FOCUS;
       }
