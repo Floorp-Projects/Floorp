@@ -6,7 +6,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Accessible Application Accessible hierarchy tests">
 
-  <script type="application/javascript" 
+  <script type="application/javascript"
           src="chrome://mochikit/content/MochiKit/packed.js" />
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
@@ -21,7 +21,7 @@
     ////////////////////////////////////////////////////////////////////////////
     // Test
 
-    // Note: but 560239 can be tested if this test runs in standalone mode only.
+    // Note: bug 560239 can be tested if this test runs in standalone mode only.
  
     var gURL = "chrome://mochikit/content/a11y/accessible/tree/wnd.xul"
     var gWnd = window.openDialog(gURL, "wnd", "chrome,width=600,height=600");
