@@ -275,16 +275,24 @@ function UIClass(){
   var data = Storage.read();
   if(data.hideTabBar)
     this.hideTabBar();
-  
-  $(window).unload(function() {
-    var data = {
-      dataVersion: 1,
-      hideTabBar: self.tabBar._hidden,
-      groups: Groups.getStorageData()
-    };
     
-    Storage.write(data);
+  Groups.reconstitute(data.groups);
+  TabItems.reconstitute(data.tabs);
+  
+  $(window).bind('beforeunload', function() {
+    if(self.initialized) {
+      var data = {
+        dataVersion: 1,
+        hideTabBar: self.tabBar._hidden,
+        groups: Groups.getStorageData(),
+        tabs: TabItems.getStorageData()
+      };
+      
+      Storage.write(data);
+    }
   });
+  
+  this.initialized = true;
 };
 
 // ----------
