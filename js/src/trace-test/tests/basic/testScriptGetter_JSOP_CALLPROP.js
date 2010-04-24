@@ -8,5 +8,6 @@ for (var i = 0; i < 9; i++)
     g += a.p();
 assertEq(g, 'qqqqqqqqq');
 
-print(uneval(jitstats));
+if (jitstats)
+    print(uneval(jitstats));
 checkStats({recorderStarted: 1, recorderAborted: 0, traceCompleted: 1, traceTriggered: 1});
