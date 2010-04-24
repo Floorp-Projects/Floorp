@@ -46,7 +46,6 @@
 #include "jsiter.h"
 #include "jsobj.h"
 #include "jsscope.h"
-#include "jsxml.h"
 
 #ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
@@ -283,62 +282,6 @@ JSObject::zeroRegExpLastIndex()
 {
     JS_ASSERT(isRegExp());
     fslots[JSSLOT_REGEXP_LAST_INDEX] = JSVAL_ZERO;
-}
-
-inline jsval
-JSObject::getNamePrefix() const
-{
-    JS_ASSERT(isNamespace() || isQName());
-    return fslots[JSSLOT_NAME_PREFIX];
-}
-
-inline void
-JSObject::setNamePrefix(jsval prefix)
-{
-    JS_ASSERT(isNamespace() || isQName());
-    fslots[JSSLOT_NAME_PREFIX] = prefix;
-}
-
-inline jsval
-JSObject::getNameURI() const
-{
-    JS_ASSERT(isNamespace() || isQName());
-    return fslots[JSSLOT_NAME_URI];
-}
-
-inline void
-JSObject::setNameURI(jsval uri)
-{
-    JS_ASSERT(isNamespace() || isQName());
-    fslots[JSSLOT_NAME_URI] = uri;
-}
-
-inline jsval
-JSObject::getNamespaceDeclared() const
-{
-    JS_ASSERT(isNamespace());
-    return fslots[JSSLOT_NAMESPACE_DECLARED];
-}
-
-inline void
-JSObject::setNamespaceDeclared(jsval decl)
-{
-    JS_ASSERT(isNamespace());
-    fslots[JSSLOT_NAMESPACE_DECLARED] = decl;
-}
-
-inline jsval
-JSObject::getQNameLocalName() const
-{
-    JS_ASSERT(isQName());
-    return fslots[JSSLOT_QNAME_LOCAL_NAME];
-}
-
-inline void
-JSObject::setQNameLocalName(jsval name)
-{
-    JS_ASSERT(isQName());
-    fslots[JSSLOT_QNAME_LOCAL_NAME] = name;
 }
 
 inline void
