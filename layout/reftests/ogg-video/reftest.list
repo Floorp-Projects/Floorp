@@ -15,9 +15,7 @@ random HTTP(..) == object-aspect-ratio-1b.xhtml aspect-ratio-1-ref.html
 HTTP(..) == offset-1.xhtml offset-1-ref.html
 random HTTP(..) == object-aspect-ratio-2a.xhtml aspect-ratio-2-ref.html
 random HTTP(..) == object-aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
-# XXX Marking zoomed-1.xhtml as random, pending an investigation/backout
-# in bug 561385
-random-if(MOZ_WIDGET_TOOLKIT=="cocoa") skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html
+fails-if(http.oscpu.match(/Mac\x20OS\x20X\x2010\.6$/)) skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == zoomed-1.xhtml zoomed-1-ref.html # Fails on 10.6, bug 561385
 == poster-1.html poster-ref-blue250x200.html
 == poster-2.html poster-ref-black140x100.html
 == poster-3.html poster-ref-black140x100.html
