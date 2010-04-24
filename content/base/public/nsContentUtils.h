@@ -1019,7 +1019,7 @@ public:
    *                         transferred to the caller.
    * @param aReturn [out] the created DocumentFragment
    */
-  static nsresult CreateContextualFragment(nsIDOMNode* aContextNode,
+  static nsresult CreateContextualFragment(nsINode* aContextNode,
                                            const nsAString& aFragment,
                                            PRBool aWillOwnFragment,
                                            nsIDOMDocumentFragment** aReturn);
