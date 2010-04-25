@@ -514,11 +514,6 @@ JSBool
 js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
              JSCharBuffer &cb)
 {
-    // XXX stack
-    JSObject *stack = JS_NewArrayObject(cx, 0, NULL);
-    if (!stack)
-        return JS_FALSE;
-
     StringifyContext scx(cx, cb, replacer);
     if (!InitializeGap(cx, space, scx.gap))
         return JS_FALSE;
@@ -527,6 +522,7 @@ js_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
     if (!obj)
         return JS_FALSE;
 
+    AutoObjectRooter tvr(cx, obj);
     if (!obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
                              *vp, NULL, NULL, JSPROP_ENUMERATE)) {
         return JS_FALSE;
