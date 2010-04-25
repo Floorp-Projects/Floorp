@@ -163,6 +163,8 @@ static bool crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args, uint
 static bool propertyAndMethod(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getTopLevelWindowActivationState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getTopLevelWindowActivationEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getFocusState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getFocusEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getEventModel(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
@@ -210,6 +212,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "propertyAndMethod",
   "getTopLevelWindowActivationState",
   "getTopLevelWindowActivationEventCount",
+  "getFocusState",
+  "getFocusEventCount",
   "getEventModel"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
@@ -258,6 +262,8 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   propertyAndMethod,
   getTopLevelWindowActivationState,
   getTopLevelWindowActivationEventCount,
+  getFocusState,
+  getFocusEventCount,
   getEventModel
 };
 
@@ -680,6 +686,8 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->crashOnDestroy = false;
   instanceData->topLevelWindowActivationState = ACTIVATION_STATE_UNKNOWN;
   instanceData->topLevelWindowActivationEventCount = 0;
+  instanceData->focusState = ACTIVATION_STATE_UNKNOWN;
+  instanceData->focusEventCount = 0;
   instanceData->eventModel = 0;
   instance->pdata = instanceData;
 
@@ -2843,6 +2851,49 @@ getTopLevelWindowActivationEventCount(NPObject* npobj, const NPVariant* args, ui
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
 
   INT32_TO_NPVARIANT(id->topLevelWindowActivationEventCount, *result);
+
+  return true;
+}
+
+// Returns top-level window activation state as indicated by Cocoa NPAPI's
+// NPCocoaEventWindowFocusChanged events - 'true' if active, 'false' if not.
+// Throws an exception if no events have been received and thus this state
+// is unknown.
+bool
+getFocusState(NPObject* npobj, const NPVariant* args, uint32_t argCount,
+              NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  // Throw an exception for unknown state.
+  if (id->focusState == ACTIVATION_STATE_UNKNOWN) {
+    return false;
+  }
+
+  if (id->focusState == ACTIVATION_STATE_ACTIVATED) {
+    BOOLEAN_TO_NPVARIANT(true, *result);
+  } else if (id->focusState == ACTIVATION_STATE_DEACTIVATED) {
+    BOOLEAN_TO_NPVARIANT(false, *result);
+  }
+
+  return true;
+}
+
+bool
+getFocusEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount,
+                   NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  INT32_TO_NPVARIANT(id->focusEventCount, *result);
 
   return true;
 }
