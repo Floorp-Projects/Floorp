@@ -82,10 +82,6 @@ const PREFS_BLACKLIST = [
 ];
 
 window.onload = function () {
-  // Get the FUEL Application object.
-  let Application = Cc["@mozilla.org/fuel/application;1"]
-                      .getService(Ci.fuelIApplication);
-
   // Get the support URL.
   let urlFormatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
                        .getService(Ci.nsIURLFormatter);
