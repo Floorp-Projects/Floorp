@@ -45,6 +45,7 @@
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLElement.h"
 #include "nsFrameList.h"
 #include "nsGkAtoms.h"
 #include "nsIAtom.h"
