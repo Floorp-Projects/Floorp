@@ -49,6 +49,17 @@ inactive, and throws an exception if the state is unknown (uninitialized).
 Returns the number of NPCocoaEventWindowFocusChanged events received by
 the instance.
 
+== Focus Tests ==
+
+* getFocusState()
+Returns the plugin's focus state. Returns true for focused, false for unfocused,
+and throws an exception if the state is unknown (uninitialized). This does not
+necessarily correspond to actual input focus - this corresponds to focus as
+defined by the NPAPI event model in use.
+
+* getFocusEventCount()
+Returns the number of focus events received by the instance.
+
 == NPRuntime testing ==
 
 The test plugin object supports the following scriptable methods:
