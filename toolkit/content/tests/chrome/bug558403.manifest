@@ -1,2 +1,0 @@
-# reuse the css and dtd files from bug 437844
-override chrome://global/locale/global.dtd chrome://mochikit/content/chrome/toolkit/content/tests/chrome/bug437844.dtd
