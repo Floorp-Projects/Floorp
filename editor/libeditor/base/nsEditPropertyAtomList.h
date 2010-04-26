@@ -95,6 +95,7 @@ EDITOR_ATOM(select, "select")
 EDITOR_ATOM(textarea, "textarea")
 EDITOR_ATOM(label, "label")
 EDITOR_ATOM(button, "button")
+EDITOR_ATOM(output, "output")
   // block tags
 EDITOR_ATOM(p, "p")
 EDITOR_ATOM(div, "div")

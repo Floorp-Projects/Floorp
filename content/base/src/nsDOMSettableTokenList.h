@@ -13,12 +13,12 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Sylvain Pasche <sylvain.pasche@gmail.com>
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Initial Developer of the Original Code is Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Mounir Lamouri <mounir.lamouri@mozilla.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,44 +35,33 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Implementation of nsIDOMDOMTokenList specified by HTML5.
+ * Implementation of nsIDOMDOMSettableTokenList specified by HTML5.
  */
 
-#ifndef nsDOMTokenList_h___
-#define nsDOMTokenList_h___
+#ifndef nsDOMSettableTokenList_h___
+#define nsDOMSettableTokenList_h___
 
-#include "nsGenericElement.h"
-#include "nsIDOMDOMTokenList.h"
+#include "nsIDOMDOMSettableTokenList.h"
+#include "nsDOMTokenList.h"
 
-class nsAttrValue;
 
-class nsDOMTokenList : public nsIDOMDOMTokenList
+class nsGenericElement;
+class nsIAtom;
+
+class nsDOMSettableTokenList : public nsDOMTokenList,
+                               public nsIDOMDOMSettableTokenList
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDOMTOKENLIST
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIDOMDOMSETTABLETOKENLIST
 
-  nsDOMTokenList(nsGenericElement* aElement, nsIAtom* aAttrAtom);
+  NS_FORWARD_NSIDOMDOMTOKENLIST(nsDOMTokenList::);
 
-  void DropReference();
+  nsDOMSettableTokenList(nsGenericElement* aElement, nsIAtom* aAttrAtom);
 
 protected:
-  ~nsDOMTokenList();
-
-  const nsAttrValue* GetParsedAttr() {
-    if (!mElement) {
-      return nsnull;
-    }
-    return mElement->GetParsedAttr(mAttrAtom);
-  }
-
-  nsresult CheckToken(const nsAString& aStr);
-  PRBool ContainsInternal(const nsAttrValue* aAttr, const nsAString& aToken);
-  void AddInternal(const nsAttrValue* aAttr, const nsAString& aToken);
-  void RemoveInternal(const nsAttrValue* aAttr, const nsAString& aToken);
-
-  nsGenericElement* mElement;
-  nsCOMPtr<nsIAtom> mAttrAtom;
+  virtual ~nsDOMSettableTokenList();
 };
 
-#endif // nsDOMTokenList_h___
+#endif // nsDOMSettableTokenList_h___
+
