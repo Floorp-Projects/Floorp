@@ -59,15 +59,6 @@ XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
   return PlacesUtils;
 });
 
-#ifdef XP_MACOSX
-// On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
-// really just want "\n".
-const NEWLINE= "\n";
-#else
-// On other platforms, the transferable system converts "\r\n" to "\n".
-const NEWLINE = "\r\n";
-#endif
-
 var PlacesUIUtils = {
   ORGANIZER_LEFTPANE_VERSION: 6,
   ORGANIZER_FOLDER_ANNO: "PlacesOrganizer/OrganizerFolder",
