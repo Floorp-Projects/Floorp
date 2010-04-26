@@ -431,6 +431,7 @@ nsHTMLEditUtils::IsFormWidget(nsIDOMNode *node)
   return (nodeAtom == nsEditProperty::textarea)
       || (nodeAtom == nsEditProperty::select)
       || (nodeAtom == nsEditProperty::button)
+      || (nodeAtom == nsEditProperty::output)
       || (nodeAtom == nsEditProperty::input);
 }
 
@@ -481,8 +482,8 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
 // abbr, acronym, cite, code, del, dfn, em, ins, kbd, samp, strong, var
 #define GROUP_PHRASE           (1 << 4)
 
-// a, applet, basefont, bdo, br, font, iframe, img, map, object, q, script,
-// span, sub, sup
+// a, applet, basefont, bdo, br, font, iframe, img, map, object, output, q,
+// script, span, sub, sup
 #define GROUP_SPECIAL          (1 << 5)
 
 // button, form, input, label, select, textarea
@@ -650,6 +651,7 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
        GROUP_OPTGROUP_CONTENT),
   ELEM(option, PR_TRUE, PR_FALSE,
        GROUP_SELECT_CONTENT | GROUP_OPTGROUP_CONTENT, GROUP_LEAF),
+  ELEM(output, PR_TRUE, PR_TRUE, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
   ELEM(p, PR_TRUE, PR_FALSE, GROUP_BLOCK | GROUP_P, GROUP_INLINE_ELEMENT),
   ELEM(param, PR_FALSE, PR_FALSE, GROUP_OBJECT_CONTENT, GROUP_NONE),
   ELEM(plaintext, PR_FALSE, PR_FALSE, GROUP_NONE, GROUP_NONE),
