@@ -43,6 +43,7 @@ const Ci = Components.interfaces;
 var EXPORTED_SYMBOLS = [];
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 /**
  * Logs a debug message.
@@ -199,12 +200,12 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
   this.__defineGetter__("id", function() aId);
   this.__defineGetter__("type", function() "plugin");
   this.__defineGetter__("name", function() aName);
+  this.__defineGetter__("creator", function() "");
   this.__defineGetter__("description", function() safedesc);
   this.__defineGetter__("version", function() aTags[0].version);
   this.__defineGetter__("homepageURL", function() homepageURL);
 
   this.__defineGetter__("isActive", function() !aTags[0].blocklisted && !aTags[0].disabled);
-  this.__defineGetter__("isCompatible", function() true);
   this.__defineGetter__("appDisabled", function() aTags[0].blocklisted);
   this.__defineGetter__("userDisabled", function() aTags[0].disabled);
   this.__defineSetter__("userDisabled", function(aVal) {
@@ -217,6 +218,33 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     AddonManagerPrivate.callAddonListeners(aVal ? "onDisabling" : "onEnabling", this, false);
     AddonManagerPrivate.callAddonListeners(aVal ? "onDisabled" : "onEnabled", this);
     return aVal;
+  });
+
+  this.__defineGetter__("blocklistState", function() {
+    let bs = Cc["@mozilla.org/extensions/blocklist;1"].
+             getService(Ci.nsIBlocklistService);
+    return bs.getPluginBlocklistState(aTags[0]);
+  });
+
+  this.__defineGetter__("scope", function() {
+    let path = aTags[0].fullpath;
+    // Plugins inside the application directory are in the application scope
+    let dir = Services.dirsvc.get("APlugns", Ci.nsILocalFile);
+    if (path.substring(0, dir.path.length) == dir.path)
+      return AddonManager.SCOPE_APPLICATION;
+
+    // Plugins inside the profile directory are in the profile scope
+    dir = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
+    if (path.substring(0, dir.path.length) == dir.path)
+      return AddonManager.SCOPE_PROFILE;
+
+    // Plugins anywhere else in the user's home are in the user scope
+    dir = Services.dirsvc.get("Home", Ci.nsILocalFile);
+    if (path.substring(0, dir.path.length) == dir.path)
+      return AddonManager.SCOPE_USER;
+
+    // Any other locations are system scope
+    return AddonManager.SCOPE_SYSTEM;
   });
 
   this.__defineGetter__("pendingOperations", function() {
@@ -233,28 +261,29 @@ function PluginWrapper(aId, aName, aDescription, aTags) {
     }
     return permissions;
   });
-
-  this.uninstall = function() {
-    throw new Error("Cannot uninstall plugins");
-  };
-
-  this.cancelUninstall = function() {
-    throw new Error("Plugin is not marked to be uninstalled");
-  };
-
-  this.findUpdates = function(aListener, aReason, aAppVersion, aPlatformVersion) {
-    throw new Error("Cannot search for updates for plugins");
-  };
-
-  this.hasResource = function(aPath) {
-    return false;
-  },
-
-  this.getResourceURL = function(aPath) {
-    return null;
-  }
 }
 
-PluginWrapper.prototype = { };
+PluginWrapper.prototype = {
+  get isCompatible() {
+    return true;
+  },
+
+  get providesUpdatesSecurely() {
+    return true;
+  },
+
+  isCompatibleWith: function(aAppVerison, aPlatformVersion) {
+    return true;
+  },
+
+  findUpdates: function(aListener, aReason, aAppVersion, aPlatformVersion) {
+    if ("onNoCompatibilityUpdateAvailable" in aListener)
+      aListener.onNoCompatibilityUpdateAvailable(this);
+    if ("onNoUpdateAvailable" in aListener)
+      aListener.onNoUpdateAvailable(this);
+    if ("onUpdateFinished" in aListener)
+      aListener.onUpdateFinished(this);
+  }
+};
 
 AddonManagerPrivate.registerProvider(PluginProvider);

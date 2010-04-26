@@ -227,6 +227,7 @@ function run_test_3() {
     do_check_neq(null, p1);
     do_check_eq(p1.name, "Test LW Theme");
     do_check_eq(p1.version, "1");
+    do_check_eq(p1.type, "theme");
     do_check_eq(p1.description, "A test theme");
     do_check_eq(p1.creator, "Mozilla");
     do_check_eq(p1.homepageURL, "http://localhost:4444/data/index.html");
@@ -241,6 +242,9 @@ function run_test_3() {
     do_check_true(p1.isActive);
     do_check_eq(p1.pendingOperations, 0);
     do_check_eq(p1.permissions, AddonManager.PERM_CAN_UNINSTALL);
+    do_check_eq(p1.scope, AddonManager.SCOPE_PROFILE);
+    do_check_true("isCompatibleWith" in p1);
+    do_check_true("findUpdates" in p1);
 
     AddonManager.getAddonsByTypes(["theme"], function(addons) {
       let seen = false;
