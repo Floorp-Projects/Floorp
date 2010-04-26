@@ -254,24 +254,24 @@ function run_test() {
 
   do_test_pending();
   startupManager(1);
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org",
-                          "addon6@tests.mozilla.org",
-                          "addon7@tests.mozilla.org",
-                          "addon8@tests.mozilla.org",
-                          "addon9@tests.mozilla.org",
-                          "addon10@tests.mozilla.org",
-                          "addon11@tests.mozilla.org",
-                          "addon12@tests.mozilla.org",
-                          "addon13@tests.mozilla.org",
-                          "addon14@tests.mozilla.org",
-                          "addon15@tests.mozilla.org",
-                          "addon16@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
-                                    a11, a12, a13, a14, a15, a16]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org",
+                               "addon6@tests.mozilla.org",
+                               "addon7@tests.mozilla.org",
+                               "addon8@tests.mozilla.org",
+                               "addon9@tests.mozilla.org",
+                               "addon10@tests.mozilla.org",
+                               "addon11@tests.mozilla.org",
+                               "addon12@tests.mozilla.org",
+                               "addon13@tests.mozilla.org",
+                               "addon14@tests.mozilla.org",
+                               "addon15@tests.mozilla.org",
+                               "addon16@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
+                                         a11, a12, a13, a14, a15, a16]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");

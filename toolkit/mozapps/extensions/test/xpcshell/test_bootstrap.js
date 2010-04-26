@@ -56,7 +56,7 @@ function run_test_1() {
 }
 
 function check_test_1() {
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.appDisabled);
@@ -74,7 +74,7 @@ function check_test_1() {
     let uri = Services.io.newFileURI(dir).spec;
     do_check_eq(b1.getResourceURL("bootstrap.js"), uri);
 
-    AddonManager.getAddonsWithPendingOperations(null, function(list) {
+    AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
       do_check_eq(list.length, 0);
 
       run_test_2();
@@ -84,7 +84,7 @@ function check_test_1() {
 
 // Tests that disabling doesn't require a restart
 function run_test_2() {
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     prepare_test({
       "bootstrap1@tests.mozilla.org": [
         ["onDisabling", false],
@@ -103,7 +103,7 @@ function run_test_2() {
     do_check_eq(getActivatedVersion(), 0);
     do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
-    AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(newb1) {
+    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
       do_check_neq(newb1, null);
       do_check_eq(newb1.version, "1.0");
       do_check_false(newb1.appDisabled);
@@ -123,7 +123,7 @@ function run_test_3() {
   do_check_eq(getActivatedVersion(), 0);
   do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.appDisabled);
@@ -136,7 +136,7 @@ function run_test_3() {
 
 // Tests that enabling doesn't require a restart
 function run_test_4() {
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     prepare_test({
       "bootstrap1@tests.mozilla.org": [
         ["onEnabling", false],
@@ -155,7 +155,7 @@ function run_test_4() {
     do_check_eq(getActivatedVersion(), 1);
     do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
-    AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(newb1) {
+    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
       do_check_neq(newb1, null);
       do_check_eq(newb1.version, "1.0");
       do_check_false(newb1.appDisabled);
@@ -176,7 +176,7 @@ function run_test_5() {
   do_check_eq(getActivatedVersion(), 1);
   do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.appDisabled);
@@ -217,7 +217,7 @@ function run_test_6() {
 }
 
 function check_test_6() {
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "2.0");
     do_check_false(b1.appDisabled);
@@ -233,7 +233,7 @@ function check_test_6() {
 
 // Tests that uninstalling doesn't require a restart
 function run_test_7() {
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     prepare_test({
       "bootstrap1@tests.mozilla.org": [
         ["onUninstalling", false],
@@ -252,12 +252,12 @@ function check_test_7() {
   do_check_eq(getActivatedVersion(), 0);
   do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
 
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_eq(b1, null);
 
     restartManager(0);
 
-    AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(newb1) {
+    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
       do_check_eq(newb1, null);
 
       run_test_8();
@@ -285,7 +285,7 @@ function run_test_8() {
 
   startupManager(0, false);
 
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.appDisabled);
@@ -307,7 +307,7 @@ function run_test_9() {
   dir.remove(true);
   startupManager(0, false);
 
-  AddonManager.getAddon("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
     do_check_eq(b1, null);
     do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 

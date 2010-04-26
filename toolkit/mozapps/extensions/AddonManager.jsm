@@ -442,15 +442,15 @@ var AddonManagerInternal = {
    *         A callback which will be passed an array of AddonInstalls
    * @throws if the aCallback argument is not specified
    */
-  getInstalls: function AMI_getInstalls(aTypes, aCallback) {
+  getInstallsByTypes: function AMI_getInstallsByTypes(aTypes, aCallback) {
     if (!aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     let installs = [];
 
-    new AsyncObjectCaller(this.providers, "getInstalls", {
+    new AsyncObjectCaller(this.providers, "getInstallsByTypes", {
       nextObject: function(aCaller, aProvider) {
-        callProvider(aProvider, "getInstalls", null, aTypes,
+        callProvider(aProvider, "getInstallsByTypes", null, aTypes,
                      function(aProviderInstalls) {
           installs = installs.concat(aProviderInstalls);
           aCaller.callNext();
@@ -461,6 +461,16 @@ var AddonManagerInternal = {
         safeCall(aCallback, installs);
       }
     });
+  },
+
+  /**
+   * Asynchronously gets all current AddonInstalls.
+   *
+   * @param  aCallback
+   *         A callback which will be passed an array of AddonInstalls
+   */
+  getAllInstalls: function AMI_getAllInstalls(aCallback) {
+    this.getInstallsByTypes(null, aCallback);
   },
 
   /**
@@ -584,13 +594,13 @@ var AddonManagerInternal = {
    *         The callback to pass the retrieved add-on to
    * @throws if the aId or aCallback arguments are not specified
    */
-  getAddon: function AMI_getAddon(aId, aCallback) {
+  getAddonByID: function AMI_getAddonByID(aId, aCallback) {
     if (!aId || !aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
-    new AsyncObjectCaller(this.providers, "getAddon", {
+    new AsyncObjectCaller(this.providers, "getAddonByID", {
       nextObject: function(aCaller, aProvider) {
-        callProvider(aProvider, "getAddon", null, aId, function(aAddon) {
+        callProvider(aProvider, "getAddonByID", null, aId, function(aAddon) {
           if (aAddon)
             safeCall(aCallback, aAddon);
           else
@@ -613,7 +623,7 @@ var AddonManagerInternal = {
    *         The callback to pass an array of Addons to
    * @throws if the aId or aCallback arguments are not specified
    */
-  getAddons: function AMI_getAddons(aIds, aCallback) {
+  getAddonsByIDs: function AMI_getAddonsByIDs(aIds, aCallback) {
     if (!aIds || !aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
@@ -621,7 +631,7 @@ var AddonManagerInternal = {
 
     new AsyncObjectCaller(aIds, null, {
       nextObject: function(aCaller, aId) {
-        AddonManagerInternal.getAddon(aId, function(aAddon) {
+        AddonManagerInternal.getAddonByID(aId, function(aAddon) {
           addons.push(aAddon);
           aCaller.callNext();
         });
@@ -664,6 +674,16 @@ var AddonManagerInternal = {
   },
 
   /**
+   * Asynchronously gets all installed add-ons.
+   *
+   * @param  aCallback
+   *         A callback which will be passed an array of Addons
+   */
+  getAllAddons: function AMI_getAllAddons(aCallback) {
+    this.getAddonsByTypes(null, aCallback);
+  },
+
+  /**
    * Asynchronously gets add-ons that have operations waiting for an application
    * restart to complete.
    *
@@ -673,16 +693,16 @@ var AddonManagerInternal = {
    *         The callback to pass the array of Addons to
    * @throws if the aCallback argument is not specified
    */
-  getAddonsWithPendingOperations:
-  function AMI_getAddonsWithPendingOperations(aTypes, aCallback) {
+  getAddonsWithOperationsByTypes:
+  function AMI_getAddonsWithOperationsByTypes(aTypes, aCallback) {
     if (!aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     let addons = [];
 
-    new AsyncObjectCaller(this.providers, "getAddonsWithPendingOperations", {
+    new AsyncObjectCaller(this.providers, "getAddonsWithOperationsByTypes", {
       nextObject: function(aCaller, aProvider) {
-        callProvider(aProvider, "getAddonsWithPendingOperations", null, aTypes,
+        callProvider(aProvider, "getAddonsWithOperationsByTypes", null, aTypes,
                      function(aProviderAddons) {
           addons = addons.concat(aProviderAddons);
           aCaller.callNext();
@@ -849,25 +869,33 @@ var AddonManager = {
     AddonManagerInternal.getInstallForFile(aFile, aCallback, aMimetype);
   },
 
-  getAddon: function AM_getAddon(aId, aCallback) {
-    AddonManagerInternal.getAddon(aId, aCallback);
+  getAddonByID: function AM_getAddonByID(aId, aCallback) {
+    AddonManagerInternal.getAddonByID(aId, aCallback);
   },
 
-  getAddons: function AM_getAddons(aIds, aCallback) {
-    AddonManagerInternal.getAddons(aIds, aCallback);
+  getAddonsByIDs: function AM_getAddonsByIDs(aIds, aCallback) {
+    AddonManagerInternal.getAddonsByIDs(aIds, aCallback);
   },
 
-  getAddonsWithPendingOperations:
-  function AM_getAddonsWithPendingOperations(aTypes, aCallback) {
-    AddonManagerInternal.getAddonsWithPendingOperations(aTypes, aCallback);
+  getAddonsWithOperationsByTypes:
+  function AM_getAddonsWithOperationsByTypes(aTypes, aCallback) {
+    AddonManagerInternal.getAddonsWithOperationsByTypes(aTypes, aCallback);
   },
 
   getAddonsByTypes: function AM_getAddonsByTypes(aTypes, aCallback) {
     AddonManagerInternal.getAddonsByTypes(aTypes, aCallback);
   },
 
-  getInstalls: function AM_getInstalls(aTypes, aCallback) {
-    AddonManagerInternal.getInstalls(aTypes, aCallback);
+  getAllAddons: function AM_getAllAddons(aCallback) {
+    AddonManagerInternal.getAllAddons(aCallback);
+  },
+
+  getInstallsByTypes: function AM_getInstallsByTypes(aTypes, aCallback) {
+    AddonManagerInternal.getInstallsByTypes(aTypes, aCallback);
+  },
+
+  getAllInstalls: function AM_getAllInstalls(aCallback) {
+    AddonManagerInternal.getAllInstalls(aCallback);
   },
 
   isInstallEnabled: function AM_isInstallEnabled(aType) {

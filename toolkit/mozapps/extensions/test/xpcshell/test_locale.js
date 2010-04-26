@@ -43,7 +43,7 @@ function run_test_1() {
 function run_test_2() {
   restartManager(1);
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(addon) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
 
     do_check_eq(addon.name, "fr-FR Name");
@@ -58,7 +58,7 @@ function run_test_2() {
 
 // Test that the localized properties are still there when disabled.
 function run_test_3() {
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(addon) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
     do_check_eq(addon.name, "fr-FR Name");
 
@@ -73,7 +73,7 @@ function run_test_4() {
   Services.prefs.setCharPref("extensions.addon1@tests.mozilla.org.contributor.2", "Contributor 2");
   restartManager(0);
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(addon) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
     do_check_eq(addon.name, "fr-FR Name");
     let contributors = addon.contributors;
@@ -91,7 +91,7 @@ function run_test_5() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "de-DE");
   restartManager(0);
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(addon) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
 
     do_check_eq(addon.name, "de-DE Name");
@@ -106,7 +106,7 @@ function run_test_6() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "nl-NL");
   restartManager(0);
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(addon) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
 
     do_check_eq(addon.name, "Fallback Name");
@@ -120,7 +120,7 @@ function run_test_6() {
 
 // Test that the prefs will override the fallbacks
 function run_test_7() {
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(addon) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
 
     do_check_eq(addon.name, "Name from prefs");
@@ -134,7 +134,7 @@ function run_test_8() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
   restartManager(0);
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(addon) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
 
     do_check_eq(addon.name, "Name from prefs");

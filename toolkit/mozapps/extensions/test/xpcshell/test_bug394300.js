@@ -72,8 +72,8 @@ function run_test()
 
     restartManager();
 
-    AddonManager.getAddons(["bug394300_1@tests.mozilla.org",
-                            "bug394300_2@tests.mozilla.org"], function(updates) {
+    AddonManager.getAddonsByIDs(["bug394300_1@tests.mozilla.org",
+                                 "bug394300_2@tests.mozilla.org"], function(updates) {
 
       do_check_neq(updates[0], null);
       do_check_neq(updates[1], null);
