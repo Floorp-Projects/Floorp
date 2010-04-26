@@ -5236,26 +5236,37 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
     return ARECORD_CONTINUE;
 }
 
-RecordingStatus
+AbortableRecordingStatus
 TraceRecorder::hasMethod(JSObject* obj, jsid id, bool& found)
 {
     found = false;
-    RecordingStatus status = RECORD_CONTINUE;
+    AbortableRecordingStatus status = ARECORD_CONTINUE;
     if (!obj)
         return status;
+
+    TraceMonitor &localtm = *traceMonitor;
+    JSContext *localcx = cx;
 
     JSObject* pobj;
     JSProperty* prop;
     int protoIndex = obj->lookupProperty(cx, id, &pobj, &prop);
     if (protoIndex < 0)
-        return RECORD_ERROR;
+        RETURN_ERROR_A("lookupProperty failed");
+
+    /* lookupProperty can reenter the interpreter and kill |this|. */
+    if (!localtm.recorder) {
+        if (prop)
+            pobj->dropProperty(localcx, prop);
+        return ARECORD_ABORTED;
+    }
+
     if (!prop)
         return status;
 
     if (!pobj->isNative()) {
         // We can't rely on __iterator__ being present on trace just because
         // it's there now, if found in a non-native object.
-        status = RECORD_STOP;
+        status = ARECORD_STOP;
     } else {
         JSScope* scope = pobj->scope();
         JSScopeProperty* sprop = (JSScopeProperty*) prop;
@@ -5265,7 +5276,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id, bool& found)
             if (VALUE_IS_FUNCTION(cx, v)) {
                 found = true;
                 if (!scope->generic() && !scope->branded() && !scope->brand(cx, sprop->slot, v))
-                    status = RECORD_STOP;
+                    status = ARECORD_STOP;
             }
         }
     }
@@ -5274,7 +5285,7 @@ TraceRecorder::hasMethod(JSObject* obj, jsid id, bool& found)
     return status;
 }
 
-JS_REQUIRES_STACK RecordingStatus
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::hasIteratorMethod(JSObject* obj, bool& found)
 {
     JS_ASSERT(cx->fp->regs->sp + 2 <= cx->fp->slots + cx->fp->script->nslots);
@@ -5923,17 +5934,27 @@ AttemptToExtendTree(JSContext* cx, VMSideExit* anchor, VMSideExit* exitedFrom, j
     return false;
 }
 
-static JS_REQUIRES_STACK VMSideExit*
+static JS_REQUIRES_STACK bool
 ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
-            VMSideExit** innermostNestedGuardp);
+            VMSideExit** innermostNestedGuardp, VMSideExit** lrp);
 
-JS_REQUIRES_STACK bool
+static inline MonitorResult
+RecordingIfTrue(bool b)
+{
+    return b ? MONITOR_RECORDING : MONITOR_NOT_RECORDING;
+}
+
+/*
+ * A postcondition of recordLoopEdge is that if recordLoopEdge does not return
+ * MONITOR_RECORDING, the recording has been aborted.
+ */
+JS_REQUIRES_STACK MonitorResult
 TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCallCount)
 {
 #ifdef JS_THREADSAFE
     if (cx->fp->scopeChain->getGlobal()->scope()->title.ownercx != cx) {
         AbortRecording(cx, "Global object not owned by this context");
-        return false; /* we stay away from shared global objects */
+        return MONITOR_NOT_RECORDING; /* we stay away from shared global objects */
     }
 #endif
 
@@ -5942,7 +5963,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
     /* Process needFlush and deep abort requests. */
     if (tm->needFlush) {
         ResetJIT(cx, FR_DEEP_BAIL);
-        return false;
+        return MONITOR_NOT_RECORDING;
     }
 
     JS_ASSERT(r->fragment && !r->fragment->lastIns);
@@ -5959,7 +5980,7 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
     SlotList* globalSlots = NULL;
     if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
         JS_ASSERT(!tm->recorder);
-        return false;
+        return MONITOR_NOT_RECORDING;
     }
 
     debug_only_printf(LC_TMTracer,
@@ -5979,10 +6000,19 @@ TraceRecorder::recordLoopEdge(JSContext* cx, TraceRecorder* r, uintN& inlineCall
         JS_ASSERT(cx->fp->argc == first->argc);
         AbortRecording(cx, "No compatible inner tree");
 
-        return RecordTree(cx, first, outer, outerArgc, globalSlots, Record_Branch);
+        return RecordingIfTrue(RecordTree(cx, first, outer, outerArgc, globalSlots, Record_Branch));
     }
 
-    return r->attemptTreeCall(f, inlineCallCount) == ARECORD_CONTINUE;
+    AbortableRecordingStatus status = r->attemptTreeCall(f, inlineCallCount);
+    if (status == ARECORD_CONTINUE)
+        return MONITOR_RECORDING;
+    if (status == ARECORD_ERROR) {
+        if (TRACE_RECORDER(cx))
+            AbortRecording(cx, "Error returned while recording loop edge");
+        return MONITOR_ERROR;
+    }
+    JS_ASSERT(status == ARECORD_ABORTED && !tm->recorder);
+    return MONITOR_NOT_RECORDING;
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -6030,9 +6060,16 @@ TraceRecorder::attemptTreeCall(TreeFragment* f, uintN& inlineCallCount)
     VisitStackSlots(visitor, cx, callDepth);
 
     VMSideExit* innermostNestedGuard = NULL;
-    VMSideExit* lr = ExecuteTree(cx, f, inlineCallCount, &innermostNestedGuard);
+    VMSideExit* lr;
+    bool ok = ExecuteTree(cx, f, inlineCallCount, &innermostNestedGuard, &lr);
 
-    /* ExecuteTree can reenter the interpreter and kill |this|. */
+    /*
+     * If ExecuteTree reentered the interpreter, it may have killed |this|
+     * and/or caused an error, which must be propagated.
+     */
+    JS_ASSERT_IF(TRACE_RECORDER(localCx), TRACE_RECORDER(localCx) == this);
+    if (!ok)
+        return ARECORD_ERROR;
     if (!TRACE_RECORDER(localCx))
         return ARECORD_ABORTED;
 
@@ -6463,9 +6500,10 @@ ScopeChainCheck(JSContext* cx, TreeFragment* f)
 static void
 LeaveTree(TraceMonitor *tm, TracerState&, VMSideExit* lr);
 
-static JS_REQUIRES_STACK VMSideExit*
+/* Return false if the interpreter should goto error. */
+static JS_REQUIRES_STACK bool
 ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
-            VMSideExit** innermostNestedGuardp)
+            VMSideExit** innermostNestedGuardp, VMSideExit **lrp)
 {
 #ifdef MOZ_TRACEVIS
     TraceVisStateObj tvso(cx, S_EXECUTE);
@@ -6473,8 +6511,10 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
     JS_ASSERT(f->root == f && f->code());
     TraceMonitor* tm = &JS_TRACE_MONITOR(cx);
 
-    if (!ScopeChainCheck(cx, f))
-        return NULL;
+    if (!ScopeChainCheck(cx, f)) {
+        *lrp = NULL;
+        return true;
+    }
 
     /* Make sure the global object is sane. */
     JS_ASSERT(f->globalObj->numSlots() <= MAX_GLOBAL_SLOTS);
@@ -6517,7 +6557,11 @@ ExecuteTree(JSContext* cx, TreeFragment* f, uintN& inlineCallCount,
 
     /* Restore interpreter state. */
     LeaveTree(tm, state, lr);
-    return state.innermost;
+
+    *lrp = state.innermost;
+    bool ok = !(state.builtinStatus & BUILTIN_ERROR);
+    JS_ASSERT_IF(cx->throwing, !ok);
+    return ok;
 }
 
 class Guardian {
@@ -6877,7 +6921,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
     state.innermost = innermost;
 }
 
-JS_REQUIRES_STACK bool
+JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 {
 #ifdef MOZ_TRACEVIS
@@ -6892,8 +6936,11 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
         if (pc == tm->recorder->tree->ip) {
             tm->recorder->closeLoop();
         } else {
-            if (TraceRecorder::recordLoopEdge(cx, tm->recorder, inlineCallCount))
-                return true;
+            MonitorResult r = TraceRecorder::recordLoopEdge(cx, tm->recorder, inlineCallCount);
+            JS_ASSERT((r == MONITOR_RECORDING) == (TRACE_RECORDER(cx) != NULL));
+            if (r == MONITOR_RECORDING || r == MONITOR_ERROR)
+                return r;
+
 
             /*
              * recordLoopEdge will invoke an inner tree if we have a matching
@@ -6910,7 +6957,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 #ifdef MOZ_TRACEVIS
                 tvso.r = R_INNER_SIDE_EXIT;
 #endif
-                return false;
+                return MONITOR_NOT_RECORDING;
             }
         }
     }
@@ -6926,7 +6973,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 
     if (!CheckGlobalObjectShape(cx, tm, globalObj, &globalShape, &globalSlots)) {
         Backoff(cx, cx->fp->regs->pc);
-        return false;
+        return MONITOR_NOT_RECORDING;
     }
 
     /* Do not enter the JIT code with a pending operation callback. */
@@ -6934,7 +6981,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 #ifdef MOZ_TRACEVIS
         tvso.r = R_CALLBACK_PENDING;
 #endif
-        return false;
+        return MONITOR_NOT_RECORDING;
     }
 
     jsbytecode* pc = cx->fp->regs->pc;
@@ -6952,14 +6999,14 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 #ifdef MOZ_TRACEVIS
             tvso.r = f->hits() < 1 ? R_BACKED_OFF : R_COLD;
 #endif
-            return false;
+            return MONITOR_NOT_RECORDING;
         }
 
         if (!ScopeChainCheck(cx, f)) {
 #ifdef MOZ_TRACEVIS
             tvso.r = R_FAIL_SCOPE_CHAIN_CHECK;
 #endif
-            return false;
+            return MONITOR_NOT_RECORDING;
         }
 
         /*
@@ -6972,7 +7019,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
         if (!rv)
             tvso.r = R_FAIL_RECORD_TREE;
 #endif
-        return rv;
+        return RecordingIfTrue(rv);
     }
 
     debug_only_printf(LC_TMTracer,
@@ -6995,7 +7042,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 #ifdef MOZ_TRACEVIS
         tvso.r = R_MAX_PEERS;
 #endif
-        return false;
+        return MONITOR_NOT_RECORDING;
     }
 
     /*
@@ -7004,17 +7051,19 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
      * benefit to doing this until the down-recursive side completes.
      */
     if (match->recursion == Recursion_Unwinds)
-        return false;
+        return MONITOR_NOT_RECORDING;
 
     VMSideExit* lr = NULL;
     VMSideExit* innermostNestedGuard = NULL;
 
-    lr = ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard);
+    if (!ExecuteTree(cx, match, inlineCallCount, &innermostNestedGuard, &lr))
+        return MONITOR_ERROR;
+
     if (!lr) {
 #ifdef MOZ_TRACEVIS
         tvso.r = R_FAIL_EXECUTE_TREE;
 #endif
-        return false;
+        return MONITOR_NOT_RECORDING;
     }
 
     /*
@@ -7031,7 +7080,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
           if (!rv)
               tvso.r = R_FAIL_STABILIZE;
 #endif
-          return rv;
+          return RecordingIfTrue(rv);
 
       case OVERFLOW_EXIT:
         oracle.markInstructionUndemotable(cx->fp->regs->pc);
@@ -7042,24 +7091,27 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
       case RECURSIVE_MISMATCH_EXIT:
       case BRANCH_EXIT:
       case CASE_EXIT:
-        return AttemptToExtendTree(cx, lr, NULL, NULL
+        rv = AttemptToExtendTree(cx, lr, NULL, NULL
 #ifdef MOZ_TRACEVIS
-                                          , &tvso
+                                                   , &tvso
 #endif
-                 );
+                                 );
+        return RecordingIfTrue(rv);
 
       case RECURSIVE_LOOP_EXIT:
       case LOOP_EXIT:
-        if (innermostNestedGuard)
-            return AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL
+        if (innermostNestedGuard) {
+            rv = AttemptToExtendTree(cx, innermostNestedGuard, lr, NULL
 #ifdef MOZ_TRACEVIS
-                                            , &tvso
+                                                                       , &tvso
 #endif
-                   );
+                                     );
+            return RecordingIfTrue(rv);
+        }
 #ifdef MOZ_TRACEVIS
         tvso.r = R_NO_EXTEND_OUTER;
 #endif
-        return false;
+        return MONITOR_NOT_RECORDING;
 
 #ifdef MOZ_TRACEVIS
       case MISMATCH_EXIT:  tvso.r = R_MISMATCH_EXIT;  return false;
@@ -7077,7 +7129,7 @@ MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason)
 #ifdef MOZ_TRACEVIS
         tvso.r = R_OTHER_EXIT;
 #endif
-        return false;
+        return MONITOR_NOT_RECORDING;
     }
 }
 
@@ -7137,44 +7189,47 @@ TraceRecorder::monitorRecording(JSOp op)
 #endif
     switch (op) {
       default:
+          AbortRecording(cx, "unsupported opcode");
           status = ARECORD_ERROR;
-          goto stop_recording;
+          break;
 # define OPDEF(x,val,name,token,length,nuses,ndefs,prec,format)               \
       case x:                                                                 \
-        status = this->record_##x();                                            \
-        if (JSOP_IS_IMACOP(x))                                                \
-            goto imacro;                                                      \
+        status = this->record_##x();                                          \
         break;
 # include "jsopcode.tbl"
 # undef OPDEF
     }
 
-    /* Careful, |this| may have been deleted. */
-    JS_ASSERT(status != ARECORD_IMACRO);
-    JS_ASSERT_IF(!wasInImacro, localcx->fp->imacpc == NULL);
+    /* N.B. |this| may have been deleted. */
 
-  imacro:
-    /* |this| may be killed while recording. */
-    if (status == ARECORD_COMPLETED) {
-        JS_ASSERT(localtm.recorder != this);
-        return localtm.recorder ? ARECORD_CONTINUE : ARECORD_COMPLETED;
-    }
-    if (status == ARECORD_ABORTED) {
-        JS_ASSERT(!localtm.recorder);
-        return ARECORD_ABORTED;
+    if (!JSOP_IS_IMACOP(op)) {
+        JS_ASSERT(status != ARECORD_IMACRO);
+        JS_ASSERT_IF(!wasInImacro, localcx->fp->imacpc == NULL);
     }
 
-  stop_recording:
-    /* Handle lazy abort / OOM. */
-    if (outOfMemory() || OverfullJITCache(&localtm)) {
-        ResetJIT(cx, FR_OOM);
-        return ARECORD_ABORTED;
-    }
-    if (StatusAbortsRecording(status)) {
-        AbortRecording(cx, js_CodeName[op]);
-        return ARECORD_ABORTED;
-    }
+    if (localtm.recorder) {
+        JS_ASSERT(status != ARECORD_ABORTED);
+        JS_ASSERT(localtm.recorder == this);
 
+        /* |this| recorder completed, but a new one started; keep recording. */
+        if (status == ARECORD_COMPLETED)
+            return ARECORD_CONTINUE;
+
+        /* Handle lazy aborts; propagate the 'error' status. */
+        if (StatusAbortsRecorderIfActive(status)) {
+            AbortRecording(cx, js_CodeName[op]);
+            return status == ARECORD_ERROR ? ARECORD_ERROR : ARECORD_ABORTED;
+        }
+
+        if (outOfMemory() || OverfullJITCache(&localtm)) {
+            ResetJIT(cx, FR_OOM);
+            return ARECORD_ABORTED;
+        }
+    } else {
+        JS_ASSERT(status == ARECORD_COMPLETED ||
+                  status == ARECORD_ABORTED ||
+                  status == ARECORD_ERROR);
+    }
     return status;
 }
 
@@ -7849,14 +7904,12 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, jsval*& vp, LIns*& ins, NameR
     JSObject* obj2;
     JSProperty* prop;
     JSObject *obj = chainHead;
-    JSBool ok = js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop);
+    if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &obj2, &prop))
+        RETURN_ERROR_A("error in js_FindProperty");
 
     /* js_FindProperty can reenter the interpreter and kill |this|. */
     if (!localtm.recorder)
         return ARECORD_ABORTED;
-
-    if (!ok)
-        RETURN_ERROR_A("error in js_FindProperty");
 
     if (!prop)
         RETURN_STOP_A("failed to find name in non-global scope chain");
@@ -9185,13 +9238,13 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
 
             TraceMonitor &localtm = *traceMonitor;
             entry = js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop);
+            if (!entry)
+                RETURN_ERROR_A("error in js_FindPropertyHelper");
 
             /* js_FindPropertyHelper can reenter the interpreter and kill |this|. */
             if (!localtm.recorder)
                 return ARECORD_ABORTED;
 
-            if (!entry)
-                RETURN_ERROR_A("error in js_FindPropertyHelper");
             if (entry == JS_NO_PROP_CACHE_FILL)
                 RETURN_STOP_A("cannot cache name");
         } else {
@@ -9201,15 +9254,15 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                                                         cx->resolveFlags,
                                                         &obj2, &prop);
 
+            if (protoIndex < 0)
+                RETURN_ERROR_A("error in js_LookupPropertyWithFlags");
+
             /* js_LookupPropertyWithFlags can reenter the interpreter and kill |this|. */
             if (!localtm.recorder) {
                 if (prop)
                     obj2->dropProperty(localcx, prop);
                 return ARECORD_ABORTED;
             }
-
-            if (protoIndex < 0)
-                RETURN_ERROR_A("error in js_LookupPropertyWithFlags");
 
             if (prop) {
                 if (!obj2->isNative()) {
@@ -11615,6 +11668,7 @@ TraceRecorder::primitiveToStringInPlace(jsval* vp)
         // v is not a string. Turn it into one. js_ValueToString is safe
         // because v is not an object.
         JSString *str = js_ValueToString(cx, v);
+        JS_ASSERT(TRACE_RECORDER(cx) == this);
         if (!str)
             RETURN_ERROR("failed to stringify element id");
         v = STRING_TO_JSVAL(str);
@@ -12954,8 +13008,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
         VMSideExit* exit = snapshot(BRANCH_EXIT);
         do {
             if (obj->isNative()) {
-                CHECK_STATUS_A(InjectStatus(guardShape(obj_ins, obj, obj->shape(),
-                                                       "guard(shape)", exit)));
+                CHECK_STATUS_A(guardShape(obj_ins, obj, obj->shape(), "guard(shape)", exit));
             } else if (!guardDenseArray(obj, obj_ins, exit)) {
                 RETURN_STOP_A("non-native object involved in undefined property access");
             }
@@ -13576,9 +13629,9 @@ TraceRecorder::record_JSOP_ITER()
     jsuint flags = cx->fp->regs->pc[1];
 
     bool found;
-    RecordingStatus status = hasIteratorMethod(JSVAL_TO_OBJECT(v), found);
-    if (status != RECORD_CONTINUE)
-        return InjectStatus(status);
+    AbortableRecordingStatus status = hasIteratorMethod(JSVAL_TO_OBJECT(v), found);
+    if (status != ARECORD_CONTINUE)
+        return status;
     if (found) {
         if (flags == JSITER_ENUMERATE)
             return InjectStatus(callImacro(iter_imacros.for_in));

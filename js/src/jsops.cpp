@@ -76,6 +76,7 @@
 #ifdef JS_TRACER
         if (TraceRecorder* tr = TRACE_RECORDER(cx)) {
             AbortableRecordingStatus status = tr->monitorRecording(op);
+            JS_ASSERT_IF(cx->throwing, status == ARECORD_ERROR);
             switch (status) {
               case ARECORD_CONTINUE:
                 moreInterrupts = true;
@@ -2173,9 +2174,17 @@ BEGIN_CASE(JSOP_APPLY)
 #endif
 
 #ifdef JS_TRACER
-            if (TRACE_RECORDER(cx)) {
-                TRACE_1(EnterFrame, inlineCallCount);
+            if (TraceRecorder *tr = TRACE_RECORDER(cx)) {
+                AbortableRecordingStatus status = tr->record_EnterFrame(inlineCallCount);
                 RESTORE_INTERP_VARS();
+                if (StatusAbortsRecorderIfActive(status)) {
+                    if (TRACE_RECORDER(cx)) {
+                        JS_ASSERT(TRACE_RECORDER(cx) == tr);
+                        AbortRecording(cx, "record_EnterFrame failed");
+                    }
+                    if (status == ARECORD_ERROR)
+                        goto error;
+                }
             } else if (fp->script == fp->down->script &&
                        *fp->down->regs->pc == JSOP_CALL &&
                        *fp->regs->pc == JSOP_TRACE) {
