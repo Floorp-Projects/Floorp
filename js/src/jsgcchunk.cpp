@@ -203,7 +203,7 @@ MapAlignedPages(size_t size, size_t alignment)
      * We don't use MAP_FIXED here, because it can cause the *replacement*
      * of existing mappings, and we only want to create new mappings.
      */
-    void *p = mmap((void *) alignment, size, PROT_READ | PROT_WRITE,
+    void *p = mmap((caddr_t) alignment, size, PROT_READ | PROT_WRITE,
                      MAP_PRIVATE | MAP_NOSYNC | MAP_ALIGN | MAP_ANON, -1, 0);
     if (p == MAP_FAILED)
         return NULL;
@@ -236,7 +236,7 @@ MapPages(void *addr, size_t size)
 static void
 UnmapPages(void *addr, size_t size)
 {
-    JS_ALWAYS_TRUE(munmap(addr, size) == 0);
+    JS_ALWAYS_TRUE(munmap((caddr_t) addr, size) == 0);
 }
 
 #endif
@@ -256,7 +256,7 @@ AllocGCChunk()
 {
     void *p;
 
-#if JS_GC_HAS_MAP_ALIGN
+#ifdef JS_GC_HAS_MAP_ALIGN
     p = MapAlignedPages(GC_CHUNK_SIZE, GC_CHUNK_SIZE);
     if (!p)
         return NULL;
