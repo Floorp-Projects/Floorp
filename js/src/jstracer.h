@@ -78,7 +78,7 @@ public:
             memcpy(tmp, _data, _len * sizeof(T));
             _data = tmp;
         } else {
-            _data = (T*)realloc(_data, _max * sizeof(T));
+            _data = (T*)js_realloc(_data, _max * sizeof(T));
         }
 #if defined(DEBUG)
         memset(&_data[_len], 0xcd, _max - _len);
@@ -95,7 +95,7 @@ public:
 
     ~Queue() {
         if (!alloc)
-            free(_data);
+            js_free(_data);
     }
 
     bool contains(T a) {
@@ -932,6 +932,9 @@ class TraceRecorder
 {
     /*************************************************************** Recording session constants */
 
+    /* Cached oracle keeps track of hit counts for program counter locations */
+    Oracle*                         oracle;
+
     /* The context in which recording started. */
     JSContext* const                cx;
 
@@ -1076,6 +1079,17 @@ class TraceRecorder
      * reuse the returned value.
      */
     JS_REQUIRES_STACK nanojit::GuardRecord* createGuardRecord(VMSideExit* exit);
+
+    JS_REQUIRES_STACK JS_INLINE void markSlotUndemotable(LinkableFragment* f, unsigned slot);
+
+    JS_REQUIRES_STACK JS_INLINE void markSlotUndemotable(LinkableFragment* f, unsigned slot, const void* pc);
+
+    JS_REQUIRES_STACK unsigned findUndemotesInTypemaps(const TypeMap& typeMap, LinkableFragment* f,
+                            Queue<unsigned>& undemotes);
+
+    JS_REQUIRES_STACK void assertDownFrameIsConsistent(VMSideExit* anchor, FrameInfo* fi);
+
+    JS_REQUIRES_STACK void captureStackTypes(unsigned callDepth, TraceType* typeMap);
 
     bool isGlobal(jsval* p) const;
     ptrdiff_t nativeGlobalSlot(jsval *p) const;
@@ -1401,8 +1415,8 @@ class TraceRecorder
 # include "jsopcode.tbl"
 #undef OPDEF
 
-    inline void* operator new(size_t size) { return calloc(1, size); }
-    inline void operator delete(void *p) { free(p); }
+    inline void* operator new(size_t size) { return js_calloc(size); }
+    inline void operator delete(void *p) { js_free(p); }
 
     JS_REQUIRES_STACK
     TraceRecorder(JSContext* cx, VMSideExit*, VMFragment*,
