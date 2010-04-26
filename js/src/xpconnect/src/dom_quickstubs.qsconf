@@ -166,6 +166,7 @@ members = [
     'nsIDOMDOMStringList.length',
     'nsIDOMDOMStringList.contains',
     'nsIDOMDOMTokenList.*',
+    'nsIDOMDOMSettableTokenList.*',
     'nsIDOMNameList.getName',
     'nsIDOMNameList.contains',
     'nsIDOMNameList.containsNS',

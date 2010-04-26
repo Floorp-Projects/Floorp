@@ -62,10 +62,11 @@ class nsFormSubmission;
 #define NS_FORM_LABEL          15
 #define NS_FORM_OPTION         16
 #define NS_FORM_OPTGROUP       17
-#define NS_FORM_LEGEND         18
-#define NS_FORM_SELECT         19
-#define NS_FORM_TEXTAREA       20
-#define NS_FORM_OBJECT         21
+#define NS_FORM_OUTPUT         18
+#define NS_FORM_LEGEND         19
+#define NS_FORM_SELECT         20
+#define NS_FORM_TEXTAREA       21
+#define NS_FORM_OBJECT         22
 
 #define NS_IFORMCONTROL_IID   \
 { 0x52dc1f0d, 0x1683, 0x4dd7, \
