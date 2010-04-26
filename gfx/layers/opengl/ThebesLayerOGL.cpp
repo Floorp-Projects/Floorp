@@ -38,6 +38,10 @@
 #include "ThebesLayerOGL.h"
 #include "ContainerLayerOGL.h"
 #include "gfxContext.h"
+#include "gfxPlatform.h"
+#ifdef XP_WIN
+#include "gfxWindowsSurface.h"
+#endif
 
 #include "glWrapper.h"
 
@@ -138,17 +142,21 @@ ThebesLayerOGL::BeginDrawing(nsIntRegion *aRegion)
   }
   *aRegion = mInvalidatedRect;
 
+  gfxASurface::gfxImageFormat imageFormat;
+
   if (UseOpaqueSurface(this)) {
-    mSoftwareSurface = new gfxImageSurface(gfxIntSize(mInvalidatedRect.width,
-                                                      mInvalidatedRect.height),
-                                           gfxASurface::ImageFormatRGB24);
+    imageFormat = gfxASurface::ImageFormatRGB24;
   } else {
-    mSoftwareSurface = new gfxImageSurface(gfxIntSize(mInvalidatedRect.width,
-                                                      mInvalidatedRect.height),
-                                           gfxASurface::ImageFormatARGB32);
+    imageFormat = gfxASurface::ImageFormatARGB32;
   }
 
-  mContext = new gfxContext(mSoftwareSurface);
+  mDestinationSurface =
+    gfxPlatform::GetPlatform()->
+      CreateOffscreenSurface(gfxIntSize(mInvalidatedRect.width,
+                                        mInvalidatedRect.height),
+                             imageFormat);
+
+  mContext = new gfxContext(mDestinationSurface);
   mContext->Translate(gfxPoint(-mInvalidatedRect.x, -mInvalidatedRect.y));
   return mContext.get();
 }
@@ -157,6 +165,44 @@ void
 ThebesLayerOGL::EndDrawing()
 {
   static_cast<LayerManagerOGL*>(mManager)->MakeCurrent();
+
+  nsRefPtr<gfxImageSurface> imageSurface;
+
+  gfxASurface::gfxImageFormat imageFormat;
+
+  if (UseOpaqueSurface(this)) {
+    imageFormat = gfxASurface::ImageFormatRGB24;
+  } else {
+    imageFormat = gfxASurface::ImageFormatARGB32;
+  }
+
+  switch (mDestinationSurface->GetType()) {
+    case gfxASurface::SurfaceTypeImage:
+      imageSurface = static_cast<gfxImageSurface*>(mDestinationSurface.get());
+      break;
+#ifdef XP_WIN
+    case gfxASurface::SurfaceTypeWin32:
+      imageSurface =
+        static_cast<gfxWindowsSurface*>(mDestinationSurface.get())->
+          GetImageSurface();
+      break;
+#endif
+    default:
+      /** 
+       * XXX - This is very undesirable. Implement this for other platforms in
+       * a more efficient way as well!
+       */
+      {
+        imageSurface = new gfxImageSurface(gfxIntSize(mInvalidatedRect.width,
+                                                      mInvalidatedRect.height),
+                                           imageFormat);
+        nsRefPtr<gfxContext> tmpContext = new gfxContext(imageSurface);
+        tmpContext->SetSource(mDestinationSurface);
+        tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+        tmpContext->Paint();
+      }
+      break;
+  }
 
   sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
   sglWrapper.TexSubImage2D(LOCAL_GL_TEXTURE_2D,
@@ -167,9 +213,9 @@ ThebesLayerOGL::EndDrawing()
                            mInvalidatedRect.height,
                            LOCAL_GL_BGRA,
                            LOCAL_GL_UNSIGNED_BYTE,
-                           mSoftwareSurface->Data());
+                           imageSurface->Data());
 
-  mSoftwareSurface = NULL;
+  mDestinationSurface = NULL;
   mContext = NULL;
 }
 
