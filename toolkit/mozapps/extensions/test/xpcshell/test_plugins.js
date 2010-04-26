@@ -28,7 +28,7 @@ function run_test_1() {
 
     do_check_neq(gID, null);
 
-    AddonManager.getAddon(gID, function(p) {
+    AddonManager.getAddonByID(gID, function(p) {
       do_check_neq(p, null)
       do_check_false(p.userDisabled);
       do_check_false(p.appDisabled);
@@ -57,7 +57,7 @@ function run_test_2(p) {
   do_check_false(p.appDisabled);
   do_check_false(p.isActive);
 
-  AddonManager.getAddon(gID, function(p) {
+  AddonManager.getAddonByID(gID, function(p) {
     do_check_neq(p, null)
     do_check_true(p.userDisabled);
     do_check_false(p.appDisabled);
@@ -85,7 +85,7 @@ function run_test_3(p) {
   do_check_false(p.appDisabled);
   do_check_true(p.isActive);
 
-  AddonManager.getAddon(gID, function(p) {
+  AddonManager.getAddonByID(gID, function(p) {
     do_check_neq(p, null)
     do_check_false(p.userDisabled);
     do_check_false(p.appDisabled);

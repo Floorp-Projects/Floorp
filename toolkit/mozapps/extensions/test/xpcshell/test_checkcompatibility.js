@@ -120,12 +120,12 @@ function check_state(overridden, a1, a2, a3, a4, a5) {
 // Tests that with compatibility checking enabled we see the incompatible
 // add-ons disabled
 function run_test_1() {
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
     check_state(false, a1, a2, a3, a4, a5);
 
     run_test_2();
@@ -138,12 +138,12 @@ function run_test_2() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.2", false);
   restartManager(0);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
     check_state(true, a1, a2, a3, a4, a5);
 
     run_test_3();
@@ -156,12 +156,12 @@ function run_test_3() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.1a", false);
   restartManager(1, "2.1a4");
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
     check_state(true, a1, a2, a3, a4, a5);
 
     run_test_4();
@@ -174,12 +174,12 @@ function run_test_4() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.1a", true);
   restartManager(0);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
     check_state(false, a1, a2, a3, a4, a5);
 
     do_test_finished();

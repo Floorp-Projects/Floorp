@@ -80,12 +80,12 @@ function run_test_1() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.1a", false);
   startupManager();
 
-  AddonManager.getAddons(["bug470377_1@tests.mozilla.org",
-                          "bug470377_2@tests.mozilla.org",
-                          "bug470377_3@tests.mozilla.org",
-                          "bug470377_4@tests.mozilla.org",
-                          "bug470377_5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["bug470377_1@tests.mozilla.org",
+                               "bug470377_2@tests.mozilla.org",
+                               "bug470377_3@tests.mozilla.org",
+                               "bug470377_4@tests.mozilla.org",
+                               "bug470377_5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
     do_check_neq(a1, null);
     do_check_false(a1.isActive);
     do_check_neq(a2, null);
@@ -106,12 +106,12 @@ function run_test_2() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.1a", true);
   restartManager();
 
-  AddonManager.getAddons(["bug470377_1@tests.mozilla.org",
-                          "bug470377_2@tests.mozilla.org",
-                          "bug470377_3@tests.mozilla.org",
-                          "bug470377_4@tests.mozilla.org",
-                          "bug470377_5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["bug470377_1@tests.mozilla.org",
+                               "bug470377_2@tests.mozilla.org",
+                               "bug470377_3@tests.mozilla.org",
+                               "bug470377_4@tests.mozilla.org",
+                               "bug470377_5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
     do_check_neq(a1, null);
     do_check_false(a1.isActive);
     do_check_neq(a2, null);

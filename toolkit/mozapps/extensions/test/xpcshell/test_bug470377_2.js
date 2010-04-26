@@ -65,12 +65,12 @@ function run_test() {
   installAllFiles([do_get_addon(a) for each (a in ADDONS)], function() {
     restartManager();
 
-    AddonManager.getAddons(["bug470377_1@tests.mozilla.org",
-                            "bug470377_2@tests.mozilla.org",
-                            "bug470377_3@tests.mozilla.org",
-                            "bug470377_4@tests.mozilla.org",
-                            "bug470377_5@tests.mozilla.org"],
-                            function([a1, a2, a3, a4, a5]) {
+    AddonManager.getAddonsByIDs(["bug470377_1@tests.mozilla.org",
+                                 "bug470377_2@tests.mozilla.org",
+                                 "bug470377_3@tests.mozilla.org",
+                                 "bug470377_4@tests.mozilla.org",
+                                 "bug470377_5@tests.mozilla.org"],
+                                 function([a1, a2, a3, a4, a5]) {
       do_check_eq(a1, null);
       do_check_neq(a2, null);
       do_check_neq(a3, null);

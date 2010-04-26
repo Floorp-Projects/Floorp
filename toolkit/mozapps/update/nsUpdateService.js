@@ -1465,7 +1465,7 @@ UpdateService.prototype = {
   _checkAddonCompatibility: function AUS__checkAddonCompatibility() {
     // Get all the installed add-ons
     var self = this;
-    AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(addons) {
+    AddonManager.getAllAddons(function(addons) {
       self._incompatibleAddons = [];
       addons.forEach(function(addon) {
         // If an add-on isn't appDisabled and isn't userDisabled then it is

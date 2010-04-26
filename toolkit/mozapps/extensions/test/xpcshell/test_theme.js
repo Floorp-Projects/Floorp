@@ -71,7 +71,8 @@ function run_test() {
   AddonManager.addAddonListener(AddonListener);
   AddonManager.addInstallListener(InstallListener);
 
-  AddonManager.getAddons(["theme1@tests.mozilla.org", "theme2@tests.mozilla.org"], function([t1, t2]) {
+  AddonManager.getAddonsByIDs(["theme1@tests.mozilla.org",
+                               "theme2@tests.mozilla.org"], function([t1, t2]) {
     do_check_neq(t1, null);
     do_check_false(t1.userDisabled);
     do_check_false(t1.appDisabled);
@@ -106,7 +107,8 @@ function run_test_1() {
       "onEnabling"
     ]
   });
-  AddonManager.getAddons(["theme1@tests.mozilla.org", "theme2@tests.mozilla.org"], function([t1, t2]) {
+  AddonManager.getAddonsByIDs(["theme1@tests.mozilla.org",
+                               "theme2@tests.mozilla.org"], function([t1, t2]) {
     t2.userDisabled = false;
 
     ensure_test_completed();
@@ -125,7 +127,8 @@ function check_test_1() {
   restartManager(0);
   do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "theme2/1.0");
 
-  AddonManager.getAddons(["theme1@tests.mozilla.org", "theme2@tests.mozilla.org"], function([t1, t2]) {
+  AddonManager.getAddonsByIDs(["theme1@tests.mozilla.org",
+                               "theme2@tests.mozilla.org"], function([t1, t2]) {
     do_check_neq(t1, null);
     do_check_true(t1.userDisabled);
     do_check_false(t1.appDisabled);
@@ -156,7 +159,8 @@ function run_test_2() {
   restartManager(1);
   do_check_eq(Services.prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN), "classic/1.0");
 
-  AddonManager.getAddons(["theme1@tests.mozilla.org", "theme2@tests.mozilla.org"], function([t1, t2]) {
+  AddonManager.getAddonsByIDs(["theme1@tests.mozilla.org",
+                               "theme2@tests.mozilla.org"], function([t1, t2]) {
     do_check_neq(t1, null);
     do_check_true(t1.userDisabled);
     do_check_false(t1.appDisabled);
@@ -219,7 +223,7 @@ function run_test_3() {
 
   ensure_test_completed();
 
-  AddonManager.getAddon("1@personas.mozilla.org", function(p1) {
+  AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
     do_check_neq(null, p1);
     do_check_eq(p1.name, "Test LW Theme");
     do_check_eq(p1.version, "1");
@@ -289,8 +293,8 @@ function run_test_4() {
 
   ensure_test_completed();
 
-  AddonManager.getAddons(["1@personas.mozilla.org",
-                          "2@personas.mozilla.org"], function([p1, p2]) {
+  AddonManager.getAddonsByIDs(["1@personas.mozilla.org",
+                               "2@personas.mozilla.org"], function([p1, p2]) {
     do_check_neq(null, p2);
     do_check_false(p2.appDisabled);
     do_check_false(p2.userDisabled);
@@ -336,8 +340,8 @@ function run_test_5() {
     ]
   });
 
-  AddonManager.getAddons(["2@personas.mozilla.org",
-                          "theme2@tests.mozilla.org"], function([p2, t2]) {
+  AddonManager.getAddonsByIDs(["2@personas.mozilla.org",
+                               "theme2@tests.mozilla.org"], function([p2, t2]) {
     t2.userDisabled = false;
 
     ensure_test_completed();
@@ -383,8 +387,8 @@ function run_test_5() {
 function check_test_5() {
   restartManager(0);
 
-  AddonManager.getAddons(["2@personas.mozilla.org",
-                          "theme2@tests.mozilla.org"], function([p2, t2]) {
+  AddonManager.getAddonsByIDs(["2@personas.mozilla.org",
+                               "theme2@tests.mozilla.org"], function([p2, t2]) {
     do_check_true(t2.isActive);
     do_check_false(t2.userDisabled);
     do_check_false(hasFlag(AddonManager.PENDING_ENABLE, t2.pendingOperations));
@@ -407,8 +411,8 @@ function run_test_6() {
     ]
   });
 
-  AddonManager.getAddons(["2@personas.mozilla.org",
-                          "theme2@tests.mozilla.org"], function([p2, t2]) {
+  AddonManager.getAddonsByIDs(["2@personas.mozilla.org",
+                               "theme2@tests.mozilla.org"], function([p2, t2]) {
     p2.userDisabled = false;
 
     ensure_test_completed();
@@ -453,8 +457,8 @@ function run_test_6() {
 function check_test_6() {
   restartManager(0);
 
-  AddonManager.getAddons(["2@personas.mozilla.org",
-                          "theme2@tests.mozilla.org"], function([p2, t2]) {
+  AddonManager.getAddonsByIDs(["2@personas.mozilla.org",
+                               "theme2@tests.mozilla.org"], function([p2, t2]) {
     do_check_true(p2.isActive);
     do_check_false(p2.userDisabled);
     do_check_false(hasFlag(AddonManager.PENDING_ENABLE, p2.pendingOperations));
@@ -475,7 +479,7 @@ function run_test_7() {
     ]
   });
 
-  AddonManager.getAddon("1@personas.mozilla.org", function(p1) {
+  AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
     p1.uninstall();
 
     ensure_test_completed();
@@ -499,7 +503,7 @@ function run_test_8() {
     ]
   });
 
-  AddonManager.getAddon("2@personas.mozilla.org", function(p2) {
+  AddonManager.getAddonByID("2@personas.mozilla.org", function(p2) {
     p2.uninstall();
 
     ensure_test_completed();
@@ -511,7 +515,7 @@ function run_test_8() {
 
 // Uninstalling a theme not in use should not require a restart
 function run_test_9() {
-  AddonManager.getAddon("theme1@tests.mozilla.org", function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     prepare_test({
       "theme1@tests.mozilla.org": [
         ["onUninstalling", false],
@@ -523,7 +527,7 @@ function run_test_9() {
 
     ensure_test_completed();
 
-    AddonManager.getAddon("theme1@tests.mozilla.org", function(newt1) {
+    AddonManager.getAddonByID("theme1@tests.mozilla.org", function(newt1) {
       do_check_eq(newt1, null);
 
       run_test_10();
@@ -533,7 +537,7 @@ function run_test_9() {
 
 // Uninstalling a custom theme in use should require a restart
 function run_test_10() {
-  AddonManager.getAddon("theme2@tests.mozilla.org", function(oldt2) {
+  AddonManager.getAddonByID("theme2@tests.mozilla.org", function(oldt2) {
     prepare_test({
       "theme2@tests.mozilla.org": [
         "onEnabling",
@@ -549,8 +553,8 @@ function run_test_10() {
 
     restartManager(0);
 
-    AddonManager.getAddons(["default@tests.mozilla.org",
-                            "theme2@tests.mozilla.org"], function([d, t2]) {
+    AddonManager.getAddonsByIDs(["default@tests.mozilla.org",
+                                 "theme2@tests.mozilla.org"], function([d, t2]) {
       do_check_true(t2.isActive);
       do_check_false(t2.userDisabled);
       do_check_false(t2.appDisabled);
@@ -607,7 +611,7 @@ function run_test_11() {
 }
 
 function check_test_11() {
-  AddonManager.getAddon("theme1@tests.mozilla.org", function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     do_check_neq(t1, null);
 
     run_test_12();
@@ -643,7 +647,7 @@ function run_test_12() {
 }
 
 function check_test_12() {
-  AddonManager.getAddon("theme1@tests.mozilla.org", function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     do_check_neq(t1, null);
 
     run_test_13();
@@ -652,7 +656,7 @@ function check_test_12() {
 
 // Updating a custom theme in use should require a restart
 function run_test_13() {
-  AddonManager.getAddon("theme1@tests.mozilla.org", function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     prepare_test({
       "theme1@tests.mozilla.org": [
         "onEnabling",
@@ -695,7 +699,7 @@ function run_test_13() {
 function check_test_13() {
   restartManager(1);
 
-  AddonManager.getAddon("theme1@tests.mozilla.org", function(t1) {
+  AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     do_check_neq(t1, null);
     do_check_true(t1.isActive);
 

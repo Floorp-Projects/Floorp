@@ -194,7 +194,7 @@ function run_test_pt2() {
   dump("\n\n*** RESTARTING EXTENSION MANAGER\n\n");
   restartManager();
 
-  AddonManager.getAddons([a.id for each (a in ADDONS)], function(items) {
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(items) {
     dump("\n\n*** REQUESTING UPDATE\n\n");
     // checkListener will call run_test_pt3().
     next_test = run_test_pt3;
@@ -231,7 +231,7 @@ function run_test_pt4() {
   restartManager();
 
   dump("\n\n*** FINAL CHECKS\n\n");
-  AddonManager.getAddons([a.id for each (a in ADDONS)], function(items) {
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(items) {
     for (var i = 0; i < ADDONS.length; i++) {
       var item = items[i];
       do_check_item(item, "0.2", ADDONS[i]);
