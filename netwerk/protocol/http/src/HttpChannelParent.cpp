@@ -43,6 +43,8 @@
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
 #include "nsISupportsPriority.h"
+#include "nsIAuthPromptProvider.h"
+#include "nsIDocShellTreeItem.h"
 
 namespace mozilla {
 namespace net {
@@ -124,9 +126,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                requestHeaders[i].mValue,
                                requestHeaders[i].mMerge);
 
-  // TODO: implement needed interfaces, and either proxy calls back to child
-  // process, or rig up appropriate hacks.
-  //  httpChan->SetNotificationCallbacks(this);
+  httpChan->SetNotificationCallbacks(this);
 
   httpChan->SetRequestMethod(nsDependentCString(requestMethod.get()));
   if (priority != nsISupportsPriority::PRIORITY_NORMAL)
@@ -226,8 +226,43 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP 
-HttpChannelParent::GetInterface(const nsIID& uuid, void **result)
+HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 {
+  if (// Known interface calls:
+
+      // FIXME: HTTP Authorization (bug 537782):
+      // nsHttpChannel first tries to get this as an nsIAuthPromptProvider; if that
+      // fails, it tries as an nsIAuthPrompt2, and if that fails, an nsIAuthPrompt.
+      // See nsHttpChannel::GetAuthPrompt().  So if we can return any one of these,
+      // HTTP auth should be all set.  The other two if checks can be eventually
+      // deleted.
+      aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) || 
+      aIID.Equals(NS_GET_IID(nsIAuthPrompt2)) ||
+      aIID.Equals(NS_GET_IID(nsIAuthPrompt))  ||
+      // FIXME: redirects (bug 536294):
+      // The likely solution here is for this class to implement nsIChannelEventSink
+      // and nsIHttpEventSink (and forward calls to any real sinks in the child), in
+      // which case QueryInterface() will do the work here and these if statements
+      // can be eventually discarded.
+      aIID.Equals(NS_GET_IID(nsIChannelEventSink)) || 
+      aIID.Equals(NS_GET_IID(nsIHttpEventSink))  ||
+      // FIXME: application cache (bug 536295):
+      aIID.Equals(NS_GET_IID(nsIApplicationCacheContainer)) ||
+      // FIXME:  progress notifications
+      aIID.Equals(NS_GET_IID(nsIProgressEventSink)) ||
+      // FIXME:  bug 561830: when fixed, we shouldn't be asked for this interface
+      aIID.Equals(NS_GET_IID(nsIDocShellTreeItem))) 
+  {
+    return QueryInterface(aIID, result);
+  } 
+
+  // Interface we haven't dealt with yet. Make sure we know by dying.
+  // - use "grep -ri [uuid] ROOT_SRC_DIR" with the uuid from the printf to
+  //   find the offending interface.
+  // - FIXME: make non-fatal before we ship
+  printf("*&*&*& HttpChannelParent::GetInterface: uuid=%s not impl'd yet! "
+         "File a bug!\n", 
+         aIID.ToString());
   DROP_DEAD();
 }
 
