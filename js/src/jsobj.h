@@ -923,6 +923,9 @@ const uintN JSDNP_DONT_PURGE   = 2; /* suppress js_PurgeScopeChain */
 const uintN JSDNP_SET_METHOD   = 4; /* js_{DefineNativeProperty,SetPropertyHelper}
                                        must pass the JSScopeProperty::METHOD
                                        flag on to js_AddScopeProperty */
+const uintN JSDNP_UNQUALIFIED  = 8; /* Unqualified property set.  Only used in
+                                       the defineHow argument of
+                                       js_SetPropertyHelper. */
 
 /*
  * On error, return false.  On success, if propp is non-null, return true with
@@ -1045,11 +1048,13 @@ extern JSBool
 js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, jsval *vp);
 
 /*
- * Check whether it is OK to assign an undeclared property of the global
- * object at the current script PC.
+ * Check whether it is OK to assign an undeclared property with name
+ * propname of the global object in the current script on cx.  Reports
+ * an error if one needs to be reported (in particular in all cases
+ * when it returns false).
  */
 extern JS_FRIEND_API(bool)
-js_CheckUndeclaredVarAssignment(JSContext *cx);
+js_CheckUndeclaredVarAssignment(JSContext *cx, jsval propname);
 
 extern JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
