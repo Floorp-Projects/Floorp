@@ -45,7 +45,6 @@ const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const POST_DATA_ANNO = "bookmarkProperties/POSTData";
 
-Components.utils.import("resource://gre/modules/utils.js");
 do_check_eq(typeof PlacesUtils, "object");
 
 // main
