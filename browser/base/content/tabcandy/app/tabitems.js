@@ -11,7 +11,8 @@ window.TabItem.prototype = $.extend(new Item(), {
   getStorageData: function() {
     return {
       bounds: this.bounds, 
-      url: this.tab.url
+      url: this.tab.url,
+      groupID: (this.parent ? this.parent.id : 0)
     };
   },
   
@@ -243,15 +244,17 @@ window.TabItems = {
       $("<div class='close'></div>").appendTo($div);
       $("<div class='expander'></div>").appendTo($div);
   
-      var items = [];
+      var reconnected = false;
       $div.each(function() {
         var tab = Tabs.tab(this);
         var item = new TabItem(this, tab);
         $(this).data('tabItem', item);    
-        items.push(item); 
+        
+        if(TabItems.reconnect(item))
+          reconnected = true;
       });
       
-      if($div.length == 1 && Groups)
+      if(!reconnected && $div.length == 1 && Groups)
         Groups.newTab($div.data('tabItem'));
       
       // TODO: Figure out this really weird bug?
@@ -296,15 +299,13 @@ window.TabItems = {
   
   // ----------
   reconstitute: function(data) {
+    this.storageData = data;
     var items = this.getItems();
     if(data && data.tabs) {
-      $.each(data.tabs, function(index, tab) {
-        $.each(items, function(index, item) {
-          if(item.getURL() == tab.url) {
-            item.setBounds(tab.bounds);
-            return false;
-          }
-        });
+      var self = this;
+      $.each(items, function(index, item) {
+        if(!self.reconnect(item))
+          Groups.newTab(item);
       });
     } else {
         var box = Items.getPageBounds();
@@ -312,6 +313,27 @@ window.TabItems = {
         
         Items.arrange(items, box, {padding: 10, animate:false});
     }
+  },
+  
+  // ----------
+  reconnect: function(item) {
+    var found = false;
+    if(this.storageData && this.storageData.tabs) {
+      $.each(this.storageData.tabs, function(index, tab) {
+        if(item.getURL() == tab.url) {
+          item.setBounds(tab.bounds);
+          if(tab.groupID) {
+            var group = Groups.group(tab.groupID);
+            group.add(item);
+          }
+          
+          found = true;
+          return false;
+        }      
+      });
+    }   
+    
+    return found; 
   }
 };
 
