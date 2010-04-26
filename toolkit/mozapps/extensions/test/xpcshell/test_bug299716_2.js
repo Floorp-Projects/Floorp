@@ -67,7 +67,7 @@ function run_test() {
   installAllFiles([do_get_addon(ADDON.addon)], function() {
     restartManager();
 
-    AddonManager.getAddon(ADDON.id, function(item) {
+    AddonManager.getAddonByID(ADDON.id, function(item) {
       do_check_eq(item.version, 0.1);
       do_check_false(item.isCompatible);
 

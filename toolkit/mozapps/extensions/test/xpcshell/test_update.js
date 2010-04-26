@@ -81,7 +81,7 @@ function end_test() {
 
 // Verify that an update is available and can be installed.
 function run_test_1() {
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "1.0");
 
@@ -138,12 +138,12 @@ function run_test_2() {
 function check_test_2() {
   ensure_test_completed();
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(olda1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
     do_check_neq(olda1, null);
     do_check_eq(olda1.version, "1.0");
     restartManager(1);
 
-    AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
+    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
       do_check_neq(a1, null);
       do_check_eq(a1.version, "2.0");
       do_check_true(isExtensionInAddonsList(profileDir, a1.id));
@@ -158,7 +158,7 @@ function check_test_2() {
 
 // Check that an update check finds compatibility updates and applies them
 function run_test_3() {
-  AddonManager.getAddon("addon2@tests.mozilla.org", function(a2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
     do_check_neq(a2, null);
     do_check_false(a2.isActive);
     do_check_false(a2.isCompatible);
@@ -186,7 +186,7 @@ function run_test_3() {
 }
 
 function check_test_3() {
-  AddonManager.getAddon("addon2@tests.mozilla.org", function(a2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
     do_check_neq(a2, null);
     do_check_true(a2.isActive);
     do_check_true(a2.isCompatible);
@@ -199,7 +199,7 @@ function check_test_3() {
 
 // Checks that we see no compatibility information when there is none.
 function run_test_4() {
-  AddonManager.getAddon("addon3@tests.mozilla.org", function(a3) {
+  AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
     do_check_false(a3.isActive);
     do_check_false(a3.isCompatible);
@@ -232,7 +232,7 @@ function run_test_4() {
 // Checks that compatibility info for future apps are detected but don't make
 // the item compatibile.
 function run_test_5() {
-  AddonManager.getAddon("addon3@tests.mozilla.org", function(a3) {
+  AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
     do_check_false(a3.isActive);
     do_check_false(a3.isCompatible);
@@ -267,7 +267,7 @@ function run_test_5() {
 }
 
 function check_test_5() {
-  AddonManager.getAddon("addon3@tests.mozilla.org", function(a3) {
+  AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
     do_check_false(a3.isActive);
     do_check_false(a3.isCompatible);
@@ -326,7 +326,7 @@ function check_test_6(install) {
   do_check_eq(install.existingAddon.pendingUpgrade.install, install);
 
   restartManager(1);
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_neq(a1, null);
     do_check_eq(a1.version, "2.0");
     a1.uninstall();
@@ -375,7 +375,7 @@ function run_test_7() {
     }));
   });
 
-  AddonManager.getAddon("1@personas.mozilla.org", function(p1) {
+  AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
     do_check_neq(p1, null);
     do_check_eq(p1.version, "1");
     do_check_eq(p1.name, "Test LW Theme");
@@ -397,7 +397,7 @@ function run_test_7() {
 }
 
 function check_test_7() {
-  AddonManager.getAddon("1@personas.mozilla.org", function(p1) {
+  AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
     do_check_neq(p1, null);
     do_check_eq(p1.version, "2");
     do_check_eq(p1.name, "Updated Theme");
@@ -498,7 +498,7 @@ function run_test_8() {
 
   restartManager(1);
 
-  AddonManager.getAddon("addon2@tests.mozilla.org", function(a2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
     a2.userDisabled = true;
     restartManager(0);
 
@@ -568,13 +568,13 @@ function run_test_8() {
       request.setStatusLine(null, 500, "Server Error");
     });
 
-    AddonManager.getAddons(["addon1@tests.mozilla.org",
-                            "addon2@tests.mozilla.org",
-                            "addon3@tests.mozilla.org",
-                            "addon4@tests.mozilla.org",
-                            "addon5@tests.mozilla.org",
-                            "addon6@tests.mozilla.org"],
-                            function([a1, a2, a3, a4, a5, a6]) {
+    AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                                 "addon2@tests.mozilla.org",
+                                 "addon3@tests.mozilla.org",
+                                 "addon4@tests.mozilla.org",
+                                 "addon5@tests.mozilla.org",
+                                 "addon6@tests.mozilla.org"],
+                                 function([a1, a2, a3, a4, a5, a6]) {
       let count = 6;
 
       let compatListener = {
@@ -635,7 +635,7 @@ function run_test_9() {
 
   restartManager(1);
 
-  AddonManager.getAddon("addon4@tests.mozilla.org", function(a4) {
+  AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
     do_check_true(a4.isActive);
     do_check_true(a4.isCompatible);
 
@@ -646,7 +646,7 @@ function run_test_9() {
 // Tests that a normal update check won't decrease a targetApplication's
 // maxVersion.
 function run_test_10() {
-  AddonManager.getAddon("addon4@tests.mozilla.org", function(a4) {
+  AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
     a4.findUpdates({
       onUpdateFinished: function(addon) {
         do_check_true(addon.isCompatible);
@@ -660,7 +660,7 @@ function run_test_10() {
 // Tests that an update check for a new application will decrease a
 // targetApplication's maxVersion.
 function run_test_11() {
-  AddonManager.getAddon("addon4@tests.mozilla.org", function(a4) {
+  AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
     a4.findUpdates({
       onUpdateFinished: function(addon) {
         do_check_false(addon.isCompatible);
@@ -675,7 +675,7 @@ function run_test_11() {
 function run_test_12() {
   restartManager(0);
 
-  AddonManager.getAddon("addon4@tests.mozilla.org", function(a4) {
+  AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
     do_check_false(a4.isActive);
     do_check_false(a4.isCompatible);
 
@@ -706,7 +706,7 @@ function run_test_13() {
   }, dest);
   restartManager(1);
 
-  AddonManager.getAddon("addon7@tests.mozilla.org", function(a7) {
+  AddonManager.getAddonByID("addon7@tests.mozilla.org", function(a7) {
     do_check_neq(a7, null);
     do_check_false(a7.isActive);
     do_check_false(a7.isCompatible);
@@ -733,7 +733,7 @@ function run_test_13() {
 }
 
 function check_test_13() {
-  AddonManager.getAddon("addon7@tests.mozilla.org", function(a7) {
+  AddonManager.getAddonByID("addon7@tests.mozilla.org", function(a7) {
     do_check_neq(a7, null);
     do_check_true(a7.isActive);
     do_check_true(a7.isCompatible);

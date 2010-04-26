@@ -102,7 +102,7 @@ function run_test()
                          .replace(/%CUSTOM1%/, "custom_parameter_1")
                          .replace(/%CUSTOM2%/, "custom_parameter_2");
 
-  AddonManager.getAddon("test@mozilla.org", function(item) {
+  AddonManager.getAddonByID("test@mozilla.org", function(item) {
     // Initiate update
     item.findUpdates({
       onNoCompatibilityUpdateAvailable: function(addon) {

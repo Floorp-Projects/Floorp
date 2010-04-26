@@ -60,8 +60,8 @@ function run_test_1() {
 
   startupManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org"], function([a1, a2]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org"], function([a1, a2]) {
     do_check_neq(a1, null);
     do_check_true(a1.isActive);
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_UNINSTALL));
@@ -87,8 +87,8 @@ function run_test_2() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org"], function([a1, a2]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org"], function([a1, a2]) {
     do_check_eq(a1, null);
     do_check_eq(a2, null);
 
@@ -107,8 +107,8 @@ function run_test_3() {
 
   restartManager(0);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org"], function([a1, a2]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org"], function([a1, a2]) {
     do_check_eq(a1, null);
     do_check_eq(a2, null);
 
@@ -145,8 +145,8 @@ function run_test_4() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org"], function([a1, a2]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org"], function([a1, a2]) {
     do_check_eq(a1, null);
     do_check_neq(a2, null);
 

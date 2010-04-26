@@ -97,10 +97,10 @@ function run_test() {
   Services.prefs.setIntPref("extensions.databaseSchema", 100);
 
   startupManager(1);
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org"], function([a1, a2, a3, a4]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org"], function([a1, a2, a3, a4]) {
     // addon1 was enabled in the database
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
