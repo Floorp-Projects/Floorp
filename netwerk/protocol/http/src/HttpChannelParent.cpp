@@ -75,14 +75,10 @@ NS_IMPL_ISUPPORTS3(HttpChannelParent,
 //-----------------------------------------------------------------------------
 
 bool 
-HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec, 
-                                 const nsCString&           charset,
-                                 const nsCString&           originalUriSpec, 
-                                 const nsCString&           originalCharset,
-                                 const nsCString&           docUriSpec, 
-                                 const nsCString&           docCharset,
-                                 const nsCString&           referrerSpec,
-                                 const nsCString&           referrerCharset,
+HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
+                                 const IPC::URI&            aOriginalURI,
+                                 const IPC::URI&            aDocURI,
+                                 const IPC::URI&            aReferrerURI,
                                  const PRUint32&            loadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsHttpAtom&          requestMethod,
@@ -91,17 +87,19 @@ HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec,
                                  const PRBool&              allowPipelining,
                                  const PRBool&              forceAllowThirdPartyCookie)
 {
-  LOG(("HttpChannelParent RecvAsyncOpen [this=%x uri=%s (%s)]\n", 
-       this, uriSpec.get(), charset.get()));
+  nsCOMPtr<nsIURI> uri = aURI;
+  nsCOMPtr<nsIURI> originalUri = aOriginalURI;
+  nsCOMPtr<nsIURI> docUri = aDocURI;
+  nsCOMPtr<nsIURI> referrerUri = aReferrerURI;
+  
+  nsCString uriSpec;
+  uri->GetSpec(uriSpec);
+  LOG(("HttpChannelParent RecvAsyncOpen [this=%x uri=%s]\n", 
+       this, uriSpec.get()));
 
   nsresult rv;
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
-  if (NS_FAILED(rv))
-    return false;       // TODO: send fail msg to child, return true
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), uriSpec, charset.get(), nsnull, ios);
   if (NS_FAILED(rv))
     return false;       // TODO: send fail msg to child, return true
 
@@ -112,29 +110,12 @@ HttpChannelParent::RecvAsyncOpen(const nsCString&           uriSpec,
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(chan.get());
 
-  if (!originalUriSpec.IsEmpty()) {
-    nsCOMPtr<nsIURI> originalUri;
-    rv = NS_NewURI(getter_AddRefs(originalUri), originalUriSpec, 
-                   originalCharset.get(), nsnull, ios);
-    if (!NS_FAILED(rv))
-      httpChan->SetOriginalURI(originalUri);
-  }
-  if (!docUriSpec.IsEmpty()) {
-    nsCOMPtr<nsIURI> docUri;
-    rv = NS_NewURI(getter_AddRefs(docUri), docUriSpec, 
-                   docCharset.get(), nsnull, ios);
-    if (!NS_FAILED(rv)) {
-      httpChan->SetDocumentURI(docUri);
-    }
-  }
-  if (!referrerSpec.IsEmpty()) {
-    nsCOMPtr<nsIURI> referrerUri;
-    rv = NS_NewURI(getter_AddRefs(referrerUri), referrerSpec,
-                   referrerCharset.get(), nsnull, ios);
-    if (!NS_FAILED(rv)) {
-      httpChan->SetReferrerInternal(referrerUri);
-    }
-  }
+  if (originalUri)
+    httpChan->SetOriginalURI(originalUri);
+  if (docUri)
+    httpChan->SetDocumentURI(docUri);
+  if (referrerUri)
+    httpChan->SetReferrerInternal(referrerUri);
   if (loadFlags != nsIRequest::LOAD_NORMAL)
     httpChan->SetLoadFlags(loadFlags);
 
