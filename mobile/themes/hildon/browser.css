@@ -61,10 +61,20 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-app-switch {
-  min-width: 64px !important;
+  margin-top: -8px; /* force the button to go to the edge */
+  margin-bottom: -8px; /* force the button to go to the edge */
+  margin-left: -8px; /* force the button to go to the edge */
+  padding-left: 8px !important; /* re-center the image */
+  min-width: 72px !important; /* 72, not 64 to make up for the negative margin */
+  min-height: 72px !important; /* 72, not 64 to make up for the negative margin */
   visibility: collapse;
   margin-right: 8px; /* core spacing */
   list-style-image: url("chrome://browser/skin/images/task-switch-40.png");
+}
+
+#tool-app-switch:hover:active {
+  background-color: #8db8d8 !important;
+  -moz-border-radius-bottomright: 6px;
 }
 
 #toolbar-main[fullscreen="true"] #tool-app-switch:not(:-moz-system-metric(maemo-classic)) {
@@ -72,9 +82,19 @@ toolbarbutton.urlbar-button {
 }
 
 #tool-app-close {
-  min-width: 64px !important;
+  margin-top: -8px; /* force the button to go to the edge */
+  margin-bottom: -8px; /* force the button to go to the edge */
+  margin-right: -8px; /* force the button to go to the edge */
+  padding-right: 8px !important; /* re-center the image */
+  min-width: 72px !important; /* 72, not 64 to make up for the negative margin */
+  min-height: 72px !important; /* 72, not 64 to make up for the negative margin */
   visibility: collapse;
   list-style-image: url("chrome://browser/skin/images/task-close-40.png");
+}
+
+#tool-app-close:hover:active {
+  background-color: #8db8d8 !important;
+  -moz-border-radius-bottomleft: 6px;
 }
 
 #toolbar-main[fullscreen="true"] #tool-app-close {
