@@ -56,6 +56,37 @@
     </implementation>
   </binding>
 
+  <binding id="download-not-started" extends="#download-base">
+   <content orient="horizontal" align="start">
+      <xul:image validate="always" xbl:inherits="src=iconURL"/>
+      <xul:vbox flex="1">
+        <xul:hbox align="center">
+          <xul:label class="title" xbl:inherits="value=target" crop="center" flex="1"/>
+          <xul:label class="normal" xbl:inherits="value=datetime"/>
+        </xul:hbox>
+        <xul:hbox>
+          <xul:label class="normal" xbl:inherits="value=status"/>
+        </xul:hbox>
+        <xul:hbox class="show-on-select" align="center">
+          <xul:button anonid="showpage-button" label="&downloadShowPage.label;"
+                      oncommand="DownloadsView.showPage(document.getBindingParent(this));"/>
+          <xul:spacer flex="1"/>
+        </xul:hbox>
+      </xul:vbox>
+    </content>
+
+    <implementation>
+      <constructor>
+        <![CDATA[
+          let referrer = this.hasAttribute("referrer");
+          if (!referrer)
+            document.getAnonymousElementByAttribute(this, "anonid", "showpage-button").setAttribute("disabled", "true");
+        ]]>
+      </constructor>
+    </implementation>
+  </binding>
+
+
   <binding id="download-downloading" extends="#download-base">
    <content orient="horizontal" align="start">
       <xul:image validate="always" xbl:inherits="src=iconURL"/>
