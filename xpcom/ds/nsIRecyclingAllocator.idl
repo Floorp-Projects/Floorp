@@ -45,7 +45,7 @@
  * Holds allocations and reuses them for subsequent allocs.
  * Thread safe and uses a timer to release freelist.
  *
- * @status UNDER-DEVELOPMENT
+ * @status UNDER_DEVELOPMENT
  */
 
 [scriptable, uuid(d064a04c-9cee-4319-be31-64d565bccba9)]
