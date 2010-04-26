@@ -3833,6 +3833,9 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
     break;
     // Wheel events forwarded from the child.
     case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
+    case WM_HSCROLL:
+    case WM_VSCROLL:
     // Plugins taking or losing focus triggering focus app messages.
     case WM_SETFOCUS:
     case WM_KILLFOCUS:
