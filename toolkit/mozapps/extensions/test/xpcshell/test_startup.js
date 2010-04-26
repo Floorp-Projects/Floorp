@@ -83,12 +83,12 @@ function run_test() {
   do_test_pending();
   startupManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_eq(a1, null);
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
@@ -129,12 +129,12 @@ function run_test_1() {
   writeInstallRDFToDir(addon5, dest);
 
   restartManager(1);
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -211,12 +211,12 @@ function run_test_2() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -267,12 +267,12 @@ function run_test_3() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -318,12 +318,12 @@ function run_test_4() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_eq(a1, null);
     do_check_false(isExtensionInAddonsList(profileDir, "addon1@tests.mozilla.org"));
@@ -350,12 +350,12 @@ function run_test_5() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -388,12 +388,12 @@ function run_test_6() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -432,12 +432,12 @@ function run_test_7() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -479,12 +479,12 @@ function run_test_8() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -522,12 +522,12 @@ function run_test_9() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -574,12 +574,12 @@ function run_test_10() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_neq(a1, null);
     do_check_eq(a1.id, "addon1@tests.mozilla.org");
@@ -624,12 +624,12 @@ function run_test_11() {
 
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org",
-                          "addon4@tests.mozilla.org",
-                          "addon5@tests.mozilla.org"],
-                          function([a1, a2, a3, a4, a5]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org",
+                               "addon4@tests.mozilla.org",
+                               "addon5@tests.mozilla.org"],
+                               function([a1, a2, a3, a4, a5]) {
 
     do_check_eq(a1, null);
     do_check_eq(a2, null);

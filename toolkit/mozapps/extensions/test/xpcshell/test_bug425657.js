@@ -49,7 +49,7 @@ function run_test()
   startupManager();
   installAllFiles([do_get_addon(ADDON)], function() {
     restartManager();
-    AddonManager.getAddon(ID, function(addon) {
+    AddonManager.getAddonByID(ID, function(addon) {
       do_check_neq(addon, null);
       do_check_eq(addon.name, "Deutsches W\u00f6rterbuch");
       do_check_eq(addon.name.length, 20);

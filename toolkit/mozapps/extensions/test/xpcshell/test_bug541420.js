@@ -47,7 +47,7 @@ function run_test() {
 
     restartManager();
 
-    AddonManager.getAddon("bug541420@tests.mozilla.org", function(addon) {
+    AddonManager.getAddonByID("bug541420@tests.mozilla.org", function(addon) {
 
       do_check_neq(addon, null);
       do_check_true(addon.hasResource("binary"));

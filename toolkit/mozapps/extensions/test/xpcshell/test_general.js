@@ -28,7 +28,7 @@ function run_test_1() {
   AddonManager.getAddonsByTypes(null, function(addons) {
     do_check_eq(gCount, addons.length);
 
-    AddonManager.getAddonsWithPendingOperations(null, function(pendingAddons) {
+    AddonManager.getAddonsWithOperationsByTypes(null, function(pendingAddons) {
       do_check_eq(0, pendingAddons.length);
 
       run_test_2();

@@ -49,9 +49,9 @@ function run_test() {
 
     restartManager();
 
-    AddonManager.getAddons(["bug526598_1@tests.mozilla.org",
-                            "bug526598_2@tests.mozilla.org"],
-                            function([a1, a2]) {
+    AddonManager.getAddonsByIDs(["bug526598_1@tests.mozilla.org",
+                                 "bug526598_2@tests.mozilla.org"],
+                                 function([a1, a2]) {
 
       do_check_neq(a1, null);
       do_check_true(a1.hasResource("install.rdf"));
@@ -76,9 +76,9 @@ function run_test() {
 
       restartManager();
 
-      AddonManager.getAddons(["bug526598_1@tests.mozilla.org",
-                              "bug526598_2@tests.mozilla.org"],
-                              function([newa1, newa2]) {
+      AddonManager.getAddonsByIDs(["bug526598_1@tests.mozilla.org",
+                                   "bug526598_2@tests.mozilla.org"],
+                                   function([newa1, newa2]) {
         do_check_eq(newa1, null);
         do_check_eq(newa2, null);
 

@@ -86,7 +86,7 @@ var PluginProvider = {
    * @param  aCallback
    *         A callback to pass the Addon to
    */
-  getAddon: function PL_getAddon(aId, aCallback) {
+  getAddonByID: function PL_getAddon(aId, aCallback) {
     if (!this.plugins)
       this.buildPluginList();
 
@@ -130,7 +130,7 @@ var PluginProvider = {
     let results = [];
 
     for (let id in this.plugins) {
-      this.getAddon(id, function(aAddon) {
+      this.getAddonByID(id, function(aAddon) {
         results.push(aAddon);
       });
     }
@@ -146,7 +146,7 @@ var PluginProvider = {
    * @param  aCallback
    *         A callback to pass an array of Addons to
    */
-  getAddonsWithPendingOperations: function PL_getAddonsWithPendingOperations(aTypes, aCallback) {
+  getAddonsWithOperationsByTypes: function PL_getAddonsWithOperationsByTypes(aTypes, aCallback) {
     aCallback([]);
   },
 
@@ -158,7 +158,7 @@ var PluginProvider = {
    * @param  aCallback
    *         A callback to pass the array of AddonInstalls to
    */
-  getInstalls: function PL_getInstalls(aTypes, aCallback) {
+  getInstallsByTypes: function PL_getInstallsByTypes(aTypes, aCallback) {
     aCallback([]);
   },
 

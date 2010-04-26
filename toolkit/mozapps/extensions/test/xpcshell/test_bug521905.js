@@ -52,7 +52,7 @@ function run_test() {
   installAllFiles([do_get_addon(ADDON)], function() {
     restartManager();
 
-    AddonManager.getAddon(ID, function(addon) {
+    AddonManager.getAddonByID(ID, function(addon) {
       do_check_neq(addon, null);
       do_check_true(addon.isActive);
 
@@ -65,7 +65,7 @@ function run_test_1() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.0pre", true);
 
   restartManager();
-  AddonManager.getAddon(ID, function(addon) {
+  AddonManager.getAddonByID(ID, function(addon) {
     do_check_neq(addon, null);
     do_check_false(addon.isActive);
 
@@ -77,7 +77,7 @@ function run_test_2() {
   Services.prefs.setBoolPref("extensions.checkCompatibility.2.0p", false);
 
   restartManager();
-  AddonManager.getAddon(ID, function(addon) {
+  AddonManager.getAddonByID(ID, function(addon) {
     do_check_neq(addon, null);
     do_check_false(addon.isActive);
 
