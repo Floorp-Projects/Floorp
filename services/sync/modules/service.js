@@ -126,11 +126,11 @@ WeaveSvc.prototype = {
     this._updateCachedURLs();
   },
 
-  get password password() ID.get("WeaveID").password,
-  set password password(value) ID.get("WeaveID").password = value,
+  get password() ID.get("WeaveID").password,
+  set password(value) ID.get("WeaveID").password = value,
 
-  get passphrase passphrase() ID.get("WeaveCryptoID").password,
-  set passphrase passphrase(value) ID.get("WeaveCryptoID").password = value,
+  get passphrase() ID.get("WeaveCryptoID").password,
+  set passphrase(value) ID.get("WeaveCryptoID").password = value,
 
   get serverURL() Svc.Prefs.get("serverURL"),
   set serverURL(value) {

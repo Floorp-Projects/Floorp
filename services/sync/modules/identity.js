@@ -81,7 +81,7 @@ function Identity(realm, username, password) {
   this._password = password;
 }
 Identity.prototype = {
-  get password password() {
+  get password() {
     // Look up the password then cache it
     if (this._password == null)
       for each (let login in this._logins)
@@ -90,9 +90,7 @@ Identity.prototype = {
     return this._password;
   },
 
-  set password password(value) {
-    this._password = value;
-  },
+  set password(value) this._password = value,
 
   persist: function persist() {
     // Clean up any existing passwords unless it's what we're persisting
@@ -120,5 +118,5 @@ Identity.prototype = {
     Svc.Login.addLogin(newLogin);
   },
 
-  get _logins _logins() Svc.Login.findLogins({}, PWDMGR_HOST, null, this.realm)
+  get _logins() Svc.Login.findLogins({}, PWDMGR_HOST, null, this.realm)
 };
