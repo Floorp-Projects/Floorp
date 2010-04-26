@@ -58,7 +58,7 @@ HttpChannelParent::HttpChannelParent()
 
 HttpChannelParent::~HttpChannelParent()
 {
-  NS_RELEASE(gHttpHandler);
+  gHttpHandler->Release();
 }
 
 //-----------------------------------------------------------------------------
