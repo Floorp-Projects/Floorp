@@ -112,7 +112,7 @@ struct ParamTraits<URI>
     if (!uri)
       return false;
     nsCOMPtr<nsIIPCSerializable> serializable = do_QueryInterface(uri);
-    if (!serialiable || !serializable->Read(aMsg, aIter))
+    if (!serializable || !serializable->Read(aMsg, aIter))
       return false;
 
     uri.forget(&aResult->mURI);
