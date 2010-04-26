@@ -521,6 +521,7 @@ var AddonManagerInternal = {
           callProvider(this.providers[i], "isInstallAllowed", null, aURI))
         return true;
     }
+    return false;
   },
 
   /**
