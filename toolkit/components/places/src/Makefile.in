@@ -91,10 +91,11 @@ endif
 
 EXTRA_JS_MODULES = \
   PlacesDBUtils.jsm \
+  utils.js \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
-  utils.js \
+  PlacesUtils.jsm \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
