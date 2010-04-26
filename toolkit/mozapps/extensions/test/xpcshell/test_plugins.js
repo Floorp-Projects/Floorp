@@ -30,10 +30,22 @@ function run_test_1() {
 
     AddonManager.getAddonByID(gID, function(p) {
       do_check_neq(p, null)
+      do_check_eq(p.name, "Test Plug-in");
+      do_check_eq(p.description, "Plug-in for testing purposes.");
+      do_check_eq(p.creator, "");
+      do_check_eq(p.version, "1.0.0.0");
+      do_check_eq(p.type, "plugin");
       do_check_false(p.userDisabled);
       do_check_false(p.appDisabled);
       do_check_true(p.isActive);
-      do_check_eq(p.name, "Test Plug-in");
+      do_check_true(p.isCompatible);
+      do_check_true(p.providesUpdatesSecurely);
+      do_check_eq(p.blocklistState, 0);
+      do_check_eq(p.permissions, AddonManager.PERM_CAN_DISABLE);
+      do_check_eq(p.pendingOperations, 0);
+      do_check_eq(p.scope, AddonManager.SCOPE_APPLICATION);
+      do_check_true("isCompatibleWith" in p);
+      do_check_true("findUpdates" in p);
 
       run_test_2(p);
     });
