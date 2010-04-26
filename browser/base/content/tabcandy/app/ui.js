@@ -268,7 +268,7 @@ function UIClass(){
         self.hideTabBar();
     });
 
-  // ___ Finish up
+  // ___ Page
   Page.init();
   
   // ___ Storage
@@ -298,6 +298,18 @@ function UIClass(){
     }
   });
   
+  // ___ resizing
+  if(data.pageBounds) {
+    this.pageBounds = data.pageBounds;
+    this.resize();
+  } else 
+    this.pageBounds = Items.getPageBounds();    
+  
+  $(window).resize(function() {
+    self.resize();
+  });
+  
+  // ___ Done
   this.initialized = true;
 };
 
@@ -315,6 +327,64 @@ UIClass.prototype = {
     this.$tabBarToggle.addClass("tabbar-off");        
   },
 
+  // ----------
+  resize: function() {
+    Groups.repositionNewTabGroup();
+    
+    var items = Items.getTopLevelItems();
+    var itemBounds = new Rect(this.pageBounds);
+    itemBounds.width = 1;
+    itemBounds.height = 1;
+    $.each(items, function(index, item) {
+      if(item.locked)
+        return;
+        
+      var bounds = item.getBounds();
+      itemBounds = (itemBounds ? itemBounds.union(bounds) : new Rect(bounds));
+    });
+
+    var oldPageBounds = new Rect(this.pageBounds);
+    
+    var newPageBounds = Items.getPageBounds();
+    if(newPageBounds.width < this.pageBounds.width && newPageBounds.width > itemBounds.width)
+      newPageBounds.width = this.pageBounds.width;
+
+    if(newPageBounds.height < this.pageBounds.height && newPageBounds.height > itemBounds.height)
+      newPageBounds.height = this.pageBounds.height;
+
+    var wScale;
+    var hScale;
+    if(Math.abs(newPageBounds.width - this.pageBounds.width)
+        > Math.abs(newPageBounds.height - this.pageBounds.height)) {
+      wScale = newPageBounds.width / this.pageBounds.width;
+      hScale = newPageBounds.height / itemBounds.height;
+    } else {
+      wScale = newPageBounds.width / itemBounds.width;
+      hScale = newPageBounds.height / this.pageBounds.height;
+    }
+    
+    var scale = Math.min(hScale, wScale);
+    var self = this;
+    $.each(items, function(index, item) {
+      if(item.locked)
+        return;
+        
+      var bounds = item.getBounds();
+
+      bounds.left += newPageBounds.left - self.pageBounds.left;
+      bounds.left *= scale;
+      bounds.width *= scale;
+
+      bounds.top += newPageBounds.top - self.pageBounds.top;            
+      bounds.top *= scale;
+      bounds.height *= scale;
+      
+      item.setBounds(bounds, true);
+    });
+    
+    this.pageBounds = Items.getPageBounds();
+  },
+  
   // ----------
   _addArrangements: function() {
     this.grid = new ArrangeClass("Grid", function(value) {

@@ -11,6 +11,7 @@ window.TabItem.prototype = $.extend(new Item(), {
   getStorageData: function() {
     return {
       bounds: this.bounds, 
+      userSize: this.userSize,
       url: this.tab.url,
       groupID: (this.parent ? this.parent.id : 0)
     };
@@ -150,6 +151,7 @@ window.TabItem.prototype = $.extend(new Item(), {
         },
         stop: function(){
           self.reloadBounds();
+          self.setUserSize();        
           self.pushAway();
         } 
       });
@@ -321,7 +323,8 @@ window.TabItems = {
     if(this.storageData && this.storageData.tabs) {
       $.each(this.storageData.tabs, function(index, tab) {
         if(item.getURL() == tab.url) {
-          item.setBounds(tab.bounds);
+          item.setBounds(tab.bounds, true);
+          item.userSize = tab.userSize;
           if(tab.groupID) {
             var group = Groups.group(tab.groupID);
             group.add(item);

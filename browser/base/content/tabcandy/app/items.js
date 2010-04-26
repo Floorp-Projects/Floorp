@@ -55,6 +55,11 @@ window.Item = function() {
   // Variable: parent
   // The group that this item is a child of
   this.parent = null;
+  
+  // Variable: userSize
+  // A <Point> that describes the last size specifically chosen by the user.
+  // Used by unsquish.
+  this.userSize = null;
 };
 
 window.Item.prototype = { 
@@ -114,6 +119,13 @@ window.Item.prototype = {
     this.setBounds(new Rect(this.bounds.left, this.bounds.top, width, height), immediately);
   },
 
+  // ----------
+  // Function: setUserSize
+  // Remembers the current size as one the user has chosen. 
+  setUserSize: function() {
+    this.userSize = new Point(this.bounds.width, this.bounds.height);
+  },
+  
   // ----------
   // Function: getZ
   // Returns the zIndex of the Item.
@@ -287,13 +299,28 @@ window.Item.prototype = {
       var data = item.pushAwayData;
       var bounds = data.bounds;
       var newBounds = new Rect(bounds);
-      if(bounds.width < TabItems.tabWidth) {
-        newBounds.left -= (TabItems.tabWidth - newBounds.width) / 2;
-        newBounds.top -= (TabItems.tabHeight - newBounds.height) / 2;
-        newBounds.width = TabItems.tabWidth;
-        newBounds.height = TabItems.tabHeight;
-      }
+
+      var newSize;
+/*
+      if(item.userSize) 
+        newSize = new Point(item.userSize);
+      else
+*/
+        newSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
         
+      if(item.isAGroup) {
+          newBounds.width = Math.max(newBounds.width, newSize.x);
+          newBounds.height = Math.max(newBounds.height, newSize.y);
+      } else {
+        if(bounds.width < newSize.x) {
+          newBounds.width = newSize.x;
+          newBounds.height = newSize.y;
+        }
+      }
+
+      newBounds.left -= (newBounds.width - bounds.width) / 2;
+      newBounds.top -= (newBounds.height - bounds.height) / 2;
+      
       var offset = new Point();
       if(newBounds.left < pageBounds.left)
         offset.x = pageBounds.left - newBounds.left;
@@ -398,7 +425,9 @@ window.Items = {
   getPageBounds: function() {
     var top = 20;
     var bottom = TabItems.tabHeight + 10; // MAGIC NUMBER: giving room for the "new tabs" group
-    return new Rect(0, top, window.innerWidth, window.innerHeight - (top + bottom));
+    var width = Math.max(100, window.innerWidth);
+    var height = Math.max(100, window.innerHeight - (top + bottom));
+    return new Rect(0, top, width, height);
   },
   
   // ----------  

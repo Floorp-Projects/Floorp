@@ -39,6 +39,7 @@ window.Group = function(listOfEls, options) {
   this.locked = options.locked || false;
   this.isAGroup = true;
   this.id = options.id || Groups.getNextID();
+  this.userSize = options.userSize || null;
 
   var self = this;
 
@@ -92,7 +93,7 @@ window.Group = function(listOfEls, options) {
     });
     
   var $close = $('.close', this.$titlebar).click(function() {
-    self.close();
+    self.closeAll();
   });
   
   // ___ Title 
@@ -151,7 +152,7 @@ window.Group = function(listOfEls, options) {
   // ___ locking
   if(this.locked) {
     $container.css({cursor: 'default'});    
-    $close.hide();
+/*     $close.hide(); */
   }
     
   // ___ Superclass initialization
@@ -187,6 +188,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   getStorageData: function() {
     var data = {
       bounds: this.getBounds(), 
+      userSize: this.userSize,
       locked: this.locked, 
       title: this.getTitle(),
       id: this.id
@@ -313,12 +315,25 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     });
   },
     
-  // ----------  
+  // ----------
   close: function() {
-    var toClose = $.merge([], this._children);
-    $.each(toClose, function(index, child) {
-      child.close();
+    this.removeAll();
+    this._sendOnClose();
+    Groups.unregister(this);
+    $(this.container).fadeOut(function() {
+      $(this).remove();
     });
+  },
+  
+  // ----------  
+  closeAll: function() {
+    if(this._children.length) {
+      var toClose = $.merge([], this._children);
+      $.each(toClose, function(index, child) {
+        child.close();
+      });
+    } else 
+      this.close();
   },
     
   // ----------  
@@ -440,12 +455,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     if(typeof(item.setResizable) == 'function')
       item.setResizable(true);
 
-    if(this._children.length == 0 && !this.locked){  
-      this._sendOnClose();
-      Groups.unregister(this);
-      $(this.container).fadeOut(function() {
-        $(this).remove();
-      });
+    if(this._children.length == 0 && !this.locked && !this.getTitle()){  
+      this.close();
     } else if(!options.dontArrange) {
       this.arrange();
     }
@@ -493,7 +504,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         drag.info.$el.addClass("willGroup");
       },
       out: function(){
-        var group = drag.item.parent;
+        var group = drag.info.item.parent;
         if(group)
           group.remove(drag.info.$el);
           
@@ -523,6 +534,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         },
         stop: function(){
           self.reloadBounds();
+          self.setUserSize();
           self.pushAway();
         } 
       });
@@ -559,11 +571,12 @@ DragInfo.prototype = {
   // ----------  
   stop: function() {
     this.$el.data('isDragging', false);    
-    
+
     if(this.parent && !this.parent.locked && this.parent != this.item.parent 
-        && this.parent._children.length <= 1) 
+        && this.parent._children.length == 1 && !this.parent.getTitle()) {
       this.parent.remove(this.parent._children[0]);
-      
+    }
+     
     if(this.item && !this.$el.hasClass('willGroup') && !this.item.parent) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
@@ -681,14 +694,39 @@ window.Groups = {
         new Group([], $.extend({}, group, {dontPush: true})); 
       });
     } else {
-      var pad = 5;
-      var sw = window.innerWidth;
-      var sh = window.innerHeight;
-      var w = sw - (pad * 2);
-      var h = TabItems.tabHeight;
-      var box = new Rect(pad, sh - (h + pad), w, h);
+      var box = this.getBoundsForNewTabGroup();
       new Group([], {bounds: box, title: 'New Tabs', locked: true, dontPush: true}); 
     }
+  },
+  
+  // ----------
+  getNewTabGroup: function() {
+    var groupTitle = 'New Tabs';
+    var array = jQuery.grep(this.groups, function(group) {
+      return group.getTitle() == groupTitle;
+    });
+    
+    if(array.length) 
+      return array[0];
+      
+    return null;
+  },
+
+  // ----------
+  getBoundsForNewTabGroup: function() {
+    var pad = 5;
+    var sw = window.innerWidth;
+    var sh = window.innerHeight;
+    var w = sw - (pad * 2);
+    var h = TabItems.tabHeight;
+    return new Rect(pad, sh - (h + pad), w, h);
+  },
+
+  // ----------
+  repositionNewTabGroup: function() {
+    var box = this.getBoundsForNewTabGroup();
+    var group = this.getNewTabGroup();
+    group.setBounds(box, true);
   },
   
   // ----------  
@@ -755,14 +793,10 @@ window.Groups = {
   
   // ----------
   newTab: function(tabItem) {
-    var groupTitle = 'New Tabs';
-    var array = jQuery.grep(this.groups, function(group) {
-      return group.getTitle() == groupTitle;
-    });
-    
+    var group = this.getNewTabGroup();
     var $el = $(tabItem.container);
-    if(array.length) 
-      array[0].add($el);
+    if(group) 
+      group.add($el);
   }
 };
 
