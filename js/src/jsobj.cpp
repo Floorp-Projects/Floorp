@@ -4617,8 +4617,13 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
      * property. We also stop when we reach the global object skipping any
      * farther checks or lookups. For details see the JSOP_BINDNAME case of
      * js_Interpret.
+     *
+     * The test order here matters because js_IsCacheableNonGlobalScope
+     * must not be passed a global object (i.e. one with null parent).
      */
-    for (int scopeIndex = 0; js_IsCacheableNonGlobalScope(obj); scopeIndex++) {
+    for (int scopeIndex = 0;
+         !obj->getParent() || js_IsCacheableNonGlobalScope(obj);
+         scopeIndex++) {
         JSObject *pobj;
         JSProperty *prop;
         int protoIndex = js_LookupPropertyWithFlags(cx, obj, id,
@@ -4628,7 +4633,8 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
             return NULL;
         if (prop) {
             JS_ASSERT(pobj->isNative());
-            JS_ASSERT(pobj->getClass() == obj->getClass());
+            JS_ASSERT(!obj->getParent() ||
+                      pobj->getClass() == obj->getClass());
 #ifdef DEBUG
             PropertyCacheEntry *entry =
 #endif
@@ -4639,10 +4645,10 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
             return obj;
         }
 
-        /* Call and other cacheable objects always have a parent. */
-        obj = obj->getParent();
-        if (!obj->getParent())
+        JSObject *parent = obj->getParent();
+        if (!parent)
             return obj;
+        obj = parent;
     }
 
     /* Loop until we find a property or reach the global object. */
