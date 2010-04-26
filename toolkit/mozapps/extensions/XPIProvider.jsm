@@ -3971,6 +3971,7 @@ function UpdateChecker(addon, listener, reason, appVersion, platformVersion) {
   this.listener = listener;
   this.appVersion = appVersion;
   this.platformVersion = platformVersion;
+  this.syncCompatibility = (reason == AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
 
   let updateURL = addon.updateURL ? addon.updateURL :
                                     Services.prefs.getCharPref(PREF_EM_UPDATE_URL);
@@ -3991,6 +3992,7 @@ UpdateChecker.prototype = {
   listener: null,
   appVersion: null,
   platformVersion: null,
+  syncCompatibility: null,
 
   /**
    * Called when AddonUpdateChecker completes the update check
@@ -4000,12 +4002,33 @@ UpdateChecker.prototype = {
    */
   onUpdateCheckComplete: function UC_onUpdateCheckComplete(updates) {
     let AUC = AddonUpdateChecker;
+
+    // Always apply any compatibility update for the current version
     let compatUpdate = AUC.getCompatibilityUpdate(updates, this.addon.version,
-                                                  this.appVersion,
-                                                  this.platformVersion);
-    if (compatUpdate && this.addon.applyCompatibilityUpdate(compatUpdate)) {
-      if ("onCompatibilityUpdated" in this.listener)
-        this.listener.onCompatibilityUpdated(createWrapper(this.addon));
+                                                  this.syncCompatibility);
+
+    // Apply the compatibility update to the database
+    if (compatUpdate)
+      this.addon.applyCompatibilityUpdate(compatUpdate, this.syncCompatibility);
+
+    // If the request is for an application or platform version that is
+    // different to the current application or platform version then look for a
+    // compatibility update for those versions.
+    if ((this.appVersion &&
+         Services.vc.compare(this.appVersion, Services.appinfo.version) != 0) ||
+        (this.platformVersion &&
+         Services.vc.compare(this.platformVersion, Services.appinfo.platformVersion) != 0)) {
+      compatUpdate = AUC.getCompatibilityUpdate(updates, this.addon.version,
+                                                false, this.appVersion,
+                                                this.platformVersion);
+    }
+
+    if (compatUpdate) {
+      if ("onCompatibilityUpdateAvailable" in this.listener)
+        this.listener.onCompatibilityUpdateAvailable(createWrapper(this.addon));
+    }
+    else if ("onNoCompatibilityUpdateAvailable" in this.listener) {
+      this.listener.onNoCompatibilityUpdateAvailable(createWrapper(this.addon));
     }
 
     let update = AUC.getNewestCompatibleUpdate(updates,
@@ -4076,15 +4099,24 @@ AddonInternal.prototype = {
   },
 
   get isCompatible() {
+    return this.isCompatibleWith();
+  },
+
+  isCompatibleWith: function(appVersion, platformVersion) {
     let app = this.matchingTargetApplication;
     if (!app)
       return false;
 
+    if (!appVersion)
+      appVersion = Services.appinfo.version;
+    if (!platformVersion)
+      platformVersion = Services.appinfo.platformVersion;
+
     let version;
     if (app.id == Services.appinfo.ID)
-      version = Services.appinfo.version;
+      version = appVersion;
     else if (app.id == TOOLKIT_ID)
-      version = Services.appinfo.platformVersion
+      version = platformVersion
 
     return (Services.vc.compare(version, app.minVersion) >= 0) &&
            (Services.vc.compare(version, app.maxVersion) <= 0)
@@ -4107,20 +4139,17 @@ AddonInternal.prototype = {
     return bs.getAddonBlocklistState(this.id, this.version);
   },
 
-  applyCompatibilityUpdate: function(update) {
-    let changed = false;
+  applyCompatibilityUpdate: function(update, syncCompatibility) {
     this.targetApplications.forEach(function(ta) {
       update.targetApplications.forEach(function(updateTarget) {
-        if (ta.id == updateTarget.id && (ta.minVersion != updateTarget.minVersion ||
-                                         ta.maxVersion != updateTarget.maxVersion)) {
+        if (ta.id == updateTarget.id && (syncCompatibility ||
+            Services.vc.compare(ta.maxVersion, updateTarget.maxVersion) < 0)) {
           ta.minVersion = updateTarget.minVersion;
           ta.maxVersion = updateTarget.maxVersion;
-          changed = true;
         }
       });
     });
     this.appDisabled = !isUsableAddon(this);
-    return changed;
   }
 };
 
@@ -4161,12 +4190,12 @@ function DBAddonInternal() {
 }
 
 DBAddonInternal.prototype = {
-  applyCompatibilityUpdate: function(update) {
+  applyCompatibilityUpdate: function(update, syncCompatibility) {
     let changes = [];
     this.targetApplications.forEach(function(ta) {
       update.targetApplications.forEach(function(updateTarget) {
-        if (ta.id == updateTarget.id && (ta.minVersion != updateTarget.minVersion ||
-                                         ta.maxVersion != updateTarget.maxVersion)) {
+        if (ta.id == updateTarget.id && (syncCompatibility ||
+            Services.vc.compare(ta.maxVersion, updateTarget.maxVersion) < 0)) {
           ta.minVersion = updateTarget.minVersion;
           ta.maxVersion = updateTarget.maxVersion;
           changes.push(ta);
@@ -4175,7 +4204,6 @@ DBAddonInternal.prototype = {
     });
     XPIDatabase.updateTargetApplications(this, changes);
     XPIProvider.updateAddonDisabledState(this);
-    return changes.length > 0;
   }
 }
 
@@ -4330,6 +4358,10 @@ function AddonWrapper(addon) {
     else
       addon.userDisabled = val;
   });
+
+  this.isCompatibleWith = function(appVersion, platformVersion) {
+    return addon.isCompatibleWith(appVersion, platformVersion);
+  };
 
   this.uninstall = function() {
     if (!(addon instanceof DBAddonInternal))
