@@ -52,15 +52,14 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-/**
- * Logs a warning message
- *
- * @param  aStr
- *         The string to log
- */
-function WARN(aStr) {
-  dump("*** addons.weblistener: " + aStr + "\n");
-}
+["LOG", "WARN", "ERROR"].forEach(function(aName) {
+  this.__defineGetter__(aName, function() {
+    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+
+    LogManager.getLogger("addons.weblistener", this);
+    return this[aName];
+  });
+}, this);
 
 /**
  * Creates a new installer to monitor downloads and prompt to install when
@@ -190,7 +189,6 @@ extWebInstallListener.prototype = {
       installs: aInstalls,
 
       install: function() {
-        dump("Start installs\n");
         new Installer(this.originatingWindow, this.originatingURI, this.installs);
       },
 
