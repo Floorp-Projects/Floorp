@@ -1181,7 +1181,7 @@ PlacesController.prototype = {
           copiedFolders.push(node);
         
         function generateChunk(type, overrideURI) {
-          let suffix = i < (nodes.length - 1) ? NEWLINE : "";
+          let suffix = i < (nodes.length - 1) ? PlacesUtils.endl : "";
           let uri = overrideURI;
         
           if (PlacesUtils.nodeIsLivemarkContainer(node))
