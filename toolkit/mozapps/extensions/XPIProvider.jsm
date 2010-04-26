@@ -132,35 +132,14 @@ const TYPES = {
  */
 var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
-/**
- * Logs a debug message.
- *
- * @param  aStr
- *         The string to log
- */
-function LOG(aStr) {
-  dump("*** addons.xpi: " + aStr + "\n");
-}
+["LOG", "WARN", "ERROR"].forEach(function(aName) {
+  this.__defineGetter__(aName, function() {
+    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
 
-/**
- * Logs a warning message.
- *
- * @param  str
- *         The string to log
- */
-function WARN(aStr) {
-  LOG(aStr);
-}
-
-/**
- * Logs an error message.
- *
- * @param  str
- *         The string to log
- */
-function ERROR(aStr) {
-  LOG(aStr);
-}
+    LogManager.getLogger("addons.xpi", this);
+    return this[aName];
+  })
+}, this);
 
 /**
  * Gets the currently selected locale for display.

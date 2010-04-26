@@ -63,35 +63,14 @@ Components.utils.import("resource://gre/modules/CertUtils.jsm");
 var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
            getService(Ci.nsIRDFService);
 
-/**
- * Logs a debug message.
- *
- * @param  aStr
- *         The string to log
- */
-function LOG(aStr) {
-  dump("*** addons.updates: " + aStr + "\n");
-}
+["LOG", "WARN", "ERROR"].forEach(function(aName) {
+  this.__defineGetter__(aName, function() {
+    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
 
-/**
- * Logs a warning message
- *
- * @param  aStr
- *         The string to log
- */
-function WARN(aStr) {
-  LOG(aStr);
-}
-
-/**
- * Logs an error message
- *
- * @param  aStr
- *         The string to log
- */
-function ERROR(aStr) {
-  LOG(str);
-}
+    LogManager.getLogger("addons.updates", this);
+    return this[aName];
+  });
+}, this);
 
 /**
  * A serialisation method for RDF data that produces an identical string
