@@ -499,40 +499,45 @@ function create_addon(addon) {
  * If a lastTest is provided checks that the notification dialog got passed
  * the newly blocked items compared to the previous test.
  */
-function check_state(test, lastTest) {
-  for (var i = 0; i < ADDONS.length; i++) {
-    var blocked = getManifestProperty(ADDONS[i].id, "blocklisted") == "true";
-    if (blocked != ADDONS[i][test])
-      do_throw("Blocklist state did not match expected for extension " + (i + 1) + ", test " + test);
-  }
-  for (i = 0; i < PLUGINS.length; i++) {
-    if (PLUGINS[i].blocklisted != PLUGINS[i][test])
-      do_throw("Blocklist state did not match expected for plugin " + (i + 1) + ", test " + test);
-  }
-
-  if (lastTest) {
-    var expected = 0;
-    for (i = 0; i < ADDONS.length; i++) {
-      if (ADDONS[i][test] && !ADDONS[i][lastTest]) {
-        if (gNewBlocks.indexOf(ADDONS[i].name + " " + ADDONS[i].version) < 0)
-          do_throw("Addon " + (i + 1) + " should have been listed in the blocklist notification for test " + test);
-        expected++;
-      }
+function check_state(test, lastTest, callback) {
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+    for (var i = 0; i < ADDONS.length; i++) {
+      var blocked = addons[i].blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED;
+      if (blocked != ADDONS[i][test])
+        do_throw("Blocklist state did not match expected for extension " + (i + 1) + ", test " + test);
     }
+
     for (i = 0; i < PLUGINS.length; i++) {
-      if (PLUGINS[i][test] && !PLUGINS[i][lastTest]) {
-        if (gNewBlocks.indexOf(PLUGINS[i].name + " " + PLUGINS[i].version) < 0)
-          do_throw("Plugin " + (i + 1) + " should have been listed in the blocklist notification for test " + test);
-        expected++;
-      }
+      if (PLUGINS[i].blocklisted != PLUGINS[i][test])
+        do_throw("Blocklist state did not match expected for plugin " + (i + 1) + ", test " + test);
     }
 
-    do_check_eq(expected, gNewBlocks.length);
-  }
+    if (lastTest) {
+      var expected = 0;
+      for (i = 0; i < ADDONS.length; i++) {
+        if (ADDONS[i][test] && !ADDONS[i][lastTest]) {
+          if (gNewBlocks.indexOf(ADDONS[i].name + " " + ADDONS[i].version) < 0)
+            do_throw("Addon " + (i + 1) + " should have been listed in the blocklist notification for test " + test);
+          expected++;
+        }
+      }
+
+      for (i = 0; i < PLUGINS.length; i++) {
+        if (PLUGINS[i][test] && !PLUGINS[i][lastTest]) {
+          if (gNewBlocks.indexOf(PLUGINS[i].name + " " + PLUGINS[i].version) < 0)
+            do_throw("Plugin " + (i + 1) + " should have been listed in the blocklist notification for test " + test);
+          expected++;
+        }
+      }
+
+      do_check_eq(expected, gNewBlocks.length);
+    }
+    callback();
+  });
 }
 
 function load_blocklist(file) {
-  gPrefs.setCharPref("extensions.blocklist.url", "http://localhost:4444/data/" + file);
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:4444/data/" + file);
   var blocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
                             .getService(Components.interfaces.nsITimerCallback);
   blocklist.notify(null);
@@ -547,7 +552,7 @@ function run_test() {
     create_addon(ADDONS[i]);
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
-  startupEM();
+  startupManager();
 
   gTestserver = new nsHttpServer();
   gTestserver.registerDirectory("/data/", do_get_file("data"));
@@ -562,12 +567,15 @@ function run_test() {
  */
 function check_test_pt1() {
   dump("Checking pt 1\n");
-  for (var i = 0; i < ADDONS.length; i++) {
-    if (!gEM.getItemForID(ADDONS[i].id))
-      do_throw("Addon " + (i + 1) + " did not get installed correctly");
-  }
-  check_state("start", null);
-  run_test_pt2();
+
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+    for (var i = 0; i < ADDONS.length; i++) {
+      if (!addons[i])
+        do_throw("Addon " + (i + 1) + " did not get installed correctly");
+    }
+
+    check_state("start", null, run_test_pt2);
+  });
 }
 
 /**
@@ -581,8 +589,7 @@ function run_test_pt2() {
 
 function check_test_pt2() {
   dump("Checking pt 2\n");
-  check_state("toolkitBlocks", "start");
-  run_test_pt3();
+  check_state("toolkitBlocks", "start", run_test_pt3);
 }
 
 /**
@@ -596,6 +603,9 @@ function run_test_pt3() {
 
 function check_test_pt3() {
   dump("Checking pt 3\n");
-  check_state("appBlocks", "toolkitBlocks");
+  check_state("appBlocks", "toolkitBlocks", end_test);
+}
+
+function end_test() {
   gTestserver.stop(do_test_finished);
 }
