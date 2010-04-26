@@ -6849,19 +6849,7 @@ MOZ_ARG_ENABLE_STRING(debug,
   fi ],
   MOZ_DEBUG=)
 
-MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
- case "${target_os}" in
-    beos*)
-        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
-        ;;
-    msvc*|mks*|cygwin*|mingw*|os2*|wince*|winmo*)
-        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
-        ;;
-    *) 
-        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`$WHOAMI`"
-        ;;
-  esac
-MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DTRACING"
+MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
 
 MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
 
