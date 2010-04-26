@@ -65,14 +65,10 @@ public:
   virtual ~HttpChannelParent();
 
 protected:
-  virtual bool RecvAsyncOpen(const nsCString&           uriSpec, 
-                             const nsCString&           charset,
-                             const nsCString&           originalUriSpec, 
-                             const nsCString&           originalCharset,
-                             const nsCString&           docUriSpec, 
-                             const nsCString&           docCharset,
-                             const nsCString&           referrerSpec,
-                             const nsCString&           referrerCharset,
+  virtual bool RecvAsyncOpen(const IPC::URI&            uri,
+                             const IPC::URI&            originalUri,
+                             const IPC::URI&            docUri,
+                             const IPC::URI&            referrerUri,
                              const PRUint32&            loadFlags,
                              const RequestHeaderTuples& requestHeaders,
                              const nsHttpAtom&          requestMethod,
