@@ -69,8 +69,7 @@ HttpBaseChannel::~HttpBaseChannel()
 {
   LOG(("Destroying HttpBaseChannel @%x\n", this));
 
-  nsHttpHandler* handler = gHttpHandler;
-  NS_RELEASE(handler);
+  gHttpHandler->Release();
 }
 
 nsresult
