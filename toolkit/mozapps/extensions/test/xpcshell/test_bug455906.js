@@ -232,22 +232,14 @@ function create_addon(addon) {
 }
 
 function load_blocklist(file) {
-  gPrefs.setCharPref("extensions.blocklist.url", "http://localhost:4444/data/" + file);
+  Services.prefs.setCharPref("extensions.blocklist.url", "http://localhost:4444/data/" + file);
   var blocklist = Cc["@mozilla.org/extensions/blocklist;1"].
                   getService(Ci.nsITimerCallback);
   blocklist.notify(null);
 }
 
-function isUserDisabled(id) {
-  return getManifestProperty(id, "userDisabled") == "true";
-}
-
-function isAppDisabled(id) {
-  return getManifestProperty(id, "appDisabled") == "true";
-}
-
-function check_addon_state(id) {
-  return isUserDisabled(id) + "," + isAppDisabled(id);
+function check_addon_state(addon) {
+  return addon.userDisabled + "," + addon.appDisabled;
 }
 
 function check_plugin_state(plugin) {
@@ -269,7 +261,7 @@ function run_test() {
   blocklist.copyTo(gProfD, "blocklist.xml");
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
-  startupEM();
+  startupManager();
 
   gTestserver = new nsHttpServer();
   gTestserver.registerDirectory("/data/", do_get_file("data"));
@@ -280,55 +272,63 @@ function run_test() {
 }
 
 // Before every main test this is the state the add-ons are meant to be in
-function check_initial_state() {
-  do_check_eq(check_addon_state(ADDONS[0].id), "true,false");
-  do_check_eq(check_addon_state(ADDONS[1].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[2].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[3].id), "true,false");
-  do_check_eq(check_addon_state(ADDONS[4].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[5].id), "false,true");
-  do_check_eq(check_addon_state(ADDONS[6].id), "false,true");
+function check_initial_state(callback) {
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+    do_check_eq(check_addon_state(addons[0]), "true,false");
+    do_check_eq(check_addon_state(addons[1]), "false,false");
+    do_check_eq(check_addon_state(addons[2]), "false,false");
+    do_check_eq(check_addon_state(addons[3]), "true,false");
+    do_check_eq(check_addon_state(addons[4]), "false,false");
+    do_check_eq(check_addon_state(addons[5]), "false,true");
+    do_check_eq(check_addon_state(addons[6]), "false,true");
+  
+    do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
+    do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
+    do_check_eq(check_plugin_state(PLUGINS[2]), "false,false");
+    do_check_eq(check_plugin_state(PLUGINS[3]), "true,false");
+    do_check_eq(check_plugin_state(PLUGINS[4]), "false,false");
+    do_check_eq(check_plugin_state(PLUGINS[5]), "false,true");
 
-  do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
-  do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
-  do_check_eq(check_plugin_state(PLUGINS[2]), "false,false");
-  do_check_eq(check_plugin_state(PLUGINS[3]), "true,false");
-  do_check_eq(check_plugin_state(PLUGINS[4]), "false,false");
-  do_check_eq(check_plugin_state(PLUGINS[5]), "false,true");
+    callback();
+  });
 }
 
 // Tests the add-ons were installed and the initial blocklist applied as expected
 function check_test_pt1() {
   dump("Checking pt 1\n");
-  for (var i = 0; i < ADDONS.length; i++) {
-    if (!gEM.getItemForID(ADDONS[i].id))
-      do_throw("Addon " + (i + 1) + " did not get installed correctly");
-  }
 
-  do_check_eq(check_addon_state(ADDONS[0].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[1].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[2].id), "false,false");
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+    for (var i = 0; i < ADDONS.length; i++) {
+      if (!addons[i])
+        do_throw("Addon " + (i + 1) + " did not get installed correctly");
+    }
+  
+    do_check_eq(check_addon_state(addons[0]), "false,false");
+    do_check_eq(check_addon_state(addons[1]), "false,false");
+    do_check_eq(check_addon_state(addons[2]), "false,false");
+  
+    // Warn add-ons should be user disabled automatically
+    do_check_eq(check_addon_state(addons[3]), "true,false");
+    do_check_eq(check_addon_state(addons[4]), "true,false");
+  
+    // Blocked and incompatible should be app disabled only
+    do_check_eq(check_addon_state(addons[5]), "false,true");
+    do_check_eq(check_addon_state(addons[6]), "false,true");
+  
+    // We've overridden the plugin host so we cannot tell what that would have
+    // initialised the plugins as
+  
+    // Put the add-ons into the base state
+    addons[0].userDisabled = true;
+    addons[4].userDisabled = false;
 
-  // Warn add-ons should be user disabled automatically
-  do_check_eq(check_addon_state(ADDONS[3].id), "true,false");
-  do_check_eq(check_addon_state(ADDONS[4].id), "true,false");
-
-  // Blocked and incompatible should be app disabled only
-  do_check_eq(check_addon_state(ADDONS[5].id), "false,true");
-  do_check_eq(check_addon_state(ADDONS[6].id), "false,true");
-
-  // We've overridden the plugin host so we cannot tell what that would have
-  // initialised the plugins as
-
-  // Put the add-ons into the base state
-  gEM.disableItem(ADDONS[0].id);
-  gEM.enableItem(ADDONS[4].id);
-  restartEM();
-  check_initial_state();
-
-  gNotificationCheck = check_notification_pt2;
-  gTestCheck = check_test_pt2;
-  load_blocklist("bug455906_warn.xml");
+    restartManager();
+    check_initial_state(function() {
+      gNotificationCheck = check_notification_pt2;
+      gTestCheck = check_test_pt2;
+      load_blocklist("bug455906_warn.xml");
+    });
+  });
 }
 
 function check_notification_pt2(args) {
@@ -337,20 +337,7 @@ function check_notification_pt2(args) {
 
   for (let i = 0; i < args.list.length; i++) {
     let addon = args.list[i];
-    if (addon.item instanceof Ci.nsIUpdateItem) {
-      switch (addon.item.id) {
-        case "test_bug455906_2@tests.mozilla.org":
-          do_check_false(addon.blocked);
-          break;
-        case "test_bug455906_3@tests.mozilla.org":
-          do_check_false(addon.blocked);
-          addon.disable = true;
-          break;
-        default:
-          do_throw("Unknown addon: " + addon.item.id);
-      }
-    }
-    else if (addon.item instanceof Ci.nsIPluginTag) {
+    if (addon.item instanceof Ci.nsIPluginTag) {
       switch (addon.item.name) {
         case "test_bug455906_2":
           do_check_false(addon.blocked);
@@ -364,52 +351,64 @@ function check_notification_pt2(args) {
       }
     }
     else {
-      do_throw("Unknown add-on type " + addon.item);
+      switch (addon.item.id) {
+        case "test_bug455906_2@tests.mozilla.org":
+          do_check_false(addon.blocked);
+          break;
+        case "test_bug455906_3@tests.mozilla.org":
+          do_check_false(addon.blocked);
+          addon.disable = true;
+          break;
+        default:
+          do_throw("Unknown addon: " + addon.item.id);
+      }
     }
   }
 }
 
 function check_test_pt2() {
-  restartEM();
+  restartManager();
   dump("Checking results pt 2\n");
 
-  // Should have disabled this add-on as requested
-  do_check_eq(check_addon_state(ADDONS[2].id), "true,false");
-  do_check_eq(check_plugin_state(PLUGINS[2]), "true,false");
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+    // Should have disabled this add-on as requested
+    do_check_eq(check_addon_state(addons[2]), "true,false");
+    do_check_eq(check_plugin_state(PLUGINS[2]), "true,false");
 
-  // The blocked add-on should have changed to user disabled
-  do_check_eq(check_addon_state(ADDONS[5].id), "true,false");
-  do_check_eq(check_plugin_state(PLUGINS[5]), "true,false");
+    // The blocked add-on should have changed to user disabled
+    do_check_eq(check_addon_state(addons[5]), "true,false");
+    do_check_eq(check_plugin_state(PLUGINS[5]), "true,false");
 
-  // These should have been unchanged
-  do_check_eq(check_addon_state(ADDONS[0].id), "true,false");
-  do_check_eq(check_addon_state(ADDONS[1].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[3].id), "true,false");
-  do_check_eq(check_addon_state(ADDONS[4].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[6].id), "false,true");
-  do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
-  do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
-  do_check_eq(check_plugin_state(PLUGINS[3]), "true,false");
-  do_check_eq(check_plugin_state(PLUGINS[4]), "false,false");
+    // These should have been unchanged
+    do_check_eq(check_addon_state(addons[0]), "true,false");
+    do_check_eq(check_addon_state(addons[1]), "false,false");
+    do_check_eq(check_addon_state(addons[3]), "true,false");
+    do_check_eq(check_addon_state(addons[4]), "false,false");
+    do_check_eq(check_addon_state(addons[6]), "false,true");
+    do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
+    do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
+    do_check_eq(check_plugin_state(PLUGINS[3]), "true,false");
+    do_check_eq(check_plugin_state(PLUGINS[4]), "false,false");
 
-  // Back to starting state
-  gEM.enableItem(ADDONS[2].id);
-  gEM.enableItem(ADDONS[5].id);
-  PLUGINS[2].disabled = false;
-  PLUGINS[5].disabled = false;
-  restartEM();
-  gNotificationCheck = null;
-  gTestCheck = run_test_pt3;
-  load_blocklist("bug455906_start.xml");
+    // Back to starting state
+    addons[2].userDisabled = false;
+    addons[5].userDisabled = false;
+    PLUGINS[2].disabled = false;
+    PLUGINS[5].disabled = false;
+    restartManager();
+    gNotificationCheck = null;
+    gTestCheck = run_test_pt3;
+    load_blocklist("bug455906_start.xml");
+  });
 }
 
 function run_test_pt3() {
-  restartEM();
-  check_initial_state();
-
-  gNotificationCheck = check_notification_pt3;
-  gTestCheck = check_test_pt3;
-  load_blocklist("bug455906_block.xml");
+  restartManager();
+  check_initial_state(function() {
+    gNotificationCheck = check_notification_pt3;
+    gTestCheck = check_test_pt3;
+    load_blocklist("bug455906_block.xml");
+  });
 }
 
 function check_notification_pt3(args) {
@@ -418,22 +417,7 @@ function check_notification_pt3(args) {
 
   for (let i = 0; i < args.list.length; i++) {
     let addon = args.list[i];
-    if (addon.item instanceof Ci.nsIUpdateItem) {
-      switch (addon.item.id) {
-        case "test_bug455906_2@tests.mozilla.org":
-          do_check_true(addon.blocked);
-          break;
-        case "test_bug455906_3@tests.mozilla.org":
-          do_check_true(addon.blocked);
-          break;
-        case "test_bug455906_5@tests.mozilla.org":
-          do_check_true(addon.blocked);
-          break;
-        default:
-          do_throw("Unknown addon: " + addon.item.id);
-      }
-    }
-    else if (addon.item instanceof Ci.nsIPluginTag) {
+    if (addon.item instanceof Ci.nsIPluginTag) {
       switch (addon.item.name) {
         case "test_bug455906_2":
           do_check_true(addon.blocked);
@@ -449,47 +433,63 @@ function check_notification_pt3(args) {
       }
     }
     else {
-      do_throw("Unknown add-on type " + addon.item);
+      switch (addon.item.id) {
+        case "test_bug455906_2@tests.mozilla.org":
+          do_check_true(addon.blocked);
+          break;
+        case "test_bug455906_3@tests.mozilla.org":
+          do_check_true(addon.blocked);
+          break;
+        case "test_bug455906_5@tests.mozilla.org":
+          do_check_true(addon.blocked);
+          break;
+        default:
+          do_throw("Unknown addon: " + addon.item.id);
+      }
     }
   }
 }
 
 function check_test_pt3() {
-  restartEM();
+  restartManager();
   dump("Checking results pt 3\n");
 
-  // All should have gained the blocklist state, user disabled as previously
-  do_check_eq(check_addon_state(ADDONS[0].id), "true,true");
-  do_check_eq(check_addon_state(ADDONS[1].id), "false,true");
-  do_check_eq(check_addon_state(ADDONS[2].id), "false,true");
-  do_check_eq(check_addon_state(ADDONS[3].id), "true,true");
-  do_check_eq(check_addon_state(ADDONS[4].id), "false,true");
-  do_check_eq(check_plugin_state(PLUGINS[0]), "true,true");
-  do_check_eq(check_plugin_state(PLUGINS[1]), "false,true");
-  do_check_eq(check_plugin_state(PLUGINS[2]), "false,true");
-  do_check_eq(check_plugin_state(PLUGINS[3]), "true,true");
-  do_check_eq(check_plugin_state(PLUGINS[4]), "false,true");
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+    // All should have gained the blocklist state, user disabled as previously
+    do_check_eq(check_addon_state(addons[0]), "true,true");
+    do_check_eq(check_addon_state(addons[1]), "false,true");
+    do_check_eq(check_addon_state(addons[2]), "false,true");
+    do_check_eq(check_addon_state(addons[3]), "true,true");
+    do_check_eq(check_addon_state(addons[4]), "false,true");
+    do_check_eq(check_plugin_state(PLUGINS[0]), "true,true");
+    do_check_eq(check_plugin_state(PLUGINS[1]), "false,true");
+    do_check_eq(check_plugin_state(PLUGINS[2]), "false,true");
+    do_check_eq(check_plugin_state(PLUGINS[3]), "true,true");
+    do_check_eq(check_plugin_state(PLUGINS[4]), "false,true");
 
-  // Shouldn't be changed
-  do_check_eq(check_addon_state(ADDONS[5].id), "false,true");
-  do_check_eq(check_addon_state(ADDONS[6].id), "false,true");
-  do_check_eq(check_plugin_state(PLUGINS[5]), "false,true");
+    // Shouldn't be changed
+    do_check_eq(check_addon_state(addons[5]), "false,true");
+    do_check_eq(check_addon_state(addons[6]), "false,true");
+    do_check_eq(check_plugin_state(PLUGINS[5]), "false,true");
 
-  // Back to starting state
-  gNotificationCheck = null;
-  gTestCheck = run_test_pt4;
-  load_blocklist("bug455906_start.xml");
+    // Back to starting state
+    gNotificationCheck = null;
+    gTestCheck = run_test_pt4;
+    load_blocklist("bug455906_start.xml");
+  });
 }
 
 function run_test_pt4() {
-  gEM.enableItem(ADDONS[4].id);
-  PLUGINS[4].disabled = false;
-  restartEM();
-  check_initial_state();
-
-  gNotificationCheck = check_notification_pt4;
-  gTestCheck = check_test_pt4;
-  load_blocklist("bug455906_empty.xml");
+  AddonManager.getAddonByID(ADDONS[4].id, function(addon) {
+    addon.userDisabled = false;
+    PLUGINS[4].disabled = false;
+    restartManager();
+    check_initial_state(function() {
+      gNotificationCheck = check_notification_pt4;
+      gTestCheck = check_test_pt4;
+      load_blocklist("bug455906_empty.xml");
+    });
+  });
 }
 
 function check_notification_pt4(args) {
@@ -497,32 +497,34 @@ function check_notification_pt4(args) {
 
   // Should be just the dummy add-on to force this notification
   do_check_eq(args.list.length, 1);
-  do_check_true(args.list[0].item instanceof Ci.nsIUpdateItem);
+  do_check_false(args.list[0].item instanceof Ci.nsIPluginTag);
   do_check_eq(args.list[0].item.id, "dummy_bug455906_2@tests.mozilla.org");
 }
 
 function check_test_pt4() {
-  restartEM();
+  restartManager();
   dump("Checking results pt 4\n");
 
-  // This should have become unblocked
-  do_check_eq(check_addon_state(ADDONS[5].id), "false,false");
-  do_check_eq(check_plugin_state(PLUGINS[5]), "false,false");
+  AddonManager.getAddonsByIDs([a.id for each (a in ADDONS)], function(addons) {
+    // This should have become unblocked
+    do_check_eq(check_addon_state(addons[5]), "false,false");
+    do_check_eq(check_plugin_state(PLUGINS[5]), "false,false");
 
-  // No change for anything else
-  do_check_eq(check_addon_state(ADDONS[0].id), "true,false");
-  do_check_eq(check_addon_state(ADDONS[1].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[2].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[3].id), "true,false");
-  do_check_eq(check_addon_state(ADDONS[4].id), "false,false");
-  do_check_eq(check_addon_state(ADDONS[6].id), "false,true");
-  do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
-  do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
-  do_check_eq(check_plugin_state(PLUGINS[2]), "false,false");
-  do_check_eq(check_plugin_state(PLUGINS[3]), "true,false");
-  do_check_eq(check_plugin_state(PLUGINS[4]), "false,false");
+    // No change for anything else
+    do_check_eq(check_addon_state(addons[0]), "true,false");
+    do_check_eq(check_addon_state(addons[1]), "false,false");
+    do_check_eq(check_addon_state(addons[2]), "false,false");
+    do_check_eq(check_addon_state(addons[3]), "true,false");
+    do_check_eq(check_addon_state(addons[4]), "false,false");
+    do_check_eq(check_addon_state(addons[6]), "false,true");
+    do_check_eq(check_plugin_state(PLUGINS[0]), "true,false");
+    do_check_eq(check_plugin_state(PLUGINS[1]), "false,false");
+    do_check_eq(check_plugin_state(PLUGINS[2]), "false,false");
+    do_check_eq(check_plugin_state(PLUGINS[3]), "true,false");
+    do_check_eq(check_plugin_state(PLUGINS[4]), "false,false");
 
-  finish();
+    finish();
+  });
 }
 
 function finish() {
