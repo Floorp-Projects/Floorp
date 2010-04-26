@@ -1816,9 +1816,13 @@ BEGIN_CASE(JSOP_SETMETHOD)
             LOAD_ATOM(0);
         id = ATOM_TO_JSID(atom);
         if (entry && JS_LIKELY(obj->map->ops->setProperty == js_SetProperty)) {
-            uintN defineHow = (op == JSOP_SETMETHOD)
-                              ? JSDNP_CACHE_RESULT | JSDNP_SET_METHOD
-                              : JSDNP_CACHE_RESULT;
+            uintN defineHow;
+            if (op == JSOP_SETMETHOD)
+                defineHow = JSDNP_CACHE_RESULT | JSDNP_SET_METHOD;
+            else if (op == JSOP_SETNAME)
+                defineHow = JSDNP_CACHE_RESULT | JSDNP_UNQUALIFIED;
+            else
+                defineHow = JSDNP_CACHE_RESULT;
             if (!js_SetPropertyHelper(cx, obj, id, defineHow, &rval))
                 goto error;
         } else {
