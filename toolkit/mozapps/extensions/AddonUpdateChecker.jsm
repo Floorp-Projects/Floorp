@@ -575,6 +575,9 @@ var AddonUpdateChecker = {
    *          An array of update objects
    * @param   version
    *          The version of the add-on to get new compatibility information for
+   * @param   ignoreCompatibility
+   *          An optional parameter to get the first compatibility update that
+   *          is compatible with any version of the application or toolkit
    * @param   appVersion
    *          The version of the application or null to use the current version
    * @param   platformVersion
@@ -582,6 +585,7 @@ var AddonUpdateChecker = {
    * @return  an update object if one matches or null if not
    */
   getCompatibilityUpdate: function AUC_getCompatibilityUpdate(updates, version,
+                                                              ignoreCompatibility,
                                                               appVersion,
                                                               platformVersion) {
     if (!appVersion)
@@ -590,9 +594,18 @@ var AddonUpdateChecker = {
       platformVersion = Services.appinfo.platformVersion;
 
     for (let i = 0; i < updates.length; i++) {
-      if ((Services.vc.compare(updates[i].version, version) == 0) &&
-          matchesVersions(updates[i], appVersion, platformVersion))
-        return updates[i];
+      if (Services.vc.compare(updates[i].version, version) == 0) {
+        if (ignoreCompatibility) {
+          for (let j = 0; j < updates[i].targetApplications.length; j++) {
+            let id = updates[i].targetApplications[j].id;
+            if (id == Services.appinfo.ID || id == TOOLKIT_ID)
+              return updates[i];
+          }
+        }
+        else if (matchesVersions(updates[i], appVersion, platformVersion)) {
+          return updates[i];
+        }
+      }
     }
     return null;
   },
