@@ -307,7 +307,7 @@ function test_5_complete() {
   ok(item, "Should have seen the installed item");
   is(item.status, "Installed", "Should have been a successful install");
 
-  AddonManager.getInstalls(null, function(installs) {
+  AddonManager.getAllInstalls(function(installs) {
     is(installs.length, 1, "Should be just one install");
     is(installs[0].state, AddonManager.STATE_INSTALLED, "Should be fully installed");
     is(installs[0].addon.id, "bug435788_1@tests.mozilla.org", "Should have installed the extension");
@@ -416,7 +416,7 @@ function test_7_complete() {
   ok(item, "Should have seen the installed item");
   is(item.status, "Failed", "Should have been a failed install");
 
-  AddonManager.getInstalls(null, function(installs) {
+  AddonManager.getAllInstalls(function(installs) {
     is(installs.length, 1, "Should be one active installs");
     installs[0].cancel();
 
@@ -470,7 +470,7 @@ function test_8_complete() {
   ok(item, "Should have seen the installed item");
   is(item.status, "Failed", "Should have not been a successful install");
 
-  AddonManager.getInstalls(null, function(installs) {
+  AddonManager.getAllInstalls(function(installs) {
     is(installs.length, 0, "Should not be any installs");
 
     gPFS.document.documentElement.getButton("finish").click();
