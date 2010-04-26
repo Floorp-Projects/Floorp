@@ -238,33 +238,10 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
 
   // TODO: add self to loadgroup? 
 
-  // TODO: smartest way to pass nsURI == (spec, charset)? 
-  nsCAutoString charset;
-  mURI->GetOriginCharset(charset);
-  nsCAutoString originalSpec;
-  mOriginalURI->GetSpec(originalSpec);
-  nsCAutoString originalCharset;
-  mOriginalURI->GetOriginCharset(originalCharset);
-
-  nsCAutoString docSpec;
-  nsCAutoString docCharset;
-  if (mDocumentURI) {
-    mDocumentURI->GetSpec(docSpec);
-    mDocumentURI->GetOriginCharset(docCharset);
-  }
-
-  nsCAutoString referrerSpec;
-  nsCAutoString referrerCharset;
-  if (mReferrer) {
-    mReferrer->GetSpec(referrerSpec);
-    mReferrer->GetOriginCharset(referrerCharset);
-  }
-
-  SendAsyncOpen(mSpec, charset, originalSpec, originalCharset, docSpec,
-                docCharset, referrerSpec, referrerCharset, mLoadFlags,
-                mRequestHeaders, mRequestHead.Method(), mPriority,
-                mRedirectionLimit, mAllowPipelining,
-                mForceAllowThirdPartyCookie);
+  SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI), IPC::URI(mDocumentURI),
+                IPC::URI(mReferrer), mLoadFlags, mRequestHeaders,
+                mRequestHead.Method(), mPriority, mRedirectionLimit,
+                mAllowPipelining, mForceAllowThirdPartyCookie);
 
   mIsPending = PR_TRUE;
   mWasOpened = PR_TRUE;
