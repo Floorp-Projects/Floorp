@@ -171,7 +171,7 @@ function run_test() {
 
   installAllFiles([do_get_addon(a.addon) for each (a in ADDONS)], function() {
     restartManager();
-    AddonManager.getAddon(ADDONS[0].id, function(addon) {
+    AddonManager.getAddonByID(ADDONS[0].id, function(addon) {
       addon.userDisabled = true;
       restartManager();
 

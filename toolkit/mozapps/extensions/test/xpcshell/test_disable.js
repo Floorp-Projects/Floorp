@@ -26,7 +26,7 @@ function run_test() {
 
   startupManager(1);
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     do_check_eq(a1, null);
     do_check_not_in_crash_annotation(addon1.id, addon1.version);
 
@@ -36,7 +36,7 @@ function run_test() {
 
     restartManager(1);
 
-    AddonManager.getAddon("addon1@tests.mozilla.org", function(newa1) {
+    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
       do_check_neq(newa1, null);
       do_check_true(newa1.isActive);
       do_check_false(newa1.userDisabled);
@@ -59,7 +59,7 @@ function run_test_1() {
     ]
   });
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     a1.userDisabled = true;
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
@@ -67,13 +67,13 @@ function run_test_1() {
 
     ensure_test_completed();
 
-    AddonManager.getAddonsWithPendingOperations(null, function(list) {
+    AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
       do_check_eq(list.length, 1);
       do_check_eq(list[0].id, "addon1@tests.mozilla.org");
 
       restartManager(0);
 
-      AddonManager.getAddon("addon1@tests.mozilla.org", function(newa1) {
+      AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
         do_check_neq(newa1, null);
         do_check_false(newa1.isActive);
         do_check_true(newa1.userDisabled);
@@ -97,20 +97,20 @@ function run_test_2() {
     ]
   });
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     a1.userDisabled = false;
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
 
     ensure_test_completed();
 
-    AddonManager.getAddonsWithPendingOperations(null, function(list) {
+    AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
       do_check_eq(list.length, 1);
       do_check_eq(list[0].id, "addon1@tests.mozilla.org");
 
       restartManager(0);
 
-      AddonManager.getAddon("addon1@tests.mozilla.org", function(newa1) {
+      AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
         do_check_neq(newa1, null);
         do_check_true(newa1.isActive);
         do_check_false(newa1.userDisabled);
@@ -133,7 +133,7 @@ function run_test_3() {
     ]
   });
 
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     a1.userDisabled = true;
     ensure_test_completed();
     prepare_test({
@@ -149,7 +149,7 @@ function run_test_3() {
 
     restartManager(0);
 
-    AddonManager.getAddon("addon1@tests.mozilla.org", function(newa1) {
+    AddonManager.getAddonByID("addon1@tests.mozilla.org", function(newa1) {
       do_check_neq(newa1, null);
       do_check_true(newa1.isActive);
       do_check_false(newa1.userDisabled);

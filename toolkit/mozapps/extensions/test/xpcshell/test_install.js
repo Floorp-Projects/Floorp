@@ -61,14 +61,14 @@ function run_test_1() {
     let uri = Services.io.newFileURI(file).spec;
     do_check_eq(install.addon.getResourceURL("install.rdf"), "jar:" + uri + "!/install.rdf");
 
-    AddonManager.getInstalls(null, function(activeInstalls) {
+    AddonManager.getAllInstalls(function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
       do_check_eq(activeInstalls[0], install);
 
-      AddonManager.getInstalls(["foo"], function(fooInstalls) {
+      AddonManager.getInstallsByTypes(["foo"], function(fooInstalls) {
         do_check_eq(fooInstalls.length, 0);
 
-        AddonManager.getInstalls(["extension"], function(extensionInstalls) {
+        AddonManager.getInstallsByTypes(["extension"], function(extensionInstalls) {
           do_check_eq(extensionInstalls.length, 1);
           do_check_eq(extensionInstalls[0], install);
 
@@ -89,19 +89,19 @@ function run_test_1() {
 
 function check_test_1() {
   ensure_test_completed();
-  AddonManager.getAddon("addon1@tests.mozilla.org", function(olda1) {
+  AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
     do_check_eq(olda1, null);
 
-    AddonManager.getAddonsWithPendingOperations(null, function(pendingAddons) {
+    AddonManager.getAddonsWithOperationsByTypes(null, function(pendingAddons) {
       do_check_eq(pendingAddons.length, 1);
       do_check_eq(pendingAddons[0].id, "addon1@tests.mozilla.org");
 
       restartManager(1);
 
-      AddonManager.getInstalls(null, function(activeInstalls) {
+      AddonManager.getAllInstalls(function(activeInstalls) {
         do_check_eq(activeInstalls, 0);
 
-        AddonManager.getAddon("addon1@tests.mozilla.org", function(a1) {
+        AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
           do_check_neq(a1, null);
           do_check_eq(a1.type, "extension");
           do_check_eq(a1.version, "1.0");
@@ -148,7 +148,7 @@ function run_test_2() {
     do_check_eq(install.name, "Test 2");
     do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
 
-    AddonManager.getInstalls(null, function(activeInstalls) {
+    AddonManager.getAllInstalls(function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
       do_check_eq(activeInstalls[0], install);
 
@@ -197,14 +197,14 @@ function run_test_3(install) {
 
 function check_test_3() {
   ensure_test_completed();
-  AddonManager.getAddon("addon2@tests.mozilla.org", function(olda2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(olda2) {
     do_check_eq(olda2, null);
     restartManager(1);
 
-    AddonManager.getInstalls(null, function(installs) {
+    AddonManager.getAllInstalls(function(installs) {
       do_check_eq(installs, 0);
 
-      AddonManager.getAddon("addon2@tests.mozilla.org", function(a2) {
+      AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
         do_check_neq(a2, null);
         do_check_eq(a2.type, "extension");
         do_check_eq(a2.version, "2.0");
@@ -244,7 +244,7 @@ function run_test_4() {
     do_check_eq(install.name, "Test 3");
     do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
 
-    AddonManager.getInstalls(null, function(activeInstalls) {
+    AddonManager.getAllInstalls(function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
       do_check_eq(activeInstalls[0], install);
       do_check_eq(install.existingAddon, null);
@@ -289,19 +289,19 @@ function check_test_5(install) {
 
   do_check_eq(install.existingAddon.pendingUpgrade.install, install);
 
-  AddonManager.getAddon("addon2@tests.mozilla.org", function(olda2) {
+  AddonManager.getAddonByID("addon2@tests.mozilla.org", function(olda2) {
     do_check_neq(olda2, null);
     do_check_true(hasFlag(olda2.pendingOperations, AddonManager.PENDING_UPGRADE));
 
-    AddonManager.getInstalls(null, function(installs) {
+    AddonManager.getInstallsByTypes(null, function(installs) {
       do_check_eq(installs.length, 1);
       do_check_eq(installs[0].addon, olda2.pendingUpgrade);
       restartManager();
 
-      AddonManager.getInstalls(null, function(installs) {
+      AddonManager.getInstallsByTypes(null, function(installs) {
         do_check_eq(installs.length, 0);
 
-        AddonManager.getAddon("addon2@tests.mozilla.org", function(a2) {
+        AddonManager.getAddonByID("addon2@tests.mozilla.org", function(a2) {
           do_check_neq(a2, null);
           do_check_eq(a2.type, "extension");
           do_check_eq(a2.version, "3.0");
@@ -340,7 +340,7 @@ function run_test_6() {
     do_check_eq(install.name, "Real Test 4");
     do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
 
-    AddonManager.getInstalls(null, function(activeInstalls) {
+    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
       do_check_eq(activeInstalls[0], install);
 
@@ -378,14 +378,14 @@ function run_test_7() {
 
 function check_test_7() {
   ensure_test_completed();
-  AddonManager.getAddon("addon3@tests.mozilla.org", function(olda3) {
+  AddonManager.getAddonByID("addon3@tests.mozilla.org", function(olda3) {
     do_check_eq(olda3, null);
     restartManager();
 
-    AddonManager.getInstalls(null, function(installs) {
+    AddonManager.getAllInstalls(function(installs) {
       do_check_eq(installs, 0);
 
-      AddonManager.getAddon("addon3@tests.mozilla.org", function(a3) {
+      AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
         do_check_neq(a3, null);
         do_check_eq(a3.type, "extension");
         do_check_eq(a3.version, "1.0");
@@ -429,7 +429,7 @@ function run_test_8() {
 function check_test_8() {
   restartManager(1);
 
-  AddonManager.getAddon("addon3@tests.mozilla.org", function(a3) {
+  AddonManager.getAddonByID("addon3@tests.mozilla.org", function(a3) {
     do_check_neq(a3, null);
     do_check_eq(a3.type, "extension");
     do_check_eq(a3.version, "1.0");
@@ -460,7 +460,7 @@ function run_test_9() {
     do_check_eq(install.name, "Real Test 4");
     do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
 
-    AddonManager.getInstalls(null, function(activeInstalls) {
+    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
       do_check_eq(activeInstalls[0], install);
 
@@ -482,7 +482,7 @@ function check_test_9(install) {
 
   ensure_test_completed();
 
-  AddonManager.getInstalls(null, function(activeInstalls) {
+  AddonManager.getAllInstalls(function(activeInstalls) {
     do_check_eq(activeInstalls.length, 0);
 
     run_test_10();
@@ -505,7 +505,7 @@ function run_test_10() {
     do_check_eq(install.name, "Real Test 4");
     do_check_eq(install.state, AddonManager.STATE_AVAILABLE);
 
-    AddonManager.getInstalls(null, function(activeInstalls) {
+    AddonManager.getInstallsByTypes(null, function(activeInstalls) {
       do_check_eq(activeInstalls.length, 1);
       do_check_eq(activeInstalls[0], install);
 
@@ -533,7 +533,7 @@ function check_test_10(install) {
 
   ensure_test_completed();
 
-  AddonManager.getInstalls(null, function(activeInstalls) {
+  AddonManager.getAllInstalls(function(activeInstalls) {
     do_check_eq(activeInstalls.length, 0);
 
     end_test();

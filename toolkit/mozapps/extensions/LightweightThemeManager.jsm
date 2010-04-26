@@ -346,7 +346,7 @@ var LightweightThemeManager = {
    * @param  aCallback
    *         A callback to pass the Addon to
    */
-  getAddon: function(aId, aCallback) {
+  getAddonByID: function(aId, aCallback) {
     let id = _getInternalID(aId);
     if (!id) {
       aCallback(null);
