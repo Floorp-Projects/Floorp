@@ -7518,27 +7518,8 @@ var LightWeightThemeWebInstaller = {
   },
 
   _isAllowed: function (node) {
-    var pm = Services.perms;
-
-    var prefs = [["xpinstall.whitelist.add", pm.ALLOW_ACTION],
-                 ["xpinstall.whitelist.add.36", pm.ALLOW_ACTION],
-                 ["xpinstall.blacklist.add", pm.DENY_ACTION]];
-    prefs.forEach(function ([pref, permission]) {
-      try {
-        var hosts = gPrefService.getCharPref(pref);
-      } catch (e) {}
-
-      if (hosts) {
-        hosts.split(",").forEach(function (host) {
-          pm.add(makeURI("http://" + host), "install", permission);
-        });
-
-        gPrefService.setCharPref(pref, "");
-      }
-    });
-
     var uri = node.ownerDocument.documentURIObject;
-    return pm.testPermission(uri, "install") == pm.ALLOW_ACTION;
+    return Services.perms.testPermission(uri, "install") == pm.ALLOW_ACTION;
   },
 
   _getThemeFromNode: function (node) {
