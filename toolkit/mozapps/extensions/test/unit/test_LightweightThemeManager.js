@@ -321,7 +321,43 @@ function run_test() {
   data.headerURL = "ftp://lwtest.invalid/test.png";
   try {
     ltm.currentTheme = data;
-    do_throw("Should have rejected a theme with a bad headerURL");
+    do_throw("Should have rejected a theme with a non-http(s) headerURL");
+  }
+  catch (e) {
+    // Expected exception
+  }
+
+  data = dummy();
+  data.headerURL = "file:///test.png";
+  try {
+    ltm.currentTheme = data;
+    do_throw("Should have rejected a theme with a non-http(s) headerURL");
+  }
+  catch (e) {
+    // Expected exception
+  }
+
+  data = dummy();
+  data.updateURL = "file:///test.json";
+  ltm.setLocalTheme(data);
+  do_check_eq(ltm.usedThemes.length, 1);
+  do_check_eq(ltm.currentTheme.updateURL, undefined);
+  ltm.forgetUsedTheme(ltm.currentTheme.id);
+  do_check_eq(ltm.usedThemes.length, 0);
+
+  data = dummy();
+  data.headerURL = "file:///test.png";
+  ltm.setLocalTheme(data);
+  do_check_eq(ltm.usedThemes.length, 1);
+  do_check_eq(ltm.currentTheme.headerURL, "file:///test.png");
+  ltm.forgetUsedTheme(ltm.currentTheme.id);
+  do_check_eq(ltm.usedThemes.length, 0);
+
+  data = dummy();
+  data.headerURL = "ftp://lwtest.invalid/test.png";
+  try {
+    ltm.setLocalTheme(data);
+    do_throw("Should have rejected a theme with a non-http(s), non-file headerURL");
   }
   catch (e) {
     // Expected exception

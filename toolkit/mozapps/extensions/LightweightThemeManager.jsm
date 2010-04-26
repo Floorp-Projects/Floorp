@@ -110,38 +110,11 @@ var LightweightThemeManager = {
   },
 
   set currentTheme (aData) {
-    aData = _sanitizeTheme(aData);
+    return _setCurrentTheme(aData, false);
+  },
 
-    let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-    cancel.data = false;
-    _observerService.notifyObservers(cancel, "lightweight-theme-change-requested",
-                                     JSON.stringify(aData));
-
-    if (aData) {
-      let usedThemes = _usedThemesExceptId(aData.id);
-      if (cancel.data && _prefs.getBoolPref("isThemeSelected"))
-        usedThemes.splice(1, 0, aData);
-      else
-        usedThemes.unshift(aData);
-      _updateUsedThemes(usedThemes);
-    }
-
-    if (cancel.data)
-      return null;
-
-    if (_previewTimer) {
-      _previewTimer.cancel();
-      _previewTimer = null;
-    }
-
-    _prefs.setBoolPref("isThemeSelected", aData != null);
-    _notifyWindows(aData);
-    _observerService.notifyObservers(null, "lightweight-theme-changed", null);
-
-    if (PERSIST_ENABLED && aData)
-      _persistImages(aData);
-
-    return aData;
+  setLocalTheme: function (aData) {
+    _setCurrentTheme(aData, true);
   },
 
   getUsedTheme: function (aId) {
@@ -193,7 +166,7 @@ var LightweightThemeManager = {
 
   parseTheme: function (aString, aBaseURI) {
     try {
-      return _sanitizeTheme(JSON.parse(aString), aBaseURI);
+      return _sanitizeTheme(JSON.parse(aString), aBaseURI, false);
     } catch (e) {
       return null;
     }
@@ -238,9 +211,49 @@ var LightweightThemeManager = {
   }
 };
 
-function _sanitizeTheme(aData, aBaseURI) {
+function _setCurrentTheme(aData, aLocal) {
+  aData = _sanitizeTheme(aData, null, aLocal);
+
+  let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+  cancel.data = false;
+  _observerService.notifyObservers(cancel, "lightweight-theme-change-requested",
+                                   JSON.stringify(aData));
+
+  if (aData) {
+    let usedThemes = _usedThemesExceptId(aData.id);
+    if (cancel.data && _prefs.getBoolPref("isThemeSelected"))
+      usedThemes.splice(1, 0, aData);
+    else
+      usedThemes.unshift(aData);
+    _updateUsedThemes(usedThemes);
+  }
+
+  if (cancel.data)
+    return null;
+
+  if (_previewTimer) {
+    _previewTimer.cancel();
+    _previewTimer = null;
+  }
+
+  _prefs.setBoolPref("isThemeSelected", aData != null);
+  _notifyWindows(aData);
+  _observerService.notifyObservers(null, "lightweight-theme-changed", null);
+
+  if (PERSIST_ENABLED && aData)
+    _persistImages(aData);
+
+  return aData;
+}
+
+function _sanitizeTheme(aData, aBaseURI, aLocal) {
   if (!aData || typeof aData != "object")
     return null;
+
+  var resourceProtocols = ["http", "https"];
+  if (aLocal)
+    resourceProtocols.push("file");
+  var resourceProtocolExp = new RegExp("^(" + resourceProtocols.join("|") + "):");
 
   function sanitizeProperty(prop) {
     if (!(prop in aData))
@@ -256,9 +269,7 @@ function _sanitizeTheme(aData, aBaseURI) {
 
     try {
       val = _makeURI(val, aBaseURI ? _makeURI(aBaseURI) : null).spec;
-      if (/^https:/.test(val))
-        return val;
-      if (prop != "updateURL" && /^http:/.test(val))
+      if ((prop == "updateURL" ? /^https:/ : resourceProtocolExp).test(val))
         return val;
       return null;
     }
@@ -340,7 +351,10 @@ function _getLocalImageURI(localFileName) {
   return _ioService.newFileURI(localFile);
 }
 
-function _persistImage(sourceURL, localFileName, callback) {
+function _persistImage(sourceURL, localFileName, successCallback) {
+  if (/^file:/.test(sourceURL))
+    return;
+
   var targetURI = _getLocalImageURI(localFileName);
   var sourceURI = _makeURI(sourceURL);
 
@@ -354,12 +368,12 @@ function _persistImage(sourceURL, localFileName, callback) {
        Ci.nsIWebBrowserPersist.PERSIST_FLAGS_BYPASS_CACHE :
        Ci.nsIWebBrowserPersist.PERSIST_FLAGS_FROM_CACHE);
 
-  persist.progressListener = new _persistProgressListener(callback);
+  persist.progressListener = new _persistProgressListener(successCallback);
 
   persist.saveURI(sourceURI, null, null, null, null, targetURI);
 }
 
-function _persistProgressListener(callback) {
+function _persistProgressListener(successCallback) {
   this.onLocationChange = function () {};
   this.onProgressChange = function () {};
   this.onStatusChange   = function () {};
@@ -371,7 +385,7 @@ function _persistProgressListener(callback) {
       try {
         if (aRequest.QueryInterface(Ci.nsIHttpChannel).requestSucceeded) {
           // success
-          callback();
+          successCallback();
           return;
         }
       } catch (e) { }
