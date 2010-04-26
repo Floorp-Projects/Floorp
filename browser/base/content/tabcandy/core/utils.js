@@ -19,9 +19,21 @@ var extensionManager = Cc["@mozilla.org/extensions/manager;1"]
     .getService(Ci.nsIExtensionManager);  
 
 // ##########
-window.Point = function(x, y) {
-  this.x = (typeof(x) == 'undefined' ? 0 : x);
-  this.y = (typeof(y) == 'undefined' ? 0 : y);
+// Class: Point
+// A simple point. 
+//
+// Constructor: Point
+// If a is a Point, creates a copy of it. Otherwise, expects a to be x, 
+// and creates a Point with it along with y. If either a or y are omitted, 
+// 0 is used in their place. 
+window.Point = function(a, y) {
+  if(a && typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
+    this.x = a.x;
+    this.y = a.y;
+  } else {
+    this.x = (typeof(a) == 'undefined' ? 0 : a);
+    this.y = (typeof(y) == 'undefined' ? 0 : y);
+  }
 }
 
 window.Point.prototype = { 
