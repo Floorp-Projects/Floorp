@@ -366,6 +366,17 @@ var AddonManagerInternal = {
   },
 
   /**
+   * Notifies all providers they need to update the appDisabled property for
+   * their add-ons in response to an application change such as a blocklist
+   * update.
+   */
+  updateAddonAppDisabledStates: function AMI_updateAddonAppDisabledStates() {
+    this.providers.forEach(function(provider) {
+      callProvider(provider, "updateAddonAppDisabledStates");
+    });
+  },
+
+  /**
    * Asynchronously gets an AddonInstall for a URL.
    *
    * @param  aUrl
@@ -769,6 +780,10 @@ var AddonManagerPrivate = {
 
   notifyAddonChanged: function AMP_notifyAddonChanged(aId, aType, aPendingRestart) {
     AddonManagerInternal.notifyAddonChanged(aId, aType, aPendingRestart);
+  },
+
+  updateAddonAppDisabledStates: function AMP_updateAddonAppDisabledStates() {
+    AddonManagerInternal.updateAddonAppDisabledStates();
   },
 
   callInstallListeners: function AMP_callInstallListeners(aMethod) {
