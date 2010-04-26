@@ -829,7 +829,7 @@ InjectStatus(AbortableRecordingStatus ars)
 }
 
 static inline bool
-StatusAbortsRecording(AbortableRecordingStatus ars)
+StatusAbortsRecorderIfActive(AbortableRecordingStatus ars)
 {
     return ars == ARECORD_ERROR || ars == ARECORD_STOP;
 }
@@ -854,23 +854,28 @@ StatusAbortsRecording(AbortableRecordingStatus ars)
  */
 
 enum RecordingStatus {
-    RECORD_ERROR      = 0,  // Error; propagate to interpreter.
-    RECORD_STOP       = 1,  // Recording should be aborted at the top-level
+    RECORD_STOP       = 0,  // Recording should be aborted at the top-level
                             // call to the recorder.
-                            // (value reserved for ARECORD_ABORTED)
-    RECORD_CONTINUE   = 3,  // Continue recording.
-    RECORD_IMACRO     = 4   // Entered imacro; continue recording.
+    RECORD_ERROR      = 1,  // Recording should be aborted at the top-level
+                            // call to the recorder and the interpreter should
+                            // goto error
+    RECORD_CONTINUE   = 2,  // Continue recording.
+    RECORD_IMACRO     = 3   // Entered imacro; continue recording.
                             // Only JSOP_IS_IMACOP opcodes may return this.
 };
 
 enum AbortableRecordingStatus {
-    ARECORD_ERROR     = 0,
-    ARECORD_STOP      = 1,
-    ARECORD_ABORTED   = 2,  // Recording has already been aborted; the recorder
-                            // has been deleted.
-    ARECORD_CONTINUE  = 3,
-    ARECORD_IMACRO    = 4,
-    ARECORD_COMPLETED = 5   // Recording of the current trace recorder completed
+    ARECORD_STOP      = 0,  // see RECORD_STOP
+    ARECORD_ERROR     = 1,  // Recording may or may not have been aborted.
+                            // Recording should be aborted at the top-level
+                            // if it has not already been and the interpreter
+                            // should goto error
+    ARECORD_CONTINUE  = 2,  // see RECORD_CONTINUE
+    ARECORD_IMACRO    = 3,  // see RECORD_IMACRO
+    ARECORD_ABORTED   = 4,  // Recording has already been aborted; the
+                            // interpreter should continue executing
+    ARECORD_COMPLETED = 5   // Recording completed successfully, the
+                            // trace recorder has been deleted
 };
 
 static JS_ALWAYS_INLINE AbortableRecordingStatus
@@ -887,13 +892,14 @@ InjectStatus(AbortableRecordingStatus ars)
 
 /*
  * Return whether the recording status requires the current recording session
- * to be deleted. ABORTED and COMPLETED indicate the recording session is
+ * to be deleted. ERROR means the recording session should be deleted if it
+ * hasn't already. ABORTED and COMPLETED indicate the recording session is
  * already deleted, so they return 'false'.
  */
 static JS_ALWAYS_INLINE bool
-StatusAbortsRecording(AbortableRecordingStatus ars)
+StatusAbortsRecorderIfActive(AbortableRecordingStatus ars)
 {
-    return ars <= ARECORD_STOP;
+    return ars <= ARECORD_ERROR;
 }
 #endif
 
@@ -906,6 +912,12 @@ enum TypeConsensus
     TypeConsensus_Okay,         /* Two typemaps are compatible */
     TypeConsensus_Undemotes,    /* Not compatible now, but would be with pending undemotes. */
     TypeConsensus_Bad           /* Typemaps are not compatible */
+};
+
+enum MonitorResult {
+    MONITOR_RECORDING,
+    MONITOR_NOT_RECORDING,
+    MONITOR_ERROR
 };
 
 typedef HashMap<nanojit::LIns*, JSObject*> GuardedShapeTable;
@@ -1349,8 +1361,8 @@ class TraceRecorder
     JS_REQUIRES_STACK void fuseIf(jsbytecode* pc, bool cond, nanojit::LIns* x);
     JS_REQUIRES_STACK AbortableRecordingStatus checkTraceEnd(jsbytecode* pc);
 
-    RecordingStatus hasMethod(JSObject* obj, jsid id, bool& found);
-    JS_REQUIRES_STACK RecordingStatus hasIteratorMethod(JSObject* obj, bool& found);
+    AbortableRecordingStatus hasMethod(JSObject* obj, jsid id, bool& found);
+    JS_REQUIRES_STACK AbortableRecordingStatus hasIteratorMethod(JSObject* obj, bool& found);
 
     JS_REQUIRES_STACK jsatomid getFullIndex(ptrdiff_t pcoff = 0);
 
@@ -1375,8 +1387,8 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus attemptTreeCall(TreeFragment* inner,
                                                                uintN& inlineCallCount);
 
-    static JS_REQUIRES_STACK bool recordLoopEdge(JSContext* cx, TraceRecorder* r,
-                                                 uintN& inlineCallCount);
+    static JS_REQUIRES_STACK MonitorResult recordLoopEdge(JSContext* cx, TraceRecorder* r,
+                                                          uintN& inlineCallCount);
 
     /* Allocators associated with this recording session. */
     VMAllocator& tempAlloc() const { return *traceMonitor->tempAlloc; }
@@ -1415,7 +1427,7 @@ class TraceRecorder
     friend class DetermineTypesVisitor;
     friend class RecursiveSlotMap;
     friend class UpRecursiveSlotMap;
-    friend bool MonitorLoopEdge(JSContext*, uintN&, RecordReason);
+    friend MonitorResult MonitorLoopEdge(JSContext*, uintN&, RecordReason);
     friend void AbortRecording(JSContext*, const char*);
 
 public:
@@ -1475,8 +1487,11 @@ public:
     JS_BEGIN_MACRO                                                            \
         if (TraceRecorder* tr_ = TRACE_RECORDER(cx)) {                        \
             AbortableRecordingStatus status = tr_->record_##x args;           \
-            if (StatusAbortsRecording(status)) {                              \
-                AbortRecording(cx, #x);                                       \
+            if (StatusAbortsRecorderIfActive(status)) {                       \
+                if (TRACE_RECORDER(cx)) {                                     \
+                    JS_ASSERT(TRACE_RECORDER(cx) == tr_);                     \
+                    AbortRecording(cx, #x);                                   \
+                }                                                             \
                 if (status == ARECORD_ERROR)                                  \
                     goto error;                                               \
             }                                                                 \
@@ -1489,7 +1504,7 @@ public:
 #define TRACE_1(x,a)            TRACE_ARGS(x, (a))
 #define TRACE_2(x,a,b)          TRACE_ARGS(x, (a, b))
 
-extern JS_REQUIRES_STACK bool
+extern JS_REQUIRES_STACK MonitorResult
 MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, RecordReason reason);
 
 extern JS_REQUIRES_STACK void

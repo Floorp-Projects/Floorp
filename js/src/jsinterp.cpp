@@ -2464,19 +2464,21 @@ js_Interpret(JSContext *cx)
         atoms = FrameAtomBase(cx, fp);                                        \
         currentVersion = (JSVersion) script->version;                         \
         JS_ASSERT(fp->regs == &regs);                                         \
-        if (cx->throwing)                                                     \
-            goto error;                                                       \
     JS_END_MACRO
 
 #define MONITOR_BRANCH(reason)                                                \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            if (MonitorLoopEdge(cx, inlineCallCount, reason)) {               \
+            MonitorResult r = MonitorLoopEdge(cx, inlineCallCount, reason);   \
+            if (r == MONITOR_RECORDING) {                                     \
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
                 MONITOR_BRANCH_TRACEVIS;                                      \
                 ENABLE_INTERRUPTS();                                          \
             }                                                                 \
             RESTORE_INTERP_VARS();                                            \
+            JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
+            if (r == MONITOR_ERROR)                                           \
+                goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
 
