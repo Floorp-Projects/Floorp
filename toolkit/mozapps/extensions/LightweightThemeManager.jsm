@@ -468,6 +468,10 @@ AddonWrapper.prototype = {
     return true;
   },
 
+  get scope() {
+    return AddonManager.SCOPE_PROFILE;
+  },
+
   // Lightweight themes are always compatible
   isCompatibleWith: function(appVersion, platformVersion) {
     return true;
