@@ -129,6 +129,7 @@ public:
 public: /* internal necko use only */ 
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
     nsHttpResponseHead * GetResponseHead() const { return mResponseHead; }
+    void SetRemoteChannel() { mRemoteChannel = 1; }
 
     nsresult SetReferrerInternal(nsIURI *referrer) {
         nsCAutoString spec;
@@ -351,6 +352,8 @@ private:
     // headers. In such a case we must not override them in the cache code
     // and also we want to pass possible 304 code response through.
     PRUint32                          mCustomConditionalRequest : 1;
+    // True iff this channel is servicing a remote HttpChannelChild
+    PRUint32                          mRemoteChannel : 1;
 
     class nsContentEncodings : public nsIUTF8StringEnumerator
     {

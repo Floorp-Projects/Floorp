@@ -108,6 +108,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
     return false;       // TODO: send fail msg to child, return true
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
+  httpChan->SetRemoteChannel();
 
   if (originalUri)
     httpChan->SetOriginalURI(originalUri);
