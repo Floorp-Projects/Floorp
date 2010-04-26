@@ -61,9 +61,9 @@ function run_test() {
 function run_test_1() {
   startupManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
 
     do_check_neq(a1, null);
     do_check_true(isExtensionInAddonsList(profileDir, a1.id));
@@ -81,9 +81,9 @@ function run_test_1() {
 // Test that upgrading the application disables now incompatible add-ons
 function run_test_2() {
   restartManager(1, "2");
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
 
     do_check_neq(a1, null);
     do_check_false(isExtensionInAddonsList(profileDir, a1.id));
@@ -107,9 +107,9 @@ function run_test_3() {
   file.remove(true);
   restartManager(1);
 
-  AddonManager.getAddons(["addon1@tests.mozilla.org",
-                          "addon2@tests.mozilla.org",
-                          "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
+  AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
+                               "addon2@tests.mozilla.org",
+                               "addon3@tests.mozilla.org"], function([a1, a2, a3]) {
 
     do_check_neq(a1, null);
     do_check_false(isExtensionInAddonsList(profileDir, a1.id));

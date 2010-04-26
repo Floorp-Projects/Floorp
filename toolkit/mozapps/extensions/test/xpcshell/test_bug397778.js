@@ -60,7 +60,7 @@ function run_test()
 }
 
 function run_test_1() {
-  AddonManager.getAddon(ID, function(addon) {
+  AddonManager.getAddonByID(ID, function(addon) {
     do_check_neq(addon, null);
     do_check_eq(addon.name, "fr Name");
     do_check_eq(addon.description, "fr Description");
@@ -69,7 +69,7 @@ function run_test_1() {
     addon.userDisabled = true;
     restartManager();
 
-    AddonManager.getAddon(ID, function(newAddon) {
+    AddonManager.getAddonByID(ID, function(newAddon) {
       do_check_neq(newAddon, null);
       do_check_eq(newAddon.name, "fr Name");
 
@@ -83,7 +83,7 @@ function run_test_2() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "de");
   restartManager();
 
-  AddonManager.getAddon(ID, function(addon) {
+  AddonManager.getAddonByID(ID, function(addon) {
     do_check_neq(addon, null);
     do_check_eq(addon.name, "de-DE Name");
     do_check_eq(addon.description, null);
@@ -97,7 +97,7 @@ function run_test_3() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "DE-de");
   restartManager();
 
-  AddonManager.getAddon(ID, function(addon) {
+  AddonManager.getAddonByID(ID, function(addon) {
     do_check_neq(addon, null);
     do_check_eq(addon.name, "de-DE Name");
     do_check_eq(addon.description, null);
@@ -111,7 +111,7 @@ function run_test_4() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "es-AR");
   restartManager();
 
-  AddonManager.getAddon(ID, function(addon) {
+  AddonManager.getAddonByID(ID, function(addon) {
     do_check_neq(addon, null);
     do_check_eq(addon.name, "es-ES Name");
     do_check_eq(addon.description, "es-ES Description");
@@ -125,7 +125,7 @@ function run_test_5() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "zh");
   restartManager();
 
-  AddonManager.getAddon(ID, function(addon) {
+  AddonManager.getAddonByID(ID, function(addon) {
     do_check_neq(addon, null);
     if (addon.name != "zh-TW Name" && addon.name != "zh-CN Name")
       do_throw("zh matched to " + addon.name);
@@ -140,7 +140,7 @@ function run_test_6() {
   Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "nl-NL");
   restartManager();
 
-  AddonManager.getAddon(ID, function(addon) {
+  AddonManager.getAddonByID(ID, function(addon) {
     do_check_neq(addon, null);
     do_check_eq(addon.name, "en Name");
     do_check_eq(addon.description, "en Description");

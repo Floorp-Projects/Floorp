@@ -107,7 +107,7 @@ function run_test() {
     inspector.events.addListener("uninstall", onGenericEvent);
     inspector.events.addListener("cancel", onGenericEvent);
 
-    AddonManager.getAddon(testdata.inspectorid, function(a) {
+    AddonManager.getAddonByID(testdata.inspectorid, function(a) {
       a.userDisabled = true;
 
       do_check_eq(gLastEvent, "disable");
