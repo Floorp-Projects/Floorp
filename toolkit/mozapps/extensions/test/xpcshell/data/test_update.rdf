@@ -9,6 +9,8 @@
         <li>
           <Description>
             <em:version>1.0</em:version>
+            <!-- Shouldn't fire onCompatibilityUpdateAvailable since this
+                 information is already in the install.rdf -->
             <em:targetApplication>
               <Description>
                 <em:id>xpcshell@tests.mozilla.org</em:id>
@@ -16,8 +18,19 @@
                 <em:maxVersion>1</em:maxVersion>
               </Description>
             </em:targetApplication>
+
+            <!-- Should be ignored as it is not for the present version of the
+                 application -->
+            <em:targetApplication>
+              <Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>2</em:minVersion>
+                <em:maxVersion>2</em:maxVersion>
+              </Description>
+            </em:targetApplication>
           </Description>
         </li>
+
         <li>
           <Description>
             <em:version>2.0</em:version>
@@ -36,6 +49,63 @@
   </Description>
 
   <Description about="urn:mozilla:extension:addon2@tests.mozilla.org">
+    <em:updates>
+      <Seq>
+        <li>
+          <Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>1</em:maxVersion>
+              </Description>
+            </em:targetApplication>
+          </Description>
+        </li>
+      </Seq>
+    </em:updates>
+  </Description>
+
+  <Description about="urn:mozilla:extension:addon3@tests.mozilla.org">
+    <em:updates>
+      <Seq>
+        <li>
+          <Description>
+            <em:version>1.0</em:version>
+            <em:targetApplication>
+              <Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>3</em:minVersion>
+                <em:maxVersion>3</em:maxVersion>
+              </Description>
+            </em:targetApplication>
+          </Description>
+        </li>
+      </Seq>
+    </em:updates>
+  </Description>
+
+  <Description about="urn:mozilla:extension:addon4@tests.mozilla.org">
+    <em:updates>
+      <Seq>
+        <li>
+          <Description>
+            <em:version>5.0</em:version>
+            <em:targetApplication>
+              <Description>
+                <em:id>xpcshell@tests.mozilla.org</em:id>
+                <em:minVersion>0</em:minVersion>
+                <em:maxVersion>0</em:maxVersion>
+              </Description>
+            </em:targetApplication>
+          </Description>
+        </li>
+      </Seq>
+    </em:updates>
+  </Description>
+
+  <Description about="urn:mozilla:extension:addon7@tests.mozilla.org">
     <em:updates>
       <Seq>
         <li>
