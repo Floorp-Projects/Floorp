@@ -999,9 +999,68 @@ var PageActions = {
     printSettings.headerStrLeft   = '';
     printSettings.headerStrRight  = '';
 
-    let webBrowserPrint = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                       .getInterface(Ci.nsIWebBrowserPrint);
-    webBrowserPrint.print(printSettings, null);
+    // We must manually add this to the download system
+    let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    let db = dm.DBConnection;
+
+    let stmt = db.createStatement(
+      "INSERT INTO moz_downloads (name, source, target, startTime, endTime, state, referrer) " +
+      "VALUES (:name, :source, :target, :startTime, :endTime, :state, :referrer)"
+    );
+
+    let current = Browser.selectedBrowser.currentURI.spec;
+    stmt.params.name = picker.file.leafName;
+    stmt.params.source = current;
+    stmt.params.target = gIOService.newFileURI(picker.file).spec;
+    stmt.params.startTime = Date.now() * 1000;
+    stmt.params.endTime = Date.now() * 1000;
+    stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED;
+    stmt.params.referrer = current;
+    stmt.execute();
+    stmt.finalize();
+
+    let newId = db.lastInsertRowID;
+    let listener = {
+      onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+        if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+          let stmt = db.createStatement("UPDATE moz_downloads SET endTime = :endTime, state = :state WHERE id = :id");
+          stmt.params.endTime = Date.now() * 1000;
+          stmt.params.state = Ci.nsIDownloadManager.DOWNLOAD_FINISHED;
+          stmt.params.id = newId;
+          stmt.execute();
+          stmt.finalize();
+
+          let download = dm.getDownload(newId);
+          try {
+            DownloadsView.downloadCompleted(download);
+            let element = DownloadsView.getElementForDownload(newId);
+            element.setAttribute("state", Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
+            element.setAttribute("endTime", Date.now());
+            element.setAttribute("referrer", current);
+            DownloadsView._updateTime(element);
+            DownloadsView._updateStatus(element);
+          }
+          catch(e) {}
+          gObserverService.notifyObservers(download, "dl-done", null);
+        }
+      },
+      onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
+
+      // stubs for the nsIWebProgressListener interfaces which nsIWebBrowserPrint doesn't use.
+      onLocationChange : function() { throw "Unexpected onLocationChange"; },
+      onStatusChange   : function() { throw "Unexpected onStatusChange";   },
+      onSecurityChange : function() { throw "Unexpected onSecurityChange"; }
+    };
+
+    let download = dm.getDownload(newId);
+    try {
+      DownloadsView.downloadStarted(download);
+    }
+    catch(e) {}
+    gObserverService.notifyObservers(download, "dl-start", null);
+
+    let webBrowserPrint = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebBrowserPrint);
+    webBrowserPrint.print(printSettings, listener);
   },
 
   updatePageSaveAs: function updatePageSaveAs() {
