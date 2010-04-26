@@ -38,6 +38,7 @@ window.Group = function(listOfEls, options) {
   this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
   this.locked = options.locked || false;
   this.isAGroup = true;
+  this.id = options.id || Groups.getNextID();
 
   var self = this;
 
@@ -187,7 +188,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var data = {
       bounds: this.getBounds(), 
       locked: this.locked, 
-      title: this.getTitle()
+      title: this.getTitle(),
+      id: this.id
     };
     
     return data;
@@ -318,10 +320,26 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       child.close();
     });
   },
-  
+    
   // ----------  
-  add: function($el, dropPos, options) {
-    Utils.assert('add expects jQuery objects', Utils.isJQuery($el));
+  // Function: add
+  // Adds an item to the group.
+  // Parameters: 
+  // 
+  //   a - The item to add. Can be an <Item>, a DOM element or a jQuery object.
+  //       The latter two must refer to the container of an <Item>.
+  //   dropPos - An object with left and top properties referring to the location dropped at.  Optional.
+  //   options - An object with optional settings for this call. Currently the only one is dontArrange. 
+  add: function(a, dropPos, options) {
+    var item;
+    var $el;
+    if(a.isAnItem) {
+      item = a;
+      $el = $(a.container);
+    } else {
+      $el = $(a);
+      item = Items.item($el);
+    }    
     
     if(!dropPos) 
       dropPos = {top:window.innerWidth, left:window.innerHeight};
@@ -360,7 +378,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       return 0;      
     }
     
-    var item = Items.item($el);
     var oldIndex = $.inArray(item, this._children);
     if(oldIndex != -1)
       this._children.splice(oldIndex, 1); 
@@ -377,8 +394,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       self.remove($el);
     });
     
-    $el.data("group", this)
-       .addClass("tabInGroup");
+    item.parent = this;
+    $el.addClass("tabInGroup");
     
     if(typeof(item.setResizable) == 'function')
       item.setResizable(false);
@@ -388,7 +405,13 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   },
   
   // ----------  
-  // The argument a can be an Item, a DOM element, or a jQuery object
+  // Function: remove
+  // Removes an item from the group.
+  // Parameters: 
+  // 
+  //   a - The item to remove. Can be an <Item>, a DOM element or a jQuery object.
+  //       The latter two must refer to the container of an <Item>.
+  //   options - An object with optional settings for this call. Currently the only one is dontArrange. 
   remove: function(a, options) {
     var $el;  
     var item;
@@ -407,8 +430,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var index = $.inArray(item, this._children);
     if(index != -1)
       this._children.splice(index, 1); 
-
-    $el.data("group", null).removeClass("tabInGroup");
+    
+    item.parent = null;
+    $el.removeClass("tabInGroup");
     item.setSize(item.defaultSize.x, item.defaultSize.y);
     $el.droppable("enable");    
     item.removeOnClose(this);
@@ -469,9 +493,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         drag.info.$el.addClass("willGroup");
       },
       out: function(){
-        var $group = drag.info.$el.data("group");
-        if($group)
-          $group.remove(drag.info.$el);
+        var group = drag.item.parent;
+        if(group)
+          group.remove(drag.info.$el);
+          
         drag.info.$el.removeClass("willGroup");
       },
       drop: function(event){
@@ -513,7 +538,7 @@ var DragInfo = function(element) {
   this.el = element;
   this.$el = $(this.el);
   this.item = Items.item(this.el);
-  this.parent = this.$el.data('group');
+  this.parent = this.item.parent;
   
   this.$el.data('isDragging', true);
   this.item.setZ(9999);
@@ -535,11 +560,11 @@ DragInfo.prototype = {
   stop: function() {
     this.$el.data('isDragging', false);    
     
-    if(this.parent && !this.parent.locked && this.parent != this.$el.data('group') 
+    if(this.parent && !this.parent.locked && this.parent != this.item.parent 
         && this.parent._children.length <= 1) 
       this.parent.remove(this.parent._children[0]);
       
-    if(this.item && !this.$el.hasClass('willGroup') && !this.$el.data('group')) {
+    if(this.item && !this.$el.hasClass('willGroup') && !this.item.parent) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
       
@@ -555,9 +580,9 @@ var drag = {
 };
 
 // ##########
+// Class: Groups
+// Singelton for managing all <Group>s. 
 window.Groups = {
-  groups: [],
-  
   // ----------  
   dragOptions: {
     scroll: false,
@@ -583,7 +608,7 @@ window.Groups = {
       drag.info.$el.removeClass("willGroup")   
       var phantom = $target.data("phantomGroup")
       
-      var group = $target.data("group");
+      var group = drag.info.item.parent;
       if( group == null ){
         phantom.removeClass("phantom");
         phantom.removeClass("group-content");
@@ -625,11 +650,20 @@ window.Groups = {
   
   // ----------
   init: function() {
+    this.groups = [];
+    this.nextID = 1;
+  },
+  
+  // ----------
+  getNextID: function() {
+    var result = this.nextID;
+    this.nextID++;
+    return result;
   },
 
   // ----------
   getStorageData: function() {
-    var data = {groups: []};
+    var data = {nextID: this.nextID, groups: []};
     $.each(this.groups, function(index, group) {
       data.groups.push(group.getStorageData());
     });
@@ -639,9 +673,12 @@ window.Groups = {
   
   // ----------
   reconstitute: function(data) {
+    if(data && data.nextID)
+      this.nextID = data.nextID;
+      
     if(data && data.groups) {
       $.each(data.groups, function(index, group) {
-        new Group([], group); 
+        new Group([], $.extend({}, group, {dontPush: true})); 
       });
     } else {
       var pad = 5;
@@ -650,7 +687,7 @@ window.Groups = {
       var w = sw - (pad * 2);
       var h = TabItems.tabHeight;
       var box = new Rect(pad, sh - (h + pad), w, h);
-      new Group([], {bounds: box, title: 'New Tabs', locked: true}); 
+      new Group([], {bounds: box, title: 'New Tabs', locked: true, dontPush: true}); 
     }
   },
   
@@ -665,6 +702,22 @@ window.Groups = {
     var index = $.inArray(group, this.groups);
     if(index != -1)
       this.groups.splice(index, 1);     
+  },
+  
+  // ----------
+  // Function: group
+  // Given some sort of identifier, returns the appropriate group.
+  // Currently only supports group ids. 
+  group: function(a) {
+    var result = null;
+    $.each(this.groups, function(index, candidate) {
+      if(candidate.id == a) {
+        result = candidate;
+        return false;
+      }
+    });
+    
+    return result;
   },
   
   // ----------  

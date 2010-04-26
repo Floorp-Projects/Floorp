@@ -276,16 +276,22 @@ function UIClass(){
   if(data.hideTabBar)
     this.hideTabBar();
     
+  if(data.dataVersion < 2) {
+    data.groups = null;
+    data.tabs = null;
+  }
+      
   Groups.reconstitute(data.groups);
   TabItems.reconstitute(data.tabs);
   
   $(window).bind('beforeunload', function() {
     if(self.initialized) {
       var data = {
-        dataVersion: 1,
+        dataVersion: 2,
         hideTabBar: self.tabBar._hidden,
         groups: Groups.getStorageData(),
-        tabs: TabItems.getStorageData()
+        tabs: TabItems.getStorageData(), 
+        pageBounds: Items.getPageBounds()
       };
       
       Storage.write(data);
