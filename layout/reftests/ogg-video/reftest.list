@@ -4,7 +4,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == aspect-ratio-2a.xhtml aspect-rat
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP(..) == aspect-ratio-2b.xhtml aspect-ratio-2-ref.html
 HTTP(..) == aspect-ratio-3a.xhtml aspect-ratio-3-ref.xhtml
 HTTP(..) == aspect-ratio-3b.xhtml aspect-ratio-3-ref.xhtml
-== encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html
+fails-if(http.oscpu.match(/Mac\x20OS\x20X\x2010\.6$/)) == encoded-aspect-ratio-1.html encoded-aspect-ratio-1-ref.html # bug 562000
 HTTP(..) == basic-1.xhtml basic-1-ref.html
 HTTP(..) == canvas-1a.xhtml basic-1-ref.html
 HTTP(..) == canvas-1b.xhtml basic-1-ref.html
