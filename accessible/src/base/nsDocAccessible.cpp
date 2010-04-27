@@ -36,9 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsRootAccessible.h"
+#include "nsAccCache.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
+#include "nsRootAccessible.h"
+#include "nsTextEquivUtils.h"
+
 #include "nsIMutableArray.h"
 #include "nsICommandManager.h"
 #include "nsIDocShell.h"

@@ -36,10 +36,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
 #include "nsHTMLSelectAccessible.h"
-#include "nsIAccessibilityService.h"
+
+#include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
+#include "nsEventShell.h"
 #include "nsIAccessibleEvent.h"
+#include "nsTextEquivUtils.h"
+
+#include "nsCOMPtr.h"
 #include "nsIFrame.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"

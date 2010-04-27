@@ -35,9 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
+#include "nsRelUtils.h"
 
 #include "nsHTMLSelectAccessible.h"
 #include "nsIDocShell.h"

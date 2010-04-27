@@ -40,10 +40,12 @@
 
 #include "nsXULListboxAccessible.h"
 
+#include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
+
 #include "nsIDOMXULPopupElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsServiceManagerUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULColumnsAccessible

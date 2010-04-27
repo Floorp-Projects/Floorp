@@ -39,7 +39,9 @@
 
 #include "nsTextEquivUtils.h"
 
+#include "nsAccessibilityService.h"
 #include "nsAccessible.h"
+#include "nsAccUtils.h"
 
 #include "nsIDOMXULLabeledControlEl.h"
 

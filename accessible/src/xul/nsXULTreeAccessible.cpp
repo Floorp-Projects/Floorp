@@ -38,7 +38,11 @@
 
 #include "nsXULTreeAccessible.h"
 
+#include "nsAccCache.h"
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
+#include "nsRelUtils.h"
 
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
