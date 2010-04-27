@@ -1751,7 +1751,7 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 HWND
 nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
 {
-  nsRefPtr<nsAccessNode> accessNode = nsAccUtils::QueryAccessNode(aAccessible);
+  nsRefPtr<nsAccessNode> accessNode = do_QueryObject(aAccessible);
   if (!accessNode)
     return 0;
 
