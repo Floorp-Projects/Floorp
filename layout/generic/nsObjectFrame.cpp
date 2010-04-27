@@ -4396,21 +4396,26 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
       EventRecord synthCarbonEvent;
 #endif
       NPCocoaEvent synthCocoaEvent;
-
       void* event = anEvent.pluginEvent;
-
+      nsPoint pt =
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
+        mObjectFrame->GetUsedBorderAndPadding().TopLeft();
+      nsPresContext* presContext = mObjectFrame->PresContext();
+      nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
+                      presContext->AppUnitsToDevPixels(pt.y));
+#ifndef NP_NO_CARBON
+      nsIntPoint geckoScreenCoords = mWidget->WidgetToScreenOffset();
+      Point carbonPt = { ptPx.y + geckoScreenCoords.y, ptPx.x + geckoScreenCoords.x };
+      if (eventModel == NPEventModelCarbon) {
+        if (event && anEvent.eventStructType == NS_MOUSE_EVENT) {
+          static_cast<EventRecord*>(event)->where = carbonPt;
+        }
+      }
+#endif
       if (!event) {
-        nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame)
-          - mObjectFrame->GetUsedBorderAndPadding().TopLeft();
-        nsPresContext* presContext = mObjectFrame->PresContext();
-        nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
-                        presContext->AppUnitsToDevPixels(pt.y));
 
 #ifndef NP_NO_CARBON
         if (eventModel == NPEventModelCarbon) {
-          nsIntPoint geckoScreenCoords = mWidget->WidgetToScreenOffset();
-          Point carbonPt = { ptPx.y + geckoScreenCoords.y, ptPx.x + geckoScreenCoords.x };
-
           event = &synthCarbonEvent;
           InitializeEventRecord(&synthCarbonEvent, &carbonPt);
         } else
