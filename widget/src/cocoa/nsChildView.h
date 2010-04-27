@@ -64,6 +64,7 @@
 
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
+#import <AppKit/NSOpenGL.h>
 
 class gfxASurface;
 class nsChildView;
@@ -161,6 +162,8 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
   TSMDocumentID mPluginTSMDoc;
 #endif
 
+  NSOpenGLContext *mContext;
+
   // Simple gestures support
   //
   // mGestureState is used to detect when Cocoa has called both
@@ -208,6 +211,10 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
 #ifndef NP_NO_CARBON
 - (void) processPluginKeyEvent:(EventRef)aKeyEvent;
 #endif
+
+- (void)update;
+- (void)lockFocus;
+- (void) _surfaceNeedsUpdate:(NSNotification*)notification;
 
 // Simple gestures support
 //
@@ -278,6 +285,8 @@ public:
 
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
+
+  LayerManager*           GetLayerManager();
 
   NS_IMETHOD              ConstrainPosition(PRBool aAllowSlop,
                                             PRInt32 *aX, PRInt32 *aY);
