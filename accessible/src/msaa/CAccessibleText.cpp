@@ -51,6 +51,7 @@
 #include "nsAccessibleWrap.h"
 
 #include "nsCOMPtr.h"
+#include "nsIPersistentProperties2.h"
 #include "nsString.h"
 
 #define GET_NSIACCESSIBLETEXT \

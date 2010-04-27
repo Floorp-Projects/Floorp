@@ -40,6 +40,7 @@
 #include "nsTextAccessibleWrap.h"
 #include "ISimpleDOMText_i.c"
 
+#include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
 
 #include "nsIFontMetrics.h"

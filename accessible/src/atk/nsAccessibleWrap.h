@@ -120,14 +120,10 @@ public:
 protected:
     virtual nsresult FirePlatformEvent(nsAccEvent *aEvent);
 
-    nsresult FireAtkStateChangeEvent(nsIAccessibleEvent *aEvent,
-                                     AtkObject *aObject);
-    nsresult FireAtkTextChangedEvent(nsIAccessibleEvent *aEvent,
-                                     AtkObject *aObject);
-    nsresult FireAtkPropChangedEvent(nsIAccessibleEvent *aEvent,
-                                     AtkObject *aObject);
-    nsresult FireAtkShowHideEvent(nsIAccessibleEvent *aEvent,
-                                  AtkObject *aObject, PRBool aIsAdded);
+    nsresult FireAtkStateChangeEvent(nsAccEvent *aEvent, AtkObject *aObject);
+    nsresult FireAtkTextChangedEvent(nsAccEvent *aEvent, AtkObject *aObject);
+    nsresult FireAtkShowHideEvent(nsAccEvent *aEvent, AtkObject *aObject,
+                                  PRBool aIsAdded);
 
     AtkObject *mAtkObject;
 

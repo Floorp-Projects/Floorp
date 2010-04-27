@@ -37,11 +37,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// NOTE: alphabetically ordered
 #include "nsXULFormControlAccessible.h"
-#include "nsHTMLFormControlAccessible.h"
+
 #include "nsAccessibilityAtoms.h"
+#include "nsAccUtils.h"
 #include "nsAccTreeWalker.h"
+#include "nsCoreUtils.h"
+#include "nsRelUtils.h"
+
+// NOTE: alphabetically ordered
+#include "nsHTMLFormControlAccessible.h"
 #include "nsXULMenuAccessible.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSEditableElement.h"

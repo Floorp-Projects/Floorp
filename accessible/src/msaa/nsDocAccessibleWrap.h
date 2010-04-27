@@ -44,6 +44,8 @@
 #define _nsDocAccessibleWrap_H_
 
 #include "ISimpleDOMDocument.h"
+
+#include "nsAccUtils.h"
 #include "nsDocAccessible.h"
 #include "nsIDocShellTreeItem.h"
 
