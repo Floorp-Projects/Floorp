@@ -4202,6 +4202,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             md.sendMethod().name,
             params=md.makeCxxParams(paramsems='in', returnsems='out',
                                     side=self.side, implicit=implicit),
+            warn_unused=(self.side == 'parent'),
             ret=Type.BOOL)
         if md.decl.type.isCtor():
             decl.ret = md.actorDecl().bareType(self.side)
@@ -4270,6 +4271,7 @@ class _ClassDeclDefn:
         md.decl.name = (clsname +'::'+ md.decl.name)
         md.decl.virtual = 0
         md.decl.static = 0
+        md.decl.warn_unused = 0
         for param in md.decl.params:
             if isinstance(param, Param):
                 param.default = None
