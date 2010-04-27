@@ -2107,7 +2107,17 @@ case "$target" in
     # The ExceptionHandling framework is needed for Objective-C exception
     # logging code in nsObjCExceptions.h. Currently we only use that in debug
     # builds.
-    MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling"
+    _SAVE_LDFLAGS=$LDFLAGS
+     AC_MSG_CHECKING([for -framework ExceptionHandling])
+    LDFLAGS="$LDFLAGS -framework ExceptionHandling"
+    AC_TRY_LINK(,[return 0;],
+                ac_cv_have_framework_exceptionhandling="yes",
+                ac_cv_have_framework_exceptionhandling="no")
+    AC_MSG_RESULT([$ac_cv_have_framework_exceptionhandling])
+    if test "$ac_cv_have_framework_exceptionhandling" = "yes"; then
+      MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
+    fi
+    LDFLAGS=$_SAVE_LDFLAGS
     # Debug builds should always have frame pointers
     MOZ_DEBUG_FLAGS="-g -fno-omit-frame-pointer"
 
@@ -3272,7 +3282,7 @@ dnl These are all the places some variant of statfs can be hiding.
 MOZ_CHECK_HEADERS(sys/statvfs.h sys/statfs.h sys/vfs.h sys/mount.h)
 
 dnl Quota support
-MOZ_CHECK_HEADERS(sys/quota.h)
+MOZ_CHECK_HEADERS(sys/quota.h sys/sysmacros.h)
 MOZ_CHECK_HEADERS(linux/quota.h)
 
 dnl Try for MMX support
@@ -4996,13 +5006,27 @@ cairo-os2)
     ;;
 
 cairo-cocoa)
-    MOZ_WIDGET_TOOLKIT=cocoa
-    AC_DEFINE(MOZ_WIDGET_COCOA)
+    # Check if we have the Cocoa framework, or if we're targeting Cocoa Touch
+    _SAVE_LDFLAGS=$LDFLAGS
+    LDFLAGS="$LDFLAGS -framework Cocoa"
+    AC_TRY_LINK(,[return 0;],_HAVE_FRAMEWORK_COCOA=1,_HAVE_FRAMEWORK_COCOA=)
+    if test -z "$_HAVE_FRAMEWORK_COCOA"; then
+        LDFLAGS="$_SAVE_LDFLAGS -framework UIKit";
+        AC_TRY_LINK(,[return 0;],_HAVE_FRAMEWORK_UIKIT=1,
+                    AC_MSG_ERROR([Neither Cocoa nor UIKit frameworks were found. Are you using the correct SDK?]))
+        MOZ_WIDGET_TOOLKIT=uikit
+      AC_DEFINE(MOZ_WIDGET_UIKIT)
+      TK_LIBS='-framework Foundation -framework CoreFoundation -framework CoreGraphics -framework CoreText'
+    else
+      MOZ_WIDGET_TOOLKIT=cocoa
+      AC_DEFINE(MOZ_WIDGET_COCOA)
+      TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
+    fi
     MOZ_USER_DIR="Mozilla"
     AC_DEFINE(XP_MACOSX)
-    TK_LIBS='-framework QuartzCore -framework Carbon -framework CoreAudio -framework AudioToolbox -framework AudioUnit -framework AddressBook -framework OpenGL'
+
     TK_CFLAGS="-DNO_X11"
-    LDFLAGS="$LDFLAGS -framework Cocoa -lobjc"
+    LDFLAGS="$LDFLAGS -lobjc"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
@@ -8018,6 +8042,7 @@ dnl Test for correct temporary object destruction order
 dnl ========================================================
 dnl We want to make sure the compiler follows the C++ spec here as 
 dnl xpcom and the string classes depend on it (bug 235381).
+if test -z "$CROSS_COMPILE"; then
 AC_MSG_CHECKING([for correct temporary object destruction order])
 AC_TRY_RUN([ class A {
              public:  A(int& x) : mValue(x) {}
@@ -8041,6 +8066,7 @@ AC_MSG_RESULT([$result])
 
 if test "$result" = "no"; then
     AC_MSG_ERROR([Your compiler does not follow the C++ specification for temporary object destruction order.])
+fi
 fi
 
 dnl ========================================================
@@ -8525,7 +8551,7 @@ if test "$MOZ_TREE_CAIRO"; then
       qt)
         QT_SURFACE_FEATURE="#define CAIRO_HAS_QT_SURFACE 1"
         ;;
-      cocoa)
+      cocoa | uikit)
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
         QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
         QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"
