@@ -76,6 +76,9 @@ window.TabItem.prototype = $.extend(new Item(), {
       css.width = rect.width - extra.x;
       var scale = css.width / TabItems.tabWidth;
       css.fontSize = TabItems.fontSize * scale;
+      if( css.fontSize < 10 ){
+        css.fontSize = 10;
+      }
     }
 
     if(rect.height != this.bounds.height) {
@@ -184,7 +187,6 @@ window.TabItems = {
   init: function() {
     var self = this;
     
-    
     function mod($div){
       if(window.Groups) {        
         $div.data('isDragging', false);
@@ -207,7 +209,6 @@ window.TabItems = {
           $(this).find("canvas").data("link").tab.close(); }
         else {
           if(!$(this).data('isDragging')) {
-
             // ZOOM! 
             var orig = {
               width: $(this).width(),
@@ -224,6 +225,7 @@ window.TabItems = {
             $("body").css("overflow", "hidden");
             
             function onZoomDone(){
+              UI.tabBar.show(false);              
               TabMirror.resumePainting();
               $(this).find("canvas").data("link").tab.focus();
               $(this).css({
@@ -233,7 +235,20 @@ window.TabItems = {
                 height:orig.height,
                 })
                 .removeClass("front");  
-              Navbar.show();    
+              Navbar.show();
+              
+              try{
+                var gID = self.getItemByTab(this).parent.id;
+                if(gID) {
+                  var group = Groups.group(gID);
+                  UI.tabBar.showOnlyTheseTabs( group._children );
+                }
+              }
+              catch(e){
+                Utils.log(e);                
+              }
+              
+              
               $("body").css("overflow", overflow);              
             }
   
@@ -297,6 +312,11 @@ window.TabItems = {
     });
     
     return items;
+  },
+  
+  // ----------
+  getItemByTab: function(tab) {
+    return $(tab).data("tabItem");
   },
   
   // ----------
