@@ -68,7 +68,7 @@ public:
     already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
 };
 
-extern THEBES_API GLContextProvider sGLContextProvider;
+extern GLContextProvider THEBES_API sGLContextProvider;
 
 }
 }
