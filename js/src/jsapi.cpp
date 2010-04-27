@@ -5522,8 +5522,19 @@ JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline)
 JS_PUBLIC_API(void)
 JS_ClearRegExpStatics(JSContext *cx)
 {
+    JSRegExpStatics *res;
+
     /* No locking required, cx is thread-private and input must be live. */
-    cx->regExpStatics.clear();
+    res = &cx->regExpStatics;
+    res->input = NULL;
+    res->multiline = JS_FALSE;
+    res->parenCount = 0;
+    res->lastMatch = res->lastParen = js_EmptySubString;
+    res->leftContext = res->rightContext = js_EmptySubString;
+    if (res->moreParens) {
+      cx->free(res->moreParens);
+      res->moreParens = NULL;
+    }
     cx->runtime->gcPoke = JS_TRUE;
 }
 
