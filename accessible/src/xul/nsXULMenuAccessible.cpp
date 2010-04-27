@@ -37,6 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXULMenuAccessible.h"
+
+#include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
+#include "nsXULFormControlAccessible.h"
+
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIMutableArray.h"
@@ -50,7 +55,6 @@
 #include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsGUIEvent.h"
-#include "nsXULFormControlAccessible.h"
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 

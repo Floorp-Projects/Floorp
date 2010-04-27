@@ -38,6 +38,9 @@
 
 #include "nsARIAGridAccessible.h"
 
+#include "nsAccUtils.h"
+
+#include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////

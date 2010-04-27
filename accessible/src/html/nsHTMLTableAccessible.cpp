@@ -39,7 +39,11 @@
 
 #include "nsHTMLTableAccessible.h"
 
+#include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 #include "nsDocAccessible.h"
+#include "nsRelUtils.h"
+#include "nsTextEquivUtils.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -48,8 +52,6 @@
 #include "nsISelection2.h"
 #include "nsISelectionPrivate.h"
 #include "nsINameSpaceManager.h"
-#include "nsIAccessibilityService.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMHTMLTableElement.h"
@@ -57,7 +59,6 @@
 #include "nsIDOMHTMLTableSectionElem.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
-#include "nsIServiceManager.h"
 #include "nsITableLayout.h"
 #include "nsITableCellLayout.h"
 #include "nsFrameSelection.h"

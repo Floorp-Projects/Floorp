@@ -41,6 +41,7 @@
 
 #include "nsIAccessibilityService.h"
 
+#include "a11yGeneric.h"
 #include "nsCoreUtils.h"
 
 #include "nsCOMArray.h"
