@@ -58,6 +58,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
 #include "nsContentUtils.h"
+#include "nsIContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -5424,7 +5425,7 @@ nsContentUtils::StripNullChars(const nsAString& aInStr, nsAString& aOutStr)
 
 namespace {
 
-const int kCloneStackFrameStackSize = 20;
+const size_t kCloneStackFrameStackSize = 20;
 
 class CloneStackFrame
 {
@@ -6010,3 +6011,10 @@ void nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
+NS_IMPL_ISUPPORTS1(nsIContentUtils, nsIContentUtils)
+
+PRBool
+nsIContentUtils::IsSafeToRunScript()
+{
+  return nsContentUtils::IsSafeToRunScript();
+}
