@@ -1330,7 +1330,7 @@ nsWindow::OnButtonReleaseEvent(QGraphicsSceneMouseEvent *aEvent)
 }
 
 nsEventStatus
-nsWindow::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *aEvent)
+nsWindow::OnMouseDoubleClickEvent(QGraphicsSceneMouseEvent *aEvent)
 {
     PRUint32 eventType;
 

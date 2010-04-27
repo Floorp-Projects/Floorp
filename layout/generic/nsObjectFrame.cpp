@@ -4427,12 +4427,8 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
           if (eventModel == NPEventModelCarbon) {
             synthCarbonEvent.what = (anEvent.message == NS_FOCUS_CONTENT) ?
             NPEventType_GetFocusEvent : NPEventType_LoseFocusEvent;
-          } else
-#endif
-          {
-            synthCocoaEvent.type = NPCocoaEventFocusChanged;
-            synthCocoaEvent.data.focus.hasFocus = (anEvent.message == NS_FOCUS_CONTENT);
           }
+#endif
           break;
         case NS_MOUSE_MOVE:
           {

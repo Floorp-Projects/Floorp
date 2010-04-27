@@ -249,11 +249,15 @@ $("five").style.color = "lime";
 $("six").style.color = "lime";
 
 setTimeout(function() {
+             if (cs("five") != "rgb(0, 255, 0)" &&
+                 cs("six") != "rgb(0, 255, 0)") {
+               // The transition hasn't finished already.
+               did_stops = true;
+             }
              $("five").style.MozTransitionProperty = "margin-left";
              $("six").style.MozTransitionDuration = "0s";
              $("six").style.MozTransitionDelay = "0s";
              $("six").style.color = "blue";
-             did_stops = true;
            }, 100);
 function poll_start_reversal() {
   if (cs("four").color != "rgb(0, 0, 255)") {

@@ -239,6 +239,8 @@ nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
 
+PRBool nsContentUtils::sIsHandlingKeyBoardEvent = PR_FALSE;
+
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
 nsCOMArray<nsPrefOldCallback> *nsContentUtils::sPrefCallbackList = nsnull;
@@ -3700,27 +3702,26 @@ nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
 
 /* static */
 nsresult
-nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
+nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                                          const nsAString& aFragment,
                                          PRBool aWillOwnFragment,
                                          nsIDOMDocumentFragment** aReturn)
 {
-  NS_ENSURE_ARG(aContextNode);
   *aReturn = nsnull;
+  NS_ENSURE_ARG(aContextNode);
 
   nsresult rv;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aContextNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NOT_AVAILABLE);
 
   // If we don't have a document here, we can't get the right security context
   // for compiling event handlers... so just bail out.
-  nsCOMPtr<nsIDocument> document = node->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> document = aContextNode->GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
-  
-  PRBool bCaseSensitive = !document->IsHTML();
 
-  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
-  PRBool isHTML = htmlDoc && !bCaseSensitive;
+  PRBool isHTML = document->IsHTML();
+#ifdef DEBUG
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
+  NS_ASSERTION(!isHTML || htmlDoc, "Should have HTMLDocument here!");
+#endif
 
   if (isHTML && nsHtml5Module::sEnabled) {
     // See if the document has a cached fragment parser. nsHTMLDocument is the
@@ -3764,7 +3765,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
                             (document->GetCompatibilityMode() == eCompatibility_NavQuirks));
     }
   
-    NS_ADDREF(*aReturn = frag);
+    frag.swap(*aReturn);
     document->SetFragmentParser(parser);
     return NS_OK;
   }

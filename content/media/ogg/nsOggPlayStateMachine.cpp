@@ -969,29 +969,6 @@ nsresult nsOggPlayStateMachine::Run()
   return NS_OK;
 }
 
-static void ToARGBHook(const PlanarYCbCrImage::Data& aData, PRUint8* aOutput)
-{
-  OggPlayYUVChannels yuv;
-  NS_ASSERTION(aData.mYStride == aData.mYSize.width,
-               "Stride not supported");
-  NS_ASSERTION(aData.mCbCrStride == aData.mCbCrSize.width,
-               "Stride not supported");
-  yuv.ptry = aData.mYChannel;
-  yuv.ptru = aData.mCbChannel;
-  yuv.ptrv = aData.mCrChannel;
-  yuv.uv_width = aData.mCbCrSize.width;
-  yuv.uv_height = aData.mCbCrSize.height;
-  yuv.y_width = aData.mYSize.width;
-  yuv.y_height = aData.mYSize.height;
-
-  OggPlayRGBChannels rgb;
-  rgb.ptro = aOutput;
-  rgb.rgb_width = aData.mYSize.width;
-  rgb.rgb_height = aData.mYSize.height;
-
-  oggplay_yuv2bgra(&yuv, &rgb);  
-}
-
 void nsOggPlayStateMachine::RenderVideoFrame(VideoData* aData)
 {
   NS_ASSERTION(IsThread(mDecoder->mStateMachineThread), "Should be on state machine thread.");
@@ -1000,21 +977,12 @@ void nsOggPlayStateMachine::RenderVideoFrame(VideoData* aData)
     return;
   }
 
-  unsigned xSubsample = (aData->mBuffer[1].width != 0) ?
-    (aData->mBuffer[0].width / aData->mBuffer[1].width) : 0;
-
-  unsigned ySubsample = (aData->mBuffer[1].height != 0) ?
-    (aData->mBuffer[0].height / aData->mBuffer[1].height) : 0;
-
-  if (xSubsample == 0 || ySubsample == 0) {
-    // We can't perform yCbCr to RGB, so we can't render the frame...
-    return;
-  }
   NS_ASSERTION(mInfo.mPicture.width != 0 && mInfo.mPicture.height != 0,
                "We can only render non-zero-sized video");
-
-  unsigned cbCrStride = mInfo.mPicture.width / xSubsample;
-  unsigned cbCrHeight = mInfo.mPicture.height / ySubsample;
+  NS_ASSERTION(aData->mBuffer[0].stride >= 0 && aData->mBuffer[0].height >= 0 &&
+               aData->mBuffer[1].stride >= 0 && aData->mBuffer[1].height >= 0 &&
+               aData->mBuffer[2].stride >= 0 && aData->mBuffer[2].height >= 0,
+               "YCbCr stride and height must be non-negative");
 
   // Ensure the picture size specified in the headers can be extracted out of
   // the frame we've been supplied without indexing out of bounds.
@@ -1030,8 +998,11 @@ void nsOggPlayStateMachine::RenderVideoFrame(VideoData* aData)
     return;
   }
 
-  unsigned cbCrSize = PR_ABS(aData->mBuffer[0].stride * aData->mBuffer[0].height) +
-                      PR_ABS(aData->mBuffer[1].stride * aData->mBuffer[1].height) * 2;
+  unsigned ySize = aData->mBuffer[0].stride * aData->mBuffer[0].height;
+  unsigned cbSize = aData->mBuffer[1].stride * aData->mBuffer[1].height;
+  unsigned crSize = aData->mBuffer[2].stride * aData->mBuffer[2].height;
+  unsigned cbCrSize = ySize + cbSize + crSize;
+
   if (cbCrSize != mCbCrSize) {
     mCbCrSize = cbCrSize;
     mCbCrBuffer = static_cast<unsigned char*>(moz_xmalloc(cbCrSize));
@@ -1045,54 +1016,13 @@ void nsOggPlayStateMachine::RenderVideoFrame(VideoData* aData)
   unsigned char* data = mCbCrBuffer.get();
 
   unsigned char* y = data;
-  unsigned char* cb = y + (mInfo.mPicture.width * PR_ABS(aData->mBuffer[0].height));
-  unsigned char* cr = cb + (cbCrStride * PR_ABS(aData->mBuffer[1].height));
-
-  unsigned char* p = y;
-  unsigned char* q = aData->mBuffer[0].data + mInfo.mPicture.x +
-                     aData->mBuffer[0].stride * mInfo.mPicture.y;
-  for(PRInt32 i=0; i < mInfo.mPicture.height; ++i) {
-    NS_ASSERTION(q + mInfo.mPicture.width <
-                 aData->mBuffer[0].data + aData->mBuffer[0].stride * aData->mBuffer[0].height,
-                 "Y read must be in bounds");
-    NS_ASSERTION(p + mInfo.mPicture.width < data + mCbCrSize,
-                 "Memory copy 1 will stomp");
-    memcpy(p, q, mInfo.mPicture.width);
-    p += mInfo.mPicture.width;
-    q += aData->mBuffer[0].stride;
-  }
-
-  unsigned xo = xSubsample ? (mInfo.mPicture.x / xSubsample) : 0;
-  unsigned yo = ySubsample ? aData->mBuffer[1].stride * (mInfo.mPicture.y / ySubsample) : 0;
-
-  unsigned cbCrOffset = xo+yo;
-  p = cb;
-  q = aData->mBuffer[1].data + cbCrOffset;
-  unsigned char* p2 = cr;
-  unsigned char* q2 = aData->mBuffer[2].data + cbCrOffset;
-#ifdef DEBUG
-  unsigned char* buffer1Limit =
-    aData->mBuffer[1].data + aData->mBuffer[1].stride * aData->mBuffer[1].height;
-  unsigned char* buffer2Limit =
-    aData->mBuffer[2].data + aData->mBuffer[2].stride * aData->mBuffer[2].height;
-#endif
-  for(unsigned i=0; i < cbCrHeight; ++i) {
-    NS_ASSERTION(q + cbCrStride <= buffer1Limit,
-                 "Cb source read must be within bounds");
-    NS_ASSERTION(q2 + cbCrStride <= buffer2Limit,
-                 "Cr source read must be within bounds");
-    NS_ASSERTION(p + cbCrStride < data + mCbCrSize,
-                 "Cb write destination must be within bounds");
-    NS_ASSERTION(p2 + cbCrStride < data + mCbCrSize,
-                 "Cr write destination must be within bounds");
-    memcpy(p, q, cbCrStride);
-    memcpy(p2, q2, cbCrStride);
-    p += cbCrStride;
-    p2 += cbCrStride;
-    q += aData->mBuffer[1].stride;
-    q2 += aData->mBuffer[2].stride;
-  }
-
+  unsigned char* cb = y + ySize;
+  unsigned char* cr = cb + cbSize;
+  
+  memcpy(y, aData->mBuffer[0].data, ySize);
+  memcpy(cb, aData->mBuffer[1].data, cbSize);
+  memcpy(cr, aData->mBuffer[2].data, crSize);
+ 
   ImageContainer* container = mDecoder->GetImageContainer();
   // Currently our Ogg decoder only knows how to output to PLANAR_YCBCR
   // format.
@@ -1105,19 +1035,19 @@ void nsOggPlayStateMachine::RenderVideoFrame(VideoData* aData)
     NS_ASSERTION(image->GetFormat() == Image::PLANAR_YCBCR,
                  "Wrong format?");
     PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(image.get());
-    // XXX this is only temporary until we get YCbCr code in the layer
-    // system.
-    videoImage->SetRGBConverter(ToARGBHook);
     PlanarYCbCrImage::Data data;
     data.mYChannel = y;
-    data.mYSize = gfxIntSize(mInfo.mPicture.width, mInfo.mPicture.height);
-    data.mYStride = mInfo.mPicture.width;
+    data.mYSize = gfxIntSize(mInfo.mFrame.width, mInfo.mFrame.height);
+    data.mYStride = aData->mBuffer[0].stride;
     data.mCbChannel = cb;
     data.mCrChannel = cr;
-    data.mCbCrSize = gfxIntSize(cbCrStride, cbCrHeight);
-    data.mCbCrStride = cbCrStride;
+    data.mCbCrSize = gfxIntSize(aData->mBuffer[1].width, aData->mBuffer[1].height);
+    data.mCbCrStride = aData->mBuffer[1].stride;
+    data.mPicX = mInfo.mPicture.x;
+    data.mPicY = mInfo.mPicture.y;
+    data.mPicSize = gfxIntSize(mInfo.mPicture.width, mInfo.mPicture.height);
     videoImage->SetData(data);
-    mDecoder->SetVideoData(data.mYSize, mInfo.mAspectRatio, image);
+    mDecoder->SetVideoData(data.mPicSize, mInfo.mAspectRatio, image);
   }
 }
 

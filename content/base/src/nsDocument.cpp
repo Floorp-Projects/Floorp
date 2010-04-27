@@ -1786,6 +1786,32 @@ nsDocument::Init()
   return NS_OK;
 }
 
+void 
+nsIDocument::DeleteAllProperties()
+{
+  for (PRUint32 i = 0; i < GetPropertyTableCount(); ++i) {
+    PropertyTable(i)->DeleteAllProperties();
+  }
+}
+
+void
+nsIDocument::DeleteAllPropertiesFor(nsINode* aNode)
+{
+  for (PRUint32 i = 0; i < GetPropertyTableCount(); ++i) {
+    PropertyTable(i)->DeleteAllPropertiesFor(aNode);
+  }
+}
+
+nsPropertyTable*
+nsIDocument::GetExtraPropertyTable(PRUint16 aCategory)
+{
+  NS_ASSERTION(aCategory > 0, "Category 0 should have already been handled");
+  while (aCategory - 1 >= mExtraPropertyTables.Length()) {
+    mExtraPropertyTables.AppendElement(new nsPropertyTable());
+  }
+  return mExtraPropertyTables[aCategory - 1];
+}
+
 nsresult
 nsDocument::AddXMLEventsContent(nsIContent *aXMLEventsElement)
 {
@@ -2887,48 +2913,45 @@ nsDocument::ReleaseCapture()
 nsresult
 nsDocument::SetBaseURI(nsIURI* aURI)
 {
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIURI> oldBase = nsIDocument::GetBaseURI();
-  if (aURI) {
-    rv = nsContentUtils::GetSecurityManager()->
-      CheckLoadURIWithPrincipal(NodePrincipal(), aURI,
-                                nsIScriptSecurityManager::STANDARD);
-    if (NS_SUCCEEDED(rv)) {
-      mDocumentBaseURI = NS_TryToMakeImmutable(aURI);
+  if (!aURI && !mDocumentBaseURI) {
+    return NS_OK;
+  }
+  
+  // Don't do anything if the URI wasn't actually changed.
+  if (aURI && mDocumentBaseURI) {
+    PRBool equalBases = PR_FALSE;
+    mDocumentBaseURI->Equals(aURI, &equalBases);
+    if (equalBases) {
+      return NS_OK;
     }
+  }
+
+  if (aURI) {
+    mDocumentBaseURI = NS_TryToMakeImmutable(aURI);
   } else {
     mDocumentBaseURI = nsnull;
   }
+  RefreshLinkHrefs();
 
-  nsIURI* newBase = nsIDocument::GetBaseURI();
-  PRBool equalBases = PR_FALSE;
-  if (oldBase && newBase) {
-    oldBase->Equals(newBase, &equalBases);
-  }
-  else {
-    equalBases = !oldBase && !newBase;
-  }
-
-  // If the document's base URI has changed, we need to re-resolve all the
-  // cached link hrefs relative to the new base.
-  if (!equalBases) {
-    RefreshLinkHrefs();
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 void
-nsDocument::GetBaseTarget(nsAString &aBaseTarget) const
+nsDocument::GetBaseTarget(nsAString &aBaseTarget)
 {
-  aBaseTarget.Assign(mBaseTarget);
-}
-
-void
-nsDocument::SetBaseTarget(const nsAString &aBaseTarget)
-{
-  mBaseTarget.Assign(aBaseTarget);
+  aBaseTarget.Truncate();
+  nsIContent* head = GetHeadContent();
+  if (!head) {
+    return;
+  }
+  
+  for (ChildIterator iter(head); !iter.IsDone(); iter.Next()) {
+    nsIContent* child = iter;
+    if (child->NodeInfo()->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
+        child->GetAttr(kNameSpaceID_None, nsGkAtoms::target, aBaseTarget)) {
+      return;
+    }
+  }
 }
 
 void
@@ -6120,34 +6143,39 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     BlastSubtreeToPieces(adoptedNode);
 
     if (!sameDocument && oldDocument) {
-      PRUint32 i, count = nodesWithProperties.Count();
-      for (i = 0; i < count; ++i) {
-        // Remove all properties.
-        oldDocument->PropertyTable()->
-          DeleteAllPropertiesFor(nodesWithProperties[i]);
+      PRUint32 count = nodesWithProperties.Count();
+      for (PRUint32 j = 0; j < oldDocument->GetPropertyTableCount(); ++j) {
+        for (PRUint32 i = 0; i < count; ++i) {
+          // Remove all properties.
+          oldDocument->PropertyTable(j)->
+            DeleteAllPropertiesFor(nodesWithProperties[i]);
+        }
       }
     }
 
     return rv;
   }
 
-  PRUint32 i, count = nodesWithProperties.Count();
+  PRUint32 count = nodesWithProperties.Count();
   if (!sameDocument && oldDocument) {
-    nsPropertyTable *oldTable = oldDocument->PropertyTable();
-    nsPropertyTable *newTable = PropertyTable();
-    for (i = 0; i < count; ++i) {
-      rv = oldTable->TransferOrDeleteAllPropertiesFor(nodesWithProperties[i],
-                                                      newTable);
-      if (NS_FAILED(rv)) {
-        while (++i < count) {
+    for (PRUint32 j = 0; j < oldDocument->GetPropertyTableCount(); ++j) {
+      nsPropertyTable *oldTable = oldDocument->PropertyTable(j);
+      nsPropertyTable *newTable = PropertyTable(j);
+      for (PRUint32 i = 0; i < count; ++i) {
+        if (NS_SUCCEEDED(rv)) {
+          rv = oldTable->TransferOrDeleteAllPropertiesFor(nodesWithProperties[i],
+                                                          newTable);
+        } else {
           oldTable->DeleteAllPropertiesFor(nodesWithProperties[i]);
         }
-
-        // Disconnect all nodes from their parents.
-        BlastSubtreeToPieces(adoptedNode);
-
-        return rv;
       }
+    }
+
+    if (NS_FAILED(rv)) {
+      // Disconnect all nodes from their parents.
+      BlastSubtreeToPieces(adoptedNode);
+
+      return rv;
     }
   }
 
@@ -6764,7 +6792,7 @@ nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
       "refresh",
       "x-dns-prefetch-control",
       "x-content-security-policy",
-      "x-content-security-policy-read-only",
+      "x-content-security-policy-report-only",
       // add more http headers if you need
       // XXXbz don't add content-location support without reading bug
       // 238654 and its dependencies/dups first.
@@ -7539,48 +7567,6 @@ nsDocument::RefreshLinkHrefs()
   for (nsTArray_base::size_type i = 0; i < linksToNotify.Length(); i++) {
     linksToNotify[i]->ResetLinkState(true);
   }
-}
-
-nsIContent*
-nsDocument::GetFirstBaseNodeWithHref()
-{
-  return mFirstBaseNodeWithHref;
-}
-
-nsresult
-nsDocument::SetFirstBaseNodeWithHref(nsIContent *elem)
-{
-  mFirstBaseNodeWithHref = elem;
-
-  if (!elem) {
-    SetBaseURI(nsnull);
-    return NS_OK;
-  }
-
-  NS_ASSERTION(elem->Tag() == nsGkAtoms::base,
-               "Setting base node to a non <base> element?");
-  NS_ASSERTION(elem->GetNameSpaceID() == kNameSpaceID_XHTML,
-               "Setting base node to a non XHTML element?");
-
-  nsIDocument* doc = elem->GetOwnerDoc();
-  nsIURI* currentURI = nsIDocument::GetDocumentURI();
-
-  // Resolve the <base> element's href relative to our current URI
-  nsAutoString href;
-  PRBool hasHref = elem->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
-  NS_ASSERTION(hasHref,
-               "Setting first base node to a node with no href attr?");
-
-  nsCOMPtr<nsIURI> newBaseURI;
-  nsContentUtils::NewURIWithDocumentCharset(
-    getter_AddRefs(newBaseURI), href, doc, currentURI);
-
-  // Try to set our base URI.  If that fails, try to set our base URI to null.
-  nsresult rv =  SetBaseURI(newBaseURI);
-  if (NS_FAILED(rv)) {
-    return SetBaseURI(nsnull);
-  }
-  return rv;
 }
 
 NS_IMETHODIMP

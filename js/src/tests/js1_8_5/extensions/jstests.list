@@ -2,7 +2,7 @@ url-prefix ../../jsreftest.html?test=js1_8_5/extensions/
 script typedarray.js
 script worker-error.js
 script worker-error-propagation.js
-script worker-fib.js
+skip-if(!xulRuntime.shell) script worker-fib.js  # sometimes hangs in browser, bug 559954
 script worker-init.js
 script worker-simple.js
 script worker-terminate.js

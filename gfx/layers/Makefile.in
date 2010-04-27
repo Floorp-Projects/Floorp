@@ -73,6 +73,7 @@ CPPSRCS = \
 EXTRA_DSO_LIBS = \
         gkgfx \
         thebes \
+        ycbcr \
         $(NULL)
 
 EXTRA_DSO_LDOPTS += \

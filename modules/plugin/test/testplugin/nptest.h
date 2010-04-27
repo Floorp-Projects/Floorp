@@ -131,6 +131,8 @@ typedef struct InstanceData {
   bool crashOnDestroy;
   ActivationState topLevelWindowActivationState;
   int32_t topLevelWindowActivationEventCount;
+  ActivationState focusState;
+  int32_t focusEventCount;
   int32_t eventModel;
 } InstanceData;
 

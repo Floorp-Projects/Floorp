@@ -1438,7 +1438,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
                 if (!atom)
                     return JS_FALSE;
                 if (idstr == ATOM_TO_STRING(atom)) {
-                    stdnm = &standard_class_names[i];
+                    stdnm = &object_prototype_names[i];
                     break;
                 }
             }
@@ -1879,10 +1879,8 @@ JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc)
 {
-    JSBool allAtoms = trc->context->runtime->gcKeepAtoms != 0;
-
     LeaveTrace(trc->context);
-    js_TraceRuntime(trc, allAtoms);
+    js_TraceRuntime(trc);
 }
 
 JS_PUBLIC_API(void)

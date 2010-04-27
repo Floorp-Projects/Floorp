@@ -43,6 +43,8 @@
 
 #include <windows.h>
 
+class gfxContext;
+
 class THEBES_API gfxWindowsSurface : public gfxASurface {
 public:
     enum {
@@ -67,6 +69,8 @@ public:
     virtual ~gfxWindowsSurface();
 
     HDC GetDC() { return mDC; }
+
+    HDC GetDCWithClip(gfxContext *);
 
     already_AddRefed<gfxImageSurface> GetImageSurface();
 

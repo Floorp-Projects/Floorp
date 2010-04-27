@@ -116,6 +116,8 @@ _MOCHICHROME_FILES += \
 _MOCHITEST_FILES += \
   test_cocoa_window_focus.html \
   cocoa_window_focus.html \
+  test_cocoa_focus.html \
+  cocoa_focus.html \
   $(NULL)
 endif
 
