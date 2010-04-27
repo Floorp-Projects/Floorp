@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Steffen Wilberg <steffen.wilberg@web.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,9 +44,6 @@
 
 NS_IMPL_ISUPPORTS1(nsAboutBlank, nsIAboutModule)
 
-static const char kBlankPage[] = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
-"<html><head><title></title></head><body></body></html>";
-
 NS_IMETHODIMP
 nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
@@ -54,7 +52,7 @@ nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
     nsIChannel* channel;
 
     nsCOMPtr<nsIInputStream> in;
-    rv = NS_NewCStringInputStream(getter_AddRefs(in), NS_LITERAL_CSTRING(kBlankPage));
+    rv = NS_NewCStringInputStream(getter_AddRefs(in), EmptyCString());
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewInputStreamChannel(&channel, aURI, in,
