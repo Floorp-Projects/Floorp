@@ -1472,6 +1472,15 @@ class Protocol(ipdl.ast.Protocol):
             '->', 'mManaged'+ _actorName(self.decl.type.name(), side))
 
     # shmem stuff
+    def shmemMapType(self):
+        assert self.decl.type.isToplevel()
+        return Type('IDMap', T=_rawShmemType())
+
+    def shmemIteratorType(self):
+        assert self.decl.type.isToplevel()
+        # XXX breaks abstractions
+        return Type('IDMap<SharedMemory>::const_iterator')
+
     def shmemMapVar(self):
         assert self.decl.type.isToplevel()
         return ExprVar('mShmemMap')
@@ -2879,6 +2888,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         destroysubtreevar = ExprVar('DestroySubtree')
         deallocsubtreevar = ExprVar('DeallocSubtree')
+        deallocshmemvar = ExprVar('DeallocShmems')
 
         # OnReplyTimeout()
         if toplevel.talksSync() or toplevel.talksRpc():
@@ -2920,7 +2930,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             onclose.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.NormalShutdown ])),
-                StmtExpr(ExprCall(deallocsubtreevar))
+                StmtExpr(ExprCall(deallocsubtreevar)),
+                StmtExpr(ExprCall(deallocshmemvar))
             ])
         else:
             onclose.addstmt(
@@ -2933,7 +2944,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             onerror.addstmts([
                 StmtExpr(ExprCall(destroysubtreevar,
                                   args=[ _DestroyReason.AbnormalShutdown ])),
-                StmtExpr(ExprCall(deallocsubtreevar))
+                StmtExpr(ExprCall(deallocsubtreevar)),
+                StmtExpr(ExprCall(deallocshmemvar))
             ])
         else:
             onerror.addstmt(
@@ -3123,7 +3135,30 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # don't delete outselves: either the manager will do it, or
         # we're toplevel
         self.cls.addstmts([ deallocsubtree, Whitespace.NL ])
-        
+
+        if ptype.isToplevel():
+            ## DeallocShmem():
+            #    for (cit = map.begin(); cit != map.end(); ++cit)
+            #      Dealloc(cit->second)
+            #    map.Clear()
+            deallocshmem = MethodDefn(MethodDecl(deallocshmemvar.name))
+
+            citvar = ExprVar('cit')
+            begin = ExprCall(ExprSelect(p.shmemMapVar(), '.', 'begin'))
+            end = ExprCall(ExprSelect(p.shmemMapVar(), '.', 'end'))
+            shmem = ExprSelect(citvar, '->', 'second')
+            foreachdealloc = StmtFor(
+                Param(p.shmemIteratorType(), citvar.name, begin),
+                ExprBinary(citvar, '!=', end),
+                ExprPrefixUnop(citvar, '++'))
+            foreachdealloc.addstmt(StmtExpr(_shmemDealloc(shmem)))
+
+            deallocshmem.addstmts([
+                foreachdealloc,
+                StmtExpr(ExprCall(ExprSelect(p.shmemMapVar(), '.', 'Clear')))
+            ])
+            self.cls.addstmts([ deallocshmem, Whitespace.NL ])
+
         ## private members
         self.cls.addstmt(StmtDecl(Decl(p.channelType(), 'mChannel')))
         if ptype.isToplevel():
@@ -3142,8 +3177,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ])
         if p.decl.type.isToplevel():
             self.cls.addstmts([
-                StmtDecl(Decl(Type('IDMap', T=_rawShmemType()),
-                              p.shmemMapVar().name)),
+                StmtDecl(Decl(p.shmemMapType(), p.shmemMapVar().name)),
                 StmtDecl(Decl(_shmemIdType(), p.lastShmemIdVar().name))
             ])
 
