@@ -706,6 +706,49 @@ function check_test_13() {
   AddonManager.getAddonByID("theme1@tests.mozilla.org", function(t1) {
     do_check_neq(t1, null);
     do_check_true(t1.isActive);
+    t1.uninstall();
+    restartManager();
+
+    run_test_14();
+  });
+}
+
+// Switching from a lightweight theme to the default theme should not require
+// a restart
+function run_test_14() {
+  LightweightThemeManager.currentTheme = {
+    id: "1",
+    version: "1",
+    name: "Test LW Theme",
+    description: "A test theme",
+    author: "Mozilla",
+    homepageURL: "http://localhost:4444/data/index.html",
+    headerURL: "http://localhost:4444/data/header.png",
+    footerURL: "http://localhost:4444/data/footer.png",
+    previewURL: "http://localhost:4444/data/preview.png",
+    iconURL: "http://localhost:4444/data/icon.png"
+  };
+
+  AddonManager.getAddonByID("default@tests.mozilla.org", function(d) {
+    do_check_true(d.userDisabled);
+    do_check_false(d.isActive);
+
+    prepare_test({
+      "1@personas.mozilla.org": [
+        ["onDisabling", false],
+        "onDisabled"
+      ],
+      "default@tests.mozilla.org": [
+        ["onEnabling", false],
+        "onEnabled"
+      ]
+    });
+
+    d.userDisabled = false;
+    ensure_test_completed();
+
+    do_check_false(d.userDisabled);
+    do_check_true(d.isActive);
 
     end_test();
   });
