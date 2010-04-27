@@ -1309,9 +1309,12 @@ def _usesShmem(p):
 def _subtreeUsesShmem(p):
     if _usesShmem(p):
         return True
-    for mgd in p.decl.type.manages:
-        if _subtreeUsesShmem(mgd._p):
-            return True
+
+    ptype = p.decl.type
+    for mgd in ptype.manages:
+        if ptype is not mgd:
+            if _subtreeUsesShmem(mgd._p):
+                return True
     return False
 
 
@@ -2419,7 +2422,8 @@ class _FindFriends(ipdl.ast.Visitor):
             # don't want to |friend| ourself!
             self.visit(ptype)
         for mtype in ptype.manages:
-            self.walkDownTheProtocolTree(mtype)
+            if mtype is not ptype:
+                self.walkDownTheProtocolTree(mtype)
 
     def visit(self, ptype):
         # |vtype| is the type currently being visited
@@ -2623,6 +2627,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # |friend| managed actors so that they can call our Dealloc*()
         friends.update(ptype.manages)
 
+        # don't friend ourself if we're a self-managed protocol
+        friends.discard(ptype)
+
         for friend in friends:
             self.hdrfile.addthings([
                 Whitespace.NL,
@@ -2664,7 +2671,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         for md in p.messageDecls:
             managed = md.decl.type.constructedType()
-            if not ptype.isManagerOf(managed):
+            if not ptype.isManagerOf(managed) or md.decl.type.isDtor():
                 continue
 
             # add the Alloc/Dealloc interface for managed actors
