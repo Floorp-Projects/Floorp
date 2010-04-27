@@ -2942,10 +2942,6 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
     }
 #endif
 
-#ifdef JS_TRACER
-    PurgeJITOracle();
-#endif
-
     /*
      * Reset the property cache's type id generator so we can compress ids.
      * Same for the protoHazardShape proxy-shape standing in for all object
