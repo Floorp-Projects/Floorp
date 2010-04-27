@@ -37,13 +37,24 @@ window.TabItem.prototype = $.extend(new Item(), {
   
   // ----------  
   reloadBounds: function() {
-    this.bounds = Utils.getBounds(this.container);
-      
+    var newBounds = Utils.getBounds(this.container);
     var extra = this._getSizeExtra();
-    this.bounds.width += extra.x;
-    this.bounds.height += extra.y;
+    newBounds.width += extra.x;
+    newBounds.height += extra.y;
 
-    this._updateDebugBounds();
+/*
+    if(!this.bounds || newBounds.width != this.bounds.width || newBounds.height != this.bounds.height) {
+      // if resizing, or first time, do the whole deal
+      if(!this.bounds)
+        this.bounds = new Rect(0, 0, 0, 0);
+  
+      this.setBounds(newBounds, true);      
+    } else { 
+*/
+      // if we're just moving, this is more efficient
+      this.bounds = newBounds;
+      this._updateDebugBounds();
+/*     } */
   },
   
   // ----------  
