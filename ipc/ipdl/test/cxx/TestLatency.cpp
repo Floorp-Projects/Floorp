@@ -52,7 +52,8 @@ void
 TestLatencyParent::PingPongTrial()
 {
     mStart = TimeStamp::Now();
-    SendPing();
+    if (!SendPing())
+        fail("sending Ping()");
 }
 
 void
@@ -62,11 +63,12 @@ TestLatencyParent::Ping5Pong5Trial()
     // HACK
     mPongsToGo = 5;
 
-    SendPing5();
-    SendPing5();
-    SendPing5();
-    SendPing5();
-    SendPing5();
+    if (!SendPing5() ||
+        !SendPing5() ||
+        !SendPing5() ||
+        !SendPing5() ||
+        !SendPing5())
+        fail("sending Ping5()");
 }
 
 void

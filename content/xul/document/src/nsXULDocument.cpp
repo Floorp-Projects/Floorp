@@ -3279,7 +3279,7 @@ nsXULDocument::MaybeBroadcast()
         if (!nsContentUtils::IsSafeToRunScript()) {
             if (!mInDestructor) {
                 nsContentUtils::AddScriptRunner(
-                  NS_NEW_RUNNABLE_METHOD(nsXULDocument, this, MaybeBroadcast));
+                    NS_NewRunnableMethod(this, &nsXULDocument::MaybeBroadcast));
             }
             return;
         }

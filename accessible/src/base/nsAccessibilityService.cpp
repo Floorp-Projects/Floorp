@@ -246,8 +246,7 @@ nsAccessibilityService::ProcessDocLoadEvent(nsIWebProgress *aWebProgress,
 
   nsCOMPtr<nsIAccessible> accessible;
   GetAccessibleFor(docNode, getter_AddRefs(accessible));
-  nsRefPtr<nsDocAccessible> docAcc =
-    nsAccUtils::QueryAccessibleDocument(accessible);
+  nsRefPtr<nsDocAccessible> docAcc = do_QueryObject(accessible);
   NS_ENSURE_TRUE(docAcc,);
 
   docAcc->FireDocLoadEvents(aEventType);
@@ -2086,8 +2085,7 @@ nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
 
   nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
     nsAccessNode::GetDocAccessibleFor(aShell->GetDocument());
-  nsRefPtr<nsDocAccessible> docAcc =
-    nsAccUtils::QueryAccessibleDocument(accessibleDoc);
+  nsRefPtr<nsDocAccessible> docAcc = do_QueryObject(accessibleDoc);
   if (docAcc)
     docAcc->InvalidateCacheSubtree(aChangeContent, aChangeType);
 

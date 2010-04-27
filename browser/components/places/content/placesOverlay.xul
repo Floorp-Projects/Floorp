@@ -58,7 +58,7 @@
     var Ci = Components.interfaces;
     var Cr = Components.results;
 
-    Components.utils.import("resource://gre/modules/utils.js");
+    Components.utils.import("resource://gre/modules/PlacesUtils.jsm");
     Components.utils.import("resource:///modules/PlacesUIUtils.jsm");
   ]]></script>
   <script type="application/javascript"

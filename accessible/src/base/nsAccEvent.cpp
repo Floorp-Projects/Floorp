@@ -219,8 +219,7 @@ nsAccEvent::GetAccessibleByNode()
       PRInt32 treeIndex = -1;
       multiSelect->GetCurrentIndex(&treeIndex);
       if (treeIndex >= 0) {
-        nsRefPtr<nsXULTreeAccessible> treeAcc =
-          nsAccUtils::QueryAccessibleTree(accessible);
+        nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(accessible);
         if (treeAcc)
           accessible = treeAcc->GetTreeItemAccessible(treeIndex);
       }
