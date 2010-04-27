@@ -39,6 +39,7 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
+#include "gfxCore.h"
 
 class nsTableCellFrame;
 class nsCellMap;
@@ -227,11 +228,11 @@ public:
                   nscoord       aSize,
                   PRBool        aStart);
 
-  BCPixelSize GetCorner(PRUint8&       aCornerOwner,
+  BCPixelSize GetCorner(mozilla::css::Side&       aCornerOwner,
                         PRPackedBool&  aBevel) const;
 
   void SetCorner(BCPixelSize aSubSize,
-                 PRUint8 aOwner,
+                 mozilla::css::Side aOwner,
                  PRBool  aBevel);
 
   PRBool IsLeftStart() const;
@@ -255,7 +256,7 @@ protected:
   unsigned mTopOwner:      4; // owner of top border
   unsigned mLeftStart:     1; // set if this is the start of a vertical border segment
   unsigned mTopStart:      1; // set if this is the start of a horizontal border segment
-  unsigned mCornerSide:    2; // side of the owner of the upper left corner relative to the corner
+  mozilla::css::Side mCornerSide: 2; // side of the owner of the upper left corner relative to the corner
   unsigned mCornerBevel:   1; // is the corner beveled (only two segments, perpendicular, not dashed or dotted).
 };
 
@@ -416,7 +417,8 @@ inline BCData::BCData()
 {
   mLeftOwner = mTopOwner = eCellOwner;
   mLeftStart = mTopStart = 1;
-  mLeftSize = mCornerSide = mCornerSubSize = mTopSize = 0;
+  mLeftSize = mCornerSubSize = mTopSize = 0;
+  mCornerSide = NS_SIDE_TOP;
   mCornerBevel = PR_FALSE;
 }
 
@@ -460,7 +462,7 @@ inline void BCData::SetTopEdge(BCBorderOwner  aOwner,
   mTopStart = aStart;
 }
 
-inline BCPixelSize BCData::GetCorner(PRUint8&       aOwnerSide,
+inline BCPixelSize BCData::GetCorner(mozilla::css::Side&       aOwnerSide,
                                      PRPackedBool&  aBevel) const
 {
   aOwnerSide = mCornerSide;
@@ -469,7 +471,7 @@ inline BCPixelSize BCData::GetCorner(PRUint8&       aOwnerSide,
 }
 
 inline void BCData::SetCorner(BCPixelSize aSubSize,
-                              PRUint8 aOwnerSide,
+                              mozilla::css::Side aOwnerSide,
                               PRBool  aBevel)
 {
   mCornerSubSize = aSubSize;

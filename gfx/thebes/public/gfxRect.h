@@ -40,20 +40,37 @@
 
 #include "gfxTypes.h"
 #include "gfxPoint.h"
+#include "gfxCore.h"
 #include "nsDebug.h" 
 
-struct THEBES_API gfxCorner {
-    typedef int Corner;
-    enum {
-        // this order is important!
-        TOP_LEFT = 0,
-        TOP_RIGHT = 1,
-        BOTTOM_RIGHT = 2,
-        BOTTOM_LEFT = 3,
-        NUM_CORNERS = 4
-    };
-};
+namespace mozilla {
+    namespace css {
+        enum Corner {
+            // this order is important!
+            eCornerTopLeft = 0,
+            eCornerTopRight = 1,
+            eCornerBottomRight = 2,
+            eCornerBottomLeft = 3,
+            eNumCorners = 4
+        };
+    }
+}
+#define NS_CORNER_TOP_LEFT mozilla::css::eCornerTopLeft
+#define NS_CORNER_TOP_RIGHT mozilla::css::eCornerTopRight
+#define NS_CORNER_BOTTOM_RIGHT mozilla::css::eCornerBottomRight
+#define NS_CORNER_BOTTOM_LEFT mozilla::css::eCornerBottomLeft
+#define NS_NUM_CORNERS mozilla::css::eNumCorners
 
+#define NS_FOR_CSS_CORNERS(var_)                         \
+    for (mozilla::css::Corner var_ = NS_CORNER_TOP_LEFT; \
+         var_ <= NS_CORNER_BOTTOM_LEFT;                  \
+         var_++)
+
+static inline mozilla::css::Corner operator++(mozilla::css::Corner& corner, int) {
+    NS_PRECONDITION(corner < NS_CORNER_TOP_LEFT, "Out of range corner");
+    corner = mozilla::css::Corner(corner + 1);
+    return corner;
+}
 
 struct THEBES_API gfxRect {
     // pt? point?
@@ -164,14 +181,40 @@ struct THEBES_API gfxRect {
     gfxPoint BottomLeft() const { return pos + gfxSize(0.0, size.height); }
     gfxPoint BottomRight() const { return pos + size; }
 
-    gfxPoint Corner(gfxCorner::Corner corner) const {
+    gfxPoint AtCorner(mozilla::css::Corner corner) const {
         switch (corner) {
-            case gfxCorner::TOP_LEFT: return TopLeft();
-            case gfxCorner::TOP_RIGHT: return TopRight();
-            case gfxCorner::BOTTOM_LEFT: return BottomLeft();
-            case gfxCorner::BOTTOM_RIGHT: return BottomRight();
+            case NS_CORNER_TOP_LEFT: return TopLeft();
+            case NS_CORNER_TOP_RIGHT: return TopRight();
+            case NS_CORNER_BOTTOM_RIGHT: return BottomRight();
+            case NS_CORNER_BOTTOM_LEFT: return BottomLeft();
             default:
                 NS_ERROR("Invalid corner!");
+                break;
+        }
+        return gfxPoint(0.0, 0.0);
+    }
+
+    gfxPoint CCWCorner(mozilla::css::Side side) const {
+        switch (side) {
+            case NS_SIDE_TOP: return TopLeft();
+            case NS_SIDE_RIGHT: return TopRight();
+            case NS_SIDE_BOTTOM: return BottomRight();
+            case NS_SIDE_LEFT: return BottomLeft();
+            default:
+                NS_ERROR("Invalid side!");
+                break;
+        }
+        return gfxPoint(0.0, 0.0);
+    }
+
+    gfxPoint CWCorner(mozilla::css::Side side) const {
+        switch (side) {
+            case NS_SIDE_TOP: return TopRight();
+            case NS_SIDE_RIGHT: return BottomRight();
+            case NS_SIDE_BOTTOM: return BottomLeft();
+            case NS_SIDE_LEFT: return TopLeft();
+            default:
+                NS_ERROR("Invalid side!");
                 break;
         }
         return gfxPoint(0.0, 0.0);
@@ -210,47 +253,47 @@ struct THEBES_API gfxRect {
 };
 
 struct THEBES_API gfxCornerSizes {
-    gfxSize sizes[gfxCorner::NUM_CORNERS];
+    gfxSize sizes[NS_NUM_CORNERS];
 
     gfxCornerSizes () { }
 
     gfxCornerSizes (gfxFloat v) {
-        for (int i = 0; i < gfxCorner::NUM_CORNERS; i++)
+        for (int i = 0; i < NS_NUM_CORNERS; i++)
             sizes[i].SizeTo(v, v);
     }
 
     gfxCornerSizes (gfxFloat tl, gfxFloat tr, gfxFloat br, gfxFloat bl) {
-        sizes[gfxCorner::TOP_LEFT].SizeTo(tl, tl);
-        sizes[gfxCorner::TOP_RIGHT].SizeTo(tr, tr);
-        sizes[gfxCorner::BOTTOM_RIGHT].SizeTo(br, br);
-        sizes[gfxCorner::BOTTOM_LEFT].SizeTo(bl, bl);
+        sizes[NS_CORNER_TOP_LEFT].SizeTo(tl, tl);
+        sizes[NS_CORNER_TOP_RIGHT].SizeTo(tr, tr);
+        sizes[NS_CORNER_BOTTOM_RIGHT].SizeTo(br, br);
+        sizes[NS_CORNER_BOTTOM_LEFT].SizeTo(bl, bl);
     }
 
     gfxCornerSizes (const gfxSize& tl, const gfxSize& tr, const gfxSize& br, const gfxSize& bl) {
-        sizes[gfxCorner::TOP_LEFT] = tl;
-        sizes[gfxCorner::TOP_RIGHT] = tr;
-        sizes[gfxCorner::BOTTOM_RIGHT] = br;
-        sizes[gfxCorner::BOTTOM_LEFT] = bl;
+        sizes[NS_CORNER_TOP_LEFT] = tl;
+        sizes[NS_CORNER_TOP_RIGHT] = tr;
+        sizes[NS_CORNER_BOTTOM_RIGHT] = br;
+        sizes[NS_CORNER_BOTTOM_LEFT] = bl;
     }
 
-    const gfxSize& operator[] (gfxCorner::Corner index) const {
+    const gfxSize& operator[] (mozilla::css::Corner index) const {
         return sizes[index];
     }
 
-    gfxSize& operator[] (gfxCorner::Corner index) {
+    gfxSize& operator[] (mozilla::css::Corner index) {
         return sizes[index];
     }
 
-    const gfxSize TopLeft() const { return sizes[gfxCorner::TOP_LEFT]; }
-    gfxSize& TopLeft() { return sizes[gfxCorner::TOP_LEFT]; }
+    const gfxSize TopLeft() const { return sizes[NS_CORNER_TOP_LEFT]; }
+    gfxSize& TopLeft() { return sizes[NS_CORNER_TOP_LEFT]; }
 
-    const gfxSize TopRight() const { return sizes[gfxCorner::TOP_RIGHT]; }
-    gfxSize& TopRight() { return sizes[gfxCorner::TOP_RIGHT]; }
+    const gfxSize TopRight() const { return sizes[NS_CORNER_TOP_RIGHT]; }
+    gfxSize& TopRight() { return sizes[NS_CORNER_TOP_RIGHT]; }
 
-    const gfxSize BottomLeft() const { return sizes[gfxCorner::BOTTOM_LEFT]; }
-    gfxSize& BottomLeft() { return sizes[gfxCorner::BOTTOM_LEFT]; }
+    const gfxSize BottomLeft() const { return sizes[NS_CORNER_BOTTOM_LEFT]; }
+    gfxSize& BottomLeft() { return sizes[NS_CORNER_BOTTOM_LEFT]; }
 
-    const gfxSize BottomRight() const { return sizes[gfxCorner::BOTTOM_RIGHT]; }
-    gfxSize& BottomRight() { return sizes[gfxCorner::BOTTOM_RIGHT]; }
+    const gfxSize BottomRight() const { return sizes[NS_CORNER_BOTTOM_RIGHT]; }
+    gfxSize& BottomRight() { return sizes[NS_CORNER_BOTTOM_RIGHT]; }
 };
 #endif /* GFX_RECT_H */

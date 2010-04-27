@@ -116,25 +116,25 @@ private:
                            PRUint8 aFullCorner,
                            nsIDOMCSSValue** aValue);
 
-  nsresult GetOffsetWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetOffsetWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetAbsoluteOffset(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetAbsoluteOffset(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetRelativeOffset(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetRelativeOffset(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetStaticOffset(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetStaticOffset(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetPaddingWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetBorderColorsFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetBorderColorsFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetBorderStyleFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetBorderStyleFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetBorderWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetBorderColorFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetBorderColorFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetMarginWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetMarginWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
   PRBool GetLineHeightCoord(nscoord& aCoord);
 

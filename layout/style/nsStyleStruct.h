@@ -66,6 +66,7 @@
 #include "nsStyleTransformMatrix.h"
 #include "nsAlgorithm.h"
 #include "imgIRequest.h"
+#include "gfxRect.h"
 
 class nsIFrame;
 class imgIRequest;
@@ -737,7 +738,7 @@ struct nsStyleBorder {
     }
   }
 
-  void ClearBorderColors(PRUint8 aSide) {
+  void ClearBorderColors(mozilla::css::Side aSide) {
     if (mBorderColors && mBorderColors[aSide]) {
       delete mBorderColors[aSide];
       mBorderColors[aSide] = nsnull;
@@ -749,13 +750,13 @@ struct nsStyleBorder {
   // Note that this does *not* consider the effects of 'border-image':
   // if border-style is none, but there is a loaded border image,
   // HasVisibleStyle will be false even though there *is* a border.
-  PRBool HasVisibleStyle(PRUint8 aSide)
+  PRBool HasVisibleStyle(mozilla::css::Side aSide)
   {
     return IsVisibleBorderStyle(GetBorderStyle(aSide));
   }
 
   // aBorderWidth is in twips
-  void SetBorderWidth(PRUint8 aSide, nscoord aBorderWidth)
+  void SetBorderWidth(mozilla::css::Side aSide, nscoord aBorderWidth)
   {
     nscoord roundedWidth =
       NS_ROUND_BORDER_TO_PIXELS(aBorderWidth, mTwipsPerPixel);
@@ -764,7 +765,7 @@ struct nsStyleBorder {
       mComputedBorder.side(aSide) = roundedWidth;
   }
 
-  void SetBorderImageWidthOverride(PRUint8 aSide, nscoord aBorderWidth)
+  void SetBorderImageWidthOverride(mozilla::css::Side aSide, nscoord aBorderWidth)
   {
     mBorderImageWidth.side(aSide) =
       NS_ROUND_BORDER_TO_PIXELS(aBorderWidth, mTwipsPerPixel);
@@ -789,18 +790,18 @@ struct nsStyleBorder {
   // this is zero if and only if there is no border to be painted for this
   // side.  That is, this value takes into account the border style and the
   // value is rounded to the nearest device pixel by NS_ROUND_BORDER_TO_PIXELS.
-  nscoord GetActualBorderWidth(PRUint8 aSide) const
+  nscoord GetActualBorderWidth(mozilla::css::Side aSide) const
   {
     return GetActualBorder().side(aSide);
   }
 
-  PRUint8 GetBorderStyle(PRUint8 aSide) const
+  PRUint8 GetBorderStyle(mozilla::css::Side aSide) const
   {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
     return (mBorderStyle[aSide] & BORDER_STYLE_MASK);
   }
 
-  void SetBorderStyle(PRUint8 aSide, PRUint8 aStyle)
+  void SetBorderStyle(mozilla::css::Side aSide, PRUint8 aStyle)
   {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
     mBorderStyle[aSide] &= ~BORDER_STYLE_MASK;
@@ -813,7 +814,7 @@ struct nsStyleBorder {
   inline PRBool IsBorderImageLoaded() const;
   inline nsresult RequestDecode();
 
-  void GetBorderColor(PRUint8 aSide, nscolor& aColor,
+  void GetBorderColor(mozilla::css::Side aSide, nscolor& aColor,
                       PRBool& aForeground) const
   {
     aForeground = PR_FALSE;
@@ -826,7 +827,7 @@ struct nsStyleBorder {
       NS_NOTREACHED("OUTLINE_COLOR_INITIAL should not be set here");
   }
 
-  void SetBorderColor(PRUint8 aSide, nscolor aColor)
+  void SetBorderColor(mozilla::css::Side aSide, nscolor aColor)
   {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
     mBorderColor[aSide] = aColor;
@@ -865,7 +866,7 @@ struct nsStyleBorder {
     mBorderStyle[aIndex] &= ~BORDER_COLOR_SPECIAL;
   }
 
-  void SetBorderToForeground(PRUint8 aSide)
+  void SetBorderToForeground(mozilla::css::Side aSide)
   {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
     mBorderStyle[aSide] &= ~BORDER_COLOR_SPECIAL;

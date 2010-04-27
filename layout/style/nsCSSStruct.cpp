@@ -57,6 +57,7 @@
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsPrintfCString.h"
+#include "prlog.h"
 
 // --- nsCSSFont -----------------
 
@@ -173,9 +174,7 @@ void nsCSSRect::SetAllSidesTo(const nsCSSValue& aValue)
   mLeft = aValue;
 }
 
-#if (NS_SIDE_TOP != 0) || (NS_SIDE_RIGHT != 1) || (NS_SIDE_BOTTOM != 2) || (NS_SIDE_LEFT != 3)
-#error "Somebody changed the side constants."
-#endif
+PR_STATIC_ASSERT((NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3));
 
 /* static */ const nsCSSRect::side_type nsCSSRect::sides[4] = {
   &nsCSSRect::mTop,
@@ -213,10 +212,8 @@ nsCSSCornerSizes::Reset()
   }
 }
 
-#if NS_CORNER_TOP_LEFT != 0 || NS_CORNER_TOP_RIGHT != 1 || \
-    NS_CORNER_BOTTOM_RIGHT != 2 || NS_CORNER_BOTTOM_LEFT != 3
-#error "Somebody changed the corner constants."
-#endif
+PR_STATIC_ASSERT(NS_CORNER_TOP_LEFT == 0 && NS_CORNER_TOP_RIGHT == 1 && \
+    NS_CORNER_BOTTOM_RIGHT == 2 && NS_CORNER_BOTTOM_LEFT == 3);
 
 /* static */ const nsCSSCornerSizes::corner_type
 nsCSSCornerSizes::corners[4] = {
