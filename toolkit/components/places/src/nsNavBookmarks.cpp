@@ -433,11 +433,11 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
 
   RETURN_IF_STMT(mDBFindRedirectedBookmark, NS_LITERAL_CSTRING(
     "SELECT IFNULL( "
-      "(SELECT url FROM moz_places_temp WHERE id = ?1), "
-      "(SELECT url FROM moz_places WHERE id = ?1) "
+      "(SELECT url FROM moz_places_temp WHERE id = :page_id), "
+      "(SELECT url FROM moz_places WHERE id = :page_id) "
     ") "
     "FROM moz_bookmarks b "
-    "WHERE b.fk = ?1 "
+    "WHERE b.fk = :page_id "
     "UNION ALL " // Not directly bookmarked.
     "SELECT IFNULL( "
       "(SELECT url FROM moz_places_temp WHERE id = " COALESCE_PLACEID "), "
@@ -451,7 +451,7 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "LEFT JOIN moz_historyvisits_temp greatgrandparent ON grandparent.from_visit = greatgrandparent.id "
       "AND grandparent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
     "WHERE self.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
-      "AND self.place_id = ?1 "
+      "AND self.place_id = :page_id "
     "UNION ALL " // Not in the temp table.
     "SELECT IFNULL( "
       "(SELECT url FROM moz_places_temp WHERE id = " COALESCE_PLACEID "), "
@@ -465,7 +465,7 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
     "LEFT JOIN moz_historyvisits greatgrandparent ON grandparent.from_visit = greatgrandparent.id "
       "AND grandparent.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
     "WHERE self.visit_type IN (") + redirectsFragment + NS_LITERAL_CSTRING(") "
-      "AND self.place_id = ?1 "
+      "AND self.place_id = :page_id "
     "LIMIT 1 " // Stop at the first result.
   ));
 #undef COALESCE_PLACEID
@@ -2482,7 +2482,7 @@ nsNavBookmarks::GetBookmarkedURIFor(nsIURI* aURI, nsIURI** _retval)
   // the first found bookmark in case.  The check is directly on moz_bookmarks
   // without special filtering.
   DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(stmt, mDBFindRedirectedBookmark);
-  rv = stmt->BindInt64Parameter(0, placeId);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), placeId);
   NS_ENSURE_SUCCESS(rv, rv);
   PRBool hasBookmarkedOrigin;
   if (NS_SUCCEEDED(stmt->ExecuteStep(&hasBookmarkedOrigin)) &&

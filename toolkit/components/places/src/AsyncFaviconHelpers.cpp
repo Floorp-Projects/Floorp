@@ -293,12 +293,13 @@ GetEffectivePageStep::Run()
   // favicons if the page is bookmarked.
   if (!canAddToHistory || history->IsHistoryDisabled()) {
     // Get place id associated with this page.
-    mozIStorageStatement* stmt = history->GetStatementById(DB_GET_PAGE_INFO);
+    mozIStorageStatement* stmt = history->GetStatementById(DB_GET_PAGE_INFO_BY_URL);
     // Statement is null if we are shutting down.
     FAVICONSTEP_CANCEL_IF_TRUE(!stmt, PR_FALSE);
     mozStorageStatementScoper scoper(stmt);
 
-    nsresult rv = BindStatementURI(stmt, 0, mStepper->mPageURI);
+    nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
+                                  mStepper->mPageURI);
     FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
 
     nsCOMPtr<mozIStoragePendingStatement> ps;
@@ -360,7 +361,8 @@ GetEffectivePageStep::HandleCompletion(PRUint16 aReason)
     FAVICONSTEP_CANCEL_IF_TRUE_RV(!stmt, PR_FALSE, NS_OK);
     mozStorageStatementScoper scoper(stmt);
 
-    nsresult rv = stmt->BindInt64Parameter(0, mStepper->mPageId);
+    nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"),
+                                        mStepper->mPageId);
     FAVICONSTEP_FAIL_IF_FALSE_RV(NS_SUCCEEDED(rv), rv);
 
     nsCOMPtr<mozIStoragePendingStatement> ps;
@@ -434,13 +436,15 @@ FetchDatabaseIconStep::Run()
   FAVICONSTEP_CANCEL_IF_TRUE(!stmt, PR_FALSE);
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = BindStatementURI(stmt, 0, mStepper->mIconURI);
+  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"),
+                                mStepper->mIconURI);
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
   if (mStepper->mPageURI) {
-    rv = BindStatementURI(stmt, 1, mStepper->mPageURI);
+    rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
+                         mStepper->mPageURI);
   }
   else {
-    rv = stmt->BindNullParameter(1);
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("page_url"));
   }
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
 
@@ -533,9 +537,10 @@ EnsureDatabaseEntryStep::Run()
   // Statement is null if we are shutting down.
   FAVICONSTEP_CANCEL_IF_TRUE(!stmt, PR_FALSE);
   mozStorageStatementScoper scoper(stmt);
-  rv = stmt->BindNullParameter(0);
+  rv = stmt->BindNullByName(NS_LITERAL_CSTRING("icon_id"));
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
-  rv = BindStatementURI(stmt, 1, mStepper->mIconURI);
+  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"),
+                       mStepper->mIconURI);
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
   nsCOMPtr<mozIStoragePendingStatement> ps;
   rv = stmt->ExecuteAsync(this, getter_AddRefs(ps));
@@ -820,20 +825,25 @@ SetFaviconDataStep::Run()
   mozStorageStatementScoper scoper(stmt);
 
   if (!mStepper->mIconId) {
-    rv = stmt->BindNullParameter(0);
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("icon_id"));
   }
   else {
-    rv = stmt->BindInt64Parameter(0, mStepper->mIconId);
+    rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("icon_id"),
+                               mStepper->mIconId);
   }
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
-  rv = BindStatementURI(stmt, 1, mStepper->mIconURI);
+  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"),
+                       mStepper->mIconURI);
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
-  rv = stmt->BindBlobParameter(2, TO_INTBUFFER(mStepper->mData),
-                                     mStepper->mData.Length());
+  rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"),
+                            TO_INTBUFFER(mStepper->mData),
+                            mStepper->mData.Length());
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
-  rv = stmt->BindUTF8StringParameter(3, mStepper->mMimeType);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("mime_type"),
+                                  mStepper->mMimeType);
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
-  rv = stmt->BindInt64Parameter(4, mStepper->mExpiration);
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("expiration"),
+                             mStepper->mExpiration);
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
 
   nsCOMPtr<mozIStoragePendingStatement> ps;
@@ -902,9 +912,11 @@ AssociateIconWithPageStep::Run() {
   FAVICONSTEP_CANCEL_IF_TRUE(!stmt, PR_FALSE);
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = BindStatementURI(stmt, 0, mStepper->mIconURI);
+  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"),
+                                mStepper->mIconURI);
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
-  rv = BindStatementURI(stmt, 1, mStepper->mPageURI);
+  rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"),
+                       mStepper->mPageURI);
   FAVICONSTEP_FAIL_IF_FALSE(NS_SUCCEEDED(rv));
 
   nsCOMPtr<mozIStoragePendingStatement> ps;
