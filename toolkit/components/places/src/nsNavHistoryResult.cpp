@@ -1967,10 +1967,11 @@ nsNavHistoryContainerResultNode::GetChildIndex(nsINavHistoryResultNode* aNode,
   if (!mExpanded)
     return NS_ERROR_NOT_AVAILABLE;
 
-  *_retval = FindChild(static_cast<nsNavHistoryResultNode*>(aNode));
-  if (*_retval == -1)
+  PRInt32 nodeIndex = FindChild(static_cast<nsNavHistoryResultNode*>(aNode));
+  if (nodeIndex == -1)
     return NS_ERROR_INVALID_ARG;
 
+  *_retval = nodeIndex;
   return NS_OK;
 }
 
