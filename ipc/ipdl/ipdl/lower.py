@@ -202,8 +202,8 @@ def _lookupActorHandle(handle, outactor, actortype, cxxactortype, errfn):
 def _lookupListener(idexpr):
     return ExprCall(ExprVar('Lookup'), args=[ idexpr ])
 
-def _shmemType(ptr=0):
-    return Type('Shmem', ptr=ptr)
+def _shmemType(ptr=0, ref=0):
+    return Type('Shmem', ptr=ptr, ref=ref)
 
 def _rawShmemType(ptr=0):
     return Type('Shmem::SharedMemory', ptr=ptr)
@@ -231,6 +231,10 @@ def _shmemAlloc(size, type):
     return ExprCall(ExprVar('Shmem::Alloc'),
                     args=[ _shmemBackstagePass(), size, type ])
 
+def _shmemDealloc(rawmemvar):
+    return ExprCall(ExprVar('Shmem::Dealloc'),
+                    args=[ _shmemBackstagePass(), rawmemvar ])
+
 def _shmemShareTo(shmemvar, processvar, route):
     return ExprCall(ExprSelect(shmemvar, '.', 'ShareTo'),
                     args=[ _shmemBackstagePass(),
@@ -242,6 +246,11 @@ def _shmemOpenExisting(descriptor, outid):
                     args=[ _shmemBackstagePass(),
                            # true => protect
                            descriptor, outid, ExprLiteral.TRUE ])
+
+def _shmemUnshareFrom(shmemvar, processvar, route):
+    return ExprCall(ExprSelect(shmemvar, '.', 'UnshareFrom'),
+                    args=[ _shmemBackstagePass(),
+                           processvar, route ])
 
 def _shmemForget(shmemexpr):
     return ExprCall(ExprSelect(shmemexpr, '.', 'forget'),
@@ -1360,6 +1369,9 @@ class Protocol(ipdl.ast.Protocol):
     def lookupSharedMemory(self):
         return ExprVar('LookupSharedMemory')
 
+    def destroySharedMemory(self):
+        return ExprVar('DestroySharedMemory')
+
     def otherProcessMethod(self):
         return ExprVar('OtherProcess')
 
@@ -1480,6 +1492,10 @@ class Protocol(ipdl.ast.Protocol):
         if side is 'parent':   op = '++'
         elif side is 'child':  op = '--'
         return ExprPrefixUnop(self.lastShmemIdVar(), op)
+
+    def removeShmemId(self, idexpr):
+        return ExprCall(ExprSelect(self.shmemMapVar(), '.', 'Remove'),
+                        args=[ idexpr ])
 
     def usesShmem(self):
         for md in self.messageDecls:
@@ -3142,6 +3158,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         p = self.protocol
         routedvar = ExprVar('aRouted')
         idvar = ExprVar('aId')
+        shmemvar = ExprVar('aShmem')
         sizevar = ExprVar('aSize')
         typevar = ExprVar('type')
         listenertype = Type('ChannelListener', ptr=1)
@@ -3177,7 +3194,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ret=_rawShmemType(ptr=1),
             params=[ Decl(_shmemIdType(), idvar.name) ],
             virtual=1))
-        
+        destroyshmem = MethodDefn(MethodDecl(
+            p.destroySharedMemory().name,
+            ret=Type.BOOL,
+            params=[ Decl(_shmemType(ref=1), shmemvar.name) ],
+            virtual=1))
+
         otherprocess = MethodDefn(MethodDecl(
             p.otherProcessMethod().name,
             ret=Type('ProcessHandle'),
@@ -3214,9 +3236,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             #     return false
             #   Shmem s(seg, [nextshmemid]);
             #   Message descriptor;
-            #   if (!s->ShareTo(subprocess, mId, descriptor))
-            #     return false;
-            #   if (!Send(descriptor))
+            #   if (!s->ShareTo(subprocess, mId, descriptor) ||
+            #       !Send(descriptor))
             #     return false;
             #   mShmemMap.Add(seg, id);
             #   return shmem.forget();
@@ -3229,7 +3250,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
             createshmem.addstmt(failif)
 
-            shmemvar = ExprVar('shmem')
             descriptorvar = ExprVar('descriptor')
             createshmem.addstmts([
                 StmtDecl(
@@ -3264,12 +3284,62 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprSelect(p.shmemMapVar(), '.', 'Lookup'),
                 args=[ idvar ])))
 
+            # bool DestroySharedMemory(shmem):
+            #   id = shmem.Id()
+            #   SharedMemory* rawmem = Lookup(id)
+            #   if (!rawmem)
+            #     return false;
+            #   Message descriptor = UnShare(subprocess, mId, descriptor)
+            #   mShmemMap.Remove(id)
+            #   Shmem::Dealloc(rawmem)
+            #   return descriptor && Send(descriptor)
+            destroyshmem.addstmts([
+                StmtDecl(Decl(_shmemIdType(), idvar.name),
+                         init=_shmemId(shmemvar)),
+                StmtDecl(Decl(_rawShmemType(ptr=1), rawvar.name),
+                         init=_lookupShmem(idvar))
+            ])
+
+            failif = StmtIf(ExprNot(rawvar))
+            failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
+            destroyshmem.addstmts([
+                failif,
+                StmtDecl(Decl(Type('Message', ptr=1), descriptorvar.name),
+                         init=_shmemUnshareFrom(
+                             shmemvar,
+                             ExprCall(p.otherProcessMethod()),
+                             p.routingId())),
+                Whitespace.NL,
+                StmtExpr(p.removeShmemId(idvar)),
+                StmtExpr(_shmemDealloc(rawvar)),
+                Whitespace.NL,
+                StmtReturn(ExprBinary(
+                    descriptorvar, '&&',
+                    ExprCall(
+                        ExprSelect(p.channelVar(), p.channelSel(), 'Send'),
+                        args=[ descriptorvar ])))
+            ])
+
+
             # "private" message that passes shmem mappings from one process
             # to the other
             if p.usesShmem():
                 self.asyncSwitch.addcase(
                     CaseLabel('SHMEM_CREATED_MESSAGE_TYPE'),
                     self.genShmemCreatedHandler())
+                self.asyncSwitch.addcase(
+                    CaseLabel('SHMEM_DESTROYED_MESSAGE_TYPE'),
+                    self.genShmemDestroyedHandler())
+            else:
+                abort = StmtBlock()
+                abort.addstmts([
+                    _runtimeAbort('this protocol tree does not use shmem'),
+                    StmtReturn(_Result.NotKnown)
+                ])
+                self.asyncSwitch.addcase(
+                    CaseLabel('SHMEM_CREATED_MESSAGE_TYPE'), abort)
+                self.asyncSwitch.addcase(
+                    CaseLabel('SHMEM_DESTROYED_MESSAGE_TYPE'), abort)
             
             otherprocess.addstmt(StmtReturn(p.otherProcessVar()))
         else:
@@ -3292,6 +3362,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             lookupshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->', p.lookupSharedMemory().name),
                 [ idvar ])))
+            destroyshmem.addstmt(StmtReturn(ExprCall(
+                ExprSelect(p.managerVar(), '->', p.destroySharedMemory().name),
+                [ shmemvar ])))
             otherprocess.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->',
                            p.otherProcessMethod().name))))
@@ -3342,6 +3415,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                  removemanagee,
                  createshmem,
                  lookupshmem,
+                 destroyshmem,
                  otherprocess,
                  Whitespace.NL ]
 
@@ -3383,9 +3457,29 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprDeref(memvar), _shmemCtor(_autoptrForget(rawvar), idvar))),
             StmtReturn(ExprLiteral.TRUE)
         ])
-                
+
+        # bool DeallocShmem(Shmem& mem):
+        #   bool ok = DestroySharedMemory(mem);
+        #   mem.forget();
+        #   return ok;
+        deallocShmem = MethodDefn(MethodDecl(
+            'DeallocShmem',
+            params=[ Decl(_shmemType(ref=1), memvar.name) ],
+            ret=Type.BOOL))
+        okvar = ExprVar('ok')
+
+        deallocShmem.addstmts([
+            StmtDecl(Decl(Type.BOOL, okvar.name),
+                     init=ExprCall(p.destroySharedMemory(),
+                                   args=[ memvar ])),
+            StmtExpr(_shmemForget(memvar)),
+            StmtReturn(okvar)
+        ])
+
         return [ Whitespace('// Methods for managing shmem\n', indent=1),
                  allocShmem,
+                 Whitespace.NL,
+                 deallocShmem,
                  Whitespace.NL ]
 
     def genShmemCreatedHandler(self):
@@ -3411,6 +3505,47 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
                 args=[ _autoptrForget(rawvar), idvar ])),
             Whitespace.NL,
+            StmtReturn(_Result.Processed)
+        ])
+
+        return case
+
+    def genShmemDestroyedHandler(self):
+        p = self.protocol
+        assert p.decl.type.isToplevel()
+        
+        case = StmtBlock()                                          
+
+        rawvar = ExprVar('rawmem')
+        idvar = ExprVar('id')
+        itervar = ExprVar('iter')
+        case.addstmts([
+            StmtDecl(Decl(_shmemIdType(), idvar.name)),
+            StmtDecl(Decl(Type.VOIDPTR, itervar.name), init=ExprLiteral.NULL)
+        ])
+
+        failif = StmtIf(ExprNot(
+            ExprCall(ExprVar('IPC::ReadParam'),
+                     args=[ ExprAddrOf(self.msgvar), ExprAddrOf(itervar),
+                            ExprAddrOf(idvar) ])))
+        failif.addifstmt(StmtReturn(_Result.PayloadError))
+
+        case.addstmts([
+            failif,
+            StmtExpr(ExprCall(ExprSelect(self.msgvar, '.', 'EndRead'),
+                              args=[ itervar ])),
+            Whitespace.NL,
+            StmtDecl(Decl(_rawShmemType(ptr=1), rawvar.name),
+                     init=ExprCall(p.lookupSharedMemory(), args=[ idvar ]))
+        ])
+
+        failif = StmtIf(ExprNot(rawvar))
+        failif.addifstmt(StmtReturn(_Result.ValuError))
+
+        case.addstmts([
+            failif,
+            StmtExpr(p.removeShmemId(idvar)),
+            StmtExpr(_shmemDealloc(rawvar)),
             StmtReturn(_Result.Processed)
         ])
 
