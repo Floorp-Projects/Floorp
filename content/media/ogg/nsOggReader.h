@@ -44,7 +44,6 @@
 #include <ogg/ogg.h>
 #include <theora/theoradec.h>
 #include <vorbis/codec.h>
-#include "prmon.h"
 #include "nsAutoLock.h"
 #include "nsClassHashtable.h"
 #include "mozilla/TimeStamp.h"
