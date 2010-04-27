@@ -45,19 +45,11 @@
 
 #include <stddef.h>
 
-#if defined(__APPLE__)
-typedef unsigned long GLenum;
-typedef unsigned long GLbitfield;
-typedef unsigned long GLuint;
-typedef long GLint;
-typedef long GLsizei;
-#else
 typedef unsigned int GLenum;
 typedef unsigned int GLbitfield;
 typedef unsigned int GLuint;
 typedef int GLint;
 typedef int GLsizei;
-#endif
 typedef char realGLboolean;
 typedef signed char GLbyte;
 typedef short GLshort;

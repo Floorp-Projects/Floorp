@@ -177,7 +177,7 @@ CPPSRCS +=      gfxQuartzNativeDrawing.cpp
 CMMSRCS = gfxMacPlatformFontList.mm
 
 # Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime
+EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit
 endif
 
 CSRCS += woff.c
@@ -191,7 +191,11 @@ else
 CPPSRCS += GLContextProviderNull.cpp
 endif
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS += GLContextProviderCGL.mm
+else
 CPPSRCS += GLContextProviderNull.cpp
+endif
 endif
 
 DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT
