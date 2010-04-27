@@ -363,7 +363,6 @@ public:
 //  - MyClass must defined AddRef and Release methods
 //
 template<typename PtrType, typename Method>
-NS_COM_GLUE
 typename nsRunnableMethodTraits<Method, true>::base_type*
 NS_NewRunnableMethod(PtrType ptr, Method method)
 {
@@ -371,7 +370,6 @@ NS_NewRunnableMethod(PtrType ptr, Method method)
 }
 
 template<typename PtrType, typename Method>
-NS_COM_GLUE
 typename nsRunnableMethodTraits<Method, false>::base_type*
 NS_NewNonOwningRunnableMethod(PtrType ptr, Method method)
 {
