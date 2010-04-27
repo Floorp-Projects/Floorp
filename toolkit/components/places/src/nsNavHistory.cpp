@@ -1194,12 +1194,12 @@ nsNavHistory::InitStatements()
         "SELECT t.title AS tag_title "
         "FROM moz_bookmarks b "
         "JOIN moz_bookmarks t ON t.id = b.parent "
-        "WHERE b.fk = IFNULL((SELECT id FROM moz_places_temp WHERE url = ?2), "
-                            "(SELECT id FROM moz_places WHERE url = ?2)) "
+        "WHERE b.fk = IFNULL((SELECT id FROM moz_places_temp WHERE url = :page_url), "
+                            "(SELECT id FROM moz_places WHERE url = :page_url)) "
           "AND LENGTH(t.title) > 0 "
           "AND b.type = ") +
             nsPrintfCString("%d", nsINavBookmarksService::TYPE_BOOKMARK) +
-          NS_LITERAL_CSTRING(" AND t.parent = ?1 "
+          NS_LITERAL_CSTRING(" AND t.parent = :tags_folder "
         "ORDER BY t.title COLLATE NOCASE ASC)"),
     getter_AddRefs(mDBGetTags));
   NS_ENSURE_SUCCESS(rv, rv);
