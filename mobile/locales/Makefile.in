@@ -166,7 +166,7 @@ ifeq (Darwin, $(OS_ARCH))
 GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/../Frameworks/XUL.framework/Versions/$(MOZILLA_VERSION)/platform.ini"
 FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/../Resources/application.ini"
 else
-GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/xulrunner/platform.ini"
+GECKO_PLATFORM_INI_PATH="$(STAGEDIST)/platform.ini"
 FENNEC_APPLICATION_INI_PATH="$(STAGEDIST)/application.ini"
 endif
 
