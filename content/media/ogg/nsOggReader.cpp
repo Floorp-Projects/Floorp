@@ -82,12 +82,13 @@ PRBool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult) {
   return PR_TRUE;
 }
 
-VideoData* VideoData::Create(PRInt64 aTime,
+VideoData* VideoData::Create(PRInt64 aOffset,
+                             PRInt64 aTime,
                              th_ycbcr_buffer aBuffer,
                              PRBool aKeyframe,
                              PRInt64 aGranulepos)
 {
-  nsAutoPtr<VideoData> v(new VideoData(aTime, aKeyframe, aGranulepos));
+  nsAutoPtr<VideoData> v(new VideoData(aOffset, aTime, aKeyframe, aGranulepos));
   for (PRUint32 i=0; i < 3; ++i) {
     PRUint32 size = 0;
     if (!MulOverflow32(PR_ABS(aBuffer[i].height),
@@ -199,7 +200,8 @@ nsresult nsOggReader::DecodeVorbis(nsTArray<SoundData*>& aChunks,
       PRInt64 duration = mVorbisState->Time((PRInt64)samples);
       PRInt64 startTime = (mVorbisGranulepos != -1) ?
         mVorbisState->Time(mVorbisGranulepos) : -1;
-      SoundData* s = new SoundData(startTime,
+      SoundData* s = new SoundData(mPageOffset,
+                                   startTime,
                                    duration,
                                    samples,
                                    buffer,
@@ -357,14 +359,16 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
   PRInt64 time = (aPacket->granulepos != -1)
     ? mTheoraState->StartTime(aPacket->granulepos) : -1;
   if (ret == TH_DUPFRAME) {
-    aFrames.AppendElement(VideoData::CreateDuplicate(time,
+    aFrames.AppendElement(VideoData::CreateDuplicate(mPageOffset,
+                                                     time,
                                                      aPacket->granulepos));
   } else if (ret == 0) {
     th_ycbcr_buffer buffer;
     ret = th_decode_ycbcr_out(mTheoraState->mCtx, buffer);
     NS_ASSERTION(ret == 0, "th_decode_ycbcr_out failed");
     PRBool isKeyframe = th_packet_iskeyframe(aPacket) == 1;
-    VideoData *v = VideoData::Create(time,
+    VideoData *v = VideoData::Create(mPageOffset,
+                                     time,
                                      buffer,
                                      isKeyframe,
                                      aPacket->granulepos);

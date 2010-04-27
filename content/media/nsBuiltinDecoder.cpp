@@ -815,3 +815,9 @@ void nsBuiltinDecoder::MoveLoadsToBackground()
     mStream->MoveLoadsToBackground();
   }
 }
+
+void nsBuiltinDecoder::UpdatePlaybackOffset(PRInt64 aOffset)
+{
+  MonitorAutoEnter mon(mMonitor);
+  mPlaybackPosition = NS_MAX(aOffset, mPlaybackPosition);
+}
