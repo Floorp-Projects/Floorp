@@ -43,7 +43,8 @@
  * This file contains helper classes used by various bits of Places code.
  */
 
-#include "mozIStorageStatementCallback.h"
+#include "mozilla/storage.h"
+#include "nsIURI.h"
 
 namespace mozilla {
 namespace places {
@@ -91,6 +92,50 @@ public:
 #define DECLARE_AND_ASSIGN_SCOPED_LAZY_STMT(_localStmt, _globalStmt)           \
   DECLARE_AND_ASSIGN_LAZY_STMT(_localStmt, _globalStmt);                       \
   mozStorageStatementScoper scoper(_localStmt)
+
+
+/**
+ * Utils to bind a specified URI (or URL) to a statement or binding params, at
+ * the specified index or name.
+ * @note URIs are always bound as UTF8.
+ */
+class URIBinder // static
+{
+public:
+  // Bind URI to statement by index.
+  static nsresult Bind(mozIStorageStatement* statement,
+                       PRInt32 index,
+                       nsIURI* aURI);
+  // Statement URLCString to statement by index.
+  static nsresult Bind(mozIStorageStatement* statement,
+                       PRInt32 index,
+                       const nsACString& aURLString);
+  // Bind URI to statement by name.
+  static nsresult Bind(mozIStorageStatement* statement,
+                       const nsACString& aName,
+                       nsIURI* aURI);
+  // Bind URLCString to statement by name.
+  static nsresult Bind(mozIStorageStatement* statement,
+                       const nsACString& aName,
+                       const nsACString& aURLString);
+  // Bind URI to params by index.
+  static nsresult Bind(mozIStorageBindingParams* aParams,
+                       PRInt32 index,
+                       nsIURI* aURI);
+  // Bind URLCString to params by index.
+  static nsresult Bind(mozIStorageBindingParams* aParams,
+                       PRInt32 index,
+                       const nsACString& aURLString);
+  // Bind URI to params by name.
+  static nsresult Bind(mozIStorageBindingParams* aParams,
+                       const nsACString& aName,
+                       nsIURI* aURI);
+  // Bind URLCString to params by name.
+  static nsresult Bind(mozIStorageBindingParams* aParams,
+                       const nsACString& aName,
+                       const nsACString& aURLString);
+};
+
 
 } // namespace places
 } // namespace mozilla
