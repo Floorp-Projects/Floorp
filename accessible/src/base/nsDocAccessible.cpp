@@ -474,17 +474,16 @@ NS_IMETHODIMP nsDocAccessible::GetWindow(nsIDOMWindow **aDOMWin)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::GetDocument(nsIDOMDocument **aDOMDoc)
+NS_IMETHODIMP
+nsDocAccessible::GetDOMDocument(nsIDOMDocument **aDOMDocument)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocument));
-  *aDOMDoc = domDoc;
+  NS_ENSURE_ARG_POINTER(aDOMDocument);
+  *aDOMDocument = nsnull;
 
-  if (domDoc) {
-    NS_ADDREF(*aDOMDoc);
-    return NS_OK;
-  }
+  if (mDocument)
+    CallQueryInterface(mDocument, aDOMDocument);
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 // nsIAccessibleHyperText method
