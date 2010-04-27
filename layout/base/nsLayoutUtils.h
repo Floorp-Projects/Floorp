@@ -85,7 +85,7 @@ public:
   /**
    * GetBeforeFrame returns the outermost :before frame of the given frame, if
    * one exists.  This is typically O(1).  The frame passed in must be
-   * the first-in-flow.   
+   * the first-in-flow.
    *
    * @param aFrame the frame whose :before is wanted
    * @return the :before frame or nsnull if there isn't one
@@ -103,7 +103,7 @@ public:
    */
   static nsIFrame* GetAfterFrame(nsIFrame* aFrame);
 
-  /** 
+  /**
    * Given a frame, search up the frame tree until we find an
    * ancestor that (or the frame itself) is of type aFrameType, if any.
    *
@@ -114,7 +114,7 @@ public:
    */
   static nsIFrame* GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType);
 
-  /** 
+  /**
    * Given a frame, search up the frame tree until we find an
    * ancestor that (or the frame itself) is a "Page" frame, if any.
    *
@@ -155,7 +155,7 @@ public:
   /**
    * CompareTreePosition determines whether aContent1 comes before or
    * after aContent2 in a preorder traversal of the content tree.
-   * 
+   *
    * @param aCommonAncestor either null, or a common ancestor of
    *                        aContent1 and aContent2.  Actually this is
    *                        only a hint; if it's not an ancestor of
@@ -193,7 +193,7 @@ public:
    * basically the same ordering as DoCompareTreePosition(nsIContent*) except
    * that it handles anonymous content properly and there are subtleties with
    * continuations.
-   * 
+   *
    * @param aCommonAncestor either null, or a common ancestor of
    *                        aContent1 and aContent2.  Actually this is
    *                        only a hint; if it's not an ancestor of
@@ -254,7 +254,7 @@ public:
    */
   static nsIFrame* GetCrossDocParentFrame(const nsIFrame* aFrame,
                                           nsPoint* aCrossDocOffset = nsnull);
-  
+
   /**
    * IsProperAncestorFrame checks whether aAncestorFrame is an ancestor
    * of aFrame and not equal to aFrame.
@@ -294,7 +294,7 @@ public:
     */
   static nsIFrame* GetFrameFor(nsIView *aView)
   { return static_cast<nsIFrame*>(aView->GetClientData()); }
-  
+
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
     */
@@ -403,7 +403,7 @@ public:
    * @param aView  view to which returned coordinates are relative
    * @return the point in the view's coordinates
    */
-  static nsPoint TranslateWidgetToView(nsPresContext* aPresContext, 
+  static nsPoint TranslateWidgetToView(nsPresContext* aPresContext,
                                        nsIWidget* aWidget, nsIntPoint aPt,
                                        nsIView* aView);
 
@@ -513,7 +513,7 @@ public:
 
   /**
    * Given aFrame, the root frame of a stacking context, paint it and its
-   * descendants to aRenderingContext. 
+   * descendants to aRenderingContext.
    * @param aRenderingContext a rendering context translated so that (0,0)
    * is the origin of aFrame; for best results, (0,0) should transform
    * to pixel-aligned coordinates. This can be null, in which case
@@ -532,7 +532,7 @@ public:
    * even if aRenderingContext is non-null. This is useful if you want
    * to force rendering to use the widget's layer manager for testing
    * or speed. PAINT_WIDGET_LAYERS must be set if aRenderingContext is null.
-   * 
+   *
    * So there are three possible behaviours:
    * 1) PAINT_WIDGET_LAYERS is set and aRenderingContext is null; we paint
    * by calling BeginTransaction on the widget's layer manager
@@ -560,22 +560,22 @@ public:
    * repainted after doing the blit
    * @param aBlitRegion output: a subregion of aUpdateRect that should
    * be repainted by blitting
-   * 
+   *
    * If the caller does a bitblt copy of aBlitRegion-aPt to aBlitRegion,
    * and then repaints aRepaintRegion, then the area aUpdateRect will be
    * correctly up to date. aBlitRegion and aRepaintRegion do not intersect
    * and are both contained within aUpdateRect.
-   * 
+   *
    * Frame geometry must have already been adjusted for the scroll/copy
    * operation before this function is called.
-   * 
+   *
    * Conceptually it works by computing a display list in the before-state
    * and a display list in the after-state and analyzing them to find the
    * differences. In practice it is only feasible to build a display list
    * in the after-state (plus building two display lists would be less
    * efficient), so we use some unfortunately tricky techniques to get by
    * with just the after-list.
-   * 
+   *
    * We compute the "visible moving area", a region that contains all
    * moving content that is visible, either before or after scrolling,
    * intersected with aUpdateRect.
@@ -588,9 +588,9 @@ public:
    * frames that will not move (translated by aDelta)
    * c) any visible areas of the after-move display list corresponding to
    * frames that did not move
-   * 
+   *
    * aBlitRegion is the visible moving area minus aRepaintRegion.
-   * 
+   *
    * We may return a larger region for aRepaintRegion and/or aBlitRegion
    * if computing the above regions precisely is too expensive.  (However,
    * they will never intersect, since the regions that may be computed
@@ -614,7 +614,7 @@ public:
    * It also keeps track of the part of the string that has already been measured
    * so it doesn't have to keep measuring the same text over and over
    *
-   * @param "aBaseWidth" contains the width in twips of the portion 
+   * @param "aBaseWidth" contains the width in twips of the portion
    * of the text that has already been measured, and aBaseInx contains
    * the index of the text that has already been measured.
    *
@@ -622,13 +622,13 @@ public:
    * before the cursor aIndex contains the index of the text where the cursor falls
    */
   static PRBool
-  BinarySearchForPosition(nsIRenderingContext* acx, 
+  BinarySearchForPosition(nsIRenderingContext* acx,
                           const PRUnichar* aText,
                           PRInt32    aBaseWidth,
                           PRInt32    aBaseInx,
-                          PRInt32    aStartInx, 
-                          PRInt32    aEndInx, 
-                          PRInt32    aCursorPos, 
+                          PRInt32    aStartInx,
+                          PRInt32    aEndInx,
+                          PRInt32    aCursorPos,
                           PRInt32&   aIndex,
                           PRInt32&   aTextWidth);
 
@@ -720,7 +720,7 @@ public:
    * of aParent.
    */
   static nsIFrame* FindChildContainingDescendant(nsIFrame* aParent, nsIFrame* aDescendantFrame);
-  
+
   /**
    * Find the nearest ancestor that's a block
    */
@@ -737,7 +737,7 @@ public:
    * an nsBlockFrame.
    */
   static nsBlockFrame* GetAsBlock(nsIFrame* aFrame);
-  
+
   /**
    * If aFrame is an out of flow frame, return its placeholder, otherwise
    * return its parent.
@@ -757,7 +757,7 @@ public:
    */
   static nsIFrame*
   GetFirstContinuationOrSpecialSibling(nsIFrame *aFrame);
-  
+
   /**
    * Check whether aFrame is a part of the scrollbar or scrollcorner of
    * the root content.

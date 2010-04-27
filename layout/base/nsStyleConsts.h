@@ -198,19 +198,19 @@
 #define NS_STYLE_SPEAK_NORMAL             1
 #define NS_STYLE_SPEAK_SPELL_OUT          2
 
-// See nsStyleAural 
+// See nsStyleAural
 #define NS_STYLE_SPEAK_HEADER_ONCE        0
 #define NS_STYLE_SPEAK_HEADER_ALWAYS      1
 
-// See nsStyleAural 
+// See nsStyleAural
 #define NS_STYLE_SPEAK_NUMERAL_DIGITS     0
 #define NS_STYLE_SPEAK_NUMERAL_CONTINUOUS 1
 
-// See nsStyleAural 
+// See nsStyleAural
 #define NS_STYLE_SPEAK_PUNCTUATION_NONE   0
 #define NS_STYLE_SPEAK_PUNCTUATION_CODE   1
 
-// See nsStyleAural 
+// See nsStyleAural
 #define NS_STYLE_SPEECH_RATE_X_SLOW       0
 #define NS_STYLE_SPEECH_RATE_SLOW         1
 #define NS_STYLE_SPEECH_RATE_MEDIUM       2
@@ -219,7 +219,7 @@
 #define NS_STYLE_SPEECH_RATE_FASTER       10
 #define NS_STYLE_SPEECH_RATE_SLOWER       11
 
-// See nsStyleAural 
+// See nsStyleAural
 #define NS_STYLE_VOLUME_SILENT            0
 #define NS_STYLE_VOLUME_X_SOFT            1
 #define NS_STYLE_VOLUME_SOFT              2
@@ -331,15 +331,15 @@
 #define NS_STYLE_CURSOR_CROSSHAIR               2
 #define NS_STYLE_CURSOR_DEFAULT                 3    // ie: an arrow
 #define NS_STYLE_CURSOR_POINTER                 4    // for links
-#define NS_STYLE_CURSOR_MOVE                    5 
-#define NS_STYLE_CURSOR_E_RESIZE                6     
-#define NS_STYLE_CURSOR_NE_RESIZE               7      
-#define NS_STYLE_CURSOR_NW_RESIZE               8      
-#define NS_STYLE_CURSOR_N_RESIZE                9     
-#define NS_STYLE_CURSOR_SE_RESIZE               10      
-#define NS_STYLE_CURSOR_SW_RESIZE               11     
-#define NS_STYLE_CURSOR_S_RESIZE                12    
-#define NS_STYLE_CURSOR_W_RESIZE                13    
+#define NS_STYLE_CURSOR_MOVE                    5
+#define NS_STYLE_CURSOR_E_RESIZE                6
+#define NS_STYLE_CURSOR_NE_RESIZE               7
+#define NS_STYLE_CURSOR_NW_RESIZE               8
+#define NS_STYLE_CURSOR_N_RESIZE                9
+#define NS_STYLE_CURSOR_SE_RESIZE               10
+#define NS_STYLE_CURSOR_SW_RESIZE               11
+#define NS_STYLE_CURSOR_S_RESIZE                12
+#define NS_STYLE_CURSOR_W_RESIZE                13
 #define NS_STYLE_CURSOR_TEXT                    14   // ie: i-beam
 #define NS_STYLE_CURSOR_WAIT                    15
 #define NS_STYLE_CURSOR_HELP                    16
@@ -495,7 +495,7 @@
 #define NS_STYLE_CLIP_BOTTOM_AUTO               0x80
 
 // FRAME/FRAMESET/IFRAME specific values including backward compatibility. Boolean values with
-// the same meaning (e.g. 1 & yes) may need to be distinguished for correct mode processing 
+// the same meaning (e.g. 1 & yes) may need to be distinguished for correct mode processing
 #define NS_STYLE_FRAME_YES                      0
 #define NS_STYLE_FRAME_NO                       1
 #define NS_STYLE_FRAME_0                        2
@@ -552,7 +552,7 @@
 #define NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL       31
 #define NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC          32
 #define NS_STYLE_LIST_STYLE_MOZ_PERSIAN               33
-#define NS_STYLE_LIST_STYLE_MOZ_URDU                  34 
+#define NS_STYLE_LIST_STYLE_MOZ_URDU                  34
 #define NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI            35
 #define NS_STYLE_LIST_STYLE_MOZ_GURMUKHI              36
 #define NS_STYLE_LIST_STYLE_MOZ_GUJARATI              37
@@ -804,9 +804,9 @@
 #define NS_STYLE_STROKE_LINEJOIN_BEVEL          2
 
 // text-anchor
-#define NS_STYLE_TEXT_ANCHOR_START              0 
-#define NS_STYLE_TEXT_ANCHOR_MIDDLE             1 
-#define NS_STYLE_TEXT_ANCHOR_END                2 
+#define NS_STYLE_TEXT_ANCHOR_START              0
+#define NS_STYLE_TEXT_ANCHOR_MIDDLE             1
+#define NS_STYLE_TEXT_ANCHOR_END                2
 
 // text-rendering
 #define NS_STYLE_TEXT_RENDERING_AUTO               0

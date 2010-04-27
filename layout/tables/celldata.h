@@ -48,15 +48,15 @@ class BCCellData;
 #define MAX_ROWSPAN 8190 // the cellmap can not handle more
 #define MAX_COLSPAN 1000 // limit as IE and opera do
 
-/** 
+/**
   * Data stored by nsCellMap to rationalize rowspan and colspan cells.
   */
 class CellData
 {
 public:
-  /** Initialize the mOrigCell pointer 
-    * @param aOrigCell  the table cell frame which will be stored in mOrigCell.   
-    */ 
+  /** Initialize the mOrigCell pointer
+    * @param aOrigCell  the table cell frame which will be stored in mOrigCell.
+    */
   void   Init(nsTableCellFrame* aCellFrame);
 
   /** does a cell originate from here
@@ -65,7 +65,7 @@ public:
   PRBool IsOrig() const;
 
   /** is the celldata valid
-    * @return    is true if no cell originates and the cell is not spanned by 
+    * @return    is true if no cell originates and the cell is not spanned by
     *            a row- or colspan. mBits are 0 in this case and mOrigCell is
     *            nsnull
     */
@@ -80,9 +80,9 @@ public:
     * @return    is true if the entry is spanned by a rowspan
     */
   PRBool IsRowSpan() const;
-  
+
   /** is the entry spanned by a zero rowspan
-    * zero rowspans span all cells starting from the originating cell down to 
+    * zero rowspans span all cells starting from the originating cell down to
     * the end of the rowgroup or a cell originating in the same column
     * @return    is true if the entry is spanned by a zero rowspan
     */
@@ -109,8 +109,8 @@ public:
   PRBool IsColSpan() const;
 
   /** is the entry spanned by a zero colspan
-    * zero colspans span all cells starting from the originating cell towards 
-    * the end of the colgroup or a cell originating in the same row 
+    * zero colspans span all cells starting from the originating cell towards
+    * the end of the colgroup or a cell originating in the same row
     * or a rowspanned entry
     * @return    is true if the entry is spanned by a zero colspan
     */
@@ -130,7 +130,7 @@ public:
     * @param    the distance in the column to the originating cell
     */
   void SetColSpanOffset(PRUint32 aSpan);
-  
+
   /** is the entry spanned by a row- and a colspan
     * @return    is true if the entry is spanned by a row- and a colspan
     */
@@ -140,9 +140,9 @@ public:
     * @param aOverlap    if true mark the entry as covered by a row- and a colspan
     */
   void SetOverlap(PRBool aOverlap);
-  
-  /** get the table cell frame for this entry 
-    * @return    a pointer to the cellframe, this will be nsnull when the entry 
+
+  /** get the table cell frame for this entry
+    * @return    a pointer to the cellframe, this will be nsnull when the entry
     *            is only a spanned entry
     */
   nsTableCellFrame* GetCellFrame() const;
@@ -152,20 +152,20 @@ private:
   friend class BCCellData;
 
   /** constructor.
-    * @param aOrigCell  the table cell frame which will be stored in mOrigCell.   
+    * @param aOrigCell  the table cell frame which will be stored in mOrigCell.
     */
   CellData(nsTableCellFrame* aOrigCell);  // implemented in nsCellMap.cpp
 
   /** destructor */
   ~CellData(); // implemented in nsCellMap.cpp
-  
+
 protected:
 
   // this union relies on the assumption that an object (not primitive type) does
-  // not start on an odd bit boundary. If mSpan is 0 then mOrigCell is in effect 
+  // not start on an odd bit boundary. If mSpan is 0 then mOrigCell is in effect
   // and the data does not represent a span. If mSpan is 1, then mBits is in
   // effect and the data represents a span.
-  // mBits must be an unsigned long because it must match the size of 
+  // mBits must be an unsigned long because it must match the size of
   // mOrigCell on both 32- and 64-bit platforms.
   union {
     nsTableCellFrame* mOrigCell;
@@ -174,16 +174,16 @@ protected:
 };
 
 // Border Collapsing Cell Data
-enum BCBorderOwner 
+enum BCBorderOwner
 {
   eTableOwner        =  0,
-  eColGroupOwner     =  1, 
-  eAjaColGroupOwner  =  2, // col group to the left 
+  eColGroupOwner     =  1,
+  eAjaColGroupOwner  =  2, // col group to the left
   eColOwner          =  3,
   eAjaColOwner       =  4, // col to the left
-  eRowGroupOwner     =  5, 
+  eRowGroupOwner     =  5,
   eAjaRowGroupOwner  =  6, // row group above
-  eRowOwner          =  7, 
+  eRowOwner          =  7,
   eAjaRowOwner       =  8, // row above
   eCellOwner         =  9,
   eAjaCellOwner      = 10  // cell to the top or to the left
@@ -242,7 +242,7 @@ public:
 
   void SetTopStart(PRBool aValue);
 
-               
+
 protected:
   BCPixelSize mLeftSize;      // size in pixels of left border
   BCPixelSize mTopSize;       // size in pixels of top border
@@ -251,8 +251,8 @@ protected:
                               //   owned by the segment to its top or bottom,
                               //   then the size is the max of the border
                               //   sizes of the segments to its left or right.
-  unsigned mLeftOwner:     4; // owner of left border     
-  unsigned mTopOwner:      4; // owner of top border    
+  unsigned mLeftOwner:     4; // owner of left border
+  unsigned mTopOwner:      4; // owner of top border
   unsigned mLeftStart:     1; // set if this is the start of a vertical border segment
   unsigned mTopStart:      1; // set if this is the start of a horizontal border segment
   unsigned mCornerSide:    2; // side of the owner of the upper left corner relative to the corner
@@ -260,7 +260,7 @@ protected:
 };
 
 // BCCellData entries replace CellData entries in the cell map if the border collapsing model is in
-// effect. BCData for a row and col entry contains the left and top borders of cell at that row and 
+// effect. BCData for a row and col entry contains the left and top borders of cell at that row and
 // col and the corner connecting the two. The right borders of the cells in the last col and the bottom
 // borders of the last row are stored in separate BCData entries in the cell map.
 class BCCellData : public CellData
@@ -273,7 +273,7 @@ public:
 };
 
 
-#define SPAN             0x00000001 // there a row or col span 
+#define SPAN             0x00000001 // there a row or col span
 #define ROW_SPAN         0x00000002 // there is a row span
 #define ROW_SPAN_0       0x00000004 // the row span is 0
 #define ROW_SPAN_OFFSET  0x0000FFF8 // the row offset to the data containing the original cell
@@ -292,7 +292,7 @@ inline nsTableCellFrame* CellData::GetCellFrame() const
   return nsnull;
 }
 
-inline void CellData::Init(nsTableCellFrame* aCellFrame) 
+inline void CellData::Init(nsTableCellFrame* aCellFrame)
 {
   mOrigCell = aCellFrame;
 }
@@ -314,13 +314,13 @@ inline PRBool CellData::IsSpan() const
 
 inline PRBool CellData::IsRowSpan() const
 {
-  return (SPAN     == (SPAN & mBits)) && 
+  return (SPAN     == (SPAN & mBits)) &&
          (ROW_SPAN == (ROW_SPAN & mBits));
 }
 
 inline PRBool CellData::IsZeroRowSpan() const
 {
-  return (SPAN       == (SPAN & mBits))     && 
+  return (SPAN       == (SPAN & mBits))     &&
          (ROW_SPAN   == (ROW_SPAN & mBits)) &&
          (ROW_SPAN_0 == (ROW_SPAN_0 & mBits));
 }
@@ -345,7 +345,7 @@ inline PRUint32 CellData::GetRowSpanOffset() const
   return 0;
 }
 
-inline void CellData::SetRowSpanOffset(PRUint32 aSpan) 
+inline void CellData::SetRowSpanOffset(PRUint32 aSpan)
 {
   mBits &= ~ROW_SPAN_OFFSET;
   mBits |= (aSpan << ROW_SPAN_SHIFT);
@@ -355,13 +355,13 @@ inline void CellData::SetRowSpanOffset(PRUint32 aSpan)
 
 inline PRBool CellData::IsColSpan() const
 {
-  return (SPAN     == (SPAN & mBits)) && 
+  return (SPAN     == (SPAN & mBits)) &&
          (COL_SPAN == (COL_SPAN & mBits));
 }
 
 inline PRBool CellData::IsZeroColSpan() const
 {
-  return (SPAN       == (SPAN & mBits))     && 
+  return (SPAN       == (SPAN & mBits))     &&
          (COL_SPAN   == (COL_SPAN & mBits)) &&
          (COL_SPAN_0 == (COL_SPAN_0 & mBits));
 }
@@ -386,7 +386,7 @@ inline PRUint32 CellData::GetColSpanOffset() const
   return 0;
 }
 
-inline void CellData::SetColSpanOffset(PRUint32 aSpan) 
+inline void CellData::SetColSpanOffset(PRUint32 aSpan)
 {
   mBits &= ~COL_SPAN_OFFSET;
   mBits |= (aSpan << COL_SPAN_SHIFT);
@@ -400,7 +400,7 @@ inline PRBool CellData::IsOverlap() const
   return (SPAN == (SPAN & mBits)) && (OVERLAP == (OVERLAP & mBits));
 }
 
-inline void CellData::SetOverlap(PRBool aOverlap) 
+inline void CellData::SetOverlap(PRBool aOverlap)
 {
   if (SPAN == (SPAN & mBits)) {
     if (aOverlap) {

@@ -808,7 +808,7 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
 {
     //
     // For CW drawing, this looks like:
-    // 
+    //
     //  ...******0**      1    C
     //              ****
     //                  ***    2
