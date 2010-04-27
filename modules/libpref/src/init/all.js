@@ -1213,7 +1213,7 @@ pref("dom.max_script_run_time", 10);
 //
 // NB: chosen to match dom.max_script_run_time by default
 #ifndef DEBUG
-pref("dom.ipc.plugins.timeoutSecs", 30);
+pref("dom.ipc.plugins.timeoutSecs", 10);
 #else
 // No timeout in DEBUG builds
 pref("dom.ipc.plugins.timeoutSecs", 0);
