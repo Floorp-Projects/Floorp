@@ -382,24 +382,21 @@ def p_MessageDirectionLabel(p):
 
 def p_MessageDecl(p):
     """MessageDecl : OptionalSendSemanticsQual MessageBody"""
+    msg = p[2]
+    msg.sendSemantics = p[1]
+
     if Parser.current.direction is None:
-        _error(locFromTok(p, 1), 'missing message direction')
-
-    if 2 == len(p):
-        msg = p[1]
-        msg.sendSemantics = ASYNC
-    else:
-        msg = p[2]
-        msg.sendSemantics = p[1]
-
+        _error(msg.loc, 'missing message direction')
     msg.direction = Parser.current.direction
+
     p[0] = msg
 
 def p_MessageBody(p):
     """MessageBody : MessageId MessageInParams MessageOutParams"""
     # FIXME/cjones: need better loc info: use one of the quals
-    msg = MessageDecl(locFromTok(p, 1))
-    msg.name = p[1]
+    loc, name = p[1]
+    msg = MessageDecl(loc)
+    msg.name = name
     msg.addInParams(p[2])
     msg.addOutParams(p[3])
     p[0] = msg
@@ -409,11 +406,12 @@ def p_MessageId(p):
                  | __DELETE__
                  | DELETE
                  | '~' ID"""
+    loc = locFromTok(p, 1)
     if 3 == len(p):
-        _error(locFromTok(p, 1), "sorry, `%s()' destructor syntax is a relic from a bygone era.  Declare `__delete__()' in the `%s' protocol instead", p[1]+p[2], p[2])
+        _error(loc, "sorry, `%s()' destructor syntax is a relic from a bygone era.  Declare `__delete__()' in the `%s' protocol instead", p[1]+p[2], p[2])
     elif 'delete' == p[1]:
-        _error(locFromTok(p, 1), "`delete' is a reserved identifier")
-    p[0] = p[1]
+        _error(loc, "`delete' is a reserved identifier")
+    p[0] = [ loc, p[1] ]
 
 def p_MessageInParams(p):
     """MessageInParams : '(' ParamList ')'"""
