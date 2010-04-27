@@ -937,8 +937,10 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
         return false;
     }
 
+#ifdef JS_THREADSAFE
     if (!rt->gcHelperThread.init())
         return false;
+#endif
 
     /*
      * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
@@ -1154,7 +1156,9 @@ js_FinishGC(JSRuntime *rt)
         js_DumpGCStats(rt, stdout);
 #endif
 
+#ifdef JS_THREADSAFE
     rt->gcHelperThread.cancel();
+#endif
     FinishGCArenaLists(rt);
 
     if (rt->gcRootsHash.ops) {
