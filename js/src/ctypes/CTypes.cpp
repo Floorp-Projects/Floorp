@@ -5162,7 +5162,7 @@ CData::Create(JSContext* cx,
   *buffer = data;
   if (!JS_SetReservedSlot(cx, dataObj, SLOT_DATA, PRIVATE_TO_JSVAL(buffer))) {
     if (ownResult)
-      delete data;
+      delete[] data;
     delete buffer;
     return NULL;
   }
