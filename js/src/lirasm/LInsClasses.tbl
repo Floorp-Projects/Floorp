@@ -85,16 +85,16 @@ CL___(  LALLOC,         1)  //  2%  LIR_alloc
 
 CL___(  LIMM_I,         4)  //  6%  LIR_imm
 CL_64(  LIMM_Q,         3)  //  9%  LIR_quad
-CL___(  LIMM_F,         3)  // 12%  LIR_float
+CL___(  LIMM_D,         3)  // 12%  LIR_float
 
 CL___(  LOP_I_I,        2)  // 14%  LIR_neg, LIR_not
 CL_64(  LOP_Q_Q,        0)  // 14%  (none)
-CL___(  LOP_F_F,        2)  // 16%  LIR_fneg
+CL___(  LOP_D_D,        2)  // 16%  LIR_fneg
 
 CL___(  LOP_I_II,       6)  // 32%  LIR_add, LIR_and, LIR_eq, etc.
 CL_64(  LOP_Q_QQ,       7)  // 39%  LIR_qiadd, LIR_qiand, LIR_qeq, etc.
 CL_64(  LOP_Q_QI,       2)  // 41%  LIR_qilsh, LIR_qirsh, LIR_qursh
-CL___(  LOP_F_FF,       0)  // 51%  LIR_fadd, etc.
+CL___(  LOP_D_DD,       0)  // 51%  LIR_fadd, etc.
 
 // cmov has a low weight because is also used with LIR_div/LIR_mod.
 CL___(  LOP_I_BII,      1)  // 52%  LIR_cmov
@@ -102,29 +102,29 @@ CL_64(  LOP_Q_BQQ,      2)  // 54%  LIR_qcmov
 
 CL___(  LOP_B_II,       3)  // 57%  LIR_eq,  LIR_lt,  etc
 CL_64(  LOP_B_QQ,       3)  // 60%  LIR_qeq, LIR_qlt, etc
-CL___(  LOP_B_FF,       3)  // 63%  LIR_feq, LIR_flt, etc
+CL___(  LOP_B_DD,       3)  // 63%  LIR_feq, LIR_flt, etc
 
 CL_64(  LOP_Q_I,        2)  // 65%  LIR_i2q, LIR_u2q
-CL___(  LOP_F_I,        2)  // 67%  LIR_i2f, LIR_u2f
+CL___(  LOP_D_I,        2)  // 67%  LIR_i2f, LIR_u2f
 CL_64(  LOP_I_Q,        1)  // 68%  LIR_q2i
-CL___(  LOP_I_F,        1)  // 69%  LIR_qlo, LIR_qhi, LIR_f2i
-CL___(  LOP_F_II,       1)  // 70%  LIR_qjoin
+CL___(  LOP_I_D,        1)  // 69%  LIR_qlo, LIR_qhi, LIR_f2i
+CL___(  LOP_D_II,       1)  // 70%  LIR_qjoin
 
 CL___(  LLD_I,          3)  // 73%  LIR_ld, LIR_ldc, LIR_ld*b, LIR_ld*s
 CL_64(  LLD_Q,          2)  // 75%  LIR_ldq, LIR_ldqc
-CL___(  LLD_F,          3)  // 78%  LIR_ldf, LIR_ldfc
+CL___(  LLD_D,          3)  // 78%  LIR_ldf, LIR_ldfc
 
 CL___(  LST_I,          5)  // 83%  LIR_sti
 CL_64(  LST_Q,          4)  // 87%  LIR_stqi
-CL___(  LST_F,          5)  // 92%  LIR_stfi
+CL___(  LST_D,          5)  // 92%  LIR_stfi
 
 CL___(  LCALL_I_I1,     1)  // 93%  LIR_icall
 CL___(  LCALL_I_I6,     1)  // 94%  LIR_icall
 CL_64(  LCALL_Q_Q2,     1)  // 95%  LIR_qcall
 CL_64(  LCALL_Q_Q7,     1)  // 96%  LIR_qcall
-CL___(  LCALL_F_F3,     1)  // 97%  LIR_fcall
-CL___(  LCALL_F_F8,     1)  // 98%  LIR_fcall
-CL_64(  LCALL_V_IQF,    1)  // 99%  LIR_icall or LIR_qcall
+CL___(  LCALL_D_D3,     1)  // 97%  LIR_fcall
+CL___(  LCALL_D_D8,     1)  // 98%  LIR_fcall
+CL_64(  LCALL_V_IQD,    1)  // 99%  LIR_icall or LIR_qcall
 
 CL___(  LLABEL,         1)  //100%  LIR_label
 

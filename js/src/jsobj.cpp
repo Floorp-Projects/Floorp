@@ -2432,11 +2432,11 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
         if (desc.hasGet)
             getter = desc.getterObject() ? desc.getter() : JS_PropertyStub;
         else
-            getter = sprop->getter();
+            getter = sprop->hasDefaultGetter() ? JS_PropertyStub : sprop->getter();
         if (desc.hasSet)
             setter = desc.setterObject() ? desc.setter() : JS_PropertyStub;
         else
-            setter = sprop->setter();
+            setter = sprop->hasDefaultSetter() ? JS_PropertyStub : sprop->setter();
     }
 
     *rval = true;
@@ -5034,16 +5034,15 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             if (!sprop->writable()) {
                 JS_UNLOCK_SCOPE(cx, scope);
 
-                /* Strict mode: report a read-only strict warning. */
-                if (JS_HAS_STRICT_OPTION(cx))
-                    return ReportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
-
-                /* Just return true per ECMA if not in strict mode. */
                 PCMETER((defineHow & JSDNP_CACHE_RESULT) && JS_PROPERTY_CACHE(cx).rofills++);
                 if (defineHow & JSDNP_CACHE_RESULT) {
                     JS_ASSERT_NOT_ON_TRACE(cx);
                     TRACE_2(SetPropHit, JS_NO_PROP_CACHE_FILL, sprop);
                 }
+
+                /* Warn in strict mode, otherwise do nothing. */
+                if (JS_HAS_STRICT_OPTION(cx))
+                    return ReportReadOnly(cx, id, JSREPORT_STRICT | JSREPORT_WARNING);
                 return JS_TRUE;
 
 #ifdef JS_TRACER

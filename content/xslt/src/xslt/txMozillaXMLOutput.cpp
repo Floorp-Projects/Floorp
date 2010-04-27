@@ -86,7 +86,6 @@ txMozillaXMLOutput::txMozillaXMLOutput(const nsSubstring& aRootName,
     : mTreeDepth(0),
       mBadChildLevel(0),
       mTableState(NORMAL),
-      mHaveBaseElement(PR_FALSE),
       mCreatingNewDocument(PR_TRUE),
       mOpenedElementIsHTML(PR_FALSE),
       mRootContentCreated(PR_FALSE),
@@ -111,7 +110,6 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
     : mTreeDepth(0),
       mBadChildLevel(0),
       mTableState(NORMAL),
-      mHaveBaseElement(PR_FALSE),
       mCreatingNewDocument(PR_FALSE),
       mOpenedElementIsHTML(PR_FALSE),
       mRootContentCreated(PR_FALSE),
@@ -762,23 +760,6 @@ txMozillaXMLOutput::endHTMLElement(nsIContent* aElement)
                                  (NS_PTR_TO_INT32(mTableStateStack.pop()));
 
         return NS_OK;
-    }
-    else if (mCreatingNewDocument && atom == txHTMLAtoms::base &&
-             !mHaveBaseElement) {
-        // The first base wins
-        mHaveBaseElement = PR_TRUE;
-
-        nsAutoString value;
-        aElement->GetAttr(kNameSpaceID_None, txHTMLAtoms::target, value);
-        mDocument->SetBaseTarget(value);
-
-        aElement->GetAttr(kNameSpaceID_None, txHTMLAtoms::href, value);
-        nsCOMPtr<nsIURI> baseURI;
-        NS_NewURI(getter_AddRefs(baseURI), value, nsnull);
-
-        if (baseURI) {
-            mDocument->SetBaseURI(baseURI); // The document checks if it is legal to set this base
-        }
     }
     else if (mCreatingNewDocument && atom == txHTMLAtoms::meta) {
         // handle HTTP-EQUIV data

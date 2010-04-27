@@ -97,18 +97,6 @@ function getTestPairs() {
   return testPairs;
 }
 
-function testIterator() {
-  // custom iterator: JS 1.7+
-  var x = {
-   "a": "foo",
-   b: "not included",
-   c: "bar",
-   "4": "qux",
-   __iterator__: function() { return (function() { yield "a"; yield "c"; yield 4; })() }
-  }
-  do_check_eq('{"a":"foo","c":"bar","4":"qux"}', nativeJSON.encode(x));
-}
-
 function testStringEncode() {
   // test empty arg
   do_check_eq(null, nativeJSON.encode());
@@ -185,61 +173,9 @@ function throwingToJSON() {
   } catch (ex) {}
 }
 
-function throwingIterator() {
-  var a = {
-    "b": 1,
-    "c": 2,
-    __iterator__: function() { yield "b"; throw("uh oh"); }
-  }
-  try {
-    var y = nativeJSON.encode(a);
-  } catch (ex) {}
-}
-
-function deletingIter(x) {
-  return function() {
-    yield "dd";
-    print("after first yield");
-    delete x["a"]["c"];
-    gc();
-    print("about to yield second");
-    yield "ddddd";
-  }
-}
-
-function deleteDuringEncode() {
-  var x = {};
-  x.a = {
-    b: 1,
-    bb: 2,
-    bbb: 3,
-    c: {
-      cc: 2,
-      ccc: 3,
-      d: {
-        dd: 2,
-        ddd: 3,
-        __iterator__: deletingIter(x),
-        dddd: 4,
-        ddddd: 5
-      },
-      cccc: 4,
-      ccccc: 5
-    },
-    bbbb: 4,
-    bbbbb: 5,
-    bbbbbb: 6
-  };
-  var z = nativeJSON.encode(x);
-  print(z);
-}
-
 function run_test() {
   testStringEncode();
-  testIterator();
   throwingToJSON();
-  throwingIterator();
-  deleteDuringEncode();
   
   // failing on windows -- bug 410005
   // testOutputStreams();

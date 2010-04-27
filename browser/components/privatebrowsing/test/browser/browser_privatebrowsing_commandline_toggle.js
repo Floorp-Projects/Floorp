@@ -51,7 +51,7 @@ function test() {
 
     testprivatecl.prototype = {
       _arguments: ["private-toggle"],
-      get length getLength() {
+      get length() {
         return this._arguments.length;
       },
       getArgument: function getArgument(aIndex) {
@@ -82,7 +82,7 @@ function test() {
       STATE_INITIAL_LAUNCH: 0,
       STATE_REMOTE_AUTO: 1,
       STATE_REMOTE_EXPLICIT: 2,
-      get state getState() {
+      get state() {
         return this.STATE_REMOTE_AUTO;
       },
       preventDefault: false,

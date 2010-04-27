@@ -72,6 +72,8 @@
 #include "nsDocShellCID.h"
 #include "nsIContentSecurityPolicy.h"
 #include "prlog.h"
+#include "nsIChannelPolicy.h"
+#include "nsChannelPolicy.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gCspPRLog;
@@ -285,10 +287,23 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
 
   nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
 
+  // check for a Content Security Policy to pass down to the channel
+  // that will be created to load the script
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = mDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (csp) {
+    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_SCRIPT);
+  }
+
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      aRequest->mURI, nsnull, loadGroup,
-                     prompter, nsIRequest::LOAD_NORMAL);
+                     prompter, nsIRequest::LOAD_NORMAL,
+                     channelPolicy);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));

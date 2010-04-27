@@ -6897,30 +6897,7 @@ nsBlockFrame::ResolveBidi()
   if (!bidiUtils)
     return NS_ERROR_NULL_POINTER;
 
-  return bidiUtils->Resolve(this, IsVisualFormControl(presContext));
-}
-
-PRBool
-nsBlockFrame::IsVisualFormControl(nsPresContext* aPresContext)
-{
-  // We always use logical order on form controls, so that they will display
-  // correctly in native widgets in OSs with Bidi support.
-  // If the page uses logical ordering we can bail out immediately, but on
-  // visual pages we need to drill up in content to detect whether this block
-  // is a descendant of a form control.
-
-  if (!aPresContext->IsVisualMode()) {
-    return PR_FALSE;
-  }
-
-  nsIContent* content = GetContent();
-  for ( ; content; content = content->GetParent()) {
-    if (content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL)) {
-      return PR_TRUE;
-    }
-  }
-  
-  return PR_FALSE;
+  return bidiUtils->Resolve(this);
 }
 #endif
 

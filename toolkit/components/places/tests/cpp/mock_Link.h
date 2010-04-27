@@ -91,6 +91,8 @@ namespace dom {
 
 Link::Link()
 : mLinkState(mozilla::dom::Link::defaultState)
+, mRegistered(false)
+, mContent(NULL)
 {
 }
 

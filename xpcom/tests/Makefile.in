@@ -92,6 +92,7 @@ CPP_UNIT_TESTS = \
                  TestObserverArray.cpp \
                  TestObserverService.cpp \
                  TestPipe.cpp \
+                 TestRefPtr.cpp \
                  TestServMgr.cpp \
                  TestTextFormatter.cpp \
                  $(NULL)

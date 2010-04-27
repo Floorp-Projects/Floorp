@@ -111,9 +111,7 @@ SyncChannel::Send(Message* msg, Message* reply)
 
     mPendingReply = msg->type() + 1;
     int32 msgSeqno = msg->seqno();
-    mIOLoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &SyncChannel::OnSend, msg));
+    SendThroughTransport(msg);
 
     while (1) {
         bool maybeTimedOut = !SyncChannel::WaitForNotify();
@@ -178,9 +176,7 @@ SyncChannel::OnDispatchMessage(const Message& msg)
     {
         MutexAutoLock lock(mMutex);
         if (ChannelConnected == mChannelState)
-            mIOLoop->PostTask(
-                FROM_HERE,
-                NewRunnableMethod(this, &SyncChannel::OnSend, reply));
+            SendThroughTransport(reply);
     }
 }
 

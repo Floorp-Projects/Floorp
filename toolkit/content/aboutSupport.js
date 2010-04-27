@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -16,7 +14,7 @@
 # The Original Code is aboutSupport.xhtml.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Corporation
+# Mozilla Foundation
 # Portions created by the Initial Developer are Copyright (C) 2009
 # the Initial Developer. All Rights Reserved.
 #
@@ -36,100 +34,6 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
 # ***** END LICENSE BLOCK *****
-
-<!DOCTYPE html [
-  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
-  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
-  <!ENTITY % aboutSupportDTD SYSTEM "chrome://browser/locale/aboutSupport.dtd"> %aboutSupportDTD;
-]>
-
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <title>&aboutSupport.pageTitle;</title>
-
-    <style type="text/css"><![CDATA[
-
-html {
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-  font: message-box;
-}
-
-body {
-  text-align: justify;
-  width: 90%;
-  margin-left: 5%;
-  margin-right: 5%;
-}
-
-.page-subtitle {
-  margin-bottom: 3em; 
-}
-
-.major-section {
-  margin-top: 2em;
-  margin-bottom: 1em;
-  font-size: large;
-  text-align: start;
-  font-weight: bold;
-}
-
-table {
-  background-color: -moz-Dialog;
-  color: -moz-DialogText;
-  font: message-box;
-  text-align: start;
-  width: 100%;
-  border: 1px solid ThreeDShadow;
-  border-spacing: 0px;
-}
-
-th, td {
-  border: 1px dotted ThreeDShadow;
-  padding: 3px;
-}
-
-thead th {
-  text-align: center;
-}
-
-th {
-  text-align: start;
-  background-color: Highlight;
-  color: HighlightText;
-}
-
-th.column {
-  white-space: nowrap;
-  width: 0px; 
-}
-
-td {
-  text-align: start;
-  border-top: 1px dotted ThreeDShadow;
-}
-
-.prefs-table {
-  width: 100%;
-  table-layout: fixed;
-}
-
-.pref-name {
-  width: 70%;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.pref-value {
-  width: 30%;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-    ]]></style>
-
-    <script type="application/javascript;version=1.7"><![CDATA[
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -162,7 +66,7 @@ const PREFS_WHITELIST = [
   "general.useragent.",
   "gfx.color_management.mode",
   "javascript.",
-  "keyword.", 
+  "keyword.",
   "layout.css.dpi",
   "network.",
   "places.",
@@ -178,10 +82,6 @@ const PREFS_BLACKLIST = [
 ];
 
 window.onload = function () {
-  // Get the FUEL Application object.
-  let Application = Cc["@mozilla.org/fuel/application;1"]
-                      .getService(Ci.fuelIApplication);
-
   // Get the support URL.
   let urlFormatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
                        .getService(Ci.nsIURLFormatter);
@@ -241,7 +141,7 @@ function formatPrefValue(prefValue) {
   // Some pref values are really long and don't have spaces.  This can cause
   // problems when copying and pasting into some WYSIWYG editors.  In general
   // the exact contents of really long pref values aren't particularly useful,
-  // so we truncate them to some reasonable length. 
+  // so we truncate them to some reasonable length.
   let maxPrefValueLen = 120;
   let text = "" + prefValue;
   if (text.length > maxPrefValueLen)
@@ -285,7 +185,7 @@ function createElement(tagName, textContent, opt_class) {
   let elem = document.createElement(tagName);
   elem.textContent = textContent;
   elem.className = opt_class || "";
-  return elem; 
+  return elem;
 }
 
 function appendChildren(parentElem, childNodes) {
@@ -305,7 +205,7 @@ function copyContentsToClipboard() {
   let ssText = supportsStringClass.createInstance(Ci.nsISupportsString);
 
   let transferable = Cc["@mozilla.org/widget/transferable;1"]
-                       .createInstance(Ci.nsITransferable);  
+                       .createInstance(Ci.nsITransferable);
 
   // Add the HTML flavor.
   transferable.addDataFlavor("text/html");
@@ -320,7 +220,7 @@ function copyContentsToClipboard() {
   // Store the data into the clipboard.
   let clipboard = Cc["@mozilla.org/widget/clipboard;1"]
                     .getService(Ci.nsIClipboard);
-  clipboard.setData(transferable, null, clipboard.kGlobalClipboard);        
+  clipboard.setData(transferable, null, clipboard.kGlobalClipboard);
 }
 
 // Return the plain text representation of an element.  Do a little bit
@@ -335,7 +235,7 @@ function createTextForElement(elem) {
   // blank lines.
   text = text.replace(/[ \t]+\n/g, "\n");
   text = text.replace(/\n\n\n+/g, "\n\n");
-  
+
   // Actual CR/LF pairs are needed for some Windows text editors.
 #ifdef XP_WIN
   text = text.replace(/\n/g, "\r\n");
@@ -347,7 +247,7 @@ function createTextForElement(elem) {
 function generateTextForElement(elem, indent, textFragmentAccumulator) {
   // Add a little extra spacing around most elements.
   if (elem.tagName != "td")
-    textFragmentAccumulator.push("\n"); 
+    textFragmentAccumulator.push("\n");
 
   // Generate the text representation for each child node.
   let node = elem.firstChild;
@@ -359,7 +259,7 @@ function generateTextForElement(elem, indent, textFragmentAccumulator) {
     }
     else if (node.nodeType == Node.ELEMENT_NODE) {
       // Recurse on the child element with an extra level of indentation.
-      generateTextForElement(node, indent + "  ", textFragmentAccumulator); 
+      generateTextForElement(node, indent + "  ", textFragmentAccumulator);
     }
 
     // Advance!
@@ -374,8 +274,8 @@ function generateTextForTextNode(node, indent, textFragmentAccumulator) {
   if (!prevNode || prevNode.nodeType == Node.TEXT_NODE)
     textFragmentAccumulator.push("\n" + indent);
 
-  // Trim the text node's text content and add proper indentation after 
-  // any internal line breaks.  
+  // Trim the text node's text content and add proper indentation after
+  // any internal line breaks.
   let text = node.textContent.trim().replace("\n", "\n" + indent, "g");
   textFragmentAccumulator.push(text);
 }
@@ -392,145 +292,3 @@ function openProfileDirectory() {
                                            "nsILocalFile", "initWithPath");
   new nsLocalFile(profileDir).reveal();
 }
-
-    ]]></script>
-
-  </head>
-
-  <body dir="&locale.dir;">
-
-    <h1>
-      &aboutSupport.pageTitle;
-    </h1>
-
-    <div class="page-subtitle">
-        &aboutSupport.pageSubtitle;
-    </div>
-
-    <div>
-      <button onclick="copyContentsToClipboard()">
-        &aboutSupport.copyToClipboard.label;
-      </button>
-    </div>
-
-    <div id="contents">
-
-      <!-- - - - - - - - - - - - - - - - - - - - - -->
-
-      <h2 class="major-section">
-        &aboutSupport.appBasicsTitle;
-      </h2>
-      
-      <table>
-        <tbody>
-          <tr>
-            <th class="column">
-              &aboutSupport.appBasicsName;
-            </th>
-
-            <td id="application-box">
-            </td>
-          </tr>
-            
-          <tr>
-            <th class="column">
-              &aboutSupport.appBasicsVersion;
-            </th>
-
-            <td id="version-box">
-            </td>
-          </tr>
-            
-          <tr>
-            <th class="column">
-              &aboutSupport.appBasicsProfileDir;
-            </th>
-
-            <td>
-              <button onclick="openProfileDirectory()">
-#ifdef XP_MACOSX
-                &aboutSupport.showMac.label;
-#else
-                &aboutSupport.show.label;
-#endif
-               </button>
-            </td>
-          </tr>
-
-          <tr>
-            <th class="column">
-              &aboutSupport.appBasicsPlugins;
-            </th>
-
-            <td>
-              <a href="about:plugins">about:plugins</a>
-            </td>
-          </tr>
-            
-          <tr>
-            <th class="column">
-              &aboutSupport.appBasicsBuildConfig;
-            </th>
-
-            <td>
-              <a href="about:buildconfig">about:buildconfig</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- - - - - - - - - - - - - - - - - - - - - -->
-
-      <h2 class="major-section">
-        &aboutSupport.extensionsTitle;
-      </h2>
-
-      <table>
-        <thead>
-          <tr>
-            <th>
-              &aboutSupport.extensionName;
-            </th>
-            <th>
-              &aboutSupport.extensionVersion;
-            </th>
-            <th>
-              &aboutSupport.extensionEnabled;
-            </th>
-            <th>
-              &aboutSupport.extensionId;
-            </th>
-          </tr>
-        </thead>
-        <tbody id="extensions-tbody">
-        </tbody>
-      </table>
-
-      <!-- - - - - - - - - - - - - - - - - - - - - -->
-
-      <h2 class="major-section">
-        &aboutSupport.modifiedPrefsTitle;
-      </h2>
-
-      <table class="prefs-table">
-        <thead>
-          <th class="name">
-            &aboutSupport.modifiedPrefsName;
-          </th>
-          
-          <th class="value">
-            &aboutSupport.modifiedPrefsValue;
-          </th>
-        </thead>
-
-        <tbody id="prefs-tbody">
-        </tbody>
-      </table>
-
-      <!-- - - - - - - - - - - - - - - - - - - - - -->
-
-    </div>
-
-  </body>
-
-</html>
