@@ -1127,6 +1127,11 @@ statusbarpanel#statusbar-display {
   -moz-box-shadow: ThreeDShadow 0 -1px inset;
 }
 
+#TabsToolbar > toolbarbutton,
+#TabsToolbar > toolbarpaletteitem > toolbarbutton {
+  margin-bottom: 1px;
+}
+
 .tabbrowser-tab {
   border: none !important;
   padding: 0 2px;
@@ -1236,17 +1241,21 @@ statusbarpanel#statusbar-display {
 }
 
 /* Tabstrip new tab button */
-.tabs-newtab-button {
+.tabs-newtab-button,
+#TabsToolbar > #new-tab-button ,
+#TabsToolbar > #wrapper-new-tab-button > #new-tab-button {
   list-style-image: url("moz-icon://stock/gtk-add?size=menu");
-  border: none;
+  -moz-image-region: auto;
   margin-bottom: 1px;
 }
 
-.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+.tabs-newtab-button {
   width: 32px;
 }
 
-.tabs-newtab-button > .toolbarbutton-icon {
+.tabs-newtab-button > .toolbarbutton-icon,
+#TabsToolbar > #new-tab-button > .toolbarbutton-icon,
+#TabsToolbar > #wrapper-new-tab-button > #new-tab-button > .toolbarbutton-icon {
   margin-top: -2px;
   margin-bottom: -2px;
 }
@@ -1254,8 +1263,6 @@ statusbarpanel#statusbar-display {
 /* Tabstrip close button */
 .tabs-closebutton {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
-  border: none;
-  margin-bottom: 1px;
 }
 
 .tabs-closebutton > .toolbarbutton-icon {
@@ -1282,20 +1289,16 @@ statusbarpanel#statusbar-display {
   -moz-transition: none;
 }
 
-.tabs-alltabs-button {
-  margin-bottom: 1px;
-}
-
-.tabs-alltabs-button > .toolbarbutton-icon {
+#alltabs-button > .toolbarbutton-icon {
   list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
   margin: 2px 0 1px;
 }
 
-.tabs-alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
+#alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
   margin-bottom: -2px;
 }
 
-.tabs-alltabs-button[type="menu"] > .toolbarbutton-icon {
+#alltabs-button[type="menu"] > .toolbarbutton-icon {
   display: none;
 }
 
@@ -1314,7 +1317,7 @@ statusbarpanel#statusbar-display {
 }
 
 /* Sidebar */
-#sidebar-box .tabs-closebutton {
+#sidebar-header > .tabs-closebutton {
   margin-bottom: 0px !important;
   padding: 0px 2px 0px 2px !important;
 }

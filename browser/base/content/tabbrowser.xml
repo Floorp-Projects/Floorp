@@ -2457,17 +2457,6 @@
                            command="cmd_newNavigatorTab"
                            tooltiptext="&newTabButton.tooltip;"/>
       </xul:arrowscrollbox>
-      <xul:toolbarbutton class="tabs-newtab-button" anonid="newtab-button"
-                         command="cmd_newNavigatorTab"
-                         tooltiptext="&newTabButton.tooltip;"/>
-      <xul:toolbarbutton class="tabs-alltabs-button" anonid="alltabs-button"
-                         type="menu"
-                         tooltiptext="&listAllTabs.label;">
-        <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
-                       position="after_end"/>
-      </xul:toolbarbutton>
-      <xul:toolbarbutton anonid="tabs-closebutton"
-                         class="close-button tabs-closebutton"/>
     </content>
 
     <implementation implements="nsIDOMEventListener">
@@ -2523,10 +2512,6 @@
 
       <field name="mTabstrip">
         document.getAnonymousElementByAttribute(this, "anonid", "arrowscrollbox");
-      </field>
-
-      <field name="mTabstripClosebutton">
-        document.getAnonymousElementByAttribute(this, "anonid", "tabs-closebutton");
       </field>
 
       <field name="_prefObserver"><![CDATA[({
@@ -2618,7 +2603,9 @@
             this.setAttribute("closebuttons", "noclose");
             break;
           }
-          this.mTabstripClosebutton.collapsed = this.mCloseButtons != 3;
+          var tabstripClosebutton = document.getElementById("tabs-closebutton");
+          if (tabstripClosebutton && tabstripClosebutton.parentNode == this._container)
+            tabstripClosebutton.collapsed = this.mCloseButtons != 3;
         ]]></body>
       </method>
 
@@ -2659,11 +2646,6 @@
           }
         ]]></body>
       </method>
-
-      <field name="mAllTabsPopup">
-        document.getAnonymousElementByAttribute(this, 
-                                                "anonid", "alltabs-popup");
-      </field>
 
       <field name="_animateElement">
         this.mTabstrip._scrollButtonDown;
@@ -2780,6 +2762,12 @@
             this.mTabstrip.ensureElementIsVisible(t);
         ]]></body>
       </method>
+
+      <!-- Deprecated stuff, implemented for backwards compatibility. -->
+      <property name="mTabstripClosebutton" readonly="true"
+                onget="return document.getElementById('tabs-closebutton');"/>
+      <property name="mAllTabsPopup" readonly="true"
+                onget="return document.getElementById('alltabs-popup');"/>
     </implementation>
 
     <handlers>
@@ -2852,8 +2840,6 @@
               pixelsToScroll = tabStrip.scrollIncrement * -1;
               break;
             case "scrollbutton-down":
-            case "alltabs-button":
-            case "newtab-button":
               pixelsToScroll = tabStrip.scrollIncrement;
               break;
           }
@@ -3078,59 +3064,54 @@
     <handlers>
       <handler event="click" button="0"><![CDATA[
         var bindingParent = document.getBindingParent(this);
+        var tabContainer = bindingParent.parentNode;
+        /* The only sequence in which a second click event (i.e. dblclik)
+         * can be dispatched on an in-tab close button is when it is shown
+         * after the first click (i.e. the first click event was dispatched
+         * on the tab). This happens when we show the close button only on
+         * the active tab. (bug 352021)
+         * The only sequence in which a third click event can be dispatched
+         * on an in-tab close button is when the tab was opened with a
+         * double click on the tabbar. (bug 378344)
+         * In both cases, it is most likely that the close button area has
+         * been accidentally clicked, therefore we do not close the tab.
+         *
+         * We don't want to ignore processing of more than one click event,
+         * though, since the user might actually be repeatedly clicking to
+         * close many tabs at once.
+         */
+        if (event.detail > 1 && !this._ignoredClick) {
+          this._ignoredClick = true;
+          return;
+        }
 
-        if (bindingParent.localName == "tab") {
-          let tabContainer = bindingParent.parentNode;
-          /* The only sequence in which a second click event (i.e. dblclik)
-           * can be dispatched on an in-tab close button is when it is shown
-           * after the first click (i.e. the first click event was dispatched
-           * on the tab). This happens when we show the close button only on
-           * the active tab. (bug 352021)
-           * The only sequence in which a third click event can be dispatched
-           * on an in-tab close button is when the tab was opened with a
-           * double click on the tabbar. (bug 378344)
-           * In both cases, it is most likely that the close button area has
-           * been accidentally clicked, therefore we do not close the tab.
-           *
-           * We don't want to ignore processing of more than one click event,
-           * though, since the user might actually be repeatedly clicking to
-           * close many tabs at once.
-           */
-          if (event.detail > 1 && !this._ignoredClick) {
-            this._ignoredClick = true;
+        // Reset the "ignored click" flag
+        this._ignoredClick = false;
+
+        tabContainer.tabbrowser.removeTab(bindingParent);
+        this._blockDblClick = true;
+
+        /* XXXmano hack (see bug 343628):
+         * Since we're removing the event target, if the user
+         * double-clicks this button, the dblclick event will be dispatched
+         * with the tabbar as its event target (and explicit/originalTarget),
+         * which treats that as a mouse gesture for opening a new tab.
+         * In this context, we're manually blocking the dblclick event
+         * (see dblclick handler).
+         */
+        var self = this;
+        var clickedOnce = false;
+        function enableDblClick(event) {
+          if (event.detail == 1 && !clickedOnce) {
+            clickedOnce = true;
             return;
           }
-
-          // Reset the "ignored click" flag
-          this._ignoredClick = false;
-
-          tabContainer.tabbrowser.removeTab(bindingParent);
-          this._blockDblClick = true;
-
-          /* XXXmano hack (see bug 343628):
-           * Since we're removing the event target, if the user
-           * double-clicks this button, the dblclick event will be dispatched
-           * with the tabbar as its event target (and explicit/originalTarget),
-           * which treats that as a mouse gesture for opening a new tab.
-           * In this context, we're manually blocking the dblclick event
-           * (see dblclick handler).
-           */
-          let self = this;
-          let clickedOnce = false;
-          function enableDblClick(event) {
-            if (event.detail == 1 && !clickedOnce) {
-              clickedOnce = true;
-              return;
-            }
-            setTimeout(function() {
-              self._blockDblClick = false;
-            }, 0);
-            tabContainer.removeEventListener("click", enableDblClick, false);
-          }
-          tabContainer.addEventListener("click", enableDblClick, false);
+          setTimeout(function() {
+            self._blockDblClick = false;
+          }, 0);
+          tabContainer.removeEventListener("click", enableDblClick, false);
         }
-        else // "tabs"
-          bindingParent.tabbrowser.removeCurrentTab();
+        tabContainer.addEventListener("click", enableDblClick, false);
       ]]></handler>
 
       <handler event="dblclick" button="0" phase="capturing">
@@ -3213,8 +3194,7 @@
       <method name="_menuItemOnCommand">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          var tabcontainer = document.getBindingParent(this);
-          tabcontainer.selectedItem = aEvent.target.tab;
+          gBrowser.selectedTab = aEvent.target.tab;
         ]]></body>
       </method>
 
@@ -3263,7 +3243,7 @@
 
       <method name="_updateTabsVisibilityStatus">
         <body><![CDATA[
-          var tabContainer = document.getBindingParent(this);
+          var tabContainer = gBrowser.tabContainer;
           // We don't want menu item decoration unless there is overflow.
           if (tabContainer.getAttribute("overflow") != "true")
             return;
@@ -3287,7 +3267,7 @@
             "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
             "menuitem");
 
-          menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
+          menuItem.setAttribute("class", "menuitem-iconic alltabs-item menuitem-with-favicon");
 
           this._setMenuitemAttributes(menuItem, aTab);
 
@@ -3327,7 +3307,7 @@
       <handler event="popupshowing">
       <![CDATA[
         // set up the menu popup
-        var tabcontainer = document.getBindingParent(this);
+        var tabcontainer = gBrowser.tabContainer;
         var tabs = tabcontainer.childNodes;
 
         // Listen for changes in the tab bar.
@@ -3351,7 +3331,7 @@
           menuItem.tab.mCorrespondingMenuitem = null;
           this.removeChild(menuItem);
         }
-        var tabcontainer = document.getBindingParent(this);
+        var tabcontainer = gBrowser.tabContainer;
         tabcontainer.mTabstrip.removeEventListener("scroll", this, false);
         tabcontainer.removeEventListener("TabOpen", this, false);
         tabcontainer.removeEventListener("TabAttrModified", this, false);

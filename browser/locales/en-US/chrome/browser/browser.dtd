@@ -31,6 +31,8 @@
 <!ENTITY  closeTab.label                     "Close Tab">
 <!ENTITY  closeTab.accesskey                 "c">
 
+<!ENTITY  listAllTabs.label      "List all tabs">
+
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
