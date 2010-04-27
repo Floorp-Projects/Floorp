@@ -478,8 +478,18 @@ richlistitem[isDisabled="true"] image {
 
 /* bookmarks navigation popup ------------------------------ */
 #tool-bookmarks-close {
-  min-width: 64px !important;
+  margin-top: -8px; /* force the button to go to the edge */
+  margin-bottom: -8px; /* force the button to go to the edge */
+  margin-right: -8px; /* force the button to go to the edge */
+  padding-right: 8px !important; /* re-center the image */
+  min-width: 72px !important; /* 72, not 64 to make up for the negative margin */
+  min-height: 72px !important; /* 72, not 64 to make up for the negative margin */
   list-style-image: url("chrome://browser/skin/images/task-back-40.png");
+}
+
+#tool-bookmarks-close:hover:active {
+  background-color: #8db8d8 !important;
+  -moz-border-radius-bottomleft: 6px;
 }
 
 #bookmarklist-container {
