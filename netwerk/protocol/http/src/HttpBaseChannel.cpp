@@ -147,7 +147,7 @@ NS_IMPL_ISUPPORTS_INHERITED5(HttpBaseChannel,
                              nsIChannel,
                              nsIHttpChannel,
                              nsIHttpChannelInternal,
-                             nsISupportsPriority);
+                             nsISupportsPriority)
 
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIRequest
