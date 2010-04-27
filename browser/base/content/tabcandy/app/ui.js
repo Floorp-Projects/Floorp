@@ -50,17 +50,52 @@ var Tabbar = {
   _hidden: false, 
   get el(){ return window.Tabs[0].raw.parentNode; },
   height: window.Tabs[0].raw.parentNode.getBoundingClientRect().height,
-  hide: function() {
-    this._hidden = true;
+  hide: function(animate) {
     var self = this;
-    $(self.el).animate({"marginTop":-self.height}, 150, function(){
+    this._hidden = true;
+    
+    if( animate == false ) speed = 0;
+    else speed = 150;
+    
+    $(self.el).animate({"marginTop":-self.height}, speed, function(){
       self.el.collapsed = true;
     });
   },
-  show: function() {
+  show: function(animate) {
     this._hidden = false;
+
+    if( animate == false ) speed = 0;
+    else speed = 150;
+        
     this.el.collapsed = false;
-    $(this.el).animate({"marginTop":0}, 150);
+    $(this.el).animate({"marginTop":0}, speed);
+  },
+  
+  showOnlyTheseTabs: function(tabs){
+    var visibleTabs = [];
+    // UI.tabBar.el.children is not a real array and does contain
+    // useful functions like filter or forEach. Convert it into a real array.
+    var tabBarTabs = [];
+    for( var i=0; i<UI.tabBar.el.children.length; i++ ){
+      tabBarTabs.push(UI.tabBar.el.children[i]);
+    }
+    
+    for each( var tab in tabs ){
+      var rawTab = tab.tab.raw;
+      var toShow = tabBarTabs.filter(function(testTab){
+        return testTab == rawTab;
+      }); 
+      visibleTabs = visibleTabs.concat( toShow );
+    }
+
+    tabBarTabs.forEach(function(tab){
+      tab.collapsed = true;
+    });
+    
+    visibleTabs.forEach(function(tab){
+      tab.collapsed = false;
+    });
+    
   },
   get isHidden(){ return this._hidden; }
 }
@@ -91,6 +126,7 @@ window.Page = {
     Tabs.onFocus(function(){
       // If we switched to TabCandy window...
       if( this.contentWindow == window && lastTab != null && lastTab.mirror != null){
+        UI.tabBar.hide(false);
         Toolbar.unread = 0;
         // If there was a lastTab we want to animate
         // its mirror for the zoom out.
