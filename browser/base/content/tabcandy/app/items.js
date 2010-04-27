@@ -215,14 +215,16 @@ window.Item.prototype = {
           bounds.left += posStep.x;
           bounds.top += posStep.y;
           
-          if(sizeStep.y > sizeStep.x) {
-            var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
-            bounds.left += (bounds.width - newWidth) / 2;
-            bounds.width = newWidth;
-          } else {
-            var newHeight = bounds.width * (TabItems.tabHeight / TabItems.tabWidth);
-            bounds.top += (bounds.height - newHeight) / 2;
-            bounds.height = newHeight;
+          if(!item.isAGroup) {
+            if(sizeStep.y > sizeStep.x) {
+              var newWidth = bounds.height * (TabItems.tabWidth / TabItems.tabHeight);
+              bounds.left += (bounds.width - newWidth) / 2;
+              bounds.width = newWidth;
+            } else {
+              var newHeight = bounds.width * (TabItems.tabHeight / TabItems.tabWidth);
+              bounds.top += (bounds.height - newHeight) / 2;
+              bounds.height = newHeight;
+            }
           }
           
           var pusher = data.pusher;
@@ -301,11 +303,9 @@ window.Item.prototype = {
       var newBounds = new Rect(bounds);
 
       var newSize;
-/*
       if(item.userSize) 
         newSize = new Point(item.userSize);
       else
-*/
         newSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
         
       if(item.isAGroup) {
