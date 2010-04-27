@@ -2001,7 +2001,7 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
 
     jsval *slots = aobj->dslots;
     size_t len = ida.length();
-    JS_ASSERT(js_DenseArrayCapacity(aobj) >= len);
+    JS_ASSERT(aobj->getDenseArrayCapacity() >= len);
     for (size_t i = 0; i < len; i++) {
         jsid id = ida[i];
         if (JSID_IS_INT(id)) {
@@ -6712,11 +6712,11 @@ js_DumpObject(JSObject *obj)
     fprintf(stderr, "class %p %s\n", (void *)clasp, clasp->name);
 
     if (obj->isDenseArray()) {
-        slots = JS_MIN(obj->getArrayLength(), js_DenseArrayCapacity(obj));
+        slots = JS_MIN(obj->getArrayLength(), obj->getDenseArrayCapacity());
         fprintf(stderr, "elements\n");
         for (i = 0; i < slots; i++) {
             fprintf(stderr, " %3d: ", i);
-            dumpValue(obj->dslots[i]);
+            dumpValue(obj->getDenseArrayElement(i));
             fprintf(stderr, "\n");
             fflush(stderr);
         }

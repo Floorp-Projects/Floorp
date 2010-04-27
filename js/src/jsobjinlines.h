@@ -164,11 +164,51 @@ JSObject::decArrayCountBy(uint32 negDelta)
     fslots[JSSLOT_ARRAY_COUNT] -= negDelta;
 }
 
-inline void
-JSObject::voidArrayUnused()
+inline uint32
+JSObject::getDenseArrayCapacity() const
 {
-    JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_UNUSED] = JSVAL_VOID;
+    JS_ASSERT(isDenseArray());
+    return dslots ? uint32(dslots[-1]) : 0;
+}
+
+inline void
+JSObject::setDenseArrayCapacity(uint32 capacity)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(dslots);
+    dslots[-1] = capacity;
+}
+
+inline jsval
+JSObject::getDenseArrayElement(uint32 i) const
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(i < getDenseArrayCapacity());
+    return dslots[i];
+}
+
+inline void
+JSObject::setDenseArrayElement(uint32 i, jsval v)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(i < getDenseArrayCapacity());
+    dslots[i] = v;
+}
+
+inline jsval *
+JSObject::getDenseArrayElements() const
+{
+    JS_ASSERT(isDenseArray());
+    return dslots;
+}
+
+inline void
+JSObject::freeDenseArrayElements(JSContext *cx)
+{
+    if (dslots) {
+        cx->free(dslots - 1);
+        dslots = NULL;
+    }
 }
 
 inline void
