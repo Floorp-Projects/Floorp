@@ -43,8 +43,6 @@
 #include "gfxWindowsSurface.h"
 #endif
 
-#include "glWrapper.h"
-
 namespace mozilla {
 namespace layers {
 
@@ -71,8 +69,9 @@ UseOpaqueSurface(Layer* aLayer)
 }
 
 
-ThebesLayerOGL::ThebesLayerOGL(LayerManager *aManager)
+ThebesLayerOGL::ThebesLayerOGL(LayerManagerOGL *aManager)
   : ThebesLayer(aManager, NULL)
+  , LayerOGL(aManager)
   , mTexture(0)
 {
   mImplData = static_cast<LayerOGL*>(this);
@@ -82,7 +81,7 @@ ThebesLayerOGL::~ThebesLayerOGL()
 {
   static_cast<LayerManagerOGL*>(mManager)->MakeCurrent();
   if (mTexture) {
-    sglWrapper.DeleteTextures(1, &mTexture);
+    gl()->fDeleteTextures(1, &mTexture);
   }
 }
 
@@ -97,27 +96,27 @@ ThebesLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
   static_cast<LayerManagerOGL*>(mManager)->MakeCurrent();
 
   if (!mTexture) {
-    sglWrapper.GenTextures(1, &mTexture);
+    gl()->fGenTextures(1, &mTexture);
   }
 
   mInvalidatedRect = mVisibleRect;
 
-  sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
 
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+  gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
-  sglWrapper.TexImage2D(LOCAL_GL_TEXTURE_2D,
-                        0,
-                        LOCAL_GL_RGBA,
-                        mVisibleRect.width,
-                        mVisibleRect.height,
-                        0,
-                        LOCAL_GL_BGRA,
-                        LOCAL_GL_UNSIGNED_BYTE,
-                        NULL);
+  gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                  0,
+                  LOCAL_GL_RGBA,
+                  mVisibleRect.width,
+                  mVisibleRect.height,
+                  0,
+                  LOCAL_GL_BGRA,
+                  LOCAL_GL_UNSIGNED_BYTE,
+                  NULL);
 }
 
 void
@@ -204,16 +203,16 @@ ThebesLayerOGL::EndDrawing()
       break;
   }
 
-  sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-  sglWrapper.TexSubImage2D(LOCAL_GL_TEXTURE_2D,
-                           0,
-                           mInvalidatedRect.x - mVisibleRect.x,
-                           mInvalidatedRect.y - mVisibleRect.y,
-                           mInvalidatedRect.width,
-                           mInvalidatedRect.height,
-                           LOCAL_GL_BGRA,
-                           LOCAL_GL_UNSIGNED_BYTE,
-                           imageSurface->Data());
+  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+  gl()->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                       0,
+                       mInvalidatedRect.x - mVisibleRect.x,
+                       mInvalidatedRect.y - mVisibleRect.y,
+                       mInvalidatedRect.width,
+                       mInvalidatedRect.height,
+                       LOCAL_GL_BGRA,
+                       LOCAL_GL_UNSIGNED_BYTE,
+                       imageSurface->Data());
 
   mDestinationSurface = NULL;
   mContext = NULL;
@@ -268,9 +267,9 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer)
   program->SetLayerTransform(&mTransform._11);
   program->Apply();
 
-  sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
 
-  sglWrapper.DrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+  gl()->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
 }
 
 const nsIntRect&

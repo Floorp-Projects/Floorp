@@ -50,7 +50,7 @@ class ThebesLayerOGL : public ThebesLayer,
                          public LayerOGL
 {
 public:
-  ThebesLayerOGL(LayerManager *aManager);
+  ThebesLayerOGL(LayerManagerOGL *aManager);
   virtual ~ThebesLayerOGL();
 
   /** Layer implementation */
