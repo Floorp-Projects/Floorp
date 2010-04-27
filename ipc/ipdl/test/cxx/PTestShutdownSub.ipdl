@@ -1,5 +1,5 @@
-include protocol "PTestShutdown.ipdl";
-include protocol "PTestShutdownSubsub.ipdl";
+include protocol PTestShutdown;
+include protocol PTestShutdownSubsub;
 
 namespace mozilla {
 namespace _ipdltest {
