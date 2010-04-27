@@ -107,6 +107,7 @@ namespace places {
   enum HistoryStatementId {
     DB_GET_PAGE_INFO = 0
   , DB_GET_TAGS = 1
+  , DB_IS_PAGE_VISITED = 2
   };
 
 } // namespace places
@@ -261,8 +262,6 @@ public:
 
   PRInt64 GetTagsFolder();
 
-  mozIStorageStatement *DBGetIsVisited() { return mDBIsPageVisited; }
-
   // Constants for the columns returned by the above statement
   // (in addition to the ones above).
   static const PRInt32 kGetInfoIndex_VisitDate;
@@ -404,6 +403,8 @@ public:
         return mDBGetURLPageInfo;
       case DB_GET_TAGS:
         return mDBGetTags;
+      case DB_IS_PAGE_VISITED:
+        return mDBIsPageVisited;
     }
     return nsnull;
   }
