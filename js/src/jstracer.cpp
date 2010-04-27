@@ -12170,6 +12170,9 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
     if (JS_InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
         RETURN_STOP_A("can't trace setting elements of the |arguments| object");
 
+    if (obj == globalObj)
+        RETURN_STOP_A("can't trace setting elements on the global object");
+
     if (!JSVAL_IS_INT(idx)) {
         if (!JSVAL_IS_PRIMITIVE(idx))
             RETURN_STOP_A("non-primitive index");
