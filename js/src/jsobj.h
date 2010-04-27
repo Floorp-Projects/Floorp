@@ -424,7 +424,18 @@ struct JSObject {
     inline void incArrayCountBy(uint32 posDelta);
     inline void decArrayCountBy(uint32 negDelta);
 
-    inline void voidArrayUnused();
+    inline uint32 getDenseArrayCapacity() const;
+    inline void setDenseArrayCapacity(uint32 capacity); // XXX: bug 558263 will remove this
+
+    inline jsval getDenseArrayElement(uint32 i) const;
+    inline void setDenseArrayElement(uint32 i, jsval v);
+
+    inline jsval *getDenseArrayElements() const;   // returns pointer to the Array's elements array
+    bool resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
+                               bool initializeAllSlots = true);
+    bool ensureDenseArrayElements(JSContext *cx, uint32 newcap,
+                               bool initializeAllSlots = true);
+    inline void freeDenseArrayElements(JSContext *cx);
 
     /*
      * Arguments-specific getters and setters.

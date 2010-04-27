@@ -13133,7 +13133,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
 
     /* check that the index is within bounds */
     LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACC_OTHER);
-    jsuint capacity = js_DenseArrayCapacity(obj);
+    jsuint capacity = obj->getDenseArrayCapacity();
     bool within = (jsuint(idx) < obj->getArrayLength() && jsuint(idx) < capacity);
     if (!within) {
         /* If idx < 0, stay on trace (and read value as undefined, since this is a dense array). */

@@ -1856,8 +1856,8 @@ BEGIN_CASE(JSOP_GETELEM)
             jsuint idx = jsuint(JSVAL_TO_INT(rval));
 
             if (idx < obj->getArrayLength() &&
-                idx < js_DenseArrayCapacity(obj)) {
-                rval = obj->dslots[idx];
+                idx < obj->getDenseArrayCapacity()) {
+                rval = obj->getDenseArrayElement(idx);
                 if (rval != JSVAL_HOLE)
                     goto end_getelem;
 
@@ -1921,17 +1921,17 @@ BEGIN_CASE(JSOP_SETELEM)
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length;
 
-            length = js_DenseArrayCapacity(obj);
+            length = obj->getDenseArrayCapacity();
             i = JSID_TO_INT(id);
             if ((jsuint)i < length) {
-                if (obj->dslots[i] == JSVAL_HOLE) {
+                if (obj->getDenseArrayElement(i) == JSVAL_HOLE) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
                     if ((jsuint)i >= obj->getArrayLength())
                         obj->setArrayLength(i + 1);
                     obj->incArrayCountBy(1);
                 }
-                obj->dslots[i] = rval;
+                obj->setDenseArrayElement(i, rval);
                 goto end_setelem;
             }
         }
