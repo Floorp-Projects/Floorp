@@ -43,7 +43,6 @@
 #include "nsBuiltinDecoder.h"
 #include "nsOggReader.h"
 #include "nsOggPlayStateMachine.h"
-#include "oggplay/oggplay.h"
 #include "mozilla/mozalloc.h"
 #include "VideoUtils.h"
 
