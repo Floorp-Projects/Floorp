@@ -58,7 +58,8 @@
 
 #define NS_FOR_CSS_SIDES(var_) for (mozilla::css::Side var_ = NS_SIDE_TOP; var_ <= NS_SIDE_LEFT; var_++)
 static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
-    NS_PRECONDITION(side < NS_SIDE_LEFT, "Out of range side");
+    NS_PRECONDITION(side >= NS_SIDE_TOP &&
+                    side <= NS_SIDE_LEFT, "Out of range side");
     side = mozilla::css::Side(side + 1);
     return side;
 }
