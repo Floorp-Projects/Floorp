@@ -48,19 +48,11 @@
  * We don't include GLDefs.h here since we don't want to drag in all defines
  * in for all our users.
  */
-#if defined(__APPLE__)
-typedef unsigned long GLenum;
-typedef unsigned long GLbitfield;
-typedef unsigned long GLuint;
-typedef long GLint;
-typedef long GLsizei;
-#else
 typedef unsigned int GLenum;
 typedef unsigned int GLbitfield;
 typedef unsigned int GLuint;
 typedef int GLint;
 typedef int GLsizei;
-#endif
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
