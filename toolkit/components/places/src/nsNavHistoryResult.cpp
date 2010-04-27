@@ -609,9 +609,9 @@ nsNavHistoryContainerResultNode::GetState(PRUint16* _state)
 {
   NS_ENSURE_ARG_POINTER(_state);
 
-  *_state = mExpanded ? STATE_OPENED :
-            mAsyncPendingStmt ? STATE_LOADING :
-            STATE_CLOSED;
+  *_state = mExpanded ? (PRUint16)STATE_OPENED
+                      : mAsyncPendingStmt ? (PRUint16)STATE_LOADING
+                                          : (PRUint16)STATE_CLOSED;
 
   return NS_OK;
 }

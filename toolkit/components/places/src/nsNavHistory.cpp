@@ -390,9 +390,9 @@ nsNavHistory::nsNavHistory()
 , mTagsFolder(-1)
 , mInPrivateBrowsing(PRIVATEBROWSING_NOTINITED)
 , mDatabaseStatus(DATABASE_STATUS_OK)
+, mHasHistoryEntries(-1)
 , mCanNotify(true)
 , mCacheObservers("history-observers")
-, mHasHistoryEntries(-1)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -3453,9 +3453,9 @@ PlacesSQLQueryBuilder::SelectAsDay()
     sortingMode = mSortingMode;
 
   PRUint16 resultType =
-    (mResultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY) ?
-      nsINavHistoryQueryOptions::RESULTS_AS_URI :
-      nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY;
+    mResultType == nsINavHistoryQueryOptions::RESULTS_AS_DATE_QUERY ?
+      (PRUint16)nsINavHistoryQueryOptions::RESULTS_AS_URI :
+      (PRUint16)nsINavHistoryQueryOptions::RESULTS_AS_SITE_QUERY;
 
   // beginTime will become the node's time property, we don't use endTime
   // because it could overlap, and we use time to sort containers and find
@@ -5262,7 +5262,6 @@ nsNavHistory::AddURIInternal(nsIURI* aURI, PRTime aTime, PRBool aRedirect,
 {
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
 
-  PRInt64 redirectBookmark = 0;
   PRInt64 visitID = 0;
   PRInt64 sessionID = 0;
   nsresult rv = AddVisitChain(aURI, aTime, aToplevel, aRedirect, aReferrer,
