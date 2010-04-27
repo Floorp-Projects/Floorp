@@ -1,0 +1,24 @@
+include protocol PTestSelfManageRoot;
+
+namespace mozilla {
+namespace _ipdltest {
+
+
+protocol PTestSelfManage {
+    manager PTestSelfManageRoot or PTestSelfManage;
+    manages PTestSelfManage;
+
+child:
+    PTestSelfManage();
+    __delete__();
+
+state LIVE:
+    send PTestSelfManage goto DEAD;
+
+state DEAD:
+    send __delete__;
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest

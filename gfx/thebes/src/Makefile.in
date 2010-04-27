@@ -32,6 +32,7 @@ CPPSRCS	= \
 	gfxTextRunCache.cpp \
 	gfxTextRunWordCache.cpp \
 	gfxUserFontSet.cpp \
+	GLContext.cpp \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS += \
@@ -182,6 +183,16 @@ endif
 CSRCS += woff.c
 
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifndef WINCE
+CPPSRCS += GLContextProviderWGL.cpp
+else
+CPPSRCS += GLContextProviderNull.cpp
+endif
+else
+CPPSRCS += GLContextProviderNull.cpp
+endif
 
 DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT
 

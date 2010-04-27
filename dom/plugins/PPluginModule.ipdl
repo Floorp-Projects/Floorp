@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PPluginIdentifier.ipdl";
-include protocol "PPluginInstance.ipdl";
+include protocol PPluginIdentifier;
+include protocol PPluginInstance;
 
 include "npapi.h";
 include "mozilla/plugins/PluginMessageUtils.h";
@@ -82,7 +82,6 @@ child:
     returns (NPError rv);
 
 parent:
-  async XXX_HACK_FIXME_cjones(Shmem _);
   rpc NPN_UserAgent()
     returns (nsCString userAgent);
 

@@ -1,6 +1,6 @@
 /* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 
-include protocol "PPluginInstance.ipdl";
+include protocol PPluginInstance;
 
 include "npapi.h";
 

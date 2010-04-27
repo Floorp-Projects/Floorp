@@ -111,6 +111,8 @@
 #include "nsIDocShell.h"
 #include "nsAppShellCID.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #ifdef XP_WIN
 #include "nsIWinAppHelper.h"
 #include <windows.h>
@@ -2702,6 +2704,8 @@ typedef BOOL (WINAPI* SetProcessDEPPolicyFunc)(DWORD dwFlags);
 int
 XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
+  NS_TIME_FUNCTION;
+
 #ifdef MOZ_SPLASHSCREEN
   nsSplashScreen *splashScreen = nsnull;
 #endif
@@ -3317,6 +3321,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     MOZ_SPLASHSCREEN_UPDATE(30);
 
+    NS_TIME_FUNCTION_MARK("Next: ScopedXPCOMStartup");
+
     // Allows the user to forcefully bypass the restart process at their
     // own risk. Useful for debugging or for tinderboxes where child 
     // processes can be problematic.
@@ -3347,6 +3353,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         }
       }
 #endif
+
+      NS_TIME_FUNCTION_MARK("Next: AppStartup");
+
       {
         if (startOffline) {
           nsCOMPtr<nsIIOService2> io (do_GetService("@mozilla.org/network/io-service;1"));
@@ -3422,12 +3431,16 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             obsService->NotifyObservers(cmdLine, "command-line-startup", nsnull);
           }
 
+          NS_TIME_FUNCTION_MARK("Next: CreateHiddenWindow");
+
           NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
           rv = appStartup->CreateHiddenWindow();
           NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
           NS_ENSURE_SUCCESS(rv, 1);
 
           MOZ_SPLASHSCREEN_UPDATE(50);
+
+          NS_TIME_FUNCTION_MARK("Next: prepare for Run");
 
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
           nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
@@ -3530,6 +3543,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             nativeApp->Enable();
           }
 
+          NS_TIME_FUNCTION_MARK("Next: Run");
+
           MOZ_SPLASHSCREEN_UPDATE(90);
           {
             NS_TIMELINE_ENTER("appStartup->Run");
@@ -3540,6 +3555,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
               gLogConsoleErrors = PR_TRUE;
             }
           }
+
+          NS_TIME_FUNCTION_MARK("Next: Finish");
 
           // Check for an application initiated restart.  This is one that
           // corresponds to nsIAppStartup.quit(eRestart)

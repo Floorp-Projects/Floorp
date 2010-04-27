@@ -264,7 +264,7 @@ private:
   void LoadOggHeaders();
 
   // The main loop for the audio thread. Sent to the thread as
-  // an NS_NEW_RUNNABLE_METHOD. This continually does blocking writes to
+  // an nsRunnableMethod. This continually does blocking writes to
   // to audio stream to play audio data.
   void AudioLoop();
 
