@@ -2503,7 +2503,7 @@ DefineProperty(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc, boo
     if (obj->isArray())
         return DefinePropertyArray(cx, obj, desc, throwError, rval);
 
-    if (!obj->isNative())
+    if (obj->map->ops->lookupProperty != js_LookupProperty)
         return Reject(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
 
     return DefinePropertyObject(cx, obj, desc, throwError, rval);
