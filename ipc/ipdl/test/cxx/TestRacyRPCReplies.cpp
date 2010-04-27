@@ -56,7 +56,8 @@ TestRacyRPCRepliesParent::Answer_R(int* replyNum)
     *replyNum = ++mReplyNum;
 
     if (1 == *replyNum)
-        Send_A();
+        if (!Send_A())
+            fail("sending _A()");
 
     return true;
 }

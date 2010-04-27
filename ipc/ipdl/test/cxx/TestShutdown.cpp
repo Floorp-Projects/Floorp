@@ -8,7 +8,8 @@ namespace _ipdltest {
 void
 TestShutdownParent::Main()
 {
-    SendStart();
+    if (!SendStart())
+        fail("sending Start()");
 }
 
 void
