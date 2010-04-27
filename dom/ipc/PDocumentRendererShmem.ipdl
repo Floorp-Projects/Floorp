@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PIFrameEmbedding.ipdl";
+include protocol PIFrameEmbedding;
 
 namespace mozilla {
 namespace ipc {

@@ -38,9 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PIFrameEmbedding.ipdl";
-include protocol "PTestShell.ipdl";
-include protocol "PObjectWrapper.ipdl";
+include protocol PIFrameEmbedding;
+include protocol PTestShell;
+include protocol PObjectWrapper;
 
 namespace mozilla {
 namespace jsipc {

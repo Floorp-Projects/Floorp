@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PContextWrapper.ipdl";
+include protocol PContextWrapper;
 
 include "mozilla/jsipc/CPOWTypes.h";
 
