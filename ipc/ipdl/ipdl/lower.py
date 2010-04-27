@@ -1296,6 +1296,24 @@ def _semsToListener(sems):
              ipdl.ast.SYNC: 'SyncListener',
              ipdl.ast.RPC: 'RPCListener' }[sems]
 
+def _usesShmem(p):
+    for md in p.messageDecls:
+        for param in md.inParams:
+            if ipdl.type.hasshmem(param.type):
+                return True
+        for ret in md.outParams:
+            if ipdl.type.hasshmem(ret.type):
+                return True
+    return False
+
+def _subtreeUsesShmem(p):
+    if _usesShmem(p):
+        return True
+    for mgd in p.decl.type.manages:
+        if _subtreeUsesShmem(mgd._p):
+            return True
+    return False
+
 
 class Protocol(ipdl.ast.Protocol):
     def cxxTypedefs(self):
@@ -1506,15 +1524,12 @@ class Protocol(ipdl.ast.Protocol):
         return ExprCall(ExprSelect(self.shmemMapVar(), '.', 'Remove'),
                         args=[ idexpr ])
 
+    # XXX this is sucky, fix
     def usesShmem(self):
-        for md in self.messageDecls:
-            for param in md.inParams:
-                if ipdl.type.hasshmem(param.type):
-                    return True
-            for ret in md.outParams:
-                if ipdl.type.hasshmem(ret.type):
-                    return True
-        return False
+        return _usesShmem(self)
+
+    def subtreeUsesShmem(self):
+        return _subtreeUsesShmem(self)
 
     @staticmethod
     def upgrade(protocol):
@@ -3357,7 +3372,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
             # "private" message that passes shmem mappings from one process
             # to the other
-            if p.usesShmem():
+            if p.subtreeUsesShmem():
                 self.asyncSwitch.addcase(
                     CaseLabel('SHMEM_CREATED_MESSAGE_TYPE'),
                     self.genShmemCreatedHandler())
