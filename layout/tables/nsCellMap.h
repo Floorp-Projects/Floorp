@@ -235,7 +235,7 @@ public:
                       PRUint32   aXPos,
                       PRBool     aIsLowerRight = PR_FALSE);
 
-  void SetBCBorderEdge(PRUint8       aEdge,
+  void SetBCBorderEdge(mozilla::css::Side aEdge,
                        nsCellMap&    aCellMap,
                        PRUint32      aCellMapStart,
                        PRUint32      aYPos,
@@ -250,7 +250,7 @@ public:
                          PRUint32    aCellMapStart,
                          PRUint32    aYPos,
                          PRUint32    aXPos,
-                         PRUint8     aOwner,
+                         mozilla::css::Side aOwner,
                          nscoord     aSubSize,
                          PRBool      aBevel,
                          PRBool      aIsBottomRight = PR_FALSE);

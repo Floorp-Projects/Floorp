@@ -41,10 +41,15 @@
 #include "nscore.h"
 
 // Side constants for use in various places
-#define NS_SIDE_TOP     0
-#define NS_SIDE_RIGHT   1
-#define NS_SIDE_BOTTOM  2
-#define NS_SIDE_LEFT    3
+namespace mozilla {
+  namespace css {
+    enum Side {eSideTop, eSideRight, eSideBottom, eSideLeft};
+  }
+}
+#define NS_SIDE_TOP     mozilla::css::eSideTop
+#define NS_SIDE_RIGHT   mozilla::css::eSideRight
+#define NS_SIDE_BOTTOM  mozilla::css::eSideBottom
+#define NS_SIDE_LEFT    mozilla::css::eSideLeft
 
 #if defined(MOZ_ENABLE_LIBXUL) || !defined(MOZILLA_INTERNAL_API)
 #  define NS_GFX

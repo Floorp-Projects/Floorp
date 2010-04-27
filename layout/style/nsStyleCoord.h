@@ -134,15 +134,13 @@ public:
   PRBool         operator==(const nsStyleSides& aOther) const;
   PRBool         operator!=(const nsStyleSides& aOther) const;
 
-  // aSide is always one of NS_SIDE_* defined in nsStyleConsts.h
-
-  inline nsStyleUnit GetUnit(PRUint8 aSide) const;
+  inline nsStyleUnit GetUnit(mozilla::css::Side aSide) const;
   inline nsStyleUnit GetLeftUnit(void) const;
   inline nsStyleUnit GetTopUnit(void) const;
   inline nsStyleUnit GetRightUnit(void) const;
   inline nsStyleUnit GetBottomUnit(void) const;
 
-  inline nsStyleCoord Get(PRUint8 aSide) const;
+  inline nsStyleCoord Get(mozilla::css::Side aSide) const;
   inline nsStyleCoord GetLeft() const;
   inline nsStyleCoord GetTop() const;
   inline nsStyleCoord GetRight() const;
@@ -150,7 +148,7 @@ public:
 
   void  Reset(void);
 
-  inline void Set(PRUint8 aSide, const nsStyleCoord& aCoord);
+  inline void Set(mozilla::css::Side aSide, const nsStyleCoord& aCoord);
   inline void SetLeft(const nsStyleCoord& aCoord);
   inline void SetTop(const nsStyleCoord& aCoord);
   inline void SetRight(const nsStyleCoord& aCoord);
@@ -286,7 +284,7 @@ inline PRBool nsStyleSides::operator!=(const nsStyleSides& aOther) const
   return !((*this) == aOther);
 }
 
-inline nsStyleUnit nsStyleSides::GetUnit(PRUint8 aSide) const
+inline nsStyleUnit nsStyleSides::GetUnit(mozilla::css::Side aSide) const
 {
   return (nsStyleUnit)mUnits[aSide];
 }
@@ -311,7 +309,7 @@ inline nsStyleUnit nsStyleSides::GetBottomUnit(void) const
   return GetUnit(NS_SIDE_BOTTOM);
 }
 
-inline nsStyleCoord nsStyleSides::Get(PRUint8 aSide) const
+inline nsStyleCoord nsStyleSides::Get(mozilla::css::Side aSide) const
 {
   return nsStyleCoord(mValues[aSide], nsStyleUnit(mUnits[aSide]));
 }
@@ -336,7 +334,7 @@ inline nsStyleCoord nsStyleSides::GetBottom() const
   return Get(NS_SIDE_BOTTOM);
 }
 
-inline void nsStyleSides::Set(PRUint8 aSide, const nsStyleCoord& aCoord)
+inline void nsStyleSides::Set(mozilla::css::Side aSide, const nsStyleCoord& aCoord)
 {
   mUnits[aSide] = aCoord.GetUnit();
   aCoord.GetUnionValue(mValues[aSide]);

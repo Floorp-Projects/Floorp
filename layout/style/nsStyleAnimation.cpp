@@ -1236,7 +1236,7 @@ StyleDataAtOffset(void* aStyleStruct, ptrdiff_t aOffset)
 
 static void
 ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
-                   PRUint8 aSide, nsStyleAnimation::Value& aComputedValue)
+                   mozilla::css::Side aSide, nsStyleAnimation::Value& aComputedValue)
 {
   nscolor color;
   PRBool foreground;
@@ -1668,7 +1668,7 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
                          == NS_SIDE_LEFT);
       const nsStyleCoord &coord = static_cast<const nsStyleSides*>(
         StyleDataAtOffset(styleStruct, ssOffset))->
-          Get(animType - eStyleAnimType_Sides_Top);
+          Get(mozilla::css::Side(animType - eStyleAnimType_Sides_Top));
       return StyleCoordToValue(coord, aComputedValue);
     }
     case eStyleAnimType_Corner_TopLeft:

@@ -3898,8 +3898,8 @@ struct BCMapCellInfo
   // storage of table ltr information, the border collapse code swaps the sides
   // to account for rtl tables, this is done through mStartSide and mEndSide
   PRPackedBool          mTableIsLTR;
-  PRUint8               mStartSide;
-  PRUint8               mEndSide;
+  mozilla::css::Side    mStartSide;
+  mozilla::css::Side    mEndSide;
 
   // a cell can only belong to one rowgroup
   nsTableRowGroupFrame* mRowGroup;
@@ -4400,7 +4400,7 @@ static PRUint8 styleToPriority[13] = { 0,  // NS_STYLE_BORDER_STYLE_NONE
   */
 static void
 GetColorAndStyle(const nsIFrame*  aFrame,
-                 PRUint8          aSide,
+                 mozilla::css::Side aSide,
                  PRUint8&         aStyle,
                  nscolor&         aColor,
                  PRBool           aTableIsLTR)
@@ -4436,7 +4436,7 @@ GetColorAndStyle(const nsIFrame*  aFrame,
   */
 static void
 GetPaintStyleInfo(const nsIFrame*  aFrame,
-                  PRUint8          aSide,
+                  mozilla::css::Side aSide,
                   PRUint8&         aStyle,
                   nscolor&         aColor,
                   PRBool           aTableIsLTR)
@@ -4462,7 +4462,7 @@ GetPaintStyleInfo(const nsIFrame*  aFrame,
   */
 static void
 GetColorAndStyle(const nsIFrame*  aFrame,
-                 PRUint8          aSide,
+                 mozilla::css::Side aSide,
                  PRUint8&         aStyle,
                  nscolor&         aColor,
                  PRBool           aTableIsLTR,
@@ -4610,7 +4610,7 @@ CompareBorders(const nsIFrame*  aTableFrame,
                const nsIFrame*  aRowFrame,
                const nsIFrame*  aCellFrame,
                PRBool           aTableIsLTR,
-               PRUint8          aSide,
+               mozilla::css::Side aSide,
                PRBool           aAja)
 {
   BCCellBorder border, tempBorder;
@@ -4671,8 +4671,8 @@ CompareBorders(const nsIFrame*  aTableFrame,
 }
 
 static PRBool
-Perpendicular(PRUint8 aSide1,
-              PRUint8 aSide2)
+Perpendicular(mozilla::css::Side aSide1,
+              mozilla::css::Side aSide2)
 {
   switch (aSide1) {
   case NS_SIDE_TOP:
@@ -4689,20 +4689,20 @@ Perpendicular(PRUint8 aSide1,
 // XXX allocate this as number-of-cols+1 instead of number-of-cols+1 * number-of-rows+1
 struct BCCornerInfo
 {
-  BCCornerInfo() { ownerColor = 0; ownerWidth = subWidth = ownerSide = ownerElem = subSide =
-                   subElem = hasDashDot = numSegs = bevel = 0;
+  BCCornerInfo() { ownerColor = 0; ownerWidth = subWidth = ownerElem = subSide =
+                   subElem = hasDashDot = numSegs = bevel = 0; ownerSide = NS_SIDE_TOP;
                    ownerStyle = 0xFF; subStyle = NS_STYLE_BORDER_STYLE_SOLID;  }
-  void Set(PRUint8       aSide,
+  void Set(mozilla::css::Side aSide,
            BCCellBorder  border);
 
-  void Update(PRUint8       aSide,
+  void Update(mozilla::css::Side aSide,
               BCCellBorder  border);
 
   nscolor   ownerColor;     // color of borderOwner
   PRUint16  ownerWidth;     // pixel width of borderOwner
   PRUint16  subWidth;       // pixel width of the largest border intersecting the border perpendicular
                             // to ownerSide
-  PRUint32  ownerSide:2;    // side (e.g NS_SIDE_TOP, NS_SIDE_RIGHT, etc) of the border owning
+  mozilla::css::Side ownerSide:2; // side (e.g NS_SIDE_TOP, NS_SIDE_RIGHT, etc) of the border owning
                             // the corner relative to the corner
   PRUint32  ownerElem:3;    // elem type (e.g. eTable, eGroup, etc) owning the corner
   PRUint32  ownerStyle:8;   // border style of ownerElem
@@ -4716,7 +4716,7 @@ struct BCCornerInfo
 };
 
 void
-BCCornerInfo::Set(PRUint8       aSide,
+BCCornerInfo::Set(mozilla::css::Side aSide,
                   BCCellBorder  aBorder)
 {
   ownerElem  = aBorder.owner;
@@ -4740,7 +4740,7 @@ BCCornerInfo::Set(PRUint8       aSide,
 }
 
 void
-BCCornerInfo::Update(PRUint8       aSide,
+BCCornerInfo::Update(mozilla::css::Side aSide,
                      BCCellBorder  aBorder)
 {
   PRBool existingWins = PR_FALSE;
@@ -4755,7 +4755,7 @@ BCCornerInfo::Update(PRUint8       aSide,
     oldBorder.width =  ownerWidth;
     oldBorder.color =  ownerColor;
 
-    PRUint8 oldSide  = ownerSide;
+    mozilla::css::Side oldSide  = ownerSide;
 
     tempBorder = CompareBorders(CELL_CORNER, oldBorder, aBorder, horizontal, &existingWins);
 
@@ -5529,7 +5529,7 @@ nsTableFrame::CalcBCBorders()
       if (info.mColIndex > 0) {
         BCData& data = info.mCellData->mData;
         if (!data.IsTopStart()) {
-          PRUint8 cornerSide;
+          mozilla::css::Side cornerSide;
           PRPackedBool bevel;
           data.GetCorner(cornerSide, bevel);
           if ((NS_SIDE_TOP == cornerSide) || (NS_SIDE_BOTTOM == cornerSide)) {
@@ -5931,7 +5931,7 @@ struct BCVerticalSeg
 
   PRUint8               mOwner;         // owner of the border, defines the
                                         // style
-  PRUint8               mTopBevelSide;  // direction to bevel at the top
+  mozilla::css::Side    mTopBevelSide;  // direction to bevel at the top
   nscoord               mTopBevelOffset; // how much to bevel at the top
   BCPixelSize           mBottomHorSegHeight; // height of the crossing
                                         //horizontal border
@@ -5962,10 +5962,10 @@ struct BCHorizontalSeg
   nscoord            mLength;        // horizontal length including corners
   BCPixelSize        mWidth;         // border width in pixels
   nscoord            mLeftBevelOffset;   // how much to bevel at the left
-  PRUint8            mLeftBevelSide;     // direction to bevel at the left
-  PRBool             mIsRightBevel;        // should we bevel at the right end
+  mozilla::css::Side mLeftBevelSide;     // direction to bevel at the left
+  PRBool             mIsRightBevel;      // should we bevel at the right end
   nscoord            mRightBevelOffset;  // how much to bevel at the right
-  PRUint8            mRightBevelSide;    // direction to bevel at the right
+  mozilla::css::Side mRightBevelSide;    // direction to bevel at the right
   nscoord            mEndOffset;         // how much longer is the segment due
                                          // to the vertical border, by this
                                          // amount the next segment needs to be
@@ -6467,7 +6467,7 @@ BCPaintBorderIterator::Next()
   * @return                 - offset in twips
   */
 static nscoord
-CalcVerCornerOffset(PRUint8     aCornerOwnerSide,
+CalcVerCornerOffset(mozilla::css::Side aCornerOwnerSide,
                     BCPixelSize aCornerSubWidth,
                     BCPixelSize aHorWidth,
                     PRBool      aIsStartOfSeg,
@@ -6508,7 +6508,7 @@ CalcVerCornerOffset(PRUint8     aCornerOwnerSide,
   * @return                 - offset in twips
   */
 static nscoord
-CalcHorCornerOffset(PRUint8     aCornerOwnerSide,
+CalcHorCornerOffset(mozilla::css::Side aCornerOwnerSide,
                     BCPixelSize aCornerSubWidth,
                     BCPixelSize aVerWidth,
                     PRBool      aIsStartOfSeg,
@@ -6554,7 +6554,8 @@ BCVerticalSeg::BCVerticalSeg()
 {
   mCol = nsnull;
   mFirstCell = mLastCell = mAjaCell = nsnull;
-  mOffsetX = mOffsetY = mLength = mWidth = mTopBevelOffset = mTopBevelSide = 0;
+  mOffsetX = mOffsetY = mLength = mWidth = mTopBevelOffset = 0;
+  mTopBevelSide = NS_SIDE_TOP;
   mOwner = eCellOwner;
 }
 
@@ -6572,7 +6573,7 @@ BCVerticalSeg::Start(BCPaintBorderIterator& aIter,
                      BCPixelSize            aVerSegWidth,
                      BCPixelSize            aHorSegHeight)
 {
-  PRUint8      ownerSide   = 0;
+  mozilla::css::Side ownerSide   = NS_SIDE_TOP;
   PRPackedBool bevel       = PR_FALSE;
 
 
@@ -6635,7 +6636,7 @@ void
 BCVerticalSeg::GetBottomCorner(BCPaintBorderIterator& aIter,
                                BCPixelSize            aHorSegHeight)
 {
-   PRUint8 ownerSide = 0;
+   mozilla::css::Side ownerSide = NS_SIDE_TOP;
    nscoord cornerSubWidth = 0;
    PRPackedBool bevel = PR_FALSE;
    if (aIter.mBCData) {
@@ -6662,7 +6663,7 @@ BCVerticalSeg::Paint(BCPaintBorderIterator& aIter,
                      BCPixelSize            aHorSegHeight)
 {
   // get the border style, color and paint the segment
-  PRUint8 side = (aIter.IsDamageAreaRightMost()) ? NS_SIDE_RIGHT :
+  mozilla::css::Side side = (aIter.IsDamageAreaRightMost()) ? NS_SIDE_RIGHT :
                                                     NS_SIDE_LEFT;
   PRInt32 relColIndex = aIter.GetRelativeColIndex();
   nsTableColFrame* col           = mCol; if (!col) ABORT0();
@@ -6725,9 +6726,9 @@ BCVerticalSeg::Paint(BCPaintBorderIterator& aIter,
                  nsPresContext::CSSPixelsToAppUnits(mWidth), mLength);
   nscoord bottomBevelOffset = (mIsBottomBevel) ?
                   nsPresContext::CSSPixelsToAppUnits(mBottomHorSegHeight) : 0;
-  PRUint8 bottomBevelSide = ((aHorSegHeight > 0) ^ !aIter.mTableIsLTR) ?
+  mozilla::css::Side bottomBevelSide = ((aHorSegHeight > 0) ^ !aIter.mTableIsLTR) ?
                             NS_SIDE_RIGHT : NS_SIDE_LEFT;
-  PRUint8 topBevelSide = ((mTopBevelSide == NS_SIDE_RIGHT) ^ !aIter.mTableIsLTR)?
+  mozilla::css::Side topBevelSide = ((mTopBevelSide == NS_SIDE_RIGHT) ^ !aIter.mTableIsLTR)?
                          NS_SIDE_RIGHT : NS_SIDE_LEFT;
   nsCSSRendering::DrawTableBorderSegment(aRenderingContext, style, color,
                                          aIter.mTableBgColor, segRect,
@@ -6758,7 +6759,7 @@ BCVerticalSeg::IncludeCurrentBorder(BCPaintBorderIterator& aIter)
 BCHorizontalSeg::BCHorizontalSeg()
 {
   mOffsetX = mOffsetY = mLength = mWidth =  mLeftBevelOffset = 0;
-  mLeftBevelSide = 0;
+  mLeftBevelSide = NS_SIDE_TOP;
   mFirstCell = mAjaCell = nsnull;
 }
 
@@ -6774,7 +6775,7 @@ BCHorizontalSeg::Start(BCPaintBorderIterator& aIter,
                        BCPixelSize          aBottomVerSegWidth,
                        BCPixelSize          aHorSegHeight)
 {
-  PRUint8      cornerOwnerSide = 0;
+  mozilla::css::Side cornerOwnerSide = NS_SIDE_TOP;
   PRPackedBool bevel     = PR_FALSE;
 
   mOwner = aBorderOwner;
@@ -6815,7 +6816,7 @@ void
 BCHorizontalSeg::GetRightCorner(BCPaintBorderIterator& aIter,
                                 BCPixelSize            aLeftSegWidth)
 {
-  PRUint8 ownerSide = 0;
+  mozilla::css::Side ownerSide = NS_SIDE_TOP;
   nscoord cornerSubWidth = 0;
   PRPackedBool bevel = PR_FALSE;
   if (aIter.mBCData) {
@@ -6843,7 +6844,7 @@ BCHorizontalSeg::Paint(BCPaintBorderIterator& aIter,
                        nsIRenderingContext&   aRenderingContext)
 {
   // get the border style, color and paint the segment
-  PRUint8 side = (aIter.IsDamageAreaBottomMost()) ? NS_SIDE_BOTTOM :
+  mozilla::css::Side side = (aIter.IsDamageAreaBottomMost()) ? NS_SIDE_BOTTOM :
                                                      NS_SIDE_TOP;
   nsIFrame* rg   = aIter.mRg;  if (!rg) ABORT0();
   nsIFrame* row  = aIter.mRow; if (!row) ABORT0();
@@ -6968,7 +6969,7 @@ BCPaintBorderIterator::StoreColumnWidth(PRInt32 aIndex)
 PRBool
 BCPaintBorderIterator::VerticalSegmentOwnsCorner()
 {
-  PRUint8 cornerOwnerSide = 0;
+  mozilla::css::Side cornerOwnerSide = NS_SIDE_TOP;
   PRPackedBool bevel = PR_FALSE;
   nscoord cornerSubWidth;
   cornerSubWidth = (mBCData) ? mBCData->GetCorner(cornerOwnerSide, bevel) : 0;

@@ -604,7 +604,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
   NS_PRECONDITION(aType == nsLayoutUtils::MIN_WIDTH ||
                   aType == nsLayoutUtils::PREF_WIDTH, "bad type");
 
-  PRUint8 startSide, endSide;
+  mozilla::css::Side startSide, endSide;
   if (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR) {
     startSide = NS_SIDE_LEFT;
     endSide = NS_SIDE_RIGHT;

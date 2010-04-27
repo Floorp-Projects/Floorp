@@ -893,13 +893,13 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
     gfxPoint pc, p0, p1, p2, p3;
 
     if (draw_clockwise)
-        cairo_move_to(mCairo, rect.pos.x + corners[gfxCorner::TOP_LEFT].width, rect.pos.y);
+        cairo_move_to(mCairo, rect.pos.x + corners[NS_CORNER_TOP_LEFT].width, rect.pos.y);
     else
-        cairo_move_to(mCairo, rect.pos.x + rect.size.width - corners[gfxCorner::TOP_RIGHT].width, rect.pos.y);
+        cairo_move_to(mCairo, rect.pos.x + rect.size.width - corners[NS_CORNER_TOP_RIGHT].width, rect.pos.y);
 
-    for (int i = 0; i < gfxCorner::NUM_CORNERS; i++) {
+    NS_FOR_CSS_CORNERS(i) {
         // the corner index -- either 1 2 3 0 (cw) or 0 3 2 1 (ccw)
-        int c = draw_clockwise ? ((i+1) % 4) : ((4-i) % 4);
+        mozilla::css::Corner c = mozilla::css::Corner(draw_clockwise ? ((i+1) % 4) : ((4-i) % 4));
 
         // i+2 and i+3 respectively.  These are used to index into the corner
         // multiplier table, and were deduced by calculating out the long form
@@ -907,7 +907,7 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
         int i2 = (i+2) % 4;
         int i3 = (i+3) % 4;
 
-        pc = rect.Corner(c);
+        pc = rect.AtCorner(c);
 
         if (corners[c].width > 0.0 && corners[c].height > 0.0) {
             p0.x = pc.x + cornerMults[i].a * corners[c].width;

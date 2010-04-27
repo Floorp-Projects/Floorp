@@ -318,10 +318,10 @@ public:
   virtual nsMargin* GetBorderWidth(nsMargin& aBorder) const;
 
   // Get the *inner half of the border only*, in pixels.
-  BCPixelSize GetBorderWidth(PRUint8 aSide) const;
+  BCPixelSize GetBorderWidth(mozilla::css::Side aSide) const;
 
   // Set the full (both halves) width of the border
-  void SetBorderWidth(PRUint8 aSide, BCPixelSize aPixelValue);
+  void SetBorderWidth(mozilla::css::Side aSide, BCPixelSize aPixelValue);
 
   virtual void GetSelfOverflow(nsRect& aOverflowArea);
 
