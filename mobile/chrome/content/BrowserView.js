@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Roy Frostig <rfrostig@mozilla.com>
  *   Stuart Parmenter <stuart@mozilla.com>
+ *   Matt Brubeck <mbrubeck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -616,8 +617,12 @@ BrowserView.prototype = {
       pageZoom = 1;
 
     let metaData = Util.getViewportMetadata(browser);
+    if (metaData.minScale)
+      pageZoom = Math.max(metaData.minScale, pageZoom);
+    if (metaData.maxScale)
+      pageZoom = Math.min(metaData.maxScale, pageZoom);
     if (metaData.scale)
-      return Math.max(metaData.scale, pageZoom);
+      pageZoom = Math.max(metaData.scale, pageZoom);
 
     return pageZoom;
   },
