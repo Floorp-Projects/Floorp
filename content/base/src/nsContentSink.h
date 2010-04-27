@@ -152,6 +152,8 @@ class nsContentSink : public nsICSSLoaderObserver,
 
   PRBool IsTimeToNotify();
 
+  static void InitializeStatics();
+
 protected:
   nsContentSink();
   virtual ~nsContentSink();
@@ -278,7 +280,7 @@ protected:
       return 1000;
     }
 
-    return mNotificationInterval;
+    return sNotificationInterval;
   }
 
   // Overridable hooks into script evaluation
@@ -318,18 +320,12 @@ protected:
   // back off timer notification after count
   PRInt32 mBackoffCount;
 
-  // Notification interval in microseconds
-  PRInt32 mNotificationInterval;
-
   // Time of last notification
   // Note: mLastNotificationTime is only valid once mLayoutStarted is true.
   PRTime mLastNotificationTime;
 
   // Timer used for notification
   nsCOMPtr<nsITimer> mNotificationTimer;
-
-  // Do we notify based on time?
-  PRPackedBool mNotifyOnTimer;
 
   // Have we already called BeginUpdate for this set of content changes?
   PRUint8 mBeganUpdate : 1;
@@ -357,35 +353,11 @@ protected:
   // if it's time to return to the main event loop.
   PRUint32 mDeflectedCount;
 
-  // How many times to deflect in interactive/perf modes
-  PRUint32 mInteractiveDeflectCount;
-  PRUint32 mPerfDeflectCount;
-
-  // 0 = don't check for pending events
-  // 1 = don't deflect if there are pending events
-  // 2 = bail if there are pending events
-  PRUint32 mPendingEventMode;
-
-  // How often to probe for pending events. 1=every token
-  PRUint32 mEventProbeRate;
-
   // Is there currently a pending event?
   PRBool mHasPendingEvent;
 
   // When to return to the main event loop
   PRUint32 mCurrentParseEndTime;
-
-  // How long to stay off the event loop in interactive/perf modes
-  PRUint32 mInteractiveParseTime;
-  PRUint32 mPerfParseTime;
-
-  // How long to be in interactive mode after an event
-  PRUint32 mInteractiveTime;
-  // How long to stay in perf mode after initial loading
-  PRUint32 mInitialPerfTime;
-
-  // Should we switch between perf-mode and interactive-mode
-  PRBool mEnablePerfMode;
 
   PRInt32 mBeginLoadTime;
 
@@ -402,6 +374,32 @@ protected:
 
   nsRevocableEventPtr<nsRunnableMethod<nsContentSink, void, false> >
     mProcessLinkHeaderEvent;
+
+  // Do we notify based on time?
+  static PRBool sNotifyOnTimer;
+  // Back off timer notification after count.
+  static PRInt32 sBackoffCount;
+  // Notification interval in microseconds
+  static PRInt32 sNotificationInterval;
+  // How many times to deflect in interactive/perf modes
+  static PRInt32 sInteractiveDeflectCount;
+  static PRInt32 sPerfDeflectCount;
+  // 0 = don't check for pending events
+  // 1 = don't deflect if there are pending events
+  // 2 = bail if there are pending events
+  static PRInt32 sPendingEventMode;
+  // How often to probe for pending events. 1=every token
+  static PRInt32 sEventProbeRate;
+  // How long to stay off the event loop in interactive/perf modes
+  static PRInt32 sInteractiveParseTime;
+  static PRInt32 sPerfParseTime;
+  // How long to be in interactive mode after an event
+  static PRInt32 sInteractiveTime;
+  // How long to stay in perf mode after initial loading
+  static PRInt32 sInitialPerfTime;
+  // Should we switch between perf-mode and interactive-mode
+  static PRInt32 sEnablePerfMode;
+  static PRBool sCanInterruptParser;
 };
 
 // sanitizing content sink whitelists
