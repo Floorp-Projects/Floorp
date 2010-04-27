@@ -104,8 +104,6 @@ quartz-is-clear.patch: Propagate the quartz is_clear flag.
 
 ==== pixman patches ====
 
-pixman-neon.patch: add ARM NEON optimized compositing functions
-
 pixman-rename-and-endian.patch: include cairo-platform.h for renaming of external symbols and endian macros
 
 ==== disable printing patch ====
