@@ -249,8 +249,13 @@ def p_CxxIncludeStmt(p):
     p[0] = CxxInclude(locFromTok(p, 1), p[2])
 
 def p_ProtocolIncludeStmt(p):
-    """ProtocolIncludeStmt : INCLUDE PROTOCOL STRING"""
+    """ProtocolIncludeStmt : INCLUDE PROTOCOL ID
+                           | INCLUDE PROTOCOL STRING"""
     loc = locFromTok(p, 1)
+    
+    if 0 <= p[3].rfind('.ipdl'):
+        _error(loc, "`include protocol \"P.ipdl\"' syntax is obsolete.  Use `include protocol P' instead.")
+    
     Parser.current.loc = loc
     inc = ProtocolInclude(loc, p[3])
 

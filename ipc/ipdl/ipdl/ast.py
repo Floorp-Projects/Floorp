@@ -177,9 +177,9 @@ class CxxInclude(Node):
         self.file = cxxFile
 
 class ProtocolInclude(Node):
-    def __init__(self, loc, protocolFile):
+    def __init__(self, loc, protocolName):
         Node.__init__(self, loc)
-        self.file = protocolFile
+        self.file = "%s.ipdl" % protocolName
 
 class UsingStmt(Node):
     def __init__(self, loc, cxxTypeSpec):
