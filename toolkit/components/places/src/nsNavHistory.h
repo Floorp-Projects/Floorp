@@ -105,7 +105,7 @@ namespace mozilla {
 namespace places {
 
   enum HistoryStatementId {
-    DB_GET_PAGE_INFO = 0
+    DB_GET_PAGE_INFO_BY_URL = 0
   , DB_GET_TAGS = 1
   , DB_IS_PAGE_VISITED = 2
   };
@@ -257,9 +257,6 @@ public:
   static const PRInt32 kGetInfoIndex_ItemTags;
   static const PRInt32 kGetInfoIndex_ItemParentId;
 
-  // select a history row by id
-  mozIStorageStatement *DBGetIdPageInfo() { return mDBGetIdPageInfo; }
-
   PRInt64 GetTagsFolder();
 
   // Constants for the columns returned by the above statement
@@ -399,7 +396,7 @@ public:
   {
     using namespace mozilla::places;
     switch(aStatementId) {
-      case DB_GET_PAGE_INFO:
+      case DB_GET_PAGE_INFO_BY_URL:
         return mDBGetURLPageInfo;
       case DB_GET_TAGS:
         return mDBGetTags;
