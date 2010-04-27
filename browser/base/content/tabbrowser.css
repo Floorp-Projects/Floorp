@@ -6,31 +6,14 @@
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-arrowscrollbox");
 }
 
-.tabs-alltabs-popup {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
-}
-
-.tab-close-button,
-.tabs-closebutton {
-  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-close-tab-button");
-}
-
 .tab-close-button {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-close-tab-button");
   display: none;
 }
 
 .tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab[selected="true"] > .tab-close-button,
 .tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab > .tab-close-button {
   display: -moz-box;
-}
-
-.tabbrowser-tabs:not([overflow="true"]) > .tabs-newtab-button,
-.tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
-  visibility: collapse;
-}
-
-.tabs-newtab-button > .toolbarbutton-text {
-  display: none;
 }
 
 tabpanels {
@@ -41,10 +24,3 @@ tabpanels {
   position: relative;
   z-index: 1;
 }
-
-%ifdef MOZ_WIDGET_GTK2
-/* Favicons override the "images-in-menus" metric in xul.css */
-.alltabs-item > .menu-iconic-left {
-  visibility: inherit;
-}
-%endif

@@ -563,7 +563,13 @@
 
     <toolbar id="TabsToolbar"
              fullscreentoolbar="true"
+             customizable="true"
+             mode="icons" lockmode="true"
+             iconsize="small" defaulticonsize="small" lockiconsize="true"
+             context="toolbar-context-menu"
+             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
              collapsed="true">
+
       <tabs id="tabbrowser-tabs"
             class="tabbrowser-tabs"
             context="tabContextMenu"
@@ -573,6 +579,34 @@
             tooltip="tabbrowser-tab-tooltip">
         <tab class="tabbrowser-tab" selected="true"/>
       </tabs>
+
+      <toolbarbutton id="new-tab-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabCmd.label;"
+                     command="cmd_newNavigatorTab"
+                     tooltiptext="&newTabButton.tooltip;"
+                     ondrop="newTabButtonObserver.onDrop(event)"
+                     ondragover="newTabButtonObserver.onDragOver(event)"
+                     ondragenter="newTabButtonObserver.onDragOver(event)"
+                     ondragleave="newTabButtonObserver.onDragLeave(event)"
+                     removable="true"/>
+
+      <toolbarbutton id="alltabs-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional tabs-alltabs-button"
+                     type="menu"
+                     label="&listAllTabs.label;"
+                     tooltiptext="&listAllTabs.label;"
+                     removable="true">
+        <menupopup id="alltabs-popup"
+                   position="after_end"/>
+      </toolbarbutton>
+
+      <toolbarbutton id="tabs-closebutton"
+                     class="close-button tabs-closebutton"
+                     command="cmd_close"
+                     label="&closeTab.label;"
+                     tooltiptext="&closeTab.label;"/>
+
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
@@ -606,15 +640,6 @@
                      ondragover="bookmarksButtonObserver.onDragOver(event)"
                      ondragenter="bookmarksButtonObserver.onDragOver(event)"
                      ondragleave="bookmarksButtonObserver.onDragLeave(event)"/>
-
-      <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabCmd.label;"
-                     command="cmd_newNavigatorTab"
-                     tooltiptext="&newTabButton.tooltip;"
-                     ondrop="newTabButtonObserver.onDrop(event)"
-                     ondragover="newTabButtonObserver.onDragOver(event)"
-                     ondragenter="newTabButtonObserver.onDragOver(event)"
-                     ondragleave="newTabButtonObserver.onDragLeave(event)"/>
 
       <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&newNavigatorCmd.label;"
