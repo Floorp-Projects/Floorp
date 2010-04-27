@@ -610,7 +610,16 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTimeout, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTimeout, Release)
 
-  
+nsPIDOMWindow::nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
+: mFrameElement(nsnull), mDocShell(nsnull), mModalStateDepth(0),
+  mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
+  mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
+  mMayHavePaintEventListener(PR_FALSE),
+  mIsModalContentWindow(PR_FALSE), mIsActive(PR_FALSE),
+  mInnerWindow(nsnull), mOuterWindow(aOuterWindow) {}
+
+nsPIDOMWindow::~nsPIDOMWindow() {}
+
 //*****************************************************************************
 //***    nsGlobalWindow: Object Management
 //*****************************************************************************
@@ -6910,14 +6919,6 @@ nsGlobalWindow::SetChromeEventHandler(nsPIDOMEventTarget* aChromeEventHandler)
     static_cast<nsGlobalWindow*>(mOuterWindow)->
       SetChromeEventHandlerInternal(aChromeEventHandler);
   }
-}
-
-nsIContent*
-nsGlobalWindow::GetFocusedNode()
-{
-  FORWARD_TO_INNER(GetFocusedNode, (), NS_OK);
-
-  return mFocusedNode;
 }
 
 void

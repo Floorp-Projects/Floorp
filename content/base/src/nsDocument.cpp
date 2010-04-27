@@ -3817,11 +3817,9 @@ nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
 }
 
 nsPIDOMWindow *
-nsDocument::GetWindow()
+nsDocument::GetWindowInternal()
 {
-  if (mWindow) {
-    return mWindow->GetOuterWindow();
-  }
+  NS_ASSERTION(!mWindow, "This should not be called when mWindow is not null!");
 
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(GetScriptGlobalObject()));
 
