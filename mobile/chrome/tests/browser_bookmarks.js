@@ -236,3 +236,56 @@ gTests.push({
     runNextTest();
   }
 });
+
+//------------------------------------------------------------------------------
+// Case: Test editing title of desktop folder
+gTests.push({
+  desc: "Test editing title of desktop folder",
+  bmId: null,
+  
+  run: function() {
+    // Add a bookmark to the desktop area so the desktop folder is displayed
+    gCurrentTest.bmId = PlacesUtils.bookmarks
+                                   .insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                                   makeURI(testURL_02),
+                                                   Ci.nsINavBookmarksService.DEFAULT_INDEX,
+                                                   testURL_02);
+
+    // Open the bookmark list
+    BookmarkList.show();
+
+    // Go into edit mode
+    BookmarkList.toggleManage();
+
+    waitFor(gCurrentTest.onBookmarksReady, function() { return document.getElementById("bookmark-items").manageUI == true; });
+  },
+  
+  onBookmarksReady: function() {
+    // Is the "desktop" folder showing?
+    var first = BookmarkList._bookmarks._children.firstChild;
+    is(first.itemId, BookmarkList._bookmarks._desktopFolderId, "Desktop folder is showing");
+
+    // Is the "desktop" folder in edit mode?
+    is(first.isEditing, false, "Desktop folder is not in edit mode");
+
+
+    // Do not allow the "desktop" folder to be editable by tap
+    EventUtils.synthesizeMouse(first, first.clientWidth / 2, first.clientHeight / 2, {});
+
+    // A tap on the "desktop" folder _should_ open the folder, not put it into edit mode.
+    // So we need to get the first item again.
+    first = BookmarkList._bookmarks._children.firstChild;
+
+    // It should not be the "desktop" folder
+    isnot(first.itemId, BookmarkList._bookmarks._desktopFolderId, "Desktop folder is not showing after mouse click");
+
+    // But it should be one of the other readonly bookmark roots
+    isnot(BookmarkList._bookmarks._readOnlyFolders.indexOf(parseInt(first.itemId)), -1, "Desktop subfolder is showing after mouse click");
+    
+    BookmarkList.close();
+
+    PlacesUtils.bookmarks.removeItem(gCurrentTest.bmId);
+
+    runNextTest();
+  }
+});

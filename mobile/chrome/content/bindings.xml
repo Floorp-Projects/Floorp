@@ -730,6 +730,15 @@
         ];
       ]]></field>
 
+      <field name="_readOnlyFolders"><![CDATA[
+        [
+          this._desktopFolderId,
+          PlacesUtils.bookmarks.unfiledBookmarksFolder,
+          PlacesUtils.bookmarksMenuFolderId,
+          PlacesUtils.toolbarFolderId
+        ];
+      ]]></field>
+
       <field name="_type"/>
       <field name="_mode"/>
       <field name="_activeItem">null</field>
@@ -753,7 +762,7 @@
       <property name="isRootFolder" readonly="true">
         <getter>
           <![CDATA[
-            let currentFolderId = this._parents.lastChild.getAttribute("itemid");
+            let currentFolderId = this._parents.lastChild.itemId;
             return currentFolderId == this.mobileRoot;
           ]]>
         </getter>
@@ -839,7 +848,7 @@
             for (let i = 0; i < children.length; i++) {
               let rect = children[i].getBoundingClientRect();
               let position = rect.top - rect.height;
-              if (position > 0 && children[i].getAttribute("itemid") != this._desktopFolderId)
+              if (position > 0 && this._readOnlyFolders.indexOf(parseInt(children[i].itemId)) == -1)
                 return children[i];
             }
             return null;
@@ -976,10 +985,10 @@
         <body>
           <![CDATA[
             let target = aEvent.originalTarget;
-            if (target.localName == "button" || this._activeItem == aItem || this._desktopFolderId == aItem.getAttribute("itemid"))
+            if (target.localName == "button" || this._activeItem == aItem)
               return;
 
-            if (this._manageUI) {
+            if (this._manageUI && this._readOnlyFolders.indexOf(parseInt(aItem.itemId)) == -1) {
               aItem.startEditing();
               return;
             }
