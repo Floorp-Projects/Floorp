@@ -2894,7 +2894,7 @@ nsAccessible::GetParent()
   docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE,
                                             getter_AddRefs(parent));
 
-  nsRefPtr<nsAccessible> parentAcc = nsAccUtils::QueryAccessible(parent);
+  nsRefPtr<nsAccessible> parentAcc = do_QueryObject(parent);
 
 #ifdef DEBUG
   NS_ASSERTION(!parentAcc->IsDefunct(), "Defunct parent!");
