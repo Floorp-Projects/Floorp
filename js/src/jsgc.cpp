@@ -937,6 +937,9 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
         return false;
     }
 
+    if (!rt->gcHelperThread.init())
+        return false;
+
     /*
      * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
      * for default backward API compatibility.
@@ -1151,6 +1154,7 @@ js_FinishGC(JSRuntime *rt)
         js_DumpGCStats(rt, stdout);
 #endif
 
+    rt->gcHelperThread.cancel();
     FinishGCArenaLists(rt);
 
     if (rt->gcRootsHash.ops) {
@@ -2869,6 +2873,49 @@ SweepDoubles(JSRuntime *rt)
     rt->gcDoubleArenaList.cursor = rt->gcDoubleArenaList.head;
 }
 
+#ifdef JS_THREADSAFE
+
+namespace js {
+
+void
+BackgroundSweepTask::replenishAndFreeLater(void *ptr)
+{
+    JS_ASSERT(freeCursor == freeCursorEnd);
+    do {
+        if (freeCursor && !freeVector.append(freeCursorEnd - FREE_ARRAY_LENGTH))
+            break;
+        freeCursor = (void **) js_malloc(FREE_ARRAY_SIZE);
+        if (!freeCursor) {
+            freeCursorEnd = NULL;
+            break;
+        }
+        freeCursorEnd = freeCursor + FREE_ARRAY_LENGTH;
+        *freeCursor++ = ptr;
+        return;
+    } while (false);
+    js_free(ptr);
+}
+
+void
+BackgroundSweepTask::run()
+{
+    if (freeCursor) {
+        void **array = freeCursorEnd - FREE_ARRAY_LENGTH;
+        freeElementsAndArray(array, freeCursor);
+        freeCursor = freeCursorEnd = NULL;
+    } else {
+        JS_ASSERT(!freeCursorEnd);
+    }
+    for (void ***iter = freeVector.begin(); iter != freeVector.end(); ++iter) {
+        void **array = *iter;
+        freeElementsAndArray(array, array + FREE_ARRAY_LENGTH);
+    }
+}
+
+}
+
+#endif /* JS_THREADSAFE */
+
 /*
  * Common cache invalidation and so forth that must be done before GC. Even if
  * GCUntilDone calls GC several times, this work only needs to be done once.
@@ -2978,7 +3025,9 @@ GC(JSContext *cx  GCTIMER_PARAM)
     rt->gcMarkingTracer = NULL;
 
 #ifdef JS_THREADSAFE
-    cx->createDeallocatorTask();
+    JS_ASSERT(!cx->gcSweepTask);
+    if (!rt->gcHelperThread.busy())
+        cx->gcSweepTask = new js::BackgroundSweepTask();
 #endif
 
     /*
@@ -3071,7 +3120,10 @@ GC(JSContext *cx  GCTIMER_PARAM)
     TIMESTAMP(sweepDestroyEnd);
 
 #ifdef JS_THREADSAFE
-    cx->submitDeallocatorTask();
+    if (cx->gcSweepTask) {
+        rt->gcHelperThread.schedule(cx->gcSweepTask);
+        cx->gcSweepTask = NULL;
+    }
 #endif
 
     if (rt->gcCallback)
