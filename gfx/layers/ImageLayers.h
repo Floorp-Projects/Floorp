@@ -246,10 +246,8 @@ public:
   /**
    * This makes a copy of the data buffers.
    * XXX Eventually we will change this to not make a copy of the data,
-   * but we can't do that until we have tighter control of nsOggDecoder's
-   * buffer management (i.e. not going through liboggplay). Right now
-   * it doesn't matter because the BasicLayer implementation does YCbCr
-   * conversion here anyway.
+   * Right now it doesn't matter because the BasicLayer implementation
+   * does YCbCr conversion here anyway.
    */
   virtual void SetData(const Data& aData) = 0;
 
