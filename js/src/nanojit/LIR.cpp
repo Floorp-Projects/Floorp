@@ -1124,382 +1124,6 @@ namespace nanojit
         }
     }
 
-    // Inlined/separated version of SuperFastHash.
-    // This content is copyrighted by Paul Hsieh.
-    // For reference see: http://www.azillionmonkeys.com/qed/hash.html
-    //
-    inline uint32_t CseFilter::hash8(uint32_t hash, const uint8_t data)
-    {
-        hash += data;
-        hash ^= hash << 10;
-        hash += hash >> 1;
-        return hash;
-    }
-
-    inline uint32_t CseFilter::hash32(uint32_t hash, const uint32_t data)
-    {
-        const uint32_t dlo = data & 0xffff;
-        const uint32_t dhi = data >> 16;
-        hash += dlo;
-        const uint32_t tmp = (dhi << 11) ^ hash;
-        hash = (hash << 16) ^ tmp;
-        hash += hash >> 11;
-        return hash;
-    }
-
-    inline uint32_t CseFilter::hashptr(uint32_t hash, const void* data)
-    {
-#ifdef NANOJIT_64BIT
-        hash = hash32(hash, uint32_t(uintptr_t(data) >> 32));
-        hash = hash32(hash, uint32_t(uintptr_t(data)));
-        return hash;
-#else
-        return hash32(hash, uint32_t(data));
-#endif
-    }
-
-    inline uint32_t CseFilter::hashfinish(uint32_t hash)
-    {
-        /* Force "avalanching" of final 127 bits */
-        hash ^= hash << 3;
-        hash += hash >> 5;
-        hash ^= hash << 4;
-        hash += hash >> 17;
-        hash ^= hash << 25;
-        hash += hash >> 6;
-        return hash;
-    }
-
-    void CseFilter::clear(LInsHashKind kind) {
-        VMPI_memset(m_list[kind], 0, sizeof(LInsp)*m_cap[kind]);
-        m_used[kind] = 0;
-    }
-
-    void CseFilter::clear() {
-        for (LInsHashKind kind = LInsFirst; kind <= LInsLast; kind = nextKind(kind)) {
-            clear(kind);
-        }
-    }
-
-    inline uint32_t CseFilter::hashImmI(int32_t a) {
-        return hashfinish(hash32(0, a));
-    }
-
-    inline uint32_t CseFilter::hashImmQorD(uint64_t a) {
-        uint32_t hash = hash32(0, uint32_t(a >> 32));
-        return hashfinish(hash32(hash, uint32_t(a)));
-    }
-
-    inline uint32_t CseFilter::hash1(LOpcode op, LInsp a) {
-        uint32_t hash = hash8(0, uint8_t(op));
-        return hashfinish(hashptr(hash, a));
-    }
-
-    inline uint32_t CseFilter::hash2(LOpcode op, LInsp a, LInsp b) {
-        uint32_t hash = hash8(0, uint8_t(op));
-        hash = hashptr(hash, a);
-        return hashfinish(hashptr(hash, b));
-    }
-
-    inline uint32_t CseFilter::hash3(LOpcode op, LInsp a, LInsp b, LInsp c) {
-        uint32_t hash = hash8(0, uint8_t(op));
-        hash = hashptr(hash, a);
-        hash = hashptr(hash, b);
-        return hashfinish(hashptr(hash, c));
-    }
-
-    NanoStaticAssert(sizeof(AccSet) == 1);  // required for hashLoad to work properly
-
-    // Nb: no need to hash the load's AccSet because each region's loads go in
-    // a different hash table.
-    inline uint32_t CseFilter::hashLoad(LOpcode op, LInsp a, int32_t d, AccSet accSet) {
-        uint32_t hash = hash8(0,uint8_t(op));
-        hash = hashptr(hash, a);
-        hash = hash32(hash, d);
-        return hashfinish(hash8(hash, accSet));
-    }
-
-    inline uint32_t CseFilter::hashCall(const CallInfo *ci, uint32_t argc, LInsp args[]) {
-        uint32_t hash = hashptr(0, ci);
-        for (int32_t j=argc-1; j >= 0; j--)
-            hash = hashptr(hash,args[j]);
-        return hashfinish(hash);
-    }
-
-    void CseFilter::grow(LInsHashKind kind)
-    {
-        const uint32_t oldcap = m_cap[kind];
-        m_cap[kind] <<= 1;
-        LInsp *oldlist = m_list[kind];
-        m_list[kind] = new (alloc) LInsp[m_cap[kind]];
-        VMPI_memset(m_list[kind], 0, m_cap[kind] * sizeof(LInsp));
-        find_t find = m_find[kind];
-        for (uint32_t i = 0; i < oldcap; i++) {
-            LInsp ins = oldlist[i];
-            if (!ins) continue;
-            uint32_t j = (this->*find)(ins);
-            NanoAssert(!m_list[kind][j]);
-            m_list[kind][j] = ins;
-        }
-    }
-
-    void CseFilter::add(LInsHashKind kind, LInsp ins, uint32_t k)
-    {
-        NanoAssert(!m_list[kind][k]);
-        m_used[kind]++;
-        m_list[kind][k] = ins;
-        if ((m_used[kind] * 4) >= (m_cap[kind] * 3)) {  // load factor of 0.75
-            grow(kind);
-        }
-    }
-
-    inline LInsp CseFilter::findImmI(int32_t a, uint32_t &k)
-    {
-        LInsHashKind kind = LInsImmI;
-        const uint32_t bitmask = m_cap[kind] - 1;
-        k = hashImmI(a) & bitmask;
-        uint32_t n = 1;
-        while (true) {
-            LInsp ins = m_list[kind][k];
-            if (!ins)
-                return NULL;
-            NanoAssert(ins->isImmI());
-            if (ins->immI() == a)
-                return ins;
-            // Quadratic probe:  h(k,i) = h(k) + 0.5i + 0.5i^2, which gives the
-            // sequence h(k), h(k)+1, h(k)+3, h(k)+6, h+10, ...  This is a
-            // good sequence for 2^n-sized tables as the values h(k,i) for i
-            // in [0,m − 1] are all distinct so termination is guaranteed.
-            // See http://portal.acm.org/citation.cfm?id=360737 and
-            // http://en.wikipedia.org/wiki/Quadratic_probing (fetched
-            // 06-Nov-2009) for more details.
-            k = (k + n) & bitmask;
-            n += 1;
-        }
-    }
-
-    uint32_t CseFilter::findImmI(LInsp ins)
-    {
-        uint32_t k;
-        findImmI(ins->immI(), k);
-        return k;
-    }
-
-#ifdef NANOJIT_64BIT
-    inline LInsp CseFilter::findImmQ(uint64_t a, uint32_t &k)
-    {
-        LInsHashKind kind = LInsImmQ;
-        const uint32_t bitmask = m_cap[kind] - 1;
-        k = hashImmQorD(a) & bitmask;
-        uint32_t n = 1;
-        while (true) {
-            LInsp ins = m_list[kind][k];
-            if (!ins)
-                return NULL;
-            NanoAssert(ins->isImmQ());
-            if (ins->immQ() == a)
-                return ins;
-            k = (k + n) & bitmask;
-            n += 1;
-        }
-    }
-
-    uint32_t CseFilter::findImmQ(LInsp ins)
-    {
-        uint32_t k;
-        findImmQ(ins->immQ(), k);
-        return k;
-    }
-#endif
-
-    inline LInsp CseFilter::findImmD(uint64_t a, uint32_t &k)
-    {
-        LInsHashKind kind = LInsImmD;
-        const uint32_t bitmask = m_cap[kind] - 1;
-        k = hashImmQorD(a) & bitmask;
-        uint32_t n = 1;
-        while (true) {
-            LInsp ins = m_list[kind][k];
-            if (!ins)
-                return NULL;
-            NanoAssert(ins->isImmD());
-            if (ins->immQ() == a)
-                return ins;
-            k = (k + n) & bitmask;
-            n += 1;
-        }
-    }
-
-    uint32_t CseFilter::findImmD(LInsp ins)
-    {
-        uint32_t k;
-        findImmD(ins->immQ(), k);
-        return k;
-    }
-
-    inline LInsp CseFilter::find1(LOpcode op, LInsp a, uint32_t &k)
-    {
-        LInsHashKind kind = LIns1;
-        const uint32_t bitmask = m_cap[kind] - 1;
-        k = hash1(op, a) & bitmask;
-        uint32_t n = 1;
-        while (true) {
-            LInsp ins = m_list[kind][k];
-            if (!ins)
-                return NULL;
-            if (ins->isop(op) && ins->oprnd1() == a)
-                return ins;
-            k = (k + n) & bitmask;
-            n += 1;
-        }
-    }
-
-    uint32_t CseFilter::find1(LInsp ins)
-    {
-        uint32_t k;
-        find1(ins->opcode(), ins->oprnd1(), k);
-        return k;
-    }
-
-    inline LInsp CseFilter::find2(LOpcode op, LInsp a, LInsp b, uint32_t &k)
-    {
-        LInsHashKind kind = LIns2;
-        const uint32_t bitmask = m_cap[kind] - 1;
-        k = hash2(op, a, b) & bitmask;
-        uint32_t n = 1;
-        while (true) {
-            LInsp ins = m_list[kind][k];
-            if (!ins)
-                return NULL;
-            if (ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b)
-                return ins;
-            k = (k + n) & bitmask;
-            n += 1;
-        }
-    }
-
-    uint32_t CseFilter::find2(LInsp ins)
-    {
-        uint32_t k;
-        find2(ins->opcode(), ins->oprnd1(), ins->oprnd2(), k);
-        return k;
-    }
-
-    inline LInsp CseFilter::find3(LOpcode op, LInsp a, LInsp b, LInsp c, uint32_t &k)
-    {
-        LInsHashKind kind = LIns3;
-        const uint32_t bitmask = m_cap[kind] - 1;
-        k = hash3(op, a, b, c) & bitmask;
-        uint32_t n = 1;
-        while (true) {
-            LInsp ins = m_list[kind][k];
-            if (!ins)
-                return NULL;
-            if (ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b && ins->oprnd3() == c)
-                return ins;
-            k = (k + n) & bitmask;
-            n += 1;
-        }
-    }
-
-    uint32_t CseFilter::find3(LInsp ins)
-    {
-        uint32_t k;
-        find3(ins->opcode(), ins->oprnd1(), ins->oprnd2(), ins->oprnd3(), k);
-        return k;
-    }
-
-    inline LInsp CseFilter::findLoad(LOpcode op, LInsp a, int32_t d, AccSet accSet,
-                                     LInsHashKind kind, uint32_t &k)
-    {
-        (void)accSet;
-        const uint32_t bitmask = m_cap[kind] - 1;
-        k = hashLoad(op, a, d, accSet) & bitmask;
-        uint32_t n = 1;
-        while (true) {
-            LInsp ins = m_list[kind][k];
-            if (!ins)
-                return NULL;
-            NanoAssert(ins->accSet() == accSet);
-            if (ins->isop(op) && ins->oprnd1() == a && ins->disp() == d)
-                return ins;
-            k = (k + n) & bitmask;
-            n += 1;
-        }
-    }
-
-    uint32_t CseFilter::findLoadReadOnly(LInsp ins)
-    {
-        uint32_t k;
-        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadReadOnly, k);
-        return k;
-    }
-
-    uint32_t CseFilter::findLoadStack(LInsp ins)
-    {
-        uint32_t k;
-        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadStack, k);
-        return k;
-    }
-
-    uint32_t CseFilter::findLoadRStack(LInsp ins)
-    {
-        uint32_t k;
-        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadRStack, k);
-        return k;
-    }
-
-    uint32_t CseFilter::findLoadOther(LInsp ins)
-    {
-        uint32_t k;
-        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadOther, k);
-        return k;
-    }
-
-    uint32_t CseFilter::findLoadMultiple(LInsp ins)
-    {
-        uint32_t k;
-        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadMultiple, k);
-        return k;
-    }
-
-    bool argsmatch(LInsp ins, uint32_t argc, LInsp args[])
-    {
-        for (uint32_t j=0; j < argc; j++)
-            if (ins->arg(j) != args[j])
-                return false;
-        return true;
-    }
-
-    inline LInsp CseFilter::findCall(const CallInfo *ci, uint32_t argc, LInsp args[], uint32_t &k)
-    {
-        LInsHashKind kind = LInsCall;
-        const uint32_t bitmask = m_cap[kind] - 1;
-        k = hashCall(ci, argc, args) & bitmask;
-        uint32_t n = 1;
-        while (true) {
-            LInsp ins = m_list[kind][k];
-            if (!ins)
-                return NULL;
-            if (ins->isCall() && ins->callInfo() == ci && argsmatch(ins, argc, args))
-                return ins;
-            k = (k + n) & bitmask;
-            n += 1;
-        }
-    }
-
-    uint32_t CseFilter::findCall(LInsp ins)
-    {
-        LInsp args[MAXARGS];
-        uint32_t argc = ins->argc();
-        NanoAssert(argc < MAXARGS);
-        for (uint32_t j=0; j < argc; j++)
-            args[j] = ins->arg(j);
-        uint32_t k;
-        findCall(ins->callInfo(), argc, args, k);
-        return k;
-    }
-
 #ifdef NJ_VERBOSE
     class RetiredEntry
     {
@@ -2179,6 +1803,382 @@ namespace nanojit
             m_list[kind] = new (alloc) LInsp[m_cap[kind]];
         }
         clear();
+    }
+
+    // Inlined/separated version of SuperFastHash.
+    // This content is copyrighted by Paul Hsieh.
+    // For reference see: http://www.azillionmonkeys.com/qed/hash.html
+    //
+    inline uint32_t CseFilter::hash8(uint32_t hash, const uint8_t data)
+    {
+        hash += data;
+        hash ^= hash << 10;
+        hash += hash >> 1;
+        return hash;
+    }
+
+    inline uint32_t CseFilter::hash32(uint32_t hash, const uint32_t data)
+    {
+        const uint32_t dlo = data & 0xffff;
+        const uint32_t dhi = data >> 16;
+        hash += dlo;
+        const uint32_t tmp = (dhi << 11) ^ hash;
+        hash = (hash << 16) ^ tmp;
+        hash += hash >> 11;
+        return hash;
+    }
+
+    inline uint32_t CseFilter::hashptr(uint32_t hash, const void* data)
+    {
+#ifdef NANOJIT_64BIT
+        hash = hash32(hash, uint32_t(uintptr_t(data) >> 32));
+        hash = hash32(hash, uint32_t(uintptr_t(data)));
+        return hash;
+#else
+        return hash32(hash, uint32_t(data));
+#endif
+    }
+
+    inline uint32_t CseFilter::hashfinish(uint32_t hash)
+    {
+        /* Force "avalanching" of final 127 bits */
+        hash ^= hash << 3;
+        hash += hash >> 5;
+        hash ^= hash << 4;
+        hash += hash >> 17;
+        hash ^= hash << 25;
+        hash += hash >> 6;
+        return hash;
+    }
+
+    void CseFilter::clear(LInsHashKind kind) {
+        VMPI_memset(m_list[kind], 0, sizeof(LInsp)*m_cap[kind]);
+        m_used[kind] = 0;
+    }
+
+    void CseFilter::clear() {
+        for (LInsHashKind kind = LInsFirst; kind <= LInsLast; kind = nextKind(kind)) {
+            clear(kind);
+        }
+    }
+
+    inline uint32_t CseFilter::hashImmI(int32_t a) {
+        return hashfinish(hash32(0, a));
+    }
+
+    inline uint32_t CseFilter::hashImmQorD(uint64_t a) {
+        uint32_t hash = hash32(0, uint32_t(a >> 32));
+        return hashfinish(hash32(hash, uint32_t(a)));
+    }
+
+    inline uint32_t CseFilter::hash1(LOpcode op, LInsp a) {
+        uint32_t hash = hash8(0, uint8_t(op));
+        return hashfinish(hashptr(hash, a));
+    }
+
+    inline uint32_t CseFilter::hash2(LOpcode op, LInsp a, LInsp b) {
+        uint32_t hash = hash8(0, uint8_t(op));
+        hash = hashptr(hash, a);
+        return hashfinish(hashptr(hash, b));
+    }
+
+    inline uint32_t CseFilter::hash3(LOpcode op, LInsp a, LInsp b, LInsp c) {
+        uint32_t hash = hash8(0, uint8_t(op));
+        hash = hashptr(hash, a);
+        hash = hashptr(hash, b);
+        return hashfinish(hashptr(hash, c));
+    }
+
+    NanoStaticAssert(sizeof(AccSet) == 1);  // required for hashLoad to work properly
+
+    // Nb: no need to hash the load's AccSet because each region's loads go in
+    // a different hash table.
+    inline uint32_t CseFilter::hashLoad(LOpcode op, LInsp a, int32_t d, AccSet accSet) {
+        uint32_t hash = hash8(0,uint8_t(op));
+        hash = hashptr(hash, a);
+        hash = hash32(hash, d);
+        return hashfinish(hash8(hash, accSet));
+    }
+
+    inline uint32_t CseFilter::hashCall(const CallInfo *ci, uint32_t argc, LInsp args[]) {
+        uint32_t hash = hashptr(0, ci);
+        for (int32_t j=argc-1; j >= 0; j--)
+            hash = hashptr(hash,args[j]);
+        return hashfinish(hash);
+    }
+
+    void CseFilter::grow(LInsHashKind kind)
+    {
+        const uint32_t oldcap = m_cap[kind];
+        m_cap[kind] <<= 1;
+        LInsp *oldlist = m_list[kind];
+        m_list[kind] = new (alloc) LInsp[m_cap[kind]];
+        VMPI_memset(m_list[kind], 0, m_cap[kind] * sizeof(LInsp));
+        find_t find = m_find[kind];
+        for (uint32_t i = 0; i < oldcap; i++) {
+            LInsp ins = oldlist[i];
+            if (!ins) continue;
+            uint32_t j = (this->*find)(ins);
+            NanoAssert(!m_list[kind][j]);
+            m_list[kind][j] = ins;
+        }
+    }
+
+    void CseFilter::add(LInsHashKind kind, LInsp ins, uint32_t k)
+    {
+        NanoAssert(!m_list[kind][k]);
+        m_used[kind]++;
+        m_list[kind][k] = ins;
+        if ((m_used[kind] * 4) >= (m_cap[kind] * 3)) {  // load factor of 0.75
+            grow(kind);
+        }
+    }
+
+    inline LInsp CseFilter::findImmI(int32_t a, uint32_t &k)
+    {
+        LInsHashKind kind = LInsImmI;
+        const uint32_t bitmask = m_cap[kind] - 1;
+        k = hashImmI(a) & bitmask;
+        uint32_t n = 1;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            NanoAssert(ins->isImmI());
+            if (ins->immI() == a)
+                return ins;
+            // Quadratic probe:  h(k,i) = h(k) + 0.5i + 0.5i^2, which gives the
+            // sequence h(k), h(k)+1, h(k)+3, h(k)+6, h+10, ...  This is a
+            // good sequence for 2^n-sized tables as the values h(k,i) for i
+            // in [0,m − 1] are all distinct so termination is guaranteed.
+            // See http://portal.acm.org/citation.cfm?id=360737 and
+            // http://en.wikipedia.org/wiki/Quadratic_probing (fetched
+            // 06-Nov-2009) for more details.
+            k = (k + n) & bitmask;
+            n += 1;
+        }
+    }
+
+    uint32_t CseFilter::findImmI(LInsp ins)
+    {
+        uint32_t k;
+        findImmI(ins->immI(), k);
+        return k;
+    }
+
+#ifdef NANOJIT_64BIT
+    inline LInsp CseFilter::findImmQ(uint64_t a, uint32_t &k)
+    {
+        LInsHashKind kind = LInsImmQ;
+        const uint32_t bitmask = m_cap[kind] - 1;
+        k = hashImmQorD(a) & bitmask;
+        uint32_t n = 1;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            NanoAssert(ins->isImmQ());
+            if (ins->immQ() == a)
+                return ins;
+            k = (k + n) & bitmask;
+            n += 1;
+        }
+    }
+
+    uint32_t CseFilter::findImmQ(LInsp ins)
+    {
+        uint32_t k;
+        findImmQ(ins->immQ(), k);
+        return k;
+    }
+#endif
+
+    inline LInsp CseFilter::findImmD(uint64_t a, uint32_t &k)
+    {
+        LInsHashKind kind = LInsImmD;
+        const uint32_t bitmask = m_cap[kind] - 1;
+        k = hashImmQorD(a) & bitmask;
+        uint32_t n = 1;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            NanoAssert(ins->isImmD());
+            if (ins->immQ() == a)
+                return ins;
+            k = (k + n) & bitmask;
+            n += 1;
+        }
+    }
+
+    uint32_t CseFilter::findImmD(LInsp ins)
+    {
+        uint32_t k;
+        findImmD(ins->immQ(), k);
+        return k;
+    }
+
+    inline LInsp CseFilter::find1(LOpcode op, LInsp a, uint32_t &k)
+    {
+        LInsHashKind kind = LIns1;
+        const uint32_t bitmask = m_cap[kind] - 1;
+        k = hash1(op, a) & bitmask;
+        uint32_t n = 1;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            if (ins->isop(op) && ins->oprnd1() == a)
+                return ins;
+            k = (k + n) & bitmask;
+            n += 1;
+        }
+    }
+
+    uint32_t CseFilter::find1(LInsp ins)
+    {
+        uint32_t k;
+        find1(ins->opcode(), ins->oprnd1(), k);
+        return k;
+    }
+
+    inline LInsp CseFilter::find2(LOpcode op, LInsp a, LInsp b, uint32_t &k)
+    {
+        LInsHashKind kind = LIns2;
+        const uint32_t bitmask = m_cap[kind] - 1;
+        k = hash2(op, a, b) & bitmask;
+        uint32_t n = 1;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            if (ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b)
+                return ins;
+            k = (k + n) & bitmask;
+            n += 1;
+        }
+    }
+
+    uint32_t CseFilter::find2(LInsp ins)
+    {
+        uint32_t k;
+        find2(ins->opcode(), ins->oprnd1(), ins->oprnd2(), k);
+        return k;
+    }
+
+    inline LInsp CseFilter::find3(LOpcode op, LInsp a, LInsp b, LInsp c, uint32_t &k)
+    {
+        LInsHashKind kind = LIns3;
+        const uint32_t bitmask = m_cap[kind] - 1;
+        k = hash3(op, a, b, c) & bitmask;
+        uint32_t n = 1;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            if (ins->isop(op) && ins->oprnd1() == a && ins->oprnd2() == b && ins->oprnd3() == c)
+                return ins;
+            k = (k + n) & bitmask;
+            n += 1;
+        }
+    }
+
+    uint32_t CseFilter::find3(LInsp ins)
+    {
+        uint32_t k;
+        find3(ins->opcode(), ins->oprnd1(), ins->oprnd2(), ins->oprnd3(), k);
+        return k;
+    }
+
+    inline LInsp CseFilter::findLoad(LOpcode op, LInsp a, int32_t d, AccSet accSet,
+                                     LInsHashKind kind, uint32_t &k)
+    {
+        (void)accSet;
+        const uint32_t bitmask = m_cap[kind] - 1;
+        k = hashLoad(op, a, d, accSet) & bitmask;
+        uint32_t n = 1;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            NanoAssert(ins->accSet() == accSet);
+            if (ins->isop(op) && ins->oprnd1() == a && ins->disp() == d)
+                return ins;
+            k = (k + n) & bitmask;
+            n += 1;
+        }
+    }
+
+    uint32_t CseFilter::findLoadReadOnly(LInsp ins)
+    {
+        uint32_t k;
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadReadOnly, k);
+        return k;
+    }
+
+    uint32_t CseFilter::findLoadStack(LInsp ins)
+    {
+        uint32_t k;
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadStack, k);
+        return k;
+    }
+
+    uint32_t CseFilter::findLoadRStack(LInsp ins)
+    {
+        uint32_t k;
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadRStack, k);
+        return k;
+    }
+
+    uint32_t CseFilter::findLoadOther(LInsp ins)
+    {
+        uint32_t k;
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadOther, k);
+        return k;
+    }
+
+    uint32_t CseFilter::findLoadMultiple(LInsp ins)
+    {
+        uint32_t k;
+        findLoad(ins->opcode(), ins->oprnd1(), ins->disp(), ins->accSet(), LInsLoadMultiple, k);
+        return k;
+    }
+
+    bool argsmatch(LInsp ins, uint32_t argc, LInsp args[])
+    {
+        for (uint32_t j=0; j < argc; j++)
+            if (ins->arg(j) != args[j])
+                return false;
+        return true;
+    }
+
+    inline LInsp CseFilter::findCall(const CallInfo *ci, uint32_t argc, LInsp args[], uint32_t &k)
+    {
+        LInsHashKind kind = LInsCall;
+        const uint32_t bitmask = m_cap[kind] - 1;
+        k = hashCall(ci, argc, args) & bitmask;
+        uint32_t n = 1;
+        while (true) {
+            LInsp ins = m_list[kind][k];
+            if (!ins)
+                return NULL;
+            if (ins->isCall() && ins->callInfo() == ci && argsmatch(ins, argc, args))
+                return ins;
+            k = (k + n) & bitmask;
+            n += 1;
+        }
+    }
+
+    uint32_t CseFilter::findCall(LInsp ins)
+    {
+        LInsp args[MAXARGS];
+        uint32_t argc = ins->argc();
+        NanoAssert(argc < MAXARGS);
+        for (uint32_t j=0; j < argc; j++)
+            args[j] = ins->arg(j);
+        uint32_t k;
+        findCall(ins->callInfo(), argc, args, k);
+        return k;
     }
 
     LIns* CseFilter::insImmI(int32_t imm)
