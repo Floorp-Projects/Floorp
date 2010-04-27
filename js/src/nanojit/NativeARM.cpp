@@ -1231,9 +1231,27 @@ Assembler::asm_store32(LOpcode op, LIns *value, int dr, LIns *base)
 }
 
 bool
+canRematALU(LIns *ins)
+{
+    // Return true if we can generate code for this instruction that neither
+    // sets CCs, clobbers an input register, nor requires allocating a register.
+    switch (ins->opcode()) {
+    case LIR_addi:
+    case LIR_subi:
+    case LIR_andi:
+    case LIR_ori:
+    case LIR_xori:
+        return ins->oprnd1()->isInReg() && ins->oprnd2()->isImmI();
+    default:
+        ;
+    }
+    return false;
+}
+
+bool
 Assembler::canRemat(LIns* ins)
 {
-    return ins->isImmI() || ins->isop(LIR_alloc);
+    return ins->isImmI() || ins->isop(LIR_alloc) || canRematALU(ins);
 }
 
 void
@@ -1243,8 +1261,17 @@ Assembler::asm_restore(LInsp i, Register r)
         asm_add_imm(r, FP, deprecated_disp(i));
     } else if (i->isImmI()) {
         asm_ld_imm(r, i->immI());
-    }
-    else {
+    } else if (canRematALU(i)) {
+        Register rn = i->oprnd1()->getReg();
+        int32_t imm = i->oprnd2()->immI();
+        switch (i->opcode()) {
+        case LIR_addi: asm_add_imm(r, rn, imm, /*stat=*/ 0); break;
+        case LIR_subi: asm_sub_imm(r, rn, imm, /*stat=*/ 0); break;
+        case LIR_andi: asm_and_imm(r, rn, imm, /*stat=*/ 0); break;
+        case LIR_ori:  asm_orr_imm(r, rn, imm, /*stat=*/ 0); break;
+        case LIR_xori: asm_eor_imm(r, rn, imm, /*stat=*/ 0); break;
+        }
+    } else {
         // We can't easily load immediate values directly into FP registers, so
         // ensure that memory is allocated for the constant and load it from
         // memory.
