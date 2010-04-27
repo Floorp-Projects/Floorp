@@ -79,7 +79,8 @@ function load_second_viewport() {
   // Check viewport settings
   ok(working_tab.browser.classList.contains("browser-viewport"), "Viewport 'browser-viewport' class");
   let style = window.getComputedStyle(working_tab.browser, null);
-  is(style.width, "320px", "Viewport width=320");
+  let expectedWidth = Math.max(320, window.innerWidth);
+  is(style.width, expectedWidth+"px", "Viewport width is at least 320"); // Bug 561413
 
   is(Browser._browserView.getZoomLevel(), 1, "Viewport scale=1");
 

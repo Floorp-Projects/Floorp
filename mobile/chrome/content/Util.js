@@ -142,6 +142,11 @@ let Util = {
 
     let viewportWidth = viewportWidthStr == "device-width" ? window.innerWidth : parseInt(viewportWidthStr);
     let viewportHeight = viewportHeightStr == "device-height" ? window.innerHeight : parseInt(viewportHeightStr);
+ 
+    // If (scale * width) < device-width, increase the width (bug 561413).
+    let maxInitialScale = viewportScale;
+    if (maxInitialScale && viewportWidth)
+      viewportWidth = Math.max(viewportWidth, window.innerWidth / maxInitialScale);
 
     if (viewportScale > 0 || viewportWidth > 0 || viewportHeight > 0) {
       return {
