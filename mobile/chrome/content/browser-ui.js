@@ -425,6 +425,9 @@ var BrowserUI = {
     // listening escape to dismiss dialog on VK_ESCAPE
     window.addEventListener("keypress", this, true);
 
+    // listening AppCommand to handle special keys
+    window.addEventListener("AppCommand", this, true);
+
     // Push the panel initialization out of the startup path
     // (Using an event because we have no good way to delay-init [Bug 535366])
     browsers.addEventListener("load", function() {
@@ -707,6 +710,19 @@ var BrowserUI = {
             dialog.close();
         }
         break;
+      case "AppCommand":
+        aEvent.stopPropagation();
+        switch (aEvent.command) {
+          case "Menu":
+            this.doCommand("cmd_menu");
+            break;
+          case "Search":
+            this.doCommand("cmd_openLocation");
+            break;
+          default:
+            break;
+        }
+        break;
       // URL textbox events
       case "mouseup":
         if (!this._isEventInsidePopup(aEvent))
@@ -829,6 +845,7 @@ var BrowserUI = {
         this._closeOrQuit();
         break;
       case "cmd_menu":
+        getIdentityHandler().toggle();
         break;
       case "cmd_newTab":
         this.newTab();
