@@ -958,6 +958,10 @@ def checkcycles(p, stack=None):
         stack = []
 
     for cp in p.manages:
+        # special case for self-managed protocols
+        if cp is p:
+            continue
+        
         if cp in stack:
             return [stack + [p, cp]]
         cycles += checkcycles(cp, stack + [p])
