@@ -7203,19 +7203,6 @@ js_GetXMLObject(JSContext *cx, JSXML *xml)
         return obj;
     }
 
-    /*
-     * A JSXML cannot be shared among threads unless it has an object.
-     * A JSXML cannot be given an object unless:
-     * (a) it has no parent; or
-     * (b) its parent has no object (therefore is thread-private); or
-     * (c) its parent's object is locked.
-     *
-     * Once given an object, a JSXML is immutable.
-     */
-    JS_ASSERT(!xml->parent ||
-              !xml->parent->object ||
-              JS_IS_OBJ_LOCKED(cx, xml->parent->object));
-
     obj = NewXMLObject(cx, xml);
     if (!obj)
         return NULL;
