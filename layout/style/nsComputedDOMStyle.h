@@ -104,7 +104,7 @@ private:
     NS_ASSERTION(mFlushedPendingReflows,
                  "property getter should have been marked layout-dependent");
   }
-  
+
 #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                  \
   const nsStyle##name_ * GetStyle##name_() {                            \
     return mStyleContextHolder->GetStyle##name_();                      \
@@ -389,7 +389,7 @@ private:
   nsresult SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
   nsresult SetValueToStyleImage(const nsStyleImage& aStyleImage,
                                 nsROCSSPrimitiveValue* aValue);
-  
+
   /**
    * A method to get a percentage base for a percentage value.  Returns PR_TRUE
    * if a percentage base value was determined, PR_FALSE otherwise.
@@ -486,7 +486,7 @@ private:
 #endif
 };
 
-nsresult 
+nsresult
 NS_NewComputedDOMStyle(nsIDOMElement *aElement, const nsAString &aPseudoElt,
                        nsIPresShell *aPresShell,
                        nsComputedDOMStyle **aComputedStyle);

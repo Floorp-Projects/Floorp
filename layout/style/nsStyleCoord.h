@@ -171,7 +171,7 @@ public:
   nsStyleCorners(void);
 
   // use compiler's version
-  //nsStyleCorners&  operator=(const nsStyleCorners& aCopy);  
+  //nsStyleCorners&  operator=(const nsStyleCorners& aCopy);
   PRBool         operator==(const nsStyleCorners& aOther) const;
   PRBool         operator!=(const nsStyleCorners& aOther) const;
 

@@ -445,12 +445,12 @@ protected:
   void DestroyInternal(nsRuleNode ***aDestroyQueueTail);
   void PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode);
   void PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode);
-  
+
   const void* SetDefaultOnRoot(const nsStyleStructID aSID,
                                nsStyleContext* aContext);
 
   const void*
-    WalkRuleTree(const nsStyleStructID aSID, nsStyleContext* aContext, 
+    WalkRuleTree(const nsStyleStructID aSID, nsStyleContext* aContext,
                  nsRuleData* aRuleData, nsRuleDataStruct* aSpecificData);
 
   const void*
@@ -483,35 +483,35 @@ protected:
 
   const void*
     ComputeBackgroundData(void* aStartStruct,
-                          const nsRuleDataStruct& aData, 
+                          const nsRuleDataStruct& aData,
                           nsStyleContext* aContext, nsRuleNode* aHighestNode,
                           RuleDetail aRuleDetail,
                           const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeMarginData(void* aStartStruct,
-                      const nsRuleDataStruct& aData, 
+                      const nsRuleDataStruct& aData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
                       const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeBorderData(void* aStartStruct,
-                      const nsRuleDataStruct& aData, 
+                      const nsRuleDataStruct& aData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
                       const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputePaddingData(void* aStartStruct,
-                       const nsRuleDataStruct& aData, 
+                       const nsRuleDataStruct& aData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
                        const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeOutlineData(void* aStartStruct,
-                       const nsRuleDataStruct& aData, 
+                       const nsRuleDataStruct& aData,
                        nsStyleContext* aContext, nsRuleNode* aHighestNode,
                        RuleDetail aRuleDetail,
                        const PRBool aCanStoreInRuleTree);
@@ -525,21 +525,21 @@ protected:
 
   const void*
     ComputePositionData(void* aStartStruct,
-                        const nsRuleDataStruct& aData, 
+                        const nsRuleDataStruct& aData,
                         nsStyleContext* aContext, nsRuleNode* aHighestNode,
                         RuleDetail aRuleDetail,
                         const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeTableData(void* aStartStruct,
-                     const nsRuleDataStruct& aData, 
+                     const nsRuleDataStruct& aData,
                      nsStyleContext* aContext, nsRuleNode* aHighestNode,
                      RuleDetail aRuleDetail,
                      const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeTableBorderData(void* aStartStruct,
-                           const nsRuleDataStruct& aData, 
+                           const nsRuleDataStruct& aData,
                            nsStyleContext* aContext, nsRuleNode* aHighestNode,
                            RuleDetail aRuleDetail,
                            const PRBool aCanStoreInRuleTree);
@@ -553,14 +553,14 @@ protected:
 
   const void*
     ComputeQuotesData(void* aStartStruct,
-                      const nsRuleDataStruct& aData, 
+                      const nsRuleDataStruct& aData,
                       nsStyleContext* aContext, nsRuleNode* aHighestNode,
                       RuleDetail aRuleDetail,
                       const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeTextData(void* aStartStruct,
-                    const nsRuleDataStruct& aData, 
+                    const nsRuleDataStruct& aData,
                     nsStyleContext* aContext, nsRuleNode* aHighestNode,
                     RuleDetail aRuleDetail,
                     const PRBool aCanStoreInRuleTree);
@@ -574,7 +574,7 @@ protected:
 
   const void*
     ComputeUserInterfaceData(void* aStartStruct,
-                             const nsRuleDataStruct& aData, 
+                             const nsRuleDataStruct& aData,
                              nsStyleContext* aContext,
                              nsRuleNode* aHighestNode,
                              RuleDetail aRuleDetail,
@@ -589,7 +589,7 @@ protected:
 
   const void*
     ComputeXULData(void* aStartStruct,
-                   const nsRuleDataStruct& aData, 
+                   const nsRuleDataStruct& aData,
                    nsStyleContext* aContext, nsRuleNode* aHighestNode,
                    RuleDetail aRuleDetail,
                    const PRBool aCanStoreInRuleTree);
@@ -603,14 +603,14 @@ protected:
 
   const void*
     ComputeSVGData(void* aStartStruct,
-                   const nsRuleDataStruct& aData, 
+                   const nsRuleDataStruct& aData,
                    nsStyleContext* aContext, nsRuleNode* aHighestNode,
                    RuleDetail aRuleDetail,
                    const PRBool aCanStoreInRuleTree);
 
   const void*
     ComputeSVGResetData(void* aStartStruct,
-                        const nsRuleDataStruct& aData, 
+                        const nsRuleDataStruct& aData,
                         nsStyleContext* aContext, nsRuleNode* aHighestNode,
                         RuleDetail aRuleDetail,
                         const PRBool aCanStoreInRuleTree);
@@ -659,7 +659,7 @@ protected:
   #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)  \
     const nsStyle##name_* GetParent##name_();
   #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT  
+  #undef STYLE_STRUCT
 
   const void* GetDisplayData(nsStyleContext* aContext);
   const void* GetVisibilityData(nsStyleContext* aContext);
@@ -708,7 +708,7 @@ public:
   PRBool IsRoot() const { return mParent == nsnull; }
 
   // These PRUint8s are really nsStyleSet::sheetType values.
-  PRUint8 GetLevel() const { 
+  PRUint8 GetLevel() const {
     NS_ASSERTION(!IsRoot(), "can't call on root");
     return (mDependentBits & NS_RULE_NODE_LEVEL_MASK) >>
              NS_RULE_NODE_LEVEL_SHIFT;
@@ -723,7 +723,7 @@ public:
   // NOTE: Does not |AddRef|.
   nsPresContext* GetPresContext() const { return mPresContext; }
 
-  const void* GetStyleData(nsStyleStructID aSID, 
+  const void* GetStyleData(nsStyleStructID aSID,
                            nsStyleContext* aContext,
                            PRBool aComputeData);
 
@@ -731,7 +731,7 @@ public:
     const nsStyle##name_* GetStyle##name_(nsStyleContext* aContext,           \
                                           PRBool aComputeData);
   #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT  
+  #undef STYLE_STRUCT
 
   /*
    * Garbage collection.  Mark walks up the tree, marking any unmarked

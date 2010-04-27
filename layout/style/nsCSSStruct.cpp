@@ -94,7 +94,7 @@ nsCSSValueList::Equal(nsCSSValueList* aList1, nsCSSValueList* aList2)
 {
   if (aList1 == aList2)
     return PR_TRUE;
-    
+
   nsCSSValueList *p1 = aList1, *p2 = aList2;
   for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
     if (p1->mValue != p2->mValue)
