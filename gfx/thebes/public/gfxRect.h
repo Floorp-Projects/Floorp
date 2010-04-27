@@ -67,7 +67,8 @@ namespace mozilla {
          var_++)
 
 static inline mozilla::css::Corner operator++(mozilla::css::Corner& corner, int) {
-    NS_PRECONDITION(corner < NS_CORNER_TOP_LEFT, "Out of range corner");
+    NS_PRECONDITION(corner >= NS_CORNER_TOP_LEFT &&
+                    corner < NS_NUM_CORNERS, "Out of range corner");
     corner = mozilla::css::Corner(corner + 1);
     return corner;
 }
