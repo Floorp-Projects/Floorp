@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Roy Frostig <rfrostig@mozilla.com>
  *   Ben Combee <bcombee@mozilla.com>
+ *   Matt Brubeck <mbrubeck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -133,6 +134,8 @@ let Util = {
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html
     
     let viewportScale = parseFloat(windowUtils.getDocumentMetadata("viewport-initial-scale"));
+    let viewportMinScale = parseFloat(windowUtils.getDocumentMetadata("viewport-minimum-scale"));
+    let viewportMaxScale = parseFloat(windowUtils.getDocumentMetadata("viewport-maximum-scale"));
     let viewportWidthStr = windowUtils.getDocumentMetadata("viewport-width");
     let viewportHeightStr = windowUtils.getDocumentMetadata("viewport-height");
 
@@ -144,20 +147,22 @@ let Util = {
     let viewportHeight = viewportHeightStr == "device-height" ? window.innerHeight : parseInt(viewportHeightStr);
  
     // If (scale * width) < device-width, increase the width (bug 561413).
-    let maxInitialScale = viewportScale;
+    let maxInitialScale = viewportScale || viewportMaxScale;
     if (maxInitialScale && viewportWidth)
       viewportWidth = Math.max(viewportWidth, window.innerWidth / maxInitialScale);
 
-    if (viewportScale > 0 || viewportWidth > 0 || viewportHeight > 0) {
+    if (viewportScale > 0 || viewportWidth > 0 || viewportHeight > 0 || viewportMinScale > 0 || viewportMaxScale > 0) {
       return {
         reason: "viewport",
         result: true,
         scale: viewportScale,
+        minScale: viewportMinScale,
+        maxScale: viewportMaxScale,
         width: viewportWidth,
         height: viewportHeight,
         autoSize: viewportWidthStr == "device-width" || viewportHeightStr == "device-height",
         allowZoom: windowUtils.getDocumentMetadata("viewport-user-scalable") != "no"
-      }
+      };
     }
 
     return { reason: "", result: false, allowZoom: true };

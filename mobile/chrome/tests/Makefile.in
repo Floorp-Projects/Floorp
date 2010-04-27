@@ -59,8 +59,14 @@ _BROWSER_FILES = \
   browser_blank_02.html \
   browser_select.html \
   browser_FormAssistant.html \
+  browser_viewport_00.html \
   browser_viewport_01.html \
   browser_viewport_02.html \
+  browser_viewport_03.html \
+  browser_viewport_04.html \
+  browser_viewport_05.html \
+  browser_viewport_06.html \
+  browser_viewport_07.html \
   $(NULL)
 
 libs:: $(_BROWSER_FILES)
