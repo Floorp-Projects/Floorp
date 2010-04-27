@@ -225,6 +225,7 @@ public:
   virtual void SetCurrentImage(Image* aImage);
   virtual already_AddRefed<Image> GetCurrentImage();
   virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSize);
+  virtual gfxIntSize GetCurrentSize();
 
 protected:
   Monitor mMonitor;
@@ -292,6 +293,13 @@ BasicImageContainer::GetCurrentAsSurface(gfxIntSize* aSizeResult)
   }
   *aSizeResult = ToImageData(mImage)->GetSize();
   return ToImageData(mImage)->GetAsSurface();
+}
+
+gfxIntSize
+BasicImageContainer::GetCurrentSize()
+{
+  MonitorAutoEnter mon(mMonitor);
+  return !mImage ? gfxIntSize(0,0) : ToImageData(mImage)->GetSize();
 }
 
 already_AddRefed<ImageContainer>
