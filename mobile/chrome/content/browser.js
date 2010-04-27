@@ -2272,6 +2272,13 @@ IdentityHandler.prototype = {
     BrowserUI.unlockToolbar();
   },
 
+  toggle: function ih_toggle() {
+    if (this._identityPopup.hidden)
+      this.show();
+    else
+      this.hide();
+  },
+
   /**
    * Click handler for the identity-box element in primary chrome.
    */
@@ -2283,10 +2290,7 @@ IdentityHandler.prototype = {
          event.keyCode != KeyEvent.DOM_VK_RETURN))
       return; // Left click, space or enter only
 
-    if (this._identityPopup.hidden)
-      this.show();
-    else
-      this.hide();
+    this.toggle();
   }
 };
 
