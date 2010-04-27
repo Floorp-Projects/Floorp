@@ -125,8 +125,8 @@ body {
 }
 
 .group {
-	position: relative;
-	float: left; 
+	position: absolute;
+/* 	float: left;  */
   cursor: move;
 	border: 1px solid rgba(230,230,230,1);
 	background-color: rgba(248,248,248,1);
