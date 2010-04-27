@@ -77,6 +77,26 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 // be played.
 #define AUDIO_FRAME_RATE 25.0
 
+// If audio queue has less than this many ms of decoded audio, we won't risk
+// trying to decode the video, we'll skip decoding video up to the next
+// keyframe.
+//
+// Also if the decode catches up with the end of the downloaded data,
+// we'll only go into BUFFERING state if we've got audio and have queued
+// less than LOW_AUDIO_MS of audio, or if we've got video and have queued
+// less than LOW_VIDEO_FRAMES frames.
+static const PRUint32 LOW_AUDIO_MS = 100;
+
+// If we have fewer than LOW_VIDEO_FRAMES decoded frames, and
+// we're not "pumping video", we'll skip the video up to the next keyframe
+// which is at or after the current playback position.
+//
+// Also if the decode catches up with the end of the downloaded data,
+// we'll only go into BUFFERING state if we've got audio and have queued
+// less than LOW_AUDIO_MS of audio, or if we've got video and have queued
+// less than LOW_VIDEO_FRAMES frames.
+static const PRUint32 LOW_VIDEO_FRAMES = 1;
+
 nsOggPlayStateMachine::nsOggPlayStateMachine(nsBuiltinDecoder* aDecoder) :
   mDecoder(aDecoder),
   mState(DECODER_STATE_DECODING_METADATA),
@@ -129,11 +149,6 @@ void nsOggPlayStateMachine::DecodeLoop()
   // skipping up to the next keyframe.
   PRBool skipToNextKeyframe = PR_FALSE;
 
-  // If we have fewer than videoKeyframeSkipThreshold decoded frames, and
-  // we're not "pumping video", we'll skip the video up to the next keyframe
-  // which is at or after the current playback position.
-  const unsigned videoKeyframeSkipThreshold = 1;
-
   // Once we've decoded more than videoPumpThreshold video frames, we'll
   // no longer be considered to be "pumping video".
   const unsigned videoPumpThreshold = 5;
@@ -147,11 +162,6 @@ void nsOggPlayStateMachine::DecodeLoop()
   // of decoded audio, we'll start to check whether the audio or video decode
   // is falling behind.
   const unsigned audioPumpThresholdMs = 250;
-
-  // If audio queue has less than this many ms of decoded audio, we won't risk
-  // trying to decode the video, we'll skip decoding video up to the next
-  // keyframe.
-  const unsigned lowAudioThresholdMs = 100;
 
   // If more than this many ms of decoded audio is queued, we'll hold off
   // decoding more audio.
@@ -190,7 +200,7 @@ void nsOggPlayStateMachine::DecodeLoop()
     }
     if (!videoPump &&
         videoPlaying &&
-        videoQueueSize < videoKeyframeSkipThreshold)
+        videoQueueSize < LOW_VIDEO_FRAMES)
     {
       skipToNextKeyframe = PR_TRUE;
     }
@@ -218,7 +228,7 @@ void nsOggPlayStateMachine::DecodeLoop()
     if (audioPump && audioDecoded > audioPumpThresholdMs) {
       audioPump = PR_FALSE;
     }
-    if (!audioPump && audioPlaying && audioDecoded < lowAudioThresholdMs) {
+    if (!audioPump && audioPlaying && audioDecoded < LOW_AUDIO_MS) {
       skipToNextKeyframe = PR_TRUE;
     }
 
@@ -755,7 +765,10 @@ nsresult nsOggPlayStateMachine::Run()
         if (mBufferExhausted &&
             mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING &&
             !mDecoder->GetCurrentStream()->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
-            !mDecoder->GetCurrentStream()->IsSuspendedByCache()) {
+            !mDecoder->GetCurrentStream()->IsSuspendedByCache() &&
+            ((HasAudio() && mReader->mAudioQueue.Duration() < LOW_AUDIO_MS) ||
+             (HasVideo() && mReader->mVideoQueue.GetSize() < LOW_VIDEO_FRAMES)))
+        {
           // There is at most one frame in the queue and there's
           // more data to load. Let's buffer to make sure we can play a
           // decent amount of video in the future.
