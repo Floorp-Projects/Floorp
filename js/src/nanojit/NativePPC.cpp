@@ -777,7 +777,7 @@ namespace nanojit
             if (p->isImmI()) {
                 asm_li(r, p->immI());
             } else {
-                if (p->isUsed()) {
+                if (p->isExtant()) {
                     if (!p->deprecated_hasKnownReg()) {
                         // load it into the arg reg
                         int d = findMemFor(p);
@@ -802,7 +802,7 @@ namespace nanojit
             }
         }
         else {
-            if (p->isUsed()) {
+            if (p->isExtant()) {
                 Register rp = p->deprecated_getReg();
                 if (!deprecated_isKnownReg(rp) || !IsFpReg(rp)) {
                     // load it into the arg reg
