@@ -7173,6 +7173,15 @@ nsDocument::EnsureOnloadBlocker()
 }
 
 void
+nsDocument::AsyncBlockOnload()
+{
+  while (mAsyncOnloadBlockCount) {
+    --mAsyncOnloadBlockCount;
+    BlockOnload();
+  }
+}
+
+void
 nsDocument::BlockOnload()
 {
   if (mDisplayDocument) {
@@ -7183,6 +7192,16 @@ nsDocument::BlockOnload()
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
   // -- it's not ours.
   if (mOnloadBlockCount == 0 && mScriptGlobalObject) {
+    if (!nsContentUtils::IsSafeToRunScript()) {
+      // Because AddRequest may lead to OnStateChange calls in chrome,
+      // block onload only when there are no script blockers.
+      ++mAsyncOnloadBlockCount;
+      if (mAsyncOnloadBlockCount == 1) {
+        nsContentUtils::AddScriptRunner(
+          NS_NEW_RUNNABLE_METHOD(nsDocument, this, AsyncBlockOnload));
+      }
+      return;
+    }
     nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
     if (loadGroup) {
       loadGroup->AddRequest(mOnloadBlocker, nsnull);
@@ -7199,7 +7218,7 @@ nsDocument::UnblockOnload(PRBool aFireSync)
     return;
   }
 
-  if (mOnloadBlockCount == 0) {
+  if (mOnloadBlockCount == 0 && mAsyncOnloadBlockCount == 0) {
     NS_NOTREACHED("More UnblockOnload() calls than BlockOnload() calls; dropping call");
     return;
   }
@@ -7209,7 +7228,7 @@ nsDocument::UnblockOnload(PRBool aFireSync)
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
   // -- it's not ours.
   if (mOnloadBlockCount == 0 && mScriptGlobalObject) {
-    if (aFireSync) {
+    if (aFireSync && mAsyncOnloadBlockCount == 0) {
       // Increment mOnloadBlockCount, since DoUnblockOnload will decrement it
       ++mOnloadBlockCount;
       DoUnblockOnload();
@@ -7258,6 +7277,11 @@ nsDocument::DoUnblockOnload()
     // We blocked again after the last unblock.  Nothing to do here.  We'll
     // post a new event when we unblock again.
     return;
+  }
+
+  if (mAsyncOnloadBlockCount != 0) {
+    // We need to wait until the async onload block has been handled.
+    PostUnblockOnloadEvent();
   }
 
   // If mScriptGlobalObject is null, we shouldn't be messing with the loadgroup
