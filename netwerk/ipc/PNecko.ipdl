@@ -38,9 +38,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PContentProcess.ipdl";
-include protocol "PHttpChannel.ipdl";
-include protocol "PCookieService.ipdl";
+include protocol PContentProcess;
+include protocol PHttpChannel;
+include protocol PCookieService;
 
 namespace mozilla {
 namespace net {

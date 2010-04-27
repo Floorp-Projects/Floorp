@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PTestShell.ipdl";
+include protocol PTestShell;
 
 namespace mozilla {
 namespace ipc {

@@ -35,9 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PContentProcess.ipdl";
-include protocol "PTestShellCommand.ipdl";
-include protocol "PContextWrapper.ipdl";
+include protocol PContentProcess;
+include protocol PTestShellCommand;
+include protocol PContextWrapper;
 
 namespace mozilla {
 namespace ipc {

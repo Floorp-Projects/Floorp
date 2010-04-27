@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PNecko.ipdl";
+include protocol PNecko;
 
 include "mozilla/net/PHttpChannelParams.h";
 include "mozilla/net/NeckoMessageUtils.h";
