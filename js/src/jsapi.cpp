@@ -592,9 +592,6 @@ JSRuntime::init(uint32 maxbytes)
     debuggerLock = JS_NEW_LOCK();
     if (!debuggerLock)
         return false;
-    deallocatorThread = new JSBackgroundThread();
-    if (!deallocatorThread || !deallocatorThread->init())
-        return false;
 #endif
     return propertyTree.init() && js_InitThreads(this);
 }
@@ -643,10 +640,6 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_CONDVAR(titleSharingDone);
     if (debuggerLock)
         JS_DESTROY_LOCK(debuggerLock);
-    if (deallocatorThread) {
-        deallocatorThread->cancel();
-        delete deallocatorThread;
-    }
 #endif
     propertyTree.finish();
 }
