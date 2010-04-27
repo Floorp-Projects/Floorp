@@ -650,11 +650,6 @@ public:
   virtual nsIScriptGlobalObject* GetScopeObject();
 
   /**
-   * Return the window containing the document (the outer window).
-   */
-  virtual nsPIDOMWindow *GetWindow();
-
-  /**
    * Get the script loader for this document
    */
   virtual nsScriptLoader* ScriptLoader();
@@ -1011,6 +1006,7 @@ protected:
                               const nsAString& aType,
                               PRBool aPersisted);
 
+  virtual nsPIDOMWindow *GetWindowInternal();
   virtual nsPIDOMWindow *GetInnerWindowInternal();
 
   // nsContentList match functions for GetElementsByClassName
