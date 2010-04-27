@@ -37,11 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PContentProcess.ipdl";
-include protocol "PDocumentRenderer.ipdl";
-include protocol "PDocumentRendererShmem.ipdl";
-include protocol "PObjectWrapper.ipdl";
-include protocol "PContextWrapper.ipdl";
+include protocol PContentProcess;
+include protocol PDocumentRenderer;
+include protocol PDocumentRendererShmem;
+include protocol PObjectWrapper;
+include protocol PContextWrapper;
 
 include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";

@@ -1,4 +1,4 @@
-include protocol "cyclecheck_Child.ipdl";
+include protocol cyclecheck_Child;
 
 protocol cyclecheck_Parent {
     manages cyclecheck_Child;
