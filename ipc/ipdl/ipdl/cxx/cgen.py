@@ -216,6 +216,8 @@ class CxxCodeGen(CodePrinter, Visitor):
 
         if md.const:
             self.write(' const')
+        if md.warn_unused:
+            self.write(' NS_WARN_UNUSED_RESULT')
         if md.pure:
             self.write(' = 0')
 
