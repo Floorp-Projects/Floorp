@@ -1033,7 +1033,7 @@ public:
    * given side.
    */
   static PRBool HasNonZeroCornerOnSide(const nsStyleCorners& aCorners,
-                                       PRUint8 aSide);
+                                       mozilla::css::Side aSide);
 
   /**
    * Determine if a widget is likely to require transparency or translucency.

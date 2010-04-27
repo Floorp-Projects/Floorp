@@ -59,10 +59,10 @@
 #define SIDE_BIT_LEFT (1 << NS_SIDE_LEFT)
 #define SIDE_BITS_ALL (SIDE_BIT_TOP|SIDE_BIT_RIGHT|SIDE_BIT_BOTTOM|SIDE_BIT_LEFT)
 
-#define C_TL (gfxCorner::TOP_LEFT)
-#define C_TR (gfxCorner::TOP_RIGHT)
-#define C_BR (gfxCorner::BOTTOM_RIGHT)
-#define C_BL (gfxCorner::BOTTOM_LEFT)
+#define C_TL NS_CORNER_TOP_LEFT
+#define C_TR NS_CORNER_TOP_RIGHT
+#define C_BR NS_CORNER_BOTTOM_RIGHT
+#define C_BL NS_CORNER_BOTTOM_LEFT
 
 /*
  * Helper class that handles border rendering.
@@ -141,19 +141,19 @@ struct nsCSSBorderRenderer {
   PRBool AreBorderSideFinalStylesSame(PRUint8 aSides);
 
   // For the given style, is the given corner a solid color?
-  PRBool IsSolidCornerStyle(PRUint8 aStyle, gfxCorner::Corner aCorner);
+  PRBool IsSolidCornerStyle(PRUint8 aStyle, mozilla::css::Corner aCorner);
 
   // For the given solid corner, what color style should be used?
-  BorderColorStyle BorderColorStyleForSolidCorner(PRUint8 aStyle, gfxCorner::Corner aCorner);
+  BorderColorStyle BorderColorStyleForSolidCorner(PRUint8 aStyle, mozilla::css::Corner aCorner);
 
   //
   // Path generation functions
   //
 
   // add the path for drawing the given corner to the context
-  void DoCornerSubPath(PRUint8 aCorner);
+  void DoCornerSubPath(mozilla::css::Corner aCorner);
   // add the path for drawing the given side without any adjacent corners to the context
-  void DoSideClipWithoutCornersSubPath(PRUint8 aSide);
+  void DoSideClipWithoutCornersSubPath(mozilla::css::Side aSide);
 
   // Create a clip path for the wedge that this side of
   // the border should take up.  This is only called
@@ -163,7 +163,7 @@ struct nsCSSBorderRenderer {
   // This code needs to make sure that the individual pieces
   // don't ever (mathematically) overlap; the pixel overlap
   // is taken care of by the ADD compositing.
-  void DoSideClipSubPath(PRUint8 aSide);
+  void DoSideClipSubPath(mozilla::css::Side aSide);
 
   // Given a set of sides to fill and a color, do so in the fastest way.
   //
@@ -196,7 +196,7 @@ struct nsCSSBorderRenderer {
   void DrawBorderSidesCompositeColors(PRIntn aSides, const nsBorderColors *compositeColors);
 
   // draw the given dashed side
-  void DrawDashedSide (PRUint8 aSide);
+  void DrawDashedSide (mozilla::css::Side aSide);
 
   // draw the entire border
   void DrawBorders ();

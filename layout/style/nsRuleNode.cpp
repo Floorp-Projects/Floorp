@@ -2309,7 +2309,7 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
                                  const nsCSSValue& aRTLSource,
                                  const nsCSSValue& aLTRLogicalValue,
                                  const nsCSSValue& aRTLLogicalValue,
-                                 PRUint8 aSide,
+                                 mozilla::css::Side aSide,
                                  nsCSSRect& aValueRect,
                                  PRBool& aCanStoreInRuleTree)
 {

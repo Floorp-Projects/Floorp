@@ -1112,7 +1112,7 @@ nsBCTableCellFrame::GetBorderWidth(nsMargin&  aBorder) const
 }
 
 BCPixelSize
-nsBCTableCellFrame::GetBorderWidth(PRUint8 aSide) const
+nsBCTableCellFrame::GetBorderWidth(mozilla::css::Side aSide) const
 {
   switch(aSide) {
   case NS_SIDE_TOP:
@@ -1127,7 +1127,7 @@ nsBCTableCellFrame::GetBorderWidth(PRUint8 aSide) const
 }
 
 void
-nsBCTableCellFrame::SetBorderWidth(PRUint8 aSide,
+nsBCTableCellFrame::SetBorderWidth(mozilla::css::Side aSide,
                                    BCPixelSize aValue)
 {
   switch(aSide) {

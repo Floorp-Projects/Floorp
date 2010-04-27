@@ -42,6 +42,7 @@
 #ifndef nsStyleConsts_h___
 #define nsStyleConsts_h___
 
+#include "gfxRect.h"
 #include "nsFont.h"
 
 // cairo doesn't support invert
@@ -50,18 +51,17 @@
 // XXX fold this into nsStyleContext and group by nsStyleXXX struct
 
 // Indices into border/padding/margin arrays
-#define NS_SIDE_TOP     0
-#define NS_SIDE_RIGHT   1
-#define NS_SIDE_BOTTOM  2
-#define NS_SIDE_LEFT    3
+#define NS_SIDE_TOP     mozilla::css::eSideTop
+#define NS_SIDE_RIGHT   mozilla::css::eSideRight
+#define NS_SIDE_BOTTOM  mozilla::css::eSideBottom
+#define NS_SIDE_LEFT    mozilla::css::eSideLeft
 
-#define NS_FOR_CSS_SIDES(var_) for (PRInt32 var_ = 0; var_ < 4; ++var_)
-
-// Indices into "full corner" arrays (nsCSSCornerSizes e.g.)
-#define NS_CORNER_TOP_LEFT     0
-#define NS_CORNER_TOP_RIGHT    1
-#define NS_CORNER_BOTTOM_RIGHT 2
-#define NS_CORNER_BOTTOM_LEFT  3
+#define NS_FOR_CSS_SIDES(var_) for (mozilla::css::Side var_ = NS_SIDE_TOP; var_ <= NS_SIDE_LEFT; var_++)
+static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
+    NS_PRECONDITION(side < NS_SIDE_LEFT, "Out of range side");
+    side = mozilla::css::Side(side + 1);
+    return side;
+}
 
 #define NS_FOR_CSS_FULL_CORNERS(var_) for (PRInt32 var_ = 0; var_ < 4; ++var_)
 
