@@ -405,6 +405,10 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // position.
   PRInt64 GetDownloadPosition();
 
+  // Updates the approximate byte offset which playback has reached. This is
+  // used to calculate the readyState transitions.
+  void UpdatePlaybackOffset(PRInt64 aOffset);
+  
 public:
   // Notifies the element that decoding has failed.
   void DecodeError();

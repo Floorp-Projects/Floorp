@@ -379,6 +379,7 @@ void nsOggPlayStateMachine::AudioLoop()
                               sound->AudioDataLength(),
                               PR_TRUE);
           mAudioEndTime = sound->mTime + sound->mDuration;
+          mDecoder->UpdatePlaybackOffset(sound->mOffset);
         } else {
           mReader->mAudioQueue.PushFront(sound);
           sound.forget();
@@ -1122,6 +1123,7 @@ void nsOggPlayStateMachine::AdvanceFrame()
         mVideoFrameTime = data->mTime;
         videoData = data;
         mReader->mVideoQueue.PopFront();
+        mDecoder->UpdatePlaybackOffset(data->mOffset);
         if (mReader->mVideoQueue.GetSize() == 0)
           break;
         data = mReader->mVideoQueue.PeekFront();
