@@ -1148,6 +1148,7 @@ nsNavHistory::InitStatements()
   // We are not checking for duplicated ids into the unified table
   // for perf reasons, LIMIT 1 will discard duplicates faster since we
   // only need to know if a visit exists.
+  // Use indexed params here for performance.
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT h.id "
       "FROM moz_places_temp h "
