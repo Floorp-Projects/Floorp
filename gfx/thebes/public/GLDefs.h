@@ -43,7 +43,9 @@
 #if !defined(__gl_h_)
 #define __gl_h_
 
-#if defined(__APPLE__XXX)
+#include <stddef.h>
+
+#if defined(__APPLE__)
 typedef unsigned long GLenum;
 typedef unsigned long GLbitfield;
 typedef unsigned long GLuint;
