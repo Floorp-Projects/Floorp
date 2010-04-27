@@ -739,18 +739,7 @@ protected:
   nsCategoryCache<nsINavHistoryObserver> mCacheObservers;
 };
 
-/**
- * These utils bind a specified URI (or URL) to a statement, at the specified
- * index.
- * @note URIs are always bound as UTF8.
- */
-nsresult BindStatementURI(mozIStorageStatement* statement,
-                          PRInt32 index,
-                          nsIURI* aURI);
-nsresult BindStatementURLCString(mozIStorageStatement* statement,
-                                 PRInt32 index,
-                                 const nsACString& aURLString);
-                        
+
 #define PLACES_URI_PREFIX "place:"
 
 /* Returns true if the given URI represents a history query. */
