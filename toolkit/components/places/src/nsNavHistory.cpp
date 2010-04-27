@@ -1058,11 +1058,11 @@ nsNavHistory::InitStatements()
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, url, title, rev_host, visit_count "
     "FROM moz_places_temp "
-    "WHERE url = ?1 "
+    "WHERE url = :page_url "
     "UNION ALL "
     "SELECT id, url, title, rev_host, visit_count "
     "FROM moz_places "
-    "WHERE url = ?1 "
+    "WHERE url = :page_url "
     "LIMIT 1"),
     getter_AddRefs(mDBGetURLPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1074,11 +1074,11 @@ nsNavHistory::InitStatements()
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT id, url, title, rev_host, visit_count "
       "FROM moz_places_temp "
-      "WHERE id = ?1 "
+      "WHERE id = :page_id "
       "UNION ALL "
       "SELECT id, url, title, rev_host, visit_count "
       "FROM moz_places "
-      "WHERE id = ?1 "
+      "WHERE id = :page_id "
       "LIMIT 1"),
     getter_AddRefs(mDBGetIdPageInfo));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1816,7 +1816,7 @@ nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
   *aEntryID = 0;
 
   mozStorageStatementScoper statementResetter(mDBGetURLPageInfo);
-  nsresult rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
+  nsresult rv = URIBinder::Bind(mDBGetURLPageInfo, NS_LITERAL_CSTRING("page_url"), aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasEntry = PR_FALSE;
@@ -1912,7 +1912,7 @@ nsNavHistory::InternalAddNewPage(nsIURI* aURI,
   if (aPageID) {
     mozStorageStatementScoper scoper(mDBGetURLPageInfo);
 
-    rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
+    rv = URIBinder::Bind(mDBGetURLPageInfo, NS_LITERAL_CSTRING("page_url"), aURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool hasResult = PR_FALSE;
@@ -5493,7 +5493,7 @@ nsNavHistory::GetPageTitle(nsIURI* aURI, nsAString& aTitle)
   aTitle.Truncate(0);
 
   mozStorageStatementScoper scope(mDBGetURLPageInfo);
-  nsresult rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
+  nsresult rv = URIBinder::Bind(mDBGetURLPageInfo, NS_LITERAL_CSTRING("page_url"), aURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool hasResults = PR_FALSE;
@@ -7224,7 +7224,7 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
   nsAutoString title;
   { // scope for statement
     mozStorageStatementScoper infoScoper(mDBGetURLPageInfo);
-    rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
+    rv = URIBinder::Bind(mDBGetURLPageInfo, NS_LITERAL_CSTRING("page_url"), aURI);
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool hasURL = PR_FALSE;
     rv = mDBGetURLPageInfo->ExecuteStep(&hasURL);
@@ -7837,7 +7837,7 @@ nsNavHistory::CalculateFrecencyInternal(PRInt64 aPlaceId,
         // frecency to -visit_count, so they're still shown in autocomplete.
         PRInt32 visitCount = 0;
         mozStorageStatementScoper scoper(mDBGetIdPageInfo);
-        rv = mDBGetIdPageInfo->BindInt64Parameter(0, aPlaceId);
+        rv = mDBGetIdPageInfo->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlaceId);
         NS_ENSURE_SUCCESS(rv, rv);
 
         PRBool hasVisits = PR_TRUE;
