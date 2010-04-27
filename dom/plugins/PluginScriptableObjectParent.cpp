@@ -39,6 +39,8 @@
 #include "PluginScriptableObjectParent.h"
 #include "PluginScriptableObjectUtils.h"
 
+#include "mozilla/unused.h"
+
 using namespace mozilla::plugins;
 
 namespace {
@@ -671,7 +673,7 @@ PluginScriptableObjectParent::Unprotect()
 
   if (mType == LocalObject) {
     if (--mProtectCount == 0) {
-      PluginScriptableObjectParent::Send__delete__(this);
+      unused << PluginScriptableObjectParent::Send__delete__(this);
     }
   }
 }
@@ -691,7 +693,7 @@ PluginScriptableObjectParent::DropNPObject()
   instance->UnregisterNPObject(mObject);
   mObject = nsnull;
 
-  (void) SendUnprotect();
+  unused << SendUnprotect();
 }
 
 bool
