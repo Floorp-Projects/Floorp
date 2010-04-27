@@ -96,6 +96,9 @@
 #include "nsIWindowWatcher.h"
 #include "nsCommaSeparatedTokenizer.h"
 #include "nsIConsoleService.h"
+#include "nsIChannelPolicy.h"
+#include "nsChannelPolicy.h"
+#include "nsIContentSecurityPolicy.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -849,6 +852,7 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mLoadLengthComputable(PR_FALSE), mLoadTotal(0),
     mFirstStartRequestSeen(PR_FALSE)
 {
+  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   nsLayoutStatics::AddRef();
 }
 
@@ -1129,10 +1133,16 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
   // nsScanner::Append(const char* aBuffer, PRUint32 aLen).
   // If we get illegal characters in the input we replace
   // them and don't just fail.
-
-  PRInt32 dataLen = mResponseBody.Length();
-  if (!dataLen)
+  if (!mResponseBodyUnicode.IsVoid()) {
+    aOutBuffer = mResponseBodyUnicode;
     return NS_OK;
+  }
+  
+  PRInt32 dataLen = mResponseBody.Length();
+  if (!dataLen) {
+    mResponseBodyUnicode.SetIsVoid(PR_FALSE);
+    return NS_OK;
+  }
 
   nsresult rv = NS_OK;
 
@@ -1148,8 +1158,14 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
   }
 
   if (dataCharset.EqualsLiteral("ASCII")) {
-    CopyASCIItoUTF16(mResponseBody, aOutBuffer);
+    CopyASCIItoUTF16(mResponseBody, mResponseBodyUnicode);
+    aOutBuffer = mResponseBodyUnicode;
+    return NS_OK;
+  }
 
+  if (dataCharset.EqualsLiteral("UTF-8")) {
+    CopyUTF8toUTF16(mResponseBody, mResponseBodyUnicode);
+    aOutBuffer = mResponseBodyUnicode;
     return NS_OK;
   }
 
@@ -1208,7 +1224,8 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
     }
   } while ( NS_FAILED(rv) && (dataLen > 0) );
 
-  aOutBuffer.Assign(outBuffer, totalChars);
+  mResponseBodyUnicode.Assign(outBuffer, totalChars);
+  aOutBuffer = mResponseBodyUnicode;
   nsMemory::Free(outBuffer);
 
   return NS_OK;
@@ -1314,6 +1331,7 @@ nsXMLHttpRequest::Abort()
   mResponseXML = nsnull;
   PRUint32 responseLength = mResponseBody.Length();
   mResponseBody.Truncate();
+  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
   mState |= XML_HTTP_REQUEST_ABORTED;
 
   if (!(mState & (XML_HTTP_REQUEST_UNINITIALIZED |
@@ -1736,8 +1754,22 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   } else {
     loadFlags = nsIRequest::LOAD_BACKGROUND;
   }
-  rv = NS_NewChannel(getter_AddRefs(mChannel), uri, nsnull, loadGroup, nsnull,
-                     loadFlags);
+  // get Content Security Policy from principal to pass into channel
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  mPrincipal->GetCsp(getter_AddRefs(csp));
+  if (csp) {
+    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_XMLHTTPREQUEST);
+  }
+  rv = NS_NewChannel(getter_AddRefs(mChannel),
+                     uri,
+                     nsnull,                    // ioService
+                     loadGroup,
+                     nsnull,                    // callbacks
+                     loadFlags,
+                     channelPolicy);
   if (NS_FAILED(rv)) return rv;
 
   // Check if we're doing a cross-origin request.
@@ -1804,6 +1836,7 @@ nsXMLHttpRequest::StreamReaderFunc(nsIInputStream* in,
 
   // Copy for our own use
   xmlHttpRequest->mResponseBody.Append(fromRawSegment,count);
+  xmlHttpRequest->mResponseBodyUnicode.SetIsVoid(PR_TRUE);
 
   nsresult rv = NS_OK;
 
@@ -1928,6 +1961,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   // Reset responseBody
   mResponseBody.Truncate();
+  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
 
   // Set up responseXML
   PRBool parseBody = PR_TRUE;
@@ -2487,6 +2521,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
   // Reset responseBody
   mResponseBody.Truncate();
+  mResponseBodyUnicode.SetIsVoid(PR_TRUE);
 
   // Reset responseXML
   mResponseXML = nsnull;

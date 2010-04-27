@@ -180,9 +180,7 @@ RPCChannel::Call(Message* msg, Message* reply)
     msg->set_rpc_local_stack_depth(1 + StackDepth());
     mStack.push(*msg);
 
-    mIOLoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this, &RPCChannel::OnSend, msg));
+    SendThroughTransport(msg);
 
     while (1) {
         // if a handler invoked by *Dispatch*() spun a nested event
@@ -498,9 +496,7 @@ RPCChannel::DispatchIncall(const Message& call)
     {
         MutexAutoLock lock(mMutex);
         if (ChannelConnected == mChannelState)
-            mIOLoop->PostTask(
-                FROM_HERE,
-                NewRunnableMethod(this, &RPCChannel::OnSend, reply));
+            SendThroughTransport(reply);
     }
 }
 

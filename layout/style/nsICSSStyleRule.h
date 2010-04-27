@@ -58,6 +58,7 @@
 class nsIAtom;
 class nsCSSDeclaration;
 class nsICSSStyleSheet;
+struct nsCSSSelectorList;
 
 struct nsAtomList {
 public:
@@ -85,6 +86,8 @@ public:
                     const PRUnichar *aString);
   nsPseudoClassList(nsIAtom* aAtom, nsCSSPseudoClasses::Type aType,
                     const PRInt32 *aIntPair);
+  nsPseudoClassList(nsIAtom* aAtom, nsCSSPseudoClasses::Type aType,
+                    nsCSSSelectorList *aSelectorList /* takes ownership */);
   ~nsPseudoClassList(void);
 
   /** Do a deep clone.  Should be used only on the first in the linked list. */
@@ -94,14 +97,17 @@ public:
   union {
     // For a given value of mAtom, we have either:
     //   a. no value, which means mMemory is always null
-    //      (if neither of the conditions for (b) or (c) is true)
+    //      (if none of the conditions for (b), (c), or (d) is true)
     //   b. a string value, which means mString/mMemory is non-null
     //      (if nsCSSPseudoClasses::HasStringArg(mAtom))
     //   c. an integer pair value, which means mNumbers/mMemory is non-null
     //      (if nsCSSPseudoClasses::HasNthPairArg(mAtom))
-    void*           mMemory; // both pointer types use NS_Alloc/NS_Free
+    //   d. a selector list, which means mSelectors is non-null
+    //      (if nsCSSPseudoClasses::HasSelectorListArg(mAtom))
+    void*           mMemory; // mString and mNumbers use NS_Alloc/NS_Free
     PRUnichar*      mString;
     PRInt32*        mNumbers;
+    nsCSSSelectorList* mSelectors;
   } u;
   nsCSSPseudoClasses::Type mType;
   nsPseudoClassList* mNext;
@@ -168,6 +174,9 @@ public:
                       const PRUnichar* aString);
   void AddPseudoClass(nsIAtom* aPseudoClass, nsCSSPseudoClasses::Type aType,
                       const PRInt32* aIntPair);
+  // takes ownership of aSelectorList
+  void AddPseudoClass(nsIAtom* aPseudoClass, nsCSSPseudoClasses::Type aType,
+                      nsCSSSelectorList* aSelectorList);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr);
   void AddAttribute(PRInt32 aNameSpace, const nsString& aAttr, PRUint8 aFunc, 
                     const nsString& aValue, PRBool aCaseSensitive);

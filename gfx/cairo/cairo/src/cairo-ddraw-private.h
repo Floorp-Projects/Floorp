@@ -37,6 +37,7 @@
 
 #include "cairo-ddraw.h"
 #include "cairoint.h"
+#include "cairo-region-private.h"
 
 #ifdef CAIRO_DDRAW_USE_GL
 #include <EGL/egl.h>

@@ -75,8 +75,8 @@ js_GetGCThingTraceKind(void *thing);
  * The sole purpose of the function is to preserve public API compatibility
  * in JS_GetStringBytes which takes only single JSString* argument.
  */
-JSRuntime*
-js_GetGCStringRuntime(JSString *str);
+JSRuntime *
+js_GetGCThingRuntime(void *thing);
 
 #if 1
 /*
@@ -179,7 +179,7 @@ extern void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
 
 extern JS_REQUIRES_STACK void
-js_TraceRuntime(JSTracer *trc, JSBool allAtoms);
+js_TraceRuntime(JSTracer *trc);
 
 extern JS_REQUIRES_STACK JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx);
@@ -209,23 +209,14 @@ typedef enum JSGCInvocationKind {
 
     /*
      * Flag bit telling js_GC that the caller has already acquired rt->gcLock.
-     * Currently, this flag is set for the invocation kinds that also preserve
-     * atoms and weak roots, so we don't need another bit for GC_KEEP_ATOMS.
      */
     GC_LOCK_HELD        = 0x10,
-    GC_KEEP_ATOMS       = GC_LOCK_HELD,
 
     /*
      * Called from js_SetProtoOrParent with a request to set an object's proto
      * or parent slot inserted on rt->setSlotRequests.
      */
-    GC_SET_SLOT_REQUEST = GC_LOCK_HELD | 1,
-
-    /*
-     * Called from js_NewGCThing as a last-ditch GC attempt. See comments in
-     * jsgc.c just before js_GC's definition for details.
-     */
-    GC_LAST_DITCH       = GC_LOCK_HELD | 2
+    GC_SET_SLOT_REQUEST = GC_LOCK_HELD | 1
 } JSGCInvocationKind;
 
 extern void

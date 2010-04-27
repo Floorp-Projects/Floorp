@@ -13,3 +13,4 @@ patch -p3 <bug495794_closeAudio.patch
 patch -p3 <bug495558_alsa_endian.patch
 patch -p3 <bug525401_drain_deadlock.patch
 patch -p3 <bug526411_latency.patch
+patch -p3 <sydney_aix.patch

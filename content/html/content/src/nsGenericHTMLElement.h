@@ -209,8 +209,6 @@ public:
 
   virtual void UpdateEditableState();
 
-  already_AddRefed<nsIURI> GetBaseURI() const;
-
   virtual PRBool ParseAttribute(PRInt32 aNamespaceID,
                                 nsIAtom* aAttribute,
                                 const nsAString& aValue,
