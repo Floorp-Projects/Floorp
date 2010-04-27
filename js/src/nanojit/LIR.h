@@ -1946,57 +1946,63 @@ namespace nanojit
         LIns* insLoad(LOpcode op, LInsp base, int32_t off, AccSet accSet);
     };
 
-    enum LInsHashKind {
-        // We divide instruction kinds into groups for the use of LInsHashSet.
-        // LIns0 isn't present because we don't need to record any 0-ary
-        // instructions.
-        LInsImmI  = 0,
-        LInsImmQ = 1,   // only occurs on 64-bit platforms
-        LInsImmD = 2,
-        LIns1    = 3,
-        LIns2    = 4,
-        LIns3    = 5,
-        LInsCall = 6,
-
-        // Loads are special.  We group them by access region:  one table for
-        // each region, and then a catch-all table for any loads marked with
-        // multiple regions.  This arrangement makes the removal of
-        // invalidated loads fast -- eg. we can invalidate all STACK loads by
-        // just clearing the LInsLoadStack table.  The disadvantage is that
-        // loads marked with multiple regions must be invalidated
-        // conservatively, eg. if any intervening stores occur.  But loads
-        // marked with multiple regions should be rare.
-        LInsLoadReadOnly = 7,
-        LInsLoadStack    = 8,
-        LInsLoadRStack   = 9,
-        LInsLoadOther    = 10,
-        LInsLoadMultiple = 11,
-
-        LInsFirst = 0,
-        LInsLast = 11,
-        // need a value after "last" to outsmart compilers that will insist last+1 is impossible
-        LInsInvalid = 12
-    };
-    #define nextKind(kind)  LInsHashKind(kind+1)
-
-    class LInsHashSet
+    class CseFilter: public LirWriter
     {
-        // Must be a power of 2.
-        // Don't start too small, or we'll waste time growing and rehashing.
-        // Don't start too large, will waste memory.
-        static const uint32_t kInitialCap[LInsLast + 1];
+        enum LInsHashKind {
+            // We divide instruction kinds into groups.  LIns0 isn't present
+            // because we don't need to record any 0-ary instructions.
+            LInsImmI = 0,
+            LInsImmQ = 1,   // only occurs on 64-bit platforms
+            LInsImmD = 2,
+            LIns1    = 3,
+            LIns2    = 4,
+            LIns3    = 5,
+            LInsCall = 6,
+
+            // Loads are special.  We group them by access region:  one table for
+            // each region, and then a catch-all table for any loads marked with
+            // multiple regions.  This arrangement makes the removal of
+            // invalidated loads fast -- eg. we can invalidate all STACK loads by
+            // just clearing the LInsLoadStack table.  The disadvantage is that
+            // loads marked with multiple regions must be invalidated
+            // conservatively, eg. if any intervening stores occur.  But loads
+            // marked with multiple regions should be rare.
+            LInsLoadReadOnly = 7,
+            LInsLoadStack    = 8,
+            LInsLoadRStack   = 9,
+            LInsLoadOther    = 10,
+            LInsLoadMultiple = 11,
+
+            LInsFirst = 0,
+            LInsLast = 11,
+            // Need a value after "last" to outsmart compilers that insist last+1 is impossible.
+            LInsInvalid = 12
+        };
+        #define nextKind(kind)  LInsHashKind(kind+1)
 
         // There is one list for each instruction kind.  This lets us size the
         // lists appropriately (some instructions are more common than others).
         // It also lets us have kind-specific find/add/grow functions, which
         // are faster than generic versions.
-        LInsp *m_list[LInsLast + 1];
-        uint32_t m_cap[LInsLast + 1];
-        uint32_t m_used[LInsLast + 1];
-        typedef uint32_t (LInsHashSet::*find_t)(LInsp);
-        find_t m_find[LInsLast + 1];
+        //
+        // Nb: Size must be a power of 2.
+        //     Don't start too small, or we'll waste time growing and rehashing.
+        //     Don't start too large, will waste memory.
+        //
+        LInsp*      m_list[LInsLast + 1];
+        uint32_t    m_cap[LInsLast + 1];
+        uint32_t    m_used[LInsLast + 1];
+        typedef uint32_t (CseFilter::*find_t)(LInsp);
+        find_t      m_find[LInsLast + 1];
+
+        AccSet      storesSinceLastLoad;    // regions stored to since the last load
 
         Allocator& alloc;
+
+        static uint32_t hash8(uint32_t hash, const uint8_t data);
+        static uint32_t hash32(uint32_t hash, const uint32_t data);
+        static uint32_t hashptr(uint32_t hash, const void* data);
+        static uint32_t hashfinish(uint32_t hash);
 
         static uint32_t hashImmI(int32_t);
         static uint32_t hashImmQorD(uint64_t);     // not NANOJIT_64BIT-only -- used by findImmD()
@@ -2006,8 +2012,22 @@ namespace nanojit
         static uint32_t hashLoad(LOpcode op, LInsp, int32_t, AccSet);
         static uint32_t hashCall(const CallInfo *call, uint32_t argc, LInsp args[]);
 
-        // These private versions are used after an LIns has been created;
-        // they are used for rehashing after growing.
+        // These versions are used before an LIns has been created.
+        LInsp findImmI(int32_t a, uint32_t &k);
+#ifdef NANOJIT_64BIT
+        LInsp findImmQ(uint64_t a, uint32_t &k);
+#endif
+        LInsp findImmD(uint64_t d, uint32_t &k);
+        LInsp find1(LOpcode v, LInsp a, uint32_t &k);
+        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
+        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
+        LInsp findLoad(LOpcode v, LInsp a, int32_t b, AccSet accSet, LInsHashKind kind,
+                       uint32_t &k);
+        LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
+
+        // These versions are used after an LIns has been created; they are
+        // used for rehashing after growing.  They just call onto the
+        // multi-arg versions above.
         uint32_t findImmI(LInsp ins);
 #ifdef NANOJIT_64BIT
         uint32_t findImmQ(LInsp ins);
@@ -2025,35 +2045,11 @@ namespace nanojit
 
         void grow(LInsHashKind kind);
 
-    public:
-        // kInitialCaps[i] holds the initial size for m_list[i].
-        LInsHashSet(Allocator&, uint32_t kInitialCaps[]);
-
-        // These public versions are used before an LIns has been created.
-        LInsp findImmI(int32_t a, uint32_t &k);
-#ifdef NANOJIT_64BIT
-        LInsp findImmQ(uint64_t a, uint32_t &k);
-#endif
-        LInsp findImmD(uint64_t d, uint32_t &k);
-        LInsp find1(LOpcode v, LInsp a, uint32_t &k);
-        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
-        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
-        LInsp findLoad(LOpcode v, LInsp a, int32_t b, AccSet accSet, LInsHashKind kind,
-                       uint32_t &k);
-        LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
-
         // 'k' is the index found by findXYZ().
         void add(LInsHashKind kind, LInsp ins, uint32_t k);
 
         void clear();               // clears all tables
         void clear(LInsHashKind);   // clears one table
-    };
-
-    class CseFilter: public LirWriter
-    {
-    private:
-        LInsHashSet* exprs;
-        AccSet       storesSinceLastLoad;   // regions stored to since the last load
 
     public:
         CseFilter(LirWriter *out, Allocator&);
