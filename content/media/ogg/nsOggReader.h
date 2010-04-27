@@ -61,12 +61,14 @@ using mozilla::TimeStamp;
 // Holds chunk a decoded sound samples.
 class SoundData {
 public:
-  SoundData(PRInt64 aTime,
+  SoundData(PRInt64 aOffset,
+            PRInt64 aTime,
             PRInt64 aDuration,
             PRUint32 aSamples,
             float* aData,
             PRUint32 aChannels)
-  : mTime(aTime),
+  : mOffset(aOffset),
+    mTime(aTime),
     mDuration(aDuration),
     mSamples(aSamples),
     mChannels(aChannels),
@@ -75,11 +77,13 @@ public:
     MOZ_COUNT_CTOR(SoundData);
   }
 
-  SoundData(PRInt64 aDuration,
+  SoundData(PRInt64 aOffset,
+            PRInt64 aDuration,
             PRUint32 aSamples,
             float* aData,
             PRUint32 aChannels)
-  : mTime(-1),
+  : mOffset(aOffset),
+    mTime(-1),
     mDuration(aDuration),
     mSamples(aSamples),
     mChannels(aChannels),
@@ -97,6 +101,10 @@ public:
     return mChannels * mSamples;
   }
 
+  // Approximate byte offset of the end of the page on which this sample
+  // chunk ends.
+  const PRInt64 mOffset;
+
   PRInt64 mTime; // Start time of samples in ms.
   const PRInt64 mDuration; // In ms.
   const PRUint32 mSamples;
@@ -111,7 +119,8 @@ public:
   // Constructs a VideoData object. Makes a copy of YCbCr data in aBuffer.
   // This may return nsnull if we run out of memory when allocating buffers
   // to store the frame.
-  static VideoData* Create(PRInt64 aTime,
+  static VideoData* Create(PRInt64 aOffset,
+                           PRInt64 aTime,
                            th_ycbcr_buffer aBuffer,
                            PRBool aKeyframe,
                            PRInt64 aGranulepos);
@@ -119,10 +128,11 @@ public:
   // Constructs a duplicate VideoData object. This intrinsically tells the
   // player that it does not need to update the displayed frame when this
   // frame is played; this frame is identical to the previous.
-  static VideoData* CreateDuplicate(PRInt64 aTime,
+  static VideoData* CreateDuplicate(PRInt64 aOffset,
+                                    PRInt64 aTime,
                                     PRInt64 aGranulepos)
   {
-    return new VideoData(aTime, aGranulepos);
+    return new VideoData(aOffset, aTime, aGranulepos);
   }
 
   ~VideoData()
@@ -132,6 +142,9 @@ public:
       delete mBuffer[i].data;
     }
   }
+
+  // Approximate byte offset of the end of the frame in the media.
+  PRInt64 mOffset;
 
   // Start time of frame in milliseconds.
   PRInt64 mTime;
@@ -145,23 +158,26 @@ public:
   PRPackedBool mKeyframe;
 
 private:
-  VideoData(PRInt64 aTime, PRInt64 aGranulepos) :
-    mTime(aTime),
-    mGranulepos(aGranulepos),
-    mDuplicate(PR_TRUE),
-    mKeyframe(PR_FALSE)
+  VideoData(PRInt64 aOffset, PRInt64 aTime, PRInt64 aGranulepos)
+    : mOffset(aOffset),
+      mTime(aTime),
+      mGranulepos(aGranulepos),
+      mDuplicate(PR_TRUE),
+      mKeyframe(PR_FALSE)
   {
     MOZ_COUNT_CTOR(VideoData);
     memset(&mBuffer, 0, sizeof(th_ycbcr_buffer));
   }
 
-  VideoData(PRInt64 aTime,
+  VideoData(PRInt64 aOffset,
+            PRInt64 aTime,
             PRBool aKeyframe,
             PRInt64 aGranulepos)
-  : mTime(aTime),
-    mGranulepos(aGranulepos),
-    mDuplicate(PR_FALSE),
-    mKeyframe(aKeyframe)
+    : mOffset(aOffset),
+      mTime(aTime),
+      mGranulepos(aGranulepos),
+      mDuplicate(PR_FALSE),
+      mKeyframe(aKeyframe)
   {
     MOZ_COUNT_CTOR(VideoData);
   }
@@ -278,8 +294,8 @@ private:
 // extremities of a range to seek in.
 class ByteRange {
 public:
-  ByteRange() :
-      mOffsetStart(0),
+  ByteRange()
+    : mOffsetStart(0),
       mOffsetEnd(0),
       mTimeStart(0),
       mTimeEnd(0)
