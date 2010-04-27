@@ -58,6 +58,10 @@ static const Accelerometer gAccelerometers[] = {
   {"/sys/class/i2c-adapter/i2c-3/3-001d/coord",
    NULL,
    eMaemoSensor},
+  // HP Pavilion dv7
+  {"/sys/devices/platform/lis3lv02d/position",
+   "/sys/devices/platform/lis3lv02d/calibrate",
+   eHPdv7Sensor},
 };
 
 nsAccelerometerUnix::nsAccelerometerUnix() :
@@ -139,6 +143,42 @@ nsAccelerometerUnix::UpdateHandler(nsITimer *aTimer, void *aClosure)
       xf = ((float)x) / -1000.0;
       yf = ((float)y) / -1000.0;
       zf = ((float)z) / -1000.0;
+      break;
+    }
+    case eHPdv7Sensor:
+    {
+      int x, y, z, calibrate_x, calibrate_y, calibrate_z;
+      fflush(self->mCalibrateFile);
+      rewind(self->mCalibrateFile);
+
+      fflush(self->mPositionFile);
+      rewind(self->mPositionFile);
+
+      if (fscanf(self->mCalibrateFile, "(%d,%d,%d)", &calibrate_x, &calibrate_y, &calibrate_z) <= 0)
+        return;
+
+      if (fscanf(self->mPositionFile, "(%d,%d,%d)", &x, &y, &z) <= 0)
+        return;
+
+      // Example data:
+      //
+      // Calibration (-4,0,51)
+      // flat on the table (-5,-2,50)
+      // Tilted on its left side (-60,0,-4)
+      // Tilted on its right side (51,1,-1)
+      // upside down (-2,3,-60)
+      //
+      // So assuming the calibration data shows the acceleration
+      // (1G) measured with the notebook laying flat on the table
+      // it would mean that our best bet, is to ignore the z-axis
+      // calibration...  We are still way off, but it's hard to
+      // see how to get better data without doing calibration with
+      // user intervention (like: Turn your notbook slowly around
+      // so every edge and the top and bottom points up in turn)
+
+      xf = ((float)(x - calibrate_x)) / 60.0;
+      yf = ((float)(y - calibrate_y)) / 60.0;
+      zf = ((float)(z)) / 60.0;
       break;
     }
 
