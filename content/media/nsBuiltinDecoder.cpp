@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsOggPlayStateMachine.h"
 #include <limits>
 #include "nsNetUtil.h"
 #include "nsAudioStream.h"
@@ -45,20 +44,23 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsTArray.h"
-#include "nsOggCodecState.h"
-#include "nsOggDecoder.h"
-#include "nsOggReader.h"
+#include "VideoUtils.h"
+#include "nsBuiltinDecoder.h"
+
+using mozilla::Monitor;
+using mozilla::MonitorAutoEnter;
+using mozilla::MonitorAutoExit;
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gOggDecoderLog;
-#define LOG(type, msg) PR_LOG(gOggDecoderLog, type, msg)
+PRLogModuleInfo* gBuiltinDecoderLog;
+#define LOG(type, msg) PR_LOG(gBuiltinDecoderLog, type, msg)
 #else
 #define LOG(type, msg)
 #endif
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsOggDecoder, nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsBuiltinDecoder, nsIObserver)
 
-void nsOggDecoder::Pause() 
+void nsBuiltinDecoder::Pause() 
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   MonitorAutoEnter mon(mMonitor);
@@ -70,16 +72,16 @@ void nsOggDecoder::Pause()
   ChangeState(PLAY_STATE_PAUSED);
 }
 
-void nsOggDecoder::SetVolume(float volume)
+void nsBuiltinDecoder::SetVolume(float volume)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   mInitialVolume = volume;
-  if (mDecodeStateMachine) {
-    mDecodeStateMachine->SetVolume(volume);
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->SetVolume(volume);
   }
 }
 
-float nsOggDecoder::GetDuration()
+float nsBuiltinDecoder::GetDuration()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mDuration >= 0) {
@@ -88,7 +90,7 @@ float nsOggDecoder::GetDuration()
   return std::numeric_limits<float>::quiet_NaN();
 }
 
-nsOggDecoder::nsOggDecoder() :
+nsBuiltinDecoder::nsBuiltinDecoder() :
   mDecoderPosition(0),
   mPlaybackPosition(0),
   mCurrentTime(0.0),
@@ -102,16 +104,16 @@ nsOggDecoder::nsOggDecoder() :
   mResourceLoaded(PR_FALSE),
   mIgnoreProgressData(PR_FALSE)
 {
-  MOZ_COUNT_CTOR(nsOggDecoder);
+  MOZ_COUNT_CTOR(nsBuiltinDecoder);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 #ifdef PR_LOGGING
-  if (!gOggDecoderLog) {
-    gOggDecoderLog = PR_NewLogModule("nsOggDecoder");
+  if (!gBuiltinDecoderLog) {
+    gBuiltinDecoderLog = PR_NewLogModule("nsBuiltinDecoder");
   }
 #endif
 }
 
-PRBool nsOggDecoder::Init(nsHTMLMediaElement* aElement)
+PRBool nsBuiltinDecoder::Init(nsHTMLMediaElement* aElement)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (!nsMediaDecoder::Init(aElement))
@@ -122,7 +124,7 @@ PRBool nsOggDecoder::Init(nsHTMLMediaElement* aElement)
   return PR_TRUE;
 }
 
-void nsOggDecoder::Stop()
+void nsBuiltinDecoder::Stop()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread");
 
@@ -133,10 +135,10 @@ void nsOggDecoder::Stop()
     mStateMachineThread->Shutdown();
 
   mStateMachineThread = nsnull;
-  mDecodeStateMachine = nsnull;
+  mDecoderStateMachine = nsnull;
 }
 
-void nsOggDecoder::Shutdown()
+void nsBuiltinDecoder::Shutdown()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   
@@ -148,8 +150,8 @@ void nsOggDecoder::Shutdown()
   // This changes the decoder state to SHUTDOWN and does other things
   // necessary to unblock the state machine thread if it's blocked, so
   // the asynchronous shutdown in nsDestroyStateMachine won't deadlock.
-  if (mDecodeStateMachine) {
-    mDecodeStateMachine->Shutdown();
+  if (mDecoderStateMachine) {
+    mDecoderStateMachine->Shutdown();
   }
 
   // Force any outstanding seek and byterange requests to complete
@@ -161,7 +163,7 @@ void nsOggDecoder::Shutdown()
   ChangeState(PLAY_STATE_SHUTDOWN);
   nsMediaDecoder::Shutdown();
 
-  // We can't destroy mDecodeStateMachine until mStateMachineThread is shut down.
+  // We can't destroy mDecoderStateMachine until mStateMachineThread is shut down.
   // It's unsafe to Shutdown() the decode thread here, as
   // nsIThread::Shutdown() may run events, such as JS event handlers,
   // and we could be running at an unsafe time such as during element
@@ -169,19 +171,19 @@ void nsOggDecoder::Shutdown()
   // So we destroy the decoder on the main thread in an asynchronous event.
   // See bug 468721.
   nsCOMPtr<nsIRunnable> event =
-    NS_NewRunnableMethod(this, &nsOggDecoder::Stop);
+    NS_NewRunnableMethod(this, &nsBuiltinDecoder::Stop);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 
   nsContentUtils::UnregisterShutdownObserver(this);
 }
 
-nsOggDecoder::~nsOggDecoder()
+nsBuiltinDecoder::~nsBuiltinDecoder()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  MOZ_COUNT_DTOR(nsOggDecoder);
+  MOZ_COUNT_DTOR(nsBuiltinDecoder);
 }
 
-nsresult nsOggDecoder::Load(nsMediaStream* aStream,
+nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
                             nsIStreamListener** aStreamListener)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
@@ -207,22 +209,26 @@ nsresult nsOggDecoder::Load(nsMediaStream* aStream,
   nsresult rv = NS_NewThread(getter_AddRefs(mStateMachineThread));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mDecodeStateMachine = new nsOggPlayStateMachine(this);
-  if (NS_FAILED(mDecodeStateMachine->Init())) {
+  mDecoderStateMachine = CreateStateMachine();
+  if (!mDecoderStateMachine) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_FAILED(mDecoderStateMachine->Init())) {
     return NS_ERROR_FAILURE;
   }
   {
     MonitorAutoEnter mon(mMonitor);
-    mDecodeStateMachine->SetSeekable(mSeekable);
-    mDecodeStateMachine->SetDuration(mDuration);
+    mDecoderStateMachine->SetSeekable(mSeekable);
+    mDecoderStateMachine->SetDuration(mDuration);
   }
 
   ChangeState(PLAY_STATE_LOADING);
 
-  return mStateMachineThread->Dispatch(mDecodeStateMachine, NS_DISPATCH_NORMAL);
+  return mStateMachineThread->Dispatch(mDecoderStateMachine, NS_DISPATCH_NORMAL);
 }
 
-nsresult nsOggDecoder::Play()
+nsresult nsBuiltinDecoder::Play()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   MonitorAutoEnter mon(mMonitor);
@@ -238,7 +244,7 @@ nsresult nsOggDecoder::Play()
   return NS_OK;
 }
 
-nsresult nsOggDecoder::Seek(float aTime)
+nsresult nsBuiltinDecoder::Seek(float aTime)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   MonitorAutoEnter mon(mMonitor);
@@ -254,7 +260,8 @@ nsresult nsOggDecoder::Seek(float aTime)
   if (mPlayState != PLAY_STATE_SEEKING) {
     if (mPlayState == PLAY_STATE_ENDED) {
       mNextState = PLAY_STATE_PLAYING;
-    } else {
+    }
+    else {
       mNextState = mPlayState;
     }
     ChangeState(PLAY_STATE_SEEKING);
@@ -263,31 +270,30 @@ nsresult nsOggDecoder::Seek(float aTime)
   return NS_OK;
 }
 
-nsresult nsOggDecoder::PlaybackRateChanged()
+nsresult nsBuiltinDecoder::PlaybackRateChanged()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-float nsOggDecoder::GetCurrentTime()
+float nsBuiltinDecoder::GetCurrentTime()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   return mCurrentTime;
 }
 
-nsMediaStream* nsOggDecoder::GetCurrentStream()
+nsMediaStream* nsBuiltinDecoder::GetCurrentStream()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   return mStream;
 }
 
-already_AddRefed<nsIPrincipal> nsOggDecoder::GetCurrentPrincipal()
+already_AddRefed<nsIPrincipal> nsBuiltinDecoder::GetCurrentPrincipal()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   return mStream ? mStream->GetCurrentPrincipal() : nsnull;
 }
 
-void nsOggDecoder::MetadataLoaded()
+void nsBuiltinDecoder::MetadataLoaded()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mShuttingDown)
@@ -298,7 +304,7 @@ void nsOggDecoder::MetadataLoaded()
   PRBool notifyElement = PR_TRUE;
   {
     MonitorAutoEnter mon(mMonitor);
-    mDuration = mDecodeStateMachine ? mDecodeStateMachine->GetDuration() : -1;
+    mDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
     notifyElement = mNextState != PLAY_STATE_SEEKING;
   }
 
@@ -311,7 +317,8 @@ void nsOggDecoder::MetadataLoaded()
 
   if (!mResourceLoaded) {
     StartProgress();
-  } else if (mElement) {
+  }
+  else if (mElement) {
     // Resource was loaded during metadata loading, when progress
     // events are being ignored. Fire the final progress event.
     mElement->DispatchAsyncProgressEvent(NS_LITERAL_STRING("progress"));
@@ -333,7 +340,8 @@ void nsOggDecoder::MetadataLoaded()
   if (mPlayState == PLAY_STATE_LOADING) {
     if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);
-    } else {
+    }
+    else {
       ChangeState(mNextState);
     }
   }
@@ -343,7 +351,7 @@ void nsOggDecoder::MetadataLoaded()
   }
 }
 
-void nsOggDecoder::ResourceLoaded()
+void nsBuiltinDecoder::ResourceLoaded()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -374,7 +382,7 @@ void nsOggDecoder::ResourceLoaded()
   }
 }
 
-void nsOggDecoder::NetworkError()
+void nsBuiltinDecoder::NetworkError()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mShuttingDown)
@@ -386,7 +394,7 @@ void nsOggDecoder::NetworkError()
   Shutdown();
 }
 
-void nsOggDecoder::DecodeError()
+void nsBuiltinDecoder::DecodeError()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mShuttingDown)
@@ -398,19 +406,19 @@ void nsOggDecoder::DecodeError()
   Shutdown();
 }
 
-PRBool nsOggDecoder::IsSeeking() const
+PRBool nsBuiltinDecoder::IsSeeking() const
 {
   return mPlayState == PLAY_STATE_SEEKING || mNextState == PLAY_STATE_SEEKING;
 }
 
-PRBool nsOggDecoder::IsEnded() const
+PRBool nsBuiltinDecoder::IsEnded() const
 {
   return mPlayState == PLAY_STATE_ENDED || mPlayState == PLAY_STATE_SHUTDOWN;
 }
 
-void nsOggDecoder::PlaybackEnded()
+void nsBuiltinDecoder::PlaybackEnded()
 {
-  if (mShuttingDown || mPlayState == nsOggDecoder::PLAY_STATE_SEEKING)
+  if (mShuttingDown || mPlayState == nsBuiltinDecoder::PLAY_STATE_SEEKING)
     return;
 
   PlaybackPositionChanged();
@@ -422,9 +430,9 @@ void nsOggDecoder::PlaybackEnded()
   }
 }
 
-NS_IMETHODIMP nsOggDecoder::Observe(nsISupports *aSubjet,
-                                    const char *aTopic,
-                                    const PRUnichar *someData)
+NS_IMETHODIMP nsBuiltinDecoder::Observe(nsISupports *aSubjet,
+                                        const char *aTopic,
+                                        const PRUnichar *someData)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
@@ -435,7 +443,7 @@ NS_IMETHODIMP nsOggDecoder::Observe(nsISupports *aSubjet,
 }
 
 nsMediaDecoder::Statistics
-nsOggDecoder::GetStatistics()
+nsBuiltinDecoder::GetStatistics()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   Statistics result;
@@ -450,7 +458,8 @@ nsOggDecoder::GetStatistics()
     result.mPlaybackRate = ComputePlaybackRate(&result.mPlaybackRateReliable);
     result.mDecoderPosition = mDecoderPosition;
     result.mPlaybackPosition = mPlaybackPosition;
-  } else {
+  }
+  else {
     result.mDownloadRate = 0;
     result.mDownloadRateReliable = PR_TRUE;
     result.mPlaybackRate = 0;
@@ -464,10 +473,10 @@ nsOggDecoder::GetStatistics()
   return result;
 }
 
-double nsOggDecoder::ComputePlaybackRate(PRPackedBool* aReliable)
+double nsBuiltinDecoder::ComputePlaybackRate(PRPackedBool* aReliable)
 {
   GetMonitor().AssertCurrentThreadIn();
-  NS_ASSERTION(NS_IsMainThread() || IsThread(mStateMachineThread),
+  NS_ASSERTION(NS_IsMainThread() || IsCurrentThread(mStateMachineThread),
                "Should be on main or state machine thread.");
 
   PRInt64 length = mStream ? mStream->GetLength() : -1;
@@ -478,9 +487,9 @@ double nsOggDecoder::ComputePlaybackRate(PRPackedBool* aReliable)
   return mPlaybackStatistics.GetRateAtLastStop(aReliable);
 }
 
-void nsOggDecoder::UpdatePlaybackRate()
+void nsBuiltinDecoder::UpdatePlaybackRate()
 {
-  NS_ASSERTION(NS_IsMainThread() || IsThread(mStateMachineThread),
+  NS_ASSERTION(NS_IsMainThread() || IsCurrentThread(mStateMachineThread),
                "Should be on main or state machine thread.");
   GetMonitor().AssertCurrentThreadIn();
   if (!mStream)
@@ -490,7 +499,8 @@ void nsOggDecoder::UpdatePlaybackRate()
   if (reliable) {
     // Avoid passing a zero rate
     rate = NS_MAX(rate, 1u);
-  } else {
+  }
+  else {
     // Set a minimum rate of 10,000 bytes per second ... sometimes we just
     // don't have good data
     rate = NS_MAX(rate, 10000u);
@@ -498,7 +508,7 @@ void nsOggDecoder::UpdatePlaybackRate()
   mStream->SetPlaybackRate(rate);
 }
 
-void nsOggDecoder::NotifySuspendedStatusChanged()
+void nsBuiltinDecoder::NotifySuspendedStatusChanged()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (!mStream)
@@ -510,14 +520,14 @@ void nsOggDecoder::NotifySuspendedStatusChanged()
   }
 }
 
-void nsOggDecoder::NotifyBytesDownloaded()
+void nsBuiltinDecoder::NotifyBytesDownloaded()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   UpdateReadyStateForData();
   Progress(PR_FALSE);
 }
 
-void nsOggDecoder::NotifyDownloadEnded(nsresult aStatus)
+void nsBuiltinDecoder::NotifyDownloadEnded(nsresult aStatus)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -531,61 +541,60 @@ void nsOggDecoder::NotifyDownloadEnded(nsresult aStatus)
 
   if (NS_SUCCEEDED(aStatus)) {
     ResourceLoaded();
-  } else if (aStatus != NS_BASE_STREAM_CLOSED) {
+  }
+  else if (aStatus != NS_BASE_STREAM_CLOSED) {
     NetworkError();
   }
   UpdateReadyStateForData();
 }
 
-void nsOggDecoder::NotifyBytesConsumed(PRInt64 aBytes)
+void nsBuiltinDecoder::NotifyBytesConsumed(PRInt64 aBytes)
 {
   MonitorAutoEnter mon(mMonitor);
-  NS_ASSERTION(mDecodeStateMachine->OnStateMachineThread() || mDecodeStateMachine->OnDecodeThread(),
+  NS_ASSERTION(OnStateMachineThread() || mDecoderStateMachine->OnDecodeThread(),
                "Should be on play state machine or decode thread.");
   if (!mIgnoreProgressData) {
     mDecoderPosition += aBytes;
   }
 }
 
-void nsOggDecoder::NextFrameUnavailableBuffering()
+void nsBuiltinDecoder::NextFrameUnavailableBuffering()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
-  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+  if (!mElement || mShuttingDown || !mDecoderStateMachine)
     return;
 
   mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE_BUFFERING);
 }
 
-void nsOggDecoder::NextFrameAvailable()
+void nsBuiltinDecoder::NextFrameAvailable()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
-  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+  if (!mElement || mShuttingDown || !mDecoderStateMachine)
     return;
 
   mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_AVAILABLE);
 }
 
-void nsOggDecoder::NextFrameUnavailable()
+void nsBuiltinDecoder::NextFrameUnavailable()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
-  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+  if (!mElement || mShuttingDown || !mDecoderStateMachine)
     return;
-
   mElement->UpdateReadyStateForData(nsHTMLMediaElement::NEXT_FRAME_UNAVAILABLE);
 }
 
-void nsOggDecoder::UpdateReadyStateForData()
+void nsBuiltinDecoder::UpdateReadyStateForData()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be called on main thread");
-  if (!mElement || mShuttingDown || !mDecodeStateMachine)
+  if (!mElement || mShuttingDown || !mDecoderStateMachine)
     return;
-
   nsHTMLMediaElement::NextFrameStatus frameStatus =
-    mDecodeStateMachine->GetNextFrameStatus();
+    mDecoderStateMachine->GetNextFrameStatus();
   mElement->UpdateReadyStateForData(frameStatus);
 }
 
-void nsOggDecoder::SeekingStopped()
+void nsBuiltinDecoder::SeekingStopped()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -611,7 +620,7 @@ void nsOggDecoder::SeekingStopped()
 
 // This is called when seeking stopped *and* we're at the end of the
 // media.
-void nsOggDecoder::SeekingStoppedAtEnd()
+void nsBuiltinDecoder::SeekingStoppedAtEnd()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
@@ -626,7 +635,8 @@ void nsOggDecoder::SeekingStoppedAtEnd()
     // in operation.
     if (mRequestedSeekTime >= 0.0) {
       ChangeState(PLAY_STATE_SEEKING);
-    } else {
+    }
+    else {
       fireEnded = mNextState != PLAY_STATE_PLAYING;
       ChangeState(fireEnded ? PLAY_STATE_ENDED : mNextState);
     }
@@ -641,7 +651,7 @@ void nsOggDecoder::SeekingStoppedAtEnd()
   }
 }
 
-void nsOggDecoder::SeekingStarted()
+void nsBuiltinDecoder::SeekingStarted()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mShuttingDown)
@@ -653,7 +663,7 @@ void nsOggDecoder::SeekingStarted()
   }
 }
 
-void nsOggDecoder::ChangeState(PlayState aState)
+void nsBuiltinDecoder::ChangeState(PlayState aState)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");   
   MonitorAutoEnter mon(mMonitor);
@@ -673,10 +683,10 @@ void nsOggDecoder::ChangeState(PlayState aState)
     /* No action needed */
     break;
   case PLAY_STATE_PLAYING:
-    mDecodeStateMachine->Decode();
+    mDecoderStateMachine->Decode();
     break;
   case PLAY_STATE_SEEKING:
-    mDecodeStateMachine->Seek(mRequestedSeekTime);
+    mDecoderStateMachine->Seek(mRequestedSeekTime);
     mRequestedSeekTime = -1.0;
     break;
   case PLAY_STATE_LOADING:
@@ -695,7 +705,7 @@ void nsOggDecoder::ChangeState(PlayState aState)
   mMonitor.NotifyAll();
 }
 
-void nsOggDecoder::PlaybackPositionChanged()
+void nsBuiltinDecoder::PlaybackPositionChanged()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mShuttingDown)
@@ -707,10 +717,9 @@ void nsOggDecoder::PlaybackPositionChanged()
   // held while the timeupdate and the invalidate is run.
   {
     MonitorAutoEnter mon(mMonitor);
-
-    if (mDecodeStateMachine) {
-      mCurrentTime = mDecodeStateMachine->GetCurrentTime();
-      mDecodeStateMachine->ClearPositionChangeFlag();
+    if (mDecoderStateMachine) {
+      mCurrentTime = mDecoderStateMachine->GetCurrentTime();
+      mDecoderStateMachine->ClearPositionChangeFlag();
     }
   }
 
@@ -725,46 +734,46 @@ void nsOggDecoder::PlaybackPositionChanged()
   }
 }
 
-void nsOggDecoder::DurationChanged()
+void nsBuiltinDecoder::DurationChanged()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   MonitorAutoEnter mon(mMonitor);
   PRInt64 oldDuration = mDuration;
-  mDuration = mDecodeStateMachine ? mDecodeStateMachine->GetDuration() : -1;
+  mDuration = mDecoderStateMachine ? mDecoderStateMachine->GetDuration() : -1;
   if (mElement && oldDuration != mDuration) {
     LOG(PR_LOG_DEBUG, ("%p duration changed to %lldms", this, mDuration));
     mElement->DispatchSimpleEvent(NS_LITERAL_STRING("durationchange"));
   }
 }
 
-void nsOggDecoder::SetDuration(PRInt64 aDuration)
+void nsBuiltinDecoder::SetDuration(PRInt64 aDuration)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   mDuration = aDuration;
-  if (mDecodeStateMachine) {
+  if (mDecoderStateMachine) {
     MonitorAutoEnter mon(mMonitor);
-    mDecodeStateMachine->SetDuration(mDuration);
+    mDecoderStateMachine->SetDuration(mDuration);
     UpdatePlaybackRate();
   }
 }
 
-void nsOggDecoder::SetSeekable(PRBool aSeekable)
+void nsBuiltinDecoder::SetSeekable(PRBool aSeekable)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   mSeekable = aSeekable;
-  if (mDecodeStateMachine) {
+  if (mDecoderStateMachine) {
     MonitorAutoEnter mon(mMonitor);
-    mDecodeStateMachine->SetSeekable(aSeekable);
+    mDecoderStateMachine->SetSeekable(aSeekable);
   }
 }
 
-PRBool nsOggDecoder::GetSeekable()
+PRBool nsBuiltinDecoder::GetSeekable()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   return mSeekable;
 }
 
-void nsOggDecoder::Suspend()
+void nsBuiltinDecoder::Suspend()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mStream) {
@@ -772,7 +781,7 @@ void nsOggDecoder::Suspend()
   }
 }
 
-void nsOggDecoder::Resume()
+void nsBuiltinDecoder::Resume()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mStream) {
@@ -780,18 +789,18 @@ void nsOggDecoder::Resume()
   }
 }
 
-void nsOggDecoder::StopProgressUpdates()
+void nsBuiltinDecoder::StopProgressUpdates()
 {
-  NS_ASSERTION(IsThread(mStateMachineThread), "Should be on state machine thread.");
+  NS_ASSERTION(IsCurrentThread(mStateMachineThread), "Should be on state machine thread.");
   mIgnoreProgressData = PR_TRUE;
   if (mStream) {
     mStream->SetReadMode(nsMediaCacheStream::MODE_METADATA);
   }
 }
 
-void nsOggDecoder::StartProgressUpdates()
+void nsBuiltinDecoder::StartProgressUpdates()
 {
-  NS_ASSERTION(IsThread(mStateMachineThread), "Should be on state machine thread.");
+  NS_ASSERTION(IsCurrentThread(mStateMachineThread), "Should be on state machine thread.");
   mIgnoreProgressData = PR_FALSE;
   if (mStream) {
     mStream->SetReadMode(nsMediaCacheStream::MODE_PLAYBACK);
@@ -799,7 +808,7 @@ void nsOggDecoder::StartProgressUpdates()
   }
 }
 
-void nsOggDecoder::MoveLoadsToBackground()
+void nsBuiltinDecoder::MoveLoadsToBackground()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mStream) {

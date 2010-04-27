@@ -36,8 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsOggHacks_h
-#define nsOggHacks_h
+#ifndef VideoUtils_h
+#define VideoUtils_h
+
+#include "mozilla/Monitor.h"
 
 // This file contains stuff we'd rather put elsewhere, but which is
 // dependent on other changes which we don't want to wait for. We plan to

@@ -45,7 +45,7 @@
 #include "nsOggCodecState.h"
 #include "nsOggPlayStateMachine.h"
 #include "mozilla/mozalloc.h"
-#include "nsOggHacks.h"
+#include "VideoUtils.h"
 
 using mozilla::MonitorAutoExit;
 
@@ -53,10 +53,10 @@ using mozilla::MonitorAutoExit;
 //#define SEEK_LOGGING
 
 #ifdef PR_LOGGING
-extern PRLogModuleInfo* gOggDecoderLog;
-#define LOG(type, msg) PR_LOG(gOggDecoderLog, type, msg)
+extern PRLogModuleInfo* gBuiltinDecoderLog;
+#define LOG(type, msg) PR_LOG(gBuiltinDecoderLog, type, msg)
 #ifdef SEEK_LOGGING
-#define SEEK_LOG(type, msg) PR_LOG(gOggDecoderLog, type, msg)
+#define SEEK_LOG(type, msg) PR_LOG(gBuiltinDecoderLog, type, msg)
 #else
 #define SEEK_LOG(type, msg)
 #endif
@@ -566,7 +566,7 @@ nsresult nsOggReader::GetBufferedBytes(nsTArray<ByteRange>& aRanges)
                "Should be on state machine thread.");
   mMonitor.AssertCurrentThreadIn();
   PRInt64 startOffset = mDataOffset;
-  nsMediaStream* stream = mPlayer->mDecoder->mStream;
+  nsMediaStream* stream = mPlayer->mDecoder->GetCurrentStream();
   while (PR_TRUE) {
     PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
     if (endOffset == startOffset) {
@@ -612,7 +612,7 @@ nsOggReader::GetSeekRange(const nsTArray<ByteRange>& ranges,
   NS_ASSERTION(mPlayer->OnStateMachineThread(),
                "Should be on state machine thread.");
   PRInt64 so = mDataOffset;
-  PRInt64 eo = mPlayer->mDecoder->mStream->GetLength();
+  PRInt64 eo = mPlayer->mDecoder->GetCurrentStream()->GetLength();
   PRInt64 st = aStartTime;
   PRInt64 et = aEndTime;
   for (PRUint32 i = 0; i < ranges.Length(); i++) {
@@ -640,7 +640,7 @@ nsresult nsOggReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime
   NS_ASSERTION(mPlayer->OnStateMachineThread(),
                "Should be on state machine thread.");
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mPlayer->mDecoder, aTarget));
-  nsMediaStream* stream = mPlayer->mDecoder->mStream;
+  nsMediaStream* stream = mPlayer->mDecoder->GetCurrentStream();
 
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
@@ -888,7 +888,7 @@ nsresult nsOggReader::SeekBisection(PRInt64 aTarget,
 {
   NS_ASSERTION(mPlayer->OnStateMachineThread(),
                "Should be on state machine thread.");
-  nsMediaStream* stream = mPlayer->mDecoder->mStream;
+  nsMediaStream* stream = mPlayer->mDecoder->GetCurrentStream();
 
   if (aTarget == aRange.mTimeStart) {
     if (NS_FAILED(ResetDecode())) {
@@ -1121,7 +1121,7 @@ PRInt64 nsOggReader::ReadOggPage(ogg_page* aPage)
     // Read from the stream into the buffer
     PRUint32 bytesRead = 0;
 
-    nsresult rv = mPlayer->mDecoder->mStream->Read(buffer, 4096, &bytesRead);
+    nsresult rv = mPlayer->mDecoder->GetCurrentStream()->Read(buffer, 4096, &bytesRead);
     if (NS_FAILED(rv) || (bytesRead == 0 && ret == 0)) {
       // End of file.
       return -1;
@@ -1371,7 +1371,7 @@ VideoData* nsOggReader::FindStartTime(PRInt64 aOffset,
 {
   NS_ASSERTION(mPlayer->OnStateMachineThread(), "Should be on state machine thread.");
 
-  nsMediaStream* stream = mPlayer->mDecoder->mStream;
+  nsMediaStream* stream = mPlayer->mDecoder->GetCurrentStream();
 
   stream->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
   if (NS_FAILED(ResetDecode())) {
@@ -1427,7 +1427,7 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
   MonitorAutoEnter mon(mMonitor);
   NS_ASSERTION(mPlayer->OnStateMachineThread(), "Should be on state machine thread.");
 
-  nsMediaStream* stream = mPlayer->mDecoder->mStream;
+  nsMediaStream* stream = mPlayer->mDecoder->GetCurrentStream();
   ogg_sync_reset(&mOggState);
 
   stream->Seek(nsISeekableStream::NS_SEEK_SET, aEndOffset);
