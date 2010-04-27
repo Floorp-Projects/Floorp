@@ -106,6 +106,7 @@ namespace places {
 
   enum HistoryStatementId {
     DB_GET_PAGE_INFO = 0
+  , DB_GET_TAGS = 1
   };
 
 } // namespace places
@@ -258,7 +259,6 @@ public:
   // select a history row by id
   mozIStorageStatement *DBGetIdPageInfo() { return mDBGetIdPageInfo; }
 
-  mozIStorageStatement *DBGetTags() { return mDBGetTags; }
   PRInt64 GetTagsFolder();
 
   mozIStorageStatement *DBGetIsVisited() { return mDBIsPageVisited; }
@@ -402,6 +402,8 @@ public:
     switch(aStatementId) {
       case DB_GET_PAGE_INFO:
         return mDBGetURLPageInfo;
+      case DB_GET_TAGS:
+        return mDBGetTags;
     }
     return nsnull;
   }
