@@ -444,8 +444,8 @@ nsContentSink::ProcessHTTPHeaders(nsIChannel* aChannel)
                  "Already dispatched an event?");
 
     mProcessLinkHeaderEvent =
-      new nsNonOwningRunnableMethod<nsContentSink>(this,
-                                           &nsContentSink::DoProcessLinkHeader);
+      NS_NewNonOwningRunnableMethod(this,
+        &nsContentSink::DoProcessLinkHeader);
     rv = NS_DispatchToCurrentThread(mProcessLinkHeaderEvent.get());
     if (NS_FAILED(rv)) {
       mProcessLinkHeaderEvent.Forget();
@@ -1738,7 +1738,7 @@ nsContentSink::ContinueInterruptedParsingIfEnabled()
 void
 nsContentSink::ContinueInterruptedParsingAsync()
 {
-  nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsContentSink>(this,
+  nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this,
     &nsContentSink::ContinueInterruptedParsingIfEnabled);
 
   NS_DispatchToCurrentThread(ev);

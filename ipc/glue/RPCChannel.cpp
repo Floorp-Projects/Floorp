@@ -127,7 +127,7 @@ int RPCChannel::sModalEventCount = 0;
 #endif
 
 bool
-RPCChannel::EventOccurred()
+RPCChannel::EventOccurred() const
 {
     AssertWorkerThread();
     mMutex.AssertCurrentThreadOwns();
@@ -618,7 +618,7 @@ RPCChannel::ExitedCxxStack()
 void
 RPCChannel::DebugAbort(const char* file, int line, const char* cond,
                        const char* why,
-                       const char* type, bool reply)
+                       const char* type, bool reply) const
 {
     fprintf(stderr,
             "###!!! [RPCChannel][%s][%s:%d] "
@@ -637,19 +637,21 @@ RPCChannel::DebugAbort(const char* file, int line, const char* cond,
             mOutOfTurnReplies.size());
     fprintf(stderr, "  Pending queue size: %lu, front to back:\n",
             mPending.size());
-    while (!mPending.empty()) {
+
+    MessageQueue pending = mPending;
+    while (!pending.empty()) {
         fprintf(stderr, "    [ %s%s ]\n",
-                mPending.front().is_rpc() ? "rpc" :
-                (mPending.front().is_sync() ? "sync" : "async"),
-                mPending.front().is_reply() ? "reply" : "");
-        mPending.pop();
+                pending.front().is_rpc() ? "rpc" :
+                (pending.front().is_sync() ? "sync" : "async"),
+                pending.front().is_reply() ? "reply" : "");
+        pending.pop();
     }
 
     NS_RUNTIMEABORT(why);
 }
 
 void
-RPCChannel::DumpRPCStack(FILE* outfile, const char* const pfx)
+RPCChannel::DumpRPCStack(FILE* outfile, const char* const pfx) const
 {
     NS_WARN_IF_FALSE(MessageLoop::current() != mWorkerLoop,
                      "The worker thread had better be paused in a debugger!");

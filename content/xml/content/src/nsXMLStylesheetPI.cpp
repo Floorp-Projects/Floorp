@@ -125,9 +125,8 @@ nsXMLStylesheetPI::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                        aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsContentUtils::AddScriptRunner(
-    new nsRunnableMethod<nsXMLStylesheetPI>(this,
-                                            &nsXMLStylesheetPI::UpdateStyleSheetInternal));
+  void (nsXMLStylesheetPI::*update)() = &nsXMLStylesheetPI::UpdateStyleSheetInternal;
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
 
   return rv;  
 }

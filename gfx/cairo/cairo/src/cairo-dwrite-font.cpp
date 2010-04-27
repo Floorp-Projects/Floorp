@@ -1069,6 +1069,8 @@ _cairo_dwrite_show_glyphs_on_surface(void			*surface,
 
 	    _cairo_win32_surface_set_clip_region (dst, clip_region);
 	}
+    } else {
+	_cairo_win32_surface_set_clip_region (surface, NULL);
     }
 
     /* It is vital that dx values for dxy_buf are calculated from the delta of

@@ -138,7 +138,7 @@ nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr,
     nsresult rv;
 
     nsRefPtr<nsRunnableMethod<nsHttpChannel> > event =
-            new nsRunnableMethod<nsHttpChannel>(this, funcPtr);
+        NS_NewRunnableMethod(this, funcPtr);
     rv = NS_DispatchToCurrentThread(event);
     if (NS_SUCCEEDED(rv) && retval) {
         *retval = event;

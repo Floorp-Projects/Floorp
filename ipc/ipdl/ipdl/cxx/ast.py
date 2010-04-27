@@ -455,7 +455,7 @@ class FriendClassDecl(Node):
 
 class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
-                 virtual=0, const=0, pure=0, static=0,
+                 virtual=0, const=0, pure=0, static=0, warn_unused=0,
                  typeop=None):
         assert not (virtual and static)
         assert not pure or virtual      # pure => virtual
@@ -475,6 +475,7 @@ class MethodDecl(Node):
         self.const = const              # bool
         self.pure = pure                # bool
         self.static = static            # bool
+        self.warn_unused = warn_unused  # bool
         self.typeop = typeop            # Type or None
 
     def __deepcopy__(self, memo):
@@ -482,7 +483,7 @@ class MethodDecl(Node):
             self.name,
             copy.deepcopy(self.params, memo),
             copy.deepcopy(self.ret, memo),
-            self.virtual, self.const, self.pure, self.static,
+            self.virtual, self.const, self.pure, self.static, self.warn_unused,
             copy.deepcopy(self.typeop, memo))
 
 class MethodDefn(Block):
@@ -665,6 +666,7 @@ class StmtDecl(Node):
     def __init__(self, decl, init=None, initargs=None):
         assert not (init and initargs)
         assert not isinstance(init, str) # easy to confuse with Decl
+        assert not isinstance(init, list)
         assert not isinstance(decl, tuple)
         
         Node.__init__(self)

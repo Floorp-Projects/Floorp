@@ -242,9 +242,8 @@ nsHTMLStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsContentUtils::AddScriptRunner(
-    new nsRunnableMethod<nsHTMLStyleElement>(this,
-                                             &nsHTMLStyleElement::UpdateStyleSheetInternal));
+  void (nsHTMLStyleElement::*update)() = &nsHTMLStyleElement::UpdateStyleSheetInternal;
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
 
   return rv;  
 }

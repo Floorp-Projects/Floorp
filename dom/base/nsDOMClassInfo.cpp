@@ -7773,8 +7773,8 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       binding->ExecuteAttachedHandler();
     }
     else {
-      nsContentUtils::AddScriptRunner(new nsRunnableMethod<nsXBLBinding>(
-        binding, &nsXBLBinding::ExecuteAttachedHandler));
+      nsContentUtils::AddScriptRunner(
+        NS_NewRunnableMethod(binding, &nsXBLBinding::ExecuteAttachedHandler));
     }
   }
 

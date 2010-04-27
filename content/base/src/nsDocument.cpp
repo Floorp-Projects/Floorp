@@ -3885,7 +3885,7 @@ nsDocument::MaybeEndOutermostXBLUpdate()
       BindingManager()->EndOutermostUpdate();
     } else if (!mInDestructor) {
       nsContentUtils::AddScriptRunner(
-        NS_NEW_RUNNABLE_METHOD(nsDocument, this, MaybeEndOutermostXBLUpdate));
+        NS_NewRunnableMethod(this, &nsDocument::MaybeEndOutermostXBLUpdate));
     }
   }
 }
@@ -4153,8 +4153,7 @@ nsDocument::EndLoad()
   
   if (!mSynchronousDOMContentLoaded) {
     nsRefPtr<nsIRunnable> ev =
-      new nsRunnableMethod<nsDocument>(this,
-                                       &nsDocument::DispatchContentLoadedEvents);
+      NS_NewRunnableMethod(this, &nsDocument::DispatchContentLoadedEvents);
     NS_DispatchToCurrentThread(ev);
   } else {
     DispatchContentLoadedEvents();
@@ -5159,9 +5158,9 @@ nsDocument::NotifyPossibleTitleChange(PRBool aBoundTitleElement)
   if (mPendingTitleChangeEvent.IsPending())
     return;
 
-  nsRefPtr<nsNonOwningRunnableMethod<nsDocument> > event =
-      new nsNonOwningRunnableMethod<nsDocument>(this,
-            &nsDocument::DoNotifyPossibleTitleChange);
+  nsRefPtr<nsRunnableMethod<nsDocument, void, false> > event =
+    NS_NewNonOwningRunnableMethod(this,
+      &nsDocument::DoNotifyPossibleTitleChange);
   nsresult rv = NS_DispatchToCurrentThread(event);
   if (NS_SUCCEEDED(rv)) {
     mPendingTitleChangeEvent = event;
@@ -5316,8 +5315,7 @@ nsDocument::InitializeFrameLoader(nsFrameLoader* aLoader)
   mInitializableFrameLoaders.AppendElement(aLoader);
   if (!mFrameLoaderRunner) {
     mFrameLoaderRunner =
-      NS_NEW_RUNNABLE_METHOD(nsDocument, this,
-                             MaybeInitializeFinalizeFrameLoaders);
+      NS_NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -5335,8 +5333,7 @@ nsDocument::FinalizeFrameLoader(nsFrameLoader* aLoader)
   mFinalizableFrameLoaders.AppendElement(aLoader);
   if (!mFrameLoaderRunner) {
     mFrameLoaderRunner =
-      NS_NEW_RUNNABLE_METHOD(nsDocument, this,
-                             MaybeInitializeFinalizeFrameLoaders);
+      NS_NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
     NS_ENSURE_TRUE(mFrameLoaderRunner, NS_ERROR_OUT_OF_MEMORY);
     nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
   }
@@ -5360,8 +5357,7 @@ nsDocument::MaybeInitializeFinalizeFrameLoaders()
         (mInitializableFrameLoaders.Length() ||
          mFinalizableFrameLoaders.Length())) {
       mFrameLoaderRunner =
-        NS_NEW_RUNNABLE_METHOD(nsDocument, this,
-                               MaybeInitializeFinalizeFrameLoaders);
+        NS_NewRunnableMethod(this, &nsDocument::MaybeInitializeFinalizeFrameLoaders);
       nsContentUtils::AddScriptRunner(mFrameLoaderRunner);
     }
     return;

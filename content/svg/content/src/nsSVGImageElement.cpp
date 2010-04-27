@@ -206,8 +206,7 @@ nsSVGImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href)) {
     ClearBrokenState();
     nsContentUtils::AddScriptRunner(
-      new nsRunnableMethod<nsSVGImageElement>(this,
-                                              &nsSVGImageElement::MaybeLoadSVGImage));
+      NS_NewRunnableMethod(this, &nsSVGImageElement::MaybeLoadSVGImage));
   }
 
   return rv;

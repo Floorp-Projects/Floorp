@@ -764,7 +764,7 @@ BrowserGlue.prototype = {
     // from bookmarks.html, we will try to restore from JSON
     if (importBookmarks && !restoreDefaultBookmarks && !importBookmarksHTML) {
       // get latest JSON backup
-      Cu.import("resource://gre/modules/utils.js");
+      Cu.import("resource://gre/modules/PlacesUtils.jsm");
       var bookmarksBackupFile = PlacesUtils.backups.getMostRecent("json");
       if (bookmarksBackupFile) {
         // restore from JSON backup
@@ -894,7 +894,7 @@ BrowserGlue.prototype = {
    * Backup bookmarks if needed.
    */
   _backupBookmarks: function BG__backupBookmarks() {
-    Cu.import("resource://gre/modules/utils.js");
+    Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
     let lastBackupFile = PlacesUtils.backups.getMostRecent();
 

@@ -42,7 +42,6 @@
   * PlacesUtils.hasChildURIs (those helpers share almost all of their code)
   */
 
-Components.utils.import("resource://gre/modules/utils.js");
 var PU = PlacesUtils;
 var hs = PU.history;
 var bs = PU.bookmarks;
