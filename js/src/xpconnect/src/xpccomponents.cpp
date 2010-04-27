@@ -3556,10 +3556,12 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
     {
         nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
         if (ssm) {
-            nsIPrincipal *subjectPrincipal = ssm->GetCxSubjectPrincipal(cx);
+            JSStackFrame *fp;
+            nsIPrincipal *subjectPrincipal =
+                ssm->GetCxSubjectPrincipalAndFrame(cx, &fp);
             PRBool system;
             ssm->IsSystemPrincipal(subjectPrincipal, &system);
-            NS_ASSERTION(system, "Bad caller!");
+            NS_ASSERTION(!fp || system, "Bad caller!");
         }
     }
 #endif
