@@ -37,7 +37,6 @@
 
 #include "ImageLayerOGL.h"
 #include "gfxImageSurface.h"
-#include "glWrapper.h"
 
 namespace mozilla {
 namespace layers {
@@ -137,21 +136,21 @@ ImageLayerOGL::RenderLayer(int)
 
     program->SetLayerQuadTransform(&quadTransform[0][0]);
   
-    sglWrapper.ActiveTexture(LOCAL_GL_TEXTURE0);
-    sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, yuvImage->mTextures[0]);
-    sglWrapper.ActiveTexture(LOCAL_GL_TEXTURE1);
-    sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, yuvImage->mTextures[1]);
-    sglWrapper.ActiveTexture(LOCAL_GL_TEXTURE2);
-    sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, yuvImage->mTextures[2]);
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, yuvImage->mTextures[0]);
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE1);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, yuvImage->mTextures[1]);
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE2);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, yuvImage->mTextures[2]);
 
     program->SetLayerOpacity(GetOpacity());
     program->SetLayerTransform(&mTransform._11);
     program->Apply();
 
-    sglWrapper.DrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+    gl()->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
 
     yuvImage->FreeTextures();
-    sglWrapper.ActiveTexture(LOCAL_GL_TEXTURE0);
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   } else if (image->GetFormat() == Image::CAIRO_SURFACE) {
     CairoImageOGL *cairoImage =
@@ -172,13 +171,13 @@ ImageLayerOGL::RenderLayer(int)
 
     program->SetLayerQuadTransform(&quadTransform[0][0]);
 
-    sglWrapper.ActiveTexture(LOCAL_GL_TEXTURE0);
-    sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, cairoImage->mTexture);
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, cairoImage->mTexture);
     program->SetLayerOpacity(GetOpacity());
     program->SetLayerTransform(&mTransform._11);
     program->Apply();
 
-    sglWrapper.DrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+    gl()->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
   }
 }
 
@@ -258,7 +257,9 @@ void
 PlanarYCbCrImageOGL::AllocateTextures()
 {
   mManager->MakeCurrent();
-  sglWrapper.GenTextures(3, mTextures);
+
+  mozilla::gl::GLContext *gl = mManager->gl();
+  gl->fGenTextures(3, mTextures);
 
   GLint alignment;
 
@@ -273,24 +274,24 @@ PlanarYCbCrImageOGL::AllocateTextures()
   }
 
   // Set texture alignment for Y plane.
-  sglWrapper.PixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, alignment);
+  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, alignment);
 
-  sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTextures[0]);
+  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextures[0]);
 
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
-  sglWrapper.TexImage2D(LOCAL_GL_TEXTURE_2D,
-               0,
-               LOCAL_GL_LUMINANCE,
-               mSize.width,
-               mSize.height,
-               0,
-               LOCAL_GL_LUMINANCE,
-               LOCAL_GL_UNSIGNED_BYTE,
-               mData.mYChannel);
+  gl->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                  0,
+                  LOCAL_GL_LUMINANCE,
+                  mSize.width,
+                  mSize.height,
+                  0,
+                  LOCAL_GL_LUMINANCE,
+                  LOCAL_GL_UNSIGNED_BYTE,
+                  mData.mYChannel);
 
   if (!((ptrdiff_t)mData.mCbCrStride & 0x7) && 
       !((ptrdiff_t)mData.mCbChannel & 0x7) &&
@@ -305,44 +306,44 @@ PlanarYCbCrImageOGL::AllocateTextures()
   }
   
   // Set texture alignment for Cb/Cr plane
-  sglWrapper.PixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, alignment);
+  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, alignment);
 
-  sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTextures[1]);
+  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextures[1]);
 
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
-  sglWrapper.TexImage2D(LOCAL_GL_TEXTURE_2D,
-               0,
-               LOCAL_GL_LUMINANCE,
-               mData.mCbCrSize.width,
-               mData.mCbCrSize.height,
-               0,
-               LOCAL_GL_LUMINANCE,
-               LOCAL_GL_UNSIGNED_BYTE,
-               mData.mCbChannel);
+  gl->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                  0,
+                  LOCAL_GL_LUMINANCE,
+                  mData.mCbCrSize.width,
+                  mData.mCbCrSize.height,
+                  0,
+                  LOCAL_GL_LUMINANCE,
+                  LOCAL_GL_UNSIGNED_BYTE,
+                  mData.mCbChannel);
 
-  sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTextures[2]);
+  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextures[2]);
 
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
-  sglWrapper.TexImage2D(LOCAL_GL_TEXTURE_2D,
-               0,
-               LOCAL_GL_LUMINANCE,
-               mData.mCbCrSize.width,
-               mData.mCbCrSize.height,
-               0,
-               LOCAL_GL_LUMINANCE,
-               LOCAL_GL_UNSIGNED_BYTE,
-               mData.mCrChannel);
+  gl->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                  0,
+                  LOCAL_GL_LUMINANCE,
+                  mData.mCbCrSize.width,
+                  mData.mCbCrSize.height,
+                  0,
+                  LOCAL_GL_LUMINANCE,
+                  LOCAL_GL_UNSIGNED_BYTE,
+                  mData.mCrChannel);
 
   // Reset alignment to default
-  sglWrapper.PixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+  gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
 void
@@ -350,7 +351,7 @@ PlanarYCbCrImageOGL::FreeTextures()
 {
   static_cast<LayerManagerOGL*>(mManager)->MakeCurrent();
   if (mTextures[0]) {
-    sglWrapper.DeleteTextures(3, mTextures);
+    mManager->gl()->fDeleteTextures(3, mTextures);
   }
 }
 
@@ -358,7 +359,7 @@ CairoImageOGL::~CairoImageOGL()
 {
   static_cast<LayerManagerOGL*>(mManager)->MakeCurrent();
   if (mTexture) {
-    sglWrapper.DeleteTextures(1, &mTexture);
+    mManager->gl()->fDeleteTextures(1, &mTexture);
   }
 }
 
@@ -367,6 +368,7 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
 {
   mSize = aData.mSize;
   mManager->MakeCurrent();
+  mozilla::gl::GLContext *gl = mManager->gl();
 
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(aData.mSize, gfxASurface::ImageFormatARGB32);
@@ -376,24 +378,24 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
   context->SetSource(aData.mSurface);
   context->Paint();
 
-  sglWrapper.GenTextures(1, &mTexture);
+  gl->fGenTextures(1, &mTexture);
 
-  sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+  gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
 
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
 
-  sglWrapper.TexImage2D(LOCAL_GL_TEXTURE_2D,
-               0,
-               LOCAL_GL_RGBA,
-               mSize.width,
-               mSize.height,
-               0,
-               LOCAL_GL_BGRA,
-               LOCAL_GL_UNSIGNED_BYTE,
-               imageSurface->Data());
+  gl->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                  0,
+                  LOCAL_GL_RGBA,
+                  mSize.width,
+                  mSize.height,
+                  0,
+                  LOCAL_GL_BGRA,
+                  LOCAL_GL_UNSIGNED_BYTE,
+                  imageSurface->Data());
 }
 
 } /* layers */

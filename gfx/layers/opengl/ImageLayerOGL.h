@@ -73,6 +73,7 @@ class THEBES_API ImageLayerOGL : public ImageLayer,
 public:
   ImageLayerOGL(LayerManagerOGL *aManager)
     : ImageLayer(aManager, NULL)
+    , LayerOGL(aManager)
   { 
     mImplData = static_cast<LayerOGL*>(this);
   }
