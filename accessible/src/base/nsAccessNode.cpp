@@ -166,8 +166,7 @@ nsAccessNode::Init()
 
   void* uniqueID;
   GetUniqueID(&uniqueID);
-  nsRefPtr<nsDocAccessible> docAcc =
-    nsAccUtils::QueryAccessibleDocument(docAccessible);
+  nsRefPtr<nsDocAccessible> docAcc = do_QueryObject(docAccessible);
   NS_ASSERTION(docAcc, "No nsDocAccessible for document accessible!");
 
   if (!docAcc->CacheAccessNode(uniqueID, this))
