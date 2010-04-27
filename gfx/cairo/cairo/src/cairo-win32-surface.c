@@ -659,6 +659,10 @@ _cairo_win32_surface_release_dest_image (void                    *abstract_surfa
     if (!local)
 	return;
 
+    /* clear any clip that's currently set on the surface
+       so that we can blit uninhibited. */
+    _cairo_win32_surface_set_clip_region (surface, NULL);
+
     if (!BitBlt (surface->dc,
 		 image_rect->x, image_rect->y,
 		 image_rect->width, image_rect->height,
