@@ -1164,7 +1164,7 @@ namespace nanojit
             int live_count = 0;
             while (iter.next()) {
                 LIns* ins = iter.key();
-                if (!ins->isStore() && !ins->isGuard()) {
+                if (!ins->isV()) {
                     live_count++;
                     livelist.insert(ins);
                 }
@@ -1198,13 +1198,15 @@ namespace nanojit
         uint32_t exits = 0;
         int total = 0;
         if (frag->lirbuf->state)
-            live.add(frag->lirbuf->state, in->finalIns());
+            live.add(frag->lirbuf->state, 0);
         for (LInsp ins = in->read(); !ins->isop(LIR_start); ins = in->read())
         {
             total++;
 
-            // first handle side-effect instructions
-            if (ins->isStmt())
+            // First handle instructions that are always live (ie. those that
+            // don't require being marked as live), eg. those with
+            // side-effects.  We ignore LIR_paramp.
+            if (ins->isLive() && !ins->isop(LIR_paramp))
             {
                 live.add(ins, 0);
                 if (ins->isGuard())
@@ -1260,6 +1262,7 @@ namespace nanojit
                 case LIR_noti:
                 CASESF(LIR_dlo2i:)
                 CASESF(LIR_dhi2i:)
+                CASESF(LIR_hcalli:)
                 CASE64(LIR_i2q:)
                 CASE64(LIR_ui2uq:)
                 case LIR_i2d:
@@ -1267,7 +1270,7 @@ namespace nanojit
                 CASE64(LIR_q2i:)
                 case LIR_d2i:
                 CASE86(LIR_modi:)
-                    live.add(ins->oprnd1(), ins);
+                    live.add(ins->oprnd1(), 0);
                     break;
 
                 case LIR_sti:
@@ -1326,29 +1329,23 @@ namespace nanojit
                 CASESF(LIR_ii2d:)
                 case LIR_file:
                 case LIR_line:
-                    live.add(ins->oprnd1(), ins);
-                    live.add(ins->oprnd2(), ins);
+                    live.add(ins->oprnd1(), 0);
+                    live.add(ins->oprnd2(), 0);
                     break;
 
                 case LIR_cmovi:
                 CASE64(LIR_cmovq:)
-                    live.add(ins->oprnd1(), ins);
-                    live.add(ins->oprnd2(), ins);
-                    live.add(ins->oprnd3(), ins);
+                    live.add(ins->oprnd1(), 0);
+                    live.add(ins->oprnd2(), 0);
+                    live.add(ins->oprnd3(), 0);
                     break;
 
                 case LIR_calli:
                 case LIR_calld:
                 CASE64(LIR_callq:)
                     for (int i = 0, argc = ins->argc(); i < argc; i++)
-                        live.add(ins->arg(i), ins);
+                        live.add(ins->arg(i), 0);
                     break;
-
-#if NJ_SOFTFLOAT_SUPPORTED
-                case LIR_hcalli:
-                    live.add(ins->oprnd1(), ins);
-                    break;
-#endif
 
                 default:
                     NanoAssertMsgf(0, "unhandled opcode: %d", ins->opcode());

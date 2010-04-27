@@ -729,7 +729,7 @@ Assembler::asm_regarg(ArgType ty, LInsp p, Register r)
         if (p->isImmI()) {
             asm_ld_imm(r, p->immI());
         } else {
-            if (p->isUsed()) {
+            if (p->isExtant()) {
                 if (!p->deprecated_hasKnownReg()) {
                     // load it into the arg reg
                     int d = findMemFor(p);
@@ -765,7 +765,7 @@ Assembler::asm_stkarg(LInsp arg, int stkd)
     bool isF64 = arg->isD();
 
     Register rr;
-    if (arg->isUsed() && (rr = arg->deprecated_getReg(), deprecated_isKnownReg(rr))) {
+    if (arg->isExtant() && (rr = arg->deprecated_getReg(), deprecated_isKnownReg(rr))) {
         // The argument resides somewhere in registers, so we simply need to
         // push it onto the stack.
         if (!_config.arm_vfp || !isF64) {
@@ -861,7 +861,7 @@ Assembler::asm_call(LInsp ins)
     // R0/R1. We need to either place it in the result fp reg, or store it.
     // See comments above for more details as to why this is necessary here
     // for floating point calls, but not for integer calls.
-    if (_config.arm_vfp && ins->isUsed()) {
+    if (_config.arm_vfp && ins->isExtant()) {
         // If the result size is a floating-point value, treat the result
         // specially, as described previously.
         if (ci->returnType() == ARGTYPE_D) {

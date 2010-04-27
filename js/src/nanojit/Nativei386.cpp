@@ -2251,11 +2251,11 @@ namespace nanojit
     void Assembler::asm_pusharg(LInsp ins)
     {
         // arg goes on stack
-        if (!ins->isUsed() && ins->isImmI())
+        if (!ins->isExtant() && ins->isImmI())
         {
             PUSHi(ins->immI());    // small const we push directly
         }
-        else if (!ins->isUsed() || ins->isop(LIR_alloc))
+        else if (!ins->isExtant() || ins->isop(LIR_alloc))
         {
             Register ra = findRegFor(ins, GpRegs);
             PUSHr(ra);
@@ -2274,7 +2274,7 @@ namespace nanojit
     void Assembler::asm_stkarg(LInsp ins, int32_t& stkd)
     {
         // arg goes on stack
-        if (!ins->isUsed() && ins->isImmI())
+        if (!ins->isExtant() && ins->isImmI())
         {
             // small const we push directly
             STi(SP, stkd, ins->immI());
