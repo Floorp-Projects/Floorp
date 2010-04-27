@@ -1270,6 +1270,7 @@ Assembler::asm_restore(LInsp i, Register r)
         case LIR_andi: asm_and_imm(r, rn, imm, /*stat=*/ 0); break;
         case LIR_ori:  asm_orr_imm(r, rn, imm, /*stat=*/ 0); break;
         case LIR_xori: asm_eor_imm(r, rn, imm, /*stat=*/ 0); break;
+        default:       NanoAssert(0);                        break;
         }
     } else {
         // We can't easily load immediate values directly into FP registers, so
