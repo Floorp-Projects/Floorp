@@ -611,11 +611,6 @@ struct JSThread {
      */
     bool                gcWaiting;
 
-    /*
-     * Deallocator task for this thread.
-     */
-    JSFreePointerListTask *deallocatorTask;
-
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
 };
@@ -811,6 +806,10 @@ struct JSRuntime {
     size_t              gcMarkLaterCount;
 #endif
 
+#ifdef JS_THREADSAFE
+    JSBackgroundThread  gcHelperThread;
+#endif
+
     /*
      * The trace operation and its data argument to trace embedding-specific
      * GC roots.
@@ -983,10 +982,6 @@ struct JSRuntime {
 
     /* Literal table maintained by jsatom.c functions. */
     JSAtomState         atomState;
-
-#ifdef JS_THREADSAFE
-    JSBackgroundThread    *deallocatorThread;
-#endif
 
     JSEmptyScope          *emptyArgumentsScope;
     JSEmptyScope          *emptyBlockScope;
@@ -1414,8 +1409,6 @@ struct JSContext
     bool                 jitEnabled;
 #endif
 
-    JSClassProtoCache    classProtoCache;
-
     /* Caller must be holding runtime->gcLock. */
     void updateJITEnabled() {
 #ifdef JS_TRACER
@@ -1426,19 +1419,13 @@ struct JSContext
 #endif
     }
 
-#ifdef JS_THREADSAFE
-    inline void createDeallocatorTask() {
-        JS_ASSERT(!thread->deallocatorTask);
-        if (runtime->deallocatorThread && !runtime->deallocatorThread->busy())
-            thread->deallocatorTask = new JSFreePointerListTask();
-    }
+    JSClassProtoCache    classProtoCache;
 
-    inline void submitDeallocatorTask() {
-        if (thread->deallocatorTask) {
-            runtime->deallocatorThread->schedule(thread->deallocatorTask);
-            thread->deallocatorTask = NULL;
-        }
-    }
+#ifdef JS_THREADSAFE
+    /*
+     * The sweep task for this context.
+     */
+    js::BackgroundSweepTask *gcSweepTask;
 #endif
 
     ptrdiff_t &getMallocCounter() {
@@ -1513,26 +1500,15 @@ struct JSContext
         return p;
     }
 
+    inline void free(void* p) {
 #ifdef JS_THREADSAFE
-    inline void free(void* p) {
-        if (!p)
+        if (gcSweepTask) {
+            gcSweepTask->freeLater(p);
             return;
-        if (thread) {
-            JSFreePointerListTask* task = thread->deallocatorTask;
-            if (task) {
-                task->add(p);
-                return;
-            }
         }
-        runtime->free(p);
-    }
-#else
-    inline void free(void* p) {
-        if (!p)
-            return;
-        runtime->free(p);
-    }
 #endif
+        runtime->free(p);
+    }
 
     /*
      * In the common case that we'd like to allocate the memory for an object
