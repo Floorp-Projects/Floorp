@@ -67,8 +67,8 @@ class nsTableFrame;
  *
  * @author  sclark
  */
-class nsTableCellFrame : public nsHTMLContainerFrame, 
-                         public nsITableCellLayout, 
+class nsTableCellFrame : public nsHTMLContainerFrame,
+                         public nsITableCellLayout,
                          public nsIPercentHeightObserver
 {
 public:
@@ -95,7 +95,7 @@ public:
 
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
-  
+
   // table cells contain a block frame which does most of the work, and
   // so these functions should never be called. They assert and return
   // NS_ERROR_NOT_IMPLEMENTED
@@ -127,7 +127,7 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
-                              
+
   void PaintCellBackground(nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, nsPoint aPt,
                            PRUint32 aFlags);
@@ -158,8 +158,8 @@ public:
   void VerticallyAlignChild(nscoord aMaxAscent);
 
   PRBool HasVerticalAlignBaseline();
-  
-  PRBool CellHasVisibleContent(nscoord       height, 
+
+  PRBool CellHasVisibleContent(nscoord       height,
                                nsTableFrame* tableFrame,
                                nsIFrame*     kidFrame);
 
@@ -198,14 +198,14 @@ public:
    * @see nsTableFrame::GetEffectiveColSpan()
    */
   virtual PRInt32 GetColSpan();
-  
+
   /** return the cell's column index (starting at 0 for the first column) */
   virtual nsresult GetColIndex(PRInt32 &aColIndex) const;
   void SetColIndex(PRInt32 aColIndex);
 
   /** return the available width given to this frame during its last reflow */
   inline nscoord GetPriorAvailWidth();
-  
+
   /** set the available width given to this frame during its last reflow */
   inline void SetPriorAvailWidth(nscoord aPriorAvailWidth);
 
@@ -232,7 +232,7 @@ public:
 
   void DecorateForSelection(nsIRenderingContext& aRenderingContext,
                             nsPoint              aPt);
-                                 
+
 protected:
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
@@ -249,7 +249,7 @@ protected:
 
   friend class nsTableRowFrame;
 
-  PRUint32     mColIndex;             // the starting column for this cell 
+  PRUint32     mColIndex;             // the starting column for this cell
 
   nscoord      mPriorAvailWidth;      // the avail width during the last reflow
   nsSize       mDesiredSize;          // the last desired width & height
@@ -265,7 +265,7 @@ inline nsSize nsTableCellFrame::GetDesiredSize()
 { return mDesiredSize; }
 
 inline void nsTableCellFrame::SetDesiredSize(const nsHTMLReflowMetrics & aDesiredSize)
-{ 
+{
   mDesiredSize.width = aDesiredSize.width;
   mDesiredSize.height = aDesiredSize.height;
 }
@@ -335,7 +335,7 @@ public:
                                PRUint32             aFlags);
 
 private:
-  
+
   // These are the entire width of the border (the cell edge contains only
   // the inner half, per the macros in nsTablePainter.h).
   BCPixelSize mTopBorder;

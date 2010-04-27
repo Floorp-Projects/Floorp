@@ -68,12 +68,12 @@ struct nsMargin {
   nscoord& side(PRUint8 aSide) {
     NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
     return *(&top + aSide);
-  }    
+  }
 
   nscoord side(PRUint8 aSide) const {
     NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
     return *(&top + aSide);
-  }    
+  }
 #else
 #error "Somebody changed the side constants."
 #endif

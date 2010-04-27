@@ -70,7 +70,7 @@
  * appUnitsPerPixel -- current value of AUPP
  * destContext -- the gfxContext to which the border should be rendered
  * outsideRect -- the rectangle on the outer edge of the border
- * 
+ *
  * For any parameter where an array of side values is passed in,
  * they are in top, right, bottom, left order.
  *
