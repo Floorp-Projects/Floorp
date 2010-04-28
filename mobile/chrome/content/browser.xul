@@ -449,7 +449,7 @@
             </hbox>
           </vbox>
 
-          <richlistbox id="console-box" class="console-box" flex="1"/>
+          <richlistbox id="console-box" class="console-box" flex="1" onkeypress="ConsoleView.onConsoleBoxKeyPress(event)"/>
         </vbox>
       </deck>
     </box>
