@@ -3269,7 +3269,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                          * the second if, so we simply decompile it and start
                          * over at label if_again.
                          */
-                        cond = js_GetSrcNoteOffset(sn, 1) - tail;
+                        cond = js_GetSrcNoteOffset(sn, 1);
                         if (cond != 0) {
                             DECOMPILE_CODE(pc + oplen, cond - oplen);
                             pc += cond;
