@@ -2134,7 +2134,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * If this is a global reference from within a function, leave pn_op as
          * JSOP_NAME, etc. We could emit JSOP_*GVAR ops within function code if
          * only we could depend on the global frame's slots being valid for all
-         * calls to the function.
+         * calls to the function, and if we could equate the atom index in the
+         * function's atom map for every global name with its frame slot.
          */
         if (cg->flags & TCF_IN_FUNCTION)
             return JS_TRUE;
@@ -4514,7 +4515,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             stmtInfo.update = top;
             if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
                 return JS_FALSE;
-            if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 1, top - jmp))
+            if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 1, top - beq))
                 return JS_FALSE;
         }
 

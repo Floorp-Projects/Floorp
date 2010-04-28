@@ -1,4 +1,4 @@
-include protocol "multimanDupMgrsMgr.ipdl";
+include protocol multimanDupMgrsMgr;
 
 protocol multimanDupMgrs {
     manager multimanDupMgrsMgr or multimanDupMgrsMgr;

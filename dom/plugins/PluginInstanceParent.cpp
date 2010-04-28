@@ -45,6 +45,7 @@
 #include "StreamNotifyParent.h"
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
+#include "mozilla/unused.h"
 
 #if defined(OS_WIN)
 #include <windowsx.h>
@@ -152,14 +153,6 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
         // chance we get to destroy resources.
         SharedSurfaceRelease();
         UnsubclassPluginWindow();
-        // If we crashed in a modal loop in the child, reset
-        // the rpc event spin loop state.
-        if (mNestedEventState) {
-            mNestedEventState = false;
-            PostThreadMessage(GetCurrentThreadId(),
-                              gOOPPStopNativeLoopEvent,
-                              0, 0);
-        }
     }
 #endif
 }
@@ -174,12 +167,6 @@ PluginInstanceParent::Destroy()
 #if defined(OS_WIN)
     SharedSurfaceRelease();
     UnsubclassPluginWindow();
-    if (mNestedEventState) {
-        mNestedEventState = false;
-        PostThreadMessage(GetCurrentThreadId(),
-                          gOOPPStopNativeLoopEvent,
-                          0, 0);
-    }
 #endif
 
     return retval;
@@ -360,7 +347,6 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
                                   (void*)NPDrawingModelCoreGraphics);
         if (mQuirks & COREANIMATION_REFRESH_TIMER) {
-            abort();
             mParent->AddToRefreshTimer(this);
         }
     } else {
@@ -454,7 +440,8 @@ PluginInstanceParent::AnswerPStreamNotifyConstructor(PStreamNotifyParent* actor,
     if (!streamDestroyed) {
         static_cast<StreamNotifyParent*>(actor)->ClearDestructionFlag();
         if (*result != NPERR_NO_ERROR)
-            PStreamNotifyParent::Send__delete__(actor, NPERR_GENERIC_ERROR);
+            return PStreamNotifyParent::Send__delete__(actor,
+                                                       NPERR_GENERIC_ERROR);
     }
 
     return true;
@@ -836,7 +823,7 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
         return NPERR_GENERIC_ERROR;
 
     if (NPERR_NO_ERROR != err)
-        PBrowserStreamParent::Send__delete__(bs);
+        unused << PBrowserStreamParent::Send__delete__(bs);
 
     return err;
 }
@@ -863,8 +850,8 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         if (sp->mInstance != this)
             NS_RUNTIMEABORT("Mismatched plugin data");
 
-        PPluginStreamParent::Call__delete__(sp, reason, false);
-        return NPERR_NO_ERROR;
+        return PPluginStreamParent::Call__delete__(sp, reason, false) ?
+            NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
     }
 }
 
@@ -957,7 +944,7 @@ PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
 
     PStreamNotifyParent* streamNotify =
         static_cast<PStreamNotifyParent*>(notifyData);
-    PStreamNotifyParent::Send__delete__(streamNotify, reason);
+    unused << PStreamNotifyParent::Send__delete__(streamNotify, reason);
 }
 
 bool
@@ -1327,13 +1314,12 @@ PluginInstanceParent::AnswerPluginGotFocus()
 }
 
 bool
-PluginInstanceParent::RecvSetNestedEventState(const bool& aState)
+PluginInstanceParent::RecvProcessNativeEventsInRPCCall()
 {
-    PLUGIN_LOG_DEBUG(("%s state=%i", FULLFUNCTION, (int)aState));
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
 #if defined(OS_WIN)
-    PostThreadMessage(GetCurrentThreadId(), aState ?
-        gOOPPSpinNativeLoopEvent : gOOPPStopNativeLoopEvent, 0, 0);
-    mNestedEventState = aState;
+    static_cast<PluginModuleParent*>(Manager())
+        ->ProcessNativeEventsInRPCCall();
     return true;
 #else
     NS_NOTREACHED(

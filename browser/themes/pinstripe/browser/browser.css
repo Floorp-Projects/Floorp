@@ -74,7 +74,7 @@
   opacity: .8;
 }
 
-.tabbrowser-arrowscrollbox:-moz-lwtheme > .tabs-newtab-button {
+.tabs-newtab-button:-moz-lwtheme {
   width: auto;
   -moz-box-flex: 1;
   -moz-box-pack: start;
@@ -95,8 +95,11 @@
 }
 
 .tabs-newtab-button:-moz-lwtheme-darktext,
-.tabs-alltabs-button:-moz-lwtheme-darktext,
-.tabbrowser-tabs:-moz-lwtheme-darktext > .tabs-closebutton,
+#TabsToolbar > #new-tab-button:-moz-lwtheme-darktext,
+#TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-lwtheme-darktext,
+#TabsToolbar > #alltabs-button:-moz-lwtheme-darktext,
+#TabsToolbar > toolbarpaletteitem > #alltabs-button:-moz-lwtheme-darktext,
+#tabs-closebutton:-moz-lwtheme-darktext,
 .tabbrowser-arrowscrollbox:-moz-lwtheme-darktext > .scrollbutton-up,
 .tabbrowser-arrowscrollbox:-moz-lwtheme-darktext > .scrollbutton-down,
 .tabbrowser-tab:-moz-lwtheme-darktext:not([selected="true"]) {
@@ -104,8 +107,11 @@
 }
 
 .tabs-newtab-button:-moz-lwtheme-brighttext,
-.tabs-alltabs-button:-moz-lwtheme-brighttext,
-.tabbrowser-tabs:-moz-lwtheme-brighttext > .tabs-closebutton,
+#TabsToolbar > #new-tab-button:-moz-lwtheme-brighttext,
+#TabsToolbar > toolbarpaletteitem > #new-tab-button:-moz-lwtheme-brighttext,
+#TabsToolbar > #alltabs-button:-moz-lwtheme-brighttext,
+#TabsToolbar > toolbarpaletteitem > #alltabs-button:-moz-lwtheme-brighttext,
+#tabs-closebutton:-moz-lwtheme-brighttext,
 .tabbrowser-arrowscrollbox:-moz-lwtheme-brighttext > .scrollbutton-up,
 .tabbrowser-arrowscrollbox:-moz-lwtheme-brighttext > .scrollbutton-down,
 .tabbrowser-tab:-moz-lwtheme-brighttext:not([selected="true"]) {
@@ -1528,7 +1534,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabbrowser-tab,
-.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+.tabs-newtab-button {
   -moz-appearance: none;
   -moz-border-radius: 0 0 6px 6px;
   color: #222;
@@ -1547,7 +1553,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   background-image: url(chrome://browser/skin/tabbrowser/tab-bkgnd.png);
 }
 
-.tabbrowser-arrowscrollbox > .tabs-newtab-button {
+.tabs-newtab-button {
   width: 34px;
   padding-top: 1px;
 }
@@ -1603,6 +1609,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
   background-color: #e2e2e2;
+}
+
+#TabsToolbar > toolbarbutton,
+#TabsToolbar > toolbarpaletteitem > toolbarbutton {
+  padding: 0;
 }
 
 .tabbrowser-tabs {
@@ -1712,55 +1723,71 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
  * Tabstrip New Tab & All Tabs Buttons
  */
 
-.tabbrowser-tabs > .tabs-newtab-button,
-.tabs-alltabs-button {
+#TabsToolbar > #new-tab-button,
+#TabsToolbar > toolbarpaletteitem > #new-tab-button,
+#TabsToolbar > #alltabs-button,
+#TabsToolbar > toolbarpaletteitem > #alltabs-button {
   -moz-border-start: 2px solid;
   -moz-border-end: none;
   -moz-border-left-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   -moz-border-right-colors: rgba(0,0,0,0.25) rgba(255,255,255,0.15);
   margin: 0;
-  padding: 0;
 }
+
 .tabs-newtab-button > .toolbarbutton-icon,
-.tabs-alltabs-button > .toolbarbutton-icon {
+#TabsToolbar > #new-tab-button > .toolbarbutton-icon,
+#TabsToolbar > toolbarpaletteitem > #new-tab-button > .toolbarbutton-icon,
+#TabsToolbar > #alltabs-button > .toolbarbutton-icon,
+#TabsToolbar > toolbarpaletteitem > #alltabs-button > .toolbarbutton-icon {
   padding: 0;
 }
-.tabs-newtab-button {
+
+.tabs-newtab-button,
+#TabsToolbar > #new-tab-button,
+#TabsToolbar > toolbarpaletteitem > #new-tab-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/newtab.png);
   -moz-image-region: rect(0, 18px, 20px, 0);
 }
-.tabs-newtab-button:hover {
+
+.tabs-newtab-button:hover,
+#TabsToolbar > #new-tab-button:hover {
   -moz-image-region: rect(0, 36px, 20px, 18px);
 }
-.tabs-newtab-button:hover:active {
+
+.tabs-newtab-button:hover:active,
+#TabsToolbar > #new-tab-button:hover:active {
   -moz-image-region: rect(0, 54px, 20px, 36px);
 }
-.tabs-alltabs-button {
+
+#alltabs-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png);
   -moz-image-region: rect(0, 22px, 20px, 0);
 }
-.tabs-alltabs-button:hover {
+
+#alltabs-button:hover {
   -moz-image-region: rect(0, 44px, 20px, 22px);
 }
-.tabs-alltabs-button[type="menu"][open="true"],
-.tabs-alltabs-button:hover:active {
+
+#alltabs-button[type="menu"][open="true"],
+#alltabs-button:hover:active {
   -moz-image-region: rect(0, 66px, 20px, 44px);
 }
-.tabbrowser-tabs > .tabs-newtab-button:hover,
-.tabs-alltabs-button:hover {
+
+#TabsToolbar > #new-tab-button:hover,
+#TabsToolbar > #alltabs-button:hover {
   background-color: rgba(0,0,0,0.10);
 }
-.tabbrowser-tabs > .tabs-newtab-button:hover:active,
-.tabs-alltabs-button:hover:active {
+
+#TabsToolbar > #new-tab-button:hover:active,
+#TabsToolbar > #alltabs-button:hover:active {
   background-color: rgba(0,0,0,0.20);
 }
 
-.tabs-alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker,
-.tabs-alltabs-button > .toolbarbutton-text {
+#alltabs-button[type="menu"] > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
-.tabs-alltabs-button > .toolbarbutton-icon {
+#alltabs-button > .toolbarbutton-icon {
   -moz-margin-end: 2px;
 }
 

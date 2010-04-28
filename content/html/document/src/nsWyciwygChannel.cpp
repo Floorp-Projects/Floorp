@@ -306,8 +306,7 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
   nsresult rv = OpenCacheEntry(spec, nsICache::ACCESS_READ, &delayed);
   if (rv == NS_ERROR_CACHE_KEY_NOT_FOUND) {
     nsCOMPtr<nsIRunnable> ev =
-      new nsRunnableMethod<nsWyciwygChannel>(this,
-                                             &nsWyciwygChannel::NotifyListener);
+      NS_NewRunnableMethod(this, &nsWyciwygChannel::NotifyListener);
     // Overwrite rv on purpose; if event dispatch fails we'll bail, and
     // otherwise we'll wait until the event fires before calling back.
     rv = NS_DispatchToCurrentThread(ev);

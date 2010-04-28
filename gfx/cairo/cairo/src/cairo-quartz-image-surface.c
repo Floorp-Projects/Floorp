@@ -58,9 +58,8 @@ _cairo_quartz_image_surface_create_similar (void *asurface,
 					    int height)
 {
     cairo_surface_t *result;
-    cairo_surface_t *isurf = cairo_image_surface_create (_cairo_format_from_content (content),
-							 width,
-							 height);
+    cairo_surface_t *isurf =
+	_cairo_image_surface_create_with_content (content, width, height);
     if (cairo_surface_status(isurf))
 	return isurf;
 
@@ -108,18 +107,16 @@ _cairo_quartz_image_surface_acquire_dest_image (void *asurface,
     *image_extra = NULL;
 
     return CAIRO_STATUS_SUCCESS;
-   
 }
 
-static cairo_int_status_t
+static cairo_bool_t
 _cairo_quartz_image_surface_get_extents (void *asurface,
 					 cairo_rectangle_int_t *extents)
 {
     cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t *) asurface;
 
     *extents = surface->extents;
-
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 /* we assume some drawing happened to the image buffer; make sure it's
@@ -149,6 +146,8 @@ _cairo_quartz_image_surface_flush (void *asurface)
     surface->image = newImage;
     CGImageRelease (oldImage);
 
+    surface->base.is_clear = surface->imageSurface->base.is_clear;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -168,8 +167,6 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
     NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
-    NULL, /* set_clip_region */
-    NULL, /* intersect_clip_path */
     _cairo_quartz_image_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
@@ -185,7 +182,6 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
     NULL, /* surface_show_glyphs */
     NULL, /* snapshot */
     NULL, /* is_similar */
-    NULL, /* reset */
     NULL  /* fill_stroke */
 
 };
@@ -272,6 +268,8 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 
     qisurf->image = image;
     qisurf->imageSurface = image_surface;
+
+    qisurf->base.is_clear = image_surface->base.is_clear;
 
     return &qisurf->base;
 }

@@ -1,0 +1,9 @@
+include protocol manageSelf;
+
+protocol manageSelf_Toplevel {
+    manages manageSelf;
+
+child:
+    manageSelf();
+    __delete__();
+};

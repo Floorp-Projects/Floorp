@@ -4282,7 +4282,7 @@ nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent
 {
   // inform the focus manager that the content is being removed. If this
   // content is focused, the focus will be removed without firing events.
-  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm)
     fm->ContentRemoved(aDocument, aContent);
 

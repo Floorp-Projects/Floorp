@@ -12420,22 +12420,24 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         LIns* pidx_ins = lir->insUI2P(idx_ins);
         LIns* addr_ins = 0;
 
+        LIns* typed_v_ins = v_ins;
+
         // If it's not a number, convert objects to NaN,
         // null to 0, and call StringToNumber or BooleanOrUndefinedToNumber
         // for those.
         if (!isNumber(v)) {
             if (JSVAL_IS_NULL(v)) {
-                v_ins = INS_CONST(0);
+                typed_v_ins = lir->insImmD(0);
             } else if (JSVAL_IS_VOID(v)) {
-                v_ins = lir->insImmD(js_NaN);
+                typed_v_ins = lir->insImmD(js_NaN);
             } else if (JSVAL_IS_STRING(v)) {
-                LIns* args[] = { v_ins, cx_ins };
-                v_ins = lir->insCall(&js_StringToNumber_ci, args);
+                LIns* args[] = { typed_v_ins, cx_ins };
+                typed_v_ins = lir->insCall(&js_StringToNumber_ci, args);
             } else if (JSVAL_IS_SPECIAL(v)) {
                 JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-                v_ins = i2d(v_ins);
+                typed_v_ins = i2d(typed_v_ins);
             } else {
-                v_ins = lir->insImmD(js_NaN);
+                typed_v_ins = lir->insImmD(js_NaN);
             }
         }
 
@@ -12443,25 +12445,27 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
           case js::TypedArray::TYPE_INT8:
           case js::TypedArray::TYPE_INT16:
           case js::TypedArray::TYPE_INT32:
-            v_ins = d2i(v_ins);
+            typed_v_ins = d2i(typed_v_ins);
             break;
           case js::TypedArray::TYPE_UINT8:
           case js::TypedArray::TYPE_UINT16:
           case js::TypedArray::TYPE_UINT32:
-            v_ins = f2u(v_ins);
+            typed_v_ins = f2u(typed_v_ins);
             break;
           case js::TypedArray::TYPE_UINT8_CLAMPED:
-            if (isPromoteInt(v_ins)) {
-                v_ins = demote(lir, v_ins);
-                v_ins = lir->insChoose(lir->ins2ImmI(LIR_lt, v_ins, 0),
-                                        lir->insImmI(0),
-                                        lir->insChoose(lir->ins2ImmI(LIR_gt, v_ins, 0xff),
-                                                        lir->insImmI(0xff),
-                                                        v_ins,
-                                                        avmplus::AvmCore::use_cmov()),
+            if (isPromoteInt(typed_v_ins)) {
+                typed_v_ins = demote(lir, typed_v_ins);
+                typed_v_ins = lir->insChoose(lir->ins2ImmI(LIR_lt, typed_v_ins, 0),
+                                             lir->insImmI(0),
+                                             lir->insChoose(lir->ins2ImmI(LIR_gt,
+                                                                          typed_v_ins,
+                                                                          0xff),
+                                                            lir->insImmI(0xff),
+                                                            typed_v_ins,
+                                                            avmplus::AvmCore::use_cmov()),
                                         avmplus::AvmCore::use_cmov());
             } else {
-                v_ins = lir->insCall(&js_TypedArray_uint8_clamp_double_ci, &v_ins);
+                typed_v_ins = lir->insCall(&js_TypedArray_uint8_clamp_double_ci, &typed_v_ins);
             }
             break;
           case js::TypedArray::TYPE_FLOAT32:
@@ -12477,25 +12481,25 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
           case js::TypedArray::TYPE_UINT8_CLAMPED:
           case js::TypedArray::TYPE_UINT8:
             addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
-            lir->insStore(LIR_stb, v_ins, addr_ins, 0, ACC_OTHER);
+            lir->insStore(LIR_stb, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           case js::TypedArray::TYPE_INT16:
           case js::TypedArray::TYPE_UINT16:
             addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 1));
-            lir->insStore(LIR_sts, v_ins, addr_ins, 0, ACC_OTHER);
+            lir->insStore(LIR_sts, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           case js::TypedArray::TYPE_INT32:
           case js::TypedArray::TYPE_UINT32:
             addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 2));
-            lir->insStore(LIR_sti, v_ins, addr_ins, 0, ACC_OTHER);
+            lir->insStore(LIR_sti, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           case js::TypedArray::TYPE_FLOAT32:
             addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 2));
-            lir->insStore(LIR_st32f, v_ins, addr_ins, 0, ACC_OTHER);
+            lir->insStore(LIR_st32f, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           case js::TypedArray::TYPE_FLOAT64:
             addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 3));
-            lir->insStore(LIR_stfi, v_ins, addr_ins, 0, ACC_OTHER);
+            lir->insStore(LIR_stfi, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           default:
             JS_NOT_REACHED("Unknown typed array type in tracer");       

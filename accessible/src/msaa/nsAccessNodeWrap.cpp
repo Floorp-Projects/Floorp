@@ -37,12 +37,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessNodeWrap.h"
+
+#include "AccessibleApplication.h"
 #include "ISimpleDOMNode_i.c"
+
 #include "nsAccessibilityAtoms.h"
-#include "nsIAccessible.h"
+#include "nsAccessibilityService.h"
+#include "nsApplicationAccessibleWrap.h"
+#include "nsCoreUtils.h"
+#include "nsRootAccessible.h"
+
 #include "nsAttrName.h"
 #include "nsIDocument.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMViewCSS.h"
@@ -51,10 +57,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsPIDOMWindow.h"
-#include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
-#include "AccessibleApplication.h"
-#include "nsApplicationAccessibleWrap.h"
 
 /// the accessible library and cached methods
 HINSTANCE nsAccessNodeWrap::gmAccLib = nsnull;

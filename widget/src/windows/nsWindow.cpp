@@ -205,6 +205,8 @@
 
 #include "nsWindowDefs.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #ifdef WINCE_WINDOWS_MOBILE
 #include "nsGfxCIID.h"
 #endif
@@ -1085,6 +1087,18 @@ NS_METHOD nsWindow::Show(PRBool bState)
        mWindowType == eWindowType_popup))
   {
     splash->Close();
+  }
+#endif
+
+#ifdef NS_FUNCTION_TIMER
+  static bool firstShow = true;
+  if (firstShow &&
+      (mWindowType == eWindowType_toplevel ||
+       mWindowType == eWindowType_dialog ||
+       mWindowType == eWindowType_popup))
+  {
+    firstShow = false;
+    mozilla::FunctionTimer::LogMessage("First toplevel/dialog/popup showing");
   }
 #endif
 
@@ -3833,6 +3847,9 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
     break;
     // Wheel events forwarded from the child.
     case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
+    case WM_HSCROLL:
+    case WM_VSCROLL:
     // Plugins taking or losing focus triggering focus app messages.
     case WM_SETFOCUS:
     case WM_KILLFOCUS:

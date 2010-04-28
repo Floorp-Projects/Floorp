@@ -560,6 +560,13 @@ namespace nanojit
         NanoAssert(isCses[op] != -1);   // see LIRopcode.tbl to understand this
         return isCses[op] == 1;
     }
+    inline bool isLiveOpcode(LOpcode op) {
+        return 
+#if defined NANOJIT_64BIT
+               op == LIR_liveq ||
+#endif
+               op == LIR_livei || op == LIR_lived;
+    }
     inline bool isRetOpcode(LOpcode op) {
         return
 #if defined NANOJIT_64BIT
@@ -769,20 +776,27 @@ namespace nanojit
     class LIns
     {
     private:
-        // SharedFields: fields shared by all LIns kinds.  The .inReg, .reg,
-        // .inAr and .arIndex fields form a "reservation" that is used
-        // temporarily during assembly to record information relating to
-        // register allocation.  See class RegAlloc for more details.
+        // SharedFields: fields shared by all LIns kinds.
         //
-        // Note: all combinations of .inReg/.inAr are possible, ie. 0/0, 0/1,
-        // 1/0, 1/1.
+        // The .inReg, .reg, .inAr and .arIndex fields form a "reservation"
+        // that is used temporarily during assembly to record information
+        // relating to register allocation.  See class RegAlloc for more
+        // details.  Note: all combinations of .inReg/.inAr are possible, ie.
+        // 0/0, 0/1, 1/0, 1/1.
+        //
+        // The .isResultLive field is only used for instructions that return
+        // results.  It indicates if the result is live.  It's set (if
+        // appropriate) and used only during the codegen pass.
+        //
         struct SharedFields {
-            uint32_t inReg:1;       // if 1, 'reg' is active
+            uint32_t inReg:1;           // if 1, 'reg' is active
             Register reg:7;
-            uint32_t inAr:1;        // if 1, 'arIndex' is active
-            uint32_t arIndex:15;    // index into stack frame;  displ is -4*arIndex
+            uint32_t inAr:1;            // if 1, 'arIndex' is active
+            uint32_t isResultLive:1;    // if 1, the instruction's result is live
+                                    
+            uint32_t arIndex:14;        // index into stack frame;  displ is -4*arIndex
 
-            LOpcode  opcode:8;      // instruction's opcode
+            LOpcode  opcode:8;          // instruction's opcode
         };
 
         union {
@@ -795,8 +809,8 @@ namespace nanojit
 
         inline void initSharedFields(LOpcode opcode)
         {
-            // We must zero .inReg and .inAR, but zeroing the whole word is
-            // easier.  Then we set the opcode.
+            // We must zero .inReg, .inAR and .isResultLive, but zeroing the
+            // whole word is easier.  Then we set the opcode.
             wholeWord = 0;
             sharedFields.opcode = opcode;
         }
@@ -836,6 +850,20 @@ namespace nanojit
 
         LOpcode opcode() const { return sharedFields.opcode; }
 
+        // Generally, void instructions (statements) are always live and
+        // non-void instructions (expressions) are live if used by another
+        // live instruction.  But there are some trickier cases.
+        bool isLive() const { 
+            return isV() ||
+                   sharedFields.isResultLive ||
+                   (isCall() && !callInfo()->_isPure) ||    // impure calls are always live
+                   isop(LIR_paramp);                        // LIR_paramp is always live
+        }
+        void setResultLive() {
+            NanoAssert(!isV());
+            sharedFields.isResultLive = 1;
+        }
+
         // XXX: old reservation manipulating functions.  See bug 538924.
         // Replacement strategy:
         // - deprecated_markAsClear() --> clearReg() and/or clearArIndex()
@@ -847,20 +875,25 @@ namespace nanojit
             sharedFields.inAr = 0;
         }
         bool deprecated_hasKnownReg() {
-            NanoAssert(isUsed());
+            NanoAssert(isExtant());
             return isInReg();
         }
         Register deprecated_getReg() {
-            NanoAssert(isUsed());
+            NanoAssert(isExtant());
             return ( isInReg() ? sharedFields.reg : deprecated_UnknownReg );
         }
         uint32_t deprecated_getArIndex() {
-            NanoAssert(isUsed());
+            NanoAssert(isExtant());
             return ( isInAr() ? sharedFields.arIndex : 0 );
         }
 
         // Reservation manipulation.
-        bool isUsed() {
+        //
+        // "Extant" mean "in existence, still existing, surviving".  In other
+        // words, has the value been computed explicitly (not folded into
+        // something else) and is it still available (in a register or spill
+        // slot) for use?
+        bool isExtant() {
             return isInReg() || isInAr();
         }
         bool isInReg() {
@@ -1004,13 +1037,6 @@ namespace nanojit
         bool isRet() const {
             return isRetOpcode(opcode());
         }
-        bool isLive() const {
-            return isop(LIR_livei) ||
-#if defined NANOJIT_64BIT
-                   isop(LIR_liveq) ||
-#endif
-                   isop(LIR_lived);
-        }
         bool isCmp() const {
             LOpcode op = opcode();
             return isCmpIOpcode(op) ||
@@ -1115,22 +1141,6 @@ namespace nanojit
 #else
             return isI();
 #endif
-        }
-
-        // Return true if removal of 'ins' from a LIR fragment could
-        // possibly change the behaviour of that fragment, even if any
-        // value computed by 'ins' is not used later in the fragment.
-        // In other words, can 'ins' possibly alter control flow or memory?
-        // Note, this assumes that loads will never fault and hence cannot
-        // affect the control flow.
-        bool isStmt() {
-            NanoAssert(!isop(LIR_skip));
-            // All instructions with Void retType are statements, as are calls
-            // to impure functions.
-            if (isCall())
-                return !callInfo()->_isPure;
-            else
-                return isV();
         }
 
         inline void* immP() const
@@ -1805,8 +1815,9 @@ namespace nanojit
     private:
         Allocator& alloc;
 
-        void formatImm(RefBuf* buf, int32_t c);
-        void formatImmq(RefBuf* buf, uint64_t c);
+        char *formatImmI(RefBuf* buf, int32_t c);
+        char *formatImmQ(RefBuf* buf, uint64_t c);
+        char *formatImmD(RefBuf* buf, double c);
         void formatGuard(InsBuf* buf, LInsp ins);
         void formatGuardXov(InsBuf* buf, LInsp ins);
 
@@ -1819,7 +1830,7 @@ namespace nanojit
         }
 
         char *formatAddr(RefBuf* buf, void* p);
-        char *formatRef(RefBuf* buf, LInsp ref);
+        char *formatRef(RefBuf* buf, LInsp ref, bool showImmValue = true);
         char *formatIns(InsBuf* buf, LInsp ins);
         char *formatAccSet(RefBuf* buf, AccSet accSet);
 
