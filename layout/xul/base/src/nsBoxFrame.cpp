@@ -2150,8 +2150,8 @@ void nsDisplayXULEventRedirector::HitTest(nsDisplayListBuilder* aBuilder,
   nsTArray<nsIFrame*> outFrames;
   mList.HitTest(aBuilder, aRect, aState, &outFrames);
 
-  PRInt32 originalLength = aOutFrames->Length();
-  PRInt32 localLength = outFrames.Length();
+  PRUint32 originalLength = aOutFrames->Length();
+  PRUint32 localLength = outFrames.Length();
 
   for (PRUint32 i = 0; i < localLength; i++) {
 
