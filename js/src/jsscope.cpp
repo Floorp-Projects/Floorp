@@ -763,7 +763,7 @@ JSScope::addProperty(JSContext *cx, jsid id,
  * SPROP_CALL_[GS]ETTER macros.
  */
 static inline bool
-NormalizeGetterAndSetter(JSContext *cx, JSScope *scope,
+NormalizeGetterAndSetter(JSContext *cx, const JSScope *scope,
                          jsid id, uintN attrs, uintN flags,
                          JSPropertyOp &getter,
                          JSPropertyOp &setter)
@@ -853,6 +853,25 @@ JSScope::addPropertyHelper(JSContext *cx, jsid id,
 
     METER(addFails);
     return NULL;
+}
+
+JSScopeProperty *
+JSScope::prepareForAddProperty(JSContext *cx, jsid id, JSPropertyOp getter, JSPropertyOp setter,
+                               uint32 slot, uintN attrs, uintN flags, intN shortid) const
+{
+    NormalizeGetterAndSetter(cx, this, id, attrs, flags, getter, setter);
+
+    // Find or create a property tree node labeled by our arguments. Do not use
+    // getChildProperty because it also effectively adds the property to this
+    // JSScope.
+    if (inDictionaryMode()) {
+        JSScopeProperty *sprop = JS_PROPERTY_TREE(cx).newScopeProperty(cx, true);
+        if (sprop)
+            new (sprop) JSScopeProperty(id, getter, setter, slot, attrs, flags, shortid);
+        return sprop;
+    }
+    JSScopeProperty child(id, getter, setter, slot, attrs, flags, shortid);
+    return JS_PROPERTY_TREE(cx).getChild(cx, lastProp, shape, child);
 }
 
 JSScopeProperty *
