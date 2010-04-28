@@ -1307,7 +1307,8 @@ nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
     // iter is the beginning of a cluster (or of the entire run);
     // look ahead for the next cluster start, then measure the entire cluster
     PRInt32 limit = i + 1;
-    while (limit < mTextRun->GetLength() && !mTextRun->IsClusterStart(limit)) {
+    while (limit < (PRInt32)mTextRun->GetLength() &&
+           !mTextRun->IsClusterStart(limit)) {
       ++limit;
     }
     gfxTextRun::Metrics metrics =
