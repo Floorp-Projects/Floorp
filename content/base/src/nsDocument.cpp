@@ -1810,7 +1810,7 @@ nsPropertyTable*
 nsIDocument::GetExtraPropertyTable(PRUint16 aCategory)
 {
   NS_ASSERTION(aCategory > 0, "Category 0 should have already been handled");
-  while (aCategory - 1 >= mExtraPropertyTables.Length()) {
+  while (aCategory >= mExtraPropertyTables.Length() + 1) {
     mExtraPropertyTables.AppendElement(new nsPropertyTable());
   }
   return mExtraPropertyTables[aCategory - 1];
