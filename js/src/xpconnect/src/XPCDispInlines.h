@@ -109,7 +109,7 @@ VARTYPE XPCDispInterface::Member::ParamInfo::GetType() const
 inline
 XPCDispInterface::Member::Member() : 
     mType(UNINITIALIZED), mFuncDesc(nsnull), mGetterFuncDesc(nsnull),
-    mTypeInfo(nsnull)
+    mTypeInfo(reinterpret_cast<ITypeInfo *>(nsnull))
 {
 }
 
