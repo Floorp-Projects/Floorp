@@ -79,6 +79,7 @@ XPCOM_GLUENS_SRC_LCPPSRCS =      \
   BlockingResourceBase.cpp       \
   DeadlockDetector.cpp           \
   SSE.cpp                        \
+  unused.cpp                     \
   nsAutoLock.cpp                 \
   nsGenericFactory.cpp           \
   nsProxyRelease.cpp             \

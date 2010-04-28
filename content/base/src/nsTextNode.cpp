@@ -345,8 +345,8 @@ nsAttributeTextNode::AttributeChanged(nsIDocument* aDocument,
     // XXXbz ideally we'd either process this on layout flushes or do it right
     // after nsIMutationObserver notifications are over or something, instead
     // of doing it fully async.
-    nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsAttributeTextNode>(
-            this, &nsAttributeTextNode::UpdateText);
+    void (nsAttributeTextNode::*update)() = &nsAttributeTextNode::UpdateText;
+    nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this, update);
     NS_DispatchToCurrentThread(ev);
   }
 }

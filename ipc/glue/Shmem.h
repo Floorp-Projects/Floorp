@@ -224,6 +224,15 @@ public:
           base::ProcessHandle aProcess,
           int32 routingId);
 
+  // Stop sharing this with |aProcess|.  Return an IPC message that
+  // contains enough information for the other process to unmap this
+  // segment.  Return a new message if successful (owned by the
+  // caller), NULL if not.
+  IPC::Message*
+  UnshareFrom(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
+              base::ProcessHandle aProcess,
+              int32 routingId);
+
   // Return a SharedMemory instance in this process using the
   // descriptor shared to us by the process that created the
   // underlying OS shmem resource.  The contents of the descriptor

@@ -44,15 +44,21 @@
 #include <windows.h>
 #endif
 
+/**
+ * We don't include GLDefs.h here since we don't want to drag in all defines
+ * in for all our users.
+ */
+typedef unsigned int GLenum;
+typedef unsigned int GLbitfield;
 typedef unsigned int GLuint;
 typedef int GLint;
-typedef float GLfloat;
-typedef char GLchar;
+typedef int GLsizei;
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 #include "gfxContext.h"
 #include "nsIWidget.h"
+#include "GLContext.h"
 
 namespace mozilla {
 namespace layers {
@@ -74,7 +80,9 @@ public:
   LayerProgram();
   virtual ~LayerProgram();
 
-  PRBool Initialize(GLuint aVertexShader, GLuint aFragmentShader);
+  PRBool Initialize(GLuint aVertexShader,
+                    GLuint aFragmentShader,
+                    mozilla::gl::GLContext *aContext);
 
   virtual void UpdateLocations();
 
@@ -106,6 +114,8 @@ public:
   void Apply();
 
 protected:
+  mozilla::gl::GLContext *mGLContext;
+
   GLuint mProgram;
   GLint mMatrixProjLocation;
   GLint mLayerQuadTransformLocation;
@@ -215,6 +225,10 @@ public:
   RGBLayerProgram *GetRGBLayerProgram() { return mRGBLayerProgram; }
   YCbCrLayerProgram *GetYCbCrLayerProgram() { return mYCbCrLayerProgram; }
 
+  typedef mozilla::gl::GLContext GLContext;
+
+  GLContext *gl() const { return mGLContext; }
+
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;
@@ -223,13 +237,7 @@ private:
    */
   nsRefPtr<gfxContext> mTarget;
 
-#ifdef XP_WIN
-  /** Windows Device Context */
-  HDC mDC;
-
-  /** OpenGL Context */
-  HGLRC mContext;
-#endif
+  nsRefPtr<GLContext> mGLContext;
 
   /** Backbuffer */
   GLuint mBackBuffer;
@@ -282,7 +290,7 @@ private:
 class LayerOGL
 {
 public:
-  LayerOGL();
+  LayerOGL(LayerManagerOGL *aManager);
 
   enum LayerType { TYPE_THEBES, TYPE_CONTAINER, TYPE_IMAGE };
   
@@ -298,7 +306,11 @@ public:
 
   virtual void RenderLayer(int aPreviousFrameBuffer) = 0;
 
+  typedef mozilla::gl::GLContext GLContext;
+
+  GLContext *gl() const { return mOGLManager->gl(); }
 protected:
+  LayerManagerOGL *mOGLManager;
   LayerOGL *mNextSibling;
 };
 

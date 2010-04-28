@@ -1,0 +1,21 @@
+commit 31579379422b75c3fe01b75d363e03f9b1e85604
+Author: Jeff Muizelaar <jmuizelaar@mozilla.com>
+Date:   Fri Mar 12 16:07:59 2010 -0500
+
+    xlib bugs
+
+diff --git a/src/cairo-xlib-display.c b/src/cairo-xlib-display.c
+index a7a40b8..566d9fb 100644
+--- a/src/cairo-xlib-display.c
++++ b/src/cairo-xlib-display.c
+@@ -407,6 +407,10 @@ _cairo_xlib_display_get (Display *dpy,
+ 	display->buggy_pad_reflect = TRUE;
+     }
+ 
++    /* gradients don't seem to work */
++    display->buggy_gradients = TRUE;
++
++
+     /* XXX workaround; see https://bugzilla.mozilla.org/show_bug.cgi?id=413583 */
+     /* If buggy_repeat_force == -1, then initialize.
+      *    - set to -2, meaning "nothing was specified", and we trust the above detection.

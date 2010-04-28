@@ -45,6 +45,7 @@
 #include "StreamNotifyParent.h"
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
+#include "mozilla/unused.h"
 
 #if defined(OS_WIN)
 #include <windowsx.h>
@@ -360,7 +361,6 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
                                   (void*)NPDrawingModelCoreGraphics);
         if (mQuirks & COREANIMATION_REFRESH_TIMER) {
-            abort();
             mParent->AddToRefreshTimer(this);
         }
     } else {
@@ -454,7 +454,8 @@ PluginInstanceParent::AnswerPStreamNotifyConstructor(PStreamNotifyParent* actor,
     if (!streamDestroyed) {
         static_cast<StreamNotifyParent*>(actor)->ClearDestructionFlag();
         if (*result != NPERR_NO_ERROR)
-            PStreamNotifyParent::Send__delete__(actor, NPERR_GENERIC_ERROR);
+            return PStreamNotifyParent::Send__delete__(actor,
+                                                       NPERR_GENERIC_ERROR);
     }
 
     return true;
@@ -836,7 +837,7 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
         return NPERR_GENERIC_ERROR;
 
     if (NPERR_NO_ERROR != err)
-        PBrowserStreamParent::Send__delete__(bs);
+        unused << PBrowserStreamParent::Send__delete__(bs);
 
     return err;
 }
@@ -863,8 +864,8 @@ PluginInstanceParent::NPP_DestroyStream(NPStream* stream, NPReason reason)
         if (sp->mInstance != this)
             NS_RUNTIMEABORT("Mismatched plugin data");
 
-        PPluginStreamParent::Call__delete__(sp, reason, false);
-        return NPERR_NO_ERROR;
+        return PPluginStreamParent::Call__delete__(sp, reason, false) ?
+            NPERR_NO_ERROR : NPERR_GENERIC_ERROR;
     }
 }
 
@@ -957,7 +958,7 @@ PluginInstanceParent::NPP_URLNotify(const char* url, NPReason reason,
 
     PStreamNotifyParent* streamNotify =
         static_cast<PStreamNotifyParent*>(notifyData);
-    PStreamNotifyParent::Send__delete__(streamNotify, reason);
+    unused << PStreamNotifyParent::Send__delete__(streamNotify, reason);
 }
 
 bool

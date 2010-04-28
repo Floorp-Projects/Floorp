@@ -1,0 +1,12 @@
+include protocol "cyclecheck_Child.ipdl";
+include protocol "cyclecheck_Parent.ipdl";
+
+protocol cyclecheck_Grandchild {
+    manager cyclecheck_Child;
+    manages cyclecheck_Parent;
+
+child:
+    cyclecheck_Parent();
+    __delete__();
+};
+

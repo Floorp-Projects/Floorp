@@ -75,7 +75,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 mode;
     PRInt32 originalMode;
     PRBool framesetOk;
-    PRInt32 foreignFlag;
+    PRBool inForeign;
   protected:
     nsHtml5Tokenizer* tokenizer;
   private:
@@ -210,7 +210,6 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
   public:
     PRBool isScriptingEnabled();
     void setScriptingEnabled(PRBool scriptingEnabled);
-    PRBool inForeign();
     void flushCharacters();
   private:
     PRBool charBufferContainsNonWhitespace();
@@ -228,7 +227,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
     PRInt32 getMode();
     PRInt32 getOriginalMode();
     PRBool isFramesetOk();
-    PRInt32 getForeignFlag();
+    PRBool isInForeign();
     PRBool isNeedToDropLF();
     PRBool isQuirks();
     PRInt32 getListOfActiveFormattingElementsLength();
@@ -344,8 +343,6 @@ jArray<const char*,PRInt32> nsHtml5TreeBuilder::QUIRKY_PUBLIC_IDS = nsnull;
 #define NS_HTML5TREE_BUILDER_CHARSET_DOUBLE_QUOTED 10
 #define NS_HTML5TREE_BUILDER_CHARSET_UNQUOTED 11
 #define NS_HTML5TREE_BUILDER_NOT_FOUND_ON_STACK PR_INT32_MAX
-#define NS_HTML5TREE_BUILDER_IN_FOREIGN 0
-#define NS_HTML5TREE_BUILDER_NOT_IN_FOREIGN 1
 
 
 #endif

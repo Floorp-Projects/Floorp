@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<body style="background:white;">
+<!--
+     Test if video displays correctly with a 3:2 aspect ratio.
+     It should display at w=150 h=100.
+     On some Linux systems, the scaling to preserve the aspect ratio can sample
+     the pixels outside visible region. This results in a thin grey line down
+     some sides of the scaled picture. We add red bars over the edges to
+     overwrite such happenings, to make the test reliable.
+-->
+<video src="black100x100-aspect3to2.ogv"
+       style="position:absolute; left: 10px; top: 10px; z-index: 1;">
+</video>
+
+<!-- Left side vertical. -->
+<div style="position: absolute; left: 9px; top: 9px; width: 2px; height: 102px; z-index: 2; background: red;"></div>
+
+<!-- Right side vertical. -->
+<div style="position: absolute; left: 159px; top: 9px; width: 2px; height: 102px; z-index: 2; background: red;"></div>
+
+<!-- Top horizontal bar. -->
+<div style="position: absolute; left: 9px; top: 9px; width: 152px; height: 2px; z-index: 2; background: red;"></div>
+
+<!-- Bottom horizontal bar. -->
+<div style="position: absolute; left: 9px; top: 109px; width: 152px; height: 2px; z-index: 2; background: red;"></div>
+
+</body>
+</html>

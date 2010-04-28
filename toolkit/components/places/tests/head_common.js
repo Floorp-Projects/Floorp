@@ -66,7 +66,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
-  Cu.import("resource://gre/modules/utils.js");
+  Cu.import("resource://gre/modules/PlacesUtils.jsm");
   return PlacesUtils;
 });
 

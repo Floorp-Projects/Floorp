@@ -54,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=441737
         // Test for correct nsIDOMDocument retrieval.
         var domDoc = null;
         try {
-          domDoc = docAcc.document.QueryInterface(nsIDOMDocument);
+          domDoc = docAcc.DOMDocument.QueryInterface(nsIDOMDocument);
         } catch(e) {}
         ok(domDoc, "no nsIDOMDocument for this doc accessible!");
         is(domDoc, document, "Document nodes do not match!");
