@@ -1815,8 +1815,9 @@ namespace nanojit
     private:
         Allocator& alloc;
 
-        void formatImm(RefBuf* buf, int32_t c);
-        void formatImmq(RefBuf* buf, uint64_t c);
+        char *formatImmI(RefBuf* buf, int32_t c);
+        char *formatImmQ(RefBuf* buf, uint64_t c);
+        char *formatImmD(RefBuf* buf, double c);
         void formatGuard(InsBuf* buf, LInsp ins);
         void formatGuardXov(InsBuf* buf, LInsp ins);
 
@@ -1829,7 +1830,7 @@ namespace nanojit
         }
 
         char *formatAddr(RefBuf* buf, void* p);
-        char *formatRef(RefBuf* buf, LInsp ref);
+        char *formatRef(RefBuf* buf, LInsp ref, bool showImmValue = true);
         char *formatIns(InsBuf* buf, LInsp ins);
         char *formatAccSet(RefBuf* buf, AccSet accSet);
 
