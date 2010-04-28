@@ -43,6 +43,7 @@
 #include "nsSVGPathDataParser.h"
 #include "nsSVGPathSeg.h"
 #include "nsSVGPathElement.h" // for nsSVGPathList
+#include "nsSVGMpathElement.h"
 
 namespace mozilla {
 
@@ -150,6 +151,25 @@ SVGMotionSMILAnimationFunction::GetCalcMode() const
 //----------------------------------------------------------------------
 // Helpers for GetValues
 
+/*
+ * Returns the first <mpath> child of the given element
+ */
+
+static nsSVGMpathElement*
+GetFirstMpathChild(nsIContent* aElem)
+{
+  PRUint32 childCount = aElem->GetChildCount();
+  for (PRUint32 i = 0; i < childCount; ++i) {
+    nsIContent* child = aElem->GetChildAt(i);
+    if (child->Tag() == nsGkAtoms::mpath &&
+        child->GetNameSpaceID() == kNameSpaceID_SVG) {
+      return static_cast<nsSVGMpathElement*>(child);
+    }
+  }
+
+  return nsnull;
+}
+
 void
 SVGMotionSMILAnimationFunction::
   RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem)
@@ -221,6 +241,27 @@ SVGMotionSMILAnimationFunction::
   } else {
     // Parse failure. Leave path as null, and clear path-related member data.
     mPathVertices.Clear();
+  }
+}
+
+void
+SVGMotionSMILAnimationFunction::
+  RebuildPathAndVerticesFromMpathElem(nsSVGMpathElement* aMpathElem)
+{
+  mPathSourceType = ePathSourceType_Mpath;
+
+  // Use the path that's the target of our chosen <mpath> child.
+  nsSVGPathElement* pathElem = aMpathElem->GetReferencedPath();
+  if (pathElem) {
+    if (pathElem->HasAttr(kNameSpaceID_None, nsGkAtoms::d)) {
+      const nsAString& pathSpec =
+        pathElem->GetParsedAttr(nsGkAtoms::d)->GetStringValue();
+      nsresult rv = SetPathVerticesFromPathString(pathSpec);
+      if (NS_SUCCEEDED(rv)) {
+        mPath = pathElem->GetFlattenedPath(
+          pathElem->PrependLocalTransformTo(gfxMatrix()));
+      }
+    }
   }
 }
 
@@ -304,9 +345,13 @@ SVGMotionSMILAnimationFunction::
 
   // Do we have a mpath child? if so, it trumps everything. Otherwise, we look
   // through our list of path-defining attributes, in order of priority.
-  // XXXdholbert This is where we should check for mpath, in <mpath> patch.
-  // ...else, if no mpath child:
-  if (HasAttr(nsGkAtoms::path)) {
+  nsSVGMpathElement* firstMpathChild =
+    GetFirstMpathChild(&mAnimationElement->Content());
+
+  if (firstMpathChild) {
+    RebuildPathAndVerticesFromMpathElem(firstMpathChild);
+    mValueNeedsReparsingEverySample = PR_FALSE;
+  } else if (HasAttr(nsGkAtoms::path)) {
     RebuildPathAndVerticesFromPathAttr();
     mValueNeedsReparsingEverySample = PR_FALSE;
   } else {

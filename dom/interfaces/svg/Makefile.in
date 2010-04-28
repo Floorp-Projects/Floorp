@@ -135,6 +135,7 @@ XPIDLSRCS	+= \
 		nsIDOMSVGAnimateTransformElement.idl \
 		nsIDOMSVGAnimateMotionElement.idl \
 		nsIDOMSVGAnimationElement.idl \
+		nsIDOMSVGMpathElement.idl \
 		nsIDOMSVGSetElement.idl \
 		$(NULL)
 endif
