@@ -1475,7 +1475,7 @@ namespace nanojit
         return buf->buf;
     }
 
-    void LInsPrinter::formatImm(RefBuf* buf, int32_t c) {
+    char* LInsPrinter::formatImmI(RefBuf* buf, int32_t c) {
         if (-10000 < c || c < 10000) {
             VMPI_snprintf(buf->buf, buf->len, "%d", c);
         } else {
@@ -1485,9 +1485,10 @@ namespace nanojit
             VMPI_snprintf(buf->buf, buf->len, "0x%x", (unsigned int)c);
 #endif
         }
+        return buf->buf;
     }
 
-    void LInsPrinter::formatImmq(RefBuf* buf, uint64_t c) {
+    char* LInsPrinter::formatImmQ(RefBuf* buf, uint64_t c) {
         if (-10000 < (int64_t)c || c < 10000) {
             VMPI_snprintf(buf->buf, buf->len, "%dLL", (int)c);
         } else {
@@ -1497,6 +1498,12 @@ namespace nanojit
             VMPI_snprintf(buf->buf, buf->len, "0x%llxLL", c);
 #endif
         }
+        return buf->buf;
+    }
+
+    char* LInsPrinter::formatImmD(RefBuf* buf, double c) {
+        VMPI_snprintf(buf->buf, buf->len, "%g", c);
+        return buf->buf;
     }
 
     char* LInsPrinter::formatAddr(RefBuf* buf, void* p)
@@ -1518,30 +1525,34 @@ namespace nanojit
         return buf->buf;
     }
 
-    char* LInsPrinter::formatRef(RefBuf* buf, LIns *ref)
+    char* LInsPrinter::formatRef(RefBuf* buf, LIns *ref, bool showImmValue)
     {
-        // - If 'ref' already has a name, use it.
-        // - Otherwise, if it's a constant, use the constant.
-        // - Otherwise, give it a name and use it.
+        // Give 'ref' a name if it doesn't have one.  
         const char* name = lirNameMap->lookupName(ref);
-        if (name) {
-            VMPI_snprintf(buf->buf, buf->len, "%s", name);
+        if (!name) {
+            name = lirNameMap->createName(ref);
         }
-        else if (ref->isImmI()) {
-            formatImm(buf, ref->immI());
+
+        // Put it in the buffer.  If it's an immediate, show the value if
+        // showImmValue==true.  (This facility allows us to print immediate
+        // values when they're used but not when they're def'd, ie. we don't
+        // want "immi1/*1*/ = immi 1".)
+        RefBuf buf2;
+        if (ref->isImmI() && showImmValue) {
+            VMPI_snprintf(buf->buf, buf->len, "%s/*%s*/", name, formatImmI(&buf2, ref->immI()));
         }
 #ifdef NANOJIT_64BIT
-        else if (ref->isImmQ()) {
-            formatImmq(buf, ref->immQ());
+        else if (ref->isImmQ() && showImmValue) {
+            VMPI_snprintf(buf->buf, buf->len, "%s/*%s*/", name, formatImmQ(&buf2, ref->immQ()));
         }
 #endif
-        else if (ref->isImmD()) {
-            VMPI_snprintf(buf->buf, buf->len, "%g", ref->immD());
+        else if (ref->isImmD() && showImmValue) {
+            VMPI_snprintf(buf->buf, buf->len, "%s/*%s*/", name, formatImmD(&buf2, ref->immD()));
         }
         else {
-            name = lirNameMap->createName(ref);
             VMPI_snprintf(buf->buf, buf->len, "%s", name);
         }
+
         return buf->buf;
     }
 
@@ -1554,22 +1565,24 @@ namespace nanojit
         switch (op)
         {
             case LIR_immi:
-                VMPI_snprintf(s, n, "%s = %s %d", formatRef(&b1, i), lirNames[op], i->immI());
-                break;
-
-            case LIR_allocp:
-                VMPI_snprintf(s, n, "%s = %s %d", formatRef(&b1, i), lirNames[op], i->size());
+                VMPI_snprintf(s, n, "%s = %s %s", formatRef(&b1, i, /*showImmValue*/false),
+                              lirNames[op], formatImmI(&b2, i->immI()));
                 break;
 
 #ifdef NANOJIT_64BIT
             case LIR_immq:
-                VMPI_snprintf(s, n, "%s = %s %X:%X", formatRef(&b1, i), lirNames[op],
-                             i->immQorDhi(), i->immQorDlo());
+                VMPI_snprintf(s, n, "%s = %s %s", formatRef(&b1, i, /*showImmValue*/false),
+                              lirNames[op], formatImmQ(&b2, i->immQ()));
                 break;
 #endif
 
             case LIR_immd:
-                VMPI_snprintf(s, n, "%s = %s %g", formatRef(&b1, i), lirNames[op], i->immD());
+                VMPI_snprintf(s, n, "%s = %s %s", formatRef(&b1, i, /*showImmValue*/false),
+                              lirNames[op], formatImmD(&b2, i->immD()));
+                break;
+
+            case LIR_allocp:
+                VMPI_snprintf(s, n, "%s = %s %d", formatRef(&b1, i), lirNames[op], i->size());
                 break;
 
             case LIR_start:
