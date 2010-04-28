@@ -39,6 +39,9 @@
 // Note: Class syntax roughly based on:
 // https://developer.mozilla.org/en/Core_JavaScript_1.5_Guide/Inheritance
 const SVG_NS = "http://www.w3.org/2000/svg";
+const XLINK_NS = "http://www.w3.org/1999/xlink";
+
+const MPATH_TARGET_ID = "smilTestUtilsTestingPath";
 
 function extend(child, supertype)
 {
@@ -85,11 +88,16 @@ var SMILUtil =
 
   getAttributeValue: function(elem, attr)
   {
+    if (attr.attrName == SMILUtil.getMotionFakeAttributeName()) {
+      // Fake motion "attribute" -- "computed value" is the element's CTM
+      return elem.getCTM();
+    }
     if (attr.attrType == "CSS") {
       return SMILUtil.getComputedStyleWrapper(elem, attr.attrName);
-    } else if (attr.attrType == "XML") {
+    }
+    if (attr.attrType == "XML") {
       // XXXdholbert This is appropriate for mapped attributes, but not
-      // for others.
+      // for other attributes.
       return SMILUtil.getComputedStyleWrapper(elem, attr.attrName);
     }
   },
@@ -168,7 +176,82 @@ var SMILUtil =
       child = child.nextSibling;
     }
   },
-}
+
+  getMotionFakeAttributeName : function() {
+    return "_motion";
+  },
+};
+
+
+var CTMUtil =
+{
+  CTM_COMPONENTS_ALL    : ["a", "b", "c", "d", "e", "f"],
+  CTM_COMPONENTS_ROTATE : ["a", "b", "c", "d" ],
+
+  // Function to generate a CTM Matrix from a "summary"
+  // (a 3-tuple containing [tX, tY, theta])
+  generateCTM : function(aCtmSummary)
+  {
+    if (!aCtmSummary || aCtmSummary.length != 3) {
+      ok(false, "Unexpected CTM summary tuple length: " + aCtmSummary.length);
+    }
+    var tX = aCtmSummary[0];
+    var tY = aCtmSummary[1];
+    var theta = aCtmSummary[2];
+    var cosTheta = Math.cos(theta);
+    var sinTheta = Math.sin(theta);
+    var newCtm = { a : cosTheta,  c: -sinTheta,  e: tX,
+                   b : sinTheta,  d:  cosTheta,  f: tY  };
+    return newCtm;
+  },
+
+  /// Helper for isCtmEqual
+  isWithinDelta : function(aTestVal, aExpectedVal, aErrMsg, aIsTodo) {
+    var testFunc = aIsTodo ? todo : ok;
+    const delta = 0.000001; // allowing margin of error = 10^-6
+    ok(aTestVal >= aExpectedVal - delta &&
+       aTestVal <= aExpectedVal + delta,
+       aErrMsg + " | got: " + aTestVal + ", expected: " + aExpectedVal);
+  },
+
+  assertCTMEqual : function(aLeftCtm, aRightCtm, aComponentsToCheck,
+                            aErrMsg, aIsTodo) {
+    var foundCTMDifference = false;
+    for (var j in aComponentsToCheck) {
+      var curComponent = aComponentsToCheck[j];
+      if (!aIsTodo) {
+        CTMUtil.isWithinDelta(aLeftCtm[curComponent], aRightCtm[curComponent],
+                              aErrMsg + " | component: " + curComponent, false);
+      } else if (aLeftCtm[curComponent] != aRightCtm[curComponent]) {
+        foundCTMDifference = true;
+      }
+    }
+
+    if (aIsTodo) {
+      todo(!foundCTMDifference, aErrMsg + " | (currently marked todo)");
+    }
+  },
+
+  assertCTMNotEqual : function(aLeftCtm, aRightCtm, aComponentsToCheck,
+                               aErrMsg, aIsTodo) {
+    // CTM should not match initial one
+    var foundCTMDifference = false;
+    for (var j in aComponentsToCheck) {
+      var curComponent = aComponentsToCheck[j];
+      if (aLeftCtm[curComponent] != aRightCtm[curComponent]) {
+        foundCTMDifference = true;
+        break; // We found a difference, as expected. Success!
+      }
+    }
+
+    if (aIsTodo) {
+      todo(foundCTMDifference, aErrMsg + " | (currently marked todo)");
+    } else {
+      ok(foundCTMDifference, aErrMsg);
+    }
+  },
+};
+
 
 // Wrapper for timing information
 function SMILTimingData(aBegin, aDur)
@@ -684,6 +767,154 @@ AnimTestcasePaced.prototype =
   },
 };
 extend(AnimTestcasePaced, AnimTestcase);
+
+/*
+ * A testcase for an <animateMotion> animation.
+ *
+ * @param aAttrValueHash   A hash-map mapping attribute names to values.
+ *                         Should include at least 'path', 'values', 'to'
+ *                         or 'by' to describe the motion path.
+ * @param aCtmMap  A hash-map that contains summaries of the expected resulting
+ *                 CTM at various points during the animation. The CTM is
+ *                 summarized as a tuple of three numbers: [tX, tY, theta]
+                   (indicating a translate(tX,tY) followed by a rotate(theta))
+ *      - ctm0:   The CTM summary at the start of the animation
+ *      - ctm1_6: The CTM summary at exactly 1/6 through animation
+ *      - ctm1_3: The CTM summary at exactly 1/3 through animation
+ *      - ctm2_3: The CTM summary at exactly 2/3 through animation
+ *      - ctm1:   The CTM summary at the animation endpoint
+ *
+ *  NOTE: For paced-mode animation (the default for animateMotion), the math
+ *  works out easiest if:
+ *    (a) our motion path has 3 points: vA, vB, vC
+ *    (b) dist(vB, vC) = 2 * dist(vA, vB)
+ *  (See discussion in header comment for AnimTestcasePaced.)
+ *
+ * @param aSkipReason  If this test-case is known to currently fail, this
+ *                     parameter should be a string explaining why.
+ *                     Otherwise, this value should be null (or omitted).
+ */
+function AnimMotionTestcase(aAttrValueHash, aCtmMap, aSkipReason)
+{
+  this.attrValueHash = aAttrValueHash;
+  this.ctmMap        = aCtmMap;
+  this.skipReason    = aSkipReason;
+  if (this.ctmMap &&
+      (!this.ctmMap.ctm0 ||
+       !this.ctmMap.ctm1_6 ||
+       !this.ctmMap.ctm1_3 ||
+       !this.ctmMap.ctm2_3 ||
+       !this.ctmMap.ctm1)) {
+    ok(false, "This AnimMotionTestcase has an incomplete CTM map");
+  }
+}
+AnimMotionTestcase.prototype =
+{
+  // Member variables
+  _animElementTagName : "animateMotion",
+  
+  // Implementations of inherited methods that we need to override:
+  // --------------------------------------------------------------
+  setupAnimationElement : function(aAnimAttr, aTimeData, aIsFreeze)
+  {
+    var animElement = document.createElementNS(SVG_NS,
+                                               this._animElementTagName);
+    animElement.setAttribute("begin", aTimeData.getBeginTime());
+    animElement.setAttribute("dur", aTimeData.getDur());
+    if (aIsFreeze) {
+      animElement.setAttribute("fill", "freeze");
+    }
+    for (var attrName in this.attrValueHash) {
+      if (attrName == "mpath") {
+        this.createPath(this.attrValueHash[attrName]);
+        this.createMpath(animElement);
+      } else {
+        animElement.setAttribute(attrName, this.attrValueHash[attrName]);
+      }
+    }
+    return animElement;
+  },
+
+  createPath : function(aPathDescription)
+  {
+    var path = document.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", aPathDescription);
+    path.setAttribute("id", MPATH_TARGET_ID);
+    return SMILUtil.getSVGRoot().appendChild(path);
+  },
+
+  createMpath : function(aAnimElement)
+  {
+    var mpath = document.createElementNS(SVG_NS, "mpath");
+    mpath.setAttributeNS(XLINK_NS, "href", "#" + MPATH_TARGET_ID);
+    return aAnimElement.appendChild(mpath);
+  },
+
+  // Override inherited seekAndTest method since...
+  // (a) it expects a computedValMap and we have a computed-CTM map instead
+  // and (b) it expects we might have no effect (for non-animatable attrs)
+  buildSeekList : function(aAnimAttr, aBaseVal, aTimeData, aIsFreeze)
+  {
+    var seekList = new Array();
+    var msgPrefix = "CTM mismatch ";
+    seekList.push([aTimeData.getBeginTime(),
+                   CTMUtil.generateCTM(this.ctmMap.ctm0),
+                   msgPrefix + "at start of animation"]);
+    seekList.push([aTimeData.getFractionalTime(1/6),
+                   CTMUtil.generateCTM(this.ctmMap.ctm1_6),
+                   msgPrefix + "1/6 of the way through animation."]);
+    seekList.push([aTimeData.getFractionalTime(1/3),
+                   CTMUtil.generateCTM(this.ctmMap.ctm1_3),
+                   msgPrefix + "1/3 of the way through animation."]);
+    seekList.push([aTimeData.getFractionalTime(2/3),
+                   CTMUtil.generateCTM(this.ctmMap.ctm2_3),
+                   msgPrefix + "2/3 of the way through animation."]);
+
+    var finalMsg;
+    var expectedEndVal;
+    if (aIsFreeze) {
+      expectedEndVal = CTMUtil.generateCTM(this.ctmMap.ctm1);
+      finalMsg = aAnimAttr.attrName +
+        ": [freeze-mode] checking that final value is set ";
+    } else {
+      expectedEndVal = aBaseVal;
+      finalMsg = aAnimAttr.attrName +
+        ": [remove-mode] checking that animation is cleared ";
+    }
+    seekList.push([aTimeData.getEndTime(),
+                   expectedEndVal, finalMsg + "at end of animation"]);
+    seekList.push([aTimeData.getEndTime() + aTimeData.getDur(),
+                   expectedEndVal, finalMsg + "after end of animation"]);
+    return seekList;
+  },
+
+  // Override inherited seekAndTest method
+  // (Have to use assertCTMEqual() instead of is() for comparison, to check each
+  // component of the CTM and to allow for a small margin of error.)
+  seekAndTest : function(aSeekList, aTargetElem, aTargetAttr)
+  {
+    var svg = document.getElementById("svg");
+    for (var i in aSeekList) {
+      var entry = aSeekList[i];
+      SMILUtil.getSVGRoot().setCurrentTime(entry[0]);
+      CTMUtil.assertCTMEqual(aTargetElem.getCTM(), entry[1],
+                             CTMUtil.CTM_COMPONENTS_ALL, entry[2], false);
+    }
+  },
+
+  // Override "runTest" method so we can remove any <path> element that we
+  // created at the end of each test.
+  runTest : function(aTargetElem, aTargetAttr, aTimeData, aIsFreeze)
+  {
+    AnimTestcase.prototype.runTest.apply(this,
+                             [aTargetElem, aTargetAttr, aTimeData, aIsFreeze]);
+    var pathElem = document.getElementById(MPATH_TARGET_ID);
+    if (pathElem) {
+      SMILUtil.getSVGRoot().removeChild(pathElem);
+    }
+  }
+};
+extend(AnimMotionTestcase, AnimTestcase);
 
 // MAIN METHOD
 function testBundleList(aBundleList, aTimingData)
