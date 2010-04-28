@@ -112,7 +112,7 @@ JSVAL_IS_OBJECT(jsval v)
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_INT(jsval v)
 {
-    return v & JSVAL_INT;
+    return (JSBool)(v & JSVAL_INT);
 }
 
 static JS_ALWAYS_INLINE JSBool
