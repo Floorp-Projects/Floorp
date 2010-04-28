@@ -374,20 +374,20 @@ var AddonManagerInternal = {
    *          An optional placeholder icon URL while the add-on is being downloaded
    * @param   version
    *          An optional placeholder version while the add-on is being downloaded
-   * @param   loadgroup
+   * @param   loadGroup
    *          An optional nsILoadGroup to associate any network requests with
    * @throws  if the url, callback or mimetype arguments are not specified
    */
   getInstallForURL: function AMI_getInstallForURL(url, callback, mimetype, hash,
                                                   name, iconURL, version,
-                                                  loadgroup) {
+                                                  loadGroup) {
     if (!url || !mimetype || !callback)
       throw new TypeError("Invalid arguments");
 
     for (let i = 0; i < this.providers.length; i++) {
       if (callProvider(this.providers[i], "supportsMimetype", false, mimetype)) {
         callProvider(this.providers[i], "getInstallForURL", null,
-                     url, hash, name, iconURL, version, loadgroup,
+                     url, hash, name, iconURL, version, loadGroup,
                      function(install) {
           safeCall(callback, install);
         });
@@ -825,9 +825,9 @@ var AddonManager = {
 
   getInstallForURL: function AM_getInstallForURL(url, callback, mimetype, hash,
                                                  name, iconURL, version,
-                                                 loadgroup) {
+                                                 loadGroup) {
     AddonManagerInternal.getInstallForURL(url, callback, mimetype, hash, name,
-                                         iconURL, version, loadgroup);
+                                         iconURL, version, loadGroup);
   },
 
   getInstallForFile: function AM_getInstallForFile(file, callback, mimetype) {
