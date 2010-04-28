@@ -577,6 +577,8 @@ pageaction {
   pageaction:last-child:not(:nth-child(even)) {
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomleft: 1.1mm;
+    -moz-border-radius-bottomright: 1.1mm;
+    width: 100%;
   }
 
   pageaction:last-child:not(:nth-child(odd)) {

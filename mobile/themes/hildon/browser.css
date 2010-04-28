@@ -924,6 +924,8 @@ pageaction {
   pageaction:last-child:not(:nth-child(even)) {
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomleft: 8px;
+    -moz-border-radius-bottomright: 8px;
+    width: 100%;
   }
 
   pageaction:last-child:not(:nth-child(odd)) {
