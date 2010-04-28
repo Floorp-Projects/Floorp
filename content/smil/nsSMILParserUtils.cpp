@@ -494,8 +494,9 @@ nsSMILParserUtils::ParseKeySplines(const nsAString& aSpec,
 }
 
 nsresult
-nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
-                                 nsTArray<double>& aTimeArray)
+nsSMILParserUtils::ParseSemicolonDelimitedProgressList(const nsAString& aSpec,
+                                                       PRBool aNonDecreasing,
+                                                       nsTArray<double>& aArray)
 {
   nsresult rv = NS_OK;
 
@@ -512,12 +513,13 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
     if (NS_FAILED(rv))
       break;
 
-    if (value > 1.0 || value < 0.0 || value < previousValue) {
+    if (value > 1.0 || value < 0.0 ||
+        (aNonDecreasing && value < previousValue)) {
       rv = NS_ERROR_FAILURE;
       break;
     }
 
-    if (!aTimeArray.AppendElement(value)) {
+    if (!aArray.AppendElement(value)) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
     }

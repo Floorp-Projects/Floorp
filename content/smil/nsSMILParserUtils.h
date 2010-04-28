@@ -66,8 +66,10 @@ public:
   static nsresult ParseKeySplines(const nsAString& aSpec,
                                   nsTArray<double>& aSplineArray);
 
-  static nsresult ParseKeyTimes(const nsAString& aSpec,
-                                nsTArray<double>& aTimesArray);
+  // Used for parsing the |keyTimes| and |keyPoints| attributes.
+  static nsresult ParseSemicolonDelimitedProgressList(const nsAString& aSpec,
+                                                      PRBool aNonDecreasing,
+                                                      nsTArray<double>& aArray);
 
   static nsresult ParseValues(const nsAString& aSpec,
                               const nsISMILAnimationElement* aSrcElement,

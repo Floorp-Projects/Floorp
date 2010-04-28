@@ -81,7 +81,13 @@ SVGMotionSMILAnimationFunction::SetAttr(nsIAtom* aAttribute,
                                         nsAttrValue& aResult,
                                         nsresult* aParseResult)
 {
-  if (aAttribute == nsGkAtoms::rotate) {
+  // Handle motion-specific attrs
+  if (aAttribute == nsGkAtoms::keyPoints) {
+    nsresult rv = SetKeyPoints(aValue, aResult);
+    if (aParseResult) {
+      *aParseResult = rv;
+    }
+  } else if (aAttribute == nsGkAtoms::rotate) {
     nsresult rv = SetRotate(aValue, aResult);
     if (aParseResult) {
       *aParseResult = rv;
@@ -103,7 +109,9 @@ SVGMotionSMILAnimationFunction::SetAttr(nsIAtom* aAttribute,
 PRBool
 SVGMotionSMILAnimationFunction::UnsetAttr(nsIAtom* aAttribute)
 {
-  if (aAttribute == nsGkAtoms::rotate) {
+  if (aAttribute == nsGkAtoms::keyPoints) {
+    UnsetKeyPoints();
+  } else if (aAttribute == nsGkAtoms::rotate) {
     UnsetRotate();
   } else if (aAttribute == nsGkAtoms::by ||
              aAttribute == nsGkAtoms::from ||
@@ -234,14 +242,18 @@ SVGMotionSMILAnimationFunction::
 PRBool
 SVGMotionSMILAnimationFunction::
   GenerateValuesForPathAndPoints(gfxFlattenedPath* aPath,
+                                 PRBool aIsKeyPoints,
                                  nsTArray<double>& aPointDistances,
                                  nsTArray<nsSMILValue>& aResult)
 {
   NS_ABORT_IF_FALSE(aResult.IsEmpty(), "outparam is non-empty");
 
+  // If we're using "keyPoints" as our list of input distances, then we need
+  // to de-normalize from the [0, 1] scale to the [0, totalPathLen] scale.
+  double distanceMultiplier = aIsKeyPoints ? aPath->GetLength() : 1.0;
   const PRUint32 numPoints = aPointDistances.Length();
   for (PRUint32 i = 0; i < numPoints; ++i) {
-    double curDist = aPointDistances[i];
+    double curDist = aPointDistances[i] * distanceMultiplier;
     if (!aResult.AppendElement(
           SVGMotionSMILType::ConstructSMILValue(aPath, curDist,
                                                 mRotateType, mRotateAngle))) {
@@ -267,14 +279,86 @@ SVGMotionSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
   }
   NS_ABORT_IF_FALSE(!mPathVertices.IsEmpty(), "have a path but no vertices");
 
-  // Now: Make the actual list of nsSMILValues
-  PRBool success = GenerateValuesForPathAndPoints(mPath, mPathVertices,
+  // Now: Make the actual list of nsSMILValues (using keyPoints, if set)
+  PRBool isUsingKeyPoints = !mKeyPoints.IsEmpty();
+  PRBool success = GenerateValuesForPathAndPoints(mPath, isUsingKeyPoints,
+                                                  isUsingKeyPoints ?
+                                                  mKeyPoints : mPathVertices,
                                                   aResult);
   if (!success) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   return NS_OK;
+}
+
+void
+SVGMotionSMILAnimationFunction::
+  CheckValueListDependentAttrs(PRUint32 aNumValues)
+{
+  // Call superclass method.
+  nsSMILAnimationFunction::CheckValueListDependentAttrs(aNumValues);
+
+  // Added behavior: Do checks specific to keyPoints.
+  CheckKeyPoints();
+}
+
+void
+SVGMotionSMILAnimationFunction::CheckKeyPoints()
+{
+  if (!HasAttr(nsGkAtoms::keyPoints))
+    return;
+
+  // attribute is ignored for calcMode="paced" (even if it's got errors)
+  if (GetCalcMode() == CALC_PACED) {
+    SetKeyPointsErrorFlag(PR_FALSE);
+  }
+
+  if (mKeyPoints.IsEmpty()) {
+    // keyPoints attr is set, but array is empty => it failed preliminary checks
+    SetKeyPointsErrorFlag(PR_TRUE);
+    return;
+  }
+
+  // Nothing else to check -- we can catch all keyPoints errors elsewhere.
+  // -  Formatting & range issues will be caught in SetKeyPoints, and will
+  //  result in an empty mKeyPoints array, which will drop us into the error
+  //  case above.
+  // -  Number-of-entries issues will be caught in CheckKeyTimes (and flagged
+  //  as a problem with |keyTimes|), since we use our keyPoints entries to
+  //  populate the "values" list, and that list's count gets passed to
+  //  CheckKeyTimes.
+}
+
+nsresult
+SVGMotionSMILAnimationFunction::SetKeyPoints(const nsAString& aKeyPoints,
+                                             nsAttrValue& aResult)
+{
+  mKeyPoints.Clear();
+  aResult.SetTo(aKeyPoints);
+
+  nsresult rv =
+    nsSMILParserUtils::ParseSemicolonDelimitedProgressList(aKeyPoints, PR_FALSE,
+                                                           mKeyPoints);
+
+  if (NS_SUCCEEDED(rv) && mKeyPoints.Length() < 1)
+    rv = NS_ERROR_FAILURE;
+
+  if (NS_FAILED(rv)) {
+    mKeyPoints.Clear();
+  }
+
+  mHasChanged = PR_TRUE;
+
+  return NS_OK;
+}
+
+void
+SVGMotionSMILAnimationFunction::UnsetKeyPoints()
+{
+  mKeyTimes.Clear();
+  SetKeyPointsErrorFlag(PR_FALSE);
+  mHasChanged = PR_TRUE;
 }
 
 nsresult

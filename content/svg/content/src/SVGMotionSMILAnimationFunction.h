@@ -75,8 +75,12 @@ protected:
   NS_OVERRIDE virtual nsSMILCalcMode GetCalcMode() const;
   NS_OVERRIDE virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
                                          nsSMILValueArray& aResult);
+  NS_OVERRIDE virtual void CheckValueListDependentAttrs(PRUint32 aNumValues);
   NS_OVERRIDE virtual PRBool TreatSingleValueAsStatic() const;
 
+  void     CheckKeyPoints();
+  nsresult SetKeyPoints(const nsAString& aKeyPoints, nsAttrValue& aResult);
+  void     UnsetKeyPoints();
   nsresult SetRotate(const nsAString& aRotate, nsAttrValue& aResult);
   void     UnsetRotate();
 
@@ -86,11 +90,14 @@ protected:
   void     RebuildPathAndVertices(const nsIContent* aContextElem);
   void     RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem);
   PRBool   GenerateValuesForPathAndPoints(gfxFlattenedPath* aPath,
+                                          PRBool aIsKeyPoints,
                                           nsTArray<double>& aPointDistances,
                                           nsTArray<nsSMILValue>& aResult);
 
   // Members
   // -------
+  nsTArray<double>           mKeyPoints; // parsed from "keyPoints" attribute.
+
   RotateType                 mRotateType;  // auto, auto-reverse, or explicit.
   float                      mRotateAngle; // the angle value, if explicit.
 
