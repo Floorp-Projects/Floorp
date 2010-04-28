@@ -66,7 +66,7 @@ window.TabItem.prototype = $.extend(new Item(), {
     var extra = this._getSizeExtra();
     var css = {};
     
-    const minFontSize = 6;
+    const minFontSize = 8;
     const maxFontSize = 15;
 
     if(rect.left != this.bounds.left)
@@ -182,7 +182,7 @@ window.TabItems = {
   // ----------
   init: function() {
     var self = this;
-    
+        
     function mod($div){
       if(window.Groups) {        
         $div.data('isDragging', false);
@@ -207,7 +207,7 @@ window.TabItems = {
           if(!$(this).data('isDragging')) {
             var item = $(this).data('tabItem');
             if(!item.parent || !item.parent.childHit(item)) {
-              // ZOOM! 
+              // Zoom in! 
               var orig = {
                 width: $(this).width(),
                 height:  $(this).height(),
@@ -233,13 +233,13 @@ window.TabItems = {
                   height:orig.height,
                   })
                   .removeClass("front");  
-                Navbar.show();    
-              
+                Navbar.show();
+                              
                 try{
                   var gID = self.getItemByTab(this).parent.id;
                   if(gID) {
                     var group = Groups.group(gID);
-                    UI.tabBar.showOnlyTheseTabs( group._children );
+                    Groups.setActiveGroup( group );                   
                   }
                 }
                 catch(e){
@@ -281,7 +281,7 @@ window.TabItems = {
       
       if(!reconnected && $div.length == 1 && Groups)
         Groups.newTab($div.data('tabItem'));
-      
+            
       // TODO: Figure out this really weird bug?
       // Why is that:
       //    $div.find("canvas").data("link").tab.url

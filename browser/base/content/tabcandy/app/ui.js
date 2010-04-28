@@ -130,6 +130,7 @@ window.Page = {
         Toolbar.unread = 0;
         // If there was a lastTab we want to animate
         // its mirror for the zoom out.
+        // Zoom out!
         var $tab = $(lastTab.mirror.el);
         
         var [w,h, pos, z] = [$tab.width(), $tab.height(), $tab.position(), $tab.css("zIndex")];
@@ -148,9 +149,10 @@ window.Page = {
         }).animate({
             top: pos.top, left: pos.left,
             width: w, height: h
-        },250, '', function() {
+        },350, '', function() {
           $tab.css("zIndex",z);
           $("body").css("overflow", overflow);
+          window.Groups.setActiveGroup(null);
           TabMirror.resumePainting();
         });
       }
