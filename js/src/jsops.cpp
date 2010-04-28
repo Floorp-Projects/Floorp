@@ -619,6 +619,7 @@ END_CASE(JSOP_PICK)
 
 #define NATIVE_SET(cx,obj,sprop,entry,vp)                                     \
     JS_BEGIN_MACRO                                                            \
+        TRACE_2(SetPropHit, entry, sprop);                                    \
         if (sprop->hasDefaultSetter() &&                                      \
             (sprop)->slot != SPROP_INVALID_SLOT &&                            \
             !(obj)->scope()->brandedOrHasMethodBarrier()) {                   \
@@ -1782,6 +1783,7 @@ BEGIN_CASE(JSOP_SETMETHOD)
                  * slot's value that might contain a method of a
                  * branded scope.
                  */
+                TRACE_2(SetPropHit, entry, sprop);
                 obj->lockedSetSlot(slot, rval);
 
                 /*
@@ -3349,7 +3351,6 @@ BEGIN_CASE(JSOP_INITMETHOD)
     lval = FETCH_OPND(-2);
     obj = JSVAL_TO_OBJECT(lval);
     JS_ASSERT(obj->isNative());
-    JS_ASSERT(obj->getClass() == &js_ObjectClass);
     JS_ASSERT(!obj->getClass()->reserveSlots);
 
     JSScope *scope = obj->scope();
@@ -3404,6 +3405,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
          * property, not updating an existing slot's value that might
          * contain a method of a branded scope.
          */
+        TRACE_2(SetPropHit, entry, sprop);
         obj->lockedSetSlot(slot, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
