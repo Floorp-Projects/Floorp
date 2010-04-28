@@ -1,0 +1,8 @@
+protocol manageSelfToplevel {
+    manager manageSelfToplevel;
+    manages manageSelfToplevel;
+
+child:
+    manageSelfToplevel();
+    __delete__();
+};

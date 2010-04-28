@@ -274,6 +274,15 @@ sa.gov.au
 tas.gov.au
 vic.gov.au
 wa.gov.au
+// CGDNs - http://www.aucd.org.au/
+act.au
+nsw.au
+nt.au
+qld.au
+sa.au
+tas.au
+vic.au
+wa.au
 
 // aw : http://en.wikipedia.org/wiki/.aw
 aw
@@ -4139,6 +4148,9 @@ mil.to
 
 // tr : http://en.wikipedia.org/wiki/.tr
 *.tr
+// Used by government in the TRNC
+// http://en.wikipedia.org/wiki/.nc.tr
+gov.nc.tr
 
 // travel : http://en.wikipedia.org/wiki/.travel
 travel
@@ -4164,12 +4176,9 @@ gov.tt
 edu.tt
 
 // tv : http://en.wikipedia.org/wiki/.tv
-// list of other 2nd level tlds ?
+// Not listing any 2LDs as reserved since none seem to exist in practice,
+// Wikipedia notwithstanding.
 tv
-com.tv
-net.tv
-org.tv
-gov.tv
 
 // tw : http://en.wikipedia.org/wiki/.tw
 tw

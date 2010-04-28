@@ -43,7 +43,7 @@ function test() {
   let pb = Cc["@mozilla.org/privatebrowsing;1"].
            getService(Ci.nsIPrivateBrowsingService);
 
-  const TEST_URI = "http://localhost:8888/browser/browser/components/privatebrowsing/test/browser/ctxmenu.html";
+  const TEST_URI = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/ctxmenu.html";
 
   waitForExplicitFinish();
 

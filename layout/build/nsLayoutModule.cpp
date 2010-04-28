@@ -94,6 +94,7 @@
 #include "nsStyleSheetService.h"
 #include "nsXULPopupManager.h"
 #include "nsFocusManager.h"
+#include "nsIContentUtils.h"
 
 #include "nsIEventListenerService.h"
 // Transformiix stuff
@@ -535,6 +536,8 @@ MAKE_CTOR(CreateVideoDocument,            nsIDocument,                 NS_NewVid
 #endif
 MAKE_CTOR(CreateFocusManager,             nsIFocusManager,      NS_NewFocusManager)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsIContentUtils)
+
 MAKE_CTOR(CreateCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D, NS_NewCanvasRenderingContext2D)
 MAKE_CTOR(CreateCanvasRenderingContextWebGL, nsICanvasRenderingContextWebGL, NS_NewCanvasRenderingContextWebGL)
 
@@ -875,6 +878,16 @@ CSPServiceRegistration(nsIComponentManager *aCompMgr,
                                 PR_TRUE,
                                 PR_TRUE,
                                 getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = catman->AddCategoryEntry("net-channel-event-sinks",
+                                "CSPService",
+                                CSPSERVICE_CONTRACTID,
+                                PR_TRUE,
+                                PR_TRUE,
+                                getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return rv;
 }
 
@@ -895,6 +908,10 @@ CSPServiceUnregistration(nsIComponentManager *aCompMgr,
   if (NS_FAILED(rv)) return rv;
 
   rv = catman->DeleteCategoryEntry("content-policy",
+                                   "CSPService",
+                                   PR_TRUE);
+
+  rv = catman->DeleteCategoryEntry("net-channel-event-sinks",
                                    "CSPService",
                                    PR_TRUE);
 
@@ -1502,6 +1519,11 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_FOCUSMANAGER_CID,
       "@mozilla.org/focus-manager;1",
       CreateFocusManager },
+
+    { "Content Utils",
+      NS_ICONTENTUTILS_CID,
+      "@mozilla.org/content/contentutils;1",
+      nsIContentUtilsConstructor },
 
     { "Content Security Policy Service",
       CSPSERVICE_CID,

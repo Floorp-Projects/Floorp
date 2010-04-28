@@ -39,18 +39,22 @@
  * retrying the download.
  */
 
+const HTTP_SERVER_PORT = 4444;
+
 function run_test()
 {
   let dm = Cc["@mozilla.org/download-manager;1"].
            getService(Ci.nsIDownloadManager);
   let db = dm.DBConnection;
+  var httpserv = new nsHttpServer();
+  httpserv.start(HTTP_SERVER_PORT);
 
   let stmt = db.createStatement(
     "INSERT INTO moz_downloads (source, target, state, referrer) " +
     "VALUES (?1, ?2, ?3, ?4)");
 
   // Download from the test http server
-  stmt.bindStringParameter(0, "http://example.com/httpd.js");
+  stmt.bindStringParameter(0, "http://localhost:"+HTTP_SERVER_PORT+"/httpd.js");
 
   // Download to a temp local file
   let file = Cc["@mozilla.org/file/directory_service;1"].
@@ -83,10 +87,11 @@ function run_test()
 
           dm.removeListener(listener);
           try { file.remove(false); } catch(e) { /* stupid windows box */ }
-          do_test_finished();
+          httpserv.stop(do_test_finished);
           break;
         case dm.DOWNLOAD_FAILED:
         case dm.DOWNLOAD_CANCELED:
+          httpserv.stop(function () {});
           do_throw("Unexpected download state change received, state: " +
                    aDownload.state);
           break;

@@ -83,6 +83,12 @@ CSRCS		= \
 		$(NULL)
 endif
 
+ifeq ($(OS_ARCH),AIX)
+CSRCS		= \
+		sydney_audio_aix.c \
+		$(NULL)
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += winmm.lib
 endif

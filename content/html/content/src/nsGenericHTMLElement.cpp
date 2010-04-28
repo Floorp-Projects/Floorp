@@ -266,23 +266,6 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Copy the baseuri and basetarget
-  void* prop;
-  if ((prop = GetProperty(nsGkAtoms::htmlBaseHref))) {
-    rv = aDst->SetProperty(nsGkAtoms::htmlBaseHref, prop,
-                           nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ADDREF(static_cast<nsIURI*>(prop));
-    }
-  }
-  if ((prop = GetProperty(nsGkAtoms::htmlBaseTarget))) {
-    rv = aDst->SetProperty(nsGkAtoms::htmlBaseTarget, prop,
-                           nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ADDREF(static_cast<nsIAtom*>(prop));
-    }
-  }
-
   return NS_OK;
 }
 
@@ -698,14 +681,12 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
     loader->SetEnabled(PR_FALSE);
   }
 
-  nsCOMPtr<nsIDOMNode> thisNode(do_QueryInterface(static_cast<nsIContent *>
-                                                             (this)));
-  nsresult rv = nsContentUtils::CreateContextualFragment(thisNode, aInnerHTML,
+  nsresult rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML,
                                                          PR_FALSE,
                                                          getter_AddRefs(df));
+  nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIDOMNode> tmpNode;
-    rv = thisNode->AppendChild(df, getter_AddRefs(tmpNode));
+    static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
   }
 
   if (scripts_enabled) {
@@ -1153,30 +1134,9 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
   return NS_OK;
 }
 
-already_AddRefed<nsIURI>
-nsGenericHTMLElement::GetBaseURI() const
-{
-  void* prop;
-  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsGkAtoms::htmlBaseHref))) {
-    nsIURI* uri = static_cast<nsIURI*>(prop);
-    NS_ADDREF(uri);
-    
-    return uri;
-  }
-
-  return nsGenericHTMLElementBase::GetBaseURI();
-}
-
 void
 nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
 {
-  void* prop;
-  if (HasFlag(NODE_HAS_PROPERTIES) && (prop = GetProperty(nsGkAtoms::htmlBaseTarget))) {
-    static_cast<nsIAtom*>(prop)->ToString(aBaseTarget);
-    
-    return;
-  }
-
   nsIDocument* ownerDoc = GetOwnerDoc();
   if (ownerDoc) {
     ownerDoc->GetBaseTarget(aBaseTarget);
@@ -1202,7 +1162,7 @@ nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::dir) {
-      return aResult.ParseEnumValue(aValue, kDirTable);
+      return aResult.ParseEnumValue(aValue, kDirTable, PR_FALSE);
     }
   
     if (aAttribute == nsGkAtoms::tabindex) {
@@ -1451,7 +1411,7 @@ PRBool
 nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
                                       nsAttrValue& aResult)
 {
-  return aResult.ParseEnumValue(aString, kAlignTable);
+  return aResult.ParseEnumValue(aString, kAlignTable, PR_FALSE);
 }
 
 //----------------------------------------
@@ -1484,9 +1444,9 @@ nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
                                             nsAttrValue& aResult) const
 {
   if (InNavQuirksMode(GetOwnerDoc())) {
-    return aResult.ParseEnumValue(aString, kCompatTableHAlignTable);
+    return aResult.ParseEnumValue(aString, kCompatTableHAlignTable, PR_FALSE);
   }
-  return aResult.ParseEnumValue(aString, kTableHAlignTable);
+  return aResult.ParseEnumValue(aString, kTableHAlignTable, PR_FALSE);
 }
 
 //----------------------------------------
@@ -1522,9 +1482,9 @@ nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
                                                 nsAttrValue& aResult) const
 {
   if (InNavQuirksMode(GetOwnerDoc())) {
-    return aResult.ParseEnumValue(aString, kCompatTableCellHAlignTable);
+    return aResult.ParseEnumValue(aString, kCompatTableCellHAlignTable, PR_FALSE);
   }
-  return aResult.ParseEnumValue(aString, kTableCellHAlignTable);
+  return aResult.ParseEnumValue(aString, kTableCellHAlignTable, PR_FALSE);
 }
 
 //----------------------------------------
@@ -1533,14 +1493,14 @@ PRBool
 nsGenericHTMLElement::ParseTableVAlignValue(const nsAString& aString,
                                             nsAttrValue& aResult)
 {
-  return aResult.ParseEnumValue(aString, kTableVAlignTable);
+  return aResult.ParseEnumValue(aString, kTableVAlignTable, PR_FALSE);
 }
 
-PRBool
+PRBool 
 nsGenericHTMLElement::ParseDivAlignValue(const nsAString& aString,
                                          nsAttrValue& aResult) const
 {
-  return aResult.ParseEnumValue(aString, kDivAlignTable);
+  return aResult.ParseEnumValue(aString, kDivAlignTable, PR_FALSE);
 }
 
 PRBool
@@ -1564,14 +1524,14 @@ PRBool
 nsGenericHTMLElement::ParseFrameborderValue(const nsAString& aString,
                                             nsAttrValue& aResult)
 {
-  return aResult.ParseEnumValue(aString, kFrameborderTable);
+  return aResult.ParseEnumValue(aString, kFrameborderTable, PR_FALSE);
 }
 
 PRBool
 nsGenericHTMLElement::ParseScrollingValue(const nsAString& aString,
                                           nsAttrValue& aResult)
 {
-  return aResult.ParseEnumValue(aString, kScrollingTable);
+  return aResult.ParseEnumValue(aString, kScrollingTable, PR_FALSE);
 }
 
 /**
@@ -2179,6 +2139,24 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
 }
 
 nsresult
+nsGenericHTMLElement::GetEnumAttr(nsIAtom* aAttr,
+                                  const char* aDefault,
+                                  nsAString& aResult)
+{
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
+
+  aResult.Truncate();
+
+  if (attrVal && attrVal->Type() == nsAttrValue::eEnum) {
+    attrVal->GetEnumString(aResult, PR_TRUE);
+  } else {
+    AppendASCIItoUTF16(nsDependentCString(aDefault), aResult);
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsGenericHTMLElement::GetContentEditable(nsAString& aContentEditable)
 {
   ContentEditableTristate value = GetContentEditableValue();
@@ -2592,7 +2570,8 @@ nsGenericHTMLFormElement::CanBeDisabled() const
     type != NS_FORM_LABEL &&
     type != NS_FORM_LEGEND &&
     type != NS_FORM_FIELDSET &&
-    type != NS_FORM_OBJECT;
+    type != NS_FORM_OBJECT &&
+    type != NS_FORM_OUTPUT;
 }
 
 PRBool

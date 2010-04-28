@@ -1,13 +1,13 @@
 ; 1073741823 * 2 = 0x7ffffffe, and will nearly (but not quite) overflow.
-big = imml 1073741823
-two = imml 2
+big = immi 1073741823
+two = immi 2
 
-res = mulxovl big two    ; no overflow, so we don't exit here
+res = mulxovi big two    ; no overflow, so we don't exit here
 
 ; Ensure that 'big' and 'two' get their own registers and
 ; aren't shared with 'res'.  Also store 'res' so it isn't dead.
 m = allocp 12
-stl big m 0
-stl two m 4
-stl res m 8
+sti big m 0
+sti two m 4
+sti res m 8
 x                       ; we exit here

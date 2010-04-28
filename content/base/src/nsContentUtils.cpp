@@ -58,6 +58,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
 #include "nsContentUtils.h"
+#include "nsIContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -239,6 +240,8 @@ nsIInterfaceRequestor* nsContentUtils::sSameOriginChecker = nsnull;
 nsIJSRuntimeService *nsAutoGCRoot::sJSRuntimeService;
 JSRuntime *nsAutoGCRoot::sJSScriptRuntime;
 
+PRBool nsContentUtils::sIsHandlingKeyBoardEvent = PR_FALSE;
+
 PRBool nsContentUtils::sInitialized = PR_FALSE;
 
 nsCOMArray<nsPrefOldCallback> *nsContentUtils::sPrefCallbackList = nsnull;
@@ -329,6 +332,16 @@ nsPrefOldCallback::Observe(nsISupports   *aSubject,
   return NS_OK;
 }
 
+struct PrefCacheData {
+  void* cacheLocation;
+  union {
+    PRBool defaultValueBool;
+    PRInt32 defaultValueInt;
+  };
+};
+
+nsTArray<nsAutoPtr<PrefCacheData> >* sPrefCacheData = nsnull;
+
 // static
 nsresult
 nsContentUtils::Init()
@@ -338,6 +351,8 @@ nsContentUtils::Init()
 
     return NS_OK;
   }
+
+  sPrefCacheData = new nsTArray<nsAutoPtr<PrefCacheData> >();
 
   nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                                &sSecurityManager);
@@ -951,6 +966,9 @@ nsContentUtils::Shutdown()
     delete sPrefCallbackList;
     sPrefCallbackList = nsnull;
   }
+
+  delete sPrefCacheData;
+  sPrefCacheData = nsnull;
 
   NS_IF_RELEASE(sStringBundleService);
   NS_IF_RELEASE(sConsoleService);
@@ -2694,35 +2712,47 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
 static int
 BoolVarChanged(const char *aPref, void *aClosure)
 {
-  PRBool* cache = static_cast<PRBool*>(aClosure);
-  *cache = nsContentUtils::GetBoolPref(aPref, PR_FALSE);
+  PrefCacheData* cache = static_cast<PrefCacheData*>(aClosure);
+  *((PRBool*)cache->cacheLocation) =
+    nsContentUtils::GetBoolPref(aPref, cache->defaultValueBool);
   
   return 0;
 }
 
 void
 nsContentUtils::AddBoolPrefVarCache(const char *aPref,
-                                    PRBool* aCache)
+                                    PRBool* aCache,
+                                    PRBool aDefault)
 {
-  *aCache = GetBoolPref(aPref, PR_FALSE);
-  RegisterPrefCallback(aPref, BoolVarChanged, aCache);
+  *aCache = GetBoolPref(aPref, aDefault);
+  PrefCacheData* data = new PrefCacheData;
+  data->cacheLocation = aCache;
+  data->defaultValueBool = aDefault;
+  sPrefCacheData->AppendElement(data);
+  RegisterPrefCallback(aPref, BoolVarChanged, data);
 }
 
 static int
 IntVarChanged(const char *aPref, void *aClosure)
 {
-  PRInt32* cache = static_cast<PRInt32*>(aClosure);
-  *cache = nsContentUtils::GetIntPref(aPref, 0);
+  PrefCacheData* cache = static_cast<PrefCacheData*>(aClosure);
+  *((PRInt32*)cache->cacheLocation) =
+    nsContentUtils::GetIntPref(aPref, cache->defaultValueInt);
   
   return 0;
 }
 
 void
 nsContentUtils::AddIntPrefVarCache(const char *aPref,
-                                   PRInt32* aCache)
+                                   PRInt32* aCache,
+                                   PRInt32 aDefault)
 {
-  *aCache = GetIntPref(aPref, PR_FALSE);
-  RegisterPrefCallback(aPref, IntVarChanged, aCache);
+  *aCache = GetIntPref(aPref, aDefault);
+  PrefCacheData* data = new PrefCacheData;
+  data->cacheLocation = aCache;
+  data->defaultValueInt = aDefault;
+  sPrefCacheData->AppendElement(data);
+  RegisterPrefCallback(aPref, IntVarChanged, data);
 }
 
 static const char *gEventNames[] = {"event"};
@@ -3694,27 +3724,26 @@ nsContentUtils::IsValidNodeName(nsIAtom *aLocalName, nsIAtom *aPrefix,
 
 /* static */
 nsresult
-nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
+nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
                                          const nsAString& aFragment,
                                          PRBool aWillOwnFragment,
                                          nsIDOMDocumentFragment** aReturn)
 {
-  NS_ENSURE_ARG(aContextNode);
   *aReturn = nsnull;
+  NS_ENSURE_ARG(aContextNode);
 
   nsresult rv;
-  nsCOMPtr<nsINode> node = do_QueryInterface(aContextNode);
-  NS_ENSURE_TRUE(node, NS_ERROR_NOT_AVAILABLE);
 
   // If we don't have a document here, we can't get the right security context
   // for compiling event handlers... so just bail out.
-  nsCOMPtr<nsIDocument> document = node->GetOwnerDoc();
+  nsCOMPtr<nsIDocument> document = aContextNode->GetOwnerDoc();
   NS_ENSURE_TRUE(document, NS_ERROR_NOT_AVAILABLE);
-  
-  PRBool bCaseSensitive = !document->IsHTML();
 
-  nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(document));
-  PRBool isHTML = htmlDoc && !bCaseSensitive;
+  PRBool isHTML = document->IsHTML();
+#ifdef DEBUG
+  nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
+  NS_ASSERTION(!isHTML || htmlDoc, "Should have HTMLDocument here!");
+#endif
 
   if (isHTML && nsHtml5Module::sEnabled) {
     // See if the document has a cached fragment parser. nsHTMLDocument is the
@@ -3758,7 +3787,7 @@ nsContentUtils::CreateContextualFragment(nsIDOMNode* aContextNode,
                             (document->GetCompatibilityMode() == eCompatibility_NavQuirks));
     }
   
-    NS_ADDREF(*aReturn = frag);
+    frag.swap(*aReturn);
     document->SetFragmentParser(parser);
     return NS_OK;
   }
@@ -5396,7 +5425,7 @@ nsContentUtils::StripNullChars(const nsAString& aInStr, nsAString& aOutStr)
 
 namespace {
 
-const int kCloneStackFrameStackSize = 20;
+const size_t kCloneStackFrameStackSize = 20;
 
 class CloneStackFrame
 {
@@ -5982,3 +6011,10 @@ void nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
+NS_IMPL_ISUPPORTS1(nsIContentUtils, nsIContentUtils)
+
+PRBool
+nsIContentUtils::IsSafeToRunScript()
+{
+  return nsContentUtils::IsSafeToRunScript();
+}

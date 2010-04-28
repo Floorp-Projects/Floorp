@@ -1052,6 +1052,16 @@ nsJSContext::DOMOperationCallback(JSContext *cx)
     return JS_TRUE;
   }
 
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    // If it isn't safe to run script, then it isn't safe to bring up the
+    // prompt (since that will cause the event loop to spin). In this case
+    // (which is rare), we just stop the script... But report a warning so
+    // that developers have some idea of what went wrong.
+
+    JS_ReportWarning(cx, "A long running script was terminated");
+    return JS_FALSE;
+  }
+
   // If we get here we're most likely executing an infinite loop in JS,
   // we'll tell the user about this and we'll give the user the option
   // of stopping the execution of the script.

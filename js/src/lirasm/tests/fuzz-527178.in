@@ -1,5 +1,5 @@
 base = allocp 512
-five = imml 5
-stl five base 256
-x = lduw2ul base 256
-retl x
+five = immi 5
+sti five base 256
+x = ldus2ui base 256
+reti x

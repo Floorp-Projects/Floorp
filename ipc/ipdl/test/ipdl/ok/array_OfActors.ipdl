@@ -1,4 +1,4 @@
-include protocol "array_OfActorsSub.ipdl";
+include protocol array_OfActorsSub;
 
 protocol array_OfActors {
     manages array_OfActorsSub;

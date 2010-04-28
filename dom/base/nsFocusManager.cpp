@@ -82,6 +82,8 @@
 #include "nsImageMapUtils.h"
 #include "nsTreeWalker.h"
 #include "nsIDOMNodeFilter.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsIPrincipal.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
@@ -740,7 +742,7 @@ nsFocusManager::WindowLowered(nsIDOMWindow* aWindow)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 {
   NS_ENSURE_ARG(aDocument);
@@ -752,7 +754,7 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 
   // if the content is currently focused in the window, or is an ancestor
   // of the currently focused element, reset the focus within that window.
-  nsCOMPtr<nsIContent> content = window->GetFocusedNode();
+  nsIContent* content = window->GetFocusedNode();
   if (content && nsContentUtils::ContentIsDescendantOf(content, aContent)) {
     window->SetFocusedNode(nsnull);
 
@@ -1044,6 +1046,25 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, PRInt32 aFlags,
 
   // if the new element is in the same window as the currently focused element 
   PRBool isElementInFocusedWindow = (mFocusedWindow == newWindow);
+
+  if (!isElementInFocusedWindow && mFocusedWindow && newWindow &&
+      nsContentUtils::IsHandlingKeyBoardEvent()) {
+    nsCOMPtr<nsIScriptObjectPrincipal> focused =
+      do_QueryInterface(mFocusedWindow);
+    nsCOMPtr<nsIScriptObjectPrincipal> newFocus =
+      do_QueryInterface(newWindow);
+    nsIPrincipal* focusedPrincipal = focused->GetPrincipal();
+    nsIPrincipal* newPrincipal = newFocus->GetPrincipal();
+    if (!focusedPrincipal || !newPrincipal) {
+      return;
+    }
+    PRBool subsumes = PR_FALSE;
+    focusedPrincipal->Subsumes(newPrincipal, &subsumes);
+    if (!subsumes && !nsContentUtils::IsCallerTrustedForWrite()) {
+      NS_WARNING("Not allowed to focus the new window!");
+      return;
+    }
+  }
 
   // to check if the new element is in the active window, compare the
   // new root docshell for the new element with the active window's docshell.

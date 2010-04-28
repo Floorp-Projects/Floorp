@@ -36,6 +36,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 function test() {
   // Due to LAZY_ADD this is an async test.
   waitForExplicitFinish();

@@ -41,7 +41,6 @@
 
 #include <stdio.h>
 #include <locale.h>
-#include <ctype.h>
 #include <errno.h>
 
 /* Numbers printed with %f are printed with this number of significant
@@ -341,7 +340,7 @@ _cairo_dtostr (char *buffer, size_t size, double d, cairo_bool_t limited_precisi
 	    if (*p == '+' || *p == '-')
 		p++;
 
-	    while (isdigit (*p))
+	    while (_cairo_isdigit (*p))
 		p++;
 
 	    if (strncmp (p, decimal_point, decimal_point_len) == 0)
@@ -362,7 +361,7 @@ _cairo_dtostr (char *buffer, size_t size, double d, cairo_bool_t limited_precisi
     if (*p == '+' || *p == '-')
 	p++;
 
-    while (isdigit (*p))
+    while (_cairo_isdigit (*p))
 	p++;
 
     if (strncmp (p, decimal_point, decimal_point_len) == 0) {
@@ -434,7 +433,7 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    f++;
         }
 
-	while (isdigit (*f))
+	while (_cairo_isdigit (*f))
 	    f++;
 
 	length_modifier = 0;

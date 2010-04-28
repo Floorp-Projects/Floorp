@@ -93,6 +93,7 @@ GARBAGE += css_properties.js
 
 
 _TEST_FILES =	test_acid3_test46.html \
+		test_any_dynamic.html \
 		test_at_rule_parse_serialize.html \
 		test_bug73586.html \
 		test_bug74880.html \

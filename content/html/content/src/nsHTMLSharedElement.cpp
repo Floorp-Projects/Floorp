@@ -263,7 +263,7 @@ nsHTMLSharedElement::ParseAttribute(PRInt32 aNamespaceID,
     else if (mNodeInfo->Equals(nsGkAtoms::dir) ||
              mNodeInfo->Equals(nsGkAtoms::menu)) {
       if (aAttribute == nsGkAtoms::type) {
-        return aResult.ParseEnumValue(aValue, kListTypeTable);
+        return aResult.ParseEnumValue(aValue, kListTypeTable, PR_FALSE);
       }
       if (aAttribute == nsGkAtoms::start) {
         return aResult.ParseIntWithBounds(aValue, 1);
@@ -428,6 +428,43 @@ nsHTMLSharedElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return nsGenericHTMLElement::IsAttributeMapped(aAttribute);
 }
 
+void
+SetBaseURIUsingFirstBaseWithHref(nsIContent* aHead, nsIContent* aMustMatch)
+{
+  NS_PRECONDITION(aHead && aHead->GetOwnerDoc() &&
+                  aHead->GetOwnerDoc()->GetHeadContent() == aHead,
+                  "Bad head");
+
+  nsIDocument* doc = aHead->GetOwnerDoc();
+
+  for (nsINode::ChildIterator iter(aHead); !iter.IsDone(); iter.Next()) {
+    nsIContent* child = iter;
+    if (child->NodeInfo()->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
+        child->HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+      if (aMustMatch && child != aMustMatch) {
+        return;
+      }
+
+      // Resolve the <base> element's href relative to our document URI
+      nsAutoString href;
+      child->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+
+      nsCOMPtr<nsIURI> newBaseURI;
+      nsContentUtils::NewURIWithDocumentCharset(
+        getter_AddRefs(newBaseURI), href, doc, doc->GetDocumentURI());
+
+      // Try to set our base URI.  If that fails, try to set base URI to null
+      nsresult rv = doc->SetBaseURI(newBaseURI);
+      if (NS_FAILED(rv)) {
+        doc->SetBaseURI(nsnull);
+      }
+      return;
+    }
+  }
+
+  doc->SetBaseURI(nsnull);
+}
+
 nsresult
 nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                              nsIAtom* aPrefix, const nsAString& aValue,
@@ -435,64 +472,22 @@ nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 {
   nsresult rv =  nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
                                                aValue, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // If the href attribute of a <base> tag is changing, we may need to update
   // the document's base URI, which will cause all the links on the page to be
   // re-resolved given the new base.
-  if (NS_SUCCEEDED(rv) &&
-      mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
+  nsIContent* head;
+  if (mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
       aName == nsGkAtoms::href &&
       aNameSpaceID == kNameSpaceID_None &&
-      GetOwnerDoc() == GetCurrentDoc()) {
-
-    nsIDocument* doc = GetCurrentDoc();
-    NS_ENSURE_TRUE(doc, NS_OK);
-
-    // We become the first base node with an href if
-    //   * there's no other base node with an href, or
-    //   * we come before the first base node with an href (this would happen
-    //     if we didn't have an href before this call to SetAttr).
-    // Additionally, we call doc->SetFirstBaseNodeWithHref if we're the first
-    // base node with an href so the document updates its base URI with our new
-    // href.
-    nsIContent* firstBase = doc->GetFirstBaseNodeWithHref();
-    if (!firstBase || this == firstBase ||
-        nsContentUtils::PositionIsBefore(this, firstBase)) {
-
-      return doc->SetFirstBaseNodeWithHref(this);
-    }
+      IsInDoc() &&
+      (head = GetParent()) &&
+      head == GetOwnerDoc()->GetHeadContent()) {
+    SetBaseURIUsingFirstBaseWithHref(head, this);
   }
 
-  return rv;
-}
-
-// Helper function for nsHTMLSharedElement::UnbindFromTree.  Finds and returns
-// the first <base> tag with an href attribute which is a child of elem, if one
-// exists.
-static nsIContent*
-FindBaseRecursive(nsINode * const elem)
-{
-  // We can't use NS_GetContentList to get the list of <base> elements, because
-  // that flushes content notifications, and we need this function to work in
-  // UnbindFromTree.  Once we land the HTML5 parser and get rid of content
-  // notifications, we should fix this up. (bug 515819)
-
-  PRUint32 childCount;
-  nsIContent * const * child = elem->GetChildArray(&childCount);
-  nsIContent * const * end = child + childCount;
-  for ( ; child != end; child++) {
-    nsIContent *childElem = *child;
-
-    if (childElem->NodeInfo()->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
-        childElem->HasAttr(kNameSpaceID_None, nsGkAtoms::href))
-      return childElem;
-
-    nsIContent* base = FindBaseRecursive(childElem);
-    if (base)
-      return base;
-  }
-
-  return nsnull;
+  return NS_OK;
 }
 
 nsresult
@@ -500,31 +495,22 @@ nsHTMLSharedElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                PRBool aNotify)
 {
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aName, aNotify);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // If we're the first <base> with an href and our href attribute is being
   // unset, then we're no longer the first <base> with an href, and we need to
   // find the new one.
-  if (NS_SUCCEEDED(rv) &&
-      mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
+  nsIContent* head;
+  if (mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
       aName == nsGkAtoms::href &&
       aNameSpaceID == kNameSpaceID_None &&
-      GetOwnerDoc() == GetCurrentDoc()) {
-
-    nsIDocument* doc = GetCurrentDoc();
-    NS_ENSURE_TRUE(doc, NS_OK);
-
-    // If we're not the first <base> in the document, then unsetting our href
-    // doesn't affect the document's base URI.
-    if (this != doc->GetFirstBaseNodeWithHref())
-      return NS_OK;
-
-    // We're the first base, but we don't have an href; find the first base
-    // which does have an href, and set the document's first base to that.
-    nsIContent* newBaseNode = FindBaseRecursive(doc);
-    return doc->SetFirstBaseNodeWithHref(newBaseNode);
+      IsInDoc() &&
+      (head = GetParent()) &&
+      head == GetOwnerDoc()->GetHeadContent()) {
+    SetBaseURIUsingFirstBaseWithHref(head, nsnull);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -535,46 +521,46 @@ nsHTMLSharedElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // The document stores a pointer to its first <base> element, which we may
   // need to update here.
-  if (NS_SUCCEEDED(rv) &&
-      mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
+  if (mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
       HasAttr(kNameSpaceID_None, nsGkAtoms::href) &&
-      aDocument) {
+      aDocument && aParent &&
+      aDocument->GetHeadContent() == aParent) {
 
-    // If there's no <base> in the document, or if this comes before the one
-    // that's currently there, set the document's first <base> to this.
-    nsINode* curBaseNode = aDocument->GetFirstBaseNodeWithHref();
-    if (!curBaseNode ||
-        nsContentUtils::PositionIsBefore(this, curBaseNode)) {
-
-      aDocument->SetFirstBaseNodeWithHref(this);
-    }
+    SetBaseURIUsingFirstBaseWithHref(aParent, this);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 void
 nsHTMLSharedElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
+  nsIDocument* doc;
+  nsIContent* parent;
+  PRBool inHeadBase = mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
+                      (doc = GetCurrentDoc()) &&
+                      (parent = GetParent()) &&
+                      parent->NodeInfo()->Equals(nsGkAtoms::head,
+                                                 kNameSpaceID_XHTML);
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 
   // If we're removing a <base> from a document, we may need to update the
   // document's record of the first base node.
-  if (doc && mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML)) {
-
-    // If we're not the first base node, then we don't need to do anything.
-    if (this != doc->GetFirstBaseNodeWithHref())
-      return;
-
-    // If we were the first base node, we need to find the new first base.
-
-    nsIContent* newBaseNode = FindBaseRecursive(doc);
-    doc->SetFirstBaseNodeWithHref(newBaseNode);
+  if (inHeadBase) {
+    // We might have gotten here as a result of the <head> being removed
+    // from the document. In that case we need to call SetBaseURI(nsnull)
+    nsIContent* head = doc->GetHeadContent();
+    if (head) {
+      SetBaseURIUsingFirstBaseWithHref(head, nsnull);
+    }
+    else {
+      doc->SetBaseURI(nsnull);
+    }
   }
 }
 

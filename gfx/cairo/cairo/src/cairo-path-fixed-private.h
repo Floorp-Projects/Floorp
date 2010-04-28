@@ -81,11 +81,25 @@ struct _cairo_path_fixed {
     cairo_point_t current_point;
     unsigned int has_current_point	: 1;
     unsigned int has_curve_to		: 1;
-    unsigned int is_box			: 1;
-    unsigned int is_region		: 1;
+    unsigned int is_rectilinear		: 1;
+    unsigned int maybe_fill_region	: 1;
+    unsigned int is_empty_fill		: 1;
 
     cairo_path_buf_fixed_t  buf;
 };
+
+
+cairo_private void
+_cairo_path_fixed_translate (cairo_path_fixed_t *path,
+			     cairo_fixed_t offx,
+			     cairo_fixed_t offy);
+
+cairo_private cairo_status_t
+_cairo_path_fixed_append (cairo_path_fixed_t		    *path,
+			  const cairo_path_fixed_t	    *other,
+			  cairo_direction_t		     dir,
+			  cairo_fixed_t			     tx,
+			  cairo_fixed_t			     ty);
 
 cairo_private unsigned long
 _cairo_path_fixed_hash (const cairo_path_fixed_t *path);
@@ -98,14 +112,15 @@ _cairo_path_fixed_equal (const cairo_path_fixed_t *a,
 			 const cairo_path_fixed_t *b);
 
 typedef struct _cairo_path_fixed_iter {
-    cairo_path_buf_t *buf;
+    const cairo_path_buf_t *first;
+    const cairo_path_buf_t *buf;
     unsigned int n_op;
     unsigned int n_point;
 } cairo_path_fixed_iter_t;
 
 cairo_private void
 _cairo_path_fixed_iter_init (cairo_path_fixed_iter_t *iter,
-			     cairo_path_fixed_t *path);
+			     const cairo_path_fixed_t *path);
 
 cairo_private cairo_bool_t
 _cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
@@ -115,13 +130,33 @@ cairo_private cairo_bool_t
 _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter);
 
 static inline cairo_bool_t
-_cairo_path_fixed_is_region (cairo_path_fixed_t *path)
+_cairo_path_fixed_fill_is_empty (const cairo_path_fixed_t *path)
+{
+    return path->is_empty_fill;
+}
+
+static inline cairo_bool_t
+_cairo_path_fixed_is_rectilinear_fill (const cairo_path_fixed_t *path)
+{
+    if (! path->is_rectilinear)
+	return 0;
+
+    if (! path->has_current_point)
+	return 1;
+
+    /* check whether the implicit close preserves the rectilinear property */
+    return path->current_point.x == path->last_move_point.x ||
+	   path->current_point.y == path->last_move_point.y;
+}
+
+static inline cairo_bool_t
+_cairo_path_fixed_maybe_fill_region (const cairo_path_fixed_t *path)
 {
 #if WATCH_PATH
-    fprintf (stderr, "_cairo_path_fixed_is_region () = %s\n",
-	     path->is_region ? "true" : "false");
+    fprintf (stderr, "_cairo_path_fixed_maybe_fill_region () = %s\n",
+	     path->maybe_fill_region ? "true" : "false");
 #endif
-    return path->is_region;
+    return path->maybe_fill_region;
 }
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */

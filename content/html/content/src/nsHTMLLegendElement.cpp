@@ -169,7 +169,7 @@ nsHTMLLegendElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsAttrValue& aResult)
 {
   if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
-    return aResult.ParseEnumValue(aValue, kAlignTable);
+    return aResult.ParseEnumValue(aValue, kAlignTable, PR_FALSE);
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
