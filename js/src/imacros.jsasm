@@ -740,15 +740,6 @@
     .end
 .end callprop
 
-.igroup setprop JSOP_SETPROP,JSOP_SETNAME,JSOP_SETMETHOD
-    .imacro scriptsetter        # obj val
-        .fixup +2               # val setter obj val
-        call 1                  # val ret
-        pop                     # val
-        stop
-    .end
-.end setprop
-
 .igroup getthisprop JSOP_GETTHISPROP,JSOP_GETARGPROP,JSOP_GETLOCALPROP
     .imacro scriptgetter        #
         .fixup +2               # getter obj
