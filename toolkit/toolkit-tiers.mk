@@ -151,10 +151,7 @@ endif
 
 ifdef MOZ_OGG
 tier_platform_dirs += \
-		media/libfishsound \
 		media/libogg \
-		media/liboggplay \
-		media/liboggz \
 		media/libtheora \
 		media/libvorbis \
 		$(NULL)

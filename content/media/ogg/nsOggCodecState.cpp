@@ -41,7 +41,7 @@
 #include "nsOggDecoder.h"
 #include <string.h>
 #include "nsTraceRefcnt.h"
-#include "nsOggHacks.h"
+#include "VideoUtils.h"
 
 /*
    The maximum height and width of the video. Used for

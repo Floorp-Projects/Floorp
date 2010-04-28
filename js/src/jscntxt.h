@@ -1656,17 +1656,17 @@ class AutoGCRooter {
     void operator=(AutoGCRooter &ida);
 };
 
-class AutoSaveRestoreWeakRoots : private AutoGCRooter
+class AutoPreserveWeakRoots : private AutoGCRooter
 {
   public:
-    explicit AutoSaveRestoreWeakRoots(JSContext *cx
-                                      JS_GUARD_OBJECT_NOTIFIER_PARAM)
+    explicit AutoPreserveWeakRoots(JSContext *cx
+                                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : AutoGCRooter(cx, WEAKROOTS), savedRoots(cx->weakRoots)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    ~AutoSaveRestoreWeakRoots()
+    ~AutoPreserveWeakRoots()
     {
         context->weakRoots = savedRoots;
     }

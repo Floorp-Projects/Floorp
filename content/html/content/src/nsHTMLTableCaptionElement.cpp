@@ -124,7 +124,7 @@ nsHTMLTableCaptionElement::ParseAttribute(PRInt32 aNamespaceID,
                                           nsAttrValue& aResult)
 {
   if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
-    return aResult.ParseEnumValue(aValue, kCaptionAlignTable);
+    return aResult.ParseEnumValue(aValue, kCaptionAlignTable, PR_FALSE);
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,

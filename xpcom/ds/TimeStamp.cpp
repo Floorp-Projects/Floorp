@@ -53,7 +53,7 @@ struct TimeStampInitialization
 
 static TimeStampInitialization initOnce;
 
-static PRLock* gTimeStampLock;
+static PRLock* gTimeStampLock = 0;
 static PRUint32 gRolloverCount;
 static PRIntervalTime gLastNow;
 
@@ -94,6 +94,9 @@ TimeDuration::Resolution()
 nsresult
 TimeStamp::Startup()
 {
+  if (gTimeStampLock)
+    return NS_OK;
+
   gTimeStampLock = PR_NewLock();
   gRolloverCount = 1;
   gLastNow = 0;

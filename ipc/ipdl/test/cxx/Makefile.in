@@ -72,6 +72,7 @@ IPDLTESTS = \
   TestRPCShutdownRace \
   TestRacyRPCReplies  \
   TestSanity  \
+  TestSelfManageRoot \
   TestShmem \
   TestShutdown \
   TestStackHooks \
