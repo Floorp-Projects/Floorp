@@ -17,6 +17,9 @@ TestSysVShmemParent::Main()
     if (!AllocShmem(size, SharedMemory::TYPE_SYSV, &mem))
         fail("can't alloc shmem");
 
+    if (0 > mem.GetSysVID())
+        fail("invalid shmem ID");
+
     if (mem.Size<char>() != size)
         fail("shmem is wrong size: expected %lu, got %lu",
              size, mem.Size<char>());
@@ -43,6 +46,9 @@ TestSysVShmemParent::RecvTake(Shmem& mem, const size_t& expectedSize)
 
     if (strcmp(mem.get<char>(), "And yourself!"))
         fail("expected message was not written");
+
+    if (!DeallocShmem(mem))
+        fail("DeallocShmem");
 
     Close();
 

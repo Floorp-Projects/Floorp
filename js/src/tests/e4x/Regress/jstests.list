@@ -92,3 +92,4 @@ script regress-470619.js
 script regress-473709.js
 script regress-474319.js
 script regress-477053.js
+script regress-561031.js

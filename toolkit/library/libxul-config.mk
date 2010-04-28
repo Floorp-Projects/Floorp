@@ -307,7 +307,7 @@ DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
 
-STATIC_LIBS += thebes layers
+STATIC_LIBS += thebes ycbcr
 COMPONENT_LIBS += gkgfxthebes
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))

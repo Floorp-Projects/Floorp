@@ -60,17 +60,74 @@ bdo[dir] {
  * formatting obtained by explicitly adding a dir attribute (assigned the
  * inherited value) to the transformed element." */
 
-address, blockquote, body, caption, center, col, colgroup, dd, dir, div, dl, dt,
-fieldset, form, h1, h2, h3, h4, h5, h6, hr, html, isindex, li, listing, map, 
-marquee, menu, noframes, ol, p, plaintext, pre, table, tbody, td, tfoot, th, 
-thead, tr, ul, xmp {
+address,
+article,
+aside,
+blockquote,
+body,
+caption,
+center,
+col,
+colgroup,
+dd,
+dir,
+div,
+dl,
+dt,
+fieldset,
+footer,
+form,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+header,
+hgroup,
+hr,
+html,
+isindex,
+li,
+listing,
+map,
+marquee,
+menu,
+nav,
+noframes,
+ol,
+p,
+plaintext,
+pre,
+section,
+table,
+tbody,
+td,
+tfoot,
+th,
+thead,
+tr,
+ul,
+xmp {
   unicode-bidi: embed;
 }
 
 
 /* blocks */
 
-html, div, map, dt, isindex, form {
+article,
+aside,
+footer,
+header,
+hgroup,
+html,
+div,
+map,
+dt,
+isindex,
+form,
+nav,
+section {
   display: block;
 }
 
@@ -474,35 +531,26 @@ li {
 }
 
 /* nested lists have no top/bottom margins */
-ul ul,   ul ol,   ul dir,   ul menu,   ul dl,
-ol ul,   ol ol,   ol dir,   ol menu,   ol dl,
-dir ul,  dir ol,  dir dir,  dir menu,  dir dl,
-menu ul, menu ol, menu dir, menu menu, menu dl,
-dl ul,   dl ol,   dl dir,   dl menu,   dl dl {
+:-moz-any(ul, ol, dir, menu, dl) ul,
+:-moz-any(ul, ol, dir, menu, dl) ol,
+:-moz-any(ul, ol, dir, menu, dl) dir,
+:-moz-any(ul, ol, dir, menu, dl) menu,
+:-moz-any(ul, ol, dir, menu, dl) dl {
   margin-top: 0;
   margin-bottom: 0;
 }
 
 /* 2 deep unordered lists use a circle */
-ol ul,   ul ul,   menu ul,   dir ul,
-ol menu, ul menu, menu menu, dir menu,
-ol dir,  ul dir,  menu dir,  dir dir {
+:-moz-any(ol, ul, menu, dir) ul,
+:-moz-any(ol, ul, menu, dir) menu,
+:-moz-any(ol, ul, menu, dir) dir {
   list-style-type: circle;
 }
 
 /* 3 deep (or more) unordered lists use a square */
-ol ol ul,     ol ul ul,     ol menu ul,     ol dir ul,
-ol ol menu,   ol ul menu,   ol menu menu,   ol dir menu,
-ol ol dir,    ol ul dir,    ol menu dir,    ol dir dir,
-ul ol ul,     ul ul ul,     ul menu ul,     ul dir ul,
-ul ol menu,   ul ul menu,   ul menu menu,   ul dir menu,
-ul ol dir,    ul ul dir,    ul menu dir,    ul dir dir,
-menu ol ul,   menu ul ul,   menu menu ul,   menu dir ul,
-menu ol menu, menu ul menu, menu menu menu, menu dir menu,
-menu ol dir,  menu ul dir,  menu menu dir,  menu dir dir,
-dir ol ul,    dir ul ul,    dir menu ul,    dir dir ul,
-dir ol menu,  dir ul menu,  dir menu menu,  dir dir menu,
-dir ol dir,   dir ul dir,   dir menu dir,   dir dir dir {
+:-moz-any(ol, ul, menu, dir) :-moz-any(ol, ul, menu, dir) ul,
+:-moz-any(ol, ul, menu, dir) :-moz-any(ol, ul, menu, dir) menu,
+:-moz-any(ol, ul, menu, dir) :-moz-any(ol, ul, menu, dir) dir {
   list-style-type: square;
 }
 
@@ -535,8 +583,7 @@ applet:-moz-empty-except-children-with-localname(param):-moz-user-disabled::befo
   unicode-bidi: embed;
 }
 
-object:-moz-broken > *|*, applet:-moz-broken > *|*
-object:-moz-user-disabled > *|*, applet:-moz-user-disabled > *|* {
+:-moz-any(object,applet):-moz-any(:-moz-broken,:-moz-user-disabled) > *|* {
   /*
     Inherit in the object's alignment so that if we aren't aligned explicitly
     we'll end up in the right place vertically.  See bug 36997.  Note that this

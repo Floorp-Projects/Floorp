@@ -391,14 +391,14 @@ namespace nanojit
     #define SRD(rd,rs,rb)   BITALU2(srd,  rd, rs, rb, 0)
     #define SRAD(rd,rs,rb)  BITALU2(srad, rd, rs, rb, 0)
 
-    #define FADD(rd,ra,rb)  FPUAB(fadd, rd, ra, rb, 0)
-    #define FADD_(rd,ra,rb) FPUAB(fadd, rd, ra, rb, 1)
-    #define FDIV(rd,ra,rb)  FPUAB(fdiv, rd, ra, rb, 0)
-    #define FDIV_(rd,ra,rb) FPUAB(fdiv, rd, ra, rb, 1)
-    #define FMUL(rd,ra,rb)  FPUAC(fmul, rd, ra, rb, 0)
-    #define FMUL_(rd,ra,rb) FPUAC(fmul, rd, ra, rb, 1)
-    #define FSUB(rd,ra,rb)  FPUAB(fsub, rd, ra, rb, 0)
-    #define FSUB_(rd,ra,rb) FPUAB(fsub, rd, ra, rb, 1)
+    #define FADD(rd,ra,rb)  FPUAB(addd, rd, ra, rb, 0)
+    #define FADD_(rd,ra,rb) FPUAB(addd, rd, ra, rb, 1)
+    #define FDIV(rd,ra,rb)  FPUAB(divd, rd, ra, rb, 0)
+    #define FDIV_(rd,ra,rb) FPUAB(divd, rd, ra, rb, 1)
+    #define FMUL(rd,ra,rb)  FPUAC(muld, rd, ra, rb, 0)
+    #define FMUL_(rd,ra,rb) FPUAC(muld, rd, ra, rb, 1)
+    #define FSUB(rd,ra,rb)  FPUAB(subd, rd, ra, rb, 0)
+    #define FSUB_(rd,ra,rb) FPUAB(subd, rd, ra, rb, 1)
 
     #define MULLI(rd,ra,simm) EMIT1(PPC_mulli | GPR(rd)<<21 | GPR(ra)<<16 | uint16_t(simm),\
         "mulli %s,%s,%d", gpn(rd), gpn(ra), int16_t(simm))

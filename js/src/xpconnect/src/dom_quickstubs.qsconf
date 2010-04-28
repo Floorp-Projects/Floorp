@@ -166,6 +166,7 @@ members = [
     'nsIDOMDOMStringList.length',
     'nsIDOMDOMStringList.contains',
     'nsIDOMDOMTokenList.*',
+    'nsIDOMDOMSettableTokenList.*',
     'nsIDOMNameList.getName',
     'nsIDOMNameList.contains',
     'nsIDOMNameList.containsNS',
@@ -449,6 +450,25 @@ members = [
     'nsIDOMNSXPathExpression.evaluateWithContext',
 
     # dom/interfaces/xul - None.
+
+    # XHR
+    'nsIXMLHttpRequest.*',
+    # nsIXMLHttpRequest.channel is not used on the web, and more
+    # importantly relies on the CAPS check that quickstubs don't make.
+    '-nsIXMLHttpRequest.channel',
+    # nsIXMLHttpRequest.open uses the JS stack
+    '-nsIXMLHttpRequest.open',
+    # various XHR things use ACString and AUTF8String and [cstring]
+    # which quickstubs don't handle as return values (or at all in the
+    # case of AUTF8String) yet.
+    '-nsIXMLHttpRequest.statusText',
+    '-nsIXMLHttpRequest.getAllResponseHeaders',
+    '-nsIXMLHttpRequest.getResponseHeader',
+    '-nsIXMLHttpRequest.setRequestHeader',
+    '-nsIXMLHttpRequest.overrideMimeType',
+    # nsIXMLHttpRequestUpload doesn't live in its own IDL file, so
+    # can't be quickstubbed
+    '-nsIXMLHttpRequest.upload',
 
     # webgl
     'nsICanvasRenderingContextWebGL.*',

@@ -569,7 +569,7 @@ nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
   aImage->GetWidth(&mImageWidth);
   aImage->GetHeight(&mImageHeight);
   nsCOMPtr<nsIRunnable> runnable =
-    NS_NEW_RUNNABLE_METHOD(nsImageDocument, this, DefaultCheckOverflowing);
+    NS_NewRunnableMethod(this, &nsImageDocument::DefaultCheckOverflowing);
   nsContentUtils::AddScriptRunner(runnable);
   UpdateTitleAndCharset();
 

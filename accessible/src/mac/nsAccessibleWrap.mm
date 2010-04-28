@@ -309,3 +309,28 @@ nsAccessibleWrap::GetUnignoredParent()
   
   return outValue;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessibleWrap protected
+
+PRBool
+nsAccessibleWrap::AncestorIsFlat()
+{
+  // We don't create a native object if we're child of a "flat" accessible;
+  // for example, on OS X buttons shouldn't have any children, because that
+  // makes the OS confused. 
+  //
+  // To maintain a scripting environment where the XPCOM accessible hierarchy
+  // look the same on all platforms, we still let the C++ objects be created
+  // though.
+
+  nsAccessible* parent(GetParent());
+  while (parent) {
+    if (nsAccUtils::MustPrune(parent))
+      return PR_TRUE;
+
+    parent = parent->GetParent();
+  }
+  // no parent was flat
+  return PR_FALSE;
+}

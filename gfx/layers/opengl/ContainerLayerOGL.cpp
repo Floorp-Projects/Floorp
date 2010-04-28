@@ -37,13 +37,12 @@
 
 #include "ContainerLayerOGL.h"
 
-#include "glWrapper.h"
-
 namespace mozilla {
 namespace layers {
 
-ContainerLayerOGL::ContainerLayerOGL(LayerManager *aManager)
+ContainerLayerOGL::ContainerLayerOGL(LayerManagerOGL *aManager)
   : ContainerLayer(aManager, NULL)
+  , LayerOGL(aManager)
 {
   mImplData = static_cast<LayerOGL*>(this);
 }
@@ -139,9 +138,9 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
     static_cast<LayerManagerOGL*>(mManager)->GetYCbCrLayerProgram();
 
   if (GetOpacity() != 1.0) {
-    sglWrapper.GenTextures(1, &containerSurface);
-    sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
-    sglWrapper.TexImage2D(LOCAL_GL_TEXTURE_2D,
+    gl()->fGenTextures(1, &containerSurface);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
+    gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
 			    0,
 			    LOCAL_GL_RGBA,
 			    mVisibleRect.width,
@@ -150,23 +149,23 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
 			    LOCAL_GL_BGRA,
 			    LOCAL_GL_UNSIGNED_BYTE,
 			    NULL);
-    sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-    sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
 
     /**
      * Create the framebuffer and bind it to make our content render into our
      * framebuffer.
      */
-    sglWrapper.GenFramebuffersEXT(1, &frameBuffer);
-    sglWrapper.BindFramebufferEXT(LOCAL_GL_FRAMEBUFFER_EXT, frameBuffer);
-    sglWrapper.FramebufferTexture2DEXT(LOCAL_GL_FRAMEBUFFER_EXT,
-					 LOCAL_GL_COLOR_ATTACHMENT0_EXT,
-					 LOCAL_GL_TEXTURE_2D,
-					 containerSurface,
-					 0);
+    gl()->fGenFramebuffers(1, &frameBuffer);
+    gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, frameBuffer);
+    gl()->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                              LOCAL_GL_COLOR_ATTACHMENT0,
+                              LOCAL_GL_TEXTURE_2D,
+                              containerSurface,
+                              0);
 
     NS_ASSERTION(
-	  sglWrapper.CheckFramebufferStatusEXT(LOCAL_GL_FRAMEBUFFER_EXT) ==
+	  gl()->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
 	    LOCAL_GL_FRAMEBUFFER_COMPLETE, "Error setting up framebuffer.");
 
     /**
@@ -191,12 +190,12 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
   while (layerToRender) {
     const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
     if (clipRect) {
-      sglWrapper.Scissor(clipRect->x - GetVisibleRect().x,
-                clipRect->y - GetVisibleRect().y,
-                clipRect->width,
-                clipRect->height);
+      gl()->fScissor(clipRect->x - GetVisibleRect().x,
+                   clipRect->y - GetVisibleRect().y,
+                   clipRect->width,
+                   clipRect->height);
     } else {
-      sglWrapper.Scissor(0, 0, GetVisibleRect().width, GetVisibleRect().height);
+      gl()->fScissor(0, 0, GetVisibleRect().width, GetVisibleRect().height);
     }
 
     layerToRender->RenderLayer(frameBuffer);
@@ -205,8 +204,8 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
 
   if (GetOpacity() != 1.0) {
     // Unbind the current framebuffer and rebind the previous one.
-    sglWrapper.BindFramebufferEXT(LOCAL_GL_FRAMEBUFFER_EXT, aPreviousFrameBuffer);
-    sglWrapper.DeleteFramebuffersEXT(1, &frameBuffer);
+    gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
+    gl()->fDeleteFramebuffers(1, &frameBuffer);
 
     // Restore old shader program variables.
     yCbCrProgram->Activate();
@@ -233,16 +232,16 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
 
     rgbProgram->SetLayerQuadTransform(&quadTransform[0][0]);
 
-    sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
+    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
 
     rgbProgram->SetLayerOpacity(GetOpacity());
     rgbProgram->SetLayerTransform(&mTransform._11);
     rgbProgram->Apply();
 
-    sglWrapper.DrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+    gl()->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
 
     // Clean up resources.
-    sglWrapper.DeleteTextures(1, &containerSurface);
+    gl()->fDeleteTextures(1, &containerSurface);
   }
 }
 

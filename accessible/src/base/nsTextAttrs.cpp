@@ -38,7 +38,8 @@
 
 #include "nsTextAttrs.h"
 
-#include "nsAccessNode.h"
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
 #include "nsHyperTextAccessibleWrap.h"
 
 #include "gfxFont.h"

@@ -38,8 +38,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHyperTextAccessible.h"
+
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 #include "nsTextAttrs.h"
 
 #include "nsIClipboard.h"
@@ -583,7 +585,7 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
 
   // Get accessible for this findNode, or if that node isn't accessible, use the
   // accessible for the next DOM node which has one (based on forward depth first search)
-  nsCOMPtr<nsIAccessible> descendantAccessible;
+  nsRefPtr<nsAccessible> descendantAcc;
   if (findNode) {
     nsCOMPtr<nsIContent> findContent = do_QueryInterface(findNode);
     if (findContent->IsHTML() && 
@@ -596,14 +598,11 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
       *aHyperTextOffset = 0;
       return NS_OK;
     }
-    descendantAccessible = GetFirstAvailableAccessible(findNode);
+    descendantAcc = GetFirstAvailableAccessible(findNode);
   }
 
   // From the descendant, go up and get the immediate child of this hypertext
   nsRefPtr<nsAccessible> childAccAtOffset;
-  nsRefPtr<nsAccessible> descendantAcc =
-    nsAccUtils::QueryObject<nsAccessible>(descendantAccessible);
-
   while (descendantAcc) {
     nsRefPtr<nsAccessible> parentAcc = descendantAcc->GetParent();
     if (parentAcc == this) {
@@ -782,8 +781,7 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
   nsresult rv;
   PRInt32 contentOffset = aFromOffset;
   if (nsAccUtils::IsText(aFromAccessible)) {
-    nsRefPtr<nsAccessNode> accessNode =
-      nsAccUtils::QueryAccessNode(aFromAccessible);
+    nsRefPtr<nsAccessNode> accessNode = do_QueryObject(aFromAccessible);
 
     nsIFrame *frame = accessNode->GetFrame();
     NS_ENSURE_TRUE(frame, -1);
@@ -977,8 +975,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     if (aBoundaryType == BOUNDARY_LINE_START && aOffset > 0 && aOffset == textLength) {
       // Asking for start of line, while on last character
       if (startAcc) {
-        nsRefPtr<nsAccessNode> startAccessNode =
-          nsAccUtils::QueryAccessNode(startAcc);
+        nsRefPtr<nsAccessNode> startAccessNode = do_QueryObject(startAcc);
         startFrame = startAccessNode->GetFrame();
       }
     }

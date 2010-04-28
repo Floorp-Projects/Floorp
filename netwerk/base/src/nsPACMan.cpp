@@ -268,7 +268,7 @@ nsPACMan::LoadPACFromURI(nsIURI *pacURI)
 
   if (!mLoadPending) {
     nsCOMPtr<nsIRunnable> event =
-        NS_NEW_RUNNABLE_METHOD(nsPACMan, this, StartLoading);
+      NS_NewRunnableMethod(this, &nsPACMan::StartLoading);
     nsresult rv;
     if (NS_FAILED(rv = NS_DispatchToCurrentThread(event)))
       return rv;

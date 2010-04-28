@@ -121,6 +121,7 @@ MAKEFILES_xmlparser="
 
 MAKEFILES_gfx="
   gfx/Makefile
+  gfx/ycbcr/Makefile
   gfx/idl/Makefile
   gfx/layers/Makefile
   gfx/public/Makefile
@@ -323,37 +324,12 @@ MAKEFILES_libtheora="
   media/libtheora/include/theora/Makefile
 "
 
-MAKEFILES_liboggz="
-  media/liboggz/Makefile
-  media/liboggz/src/Makefile
-  media/liboggz/src/liboggz/Makefile
-  media/liboggz/include/Makefile
-  media/liboggz/include/oggz/Makefile
-"
-
 MAKEFILES_libogg="
   media/libogg/Makefile
   media/libogg/src/Makefile
   media/libogg/include/Makefile
   media/libogg/include/ogg/Makefile
 "
-
-MAKEFILES_libfishsound="
-  media/libfishsound/Makefile
-  media/libfishsound/src/Makefile
-  media/libfishsound/src/libfishsound/Makefile
-  media/libfishsound/include/Makefile
-  media/libfishsound/include/fishsound/Makefile
-"
-
-MAKEFILES_liboggplay="
-  media/liboggplay/Makefile
-  media/liboggplay/src/Makefile
-  media/liboggplay/src/liboggplay/Makefile
-  media/liboggplay/include/Makefile
-  media/liboggplay/include/oggplay/Makefile
-"
-
 MAKEFILES_libsydneyaudio="
   media/libsydneyaudio/Makefile
   media/libsydneyaudio/include/Makefile
@@ -1262,10 +1238,7 @@ if [ "$MOZ_OGG" ]; then
  add_makefiles "
    $MAKEFILES_libvorbis
    $MAKEFILES_libtheora
-   $MAKEFILES_liboggz
    $MAKEFILES_libogg
-   $MAKEFILES_libfishsound
-   $MAKEFILES_liboggplay
    content/media/ogg/Makefile
  "
 fi
