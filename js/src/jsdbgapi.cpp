@@ -926,7 +926,6 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval idval,
         wp->handler = NULL;
         wp->closure = NULL;
         wp->object = obj;
-        JS_ASSERT(sprop->setter() != js_watch_set || pobj != obj);
         wp->setter = sprop->setter();
         wp->flags = JSWP_LIVE;
 

@@ -163,6 +163,8 @@ static bool crashPluginInNestedLoop(NPObject* npobj, const NPVariant* args, uint
 static bool propertyAndMethod(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getTopLevelWindowActivationState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getTopLevelWindowActivationEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getFocusState(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool getFocusEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getEventModel(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
@@ -210,6 +212,8 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "propertyAndMethod",
   "getTopLevelWindowActivationState",
   "getTopLevelWindowActivationEventCount",
+  "getFocusState",
+  "getFocusEventCount",
   "getEventModel"
 };
 static NPIdentifier sPluginMethodIdentifiers[ARRAY_LENGTH(sPluginMethodIdentifierNames)];
@@ -258,6 +262,8 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   propertyAndMethod,
   getTopLevelWindowActivationState,
   getTopLevelWindowActivationEventCount,
+  getFocusState,
+  getFocusEventCount,
   getEventModel
 };
 
@@ -678,8 +684,11 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->writeReadyCount = 0;
   memset(&instanceData->window, 0, sizeof(instanceData->window));
   instanceData->crashOnDestroy = false;
+  instanceData->cleanupWidget = true; // only used by nptest_gtk
   instanceData->topLevelWindowActivationState = ACTIVATION_STATE_UNKNOWN;
   instanceData->topLevelWindowActivationEventCount = 0;
+  instanceData->focusState = ACTIVATION_STATE_UNKNOWN;
+  instanceData->focusEventCount = 0;
   instanceData->eventModel = 0;
   instance->pdata = instanceData;
 
@@ -784,6 +793,14 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     }
     if (strcmp(argn[i], "newcrash") == 0) {
       IntentionalCrash();
+    }
+    // "cleanupwidget" is only used with nptest_gtk, defaulting to true.  It
+    // indicates whether the plugin should destroy its window in response to
+    // NPP_Destroy (or let the platform destroy the widget when the parent
+    // window gets destroyed).
+    if (strcmp(argn[i], "cleanupwidget") == 0 &&
+        strcmp(argv[i], "false") == 0) {
+      instanceData->cleanupWidget = false;
     }
   }
 
@@ -2843,6 +2860,49 @@ getTopLevelWindowActivationEventCount(NPObject* npobj, const NPVariant* args, ui
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
 
   INT32_TO_NPVARIANT(id->topLevelWindowActivationEventCount, *result);
+
+  return true;
+}
+
+// Returns top-level window activation state as indicated by Cocoa NPAPI's
+// NPCocoaEventWindowFocusChanged events - 'true' if active, 'false' if not.
+// Throws an exception if no events have been received and thus this state
+// is unknown.
+bool
+getFocusState(NPObject* npobj, const NPVariant* args, uint32_t argCount,
+              NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  // Throw an exception for unknown state.
+  if (id->focusState == ACTIVATION_STATE_UNKNOWN) {
+    return false;
+  }
+
+  if (id->focusState == ACTIVATION_STATE_ACTIVATED) {
+    BOOLEAN_TO_NPVARIANT(true, *result);
+  } else if (id->focusState == ACTIVATION_STATE_DEACTIVATED) {
+    BOOLEAN_TO_NPVARIANT(false, *result);
+  }
+
+  return true;
+}
+
+bool
+getFocusEventCount(NPObject* npobj, const NPVariant* args, uint32_t argCount,
+                   NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+
+  INT32_TO_NPVARIANT(id->focusEventCount, *result);
 
   return true;
 }

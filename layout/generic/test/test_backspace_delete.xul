@@ -38,13 +38,13 @@ function execTests() {
   /* On Unix systems we have to check for a bug in Pango's handling of Thai
    * script (bug 474068 and http://bugzilla.gnome.org/show_bug.cgi?id=576156 ).
    * We assume that ctypes is available, and the library can be accessed as
-   * libpango-1.0.so, on all systems that potentially have this problem.
+   * libpango-1.0.so.0, on all systems that potentially have this problem.
    */
   var pango_todos = false;
   try {
     Components.utils.import("resource://gre/modules/ctypes.jsm");
     if (ctypes) {
-      let pango = ctypes.open("libpango-1.0.so");
+      let pango = ctypes.open("libpango-1.0.so.0");
       if (pango) {
 	// int pango_version();
 	let pango_version = pango.declare("pango_version", ctypes.default_abi,
@@ -116,9 +116,11 @@ function execTests() {
     if (controller) {
       try {
         controller.doCommand(cmd);
-	ok(!exc_todo, 'doCommand(' + cmd + ') succeeded');
+        (exc_todo ? todo : ok)
+	  (true, 'doCommand(' + cmd + ') succeeded');
       } catch(ex) {
-	todo(!exc_todo, 'exception in doCommand(' + cmd + '): ', ex.message);
+        (exc_todo ? todo : ok)
+	  (false, 'exception in doCommand(' + cmd + '): ', ex.message);
       }
     }
   }

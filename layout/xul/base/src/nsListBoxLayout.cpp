@@ -130,26 +130,7 @@ nsListBoxLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState)
 NS_IMETHODIMP
 nsListBoxLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 {
-  nsListBoxBodyFrame* frame = static_cast<nsListBoxBodyFrame*>(aBox);
-
-  // Always ensure an accurate scrollview position
-  // This is an edge case that was caused by the row height
-  // changing after a scroll had occurred.  (Bug #51084)
-  PRInt32 index;
-  frame->GetIndexOfFirstVisibleRow(&index);
-  if (index > 0) {
-    nscoord pos = frame->GetYPosition();
-    PRInt32 rowHeight = frame->GetRowHeightAppUnits();
-    if (pos != (rowHeight*index)) {
-      frame->VerticalScroll(rowHeight*index);
-      frame->Redraw(aState, nsnull, PR_FALSE);
-    }
-  }
-
-  nsresult rv = LayoutInternal(aBox, aState);
-  if (NS_FAILED(rv)) return rv;
-
-  return NS_OK;
+  return LayoutInternal(aBox, aState);
 }
 
 

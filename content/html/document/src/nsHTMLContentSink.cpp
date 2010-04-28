@@ -250,9 +250,6 @@ protected:
   SinkContext* mHeadContext;
   PRInt32 mNumOpenIFRAMES;
 
-  nsCOMPtr<nsIURI> mBaseHref;
-  nsCOMPtr<nsIAtom> mBaseTarget;
-
   // depth of containment within <noembed>, <noframes> etc
   PRInt32 mInsideNoXXXTag;
 
@@ -277,14 +274,6 @@ protected:
 
   void StartLayout(PRBool aIgnorePendingSheets);
 
-  /**
-   * AddBaseTagInfo adds the "current" base URI and target to the content node
-   * in the form of bogo-attributes.  This MUST be called before attributes are
-   * added to the content node, since the way URI attributes are treated may
-   * depend on the value of the base URI
-   */
-  void AddBaseTagInfo(nsIContent* aContent);
-
   // Routines for tags that require special handling
   nsresult CloseHTML();
   nsresult OpenFrameset(const nsIParserNode& aNode);
@@ -293,7 +282,6 @@ protected:
   nsresult CloseBody();
   nsresult OpenForm(const nsIParserNode& aNode);
   nsresult CloseForm();
-  void ProcessBASEElement(nsGenericHTMLElement* aElement);
   nsresult ProcessLINKTag(const nsIParserNode& aNode);
 
   // Routines for tags that require special handling when we reach their end
@@ -788,39 +776,6 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
 
     ssle->SetEnableUpdates(PR_FALSE);
   }
-
-  // Make sure to add base tag info, if needed, before setting any other
-  // attributes -- what URI attrs do will depend on the base URI.  Only do this
-  // for elements that have useful URI attributes.
-  // See bug 18478 and bug 30617 for why we need to do this.
-  switch (nodeType) {
-    // Containers with "href="
-    case eHTMLTag_a:
-    case eHTMLTag_map:
-
-    // Containers with "src="
-    case eHTMLTag_script:
-    
-    // Containers with "action="
-    case eHTMLTag_form:
-
-    // Containers with "data="
-    case eHTMLTag_object:
-
-    // Containers with "background="
-    case eHTMLTag_table:
-    case eHTMLTag_thead:
-    case eHTMLTag_tbody:
-    case eHTMLTag_tfoot:
-    case eHTMLTag_tr:
-    case eHTMLTag_td:
-    case eHTMLTag_th:
-      mSink->AddBaseTagInfo(content);
-
-      break;
-    default:
-      break;    
-  }
   
   rv = mSink->AddAttributes(aNode, content);
   MaybeSetForm(content, nodeType, mSink);
@@ -1047,28 +1002,8 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
         mSink->CreateContentObject(aNode, nodeType);
       NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
 
-      // Make sure to add base tag info, if needed, before setting any other
-      // attributes -- what URI attrs do will depend on the base URI.  Only do
-      // this for elements that have useful URI attributes.
-      // See bug 18478 and bug 30617 for why we need to do this.
-      switch (nodeType) {
-      case eHTMLTag_area:
-      case eHTMLTag_meta:
-      case eHTMLTag_img:
-      case eHTMLTag_frame:
-      case eHTMLTag_input:
-      case eHTMLTag_embed:
-        mSink->AddBaseTagInfo(content);
-        break;
-
-      // <form> can end up as a leaf if it's misnested with table elements
-      case eHTMLTag_form:
-        mSink->AddBaseTagInfo(content);
+      if (nodeType == eHTMLTag_form) {
         mSink->mCurrentForm = content;
-
-        break;
-      default:
-        break;
       }
 
       rv = mSink->AddAttributes(aNode, content);
@@ -1082,12 +1017,6 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
 
       // Additional processing needed once the element is in the tree
       switch (nodeType) {
-      case eHTMLTag_base:
-        if (!mSink->mInsideNoXXXTag) {
-          mSink->ProcessBASEElement(content);
-        }
-        break;
-
       case eHTMLTag_meta:
         // XXX It's just not sufficient to check if the parent is head. Also
         // check for the preference.
@@ -2630,28 +2559,6 @@ HTMLContentSink::StartLayout(PRBool aIgnorePendingSheets)
   nsContentSink::StartLayout(aIgnorePendingSheets);
 }
 
-void
-HTMLContentSink::AddBaseTagInfo(nsIContent* aContent)
-{
-  nsresult rv;
-  if (mBaseHref) {
-    rv = aContent->SetProperty(nsGkAtoms::htmlBaseHref, mBaseHref,
-                               nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      // circumvent nsDerivedSafe
-      NS_ADDREF(static_cast<nsIURI*>(mBaseHref));
-    }
-  }
-  if (mBaseTarget) {
-    rv = aContent->SetProperty(nsGkAtoms::htmlBaseTarget, mBaseTarget,
-                               nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      // circumvent nsDerivedSafe
-      NS_ADDREF(static_cast<nsIAtom*>(mBaseTarget));
-    }
-  }
-}
-
 nsresult
 HTMLContentSink::OpenHeadContext()
 {
@@ -2703,56 +2610,6 @@ HTMLContentSink::CloseHeadContext()
   }
 }
 
-void
-HTMLContentSink::ProcessBASEElement(nsGenericHTMLElement* aElement)
-{
-  // href attribute
-  nsAutoString attrValue;
-  if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, attrValue)) {
-    //-- Make sure this page is allowed to load this URI
-    nsresult rv;
-    nsCOMPtr<nsIURI> baseHrefURI;
-    rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(baseHrefURI),
-                                                   attrValue, mDocument,
-                                                   nsnull);
-    if (NS_FAILED(rv))
-      return;
-
-    // Setting "BASE URI" from the last BASE tag appearing in HEAD.
-    if (!mBody) {
-      // The document checks if it is legal to set this base. Failing here is
-      // ok, we just won't set a new base.
-      rv = mDocument->SetBaseURI(baseHrefURI);
-      if (NS_SUCCEEDED(rv)) {
-        mDocumentBaseURI = mDocument->GetBaseURI();
-      }
-    } else {
-      // NAV compatibility quirk
-
-      nsIScriptSecurityManager *securityManager =
-        nsContentUtils::GetSecurityManager();
-
-      rv = securityManager->
-        CheckLoadURIWithPrincipal(mDocument->NodePrincipal(), baseHrefURI,
-                                  nsIScriptSecurityManager::STANDARD);
-      if (NS_SUCCEEDED(rv)) {
-        mBaseHref = baseHrefURI;
-      }
-    }
-  }
-
-  // target attribute
-  if (aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::target, attrValue)) {
-    if (!mBody) {
-      // still in real HEAD
-      mDocument->SetBaseTarget(attrValue);
-    } else {
-      // NAV compatibility quirk
-      mBaseTarget = do_GetAtom(attrValue);
-    }
-  }
-}
-
 nsresult
 HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 {
@@ -2781,7 +2638,6 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
     // Add in the attributes and add the style content object to the
     // head container.
-    AddBaseTagInfo(element);
     result = AddAttributes(aNode, element);
     if (NS_FAILED(result)) {
       return result;

@@ -256,7 +256,7 @@ protected:
     virtual nsEventStatus OnMotionNotifyEvent(QGraphicsSceneMouseEvent *);
     virtual nsEventStatus OnButtonPressEvent(QGraphicsSceneMouseEvent *);
     virtual nsEventStatus OnButtonReleaseEvent(QGraphicsSceneMouseEvent *);
-    virtual nsEventStatus mouseDoubleClickEvent(QGraphicsSceneMouseEvent *);
+    virtual nsEventStatus OnMouseDoubleClickEvent(QGraphicsSceneMouseEvent *);
     virtual nsEventStatus OnFocusInEvent(QEvent *);
     virtual nsEventStatus OnFocusOutEvent(QEvent *);
     virtual nsEventStatus OnKeyPressEvent(QKeyEvent *);

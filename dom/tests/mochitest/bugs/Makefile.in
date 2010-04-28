@@ -99,6 +99,7 @@ _TEST_FILES	= \
 		test_bug479143.html \
 		test_bug484775.html \
 		test_bug427744.html \
+		test_bug492925.html \
 		test_bug495219.html \
 		test_bug504862.html \
 		file_bug504862.html \

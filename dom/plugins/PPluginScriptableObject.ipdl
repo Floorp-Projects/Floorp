@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol "PPluginInstance.ipdl";
-include protocol "PPluginIdentifier.ipdl";
+include protocol PPluginInstance;
+include protocol PPluginIdentifier;
 
 include "npapi.h";
 include "npruntime.h";

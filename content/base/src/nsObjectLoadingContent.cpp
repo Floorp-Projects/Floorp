@@ -92,6 +92,9 @@
 
 #include "nsObjectLoadingContent.h"
 #include "mozAutoDocUpdate.h"
+#include "nsIContentSecurityPolicy.h"
+#include "nsIChannelPolicy.h"
+#include "nsChannelPolicy.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gObjectLog = PR_NewLogModule("objlc");
@@ -1423,8 +1426,18 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   nsCOMPtr<nsILoadGroup> group = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> chan;
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (csp) {
+    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_OBJECT);
+  }
   rv = NS_NewChannel(getter_AddRefs(chan), aURI, nsnull, group, this,
-                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS);
+                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS, 
+                     channelPolicy);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Referrer

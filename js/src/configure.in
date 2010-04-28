@@ -1777,6 +1777,25 @@ case "$target" in
 #    fi
     ;; 
 
+ia64*-hpux*)
+    DLL_SUFFIX=".so"
+    if test ! "$GNU_CC"; then
+       DSO_LDOPTS='-b'
+       DSO_CFLAGS=""
+       DSO_PIC_CFLAGS=
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+       CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
+    else
+       DSO_LDOPTS='-b -E'
+       MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+    fi
+    MOZ_FIX_LINK_PATHS=
+    SYSTEM_MAKEDEPEND=
+    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+    ;;
+
 *-hpux*)
     DLL_SUFFIX=".sl"
     if test ! "$GNU_CC"; then

@@ -47,13 +47,11 @@ LIBXUL_LIBRARY 	= 1
 
 
 EXPORTS		+= \
-		nsChannelReader.h \
 		nsOggDecoder.h \
 		nsOggCodecState.h \
 		$(NULL)
 
 CPPSRCS		= \
-		nsChannelReader.cpp \
 		nsOggDecoder.cpp \
 		nsOggCodecState.cpp \
 		nsOggReader.cpp \

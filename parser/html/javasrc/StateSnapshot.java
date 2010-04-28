@@ -39,7 +39,7 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
     
     private final boolean framesetOk;
 
-    private final int foreignFlag;
+    private final boolean inForeign;
 
     private final boolean needToDropLF;
 
@@ -56,7 +56,7 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
      * @param mode 
      */
     StateSnapshot(StackNode<T>[] stack,
-            StackNode<T>[] listOfActiveFormattingElements, T formPointer, T headPointer, int mode, int originalMode, boolean framesetOk, int foreignFlag, boolean needToDropLF, boolean quirks) {
+            StackNode<T>[] listOfActiveFormattingElements, T formPointer, T headPointer, int mode, int originalMode, boolean framesetOk, boolean inForeign, boolean needToDropLF, boolean quirks) {
         this.stack = stack;
         this.listOfActiveFormattingElements = listOfActiveFormattingElements;
         this.formPointer = formPointer;
@@ -64,7 +64,7 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
         this.mode = mode;
         this.originalMode = originalMode;
         this.framesetOk = framesetOk;
-        this.foreignFlag = foreignFlag;
+        this.inForeign = inForeign;
         this.needToDropLF = needToDropLF;
         this.quirks = quirks;
     }
@@ -127,12 +127,12 @@ public class StateSnapshot<T> implements TreeBuilderState<T> {
     }
 
     /**
-     * Returns the foreignFlag.
+     * Returns the inForeign.
      * 
-     * @return the foreignFlag
+     * @return the inForeign
      */
-    public int getForeignFlag() {
-        return foreignFlag;
+    public boolean isInForeign() {
+        return inForeign;
     }
 
     /**

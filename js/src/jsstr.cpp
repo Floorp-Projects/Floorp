@@ -3944,7 +3944,7 @@ js_GetStringBytes(JSContext *cx, JSString *str)
         rt = cx->runtime;
     } else {
         /* JS_GetStringBytes calls us with null cx. */
-        rt = js_GetGCStringRuntime(str);
+        rt = js_GetGCThingRuntime(str);
     }
 
     return rt->deflatedStringCache->getBytes(cx, str);

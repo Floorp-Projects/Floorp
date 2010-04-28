@@ -76,11 +76,9 @@ bool TestManyChildAllocsChild::RecvGo()
             fail("can't send Hello()");
     }
 
-    nsTArray<PTestManyChildAllocsSubChild*> kids;
-    ManagedPTestManyChildAllocsSubChild(kids);
-
-    if (NALLOCS != kids.Length())
-        fail("expected %lu kids, got %lu", NALLOCS, kids.Length());
+    size_t len = ManagedPTestManyChildAllocsSubChild().Length();
+    if (NALLOCS != len)
+        fail("expected %lu kids, got %lu", NALLOCS, len);
 
     if (!SendDone())
         fail("can't send Done()");

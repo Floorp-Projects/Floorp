@@ -583,8 +583,10 @@ public:
   static void UnregisterPrefCallback(const char *aPref,
                                      PrefChangedFunc aCallback,
                                      void * aClosure);
-  static void AddBoolPrefVarCache(const char* aPref, PRBool* aVariable);
-  static void AddIntPrefVarCache(const char* aPref, PRInt32* aVariable);
+  static void AddBoolPrefVarCache(const char* aPref, PRBool* aVariable,
+                                  PRBool aDefault = PR_FALSE);
+  static void AddIntPrefVarCache(const char* aPref, PRInt32* aVariable,
+                                 PRInt32 aDefault = 0);
   static nsIPrefBranch2 *GetPrefBranch()
   {
     return sPrefBranch;
@@ -1019,7 +1021,7 @@ public:
    *                         transferred to the caller.
    * @param aReturn [out] the created DocumentFragment
    */
-  static nsresult CreateContextualFragment(nsIDOMNode* aContextNode,
+  static nsresult CreateContextualFragment(nsINode* aContextNode,
                                            const nsAString& aFragment,
                                            PRBool aWillOwnFragment,
                                            nsIDOMDocumentFragment** aReturn);
@@ -1596,6 +1598,15 @@ public:
    */
   static void PlatformToDOMLineBreaks(nsString &aString);
 
+  static PRBool IsHandlingKeyBoardEvent()
+  {
+    return sIsHandlingKeyBoardEvent;
+  }
+
+  static void SetIsHandlingKeyBoardEvent(PRBool aHandling)
+  {
+    sIsHandlingKeyBoardEvent = aHandling;
+  }
 private:
 
   static PRBool InitializeEventTable();
@@ -1671,6 +1682,8 @@ private:
   static PRUint32 sScriptBlockerCountWhereRunnersPrevented;
 
   static nsIInterfaceRequestor* sSameOriginChecker;
+
+  static PRBool sIsHandlingKeyBoardEvent;
 };
 
 #define NS_HOLD_JS_OBJECTS(obj, clazz)                                         \

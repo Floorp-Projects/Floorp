@@ -2196,15 +2196,15 @@ function losslessDecodeURI(aURI) {
                          encodeURIComponent);
     } catch (e) {}
 
-  // Encode invisible characters (soft hyphen, zero-width space, BOM,
-  // line and paragraph separator, word joiner, invisible times,
-  // invisible separator, object replacement character) (bug 452979)
-  value = value.replace(/[\v\x0c\x1c\x1d\x1e\x1f\u00ad\u200b\ufeff\u2028\u2029\u2060\u2062\u2063\ufffc]/g,
+  // Encode invisible characters (line and paragraph separator,
+  // object replacement character) (bug 452979)
+  value = value.replace(/[\v\x0c\x1c\x1d\x1e\x1f\u2028\u2029\ufffc]/g,
                         encodeURIComponent);
 
-  // Encode bidirectional formatting characters.
+  // Encode default ignorable characters. (bug 546013)
+  // This includes all bidirectional formatting characters.
   // (RFC 3987 sections 3.2 and 4.1 paragraph 6)
-  value = value.replace(/[\u200e\u200f\u202a\u202b\u202c\u202d\u202e]/g,
+  value = value.replace(/[\u00ad\u034f\u115f-\u1160\u17b4-\u17b5\u180b-\u180d\u200b-\u200f\u202a-\u202e\u2060-\u206f\u3164\ufe00-\ufe0f\ufeff\uffa0\ufff0-\ufff8]|\ud834[\udd73-\udd7a]|[\udb40-\udb43][\udc00-\udfff]/g,
                         encodeURIComponent);
   return value;
 }
@@ -3355,8 +3355,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 
   CombinedStopReload.init();
 
-  gHomeButton.updatePersonalToolbarStyle();
-
   // Update the urlbar
   if (gURLBar) {
     URLBarSetURI();
@@ -3380,11 +3378,12 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
   // XXX Shouldn't have to do this, but I do
   if (!gCustomizeSheet)
     window.focus();
-
 }
 
 function BrowserToolboxCustomizeChange() {
   gHomeButton.updatePersonalToolbarStyle();
+
+  allTabs.readPref();
 }
 
 /**
@@ -6316,6 +6315,11 @@ var gPluginHandler = {
       link.href = gPluginHandler.crashReportHelpURL;
       let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
       description.appendChild(link);
+
+      // Remove the notfication when the page is reloaded.
+      doc.defaultView.top.addEventListener("unload", function() {
+        notificationBox.removeNotification(notification);
+      }, false);
     }
 
   }
@@ -7151,7 +7155,7 @@ let gPrivateBrowsingUI = {
     Services.obs.removeObserver(this, "private-browsing-transition-complete");
   },
 
-  get _disableUIOnToggle PBUI__disableUIOnTogle() {
+  get _disableUIOnToggle() {
     if (this._privateBrowsingService.autoStarted)
       return false;
 
@@ -7353,7 +7357,7 @@ let gPrivateBrowsingUI = {
       !this.privateBrowsingEnabled;
   },
 
-  get privateBrowsingEnabled PBUI_get_privateBrowsingEnabled() {
+  get privateBrowsingEnabled() {
     return this._privateBrowsingService.privateBrowsingEnabled;
   }
 };

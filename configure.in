@@ -1973,6 +1973,26 @@ case "$target" in
 #    fi
     ;; 
 
+ia64*-hpux*)
+    DLL_SUFFIX=".so"
+    if test ! "$GNU_CC"; then
+       DSO_LDOPTS='-b'
+       DSO_CFLAGS=""
+       DSO_PIC_CFLAGS=
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+       CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
+    else
+       DSO_LDOPTS='-b -E'
+       MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+    fi
+    MOZ_FIX_LINK_PATHS=
+    SYSTEM_MAKEDEPEND=
+    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+    AC_DEFINE(_LARGEFILE64_SOURCE)
+    ;;
+
 *-hpux*)
     DLL_SUFFIX=".sl"
     if test ! "$GNU_CC"; then
@@ -2842,6 +2862,18 @@ AC_TYPE_MODE_T
 AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
+AC_MSG_CHECKING(for __stdcall)
+AC_CACHE_VAL(ac_cv___stdcall,
+ [AC_TRY_COMPILE([],
+                 [void foo(); void __stdcall foo();],
+                 [ac_cv___stdcall=true],
+                 [ac_cv___stdcall=false])])
+if test "$ac_cv___stdcall" = true ; then
+  AC_DEFINE(HAVE_STDCALL)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
 AC_MSG_CHECKING(for ssize_t)
 AC_CACHE_VAL(ac_cv_type_ssize_t,
  [AC_TRY_COMPILE([#include <stdio.h>
@@ -5555,11 +5587,14 @@ then
 
     if test "$MOZ_ENABLE_DBUS"
     then
+        PKG_CHECK_MODULES(MOZ_DBUS, dbus-1 >= $DBUS_VERSION)
         PKG_CHECK_MODULES(MOZ_DBUS_GLIB, dbus-glib-1 >= $DBUS_VERSION)
         AC_DEFINE(MOZ_ENABLE_DBUS)
     fi
 fi
 AC_SUBST(MOZ_ENABLE_DBUS)
+AC_SUBST(MOZ_DBUS_CFLAGS)
+AC_SUBST(MOZ_DBUS_LIBS)
 AC_SUBST(MOZ_DBUS_GLIB_CFLAGS)
 AC_SUBST(MOZ_DBUS_GLIB_LIBS)
 
@@ -6552,6 +6587,14 @@ else
 fi
 
 AC_SUBST(MOZ_NATIVE_SQLITE)
+
+dnl ========================================================
+dnl = Enable help viewer (off by default)
+dnl ========================================================
+if test -n "$MOZ_HELP_VIEWER"; then
+     dnl Do this if defined in confvars.sh
+     AC_DEFINE(MOZ_HELP_VIEWER)
+fi
 
 dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)
