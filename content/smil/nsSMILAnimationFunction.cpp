@@ -234,7 +234,8 @@ nsSMILAnimationFunction::ComposeResult(const nsISMILAttr& aSMILAttr,
   if (NS_FAILED(rv))
     return;
 
-  // GetValues may update the error state
+  // Check that we have the right number of keySplines and keyTimes
+  CheckValueListDependentAttrs(values.Length());
   if (mErrorFlags != 0)
     return;
 
@@ -801,13 +802,16 @@ nsSMILAnimationFunction::GetValues(const nsISMILAttr& aSMILAttr,
     }
   }
 
-  // Check that we have the right number of keySplines and keyTimes
-  CheckKeyTimes(result.Length());
-  CheckKeySplines(result.Length());
-
   result.SwapElements(aResult);
 
   return NS_OK;
+}
+
+void
+nsSMILAnimationFunction::CheckValueListDependentAttrs(PRUint32 aNumValues)
+{
+  CheckKeyTimes(aNumValues);
+  CheckKeySplines(aNumValues);
 }
 
 /**
@@ -1031,7 +1035,9 @@ nsSMILAnimationFunction::SetKeyTimes(const nsAString& aKeyTimes,
   mKeyTimes.Clear();
   aResult.SetTo(aKeyTimes);
 
-  nsresult rv = nsSMILParserUtils::ParseKeyTimes(aKeyTimes, mKeyTimes);
+  nsresult rv =
+    nsSMILParserUtils::ParseSemicolonDelimitedProgressList(aKeyTimes, PR_TRUE,
+                                                           mKeyTimes);
 
   if (NS_SUCCEEDED(rv) && mKeyTimes.Length() < 1)
     rv = NS_ERROR_FAILURE;
