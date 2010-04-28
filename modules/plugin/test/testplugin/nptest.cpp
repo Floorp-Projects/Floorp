@@ -684,6 +684,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->writeReadyCount = 0;
   memset(&instanceData->window, 0, sizeof(instanceData->window));
   instanceData->crashOnDestroy = false;
+  instanceData->cleanupWidget = true; // only used by nptest_gtk
   instanceData->topLevelWindowActivationState = ACTIVATION_STATE_UNKNOWN;
   instanceData->topLevelWindowActivationEventCount = 0;
   instanceData->focusState = ACTIVATION_STATE_UNKNOWN;
@@ -792,6 +793,14 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
     }
     if (strcmp(argn[i], "newcrash") == 0) {
       IntentionalCrash();
+    }
+    // "cleanupwidget" is only used with nptest_gtk, defaulting to true.  It
+    // indicates whether the plugin should destroy its window in response to
+    // NPP_Destroy (or let the platform destroy the widget when the parent
+    // window gets destroyed).
+    if (strcmp(argn[i], "cleanupwidget") == 0 &&
+        strcmp(argv[i], "false") == 0) {
+      instanceData->cleanupWidget = false;
     }
   }
 

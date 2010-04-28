@@ -129,6 +129,7 @@ typedef struct InstanceData {
   void* streamBuf;
   void* fileBuf;
   bool crashOnDestroy;
+  bool cleanupWidget;
   ActivationState topLevelWindowActivationState;
   int32_t topLevelWindowActivationEventCount;
   ActivationState focusState;
