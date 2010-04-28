@@ -79,6 +79,7 @@ components/xpti.dat
 components/xptitemp.dat
 components/nsBackgroundUpdateService.js
 components/nsCloseAllWindows.js
+components/nsExtensionManager.js
 #ifndef XP_MACOSX
 components/autocomplete.xpt
 #endif
