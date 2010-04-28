@@ -671,6 +671,35 @@ var BrowserUI = {
   },
 #endif
 
+  handleEscape: function () {
+    // Check open dialogs
+    let dialog = this.activeDialog;
+    if (dialog) {
+      dialog.close();
+      return;
+    }
+    
+    // Check open popups
+    if (this._popup) {
+      this._hidePopup();
+      return;
+    }
+      
+    // Check open modal elements
+    let modalElementsLength = document.getElementsByClassName("modal-block").length;
+    if (modalElementsLength > 0) 
+      return;
+
+    // Check open panel
+    if (this.isPanelVisible()) {
+      this.hidePanel();
+      return;
+    }
+
+    // Only if there are no dialogs, popups, or panels open
+    Browser.selectedBrowser.goBack();
+  },
+
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       // Browser events
@@ -704,11 +733,8 @@ var BrowserUI = {
       }
       // Window events
       case "keypress":
-        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
-          let dialog = this.activeDialog;
-          if (dialog)
-            dialog.close();
-        }
+        if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE)
+          this.handleEscape();
         break;
       case "AppCommand":
         aEvent.stopPropagation();
