@@ -57,6 +57,9 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
 cairo_public CGContextRef
 cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
 
+cairo_public CGContextRef
+cairo_quartz_get_cg_context_with_clip (cairo_t *cr);
+
 #if CAIRO_HAS_QUARTZ_FONT
 
 /*

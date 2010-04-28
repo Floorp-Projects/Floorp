@@ -41,32 +41,28 @@
 
 #include "nsAccessNodeWrap.h"
 
-#include "nsARIAMap.h"
-#include "nsEventShell.h"
-#include "nsRelUtils.h"
-#include "nsTextEquivUtils.h"
-
 #include "nsIAccessible.h"
 #include "nsIAccessibleHyperLink.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleValue.h"
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleStates.h"
-#include "nsIAccessibleEvent.h"
 
-#include "nsIDOMNodeList.h"
-#include "nsINameSpaceManager.h"
-#include "nsWeakReference.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "nsIDOMDOMStringList.h"
+
+class nsAccessible;
+class nsAccEvent;
+struct nsRoleMapEntry;
 
 struct nsRect;
 class nsIContent;
 class nsIFrame;
-class nsIDOMNode;
 class nsIAtom;
 class nsIView;
+
+typedef nsRefPtrHashtable<nsVoidPtrHashKey, nsAccessible>
+  nsAccessibleHashtable;
 
 // see nsAccessible::GetAttrValue
 #define NS_OK_NO_ARIA_VALUE \
@@ -80,29 +76,8 @@ NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x23)
 #define NS_OK_NAME_FROM_TOOLTIP \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x25)
 
-// Saves a data member -- if child count equals this value we haven't
-// cached children or child count yet
-enum { eChildCountUninitialized = -1 };
 
-class nsAccessibleDOMStringList : public nsIDOMDOMStringList
-{
-public:
-  nsAccessibleDOMStringList();
-  virtual ~nsAccessibleDOMStringList();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDOMSTRINGLIST
-
-  PRBool Add(const nsAString& aName) {
-    return mNames.AppendElement(aName) != nsnull;
-  }
-
-private:
-  nsTArray<nsString> mNames;
-};
-
-
-#define NS_ACCESSIBLE_IMPL_CID                          \
+#define NS_ACCESSIBLE_IMPL_IID                          \
 {  /* 133c8bf4-4913-4355-bd50-426bd1d6e1ad */           \
   0x133c8bf4,                                           \
   0x4913,                                               \
@@ -127,7 +102,7 @@ public:
   NS_DECL_NSIACCESSIBLEHYPERLINK
   NS_DECL_NSIACCESSIBLESELECTABLE
   NS_DECL_NSIACCESSIBLEVALUE
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_CID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_IID)
 
   //////////////////////////////////////////////////////////////////////////////
   // nsAccessNode
@@ -441,7 +416,7 @@ protected:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessible,
-                              NS_ACCESSIBLE_IMPL_CID)
+                              NS_ACCESSIBLE_IMPL_IID)
 
 #endif  
 

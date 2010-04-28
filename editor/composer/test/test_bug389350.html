@@ -19,8 +19,9 @@ function runTest() {
   sendChar('a', e.contentDocument);
   sendChar('b', e.contentDocument);
   sendChar('c', e.contentDocument);
-  var frame_html = "<head><title></title></head><body>abc</body>";
-  ok(frame_html == e.contentDocument.documentElement.innerHTML);
+  var expected = "<head></head><body>abc</body>";
+  var result = e.contentDocument.documentElement.innerHTML;
+  is(result, expected, "iframe with designmode on had incorrect content");
   SimpleTest.finish();
 }
 

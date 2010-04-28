@@ -141,6 +141,14 @@ nsListBoxLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     nscoord pos = frame->GetYPosition();
     PRInt32 rowHeight = frame->GetRowHeightAppUnits();
     if (pos != (rowHeight*index)) {
+      // At this point the overflow rect has not yet been updated to account
+      // for a frame size change.  VerticalScroll() leads to GetScrolledRect()
+      // which uses the overflow rect so we need to update it now (bug 547338).
+      if (frame->HasOverflowRect()) {
+        nsRect overflowRect = nsRect(nsPoint(0, 0), frame->GetSize());
+        overflowRect.UnionRect(overflowRect, frame->GetOverflowRect());
+        frame->SetOverflowRect(overflowRect);
+      }
       frame->VerticalScroll(rowHeight*index);
       frame->Redraw(aState, nsnull, PR_FALSE);
     }

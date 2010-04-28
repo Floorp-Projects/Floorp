@@ -44,7 +44,8 @@
 #include "gfxContext.h"
 #include "nsIWidget.h"
 
-#include "glWrapper.h"
+#include "GLContext.h"
+#include "GLContextProvider.h"
 
 #include "nsIServiceManager.h"
 #include "nsIConsoleService.h"
@@ -53,6 +54,8 @@ static const GLint VERTEX_ATTRIB_LOCATION = 0;
 
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gl;
 
 /**
  * LayerManagerOGL
@@ -71,97 +74,85 @@ LayerManagerOGL::LayerManagerOGL(nsIWidget *aWidget)
 
 LayerManagerOGL::~LayerManagerOGL()
 {
-  MakeCurrent();
+  mGLContext->MakeCurrent();
   delete mRGBLayerProgram;
   delete mYCbCrLayerProgram;
-#ifdef XP_WIN
-  BOOL deleted = sglWrapper.wDeleteContext(mContext);
-  NS_ASSERTION(deleted, "Error deleting OpenGL context!");
-  ::ReleaseDC((HWND)mWidget->GetNativeData(NS_NATIVE_WINDOW), mDC);
-#endif
 }
 
 PRBool
 LayerManagerOGL::Initialize()
 {
-#ifdef XP_WIN
-  mDC = (HDC)mWidget->GetNativeData(NS_NATIVE_GRAPHIC);
+  mGLContext = sGLContextProvider.CreateForWindow(mWidget);
 
-  mContext = sglWrapper.wCreateContext(mDC);
-
-  if (!mContext) {
+  if (!mGLContext) {
     return PR_FALSE;
   }
-#else
-  // Don't know how to initialize on this platform!
-  return PR_FALSE;
-#endif
 
   MakeCurrent();
 
-  sglWrapper.BlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA, LOCAL_GL_ONE, LOCAL_GL_ONE);
-  sglWrapper.Enable(LOCAL_GL_BLEND);
-  sglWrapper.Enable(LOCAL_GL_TEXTURE_2D);
-  sglWrapper.Enable(LOCAL_GL_SCISSOR_TEST);
+  mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA, LOCAL_GL_ONE, LOCAL_GL_ONE);
+  mGLContext->fEnable(LOCAL_GL_BLEND);
+  mGLContext->fEnable(LOCAL_GL_TEXTURE_2D);
+  mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
-  mVertexShader = sglWrapper.CreateShader(LOCAL_GL_VERTEX_SHADER);
-  mRGBShader = sglWrapper.CreateShader(LOCAL_GL_FRAGMENT_SHADER);
-  mYUVShader = sglWrapper.CreateShader(LOCAL_GL_FRAGMENT_SHADER);
+  mVertexShader = mGLContext->fCreateShader(LOCAL_GL_VERTEX_SHADER);
+  mRGBShader = mGLContext->fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
+  mYUVShader = mGLContext->fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
 
-  sglWrapper.ShaderSource(mVertexShader, 1, (const GLchar**)&sVertexShader, NULL);
-  sglWrapper.ShaderSource(mRGBShader, 1, (const GLchar**)&sRGBLayerPS, NULL);
-  sglWrapper.ShaderSource(mYUVShader, 1, (const GLchar**)&sYUVLayerPS, NULL);
+  mGLContext->fShaderSource(mVertexShader, 1, (const GLchar**)&sVertexShader, NULL);
+  mGLContext->fShaderSource(mRGBShader, 1, (const GLchar**)&sRGBLayerPS, NULL);
+  mGLContext->fShaderSource(mYUVShader, 1, (const GLchar**)&sYUVLayerPS, NULL);
 
-  sglWrapper.CompileShader(mVertexShader);
-  sglWrapper.CompileShader(mRGBShader);
-  sglWrapper.CompileShader(mYUVShader);
+  mGLContext->fCompileShader(mVertexShader);
+  mGLContext->fCompileShader(mRGBShader);
+  mGLContext->fCompileShader(mYUVShader);
 
   GLint status;
-  sglWrapper.GetShaderiv(mVertexShader, LOCAL_GL_COMPILE_STATUS, &status);
+  mGLContext->fGetShaderiv(mVertexShader, LOCAL_GL_COMPILE_STATUS, &status);
   if (!status) {
     return false;
   }
 
-  sglWrapper.GetShaderiv(mRGBShader, LOCAL_GL_COMPILE_STATUS, &status);
+  mGLContext->fGetShaderiv(mRGBShader, LOCAL_GL_COMPILE_STATUS, &status);
   if (!status) {
     return false;
   }
 
-  sglWrapper.GetShaderiv(mYUVShader, LOCAL_GL_COMPILE_STATUS, &status);
+  mGLContext->fGetShaderiv(mYUVShader, LOCAL_GL_COMPILE_STATUS, &status);
 
   if (!status) {
     return false;
   }
 
   mRGBLayerProgram = new RGBLayerProgram();
-  if (!mRGBLayerProgram->Initialize(mVertexShader, mRGBShader)) {
+  if (!mRGBLayerProgram->Initialize(mVertexShader, mRGBShader, mGLContext)) {
     return false;
   }
   mYCbCrLayerProgram = new YCbCrLayerProgram();
-  if (!mYCbCrLayerProgram->Initialize(mVertexShader, mYUVShader)) {
+  if (!mYCbCrLayerProgram->Initialize(mVertexShader, mYUVShader, mGLContext)) {
     return false;
   }
 
   mRGBLayerProgram->UpdateLocations();
   mYCbCrLayerProgram->UpdateLocations();
 
-  sglWrapper.GenBuffers(1, &mVBO);
-  sglWrapper.BindBuffer(LOCAL_GL_ARRAY_BUFFER, mVBO);
-  sglWrapper.EnableClientState(LOCAL_GL_VERTEX_ARRAY);
-  sglWrapper.EnableVertexAttribArray(VERTEX_ATTRIB_LOCATION);
+  mGLContext->fGenBuffers(1, &mVBO);
+  mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mVBO);
+  mGLContext->fEnableClientState(LOCAL_GL_VERTEX_ARRAY);
+  mGLContext->fEnableVertexAttribArray(VERTEX_ATTRIB_LOCATION);
 
   GLfloat vertices[] = { 0, 0, 1.0f, 0, 0, 1.0f, 1.0f, 1.0f };
-  sglWrapper.BufferData(LOCAL_GL_ARRAY_BUFFER, sizeof(vertices), vertices, LOCAL_GL_STATIC_DRAW);
+  mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER, sizeof(vertices), vertices, LOCAL_GL_STATIC_DRAW);
 
   mRGBLayerProgram->Activate();
-  sglWrapper.VertexAttribPointer(VERTEX_ATTRIB_LOCATION,
+  mGLContext->fVertexAttribPointer(VERTEX_ATTRIB_LOCATION,
                         2,
                         LOCAL_GL_FLOAT,
                         LOCAL_GL_FALSE,
                         0,
                         0);
   mYCbCrLayerProgram->Activate();
-  sglWrapper.VertexAttribPointer(VERTEX_ATTRIB_LOCATION,
+  mGLContext->fVertexAttribPointer(VERTEX_ATTRIB_LOCATION,
                         2,
                         LOCAL_GL_FLOAT,
                         LOCAL_GL_FALSE,
@@ -182,13 +173,13 @@ LayerManagerOGL::Initialize()
     msg +=
       NS_LITERAL_STRING("OpenGL LayerManager Initialized Succesfully.\nVersion: ");
     msg += NS_ConvertUTF8toUTF16(
-      nsDependentCString((const char*)sglWrapper.GetString(LOCAL_GL_VERSION)));
+      nsDependentCString((const char*)mGLContext->fGetString(LOCAL_GL_VERSION)));
     msg += NS_LITERAL_STRING("\nVendor: ");
     msg += NS_ConvertUTF8toUTF16(
-      nsDependentCString((const char*)sglWrapper.GetString(LOCAL_GL_VENDOR)));
+      nsDependentCString((const char*)mGLContext->fGetString(LOCAL_GL_VENDOR)));
     msg += NS_LITERAL_STRING("\nRenderer: ");
     msg += NS_ConvertUTF8toUTF16(
-      nsDependentCString((const char*)sglWrapper.GetString(LOCAL_GL_RENDERER)));
+      nsDependentCString((const char*)mGLContext->fGetString(LOCAL_GL_RENDERER)));
     console->LogStringMessage(msg.get());
   }
 
@@ -262,19 +253,16 @@ void
 LayerManagerOGL::SetClippingEnabled(PRBool aEnabled)
 {
   if (aEnabled) {
-    sglWrapper.Enable(LOCAL_GL_SCISSOR_TEST);
+    mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
   } else {
-    sglWrapper.Disable(LOCAL_GL_SCISSOR_TEST);
+    mGLContext->fDisable(LOCAL_GL_SCISSOR_TEST);
   }
 }
 
 void
 LayerManagerOGL::MakeCurrent()
 {
-#ifdef XP_WIN
-  BOOL succeeded = sglWrapper.wMakeCurrent(mDC, mContext);
-  NS_ASSERTION(succeeded, "Failed to make GL context current!");
-#endif
+    mGLContext->MakeCurrent();
 }
 
 void
@@ -288,10 +276,10 @@ LayerManagerOGL::Render()
   MakeCurrent();
   SetupBackBuffer();
 
-  sglWrapper.BindFramebufferEXT(LOCAL_GL_FRAMEBUFFER_EXT, mFrameBuffer);
-  sglWrapper.BlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA, LOCAL_GL_ONE, LOCAL_GL_ONE);
-  sglWrapper.ClearColor(0.0, 0.0, 0.0, 0.0);
-  sglWrapper.Clear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
+  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mFrameBuffer);
+  mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA, LOCAL_GL_ONE, LOCAL_GL_ONE);
+  mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
+  mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 
   SetupPipeline();
   SetClippingEnabled(PR_FALSE);
@@ -299,9 +287,9 @@ LayerManagerOGL::Render()
   if (mRootLayer) {
     const nsIntRect *clipRect = mRootLayer->GetLayer()->GetClipRect();
     if (clipRect) {
-      sglWrapper.Scissor(clipRect->x, clipRect->y, clipRect->width, clipRect->height);
+      mGLContext->fScissor(clipRect->x, clipRect->y, clipRect->width, clipRect->height);
     } else {
-      sglWrapper.Scissor(0, 0, width, height);
+      mGLContext->fScissor(0, 0, width, height);
     }
 
     mRootLayer->RenderLayer(mFrameBuffer);
@@ -315,18 +303,18 @@ LayerManagerOGL::Render()
      * shaders. We're fine with just calculating the viewport coordinates
      * in software. And nothing special is required for the texture sampling.
      */
-    sglWrapper.BindFramebufferEXT(LOCAL_GL_FRAMEBUFFER_EXT, 0);
-    sglWrapper.UseProgram(0);
-    sglWrapper.DisableVertexAttribArray(VERTEX_ATTRIB_LOCATION);
-    sglWrapper.BindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
-    sglWrapper.EnableClientState(LOCAL_GL_VERTEX_ARRAY);
-    sglWrapper.EnableClientState(LOCAL_GL_TEXTURE_COORD_ARRAY);
-    sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mBackBuffer);
+    mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+    mGLContext->fUseProgram(0);
+    mGLContext->fDisableVertexAttribArray(VERTEX_ATTRIB_LOCATION);
+    mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+    mGLContext->fEnableClientState(LOCAL_GL_VERTEX_ARRAY);
+    mGLContext->fEnableClientState(LOCAL_GL_TEXTURE_COORD_ARRAY);
+    mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mBackBuffer);
 
     const nsIntRect *r;
     for (nsIntRegionRectIterator iter(mClippingRegion);
          (r = iter.Next()) != nsnull;) {
-      sglWrapper.BlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ZERO, LOCAL_GL_ONE, LOCAL_GL_ZERO);
+      mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ZERO, LOCAL_GL_ONE, LOCAL_GL_ZERO);
       float left = (GLfloat)r->x / width;
       float right = (GLfloat)r->XMost() / width;
       float top = (GLfloat)r->y / height;
@@ -342,16 +330,16 @@ LayerManagerOGL::Render()
                            -(bottom * 2.0f - 1.0f) };
       float coords[] = { left, top, right, top, left, bottom, right, bottom };
 
-      sglWrapper.VertexPointer(2, LOCAL_GL_FLOAT, 0, vertices);
-      sglWrapper.TexCoordPointer(2, LOCAL_GL_FLOAT, 0, coords);
-      sglWrapper.DrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+      mGLContext->fVertexPointer(2, LOCAL_GL_FLOAT, 0, vertices);
+      mGLContext->fTexCoordPointer(2, LOCAL_GL_FLOAT, 0, coords);
+      mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
     }
-    sglWrapper.BindBuffer(LOCAL_GL_ARRAY_BUFFER, mVBO);
-    sglWrapper.EnableVertexAttribArray(VERTEX_ATTRIB_LOCATION);
-    sglWrapper.DisableClientState(LOCAL_GL_TEXTURE_COORD_ARRAY);
+    mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mVBO);
+    mGLContext->fEnableVertexAttribArray(VERTEX_ATTRIB_LOCATION);
+    mGLContext->fDisableClientState(LOCAL_GL_TEXTURE_COORD_ARRAY);
   }
 
-  sglWrapper.Finish();
+  mGLContext->fFinish();
 }
 
 void
@@ -360,7 +348,7 @@ LayerManagerOGL::SetupPipeline()
   nsIntRect rect;
   mWidget->GetBounds(rect);
 
-  sglWrapper.Viewport(0, 0, rect.width, rect.height);
+  mGLContext->fViewport(0, 0, rect.width, rect.height);
 
   float viewMatrix[4][4];
   /**
@@ -395,17 +383,17 @@ LayerManagerOGL::SetupBackBuffer()
   }
 
   if (!mBackBuffer) {
-    sglWrapper.GenTextures(1, &mBackBuffer);
+    mGLContext->fGenTextures(1, &mBackBuffer);
   }
 
   /**
    * Setup the texture used as the backbuffer.
    */
-  sglWrapper.BindTexture(LOCAL_GL_TEXTURE_2D, mBackBuffer);
-  sglWrapper.TexEnvf(LOCAL_GL_TEXTURE_ENV, LOCAL_GL_TEXTURE_ENV_MODE, LOCAL_GL_MODULATE);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
-  sglWrapper.TexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
-  sglWrapper.TexImage2D(LOCAL_GL_TEXTURE_2D,
+  mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mBackBuffer);
+  mGLContext->fTexEnvf(LOCAL_GL_TEXTURE_ENV, LOCAL_GL_TEXTURE_ENV_MODE, LOCAL_GL_MODULATE);
+  mGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
+  mGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
+  mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
                         0,
                         LOCAL_GL_RGBA,
                         width,
@@ -420,15 +408,15 @@ LayerManagerOGL::SetupBackBuffer()
    * framebuffer.
    */
   if (!mFrameBuffer) {
-    sglWrapper.GenFramebuffersEXT(1, &mFrameBuffer);
+    mGLContext->fGenFramebuffers(1, &mFrameBuffer);
   }
 
-  sglWrapper.BindFramebufferEXT(LOCAL_GL_FRAMEBUFFER_EXT, mFrameBuffer);
-  sglWrapper.FramebufferTexture2DEXT(LOCAL_GL_FRAMEBUFFER_EXT,
-                                     LOCAL_GL_COLOR_ATTACHMENT0_EXT,
-                                     LOCAL_GL_TEXTURE_2D,
-                                     mBackBuffer,
-                                     0);
+  mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mFrameBuffer);
+  mGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                   LOCAL_GL_COLOR_ATTACHMENT0,
+                                   LOCAL_GL_TEXTURE_2D,
+                                   mBackBuffer,
+                                   0);
 
   return PR_TRUE;
 }
@@ -450,19 +438,19 @@ LayerManagerOGL::CopyToTarget()
     new gfxImageSurface(gfxIntSize(width, height),
                         gfxASurface::ImageFormatARGB32);
 
-  sglWrapper.ReadBuffer(LOCAL_GL_COLOR_ATTACHMENT0_EXT);
+  mGLContext->fReadBuffer(LOCAL_GL_COLOR_ATTACHMENT0);
 
   if (imageSurface->Stride() != width * 4) {
     char *tmpData = new char[width * height * 4];
 
-    sglWrapper.ReadPixels(0,
+    mGLContext->fReadPixels(0,
                           0,
                           width,
                           height,
                           LOCAL_GL_BGRA,
                           LOCAL_GL_UNSIGNED_BYTE,
                           tmpData);
-    sglWrapper.Finish();
+    mGLContext->fFinish();
 
     for (int y = 0; y < height; y++) {
       memcpy(imageSurface->Data() + imageSurface->Stride() * y,
@@ -471,14 +459,14 @@ LayerManagerOGL::CopyToTarget()
     }
     delete [] tmpData;
   } else {
-    sglWrapper.ReadPixels(0,
+    mGLContext->fReadPixels(0,
                           0,
                           width,
                           height,
                           LOCAL_GL_BGRA,
                           LOCAL_GL_UNSIGNED_BYTE,
                           imageSurface->Data());
-    sglWrapper.Finish();
+    mGLContext->fFinish();
   }                          
 
   mTarget->SetOperator(gfxContext::OPERATOR_OVER);
@@ -486,8 +474,9 @@ LayerManagerOGL::CopyToTarget()
   mTarget->Paint();
 }
 
-LayerOGL::LayerOGL()
-  : mNextSibling(NULL)
+LayerOGL::LayerOGL(LayerManagerOGL *aManager)
+  : mOGLManager(aManager)
+  , mNextSibling(NULL)
 {
 }
 
@@ -507,28 +496,33 @@ LayerOGL::SetNextSibling(LayerOGL *aNextSibling)
  * LayerProgram Helpers
  */
 LayerProgram::LayerProgram()
-  : mProgram(0)
+  : mGLContext(NULL)
+  , mProgram(0)
 {
 }
 
 LayerProgram::~LayerProgram()
 {
-  sglWrapper.DeleteProgram(mProgram);
+  mGLContext->fDeleteProgram(mProgram);
 }
 
 PRBool
-LayerProgram::Initialize(GLuint aVertexShader, GLuint aFragmentShader)
+LayerProgram::Initialize(GLuint aVertexShader,
+                         GLuint aFragmentShader,
+                         mozilla::gl::GLContext *aContext)
 {
-  mProgram = sglWrapper.CreateProgram();
-  sglWrapper.AttachShader(mProgram, aVertexShader);
-  sglWrapper.AttachShader(mProgram, aFragmentShader);
+  mGLContext = aContext;
 
-  sglWrapper.BindAttribLocation(mProgram, VERTEX_ATTRIB_LOCATION, "aVertex");
+  mProgram = mGLContext->fCreateProgram();
+  mGLContext->fAttachShader(mProgram, aVertexShader);
+  mGLContext->fAttachShader(mProgram, aFragmentShader);
+
+  mGLContext->fBindAttribLocation(mProgram, VERTEX_ATTRIB_LOCATION, "aVertex");
   
-  sglWrapper.LinkProgram(mProgram);
+  mGLContext->fLinkProgram(mProgram);
 
   GLint status;
-  sglWrapper.GetProgramiv(mProgram, LOCAL_GL_LINK_STATUS, &status);
+  mGLContext->fGetProgramiv(mProgram, LOCAL_GL_LINK_STATUS, &status);
 
   if (!status) {
     return false;
@@ -539,37 +533,37 @@ LayerProgram::Initialize(GLuint aVertexShader, GLuint aFragmentShader)
 void
 LayerProgram::Activate()
 {
-  sglWrapper.UseProgram(mProgram);
+  mGLContext->fUseProgram(mProgram);
 }
 
 void
 LayerProgram::UpdateLocations()
 {
-  mMatrixProjLocation = sglWrapper.GetUniformLocation(mProgram, "uMatrixProj");
+  mMatrixProjLocation = mGLContext->fGetUniformLocation(mProgram, "uMatrixProj");
   mLayerQuadTransformLocation =
-    sglWrapper.GetUniformLocation(mProgram, "uLayerQuadTransform");
-  mLayerTransformLocation = sglWrapper.GetUniformLocation(mProgram, "uLayerTransform");
+    mGLContext->fGetUniformLocation(mProgram, "uLayerQuadTransform");
+  mLayerTransformLocation = mGLContext->fGetUniformLocation(mProgram, "uLayerTransform");
   mRenderTargetOffsetLocation =
-    sglWrapper.GetUniformLocation(mProgram, "uRenderTargetOffset");
-  mLayerOpacityLocation = sglWrapper.GetUniformLocation(mProgram, "uLayerOpacity");
+    mGLContext->fGetUniformLocation(mProgram, "uRenderTargetOffset");
+  mLayerOpacityLocation = mGLContext->fGetUniformLocation(mProgram, "uLayerOpacity");
 }
 
 void
 LayerProgram::SetMatrixUniform(GLint aLocation, const GLfloat *aValue)
 {
-  sglWrapper.UniformMatrix4fv(aLocation, 1, false, aValue);
+  mGLContext->fUniformMatrix4fv(aLocation, 1, false, aValue);
 }
 
 void
 LayerProgram::SetInt(GLint aLocation, GLint aValue)
 {
-  sglWrapper.Uniform1i(aLocation, aValue);
+  mGLContext->fUniform1i(aLocation, aValue);
 }
 
 void
 LayerProgram::SetLayerOpacity(GLfloat aValue)
 {
-  sglWrapper.Uniform1f(mLayerOpacityLocation, aValue);
+  mGLContext->fUniform1f(mLayerOpacityLocation, aValue);
 }
 
 void
@@ -592,11 +586,11 @@ void
 LayerProgram::Apply()
 {
   if (!mRenderTargetOffsetStack.Length()) {
-    sglWrapper.Uniform4f(mRenderTargetOffsetLocation, 0, 0, 0, 0);
+    mGLContext->fUniform4f(mRenderTargetOffsetLocation, 0, 0, 0, 0);
   } else {
     GLvec2 vector =
       mRenderTargetOffsetStack[mRenderTargetOffsetStack.Length() - 1];
-    sglWrapper.Uniform4f(mRenderTargetOffsetLocation, vector.mX, vector.mY, 0, 0);
+    mGLContext->fUniform4f(mRenderTargetOffsetLocation, vector.mX, vector.mY, 0, 0);
   }
 }
 
@@ -605,7 +599,7 @@ RGBLayerProgram::UpdateLocations()
 {
   LayerProgram::UpdateLocations();
 
-  mLayerTextureLocation = sglWrapper.GetUniformLocation(mProgram, "uLayerTexture");
+  mLayerTextureLocation = mGLContext->fGetUniformLocation(mProgram, "uLayerTexture");
 }
 
 void
@@ -613,9 +607,9 @@ YCbCrLayerProgram::UpdateLocations()
 {
   LayerProgram::UpdateLocations();
 
-  mYTextureLocation = sglWrapper.GetUniformLocation(mProgram, "uYTexture");
-  mCbTextureLocation = sglWrapper.GetUniformLocation(mProgram, "uCbTexture");
-  mCrTextureLocation = sglWrapper.GetUniformLocation(mProgram, "uCrTexture");
+  mYTextureLocation = mGLContext->fGetUniformLocation(mProgram, "uYTexture");
+  mCbTextureLocation = mGLContext->fGetUniformLocation(mProgram, "uCbTexture");
+  mCrTextureLocation = mGLContext->fGetUniformLocation(mProgram, "uCrTexture");
 }
 
 } /* layers */

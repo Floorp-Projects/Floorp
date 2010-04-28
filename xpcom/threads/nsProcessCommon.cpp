@@ -284,7 +284,8 @@ void PR_CALLBACK nsProcess::Monitor(void *arg)
         process->ProcessComplete();
     }
     else {
-        nsCOMPtr<nsIRunnable> event = new nsRunnableMethod<nsProcess>(process, &nsProcess::ProcessComplete);
+        nsCOMPtr<nsIRunnable> event =
+            NS_NewRunnableMethod(process, &nsProcess::ProcessComplete);
         NS_DispatchToMainThread(event);
     }
 }

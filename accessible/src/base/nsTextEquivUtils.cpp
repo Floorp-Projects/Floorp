@@ -39,7 +39,9 @@
 
 #include "nsTextEquivUtils.h"
 
+#include "nsAccessibilityService.h"
 #include "nsAccessible.h"
+#include "nsAccUtils.h"
 
 #include "nsIDOMXULLabeledControlEl.h"
 
@@ -334,7 +336,7 @@ nsTextEquivUtils::AppendFromValue(nsIAccessible *aAccessible,
       NS_OK : NS_OK_NO_NAME_CLAUSE_HANDLED;
   }
 
-  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryAccessible(aAccessible);
+  nsRefPtr<nsAccessible> acc = do_QueryObject(aAccessible);
   nsCOMPtr<nsIDOMNode> node;
   acc->GetDOMNode(getter_AddRefs(node));
   NS_ENSURE_STATE(node);
