@@ -236,6 +236,7 @@ DOMCI_CLASS(SVGAltGlyphElement)
 DOMCI_CLASS(SVGAnimateElement)
 DOMCI_CLASS(SVGAnimateTransformElement)
 DOMCI_CLASS(SVGAnimateMotionElement)
+DOMCI_CLASS(SVGMpathElement)
 DOMCI_CLASS(SVGSetElement)
 #endif // MOZ_SMIL
 DOMCI_CLASS(SVGCircleElement)

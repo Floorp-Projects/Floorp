@@ -38,48 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGAnimationElement.h"
-#include "nsIDOMSVGAnimateMotionElement.h"
-#include "nsSVGEnum.h"
-#include "SVGMotionSMILAnimationFunction.h"
-
-#include "nsCOMArray.h"
-#include "nsIDOMSVGPathSeg.h"
-#include "nsSVGPathSeg.h"
-#include "nsSVGPathDataParser.h"
-
-
-typedef nsSVGAnimationElement nsSVGAnimateMotionElementBase;
-
-class nsSVGAnimateMotionElement : public nsSVGAnimateMotionElementBase,
-                                  public nsIDOMSVGAnimateMotionElement
-{
-protected:
-  friend nsresult NS_NewSVGAnimateMotionElement(nsIContent **aResult,
-                                                   nsINodeInfo *aNodeInfo);
-  nsSVGAnimateMotionElement(nsINodeInfo* aNodeInfo);
-
-  mozilla::SVGMotionSMILAnimationFunction mAnimationFunction;
-
-public:
-  // interfaces:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGANIMATEMOTIONELEMENT
-
-  NS_FORWARD_NSIDOMNODE(nsSVGAnimateMotionElementBase::)
-  NS_FORWARD_NSIDOMELEMENT(nsSVGAnimateMotionElementBase::)
-  NS_FORWARD_NSIDOMSVGELEMENT(nsSVGAnimateMotionElementBase::)
-  NS_FORWARD_NSIDOMSVGANIMATIONELEMENT(nsSVGAnimateMotionElementBase::)
-
-  // nsIDOMNode specializations
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  // nsISMILAnimationElement
-  virtual nsSMILAnimationFunction& AnimationFunction();
-  virtual nsIAtom* GetTargetAttributeName() const;
-  virtual nsSMILTargetAttrType GetTargetAttributeType() const;
-
-};
+#include "nsSVGAnimateMotionElement.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(AnimateMotion)
 
