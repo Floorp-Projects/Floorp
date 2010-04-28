@@ -21,7 +21,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com>
  *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,29 +37,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef mozilla_dom_indexeddb_asyncdatabaseconnection_h__
+#define mozilla_dom_indexeddb_asyncdatabaseconnection_h__
 
-interface nsIDOMEventListener;
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+
+class nsIDOMEventTarget;
+
+BEGIN_INDEXEDDB_NAMESPACE
 
 /**
- * IDBReqeust interface.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
- * information.
+ * This is mostly a fake backend until we have a real one
  */
-[scriptable, uuid(2cff021d-e80e-48a7-bb45-00172df02c1c)]
-interface nsIIDBRequest : nsISupports
+
+class AsyncDatabaseConnection
 {
-  void
-  abort();
+public:
+  static AsyncDatabaseConnection*
+  OpenConnection(const nsAString& aName,
+                 const nsAString& aDescription,
+                 PRBool aReadOnly);
+  ~AsyncDatabaseConnection();
 
-  const unsigned short INITIAL = 0;
-  const unsigned short LOADING = 1;
-  const unsigned short DONE = 2;
-  readonly attribute unsigned short readyState;
+  nsresult
+  CreateObjectStore(const nsAString& aName,
+                    const nsAString& aKeyPath,
+                    PRBool aAutoIncrement,
+                    nsIDOMEventTarget* aTarget);
 
-  attribute nsIDOMEventListener onsuccess;
+  nsresult
+  OpenObjectStore(const nsAString& aName,
+                  PRUint16 aMode,
+                  nsIDOMEventTarget* aTarget);
 
-  attribute nsIDOMEventListener onerror;
+private:
+  AsyncDatabaseConnection();
 
-  readonly attribute nsISupports source;
+  nsString mName;
+  nsString mDescription;
+  PRBool mReadOnly;
 };
+
+END_INDEXEDDB_NAMESPACE
+
+#endif // mozilla_dom_indexeddb_asyncdatabaseconnection_h__

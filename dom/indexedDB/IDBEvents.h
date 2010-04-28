@@ -21,7 +21,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com>
  *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,29 +37,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef mozilla_dom_indexeddb_idbevents_h__
+#define mozilla_dom_indexeddb_idbevents_h__
 
-interface nsIDOMEventListener;
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-/**
- * IDBReqeust interface.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
- * information.
- */
-[scriptable, uuid(2cff021d-e80e-48a7-bb45-00172df02c1c)]
-interface nsIIDBRequest : nsISupports
+#include "nsIIDBDatabaseError.h"
+#include "nsIIDBErrorEvent.h"
+#include "nsIIDBSuccessEvent.h"
+#include "nsIVariant.h"
+
+#include "nsDOMEvent.h"
+
+#define SUCCESS_EVT_STR "success"
+#define ERROR_EVT_STR "error"
+
+BEGIN_INDEXEDDB_NAMESPACE
+
+class IDBErrorEvent : public nsDOMEvent,
+                      public nsIIDBErrorEvent
 {
-  void
-  abort();
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIIDBERROREVENT
+  NS_FORWARD_TO_NSDOMEVENT
 
-  const unsigned short INITIAL = 0;
-  const unsigned short LOADING = 1;
-  const unsigned short DONE = 2;
-  readonly attribute unsigned short readyState;
+  static already_AddRefed<nsIDOMEvent> Create(PRUint16 aCode);
 
-  attribute nsIDOMEventListener onsuccess;
+protected:
+  IDBErrorEvent() : nsDOMEvent(nsnull, nsnull) { }
 
-  attribute nsIDOMEventListener onerror;
+  nsresult Init();
 
-  readonly attribute nsISupports source;
+  nsCOMPtr<nsIIDBDatabaseError> mError;
 };
+
+class IDBSuccessEvent : public nsDOMEvent,
+                        public nsIIDBSuccessEvent
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIIDBSUCCESSEVENT
+  NS_FORWARD_TO_NSDOMEVENT
+
+  static already_AddRefed<nsIDOMEvent> Create(nsIVariant* aResult);
+  static already_AddRefed<nsIVariant> CreateVariant();
+
+protected:
+  IDBSuccessEvent() : nsDOMEvent(nsnull, nsnull) { }
+
+  nsresult Init();
+
+  nsCOMPtr<nsIVariant> mResult;
+};
+
+END_INDEXEDDB_NAMESPACE
+
+#endif // mozilla_dom_indexeddb_idbevents_h__

@@ -40,6 +40,8 @@
 #include "nsIIDBDatabase.idl"
 
 interface nsIDOMDOMStringList;
+interface nsIIDBIndexRequest;
+interface nsIIDBObjectStoreRequest;
 interface nsIIDBRequest;
 
 /**
@@ -55,9 +57,6 @@ interface nsIIDBDatabaseRequest : nsIIDBDatabase
                     in DOMString keyPath,
                     [optional /* false */] in boolean autoIncrement);
 
-  const unsigned short READ_WRITE = 0;
-  const unsigned short READ_ONLY = 1;
-  const unsigned short SNAPSHOT_READ = 2;
   nsIIDBRequest
   openObjectStore(in DOMString name,
                   [optional /* READ_WRITE */] in unsigned short mode);
