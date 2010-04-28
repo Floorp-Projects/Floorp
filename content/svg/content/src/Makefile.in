@@ -132,6 +132,10 @@ CPPSRCS += nsSVGAnimateElement.cpp \
            nsSVGSetElement.cpp \
            nsSVGTransformSMILType.cpp \
            nsSVGTransformSMILAttr.cpp \
+           SVGMotionSMILType.cpp \
+           SVGMotionSMILAttr.cpp \
+           SVGMotionSMILAnimationFunction.cpp \
+           SVGMotionSMILPathUtils.cpp \
            SVGOrientSMILType.cpp \
            SVGViewBoxSMILType.cpp \
            $(NULL)
