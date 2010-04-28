@@ -83,7 +83,7 @@ let ConsoleView = {
     let self = this;
     this._evalFrame.addEventListener("load", function() { self.loadOrDisplayResult(); }, true);
   },
-  
+
   uninit: function cv_uninit() {
     if (this._console)
       this._console.unregisterListener(this);
@@ -172,7 +172,6 @@ let ConsoleView = {
       row.collapsed = true;
 
     this.appendConsoleRow(row);
-
   },
 
   appendMessage: function cv_appendMessage (aMessage) {
@@ -182,7 +181,7 @@ let ConsoleView = {
 
     let mode = document.getElementById("console-filter").value;
     if (mode != "all" && mode != "message")
-      row.collapsed = false;
+      row.collapsed = true;
 
     this.appendConsoleRow(row);
   },
