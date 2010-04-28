@@ -548,7 +548,7 @@ js_SweepWatchPoints(JSContext *cx)
  * NB: FindWatchPoint must be called with rt->debuggerLock acquired.
  */
 static JSWatchPoint *
-FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id)
+FindWatchPoint(JSRuntime *rt, const JSScope *scope, jsid id)
 {
     JSWatchPoint *wp;
 
@@ -562,7 +562,7 @@ FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id)
 }
 
 JSScopeProperty *
-js_FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id)
+js_FindWatchPoint(JSRuntime *rt, const JSScope *scope, jsid id)
 {
     JSWatchPoint *wp;
     JSScopeProperty *sprop;
