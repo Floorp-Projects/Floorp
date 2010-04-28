@@ -56,7 +56,7 @@
 // Helper function for URI verification
 //
 static nsresult
-CheckLoadURIFromScript(JSContext *cx, const nsACString& uriStr)
+CheckLoadURIFromScript(JSContext *aCx, const nsACString& aUriStr)
 {
   nsresult rv;
   nsCOMPtr<nsIScriptSecurityManager> secman(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
@@ -73,7 +73,7 @@ CheckLoadURIFromScript(JSContext *cx, const nsACString& uriStr)
   // Note that we use a null base URI here, since that's what we use when we
   // actually convert the string into a URI to load.
   nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), uriStr);
+  rv = NS_NewURI(getter_AddRefs(uri), aUriStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // are we allowed to load this one?
@@ -114,10 +114,10 @@ amInstallTrigger::GetJSContext()
 }
 
 already_AddRefed<nsIDOMWindowInternal>
-amInstallTrigger::GetOriginatingWindow(JSContext* cx)
+amInstallTrigger::GetOriginatingWindow(JSContext* aCx)
 {
   nsIScriptGlobalObject *globalObject = nsnull;
-  nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
+  nsIScriptContext *scriptContext = GetScriptContextFromJSContext(aCx);
   if (!scriptContext)
     return nsnull;
 
@@ -162,8 +162,8 @@ amInstallTrigger::Enabled(PRBool *_retval NS_OUTPARAM)
 
 /* boolean install (in nsIVariant args, [optional] in amIInstallCallback callback); */
 NS_IMETHODIMP
-amInstallTrigger::Install(nsIVariant *args,
-                          amIInstallCallback *callback,
+amInstallTrigger::Install(nsIVariant *aArgs,
+                          amIInstallCallback *aCallback,
                           PRBool *_retval NS_OUTPARAM)
 {
   JSContext *cx = GetJSContext();
@@ -171,7 +171,7 @@ amInstallTrigger::Install(nsIVariant *args,
   nsCOMPtr<nsIURI> referer = GetOriginatingURI(window);
 
   jsval params;
-  nsresult rv = args->GetAsJSVal(&params);
+  nsresult rv = aArgs->GetAsJSVal(&params);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!JSVAL_IS_OBJECT(params) || !JSVAL_TO_OBJECT(params))
@@ -287,7 +287,7 @@ amInstallTrigger::Install(nsIVariant *args,
   rv = mManager->InstallAddonsFromWebpage(NS_LITERAL_STRING("application/x-xpinstall"),
                                           window, referer, uris.Elements(),
                                           hashes.Elements(), names.Elements(),
-                                          icons.Elements(), callback, count,
+                                          icons.Elements(), aCallback, count,
                                           _retval);
 
   for (PRUint32 i = 0; i < uris.Length(); i++) {
@@ -301,18 +301,18 @@ amInstallTrigger::Install(nsIVariant *args,
 
 /* boolean installChrome (in PRUint32 type, in AString url, in AString skin); */
 NS_IMETHODIMP
-amInstallTrigger::InstallChrome(PRUint32 type,
-                                const nsAString & url,
-                                const nsAString & skin,
+amInstallTrigger::InstallChrome(PRUint32 aType,
+                                const nsAString & aUrl,
+                                const nsAString & aSkin,
                                 PRBool *_retval NS_OUTPARAM)
 {
-  return StartSoftwareUpdate(url, 0, _retval);
+  return StartSoftwareUpdate(aUrl, 0, _retval);
 }
 
 /* boolean startSoftwareUpdate (in AString url, [optional] in PRInt32 flags); */
 NS_IMETHODIMP
-amInstallTrigger::StartSoftwareUpdate(const nsAString & url,
-                                      PRInt32 flags,
+amInstallTrigger::StartSoftwareUpdate(const nsAString & aUrl,
+                                      PRInt32 aFlags,
                                       PRBool *_retval NS_OUTPARAM)
 {
   nsresult rv;
@@ -326,7 +326,7 @@ amInstallTrigger::StartSoftwareUpdate(const nsAString & url,
   nsTArray<const PRUnichar*> icons;
   nsTArray<const PRUnichar*> hashes;
 
-  nsCString tmpURI = NS_ConvertUTF16toUTF8(url);
+  nsCString tmpURI = NS_ConvertUTF16toUTF8(aUrl);
   // Get relative URL to load
   if (referer) {
     rv = referer->Resolve(tmpURI, tmpURI);
@@ -357,9 +357,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(amInstallTrigger)
 static NS_METHOD
 RegisterInstallTrigger(nsIComponentManager *aCompMgr,
                        nsIFile *aPath,
-                       const char *registryLocation,
-                       const char *componentType,
-                       const nsModuleComponentInfo *info)
+                       const char *aRegistryLocation,
+                       const char *aComponentType,
+                       const nsModuleComponentInfo *aInfo)
 {
   nsresult rv = NS_OK;
 
