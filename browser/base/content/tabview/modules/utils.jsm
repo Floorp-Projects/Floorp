@@ -420,4 +420,9 @@ var Utils = {
 
 window.Utils = Utils;
 
+window.Math.tanh = function tanh(x){
+  var e = Math.exp(x);
+  return (e - 1/e) / (e + 1/e); 
+}
+
 })();
