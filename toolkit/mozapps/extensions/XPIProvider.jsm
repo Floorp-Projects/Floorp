@@ -1501,16 +1501,16 @@ var XPIProvider = {
    *          An icon URL for the install
    * @param   version
    *          A version for the install
-   * @param   loadgroup
-   *          A loadgroup to associate requests with
+   * @param   loadGroup
+   *          An nsILoadGroup to associate requests with
    * @param   callback
    *          A callback to pass the AddonInstall to
    */
   getInstallForURL: function XPI_getInstallForURL(url, hash, name, iconURL,
-                                                  version, loadgroup, callback) {
+                                                  version, loadGroup, callback) {
     AddonInstall.createDownload(function(install) {
       callback(install.wrapper);
-    }, url, hash, name, iconURL, version, loadgroup);
+    }, url, hash, name, iconURL, version, loadGroup);
   },
 
   /**
@@ -3077,17 +3077,17 @@ var XPIDatabase = {
  *          An optional URL of release notes for the add-on
  * @param   existingAddon
  *          The add-on this install will update if known
- * @param   loadgroup
+ * @param   loadGroup
  *          The nsILoadGroup to associate any requests with
  * @throws  if the url is the url of a local file and the hash does not match
  *          or the add-on does not contain an valid install manifest
  */
 function AddonInstall(callback, installLocation, url, hash, name, type, iconURL,
-                      version, infoURL, existingAddon, loadgroup) {
+                      version, infoURL, existingAddon, loadGroup) {
   this.wrapper = new AddonInstallWrapper(this);
   this.installLocation = installLocation;
   this.sourceURL = url;
-  this.loadgroup = loadgroup;
+  this.loadGroup = loadGroup;
   this.listeners = [];
   this.existingAddon = existingAddon;
 
@@ -3166,7 +3166,7 @@ AddonInstall.prototype = {
   stream: null,
   crypto: null,
   hash: null,
-  loadgroup: null,
+  loadGroup: null,
   listeners: null,
 
   name: null,
@@ -3380,7 +3380,7 @@ AddonInstall.prototype = {
       listener.init(this, this.stream);
       let channel = NetUtil.newChannel(this.sourceURL);
       if (this.loadGroup)
-        channel.loadGroup = this.loadgroup;
+        channel.loadGroup = this.loadGroup;
 
       // Verify that we don't end up on an insecure channel if we haven't got a
       // hash to verify with (see bug 537761 for discussion)
@@ -3734,15 +3734,15 @@ AddonInstall.createInstall = function(callback, file) {
  *          An icon URL for the add-on
  * @param   version
  *          A version for the add-on
- * @param   loadgroup
+ * @param   loadGroup
  *          An nsILoadGroup to associate the download with
  */
 AddonInstall.createDownload = function(callback, uri, hash, name, iconURL,
-                                       version, loadgroup) {
+                                       version, loadGroup) {
   let location = XPIProvider.installLocationsByName[KEY_APP_PROFILE];
   let url = NetUtil.newURI(uri);
   new AddonInstall(callback, location, url, hash, name, null,
-                   iconURL, version, null, null, loadgroup);
+                   iconURL, version, null, null, loadGroup);
 };
 
 /**
