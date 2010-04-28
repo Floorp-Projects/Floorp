@@ -399,8 +399,9 @@ TileManager.prototype = {
       if (drawMissing && tile.isDirty()) {
         return false;
       } else if (!tile.isDirty()) {
+        // We expand the rect to work around a gfx issue (bug 556046)
         ctx.drawImage(tile._canvas, tile.boundRect.left, tile.boundRect.top,
-                      kTileWidth, kTileHeight);
+                      kTileWidth + 8, kTileHeight + 8);
       }
       
       END_FOREACH_IN_RECT
