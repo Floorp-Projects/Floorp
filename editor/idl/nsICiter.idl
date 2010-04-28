@@ -35,9 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsICiter_h__
-#define nsICiter_h__
-
 #include "nsISupports.idl"
 #include "domstubs.idl"
 %{C++
