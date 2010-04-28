@@ -243,7 +243,6 @@ struct JSScope : public JSObjectMap
     JSScopeProperty *getChildProperty(JSContext *cx, JSScopeProperty *parent,
                                       JSScopeProperty &child);
 
-  private:
     JSScopeProperty *newDictionaryProperty(JSContext *cx, const JSScopeProperty &child,
                                            JSScopeProperty **childp);
 
@@ -328,17 +327,6 @@ struct JSScope : public JSObjectMap
                                  uint32 slot, uintN attrs,
                                  uintN flags, intN shortid);
 
-    /*
-     * Like addProperty, but just return the new (or cached) JSScopeProperty
-     * without adding it. This is for use with js_AddProperty.
-     *
-     * Note that the return value is not necessarily rooted.
-     */
-    JSScopeProperty *prepareAddProperty(JSContext *cx, jsid id,
-                                        JSPropertyOp getter, JSPropertyOp setter,
-                                        uint32 slot, uintN attrs,
-                                        uintN flags, intN shortid) const;
-
     /* Add a data property whose id is not yet in this scope. */
     JSScopeProperty *addDataProperty(JSContext *cx, jsid id, uint32 slot, uintN attrs) {
         JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
@@ -412,16 +400,16 @@ struct JSScope : public JSObjectMap
         GENERIC                 = 0x0080
     };
 
-    bool inDictionaryMode() const   { return flags & DICTIONARY_MODE; }
-    void setDictionaryMode()        { flags |= DICTIONARY_MODE; }
-    void clearDictionaryMode()      { flags &= ~DICTIONARY_MODE; }
+    bool inDictionaryMode()     { return flags & DICTIONARY_MODE; }
+    void setDictionaryMode()    { flags |= DICTIONARY_MODE; }
+    void clearDictionaryMode()  { flags &= ~DICTIONARY_MODE; }
 
     /*
      * Don't define clearSealed, as it can't be done safely because JS_LOCK_OBJ
      * will avoid taking the lock if the object owns its scope and the scope is
      * sealed.
      */
-    bool sealed() const             { return flags & SEALED; }
+    bool sealed()               { return flags & SEALED; }
 
     void seal(JSContext *cx) {
         JS_ASSERT(!isSharedEmpty());
@@ -435,7 +423,7 @@ struct JSScope : public JSObjectMap
      * properties without magic getters and setters), and its scope->shape
      * evolves whenever a function value changes.
      */
-    bool branded() const            { JS_ASSERT(!generic()); return flags & BRANDED; }
+    bool branded()              { JS_ASSERT(!generic()); return flags & BRANDED; }
 
     bool brand(JSContext *cx, uint32 slot, jsval v) {
         JS_ASSERT(!branded());
@@ -446,15 +434,15 @@ struct JSScope : public JSObjectMap
         return true;
     }
 
-    bool generic() const            { return flags & GENERIC; }
-    void setGeneric()               { flags |= GENERIC; }
+    bool generic()              { return flags & GENERIC; }
+    void setGeneric()           { flags |= GENERIC; }
 
-    bool hadIndexedProperties() const { return flags & INDEXED_PROPERTIES; }
-    void setIndexedProperties()     { flags |= INDEXED_PROPERTIES; }
+    bool hadIndexedProperties() { return flags & INDEXED_PROPERTIES; }
+    void setIndexedProperties() { flags |= INDEXED_PROPERTIES; }
 
-    bool hasOwnShape() const        { return flags & OWN_SHAPE; }
+    bool hasOwnShape()          { return flags & OWN_SHAPE; }
 
-    bool hasRegenFlag(uint8 regenFlag) const { return (flags & SHAPE_REGEN) == regenFlag; }
+    bool hasRegenFlag(uint8 regenFlag) { return (flags & SHAPE_REGEN) == regenFlag; }
 
     /*
      * A scope has a method barrier when some compiler-created "null closure"
@@ -496,8 +484,8 @@ struct JSScope : public JSObjectMap
      * METHOD_BARRIER too, and regenerate this scope's shape if the method's
      * value is in fact changing.
      */
-    bool hasMethodBarrier() const   { return flags & METHOD_BARRIER; }
-    void setMethodBarrier()         { flags |= METHOD_BARRIER; }
+    bool hasMethodBarrier()     { return flags & METHOD_BARRIER; }
+    void setMethodBarrier()     { flags |= METHOD_BARRIER; }
 
     /*
      * Test whether this scope may be branded due to method calls, which means
@@ -505,9 +493,10 @@ struct JSScope : public JSObjectMap
      * test whether this scope has method properties, which require a method
      * write barrier.
      */
-    bool brandedOrHasMethodBarrier() const { return flags & (BRANDED | METHOD_BARRIER); }
+    bool
+    brandedOrHasMethodBarrier() { return flags & (BRANDED | METHOD_BARRIER); }
 
-    bool isSharedEmpty() const      { return !object; }
+    bool isSharedEmpty() const  { return !object; }
 
     static bool initRuntimeState(JSContext *cx);
     static void finishRuntimeState(JSContext *cx);
