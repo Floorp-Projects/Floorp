@@ -53,11 +53,13 @@ _BROWSER_FILES = \
   browser_bookmarks_tags.js \
   browser_select.js \
   browser_rect.js \
+  browser_click_content.js \
   browser_FormAssistant.js \
   browser_viewport.js \
   browser_blank_01.html \
   browser_blank_02.html \
   browser_select.html \
+  browser_click_content.html \
   browser_FormAssistant.html \
   browser_viewport_00.html \
   browser_viewport_01.html \
