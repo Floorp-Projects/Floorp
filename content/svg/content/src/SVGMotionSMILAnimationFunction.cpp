@@ -40,6 +40,9 @@
 #include "nsSVGAngle.h"
 #include "SVGMotionSMILType.h"
 #include "SVGMotionSMILPathUtils.h"
+#include "nsSVGPathDataParser.h"
+#include "nsSVGPathSeg.h"
+#include "nsSVGPathElement.h" // for nsSVGPathList
 
 namespace mozilla {
 
@@ -92,6 +95,12 @@ SVGMotionSMILAnimationFunction::SetAttr(nsIAtom* aAttribute,
     if (aParseResult) {
       *aParseResult = rv;
     }
+  } else if (aAttribute == nsGkAtoms::path) {
+    aResult.SetTo(aValue);
+    if (aParseResult) {
+      *aParseResult = NS_OK;
+    }
+    MarkStaleIfAttributeAffectsPath(aAttribute);
   } else if (aAttribute == nsGkAtoms::by ||
              aAttribute == nsGkAtoms::from ||
              aAttribute == nsGkAtoms::to ||
@@ -113,7 +122,8 @@ SVGMotionSMILAnimationFunction::UnsetAttr(nsIAtom* aAttribute)
     UnsetKeyPoints();
   } else if (aAttribute == nsGkAtoms::rotate) {
     UnsetRotate();
-  } else if (aAttribute == nsGkAtoms::by ||
+  } else if (aAttribute == nsGkAtoms::path ||
+             aAttribute == nsGkAtoms::by ||
              aAttribute == nsGkAtoms::from ||
              aAttribute == nsGkAtoms::to ||
              aAttribute == nsGkAtoms::values) {
@@ -144,6 +154,8 @@ void
 SVGMotionSMILAnimationFunction::
   RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem)
 {
+  NS_ABORT_IF_FALSE(!HasAttr(nsGkAtoms::path),
+                    "Should be using |path| attr if we have it");
   NS_ABORT_IF_FALSE(!mPath, "regenerating when we aleady have path");
   NS_ABORT_IF_FALSE(mPathVertices.IsEmpty(),
                     "regenerating when we already have vertices");
@@ -212,6 +224,72 @@ SVGMotionSMILAnimationFunction::
   }
 }
 
+void
+SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr()
+{
+  const nsAString& pathSpec = GetAttr(nsGkAtoms::path)->GetStringValue();
+  mPathSourceType = ePathSourceType_PathAttr;
+
+  // Generate gfxFlattenedPath from |path| attr
+  nsresult rv;
+  nsSVGPathList pathData;
+  nsSVGPathDataParserToInternal pathParser(&pathData);
+  rv = pathParser.Parse(pathSpec);
+  if (NS_FAILED(rv)) {
+    // Parse error.
+    return;
+  }
+  mPath = pathData.GetFlattenedPath(gfxMatrix());
+
+  // Generate list of vertices from |path| attr
+  rv = SetPathVerticesFromPathString(pathSpec);
+
+  if (NS_FAILED(rv)) {
+    // The first parser liked our string, but the second did not. (unexpected,
+    // but possible depending on parser implementations.) Clear path so we
+    // completely (instead of partially) fail.
+    mPath = nsnull;
+    NS_WARNING("nsSVGPathDataParserToInternal successfully parsed path string, but "
+               "nsSVGPathDataParserToDOM did not");
+  }
+}
+
+nsresult
+SVGMotionSMILAnimationFunction::SetPathVerticesFromPathString(const nsAString& aPathSpec)
+{
+  // Parse the string to an array of path segments.
+  nsCOMArray<nsIDOMSVGPathSeg> pathSegments;
+  nsSVGPathDataParserToDOM segmentParser(&pathSegments);
+  nsresult rv = segmentParser.Parse(aPathSpec);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Iterate across the parsed segments to populate our mPathVertices array.
+  PRUint32 numSegments = pathSegments.Count();
+  nsSVGPathSegTraversalState ts;
+  double runningDistTotal = 0.0;
+  for (PRUint32 i = 0; i < numSegments; ++i) {
+    nsSVGPathSeg* segment = static_cast<nsSVGPathSeg*>(pathSegments[i]);
+
+    PRUint16 type = nsIDOMSVGPathSeg::PATHSEG_UNKNOWN;
+    segment->GetPathSegType(&type);
+    if (i == 0 ||
+        (type != nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS &&
+         type != nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL)) {
+
+      // Increment running length total (note that MoveTo's have 0 length)
+      runningDistTotal += segment->GetLength(&ts);
+
+      // Add an entry for the current point.
+      if (!mPathVertices.AppendElement(runningDistTotal)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+  return NS_OK;
+}
+
 // Helper to regenerate our path representation & its list of vertices
 void
 SVGMotionSMILAnimationFunction::
@@ -228,9 +306,10 @@ SVGMotionSMILAnimationFunction::
   // through our list of path-defining attributes, in order of priority.
   // XXXdholbert This is where we should check for mpath, in <mpath> patch.
   // ...else, if no mpath child:
-  // XXXdholbert This is where we should check for path attr, in |path| patch.
-  // ...else {
-  {
+  if (HasAttr(nsGkAtoms::path)) {
+    RebuildPathAndVerticesFromPathAttr();
+    mValueNeedsReparsingEverySample = PR_FALSE;
+  } else {
     // Get path & vertices from basic SMIL attrs: from/by/to/values
 
     RebuildPathAndVerticesFromBasicAttrs(aTargetElement);
