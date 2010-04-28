@@ -57,11 +57,14 @@ namespace ipc {
 const int32 SyncChannel::kNoTimeout = PR_INT32_MIN;
 
 SyncChannel::SyncChannel(SyncListener* aListener)
-  : AsyncChannel(aListener),
-    mPendingReply(0),
-    mProcessingSyncMessage(false),
-    mNextSeqno(0),
-    mTimeoutMs(kNoTimeout)
+  : AsyncChannel(aListener)
+  , mPendingReply(0)
+  , mProcessingSyncMessage(false)
+  , mNextSeqno(0)
+  , mTimeoutMs(kNoTimeout)
+#ifdef OS_WIN
+  , mTopFrame(NULL)
+#endif
 {
     MOZ_COUNT_CTOR(SyncChannel);
 #ifdef OS_WIN
@@ -99,6 +102,10 @@ SyncChannel::Send(Message* msg, Message* reply)
     NS_ABORT_IF_FALSE(!ProcessingSyncMessage(),
                       "violation of sync handler invariant");
     NS_ABORT_IF_FALSE(msg->is_sync(), "can only Send() sync messages here");
+
+#ifdef OS_WIN
+    SyncStackFrame frame(this, false);
+#endif
 
     msg->set_seqno(NextSeqno());
 
