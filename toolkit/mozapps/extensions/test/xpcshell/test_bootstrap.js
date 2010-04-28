@@ -2,6 +2,15 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+const APP_STARTUP                     = 1;
+const APP_SHUTDOWN                    = 2;
+const ADDON_ENABLE                    = 3;
+const ADDON_DISABLE                   = 4;
+const ADDON_INSTALL                   = 5;
+const ADDON_UNINSTALL                 = 6;
+const ADDON_UPGRADE                   = 7;
+const ADDON_DOWNGRADE                 = 8;
+
 // This verifies that bootstrappable add-ons can be used with restarts.
 Components.utils.import("resource://gre/modules/Services.jsm");
 
@@ -10,8 +19,20 @@ Services.prefs.setIntPref("bootstraptest.version", 0);
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
-function getActivatedVersion() {
-  return Services.prefs.getIntPref("bootstraptest.version");
+function getActiveVersion() {
+  return Services.prefs.getIntPref("bootstraptest.active_version");
+}
+
+function getInstalledVersion() {
+  return Services.prefs.getIntPref("bootstraptest.installed_version");
+}
+
+function getStartupReason() {
+  return Services.prefs.getIntPref("bootstraptest.startup_reason");
+}
+
+function getShutdownReason() {
+  return Services.prefs.getIntPref("bootstraptest.shutdown_reason");
 }
 
 function run_test() {
@@ -33,7 +54,7 @@ function run_test_1() {
     ensure_test_completed();
 
     do_check_neq(install, null);
-    do_check_eq(install.type, "bootstrapped");
+    do_check_eq(install.type, "extension");
     do_check_eq(install.version, "1.0");
     do_check_eq(install.name, "Test Bootstrap 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
@@ -62,7 +83,9 @@ function check_test_1() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getActivatedVersion(), 1);
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getStartupReason(), ADDON_INSTALL);
     do_check_true(b1.hasResource("install.rdf"));
     do_check_true(b1.hasResource("bootstrap.js"));
     do_check_false(b1.hasResource("foo.bar"));
@@ -100,7 +123,9 @@ function run_test_2() {
     do_check_false(b1.appDisabled);
     do_check_true(b1.userDisabled);
     do_check_false(b1.isActive);
-    do_check_eq(getActivatedVersion(), 0);
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 0);
+    do_check_eq(getShutdownReason(), ADDON_DISABLE);
     do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
@@ -118,9 +143,13 @@ function run_test_2() {
 // Test that restarting doesn't accidentally re-enable
 function run_test_3() {
   shutdownManager();
-  do_check_eq(getActivatedVersion(), 0);
+  do_check_eq(getInstalledVersion(), 1);
+  do_check_eq(getActiveVersion(), 0);
+  do_check_eq(getShutdownReason(), ADDON_DISABLE);
   startupManager(0, false);
-  do_check_eq(getActivatedVersion(), 0);
+  do_check_eq(getInstalledVersion(), 1);
+  do_check_eq(getActiveVersion(), 0);
+  do_check_eq(getShutdownReason(), ADDON_DISABLE);
   do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
@@ -152,7 +181,9 @@ function run_test_4() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getActivatedVersion(), 1);
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getStartupReason(), ADDON_ENABLE);
     do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
@@ -170,10 +201,14 @@ function run_test_4() {
 // Tests that a restart shuts down and restarts the add-on
 function run_test_5() {
   shutdownManager();
-  do_check_eq(getActivatedVersion(), 0);
+  do_check_eq(getInstalledVersion(), 1);
+  do_check_eq(getActiveVersion(), 0);
+  do_check_eq(getShutdownReason(), APP_SHUTDOWN);
   do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
   startupManager(0, false);
-  do_check_eq(getActivatedVersion(), 1);
+  do_check_eq(getInstalledVersion(), 1);
+  do_check_eq(getActiveVersion(), 1);
+  do_check_eq(getStartupReason(), APP_STARTUP);
   do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
@@ -198,7 +233,7 @@ function run_test_6() {
     ensure_test_completed();
 
     do_check_neq(install, null);
-    do_check_eq(install.type, "bootstrapped");
+    do_check_eq(install.type, "extension");
     do_check_eq(install.version, "2.0");
     do_check_eq(install.name, "Test Bootstrap 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
@@ -223,7 +258,10 @@ function check_test_6() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getActivatedVersion(), 2);
+    do_check_eq(getInstalledVersion(), 2);
+    do_check_eq(getActiveVersion(), 2);
+    do_check_eq(getStartupReason(), ADDON_UPGRADE);
+    do_check_eq(getShutdownReason(), ADDON_UPGRADE);
     do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
     do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
 
@@ -249,7 +287,9 @@ function run_test_7() {
 
 function check_test_7() {
   ensure_test_completed();
-  do_check_eq(getActivatedVersion(), 0);
+  do_check_eq(getInstalledVersion(), 0);
+  do_check_eq(getActiveVersion(), 0);
+  do_check_eq(getShutdownReason(), ADDON_UNINSTALL);
   do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
 
   AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
@@ -291,7 +331,9 @@ function run_test_8() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getActivatedVersion(), 1);
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getStartupReason(), APP_STARTUP);
     do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
     run_test_9();
@@ -311,6 +353,133 @@ function run_test_9() {
     do_check_eq(b1, null);
     do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
-    do_test_finished();
+    run_test_10();
   });
+}
+
+
+// Tests that installing a downgrade sends the right reason
+function run_test_10() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_2"), function(install) {
+    ensure_test_completed();
+
+    do_check_neq(install, null);
+    do_check_eq(install.type, "extension");
+    do_check_eq(install.version, "2.0");
+    do_check_eq(install.name, "Test Bootstrap 1");
+    do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+    do_check_true(install.addon.hasResource("install.rdf"));
+    do_check_true(install.addon.hasResource("bootstrap.js"));
+    do_check_false(install.addon.hasResource("foo.bar"));
+    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
+
+    prepare_test({
+      "bootstrap1@tests.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled"
+      ]
+    }, [
+      "onInstallStarted",
+      "onInstallEnded",
+    ], check_test_10_pt1);
+    install.install();
+  });
+}
+
+function check_test_10_pt1() {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "2.0");
+    do_check_false(b1.appDisabled);
+    do_check_false(b1.userDisabled);
+    do_check_true(b1.isActive);
+    do_check_eq(getInstalledVersion(), 2);
+    do_check_eq(getActiveVersion(), 2);
+    do_check_eq(getStartupReason(), ADDON_INSTALL);
+    do_check_true(b1.hasResource("install.rdf"));
+    do_check_true(b1.hasResource("bootstrap.js"));
+    do_check_false(b1.hasResource("foo.bar"));
+    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
+
+    prepare_test({ }, [
+      "onNewInstall"
+    ]);
+
+    AddonManager.getInstallForFile(do_get_addon("test_bootstrap1_1"), function(install) {
+      ensure_test_completed();
+
+      do_check_neq(install, null);
+      do_check_eq(install.type, "extension");
+      do_check_eq(install.version, "1.0");
+      do_check_eq(install.name, "Test Bootstrap 1");
+      do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
+
+      prepare_test({
+        "bootstrap1@tests.mozilla.org": [
+          ["onInstalling", false],
+          "onInstalled"
+        ]
+      }, [
+        "onInstallStarted",
+        "onInstallEnded",
+      ], check_test_10_pt2);
+      install.install();
+    });
+  });
+}
+
+function check_test_10_pt2() {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "1.0");
+    do_check_false(b1.appDisabled);
+    do_check_false(b1.userDisabled);
+    do_check_true(b1.isActive);
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getStartupReason(), ADDON_DOWNGRADE);
+    do_check_eq(getShutdownReason(), ADDON_DOWNGRADE);
+    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
+
+    run_test_11();
+  });
+}
+
+// Tests that uninstalling a disabled add-on still calls the uninstall method
+function run_test_11() {
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    prepare_test({
+      "bootstrap1@tests.mozilla.org": [
+        ["onDisabling", false],
+        "onDisabled",
+        ["onUninstalling", false],
+        "onUninstalled"
+      ]
+    });
+
+    b1.userDisabled = true;
+
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 0);
+    do_check_eq(getShutdownReason(), ADDON_DISABLE);
+    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+
+    b1.uninstall();
+
+    check_test_11();
+  });
+}
+
+function check_test_11() {
+  ensure_test_completed();
+  do_check_eq(getInstalledVersion(), 0);
+  do_check_eq(getActiveVersion(), 0);
+  do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+
+  do_test_finished();
 }
