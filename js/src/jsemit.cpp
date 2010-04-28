@@ -2134,7 +2134,8 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * If this is a global reference from within a function, leave pn_op as
          * JSOP_NAME, etc. We could emit JSOP_*GVAR ops within function code if
          * only we could depend on the global frame's slots being valid for all
-         * calls to the function.
+         * calls to the function, and if we could equate the atom index in the
+         * function's atom map for every global name with its frame slot.
          */
         if (cg->flags & TCF_IN_FUNCTION)
             return JS_TRUE;
