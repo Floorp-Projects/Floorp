@@ -76,23 +76,9 @@ nsAttrValue::EnumTable nsSMILAnimationFunction::sCalcModeTable[] = {
       {nsnull, 0}
 };
 
-// Bits for attributes that are parsed the same regardless of animated type
-#define BF_ACCUMULATE  0
-#define BF_ADDITIVE    1
-#define BF_CALC_MODE   2
-#define BF_KEY_TIMES   3
-#define BF_KEY_SPLINES 4
-
 // Any negative number should be fine as a sentinel here,
 // because valid distances are non-negative.
 #define COMPUTE_DISTANCE_ERROR (-1)
-
-// Based on GET/SET_BOOLBIT in nsHTMLInputElement.cpp
-#define GET_FLAG(bitfield, field) (((bitfield) & (0x01 << (field))) \
-                                     ? PR_TRUE : PR_FALSE)
-#define SET_FLAG(bitfield, field, b) ((b) \
-                                     ? ((bitfield) |=  (0x01 << (field))) \
-                                     : ((bitfield) &= ~(0x01 << (field))))
 
 //----------------------------------------------------------------------
 // Constructors etc.
@@ -838,20 +824,20 @@ nsSMILAnimationFunction::CheckKeyTimes(PRUint32 aNumValues)
 
   // attribute is ignored for calcMode = paced
   if (GetCalcMode() == CALC_PACED) {
-    SET_FLAG(mErrorFlags, BF_KEY_TIMES, PR_FALSE);
+    SetKeyTimesErrorFlag(PR_FALSE);
     return;
   }
 
   if (mKeyTimes.Length() < 1) {
     // keyTimes isn't set or failed preliminary checks
-    SET_FLAG(mErrorFlags, BF_KEY_TIMES, PR_TRUE);
+    SetKeyTimesErrorFlag(PR_TRUE);
     return;
   }
 
   // no. keyTimes == no. values
   if ((mKeyTimes.Length() != aNumValues && !IsToAnimation()) ||
       (IsToAnimation() && mKeyTimes.Length() != 2)) {
-    SET_FLAG(mErrorFlags, BF_KEY_TIMES, PR_TRUE);
+    SetKeyTimesErrorFlag(PR_TRUE);
     return;
   }
 
@@ -859,7 +845,7 @@ nsSMILAnimationFunction::CheckKeyTimes(PRUint32 aNumValues)
   // do in this case so we allow the keyTime to be either 0 or 1.
   if (mKeyTimes.Length() == 1) {
     double time = mKeyTimes[0];
-    SET_FLAG(mErrorFlags, BF_KEY_TIMES, !(time == 0.0 || time == 1.0));
+    SetKeyTimesErrorFlag(!(time == 0.0 || time == 1.0));
     return;
   }
 
@@ -868,7 +854,7 @@ nsSMILAnimationFunction::CheckKeyTimes(PRUint32 aNumValues)
   // a spline calcMode and keyTimes "0.0; 0.7". So we don't bother checking
   // the end-values here but just allow bad specs.
 
-  SET_FLAG(mErrorFlags, BF_KEY_TIMES, PR_FALSE);
+  SetKeyTimesErrorFlag(PR_FALSE);
 }
 
 void
@@ -876,25 +862,25 @@ nsSMILAnimationFunction::CheckKeySplines(PRUint32 aNumValues)
 {
   // attribute is ignored if calc mode is not spline
   if (GetCalcMode() != CALC_SPLINE) {
-    SET_FLAG(mErrorFlags, BF_KEY_SPLINES, PR_FALSE);
+    SetKeySplinesErrorFlag(PR_FALSE);
     return;
   }
 
   // calc mode is spline but the attribute is not set
   if (!HasAttr(nsGkAtoms::keySplines)) {
-    SET_FLAG(mErrorFlags, BF_KEY_SPLINES, PR_FALSE);
+    SetKeySplinesErrorFlag(PR_FALSE);
     return;
   }
 
   if (mKeySplines.Length() < 1) {
     // keyTimes isn't set or failed preliminary checks
-    SET_FLAG(mErrorFlags, BF_KEY_SPLINES, PR_TRUE);
+    SetKeySplinesErrorFlag(PR_TRUE);
     return;
   }
 
   // ignore splines if there's only one value
   if (aNumValues == 1 && !IsToAnimation()) {
-    SET_FLAG(mErrorFlags, BF_KEY_SPLINES, PR_FALSE);
+    SetKeySplinesErrorFlag(PR_FALSE);
     return;
   }
 
@@ -902,11 +888,11 @@ nsSMILAnimationFunction::CheckKeySplines(PRUint32 aNumValues)
   PRUint32 splineSpecs = mKeySplines.Length();
   if ((splineSpecs != aNumValues - 1 && !IsToAnimation()) ||
       (IsToAnimation() && splineSpecs != 1)) {
-    SET_FLAG(mErrorFlags, BF_KEY_SPLINES, PR_TRUE);
+    SetKeySplinesErrorFlag(PR_TRUE);
     return;
   }
 
-  SET_FLAG(mErrorFlags, BF_KEY_SPLINES, PR_FALSE);
+  SetKeySplinesErrorFlag(PR_FALSE);
 }
 
 //----------------------------------------------------------------------
@@ -952,14 +938,14 @@ nsSMILAnimationFunction::SetAccumulate(const nsAString& aAccumulate,
   mHasChanged = PR_TRUE;
   PRBool parseResult =
     aResult.ParseEnumValue(aAccumulate, sAccumulateTable, PR_TRUE);
-  SET_FLAG(mErrorFlags, BF_ACCUMULATE, !parseResult);
+  SetAccumulateErrorFlag(!parseResult);
   return parseResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void
 nsSMILAnimationFunction::UnsetAccumulate()
 {
-  SET_FLAG(mErrorFlags, BF_ACCUMULATE, PR_FALSE);
+  SetAccumulateErrorFlag(PR_FALSE);
   mHasChanged = PR_TRUE;
 }
 
@@ -970,14 +956,14 @@ nsSMILAnimationFunction::SetAdditive(const nsAString& aAdditive,
   mHasChanged = PR_TRUE;
   PRBool parseResult
     = aResult.ParseEnumValue(aAdditive, sAdditiveTable, PR_TRUE);
-  SET_FLAG(mErrorFlags, BF_ADDITIVE, !parseResult);
+  SetAdditiveErrorFlag(!parseResult);
   return parseResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void
 nsSMILAnimationFunction::UnsetAdditive()
 {
-  SET_FLAG(mErrorFlags, BF_ADDITIVE, PR_FALSE);
+  SetAdditiveErrorFlag(PR_FALSE);
   mHasChanged = PR_TRUE;
 }
 
@@ -988,14 +974,14 @@ nsSMILAnimationFunction::SetCalcMode(const nsAString& aCalcMode,
   mHasChanged = PR_TRUE;
   PRBool parseResult
     = aResult.ParseEnumValue(aCalcMode, sCalcModeTable, PR_TRUE);
-  SET_FLAG(mErrorFlags, BF_CALC_MODE, !parseResult);
+  SetCalcModeErrorFlag(!parseResult);
   return parseResult ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void
 nsSMILAnimationFunction::UnsetCalcMode()
 {
-  SET_FLAG(mErrorFlags, BF_CALC_MODE, PR_FALSE);
+  SetCalcModeErrorFlag(PR_FALSE);
   mHasChanged = PR_TRUE;
 }
 
@@ -1035,7 +1021,7 @@ void
 nsSMILAnimationFunction::UnsetKeySplines()
 {
   mKeySplines.Clear();
-  SET_FLAG(mErrorFlags, BF_KEY_SPLINES, PR_FALSE);
+  SetKeySplinesErrorFlag(PR_FALSE);
   mHasChanged = PR_TRUE;
 }
 
@@ -1063,6 +1049,6 @@ void
 nsSMILAnimationFunction::UnsetKeyTimes()
 {
   mKeyTimes.Clear();
-  SET_FLAG(mErrorFlags, BF_KEY_TIMES, PR_FALSE);
+  SetKeyTimesErrorFlag(PR_FALSE);
   mHasChanged = PR_TRUE;
 }
