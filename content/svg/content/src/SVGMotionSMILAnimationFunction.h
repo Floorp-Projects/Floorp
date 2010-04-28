@@ -88,6 +88,7 @@ protected:
   void     MarkStaleIfAttributeAffectsPath(nsIAtom* aAttribute);
   nsresult SetPathVerticesFromPathString(const nsAString& aPathSpec);
   void     RebuildPathAndVertices(const nsIContent* aContextElem);
+  void     RebuildPathAndVerticesFromPathAttr();
   void     RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem);
   PRBool   GenerateValuesForPathAndPoints(gfxFlattenedPath* aPath,
                                           PRBool aIsKeyPoints,
