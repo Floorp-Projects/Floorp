@@ -107,12 +107,22 @@ const PROP_LOCALE_SINGLE = ["name", "description", "creator", "homepageURL"];
 const PROP_LOCALE_MULTI  = ["developers", "translators", "contributors"];
 const PROP_TARGETAPP     = ["id", "minVersion", "maxVersion"];
 
+const BOOTSTRAP_REASONS = {
+  APP_STARTUP     : 1,
+  APP_SHUTDOWN    : 2,
+  ADDON_ENABLE    : 3,
+  ADDON_DISABLE   : 4,
+  ADDON_INSTALL   : 5,
+  ADDON_UNINSTALL : 6,
+  ADDON_UPGRADE   : 7,
+  ADDON_DOWNGRADE : 8
+};
+
 // Map new string type identifiers to old style nsIUpdateItem types
 const TYPES = {
   extension: 2,
   theme: 4,
-  locale: 8,
-  bootstrapped: 64
+  locale: 8
 };
 
 /**
@@ -392,6 +402,10 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.optionsURL = null;
     addon.aboutURL = null;
   }
+
+  // Only read the bootstrapped property for extensions
+  if (addon.type == "extension")
+    addon.bootstrap = getRDFProperty(ds, root, "bootstrap") == "true";
 
   addon.defaultLocale = readLocale(ds, root, true);
 
@@ -1191,7 +1205,7 @@ var XPIProvider = {
           WARN("Could not uninstall invalid item from locked install location");
         // If this was an active add-on then we must force a restart
         if (aOldAddon.active) {
-          if (aOldAddon.type == "bootstrapped")
+          if (aOldAddon.bootstrap)
             delete XPIProvider.bootstrappedAddons[aOldAddon.id];
           else
             return true;
@@ -1212,8 +1226,8 @@ var XPIProvider = {
         // If the old version was active and wasn't bootstrapped or the new
         // version will be active and isn't bootstrapped then we must force a
         // restart
-        if ((aOldAddon.active && aOldAddon.type != "bootstrapped") ||
-            (newAddon.active && newAddon.type != "bootstrapped")) {
+        if ((aOldAddon.active && !aOldAddon.bootstrap) ||
+            (newAddon.active && !newAddon.bootstrap)) {
           return true;
         }
       }
@@ -1250,7 +1264,7 @@ var XPIProvider = {
 
           // If the add-on is bootstrappable and it should be active then
           // mark it as active and add it to the list to be activated.
-          if (aOldAddon.type == "bootstrapped" && !aOldAddon.appDisabled &&
+          if (aOldAddon.bootstrap && !aOldAddon.appDisabled &&
               !aOldAddon.userDisabled) {
             aOldAddon.active = true;
             XPIDatabase.updateAddonActive(aOldAddon);
@@ -1281,7 +1295,7 @@ var XPIProvider = {
           // If this is a visible add-on and it isn't userDisabled then we
           // may need a restart or to update the bootstrap list.
           if (aOldAddon.visible && !aOldAddon.userDisabled) {
-            if (aOldAddon.type == "bootstrapped") {
+            if (aOldAddon.bootstrap) {
               // When visible and not userDisabled, active is the opposite of
               // appDisabled.
               aOldAddon.active = !aOldAddon.appDisabled;
@@ -1330,10 +1344,10 @@ var XPIProvider = {
 
         // If this was an active add-on and bootstrapped we must remove it from
         // the bootstrapped list, otherwise we need to force a restart.
-        if (aOldAddon.type != "bootstrapped")
+        if (!aOldAddon.bootstrap)
           return true;
 
-        delete XPIProvider.bootstrappedAddons[aOldAddon.id];
+        XPIProvider.unloadBootstrapScope(aOldAddon.id);
       }
 
       return false;
@@ -1398,16 +1412,17 @@ var XPIProvider = {
       // Update the database.
       XPIDatabase.addAddonMetadata(newAddon, aAddonState.descriptor);
 
-      // Visible bootstrapped add-ons need to be added to the bootstrap list.
+      // Visible bootstrapped add-ons need to have their install method called
       if (newAddon.visible) {
         visibleAddons[newAddon.id] = newAddon;
-        if (newAddon.type != "bootstrapped")
+        if (!newAddon.bootstrap)
           return true;
 
-        XPIProvider.bootstrappedAddons[newAddon.id] = {
-          version: newAddon.version,
-          descriptor: aAddonState.descriptor
-        };
+        let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+        dir.persistentDescriptor = aAddonState.descriptor;
+        XPIProvider.callBootstrapMethod(newAddon.id, newAddon.version, dir,
+                                        "install",
+                                        BOOTSTRAP_REASONS.ADDON_INSTALL);
       }
 
       return false;
@@ -1566,12 +1581,11 @@ var XPIProvider = {
       return true;
     }
 
-    let bootstrappedAddons = this.bootstrappedAddons;
-    this.bootstrappedAddons = {};
-    for (let id in bootstrappedAddons) {
+    for (let id in this.bootstrappedAddons) {
       let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      dir.persistentDescriptor = bootstrappedAddons[id].descriptor;
-      this.activateAddon(id, bootstrappedAddons[id].version, dir, true, false);
+      dir.persistentDescriptor = this.bootstrappedAddons[id].descriptor;
+      this.callBootstrapMethod(id, this.bootstrappedAddons[id].version, dir,
+                               "startup", BOOTSTRAP_REASONS.APP_STARTUP);
     }
 
     // Let these shutdown a little earlier when they still have access to most
@@ -1580,8 +1594,13 @@ var XPIProvider = {
       observe: function(aSubject, aTopic, aData) {
         Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
                                    JSON.stringify(XPIProvider.bootstrappedAddons));
-        for (let id in XPIProvider.bootstrappedAddons)
-          XPIProvider.deactivateAddon(id, true, false);
+        for (let id in XPIProvider.bootstrappedAddons) {
+          let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+          dir.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
+          XPIProvider.callBootstrapMethod(id, XPIProvider.bootstrappedAddons[id].version,
+                                          dir, "shutdown",
+                                          BOOTSTRAP_REASONS.APP_SHUTDOWN);
+        }
         Services.obs.removeObserver(this, "quit-application-granted");
       }
     }, "quit-application-granted", false);
@@ -1872,7 +1891,7 @@ var XPIProvider = {
       return aAddon.internalName !=
              Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
 
-    return aAddon.type != "bootstrapped";
+    return !aAddon.bootstrap;
   },
 
   /**
@@ -1891,7 +1910,7 @@ var XPIProvider = {
       return this.selectedSkin !=
              Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
 
-    return aAddon.type != "bootstrapped";
+    return !aAddon.bootstrap;
   },
 
   /**
@@ -1907,7 +1926,7 @@ var XPIProvider = {
       return aAddon.internalName ==
              Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
 
-    return aAddon.type != "bootstrapped";
+    return !aAddon.bootstrap;
   },
 
   /**
@@ -1923,85 +1942,53 @@ var XPIProvider = {
       return aAddon.internalName ==
              Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
 
-    return aAddon.type != "bootstrapped";
+    return !aAddon.bootstrap;
   },
 
   /**
-   * Calls a method in a bootstrap.js loaded scope logging any exceptions thrown.
+   * Loads a bootstrapped add-on's bootstrap.js into a sandbox and the reason
+   * values as constants in the scope. This will also add information about the
+   * add-on to the bootstrappedAddons dictionary and notify the crash reporter
+   * that new add-ons have been loaded.
    *
    * @param  aId
-   *         The ID of the add-on being bootstrapped
-   * @param  aScope
-   *         The loaded JS scope to call into
-   * @param  aMethods
-   *         An array of methods. The first method in the array that exists in
-   *         the scope will be called
-   */
-  callBootstrapMethod: function XPI_callBootstrapMethod(aId, aScope, aMethods) {
-    for (let i = 0; i < aMethods.length; i++) {
-      if (aMethods[i] in aScope) {
-        LOG("Calling bootstrap method " + aMethods[i] + " on " + aId);
-
-        try {
-          aScope[aMethods[i]](aId);
-        }
-        catch (e) {
-          WARN("Exception running bootstrap method " + aMethods[i] + " on " +
-               aId + ": " + e);
-        }
-        return;
-      }
-    }
-  },
-
-  /**
-   * Activates a bootstrapped add-on by loading its JS scope and calling the
-   * appropriate method on it. Adds the add-on and its scope to the
-   * bootstrapScopes and bootstrappedAddons dictionaries.
-   *
-   * @param  aId
-   *         The ID of the add-on being activated
-   * @param  aVersion
-   *         The version of the add-on being activated
+   *         The add-on's ID
    * @param  aDir
-   *         The directory containing the add-on
-   * @param  aStartup
-   *         true if the add-on is being activated during startup
-   * @param  aInstall
-   *         true if the add-on is being activated during installation
+   *         The nsILocalFile for the directory containing the add-on
+   * @param  aVersion
+   *         The add-on's version
+   * @return a JavaScript scope
    */
-  activateAddon: function XPI_activateAddon(aId, aVersion, aDir, aStartup, aInstall) {
-    let methods = ["enable"];
-    if (aStartup)
-      methods.unshift("startup");
-    if (aInstall)
-      methods.unshift("install");
+  loadBootstrapScope: function XPI_loadBootstrapScope(aId, aDir, aVersion) {
+    LOG("Loading bootstrap scope from " + aDir.path);
+    // Mark the add-on as active for the crash reporter before loading
+    this.bootstrappedAddons[aId] = {
+      version: aVersion,
+      descriptor: aDir.persistentDescriptor
+    };
+    this.addAddonsToCrashReporter();
+
+    let principal = Cc["@mozilla.org/systemprincipal;1"].
+                    createInstance(Ci.nsIPrincipal);
+    this.bootstrapScopes[aId] = new Components.utils.Sandbox(principal);
+
     let bootstrap = aDir.clone();
     bootstrap.append("bootstrap.js");
     if (bootstrap.exists()) {
       let uri = Services.io.newFileURI(bootstrap);
-      let principal = Cc["@mozilla.org/systemprincipal;1"].
-                      createInstance(Ci.nsIPrincipal);
-      let scope = new Components.utils.Sandbox(principal);
       let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                    createInstance(Ci.mozIJSSubScriptLoader);
 
-      // Mark the add-on as active for the crash reporter before loading
-      this.bootstrappedAddons[aId] = {
-        version: aVersion,
-        descriptor: aDir.persistentDescriptor
-      };
-      this.bootstrapScopes[aId] = scope;
-      this.addAddonsToCrashReporter();
-
       try {
-        loader.loadSubScript(uri.spec, scope);
+        loader.loadSubScript(uri.spec, this.bootstrapScopes[aId]);
       }
       catch (e) {
         WARN("Error loading bootstrap.js for " + aId + ": " + e);
       }
 
-      this.callBootstrapMethod(aId, scope, methods);
+      // Copy the reason values from the global object into the bootstrap scope.
+      for (let name in BOOTSTRAP_REASONS)
+        this.bootstrapScopes[aId][name] = BOOTSTRAP_REASONS[name];
     }
     else {
       WARN("Bootstrap missing for " + aId);
@@ -2009,34 +1996,58 @@ var XPIProvider = {
   },
 
   /**
-   * Dectivates a bootstrapped add-on by by calling the appropriate method on
-   * the cached JS scope. Removes the add-on and its scope from the
-   * bootstrapScopes and bootstrappedAddons dictionaries.
+   * Unloads a bootstrap scope by dropping all references to it and then
+   * updating the list of active add-ons with the crash reporter.
    *
    * @param  aId
-   *         The ID of the add-on being deactivated
-   * @param  aShutdown
-   *         true if the add-on is being deactivated during shutdown
-   * @param  aUninstall
-   *         true if the add-on is being deactivated during uninstallation
+   *         The add-on's ID
    */
-  deactivateAddon: function XPI_deactivateAddon(aId, aShutdown, aUninstall) {
-    if (!(aId in this.bootstrappedAddons)) {
-      ERROR("Attempted to deactivate an add-on that was never activated");
+  unloadBootstrapScope: function XPI_unloadBootstrapScope(aId) {
+    delete this.bootstrapScopes[aId];
+    delete this.bootstrappedAddons[aId];
+    this.addAddonsToCrashReporter();
+  },
+
+  /**
+   * Calls a bootstrap method for an add-on.
+   *
+   * @param  aId
+   *         The ID of the add-on
+   * @param  aVersion
+   *         The version of the add-on
+   * @param  aDir
+   *         The nsILocalFile for the directory containing the add-on
+   * @param  aMethod
+   *         The name of the bootstrap method to call
+   * @param  aReason
+   *         The reason flag to pass to the bootstrap's startup method
+   */
+  callBootstrapMethod: function XPI_callBootstrapMethod(aId, aVersion, aDir,
+                                                        aMethod, aReason) {
+    // Load the scope if it hasn't already been loaded
+    if (!(aId in this.bootstrapScopes))
+      this.loadBootstrapScope(aId, aDir, aVersion);
+
+    if (!(aMethod in this.bootstrapScopes[aId])) {
+      WARN("Add-on " + aId + " is missing bootstrap method " + aMethod);
       return;
     }
-    let scope = this.bootstrapScopes[aId];
-    delete this.bootstrappedAddons[aId];
-    delete this.bootstrapScopes[aId];
 
-    let methods = ["disable"];
-    if (aShutdown)
-      methods.unshift("shutdown");
-    if (aUninstall)
-      methods.unshift("uninstall");
-    this.callBootstrapMethod(aId, scope, methods);
+    let params = {
+      id: aId,
+      version: aVersion,
+      installPath: aDir.clone()
+    };
 
-    this.addAddonsToCrashReporter();
+    LOG("Calling bootstrap method " + aMethod + " on " + aId + " version " +
+        aVersion);
+    try {
+      this.bootstrapScopes[aId][aMethod](params, aReason);
+    }
+    catch (e) {
+      WARN("Exception running bootstrap method " + aMethods + " on " +
+           aId + ": " + e);
+    }
   },
 
   /**
@@ -2113,14 +2124,19 @@ var XPIProvider = {
         aAddon.active = !isDisabled;
         XPIDatabase.updateAddonActive(aAddon);
         if (isDisabled) {
-          if (aAddon.type == "bootstrapped")
-            this.deactivateAddon(aAddon.id, false, false);
+          if (aAddon.bootstrap) {
+            let dir = aAddon._installLocation.getLocationForID(aAddon.id);
+            this.callBootstrapMethod(aAddon.id, aAddon.version, dir, "shutdown",
+                                     BOOTSTRAP_REASONS.ADDON_DISABLE);
+            this.unloadBootstrapScope(aAddon.id);
+          }
           AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
         }
         else {
-          if (aAddon.type == "bootstrapped") {
+          if (aAddon.bootstrap) {
             let dir = aAddon._installLocation.getLocationForID(aAddon.id);
-            this.activateAddon(aAddon.id, aAddon.version, dir, false, false);
+            this.callBootstrapMethod(aAddon.id, aAddon.version, dir, "startup",
+                                     BOOTSTRAP_REASONS.ADDON_ENABLE);
           }
           AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
         }
@@ -2174,8 +2190,16 @@ var XPIProvider = {
                                            requiresRestart);
 
     if (!requiresRestart) {
-      if (aAddon.type == "bootstrapped")
-        this.deactivateAddon(aAddon.id, false, true);
+      if (aAddon.bootstrap) {
+        let dir = aAddon._installLocation.getLocationForID(aAddon.id);
+        if (aAddon.active) {
+          this.callBootstrapMethod(aAddon.id, aAddon.version, dir, "shutdown",
+                                   BOOTSTRAP_REASONS.ADDON_UNINSTALL);
+        }
+        this.callBootstrapMethod(aAddon.id, aAddon.version, dir, "uninstall",
+                                 BOOTSTRAP_REASONS.ADDON_UNINSTALL);
+        this.unloadBootstrapScope(aAddon.id);
+      }
       aAddon._installLocation.uninstallAddon(aAddon.id);
       XPIDatabase.removeAddonMetadata(aAddon);
       AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
@@ -2225,7 +2249,7 @@ const FIELDS_ADDON = "internal_id, id, location, version, type, internalName, " 
                      "updateURL, updateKey, optionsURL, aboutURL, iconURL, " +
                      "defaultLocale, visible, active, userDisabled, appDisabled, " +
                      "pendingUninstall, descriptor, installDate, updateDate, " +
-                     "applyBackgroundUpdates";
+                     "applyBackgroundUpdates, bootstrap";
 
 // A helper function to simply log any errors that occur during async statements.
 function asyncErrorLogger(aError) {
@@ -2261,7 +2285,7 @@ var XPIDatabase = {
                             ":updateKey, :optionsURL, :aboutURL, :iconURL, " +
                             ":locale, :visible, :active, :userDisabled," +
                             " :appDisabled, 0, :descriptor, :installDate, " +
-                            ":updateDate, :applyBackgroundUpdates)",
+                            ":updateDate, :applyBackgroundUpdates, :bootstrap)",
     addAddonMetadata_addon_locale: "INSERT INTO addon_locale VALUES " +
                                    "(:internal_id, :name, :locale)",
     addAddonMetadata_locale: "INSERT INTO locale (name, description, creator, " +
@@ -2278,7 +2302,7 @@ var XPIDatabase = {
                       "internal_id=:internal_id",
 
     getActiveAddons: "SELECT " + FIELDS_ADDON + " FROM addon WHERE active=1 AND " +
-                     "type<>'theme' AND type<>'bootstrapped'",
+                     "type<>'theme' AND bootstrap=0",
     getActiveTheme: "SELECT " + FIELDS_ADDON + " FROM addon WHERE " +
                     "internalName=:internalName AND type='theme'",
 
@@ -2299,7 +2323,8 @@ var XPIDatabase = {
 
     makeAddonVisible: "UPDATE addon SET visible=1 WHERE internal_id=:internal_id",
     removeAddonMetadata: "DELETE FROM addon WHERE internal_id=:internal_id",
-    // Equates to active = visible && !userDisabled && !appDisabled && !pendingUninstall
+    // Equates to active = visible && !userDisabled && !appDisabled &&
+    // !pendingUninstall
     setActiveAddons: "UPDATE addon SET active=MIN(visible, 1 - userDisabled, " +
                      "1 - appDisabled, 1 - pendingUninstall)",
     setAddonProperties: "UPDATE addon SET userDisabled=:userDisabled, " +
@@ -2369,9 +2394,11 @@ var XPIDatabase = {
             if (disabled == "true" || disabled == "needs-disable")
               migrateData[location][id].userDisabled = true;
 
-            let targetApps = ds.GetTargets(source, EM_R("targetApplication"), true);
+            let targetApps = ds.GetTargets(source, EM_R("targetApplication"),
+                                           true);
             while (targetApps.hasMoreElements()) {
-              let targetApp = targetApps.getNext().QueryInterface(Ci.nsIRDFResource);
+              let targetApp = targetApps.getNext()
+                                        .QueryInterface(Ci.nsIRDFResource);
               let appInfo = {
                 id: getRDFProperty(ds, targetApp, "id"),
                 minVersion: getRDFProperty(ds, targetApp, "minVersion"),
@@ -2482,7 +2509,7 @@ var XPIDatabase = {
                                 "pendingUninstall INTEGER, descriptor TEXT, " +
                                 "installDate INTEGER, updateDate INTEGER, " +
                                 "applyBackgroundUpdates INTEGER, " +
-                                "UNIQUE (id, location)");
+                                "bootstrap INTEGER, UNIQUE (id, location)");
     this.connection.createTable("targetApplication",
                                 "addon_internal_id INTEGER, " +
                                 "id TEXT, minVersion TEXT, maxVersion TEXT, " +
@@ -2618,7 +2645,8 @@ var XPIDatabase = {
     addon.installDate = aRow.installDate;
     addon.updateDate = aRow.updateDate;
     ["visible", "active", "userDisabled", "appDisabled",
-     "pendingUninstall", "applyBackgroundUpdates"].forEach(function(aProp) {
+     "pendingUninstall", "applyBackgroundUpdates",
+     "bootstrap"].forEach(function(aProp) {
       addon[aProp] = aRow[aProp] != 0;
     });
     this.addonCache[aRow.internal_id] = Components.utils.getWeakReference(addon);
@@ -2768,7 +2796,8 @@ var XPIDatabase = {
     addon.installDate = aRow.getResultByName("installDate");
     addon.updateDate = aRow.getResultByName("updateDate");
     ["visible", "active", "userDisabled", "appDisabled",
-     "pendingUninstall", "applyBackgroundUpdates"].forEach(function(aProp) {
+     "pendingUninstall", "applyBackgroundUpdates",
+     "bootstrap"].forEach(function(aProp) {
       addon[aProp] = aRow.getResultByName(aProp) != 0;
     });
     this.addonCache[internal_id] = Components.utils.getWeakReference(addon);
@@ -3042,8 +3071,8 @@ var XPIDatabase = {
     stmt.params.installDate = aAddon.installDate;
     stmt.params.updateDate = aAddon.updateDate;
     copyProperties(aAddon, PROP_METADATA, stmt.params);
-    ["visible", "userDisabled", "appDisabled",
-     "applyBackgroundUpdates"].forEach(function(aProp) {
+    ["visible", "userDisabled", "appDisabled", "applyBackgroundUpdates",
+     "bootstrap"].forEach(function(aProp) {
       stmt.params[aProp] = aAddon[aProp] ? 1 : 0;
     });
     stmt.params.active = (aAddon.visible && !aAddon.userDisabled &&
@@ -3842,19 +3871,34 @@ AddonInstall.prototype = {
         // See bug 553015.
 
         // Deactivate and remove the old add-on as necessary
+        let reason = BOOTSTRAP_REASONS.ADDON_INSTALL;
         if (this.existingAddon) {
-          if (this.existingAddon.active) {
-            if (this.existingAddon.type == "bootstrapped")
-              XPIProvider.deactivateAddon(this.existingAddon.id, false,
-                                          isUpgrade);
-            // If this is an upgrade its metadata will be removed below
-            if (!isUpgrade) {
-              this.existingAddon.active = false;
-              XPIDatabase.updateAddonActive(this.existingAddon);
+          if (Services.vc.compare(this.existingAddon.version, this.addon.version) < 0)
+            reason = BOOTSTRAP_REASONS.ADDON_UPGRADE;
+          else
+            reason = BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+
+          if (this.existingAddon.bootstrap) {
+            let dir = this.existingAddon._installLocation
+                          .getLocationForID(this.existingAddon.id);
+            if (this.existingAddon.active) {
+              XPIProvider.callBootstrapMethod(this.existingAddon.id,
+                                              this.existingAddon.version,
+                                              dir, "shutdown", reason);
             }
+            XPIProvider.callBootstrapMethod(this.existingAddon.id,
+                                            this.existingAddon.version,
+                                            dir, "uninstall", reason);
+            XPIProvider.unloadBootstrapScope(this.existingAddon.id);
           }
-          if (isUpgrade)
+
+          if (isUpgrade) {
             this.installLocation.uninstallAddon(this.existingAddon.id);
+          }
+          else if (this.existingAddon.active) {
+            this.existingAddon.active = false;
+            XPIDatabase.updateAddonActive(this.existingAddon);
+          }
         }
 
         // Install the new add-on into its final directory
@@ -3878,8 +3922,17 @@ AddonInstall.prototype = {
         XPIDatabase.getAddonInLocation(this.addon.id, this.installLocation.name,
                                        function(a) {
           self.addon = a;
-          if (self.addon.active && self.addon.type == "bootstrapped")
-            XPIProvider.activateAddon(self.addon.id, self.addon.version, dir, false, true);
+          if (self.addon.bootstrap) {
+            XPIProvider.callBootstrapMethod(self.addon.id, self.addon.version,
+                                            dir, "install", reason);
+            if (self.addon.active) {
+              XPIProvider.callBootstrapMethod(self.addon.id, self.addon.version,
+                                              dir, "startup", reason);
+            }
+            else {
+              this.unloadBootstrapScope(self.addon.id);
+            }
+          }
           AddonManagerPrivate.callAddonListeners("onInstalled",
                                                  createWrapper(self.addon));
 
