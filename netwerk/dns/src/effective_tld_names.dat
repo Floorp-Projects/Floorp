@@ -4148,6 +4148,9 @@ mil.to
 
 // tr : http://en.wikipedia.org/wiki/.tr
 *.tr
+// Used by government in the TRNC
+// http://en.wikipedia.org/wiki/.nc.tr
+gov.nc.tr
 
 // travel : http://en.wikipedia.org/wiki/.travel
 travel
