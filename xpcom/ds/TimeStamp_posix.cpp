@@ -49,6 +49,22 @@
 
 #include "mozilla/TimeStamp.h"
 
+namespace mozilla {
+
+struct TimeStampInitialization
+{
+  TimeStampInitialization() {
+    TimeStamp::Startup();
+  }
+  ~TimeStampInitialization() {
+    TimeStamp::Shutdown();
+  }
+};
+
+static TimeStampInitialization initOnce;
+
+}
+
 // Estimate of the smallest duration of time we can measure.
 static PRUint64 sResolution;
 static PRUint64 sResolutionSigDigs;
