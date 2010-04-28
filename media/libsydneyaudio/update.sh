@@ -14,3 +14,4 @@ patch -p3 <bug495558_alsa_endian.patch
 patch -p3 <bug525401_drain_deadlock.patch
 patch -p3 <bug526411_latency.patch
 patch -p3 <sydney_aix.patch
+patch -p3 <bug562488_oss_destroy_crash.patch
