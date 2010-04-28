@@ -693,15 +693,6 @@ static struct {
     },
 };
 static struct {
-    jsbytecode scriptsetter[5];
-} setprop_imacros = {
-    {
-/* 0*/  JSOP_CALL, 0, 1,
-/* 3*/  JSOP_POP,
-/* 4*/  JSOP_STOP,
-    },
-};
-static struct {
     jsbytecode scriptgetter[4];
 } getthisprop_imacros = {
     {
@@ -764,7 +755,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_PROPDEC */
     0,  /* JSOP_ELEMDEC */
     1,  /* JSOP_GETPROP */
-    2,  /* JSOP_SETPROP */
+    0,  /* JSOP_SETPROP */
     0,  /* JSOP_GETELEM */
     0,  /* JSOP_SETELEM */
     0,  /* JSOP_CALLNAME */
@@ -819,7 +810,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_FORELEM */
     0,  /* JSOP_POPN */
     0,  /* JSOP_BINDNAME */
-    2,  /* JSOP_SETNAME */
+    0,  /* JSOP_SETNAME */
     0,  /* JSOP_THROW */
     0,  /* JSOP_IN */
     0,  /* JSOP_INSTANCEOF */
@@ -945,7 +936,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_DEFLOCALFUN_DBGFC */
     0,  /* JSOP_LAMBDA_DBGFC */
     0,  /* JSOP_CONCATN */
-    2,  /* JSOP_SETMETHOD */
+    0,  /* JSOP_SETMETHOD */
     0,  /* JSOP_INITMETHOD */
     0,  /* JSOP_UNBRAND */
     0,  /* JSOP_UNBRANDTHIS */
@@ -973,18 +964,15 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_NEG \
  || x == JSOP_POS \
  || x == JSOP_GETPROP \
- || x == JSOP_SETPROP \
  || x == JSOP_CALL \
  || x == JSOP_ITER \
  || x == JSOP_NEXTITER \
  || x == JSOP_APPLY \
  || x == JSOP_NEW \
- || x == JSOP_SETNAME \
  || x == JSOP_CALLPROP \
  || x == JSOP_GETTHISPROP \
  || x == JSOP_GETARGPROP \
  || x == JSOP_GETLOCALPROP \
- || x == JSOP_SETMETHOD \
  || x == JSOP_OBJTOSTR \
 )
 jsbytecode*
@@ -1027,7 +1015,6 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - objtostr_imacros.toString) < 35) return objtostr_imacros.toString;
     if (size_t(pc - getprop_imacros.scriptgetter) < 4) return getprop_imacros.scriptgetter;
     if (size_t(pc - callprop_imacros.scriptgetter) < 5) return callprop_imacros.scriptgetter;
-    if (size_t(pc - setprop_imacros.scriptsetter) < 5) return setprop_imacros.scriptsetter;
     if (size_t(pc - getthisprop_imacros.scriptgetter) < 4) return getthisprop_imacros.scriptgetter;
     return NULL;
 }
