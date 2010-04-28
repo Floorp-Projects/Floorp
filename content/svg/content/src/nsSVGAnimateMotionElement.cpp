@@ -41,7 +41,7 @@
 #include "nsSVGAnimationElement.h"
 #include "nsIDOMSVGAnimateMotionElement.h"
 #include "nsSVGEnum.h"
-#include "nsSMILAnimationFunction.h"
+#include "SVGMotionSMILAnimationFunction.h"
 
 #include "nsCOMArray.h"
 #include "nsIDOMSVGPathSeg.h"
@@ -59,7 +59,7 @@ protected:
                                                    nsINodeInfo *aNodeInfo);
   nsSVGAnimateMotionElement(nsINodeInfo* aNodeInfo);
 
-  nsSMILAnimationFunction mAnimationFunction;
+  mozilla::SVGMotionSMILAnimationFunction mAnimationFunction;
 
 public:
   // interfaces:
@@ -76,6 +76,9 @@ public:
 
   // nsISMILAnimationElement
   virtual nsSMILAnimationFunction& AnimationFunction();
+  virtual nsIAtom* GetTargetAttributeName() const;
+  virtual nsSMILTargetAttrType GetTargetAttributeType() const;
+
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(AnimateMotion)
@@ -116,4 +119,22 @@ nsSMILAnimationFunction&
 nsSVGAnimateMotionElement::AnimationFunction()
 {
   return mAnimationFunction;
+}
+
+nsIAtom*
+nsSVGAnimateMotionElement::GetTargetAttributeName() const
+{
+  // <animateMotion> doesn't take an attributeName, since it doesn't target an
+  // 'attribute' per se.  We'll use a unique dummy attribute-name so that our
+  // nsSMILTargetIdentifier logic (which requires a attribute name) still works.
+  return nsGkAtoms::mozAnimateMotionDummyAttr;
+}
+
+nsSMILTargetAttrType
+nsSVGAnimateMotionElement::GetTargetAttributeType() const
+{
+  // <animateMotion> doesn't take an attributeType, since it doesn't target an
+  // 'attribute' per se.  We'll just return 'XML' for simplicity.  (This just
+  // needs to match what we expect in nsSVGElement::GetAnimAttr.)
+  return eSMILTargetAttrType_XML;
 }

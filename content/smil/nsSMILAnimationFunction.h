@@ -322,8 +322,10 @@ protected:
 
   PRBool   ParseAttr(nsIAtom* aAttName, const nsISMILAttr& aSMILAttr,
                      nsSMILValue& aResult, PRBool& aCanCacheSoFar) const;
-  nsresult GetValues(const nsISMILAttr& aSMILAttr,
-                     nsSMILValueArray& aResult);
+
+  virtual nsresult GetValues(const nsISMILAttr& aSMILAttr,
+                             nsSMILValueArray& aResult);
+
   void     CheckKeyTimes(PRUint32 aNumValues);
   void     CheckKeySplines(PRUint32 aNumValues);
 

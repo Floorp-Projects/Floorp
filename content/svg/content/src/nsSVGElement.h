@@ -145,6 +145,11 @@ public:
    */
   virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix);
 
+  // Setter for to set the current <animateMotion> transformation
+  // Only visible for nsSVGGraphicElement, so it's a no-op here, and that
+  // subclass has the useful implementation.
+  virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix) {/*no-op*/}
+
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
