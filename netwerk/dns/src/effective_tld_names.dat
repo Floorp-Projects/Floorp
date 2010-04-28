@@ -4164,12 +4164,9 @@ gov.tt
 edu.tt
 
 // tv : http://en.wikipedia.org/wiki/.tv
-// list of other 2nd level tlds ?
+// Not listing any 2LDs as reserved since none seem to exist in practice,
+// Wikipedia notwithstanding.
 tv
-com.tv
-net.tv
-org.tv
-gov.tv
 
 // tw : http://en.wikipedia.org/wiki/.tw
 tw
