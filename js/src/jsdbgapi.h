@@ -111,7 +111,7 @@ extern void
 js_SweepWatchPoints(JSContext *cx);
 
 extern JSScopeProperty *
-js_FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id);
+js_FindWatchPoint(JSRuntime *rt, const JSScope *scope, jsid id);
 
 /*
  * NB: callers outside of jsdbgapi.c must pass non-null scope.

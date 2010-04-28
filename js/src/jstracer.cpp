@@ -2445,6 +2445,7 @@ TraceRecorder::insImmVal(jsval val)
 inline LIns*
 TraceRecorder::insImmObj(JSObject* obj)
 {
+    JS_ASSERT(obj);
     tree->gcthings.addUnique(OBJECT_TO_JSVAL(obj));
     return lir->insImmP((void*)obj);
 }
@@ -2452,6 +2453,7 @@ TraceRecorder::insImmObj(JSObject* obj)
 inline LIns*
 TraceRecorder::insImmFun(JSFunction* fun)
 {
+    JS_ASSERT(fun);
     tree->gcthings.addUnique(OBJECT_TO_JSVAL(FUN_OBJECT(fun)));
     return lir->insImmP((void*)fun);
 }
@@ -2459,6 +2461,7 @@ TraceRecorder::insImmFun(JSFunction* fun)
 inline LIns*
 TraceRecorder::insImmStr(JSString* str)
 {
+    JS_ASSERT(str);
     tree->gcthings.addUnique(STRING_TO_JSVAL(str));
     return lir->insImmP((void*)str);
 }
@@ -2466,6 +2469,7 @@ TraceRecorder::insImmStr(JSString* str)
 inline LIns*
 TraceRecorder::insImmSprop(JSScopeProperty* sprop)
 {
+    JS_ASSERT(sprop);
     tree->sprops.addUnique(sprop);
     return lir->insImmP((void*)sprop);
 }
@@ -11245,20 +11249,96 @@ TraceRecorder::record_JSOP_GETPROP()
     return getProp(stackval(-1));
 }
 
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETPROP()
+/*
+ * If possible, lookup obj[id] without calling any resolve hooks or touching
+ * any non-native objects or objects that have been shared across contexts,
+ * store the results in *pobjp and *spropp (NULL if no such property exists),
+ * and return true. This does not take any locks. That is safe because we
+ * avoid shared objects.
+ *
+ * If a safe lookup is not possible, return false; *pobjp and *spropp are
+ * undefined.
+ */
+static bool
+SafeLookup(JSContext *cx, JSObject* obj, jsid id, JSObject** pobjp, JSScopeProperty** spropp)
 {
-    jsval& l = stackval(-2);
-    if (JSVAL_IS_PRIMITIVE(l))
-        RETURN_STOP_A("primitive this for SETPROP");
+    for (; obj; obj = obj->getProto()) {
+        // Avoid non-native lookupProperty hooks.
+        if (obj->map->ops->lookupProperty != js_LookupProperty)
+            return false;
 
-    JSObject* obj = JSVAL_TO_OBJECT(l);
-    if (obj->map->ops->setProperty != js_SetProperty)
-        RETURN_STOP_A("non-native JSObjectOps::setProperty");
-    return ARECORD_CONTINUE;
+        // Avoid shared objects.
+        JSScope *scope = obj->scope();
+        if (!CX_OWNS_SCOPE_TITLE(cx, scope))
+            return false;
+
+        if (JSScopeProperty *sprop = scope->lookup(id)) {
+            *pobjp = obj;
+            *spropp = sprop;
+            return true;
+        }
+
+        // Avoid resolve hooks.
+        if (obj->getClass()->resolve != JS_ResolveStub)
+            return false;
+    }
+    *pobjp = NULL;
+    *spropp = NULL;
+    return true;
 }
 
-/* Emit a specialized, inlined copy of js_NativeSet. */
+/*
+ * Lookup the property for the SETPROP/SETNAME/SETMETHOD instruction at pc.
+ * Emit guards to ensure that the result at run time is the same.
+ */
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::lookupForSetPropertyOp(JSObject* obj, LIns* obj_ins, jsid id,
+                                      bool* safep, JSObject** pobjp, JSScopeProperty** spropp)
+{
+    // We could consult the property cache here, but the contract for
+    // PropertyCache::testForSet is intricate enough that it's a lot less code
+    // to do a SafeLookup.
+    *safep = SafeLookup(cx, obj, id, pobjp, spropp);
+    if (!*safep)
+        return RECORD_CONTINUE;
+
+    VMSideExit *exit = snapshot(BRANCH_EXIT);
+    if (*spropp) {
+        if (obj != globalObj)
+            CHECK_STATUS(guardShape(obj_ins, obj, obj->shape(), "guard_kshape", exit));
+        if (obj != *pobjp && *pobjp != globalObj) {
+            CHECK_STATUS(guardShape(INS_CONSTOBJ(*pobjp), *pobjp, (*pobjp)->shape(),
+                                    "guard_vshape", exit));
+        }
+    } else {
+        for (;;) {
+            if (obj != globalObj)
+                CHECK_STATUS(guardShape(obj_ins, obj, obj->shape(), "guard_proto_chain", exit));
+            obj = obj->getProto();
+            if (!obj)
+                break;
+            obj_ins = INS_CONSTOBJ(obj);
+        }
+    }
+    return RECORD_CONTINUE;
+}
+
+static JSBool FASTCALL
+MethodWriteBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObject* funobj)
+{
+    AutoValueRooter tvr(cx, funobj);
+
+    return obj->scope()->methodWriteBarrier(cx, sprop, tvr.value());
+}
+JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, SCOPEPROP, OBJECT,
+                     0, ACC_STORE_ANY)
+
+/*
+ * Emit a specialized, inlined copy of js_NativeSet.
+ *
+ * Note that since this runs before the interpreter opcode, obj->scope() may
+ * not actually have the property sprop yet.
+ */
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
                          jsval v, LIns* v_ins)
@@ -11266,9 +11346,13 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
     JSScope* scope = obj->scope();
     uint32 slot = sprop->slot;
 
+    // If obj is the global, it must already have sprop. Otherwise we would
+    // have gone through addDataProperty, which would have stopped recording.
+    JS_ASSERT_IF(obj == globalObj, scope->hasProperty(sprop));
+
     /*
-     * We do not trace assignment to properties that have both a nonstub setter
-     * and a slot, for several reasons.
+     * We do not trace assignment to properties that have both a non-default
+     * setter and a slot, for several reasons.
      *
      * First, that would require sampling rt->propertyRemovals before and after
      * (see js_NativeSet), and even more code to handle the case where the two
@@ -11283,8 +11367,18 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
      * setter's return value differed from the record-time type of v, in which
      * case unboxing would fail and, having called a native setter, we could
      * not just retry the instruction in the interpreter.
+     *
+     * If obj is branded, we would have a similar problem recovering from a
+     * failed call to MethodWriteBarrier.
      */
-    JS_ASSERT(sprop->hasDefaultSetter() || slot == SPROP_INVALID_SLOT);
+    if (!sprop->hasDefaultSetter() && slot != SPROP_INVALID_SLOT)
+        RETURN_STOP("can't trace set of property with setter and slot");
+
+    // These two cases are strict-mode errors and can't be traced.
+    if (sprop->hasGetterValue() && sprop->hasDefaultSetter())
+        RETURN_STOP("can't set a property that has only a getter");
+    if (sprop->isDataDescriptor() && !sprop->writable())
+        RETURN_STOP("can't assign to readonly property");
 
     // Box the value to be stored, if necessary.
     LIns* boxed_ins = NULL;
@@ -11292,14 +11386,36 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
         boxed_ins = box_jsval(v, v_ins);
 
     // Call the setter, if any.
-    if (!sprop->hasDefaultSetter())
+    if (!sprop->hasDefaultSetter()) {
+        if (sprop->hasSetterValue())
+            RETURN_STOP("can't trace JavaScript function setter yet");
         emitNativePropertyOp(scope, sprop, obj_ins, true, boxed_ins);
+    }
 
-    // Store the value, if this property has a slot.
     if (slot != SPROP_INVALID_SLOT) {
-        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
+        if (scope->brandedOrHasMethodBarrier()) {
+            if (obj == globalObj) {
+                // Because the trace is type-specialized to the global object's
+                // slots, no run-time check is needed. Avoid recording a global
+                // shape change, though.
+                if (VALUE_IS_FUNCTION(cx, obj->getSlot(slot)))
+                    RETURN_STOP("can't trace set of function-valued property in branded global");
+            } else {
+                // Setting a function-valued property might need to rebrand the
+                // object. Call the method write barrier. Note that even if the
+                // property is not function-valued now, it might be on trace.
+                enterDeepBailCall();
+                LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
+                LIns* ok_ins = lir->insCall(&MethodWriteBarrier_ci, args);
+                guard(false, lir->insEqI_0(ok_ins), OOM_EXIT);
+                leaveDeepBailCall();
+            }
+        }
+
+        // Store the value.
         JS_ASSERT(sprop->hasSlot());
         if (obj == globalObj) {
+            JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
             if (!lazilyImportGlobalSlot(slot))
                 RETURN_STOP("lazy import of global slot failed");
             set(&obj->getSlotRef(slot), v_ins);
@@ -11312,89 +11428,65 @@ TraceRecorder::nativeSet(JSObject* obj, LIns* obj_ins, JSScopeProperty* sprop,
     return RECORD_CONTINUE;
 }
 
-static JSBool FASTCALL
-MethodWriteBarrier(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, JSObject* funobj)
-{
-    AutoValueRooter tvr(cx, funobj);
-
-    return obj->scope()->methodWriteBarrier(cx, sprop, tvr.value());
-}
-JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, SCOPEPROP, OBJECT,
-                     0, ACC_STORE_ANY)
-
 JS_REQUIRES_STACK RecordingStatus
-TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* sprop,
-                       jsval &v, LIns*& v_ins)
+TraceRecorder::addDataProperty(JSObject* obj, LIns* obj_ins,
+                               jsid id, JSPropertyOp getter, JSPropertyOp setter,
+                               uintN flags, intN shortid, jsval v, LIns* v_ins)
 {
-    if (entry == JS_NO_PROP_CACHE_FILL)
-        RETURN_STOP("can't trace uncacheable property set");
-    JS_ASSERT_IF(entry->vcapTag() >= 1, !sprop->hasSlot());
-    if (!sprop->hasDefaultSetter() && sprop->slot != SPROP_INVALID_SLOT)
-        RETURN_STOP("can't trace set of property with setter and slot");
-    if (sprop->hasSetterValue())
-        RETURN_STOP("can't trace JavaScript function setter");
+    // If obj is the global, the global shape is about to change. Note also
+    // that since we do not record this case, SETNAME and SETPROP are identical
+    // as far as the tracer is concerned. (js_CheckUndeclaredVarAssignment
+    // distinguishes the two, in the interpreter.)
+    if (obj == globalObj)
+        RETURN_STOP("set new property of global object");  // global shape change
 
-    // These two cases are errors and can't be traced.
-    if (sprop->hasGetterValue())
-        RETURN_STOP("can't assign to property with script getter but no setter");
-    if (!sprop->writable())
-        RETURN_STOP("can't assign to readonly property");
+    // js_AddProperty does not call the addProperty hook.
+    if (obj->getClass()->addProperty != JS_PropertyStub)
+        RETURN_STOP("set new property of object with addProperty hook");
 
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(l));
-    JSObject* obj = JSVAL_TO_OBJECT(l);
-    LIns* obj_ins = get(&l);
+    // See comment in TR::nativeSet about why we do not support setting a
+    // property that has both a setter and a slot.
+    if (setter != JS_PropertyStub)
+        RETURN_STOP("set new property with setter and slot");
 
-    JS_ASSERT_IF(entry->directHit(), obj->scope()->hasProperty(sprop));
+    // Methods can be defined only on plain Objects.
+    jsbytecode op = *cx->fp->regs->pc;
+    if ((op == JSOP_INITMETHOD || op == JSOP_SETMETHOD) && obj->getClass() == &js_ObjectClass) {
+        JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
 
-    // Fast path for CallClass. This is about 20% faster than the general case.
-    v_ins = get(&v);
-    if (obj->getClass() == &js_CallClass)
-        return setCallProp(obj, obj_ins, sprop, v_ins, v);
-
-    // Find obj2. If entry->adding(), the TAG bits are all 0.
-    JSObject* obj2 = obj;
-    for (jsuword i = entry->scopeIndex(); i; i--)
-        obj2 = obj2->getParent();
-    for (jsuword j = entry->protoIndex(); j; j--)
-        obj2 = obj2->getProto();
-    JSScope *scope = obj2->scope();
-    JS_ASSERT_IF(entry->adding(), obj2 == obj);
-
-    // Guard before anything else.
-    PCVal pcval;
-    CHECK_STATUS(guardPropertyCacheHit(obj_ins, obj, obj2, entry, pcval));
-    JS_ASSERT(scope->object == obj2);
-    JS_ASSERT(scope->hasProperty(sprop));
-    JS_ASSERT_IF(obj2 != obj, !sprop->hasSlot());
-
-    /*
-     * Setting a function-valued property might need to rebrand the object, so
-     * we emit a call to the method write barrier. There's no need to guard on
-     * this, because functions have distinct trace-type from other values and
-     * branded-ness is implied by the shape, which we've already guarded on.
-     */
-    if (scope->brandedOrHasMethodBarrier() && VALUE_IS_FUNCTION(cx, v) && entry->directHit()) {
-        if (obj == globalObj)
-            RETURN_STOP("can't trace function-valued property set in branded global scope");
-
-        enterDeepBailCall();
-        LIns* args[] = { v_ins, INS_CONSTSPROP(sprop), obj_ins, cx_ins };
-        LIns* ok_ins = lir->insCall(&MethodWriteBarrier_ci, args);
-        guard(false, lir->insEqI_0(ok_ins), OOM_EXIT);
-        leaveDeepBailCall();
+        JSObject *funobj = JSVAL_TO_OBJECT(v);
+        if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
+            flags |= JSScopeProperty::METHOD;
+            getter = js_CastAsPropertyOp(funobj);
+        }
     }
 
-    // Add a property to the object if necessary.
-    if (entry->adding()) {
-        JS_ASSERT(sprop->hasSlot());
-        if (obj == globalObj)
-            RETURN_STOP("adding a property to the global object");
+    // Determine what slot the interpreter will assign this property.
+    JSScope *scope;
+    uint32 slot;
+    JS_LOCK_OBJ(cx, obj);
+    scope = js_GetMutableScope(cx, obj);
+    if (!scope)
+        RETURN_STOP("js_GetMutableScope failed");
+    if (!js_AllocSlot(cx, obj, &slot))
+        RETURN_STOP("js_AllocSlot failed");
+    js_FreeSlot(cx, obj, slot);
+    JS_UNLOCK_OBJ(cx, obj);
 
-        LIns* args[] = { INS_CONSTSPROP(sprop), obj_ins, cx_ins };
-        LIns* ok_ins = lir->insCall(&js_AddProperty_ci, args);
-        guard(false, lir->insEqI_0(ok_ins), OOM_EXIT);
-    }
+    // Find or create an sprop for the new property but avoid adding it to
+    // obj's scope. The sprop returned by prepareAddProperty may not be rooted,
+    // but we immediately pass it to INS_CONSTSPROP, which roots it.
+    JSScopeProperty* sprop = obj->scope()->prepareAddProperty(cx, id, getter, setter, slot,
+                                                              JSPROP_ENUMERATE, flags, shortid);
+    if (!sprop)
+        RETURN_ERROR("JSScope::getScopeProperty failed");
 
+    // On trace, call js_AddProperty to do the dirty work.
+    LIns* args[] = { INS_CONSTSPROP(sprop), obj_ins, cx_ins };
+    LIns* ok_ins = lir->insCall(&js_AddProperty_ci, args);
+    guard(false, lir->insEqI_0(ok_ins), OOM_EXIT);
+
+    // Box the value and store it in the new slot.
     return nativeSet(obj, obj_ins, sprop, v, v_ins);
 }
 
@@ -11545,27 +11637,161 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     return RECORD_CONTINUE;
 }
 
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_SetPropHit(PropertyCacheEntry* entry, JSScopeProperty* sprop)
+/*
+ * Emit a specialized, inlined copy of js_SetPropertyHelper for the current
+ * instruction.
+ */
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::setProperty(JSObject* obj, LIns* obj_ins, jsval v, LIns* v_ins)
 {
-    jsval& r = stackval(-1);
-    jsval& l = stackval(-2);
-    LIns* v_ins;
-    CHECK_STATUS_A(setProp(l, entry, sprop, r, v_ins));
+    JSAtom *atom;
+    GET_ATOM_FROM_BYTECODE(cx->fp->script, cx->fp->regs->pc, 0, atom);
+    jsid id = ATOM_TO_JSID(atom);
 
-    jsbytecode* pc = cx->fp->regs->pc;
-    switch (*pc) {
-      case JSOP_SETPROP:
-      case JSOP_SETNAME:
-      case JSOP_SETMETHOD:
-        if (pc[JSOP_SETPROP_LENGTH] != JSOP_POP)
-            set(&l, v_ins);
-        break;
+    if (obj->map->ops->setProperty != js_SetProperty)
+        RETURN_STOP("non-native object");  // TODO - fall back on slow path
+    if (obj->scope()->sealed())
+        RETURN_STOP("setting property of sealed object");  // this will throw
 
-      default:;
+    bool safe;
+    JSObject* pobj;
+    JSScopeProperty* sprop;
+    CHECK_STATUS(lookupForSetPropertyOp(obj, obj_ins, id, &safe, &pobj, &sprop));
+    if (!safe)
+        RETURN_STOP("setprop: lookup fail"); // TODO - fall back on slow path
+
+    // Handle Call objects specially. The Call objects we create on trace are
+    // bogus. Calling the setter on such an object wouldn't work.
+    if (obj->getClass() == &js_CallClass)
+        return setCallProp(obj, obj_ins, sprop, v_ins, v);
+
+    // Handle setting a property that is not found on obj or anywhere on its
+    // the prototype chain.
+    if (!sprop) {
+        JSClass *cls = obj->getClass();
+        return addDataProperty(obj, obj_ins, id, cls->getProperty, cls->setProperty, 0, 0,
+                               v, v_ins);
     }
 
-    return ARECORD_CONTINUE;
+    // Check whether we can assign to/over the existing property.
+    if (sprop->isAccessorDescriptor()) {
+        if (sprop->hasDefaultSetter())
+            RETURN_STOP("setting accessor property with no setter");
+    } else if (!sprop->writable()) {
+        RETURN_STOP("setting readonly data property");
+    }
+
+    // Handle setting an existing own property.
+    if (pobj == obj)
+        return nativeSet(obj, obj_ins, sprop, v, v_ins);
+
+    // Handle setting an inherited non-SHARED property.
+    if (sprop->hasSlot()) {
+        if (sprop->hasShortID()) {
+            return addDataProperty(obj, obj_ins, id, sprop->getter(), sprop->setter(),
+                                   JSScopeProperty::HAS_SHORTID, sprop->shortid,
+                                   v, v_ins);
+        } else {
+            JSClass *cls = obj->getClass();
+            return addDataProperty(obj, obj_ins, id, cls->getProperty, cls->setProperty,
+                                   0, 0, v, v_ins);
+        }
+    }
+
+    // Handle setting an inherited SHARED property.
+    if (pobj->scope()->sealed())
+        RETURN_STOP("setting SHARED property inherited from sealed object");
+    if (sprop->hasDefaultSetter() && !sprop->hasGetterValue())
+        return RECORD_CONTINUE; // nothing happens
+
+    // Handle setting an inherited SHARED property with a non-default setter.
+    return nativeSet(obj, obj_ins, sprop, v, v_ins);
+}
+
+/*
+ * Record a JSOP_SET{PROP,NAME,METHOD} instruction or a JSOP_INITPROP
+ * instruction initializing __proto__.
+ */
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::recordSetPropertyOp()
+{
+    jsval& l = stackval(-2);
+    if (JSVAL_IS_PRIMITIVE(l))
+        RETURN_STOP("primitive operand object");
+    JSObject* obj = JSVAL_TO_OBJECT(l);
+    LIns* obj_ins = get(&l);
+
+    jsval& r = stackval(-1);
+    LIns* r_ins = get(&r);
+
+    CHECK_STATUS(setProperty(obj, obj_ins, r, r_ins));
+    set(&l, r_ins);
+    return RECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETPROP()
+{
+    return InjectStatus(recordSetPropertyOp());
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETMETHOD()
+{
+    return InjectStatus(recordSetPropertyOp());
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_SETNAME()
+{
+    return InjectStatus(recordSetPropertyOp());
+}
+
+JS_REQUIRES_STACK RecordingStatus
+TraceRecorder::recordInitPropertyOp()
+{
+    jsval& l = stackval(-2);
+    JSObject* obj = JSVAL_TO_OBJECT(l);
+    LIns* obj_ins = get(&l);
+    JS_ASSERT(obj->getClass() == &js_ObjectClass);
+
+    jsval& v = stackval(-1);
+    LIns* v_ins = get(&v);
+
+    JSAtom *atom;
+    GET_ATOM_FROM_BYTECODE(cx->fp->script, cx->fp->regs->pc, 0, atom);
+    jsid id = ATOM_TO_JSID(atom);
+
+    // If obj already has this property (because the id appears more than once
+    // in the initializer), just set it.
+    JSScope* scope = obj->scope();
+    if (!CX_OWNS_SCOPE_TITLE(cx, scope))
+        RETURN_STOP("object being initialized is shared among contexts");
+    if (JSScopeProperty* sprop = scope->lookup(id)) {
+        JS_ASSERT(sprop->isDataDescriptor());
+        JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, scope));
+        JS_ASSERT(sprop->hasDefaultSetter());
+        return nativeSet(obj, obj_ins, sprop, v, v_ins);
+    }
+
+    // Duplicate the interpreter's special treatment of __proto__.
+    if (atom == cx->runtime->atomState.protoAtom)
+        return recordSetPropertyOp();
+
+    // Define a new property.
+    return addDataProperty(obj, obj_ins, id, JS_PropertyStub, JS_PropertyStub, 0, 0, v, v_ins);
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_INITPROP()
+{
+    return InjectStatus(recordInitPropertyOp());
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_INITMETHOD()
+{
+    return InjectStatus(recordInitPropertyOp());
 }
 
 JS_REQUIRES_STACK VMSideExit*
@@ -13530,13 +13756,6 @@ TraceRecorder::record_JSOP_ENDINIT()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_INITPROP()
-{
-    // All the action is in record_SetPropHit.
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INITELEM()
 {
     return setElem(-3, -2, -1);
@@ -13874,13 +14093,6 @@ TraceRecorder::record_JSOP_BINDNAME()
     // If |obj2| is the global object, we can refer to it directly instead of walking up
     // the scope chain. There may still be guards on intervening call objects.
     stack(0, obj2 == globalObj ? INS_CONSTOBJ(obj2) : obj2_ins);
-    return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETNAME()
-{
-    // record_SetPropHit does all the work.
     return ARECORD_CONTINUE;
 }
 
@@ -15279,18 +15491,6 @@ TraceRecorder::record_JSOP_CONCATN()
     /* Update tracker with result. */
     set(argBase, result_ins);
     return ARECORD_CONTINUE;
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_SETMETHOD()
-{
-    return record_JSOP_SETPROP();
-}
-
-JS_REQUIRES_STACK AbortableRecordingStatus
-TraceRecorder::record_JSOP_INITMETHOD()
-{
-    return record_JSOP_INITPROP();
 }
 
 JSBool FASTCALL
