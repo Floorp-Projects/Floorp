@@ -6,7 +6,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>bootstrap1@tests.mozilla.org</em:id>
     <em:version>2.0</em:version>
-    <em:type>64</em:type>
+    <em:bootstrap>true</em:bootstrap>
 
     <!-- Front End MetaData -->
     <em:name>Test Bootstrap 1</em:name>
