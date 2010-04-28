@@ -4514,7 +4514,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             stmtInfo.update = top;
             if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 0, jmp - beq))
                 return JS_FALSE;
-            if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 1, top - jmp))
+            if (!js_SetSrcNoteOffset(cx, cg, noteIndex, 1, top - beq))
                 return JS_FALSE;
         }
 
