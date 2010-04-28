@@ -66,30 +66,30 @@ var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
 /**
  * Logs a debug message.
  *
- * @param   str
- *          The string to log
+ * @param  aStr
+ *         The string to log
  */
-function LOG(str) {
-  dump("*** addons.updates: " + str + "\n");
+function LOG(aStr) {
+  dump("*** addons.updates: " + aStr + "\n");
 }
 
 /**
  * Logs a warning message
  *
- * @param   str
- *          The string to log
+ * @param  aStr
+ *         The string to log
  */
-function WARN(str) {
-  LOG(str);
+function WARN(aStr) {
+  LOG(aStr);
 }
 
 /**
  * Logs an error message
  *
- * @param   str
- *          The string to log
+ * @param  aStr
+ *         The string to log
  */
-function ERROR(str) {
+function ERROR(aStr) {
   LOG(str);
 }
 
@@ -114,37 +114,38 @@ RDFSerializer.prototype = {
   /**
    * Escapes characters from a string that should not appear in XML.
    *
-   * @param   string
-   *          The string to be escaped
-   * @return  a string with all characters invalid in XML character data
-   *          converted to entity references.
+   * @param  aString
+   *         The string to be escaped
+   * @return a string with all characters invalid in XML character data
+   *         converted to entity references.
    */
-  escapeEntities: function RDFS_escapeEntities(string) {
-    string = string.replace(/&/g, "&amp;");
-    string = string.replace(/</g, "&lt;");
-    string = string.replace(/>/g, "&gt;");
-    return string.replace(/"/g, "&quot;");
+  escapeEntities: function RDFS_escapeEntities(aString) {
+    aString = aString.replace(/&/g, "&amp;");
+    aString = aString.replace(/</g, "&lt;");
+    aString = aString.replace(/>/g, "&gt;");
+    return aString.replace(/"/g, "&quot;");
   },
 
   /**
    * Serializes all the elements of an RDF container.
    *
-   * @param   ds
-   *          The RDF datasource
-   * @param   container
-   *          The RDF container to output the child elements of
-   * @param   indent
-   *          The current level of indent for pretty-printing
-   * @return  a string containing the serialized elements.
+   * @param  aDs
+   *         The RDF datasource
+   * @param  aContainer
+   *         The RDF container to output the child elements of
+   * @param  aIndent
+   *         The current level of indent for pretty-printing
+   * @return a string containing the serialized elements.
    */
-  serializeContainerItems: function RDFS_serializeContainerItems(ds, container, indent) {
+  serializeContainerItems: function RDFS_serializeContainerItems(aDs, aContainer,
+                                                                 aIndent) {
     var result = "";
-    var items = container.GetElements();
+    var items = aContainer.GetElements();
     while (items.hasMoreElements()) {
       var item = items.getNext().QueryInterface(Ci.nsIRDFResource);
-      result += indent + "<RDF:li>\n"
-      result += this.serializeResource(ds, item, indent + this.INDENT);
-      result += indent + "</RDF:li>\n"
+      result += aIndent + "<RDF:li>\n"
+      result += this.serializeResource(aDs, item, aIndent + this.INDENT);
+      result += aIndent + "</RDF:li>\n"
     }
     return result;
   },
@@ -154,19 +155,21 @@ RDFSerializer.prototype = {
    * the em:signature property. As this serialization is to be compared against
    * the manifest signature it cannot contain the em:signature property itself.
    *
-   * @param   ds
-   *          The RDF datasource
-   * @param   resource
-   *          The RDF resource that contains the properties to serialize
-   * @param   indent
-   *          The current level of indent for pretty-printing
-   * @return  a string containing the serialized properties.
-   * @throws  if the resource contains a property that cannot be serialized
+   * @param  aDs
+   *         The RDF datasource
+   * @param  aResource
+   *         The RDF resource that contains the properties to serialize
+   * @param  aIndent
+   *         The current level of indent for pretty-printing
+   * @return a string containing the serialized properties.
+   * @throws if the resource contains a property that cannot be serialized
    */
-  serializeResourceProperties: function RDFS_serializeResourceProperties(ds, resource, indent) {
+  serializeResourceProperties: function RDFS_serializeResourceProperties(aDs,
+                                                                         aResource,
+                                                                         aIndent) {
     var result = "";
     var items = [];
-    var arcs = ds.ArcLabelsOut(resource);
+    var arcs = aDs.ArcLabelsOut(aResource);
     while (arcs.hasMoreElements()) {
       var arc = arcs.getNext().QueryInterface(Ci.nsIRDFResource);
       if (arc.ValueUTF8.substring(0, PREFIX_NS_EM.length) != PREFIX_NS_EM)
@@ -175,20 +178,22 @@ RDFSerializer.prototype = {
       if (prop == "signature")
         continue;
 
-      var targets = ds.GetTargets(resource, arc, true);
+      var targets = aDs.GetTargets(aResource, arc, true);
       while (targets.hasMoreElements()) {
         var target = targets.getNext();
         if (target instanceof Ci.nsIRDFResource) {
-          var item = indent + "<em:" + prop + ">\n";
-          item += this.serializeResource(ds, target, indent + this.INDENT);
-          item += indent + "</em:" + prop + ">\n";
+          var item = aIndent + "<em:" + prop + ">\n";
+          item += this.serializeResource(aDs, target, aIndent + this.INDENT);
+          item += aIndent + "</em:" + prop + ">\n";
           items.push(item);
         }
         else if (target instanceof Ci.nsIRDFLiteral) {
-          items.push(indent + "<em:" + prop + ">" + this.escapeEntities(target.Value) + "</em:" + prop + ">\n");
+          items.push(aIndent + "<em:" + prop + ">" +
+                     this.escapeEntities(target.Value) + "</em:" + prop + ">\n");
         }
         else if (target instanceof Ci.nsIRDFInt) {
-          items.push(indent + "<em:" + prop + " NC:parseType=\"Integer\">" + target.Value + "</em:" + prop + ">\n");
+          items.push(aIndent + "<em:" + prop + " NC:parseType=\"Integer\">" +
+                     target.Value + "</em:" + prop + ">\n");
         }
         else {
           throw new Error("Cannot serialize unknown literal type");
@@ -205,51 +210,51 @@ RDFSerializer.prototype = {
    * This will only output EM_NS properties and will ignore any em:signature
    * property.
    *
-   * @param   ds
-   *          The RDF datasource
-   * @param   resource
-   *          The RDF resource to serialize
-   * @param   indent
-   *          The current level of indent for pretty-printing. If undefined no
-   *          indent will be added
-   * @return  a string containing the serialized resource.
-   * @throws  if the RDF data contains multiple references to the same resource.
+   * @param  aDs
+   *         The RDF datasource
+   * @param  aResource
+   *         The RDF resource to serialize
+   * @param  aIndent
+   *         The current level of indent for pretty-printing. If undefined no
+   *         indent will be added
+   * @return a string containing the serialized resource.
+   * @throws if the RDF data contains multiple references to the same resource.
    */
-  serializeResource: function RDFS_serializeResource(ds, resource, indent) {
-    if (this.resources.indexOf(resource) != -1 ) {
+  serializeResource: function RDFS_serializeResource(aDs, aResource, aIndent) {
+    if (this.resources.indexOf(aResource) != -1 ) {
       // We cannot output multiple references to the same resource.
-      throw new Error("Cannot serialize multiple references to " + resource.Value);
+      throw new Error("Cannot serialize multiple references to " + aResource.Value);
     }
-    if (indent === undefined)
-      indent = "";
+    if (aIndent === undefined)
+      aIndent = "";
 
-    this.resources.push(resource);
+    this.resources.push(aResource);
     var container = null;
     var type = "Description";
-    if (this.cUtils.IsSeq(ds, resource)) {
+    if (this.cUtils.IsSeq(aDs, aResource)) {
       type = "Seq";
-      container = this.cUtils.MakeSeq(ds, resource);
+      container = this.cUtils.MakeSeq(aDs, aResource);
     }
-    else if (this.cUtils.IsAlt(ds, resource)) {
+    else if (this.cUtils.IsAlt(aDs, aResource)) {
       type = "Alt";
-      container = this.cUtils.MakeAlt(ds, resource);
+      container = this.cUtils.MakeAlt(aDs, aResource);
     }
-    else if (this.cUtils.IsBag(ds, resource)) {
+    else if (this.cUtils.IsBag(aDs, aResource)) {
       type = "Bag";
-      container = this.cUtils.MakeBag(ds, resource);
+      container = this.cUtils.MakeBag(aDs, aResource);
     }
 
-    var result = indent + "<RDF:" + type;
-    if (!gRDF.IsAnonymousResource(resource))
-      result += " about=\"" + this.escapeEntities(resource.ValueUTF8) + "\"";
+    var result = aIndent + "<RDF:" + type;
+    if (!gRDF.IsAnonymousResource(aResource))
+      result += " about=\"" + this.escapeEntities(aResource.ValueUTF8) + "\"";
     result += ">\n";
 
     if (container)
-      result += this.serializeContainerItems(ds, container, indent + this.INDENT);
+      result += this.serializeContainerItems(aDs, container, aIndent + this.INDENT);
 
-    result += this.serializeResourceProperties(ds, resource, indent + this.INDENT);
+    result += this.serializeResourceProperties(aDs, aResource, aIndent + this.INDENT);
 
-    result += indent + "</RDF:" + type + ">\n";
+    result += aIndent + "</RDF:" + type + ">\n";
     return result;
   }
 }
@@ -257,39 +262,40 @@ RDFSerializer.prototype = {
 /**
  * Parses an RDF style update manifest into an array of update objects.
  *
- * @param   id
- *          The ID of the add-on being checked for updates
- * @param   type
- *          The type of the add-on being checked for updates
- * @param   updateKey
- *          An optional update key for the add-on
- * @param   The XMLHttpRequest that has retrieved the update manifest
- * @return  an array of update objects
- * @throws  if the update manifest is invalid in any way
+ * @param  aId
+ *         The ID of the add-on being checked for updates
+ * @param  aType
+ *         The type of the add-on being checked for updates
+ * @param  aUpdateKey
+ *         An optional update key for the add-on
+ * @param  aRequest
+ *         The XMLHttpRequest that has retrieved the update manifest
+ * @return an array of update objects
+ * @throws if the update manifest is invalid in any way
  */
-function parseRDFManifest(id, type, updateKey, request) {
-  function EM_R(prop) {
-    return gRDF.GetResource(PREFIX_NS_EM + prop);
+function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
+  function EM_R(aProp) {
+    return gRDF.GetResource(PREFIX_NS_EM + aProp);
   }
 
-  function getValue(literal) {
-    if (literal instanceof Ci.nsIRDFLiteral)
-      return literal.Value;
-    if (literal instanceof Ci.nsIRDFResource)
-      return literal.Value;
-    if (literal instanceof Ci.nsIRDFInt)
-      return literal.Value;
+  function getValue(aLiteral) {
+    if (aLiteral instanceof Ci.nsIRDFLiteral)
+      return aLiteral.Value;
+    if (aLiteral instanceof Ci.nsIRDFResource)
+      return aLiteral.Value;
+    if (aLiteral instanceof Ci.nsIRDFInt)
+      return aLiteral.Value;
     return null;
   }
 
-  function getProperty(ds, source, property) {
-    return getValue(ds.GetTarget(source, EM_R(property), true));
+  function getProperty(aDs, aSource, aProperty) {
+    return getValue(aDs.GetTarget(aSource, EM_R(aProperty), true));
   }
 
-  function getRequiredProperty(ds, source, property) {
-    let value = getProperty(ds, source, property);
+  function getRequiredProperty(aDs, aSource, aProperty) {
+    let value = getProperty(aDs, aSource, aProperty);
     if (!value)
-      throw new Error("Update manifest is missing a required " + property + " property.");
+      throw new Error("Update manifest is missing a required " + aProperty + " property.");
     return value;
   }
 
@@ -297,27 +303,27 @@ function parseRDFManifest(id, type, updateKey, request) {
                   createInstance(Ci.nsIRDFXMLParser);
   let ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
            createInstance(Ci.nsIRDFDataSource);
-  rdfParser.parseString(ds, request.channel.URI, request.responseText);
+  rdfParser.parseString(ds, aRequest.channel.URI, aRequest.responseText);
 
-  switch (type) {
+  switch (aType) {
   case "extension":
-    var item = PREFIX_EXTENSION + id;
+    var item = PREFIX_EXTENSION + aId;
     break;
   case "theme":
-    item = PREFIX_THEME + id;
+    item = PREFIX_THEME + aId;
     break;
   default:
-    item = PREFIX_ITEM + id;
+    item = PREFIX_ITEM + aId;
     break;
   }
 
   let extensionRes  = gRDF.GetResource(item);
 
   // If we have an update key then the update manifest must be signed
-  if (updateKey) {
+  if (aUpdateKey) {
     let signature = getProperty(ds, extensionRes, "signature");
     if (!signature)
-      throw new Error("Update manifest for " + id + " does not contain a required signature");
+      throw new Error("Update manifest for " + aId + " does not contain a required signature");
     let serializer = new RDFSerializer();
     let updateString = null;
 
@@ -325,7 +331,7 @@ function parseRDFManifest(id, type, updateKey, request) {
       updateString = serializer.serializeResource(ds, extensionRes);
     }
     catch (e) {
-      throw new Error("Failed to generate signed string for " + id + ". Serializer threw " + e);
+      throw new Error("Failed to generate signed string for " + aId + ". Serializer threw " + e);
     }
 
     let result = false;
@@ -333,14 +339,14 @@ function parseRDFManifest(id, type, updateKey, request) {
     try {
       let verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
                      getService(Ci.nsIDataSignatureVerifier);
-      result = verifier.verifyData(updateString, signature, updateKey);
+      result = verifier.verifyData(updateString, signature, aUpdateKey);
     }
     catch (e) {
-      throw new Error("The signature or updateKey for " + id + " is malformed");
+      throw new Error("The signature or updateKey for " + aId + " is malformed");
     }
 
     if (!result)
-      throw new Error("The signature for " + id + " was not created by the add-on's updateKey");
+      throw new Error("The signature for " + aId + " was not created by the add-on's updateKey");
   }
 
   let updates = ds.GetTarget(extensionRes, EM_R("updates"), true);
@@ -374,7 +380,7 @@ function parseRDFManifest(id, type, updateKey, request) {
       continue;
     }
 
-    LOG("Found an update entry for " + id + " version " + version);
+    LOG("Found an update entry for " + aId + " version " + version);
 
     let targetApps = ds.GetTargets(item, EM_R("targetApplication"), true);
     while (targetApps.hasMoreElements()) {
@@ -417,31 +423,31 @@ function parseRDFManifest(id, type, updateKey, request) {
  * Starts downloading an update manifest and then passes it to an appropriate
  * parser to convert to an array of update objects
  *
- * @param   id
- *          The ID of the add-on being checked for updates
- * @param   type
- *          The type of add-on being checked for updates
- * @param   updateKey
- *          An optional update key for the add-on
- * @param   url
- *          The URL of the update manifest
- * @param   observer
- *          An observer to pass results to
+ * @param  aId
+ *         The ID of the add-on being checked for updates
+ * @param  aType
+ *         The type of add-on being checked for updates
+ * @param  aUpdateKey
+ *         An optional update key for the add-on
+ * @param  aUrl
+ *         The URL of the update manifest
+ * @param  aObserver
+ *         An observer to pass results to
  */
-function UpdateParser(id, type, updateKey, url, observer) {
-  this.id = id;
-  this.type = type;
-  this.updateKey = updateKey;
-  this.observer = observer;
+function UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver) {
+  this.id = aId;
+  this.type = aType;
+  this.updateKey = aUpdateKey;
+  this.observer = aObserver;
 
   this.timer = Cc["@mozilla.org/timer;1"].
                createInstance(Ci.nsITimer);
   this.timer.initWithCallback(this, TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
 
-  LOG("Requesting " + url);
+  LOG("Requesting " + aUrl);
   this.request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                  createInstance(Ci.nsIXMLHttpRequest);
-  this.request.open("GET", url, true);
+  this.request.open("GET", aUrl, true);
   this.request.channel.notificationCallbacks = new BadCertHandler();
   this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
   this.request.overrideMimeType("text/xml");
@@ -526,15 +532,15 @@ UpdateParser.prototype = {
   /**
    * Helper method to notify the observer that an error occured.
    */
-  notifyError: function UP_notifyError(status) {
+  notifyError: function UP_notifyError(aStatus) {
     if ("onUpdateCheckError" in this.observer)
-      this.observer.onUpdateCheckError(status);
+      this.observer.onUpdateCheckError(aStatus);
   },
 
   /**
    * Called when the request has timed out and should be canceled.
    */
-  notify: function UP_notify(timer) {
+  notify: function UP_notify(aTimer) {
     this.timer = null;
     this.request.abort();
     this.request = null;
@@ -548,25 +554,25 @@ UpdateParser.prototype = {
 /**
  * Tests if an update matches a version of the application or platform
  *
- * @param   update
- *          The available update
- * @param   appVersion
- *          The application version to use
- * @param   platformVersion
- *          The platform version to use
- * @return  true if the update is compatible with the application/platform
+ * @param  aUpdate
+ *         The available update
+ * @param  aAppVersion
+ *         The application version to use
+ * @param  aPlatformVersion
+ *         The platform version to use
+ * @return true if the update is compatible with the application/platform
  */
-function matchesVersions(update, appVersion, platformVersion) {
+function matchesVersions(aUpdate, aAppVersion, aPlatformVersion) {
   let result = false;
-  for (let i = 0; i < update.targetApplications.length; i++) {
-    let app = update.targetApplications[i];
+  for (let i = 0; i < aUpdate.targetApplications.length; i++) {
+    let app = aUpdate.targetApplications[i];
     if (app.id == Services.appinfo.ID) {
-      return (Services.vc.compare(appVersion, app.minVersion) >= 0) &&
-             (Services.vc.compare(appVersion, app.maxVersion) <= 0);
+      return (Services.vc.compare(aAppVersion, app.minVersion) >= 0) &&
+             (Services.vc.compare(aAppVersion, app.maxVersion) <= 0);
     }
     if (app.id == TOOLKIT_ID) {
-      result = (Services.vc.compare(platformVersion, app.minVersion) >= 0) &&
-               (Services.vc.compare(platformVersion, app.maxVersion) <= 0);
+      result = (Services.vc.compare(aPlatformVersion, app.minVersion) >= 0) &&
+               (Services.vc.compare(aPlatformVersion, app.maxVersion) <= 0);
     }
   }
   return result;
@@ -583,39 +589,39 @@ var AddonUpdateChecker = {
    * Retrieves the best matching compatibility update for the application from
    * a list of available update objects.
    *
-   * @param   updates
-   *          An array of update objects
-   * @param   version
-   *          The version of the add-on to get new compatibility information for
-   * @param   ignoreCompatibility
-   *          An optional parameter to get the first compatibility update that
-   *          is compatible with any version of the application or toolkit
-   * @param   appVersion
-   *          The version of the application or null to use the current version
-   * @param   platformVersion
-   *          The version of the platform or null to use the current version
-   * @return  an update object if one matches or null if not
+   * @param  aUpdates
+   *         An array of update objects
+   * @param  aVersion
+   *         The version of the add-on to get new compatibility information for
+   * @param  aIgnoreCompatibility
+   *         An optional parameter to get the first compatibility update that
+   *         is compatible with any version of the application or toolkit
+   * @param  aAppVersion
+   *         The version of the application or null to use the current version
+   * @param  aPlatformVersion
+   *         The version of the platform or null to use the current version
+   * @return an update object if one matches or null if not
    */
-  getCompatibilityUpdate: function AUC_getCompatibilityUpdate(updates, version,
-                                                              ignoreCompatibility,
-                                                              appVersion,
-                                                              platformVersion) {
-    if (!appVersion)
-      appVersion = Services.appinfo.version;
-    if (!platformVersion)
-      platformVersion = Services.appinfo.platformVersion;
+  getCompatibilityUpdate: function AUC_getCompatibilityUpdate(aUpdates, aVersion,
+                                                              aIgnoreCompatibility,
+                                                              aAppVersion,
+                                                              aPlatformVersion) {
+    if (!aAppVersion)
+      aAppVersion = Services.appinfo.version;
+    if (!aPlatformVersion)
+      aPlatformVersion = Services.appinfo.platformVersion;
 
-    for (let i = 0; i < updates.length; i++) {
-      if (Services.vc.compare(updates[i].version, version) == 0) {
-        if (ignoreCompatibility) {
-          for (let j = 0; j < updates[i].targetApplications.length; j++) {
-            let id = updates[i].targetApplications[j].id;
+    for (let i = 0; i < aUpdates.length; i++) {
+      if (Services.vc.compare(aUpdates[i].version, aVersion) == 0) {
+        if (aIgnoreCompatibility) {
+          for (let j = 0; j < aUpdates[i].targetApplications.length; j++) {
+            let id = aUpdates[i].targetApplications[j].id;
             if (id == Services.appinfo.ID || id == TOOLKIT_ID)
-              return updates[i];
+              return aUpdates[i];
           }
         }
-        else if (matchesVersions(updates[i], appVersion, platformVersion)) {
-          return updates[i];
+        else if (matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion)) {
+          return aUpdates[i];
         }
       }
     }
@@ -625,29 +631,29 @@ var AddonUpdateChecker = {
   /**
    * Returns the newest available update from a list of update objects.
    *
-   * @param   updates
-   *          An array of update objects
-   * @param   appVersion
-   *          The version of the application or null to use the current version
-   * @param   platformVersion
-   *          The version of the platform or null to use the current version
-   * @return  an update object if one matches or null if not
+   * @param  aUpdates
+   *         An array of update objects
+   * @param  aAppVersion
+   *         The version of the application or null to use the current version
+   * @param  aPlatformVersion
+   *         The version of the platform or null to use the current version
+   * @return an update object if one matches or null if not
    */
-  getNewestCompatibleUpdate: function AUC_getNewestCompatibleUpdate(updates,
-                                                                    appVersion,
-                                                                    platformVersion) {
-    if (!appVersion)
-      appVersion = Services.appinfo.version;
-    if (!platformVersion)
-      platformVersion = Services.appinfo.platformVersion;
+  getNewestCompatibleUpdate: function AUC_getNewestCompatibleUpdate(aUpdates,
+                                                                    aAppVersion,
+                                                                    aPlatformVersion) {
+    if (!aAppVersion)
+      aAppVersion = Services.appinfo.version;
+    if (!aPlatformVersion)
+      aPlatformVersion = Services.appinfo.platformVersion;
 
     let newest = null;
-    for (let i = 0; i < updates.length; i++) {
-      if (!updates[i].updateURL)
+    for (let i = 0; i < aUpdates.length; i++) {
+      if (!aUpdates[i].updateURL)
         continue;
-      if ((newest == null || (Services.vc.compare(newest.version, updates[i].version) < 0)) &&
-          matchesVersions(updates[i], appVersion, platformVersion))
-        newest = updates[i];
+      if ((newest == null || (Services.vc.compare(newest.version, aUpdates[i].version) < 0)) &&
+          matchesVersions(aUpdates[i], aAppVersion, aPlatformVersion))
+        newest = aUpdates[i];
     }
     return newest;
   },
@@ -655,19 +661,19 @@ var AddonUpdateChecker = {
   /**
    * Starts an update check.
    *
-   * @param   id
-   *          The ID of the add-on being checked for updates
-   * @param   type
-   *          The type of add-on being checked for updates
-   * @param   updateKey
-   *          An optional update key for the add-on
-   * @param   url
-   *          The URL of the add-on's update manifest
-   * @param   observer
-   *          An observer to notify of results
+   * @param  aId
+   *         The ID of the add-on being checked for updates
+   * @param  aType
+   *         The type of add-on being checked for updates
+   * @param  aUpdateKey
+   *         An optional update key for the add-on
+   * @param  aUrl
+   *         The URL of the add-on's update manifest
+   * @param  aObserver
+   *         An observer to notify of results
    */
-  checkForUpdates: function AUC_checkForUpdates(id, type, updateKey, url,
-                                                observer) {
-    new UpdateParser(id, type, updateKey, url, observer);
+  checkForUpdates: function AUC_checkForUpdates(aId, aType, aUpdateKey, aUrl,
+                                                aObserver) {
+    new UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver);
   }
 };
