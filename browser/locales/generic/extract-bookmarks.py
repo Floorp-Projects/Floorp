@@ -61,10 +61,6 @@ template = '''#filter emptyLines
 #define bookmarks_title %s
 #define bookmarks_heading %s
 
-# LOCALIZATION NOTE (bookmarks_addons):
-# link title for https://en-US.add-ons.mozilla.com/en-US/firefox/bookmarks/
-#define bookmarks_addons %s
-
 #define bookmarks_toolbarfolder %s
 #define bookmarks_toolbarfolder_description %s
 
