@@ -223,7 +223,7 @@ interface nsIXPCComponents_Utils : nsISupports
      *
      * Returns the global object with which the given object is associated.
      *
-     * @param obj The JavaScript object whose parent is to be gotten.
+     * @param obj The JavaScript object whose global is to be gotten.
      * @return the corresponding global.
      */
     void /* JSObject */ getGlobalForObject(/* in JSObject obj */);
