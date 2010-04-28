@@ -289,7 +289,7 @@ function parseRDFManifest(id, type, updateKey, request) {
   function getRequiredProperty(ds, source, property) {
     let value = getProperty(ds, source, property);
     if (!value)
-      throw new Error("Missing required property " + property);
+      throw new Error("Update manifest is missing a required " + property + " property.");
     return value;
   }
 
@@ -368,23 +368,35 @@ function parseRDFManifest(id, type, updateKey, request) {
   let items = ctr.GetElements();
   while (items.hasMoreElements()) {
     let item = items.getNext().QueryInterface(Ci.nsIRDFResource);
-    let version = getRequiredProperty(ds, item, "version");
+    let version = getProperty(ds, item, "version");
+    if (!version) {
+      WARN("Update manifest is missing a required version property.");
+      continue;
+    }
+
     LOG("Found an update entry for " + id + " version " + version);
 
     let targetApps = ds.GetTargets(item, EM_R("targetApplication"), true);
     while (targetApps.hasMoreElements()) {
       let targetApp = targetApps.getNext().QueryInterface(Ci.nsIRDFResource);
 
+      let appEntry = {};
+      try {
+        appEntry.id = getRequiredProperty(ds, targetApp, "id");
+        appEntry.minVersion = getRequiredProperty(ds, targetApp, "minVersion");
+        appEntry.maxVersion = getRequiredProperty(ds, targetApp, "maxVersion");
+      }
+      catch (e) {
+        WARN(e);
+        continue;
+      }
+
       let result = {
         version: version,
         updateURL: getProperty(ds, targetApp, "updateLink"),
         updateHash: getProperty(ds, targetApp, "updateHash"),
         updateInfoURL: getProperty(ds, targetApp, "updateInfoURL"),
-        targetApplications: [{
-          id: getRequiredProperty(ds, targetApp, "id"),
-          minVersion: getRequiredProperty(ds, targetApp, "minVersion"),
-          maxVersion: getRequiredProperty(ds, targetApp, "maxVersion"),
-        }]
+        targetApplications: [appEntry]
       };
 
       if (result.updateURL && checkSecurity &&
