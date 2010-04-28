@@ -2995,6 +2995,24 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # User-facing shmem methods
         self.cls.addstmts(self.makeShmemIface())
 
+        if (ptype.isToplevel() and self.side is 'parent'
+            and ptype.talksRpc()):
+
+            processnative = MethodDefn(
+                MethodDecl('ProcessNativeEventsInRPCCall', ret=Type.VOID))
+
+            processnative.addstmts([
+                    CppDirective('ifdef', 'OS_WIN'),
+                    StmtExpr(ExprCall(
+                            ExprSelect(p.channelVar(), '.',
+                                       'ProcessNativeEventsInRPCCall'))),
+                    CppDirective('else'),
+                    _runtimeAbort('This method is Windows-only'),
+                    CppDirective('endif'),
+                    ])
+
+            self.cls.addstmts([ processnative, Whitespace.NL ])
+
         if ptype.isToplevel() and self.side is 'parent':
             ## bool GetMinidump(nsIFile** dump)
             self.cls.addstmt(Label.PROTECTED)
