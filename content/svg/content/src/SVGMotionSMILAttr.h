@@ -14,13 +14,12 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Daniel Holbert <dholbert@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,49 +35,46 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGGRAPHICELEMENT_H__
-#define __NS_SVGGRAPHICELEMENT_H__
+/* representation of a dummy attribute targeted by <animateMotion> element */
 
-#include "nsSVGStylableElement.h"
-#include "nsIDOMSVGLocatable.h"
-#include "nsIDOMSVGTransformable.h"
-#include "nsIDOMSVGAnimTransformList.h"
-#include "gfxMatrix.h"
+#ifndef MOZILLA_SVGMOTIONSMILATTR_H_
+#define MOZILLA_SVGMOTIONSMILATTR_H_
 
-typedef nsSVGStylableElement nsSVGGraphicElementBase;
+#include "nsISMILAttr.h"
+class nsSVGElement;
 
-class nsSVGGraphicElement : public nsSVGGraphicElementBase,
-                            public nsIDOMSVGTransformable // : nsIDOMSVGLocatable
+namespace mozilla {
+
+/**
+ * SVGMotionSMILAttr: Implements the nsISMILAttr interface for SMIL animations
+ * from <animateMotion>.
+ *
+ * NOTE: Even though there's technically no "motion" attribute, we behave in
+ * many ways as if there were, for simplicity.
+ */
+class SVGMotionSMILAttr : public nsISMILAttr
 {
-protected:
-  nsSVGGraphicElement(nsINodeInfo *aNodeInfo);
-  
 public:
-  // interfaces:  
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMSVGLOCATABLE
-  NS_DECL_NSIDOMSVGTRANSFORMABLE
+  SVGMotionSMILAttr(nsSVGElement* aSVGElement)
+    : mSVGElement(aSVGElement) {}
 
-  // nsIContent interface
-  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-
-  virtual gfxMatrix PrependLocalTransformTo(const gfxMatrix &aMatrix);
-  virtual void SetAnimateMotionTransform(const gfxMatrix* aMatrix);
+  // nsISMILAttr methods
+  virtual nsresult ValueFromString(const nsAString& aStr,
+                                   const nsISMILAnimationElement* aSrcElement,
+                                   nsSMILValue& aValue,
+                                   PRBool& aCanCache) const;
+  virtual nsSMILValue GetBaseValue() const;
+  virtual nsresult    SetAnimValue(const nsSMILValue& aValue);
+  virtual void        ClearAnimValue();
+  virtual const nsIContent* GetTargetNode() const;
 
 protected:
-  // nsSVGElement overrides
-  virtual PRBool IsEventName(nsIAtom* aName);
-  
-  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify);
-
-  nsCOMPtr<nsIDOMSVGAnimatedTransformList> mTransforms;
-
-  // XXX maybe move this to property table, to save space on un-animated elems?
-  nsAutoPtr<gfxMatrix> mAnimateMotionTransform;
-
-  // helper
-  nsresult CreateTransformList();
+  // Raw pointers are OK here because this SVGMotionSMILAttr is both
+  // created & destroyed during a SMIL sample-step, during which time the DOM
+  // isn't modified.
+  nsSVGElement* mSVGElement;
 };
 
-#endif // __NS_SVGGRAPHICELEMENT_H__
+} // namespace mozilla
+
+#endif // MOZILLA_SVGMOTIONSMILATTR_H_

@@ -94,6 +94,7 @@
 #include "nsSMILMappedAttribute.h"
 #include "nsSVGTransformSMILAttr.h"
 #include "nsSVGAnimatedTransformList.h"
+#include "SVGMotionSMILAttr.h"
 #include "nsIDOMSVGTransformable.h"
 #endif // MOZ_SMIL
 
@@ -1952,6 +1953,11 @@ nsSVGElement::GetAnimatedAttr(nsIAtom* aName)
     NS_ENSURE_TRUE(list, nsnull);
 
     return new nsSVGTransformSMILAttr(list, this);
+  }
+
+  // Motion (fake 'attribute' for animateMotion)
+  if (aName == nsGkAtoms::mozAnimateMotionDummyAttr) {
+    return new mozilla::SVGMotionSMILAttr(this);
   }
 
   // Lengths:
