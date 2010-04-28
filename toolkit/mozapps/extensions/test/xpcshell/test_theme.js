@@ -662,7 +662,7 @@ function run_test_13() {
       do_check_eq(install.version, "1.0");
       do_check_eq(install.name, "Test Theme 1");
       do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
-  
+
       prepare_test({
         "theme1@tests.mozilla.org": [
           "onInstalling",
