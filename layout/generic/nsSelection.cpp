@@ -1076,6 +1076,24 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
                             PRBool            aContinueSelection,
                             nsSelectionAmount aAmount)
 {
+  PRBool visualMovement =
+      (aKeycode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE ||
+       aKeycode == nsIDOMKeyEvent::DOM_VK_DELETE ||
+       aKeycode == nsIDOMKeyEvent::DOM_VK_HOME ||
+       aKeycode == nsIDOMKeyEvent::DOM_VK_END) ?
+      PR_FALSE : // Delete operations and home/end are always logical
+      mCaretMovementStyle == 1 ||
+        (mCaretMovementStyle == 2 && !aContinueSelection);
+
+  return MoveCaret(aKeycode, aContinueSelection, aAmount, visualMovement);
+}
+
+nsresult
+nsFrameSelection::MoveCaret(PRUint32          aKeycode,
+                            PRBool            aContinueSelection,
+                            nsSelectionAmount aAmount,
+                            PRBool            aVisualMovement)
+{
   NS_ENSURE_STATE(mShell);
   // Flush out layout, since we need it to be up to date to do caret
   // positioning.
@@ -1148,17 +1166,10 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
     }
   }
 
-  PRBool visualMovement = 
-    (aKeycode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE || 
-     aKeycode == nsIDOMKeyEvent::DOM_VK_DELETE ||
-     aKeycode == nsIDOMKeyEvent::DOM_VK_HOME || 
-     aKeycode == nsIDOMKeyEvent::DOM_VK_END) ?
-    PR_FALSE : // Delete operations and home/end are always logical
-    mCaretMovementStyle == 1 || (mCaretMovementStyle == 2 && !aContinueSelection);
-
   nsIFrame *frame;
   PRInt32 offsetused = 0;
-  result = sel->GetPrimaryFrameForFocusNode(&frame, &offsetused, visualMovement);
+  result = sel->GetPrimaryFrameForFocusNode(&frame, &offsetused,
+                                            aVisualMovement);
 
   if (NS_FAILED(result) || !frame)
     return result?result:NS_ERROR_FAILURE;
@@ -1167,7 +1178,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
   //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking
   //when we hit scrollable views.  If no limiter then just let it go ahead
   pos.SetData(aAmount, eDirPrevious, offsetused, desiredX, 
-              PR_TRUE, mLimiter != nsnull, PR_TRUE, visualMovement);
+              PR_TRUE, mLimiter != nsnull, PR_TRUE, aVisualMovement);
 
   nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
   
@@ -5663,6 +5674,123 @@ nsTypedSelection::DeleteFromDocument()
   if (!mFrameSelection)
     return NS_OK;//nothing to do
   return mFrameSelection->DeleteFromDocument();
+}
+
+NS_IMETHODIMP
+nsTypedSelection::Modify(const nsAString& aAlter, const nsAString& aDirection,
+                         const nsAString& aGranularity)
+{
+  // Silently exit if there's no selection or no focus node.
+  if (!mFrameSelection || !GetAnchorFocusRange() || !GetFocusNode()) {
+    return NS_OK;
+  }
+
+  if (!aAlter.LowerCaseEqualsLiteral("move") &&
+      !aAlter.LowerCaseEqualsLiteral("extend")) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (!aDirection.LowerCaseEqualsLiteral("forward") &&
+      !aDirection.LowerCaseEqualsLiteral("backward") &&
+      !aDirection.LowerCaseEqualsLiteral("left") &&
+      !aDirection.LowerCaseEqualsLiteral("right")) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Line moves are always visual.
+  PRBool visual  = aDirection.LowerCaseEqualsLiteral("left") ||
+                   aDirection.LowerCaseEqualsLiteral("right") ||
+                   aGranularity.LowerCaseEqualsLiteral("line");
+
+  PRBool forward = aDirection.LowerCaseEqualsLiteral("forward") ||
+                   aDirection.LowerCaseEqualsLiteral("right");
+
+  PRBool extend  = aAlter.LowerCaseEqualsLiteral("extend");
+
+  // The PRUint32 casts below prevent an enum mismatch warning.
+  nsSelectionAmount amount;
+  PRUint32 keycode;
+  if (aGranularity.LowerCaseEqualsLiteral("character")) {
+    amount = eSelectCharacter;
+    keycode = forward ? (PRUint32) nsIDOMKeyEvent::DOM_VK_RIGHT :
+                        (PRUint32) nsIDOMKeyEvent::DOM_VK_LEFT;
+  }
+  else if (aGranularity.LowerCaseEqualsLiteral("word")) {
+    amount = eSelectWord;
+    keycode = forward ? (PRUint32) nsIDOMKeyEvent::DOM_VK_RIGHT :
+                        (PRUint32) nsIDOMKeyEvent::DOM_VK_LEFT;
+  }
+  else if (aGranularity.LowerCaseEqualsLiteral("line")) {
+    amount = eSelectLine;
+    keycode = forward ? (PRUint32) nsIDOMKeyEvent::DOM_VK_DOWN :
+                        (PRUint32) nsIDOMKeyEvent::DOM_VK_UP;
+  }
+  else if (aGranularity.LowerCaseEqualsLiteral("lineboundary")) {
+    amount = eSelectLine;
+    keycode = forward ? (PRUint32) nsIDOMKeyEvent::DOM_VK_END :
+                        (PRUint32) nsIDOMKeyEvent::DOM_VK_HOME;
+  }
+  else if (aGranularity.LowerCaseEqualsLiteral("sentence") ||
+           aGranularity.LowerCaseEqualsLiteral("sentenceboundary") ||
+           aGranularity.LowerCaseEqualsLiteral("paragraph") ||
+           aGranularity.LowerCaseEqualsLiteral("paragraphboundary") ||
+           aGranularity.LowerCaseEqualsLiteral("documentboundary")) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  else {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // If the anchor doesn't equal the focus and we try to move without first
+  // collapsing the selection, MoveCaret will collapse the selection and quit.
+  // To avoid this, we need to collapse the selection first.
+  nsresult rv = NS_OK;
+  if (!extend) {
+    nsINode* focusNode = GetFocusNode();
+    // We should have checked earlier that there was a focus node.
+    NS_ENSURE_TRUE(focusNode, NS_ERROR_UNEXPECTED);
+    PRInt32 focusOffset = GetFocusOffset();
+    Collapse(focusNode, focusOffset);
+  }
+
+  // If the base level of the focused frame is odd, we may have to swap the
+  // direction of the keycode.
+  nsIFrame *frame;
+  PRInt32 offset;
+  rv = GetPrimaryFrameForFocusNode(&frame, &offset, visual);
+  if (NS_SUCCEEDED(rv) && frame) {
+    nsBidiLevel baseLevel = nsBidiPresUtils::GetFrameBaseLevel(frame);
+
+    if (baseLevel & 1) {
+      if (!visual && keycode == nsIDOMKeyEvent::DOM_VK_RIGHT) {
+        keycode = nsIDOMKeyEvent::DOM_VK_LEFT;
+      }
+      else if (!visual && keycode == nsIDOMKeyEvent::DOM_VK_LEFT) {
+        keycode = nsIDOMKeyEvent::DOM_VK_RIGHT;
+      }
+      else if (visual && keycode == nsIDOMKeyEvent::DOM_VK_HOME) {
+        keycode = nsIDOMKeyEvent::DOM_VK_END;
+      }
+      else if (visual && keycode == nsIDOMKeyEvent::DOM_VK_END) {
+        keycode = nsIDOMKeyEvent::DOM_VK_HOME;
+      }
+    }
+  }
+
+  // MoveCaret will return an error if it can't move in the specified
+  // direction, but we just ignore this error unless it's a line move, in which
+  // case we call nsISelectionController::CompleteMove to move the cursor to
+  // the beginning/end of the line.
+  rv = mFrameSelection->MoveCaret(keycode, extend, amount, visual);
+
+  if (aGranularity.LowerCaseEqualsLiteral("line") && NS_FAILED(rv)) {
+    nsCOMPtr<nsISelectionController> shell =
+      do_QueryInterface(mFrameSelection->GetShell());
+    if (!shell)
+      return NS_OK;
+    shell->CompleteMove(forward, extend);
+  }
+  return NS_OK;
 }
 
 /** SelectionLanguageChange modifies the cursor Bidi level after a change in keyboard direction
