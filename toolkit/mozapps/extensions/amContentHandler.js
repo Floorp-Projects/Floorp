@@ -52,38 +52,40 @@ amContentHandler.prototype = {
   /**
    * Handles a new request for an application/x-xpinstall file.
    *
-   * @param   mimetype
-   *          The mimetype of the file
-   * @param   context
-   *          The context passed to nsIChannel.asyncOpen
+   * @param  aMimetype
+   *         The mimetype of the file
+   * @param  aContext
+   *         The context passed to nsIChannel.asyncOpen
+   * @param  aRequest
+   *         The nsIRequest dealing with the content
    */
-  handleContent: function XCH_handleContent(mimetype, context, request) {
-    if (mimetype != XPI_CONTENT_TYPE)
+  handleContent: function XCH_handleContent(aMimetype, aContext, aRequest) {
+    if (aMimetype != XPI_CONTENT_TYPE)
       throw Cr.NS_ERROR_WONT_HANDLE_CONTENT;
 
-    if (!(request instanceof Ci.nsIChannel))
+    if (!(aRequest instanceof Ci.nsIChannel))
       throw Cr.NS_ERROR_WONT_HANDLE_CONTENT;
 
-    let uri = request.URI;
+    let uri = aRequest.URI;
 
     let referer = null;
-    if (request instanceof Ci.nsIPropertyBag2) {
-      referer = request.getPropertyAsInterface("docshell.internalReferrer",
-                                               Ci.nsIURI);
+    if (aRequest instanceof Ci.nsIPropertyBag2) {
+      referer = aRequest.getPropertyAsInterface("docshell.internalReferrer",
+                                                Ci.nsIURI);
     }
 
     let window = null;
-    let callbacks = request.notificationCallbacks ?
-                    request.notificationCallbacks :
-                    request.loadGroup.notificationCallbacks;
+    let callbacks = aRequest.notificationCallbacks ?
+                    aRequest.notificationCallbacks :
+                    aRequest.loadGroup.notificationCallbacks;
     if (callbacks)
       window = callbacks.getInterface(Ci.nsIDOMWindow);
 
-    request.cancel(Cr.NS_BINDING_ABORTED);
+    aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
     let manager = Cc["@mozilla.org/addons/integration;1"].
                   getService(Ci.amIWebInstaller);
-    manager.installAddonsFromWebpage(mimetype, window, referer, [uri.spec],
+    manager.installAddonsFromWebpage(aMimetype, window, referer, [uri.spec],
                                      [null], [null], [null], null, 1);
   },
 

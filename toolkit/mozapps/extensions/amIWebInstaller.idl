@@ -51,45 +51,45 @@ interface amIWebInstaller : nsISupports
   /**
    * Checks if installation is enabled for a webpage.
    *
-   * @param   mimetype
-   *          The mimetype for the add-on to be installed
-   * @param   referer
-   *          The URL of the webpage trying to install an add-on
-   * @return  true if installation is enabled
+   * @param  aMimetype
+   *         The mimetype for the add-on to be installed
+   * @param  referer
+   *         The URL of the webpage trying to install an add-on
+   * @return true if installation is enabled
    */
-  boolean isInstallEnabled(in AString mimetype, in nsIURI referer);
+  boolean isInstallEnabled(in AString aMimetype, in nsIURI aReferer);
 
   /**
    * Installs an array of add-ons at the request of a webpage
    *
-   * @param   mimetype
-   *          The mimetype for the add-ons
-   * @param   window
-   *          The window installing the add-ons
-   * @param   referer
-   *          The URI for the webpage installing the add-ons
-   * @param   uris
-   *          The URIs of add-ons to be installed
-   * @param   hashes
-   *          The hashes for the add-ons to be installed
-   * @param   names
-   *          The names for the add-ons to be installed
-   * @param   icons
-   *          The icons for the add-ons to be installed
-   * @param   callback
-   *          An optional callback to notify about installation success and
-   *          failure
-   * @param   installCount
-   *          An optional argument including the number of add-ons to install
-   * @return  true if the installation was successfully started
+   * @param  aMimetype
+   *         The mimetype for the add-ons
+   * @param  aWindow
+   *         The window installing the add-ons
+   * @param  aReferer
+   *         The URI for the webpage installing the add-ons
+   * @param  aUris
+   *         The URIs of add-ons to be installed
+   * @param  aHashes
+   *         The hashes for the add-ons to be installed
+   * @param  aNames
+   *         The names for the add-ons to be installed
+   * @param  aIcons
+   *         The icons for the add-ons to be installed
+   * @param  aCallback
+   *         An optional callback to notify about installation success and
+   *         failure
+   * @param  aInstallCount
+   *         An optional argument including the number of add-ons to install
+   * @return true if the installation was successfully started
    */
-  boolean installAddonsFromWebpage(in AString mimetype,
-                                   in nsIDOMWindowInternal window,
-                                   in nsIURI referer,
-                                   [array, size_is(installCount)] in wstring uris,
-                                   [array, size_is(installCount)] in wstring hashes,
-                                   [array, size_is(installCount)] in wstring names,
-                                   [array, size_is(installCount)] in wstring icons,
-                                   [optional] in amIInstallCallback callback,
-                                   [optional] in PRUint32 installCount);
+  boolean installAddonsFromWebpage(in AString aMimetype,
+                                   in nsIDOMWindowInternal aWindow,
+                                   in nsIURI aReferer,
+                                   [array, size_is(aInstallCount)] in wstring aUris,
+                                   [array, size_is(aInstallCount)] in wstring aHashes,
+                                   [array, size_is(aInstallCount)] in wstring aNames,
+                                   [array, size_is(aInstallCount)] in wstring aIcons,
+                                   [optional] in amIInstallCallback aCallback,
+                                   [optional] in PRUint32 aInstallCount);
 };

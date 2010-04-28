@@ -66,12 +66,12 @@ function createAppInfo(id, name, version, platformVersion) {
  * Tests that an add-on does appear in the crash report annotations, if
  * crash reporting is enabled. The test will fail if the add-on is not in the
  * annotation.
- * @param   id
- *          The ID of the add-on
- * @param   version
- *          The version of the add-on
+ * @param  aId
+ *         The ID of the add-on
+ * @param  aVersion
+ *         The version of the add-on
  */
-function do_check_in_crash_annotation(id, version) {
+function do_check_in_crash_annotation(aId, aVersion) {
   if (!("nsICrashReporter" in AM_Ci))
     return;
 
@@ -81,19 +81,19 @@ function do_check_in_crash_annotation(id, version) {
   }
 
   let addons = gAppInfo.annotations["Add-ons"].split(",");
-  do_check_false(addons.indexOf(id + ":" + version) < 0);
+  do_check_false(addons.indexOf(aId + ":" + aVersion) < 0);
 }
 
 /**
  * Tests that an add-on does not appear in the crash report annotations, if
  * crash reporting is enabled. The test will fail if the add-on is in the
  * annotation.
- * @param   id
- *          The ID of the add-on
- * @param   version
- *          The version of the add-on
+ * @param  aId
+ *         The ID of the add-on
+ * @param  aVersion
+ *         The version of the add-on
  */
-function do_check_not_in_crash_annotation(id, version) {
+function do_check_not_in_crash_annotation(aId, aVersion) {
   if (!("nsICrashReporter" in AM_Ci))
     return;
 
@@ -103,42 +103,42 @@ function do_check_not_in_crash_annotation(id, version) {
   }
 
   let addons = gAppInfo.annotations["Add-ons"].split(",");
-  do_check_true(addons.indexOf(id + ":" + version) < 0);
+  do_check_true(addons.indexOf(aId + ":" + aVersion) < 0);
 }
 
 /**
  * Returns a testcase xpi
  *
- * @param   name
- *          The name of the testcase (without extension)
- * @return  an nsILocalFile pointing to the testcase xpi
+ * @param  aName
+ *         The name of the testcase (without extension)
+ * @return an nsILocalFile pointing to the testcase xpi
  */
-function do_get_addon(name) {
-  return do_get_file("addons/" + name + ".xpi");
+function do_get_addon(aName) {
+  return do_get_file("addons/" + aName + ".xpi");
 }
 
 /**
  * Starts up the add-on manager as if it was started by the application. This
  * will simulate any restarts requested by the manager.
  *
- * @param   expectedRestarts
- *          An optional parameter to specify the expected number of restarts.
- *          If passed and the number of restarts requested differs then the
- *          test will fail
- * @param   appChanged
- *          An optional boolean parameter to simulate the case where the
- *          application has changed version since the last run. If not passed it
- *          defaults to true
+ * @param  aExpectedRestarts
+ *         An optional parameter to specify the expected number of restarts.
+ *         If passed and the number of restarts requested differs then the
+ *         test will fail
+ * @param  aAppChanged
+ *         An optional boolean parameter to simulate the case where the
+ *         application has changed version since the last run. If not passed it
+ *         defaults to true
  */
-function startupManager(expectedRestarts, appChanged) {
+function startupManager(aExpectedRestarts, aAppChanged) {
   if (gInternalManager)
     do_throw("Test attempt to startup manager that was already started.");
 
-  if (appChanged === undefined)
-    appChanged = true;
+  if (aAppChanged === undefined)
+    aAppChanged = true;
 
   // Load the add-ons list as it was during application startup
-  loadAddonsList(appChanged);
+  loadAddonsList(aAppChanged);
 
   gInternalManager = AM_Cc["@mozilla.org/addons/integration;1"].
                      getService(AM_Ci.nsIObserver).
@@ -148,20 +148,20 @@ function startupManager(expectedRestarts, appChanged) {
 
   let appStartup = AM_Cc["@mozilla.org/toolkit/app-startup;1"].
                    getService(AM_Ci.nsIAppStartup2);
-  var restart = appChanged || appStartup.needsRestart;
+  var restart = aAppChanged || appStartup.needsRestart;
   appStartup.needsRestart = false;
 
   if (restart) {
-    if (expectedRestarts !== undefined)
-      restartManager(expectedRestarts - 1);
+    if (aExpectedRestarts !== undefined)
+      restartManager(aExpectedRestarts - 1);
     else
       restartManager();
   }
-  else if (expectedRestarts !== undefined) {
-    if (expectedRestarts > 0)
-      do_throw("Expected to need to restart " + expectedRestarts + " more times");
-    else if (expectedRestarts < 0)
-      do_throw("Restarted " + (-expectedRestarts) + " more times than expected");
+  else if (aExpectedRestarts !== undefined) {
+    if (aExpectedRestarts > 0)
+      do_throw("Expected to need to restart " + aExpectedRestarts + " more times");
+    else if (aExpectedRestarts < 0)
+      do_throw("Restarted " + (-aExpectedRestarts) + " more times than expected");
   }
 }
 
@@ -169,23 +169,23 @@ function startupManager(expectedRestarts, appChanged) {
  * Restarts the add-on manager as if the host application was restarted. This
  * will simulate any restarts requested by the manager.
  *
- * @param   expectedRestarts
- *          An optional parameter to specify the expected number of restarts.
- *          If passed and the number of restarts requested differs then the
- *          test will fail
- * @param   newVersion
- *          An optional new version to use for the application. Passing this
- *          will change nsIXULAppInfo.version and make the startup appear as if
- *          the application version has changed.
+ * @param  aExpectedRestarts
+ *         An optional parameter to specify the expected number of restarts.
+ *         If passed and the number of restarts requested differs then the
+ *         test will fail
+ * @param  aNewVersion
+ *         An optional new version to use for the application. Passing this
+ *         will change nsIXULAppInfo.version and make the startup appear as if
+ *         the application version has changed.
  */
-function restartManager(expectedRestarts, newVersion) {
+function restartManager(aExpectedRestarts, aNewVersion) {
   shutdownManager();
-  if (newVersion) {
-    gAppInfo.version = newVersion;
-    startupManager(expectedRestarts, true);
+  if (aNewVersion) {
+    gAppInfo.version = aNewVersion;
+    startupManager(aExpectedRestarts, true);
   }
   else {
-    startupManager(expectedRestarts, false);
+    startupManager(aExpectedRestarts, false);
   }
 }
 
@@ -203,12 +203,12 @@ function shutdownManager() {
   gAppInfo.annotations = {};
 }
 
-function loadAddonsList(appChanged) {
-  function readDirectories(section) {
+function loadAddonsList(aAppChanged) {
+  function readDirectories(aSection) {
     var dirs = [];
-    var keys = parser.getKeys(section);
+    var keys = parser.getKeys(aSection);
     while (keys.hasMore()) {
-      let descriptor = parser.getString(section, keys.getNext());
+      let descriptor = parser.getString(aSection, keys.getNext());
       try {
         let file = AM_Cc["@mozilla.org/file/local;1"].
                    createInstance(AM_Ci.nsILocalFile);
@@ -232,7 +232,7 @@ function loadAddonsList(appChanged) {
   file.append("extensions.ini");
   if (!file.exists())
     return;
-  if (appChanged) {
+  if (aAppChanged) {
     file.remove(true);
     return;
   }
@@ -244,22 +244,22 @@ function loadAddonsList(appChanged) {
   gAddonsList.themes = readDirectories("ThemeDirs");
 }
 
-function isItemInAddonsList(type, dir, id) {
-  var path = dir.clone();
-  path.append(id);
-  for (var i = 0; i < gAddonsList[type].length; i++) {
-    if (gAddonsList[type][i].equals(path))
+function isItemInAddonsList(aType, aDir, aId) {
+  var path = aDir.clone();
+  path.append(aId);
+  for (var i = 0; i < gAddonsList[aType].length; i++) {
+    if (gAddonsList[aType][i].equals(path))
       return true;
   }
   return false;
 }
 
-function isThemeInAddonsList(dir, id) {
-  return isItemInAddonsList("themes", dir, id);
+function isThemeInAddonsList(aDir, aId) {
+  return isItemInAddonsList("themes", aDir, aId);
 }
 
-function isExtensionInAddonsList(dir, id) {
-  return isItemInAddonsList("extensions", dir, id);
+function isExtensionInAddonsList(aDir, aId) {
+  return isItemInAddonsList("extensions", aDir, aId);
 }
 
 /**
@@ -269,25 +269,25 @@ function isExtensionInAddonsList(dir, id) {
  *          The string to escape
  * @return  The escaped string
  */
-function escapeXML(str) {
-  return str.toString()
-            .replace(/&/g, "&amp;")
-            .replace(/"/g, "&quot;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
+function escapeXML(aStr) {
+  return aStr.toString()
+             .replace(/&/g, "&amp;")
+             .replace(/"/g, "&quot;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;");
 }
 
-function writeLocaleStrings(data) {
+function writeLocaleStrings(aData) {
   let rdf = "";
-  ["name", "description", "creator", "homepageURL"].forEach(function(prop) {
-    if (prop in data)
-      rdf += "<em:" + prop + ">" + escapeXML(data[prop]) + "</em:" + prop + ">\n";
+  ["name", "description", "creator", "homepageURL"].forEach(function(aProp) {
+    if (aProp in aData)
+      rdf += "<em:" + aProp + ">" + escapeXML(aData[aProp]) + "</em:" + aProp + ">\n";
   });
 
-  ["developer", "translator", "contributor"].forEach(function(prop) {
-    if (prop in data) {
-      data[prop].forEach(function(value) {
-        rdf += "<em:" + prop + ">" + escapeXML(value) + "</em:" + prop + ">\n";
+  ["developer", "translator", "contributor"].forEach(function(aProp) {
+    if (aProp in aData) {
+      aData[aProp].forEach(function(aValue) {
+        rdf += "<em:" + aProp + ">" + escapeXML(aValue) + "</em:" + aProp + ">\n";
       });
     }
   });
@@ -301,31 +301,31 @@ function writeLocaleStrings(data) {
  * minVersion and maxVersion in the targetApplications property to give target
  * application compatibility.
  *
- * @param   data
+ * @param   aData
  *          The object holding data about the add-on
- * @param   dir
+ * @param   aDir
  *          The directory to add the install.rdf to
  */
-function writeInstallRDFToDir(data, dir) {
+function writeInstallRDFToDir(aData, aDir) {
   var rdf = '<?xml version="1.0"?>\n';
   rdf += '<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"\n' +
          '     xmlns:em="http://www.mozilla.org/2004/em-rdf#">\n';
   rdf += '<Description about="urn:mozilla:install-manifest">\n';
 
   ["id", "version", "type", "internalName", "updateURL", "updateKey",
-   "optionsURL", "aboutURL", "iconURL"].forEach(function(prop) {
-    if (prop in data)
-      rdf += "<em:" + prop + ">" + escapeXML(data[prop]) + "</em:" + prop + ">\n";
+   "optionsURL", "aboutURL", "iconURL"].forEach(function(aProp) {
+    if (aProp in aData)
+      rdf += "<em:" + aProp + ">" + escapeXML(aData[aProp]) + "</em:" + aProp + ">\n";
   });
 
-  rdf += writeLocaleStrings(data);
+  rdf += writeLocaleStrings(aData);
 
-  if ("targetApplications" in data) {
-    data.targetApplications.forEach(function(app) {
+  if ("targetApplications" in aData) {
+    aData.targetApplications.forEach(function(aApp) {
       rdf += "<em:targetApplication><Description>\n";
-      ["id", "minVersion", "maxVersion"].forEach(function(prop) {
-        if (prop in app)
-          rdf += "<em:" + prop + ">" + escapeXML(app[prop]) + "</em:" + prop + ">\n";
+      ["id", "minVersion", "maxVersion"].forEach(function(aProp) {
+        if (aProp in aApp)
+          rdf += "<em:" + aProp + ">" + escapeXML(aApp[aProp]) + "</em:" + aProp + ">\n";
       });
       rdf += "</Description></em:targetApplication>\n";
     });
@@ -333,9 +333,9 @@ function writeInstallRDFToDir(data, dir) {
 
   rdf += "</Description>\n</RDF>\n";
 
-  if (!dir.exists())
-    dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-  var file = dir.clone();
+  if (!aDir.exists())
+    aDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  var file = aDir.clone();
   file.append("install.rdf");
   if (file.exists())
     file.remove(true);
@@ -348,12 +348,12 @@ function writeInstallRDFToDir(data, dir) {
   fos.close();
 }
 
-function registerDirectory(key, dir) {
+function registerDirectory(aKey, aDir) {
   var dirProvider = {
-    getFile: function(prop, persistent) {
-      persistent.value = true;
-      if (prop == key)
-        return dir.clone();
+    getFile: function(aProp, aPersistent) {
+      aPersistent.value = true;
+      if (aProp == aKey)
+        return aDir.clone();
       return null;
     },
 
@@ -367,84 +367,84 @@ var gExpectedEvents = {};
 var gExpectedInstalls = [];
 var gNext = null;
 
-function getExpectedEvent(id) {
-  if (!(id in gExpectedEvents))
-    do_throw("Wasn't expecting events for " + id);
-  if (gExpectedEvents[id].length == 0)
-    do_throw("Too many events for " + id);
-  let event = gExpectedEvents[id].shift();
+function getExpectedEvent(aId) {
+  if (!(aId in gExpectedEvents))
+    do_throw("Wasn't expecting events for " + aId);
+  if (gExpectedEvents[aId].length == 0)
+    do_throw("Too many events for " + aId);
+  let event = gExpectedEvents[aId].shift();
   if (event instanceof Array)
     return event;
   return [event, true];
 }
 
 const AddonListener = {
-  onEnabling: function(addon, requiresRestart) {
-    let [event, expectedRestart] = getExpectedEvent(addon.id);
+  onEnabling: function(aAddon, aRequiresRestart) {
+    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onEnabling", event);
-    do_check_eq(requiresRestart, expectedRestart);
+    do_check_eq(aRequiresRestart, expectedRestart);
     if (expectedRestart)
-      do_check_true(hasFlag(addon.pendingOperations, AddonManager.PENDING_ENABLE));
-    do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_ENABLE));
+      do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_ENABLE));
+    do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
     return check_test_completed(arguments);
   },
 
-  onEnabled: function(addon) {
-    let [event, expectedRestart] = getExpectedEvent(addon.id);
+  onEnabled: function(aAddon) {
+    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onEnabled", event);
-    do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_ENABLE));
+    do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
     return check_test_completed(arguments);
   },
 
-  onDisabling: function(addon, requiresRestart) {
-    let [event, expectedRestart] = getExpectedEvent(addon.id);
+  onDisabling: function(aAddon, aRequiresRestart) {
+    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onDisabling", event);
-    do_check_eq(requiresRestart, expectedRestart);
+    do_check_eq(aRequiresRestart, expectedRestart);
     if (expectedRestart)
-      do_check_true(hasFlag(addon.pendingOperations, AddonManager.PENDING_DISABLE));
-    do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_DISABLE));
+      do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_DISABLE));
+    do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
     return check_test_completed(arguments);
   },
 
-  onDisabled: function(addon) {
-    let [event, expectedRestart] = getExpectedEvent(addon.id);
+  onDisabled: function(aAddon) {
+    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onDisabled", event);
-    do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_DISABLE));
+    do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
     return check_test_completed(arguments);
   },
 
-  onInstalling: function(addon, requiresRestart) {
-    let [event, expectedRestart] = getExpectedEvent(addon.id);
+  onInstalling: function(aAddon, aRequiresRestart) {
+    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onInstalling", event);
-    do_check_eq(requiresRestart, expectedRestart);
+    do_check_eq(aRequiresRestart, expectedRestart);
     if (expectedRestart)
-      do_check_true(hasFlag(addon.pendingOperations, AddonManager.PENDING_INSTALL));
+      do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_INSTALL));
     return check_test_completed(arguments);
   },
 
-  onInstalled: function(addon) {
-    let [event, expectedRestart] = getExpectedEvent(addon.id);
+  onInstalled: function(aAddon) {
+    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onInstalled", event);
     return check_test_completed(arguments);
   },
 
-  onUninstalling: function(addon, requiresRestart) {
-    let [event, expectedRestart] = getExpectedEvent(addon.id);
+  onUninstalling: function(aAddon, aRequiresRestart) {
+    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onUninstalling", event);
-    do_check_eq(requiresRestart, expectedRestart);
+    do_check_eq(aRequiresRestart, expectedRestart);
     if (expectedRestart)
-      do_check_true(hasFlag(addon.pendingOperations, AddonManager.PENDING_UNINSTALL));
+      do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_UNINSTALL));
     return check_test_completed(arguments);
   },
 
-  onUninstalled: function(addon) {
-    let [event, expectedRestart] = getExpectedEvent(addon.id);
+  onUninstalled: function(aAddon) {
+    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onUninstalled", event);
     return check_test_completed(arguments);
   },
 
-  onOperationCancelled: function(addon) {
-    let [event, expectedRestart] = getExpectedEvent(addon.id);
+  onOperationCancelled: function(aAddon) {
+    let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onOperationCancelled", event);
     return check_test_completed(arguments);
   }
@@ -507,29 +507,29 @@ const InstallListener = {
     return check_test_completed(arguments);
   },
 
-  onExternalInstall: function(addon, existingAddon, requiresRestart) {
+  onExternalInstall: function(aAddon, existingAddon, aRequiresRestart) {
     do_check_eq("onExternalInstall", gExpectedInstalls.shift());
-    do_check_false(requiresRestart);
+    do_check_false(aRequiresRestart);
     return check_test_completed(arguments);
   }
 };
 
-function hasFlag(bits, flag) {
-  return (bits & flag) != 0;
+function hasFlag(aBits, aFlag) {
+  return (aBits & aFlag) != 0;
 }
 
 // Just a wrapper around setting the expected events
-function prepare_test(expectedEvents, expectedInstalls, next) {
+function prepare_test(aExpectedEvents, aExpectedInstalls, aNext) {
   AddonManager.addAddonListener(AddonListener);
   AddonManager.addInstallListener(InstallListener);
 
-  gExpectedInstalls = expectedInstalls;
-  gExpectedEvents = expectedEvents;
-  gNext = next;
+  gExpectedInstalls = aExpectedInstalls;
+  gExpectedEvents = aExpectedEvents;
+  gNext = aNext;
 }
 
 // Checks if all expected events have been seen and if so calls the callback
-function check_test_completed(args) {
+function check_test_completed(aArgs) {
   if (!gNext)
     return;
 
@@ -541,7 +541,7 @@ function check_test_completed(args) {
       return;
   }
 
-  return gNext.apply(null, args);
+  return gNext.apply(null, aArgs);
 }
 
 // Verifies that all the expected events for all add-ons were seen
@@ -559,24 +559,24 @@ function ensure_test_completed() {
  * A helper method to install an array of AddonInstall to completion and then
  * call a provided callback.
  *
- * @param   installs
+ * @param   aInstalls
  *          The array of AddonInstalls to install
- * @param   callback
+ * @param   aCallback
  *          The callback to call when all installs have finished
  */
-function completeAllInstalls(installs, callback) {
+function completeAllInstalls(aInstalls, aCallback) {
+  let count = aInstalls.length;
+
   if (count == 0) {
-    callback();
+    aCallback();
     return;
   }
 
-  let count = installs.length;
-
-  function installCompleted(install) {
-    install.removeListener(listener);
+  function installCompleted(aInstall) {
+    aInstall.removeListener(listener);
 
     if (--count == 0)
-      callback();
+      aCallback();
   }
 
   let listener = {
@@ -587,9 +587,9 @@ function completeAllInstalls(installs, callback) {
     onInstallEnded: installCompleted
   };
 
-  installs.forEach(function(install) {
-    install.addListener(listener);
-    install.install();
+  aInstalls.forEach(function(aInstall) {
+    aInstall.addListener(listener);
+    aInstall.install();
   });
 }
 
@@ -597,28 +597,28 @@ function completeAllInstalls(installs, callback) {
  * A helper method to install an array of files and call a callback after the
  * installs are completed.
  *
- * @param   files
+ * @param   aFiles
  *          The array of files to install
- * @param   callback
+ * @param   aCallback
  *          The callback to call when all installs have finished
- * @param   ignoreIncompatible
+ * @param   aIgnoreIncompatible
  *          Optional parameter to ignore add-ons that are incompatible in
  *          aome way with the application
  */
-function installAllFiles(files, callback, ignoreIncompatible) {
-  let count = files.length;
+function installAllFiles(aFiles, aCallback, aIgnoreIncompatible) {
+  let count = aFiles.length;
   let installs = [];
 
-  files.forEach(function(file) {
-    AddonManager.getInstallForFile(file, function(install) {
-      if (!install)
-        do_throw("No AddonInstall created for " + file.path);
+  aFiles.forEach(function(aFile) {
+    AddonManager.getInstallForFile(aFile, function(aInstall) {
+      if (!aInstall)
+        do_throw("No AddonInstall created for " + aFile.path);
 
-      if (!ignoreIncompatible || !install.addon.appDisabled)
-        installs.push(install);
+      if (!aIgnoreIncompatible || !aInstall.addon.appDisabled)
+        installs.push(aInstall);
 
       if (--count == 0)
-        completeAllInstalls(installs, callback);
+        completeAllInstalls(installs, aCallback);
     });
   });
 }
@@ -628,8 +628,8 @@ if ("nsIWindowsRegKey" in AM_Ci) {
     LOCAL_MACHINE: {},
     CURRENT_USER: {},
 
-    setValue: function(root, path, name, value) {
-      switch (root) {
+    setValue: function(aRoot, aPath, aName, aValue) {
+      switch (aRoot) {
       case AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE:
         var rootKey = MockRegistry.LOCAL_MACHINE;
         break
@@ -638,27 +638,27 @@ if ("nsIWindowsRegKey" in AM_Ci) {
         break
       }
 
-      if (!(path in rootKey)) {
-        rootKey[path] = [];
+      if (!(aPath in rootKey)) {
+        rootKey[aPath] = [];
       }
       else {
-        for (let i = 0; i < rootKey[path].length; i++) {
-          if (rootKey[path][i].name == name) {
-            if (value === null)
-              rootKey[path].splice(i, 1);
+        for (let i = 0; i < rootKey[aPath].length; i++) {
+          if (rootKey[aPath][i].name == aName) {
+            if (aValue === null)
+              rootKey[aPath].splice(i, 1);
             else
-              rootKey[path][i].value = value;
+              rootKey[aPath][i].value = aValue;
             return;
           }
         }
       }
 
-      if (value === null)
+      if (aValue === null)
         return;
 
-      rootKey[path].push({
-        name: name,
-        value: value
+      rootKey[aPath].push({
+        name: aName,
+        value: aValue
       });
     }
   };

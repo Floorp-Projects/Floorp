@@ -231,8 +231,8 @@ var LightweightThemeManager = {
   /**
    * Switches to a new lightweight theme.
    *
-   * @param   aData
-   *          The lightweight theme to switch to
+   * @param  aData
+   *         The lightweight theme to switch to
    */
   themeChanged: function(aData) {
     if (_previewTimer) {
@@ -272,13 +272,13 @@ var LightweightThemeManager = {
    * Called when a new add-on has been enabled when only one add-on of that type
    * can be enabled.
    *
-   * @param   aId
-   *          The ID of the newly enabled add-on
-   * @param   aType
-   *          The type of the newly enabled add-on
-   * @param   aPendingRestart
-   *          true if the newly enabled add-on will only become enabled after a
-   *          restart
+   * @param  aId
+   *         The ID of the newly enabled add-on
+   * @param  aType
+   *         The type of the newly enabled add-on
+   * @param  aPendingRestart
+   *         true if the newly enabled add-on will only become enabled after a
+   *         restart
    */
   addonChanged: function(aId, aType, aPendingRestart) {
     if (aType != ADDON_TYPE)
@@ -341,10 +341,10 @@ var LightweightThemeManager = {
   /**
    * Called to get an Addon with a particular ID.
    *
-   * @param   aId
-   *          The ID of the add-on to retrieve
-   * @param   aCallback
-   *          A callback to pass the Addon to
+   * @param  aId
+   *         The ID of the add-on to retrieve
+   * @param  aCallback
+   *         A callback to pass the Addon to
    */
   getAddon: function(aId, aCallback) {
     let id = _getInternalID(aId);
@@ -365,10 +365,10 @@ var LightweightThemeManager = {
   /**
    * Called to get Addons of a particular type.
    *
-   * @param   aTypes
-   *          An array of types to fetch. Can be null to get all types.
-   * @param   aCallback
-   *          A callback to pass an array of Addons to
+   * @param  aTypes
+   *         An array of types to fetch. Can be null to get all types.
+   * @param  aCallback
+   *         A callback to pass an array of Addons to
    */
   getAddonsByTypes: function(aTypes, aCallback) {
     if (aTypes && aTypes.indexOf(ADDON_TYPE) == -1) {

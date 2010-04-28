@@ -66,11 +66,11 @@ function amManager() {
 }
 
 amManager.prototype = {
-  observe: function AMC_observe(subject, topic, data) {
+  observe: function AMC_observe(aSubject, aTopic, aData) {
     let os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
 
-    switch (topic) {
+    switch (aTopic) {
     case "profile-after-change":
       os.addObserver(this, "xpcom-shutdown", false);
       AddonManagerPrivate.startup();
@@ -85,82 +85,82 @@ amManager.prototype = {
   /**
    * @see amIWebInstaller.idl
    */
-  isInstallEnabled: function AMC_isInstallEnabled(mimetype, referer) {
-    return AddonManager.isInstallEnabled(mimetype);
+  isInstallEnabled: function AMC_isInstallEnabled(aMimetype, aReferer) {
+    return AddonManager.isInstallEnabled(aMimetype);
   },
 
   /**
    * @see amIWebInstaller.idl
    */
-  installAddonsFromWebpage: function AMC_installAddonsFromWebpage(mimetype,
-                                                                  window,
-                                                                  referer, uris,
-                                                                  hashes, names,
-                                                                  icons, callback) {
-    if (uris.length == 0)
+  installAddonsFromWebpage: function AMC_installAddonsFromWebpage(aMimetype,
+                                                                  aWindow,
+                                                                  aReferer, aUris,
+                                                                  aHashes, aNames,
+                                                                  aIcons, aCallback) {
+    if (aUris.length == 0)
       return false;
 
     let retval = true;
-    if (!AddonManager.isInstallAllowed(mimetype, referer)) {
-      callback = null;
+    if (!AddonManager.isInstallAllowed(aMimetype, aReferer)) {
+      aCallback = null;
       retval = false;
     }
 
     let loadGroup = null;
 
     try {
-      loadGroup = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocumentLoader).loadGroup;
+      loadGroup = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocumentLoader).loadGroup;
     }
     catch (e) {
     }
 
     let installs = [];
     function buildNextInstall() {
-      if (uris.length == 0) {
-        AddonManager.installAddonsFromWebpage(mimetype, window, referer, installs);
+      if (aUris.length == 0) {
+        AddonManager.installAddonsFromWebpage(aMimetype, aWindow, aReferer, installs);
         return;
       }
-      let uri = uris.shift();
-      AddonManager.getInstallForURL(uri, function(install) {
-        if (install) {
-          installs.push(install);
-          if (callback) {
-            install.addListener({
-              onDownloadCancelled: function(install) {
-                callback.onInstallEnded(uri, USER_CANCELLED);
+      let uri = aUris.shift();
+      AddonManager.getInstallForURL(uri, function(aInstall) {
+        if (aInstall) {
+          installs.push(aInstall);
+          if (aCallback) {
+            aInstall.addListener({
+              onDownloadCancelled: function(aInstall) {
+                aCallback.onInstallEnded(uri, USER_CANCELLED);
               },
 
-              onDownloadFailed: function(install, error) {
-                if (error == AddonManager.ERROR_CORRUPT_FILE)
-                  callback.onInstallEnded(uri, CANT_READ_ARCHIVE);
+              onDownloadFailed: function(aInstall, aError) {
+                if (aError == AddonManager.ERROR_CORRUPT_FILE)
+                  aCallback.onInstallEnded(uri, CANT_READ_ARCHIVE);
                 else
-                  callback.onInstallEnded(uri, DOWNLOAD_ERROR);
+                  aCallback.onInstallEnded(uri, DOWNLOAD_ERROR);
               },
 
-              onInstallFailed: function(install, error) {
-                callback.onInstallEnded(uri, EXECUTION_ERROR);
+              onInstallFailed: function(aInstall, aError) {
+                aCallback.onInstallEnded(uri, EXECUTION_ERROR);
               },
 
-              onInstallEnded: function(install, status) {
-                callback.onInstallEnded(uri, SUCCESS);
+              onInstallEnded: function(aInstall, aStatus) {
+                aCallback.onInstallEnded(uri, SUCCESS);
               }
             });
           }
         }
-        else if (callback) {
-          callback.callback(uri, UNSUPPORTED_TYPE);
+        else if (aCallback) {
+          aCallback.onInstallEnded(uri, UNSUPPORTED_TYPE);
         }
         buildNextInstall();
-      }, mimetype, hashes.shift(), names.shift(), icons.shift(), null, loadGroup);
+      }, aMimetype, aHashes.shift(), aNames.shift(), aIcons.shift(), null, loadGroup);
     }
     buildNextInstall();
 
     return retval;
   },
 
-  notify: function AMC_notify(timer) {
+  notify: function AMC_notify(aTimer) {
     AddonManagerPrivate.backgroundUpdateCheck();
   },
 
@@ -173,13 +173,13 @@ amManager.prototype = {
                                "getService,addon-background-update-timer," +
                                PREF_EM_UPDATE_INTERVAL + ",86400" }],
   _xpcom_factory: {
-    createInstance: function(outer, iid) {
-      if (outer != null)
+    createInstance: function(aOuter, aIid) {
+      if (aOuter != null)
         throw Cr.NS_ERROR_NO_AGGREGATION;
   
       if (!gSingleton)
         gSingleton = new amManager();
-      return gSingleton.QueryInterface(iid);
+      return gSingleton.QueryInterface(aIid);
     }
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstaller,
@@ -187,5 +187,5 @@ amManager.prototype = {
                                          Ci.nsIObserver])
 };
 
-function NSGetModule(compMgr, fileSpec)
+function NSGetModule(aCompMgr, aFileSpec)
   XPCOMUtils.generateModule([amManager]);
