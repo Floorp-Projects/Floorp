@@ -151,7 +151,7 @@ public:
    * Notify accessibility that anchor jump has been accomplished to the given
    * target. Used by layout.
    */
-  virtual nsresult NotifyOfAnchorJumpTo(nsIContent *aTarget) = 0;
+  virtual void NotifyOfAnchorJumpTo(nsIContent *aTarget) = 0;
 
   /**
    * Fire accessible event of the given type for the given target.
