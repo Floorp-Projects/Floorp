@@ -46,29 +46,32 @@ Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 /**
  * Logs a debug message.
- * @param   str
- *          The string to log
+ *
+ * @param  aStr
+ *         The string to log
  */
-function LOG(str) {
-  dump("*** addons.plugins: " + str + "\n");
+function LOG(aStr) {
+  dump("*** addons.plugins: " + aStr + "\n");
 }
 
 /**
  * Logs a warning message.
- * @param   str
- *          The string to log
+ *
+ * @param  aStr
+ *         The string to log
  */
-function WARN(str) {
-  LOG(str);
+function WARN(aStr) {
+  LOG(aStr);
 }
 
 /**
  * Logs an error message.
- * @param   str
- *          The string to log
+ *
+ * @param  aStr
+ *         The string to log
  */
-function ERROR(str) {
-  LOG(str);
+function ERROR(aStr) {
+  LOG(aStr);
 }
 
 var PluginProvider = {
@@ -77,45 +80,47 @@ var PluginProvider = {
 
   /**
    * Called to get an Addon with a particular ID.
-   * @param   id
-   *          The ID of the add-on to retrieve
-   * @param   callback
-   *          A callback to pass the Addon to
+   *
+   * @param  aId
+   *         The ID of the add-on to retrieve
+   * @param  aCallback
+   *         A callback to pass the Addon to
    */
-  getAddon: function PL_getAddon(id, callback) {
+  getAddon: function PL_getAddon(aId, aCallback) {
     if (!this.plugins)
       this.buildPluginList();
 
-    if (id in this.plugins) {
-      let name = this.plugins[id].name;
-      let description = this.plugins[id].description;
+    if (aId in this.plugins) {
+      let name = this.plugins[aId].name;
+      let description = this.plugins[aId].description;
 
       let tags = Cc["@mozilla.org/plugin/host;1"].
                  getService(Ci.nsIPluginHost).
                  getPluginTags({});
       let selected = [];
-      tags.forEach(function(tag) {
-        if (tag.name == name && tag.description == description)
-          selected.push(tag);
+      tags.forEach(function(aTag) {
+        if (aTag.name == name && aTag.description == description)
+          selected.push(aTag);
       }, this);
 
-      callback(new PluginWrapper(id, name, description, selected));
+      aCallback(new PluginWrapper(aId, name, description, selected));
     }
     else {
-      callback(null);
+      aCallback(null);
     }
   },
 
   /**
    * Called to get Addons of a particular type.
-   * @param   types
-   *          An array of types to fetch. Can be null to get all types.
-   * @param   callback
-   *          A callback to pass an array of Addons to
+   *
+   * @param  aTypes
+   *         An array of types to fetch. Can be null to get all types.
+   * @param  callback
+   *         A callback to pass an array of Addons to
    */
-  getAddonsByTypes: function PL_getAddonsByTypes(types, callback) {
-    if (types && types.indexOf("plugin") < 0) {
-      callback([]);
+  getAddonsByTypes: function PL_getAddonsByTypes(aTypes, aCallback) {
+    if (aTypes && aTypes.indexOf("plugin") < 0) {
+      aCallback([]);
       return;
     }
 
@@ -125,34 +130,36 @@ var PluginProvider = {
     let results = [];
 
     for (let id in this.plugins) {
-      this.getAddon(id, function(addon) {
-        results.push(addon);
+      this.getAddon(id, function(aAddon) {
+        results.push(aAddon);
       });
     }
 
-    callback(results);
+    aCallback(results);
   },
 
   /**
    * Called to get Addons that have pending operations.
-   * @param   types
-   *          An array of types to fetch. Can be null to get all types
-   * @param   callback
-   *          A callback to pass an array of Addons to
+   *
+   * @param  aTypes
+   *         An array of types to fetch. Can be null to get all types
+   * @param  aCallback
+   *         A callback to pass an array of Addons to
    */
-  getAddonsWithPendingOperations: function PL_getAddonsWithPendingOperations(types, callback) {
-    callback([]);
+  getAddonsWithPendingOperations: function PL_getAddonsWithPendingOperations(aTypes, aCallback) {
+    aCallback([]);
   },
 
   /**
    * Called to get the current AddonInstalls, optionally restricting by type.
-   * @param   types
-   *          An array of types or null to get all types
-   * @param   callback
-   *          A callback to pass the array of AddonInstalls to
+   *
+   * @param  aTypes
+   *         An array of types or null to get all types
+   * @param  aCallback
+   *         A callback to pass the array of AddonInstalls to
    */
-  getInstalls: function PL_getInstalls(types, callback) {
-    callback([]);
+  getInstalls: function PL_getInstalls(aTypes, aCallback) {
+    aCallback([]);
   },
 
   buildPluginList: function PL_buildPluginList() {
@@ -162,18 +169,18 @@ var PluginProvider = {
 
     this.plugins = {};
     let seen = {};
-    tags.forEach(function(tag) {
-      if (!(tag.name in seen))
-        seen[tag.name] = {};
-      if (!(tag.description in seen[tag.name])) {
+    tags.forEach(function(aTag) {
+      if (!(aTag.name in seen))
+        seen[aTag.name] = {};
+      if (!(aTag.description in seen[aTag.name])) {
         let id = Cc["@mozilla.org/uuid-generator;1"].
                  getService(Ci.nsIUUIDGenerator).
                  generateUUID();
         this.plugins[id] = {
-          name: tag.name,
-          description: tag.description
+          name: aTag.name,
+          description: aTag.description
         };
-        seen[tag.name][tag.description] = true;
+        seen[aTag.name][aTag.description] = true;
       }
     }, this);
   }
@@ -183,33 +190,33 @@ var PluginProvider = {
  * The PluginWrapper wraps a set of nsIPluginTags to provide the data visible to
  * public callers through the API.
  */
-function PluginWrapper(id, name, description, tags) {
-  let safedesc = description.replace(/<\/?[a-z][^>]*>/gi, " ");
+function PluginWrapper(aId, aName, aDescription, aTags) {
+  let safedesc = aDescription.replace(/<\/?[a-z][^>]*>/gi, " ");
   let homepageURL = null;
-  if (/<A\s+HREF=[^>]*>/i.test(description))
-    homepageURL = /<A\s+HREF=["']?([^>"'\s]*)/i.exec(description)[1];
+  if (/<A\s+HREF=[^>]*>/i.test(aDescription))
+    homepageURL = /<A\s+HREF=["']?([^>"'\s]*)/i.exec(aDescription)[1];
 
-  this.__defineGetter__("id", function() id);
+  this.__defineGetter__("id", function() aId);
   this.__defineGetter__("type", function() "plugin");
-  this.__defineGetter__("name", function() name);
+  this.__defineGetter__("name", function() aName);
   this.__defineGetter__("description", function() safedesc);
-  this.__defineGetter__("version", function() tags[0].version);
+  this.__defineGetter__("version", function() aTags[0].version);
   this.__defineGetter__("homepageURL", function() homepageURL);
 
-  this.__defineGetter__("isActive", function() !tags[0].blocklisted && !tags[0].disabled);
+  this.__defineGetter__("isActive", function() !aTags[0].blocklisted && !aTags[0].disabled);
   this.__defineGetter__("isCompatible", function() true);
-  this.__defineGetter__("appDisabled", function() tags[0].blocklisted);
-  this.__defineGetter__("userDisabled", function() tags[0].disabled);
-  this.__defineSetter__("userDisabled", function(val) {
-    if (tags[0].disabled == val)
+  this.__defineGetter__("appDisabled", function() aTags[0].blocklisted);
+  this.__defineGetter__("userDisabled", function() aTags[0].disabled);
+  this.__defineSetter__("userDisabled", function(aVal) {
+    if (aTags[0].disabled == aVal)
       return;
 
-    tags.forEach(function(tag) {
-      tag.disabled = val;
+    aTags.forEach(function(aTag) {
+      aTag.disabled = aVal;
     });
-    AddonManagerPrivate.callAddonListeners(val ? "onDisabling" : "onEnabling", this, false);
-    AddonManagerPrivate.callAddonListeners(val ? "onDisabled" : "onEnabled", this);
-    return val;
+    AddonManagerPrivate.callAddonListeners(aVal ? "onDisabling" : "onEnabling", this, false);
+    AddonManagerPrivate.callAddonListeners(aVal ? "onDisabled" : "onEnabled", this);
+    return aVal;
   });
 
   this.__defineGetter__("pendingOperations", function() {
@@ -235,15 +242,15 @@ function PluginWrapper(id, name, description, tags) {
     throw new Error("Plugin is not marked to be uninstalled");
   };
 
-  this.findUpdates = function(listener, reason, appVersion, platformVersion) {
+  this.findUpdates = function(aListener, aReason, aAppVersion, aPlatformVersion) {
     throw new Error("Cannot search for updates for plugins");
   };
 
-  this.hasResource = function(path) {
+  this.hasResource = function(aPath) {
     return false;
   },
 
-  this.getResourceURL = function(path) {
+  this.getResourceURL = function(aPath) {
     return null;
   }
 }

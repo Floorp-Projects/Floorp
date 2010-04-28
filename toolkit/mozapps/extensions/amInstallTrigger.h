@@ -58,7 +58,7 @@ private:
   ~amInstallTrigger();
 
   JSContext* GetJSContext();
-  already_AddRefed<nsIDOMWindowInternal> GetOriginatingWindow(JSContext* cx);
+  already_AddRefed<nsIDOMWindowInternal> GetOriginatingWindow(JSContext* aCx);
   already_AddRefed<nsIURI> GetOriginatingURI(nsIDOMWindowInternal* aWindow);
 
   nsCOMPtr<amIWebInstaller> mManager;

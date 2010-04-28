@@ -57,45 +57,45 @@ const PROVIDERS = [
 /**
  * Logs a debugging message.
  *
- * @param   str
- *          The string to log
+ * @param  aStr
+ *         The string to log
  */
-function LOG(str) {
-  dump("*** addons.manager: " + str + "\n");
+function LOG(aStr) {
+  dump("*** addons.manager: " + aStr + "\n");
 }
 
 /**
  * Logs a warning message.
  *
- * @param   str
- *          The string to log
+ * @param  aStr
+ *         The string to log
  */
-function WARN(str) {
-  LOG(str);
+function WARN(aStr) {
+  LOG(aStr);
 }
 
 /**
  * Logs an error message.
  *
- * @param   str
- *          The string to log
+ * @param  aStr
+ *         The string to log
  */
-function ERROR(str) {
-  LOG(str);
+function ERROR(aStr) {
+  LOG(aStr);
 }
 
 /**
  * Calls a callback method consuming any thrown exception. Any parameters after
  * the callback parameter will be passed to the callback.
  *
- * @param   callback
- *          The callback method to call
+ * @param  aCallback
+ *         The callback method to call
  */
-function safeCall(callback) {
+function safeCall(aCallback) {
   var args = Array.slice(arguments, 1);
 
   try {
-    callback.apply(null, args);
+    aCallback.apply(null, args);
   }
   catch (e) {
     WARN("Exception calling callback: " + e);
@@ -106,28 +106,27 @@ function safeCall(callback) {
  * Calls a method on a provider if it exists and consumes any thrown exception.
  * Any parameters after the dflt parameter are passed to the provider's method.
  *
- * @param   provider
- *          The provider to call
- * @param   method
- *          The method name to call
- * @param   dflt
- *          A default return value if the provider does not implement the named
- *          method or throws an error.
- * @return  the return value from the provider or dflt if the provider does not
- *          implement method or throws an error
+ * @param  aProvider
+ *         The provider to call
+ * @param  aMethod
+ *         The method name to call
+ * @param  aDefault
+ *         A default return value if the provider does not implement the named
+ *         method or throws an error.
+ * @return the return value from the provider or dflt if the provider does not
+ *         implement method or throws an error
  */
-function callProvider(provider, method, dflt) {
-  if (!(method in provider))
-    return dflt;
+function callProvider(aProvider, aMethod, aDefault) {
+  if (!(aMethod in aProvider))
+    return aDefault;
 
   var args = Array.slice(arguments, 3);
 
   try {
-    return provider[method].apply(provider, args);
-  }
-  catch (e) {
-    ERROR("Exception calling provider." + method + ": " + e);
-    return dflt;
+    return aProvider[aMethod].apply(aProvider, args);
+  } catch (e) {
+    ERROR("Exception calling provider." + aMethod + ": " + e);
+    return aDefault;
   }
 }
 
@@ -135,21 +134,21 @@ function callProvider(provider, method, dflt) {
  * A helper class to repeatedly call a listener with each object in an array
  * optionally checking whether the object has a method in it.
  *
- * @param   objects
- *          The array of objects to iterate through
- * @param   method
- *          An optional method name, if not null any objects without this method
- *          will not be passed to the listener
- * @param   listener
- *          A listener implementing nextObject and noMoreObjects methods. The
- *          former will be called with the AsyncObjectCaller as the first
- *          parameter and the object as the second. noMoreObjects will be passed
- *          just the AsyncObjectCaller
+ * @param  aObjects
+ *         The array of objects to iterate through
+ * @param  aMethod
+ *         An optional method name, if not null any objects without this method
+ *         will not be passed to the listener
+ * @param  aListener
+ *         A listener implementing nextObject and noMoreObjects methods. The
+ *         former will be called with the AsyncObjectCaller as the first
+ *         parameter and the object as the second. noMoreObjects will be passed
+ *         just the AsyncObjectCaller
  */
-function AsyncObjectCaller(objects, method, listener) {
-  this.objects = objects.slice(0);
-  this.method = method;
-  this.listener = listener;
+function AsyncObjectCaller(aObjects, aMethod, aListener) {
+  this.objects = aObjects.slice(0);
+  this.method = aMethod;
+  this.listener = aListener;
 
   this.callNext();
 }
@@ -241,15 +240,15 @@ var AddonManagerInternal = {
   /**
    * Registers a new AddonProvider.
    *
-   * @param   provider
-   *          The provider to register
+   * @param  aProvider
+   *         The provider to register
    */
-  registerProvider: function AMI_registerProvider(provider) {
-    this.providers.push(provider);
+  registerProvider: function AMI_registerProvider(aProvider) {
+    this.providers.push(aProvider);
 
     // If we're registering after startup call this provider's startup.
     if (this.started)
-      callProvider(provider, "startup");
+      callProvider(aProvider, "startup");
   },
 
   /**
@@ -278,12 +277,12 @@ var AddonManagerInternal = {
     Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", scope);
     scope.LightweightThemeManager.updateCurrentTheme();
 
-    this.getAddonsByTypes(null, function getAddonsCallback(addons) {
-      addons.forEach(function BUC_forEachCallback(addon) {
-        if (addon.permissions & AddonManager.PERM_CAN_UPGRADE) {
-          addon.findUpdates({
-            onUpdateAvailable: function BUC_onUpdateAvailable(addon, install) {
-              install.install();
+    this.getAddonsByTypes(null, function getAddonsCallback(aAddons) {
+      aAddons.forEach(function BUC_forEachCallback(aAddon) {
+        if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE) {
+          aAddon.findUpdates({
+            onUpdateAvailable: function BUC_onUpdateAvailable(aAddon, aInstall) {
+              aInstall.install();
             }
           }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
         }
@@ -295,28 +294,28 @@ var AddonManagerInternal = {
    * Calls all registered InstallListeners with an event. Any parameters after
    * the extraListeners parameter are passed to the listener.
    *
-   * @param   method
-   *          The method on the listeners to call
-   * @param   extraListeners
-   *          An array of extra InstallListeners to also call
-   * @return  false if any of the listeners returned false, true otherwise
+   * @param  aMethod
+   *         The method on the listeners to call
+   * @param  aExtraListeners
+   *         An array of extra InstallListeners to also call
+   * @return false if any of the listeners returned false, true otherwise
    */
-  callInstallListeners: function AMI_callInstallListeners(method, extraListeners) {
+  callInstallListeners: function AMI_callInstallListeners(aMethod, aExtraListeners) {
     let result = true;
     let listeners = this.installListeners;
-    if (extraListeners)
-      listeners = extraListeners.concat(listeners);
+    if (aExtraListeners)
+      listeners = aExtraListeners.concat(listeners);
     let args = Array.slice(arguments, 2);
 
     listeners.forEach(function(listener) {
       try {
-        if (method in listener) {
-          if (listener[method].apply(listener, args) === false)
+        if (aMethod in listener) {
+          if (listener[aMethod].apply(listener, args) === false)
             result = false;
         }
       }
       catch (e) {
-        WARN("InstallListener threw exception when calling " + method + ": " + e);
+        WARN("InstallListener threw exception when calling " + aMethod + ": " + e);
       }
     });
     return result;
@@ -326,18 +325,18 @@ var AddonManagerInternal = {
    * Calls all registered AddonListeners with an event. Any parameters after
    * the method parameter are passed to the listener.
    *
-   * @param   method
-   *          The method on the listeners to call
+   * @param  aMethod
+   *         The method on the listeners to call
    */
-  callAddonListeners: function AMI_callAddonListeners(method) {
+  callAddonListeners: function AMI_callAddonListeners(aMethod) {
     var args = Array.slice(arguments, 1);
     this.addonListeners.forEach(function(listener) {
       try {
-        if (method in listener)
-          listener[method].apply(listener, args);
+        if (aMethod in listener)
+          listener[aMethod].apply(listener, args);
       }
       catch (e) {
-        WARN("AddonListener threw exception when calling " + method + ": " + e);
+        WARN("AddonListener threw exception when calling " + aMethod + ": " + e);
       }
     });
   },
@@ -347,88 +346,88 @@ var AddonManagerInternal = {
    * add-on only supports a single add-on being enabled at a time. This allows
    * the providers to disable theirs if necessary.
    *
-   * @param   id
-   *          The id of the enabled add-on
-   * @param   type
-   *          The type of the enabled add-on
-   * @param   pendingRestart
-   *          A boolean indicating if the change will only take place the next
-   *          time the application is restarted
+   * @param  aId
+   *         The id of the enabled add-on
+   * @param  aType
+   *         The type of the enabled add-on
+   * @param  aPendingRestart
+   *         A boolean indicating if the change will only take place the next
+   *         time the application is restarted
    */
-  notifyAddonChanged: function AMI_notifyAddonChanged(id, type, pendingRestart) {
+  notifyAddonChanged: function AMI_notifyAddonChanged(aId, aType, aPendingRestart) {
     this.providers.forEach(function(provider) {
-      callProvider(provider, "addonChanged", null, id, type, pendingRestart);
+      callProvider(provider, "addonChanged", null, aId, aType, aPendingRestart);
     });
   },
 
   /**
    * Asynchronously gets an AddonInstall for a URL.
    *
-   * @param   url
-   *          The url the add-on is located at
-   * @param   callback
-   *          A callback to pass the AddonInstall to
-   * @param   mimetype
-   *          The mimetype of the add-on
-   * @param   hash
-   *          An optional hash of the add-on
-   * @param   name
-   *          An optional placeholder name while the add-on is being downloaded
-   * @param   iconURL
-   *          An optional placeholder icon URL while the add-on is being downloaded
-   * @param   version
-   *          An optional placeholder version while the add-on is being downloaded
-   * @param   loadGroup
-   *          An optional nsILoadGroup to associate any network requests with
-   * @throws  if the url, callback or mimetype arguments are not specified
+   * @param  aUrl
+   *         The url the add-on is located at
+   * @param  aCallback
+   *         A callback to pass the AddonInstall to
+   * @param  aMimetype
+   *         The mimetype of the add-on
+   * @param  aHash
+   *         An optional hash of the add-on
+   * @param  aName
+   *         An optional placeholder name while the add-on is being downloaded
+   * @param  aIconURL
+   *         An optional placeholder icon URL while the add-on is being downloaded
+   * @param  aVersion
+   *         An optional placeholder version while the add-on is being downloaded
+   * @param  aLoadGroup
+   *         An optional nsILoadGroup to associate any network requests with
+   * @throws if the aUrl, aCallback or aMimetype arguments are not specified
    */
-  getInstallForURL: function AMI_getInstallForURL(url, callback, mimetype, hash,
-                                                  name, iconURL, version,
-                                                  loadGroup) {
-    if (!url || !mimetype || !callback)
+  getInstallForURL: function AMI_getInstallForURL(aUrl, aCallback, aMimetype,
+                                                  aHash, aName, aIconURL,
+                                                  aVersion, aLoadGroup) {
+    if (!aUrl || !aMimetype || !aCallback)
       throw new TypeError("Invalid arguments");
 
     for (let i = 0; i < this.providers.length; i++) {
-      if (callProvider(this.providers[i], "supportsMimetype", false, mimetype)) {
+      if (callProvider(this.providers[i], "supportsMimetype", false, aMimetype)) {
         callProvider(this.providers[i], "getInstallForURL", null,
-                     url, hash, name, iconURL, version, loadGroup,
-                     function(install) {
-          safeCall(callback, install);
+                     aUrl, aHash, aName, aIconURL, aVersion, aLoadGroup,
+                     function(aInstall) {
+          safeCall(aCallback, aInstall);
         });
         return;
       }
     }
-    safeCall(callback, null);
+    safeCall(aCallback, null);
   },
 
   /**
    * Asynchronously gets an AddonInstall for an nsIFile.
    *
-   * @param   file
-   *          the nsIFile where the add-on is located
-   * @param   callback
-   *          A callback to pass the AddonInstall to
-   * @param   mimetype
-   *          An optional mimetype hint for the add-on
-   * @throws  if the file or callback arguments are not specified
+   * @param  aFile
+   *         the nsIFile where the add-on is located
+   * @param  aCallback
+   *         A callback to pass the AddonInstall to
+   * @param  aMimetype
+   *         An optional mimetype hint for the add-on
+   * @throws if the aFile or aCallback arguments are not specified
    */
-  getInstallForFile: function AMI_getInstallForFile(file, callback, mimetype) {
-    if (!file || !callback)
+  getInstallForFile: function AMI_getInstallForFile(aFile, aCallback, aMimetype) {
+    if (!aFile || !aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     new AsyncObjectCaller(this.providers, "getInstallForFile", {
-      nextObject: function(caller, provider) {
-        callProvider(provider, "getInstallForFile", null, file,
-                     function(install) {
-          if (install)
-            safeCall(callback, install);
+      nextObject: function(aCaller, aProvider) {
+        callProvider(aProvider, "getInstallForFile", null, aFile,
+                     function(aInstall) {
+          if (aInstall)
+            safeCall(aCallback, aInstall);
           else
-            caller.callNext();
+            aCaller.callNext();
         });
       },
 
-      noMoreObjects: function(caller) {
-        safeCall(callback, null);
+      noMoreObjects: function(aCaller) {
+        safeCall(aCallback, null);
       }
     });
   },
@@ -437,29 +436,29 @@ var AddonManagerInternal = {
    * Asynchronously gets all current AddonInstalls optionally limiting to a list
    * of types.
    *
-   * @param   types
-   *          An optional array of types to retrieve. Each type is a string name
-   * @param   callback
-   *          A callback which will be passed an array of AddonInstalls
-   * @throws  if the callback argument is not specified
+   * @param  aTypes
+   *         An optional array of types to retrieve. Each type is a string name
+   * @param  aCallback
+   *         A callback which will be passed an array of AddonInstalls
+   * @throws if the aCallback argument is not specified
    */
-  getInstalls: function AMI_getInstalls(types, callback) {
-    if (!callback)
+  getInstalls: function AMI_getInstalls(aTypes, aCallback) {
+    if (!aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     let installs = [];
 
     new AsyncObjectCaller(this.providers, "getInstalls", {
-      nextObject: function(caller, provider) {
-        callProvider(provider, "getInstalls", null, types,
-                     function(providerInstalls) {
-          installs = installs.concat(providerInstalls);
-          caller.callNext();
+      nextObject: function(aCaller, aProvider) {
+        callProvider(aProvider, "getInstalls", null, aTypes,
+                     function(aProviderInstalls) {
+          installs = installs.concat(aProviderInstalls);
+          aCaller.callNext();
         });
       },
 
-      noMoreObjects: function(caller) {
-        safeCall(callback, installs);
+      noMoreObjects: function(aCaller) {
+        safeCall(aCallback, installs);
       }
     });
   },
@@ -467,13 +466,13 @@ var AddonManagerInternal = {
   /**
    * Checks whether installation is enabled for a particular mimetype.
    *
-   * @param   mimetype
-   *          The mimetype to check
-   * @return  true if installation is enabled for the mimetype
+   * @param  aMimetype
+   *         The mimetype to check
+   * @return true if installation is enabled for the mimetype
    */
-  isInstallEnabled: function AMI_isInstallEnabled(mimetype) {
+  isInstallEnabled: function AMI_isInstallEnabled(aMimetype) {
     for (let i = 0; i < this.providers.length; i++) {
-      if (callProvider(this.providers[i], "supportsMimetype", false, mimetype) &&
+      if (callProvider(this.providers[i], "supportsMimetype", false, aMimetype) &&
           callProvider(this.providers[i], "isInstallEnabled"))
         return true;
     }
@@ -484,16 +483,16 @@ var AddonManagerInternal = {
    * Checks whether a particular source is allowed to install add-ons of a
    * given mimetype.
    *
-   * @param   mimetype
-   *          The mimetype of the add-on
-   * @param   uri
-   *          The uri of the source, may be null
-   * @return  true if the source is allowed to install this mimetype
+   * @param  aMimetype
+   *         The mimetype of the add-on
+   * @param  aURI
+   *         The uri of the source, may be null
+   * @return true if the source is allowed to install this mimetype
    */
-  isInstallAllowed: function AMI_isInstallAllowed(mimetype, uri) {
+  isInstallAllowed: function AMI_isInstallAllowed(aMimetype, aURI) {
     for (let i = 0; i < this.providers.length; i++) {
-      if (callProvider(this.providers[i], "supportsMimetype", false, mimetype) &&
-          callProvider(this.providers[i], "isInstallAllowed", null, uri))
+      if (callProvider(this.providers[i], "supportsMimetype", false, aMimetype) &&
+          callProvider(this.providers[i], "isInstallAllowed", null, aURI))
         return true;
     }
   },
@@ -502,23 +501,23 @@ var AddonManagerInternal = {
    * Starts installation of an array of AddonInstalls notifying the registered
    * web install listener of blocked or started installs.
    *
-   * @param   mimetype
-   *          The mimetype of add-ons being installed
-   * @param   source
-   *          The nsIDOMWindowInternal that started the installs
-   * @param   uri
-   *          the nsIURI that started the installs
-   * @param   installs
-   *          The array of AddonInstalls to be installed
+   * @param  aMimetype
+   *         The mimetype of add-ons being installed
+   * @param  aSource
+   *         The nsIDOMWindowInternal that started the installs
+   * @param  aURI
+   *         the nsIURI that started the installs
+   * @param  aInstalls
+   *         The array of AddonInstalls to be installed
    */
-  installAddonsFromWebpage: function AMI_installAddonsFromWebpage(mimetype,
-                                                                  source,
-                                                                  uri,
-                                                                  installs) {
+  installAddonsFromWebpage: function AMI_installAddonsFromWebpage(aMimetype,
+                                                                  aSource,
+                                                                  aURI,
+                                                                  aInstalls) {
     if (!("@mozilla.org/addons/web-install-listener;1" in Cc)) {
       WARN("No web installer available, cancelling all installs");
-      installs.forEach(function(install) {
-        install.cancel();
+      aInstalls.forEach(function(aInstall) {
+        aInstall.cancel();
       });
       return;
     }
@@ -527,18 +526,18 @@ var AddonManagerInternal = {
       let weblistener = Cc["@mozilla.org/addons/web-install-listener;1"].
                         getService(Ci.amIWebInstallListener);
 
-      if (!this.isInstallAllowed(mimetype, uri)) {
-        if (weblistener.onWebInstallBlocked(source, uri, installs,
-                                            installs.length)) {
-          installs.forEach(function(install) {
-            install.install();
+      if (!this.isInstallAllowed(aMimetype, aURI)) {
+        if (weblistener.onWebInstallBlocked(aSource, aURI, aInstalls,
+                                            aInstalls.length)) {
+          aInstalls.forEach(function(aInstall) {
+            aInstall.install();
           });
         }
       }
-      else if (weblistener.onWebInstallRequested(source, uri, installs,
-                                                 installs.length)) {
-        installs.forEach(function(install) {
-          install.install();
+      else if (weblistener.onWebInstallRequested(aSource, aURI, aInstalls,
+                                                   aInstalls.length)) {
+        aInstalls.forEach(function(aInstall) {
+          aInstall.install();
         });
       }
     }
@@ -547,8 +546,8 @@ var AddonManagerInternal = {
       // calling onWebInstallBlocked or onWebInstallRequested all of the
       // installs should get cancelled.
       WARN("Failure calling web installer: " + e);
-      installs.forEach(function(install) {
-        install.cancel();
+      aInstalls.forEach(function(aInstall) {
+        aInstall.cancel();
       });
     }
   },
@@ -556,51 +555,51 @@ var AddonManagerInternal = {
   /**
    * Adds a new InstallListener if the listener is not already registered.
    *
-   * @param   listener
-   *          The InstallListener to add
+   * @param  aListener
+   *         The InstallListener to add
    */
-  addInstallListener: function AMI_addInstallListener(listener) {
-    if (!this.installListeners.some(function(i) { return i == listener; }))
-      this.installListeners.push(listener);
+  addInstallListener: function AMI_addInstallListener(aListener) {
+    if (!this.installListeners.some(function(i) { return i == aListener; }))
+      this.installListeners.push(aListener);
   },
 
   /**
    * Removes an InstallListener if the listener is registered.
    *
-   * @param   listener
-   *          The InstallListener to remove
+   * @param  aListener
+   *         The InstallListener to remove
    */
-  removeInstallListener: function AMI_removeInstallListener(listener) {
+  removeInstallListener: function AMI_removeInstallListener(aListener) {
     this.installListeners = this.installListeners.filter(function(i) {
-      return i != listener;
+      return i != aListener;
     });
   },
 
   /**
    * Asynchronously gets an add-on with a specific ID.
    *
-   * @param   id
-   *          The ID of the add-on to retrieve
-   * @param   callback
-   *          The callback to pass the retrieved add-on to
-   * @throws  if the id or callback arguments are not specified
+   * @param  aId
+   *         The ID of the add-on to retrieve
+   * @param  aCallback
+   *         The callback to pass the retrieved add-on to
+   * @throws if the aId or aCallback arguments are not specified
    */
-  getAddon: function AMI_getAddon(id, callback) {
-    if (!id || !callback)
+  getAddon: function AMI_getAddon(aId, aCallback) {
+    if (!aId || !aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     new AsyncObjectCaller(this.providers, "getAddon", {
-      nextObject: function(caller, provider) {
-        callProvider(provider, "getAddon", null, id, function(addon) {
-          if (addon)
-            safeCall(callback, addon);
+      nextObject: function(aCaller, aProvider) {
+        callProvider(aProvider, "getAddon", null, aId, function(aAddon) {
+          if (aAddon)
+            safeCall(aCallback, aAddon);
           else
-            caller.callNext();
+            aCaller.callNext();
         });
       },
 
-      noMoreObjects: function(caller) {
-        safeCall(callback, null);
+      noMoreObjects: function(aCaller) {
+        safeCall(aCallback, null);
       }
     });
   },
@@ -608,28 +607,28 @@ var AddonManagerInternal = {
   /**
    * Asynchronously gets an array of add-ons.
    *
-   * @param   ids
-   *          The array of IDs to retrieve
-   * @param   callback
-   *          The callback to pass an array of Addons to
-   * @throws  if the id or callback arguments are not specified
+   * @param  aIds
+   *         The array of IDs to retrieve
+   * @param  aCallback
+   *         The callback to pass an array of Addons to
+   * @throws if the aId or aCallback arguments are not specified
    */
-  getAddons: function AMI_getAddons(ids, callback) {
-    if (!ids || !callback)
+  getAddons: function AMI_getAddons(aIds, aCallback) {
+    if (!aIds || !aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     let addons = [];
 
-    new AsyncObjectCaller(ids, null, {
-      nextObject: function(caller, id) {
-        AddonManagerInternal.getAddon(id, function(addon) {
-          addons.push(addon);
-          caller.callNext();
+    new AsyncObjectCaller(aIds, null, {
+      nextObject: function(aCaller, aId) {
+        AddonManagerInternal.getAddon(aId, function(aAddon) {
+          addons.push(aAddon);
+          aCaller.callNext();
         });
       },
 
-      noMoreObjects: function(caller) {
-        safeCall(callback, addons);
+      noMoreObjects: function(aCaller) {
+        safeCall(aCallback, addons);
       }
     });
   },
@@ -637,29 +636,29 @@ var AddonManagerInternal = {
   /**
    * Asynchronously gets add-ons of specific types.
    *
-   * @param   types
-   *          An optional array of types to retrieve. Each type is a string name
-   * @param   callback
-   *          The callback to pass an array of Addons to.
-   * @throws  if the callback argument is not specified
+   * @param  aTypes
+   *         An optional array of types to retrieve. Each type is a string name
+   * @param  aCallback
+   *         The callback to pass an array of Addons to.
+   * @throws if the aCallback argument is not specified
    */
-  getAddonsByTypes: function AMI_getAddonsByTypes(types, callback) {
-    if (!callback)
+  getAddonsByTypes: function AMI_getAddonsByTypes(aTypes, aCallback) {
+    if (!aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     let addons = [];
 
     new AsyncObjectCaller(this.providers, "getAddonsByTypes", {
-      nextObject: function(caller, provider) {
-        callProvider(provider, "getAddonsByTypes", null, types,
-                     function(providerAddons) {
-          addons = addons.concat(providerAddons);
-          caller.callNext();
+      nextObject: function(aCaller, aProvider) {
+        callProvider(aProvider, "getAddonsByTypes", null, aTypes,
+                     function(aProviderAddons) {
+          addons = addons.concat(aProviderAddons);
+          aCaller.callNext();
         });
       },
 
-      noMoreObjects: function(caller) {
-        safeCall(callback, addons);
+      noMoreObjects: function(aCaller) {
+        safeCall(aCallback, addons);
       }
     });
   },
@@ -668,30 +667,30 @@ var AddonManagerInternal = {
    * Asynchronously gets add-ons that have operations waiting for an application
    * restart to complete.
    *
-   * @param   types
-   *          An optional array of types to retrieve. Each type is a string name
-   * @param   callback
-   *          The callback to pass the array of Addons to
-   * @throws  if the callback argument is not specified
+   * @param  aTypes
+   *         An optional array of types to retrieve. Each type is a string name
+   * @param  aCallback
+   *         The callback to pass the array of Addons to
+   * @throws if the aCallback argument is not specified
    */
   getAddonsWithPendingOperations:
-  function AMI_getAddonsWithPendingOperations(types, callback) {
-    if (!callback)
+  function AMI_getAddonsWithPendingOperations(aTypes, aCallback) {
+    if (!aCallback)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     let addons = [];
 
     new AsyncObjectCaller(this.providers, "getAddonsWithPendingOperations", {
-      nextObject: function(caller, provider) {
-        callProvider(provider, "getAddonsWithPendingOperations", null, types,
-                     function(providerAddons) {
-          addons = addons.concat(providerAddons);
-          caller.callNext();
+      nextObject: function(aCaller, aProvider) {
+        callProvider(aProvider, "getAddonsWithPendingOperations", null, aTypes,
+                     function(aProviderAddons) {
+          addons = addons.concat(aProviderAddons);
+          aCaller.callNext();
         });
       },
 
       noMoreObjects: function(caller) {
-        safeCall(callback, addons);
+        safeCall(aCallback, addons);
       }
     });
   },
@@ -699,23 +698,23 @@ var AddonManagerInternal = {
   /**
    * Adds a new AddonListener if the listener is not already registered.
    *
-   * @param   listener
-   *          The listener to add
+   * @param  aListener
+   *         The listener to add
    */
-  addAddonListener: function AMI_addAddonListener(listener) {
-    if (!this.addonListeners.some(function(i) { return i == listener; }))
-      this.addonListeners.push(listener);
+  addAddonListener: function AMI_addAddonListener(aListener) {
+    if (!this.addonListeners.some(function(i) { return i == aListener; }))
+      this.addonListeners.push(aListener);
   },
 
   /**
    * Removes an AddonListener if the listener is registered.
    *
-   * @param   listener
-   *          The listener to remove
+   * @param  aListener
+   *         The listener to remove
    */
-  removeAddonListener: function AMI_removeAddonListener(listener) {
+  removeAddonListener: function AMI_removeAddonListener(aListener) {
     this.addonListeners = this.addonListeners.filter(function(i) {
-      return i != listener;
+      return i != aListener;
     });
   }
 };
@@ -731,8 +730,8 @@ var AddonManagerPrivate = {
     AddonManagerInternal.startup();
   },
 
-  registerProvider: function AMP_registerProvider(provider) {
-    AddonManagerInternal.registerProvider(provider);
+  registerProvider: function AMP_registerProvider(aProvider) {
+    AddonManagerInternal.registerProvider(aProvider);
   },
 
   shutdown: function AMP_shutdown() {
@@ -743,16 +742,16 @@ var AddonManagerPrivate = {
     AddonManagerInternal.backgroundUpdateCheck();
   },
 
-  notifyAddonChanged: function AMP_notifyAddonChanged(id, type, pendingRestart) {
-    AddonManagerInternal.notifyAddonChanged(id, type, pendingRestart);
+  notifyAddonChanged: function AMP_notifyAddonChanged(aId, aType, aPendingRestart) {
+    AddonManagerInternal.notifyAddonChanged(aId, aType, aPendingRestart);
   },
 
-  callInstallListeners: function AMP_callInstallListeners(method) {
+  callInstallListeners: function AMP_callInstallListeners(aMethod) {
     return AddonManagerInternal.callInstallListeners.apply(AddonManagerInternal,
-                                                          arguments);
+                                                           arguments);
   },
 
-  callAddonListeners: function AMP_callAddonListeners(method) {
+  callAddonListeners: function AMP_callAddonListeners(aMethod) {
     AddonManagerInternal.callAddonListeners.apply(AddonManagerInternal, arguments);
   }
 };
@@ -839,64 +838,64 @@ var AddonManager = {
   // The combination of all scopes.
   SCOPE_ALL: 15,
 
-  getInstallForURL: function AM_getInstallForURL(url, callback, mimetype, hash,
-                                                 name, iconURL, version,
-                                                 loadGroup) {
-    AddonManagerInternal.getInstallForURL(url, callback, mimetype, hash, name,
-                                         iconURL, version, loadGroup);
+  getInstallForURL: function AM_getInstallForURL(aUrl, aCallback, aMimetype,
+                                                 aHash, aName, aIconURL,
+                                                 aVersion, aLoadGroup) {
+    AddonManagerInternal.getInstallForURL(aUrl, aCallback, aMimetype, aHash,
+                                          aName, aIconURL, aVersion, aLoadGroup);
   },
 
-  getInstallForFile: function AM_getInstallForFile(file, callback, mimetype) {
-    AddonManagerInternal.getInstallForFile(file, callback, mimetype);
+  getInstallForFile: function AM_getInstallForFile(aFile, aCallback, aMimetype) {
+    AddonManagerInternal.getInstallForFile(aFile, aCallback, aMimetype);
   },
 
-  getAddon: function AM_getAddon(id, callback) {
-    AddonManagerInternal.getAddon(id, callback);
+  getAddon: function AM_getAddon(aId, aCallback) {
+    AddonManagerInternal.getAddon(aId, aCallback);
   },
 
-  getAddons: function AM_getAddons(ids, callback) {
-    AddonManagerInternal.getAddons(ids, callback);
+  getAddons: function AM_getAddons(aIds, aCallback) {
+    AddonManagerInternal.getAddons(aIds, aCallback);
   },
 
   getAddonsWithPendingOperations:
-  function AM_getAddonsWithPendingOperations(types, callback) {
-    AddonManagerInternal.getAddonsWithPendingOperations(types, callback);
+  function AM_getAddonsWithPendingOperations(aTypes, aCallback) {
+    AddonManagerInternal.getAddonsWithPendingOperations(aTypes, aCallback);
   },
 
-  getAddonsByTypes: function AM_getAddonsByTypes(types, callback) {
-    AddonManagerInternal.getAddonsByTypes(types, callback);
+  getAddonsByTypes: function AM_getAddonsByTypes(aTypes, aCallback) {
+    AddonManagerInternal.getAddonsByTypes(aTypes, aCallback);
   },
 
-  getInstalls: function AM_getInstalls(types, callback) {
-    AddonManagerInternal.getInstalls(types, callback);
+  getInstalls: function AM_getInstalls(aTypes, aCallback) {
+    AddonManagerInternal.getInstalls(aTypes, aCallback);
   },
 
-  isInstallEnabled: function AM_isInstallEnabled(type) {
-    return AddonManagerInternal.isInstallEnabled(type);
+  isInstallEnabled: function AM_isInstallEnabled(aType) {
+    return AddonManagerInternal.isInstallEnabled(aType);
   },
 
-  isInstallAllowed: function AM_isInstallAllowed(type, uri) {
-    return AddonManagerInternal.isInstallAllowed(type, uri);
+  isInstallAllowed: function AM_isInstallAllowed(aType, aUri) {
+    return AddonManagerInternal.isInstallAllowed(aType, aUri);
   },
 
-  installAddonsFromWebpage: function AM_installAddonsFromWebpage(type, source,
-                                                                 uri, installs) {
-    AddonManagerInternal.installAddonsFromWebpage(type, source, uri, installs);
+  installAddonsFromWebpage: function AM_installAddonsFromWebpage(aType, aSource,
+                                                                 aUri, aInstalls) {
+    AddonManagerInternal.installAddonsFromWebpage(aType, aSource, aUri, aInstalls);
   },
 
-  addInstallListener: function AM_addInstallListener(listener) {
-    AddonManagerInternal.addInstallListener(listener);
+  addInstallListener: function AM_addInstallListener(aListener) {
+    AddonManagerInternal.addInstallListener(aListener);
   },
 
-  removeInstallListener: function AM_removeInstallListener(listener) {
-    AddonManagerInternal.removeInstallListener(listener);
+  removeInstallListener: function AM_removeInstallListener(aListener) {
+    AddonManagerInternal.removeInstallListener(aListener);
   },
 
-  addAddonListener: function AM_addAddonListener(listener) {
-    AddonManagerInternal.addAddonListener(listener);
+  addAddonListener: function AM_addAddonListener(aListener) {
+    AddonManagerInternal.addAddonListener(aListener);
   },
 
-  removeAddonListener: function AM_removeAddonListener(listener) {
-    AddonManagerInternal.removeAddonListener(listener);
+  removeAddonListener: function AM_removeAddonListener(aListener) {
+    AddonManagerInternal.removeAddonListener(aListener);
   }
 };
