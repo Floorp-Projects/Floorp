@@ -7,6 +7,8 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
+Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm");
+
 do_load_httpd_js();
 var testserver;
 var profileDir;
@@ -228,6 +230,76 @@ function check_test_4(install) {
     do_check_eq(a1.version, "2.0");
     a1.uninstall();
     restartManager(0);
+
+    run_test_5();
+  });
+}
+
+// Test that background update checks work for lightweight themes
+function run_test_5() {
+  LightweightThemeManager.currentTheme = {
+    id: "1",
+    version: "1",
+    name: "Test LW Theme",
+    description: "A test theme",
+    author: "Mozilla",
+    homepageURL: "http://localhost:4444/data/index.html",
+    headerURL: "http://localhost:4444/data/header.png",
+    footerURL: "http://localhost:4444/data/footer.png",
+    previewURL: "http://localhost:4444/data/preview.png",
+    iconURL: "http://localhost:4444/data/icon.png",
+    updateURL: "http://localhost:4444/data/lwtheme.js"
+  };
+
+  // XXX The lightweight theme manager strips non-https updateURLs so hack it
+  // back in.
+  let themes = JSON.parse(Services.prefs.getCharPref("lightweightThemes.usedThemes"));
+  do_check_eq(themes.length, 1);
+  themes[0].updateURL = "http://localhost:4444/data/lwtheme.js";
+  Services.prefs.setCharPref("lightweightThemes.usedThemes", JSON.stringify(themes));
+
+  testserver.registerPathHandler("/data/lwtheme.js", function(request, response) {
+    response.write(JSON.stringify({
+      id: "1",
+      version: "2",
+      name: "Updated Theme",
+      description: "A test theme",
+      author: "Mozilla",
+      homepageURL: "http://localhost:4444/data/index2.html",
+      headerURL: "http://localhost:4444/data/header.png",
+      footerURL: "http://localhost:4444/data/footer.png",
+      previewURL: "http://localhost:4444/data/preview.png",
+      iconURL: "http://localhost:4444/data/icon2.png",
+      updateURL: "http://localhost:4444/data/lwtheme.js"
+    }));
+  });
+
+  AddonManager.getAddon("1@personas.mozilla.org", function(p1) {
+    do_check_neq(p1, null);
+    do_check_eq(p1.version, "1");
+    do_check_eq(p1.name, "Test LW Theme");
+    do_check_true(p1.isActive);
+
+    prepare_test({
+      "1@personas.mozilla.org": [
+        ["onInstalling", false],
+        "onInstalled"
+      ]
+    }, [
+      "onExternalInstall"
+    ], check_test_5);
+  
+    // Fake a timer event to cause a background update and wait for the magic to
+    // happen
+    gInternalManager.notify(null);
+  });
+}
+
+function check_test_5() {
+  AddonManager.getAddon("1@personas.mozilla.org", function(p1) {
+    do_check_neq(p1, null);
+    do_check_eq(p1.version, "2");
+    do_check_eq(p1.name, "Updated Theme");
 
     end_test();
   });
