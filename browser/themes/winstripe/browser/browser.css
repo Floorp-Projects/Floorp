@@ -970,7 +970,7 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 .tabs-newtab-button {
   -moz-appearance: none;
   background: -moz-linear-gradient(left, transparent, transparent 1px,
-                                         rgba(255,255,255,.15) 1px, rgba(255,255,255,.15));
+                                         rgba(50%,50%,50%,.1) 1px, rgba(50%,50%,50%,.1));
   background-position: -6px 0;
   -moz-background-size: 200%;
   margin: 0;
@@ -1010,10 +1010,16 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 }
 
 .tabbrowser-tab[selected="true"] {
-  background-image: -moz-linear-gradient(left, transparent, transparent 1px,
-                                               rgba(255,255,255,.4) 1px, rgba(255,255,255,.4)),
+  background-image: -moz-linear-gradient(left, transparent, transparent 1px, white 1px, white);
+  color: black;
+}
+
+#navigator-toolbox[tabsontop="true"] > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-tab[selected="true"] {
+  background-image: -moz-radial-gradient(center top, white, rgba(255,255,255,0) 60%),
                     -moz-linear-gradient(left, transparent, transparent 1px,
                                                -moz-dialog 1px, -moz-dialog);
+  background-position: center center, -6px 0;
+  color: -moz-dialogText;
 }
 
 .tabbrowser-tab:-moz-lwtheme[selected="true"] {
