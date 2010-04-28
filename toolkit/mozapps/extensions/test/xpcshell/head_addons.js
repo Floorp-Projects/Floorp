@@ -262,17 +262,32 @@ function isExtensionInAddonsList(dir, id) {
   return isItemInAddonsList("extensions", dir, id);
 }
 
+/**
+ * Escapes any occurances of &, ", < or > with XML entities.
+ *
+ * @param   str
+ *          The string to escape
+ * @return  The escaped string
+ */
+function escapeXML(str) {
+  return str.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+}
+
 function writeLocaleStrings(data) {
   let rdf = "";
   ["name", "description", "creator", "homepageURL"].forEach(function(prop) {
     if (prop in data)
-      rdf += "<em:" + prop + ">" + data[prop] + "</em:" + prop + ">\n";
+      rdf += "<em:" + prop + ">" + escapeXML(data[prop]) + "</em:" + prop + ">\n";
   });
 
   ["developer", "translator", "contributor"].forEach(function(prop) {
     if (prop in data) {
       data[prop].forEach(function(value) {
-        rdf += "<em:" + prop + ">" + value + "</em:" + prop + ">\n";
+        rdf += "<em:" + prop + ">" + escapeXML(value) + "</em:" + prop + ">\n";
       });
     }
   });
@@ -300,7 +315,7 @@ function writeInstallRDFToDir(data, dir) {
   ["id", "version", "type", "internalName", "updateURL", "updateKey",
    "optionsURL", "aboutURL", "iconURL"].forEach(function(prop) {
     if (prop in data)
-      rdf += "<em:" + prop + ">" + data[prop] + "</em:" + prop + ">\n";
+      rdf += "<em:" + prop + ">" + escapeXML(data[prop]) + "</em:" + prop + ">\n";
   });
 
   rdf += writeLocaleStrings(data);
@@ -310,7 +325,7 @@ function writeInstallRDFToDir(data, dir) {
       rdf += "<em:targetApplication><Description>\n";
       ["id", "minVersion", "maxVersion"].forEach(function(prop) {
         if (prop in app)
-          rdf += "<em:" + prop + ">" + app[prop] + "</em:" + prop + ">\n";
+          rdf += "<em:" + prop + ">" + escapeXML(app[prop]) + "</em:" + prop + ">\n";
       });
       rdf += "</Description></em:targetApplication>\n";
     });
@@ -538,6 +553,74 @@ function ensure_test_completed() {
   gExpectedEvents = {};
   if (gExpectedInstalls)
     do_check_eq(gExpectedInstalls.length, 0);
+}
+
+/**
+ * A helper method to install an array of AddonInstall to completion and then
+ * call a provided callback.
+ *
+ * @param   installs
+ *          The array of AddonInstalls to install
+ * @param   callback
+ *          The callback to call when all installs have finished
+ */
+function completeAllInstalls(installs, callback) {
+  if (count == 0) {
+    callback();
+    return;
+  }
+
+  let count = installs.length;
+
+  function installCompleted(install) {
+    install.removeListener(listener);
+
+    if (--count == 0)
+      callback();
+  }
+
+  let listener = {
+    onDownloadFailed: installCompleted,
+    onDownloadCancelled: installCompleted,
+    onInstallFailed: installCompleted,
+    onInstallCancelled: installCompleted,
+    onInstallEnded: installCompleted
+  };
+
+  installs.forEach(function(install) {
+    install.addListener(listener);
+    install.install();
+  });
+}
+
+/**
+ * A helper method to install an array of files and call a callback after the
+ * installs are completed.
+ *
+ * @param   files
+ *          The array of files to install
+ * @param   callback
+ *          The callback to call when all installs have finished
+ * @param   ignoreIncompatible
+ *          Optional parameter to ignore add-ons that are incompatible in
+ *          aome way with the application
+ */
+function installAllFiles(files, callback, ignoreIncompatible) {
+  let count = files.length;
+  let installs = [];
+
+  files.forEach(function(file) {
+    AddonManager.getInstallForFile(file, function(install) {
+      if (!install)
+        do_throw("No AddonInstall created for " + file.path);
+
+      if (!ignoreIncompatible || !install.addon.appDisabled)
+        installs.push(install);
+
+      if (--count == 0)
+        completeAllInstalls(installs, callback);
+    });
+  });
 }
 
 if ("nsIWindowsRegKey" in AM_Ci) {
