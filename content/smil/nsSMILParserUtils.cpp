@@ -538,6 +538,43 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
   return rv;
 }
 
+// Helper class for ParseValues
+class SMILValueParser : public nsSMILParserUtils::GenericValueParser
+{
+public:
+  SMILValueParser(const nsISMILAnimationElement* aSrcElement,
+                  const nsISMILAttr* aSMILAttr,
+                  nsTArray<nsSMILValue>* aValuesArray,
+                  PRBool* aCanCache) :
+    mSrcElement(aSrcElement),
+    mSMILAttr(aSMILAttr),
+    mValuesArray(aValuesArray),
+    mCanCache(aCanCache)
+  {}
+
+  virtual nsresult Parse(const nsAString& aValueStr) {
+    nsSMILValue newValue;
+    PRBool tmpCanCache;
+    nsresult rv = mSMILAttr->ValueFromString(aValueStr, mSrcElement,
+                                             newValue, tmpCanCache);
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (!mValuesArray->AppendElement(newValue)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!tmpCanCache) {
+      *mCanCache = PR_FALSE;
+    }
+    return NS_OK;
+  }
+protected:
+  const nsISMILAnimationElement* mSrcElement;
+  const nsISMILAttr* mSMILAttr;
+  nsTArray<nsSMILValue>* mValuesArray;
+  PRBool* mCanCache;
+};
+
 nsresult
 nsSMILParserUtils::ParseValues(const nsAString& aSpec,
                                const nsISMILAnimationElement* aSrcElement,
@@ -545,15 +582,23 @@ nsSMILParserUtils::ParseValues(const nsAString& aSpec,
                                nsTArray<nsSMILValue>& aValuesArray,
                                PRBool& aCanCache)
 {
+  // Assume all results can be cached, until we find one that can't.
+  aCanCache = PR_TRUE;
+  SMILValueParser valueParser(aSrcElement, &aAttribute,
+                              &aValuesArray, &aCanCache);
+  return ParseValuesGeneric(aSpec, valueParser);
+}
+
+nsresult
+nsSMILParserUtils::ParseValuesGeneric(const nsAString& aSpec,
+                                      GenericValueParser& aParser)
+{
   nsresult rv = NS_ERROR_FAILURE;
 
   const PRUnichar* start = aSpec.BeginReading();
   const PRUnichar* end = aSpec.EndReading();
   const PRUnichar* substrEnd = nsnull;
   const PRUnichar* next = nsnull;
-
-  // Assume all results can be cached, until we find one that can't.
-  aCanCache = PR_TRUE;
 
   while (start != end) {
     rv = NS_ERROR_FAILURE;
@@ -579,20 +624,9 @@ nsSMILParserUtils::ParseValues(const nsAString& aSpec,
     while (substrEnd != start && NS_IS_SPACE(*(substrEnd-1)))
       --substrEnd;
 
-    nsSMILValue newValue;
-    PRBool tmpCanCache;
-    rv = aAttribute.ValueFromString(Substring(start, substrEnd),
-                                    aSrcElement, newValue, tmpCanCache);
+    rv = aParser.Parse(Substring(start, substrEnd));
     if (NS_FAILED(rv))
       break;
-
-    if (!aValuesArray.AppendElement(newValue)) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      break;
-    }
-    if (!tmpCanCache) {
-      aCanCache = PR_FALSE;
-    }
 
     start = next;
   }

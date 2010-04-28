@@ -57,6 +57,12 @@ class nsSMILTimeValueSpecParams;
 class nsSMILParserUtils
 {
 public:
+  // Abstract helper-class for assisting in parsing |values| attribute
+  class GenericValueParser {
+  public:
+    virtual nsresult Parse(const nsAString& aValueStr) = 0;
+  };
+
   static nsresult ParseKeySplines(const nsAString& aSpec,
                                   nsTArray<double>& aSplineArray);
 
@@ -68,6 +74,11 @@ public:
                               const nsISMILAttr& aAttribute,
                               nsTArray<nsSMILValue>& aValuesArray,
                               PRBool& aCanCache);
+
+  // Generic method that will run some code on each sub-section of an animation
+  // element's "values" list.
+  static nsresult ParseValuesGeneric(const nsAString& aSpec,
+                                     GenericValueParser& aParser);
 
   static nsresult ParseRepeatCount(const nsAString& aSpec,
                                    nsSMILRepeatCount& aResult);
