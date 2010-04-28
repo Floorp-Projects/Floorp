@@ -6589,6 +6589,14 @@ fi
 AC_SUBST(MOZ_NATIVE_SQLITE)
 
 dnl ========================================================
+dnl = Enable help viewer (off by default)
+dnl ========================================================
+if test -n "$MOZ_HELP_VIEWER"; then
+     dnl Do this if defined in confvars.sh
+     AC_DEFINE(MOZ_HELP_VIEWER)
+fi
+
+dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(safe-browsing,
