@@ -2283,7 +2283,13 @@ function run_load_system_library()
 #elifdef XP_MACOSX
   let syslib = ctypes.open("libm.dylib");
 #elifdef XP_UNIX
-  let syslib = ctypes.open("libm.so");
+  let syslib;
+  try {
+    syslib = ctypes.open("libm.so");
+  } catch (e) {
+    // limb.so wasn't available, try libm.so.6 instead
+    syslib = ctypes.open("libm.so.6");
+  }
 #elifdef XP_OS2
   let syslib = ctypes.open("libc063.dll");
 #else
