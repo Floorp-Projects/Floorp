@@ -106,10 +106,10 @@ amManager.prototype = {
       retval = false;
     }
 
-    let loadgroup = null;
+    let loadGroup = null;
 
     try {
-      loadgroup = window.QueryInterface(Ci.nsIInterfaceRequestor)
+      loadGroup = window.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIWebNavigation)
                         .QueryInterface(Ci.nsIDocumentLoader).loadGroup;
     }
@@ -153,7 +153,7 @@ amManager.prototype = {
           callback.callback(uri, UNSUPPORTED_TYPE);
         }
         buildNextInstall();
-      }, mimetype, hashes.shift(), names.shift(), icons.shift(), null, loadgroup);
+      }, mimetype, hashes.shift(), names.shift(), icons.shift(), null, loadGroup);
     }
     buildNextInstall();
 
