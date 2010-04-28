@@ -45,8 +45,6 @@
 #include "nsCOMPtr.h"
 
 #if (MOZ_PLATFORM_MAEMO == 5)
-#include <libosso.h>
-
 #define APP_LAUNCH_BANNER_SERVICE           "com.nokia.hildon-desktop"
 #define APP_LAUNCH_BANNER_METHOD_INTERFACE  "com.nokia.hildon.hdwm.startupnotification"
 #define APP_LAUNCH_BANNER_METHOD_PATH       "/com/nokia/hildon/hdwm"
