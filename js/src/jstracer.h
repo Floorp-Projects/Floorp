@@ -1300,6 +1300,9 @@ class TraceRecorder
     JS_REQUIRES_STACK RecordingStatus getPropertyWithNativeGetter(nanojit::LIns* obj_ins,
                                                                   JSScopeProperty* sprop,
                                                                   jsval* outp);
+    JS_REQUIRES_STACK void stackCopy(int dest, int src);
+    JS_REQUIRES_STACK void stackStoreConstObject(int dest, JSObject *obj);
+    JS_REQUIRES_STACK void stackStore(int dest, JSObject* obj, nanojit::LIns* obj_ins);
     JS_REQUIRES_STACK RecordingStatus getPropertyWithScriptGetter(JSObject *obj,
                                                                   nanojit::LIns* obj_ins,
                                                                   JSScopeProperty* sprop);
@@ -1317,6 +1320,7 @@ class TraceRecorder
                                                              jsid id, bool* safep,
                                                              JSObject** pobjp,
                                                              JSScopeProperty** spropp);
+    JS_REQUIRES_STACK RecordingStatus setPropertyWithScriptSetter(JSScopeProperty* sprop);
     JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
                                                 JSScopeProperty* sprop,
                                                 jsval v, nanojit::LIns* v_ins);
