@@ -3355,8 +3355,6 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
 
   CombinedStopReload.init();
 
-  gHomeButton.updatePersonalToolbarStyle();
-
   // Update the urlbar
   if (gURLBar) {
     URLBarSetURI();
@@ -3380,11 +3378,12 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
   // XXX Shouldn't have to do this, but I do
   if (!gCustomizeSheet)
     window.focus();
-
 }
 
 function BrowserToolboxCustomizeChange() {
   gHomeButton.updatePersonalToolbarStyle();
+
+  allTabs.readPref();
 }
 
 /**
@@ -6316,6 +6315,11 @@ var gPluginHandler = {
       link.href = gPluginHandler.crashReportHelpURL;
       let description = notification.ownerDocument.getAnonymousElementByAttribute(notification, "anonid", "messageText");
       description.appendChild(link);
+
+      // Remove the notfication when the page is reloaded.
+      doc.defaultView.top.addEventListener("unload", function() {
+        notificationBox.removeNotification(notification);
+      }, false);
     }
 
   }

@@ -2023,7 +2023,7 @@ void nsHTMLMediaElement::AddRemoveSelfReference()
       // Dispatch Release asynchronously so that we don't destroy this object
       // inside a call stack of method calls on this object
       nsCOMPtr<nsIRunnable> event =
-        NS_NEW_RUNNABLE_METHOD(nsHTMLMediaElement, this, DoRemoveSelfReference);
+        NS_NewRunnableMethod(this, &nsHTMLMediaElement::DoRemoveSelfReference);
       NS_DispatchToMainThread(event);
     }
   }

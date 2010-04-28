@@ -39,6 +39,8 @@
 
 #include "nsHTMLImageMapAccessible.h"
 
+#include "nsAccUtils.h"
+
 #include "nsIDOMHTMLCollection.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"

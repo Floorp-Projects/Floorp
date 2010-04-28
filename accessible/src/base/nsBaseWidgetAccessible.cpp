@@ -38,18 +38,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBaseWidgetAccessible.h"
+
 #include "nsAccessibilityAtoms.h"
-#include "nsIAccessibilityService.h"
-#include "nsIAccessibleDocument.h"
-#include "nsAccessibleWrap.h"
+#include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 #include "nsCoreUtils.h"
+#include "nsHyperTextAccessibleWrap.h"
+
 #include "nsIDOMNSHTMLElement.h"
 #include "nsGUIEvent.h"
-#include "nsHyperTextAccessibleWrap.h"
 #include "nsILink.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
-#include "nsIServiceManager.h"
 #include "nsIURI.h"
 
 ////////////////////////////////////////////////////////////////////////////////

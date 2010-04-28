@@ -43,6 +43,7 @@
 #include "nsApplicationAccessible.h"
 
 #include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 
 #include "nsIComponentManager.h"
 #include "nsIDOMDocument.h"

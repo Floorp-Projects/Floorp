@@ -965,7 +965,7 @@ void
 nsBindingManager::PostProcessAttachedQueueEvent()
 {
   mProcessAttachedQueueEvent =
-    NS_NEW_RUNNABLE_METHOD(nsBindingManager, this, DoProcessAttachedQueue);
+    NS_NewRunnableMethod(this, &nsBindingManager::DoProcessAttachedQueue);
   nsresult rv = NS_DispatchToCurrentThread(mProcessAttachedQueueEvent);
   if (NS_SUCCEEDED(rv) && mDocument) {
     mDocument->BlockOnload();

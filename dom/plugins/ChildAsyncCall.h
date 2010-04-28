@@ -59,11 +59,13 @@ public:
 
   NS_OVERRIDE void Run();
   NS_OVERRIDE void Cancel();
-
-private:
+  
+protected:
   PluginInstanceChild* mInstance;
   PluginThreadCallback mFunc;
   void* mData;
+
+  void RemoveFromAsyncList();
 };
 
 } // namespace plugins

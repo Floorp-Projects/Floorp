@@ -371,37 +371,39 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
     double min_x, max_x;
     double min_y, max_y;
 
-    if (_cairo_matrix_is_identity (matrix)) {
-	if (is_tight)
-	    *is_tight = TRUE;
-
-	return;
-    }
-
     if (matrix->xy == 0. && matrix->yx == 0.) {
 	/* non-rotation/skew matrix, just map the two extreme points */
-	quad_x[0] = *x1;
-	quad_y[0] = *y1;
-	cairo_matrix_transform_distance (matrix, &quad_x[0], &quad_y[0]);
 
-	quad_x[1] = *x2;
-	quad_y[1] = *y2;
-	cairo_matrix_transform_distance (matrix, &quad_x[1], &quad_y[1]);
-
-	if (quad_x[0] < quad_x[1]) {
-	    *x1 = quad_x[0] + matrix->x0;
-	    *x2 = quad_x[1] + matrix->x0;
-	} else {
-	    *x1 = quad_x[1] + matrix->x0;
-	    *x2 = quad_x[0] + matrix->x0;
+	if (matrix->xx != 1.) {
+	    quad_x[0] = *x1 * matrix->xx;
+	    quad_x[1] = *x2 * matrix->xx;
+	    if (quad_x[0] < quad_x[1]) {
+		*x1 = quad_x[0];
+		*x2 = quad_x[1];
+	    } else {
+		*x1 = quad_x[1];
+		*x2 = quad_x[0];
+	    }
+	}
+	if (matrix->x0 != 0.) {
+	    *x1 += matrix->x0;
+	    *x2 += matrix->x0;
 	}
 
-	if (quad_y[0] < quad_y[1]) {
-	    *y1 = quad_y[0] + matrix->y0;
-	    *y2 = quad_y[1] + matrix->y0;
-	} else {
-	    *y1 = quad_y[1] + matrix->y0;
-	    *y2 = quad_y[0] + matrix->y0;
+	if (matrix->yy != 1.) {
+	    quad_y[0] = *y1 * matrix->yy;
+	    quad_y[1] = *y2 * matrix->yy;
+	    if (quad_y[0] < quad_y[1]) {
+		*y1 = quad_y[0];
+		*y2 = quad_y[1];
+	    } else {
+		*y1 = quad_y[1];
+		*y2 = quad_y[0];
+	    }
+	}
+	if (matrix->y0 != 0.) {
+	    *y1 += matrix->y0;
+	    *y2 += matrix->y0;
 	}
 
 	if (is_tight)
@@ -624,7 +626,7 @@ _cairo_matrix_compute_basis_scale_factors (const cairo_matrix_t *matrix,
 	double major, minor;
 
 	cairo_matrix_transform_distance (matrix, &x, &y);
-	major = sqrt(x*x + y*y);
+	major = hypot (x, y);
 	/*
 	 * ignore mirroring
 	 */
@@ -688,16 +690,9 @@ _cairo_matrix_is_integer_translation (const cairo_matrix_t *matrix,
     return FALSE;
 }
 
-/* By pixel exact here, we mean a matrix that is composed only of
- * 90 degree rotations, flips, and integer translations and produces a 1:1
- * mapping between source and destination pixels. If we transform an image
- * with a pixel-exact matrix, filtering is not useful.
- */
-cairo_private cairo_bool_t
-_cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix)
+cairo_bool_t
+_cairo_matrix_has_unity_scale (const cairo_matrix_t *matrix)
 {
-    cairo_fixed_t x0_fixed, y0_fixed;
-
     if (matrix->xy == 0.0 && matrix->yx == 0.0) {
 	if (! (matrix->xx == 1.0 || matrix->xx == -1.0))
 	    return FALSE;
@@ -709,6 +704,22 @@ _cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix)
 	if (! (matrix->yx == 1.0 || matrix->yx == -1.0))
 	    return FALSE;
     } else
+	return FALSE;
+
+    return TRUE;
+}
+
+/* By pixel exact here, we mean a matrix that is composed only of
+ * 90 degree rotations, flips, and integer translations and produces a 1:1
+ * mapping between source and destination pixels. If we transform an image
+ * with a pixel-exact matrix, filtering is not useful.
+ */
+cairo_bool_t
+_cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix)
+{
+    cairo_fixed_t x0_fixed, y0_fixed;
+
+    if (! _cairo_matrix_has_unity_scale (matrix))
 	return FALSE;
 
     x0_fixed = _cairo_fixed_from_double (matrix->x0);
@@ -856,7 +867,7 @@ _cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
     g = 0.5 * (i - j);
     h = a*c + b*d;
 
-    return radius * sqrt (f + sqrt (g*g+h*h));
+    return radius * sqrt (f + hypot (g, h));
 
     /*
      * we don't need the minor axis length, which is

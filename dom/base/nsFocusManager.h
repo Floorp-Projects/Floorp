@@ -84,6 +84,11 @@ public:
   nsIContent* GetFocusedContent() { return mFocusedContent; }
 
   /**
+   * Called when content has been removed.
+   */
+  nsresult ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
+
+  /**
    * Returns the content node that would be focused if aWindow was in an
    * active window. This will traverse down the frame hierarchy, starting at
    * the given window aWindow. Sets aFocusedWindow to the window with the

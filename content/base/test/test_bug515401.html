@@ -1,4 +1,4 @@
-<<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=515401
@@ -96,7 +96,7 @@ verifyBase("base5/", "unset href on second");
 var basehref0 = document.createElement("base");
 basehref0.href = "base6/";
 verifyBase("base5/", "nothing modified");
-head.insertBefore(basehref0, head.firstChild.nextElementSibling);
+head.insertBefore(basehref0, head.firstChild);
 verifyBase("base6/", "insert base with href before existing");
 
 // Insert base as grandchild of head
