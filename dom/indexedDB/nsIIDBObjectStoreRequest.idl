@@ -21,7 +21,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com>
  *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,29 +37,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIIDBObjectStore.idl"
 
-interface nsIDOMEventListener;
+interface nsIIDBKeyRange;
+interface nsIIDBRequest;
+interface nsIVariant;
 
 /**
- * IDBReqeust interface.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
- * information.
+ * nsIIDBObjectStoreRequest interface.  See
+ * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-nsIIDBObjectStoreRequest
+ * for more information.
  */
-[scriptable, uuid(2cff021d-e80e-48a7-bb45-00172df02c1c)]
-interface nsIIDBRequest : nsISupports
+[scriptable, uuid(ce65fbc2-06a0-4f1c-89e4-0d9a636179c7)]
+interface nsIIDBObjectStoreRequest : nsIIDBObjectStore
 {
-  void
-  abort();
+  nsIIDBRequest
+  put (in nsIVariant value,
+       [optional /* null */] in nsIVariant key,
+       [optional /* false */] in boolean noOverwrite);
 
-  const unsigned short INITIAL = 0;
-  const unsigned short LOADING = 1;
-  const unsigned short DONE = 2;
-  readonly attribute unsigned short readyState;
+  nsIIDBRequest
+  remove(in nsIVariant key);
 
-  attribute nsIDOMEventListener onsuccess;
+  nsIIDBRequest
+  get(in nsIVariant key);
 
-  attribute nsIDOMEventListener onerror;
-
-  readonly attribute nsISupports source;
+  nsIIDBRequest
+  openCursor([optional] in nsIIDBKeyRange range,
+             [optional] in unsigned short direction);
 };

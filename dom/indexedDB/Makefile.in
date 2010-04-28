@@ -52,15 +52,19 @@ FORCE_STATIC_LIB = 1
 EXPORTS_NAMESPACES = mozilla/dom/indexedDB
 
 CPPSRCS = \
+  AsyncDatabaseConnection.cpp \
   IDBDatabaseError.cpp \
   IDBDatabaseRequest.cpp \
+  IDBEvents.cpp \
   IDBRequest.cpp \
   IndexedDatabaseRequest.cpp \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
+  AsyncDatabaseConnection.h \
   IDBDatabaseError.h \
   IDBDatabaseRequest.h \
+  IDBEvents.h \
   IDBRequest.h \
   IndexedDatabase.h \
   IndexedDatabaseRequest.h \
@@ -73,11 +77,21 @@ LOCAL_INCLUDES = \
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
+# Make sure to quickstub as much as possible here! See
+# js/src/xpconnect/src/dom_quickstubs.qsconf.
 XPIDLSRCS = \
+  nsIIDBCursor.idl \
   nsIIDBDatabase.idl \
   nsIIDBDatabaseError.idl \
   nsIIDBDatabaseRequest.idl \
+  nsIIDBErrorEvent.idl \
+  nsIIDBIndex.idl \
+  nsIIDBIndexRequest.idl \
+  nsIIDBKeyRange.idl \
+  nsIIDBObjectStore.idl \
+  nsIIDBObjectStoreRequest.idl \
   nsIIDBRequest.idl \
+  nsIIDBSuccessEvent.idl \
   nsIIDBTransaction.idl \
   nsIIDBTransactionRequest.idl \
   nsIIndexedDatabaseRequest.idl \

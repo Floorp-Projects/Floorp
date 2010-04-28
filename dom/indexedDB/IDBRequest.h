@@ -42,15 +42,14 @@
 #define mozilla_dom_indexeddb_idbrequest_h__
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
-#include "mozilla/dom/indexedDB/IDBDatabaseError.h"
 
 #include "nsIIDBRequest.h"
 #include "nsIVariant.h"
 
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
+
+class nsIIDBDatabaseError;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -59,30 +58,68 @@ class IDBDatabaseRequest;
 
 class IDBRequest : public nsDOMEventTargetHelper,
                    public nsIIDBRequest
-
 {
-  friend class IndexedDatabaseRequest;
-  friend class IDBDatabaseRequest;
-
 public:
+  class Generator : public nsISupports
+  {
+    protected:
+      friend class IDBRequest;
+
+      Generator() { }
+
+      virtual ~Generator() {
+        PRUint32 count = mLiveRequests.Length();
+        if (count) {
+          nsTArray<IDBRequest*> requests(mLiveRequests);
+          NS_ASSERTION(count == requests.Length(), "Copy failed!");
+          for (PRUint32 index = 0; index < count; index++) {
+            requests[index]->NoteDyingGenerator();
+          }
+        }
+      }
+
+      IDBRequest* GenerateRequest() {
+        IDBRequest* request = new IDBRequest(this);
+        if (!mLiveRequests.AppendElement(request)) {
+          NS_ERROR("Append failed!");
+        }
+        return request;
+      }
+
+      void NoteDyingRequest(IDBRequest* aRequest) {
+        NS_ASSERTION(mLiveRequests.Contains(aRequest), "Unknown request!");
+        mLiveRequests.RemoveElement(aRequest);
+      }
+
+    private:
+      // XXXbent Assuming infallible nsTArray here, make sure it lands!
+      nsAutoTArray<IDBRequest*, 1> mLiveRequests;
+  };
+
+  friend class IDBRequestGenerator;
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBREQUEST
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBRequest,
                                            nsDOMEventTargetHelper)
 
-  nsresult SetResult(nsISupports* aResult);
+private:
+  // Only called by IDBRequestGenerator::Generate().
+  IDBRequest(Generator* aGenerator);
+
+  nsRefPtr<Generator> mGenerator;
 
 protected:
-  IDBRequest(nsISupports* aSource);
+  // Called by Release().
   ~IDBRequest();
 
-protected:
+  virtual void NoteDyingGenerator() {
+    Abort();
+  }
+
   PRUint16 mReadyState;
   nsRefPtr<nsDOMEventListenerWrapper> mOnSuccessListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnErrorListener;
-  nsRefPtr<IDBDatabaseError> mError;
-  nsCOMPtr<nsIWritableVariant> mResult;
-  nsCOMPtr<nsISupports> mSource;
 };
 
 END_INDEXEDDB_NAMESPACE

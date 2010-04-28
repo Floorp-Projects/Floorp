@@ -21,7 +21,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com>
  *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -40,27 +39,19 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMEventListener;
-
 /**
- * IDBReqeust interface.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBRequest for more
+ * IDBIndex interface.  See
+ * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBIndex for more
  * information.
  */
-[scriptable, uuid(2cff021d-e80e-48a7-bb45-00172df02c1c)]
-interface nsIIDBRequest : nsISupports
+[scriptable, uuid(7df8a6cc-d11a-48c9-9cd4-6d18a9df3c09)]
+interface nsIIDBIndex : nsISupports
 {
-  void
-  abort();
+  readonly attribute DOMString name;
 
-  const unsigned short INITIAL = 0;
-  const unsigned short LOADING = 1;
-  const unsigned short DONE = 2;
-  readonly attribute unsigned short readyState;
+  readonly attribute DOMString storeName;
 
-  attribute nsIDOMEventListener onsuccess;
+  readonly attribute DOMString keyPath;
 
-  attribute nsIDOMEventListener onerror;
-
-  readonly attribute nsISupports source;
+  readonly attribute boolean unique;
 };

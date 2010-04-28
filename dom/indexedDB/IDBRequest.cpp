@@ -47,37 +47,27 @@
 #include "nsDOMClassInfo.h"
 #include "nsStringGlue.h"
 
+#include "IDBEvents.h"
+
 USING_INDEXEDDB_NAMESPACE
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Request
 
-#define SUCCESS_EVT_STR "success"
-#define ERROR_EVT_STR "error"
-
-IDBRequest::IDBRequest(nsISupports* aSource)
-: mReadyState(INITIAL),
-  mSource(aSource)
+IDBRequest::IDBRequest(Generator* aGenerator)
+: mGenerator(aGenerator),
+  mReadyState(INITIAL)
 {
-  NS_ASSERTION(mSource, "Null source!");
+  NS_ASSERTION(aGenerator, "Null generator!");
 }
 
 IDBRequest::~IDBRequest()
 {
+  mGenerator->NoteDyingRequest(this);
+
   if (mListenerManager) {
     mListenerManager->Disconnect();
   }
-}
-
-nsresult
-IDBRequest::SetResult(nsISupports* aResult)
-{
-  if (!mResult) {
-    mResult = do_CreateInstance(NS_VARIANT_CONTRACTID);
-    NS_ENSURE_TRUE(mResult, NS_ERROR_FAILURE);
-  }
-
-  return mResult->SetAsISupports(aResult);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,22 +84,6 @@ NS_IMETHODIMP
 IDBRequest::GetReadyState(PRUint16* aReadyState)
 {
   *aReadyState = mReadyState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBRequest::GetError(nsIIDBDatabaseError** aError)
-{
-  nsCOMPtr<nsIIDBDatabaseError> error(mError);
-  error.forget(aError);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBRequest::GetResult(nsIVariant** aResult)
-{
-  nsCOMPtr<nsIVariant> result(mResult);
-  result.forget(aResult);
   return NS_OK;
 }
 
@@ -137,6 +111,12 @@ NS_IMETHODIMP
 IDBRequest::GetOnerror(nsIDOMEventListener** aErrorListener)
 {
   return GetInnerEventListener(mOnErrorListener, aErrorListener);
+}
+
+NS_IMETHODIMP
+IDBRequest::GetSource(nsISupports** aSource)
+{
+  return CallQueryInterface(mGenerator, aSource);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
