@@ -120,12 +120,6 @@ RPCChannel::Clear()
     AsyncChannel::Clear();
 }
 
-#ifdef OS_WIN
-// static
-int RPCChannel::sInnerEventLoopDepth = 0;
-int RPCChannel::sModalEventCount = 0;
-#endif
-
 bool
 RPCChannel::EventOccurred() const
 {
@@ -164,6 +158,10 @@ RPCChannel::Call(Message* msg, Message* reply)
     RPC_ASSERT(!ProcessingSyncMessage(),
                "violation of sync handler invariant");
     RPC_ASSERT(msg->is_rpc(), "can only Call() RPC messages here");
+
+#ifdef OS_WIN
+    SyncStackFrame frame(this, true);
+#endif
 
     Message copy = *msg;
     CxxStackFrame f(*this, OUT_MESSAGE, &copy);

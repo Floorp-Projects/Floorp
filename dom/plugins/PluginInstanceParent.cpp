@@ -153,14 +153,6 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
         // chance we get to destroy resources.
         SharedSurfaceRelease();
         UnsubclassPluginWindow();
-        // If we crashed in a modal loop in the child, reset
-        // the rpc event spin loop state.
-        if (mNestedEventState) {
-            mNestedEventState = false;
-            PostThreadMessage(GetCurrentThreadId(),
-                              gOOPPStopNativeLoopEvent,
-                              0, 0);
-        }
     }
 #endif
 }
@@ -175,12 +167,6 @@ PluginInstanceParent::Destroy()
 #if defined(OS_WIN)
     SharedSurfaceRelease();
     UnsubclassPluginWindow();
-    if (mNestedEventState) {
-        mNestedEventState = false;
-        PostThreadMessage(GetCurrentThreadId(),
-                          gOOPPStopNativeLoopEvent,
-                          0, 0);
-    }
 #endif
 
     return retval;
@@ -1328,13 +1314,12 @@ PluginInstanceParent::AnswerPluginGotFocus()
 }
 
 bool
-PluginInstanceParent::RecvSetNestedEventState(const bool& aState)
+PluginInstanceParent::RecvProcessNativeEventsInRPCCall()
 {
-    PLUGIN_LOG_DEBUG(("%s state=%i", FULLFUNCTION, (int)aState));
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
 #if defined(OS_WIN)
-    PostThreadMessage(GetCurrentThreadId(), aState ?
-        gOOPPSpinNativeLoopEvent : gOOPPStopNativeLoopEvent, 0, 0);
-    mNestedEventState = aState;
+    static_cast<PluginModuleParent*>(Manager())
+        ->ProcessNativeEventsInRPCCall();
     return true;
 #else
     NS_NOTREACHED(

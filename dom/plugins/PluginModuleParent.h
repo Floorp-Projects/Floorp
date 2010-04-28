@@ -126,6 +126,7 @@ public:
         return mNPNIface;
     }
 
+    PluginProcessParent* Process() const { return mSubprocess; }
     base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
 
     bool OkToCleanup() const {
