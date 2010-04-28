@@ -103,6 +103,7 @@
 #include "nsICacheEntryDescriptor.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLDNSPrefetch.h"
+#include "nsISupportsPrimitives.h"
 
 PRLogModuleInfo* gContentSinkLogModuleInfo;
 
@@ -950,14 +951,15 @@ nsContentSink::GetChannelCacheKey(nsIChannel* aChannel, nsACString& aCacheKey)
   nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(aChannel, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISupports> token;
-  rv = cachingChannel->GetCacheToken(getter_AddRefs(token));
+  nsCOMPtr<nsISupports> cacheKey;
+  rv = cachingChannel->GetCacheKey(getter_AddRefs(cacheKey));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsICacheEntryDescriptor> descriptor = do_QueryInterface(token, &rv);
+  nsCOMPtr<nsISupportsCString> cacheKeyString = 
+        do_QueryInterface(cacheKey, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = descriptor->GetKey(aCacheKey);
+  rv = cacheKeyString->GetData(aCacheKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
