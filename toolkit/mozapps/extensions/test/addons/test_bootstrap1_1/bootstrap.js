@@ -1,9 +1,19 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-function enable() {
-  Services.prefs.setIntPref("bootstraptest.version", 1);
+function install(data, reason) {
+  Services.prefs.setIntPref("bootstraptest.installed_version", 1);
 }
 
-function disable() {
-  Services.prefs.setIntPref("bootstraptest.version", 0);
+function startup(data, reason) {
+  Services.prefs.setIntPref("bootstraptest.active_version", 1);
+  Services.prefs.setIntPref("bootstraptest.startup_reason", reason);
+}
+
+function shutdown(data, reason) {
+  Services.prefs.setIntPref("bootstraptest.active_version", 0);
+  Services.prefs.setIntPref("bootstraptest.shutdown_reason", reason);
+}
+
+function uninstall(data, reason) {
+  Services.prefs.setIntPref("bootstraptest.installed_version", 0);
 }
