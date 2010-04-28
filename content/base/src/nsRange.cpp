@@ -2071,18 +2071,20 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
     nsIFrame* relativeTo = nsLayoutUtils::GetContainingBlockForClientRect(textFrame);
     for (nsTextFrame* f = textFrame; f; f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
       PRInt32 fstart = f->GetContentOffset(), fend = f->GetContentEnd();
-      PRBool rtl = f->GetTextRun()->IsRightToLeft();
       if (fend <= aStartOffset || fstart >= aEndOffset)
         continue;
 
-      //overlaping with the offset we want
+      // overlapping with the offset we want
+      f->EnsureTextRun();
+      NS_ENSURE_TRUE(f->GetTextRun(), NS_ERROR_OUT_OF_MEMORY);
+      PRBool rtl = f->GetTextRun()->IsRightToLeft();
       nsRect r(f->GetOffsetTo(relativeTo), f->GetSize());
       if (fstart < aStartOffset) {
-        //aStartOffset is within this frame
+        // aStartOffset is within this frame
         ExtractRectFromOffset(f, relativeTo, aStartOffset, &r, rtl);
       }
       if (fend > aEndOffset) {
-        //aEndOffset is in the middle of this frame
+        // aEndOffset is in the middle of this frame
         ExtractRectFromOffset(f, relativeTo, aEndOffset, &r, !rtl);
       }
       aCallback->AddRect(r);
