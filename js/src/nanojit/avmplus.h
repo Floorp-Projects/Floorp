@@ -77,6 +77,12 @@
 #include <os2.h>
 #endif
 
+#if defined(__SUNPRO_CC)
+#define __asm__ asm
+#define __volatile__ volatile
+#define __inline__ inline
+#endif
+
 #if defined(DEBUG) || defined(NJ_NO_VARIADIC_MACROS)
 #if !defined _DEBUG
 #define _DEBUG
@@ -105,26 +111,15 @@ __declspec(naked) static inline __int64 rdtsc()
     }
 }
 
-#elif defined(SOLARIS)
-
-# define AVMPLUS_HAS_RDTSC 1
-
-static inline unsigned long long rdtsc(void)
-{
-    unsigned long long int x;
-    asm volatile (".byte 0x0f, 0x31" : "=A" (x));
-    return x;
-}
-
-#elif defined(__i386__)
+#elif defined(__i386__) || defined(__i386)
 
 # define AVMPLUS_HAS_RDTSC 1
 
 static __inline__ unsigned long long rdtsc(void)
 {
   unsigned long long int x;
-     __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
-     return x;
+  __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+  return x;
 }
 
 #endif /* compilers */

@@ -38,8 +38,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHyperTextAccessible.h"
+
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 #include "nsTextAttrs.h"
 
 #include "nsIClipboard.h"
@@ -779,8 +781,7 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
   nsresult rv;
   PRInt32 contentOffset = aFromOffset;
   if (nsAccUtils::IsText(aFromAccessible)) {
-    nsRefPtr<nsAccessNode> accessNode =
-      nsAccUtils::QueryAccessNode(aFromAccessible);
+    nsRefPtr<nsAccessNode> accessNode = do_QueryObject(aFromAccessible);
 
     nsIFrame *frame = accessNode->GetFrame();
     NS_ENSURE_TRUE(frame, -1);
@@ -974,8 +975,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     if (aBoundaryType == BOUNDARY_LINE_START && aOffset > 0 && aOffset == textLength) {
       // Asking for start of line, while on last character
       if (startAcc) {
-        nsRefPtr<nsAccessNode> startAccessNode =
-          nsAccUtils::QueryAccessNode(startAcc);
+        nsRefPtr<nsAccessNode> startAccessNode = do_QueryObject(startAcc);
         startFrame = startAccessNode->GetFrame();
       }
     }

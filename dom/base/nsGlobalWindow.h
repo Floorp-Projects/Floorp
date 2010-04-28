@@ -660,7 +660,6 @@ protected:
   nsIntSize DevToCSSIntPixels(nsIntSize px);
   nsIntSize CSSToDevIntPixels(nsIntSize px);
 
-  virtual nsIContent* GetFocusedNode();
   virtual void SetFocusedNode(nsIContent* aNode,
                               PRUint32 aFocusMethod = 0,
                               PRBool aNeedsFocus = PR_FALSE);
@@ -802,10 +801,6 @@ protected:
   nsDataHashtable<nsStringHashKey, PRBool> *mPendingStorageEventsObsolete;
 
   PRUint32 mTimeoutsSuspendDepth;
-
-  // the element within the document that is currently focused when this
-  // window is active
-  nsCOMPtr<nsIContent>   mFocusedNode;
 
   // the method that was used to focus mFocusedNode
   PRUint32 mFocusMethod;

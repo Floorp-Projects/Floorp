@@ -1416,7 +1416,7 @@ LastDitchGC(JSContext *cx)
     JS_ASSERT(!JS_ON_TRACE(cx));
 
     /* The last ditch GC preserves weak roots and all atoms. */
-    AutoSaveRestoreWeakRoots save(cx);
+    AutoPreserveWeakRoots save(cx);
     AutoKeepAtoms keep(cx->runtime);
 
     /*
