@@ -861,8 +861,9 @@ window.Groups = {
     var pad = 5;
     var sw = window.innerWidth;
     var sh = window.innerHeight;
-    var w = sw - (pad * 2);
-    var h = TabItems.tabHeight;
+    //var w = sw - (pad * 2);
+    var w = TabItems.tabWidth*2.5 + pad*4;
+    var h = TabItems.tabHeight*1.2 + pad*2;
     return new Rect(pad, sh - (h + pad), w, h);
   },
 
@@ -937,11 +938,29 @@ window.Groups = {
   
   // ----------
   newTab: function(tabItem) {
-    var group = this.getNewTabGroup();
+    //var group = this.getActiveGroup() ? this.getActiveGroup() : this.getNewTabGroup();
+    var group = this.getActiveGroup();
+    if( group == null )
+      group = this.getNewTabGroup();
+      
     var $el = $(tabItem.container);
     if(group) 
       group.add($el);
+  },
+  
+  // ----------
+  getActiveGroup: function() {
+    return this._activeGroup;
+  },
+  
+  // ----------
+  setActiveGroup: function(group) {
+    try{
+    this._activeGroup = group;
+    UI.tabBar.showOnlyTheseTabs( group._children );    
+    }catch(e){Utils.log(e)}
   }
+  
 };
 
 // ----------
