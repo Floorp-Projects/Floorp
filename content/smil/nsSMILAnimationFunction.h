@@ -327,6 +327,13 @@ protected:
   void     CheckKeyTimes(PRUint32 aNumValues);
   void     CheckKeySplines(PRUint32 aNumValues);
 
+  // When GetValues() returns a single-value array, this method indicates
+  // whether that single value can be understood to be a static value, to be
+  // set for the full animation duration.
+  virtual PRBool TreatSingleValueAsStatic() const {
+    return HasAttr(nsGkAtoms::values);
+  }
+
   inline PRBool IsToAnimation() const {
     return !HasAttr(nsGkAtoms::values) &&
             HasAttr(nsGkAtoms::to) &&
