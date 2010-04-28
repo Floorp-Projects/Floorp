@@ -42,6 +42,8 @@
 #include "SVGMotionSMILType.h" // for RotateType
 #include "gfxPath.h"  // for gfxFlattenedPath
 
+class nsSVGMpathElement;
+
 namespace mozilla {
 
 //----------------------------------------------------------------------
@@ -59,6 +61,13 @@ public:
                                      nsAttrValue& aResult,
                                      nsresult* aParseResult = nsnull);
   NS_OVERRIDE virtual PRBool UnsetAttr(nsIAtom* aAttribute);
+
+  // Method to allow our owner-element to signal us when our <mpath>
+  // has changed or been added/removed.  When that happens, we need to
+  // mark ourselves as changed so we'll get recomposed, and mark our path data
+  // as stale so it'll get regenerated (regardless of mPathSourceType, since
+  // <mpath> trumps all the other sources of path data)
+  void MpathChanged() { mIsPathStale = mHasChanged = PR_TRUE; }
 
 protected:
   enum PathSourceType {
@@ -88,6 +97,7 @@ protected:
   void     MarkStaleIfAttributeAffectsPath(nsIAtom* aAttribute);
   nsresult SetPathVerticesFromPathString(const nsAString& aPathSpec);
   void     RebuildPathAndVertices(const nsIContent* aContextElem);
+  void     RebuildPathAndVerticesFromMpathElem(nsSVGMpathElement* aMpathElem);
   void     RebuildPathAndVerticesFromPathAttr();
   void     RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem);
   PRBool   GenerateValuesForPathAndPoints(gfxFlattenedPath* aPath,
