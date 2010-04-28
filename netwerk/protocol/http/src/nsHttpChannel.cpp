@@ -5458,6 +5458,78 @@ nsHttpChannel::SetOfflineCacheToken(nsISupports *token)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+class nsHttpChannelCacheKey : public nsISupportsPRUint32,
+                              public nsISupportsCString
+{
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_NSISUPPORTSPRIMITIVE
+    NS_FORWARD_NSISUPPORTSPRUINT32(mSupportsPRUint32->)
+    
+    // Both interfaces declares toString method with the same signature.
+    // Thus we have to delegate only to nsISupportsPRUint32 implementation.
+    NS_SCRIPTABLE NS_IMETHOD GetData(nsACString & aData) 
+    { 
+        return mSupportsCString->GetData(aData);
+    }
+    NS_SCRIPTABLE NS_IMETHOD SetData(const nsACString & aData)
+    { 
+        return mSupportsCString->SetData(aData);
+    }
+    
+public:
+    nsresult SetData(PRUint32 aPostID, const nsACString& aKey);
+
+protected:
+    nsCOMPtr<nsISupportsPRUint32> mSupportsPRUint32;
+    nsCOMPtr<nsISupportsCString> mSupportsCString;
+};
+
+NS_IMPL_ADDREF(nsHttpChannelCacheKey)
+NS_IMPL_RELEASE(nsHttpChannelCacheKey)
+NS_INTERFACE_TABLE_HEAD(nsHttpChannelCacheKey)
+NS_INTERFACE_TABLE_BEGIN
+NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsHttpChannelCacheKey,
+                                   nsISupports, nsISupportsPRUint32)
+NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(nsHttpChannelCacheKey,
+                                   nsISupportsPrimitive, nsISupportsPRUint32)
+NS_INTERFACE_TABLE_ENTRY(nsHttpChannelCacheKey,
+                         nsISupportsPRUint32)
+NS_INTERFACE_TABLE_ENTRY(nsHttpChannelCacheKey,
+                         nsISupportsCString)
+NS_INTERFACE_TABLE_END
+NS_INTERFACE_TABLE_TAIL
+
+NS_IMETHODIMP nsHttpChannelCacheKey::GetType(PRUint16 *aType)
+{
+    NS_ENSURE_ARG_POINTER(aType);
+
+    *aType = TYPE_PRUINT32;
+    return NS_OK;
+}
+
+nsresult nsHttpChannelCacheKey::SetData(PRUint32 aPostID,
+                                        const nsACString& aKey)
+{
+    nsresult rv;
+
+    mSupportsCString = 
+        do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    mSupportsCString->SetData(aKey);
+    if (NS_FAILED(rv)) return rv;
+
+    mSupportsPRUint32 = 
+        do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    mSupportsPRUint32->SetData(aPostID);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHttpChannel::GetCacheKey(nsISupports **key)
 {
@@ -5468,14 +5540,20 @@ nsHttpChannel::GetCacheKey(nsISupports **key)
 
     *key = nsnull;
 
-    nsCOMPtr<nsISupportsPRUint32> container =
-        do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
+    nsRefPtr<nsHttpChannelCacheKey> container =
+        new nsHttpChannelCacheKey();
+
+    if (!container)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCAutoString cacheKey;
+    rv = GenerateCacheKey(mPostID, cacheKey);
     if (NS_FAILED(rv)) return rv;
 
-    rv = container->SetData(mPostID);
+    rv = container->SetData(mPostID, cacheKey);
     if (NS_FAILED(rv)) return rv;
 
-    return CallQueryInterface(container, key);
+    return CallQueryInterface(container.get(), key);
 }
 
 NS_IMETHODIMP
