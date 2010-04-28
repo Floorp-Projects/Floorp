@@ -516,24 +516,24 @@ function _setCurrentTheme(aData, aLocal) {
 
   if (aData) {
     let theme = LightweightThemeManager.getUsedTheme(aData.id);
-    // TODO detect if it is an install and act accordingly
-    if (!theme) {
+    let isInstall = !theme || theme.version != aData.version;
+    if (isInstall) {
+      var oldWrapper = theme ? new AddonWrapper(theme) : null;
       var wrapper = new AddonWrapper(aData);
       AddonManagerPrivate.callInstallListeners("onExternalInstall", null,
-                                               wrapper, null, false);
+                                               wrapper, oldWrapper, false);
       AddonManagerPrivate.callAddonListeners("onInstalling", wrapper, false);
     }
-    let current = LightweightThemeManager.currentTheme;
-    if (!current || current.id != aData.id) {
-      let usedThemes = _usedThemesExceptId(aData.id);
-      if (current)
-        usedThemes.splice(1, 0, aData);
-      else
-        usedThemes.unshift(aData);
-      _updateUsedThemes(usedThemes);
-    }
 
-    if (!theme)
+    let current = LightweightThemeManager.currentTheme;
+    let usedThemes = _usedThemesExceptId(aData.id);
+    if (current && current.id != aData.id)
+      usedThemes.splice(1, 0, aData);
+    else
+      usedThemes.unshift(aData);
+    _updateUsedThemes(usedThemes);
+
+    if (isInstall)
        AddonManagerPrivate.callAddonListeners("onInstalled", wrapper);
   }
 

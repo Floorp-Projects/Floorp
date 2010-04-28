@@ -274,6 +274,10 @@ var AddonManagerInternal = {
     if (!Services.prefs.getBoolPref(PREF_EM_UPDATE_ENABLED))
       return;
 
+    let scope = {};
+    Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", scope);
+    scope.LightweightThemeManager.updateCurrentTheme();
+
     this.getAddonsByTypes(null, function getAddonsCallback(addons) {
       addons.forEach(function BUC_forEachCallback(addon) {
         if (addon.permissions & AddonManager.PERM_CAN_UPGRADE) {
