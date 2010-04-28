@@ -1182,22 +1182,6 @@ BookmarkContentSink::NewFrame()
       rv = mBookmarksService->GetToolbarFolder(&ourID);
       NS_ENSURE_SUCCESS(rv, rv);
       
-      // In Fx2, the toolbar folder is a child of the bookmarks menu, listed
-      // between two separators:
-      // 1) Get Bookmarks Addons 2) Separator 3) Bookmarks Toolbar Folder
-      // 4) Separator 5) Mozilla Firefox Folder
-      // In Places, the toolbar folder is a direct child of the places root,
-      // meaning that we end up with two sequential separators.
-      if (frame.mPreviousId > 0) {
-        PRUint16 itemType;
-        rv = mBookmarksService->GetItemType(frame.mPreviousId, &itemType);
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (itemType == nsINavBookmarksService::TYPE_SEPARATOR) {
-          // remove it
-          rv = mBookmarksService->RemoveItem(frame.mPreviousId);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      }      
       break;
     default:
       NS_NOTREACHED("Unknown container type");
