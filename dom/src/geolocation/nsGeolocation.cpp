@@ -277,7 +277,7 @@ nsGeolocationRequest::Allow()
   }
 
   if (lastPosition && maximumAge > 0 &&
-      ( (PR_Now() / PR_USEC_PER_MSEC) - maximumAge <=
+      ( PRTime(PR_Now() / PR_USEC_PER_MSEC) - maximumAge <=
         PRTime(cachedPositionTime) )) {
     // okay, we can return a cached position
     mAllowed = PR_TRUE;
