@@ -84,6 +84,8 @@ const KEY_APP_SYSTEM_LOCAL            = "app-system-local";
 const KEY_APP_SYSTEM_SHARE            = "app-system-share";
 const KEY_APP_SYSTEM_USER             = "app-system-user";
 
+const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
+
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
 const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
 const XPI_PERMISSION                  = "install";
@@ -360,6 +362,13 @@ function loadManifestFromRDF(uri, stream) {
     throw new Error("Install manifest specifies unknown type: " + addon.type);
   if (addon.type == "theme" && !addon.internalName)
     throw new Error("Themes must include an internalName property");
+
+  // Only extensions are allowed to provide an optionsURL or aboutURL. For all
+  // other types they are silently ignored
+  if (addon.type != "extension") {
+    addon.optionsURL = null;
+    addon.aboutURL = null;
+  }
 
   addon.defaultLocale = readLocale(ds, root, true);
 
