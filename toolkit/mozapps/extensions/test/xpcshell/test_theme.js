@@ -52,6 +52,7 @@ function run_test() {
   AddonManager.addAddonListener(AddonListener);
   AddonManager.addInstallListener(InstallListener);
   AddonManager.addAddonListener(AddonListener);
+  AddonManager.addInstallListener(InstallListener);
 
   AddonManager.getAddons(["theme1@tests.mozilla.org", "theme2@tests.mozilla.org"], function([t1, t2]) {
     do_check_neq(t1, null);
@@ -182,7 +183,9 @@ function run_test_3() {
       ["onDisabling", false],
       "onDisabled",
     ]
-  });
+  }, [
+    "onExternalInstall"
+  ]);
 
   LightweightThemeManager.currentTheme = {
     id: "1",
@@ -250,7 +253,9 @@ function run_test_4() {
       ["onEnabling", false],
       "onEnabled"
     ]
-  });
+  }, [
+    "onExternalInstall"
+  ]);
 
   LightweightThemeManager.currentTheme = {
     id: "2",
