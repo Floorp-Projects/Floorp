@@ -384,15 +384,6 @@ members = [
     'nsIDOMNSHTMLTextAreaElement.textLength',
     'nsIDOMNSHTMLTextAreaElement.wrap',
 
-    # dom/interfaces/indexedDB
-    'nsIIDBDatabase.*',
-    'nsIIDBDatabaseError.*',
-    'nsIIDBDatabaseRequest.*',
-    'nsIIDBRequest.*',
-    'nsIIDBTransaction.*',
-    'nsIIDBTransactionRequest.*',
-    'nsIIndexedDatabaseRequest.*',
-
     # dom/interfaces/json - None.
     # All 4 methods of nsIJSON call GetCurrentNativeCallContext.
 
@@ -487,6 +478,23 @@ members = [
     '-nsICanvasRenderingContextWebGL.getVertexAttrib',
     '-nsICanvasRenderingContextWebGL.readPixels',
     '-nsICanvasRenderingContextWebGL.getShaderParameter',
+
+    # dom/indexedDB
+    'nsIIDBCursor.*',
+    'nsIIDBDatabase.*',
+    'nsIIDBDatabaseError.*',
+    'nsIIDBDatabaseRequest.*',
+    'nsIIDBErrorEvent.*',
+    'nsIIDBIndex.*',
+    'nsIIDBIndexRequest.*',
+    'nsIIDBKeyRange.*',
+    'nsIIDBObjectStore.*',
+    'nsIIDBObjectStoreRequest.*',
+    'nsIIDBRequest.*',
+    'nsIIDBSuccessEvent.*',
+    'nsIIDBTransaction.*',
+    'nsIIDBTransactionRequest.*',
+    'nsIIndexedDatabaseRequest.*'
     ]
 
 # Most interfaces can be found by searching the includePath; to find

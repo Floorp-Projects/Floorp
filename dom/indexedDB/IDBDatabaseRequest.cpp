@@ -40,7 +40,9 @@
 #include "IDBDatabaseRequest.h"
 
 #include "nsDOMClassInfo.h"
+#include "nsThreadUtils.h"
 
+#include "IDBEvents.h"
 #include "IDBRequest.h"
 
 USING_INDEXEDDB_NAMESPACE
@@ -48,10 +50,39 @@ USING_INDEXEDDB_NAMESPACE
 namespace {
 
 const PRUint32 kDefaultTimeoutMS = 5000;
-  
+
+inline
+nsISupports*
+isupports_cast(IDBDatabaseRequest* aClassPtr)
+{
+  return static_cast<nsISupports*>(
+    static_cast<IDBRequest::Generator*>(aClassPtr));
+}
+
 } // anonymous namespace
 
+// static
+already_AddRefed<nsIIDBDatabaseRequest>
+IDBDatabaseRequest::Create(const nsAString& aName,
+                           const nsAString& aDescription,
+                           PRBool aReadOnly)
+{
+  nsRefPtr<IDBDatabaseRequest> db(new IDBDatabaseRequest());
+  db->mDatabase = AsyncDatabaseConnection::OpenConnection(aName, aDescription,
+                                                          aReadOnly);
+  NS_ENSURE_TRUE(db->mDatabase, nsnull);
+
+  nsIIDBDatabaseRequest* result;
+  db.forget(&result);
+  return result;
+}
+
 IDBDatabaseRequest::IDBDatabaseRequest()
+{
+  
+}
+
+IDBDatabaseRequest::~IDBDatabaseRequest()
 {
   
 }
@@ -116,11 +147,14 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
                                       PRBool aAutoIncrement,
                                       nsIIDBRequest** _retval)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsresult rv = mDatabase->CreateObjectStore(aName, aKeyPath, aAutoIncrement,
+                                             request);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIIDBRequest> request(new IDBRequest(this));
-  request.forget(_retval);
-
+  IDBRequest* retval;
+  request.forget(&retval);
+  *_retval = retval;
   return NS_OK;
 }
 
@@ -129,11 +163,13 @@ IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
                                     PRUint16 aMode,
                                     nsIIDBRequest** _retval)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  nsresult rv = mDatabase->OpenObjectStore(aName, aMode, request);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIIDBRequest> request(new IDBRequest(this));
-  request.forget(_retval);
-
+  IDBRequest* retval;
+  request.forget(&retval);
+  *_retval = retval;
   return NS_OK;
 }
 
@@ -146,7 +182,7 @@ IDBDatabaseRequest::CreateIndex(const nsAString& aName,
 {
   NS_NOTYETIMPLEMENTED("Implement me!");
 
-  nsCOMPtr<nsIIDBRequest> request(new IDBRequest(this));
+  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
   request.forget(_retval);
 
   return NS_OK;
@@ -158,7 +194,7 @@ IDBDatabaseRequest::OpenIndex(const nsAString& aName,
 {
   NS_NOTYETIMPLEMENTED("Implement me!");
 
-  nsCOMPtr<nsIIDBRequest> request(new IDBRequest(this));
+  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
   request.forget(_retval);
 
   return NS_OK;
@@ -170,7 +206,7 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aStoreName,
 {
   NS_NOTYETIMPLEMENTED("Implement me!");
 
-  nsCOMPtr<nsIIDBRequest> request(new IDBRequest(this));
+  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
   request.forget(_retval);
 
   return NS_OK;
@@ -182,7 +218,7 @@ IDBDatabaseRequest::RemoveIndex(const nsAString& aIndexName,
 {
   NS_NOTYETIMPLEMENTED("Implement me!");
 
-  nsCOMPtr<nsIIDBRequest> request(new IDBRequest(this));
+  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
   request.forget(_retval);
 
   return NS_OK;
@@ -194,7 +230,7 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
 {
   NS_NOTYETIMPLEMENTED("Implement me!");
 
-  nsCOMPtr<nsIIDBRequest> request(new IDBRequest(this));
+  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
   request.forget(_retval);
 
   return NS_OK;
@@ -212,7 +248,7 @@ IDBDatabaseRequest::OpenTransaction(nsIDOMDOMStringList* aStoreNames,
     aTimeout = kDefaultTimeoutMS;
   }
 
-  nsCOMPtr<nsIIDBRequest> request(new IDBRequest(this));
+  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
   request.forget(_retval);
 
   return NS_OK;

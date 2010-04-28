@@ -43,6 +43,12 @@
 
 #include "nsIProgrammingLanguage.h"
 
+#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
+#include "nsDebug.h"
+#include "nsStringGlue.h"
+#include "nsTArray.h"
+
 #define BEGIN_INDEXEDDB_NAMESPACE \
   namespace mozilla { namespace dom { namespace indexedDB {
 

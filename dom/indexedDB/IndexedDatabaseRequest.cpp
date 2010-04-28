@@ -40,7 +40,9 @@
 #include "IndexedDatabaseRequest.h"
 
 #include "nsDOMClassInfo.h"
+#include "nsThreadUtils.h"
 
+#include "IDBDatabaseRequest.h"
 #include "IDBRequest.h"
 
 USING_INDEXEDDB_NAMESPACE
@@ -74,14 +76,15 @@ IndexedDatabaseRequest::Open(const nsAString& aName,
                              const nsAString& aDescription,
                              PRBool aModifyDatabase,
                              PRUint8 aArgCount,
-                             nsIIDBRequest** _retval)
+                             nsIIDBDatabaseRequest** _retval)
 {
   if (aArgCount < 3) {
     // aModifyDatabase defaults to true.
     aModifyDatabase = PR_TRUE;
   }
 
-  nsCOMPtr<nsIIDBRequest> request(new IDBRequest(this));
-  request.forget(_retval);
+  nsCOMPtr<nsIIDBDatabaseRequest> database =
+    IDBDatabaseRequest::Create(aName, aDescription, !aModifyDatabase);
+  database.forget(_retval);
   return NS_OK;
 }

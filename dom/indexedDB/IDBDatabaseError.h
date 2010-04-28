@@ -44,27 +44,20 @@
 
 #include "nsIIDBDatabaseError.h"
 
-#include "nsStringGlue.h"
-
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBRequest;
+class IDBErrorEvent;
 
 class IDBDatabaseError : public nsIIDBDatabaseError
 {
-  friend class IDBRequest;
+  friend class IDBErrorEvent;
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBDATABASEERROR
 
 protected:
-  // Only called by IDBRequest.
-  IDBDatabaseError(PRUint16 aCode,
-                   const nsAString& aMessage)
-  : mCode(aCode),
-    mMessage(aMessage)
-  { }
+  IDBDatabaseError(PRUint16 aCode);
 
 protected:
   PRUint16 mCode;
