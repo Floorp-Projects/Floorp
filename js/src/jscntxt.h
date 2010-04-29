@@ -1179,6 +1179,7 @@ class AutoGCRooter;
 }
 
 struct JSRegExpStatics {
+    JSContext   *cx;
     JSString    *input;         /* input string to match (perl $_, GC root) */
     JSBool      multiline;      /* whether input contains newlines (perl $*) */
     JSSubString lastMatch;      /* last string matched (perl $&) */
@@ -1187,27 +1188,11 @@ struct JSRegExpStatics {
     JSSubString rightContext;   /* input to right of last match (perl $') */
     js::Vector<JSSubString> parens; /* last set of parens matched (perl $1, $2) */
 
-    JSRegExpStatics(JSContext *cx) : parens(cx) {}
+    JSRegExpStatics(JSContext *cx) : cx(cx), parens(cx) {}
 
-    bool copy(const JSRegExpStatics& other) {
-        input = other.input;
-        multiline = other.multiline;
-        lastMatch = other.lastMatch;
-        lastParen = other.lastParen;
-        leftContext = other.leftContext;
-        rightContext = other.rightContext;
-        if (!parens.resize(other.parens.length()))
-            return false;
-        memcpy(parens.begin(), other.parens.begin(), sizeof(JSSubString) * parens.length());
-        return true;
-    }
-
-    void clear() {
-        input = NULL;
-        multiline = false;
-        lastMatch = lastParen = leftContext = rightContext = js_EmptySubString;
-        parens.clear();
-    }
+    bool copy(const JSRegExpStatics& other);
+    void clearRoots();
+    void clear();
 };
 
 struct JSContext
