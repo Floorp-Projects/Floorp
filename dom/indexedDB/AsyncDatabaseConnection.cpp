@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Ben Turner <bent.mozilla@gmail.com>
+ *   Shawn Wilsher <me@shawnwilsher.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,12 +45,18 @@
 #include "nsIObserverService.h"
 #include "nsIVariant.h"
 
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsComponentManagerUtils.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXPCOMCID.h"
 
+#include "mozilla/Storage.h"
+
 #include "IDBEvents.h"
+
+#define DB_SCHEMA_VERSION 1
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -291,6 +298,162 @@ protected:
   nsString mName;
   PRUint16 mMode;
 };
+
+/**
+ * Creates the needed tables and their indexes.
+ *
+ * @param aDBConn
+ *        The database connection to create the tables on.
+ */
+nsresult
+CreateTables(mozIStorageConnection* aDBConn)
+{
+  NS_PRECONDITION(!NS_IsMainThread(),
+                  "Creating tables on the main thread!");
+  NS_PRECONDITION(aDBConn, "Passing a null database connection!");
+
+  // Table `database`
+  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE database ("
+      "name TEXT NOT NULL, "
+      "description TEXT NOT NULL, "
+      "version TEXT DEFAULT NULL, "
+      "UNIQUE (name)"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `object_store`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_store ("
+      "id INTEGER DEFAULT NULL, "
+      "name TEXT NOT NULL, "
+      "key_path TEXT DEFAULT NULL, "
+      "autoincrement INTEGER NOT NULL DEFAULT 0, "
+      "readers INTEGER NOT NULL DEFAULT 0, "
+      "isWriting INTEGER NOT NULL DEFAULT 0, "
+      "PRIMARY KEY (id), "
+      "UNIQUE (name)"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `object_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_data ("
+      "id INTEGER NOT NULL AUTOINCREMENT, "
+      "object_store_id INTEGER NOT NULL, "
+      "data TEXT NOT NULL, "
+      "key_value TEXT DEFAULT NULL, "
+      "PRIMARY KEY (id), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX key_index "
+    "ON object_data (id, object_store_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `ai_object_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_object_data ("
+      "id INTEGER NOT NULL AUTOINCREMENT, "
+      "object_store_id INTEGER NOT NULL, "
+      "data TEXT NOT NULL, "
+      "PRIMARY KEY (id), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX key_index "
+    "ON ai_object_data (id, object_store_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return aDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
+}
+
+already_AddRefed<mozIStorageConnection>
+NewConnection(const nsCString& aOrigin, bool aDeleteIfExists = false);
+
+bool
+ConnectionReady(nsCOMPtr<mozIStorageConnection>& aDBConn,
+                const nsCString& aOrigin)
+{
+  NS_PRECONDITION(!NS_IsMainThread(),
+                  "Checking a database on the main thread!");
+  NS_PRECONDITION(aDBConn, "Passing a null database connection!");
+
+  // Check to make sure that the database schema is correct.
+  PRInt32 schemaVersion;
+  nsresult rv = aDBConn->GetSchemaVersion(&schemaVersion);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  // If the connection is not at the right schema version, nuke it.
+  if (schemaVersion != DB_SCHEMA_VERSION) {
+    aDBConn = NewConnection(aOrigin, true);
+    NS_ENSURE_TRUE(aDBConn, false);
+    rv = CreateTables(aDBConn);
+    NS_ENSURE_SUCCESS(rv, false);
+  }
+
+#ifdef DEBUG
+  // Turn on foreign key constraints in debug builds to catch bugs!
+  (void)aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA foreign_keys = ON;"
+  ));
+#endif
+
+  return true;
+}
+
+already_AddRefed<mozIStorageConnection>
+NewConnection(const nsCString& aOrigin,
+              bool aDeleteIfExists)
+{
+  NS_PRECONDITION(!NS_IsMainThread(),
+                  "Opening a database on the main thread!");
+
+  nsCOMPtr<nsIFile> dbFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(dbFile));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  rv = dbFile->Append(NS_LITERAL_STRING("indexedDB_files"));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  // Replace illegal filename characters.
+  char illegalChars[] = {':', '/', '\\' };
+  nsCString fname(aOrigin);
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(illegalChars); i++) {
+    fname.ReplaceChar(illegalChars[i], '_');
+  }
+  fname.AppendLiteral(".sqlite");
+  rv = dbFile->Append(NS_ConvertUTF8toUTF16(fname));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  if (aDeleteIfExists) {
+    rv = dbFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+
+  nsCOMPtr<mozIStorageConnection> conn;
+  rv = ss->OpenDatabase(dbFile, getter_AddRefs(conn));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // Nuke the database file.  The web services can recreate their data.
+    rv = dbFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    rv = ss->OpenDatabase(dbFile, getter_AddRefs(conn));
+  }
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  NS_ENSURE_TRUE(ConnectionReady(conn, aOrigin), false);
+  return conn.forget();
+}
 
 } // anonymous namespace
 
