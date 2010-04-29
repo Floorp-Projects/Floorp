@@ -1,7 +1,9 @@
 // ----------------------------------------------------------------------------
 // Test whether an InstallTrigger.install call fails when xpinstall is disabled
 function test() {
-  waitForExplicitFinish();
+  Harness.installBlockedCallback = allow_blocked;
+  Harness.installConfirmCallback = confirm_install;
+  Harness.setup();
 
   Services.prefs.setBoolPref("xpinstall.enabled", false);
 
@@ -17,12 +19,22 @@ function test() {
   gBrowser.loadURI(TESTROOT + "installtrigger.html?" + triggers);
 }
 
+function allow_blocked(installInfo) {
+  ok(false, "Should never see the blocked install notification");
+  return false;
+}
+
+function confirm_install(window) {
+  ok(false, "Should never see an install confirmation dialog");
+  return false;
+}
+
 function page_loaded() {
   Services.prefs.clearUserPref("xpinstall.enabled");
 
   var doc = gBrowser.contentDocument;
   is(doc.getElementById("return").textContent, "false", "installTrigger should have not been enabled");
   gBrowser.removeCurrentTab();
-  finish();
+  Harness.finish();
 }
 // ----------------------------------------------------------------------------
