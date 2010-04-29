@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<!-- This is a copy of extensions.rdf from Firefox 3.5 including four
+     test extensions. Addon1 was enabled, addon2 was disabled, addon3 was pending
+     disable at the next restart and addon4 was pending enable at the next
+     restart. -->
+
+<RDF:RDF xmlns:NS1="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="rdf:#$w8dNC1"
+                   NS1:id="xpcshell@tests.mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="1" />
+  <RDF:Description RDF:about="rdf:#$oadNC1"
+                   NS1:id="xpcshell@tests.mozilla.org"
+                   NS1:minVersion="1"
+                   NS1:maxVersion="1" />
+  <RDF:Description RDF:about="urn:mozilla:item:addon1@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="1.0"
+                   NS1:name="Test 1">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$oadNC1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:addon2@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="2.0"
+                   NS1:name="Test 2"
+                   NS1:userDisabled="true">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$w8dNC1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:addon3@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="2.0"
+                   NS1:name="Test 3"
+                   NS1:userDisabled="needs-disable">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$w8dNC1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:item:addon4@tests.mozilla.org"
+                   NS1:installLocation="app-profile"
+                   NS1:version="2.0"
+                   NS1:name="Test 4"
+                   NS1:userDisabled="needs-enable">
+    <NS1:type NC:parseType="Integer">2</NS1:type>
+    <NS1:targetApplication RDF:resource="rdf:#$w8dNC1"/>
+  </RDF:Description>
+  <RDF:Seq RDF:about="urn:mozilla:item:root">
+    <RDF:li RDF:resource="urn:mozilla:item:addon1@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:addon2@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:addon3@tests.mozilla.org"/>
+    <RDF:li RDF:resource="urn:mozilla:item:addon4@tests.mozilla.org"/>
+  </RDF:Seq>
+</RDF:RDF>
