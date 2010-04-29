@@ -81,7 +81,11 @@ var Harness = {
       win.close();
 
     AddonManager.removeInstallListener(this);
-    finish();
+
+    AddonManager.getAllInstalls(function(installs) {
+      is(installs.length, 0, "Should be no active installs at the end of the test");
+      finish();
+    });
   },
 
   endTest: function() {
@@ -169,6 +173,9 @@ var Harness = {
       installInfo.install();
     }
     else {
+      installInfo.installs.forEach(function(install) {
+        install.cancel();
+      });
       this.endTest();
     }
   },
