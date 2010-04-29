@@ -825,7 +825,7 @@ var AddonManager = {
     AddonManagerInternal.getInstallForFile(file, callback, mimetype);
   },
 
-  getAddon: function AM_getAdon(id, callback) {
+  getAddon: function AM_getAddon(id, callback) {
     AddonManagerInternal.getAddon(id, callback);
   },
 
