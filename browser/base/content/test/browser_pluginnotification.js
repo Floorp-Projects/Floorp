@@ -6,7 +6,7 @@ var gNextTest = null;
 function get_test_plugin() {
   var ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
   var tags = ph.getPluginTags();
-  
+
   // Find the test plugin
   for (var i = 0; i < tags.length; i++) {
     if (tags[i].name == "Test Plug-in")
@@ -14,58 +14,49 @@ function get_test_plugin() {
   }
 }
 
-// This listens for the next opened window and checks it is of the right url.
-// opencallback is called when the new window is fully loaded
-// closecallback is called when the window is closed
-function WindowOpenListener(url, opencallback, closecallback) {
+// This listens for the next opened tab and checks it is of the right url.
+// opencallback is called when the new tab is fully loaded
+// closecallback is called when the tab is closed
+function TabOpenListener(url, opencallback, closecallback) {
   this.url = url;
   this.opencallback = opencallback;
   this.closecallback = closecallback;
 
-  Services.wm.addListener(this);
+  gBrowser.tabContainer.addEventListener("TabOpen", this, false);
 }
 
-WindowOpenListener.prototype = {
+TabOpenListener.prototype = {
   url: null,
   opencallback: null,
   closecallback: null,
-  window: null,
-  domwindow: null,
+  tab: null,
+  browser: null,
 
   handleEvent: function(event) {
-    is(this.domwindow.document.location.href, this.url, "Should have opened the correct window");
-
-    this.domwindow.removeEventListener("load", this, false);
-    // Allow any other load handlers to execute
-    var self = this;
-    executeSoon(function() { self.opencallback(self.domwindow); } );
-  },
-
-  onWindowTitleChange: function(window, title) {
-  },
-
-  onOpenWindow: function(window) {
-    if (this.window)
-      return;
-
-    this.window = window;
-    this.domwindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindowInternal);
-    this.domwindow.addEventListener("load", this, false);
-  },
-
-  onCloseWindow: function(window) {
-    if (this.window != window)
-      return;
-
-    Services.wm.removeListener(this);
-    this.opencallback = null;
-    this.window = null;
-    this.domwindow = null;
-
-    // Let the window close complete
-    executeSoon(this.closecallback);
-    this.closecallback = null;
+    if (event.type == "TabOpen") {
+      gBrowser.tabContainer.removeEventListener("TabOpen", this, false);
+      this.tab = event.originalTarget;
+      this.browser = this.tab.linkedBrowser;
+      gBrowser.addEventListener("load", this, true);
+    } else if (event.type == "load") {
+      gBrowser.removeEventListener("load", this, true);
+      this.tab.addEventListener("TabClose", this, false);
+      var url = this.browser.contentDocument.location.href;
+      is(url, this.url, "Should have opened the correct tab");
+      // Allow any other load handlers to execute
+      var self = this;
+      executeSoon(function() { self.opencallback(self.tab, self.browser.contentWindow); } );
+    } else if (event.type == "TabClose") {
+      if (event.originalTarget != this.tab)
+        return;
+      this.tab.removeEventListener("TabClose", this, false);
+      this.opencallback = null;
+      this.tab = null;
+      this.browser = null;
+      // Let the window close complete
+      executeSoon(this.closecallback);
+      this.closecallback = null;
+    }
   }
 };
 
@@ -133,15 +124,15 @@ function test3() {
   ok(!notificationBox.getNotificationWithValue("blocked-plugins"), "Test 3, Should not have displayed the blocked plugin notification");
   ok(!gTestBrowser.missingPlugins, "Test 3, Should not be a missing plugin list");
 
-  new WindowOpenListener("chrome://mozapps/content/extensions/extensions.xul", test4, prepareTest5);
+  new TabOpenListener("about:addons", test4, prepareTest5);
 
   EventUtils.synthesizeMouse(gTestBrowser.contentDocument.getElementById("test"),
                              0, 0, {}, gTestBrowser.contentWindow);
 }
 
-function test4(win) {
-  is(win.gView, "plugins", "Should have displayed the plugins pane");
-  win.close();
+function test4(tab, win) {
+  todo_is(win.gView, "plugins", "Should have displayed the plugins pane");
+  gBrowser.removeTab(tab);
 }
 
 function prepareTest5() {
