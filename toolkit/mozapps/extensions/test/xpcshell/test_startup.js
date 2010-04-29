@@ -190,14 +190,6 @@ function run_test_2() {
   writeInstallRDFToDir(addon1, dest);
   dest = profileDir.clone();
   dest.append("addon2@tests.mozilla.org");
-  try {
-    dest.lastModifiedTime -= 20000; // test runs too fast to see real modifications
-  }
-  catch (e) {
-    // Cannot set last modified time for directories on windows
-    dest.append("install.rdf");
-    dest.lastModifiedTime -= 20000;
-  }
   addon2.version="2.1";
   writeInstallRDFToDir(addon2, dest);
   dest = globalDir.clone();

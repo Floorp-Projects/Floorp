@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+
+<!-- This page tests that window.InstallTrigger.install works -->
+
+<head>
+<title>InstallTrigger tests</title>
+<script type="text/javascript">
+function startInstall() {
+  window.InstallTrigger.install({
+    "Unsigned XPI": "unsigned.xpi"
+  });
+}
+</script>
+</head>
+<body onload="startInstall()">
+<p>InstallTrigger tests</p>
+<p id="return"></p>
+<p id="status"></p>
+</body>
+</html>
