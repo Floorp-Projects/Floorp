@@ -76,14 +76,14 @@ function run_test()
 {
   // EM needs to be running.
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
-  startupEM();
+  startupManager();
 
   server = new nsHttpServer();
   server.registerDirectory("/", do_get_file("data"));
   server.start(4444);
 
   // Point the addons repository to the test server
-  gPrefs.setCharPref(PREF_GETADDONS_GETRECOMMENDED, "http://localhost:4444/test_bug424262.xml");
+  Services.prefs.setCharPref(PREF_GETADDONS_GETRECOMMENDED, "http://localhost:4444/test_bug424262.xml");
   
   addonRepo = Components.classes["@mozilla.org/extensions/addon-repository;1"]
                         .getService(Components.interfaces.nsIAddonRepository);
