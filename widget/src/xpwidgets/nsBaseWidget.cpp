@@ -1103,7 +1103,6 @@ case _value: eventName.AssignWithConversion(_name) ; break
   switch(aGuiEvent->message)
   {
     _ASSIGN_eventName(NS_BLUR_CONTENT,"NS_BLUR_CONTENT");
-    _ASSIGN_eventName(NS_CONTROL_CHANGE,"NS_CONTROL_CHANGE");
     _ASSIGN_eventName(NS_CREATE,"NS_CREATE");
     _ASSIGN_eventName(NS_DESTROY,"NS_DESTROY");
     _ASSIGN_eventName(NS_DRAGDROP_GESTURE,"NS_DND_GESTURE");
@@ -1122,7 +1121,6 @@ case _value: eventName.AssignWithConversion(_name) ; break
     _ASSIGN_eventName(NS_KEY_DOWN,"NS_KEY_DOWN");
     _ASSIGN_eventName(NS_KEY_PRESS,"NS_KEY_PRESS");
     _ASSIGN_eventName(NS_KEY_UP,"NS_KEY_UP");
-    _ASSIGN_eventName(NS_MENU_SELECTED,"NS_MENU_SELECTED");
     _ASSIGN_eventName(NS_MOUSE_ENTER,"NS_MOUSE_ENTER");
     _ASSIGN_eventName(NS_MOUSE_EXIT,"NS_MOUSE_EXIT");
     _ASSIGN_eventName(NS_MOUSE_BUTTON_DOWN,"NS_MOUSE_BUTTON_DOWN");
