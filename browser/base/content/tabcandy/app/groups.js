@@ -107,7 +107,7 @@ window.Group = function(listOfEls, options) {
         .val(self.defaultName);
     } else {
       self.$title.css({"background":"none"})
-        .animate({"paddingLeft":1, "easing":"linear"}, 340);
+        .animate({"paddingLeft":1}, 340, "tabcandyBounce");
     }
   };
   
@@ -295,9 +295,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       this.$content.css(contentCSS);
     } else {
       TabMirror.pausePainting();
-      $(this.container).animate(css, {complete: function() {
-        TabMirror.resumePainting();
-      }}).dequeue();
+      $(this.container).animate(css, {
+        complete: function() {TabMirror.resumePainting();},
+        easing: "tabcandyBounce"
+      }).dequeue();
       
       this.$titlebar.animate(titlebarCSS).dequeue();        
       this.$content.animate(contentCSS).dequeue();        
@@ -604,7 +605,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       height: overlayHeight,
       top: pos.top,
       left: pos.left
-    },170).addClass("overlay");
+    }, 350, "tabcandyBounce").addClass("overlay");//xxx
 
     var box = new Rect(pos.left, pos.top, overlayWidth, overlayHeight);
     box.inset(8, 8);
@@ -892,11 +893,11 @@ window.Groups = {
 
   // ----------
   getBoundsForNewTabGroup: function() {
-    var pad = 5;
+    var pad = 20;
     var sw = window.innerWidth;
     var sh = window.innerHeight;
     //var w = sw - (pad * 2);
-    var w = TabItems.tabWidth*2.5 + pad*4;
+    var w = TabItems.tabWidth*2 + pad*2;
     var h = TabItems.tabHeight*1.2 + pad*2;
     return new Rect(pad, sh - (h + pad), w, h);
   },
