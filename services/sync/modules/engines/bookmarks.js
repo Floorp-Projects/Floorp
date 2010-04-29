@@ -168,8 +168,13 @@ BookmarksEngine.prototype = {
         if (lazyMap[parentName] == null)
           lazyMap[parentName] = {};
 
+        // If the entry already exists, remember that there are explicit dupes
+        let entry = new String(guid);
+        entry.hasDupe = lazyMap[parentName][key] != null;
+
         // Remember this item's guid for its parent-name/key pair
-        lazyMap[parentName][key] = guid;
+        lazyMap[parentName][key] = entry;
+        this._log.trace("Mapped: " + [parentName, key, entry, entry.hasDupe]);
       }
 
       // Expose a helper function to get a dupe guid for an item
@@ -209,7 +214,19 @@ BookmarksEngine.prototype = {
     this._tracker._ensureMobileQuery();
   },
 
+  _createRecord: function _createRecord(id) {
+    // Create the record like normal but mark it as having dupes if necessary
+    let record = SyncEngine.prototype._createRecord.call(this, id);
+    let entry = this._lazyMap(record);
+    if (entry != null && entry.hasDupe)
+      record.hasDupe = true;
+    return record;
+  },
+
   _findDupe: function _findDupe(item) {
+    // Don't bother finding a dupe if the incoming item has duplicates
+    if (item.hasDupe)
+      return;
     return this._lazyMap(item);
   },
 
