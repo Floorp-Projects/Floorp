@@ -47,6 +47,7 @@
 #include "nsImageToPixbuf.h"
 #include "nsStringStream.h"
 #include "nsIObserverService.h"
+#include "mozilla/Services.h"
 
 #include "imgIContainer.h"
 
@@ -141,10 +142,9 @@ NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 nsresult
 nsClipboard::Init(void)
 {
-    nsresult rv;
-    nsCOMPtr<nsIObserverService> os
-      (do_GetService("@mozilla.org/observer-service;1", &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (!os)
+      return NS_ERROR_FAILURE;
 
     os->AddObserver(this, "quit-application", PR_FALSE);
 

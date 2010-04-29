@@ -2342,8 +2342,6 @@ nsOfflineCacheUpdateService::~nsOfflineCacheUpdateService()
 nsresult
 nsOfflineCacheUpdateService::Init()
 {
-    nsresult rv;
-
 #if defined(PR_LOGGING)
     if (!gOfflineCacheUpdateLog)
         gOfflineCacheUpdateLog = PR_NewLogModule("nsOfflineCacheUpdate");
@@ -2351,12 +2349,13 @@ nsOfflineCacheUpdateService::Init()
 
     // Observe xpcom-shutdown event
     nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+      mozilla::services::GetObserverService();
+    if (!observerService)
+      return NS_ERROR_FAILURE;
 
-    rv = observerService->AddObserver(this,
-                                      NS_XPCOM_SHUTDOWN_OBSERVER_ID,
-                                      PR_TRUE);
+    nsresult rv = observerService->AddObserver(this,
+                                               NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                               PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     gOfflineCacheUpdateService = this;
@@ -2407,10 +2406,10 @@ nsOfflineCacheUpdateService::Schedule(nsOfflineCacheUpdate *aUpdate)
 
     aUpdate->SetOwner(this);
 
-    nsresult rv;
     nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+      mozilla::services::GetObserverService();
+    if (!observerService)
+      return NS_ERROR_FAILURE;
 
     observerService->NotifyObservers(static_cast<nsIOfflineCacheUpdate*>(aUpdate),
                                      "offline-cache-update-added",
@@ -2466,10 +2465,10 @@ nsOfflineCacheUpdateService::UpdateFinished(nsOfflineCacheUpdate *aUpdate)
     mUpdates.RemoveElementAt(0);
     mUpdateRunning = PR_FALSE;
 
-    nsresult rv;
     nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+      mozilla::services::GetObserverService();
+    if (!observerService)
+      return NS_ERROR_FAILURE;
 
     observerService->NotifyObservers(static_cast<nsIOfflineCacheUpdate*>(aUpdate),
                                      "offline-cache-update-completed",

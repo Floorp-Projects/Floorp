@@ -862,8 +862,7 @@ nsNativeAppSupportWin::Enable()
 {
     mCanHandleRequests = PR_TRUE;
 
-    nsCOMPtr<nsIObserverService> obs
-        (do_GetService("@mozilla.org/observer-service;1"));
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
         obs->AddObserver(this, "quit-application", PR_FALSE);
     } else {

@@ -48,6 +48,7 @@
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 #include "nsIProxyObjectManager.h"
+#include "mozilla/Services.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(TimerThread, nsIRunnable, nsIObserver)
 
@@ -111,7 +112,7 @@ nsresult TimerThread::Init()
     }
     else {
       nsCOMPtr<nsIObserverService> observerService =
-          do_GetService("@mozilla.org/observer-service;1");
+          mozilla::services::GetObserverService();
       // We must not use the observer service from a background thread!
       if (observerService && !NS_IsMainThread()) {
         nsCOMPtr<nsIObserverService> result = nsnull;

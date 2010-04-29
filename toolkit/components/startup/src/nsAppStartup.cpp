@@ -68,6 +68,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsWidgetsCID.h"
 #include "nsAppShellCID.h"
+#include "mozilla/Services.h"
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -111,9 +112,10 @@ nsAppStartup::Init()
   mAppShell = do_GetService(kAppShellCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIObserverService> os
-    (do_GetService("@mozilla.org/observer-service;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIObserverService> os =
+    mozilla::services::GetObserverService();
+  if (!os)
+    return NS_ERROR_FAILURE;
 
   os->AddObserver(this, "quit-application-forced", PR_TRUE);
   os->AddObserver(this, "profile-change-teardown", PR_TRUE);
@@ -256,7 +258,7 @@ nsAppStartup::Quit(PRUint32 aMode)
     if (!mRestart)
       mRestart = (aMode & eRestart) != 0;
 
-    obsService = do_GetService("@mozilla.org/observer-service;1");
+    obsService = mozilla::services::GetObserverService();
 
     if (!mAttemptingQuit) {
       mAttemptingQuit = PR_TRUE;
