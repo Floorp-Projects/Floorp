@@ -24,7 +24,9 @@
 <!ENTITY setup.tosAgree1.label      "I agree to the">
 <!ENTITY setup.tosAgree1.accesskey  "a">
 <!ENTITY setup.tosLink.label        "Terms of Service">
-<!ENTITY setup.tosAgree2.label      "">
+<!ENTITY setup.tosAgree2.label      "and the">
+<!ENTITY setup.ppLink.label         "Privacy Policy">
+<!ENTITY setup.tosAgree3.label      "">
 <!ENTITY setup.tosAgree2.accesskey  "">
 
 <!ENTITY weaveDesc.label            "&brandShortName; can use a &syncBrand.fullName.label; account to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
