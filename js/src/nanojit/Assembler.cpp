@@ -1526,7 +1526,7 @@ namespace nanojit
                 case LIR_rshuq:
                 case LIR_rshq:
                 case LIR_orq:
-                case LIR_qxor:
+                case LIR_xorq:
                     countlir_alu();
                     ins->oprnd1()->setResultLive();
                     ins->oprnd2()->setResultLive();

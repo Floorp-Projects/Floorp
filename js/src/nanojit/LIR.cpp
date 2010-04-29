@@ -1325,7 +1325,7 @@ namespace nanojit
                 case LIR_xori:
                 CASE64(LIR_andq:)
                 CASE64(LIR_orq:)
-                CASE64(LIR_qxor:)
+                CASE64(LIR_xorq:)
                 CASESF(LIR_ii2d:)
                 case LIR_file:
                 case LIR_line:
@@ -1710,7 +1710,7 @@ namespace nanojit
             case LIR_divd:
             case LIR_andi:       CASE64(LIR_andq:)
             case LIR_ori:        CASE64(LIR_orq:)
-            case LIR_xori:       CASE64(LIR_qxor:)
+            case LIR_xori:       CASE64(LIR_xorq:)
             case LIR_lshi:       CASE64(LIR_lshq:)
             case LIR_rshi:       CASE64(LIR_rshq:)
             case LIR_rshui:       CASE64(LIR_rshuq:)
@@ -2922,7 +2922,7 @@ namespace nanojit
 #ifdef NANOJIT_64BIT
         case LIR_andq:
         case LIR_orq:
-        case LIR_qxor:
+        case LIR_xorq:
         case LIR_addq:
         case LIR_eqq:
         case LIR_ltq:
