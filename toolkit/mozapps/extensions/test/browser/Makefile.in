@@ -39,12 +39,18 @@ DEPTH = ../../../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-relativesrcdir  = toolkit/mozapps/extensions/test
+relativesrcdir  = toolkit/mozapps/extensions/test/browser
 
 include $(DEPTH)/config/autoconf.mk
 
 _TEST_FILES = \
-  browser_bug510909.js
+  head.js \
+  browser_bug510909.js \
+  browser_updatessl.js \
+  browser_updatessl.rdf \
+  browser_installssl.js \
+  browser_installssl.xpi \
+  redirect.sjs \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
