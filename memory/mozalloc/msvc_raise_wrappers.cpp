@@ -38,15 +38,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_throw_msvc_h
-#define mozilla_throw_msvc_h
+#include <stdio.h>
 
-#if defined(MOZ_MSVC_STL_WRAP__RAISE)
-#  include "msvc_raise_wrappers.h"
-#elif defined(MOZ_MSVC_STL_WRAP__Throw)
-#  include "msvc_throw_wrapper.h"
-#else
-#  error "Unknown STL wrapper tactic"
+#if defined(XP_WIN) || (defined(XP_OS2) && defined(__declspec))
+#  define MOZALLOC_EXPORT __declspec(dllexport)
 #endif
 
-#endif  // mozilla_throw_msvc_h
+#define MOZALLOC_DONT_WRAP_RAISE_FUNCTIONS
+#include "mozilla/throw_msvc.h"
+
+__declspec(noreturn) static void abort_from_exception(const char* const which,
+                                                      const char* const what);
+static void
+abort_from_exception(const char* const which,  const char* const what)
+{
+    fprintf(stderr, "fatal: STL threw %s: ", which);
+    mozalloc_abort(what);
+}
+
+namespace std {
+
+// NB: user code is not supposed to touch the std:: namespace.  We're
+// doing this after careful review because we want to define our own
+// exception throwing semantics.  Don't try this at home!
+
+void
+moz_Xinvalid_argument(const char* what)
+{
+    abort_from_exception("invalid_argument", what);
+}
+
+void
+moz_Xlength_error(const char* what)
+{
+    abort_from_exception("length_error", what);
+}
+
+void
+moz_Xout_of_range(const char* what)
+{
+    abort_from_exception("out_of_range", what);
+}
+
+void
+moz_Xoverflow_error(const char* what)
+{
+    abort_from_exception("overflow_error", what);
+}
+
+void
+moz_Xruntime_error(const char* what)
+{
+    abort_from_exception("runtime_error", what);
+}
+
+}  // namespace std
