@@ -190,7 +190,7 @@ NS_IMETHODIMP mozPersonalDictionary::Save()
 
   PRUint32 bytesWritten;
   nsCAutoString utf8Key;
-  for (PRInt32 i = 0; i < array.Length(); ++i ) {
+  for (PRUint32 i = 0; i < array.Length(); ++i ) {
     CopyUTF16toUTF8(array[i], utf8Key);
 
     bufferedOutputStream->Write(utf8Key.get(), utf8Key.Length(), &bytesWritten);
