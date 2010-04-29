@@ -295,7 +295,7 @@
 @BINPATH@/components/NetworkGeolocationProvider.js
 @BINPATH@/components/GPSDGeolocationProvider.js
 @BINPATH@/components/nsSidebar.js
-@BINPATH@/components/nsExtensionManager.js
+@BINPATH@/components/addonManager.js
 @BINPATH@/components/nsBlocklistService.js
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.js
