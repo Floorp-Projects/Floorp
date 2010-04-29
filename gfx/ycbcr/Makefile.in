@@ -21,7 +21,7 @@ CPPSRCS = yuv_convert.cpp \
           yuv_row_c.cpp \
           $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifdef _MSC_VER
 CPPSRCS += yuv_row_win.cpp \
            $(NULL)
 else
