@@ -1002,6 +1002,12 @@ var gDetailView = {
 
     this._notificationContainer = document.getElementById("detail-notification");
     this._notificationText = document.getElementById("detail-notification-text");
+
+    var self = this;
+    var autoUpdate = document.getElementById("detail-autoUpdate");
+    autoUpdate.addEventListener("command", function() {
+      self._addon.applyBackgroundUpdates = autoUpdate.checked;
+    }, true);
   },
 
   show: function(aAddonId) {
