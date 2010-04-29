@@ -353,6 +353,35 @@ typedef struct REGlobalData {
     size_t backTrackLimit;          /* upper limit on backtrack states */
 } REGlobalData;
 
+void
+JSRegExpStatics::clearRoots() {
+    input = NULL;
+    cx->runtime->gcPoke = JS_TRUE;
+}
+
+bool
+JSRegExpStatics::copy(const JSRegExpStatics& other) {
+    clearRoots();
+    input = other.input;
+    multiline = other.multiline;
+    lastMatch = other.lastMatch;
+    lastParen = other.lastParen;
+    leftContext = other.leftContext;
+    rightContext = other.rightContext;
+    if (!parens.resize(other.parens.length()))
+        return false;
+    memcpy(parens.begin(), other.parens.begin(), sizeof(JSSubString) * parens.length());
+    return true;
+}
+
+void
+JSRegExpStatics::clear() {
+    clearRoots();
+    multiline = false;
+    lastMatch = lastParen = leftContext = rightContext = js_EmptySubString;
+    parens.clear();
+}
+
 /*
  * 1. If IgnoreCase is false, return ch.
  * 2. Let u be ch converted to upper case as if by calling
