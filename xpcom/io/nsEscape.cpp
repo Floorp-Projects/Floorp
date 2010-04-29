@@ -289,12 +289,12 @@ NS_COM PRUnichar *
 nsEscapeHTML2(const PRUnichar *aSourceBuffer, PRInt32 aSourceBufferLen)
 {
   // if the caller didn't calculate the length
-  if (aSourceBufferLen == -1) {
+  if (aSourceBufferLen < 0) {
     aSourceBufferLen = nsCRT::strlen(aSourceBuffer); // ...then I will
   }
 
   /* XXX Hardcoded max entity len. */
-  if (aSourceBufferLen >=
+  if (PRUint32(aSourceBufferLen) >=
       ((PR_UINT32_MAX - sizeof(PRUnichar)) / (6 * sizeof(PRUnichar))) )
     return nsnull;
 
