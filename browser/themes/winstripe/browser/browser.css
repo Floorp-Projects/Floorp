@@ -310,7 +310,7 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 #TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 {
   -moz-appearance: toolbarbutton;
   margin: 0;
-  padding: 3px;
+  padding: 0 3px;
   border: none !important;
   color: inherit !important;
   background: transparent !important;
