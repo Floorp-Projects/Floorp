@@ -630,6 +630,7 @@ imgLoader::~imgLoader()
 
 void imgLoader::VerifyCacheSizes()
 {
+#ifdef DEBUG
   if (!gCacheTracker)
     return;
 
@@ -640,6 +641,7 @@ void imgLoader::VerifyCacheSizes()
     trackersize++;
   NS_ABORT_IF_FALSE(queuesize == trackersize, "Queue and tracker sizes out of sync!");
   NS_ABORT_IF_FALSE(queuesize <= cachesize, "Queue has more elements than cache!");
+#endif
 }
 
 imgLoader::imgCacheTable & imgLoader::GetCache(nsIURI *aURI)
