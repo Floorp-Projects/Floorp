@@ -2020,7 +2020,7 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
     }
 
     JS_ASSERT(len <= UINT32_MAX);
-    aobj->setArrayCount(len);
+    aobj->setDenseArrayCount(len);
 
     return JS_TRUE;
 }
