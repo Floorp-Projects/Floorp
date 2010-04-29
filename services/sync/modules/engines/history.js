@@ -177,9 +177,6 @@ HistoryStore.prototype = {
         execCb.throw(error);
       },
       handleCompletion: function(reason) {
-        // Throw in-case for some reason we didn't find the GUID
-        if (this.urlInfo == null)
-          execCb.throw(reason);
         execCb(this.urlInfo);
       }
     });
