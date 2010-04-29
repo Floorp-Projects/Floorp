@@ -209,8 +209,8 @@ EXPORTS_cairo += $(PDF_EXPORTS) $(PS_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += cairo-qpainter-surface.cpp
-EXPORTS_cairo += cairo-qpainter.h
+CPPSRCS += cairo-qt-surface.cpp
+EXPORTS_cairo += cairo-qt.h
 OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 
