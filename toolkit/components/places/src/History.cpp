@@ -78,9 +78,6 @@ public:
     mozIStorageStatement* stmt = navHist->GetStatementById(DB_IS_PAGE_VISITED);
     NS_ENSURE_STATE(stmt);
 
-    // Be sure to reset our statement!
-    mozStorageStatementScoper scoper(stmt);
-
     // Bind by index for performance.
     nsresult rv = URIBinder::Bind(stmt, 0, aURI);
     NS_ENSURE_SUCCESS(rv, rv);
