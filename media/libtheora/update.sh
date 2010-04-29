@@ -60,3 +60,4 @@ cp $1/include/theora/theora.h ./include/theora/theora.h
 cp $1/include/theora/theoradec.h ./include/theora/theoradec.h
 cp $1/include/theora/theoraenc.h ./include/theora/theoraenc.h
 cp $1/include/theora/codec.h ./include/theora/codec.h
+patch -p3 <bug559343.patch
