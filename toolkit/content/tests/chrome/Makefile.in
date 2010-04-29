@@ -43,7 +43,7 @@ relativesrcdir  = toolkit/content/tests/chrome
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = rtltest
+DIRS = rtltest rtlchrome
 
 include $(topsrcdir)/config/rules.mk
 
@@ -63,15 +63,15 @@ _TEST_FILES = 	findbar_window.xul \
 		test_bug418874.xul \
 		bug429723_window.xul \
 		test_bug429723.xul \
-		bug437844.css \
-		bug437844.dtd \
-		bug437844.manifest \
 		test_bug437844.xul \
 		bug451286_window.xul \
 		test_bug451286.xul \
 		bug451540_window.xul \
 		test_bug451540.xul \
 		test_bug471776.xul \
+		bug558403.logical.html \
+		bug558403.visual.html \
+		test_bug558403.xul \
 		test_popup_preventdefault_chrome.xul \
 		window_popup_preventdefault_chrome.xul \
 		test_largemenu.xul \
@@ -99,6 +99,7 @@ _TEST_FILES = 	findbar_window.xul \
 		window_titlebar.xul \
 		test_browser_drop.xul \
 		window_browser_drop.xul \
+		RegisterUnregisterChrome.js \
 		$(NULL)
 
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to
