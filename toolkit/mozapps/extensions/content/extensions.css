@@ -1,258 +1,88 @@
-richlistbox#extensionsView {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addons");
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Extension Manager UI.
+ *
+ * The Initial Developer of the Original Code is
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Blair McBride <bmcbride@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#categories {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#categories-list");
 }
 
-richlistitem {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon");
+.category {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#category");
 }
 
-richlistitem[selected="true"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-selected");
+.sort-controls {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#sorters");
 }
 
-richlistitem[typeName="searchResult"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#searchresult");
+.addon[status="installed"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-generic");
 }
 
-richlistitem[typeName="searchResult"][selected="true"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#searchresult-selected");
+.addon[status="installing"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-installing");
 }
 
-vbox[typeName="status"][type="search-failure"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-search-failure");
+.addon[status="uninstalled"] {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-uninstalled");
 }
 
-vbox[typeName="status"][type="recommended-failure"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-recommended-failure");
+.creator {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#creator-link");
 }
 
-vbox[typeName="status"][type="header-recommended"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-header-recommended");
+.meta-rating {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#rating");
 }
 
-vbox[typeName="status"][type="message-norecommended"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-message-norecommended");
+.download-progress {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#download-progress");
 }
 
-vbox[typeName="status"][type="message-nosearchresults"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-message-nosearchresults");
+.install-status {
+  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#install-status");
 }
 
-vbox[typeName="status"][type="footer-recommended"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-recommended");
-}
-
-vbox[typeName="status"][type="footer-search"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-search");
-}
-
-vbox[typeName="status"][type="footer-search"][count="0"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-footer-search-empty");
-}
-
-vbox[typeName="status"][type="retrieve-search"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-retrieve-search");
-}
-
-vbox[typeName="status"][type="retrieve-recommended"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#status-retrieve-recommended");
-}
-
-richlistitem[typeName="update"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#update-found");
-}
-
-richlistitem[updateStatus] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#update-checking");
-}
-
-richlistitem[state] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#install");
-}
-
-richlistitem[state="downloading"] {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#install-downloading");
-}
-
-richlistitem[state="waiting"] hbox.addon-install-status {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-waiting");
-}
-
-richlistitem[state="incompatibleUpdate"] hbox.addon-install-status {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-incompatibleUpdate");
-}
-
-richlistitem[state="finishing"] hbox.addon-install-status {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-finishing");
-}
-
-richlistitem[state="success"][opType="needs-install"] hbox.addon-install-status {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-restart");
-}
-
-richlistitem[state="success"][opType="needs-upgrade"] hbox.addon-install-status {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-upgrade-restart");
-}
-
-richlistitem[state="success"] hbox.addon-install-status {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-success");
-}
-
-richlistbox[norestart] richlistitem[state="success"] hbox.addon-install-status {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-updated");
-}
-
-richlistitem[state="failure"] hbox.addon-install-status {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-install-fail");
-}
-
-vbox.addon-icon {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-icon");
-}
-
-hbox.addon-name-version {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-name-version");
-}
-
-richlistitem:not([opType]) hbox.addon-optype {
+.addon[active="true"] .disabled-postfix {
   display: none;
 }
 
-richlistitem hbox.addon-description {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-description-crop");
-}
-
-richlistitem[opType="needs-uninstall"] hbox.addon-optype,
-richlistitem[opType="needs-uninstall"] hbox.addon-description {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-uninstall");
-}
-
-richlistitem[opType="needs-install"] hbox.addon-optype,
-richlistitem[opType="needs-install"] hbox.addon-description {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-install");
-}
-
-richlistitem[opType="needs-upgrade"] hbox.addon-optype,
-richlistitem[opType="needs-upgrade"] hbox.addon-description {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-upgrade");
-}
-
-richlistitem[opType="needs-enable"] hbox.addon-optype,
-richlistitem[opType="needs-enable"] hbox.addon-description {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-enable");
-}
-
-richlistitem[opType="needs-disable"] hbox.addon-optype,
-richlistitem[opType="needs-disable"] hbox.addon-description {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-needs-disable");
-}
-
-#viewGroup > radio {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#viewbutton");
-  -moz-box-orient: vertical;
-  -moz-box-align: center;
-  -moz-appearance: none;
-}
-
-/* Hide / Display buttons depending on the state of the add-on */
-.enableHide,
-.uninstallShow,
-.installShow,
-.upgradeShow,
-richlistitem[isDisabled="true"] .disableHide {
+.addon[incompatible="false"] .incompatible-warning {
   display: none;
 }
 
-richlistitem[opType="needs-uninstall"] .uninstallShow,
-richlistitem[opType="needs-install"] .installShow,
-richlistitem[opType="needs-upgrade"] .upgradeShow,
-richlistitem[opType="needs-enable"] .enableShow,
-richlistitem[opType="needs-disable"] .disableShow,
-richlistitem[isDisabled="true"] .disableShow {
-  display: -moz-box;
-}
-
-richlistitem[opType="needs-uninstall"] .uninstallHide,
-richlistitem[opType="needs-install"] .uninstallHide,
-richlistitem[opType="needs-upgrade"] .uninstallHide,
-richlistitem[opType="needs-enable"] .enableHide,
-richlistitem[opType="needs-disable"] .disableHide {
-  display: none;
-}
-
-richlistitem[plugin] .themeButton,
-richlistitem[plugin] .optionsButton,
-richlistitem[plugin] .uninstallButton,
-richlistitem[type="2"] .themeButton,
-richlistitem[type="8"] .themeButton,
-richlistitem[type="4"] .optionsButton,
-richlistitem[type="8"] .optionsButton,
-richlistitem[type="4"] .disableShow,
-richlistitem[type="4"] .disableHide {
-  display: none;
-}
-
-richlistitem[action] .addonInstallButton {
-  display: none;
-}
-
-.searchResultInstalling, .searchResultFailed,
-.searchResultInstalled, .searchResultConnecting {
-  display: none;
-}
-
-richlistitem[action="connecting"] .searchResultConnecting,
-richlistitem[action="installing"] .searchResultInstalling,
-richlistitem[action="failed"] .searchResultFailed,
-richlistitem[action="failed"] .addonInstallButton,
-richlistitem[action="installed"] .searchResultInstalled {
-  display: -moz-box;
-}
-
-richlistitem .addonType {
-  display: none;
-}
-
-richlistitem[addonType="2"] .addonTypeExtension {
-  display: -moz-box;
-}
-
-richlistitem[addonType="4"] .addonTypeTheme {
-  display: -moz-box;
-}
-
-.updateBadge,
-.updateAvailableBox,
-.notifyBadge {
-  display: none;
-}
-
-richlistitem[availableUpdateURL][updateable="true"] .updateBadge,
-richlistitem[availableUpdateURL][updateable="true"] .updateAvailableBox,
-richlistitem[compatible="false"] .notifyBadge,
-richlistitem[providesUpdatesSecurely="false"] .notifyBadge,
-richlistitem[blocklisted="true"] .notifyBadge,
-richlistitem[blocklistedsoft="true"] .notifyBadge,
-richlistitem[outdated="true"] .notifyBadge,
-richlistitem[satisfiesDependencies="false"] .notifyBadge,
-richlistitem[loading="true"] .updateBadge {
-  display: -moz-box;
-}
-
-/* Selected Add-on status messages and images */
-richlistitem[compatible="true"] .incompatibleBox,
-richlistitem[providesUpdatesSecurely="true"] .insecureUpdateBox,
-richlistitem[satisfiesDependencies="true"] .needsDependenciesBox,
-richlistitem:not([blocklisted="true"]):not([blocklistedsoft="true"]):not([outdated="true"]) .blocklistedBox,
-richlistitem[blocklistedsoft="false"][outdated="false"]:not([selected="true"]) .blocklistedBox,
-richlistitem[blocklisted="false"] .blocklistedLabel,
-richlistitem[blocklistedsoft="false"] .softBlocklistedLabel,
-richlistitem:not([outdated="true"]) .outdatedLabel,
-richlistitem[opType="needs-uninstall"] .blocklistedBox,
-richlistitem[opType="needs-uninstall"] .incompatibleBox,
-richlistitem[opType="needs-uninstall"] .needsDependenciesBox,
-richlistitem[opType="needs-uninstall"] .notifyBadge,
-richlistitem[selected="true"]:not([opType]) .descriptionCrop,
-.addonRating:not([rating]) {
+#detail-view[loading] > .detail-view-container {
   display: none;
 }
