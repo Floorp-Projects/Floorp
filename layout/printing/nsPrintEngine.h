@@ -165,7 +165,7 @@ public:
   // Timer Methods
   nsresult StartPagePrintTimer(nsPrintObject* aPO);
 
-  PRBool IsWindowsInOurSubTree(nsIDOMWindow * aDOMWindow);
+  PRBool IsWindowsInOurSubTree(nsPIDOMWindow * aDOMWindow);
   static PRBool IsParentAFrameSet(nsIDocShell * aParent);
   PRBool IsThereAnIFrameSelected(nsIDocShell* aDocShell,
                                  nsIDOMWindow* aDOMWin,
