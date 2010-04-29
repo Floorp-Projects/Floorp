@@ -1,0 +1,20 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+
+<!-- This page will test if InstallTrigger seems to be enabled -->
+
+<head>
+<title>InstallTrigger tests</title>
+<script type="text/javascript">
+function init() {
+  document.getElementById("enabled").textContent = InstallTrigger.enabled() ? "true" : "false";
+}
+</script>
+</head>
+<body onload="init()">
+<p>InstallTrigger tests</p>
+<p id="enabled"></p>
+</body>
+</html>
