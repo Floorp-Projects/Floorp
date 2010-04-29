@@ -85,7 +85,7 @@ PlacesItem.prototype = {
   _logName: "Record.PlacesItem",
 };
 
-Utils.deferGetSet(PlacesItem, "cleartext", ["parentid", "parentName",
+Utils.deferGetSet(PlacesItem, "cleartext", ["hasDupe", "parentid", "parentName",
   "predecessorid", "type"]);
 
 function Bookmark(uri, type) {
