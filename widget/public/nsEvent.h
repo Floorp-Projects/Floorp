@@ -86,7 +86,6 @@ class nsCompositionEvent;
 class nsMouseScrollEvent;
 class nsReconversionEvent;
 class nsTooltipEvent;
-class nsMenuEvent;
 class nsSimpleGestureEvent;
 class nsContentCommandEvent;
 
