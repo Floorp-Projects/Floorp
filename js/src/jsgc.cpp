@@ -3411,7 +3411,7 @@ FireGCEnd(JSContext *cx, JSGCInvocationKind gckind)
      * interlock mechanism here.
      */
     if (gckind != GC_SET_SLOT_REQUEST && callback) {
-        Conditionally<AutoUnlockGC> unlockIf(gckind & GC_LOCK_HELD, rt);
+        Conditionally<AutoUnlockGC> unlockIf(!!(gckind & GC_LOCK_HELD), rt);
 
         (void) callback(cx, JSGC_END);
 
