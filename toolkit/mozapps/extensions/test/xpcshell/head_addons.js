@@ -267,6 +267,8 @@ function writeInstallRDFToDir(data, dir) {
     dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
   var file = dir.clone();
   file.append("install.rdf");
+  if (file.exists())
+    file.remove(true);
   var fos = AM_Cc["@mozilla.org/network/file-output-stream;1"].
             createInstance(AM_Ci.nsIFileOutputStream);
   fos.init(file,
