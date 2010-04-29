@@ -96,7 +96,6 @@ window.TabItem.prototype = $.extend(new Item(), {
 
     if(immediately) {
       $container.css(css);
-      
     } else {
       TabMirror.pausePainting();
       $container.animate(css, {complete: function() {

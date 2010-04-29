@@ -142,6 +142,12 @@ body {
   border: 1px solid rgba(190,190,190,1);
 }
 
+.overlay{
+  background-color: rgba(0,0,0,.7) !important;
+  -moz-box-shadow: 3px 3px 8px rgba(0,0,0,.5);        
+	-moz-border-radius: 0.4em;
+}
+
 /* Other
 ----------------------------------*/
 
