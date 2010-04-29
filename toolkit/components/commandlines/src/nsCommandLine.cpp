@@ -129,7 +129,7 @@ NS_IMETHODIMP
 nsCommandLine::GetArgument(PRInt32 aIndex, nsAString& aResult)
 {
   NS_ENSURE_ARG_MIN(aIndex, 0);
-  NS_ENSURE_ARG_MAX(aIndex, mArgs.Length());
+  NS_ENSURE_ARG_MAX(PRUint32(aIndex), mArgs.Length());
 
   aResult = mArgs[aIndex];
   return NS_OK;
@@ -165,7 +165,7 @@ NS_IMETHODIMP
 nsCommandLine::RemoveArguments(PRInt32 aStart, PRInt32 aEnd)
 {
   NS_ENSURE_ARG_MIN(aStart, 0);
-  NS_ENSURE_ARG_MAX(aEnd + 1, mArgs.Length());
+  NS_ENSURE_ARG_MAX(PRUint32(aEnd) + 1, mArgs.Length());
 
   for (PRInt32 i = aEnd; i >= aStart; --i) {
     mArgs.RemoveElementAt(i);
