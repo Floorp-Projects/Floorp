@@ -94,6 +94,16 @@ public:
             NS_RUNTIMEABORT("default impl shouldn't be invoked");
         }
 
+        virtual void OnEnteredCall()
+        {
+            NS_RUNTIMEABORT("default impl shouldn't be invoked");
+        }
+
+        virtual void OnExitedCall()
+        {
+            NS_RUNTIMEABORT("default impl shouldn't be invoked");
+        }
+
         virtual RacyRPCPolicy MediateRPCRace(const Message& parent,
                                              const Message& child)
         {
@@ -199,11 +209,31 @@ protected:
 
     void ExitedCxxStack();
 
+    void EnteredCall()
+    {
+        Listener()->OnEnteredCall();
+    }
+
+    void ExitedCall()
+    {
+        Listener()->OnExitedCall();
+    }
+
     enum Direction { IN_MESSAGE, OUT_MESSAGE };
     struct RPCFrame {
         RPCFrame(Direction direction, const Message* msg) :
             mDirection(direction), mMsg(msg)
         { }
+
+        bool IsRPCIncall() const
+        {
+            return mMsg->is_rpc() && IN_MESSAGE == mDirection;
+        }
+
+        bool IsRPCOutcall() const
+        {
+            return mMsg->is_rpc() && OUT_MESSAGE == mDirection;
+        }
 
         void Describe(int32* id, const char** dir, const char** sems,
                       const char** name) const
@@ -230,11 +260,16 @@ protected:
                 mThat.EnteredCxxStack();
 
             mThat.mCxxStackFrames.push_back(RPCFrame(direction, msg));
-            mThat.mSawRPCOutMsg |= (direction == OUT_MESSAGE) &&
-                                   (msg->is_rpc());
+            const RPCFrame& frame = mThat.mCxxStackFrames.back();
+
+            if (frame.IsRPCIncall())
+                mThat.EnteredCall();
+
+            mThat.mSawRPCOutMsg |= frame.IsRPCOutcall();
         }
 
         ~CxxStackFrame() {
+            bool exitingCall = mThat.mCxxStackFrames.back().IsRPCIncall();
             mThat.mCxxStackFrames.pop_back();
             bool exitingStack = mThat.mCxxStackFrames.empty();
 
@@ -244,6 +279,9 @@ protected:
                 return;
 
             mThat.AssertWorkerThread();
+            if (exitingCall)
+                mThat.ExitedCall();
+
             if (exitingStack)
                 mThat.ExitedCxxStack();
         }
