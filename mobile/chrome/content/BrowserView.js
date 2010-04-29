@@ -153,16 +153,6 @@ BrowserView.Util = {
     return visibleRect.intersect(browserViewportState.viewportRect);
   },
 
-  clampZoomLevel: function clampZoomLevel(zl) {
-    let bounded = Math.min(Math.max(ZoomManager.MIN, zl), ZoomManager.MAX);
-    let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
-    return (rounded) ? rounded : 1.0;
-  },
-
-  pageZoomLevel: function pageZoomLevel(visibleRect, browserW, browserH) {
-    return BrowserView.Util.clampZoomLevel(visibleRect.width / browserW);
-  },
-
   createBrowserViewportState: function createBrowserViewportState() {
     return new BrowserView.BrowserViewportState(new Rect(0, 0, 1, 1), 0, 0, 1);
   },
@@ -319,7 +309,7 @@ BrowserView.prototype = {
     if (!bvs)
       return;
 
-    let newZoomLevel = BrowserView.Util.clampZoomLevel(zoomLevel);
+    let newZoomLevel = this.clampZoomLevel(zoomLevel);
     if (newZoomLevel != bvs.zoomLevel) {
       let browserW = this.viewportToBrowser(bvs.viewportRect.right);
       let browserH = this.viewportToBrowser(bvs.viewportRect.bottom);
@@ -342,6 +332,22 @@ BrowserView.prototype = {
       return undefined;
 
     return bvs.zoomLevel;
+  },
+
+  clampZoomLevel: function clampZoomLevel(zl) {
+    let bounded = Math.min(Math.max(ZoomManager.MIN, zl), ZoomManager.MAX);
+
+    let bvs = this._browserViewportState;
+    if (bvs) {
+      let md = bvs.metaData;
+      if (md && md.minScale)
+        bounded = Math.max(bounded, md.minScale);
+      if (md && md.maxScale)
+        bounded = Math.min(bounded, md.maxScale);
+    }
+
+    let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
+    return (rounded) ? rounded : 1.0;
   },
 
   beginOffscreenOperation: function beginOffscreenOperation(rect) {
@@ -589,6 +595,8 @@ BrowserView.prototype = {
     if (!bvs)
       return false;
 
+    bvs.metaData = Util.getViewportMetadata(this._browser);
+
     let isDefault = (bvs.zoomLevel == bvs.defaultZoomLevel);
     bvs.defaultZoomLevel = this.getDefaultZoomLevel();
     if (isDefault)
@@ -604,8 +612,8 @@ BrowserView.prototype = {
   },
 
   getDefaultZoomLevel: function getDefaultZoomLevel() {
-    let browser = this._browser;
-    if (!browser)
+    let bvs = this._browserViewportState;
+    if (!bvs)
       return 0;
 
     let pageZoom = this.getPageZoomLevel();
@@ -616,22 +624,17 @@ BrowserView.prototype = {
     if (threshold < pageZoom && pageZoom < 1)
       pageZoom = 1;
 
-    let metaData = Util.getViewportMetadata(browser);
-    if (metaData.minScale)
-      pageZoom = Math.max(metaData.minScale, pageZoom);
-    if (metaData.maxScale)
-      pageZoom = Math.min(metaData.maxScale, pageZoom);
-    if (metaData.scale)
-      pageZoom = Math.max(metaData.scale, pageZoom);
+    let md = bvs.metaData;
+    if (md && md.scale)
+      pageZoom = Math.max(pageZoom, md.scale);
 
     return pageZoom;
   },
 
   getPageZoomLevel: function getPageZoomLevel() {
     let bvs = this._browserViewportState;  // browser exists, so bvs must as well
-    let w = this.viewportToBrowser(bvs.viewportRect.right);
-    let h = this.viewportToBrowser(bvs.viewportRect.bottom);
-    return BrowserView.Util.pageZoomLevel(this.getVisibleRect(), w, h);
+    let browserW = this.viewportToBrowser(bvs.viewportRect.right);
+    return this.clampZoomLevel(this.getVisibleRect().width / browserW);
   },
 
   zoom: function zoom(aDirection) {
@@ -647,6 +650,13 @@ BrowserView.prototype = {
       zoomDelta *= -1;
 
     this.setZoomLevel(bvs.zoomLevel + zoomDelta);
+  },
+
+  get allowZoom() {
+    let bvs = this._browserViewportState;
+    if (!bvs || !bvs.metaData)
+      return true;
+    return bvs.metaData.allowZoom;
   },
 
   //

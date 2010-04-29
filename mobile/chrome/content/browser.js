@@ -29,6 +29,7 @@
  *   Taras Glek <tglek@mozilla.com>
  *   Roy Frostig <rfrostig@mozilla.com>
  *   Ben Combee <bcombee@mozilla.com>
+ *   Matt Brubeck <mbrubeck@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -1035,6 +1036,9 @@ var Browser = {
   /** Zoom one step in (negative) or out (positive). */
   zoom: function zoom(aDirection) {
     let bv = this._browserView;
+    if (!bv.allowZoom)
+      return;
+
     let zoomLevel = bv.getZoomLevel();
 
     let zoomValues = ZoomManager.zoomValues;
@@ -1058,7 +1062,7 @@ var Browser = {
     let elRect = bv.browserToViewportRect(Browser.getBoundingContentRect(element));
 
     let vis = bv.getVisibleRect();
-    return BrowserView.Util.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
+    return bv.clampZoomLevel(bv.getZoomLevel() * vis.width / (elRect.width + margin * 2));
   },
 
   /**
