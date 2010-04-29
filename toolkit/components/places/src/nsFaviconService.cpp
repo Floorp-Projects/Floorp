@@ -1060,7 +1060,7 @@ ExpireFaviconsStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
     return NS_OK;
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService) {
     (void)observerService->NotifyObservers(nsnull,
                                            NS_PLACES_FAVICONS_EXPIRED_TOPIC_ID,

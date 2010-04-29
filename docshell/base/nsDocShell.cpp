@@ -10123,7 +10123,7 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
 
     if (!visited) {
         nsCOMPtr<nsIObserverService> obsService =
-            do_GetService("@mozilla.org/observer-service;1");
+            mozilla::services::GetObserverService();
         if (obsService) {
             obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
         }

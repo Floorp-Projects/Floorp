@@ -51,6 +51,7 @@
 #include "nsWeakReference.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "mozilla/Services.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -203,13 +204,13 @@ NS_IMETHODIMP nsXMLEncodingObserver::Start()
     if (bXMLEncodingObserverStarted) 
       return res;
 
-    nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (!obs)
+      return NS_ERROR_FAILURE;
 
-    if (NS_SUCCEEDED(res)) {
-      res = anObserverService->AddObserver(this, "xmlparser", PR_TRUE);
+    res = obs->AddObserver(this, "xmlparser", PR_TRUE);
 
-      bXMLEncodingObserverStarted = PR_TRUE;
-    }
+    bXMLEncodingObserverStarted = PR_TRUE;
 
     return res;
 }
@@ -221,12 +222,13 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
     if (!bXMLEncodingObserverStarted)
       return res;
 
-    nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);
-    if (NS_SUCCEEDED(res)) {
-      res = anObserverService->RemoveObserver(this, "xmlparser");
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (!obs)
+      return NS_ERROR_FAILURE;
 
-      bXMLEncodingObserverStarted = PR_FALSE;
-    }
+    res = obs->RemoveObserver(this, "xmlparser");
+
+    bXMLEncodingObserverStarted = PR_FALSE;
 
     return res;
 }

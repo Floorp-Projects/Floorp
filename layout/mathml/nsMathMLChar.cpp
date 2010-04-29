@@ -579,12 +579,11 @@ nsGlyphTableList::Observe(nsISupports*     aSubject,
 nsresult
 nsGlyphTableList::Initialize()
 {
-  nsresult rv;
-  nsCOMPtr<nsIObserverService> obs = 
-           do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (!obs)
+    return NS_ERROR_FAILURE;
 
-  rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  nsresult rv = obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -596,11 +595,12 @@ nsGlyphTableList::Finalize()
 {
   // Remove our observer from the observer service
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIObserverService> obs = 
-           do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_SUCCEEDED(rv)) {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs)
     rv = obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-  }
+  else
+    rv = NS_ERROR_FAILURE;
+
   gInitialized = PR_FALSE;
   // our oneself will be destroyed when our |Release| is called by the observer
   return rv;

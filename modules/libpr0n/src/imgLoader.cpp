@@ -665,9 +665,9 @@ imgCacheQueue & imgLoader::GetCacheQueue(nsIURI *aURI)
 nsresult imgLoader::InitCache()
 {
   nsresult rv;
-  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (!os)
+    return NS_ERROR_FAILURE;
   
   gCacheObserver = new imgCacheObserver();
   if (!gCacheObserver) 

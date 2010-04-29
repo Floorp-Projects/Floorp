@@ -642,8 +642,8 @@ nsXULDocument::OnDocumentParserError()
   if (mCurrentPrototype && mMasterPrototype != mCurrentPrototype) {
     nsCOMPtr<nsIURI> uri = mCurrentPrototype->GetURI();
     if (IsChromeURI(uri)) {
-      nsCOMPtr<nsIObserverService> os(
-        do_GetService("@mozilla.org/observer-service;1"));
+      nsCOMPtr<nsIObserverService> os =
+        mozilla::services::GetObserverService();
       if (os)
         os->NotifyObservers(uri, "xul-overlay-parsererror",
                             EmptyString().get());

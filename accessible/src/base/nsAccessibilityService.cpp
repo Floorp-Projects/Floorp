@@ -85,6 +85,7 @@
 #include "nsIWebProgress.h"
 #include "nsNetError.h"
 #include "nsDocShellLoadTypes.h"
+#include "mozilla/Services.h"
 
 #ifdef MOZ_XUL
 #include "nsXULAlertAccessible.h"
@@ -119,8 +120,8 @@ PRBool nsAccessibilityService::gIsShutdown = PR_TRUE;
 nsAccessibilityService::nsAccessibilityService()
 {
   // Add observers.
-  nsCOMPtr<nsIObserverService> observerService = 
-    do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
   if (!observerService)
     return;
 
@@ -155,11 +156,11 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
   if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
 
     // Remove observers.
-    nsCOMPtr<nsIObserverService> observerService = 
-      do_GetService("@mozilla.org/observer-service;1");
-    if (observerService) {
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (observerService)
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    }
+
     nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
     if (progress)
       progress->RemoveProgressListener(static_cast<nsIWebProgressListener*>(this));

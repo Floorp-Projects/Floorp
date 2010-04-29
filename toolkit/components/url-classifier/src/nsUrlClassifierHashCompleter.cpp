@@ -90,7 +90,7 @@ nsUrlClassifierHashCompleterRequest::Begin()
   }
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService)
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
 
@@ -471,7 +471,7 @@ nsUrlClassifierHashCompleterRequest::OnStopRequest(nsIRequest *request,
        this, status));
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService)
     observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 
@@ -537,7 +537,7 @@ nsUrlClassifierHashCompleter::Init()
 #endif
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService)
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
 
@@ -673,17 +673,14 @@ nsUrlClassifierHashCompleter::RekeyRequested()
   // Notify the key manager that we need a new key.  Until we get a
   // new key, gethash requests will be unauthenticated (and therefore
   // uncacheable).
-  nsresult rv;
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    mozilla::services::GetObserverService();
+  if (!observerService)
+    return NS_ERROR_FAILURE;
 
-  rv = observerService->NotifyObservers(static_cast<nsIUrlClassifierHashCompleter*>(this),
-                                        "url-classifier-rekey-requested",
-                                        nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return observerService->NotifyObservers(static_cast<nsIUrlClassifierHashCompleter*>(this),
+                                          "url-classifier-rekey-requested",
+                                          nsnull);
 }
 
 void
