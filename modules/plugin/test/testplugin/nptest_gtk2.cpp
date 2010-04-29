@@ -292,6 +292,10 @@ pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
   /* create a GtkPlug container */
   GtkWidget* plug = gtk_plug_new(nativeWinId);
 
+  // Test for bugs 539138 and 561308
+  if (!plug->window)
+    g_error("Plug has no window"); // aborts
+
   /* make sure the widget is capable of receiving focus */
   GTK_WIDGET_SET_FLAGS (GTK_WIDGET(plug), GTK_CAN_FOCUS);
 
