@@ -311,6 +311,8 @@ HistoryTracker.prototype = {
     if (this.addChangedID(GUIDForUri(uri, true)))
       this._upScore();
   },
+  onDeleteVisits: function onDeleteVisits() {
+  },
   onPageExpired: function HT_onPageExpired(uri, time, entry) {
   },
   onBeforeDeleteURI: function onBeforeDeleteURI(uri) {
