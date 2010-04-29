@@ -234,13 +234,6 @@ void nsWindowGfx::OnSettingsChangeGfx(WPARAM wParam)
 #endif
 }
 
-void nsWindow::SetUpForPaint(HDC aHDC)
-{
-  ::SetBkColor (aHDC, NSRGB_2_COLOREF(mBackground));
-  ::SetTextColor(aHDC, NSRGB_2_COLOREF(mForeground));
-  ::SetBkMode (aHDC, TRANSPARENT);
-}
-
 // GetRegionToPaint returns the invalidated region that needs to be painted
 // it's abstracted out because Windows XP/Vista/7 handles this for us, but
 // we need to keep track of it our selves for Windows CE and Windows Mobile
