@@ -1292,7 +1292,7 @@ nsIntRegion nsRegion::ToOutsidePixels(nscoord aAppUnitsPerPixel) const {
   nsIntRegion result;
   nsRegionRectIterator rgnIter(*this);
   const nsRect *currentRect;
-  while (currentRect = rgnIter.Next()) {
+  while ((currentRect = rgnIter.Next())) {
     nsIntRect deviceRect = currentRect->ToOutsidePixels(aAppUnitsPerPixel);
     result.Or(result, deviceRect);
   }
