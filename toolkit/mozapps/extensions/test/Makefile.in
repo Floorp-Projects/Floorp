@@ -50,6 +50,7 @@ MODULE = test_extensionmanager
 
 DIRS = \
   browser \
+  xpinstall \
   $(NULL)
 
 XPCSHELL_TESTS = \
