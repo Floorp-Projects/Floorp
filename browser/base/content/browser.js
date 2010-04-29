@@ -5723,21 +5723,8 @@ var MailIntegration = {
 };
 
 function BrowserOpenAddonsMgr(aPane) {
-  const EMTYPE = "Extension:Manager";
-  var theEM = Services.wm.getMostRecentWindow(EMTYPE);
-  if (theEM) {
-    theEM.focus();
-    if (aPane)
-      theEM.showView(aPane);
-    return;
-  }
-
-  const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
-  const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
-  if (aPane)
-    window.openDialog(EMURL, "", EMFEATURES, aPane);
-  else
-    window.openDialog(EMURL, "", EMFEATURES);
+  // TODO need to implement switching to the relevant view - see bug 560449
+  switchToTabHavingURI("about:addons", true);
 }
 
 function AddKeywordForSearchField() {
@@ -7518,8 +7505,10 @@ var LightWeightThemeWebInstaller = {
   },
 
   _isAllowed: function (node) {
+    var pm = Services.perms;
+
     var uri = node.ownerDocument.documentURIObject;
-    return Services.perms.testPermission(uri, "install") == pm.ALLOW_ACTION;
+    return pm.testPermission(uri, "install") == pm.ALLOW_ACTION;
   },
 
   _getThemeFromNode: function (node) {
@@ -7528,7 +7517,18 @@ var LightWeightThemeWebInstaller = {
   }
 }
 
-function switchToTabHavingURI(aURI) {
+/**
+ * Switch to a tab that has a given URI, and focusses its browser window.
+ * If a matching tab is in this window, it will be switched to. Otherwise, other
+ * windows will be searched.
+ *
+ * @param aURI
+ *        URI to search for
+ * @param aOpenNew
+ *        True to open a new tab and switch to it, if no existing tab is found
+ * @return True if a tab was switched to (or opened), false otherwise
+ */
+function switchToTabHavingURI(aURI, aOpenNew) {
   function switchIfURIInWindow(aWindow) {
     if (!("gBrowser" in aWindow))
       return false;
@@ -7563,7 +7563,13 @@ function switchToTabHavingURI(aURI) {
     if (switchIfURIInWindow(browserWin))
       return true;
   }
+
   // No opened tab has that url.
+  if (aOpenNew) {
+    gBrowser.selectedTab = gBrowser.addTab(aURI.spec);
+    return true;
+  }
+
   return false;
 }
 
