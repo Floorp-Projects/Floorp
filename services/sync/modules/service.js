@@ -183,9 +183,11 @@ WeaveSvc.prototype = {
   get keyGenEnabled() { return this._keyGenEnabled; },
   set keyGenEnabled(value) { this._keyGenEnabled = value; },
 
-  // nextSync is in milliseconds, but prefs can't hold that much
+  // nextSync and nextHeartbeat are in milliseconds, but prefs can't hold that much
   get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
   set nextSync(value) Svc.Prefs.set("nextSync", Math.floor(value / 1000)),
+  get nextHeartbeat() Svc.Prefs.get("nextHeartbeat", 0) * 1000,
+  set nextHeartbeat(value) Svc.Prefs.set("nextHeartbeat", Math.floor(value / 1000)),
 
   get syncInterval() {
     // If we have a partial download, sync sooner if we're not mobile
@@ -1057,6 +1059,7 @@ WeaveSvc.prototype = {
     if (this._heartbeatTimer)
       this._heartbeatTimer.clear();
 
+    this.nextHeartbeat = 0;
     let info = null;
     try {
       info = new Resource(this.infoURL).get();
@@ -1090,10 +1093,25 @@ WeaveSvc.prototype = {
    * this until the next sync.
    */
   _scheduleHeartbeat: function WeaveSvc__scheduleNextHeartbeat() {
+    if (this._heartbeatTimer)
+      return;
+
+    let now = Date.now();
+    if (this.nextHeartbeat && this.nextHeartbeat < now) {
+      this._doHeartbeat();
+      return;
+    }
+
+    // if the next sync is in less than an hour, don't bother
     let interval = MULTI_DESKTOP_SYNC;
     if (this.nextSync < Date.now() + interval ||
         Status.enforceBackoff)
       return;
+
+    if (this.nextHeartbeat)
+      interval = this.nextHeartbeat - now;
+    else
+      this.nextHeartbeat = now + interval;
 
     this._log.trace("Setting up heartbeat, next ping in " +
                     Math.ceil(interval / 1000) + " sec.");
@@ -1151,6 +1169,7 @@ WeaveSvc.prototype = {
     // Clear out any potentially pending syncs now that we're syncing
     this._clearSyncTriggers();
     this.nextSync = 0;
+    this.nextHeartbeat = 0;
 
     // reset backoff info, if the server tells us to continue backing off,
     // we'll handle that later
