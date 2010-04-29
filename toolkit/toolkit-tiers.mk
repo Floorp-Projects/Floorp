@@ -59,9 +59,7 @@ tier_platform_dirs += modules/zlib
 endif
 
 ifndef WINCE
-ifneq (,$(MOZ_XPINSTALL))
 tier_platform_dirs += modules/libreg
-endif
 endif
 
 tier_platform_dirs += \
@@ -213,10 +211,6 @@ tier_platform_dirs	+= extensions/spellcheck
 endif
 
 tier_platform_dirs	+= toolkit
-
-ifdef MOZ_XPINSTALL
-tier_platform_dirs     +=  xpinstall
-endif
 
 ifdef MOZ_PSM
 tier_platform_dirs	+= security/manager
