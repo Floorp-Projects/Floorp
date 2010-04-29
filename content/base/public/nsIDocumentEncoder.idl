@@ -302,7 +302,7 @@ interface nsIDocumentEncoder : nsISupports
   /**
    * Encode the document into a string. Stores the extra context information
    * into the two arguments.
-   * @param [OUT] aContextString The string where the parent heirarchy
+   * @param [OUT] aContextString The string where the parent hierarchy
    *              information will be stored.
    * @param [OUT] aInfoString The string where extra context info will
    *              be stored.

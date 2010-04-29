@@ -3497,7 +3497,7 @@ PRBool
 nsEditor::IsBlockNode(nsIDOMNode *aNode)
 {
   // stub to be overridden in nsHTMLEditor.
-  // screwing around with the class heirarchy here in order
+  // screwing around with the class hierarchy here in order
   // to not duplicate the code in GetNextNode/GetPrevNode
   // across both nsEditor/nsHTMLEditor.  
   return PR_FALSE;
