@@ -57,7 +57,8 @@ let testData = [
   { width: 200,         scale: undefined },
   { width: 2000,        minScale: 0.75 },
   { width: 100,         maxScale: 2 },
-  { width: 2000,        scale: 0.75 }
+  { width: 2000,        scale: 0.75 },
+  { width: 10000,       scale: 10 }
 ];
 
 //------------------------------------------------------------------------------

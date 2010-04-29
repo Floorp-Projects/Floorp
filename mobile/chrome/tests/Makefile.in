@@ -69,6 +69,7 @@ _BROWSER_FILES = \
   browser_viewport_05.html \
   browser_viewport_06.html \
   browser_viewport_07.html \
+  browser_viewport_08.html \
   $(NULL)
 
 libs:: $(_BROWSER_FILES)
