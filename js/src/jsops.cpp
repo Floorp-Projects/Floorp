@@ -1929,7 +1929,7 @@ BEGIN_CASE(JSOP_SETELEM)
                         break;
                     if ((jsuint)i >= obj->getArrayLength())
                         obj->setArrayLength(i + 1);
-                    obj->incArrayCountBy(1);
+                    obj->incDenseArrayCountBy(1);
                 }
                 obj->setDenseArrayElement(i, rval);
                 goto end_setelem;
