@@ -163,7 +163,9 @@ ClientEngine.prototype = {
   set localType(value) Svc.Prefs.set("client.type", value),
 
   isMobile: function isMobile(id) {
-    return this._store._remoteClients[id].type == "mobile";
+    if (this._store._remoteClients[id])
+      return this._store._remoteClients[id].type == "mobile";
+    return false;
   },
 
   // Always process incoming items because they might have commands
