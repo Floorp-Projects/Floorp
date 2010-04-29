@@ -834,7 +834,7 @@ BookmarksStore.prototype = {
     this._log.trace("Creating SQL statement: _frecencyStm");
     let stm = Svc.History.DBConnection.createStatement(
       "SELECT frecency " +
-      "FROM moz_places_view " +
+      "FROM moz_places " +
       "WHERE url = :url");
     this.__defineGetter__("_frecencyStm", function() stm);
     return stm;
