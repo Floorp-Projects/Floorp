@@ -3438,8 +3438,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
           /* Special-case services that need early access to the command
              line. */
-          nsCOMPtr<nsIObserverService> obsService
-            (do_GetService("@mozilla.org/observer-service;1"));
+          nsCOMPtr<nsIObserverService> obsService =
+            mozilla::services::GetObserverService();
           if (obsService) {
             obsService->NotifyObservers(cmdLine, "command-line-startup", nsnull);
           }
@@ -3524,8 +3524,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
             MOZ_SPLASHSCREEN_UPDATE(70);
 
-            nsCOMPtr<nsIObserverService> obsService
-              (do_GetService("@mozilla.org/observer-service;1"));
+            nsCOMPtr<nsIObserverService> obsService =
+              mozilla::services::GetObserverService();
             if (obsService)
               obsService->NotifyObservers(nsnull, "final-ui-startup", nsnull);
 

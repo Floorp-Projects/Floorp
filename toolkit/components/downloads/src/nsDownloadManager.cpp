@@ -842,9 +842,11 @@ nsDownloadManager::Init()
     }
   }
 
+  mObserverService = mozilla::services::GetObserverService();
+  if (!mObserverService)
+    return NS_ERROR_FAILURE;
+
   nsresult rv;
-  mObserverService = do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);

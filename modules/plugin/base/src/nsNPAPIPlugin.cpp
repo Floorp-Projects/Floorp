@@ -195,7 +195,7 @@ void NS_NotifyPluginCall(PRIntervalTime startTime)
 {
   PRIntervalTime endTime = PR_IntervalNow() - startTime;
   nsCOMPtr<nsIObserverService> notifyUIService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (!notifyUIService)
     return;
 

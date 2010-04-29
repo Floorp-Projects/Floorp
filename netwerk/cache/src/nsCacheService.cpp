@@ -71,6 +71,7 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 #include <math.h>  // for log()
+#include "mozilla/Services.h"
 
 
 /******************************************************************************
@@ -174,13 +175,13 @@ NS_IMPL_ISUPPORTS1(nsCacheProfilePrefObserver, nsIObserver)
 nsresult
 nsCacheProfilePrefObserver::Install()
 {
-    nsresult rv, rv2 = NS_OK;
-    
     // install profile-change observer
-    nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_ARG(observerService);
+    nsCOMPtr<nsIObserverService> observerService =
+        mozilla::services::GetObserverService();
+    if (!observerService)
+        return NS_ERROR_FAILURE;
     
+    nsresult rv, rv2 = NS_OK;
     for (unsigned int i=0; i<NS_ARRAY_LENGTH(observerList); i++) {
         rv = observerService->AddObserver(this, observerList[i], PR_FALSE);
         if (NS_FAILED(rv)) 
@@ -210,12 +211,11 @@ nsCacheProfilePrefObserver::Install()
     //     In that case, we detect the presence of a profile by the existence
     //     of the NS_APP_USER_PROFILE_50_DIR directory.
 
-    nsCOMPtr<nsIFile>  directory;
+    nsCOMPtr<nsIFile> directory;
     rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                 getter_AddRefs(directory));
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv))
         mHaveProfile = PR_TRUE;
-    }
 
     rv = ReadPrefs(branch);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -229,7 +229,7 @@ nsCacheProfilePrefObserver::Remove()
 {
     // remove Observer Service observers
     nsCOMPtr<nsIObserverService> obs =
-            do_GetService("@mozilla.org/observer-service;1");
+        mozilla::services::GetObserverService();
     if (obs) {
         for (unsigned int i=0; i<NS_ARRAY_LENGTH(observerList); i++) {
             obs->RemoveObserver(this, observerList[i]);
@@ -238,13 +238,11 @@ nsCacheProfilePrefObserver::Remove()
 
     // remove Pref Service observers
     nsCOMPtr<nsIPrefBranch2> prefs =
-           do_GetService(NS_PREFSERVICE_CONTRACTID);
-    if (prefs) {
-        for (unsigned int i=0; i<NS_ARRAY_LENGTH(prefList); i++) {
-            // remove cache pref observers
-            prefs->RemoveObserver(prefList[i], this);
-        }
-    }
+        do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (!prefs)
+        return;
+    for (unsigned int i=0; i<NS_ARRAY_LENGTH(prefList); i++)
+        prefs->RemoveObserver(prefList[i], this); // remove cache pref observers
 }
 
 
@@ -794,7 +792,7 @@ nsCacheService::EvictEntriesForClient(const char *          clientID,
     if (this == nsnull) return NS_ERROR_NOT_AVAILABLE; // XXX eh?
 
     nsCOMPtr<nsIObserverService> obsSvc =
-        do_GetService("@mozilla.org/observer-service;1");
+        mozilla::services::GetObserverService();
     if (obsSvc) {
         // Proxy to the UI thread since the observer service isn't thredsafe.
         // We use an async proxy, since this it's not important whether this

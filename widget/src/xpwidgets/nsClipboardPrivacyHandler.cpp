@@ -46,6 +46,7 @@
 #include "nsLiteralString.h"
 #include "nsNetCID.h"
 #include "nsXPCOM.h"
+#include "mozilla/Services.h"
 
 #if defined(XP_WIN) && !defined(WINCE)
 #include <ole2.h>
@@ -58,12 +59,12 @@ NS_IMPL_ISUPPORTS2(nsClipboardPrivacyHandler, nsIObserver, nsISupportsWeakRefere
 nsresult
 nsClipboardPrivacyHandler::Init()
 {
-  nsresult rv;
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
-  return rv;
+    mozilla::services::GetObserverService();
+  if (!observerService)
+    return NS_ERROR_FAILURE;
+  return observerService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC,
+                                      PR_TRUE);
 }
 
 /**

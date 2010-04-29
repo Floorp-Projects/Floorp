@@ -126,7 +126,7 @@ nsIOThreadPool::Init()
     PR_INIT_CLIST(&mEventQ);
 
     // We want to shutdown the i/o thread pool at xpcom-shutdown-threads time.
-    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os)
         os->AddObserver(this, "xpcom-shutdown-threads", PR_FALSE);
     return NS_OK;

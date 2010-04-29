@@ -680,8 +680,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mObserver = new nsGlobalWindowObserver(this);
     if (mObserver) {
       NS_ADDREF(mObserver);
-      nsCOMPtr<nsIObserverService> os =
-        do_GetService("@mozilla.org/observer-service;1");
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       if (os) {
         // Watch for online/offline status changes so we can fire events. Use
         // a strong reference.
@@ -773,8 +772,7 @@ nsGlobalWindow::~nsGlobalWindow()
 #endif
 
   if (mObserver) {
-    nsCOMPtr<nsIObserverService> os =
-      do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       os->RemoveObserver(mObserver, "dom-storage2-changed");
@@ -2114,7 +2112,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   }
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService) {
     nsAutoString origin;
     nsIPrincipal* principal = aDocument->NodePrincipal();

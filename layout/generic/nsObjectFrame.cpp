@@ -1263,7 +1263,8 @@ nsObjectFrame::SetAbsoluteScreenPosition(nsIDOMElement* element,
 
 nsresult
 nsObjectFrame::PluginEventNotifier::Run() {
-  nsCOMPtr<nsIObserverService> obsSvc = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> obsSvc =
+    mozilla::services::GetObserverService();
   obsSvc->NotifyObservers(nsnull, "plugin-changed-event", mEventType.get());
   return NS_OK;
 }

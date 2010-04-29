@@ -3494,7 +3494,7 @@ void
 nsContentUtils::RegisterShutdownObserver(nsIObserver* aObserver)
 {
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService) {
     observerService->AddObserver(aObserver, 
                                  NS_XPCOM_SHUTDOWN_OBSERVER_ID, 
@@ -3507,7 +3507,7 @@ void
 nsContentUtils::UnregisterShutdownObserver(nsIObserver* aObserver)
 {
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService) {
     observerService->RemoveObserver(aObserver, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }

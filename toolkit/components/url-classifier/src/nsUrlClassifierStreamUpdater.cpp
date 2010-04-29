@@ -212,7 +212,7 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
     // downloads.  quit-application is the same event that the download
     // manager listens for and uses to cancel pending downloads.
     nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1");
+      mozilla::services::GetObserverService();
     if (!observerService)
       return NS_ERROR_FAILURE;
 
@@ -274,10 +274,11 @@ nsUrlClassifierStreamUpdater::UpdateUrlRequested(const nsACString &aUrl,
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::RekeyRequested()
 {
-  nsresult rv;
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    mozilla::services::GetObserverService();
+
+  if (!observerService)
+    return NS_ERROR_FAILURE;
 
   return observerService->NotifyObservers(static_cast<nsIUrlClassifierStreamUpdater*>(this),
                                           "url-classifier-rekey-requested",

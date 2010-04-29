@@ -504,8 +504,7 @@ nsIncrementalDownload::Start(nsIRequestObserver *observer,
   // between ourselves and the timer.  We have the observer service hold a weak
   // reference to us, so that we don't have to worry about calling
   // RemoveObserver.  XXX(darin): The timer code should do this for us.
-  nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs)
     obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
 

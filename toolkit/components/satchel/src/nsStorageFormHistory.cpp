@@ -72,6 +72,7 @@
 #include "nsIMutableArray.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
+#include "mozilla/Services.h"
 
 #define DB_SCHEMA_VERSION   3
 #define DB_FILENAME         NS_LITERAL_STRING("formhistory.sqlite")
@@ -141,7 +142,7 @@ nsFormHistory::Init()
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mObserverService = do_GetService("@mozilla.org/observer-service;1");
+  mObserverService = mozilla::services::GetObserverService();
   if (mObserverService) {
     mObserverService->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
     mObserverService->AddObserver(this, "idle-daily", PR_TRUE);

@@ -52,6 +52,7 @@
 #include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "mozilla/Services.h"
 
 #if defined(XP_WIN)
 #include <windows.h>
@@ -206,7 +207,7 @@ nsMemoryImpl::FlushMemory(const PRUnichar* aReason, PRBool aImmediate)
 nsresult
 nsMemoryImpl::RunFlushers(const PRUnichar* aReason)
 {
-    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
 
         // Instead of:

@@ -582,7 +582,7 @@ nsStringBundleService::~nsStringBundleService()
 nsresult
 nsStringBundleService::Init()
 {
-  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
     os->AddObserver(this, "memory-pressure", PR_TRUE);
     os->AddObserver(this, "profile-do-change", PR_TRUE);
