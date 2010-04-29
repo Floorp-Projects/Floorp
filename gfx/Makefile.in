@@ -58,7 +58,7 @@ else
 DIRS            += ycbcr layers
 endif
 
-DIRS		+= public idl src qcms thebes
+DIRS		+= public idl src qcms thebes src/thebes
 
 ifdef MOZ_IPC
 DIRS		+= ipc
