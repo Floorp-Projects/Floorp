@@ -38,9 +38,15 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(a549a714-2ada-4bb9-8a47-be26e73d49a5)]
+[scriptable, uuid(f81ed0bc-ee98-4edd-bf2d-751b47bf665d)]
 interface nsIAddonSearchResult : nsISupports
 {
+  /**
+   * Values for the type attribute
+   */
+  const unsigned long TYPE_EXTENSION   = 0x02;
+  const unsigned long TYPE_THEME       = 0x04;
+
   /**
    * The ID of the add-on
    */
