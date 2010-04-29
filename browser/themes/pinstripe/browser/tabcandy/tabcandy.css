@@ -110,7 +110,17 @@ body {
   overflow: hidden;
 }
 
+.stacked .tab-title{ display: none; }
+.stacked .thumbShadow{display: none;}
+.stacked .thumb{-moz-box-shadow: rgba(0,0,0,.2) 1px 1px 6px;}
 
+.stack-trayed .tab-title{
+  display: block !important;
+	text-shadow: rgba(0,0,0,1) 1px 1px 2px;
+  color: #EEE;
+  font-size: 11px;
+}
+.stack-trayed .thumb{ -moz-box-shadow: none !important;}
 
 /* Tab Group
 ----------------------------------*/

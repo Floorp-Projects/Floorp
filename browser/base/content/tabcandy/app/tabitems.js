@@ -106,11 +106,16 @@ window.TabItem.prototype = $.extend(new Item(), {
     }
 
     if(css.fontSize) {
-      if(css.fontSize < minFontSize)
-        $title.fadeOut();
+      if(css.fontSize < minFontSize )
+        $title.fadeOut().dequeue();
       else
-        $title.fadeIn();
+        $title.fadeIn().dequeue();
     }
+
+    if( $container.hasClass("stacked") ){
+      $title.hide();
+    }
+
 
     if(css.width) {
       if(css.width < 30) {
@@ -120,7 +125,7 @@ window.TabItem.prototype = $.extend(new Item(), {
         $thumb.fadeIn();
         $close.fadeIn();
       }
-    }
+    }    
 
     this._updateDebugBounds();
   },
@@ -133,6 +138,16 @@ window.TabItem.prototype = $.extend(new Item(), {
   // ----------
   close: function() {
     this.tab.close();
+  },
+  
+  // ----------
+  addClass: function(className) {
+    $(this.container).addClass(className);
+  },
+  
+  // ----------
+  removeClass: function(className) {
+    $(this.container).removeClass(className);
   },
   
   // ----------
@@ -258,7 +273,7 @@ window.TabItems = {
                   left:   0,
                   width:  orig.width*scale,
                   height: orig.height*scale
-                  }, 200, "easeOutQuad", onZoomDone);
+                  }, 200, "easeInQuad", onZoomDone);
             }
           } else {
             $(this).find("canvas").data("link").tab.raw.pos = $(this).position();
