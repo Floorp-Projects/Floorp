@@ -56,18 +56,7 @@ XPCSHELL_TESTS = \
   unit \
   $(NULL)
 
-_CHROME_FILES = \
-  test_bug435743_1.xul \
-  test_bug435743_2.xul \
-  bug435743.rdf \
-  bug435743.xpi \
-  bug435743.sjs \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-libs:: $(_CHROME_FILES)
-	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
 libs::
 	rm -rf $(TESTXPI)
