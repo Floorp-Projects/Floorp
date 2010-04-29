@@ -1992,7 +1992,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
 /* 
   InsertNodeAtPoint: attempts to insert aNode into the document, at a point specified by 
       {*ioParent,*ioOffset}.  Checks with strict dtd to see if containment is allowed.  If not
-      allowed, will attempt to find a parent in the parent heirarchy of *ioParent that will
+      allowed, will attempt to find a parent in the parent hierarchy of *ioParent that will
       accept aNode as a child.  If such a parent is found, will split the document tree from
       {*ioParent,*ioOffset} up to parent, and then insert aNode.  ioParent & ioOffset are then
       adjusted to point to the actual location that aNode was inserted at.  aNoEmptyNodes

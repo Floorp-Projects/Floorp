@@ -1061,7 +1061,7 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
   {
     // if we haven't found something to outdent yet, also check the parents
     // of selection endpoints.  We might have a blockquote or list item 
-    // in the parent heirarchy.
+    // in the parent hierarchy.
     
     // gather up info we need for test
     nsCOMPtr<nsIDOMNode> parent, tmp, root;
@@ -1126,7 +1126,7 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
   if (NS_FAILED(res)) return res;
 
   // post process list.  We need to replace any block nodes that are not format
-  // nodes with their content.  This is so we only have to look "up" the heirarchy
+  // nodes with their content.  This is so we only have to look "up" the hierarchy
   // to find format nodes, instead of both up and down.
   PRInt32 listCount = arrayOfNodes.Count();
   PRInt32 i;
@@ -4126,7 +4126,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
       nsCOMPtr<nsIDOMNode> n = curNode;
       nsCOMPtr<nsIDOMNode> tmp;
       curBlockQuoteIsIndentedWithCSS = PR_FALSE;
-      // keep looking up the heirarchy as long as we don't hit the body or a table element
+      // keep looking up the hierarchy as long as we don't hit the body or a table element
       // (other than an entire table)
       while (!nsTextEditUtils::IsBody(n) &&   
              (nsHTMLEditUtils::IsTable(n) || !nsHTMLEditUtils::IsTableElement(n)))
@@ -4521,10 +4521,10 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
         res = mEditor->DeleteNode(rightNode);
         NS_ENSURE_SUCCESS(res, res);
       }
-      // remove the style on this new heirarchy
+      // remove the style on this new hierarchy
       PRInt32 newSelOffset = 0;
       {
-        // track the point at the new heirarchy.
+        // track the point at the new hierarchy.
         // This is so we can know where to put the selection after we call
         // RemoveStyleInside().  RemoveStyleInside() could remove any and all of those nodes,
         // so I have to use the range tracking system to find the right spot to put selection.
