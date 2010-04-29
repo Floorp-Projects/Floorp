@@ -47,6 +47,8 @@ for (var index in typedArrayWithFunBuffer) {
 
 var typedArrayWithFunBuffer2 = new Int32Array(typedArrayWithFunBuffer.buffer);
 
+var xhr = new XMLHttpRequest();
+
 var messages = [
   {
     type: "object",
@@ -198,9 +200,8 @@ var messages = [
   },
   {
     type: "object",
-    shouldEqual: true,
     value: function (foo) { return "Bad!"; },
-    compareValue: null
+    exception: true
   },
   {
     type: "number",
@@ -246,17 +247,42 @@ var messages = [
   {
     type: "object",
     value: typedArrayWithFunBuffer2,
-    jsonValue: '{"0":-1}',
+    jsonValue: '{"0":-1}'
   },
   {
     type: "object",
     value: { foo: typedArrayWithFunBuffer2 },
-    jsonValue: '{"foo":{"0":-1}}',
+    jsonValue: '{"foo":{"0":-1}}'
   },
   {
     type: "object",
     value: [ typedArrayWithFunBuffer2 ],
-    jsonValue: '[{"0":-1}]',
+    jsonValue: '[{"0":-1}]'
+  },
+  {
+    type: "object",
+    value: { foo: function(a) { alert(b); } },
+    exception: true
+  },
+  {
+    type: "object",
+    value: xhr,
+    exception: true
+  },
+  {
+    type: "number",
+    value: xhr.readyState,
+    shouldEqual: true
+  },
+  {
+    type: "object",
+    value: { xhr: xhr },
+    exception: true
+  },
+  {
+    type: "object",
+    value: self,
+    exception: true
   },
   {
     type: "string",
@@ -289,7 +315,8 @@ function onmessage(event) {
 
     if ((exception !== undefined && !messages[index].exception) ||
         (exception === undefined && messages[index].exception)) {
-      throw "Exception inconsistency [" + index + "]: " + exception;
+      throw "Exception inconsistency [index = " + index + ", " +
+            messages[index].toSource() + "]: " + exception;
     }
   }
 }
