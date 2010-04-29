@@ -257,7 +257,6 @@
 @BINPATH@/components/xpcom_threads.xpt
 @BINPATH@/components/xpcom_xpti.xpt
 @BINPATH@/components/xpconnect.xpt
-@BINPATH@/components/xpinstall.xpt
 @BINPATH@/components/xulapp.xpt
 @BINPATH@/components/xuldoc.xpt
 @BINPATH@/components/xultmpl.xpt
@@ -296,6 +295,8 @@
 @BINPATH@/components/GPSDGeolocationProvider.js
 @BINPATH@/components/nsSidebar.js
 @BINPATH@/components/addonManager.js
+@BINPATH@/components/amContentHandler.js
+@BINPATH@/components/amWebInstallListener.js
 @BINPATH@/components/nsBlocklistService.js
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.js

@@ -597,8 +597,8 @@ const gXPInstallObserver = {
   {
     var brandBundle = document.getElementById("bundle_brand");
     switch (aTopic) {
-    case "xpinstall-install-blocked":
-      var installInfo = aSubject.QueryInterface(Components.interfaces.nsIXPIInstallInfo);
+    case "addon-install-blocked":
+      var installInfo = aSubject.QueryInterface(Components.interfaces.amIWebInstallInfo);
       var win = installInfo.originatingWindow;
       var shell = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                      .getInterface(Components.interfaces.nsIWebNavigation)
@@ -608,7 +608,13 @@ const gXPInstallObserver = {
         var host = installInfo.originatingURI.host;
         var brandShortName = brandBundle.getString("brandShortName");
         var notificationName, messageString, buttons;
-        if (!gPrefService.getBoolPref("xpinstall.enabled")) {
+        var enabled = true;
+        try {
+          enabled = gPrefService.getBoolPref("xpinstall.enabled");
+        }
+        catch (e) {
+        }
+        if (!enabled) {
           notificationName = "xpinstall-disabled"
           if (gPrefService.prefIsLocked("xpinstall.enabled")) {
             messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
@@ -639,9 +645,7 @@ const gXPInstallObserver = {
             accessKey: gNavigatorBundle.getString("xpinstallPromptAllowButton.accesskey"),
             popup: null,
             callback: function() {
-              var mgr = Components.classes["@mozilla.org/xpinstall/install-manager;1"]
-                                  .createInstance(Components.interfaces.nsIXPInstallManager);
-              mgr.initManagerWithInstallInfo(installInfo);
+              installInfo.install();
               return false;
             }
           }];
@@ -1183,7 +1187,7 @@ function prepareForStartup() {
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
-  Services.obs.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
+  Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
 
   BrowserOffline.init();
   OfflineApps.init();
@@ -1401,7 +1405,7 @@ function BrowserShutdown()
   }
 
   Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
-  Services.obs.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
+  Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
   Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
 
   try {
