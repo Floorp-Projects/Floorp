@@ -98,9 +98,11 @@ window.TabItem.prototype = $.extend(new Item(), {
       $container.css(css);
     } else {
       TabMirror.pausePainting();
-      $container.animate(css, {complete: function() {
-        TabMirror.resumePainting();
-      }}).dequeue();
+      $container.animate(css,{
+        complete: function() {TabMirror.resumePainting();},
+        duration: 350,
+        easing: "tabcandyBounce"
+      }).dequeue();
     }
 
     if(css.fontSize) {
@@ -254,10 +256,9 @@ window.TabItems = {
                 .animate({
                   top:    -10,
                   left:   0,
-                  easing: "easein",
                   width:  orig.width*scale,
                   height: orig.height*scale
-                  }, 200, onZoomDone);
+                  }, 200, "easeOutQuad", onZoomDone);
             }
           } else {
             $(this).find("canvas").data("link").tab.raw.pos = $(this).position();
