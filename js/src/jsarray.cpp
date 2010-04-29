@@ -3554,3 +3554,83 @@ js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, jsval **vector)
     *vector = obj->dslots;
     return obj;
 }
+
+JS_FRIEND_API(JSBool)
+js_IsDensePrimitiveArray(JSObject *obj)
+{
+    if (!obj || !obj->isDenseArray())
+        return JS_FALSE;
+
+    jsuint length = obj->getArrayLength();
+    for (jsuint i = 0; i < length; i++) {
+        if (!JSVAL_IS_PRIMITIVE(obj->dslots[i]))
+            return JS_FALSE;
+    }
+
+    return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
+{
+    JS_ASSERT(obj);
+    if (!obj->isDenseArray()) {
+        /*
+         * This wasn't a dense array. Return JS_TRUE but a NULL clone to signal
+         * that no exception was encountered.
+         */
+        *clone = NULL;
+        return JS_TRUE;
+    }
+
+    jsuint length = obj->getArrayLength();
+
+    /*
+     * Must use the minimum of original array's length and capacity, to handle
+     * |a = [1,2,3]; a.length = 10000| "dense" cases efficiently. In such a case
+     * we would use ARRAY_CAPACITY_MIN (not 3), which will cause the clone to be
+     * over-allocated. In the normal case where length is <= capacity the
+     * clone and original array will have the same capacity.
+     */
+    jsuint jsvalCount = JS_MIN(js_DenseArrayCapacity(obj), length);
+
+    js::AutoValueVector vector(cx);
+    if (!vector.reserve(jsvalCount))
+        return JS_FALSE;
+
+    jsuint holeCount = 0;
+
+    for (jsuint i = 0; i < jsvalCount; i++) {
+        jsval &val = obj->dslots[i];
+
+        if (JSVAL_IS_STRING(val)) {
+            // Strings must be made immutable before being copied to a clone.
+            if (!js_MakeStringImmutable(cx, JSVAL_TO_STRING(val)))
+                return JS_FALSE;
+        } else if (val == JSVAL_HOLE) {
+            holeCount++;
+        } else if (!JSVAL_IS_PRIMITIVE(val)) {
+            /*
+             * This wasn't an array of primitives. Return JS_TRUE but a null
+             * clone to signal that no exception was encountered.
+             */
+            *clone = NULL;
+            return JS_TRUE;
+        }
+
+        vector.push(val);
+    }
+
+    jsval *buffer;
+    *clone = js_NewArrayObjectWithCapacity(cx, jsvalCount, &buffer);
+    if (!*clone)
+        return JS_FALSE;
+
+    AutoObjectRooter cloneRoot(cx, *clone);
+
+    memcpy(buffer, vector.buffer(), jsvalCount * sizeof (jsval));
+    (*clone)->setArrayLength(length);
+    (*clone)->setArrayCount(length - holeCount);
+
+    return JS_TRUE;
+}
