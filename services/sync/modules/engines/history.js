@@ -109,10 +109,10 @@ HistoryStore.prototype = {
     this._log.trace("Creating SQL statement: _visitStm");
     let stm = this._db.createStatement(
       "SELECT visit_type type, visit_date date " +
-      "FROM moz_historyvisits_view " +
+      "FROM moz_historyvisits " +
       "WHERE place_id = (" +
         "SELECT id " +
-        "FROM moz_places_view " +
+        "FROM moz_places " +
         "WHERE url = :url) " +
       "ORDER BY date DESC LIMIT 10");
     this.__defineGetter__("_visitStm", function() stm);
@@ -123,7 +123,7 @@ HistoryStore.prototype = {
     this._log.trace("Creating SQL statement: _urlStm");
     let stm = this._db.createStatement(
       "SELECT url, title, frecency " +
-      "FROM moz_places_view " +
+      "FROM moz_places " +
       "WHERE id = (" +
         "SELECT place_id " +
         "FROM moz_annos " +
