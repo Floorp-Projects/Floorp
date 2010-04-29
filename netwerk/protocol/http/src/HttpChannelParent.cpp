@@ -144,8 +144,8 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 bool 
 HttpChannelParent::RecvSetPriority(const PRUint16& priority)
 {
-  // FIXME: bug XXX: once we figure out how to keep a ref to the nsHttpChannel,
-  // call SetPriority on it here.
+  nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
+  httpChan->SetPriority(priority);
   return true;
 }
 
