@@ -144,13 +144,6 @@
 #define PLUGINS_MODULES
 #endif
 
-#ifdef MOZ_XPINSTALL
-#define XPINSTALL_MODULES \
-    MODULE(nsSoftwareUpdate)
-#else
-#define XPINSTALL_MODULES
-#endif
-
 #ifdef MOZ_JSDEBUGGER
 #define JSDEBUGGER_MODULES \
     MODULE(JavaScript_Debugger)
@@ -269,9 +262,9 @@
     STORAGE_MODULE                           \
     PLACES_MODULES                           \
     XULENABLED_MODULES                       \
+    MODULE(AddonsModule)                     \
     MODULE(nsToolkitCompsModule)             \
     XREMOTE_MODULES                          \
-    XPINSTALL_MODULES                        \
     JSDEBUGGER_MODULES                       \
     MODULE(BOOT)                             \
     MODULE(NSS)                              \
