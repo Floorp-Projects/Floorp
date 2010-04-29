@@ -2079,13 +2079,3 @@ NS_IMETHODIMP nsCharsetMenu::EndUpdateBatch()
 {
   return mInner->EndUpdateBatch();
 }
-
-// Module definitions
-
-static const nsModuleComponentInfo components[] = {
-    { "nsCharsetMenu", NS_CHARSETMENU_CID,
-      NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
-      NS_NewCharsetMenu },
-};
-
-NS_IMPL_NSGETMODULE(nsXPIntlModule, components)

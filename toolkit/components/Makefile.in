@@ -58,6 +58,7 @@ PARALLEL_DIRS += \
   cookie \
   exthelper \
   filepicker \
+  find \
   microformats \
   parentalcontrols \
   passwordmgr \
@@ -109,7 +110,10 @@ PARALLEL_DIRS += search
 endif
 
 ifdef MOZ_RDF
-PARALLEL_DIRS += downloads
+PARALLEL_DIRS += \
+  downloads \
+  intl \
+  $(NULL)
 endif
 
 ifdef MOZ_URL_CLASSIFIER
