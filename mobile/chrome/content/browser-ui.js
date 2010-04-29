@@ -1778,7 +1778,11 @@ var FormHelper = {
   },
 
   zoom: function formHelperZoom(aElement) {
-    let zoomLevel = Browser._browserView.getZoomLevel();
+    let bv = Browser._browserView;
+    if (!bv.allowZoom)
+      return;
+
+    let zoomLevel = bv.getZoomLevel();
     if (gPrefService.getBoolPref("formhelper.autozoom")) {
       zoomLevel = Browser._getZoomLevelForElement(aElement);
       zoomLevel = Math.min(Math.max(kBrowserFormZoomLevelMin, zoomLevel), kBrowserFormZoomLevelMax);

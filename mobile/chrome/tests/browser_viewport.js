@@ -53,10 +53,11 @@ let testData = [
   { width: undefined,   scale: undefined },
   { width: deviceWidth, scale: 1 },
   { width: 320,         scale: 1 },
-  { width: undefined,   scale: 1 },
+  { width: undefined,   scale: 1,        disableZoom: true },
   { width: 200,         scale: undefined },
   { width: 2000,        minScale: 0.75 },
-  { width: 100,         maxScale: 2 }
+  { width: 100,         maxScale: 2 },
+  { width: 2000,        scale: 0.75 }
 ];
 
 //------------------------------------------------------------------------------
@@ -79,7 +80,7 @@ function verifyBlank(n) {
   return function() {
     // Do sanity tests
     var uri = working_tab.browser.currentURI.spec;
-    is(uri, testURL_blank, "URL Matches newly created Tab "+n);
+    is(uri, testURL_blank, "URL Matches blank page "+n);
 
     // Check viewport settings
     ok(working_tab.browser.classList.contains("browser"), "Normal 'browser' class");
@@ -117,6 +118,10 @@ function verifyTest(n) {
     scale = Math.min(scale, maxScale);
     scale = Math.max(scale, minScale);
 
+    // If pageZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
+    if (0.9 < scale && scale < 1)
+      scale = 1;
+
     // Width at initial scale can't be less than screen width (Bug 561413).
     if (width * scale < window.innerWidth)
       width = window.innerWidth / scale;
@@ -124,7 +129,40 @@ function verifyTest(n) {
     let style = window.getComputedStyle(working_tab.browser, null);
     is(style.width, width + "px", "Viewport width="+width);
 
-    is(Browser._browserView.getZoomLevel(), scale, "Viewport scale="+scale);
+    let bv = Browser._browserView;
+    let zoomLevel = bv.getZoomLevel();
+    is(bv.getZoomLevel(), scale, "Viewport scale="+scale);
+
+    // Test zooming
+    if (data.disableZoom) {
+      ok(!bv.allowZoom, "Zoom disabled");
+
+      Browser.zoom(-1);
+      is(bv.getZoomLevel(), zoomLevel, "Zoom in does nothing");
+
+      Browser.zoom(1);
+      is(bv.getZoomLevel(), zoomLevel, "Zoom out does nothing");
+    }
+    else {
+      ok(bv.allowZoom, "Zoom enabled");
+    }
+
+
+    if (data.minScale) {
+      do { // Zoom out until we can't go any farther.
+        zoomLevel = bv.getZoomLevel();
+        Browser.zoom(1);
+      } while (bv.getZoomLevel() != zoomLevel);
+      ok(bv.getZoomLevel() >= data.minScale, "Zoom out limited");
+    }
+
+    if (data.maxScale) {
+      do { // Zoom in until we can't go any farther.
+        zoomLevel = bv.getZoomLevel();
+        Browser.zoom(-1);
+      } while (bv.getZoomLevel() != zoomLevel);
+      ok(bv.getZoomLevel() <= data.maxScale, "Zoom in limited");
+    }
 
     finishTest(n);
   }
