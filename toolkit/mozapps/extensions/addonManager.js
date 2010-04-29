@@ -100,6 +100,9 @@ amManager.prototype = {
     if (aUris.length == 0)
       return false;
 
+    if (!AddonManager.isInstallEnabled(aMimetype))
+      return false;
+
     let retval = true;
     if (!AddonManager.isInstallAllowed(aMimetype, aReferer)) {
       aCallback = null;
