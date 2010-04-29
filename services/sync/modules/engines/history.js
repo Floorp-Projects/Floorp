@@ -43,6 +43,7 @@ const Cu = Components.utils;
 const GUID_ANNO = "weave/guid";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://weave/ext/Sync.js");
 Cu.import("resource://weave/util.js");
 Cu.import("resource://weave/engines.js");
 Cu.import("resource://weave/stores.js");
@@ -136,39 +137,52 @@ HistoryStore.prototype = {
 
   // See bug 320831 for why we use SQL here
   _getVisits: function HistStore__getVisits(uri) {
-    let visits = [];
-    if (typeof(uri) != "string")
-      uri = uri.spec;
-
-    try {
-      this._visitStm.params.url = uri;
-      while (this._visitStm.step()) {
-        visits.push({date: this._visitStm.row.date,
-                     type: this._visitStm.row.type});
+    this._visitStm.params.url = uri;
+    let [exec, execCb] = Sync.withCb(this._visitStm.executeAsync, this._visitStm);
+    return exec({
+      visits: [],
+      handleResult: function handleResult(results) {
+        let row;
+        while ((row = results.getNextRow()) != null) {
+          this.visits.push({
+            date: row.getResultByName("date"),
+            type: row.getResultByName("type")
+          });
+        }
+      },
+      handleError: function handleError(error) {
+        execCb.throw(error);
+      },
+      handleCompletion: function handleCompletion(reason) {
+        execCb(this.visits);
       }
-    } finally {
-      this._visitStm.reset();
-    }
-
-    return visits;
+    });
   },
 
   // See bug 468732 for why we use SQL here
   _findURLByGUID: function HistStore__findURLByGUID(guid) {
-    try {
-      this._urlStm.params.guid = guid;
-      if (!this._urlStm.step())
-        return null;
-
-      return {
-        url: this._urlStm.row.url,
-        title: this._urlStm.row.title,
-        frecency: this._urlStm.row.frecency
-      };
-    }
-    finally {
-      this._urlStm.reset();
-    }
+    this._urlStm.params.guid = guid;
+    let [exec, execCb] = Sync.withCb(this._urlStm.executeAsync, this._urlStm);
+    return exec({
+      handleResult: function(results) {
+        // Save the one result and its columns
+        let row = results.getNextRow();
+        this.urlInfo = {
+          url: row.getResultByName("url"),
+          title: row.getResultByName("title"),
+          frecency: row.getResultByName("frecency"),
+        };
+      },
+      handleError: function(error) {
+        execCb.throw(error);
+      },
+      handleCompletion: function(reason) {
+        // Throw in-case for some reason we didn't find the GUID
+        if (this.urlInfo == null)
+          execCb.throw(reason);
+        execCb(this.urlInfo);
+      }
+    });
   },
 
   changeItemID: function HStore_changeItemID(oldID, newID) {
