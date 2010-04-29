@@ -1,176 +1,112 @@
-<!ENTITY addons.title                     "Add-ons">
+<!ENTITY addons.title                         "Add-ons Manager">
+<!ENTITY search.placeholder                   "Search all add-ons">
+<!ENTITY loading.label                        "Loading…">
+<!ENTITY listEmpty.installed.label            "You don't have any add-ons of this type installed">
+<!ENTITY listEmpty.search.label               "Could not find any matching add-ons">
+<!ENTITY listEmpty.button.label               "Learn more about add-ons">
 
-<!-- Default window size for the addon manager in pixels -->
-<!ENTITY em.width                         "520">
-<!ENTITY em.height                        "380">
 
-<!ENTITY cmd.info.commandKey              "i">
-<!ENTITY cmd.options.commandKey           ",">
-<!ENTITY cmd.close.commandKey             "w">
+<!-- categories / views -->
+<!-- LOCALIZATION NOTE: These should match the header-* entries in extensions.properties -->
+<!ENTITY view.search.label                    "Search">
+<!ENTITY view.discover.label                  "Get Add-ons">
+<!ENTITY view.languages.label                 "Languages">
+<!ENTITY view.searchengines.label             "Search Engines">
+<!ENTITY view.features.label                  "Extensions">
+<!ENTITY view.appearance.label                "Themes">
+<!ENTITY view.plugins.label                   "Plugins">
 
-<!-- View labels -->
-<!ENTITY search.label                     "Get Add-ons">
-<!ENTITY extensions.label                 "Extensions">
-<!ENTITY themes.label                     "Themes">
-<!ENTITY locales.label                    "Languages">
-<!ENTITY plugins.label                    "Plugins">
-<!ENTITY update.label                     "Updates">
-<!ENTITY install.label                    "Installation">
+<!-- addon updates -->
+<!ENTITY updates.updateNow.label              "Update add-ons">
+<!ENTITY updates.updating.label               "Updating add-ons">
+<!ENTITY updates.installed.label              "Your add-ons have been updated.">
+<!ENTITY updates.downloaded.label             "Your add-on updates have been downloaded.">
+<!ENTITY updates.restart.label                "Restart now to complete installation">
+<!ENTITY updates.noneFound.label              "No updates found">
 
-<!-- Command Bar items -->
-<!ENTITY cmd.checkUpdatesAll.label        "Find Updates">
-<!ENTITY cmd.checkUpdatesAll.accesskey    "F">
-<!ENTITY cmd.checkUpdatesAllAddon.tooltip "Finds Updates to your Add-ons">
-<!ENTITY cmd.checkUpdatesAllTheme.tooltip "Finds Updates to your Themes">
-<!ENTITY cmd.checkUpdatesAllPlugin.tooltip "Finds Updates to your Plugins">
-<!ENTITY cmd.installLocalFile.label       "Install…">
-<!ENTITY cmd.installLocalFile.accesskey   "n">
-<!ENTITY cmd.installFileAddon.tooltip     "Install an Add-on">
-<!ENTITY cmd.installFileTheme.tooltip     "Install a Theme">
-<!ENTITY cmd.installUpdatesAll2.label     "Install Updates">
-<!ENTITY cmd.installUpdatesAll2.accesskey "I">
-<!ENTITY cmd.installUpdatesAll2.tooltip   "Install the selected updates">
-<!ENTITY cmd.restartApp2.label            "Restart &brandShortName;">
-<!ENTITY cmd.restartApp2.accesskey        "R">
-<!ENTITY cmd.restartApp2.tooltip          "Restart &brandShortName; to apply changes">
-<!ENTITY cmd.skip.label                   "Skip">
-<!ENTITY cmd.skip.accesskey               "k">
-<!ENTITY cmd.skip.tooltip                 "Skip these updates">
-<!ENTITY cmd.continue.label               "Continue">
-<!ENTITY cmd.continue.accesskey           "C">
-<!ENTITY cmd.continue.tooltip             "Continue loading &brandShortName;">
+<!-- addon actions -->
+<!ENTITY cmd.showDetails.label                "Show more information">
+<!ENTITY cmd.showDetails.accesskey            "S">
+<!ENTITY cmd.findUpdates.label                "Find updates">
+<!ENTITY cmd.findUpdates.accesskey            "F">
+<!ENTITY cmd.preferences.label                "Preferences">
+<!ENTITY cmd.preferences.accesskey            "P">
+<!ENTITY cmd.about.label                      "About">
+<!ENTITY cmd.about.accesskey                  "A">
 
-<!ENTITY cmd.enableAll.label              "Enable All">
-<!ENTITY cmd.enableAll.accesskey          "a">
-<!ENTITY cmd.enableAll.tooltip            "Enable all displayed Add-ons">
-<!ENTITY cmd.disableAll.label             "Disable All">
-<!ENTITY cmd.disableAll.accesskey         "s">
-<!ENTITY cmd.disableAll.tooltip           "Disable all displayed Add-ons">
+<!ENTITY cmd.enable.label                     "Enable">
+<!ENTITY cmd.enable.accesskey                 "E">
+<!ENTITY cmd.enable.tooltip                   "Enable this add-on">
+<!ENTITY cmd.disable.label                    "Disable">
+<!ENTITY cmd.disable.accesskey                "D">
+<!ENTITY cmd.disable.tooltip                  "Disable this add-on">
+<!ENTITY cmd.uninstall.label                  "Remove">
+<!ENTITY cmd.uninstall.accesskey              "R">
+<!ENTITY cmd.uninstall.tooltip                "Uninstall this add-on">
+<!ENTITY cmd.contribute.label                 "Contribute">
+<!ENTITY cmd.contribute.accesskey             "C">
+<!ENTITY cmd.contribute.tooltip               "Contribute to the development of this add-on">
 
-<!-- Displayed in the selected Add-on's richlistitem and context menu -->
-<!ENTITY cmd.useTheme.label               "Use Theme">
-<!ENTITY cmd.useTheme.accesskey           "T">
-<!ENTITY cmd.useTheme.tooltip             "Changes &brandShortName;'s Theme">
-<!ENTITY cmd.options.label                "Options">
-<!ENTITY cmd.options.accesskey            "O">
-<!ENTITY cmd.options.tooltip              "Set Options for the selected Extension">
-<!ENTITY cmd.optionsUnix.label            "Preferences">
-<!ENTITY cmd.optionsUnix.accesskey        "P">
-<!ENTITY cmd.optionsUnix.tooltip          "Edit Preferences for the selected Extension">
-<!ENTITY cmd.enable.label                 "Enable">
-<!ENTITY cmd.enable.accesskey             "E">
-<!ENTITY cmd.enable.tooltip               "Enable this Add-on when &brandShortName; is restarted">
-<!ENTITY cmd.disable.label                "Disable">
-<!ENTITY cmd.disable.accesskey            "D">
-<!ENTITY cmd.disable.tooltip              "Disable this Add-on when &brandShortName; is restarted">
-<!ENTITY cmd.uninstall.label              "Uninstall">
-<!ENTITY cmd.uninstall2.accesskey         "U">
-<!ENTITY cmd.uninstall2.tooltip           "Uninstall this Add-on when &brandShortName; is restarted">
-<!ENTITY cmd.cancelUninstall.label        "Cancel Uninstall">
-<!ENTITY cmd.cancelUninstall.accesskey    "C">
-<!ENTITY cmd.cancelUninstall.tooltip      "Cancel the uninstall of this Add-on">
-<!ENTITY cmd.cancelInstall.label          "Cancel Install">
-<!ENTITY cmd.cancelInstall.accesskey      "C">
-<!ENTITY cmd.cancelInstall.tooltip        "Cancel the install of this Add-on">
-<!ENTITY cmd.cancelUpgrade.label          "Cancel Upgrade">
-<!ENTITY cmd.cancelUpgrade.accesskey      "C">
-<!ENTITY cmd.cancelUpgrade.tooltip        "Cancel the upgrade of this Add-on">
-<!ENTITY cmd.installUpdate.label          "Install Update">
-<!ENTITY cmd.installUpdate.accesskey      "I">
-<!ENTITY cmd.installUpdate.tooltip        "Install an update for this Add-on">
-<!ENTITY cmd.showUpdateInfo.label         "Show Information">
-<!ENTITY cmd.showUpdateInfo.accesskey     "S">
-<!ENTITY cmd.showUpdateInfo.tooltip       "Show more information about these updates">
-<!ENTITY cmd.hideUpdateInfo.label         "Hide Information">
-<!ENTITY cmd.hideUpdateInfo.accesskey     "H">
-<!ENTITY cmd.hideUpdateInfo.tooltip       "Hide information about these updates">
-<!ENTITY cmd.installSearchResult.label     "Add to &brandShortName;…">
-<!ENTITY cmd.installSearchResult.accesskey "A">
-<!ENTITY cmd.installSearchResult.tooltip   "Download and install this add-on">
-<!-- The selected add-on's cancel action button label -->
-<!ENTITY cancel.label                     "Cancel">
-<!ENTITY cancel.accesskey                 "C">
-<!ENTITY cancelInstall.label              "Cancel">
-<!ENTITY cancelInstall.accesskey          "C">
-<!ENTITY cancelUpgrade.label              "Cancel">
-<!ENTITY cancelUpgrade.accesskey          "C">
 
-<!-- Only displayed in the selected Add-on's context menu -->
-<!ENTITY cmd.homepage.label               "Visit Home Page">
-<!ENTITY cmd.homepage.accesskey           "H">
-<!ENTITY cmd.about2.label                 "About this Add-on">
-<!ENTITY cmd.about.accesskey              "A">
-<!ENTITY cmd.checkUpdate.label            "Find Update">
-<!ENTITY cmd.checkUpdate.accesskey        "F">
+<!-- detail view -->
+<!ENTITY detail.version.label                 "Version">
+<!ENTITY detail.updated.label                 "Updated">
+<!ENTITY detail.creator.label                 "Developer">
+<!ENTITY detail.homepage.label                "Homepage">
+<!ENTITY detail.numberOfDownloads.label       "Downloads">
 
-<!ENTITY cmd.includeUpdate.label          "Include Update">
-<!ENTITY cmd.includeUpdate.accesskey      "n">
-<!ENTITY includeUpdate.label              "Include this update">
-<!ENTITY includeUpdate.accesskey          "n">
-<!ENTITY includeUpdate.tooltip            "Include this Add-on when installing the updates">
+<!ENTITY detail.updateAutomatically.label     "Update automatically">
+<!ENTITY detail.updateAutomatically.accesskey "U">
+<!ENTITY detail.updateAutomatically.tooltip   "Update this add-on automatically whenever there is an update available">
+<!ENTITY detail.checkForUpdates.label         "Check for updates">
+<!ENTITY detail.checkForUpdates.accesskey     "F">
+<!ENTITY detail.checkForUpdates.tooltip       "Check for updates for this add-on">
+<!ENTITY detail.showPreferences.label         "Preferences">
+<!ENTITY detail.showPreferences.accesskey     "P">
+<!ENTITY detail.showPreferences.tooltip       "Change this add-on's preferences">
 
-<!-- Status Messsages -->
-<!ENTITY insecureUpdate.label             "Does not provide secure updates.">
-<!ENTITY needsDependencies.label          "Requires additional items.">
-<!ENTITY blocklisted.label                "Disabled for your protection.">
-<!ENTITY softBlocklisted.label            "Known to cause security or stability issues.">
-<!ENTITY outdated.label                   "A newer, safer version is available.">
-<!ENTITY toBeDisabled.label               "This add-on will be disabled when &brandShortName; is restarted.">
-<!ENTITY toBeEnabled.label                "This add-on will be enabled when &brandShortName; is restarted.">
-<!ENTITY toBeInstalled.label              "This add-on will be installed when &brandShortName; is restarted.">
-<!ENTITY toBeUninstalled.label            "This add-on will be uninstalled when &brandShortName; is restarted.">
-<!ENTITY toBeUpdated.label                "This add-on will be updated when &brandShortName; is restarted.">
 
-<!ENTITY getExtensions.label              "Get Extensions">
-<!ENTITY getThemes.label                  "Get Themes">
-<!ENTITY getPlugins.label                 "Get Plugins">
+<!-- ratings -->
+<!ENTITY rating.yourRating.label              "Your rating:">
 
-<!ENTITY searchAddons.label               "Search All Add-ons">
-<!ENTITY browseAddons.label               "Browse All Add-ons">
-<!ENTITY searchFailed.label               "&brandShortName; couldn't retrieve add-ons">
-<!ENTITY recommendedHeader.label          "Recommended">
-<!ENTITY recommendedThrobber.label        "Retrieving recommended add-ons">
-<!ENTITY searchThrobber.label             "Searching add-ons">
-<!ENTITY resetSearch.label                "Clear Results">
-<!ENTITY noSearchResults.label            "All results are already installed or incompatible.">
-<!ENTITY noRecommendedResults.label       "All recommendations are already installed or incompatible.">
-<!ENTITY emptySearch.label                "No matching add-ons">
-<!ENTITY emptySearch.button               "OK">
-<!ENTITY cancelSearch.button              "Cancel">
-<!ENTITY searchFailed.button              "OK">
-<!ENTITY searchResultHomepage.value       "Learn More">
-<!ENTITY searchBox.label                  "Search All Add-ons">
-<!ENTITY recommendedResults.label         "See All Recommended Add-ons">
-<!ENTITY searchResultConnecting.label     "Connecting…">
-<!ENTITY searchResultInstalling.label     "Installing…">
-<!ENTITY searchResultFailed.label         "Install Failed">
-<!ENTITY searchResultInstalled.label      "Install Complete">
-<!ENTITY addonTypeExtension.label         "Extension">
-<!ENTITY addonTypeTheme.label             "Theme">
-<!ENTITY missingThumbnail.label           "No Preview">
+<!-- download/install progress -->
+<!ENTITY progress.pause.tooltip               "Pause">
+<!ENTITY progress.cancel.tooltip              "Cancel">
 
-<!ENTITY previewNoThemeSelected.label     "No Theme Selected">
-<!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">
-<!ENTITY moreInfo.label                   "More Information">
-<!ENTITY infoNoAddonSelected.label        "No Update Selected">
-<!ENTITY infoNoUpdateInfo.label           "This update does not have any additional information">
-<!ENTITY infoUpdateInfoError.label        "There was an error loading the information about this update">
 
-<!ENTITY updateSuccess.label              "Update completed successfully.">
-<!ENTITY installSuccess.label             "Install completed successfully.">
-<!ENTITY installSuccessRestart.label      "Restart to complete the installation.">
-<!ENTITY updateSuccessRestart.label       "Restart to complete the update.">
-<!ENTITY installWaiting.label             "Waiting…">
-<!ENTITY installIncompatibleUpdate.label  "Checking compatibility…">
-<!ENTITY installFinishing.label           "Installing…">
-<!ENTITY installFailure.label             "Install failed.">
+<!-- list sorting -->
+<!ENTITY sort.name.label                      "Name">
+<!ENTITY sort.name.tooltip                    "Sort by name">
+<!ENTITY sort.size.label                      "Size">
+<!ENTITY sort.size.tooltip                    "Sort by size">
+<!ENTITY sort.dateUpdated.label               "Last Updated">
+<!ENTITY sort.dateUpdated.tooltip             "Sort by date updated">
+<!ENTITY sort.rating.label                    "Rating">
+<!ENTITY sort.rating.tooltip                  "Sort by average rating">
 
-<!ENTITY progressStatus.label             "Checking For Updates">
 
-<!ENTITY eula.title                       "End-User License Agreement">
-<!ENTITY eula.width                       "560px">
-<!ENTITY eula.height                      "400px">
-<!ENTITY eula.accept                      "Accept and Install…">
+<!ENTITY showMore.label                       "Show more">
+<!ENTITY showMore.accesskey                   "m">
+<!ENTITY showMore.tooltip                     "Show more details">
+<!ENTITY showLess.label                       "Show less">
+<!ENTITY showLess.accesskey                   "l">
+<!ENTITY showLess.tooltip                     "Show fewer details">
 
-<!ENTITY blocklist.blocked.label          "Blocked">
-<!ENTITY blocklist.checkbox.label         "Disable">
+<!ENTITY search.filter.label                  "Show:">
+<!ENTITY search.filter.installed.label        "Your installed add-ons">
+<!ENTITY search.filter.available.label        "Available add-ons">
+
+<!ENTITY addon.homepage                       "Homepage">
+<!ENTITY addon.unknownDate                    "Unknown">
+<!ENTITY addon.disabled.postfix               "(disabled)">
+<!ENTITY addon.undo.label                     "Undo?">
+<!ENTITY addon.undo.tooltip                   "Undo this action">
+<!ENTITY addon.undoUninstall.label            "Undo?">
+<!ENTITY addon.undoUninstall.tooltip          "Keep this add-on installed">
+<!ENTITY addon.restartNow.label               "Restart now">
+<!ENTITY addon.restartNow.tooltip             "Restart now to complete installation">
+<!ENTITY addon.install.label                  "Install">
+<!ENTITY addon.install.tooltip                "Install this add-on">
+<!ENTITY addon.checkingForUpdates.label       "Checking for updates…">
+
+<!ENTITY addon.createdBy.label                "By ">
