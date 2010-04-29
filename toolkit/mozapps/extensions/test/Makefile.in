@@ -41,7 +41,7 @@ srcdir = @srcdir@
 VPATH = @srcdir@
 ADDONSRC = $(srcdir)/addons
 TESTROOT = $(CURDIR)/$(DEPTH)/_tests/xpcshell/$(MODULE)
-TESTXPI = $(TESTROOT)/unit/addons
+TESTXPI = $(TESTROOT)/xpcshell/addons
 relativesrcdir  = toolkit/mozapps/extensions/test
 
 include $(DEPTH)/config/autoconf.mk
@@ -53,7 +53,7 @@ DIRS = \
   $(NULL)
 
 XPCSHELL_TESTS = \
-  unit \
+  xpcshell \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
