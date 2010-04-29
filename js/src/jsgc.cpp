@@ -2881,7 +2881,7 @@ SweepDoubles(JSRuntime *rt)
 
 namespace js {
 
-void
+JS_FRIEND_API(void)
 BackgroundSweepTask::replenishAndFreeLater(void *ptr)
 {
     JS_ASSERT(freeCursor == freeCursorEnd);
