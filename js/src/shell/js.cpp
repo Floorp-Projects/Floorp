@@ -712,7 +712,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'Z':
             if (++i == argc)
                 return usage();
-            JS_SetGCZeal(cx, atoi(argv[i]));
+            JS_SetGCZeal(cx, !!(atoi(argv[i])));
             break;
 #endif
 
@@ -3056,7 +3056,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     JSString *str = JSVAL_TO_STRING(argv[1]);
 
     bool saveCurrent = (argc >= 3 && JSVAL_IS_BOOLEAN(argv[2]))
-                        ? (bool)JSVAL_TO_SPECIAL(argv[2])
+                        ? !!(JSVAL_TO_SPECIAL(argv[2]))
                         : false;
 
     JS_ASSERT(cx->fp);
