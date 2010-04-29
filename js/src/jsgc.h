@@ -383,7 +383,8 @@ class BackgroundSweepTask : public JSBackgroundTask {
     void            **freeCursor;
     void            **freeCursorEnd;
 
-    void replenishAndFreeLater(void *ptr);
+    JS_FRIEND_API(void)
+    replenishAndFreeLater(void *ptr);
 
     static void freeElementsAndArray(void **array, void **end) {
         JS_ASSERT(array <= end);
