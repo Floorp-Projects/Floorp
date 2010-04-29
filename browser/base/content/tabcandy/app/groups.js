@@ -490,10 +490,15 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 
     var bb = this.getContentBounds();
     bb.inset(6, 6);
-
+    
     if((bb.width * bb.height) / count > 7000) {
+      this._children.forEach(function(child){
+          child.removeClass("stacked")
+      });
+
       Items.arrange(this._children, bb, options);
       this._isStacked = false;
+      
     } else
       this._stackArrange(bb, options);
   },
@@ -540,6 +545,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         
         child.setBounds(box, !animate);
         child.setRotation(self._randRotate(35, index));
+        child.addClass("stacked");
       }
     });
     
@@ -582,7 +588,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       zIndex: 99998
     }).appendTo("body");
 
-    var w = 240;
+    var w = 180;
     var h = w * (TabItems.tabHeight / TabItems.tabWidth) * 1.1;
     var padding = 20;
     var col = Math.ceil(Math.sqrt(this._children.length));
@@ -605,7 +611,11 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       height: overlayHeight,
       top: pos.top,
       left: pos.left
-    }, 350, "tabcandyBounce").addClass("overlay");//xxx
+    }, 350, "tabcandyBounce").addClass("overlay");
+
+    this._children.forEach(function(child){
+      child.addClass("stack-trayed");
+    });
 
     var box = new Rect(pos.left, pos.top, overlayWidth, overlayHeight);
     box.inset(8, 8);
@@ -642,7 +652,11 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       this.expanded.$tray.remove();
       this.expanded.$shield.remove();
       this.expanded = null;
-            
+
+      this._children.forEach(function(child){
+        child.removeClass("stack-trayed");
+      });
+                  
       this.arrange({z: this.getZ() + 1});
     }
   },
