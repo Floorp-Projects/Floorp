@@ -553,12 +553,6 @@ MAKEFILES_xpcom_tests="
   xpcom/tests/static-checker/Makefile
 "
 
-MAKEFILES_xpinstall="
-  xpinstall/Makefile
-  xpinstall/public/Makefile
-  xpinstall/src/Makefile
-"
-
 MAKEFILES_xpfe="
   widget/src/xremoteclient/Makefile
   toolkit/components/remote/Makefile
@@ -840,7 +834,6 @@ add_makefiles "
   $MAKEFILES_widget
   $MAKEFILES_xpcom
   $MAKEFILES_xpcom_tests
-  $MAKEFILES_xpinstall
   $MAKEFILES_xpfe
   $MAKEFILES_embedding
   $MAKEFILES_xulapp
@@ -1003,7 +996,6 @@ if [ "$ENABLE_TESTS" ]; then
     widget/tests/Makefile
     xpcom/sample/program/Makefile
     xpcom/tests/external/Makefile
-    xpinstall/tests/Makefile
   "
 fi
 
