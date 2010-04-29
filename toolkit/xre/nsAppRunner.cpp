@@ -83,7 +83,6 @@
 #include "nsIContentHandler.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"
-#include "nsIExtensionManager.h"
 #include "nsIFastLoadService.h" // for PLATFORM_FASL_SUFFIX
 #include "nsIGenericFactory.h"
 #include "nsIIOService2.h"
@@ -3444,40 +3443,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             obsService->NotifyObservers(cmdLine, "command-line-startup", nsnull);
           }
 
-          NS_TIME_FUNCTION_MARK("Next: CreateHiddenWindow");
-
-          NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
-          rv = appStartup->CreateHiddenWindow();
-          NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
-          NS_ENSURE_SUCCESS(rv, 1);
-
-          MOZ_SPLASHSCREEN_UPDATE(50);
-
           NS_TIME_FUNCTION_MARK("Next: prepare for Run");
 
-#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
-          nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
-          if (toolkit && !desktopStartupID.IsEmpty()) {
-            toolkit->SetDesktopStartupID(desktopStartupID);
-          }
-#endif
-
-          // Extension Compatibility Checking and Startup
-          if (gAppData->flags & NS_XRE_ENABLE_EXTENSION_MANAGER) {
-            nsCOMPtr<nsIExtensionManager> em(do_GetService("@mozilla.org/extensions/manager;1"));
-            NS_ENSURE_TRUE(em, 1);
-
-            if (upgraded) {
-              rv = em->CheckForMismatches(&needsRestart);
-              if (NS_FAILED(rv)) {
-                needsRestart = PR_FALSE;
-                upgraded = PR_FALSE;
-              }
-            }
-            
-            if (!upgraded || !needsRestart)
-              em->Start(&needsRestart);
-          }
+          if (!upgraded)
+            appStartup->GetNeedsRestart(&needsRestart);
 
           // We want to restart no more than 2 times. The first restart,
           // NO_EM_RESTART == "0" , and the second time, "1".
@@ -3505,6 +3474,22 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           SaveToEnv("XRE_BINARY_PATH=");
 
           if (!shuttingDown) {
+            NS_TIME_FUNCTION_MARK("Next: CreateHiddenWindow");
+
+            NS_TIMELINE_ENTER("appStartup->CreateHiddenWindow");
+            rv = appStartup->CreateHiddenWindow();
+            NS_TIMELINE_LEAVE("appStartup->CreateHiddenWindow");
+            NS_ENSURE_SUCCESS(rv, 1);
+
+            MOZ_SPLASHSCREEN_UPDATE(50);
+
+#if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_WIDGET_GTK2)
+            nsRefPtr<nsGTKToolkit> toolkit = GetGTKToolkit();
+            if (toolkit && !desktopStartupID.IsEmpty()) {
+              toolkit->SetDesktopStartupID(desktopStartupID);
+            }
+#endif
+
 #ifdef XP_MACOSX
             // we re-initialize the command-line service and do appleevents munging
             // after we are sure that we're not restarting
