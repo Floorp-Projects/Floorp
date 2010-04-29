@@ -177,6 +177,9 @@ Engine.prototype = {
   },
 
   sync: function Engine_sync() {
+    if (!this.enabled)
+      return;
+
     if (!this._sync)
       throw "engine does not implement _sync method";
 
