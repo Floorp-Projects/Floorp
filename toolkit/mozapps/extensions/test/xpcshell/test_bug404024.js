@@ -44,7 +44,7 @@ const PREF_GETADDONS_GETSEARCHRESULTS    = "extensions.getAddons.search.url";
 
 const BROWSE      = "http://localhost:4444/";
 const RECOMMENDED = "http://localhost:4444/recommended.html";
-const SEARCH      = "http://localhost:4444/search/";
+const SEARCH      = "http://localhost:4444/search.html?q=";
 
 var BROWSE_SEARCH_URLS = [
   ["test",                              SEARCH + "test" ],
@@ -69,7 +69,7 @@ var RESULTS = [
   thumbnailURL: null,
   homepageURL:  "https://addons.mozilla.org/addon/5992",
   eula:         null,
-  type:         Ci.nsIUpdateItem.TYPE_EXTENSION,
+  type:         Ci.nsIAddonSearchResult.TYPE_EXTENSION,
   xpiURL:       "http://localhost:4444/test.xpi",
   xpiHash:      "sha1:c26f0b0d62e5dcddcda95074d3f3fedb9bbc26e3"
 },
@@ -84,15 +84,16 @@ var RESULTS = [
   thumbnailURL: "http://localhost:4444/test_bug404024/thumbnail.png",
   homepageURL:  null,
   eula:         "EULA should be confirmed",
-  type:         Ci.nsIUpdateItem.TYPE_THEME,
-  xpiURL:       "http://localhost:4444/XPCShell.xpi",
+  type:         Ci.nsIAddonSearchResult.TYPE_THEME,
+  xpiURL:       "http://localhost:4444/test.xpi",
   xpiHash:      null
 }
 ];
 
-function checkResults(addons) {
+function checkResults(addons, length) {
   do_check_eq(addons.length, RESULTS.length);
-  
+  do_check_eq(addons.length, length);
+
   for (var i = 0; i < addons.length; i++) {
     if (addons[i].name == "FAIL")
       do_throw(addons[i].id + " - " + addons[i].summary);
@@ -113,10 +114,10 @@ var RecommendedCallback = {
   searchSucceeded: function(addons, length, total) {
     // Search is complete
     do_check_false(addonRepo.isSearching);
-    checkResults(addons);
+    checkResults(addons, length);
 
     // "search" for the same results
-    addonRepo.searchAddons("bug417606", 10, SearchCallback);
+    addonRepo.searchAddons("bug404024", 10, SearchCallback);
     // Should be searching now and any attempt to retrieve again should be ignored
     do_check_true(addonRepo.isSearching);
     addonRepo.searchAddons("test search", 10, FailCallback);
@@ -131,8 +132,7 @@ var RecommendedCallback = {
 var SearchCallback = {
   searchSucceeded: function(addons, length, total) {
     do_check_false(addonRepo.isSearching);
-    do_check_eq(total, 100);
-    checkResults(addons);
+    checkResults(addons, length);
 
     server.stop(do_test_finished);
   },
@@ -158,47 +158,48 @@ var FailCallback = {
 function run_test()
 {
   // Setup for test
+  do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
 
   // Install an add-on so we can check the same add-on isn't returns in the results
-  startupEM();
-  gEM.installItemFromFile(do_get_addon("test_bug397778"), NS_INSTALL_LOCATION_APPPROFILE);
-  restartEM();
+  startupManager();
+  installAllFiles([do_get_addon("test_bug397778")], function() {
+    restartManager();
 
-  server = new nsHttpServer();
-  server.registerDirectory("/", do_get_file("data"));
-  server.start(4444);
+    server = new nsHttpServer();
+    server.registerDirectory("/", do_get_file("data"));
+    server.start(4444);
 
-  // Point the addons repository to the test server
-  gPrefs.setCharPref(PREF_GETADDONS_BROWSEADDONS, BROWSE);
-  gPrefs.setCharPref(PREF_GETADDONS_BROWSERECOMMENDED, RECOMMENDED);
-  gPrefs.setCharPref(PREF_GETADDONS_GETRECOMMENDED, "http://localhost:4444/test_bug417606.xml");
-  gPrefs.setCharPref(PREF_GETADDONS_BROWSESEARCHRESULTS, SEARCH + "%TERMS%");
-  gPrefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS, "http://localhost:4444/test_%TERMS%.xml");
-  
-  addonRepo = Components.classes["@mozilla.org/extensions/addon-repository;1"]
-                        .getService(Components.interfaces.nsIAddonRepository);
+    // Point the addons repository to the test server
+    Services.prefs.setCharPref(PREF_GETADDONS_BROWSEADDONS, BROWSE);
+    Services.prefs.setCharPref(PREF_GETADDONS_BROWSERECOMMENDED, RECOMMENDED);
+    Services.prefs.setCharPref(PREF_GETADDONS_GETRECOMMENDED, "http://localhost:4444/test_bug404024.xml");
+    Services.prefs.setCharPref(PREF_GETADDONS_BROWSESEARCHRESULTS, SEARCH + "%TERMS%");
+    Services.prefs.setCharPref(PREF_GETADDONS_GETSEARCHRESULTS, "http://localhost:4444/test_%TERMS%.xml");
 
-  do_check_neq(addonRepo, null);
-  // Check the homepage and recommended urls
-  do_check_eq(addonRepo.homepageURL, BROWSE);
-  do_check_eq(addonRepo.getRecommendedURL(), RECOMMENDED);
+    addonRepo = Components.classes["@mozilla.org/extensions/addon-repository;1"]
+                          .getService(Components.interfaces.nsIAddonRepository);
 
-  // Check that search urls are correct
-  for (var i = 0; i < BROWSE_SEARCH_URLS.length; i++) {
-    var url = addonRepo.getSearchURL(BROWSE_SEARCH_URLS[i][0]);
-    if (url != BROWSE_SEARCH_URLS[i][1])
-      do_throw("BROWSE_SEARCH_URL[" + i + "] returned " + url);
-  }
+    do_check_neq(addonRepo, null);
+    // Check the homepage and recommended urls
+    do_check_eq(addonRepo.homepageURL, BROWSE);
+    do_check_eq(addonRepo.getRecommendedURL(), RECOMMENDED);
 
-  do_test_pending();
-  // This should fail because we cancel it immediately.
-  addonRepo.retrieveRecommendedAddons(10, FailCallback);
-  addonRepo.cancelSearch();
-  // Pull some results.
-  addonRepo.retrieveRecommendedAddons(10, RecommendedCallback);
-  // Should be searching now and any attempt to retrieve again should be ignored
-  do_check_true(addonRepo.isSearching);
-  addonRepo.retrieveRecommendedAddons(10, FailCallback);
+    // Check that search urls are correct
+    for (var i = 0; i < BROWSE_SEARCH_URLS.length; i++) {
+      var url = addonRepo.getSearchURL(BROWSE_SEARCH_URLS[i][0]);
+      if (url != BROWSE_SEARCH_URLS[i][1])
+        do_throw("BROWSE_SEARCH_URL[" + i + "] returned " + url);
+    }
+
+    // This should fail because we cancel it immediately.
+    addonRepo.retrieveRecommendedAddons(10, FailCallback);
+    addonRepo.cancelSearch();
+    // Pull some results.
+    addonRepo.retrieveRecommendedAddons(10, RecommendedCallback);
+    // Should be searching now and any attempt to retrieve again should be ignored
+    do_check_true(addonRepo.isSearching);
+    addonRepo.retrieveRecommendedAddons(10, FailCallback);
+  });
 }
 
