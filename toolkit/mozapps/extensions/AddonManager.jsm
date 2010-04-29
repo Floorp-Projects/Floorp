@@ -795,6 +795,8 @@ var AddonManager = {
   UPDATE_WHEN_ADDON_INSTALLED: 17,
 
   // Constants for operations in Addon.pendingOperations
+  // Indicates that the Addon has no pending operations.
+  PENDING_NONE: 0,
   // Indicates that the Addon will be enabled after the application restarts.
   PENDING_ENABLE: 1,
   // Indicates that the Addon will be disabled after the application restarts.
