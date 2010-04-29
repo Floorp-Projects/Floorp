@@ -45,7 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 
 _TEST_FILES = \
   head.js \
-  browser_bug510909.js \
   browser_updatessl.js \
   browser_updatessl.rdf \
   browser_installssl.js \
