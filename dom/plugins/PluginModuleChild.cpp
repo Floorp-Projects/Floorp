@@ -318,12 +318,18 @@ gtk_plug_scroll_event(GtkWidget *widget, GdkEventScroll *gdk_event)
 static void
 wrap_gtk_plug_embedded(GtkPlug* plug) {
     GdkWindow* socket_window = plug->socket_window;
-    if (socket_window &&
-        g_object_get_data(G_OBJECT(socket_window),
-                          "moz-existed-before-set-window")) {
-        // Add missing reference for
-        // https://bugzilla.gnome.org/show_bug.cgi?id=607061
-        g_object_ref(socket_window);
+    if (socket_window) {
+        if (gtk_check_version(2,18,7) != NULL // older
+            && g_object_get_data(G_OBJECT(socket_window),
+                                 "moz-existed-before-set-window")) {
+            // Add missing reference for
+            // https://bugzilla.gnome.org/show_bug.cgi?id=607061
+            g_object_ref(socket_window);
+        }
+
+        // Ensure the window exists to make this GtkPlug behave like an
+        // in-process GtkPlug for Flash Player.  (Bugs 561308 and 539138).
+        gtk_widget_realize(GTK_WIDGET(plug));
     }
 
     if (*real_gtk_plug_embedded) {
@@ -448,11 +454,9 @@ PluginModuleChild::InitGraphics()
         *scroll_event = gtk_plug_scroll_event;
     }
 
-    if (gtk_check_version(2,18,7) != NULL) { // older
-        GtkPlugEmbeddedFn* embedded = &GTK_PLUG_CLASS(gtk_plug_class)->embedded;
-        real_gtk_plug_embedded = *embedded;
-        *embedded = wrap_gtk_plug_embedded;
-    }
+    GtkPlugEmbeddedFn* embedded = &GTK_PLUG_CLASS(gtk_plug_class)->embedded;
+    real_gtk_plug_embedded = *embedded;
+    *embedded = wrap_gtk_plug_embedded;
 
 #elif defined(MOZ_WIDGET_QT)
     nsQAppInstance::AddRef();
