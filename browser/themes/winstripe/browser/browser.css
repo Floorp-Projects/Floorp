@@ -1197,7 +1197,8 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   width: 31px;
 }
 
-.tabs-newtab-button:hover:active {
+.tabs-newtab-button:hover:active,
+#TabsToolbar > #new-tab-button:hover:active {
   -moz-image-region: rect(0, 32px, 18px, 16px);
 }
 
