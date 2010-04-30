@@ -4237,7 +4237,7 @@ nsXULDocument::FindBroadcaster(nsIContent* aElement,
                                nsString& aAttribute,
                                nsIDOMElement** aBroadcaster)
 {
-    NS_ASSERTION(aElement->IsNodeOfType(nsINode::eELEMENT),
+    NS_ASSERTION(aElement->IsElement(),
                  "Only pass elements into FindBroadcaster!");
 
     nsresult rv;
