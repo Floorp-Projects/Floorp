@@ -76,16 +76,43 @@ LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS)
   mOwningThread(NS_GetCurrentThread()),
   mIdleTimeoutMS(aIdleTimeoutMS),
   mShutdown(PR_FALSE),
-  mThreadHasTimedOut(PR_FALSE)
+  mThreadHasTimedOut(PR_FALSE),
+  mTimeoutDisabledCount(0)
 {
   NS_ASSERTION(mOwningThread, "This should never fail!");
 }
 
 LazyIdleThread::~LazyIdleThread()
 {
-  NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
+  if (!mShutdown) {
+    NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
+    Shutdown();
+  }
+}
 
-  Shutdown();
+void
+LazyIdleThread::EnableIdleTimeout(PRBool aEnable)
+{
+  if (aEnable) {
+    MutexAutoLock lock(mMutex);
+    if (mTimeoutDisabledCount) {
+      mTimeoutDisabledCount--;
+    }
+    return;
+  }
+
+  nsCOMPtr<nsITimer> timer;
+  {
+    MutexAutoLock lock(mMutex);
+    NS_ASSERTION(mTimeoutDisabledCount < PR_UINT32_MAX, "Too many calls!");
+    if (mTimeoutDisabledCount < PR_UINT32_MAX) {
+      mTimeoutDisabledCount++;
+    }
+    timer.swap(mIdleTimer);
+  }
+  if (timer) {
+    CancelTimer(timer);
+  }
 }
 
 /**
@@ -177,35 +204,108 @@ LazyIdleThread::ShutdownThread()
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(LazyIdleThread, nsITimerCallback,
+/**
+ * Cancel any pending timer. May be called from any thread.
+ */
+void
+LazyIdleThread::CancelTimer(nsITimer* aTimer)
+{
+  NS_ASSERTION(aTimer, "Null timer!");
+  if (NS_FAILED(mOwningThread->Dispatch(new CancelTimerRunnable(aTimer),
+                                        NS_DISPATCH_NORMAL))) {
+    NS_WARNING("Failed to dispatch CancelTimerRunnable!");
+  }
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS5(LazyIdleThread, nsIThread,
+                                              nsIEventTarget,
+                                              nsITimerCallback,
                                               nsIThreadObserver,
                                               nsIObserver)
 
 /**
  * Dispatch an event to the thread.
  */
-nsresult
-LazyIdleThread::Dispatch(nsIRunnable* aEvent)
+NS_IMETHODIMP
+LazyIdleThread::Dispatch(nsIRunnable* aEvent,
+                         PRUint32 aFlags)
 {
   NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
 
   nsresult rv = EnsureThread();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return mThread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
+  return mThread->Dispatch(aEvent, aFlags);
+}
+
+NS_IMETHODIMP
+LazyIdleThread::IsOnCurrentThread(PRBool* aIsOnCurrentThread)
+{
+  if (mThread) {
+    return mThread->IsOnCurrentThread(aIsOnCurrentThread);
+  }
+
+  *aIsOnCurrentThread = PR_FALSE;
+  return NS_OK;
+}
+
+/**
+ * Get the PRThread for our thread (if it has been created).
+ */
+NS_IMETHODIMP
+LazyIdleThread::GetPRThread(PRThread** aPRThread)
+{
+  if (mThread) {
+    return mThread->GetPRThread(aPRThread);
+  }
+
+  *aPRThread = nsnull;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 /**
  * Shut down the thread (if it has been created) and prevent future dispatch.
  */
-void
+NS_IMETHODIMP
 LazyIdleThread::Shutdown()
 {
-  NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
+  if (!mShutdown) {
+    NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
 
-  mShutdown = PR_TRUE;
+    ShutdownThread();
 
-  ShutdownThread();
+    mShutdown = PR_TRUE;
+    mOwningThread = nsnull;
+  }
+
+  return NS_OK;
+}
+
+/**
+ * See if there are more events to be processed. This is only supposed to be
+ * called from the thread itself.
+ */
+NS_IMETHODIMP
+LazyIdleThread::HasPendingEvents(PRBool* aHasPendingEvents)
+{
+  nsCOMPtr<nsIThread> thisThread(NS_GetCurrentThread());
+  NS_ASSERTION(thisThread, "This should never be null!");
+
+  return thisThread->HasPendingEvents(aHasPendingEvents);
+}
+
+/**
+ * Run another event on the thread. Should only be called from the thread
+ * itself.
+ */
+NS_IMETHODIMP
+LazyIdleThread::ProcessNextEvent(PRBool aMayWait,
+                                 PRBool* aEventWasProcessed)
+{
+  nsCOMPtr<nsIThread> thisThread(NS_GetCurrentThread());
+  NS_ASSERTION(thisThread, "This should never be null!");
+
+  return thisThread->ProcessNextEvent(aMayWait, aEventWasProcessed);
 }
 
 /**
@@ -247,7 +347,6 @@ NS_IMETHODIMP
 LazyIdleThread::OnDispatchedEvent(nsIThreadInternal* /*aThread */)
 {
   // This can happen on *any* thread...
-
   nsCOMPtr<nsITimer> timer;
   {
     MutexAutoLock lock(mMutex);
@@ -260,9 +359,7 @@ LazyIdleThread::OnDispatchedEvent(nsIThreadInternal* /*aThread */)
   }
 
   if (timer) {
-    nsresult rv = mOwningThread->Dispatch(new CancelTimerRunnable(timer),
-                                          NS_DISPATCH_NORMAL);
-    NS_ENSURE_SUCCESS(rv, rv);
+    CancelTimer(timer);
   }
   return NS_OK;
 }
@@ -296,7 +393,7 @@ LazyIdleThread::AfterProcessNextEvent(nsIThreadInternal* aThread,
 
   MutexAutoLock lock(mMutex);
 
-  if (mThreadHasTimedOut) {
+  if (mThreadHasTimedOut || mTimeoutDisabledCount) {
     return NS_OK;
   }
 
@@ -323,8 +420,7 @@ LazyIdleThread::Observe(nsISupports* /* aSubject */,
                         const char* /* aTopic */,
                         const PRUnichar* /* aData */)
 {
-  NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  ShutdownThread();
+  Shutdown();
   return NS_OK;
 }

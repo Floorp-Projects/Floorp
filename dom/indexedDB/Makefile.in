@@ -52,7 +52,7 @@ FORCE_STATIC_LIB = 1
 EXPORTS_NAMESPACES = mozilla/dom/indexedDB
 
 CPPSRCS = \
-  AsyncDatabaseConnection.cpp \
+  AsyncConnectionHelper.cpp \
   IDBDatabaseError.cpp \
   IDBDatabaseRequest.cpp \
   IDBEvents.cpp \
@@ -62,7 +62,6 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
-  AsyncDatabaseConnection.h \
   IDBDatabaseError.h \
   IDBDatabaseRequest.h \
   IDBEvents.h \
