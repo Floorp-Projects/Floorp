@@ -58,6 +58,7 @@
 #include "nsString.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
 #include "nsNodeInfoManager.h"
@@ -265,6 +266,7 @@ nsXULPrototypeDocument::NewXULPDGlobalObject()
 NS_IMETHODIMP
 nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 {
+    NS_TIME_FUNCTION;
     nsresult rv;
 
     rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(mURI));
