@@ -1458,7 +1458,7 @@ nsDocument::~nsDocument()
     mChildren.ChildAt(indx)->UnbindFromTree();
     mChildren.RemoveChildAt(indx);
   }
-  mCachedRootContent = nsnull;
+  mCachedRootElement = nsnull;
 
   // Let the stylesheets know we're going away
   indx = mStyleSheets.Count();
@@ -1648,7 +1648,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
 
   // Traverse all nsIDocument pointer members.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedRootContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedRootElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNodeInfoManager,
                                                   nsNodeInfoManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSecurityInfo)
@@ -1715,7 +1715,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
     tmp->mChildren.RemoveChildAt(indx);
   }
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedRootContent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedRootElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDOMImplementation)
@@ -1903,7 +1903,7 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
       content->UnbindFromTree();
     }
   }
-  mCachedRootContent = nsnull;
+  mCachedRootElement = nsnull;
 
   // Reset our stylesheets
   ResetStylesheetsToURI(aURI);
@@ -2941,7 +2941,7 @@ void
 nsDocument::GetBaseTarget(nsAString &aBaseTarget)
 {
   aBaseTarget.Truncate();
-  nsIContent* head = GetHeadContent();
+  Element* head = GetHeadElement();
   if (!head) {
     return;
   }
@@ -3060,7 +3060,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
 
   // Set the default script-type on the root element.
   if (aHeaderField == nsGkAtoms::headerContentScriptType) {
-    nsIContent *root = GetRootContent();
+    Element *root = GetRootElement();
     if (root) {
       // Get the script-type ID for this value.
       nsresult rv;
@@ -3329,21 +3329,21 @@ nsDocument::IsNodeOfType(PRUint32 aFlags) const
     return !(aFlags & ~eDOCUMENT);
 }
 
-nsIContent*
-nsDocument::GetRootContentInternal() const
+Element*
+nsDocument::GetRootElementInternal() const
 {
   // Loop backwards because any non-elements, such as doctypes and PIs
   // are likely to appear before the root element.
   PRUint32 i;
   for (i = mChildren.ChildCount(); i > 0; --i) {
     nsIContent* child = mChildren.ChildAt(i - 1);
-    if (child->IsNodeOfType(nsINode::eELEMENT)) {
-      const_cast<nsDocument*>(this)->mCachedRootContent = child;
-      return child;
+    if (child->IsElement()) {
+      const_cast<nsDocument*>(this)->mCachedRootElement = child;
+      return child->AsElement();
     }
   }
   
-  const_cast<nsDocument*>(this)->mCachedRootContent = nsnull;
+  const_cast<nsDocument*>(this)->mCachedRootElement = nsnull;
   return nsnull;
 }
 
@@ -3376,8 +3376,7 @@ nsresult
 nsDocument::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                           PRBool aNotify)
 {
-  if (aKid->IsNodeOfType(nsINode::eELEMENT) &&
-      GetRootContent()) {
+  if (aKid->IsElement() && GetRootElement()) {
     NS_ERROR("Inserting element child when we already have one");
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
@@ -3414,7 +3413,7 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent
   nsresult rv = nsGenericElement::doRemoveChildAt(aIndex, aNotify, oldKid,
                                                   nsnull, this, mChildren, 
                                                   aMutationEvent);
-  mCachedRootContent = nsnull;
+  mCachedRootElement = nsnull;
   return rv;
 }
 
@@ -4127,7 +4126,7 @@ nsDocument::DispatchContentLoadedEvents()
 
   // If the document has a manifest attribute, fire a MozApplicationManifest
   // event.
-  nsIContent* root = GetRootContent();
+  Element* root = GetRootElement();
   if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::manifest)) {
     nsContentUtils::DispatchChromeEvent(this, static_cast<nsIDocument*>(this),
                                         NS_LITERAL_STRING("MozApplicationManifest"),
@@ -4254,7 +4253,7 @@ nsDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
 {
   NS_ENSURE_ARG_POINTER(aDocumentElement);
 
-  nsIContent* root = GetRootContent();
+  Element* root = GetRootElement();
   if (root) {
     return CallQueryInterface(root, aDocumentElement);
   }
@@ -5013,20 +5012,20 @@ nsDocument::GetLocation(nsIDOMLocation **_retval)
   return w->GetLocation(_retval);
 }
 
-nsIContent*
-nsIDocument::GetHtmlContent()
+Element*
+nsIDocument::GetHtmlElement()
 {
-  nsIContent* rootContent = GetRootContent();
-  if (rootContent && rootContent->Tag() == nsGkAtoms::html &&
-      rootContent->IsHTML())
-    return rootContent;
+  Element* rootElement = GetRootElement();
+  if (rootElement && rootElement->Tag() == nsGkAtoms::html &&
+      rootElement->IsHTML())
+    return rootElement;
   return nsnull;
 }
 
-nsIContent*
-nsIDocument::GetHtmlChildContent(nsIAtom* aTag)
+Element*
+nsIDocument::GetHtmlChildElement(nsIAtom* aTag)
 {
-  nsIContent* html = GetHtmlContent();
+  Element* html = GetHtmlElement();
   if (!html)
     return nsnull;
 
@@ -5035,7 +5034,7 @@ nsIDocument::GetHtmlChildContent(nsIAtom* aTag)
   for (PRUint32 i = 0; i < html->GetChildCount(); ++i) {
     nsIContent* result = html->GetChildAt(i);
     if (result->Tag() == aTag && result->IsHTML())
-      return result;
+      return result->AsElement();
   }
   return nsnull;
 }
@@ -5073,21 +5072,21 @@ nsDocument::GetTitle(nsAString& aTitle)
 {
   aTitle.Truncate();
 
-  nsIContent *rootContent = GetRootContent();
-  if (!rootContent)
+  nsIContent *rootElement = GetRootElement();
+  if (!rootElement)
     return NS_OK;
 
   nsAutoString tmp;
 
-  switch (rootContent->GetNameSpaceID()) {
+  switch (rootElement->GetNameSpaceID()) {
 #ifdef MOZ_XUL
     case kNameSpaceID_XUL:
-      rootContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
+      rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
       break;
 #endif
 #ifdef MOZ_SVG
     case kNameSpaceID_SVG:
-      if (rootContent->Tag() == nsGkAtoms::svg) {
+      if (rootElement->Tag() == nsGkAtoms::svg) {
         GetTitleFromElement(kNameSpaceID_SVG, tmp);
         break;
       } // else fall through
@@ -5105,18 +5104,18 @@ nsDocument::GetTitle(nsAString& aTitle)
 NS_IMETHODIMP
 nsDocument::SetTitle(const nsAString& aTitle)
 {
-  nsIContent *rootContent = GetRootContent();
-  if (!rootContent)
+  Element *rootElement = GetRootElement();
+  if (!rootElement)
     return NS_OK;
 
-  switch (rootContent->GetNameSpaceID()) {
+  switch (rootElement->GetNameSpaceID()) {
 #ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       return NS_OK; // SVG doesn't support setting a title
 #endif
 #ifdef MOZ_XUL
     case kNameSpaceID_XUL:
-      return rootContent->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
+      return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
                                   aTitle, PR_TRUE);
 #endif
   }
@@ -5127,7 +5126,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
 
   nsIContent* title = GetTitleContent(kNameSpaceID_XHTML);
   if (!title) {
-    nsIContent *head = GetHeadContent();
+    Element *head = GetHeadElement();
     if (!head)
       return NS_OK;
 
@@ -5849,7 +5848,7 @@ NS_IMETHODIMP
 nsDocument::LookupPrefix(const nsAString& aNamespaceURI,
                          nsAString& aPrefix)
 {
-  nsCOMPtr<nsIDOM3Node> root(do_QueryInterface(GetRootContent()));
+  nsCOMPtr<nsIDOM3Node> root(do_QueryInterface(GetRootElement()));
   if (root) {
     return root->LookupPrefix(aNamespaceURI, aPrefix);
   }
@@ -5862,7 +5861,7 @@ NS_IMETHODIMP
 nsDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                nsAString& aNamespaceURI)
 {
-  if (NS_FAILED(nsContentUtils::LookupNamespaceURI(GetRootContent(),
+  if (NS_FAILED(nsContentUtils::LookupNamespaceURI(GetRootElement(),
                                                    aNamespacePrefix,
                                                    aNamespaceURI))) {
     SetDOMStringToNull(aNamespaceURI);
@@ -7369,7 +7368,7 @@ nsDocument::OnPageShow(PRBool aPersisted,
   EnumerateFreezableElements(NotifyActivityChanged, nsnull);
   EnumerateExternalResources(NotifyPageShow, &aPersisted);
 
-  nsIContent* root = GetRootContent();
+  Element* root = GetRootElement();
   if (aPersisted && root) {
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
@@ -7419,7 +7418,7 @@ nsDocument::OnPageHide(PRBool aPersisted,
 {
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
-  nsIContent* root = GetRootContent();
+  Element* root = GetRootElement();
   if (aPersisted && root) {
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
                                                       nsGkAtoms::link,

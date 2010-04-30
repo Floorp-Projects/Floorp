@@ -378,8 +378,9 @@ nsFrameManager::SetUndisplayedContent(nsIContent* aContent,
   if (mUndisplayedMap) {
     nsIContent* parent = aContent->GetParent();
     NS_ASSERTION(parent || (mPresShell && mPresShell->GetDocument() &&
-                 mPresShell->GetDocument()->GetRootContent() == aContent),
-                 "undisplayed content must have a parent, unless it's the root content");
+                 mPresShell->GetDocument()->GetRootElement() == aContent),
+                 "undisplayed content must have a parent, unless it's the root "
+                 "element");
     mUndisplayedMap->AddNodeFor(parent, aContent, aStyleContext);
   }
 }
@@ -1228,7 +1229,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
            undisplayed; undisplayed = undisplayed->mNext) {
         NS_ASSERTION(undisplayedParent ||
                      undisplayed->mContent ==
-                       mPresShell->GetDocument()->GetRootContent(),
+                       mPresShell->GetDocument()->GetRootElement(),
                      "undisplayed node child of null must be root");
         NS_ASSERTION(!undisplayed->mStyle->GetPseudo(),
                      "Shouldn't have random pseudo style contexts in the "

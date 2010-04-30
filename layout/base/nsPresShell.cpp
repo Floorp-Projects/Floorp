@@ -58,6 +58,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
+#include "Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsStubDocumentObserver.h"
@@ -210,6 +211,7 @@
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 using namespace mozilla::layers;
+using namespace mozilla::dom;
 
 PRBool nsIPresShell::gIsAccessibilityActive = PR_FALSE;
 CapturingContentInfo nsIPresShell::gCaptureInfo;
@@ -2485,7 +2487,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsIContent *root = mDocument->GetRootContent();
+  Element *root = mDocument->GetRootElement();
 
   if (root) {
     {
@@ -3235,9 +3237,9 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
     printf("\nPresShell@%p: frame %p needs reflow\n", (void*)this, (void*)aFrame);
     if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
       printf("Current content model:\n");
-      nsIContent *rootContent = mDocument->GetRootContent();
-      if (rootContent) {
-        rootContent->List(stdout, 0);
+      Element *rootElement = mDocument->GetRootElement();
+      if (rootElement) {
+        rootElement->List(stdout, 0);
       }
     }
   }  
@@ -4728,9 +4730,9 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
 
   if (mDidInitialReflow &&
       mStyleSet->HasDocumentStateDependentStyle(mPresContext,
-                                                mDocument->GetRootContent(),
+                                                mDocument->GetRootElement(),
                                                 aStateMask)) {
-    mFrameConstructor->PostRestyleEvent(mDocument->GetRootContent(),
+    mFrameConstructor->PostRestyleEvent(mDocument->GetRootElement(),
                                         eRestyle_Self, NS_STYLE_HINT_NONE);
     VERIFY_STYLE_TREE;
   }
@@ -4894,7 +4896,7 @@ nsIPresShell::ReconstructStyleDataInternal()
     mPresContext->RebuildUserFontSet();
   }
 
-  nsIContent* root = mDocument->GetRootContent();
+  Element* root = mDocument->GetRootElement();
   if (!mDidInitialReflow) {
     // Nothing to do here, since we have no frames yet
     return;
@@ -6166,7 +6168,7 @@ PresShell::HandleEvent(nsIView         *aView,
       // still get sent to the window properly if nothing is focused or if a
       // frame goes away while it is focused.
       if (!mCurrentEventContent || !GetCurrentEventFrame())
-        mCurrentEventContent = mDocument->GetRootContent();
+        mCurrentEventContent = mDocument->GetRootElement();
       mCurrentEventFrame = nsnull;
         
       if (!mCurrentEventContent || !GetCurrentEventFrame() ||

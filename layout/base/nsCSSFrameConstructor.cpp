@@ -119,6 +119,7 @@
 #include "nsBox.h"
 #include "nsTArray.h"
 #include "nsGenericDOMDataNode.h"
+#include "Element.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
@@ -151,6 +152,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsIFrame*
 NS_NewHTMLCanvasFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -2237,7 +2239,7 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
     return nsnull;
   }
 
-  nsIContent* docElement = mDocument->GetRootContent();
+  Element* docElement = mDocument->GetRootElement();
 
   // Check the style on the document root element
   nsStyleSet *styleSet = mPresShell->StyleSet();
@@ -2574,7 +2576,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
   NS_PRECONDITION(aDocElement, "No element?");
   NS_PRECONDITION(!aDocElement->GetParent(), "Not root content?");
   NS_PRECONDITION(aDocElement->GetCurrentDoc(), "Not in a document?");
-  NS_PRECONDITION(aDocElement->GetCurrentDoc()->GetRootContent() ==
+  NS_PRECONDITION(aDocElement->GetCurrentDoc()->GetRootElement() ==
                   aDocElement, "Not the root of the document?");
 
   /*
@@ -5456,7 +5458,8 @@ IsRootBoxFrame(nsIFrame *aFrame)
 nsresult
 nsCSSFrameConstructor::ReconstructDocElementHierarchy()
 {
-  return RecreateFramesForContent(mPresShell->GetDocument()->GetRootContent(), PR_FALSE);
+  return RecreateFramesForContent(mPresShell->GetDocument()->GetRootElement(),
+				  PR_FALSE);
 }
 
 nsIFrame*
@@ -6306,12 +6309,12 @@ void nsCSSFrameConstructor::CreateNeededFrames()
 
   mInLazyFCRefresh = PR_FALSE;
 
-  nsIContent* rootContent = mDocument->GetRootContent();
-  NS_ASSERTION(!rootContent || !rootContent->HasFlag(NODE_NEEDS_FRAME),
-    "root content should not have frame created lazily");
-  if (rootContent && rootContent->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
+  Element* rootElement = mDocument->GetRootElement();
+  NS_ASSERTION(!rootElement || !rootElement->HasFlag(NODE_NEEDS_FRAME),
+    "root element should not have frame created lazily");
+  if (rootElement && rootElement->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
     BeginUpdate();
-    CreateNeededFrames(rootContent);
+    CreateNeededFrames(rootElement);
     EndUpdate();
   }
 }
@@ -6840,7 +6843,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   if (! aContainer) {
     NS_ASSERTION(isSingleInsert,
                  "root node insertion should be a single insertion");
-    nsIContent *docElement = mDocument->GetRootContent();
+    Element *docElement = mDocument->GetRootElement();
 
     if (aChild != docElement) {
       // Not the root element; just bail out
@@ -11224,7 +11227,8 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
   }
 
   // If we get here, we're screwed!
-  return RecreateFramesForContent(mPresShell->GetDocument()->GetRootContent(), PR_TRUE);
+  return RecreateFramesForContent(mPresShell->GetDocument()->GetRootElement(),
+				  PR_TRUE);
 }
 
 void

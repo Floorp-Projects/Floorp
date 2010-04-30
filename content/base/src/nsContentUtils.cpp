@@ -61,6 +61,7 @@
 #include "nsIContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIContent.h"
+#include "Element.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsReadableUtils.h"
@@ -192,6 +193,8 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "jsdate.h"
 #include "jsregexp.h"
 #include "jstypedarray.h"
+
+using namespace mozilla::dom;
 
 const char kLoadAsData[] = "loadAsData";
 
@@ -887,7 +890,7 @@ nsContentUtils::IsHTMLWhitespace(PRUnichar aChar)
 void
 nsContentUtils::GetOfflineAppManifest(nsIDocument *aDocument, nsIURI **aURI)
 {
-  nsCOMPtr<nsIContent> docElement = aDocument->GetRootContent();
+  Element* docElement = aDocument->GetRootElement();
   if (!docElement) {
     return;
   }
@@ -1186,7 +1189,7 @@ nsContentUtils::InProlog(nsINode *aNode)
   }
 
   nsIDocument* doc = static_cast<nsIDocument*>(parent);
-  nsIContent* root = doc->GetRootContent();
+  nsIContent* root = doc->GetRootElement();
 
   return !root || doc->IndexOf(aNode) < doc->IndexOf(root);
 }

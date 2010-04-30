@@ -126,6 +126,9 @@
 #include "nsXULPopupManager.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsURILoader.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 //
@@ -2427,7 +2430,7 @@ nsXULDocument::PrepareToWalk()
 
     PRUint32 piInsertionPoint = 0;
     if (mState != eState_Master) {
-        piInsertionPoint = IndexOf(GetRootContent());
+        piInsertionPoint = IndexOf(GetRootElement());
         NS_ASSERTION(piInsertionPoint >= 0,
                      "No root content when preparing to walk overlay!");
     }
@@ -3058,7 +3061,7 @@ nsXULDocument::ResumeWalk()
                 }
 
                 nsIContent* parent = processingOverlayHookupNodes ?
-                    GetRootContent() : element.get();
+                    GetRootElement() : element.get();
 
                 if (parent) {
                     // an inline script could have removed the root element
@@ -3918,7 +3921,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
     if (id.IsEmpty()) {
         // mOverlay is a direct child of <overlay> and has no id.
         // Insert it under the root element in the base document.
-        nsIContent* root = mDocument->GetRootContent();
+        Element* root = mDocument->GetRootElement();
         if (!root) {
             return eResolve_Error;
         }
@@ -4607,11 +4610,11 @@ nsXULDocument::IsDocumentRightToLeft()
 {
     // setting the localedir attribute on the root element forces a
     // specific direction for the document.
-    nsIContent* content = GetRootContent();
-    if (content) {
+    Element* element = GetRootElement();
+    if (element) {
         static nsIContent::AttrValuesArray strings[] =
             {&nsGkAtoms::ltr, &nsGkAtoms::rtl, nsnull};
-        switch (content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::localedir,
+        switch (element->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::localedir,
                                          strings, eCaseMatters)) {
             case 0: return PR_FALSE;
             case 1: return PR_TRUE;
@@ -4678,15 +4681,15 @@ nsXULDocument::GetDocumentLWTheme()
     if (mDocLWTheme == Doc_Theme_Uninitialized) {
         mDocLWTheme = Doc_Theme_None; // No lightweight theme by default
 
-        nsIContent* content = GetRootContent();
+        Element* element = GetRootElement();
         nsAutoString hasLWTheme;
-        if (content &&
-            content->GetAttr(kNameSpaceID_None, nsGkAtoms::lwtheme, hasLWTheme) &&
+        if (element &&
+            element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwtheme, hasLWTheme) &&
             !(hasLWTheme.IsEmpty()) &&
             hasLWTheme.EqualsLiteral("true")) {
             mDocLWTheme = Doc_Theme_Neutral;
             nsAutoString lwTheme;
-            content->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
+            element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
             if (!(lwTheme.IsEmpty())) {
                 if (lwTheme.EqualsLiteral("dark"))
                     mDocLWTheme = Doc_Theme_Dark;

@@ -66,6 +66,7 @@
 #include "nsLayoutUtils.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
+#include "Element.h"
 #include "nsIFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
@@ -95,6 +96,8 @@
 #include "nsEventListenerService.h"
 #include "nsDOMEvent.h"
 #include "nsIContentSecurityPolicy.h"
+
+using namespace mozilla::dom;
 
 #define EVENT_TYPE_EQUALS( ls, type, userType ) \
   (ls->mEventType && ls->mEventType == type && \
@@ -778,7 +781,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
           nameSpace = content->GetNameSpaceID();
         }
         else if (doc) {
-          nsCOMPtr<nsIContent> root = doc->GetRootContent();
+          Element* root = doc->GetRootElement();
           if (root)
             nameSpace = root->GetNameSpaceID();
         }

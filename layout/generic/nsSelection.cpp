@@ -2211,7 +2211,7 @@ nsFrameSelection::SelectAll()
     nsIDocument *doc = mShell->GetDocument();
     if (!doc)
       return NS_ERROR_FAILURE;
-    rootContent = doc->GetRootContent();
+    rootContent = doc->GetRootElement();
     if (!rootContent)
       return NS_ERROR_FAILURE;
   }

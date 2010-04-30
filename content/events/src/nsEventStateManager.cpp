@@ -2760,7 +2760,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // designMode.  In designMode, all contents are not focusable.
         if (newFocus && !newFocus->IsEditable()) {
           nsIDocument *doc = newFocus->GetCurrentDoc();
-          if (doc && newFocus == doc->GetRootContent()) {
+          if (doc && newFocus == doc->GetRootElement()) {
             nsIContent *bodyContent =
               nsLayoutUtils::GetEditableRootContentByContentEditable(doc);
             if (bodyContent) {
@@ -3616,7 +3616,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
         // We're always over the document root, even if we're only
         // over dead space in a page (whose frame is not associated with
         // any content) or in print preview dead space
-        targetElement = mDocument->GetRootContent();
+        targetElement = mDocument->GetRootElement();
       }
       if (targetElement) {
         NotifyMouseOver(aEvent, targetElement);
