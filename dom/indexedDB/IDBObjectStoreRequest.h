@@ -37,47 +37,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_asyncdatabaseconnection_h__
-#define mozilla_dom_indexeddb_asyncdatabaseconnection_h__
+#ifndef mozilla_dom_indexeddb_idbdatabaserequest_h__
+#define mozilla_dom_indexeddb_idbdatabaserequest_h__
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-class nsIDOMEventTarget;
+#include "nsIIDBObjectStoreRequest.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-/**
- * This is mostly a fake backend until we have a real one
- */
-
-class AsyncDatabaseConnection
+class IDBObjectStoreRequest : public IDBRequest::Generator,
+                              public nsIIDBObjectStoreRequest
 {
 public:
-  static AsyncDatabaseConnection*
-  OpenConnection(const nsAString& aName,
-                 const nsAString& aDescription,
-                 PRBool aReadOnly);
-  ~AsyncDatabaseConnection();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIIDBOBJECTSTORE
+  NS_DECL_NSIIDBOBJECTSTOREREQUEST
 
-  nsresult
-  CreateObjectStore(const nsAString& aName,
-                    const nsAString& aKeyPath,
-                    PRBool aAutoIncrement,
-                    nsIDOMEventTarget* aTarget);
+  static already_AddRefed<nsIIDBObjectStoreRequest>
+  Create(const nsAString& aName,
+         const nsAString& aKeyPath,
+         PRBool aAutoIncrement,
+         PRUint16 aMode);
 
-  nsresult
-  OpenObjectStore(const nsAString& aName,
-                  PRUint16 aMode,
-                  nsIDOMEventTarget* aTarget);
+protected:
+  IDBObjectStoreRequest();
+  ~IDBObjectStoreRequest();
 
 private:
-  AsyncDatabaseConnection();
-
-  nsString mName;
-  nsString mDescription;
-  PRBool mReadOnly;
+  nsAutoPtr<AsyncDatabaseConnection> mDatabase;
 };
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_asyncdatabaseconnection_h__
+#endif // mozilla_dom_indexeddb_idbdatabaserequest_h__
