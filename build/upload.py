@@ -179,9 +179,6 @@ def UploadFiles(user, host, path, files, verbose=False, port=None, ssh_key=None,
                 print "Running post-upload command: " + post_upload_command
             file_list = '"' + '" "'.join(remote_files) + '"'
             DoSSHCommand('%s "%s" %s' % (post_upload_command, path, file_list), user, host, port=port, ssh_key=ssh_key)
-    except:
-        print "Encountered error while uploading"
-        raise
     finally:
         if upload_to_temp_dir:
             DoSSHCommand("rm -rf %s" % path, user, host, port=port,
