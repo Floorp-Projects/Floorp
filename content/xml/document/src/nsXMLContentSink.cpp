@@ -319,7 +319,7 @@ nsXMLContentSink::DidBuildModel(PRBool aTerminated)
         nsCOMPtr<nsIDOMProcessingInstruction> pi = do_QueryInterface(child);
         CheckXSLTParamPI(pi, mXSLTProcessor, mDocument);
       }
-      else if (child->IsNodeOfType(nsINode::eELEMENT)) {
+      else if (child->IsElement()) {
         // Only honor PIs in the prolog
         break;
       }
