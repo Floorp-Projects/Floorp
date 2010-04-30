@@ -80,6 +80,9 @@ PluginModuleChild::PluginModuleChild() :
 #elif defined(MOZ_WIDGET_GTK2)
   , mNestedLoopTimerId(0)
 #endif
+#ifdef OS_WIN
+  , mNestedEventHook(NULL)
+#endif
 {
     NS_ASSERTION(!gInstance, "Something terribly wrong here!");
     memset(&mFunctions, 0, sizeof(mFunctions));
@@ -483,6 +486,10 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 
     // weakly guard against re-entry after NP_Shutdown
     memset(&mFunctions, 0, sizeof(mFunctions));
+
+#ifdef OS_WIN
+    ResetNestedInputEventHook();
+#endif
 
     return true;
 }
@@ -1488,6 +1495,10 @@ PluginModuleChild::AnswerNP_Initialize(NativeThreadId* tid, NPError* _retval)
     *tid = 0;
 #endif
 
+#ifdef OS_WIN
+    SetNestedInputEventHook();
+#endif
+
 #if defined(OS_LINUX)
     *_retval = mInitializeFunc(&sBrowserFuncs, &mFunctions);
     return true;
@@ -1844,3 +1855,59 @@ PluginModuleChild::NPN_IntFromIdentifier(NPIdentifier aIdentifier)
     }
     return PR_INT32_MIN;
 }
+
+#ifdef OS_WIN
+void
+PluginModuleChild::EnteredCall()
+{
+    mIncallPumpingStack.AppendElement(false);
+}
+
+void
+PluginModuleChild::ExitedCall()
+{
+    NS_ASSERTION(mIncallPumpingStack.Length(), "mismatched entered/exited");
+    PRUint32 len = mIncallPumpingStack.Length() - 1;
+    mIncallPumpingStack.TruncateLength(len);
+}
+
+LRESULT CALLBACK
+PluginModuleChild::NestedInputEventHook(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    PluginModuleChild* self = current();
+    PRUint32 len = self->mIncallPumpingStack.Length();
+    if (nCode >= 0 && len && !self->mIncallPumpingStack[len - 1]) {
+        self->SendProcessNativeEventsInRPCCall();
+        self->mIncallPumpingStack[len - 1] = true;
+    }
+
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+void
+PluginModuleChild::SetNestedInputEventHook()
+{
+    NS_ASSERTION(!mNestedEventHook,
+        "mNestedEventHook already setup in call to SetNestedInputEventHook?");
+
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+
+    // WH_GETMESSAGE hooks are triggered by peek message calls in parent due to
+    // attached message queues, resulting in stomped in-process ipc calls.  So
+    // we use a filter hook specific to dialogs, menus, and scroll bars to kick
+    // things off.
+    mNestedEventHook = SetWindowsHookEx(WH_MSGFILTER,
+                                        NestedInputEventHook,
+                                        NULL,
+                                        GetCurrentThreadId());
+}
+
+void
+PluginModuleChild::ResetNestedInputEventHook()
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+    if (mNestedEventHook)
+        UnhookWindowsHookEx(mNestedEventHook);
+    mNestedEventHook = NULL;
+}
+#endif
