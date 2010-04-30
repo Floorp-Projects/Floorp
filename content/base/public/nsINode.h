@@ -154,8 +154,11 @@ enum {
   // node(s) with NODE_NEEDS_FRAME and the root content.
   NODE_DESCENDANTS_NEED_FRAMES = 0x00100000U,
 
+  // Set if the node is an element.
+  NODE_IS_ELEMENT              = 0x00200000U,
+
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               21,
+  NODE_SCRIPT_TYPE_OFFSET =               22,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
@@ -330,6 +333,13 @@ public:
    * @return whether the content matches ALL flags passed in
    */
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const = 0;
+
+  /**
+   * Return whether the node is an Element node
+   */
+  PRBool IsElement() const {
+    return HasFlag(NODE_IS_ELEMENT);
+  }
 
   /**
    * Get the number of children
