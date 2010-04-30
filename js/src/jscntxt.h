@@ -556,6 +556,17 @@ struct JSThreadData {
     /* State used by dtoa.c. */
     DtoaState           *dtoaState;
 
+    /* 
+     * State used to cache some double-to-string conversions.  A stupid
+     * optimization aimed directly at v8-splay.js, which stupidly converts
+     * many doubles multiple times in a row.
+     */
+    struct {
+        jsdouble d;
+        jsint    base;
+        JSString *s;        // if s==NULL, d and base are not valid
+    } dtoaCache;
+
     /*
      * Cache of reusable JSNativeEnumerators mapped by shape identifiers (as
      * stored in scope->shape). This cache is nulled by the GC and protected
