@@ -638,6 +638,14 @@ public:
                                   PRBool aMutationEvent);
 
   /**
+   * If there are listeners for DOMNodeInserted event, fires the event on all
+   * aNodes
+   */
+  static void FireNodeInserted(nsIDocument* aDoc,
+                               nsINode* aParent,
+                               nsCOMArray<nsIContent>& aNodes);
+
+  /**
    * Helper methods for implementing querySelector/querySelectorAll
    */
   static nsresult doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
