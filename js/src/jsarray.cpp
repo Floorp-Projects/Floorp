@@ -1764,30 +1764,6 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const jsval *vector
     return JS_TRUE;
 }
 
-#ifdef JS_TRACER
-static JSString* FASTCALL
-Array_p_join(JSContext* cx, JSObject* obj, JSString *str)
-{
-    AutoValueRooter tvr(cx);
-    if (!array_toString_sub(cx, obj, JS_FALSE, str, tvr.addr())) {
-        SetBuiltinError(cx);
-        return NULL;
-    }
-    return JSVAL_TO_STRING(tvr.value());
-}
-
-static JSString* FASTCALL
-Array_p_toString(JSContext* cx, JSObject* obj)
-{
-    AutoValueRooter tvr(cx);
-    if (!array_toString_sub(cx, obj, JS_FALSE, NULL, tvr.addr())) {
-        SetBuiltinError(cx);
-        return NULL;
-    }
-    return JSVAL_TO_STRING(tvr.value());
-}
-#endif
-
 /*
  * Perl-inspired join, reverse, and sort.
  */
@@ -2406,21 +2382,6 @@ js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v)
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_ArrayCompPush, CONTEXT, OBJECT, JSVAL, 0,
                      nanojit::ACC_STORE_ANY)
 
-#ifdef JS_TRACER
-static jsval FASTCALL
-Array_p_push1(JSContext* cx, JSObject* obj, jsval v)
-{
-    AutoValueRooter tvr(cx, v);
-    if (obj->isDenseArray()
-        ? array_push1_dense(cx, obj, v, tvr.addr())
-        : array_push_slowly(cx, obj, 1, tvr.addr(), tvr.addr())) {
-        return tvr.value();
-    }
-    SetBuiltinError(cx);
-    return JSVAL_VOID;
-}
-#endif
-
 static JSBool
 array_push(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -2477,21 +2438,6 @@ array_pop_dense(JSContext *cx, JSObject* obj, jsval *vp)
     obj->setDenseArrayLength(index);
     return JS_TRUE;
 }
-
-#ifdef JS_TRACER
-static jsval FASTCALL
-Array_p_pop(JSContext* cx, JSObject* obj)
-{
-    AutoValueRooter tvr(cx);
-    if (obj->isDenseArray()
-        ? array_pop_dense(cx, obj, tvr.addr())
-        : array_pop_slowly(cx, obj, tvr.addr())) {
-        return tvr.value();
-    }
-    SetBuiltinError(cx);
-    return JSVAL_VOID;
-}
-#endif
 
 static JSBool
 array_pop(JSContext *cx, uintN argc, jsval *vp)
@@ -3273,28 +3219,19 @@ static JSPropertySpec array_props[] = {
     {0,0,0,0,0}
 };
 
-JS_DEFINE_TRCINFO_1(array_toString,
-    (2, (static, STRING_FAIL, Array_p_toString, CONTEXT, THIS,      0, nanojit::ACC_STORE_ANY)))
-JS_DEFINE_TRCINFO_1(array_join,
-    (3, (static, STRING_FAIL, Array_p_join, CONTEXT, THIS, STRING,  0, nanojit::ACC_STORE_ANY)))
-JS_DEFINE_TRCINFO_1(array_push,
-    (3, (static, JSVAL_FAIL, Array_p_push1, CONTEXT, THIS, JSVAL,   0, nanojit::ACC_STORE_ANY)))
-JS_DEFINE_TRCINFO_1(array_pop,
-    (2, (static, JSVAL_FAIL, Array_p_pop, CONTEXT, THIS,            0, nanojit::ACC_STORE_ANY)))
-
 static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,      array_toSource,     0,0),
 #endif
-    JS_TN(js_toString_str,      array_toString,     0,0, &array_toString_trcinfo),
+    JS_FN(js_toString_str,      array_toString,     0,0),
     JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
 
     /* Perl-ish methods. */
-    JS_TN("join",               array_join,         1,JSFUN_GENERIC_NATIVE, &array_join_trcinfo),
+    JS_FN("join",               array_join,         1,JSFUN_GENERIC_NATIVE),
     JS_FN("reverse",            array_reverse,      0,JSFUN_GENERIC_NATIVE),
     JS_FN("sort",               array_sort,         1,JSFUN_GENERIC_NATIVE),
-    JS_TN("push",               array_push,         1,JSFUN_GENERIC_NATIVE, &array_push_trcinfo),
-    JS_TN("pop",                array_pop,          0,JSFUN_GENERIC_NATIVE, &array_pop_trcinfo),
+    JS_FN("push",               array_push,         1,JSFUN_GENERIC_NATIVE),
+    JS_FN("pop",                array_pop,          0,JSFUN_GENERIC_NATIVE),
     JS_FN("shift",              array_shift,        0,JSFUN_GENERIC_NATIVE),
     JS_FN("unshift",            array_unshift,      1,JSFUN_GENERIC_NATIVE),
     JS_FN("splice",             array_splice,       2,JSFUN_GENERIC_NATIVE),
