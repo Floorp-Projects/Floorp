@@ -6873,8 +6873,8 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
                           nsNavHistoryQueryOptions* aOptions,
                           nsNavHistoryResultNode** aResult)
 {
-  *aResult = nsnull;
   NS_ASSERTION(aRow && aOptions && aResult, "Null pointer in RowToResult");
+  *aResult = nsnull;
 
   // URL
   nsCAutoString url;
@@ -6929,19 +6929,17 @@ nsNavHistory::RowToResult(mozIStorageValueArray* aRow,
     }
 
     rv = QueryRowToResult(itemId, url, title, accessCount, time, favicon, aResult);
-
-    // If it's a simple folder node (i.e. a shortcut to another folder), apply
-    // our options for it. However, if the parent type was tag query, we do not
-    // apply them, because it would not yield any results.
-    if (*aResult && (*aResult)->IsFolder() &&
-         aOptions->ResultType() != 
-           nsINavHistoryQueryOptions::RESULTS_AS_TAG_QUERY)
-      (*aResult)->GetAsContainer()->mOptions = aOptions;
-
-    // RESULTS_AS_TAG_QUERY has date columns
+    NS_ENSURE_STATE(*aResult);
     if (aOptions->ResultType() == nsNavHistoryQueryOptions::RESULTS_AS_TAG_QUERY) {
+      // RESULTS_AS_TAG_QUERY has date columns
       (*aResult)->mDateAdded = aRow->AsInt64(kGetInfoIndex_ItemDateAdded);
       (*aResult)->mLastModified = aRow->AsInt64(kGetInfoIndex_ItemLastModified);
+    }
+    else if ((*aResult)->IsFolder()) {
+      // If it's a simple folder node (i.e. a shortcut to another folder), apply
+      // our options for it. However, if the parent type was tag query, we do not
+      // apply them, because it would not yield any results.
+      (*aResult)->GetAsContainer()->mOptions = aOptions;
     }
 
     return rv;
