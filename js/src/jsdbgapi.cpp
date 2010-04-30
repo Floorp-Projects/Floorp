@@ -506,10 +506,8 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
          wp = (JSWatchPoint *)wp->links.next) {
         if (wp->object == obj) {
             wp->sprop->trace(trc);
-            if (wp->sprop->hasSetterValue() && wp->setter) {
-                JS_CALL_OBJECT_TRACER(trc, js_CastAsObject(wp->setter),
-                                      "wp->setter");
-            }
+            if (wp->sprop->hasSetterValue() && wp->setter)
+                JS_CALL_OBJECT_TRACER(trc, CastAsObject(wp->setter), "wp->setter");
             JS_SET_TRACING_NAME(trc, "wp->closure");
             js_CallValueTracerIfGCThing(trc, OBJECT_TO_JSVAL(wp->closure));
         }
@@ -735,7 +733,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 ok = !wp->setter ||
                      (sprop->hasSetterValue()
                       ? js_InternalCall(cx, obj,
-                                        js_CastAsObjectJSVal(wp->setter),
+                                        CastAsObjectJSVal(wp->setter),
                                         1, vp, vp)
                       : wp->setter(cx, obj, userid, vp));
                 if (injectFrame) {
@@ -774,7 +772,7 @@ IsWatchedProperty(JSContext *cx, JSScopeProperty *sprop)
 {
     if (sprop->hasSetterValue()) {
         JSObject *funobj = sprop->setterObject();
-        if (!funobj->isFunction())
+        if (!funobj || !funobj->isFunction())
             return false;
 
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
@@ -803,10 +801,10 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     }
 
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             setter ? js_CastAsObject(setter)->getParent() : NULL, atom);
+                             setter ? CastAsObject(setter)->getParent() : NULL, atom);
     if (!wrapper)
         return NULL;
-    return js_CastAsPropertyOp(FUN_OBJECT(wrapper));
+    return CastAsPropertyOp(FUN_OBJECT(wrapper));
 }
 
 JS_PUBLIC_API(JSBool)

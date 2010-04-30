@@ -1731,7 +1731,7 @@ js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = JSVAL_VOID;
     return obj->defineProperty(cx, id, JSVAL_VOID,
-                               js_CastAsPropertyOp(JSVAL_TO_OBJECT(fval)), JS_PropertyStub,
+                               CastAsPropertyOp(JSVAL_TO_OBJECT(fval)), JS_PropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
 }
 
@@ -1764,7 +1764,7 @@ js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = JSVAL_VOID;
     return obj->defineProperty(cx, id, JSVAL_VOID,
-                               JS_PropertyStub, js_CastAsPropertyOp(JSVAL_TO_OBJECT(fval)),
+                               JS_PropertyStub, CastAsPropertyOp(JSVAL_TO_OBJECT(fval)),
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
 }
 
@@ -2137,8 +2137,8 @@ Reject(JSContext *cx, JSObject *obj, JSProperty *prop, uintN errorNumber, bool t
 }
 
 static JSBool
-DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc,
-                     bool throwError, bool *rval)
+DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc,
+                       bool throwError, bool *rval)
 {
     /* 8.12.9 step 1. */
     JSProperty *current;
@@ -2176,9 +2176,7 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
             return JS_FALSE;
 
         return js_DefineProperty(cx, obj, desc.id, JSVAL_VOID,
-                                 desc.getterObject() ? desc.getter() : JS_PropertyStub,
-                                 desc.setterObject() ? desc.setter() : JS_PropertyStub,
-                                 desc.attrs);
+                                 desc.getter(), desc.setter(), desc.attrs);
     }
 
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
@@ -2202,13 +2200,15 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
 
             if (desc.hasGet &&
                 !js_SameValue(desc.getterValue(),
-                              sprop->hasGetterValue() ? sprop->getterValue() : JSVAL_VOID, cx)) {
+                              sprop->hasGetterValue() ? sprop->getterValue() : JSVAL_VOID,
+                              cx)) {
                 break;
             }
 
             if (desc.hasSet &&
                 !js_SameValue(desc.setterValue(),
-                              sprop->hasSetterValue() ? sprop->setterValue() : JSVAL_VOID, cx)) {
+                              sprop->hasSetterValue() ? sprop->setterValue() : JSVAL_VOID,
+                              cx)) {
                 break;
             }
         } else {
@@ -2305,8 +2305,9 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
             return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
                           throwError, desc.id, rval);
         }
-    } else if (desc.isDataDescriptor() && sprop->isDataDescriptor()) {
+    } else if (desc.isDataDescriptor()) {
         /* 8.12.9 step 10. */
+        JS_ASSERT(sprop->isDataDescriptor());
         if (!sprop->configurable() && !sprop->writable()) {
             if ((desc.hasWritable && desc.writable()) ||
                 (desc.hasValue && !js_SameValue(desc.value, v, cx))) {
@@ -2324,7 +2325,8 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
                                cx)) ||
                 (desc.hasGet &&
                  !js_SameValue(desc.getterValue(),
-                               sprop->hasGetterValue() ? sprop->getterValue() : JSVAL_VOID, cx)))
+                               sprop->hasGetterValue() ? sprop->getterValue() : JSVAL_VOID,
+                               cx)))
             {
                 return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
                               throwError, desc.id, rval);
@@ -2384,14 +2386,20 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
             changed |= JSPROP_SETTER | JSPROP_SHARED;
 
         attrs = (desc.attrs & changed) | (sprop->attributes() & ~changed);
-        if (desc.hasGet)
-            getter = desc.getterObject() ? desc.getter() : JS_PropertyStub;
-        else
-            getter = sprop->hasDefaultGetter() ? JS_PropertyStub : sprop->getter();
-        if (desc.hasSet)
-            setter = desc.setterObject() ? desc.setter() : JS_PropertyStub;
-        else
-            setter = sprop->hasDefaultSetter() ? JS_PropertyStub : sprop->setter();
+        if (desc.hasGet) {
+            getter = desc.getter();
+        } else {
+            getter = (sprop->hasDefaultGetter() && !sprop->hasGetterValue())
+                     ? JS_PropertyStub
+                     : sprop->getter();
+        }
+        if (desc.hasSet) {
+            setter = desc.setter();
+        } else {
+            setter = (sprop->hasDefaultSetter() && !sprop->hasSetterValue())
+                     ? JS_PropertyStub
+                     : sprop->setter();
+        }
     }
 
     *rval = true;
@@ -2400,8 +2408,8 @@ DefinePropertyObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &des
 }
 
 static JSBool
-DefinePropertyArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc,
-                    bool throwError, bool *rval)
+DefinePropertyOnArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc,
+                      bool throwError, bool *rval)
 {
     /*
      * We probably should optimize dense array property definitions where
@@ -2434,7 +2442,7 @@ DefinePropertyArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc
         if (index >= oldLen && lengthPropertyNotWritable())
             return ThrowTypeError(cx, JSMSG_CANT_APPEND_PROPERTIES_TO_UNWRITABLE_LENGTH_ARRAY);
          */
-        if (!DefinePropertyObject(cx, obj, desc, false, rval))
+        if (!DefinePropertyOnObject(cx, obj, desc, false, rval))
             return JS_FALSE;
         if (!*rval)
             return Reject(cx, JSMSG_CANT_DEFINE_ARRAY_INDEX, throwError, rval);
@@ -2448,7 +2456,7 @@ DefinePropertyArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc
         return JS_TRUE;
     }
 
-    return DefinePropertyObject(cx, obj, desc, throwError, rval);
+    return DefinePropertyOnObject(cx, obj, desc, throwError, rval);
 }
 
 static JSBool
@@ -2456,12 +2464,12 @@ DefineProperty(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc, boo
                bool *rval)
 {
     if (obj->isArray())
-        return DefinePropertyArray(cx, obj, desc, throwError, rval);
+        return DefinePropertyOnArray(cx, obj, desc, throwError, rval);
 
     if (obj->map->ops->lookupProperty != js_LookupProperty)
         return Reject(cx, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
 
-    return DefinePropertyObject(cx, obj, desc, throwError, rval);
+    return DefinePropertyOnObject(cx, obj, desc, throwError, rval);
 }
 
 JSBool
@@ -4195,9 +4203,9 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     /* Use the object's class getter and setter by default. */
     clasp = obj->getClass();
     if (!(defineHow & JSDNP_SET_METHOD)) {
-        if (!getter)
+        if (!getter && !(attrs & JSPROP_GETTER))
             getter = clasp->getProperty;
-        if (!setter)
+        if (!setter && !(attrs & JSPROP_SETTER))
             setter = clasp->setProperty;
     }
 
@@ -4218,7 +4226,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
             JSObject *funobj = JSVAL_TO_OBJECT(value);
             if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
                 flags |= JSScopeProperty::METHOD;
-                getter = js_CastAsPropertyOp(funobj);
+                getter = CastAsPropertyOp(funobj);
             }
         }
 
@@ -5095,7 +5103,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
             JSObject *funobj = JSVAL_TO_OBJECT(*vp);
             if (FUN_OBJECT(GET_FUNCTION_PRIVATE(cx, funobj)) == funobj) {
                 flags |= JSScopeProperty::METHOD;
-                getter = js_CastAsPropertyOp(funobj);
+                getter = CastAsPropertyOp(funobj);
             }
         }
 

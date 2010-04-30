@@ -97,10 +97,10 @@ struct PropertyDescriptor {
     }
 
     JSObject* getterObject() const {
-        return get != JSVAL_VOID ? JSVAL_TO_OBJECT(get) : NULL;
+        return (get != JSVAL_VOID) ? JSVAL_TO_OBJECT(get) : NULL;
     }
     JSObject* setterObject() const {
-        return set != JSVAL_VOID ? JSVAL_TO_OBJECT(set) : NULL;
+        return (set != JSVAL_VOID) ? JSVAL_TO_OBJECT(set) : NULL;
     }
 
     jsval getterValue() const {
@@ -111,10 +111,10 @@ struct PropertyDescriptor {
     }
 
     JSPropertyOp getter() const {
-        return js_CastAsPropertyOp(getterObject());
+        return js::CastAsPropertyOp(getterObject());
     }
     JSPropertyOp setter() const {
-        return js_CastAsPropertyOp(setterObject());
+        return js::CastAsPropertyOp(setterObject());
     }
 
     static void traceDescriptorArray(JSTracer* trc, JSObject* obj);
