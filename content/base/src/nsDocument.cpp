@@ -78,6 +78,7 @@
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMDocumentXBL.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsGenericElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMEventGroup.h"
@@ -4050,6 +4051,7 @@ nsDocument::RemoveIDTargetObserver(nsIAtom* aID,
 void
 nsDocument::DispatchContentLoadedEvents()
 {
+  NS_TIME_FUNCTION;
   // If you add early returns from this method, make sure you're
   // calling UnblockOnload properly.
   
