@@ -1928,7 +1928,7 @@ BEGIN_CASE(JSOP_SETELEM)
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
                     if ((jsuint)i >= obj->getArrayLength())
-                        obj->setArrayLength(i + 1);
+                        obj->setDenseArrayLength(i + 1);
                     obj->incDenseArrayCountBy(1);
                 }
                 obj->setDenseArrayElement(i, rval);

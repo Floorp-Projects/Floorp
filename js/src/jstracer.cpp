@@ -13127,7 +13127,8 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     VMSideExit* exit = snapshot(BRANCH_EXIT);
 
     /* check that the index is within bounds */
-    LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACC_OTHER);
+    LIns* dslots_ins =
+        addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACC_OTHER), "dslots");
     jsuint capacity = obj->getDenseArrayCapacity();
     bool within = (jsuint(idx) < obj->getArrayLength() && jsuint(idx) < capacity);
     if (!within) {
@@ -13141,32 +13142,18 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
                                  NULL);
         }
 
-        /* If not idx < length, stay on trace (and read value as undefined). */
-        LIns* length = stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH);
-        if (pidx_ins != length) {
-            LIns* br2 = lir->insBranch(LIR_jf,
-                                       lir->ins2(LIR_pult, pidx_ins, length),
-                                       NULL);
+        /* If not idx < min(length, capacity), stay on trace (and read value as undefined). */
+        LIns* minLenCap =
+            addName(stobj_get_fslot(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
+        LIns* br2 = lir->insBranch(LIR_jf,
+                                   lir->ins2(LIR_pult, pidx_ins, minLenCap),
+                                   NULL);
 
-            /* If dslots is NULL, stay on trace (and read value as undefined). */
-            LIns* br3 = lir->insBranch(LIR_jt, lir->insEqP_0(dslots_ins), NULL);
-
-            /* If not idx < capacity, stay on trace (and read value as undefined). */
-            LIns* br4 = lir->insBranch(LIR_jf,
-                                       lir->ins2(LIR_pult,
-                                                 pidx_ins,
-                                                 lir->insLoad(LIR_ldp, dslots_ins,
-                                                              -(int)sizeof(jsval), ACC_OTHER)),
-                                       NULL);
-
-            lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
-            LIns* label = lir->ins0(LIR_label);
-            if (br1)
-                br1->setTarget(label);
-            br2->setTarget(label);
-            br3->setTarget(label);
-            br4->setTarget(label);
-        }
+        lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+        LIns* label = lir->ins0(LIR_label);
+        if (br1)
+            br1->setTarget(label);
+        br2->setTarget(label);
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
@@ -13185,21 +13172,11 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
               exit);
     }
 
-    /* Guard array length */
+    /* Guard array min(length, capacity). */
+    LIns* minLenCap =
+        addName(stobj_get_fslot(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
     guard(true,
-          lir->ins2(LIR_pult, pidx_ins, stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)),
-          exit);
-
-    /* dslots must not be NULL */
-    guard(false,
-          lir->insEqP_0(dslots_ins),
-          exit);
-
-    /* Guard array capacity */
-    guard(true,
-          lir->ins2(LIR_pult,
-                    pidx_ins,
-                    lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval), ACC_OTHER)),
+          lir->ins2(LIR_pult, pidx_ins, minLenCap),
           exit);
 
     /* Load the value and guard on its type to unbox it. */
