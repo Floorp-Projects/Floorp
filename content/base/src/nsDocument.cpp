@@ -2708,7 +2708,7 @@ nsDocument::ElementFromPointHelper(float aX, float aY,
   // or a node that isn't an element (such as a text frame node),
   // replace it with the first non-anonymous parent node of type element.
   while (ptContent &&
-         (!ptContent->IsNodeOfType(nsINode::eELEMENT) ||
+         (!ptContent->IsElement() ||
           ptContent->IsInAnonymousSubtree())) {
     // XXXldb: Faster to jump to GetBindingParent if non-null?
     ptContent = ptContent->GetParent();
@@ -2792,7 +2792,7 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
     // or a node that isn't an element or a text node,
     // replace it with the first non-anonymous parent node.
     while (ptContent &&
-           (!(ptContent->IsNodeOfType(nsINode::eELEMENT) ||
+           (!(ptContent->IsElement() ||
               ptContent->IsNodeOfType(nsINode::eTEXT)) ||
             ptContent->IsInAnonymousSubtree())) {
       // XXXldb: Faster to jump to GetBindingParent if non-null?
@@ -3407,7 +3407,7 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent
     return NS_OK;
   }
 
-  if (oldKid->IsNodeOfType(nsINode::eELEMENT)) {
+  if (oldKid->IsElement()) {
     // Destroy the link map up front before we mess with the child list.
     DestroyLinkMap();
   }
@@ -5988,7 +5988,7 @@ static void
 BlastSubtreeToPieces(nsINode *aNode)
 {
   PRUint32 i, count;
-  if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+  if (aNode->IsElement()) {
     nsGenericElement *element = static_cast<nsGenericElement*>(aNode);
     const nsDOMAttributeMap *map = element->GetAttributeMap();
     if (map) {
