@@ -3242,7 +3242,7 @@ nsGenericElement::GetBindingParent() const
 PRBool
 nsGenericElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eELEMENT));
+  return !(aFlags & ~eCONTENT);
 }
 
 //----------------------------------------------------------------------
@@ -5196,7 +5196,7 @@ TryMatchingElementsInSubtree(nsINode* aRoot,
       continue;
     }
     /* See whether we match */
-    new (data) RuleProcessorData(aPresContext, kid, nsnull);
+    new (data) RuleProcessorData(aPresContext, kid->AsElement(), nsnull);
     NS_ASSERTION(!data->mParentData, "Shouldn't happen");
     NS_ASSERTION(!data->mPreviousSiblingData, "Shouldn't happen");
     data->mParentData = aParentData;
@@ -5333,17 +5333,18 @@ nsNSElementTearoff::MozMatchesSelector(const nsAString& aSelector, PRBool* aRetu
 
 /* static */
 PRBool
-nsGenericElement::doMatchesSelector(nsIContent* aNode, const nsAString& aSelector)
+nsGenericElement::doMatchesSelector(Element* aElement,
+                                    const nsAString& aSelector)
 {
   nsAutoPtr<nsCSSSelectorList> selectorList;
   nsPresContext* presContext;
   PRBool matches = PR_FALSE;
 
-  if (NS_SUCCEEDED(ParseSelectorList(aNode, aSelector,
+  if (NS_SUCCEEDED(ParseSelectorList(aElement, aSelector,
                                      getter_Transfers(selectorList),
                                      &presContext)))
   {
-    RuleProcessorData data(presContext, aNode, nsnull);
+    RuleProcessorData data(presContext, aElement, nsnull);
     matches = nsCSSRuleProcessor::SelectorListMatches(data, selectorList);
   }
 

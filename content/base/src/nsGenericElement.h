@@ -653,7 +653,8 @@ public:
   static nsresult doQuerySelectorAll(nsINode* aRoot,
                                      const nsAString& aSelector,
                                      nsIDOMNodeList **aReturn);
-  static PRBool doMatchesSelector(nsIContent* aNode, const nsAString& aSelector);
+  static PRBool doMatchesSelector(mozilla::dom::Element* aElement,
+                                  const nsAString& aSelector);
 
   /**
    * Default event prehandling for content objects. Handles event retargeting.
