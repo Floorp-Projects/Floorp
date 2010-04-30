@@ -1860,15 +1860,19 @@ PluginModuleChild::NPN_IntFromIdentifier(NPIdentifier aIdentifier)
 void
 PluginModuleChild::EnteredCall()
 {
-    mIncallPumpingStack.AppendElement(false);
+    mIncallPumpingStack.AppendElement();
 }
 
 void
 PluginModuleChild::ExitedCall()
 {
     NS_ASSERTION(mIncallPumpingStack.Length(), "mismatched entered/exited");
-    PRUint32 len = mIncallPumpingStack.Length() - 1;
-    mIncallPumpingStack.TruncateLength(len);
+    PRUint32 len = mIncallPumpingStack.Length();
+    const IncallFrame& f = mIncallPumpingStack[len - 1];
+    if (f._spinning)
+        MessageLoop::current()->SetNestableTasksAllowed(f._savedNestableTasksAllowed);
+
+    mIncallPumpingStack.TruncateLength(len - 1);
 }
 
 LRESULT CALLBACK
@@ -1876,9 +1880,13 @@ PluginModuleChild::NestedInputEventHook(int nCode, WPARAM wParam, LPARAM lParam)
 {
     PluginModuleChild* self = current();
     PRUint32 len = self->mIncallPumpingStack.Length();
-    if (nCode >= 0 && len && !self->mIncallPumpingStack[len - 1]) {
+    if (nCode >= 0 && len && !self->mIncallPumpingStack[len - 1]._spinning) {
         self->SendProcessNativeEventsInRPCCall();
-        self->mIncallPumpingStack[len - 1] = true;
+        IncallFrame& f = self->mIncallPumpingStack[len - 1];
+        f._spinning = true;
+        MessageLoop* loop = MessageLoop::current();
+        f._savedNestableTasksAllowed = loop->NestableTasksAllowed();
+        loop->SetNestableTasksAllowed(true);
     }
 
     return CallNextHookEx(NULL, nCode, wParam, lParam);
