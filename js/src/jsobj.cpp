@@ -1012,14 +1012,6 @@ obj_valueOf(JSContext *cx, uintN argc, jsval *vp)
     return !JSVAL_IS_NULL(*vp);
 }
 
-#ifdef JS_TRACER
-static jsval FASTCALL
-Object_p_valueOf(JSContext* cx, JSObject* obj, JSString *hint)
-{
-    return OBJECT_TO_JSVAL(obj);
-}
-#endif
-
 /*
  * Check if CSP allows new Function() or eval() to run in the current
  * principals.
@@ -1633,26 +1625,6 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
     return true;
 }
 
-#ifdef JS_TRACER
-static JSBool FASTCALL
-Object_p_hasOwnProperty(JSContext* cx, JSObject* obj, JSString *str)
-{
-    jsid id;
-
-    JSObject *pobj;
-    JSProperty *prop;
-    if (!js_ValueToStringId(cx, STRING_TO_JSVAL(str), &id) ||
-        !js_HasOwnProperty(cx, obj->map->ops->lookupProperty, obj, id, &pobj, &prop)) {
-        SetBuiltinError(cx);
-        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
-    }
-
-    if (prop)
-       pobj->dropProperty(cx, prop);
-    return !!prop;
-}
-#endif
-
 /* Proposed ECMA 15.2.4.6. */
 static JSBool
 obj_isPrototypeOf(JSContext *cx, uintN argc, jsval *vp)
@@ -1680,23 +1652,6 @@ obj_propertyIsEnumerable(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     return obj && js_PropertyIsEnumerable(cx, obj, id, vp);
 }
-
-#ifdef JS_TRACER
-static JSBool FASTCALL
-Object_p_propertyIsEnumerable(JSContext* cx, JSObject* obj, JSString *str)
-{
-    jsid id = ATOM_TO_JSID(STRING_TO_JSVAL(str));
-    jsval v;
-
-    if (!js_PropertyIsEnumerable(cx, obj, id, &v)) {
-        SetBuiltinError(cx);
-        return JSVAL_TO_BOOLEAN(JSVAL_VOID);
-    }
-
-    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-    return JSVAL_TO_BOOLEAN(v);
-}
-#endif
 
 JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
@@ -2671,30 +2626,20 @@ const char js_hasOwnProperty_str[] = "hasOwnProperty";
 const char js_isPrototypeOf_str[] = "isPrototypeOf";
 const char js_propertyIsEnumerable_str[] = "propertyIsEnumerable";
 
-JS_DEFINE_TRCINFO_1(obj_valueOf,
-    (3, (static, JSVAL,     Object_p_valueOf,               CONTEXT, THIS, STRING,  0,
-         nanojit::ACC_STORE_ANY)))
-JS_DEFINE_TRCINFO_1(obj_hasOwnProperty,
-    (3, (static, BOOL_FAIL, Object_p_hasOwnProperty,        CONTEXT, THIS, STRING,  0,
-         nanojit::ACC_STORE_ANY)))
-JS_DEFINE_TRCINFO_1(obj_propertyIsEnumerable,
-    (3, (static, BOOL_FAIL, Object_p_propertyIsEnumerable,  CONTEXT, THIS, STRING,  0,
-         nanojit::ACC_STORE_ANY)))
-
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str,             obj_toSource,                0,0),
 #endif
     JS_FN(js_toString_str,             obj_toString,                0,0),
     JS_FN(js_toLocaleString_str,       obj_toLocaleString,          0,0),
-    JS_TN(js_valueOf_str,              obj_valueOf,                 0,0, &obj_valueOf_trcinfo),
+    JS_FN(js_valueOf_str,              obj_valueOf,                 0,0),
 #if JS_HAS_OBJ_WATCHPOINT
     JS_FN(js_watch_str,                obj_watch,                   2,0),
     JS_FN(js_unwatch_str,              obj_unwatch,                 1,0),
 #endif
-    JS_TN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0, &obj_hasOwnProperty_trcinfo),
+    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,          1,0),
     JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,           1,0),
-    JS_TN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0, &obj_propertyIsEnumerable_trcinfo),
+    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable,    1,0),
 #if OLD_GETTER_SETTER_METHODS
     JS_FN(js_defineGetter_str,         js_obj_defineGetter,         2,0),
     JS_FN(js_defineSetter_str,         js_obj_defineSetter,         2,0),
