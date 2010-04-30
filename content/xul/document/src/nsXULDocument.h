@@ -485,12 +485,12 @@ protected:
     {
     protected:
         nsXULDocument* mDocument;              // [WEAK]
-        nsCOMPtr<nsIContent> mObservesElement; // [OWNER]
+        nsCOMPtr<mozilla::dom::Element> mObservesElement; // [OWNER]
         PRBool mResolved;
 
     public:
         BroadcasterHookup(nsXULDocument* aDocument,
-                          nsIContent* aObservesElement)
+                          mozilla::dom::Element* aObservesElement)
             : mDocument(aDocument),
               mObservesElement(aObservesElement),
               mResolved(PR_FALSE)
@@ -550,14 +550,14 @@ protected:
     // values of the out params should not be relied on (though *aListener and
     // *aBroadcaster do need to be released if non-null, of course).
     nsresult
-    FindBroadcaster(nsIContent* aElement,
+    FindBroadcaster(mozilla::dom::Element* aElement,
                     nsIDOMElement** aListener,
                     nsString& aBroadcasterID,
                     nsString& aAttribute,
                     nsIDOMElement** aBroadcaster);
 
     nsresult
-    CheckBroadcasterHookup(nsIContent* aElement,
+    CheckBroadcasterHookup(mozilla::dom::Element* aElement,
                            PRBool* aNeedsHookup,
                            PRBool* aDidResolve);
 
