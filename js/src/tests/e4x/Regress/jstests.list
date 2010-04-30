@@ -23,7 +23,7 @@ script regress-309897.js
 script regress-311580.js
 script regress-313799.js
 script regress-318922.js
-skip script regress-319872.js # slow, Bug 514139
+skip script regress-319872.js # slow
 script regress-321547.js
 script regress-322499.js
 script regress-323338-1.js
