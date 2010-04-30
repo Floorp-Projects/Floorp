@@ -106,6 +106,7 @@ public:
     virtual PRBool MakeCurrent() = 0;
     virtual PRBool SetupLookupFunction() = 0;
 
+    virtual void *GetNativeContext() { return NULL; }
 protected:
 
     PRBool mInitialized;

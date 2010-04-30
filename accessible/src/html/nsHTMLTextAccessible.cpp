@@ -40,6 +40,7 @@
 #include "nsHTMLTextAccessible.h"
 
 #include "nsDocAccessible.h"
+#include "nsTextEquivUtils.h"
 
 #include "nsIFrame.h"
 #include "nsPresContext.h"

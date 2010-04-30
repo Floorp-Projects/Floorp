@@ -635,7 +635,11 @@ private:
 
   void ResizeBuffer(PRUint32 aNewBufSize);
 /*HELPER METHODS*/
-  nsresult     MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelectionAmount aAmount);
+  nsresult     MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection,
+                         nsSelectionAmount aAmount);
+  nsresult     MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection,
+                         nsSelectionAmount aAmount,
+                         PRBool aVisualMovement);
 
   nsresult     FetchDesiredX(nscoord &aDesiredX); //the x position requested by the Key Handling for up down
   void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.

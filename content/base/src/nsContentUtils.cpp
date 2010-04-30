@@ -58,6 +58,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
 #include "nsContentUtils.h"
+#include "nsIContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -331,6 +332,16 @@ nsPrefOldCallback::Observe(nsISupports   *aSubject,
   return NS_OK;
 }
 
+struct PrefCacheData {
+  void* cacheLocation;
+  union {
+    PRBool defaultValueBool;
+    PRInt32 defaultValueInt;
+  };
+};
+
+nsTArray<nsAutoPtr<PrefCacheData> >* sPrefCacheData = nsnull;
+
 // static
 nsresult
 nsContentUtils::Init()
@@ -340,6 +351,8 @@ nsContentUtils::Init()
 
     return NS_OK;
   }
+
+  sPrefCacheData = new nsTArray<nsAutoPtr<PrefCacheData> >();
 
   nsresult rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
                                &sSecurityManager);
@@ -953,6 +966,9 @@ nsContentUtils::Shutdown()
     delete sPrefCallbackList;
     sPrefCallbackList = nsnull;
   }
+
+  delete sPrefCacheData;
+  sPrefCacheData = nsnull;
 
   NS_IF_RELEASE(sStringBundleService);
   NS_IF_RELEASE(sConsoleService);
@@ -2696,35 +2712,47 @@ nsContentUtils::UnregisterPrefCallback(const char *aPref,
 static int
 BoolVarChanged(const char *aPref, void *aClosure)
 {
-  PRBool* cache = static_cast<PRBool*>(aClosure);
-  *cache = nsContentUtils::GetBoolPref(aPref, PR_FALSE);
+  PrefCacheData* cache = static_cast<PrefCacheData*>(aClosure);
+  *((PRBool*)cache->cacheLocation) =
+    nsContentUtils::GetBoolPref(aPref, cache->defaultValueBool);
   
   return 0;
 }
 
 void
 nsContentUtils::AddBoolPrefVarCache(const char *aPref,
-                                    PRBool* aCache)
+                                    PRBool* aCache,
+                                    PRBool aDefault)
 {
-  *aCache = GetBoolPref(aPref, PR_FALSE);
-  RegisterPrefCallback(aPref, BoolVarChanged, aCache);
+  *aCache = GetBoolPref(aPref, aDefault);
+  PrefCacheData* data = new PrefCacheData;
+  data->cacheLocation = aCache;
+  data->defaultValueBool = aDefault;
+  sPrefCacheData->AppendElement(data);
+  RegisterPrefCallback(aPref, BoolVarChanged, data);
 }
 
 static int
 IntVarChanged(const char *aPref, void *aClosure)
 {
-  PRInt32* cache = static_cast<PRInt32*>(aClosure);
-  *cache = nsContentUtils::GetIntPref(aPref, 0);
+  PrefCacheData* cache = static_cast<PrefCacheData*>(aClosure);
+  *((PRInt32*)cache->cacheLocation) =
+    nsContentUtils::GetIntPref(aPref, cache->defaultValueInt);
   
   return 0;
 }
 
 void
 nsContentUtils::AddIntPrefVarCache(const char *aPref,
-                                   PRInt32* aCache)
+                                   PRInt32* aCache,
+                                   PRInt32 aDefault)
 {
-  *aCache = GetIntPref(aPref, PR_FALSE);
-  RegisterPrefCallback(aPref, IntVarChanged, aCache);
+  *aCache = GetIntPref(aPref, aDefault);
+  PrefCacheData* data = new PrefCacheData;
+  data->cacheLocation = aCache;
+  data->defaultValueInt = aDefault;
+  sPrefCacheData->AppendElement(data);
+  RegisterPrefCallback(aPref, IntVarChanged, data);
 }
 
 static const char *gEventNames[] = {"event"};
@@ -5403,7 +5431,7 @@ nsContentUtils::StripNullChars(const nsAString& aInStr, nsAString& aOutStr)
 
 namespace {
 
-const int kCloneStackFrameStackSize = 20;
+const unsigned int kCloneStackFrameStackSize = 20;
 
 class CloneStackFrame
 {
@@ -5613,25 +5641,14 @@ CloneSimpleValues(JSContext* cx,
   NS_ASSERTION(JSVAL_IS_OBJECT(val), "Not an object!");
   JSObject* obj = JSVAL_TO_OBJECT(val);
 
-  // See if this JSObject is backed by some C++ object. If it is then we assume
-  // that it is inappropriate to clone.
-  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
-  nsContentUtils::XPConnect()->
-    GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
-  if (wrapper) {
-    return SetPropertyOnValueOrObject(cx, JSVAL_NULL, rval, robj, rid);
+  // Dense arrays of primitives can be cloned quickly.
+  JSObject* newArray;
+  if (!js_CloneDensePrimitiveArray(cx, obj, &newArray)) {
+    return NS_ERROR_FAILURE;
   }
-
-  // Security wrapped objects are auto-nulled as well.
-  JSClass* clasp = JS_GET_CLASS(cx, obj);
-  if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
-      ((JSExtendedClass*)clasp)->wrappedObject) {
-    return SetPropertyOnValueOrObject(cx, JSVAL_NULL, rval, robj, rid);
-  }
-
-  // Function objects don't get cloned.
-  if (JS_ObjectIsFunction(cx, obj)) {
-    return SetPropertyOnValueOrObject(cx, JSVAL_NULL, rval, robj, rid);
+  if (newArray) {
+    return SetPropertyOnValueOrObject(cx, OBJECT_TO_JSVAL(newArray), rval, robj,
+                                      rid);
   }
 
   // Date objects.
@@ -5687,6 +5704,27 @@ CloneSimpleValues(JSContext* cx,
   // Do we support File?
   // Do we support Blob?
   // Do we support FileList?
+
+  // Function objects don't get cloned.
+  if (JS_ObjectIsFunction(cx, obj)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
+  // Security wrapped objects are not allowed either.
+  JSClass* clasp = JS_GET_CLASS(cx, obj);
+  if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
+      ((JSExtendedClass*)clasp)->wrappedObject) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
+  // See if this JSObject is backed by some C++ object. If it is then we assume
+  // that it is inappropriate to clone.
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+  nsContentUtils::XPConnect()->
+    GetWrappedNativeOfJSObject(cx, obj, getter_AddRefs(wrapper));
+  if (wrapper) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
   *wasCloned = PR_FALSE;
   return NS_OK;
@@ -5830,6 +5868,13 @@ nsContentUtils::ReparentClonedObjectToScope(JSContext* cx,
           !JS_SetPrototype(cx, data.obj, proto) ||
           !JS_SetParent(cx, data.obj, scope)) {
         return NS_ERROR_FAILURE;
+      }
+
+      // Primitive arrays don't need to be enumerated either but the proto and
+      // parent needed to be fixed above. Now we can just move on.
+      if (js_IsDensePrimitiveArray(data.obj)) {
+        objectData.RemoveElementAt(objectData.Length() - 1);
+        continue;
       }
 
       // And now enumerate the object's properties.
@@ -5989,3 +6034,10 @@ void nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
+NS_IMPL_ISUPPORTS1(nsIContentUtils, nsIContentUtils)
+
+PRBool
+nsIContentUtils::IsSafeToRunScript()
+{
+  return nsContentUtils::IsSafeToRunScript();
+}

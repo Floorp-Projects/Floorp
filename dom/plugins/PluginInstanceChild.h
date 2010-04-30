@@ -240,7 +240,6 @@ private:
     void CreateWinlessPopupSurrogate();
     void DestroyWinlessPopupSurrogate();
     void InitPopupMenuHook();
-    void InternalCallSetNestedEventState(bool aState);
     void SetupFlashMsgThrottle();
     void FlashThrottleMessage(HWND, UINT, WPARAM, LPARAM, bool);
     static LRESULT CALLBACK DummyWindowProc(HWND hWnd,
@@ -326,7 +325,6 @@ private:
     HWND mPluginParentHWND;
     HHOOK mNestedEventHook;
     int mNestedEventLevelDepth;
-    bool mNestedEventState;
     HWND mCachedWinlessPluginHWND;
     HWND mWinlessPopupSurrogateHWND;
     nsIntPoint mPluginSize;

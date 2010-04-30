@@ -13,8 +13,19 @@ tabbrowser {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
 }
 
+#tabbrowser-tabs:not([overflow="true"]) + #new-tab-button,
+#tabbrowser-tabs[overflow="true"] > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
+#TabsToolbar[currentset]:not([currentset*="tabbrowser-tabs,new-tab-button"]) > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button,
+#navigator-toolbox[customizing="true"] > #TabsToolbar > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .tabs-newtab-button {
+  visibility: collapse;
+}
+
 .tabbrowser-tab {
   -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
+}
+
+#alltabs-popup {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
 }
 
 toolbar[printpreview="true"] {
@@ -155,7 +166,7 @@ menuitem.spell-suggestion {
   font-weight: bold;
 }
 
-#sidebar-box toolbarbutton.tabs-closebutton {
+#sidebar-header > .tabs-closebutton {
   -moz-user-focus: normal;
 }
 

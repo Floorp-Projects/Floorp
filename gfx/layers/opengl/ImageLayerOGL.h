@@ -59,6 +59,9 @@ public:
   virtual already_AddRefed<Image> GetCurrentImage();
 
   virtual already_AddRefed<gfxASurface> GetCurrentAsSurface(gfxIntSize* aSize);
+
+  virtual gfxIntSize GetCurrentSize();
+
 private:
   typedef mozilla::Mutex Mutex;
 

@@ -36,12 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsHTMLImageAccessible.h"
+
+#include "nsAccessibilityAtoms.h"
+#include "nsAccUtils.h"
+
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-
-#include "nsHTMLImageAccessible.h"
-#include "nsAccessibilityAtoms.h"
-
 #include "nsIDocument.h"
 #include "nsIImageLoadingContent.h"
 #include "nsILink.h"

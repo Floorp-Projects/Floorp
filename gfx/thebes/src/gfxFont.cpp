@@ -57,6 +57,7 @@
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
 #include "nsUnicodeRange.h"
+#include "nsCompressedCharMap.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
@@ -946,7 +947,9 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
             for (j = 0; j < glyphCount; ++j, ++details) {
                 double advance = details->mAdvance;
                 if (glyphData->IsMissing()) {
-                    if (!aDrawToPath) {
+                    // default ignorable characters will have zero advance width.
+                    // we don't have to draw the hexbox for them
+                    if (!aDrawToPath && advance > 0) {
                         double glyphX = x;
                         if (isRTL) {
                             glyphX -= advance;
@@ -3383,6 +3386,15 @@ gfxTextRun::SetGlyphs(PRUint32 aIndex, CompressedGlyph aGlyph,
     mCharacterGlyphs[aIndex] = aGlyph;
 }
 
+#include "ignorable.x-ccmap"
+DEFINE_X_CCMAP(gIgnorableCCMapExt, const);
+
+static inline PRBool
+IsDefaultIgnorable(PRUint32 aChar)
+{
+    return CCMAP_HAS_CHAR_EXT(gIgnorableCCMapExt, aChar);
+}
+
 void
 gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
 {
@@ -3392,9 +3404,14 @@ gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
 
     details->mGlyphID = aChar;
     GlyphRun *glyphRun = &mGlyphRuns[FindFirstGlyphRunContaining(aIndex)];
-    gfxFloat width = PR_MAX(glyphRun->mFont->GetMetrics().aveCharWidth,
-                            gfxFontMissingGlyphs::GetDesiredMinWidth(aChar));
-    details->mAdvance = PRUint32(width*GetAppUnitsPerDevUnit());
+    if (IsDefaultIgnorable(aChar)) {
+        // Setting advance width to zero will prevent drawing the hexbox
+        details->mAdvance = 0;
+    } else {
+        gfxFloat width = PR_MAX(glyphRun->mFont->GetMetrics().aveCharWidth,
+                                gfxFontMissingGlyphs::GetDesiredMinWidth(aChar));
+        details->mAdvance = PRUint32(width*GetAppUnitsPerDevUnit());
+    }
     details->mXOffset = 0;
     details->mYOffset = 0;
     mCharacterGlyphs[aIndex].SetMissing(1);

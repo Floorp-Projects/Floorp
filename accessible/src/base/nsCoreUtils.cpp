@@ -74,6 +74,10 @@
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
+////////////////////////////////////////////////////////////////////////////////
+// nsCoreUtils
+////////////////////////////////////////////////////////////////////////////////
+
 PRBool
 nsCoreUtils::HasClickListener(nsIContent *aContent)
 {
@@ -1149,4 +1153,38 @@ nsCoreUtils::GeneratePopupTree(nsIDOMNode *aNode, PRBool aIsAnon)
       return;
     }
   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// nsAccessibleDOMStringList
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS1(nsAccessibleDOMStringList, nsIDOMDOMStringList)
+
+NS_IMETHODIMP
+nsAccessibleDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
+{
+  if (aIndex >= mNames.Length())
+    SetDOMStringToNull(aResult);
+  else
+    aResult = mNames.ElementAt(aIndex);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibleDOMStringList::GetLength(PRUint32 *aLength)
+{
+  *aLength = mNames.Length();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibleDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
+{
+  *aResult = mNames.Contains(aString);
+
+  return NS_OK;
 }

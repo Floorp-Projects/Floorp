@@ -104,7 +104,7 @@ private:
     NS_ASSERTION(mFlushedPendingReflows,
                  "property getter should have been marked layout-dependent");
   }
-  
+
 #define STYLE_STRUCT(name_, checkdata_cb_, ctor_args_)                  \
   const nsStyle##name_ * GetStyle##name_() {                            \
     return mStyleContextHolder->GetStyle##name_();                      \
@@ -116,25 +116,25 @@ private:
                            PRUint8 aFullCorner,
                            nsIDOMCSSValue** aValue);
 
-  nsresult GetOffsetWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetOffsetWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetAbsoluteOffset(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetAbsoluteOffset(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetRelativeOffset(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetRelativeOffset(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetStaticOffset(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetStaticOffset(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetPaddingWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetPaddingWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetBorderColorsFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetBorderColorsFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetBorderStyleFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetBorderStyleFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetBorderWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetBorderWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetBorderColorFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetBorderColorFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
-  nsresult GetMarginWidthFor(PRUint8 aSide, nsIDOMCSSValue** aValue);
+  nsresult GetMarginWidthFor(mozilla::css::Side aSide, nsIDOMCSSValue** aValue);
 
   PRBool GetLineHeightCoord(nscoord& aCoord);
 
@@ -389,7 +389,7 @@ private:
   nsresult SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
   nsresult SetValueToStyleImage(const nsStyleImage& aStyleImage,
                                 nsROCSSPrimitiveValue* aValue);
-  
+
   /**
    * A method to get a percentage base for a percentage value.  Returns PR_TRUE
    * if a percentage base value was determined, PR_FALSE otherwise.
@@ -486,7 +486,7 @@ private:
 #endif
 };
 
-nsresult 
+nsresult
 NS_NewComputedDOMStyle(nsIDOMElement *aElement, const nsAString &aPseudoElt,
                        nsIPresShell *aPresShell,
                        nsComputedDOMStyle **aComputedStyle);
