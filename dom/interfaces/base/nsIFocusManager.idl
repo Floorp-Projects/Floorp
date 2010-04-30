@@ -39,7 +39,7 @@
 interface nsIDocument;
 interface nsIContent;
 
-[scriptable, uuid(39BB7C9F-10FC-4345-B381-5E6B3FF3A277)]
+[scriptable, uuid(5cb91200-53f6-4d35-989d-1d28ad80a0d4)]
 /**
  * The focus manager deals with all focus related behaviour. Only one element
  * in the entire application may have the focus at a time; this element
@@ -242,12 +242,6 @@ interface nsIFocusManager : nsISupports
    * Called when a window has been lowered.
    */
   [noscript] void windowLowered(in nsIDOMWindow aWindow);
-
-  /**
-   * Called when content has been removed.
-   */
-  [noscript] void contentRemoved(in nsIDocument aDocument,
-                                 in nsIContent aElement);
 
   /**
    * Called when a new document in a window is shown.

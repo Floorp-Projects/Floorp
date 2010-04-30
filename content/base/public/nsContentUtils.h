@@ -583,8 +583,10 @@ public:
   static void UnregisterPrefCallback(const char *aPref,
                                      PrefChangedFunc aCallback,
                                      void * aClosure);
-  static void AddBoolPrefVarCache(const char* aPref, PRBool* aVariable);
-  static void AddIntPrefVarCache(const char* aPref, PRInt32* aVariable);
+  static void AddBoolPrefVarCache(const char* aPref, PRBool* aVariable,
+                                  PRBool aDefault = PR_FALSE);
+  static void AddIntPrefVarCache(const char* aPref, PRInt32* aVariable,
+                                 PRInt32 aDefault = 0);
   static nsIPrefBranch2 *GetPrefBranch()
   {
     return sPrefBranch;

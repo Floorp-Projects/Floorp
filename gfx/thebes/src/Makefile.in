@@ -35,8 +35,21 @@ CPPSRCS	= \
 	GLContext.cpp \
 	$(NULL)
 
+SHARED_LIBRARY_LIBS += \
+	../../layers/$(LIB_PREFIX)layers.$(LIB_SUFFIX) \
+	$(NULL)
+
+
+ifndef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LIBS	= gkgfx ycbcr
+ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
+CPPSRCS += gfxDllDeps.cpp
+endif
+endif
+
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_CAIRO_LIBS) \
+	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
@@ -177,7 +190,7 @@ CPPSRCS +=      gfxQuartzNativeDrawing.cpp
 CMMSRCS = gfxMacPlatformFontList.mm
 
 # Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime
+EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit
 endif
 
 CSRCS += woff.c
@@ -191,7 +204,11 @@ else
 CPPSRCS += GLContextProviderNull.cpp
 endif
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS += GLContextProviderCGL.mm
+else
 CPPSRCS += GLContextProviderNull.cpp
+endif
 endif
 
 DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT

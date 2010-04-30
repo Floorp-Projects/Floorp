@@ -157,35 +157,11 @@ public:
     virtual void OnChannelError();
 
 #ifdef OS_WIN
-    static bool IsSpinLoopActive() {
-        return (sModalEventCount > 0);
-    }
+    void ProcessNativeEventsInRPCCall();
+
 protected:
     bool WaitForNotify();
     void SpinInternalEventLoop();
-    static bool WaitNeedsSpinLoop() {
-        return (IsSpinLoopActive() && 
-                (sModalEventCount > sInnerEventLoopDepth));
-    }
-    static void EnterSpinLoop() {
-        sInnerEventLoopDepth++;
-    }
-    static void ExitSpinLoop() {
-        sInnerEventLoopDepth--;
-        NS_ASSERTION(sInnerEventLoopDepth >= 0,
-            "sInnerEventLoopDepth dropped below zero!");
-    }
-    static void IncModalLoopCnt() {
-        sModalEventCount++;
-    }
-    static void DecModalLoopCnt() {
-        sModalEventCount--;
-        NS_ASSERTION(sModalEventCount >= 0,
-            "sModalEventCount dropped below zero!");
-    }
-
-    static int sInnerEventLoopDepth;
-    static int sModalEventCount;
 #endif
 
   private:

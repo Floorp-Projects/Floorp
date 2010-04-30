@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-8-i">
+    <title>Plugin with Logical Hebrew</title>
+  </head>
+  <body dir="rtl">
+    <embed type="application/x-test" width="400" height="400" id="crashme"></embed>
+    <script type="text/javascript">
+      var plugin = document.getElementById("crashme");
+      function checkForCrashUI() {
+        if (getComputedStyle(plugin, null).MozBinding != "none") {
+          document.documentElement.removeAttribute("class");
+          clearInterval(interval);
+        }
+      }
+
+      var interval = setInterval(checkForCrashUI, 100);
+      setTimeout(function() { plugin.crash(); }, 0);
+    </script>
+  </body>
+</html>

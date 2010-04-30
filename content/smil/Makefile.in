@@ -91,6 +91,7 @@ endif # ENABLE_TESTS
 EXPORTS		+= \
 	  nsISMILAnimationElement.h \
 	  nsISMILAttr.h \
+	  nsISMILType.h \
 	  nsSMILAnimationController.h \
 	  nsSMILCompositorTable.h \
 	  nsSMILCSSProperty.h \

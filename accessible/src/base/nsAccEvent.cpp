@@ -38,8 +38,14 @@
 
 #include "nsAccEvent.h"
 
+#include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
 #include "nsApplicationAccessibleWrap.h"
 #include "nsDocAccessible.h"
+#include "nsIAccessibleText.h"
+#ifdef MOZ_XUL
+#include "nsXULTreeAccessible.h"
+#endif
 
 #include "nsIDOMDocument.h"
 #include "nsIEventStateManager.h"
@@ -47,9 +53,7 @@
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
 #include "nsIDOMXULMultSelectCntrlEl.h"
-#include "nsXULTreeAccessible.h"
 #endif
-#include "nsIAccessibleText.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -193,15 +197,10 @@ nsAccEvent::GetAccessibleByNode()
   if (!mNode)
     return nsnull;
 
-  nsCOMPtr<nsIAccessibilityService> accService = 
-    do_GetService("@mozilla.org/accessibilityService;1");
-  if (!accService)
-    return nsnull;
-
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mNode));
 
   nsCOMPtr<nsIAccessible> accessible;
-  accService->GetAccessibleFor(DOMNode, getter_AddRefs(accessible));
+  GetAccService()->GetAccessibleFor(DOMNode, getter_AddRefs(accessible));
 
 #ifdef MOZ_XUL
   // hack for xul tree table. We need a better way for firing delayed event

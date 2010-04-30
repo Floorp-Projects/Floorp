@@ -41,6 +41,9 @@ include bugs/reftest.list
 # canvas 2D
 include canvas/reftest.list
 
+# css default pseudo class tests
+include css-default/reftest.list
+
 # css @import tests
 include css-import/reftest.list
 

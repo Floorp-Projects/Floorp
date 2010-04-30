@@ -31,6 +31,8 @@
 <!ENTITY  closeTab.label                     "Close Tab">
 <!ENTITY  closeTab.accesskey                 "c">
 
+<!ENTITY  listAllTabs.label      "List all tabs">
+
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
@@ -209,7 +211,7 @@
 <!ENTITY viewSidebarMenu.accesskey "e">
 <!ENTITY viewCustomizeToolbar.label       "Customize…"> 
 <!ENTITY viewCustomizeToolbar.accesskey     "C">
-<!ENTITY viewTabsOnTop.label            "Tabs on top">
+<!ENTITY viewTabsOnTop.label            "Tabs on Top">
 <!ENTITY viewTabsOnTop.accesskey        "T">
 
 <!ENTITY historyMenu.label "History">
