@@ -1158,7 +1158,7 @@ JSScope::deletingShapeChange(JSContext *cx, JSScopeProperty *sprop)
 }
 
 bool
-JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop, jsval toval)
+JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop)
 {
     JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
     if (sprop->isMethod()) {
@@ -1189,7 +1189,7 @@ JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop, jsval toval)
 }
 
 bool
-JSScope::methodShapeChange(JSContext *cx, uint32 slot, jsval toval)
+JSScope::methodShapeChange(JSContext *cx, uint32 slot)
 {
     if (!hasMethodBarrier()) {
         generateOwnShape(cx);
@@ -1197,7 +1197,7 @@ JSScope::methodShapeChange(JSContext *cx, uint32 slot, jsval toval)
         for (JSScopeProperty *sprop = lastProp; sprop; sprop = sprop->parent) {
             JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
             if (sprop->slot == slot)
-                return methodShapeChange(cx, sprop, toval);
+                return methodShapeChange(cx, sprop);
         }
     }
     return true;
