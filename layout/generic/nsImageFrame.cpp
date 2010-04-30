@@ -1531,7 +1531,7 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
       // specified will inherit the style from the image.
       nsRefPtr<nsStyleContext> areaStyle = 
         PresContext()->PresShell()->StyleSet()->
-          ResolveStyleFor(area, GetStyleContext());
+          ResolveStyleFor(area->AsElement(), GetStyleContext());
       if (areaStyle) {
         FillCursorInformationFromStyle(areaStyle->GetStyleUserInterface(),
                                        aCursor);

@@ -5958,8 +5958,7 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
   }
   PRBool isFocusable = PR_FALSE;
 
-  if (mContent && mContent->IsNodeOfType(nsINode::eELEMENT) &&
-      AreAncestorViewsVisible()) {
+  if (mContent && mContent->IsElement() && AreAncestorViewsVisible()) {
     const nsStyleVisibility* vis = GetStyleVisibility();
     if (vis->mVisible != NS_STYLE_VISIBILITY_COLLAPSE &&
         vis->mVisible != NS_STYLE_VISIBILITY_HIDDEN) {
