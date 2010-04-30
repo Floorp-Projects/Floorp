@@ -373,8 +373,8 @@ struct JSScope : public JSObjectMap
     void trace(JSTracer *trc);
 
     void deletingShapeChange(JSContext *cx, JSScopeProperty *sprop);
-    bool methodShapeChange(JSContext *cx, JSScopeProperty *sprop, jsval toval);
-    bool methodShapeChange(JSContext *cx, uint32 slot, jsval toval);
+    bool methodShapeChange(JSContext *cx, JSScopeProperty *sprop);
+    bool methodShapeChange(JSContext *cx, uint32 slot);
     void protoShapeChange(JSContext *cx);
     void shadowingShapeChange(JSContext *cx, JSScopeProperty *sprop);
     bool globalObjectOwnShapeChange(JSContext *cx);

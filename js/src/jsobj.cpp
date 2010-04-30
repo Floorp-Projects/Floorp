@@ -4278,10 +4278,20 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
         }
 
         added = !scope->hasProperty(id);
+        uint32 oldShape = scope->shape;
         sprop = scope->putProperty(cx, id, getter, setter, SPROP_INVALID_SLOT,
                                    attrs, flags, shortid);
         if (!sprop)
             goto error;
+
+        /*
+         * If sprop is a method, the above call to putProperty suffices to
+         * update the shape if necessary. But if scope->branded(), the shape
+         * may not have changed and we may be overwriting a function-valued
+         * property. See bug 560998.
+         */
+        if (scope->shape == oldShape && scope->branded())
+            scope->methodWriteBarrier(cx, sprop->slot, value);
     }
 
     /* Store value before calling addProperty, in case the latter GC's. */
