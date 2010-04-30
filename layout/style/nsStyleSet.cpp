@@ -736,7 +736,7 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   if (mRuleProcessors[ePresHintSheet])
     (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
 
-  PRBool skipUserStyles = aData->mContent->IsInNativeAnonymousSubtree();
+  PRBool skipUserStyles = aData->mElement->IsInNativeAnonymousSubtree();
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aFunc)(mRuleProcessors[eUserSheet], aData);
 
@@ -1181,8 +1181,8 @@ nsStyleSet::ReparentStyleContext(nsStyleContext* aStyleContext,
 
 struct StatefulData : public StateRuleProcessorData {
   StatefulData(nsPresContext* aPresContext,
-               nsIContent* aContent, PRInt32 aStateMask)
-    : StateRuleProcessorData(aPresContext, aContent, aStateMask),
+               Element* aElement, PRInt32 aStateMask)
+    : StateRuleProcessorData(aPresContext, aElement, aStateMask),
       mHint(nsRestyleHint(0))
   {}
   nsRestyleHint   mHint;
@@ -1241,9 +1241,9 @@ nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
 
 struct AttributeData : public AttributeRuleProcessorData {
   AttributeData(nsPresContext* aPresContext,
-                nsIContent* aContent, nsIAtom* aAttribute, PRInt32 aModType,
+                Element* aElement, nsIAtom* aAttribute, PRInt32 aModType,
                 PRBool aAttrHasChanged)
-    : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType,
+    : AttributeRuleProcessorData(aPresContext, aElement, aAttribute, aModType,
                                  aAttrHasChanged),
       mHint(nsRestyleHint(0))
   {}
