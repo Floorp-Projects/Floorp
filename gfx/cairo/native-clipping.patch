@@ -38,12 +38,12 @@ index df063bf..819e53e 100644
 +	if (clip->all_clipped) {
 +	    /* Save the state before we set an empty clip rect so that
 +	     * our previous clip will be restored */
++	    CGContextSaveGState (quartz->cgContext);
 +
 +	    /* _cairo_surface_clipper_set_clip doesn't deal with
 +	     * clip->all_clipped because drawing is normally discarded earlier */
 +	    CGRect empty = {{0,0}, {0,0}};
 +	    CGContextClipToRect (quartz->cgContext, empty);
-+	    CGContextSaveGState (quartz->cgContext);
 +
 +	    return quartz->cgContext;
 +	}
