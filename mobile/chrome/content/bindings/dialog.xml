@@ -5,25 +5,16 @@
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <binding id="dialog">
-    <content>
-      <xul:stack>
-        <xul:box xbl:inherits="orient" class="dialog-dark" align="center">
-          <children/>
-        </xul:box>
-        <xul:image collapsed="true" top="-10" left="0" anonid="close" class="close-button"
-          onclick="document.getBindingParent(this).close()"/>
-      </xul:stack>
+    <content orient="vertical" xbl:inherits="orient, closebutton" flex="1">
+      <children/>
     </content>
-    
+
     <implementation implements="nsIDOMEventListener">
       <field name="arguments"/>
       <field name="parent"/>
-      
+      <property name="_scrollbox" readonly="true" onget="return this.getElementsByTagName('scrollbox')[0];"/>
+
       <constructor><![CDATA[
-        if (!this.hasAttribute("orient"))
-          this.setAttribute("orient", "vertical");
-        if (this.hasAttribute("closebutton") && (this.getAttribute("closebutton") == "true"))
-          document.getAnonymousElementByAttribute(this, "anonid", "close").removeAttribute("collapsed");
         this._closed = false;
         if (this.hasAttribute("script")) {
           try {
@@ -35,29 +26,55 @@
           }
         }
         window.addEventListener("unload", this, true);
+
+        let scrollbox = this._scrollbox;
+        if (scrollbox) {
+          window.addEventListener("resize", this, true);
+          scrollbox.addEventListener("overflow", this, true);
+        }
       ]]></constructor>
 
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          if (aEvent.originalTarget == document && aEvent.type == "unload")
-            this._removeDialog();
+          switch(aEvent.type) {
+            case "unload":
+              if (aEvent.originalTarget == document)
+                this._removeDialog();
+              break;
+
+            case "resize":
+            case "overflow":
+              let scrollbox = this._scrollbox;
+              let style = document.defaultView.getComputedStyle(scrollbox, null);
+              let newHeight =  Math.ceil(scrollbox.firstChild.getBoundingClientRect().height) + 
+                               parseInt(style.marginTop) +
+                               parseInt(style.marginBottom);
+              scrollbox.style.minHeight = Math.min(window.innerHeight / 2, newHeight) + "px";
+              break;
+          }
         ]]></body>
       </method>
-      
+
       <method name="close">
-        <body>
+        <body><![CDATA[
           if (this.hasAttribute("onclose")) {
-            var f = new Function(this.getAttribute("onclose"));
-            f.call(this);
+            let func = new Function(this.getAttribute("onclose"));
+            func.call(this);
           }
           this._removeDialog();
-        </body>
+        ]]></body>
       </method>
 
       <method name="_removeDialog">
         <body><![CDATA[
           window.removeEventListener("unload", this, true);
+          let scrollbox = this._scrollbox;
+          if (scrollbox) {
+            window.removeEventListener("resize", this, true);
+            scrollbox.removeEventListener("overflow", this, true);
+          }
+
           this.parentNode.parentNode.removeChild(this.parentNode);
           this._closed = true;
 
@@ -70,15 +87,14 @@
       </method>
       
       <method name="waitForClose">
-        <body>
+        <body><![CDATA[
           let thread = Components.classes["@mozilla.org/thread-manager;1"]
                           .getService(Components.interfaces.nsIThreadManager)
                           .currentThread;
           while (!this._closed)
             thread.processNextEvent(true);
-        </body>
+        ]]></body>
       </method>
     </implementation>
   </binding>
-  
 </bindings>

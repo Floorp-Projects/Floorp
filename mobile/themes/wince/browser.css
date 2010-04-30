@@ -539,6 +539,7 @@ box[type="documenttab"]:only-child .documenttab-close {
   display: none;
 }
 
+.prompt-buttons,
 #pageactions-container {
   background: rgb(210, 210, 210) -moz-linear-gradient(top, rgba(255,255,255,0.4) 0%, rgba(235,235,235,0.4) 90%, rgba(185,185,185,0.4) 100%);
   border: none;
@@ -549,31 +550,50 @@ box[type="documenttab"]:only-child .documenttab-close {
   -moz-border-radius-bottomright: 1.1mm;
 }
 
+.prompt-buttons > button,
 pageaction {
-  border-color: rgb(255,255,255) rgb(215,215,215) rgb(215,215,215) rgb(255,255,255);
+  -moz-border-top-colors: rgb(255, 255, 255);
+  -moz-border-right-colors: rgb(215, 215, 215);
+  -moz-border-bottom-colors: rgb(215, 215, 215);
+  -moz-border-left-colors: rgb(255, 255, 255);
   background-color: rgb(235,235,235);
   border-style: solid;
-  border-width: 1px;
+  border-width: 1px !important;
   height: 64px;
   width: 100%;
 }
 
+/* Override buttons style */
+.prompt-buttons > button {
+  margin: 0;
+  -moz-border-image: none !important;
+}
+
+.prompt-buttons > button > .button-box {
+  padding: 0 4px 1px 3px !important;
+}
+
 @media all and (orientation: landscape) {
+  .prompt-buttons > button,
   pageaction {
     width: 50%;
   }
 
+  .prompt-buttons > button:nth-last-child(2):not(:nth-child(even)),
   pageaction:nth-last-child(2):not(:nth-child(even)) {
     background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomleft: 1.1mm;
   }
 
+  .prompt-buttons > button:first-child,
+  .prompt-buttons > button:nth-child(2),
   pageaction:first-child,
   pageaction:nth-child(2) {
     background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgb(235,235,235) 90%) !important;
   }
 
+  .prompt-buttons > button:last-child:not(:nth-child(even)),
   pageaction:last-child:not(:nth-child(even)) {
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomleft: 1.1mm;
@@ -581,6 +601,7 @@ pageaction {
     width: 100%;
   }
 
+  .prompt-buttons > button:last-child:not(:nth-child(odd)),
   pageaction:last-child:not(:nth-child(odd)) {
     border-bottom: 1px solid #fff;
     -moz-border-radius-bottomright: 1.1mm;
@@ -588,23 +609,27 @@ pageaction {
 }
 
 @media all and (orientation: portrait) {
+  .prompt-buttons > button:last-child,
   pageaction:last-child {
     -moz-border-radius-bottomleft: 1.1mm;
     -moz-border-radius-bottomright: 1.1mm;
   }
 }
 
+.prompt-buttons > button:last-child,
 pageaction:last-child {
   background-image: -moz-linear-gradient(top, rgb(235,235,235) 0%, rgb(215,215,215) 90%);
 }
 
+.prompt-buttons > button:first-child,
 pageaction:first-child {
   background-image: -moz-linear-gradient(top, rgb(255,255,255) 0%, rgba(235,235,235) 90%);
 }
 
+.prompt-buttons > button:hover:active,
 pageaction:hover:active {
   background-image: none !important;
-  background-color: #8db8d8;
+  background-color: #8db8d8 !important;
 }
 
 pageaction .pageaction-image {
@@ -617,9 +642,10 @@ pageaction:not([image]) .pageaction-image {
   width: 0;
 }
 
+.prompt-buttons > button,
 pageaction .pageaction-title {
   font-size: 9pt !important;
-  color: #414141;
+  color: #414141 !important;
 }
 
 pageaction .pageaction-desc {

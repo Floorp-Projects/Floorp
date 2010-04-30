@@ -94,31 +94,76 @@ textbox[isempty="true"] {
 .dialog-dark {
   color: #fff;
   background-color: #36373b;
-  border: 3px solid #262629;
+  border-width: 4px 3px 4px 3px;
+  border-style: solid;
+  -moz-border-top-colors: black #4a4b4f;
+  -moz-border-left-colors: black #4a4b4f;
+  -moz-border-bottom-colors: black #4a4b4f;
+  -moz-border-right-colors: black #4a4b4f;
   -moz-border-radius: 8px 8px 8px 8px;
-  padding: 8px;
   -moz-box-shadow: black 0 2px 2px;
+  padding: 8px;
 }
 
 /* prompt dialogs ---------------------------------------------------------- */
-dialog {
+.modal-block {
+  padding: 64px;
+}
+
+.modal-block dialog {
+  color: #fff;
+  background-color: transparent;
+  -moz-border-radius: 8px;
+  -moz-box-shadow: black 0 2px 2px;
+}
+
+.prompt-header {
+  padding: 8px;
+  font-size: 18px !important;
+  -moz-border-radius: 8px 8px 0 0;
+  background-color: #36373b;
+  border-style: solid;
+  border-width: 4px 3px 2px 3px;
+  -moz-border-top-colors: black #4a4b4f;
+  -moz-border-left-colors: black #4a4b4f;
+  -moz-border-bottom-colors: black #4a4b4f;
+  -moz-border-right-colors: black #4a4b4f;
+}
+
+dialog hbox > .close-button {
+  min-height: 0 !important;
+  min-width: 0 !important;
+  display: none;
+}
+
+dialog[closebutton="true"] hbox > .close-button {
+  display: -moz-box;
+}
+
+.prompt-title {
   font-size: 24px !important;
 }
 
-dialog .prompt-message {
-  font-size: 18px !important;
+@media (max-width: 499px) {
+  .modal-block {
+    padding: 32px;
+  }
+
+  .prompt-header {
+    font-size: 16px !important;
+  }
+
+  .prompt-title {
+    font-size: 18px !important;
+  }
 }
 
-dialog > scrollbox.prompt-message {
-  margin: 8px 0 8px 0;
-}
-
-dialog > hbox.prompt-message {
+.prompt-message {
   margin-top: 8px;
 }
 
-dialog > hbox.prompt-buttons {
-  margin-top: 8px;
+.prompt-checkbox-label {
+  text-align: right;
 }
 
 /* buttons ----------------------------------------------------------------- */
