@@ -18,3 +18,4 @@ remove_scale.patch: Removes Chromium scaling code.
 export.patch: Fix export for building on comm-central
 win64_mac64.patch: Fallback to C implementation on Windows and Mac OS X 64 bit
 yv24.patch: Adds YCbCr 4:4:4 support
+row_c_fix.patch: Fix broken C fallback code (See bug 561385).
