@@ -338,8 +338,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
       // Failing all else, try the first thing we have, but only if
       // it's an element.  Text frames need not apply.
       childframe = containerFrame->GetFirstChild(nsnull);
-      if (childframe &&
-          !childframe->GetContent()->IsNodeOfType(nsINode::eELEMENT)) {
+      if (childframe && !childframe->GetContent()->IsElement()) {
         childframe = nsnull;
       }
       result = NS_OK;
