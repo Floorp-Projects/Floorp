@@ -3743,6 +3743,28 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
   return PR_FALSE;
 }
 
+void
+nsGenericElement::FireNodeInserted(nsIDocument* aDoc,
+                                   nsINode* aParent,
+                                   nsCOMArray<nsIContent>& aNodes)
+{
+  PRInt32 count = aNodes.Count();
+  for (PRInt32 i = 0; i < count; ++i) {
+    nsIContent* childContent = aNodes[i];
+
+    if (nsContentUtils::HasMutationListeners(childContent,
+          NS_EVENT_BITS_MUTATION_NODEINSERTED, aParent)) {
+      mozAutoRemovableBlockerRemover blockerRemover(aDoc);
+
+      nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
+      mutation.mRelatedNode = do_QueryInterface(aParent);
+
+      mozAutoSubtreeModified subtree(aDoc, aParent);
+      nsEventDispatcher::Dispatch(childContent, nsnull, &mutation);
+    }
+  }
+}
+
 nsresult
 nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
                                nsINode* aRefChild)
@@ -3951,23 +3973,11 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
 
     // Fire mutation events. Optimize for the case when there are no listeners
     nsPIDOMWindow* window = nsnull;
-    if (doc && (window = doc->GetInnerWindow()) &&
-        window->HasMutationListeners(NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
-
-      for (i = 0; i < count; ++i, ++insPos) {
-        nsIContent* childContent = fragChildren[i];
-
-        if (nsContentUtils::HasMutationListeners(childContent,
-              NS_EVENT_BITS_MUTATION_NODEINSERTED, this)) {
-          mozAutoRemovableBlockerRemover blockerRemover(doc);
-
-          nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
-          mutation.mRelatedNode = do_QueryInterface(this);
-
-          mozAutoSubtreeModified subtree(doc, this);
-          nsEventDispatcher::Dispatch(childContent, nsnull, &mutation);
-        }
-      }
+    if (doc &&
+        (((window = doc->GetInnerWindow()) &&
+          window->HasMutationListeners(NS_EVENT_BITS_MUTATION_NODEINSERTED)) ||
+         !window)) {
+      nsGenericElement::FireNodeInserted(doc, this, fragChildren);
     }
   }
   else {

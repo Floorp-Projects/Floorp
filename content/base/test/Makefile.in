@@ -380,6 +380,7 @@ _TEST_FILES = 	test_bug5141.html \
 		file_csp_redirects_resource.sjs \
 		test_bug346485.html \
 		test_bug560780.html \
+		test_bug562652.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason
