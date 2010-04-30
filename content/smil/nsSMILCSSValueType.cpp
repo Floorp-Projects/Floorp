@@ -379,6 +379,7 @@ nsSMILCSSValueType::ValueFromString(nsCSSProperty aPropID,
                                     PRBool aUseSVGMode,
                                     nsSMILValue& aValue)
 {
+  // XXXbz aTargetElement should be an Element
   NS_ABORT_IF_FALSE(aValue.IsNull(), "Outparam should be null-typed");
   nsPresContext* presContext = GetPresContextForElement(aTargetElement);
   if (!presContext) {

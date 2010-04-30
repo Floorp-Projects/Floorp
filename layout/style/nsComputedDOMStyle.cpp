@@ -80,6 +80,9 @@
 #include "nsStyleCoord.h"
 #include "nsDisplayList.h"
 #include "nsDOMCSSDeclaration.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 #if defined(DEBUG_bzbarsky) || defined(DEBUG_caillon)
 #define DEBUG_ComputedDOMStyle
@@ -324,42 +327,39 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
 
 /* static */
 already_AddRefed<nsStyleContext>
-nsComputedDOMStyle::GetStyleContextForContent(nsIContent* aContent,
+nsComputedDOMStyle::GetStyleContextForElement(Element* aElement,
                                               nsIAtom* aPseudo,
                                               nsIPresShell* aPresShell)
 {
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eELEMENT),
-               "aContent must be an element");
-
   // If there's no pres shell, get it from the content
   if (!aPresShell) {
-    aPresShell = GetPresShellForContent(aContent);
+    aPresShell = GetPresShellForContent(aElement);
     if (!aPresShell)
       return nsnull;
   }
 
   aPresShell->FlushPendingNotifications(Flush_Style);
 
-  return GetStyleContextForContentNoFlush(aContent, aPseudo, aPresShell);
+  return GetStyleContextForElementNoFlush(aElement, aPseudo, aPresShell);
 }
 
 /* static */
 already_AddRefed<nsStyleContext>
-nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
+nsComputedDOMStyle::GetStyleContextForElementNoFlush(Element* aElement,
                                                      nsIAtom* aPseudo,
                                                      nsIPresShell* aPresShell)
 {
-  NS_ABORT_IF_FALSE(aContent, "NULL content node");
+  NS_ABORT_IF_FALSE(aElement, "NULL element");
 
   // If there's no pres shell, get it from the content
   if (!aPresShell) {
-    aPresShell = GetPresShellForContent(aContent);
+    aPresShell = GetPresShellForContent(aElement);
     if (!aPresShell)
       return nsnull;
   }
 
   if (!aPseudo) {
-    nsIFrame* frame = aContent->GetPrimaryFrame();
+    nsIFrame* frame = aElement->GetPrimaryFrame();
     if (frame) {
       nsStyleContext* result =
         nsLayoutUtils::GetStyleFrame(frame)->GetStyleContext();
@@ -377,10 +377,11 @@ nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
   // No frame has been created or we have a pseudo, so resolve the
   // style ourselves
   nsRefPtr<nsStyleContext> parentContext;
-  nsIContent* parent = aPseudo ? aContent : aContent->GetParent();
+  nsIContent* parent = aPseudo ? aElement : aElement->GetParent();
   // Don't resolve parent context for document fragments.
-  if (parent && parent->IsNodeOfType(nsINode::eELEMENT))
-    parentContext = GetStyleContextForContentNoFlush(parent, nsnull, aPresShell);
+  if (parent && parent->IsElement())
+    parentContext = GetStyleContextForElementNoFlush(parent->AsElement(),
+                                                     nsnull, aPresShell);
 
   nsPresContext *presContext = aPresShell->GetPresContext();
   if (!presContext)
@@ -393,10 +394,10 @@ nsComputedDOMStyle::GetStyleContextForContentNoFlush(nsIContent* aContent,
     if (type >= nsCSSPseudoElements::ePseudo_PseudoElementCount) {
       return nsnull;
     }
-    return styleSet->ResolvePseudoElementStyle(aContent, type, parentContext);
+    return styleSet->ResolvePseudoElementStyle(aElement, type, parentContext);
   }
 
-  return styleSet->ResolveStyleFor(aContent, parentContext);
+  return styleSet->ResolveStyleFor(aElement, parentContext);
 }
 
 /* static */
@@ -495,7 +496,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 #endif
     // Need to resolve a style context
     mStyleContextHolder =
-      nsComputedDOMStyle::GetStyleContextForContent(mContent,
+      nsComputedDOMStyle::GetStyleContextForElement(mContent->AsElement(),
                                                     mPseudo,
                                                     mPresShell);
     NS_ENSURE_TRUE(mStyleContextHolder, NS_ERROR_OUT_OF_MEMORY);

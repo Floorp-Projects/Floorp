@@ -63,7 +63,7 @@ nsDOMCSSAttributeDeclaration::nsDOMCSSAttributeDeclaration(nsIContent *aContent
 {
   MOZ_COUNT_CTOR(nsDOMCSSAttributeDeclaration);
 
-  NS_ASSERTION(aContent && aContent->IsNodeOfType(nsINode::eELEMENT),
+  NS_ASSERTION(aContent && aContent->IsElement(),
                "Inline style for non-element content?");
 }
 
