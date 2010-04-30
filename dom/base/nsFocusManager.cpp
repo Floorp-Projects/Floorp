@@ -2029,7 +2029,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
       nsIContent *childContent = nsnull;
 
       startContent = do_QueryInterface(startNode);
-      if (startContent && startContent->IsNodeOfType(nsINode::eELEMENT)) {
+      if (startContent && startContent->IsElement()) {
         NS_ASSERTION(startOffset >= 0, "Start offset cannot be negative");  
         childContent = startContent->GetChildAt(startOffset);
         if (childContent) {
@@ -2038,7 +2038,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
       }
 
       endContent = do_QueryInterface(endNode);
-      if (endContent && endContent->IsNodeOfType(nsINode::eELEMENT)) {
+      if (endContent && endContent->IsElement()) {
         PRInt32 endOffset = 0;
         domRange->GetEndOffset(&endOffset);
         NS_ASSERTION(endOffset >= 0, "End offset cannot be negative");
