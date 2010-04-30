@@ -69,7 +69,7 @@ NS_EXTERN_C
 
 #include "typedefs.h"
 
-#if defined(_WIN32) && !defined(__WIN64)
+#if defined(_WIN32) && !defined(_WIN64)
   EXPORT_STDCALL(void) test_void_t_stdcall();
 
   EXPORT_STDCALL(void*) get_voidptr_t_stdcall();
@@ -89,7 +89,7 @@ NS_EXTERN_C
 
 #include "typedefs.h"
 
-#endif /* defined(_WIN32) && !defined(__WIN64) */
+#endif /* defined(_WIN32) && !defined(_WIN64) */
 
   NS_EXPORT PRInt32 test_ansi_len(const char*);
   NS_EXPORT PRInt32 test_wide_len(const PRUnichar*);
@@ -189,9 +189,9 @@ NS_EXTERN_C
   NS_EXPORT void * test_fnptr();
 
   NS_EXPORT PRInt32 test_closure_cdecl(PRInt8, PRInt32 (*)(PRInt8));
-#if defined(_WIN32) && !defined(__WIN64)
+#if defined(_WIN32) && !defined(_WIN64)
   NS_EXPORT PRInt32 test_closure_stdcall(PRInt8, PRInt32 (NS_STDCALL *)(PRInt8));
-#endif /* defined(_WIN32) && !defined(__WIN64) */
+#endif /* defined(_WIN32) && !defined(_WIN64) */
 
   NS_EXPORT PRInt32 test_callme(PRInt8);
   NS_EXPORT void* test_getfn();
