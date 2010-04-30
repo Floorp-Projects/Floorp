@@ -41,9 +41,12 @@
 #define mozilla_dom_indexeddb_idbdatabaserequest_h__
 
 #include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/AsyncDatabaseConnection.h"
+#include "mozilla/dom/indexedDB/LazyIdleThread.h"
 
+#include "mozIStorageConnection.h"
+#include "nsIDOMDOMStringList.h"
 #include "nsIIDBDatabaseRequest.h"
+#include "nsIIDBTransaction.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -65,7 +68,18 @@ protected:
   ~IDBDatabaseRequest();
 
 private:
-  nsAutoPtr<AsyncDatabaseConnection> mDatabase;
+  nsString mName;
+  nsString mDescription;
+  PRBool mReadOnly;
+  nsString mVersion;
+  nsCOMPtr<nsIDOMDOMStringList> mObjectStores;
+  nsCOMPtr<nsIDOMDOMStringList> mIndexes;
+  nsCOMPtr<nsIIDBTransaction> mCurrentTransaction;
+
+  nsRefPtr<LazyIdleThread> mStorageThread;
+
+  // Only touched on mStorageThread!
+  nsCOMPtr<mozIStorageConnection> mStorage;
 };
 
 END_INDEXEDDB_NAMESPACE

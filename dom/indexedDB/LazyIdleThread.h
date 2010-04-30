@@ -57,12 +57,15 @@ BEGIN_INDEXEDDB_NAMESPACE
  * is created on the main thread then it will automatically join its thread on
  * XPCOM shutdown using the Observer Service.
  */
-class LazyIdleThread : public nsITimerCallback,
+class LazyIdleThread : public nsIThread,
+                       public nsITimerCallback,
                        public nsIThreadObserver,
                        public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIEVENTTARGET
+  NS_DECL_NSITHREAD
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSITHREADOBSERVER
   NS_DECL_NSIOBSERVER
@@ -74,16 +77,9 @@ public:
   LazyIdleThread(PRUint32 aIdleTimeoutMS);
 
   /**
-   * Dispatch an event to the thread, creating it if necessary.
+   * Enables or disables the idle timeout.
    */
-  nsresult Dispatch(nsIRunnable* aEvent);
-
-  /**
-   * Join the thread and prevent further event dispatch. It is not possible to
-   * reuse the LazyIdleThread after calling this. Shutdown() will also be called
-   * automatically when the reference count drops to 0.
-   */
-  void Shutdown();
+  void EnableIdleTimeout(PRBool aEnable);
 
 private:
   /**
@@ -105,6 +101,11 @@ private:
    * Called when we are shutting down mThread.
    */
   void ShutdownThread();
+
+  /**
+   * Called to cancel any pending timer.
+   */
+  void CancelTimer(nsITimer* aTimer);
 
   /**
    * Protects mIdleTimer and mThreadHasTimedOut.
@@ -145,6 +146,11 @@ private:
    * when we're in the process of shutting down mThread.
    */
   PRBool mThreadHasTimedOut;
+
+  /**
+   * Protected by mMutex. Whether or not the timeout is enabled.
+   */
+  PRUint32 mTimeoutDisabledCount;
 };
 
 END_INDEXEDDB_NAMESPACE

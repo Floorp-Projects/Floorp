@@ -39,17 +39,27 @@
 
 #include "IDBDatabaseRequest.h"
 
+#include "mozilla/Storage.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfo.h"
+#include "nsDOMLists.h"
+#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
+#include "AsyncConnectionHelper.h"
 #include "IDBEvents.h"
 #include "IDBRequest.h"
+#include "LazyIdleThread.h"
+
+#define DB_SCHEMA_VERSION 1
 
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-const PRUint32 kDefaultTimeoutMS = 5000;
+const PRUint32 kDefaultDatabaseTimeoutMS = 5000;
+const PRUint32 kDefaultThreadTimeoutMS = 30000;
 
 inline
 nsISupports*
@@ -57,6 +67,200 @@ isupports_cast(IDBDatabaseRequest* aClassPtr)
 {
   return static_cast<nsISupports*>(
     static_cast<IDBRequest::Generator*>(aClassPtr));
+}
+
+class CreateObjectStoreHelper : public AsyncConnectionHelper
+{
+public:
+  CreateObjectStoreHelper(nsCOMPtr<mozIStorageConnection>& aConnection,
+                          nsIDOMEventTarget* aTarget,
+                          const nsAString& aName,
+                          const nsAString& aKeyPath,
+                          PRBool aAutoIncrement)
+  : AsyncConnectionHelper(aConnection, aTarget), mName(aName),
+    mKeyPath(aKeyPath), mAutoIncrement(aAutoIncrement)
+  { }
+
+  PRUint16 DoDatabaseWork();
+  void GetSuccessResult(nsIWritableVariant* aResult);
+
+protected:
+  nsString mName;
+  nsString mKeyPath;
+  PRBool mAutoIncrement;
+};
+
+/**
+ * Creates the needed tables and their indexes.
+ *
+ * @param aDBConn
+ *        The database connection to create the tables on.
+ */
+nsresult
+CreateTables(mozIStorageConnection* aDBConn)
+{
+  NS_PRECONDITION(!NS_IsMainThread(),
+                  "Creating tables on the main thread!");
+  NS_PRECONDITION(aDBConn, "Passing a null database connection!");
+
+  // Table `database`
+  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE database ("
+      "name TEXT NOT NULL, "
+      "description TEXT NOT NULL, "
+      "version TEXT DEFAULT NULL, "
+      "UNIQUE (name)"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `object_store`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_store ("
+      "id INTEGER NOT NULL, "
+      "name TEXT NOT NULL, "
+      "keyPath TEXT DEFAULT NULL, "
+      "auto_increment INTEGER NOT NULL DEFAULT 0, "
+      "readers INTEGER NOT NULL DEFAULT 0, "
+      "is_writing INTEGER NOT NULL DEFAULT 0, "
+      "PRIMARY KEY (id), "
+      "UNIQUE (name)"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `object_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_data ("
+      "id INTEGER NOT NULL, "
+      "object_store_id INTEGER NOT NULL, "
+      "data TEXT NOT NULL, "
+      "key_value TEXT DEFAULT NULL, "
+      "PRIMARY KEY (id), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX key_index "
+    "ON object_data (id, object_store_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `ai_object_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_object_data ("
+      "id INTEGER NOT NULL, "
+      "object_store_id INTEGER NOT NULL, "
+      "data TEXT NOT NULL, "
+      "PRIMARY KEY (id), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX ai_key_index "
+    "ON ai_object_data (id, object_store_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return aDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
+}
+
+already_AddRefed<mozIStorageConnection>
+NewConnection(const nsCString& aOrigin)
+{
+  NS_PRECONDITION(!NS_IsMainThread(),
+                  "Opening a database on the main thread!");
+
+  nsCOMPtr<nsIFile> dbFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(dbFile));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  rv = dbFile->Append(NS_LITERAL_STRING("indexedDB_files"));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  PRBool exists;
+  rv = dbFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  if (exists) {
+    PRBool isDirectory;
+    rv = dbFile->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+    NS_ENSURE_TRUE(isDirectory, nsnull);
+  }
+  else {
+    rv = dbFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+
+  // Replace illegal filename characters.
+  static const char illegalChars[] = {':', '/', '\\' };
+  nsCString fname(aOrigin);
+  for (size_t i = 0; i < NS_ARRAY_LENGTH(illegalChars); i++) {
+    fname.ReplaceChar(illegalChars[i], '_');
+  }
+
+  fname.AppendLiteral(".sqlite");
+
+  rv = dbFile->Append(NS_ConvertUTF8toUTF16(fname));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  rv = dbFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+
+  nsCOMPtr<mozIStorageConnection> conn;
+  rv = ss->OpenDatabase(dbFile, getter_AddRefs(conn));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // Nuke the database file.  The web services can recreate their data.
+    rv = dbFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    exists = PR_FALSE;
+
+    rv = ss->OpenDatabase(dbFile, getter_AddRefs(conn));
+  }
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  // Check to make sure that the database schema is correct.
+  PRInt32 schemaVersion;
+  rv = conn->GetSchemaVersion(&schemaVersion);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  if (schemaVersion != DB_SCHEMA_VERSION) {
+    if (exists) {
+      // If the connection is not at the right schema version, nuke it.
+      rv = dbFile->Remove(PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, nsnull);
+
+      rv = ss->OpenDatabase(dbFile, getter_AddRefs(conn));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+
+    rv = CreateTables(conn);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+
+#ifdef DEBUG
+  // Check to make sure that the database schema is correct.
+  NS_ASSERTION(NS_SUCCEEDED(conn->GetSchemaVersion(&schemaVersion)) &&
+               schemaVersion == DB_SCHEMA_VERSION,
+               "CreateTables failed!");
+
+  // Turn on foreign key constraints in debug builds to catch bugs!
+  (void)conn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA foreign_keys = ON;"
+  ));
+#endif
+
+  return conn.forget();
 }
 
 } // anonymous namespace
@@ -68,9 +272,15 @@ IDBDatabaseRequest::Create(const nsAString& aName,
                            PRBool aReadOnly)
 {
   nsRefPtr<IDBDatabaseRequest> db(new IDBDatabaseRequest());
-  db->mDatabase = AsyncDatabaseConnection::OpenConnection(aName, aDescription,
-                                                          aReadOnly);
-  NS_ENSURE_TRUE(db->mDatabase, nsnull);
+
+  db->mStorageThread = new LazyIdleThread(kDefaultThreadTimeoutMS);
+
+  db->mName.Assign(aName);
+  db->mDescription.Assign(aDescription);
+  db->mReadOnly = aReadOnly;
+
+  db->mObjectStores = new nsDOMStringList();
+  db->mIndexes = new nsDOMStringList();
 
   nsIIDBDatabaseRequest* result;
   db.forget(&result);
@@ -84,7 +294,9 @@ IDBDatabaseRequest::IDBDatabaseRequest()
 
 IDBDatabaseRequest::~IDBDatabaseRequest()
 {
-  
+  if (mStorageThread) {
+    mStorageThread->Shutdown();
+  }
 }
 
 NS_IMPL_ADDREF(IDBDatabaseRequest)
@@ -102,43 +314,46 @@ DOMCI_DATA(IDBDatabaseRequest, IDBDatabaseRequest)
 NS_IMETHODIMP
 IDBDatabaseRequest::GetName(nsAString& aName)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aName.Assign(mName);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBDatabaseRequest::GetDescription(nsAString& aDescription)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aDescription.Assign(mDescription);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBDatabaseRequest::GetVersion(nsAString& aVersion)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aVersion.Assign(mVersion);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBDatabaseRequest::GetObjectStores(nsIDOMDOMStringList** aObjectStores)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMDOMStringList> objectStores(mObjectStores);
+  objectStores.forget(aObjectStores);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBDatabaseRequest::GetIndexes(nsIDOMDOMStringList** aIndexes)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIDOMDOMStringList> indexes(mIndexes);
+  indexes.forget(aIndexes);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBDatabaseRequest::GetCurrentTransaction(nsIIDBTransaction** aTransaction)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIIDBTransaction> transaction(mCurrentTransaction);
+  transaction.forget(aTransaction);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -148,8 +363,12 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
                                       nsIIDBRequest** _retval)
 {
   nsRefPtr<IDBRequest> request = GenerateRequest();
-  nsresult rv = mDatabase->CreateObjectStore(aName, aKeyPath, aAutoIncrement,
-                                             request);
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<CreateObjectStoreHelper> helper =
+    new CreateObjectStoreHelper(mStorage, request, aName, aKeyPath,
+                                aAutoIncrement);
+  nsresult rv = helper->Dispatch(mStorageThread);
   NS_ENSURE_SUCCESS(rv, rv);
 
   IDBRequest* retval;
@@ -164,9 +383,10 @@ IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
                                     nsIIDBRequest** _retval)
 {
   nsRefPtr<IDBRequest> request = GenerateRequest();
+  /*
   nsresult rv = mDatabase->OpenObjectStore(aName, aMode, request);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  */
   IDBRequest* retval;
   request.forget(&retval);
   *_retval = retval;
@@ -245,11 +465,24 @@ IDBDatabaseRequest::OpenTransaction(nsIDOMDOMStringList* aStoreNames,
   NS_NOTYETIMPLEMENTED("Implement me!");
 
   if (aArgCount < 2) {
-    aTimeout = kDefaultTimeoutMS;
+    aTimeout = kDefaultDatabaseTimeoutMS;
   }
 
   nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
   request.forget(_retval);
 
   return NS_OK;
+}
+
+PRUint16
+CreateObjectStoreHelper::DoDatabaseWork()
+{
+  mConnection = NewConnection(NS_LITERAL_CSTRING("http://foo.com/bar.html"));
+  return mConnection ? OK : nsIIDBDatabaseError::UNKNOWN_ERR;
+}
+
+void
+CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
+{
+  aResult->SetAsBool(PR_TRUE);
 }
