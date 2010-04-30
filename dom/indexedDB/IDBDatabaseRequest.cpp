@@ -69,6 +69,28 @@ isupports_cast(IDBDatabaseRequest* aClassPtr)
     static_cast<IDBRequest::Generator*>(aClassPtr));
 }
 
+class CloseConnectionRunnable : public nsRunnable
+{
+public:
+  CloseConnectionRunnable(nsCOMPtr<mozIStorageConnection>& aConnection)
+  : mConnection(aConnection)
+  { }
+
+  NS_IMETHOD Run()
+  {
+    if (mConnection) {
+      if (NS_FAILED(mConnection->Close())) {
+        NS_WARNING("Failed to close connection!");
+      }
+      mConnection = nsnull;
+    }
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<mozIStorageConnection>& mConnection;
+};
+
 class CreateObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
@@ -275,6 +297,9 @@ IDBDatabaseRequest::Create(const nsAString& aName,
 
   db->mStorageThread = new LazyIdleThread(kDefaultThreadTimeoutMS);
 
+  // Circular reference!
+  db->mStorageThread->SetIdleObserver(db);
+
   db->mName.Assign(aName);
   db->mDescription.Assign(aDescription);
   db->mReadOnly = aReadOnly;
@@ -306,6 +331,7 @@ NS_INTERFACE_MAP_BEGIN(IDBDatabaseRequest)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIIDBDatabaseRequest)
   NS_INTERFACE_MAP_ENTRY(nsIIDBDatabaseRequest)
   NS_INTERFACE_MAP_ENTRY(nsIIDBDatabase)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBDatabaseRequest)
 NS_INTERFACE_MAP_END
 
@@ -470,6 +496,26 @@ IDBDatabaseRequest::OpenTransaction(nsIDOMDOMStringList* aStoreNames,
 
   nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
   request.forget(_retval);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBDatabaseRequest::Observe(nsISupports* aSubject,
+                            const char* aTopic,
+                            const PRUnichar* aData)
+{
+  NS_ENSURE_FALSE(strcmp(aTopic, IDLE_THREAD_TOPIC), NS_ERROR_UNEXPECTED);
+
+  // This should be safe to clear mStorage before we're deleted since we own
+  // the thread and must join with it before we can be deleted.
+  nsCOMPtr<nsIRunnable> runnable = new CloseConnectionRunnable(mStorage);
+
+  nsCOMPtr<nsIThread> thread(do_QueryInterface(aSubject));
+  NS_ENSURE_TRUE(thread, NS_NOINTERFACE);
+
+  nsresult rv = thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

@@ -76,8 +76,7 @@ LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS)
   mOwningThread(NS_GetCurrentThread()),
   mIdleTimeoutMS(aIdleTimeoutMS),
   mShutdown(PR_FALSE),
-  mThreadHasTimedOut(PR_FALSE),
-  mTimeoutDisabledCount(0)
+  mThreadHasTimedOut(PR_FALSE)
 {
   NS_ASSERTION(mOwningThread, "This should never fail!");
 }
@@ -91,28 +90,19 @@ LazyIdleThread::~LazyIdleThread()
 }
 
 void
-LazyIdleThread::EnableIdleTimeout(PRBool aEnable)
+LazyIdleThread::SetIdleObserver(nsIObserver* aObserver)
 {
-  if (aEnable) {
-    MutexAutoLock lock(mMutex);
-    if (mTimeoutDisabledCount) {
-      mTimeoutDisabledCount--;
+  if (mShutdown) {
+    if (aObserver) {
+      NS_WARNING("Setting an observer after Shutdown was called!");
+      return;
     }
-    return;
+  }
+  else {
+    NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
   }
 
-  nsCOMPtr<nsITimer> timer;
-  {
-    MutexAutoLock lock(mMutex);
-    NS_ASSERTION(mTimeoutDisabledCount < PR_UINT32_MAX, "Too many calls!");
-    if (mTimeoutDisabledCount < PR_UINT32_MAX) {
-      mTimeoutDisabledCount++;
-    }
-    timer.swap(mIdleTimer);
-  }
-  if (timer) {
-    CancelTimer(timer);
-  }
+  mIdleObserver = aObserver;
 }
 
 /**
@@ -189,6 +179,11 @@ LazyIdleThread::ShutdownThread()
   NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
 
   if (mThread) {
+
+    if (mIdleObserver) {
+      mIdleObserver->Observe(mThread, IDLE_THREAD_TOPIC, nsnull);
+    }
+
     if (NS_FAILED(mThread->Shutdown())) {
       NS_WARNING("Failed to shutdown thread!");
     }
@@ -276,6 +271,7 @@ LazyIdleThread::Shutdown()
 
     mShutdown = PR_TRUE;
     mOwningThread = nsnull;
+    mIdleObserver = nsnull;
   }
 
   return NS_OK;
@@ -393,7 +389,7 @@ LazyIdleThread::AfterProcessNextEvent(nsIThreadInternal* aThread,
 
   MutexAutoLock lock(mMutex);
 
-  if (mThreadHasTimedOut || mTimeoutDisabledCount) {
+  if (mThreadHasTimedOut) {
     return NS_OK;
   }
 

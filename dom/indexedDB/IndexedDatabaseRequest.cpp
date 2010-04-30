@@ -55,11 +55,6 @@ IndexedDatabaseRequest::Create()
   return request.forget();
 }
 
-IndexedDatabaseRequest::IndexedDatabaseRequest()
-{
-  
-}
-
 NS_IMPL_ADDREF(IndexedDatabaseRequest)
 NS_IMPL_RELEASE(IndexedDatabaseRequest)
 
