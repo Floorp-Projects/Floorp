@@ -195,12 +195,15 @@ var BrowserUI = {
     forward.setAttribute("disabled", !aBrowser.canGoForward);
   },
 
-  _updateToolbarButton: function() {
+  _updateToolbar: function _updateToolbar() {
     let icons = document.getElementById("urlbar-icons");
     if (Browser.selectedTab.isLoading() && icons.getAttribute("mode") != "loading") {
+      this.lockToolbar();
       icons.setAttribute("mode", "loading");
     }
     else if (icons.getAttribute("mode") != "view") {
+      if (this.isToolbarLocked())
+        this.unlockToolbar();
       icons.setAttribute("mode", "view");
     }
   },
@@ -208,7 +211,7 @@ var BrowserUI = {
   _tabSelect : function(aEvent) {
     let browser = Browser.selectedBrowser;
     this._titleChanged(browser.contentDocument);
-    this._updateToolbarButton();
+    this._updateToolbar();
     this._updateButtons(browser);
     this._updateIcon(browser.mIconURL);
     this.updateStar();
@@ -266,7 +269,7 @@ var BrowserUI = {
       gFocusManager.setFocus(this._edit, Ci.nsIFocusManager.FLAG_NOSCROLL);
     }
     else if (!aEdit) {
-      this._updateToolbarButton();
+      this._updateToolbar();
     }
   },
 
@@ -457,14 +460,14 @@ var BrowserUI = {
     switch (aState) {
       case TOOLBARSTATE_LOADED:
         if (icons.getAttribute("mode") != "edit")
-          icons.setAttribute("mode", "view");
+          this._updateToolbar();
 
         this._updateIcon(browser.mIconURL);
         break;
 
       case TOOLBARSTATE_LOADING:
         if (icons.getAttribute("mode") != "edit")
-          icons.setAttribute("mode", "loading");
+          this._updateToolbar();
 
         browser.mIconURL = "";
         this._updateIcon();
