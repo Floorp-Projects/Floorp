@@ -38,6 +38,8 @@
 
 #include "nsXFormsFormControlsAccessible.h"
 
+#include "nsTextEquivUtils.h"
+
 // nsXFormsLabelAccessible
 
 nsXFormsLabelAccessible::

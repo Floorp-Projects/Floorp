@@ -160,10 +160,10 @@ function testCanonicalBookmarks() {
 
   // 6-2: the toolbar contents are imported to the places-toolbar folder,
   // the separator above it is removed.
-  do_check_eq(rootNode.childCount, 4);
+  do_check_eq(rootNode.childCount, DEFAULT_BOOKMARKS_ON_MENU + 1);
 
   // get test folder
-  var testFolder = rootNode.getChild(3);
+  var testFolder = rootNode.getChild(DEFAULT_BOOKMARKS_ON_MENU);
   do_check_eq(testFolder.type, testFolder.RESULT_TYPE_FOLDER);
   do_check_eq(testFolder.title, "test");
 

@@ -713,28 +713,56 @@ EOF
                 AC_LANG_RESTORE
             ])
 
-        if test "$ac_cv_have_std__Throw" = "no"; then
-          AC_MSG_ERROR([Your MSVC/SDK doesn't export std::_Throw.  This breaks assumptions in Gecko.  Please file a bug describing this error along with your build configuration.])
+        if test "$ac_cv_have_std__Throw" == "yes"; then
+            AC_CACHE_CHECK(for |class __declspec(dllimport) exception| bug,
+                           ac_cv_have_dllimport_exception_bug,
+                [
+                    AC_LANG_SAVE
+                    AC_LANG_CPLUSPLUS
+                    _SAVE_CXXFLAGS="$CXXFLAGS"
+                    CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
+                    AC_TRY_LINK([#include <vector>],
+                                [std::vector<int> v; return v.at(1);],
+                                ac_cv_have_dllimport_exception_bug="no",
+                                ac_cv_have_dllimport_exception_bug="yes")
+                    CXXFLAGS="$_SAVE_CXXFLAGS"
+                    AC_LANG_RESTORE
+                ])
+            if test "$ac_cv_have_dllimport_exception_bug" = "no"; then
+                WRAP_STL_INCLUDES=1
+                MOZ_MSVC_STL_WRAP__Throw=1
+                AC_DEFINE(MOZ_MSVC_STL_WRAP__Throw)
+            fi
+        else
+            AC_CACHE_CHECK(for overridable _RAISE,
+                           ac_cv_have__RAISE,
+                [
+                    AC_LANG_SAVE
+                    AC_LANG_CPLUSPLUS
+                    _SAVE_CXXFLAGS="$CXXFLAGS"
+                    CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
+                    AC_TRY_COMPILE([#include <xstddef>
+                                    #undef _RAISE
+                                    #define _RAISE(x) externallyDefinedFunction((x).what())
+                                    #include <vector>
+                                   ],
+                                   [std::vector<int> v; return v.at(1);],
+                                   ac_cv_have__RAISE="no",
+                                   ac_cv_have__RAISE="yes")
+                    CXXFLAGS="$_SAVE_CXXFLAGS"
+                    AC_LANG_RESTORE
+                ])
+            if test "$ac_cv_have__RAISE" = "yes"; then
+                WRAP_STL_INCLUDES=1
+                MOZ_MSVC_STL_WRAP__RAISE=1
+                AC_DEFINE(MOZ_MSVC_STL_WRAP__RAISE)
+            else
+                AC_MSG_ERROR([Gecko exception wrapping doesn't understand your your MSVC/SDK.  Please file a bug describing this error and your build configuration.])
+            fi
         fi
 
-        AC_CACHE_CHECK(for |class __declspec(dllimport) exception| bug,
-                       ac_cv_have_dllimport_exception_bug,
-            [
-                AC_LANG_SAVE
-                AC_LANG_CPLUSPLUS
-                _SAVE_CXXFLAGS="$CXXFLAGS"
-                CXXFLAGS="${CXXFLAGS} -D_HAS_EXCEPTIONS=0"
-                AC_TRY_LINK([#include <vector>],
-                            [std::vector<int> v; return v.at(1);],
-                            ac_cv_have_dllimport_exception_bug="no",
-                            ac_cv_have_dllimport_exception_bug="yes")
-                CXXFLAGS="$_SAVE_CXXFLAGS"
-                AC_LANG_RESTORE
-            ])
-
-        if test "$ac_cv_have_dllimport_exception_bug" = "no"; then
+        if test "$WRAP_STL_INCLUDES" = "1"; then
             STL_FLAGS='-D_HAS_EXCEPTIONS=0 -I$(DIST)/stl_wrappers'
-            WRAP_STL_INCLUDES=1
         fi
     else
         # Check w32api version
@@ -846,6 +874,8 @@ AC_SUBST(INTEL_CXX)
 
 AC_SUBST(STL_FLAGS)
 AC_SUBST(WRAP_STL_INCLUDES)
+AC_SUBST(MOZ_MSVC_STL_WRAP__Throw)
+AC_SUBST(MOZ_MSVC_STL_WRAP__RAISE)
 
 dnl ========================================================
 dnl Checks for programs.
@@ -1972,6 +2002,26 @@ case "$target" in
 #	MKSHLIB_UNFORCE_ALL=''
 #    fi
     ;; 
+
+ia64*-hpux*)
+    DLL_SUFFIX=".so"
+    if test ! "$GNU_CC"; then
+       DSO_LDOPTS='-b'
+       DSO_CFLAGS=""
+       DSO_PIC_CFLAGS=
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+       CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
+    else
+       DSO_LDOPTS='-b -E'
+       MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+    fi
+    MOZ_FIX_LINK_PATHS=
+    SYSTEM_MAKEDEPEND=
+    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+    AC_DEFINE(_LARGEFILE64_SOURCE)
+    ;;
 
 *-hpux*)
     DLL_SUFFIX=".sl"
@@ -6567,6 +6617,14 @@ else
 fi
 
 AC_SUBST(MOZ_NATIVE_SQLITE)
+
+dnl ========================================================
+dnl = Enable help viewer (off by default)
+dnl ========================================================
+if test -n "$MOZ_HELP_VIEWER"; then
+     dnl Do this if defined in confvars.sh
+     AC_DEFINE(MOZ_HELP_VIEWER)
+fi
 
 dnl ========================================================
 dnl = Enable safe browsing (anti-phishing)

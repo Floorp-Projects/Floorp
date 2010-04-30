@@ -118,6 +118,13 @@ class nsSVGDisplayContainerFrame;
 #define SVG_WSP_DELIM       "\x20\x9\xD\xA"
 #define SVG_COMMA_WSP_DELIM "," SVG_WSP_DELIM
 
+inline PRBool
+IsSVGWhitespace(char aChar)
+{
+  return aChar == '\x20' || aChar == '\x9' ||
+         aChar == '\xD'  || aChar == '\xA';
+}
+
 /*
  * Checks the svg enable preference and if a renderer could
  * successfully be created.  Declared as a function instead of a

@@ -1162,7 +1162,7 @@ nsGenericHTMLElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::dir) {
-      return aResult.ParseEnumValue(aValue, kDirTable);
+      return aResult.ParseEnumValue(aValue, kDirTable, PR_FALSE);
     }
   
     if (aAttribute == nsGkAtoms::tabindex) {
@@ -1411,7 +1411,7 @@ PRBool
 nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
                                       nsAttrValue& aResult)
 {
-  return aResult.ParseEnumValue(aString, kAlignTable);
+  return aResult.ParseEnumValue(aString, kAlignTable, PR_FALSE);
 }
 
 //----------------------------------------
@@ -1444,9 +1444,9 @@ nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
                                             nsAttrValue& aResult) const
 {
   if (InNavQuirksMode(GetOwnerDoc())) {
-    return aResult.ParseEnumValue(aString, kCompatTableHAlignTable);
+    return aResult.ParseEnumValue(aString, kCompatTableHAlignTable, PR_FALSE);
   }
-  return aResult.ParseEnumValue(aString, kTableHAlignTable);
+  return aResult.ParseEnumValue(aString, kTableHAlignTable, PR_FALSE);
 }
 
 //----------------------------------------
@@ -1482,9 +1482,9 @@ nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
                                                 nsAttrValue& aResult) const
 {
   if (InNavQuirksMode(GetOwnerDoc())) {
-    return aResult.ParseEnumValue(aString, kCompatTableCellHAlignTable);
+    return aResult.ParseEnumValue(aString, kCompatTableCellHAlignTable, PR_FALSE);
   }
-  return aResult.ParseEnumValue(aString, kTableCellHAlignTable);
+  return aResult.ParseEnumValue(aString, kTableCellHAlignTable, PR_FALSE);
 }
 
 //----------------------------------------
@@ -1493,14 +1493,14 @@ PRBool
 nsGenericHTMLElement::ParseTableVAlignValue(const nsAString& aString,
                                             nsAttrValue& aResult)
 {
-  return aResult.ParseEnumValue(aString, kTableVAlignTable);
+  return aResult.ParseEnumValue(aString, kTableVAlignTable, PR_FALSE);
 }
 
-PRBool
+PRBool 
 nsGenericHTMLElement::ParseDivAlignValue(const nsAString& aString,
                                          nsAttrValue& aResult) const
 {
-  return aResult.ParseEnumValue(aString, kDivAlignTable);
+  return aResult.ParseEnumValue(aString, kDivAlignTable, PR_FALSE);
 }
 
 PRBool
@@ -1524,14 +1524,14 @@ PRBool
 nsGenericHTMLElement::ParseFrameborderValue(const nsAString& aString,
                                             nsAttrValue& aResult)
 {
-  return aResult.ParseEnumValue(aString, kFrameborderTable);
+  return aResult.ParseEnumValue(aString, kFrameborderTable, PR_FALSE);
 }
 
 PRBool
 nsGenericHTMLElement::ParseScrollingValue(const nsAString& aString,
                                           nsAttrValue& aResult)
 {
-  return aResult.ParseEnumValue(aString, kScrollingTable);
+  return aResult.ParseEnumValue(aString, kScrollingTable, PR_FALSE);
 }
 
 /**
@@ -2139,6 +2139,24 @@ nsGenericHTMLElement::GetURIListAttr(nsIAtom* aAttr, nsAString& aResult)
 }
 
 nsresult
+nsGenericHTMLElement::GetEnumAttr(nsIAtom* aAttr,
+                                  const char* aDefault,
+                                  nsAString& aResult)
+{
+  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(aAttr);
+
+  aResult.Truncate();
+
+  if (attrVal && attrVal->Type() == nsAttrValue::eEnum) {
+    attrVal->GetEnumString(aResult, PR_TRUE);
+  } else {
+    AppendASCIItoUTF16(nsDependentCString(aDefault), aResult);
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsGenericHTMLElement::GetContentEditable(nsAString& aContentEditable)
 {
   ContentEditableTristate value = GetContentEditableValue();
@@ -2552,7 +2570,8 @@ nsGenericHTMLFormElement::CanBeDisabled() const
     type != NS_FORM_LABEL &&
     type != NS_FORM_LEGEND &&
     type != NS_FORM_FIELDSET &&
-    type != NS_FORM_OBJECT;
+    type != NS_FORM_OBJECT &&
+    type != NS_FORM_OUTPUT;
 }
 
 PRBool

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script type="text/javascript">
+function crashplugin() {
+  var plugin = document.getElementById('removeme');
+  var flush_reflow = plugin.offsetHeight; // this may not be necessary
+  document.body.removeChild(plugin);
+  // Give the plugin time to crash
+  setTimeout(function() { document.documentElement.removeAttribute('class') },
+             1000);
+}
+
+function getTestCases() {
+  return [
+    { testPassed:
+      (function () {
+        // Assuming the same process is used for removeme and checkme
+        var plugin = document.getElementById('checkme');
+        try {
+          plugin.getPaintCount();
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }),
+      testDescription:
+      (function () {
+        return "plugin should not crash";
+      })
+    }
+  ];
+}
+</script>
+</head>
+<body onload="crashplugin();">
+<embed id="checkme" type="application/x-test"/>
+<embed id="removeme" type="application/x-test" wmode="window" cleanupwidget="false"/>
+</body>
+</html>

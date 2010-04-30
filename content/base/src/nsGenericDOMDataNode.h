@@ -110,37 +110,20 @@ public:
   nsresult InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                         nsIDOMNode** aReturn)
   {
-    NS_ENSURE_ARG_POINTER(aReturn);
-    *aReturn = nsnull;
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    return ReplaceOrInsertBefore(PR_FALSE, aNewChild, aRefChild, aReturn);
   }
   nsresult ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
                         nsIDOMNode** aReturn)
   {
-    NS_ENSURE_ARG_POINTER(aReturn);
-    *aReturn = nsnull;
-
-    /*
-     * Data nodes can't have children.
-     */
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    return ReplaceOrInsertBefore(PR_TRUE, aNewChild, aOldChild, aReturn);
   }
   nsresult RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
   {
-    NS_ENSURE_ARG_POINTER(aReturn);
-    *aReturn = nsnull;
-
-    /*
-     * Data nodes can't have children, i.e. aOldChild can't be a child of
-     * this node.
-     */
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
+    return nsINode::RemoveChild(aOldChild, aReturn);
   }
   nsresult AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
   {
-    NS_ENSURE_ARG_POINTER(aReturn);
-    *aReturn = nsnull;
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    return InsertBefore(aNewChild, nsnull, aReturn);
   }
   nsresult GetNamespaceURI(nsAString& aNamespaceURI);
   nsresult GetLocalName(nsAString& aLocalName);

@@ -51,7 +51,7 @@ namespace mozilla {
 //
 struct NS_COM_GLUE unused_t { };
 
-extern const unused_t unused NS_COM_GLUE;
+extern const unused_t NS_COM_GLUE unused;
 
 template<typename T>
 inline void operator<<(const unused_t& /*unused*/, const T& /*unused*/) { }

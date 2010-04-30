@@ -742,7 +742,7 @@ nsFocusManager::WindowLowered(nsIDOMWindow* aWindow)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 {
   NS_ENSURE_ARG(aDocument);
@@ -754,7 +754,7 @@ nsFocusManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 
   // if the content is currently focused in the window, or is an ancestor
   // of the currently focused element, reset the focus within that window.
-  nsCOMPtr<nsIContent> content = window->GetFocusedNode();
+  nsIContent* content = window->GetFocusedNode();
   if (content && nsContentUtils::ContentIsDescendantOf(content, aContent)) {
     window->SetFocusedNode(nsnull);
 

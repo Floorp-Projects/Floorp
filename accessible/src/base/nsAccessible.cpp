@@ -41,9 +41,15 @@
 
 #include "nsIXBLAccessible.h"
 
-#include "nsAccTreeWalker.h"
-#include "nsAccessibleRelation.h"
+#include "nsAccUtils.h"
+#include "nsARIAMap.h"
 #include "nsDocAccessible.h"
+#include "nsEventShell.h"
+
+#include "nsAccessibilityService.h"
+#include "nsAccTreeWalker.h"
+#include "nsRelUtils.h"
+#include "nsTextEquivUtils.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -95,50 +101,6 @@
 #include "nsIDOMCharacterData.h"
 #endif
 
-/**
- * nsAccessibleDOMStringList implementation
- */
-nsAccessibleDOMStringList::nsAccessibleDOMStringList()
-{
-}
-
-nsAccessibleDOMStringList::~nsAccessibleDOMStringList()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsAccessibleDOMStringList, nsIDOMDOMStringList)
-
-NS_IMETHODIMP
-nsAccessibleDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
-{
-  if (aIndex >= mNames.Length()) {
-    SetDOMStringToNull(aResult);
-  } else {
-    aResult = mNames.ElementAt(aIndex);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibleDOMStringList::GetLength(PRUint32 *aLength)
-{
-  *aLength = mNames.Length();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibleDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
-{
-  *aResult = mNames.Contains(aString);
-
-  return NS_OK;
-}
-
-/*
- * Class nsAccessible
- */
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible. nsISupports
@@ -824,12 +786,8 @@ NS_IMETHODIMP nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
     focusedChild = this;
   }
   else if (gLastFocusedNode) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-
-    accService->GetAccessibleFor(gLastFocusedNode,
-                                 getter_AddRefs(focusedChild));
+    GetAccService()->GetAccessibleFor(gLastFocusedNode,
+                                      getter_AddRefs(focusedChild));
     if (focusedChild) {
       nsCOMPtr<nsIAccessible> focusedParentAccessible;
       focusedChild->GetParent(getter_AddRefs(focusedParentAccessible));
@@ -891,17 +849,17 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY, PRBool aDeepestChild,
   }
 
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-  nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
 
   nsCOMPtr<nsIDOMNode> relevantNode;
-  accService->GetRelevantContentNodeFor(node, getter_AddRefs(relevantNode));
+  GetAccService()->GetRelevantContentNodeFor(node,
+                                             getter_AddRefs(relevantNode));
   if (!relevantNode) {
     NS_IF_ADDREF(*aChild = fallbackAnswer);
     return NS_OK;
   }
 
   nsCOMPtr<nsIAccessible> accessible;
-  accService->GetAccessibleFor(relevantNode, getter_AddRefs(accessible));
+  GetAccService()->GetAccessibleFor(relevantNode, getter_AddRefs(accessible));
   if (!accessible) {
     // No accessible for the node with the point, so find the first
     // accessible in the DOM parent chain

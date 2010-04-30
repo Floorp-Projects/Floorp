@@ -2821,24 +2821,33 @@ already_AddRefed<nsIDOMWindow>
 nsPrintEngine::FindFocusedDOMWindow()
 {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    nsCOMPtr<nsIDOMWindow> domWin;
-    fm->GetFocusedWindow(getter_AddRefs(domWin));
-    if (domWin && IsWindowsInOurSubTree(domWin))
-      return domWin.forget();
+  NS_ENSURE_TRUE(fm, nsnull);
+
+  nsCOMPtr<nsPIDOMWindow> window(mDocument->GetWindow());
+  NS_ENSURE_TRUE(window, nsnull);
+
+  nsCOMPtr<nsPIDOMWindow> rootWindow = window->GetPrivateRoot();
+  NS_ENSURE_TRUE(rootWindow, nsnull);
+
+  nsPIDOMWindow* focusedWindow;
+  nsFocusManager::GetFocusedDescendant(rootWindow, PR_TRUE, &focusedWindow);
+  NS_ENSURE_TRUE(focusedWindow, nsnull);
+
+  if (IsWindowsInOurSubTree(focusedWindow)) {
+    return focusedWindow;
   }
 
+  NS_IF_RELEASE(focusedWindow);
   return nsnull;
 }
 
 //---------------------------------------------------------------------
 PRBool
-nsPrintEngine::IsWindowsInOurSubTree(nsIDOMWindow * aDOMWindow)
+nsPrintEngine::IsWindowsInOurSubTree(nsPIDOMWindow * window)
 {
   PRBool found = PR_FALSE;
 
   // now check to make sure it is in "our" tree of docshells
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWindow));
   if (window) {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
       do_QueryInterface(window->GetDocShell());

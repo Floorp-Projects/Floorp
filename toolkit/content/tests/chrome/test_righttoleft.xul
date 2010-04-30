@@ -12,6 +12,8 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="application/javascript" 
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" 
+          src="RegisterUnregisterChrome.js"></script>
 
   <body  xmlns="http://www.w3.org/1999/xhtml">
     <p id="display"></p>
@@ -26,106 +28,15 @@
   <script type="application/javascript">
     <![CDATA[
 
-      /* This code is mostly copied from chrome/test/unit/head_crtestutils.js */
-      const NS_CHROME_MANIFESTS_FILE_LIST = "ChromeML";
-
-      const Cc = Components.classes;
-      const Ci = Components.interfaces;
-      const Cr = Components.results;
-
-      function ArrayEnumerator(array)
-      {
-        this.array = array;
-      }
-
-      ArrayEnumerator.prototype = {
-        pos: 0,
-        
-        hasMoreElements: function() {
-          return this.pos < this.array.length;
-        },
-        
-        getNext: function() {
-          if (this.pos < this.array.length)
-            return this.array[this.pos++];
-          throw Cr.NS_ERROR_FAILURE;
-        },
-
-        QueryInterface: function(iid) {
-          if (iid.equals(Ci.nsISimpleEnumerator)
-           || iid.equals(Ci.nsISupports))
-            return this;
-
-          throw Cr.NS_ERROR_NO_INTERFACE;
-        }
-      };
-
-      function ChromeProvider(manifests)
-      {
-        this._manifests = manifests;
-      }
-
-      ChromeProvider.prototype = {
-        getFile: function(prop, persistent) {
-          throw Cr.NS_ERROR_FAILURE;
-        },
-
-        getFiles: function(prop) {
-          if (prop == NS_CHROME_MANIFESTS_FILE_LIST) {
-            return new ArrayEnumerator(this._manifests);
-          }
-          throw Cr.NS_ERROR_FAILURE;
-        },
-
-        QueryInterface: function(iid) {
-          if (iid.equals(Ci.nsIDirectoryServiceProvider)
-           || iid.equals(Ci.nsIDirectoryServiceProvider2)
-           || iid.equals(Ci.nsISupports))
-            return this;
-
-          throw Cr.NS_ERROR_NO_INTERFACE;
-        }
-      };
-
-      let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                   getService(Ci.nsIDirectoryService);
-      function registerManifests(manifests)
-      {
-        let provider = new ChromeProvider(manifests);
-        dirSvc.registerProvider(provider);
-        return provider;
-      }
-
       SimpleTest.waitForExplicitFinish();
 
-      // Disable XUL cache temporarily
       let prefs = Cc["@mozilla.org/preferences-service;1"].
                   getService(Ci.nsIPrefBranch);
-      const XUL_CACHE_PREF = "nglayout.debug.disable_xul_cache";
       const UI_DIRECTION_PREF = "intl.uidirection.ar";
-      prefs.setBoolPref(XUL_CACHE_PREF, true);
       prefs.setCharPref(UI_DIRECTION_PREF, "rtl");
 
-      // Register our manifest
-      let cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
-               getService(Ci.nsIXULChromeRegistry);
-      let manifests = [];
-      let currentManifests = dirSvc.QueryInterface(Ci.nsIProperties)
-                                   .get(NS_CHROME_MANIFESTS_FILE_LIST,
-                                        Ci.nsISimpleEnumerator);
-      while (currentManifests.hasMoreElements())
-        manifests.push(currentManifests.getNext());
-
-      let ioService = Cc["@mozilla.org/network/io-service;1"].
-                        getService(Ci.nsIIOService);
-
-      let uri = ioService.newURI("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtltest/", null, null);
-      uri = cr.convertChromeURL(uri);
-      let newChromePath = uri.QueryInterface(Ci.nsIFileURL).file;
-      manifests.push(newChromePath);
-      let provider = registerManifests(manifests);
-      cr.checkForNewChrome();
-      cr.refreshSkins();
+      registerCustomChrome("chrome://mochikit/content/chrome/toolkit/content/tests/chrome/rtltest/",
+                           true, true);
 
       function runTest()
       {
@@ -203,11 +114,7 @@
           if (prefs.prefHasUserValue(UI_DIRECTION_PREF + "-QA"))
             prefs.clearUserPref(UI_DIRECTION_PREF + "-QA");
 
-          dirSvc.unregisterProvider(provider);
-          cr.checkForNewChrome();
-          cr.refreshSkins();
-          if (prefs.prefHasUserValue(XUL_CACHE_PREF))
-            prefs.clearUserPref(XUL_CACHE_PREF);
+          cleanupCustomChrome();
           if (prefs.prefHasUserValue(UI_DIRECTION_PREF))
             prefs.clearUserPref(UI_DIRECTION_PREF);
 

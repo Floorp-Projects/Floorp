@@ -47,7 +47,7 @@ class nsIWidget;
 namespace mozilla {
 namespace gl {
 
-class GLContextProvider 
+class THEBES_API GLContextProvider 
 {
 public:
     /**
@@ -68,7 +68,7 @@ public:
     already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
 };
 
-extern GLContextProvider sGLContextProvider;
+extern GLContextProvider THEBES_API sGLContextProvider;
 
 }
 }
