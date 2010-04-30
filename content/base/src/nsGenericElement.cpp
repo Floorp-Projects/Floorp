@@ -327,8 +327,8 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
   if (aEditor)
     *aEditor = nsnull;
   for (nsINode* node = this; node; node = node->GetNodeParent()) {
-    if (!node->IsNodeOfType(eELEMENT) ||
-        !static_cast<nsIContent*>(node)->IsHTML())
+    if (!node->IsElement() ||
+        !node->AsElement()->IsHTML())
       continue;
 
     nsCOMPtr<nsIEditor> editor;
@@ -841,28 +841,46 @@ nsNode3Tearoff::AreNodesEqual(nsIContent* aContent1,
     }
   }
 
-  if (aContent1->IsNodeOfType(nsINode::eELEMENT)) {
-    // aContent1 is an element.  Do the check on attributes.
-    PRUint32 attrCount = aContent1->GetAttrCount();
-    if (attrCount != aContent2->GetAttrCount()) {
+  if (aContent1->IsElement()) {
+    // aContent1 is an element.  So is aContent2, since the nodeinfos
+    // were equal.  Do the check on attributes.
+    Element* element1 = aContent1->AsElement();
+    Element* element2 = aContent2->AsElement();
+    PRUint32 attrCount = element1->GetAttrCount();
+    if (attrCount != element2->GetAttrCount()) {
       return PR_FALSE;
     }
 
     // Iterate over attributes.
     for (PRUint32 i = 0; i < attrCount; ++i) {
-      const nsAttrName* attrName1 = aContent1->GetAttrNameAt(i);
+      const nsAttrName* attrName1 = element1->GetAttrNameAt(i);
 #ifdef DEBUG
       PRBool hasAttr =
 #endif
-      aContent1->GetAttr(attrName1->NamespaceID(),
-                         attrName1->LocalName(),
-                         string1);
+      element1->GetAttr(attrName1->NamespaceID(),
+                        attrName1->LocalName(),
+                        string1);
       NS_ASSERTION(hasAttr, "Why don't we have an attr?");
 
-      if (!aContent2->AttrValueIs(attrName1->NamespaceID(),
-                                  attrName1->LocalName(),
-                                  string1,
-                                  eCaseMatters)) {
+      if (!element2->AttrValueIs(attrName1->NamespaceID(),
+                                 attrName1->LocalName(),
+                                 string1,
+                                 eCaseMatters)) {
+        return PR_FALSE;
+      }
+    }
+
+    // Child nodes count.
+    PRUint32 childCount = element1->GetChildCount();
+    if (childCount != element2->GetChildCount()) {
+      return PR_FALSE;
+    }
+
+    // Iterate over child nodes.
+    for (PRUint32 i = 0; i < childCount; ++i) {
+      nsIContent* child1 = element1->GetChildAt(i);
+      nsIContent* child2 = element2->GetChildAt(i);
+      if (!AreNodesEqual(child1, child2)) {
         return PR_FALSE;
       }
     }
@@ -874,21 +892,6 @@ nsNode3Tearoff::AreNodesEqual(nsIContent* aContent1,
     domNode1->GetNodeValue(string1);
     domNode2->GetNodeValue(string2);
     if (!string1.Equals(string2)) {
-      return PR_FALSE;
-    }
-  }
-
-  // Child nodes count.
-  PRUint32 childCount = aContent1->GetChildCount();
-  if (childCount != aContent2->GetChildCount()) {
-    return PR_FALSE;
-  }
-
-  // Iterate over child nodes.
-  for (PRUint32 i = 0; i < childCount; ++i) {
-    nsIContent* child1 = aContent1->GetChildAt(i);
-    nsIContent* child2 = aContent2->GetChildAt(i);
-    if (!AreNodesEqual(child1, child2)) {
       return PR_FALSE;
     }
   }
@@ -1006,7 +1009,7 @@ nsNSElementTearoff::GetFirstElementChild(nsIDOMElement** aResult)
   PRUint32 i, count = children.ChildCount();
   for (i = 0; i < count; ++i) {
     nsIContent* child = children.ChildAt(i);
-    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+    if (child->IsElement()) {
       return CallQueryInterface(child, aResult);
     }
   }
@@ -1023,7 +1026,7 @@ nsNSElementTearoff::GetLastElementChild(nsIDOMElement** aResult)
   PRUint32 i = children.ChildCount();
   while (i > 0) {
     nsIContent* child = children.ChildAt(--i);
-    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+    if (child->IsElement()) {
       return CallQueryInterface(child, aResult);
     }
   }
@@ -1041,7 +1044,7 @@ nsNSElementTearoff::GetPreviousElementSibling(nsIDOMElement** aResult)
     return NS_OK;
   }
 
-  NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
+  NS_ASSERTION(parent->IsElement() ||
                parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
                "Parent content must be an element or a doc fragment");
 
@@ -1055,7 +1058,7 @@ nsNSElementTearoff::GetPreviousElementSibling(nsIDOMElement** aResult)
   PRUint32 i = index;
   while (i > 0) {
     nsIContent* child = children.ChildAt((PRUint32)--i);
-    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+    if (child->IsElement()) {
       return CallQueryInterface(child, aResult);
     }
   }
@@ -1073,7 +1076,7 @@ nsNSElementTearoff::GetNextElementSibling(nsIDOMElement** aResult)
     return NS_OK;
   }
 
-  NS_ASSERTION(parent->IsNodeOfType(nsINode::eELEMENT) ||
+  NS_ASSERTION(parent->IsElement() ||
                parent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT),
                "Parent content must be an element or a doc fragment");
 
@@ -1087,7 +1090,7 @@ nsNSElementTearoff::GetNextElementSibling(nsIDOMElement** aResult)
   PRUint32 i, count = children.ChildCount();
   for (i = (PRUint32)index + 1; i < count; ++i) {
     nsIContent* child = children.ChildAt(i);
-    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+    if (child->IsElement()) {
       return CallQueryInterface(child, aResult);
     }
   }
@@ -3577,7 +3580,7 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
                   "Must have ref content for replace");
   NS_PRECONDITION(aParent->IsNodeOfType(nsINode::eDOCUMENT) ||
                   aParent->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT) ||
-                  aParent->IsNodeOfType(nsINode::eELEMENT),
+                  aParent->IsElement(),
                   "Nodes that are not documents, document fragments or "
                   "elements can't be parents!");
 #ifdef DEBUG
@@ -3701,7 +3704,7 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
       for (PRUint32 index = 0; index < count; ++index) {
         nsIContent* childContent = aNewChild->GetChildAt(index);
         NS_ASSERTION(childContent, "Something went wrong");
-        if (childContent->IsNodeOfType(nsINode::eELEMENT)) {
+        if (childContent->IsElement()) {
           if (sawElement) {
             // Can't put two elements into a document
             return PR_FALSE;
@@ -3930,7 +3933,8 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
       }
     }
 
-    PRBool appending = !IsNodeOfType(eDOCUMENT) && insPos == GetChildCount();
+    PRBool appending =
+      !IsNodeOfType(eDOCUMENT) && PRUint32(insPos) == GetChildCount();
     PRBool firstInsPos = insPos;
 
     // Iterate through the fragment's children, and insert them in the new
@@ -5188,7 +5192,7 @@ TryMatchingElementsInSubtree(nsINode* aRoot,
   PRBool continueIteration = PR_TRUE;
   for (nsINode::ChildIterator iter(aRoot); !iter.IsDone(); iter.Next()) {
     nsIContent* kid = iter;
-    if (!kid->IsNodeOfType(nsINode::eELEMENT)) {
+    if (!kid->IsElement()) {
       continue;
     }
     /* See whether we match */
