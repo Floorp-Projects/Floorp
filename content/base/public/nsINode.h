@@ -469,7 +469,7 @@ public:
    * @throws NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have more
    * than one element node as a child of a document.  Doing this will also
    * assert -- you shouldn't be doing it!  Check with
-   * nsIDocument::GetRootContent() first if you're not sure.  Apart from this
+   * nsIDocument::GetRootElement() first if you're not sure.  Apart from this
    * one constraint, this doesn't do any checking on whether aKid is a valid
    * child of |this|.
    *
@@ -490,7 +490,7 @@ public:
    * @throws NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have more
    * than one element node as a child of a document.  Doing this will also
    * assert -- you shouldn't be doing it!  Check with
-   * nsIDocument::GetRootContent() first if you're not sure.  Apart from this
+   * nsIDocument::GetRootElement() first if you're not sure.  Apart from this
    * one constraint, this doesn't do any checking on whether aKid is a valid
    * child of |this|.
    *

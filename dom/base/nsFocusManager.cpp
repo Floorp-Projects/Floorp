@@ -84,11 +84,14 @@
 #include "nsIDOMNodeFilter.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
+#include "Element.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #endif
+
+using namespace mozilla::dom;
 
 //#define DEBUG_FOCUS 1
 //#define DEBUG_FOCUS_NAVIGATION 1
@@ -1307,7 +1310,7 @@ nsFocusManager::IsNonFocusableRoot(nsIContent* aContent)
   // focusable.
   nsIDocument* doc = aContent->GetCurrentDoc();
   NS_ASSERTION(doc, "aContent must have current document");
-  return aContent == doc->GetRootContent() &&
+  return aContent == doc->GetRootElement() &&
            (doc->HasFlag(NODE_IS_EDITABLE) || !aContent->IsEditable());
 }
 
@@ -1337,7 +1340,7 @@ nsFocusManager::CheckIfFocusable(nsIContent* aContent, PRUint32 aFlags)
     return nsnull;
 
   // the root content can always be focused
-  if (aContent == doc->GetRootContent())
+  if (aContent == doc->GetRootElement())
     return aContent;
 
   // cannot focus content in print preview mode. Only the root can be focused.
@@ -1584,7 +1587,7 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
   PRINTTAGF("**Element %s has been focused", aContent);
   nsCOMPtr<nsIDocument> docm = do_QueryInterface(aWindow->GetExtantDocument());
   if (docm)
-    PRINTTAGF(" from %s", docm->GetRootContent());
+    PRINTTAGF(" from %s", docm->GetRootElement());
   printf(" [Newdoc: %d FocusChanged: %d Raised: %d Flags: %x]\n",
          aIsNewDocument, aFocusChanged, aWindowRaised, aFlags);
 #endif
@@ -2071,7 +2074,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
           startContent->IsNodeOfType(nsINode::eHTML_FORM_CONTROL);
 
         if (nodeValue.Length() == (PRUint32)startOffset && !isFormControl &&
-            startContent != aDocument->GetRootContent()) {
+            startContent != aDocument->GetRootElement()) {
           // Yes, indeed we were at the end of the last node
           nsCOMPtr<nsIFrameEnumerator> frameTraversal;
           nsresult rv = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),
@@ -2173,7 +2176,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
     return NS_OK;
   }
   
-  nsIContent* rootContent = doc->GetRootContent();
+  nsIContent* rootContent = doc->GetRootElement();
   NS_ENSURE_TRUE(rootContent, NS_OK);
 
   nsIPresShell *presShell = doc->GetPrimaryShell();
@@ -2398,7 +2401,7 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
 
       presShell = doc->GetPrimaryShell();
 
-      rootContent = doc->GetRootContent();
+      rootContent = doc->GetRootElement();
       startContent = do_QueryInterface(piWindow->GetFrameElementInternal());
       if (startContent) {
         nsIFrame* frame = startContent->GetPrimaryFrame();
@@ -2609,11 +2612,11 @@ nsFocusManager::GetNextTabbableContent(nsIPresShell* aPresShell,
                   }
                 }
               }
-              nsIContent* rootContent = subdoc->GetRootContent();
+              Element* rootElement = subdoc->GetRootElement();
               nsIPresShell* subShell = subdoc->GetPrimaryShell();
-              if (rootContent && subShell) {
-                rv = GetNextTabbableContent(subShell, rootContent,
-                                            aOriginalStartContent, rootContent,
+              if (rootElement && subShell) {
+                rv = GetNextTabbableContent(subShell, rootElement,
+                                            aOriginalStartContent, rootElement,
                                             aForward, (aForward ? 1 : 0),
                                             PR_FALSE, aResultContent);
                 NS_ENSURE_SUCCESS(rv, rv);
@@ -2807,18 +2810,18 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
   if (aCheckVisibility && !IsWindowVisible(aWindow))
     return nsnull;
 
-  nsIContent *rootContent = aDocument->GetRootContent();
-  if (rootContent) {
-    if (aCheckVisibility && !rootContent->GetPrimaryFrame()) {
+  Element *rootElement = aDocument->GetRootElement();
+  if (rootElement) {
+    if (aCheckVisibility && !rootElement->GetPrimaryFrame()) {
       return nsnull;
     }
 
     // Finally, check if this is a frameset
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(aDocument);
     if (htmlDoc) {
-      PRUint32 childCount = rootContent->GetChildCount();
+      PRUint32 childCount = rootElement->GetChildCount();
       for (PRUint32 i = 0; i < childCount; ++i) {
-        nsIContent *childContent = rootContent->GetChildAt(i);
+        nsIContent *childContent = rootElement->GetChildAt(i);
         nsINodeInfo *ni = childContent->NodeInfo();
         if (childContent->IsHTML() &&
             ni->Equals(nsGkAtoms::frameset))
@@ -2827,7 +2830,7 @@ nsFocusManager::GetRootForFocus(nsPIDOMWindow* aWindow,
     }
   }
 
-  return rootContent;
+  return rootElement;
 }
 
 void
@@ -2973,11 +2976,11 @@ nsFocusManager::GetNextTabbableDocument(PRBool aForward)
         // forward one tabbable item so that the first item is focused. Note
         // that we always go forward and not back here.
         nsCOMPtr<nsIContent> nextFocus;
-        nsIContent* rootContent = doc->GetRootContent();
+        Element* rootElement = doc->GetRootElement();
         nsIPresShell* presShell = doc->GetPrimaryShell();
         if (presShell) {
-          nsresult rv = GetNextTabbableContent(presShell, rootContent,
-                                               nsnull, rootContent,
+          nsresult rv = GetNextTabbableContent(presShell, rootElement,
+                                               nsnull, rootElement,
                                                PR_TRUE, 1, PR_FALSE,
                                                getter_AddRefs(nextFocus));
           return NS_SUCCEEDED(rv) ? nextFocus.get() : nsnull;

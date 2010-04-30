@@ -73,6 +73,7 @@
 #include "nsThemeConstants.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsThemeConstants.h"
+#include "Element.h"
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -81,6 +82,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 NS_IMPL_FRAMEARENA_HELPERS(nsContainerFrame)
 
@@ -478,8 +480,8 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
   if (aView != rootView)
     return;
 
-  nsIContent* rootContent = aPresContext->Document()->GetRootContent();
-  if (!rootContent || !rootContent->IsXUL()) {
+  Element* rootElement = aPresContext->Document()->GetRootElement();
+  if (!rootElement || !rootElement->IsXUL()) {
     // Scrollframes use native widgets which don't work well with
     // translucent windows, at least in Windows XP. So if the document
     // has a root scrollrame it's useless to try to make it transparent,

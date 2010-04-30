@@ -1733,7 +1733,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
       case nsCSSPseudoClasses::ePseudoClass_root:
         if (data.mParentContent != nsnull ||
-            data.mContent != data.mContent->GetOwnerDoc()->GetRootContent()) {
+            data.mContent != data.mContent->GetOwnerDoc()->GetRootElement()) {
           return PR_FALSE;
         }
         break;
@@ -2441,7 +2441,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
     if ((aData->mAttribute == nsGkAtoms::lwtheme ||
          aData->mAttribute == nsGkAtoms::lwthemetextcolor) &&
         aData->mNameSpaceID == kNameSpaceID_XUL &&
-        aData->mContent == aData->mContent->GetOwnerDoc()->GetRootContent())
+        aData->mContent == aData->mContent->GetOwnerDoc()->GetRootElement())
       {
         data.change = nsRestyleHint(data.change | eRestyle_Self);
       }

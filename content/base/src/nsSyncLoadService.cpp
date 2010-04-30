@@ -266,7 +266,7 @@ nsSyncLoader::LoadDocument(nsIChannel* aChannel,
 
     NS_ENSURE_TRUE(mLoadSuccess, NS_ERROR_FAILURE);
 
-    NS_ENSURE_TRUE(document->GetRootContent(), NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(document->GetRootElement(), NS_ERROR_FAILURE);
 
     return CallQueryInterface(document, aResult);
 }

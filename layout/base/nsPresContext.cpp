@@ -95,6 +95,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsObjectFrame.h"
 #include "nsTransitionManager.h"
+#include "Element.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -115,6 +116,7 @@
 
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
+using namespace mozilla::dom;
 
 static nscolor
 MakeColorPref(const char *colstr)
@@ -1173,9 +1175,9 @@ nsPresContext::SetImageAnimationModeInternal(PRUint16 aMode)
   if (mShell != nsnull) {
     nsIDocument *doc = mShell->GetDocument();
     if (doc) {
-      nsIContent *rootContent = doc->GetRootContent();
-      if (rootContent) {
-        SetImgAnimations(rootContent, aMode);
+      Element *rootElement = doc->GetRootElement();
+      if (rootElement) {
+        SetImgAnimations(rootElement, aMode);
       }
 
 #ifdef MOZ_SMIL
