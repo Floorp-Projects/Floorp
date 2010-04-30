@@ -235,7 +235,8 @@
                              clickSelectsAll="true"/>
                   </hbox>
                   <hbox id="urlbar-icons" mode="view">
-                    <toolbarbutton id="tool-reload" class="urlbar-cap-button" command="cmd_reload"/>
+                    <toolbarbutton id="tool-reload" class="urlbar-cap-button"
+                                   oncommand="CommandUpdater.doCommand(event.shiftKey ? 'cmd_forceReload' : 'cmd_reload');"/>
                     <toolbarbutton id="tool-stop" class="urlbar-cap-button" command="cmd_stop"/>
                     <toolbarbutton id="tool-go" class="urlbar-cap-button" command="cmd_go"/>
                   </hbox>
