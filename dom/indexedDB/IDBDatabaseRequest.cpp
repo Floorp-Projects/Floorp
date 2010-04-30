@@ -117,7 +117,7 @@ CreateTables(mozIStorageConnection* aDBConn)
   // Table `object_store`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE object_store ("
-      "id INTEGER NOT NULL, "
+      "id INTEGER, "
       "name TEXT NOT NULL, "
       "keyPath TEXT DEFAULT NULL, "
       "auto_increment INTEGER NOT NULL DEFAULT 0, "
@@ -132,7 +132,7 @@ CreateTables(mozIStorageConnection* aDBConn)
   // Table `object_data`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE object_data ("
-      "id INTEGER NOT NULL, "
+      "id INTEGER, "
       "object_store_id INTEGER NOT NULL, "
       "data TEXT NOT NULL, "
       "key_value TEXT DEFAULT NULL, "
@@ -151,7 +151,7 @@ CreateTables(mozIStorageConnection* aDBConn)
   // Table `ai_object_data`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE ai_object_data ("
-      "id INTEGER NOT NULL, "
+      "id INTEGER, "
       "object_store_id INTEGER NOT NULL, "
       "data TEXT NOT NULL, "
       "PRIMARY KEY (id), "
