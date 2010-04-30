@@ -3761,9 +3761,9 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
-    if (contextAsContent && !contextAsContent->IsNodeOfType(nsINode::eELEMENT)) {
+    if (contextAsContent && !contextAsContent->IsElement()) {
       contextAsContent = contextAsContent->GetParent();
-      if (contextAsContent && !contextAsContent->IsNodeOfType(nsINode::eELEMENT)) {
+      if (contextAsContent && !contextAsContent->IsElement()) {
         // can this even happen?
         contextAsContent = nsnull;
       }
@@ -3792,10 +3792,10 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
   nsAutoString uriStr, nameStr;
   nsCOMPtr<nsIContent> content = do_QueryInterface(aContextNode);
   // just in case we have a text node
-  if (content && !content->IsNodeOfType(nsINode::eELEMENT))
+  if (content && !content->IsElement())
     content = content->GetParent();
 
-  while (content && content->IsNodeOfType(nsINode::eELEMENT)) {
+  while (content && content->IsElement()) {
     nsString& tagName = *tagStack.AppendElement();
     NS_ENSURE_TRUE(&tagName, NS_ERROR_OUT_OF_MEMORY);
 
@@ -4004,7 +4004,7 @@ static void AppendNodeTextContentsRecurse(nsINode* aNode, nsAString& aResult)
   nsIContent* child;
   PRUint32 i;
   for (i = 0; (child = aNode->GetChildAt(i)); ++i) {
-    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+    if (child->IsElement()) {
       AppendNodeTextContentsRecurse(child, aResult);
     }
     else if (child->IsNodeOfType(nsINode::eTEXT)) {

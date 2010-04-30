@@ -343,7 +343,7 @@ nsDocumentEncoder::SerializeNodeEnd(nsINode* aNode,
                                     nsAString& aStr)
 {
   //XXX Remove QIing to nsIDOM* when fixing bug 562321.
-  if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+  if (aNode->IsElement()) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
     mSerializer->AppendElementEnd(element, aStr);
   }
