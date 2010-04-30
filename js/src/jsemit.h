@@ -314,6 +314,15 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_MODULE_PATTERN 0x200000
 
 /*
+ * Flag to prevent a non-escaping function that could be optimized into a null
+ * closure (i.e., a closure that needs only its global object for free variable
+ * resolution, thanks to JSOP_{GET,CALL}UPVAR), because it contains a closure
+ * that needs one or more scope objects surrounding this function (i.e., Call
+ * object for a heavyweight outer function). See bug 560234.
+ */
+#define TCF_FUN_ENTRAINS_SCOPES 0x400000
+
+/*
  * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
