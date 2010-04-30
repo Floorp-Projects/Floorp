@@ -5005,13 +5005,13 @@ nsAutoGCRoot::Shutdown()
 }
 
 nsIAtom*
-nsContentUtils::IsNamedItem(nsIContent* aContent)
+nsContentUtils::IsNamedItem(Element* aElement)
 {
   // Only the content types reflected in Level 0 with a NAME
   // attribute are registered. Images, layers and forms always get
   // reflected up to the document. Applets and embeds only go
   // to the closest container (which could be a form).
-  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aContent);
+  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aElement);
   if (!elm) {
     return nsnull;
   }
