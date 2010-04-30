@@ -2933,9 +2933,9 @@ BEGIN_CASE(JSOP_DEFFUN)
         attrs |= flags | JSPROP_SHARED;
         rval = JSVAL_VOID;
         if (flags == JSPROP_GETTER)
-            getter = js_CastAsPropertyOp(obj);
+            getter = CastAsPropertyOp(obj);
         else
-            setter = js_CastAsPropertyOp(obj);
+            setter = CastAsPropertyOp(obj);
     }
 
     /*
@@ -3033,10 +3033,10 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
 
             ok = parent->defineProperty(cx, id, rval,
                                         (flags & JSPROP_GETTER)
-                                        ? js_CastAsPropertyOp(obj)
+                                        ? CastAsPropertyOp(obj)
                                         : JS_PropertyStub,
                                         (flags & JSPROP_SETTER)
-                                        ? js_CastAsPropertyOp(obj)
+                                        ? CastAsPropertyOp(obj)
                                         : JS_PropertyStub,
                                         attrs);
         }
@@ -3259,12 +3259,12 @@ BEGIN_CASE(JSOP_SETTER)
         goto error;
 
     if (op == JSOP_GETTER) {
-        getter = js_CastAsPropertyOp(JSVAL_TO_OBJECT(rval));
+        getter = CastAsPropertyOp(JSVAL_TO_OBJECT(rval));
         setter = JS_PropertyStub;
         attrs = JSPROP_GETTER;
     } else {
         getter = JS_PropertyStub;
-        setter = js_CastAsPropertyOp(JSVAL_TO_OBJECT(rval));
+        setter = CastAsPropertyOp(JSVAL_TO_OBJECT(rval));
         attrs = JSPROP_SETTER;
     }
     attrs |= JSPROP_ENUMERATE | JSPROP_SHARED;
