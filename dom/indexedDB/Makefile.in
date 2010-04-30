@@ -58,6 +58,7 @@ CPPSRCS = \
   IDBEvents.cpp \
   IDBRequest.cpp \
   IndexedDatabaseRequest.cpp \
+  LazyIdleThread.cpp \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
@@ -68,11 +69,13 @@ EXPORTS_mozilla/dom/indexedDB = \
   IDBRequest.h \
   IndexedDatabase.h \
   IndexedDatabaseRequest.h \
+  LazyIdleThread.h \
   $(NULL)
 
 LOCAL_INCLUDES = \
   -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/content/events/src
+  -I$(topsrcdir)/content/base/src \
+  -I$(topsrcdir)/content/events/src \
   $(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
