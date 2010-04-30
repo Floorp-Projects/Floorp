@@ -164,8 +164,8 @@ public:
 
   void SetInvalidName();
   PRBool IsInvalidName();
-  void AddNameContent(nsIContent* aContent);
-  void RemoveNameContent(nsIContent* aContent);
+  void AddNameElement(mozilla::dom::Element* aElement);
+  void RemoveNameElement(mozilla::dom::Element* aElement);
   PRBool HasNameContentList() {
     return mNameContentList != nsnull;
   }
@@ -178,7 +178,7 @@ public:
    * Returns the element if we know the element associated with this
    * id. Otherwise returns null.
    */
-  nsIContent* GetIdContent();
+  mozilla::dom::Element* GetIdElement();
   /**
    * Append all the elements with this id to aElements
    */
@@ -188,12 +188,12 @@ public:
    * @return true if the content could be added, false if we failed due
    * to OOM.
    */
-  PRBool AddIdContent(nsIContent* aContent);
+  PRBool AddIdElement(mozilla::dom::Element* aElement);
   /**
    * This can fire ID change callbacks.
    * @return true if this map entry should be removed
    */
-  PRBool RemoveIdContent(nsIContent* aContent);
+  PRBool RemoveIdElement(mozilla::dom::Element* aElement);
 
   PRBool HasContentChangeCallback() { return mChangeCallbacks != nsnull; }
   void AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback, void* aData);
@@ -236,12 +236,14 @@ public:
   };
 
 private:
-  void FireChangeCallbacks(nsIContent* aOldContent, nsIContent* aNewContent);
+  void FireChangeCallbacks(mozilla::dom::Element* aOldElement,
+                           mozilla::dom::Element* aNewElement);
 
-  // empty if there are no nodes with this ID.
-  // The content nodes are stored addrefed.
+  // empty if there are no elementswith this ID.
+  // The elementsnodes are stored addrefed.
   nsSmallVoidArray mIdContentList;
-  // NAME_NOT_VALID if this id cannot be used as a 'name'
+  // NAME_NOT_VALID if this id cannot be used as a 'name'.  Otherwise
+  // stores Elements.
   nsBaseContentList *mNameContentList;
   nsRefPtr<nsContentList> mDocAllList;
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
@@ -946,10 +948,10 @@ protected:
   friend class nsNodeUtils;
   void RegisterNamedItems(nsIContent *aContent);
   void UnregisterNamedItems(nsIContent *aContent);
-  void UpdateNameTableEntry(nsIContent *aContent);
-  void UpdateIdTableEntry(nsIContent *aContent);
-  void RemoveFromNameTable(nsIContent *aContent);
-  void RemoveFromIdTable(nsIContent *aContent);
+  void UpdateNameTableEntry(mozilla::dom::Element *aElement);
+  void UpdateIdTableEntry(mozilla::dom::Element *aElement);
+  void RemoveFromNameTable(mozilla::dom::Element *aElement);
+  void RemoveFromIdTable(mozilla::dom::Element *aElement);
 
   /**
    * Check that aId is not empty and log a message to the console
