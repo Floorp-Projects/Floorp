@@ -1304,36 +1304,23 @@ class TraceRecorder
                                                                   nanojit::LIns* obj_ins,
                                                                   JSScopeProperty* sprop);
 
+    JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
+                                                  JSScopeProperty* sprop,
+                                                  jsval v, nanojit::LIns* v_ins);
+    JS_REQUIRES_STACK RecordingStatus setProp(jsval &l, PropertyCacheEntry* entry,
+                                                JSScopeProperty* sprop,
+                                                jsval &v, nanojit::LIns*& v_ins);
+    JS_REQUIRES_STACK RecordingStatus setCallProp(JSObject *callobj, nanojit::LIns *callobj_ins,
+                                                    JSScopeProperty *sprop, nanojit::LIns *v_ins,
+                                                    jsval v);
     JS_REQUIRES_STACK RecordingStatus initOrSetPropertyByName(nanojit::LIns* obj_ins,
-                                                              jsval* idvalp, jsval* rvalp,
-                                                              bool init);
+                                                                jsval* idvalp, jsval* rvalp,
+                                                                bool init);
     JS_REQUIRES_STACK RecordingStatus initOrSetPropertyByIndex(nanojit::LIns* obj_ins,
-                                                               nanojit::LIns* index_ins,
-                                                               jsval* rvalp, bool init);
+                                                                 nanojit::LIns* index_ins,
+                                                                 jsval* rvalp, bool init);
     JS_REQUIRES_STACK AbortableRecordingStatus setElem(int lval_spindex, int idx_spindex,
                                                        int v_spindex);
-
-    JS_REQUIRES_STACK RecordingStatus lookupForSetPropertyOp(JSObject* obj, nanojit::LIns* obj_ins,
-                                                             jsid id, bool* safep,
-                                                             JSObject** pobjp,
-                                                             JSScopeProperty** spropp);
-    JS_REQUIRES_STACK RecordingStatus nativeSet(JSObject* obj, nanojit::LIns* obj_ins,
-                                                JSScopeProperty* sprop,
-                                                jsval v, nanojit::LIns* v_ins);
-    JS_REQUIRES_STACK RecordingStatus addDataProperty(JSObject* obj, nanojit::LIns* obj_ins,
-                                                      jsid id,
-                                                      JSPropertyOp getter, JSPropertyOp setter,
-                                                      uintN flags, intN shortid,
-                                                      jsval v, nanojit::LIns* v_ins);
-    JS_REQUIRES_STACK RecordingStatus setCallProp(JSObject *callobj, nanojit::LIns *callobj_ins,
-                                                  JSScopeProperty *sprop, nanojit::LIns *v_ins,
-                                                  jsval v);
-    JS_REQUIRES_STACK RecordingStatus setProperty(JSObject* obj, nanojit::LIns* obj_ins,
-                                                  jsval v, nanojit::LIns* v_ins);
-    JS_REQUIRES_STACK RecordingStatus recordSetPropertyOp();
-
-    JS_REQUIRES_STACK RecordingStatus recordInitPropertyOp();
-
 
     JS_REQUIRES_STACK nanojit::LIns* box_jsval(jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
@@ -1473,6 +1460,8 @@ public:
     JS_REQUIRES_STACK AbortableRecordingStatus monitorRecording(JSOp op);
     JS_REQUIRES_STACK AbortableRecordingStatus record_EnterFrame(uintN& inlineCallCount);
     JS_REQUIRES_STACK AbortableRecordingStatus record_LeaveFrame();
+    JS_REQUIRES_STACK AbortableRecordingStatus record_SetPropHit(PropertyCacheEntry* entry,
+                                                                 JSScopeProperty* sprop);
     JS_REQUIRES_STACK AbortableRecordingStatus record_DefLocalFunSetSlot(uint32 slot, JSObject* obj);
     JS_REQUIRES_STACK AbortableRecordingStatus record_NativeCallComplete();
     void forgetGuardedShapesForObject(JSObject* obj);
