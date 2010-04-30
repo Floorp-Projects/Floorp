@@ -1143,7 +1143,7 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
           skipNode = PR_TRUE;
         }
       }
-      else if (content->IsNodeOfType(nsINode::eELEMENT))
+      else if (content->IsElement())
       { // handle non-text leaf nodes here
         skipNode = PR_TRUE;
       }
