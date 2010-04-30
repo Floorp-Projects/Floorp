@@ -55,6 +55,8 @@ var ViewConfig = {
 
     this._handleWindowResize();
     this.filter("");
+
+    document.getElementById("textbox").focus();
   },
 
   uninit: function uninit() {
