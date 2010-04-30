@@ -407,7 +407,7 @@ nsHTMLTableHeaderCellAccessible::GetRoleInternal(PRUint32 *aRole)
 
   for (PRInt32 idx = indexInParent - 1; idx >= 0; idx--) {
     nsIContent* sibling = parent->GetChildAt(idx);
-    if (sibling && sibling->IsNodeOfType(nsINode::eELEMENT)) {
+    if (sibling && sibling->IsElement()) {
       if (nsCoreUtils::IsHTMLTableHeader(sibling))
         *aRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
       else
@@ -420,7 +420,7 @@ nsHTMLTableHeaderCellAccessible::GetRoleInternal(PRUint32 *aRole)
   PRInt32 childCount = parent->GetChildCount();
   for (PRInt32 idx = indexInParent + 1; idx < childCount; idx++) {
     nsIContent* sibling = parent->GetChildAt(idx);
-    if (sibling && sibling->IsNodeOfType(nsINode::eELEMENT)) {
+    if (sibling && sibling->IsElement()) {
       if (nsCoreUtils::IsHTMLTableHeader(sibling))
         *aRole = nsIAccessibleRole::ROLE_COLUMNHEADER;
       else
