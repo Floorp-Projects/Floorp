@@ -146,7 +146,10 @@ NS_INTERFACE_TABLE_HEAD(nsAnonymousContentList)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsAnonymousContentList)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsAnonymousContentList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsAnonymousContentList)
+  tmp->mElements->Clear();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAnonymousContentList)
   {
     PRInt32 i, count = tmp->mElements->Length();
