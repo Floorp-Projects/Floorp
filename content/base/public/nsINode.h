@@ -307,27 +307,25 @@ public:
     eDOCUMENT            = 1 << 1,
     /** nsIAttribute nodes */
     eATTRIBUTE           = 1 << 2,
-    /** elements */
-    eELEMENT             = 1 << 3,
     /** text nodes */
-    eTEXT                = 1 << 4,
+    eTEXT                = 1 << 3,
     /** xml processing instructions */
-    ePROCESSING_INSTRUCTION = 1 << 5,
+    ePROCESSING_INSTRUCTION = 1 << 4,
     /** comment nodes */
-    eCOMMENT             = 1 << 6,
+    eCOMMENT             = 1 << 5,
     /** form control elements */
-    eHTML_FORM_CONTROL   = 1 << 7,
+    eHTML_FORM_CONTROL   = 1 << 6,
     /** svg elements */
-    eSVG                 = 1 << 8,
+    eSVG                 = 1 << 7,
     /** document fragments */
-    eDOCUMENT_FRAGMENT   = 1 << 9,
+    eDOCUMENT_FRAGMENT   = 1 << 8,
     /** data nodes (comments, PIs, text). Nodes of this type always
      returns a non-null value for nsIContent::GetText() */
-    eDATA_NODE           = 1 << 10,
+    eDATA_NODE           = 1 << 19,
     /** nsHTMLMediaElement */
-    eMEDIA               = 1 << 11,
+    eMEDIA               = 1 << 10,
     /** animation elements */
-    eANIMATION           = 1 << 12
+    eANIMATION           = 1 << 11
   };
 
   /**
