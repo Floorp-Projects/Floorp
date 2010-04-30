@@ -39,7 +39,7 @@
 
 #include "gfxQuartzNativeDrawing.h"
 #include "gfxQuartzSurface.h"
-
+#include "cairo-quartz.h"
 // see cairo-quartz-surface.c for the complete list of these
 enum {
     kPrivateCGCompositeSourceOver = 2
@@ -83,12 +83,11 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
     }
 
     // grab the CGContextRef
-    mCGContext = mQuartzSurface->GetCGContextWithClip(mContext);
+    mCGContext = cairo_quartz_get_cg_context_with_clip(mContext->GetCairo());
     if (!mCGContext)
         return nsnull;
 
     gfxMatrix m = mContext->CurrentMatrix();
-    CGContextSaveGState(mCGContext);
     CGContextTranslateCTM(mCGContext, deviceOffset.x, deviceOffset.y);
 
     // I -think- that this context will always have an identity
@@ -121,8 +120,7 @@ gfxQuartzNativeDrawing::EndNativeDrawing()
 {
     NS_ASSERTION(mQuartzSurface, "EndNativeDrawing called without BeginNativeDrawing");
 
-    // we drew directly to a shared CGContextRef; restore previous context state
-    CGContextRestoreGState(mCGContext);
+    cairo_quartz_finish_cg_context_with_clip(mContext->GetCairo());
     mQuartzSurface->MarkDirty();
     mQuartzSurface = nsnull;
 }
