@@ -500,6 +500,9 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
       if (!resultIfVisited) {
         return nsnull;
       }
+      if (!parentIfVisited) {
+        mRoots.AppendElement(resultIfVisited);
+      }
       resultIfVisited->SetIsStyleIfVisited();
       result->SetStyleIfVisited(resultIfVisited.forget());
 
