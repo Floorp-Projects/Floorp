@@ -6856,7 +6856,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   NS_ASSERTION(isSingleInsert || !aAllowLazyConstruction,
                "range insert shouldn't be lazy");
   NS_ASSERTION(isSingleInsert || !aContainer ||
-               aEndIndexInContainer < aContainer->GetChildCount(),
+               PRUint32(aEndIndexInContainer) < aContainer->GetChildCount(),
                "end index should not include all nodes");
 
 #ifdef MOZ_XUL
