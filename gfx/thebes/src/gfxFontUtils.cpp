@@ -361,23 +361,33 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
 
 // Windows requires fonts to have a format-4 cmap with a Microsoft ID (3).  On the Mac, fonts either have
 // a format-4 cmap with Microsoft platform/encoding id or they have one with a platformID == Unicode (0)
-// For fonts with two format-4 tables, the first one (Unicode platform) is preferred on the Mac.
+
+// For fonts with two format-4 tables, the first one (Unicode platform) 
+// used to be preferred on the Mac, but this causes problems on OS X 10.6
+// where ATS appears to synthesize a platform-0 subtable that claims support
+// for additional codepoints that Cocoa Text will simulate.
+// Therefore, we prefer the later (MS) format-4 table if available.
 
 #if defined(XP_MACOSX)
-    #define acceptablePlatform(p)    ((p) == PLATFORM_ID_UNICODE || (p) == PLATFORM_ID_MICROSOFT)
-    #define acceptableFormat4(p,e,k) ( ((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDMicrosoft && (k) != 4) || \
-                                       ((p) == PLATFORM_ID_UNICODE) )
-    #define isSymbol(p,e)            ((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDSymbol)
+    #define acceptablePlatform(p)    ((p) == PLATFORM_ID_UNICODE || \
+                                      (p) == PLATFORM_ID_MICROSOFT)
+    #define acceptableFormat4(p,e)   (((p) == PLATFORM_ID_MICROSOFT && \
+                                       (e) == EncodingIDMicrosoft) || \
+                                      ((p) == PLATFORM_ID_UNICODE))
+    #define isSymbol(p,e)            ((p) == PLATFORM_ID_MICROSOFT && \
+                                      (e) == EncodingIDSymbol)
 #else
     #define acceptablePlatform(p)    ((p) == PLATFORM_ID_MICROSOFT)
-    #define acceptableFormat4(p,e,k) ((e) == EncodingIDMicrosoft)
+    #define acceptableFormat4(p,e)   ((e) == EncodingIDMicrosoft)
     #define isSymbol(p,e)            ((e) == EncodingIDSymbol)
 #endif
 
 #define acceptableUCS4Encoding(p, e) \
-    ((platformID == PLATFORM_ID_MICROSOFT && encodingID == EncodingIDUCS4ForMicrosoftPlatform) || \
+    ((platformID == PLATFORM_ID_MICROSOFT && \
+      encodingID == EncodingIDUCS4ForMicrosoftPlatform) || \
      (platformID == PLATFORM_ID_UNICODE   && \
-      (encodingID == EncodingIDDefaultForUnicodePlatform || encodingID >= EncodingIDUCS4ForUnicodePlatform)))
+      (encodingID == EncodingIDDefaultForUnicodePlatform || \
+       encodingID >= EncodingIDUCS4ForUnicodePlatform)))
 
 PRUint32
 gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
@@ -429,7 +439,7 @@ gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
             *aTableOffset = offset;
             *aSymbolEncoding = PR_TRUE;
             break;
-        } else if (format == 4 && acceptableFormat4(platformID, encodingID, keepFormat)) {
+        } else if (format == 4 && acceptableFormat4(platformID, encodingID)) {
             keepFormat = format;
             *aTableOffset = offset;
             *aSymbolEncoding = PR_FALSE;
