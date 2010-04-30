@@ -181,6 +181,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #endif // MOZ_MEDIA
 
 #include "mozAutoDocUpdate.h"
+#include "nsGlobalWindow.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -6248,8 +6249,8 @@ nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Load events must not propagate to |window| object, see bug 335251.
   if (aVisitor.mEvent->message != NS_LOAD) {
-    nsCOMPtr<nsPIDOMEventTarget> parentTarget = do_QueryInterface(GetWindow());
-    aVisitor.mParentTarget = parentTarget;
+    nsGlobalWindow* window = static_cast<nsGlobalWindow*>(GetWindow());
+    aVisitor.mParentTarget = static_cast<nsPIDOMEventTarget*>(window);
   }
   return NS_OK;
 }
