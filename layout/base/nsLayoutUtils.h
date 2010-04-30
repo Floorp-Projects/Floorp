@@ -348,7 +348,8 @@ public:
     nsRefPtr<nsStyleContext> pseudoContext;
     if (aContent) {
       pseudoContext = aPresContext->StyleSet()->
-        ProbePseudoElementStyle(aContent, aPseudoElement, aStyleContext);
+        ProbePseudoElementStyle(aContent->AsElement(), aPseudoElement,
+                                aStyleContext);
     }
     return pseudoContext != nsnull;
   }

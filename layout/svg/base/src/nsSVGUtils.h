@@ -80,6 +80,12 @@ class nsISVGChildFrame;
 class nsSVGGeometryFrame;
 class nsSVGDisplayContainerFrame;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -209,13 +215,13 @@ public:
   /*
    * Get a font-size (em) of an nsIContent
    */
-  static float GetFontSize(nsIContent *aContent);
+  static float GetFontSize(mozilla::dom::Element *aElement);
   static float GetFontSize(nsIFrame *aFrame);
   static float GetFontSize(nsStyleContext *aStyleContext);
   /*
    * Get an x-height of of an nsIContent
    */
-  static float GetFontXHeight(nsIContent *aContent);
+  static float GetFontXHeight(mozilla::dom::Element *aElement);
   static float GetFontXHeight(nsIFrame *aFrame);
   static float GetFontXHeight(nsStyleContext *aStyleContext);
 
