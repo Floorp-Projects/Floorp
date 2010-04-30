@@ -2746,7 +2746,6 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
     switch (type) {
       case TT_OBJECT:
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
-        JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
         debug_only_printf(LC_TMTracer,
                           "object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
                           JSVAL_IS_NULL(v)
@@ -2779,7 +2778,6 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
 
       case TT_JSVAL:
         v = *(jsval*)slot;
-        JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
         debug_only_printf(LC_TMTracer, "box<%p> ", (void*)v);
         break;
 
@@ -9427,8 +9425,7 @@ TraceRecorder::box_jsval(jsval v, LIns* v_ins)
         }
         LIns* args[] = { v_ins, cx_ins };
         v_ins = lir->insCall(&js_BoxDouble_ci, args);
-        guard(false, lir->ins2(LIR_peq, v_ins, INS_CONSTWORD(JSVAL_ERROR_COOKIE)),
-              OOM_EXIT);
+        guard(false, lir->insEqP_0(v_ins), OOM_EXIT);
         return v_ins;
     }
     switch (JSVAL_TAG(v)) {
@@ -10669,9 +10666,6 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[],
         break;
       case FAIL_VOID:
         guard(false, lir->ins2ImmI(LIR_eq, res_ins, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
-        break;
-      case FAIL_COOKIE:
-        guard(false, lir->ins2(LIR_peq, res_ins, INS_CONSTWORD(JSVAL_ERROR_COOKIE)), OOM_EXIT);
         break;
       default:;
     }
@@ -15036,7 +15030,7 @@ CallIteratorNext_tn(JSContext* cx, jsbytecode* pc, JSObject* iterobj)
 
     if (!ok) {
         SetBuiltinError(cx);
-        return JSVAL_ERROR_COOKIE;
+        return JSVAL_NULL; /* error occured, value doesn't matter. */
     }
     return tvr.value();
 }
