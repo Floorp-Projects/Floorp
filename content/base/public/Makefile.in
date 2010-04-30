@@ -78,6 +78,7 @@ nsDOMFile.h \
 nsLineBreaker.h \
 nsReferencedElement.h \
 nsXMLNameSpaceMap.h \
+Element.h \
 $(NULL)
 
 ifndef DISABLE_XFORMS_HOOKS

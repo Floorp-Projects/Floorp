@@ -1786,7 +1786,7 @@ nsGenericElement::nsDOMSlots::~nsDOMSlots()
 }
 
 nsGenericElement::nsGenericElement(nsINodeInfo *aNodeInfo)
-  : nsIContent(aNodeInfo)
+  : Element(aNodeInfo)
 {
   // Set the default scriptID to JS - but skip SetScriptTypeID as it
   // does extra work we know isn't necessary here...
