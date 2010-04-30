@@ -333,7 +333,7 @@ protected:
   already_AddRefed<nsStyleContext> GetFirstLetterStyle(nsPresContext* aPresContext)
   {
     return aPresContext->StyleSet()->
-      ProbePseudoElementStyle(mContent,
+      ProbePseudoElementStyle(mContent->AsElement(),
                               nsCSSPseudoElements::ePseudo_firstLetter,
                               mStyleContext);
   }
