@@ -46,7 +46,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIContent.h"
+#include "Element.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMEventTarget.h"
@@ -332,7 +332,7 @@ class nsNSElementTearoff;
  * A generic base class for DOM elements, implementing many nsIContent,
  * nsIDOMNode and nsIDOMElement methods.
  */
-class nsGenericElement : public nsIContent
+class nsGenericElement : public mozilla::dom::Element
 {
 public:
   nsGenericElement(nsINodeInfo *aNodeInfo);

@@ -66,6 +66,12 @@ class nsNodeWeakReference;
 class nsNodeSupportsWeakRefTearoff;
 class nsIEditor;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 enum {
   // This bit will be set if the node doesn't have nsSlots
   NODE_DOESNT_HAVE_SLOTS =       0x00000001U,
@@ -340,6 +346,12 @@ public:
   PRBool IsElement() const {
     return HasFlag(NODE_IS_ELEMENT);
   }
+
+  /**
+   * Return this node as an Element.  Should only be used for nodes
+   * for which IsElement() is true.
+   */
+  mozilla::dom::Element* AsElement();
 
   /**
    * Get the number of children
