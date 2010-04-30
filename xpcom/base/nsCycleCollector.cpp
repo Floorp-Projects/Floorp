@@ -138,6 +138,7 @@
 #include "prtime.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsIObserverService.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
@@ -2494,6 +2495,8 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
     // This can legitimately happen in a few cases. See bug 383651.
     if (mCollectionInProgress)
         return 0;
+
+    NS_TIME_FUNCTION;
 
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: Starting nsCycleCollector::Collect(%d)\n", aTryCollections);
