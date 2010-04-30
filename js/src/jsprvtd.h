@@ -91,9 +91,11 @@ typedef uint32 jsatomid;
 #ifdef __cplusplus
 
 /* Class and struct forward declarations in namespace js. */
+extern "C++" {
 namespace js {
 struct Parser;
 struct Compiler;
+}
 }
 
 #endif
@@ -184,16 +186,17 @@ class DeflatedStringCache;
 
 class PropertyCache;
 struct PropertyCacheEntry;
+
+static inline JSPropertyOp
+CastAsPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
+}
+
 } /* namespace js */
 
 /* Common instantiations. */
 typedef js::Vector<jschar, 32> JSCharBuffer;
-
-static inline JSPropertyOp
-js_CastAsPropertyOp(JSObject *object)
-{
-    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
-}
 
 } /* export "C++" */
 #endif  /* __cplusplus */
