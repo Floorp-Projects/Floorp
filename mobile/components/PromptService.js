@@ -56,32 +56,6 @@ promptService.prototype = {
     return win ? win.document : null;
   },
  
-  // add a width style to prevent a element to grow larger 
-  // than the screen width
-  sizeElement: function(id, percent) {
-    let elem = this.getDocument().getElementById(id);
-    let screenW = this.getDocument().getElementById("main-window").getBoundingClientRect().width;
-    elem.style.width = screenW * percent / 100 + "px"
-  },
-  
-  // size the height of the scrollable message. this assumes the given element
-  // is a child of a scrollbox
-  sizeScrollableMsg: function(id, percent) {
-    let doc = this.getDocument();
-    let screenH = doc.getElementById("main-window").getBoundingClientRect().height;
-    let maxHeight = screenH * percent / 100;
-    
-    let elem = doc.getElementById(id);
-    let style = doc.defaultView.getComputedStyle(elem, null);
-    let height = Math.ceil(elem.getBoundingClientRect().height) +
-                 parseInt(style.marginTop) +
-                 parseInt(style.marginBottom);
-
-    if (height > maxHeight)
-      height = maxHeight;
-    elem.parentNode.style.height = height + "px";
-  },
-  
   openDialog: function(aParent, aSrc, aParams) {
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
     let browser = wm.getMostRecentWindow("navigator:browser");
@@ -103,8 +77,6 @@ promptService.prototype = {
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/alert.xul", null);
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
-    this.sizeElement("prompt-alert-message", 80);
-    this.sizeScrollableMsg("prompt-alert-message", 25);
     
     dialog.waitForClose();
   },
@@ -119,12 +91,9 @@ promptService.prototype = {
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/alert.xul", aCheckState);
     doc.getElementById("prompt-alert-title").value = aTitle;
     doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
-    this.sizeElement("prompt-alert-message", 80);
-    this.sizeScrollableMsg("prompt-alert-message", 25);
     
     doc.getElementById("prompt-alert-checkbox").checked = aCheckState.value;
-    this.setLabelForNode(doc.getElementById("prompt-alert-checkbox-msg"), aCheckMsg);
-    this.sizeElement("prompt-alert-checkbox-msg", 50);
+    this.setLabelForNode(doc.getElementById("prompt-alert-checkbox-label"), aCheckMsg);
     doc.getElementById("prompt-alert-checkbox-box").removeAttribute("collapsed");
     
     dialog.waitForClose();
@@ -142,8 +111,6 @@ promptService.prototype = {
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
-    this.sizeElement("prompt-confirm-message", 80);
-    this.sizeScrollableMsg("prompt-confirm-message", 25);
     
     dialog.waitForClose();
     return params.result;
@@ -162,12 +129,9 @@ promptService.prototype = {
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
-    this.sizeElement("prompt-confirm-message", 80);
-    this.sizeScrollableMsg("prompt-confirm-message", 25);
 
     doc.getElementById("prompt-confirm-checkbox").checked = aCheckState.value;
-    this.setLabelForNode(doc.getElementById("prompt-confirm-checkbox-msg"), aCheckMsg);
-    this.sizeElement("prompt-confirm-checkbox-msg", 50);
+    this.setLabelForNode(doc.getElementById("prompt-confirm-checkbox-label"), aCheckMsg);
     doc.getElementById("prompt-confirm-checkbox-box").removeAttribute("collapsed");
     
     dialog.waitForClose();
@@ -247,17 +211,14 @@ promptService.prototype = {
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/confirm.xul", params);
     doc.getElementById("prompt-confirm-title").value = aTitle;
     doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
-    this.sizeElement("prompt-confirm-message", 80);
-    this.sizeScrollableMsg("prompt-confirm-message", 25);
 
     doc.getElementById("prompt-confirm-checkbox").checked = aCheckState.value;
-    this.setLabelForNode(doc.getElementById("prompt-confirm-checkbox-msg"), aCheckMsg);
-    this.sizeElement("prompt-confirm-checkbox-msg", 50);
+    this.setLabelForNode(doc.getElementById("prompt-confirm-checkbox-label"), aCheckMsg);
     if (aCheckMsg) {
       doc.getElementById("prompt-confirm-checkbox-box").removeAttribute("collapsed");
     }
     
-    let bbox = doc.getElementById("prompt-confirm-button-box");
+    let bbox = doc.getElementById("prompt-confirm-buttons-box");
     while (bbox.lastChild) {
       bbox.removeChild(bbox.lastChild);
     }
@@ -294,7 +255,6 @@ promptService.prototype = {
       if (bTitle) {
         let button = doc.createElement("button");
         this.setLabelForNode(button, bTitle);
-        button.setAttribute("class", "button-dark");
         if (i == defaultButton) {
           button.setAttribute("command", "cmd_ok"); 
         }
@@ -326,12 +286,9 @@ promptService.prototype = {
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/prompt.xul", params);
     doc.getElementById("prompt-prompt-title").value = aTitle;
     doc.getElementById("prompt-prompt-message").appendChild(doc.createTextNode(aText));
-    this.sizeElement("prompt-prompt-message", 80);
-    this.sizeScrollableMsg("prompt-prompt-message", 25);
 
     doc.getElementById("prompt-prompt-checkbox").checked = aCheckState.value;
-    this.setLabelForNode(doc.getElementById("prompt-prompt-checkbox-msg"), aCheckMsg);
-    this.sizeElement("prompt-prompt-checkbox-msg", 50);
+    this.setLabelForNode(doc.getElementById("prompt-prompt-checkbox-label"), aCheckMsg);
     doc.getElementById("prompt-prompt-textbox").value = aValue.value;
     if (aCheckMsg) {
       doc.getElementById("prompt-prompt-checkbox-box").removeAttribute("collapsed");
@@ -375,17 +332,13 @@ promptService.prototype = {
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/promptPassword.xul", params);
     doc.getElementById("prompt-password-title").value = aTitle;
     doc.getElementById("prompt-password-message").appendChild(doc.createTextNode(aText));
-    this.sizeElement("prompt-password-message", 80);
-    this.sizeScrollableMsg("prompt-password-message", 25);
     doc.getElementById("prompt-password-checkbox").checked = aCheckState.value;
     
     doc.getElementById("prompt-password-user").value = aUsername.value;
     doc.getElementById("prompt-password-password").value = aPassword.value;
     if (aCheckMsg) {
       doc.getElementById("prompt-password-checkbox-box").removeAttribute("collapsed");
-      this.setLabelForNode(doc.getElementById("prompt-password-checkbox-msg"), aCheckMsg);
-      this.sizeElement("prompt-password-checkbox-msg", 50);
-      this.sizeElement("prompt-password-checkbox-box", 50);
+      this.setLabelForNode(doc.getElementById("prompt-password-checkbox-label"), aCheckMsg);
     }
     
     dialog.waitForClose();
@@ -501,8 +454,6 @@ promptService.prototype = {
     let dialog = this.openDialog(aParent, "chrome://browser/content/prompt/select.xul", params);
     doc.getElementById("prompt-select-title").value = aTitle;
     doc.getElementById("prompt-select-message").appendChild(doc.createTextNode(aText));
-    this.sizeElement("prompt-select-message", 80);
-    this.sizeScrollableMsg("prompt-select-message", 25);
     
     let list = doc.getElementById("prompt-select-list");
     for (let i = 0; i < aCount; i++)
