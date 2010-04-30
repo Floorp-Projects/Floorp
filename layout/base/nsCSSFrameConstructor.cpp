@@ -1696,16 +1696,19 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
                                                   FrameConstructionItemList& aItems)
 {
   // XXXbz is this ever true?
-  if (!aParentContent->IsNodeOfType(nsINode::eELEMENT))
+  if (!aParentContent->IsElement()) {
+    NS_ERROR("Bogus generated content parent");
     return;
+  }
 
   nsStyleSet *styleSet = mPresShell->StyleSet();
 
   // Probe for the existence of the pseudo-element
   nsRefPtr<nsStyleContext> pseudoStyleContext;
-  pseudoStyleContext = styleSet->ProbePseudoElementStyle(aParentContent,
-                                                         aPseudoElement,
-                                                         aStyleContext);
+  pseudoStyleContext =
+    styleSet->ProbePseudoElementStyle(aParentContent->AsElement(),
+                                      aPseudoElement,
+                                      aStyleContext);
   if (!pseudoStyleContext)
     return;
   // |ProbePseudoStyleFor| checked the 'display' property and the
@@ -2275,7 +2278,7 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
   }
 
   nsRefPtr<nsStyleContext> bodyStyle;
-  bodyStyle = styleSet->ResolveStyleFor(bodyElement, rootStyle);
+  bodyStyle = styleSet->ResolveStyleFor(bodyElement->AsElement(), rootStyle);
   if (!bodyStyle) {
     return nsnull;
   }
@@ -2289,7 +2292,7 @@ nsCSSFrameConstructor::PropagateScrollToViewport()
 }
 
 nsresult
-nsCSSFrameConstructor::ConstructDocElementFrame(nsIContent*              aDocElement,
+nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocElement,
                                                 nsILayoutHistoryState*   aFrameState,
                                                 nsIFrame**               aNewFrame)
 {
@@ -4566,8 +4569,8 @@ nsCSSFrameConstructor::ResolveStyleContext(nsStyleContext* aParentStyleContext,
 {
   nsStyleSet *styleSet = mPresShell->StyleSet();
 
-  if (aContent->IsNodeOfType(nsINode::eELEMENT)) {
-    return styleSet->ResolveStyleFor(aContent, aParentStyleContext);
+  if (aContent->IsElement()) {
+    return styleSet->ResolveStyleFor(aContent->AsElement(), aParentStyleContext);
   }
 
   NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
@@ -8026,7 +8029,7 @@ nsCSSFrameConstructor::RestyleLaterSiblings(nsIContent *aContent)
                index_end = parent->GetChildCount();
        index != index_end; ++index) {
     nsIContent *child = parent->GetChildAt(index);
-    if (!child->IsNodeOfType(nsINode::eELEMENT))
+    if (!child->IsElement())
       continue;
 
     nsIFrame* primaryFrame = child->GetPrimaryFrame();
@@ -8819,8 +8822,9 @@ nsCSSFrameConstructor::MaybeRecreateFramesForContent(nsIContent* aContent)
   nsStyleContext *oldContext = frameManager->GetUndisplayedContent(aContent);
   if (oldContext) {
     // The parent has a frame, so try resolving a new context.
+    // XXXbz this should take Element, not nsIContent
     nsRefPtr<nsStyleContext> newContext = mPresShell->StyleSet()->
-      ResolveStyleFor(aContent, oldContext->GetParent());
+      ResolveStyleFor(aContent->AsElement(), oldContext->GetParent());
 
     frameManager->ChangeUndisplayedContent(aContent, newContext);
     if (newContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_NONE) {
@@ -9099,7 +9103,7 @@ nsCSSFrameConstructor::GetFirstLetterStyle(nsIContent* aContent,
 {
   if (aContent) {
     return mPresShell->StyleSet()->
-      ResolvePseudoElementStyle(aContent,
+      ResolvePseudoElementStyle(aContent->AsElement(),
                                 nsCSSPseudoElements::ePseudo_firstLetter,
                                 aStyleContext);
   }
@@ -9112,7 +9116,7 @@ nsCSSFrameConstructor::GetFirstLineStyle(nsIContent* aContent,
 {
   if (aContent) {
     return mPresShell->StyleSet()->
-      ResolvePseudoElementStyle(aContent,
+      ResolvePseudoElementStyle(aContent->AsElement(),
                                 nsCSSPseudoElements::ePseudo_firstLine,
                                 aStyleContext);
   }
@@ -11285,7 +11289,7 @@ nsCSSFrameConstructor::RestyleForAppend(nsIContent* aContainer,
     // restyle the last element child before this node
     for (PRInt32 index = aNewIndexInContainer - 1; index >= 0; --index) {
       nsIContent *content = aContainer->GetChildAt(index);
-      if (content->IsNodeOfType(nsINode::eELEMENT)) {
+      if (content->IsElement()) {
         PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         break;
       }
@@ -11353,7 +11357,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(nsIContent* aContainer,
         passedChild = PR_TRUE;
         continue;
       }
-      if (content->IsNodeOfType(nsINode::eELEMENT)) {
+      if (content->IsElement()) {
         if (passedChild) {
           PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         }
@@ -11369,7 +11373,7 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(nsIContent* aContainer,
         passedChild = PR_TRUE;
         continue;
       }
-      if (content->IsNodeOfType(nsINode::eELEMENT)) {
+      if (content->IsElement()) {
         if (passedChild) {
           PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         }
@@ -11427,7 +11431,7 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
       nsIContent *content = aContainer->GetChildAt(index);
       if (!content)
         break; // went through all children
-      if (content->IsNodeOfType(nsINode::eELEMENT)) {
+      if (content->IsElement()) {
         if (index >= aIndexInContainer) {
           PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         }
@@ -11438,7 +11442,7 @@ nsCSSFrameConstructor::RestyleForRemove(nsIContent* aContainer,
     for (PRInt32 index = aContainer->GetChildCount() - 1;
          index >= 0; --index) {
       nsIContent *content = aContainer->GetChildAt(index);
-      if (content->IsNodeOfType(nsINode::eELEMENT)) {
+      if (content->IsElement()) {
         if (index < aIndexInContainer) {
           PostRestyleEvent(content, eRestyle_Self, NS_STYLE_HINT_NONE);
         }
@@ -11670,7 +11674,8 @@ nsCSSFrameConstructor::PostRestyleEventCommon(nsIContent* aContent,
     return;
   }
 
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eELEMENT),
+  // XXXbz this should take Element, not nsIContent
+  NS_ASSERTION(aContent->IsElement(),
                "Shouldn't be trying to restyle non-elements directly");
 
   RestyleData existingData;

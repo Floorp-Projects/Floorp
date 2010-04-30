@@ -494,7 +494,7 @@ private:
   // Construct the frames for the document element.  This must always return a
   // singe new frame (which may, of course, have a bunch of kids).
   // XXXbz no need to return a frame here, imo.
-  nsresult ConstructDocElementFrame(nsIContent*              aDocElement,
+  nsresult ConstructDocElementFrame(mozilla::dom::Element*   aDocElement,
                                     nsILayoutHistoryState*   aFrameState,
                                     nsIFrame**               aNewFrame);
 

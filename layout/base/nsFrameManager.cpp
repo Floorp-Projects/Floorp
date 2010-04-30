@@ -1095,7 +1095,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
       if (pseudoTag == nsCSSPseudoElements::before ||
           pseudoTag == nsCSSPseudoElements::after) {
         // XXX what other pseudos do we need to treat like this?
-        newContext = styleSet->ProbePseudoElementStyle(pseudoContent,
+        newContext = styleSet->ProbePseudoElementStyle(pseudoContent->AsElement(),
                                                        pseudoType,
                                                        parentContext);
         if (!newContext) {
@@ -1121,7 +1121,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
           nsBlockFrame* block = nsBlockFrame::GetNearestAncestorBlock(aFrame);
           pseudoContent = block->GetContent();
         }
-        newContext = styleSet->ResolvePseudoElementStyle(pseudoContent,
+        newContext = styleSet->ResolvePseudoElementStyle(pseudoContent->AsElement(),
                                                          pseudoType,
                                                          parentContext);
       }
@@ -1129,7 +1129,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     else {
       NS_ASSERTION(localContent,
                    "non pseudo-element frame without content node");
-      newContext = styleSet->ResolveStyleFor(content, parentContext);
+      newContext = styleSet->ResolveStyleFor(content->AsElement(), parentContext);
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
@@ -1188,7 +1188,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
           NS_ASSERTION(extraPseudoType <
                          nsCSSPseudoElements::ePseudo_PseudoElementCount,
                        "Unexpected type");
-          newExtraContext = styleSet->ResolvePseudoElementStyle(content,
+          newExtraContext = styleSet->ResolvePseudoElementStyle(content->AsElement(),
                                                                 extraPseudoType,
                                                                 newContext);
         }
@@ -1235,15 +1235,13 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
                      "Shouldn't have random pseudo style contexts in the "
                      "undisplayed map");
         nsRefPtr<nsStyleContext> undisplayedContext =
-          styleSet->ResolveStyleFor(undisplayed->mContent, newContext);
+          styleSet->ResolveStyleFor(undisplayed->mContent->AsElement(), newContext);
         if (undisplayedContext) {
           const nsStyleDisplay* display = undisplayedContext->GetStyleDisplay();
           if (display->mDisplay != NS_STYLE_DISPLAY_NONE) {
-            aChangeList->AppendChange(nsnull,
-                                      undisplayed->mContent
-                                      ? static_cast<nsIContent*>
-                                                   (undisplayed->mContent)
-                                      : localContent, 
+            NS_ASSERTION(undisplayed->mContent,
+                         "Must have undisplayed content");
+            aChangeList->AppendChange(nsnull, undisplayed->mContent, 
                                       NS_STYLE_HINT_FRAMECHANGE);
             // The node should be removed from the undisplayed map when
             // we reframe it.
@@ -1258,8 +1256,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
       // Make sure not to do this for pseudo-frames -- those can't have :before
       // or :after content.  Neither can non-elements or leaf frames.
-      if (!pseudoTag && localContent &&
-          localContent->IsNodeOfType(nsINode::eELEMENT) &&
+      if (!pseudoTag && localContent && localContent->IsElement() &&
           !aFrame->IsLeaf()) {
         // Check for a new :before pseudo and an existing :before
         // frame, but only if the frame is the first continuation.
@@ -1284,8 +1281,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     if (!(aMinChange & nsChangeHint_ReconstructFrame)) {
       // Make sure not to do this for pseudo-frames -- those can't have :before
       // or :after content.  Neither can non-elements or leaf frames.
-      if (!pseudoTag && localContent &&
-          localContent->IsNodeOfType(nsINode::eELEMENT) &&
+      if (!pseudoTag && localContent && localContent->IsElement() &&
           !aFrame->IsLeaf()) {
         // Check for new :after content, but only if the frame is the
         // last continuation.
