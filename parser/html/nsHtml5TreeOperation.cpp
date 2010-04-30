@@ -286,7 +286,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* table = *(mThree.node);
       nsIContent* foster = table->GetParent();
 
-      if (foster && foster->IsNodeOfType(nsINode::eELEMENT)) {
+      if (foster && foster->IsElement()) {
         aBuilder->FlushPendingAppendNotifications();
 
         nsHtml5OtherDocUpdate update(foster->GetOwnerDoc(),
@@ -477,7 +477,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       
       nsIContent* foster = table->GetParent();
 
-      if (foster && foster->IsNodeOfType(nsINode::eELEMENT)) {
+      if (foster && foster->IsElement()) {
         aBuilder->FlushPendingAppendNotifications();
 
         nsHtml5OtherDocUpdate update(foster->GetOwnerDoc(),

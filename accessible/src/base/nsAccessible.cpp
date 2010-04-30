@@ -405,7 +405,7 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
     return NS_ERROR_FAILURE;
 
   PRUint32 key = nsCoreUtils::GetAccessKeyFor(content);
-  if (!key && content->IsNodeOfType(nsIContent::eELEMENT)) {
+  if (!key && content->IsElement()) {
     // Copy access key from label node unless it is labeled
     // via an ancestor <label>, in which case that would be redundant
     nsCOMPtr<nsIContent> labelContent(nsCoreUtils::GetLabelContent(content));
@@ -741,7 +741,7 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   if (isDisabled) {
     *aState |= nsIAccessibleStates::STATE_UNAVAILABLE;
   }
-  else if (content->IsNodeOfType(nsINode::eELEMENT)) {
+  else if (content->IsElement()) {
     nsIFrame *frame = GetFrame();
     if (frame && frame->IsFocusable()) {
       *aState |= nsIAccessibleStates::STATE_FOCUSABLE;

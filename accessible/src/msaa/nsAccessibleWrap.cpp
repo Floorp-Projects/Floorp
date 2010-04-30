@@ -501,7 +501,7 @@ __try {
   if (!content)
     return E_FAIL;
 
-  if (content->IsNodeOfType(nsINode::eELEMENT)) {
+  if (content->IsElement()) {
     nsAutoString roleString;
     if (msaaRole != ROLE_SYSTEM_CLIENT &&
         !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString)) {
