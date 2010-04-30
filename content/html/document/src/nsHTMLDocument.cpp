@@ -2643,24 +2643,26 @@ FindNamedItems(nsIAtom* aName, nsIContent *aContent,
   NS_ASSERTION(!aEntry->IsInvalidName(),
                "Entry that should never have a list passed to FindNamedItems()!");
 
-  if (aContent->IsNodeOfType(nsINode::eTEXT)) {
-    // Text nodes are not named items nor can they have children.
+  if (!aContent->IsElement()) {
+    // non-elements are not named items nor can they have children.
     return;
   }
 
-  if (aName == nsContentUtils::IsNamedItem(aContent)) {
-    aEntry->AddNameContent(aContent);
+  Element* element = aContent->AsElement();
+
+  if (aName == nsContentUtils::IsNamedItem(element)) {
+    aEntry->AddNameElement(element);
   }
 
-  if (!aEntry->GetIdContent() &&
+  if (!aEntry->GetIdElement() &&
       // Maybe this node has the right id?
-      aName == aContent->GetID()) {
-    aEntry->AddIdContent(aContent);
+      aName == element->GetID()) {
+    aEntry->AddIdElement(element);
   }
 
-  PRUint32 i, count = aContent->GetChildCount();
+  PRUint32 i, count = element->GetChildCount();
   for (i = 0; i < count; ++i) {
-    FindNamedItems(aName, aContent->GetChildAt(i), aEntry);
+    FindNamedItems(aName, element->GetChildAt(i), aEntry);
   }
 }
 
@@ -2791,7 +2793,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   // for aName, so we're guaranteed that if there is an element with
   // the id aName, it'll be entry's IdContent.
 
-  nsIContent *e = entry->GetIdContent();
+  Element *e = entry->GetIdElement();
 
   if (e && e->IsHTML()) {
     nsIAtom *tag = e->Tag();

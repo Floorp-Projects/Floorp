@@ -258,17 +258,17 @@ nsIdentifierMapEntry::CreateNameContentList()
   return NS_OK;
 }
 
-nsIContent*
-nsIdentifierMapEntry::GetIdContent()
+Element*
+nsIdentifierMapEntry::GetIdElement()
 {
-  return static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
+  return static_cast<Element*>(mIdContentList.SafeElementAt(0));
 }
 
 void
 nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<nsIContent>* aElements)
 {
   for (PRInt32 i = 0; i < mIdContentList.Count(); ++i) {
-    aElements->AppendObject(static_cast<nsIContent*>(mIdContentList[i]));
+    aElements->AppendObject(static_cast<Element*>(mIdContentList[i]));
   }
 }
 
@@ -301,8 +301,8 @@ nsIdentifierMapEntry::RemoveContentChangeCallback(nsIDocument::IDTargetObserver 
 }
 
 struct FireChangeArgs {
-  nsIContent* mFrom;
-  nsIContent* mTo;
+  Element* mFrom;
+  Element* mTo;
 };
 
 static PLDHashOperator
@@ -314,35 +314,35 @@ FireChangeEnumerator(nsIdentifierMapEntry::ChangeCallbackEntry *aEntry, void *aA
 }
 
 void
-nsIdentifierMapEntry::FireChangeCallbacks(nsIContent* aOldContent,
-                                          nsIContent* aNewContent)
+nsIdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
+                                          Element* aNewElement)
 {
   if (!mChangeCallbacks)
     return;
 
-  FireChangeArgs args = { aOldContent, aNewContent };
+  FireChangeArgs args = { aOldElement, aNewElement };
   mChangeCallbacks->EnumerateEntries(FireChangeEnumerator, &args);
 }
 
 PRBool
-nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
+nsIdentifierMapEntry::AddIdElement(Element* aElement)
 {
-  NS_PRECONDITION(aContent, "Must have content");
+  NS_PRECONDITION(aElement, "Must have element");
   NS_PRECONDITION(mIdContentList.IndexOf(nsnull) < 0,
                   "Why is null in our list?");
 
 #ifdef DEBUG
-  nsIContent* currentContent =
-    static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
+  Element* currentElement =
+    static_cast<Element*>(mIdContentList.SafeElementAt(0));
 #endif
 
   // Common case
   if (mIdContentList.Count() == 0) {
-    if (!mIdContentList.AppendElement(aContent))
+    if (!mIdContentList.AppendElement(aElement))
       return PR_FALSE;
-    NS_ADDREF(aContent);
-    NS_ASSERTION(currentContent == nsnull, "How did that happen?");
-    FireChangeCallbacks(nsnull, aContent);
+    NS_ADDREF(aElement);
+    NS_ASSERTION(currentElement == nsnull, "How did that happen?");
+    FireChangeCallbacks(nsnull, aElement);
     return PR_TRUE;
   }
 
@@ -356,56 +356,57 @@ nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
     PRInt32 cur = (start + end) / 2;
     NS_ASSERTION(cur >= start && cur < end, "What happened here?");
 
-    nsIContent* curContent = static_cast<nsIContent*>(mIdContentList[cur]);
-    if (curContent == aContent) {
+    Element* curElement = static_cast<Element*>(mIdContentList[cur]);
+    if (curElement == aElement) {
       // Already in the list, so already in the right spot.  Get out of here.
       // XXXbz this only happens because XUL does all sorts of random
       // UpdateIdTableEntry calls.  Hate, hate, hate!
       return PR_TRUE;
     }
 
-    if (nsContentUtils::PositionIsBefore(aContent, curContent)) {
+    if (nsContentUtils::PositionIsBefore(aElement, curElement)) {
       end = cur;
     } else {
       start = cur + 1;
     }
   } while (start != end);
 
-  if (!mIdContentList.InsertElementAt(aContent, start))
+  if (!mIdContentList.InsertElementAt(aElement, start))
     return PR_FALSE;
-  NS_ADDREF(aContent);
+  NS_ADDREF(aElement);
   if (start == 0) {
-    nsIContent* oldContent =
-      static_cast<nsIContent*>(mIdContentList.SafeElementAt(1));
-    NS_ASSERTION(currentContent == oldContent, "How did that happen?");
-    FireChangeCallbacks(oldContent, aContent);
+    Element* oldElement =
+      static_cast<Element*>(mIdContentList.SafeElementAt(1));
+    NS_ASSERTION(currentElement == oldElement, "How did that happen?");
+    FireChangeCallbacks(oldElement, aElement);
   }
   return PR_TRUE;
 }
 
 PRBool
-nsIdentifierMapEntry::RemoveIdContent(nsIContent* aContent)
+nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
 {
   // This should only be called while the document is in an update.
   // Assertions near the call to this method guarantee this.
 
   // XXXbz should this ever Compact() I guess when all the content is gone
   // we'll just get cleaned up in the natural order of things...
-  nsIContent* currentContent = static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
-  if (!mIdContentList.RemoveElement(aContent))
+  Element* currentElement =
+    static_cast<Element*>(mIdContentList.SafeElementAt(0));
+  if (!mIdContentList.RemoveElement(aElement))
     return PR_FALSE;
-  if (currentContent == aContent) {
-    FireChangeCallbacks(currentContent,
-                        static_cast<nsIContent*>(mIdContentList.SafeElementAt(0)));
+  if (currentElement == aElement) {
+    FireChangeCallbacks(currentElement,
+                        static_cast<Element*>(mIdContentList.SafeElementAt(0)));
   }
   // Make sure the release happens after the check above, since it'll
   // null out aContent.
-  NS_RELEASE(aContent);
+  NS_RELEASE(aElement);
   return mIdContentList.Count() == 0 && !mNameContentList && !mChangeCallbacks;
 }
 
 void
-nsIdentifierMapEntry::AddNameContent(nsIContent* aContent)
+nsIdentifierMapEntry::AddNameElement(Element* aElement)
 {
   if (!mNameContentList || mNameContentList == NAME_NOT_VALID)
     return;
@@ -414,16 +415,17 @@ nsIdentifierMapEntry::AddNameContent(nsIContent* aContent)
   // content notifications when we do document.foo resolution.  So
   // aContent may be in our list already and just now getting notified
   // for!
-  if (mNameContentList->IndexOf(aContent, PR_FALSE) < 0) {
-    mNameContentList->AppendElement(aContent);
+  // XXXbz with the HTML5 parser we can stop doing this!
+  if (mNameContentList->IndexOf(aElement, PR_FALSE) < 0) {
+    mNameContentList->AppendElement(aElement);
   }
 }
 
 void
-nsIdentifierMapEntry::RemoveNameContent(nsIContent* aContent)
+nsIdentifierMapEntry::RemoveNameElement(Element* aElement)
 {
   if (mNameContentList && mNameContentList != NAME_NOT_VALID) {
-    mNameContentList->RemoveElement(aContent);
+    mNameContentList->RemoveElement(aElement);
   }
 }
 
@@ -2329,12 +2331,12 @@ nsDocument::GetLastModified(nsAString& aLastModified)
 }
 
 void
-nsDocument::UpdateNameTableEntry(nsIContent *aContent)
+nsDocument::UpdateNameTableEntry(Element *aElement)
 {
   if (!mIsRegularHTML)
     return;
 
-  nsIAtom* name = nsContentUtils::IsNamedItem(aContent);
+  nsIAtom* name = nsContentUtils::IsNamedItem(aElement);
   if (!name)
     return;
 
@@ -2344,16 +2346,16 @@ nsDocument::UpdateNameTableEntry(nsIContent *aContent)
     return;
   }
 
-  entry->AddNameContent(aContent);
+  entry->AddNameElement(aElement);
 }
 
 void
-nsDocument::RemoveFromNameTable(nsIContent *aContent)
+nsDocument::RemoveFromNameTable(Element *aElement)
 {
   if (!mIsRegularHTML)
     return;
 
-  nsIAtom* name = nsContentUtils::IsNamedItem(aContent);
+  nsIAtom* name = nsContentUtils::IsNamedItem(aElement);
   if (!name)
     return;
 
@@ -2363,27 +2365,27 @@ nsDocument::RemoveFromNameTable(nsIContent *aContent)
     return;
   }
 
-  entry->RemoveNameContent(aContent);
+  entry->RemoveNameElement(aElement);
 }
 
 void
-nsDocument::UpdateIdTableEntry(nsIContent *aContent)
+nsDocument::UpdateIdTableEntry(Element *aElement)
 {
-  nsIAtom* id = aContent->GetID();
+  nsIAtom* id = aElement->GetID();
   if (!id)
     return;
 
   nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(id);
 
   if (entry) { /* True except on OOM */
-    entry->AddIdContent(aContent);
+    entry->AddIdElement(aElement);
   }
 }
 
 void
-nsDocument::RemoveFromIdTable(nsIContent *aContent)
+nsDocument::RemoveFromIdTable(Element *aElement)
 {
-  nsIAtom* id = aContent->GetID();
+  nsIAtom* id = aElement->GetID();
   if (!id)
     return;
 
@@ -2391,7 +2393,7 @@ nsDocument::RemoveFromIdTable(nsIContent *aContent)
   if (!entry) /* Should be false unless we had OOM when adding the entry */
     return;
 
-  if (entry->RemoveIdContent(aContent)) {
+  if (entry->RemoveIdElement(aElement)) {
     mIdentifierMap.RemoveEntry(id);
   }
 }
@@ -2399,13 +2401,13 @@ nsDocument::RemoveFromIdTable(nsIContent *aContent)
 void
 nsDocument::UnregisterNamedItems(nsIContent *aContent)
 {
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  if (!aContent->IsElement()) {
     // non-element nodes are not named items nor can they have children.
     return;
   }
 
-  RemoveFromNameTable(aContent);
-  RemoveFromIdTable(aContent);
+  RemoveFromNameTable(aContent->AsElement());
+  RemoveFromIdTable(aContent->AsElement());
 
   for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
     UnregisterNamedItems(iter);
@@ -2415,13 +2417,13 @@ nsDocument::UnregisterNamedItems(nsIContent *aContent)
 void
 nsDocument::RegisterNamedItems(nsIContent *aContent)
 {
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  if (!aContent->IsElement()) {
     // non-element nodes are not named items nor can they have children.
     return;
   }
 
-  UpdateNameTableEntry(aContent);
-  UpdateIdTableEntry(aContent);
+  UpdateNameTableEntry(aContent->AsElement());
+  UpdateIdTableEntry(aContent->AsElement());
 
   for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
     RegisterNamedItems(iter);
@@ -2473,15 +2475,15 @@ nsDocument::AttributeWillChange(nsIDocument* aDocument,
                                 nsIContent* aContent, PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute, PRInt32 aModType)
 {
-  NS_ABORT_IF_FALSE(aContent, "Null content!");
+  NS_ABORT_IF_FALSE(aContent && aContent->IsElement(), "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
   if (aNameSpaceID != kNameSpaceID_None)
     return;
   if (aAttribute == nsGkAtoms::name) {
-    RemoveFromNameTable(aContent);
+    RemoveFromNameTable(aContent->AsElement());
   } else if (aAttribute == aContent->GetIDAttributeName()) {
-    RemoveFromIdTable(aContent);
+    RemoveFromIdTable(aContent->AsElement());
   }
 }
 
@@ -2492,15 +2494,15 @@ nsDocument::AttributeChanged(nsIDocument* aDocument,
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
 
-  NS_ABORT_IF_FALSE(aContent, "Null content!");
+  NS_ABORT_IF_FALSE(aContent && aContent->IsElement(), "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
   if (aNameSpaceID != kNameSpaceID_None)
     return;
   if (aAttribute == nsGkAtoms::name) {
-    UpdateNameTableEntry(aContent);
+    UpdateNameTableEntry(aContent->AsElement());
   } else if (aAttribute == aContent->GetIDAttributeName()) {
-    UpdateIdTableEntry(aContent);
+    UpdateIdTableEntry(aContent->AsElement());
   }
 }
 
@@ -3968,7 +3970,7 @@ nsDocument::GetElementByIdInternal(nsIAtom* aID)
   nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aID);
   NS_ENSURE_TRUE(entry, nsnull);
 
-  if (entry->GetIdContent())
+  if (entry->GetIdElement())
     return entry;
 
   // Now we have to flush.  It could be that we know nothing about this ID yet
@@ -4006,7 +4008,7 @@ nsDocument::GetElementById(const nsAString& aElementId,
   nsIdentifierMapEntry *entry = GetElementByIdInternal(idAtom);
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
-  nsIContent *e = entry->GetIdContent();
+  Element *e = entry->GetIdElement();
   if (!e)
     return NS_OK;
 
@@ -4024,7 +4026,7 @@ nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
   NS_ENSURE_TRUE(entry, nsnull);
 
   entry->AddContentChangeCallback(aObserver, aData);
-  return entry->GetIdContent();
+  return entry->GetIdElement();
 }
 
 void
