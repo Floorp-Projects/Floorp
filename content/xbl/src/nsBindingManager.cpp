@@ -1691,7 +1691,8 @@ nsBindingManager::Traverse(nsIContent *aContent,
     cb.NoteXPCOMChild(value);
   }
 
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  // XXXbz how exactly would NODE_MAY_BE_IN_BINDING_MNGR end up on non-elements?
+  if (!aContent->IsElement()) {
     return;
   }
 

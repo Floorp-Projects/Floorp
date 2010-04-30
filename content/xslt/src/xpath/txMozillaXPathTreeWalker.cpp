@@ -382,7 +382,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode)
     }
 
     if (aNode.isContent()) {
-        if (aNode.mNode->IsNodeOfType(nsINode::eELEMENT)) {
+        if (aNode.mNode->IsElement()) {
             nsIAtom* localName = aNode.Content()->Tag();
             NS_ADDREF(localName);
 
@@ -434,7 +434,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
     }
 
     if (aNode.isContent()) {
-        if (aNode.mNode->IsNodeOfType(nsINode::eELEMENT)) {
+        if (aNode.mNode->IsElement()) {
             nsINodeInfo* nodeInfo = aNode.Content()->NodeInfo();
             nodeInfo->GetLocalName(aLocalName);
             return;
@@ -474,7 +474,7 @@ txXPathNodeUtils::getNodeName(const txXPathNode& aNode, nsAString& aName)
     }
 
     if (aNode.isContent()) {
-        if (aNode.mNode->IsNodeOfType(nsINode::eELEMENT)) {
+        if (aNode.mNode->IsElement()) {
             nsINodeInfo* nodeInfo = aNode.Content()->NodeInfo();
             nodeInfo->GetQualifiedName(aName);
 
@@ -569,7 +569,7 @@ txXPathNodeUtils::appendNodeValue(const txXPathNode& aNode, nsAString& aResult)
     }
 
     if (aNode.isDocument() ||
-        aNode.mNode->IsNodeOfType(nsINode::eELEMENT) ||
+        aNode.mNode->IsElement() ||
         aNode.mNode->IsNodeOfType(nsINode::eDOCUMENT_FRAGMENT)) {
         nsContentUtils::AppendNodeTextContent(aNode.mNode, PR_TRUE, aResult);
 
