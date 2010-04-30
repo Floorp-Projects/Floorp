@@ -67,6 +67,9 @@ NS_NewPreContentIterator(nsIContentIterator** aInstancePtrResult);
 #define ASSERT_IN_SYNC PR_BEGIN_MACRO PR_END_MACRO
 #endif
 
+
+using namespace mozilla::dom;
+
 nsBaseContentList::~nsBaseContentList()
 {
 }
@@ -605,8 +608,7 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                 PRInt32 aModType)
 {
   NS_PRECONDITION(aContent, "Must have a content node to work with");
-  NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eELEMENT),
-                  "Should be an element");
+  NS_PRECONDITION(aContent->IsElement(), "Should be an element");
   
   if (!mFunc || !mFuncMayDependOnAttr || mState == LIST_DIRTY ||
       !MayContainRelevantNodes(aContent->GetNodeParent()) ||
@@ -616,7 +618,7 @@ nsContentList::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
     return;
   }
   
-  if (Match(aContent)) {
+  if (Match(aContent->AsElement())) {
     if (mElements.IndexOf(aContent) == -1) {
       // We match aContent now, and it's not in our list already.  Just dirty
       // ourselves; this is simpler than trying to figure out where to insert
@@ -714,8 +716,8 @@ nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
          iter.Next()) {
       PRUint32 limit = PRUint32(-1);
       nsIContent* newContent = iter;
-      if (newContent->IsNodeOfType(nsINode::eELEMENT)) {
-        PopulateWith(newContent, limit);
+      if (newContent->IsElement()) {
+        PopulateWith(newContent->AsElement(), limit);
       }
     }
 
@@ -762,20 +764,14 @@ nsContentList::ContentRemoved(nsIDocument *aDocument,
 }
 
 PRBool
-nsContentList::Match(nsIContent *aContent)
+nsContentList::Match(Element *aElement)
 {
-  if (!aContent)
-    return PR_FALSE;
-
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eELEMENT),
-               "Must have element here");
-
   if (mFunc) {
-    return (*mFunc)(aContent, mMatchNameSpaceId, mMatchAtom, mData);
+    return (*mFunc)(aElement, mMatchNameSpaceId, mMatchAtom, mData);
   }
 
   if (mMatchAtom) {
-    nsINodeInfo *ni = aContent->NodeInfo();
+    nsINodeInfo *ni = aElement->NodeInfo();
 
     if (mMatchNameSpaceId == kNameSpaceID_Unknown) {
       return (mMatchAll || ni->QualifiedNameEquals(mMatchAtom));
@@ -799,11 +795,11 @@ nsContentList::MatchSelf(nsIContent *aContent)
   NS_PRECONDITION(mDeep || aContent->GetNodeParent() == mRootNode,
                   "MatchSelf called on a node that we can't possibly match");
 
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  if (!aContent->IsElement()) {
     return PR_FALSE;
   }
   
-  if (Match(aContent))
+  if (Match(aContent->AsElement()))
     return PR_TRUE;
 
   if (!mDeep)
@@ -819,17 +815,15 @@ nsContentList::MatchSelf(nsIContent *aContent)
 }
 
 void
-nsContentList::PopulateWith(nsIContent *aContent, PRUint32& aElementsToAppend)
+nsContentList::PopulateWith(Element *aElement, PRUint32& aElementsToAppend)
 {
-  NS_PRECONDITION(mDeep || aContent->GetNodeParent() == mRootNode,
+  NS_PRECONDITION(mDeep || aElement->GetNodeParent() == mRootNode,
                   "PopulateWith called on nodes we can't possibly match");
-  NS_PRECONDITION(aContent != mRootNode,
+  NS_PRECONDITION(aElement != mRootNode,
                   "We should never be trying to match mRootNode");
-  NS_PRECONDITION(aContent->IsNodeOfType(nsINode::eELEMENT),
-                  "Should be an element");
 
-  if (Match(aContent)) {
-    mElements.AppendObject(aContent);
+  if (Match(aElement)) {
+    mElements.AppendObject(aElement);
     --aElementsToAppend;
     if (aElementsToAppend == 0)
       return;
@@ -839,10 +833,10 @@ nsContentList::PopulateWith(nsIContent *aContent, PRUint32& aElementsToAppend)
   if (!mDeep)
     return;
 
-  for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
+  for (nsINode::ChildIterator iter(aElement); !iter.IsDone(); iter.Next()) {
     nsIContent* curContent = iter;
-    if (curContent->IsNodeOfType(nsINode::eELEMENT)) {
-      PopulateWith(curContent, aElementsToAppend);
+    if (curContent->IsElement()) {
+      PopulateWith(curContent->AsElement(), aElementsToAppend);
       if (aElementsToAppend == 0)
         break;
     }
@@ -875,8 +869,8 @@ nsContentList::PopulateWithStartingAfter(nsINode *aStartRoot,
          !iter.IsDone();
          iter.Next()) {
       nsIContent* content = iter;
-      if (content->IsNodeOfType(nsINode::eELEMENT)) {
-        PopulateWith(content, aElementsToAppend);
+      if (content->IsElement()) {
+        PopulateWith(content->AsElement(), aElementsToAppend);
 
         NS_ASSERTION(aElementsToAppend + mElements.Count() == invariant,
                      "Something is awry in PopulateWith!");
@@ -1049,7 +1043,7 @@ nsContentList::AssertInSync()
       break;
     }
 
-    if (cur->IsNodeOfType(nsINode::eELEMENT) && Match(cur)) {
+    if (cur->IsElement() && Match(cur->AsElement())) {
       NS_ASSERTION(cnt < mElements.Count() && mElements[cnt] == cur,
                    "Elements is out of sync");
       ++cnt;
