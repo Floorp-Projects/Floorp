@@ -726,19 +726,19 @@
         <xul:spacer flex="1"/>
         <xul:hbox anonid="control-container" class="control-container">
           <xul:button anonid="remove-btn" class="addon-control remove"
-                      label="&cmd.uninstall.label;"
-                      accesskey="&cmd.uninstall.accesskey;"
-                      tooltiptext="&cmd.uninstall.tooltip;"
+                      label="&cmd.uninstallAddon.label;"
+                      accesskey="&cmd.uninstallAddon.accesskey;"
+                      tooltiptext="&cmd.uninstallAddon.tooltip;"
                       oncommand="document.getBindingParent(this).uninstall();"/>
           <xul:button anonid="enable-btn"  class="addon-control enable"
-                      label="&cmd.enable.label;"
-                      accesskey="&cmd.enable.accesskey;"
-                      tooltiptext="&cmd.enable.tooltip;"
+                      label="&cmd.enableAddon.label;"
+                      accesskey="&cmd.enableAddon.accesskey;"
+                      tooltiptext="&cmd.enableAddon.tooltip;"
                       oncommand="document.getBindingParent(this).userDisabled = false;"/>
           <xul:button anonid="disable-btn" class="addon-control disable"
-                      label="&cmd.disable.label;"
-                      accesskey="&cmd.disable.accesskey;"
-                      tooltiptext="&cmd.disable.tooltip;"
+                      label="&cmd.disableAddon.label;"
+                      accesskey="&cmd.disableAddon.accesskey;"
+                      tooltiptext="&cmd.disableAddon.tooltip;"
                       oncommand="document.getBindingParent(this).userDisabled = true;"/>
         </xul:hbox>
         <xul:hbox class="status-container">

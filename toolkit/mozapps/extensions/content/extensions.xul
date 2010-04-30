@@ -41,14 +41,12 @@
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
 
 <!DOCTYPE page [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%brandDTD;
 <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
 %extensionsDTD;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      id="addons-page" title="&addons.title;">
+      id="addons-page" title="&addons.windowTitle;">
 
   <script type="application/javascript"
           src="chrome://mozapps/content/extensions/extensions.js"/>
@@ -266,19 +264,19 @@
                           tooltiptext="&cmd.contribute.tooltip;"/>
                   <spacer flex="1"/>
                   <button id="detail-uninstall" class="addon-control remove"
-                          label="&cmd.uninstall.label;"
-                          accesskey="&cmd.uninstall.accesskey;"
-                          tooltiptext="&cmd.uninstall.tooltip;"
+                          label="&cmd.uninstallAddon.label;"
+                          accesskey="&cmd.uninstallAddon.accesskey;"
+                          tooltiptext="&cmd.uninstallAddon.tooltip;"
                           command="cmd_uninstallItem"/>
                   <button id="detail-enable" class="addon-control enable"
-                          label="&cmd.enable.label;"
-                          accesskey="&cmd.enable.accesskey;"
-                          tooltiptext="&cmd.enable.tooltip;"
+                          label="&cmd.enableAddon.label;"
+                          accesskey="&cmd.enableAddon.accesskey;"
+                          tooltiptext="&cmd.enableAddon.tooltip;"
                           command="cmd_enableItem"/>
                   <button id="detail-disable" class="addon-control disable"
-                          label="&cmd.disable.label;"
-                          accesskey="&cmd.disable.accesskey;"
-                          tooltiptext="&cmd.disable.tooltip;"
+                          label="&cmd.disableAddon.label;"
+                          accesskey="&cmd.disableAddon.accesskey;"
+                          tooltiptext="&cmd.disableAddon.tooltip;"
                           command="cmd_disableItem"/>
                 </hbox>
               </vbox>

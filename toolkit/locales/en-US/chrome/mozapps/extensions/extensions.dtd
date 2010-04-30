@@ -1,4 +1,4 @@
-<!ENTITY addons.title                         "Add-ons Manager">
+<!ENTITY addons.windowTitle                   "Add-ons Manager">
 <!ENTITY search.placeholder                   "Search all add-ons">
 <!ENTITY loading.label                        "Loading…">
 <!ENTITY listEmpty.installed.label            "You don't have any add-ons of this type installed">
@@ -34,15 +34,15 @@
 <!ENTITY cmd.about.label                      "About">
 <!ENTITY cmd.about.accesskey                  "A">
 
-<!ENTITY cmd.enable.label                     "Enable">
-<!ENTITY cmd.enable.accesskey                 "E">
-<!ENTITY cmd.enable.tooltip                   "Enable this add-on">
-<!ENTITY cmd.disable.label                    "Disable">
-<!ENTITY cmd.disable.accesskey                "D">
-<!ENTITY cmd.disable.tooltip                  "Disable this add-on">
-<!ENTITY cmd.uninstall.label                  "Remove">
-<!ENTITY cmd.uninstall.accesskey              "R">
-<!ENTITY cmd.uninstall.tooltip                "Uninstall this add-on">
+<!ENTITY cmd.enableAddon.label                "Enable">
+<!ENTITY cmd.enableAddon.accesskey            "E">
+<!ENTITY cmd.enableAddon.tooltip              "Enable this add-on">
+<!ENTITY cmd.disableAddon.label               "Disable">
+<!ENTITY cmd.disableAddon.accesskey           "D">
+<!ENTITY cmd.disableAddon.tooltip             "Disable this add-on">
+<!ENTITY cmd.uninstallAddon.label             "Remove">
+<!ENTITY cmd.uninstallAddon.accesskey         "R">
+<!ENTITY cmd.uninstallAddon.tooltip           "Uninstall this add-on">
 <!ENTITY cmd.contribute.label                 "Contribute">
 <!ENTITY cmd.contribute.accesskey             "C">
 <!ENTITY cmd.contribute.tooltip               "Contribute to the development of this add-on">
