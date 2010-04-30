@@ -1991,6 +1991,14 @@ CanFlattenUpvar(JSDefinition *dn, JSFunctionBox *funbox, uint32 tcflags)
          */
         if (!afunbox || afunbox->node->isFunArg())
             return false;
+
+        /*
+         * Reaching up for dn across a generator also means we can't flatten,
+         * since the generator iterator does not run until later, in general.
+         * See bug 563034.
+         */
+        if (afunbox->tcflags & TCF_FUN_IS_GENERATOR)
+            return false;
     }
 
     /*
