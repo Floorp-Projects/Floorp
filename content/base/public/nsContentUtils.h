@@ -232,8 +232,8 @@ public:
    * This method fills the |aArray| with all ancestor nodes of |aNode|
    * including |aNode| at the zero index.
    */
-  static nsresult GetAncestors(nsIDOMNode* aNode,
-                               nsTArray<nsIDOMNode*>* aArray);
+  static nsresult GetAncestors(nsINode* aNode,
+                               nsTArray<nsINode*>& aArray);
 
   /*
    * This method fills |aAncestorNodes| with all ancestor nodes of |aNode|

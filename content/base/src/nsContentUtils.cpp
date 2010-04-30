@@ -1460,20 +1460,13 @@ nsContentUtils::ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
 
 // static
 nsresult
-nsContentUtils::GetAncestors(nsIDOMNode* aNode,
-                             nsTArray<nsIDOMNode*>* aArray)
+nsContentUtils::GetAncestors(nsINode* aNode,
+                             nsTArray<nsINode*>& aArray)
 {
-  NS_ENSURE_ARG_POINTER(aNode);
-
-  nsCOMPtr<nsIDOMNode> node(aNode);
-  nsCOMPtr<nsIDOMNode> ancestor;
-
-  do {
-    aArray->AppendElement(node.get());
-    node->GetParentNode(getter_AddRefs(ancestor));
-    node.swap(ancestor);
-  } while (node);
-
+  while (aNode) {
+    aArray.AppendElement(aNode);
+    aNode = aNode->GetNodeParent();
+  }
   return NS_OK;
 }
 
