@@ -10681,7 +10681,7 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[],
     /*
      * The return value will be processed by NativeCallComplete since
      * we have to know the actual return value type for calls that return
-     * jsval (like Array_p_pop).
+     * jsval.
      */
     pendingSpecializedNative = sn;
 
