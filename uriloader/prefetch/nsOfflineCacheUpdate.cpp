@@ -48,6 +48,7 @@
 #include "nsICacheSession.h"
 #include "nsICachingChannel.h"
 #include "nsIContent.h"
+#include "Element.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
@@ -1850,8 +1851,7 @@ nsOfflineCacheUpdate::ScheduleImplicit()
         if (!uri)
             continue;
 
-        nsIContent* content = doc->GetRootContent();
-        nsCOMPtr<nsIDOMElement> root = do_QueryInterface(content);
+        nsCOMPtr<nsIDOMElement> root = do_QueryInterface(doc->GetRootElement());
         if (!root)
             continue;
 

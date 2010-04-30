@@ -452,7 +452,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     parent = parent->GetParent();
   }
 
-  nsIContent* docElement = GetCurrentDoc()->GetRootContent();
+  Element* docElement = GetCurrentDoc()->GetRootElement();
   nsIContent* content = frame->GetContent();
 
   if (content && (IsBody(content) || content == docElement)) {

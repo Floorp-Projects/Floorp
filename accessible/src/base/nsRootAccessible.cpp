@@ -76,12 +76,16 @@
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsFocusManager.h"
+#include "Element.h"
+
 
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
 #include "nsIXULDocument.h"
 #include "nsIXULWindow.h"
 #endif
+
+using namespace mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
@@ -143,9 +147,9 @@ nsRootAccessible::GetRoleInternal(PRUint32 *aRole)
   }
 
   // If it's a <dialog> or <wizard>, use nsIAccessibleRole::ROLE_DIALOG instead
-  nsIContent *rootContent = mDocument->GetRootContent();
-  if (rootContent) {
-    nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(rootContent));
+  Element *root = mDocument->GetRootElement();
+  if (root) {
+    nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(root));
     if (rootElement) {
       nsAutoString name;
       rootElement->GetLocalName(name);

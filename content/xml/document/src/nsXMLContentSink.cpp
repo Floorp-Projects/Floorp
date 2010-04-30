@@ -441,13 +441,13 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
   // into the document.  
   // XXX do we need to notify for things like PIs?  Or just the
   // documentElement?
-  nsIContent *rootContent = mDocument->GetRootContent();
-  if (rootContent) {
-    NS_ASSERTION(mDocument->IndexOf(rootContent) != -1,
-                 "rootContent not in doc?");
+  nsIContent *rootElement = mDocument->GetRootElement();
+  if (rootElement) {
+    NS_ASSERTION(mDocument->IndexOf(rootElement) != -1,
+                 "rootElement not in doc?");
     mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-    nsNodeUtils::ContentInserted(mDocument, rootContent,
-                                 mDocument->IndexOf(rootContent));
+    nsNodeUtils::ContentInserted(mDocument, rootElement,
+                                 mDocument->IndexOf(rootElement));
     mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
   }
   

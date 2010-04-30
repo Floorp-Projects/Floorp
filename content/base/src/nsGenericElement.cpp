@@ -158,19 +158,7 @@
 #include "nsSVGFeatures.h"
 #endif /* MOZ_SVG */
 
-#ifdef DEBUG_waterson
-
-/**
- * List a content tree to stdout. Meant to be called from gdb.
- */
-void
-DebugListContentTree(nsIContent* aElement)
-{
-  aElement->List(stdout, 0);
-  printf("\n");
-}
-
-#endif
+using namespace mozilla::dom;
 
 NS_DEFINE_IID(kThisPtrOffsetsSID, NS_THISPTROFFSETS_SID);
 
@@ -391,7 +379,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
   NS_ENSURE_TRUE(aPresShell, nsnull);
 
   if (IsNodeOfType(eDOCUMENT))
-    return static_cast<nsIDocument*>(this)->GetRootContent();
+    return static_cast<nsIDocument*>(this)->GetRootElement();
   if (!IsNodeOfType(eCONTENT))
     return nsnull;
 
@@ -440,7 +428,7 @@ nsINode::GetSelectionRootContent(nsIPresShell* aPresShell)
     if (!content) {
       nsIDocument* doc = aPresShell->GetDocument();
       NS_ENSURE_TRUE(doc, nsnull);
-      content = doc->GetRootContent();
+      content = doc->GetRootElement();
       if (!content)
         return nsnull;
     }
@@ -1272,8 +1260,8 @@ nsNSElementTearoff::GetScrollFrame(nsIFrame **aStyledFrame)
 
   nsIDocument* doc = mContent->GetOwnerDoc();
   PRBool quirksMode = doc->GetCompatibilityMode() == eCompatibility_NavQuirks;
-  nsIContent* elementWithRootScrollInfo =
-    quirksMode ? doc->GetBodyContent() : doc->GetRootContent();
+  Element* elementWithRootScrollInfo =
+    quirksMode ? doc->GetBodyElement() : doc->GetRootElement();
   if (mContent == elementWithRootScrollInfo) {
     // In quirks mode, the scroll info for the body element should map to the
     // root scrollable frame.
@@ -3623,12 +3611,12 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
         return PR_TRUE;
       }
 
-      nsIContent* rootContent =
-        static_cast<nsIDocument*>(aParent)->GetRootContent();
-      if (rootContent) {
+      Element* rootElement =
+        static_cast<nsIDocument*>(aParent)->GetRootElement();
+      if (rootElement) {
         // Already have a documentElement, so this is only OK if we're
         // replacing it.
-        return aIsReplace && rootContent == aRefContent;
+        return aIsReplace && rootElement == aRefContent;
       }
 
       // We don't have a documentElement yet.  Our one remaining constraint is
@@ -3678,9 +3666,9 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
 
       // We don't have a doctype yet.  Our one remaining constraint is
       // that the doctype must come before the documentElement.
-      nsIContent* rootContent =
-        static_cast<nsIDocument*>(aParent)->GetRootContent();
-      if (!rootContent) {
+      Element* rootElement =
+        static_cast<nsIDocument*>(aParent)->GetRootElement();
+      if (!rootElement) {
         // It's all good
         return PR_TRUE;
       }
@@ -3690,12 +3678,12 @@ PRBool IsAllowedAsChild(nsIContent* aNewChild, PRUint16 aNewNodeType,
         return PR_FALSE;
       }
 
-      PRInt32 rootIndex = aParent->IndexOf(rootContent);
+      PRInt32 rootIndex = aParent->IndexOf(rootElement);
       PRInt32 insertIndex = aParent->IndexOf(aRefContent);
 
       // Now we're OK if and only if insertIndex <= rootIndex.  Indeed, either
       // we end up replacing aRefContent or we end up before it.  Either one is
-      // ok as long as aRefContent is not after rootContent.
+      // ok as long as aRefContent is not after rootElement.
       return insertIndex <= rootIndex;
     }
   case nsIDOMNode::DOCUMENT_FRAGMENT_NODE :

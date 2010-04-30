@@ -432,7 +432,7 @@ void
 SetBaseURIUsingFirstBaseWithHref(nsIContent* aHead, nsIContent* aMustMatch)
 {
   NS_PRECONDITION(aHead && aHead->GetOwnerDoc() &&
-                  aHead->GetOwnerDoc()->GetHeadContent() == aHead,
+                  aHead->GetOwnerDoc()->GetHeadElement() == aHead,
                   "Bad head");
 
   nsIDocument* doc = aHead->GetOwnerDoc();
@@ -483,7 +483,7 @@ nsHTMLSharedElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       aNameSpaceID == kNameSpaceID_None &&
       IsInDoc() &&
       (head = GetParent()) &&
-      head == GetOwnerDoc()->GetHeadContent()) {
+      head == GetOwnerDoc()->GetHeadElement()) {
     SetBaseURIUsingFirstBaseWithHref(head, this);
   }
 
@@ -506,7 +506,7 @@ nsHTMLSharedElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       aNameSpaceID == kNameSpaceID_None &&
       IsInDoc() &&
       (head = GetParent()) &&
-      head == GetOwnerDoc()->GetHeadContent()) {
+      head == GetOwnerDoc()->GetHeadElement()) {
     SetBaseURIUsingFirstBaseWithHref(head, nsnull);
   }
 
@@ -528,7 +528,7 @@ nsHTMLSharedElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   if (mNodeInfo->Equals(nsGkAtoms::base, kNameSpaceID_XHTML) &&
       HasAttr(kNameSpaceID_None, nsGkAtoms::href) &&
       aDocument && aParent &&
-      aDocument->GetHeadContent() == aParent) {
+      aDocument->GetHeadElement() == aParent) {
 
     SetBaseURIUsingFirstBaseWithHref(aParent, this);
   }
@@ -554,7 +554,7 @@ nsHTMLSharedElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   if (inHeadBase) {
     // We might have gotten here as a result of the <head> being removed
     // from the document. In that case we need to call SetBaseURI(nsnull)
-    nsIContent* head = doc->GetHeadContent();
+    Element* head = doc->GetHeadElement();
     if (head) {
       SetBaseURIUsingFirstBaseWithHref(head, nsnull);
     }

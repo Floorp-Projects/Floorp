@@ -63,6 +63,7 @@
 #include "nsInt64.h"
 #include "nsNodeUtils.h"
 #include "nsIContent.h"
+#include "Element.h"
 
 #include "nsGenericHTMLElement.h"
 
@@ -122,6 +123,8 @@
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
+
+using namespace mozilla::dom;
 
 #ifdef NS_DEBUG
 static PRLogModuleInfo* gSinkLogModuleInfo;
@@ -1615,24 +1618,15 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   // Make root part
-  nsIContent *doc_root = mDocument->GetRootContent();
-
-  if (doc_root) {
-    // If the document already has a root we'll use it. This will
-    // happen when we do document.open()/.write()/.close()...
-
-    mRoot = static_cast<nsGenericHTMLElement*>(doc_root);
-  } else {
-    mRoot = NS_NewHTMLHtmlElement(nodeInfo);
-    if (!mRoot) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    NS_ASSERTION(mDocument->GetChildCount() == 0,
-                 "Document should have no kids here!");
-    rv = mDocument->AppendChildTo(mRoot, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
+  mRoot = NS_NewHTMLHtmlElement(nodeInfo);
+  if (!mRoot) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  NS_ASSERTION(mDocument->GetChildCount() == 0,
+               "Document should have no kids here!");
+  rv = mDocument->AppendChildTo(mRoot, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Make head part
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::head,
@@ -2982,7 +2976,7 @@ HTMLContentSink::DumpContentModel()
   FILE* out = ::fopen("rtest_html.txt", "a");
   if (out) {
     if (mDocument) {
-      nsIContent* root = mDocument->GetRootContent();
+      Element* root = mDocument->GetRootElement();
       if (root) {
         if (mDocumentURI) {
           nsCAutoString buf;

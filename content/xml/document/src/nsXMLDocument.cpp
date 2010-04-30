@@ -463,7 +463,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     }
 
     // We set return to true unless there was a parsing error
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(GetRootContent());
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(GetRootElement());
     if (node) {
       nsAutoString name, ns;      
       if (NS_SUCCEEDED(node->GetLocalName(name)) &&
