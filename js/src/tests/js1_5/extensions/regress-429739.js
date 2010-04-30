@@ -53,7 +53,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = 'function anonymous(y) {}';
+  expect = 'TypeError: o.y is not a constructor';
 
   try
   {
@@ -65,7 +65,7 @@ function test()
     actual = ex + '';
   }
 
-  compareSource(expect, actual, summary);
+  reportCompare(expect, actual, summary);
 
   exitFunc ('test');
 }

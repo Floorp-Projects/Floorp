@@ -178,7 +178,7 @@ script regress-427196-01.js
 script regress-427196-02.js
 script regress-427196-03.js
 script regress-429264.js
-skip script regress-429739.js # Bug 520778 - wontfix
+script regress-429739.js
 script regress-431428.js
 skip script regress-432075.js # obsolete test
 script regress-434837-01.js
