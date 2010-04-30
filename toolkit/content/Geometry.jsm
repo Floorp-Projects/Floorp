@@ -248,6 +248,10 @@ let Util = {
 #ifdef MOZ_ENABLE_LIBCONIC
     gIOService.offline = false;
 #endif
+  },
+  
+  isPortrait: function isPortrait() {
+    return (window.innerWidth < 500);
   }
 };
 
