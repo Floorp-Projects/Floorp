@@ -159,7 +159,7 @@ Installer.prototype = {
       WARN("Not installing " + aInstall.addon.id + " because of the following: " + problems);
 
       title = this.bundle.GetStringFromName("incompatibleTitle2", 1);
-      text = this.bundle.formatStringFromName("incompatibleMessage",
+      text = this.bundle.formatStringFromName("incompatibleMessage2",
                                               [aInstall.addon.name,
                                                aInstall.addon.version,
                                                Services.appinfo.name,
