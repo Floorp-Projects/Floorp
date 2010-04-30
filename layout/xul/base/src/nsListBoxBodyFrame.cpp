@@ -717,7 +717,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
     nsRefPtr<nsStyleContext> styleContext;
     nsPresContext *presContext = aBoxLayoutState.PresContext();
     styleContext = presContext->StyleSet()->
-      ResolveStyleFor(firstRowContent, nsnull);
+      ResolveStyleFor(firstRowContent->AsElement(), nsnull);
 
     nscoord width = 0;
     nsMargin margin(0,0,0,0);
