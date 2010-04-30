@@ -48,6 +48,8 @@
 
 #include "mozilla/Mutex.h"
 
+#define IDLE_THREAD_TOPIC "thread-shutting-down"
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 /**
@@ -77,9 +79,12 @@ public:
   LazyIdleThread(PRUint32 aIdleTimeoutMS);
 
   /**
-   * Enables or disables the idle timeout.
+   * Add an observer that will be notified when the thread is idle and about to
+   * be shut down. The aSubject argument can be QueryInterface'd to an nsIThread
+   * that can be used to post cleanup events. The aTopic argument will be
+   * IDLE_THREAD_TOPIC, and aData will be null.
    */
-  void EnableIdleTimeout(PRBool aEnable);
+  void SetIdleObserver(nsIObserver* aObserver);
 
 private:
   /**
@@ -148,9 +153,10 @@ private:
   PRBool mThreadHasTimedOut;
 
   /**
-   * Protected by mMutex. Whether or not the timeout is enabled.
+   * Idle observer. Called when the thread is about to be shut down. Released
+   * only when Shutdown() is called.
    */
-  PRUint32 mTimeoutDisabledCount;
+  nsCOMPtr<nsIObserver> mIdleObserver;
 };
 
 END_INDEXEDDB_NAMESPACE
