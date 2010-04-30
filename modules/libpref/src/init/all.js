@@ -2822,6 +2822,7 @@ pref("signon.debug",                        false);
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
 pref("browser.formfill.enable",           true);
+pref("browser.formfill.expire_days",      180);
 pref("browser.formfill.saveHttpsForms",   true);
 pref("browser.formfill.agedWeight",       2);
 pref("browser.formfill.bucketSize",       1);
