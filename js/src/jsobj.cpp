@@ -2486,7 +2486,7 @@ DefinePropertyArray(JSContext *cx, JSObject *obj, const PropertyDescriptor &desc
 
         if (index >= oldLen) {
             JS_ASSERT(index != UINT32_MAX);
-            obj->setArrayLength(index + 1);
+            obj->setSlowArrayLength(index + 1);
         }
 
         *rval = true;
