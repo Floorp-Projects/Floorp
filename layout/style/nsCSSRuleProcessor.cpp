@@ -91,6 +91,9 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 #include "mozilla/Services.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 #define VISITED_PSEUDO_PREF "layout.css.visited_links_enabled"
 
@@ -979,11 +982,11 @@ nsCSSRuleProcessor::HasSystemMetric(nsIAtom* aMetric)
 }
 
 RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
-                                     nsIContent* aContent, 
+                                     Element* aElement, 
                                      nsRuleWalker* aRuleWalker,
                                      nsCompatibility* aCompat /*= nsnull*/)
   : mPresContext(aPresContext),
-    mContent(aContent),
+    mElement(aElement),
     mRuleWalker(aRuleWalker),
     mScopedRoot(nsnull),
     mPreviousSiblingData(nsnull),
@@ -993,8 +996,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
 {
   MOZ_COUNT_CTOR(RuleProcessorData);
 
-  NS_ASSERTION(aContent && aContent->IsNodeOfType(nsINode::eELEMENT),
-               "non-element leaked into SelectorMatches");
+  NS_ASSERTION(aElement, "null element leaked into SelectorMatches");
 
   mNthIndices[0][0] = -2;
   mNthIndices[0][1] = -2;
@@ -1008,34 +1010,33 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
   } else if (NS_LIKELY(mPresContext)) {
     mCompatMode = mPresContext->CompatibilityMode();
   } else {
-    NS_ASSERTION(aContent, "Must have content");
-    NS_ASSERTION(aContent->GetOwnerDoc(), "Must have document");
-    mCompatMode = aContent->GetOwnerDoc()->GetCompatibilityMode();
+    NS_ASSERTION(aElement->GetOwnerDoc(), "Must have document");
+    mCompatMode = aElement->GetOwnerDoc()->GetCompatibilityMode();
   }
 
-  NS_ASSERTION(aContent->GetOwnerDoc(), "Document-less node here?");
+  NS_ASSERTION(aElement->GetOwnerDoc(), "Document-less node here?");
     
   // get the tag and parent
-  mContentTag = aContent->Tag();
-  mParentContent = aContent->GetParent();
+  mContentTag = aElement->Tag();
+  mParentContent = aElement->GetParent();
 
   // see if there are attributes for the content
-  mHasAttributes = aContent->GetAttrCount() > 0;
+  mHasAttributes = aElement->GetAttrCount() > 0;
   if (mHasAttributes) {
     // get the ID and classes for the content
-    mContentID = aContent->GetID();
-    mClasses = aContent->GetClasses();
+    mContentID = aElement->GetID();
+    mClasses = aElement->GetClasses();
   } else {
     mContentID = nsnull;
     mClasses = nsnull;
   }
 
   // get the namespace
-  mNameSpaceID = aContent->GetNameSpaceID();
+  mNameSpaceID = aElement->GetNameSpaceID();
 
   // check for HTMLContent status
   mIsHTMLContent = (mNameSpaceID == kNameSpaceID_XHTML);
-  mIsHTML = mIsHTMLContent && aContent->IsInHTMLDocument();
+  mIsHTML = mIsHTMLContent && aElement->IsInHTMLDocument();
 
   // No need to initialize mContentState; the ContentState() accessor will handle
   // that.
@@ -1079,7 +1080,7 @@ const nsString* RuleProcessorData::GetLang()
     mLanguage = new nsString();
     if (!mLanguage)
       return nsnull;
-    for (nsIContent* content = mContent; content;
+    for (nsIContent* content = mElement; content;
          content = content->GetParent()) {
       if (content->GetAttrCount() > 0) {
         // xml:lang has precedence over lang on HTML elements (see
@@ -1108,10 +1109,10 @@ RuleProcessorData::ContentState()
     mGotContentState = PR_TRUE;
     mContentState = 0;
     if (mPresContext) {
-      mPresContext->EventStateManager()->GetContentState(mContent,
+      mPresContext->EventStateManager()->GetContentState(mElement,
                                                          mContentState);
     } else {
-      mContentState = mContent->IntrinsicState();
+      mContentState = mElement->IntrinsicState();
     }
 
     // If we are not supposed to mark visited links as such, be sure to
@@ -1131,7 +1132,7 @@ RuleProcessorData::ContentState()
 PRUint32
 RuleProcessorData::DocumentState()
 {
-  return mContent->GetOwnerDoc()->GetDocumentState();
+  return mElement->GetOwnerDoc()->GetDocumentState();
 }
 
 PRBool
@@ -1175,9 +1176,6 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
                                PRBool aCheckEdgeOnly)
 {
   NS_ASSERTION(mParentContent, "caller should check mParentContent");
-  NS_ASSERTION(!mPreviousSiblingData ||
-               mPreviousSiblingData->mContent->IsNodeOfType(nsINode::eELEMENT),
-               "Unexpected previous sibling data");
 
   PRInt32 &slot = mNthIndices[aIsOfType][aIsFromEnd];
   if (slot != -2 && (slot != -1 || aCheckEdgeOnly))
@@ -1223,9 +1221,9 @@ RuleProcessorData::GetNthIndex(PRBool aIsOfType, PRBool aIsFromEnd,
       break;
     }
     nsIContent* child = *curChildPtr;
-    if (child == mContent)
+    if (child == mElement)
       break;
-    if (child->IsNodeOfType(nsINode::eELEMENT) &&
+    if (child->IsElement() &&
         (!aIsOfType ||
          (child->Tag() == mContentTag &&
           child->GetNameSpaceID() == mNameSpaceID))) {
@@ -1496,7 +1494,7 @@ checkGenericEmptyMatches(RuleProcessorData& data,
                          PRBool isWhitespaceSignificant)
 {
   nsIContent *child = nsnull;
-  nsIContent *element = data.mContent;
+  Element *element = data.mElement;
   PRInt32 index = -1;
 
   if (aTreeMatchContext.mForStyling)
@@ -1650,7 +1648,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         {
           NS_ASSERTION(pseudoClass->u.mString, "Must have string!");
           nsIContent *child = nsnull;
-          nsIContent *element = data.mContent;
+          Element *element = data.mElement;
           PRInt32 index = -1;
 
           if (aTreeMatchContext.mForStyling)
@@ -1689,7 +1687,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           break;
         }
 
-        nsIDocument* doc = data.mContent->GetDocument();
+        nsIDocument* doc = data.mElement->GetDocument();
         if (doc) {
           // Try to get the language from the HTTP header or if this
           // is missing as well from the preferences.
@@ -1726,14 +1724,14 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       break;
 
       case nsCSSPseudoClasses::ePseudoClass_mozBoundElement:
-        if (data.mScopedRoot != data.mContent) {
+        if (data.mScopedRoot != data.mElement) {
           return PR_FALSE;
         }
         break;
 
       case nsCSSPseudoClasses::ePseudoClass_root:
         if (data.mParentContent != nsnull ||
-            data.mContent != data.mContent->GetOwnerDoc()->GetRootElement()) {
+            data.mElement != data.mElement->GetOwnerDoc()->GetRootElement()) {
           return PR_FALSE;
         }
         break;
@@ -1776,7 +1774,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             } while (firstNode &&
                      !IsSignificantChild(firstNode, PR_TRUE, PR_FALSE));
           }
-          if (data.mContent != firstNode) {
+          if (data.mElement != firstNode) {
             return PR_FALSE;
           }
         }
@@ -1803,7 +1801,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
             } while (lastNode &&
                      !IsSignificantChild(lastNode, PR_TRUE, PR_FALSE));
           }
-          if (data.mContent != lastNode) {
+          if (data.mElement != lastNode) {
             return PR_FALSE;
           }
         }
@@ -1864,7 +1862,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       case nsCSSPseudoClasses::ePseudoClass_mozHasHandlerRef:
         {
           nsIContent *child = nsnull;
-          nsIContent *element = data.mContent;
+          Element *element = data.mElement;
           PRInt32 index = -1;
 
           do {
@@ -1916,7 +1914,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
       case nsCSSPseudoClasses::ePseudoClass_mozLWTheme:
         {
-          nsIDocument* doc = data.mContent->GetOwnerDoc();
+          nsIDocument* doc = data.mElement->GetOwnerDoc();
           if (!doc ||
               doc->GetDocumentLWTheme() <= nsIDocument::Doc_Theme_None) {
             return PR_FALSE;
@@ -1926,7 +1924,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
       case nsCSSPseudoClasses::ePseudoClass_mozLWThemeBrightText:
         {
-          nsIDocument* doc = data.mContent->GetOwnerDoc();
+          nsIDocument* doc = data.mElement->GetOwnerDoc();
           if (!doc ||
               doc->GetDocumentLWTheme() != nsIDocument::Doc_Theme_Bright) {
             return PR_FALSE;
@@ -1936,7 +1934,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 
       case nsCSSPseudoClasses::ePseudoClass_mozLWThemeDarkText:
         {
-          nsIDocument* doc = data.mContent->GetOwnerDoc();
+          nsIDocument* doc = data.mElement->GetOwnerDoc();
           if (!doc ||
               doc->GetDocumentLWTheme() != nsIDocument::Doc_Theme_Dark) {
             return PR_FALSE;
@@ -2008,11 +2006,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           // matches, evaluate for each namespace (the only namespaces that
           // have a chance at matching, of course, are ones that the element
           // actually has attributes in), short-circuiting if we ever match.
-          PRUint32 attrCount = data.mContent->GetAttrCount();
+          PRUint32 attrCount = data.mElement->GetAttrCount();
           result = PR_FALSE;
           for (PRUint32 i = 0; i < attrCount; ++i) {
             const nsAttrName* attrName =
-              data.mContent->GetAttrNameAt(i);
+              data.mElement->GetAttrNameAt(i);
             NS_ASSERTION(attrName, "GetAttrCount lied or GetAttrNameAt failed");
             if (attrName->LocalName() != matchAttribute) {
               continue;
@@ -2024,7 +2022,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 #ifdef DEBUG
               PRBool hasAttr =
 #endif
-                data.mContent->GetAttr(attrName->NamespaceID(),
+                data.mElement->GetAttr(attrName->NamespaceID(),
                                        attrName->LocalName(), value);
               NS_ASSERTION(hasAttr, "GetAttrNameAt lied");
               result = AttrMatchesValue(attr, value, data.mIsHTML);
@@ -2042,12 +2040,12 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         }
         else if (attr->mFunction == NS_ATTR_FUNC_EQUALS) {
           result =
-            data.mContent->
+            data.mElement->
               AttrValueIs(attr->mNameSpace, matchAttribute, attr->mValue,
                           (!data.mIsHTML || attr->mCaseSensitive) ? eCaseMatters
                                                                   : eIgnoreCase);
         }
-        else if (!data.mContent->HasAttr(attr->mNameSpace, matchAttribute)) {
+        else if (!data.mElement->HasAttr(attr->mNameSpace, matchAttribute)) {
           result = PR_FALSE;
         }
         else if (attr->mFunction != NS_ATTR_FUNC_SET) {
@@ -2055,7 +2053,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
 #ifdef DEBUG
           PRBool hasAttr =
 #endif
-              data.mContent->GetAttr(attr->mNameSpace, matchAttribute, value);
+              data.mElement->GetAttr(attr->mNameSpace, matchAttribute, value);
           NS_ASSERTION(hasAttr, "HasAttr lied");
           result = AttrMatchesValue(attr, value, data.mIsHTML);
         }
@@ -2116,17 +2114,17 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
       aLookForRelevantLink = PR_FALSE;
       data = prevdata->mPreviousSiblingData;
       if (!data) {
-        nsIContent* content = prevdata->mContent;
         nsIContent* parent = prevdata->mParentContent;
         if (parent) {
           if (aTreeMatchContext.mForStyling)
             parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
 
-          PRInt32 index = parent->IndexOf(content);
+          PRInt32 index = parent->IndexOf(prevdata->mElement);
           while (0 <= --index) {
-            content = parent->GetChildAt(index);
-            if (content->IsNodeOfType(nsINode::eELEMENT)) {
-              data = RuleProcessorData::Create(prevdata->mPresContext, content,
+            nsIContent* content = parent->GetChildAt(index);
+            if (content->IsElement()) {
+              data = RuleProcessorData::Create(prevdata->mPresContext,
+                                               content->AsElement(),
                                                prevdata->mRuleWalker,
                                                prevdata->mCompatMode);
               prevdata->mPreviousSiblingData = data;    
@@ -2144,8 +2142,9 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
         nsIContent *content = prevdata->mParentContent;
         // GetParent could return a document fragment; we only want
         // element parents.
-        if (content && content->IsNodeOfType(nsINode::eELEMENT)) {
-          data = RuleProcessorData::Create(prevdata->mPresContext, content,
+        if (content && content->IsElement()) {
+          data = RuleProcessorData::Create(prevdata->mPresContext,
+                                           content->AsElement(),
                                            prevdata->mRuleWalker,
                                            prevdata->mCompatMode);
           prevdata->mParentData = data;
@@ -2242,9 +2241,6 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
 NS_IMETHODIMP
 nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
 {
-  NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
-                  "content must be element");
-
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade) {
@@ -2261,9 +2257,6 @@ nsCSSRuleProcessor::RulesMatching(ElementRuleProcessorData *aData)
 NS_IMETHODIMP
 nsCSSRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
 {
-  NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
-                  "content must be element");
-
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade) {
@@ -2311,9 +2304,6 @@ nsCSSRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
 NS_IMETHODIMP
 nsCSSRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
 {
-  NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
-                  "content must be element");
-
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   if (cascade && cascade->mXULTreeRules.entryCount) {
@@ -2345,9 +2335,6 @@ IsSiblingOperator(PRUnichar oper)
 nsRestyleHint
 nsCSSRuleProcessor::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
-                  "content must be element");
-
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext);
 
   // Look up the content node in the state rule list, which points to
@@ -2426,9 +2413,6 @@ AttributeEnumFunc(nsCSSSelector* aSelector, AttributeEnumData* aData)
 nsRestyleHint
 nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
-  NS_PRECONDITION(aData->mContent->IsNodeOfType(nsINode::eELEMENT),
-                  "content must be element");
-
   //  We could try making use of aData->mModType, but :not rules make it a bit
   //  of a pain to do so...  So just ignore it for now.
 
@@ -2441,7 +2425,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
     if ((aData->mAttribute == nsGkAtoms::lwtheme ||
          aData->mAttribute == nsGkAtoms::lwthemetextcolor) &&
         aData->mNameSpaceID == kNameSpaceID_XUL &&
-        aData->mContent == aData->mContent->GetOwnerDoc()->GetRootElement())
+        aData->mElement == aData->mElement->GetOwnerDoc()->GetRootElement())
       {
         data.change = nsRestyleHint(data.change | eRestyle_Self);
       }
@@ -2456,7 +2440,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // rules we might stop matching; if the after change notification, the
   // ones we might have started matching.
   if (cascade) {
-    if (aData->mAttribute == aData->mContent->GetIDAttributeName()) {
+    if (aData->mAttribute == aData->mElement->GetIDAttributeName()) {
       nsCSSSelector **iter = cascade->mIDSelectors.Elements(),
                     **end = iter + cascade->mIDSelectors.Length();
       for(; iter != end; ++iter) {
@@ -2464,7 +2448,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
       }
     }
     
-    if (aData->mAttribute == aData->mContent->GetClassAttributeName()) {
+    if (aData->mAttribute == aData->mElement->GetClassAttributeName()) {
       nsCSSSelector **iter = cascade->mClassSelectors.Elements(),
                     **end = iter + cascade->mClassSelectors.Length();
       for(; iter != end; ++iter) {
