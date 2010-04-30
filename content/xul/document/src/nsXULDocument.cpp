@@ -986,10 +986,13 @@ nsXULDocument::AttributeWillChange(nsIDocument* aDocument,
 
 void
 nsXULDocument::AttributeChanged(nsIDocument* aDocument,
-                                nsIContent* aElement, PRInt32 aNameSpaceID,
+                                nsIContent* aElementContent, PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute, PRInt32 aModType)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
+
+    // XXXbz once we change AttributeChanged to take Element, we can nix this line
+    Element* aElement = aElementContent->AsElement();
 
     // Do this here so that all the exit paths below don't leave this undone
     nsXMLDocument::AttributeChanged(aDocument, aElement, aNameSpaceID,
@@ -4231,15 +4234,12 @@ nsXULDocument::TemplateBuilderHookup::Resolve()
 //----------------------------------------------------------------------
 
 nsresult
-nsXULDocument::FindBroadcaster(nsIContent* aElement,
+nsXULDocument::FindBroadcaster(Element* aElement,
                                nsIDOMElement** aListener,
                                nsString& aBroadcasterID,
                                nsString& aAttribute,
                                nsIDOMElement** aBroadcaster)
 {
-    NS_ASSERTION(aElement->IsElement(),
-                 "Only pass elements into FindBroadcaster!");
-
     nsresult rv;
     nsINodeInfo *ni = aElement->NodeInfo();
     *aListener = nsnull;
@@ -4323,7 +4323,7 @@ nsXULDocument::FindBroadcaster(nsIContent* aElement,
 }
 
 nsresult
-nsXULDocument::CheckBroadcasterHookup(nsIContent* aElement,
+nsXULDocument::CheckBroadcasterHookup(Element* aElement,
                                       PRBool* aNeedsHookup,
                                       PRBool* aDidResolve)
 {
