@@ -47,16 +47,19 @@
 #include "nsIDOMDOMStringList.h"
 #include "nsIIDBDatabaseRequest.h"
 #include "nsIIDBTransaction.h"
+#include "nsIObserver.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBDatabaseRequest : public IDBRequest::Generator,
-                           public nsIIDBDatabaseRequest
+                           public nsIIDBDatabaseRequest,
+                           public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBDATABASE
   NS_DECL_NSIIDBDATABASEREQUEST
+  NS_DECL_NSIOBSERVER
 
   static already_AddRefed<nsIIDBDatabaseRequest>
   Create(const nsAString& aName,

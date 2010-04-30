@@ -56,7 +56,7 @@ public:
 
 protected:
   // Only called by Create().
-  IndexedDatabaseRequest();
+  IndexedDatabaseRequest() { }
 };
 
 END_INDEXEDDB_NAMESPACE
