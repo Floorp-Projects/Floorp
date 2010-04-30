@@ -6253,8 +6253,7 @@ PresShell::HandlePositionedEvent(nsIView*       aView,
       //
       // We use weak pointers because during this tight loop, the node
       // will *not* go away.  And this happens on every mousemove.
-      while (targetElement &&
-             !targetElement->IsNodeOfType(nsINode::eELEMENT)) {
+      while (targetElement && !targetElement->IsElement()) {
         targetElement = targetElement->GetParent();
       }
 
