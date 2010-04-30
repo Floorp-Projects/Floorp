@@ -409,19 +409,25 @@ struct JSObject {
     static const uint32 JSSLOT_ARRAY_LENGTH = JSSLOT_PRIVATE;
 
     // Used only by dense arrays.
-    static const uint32 JSSLOT_DENSE_ARRAY_COUNT = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_DENSE_ARRAY_COUNT     = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_DENSE_ARRAY_MINLENCAP = JSSLOT_PRIVATE + 2;
 
     // This assertion must remain true;  see comment in js_MakeArraySlow().
     // (Nb: This method is never called, it just contains a static assertion.
     // The static assertion isn't inline because that doesn't work on Mac.)
     inline void staticAssertArrayLengthIsInPrivateSlot();
 
+    inline bool isDenseArrayMinLenCapOk() const;
+
+    inline uint32 uncheckedGetArrayLength() const;
+    inline uint32 uncheckedGetDenseArrayCapacity() const;
+
   public:
     inline uint32 getArrayLength() const;
-    inline void setArrayLength(uint32 length);
+    inline void setDenseArrayLength(uint32 length);
+    inline void setSlowArrayLength(uint32 length);
 
     inline uint32 getDenseArrayCount() const;
-    inline void voidDenseArrayCount();
     inline void setDenseArrayCount(uint32 count);
     inline void incDenseArrayCountBy(uint32 posDelta);
     inline void decDenseArrayCountBy(uint32 negDelta);
@@ -438,6 +444,8 @@ struct JSObject {
     bool ensureDenseArrayElements(JSContext *cx, uint32 newcap,
                                bool initializeAllSlots = true);
     inline void freeDenseArrayElements(JSContext *cx);
+
+    inline void voidDenseOnlyArraySlots();  // used when converting a dense array to a slow array
 
     /*
      * Arguments-specific getters and setters.
