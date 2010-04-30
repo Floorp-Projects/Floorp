@@ -130,6 +130,9 @@
     <command id="cmd_zoomout" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_lockscreen" oncommand="CommandUpdater.doCommand(this.id);"/>
 
+    <command id="cmd_volumeLeft" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
+    <command id="cmd_volumeRight" observes="bcast_contentShowing" oncommand="CommandUpdater.doCommand(this.id);"/>
+
     <!-- scrolling -->
     <command id="cmd_scrollPageUp" oncommand="CommandUpdater.doCommand(this.id);"/>
     <command id="cmd_scrollPageDown" oncommand="CommandUpdater.doCommand(this.id);"/>
@@ -175,8 +178,8 @@
 #ifndef WINCE
     <key id="key_quit" key="q" modifiers="accel" command="cmd_quit"/>
     <key id="key_fullscreen" keycode="VK_F6" command="cmd_fullscreen"/>
-    <key id="key_zoomin2" keycode="VK_F7" command="cmd_zoomin"/>
-    <key id="key_zoomout2" keycode="VK_F8" command="cmd_zoomout"/>
+    <key id="key_zoomin2" keycode="VK_F7" command="cmd_volumeRight"/>
+    <key id="key_zoomout2" keycode="VK_F8" command="cmd_volumeLeft"/>
 #else
     <key id="key_quit" keycode="VK_F4" command="cmd_quit"/>
     <key id="key_zoomin2" keycode="VK_F1" command="cmd_zoomin"/>
