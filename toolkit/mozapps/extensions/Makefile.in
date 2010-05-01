@@ -41,39 +41,17 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE         = extensions
-LIBRARY_NAME   = extensions
-IS_COMPONENT   = 1
-MODULE_NAME    = AddonsModule
-GRE_MODULE     = 1
-LIBXUL_LIBRARY = 1
-EXPORT_LIBRARY = 1
+MODULE = extensions
 
 XPIDLSRCS = \
-  amIInstallTrigger.idl \
-  amIWebInstallListener.idl \
-  amIWebInstaller.idl \
   nsIAddonRepository.idl \
-  $(NULL)
-
-CPPSRCS		= \
-  amInstallTrigger.cpp \
+  nsIExtensionManager.idl \
   $(NULL)
 
 EXTRA_PP_COMPONENTS = \
   nsAddonRepository.js \
   nsBlocklistService.js \
-  addonManager.js \
-  amContentHandler.js \
-  amWebInstallListener.js \
-  $(NULL)
-
-EXTRA_PP_JS_MODULES = \
-  AddonManager.jsm \
-  XPIProvider.jsm \
-  PluginProvider.jsm \
-  AddonUpdateChecker.jsm \
-  AddonLogging.jsm \
+  nsExtensionManager.js \
   $(NULL)
 
 EXTRA_JS_MODULES = \
@@ -83,11 +61,5 @@ EXTRA_JS_MODULES = \
 ifdef ENABLE_TESTS
 DIRS += test
 endif
-
-EXTRA_DSO_LDOPTS = \
-		$(MOZ_JS_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

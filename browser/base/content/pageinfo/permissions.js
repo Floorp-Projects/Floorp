@@ -63,13 +63,9 @@ var gPermObj = {
   },
   install: function getInstallDefaultPermission()
   {
-    try {
-      if (!gPrefs.getBoolPref("xpinstall.whitelist.required"))
-        return ALLOW;
-    }
-    catch (e) {
-    }
-    return BLOCK;
+    if (gPrefs.getBoolPref("xpinstall.whitelist.required"))
+      return BLOCK;
+    return ALLOW;
   },
   geo: function getGeoDefaultPermissions()
   {
