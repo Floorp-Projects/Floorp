@@ -69,6 +69,9 @@ components/aboutPrivateBrowsing.js
 components/aboutRights.js
 components/aboutRobots.js
 components/aboutSessionRestore.js
+components/addonManager.js
+components/amContentHandler.js
+components/amWebInstallListener.js
 components/compreg.dat
 components/@DLL_PREFIX@browserdirprovider@DLL_SUFFIX@
 components/@DLL_PREFIX@brwsrdir@DLL_SUFFIX@
@@ -619,6 +622,11 @@ components/nsInterfaceInfoToIDL.js
 components/nsScriptableIO.js
 chrome/chromelist.txt
 modules/JSON.jsm
+modules/AddonLogging.jsm
+modules/AddonManager.jsm
+modules/AddonUpdateChecker.jsm
+modules/PluginProvider.jsm
+modules/XPIProvider.jsm
 #ifdef XP_MACOSX
 extensions/inspector@mozilla.org/chrome/chromelist.txt
 components/accessibility.xpt
