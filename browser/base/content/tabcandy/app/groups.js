@@ -587,6 +587,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     }
       
     // ___ we're stacked, so expand
+    Groups.setActiveGroup(self);
     var startBounds = child.getBounds();
     var $tray = $("<div />").css({
       top: startBounds.top,
