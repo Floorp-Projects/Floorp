@@ -1,8 +1,8 @@
 // ##########
 window.TabItem = function(container, tab) {
+  this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this._init(container);
   this.tab = tab;
-  this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this.setResizable(true);
 };
 
@@ -105,17 +105,12 @@ window.TabItem.prototype = $.extend(new Item(), {
       }).dequeue();
     }
 
-    if(css.fontSize) {
+    if(css.fontSize && !$container.hasClass("stacked")) {
       if(css.fontSize < minFontSize )
         $title.fadeOut().dequeue();
       else
         $title.fadeIn().dequeue();
     }
-
-    if( $container.hasClass("stacked") ){
-      $title.hide();
-    }
-
 
     if(css.width) {
       if(css.width < 30) {

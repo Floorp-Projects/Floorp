@@ -38,7 +38,11 @@ TabCanvas.prototype = {
   },
      
   detach: function() {
-    this.tab.contentWindow.removeEventListener("MozAfterPaint", this.paintIt, false);
+    try {
+      this.tab.contentWindow.removeEventListener("MozAfterPaint", this.paintIt, false);
+    } catch(e) {
+      // ignore
+    }
   },
   
   paint: function(evt){

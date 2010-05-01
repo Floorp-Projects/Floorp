@@ -171,7 +171,9 @@ window.Group = function(listOfEls, options) {
 
   // ___ Finish Up
   this._addHandlers($container);
-  this.setResizable(true);
+  
+  if(!this.locked)
+    this.setResizable(true);
   
   Groups.register(this);
   
@@ -314,9 +316,14 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     if(this.$debug) 
       this.$debug.css({zIndex: value + 1});
 
-    $.each(this._children, function(index, child) {
-      child.setZ(value + 1);
-    });
+    var count = this._children.length;
+    if(count) {
+      var zIndex = value + count + 1;
+      $.each(this._children, function(index, child) {
+        child.setZ(zIndex);
+        zIndex--;
+      });
+    }
   },
     
   // ----------
@@ -336,7 +343,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       $.each(toClose, function(index, child) {
         child.close();
       });
-    } else 
+    } else if(!this.locked)
       this.close();
   },
     
@@ -484,6 +491,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
   // ----------  
   arrange: function(options) {
+    if(this.expanded)
+      return;
+      
     var count = this._children.length;
     if(!count)
       return;
@@ -649,7 +659,22 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------
   collapse: function() {
     if(this.expanded) {
-      this.expanded.$tray.remove();
+      var z = this.getZ();
+      var box = this.getBounds();
+      this.expanded.$tray
+        .css({
+          zIndex: z + 1
+        })
+        .animate({
+          width:  box.width,
+          height: box.height,
+          top: box.top,
+          left: box.left,
+          opacity: 0
+        }, 350, "tabcandyBounce", function() {
+          $(this).remove();  
+        });
+  
       this.expanded.$shield.remove();
       this.expanded = null;
 
@@ -657,7 +682,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         child.removeClass("stack-trayed");
       });
                   
-      this.arrange({z: this.getZ() + 1});
+      this.arrange({z: z + 2});
     }
   },
   
@@ -669,8 +694,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       $(container).draggable({
         scroll: false,
         cancel: '.close, .name',
-        start: function(){
-          drag.info = new DragInfo(this);
+        start: function(e, ui){
+          drag.info = new DragInfo(this, e);
         },
         drag: function(e, ui){
           drag.info.drag(e, ui);
@@ -731,11 +756,13 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 });
 
 // ##########
-var DragInfo = function(element) {
+var DragInfo = function(element, event) {
   this.el = element;
   this.$el = $(this.el);
   this.item = Items.item(this.el);
   this.parent = this.item.parent;
+  this.startPosition = new Point(event.clientX, event.clientY);
+  this.startTime = Utils.getMilliseconds();
   
   this.$el.data('isDragging', true);
   this.item.setZ(99999);
@@ -743,7 +770,7 @@ var DragInfo = function(element) {
 
 DragInfo.prototype = {
   // ----------  
-  drag: function(e, ui) {
+  drag: function(event, ui) {
     if(this.item.isAGroup) {
       var bb = this.item.getBounds();
       bb.left = ui.position.left;
@@ -753,9 +780,13 @@ DragInfo.prototype = {
       this.item.reloadBounds();
       
     if(this.parent && this.parent.expanded) {
-      this.item.locked = true;
-      this.parent.collapse();
-      this.item.locked = false;
+      var now = Utils.getMilliseconds();
+      var distance = this.startPosition.distance(new Point(event.clientX, event.clientY));
+      if(now - this.startTime > 500 && distance > 100) {
+        this.item.locked = true;
+        this.parent.collapse();
+        this.item.locked = false;
+      }
     }
   },
 
@@ -791,9 +822,8 @@ window.Groups = {
   dragOptions: {
     scroll: false,
     cancel: '.close',
-    refreshPositions: true,
     start: function(e, ui) {
-      drag.info = new DragInfo(this);
+      drag.info = new DragInfo(this, e);
     },
     drag: function(e, ui) {
       drag.info.drag(e, ui);
@@ -884,12 +914,15 @@ window.Groups = {
       
     if(data && data.groups) {
       $.each(data.groups, function(index, group) {
-        new Group([], $.extend({}, group, {dontPush: true})); 
+        new Group([], $.extend({}, group, {locked: false, dontPush: true})); 
       });
-    } else {
-      var box = this.getBoundsForNewTabGroup();
-      new Group([], {bounds: box, title: 'New Tabs', locked: true, dontPush: true}); 
     }
+    
+    var group = this.getNewTabGroup();
+    if(!group) {
+      var box = this.getBoundsForNewTabGroup();
+      new Group([], {bounds: box, title: 'New Tabs', dontPush: true}); 
+    } 
   },
   
   // ----------
@@ -1005,9 +1038,12 @@ window.Groups = {
   // ----------
   setActiveGroup: function(group) {
     try{
-    this._activeGroup = group;
-    UI.tabBar.showOnlyTheseTabs( group._children );    
-    }catch(e){Utils.log(e)}
+      this._activeGroup = group;
+      if(group)
+        UI.tabBar.showOnlyTheseTabs( group._children );    
+    }catch(e){
+      Utils.log(e)
+    }
   }
   
 };
