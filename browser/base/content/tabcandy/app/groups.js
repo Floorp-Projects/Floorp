@@ -589,7 +589,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     // ___ we're stacked, so expand
     var startBounds = child.getBounds();
     var $tray = $("<div />").css({
-      "backgroundColor": "rgba(0,0,0,0)",
       top: startBounds.top,
       left: startBounds.left,
       width: startBounds.width,
