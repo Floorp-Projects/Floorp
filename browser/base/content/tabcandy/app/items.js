@@ -1,31 +1,19 @@
 // Title: items.js (revision-a)
+
 // ##########
-// An Item is an object that adheres to an interface consisting of these methods: 
+// Class: Item
+// Superclass for all visible objects (<TabItems> and <Group>s).
+// If you subclass, in addition to the things Item provides, you need to also
+// provide these methods: 
 //   reloadBounds: function() 
-//   getBounds: function(), inherited from Item 
 //   setBounds: function(rect, immediately)
-//   setPosition: function(left, top, immediately), inherited from Item
-//   setSize: function(width, height, immediately), inherited from Item
-//   getZ: function(), inherited from Item  
 //   setZ: function(value)
 //   close: function() 
 //   addOnClose: function(referenceObject, callback)
 //   removeOnClose: function(referenceObject)
-// 
-// In addition, it must have these properties:
-//   isAnItem, set to true (set by Item)
+// ... and this property: 
 //   defaultSize, a Point
-//   bounds, a Rect (set by Item in _init() via reloadBounds())
-//   debug (set by Item)
-//   $debug (set by Item in _init())
-//   container, a DOM element (set by Item in _init())
-//    
-// Its container must also have a jQuery data named 'item' that points to the item. 
-// This is set by Item in _init(). 
-
-
-// Class: Item
-// Superclass for all visible objects (tabs and groups).
+// Make sure to call _init() from your subclass's constructor. 
 window.Item = function() {
   // Variable: isAnItem
   // Always true for Items
@@ -74,6 +62,15 @@ window.Item.prototype = {
   // Parameters: 
   //   container - the outermost DOM element that describes this item onscreen. 
   _init: function(container) {
+    Utils.assert('container must be a DOM element', Utils.isDOMElement(container));
+    Utils.assert('Subclass must provide reloadBounds', typeof(this.reloadBounds) == 'function');
+    Utils.assert('Subclass must provide setBounds', typeof(this.setBounds) == 'function');
+    Utils.assert('Subclass must provide setZ', typeof(this.setZ) == 'function');
+    Utils.assert('Subclass must provide close', typeof(this.close) == 'function');
+    Utils.assert('Subclass must provide addOnClose', typeof(this.addOnClose) == 'function');
+    Utils.assert('Subclass must provide removeOnClose', typeof(this.removeOnClose) == 'function');
+    Utils.assert('Subclass must provide defaultSize', this.defaultSize);
+    
     this.container = container;
     
     if(this.debug) {
@@ -87,6 +84,8 @@ window.Item.prototype = {
     }
     
     this.reloadBounds();        
+    Utils.assert('reloadBounds must set up this.bounds', this.bounds);
+
     $(this.container).data('item', this);
   },
   
@@ -436,7 +435,7 @@ window.Items = {
   // Returns a <Rect> defining the area of the page <Item>s should stay within. 
   getPageBounds: function() {
     var top = 20;
-    var bottom = TabItems.tabHeight + 10; // MAGIC NUMBER: giving room for the "new tabs" group
+    var bottom = 20;//TabItems.tabHeight + 10; // MAGIC NUMBER: giving room for the "new tabs" group
     var width = Math.max(100, window.innerWidth);
     var height = Math.max(100, window.innerHeight - (top + bottom));
     return new Rect(0, top, width, height);

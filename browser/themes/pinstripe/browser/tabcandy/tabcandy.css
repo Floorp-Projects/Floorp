@@ -110,6 +110,7 @@ body {
   overflow: hidden;
 }
 
+.stacked {padding:0;}
 .stacked .tab-title{ display: none; }
 .stacked .thumbShadow{display: none;}
 .stacked .thumb{-moz-box-shadow: rgba(0,0,0,.2) 1px 1px 6px;}

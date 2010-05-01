@@ -347,6 +347,9 @@ function UIClass(){
     self.resize();
   });
   
+  // ___ Dev Menu
+/*   this.addDevMenu(); */
+  
   // ___ Done
   this.initialized = true;
 };
@@ -367,7 +370,7 @@ UIClass.prototype = {
 
   // ----------
   resize: function() {
-    Groups.repositionNewTabGroup();
+/*     Groups.repositionNewTabGroup(); */
     
     var items = Items.getTopLevelItems();
     var itemBounds = new Rect(this.pageBounds);
@@ -423,6 +426,44 @@ UIClass.prototype = {
     this.pageBounds = Items.getPageBounds();
   },
   
+  // ----------
+  addDevMenu: function() {
+    var html = '<select style="position:absolute">'
+      + '<option>*</option>';
+      
+/*
+    var names = Utils.getVisualizationNames();
+    var count = names.length;
+    var a;
+    for(a = 0; a < count; a++) {
+      var name = names[a];
+      html += '<option value="'
+        + name
+        + '"'
+        + (name == myName ? ' selected="true"' : '')
+        + '>'
+        + name
+        + '</option>';
+    }
+    
+    html += '<option disabled="disabled">----------</option>';
+    html += '<option value="">Home</option>';
+*/
+
+    html += '</select>';
+    $('body')
+      .append(html)
+      .change(function () {
+/*
+        var name = $(this).val();
+        if(name)
+          location.href = '../' + name + '/index.html';
+        else
+          location.href = '../../index.html';
+*/
+      });
+  },
+
   // ----------
   _addArrangements: function() {
     this.grid = new ArrangeClass("Grid", function(value) {

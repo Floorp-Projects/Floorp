@@ -38,6 +38,13 @@ window.Point = function(a, y) {
 
 window.Point.prototype = { 
   // ---------- 
+  distance: function(point) { 
+    var ax = Math.abs(this.x - point.x);
+    var ay = Math.abs(this.y - point.y);
+    return Math.sqrt((ax * ax) + (ay * ay));
+  },
+
+  // ---------- 
   plus: function(point) { 
     return new Point(this.x + point.x, this.y + point.y);
   }
@@ -326,7 +333,12 @@ var Utils = {
   
   assert: function(label, condition) {
     if(!condition) {
-      var text = 'tabcandy assert: ' + label;        
+      var text;
+      if(typeof(label) == 'undefined')
+        text = 'badly formed assert';
+      else
+        text = 'tabcandy assert: ' + label;        
+        
       if(typeof(printStackTrace) == 'function') {
         var calls = printStackTrace();
         text += '\n' + calls[3];
@@ -415,6 +427,11 @@ var Utils = {
   isJQuery: function(object) {
     // TODO: need more robust way 
     return (object && typeof(object.fadeIn) == 'function' ? true : false);
+  },   
+
+  isDOMElement: function(object) {
+    // TODO: need more robust way 
+    return (object && typeof(object.tagName) != 'undefined' ? true : false);
   }   
 };
 
