@@ -48,14 +48,14 @@
 #endif /* !JS_THREADED_INTERP */
     {
         bool moreInterrupts = false;
-        JSTrapHandler handler = cx->debugHooks->interruptHandler;
-        if (handler) {
+        JSInterruptHook hook = cx->debugHooks->interruptHook;
+        if (hook) {
 #ifdef JS_TRACER
             if (TRACE_RECORDER(cx))
-                AbortRecording(cx, "interrupt handler");
+                AbortRecording(cx, "interrupt hook");
 #endif
-            switch (handler(cx, script, regs.pc, &rval,
-                            cx->debugHooks->interruptHandlerData)) {
+            switch (hook(cx, script, regs.pc, &rval,
+                         cx->debugHooks->interruptHookData)) {
               case JSTRAP_ERROR:
                 goto error;
               case JSTRAP_CONTINUE:
@@ -3647,7 +3647,7 @@ END_CASE(JSOP_INSTANCEOF)
 #if JS_HAS_DEBUGGER_KEYWORD
 BEGIN_CASE(JSOP_DEBUGGER)
 {
-    JSTrapHandler handler = cx->debugHooks->debuggerHandler;
+    JSDebuggerHandler handler = cx->debugHooks->debuggerHandler;
     if (handler) {
         switch (handler(cx, script, regs.pc, &rval, cx->debugHooks->debuggerHandlerData)) {
         case JSTRAP_ERROR:
