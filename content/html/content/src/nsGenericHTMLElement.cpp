@@ -1565,6 +1565,9 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
 void
 nsGenericHTMLFormElement::UpdateEditableFormControlState()
 {
+  // nsCSSFrameConstructor::MaybeConstructLazily is based on the logic of this
+  // function, so should be kept in sync with that.
+
   ContentEditableTristate value = GetContentEditableValue();
   if (value != eInherit) {
     SetEditableFlag(!!value);
