@@ -5185,9 +5185,8 @@ js_TestXMLEquality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
                  HasSimpleContent(xml))) {
                 ok = js_EnterLocalRootScope(cx);
                 if (ok) {
-                    str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
-                    vstr = js_ValueToString(cx, v);
-                    ok = str && vstr;
+                    ok = (str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj))) &&
+                         (vstr = js_ValueToString(cx, v));
                     if (ok)
                         *bp = js_EqualStrings(str, vstr);
                     js_LeaveLocalRootScope(cx);
@@ -5200,9 +5199,8 @@ js_TestXMLEquality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
         ok = js_EnterLocalRootScope(cx);
         if (ok) {
             if (HasSimpleContent(xml)) {
-                str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
-                vstr = js_ValueToString(cx, v);
-                ok = str && vstr;
+                ok = (str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj))) &&
+                     (vstr = js_ValueToString(cx, v));
                 if (ok)
                     *bp = js_EqualStrings(str, vstr);
             } else if (JSVAL_IS_STRING(v) || JSVAL_IS_NUMBER(v)) {
