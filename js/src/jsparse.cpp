@@ -1529,6 +1529,9 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
     TokenStream &tokenStream = parser.tokenStream;
 
     JSCodeGenerator funcg(&parser, &codePool, &notePool, tokenStream.getLineno());
+    if (!funcg.init())
+        return NULL;
+
     funcg.flags |= TCF_IN_FUNCTION;
     funcg.fun = fun;
     if (!GenerateBlockId(&funcg, funcg.bodyid))
