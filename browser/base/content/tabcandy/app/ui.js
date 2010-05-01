@@ -104,6 +104,11 @@ var Tabbar = {
 window.Page = {
   startX: 30, 
   startY: 70,
+  
+  show: function(){
+    Utils.homeTab.focus();
+    UI.tabBar.hide(false);
+  },
     
   // ----------  
   init: function() {    
@@ -111,7 +116,12 @@ window.Page = {
     Utils.homeTab.raw.minWidth = 60;
     
     Tabs.onClose(function(){
-      Utils.homeTab.focus();
+      // Only go back to the TabCandy tab when there you close the last
+      // tab of a group.
+      var group = Groups.getActiveGroup();
+      if( group && group._children.length == 0 ){
+        Page.show();
+      }
       Toolbar.unread = 0;    
       return false;
     });
