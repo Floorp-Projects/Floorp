@@ -6425,9 +6425,9 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     // This may not do very much useful, but it's probably worth trying.
     if (parentSize.width != NS_INTRINSICSIZE)
-      parentReflowState.SetComputedWidth(parentSize.width);
+      parentReflowState.SetComputedWidth(NS_MAX(parentSize.width, 0));
     if (parentSize.height != NS_INTRINSICSIZE)
-      parentReflowState.SetComputedHeight(parentSize.height);
+      parentReflowState.SetComputedHeight(NS_MAX(parentSize.height, 0));
     parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
     // XXX use box methods
     parentFrame->GetPadding(parentReflowState.mComputedPadding);
