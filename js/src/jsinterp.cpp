@@ -2519,7 +2519,7 @@ js_Interpret(JSContext *cx)
 
 # define CHECK_INTERRUPT_HANDLER()                                            \
     JS_BEGIN_MACRO                                                            \
-        if (cx->debugHooks->interruptHandler)                                 \
+        if (cx->debugHooks->interruptHook)                                    \
             ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
@@ -2679,7 +2679,7 @@ js_Interpret(JSContext *cx)
         /* This is an error, not a catchable exception, quit the frame ASAP. */
         ok = JS_FALSE;
     } else {
-        JSTrapHandler handler;
+        JSThrowHook handler;
         JSTryNote *tn, *tnlimit;
         uint32 offset;
 
