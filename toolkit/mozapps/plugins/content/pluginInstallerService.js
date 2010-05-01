@@ -35,13 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-
-const DOWNLOAD_STARTED = 0;
-const DOWNLOAD_FINISHED = 1;
-const INSTALL_STARTED = 2;
-const INSTALL_FINISHED = 3;
-const INSTALLS_COMPLETE = 4;
+const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
 
 function getLocalizedError(key)
 {
@@ -114,13 +108,14 @@ InstallerObserver.prototype = {
       this._downloader.init(this, resultFile);
       channel.notificationCallbacks = this;
 
-      this._fireNotification(DOWNLOAD_STARTED, null);
+      this._fireNotification(nsIXPIProgressDialog.DOWNLOAD_START, null);
 
       channel.asyncOpen(this._downloader, null);
     }
     catch (e) {
       Components.utils.reportError(e);
-      this._fireNotification(INSTALL_FINISHED, getLocalizedError("error-228"));
+      this._fireNotification(nsIXPIProgressDialog.INSTALL_DONE,
+                             getLocalizedError("error-228"));
       if (resultFile && resultFile.exists())
         resultfile.remove(false);
     }
@@ -134,7 +129,7 @@ InstallerObserver.prototype = {
     gPluginInstaller.pluginInstallationProgress(this._plugin.pid,
                                                 aStatus, aErrorMsg);
 
-    if (aStatus == INSTALL_FINISHED) {
+    if (aStatus == nsIXPIProgressDialog.INSTALL_DONE) {
       --PluginInstallService._installersPending;
       PluginInstallService._fireFinishedNotification();
     }
@@ -163,22 +158,24 @@ InstallerObserver.prototype = {
   {
     if (!Components.isSuccessCode(status)) {
       // xpinstall error 228 is "Download Error"
-      this._fireNotification(INSTALL_FINISHED, getLocalizedError("error-228"));
+      this._fireNotification(nsIXPIProgressDialog.INSTALL_DONE,
+                             getLocalizedError("error-228"));
       result.remove(false);
       return;
     }
 
-    this._fireNotification(DOWNLOAD_FINISHED);
+    this._fireNotification(nsIXPIProgressDialog.DOWNLOAD_DONE);
 
     if (this._plugin.InstallerHash &&
         !verifyHash(result, this._plugin.InstallerHash)) {
       // xpinstall error 261 is "Invalid file hash..."
-      this._fireNotification(INSTALL_FINISHED, getLocalizedError("error-261"));
+      this._fireNotification(nsIXPIProgressDialog.INSTALL_DONE,
+                             getLocalizedError("error-261"));
       result.remove(false);
       return;
     }
 
-    this._fireNotification(INSTALL_STARTED);
+    this._fireNotification(nsIXPIProgressDialog.INSTALL_START);
 
     result.QueryInterface(Components.interfaces.nsILocalFile);
     try {
@@ -192,16 +189,16 @@ InstallerObserver.prototype = {
         observe: function(subject, topic, data) {
           if (topic != "process-finished") {
             Components.utils.reportError("Failed to launch installer");
-            self._fireNotification(INSTALL_FINISHED,
+            self._fireNotification(nsIXPIProgressDialog.INSTALL_DONE,
                                    getLocalizedError("error-207"));
           }
           else if (process.exitValue != 0) {
             Components.utils.reportError("Installer returned exit code " + process.exitValue);
-            self._fireNotification(INSTALL_FINISHED,
+            self._fireNotification(nsIXPIProgressDialog.INSTALL_DONE,
                                    getLocalizedError("error-203"));
           }
           else {
-            self._fireNotification(INSTALL_FINISHED, null);
+            self._fireNotification(nsIXPIProgressDialog.INSTALL_DONE, null);
           }
           result.remove(false);
         }
@@ -209,7 +206,8 @@ InstallerObserver.prototype = {
     }
     catch (e) {
       Components.utils.reportError(e);
-      this._fireNotification(INSTALL_FINISHED, getLocalizedError("error-207"));
+      this._fireNotification(nsIXPIProgressDialog.INSTALL_DONE,
+                             getLocalizedError("error-207"));
       result.remove(false);
     }
   },
@@ -242,14 +240,20 @@ var PluginInstallService = {
                                      aXPIPlugins)
   {
     this._xpiPlugins = aXPIPlugins;
-    this._xpisPending = aXPIPlugins.length;
 
-    aXPIPlugins.forEach(function(plugin) {
-      AddonManager.getInstallForURL(plugin.XPILocation, function(install) {
-        install.addListener(PluginInstallService);
-        install.install();
-      }, "application/x-xpinstall", plugin.XPIHash);
-    });
+    if (this._xpiPlugins.length > 0) {
+      this._xpisDone = false;
+
+      var xpiManager = Components.classes["@mozilla.org/xpinstall/install-manager;1"]
+                                 .createInstance(Components.interfaces.nsIXPInstallManager);
+      xpiManager.initManagerWithHashes(
+        [plugin.XPILocation for each (plugin in this._xpiPlugins)],
+        [plugin.XPIHash for each (plugin in this._xpiPlugins)],
+        this._xpiPlugins.length, this);
+    }
+    else {
+      this._xpisDone = true;
+    }
 
     // InstallerObserver may finish immediately so we must initialise the
     // installers after setting the number of installers and xpis pending
@@ -260,73 +264,44 @@ var PluginInstallService = {
 
   _fireFinishedNotification: function()
   {
-    if (this._installersPending == 0 && this._xpisPending == 0)
-      gPluginInstaller.pluginInstallationProgress(null, INSTALLS_COMPLETE, null);
+    if (this._installersPending == 0 && this._xpisDone)
+      gPluginInstaller.
+        pluginInstallationProgress(null, nsIXPIProgressDialog.DIALOG_CLOSE,
+                                   null);
   },
 
-  getPidForInstall: function(install) {
-    for (let i = 0; i < this._xpiPlugins.length; i++) {
-      if (install.sourceURL == this._xpiPlugins[i].XPILocation)
-        return this._xpiPlugins[i].pid;
+  // XPI progress listener stuff
+  onStateChange: function (aIndex, aState, aValue)
+  {
+    // get the pid to return to the wizard
+    var pid = this._xpiPlugins[aIndex].pid;
+    var errorMsg;
+
+    if (aState == nsIXPIProgressDialog.INSTALL_DONE) {
+      if (aValue != 0) {
+        var xpinstallStrings = document.getElementById("xpinstallStrings");
+        try {
+          errorMsg = xpinstallStrings.getString("error" + aValue);
+        }
+        catch (e) {
+          errorMsg = xpinstallStrings.getFormattedString("unknown.error", [aValue]);
+        }
+      }
     }
-    return -1;
-  },
 
-  // InstallListener interface
-  onDownloadStarted: function(install) {
-    var pid = this.getPidForInstall(install);
-    gPluginInstaller.pluginInstallationProgress(pid, DOWNLOAD_STARTED, null);
-  },
-
-  onDownloadProgress: function(install) {
-    var pid = this.getPidForInstall(install);
-    gPluginInstaller.pluginInstallationProgressMeter(pid, install.progress,
-                                                     install.maxProgress);
-  },
-
-  onDownloadEnded: function(install) {
-    var pid = this.getPidForInstall(install);
-    gPluginInstaller.pluginInstallationProgress(pid, DOWNLOAD_FINISHED, null);
-  },
-
-  onDownloadFailed: function(install, error) {
-    var pid = this.getPidForInstall(install);
-    switch (error) {
-    case AddonManager.ERROR_NETWORK_FAILURE:
-      var errorMsg = getLocalizedError("error-228");
-      break;
-    case AddonManager.ERROR_INCORRECT_HASH:
-      var errorMsg = getLocalizedError("error-261");
-      break;
-    case AddonManager.ERROR_CORRUPT_FILE:
-      var errorMsg = getLocalizedError("error-207");
-      break;
+    if (aState == nsIXPIProgressDialog.DIALOG_CLOSE) {
+      this._xpisDone = true;
+      this._fireFinishedNotification();
     }
-    gPluginInstaller.pluginInstallationProgress(pid, INSTALL_FINISHED, errorMsg);
-
-    this._xpisPending--;
-    this._fireFinishedNotification();
+    else {
+      gPluginInstaller.pluginInstallationProgress(pid, aState, errorMsg);
+    }
   },
 
-  onInstallStarted: function(install) {
-    var pid = this.getPidForInstall(install);
-    gPluginInstaller.pluginInstallationProgress(pid, INSTALL_STARTED, null);
-  },
-
-  onInstallEnded: function(install, addon) {
-    var pid = this.getPidForInstall(install);
-    gPluginInstaller.pluginInstallationProgress(pid, INSTALL_FINISHED, null);
-
-    this._xpisPending--;
-    this._fireFinishedNotification();
-  },
-
-  onInstallFailed: function(install, error) {
-    var pid = this.getPidForInstall(install);
-    gPluginInstaller.pluginInstallationProgress(pid, INSTALL_FINISHED,
-                                                getLocalizedError("error-203"));
-
-    this._xpisPending--;
-    this._fireFinishedNotification();
+  onProgress: function (aIndex, aValue, aMaxValue)
+  {
+    // get the pid to return to the wizard
+    var pid = this._xpiPlugins[aIndex].pid;
+    gPluginInstaller.pluginInstallationProgressMeter(pid, aValue, aMaxValue);
   }
 }

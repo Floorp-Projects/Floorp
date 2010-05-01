@@ -308,6 +308,7 @@ interface extIExtension : nsISupports
   readonly attribute extIEvents events;
 }; 
 
+
 /**
  * Interface representing a list of all installed extensions
  */
@@ -337,15 +338,6 @@ interface extIExtensions : nsISupports
    */
   extIExtension get(in AString aId);
 }; 
-
-/**
- * Interface representing a callback that receives an array of extIExtensions
- */
-[scriptable, function, uuid(2571cbb5-550d-4400-8038-75df9b553f98)]
-interface extIExtensionsCallback : nsISupports
-{
-  void callback(in nsIVariant extensions);
-};
 
 /**
  * Interface representing a simple storage system
@@ -390,7 +382,7 @@ interface extISessionStorage : nsISupports
   nsIVariant get(in AString aName, in nsIVariant aDefaultValue);
 }; 
 
-[scriptable, uuid(2be87909-0817-4292-acfa-fc39be53be3f)]
+[scriptable, uuid(e53d6610-7468-11dd-ad8b-0800200c9a66)]
 interface extIApplication : nsISupports
 {
   /**
@@ -417,7 +409,7 @@ interface extIApplication : nsISupports
    * The extensions object for the application. Contains a list
    * of all installed extensions.
    */
-  void getExtensions(in extIExtensionsCallback aCallback);
+  readonly attribute extIExtensions extensions;
 
   /**
    * The preferences object for the application. Defaults to an empty
