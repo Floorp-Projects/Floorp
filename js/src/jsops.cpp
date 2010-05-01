@@ -258,13 +258,7 @@ BEGIN_CASE(JSOP_STOP)
          */
         fp->putActivationObjects(cx);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-        /* DTrace function return, inlines */
-        if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
-            jsdtrace_function_rval(cx, fp, fp->fun, &fp->rval);
-        if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
-            jsdtrace_function_return(cx, fp, fp->fun);
-#endif
+        DTrace::exitJSFun(cx, fp, fp->fun, &fp->rval);
 
         /* Restore context version only if callee hasn't set version. */
         if (JS_LIKELY(cx->version == currentVersion)) {
@@ -2163,15 +2157,7 @@ BEGIN_CASE(JSOP_APPLY)
             inlineCallCount++;
             JS_RUNTIME_METER(rt, inlineCalls);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-            /* DTrace function entry, inlines */
-            if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
-                jsdtrace_function_entry(cx, fp, fun);
-            if (JAVASCRIPT_FUNCTION_INFO_ENABLED())
-                jsdtrace_function_info(cx, fp, fp->down, fun);
-            if (JAVASCRIPT_FUNCTION_ARGS_ENABLED())
-                jsdtrace_function_args(cx, fp, fun, fp->argc, fp->argv);
-#endif
+            DTrace::enterJSFun(cx, fp, fun, fp->down, fp->argc, fp->argv);
 
 #ifdef JS_TRACER
             if (TraceRecorder *tr = TRACE_RECORDER(cx)) {
@@ -2205,30 +2191,13 @@ BEGIN_CASE(JSOP_APPLY)
         }
 
         if (fun->flags & JSFUN_FAST_NATIVE) {
-#ifdef INCLUDE_MOZILLA_DTRACE
-            /* DTrace function entry, non-inlines */
-            if (VALUE_IS_FUNCTION(cx, lval)) {
-                if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
-                    jsdtrace_function_entry(cx, NULL, fun);
-                if (JAVASCRIPT_FUNCTION_INFO_ENABLED())
-                    jsdtrace_function_info(cx, NULL, fp, fun);
-                if (JAVASCRIPT_FUNCTION_ARGS_ENABLED())
-                    jsdtrace_function_args(cx, fp, fun, argc, vp+2);
-            }
-#endif
+            DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, &lval);
 
             JS_ASSERT(fun->u.n.extra == 0);
             JS_ASSERT(JSVAL_IS_OBJECT(vp[1]) ||
                       PRIMITIVE_THIS_TEST(fun, vp[1]));
             ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
-#ifdef INCLUDE_MOZILLA_DTRACE
-            if (VALUE_IS_FUNCTION(cx, lval)) {
-                if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
-                    jsdtrace_function_rval(cx, NULL, fun, vp);
-                if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
-                    jsdtrace_function_return(cx, NULL, fun);
-            }
-#endif
+            DTrace::exitJSFun(cx, NULL, fun, vp, &lval);
             regs.sp = vp + 1;
             if (!ok) {
                 /*
