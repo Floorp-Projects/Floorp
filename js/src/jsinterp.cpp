@@ -81,10 +81,7 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsstrinlines.h"
-
-#ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
-#endif
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -814,15 +811,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     if (hook)
         hookData = hook(cx, &frame, JS_TRUE, 0, cx->debugHooks->callHookData);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    /* DTrace function entry, non-inlines */
-    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
-        jsdtrace_function_entry(cx, &frame, fun);
-    if (JAVASCRIPT_FUNCTION_INFO_ENABLED())
-        jsdtrace_function_info(cx, &frame, frame.down, fun);
-    if (JAVASCRIPT_FUNCTION_ARGS_ENABLED())
-        jsdtrace_function_args(cx, &frame, fun, frame.argc, frame.argv);
-#endif
+    DTrace::enterJSFun(cx, &frame, fun, frame.down, frame.argc, frame.argv);
 
     /* Call the function, either a native method or an interpreted script. */
     if (native) {
@@ -842,13 +831,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         ok = js_Interpret(cx);
     }
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    /* DTrace function return, non-inlines */
-    if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
-        jsdtrace_function_rval(cx, &frame, fun, &frame.rval);
-    if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
-        jsdtrace_function_return(cx, &frame, fun);
-#endif
+    DTrace::exitJSFun(cx, &frame, fun, &frame.rval);
 
 out:
     if (hookData) {
@@ -948,20 +931,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     LeaveTrace(cx);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    struct JSDNotifyGuard {
-        JSScript *script;
-        JSDNotifyGuard(JSScript *s) : script(s) {
-            if (JAVASCRIPT_EXECUTE_START_ENABLED())
-                jsdtrace_execute_start(script);
-        }
-        ~JSDNotifyGuard() {
-            if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
-                jsdtrace_execute_done(script);
-        }
-
-    } jsdNotifyGuard(script);
-#endif
+    DTrace::ExecutionScope executionScope(script);
 
     JSInterpreterHook hook = cx->debugHooks->executeHook;
     void *hookData = NULL;

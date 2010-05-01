@@ -84,10 +84,7 @@
 #include "jsxml.h"
 #endif
 
-#ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
-#endif
-
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
@@ -2520,10 +2517,7 @@ FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
     if (clasp->finalize)
         clasp->finalize(cx, obj);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED())
-        jsdtrace_object_finalize(obj);
-#endif
+    DTrace::finalizeObject(obj);
 
     if (JS_LIKELY(obj->isNative())) {
         JSScope *scope = obj->scope();
