@@ -117,8 +117,8 @@ body {
 
 .stack-trayed .tab-title{
   display: block !important;
-	text-shadow: rgba(0,0,0,1) 1px 1px 2px;
-  color: #EEE;
+	/*text-shadow: rgba(0,0,0,1) 1px 1px 2px;
+  color: #EEE;*/
   font-size: 11px;
 }
 .stack-trayed .thumb{ -moz-box-shadow: none !important;}
@@ -154,9 +154,22 @@ body {
 }
 
 .overlay{
+  /*
+  // Growl-style
   background-color: rgba(0,0,0,.7) !important;
   -moz-box-shadow: 3px 3px 8px rgba(0,0,0,.5);        
 	-moz-border-radius: 0.4em;
+	*/
+	// The same look as a group.
+	border: 1px solid rgba(230,230,230,1);
+	background-color: rgba(248,248,248,1);
+	-moz-border-radius: 0.4em;
+	-moz-box-shadow:
+	  rgba(0,0,0, .3) 2px 2px 8px,
+		inset rgba(255, 255, 255, 0.6) 0 2px 0px,
+		inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
+		inset rgba(255, 255, 255, 0.6) 2px 0px 0px,
+		inset rgba(255, 255, 255, 0.6) -2px 0px 0px;	
 }
 
 /* Other
