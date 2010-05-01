@@ -54,6 +54,7 @@ LIBRARY_NAME    = mozcairo
 LIBXUL_LIBRARY = 1
 
 ifdef GNU_CC
+OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
 MODULE_OPTIMIZE_FLAGS = -O2
 else
 ifeq ($(OS_ARCH),SunOS)
