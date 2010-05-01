@@ -35,9 +35,11 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-var args
+var XPInstallConfirm = 
+{ 
+  _param: null
+};
 
-var XPInstallConfirm = {};
 
 XPInstallConfirm.init = function ()
 {
@@ -47,9 +49,13 @@ XPInstallConfirm.init = function ()
   var _timeout;
 
   var bundle = document.getElementById("xpinstallConfirmStrings");
-
-  args = window.arguments[0].wrappedJSObject;
-
+  
+  this._param = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+  if (!this._param)
+    close();
+  
+  this._param.SetInt(0, 1); // The default return value is "Cancel"
+  
   var _installCountdownLength = 5;
   try {
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
@@ -60,28 +66,29 @@ XPInstallConfirm.init = function ()
   
   var itemList = document.getElementById("itemList");
   
-  var numItemsToInstall = args.installs.length;
+  var numItemsToInstall = this._param.GetInt(1);
   for (var i = 0; i < numItemsToInstall; ++i) {
     var installItem = document.createElement("installitem");
     itemList.appendChild(installItem);
 
-    installItem.name = args.installs[i].addon.name;
-    installItem.url = args.installs[i].sourceURL;
-    var icon = args.installs[i].iconURL;
-    if (icon != null)
+    installItem.name = this._param.GetString(i);
+    installItem.url = this._param.GetString(++i);
+    var icon = this._param.GetString(++i);
+    if (icon != "")
       installItem.icon = icon;
-    if (args.installs[i].certName) {
-      installItem.cert = bundle.getFormattedString("signed", [args.installs[i].certName]);
-    }
-    else {
+    var cert = this._param.GetString(++i);
+    if (cert)
+      installItem.cert = bundle.getFormattedString("signed", [cert]);
+    else
       installItem.cert = bundle.getString("unverified");
-    }
-    installItem.signed = args.installs[i].certName ? "true" : "false";
+    installItem.signed = cert ? "true" : "false";
   }
   
   var introString = bundle.getString("itemWarnIntroSingle");
   if (numItemsToInstall > 4)
     introString = bundle.getFormattedString("itemWarnIntroMultiple", [numItemsToInstall / 4]);
+  if (this._param.objects && this._param.objects.length)
+    introString = this._param.objects.queryElementAt(0, Components.interfaces.nsISupportsString).data;
   var textNode = document.createTextNode(introString);
   var introNode = document.getElementById("itemWarningIntro");
   while (introNode.hasChildNodes())
@@ -166,16 +173,12 @@ XPInstallConfirm.init = function ()
 
 XPInstallConfirm.onOK = function ()
 {
-  args.installs.forEach(function(install) {
-    install.install();
-  });
+  this._param.SetInt(0, 0);
   return true;
 }
 
 XPInstallConfirm.onCancel = function ()
 {
-  args.installs.forEach(function(install) {
-    install.cancel();
-  });
+  this._param.SetInt(0, 1);
   return true;
 }
