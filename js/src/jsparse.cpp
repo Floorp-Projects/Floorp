@@ -722,7 +722,6 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
                         JSString *source /* = NULL */,
                         unsigned staticLevel /* = 0 */)
 {
-    Compiler compiler(cx, principals, callerFrame);
     JSArenaPool codePool, notePool;
     TokenKind tt;
     JSParseNode *pn;
@@ -742,6 +741,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     JS_ASSERT_IF(callerFrame, tcflags & TCF_COMPILE_N_GO);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
+    Compiler compiler(cx, principals, callerFrame);
     if (!compiler.init(chars, length, file, filename, lineno))
         return NULL;
 
@@ -754,6 +754,8 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     TokenStream &tokenStream = parser.tokenStream;
 
     JSCodeGenerator cg(&parser, &codePool, &notePool, tokenStream.getLineno());
+    if (!cg.init())
+        return NULL;
 
     MUST_FLOW_THROUGH("out");
 

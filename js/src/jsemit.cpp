@@ -96,7 +96,8 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     spanDeps(NULL), jumpTargets(NULL), jtFreeList(NULL),
     numSpanDeps(0), numJumpTargets(0), spanDepTodo(0),
     arrayCompDepth(0),
-    emitLevel(0)
+    emitLevel(0),
+    constMap(parser->context)
 {
     flags = TCF_COMPILING;
     memset(&prolog, 0, sizeof prolog);
@@ -105,6 +106,11 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     firstLine = prolog.currentLine = main.currentLine = lineno;
     prolog.noteMask = main.noteMask = SRCNOTE_CHUNK - 1;
     memset(&upvarMap, 0, sizeof upvarMap);
+}
+
+bool JSCodeGenerator::init()
+{
+    return constMap.init();
 }
 
 JSCodeGenerator::~JSCodeGenerator()
@@ -1544,7 +1550,6 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
     jsint ival;
     JSAtom *valueAtom;
     jsval v;
-    JSAtomListElement *ale;
 
     /* XXX just do numbers for now */
     if (pn->pn_type == TOK_NUMBER) {
@@ -1562,10 +1567,8 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                 return JS_FALSE;
             v = ATOM_KEY(valueAtom);
         }
-        ale = cg->constList.add(cg->parser, atom);
-        if (!ale)
+        if (!cg->constMap.put(atom, v))
             return JS_FALSE;
-        ALE_SET_VALUE(ale, v);
     }
     return JS_TRUE;
 }
@@ -1626,7 +1629,6 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 {
     JSBool ok;
     JSStmtInfo *stmt;
-    JSAtomListElement *ale;
     JSObject *obj, *objbox;
     JSProperty *prop;
     uintN attrs;
@@ -1644,10 +1646,9 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
             if (stmt)
                 return JS_TRUE;
 
-            ale = cg->constList.lookup(atom);
-            if (ale) {
-                JS_ASSERT(ALE_VALUE(ale) != JSVAL_HOLE);
-                *vp = ALE_VALUE(ale);
+            if (JSCodeGenerator::ConstMap::Ptr p = cg->constMap.lookup(atom)) {
+                JS_ASSERT(p->value != JSVAL_HOLE);
+                *vp = p->value;
                 return JS_TRUE;
             }
 
@@ -4397,6 +4398,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             new (cg2space) JSCodeGenerator(cg->parser,
                                            cg->codePool, cg->notePool,
                                            pn->pn_pos.begin.lineno);
+
+        if (!cg2->init())
+            return JS_FALSE;
+
         cg2->flags = pn->pn_funbox->tcflags | TCF_IN_FUNCTION;
 #if JS_HAS_SHARP_VARS
         if (cg2->flags & TCF_HAS_SHARPS) {
