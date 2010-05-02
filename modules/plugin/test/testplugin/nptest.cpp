@@ -1622,12 +1622,7 @@ scriptableInvokeDefault(NPObject* npobj, const NPVariant* args, uint32_t argCoun
         value << ";other";
     }
   }
-  char *pstr = strdup(value.str().c_str());
-  if (!pstr) {
-    NPN_SetException(npobj, "oom");
-    return false;
-  }
-  STRINGZ_TO_NPVARIANT(pstr, *result);
+  STRINGZ_TO_NPVARIANT(strdup(value.str().c_str()), *result);
   return true;
 }
 
@@ -2111,13 +2106,10 @@ getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* r
 
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  const char *cstr = id->err.str().length() ? id->err.str().c_str() : SUCCESS_STRING;
-  char *pstr = strdup(cstr);
-  if (!pstr) {
-    NULL_TO_NPVARIANT(*result);
-    return true;
-  }
-  STRINGZ_TO_NPVARIANT(pstr, *result);
+  if (id->err.str().length() == 0)
+    STRINGZ_TO_NPVARIANT(strdup(SUCCESS_STRING), *result);
+  else
+    STRINGZ_TO_NPVARIANT(strdup(id->err.str().c_str()), *result);
   return true;
 }
 
