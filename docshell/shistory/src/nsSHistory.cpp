@@ -56,7 +56,6 @@
 #include "nsIPrefService.h"
 #include "nsIURI.h"
 #include "nsIContentViewer.h"
-#include "nsIPrefBranch2.h"
 #include "nsICacheService.h"
 #include "nsIObserverService.h"
 #include "prclist.h"
@@ -110,13 +109,10 @@ nsSHistoryObserver::Observe(nsISupports *aSubject, const char *aTopic,
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsCOMPtr<nsIPrefBranch> prefs = do_QueryInterface(aSubject);
-    prefs->GetIntPref(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
-                      &nsSHistory::sHistoryMaxTotalViewers);
-    if (nsSHistory::sHistoryMaxTotalViewers < 0) {
-      nsSHistory::sHistoryMaxTotalViewers = nsSHistory::CalcMaxTotalViewers();
+    if (prefs) {
+      nsSHistory::UpdatePrefs(prefs);
+      nsSHistory::EvictGlobalContentViewer();
     }
-
-    nsSHistory::EvictGlobalContentViewer();
   } else if (!strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID) ||
              !strcmp(aTopic, "memory-pressure")) {
     nsSHistory::EvictAllContentViewersGlobally();
@@ -216,6 +212,20 @@ nsSHistory::CalcMaxTotalViewers()
 }
 
 // static
+void
+nsSHistory::UpdatePrefs(nsIPrefBranch *aPrefBranch)
+{
+  aPrefBranch->GetIntPref(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
+  aPrefBranch->GetIntPref(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
+                          &sHistoryMaxTotalViewers);
+  // If the pref is negative, that means we calculate how many viewers
+  // we think we should cache, based on total memory
+  if (sHistoryMaxTotalViewers < 0) {
+    sHistoryMaxTotalViewers = CalcMaxTotalViewers();
+  }
+}
+
+// static
 nsresult
 nsSHistory::Startup()
 {
@@ -224,7 +234,7 @@ nsSHistory::Startup()
     nsCOMPtr<nsIPrefBranch> sesHBranch;
     prefs->GetBranch(nsnull, getter_AddRefs(sesHBranch));
     if (sesHBranch) {
-      sesHBranch->GetIntPref(PREF_SHISTORY_SIZE, &gHistoryMaxSize);
+      UpdatePrefs(sesHBranch);
     }
 
     // The goal of this is to unbreak users who have inadvertently set their
@@ -242,14 +252,13 @@ nsSHistory::Startup()
     
     // Allow the user to override the max total number of cached viewers,
     // but keep the per SHistory cached viewer limit constant
-    nsCOMPtr<nsIPrefBranch2> branch = do_QueryInterface(prefs);
+    nsCOMPtr<nsIPrefBranch2> branch = do_QueryInterface(sesHBranch);
     if (branch) {
-      branch->GetIntPref(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
-                         &sHistoryMaxTotalViewers);
       nsSHistoryObserver* obs = new nsSHistoryObserver();
       if (!obs) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
+      branch->AddObserver(PREF_SHISTORY_SIZE, obs, PR_FALSE);
       branch->AddObserver(PREF_SHISTORY_MAX_TOTAL_VIEWERS,
                           obs, PR_FALSE);
 
@@ -265,11 +274,6 @@ nsSHistory::Startup()
         obsSvc->AddObserver(obs, "memory-pressure", PR_FALSE);
       }
     }
-  }
-  // If the pref is negative, that means we calculate how many viewers
-  // we think we should cache, based on total memory
-  if (sHistoryMaxTotalViewers < 0) {
-    sHistoryMaxTotalViewers = CalcMaxTotalViewers();
   }
 
   // Initialize the global list of all SHistory objects
