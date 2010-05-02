@@ -130,7 +130,9 @@ nsHttpHeaderArray::VisitHeaders(nsIHttpHeaderVisitor *visitor)
 }
 
 void
-nsHttpHeaderArray::ParseHeaderLine(char *line, nsHttpAtom *hdr, char **val)
+nsHttpHeaderArray::ParseHeaderLine(const char *line,
+                                   nsHttpAtom *hdr,
+                                   char **val)
 {
     //
     // BNF from section 4.2 of RFC 2616:
