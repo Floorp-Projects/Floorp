@@ -199,8 +199,7 @@ NP_END_MACRO
 #define STRINGZ_TO_NPVARIANT(_val, _v)                                        \
 NP_BEGIN_MACRO                                                                \
     (_v).type = NPVariantType_String;                                         \
-    NPString str = { _val, 0 };                                               \
-    str.UTF8Length = uint32_t(strlen(str.UTF8Characters));                    \
+    NPString str = { _val, uint32_t(strlen(_val)) };                          \
     (_v).value.stringValue = str;                                             \
 NP_END_MACRO
 
