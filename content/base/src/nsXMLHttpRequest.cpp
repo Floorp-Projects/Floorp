@@ -2100,9 +2100,13 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     mRequestObserver->OnStopRequest(request, ctxt, status);
   }
 
-  // Don't do anything if we have been aborted
-  if (mState & XML_HTTP_REQUEST_UNINITIALIZED)
+  // make sure to notify the listener if we were aborted
+  // XXX in fact, why don't we do the cleanup below in this case??
+  if (mState & XML_HTTP_REQUEST_UNINITIALIZED) {
+    if (mXMLParserStreamListener)
+      (void) mXMLParserStreamListener->OnStopRequest(request, ctxt, status);
     return NS_OK;
+  }
 
   nsCOMPtr<nsIParser> parser;
 
