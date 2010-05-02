@@ -3749,7 +3749,8 @@ Parse(JSContext *cx, uintN argc, jsval *vp)
     js::Parser parser(cx);
     parser.init(JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
                 NULL, "<string>", 0);
-    parser.parse(NULL);
+    if (!parser.parse(NULL))
+        return JS_FALSE;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
