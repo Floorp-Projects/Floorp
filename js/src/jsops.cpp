@@ -258,7 +258,7 @@ BEGIN_CASE(JSOP_STOP)
          */
         fp->putActivationObjects(cx);
 
-        DTrace::exitJSFun(cx, fp, fp->fun, &fp->rval);
+        DTrace::exitJSFun(cx, fp, fp->fun, fp->rval);
 
         /* Restore context version only if callee hasn't set version. */
         if (JS_LIKELY(cx->version == currentVersion)) {
@@ -2197,7 +2197,7 @@ BEGIN_CASE(JSOP_APPLY)
             JS_ASSERT(JSVAL_IS_OBJECT(vp[1]) ||
                       PRIMITIVE_THIS_TEST(fun, vp[1]));
             ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
-            DTrace::exitJSFun(cx, NULL, fun, vp, &lval);
+            DTrace::exitJSFun(cx, NULL, fun, *vp, &lval);
             regs.sp = vp + 1;
             if (!ok) {
                 /*
