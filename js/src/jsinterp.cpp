@@ -831,7 +831,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         ok = js_Interpret(cx);
     }
 
-    DTrace::exitJSFun(cx, &frame, fun, &frame.rval);
+    DTrace::exitJSFun(cx, &frame, fun, frame.rval);
 
 out:
     if (hookData) {
