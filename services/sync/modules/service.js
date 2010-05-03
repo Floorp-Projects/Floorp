@@ -1149,6 +1149,8 @@ WeaveSvc.prototype = {
   sync: function sync()
     this._catch(this._lock(this._notify("sync", "", function() {
 
+    let syncStartTime = Date.now();
+
     Status.resetSync();
 
     // Make sure we should sync or record why we shouldn't
@@ -1254,7 +1256,8 @@ WeaveSvc.prototype = {
       else {
         Svc.Prefs.set("lastSync", new Date().toString());
         Status.sync = SYNC_SUCCEEDED;
-        this._log.info("Sync completed successfully");
+        let syncTime = ((Date.now() - syncStartTime) / 1000).toFixed(2);
+        this._log.info("Sync completed successfully in " + syncTime + " secs.");
       }
     } finally {
       this._syncError = false;
