@@ -292,7 +292,7 @@ struct JSObject {
         classword |= jsuword(2);
     }
 
-    uint32 numSlots(void) {
+    uint32 numSlots(void) const {
         return dslots ? (uint32)dslots[-1] : (uint32)JS_INITIAL_NSLOTS;
     }
 
@@ -461,8 +461,8 @@ struct JSObject {
      * JSSLOT_ARGS_CALLEE   - the arguments.callee value or JSVAL_HOLE if that
      *                        was overwritten.
      *
-     * Argument index i is stored in dslots[i].  But future-proof your code by
-     * using {Get,Set}ArgsSlot instead of naked dslots references.
+     * Argument index i is stored in dslots[i], accessible via
+     * {get,set}ArgsElement().
      */
   private:
     static const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
@@ -475,10 +475,13 @@ struct JSObject {
     inline uint32 getArgsLength() const;
     inline void setArgsLength(uint32 argc);
     inline void setArgsLengthOverridden();
-    inline bool isArgsLengthOverridden();
+    inline bool isArgsLengthOverridden() const;
 
     inline jsval getArgsCallee() const;
     inline void setArgsCallee(jsval callee);
+
+    inline jsval getArgsElement(uint32 i) const;
+    inline void setArgsElement(uint32 i, jsval v);
 
     /*
      * Date-specific getters and setters.

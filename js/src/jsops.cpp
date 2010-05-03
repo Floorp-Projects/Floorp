@@ -1872,7 +1872,7 @@ BEGIN_CASE(JSOP_GETELEM)
                     goto end_getelem;
                 }
 
-                rval = GetArgsSlot(obj, arg);
+                rval = obj->getArgsElement(arg);
                 if (rval != JSVAL_HOLE)
                     goto end_getelem;
                 rval = FETCH_OPND(-1);
