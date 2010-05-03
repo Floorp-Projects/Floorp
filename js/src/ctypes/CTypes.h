@@ -417,6 +417,7 @@ namespace ArrayType {
   JSObject* GetBaseType(JSContext* cx, JSObject* obj);
   size_t GetLength(JSContext* cx, JSObject* obj);
   bool GetSafeLength(JSContext* cx, JSObject* obj, size_t* result);
+  ffi_type* BuildFFIType(JSContext* cx, JSObject* obj);
 }
 
 namespace StructType {
@@ -425,6 +426,7 @@ namespace StructType {
   Array<FieldInfo>* GetFieldInfo(JSContext* cx, JSObject* obj);
   FieldInfo* LookupField(JSContext* cx, JSObject* obj, jsval idval);
   JSObject* BuildFieldsArray(JSContext* cx, JSObject* obj);
+  ffi_type* BuildFFIType(JSContext* cx, JSObject* obj);
 }
 
 namespace FunctionType {
