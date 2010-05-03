@@ -41,6 +41,7 @@
 
 #include "jscntxt.h"
 #include "jsapi.h"
+#include "jshashtable.h"
 #include "prlink.h"
 #include "ffi.h"
 
@@ -237,19 +238,42 @@ enum TypeCode {
   TYPE_struct
 };
 
+// Descriptor of one field in a StructType. The name of the field is stored
+// as the key to the hash entry.
 struct FieldInfo
 {
-  // We need to provide a copy constructor because of Vector.
-  FieldInfo() {}
-  FieldInfo(const FieldInfo& other)
-  {
-    JS_NOT_REACHED("shouldn't be copy constructing FieldInfo");
+  JSObject* mType;    // CType of the field
+  size_t    mIndex;   // index of the field in the struct (first is 0)
+  size_t    mOffset;  // offset of the field in the struct, in bytes
+};
+
+// Hash policy for FieldInfos.
+struct FieldHashPolicy
+{
+  typedef JSString* Key;
+  typedef Key Lookup;
+
+  static uint32 hash(const Lookup &l) {
+    const jschar* s = l->chars();
+    size_t n = l->length();
+    uint32 hash = 0;
+    for (; n > 0; s++, n--)
+      hash = hash * 33 + *s;
+    return hash;
   }
 
-  String    mName;
-  JSObject* mType;
-  size_t    mOffset;
+  static JSBool match(const Key &k, const Lookup &l) {
+    if (k == l)
+      return true;
+
+    if (k->length() != l->length())
+      return false;
+
+    return memcmp(k->chars(), l->chars(), k->length() * sizeof(jschar)) == 0;
+  }
 };
+
+typedef HashMap<JSString*, FieldInfo, FieldHashPolicy, SystemAllocPolicy> FieldInfoHash;
 
 // Descriptor of ABI, return type, argument types, and variadicity for a
 // FunctionType.
@@ -423,8 +447,8 @@ namespace ArrayType {
 namespace StructType {
   JSBool DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj);
 
-  Array<FieldInfo>* GetFieldInfo(JSContext* cx, JSObject* obj);
-  FieldInfo* LookupField(JSContext* cx, JSObject* obj, jsval idval);
+  const FieldInfoHash* GetFieldInfo(JSContext* cx, JSObject* obj);
+  const FieldInfo* LookupField(JSContext* cx, JSObject* obj, jsval idval);
   JSObject* BuildFieldsArray(JSContext* cx, JSObject* obj);
   ffi_type* BuildFFIType(JSContext* cx, JSObject* obj);
 }
