@@ -98,9 +98,9 @@ public:
                           nsIDOMEventTarget* aTarget,
                           const nsAString& aName,
                           const nsAString& aKeyPath,
-                          PRBool aAutoIncrement)
+                          bool aAutoIncrement)
   : AsyncConnectionHelper(aConnection, aTarget), mName(aName),
-    mKeyPath(aKeyPath), mAutoIncrement(aAutoIncrement)
+    mKeyPath(aKeyPath), mAutoIncrement(aAutoIncrement), mId(LL_MININT)
   { }
 
   PRUint16 DoDatabaseWork();
@@ -109,7 +109,8 @@ public:
 protected:
   nsString mName;
   nsString mKeyPath;
-  PRBool mAutoIncrement;
+  bool mAutoIncrement;
+  PRInt64 mId;
 };
 
 /**
@@ -391,9 +392,10 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
+  // XXX what is the default value of autoincrement if it is not provided?
   nsRefPtr<CreateObjectStoreHelper> helper =
     new CreateObjectStoreHelper(mStorage, request, aName, aKeyPath,
-                                aAutoIncrement);
+                                !!aAutoIncrement);
   nsresult rv = helper->Dispatch(mStorageThread);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -523,8 +525,47 @@ IDBDatabaseRequest::Observe(nsISupports* aSubject,
 PRUint16
 CreateObjectStoreHelper::DoDatabaseWork()
 {
-  mConnection = NewConnection(NS_LITERAL_CSTRING("http://foo.com/bar.html"));
-  return mConnection ? OK : nsIIDBDatabaseError::UNKNOWN_ERR;
+  NS_PRECONDITION(!NS_IsMainThread(), "Database work on the main thread!");
+  NS_PRECONDITION(mConnection, "Do not have a database connection!");
+
+  // XXX should this be exceptions when the method is called?
+  if (mName.IsEmpty() || !mKeyPath.IsVoid() && mKeyPath.IsEmpty()) {
+    return nsIIDBDatabaseError::CONSTRAINT_ERR;
+  }
+
+  // Rollback on any errors.
+  mozStorageTransaction transaction(mConnection, PR_FALSE);
+
+  // Insert the data into the database.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "INSERT INTO object_store (name, key_path, auto_increment) "
+    "VALUES (:name, :key_path, :auto_increment)"
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  if (mKeyPath.IsVoid()) {
+    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("key_path"));
+  } else {
+    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"), mKeyPath);
+  }
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("auto_increment"),
+                             mAutoIncrement ? 1 : 0);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::CONSTRAINT_ERR);
+
+  // Get the id of this object store, and store it for future use.
+  (void)mConnection->GetLastInsertRowID(&mId);
+
+  return NS_SUCCEEDED(transaction.Commit()) ? OK :
+                                              nsIIDBDatabaseError::UNKNOWN_ERR;
 }
 
 void
