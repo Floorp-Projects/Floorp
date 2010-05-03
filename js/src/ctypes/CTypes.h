@@ -424,6 +424,7 @@ namespace StructType {
 
   Array<FieldInfo>* GetFieldInfo(JSContext* cx, JSObject* obj);
   FieldInfo* LookupField(JSContext* cx, JSObject* obj, jsval idval);
+  JSObject* BuildFieldsArray(JSContext* cx, JSObject* obj);
 }
 
 namespace FunctionType {

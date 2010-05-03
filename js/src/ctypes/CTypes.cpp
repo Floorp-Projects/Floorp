@@ -96,7 +96,7 @@ namespace CType {
   static JSBool SizeGetter(JSContext* cx, JSObject* obj, jsval idval,
     jsval* vp);
   static JSBool PtrGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool Array(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool CreateArray(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
   static JSBool HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
@@ -301,7 +301,7 @@ static JSPropertySpec sCTypeProps[] = {
 };
 
 static JSFunctionSpec sCTypeFunctions[] = {
-  JS_FN("array", CType::Array, 0, CTYPESFN_FLAGS),
+  JS_FN("array", CType::CreateArray, 0, CTYPESFN_FLAGS),
   JS_FN("toString", CType::ToString, 0, CTYPESFN_FLAGS),
   JS_FN("toSource", CType::ToSource, 0, CTYPESFN_FLAGS),
   JS_FS_END
@@ -2603,7 +2603,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
     if (!JSVAL_IS_VOID(slot)) {
       void* info = JSVAL_TO_PRIVATE(slot);
-      delete static_cast<js::ctypes::Array<FieldInfo>*>(info);
+      delete static_cast<Array<FieldInfo>*>(info);
     }
 
     // Fall through.
@@ -2654,6 +2654,20 @@ CType::Trace(JSTracer* trc, JSObject* obj)
 
   // The contents of our slots depends on what kind of type we are.
   switch (TypeCode(JSVAL_TO_INT(slot))) {
+  case TYPE_struct: {
+    ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
+    if (JSVAL_IS_VOID(slot))
+      return;
+
+    Array<FieldInfo>* fields =
+      static_cast<Array<FieldInfo>*>(JSVAL_TO_PRIVATE(slot));
+    for (size_t i = 0; i < fields->length(); ++i) {
+      FieldInfo* field = fields->begin() + i;
+      JS_CALL_TRACER(trc, field->mType, JSTRACE_OBJECT, "field");
+    }
+
+    break;
+  }
   case TYPE_function: {
     // Check if we have a FunctionInfo.
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FNINFO, &slot));
@@ -2951,7 +2965,7 @@ CType::PtrGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
 }
 
 JSBool
-CType::Array(JSContext* cx, uintN argc, jsval *vp)
+CType::CreateArray(JSContext* cx, uintN argc, jsval *vp)
 {
   JSObject* baseType = JS_THIS_OBJECT(cx, vp);
   JS_ASSERT(baseType);
@@ -3882,15 +3896,6 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
          NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
     return JS_FALSE;
 
-  // Prepare a new array for the .fields property of the StructType.
-  jsval* fieldsVec;
-  JSObject* fieldsProp =
-    js_NewArrayObjectWithCapacity(cx, len, &fieldsVec);
-  if (!fieldsProp)
-    return JS_FALSE;
-  js::AutoValueRooter root(cx, fieldsProp);
-  JS_ASSERT(len == 0 || fieldsVec);
-
   AutoPtr<ffi_type> ffiType(new ffi_type);
   if (!ffiType) {
     JS_ReportOutOfMemory(cx);
@@ -3934,11 +3939,6 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
           return JS_FALSE;
         }
       }
-
-      // Duplicate the object for the fields property.
-      if (!AddFieldToArray(cx, fieldsProp, &fieldsVec[i],
-             info->mName, info->mType))
-        return JS_FALSE;
 
       // Add the field to the StructType's 'prototype' property.
       if (!JS_DefineUCProperty(cx, prototype,
@@ -4027,12 +4027,6 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
       !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, INT_TO_JSVAL(structAlign)) ||
       //!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
       !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
-    return JS_FALSE;
-
-  // Seal and attach the fields array. (The fields array also prevents the
-  // type objects we depend on from being GC'ed).
-  if (!JS_SealObject(cx, fieldsProp, JS_FALSE) ||
-      !JS_SetReservedSlot(cx, typeObj, SLOT_FIELDS, OBJECT_TO_JSVAL(fieldsProp)))
     return JS_FALSE;
 
   // Stash the FieldInfo array in a reserved slot.
@@ -4186,6 +4180,41 @@ StructType::LookupField(JSContext* cx, JSObject* obj, jsval idval)
   return NULL;
 }
 
+JSObject*
+StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
+{
+  JS_ASSERT(CType::IsCType(cx, obj));
+  JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
+  JS_ASSERT(CType::IsSizeDefined(cx, obj));
+
+  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
+  size_t len = fields->length();
+
+  // Prepare a new array for the 'fields' property of the StructType.
+  jsval* fieldsVec;
+  JSObject* fieldsProp =
+    js_NewArrayObjectWithCapacity(cx, len, &fieldsVec);
+  if (!fieldsProp)
+    return NULL;
+  js::AutoValueRooter root(cx, fieldsProp);
+  JS_ASSERT(len == 0 || fieldsVec);
+
+  for (size_t i = 0; i < len; ++i) {
+    FieldInfo* field = fields->begin() + i;
+
+    // Add the field descriptor to the array.
+    if (!AddFieldToArray(cx, fieldsProp, &fieldsVec[i],
+           field->mName, field->mType))
+      return NULL;
+  }
+
+  // Seal the fields array.
+  if (!JS_SealObject(cx, fieldsProp, JS_FALSE))
+    return NULL;
+
+  return fieldsProp;
+}
+
 JSBool
 StructType::FieldsArrayGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
 {
@@ -4195,8 +4224,24 @@ StructType::FieldsArrayGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* 
   }
 
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDS, vp));
-  JS_ASSERT_IF(!JSVAL_IS_VOID(*vp),
-    !JSVAL_IS_PRIMITIVE(*vp) && JS_IsArrayObject(cx, JSVAL_TO_OBJECT(*vp)));
+
+  if (!CType::IsSizeDefined(cx, obj)) {
+    JS_ASSERT(JSVAL_IS_VOID(*vp));
+    return JS_TRUE;
+  }
+
+  if (JSVAL_IS_VOID(*vp)) {
+    // Build the 'fields' array lazily.
+    JSObject* fields = BuildFieldsArray(cx, obj);
+    if (!fields ||
+        !JS_SetReservedSlot(cx, obj, SLOT_FIELDS, OBJECT_TO_JSVAL(fields)))
+      return JS_FALSE;
+
+    *vp = OBJECT_TO_JSVAL(fields);
+  }
+
+  JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp) &&
+            JS_IsArrayObject(cx, JSVAL_TO_OBJECT(*vp)));
   return JS_TRUE;
 }
 
