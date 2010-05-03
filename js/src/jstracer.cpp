@@ -8608,17 +8608,19 @@ TraceRecorder::incElem(jsint incr, bool pre)
     LIns* v_ins;
     LIns* addr_ins;
 
-    if (JSVAL_IS_PRIMITIVE(l) || !JSVAL_IS_INT(r) ||
-        !guardDenseArray(JSVAL_TO_OBJECT(l), get(&l), MISMATCH_EXIT)) {
-        return RECORD_STOP;
+    if (!JSVAL_IS_PRIMITIVE(l) && JSVAL_TO_OBJECT(l)->isDenseArray() && JSVAL_IS_INT(r)) {
+        JS_ALWAYS_TRUE(guardDenseArray(JSVAL_TO_OBJECT(l), get(&l), MISMATCH_EXIT));
+        CHECK_STATUS(denseArrayElement(l, r, vp, v_ins, addr_ins));
+        if (!addr_ins) // if we read a hole, abort
+            return RECORD_STOP;
+        CHECK_STATUS(inc(*vp, v_ins, incr, pre));
+        lir->insStore(box_jsval(*vp, v_ins), addr_ins, 0, ACC_OTHER);
+        return RECORD_CONTINUE;
     }
 
-    CHECK_STATUS(denseArrayElement(l, r, vp, v_ins, addr_ins));
-    if (!addr_ins) // if we read a hole, abort
-        return RECORD_STOP;
-    CHECK_STATUS(inc(*vp, v_ins, incr, pre));
-    lir->insStore(box_jsval(*vp, v_ins), addr_ins, 0, ACC_OTHER);
-    return RECORD_CONTINUE;
+    return callImacro((incr == 1)
+                      ? pre ? incelem_imacros.incelem : incelem_imacros.eleminc
+                      : pre ? decelem_imacros.decelem : decelem_imacros.elemdec);
 }
 
 static bool
