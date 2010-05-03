@@ -57,6 +57,7 @@ interface nsIIDBDatabaseRequest : nsIIDBDatabase
                     in DOMString keyPath,
                     [optional /* false */] in boolean autoIncrement);
 
+  [optional_argc]
   nsIIDBRequest
   openObjectStore(in DOMString name,
                   [optional /* READ_WRITE */] in unsigned short mode);
