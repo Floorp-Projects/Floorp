@@ -70,8 +70,8 @@
               accesskey="&certmgr.view2.accesskey;"
               disabled="true" oncommand="viewCerts();"/>
       <button id="email_editButton"
-              label="&certmgr.edit2.label;"
-              accesskey="&certmgr.edit2.accesskey;"
+              label="&certmgr.edit3.label;"
+              accesskey="&certmgr.edit3.accesskey;"
               disabled="true" oncommand="editCerts();"/>
       <button id="email_addButton"
               label="&certmgr.restore2.label;"
