@@ -28,6 +28,7 @@ body {
 		inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
 		inset rgba(255, 255, 255, 0.6) 2px 0px 0px,
 		inset rgba(255, 255, 255, 0.6) -2px 0px 0px;
+  cursor: pointer;	
 }
 
 .tab canvas {
@@ -174,6 +175,28 @@ body {
 
 /* Other
 ----------------------------------*/
+
+.newTabButton{
+  width: 16px;
+  height: 15px;
+  bottom: 10px;
+  left: 10px;
+  position: absolute !important;
+  cursor: pointer;
+  opacity: .4;
+  background-image: url(../img/new-tab.png);
+  z-index:99999;
+}
+
+.newTabButton:hover{
+  opacity: 1;
+}
+
+.newTabAnimatee{
+  position: absolute;
+  background-color: white;
+  border: 1px solid #7F7F7F;
+}
 
 .active{
   -moz-box-shadow: 5px 5px 4px rgba(0,0,0,.5);

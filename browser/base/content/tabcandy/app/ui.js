@@ -12,6 +12,16 @@ Navbar = {
 
     return null;
   },
+  
+  get urlBar(){
+    var win = Utils.activeWindow;
+    if(win) {
+      var navbar = win.gBrowser.ownerDocument.getElementById("urlbar");
+      return navbar;      
+    }
+
+    return null;    
+  },
 
   // ----------
   show: function() {

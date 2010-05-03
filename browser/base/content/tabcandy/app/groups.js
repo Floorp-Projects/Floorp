@@ -73,6 +73,60 @@ window.Group = function(listOfEls, options) {
     .appendTo("body")
     .dequeue();
     
+  $container.dblclick(function(){
+    Groups.setActiveGroup(self);
+    UI.newTab("about:blank");
+  })
+  
+  
+  // ___ New Tab Button
+    
+  this.$ntb = $("<div class='newTabButton'/>").appendTo($container)
+
+  function zoomIn(){
+    anim = $("<div class='newTabAnimatee'/>").css({
+      width: self.$ntb.width(),
+      height: self.$ntb.height(),
+      top: self.$ntb.offset().top,
+      left: self.$ntb.offset().left,
+      zIndex: 999
+    })
+    .appendTo("body")
+    
+    // TODO: This should animate to the location that the new tab
+    // will appear! Right now it is just the center of the group.
+    // Ian had some good ideas about how to make this happen.
+    .animate({
+      top: self.bounds.top+self.bounds.width/2,
+      left: self.bounds.left+self.bounds.height/2,
+    }, 200, "tabcandyBounce")
+    
+    .animate({
+      top: 0,
+      left: 0,
+      width: window.innerWidth,
+      height: window.innerHeight
+    }, 250, function(){
+      anim.remove();
+      Groups.setActiveGroup(self);          
+      var newTab = Tabs.open("about:blank").focus();
+      UI.tabBar.show(false);
+      UI.navBar.urlBar.focus();
+      anim.remove();
+      // We need a timeout here so that there is a chance for the
+      // new tab to get made! Otherwise it won't appear in the list
+      // of the group's tab.
+      // TODO: This is probably a terrible hack that sets up a race
+      // condition. We need a better solution.
+      setTimeout(function(){
+        UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
+      }, 400)
+      
+    });
+  }
+  
+  this.$ntb.click(function(){ zoomIn(); });  
+    
   // ___ Resizer
   this.$resizer = $("<div class='resizer'/>")
     .css({
@@ -1037,13 +1091,9 @@ window.Groups = {
   
   // ----------
   setActiveGroup: function(group) {
-    try{
-      this._activeGroup = group;
-      if(group)
-        UI.tabBar.showOnlyTheseTabs( group._children );    
-    }catch(e){
-      Utils.log(e)
-    }
+    this._activeGroup = group;
+    if(group)
+      UI.tabBar.showOnlyTheseTabs( group._children );    
   }
   
 };
