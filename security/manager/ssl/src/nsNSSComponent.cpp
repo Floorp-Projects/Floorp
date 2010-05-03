@@ -1879,6 +1879,10 @@ nsNSSComponent::Init()
   PRBool enabled = PR_FALSE;
   mPrefBranch->GetBoolPref("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
   nsSSLIOLayerHelpers::setTreatUnsafeNegotiationAsBroken(enabled);
+
+  PRInt32 warnLevel = 1;
+  mPrefBranch->GetIntPref("security.ssl.warn_missing_rfc5746", &warnLevel);
+  nsSSLIOLayerHelpers::setWarnLevelMissingRFC5746(warnLevel);
   
   mClientAuthRememberService = new nsClientAuthRememberService;
   if (mClientAuthRememberService)
@@ -2227,6 +2231,10 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     } else if (prefName.Equals("security.ssl.treat_unsafe_negotiation_as_broken")) {
       mPrefBranch->GetBoolPref("security.ssl.treat_unsafe_negotiation_as_broken", &enabled);
       nsSSLIOLayerHelpers::setTreatUnsafeNegotiationAsBroken(enabled);
+    } else if (prefName.Equals("security.ssl.warn_missing_rfc5746")) {
+      PRInt32 warnLevel = 1;
+      mPrefBranch->GetIntPref("security.ssl.warn_missing_rfc5746", &warnLevel);
+      nsSSLIOLayerHelpers::setWarnLevelMissingRFC5746(warnLevel);
     } else if (prefName.Equals("security.OCSP.enabled")
                || prefName.Equals("security.OCSP.require")) {
       setOCSPOptions(mPrefBranch);
