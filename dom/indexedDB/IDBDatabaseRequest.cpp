@@ -123,6 +123,24 @@ protected:
   PRInt64 mId;
 };
 
+class OpenObjectStoreHelper : public CreateObjectStoreHelper
+{
+public:
+  OpenObjectStoreHelper(IDBDatabaseRequest* aDatabase,
+                        nsIDOMEventTarget* aTarget,
+                        const nsAString& aName,
+                        PRUint16 aMode)
+  : CreateObjectStoreHelper(aDatabase, aTarget, aName, EmptyString(), false),
+    mMode(aMode)
+  { }
+
+  PRUint16 DoDatabaseWork();
+
+protected:
+  // In-params.
+  PRUint16 mMode;
+};
+
 /**
  * Creates the needed tables and their indexes.
  *
@@ -452,10 +470,14 @@ IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
                                     nsIIDBRequest** _retval)
 {
   nsRefPtr<IDBRequest> request = GenerateRequest();
-  /*
-  nsresult rv = mDatabase->OpenObjectStore(aName, aMode, request);
+
+
+  nsRefPtr<OpenObjectStoreHelper> helper =
+    new OpenObjectStoreHelper(this, request, aName, aMode);
+
+  nsresult rv = helper->Dispatch(mStorageThread);
   NS_ENSURE_SUCCESS(rv, rv);
-  */
+
   IDBRequest* retval;
   request.forget(&retval);
   *_retval = retval;
@@ -632,4 +654,11 @@ CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ASSERTION(result, "Failed to QI!");
 
   aResult->SetAsISupports(result);
+}
+
+PRUint16
+OpenObjectStoreHelper::DoDatabaseWork()
+{
+  // mName and mMode are set, need to get mKeyPath and mAutoIncrement and mId.
+  return OK;
 }
