@@ -3588,7 +3588,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
      * over-allocated. In the normal case where length is <= capacity the
      * clone and original array will have the same capacity.
      */
-    jsuint jsvalCount = JS_MIN(js_DenseArrayCapacity(obj), length);
+    jsuint jsvalCount = JS_MIN(obj->getDenseArrayCapacity(), length);
 
     js::AutoValueVector vector(cx);
     if (!vector.reserve(jsvalCount))
