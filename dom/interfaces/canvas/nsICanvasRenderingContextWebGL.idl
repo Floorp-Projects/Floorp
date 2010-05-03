@@ -157,11 +157,6 @@ interface nsICanvasRenderingContextWebGL : nsISupports
   const unsigned long STENCIL_BUFFER_BIT             = 0x00000400;
   const unsigned long COLOR_BUFFER_BIT               = 0x00004000;
 
-  /* Boolean */
-  // XXX are these legal?
-  const unsigned long GL_FALSE                          = 0;
-  const unsigned long GL_TRUE                           = 1;
-
   /* BeginMode */
   const unsigned long POINTS                         = 0x0000;
   const unsigned long LINES                          = 0x0001;
