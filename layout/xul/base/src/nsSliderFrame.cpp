@@ -302,10 +302,8 @@ nsSliderFrame::AttributeChanged(PRInt32 aNameSpaceID,
           }
         }
 
-        nsAutoString currentStr;
-        currentStr.AppendInt(current);
         nsContentUtils::AddScriptRunner(
-          new nsSetAttrRunnable(scrollbar, nsGkAtoms::curpos, currentStr));
+          new nsSetAttrRunnable(scrollbar, nsGkAtoms::curpos, current));
       }
   }
 

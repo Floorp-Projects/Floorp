@@ -3598,6 +3598,15 @@ nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
   NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
 }
 
+nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
+                                     PRInt32 aValue)
+  : mContent(aContent),
+    mAttrName(aAttrName)
+{
+  NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
+  mValue.AppendInt(aValue);
+}
+
 NS_IMETHODIMP
 nsSetAttrRunnable::Run()
 {
