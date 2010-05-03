@@ -905,7 +905,7 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
   if (!typeObj)
     return false;
 
-  typeObj = PointerType::CreateInternal(cx, NULL, typeObj, NULL);
+  typeObj = PointerType::CreateInternal(cx, typeObj);
   if (!typeObj)
     return false;
   if (!JS_DefineProperty(cx, parent, "voidptr_t", OBJECT_TO_JSVAL(typeObj),
@@ -1703,20 +1703,18 @@ ImplicitConvert(JSContext* cx,
   }
 #include "typedefs.h"
   case TYPE_pointer: {
-    JSObject* baseType = PointerType::GetBaseType(cx, targetType);
-
     if (JSVAL_IS_NULL(val)) {
       // Convert to a null pointer.
       *static_cast<void**>(buffer) = NULL;
       break;
     }
 
+    JSObject* baseType = PointerType::GetBaseType(cx, targetType);
     if (sourceData) {
       // First, determine if the targetType is ctypes.void_t.ptr.
       TypeCode sourceCode = CType::GetTypeCode(cx, sourceType);
       void* sourceBuffer = CData::GetData(cx, sourceData);
-      bool voidptrTarget = baseType &&
-                           CType::GetTypeCode(cx, baseType) == TYPE_void_t;
+      bool voidptrTarget = CType::GetTypeCode(cx, baseType) == TYPE_void_t;
 
       if (sourceCode == TYPE_pointer && voidptrTarget) {
         // Autoconvert if targetType is ctypes.voidptr_t.
@@ -1733,7 +1731,7 @@ ImplicitConvert(JSContext* cx,
         }
       }
 
-    } else if (isArgument && baseType && JSVAL_IS_STRING(val)) {
+    } else if (isArgument && JSVAL_IS_STRING(val)) {
       // Convert the string for the ffi call. This requires allocating space
       // which the caller assumes ownership of.
       // TODO: Extend this so we can safely convert strings at other times also.
@@ -2037,23 +2035,15 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
   // pointers on the left and arrays on the right. An excellent description
   // of the rules for building C type declarations can be found at:
   // http://unixwiz.net/techtips/reading-cdecl.html
-  JSObject* currentType = typeObj;
-  JSObject* nextType;
-  TypeCode prevGrouping = CType::GetTypeCode(cx, currentType), currentGrouping;
+  TypeCode prevGrouping = CType::GetTypeCode(cx, typeObj), currentGrouping;
   while (1) {
-    currentGrouping = CType::GetTypeCode(cx, currentType);
+    currentGrouping = CType::GetTypeCode(cx, typeObj);
     switch (currentGrouping) {
     case TYPE_pointer: {
-      nextType = PointerType::GetBaseType(cx, currentType);
-      if (!nextType) {
-        // Opaque pointer type. Use the type's name as the base type.
-        break;
-      }
-
       // Pointer types go on the left.
       PrependString(result, "*");
 
-      currentType = nextType;
+      typeObj = PointerType::GetBaseType(cx, typeObj);
       prevGrouping = currentGrouping;
       continue;
     }
@@ -2067,17 +2057,17 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
       // Array types go on the right.
       AppendString(result, "[");
       size_t length;
-      if (ArrayType::GetSafeLength(cx, currentType, &length))
+      if (ArrayType::GetSafeLength(cx, typeObj, &length))
         IntegerToString(length, 10, result);
 
       AppendString(result, "]");
 
-      currentType = ArrayType::GetBaseType(cx, currentType);
+      typeObj = ArrayType::GetBaseType(cx, typeObj);
       prevGrouping = currentGrouping;
       continue;
     }
     case TYPE_function: {
-      FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, currentType);
+      FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, typeObj);
 
       // Add in the calling convention, if it's not cdecl.
       if (GetABICode(cx, fninfo->mABI) == ABI_STDCALL)
@@ -2100,10 +2090,10 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
         AppendString(result, "...");
       AppendString(result, ")");
 
-      // Set 'currentType' to the return type, and let the loop process it.
+      // Set 'typeObj' to the return type, and let the loop process it.
       // 'prevGrouping' doesn't matter here, because functions cannot return
       // arrays -- thus the parenthetical rules don't get tickled.
-      currentType = fninfo->mReturnType;
+      typeObj = fninfo->mReturnType;
       continue;
     }
     default:
@@ -2114,7 +2104,7 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
   }
 
   // Stick the base type and derived type parts together.
-  JSString* baseName = CType::GetName(cx, currentType);
+  JSString* baseName = CType::GetName(cx, typeObj);
   PrependString(result, baseName);
   return NewUCString(cx, result);
 }
@@ -2146,14 +2136,6 @@ BuildTypeSource(JSContext* cx,
   }
   case TYPE_pointer: {
     JSObject* baseType = PointerType::GetBaseType(cx, typeObj);
-    if (!baseType) {
-      // Opaque pointer type. Use the type's name.
-      AppendString(result, "ctypes.PointerType(\"");
-      JSString* baseName = CType::GetName(cx, typeObj);
-      AppendString(result, baseName);
-      AppendString(result, "\")");
-      break;
-    }
 
     // Specialcase ctypes.voidptr_t.
     if (CType::GetTypeCode(cx, baseType) == TYPE_void_t) {
@@ -2729,18 +2711,9 @@ CType::TypesEqual(JSContext* cx, JSObject* t1, JSObject* t2)
   // Determine whether the types require shallow or deep comparison.
   switch (c1) {
   case TYPE_pointer: {
+    // Compare base types.
     JSObject* b1 = PointerType::GetBaseType(cx, t1);
     JSObject* b2 = PointerType::GetBaseType(cx, t2);
-
-    if (!b1 || !b2) {
-      // One or both pointers are opaque.
-      // If both are opaque, compare names.
-      JSString* n1 = GetName(cx, t1);
-      JSString* n2 = GetName(cx, t2);
-      return b1 == b2 && JS_CompareStrings(n1, n2) == 0;
-    }
-
-    // Compare base types.
     return TypesEqual(cx, b1, b2);
   }
   case TYPE_function: {
@@ -2957,7 +2930,7 @@ CType::PtrGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
     return JS_FALSE;
   }
 
-  JSObject* pointerType = PointerType::CreateInternal(cx, NULL, obj, NULL);
+  JSObject* pointerType = PointerType::CreateInternal(cx, obj);
   if (!pointerType)
     return JS_FALSE;
 
@@ -3081,23 +3054,12 @@ PointerType::Create(JSContext* cx, uintN argc, jsval* vp)
   }
 
   jsval arg = JS_ARGV(cx, vp)[0];
-  JSObject* baseType = NULL;
-  JSString* name = NULL;
-  if (!JSVAL_IS_PRIMITIVE(arg) &&
-      CType::IsCType(cx, JSVAL_TO_OBJECT(arg))) {
-    baseType = JSVAL_TO_OBJECT(arg);
-
-  } else if (JSVAL_IS_STRING(arg)) {
-    // Construct an opaque pointer type from a string.
-    name = JSVAL_TO_STRING(arg);
-
-  } else {
-    JS_ReportError(cx, "first argument must be a CType or a string");
+  if (JSVAL_IS_PRIMITIVE(arg) || !CType::IsCType(cx, JSVAL_TO_OBJECT(arg))) {
+    JS_ReportError(cx, "first argument must be a CType");
     return JS_FALSE;
   }
 
-  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-  JSObject* result = CreateInternal(cx, callee, baseType, name);
+  JSObject* result = CreateInternal(cx, JSVAL_TO_OBJECT(arg));
   if (!result)
     return JS_FALSE;
 
@@ -3106,37 +3068,24 @@ PointerType::Create(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSObject*
-PointerType::CreateInternal(JSContext* cx,
-                            JSObject* ctor,
-                            JSObject* baseType,
-                            JSString* name)
+PointerType::CreateInternal(JSContext* cx, JSObject* baseType)
 {
-  JS_ASSERT(ctor || baseType);
-  JS_ASSERT((baseType && !name) || (!baseType && name));
-
-  if (baseType) {
-    // check if we have a cached PointerType on our base CType.
-    jsval slot;
-    ASSERT_OK(JS_GetReservedSlot(cx, baseType, SLOT_PTR, &slot));
-    if (!JSVAL_IS_VOID(slot))
-      return JSVAL_TO_OBJECT(slot);
-  }
+  // check if we have a cached PointerType on our base CType.
+  jsval slot;
+  ASSERT_OK(JS_GetReservedSlot(cx, baseType, SLOT_PTR, &slot));
+  if (!JSVAL_IS_VOID(slot))
+    return JSVAL_TO_OBJECT(slot);
 
   // Get ctypes.PointerType.prototype and the common prototype for CData objects
-  // of this type, either from ctor or the baseType, whichever was provided.
+  // of this type.
   JSObject* typeProto;
   JSObject* dataProto;
-  if (ctor) {
-    typeProto = CType::GetProtoFromCtor(cx, ctor, SLOT_POINTERPROTO);
-    dataProto = CType::GetProtoFromCtor(cx, ctor, SLOT_POINTERDATAPROTO);
-  } else {
-    typeProto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERPROTO);
-    dataProto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERDATAPROTO);
-  }
+  typeProto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERPROTO);
+  dataProto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERDATAPROTO);
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_pointer,
-                        name, INT_TO_JSVAL(sizeof(void*)),
+                        NULL, INT_TO_JSVAL(sizeof(void*)),
                         INT_TO_JSVAL(ffi_type_pointer.alignment),
                         &ffi_type_pointer);
   if (!typeObj)
@@ -3147,17 +3096,15 @@ PointerType::CreateInternal(JSContext* cx,
   if (!JS_SetReservedSlot(cx, typeObj, SLOT_TARGET_T, OBJECT_TO_JSVAL(baseType)))
     return NULL;
 
-  if (baseType) {
-    // Determine the name of the PointerType, since it wasn't supplied.
-    JSString* nameStr = BuildTypeName(cx, typeObj);
-    if (!nameStr ||
-        !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(nameStr)))
-      return NULL;
+  // Determine the name of the PointerType.
+  JSString* nameStr = BuildTypeName(cx, typeObj);
+  if (!nameStr ||
+      !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(nameStr)))
+    return NULL;
 
-    // Finally, cache our newly-created PointerType on our pointed-to CType.
-    if (!JS_SetReservedSlot(cx, baseType, SLOT_PTR, OBJECT_TO_JSVAL(typeObj)))
-      return NULL;
-  }
+  // Finally, cache our newly-created PointerType on our pointed-to CType.
+  if (!JS_SetReservedSlot(cx, baseType, SLOT_PTR, OBJECT_TO_JSVAL(typeObj)))
+    return NULL;
 
   return typeObj;
 }
@@ -3192,7 +3139,7 @@ PointerType::ConstructData(JSContext* cx,
 
   if (argc >= 1) {
     JSObject* baseObj = PointerType::GetBaseType(cx, obj);
-    if (baseObj && CType::GetTypeCode(cx, baseObj) == TYPE_function &&
+    if (CType::GetTypeCode(cx, baseObj) == TYPE_function &&
         JSVAL_IS_OBJECT(argv[0]) &&
         JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(argv[0]))) {
       // Construct a FunctionType.ptr from a JS function, and allow an
@@ -3227,6 +3174,7 @@ PointerType::GetBaseType(JSContext* cx, JSObject* obj)
 
   jsval type;
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_TARGET_T, &type));
+  JS_ASSERT(!JSVAL_IS_NULL(type));
   return JSVAL_TO_OBJECT(type);
 }
 
@@ -3289,11 +3237,6 @@ PointerType::ContentsGetter(JSContext* cx,
   }
 
   JSObject* baseType = GetBaseType(cx, typeObj);
-  if (!baseType) {
-    JS_ReportError(cx, "cannot get contents of an opaque pointer type");
-    return JS_FALSE;
-  }
-
   if (!CType::IsSizeDefined(cx, baseType)) {
     JS_ReportError(cx, "cannot get contents of undefined size");
     return JS_FALSE;
@@ -3332,13 +3275,8 @@ PointerType::ContentsSetter(JSContext* cx,
   }
 
   JSObject* baseType = GetBaseType(cx, typeObj);
-  if (!baseType) {
-    JS_ReportError(cx, "cannot set contents of an opaque pointer type");
-    return JS_FALSE;
-  }
-
   if (!CType::IsSizeDefined(cx, baseType)) {
-    JS_ReportError(cx, "cannot get contents of undefined size");
+    JS_ReportError(cx, "cannot set contents of undefined size");
     return JS_FALSE;
   }
 
@@ -3586,6 +3524,7 @@ ArrayType::GetBaseType(JSContext* cx, JSObject* obj)
 
   jsval type;
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_ELEMENT_T, &type));
+  JS_ASSERT(!JSVAL_IS_NULL(type));
   return JSVAL_TO_OBJECT(type);
 }
 
@@ -3756,7 +3695,7 @@ ArrayType::AddressOfElement(JSContext* cx, uintN argc, jsval *vp)
   }
 
   JSObject* baseType = GetBaseType(cx, typeObj);
-  JSObject* pointerType = PointerType::CreateInternal(cx, NULL, baseType, NULL);
+  JSObject* pointerType = PointerType::CreateInternal(cx, baseType);
   if (!pointerType)
     return JS_FALSE;
   js::AutoValueRooter root(cx, pointerType);
@@ -4332,7 +4271,7 @@ StructType::AddressOfField(JSContext* cx, uintN argc, jsval *vp)
     return JS_FALSE;
 
   JSObject* baseType = field->mType;
-  JSObject* pointerType = PointerType::CreateInternal(cx, NULL, baseType, NULL);
+  JSObject* pointerType = PointerType::CreateInternal(cx, baseType);
   if (!pointerType)
     return JS_FALSE;
   js::AutoValueRooter root(cx, pointerType);
@@ -4418,7 +4357,7 @@ PrepareType(JSContext* cx, jsval type)
     // convert array argument types to pointers, just like C.
     // ImplicitConvert will do the same, when passing an array as data.
     JSObject* baseType = ArrayType::GetBaseType(cx, result);
-    result = PointerType::CreateInternal(cx, NULL, baseType, NULL);
+    result = PointerType::CreateInternal(cx, baseType);
     if (!result)
       return NULL;
 
@@ -4762,9 +4701,13 @@ FunctionType::Call(JSContext* cx,
   }
 
   JSObject* typeObj = CData::GetCType(cx, obj);
-  if (CType::GetTypeCode(cx, typeObj) != TYPE_pointer ||
-      !(typeObj = PointerType::GetBaseType(cx, typeObj)) ||
-      CType::GetTypeCode(cx, typeObj) != TYPE_function) {
+  if (CType::GetTypeCode(cx, typeObj) != TYPE_pointer) {
+    JS_ReportError(cx, "not a FunctionType.ptr");
+    return false;
+  }
+
+  typeObj = PointerType::GetBaseType(cx, typeObj);
+  if (CType::GetTypeCode(cx, typeObj) != TYPE_function) {
     JS_ReportError(cx, "not a FunctionType.ptr");
     return false;
   }
@@ -5347,7 +5290,7 @@ CData::Address(JSContext* cx, uintN argc, jsval *vp)
   }
 
   JSObject* typeObj = CData::GetCType(cx, obj);
-  JSObject* pointerType = PointerType::CreateInternal(cx, NULL, typeObj, NULL);
+  JSObject* pointerType = PointerType::CreateInternal(cx, typeObj);
   if (!pointerType)
     return JS_FALSE;
   js::AutoValueRooter root(cx, pointerType);
@@ -5434,11 +5377,6 @@ CData::ReadString(JSContext* cx, uintN argc, jsval *vp)
   switch (typeCode) {
   case TYPE_pointer:
     baseType = PointerType::GetBaseType(cx, typeObj);
-    if (!baseType) {
-      JS_ReportError(cx, "cannot read contents of pointer to opaque type");
-      return JS_FALSE;
-    }
-
     data = *static_cast<void**>(GetData(cx, obj));
     if (data == NULL) {
       JS_ReportError(cx, "cannot read contents of null pointer");
