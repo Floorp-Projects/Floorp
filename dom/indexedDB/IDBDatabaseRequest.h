@@ -71,6 +71,7 @@ protected:
   ~IDBDatabaseRequest();
 
 private:
+  nsCString mASCIIOrigin;
   nsString mName;
   nsString mDescription;
   PRBool mReadOnly;

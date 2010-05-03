@@ -85,7 +85,8 @@ public:
   nsresult Dispatch(nsIThread* aDatabaseThread);
 
 protected:
-  AsyncConnectionHelper(nsCOMPtr<mozIStorageConnection>& aConnection,
+  AsyncConnectionHelper(const nsACString& aASCIIOrigin,
+                        nsCOMPtr<mozIStorageConnection>& aConnection,
                         nsIDOMEventTarget* aTarget);
 
   virtual ~AsyncConnectionHelper();
@@ -120,10 +121,16 @@ protected:
    */
   virtual void GetSuccessResult(nsIWritableVariant* aVariant);
 
+  /**
+   * Ensures that mConnection is valid. Creates the connection if needed.
+   */
+  nsresult EnsureConnection();
+
 protected:
   nsCOMPtr<mozIStorageConnection>& mConnection;
 
 private:
+  nsCString mASCIIOrigin;
   nsCOMPtr<nsIDOMEventTarget> mTarget;
 
 #ifdef DEBUG
