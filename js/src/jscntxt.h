@@ -556,6 +556,17 @@ struct JSThreadData {
     /* State used by dtoa.c. */
     DtoaState           *dtoaState;
 
+    /* 
+     * State used to cache some double-to-string conversions.  A stupid
+     * optimization aimed directly at v8-splay.js, which stupidly converts
+     * many doubles multiple times in a row.
+     */
+    struct {
+        jsdouble d;
+        jsint    base;
+        JSString *s;        // if s==NULL, d and base are not valid
+    } dtoaCache;
+
     /*
      * Cache of reusable JSNativeEnumerators mapped by shape identifiers (as
      * stored in scope->shape). This cache is nulled by the GC and protected
@@ -854,7 +865,7 @@ struct JSRuntime {
 #ifdef JS_TRACER
     /* True if any debug hooks not supported by the JIT are enabled. */
     bool debuggerInhibitsJIT() const {
-        return (globalDebugHooks.interruptHandler ||
+        return (globalDebugHooks.interruptHook ||
                 globalDebugHooks.callHook ||
                 globalDebugHooks.objectHook);
     }
@@ -1178,9 +1189,27 @@ namespace js {
 class AutoGCRooter;
 }
 
+struct JSRegExpStatics {
+    JSContext   *cx;
+    JSString    *input;         /* input string to match (perl $_, GC root) */
+    JSBool      multiline;      /* whether input contains newlines (perl $*) */
+    JSSubString lastMatch;      /* last string matched (perl $&) */
+    JSSubString lastParen;      /* last paren matched (perl $+) */
+    JSSubString leftContext;    /* input to left of last match (perl $`) */
+    JSSubString rightContext;   /* input to right of last match (perl $') */
+    js::Vector<JSSubString> parens; /* last set of parens matched (perl $1, $2) */
+
+    JSRegExpStatics(JSContext *cx) : cx(cx), parens(cx) {}
+
+    bool copy(const JSRegExpStatics& other);
+    void clearRoots();
+    void clear();
+};
+
 struct JSContext
 {
-    explicit JSContext(JSRuntime *rt) : runtime(rt), busyArrays(this) {}
+    explicit JSContext(JSRuntime *rt) :
+      runtime(rt), regExpStatics(this), busyArrays(this) {}
 
     /*
      * If this flag is set, we were asked to call back the operation callback
@@ -1266,7 +1295,7 @@ struct JSContext
     /* Storage to root recently allocated GC things and script result. */
     JSWeakRoots         weakRoots;
 
-    /* Regular expression class statics (XXX not shared globally). */
+    /* Regular expression class statics. */
     JSRegExpStatics     regExpStatics;
 
     /* State for object and array toSource conversion. */

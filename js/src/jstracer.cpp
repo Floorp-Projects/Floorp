@@ -2746,7 +2746,6 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
     switch (type) {
       case TT_OBJECT:
         v = OBJECT_TO_JSVAL(*(JSObject**)slot);
-        JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
         debug_only_printf(LC_TMTracer,
                           "object<%p:%s> ", (void*)JSVAL_TO_OBJECT(v),
                           JSVAL_IS_NULL(v)
@@ -2779,7 +2778,6 @@ NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot)
 
       case TT_JSVAL:
         v = *(jsval*)slot;
-        JS_ASSERT(v != JSVAL_ERROR_COOKIE); /* don't leak JSVAL_ERROR_COOKIE */
         debug_only_printf(LC_TMTracer, "box<%p> ", (void*)v);
         break;
 
@@ -9427,8 +9425,7 @@ TraceRecorder::box_jsval(jsval v, LIns* v_ins)
         }
         LIns* args[] = { v_ins, cx_ins };
         v_ins = lir->insCall(&js_BoxDouble_ci, args);
-        guard(false, lir->ins2(LIR_peq, v_ins, INS_CONSTWORD(JSVAL_ERROR_COOKIE)),
-              OOM_EXIT);
+        guard(false, lir->insEqP_0(v_ins), OOM_EXIT);
         return v_ins;
     }
     switch (JSVAL_TAG(v)) {
@@ -10546,7 +10543,7 @@ TraceRecorder::newArray(JSObject* ctor, uint32 argc, jsval* argv, jsval* rval)
         }
 
         if (argc > 0)
-            stobj_set_fslot(arr_ins, JSObject::JSSLOT_ARRAY_COUNT, INS_CONST(argc));
+            stobj_set_fslot(arr_ins, JSObject::JSSLOT_DENSE_ARRAY_COUNT, INS_CONST(argc));
     }
 
     set(rval, arr_ins);
@@ -10670,9 +10667,6 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[],
       case FAIL_VOID:
         guard(false, lir->ins2ImmI(LIR_eq, res_ins, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
         break;
-      case FAIL_COOKIE:
-        guard(false, lir->ins2(LIR_peq, res_ins, INS_CONSTWORD(JSVAL_ERROR_COOKIE)), OOM_EXIT);
-        break;
       default:;
     }
 
@@ -10681,7 +10675,7 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[],
     /*
      * The return value will be processed by NativeCallComplete since
      * we have to know the actual return value type for calls that return
-     * jsval (like Array_p_pop).
+     * jsval.
      */
     pendingSpecializedNative = sn;
 
@@ -13127,7 +13121,8 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     VMSideExit* exit = snapshot(BRANCH_EXIT);
 
     /* check that the index is within bounds */
-    LIns* dslots_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACC_OTHER);
+    LIns* dslots_ins =
+        addName(lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, dslots), ACC_OTHER), "dslots");
     jsuint capacity = obj->getDenseArrayCapacity();
     bool within = (jsuint(idx) < obj->getArrayLength() && jsuint(idx) < capacity);
     if (!within) {
@@ -13141,32 +13136,18 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
                                  NULL);
         }
 
-        /* If not idx < length, stay on trace (and read value as undefined). */
-        LIns* length = stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH);
-        if (pidx_ins != length) {
-            LIns* br2 = lir->insBranch(LIR_jf,
-                                       lir->ins2(LIR_pult, pidx_ins, length),
-                                       NULL);
+        /* If not idx < min(length, capacity), stay on trace (and read value as undefined). */
+        LIns* minLenCap =
+            addName(stobj_get_fslot(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
+        LIns* br2 = lir->insBranch(LIR_jf,
+                                   lir->ins2(LIR_pult, pidx_ins, minLenCap),
+                                   NULL);
 
-            /* If dslots is NULL, stay on trace (and read value as undefined). */
-            LIns* br3 = lir->insBranch(LIR_jt, lir->insEqP_0(dslots_ins), NULL);
-
-            /* If not idx < capacity, stay on trace (and read value as undefined). */
-            LIns* br4 = lir->insBranch(LIR_jf,
-                                       lir->ins2(LIR_pult,
-                                                 pidx_ins,
-                                                 lir->insLoad(LIR_ldp, dslots_ins,
-                                                              -(int)sizeof(jsval), ACC_OTHER)),
-                                       NULL);
-
-            lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
-            LIns* label = lir->ins0(LIR_label);
-            if (br1)
-                br1->setTarget(label);
-            br2->setTarget(label);
-            br3->setTarget(label);
-            br4->setTarget(label);
-        }
+        lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
+        LIns* label = lir->ins0(LIR_label);
+        if (br1)
+            br1->setTarget(label);
+        br2->setTarget(label);
 
         CHECK_STATUS(guardPrototypeHasNoIndexedProperties(obj, obj_ins, MISMATCH_EXIT));
 
@@ -13185,21 +13166,11 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
               exit);
     }
 
-    /* Guard array length */
+    /* Guard array min(length, capacity). */
+    LIns* minLenCap =
+        addName(stobj_get_fslot(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
     guard(true,
-          lir->ins2(LIR_pult, pidx_ins, stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)),
-          exit);
-
-    /* dslots must not be NULL */
-    guard(false,
-          lir->insEqP_0(dslots_ins),
-          exit);
-
-    /* Guard array capacity */
-    guard(true,
-          lir->ins2(LIR_pult,
-                    pidx_ins,
-                    lir->insLoad(LIR_ldp, dslots_ins, 0 - (int)sizeof(jsval), ACC_OTHER)),
+          lir->ins2(LIR_pult, pidx_ins, minLenCap),
           exit);
 
     /* Load the value and guard on its type to unbox it. */
@@ -15059,7 +15030,7 @@ CallIteratorNext_tn(JSContext* cx, jsbytecode* pc, JSObject* iterobj)
 
     if (!ok) {
         SetBuiltinError(cx);
-        return JSVAL_ERROR_COOKIE;
+        return JSVAL_NULL; /* error occured, value doesn't matter. */
     }
     return tvr.value();
 }
@@ -15221,7 +15192,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
     }
 
     if (count > 0)
-        stobj_set_fslot(v_ins, JSObject::JSSLOT_ARRAY_COUNT, INS_CONST(count));
+        stobj_set_fslot(v_ins, JSObject::JSSLOT_DENSE_ARRAY_COUNT, INS_CONST(count));
 
     stack(-int(len), v_ins);
     return ARECORD_CONTINUE;
