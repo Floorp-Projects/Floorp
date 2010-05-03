@@ -115,60 +115,85 @@ inline void JSObject::staticAssertArrayLengthIsInPrivateSlot()
     JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH == JSSLOT_PRIVATE);
 }
 
+inline bool JSObject::isDenseArrayMinLenCapOk() const
+{
+    JS_ASSERT(isDenseArray());
+    uint32 length = uncheckedGetArrayLength();
+    uint32 capacity = uncheckedGetDenseArrayCapacity();
+    uint32 minLenCap = uint32(fslots[JSSLOT_DENSE_ARRAY_MINLENCAP]);
+    return minLenCap == JS_MIN(length, capacity);
+}
+
+inline uint32
+JSObject::uncheckedGetArrayLength() const
+{
+    return uint32(fslots[JSSLOT_ARRAY_LENGTH]);
+}
+
 inline uint32
 JSObject::getArrayLength() const
 {
     JS_ASSERT(isArray());
-    return uint32(fslots[JSSLOT_ARRAY_LENGTH]);
+    JS_ASSERT_IF(isDenseArray(), isDenseArrayMinLenCapOk());
+    return uncheckedGetArrayLength();
 }
 
 inline void 
-JSObject::setArrayLength(uint32 length)
+JSObject::setDenseArrayLength(uint32 length)
 {
-    JS_ASSERT(isArray());
+    JS_ASSERT(isDenseArray());
+    fslots[JSSLOT_ARRAY_LENGTH] = length;
+    uint32 capacity = uncheckedGetDenseArrayCapacity();
+    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP] = JS_MIN(length, capacity);
+}
+
+inline void 
+JSObject::setSlowArrayLength(uint32 length)
+{
+    JS_ASSERT(isSlowArray());
     fslots[JSSLOT_ARRAY_LENGTH] = length;
 }
 
 inline uint32 
-JSObject::getArrayCount() const
-{
-    JS_ASSERT(isArray());
-    return uint32(fslots[JSSLOT_ARRAY_COUNT]);
-}
-
-inline void 
-JSObject::setArrayCount(uint32 count)
-{
-    JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_COUNT] = count;
-}
-
-inline void 
-JSObject::voidDenseArrayCount()
+JSObject::getDenseArrayCount() const
 {
     JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_ARRAY_COUNT] = JSVAL_VOID;
+    return uint32(fslots[JSSLOT_DENSE_ARRAY_COUNT]);
 }
 
 inline void 
-JSObject::incArrayCountBy(uint32 posDelta)
+JSObject::setDenseArrayCount(uint32 count)
 {
-    JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_COUNT] += posDelta;
+    JS_ASSERT(isDenseArray());
+    fslots[JSSLOT_DENSE_ARRAY_COUNT] = count;
 }
 
 inline void 
-JSObject::decArrayCountBy(uint32 negDelta)
+JSObject::incDenseArrayCountBy(uint32 posDelta)
 {
-    JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_COUNT] -= negDelta;
+    JS_ASSERT(isDenseArray());
+    fslots[JSSLOT_DENSE_ARRAY_COUNT] += posDelta;
+}
+
+inline void 
+JSObject::decDenseArrayCountBy(uint32 negDelta)
+{
+    JS_ASSERT(isDenseArray());
+    fslots[JSSLOT_DENSE_ARRAY_COUNT] -= negDelta;
+}
+
+inline uint32
+JSObject::uncheckedGetDenseArrayCapacity() const
+{
+    return dslots ? uint32(dslots[-1]) : 0;
 }
 
 inline uint32
 JSObject::getDenseArrayCapacity() const
 {
     JS_ASSERT(isDenseArray());
-    return dslots ? uint32(dslots[-1]) : 0;
+    JS_ASSERT(isDenseArrayMinLenCapOk());
+    return uncheckedGetDenseArrayCapacity();
 }
 
 inline void
@@ -177,6 +202,8 @@ JSObject::setDenseArrayCapacity(uint32 capacity)
     JS_ASSERT(isDenseArray());
     JS_ASSERT(dslots);
     dslots[-1] = capacity;
+    uint32 length = uncheckedGetArrayLength();
+    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP] = JS_MIN(length, capacity);
 }
 
 inline jsval
@@ -205,10 +232,21 @@ JSObject::getDenseArrayElements() const
 inline void
 JSObject::freeDenseArrayElements(JSContext *cx)
 {
+    JS_ASSERT(isDenseArray());
     if (dslots) {
         cx->free(dslots - 1);
         dslots = NULL;
     }
+    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP] = 0;
+    JS_ASSERT(isDenseArrayMinLenCapOk());
+}
+
+inline void 
+JSObject::voidDenseOnlyArraySlots()
+{
+    JS_ASSERT(isDenseArray());
+    fslots[JSSLOT_DENSE_ARRAY_COUNT] = JSVAL_VOID;
+    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP] = JSVAL_VOID;
 }
 
 inline void
@@ -240,7 +278,7 @@ JSObject::setArgsLengthOverridden()
 }
 
 inline bool
-JSObject::isArgsLengthOverridden()
+JSObject::isArgsLengthOverridden() const
 {
     JS_ASSERT(isArguments());
     jsval v = fslots[JSSLOT_ARGS_LENGTH];
@@ -259,6 +297,22 @@ JSObject::setArgsCallee(jsval callee)
 {
     JS_ASSERT(isArguments());
     fslots[JSSLOT_ARGS_CALLEE] = callee;
+}
+
+inline jsval
+JSObject::getArgsElement(uint32 i) const
+{
+    JS_ASSERT(isArguments());
+    JS_ASSERT(i < numSlots() - JS_INITIAL_NSLOTS);
+    return dslots[i];
+}
+
+inline void
+JSObject::setArgsElement(uint32 i, jsval v)
+{
+    JS_ASSERT(isArguments());
+    JS_ASSERT(i < numSlots() - JS_INITIAL_NSLOTS);
+    dslots[i] = v;
 }
 
 inline jsval
