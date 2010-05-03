@@ -80,6 +80,9 @@ PluginModuleChild::PluginModuleChild() :
 #elif defined(MOZ_WIDGET_GTK2)
   , mNestedLoopTimerId(0)
 #endif
+#ifdef OS_WIN
+  , mNestedEventHook(NULL)
+#endif
 {
     NS_ASSERTION(!gInstance, "Something terribly wrong here!");
     memset(&mFunctions, 0, sizeof(mFunctions));
@@ -318,12 +321,18 @@ gtk_plug_scroll_event(GtkWidget *widget, GdkEventScroll *gdk_event)
 static void
 wrap_gtk_plug_embedded(GtkPlug* plug) {
     GdkWindow* socket_window = plug->socket_window;
-    if (socket_window &&
-        g_object_get_data(G_OBJECT(socket_window),
-                          "moz-existed-before-set-window")) {
-        // Add missing reference for
-        // https://bugzilla.gnome.org/show_bug.cgi?id=607061
-        g_object_ref(socket_window);
+    if (socket_window) {
+        if (gtk_check_version(2,18,7) != NULL // older
+            && g_object_get_data(G_OBJECT(socket_window),
+                                 "moz-existed-before-set-window")) {
+            // Add missing reference for
+            // https://bugzilla.gnome.org/show_bug.cgi?id=607061
+            g_object_ref(socket_window);
+        }
+
+        // Ensure the window exists to make this GtkPlug behave like an
+        // in-process GtkPlug for Flash Player.  (Bugs 561308 and 539138).
+        gtk_widget_realize(GTK_WIDGET(plug));
     }
 
     if (*real_gtk_plug_embedded) {
@@ -448,11 +457,9 @@ PluginModuleChild::InitGraphics()
         *scroll_event = gtk_plug_scroll_event;
     }
 
-    if (gtk_check_version(2,18,7) != NULL) { // older
-        GtkPlugEmbeddedFn* embedded = &GTK_PLUG_CLASS(gtk_plug_class)->embedded;
-        real_gtk_plug_embedded = *embedded;
-        *embedded = wrap_gtk_plug_embedded;
-    }
+    GtkPlugEmbeddedFn* embedded = &GTK_PLUG_CLASS(gtk_plug_class)->embedded;
+    real_gtk_plug_embedded = *embedded;
+    *embedded = wrap_gtk_plug_embedded;
 
 #elif defined(MOZ_WIDGET_QT)
     nsQAppInstance::AddRef();
@@ -479,6 +486,10 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
 
     // weakly guard against re-entry after NP_Shutdown
     memset(&mFunctions, 0, sizeof(mFunctions));
+
+#ifdef OS_WIN
+    ResetNestedInputEventHook();
+#endif
 
     return true;
 }
@@ -807,6 +818,9 @@ _geturlnotify(NPP aNPP,
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     ENSURE_PLUGIN_THREAD(NPERR_INVALID_PARAM);
+
+    if (!aNPP) // NULL check for nspluginwrapper (bug 561690)
+        return NPERR_INVALID_INSTANCE_ERROR;
 
     nsCString url = NullableString(aRelativeURL);
     StreamNotifyChild* sn = new StreamNotifyChild(url);
@@ -1481,6 +1495,10 @@ PluginModuleChild::AnswerNP_Initialize(NativeThreadId* tid, NPError* _retval)
     *tid = 0;
 #endif
 
+#ifdef OS_WIN
+    SetNestedInputEventHook();
+#endif
+
 #if defined(OS_LINUX)
     *_retval = mInitializeFunc(&sBrowserFuncs, &mFunctions);
     return true;
@@ -1837,3 +1855,67 @@ PluginModuleChild::NPN_IntFromIdentifier(NPIdentifier aIdentifier)
     }
     return PR_INT32_MIN;
 }
+
+#ifdef OS_WIN
+void
+PluginModuleChild::EnteredCall()
+{
+    mIncallPumpingStack.AppendElement();
+}
+
+void
+PluginModuleChild::ExitedCall()
+{
+    NS_ASSERTION(mIncallPumpingStack.Length(), "mismatched entered/exited");
+    PRUint32 len = mIncallPumpingStack.Length();
+    const IncallFrame& f = mIncallPumpingStack[len - 1];
+    if (f._spinning)
+        MessageLoop::current()->SetNestableTasksAllowed(f._savedNestableTasksAllowed);
+
+    mIncallPumpingStack.TruncateLength(len - 1);
+}
+
+LRESULT CALLBACK
+PluginModuleChild::NestedInputEventHook(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    PluginModuleChild* self = current();
+    PRUint32 len = self->mIncallPumpingStack.Length();
+    if (nCode >= 0 && len && !self->mIncallPumpingStack[len - 1]._spinning) {
+        self->SendProcessNativeEventsInRPCCall();
+        IncallFrame& f = self->mIncallPumpingStack[len - 1];
+        f._spinning = true;
+        MessageLoop* loop = MessageLoop::current();
+        f._savedNestableTasksAllowed = loop->NestableTasksAllowed();
+        loop->SetNestableTasksAllowed(true);
+    }
+
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+void
+PluginModuleChild::SetNestedInputEventHook()
+{
+    NS_ASSERTION(!mNestedEventHook,
+        "mNestedEventHook already setup in call to SetNestedInputEventHook?");
+
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+
+    // WH_GETMESSAGE hooks are triggered by peek message calls in parent due to
+    // attached message queues, resulting in stomped in-process ipc calls.  So
+    // we use a filter hook specific to dialogs, menus, and scroll bars to kick
+    // things off.
+    mNestedEventHook = SetWindowsHookEx(WH_MSGFILTER,
+                                        NestedInputEventHook,
+                                        NULL,
+                                        GetCurrentThreadId());
+}
+
+void
+PluginModuleChild::ResetNestedInputEventHook()
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+    if (mNestedEventHook)
+        UnhookWindowsHookEx(mNestedEventHook);
+    mNestedEventHook = NULL;
+}
+#endif

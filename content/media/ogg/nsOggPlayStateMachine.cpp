@@ -767,7 +767,7 @@ nsresult nsOggPlayStateMachine::Run()
             !mDecoder->GetCurrentStream()->IsDataCachedToEndOfStream(mDecoder->mDecoderPosition) &&
             !mDecoder->GetCurrentStream()->IsSuspendedByCache() &&
             ((HasAudio() && mReader->mAudioQueue.Duration() < LOW_AUDIO_MS) ||
-             (HasVideo() && mReader->mVideoQueue.GetSize() < LOW_VIDEO_FRAMES)))
+             (HasVideo() && (PRUint32)mReader->mVideoQueue.GetSize() < LOW_VIDEO_FRAMES)))
         {
           // There is at most one frame in the queue and there's
           // more data to load. Let's buffer to make sure we can play a

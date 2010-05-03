@@ -1992,7 +1992,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
 /* 
   InsertNodeAtPoint: attempts to insert aNode into the document, at a point specified by 
       {*ioParent,*ioOffset}.  Checks with strict dtd to see if containment is allowed.  If not
-      allowed, will attempt to find a parent in the parent heirarchy of *ioParent that will
+      allowed, will attempt to find a parent in the parent hierarchy of *ioParent that will
       accept aNode as a child.  If such a parent is found, will split the document tree from
       {*ioParent,*ioOffset} up to parent, and then insert aNode.  ioParent & ioOffset are then
       adjusted to point to the actual location that aNode was inserted at.  aNoEmptyNodes
@@ -3309,7 +3309,7 @@ nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
     if (!doc)
       return NS_ERROR_UNEXPECTED;
 
-    iter->Init(doc->GetRootContent());
+    iter->Init(doc->GetRootElement());
 
     // loop through the content iterator for each content node
     while (!iter->IsDone())
@@ -3642,7 +3642,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
     if (!doc)
       return NS_ERROR_UNEXPECTED;
 
-    iter->Init(doc->GetRootContent());
+    iter->Init(doc->GetRootElement());
 
     // loop through the content iterator for each content node
     while (!iter->IsDone())
@@ -4269,8 +4269,7 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
   if (!doc)
     return 0;
 
-  nsCOMPtr<nsIContent> rootContent;
-  doc->GetRootContent(getter_AddRefs(rootContent));
+  nsCOMPtr<nsIContent> rootContent = doc->GetRootElement();
   if (!rootContent)
     return 0;
 

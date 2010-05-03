@@ -92,7 +92,7 @@ static void oc_sb_create_plane_mapping(oc_sb_map _sb_maps[],
       if(jmax>4)jmax=4;
       else if(jmax<=0)break;
       /*By default, set all fragment indices to -1.*/
-      memset(_sb_maps[sbi][0],0xFF,sizeof(_sb_maps[sbi]));
+      memset(_sb_maps[sbi],0xFF,sizeof(_sb_maps[sbi]));
       /*Fill in the fragment map for this super block.*/
       xfrag=yfrag+x;
       for(i=0;i<imax;i++){

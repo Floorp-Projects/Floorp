@@ -80,6 +80,9 @@
 #include "nsBidiUtils.h"
 #include "nsFrameManager.h"
 #include "nsIPrefService.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 
@@ -2687,14 +2690,14 @@ nsGfxScrollFrameInner::IsLTR() const
     // If we're the root scrollframe, we need the root element's style data.
     nsPresContext *presContext = mOuter->PresContext();
     nsIDocument *document = presContext->Document();
-    nsIContent *root = document->GetRootContent();
+    Element *root = document->GetRootElement();
 
-    // But for HTML we want the body element.
+    // But for HTML and XHTML we want the body element.
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
     if (htmlDoc) {
-      nsIContent *bodyContent = htmlDoc->GetBodyContentExternal();
-      if (bodyContent)
-        root = bodyContent; // we can trust the document to hold on to it
+      Element *bodyElement = document->GetBodyElement();
+      if (bodyElement)
+        root = bodyElement; // we can trust the document to hold on to it
     }
 
     if (root) {

@@ -129,7 +129,7 @@ library MOZILLACONTROLLib
         [id(106), helpstring("Stops opening a file."), helpcontext(0x0000)]
         HRESULT Stop();
 
-        // Automation heirarchy...
+        // Automation hierarchy...
         [id(200), propget, helpstring("Returns the application automation object if accessible, this automation object otherwise.."), helpcontext(0x0000)]
         HRESULT Application([out,retval] IDispatch** ppDisp);
 

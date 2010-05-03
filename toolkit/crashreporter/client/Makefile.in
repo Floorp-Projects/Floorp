@@ -44,6 +44,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE = crashreporter
+
 # Don't use the STL wrappers in the crashreporter clients; they don't
 # link with -lmozalloc, and it really doesn't matter here anyway.
 STL_FLAGS =
@@ -82,8 +84,21 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 CPPSRCS += crashreporter_gtk_common.cpp crashreporter_unix_common.cpp
+
 ifdef MOZ_PLATFORM_MAEMO
 CPPSRCS += crashreporter_maemo_gtk.cpp
+
+# Maemo's libcurl doesn't ship with a set of CA certificates,
+# so we have to ship our own.
+libs:: $(DIST)/bin/crashreporter.crt
+
+$(DIST)/bin/crashreporter.crt: $(topsrcdir)/security/nss/lib/ckfw/builtins/certdata.txt certdata2pem.py
+	$(PYTHON) $(srcdir)/certdata2pem.py < $< > $@
+
+# The xpcshell test case here verifies that the CA certificate list
+# works with OpenSSL.
+XPCSHELL_TESTS = maemo-unit
+
 else
 CPPSRCS += crashreporter_linux.cpp
 endif
@@ -124,4 +139,9 @@ endif
 ifeq (,$(filter-out Linux SunOS,$(OS_ARCH)))
 libs:: $(topsrcdir)/toolkit/themes/winstripe/global/throbber/Throbber-small.gif
 	$(INSTALL) $^ $(DIST)/bin
+endif
+
+ifdef MOZ_PLATFORM_MAEMO
+libs::
+	$(INSTALL) $(DIST)/bin/crashreporter.crt $(DEPTH)/_tests/xpcshell/$(MODULE)/maemo-unit/
 endif

@@ -3497,7 +3497,7 @@ PRBool
 nsEditor::IsBlockNode(nsIDOMNode *aNode)
 {
   // stub to be overridden in nsHTMLEditor.
-  // screwing around with the class heirarchy here in order
+  // screwing around with the class hierarchy here in order
   // to not duplicate the code in GetNextNode/GetPrevNode
   // across both nsEditor/nsHTMLEditor.  
   return PR_FALSE;
@@ -3606,7 +3606,7 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
     if (!resultFrame)   // if it has no frame, it is not editable
       return PR_FALSE;
     NS_ASSERTION(content->IsNodeOfType(nsINode::eTEXT) ||
-                 content->IsNodeOfType(nsINode::eELEMENT),
+                 content->IsElement(),
                  "frame for non element-or-text?");
     if (!content->IsNodeOfType(nsINode::eTEXT))
       return PR_TRUE;  // not a text node; has a frame

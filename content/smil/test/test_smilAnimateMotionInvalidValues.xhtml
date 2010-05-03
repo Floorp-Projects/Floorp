@@ -1,0 +1,175 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=436418
+-->
+<head>
+  <title>Test for animateMotion acceptance of invalid values</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="smilTestUtils.js" />
+  <script type="text/javascript" src="smilAnimateMotionValueLists.js" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=436418">Mozilla Bug 436418</a>
+<p id="display"></p>
+<div id="content" style="visibility: hidden">
+<svg xmlns="http://www.w3.org/2000/svg" id="svg"
+     width="200px" height="200px"
+     onload="this.pauseAnimations()">
+  <rect id="rect" x="20" y="20" width="200" height="200"/>
+</svg>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+// Constant strings (& string-arrays)
+const SVGNS = "http://www.w3.org/2000/svg";
+const XLINKNS = "http://www.w3.org/1999/xlink";
+
+// Constant objects
+const gSvg = document.getElementById("svg");
+const gRect = document.getElementById("rect");
+const gUnAnimatedCTM = gRect.getCTM();
+
+SimpleTest.waitForExplicitFinish();
+
+function createAnim()
+{
+  var anim = document.createElementNS(SVGNS, "animateMotion");
+  anim.setAttribute("dur", "2s");
+  return gRect.appendChild(anim);
+}
+
+function removeElem(aElem)
+{
+  aElem.parentNode.removeChild(aElem);
+}
+
+function testAttr(aAttrName, aAttrValueArray, aIsValid, aIsTodo)
+{
+  var componentsToCheck;
+
+  for (var i in aAttrValueArray) {
+    var curVal = aAttrValueArray[i];
+    var anim = createAnim();
+    anim.setAttribute(aAttrName, curVal);
+    if (aAttrName == "rotate") {
+      // Apply a diagonal translation (so rotate='auto' will have an effect)
+      // and just test the rotation matrix components
+      anim.setAttribute("values", "0 0; 50 50");
+      componentsToCheck = CTMUtil.CTM_COMPONENTS_ROTATE;
+    } else {
+      // Apply a supplementary rotation to make sure that we don't apply it if
+      // our value is rejected.
+      anim.setAttribute("rotate", Math.PI/4);
+      componentsToCheck = CTMUtil.CTM_COMPONENTS_ALL;
+    }
+
+    var curCTM = gRect.getCTM();
+    if (aIsValid) {
+      var errMsg = "CTM should have changed when applying animateMotion " +
+        "with '" + aAttrName + "' set to valid value '" + curVal + "'";
+      CTMUtil.assertCTMNotEqual(curCTM, gUnAnimatedCTM, componentsToCheck,
+                                errMsg, aIsTodo);
+    } else {
+      var errMsg = "CTM should not have changed when applying animateMotion " +
+        "with '" + aAttrName + "' set to invalid value '" + curVal + "'";
+      CTMUtil.assertCTMEqual(curCTM, gUnAnimatedCTM, componentsToCheck,
+                             errMsg, aIsTodo);
+    }
+    removeElem(anim);
+  }
+}
+
+function createPath(aPathDescription)
+{
+  var path = document.createElementNS(SVGNS, "path");
+  path.setAttribute("d", aPathDescription);
+  path.setAttribute("id", "thePath");
+  return gSvg.appendChild(path);
+}
+
+function createMpath(aAnimElement)
+{
+  var mpath = document.createElementNS(SVGNS, "mpath");
+  mpath.setAttributeNS(XLINKNS, "href", "#thePath");
+  return aAnimElement.appendChild(mpath);
+}
+
+function testMpathElem(aPathValueArray, aIsValid, aIsTodo)
+{
+  for (var i in aPathValueArray) {
+    var curVal = aPathValueArray[i];
+    var anim = createAnim();
+    var mpath = createMpath(anim);
+    var path = createPath(curVal);
+
+    // Apply a supplementary rotation to make sure that we don't apply it if
+    // our value is rejected.
+    anim.setAttribute("rotate", Math.PI/4);
+    componentsToCheck = CTMUtil.CTM_COMPONENTS_ALL;
+
+    if (aIsValid) {
+      var errMsg = "CTM should have changed when applying animateMotion " +
+        "with mpath linking to a path with valid value '" + curVal + "'";
+
+      CTMUtil.assertCTMNotEqual(gRect.getCTM(), gUnAnimatedCTM,
+                                componentsToCheck, errMsg, aIsTodo);
+    } else {
+      var errMsg = "CTM should not have changed when applying animateMotion " +
+        "with mpath linking to a path with invalid value '" + curVal + "'";
+      CTMUtil.assertCTMEqual(gRect.getCTM(), gUnAnimatedCTM,
+                             componentsToCheck, errMsg, aIsTodo);
+    }
+    removeElem(anim);
+    removeElem(path);
+    removeElem(mpath);
+ } 
+}
+
+// Main Function
+function main()
+{
+  if (!SMILUtil.isSMILEnabled()) {
+    ok(false, "SMIL dosn't seem to be enabled");
+    SimpleTest.finish();
+    return;
+  }
+
+  // Start out with document paused
+  var svg = SMILUtil.getSVGRoot();
+  ok(svg.animationsPaused(), "should be paused by <svg> load handler");
+  is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
+
+  testAttr("values", gValidValues, true, false);
+  testAttr("values", gInvalidValues, false, false);
+  testAttr("values", gInvalidValuesTodo, false, true);
+
+  testAttr("rotate", gValidRotate, true, false);
+  testAttr("rotate", gInvalidRotate, false, false);
+
+  testAttr("to", gValidToBy, true, false);
+  testAttr("to", gInvalidToBy, false, false);
+  testAttr("to", gInvalidToByTodo, false, true);
+
+  testAttr("by", gValidToBy, true, false);
+  testAttr("by", gInvalidToBy, false, false);
+  testAttr("by", gInvalidToByTodo, false, true);
+
+  testAttr("path", gValidPath, true, false);
+  testAttr("path", gInvalidPath, false, false);
+
+  testMpathElem(gValidPath, true, false);
+  testMpathElem(gInvalidPath, false, false);
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", main, false);
+]]>
+</script>
+</pre>
+</body>
+</html>

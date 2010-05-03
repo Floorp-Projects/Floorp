@@ -145,9 +145,9 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weigh
 == text-gradient-01.svg text-gradient-01-ref.svg
 == text-in-link-01.svg text-in-link-01-ref.svg
 == text-in-link-02.svg text-in-link-02-ref.svg
-# For bug 546813: sanity-check using HTML text, then test SVG behavior. Fails on Linux tryserver due to lack of CJK fonts.
+# Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
 != text-language-00.xhtml text-language-00-ref.xhtml
-random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != text-language-01.xhtml text-language-01-ref.xhtml
+random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
 == text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg

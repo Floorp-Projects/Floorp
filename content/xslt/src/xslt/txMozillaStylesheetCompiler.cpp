@@ -72,6 +72,9 @@
 #include "nsIURL.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsDOMError.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -570,8 +573,8 @@ handleNode(nsINode* aNode, txStylesheetCompiler* aCompiler)
 {
     nsresult rv = NS_OK;
     
-    if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
-        nsIContent* element = static_cast<nsIContent*>(aNode);
+    if (aNode->IsElement()) {
+        Element* element = aNode->AsElement();
 
         PRUint32 attsCount = element->GetAttrCount();
         nsAutoArrayPtr<txStylesheetAttr> atts;

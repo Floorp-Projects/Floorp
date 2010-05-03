@@ -46,7 +46,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIContent.h"
+#include "Element.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMEventTarget.h"
@@ -332,7 +332,7 @@ class nsNSElementTearoff;
  * A generic base class for DOM elements, implementing many nsIContent,
  * nsIDOMNode and nsIDOMElement methods.
  */
-class nsGenericElement : public nsIContent
+class nsGenericElement : public mozilla::dom::Element
 {
 public:
   nsGenericElement(nsINodeInfo *aNodeInfo);
@@ -638,6 +638,14 @@ public:
                                   PRBool aMutationEvent);
 
   /**
+   * If there are listeners for DOMNodeInserted event, fires the event on all
+   * aNodes
+   */
+  static void FireNodeInserted(nsIDocument* aDoc,
+                               nsINode* aParent,
+                               nsCOMArray<nsIContent>& aNodes);
+
+  /**
    * Helper methods for implementing querySelector/querySelectorAll
    */
   static nsresult doQuerySelector(nsINode* aRoot, const nsAString& aSelector,
@@ -645,7 +653,8 @@ public:
   static nsresult doQuerySelectorAll(nsINode* aRoot,
                                      const nsAString& aSelector,
                                      nsIDOMNodeList **aReturn);
-  static PRBool doMatchesSelector(nsIContent* aNode, const nsAString& aSelector);
+  static PRBool doMatchesSelector(mozilla::dom::Element* aElement,
+                                  const nsAString& aSelector);
 
   /**
    * Default event prehandling for content objects. Handles event retargeting.

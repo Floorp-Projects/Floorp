@@ -147,7 +147,7 @@ static inline void YuvPixel(uint8 y,
   int32 cg = (- 100 * d - 208 * e + 128);
   int32 cr =             (409 * e + 128);
 
-  int32 C298a = ((static_cast<int32>(y) - 16) * 298 + 128);
+  int32 C298a = ((static_cast<int32>(y) - 16) * 298);
   *reinterpret_cast<uint32*>(rgb_buf) = (clip(C298a + cb)) |
                                         (clip(C298a + cg) << 8) |
                                         (clip(C298a + cr) << 16) |
