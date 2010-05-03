@@ -68,6 +68,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "nsIEnumerator.h"
+#include "nsEditProperty.h"
 #include "nsIAtom.h"
 #include "nsCaret.h"
 #include "nsIWidget.h"
@@ -1206,9 +1207,10 @@ NS_IMETHODIMP
 nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
 {  
   //  mark the node dirty.
-  nsCOMPtr<nsIDOMElement> element (do_QueryInterface(aNode));
+  nsCOMPtr<nsIContent> element (do_QueryInterface(aNode));
   if (element)
-    element->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), EmptyString());
+    element->SetAttr(kNameSpaceID_None, nsEditProperty::mozdirty,
+                     EmptyString(), PR_FALSE);
   return NS_OK;
 }
 
@@ -3633,20 +3635,10 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
 PRBool
 nsEditor::IsMozEditorBogusNode(nsIDOMNode *aNode)
 {
-  if (!aNode)
-    return PR_FALSE;
-
-  nsCOMPtr<nsIDOMElement>element = do_QueryInterface(aNode);
-  if (element)
-  {
-    nsAutoString val;
-    (void)element->GetAttribute(kMOZEditorBogusNodeAttr, val);
-    if (val.Equals(kMOZEditorBogusNodeValue)) {
-      return PR_TRUE;
-    }
-  }
-    
-  return PR_FALSE;
+  nsCOMPtr<nsIContent> element = do_QueryInterface(aNode);
+  return element &&
+         element->AttrValueIs(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
+                              kMOZEditorBogusNodeValue, eCaseMatters);
 }
 
 nsresult

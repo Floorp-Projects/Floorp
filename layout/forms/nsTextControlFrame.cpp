@@ -59,6 +59,7 @@
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
 #include "nsIEditorObserver.h"
+#include "nsEditProperty.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
@@ -2975,11 +2976,7 @@ nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
   if (!aBeforeEditorInit)
   {
     nsWeakFrame weakFrame(this);
-    if (value.IsEmpty()) {
-      ShowPlaceholder();
-    } else {
-      HidePlaceholder();
-    }
+    SetPlaceholderClass(value.IsEmpty(), aNotify);
     NS_ENSURE_STATE(weakFrame.IsAlive());
   }
 

@@ -468,58 +468,6 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep, nsIDOMNode **aResult)
   return NS_OK;
 }
 
-class AdoptFuncData {
-public:
-  AdoptFuncData(nsGenericElement *aElement,
-                nsNodeInfoManager *aNewNodeInfoManager, JSContext *aCx,
-                JSObject *aOldScope, JSObject *aNewScope,
-                nsCOMArray<nsINode> &aNodesWithProperties)
-    : mElement(aElement),
-      mNewNodeInfoManager(aNewNodeInfoManager),
-      mCx(aCx),
-      mOldScope(aOldScope),
-      mNewScope(aNewScope),
-      mNodesWithProperties(aNodesWithProperties)
-  {
-  }
-
-  nsGenericElement *mElement;
-  nsNodeInfoManager *mNewNodeInfoManager;
-  JSContext *mCx;
-  JSObject *mOldScope;
-  JSObject *mNewScope;
-  nsCOMArray<nsINode> &mNodesWithProperties;
-};
-
-PLDHashOperator
-AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
-{
-  nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aData);
-  NS_ASSERTION(attr, "non-nsIAttribute somehow made it into the hashmap?!");
-
-  AdoptFuncData *data = static_cast<AdoptFuncData*>(aUserArg);
-
-  // If we were passed an element we need to clone the attribute nodes and
-  // insert them into the element.
-  PRBool clone = data->mElement != nsnull;
-  nsCOMPtr<nsINode> node;
-  nsresult rv = nsNodeUtils::CloneAndAdopt(attr, clone, PR_TRUE,
-                                           data->mNewNodeInfoManager,
-                                           data->mCx, data->mOldScope,
-                                           data->mNewScope,
-                                           data->mNodesWithProperties,
-                                           nsnull, getter_AddRefs(node));
-
-  if (NS_SUCCEEDED(rv) && clone) {
-    nsCOMPtr<nsIDOMAttr> dummy, attribute = do_QueryInterface(node, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = data->mElement->SetAttributeNode(attribute, getter_AddRefs(dummy));
-    }
-  }
-
-  return NS_SUCCEEDED(rv) ? PL_DHASH_NEXT : PL_DHASH_STOP;
-}
-
 /* static */
 nsresult
 nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
@@ -657,22 +605,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     }
   }
 
-  if (elem) {
-    // aNode's attributes.
-    const nsDOMAttributeMap *map = elem->GetAttributeMap();
-    if (map) {
-      // If we're cloning we need to insert the cloned attribute nodes into the
-      // cloned element. We assume that the clone of an nsGenericElement is also
-      // an nsGenericElement.
-      nsGenericElement* elemClone =
-        aClone ? static_cast<nsGenericElement*>(clone.get()) : nsnull;
-      AdoptFuncData data(elemClone, nodeInfoManager, aCx, aOldScope, aNewScope,
-                         aNodesWithProperties);
-
-      PRUint32 count = map->Enumerate(AdoptFunc, &data);
-      NS_ENSURE_TRUE(count == map->Count(), NS_ERROR_FAILURE);
-    }
-  }
+  // XXX If there are any attribute nodes on this element with UserDataHandlers
+  // we should technically adopt/clone/import such attribute nodes and notify
+  // those handlers. However we currently don't have code to do so without
+  // also notifying when it's not safe so we're not doing that at this time.
 
   // The DOM spec says to always adopt/clone/import the children of attribute
   // nodes.

@@ -87,7 +87,7 @@ class nsIFile;
 class nsISelectionController;
 class nsIDOMEventTarget;
 
-#define kMOZEditorBogusNodeAttr NS_LITERAL_STRING("_moz_editor_bogus_node")
+#define kMOZEditorBogusNodeAttrAtom nsEditProperty::mozEditorBogusNode
 #define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
 
 /** implementation of an editor object.  it will be the controller/focal point 

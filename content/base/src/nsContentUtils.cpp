@@ -3530,6 +3530,12 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
     return PR_FALSE;
   }
 
+  NS_ASSERTION((aNode->IsNodeOfType(nsINode::eCONTENT) &&
+                static_cast<nsIContent*>(aNode)->
+                  IsInNativeAnonymousSubtree()) ||
+               sScriptBlockerCount == sRemovableScriptBlockerCount,
+               "Want to fire mutation events, but it's not safe");
+
   // global object will be null for documents that don't have windows.
   nsPIDOMWindow* window = doc->GetInnerWindow();
   // This relies on nsEventListenerManager::AddEventListener, which sets
