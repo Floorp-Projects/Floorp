@@ -137,7 +137,7 @@ public:
                                         nsIContent *aContent,
                                         PRUint32 aChangeType);
 
-  virtual nsresult NotifyOfAnchorJumpTo(nsIContent *aTarget);
+  virtual void NotifyOfAnchorJumpTo(nsIContent *aTarget);
 
   virtual nsresult FireAccessibleEvent(PRUint32 aEvent, nsIAccessible *aTarget);
 

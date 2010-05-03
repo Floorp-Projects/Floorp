@@ -23,18 +23,33 @@
 
     var p = iframe.contentDocument.getElementById('plugin1');
 
+    // This test is for bug 550026, which is inherently nondeterministic.
+    // If we hit that bug, the browser process would crash when the plugin
+    // crashes in crashInNestedLoop.  If not, we'll pass "spuriously".
     try {
       p.crashInNestedLoop();
-      ok(false, "p.crashInNestedLoop() should throw an exception");
+      // The plugin didn't crash when expected.  This happens sometimes.  Give
+      // it longer to crash.  If it crashes (but not at the apropriate time),
+      // soft fail with a todo; if it doesn't crash then something went wrong,
+      // so fail.
+      setTimeout(
+        function() {
+          try {
+            p.getPaintCount();
+            ok(false, "plugin should crash");
+          } catch (e) {
+            todo(false, "p.crashInNestedLoop() should throw an exception");
+          }
+
+          SimpleTest.finish();
+        },
+        1000);
     }
     catch (e) {
       ok(true, "p.crashInNestedLoop() should throw an exception");
+      SimpleTest.finish();
     }
 
-    // this test is for bug 550026, which is inherently
-    // nondeterministic.  if we hit that bug, the browser process
-    // would have crashed by now.  if not, we'll pass "spuriously"
-    SimpleTest.finish();
   }
 
   </script>

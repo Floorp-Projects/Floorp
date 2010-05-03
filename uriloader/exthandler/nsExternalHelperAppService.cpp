@@ -580,9 +580,9 @@ nsresult nsExternalHelperAppService::Init()
   }
 
   // Add an observer for profile change
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (!obs)
+    return NS_ERROR_FAILURE;
 
 #ifdef PR_LOGGING
   if (!mLog) {
@@ -592,7 +592,7 @@ nsresult nsExternalHelperAppService::Init()
   }
 #endif
 
-  rv = obs->AddObserver(this, "profile-before-change", PR_TRUE);
+  nsresult rv = obs->AddObserver(this, "profile-before-change", PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
   return obs->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
 }

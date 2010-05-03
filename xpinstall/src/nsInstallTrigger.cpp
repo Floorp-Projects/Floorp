@@ -256,7 +256,8 @@ nsInstallTrigger::HandleContent(const char * aContentType,
             }
             else
             {
-                nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+                nsCOMPtr<nsIObserverService> os =
+                  mozilla::services::GetObserverService();
                 if (os)
                     os->NotifyObservers(installInfo,
                                         "xpinstall-install-blocked",

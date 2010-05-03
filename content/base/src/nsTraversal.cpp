@@ -82,7 +82,7 @@ nsresult nsTraversal::TestNode(nsINode* aNode, PRInt16* _filtered)
 
     PRUint16 nodeType = 0;
     // Check the most common cases
-    if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+    if (aNode->IsElement()) {
         nodeType = nsIDOMNode::ELEMENT_NODE;
     }
     else if (aNode->IsNodeOfType(nsINode::eCONTENT)) {

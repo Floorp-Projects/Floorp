@@ -981,7 +981,8 @@ LookupStyleContext(nsIContent* aElement)
   if (!shell) {
     return nsnull;
   }
-  return nsComputedDOMStyle::GetStyleContextForContent(aElement, nsnull, shell);
+  return nsComputedDOMStyle::GetStyleContextForElement(aElement->AsElement(),
+                                                       nsnull, shell);
 }
 
 
@@ -1044,6 +1045,7 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
                                PRBool aUseSVGMode,
                                Value& aComputedValue)
 {
+  // XXXbz aTargetElement should be an Element
   NS_ABORT_IF_FALSE(aTargetElement, "null target element");
   NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
                     "we should only be able to actively animate nodes that "

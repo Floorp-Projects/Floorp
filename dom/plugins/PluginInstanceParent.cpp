@@ -1313,21 +1313,6 @@ PluginInstanceParent::AnswerPluginGotFocus()
 #endif
 }
 
-bool
-PluginInstanceParent::RecvProcessNativeEventsInRPCCall()
-{
-    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-#if defined(OS_WIN)
-    static_cast<PluginModuleParent*>(Manager())
-        ->ProcessNativeEventsInRPCCall();
-    return true;
-#else
-    NS_NOTREACHED(
-        "PluginInstanceParent::AnswerSetNestedEventState not implemented!");
-    return false;
-#endif
-}
-
 #ifdef OS_MACOSX
 void
 PluginInstanceParent::Invalidate()

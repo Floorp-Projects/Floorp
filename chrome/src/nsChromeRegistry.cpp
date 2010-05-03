@@ -524,7 +524,8 @@ nsChromeRegistry::Init()
     }
   }
 
-  nsCOMPtr<nsIObserverService> obsService (do_GetService("@mozilla.org/observer-service;1"));
+  nsCOMPtr<nsIObserverService> obsService =
+    mozilla::services::GetObserverService();
   if (obsService) {
     obsService->AddObserver(this, "command-line-startup", PR_TRUE);
     obsService->AddObserver(this, "profile-initial-state", PR_TRUE);
@@ -904,7 +905,7 @@ void
 nsChromeRegistry::FlushSkinCaches()
 {
   nsCOMPtr<nsIObserverService> obsSvc =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   NS_ASSERTION(obsSvc, "Couldn't get observer service.");
 
   obsSvc->NotifyObservers(static_cast<nsIChromeRegistry*>(this),
@@ -1030,7 +1031,7 @@ void
 nsChromeRegistry::FlushAllCaches()
 {
   nsCOMPtr<nsIObserverService> obsSvc =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   NS_ASSERTION(obsSvc, "Couldn't get observer service.");
 
   obsSvc->NotifyObservers((nsIChromeRegistry*) this,

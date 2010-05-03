@@ -427,7 +427,7 @@ nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aChild,
                                    PRInt32 aIndexInContainer)
 {
-  if (!aChild || !aChild->IsNodeOfType(nsINode::eELEMENT))
+  if (!aChild || !aChild->IsElement())
     return;
   //Note, we can't use IDs here, the observer may not always have an ID.
   //And to remember: the same observer can be referenced by many 

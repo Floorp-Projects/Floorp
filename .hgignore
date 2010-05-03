@@ -3,7 +3,7 @@
 # Filenames that should be ignored wherever they appear
 ~$
 \.py(c|o)$
-(^|/)TAGS$
+(?i)(^|/)TAGS$
 (^|/)ID$
 (^|/)\.DS_Store$
 

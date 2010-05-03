@@ -1048,20 +1048,11 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 
 .editBookmarkPanelHeaderButton,
 .editBookmarkPanelBottomButton {
-  -moz-appearance: none;
-  background: url("chrome://browser/skin/hud-style-button-middle-background.png") repeat-x #464646 center center;
-  border-width: 3px;
-  border-style: solid;
-  -moz-border-radius: 20px;
-  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
-  -moz-border-right-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
-  -moz-border-bottom-colors: rgba(128,128,128,0.35) rgba(0,0,0,0.5) rgba(255,255,255,0.15);
-  -moz-border-left-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
+  @hudButton@
   padding: 0 9px;
   margin: 6px;
   min-width: 79px;
   min-height: 22px;
-  color: #ffffff;
 }
 
 .editBookmarkPanelHeaderButton:hover:active,
@@ -1136,18 +1127,11 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 }
 
 #editBMPanel_folderMenuList {
-  -moz-appearance: none;
-  background: url("chrome://browser/skin/hud-style-button-middle-background.png") repeat-x #464646 center center;
-  border: 3px solid;
+  @hudButton@
   -moz-border-radius: 5px;
-  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
-  -moz-border-right-colors: rgba(53,53,53,1) rgba(53,53,53,1) rgba(162,162,162,1);
-  -moz-border-bottom-colors: rgba(128,128,128,0.35) rgba(0,0,0,0.5) rgba(255,255,255,0.15);
-  -moz-border-left-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
   margin: 0 3px !important;
   min-height: 22px;
   -moz-padding-start: 2px;
-  color: #ffffff !important;
 }
 
 #editBMPanel_folderMenuList:focus {
@@ -1271,21 +1255,14 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
 
 #editBookmarkPanel .expander-up,
 #editBookmarkPanel .expander-down {
-  -moz-appearance: none;
-  background: url("chrome://browser/skin/hud-style-button-middle-background.png") repeat-x #464646 center center;
-  border: 3px solid;
+  @hudButton@
   -moz-border-radius: 5px;
-  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
-  -moz-border-right-colors: rgba(53,53,53,1) rgba(53,53,53,1) rgba(162,162,162,1);
-  -moz-border-bottom-colors: rgba(128,128,128,0.35) rgba(0,0,0,0.5) rgba(255,255,255,0.15);
-  -moz-border-left-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
   -moz-margin-start: 4px;
   -moz-margin-end: 2px;
   padding: 0;
   -moz-padding-start: 4px;
   min-width: 10px;
   min-height: 22px;
-  color: #ffffff !important;
 }
 
 #editBookmarkPanel .expander-up:focus,
@@ -1926,18 +1903,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 /* Popup Buttons */
 #identity-popup-more-info-button {
-  -moz-appearance: none;
-  background: url("chrome://browser/skin/hud-style-button-middle-background.png") repeat-x #464646 center center;
-  border: 3px solid;
-  -moz-border-top-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
-  -moz-border-right-colors: rgba(53,53,53,1) rgba(53,53,53,1) rgba(162,162,162,1);
-  -moz-border-bottom-colors: rgba(128,128,128,0.35) rgba(0,0,0,0.5) rgba(255,255,255,0.15);
-  -moz-border-left-colors: rgba(0,0,0,0.35) rgba(26,26,26,0.5) rgba(255,255,255,0.4);
-  -moz-border-radius: 20px;
+  @hudButton@
   padding: 1px 9px;
   margin: 10px 0 0;
   min-height: 0px;
-  color: #fff;	
 }
 
 #identity-popup-more-info-button > .button-box > .button-text {

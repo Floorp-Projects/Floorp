@@ -379,8 +379,8 @@ ifdef JS_HAS_CTYPES
 export::
 		$(call SUBMAKE,,ctypes/libffi)
 
-clean::
-		$(call SUBMAKE,clean,ctypes/libffi)
+distclean clean::
+		$(call SUBMAKE,$@,ctypes/libffi)
 endif
 
 ifdef MOZ_SYNC_BUILD_FILES

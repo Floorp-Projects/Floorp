@@ -133,7 +133,9 @@ ifdef MOZ_SMIL
 XPIDLSRCS	+= \
 		nsIDOMSVGAnimateElement.idl \
 		nsIDOMSVGAnimateTransformElement.idl \
+		nsIDOMSVGAnimateMotionElement.idl \
 		nsIDOMSVGAnimationElement.idl \
+		nsIDOMSVGMpathElement.idl \
 		nsIDOMSVGSetElement.idl \
 		$(NULL)
 endif

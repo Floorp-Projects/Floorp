@@ -85,6 +85,7 @@
 #include "nsIWebProgress.h"
 #include "nsNetError.h"
 #include "nsDocShellLoadTypes.h"
+#include "mozilla/Services.h"
 
 #ifdef MOZ_XUL
 #include "nsXULAlertAccessible.h"
@@ -119,8 +120,8 @@ PRBool nsAccessibilityService::gIsShutdown = PR_TRUE;
 nsAccessibilityService::nsAccessibilityService()
 {
   // Add observers.
-  nsCOMPtr<nsIObserverService> observerService = 
-    do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
   if (!observerService)
     return;
 
@@ -155,11 +156,11 @@ nsAccessibilityService::Observe(nsISupports *aSubject, const char *aTopic,
   if (!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
 
     // Remove observers.
-    nsCOMPtr<nsIObserverService> observerService = 
-      do_GetService("@mozilla.org/observer-service;1");
-    if (observerService) {
+    nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+    if (observerService)
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    }
+
     nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
     if (progress)
       progress->RemoveProgressListener(static_cast<nsIWebProgressListener*>(this));
@@ -253,33 +254,45 @@ nsAccessibilityService::ProcessDocLoadEvent(nsIWebProgress *aWebProgress,
 }
 
 // nsIAccessibilityService
-nsresult
+void
 nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent *aTarget)
 {
+  nsIDocument *document = aTarget->GetCurrentDoc();
+  nsCOMPtr<nsIDOMNode> documentNode(do_QueryInterface(document));
+  if (!documentNode)
+    return;
+
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aTarget));
 
   nsCOMPtr<nsIAccessible> targetAcc;
   GetAccessibleFor(targetNode, getter_AddRefs(targetAcc));
 
+  // Getting the targetAcc above will have ensured accessible doc creation.
+  // XXX Bug 561683
+  nsRefPtr<nsDocAccessible> accessibleDoc =
+    nsAccessNode::GetDocAccessibleFor(documentNode);
+  if (!accessibleDoc)
+    return;
+
   // If the jump target is not accessible then fire an event for nearest
   // accessible in parent chain.
   if (!targetAcc) {
-    nsIDocument *document = aTarget->GetCurrentDoc();
-    nsCOMPtr<nsIDOMNode> documentNode(do_QueryInterface(document));
-    if (documentNode) {
-      nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
-        nsAccessNode::GetDocAccessibleFor(documentNode);
-      if (accessibleDoc)
         accessibleDoc->GetAccessibleInParentChain(targetNode, PR_TRUE,
                                                   getter_AddRefs(targetAcc));
-    }
+        nsCOMPtr<nsIAccessNode> accNode = do_QueryInterface(targetAcc);
+        accNode->GetDOMNode(getter_AddRefs(targetNode));
   }
 
-  if (targetAcc)
-    nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
-                            targetAcc);
+  NS_ASSERTION(targetNode,
+      "No accessible in parent chain!? Expect at least a document accessible.");
+  if (!targetNode)
+    return;
 
-  return NS_OK;
+  // XXX note in rare cases the node could go away before we flush the queue,
+  // for example if the node becomes inaccessible, or is removed from the DOM.
+  accessibleDoc->FireDelayedAccessibleEvent(
+                     nsIAccessibleEvent::EVENT_SCROLLING_START,
+                     targetNode);
 }
 
 // nsIAccessibilityService

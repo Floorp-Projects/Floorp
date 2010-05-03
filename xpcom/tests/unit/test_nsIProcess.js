@@ -231,6 +231,25 @@ function test_notify_killed()
   process.kill();
 }
 
+// test if killing a process that is already finished doesn't crash
+function test_kill_2()
+{
+  var file = get_test_program("TestQuickReturn");
+
+  for (var i = 0; i < 1000; i++) {
+    var process = Components.classes["@mozilla.org/process/util;1"]
+                          .createInstance(Components.interfaces.nsIProcess);
+    process.init(file);
+
+    process.run(false, [], 0);
+
+    try {
+      process.kill();
+    }
+    catch (e) { }
+  }
+}
+
 function run_test() {
   set_environment();
   test_kill();
@@ -240,4 +259,5 @@ function run_test() {
   test_unicode_app();
   do_test_pending();
   test_notify_blocking();
+  test_kill_2();
 }

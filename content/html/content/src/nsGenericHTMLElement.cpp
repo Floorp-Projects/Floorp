@@ -452,7 +452,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
     parent = parent->GetParent();
   }
 
-  nsIContent* docElement = GetCurrentDoc()->GetRootContent();
+  Element* docElement = GetCurrentDoc()->GetRootElement();
   nsIContent* content = frame->GetContent();
 
   if (content && (IsBody(content) || content == docElement)) {
@@ -1145,12 +1145,6 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
   }
 }
 
-PRBool
-nsGenericHTMLElement::IsNodeOfType(PRUint32 aFlags) const
-{
-  return !(aFlags & ~(eCONTENT | eELEMENT));
-}
-
 //----------------------------------------------------------------------
 
 
@@ -1571,6 +1565,9 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
 void
 nsGenericHTMLFormElement::UpdateEditableFormControlState()
 {
+  // nsCSSFrameConstructor::MaybeConstructLazily is based on the logic of this
+  // function, so should be kept in sync with that.
+
   ContentEditableTristate value = GetContentEditableValue();
   if (value != eInherit) {
     SetEditableFlag(!!value);
@@ -2240,7 +2237,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
 PRBool
 nsGenericHTMLFormElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eELEMENT | eHTML_FORM_CONTROL));
+  return !(aFlags & ~(eCONTENT | eHTML_FORM_CONTROL));
 }
 
 void

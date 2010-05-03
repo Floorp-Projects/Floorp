@@ -1096,7 +1096,7 @@ void
 nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
 {
   // Only check the manifest for root document nodes.
-  if (aElement != mDocument->GetRootContent()) {
+  if (aElement != mDocument->GetRootElement()) {
     return;
   }
 
