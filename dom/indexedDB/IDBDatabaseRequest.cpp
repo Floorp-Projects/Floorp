@@ -467,10 +467,14 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
 NS_IMETHODIMP
 IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
                                     PRUint16 aMode,
+                                    PRUint8 aArgCount,
                                     nsIIDBRequest** _retval)
 {
-  nsRefPtr<IDBRequest> request = GenerateRequest();
+  if (aArgCount < 2) {
+    aMode = nsIIDBObjectStore::READ_WRITE;
+  }
 
+  nsRefPtr<IDBRequest> request = GenerateRequest();
 
   nsRefPtr<OpenObjectStoreHelper> helper =
     new OpenObjectStoreHelper(this, request, aName, aMode);
