@@ -119,7 +119,7 @@ sum_many_##name##_cdecl(                                                       \
 #include "typedefs.h"
 #undef ABI
 
-#if defined(_WIN32) && !defined(__WIN64)
+#if defined(_WIN32) && !defined(_WIN64)
 
 void NS_STDCALL
 test_void_t_stdcall()
@@ -132,7 +132,7 @@ test_void_t_stdcall()
 #include "typedefs.h"
 #undef ABI
 
-#endif /* defined(_WIN32) && !defined(__WIN64) */
+#endif /* defined(_WIN32) && !defined(_WIN64) */
 
 #define DEFINE_TYPE(name, type, ffiType)                                       \
 struct align_##name {                                                          \
@@ -319,13 +319,13 @@ test_closure_cdecl(PRInt8 i, PRInt32 (*f)(PRInt8))
   return f(i);
 }
 
-#if defined(_WIN32) && !defined(__WIN64)
+#if defined(_WIN32) && !defined(_WIN64)
 PRInt32
 test_closure_cdecl(PRInt8 i, PRInt32 (NS_STDCALL *f)(PRInt8))
 {
   return f(i);
 }
-#endif /* defined(_WIN32) && !defined(__WIN64) */
+#endif /* defined(_WIN32) && !defined(_WIN64) */
 
 template <typename T> struct PromotedTraits {
   typedef T type;

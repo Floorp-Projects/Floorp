@@ -97,6 +97,7 @@
 #include "prlog.h"
 #include "rdf.h"
 #include "nsIFrame.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsIXBLService.h"
 #include "nsCExternalHandlerService.h"
 #include "nsMimeTypes.h"
@@ -126,6 +127,9 @@
 #include "nsXULPopupManager.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsURILoader.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 //
@@ -642,8 +646,8 @@ nsXULDocument::OnDocumentParserError()
   if (mCurrentPrototype && mMasterPrototype != mCurrentPrototype) {
     nsCOMPtr<nsIURI> uri = mCurrentPrototype->GetURI();
     if (IsChromeURI(uri)) {
-      nsCOMPtr<nsIObserverService> os(
-        do_GetService("@mozilla.org/observer-service;1"));
+      nsCOMPtr<nsIObserverService> os =
+        mozilla::services::GetObserverService();
       if (os)
         os->NotifyObservers(uri, "xul-overlay-parsererror",
                             EmptyString().get());
@@ -983,10 +987,13 @@ nsXULDocument::AttributeWillChange(nsIDocument* aDocument,
 
 void
 nsXULDocument::AttributeChanged(nsIDocument* aDocument,
-                                nsIContent* aElement, PRInt32 aNameSpaceID,
+                                nsIContent* aElementContent, PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute, PRInt32 aModType)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
+
+    // XXXbz once we change AttributeChanged to take Element, we can nix this line
+    Element* aElement = aElementContent->AsElement();
 
     // Do this here so that all the exit paths below don't leave this undone
     nsXMLDocument::AttributeChanged(aDocument, aElement, aNameSpaceID,
@@ -1135,8 +1142,10 @@ nsXULDocument::AddElementForID(nsIContent* aElement)
     NS_PRECONDITION(aElement != nsnull, "null ptr");
     if (! aElement)
         return NS_ERROR_NULL_POINTER;
+    if (!aElement->IsElement())
+        return NS_ERROR_UNEXPECTED;
 
-    UpdateIdTableEntry(aElement);
+    UpdateIdTableEntry(aElement->AsElement());
     return NS_OK;
 }
 
@@ -1667,9 +1676,9 @@ nsXULDocument::GetElementById(const nsAString& aId,
 
     nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(atom);
     if (entry) {
-        nsIContent* content = entry->GetIdContent();
-        if (content)
-            return CallQueryInterface(content, aReturn);
+        Element* element = entry->GetIdElement();
+        if (element)
+            return CallQueryInterface(element, aReturn);
     }
     nsRefMapEntry* refEntry = mRefMap.GetEntry(atom);
     if (refEntry) {
@@ -1681,7 +1690,7 @@ nsXULDocument::GetElementById(const nsAString& aId,
 }
 
 nsresult
-nsXULDocument::AddElementToDocumentPre(nsIContent* aElement)
+nsXULDocument::AddElementToDocumentPre(Element* aElement)
 {
     // Do a bunch of work that's necessary when an element gets added
     // to the XUL Document.
@@ -1724,7 +1733,7 @@ nsXULDocument::AddElementToDocumentPre(nsIContent* aElement)
 }
 
 nsresult
-nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
+nsXULDocument::AddElementToDocumentPost(Element* aElement)
 {
     // We need to pay special attention to the keyset tag to set up a listener
     if (aElement->NodeInfo()->Equals(nsGkAtoms::keyset, kNameSpaceID_XUL)) {
@@ -1763,13 +1772,15 @@ nsXULDocument::AddElementToDocumentPost(nsIContent* aElement)
 }
 
 NS_IMETHODIMP
-nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
+nsXULDocument::AddSubtreeToDocument(nsIContent* aContent)
 {
-    NS_ASSERTION(aElement->GetCurrentDoc() == this, "Element not in doc!");
+    NS_ASSERTION(aContent->GetCurrentDoc() == this, "Element not in doc!");
     // From here on we only care about elements.
-    if (!aElement->IsNodeOfType(nsINode::eELEMENT)) {
+    if (!aContent->IsElement()) {
         return NS_OK;
     }
+
+    Element* aElement = aContent->AsElement();
 
     // Do pre-order addition magic
     nsresult rv = AddElementToDocumentPre(aElement);
@@ -1789,12 +1800,14 @@ nsXULDocument::AddSubtreeToDocument(nsIContent* aElement)
 }
 
 NS_IMETHODIMP
-nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
+nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aContent)
 {
     // From here on we only care about elements.
-    if (!aElement->IsNodeOfType(nsINode::eELEMENT)) {
+    if (!aContent->IsElement()) {
         return NS_OK;
     }
+
+    Element* aElement = aContent->AsElement();
 
     // Do a bunch of cleanup to remove an element from the XUL
     // document.
@@ -2427,7 +2440,7 @@ nsXULDocument::PrepareToWalk()
 
     PRUint32 piInsertionPoint = 0;
     if (mState != eState_Master) {
-        piInsertionPoint = IndexOf(GetRootContent());
+        piInsertionPoint = IndexOf(GetRootElement());
         NS_ASSERTION(piInsertionPoint >= 0,
                      "No root content when preparing to walk overlay!");
     }
@@ -2448,7 +2461,7 @@ nsXULDocument::PrepareToWalk()
 
     // Do one-time initialization if we're preparing to walk the
     // master document's prototype.
-    nsCOMPtr<nsIContent> root;
+    nsCOMPtr<Element> root;
 
     if (mState == eState_Master) {
         // Add the root element
@@ -2845,6 +2858,7 @@ FirePendingMergeNotification(nsIURI* aKey, nsCOMPtr<nsIObserver>& aObserver, voi
 nsresult
 nsXULDocument::ResumeWalk()
 {
+    NS_TIME_FUNCTION;
     // Walk the prototype and build the delegate content model. The
     // walk is performed in a top-down, left-to-right fashion. That
     // is, a parent is built before any of its children; a node is
@@ -2881,7 +2895,7 @@ nsXULDocument::ResumeWalk()
                     // document hookup done when it's successfully
                     // resolved.)
                     if (mState == eState_Master) {
-                        AddElementToDocumentPost(element);
+                        AddElementToDocumentPost(element->AsElement());
 
                         if (element->NodeInfo()->Equals(nsGkAtoms::style,
                                                         kNameSpaceID_XHTML) ||
@@ -2934,7 +2948,7 @@ nsXULDocument::ResumeWalk()
                 nsXULPrototypeElement* protoele =
                     static_cast<nsXULPrototypeElement*>(childproto);
 
-                nsCOMPtr<nsIContent> child;
+                nsCOMPtr<Element> child;
 
                 if (!processingOverlayHookupNodes) {
                     rv = CreateElementFromPrototype(protoele,
@@ -3058,7 +3072,7 @@ nsXULDocument::ResumeWalk()
                 }
 
                 nsIContent* parent = processingOverlayHookupNodes ?
-                    GetRootContent() : element.get();
+                    GetRootElement() : element.get();
 
                 if (parent) {
                     // an inline script could have removed the root element
@@ -3661,7 +3675,7 @@ nsXULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
 
 nsresult
 nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
-                                          nsIContent** aResult)
+                                          Element** aResult)
 {
     // Create a content model element from a prototype element.
     NS_PRECONDITION(aPrototype != nsnull, "null ptr");
@@ -3684,7 +3698,7 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
     }
 #endif
 
-    nsCOMPtr<nsIContent> result;
+    nsCOMPtr<Element> result;
 
     if (aPrototype->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
         // If it's a XUL element, it'll be lightweight until somebody
@@ -3702,9 +3716,12 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
                                                     aPrototype->mNodeInfo->GetPrefixAtom(),
                                                     aPrototype->mNodeInfo->NamespaceID());
         if (!newNodeInfo) return NS_ERROR_OUT_OF_MEMORY;
-        rv = NS_NewElement(getter_AddRefs(result), newNodeInfo->NamespaceID(),
+        nsCOMPtr<nsIContent> content;
+        rv = NS_NewElement(getter_AddRefs(content), newNodeInfo->NamespaceID(),
                            newNodeInfo, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
+
+        result = content->AsElement();
 
 #ifdef MOZ_XTF
         if (result && newNodeInfo->NamespaceID() > kNameSpaceID_LastBuiltin) {
@@ -3723,11 +3740,11 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
 
 nsresult
 nsXULDocument::CreateOverlayElement(nsXULPrototypeElement* aPrototype,
-                                    nsIContent** aResult)
+                                    Element** aResult)
 {
     nsresult rv;
 
-    nsCOMPtr<nsIContent> element;
+    nsCOMPtr<Element> element;
     rv = CreateElementFromPrototype(aPrototype, getter_AddRefs(element));
     if (NS_FAILED(rv)) return rv;
 
@@ -3918,7 +3935,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
     if (id.IsEmpty()) {
         // mOverlay is a direct child of <overlay> and has no id.
         // Insert it under the root element in the base document.
-        nsIContent* root = mDocument->GetRootContent();
+        Element* root = mDocument->GetRootElement();
         if (!root) {
             return eResolve_Error;
         }
@@ -4219,15 +4236,12 @@ nsXULDocument::TemplateBuilderHookup::Resolve()
 //----------------------------------------------------------------------
 
 nsresult
-nsXULDocument::FindBroadcaster(nsIContent* aElement,
+nsXULDocument::FindBroadcaster(Element* aElement,
                                nsIDOMElement** aListener,
                                nsString& aBroadcasterID,
                                nsString& aAttribute,
                                nsIDOMElement** aBroadcaster)
 {
-    NS_ASSERTION(aElement->IsNodeOfType(nsINode::eELEMENT),
-                 "Only pass elements into FindBroadcaster!");
-
     nsresult rv;
     nsINodeInfo *ni = aElement->NodeInfo();
     *aListener = nsnull;
@@ -4311,7 +4325,7 @@ nsXULDocument::FindBroadcaster(nsIContent* aElement,
 }
 
 nsresult
-nsXULDocument::CheckBroadcasterHookup(nsIContent* aElement,
+nsXULDocument::CheckBroadcasterHookup(Element* aElement,
                                       PRBool* aNeedsHookup,
                                       PRBool* aDidResolve)
 {
@@ -4607,11 +4621,11 @@ nsXULDocument::IsDocumentRightToLeft()
 {
     // setting the localedir attribute on the root element forces a
     // specific direction for the document.
-    nsIContent* content = GetRootContent();
-    if (content) {
+    Element* element = GetRootElement();
+    if (element) {
         static nsIContent::AttrValuesArray strings[] =
             {&nsGkAtoms::ltr, &nsGkAtoms::rtl, nsnull};
-        switch (content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::localedir,
+        switch (element->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::localedir,
                                          strings, eCaseMatters)) {
             case 0: return PR_FALSE;
             case 1: return PR_TRUE;
@@ -4678,15 +4692,15 @@ nsXULDocument::GetDocumentLWTheme()
     if (mDocLWTheme == Doc_Theme_Uninitialized) {
         mDocLWTheme = Doc_Theme_None; // No lightweight theme by default
 
-        nsIContent* content = GetRootContent();
+        Element* element = GetRootElement();
         nsAutoString hasLWTheme;
-        if (content &&
-            content->GetAttr(kNameSpaceID_None, nsGkAtoms::lwtheme, hasLWTheme) &&
+        if (element &&
+            element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwtheme, hasLWTheme) &&
             !(hasLWTheme.IsEmpty()) &&
             hasLWTheme.EqualsLiteral("true")) {
             mDocLWTheme = Doc_Theme_Neutral;
             nsAutoString lwTheme;
-            content->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
+            element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
             if (!(lwTheme.IsEmpty())) {
                 if (lwTheme.EqualsLiteral("dark"))
                     mDocLWTheme = Doc_Theme_Dark;

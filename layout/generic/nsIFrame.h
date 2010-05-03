@@ -2507,7 +2507,6 @@ protected:
 
 private:
   nsRect* GetOverflowAreaProperty(PRBool aCreateIfNecessary = PR_FALSE);
-  friend class nsListBoxLayout;  // needs SetOverflowRect
   void SetOverflowRect(const nsRect& aRect);
 
 #ifdef NS_DEBUG

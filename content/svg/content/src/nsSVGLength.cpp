@@ -509,13 +509,13 @@ float nsSVGLength::AxisLength()
 float nsSVGLength::EmLength()
 {
   nsCOMPtr<nsIContent> element = do_QueryReferent(mElement);
-  return nsSVGUtils::GetFontSize(element);
+  return nsSVGUtils::GetFontSize(element->AsElement());
 }
 
 float nsSVGLength::ExLength()
 {
   nsCOMPtr<nsIContent> element = do_QueryReferent(mElement);
-  return nsSVGUtils::GetFontXHeight(element);
+  return nsSVGUtils::GetFontXHeight(element->AsElement());
 }
 
 PRBool nsSVGLength::IsValidUnitType(PRUint16 unit)

@@ -912,7 +912,7 @@ FindSelectionRoot(nsEditor *aEditor, nsIContent *aContent)
 
   nsIContent *root;
   if (document->HasFlag(NODE_IS_EDITABLE)) {
-    NS_IF_ADDREF(root = document->GetRootContent());
+    NS_IF_ADDREF(root = document->GetRootElement());
 
     return root;
   }

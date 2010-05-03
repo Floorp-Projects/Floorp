@@ -2049,7 +2049,7 @@ nsresult nsHTMLMediaElement::Observe(nsISupports* aSubject,
 PRBool
 nsHTMLMediaElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eELEMENT | eMEDIA));
+  return !(aFlags & ~(eCONTENT | eMEDIA));
 }
 
 void nsHTMLMediaElement::NotifyAddedSource()

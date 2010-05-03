@@ -79,14 +79,25 @@ CPPSRCS 		=			\
 	mozalloc_oom.cpp			\
 	$(NULL)
 
-ifdef WRAP_STL_INCLUDES
-ifdef GCC_VERSION
+ifdef WRAP_STL_INCLUDES #{
+ifdef GCC_VERSION #{
 EXPORTS_mozilla	+= throw_gcc.h
-endif
-ifdef _MSC_VER
+else
+ifdef _MSC_VER #{
 EXPORTS_mozilla	+= throw_msvc.h
-CPPSRCS		+= throw_msvc.cpp
-endif
-endif  # WRAP_STL_INCLUDES
+ifdef MOZ_MSVC_STL_WRAP__Throw #{
+EXPORTS_mozilla	+= msvc_throw_wrapper.h
+CPPSRCS		+= msvc_throw_wrapper.cpp
+else
+ifdef MOZ_MSVC_STL_WRAP__RAISE #{
+EXPORTS_mozilla	+= msvc_raise_wrappers.h
+CPPSRCS		+= msvc_raise_wrappers.cpp
+else
+$(error Unknown STL wrapper tactic for MSVC)
+endif #}
+endif #}
+endif #}
+endif #}
+endif #}
 
 include $(topsrcdir)/config/rules.mk

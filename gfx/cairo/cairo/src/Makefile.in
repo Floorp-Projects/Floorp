@@ -54,6 +54,7 @@ LIBRARY_NAME    = mozcairo
 LIBXUL_LIBRARY = 1
 
 ifdef GNU_CC
+OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
 MODULE_OPTIMIZE_FLAGS = -O2
 else
 ifeq ($(OS_ARCH),SunOS)
@@ -209,8 +210,8 @@ EXPORTS_cairo += $(PDF_EXPORTS) $(PS_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += cairo-qpainter-surface.cpp
-EXPORTS_cairo += cairo-qpainter.h
+CPPSRCS += cairo-qt-surface.cpp
+EXPORTS_cairo += cairo-qt.h
 OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 

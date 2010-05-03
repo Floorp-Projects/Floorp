@@ -50,6 +50,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch2.h"
 #include "nsIJSContextStack.h"
+#include "mozilla/Services.h"
 
 #include <math.h>
 
@@ -276,7 +277,7 @@ nsGeolocationRequest::Allow()
   }
 
   if (lastPosition && maximumAge > 0 &&
-      ( (PR_Now() / PR_USEC_PER_MSEC) - maximumAge <=
+      ( PRTime(PR_Now() / PR_USEC_PER_MSEC) - maximumAge <=
         PRTime(cachedPositionTime) )) {
     // okay, we can return a cached position
     mAllowed = PR_TRUE;
@@ -383,7 +384,7 @@ nsresult nsGeolocationService::Init()
     return NS_ERROR_FAILURE;
 
   // geolocation service can be enabled -> now register observer
-  nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs)
     return NS_ERROR_FAILURE;
 
@@ -439,7 +440,7 @@ nsGeolocationService::Observe(nsISupports* aSubject,
 {
   if (!strcmp("quit-application", aTopic))
   {
-    nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, "quit-application");
     }

@@ -93,6 +93,7 @@
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
 #include "ImageLayers.h"
+#include "Element.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -106,6 +107,7 @@
 #endif
 
 using namespace mozilla::layers;
+using namespace mozilla::dom;
 
 /**
  * A namespace class for static layout utilities.
@@ -3571,9 +3573,9 @@ nsLayoutUtils::GetEditableRootContentByContentEditable(nsIDocument* aDocument)
     return nsnull;
   }
 
-  nsIContent* rootContent = aDocument->GetRootContent();
-  if (rootContent && rootContent->IsEditable()) {
-    return rootContent;
+  Element* rootElement = aDocument->GetRootElement();
+  if (rootElement && rootElement->IsEditable()) {
+    return rootElement;
   }
 
   // If there are no editable root element, check its <body> element.

@@ -162,6 +162,9 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsRange.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsIURIFixup.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 //-----------------------------------------------------
 // PR LOGGING
@@ -558,7 +561,7 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
 
   // XXX This isn't really correct...
   if (!mPrt->mPrintObject->mDocument ||
-      !mPrt->mPrintObject->mDocument->GetRootContent())
+      !mPrt->mPrintObject->mDocument->GetRootElement())
     return NS_ERROR_GFX_PRINTER_STARTDOC;
 
   // Create the linkage from the sub-docs back to the content element
@@ -1127,9 +1130,9 @@ nsPrintEngine::IsParentAFrameSet(nsIDocShell * aParent)
   nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(aParent);
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (doc) {
-    nsIContent *rootContent = doc->GetRootContent();
-    if (rootContent) {
-      isFrameSet = HasFramesetChild(rootContent);
+    nsIContent *rootElement = doc->GetRootElement();
+    if (rootElement) {
+      isFrameSet = HasFramesetChild(rootElement);
     }
   }
   return isFrameSet;
@@ -1250,9 +1253,9 @@ nsPrintEngine::MapContentToWebShells(nsPrintObject* aRootPO,
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
   if (!doc) return;
 
-  nsIContent* rootContent = doc->GetRootContent();
-  if (rootContent) {
-    MapContentForPO(aPO, rootContent);
+  Element* rootElement = doc->GetRootElement();
+  if (rootElement) {
+    MapContentForPO(aPO, rootElement);
   } else {
     NS_WARNING("Null root content on (sub)document.");
   }
@@ -2821,24 +2824,33 @@ already_AddRefed<nsIDOMWindow>
 nsPrintEngine::FindFocusedDOMWindow()
 {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm) {
-    nsCOMPtr<nsIDOMWindow> domWin;
-    fm->GetFocusedWindow(getter_AddRefs(domWin));
-    if (domWin && IsWindowsInOurSubTree(domWin))
-      return domWin.forget();
+  NS_ENSURE_TRUE(fm, nsnull);
+
+  nsCOMPtr<nsPIDOMWindow> window(mDocument->GetWindow());
+  NS_ENSURE_TRUE(window, nsnull);
+
+  nsCOMPtr<nsPIDOMWindow> rootWindow = window->GetPrivateRoot();
+  NS_ENSURE_TRUE(rootWindow, nsnull);
+
+  nsPIDOMWindow* focusedWindow;
+  nsFocusManager::GetFocusedDescendant(rootWindow, PR_TRUE, &focusedWindow);
+  NS_ENSURE_TRUE(focusedWindow, nsnull);
+
+  if (IsWindowsInOurSubTree(focusedWindow)) {
+    return focusedWindow;
   }
 
+  NS_IF_RELEASE(focusedWindow);
   return nsnull;
 }
 
 //---------------------------------------------------------------------
 PRBool
-nsPrintEngine::IsWindowsInOurSubTree(nsIDOMWindow * aDOMWindow)
+nsPrintEngine::IsWindowsInOurSubTree(nsPIDOMWindow * window)
 {
   PRBool found = PR_FALSE;
 
   // now check to make sure it is in "our" tree of docshells
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aDOMWindow));
   if (window) {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
       do_QueryInterface(window->GetDocShell());

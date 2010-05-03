@@ -70,6 +70,9 @@
 #include "nsRuleData.h"
 #include "nsContentErrors.h"
 #include "nsRuleProcessorData.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::HTMLColorRule, nsIStyleRule)
 
@@ -228,65 +231,61 @@ static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
 NS_IMETHODIMP
 nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
-  nsIContent *content = aData->mContent;
+  nsRuleWalker *ruleWalker = aData->mRuleWalker;
+  if (aData->mIsHTMLContent) {
+    nsIAtom* tag = aData->mContentTag;
 
-  if (content) {
-    nsRuleWalker *ruleWalker = aData->mRuleWalker;
-    if (aData->mIsHTMLContent) {
-      nsIAtom* tag = aData->mContentTag;
-
-      // if we have anchor colors, check if this is an anchor with an href
-      if (tag == nsGkAtoms::a) {
-        if (mLinkRule || mVisitedRule || mActiveRule) {
-          PRUint32 state = aData->GetContentStateForVisitedHandling(
-                                    ruleWalker->VisitedHandling(),
-                                    // If the node being matched is a link,
-                                    // it's the relevant link.
-                                    aData->IsLink());
-          if (mLinkRule && (state & NS_EVENT_STATE_UNVISITED)) {
-            ruleWalker->Forward(mLinkRule);
-            ruleWalker->SetHaveRelevantLink();
-          }
-          else if (mVisitedRule && (state & NS_EVENT_STATE_VISITED)) {
-            ruleWalker->Forward(mVisitedRule);
-            ruleWalker->SetHaveRelevantLink();
-          }
-
-          // No need to add to the active rule if it's not a link
-          if (mActiveRule && aData->IsLink() &&
-              (state & NS_EVENT_STATE_ACTIVE)) {
-            ruleWalker->Forward(mActiveRule);
-          }
-        } // end link/visited/active rules
-      } // end A tag
-      // add the rule to handle text-align for a <th>
-      else if (tag == nsGkAtoms::th) {
-        ruleWalker->Forward(mTableTHRule);
-      }
-      else if (tag == nsGkAtoms::table) {
-        if (aData->mCompatMode == eCompatibility_NavQuirks) {
-          nscolor bodyColor;
-          nsresult rv =
-            GetBodyColor(ruleWalker->CurrentNode()->GetPresContext(),
-                         &bodyColor);
-          if (NS_SUCCEEDED(rv) &&
-              (!mDocumentColorRule || bodyColor != mDocumentColorRule->mColor)) {
-            NS_IF_RELEASE(mDocumentColorRule);
-            mDocumentColorRule = new HTMLColorRule();
-            if (mDocumentColorRule) {
-              NS_ADDREF(mDocumentColorRule);
-              mDocumentColorRule->mColor = bodyColor;
-            }
-          }
-          if (mDocumentColorRule)
-            ruleWalker->Forward(mDocumentColorRule);
+    // if we have anchor colors, check if this is an anchor with an href
+    if (tag == nsGkAtoms::a) {
+      if (mLinkRule || mVisitedRule || mActiveRule) {
+        PRUint32 state = aData->GetContentStateForVisitedHandling(
+                                  ruleWalker->VisitedHandling(),
+                                  // If the node being matched is a link,
+                                  // it's the relevant link.
+                                  aData->IsLink());
+        if (mLinkRule && (state & NS_EVENT_STATE_UNVISITED)) {
+          ruleWalker->Forward(mLinkRule);
+          ruleWalker->SetHaveRelevantLink();
         }
+        else if (mVisitedRule && (state & NS_EVENT_STATE_VISITED)) {
+          ruleWalker->Forward(mVisitedRule);
+          ruleWalker->SetHaveRelevantLink();
+        }
+
+        // No need to add to the active rule if it's not a link
+        if (mActiveRule && aData->IsLink() &&
+            (state & NS_EVENT_STATE_ACTIVE)) {
+          ruleWalker->Forward(mActiveRule);
+        }
+      } // end link/visited/active rules
+    } // end A tag
+    // add the rule to handle text-align for a <th>
+    else if (tag == nsGkAtoms::th) {
+      ruleWalker->Forward(mTableTHRule);
+    }
+    else if (tag == nsGkAtoms::table) {
+      if (aData->mCompatMode == eCompatibility_NavQuirks) {
+        nscolor bodyColor;
+        nsresult rv =
+          GetBodyColor(ruleWalker->CurrentNode()->GetPresContext(),
+                       &bodyColor);
+        if (NS_SUCCEEDED(rv) &&
+            (!mDocumentColorRule || bodyColor != mDocumentColorRule->mColor)) {
+          NS_IF_RELEASE(mDocumentColorRule);
+          mDocumentColorRule = new HTMLColorRule();
+          if (mDocumentColorRule) {
+            NS_ADDREF(mDocumentColorRule);
+            mDocumentColorRule->mColor = bodyColor;
+          }
+        }
+        if (mDocumentColorRule)
+          ruleWalker->Forward(mDocumentColorRule);
       }
-    } // end html element
+    }
+  } // end html element
 
     // just get the style rules from the content
-    content->WalkContentStyleRules(ruleWalker);
-  }
+  aData->mElement->WalkContentStyleRules(ruleWalker);
 
   return NS_OK;
 }
@@ -326,11 +325,10 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
   // needed.
 
   // Result is true for |href| changes on HTML links if we have link rules.
-  nsIContent *content = aData->mContent;
+  Element *element = aData->mElement;
   if (aData->mAttribute == nsGkAtoms::href &&
       (mLinkRule || mVisitedRule || mActiveRule) &&
-      content &&
-      content->IsHTML() &&
+      element->IsHTML() &&
       aData->mContentTag == nsGkAtoms::a) {
     return eRestyle_Self;
   }
@@ -339,7 +337,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
   // to descendants of body, when we're already reresolving.
 
   // Handle the content style rules.
-  if (content && content->IsAttributeMapped(aData->mAttribute)) {
+  if (element->IsAttributeMapped(aData->mAttribute)) {
     return eRestyle_Self;
   }
 
