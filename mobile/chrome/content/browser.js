@@ -182,7 +182,7 @@ function onDebugKeyPress(ev) {
   const l = 76;  // restart lazy crawl
   const m = 77;  // fix mouseout
   const n = 78;
-  const o = 79;
+  const o = 79;  // toggle orientation
   const p = 80;  // debug tiles in pool order
   const q = 81;
   const r = 82;  // reset visible rect
@@ -300,6 +300,12 @@ function onDebugKeyPress(ev) {
     Util.dumpLn("renderMode:", bv._renderMode);
     Util.dumpLn("batchOps:",bv._batchOps.length);
     bv.resumeRendering();
+    break;
+  case o:
+    if (Util.isPortrait())
+      window.top.resizeTo(800,480);
+    else
+      window.top.resizeTo(480,800);
     break;
   case p:
     let tc = bv._tileManager._tileCache;
