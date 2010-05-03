@@ -423,7 +423,7 @@ window.Items = {
     $('.tab, .group').each(function() {
       $this = $(this);
       var item = $this.data('item');  
-      if(!item.parent && !$this.hasClass('phantom'))
+      if(item && !item.parent && !$this.hasClass('phantom'))
         items.push(item);
     });
     

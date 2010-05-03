@@ -164,10 +164,61 @@ window.Rect.prototype = {
 // Currently supports only onClose. 
 // TODO generalize for any number of events
 window.Subscribable = function() {
+  this.subscribers = {};
   this.onCloseSubscribers = null;
 };
 
 window.Subscribable.prototype = {
+  // ----------
+  // Function: addSubscriber
+  // The given callback will be called when the Subscribable fires the given event.
+  // The refObject is used to facilitate removal if necessary. 
+  addSubscriber: function(refObject, eventName, callback) {
+    if(!this.subscribers[eventName])
+      this.subscribers[eventName] = [];
+      
+    var subs = this.subscribers[eventName];
+    var existing = jQuery.grep(subs, function(element) {
+      return element.refObject == refObject;
+    });
+    
+    if(existing.length) {
+      Utils.assert('should only ever be one', existing.length == 1);
+      existing[0].callback = callback;
+    } else {  
+      subs.push({
+        refObject: refObject, 
+        callback: callback
+      });
+    }
+  },
+  
+  // ----------
+  // Function: removeSubscriber
+  // Removes the callback associated with refObject for the given event. 
+  removeSubscriber: function(refObject, eventName) {
+    if(!this.subscribers[eventName])
+      return;
+      
+    this.subscribers[eventName] = jQuery.grep(this.subscribers[eventName], function(element) {
+      return element.refObject == refObject;
+    }, true);
+  },
+  
+  // ----------
+  // Function: _sendToSubscribers
+  // Internal routine. Used by the Subscribable to fire events.
+  _sendToSubscribers: function(eventName, eventInfo) {
+    if(!this.subscribers[eventName])
+      return;
+      
+    var self = this;
+    var subsCopy = $.merge([], this.subscribers[eventName]);
+    $.each(subsCopy, function(index, object) { 
+      object.callback(self, eventInfo);
+    });
+  },
+  
   // ----------
   // Function: addOnClose
   // The given callback will be called when the Subscribable fires its onClose.
