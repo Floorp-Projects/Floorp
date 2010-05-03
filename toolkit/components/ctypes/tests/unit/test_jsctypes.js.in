@@ -1348,10 +1348,9 @@ function run_StructType_tests() {
   run_type_ctor_class_tests(ctypes.StructType,
     ctypes.StructType("s", [{"a": ctypes.int32_t}, {"b": ctypes.int64_t}]),
     ctypes.StructType("t", [{"c": ctypes.int32_t}, {"d": ctypes.int64_t}]),
-    [ "fields" ], [], [], [ "addressOfField" ], [ "a", "b" ]);
+    [ "fields" ], [ "define" ], [], [ "addressOfField" ], [ "a", "b" ]);
 
   do_check_throws(function() { ctypes.StructType(); }, Error);
-  do_check_throws(function() { ctypes.StructType("a"); }, Error);
   do_check_throws(function() { ctypes.StructType("a", [], 5); }, Error);
   do_check_throws(function() { ctypes.StructType(null, []); }, Error);
   do_check_throws(function() { ctypes.StructType("a", null); }, Error);
@@ -1377,6 +1376,53 @@ function run_StructType_tests() {
   }, Error);
   do_check_throws(function() {
     ctypes.StructType("a", [{"x":ctypes.int32_t()}]);
+  }, Error);
+
+  // Check that opaque structs work.
+  let opaque_t = ctypes.StructType("a");
+  do_check_eq(opaque_t.name, "a");
+  do_check_eq(opaque_t.toString(), "type a");
+  do_check_eq(opaque_t.toSource(), 'ctypes.StructType("a")');
+  do_check_true(opaque_t.prototype === undefined);
+  do_check_true(opaque_t.fields === undefined);
+  do_check_true(opaque_t.size === undefined);
+  do_check_throws(function() { opaque_t(); }, Error);
+  let opaqueptr_t = opaque_t.ptr;
+  do_check_true(opaqueptr_t.targetType === opaque_t);
+  do_check_eq(opaqueptr_t.name, "a*");
+  do_check_eq(opaqueptr_t.toString(), "type a*");
+  do_check_eq(opaqueptr_t.toSource(), 'ctypes.StructType("a").ptr');
+
+  // Check that type checking works with opaque structs.
+  let opaqueptr = opaqueptr_t();
+  opaqueptr.value = opaqueptr_t(1);
+  do_check_eq(ptrValue(opaqueptr), 1);
+  do_check_throws(function() {
+    opaqueptr.value = ctypes.StructType("a").ptr();
+  }, TypeError);
+
+  // Check that 'define' works.
+  do_check_throws(function() { opaque_t.define(); }, Error);
+  do_check_throws(function() { opaque_t.define([], 0); }, Error);
+  do_check_throws(function() { opaque_t.define([{}]); }, Error);
+  do_check_throws(function() { opaque_t.define([{ a: 0 }]); }, Error);
+  do_check_throws(function() {
+    opaque_t.define([{ a: ctypes.int32_t, b: ctypes.int64_t }]);
+  }, Error);
+
+  // Check that circular references work with opaque structs...
+  // but not crazy ones.
+  do_check_throws(function() { opaque_t.define([{ b: opaque_t }]); }, Error);
+  let circular_t = ctypes.StructType("circular", [{ a: opaqueptr_t }]);
+  opaque_t.define([{ b: circular_t }]);
+  let opaque = opaque_t();
+  let circular = circular_t(opaque.address());
+  opaque.b = circular;
+  do_check_eq(circular.a.toSource(), opaque.address().toSource());
+  do_check_eq(opaque.b.toSource(), circular.toSource());
+
+  do_check_throws(function() {
+    opaque_t.define([{ c: ctypes.int32_t }]);
   }, Error);
 
   // StructType size, alignment, and offset calculations have already been
