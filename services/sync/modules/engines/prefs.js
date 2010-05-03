@@ -133,6 +133,20 @@ PrefStore.prototype = {
   },
 
   _setAllPrefs: function PrefStore__setAllPrefs(values) {
+    // cache 
+    let ltmExists = true;
+    let ltm = {};
+    let enabledBefore = false;
+    let prevTheme = "";
+    try {
+      Cu.import("resource://gre/modules/LightweightThemeManager.jsm", ltm);
+      ltm = ltm.LightweightThemeManager;
+      enabledBefore = this._prefs.getBoolPref("lightweightThemes.isThemeSelected");
+      prevTheme = ltm.currentTheme;
+    } catch(ex) {
+      ltmExists = false;
+    } // LightweightThemeManager only exists in Firefox 3.6+
+    
     for (let i = 0; i < values.length; i++) {
       switch (values[i]["type"]) {
         case "int":
@@ -150,17 +164,15 @@ PrefStore.prototype = {
     }
 
     // Notify the lightweight theme manager of all the new values
-    try {
-      let ltm = {};
-      Cu.import("resource://gre/modules/LightweightThemeManager.jsm", ltm);
-      ltm = ltm.LightweightThemeManager;
-      if (ltm.currentTheme) {
+    if (ltmExists) {
+      let enabledNow = this._prefs.getBoolPref("lightweightThemes.isThemeSelected");    
+      if (enabledBefore && !enabledNow)
+        ltm.currentTheme = null;
+      else if (enabledNow && ltm.usedThemes[0] != prevTheme) {
         ltm.currentTheme = null;
         ltm.currentTheme = ltm.usedThemes[0];
       }
     }
-    // LightweightThemeManager only exists in Firefox 3.6+
-    catch (ex) {}
   },
 
   getAllIDs: function PrefStore_getAllIDs() {
