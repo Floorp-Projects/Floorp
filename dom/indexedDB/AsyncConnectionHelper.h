@@ -42,6 +42,7 @@
 
 // Only meant to be included in IndexedDB source files, not exported.
 #include "IndexedDatabase.h"
+#include "IDBDatabaseRequest.h"
 
 #include "mozIStorageConnection.h"
 #include "nsIDOMEventTarget.h"
@@ -85,11 +86,18 @@ public:
   nsresult Dispatch(nsIThread* aDatabaseThread);
 
 protected:
-  AsyncConnectionHelper(const nsACString& aASCIIOrigin,
-                        nsCOMPtr<mozIStorageConnection>& aConnection,
+  AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
                         nsIDOMEventTarget* aTarget);
 
   virtual ~AsyncConnectionHelper();
+
+  /**
+   * This is called on the main thread after Dispatch is called but before the
+   * runnable is actually dispatched to the database thread. Allows the subclass
+   * to initialize itself. The default implementation does nothing and returns
+   * NS_OK.
+   */
+  virtual nsresult Init();
 
   /**
    * This callback is run on the database thread. It should return a valid error
@@ -121,16 +129,10 @@ protected:
    */
   virtual void GetSuccessResult(nsIWritableVariant* aVariant);
 
-  /**
-   * Ensures that mConnection is valid. Creates the connection if needed.
-   */
-  nsresult EnsureConnection();
-
 protected:
-  nsCOMPtr<mozIStorageConnection>& mConnection;
+  nsRefPtr<IDBDatabaseRequest> mDatabase;
 
 private:
-  nsCString mASCIIOrigin;
   nsCOMPtr<nsIDOMEventTarget> mTarget;
 
 #ifdef DEBUG

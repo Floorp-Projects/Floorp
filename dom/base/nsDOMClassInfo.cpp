@@ -473,6 +473,7 @@
 #include "mozilla/dom/indexedDB/IDBDatabaseError.h"
 #include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
 #include "mozilla/dom/indexedDB/IDBEvents.h"
+#include "mozilla/dom/indexedDB/IDBObjectStoreRequest.h"
 
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -1395,6 +1396,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(IDBErrorEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBSuccessEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(IDBObjectStoreRequest, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -3861,6 +3864,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(IDBSuccessEvent, nsIIDBSuccessEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBSuccessEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(IDBObjectStoreRequest, nsIIDBObjectStoreRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBObjectStoreRequest)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBObjectStore)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG

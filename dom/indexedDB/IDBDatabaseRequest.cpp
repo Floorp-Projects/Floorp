@@ -40,16 +40,22 @@
 #include "IDBDatabaseRequest.h"
 
 #include "mozilla/Storage.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMLists.h"
+#include "nsHashKeys.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
 #include "AsyncConnectionHelper.h"
 #include "IDBEvents.h"
+#include "IDBObjectStoreRequest.h"
 #include "IDBRequest.h"
 #include "LazyIdleThread.h"
+
+#define DB_SCHEMA_VERSION 1
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -91,25 +97,115 @@ private:
 class CreateObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
-  CreateObjectStoreHelper(const nsACString& aASCIIOrigin,
-                          nsCOMPtr<mozIStorageConnection>& aConnection,
+  CreateObjectStoreHelper(IDBDatabaseRequest* aDatabase,
                           nsIDOMEventTarget* aTarget,
                           const nsAString& aName,
                           const nsAString& aKeyPath,
                           bool aAutoIncrement)
-  : AsyncConnectionHelper(aASCIIOrigin, aConnection, aTarget), mName(aName),
-    mKeyPath(aKeyPath), mAutoIncrement(aAutoIncrement), mId(LL_MININT)
+  : AsyncConnectionHelper(aDatabase, aTarget), mName(aName), mKeyPath(aKeyPath),
+    mAutoIncrement(aAutoIncrement), mId(LL_MININT)
   { }
 
+  nsresult Init();
   PRUint16 DoDatabaseWork();
   void GetSuccessResult(nsIWritableVariant* aResult);
 
 protected:
+  // In-params.
   nsString mName;
   nsString mKeyPath;
   bool mAutoIncrement;
+
+  // Created during Init.
+  nsRefPtr<IDBObjectStoreRequest> mObjectStore;
+
+  // Out-params.
   PRInt64 mId;
 };
+
+/**
+ * Creates the needed tables and their indexes.
+ *
+ * @param aDBConn
+ *        The database connection to create the tables on.
+ */
+nsresult
+CreateTables(mozIStorageConnection* aDBConn)
+{
+  NS_PRECONDITION(!NS_IsMainThread(),
+                  "Creating tables on the main thread!");
+  NS_PRECONDITION(aDBConn, "Passing a null database connection!");
+
+  // Table `database`
+  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE database ("
+      "name TEXT NOT NULL, "
+      "description TEXT NOT NULL, "
+      "version TEXT DEFAULT NULL, "
+      "UNIQUE (name)"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `object_store`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_store ("
+      "id INTEGER, "
+      "name TEXT NOT NULL, "
+      "key_path TEXT DEFAULT NULL, "
+      "auto_increment INTEGER NOT NULL DEFAULT 0, "
+      "readers INTEGER NOT NULL DEFAULT 0, "
+      "is_writing INTEGER NOT NULL DEFAULT 0, "
+      "PRIMARY KEY (id), "
+      "UNIQUE (name)"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `object_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_data ("
+      "id INTEGER, "
+      "object_store_id INTEGER NOT NULL, "
+      "data TEXT NOT NULL, "
+      "key_value TEXT DEFAULT NULL, "
+      "PRIMARY KEY (id), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX key_index "
+    "ON object_data (id, object_store_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `ai_object_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_object_data ("
+      "id INTEGER, "
+      "object_store_id INTEGER NOT NULL, "
+      "data TEXT NOT NULL, "
+      "PRIMARY KEY (id), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX ai_key_index "
+    "ON ai_object_data (id, object_store_id);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
 
 } // anonymous namespace
 
@@ -119,6 +215,8 @@ IDBDatabaseRequest::Create(const nsAString& aName,
                            const nsAString& aDescription,
                            PRBool aReadOnly)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = nsContentUtils::GetSecurityManager()->
     GetSubjectPrincipal(getter_AddRefs(principal));
@@ -165,6 +263,107 @@ IDBDatabaseRequest::~IDBDatabaseRequest()
   if (mStorageThread) {
     mStorageThread->Shutdown();
   }
+}
+
+nsCOMPtr<mozIStorageConnection>&
+IDBDatabaseRequest::Connection()
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  return mConnection;
+}
+
+nsresult
+IDBDatabaseRequest::EnsureConnection()
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  if (Connection()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIFile> dbFile;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                       getter_AddRefs(dbFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = dbFile->Append(NS_LITERAL_STRING("indexedDB"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool exists;
+  rv = dbFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (exists) {
+    PRBool isDirectory;
+    rv = dbFile->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(isDirectory, NS_ERROR_UNEXPECTED);
+  }
+  else {
+    rv = dbFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Build the filename.
+  nsCString filename;
+  filename.AppendInt(HashString(mASCIIOrigin));
+  filename.AppendLiteral(".sqlite");
+
+  rv = dbFile->Append(NS_ConvertASCIItoUTF16(filename));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = dbFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+
+  nsCOMPtr<mozIStorageConnection> connection;
+  rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // Nuke the database file.  The web services can recreate their data.
+    rv = dbFile->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    exists = PR_FALSE;
+
+    rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check to make sure that the database schema is correct.
+  PRInt32 schemaVersion;
+  rv = connection->GetSchemaVersion(&schemaVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (schemaVersion != DB_SCHEMA_VERSION) {
+    if (exists) {
+      // If the connection is not at the right schema version, nuke it.
+      rv = dbFile->Remove(PR_FALSE);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    rv = CreateTables(connection);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+#ifdef DEBUG
+  // Check to make sure that the database schema is correct again.
+  NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
+               schemaVersion == DB_SCHEMA_VERSION,
+               "CreateTables failed!");
+
+  // Turn on foreign key constraints in debug builds to catch bugs!
+  (void)connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA foreign_keys = ON;"
+  ));
+#endif
+
+  connection.swap(mConnection);
+  return NS_OK;
 }
 
 NS_IMPL_ADDREF(IDBDatabaseRequest)
@@ -235,8 +434,9 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<CreateObjectStoreHelper> helper =
-    new CreateObjectStoreHelper(mASCIIOrigin, mStorage, request, aName,
-                                aKeyPath, !!aAutoIncrement);
+    new CreateObjectStoreHelper(this, request, aName, aKeyPath,
+                                !!aAutoIncrement);
+
   nsresult rv = helper->Dispatch(mStorageThread);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -352,13 +552,24 @@ IDBDatabaseRequest::Observe(nsISupports* aSubject,
 
   // This should be safe to clear mStorage before we're deleted since we own
   // the thread and must join with it before we can be deleted.
-  nsCOMPtr<nsIRunnable> runnable = new CloseConnectionRunnable(mStorage);
+  nsCOMPtr<nsIRunnable> runnable = new CloseConnectionRunnable(mConnection);
 
   nsCOMPtr<nsIThread> thread(do_QueryInterface(aSubject));
   NS_ENSURE_TRUE(thread, NS_NOINTERFACE);
 
   nsresult rv = thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
+CreateObjectStoreHelper::Init()
+{
+  mObjectStore =
+    IDBObjectStoreRequest::Create(mDatabase, mName, mKeyPath, mAutoIncrement,
+                                  nsIIDBObjectStore::READ_WRITE);
+  NS_ENSURE_TRUE(mObjectStore, NS_ERROR_UNEXPECTED);
 
   return NS_OK;
 }
@@ -370,15 +581,17 @@ CreateObjectStoreHelper::DoDatabaseWork()
     return nsIIDBDatabaseError::CONSTRAINT_ERR;
   }
 
-  nsresult rv = EnsureConnection();
+  nsresult rv = mDatabase->EnsureConnection();
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
+  nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
+
   // Rollback on any errors.
-  mozStorageTransaction transaction(mConnection, PR_FALSE);
+  mozStorageTransaction transaction(connection, PR_FALSE);
 
   // Insert the data into the database.
   nsCOMPtr<mozIStorageStatement> stmt;
-  rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO object_store (name, key_path, auto_increment) "
     "VALUES (:name, :key_path, :auto_increment)"
   ), getter_AddRefs(stmt));
@@ -402,7 +615,7 @@ CreateObjectStoreHelper::DoDatabaseWork()
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::CONSTRAINT_ERR);
 
   // Get the id of this object store, and store it for future use.
-  (void)mConnection->GetLastInsertRowID(&mId);
+  (void)connection->GetLastInsertRowID(&mId);
 
   return NS_SUCCEEDED(transaction.Commit()) ? OK :
                                               nsIIDBDatabaseError::UNKNOWN_ERR;
@@ -411,5 +624,12 @@ CreateObjectStoreHelper::DoDatabaseWork()
 void
 CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
-  aResult->SetAsBool(PR_TRUE);
+  NS_ASSERTION(mObjectStore, "Init failed?!");
+  mObjectStore->SetId(mId);
+
+  nsCOMPtr<nsISupports> result =
+    do_QueryInterface(static_cast<nsIIDBObjectStoreRequest*>(mObjectStore));
+  NS_ASSERTION(result, "Failed to QI!");
+
+  aResult->SetAsISupports(result);
 }

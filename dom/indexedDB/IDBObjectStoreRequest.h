@@ -37,10 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbdatabaserequest_h__
-#define mozilla_dom_indexeddb_idbdatabaserequest_h__
+#ifndef mozilla_dom_indexeddb_idbobjectstorerequest_h__
+#define mozilla_dom_indexeddb_idbobjectstorerequest_h__
 
-#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+#include "mozilla/dom/indexedDB/IDBRequest.h"
+#include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
 
 #include "nsIIDBObjectStoreRequest.h"
 
@@ -54,20 +55,31 @@ public:
   NS_DECL_NSIIDBOBJECTSTORE
   NS_DECL_NSIIDBOBJECTSTOREREQUEST
 
-  static already_AddRefed<nsIIDBObjectStoreRequest>
-  Create(const nsAString& aName,
+  static already_AddRefed<IDBObjectStoreRequest>
+  Create(IDBDatabaseRequest* aDatabase,
+         const nsAString& aName,
          const nsAString& aKeyPath,
          PRBool aAutoIncrement,
          PRUint16 aMode);
+
+  void SetId(PRInt64 aId) {
+    mId = aId;
+  }
 
 protected:
   IDBObjectStoreRequest();
   ~IDBObjectStoreRequest();
 
 private:
-  nsAutoPtr<AsyncDatabaseConnection> mDatabase;
+  nsRefPtr<IDBDatabaseRequest> mDatabase;
+
+  nsString mName;
+  nsString mKeyPath;
+  PRBool mAutoIncrement;
+  PRUint16 mMode;
+  PRInt64 mId;
 };
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbdatabaserequest_h__
+#endif // mozilla_dom_indexeddb_idbobjectstorerequest_h__

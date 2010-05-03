@@ -51,10 +51,14 @@
 
 BEGIN_INDEXEDDB_NAMESPACE
 
+class IDBObjectStoreRequest;
+
 class IDBDatabaseRequest : public IDBRequest::Generator,
                            public nsIIDBDatabaseRequest,
                            public nsIObserver
 {
+  friend class IDBObjectStoreRequest;
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIDBDATABASE
@@ -65,6 +69,12 @@ public:
   Create(const nsAString& aName,
          const nsAString& aDescription,
          PRBool aReadOnly);
+
+  // Only meant to be called on mStorageThread!
+  nsCOMPtr<mozIStorageConnection>& Connection();
+
+  // Only meant to be called on mStorageThread!
+  nsresult EnsureConnection();
 
 protected:
   IDBDatabaseRequest();
@@ -83,7 +93,7 @@ private:
   nsRefPtr<LazyIdleThread> mStorageThread;
 
   // Only touched on mStorageThread!
-  nsCOMPtr<mozIStorageConnection> mStorage;
+  nsCOMPtr<mozIStorageConnection> mConnection;
 };
 
 END_INDEXEDDB_NAMESPACE
