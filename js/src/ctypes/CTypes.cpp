@@ -142,6 +142,7 @@ namespace StructType {
   static JSBool FieldSetter(JSContext* cx, JSObject* obj, jsval idval,
     jsval* vp);
   static JSBool AddressOfField(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Define(JSContext* cx, uintN argc, jsval* vp);
 }
 
 namespace FunctionType {
@@ -365,6 +366,11 @@ static JSFunctionSpec sStructFunction =
 static JSPropertySpec sStructProps[] = {
   { "fields", 0, CTYPESPROP_FLAGS, StructType::FieldsArrayGetter, NULL },
   { 0, 0, 0, NULL, NULL }
+};
+
+static JSFunctionSpec sStructFunctions[] = {
+  JS_FN("define", StructType::Define, 1, CDATAFN_FLAGS),
+  JS_FS_END
 };
 
 static JSFunctionSpec sStructInstanceFunctions[] = {
@@ -628,6 +634,7 @@ InitTypeConstructor(JSContext* cx,
                     JSObject* CTypeProto,
                     JSObject* CDataProto,
                     JSFunctionSpec spec,
+                    JSFunctionSpec* fns,
                     JSPropertySpec* props,
                     JSFunctionSpec* instanceFns,
                     JSPropertySpec* instanceProps,
@@ -651,6 +658,9 @@ InitTypeConstructor(JSContext* cx,
   // Define property before proceeding, for GC safety.
   if (!JS_DefineProperty(cx, obj, "prototype", OBJECT_TO_JSVAL(typeProto),
          NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+    return false;
+
+  if (fns && !JS_DefineFunctions(cx, typeProto, fns))
     return false;
 
   if (!JS_DefineProperties(cx, typeProto, props))
@@ -802,26 +812,28 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
   //     * 'constructor' property === 't'
   JSObject* protos[CTYPEPROTO_SLOTS];
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sPointerFunction, sPointerProps, sPointerInstanceFunctions,
-         sPointerInstanceProps, protos[SLOT_POINTERPROTO],
-         protos[SLOT_POINTERDATAPROTO]))
+         sPointerFunction, NULL, sPointerProps,
+         sPointerInstanceFunctions, sPointerInstanceProps,
+         protos[SLOT_POINTERPROTO], protos[SLOT_POINTERDATAPROTO]))
     return false;
   js::AutoValueRooter proot(cx, protos[SLOT_POINTERDATAPROTO]);
 
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sArrayFunction, sArrayProps, sArrayInstanceFunctions, sArrayInstanceProps,
+         sArrayFunction, NULL, sArrayProps,
+         sArrayInstanceFunctions, sArrayInstanceProps,
          protos[SLOT_ARRAYPROTO], protos[SLOT_ARRAYDATAPROTO]))
     return false;
   js::AutoValueRooter aroot(cx, protos[SLOT_ARRAYDATAPROTO]);
 
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sStructFunction, sStructProps, sStructInstanceFunctions, NULL,
+         sStructFunction, sStructFunctions, sStructProps,
+         sStructInstanceFunctions, NULL,
          protos[SLOT_STRUCTPROTO], protos[SLOT_STRUCTDATAPROTO]))
     return false;
   js::AutoValueRooter sroot(cx, protos[SLOT_STRUCTDATAPROTO]);
 
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sFunctionFunction, sFunctionProps, NULL, NULL,
+         sFunctionFunction, NULL, sFunctionProps, NULL, NULL,
          protos[SLOT_FUNCTIONPROTO], protos[SLOT_FUNCTIONDATAPROTO]))
     return false;
   js::AutoValueRooter froot(cx, protos[SLOT_FUNCTIONDATAPROTO]);
@@ -2219,7 +2231,15 @@ BuildTypeSource(JSContext* cx,
     // Write the full struct declaration.
     AppendString(result, "ctypes.StructType(\"");
     AppendString(result, name);
-    AppendString(result, "\", [");
+    AppendString(result, "\"");
+
+    // If it's an opaque struct, we're done.
+    if (!CType::IsSizeDefined(cx, typeObj)) {
+      AppendString(result, ")");
+      break;
+    }
+
+    AppendString(result, ", [");
 
     Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
     for (size_t i = 0; i < fields->length(); ++i) {
@@ -2486,8 +2506,7 @@ CType::Create(JSContext* cx,
               JSString* name,
               jsval size,
               jsval align,
-              ffi_type* ffiType,
-              PropertySpec* ps)
+              ffi_type* ffiType)
 {
   JSObject* parent = JS_GetParent(cx, typeProto);
   JS_ASSERT(parent);
@@ -2521,34 +2540,24 @@ CType::Create(JSContext* cx,
       !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, align))
     return NULL;
 
-  // Set up the 'prototype' and 'prototype.constructor' properties.
-  JSObject* prototype = JS_NewObject(cx, &sCDataProtoClass, dataProto, parent);
-  if (!prototype)
-    return NULL;
-  js::AutoValueRooter protoroot(cx, prototype);
+  if (dataProto) {
+    // Set up the 'prototype' and 'prototype.constructor' properties.
+    JSObject* prototype = JS_NewObject(cx, &sCDataProtoClass, dataProto, parent);
+    if (!prototype)
+      return NULL;
+    js::AutoValueRooter protoroot(cx, prototype);
 
-  if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(typeObj),
-         NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
-    return NULL;
+    if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(typeObj),
+           NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
+      return NULL;
 
-  // If required, define properties on the 'prototype' object. (These will
-  // become properties on CData objects created from this CType.)
-  if (ps) {
-    while (ps->name) {
-      if (!JS_DefineUCProperty(cx, prototype, ps->name, ps->namelen, JSVAL_VOID,
-             ps->getter, ps->setter, ps->flags))
-        return NULL;
-
-      ++ps;
-    }
+    // Set the 'prototype' object.
+    if (//!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
+        !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
+      return NULL;
   }
 
-  // Set the 'prototype' object.
-  if (!JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
-    return NULL;
-
-  if (//!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
-      !JS_SealObject(cx, typeObj, JS_FALSE))
+  if (!JS_SealObject(cx, typeObj, JS_FALSE))
     return NULL;
 
   // Assert a sanity check on size and alignment: size % alignment should always
@@ -2578,7 +2587,7 @@ CType::DefineBuiltin(JSContext* cx,
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = Create(cx, typeProto, dataProto, type, nameStr, size,
-                        align, ffiType, NULL);
+                        align, ffiType);
   if (!typeObj)
     return NULL;
 
@@ -2910,7 +2919,7 @@ CType::PrototypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
   }
 
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_PROTO, vp));
-  JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp));
+  JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp) || JSVAL_IS_VOID(*vp));
   return JS_TRUE;
 }
 
@@ -3129,7 +3138,7 @@ PointerType::CreateInternal(JSContext* cx,
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_pointer,
                         name, INT_TO_JSVAL(sizeof(void*)),
                         INT_TO_JSVAL(ffi_type_pointer.alignment),
-                        &ffi_type_pointer, NULL);
+                        &ffi_type_pointer);
   if (!typeObj)
     return NULL;
   js::AutoValueRooter root(cx, typeObj);
@@ -3445,7 +3454,7 @@ ArrayType::CreateInternal(JSContext* cx,
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_array, NULL,
-                        sizeVal, INT_TO_JSVAL(align), ffiType, NULL);
+                        sizeVal, INT_TO_JSVAL(align), ffiType);
   if (!typeObj)
     return NULL;
   js::AutoValueRooter root(cx, typeObj);
@@ -3870,8 +3879,8 @@ JSBool
 StructType::Create(JSContext* cx, uintN argc, jsval* vp)
 {
   // Construct and return a new StructType object.
-  if (argc != 2) {
-    JS_ReportError(cx, "StructType takes two arguments");
+  if (argc < 1 || argc > 2) {
+    JS_ReportError(cx, "StructType takes one or two arguments");
     return JS_FALSE;
   }
 
@@ -3882,15 +3891,57 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
   }
 
-  if (JSVAL_IS_PRIMITIVE(argv[1]) ||
-      !JS_IsArrayObject(cx, JSVAL_TO_OBJECT(argv[1]))) {
-    JS_ReportError(cx, "second argument must be an array");
+  // Get ctypes.StructType.prototype from the ctypes.StructType constructor.
+  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+  JSObject* typeProto = CType::GetProtoFromCtor(cx, callee, SLOT_STRUCTPROTO);
+
+  // Create a simple StructType with no defined fields. The result will be
+  // non-instantiable as CData, will have no 'prototype' property, and will
+  // have undefined size and alignment and no ffi_type.
+  JSObject* result = CType::Create(cx, typeProto, NULL, TYPE_struct,
+                       JSVAL_TO_STRING(name), JSVAL_VOID, JSVAL_VOID, NULL);
+  if (!result)
     return JS_FALSE;
+  js::AutoValueRooter root(cx, result);
+
+  if (argc == 2) {
+    if (JSVAL_IS_PRIMITIVE(argv[1]) ||
+        !JS_IsArrayObject(cx, JSVAL_TO_OBJECT(argv[1]))) {
+      JS_ReportError(cx, "second argument must be an array");
+      return JS_FALSE;
+    }
+
+    // Define the struct fields.
+    if (!DefineInternal(cx, result, JSVAL_TO_OBJECT(argv[1])))
+      return JS_FALSE;
   }
 
-  JSObject* fieldsObj = JSVAL_TO_OBJECT(argv[1]);
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(result));
+  return JS_TRUE;
+}
+
+JSBool
+StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj)
+{
   jsuint len;
   ASSERT_OK(JS_GetArrayLength(cx, fieldsObj, &len));
+
+  // Get the common prototype for CData objects of this type from
+  // ctypes.CType.prototype.
+  JSObject* dataProto =
+    CType::GetProtoFromType(cx, typeObj, SLOT_STRUCTDATAPROTO);
+
+  // Set up the 'prototype' and 'prototype.constructor' properties.
+  // The prototype will reflect the struct fields as properties on CData objects
+  // created from this type.
+  JSObject* prototype = JS_NewObject(cx, &sCDataProtoClass, dataProto, NULL);
+  if (!prototype)
+    return JS_FALSE;
+  js::AutoValueRooter protoroot(cx, prototype);
+
+  if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(typeObj),
+         NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
+    return JS_FALSE;
 
   // Prepare a new array for the .fields property of the StructType.
   jsval* fieldsVec;
@@ -3908,14 +3959,9 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
   }
   ffiType->type = FFI_TYPE_STRUCT;
 
-  // Create an array of FieldInfo objects to stash on the type object, and an
-  // array of PropertySpecs to reflect the struct fields as properties
-  // on CData objects created from this type.
+  // Create an array of FieldInfo objects to stash on the type object.
   AutoPtr< Array<FieldInfo> > fields(new Array<FieldInfo>);
-  Array<PropertySpec> instanceProps;
-  if (!fields ||
-      !fields->resize(len) ||
-      !instanceProps.resize(len + 1)) {
+  if (!fields || !fields->resize(len)) {
     JS_ReportOutOfMemory(cx);
     return JS_FALSE;
   }
@@ -3955,13 +4001,12 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
              info->mName, info->mType))
         return JS_FALSE;
 
-      // Fill in the PropertySpec for the field.
-      PropertySpec* instanceProp = instanceProps.begin() + i;
-      instanceProp->name = info->mName.begin();
-      instanceProp->namelen = info->mName.length();
-      instanceProp->flags = JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT;
-      instanceProp->getter = StructType::FieldGetter;
-      instanceProp->setter = StructType::FieldSetter;
+      // Add the field to the StructType's 'prototype' property.
+      if (!JS_DefineUCProperty(cx, prototype,
+             info->mName.begin(), info->mName.length(), JSVAL_VOID,
+             StructType::FieldGetter, StructType::FieldSetter,
+             JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT))
+        return JS_FALSE;
 
       elements[i] = CType::GetFFIType(cx, info->mType);
 
@@ -4028,30 +4073,22 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
   ffiType->alignment = structAlign;
 #endif
 
-  // Terminate the PropertySpec array.
-  instanceProps[len].name = NULL;
-
   jsval sizeVal;
   if (!SizeTojsval(cx, structSize, &sizeVal))
     return JS_FALSE;
 
-  // Get ctypes.StructType.prototype and the common prototype for CData objects
-  // of this type, from the ctypes.StructType constructor.
-  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-  JSObject* typeProto = CType::GetProtoFromCtor(cx, callee, SLOT_STRUCTPROTO);
-  JSObject* dataProto = CType::GetProtoFromCtor(cx, callee, SLOT_STRUCTDATAPROTO);
-
-  // Create a new CType object with the common properties and slots.
-  JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_struct,
-                        JSVAL_TO_STRING(name), sizeVal,
-                        INT_TO_JSVAL(structAlign), ffiType.get(),
-                        instanceProps.begin());
-  if (!typeObj)
+  // Set up the reserved slots.
+  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FFITYPE,
+         PRIVATE_TO_JSVAL(ffiType.get())))
     return JS_FALSE;
   ffiType.forget();
   elements.forget();
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(typeObj));
+  if (!JS_SetReservedSlot(cx, typeObj, SLOT_SIZE, sizeVal) ||
+      !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, INT_TO_JSVAL(structAlign)) ||
+      //!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
+      !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
+    return JS_FALSE;
 
   // Seal and attach the fields array. (The fields array also prevents the
   // type objects we depend on from being GC'ed).
@@ -4069,6 +4106,37 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSBool
+StructType::Define(JSContext* cx, uintN argc, jsval* vp)
+{
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  JS_ASSERT(obj);
+
+  if (!CType::IsCType(cx, obj) || CType::GetTypeCode(cx, obj) != TYPE_struct) {
+    JS_ReportError(cx, "not a StructType");
+    return JS_FALSE;
+  }
+
+  if (CType::IsSizeDefined(cx, obj)) {
+    JS_ReportError(cx, "StructType has already been defined");
+    return JS_FALSE;
+  }
+
+  if (argc != 1) {
+    JS_ReportError(cx, "define takes one argument");
+    return JS_FALSE;
+  }
+
+  jsval arg = JS_ARGV(cx, vp)[0];
+  if (JSVAL_IS_PRIMITIVE(arg) ||
+      !JS_IsArrayObject(cx, JSVAL_TO_OBJECT(arg))) {
+    JS_ReportError(cx, "argument must be an array");
+    return JS_FALSE;
+  }
+
+  return DefineInternal(cx, obj, JSVAL_TO_OBJECT(arg));
+}
+
+JSBool
 StructType::ConstructData(JSContext* cx,
                           JSObject* obj,
                           uintN argc,
@@ -4077,6 +4145,11 @@ StructType::ConstructData(JSContext* cx,
 {
   if (!CType::IsCType(cx, obj) || CType::GetTypeCode(cx, obj) != TYPE_struct) {
     JS_ReportError(cx, "not a StructType");
+    return JS_FALSE;
+  }
+
+  if (!CType::IsSizeDefined(cx, obj)) {
+    JS_ReportError(cx, "cannot construct an opaque StructType");
     return JS_FALSE;
   }
 
@@ -4183,8 +4256,8 @@ StructType::FieldsArrayGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* 
   }
 
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDS, vp));
-  JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp) &&
-            JS_IsArrayObject(cx, JSVAL_TO_OBJECT(*vp)));
+  JS_ASSERT_IF(!JSVAL_IS_VOID(*vp),
+    !JSVAL_IS_PRIMITIVE(*vp) && JS_IsArrayObject(cx, JSVAL_TO_OBJECT(*vp)));
   return JS_TRUE;
 }
 
@@ -4355,6 +4428,11 @@ PrepareType(JSContext* cx, jsval type)
     return NULL;
   }
 
+  if (!CType::IsSizeDefined(cx, result)) {
+    JS_ReportError(cx, "Argument type must have defined size");
+    return NULL;
+  }
+
   // libffi cannot pass types of zero size by value.
   JS_ASSERT(CType::GetSize(cx, result) != 0);
 
@@ -4376,6 +4454,11 @@ PrepareReturnType(JSContext* cx, jsval type)
   // Arrays and functions can never be return types.
   if (typeCode == TYPE_array || typeCode == TYPE_function) {
     JS_ReportError(cx, "Return type cannot be an array or function");
+    return NULL;
+  }
+
+  if (typeCode != TYPE_void_t && !CType::IsSizeDefined(cx, result)) {
+    JS_ReportError(cx, "Return type must have defined size");
     return NULL;
   }
 
@@ -4577,7 +4660,7 @@ FunctionType::CreateInternal(JSContext* cx,
   // Create a new CType object with the common properties and slots.
   // We use ffi_type_void here in its capacity as "a type of undefined size".
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_function,
-                        NULL, JSVAL_VOID, JSVAL_VOID, &ffi_type_void, NULL);
+                        NULL, JSVAL_VOID, JSVAL_VOID, &ffi_type_void);
   if (!typeObj)
     return NULL;
   js::AutoValueRooter root(cx, typeObj);
