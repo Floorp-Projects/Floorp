@@ -681,10 +681,10 @@ OpenObjectStoreHelper::DoDatabaseWork()
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
-  PRBool hasMore;
-  rv = stmt->ExecuteStep(&hasMore);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::NOT_FOUND_ERR);
-  NS_ASSERTION(!hasMore, "Have more than one object store with given name");
+  PRBool hasReslt;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseError::NOT_FOUND_ERR);
 
   mId = stmt->AsInt64(0);
   (void)stmt->GetString(1, mKeyPath);
