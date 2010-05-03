@@ -2516,7 +2516,7 @@ CType::Create(JSContext* cx,
 
   // Set up the reserved slots.
   if (!JS_SetReservedSlot(cx, typeObj, SLOT_TYPECODE, INT_TO_JSVAL(type)) ||
-      !JS_SetReservedSlot(cx, typeObj, SLOT_FFITYPE, PRIVATE_TO_JSVAL(ffiType)) ||
+      (ffiType && !JS_SetReservedSlot(cx, typeObj, SLOT_FFITYPE, PRIVATE_TO_JSVAL(ffiType))) ||
       (name && !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(name))) ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_SIZE, size) ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, align))
@@ -2611,7 +2611,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     // Free the ffi_type info.
     jsval slot;
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FFITYPE, &slot));
-    if (!JSVAL_IS_VOID(slot) && JSVAL_TO_PRIVATE(slot)) {
+    if (!JSVAL_IS_VOID(slot)) {
       ffi_type* ffiType = static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
       delete[] ffiType->elements;
       delete ffiType;
@@ -2849,9 +2849,29 @@ CType::GetFFIType(JSContext* cx, JSObject* obj)
   jsval slot;
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FFITYPE, &slot));
 
-  ffi_type* result = static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
-  JS_ASSERT(result);
-  return result;
+  if (!JSVAL_IS_VOID(slot)) {
+    return static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
+  }
+
+  AutoPtr<ffi_type> result;
+  switch (CType::GetTypeCode(cx, obj)) {
+  case TYPE_array:
+    result = ArrayType::BuildFFIType(cx, obj);
+    break;
+
+  case TYPE_struct:
+    result = StructType::BuildFFIType(cx, obj);
+    break;
+
+  default:
+    JS_NOT_REACHED("simple types must have an ffi_type");
+  }
+
+  if (!result ||
+      !JS_SetReservedSlot(cx, obj, SLOT_FFITYPE, PRIVATE_TO_JSVAL(result.get())))
+    return NULL;
+
+  return result.forget();
 }
 
 JSString*
@@ -3365,9 +3385,6 @@ ArrayType::CreateInternal(JSContext* cx,
     return NULL;
   }
 
-  ffi_type* ffiType = NULL;
-  size_t align = CType::GetAlignment(cx, baseType);
-
   jsval sizeVal = JSVAL_VOID;
   jsval lengthVal = JSVAL_VOID;
   if (lengthDefined) {
@@ -3380,39 +3397,13 @@ ArrayType::CreateInternal(JSContext* cx,
     if (!SizeTojsval(cx, size, &sizeVal) ||
         !SizeTojsval(cx, length, &lengthVal))
       return NULL;
-
-    // Create an ffi_type to represent the array. This is necessary for the case
-    // where the array is part of a struct. Since libffi has no intrinsic
-    // support for array types, we approximate it by creating a struct type
-    // with elements of type 'baseType' and with appropriate size and alignment
-    // values. It would be nice to not do all the work of setting up 'elements',
-    // but some libffi platforms currently require that it be meaningful. I'm
-    // looking at you, x86_64.
-    ffiType = new ffi_type;
-    if (!ffiType) {
-      JS_ReportOutOfMemory(cx);
-      return NULL;
-    }
-
-    ffiType->type = FFI_TYPE_STRUCT;
-    ffiType->size = size;
-    ffiType->alignment = align;
-    ffiType->elements = new ffi_type*[length + 1];
-    if (!ffiType->elements) {
-      delete ffiType;
-      JS_ReportAllocationOverflow(cx);
-      return NULL;
-    }
-
-    ffi_type* ffiBaseType = CType::GetFFIType(cx, baseType);
-    for (size_t i = 0; i < length; ++i)
-      ffiType->elements[i] = ffiBaseType;
-    ffiType->elements[length] = NULL;
   }
+
+  size_t align = CType::GetAlignment(cx, baseType);
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_array, NULL,
-                        sizeVal, INT_TO_JSVAL(align), ffiType);
+                        sizeVal, INT_TO_JSVAL(align), NULL);
   if (!typeObj)
     return NULL;
   js::AutoValueRooter root(cx, typeObj);
@@ -3583,6 +3574,49 @@ ArrayType::GetLength(JSContext* cx, JSObject* obj)
   if (JSVAL_IS_INT(length))
     return JSVAL_TO_INT(length);
   return Convert<size_t>(*JSVAL_TO_DOUBLE(length));
+}
+
+ffi_type*
+ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
+{
+  JS_ASSERT(CType::IsCType(cx, obj));
+  JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_array);
+  JS_ASSERT(CType::IsSizeDefined(cx, obj));
+
+  JSObject* baseType = ArrayType::GetBaseType(cx, obj);
+  ffi_type* ffiBaseType = CType::GetFFIType(cx, baseType);
+  if (!ffiBaseType)
+    return NULL;
+
+  size_t length = ArrayType::GetLength(cx, obj);
+
+  // Create an ffi_type to represent the array. This is necessary for the case
+  // where the array is part of a struct. Since libffi has no intrinsic
+  // support for array types, we approximate it by creating a struct type
+  // with elements of type 'baseType' and with appropriate size and alignment
+  // values. It would be nice to not do all the work of setting up 'elements',
+  // but some libffi platforms currently require that it be meaningful. I'm
+  // looking at you, x86_64.
+  AutoPtr<ffi_type> ffiType(new ffi_type);
+  if (!ffiType) {
+    JS_ReportOutOfMemory(cx);
+    return NULL;
+  }
+
+  ffiType->type = FFI_TYPE_STRUCT;
+  ffiType->size = CType::GetSize(cx, obj);
+  ffiType->alignment = CType::GetAlignment(cx, obj);
+  ffiType->elements = new ffi_type*[length + 1];
+  if (!ffiType->elements) {
+    JS_ReportAllocationOverflow(cx);
+    return NULL;
+  }
+
+  for (size_t i = 0; i < length; ++i)
+    ffiType->elements[i] = ffiBaseType;
+  ffiType->elements[length] = NULL;
+
+  return ffiType.forget();
 }
 
 JSBool
@@ -3778,7 +3812,7 @@ ExtractStructField(JSContext* cx, jsval val, FieldInfo* field)
   }
 
   JSString* name = JSVAL_TO_STRING(nameVal.value());
-  field->mName.clear();
+  JS_ASSERT(field->mName.length() == 0);
   AppendString(field->mName, name);
 
   js::AutoValueRooter propVal(cx);
@@ -3896,13 +3930,6 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
          NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
     return JS_FALSE;
 
-  AutoPtr<ffi_type> ffiType(new ffi_type);
-  if (!ffiType) {
-    JS_ReportOutOfMemory(cx);
-    return JS_FALSE;
-  }
-  ffiType->type = FFI_TYPE_STRUCT;
-
   // Create an array of FieldInfo objects to stash on the type object.
   AutoPtr< Array<FieldInfo> > fields(new Array<FieldInfo>);
   if (!fields || !fields->resize(len)) {
@@ -3910,17 +3937,11 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
     return JS_FALSE;
   }
 
-  AutoPtr<ffi_type*>::Array elements;
-
-  // Process the field types and fill in the ffi_type fields.
-  size_t structSize = 0, structAlign = 0;
+  // Process the field types.
+  size_t structSize, structAlign;
   if (len != 0) {
-    elements = new ffi_type*[len + 1];
-    if (!elements) {
-      JS_ReportOutOfMemory(cx);
-      return JS_FALSE;
-    }
-    elements[len] = NULL;
+    structSize = 0;
+    structAlign = 0;
 
     for (jsuint i = 0; i < len; ++i) {
       js::AutoValueRooter item(cx);
@@ -3946,8 +3967,6 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
              StructType::FieldGetter, StructType::FieldSetter,
              JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT))
         return JS_FALSE;
-
-      elements[i] = CType::GetFFIType(cx, info->mType);
 
       size_t fieldSize = CType::GetSize(cx, info->mType);
       size_t fieldAlign = CType::GetAlignment(cx, info->mType);
@@ -3981,10 +4000,71 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
     // no getters or setters, and will be initialized to zero.
     structSize = 1;
     structAlign = 1;
+  }
+
+  jsval sizeVal;
+  if (!SizeTojsval(cx, structSize, &sizeVal))
+    return JS_FALSE;
+
+  if (!JS_SetReservedSlot(cx, typeObj, SLOT_SIZE, sizeVal) ||
+      !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, INT_TO_JSVAL(structAlign)) ||
+      //!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
+      !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
+    return JS_FALSE;
+
+  // Stash the FieldInfo array in a reserved slot.
+  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FIELDINFO,
+         PRIVATE_TO_JSVAL(fields.get())))
+    return JS_FALSE;
+  fields.forget();
+
+  return JS_TRUE;
+}
+
+ffi_type*
+StructType::BuildFFIType(JSContext* cx, JSObject* obj)
+{
+  JS_ASSERT(CType::IsCType(cx, obj));
+  JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
+  JS_ASSERT(CType::IsSizeDefined(cx, obj));
+
+  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
+  size_t len = fields->length();
+
+  size_t structSize = CType::GetSize(cx, obj);
+  size_t structAlign = CType::GetAlignment(cx, obj);
+
+  AutoPtr<ffi_type> ffiType(new ffi_type);
+  if (!ffiType) {
+    JS_ReportOutOfMemory(cx);
+    return NULL;
+  }
+  ffiType->type = FFI_TYPE_STRUCT;
+
+  AutoPtr<ffi_type*>::Array elements;
+  if (len != 0) {
+    elements = new ffi_type*[len + 1];
+    if (!elements) {
+      JS_ReportOutOfMemory(cx);
+      return NULL;
+    }
+    elements[len] = NULL;
+
+    for (size_t i = 0; i < len; ++i) {
+      FieldInfo* info = fields->begin() + i;
+      elements[i] = CType::GetFFIType(cx, info->mType);
+      if (!elements[i])
+        return NULL;
+    }
+
+  } else {
+    // Represent an empty struct as having a size of 1 byte, just like C++.
+    JS_ASSERT(structSize == 1);
+    JS_ASSERT(structAlign == 1);
     elements = new ffi_type*[2];
     if (!elements) {
       JS_ReportOutOfMemory(cx);
-      return JS_FALSE;
+      return NULL;
     }
     elements[0] = &ffi_type_uint8;
     elements[1] = NULL;
@@ -4012,30 +4092,8 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
   ffiType->alignment = structAlign;
 #endif
 
-  jsval sizeVal;
-  if (!SizeTojsval(cx, structSize, &sizeVal))
-    return JS_FALSE;
-
-  // Set up the reserved slots.
-  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FFITYPE,
-         PRIVATE_TO_JSVAL(ffiType.get())))
-    return JS_FALSE;
-  ffiType.forget();
   elements.forget();
-
-  if (!JS_SetReservedSlot(cx, typeObj, SLOT_SIZE, sizeVal) ||
-      !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, INT_TO_JSVAL(structAlign)) ||
-      //!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
-      !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
-    return JS_FALSE;
-
-  // Stash the FieldInfo array in a reserved slot.
-  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FIELDINFO,
-         PRIVATE_TO_JSVAL(fields.get())))
-    return JS_FALSE;
-  fields.forget();
-
-  return JS_TRUE;
+  return ffiType.forget();
 }
 
 JSBool
@@ -4476,11 +4534,15 @@ PrepareCIF(JSContext* cx,
     return false;
   }
 
+  ffi_type* rtype = CType::GetFFIType(cx, fninfo->mReturnType);
+  if (!rtype)
+    return false;
+
   ffi_status status =
     ffi_prep_cif(&fninfo->mCIF,
                  abi,
                  fninfo->mFFITypes.length(),
-                 CType::GetFFIType(cx, fninfo->mReturnType),
+                 rtype,
                  fninfo->mFFITypes.begin());
 
   switch (status) {
@@ -4557,8 +4619,12 @@ NewFunctionInfo(JSContext* cx,
     if (!argType)
       return NULL;
 
+    ffi_type* ffiType = CType::GetFFIType(cx, argType);
+    if (!ffiType)
+      return NULL;
+
     fninfo->mArgTypes.append(argType);
-    fninfo->mFFITypes.append(CType::GetFFIType(cx, argType));
+    fninfo->mFFITypes.append(ffiType);
   }
 
   if (fninfo->mIsVariadic)
@@ -4642,9 +4708,8 @@ FunctionType::CreateInternal(JSContext* cx,
                                                 SLOT_FUNCTIONDATAPROTO);
 
   // Create a new CType object with the common properties and slots.
-  // We use ffi_type_void here in its capacity as "a type of undefined size".
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_function,
-                        NULL, JSVAL_VOID, JSVAL_VOID, &ffi_type_void);
+                        NULL, JSVAL_VOID, JSVAL_VOID, NULL);
   if (!typeObj)
     return NULL;
   js::AutoValueRooter root(cx, typeObj);
@@ -4805,11 +4870,11 @@ FunctionType::Call(JSContext* cx,
           !(type = PrepareType(cx, OBJECT_TO_JSVAL(type))) ||
           // Relying on ImplicitConvert only for the limited purpose of
           // converting one CType to another (e.g., T[] to T*).
-          !ConvertArgument(cx, argv[i], type, &values[i], &strings)) {
+          !ConvertArgument(cx, argv[i], type, &values[i], &strings) ||
+          !(fninfo->mFFITypes[i] = CType::GetFFIType(cx, type))) {
         // These functions report their own errors.
         return false;
       }
-      fninfo->mFFITypes[i] = CType::GetFFIType(cx, type);
     }
     if (!PrepareCIF(cx, fninfo))
       return false;
