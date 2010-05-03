@@ -251,16 +251,6 @@ struct FieldInfo
   size_t    mOffset;
 };
 
-// Just like JSPropertySpec, but with a Unicode name.
-struct PropertySpec
-{
-  const jschar* name;
-  size_t namelen;
-  uint8 flags;
-  JSPropertyOp getter;
-  JSPropertyOp setter;
-};
-
 // Descriptor of ABI, return type, argument types, and variadicity for a
 // FunctionType.
 struct FunctionInfo
@@ -395,8 +385,7 @@ enum Int64FunctionSlot {
 
 namespace CType {
   JSObject* Create(JSContext* cx, JSObject* typeProto, JSObject* dataProto,
-    TypeCode type, JSString* name, jsval size, jsval align, ffi_type* ffiType, 
-    PropertySpec* ps);
+    TypeCode type, JSString* name, jsval size, jsval align, ffi_type* ffiType);
 
   JSObject* DefineBuiltin(JSContext* cx, JSObject* parent, const char* propName,
     JSObject* typeProto, JSObject* dataProto, const char* name, TypeCode type,
@@ -432,6 +421,8 @@ namespace ArrayType {
 }
 
 namespace StructType {
+  JSBool DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj);
+
   Array<FieldInfo>* GetFieldInfo(JSContext* cx, JSObject* obj);
   FieldInfo* LookupField(JSContext* cx, JSObject* obj, jsval idval);
 }
