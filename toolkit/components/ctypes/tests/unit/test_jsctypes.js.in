@@ -1633,13 +1633,14 @@ function ptrValue(p) {
 
 function run_PointerType_tests() {
   run_type_ctor_class_tests(ctypes.PointerType,
-    ctypes.PointerType(ctypes.int32_t), ctypes.PointerType("FILE"),
+    ctypes.PointerType(ctypes.int32_t), ctypes.PointerType(ctypes.int64_t),
     [ "targetType" ], [], [ "contents" ], [ "isNull" ], []);
 
   do_check_throws(function() { ctypes.PointerType(); }, Error);
   do_check_throws(function() { ctypes.PointerType(ctypes.int32_t, 5); }, Error);
   do_check_throws(function() { ctypes.PointerType(null); }, Error);
   do_check_throws(function() { ctypes.PointerType(ctypes.int32_t()); }, Error);
+  do_check_throws(function() { ctypes.PointerType("void"); }, Error);
 
   let name = "g_t";
   let g_t = ctypes.StructType(name, [{ a: ctypes.int32_t }, { b: ctypes.double }]);
@@ -1675,15 +1676,15 @@ function run_PointerType_tests() {
   do_check_throws(function() { p.value = 5; }, Error);
 
   // Test opaque pointers.
-  let f_t = ctypes.PointerType("FILE*");
+  let f_t = ctypes.StructType("FILE").ptr;
   do_check_eq(f_t.name, "FILE*");
-  do_check_eq(f_t.toSource(), "ctypes.PointerType(\"FILE*\")");
+  do_check_eq(f_t.toSource(), 'ctypes.StructType("FILE").ptr');
   let f = new f_t();
   do_check_throws(function() { f.contents; }, Error);
   do_check_throws(function() { f.contents = 0; }, Error);
   let f = f_t(5);
   do_check_throws(function() { f.contents = 0; }, Error);
-  do_check_eq(f.toSource(), "ctypes.PointerType(\"FILE*\")(ctypes.UInt64(\"0x5\"))");
+  do_check_eq(f.toSource(), 'FILE.ptr(ctypes.UInt64("0x5"))');
 
   do_check_throws(function() { f_t(p); }, Error);
   do_check_throws(function() { f.value = p; }, Error);
