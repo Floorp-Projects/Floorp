@@ -166,6 +166,10 @@
           this._popupOpen = true;
 
           this.invalidate();
+
+          let event = document.createEvent("Events");
+          event.initEvent("popupshown", true, false);
+          this.dispatchEvent(event);
         ]]></body>
       </method>
 
@@ -185,6 +189,10 @@
           // possibly because it avoids scrolling too soon after we uncollapse
           // ourselves
           this.scrollToTop();
+
+          let event = document.createEvent("Events");
+          event.initEvent("popuphidden", true, false);
+          this.dispatchEvent(event);
 
           BrowserUI.showToolbar(false);
           BrowserUI.popDialog();
