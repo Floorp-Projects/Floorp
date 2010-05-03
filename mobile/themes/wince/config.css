@@ -90,6 +90,10 @@ richlistitem .prefvalue {
   display: none;
 }
 
+#editor-container > hbox > label {
+  pointer-events: none;
+}
+
 #editor + richlistitem {
   display: none;
 }
