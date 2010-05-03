@@ -842,7 +842,10 @@ nsDOMAttribute::EnsureChildState(PRBool aSetText, PRBool &aHasChild) const
   aHasChild = !value.IsEmpty();
 
   if (aSetText && aHasChild) {
-    mChild->SetText(value, PR_TRUE);
+    // aNotify should probably be PR_TRUE sometimes, but it's unlikely that
+    // anyone cares. And we aren't updating the node when the attribute changes
+    // anyway so any notifications are way late.
+    mChild->SetText(value, PR_FALSE);
   }
 
   return NS_OK;
