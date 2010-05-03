@@ -663,6 +663,32 @@ CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 PRUint16
 OpenObjectStoreHelper::DoDatabaseWork()
 {
-  // mName and mMode are set, need to get mKeyPath and mAutoIncrement and mId.
+  nsresult rv = mDatabase->EnsureConnection();
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
+
+  // TODO pull this up to the connection and cache it so opening these is
+  // cheaper.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id, key_path, auto_increment "
+    "FROM object_store "
+    "WHERE name = :name"
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  PRBool hasMore;
+  rv = stmt->ExecuteStep(&hasMore);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::NOT_FOUND_ERR);
+  NS_ASSERTION(!hasMore, "Have more than one object store with given name");
+
+  mId = stmt->AsInt64(0);
+  (void)stmt->GetString(1, mKeyPath);
+  mAutoIncrement = !!stmt->AsInt32(2);
+
   return OK;
 }
