@@ -66,9 +66,6 @@ TabCanvas.prototype = {
       return;
     }
     
-    Utils.assert('chrome windows don\'t get paint (TabCanvas.paint)', 
-      fromWin.location.protocol != "chrome:");
-
     var scaler = w/fromWin.innerWidth;
   
     // TODO: Potentially only redraw the dirty rect? (Is it worth it?)
@@ -129,10 +126,7 @@ function Mirror(tab, manager) {
   var div = $(html)
     .data("tab", this.tab)
     .appendTo("body");
-    
-  if( this.tab.url.match("chrome:") )
-    div.hide();
-  
+      
   this.needsPaint = 0;
   this.canvasSizeForced = false;
   this.el = div.get(0);
@@ -250,7 +244,9 @@ TabMirror.prototype = {
           }
           
           if(tab.url != mirror.url) {
+            var oldURL = mirror.url;
             mirror.url = tab.url;
+            mirror._sendToSubscribers('urlChanged', {oldURL: oldURL, newURL: tab.url});
             mirror.triggerPaint();
           }
           
@@ -305,10 +301,6 @@ TabMirror.prototype = {
   link: function(tab){
     // Don't add duplicates
     if(tab.mirror)
-      return false;
-    
-    // Don't do anything that starts with a chrome URL
-    if( tab.contentWindow.location.protocol == "chrome:" )
       return false;
     
     // Add the tab to the page

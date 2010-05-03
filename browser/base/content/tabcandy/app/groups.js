@@ -367,6 +367,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       item = Items.item($el);
     }    
     
+    Utils.assert('shouldn\'t already be in a group', !item.parent || item.parent == this);
+
     if(!dropPos) 
       dropPos = {top:window.innerWidth, left:window.innerHeight};
       
@@ -378,6 +380,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     // TODO: You should be allowed to drop in the white space at the bottom and have it go to the end
     // (right now it can match the thumbnail above it and go there)
     function findInsertionPoint(dropPos){
+      if(self._isStacked)
+        return 0;
+        
       var best = {dist: Infinity, item: null};
       var index = 0;
       var box;
@@ -409,27 +414,33 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       return 0;      
     }
     
+    var wasAlreadyInThisGroup = false;
     var oldIndex = $.inArray(item, this._children);
-    if(oldIndex != -1)
+    if(oldIndex != -1) {
       this._children.splice(oldIndex, 1); 
+      wasAlreadyInThisGroup = true;
+    }
 
     // Insert the tab into the right position.
     var index = findInsertionPoint(dropPos);
     this._children.splice( index, 0, item );
 
-    $el.droppable("disable");
     item.setZ(this.getZ() + 1);
-    item.groupData = {};
-
-    item.addOnClose(this, function() {
-      self.remove($el);
-    });
-    
-    item.parent = this;
     $el.addClass("tabInGroup");
     
-    if(typeof(item.setResizable) == 'function')
-      item.setResizable(false);
+    if(!wasAlreadyInThisGroup) {
+      $el.droppable("disable");
+      item.groupData = {};
+  
+      item.addOnClose(this, function() {
+        self.remove($el);
+      });
+      
+      item.parent = this;
+      
+      if(typeof(item.setResizable) == 'function')
+        item.setResizable(false);
+    }
     
     if(!options.dontArrange)
       this.arrange();
