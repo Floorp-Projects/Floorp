@@ -246,15 +246,10 @@ window.TabItems = {
                   .removeClass("front");  
                 Navbar.show();
                               
-                try{
-                  var gID = self.getItemByTab(this).parent.id;
-                  if(gID) {
-                    var group = Groups.group(gID);
-                    Groups.setActiveGroup( group );                   
-                  }
-                }
-                catch(e){
-                  Utils.log(e);                
+                var gID = self.getItemByTab(this).parent.id;
+                if(gID) {
+                  var group = Groups.group(gID);
+                  Groups.setActiveGroup( group );                   
                 }
               
                 $("body").css("overflow", overflow);              
