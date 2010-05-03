@@ -183,7 +183,7 @@ body {
   left: 10px;
   position: absolute !important;
   cursor: pointer;
-  opacity: .4;
+  opacity: .3;
   background-image: url(../img/new-tab.png);
   z-index:99999;
 }
