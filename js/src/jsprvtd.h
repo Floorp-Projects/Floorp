@@ -91,9 +91,11 @@ typedef uint32 jsatomid;
 #ifdef __cplusplus
 
 /* Class and struct forward declarations in namespace js. */
+extern "C++" {
 namespace js {
 struct Parser;
 struct Compiler;
+}
 }
 
 #endif
@@ -184,16 +186,17 @@ class DeflatedStringCache;
 
 class PropertyCache;
 struct PropertyCacheEntry;
+
+static inline JSPropertyOp
+CastAsPropertyOp(JSObject *object)
+{
+    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
+}
+
 } /* namespace js */
 
 /* Common instantiations. */
 typedef js::Vector<jschar, 32> JSCharBuffer;
-
-static inline JSPropertyOp
-js_CastAsPropertyOp(JSObject *object)
-{
-    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
-}
 
 } /* export "C++" */
 #endif  /* __cplusplus */
@@ -209,7 +212,19 @@ typedef enum JSTrapStatus {
 
 typedef JSTrapStatus
 (* JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-                  void *closure);
+                  jsval closure);
+
+typedef JSTrapStatus
+(* JSInterruptHook)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                    void *closure);
+
+typedef JSTrapStatus
+(* JSDebuggerHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                      void *closure);
+
+typedef JSTrapStatus
+(* JSThrowHook)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                void *closure);
 
 typedef JSBool
 (* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id, jsval old,
@@ -271,13 +286,13 @@ typedef JSBool
                      void *closure);
 
 typedef struct JSDebugHooks {
-    JSTrapHandler       interruptHandler;
-    void                *interruptHandlerData;
+    JSInterruptHook     interruptHook;
+    void                *interruptHookData;
     JSNewScriptHook     newScriptHook;
     void                *newScriptHookData;
     JSDestroyScriptHook destroyScriptHook;
     void                *destroyScriptHookData;
-    JSTrapHandler       debuggerHandler;
+    JSDebuggerHandler   debuggerHandler;
     void                *debuggerHandlerData;
     JSSourceHandler     sourceHandler;
     void                *sourceHandlerData;
@@ -287,7 +302,7 @@ typedef struct JSDebugHooks {
     void                *callHookData;
     JSObjectHook        objectHook;
     void                *objectHookData;
-    JSTrapHandler       throwHook;
+    JSThrowHook         throwHook;
     void                *throwHookData;
     JSDebugErrorHook    debugErrorHook;
     void                *debugErrorHookData;

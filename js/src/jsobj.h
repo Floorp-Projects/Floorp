@@ -97,10 +97,10 @@ struct PropertyDescriptor {
     }
 
     JSObject* getterObject() const {
-        return get != JSVAL_VOID ? JSVAL_TO_OBJECT(get) : NULL;
+        return (get != JSVAL_VOID) ? JSVAL_TO_OBJECT(get) : NULL;
     }
     JSObject* setterObject() const {
-        return set != JSVAL_VOID ? JSVAL_TO_OBJECT(set) : NULL;
+        return (set != JSVAL_VOID) ? JSVAL_TO_OBJECT(set) : NULL;
     }
 
     jsval getterValue() const {
@@ -111,10 +111,10 @@ struct PropertyDescriptor {
     }
 
     JSPropertyOp getter() const {
-        return js_CastAsPropertyOp(getterObject());
+        return js::CastAsPropertyOp(getterObject());
     }
     JSPropertyOp setter() const {
-        return js_CastAsPropertyOp(setterObject());
+        return js::CastAsPropertyOp(setterObject());
     }
 
     static void traceDescriptorArray(JSTracer* trc, JSObject* obj);
@@ -292,7 +292,7 @@ struct JSObject {
         classword |= jsuword(2);
     }
 
-    uint32 numSlots(void) {
+    uint32 numSlots(void) const {
         return dslots ? (uint32)dslots[-1] : (uint32)JS_INITIAL_NSLOTS;
     }
 
@@ -405,24 +405,32 @@ struct JSObject {
      */
 
   private:
+    // Used by dense and slow arrays.
     static const uint32 JSSLOT_ARRAY_LENGTH = JSSLOT_PRIVATE;
-    static const uint32 JSSLOT_ARRAY_COUNT  = JSSLOT_PRIVATE + 1;
-    static const uint32 JSSLOT_ARRAY_UNUSED = JSSLOT_PRIVATE + 2;
+
+    // Used only by dense arrays.
+    static const uint32 JSSLOT_DENSE_ARRAY_COUNT     = JSSLOT_PRIVATE + 1;
+    static const uint32 JSSLOT_DENSE_ARRAY_MINLENCAP = JSSLOT_PRIVATE + 2;
 
     // This assertion must remain true;  see comment in js_MakeArraySlow().
     // (Nb: This method is never called, it just contains a static assertion.
     // The static assertion isn't inline because that doesn't work on Mac.)
     inline void staticAssertArrayLengthIsInPrivateSlot();
 
+    inline bool isDenseArrayMinLenCapOk() const;
+
+    inline uint32 uncheckedGetArrayLength() const;
+    inline uint32 uncheckedGetDenseArrayCapacity() const;
+
   public:
     inline uint32 getArrayLength() const;
-    inline void setArrayLength(uint32 length);
+    inline void setDenseArrayLength(uint32 length);
+    inline void setSlowArrayLength(uint32 length);
 
-    inline uint32 getArrayCount() const;
-    inline void voidDenseArrayCount();
-    inline void setArrayCount(uint32 count);
-    inline void incArrayCountBy(uint32 posDelta);
-    inline void decArrayCountBy(uint32 negDelta);
+    inline uint32 getDenseArrayCount() const;
+    inline void setDenseArrayCount(uint32 count);
+    inline void incDenseArrayCountBy(uint32 posDelta);
+    inline void decDenseArrayCountBy(uint32 negDelta);
 
     inline uint32 getDenseArrayCapacity() const;
     inline void setDenseArrayCapacity(uint32 capacity); // XXX: bug 558263 will remove this
@@ -436,6 +444,8 @@ struct JSObject {
     bool ensureDenseArrayElements(JSContext *cx, uint32 newcap,
                                bool initializeAllSlots = true);
     inline void freeDenseArrayElements(JSContext *cx);
+
+    inline void voidDenseOnlyArraySlots();  // used when converting a dense array to a slow array
 
     /*
      * Arguments-specific getters and setters.
@@ -451,8 +461,8 @@ struct JSObject {
      * JSSLOT_ARGS_CALLEE   - the arguments.callee value or JSVAL_HOLE if that
      *                        was overwritten.
      *
-     * Argument index i is stored in dslots[i].  But future-proof your code by
-     * using {Get,Set}ArgsSlot instead of naked dslots references.
+     * Argument index i is stored in dslots[i], accessible via
+     * {get,set}ArgsElement().
      */
   private:
     static const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
@@ -465,10 +475,13 @@ struct JSObject {
     inline uint32 getArgsLength() const;
     inline void setArgsLength(uint32 argc);
     inline void setArgsLengthOverridden();
-    inline bool isArgsLengthOverridden();
+    inline bool isArgsLengthOverridden() const;
 
     inline jsval getArgsCallee() const;
     inline void setArgsCallee(jsval callee);
+
+    inline jsval getArgsElement(uint32 i) const;
+    inline void setArgsElement(uint32 i, jsval v);
 
     /*
      * Date-specific getters and setters.

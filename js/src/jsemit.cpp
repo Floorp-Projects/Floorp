@@ -96,7 +96,8 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     spanDeps(NULL), jumpTargets(NULL), jtFreeList(NULL),
     numSpanDeps(0), numJumpTargets(0), spanDepTodo(0),
     arrayCompDepth(0),
-    emitLevel(0)
+    emitLevel(0),
+    constMap(parser->context)
 {
     flags = TCF_COMPILING;
     memset(&prolog, 0, sizeof prolog);
@@ -105,6 +106,11 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
     firstLine = prolog.currentLine = main.currentLine = lineno;
     prolog.noteMask = main.noteMask = SRCNOTE_CHUNK - 1;
     memset(&upvarMap, 0, sizeof upvarMap);
+}
+
+bool JSCodeGenerator::init()
+{
+    return constMap.init();
 }
 
 JSCodeGenerator::~JSCodeGenerator()
@@ -1544,7 +1550,6 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
     jsint ival;
     JSAtom *valueAtom;
     jsval v;
-    JSAtomListElement *ale;
 
     /* XXX just do numbers for now */
     if (pn->pn_type == TOK_NUMBER) {
@@ -1562,10 +1567,8 @@ js_DefineCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                 return JS_FALSE;
             v = ATOM_KEY(valueAtom);
         }
-        ale = cg->constList.add(cg->parser, atom);
-        if (!ale)
+        if (!cg->constMap.put(atom, v))
             return JS_FALSE;
-        ALE_SET_VALUE(ale, v);
     }
     return JS_TRUE;
 }
@@ -1626,7 +1629,6 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
 {
     JSBool ok;
     JSStmtInfo *stmt;
-    JSAtomListElement *ale;
     JSObject *obj, *objbox;
     JSProperty *prop;
     uintN attrs;
@@ -1644,10 +1646,9 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
             if (stmt)
                 return JS_TRUE;
 
-            ale = cg->constList.lookup(atom);
-            if (ale) {
-                JS_ASSERT(ALE_VALUE(ale) != JSVAL_HOLE);
-                *vp = ALE_VALUE(ale);
+            if (JSCodeGenerator::ConstMap::Ptr p = cg->constMap.lookup(atom)) {
+                JS_ASSERT(p->value != JSVAL_HOLE);
+                *vp = p->value;
                 return JS_TRUE;
             }
 
@@ -4397,6 +4398,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             new (cg2space) JSCodeGenerator(cg->parser,
                                            cg->codePool, cg->notePool,
                                            pn->pn_pos.begin.lineno);
+
+        if (!cg2->init())
+            return JS_FALSE;
+
         cg2->flags = pn->pn_funbox->tcflags | TCF_IN_FUNCTION;
 #if JS_HAS_SHARP_VARS
         if (cg2->flags & TCF_HAS_SHARPS) {
@@ -6018,25 +6023,32 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                     return JS_FALSE;
             }
 
-            /* Emit remainder as a single JSOP_CONCATN. */
-            for (index = 0; pn2; pn2 = pn2->pn_next, index++) {
+            if (!pn2)
+                break;
+
+            /*
+             * Having seen a string literal, we know statically that the rest
+             * of the additions are string concatenation, so we emit them as a
+             * single concatn. First, do string conversion on the result of the
+             * preceding zero or more additions so that any side effects of
+             * string conversion occur before the next operand begins.
+             */
+            if (pn2 == pn->pn_head) {
+                index = 0;
+            } else {
+                if (!js_Emit1(cx, cg, JSOP_OBJTOSTR))
+                    return JS_FALSE;
+                index = 1;
+            }
+
+            for (; pn2; pn2 = pn2->pn_next, index++) {
                 if (!js_EmitTree(cx, cg, pn2))
                     return JS_FALSE;
-                if (!pn2->isLiteral() &&
-                    js_Emit1(cx, cg, JSOP_OBJTOSTR) < 0) {
+                if (!pn2->isLiteral() && js_Emit1(cx, cg, JSOP_OBJTOSTR) < 0)
                     return JS_FALSE;
-                }
             }
 
-            if (index != 0) {
-                EMIT_UINT16_IMM_OP(JSOP_CONCATN, index);
-
-                /* If we had a prefix, we need to be added to it now. */
-                if (pn->pn_head->pn_type != TOK_STRING &&
-                    js_Emit1(cx, cg, JSOP_ADD) < 0) {
-                    return JS_FALSE;
-                }
-            }
+            EMIT_UINT16_IMM_OP(JSOP_CONCATN, index);
             break;
         }
       case TOK_BITOR:

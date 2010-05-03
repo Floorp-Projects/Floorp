@@ -62,9 +62,11 @@ BEGIN_TEST(testContexts_bug561444)
 	if (!cx)
 	    return;
 	JS_BeginRequest(cx);
-	jsvalRoot v(cx);
-	if (!JS_EvaluateScript(cx, d->obj, d->code, strlen(d->code), __FILE__, __LINE__, v.addr()))
-	    return;
+	{
+	    jsvalRoot v(cx);
+	    if (!JS_EvaluateScript(cx, d->obj, d->code, strlen(d->code), __FILE__, __LINE__, v.addr()))
+		return;
+	}
 	JS_DestroyContext(cx);
 	d->ok = true;
     }
