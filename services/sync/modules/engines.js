@@ -281,6 +281,7 @@ Engine.prototype = {
     this._tracker.ignoreAll = true;
     this._store.wipe();
     this._tracker.ignoreAll = false;
+    this._tracker.clearChangedIDs();
   },
 
   wipeClient: function Engine_wipeClient() {
