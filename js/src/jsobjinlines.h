@@ -278,7 +278,7 @@ JSObject::setArgsLengthOverridden()
 }
 
 inline bool
-JSObject::isArgsLengthOverridden()
+JSObject::isArgsLengthOverridden() const
 {
     JS_ASSERT(isArguments());
     jsval v = fslots[JSSLOT_ARGS_LENGTH];
@@ -297,6 +297,22 @@ JSObject::setArgsCallee(jsval callee)
 {
     JS_ASSERT(isArguments());
     fslots[JSSLOT_ARGS_CALLEE] = callee;
+}
+
+inline jsval
+JSObject::getArgsElement(uint32 i) const
+{
+    JS_ASSERT(isArguments());
+    JS_ASSERT(i < numSlots() - JS_INITIAL_NSLOTS);
+    return dslots[i];
+}
+
+inline void
+JSObject::setArgsElement(uint32 i, jsval v)
+{
+    JS_ASSERT(isArguments());
+    JS_ASSERT(i < numSlots() - JS_INITIAL_NSLOTS);
+    dslots[i] = v;
 }
 
 inline jsval
