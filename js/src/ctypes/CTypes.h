@@ -405,8 +405,7 @@ namespace CType {
 }
 
 namespace PointerType {
-  JSObject* CreateInternal(JSContext* cx, JSObject* ctor, JSObject* baseType,
-    JSString* name);
+  JSObject* CreateInternal(JSContext* cx, JSObject* baseType);
 
   JSObject* GetBaseType(JSContext* cx, JSObject* obj);
 }
