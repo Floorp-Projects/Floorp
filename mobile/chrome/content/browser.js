@@ -1271,7 +1271,8 @@ var Browser = {
    */
   elementFromPoint: function elementFromPoint(x, y) {
     let browser = this._browserView.getBrowser();
-    if (!browser) return null;
+    if (!browser)
+      return null;
 
     // browser's elementFromPoint expect browser-relative client coordinates.
     // subtract browser's scroll values to adjust
@@ -1775,9 +1776,10 @@ ContentCustomClicker.prototype = {
         cwu.getScrollXY(false, scrollX, scrollY);
 
         // the element can be out of the cX/cY point because of the touch radius
+        // ignore the redirection if the element is a HTMLHtmlElement (bug 562981)
         let rect = Browser.getBoundingContentRect(element);
-        if (!rect.isEmpty() && ((x < rect.left || (x > rect.left + rect.width)) ||
-                                (y < rect.top || (y > rect.top + rect.height)))) {
+        if (!rect.isEmpty() && !(element instanceof HTMLHtmlElement) &&
+            ((x < rect.left || (x > rect.left + rect.width)) || (y < rect.top || (y > rect.top + rect.height)))) {
 
           let point = rect.center();
           x = point.x;
@@ -1943,7 +1945,7 @@ const ElementTouchHelper = {
                                                false); /* don't flush layout */
 
     // return early if the click is just over a clickable element
-    if (!aWindowUtils.nodesFromRect || this._isElementClickable(target))
+    if (this._isElementClickable(target))
       return target;
 
     let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.bottom,
