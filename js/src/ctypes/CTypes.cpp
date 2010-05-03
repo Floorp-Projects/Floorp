@@ -1909,7 +1909,7 @@ ImplicitConvert(JSContext* cx,
           return false;
         }
 
-        FieldInfo* field = StructType::LookupField(cx, targetType,
+        const FieldInfo* field = StructType::LookupField(cx, targetType,
           fieldVal.value());
         if (!field)
           return false;
@@ -1927,8 +1927,8 @@ ImplicitConvert(JSContext* cx,
         ++i;
       }
 
-      Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, targetType);
-      if (i != fields->length()) {
+      const FieldInfoHash* fields = StructType::GetFieldInfo(cx, targetType);
+      if (i != fields->count()) {
         JS_ReportError(cx, "missing fields");
         return false;
       }
@@ -2223,15 +2223,23 @@ BuildTypeSource(JSContext* cx,
 
     AppendString(result, ", [");
 
-    Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
-    for (size_t i = 0; i < fields->length(); ++i) {
-      FieldInfo* field = fields->begin() + i;
+    const FieldInfoHash* fields = StructType::GetFieldInfo(cx, typeObj);
+    size_t length = fields->count();
+    Array<const FieldInfoHash::Entry*, 64> fieldsArray;
+    if (!fieldsArray.resize(length))
+      break;
+
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront())
+      fieldsArray[r.front().value.mIndex] = &r.front();
+
+    for (size_t i = 0; i < length; ++i) {
+      const FieldInfoHash::Entry* entry = fieldsArray[i];
       AppendString(result, "{ \"");
-      AppendString(result, field->mName);
+      AppendString(result, entry->key);
       AppendString(result, "\": ");
-      BuildTypeSource(cx, field->mType, true, result);
+      BuildTypeSource(cx, entry->value.mType, true, result);
       AppendString(result, " }");
-      if (i != fields->length() - 1)
+      if (i != length - 1)
         AppendString(result, ", ");
     }
 
@@ -2366,21 +2374,29 @@ BuildDataSource(JSContext* cx,
 
     // Serialize each field of the struct recursively. Each field must
     // be able to ImplicitConvert successfully.
-    Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
-    for (size_t i = 0; i < fields->length(); ++i) {
-      FieldInfo* field = fields->begin() + i;
-      char* fieldData = static_cast<char*>(data) + field->mOffset;
+    const FieldInfoHash* fields = StructType::GetFieldInfo(cx, typeObj);
+    size_t length = fields->count();
+    Array<const FieldInfoHash::Entry*, 64> fieldsArray;
+    if (!fieldsArray.resize(length))
+      return false;
+
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront())
+      fieldsArray[r.front().value.mIndex] = &r.front();
+
+    for (size_t i = 0; i < length; ++i) {
+      const FieldInfoHash::Entry* entry = fieldsArray[i];
 
       if (isImplicit) {
         AppendString(result, "\"");
-        AppendString(result, field->mName);
+        AppendString(result, entry->key);
         AppendString(result, "\": ");
       }
 
-      if (!BuildDataSource(cx, field->mType, fieldData, true, result))
+      char* fieldData = static_cast<char*>(data) + entry->value.mOffset;
+      if (!BuildDataSource(cx, entry->value.mType, fieldData, true, result))
         return false;
 
-      if (i + 1 != fields->length())
+      if (i + 1 != length)
         AppendString(result, ", ");
     }
 
@@ -2603,7 +2619,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
     if (!JSVAL_IS_VOID(slot)) {
       void* info = JSVAL_TO_PRIVATE(slot);
-      delete static_cast<Array<FieldInfo>*>(info);
+      delete static_cast<FieldInfoHash*>(info);
     }
 
     // Fall through.
@@ -2659,11 +2675,11 @@ CType::Trace(JSTracer* trc, JSObject* obj)
     if (JSVAL_IS_VOID(slot))
       return;
 
-    Array<FieldInfo>* fields =
-      static_cast<Array<FieldInfo>*>(JSVAL_TO_PRIVATE(slot));
-    for (size_t i = 0; i < fields->length(); ++i) {
-      FieldInfo* field = fields->begin() + i;
-      JS_CALL_TRACER(trc, field->mType, JSTRACE_OBJECT, "field");
+    FieldInfoHash* fields =
+      static_cast<FieldInfoHash*>(JSVAL_TO_PRIVATE(slot));
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+      JS_CALL_TRACER(trc, r.front().key, JSTRACE_STRING, "fieldName");
+      JS_CALL_TRACER(trc, r.front().value.mType, JSTRACE_OBJECT, "fieldType");
     }
 
     break;
@@ -3776,66 +3792,63 @@ ArrayType::AddressOfElement(JSContext* cx, uintN argc, jsval *vp)
 *******************************************************************************/
 
 // For a struct field descriptor 'val' of the form { name : type }, extract
-// 'name' and 'type', and populate 'field' with the information.
-static JSBool
-ExtractStructField(JSContext* cx, jsval val, FieldInfo* field)
+// 'name' and 'type'.
+static JSString*
+ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
 {
   if (JSVAL_IS_PRIMITIVE(val)) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
-    return false;
+    return NULL;
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(val);
   JSObject* iter = JS_NewPropertyIterator(cx, obj);
   if (!iter)
-    return false;
+    return NULL;
   js::AutoValueRooter iterroot(cx, iter);
 
   jsid id;
   if (!JS_NextProperty(cx, iter, &id))
-    return false;
+    return NULL;
 
   js::AutoValueRooter nameVal(cx);
   if (!JS_IdToValue(cx, id, nameVal.addr()))
-    return false;
+    return NULL;
   if (!JSVAL_IS_STRING(nameVal.value())) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
-    return false;
+    return NULL;
   }
+  JSString* name = JSVAL_TO_STRING(nameVal.value());
 
   // make sure we have one, and only one, property
   if (!JS_NextProperty(cx, iter, &id))
-    return false;
+    return NULL;
   if (!JSVAL_IS_VOID(id)) {
     JS_ReportError(cx, "struct field descriptors must contain one property");
-    return false;
+    return NULL;
   }
-
-  JSString* name = JSVAL_TO_STRING(nameVal.value());
-  JS_ASSERT(field->mName.length() == 0);
-  AppendString(field->mName, name);
 
   js::AutoValueRooter propVal(cx);
   if (!JS_GetUCProperty(cx, obj, name->chars(), name->length(), propVal.addr()))
-    return false;
+    return NULL;
 
   if (JSVAL_IS_PRIMITIVE(propVal.value()) ||
       !CType::IsCType(cx, JSVAL_TO_OBJECT(propVal.value()))) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
-    return false;
+    return NULL;
   }
 
   // Undefined size or zero size struct members are illegal.
   // (Zero-size arrays are legal as struct members in C++, but libffi will
   // choke on a zero-size struct, so we disallow them.)
-  field->mType = JSVAL_TO_OBJECT(propVal.value());
+  *typeObj = JSVAL_TO_OBJECT(propVal.value());
   size_t size;
-  if (!CType::GetSafeSize(cx, field->mType, &size) || size == 0) {
+  if (!CType::GetSafeSize(cx, *typeObj, &size) || size == 0) {
     JS_ReportError(cx, "struct field types must have defined and nonzero size");
-    return false;
+    return NULL;
   }
 
-  return true;
+  return name;
 }
 
 // For a struct field with 'name' and 'type', add an element to field
@@ -3844,7 +3857,7 @@ static JSBool
 AddFieldToArray(JSContext* cx,
                 JSObject* arrayObj,
                 jsval* element,
-                const String& name,
+                JSString* name,
                 JSObject* typeObj)
 {
   JSObject* fieldObj = JS_NewObject(cx, NULL, NULL, arrayObj);
@@ -3854,7 +3867,7 @@ AddFieldToArray(JSContext* cx,
   *element = OBJECT_TO_JSVAL(fieldObj);
 
   if (!JS_DefineUCProperty(cx, fieldObj,
-         name.begin(), name.length(),
+         name->chars(), name->length(),
          OBJECT_TO_JSVAL(typeObj), NULL, NULL,
          JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
@@ -3930,12 +3943,19 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
          NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
     return JS_FALSE;
 
-  // Create an array of FieldInfo objects to stash on the type object.
-  AutoPtr< Array<FieldInfo> > fields(new Array<FieldInfo>);
-  if (!fields || !fields->resize(len)) {
+  // Create a hash of FieldInfo objects to stash on the type object.
+  FieldInfoHash* fields(new FieldInfoHash);
+  if (!fields || !fields->init(len)) {
+    delete fields;
     JS_ReportOutOfMemory(cx);
     return JS_FALSE;
   }
+
+  // Stash the FieldInfo hash in a reserved slot now, for GC safety of its
+  // constituents.
+  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FIELDINFO,
+         PRIVATE_TO_JSVAL(fields)))
+    return JS_FALSE;
 
   // Process the field types.
   size_t structSize, structAlign;
@@ -3948,28 +3968,31 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
       if (!JS_GetElement(cx, fieldsObj, i, item.addr()))
         return JS_FALSE;
 
-      FieldInfo* info = fields->begin() + i;
-      if (!ExtractStructField(cx, item.value(), info))
+      JSObject* fieldType;
+      JSString* name = ExtractStructField(cx, item.value(), &fieldType);
+      if (!name)
         return JS_FALSE;
 
-      // Make sure each field name is unique.
-      for (size_t j = 0; j < i; ++j) {
-        FieldInfo* field = fields->begin() + j;
-        if (StringsEqual(field->mName, info->mName)) {
-          JS_ReportError(cx, "struct fields must have unique names");
-          return JS_FALSE;
-        }
+      // Make sure each field name is unique, and add it to the hash.
+      FieldInfoHash::AddPtr entryPtr = fields->lookupForAdd(name);
+      if (entryPtr) {
+        JS_ReportError(cx, "struct fields must have unique names");
+        return JS_FALSE;
       }
+      ASSERT_OK(fields->add(entryPtr, name, FieldInfo()));
+      FieldInfo& info = entryPtr->value;
+      info.mType = fieldType;
+      info.mIndex = i;
 
       // Add the field to the StructType's 'prototype' property.
       if (!JS_DefineUCProperty(cx, prototype,
-             info->mName.begin(), info->mName.length(), JSVAL_VOID,
+             name->chars(), name->length(), JSVAL_VOID,
              StructType::FieldGetter, StructType::FieldSetter,
              JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT))
         return JS_FALSE;
 
-      size_t fieldSize = CType::GetSize(cx, info->mType);
-      size_t fieldAlign = CType::GetAlignment(cx, info->mType);
+      size_t fieldSize = CType::GetSize(cx, fieldType);
+      size_t fieldAlign = CType::GetAlignment(cx, fieldType);
       size_t fieldOffset = Align(structSize, fieldAlign);
       // Check for overflow. Since we hold invariant that fieldSize % fieldAlign
       // be zero, we can safely check fieldOffset + fieldSize without first
@@ -3978,7 +4001,7 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
         JS_ReportError(cx, "size overflow");
         return JS_FALSE;
       }
-      info->mOffset = fieldOffset;
+      info.mOffset = fieldOffset;
       structSize = fieldOffset + fieldSize;
 
       if (fieldAlign > structAlign)
@@ -4012,12 +4035,6 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj
       !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
     return JS_FALSE;
 
-  // Stash the FieldInfo array in a reserved slot.
-  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FIELDINFO,
-         PRIVATE_TO_JSVAL(fields.get())))
-    return JS_FALSE;
-  fields.forget();
-
   return JS_TRUE;
 }
 
@@ -4028,8 +4045,8 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
   JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
   JS_ASSERT(CType::IsSizeDefined(cx, obj));
 
-  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
-  size_t len = fields->length();
+  const FieldInfoHash* fields = GetFieldInfo(cx, obj);
+  size_t len = fields->count();
 
   size_t structSize = CType::GetSize(cx, obj);
   size_t structAlign = CType::GetAlignment(cx, obj);
@@ -4050,11 +4067,12 @@ StructType::BuildFFIType(JSContext* cx, JSObject* obj)
     }
     elements[len] = NULL;
 
-    for (size_t i = 0; i < len; ++i) {
-      FieldInfo* info = fields->begin() + i;
-      elements[i] = CType::GetFFIType(cx, info->mType);
-      if (!elements[i])
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+      const FieldInfoHash::Entry& entry = r.front();
+      ffi_type* fieldType = CType::GetFFIType(cx, entry.value.mType);
+      if (!fieldType)
         return NULL;
+      elements[entry.value.mIndex] = fieldType;
     }
 
   } else {
@@ -4154,7 +4172,7 @@ StructType::ConstructData(JSContext* cx,
     return JS_TRUE;
 
   char* buffer = static_cast<char*>(CData::GetData(cx, result));
-  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
+  const FieldInfoHash* fields = GetFieldInfo(cx, obj);
 
   if (argc == 1) {
     // There are two possible interpretations of the argument:
@@ -4169,7 +4187,7 @@ StructType::ConstructData(JSContext* cx,
     if (ExplicitConvert(cx, argv[0], obj, buffer))
       return JS_TRUE;
 
-    if (fields->length() != 1)
+    if (fields->count() != 1)
       return JS_FALSE;
 
     // If ExplicitConvert failed, and there is no pending exception, then assume
@@ -4186,10 +4204,11 @@ StructType::ConstructData(JSContext* cx,
 
   // We have a type constructor of the form 'ctypes.StructType(a, b, c, ...)'.
   // ImplicitConvert each field.
-  if (argc == fields->length()) {
-    for (size_t i = 0; i < fields->length(); ++i) {
-      FieldInfo* field = fields->begin() + i;
-      if (!ImplicitConvert(cx, argv[i], field->mType, buffer + field->mOffset,
+  if (argc == fields->count()) {
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+      const FieldInfo& field = r.front().value;
+      if (!ImplicitConvert(cx, argv[field.mIndex], field.mType,
+             buffer + field.mOffset,
              false, NULL))
         return JS_FALSE;
     }
@@ -4198,11 +4217,11 @@ StructType::ConstructData(JSContext* cx,
   }
 
   JS_ReportError(cx, "constructor takes 0, 1, or %u arguments",
-    fields->length());
+    fields->count());
   return JS_FALSE;
 }
 
-Array<FieldInfo>*
+const FieldInfoHash*
 StructType::GetFieldInfo(JSContext* cx, JSObject* obj)
 {
   JS_ASSERT(CType::IsCType(cx, obj));
@@ -4212,23 +4231,19 @@ StructType::GetFieldInfo(JSContext* cx, JSObject* obj)
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
   JS_ASSERT(!JSVAL_IS_VOID(slot) && JSVAL_TO_PRIVATE(slot));
 
-  return static_cast<Array<FieldInfo>*>(JSVAL_TO_PRIVATE(slot));
+  return static_cast<const FieldInfoHash*>(JSVAL_TO_PRIVATE(slot));
 }
 
-FieldInfo*
+const FieldInfo*
 StructType::LookupField(JSContext* cx, JSObject* obj, jsval idval)
 {
   JS_ASSERT(CType::IsCType(cx, obj));
   JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
 
-  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
-
   JSString* name = JSVAL_TO_STRING(idval);
-  for (size_t i = 0; i < fields->length(); ++i) {
-    FieldInfo* field = fields->begin() + i;
-    if (StringsEqual(field->mName, name))
-      return field;
-  }
+  FieldInfoHash::Ptr ptr = GetFieldInfo(cx, obj)->lookup(name);
+  if (ptr)
+    return &ptr->value;
 
   const char* bytes = JS_GetStringBytesZ(cx, name);
   if (!bytes)
@@ -4245,8 +4260,8 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
   JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
   JS_ASSERT(CType::IsSizeDefined(cx, obj));
 
-  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
-  size_t len = fields->length();
+  const FieldInfoHash* fields = GetFieldInfo(cx, obj);
+  size_t len = fields->count();
 
   // Prepare a new array for the 'fields' property of the StructType.
   jsval* fieldsVec;
@@ -4257,12 +4272,11 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
   js::AutoValueRooter root(cx, fieldsProp);
   JS_ASSERT(len == 0 || fieldsVec);
 
-  for (size_t i = 0; i < len; ++i) {
-    FieldInfo* field = fields->begin() + i;
-
+  for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+    const FieldInfoHash::Entry& entry = r.front();
     // Add the field descriptor to the array.
-    if (!AddFieldToArray(cx, fieldsProp, &fieldsVec[i],
-           field->mName, field->mType))
+    if (!AddFieldToArray(cx, fieldsProp, &fieldsVec[entry.value.mIndex],
+           entry.key, entry.value.mType))
       return NULL;
   }
 
@@ -4317,7 +4331,7 @@ StructType::FieldGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
     return JS_FALSE;
   }
 
-  FieldInfo* field = LookupField(cx, typeObj, idval);
+  const FieldInfo* field = LookupField(cx, typeObj, idval);
   if (!field)
     return JS_FALSE;
 
@@ -4339,7 +4353,7 @@ StructType::FieldSetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
     return JS_FALSE;
   }
 
-  FieldInfo* field = LookupField(cx, typeObj, idval);
+  const FieldInfo* field = LookupField(cx, typeObj, idval);
   if (!field)
     return JS_FALSE;
 
@@ -4369,7 +4383,7 @@ StructType::AddressOfField(JSContext* cx, uintN argc, jsval *vp)
     return JS_FALSE;
   }
 
-  FieldInfo* field = LookupField(cx, typeObj, JS_ARGV(cx, vp)[0]);
+  const FieldInfo* field = LookupField(cx, typeObj, JS_ARGV(cx, vp)[0]);
   if (!field)
     return JS_FALSE;
 
