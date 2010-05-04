@@ -40,8 +40,11 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/ctypes.jsm");
+try {
+  Components.utils.import("resource://gre/modules/Services.jsm");
+  Components.utils.import("resource://gre/modules/ctypes.jsm");
+}
+catch(ex) {}
 
 function WeaveCrypto() {
     this.init();
@@ -1120,7 +1123,7 @@ WeaveCrypto.prototype = {
     }
 };
 
-let component = [WeaveCrypto];
+let component = Services == null || ctypes == null ? [] : [WeaveCrypto];
 function NSGetModule (compMgr, fileSpec) {
     return XPCOMUtils.generateModule(component);
 }
