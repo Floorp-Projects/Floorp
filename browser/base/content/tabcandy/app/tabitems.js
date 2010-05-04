@@ -367,14 +367,18 @@ window.TabItems = {
     if(this.storageData && this.storageData.tabs) {
       $.each(this.storageData.tabs, function(index, tab) {
         if(item.getURL() == tab.url) {
-          if(item.parent)
-            item.parent.remove(item);
+          if(!item.reconnected) {
+            if(item.parent)
+              item.parent.remove(item);
+              
+            item.setBounds(tab.bounds, true);
+            item.userSize = tab.userSize;
+            if(tab.groupID) {
+              var group = Groups.group(tab.groupID);
+              group.add(item);
+            }
             
-          item.setBounds(tab.bounds, true);
-          item.userSize = tab.userSize;
-          if(tab.groupID) {
-            var group = Groups.group(tab.groupID);
-            group.add(item);
+            item.reconnected = true;
           }
           
           found = true;
