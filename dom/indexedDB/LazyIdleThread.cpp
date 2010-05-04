@@ -393,12 +393,15 @@ LazyIdleThread::AfterProcessNextEvent(nsIThreadInternal* aThread,
     return NS_OK;
   }
 
-  NS_ASSERTION(!mIdleTimer, "Should have been cleared!");
+  if (NS_UNLIKELY(mIdleTimer)) {
+    rv = mIdleTimer->Cancel();
+  }
+  else {
+    mIdleTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  mIdleTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mIdleTimer->SetTarget(mOwningThread);
+    rv = mIdleTimer->SetTarget(mOwningThread);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mIdleTimer->InitWithCallback(this, mIdleTimeoutMS,

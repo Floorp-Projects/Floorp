@@ -62,9 +62,14 @@ public:
          PRBool aAutoIncrement,
          PRUint16 aMode);
 
-  void SetId(PRInt64 aId) {
-    mId = aId;
-  }
+  static already_AddRefed<IDBObjectStoreRequest>
+  Create(IDBDatabaseRequest* aDatabase,
+         const nsAString& aName,
+         PRUint16 aMode);
+
+  void SetId(PRInt64 aId);
+  void SetKeyPath(const nsAString& aKeyPath);
+  void SetAutoIncrement(PRBool aAutoIncrement);
 
 protected:
   IDBObjectStoreRequest();
