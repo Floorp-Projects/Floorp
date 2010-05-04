@@ -2263,7 +2263,7 @@ void nsSSLIOLayerHelpers::setRenegoUnrestrictedSites(const nsCString &str)
   
   mRenegoUnrestrictedSites->Init(1);
   
-  nsCCommaSeparatedTokenizer toker(str);
+  nsCCharSeparatedTokenizer toker(str, ',');
 
   while (toker.hasMoreTokens()) {
     const nsCSubstring &host = toker.nextToken();
