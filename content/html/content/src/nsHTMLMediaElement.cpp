@@ -71,7 +71,7 @@
 #include "nsIDOMProgressEvent.h"
 #include "nsHTMLMediaError.h"
 #include "nsICategoryManager.h"
-#include "nsCommaSeparatedTokenizer.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsMediaStream.h"
 
 #include "nsIDOMHTMLVideoElement.h"

@@ -51,7 +51,7 @@
 #include "nsIContent.h"
 #include "nsContentUtils.h"
 #include "nsWhitespaceTokenizer.h"
-#include "nsCommaSeparatedTokenizer.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsStyleUtil.h"
 #include "nsSVGUtils.h"
 

@@ -94,7 +94,7 @@
 #include "nsIStorageStream.h"
 #include "nsIPromptFactory.h"
 #include "nsIWindowWatcher.h"
-#include "nsCommaSeparatedTokenizer.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsIConsoleService.h"
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
