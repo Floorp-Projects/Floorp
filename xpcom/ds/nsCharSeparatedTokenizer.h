@@ -59,10 +59,18 @@
 class nsCharSeparatedTokenizer
 {
 public:
+    // Flags -- only one for now. If we need more, they should be defined to
+    // be 1<<1, 1<<2, etc. (They're masks, and aFlags/mFlags are bitfields.)
+    enum {
+        SEPARATOR_OPTIONAL = 1
+    };
+
     nsCharSeparatedTokenizer(const nsSubstring& aSource,
-                             PRUnichar aSeparatorChar)
+                             PRUnichar aSeparatorChar,
+                             PRUint32  aFlags = 0)
         : mLastTokenEndedWithSeparator(PR_FALSE),
-          mSeparatorChar(aSeparatorChar)
+          mSeparatorChar(aSeparatorChar),
+          mFlags(aFlags)
     {
         aSource.BeginReading(mIter);
         aSource.EndReading(mEnd);
@@ -99,7 +107,8 @@ public:
         NS_ASSERTION(mIter == mEnd || !isWhitespace(*mIter),
                      "Should be at beginning of token if there is one");
 
-        // Search until we hit separator or end.
+        // Search until we hit separator or end (or whitespace, if separator
+        // isn't required -- see clause with 'break' below).
         while (mIter != mEnd && *mIter != mSeparatorChar) {
           // Skip to end of current word.
           while (mIter != mEnd &&
@@ -112,12 +121,23 @@ public:
           while (mIter != mEnd && isWhitespace(*mIter)) {
               ++mIter;
           }
+          if (mFlags & SEPARATOR_OPTIONAL) {
+            // We've hit (and skipped) whitespace, and that's sufficient to end
+            // our token, regardless of whether we've reached a SeparatorChar.
+            break;
+          } // (else, we'll keep looping until we hit mEnd or SeparatorChar)
         }
-        mLastTokenEndedWithSeparator = mIter != mEnd;
 
-        // Skip separator (and any whitespace after it).
+        mLastTokenEndedWithSeparator = (mIter != mEnd &&
+                                        *mIter == mSeparatorChar);
+        NS_ASSERTION((mFlags & SEPARATOR_OPTIONAL) ||
+                     (mLastTokenEndedWithSeparator == (mIter != mEnd)),
+                     "If we require a separator and haven't hit the end of "
+                     "our string, then we shouldn't have left the loop "
+                     "unless we hit a separator");
+
+        // Skip separator (and any whitespace after it), if we're at one.
         if (mLastTokenEndedWithSeparator) {
-            NS_ASSERTION(*mIter == mSeparatorChar, "Ended loop too soon");
             ++mIter;
 
             while (mIter != mEnd && isWhitespace(*mIter)) {
@@ -132,6 +152,7 @@ private:
     nsSubstring::const_char_iterator mIter, mEnd;
     PRPackedBool mLastTokenEndedWithSeparator;
     PRUnichar mSeparatorChar;
+    PRUint32  mFlags;
 
     PRBool isWhitespace(PRUnichar aChar)
     {
