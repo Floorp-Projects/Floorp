@@ -102,8 +102,13 @@ var Tabbar = {
       tab.collapsed = true;
     });
     
+    // Show all of the tabs in the group and move them (in order)
+    // that they appear in the group to the end of the tab strip.
+    // This way the tab order is matched up to the group's thumbnail
+    // order.
     visibleTabs.forEach(function(tab){
       tab.collapsed = false;
+      Utils.activeWindow.gBrowser.moveTabTo(tab, UI.tabBar.el.children.length-1);
     });
     
   },
