@@ -5,7 +5,7 @@ interface nsILocalFile;
 [scriptable, uuid(95464a04-6949-46cb-b621-d167790704a0)]
 interface nsITestCrasher : nsISupports
 {
-  void crash();
+  void crash(in short how);
 
   /**
    * Lock a directory using XRE_LockProfileDirectory.
@@ -14,4 +14,7 @@ interface nsITestCrasher : nsISupports
    * @return          An opaque lock object.
    */
   nsISupports lockDir(in nsILocalFile directory);
+
+  const short CRASH_INVALID_POINTER_DEREF  = 0;
+  const short CRASH_PURE_VIRTUAL_CALL      = 1;
 };
