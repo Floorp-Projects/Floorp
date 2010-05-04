@@ -1559,6 +1559,8 @@ js_TraceOpcode(JSContext *cx)
                             (n == -ndefs) ? "  output:" : ",",
                             bytes);
                     cx->free(bytes);
+                } else {
+                    JS_ClearPendingException(cx);
                 }
             }
             fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
@@ -1566,10 +1568,12 @@ js_TraceOpcode(JSContext *cx)
         fprintf(tracefp, "  stack: ");
         for (siter = StackBase(fp); siter < regs->sp; siter++) {
             str = js_ValueToString(cx, *siter);
-            if (!str)
+            if (!str) {
                 fputs("<null>", tracefp);
-            else
+            } else {
+                JS_ClearPendingException(cx);
                 js_FileEscapedString(tracefp, str, 0);
+            }
             fputc(' ', tracefp);
         }
         fputc('\n', tracefp);
@@ -1591,6 +1595,8 @@ js_TraceOpcode(JSContext *cx)
                         (n == -nuses) ? "  inputs:" : ",",
                         bytes);
                 cx->free(bytes);
+            } else {
+                JS_ClearPendingException(cx);
             }
         }
         fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
