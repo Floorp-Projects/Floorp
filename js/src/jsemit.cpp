@@ -1263,7 +1263,7 @@ JSTreeContext::ensureSharpSlots()
     }
 
     JS_ASSERT(!(flags & TCF_HAS_SHARPS));
-    if (flags & TCF_IN_FUNCTION) {
+    if (inFunction()) {
         JSContext *cx = parser->context;
         JSAtom *sharpArrayAtom = js_Atomize(cx, "#array", 6, 0);
         JSAtom *sharpDepthAtom = js_Atomize(cx, "#depth", 6, 0);
@@ -1640,7 +1640,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
      */
     *vp = JSVAL_HOLE;
     do {
-        if (cg->flags & (TCF_IN_FUNCTION | TCF_COMPILE_N_GO)) {
+        if (cg->inFunction() && cg->compileAndGo()) {
             /* XXX this will need revising if 'const' becomes block-scoped. */
             stmt = js_LexicalLookup(cg, atom, NULL);
             if (stmt)
@@ -1659,11 +1659,11 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
              * with object or catch variable; nor can prop's value be changed,
              * nor can prop be deleted.
              */
-            if (cg->flags & TCF_IN_FUNCTION) {
+            if (cg->inFunction()) {
                 if (js_LookupLocal(cx, cg->fun, atom, NULL) != JSLOCAL_NONE)
                     break;
             } else {
-                JS_ASSERT(cg->flags & TCF_COMPILE_N_GO);
+                JS_ASSERT(cg->compileAndGo());
                 obj = cg->scopeChain;
                 ok = obj->lookupProperty(cx, ATOM_TO_JSID(atom), &objbox, &prop);
                 if (!ok)
@@ -1835,7 +1835,7 @@ static jsint
 AdjustBlockSlot(JSContext *cx, JSCodeGenerator *cg, jsint slot)
 {
     JS_ASSERT((jsuint) slot < cg->maxStackDepth);
-    if (cg->flags & TCF_IN_FUNCTION) {
+    if (cg->inFunction()) {
         slot += cg->fun->u.i.nvars;
         if ((uintN) slot >= SLOTNO_LIMIT) {
             ReportCompileErrorNumber(cx, CG_TS(cg), NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
@@ -1943,7 +1943,7 @@ MakeUpvarForEval(JSParseNode *pn, JSCodeGenerator *cg)
 
     JSAtomListElement *ale = cg->upvarList.lookup(atom);
     if (!ale) {
-        if ((cg->flags & TCF_IN_FUNCTION) &&
+        if (cg->inFunction() &&
             !js_AddLocal(cx, cg->fun, atom, JSLOCAL_UPVAR)) {
             return false;
         }
@@ -2065,7 +2065,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case JSOP_DELNAME:
         if (dn_kind != JSDefinition::UNKNOWN) {
             if (cg->parser->callerFrame && !cg->funbox)
-                JS_ASSERT(cg->flags & TCF_COMPILE_N_GO);
+                JS_ASSERT(cg->compileAndGo());
             else
                 pn->pn_op = JSOP_FALSE;
             pn->pn_dflags |= PND_BOUND;
@@ -2080,7 +2080,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
     if (cookie == FREE_UPVAR_COOKIE) {
         JSStackFrame *caller = cg->parser->callerFrame;
         if (caller) {
-            JS_ASSERT(cg->flags & TCF_COMPILE_N_GO);
+            JS_ASSERT(cg->compileAndGo());
 
             /*
              * Don't generate upvars on the left side of a for loop. See
@@ -2099,7 +2099,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * created function objects have the top-level cg's scopeChain set
              * as their parent by Parser::newFunction.
              */
-            JSObject *scopeobj = (cg->flags & TCF_IN_FUNCTION)
+            JSObject *scopeobj = cg->inFunction()
                                  ? FUN_OBJECT(cg->fun)->getParent()
                                  : cg->scopeChain;
             if (scopeobj != cg->parser->callerVarObj)
@@ -2138,7 +2138,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * calls to the function, and if we could equate the atom index in the
          * function's atom map for every global name with its frame slot.
          */
-        if (cg->flags & TCF_IN_FUNCTION)
+        if (cg->inFunction())
             return JS_TRUE;
 
         /*
@@ -2194,10 +2194,10 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         JSTreeContext *tc = cg;
         while (tc->staticLevel != level)
             tc = tc->parent;
-        JS_ASSERT(tc->flags & TCF_COMPILING);
+        JS_ASSERT(tc->compiling());
 
         JSCodeGenerator *evalcg = (JSCodeGenerator *) tc;
-        JS_ASSERT(evalcg->flags & TCF_COMPILE_N_GO);
+        JS_ASSERT(evalcg->compileAndGo());
         JS_ASSERT(caller->fun && cg->parser->callerVarObj == evalcg->scopeChain);
 
         /*
@@ -2219,7 +2219,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
     uintN skip = cg->staticLevel - level;
     if (skip != 0) {
-        JS_ASSERT(cg->flags & TCF_IN_FUNCTION);
+        JS_ASSERT(cg->inFunction());
         JS_ASSERT_IF(UPVAR_FRAME_SLOT(cookie) != CALLEE_UPVAR_SLOT,
                      cg->lexdeps.lookup(atom));
         JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
@@ -2293,7 +2293,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 do {
                     tc = tc->parent;
                 } while (tc->staticLevel != level);
-                if (tc->flags & TCF_IN_FUNCTION)
+                if (tc->inFunction())
                     slot += tc->fun->nargs;
             }
 
@@ -3649,7 +3649,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
     }
 
     if (JOF_OPTYPE(pn->pn_op) == JOF_ATOM &&
-        (!(cg->flags & TCF_IN_FUNCTION) || (cg->flags & TCF_FUN_HEAVYWEIGHT))) {
+        (!cg->inFunction() || (cg->flags & TCF_FUN_HEAVYWEIGHT))) {
         CG_SWITCH_TO_PROLOG(cg);
         if (!UpdateLineNumberNotes(cx, cg, pn->pn_pos.begin.lineno))
             return JS_FALSE;
@@ -4372,7 +4372,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * comments in the TOK_LC case.
              */
             JS_ASSERT(pn->pn_op == JSOP_NOP);
-            JS_ASSERT(cg->flags & TCF_IN_FUNCTION);
+            JS_ASSERT(cg->inFunction());
             if (!EmitFunctionDefNop(cx, cg, pn->pn_index))
                 return JS_FALSE;
             break;
@@ -4456,7 +4456,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * invocation of the emitter and calls to js_EmitTree for function
          * definitions can be scheduled before generating the rest of code.
          */
-        if (!(cg->flags & TCF_IN_FUNCTION)) {
+        if (!cg->inFunction()) {
             JS_ASSERT(!cg->topStmt);
             CG_SWITCH_TO_PROLOG(cg);
             op = FUN_FLAT_CLOSURE(fun) ? JSOP_DEFFUN_FC : JSOP_DEFFUN;
@@ -5490,7 +5490,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 #if JS_HAS_GENERATORS
       case TOK_YIELD:
-        if (!(cg->flags & TCF_IN_FUNCTION)) {
+        if (!cg->inFunction()) {
             ReportCompileErrorNumber(cx, CG_TS(cg), pn, JSREPORT_ERROR,
                                      JSMSG_BAD_RETURN_OR_YIELD,
                                      js_yield_str);
@@ -5547,7 +5547,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
              * Currently this is used only for functions, as compile-as-we go
              * mode for scripts does not allow separate emitter passes.
              */
-            JS_ASSERT(cg->flags & TCF_IN_FUNCTION);
+            JS_ASSERT(cg->inFunction());
             if (pn->pn_xflags & PNX_DESTRUCT) {
                 /*
                  * Assign the destructuring arguments before defining any
@@ -6012,7 +6012,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       case TOK_PLUS:
         /* For TCF_IN_FUNCTION test, see TOK_RB concerning JSOP_NEWARRAY. */
         if (pn->pn_arity == PN_LIST && pn->pn_count < JS_BIT(16) &&
-            (cg->flags & TCF_IN_FUNCTION)) {
+            cg->inFunction()) {
             /* Emit up to the first string literal conventionally. */
             for (pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
                 if (pn2->pn_type == TOK_STRING)
@@ -6428,7 +6428,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         type = PN_TYPE(pn->expr());
         if (type != TOK_CATCH && type != TOK_LET && type != TOK_FOR &&
             (!(stmt = stmtInfo.down)
-             ? !(cg->flags & TCF_IN_FUNCTION)
+             ? !cg->inFunction()
              : stmt->type == STMT_BLOCK)) {
 #if defined DEBUG_brendan || defined DEBUG_mrbkap
             /* There must be no source note already output for the next op. */
@@ -6540,7 +6540,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
       do_emit_array:
 #endif
 
-        op = (JS_LIKELY(pn->pn_count < JS_BIT(16)) && (cg->flags & TCF_IN_FUNCTION))
+        op = (JS_LIKELY(pn->pn_count < JS_BIT(16)) && cg->inFunction())
              ? JSOP_NEWARRAY
              : JSOP_NEWINIT;
 
@@ -6758,7 +6758,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * and lastIndex sharing, select JSOP_REGEXP.
          */
         JS_ASSERT(pn->pn_op == JSOP_REGEXP);
-        bool singleton = !cg->fun && (cg->flags & TCF_COMPILE_N_GO);
+        bool singleton = !cg->fun && cg->compileAndGo();
         if (singleton) {
             for (JSStmtInfo *stmt = cg->topStmt; stmt; stmt = stmt->down) {
                 if (STMT_IS_LOOP(stmt)) {

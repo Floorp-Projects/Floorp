@@ -1104,7 +1104,7 @@ ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
 {
     const char *name;
 
-    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
+    JS_ASSERT(tc->inFunction());
     if (tc->fun->atom) {
         name = js_AtomToPrintableString(cx, tc->fun->atom);
     } else {
@@ -1117,7 +1117,7 @@ ReportBadReturn(JSContext *cx, JSTreeContext *tc, uintN flags, uintN errnum,
 static JSBool
 CheckFinalReturn(JSContext *cx, JSTreeContext *tc, JSParseNode *pn)
 {
-    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
+    JS_ASSERT(tc->inFunction());
     return HasFinalReturn(pn) == ENDS_IN_RETURN ||
            ReportBadReturn(cx, tc, JSREPORT_WARNING | JSREPORT_STRICT,
                            JSMSG_NO_RETURN_VALUE, JSMSG_ANON_NO_RETURN_VALUE);
@@ -1231,7 +1231,7 @@ Parser::functionBody()
     uintN oldflags, firstLine;
     JSParseNode *pn;
 
-    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
+    JS_ASSERT(tc->inFunction());
     js_PushStatement(tc, &stmtInfo, STMT_BLOCK, -1);
     stmtInfo.flags = SIF_BODY_BLOCK;
 
@@ -1660,7 +1660,7 @@ BindDestructuringArg(JSContext *cx, BindData *data, JSAtom *atom,
     if (atom == tc->parser->context->runtime->atomState.evalAtom)
         tc->flags |= TCF_FUN_PARAM_EVAL;
 
-    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
+    JS_ASSERT(tc->inFunction());
 
     JSLocalKind localKind = js_LookupLocal(cx, tc->fun, atom, NULL);
     if (localKind != JSLOCAL_NONE) {
@@ -1700,12 +1700,12 @@ Parser::newFunction(JSTreeContext *tc, JSAtom *atom, uintN lambda)
      */
     while (tc->parent)
         tc = tc->parent;
-    parent = (tc->flags & TCF_IN_FUNCTION) ? NULL : tc->scopeChain;
+    parent = tc->inFunction() ? NULL : tc->scopeChain;
 
     fun = js_NewFunction(context, NULL, NULL, 0, JSFUN_INTERPRETED | lambda,
                          parent, atom);
 
-    if (fun && !(tc->flags & TCF_COMPILE_N_GO)) {
+    if (fun && !tc->compileAndGo()) {
         FUN_OBJECT(fun)->clearParent();
         FUN_OBJECT(fun)->clearProto();
     }
@@ -2662,7 +2662,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
         if (topLevel) {
             pn->pn_dflags |= PND_TOPLEVEL;
 
-            if (tc->flags & TCF_IN_FUNCTION) {
+            if (tc->inFunction()) {
                 JSLocalKind localKind;
                 uintN index;
 
@@ -3260,9 +3260,9 @@ static bool
 BindGvar(JSParseNode *pn, JSTreeContext *tc, bool inWith = false)
 {
     JS_ASSERT(pn->pn_op == JSOP_NAME);
-    JS_ASSERT(!(tc->flags & TCF_IN_FUNCTION));
+    JS_ASSERT(!tc->inFunction());
 
-    if ((tc->flags & TCF_COMPILING) && !tc->parser->callerFrame) {
+    if (tc->compiling() && !tc->parser->callerFrame) {
         JSCodeGenerator *cg = (JSCodeGenerator *) tc;
 
         /* Index pn->pn_atom so we can map fast global number to name. */
@@ -3303,7 +3303,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
 
     if (stmt && stmt->type == STMT_WITH) {
         data->fresh = false;
-        return (tc->flags & TCF_IN_FUNCTION) || BindGvar(pn, tc, true);
+        return tc->inFunction() || BindGvar(pn, tc, true);
     }
 
     JSAtomListElement *ale = tc->decls.lookup(atom);
@@ -3438,7 +3438,7 @@ BindVarOrConst(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
     if (data->op == JSOP_DEFCONST)
         pn->pn_dflags |= PND_CONST;
 
-    if (!(tc->flags & TCF_IN_FUNCTION))
+    if (!tc->inFunction())
         return BindGvar(pn, tc);
 
     if (atom == cx->runtime->atomState.argumentsAtom) {
@@ -4203,7 +4203,7 @@ Parser::returnOrYield(bool useAssignExpr)
     JSParseNode *pn, *pn2;
 
     tt = tokenStream.currentToken().type;
-    if (tt == TOK_RETURN && !(tc->flags & TCF_IN_FUNCTION)) {
+    if (tt == TOK_RETURN && !tc->inFunction()) {
         ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
                                  JSMSG_BAD_RETURN_OR_YIELD, js_return_str);
         return NULL;
@@ -5663,7 +5663,7 @@ Parser::statement()
 static void
 NoteArgumentsUse(JSTreeContext *tc)
 {
-    JS_ASSERT(tc->flags & TCF_IN_FUNCTION);
+    JS_ASSERT(tc->inFunction());
     tc->flags |= TCF_FUN_USES_ARGUMENTS;
     if (tc->funbox)
         tc->funbox->node->pn_dflags |= PND_FUNARG;
@@ -5833,7 +5833,7 @@ Parser::variables(bool inLetHead)
             /* The declarator's position must include the initializer. */
             pn2->pn_pos.end = init->pn_pos.end;
 
-            if ((tc->flags & TCF_IN_FUNCTION) &&
+            if (tc->inFunction() &&
                 atom == context->runtime->atomState.argumentsAtom) {
                 NoteArgumentsUse(tc);
                 if (!let)
@@ -8387,7 +8387,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                                  tokenStream.currentToken().t_reflags);
         if (!obj)
             return NULL;
-        if (!(tc->flags & TCF_COMPILE_N_GO)) {
+        if (!tc->compileAndGo()) {
             obj->clearParent();
             obj->clearProto();
         }
