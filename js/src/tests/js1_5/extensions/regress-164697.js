@@ -79,20 +79,23 @@ function runtest(myinstance, myconstructor)
   var expr;
   var actual;
 
-  try
+  if (typeof parent === "function")
   {
-    expr =
-      'parent(' + myinstance + ') == ' +
-      'parent(' + myconstructor + ')';
-    printStatus(expr);
-    actual = eval(expr).toString();
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
+    try
+    {
+      expr =
+        'parent(' + myinstance + ') == ' +
+        'parent(' + myconstructor + ')';
+      printStatus(expr);
+      actual = eval(expr).toString();
+    }
+    catch(ex)
+    {
+      actual = ex + '';
+    }
 
-  reportCompare(expect, actual, expr);
+    reportCompare(expect, actual, expr);
+  }
 
   try
   {
