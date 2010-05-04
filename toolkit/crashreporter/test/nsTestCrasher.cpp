@@ -19,12 +19,54 @@ private:
 
 NS_IMPL_ISUPPORTS1(nsTestCrasher, nsITestCrasher)
 
-/* void crash (); */
-NS_IMETHODIMP nsTestCrasher::Crash()
+/*
+ * This pure virtual call example is from MSDN
+ */
+class A;
+
+void fcn( A* );
+
+class A
 {
-  volatile int* foo = (int*)0x42;
-  *foo = 0;
-  // not reached
+public:
+  virtual void f() = 0;
+  A() { fcn( this ); }
+};
+
+class B : A
+{
+  void f() { }
+};
+
+void fcn( A* p )
+{
+  p->f();
+}
+
+void PureVirtualCall()
+{
+  // generates a pure virtual function call
+  B b;
+}
+
+/* void crash (); */
+NS_IMETHODIMP nsTestCrasher::Crash(PRInt16 how)
+{
+  switch (how) {
+  case nsITestCrasher::CRASH_INVALID_POINTER_DEREF: {
+    volatile int* foo = (int*)0x42;
+    *foo = 0;
+    // not reached
+    break;
+  }
+  case nsITestCrasher::CRASH_PURE_VIRTUAL_CALL: {
+    PureVirtualCall();
+    // not reached
+    break;
+  }
+  default:
+    return NS_ERROR_INVALID_ARG;
+  }
   return NS_OK;
 }
 
