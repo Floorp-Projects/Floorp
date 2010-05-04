@@ -55,7 +55,7 @@ class RecursiveSlotMap : public SlotMap
     {
         /* Check if the return value should be promoted. */
         if (slots[downPostSlots].lastCheck == TypeCheck_Demote)
-            rval_ins = mRecorder.lir->ins1(LIR_i2f, rval_ins);
+            rval_ins = mRecorder.lir->ins1(LIR_i2d, rval_ins);
         /* Adjust any global variables. */
         for (unsigned i = downPostSlots + 1; i < slots.length(); i++)
             adjustType(slots[i]);
@@ -111,10 +111,10 @@ class UpRecursiveSlotMap : public RecursiveSlotMap
          */
         lir->insStore(rval_ins, lirbuf->sp, -mRecorder.tree->nativeStackBase, ACC_STACK);
 
-        lirbuf->sp = lir->ins2(LIR_piadd, lirbuf->sp,
+        lirbuf->sp = lir->ins2(LIR_addp, lirbuf->sp,
                                lir->insImmWord(-int(downPostSlots) * sizeof(double)));
         lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACC_OTHER);
-        lirbuf->rp = lir->ins2(LIR_piadd, lirbuf->rp,
+        lirbuf->rp = lir->ins2(LIR_addp, lirbuf->rp,
                                lir->insImmWord(-int(sizeof(FrameInfo*))));
         lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACC_OTHER);
     }
@@ -286,8 +286,8 @@ TraceRecorder::upRecursion()
 
         /* Guard that rp >= sr + 1 */
         guard(true,
-              lir->ins2(LIR_pge, lirbuf->rp,
-                        lir->ins2(LIR_piadd,
+              lir->ins2(LIR_gep, lirbuf->rp,
+                        lir->ins2(LIR_addp,
                                   lir->insLoad(LIR_ldp, lirbuf->state,
                                                offsetof(TracerState, sor), ACC_OTHER),
                                   INS_CONSTWORD(sizeof(FrameInfo*)))),
@@ -299,7 +299,7 @@ TraceRecorder::upRecursion()
     /* Guard that the FrameInfo above is the same FrameInfo pointer. */
     VMSideExit* exit = snapshot(RECURSIVE_MISMATCH_EXIT);
     LIns* prev_rp = lir->insLoad(LIR_ldp, lirbuf->rp, -int32_t(sizeof(FrameInfo*)), ACC_RSTACK);
-    guard(true, lir->ins2(LIR_peq, prev_rp, INS_CONSTPTR(fi)), exit);
+    guard(true, lir->ins2(LIR_eqp, prev_rp, INS_CONSTPTR(fi)), exit);
 
     /*
      * Now it's time to try and close the loop. Get a special exit that points
@@ -419,7 +419,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
              * end-of-recursion and recursion-returns-to-different-pc.
              */
             guard(true,
-                  lir->ins2(LIR_peq,
+                  lir->ins2(LIR_eqp,
                             addName(lir->insLoad(LIR_ldp, fp_ins,
                                                  offsetof(JSStackFrame, script), ACC_OTHER),
                                     "script"),
@@ -429,7 +429,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
 
         /* fp->down->regs->pc should be == pc. */
         guard(true,
-              lir->ins2(LIR_peq,
+              lir->ins2(LIR_eqp,
                         lir->insLoad(LIR_ldp,
                                      addName(lir->insLoad(LIR_ldp, fp_ins,
                                                           offsetof(JSStackFrame, regs), ACC_OTHER),
@@ -440,8 +440,8 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
 
         /* fp->down->argc should be == argc. */
         guard(true,
-              lir->ins2(LIR_eq,
-                        addName(lir->insLoad(LIR_ld, fp_ins, offsetof(JSStackFrame, argc),
+              lir->ins2(LIR_eqi,
+                        addName(lir->insLoad(LIR_ldi, fp_ins, offsetof(JSStackFrame, argc),
                                              ACC_OTHER),
                                 "argc"),
                         INS_CONST(cx->fp->argc)),
@@ -550,10 +550,10 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
           case TT_SPECIAL:
           case TT_VOID:
           case TT_INT32:
-            rval_ins = lir->insLoad(LIR_ld, lirbuf->sp, offset, ACC_STACK);
+            rval_ins = lir->insLoad(LIR_ldi, lirbuf->sp, offset, ACC_STACK);
             break;
           case TT_DOUBLE:
-            rval_ins = lir->insLoad(LIR_ldf, lirbuf->sp, offset, ACC_STACK);
+            rval_ins = lir->insLoad(LIR_ldd, lirbuf->sp, offset, ACC_STACK);
             break;
           case TT_FUNCTION:
           case TT_OBJECT:
@@ -609,7 +609,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     /* stack vals */
     unsigned nfixed = fp->script->nfixed;
     jsval* stack = StackBase(fp);
-    LIns* stack_ins = addName(lir->ins2(LIR_piadd,
+    LIns* stack_ins = addName(lir->ins2(LIR_addp,
                                         slots_ins,
                                         INS_CONSTWORD(nfixed * sizeof(jsval))),
                               "stackBase");
@@ -684,12 +684,12 @@ TraceRecorder::downRecursion()
     JS_ASSERT(tree->maxNativeStackSlots >= tree->nativeStackBase / sizeof(double));
     int guardSlots = slots + tree->maxNativeStackSlots -
                      tree->nativeStackBase / sizeof(double);
-    LIns* sp_top = lir->ins2(LIR_piadd, lirbuf->sp, lir->insImmWord(guardSlots * sizeof(double)));
-    guard(true, lir->ins2(LIR_plt, sp_top, eos_ins), OOM_EXIT);
+    LIns* sp_top = lir->ins2(LIR_addp, lirbuf->sp, lir->insImmWord(guardSlots * sizeof(double)));
+    guard(true, lir->ins2(LIR_ltp, sp_top, eos_ins), OOM_EXIT);
 
     /* Guard that there is enough call stack space. */
-    LIns* rp_top = lir->ins2(LIR_piadd, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
-    guard(true, lir->ins2(LIR_plt, rp_top, eor_ins), OOM_EXIT);
+    LIns* rp_top = lir->ins2(LIR_addp, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
+    guard(true, lir->ins2(LIR_ltp, rp_top, eor_ins), OOM_EXIT);
 
     /*
      * For every slot in the new frame that is not in the tracker, create a load
@@ -702,9 +702,9 @@ TraceRecorder::downRecursion()
     VisitStackSlots(visitor, cx, callDepth);
 
     /* Add space for a new JIT frame. */
-    lirbuf->sp = lir->ins2(LIR_piadd, lirbuf->sp, lir->insImmWord(slots * sizeof(double)));
+    lirbuf->sp = lir->ins2(LIR_addp, lirbuf->sp, lir->insImmWord(slots * sizeof(double)));
     lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACC_OTHER);
-    lirbuf->rp = lir->ins2(LIR_piadd, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
+    lirbuf->rp = lir->ins2(LIR_addp, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
     lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACC_OTHER);
     --callDepth;
     clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
@@ -734,19 +734,19 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpInt32Slot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
-          lir->ins2(LIR_or,
-                    lir->ins2(LIR_peq,
-                              lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+          lir->ins2(LIR_ori,
+                    lir->ins2(LIR_eqp,
+                              lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                               INS_CONSTWORD(JSVAL_DOUBLE)),
-                    lir->ins2(LIR_peq,
-                              lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(1)),
+                    lir->ins2(LIR_eqp,
+                              lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(1)),
                               INS_CONSTWORD(1))),
           exit);
     LIns* space = lir->insAlloc(sizeof(int32));
     LIns* args[] = { space, val_ins };
     LIns* result = lir->insCall(&js_TryUnboxInt32_ci, args);
     guard(false, lir->insEqI_0(result), exit);
-    LIns* int32_ins = lir->insLoad(LIR_ld, space, 0, ACC_OTHER);
+    LIns* int32_ins = lir->insLoad(LIR_ldi, space, 0, ACC_OTHER);
     return int32_ins;
 }
 
@@ -754,12 +754,12 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpDoubleSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
-          lir->ins2(LIR_or,
-                    lir->ins2(LIR_peq,
-                              lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+          lir->ins2(LIR_ori,
+                    lir->ins2(LIR_eqp,
+                              lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                               INS_CONSTWORD(JSVAL_DOUBLE)),
-                    lir->ins2(LIR_peq,
-                              lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(1)),
+                    lir->ins2(LIR_eqp,
+                              lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(1)),
                               INS_CONSTWORD(1))),
           exit);
     LIns* args[] = { val_ins };
@@ -771,11 +771,11 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpSpecialSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
-          lir->ins2(LIR_peq,
-                    lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+          lir->ins2(LIR_eqp,
+                    lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                     INS_CONSTWORD(JSVAL_SPECIAL)),
           exit);
-    LIns* bool_ins = lir->ins2(LIR_pirsh, val_ins, INS_CONST(JSVAL_TAGBITS));
+    LIns* bool_ins = lir->ins2(LIR_rshp, val_ins, INS_CONST(JSVAL_TAGBITS));
     bool_ins = p2i(bool_ins);
     return bool_ins;
 }
@@ -783,7 +783,7 @@ TraceRecorder::slurpSpecialSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpVoidSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
-    guard(true, lir->ins2(LIR_peq, val_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
+    guard(true, lir->ins2(LIR_eqp, val_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
     return INS_VOID();
 }
 
@@ -791,11 +791,11 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpStringSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
-          lir->ins2(LIR_peq,
-                    lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+          lir->ins2(LIR_eqp,
+                    lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                     INS_CONSTWORD(JSVAL_STRING)),
           exit);
-    LIns* str_ins = lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(~JSVAL_TAGMASK));
+    LIns* str_ins = lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(~JSVAL_TAGMASK));
     return str_ins;
 }
 
@@ -814,13 +814,13 @@ TraceRecorder::slurpObjectSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 
     /* Must be an object */
     guard(true,
-          lir->insEqP_0(lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK))),
+          lir->insEqP_0(lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK))),
           exit);
 
     /* Must NOT have a function class */
     guard(false,
-          lir->ins2(LIR_peq,
-                    lir->ins2(LIR_piand,
+          lir->ins2(LIR_eqp,
+                    lir->ins2(LIR_andp,
                               lir->insLoad(LIR_ldp, val_ins, offsetof(JSObject, classword),
                                            ACC_OTHER),
                               INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS)),
@@ -837,13 +837,13 @@ TraceRecorder::slurpFunctionSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 
     /* Must be an object */
     guard(true,
-          lir->insEqP_0(lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK))),
+          lir->insEqP_0(lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK))),
           exit);
 
     /* Must have a function class */
     guard(true,
-          lir->ins2(LIR_peq,
-                    lir->ins2(LIR_piand,
+          lir->ins2(LIR_eqp,
+                    lir->ins2(LIR_andp,
                               lir->insLoad(LIR_ldp, val_ins, offsetof(JSObject, classword),
                                            ACC_OTHER),
                               INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS)),
