@@ -5089,8 +5089,6 @@ MOZ_ARG_HEADER(Toolkit Options)
         AC_MSG_ERROR([You must specify a default toolkit (perhaps $_PLATFORM_DEFAULT_TOOLKIT).])
     fi
 
-AC_DEFINE_UNQUOTED(MOZ_DEFAULT_TOOLKIT,"$MOZ_WIDGET_TOOLKIT")
-
 dnl ========================================================
 dnl = Enable the toolkit as needed                         =
 dnl ========================================================
@@ -5210,7 +5208,6 @@ if test "$COMPILE_ENVIRONMENT"; then
 
 fi # COMPILE_ENVIRONMENT
 
-AC_SUBST(MOZ_DEFAULT_TOOLKIT)
 AC_SUBST(MOZ_FS_LAYOUT)
 
 dnl ========================================================
