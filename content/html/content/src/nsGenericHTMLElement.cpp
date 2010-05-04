@@ -109,6 +109,7 @@
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
+#include "nsHtml5Module.h"
 
 class nsINodeInfo;
 class nsIDOMNodeList;
@@ -657,36 +658,66 @@ nsGenericHTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 nsresult
 nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 {
+  nsIDocument* doc = GetOwnerDoc();
+  NS_ENSURE_STATE(doc);
+
+  nsresult rv = NS_OK;
+
   // This BeginUpdate/EndUpdate pair is important to make us reenable the
   // scriptloader before the last EndUpdate call.
-  mozAutoDocUpdate updateBatch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, PR_TRUE);
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
 
   // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
+  mozAutoSubtreeModified subtree(doc, nsnull);
 
   // Remove childnodes
   nsContentUtils::SetNodeTextContent(this, EmptyString(), PR_FALSE);
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
 
-  nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
-
   // Strong ref since appendChild can fire events
-  nsRefPtr<nsScriptLoader> loader;
-  PRBool scripts_enabled = PR_FALSE;
+  nsRefPtr<nsScriptLoader> loader = doc->ScriptLoader();
+  PRBool scripts_enabled = loader->GetEnabled();
+  loader->SetEnabled(PR_FALSE);
 
-  if (doc) {
-    loader = doc->ScriptLoader();
-    scripts_enabled = loader->GetEnabled();
-    loader->SetEnabled(PR_FALSE);
-  }
+  if (doc->IsHTML() && nsHtml5Module::sEnabled) {
+    nsCOMPtr<nsIParser> parser = doc->GetFragmentParser();
+    if (parser) {
+      parser->Reset();
+    } else {
+      parser = nsHtml5Module::NewHtml5Parser();
+      NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
+    }
 
-  nsresult rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML,
-                                                         PR_FALSE,
-                                                         getter_AddRefs(df));
-  nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
-  if (NS_SUCCEEDED(rv)) {
-    static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
+    PRInt32 oldChildCount = GetChildCount();
+    parser->ParseFragment(aInnerHTML, this, Tag(), GetNameSpaceID(),
+                          doc->GetCompatibilityMode() == eCompatibility_NavQuirks);
+    doc->SetFragmentParser(parser);
+
+    // HTML5 parser has notified, but not fired mutation events.
+    // Fire mutation events. Optimize for the case when there are no listeners
+    nsPIDOMWindow* window = nsnull;
+    PRInt32 newChildCount = GetChildCount();
+    if (newChildCount &&
+        (((window = doc->GetInnerWindow()) &&
+          window->HasMutationListeners(NS_EVENT_BITS_MUTATION_NODEINSERTED)) ||
+         !window)) {
+      nsCOMArray<nsIContent> childNodes;
+      NS_ASSERTION(newChildCount - oldChildCount >= 0,
+                   "What, some unexpected dom mutation has happened?");
+      childNodes.SetCapacity(newChildCount - oldChildCount);
+      for (nsINode::ChildIterator iter(this); !iter.IsDone(); iter.Next()) {
+        childNodes.AppendObject(iter);
+      }
+      nsGenericElement::FireNodeInserted(doc, this, childNodes);
+    }
+  } else {
+    rv = nsContentUtils::CreateContextualFragment(this, aInnerHTML, PR_FALSE,
+                                                  getter_AddRefs(df));
+    nsCOMPtr<nsINode> fragment = do_QueryInterface(df);
+    if (NS_SUCCEEDED(rv)) {
+      static_cast<nsINode*>(this)->AppendChild(fragment, &rv);
+    }
   }
 
   if (scripts_enabled) {
