@@ -125,6 +125,7 @@
 #include "nsIDOMUserDataHandler.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIEditor.h"
+#include "nsIEditorIMESupport.h"
 #include "nsIEditorDocShell.h"
 #include "nsEventDispatcher.h"
 #include "nsContentCreatorFunctions.h"
@@ -634,6 +635,47 @@ nsIContent::GetFlattenedTreeParent() const
     }
   }
   return parent;
+}
+
+PRUint32
+nsIContent::GetDesiredIMEState()
+{
+  if (!IsEditableInternal()) {
+    return IME_STATUS_DISABLE;
+  }
+  nsIContent *editableAncestor = nsnull;
+  for (nsIContent* parent = GetParent();
+       parent && parent->HasFlag(NODE_IS_EDITABLE);
+       parent = parent->GetParent()) {
+    editableAncestor = parent;
+  }
+  // This is in another editable content, use the result of it.
+  if (editableAncestor) {
+    return editableAncestor->GetDesiredIMEState();
+  }
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc) {
+    return IME_STATUS_DISABLE;
+  }
+  nsIPresShell* ps = doc->GetPrimaryShell();
+  if (!ps) {
+    return IME_STATUS_DISABLE;
+  }
+  nsPresContext* pc = ps->GetPresContext();
+  if (!pc) {
+    return IME_STATUS_DISABLE;
+  }
+  nsIEditor* editor = GetHTMLEditor(pc);
+  nsCOMPtr<nsIEditorIMESupport> imeEditor = do_QueryInterface(editor);
+  if (!imeEditor) {
+    return IME_STATUS_DISABLE;
+  }
+  // Use "enable" for the default value because IME is disabled unexpectedly,
+  // it makes serious a11y problem.
+  PRUint32 state = IME_STATUS_ENABLE;
+  nsresult rv = imeEditor->GetPreferredIMEState(&state);
+  NS_ENSURE_SUCCESS(rv, IME_STATUS_ENABLE);
+  return state;
 }
 
 //----------------------------------------------------------------------

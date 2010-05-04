@@ -647,6 +647,9 @@ public:
     return (mFlags & nsIPlaintextEditor::eEditorDontEchoPassword) != 0;
   }
 
+  // Whether the editor has focus or not.
+  virtual PRBool HasFocus();
+
 protected:
 
   PRUint32        mModCount;		// number of modifications (for undo/redo stack)
