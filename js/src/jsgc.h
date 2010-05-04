@@ -48,6 +48,7 @@
 #include "jsbit.h"
 #include "jsutil.h"
 #include "jstask.h"
+#include "jsvector.h"
 #include "jsversion.h"
 
 JS_BEGIN_EXTERN_C
@@ -361,25 +362,52 @@ struct JSWeakRoots {
 #define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
 #ifdef JS_THREADSAFE
-class JSFreePointerListTask : public JSBackgroundTask {
-    void *head;
+
+namespace js {
+
+/*
+ * During the finalization we do not free immediately. Rather we add the
+ * corresponding pointers to a buffer which we later release on the
+ * background thread.
+ *
+ * The buffer is implemented as a vector of 64K arrays of pointers, not as a
+ * simple vector, to avoid realloc calls during the vector growth and to not
+ * bloat the binary size of the inlined freeLater method. Any OOM during
+ * buffer growth results in the pointer being freed immediately.
+ */
+class BackgroundSweepTask : public JSBackgroundTask {
+    static const size_t FREE_ARRAY_SIZE = size_t(1) << 16;
+    static const size_t FREE_ARRAY_LENGTH = FREE_ARRAY_SIZE / sizeof(void *);
+
+    Vector<void **, 16, js::SystemAllocPolicy> freeVector;
+    void            **freeCursor;
+    void            **freeCursorEnd;
+
+    JS_FRIEND_API(void)
+    replenishAndFreeLater(void *ptr);
+
+    static void freeElementsAndArray(void **array, void **end) {
+        JS_ASSERT(array <= end);
+        for (void **p = array; p != end; ++p)
+            js_free(*p);
+        js_free(array);
+    }
+
   public:
-    JSFreePointerListTask() : head(NULL) {}
+    BackgroundSweepTask()
+        : freeCursor(NULL), freeCursorEnd(NULL) { }
 
-    void add(void* ptr) {
-        *(void**)ptr = head;
-        head = ptr;
+    void freeLater(void* ptr) {
+        if (freeCursor != freeCursorEnd)
+            *freeCursor++ = ptr;
+        else
+            replenishAndFreeLater(ptr);
     }
 
-    void run() {
-        void *ptr = head;
-        while (ptr) {
-            void *next = *(void **)ptr;
-            js_free(ptr);
-            ptr = next;
-        }
-    }
+    virtual void run();
 };
+
+}
 #endif
 
 extern void

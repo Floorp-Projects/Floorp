@@ -768,16 +768,20 @@ NormalizeGetterAndSetter(JSContext *cx, JSScope *scope,
                          JSPropertyOp &getter,
                          JSPropertyOp &setter)
 {
-    if (setter == JS_PropertyStub)
+    if (setter == JS_PropertyStub) {
+        JS_ASSERT(!(attrs & JSPROP_SETTER));
         setter = NULL;
+    }
     if (flags & JSScopeProperty::METHOD) {
         /* Here, getter is the method, a function object reference. */
         JS_ASSERT(getter);
         JS_ASSERT(!setter || setter == js_watch_set);
         JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     } else {
-        if (getter == JS_PropertyStub)
+        if (getter == JS_PropertyStub) {
+            JS_ASSERT(!(attrs & JSPROP_GETTER));
             getter = NULL;
+        }
     }
 
     /*
@@ -1158,7 +1162,7 @@ JSScope::deletingShapeChange(JSContext *cx, JSScopeProperty *sprop)
 }
 
 bool
-JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop, jsval toval)
+JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop)
 {
     JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
     if (sprop->isMethod()) {
@@ -1189,7 +1193,7 @@ JSScope::methodShapeChange(JSContext *cx, JSScopeProperty *sprop, jsval toval)
 }
 
 bool
-JSScope::methodShapeChange(JSContext *cx, uint32 slot, jsval toval)
+JSScope::methodShapeChange(JSContext *cx, uint32 slot)
 {
     if (!hasMethodBarrier()) {
         generateOwnShape(cx);
@@ -1197,7 +1201,7 @@ JSScope::methodShapeChange(JSContext *cx, uint32 slot, jsval toval)
         for (JSScopeProperty *sprop = lastProp; sprop; sprop = sprop->parent) {
             JS_ASSERT(!JSVAL_IS_NULL(sprop->id));
             if (sprop->slot == slot)
-                return methodShapeChange(cx, sprop, toval);
+                return methodShapeChange(cx, sprop);
         }
     }
     return true;
