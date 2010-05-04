@@ -39,9 +39,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=551654
 
   processor.importStylesheet(styleDoc);
   var fragment = processor.transformToFragment(originalDoc, document);
-  is(content.firstChild.nodeType, Node.TEXT_NODE,
+  is(fragment.firstChild.nodeType, Node.TEXT_NODE,
      "Result of transform should be a textnode");
-  is(content.firstChild.nodeValue, "42",
+  is(fragment.firstChild.nodeValue, "42",
      "Result of transform should be a textnode with value '42'");
 
 </script>
