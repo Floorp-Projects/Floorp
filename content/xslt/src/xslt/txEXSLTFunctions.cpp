@@ -94,6 +94,9 @@ convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
                  "This handler shouldn't have been replaced!");
     NS_ENSURE_SUCCESS(rv, rv);
 
+    rv = mozHandler.closePrevious(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // The txResultTreeFragment will own this.
     const txXPathNode* node = txXPathNativeNode::createXPathNode(domFragment,
                                                                  PR_TRUE);
