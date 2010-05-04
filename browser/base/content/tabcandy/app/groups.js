@@ -74,67 +74,9 @@ window.Group = function(listOfEls, options) {
     .dequeue();
     
   // ___ New Tab Button   
-  this.$ntb = $("<div class='newTabButton'/>").appendTo($container)
-
-  function zoomIn() {
-    Groups.setActiveGroup(self);          
-    Utils.log("Name", self.getTitle())
-    Utils.log("Active", Groups.getActiveGroup().getTitle())
-    var newTab = Tabs.open("about:blank");
-    
-    var doNextTab = function(tab){
-      var group = Groups.getActiveGroup();
-
-      $(tab.container).css({opacity: 0});
-      anim = $("<div class='newTabAnimatee'/>").css({
-        top: group.$ntb.offset().top,
-        left: group.$ntb.offset().left,
-        width: group.$ntb.width(),
-        height: group.$ntb.height()
-      })
-      .appendTo("body")
-      .animate({
-        top: tab.bounds.top,
-        left: tab.bounds.left,
-        width: tab.bounds.width,
-        height: tab.bounds.height,
-        zIndex: 999
-      },200)
-      .animate({
-        top: 0,
-        left: 0,
-        width: window.innerWidth,
-        height: window.innerHeight
-      }, 250, function(){
-        $(tab.container).css({opacity: 1});
-        newTab.focus();
-        UI.tabBar.show(false);
-        UI.navBar.urlBar.focus();
-        anim.remove();
-        // We need a timeout here so that there is a chance for the
-        // new tab to get made! Otherwise it won't appear in the list
-        // of the group's tab.
-        // TODO: This is probably a terrible hack that sets up a race
-        // condition. We need a better solution.
-        setTimeout(function(){
-          UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
-        }, 400);
-      });      
-    }    
-    
-    // TODO: Because this happens as a callback, there is
-    // sometimes a long delay before the animation occurs.
-    // We need to fix this--immediate response to a users
-    // actions is necessary for a good user experience.
-    
-    // Should be doNextTab being passed in. Putting "..." for debugging.
-    self.onNextNewTab(function(){
-      Utils.log('...')
-    }); 
-  }
-  
+  this.$ntb = $("<div class='newTabButton'/>").appendTo($container);
   this.$ntb.click(function(){
-    zoomIn(self);
+    self.newTab();
   });  
     
   // ___ Resizer
@@ -839,6 +781,65 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     }
   },
   
+  // ----------
+  newTab: function() {
+    Groups.setActiveGroup(this);          
+    Utils.log("Name", this.getTitle())
+    Utils.log("Active", Groups.getActiveGroup().getTitle())
+    var newTab = Tabs.open("about:blank");
+    
+    var self = this;
+    var doNextTab = function(tab){
+      var group = Groups.getActiveGroup();
+
+      $(tab.container).css({opacity: 0});
+      anim = $("<div class='newTabAnimatee'/>").css({
+        top: group.$ntb.offset().top,
+        left: group.$ntb.offset().left,
+        width: group.$ntb.width(),
+        height: group.$ntb.height()
+      })
+      .appendTo("body")
+      .animate({
+        top: tab.bounds.top,
+        left: tab.bounds.left,
+        width: tab.bounds.width,
+        height: tab.bounds.height,
+        zIndex: 999
+      },200)
+      .animate({
+        top: 0,
+        left: 0,
+        width: window.innerWidth,
+        height: window.innerHeight
+      }, 250, function(){
+        $(tab.container).css({opacity: 1});
+        newTab.focus();
+        UI.tabBar.show(false);
+        UI.navBar.urlBar.focus();
+        anim.remove();
+        // We need a timeout here so that there is a chance for the
+        // new tab to get made! Otherwise it won't appear in the list
+        // of the group's tab.
+        // TODO: This is probably a terrible hack that sets up a race
+        // condition. We need a better solution.
+        setTimeout(function(){
+          UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
+        }, 400);
+      });      
+    }    
+    
+    // TODO: Because this happens as a callback, there is
+    // sometimes a long delay before the animation occurs.
+    // We need to fix this--immediate response to a users
+    // actions is necessary for a good user experience.
+    
+    // Should be doNextTab being passed in. Putting "..." for debugging.
+    self.onNextNewTab(function(){
+      Utils.log('...')
+    }); 
+  },
+
   // ----------
   // Function: reorderBasedOnTabOrder
   // Reorderes the tabs in a group based on the arrangment of the tabs

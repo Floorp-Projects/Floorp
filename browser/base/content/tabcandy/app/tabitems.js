@@ -368,6 +368,9 @@ window.TabItems = {
     var found = false;
     if(this.storageData && this.storageData.tabs) {
       $.each(this.storageData.tabs, function(index, tab) {
+        if(tab.url == 'about:blank')
+          return;
+          
         if(item.getURL() == tab.url) {
           if(!item.reconnected) {
             if(item.parent)
