@@ -619,6 +619,7 @@ WeaveSvc.prototype = {
 
       /* Set this so UI is updated on next run */
       this.passphrase = newphrase;
+      this.persistLogin();
 
       /* Login in sync: this also generates new keys */
       this.login();
