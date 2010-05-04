@@ -490,8 +490,10 @@ members = [
     'nsIIDBKeyRange.*',
     'nsIIDBObjectStore.*',
     'nsIIDBObjectStoreRequest.*',
+    '-nsIIDBObjectStoreRequest.put',
     'nsIIDBRequest.*',
-    'nsIIDBSuccessEvent.*',
+# Remove once nsIVariant can handle jsvals
+#    'nsIIDBSuccessEvent.*',
     'nsIIDBTransaction.*',
     'nsIIDBTransactionRequest.*',
     'nsIIndexedDatabaseRequest.*'

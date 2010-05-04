@@ -109,9 +109,10 @@ protected:
    * This callback is run on the main thread if the DoDatabaseWork returned OK.
    * The default implementation constructs an IDBSuccessEvent with its result
    * property set to the value returned by GetSuccessResult. The event is then
-   * fired at the target.
+   * fired at the target. Returning anything other than OK from the OnSuccess
+   * callback will trigger the OnError callback.
    */
-  virtual void OnSuccess(nsIDOMEventTarget* aTarget);
+  virtual PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
 
   /**
    * This callback is run on the main thread if DoDatabaseWork returned an error
