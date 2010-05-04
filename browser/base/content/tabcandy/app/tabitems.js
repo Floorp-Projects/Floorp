@@ -95,7 +95,8 @@ window.TabItem.prototype = $.extend(new Item(), {
       
     this.bounds.copy(rect);
     // If this is a brand new tab don't animate it in from
-    // nowhere in particular (i.e., from [0,0])
+    // a random location (i.e., from [0,0]). Instead, just
+    // have it appear where it should be.
     if(immediately || (!this._hasBeenDrawn) ) {
       $container.css(css);
     } else {
