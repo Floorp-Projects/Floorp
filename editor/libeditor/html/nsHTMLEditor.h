@@ -146,6 +146,10 @@ public:
   NS_IMETHODIMP HandleKeyPress(nsIDOMKeyEvent* aKeyEvent);
   NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
   NS_IMETHODIMP BeginningOfDocument();
+  virtual PRBool HasFocus();
+
+  /* ------------ nsIEditorIMESupport overrides ------------ */
+  NS_IMETHOD GetPreferredIMEState(PRUint32 *aState);
 
   /* ------------ nsIHTMLEditor methods -------------- */
 
@@ -724,6 +728,12 @@ protected:
                              PRBool aCheckDefaults = PR_TRUE);
   nsresult HasStyleOrIdOrClass(nsIDOMElement * aElement, PRBool *aHasStyleOrIdOrClass);
   nsresult RemoveElementIfNoStyleOrIdOrClass(nsIDOMElement * aElement, nsIAtom * aTag);
+
+  // Whether the outer window of the DOM event target has focus or not.
+  PRBool   OurWindowHasFocus();
+  // Whether the content has independent selection or not.  E.g., input field,
+  // password field and textarea element.  At that time, this returns TRUE.
+  PRBool IsIndependentSelectionContent(nsIContent* aContent);
 
 // Data members
 protected:

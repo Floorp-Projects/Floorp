@@ -45,6 +45,8 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsPIDOMEventTarget.h"
+#include "nsIMEStateManager.h"
+#include "nsFocusManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
@@ -219,12 +221,16 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   if ((nsnull==aDoc) || (nsnull==aPresShell))
     return NS_ERROR_NULL_POINTER;
 
+  // First only set flags, but other stuff shouldn't be initialized now.
+  // Don't move this call after initializing mDocWeak and mPresShellWeak.
+  // SetFlags() can check whether it's called during initialization or not by
+  // them.  Note that SetFlags() will be called by PostCreate().
+  nsresult rv = SetFlags(aFlags);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "SetFlags() failed");
+
   mDocWeak = do_GetWeakReference(aDoc);  // weak reference to doc
   mPresShellWeak = do_GetWeakReference(aPresShell);   // weak reference to pres shell
   mSelConWeak = do_GetWeakReference(aSelCon);   // weak reference to selectioncontroller
-
-  nsresult rv = SetFlags(aFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "SetFlags() failed");
 
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
@@ -279,8 +285,8 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 NS_IMETHODIMP
 nsEditor::PostCreate()
 {
-  // Set up spellchecking
-  nsresult rv = SyncRealTimeSpell();
+  // Synchronize some stuff for the flags
+  nsresult rv = SetFlags(mFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set up listeners
@@ -437,8 +443,29 @@ nsEditor::SetFlags(PRUint32 aFlags)
 {
   mFlags = aFlags;
 
+  if (!mDocWeak || !mPresShellWeak) {
+    // If we're initializing, we shouldn't do anything now.
+    // SetFlags() will be called by PostCreate(),
+    // we should synchronize some stuff for the flags at that time.
+    return NS_OK;
+  }
+
   // Changing the flags can change whether spellchecking is on, so re-sync it
-  SyncRealTimeSpell();
+  nsresult rv = SyncRealTimeSpell();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Might be changing editable state, so, we need to reset current IME state
+  // if we're focused.
+  if (HasFocus()) {
+    // Use "enable" for the default value because if IME is disabled
+    // unexpectedly, it makes serious a11y problem.
+    PRUint32 newState = nsIContent::IME_STATUS_ENABLE;
+    rv = GetPreferredIMEState(&newState);
+    if (NS_SUCCEEDED(rv)) {
+      nsIMEStateManager::ChangeIMEStateTo(newState);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -5154,4 +5181,19 @@ PRBool
 nsEditor::IsModifiableNode(nsIDOMNode *aNode)
 {
   return PR_TRUE;
+}
+
+PRBool
+nsEditor::HasFocus()
+{
+  nsCOMPtr<nsPIDOMEventTarget> piTarget = GetPIDOMEventTarget();
+  if (!piTarget) {
+    return PR_FALSE;
+  }
+
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE(fm, PR_FALSE);
+
+  nsCOMPtr<nsIContent> content = fm->GetFocusedContent();
+  return SameCOMIdentity(content, piTarget);
 }
