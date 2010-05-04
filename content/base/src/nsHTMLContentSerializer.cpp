@@ -92,7 +92,7 @@ nsHTMLContentSerializer::~nsHTMLContentSerializer()
 
 
 NS_IMETHODIMP
-nsHTMLContentSerializer::AppendDocumentStart(nsIDocument *aDocument,
+nsHTMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
                                              nsAString& aStr)
 {
   return NS_OK;
@@ -100,7 +100,7 @@ nsHTMLContentSerializer::AppendDocumentStart(nsIDocument *aDocument,
 
 void 
 nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
-                                                 nsIContent *aOriginalElement,
+                                                 nsIDOMElement *aOriginalElement,
                                                  nsAString& aTagPrefix,
                                                  const nsAString& aTagNamespaceURI,
                                                  nsIAtom* aTagName,
@@ -190,13 +190,14 @@ nsHTMLContentSerializer::SerializeHTMLAttributes(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsHTMLContentSerializer::AppendElementStart(nsIContent *aElement,
-                                            nsIContent *aOriginalElement,
+nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
+                                            nsIDOMElement *aOriginalElement,
                                             nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
-  nsIContent* content = aElement;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  if (!content) return NS_ERROR_FAILURE;
 
   PRBool forceFormat = PR_FALSE;
   if (!CheckElementStart(content, forceFormat, aStr)) {
@@ -249,8 +250,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIContent *aElement,
     // Store its start attribute value in olState->startVal.
     nsAutoString start;
     PRInt32 startAttrVal = 0;
-
-    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::start, start);
+    aElement->GetAttribute(NS_LITERAL_STRING("start"), start);
     if (!start.IsEmpty()){
       PRInt32 rv = 0;
       startAttrVal = start.ToInteger(&rv);
@@ -298,12 +298,13 @@ nsHTMLContentSerializer::AppendElementStart(nsIContent *aElement,
 }
   
 NS_IMETHODIMP 
-nsHTMLContentSerializer::AppendElementEnd(nsIContent *aElement,
+nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
                                           nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
-  nsIContent* content = aElement;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  if (!content) return NS_ERROR_FAILURE;
 
   nsIAtom *name = content->Tag();
 
