@@ -52,7 +52,7 @@ interface nsIIndexedDatabaseRequest : nsISupports
 {
   [optional_argc]
   nsIIDBDatabaseRequest
-  open(in DOMString name,
-       in DOMString description,
+  open(in AString name,
+       in AString description,
        [optional /* true */] in boolean modifyDatabase);
 };

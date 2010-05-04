@@ -16,7 +16,25 @@
       const name = window.location.pathname;
       const description = "My Test Database";
 
-      var db = indexedDB.open(name, description);
+      var db;
+
+      try {
+        db = indexedDB.open("", "");
+        ok(false, "Open with empty name should have thrown!");
+      }
+      catch(e) {
+        is(db, undefined, "Shouldn't be set to anything");
+      }
+
+      try {
+        db = indexedDB.open(null, "");
+        ok(false, "Open with null name should have thrown!");
+      }
+      catch(e) {
+        is(db, undefined, "Shouldn't be set to anything");
+      }
+
+      db = indexedDB.open(name, description);
       is(db.name, name, "Bad name");
       is(db.description, description, "Bad description");
       is(db.version, "", "Bad version");
