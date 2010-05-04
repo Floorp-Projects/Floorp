@@ -77,51 +77,65 @@ window.Group = function(listOfEls, options) {
   this.$ntb = $("<div class='newTabButton'/>").appendTo($container)
 
   function zoomIn() {
-    var box = self.getContentBounds();
-    if(!self._isStacked) {
-      var rects = Items.arrange(null, box, {pretend: true, count: self._children.length + 1});
-      if(rects.length)
-        box = rects[rects.length - 1];
-    }
+    Groups.setActiveGroup(self);          
+    Utils.log("Name", self.getTitle())
+    Utils.log("Active", Groups.getActiveGroup().getTitle())
+    var newTab = Tabs.open("about:blank");
     
-    anim = $("<div class='newTabAnimatee'/>").css({
-      width: self.$ntb.width(),
-      height: self.$ntb.height(),
-      top: self.$ntb.offset().top,
-      left: self.$ntb.offset().left,
-      zIndex: 999
-    })
-    .appendTo("body")
-    .animate({
-      top: box.top,
-      left: box.left,
-      width: box.width,
-      height: box.height,
-    }, 200)//, "tabcandyBounce")
-    .animate({
-      top: 0,
-      left: 0,
-      width: window.innerWidth,
-      height: window.innerHeight
-    }, 250, function(){
-      anim.remove();
-      Groups.setActiveGroup(self);          
-      var newTab = Tabs.open("about:blank").focus();
-      UI.tabBar.show(false);
-      UI.navBar.urlBar.focus();
-      anim.remove();
-      // We need a timeout here so that there is a chance for the
-      // new tab to get made! Otherwise it won't appear in the list
-      // of the group's tab.
-      // TODO: This is probably a terrible hack that sets up a race
-      // condition. We need a better solution.
-      setTimeout(function(){
-        UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
-      }, 400);
-    });
+    var doNextTab = function(tab){
+      var group = Groups.getActiveGroup();
+
+      $(tab.container).css({opacity: 0});
+      anim = $("<div class='newTabAnimatee'/>").css({
+        top: group.$ntb.offset().top,
+        left: group.$ntb.offset().left,
+        width: group.$ntb.width(),
+        height: group.$ntb.height()
+      })
+      .appendTo("body")
+      .animate({
+        top: tab.bounds.top,
+        left: tab.bounds.left,
+        width: tab.bounds.width,
+        height: tab.bounds.height,
+        zIndex: 999
+      },200)
+      .animate({
+        top: 0,
+        left: 0,
+        width: window.innerWidth,
+        height: window.innerHeight
+      }, 250, function(){
+        $(tab.container).css({opacity: 1});
+        newTab.focus();
+        UI.tabBar.show(false);
+        UI.navBar.urlBar.focus();
+        anim.remove();
+        // We need a timeout here so that there is a chance for the
+        // new tab to get made! Otherwise it won't appear in the list
+        // of the group's tab.
+        // TODO: This is probably a terrible hack that sets up a race
+        // condition. We need a better solution.
+        setTimeout(function(){
+          UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
+        }, 400);
+      });      
+    }    
+    
+    // TODO: Because this happens as a callback, there is
+    // sometimes a long delay before the animation occurs.
+    // We need to fix this--immediate response to a users
+    // actions is necessary for a good user experience.
+    
+    // Should be doNextTab being passed in. Putting "..." for debugging.
+    self.onNextNewTab(function(){
+      Utils.log('...')
+    }); 
   }
   
-  this.$ntb.click(function(){ zoomIn(); });  
+  this.$ntb.click(function(){
+    zoomIn(self);
+  });  
     
   // ___ Resizer
   this.$resizer = $("<div class='resizer'/>")
@@ -495,7 +509,18 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     }
     
     if(!options.dontArrange)
-      this.arrange();
+      // If this is a brand new tab don't animate it in from
+      // nowhere in particular (i.e., from [0,0])
+      if( item.bounds.left == 0 && item.bounds.top == 0 )    
+        this.arrange({animate:false});
+      else
+        this.arrange();
+    
+    if( this._nextNewTabCallback ){
+      this._nextNewTabCallback.apply(this, [item])
+      this._nextNewTabCallback = null;
+    }
+      
   },
   
   // ----------  
@@ -814,12 +839,13 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     }
   },
   
-  reorderBasedOnTabOrder: function(){
-    // Reorderes the tabs in a group based on the arrangment of the tabs
-    // shown in the tab bar. It doesn't it by sorting the children
-    // of the group by the positions of their respective tabs in the
-    // tab bar.
-    
+  // ----------
+  // Function: reorderBasedOnTabOrder
+  // Reorderes the tabs in a group based on the arrangment of the tabs
+  // shown in the tab bar. It doesn't it by sorting the children
+  // of the group by the positions of their respective tabs in the
+  // tab bar.
+  reorderBasedOnTabOrder: function(){    
     var groupTabs = [];
     for( var i=0; i<UI.tabBar.el.children.length; i++ ){
       var tab = UI.tabBar.el.children[i];
@@ -830,6 +856,32 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     this._children.sort(function(a,b){
       return groupTabs.indexOf(a.tab.raw) - groupTabs.indexOf(b.tab.raw)
     })
+  },
+  
+  // ----------
+  // Function: getChild
+  // Returns the nth child tab or null if index is out of range.
+  //
+  // Parameters
+  //  index - the index of the child tab to return, use negative
+  //          numbers to index from the end (-1 is the last child)
+  getChild: function(index){
+    if( index < 0 ) index = this._children.length+index;
+    if( index >= this._children.length || index < 0 ) return null;
+    return this._children[index];
+  },
+  
+  // ---------
+  // Function: onNextNewTab
+  // Sets up a one-time handler that gets called the next time a
+  // tab is added to the group.
+  //
+  // Parameters
+  //  callback - the one-time callback that is fired when the next
+  //             time a tab is added to a group; it gets passed the
+  //             new tab
+  onNextNewTab: function(callback){
+    this._nextNewTabCallback = callback;
   }
 });
 
@@ -1098,14 +1150,20 @@ window.Groups = {
   
   // ----------
   newTab: function(tabItem) {
+    try{
+    
     //var group = this.getActiveGroup() ? this.getActiveGroup() : this.getNewTabGroup();
     var group = this.getActiveGroup();
     if( group == null )
       group = this.getNewTabGroup();
-      
+    
+    Utils.log("new tab in: ", group.getTitle())
     var $el = $(tabItem.container);
     if(group) 
       group.add($el);
+    }catch(e){
+      Utils.log(e)
+    }
   },
   
   // ----------

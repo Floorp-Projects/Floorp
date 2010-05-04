@@ -129,21 +129,16 @@ window.Page = {
   init: function() {    
     Utils.homeTab.raw.maxWidth = 60;
     Utils.homeTab.raw.minWidth = 60;
-    
-    /*try{
-    Tabs.onMove(function(){
-      Utils.log('mooooori');
-    })
-    }catch(e){
-      Utils.log(e)
-    }*/
-    
+        
     Tabs.onClose(function(){
       // Only go back to the TabCandy tab when there you close the last
       // tab of a group.
       var group = Groups.getActiveGroup();
-      if( group && group._children.length == 0 ){
+      if( group && group._children.length == 0 )
         Page.show();
+      else {
+        Utils.homeTab.focus();
+        UI.tabBar.hide(false);        
       }
       return false;
     });
