@@ -52,7 +52,7 @@
 #include "nsGkAtoms.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsIChannelEventSink.h"
-#include "nsCommaSeparatedTokenizer.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsXMLHttpRequest.h"
 
 static PRBool gDisableCORS = PR_FALSE;
