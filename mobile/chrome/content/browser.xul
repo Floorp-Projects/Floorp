@@ -232,6 +232,7 @@
                              maxrows="6"
                              completeselectedindex="true"
                              minresultsforpopup="0"
+                             oncontextmenu="event.preventDefault();"
                              emptytext="&urlbar.emptytext;"
                              flex="1"
                              ontextentered="BrowserUI.goToURI();"
