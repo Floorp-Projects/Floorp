@@ -71,27 +71,27 @@ public:
                   const char* aCharSet, PRBool aIsCopying,
                   PRBool aIsWholeDocument);
 
-  NS_IMETHOD AppendText(nsIContent* aText, PRInt32 aStartOffset,
+  NS_IMETHOD AppendText(nsIDOMText* aText, PRInt32 aStartOffset,
                         PRInt32 aEndOffset, nsAString& aStr);
-  NS_IMETHOD AppendCDATASection(nsIContent* aCDATASection,
+  NS_IMETHOD AppendCDATASection(nsIDOMCDATASection* aCDATASection,
                                 PRInt32 aStartOffset, PRInt32 aEndOffset,
                                 nsAString& aStr);
-  NS_IMETHOD AppendProcessingInstruction(nsIContent* aPI,
+  NS_IMETHOD AppendProcessingInstruction(nsIDOMProcessingInstruction* aPI,
                                          PRInt32 aStartOffset,
                                          PRInt32 aEndOffset,
                                          nsAString& aStr)  { return NS_OK; }
-  NS_IMETHOD AppendComment(nsIContent* aComment, PRInt32 aStartOffset,
+  NS_IMETHOD AppendComment(nsIDOMComment* aComment, PRInt32 aStartOffset,
                            PRInt32 aEndOffset, nsAString& aStr)  { return NS_OK; }
-  NS_IMETHOD AppendDoctype(nsIContent *aDoctype,
+  NS_IMETHOD AppendDoctype(nsIDOMDocumentType *aDoctype,
                            nsAString& aStr)  { return NS_OK; }
-  NS_IMETHOD AppendElementStart(nsIContent *aElement,
-                                nsIContent *aOriginalElement,
+  NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
+                                nsIDOMElement *aOriginalElement,
                                 nsAString& aStr); 
-  NS_IMETHOD AppendElementEnd(nsIContent *aElement,
+  NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
                               nsAString& aStr);
   NS_IMETHOD Flush(nsAString& aStr);
 
-  NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
+  NS_IMETHOD AppendDocumentStart(nsIDOMDocument *aDocument,
                                  nsAString& aStr);
 
   // nsIContentSink
