@@ -291,7 +291,7 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
                             headerVal);
     PRBool foundMethod = mPreflightMethod.EqualsLiteral("GET") ||
       mPreflightMethod.EqualsLiteral("POST");
-    nsCCommaSeparatedTokenizer methodTokens(headerVal);
+    nsCCharSeparatedTokenizer methodTokens(headerVal, ',');
     while(methodTokens.hasMoreTokens()) {
       const nsDependentCSubstring& method = methodTokens.nextToken();
       if (method.IsEmpty()) {
@@ -310,7 +310,7 @@ nsCrossSiteListenerProxy::CheckRequestApproved(nsIRequest* aRequest,
     http->GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Allow-Headers"),
                             headerVal);
     nsTArray<nsCString> headers;
-    nsCCommaSeparatedTokenizer headerTokens(headerVal);
+    nsCCharSeparatedTokenizer headerTokens(headerVal, ',');
     while(headerTokens.hasMoreTokens()) {
       const nsDependentCSubstring& header = headerTokens.nextToken();
       if (header.IsEmpty()) {
