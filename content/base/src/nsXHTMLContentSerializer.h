@@ -62,12 +62,12 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                   const char* aCharSet, PRBool aIsCopying,
                   PRBool aRewriteEncodingDeclaration);
 
-  NS_IMETHOD AppendText(nsIContent* aText,
+  NS_IMETHOD AppendText(nsIDOMText* aText,
                         PRInt32 aStartOffset,
                         PRInt32 aEndOffset,
                         nsAString& aStr);
 
-  NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
+  NS_IMETHOD AppendDocumentStart(nsIDOMDocument *aDocument,
                                  nsAString& aStr);
 
  protected:
@@ -77,13 +77,13 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                           PRBool & aForceFormat,
                           nsAString& aStr);
 
-  virtual void AppendEndOfElementStart(nsIContent *aOriginalElement,
+  virtual void AppendEndOfElementStart(nsIDOMElement *aOriginalElement,
                                nsIAtom * aName,
                                PRInt32 aNamespaceID,
                                nsAString& aStr);
 
   virtual void AfterElementStart(nsIContent * aContent,
-                         nsIContent *aOriginalElement,
+                         nsIDOMElement *aOriginalElement,
                          nsAString& aStr);
 
   virtual PRBool CheckElementEnd(nsIContent * aContent,
@@ -105,7 +105,7 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
   virtual void MaybeLeaveFromPreContent(nsIContent* aNode);
 
   virtual void SerializeAttributes(nsIContent* aContent,
-                           nsIContent *aOriginalElement,
+                           nsIDOMElement *aOriginalElement,
                            nsAString& aTagPrefix,
                            const nsAString& aTagNamespaceURI,
                            nsIAtom* aTagName,
@@ -113,9 +113,9 @@ class nsXHTMLContentSerializer : public nsXMLContentSerializer {
                            PRUint32 aSkipAttr,
                            PRBool aAddNSAttr);
 
-  PRBool IsFirstChildOfOL(nsIContent* aElement);
+  PRBool IsFirstChildOfOL(nsIDOMElement* aElement);
 
-  void SerializeLIValueAttribute(nsIContent* aElement,
+  void SerializeLIValueAttribute(nsIDOMElement* aElement,
                                  nsAString& aStr);
   PRBool IsShorthandAttr(const nsIAtom* aAttrName,
                          const nsIAtom* aElementName);

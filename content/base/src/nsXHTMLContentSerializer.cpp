@@ -155,7 +155,7 @@ nsXHTMLContentSerializer::HasLongLines(const nsString& text, PRInt32& aLastNewli
 }
 
 NS_IMETHODIMP
-nsXHTMLContentSerializer::AppendText(nsIContent* aText,
+nsXHTMLContentSerializer::AppendText(nsIDOMText* aText,
                                      PRInt32 aStartOffset,
                                      PRInt32 aEndOffset,
                                      nsAString& aStr)
@@ -260,7 +260,7 @@ nsXHTMLContentSerializer::EscapeURI(nsIContent* aContent, const nsAString& aURI,
 
 void
 nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
-                                              nsIContent *aOriginalElement,
+                                              nsIDOMElement *aOriginalElement,
                                               nsAString& aTagPrefix,
                                               const nsAString& aTagNamespaceURI,
                                               nsIAtom* aTagName,
@@ -306,8 +306,9 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     else if (aTagName == nsGkAtoms::li) {
       mIsFirstChildOfOL = IsFirstChildOfOL(aOriginalElement);
       if (mIsFirstChildOfOL) {
+        nsCOMPtr<nsIDOMElement> element (do_QueryInterface(aContent));
         // If OL is parent of this LI, serialize attributes in different manner.
-        SerializeLIValueAttribute(aContent, aStr);
+        SerializeLIValueAttribute(element, aStr);
       }
     }
   }
@@ -444,7 +445,7 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
 
 void 
-nsXHTMLContentSerializer::AppendEndOfElementStart(nsIContent *aOriginalElement,
+nsXHTMLContentSerializer::AppendEndOfElementStart(nsIDOMElement *aOriginalElement,
                                                   nsIAtom * aName,
                                                   PRInt32 aNamespaceID,
                                                   nsAString& aStr)
@@ -459,7 +460,7 @@ nsXHTMLContentSerializer::AppendEndOfElementStart(nsIContent *aOriginalElement,
     return;
   }
 
-  nsIContent* content = aOriginalElement;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aOriginalElement);
 
   // for non empty elements, even if they are not a container, we always
   // serialize their content, because the XHTML element could contain non XHTML
@@ -486,7 +487,7 @@ nsXHTMLContentSerializer::AppendEndOfElementStart(nsIContent *aOriginalElement,
 
 void
 nsXHTMLContentSerializer::AfterElementStart(nsIContent * aContent,
-                                            nsIContent *aOriginalElement,
+                                            nsIDOMElement *aOriginalElement,
                                             nsAString& aStr)
 {
   nsIAtom *name = aContent->Tag();
@@ -549,7 +550,7 @@ nsXHTMLContentSerializer::AfterElementEnd(nsIContent * aContent,
 
 
 NS_IMETHODIMP
-nsXHTMLContentSerializer::AppendDocumentStart(nsIDocument *aDocument,
+nsXHTMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
                                               nsAString& aStr)
 {
   if (!mBodyOnly)
@@ -978,7 +979,7 @@ nsXHTMLContentSerializer::MaybeLeaveFromPreContent(nsIContent* aNode)
 }
 
 void 
-nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
+nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
                                                     nsAString& aStr)
 {
   // We are copying and we are at the "first" LI node of OL in selected range.
@@ -1049,7 +1050,7 @@ nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
 }
 
 PRBool
-nsXHTMLContentSerializer::IsFirstChildOfOL(nsIContent* aElement)
+nsXHTMLContentSerializer::IsFirstChildOfOL(nsIDOMElement* aElement)
 {
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
   nsAutoString parentName;
