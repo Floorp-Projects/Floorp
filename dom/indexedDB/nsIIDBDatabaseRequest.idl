@@ -72,7 +72,7 @@ interface nsIIDBDatabaseRequest : nsIIDBDatabase
   openIndex(in DOMString name);
 
   nsIIDBRequest
-  removeObjectStore(in DOMString storeName);
+  removeObjectStore(in DOMString name);
 
   nsIIDBRequest
   removeIndex(in DOMString indexName);
