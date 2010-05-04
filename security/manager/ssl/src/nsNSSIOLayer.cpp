@@ -87,7 +87,7 @@
 #include "nsIClassInfoImpl.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsIArray.h"
-#include "nsCommaSeparatedTokenizer.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #include "ssl.h"
 #include "secerr.h"
