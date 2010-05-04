@@ -406,6 +406,7 @@ IDBDatabaseRequest::EnsureConnection()
   nsAutoString filename;
   filename.AppendInt(HashString(mASCIIOrigin));
 
+#if 1
   // XXX This is wrong! We do want one file per origin, but the schema doesn't
   //     support multiple database names per file yet.
   NS_WARNING("Using mutliple files per origin! Fix this now!");
@@ -413,6 +414,8 @@ IDBDatabaseRequest::EnsureConnection()
   sanitizedName.ReplaceChar(FILE_ILLEGAL_CHARACTERS FILE_PATH_SEPARATOR,
                             '_');
   filename.Append(sanitizedName);
+#endif
+
   filename.AppendLiteral(".sqlite");
 
   rv = dbFile->Append(filename);
@@ -596,6 +599,10 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (aName.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
@@ -636,7 +643,18 @@ IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (!aOptionalArgCount) {
+  if (aName.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (aOptionalArgCount) {
+    if (aMode != nsIIDBObjectStore::READ_WRITE &&
+        aMode != nsIIDBObjectStore::READ_ONLY &&
+        aMode != nsIIDBObjectStore::SNAPSHOT_READ) {
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  else {
     aMode = nsIIDBObjectStore::READ_WRITE;
   }
 
@@ -704,6 +722,10 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
                                       nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (aName.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
 
@@ -815,10 +837,6 @@ CreateObjectStoreHelper::Init()
 PRUint16
 CreateObjectStoreHelper::DoDatabaseWork()
 {
-  if (mName.IsEmpty() || (mKeyPath.IsEmpty() && !mKeyPath.IsVoid())) {
-    return nsIIDBDatabaseError::CONSTRAINT_ERR;
-  }
-
   nsresult rv = mDatabase->EnsureConnection();
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
