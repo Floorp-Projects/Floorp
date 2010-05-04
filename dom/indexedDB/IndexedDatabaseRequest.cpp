@@ -70,10 +70,10 @@ NS_IMETHODIMP
 IndexedDatabaseRequest::Open(const nsAString& aName,
                              const nsAString& aDescription,
                              PRBool aModifyDatabase,
-                             PRUint8 aArgCount,
+                             PRUint8 aOptionalArgCount,
                              nsIIDBDatabaseRequest** _retval)
 {
-  if (aArgCount < 3) {
+  if (!aOptionalArgCount) {
     // aModifyDatabase defaults to true.
     aModifyDatabase = PR_TRUE;
   }

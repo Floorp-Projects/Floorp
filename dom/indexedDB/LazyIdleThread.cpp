@@ -45,6 +45,20 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
+#ifdef DEBUG
+#define ASSERT_OWNING_THREAD()                                                 \
+  PR_BEGIN_MACRO                                                               \
+    nsIThread* currentThread = NS_GetCurrentThread();                          \
+    if (currentThread) {                                                       \
+      nsCOMPtr<nsISupports> current(do_QueryInterface(currentThread));         \
+      nsCOMPtr<nsISupports> test(do_QueryInterface(mOwningThread));            \
+      NS_ASSERTION(current == test, "Wrong thread!");                          \
+    }                                                                          \
+  PR_END_MACRO
+#else
+#define ASSERT_OWNING_THREAD() /* nothing */
+#endif
+
 USING_INDEXEDDB_NAMESPACE
 
 using mozilla::MutexAutoLock;
@@ -61,12 +75,41 @@ public:
   : mTimer(aTimer)
   { }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run()
+  {
     return mTimer->Cancel();
   }
 
 private:
   nsCOMPtr<nsITimer> mTimer;
+};
+
+class ShutdownThreadRunnable : public nsRunnable
+{
+public:
+  ShutdownThreadRunnable(nsCOMPtr<nsIThread>& aThread)
+  : mRunCount(0)
+  {
+    mThread.swap(aThread);
+  }
+
+  NS_IMETHOD Run()
+  {
+    if (mRunCount++ == 0) {
+      nsCOMPtr<nsIThreadInternal> thread =
+        do_QueryInterface(NS_GetCurrentThread());
+      NS_ASSERTION(thread, "Shouldn't ever fail!");
+
+      thread->SetObserver(nsnull);
+
+      return NS_DispatchToCurrentThread(this);
+    }
+    return mThread->Shutdown();
+  }
+
+private:
+  nsCOMPtr<nsIThread> mThread;
+  PRUint32 mRunCount;
 };
 
 } // anonymous namespace
@@ -76,30 +119,31 @@ LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS)
   mOwningThread(NS_GetCurrentThread()),
   mIdleTimeoutMS(aIdleTimeoutMS),
   mShutdown(PR_FALSE),
-  mThreadHasTimedOut(PR_FALSE)
+  mThreadHasTimedOut(PR_FALSE),
+  mIdleObserver(nsnull)
 {
   NS_ASSERTION(mOwningThread, "This should never fail!");
 }
 
 LazyIdleThread::~LazyIdleThread()
 {
+  ASSERT_OWNING_THREAD();
+
   if (!mShutdown) {
-    NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
     Shutdown();
   }
 }
 
 void
-LazyIdleThread::SetIdleObserver(nsIObserver* aObserver)
+LazyIdleThread::SetWeakIdleObserver(nsIObserver* aObserver)
 {
+  ASSERT_OWNING_THREAD();
+
   if (mShutdown) {
     if (aObserver) {
       NS_WARNING("Setting an observer after Shutdown was called!");
       return;
     }
-  }
-  else {
-    NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
   }
 
   mIdleObserver = aObserver;
@@ -111,7 +155,7 @@ LazyIdleThread::SetIdleObserver(nsIObserver* aObserver)
 nsresult
 LazyIdleThread::EnsureThread()
 {
-  NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
+  ASSERT_OWNING_THREAD();
 
   if (mShutdown) {
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
@@ -119,10 +163,6 @@ LazyIdleThread::EnsureThread()
 
   if (mThread) {
     return NS_OK;
-  }
-
-  if (!mOwningThread) {
-    NS_ASSERTION(mOwningThread, "This should never be null!");
   }
 
   nsresult rv;
@@ -176,7 +216,7 @@ LazyIdleThread::InitThread()
 void
 LazyIdleThread::ShutdownThread()
 {
-  NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
+  ASSERT_OWNING_THREAD();
 
   if (mThread) {
 
@@ -184,10 +224,10 @@ LazyIdleThread::ShutdownThread()
       mIdleObserver->Observe(mThread, IDLE_THREAD_TOPIC, nsnull);
     }
 
-    if (NS_FAILED(mThread->Shutdown())) {
+    nsCOMPtr<nsIRunnable> runnable(new ShutdownThreadRunnable(mThread));
+    if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
       NS_WARNING("Failed to shutdown thread!");
     }
-    mThread = nsnull;
   }
 
   // Don't need to lock here because the thread is gone.
@@ -225,7 +265,7 @@ NS_IMETHODIMP
 LazyIdleThread::Dispatch(nsIRunnable* aEvent,
                          PRUint32 aFlags)
 {
-  NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
+  ASSERT_OWNING_THREAD();
 
   nsresult rv = EnsureThread();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -264,16 +304,16 @@ LazyIdleThread::GetPRThread(PRThread** aPRThread)
 NS_IMETHODIMP
 LazyIdleThread::Shutdown()
 {
+  ASSERT_OWNING_THREAD();
+
   if (!mShutdown) {
-    NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
-
     ShutdownThread();
-
     mShutdown = PR_TRUE;
-    mOwningThread = nsnull;
-    mIdleObserver = nsnull;
   }
 
+  NS_ASSERTION(!mThread, "Should have destroyed this by now!");
+
+  mIdleObserver = nsnull;
   return NS_OK;
 }
 
@@ -312,7 +352,7 @@ LazyIdleThread::ProcessNextEvent(PRBool aMayWait,
 NS_IMETHODIMP
 LazyIdleThread::Notify(nsITimer* aTimer)
 {
-  NS_ASSERTION(NS_GetCurrentThread() == mOwningThread, "Wrong thread!");
+  ASSERT_OWNING_THREAD();
 
   {
     MutexAutoLock lock(mMutex);

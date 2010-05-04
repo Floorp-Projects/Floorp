@@ -93,12 +93,12 @@ IDBObjectStoreRequest::IDBObjectStoreRequest()
   mMode(nsIIDBObjectStore::READ_WRITE),
   mId(LL_MININT)
 {
-
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 
 IDBObjectStoreRequest::~IDBObjectStoreRequest()
 {
-
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 
 void
@@ -141,6 +141,8 @@ DOMCI_DATA(IDBObjectStoreRequest, IDBObjectStoreRequest)
 NS_IMETHODIMP
 IDBObjectStoreRequest::GetMode(PRUint16* aMode)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   *aMode = mMode;
   return NS_OK;
 }
@@ -148,6 +150,8 @@ IDBObjectStoreRequest::GetMode(PRUint16* aMode)
 NS_IMETHODIMP
 IDBObjectStoreRequest::GetName(nsAString& aName)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   aName.Assign(mName);
   return NS_OK;
 }
@@ -155,6 +159,8 @@ IDBObjectStoreRequest::GetName(nsAString& aName)
 NS_IMETHODIMP
 IDBObjectStoreRequest::GetKeyPath(nsAString& aKeyPath)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   if (mKeyPath.IsVoid()) {
     aKeyPath.SetIsVoid(PR_TRUE);
   }
@@ -167,7 +173,16 @@ IDBObjectStoreRequest::GetKeyPath(nsAString& aKeyPath)
 NS_IMETHODIMP
 IDBObjectStoreRequest::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
+  PRUint32 count = mIndexes.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    NS_ENSURE_TRUE(list->Add(mIndexes[index]), NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  list.forget(aIndexNames);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -176,6 +191,7 @@ IDBObjectStoreRequest::Put(nsIVariant* aValue,
                            PRBool aNoOverwrite,
                            nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -183,6 +199,7 @@ NS_IMETHODIMP
 IDBObjectStoreRequest::Remove(nsIVariant* aKey,
                               nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -190,6 +207,7 @@ NS_IMETHODIMP
 IDBObjectStoreRequest::Get(nsIVariant* aKey,
                            nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -198,5 +216,6 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aRange,
                                   PRUint16 aDirection,
                                   nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
