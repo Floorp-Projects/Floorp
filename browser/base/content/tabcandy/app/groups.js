@@ -385,10 +385,17 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       
     var self = this;
     
+    var wasAlreadyInThisGroup = false;
+    var oldIndex = $.inArray(item, this._children);
+    if(oldIndex != -1) {
+      this._children.splice(oldIndex, 1); 
+      wasAlreadyInThisGroup = true;
+    }
+
     // TODO: You should be allowed to drop in the white space at the bottom and have it go to the end
     // (right now it can match the thumbnail above it and go there)
     function findInsertionPoint(dropPos){
-      if(self._isStacked)
+      if(self.shouldStack(self._children.length + 1))
         return 0;
         
       var best = {dist: Infinity, item: null};
@@ -422,13 +429,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       return 0;      
     }
     
-    var wasAlreadyInThisGroup = false;
-    var oldIndex = $.inArray(item, this._children);
-    if(oldIndex != -1) {
-      this._children.splice(oldIndex, 1); 
-      wasAlreadyInThisGroup = true;
-    }
-
     // Insert the tab into the right position.
     var index = findInsertionPoint(dropPos);
     this._children.splice( index, 0, item );
@@ -520,6 +520,13 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   },
     
   // ----------  
+  shouldStack: function(count) {
+    var bb = this.getContentBounds();
+    var result = !(count == 1 || (bb.width * bb.height) / count > 7000);          
+    return result;
+  },
+
+  // ----------  
   arrange: function(options) {
     if(this.expanded)
       return;
@@ -529,7 +536,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       return;
 
     var bb = this.getContentBounds();
-    if((bb.width * bb.height) / count > 7000) {
+    if(!this.shouldStack(count)) {
       this._children.forEach(function(child){
           child.removeClass("stacked")
       });
@@ -764,7 +771,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       $(this.container).resizable({
         handles: "se",
         aspectRatio: false,
-        minWidth: 60,
+        minWidth: 90,
         minHeight: 90,
         resize: function(){
           self.reloadBounds();
@@ -1097,7 +1104,10 @@ window.Groups = {
   unregister: function(group) {
     var index = $.inArray(group, this.groups);
     if(index != -1)
-      this.groups.splice(index, 1);     
+      this.groups.splice(index, 1);  
+    
+    if(group == this._activeGroup)
+      this._activeGroup = null;   
   },
   
   // ----------
