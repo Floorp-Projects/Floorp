@@ -73,17 +73,17 @@ window.Group = function(listOfEls, options) {
     .appendTo("body")
     .dequeue();
     
-  $container.dblclick(function(){
-    Groups.setActiveGroup(self);
-    UI.newTab("about:blank");
-  })
-  
-  
-  // ___ New Tab Button
-    
+  // ___ New Tab Button   
   this.$ntb = $("<div class='newTabButton'/>").appendTo($container)
 
-  function zoomIn(){
+  function zoomIn() {
+    var box = self.getContentBounds();
+    if(!self._isStacked) {
+      var rects = Items.arrange(null, box, {pretend: true, count: self._children.length + 1});
+      if(rects.length)
+        box = rects[rects.length - 1];
+    }
+    
     anim = $("<div class='newTabAnimatee'/>").css({
       width: self.$ntb.width(),
       height: self.$ntb.height(),
@@ -92,15 +92,12 @@ window.Group = function(listOfEls, options) {
       zIndex: 999
     })
     .appendTo("body")
-    
-    // TODO: This should animate to the location that the new tab
-    // will appear! Right now it is just the center of the group.
-    // Ian had some good ideas about how to make this happen.
     .animate({
-      top: self.bounds.top+self.bounds.width/2,
-      left: self.bounds.left+self.bounds.height/2,
-    }, 200, "tabcandyBounce")
-    
+      top: box.top,
+      left: box.left,
+      width: box.width,
+      height: box.height,
+    }, 200)//, "tabcandyBounce")
     .animate({
       top: 0,
       left: 0,
@@ -120,8 +117,7 @@ window.Group = function(listOfEls, options) {
       // condition. We need a better solution.
       setTimeout(function(){
         UI.tabBar.showOnlyTheseTabs(Groups.getActiveGroup()._children);
-      }, 400)
-      
+      }, 400);
     });
   }
   
@@ -287,6 +283,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var titleHeight = this.$titlebar.height();
     box.top += titleHeight;
     box.height -= titleHeight;
+    box.inset(6, 6);
+    box.height -= 15; // For new tab button
     return box;
   },
   
@@ -564,8 +562,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       return;
 
     var bb = this.getContentBounds();
-    bb.inset(6, 6);
-    
     if((bb.width * bb.height) / count > 7000) {
       this._children.forEach(function(child){
           child.removeClass("stacked")
@@ -573,7 +569,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 
       Items.arrange(this._children, bb, options);
       this._isStacked = false;
-      
     } else
       this._stackArrange(bb, options);
   },
