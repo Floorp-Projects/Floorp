@@ -77,6 +77,10 @@ public:
   // Only meant to be called on mStorageThread!
   nsresult EnsureConnection();
 
+  nsIThread* ConnectionThread() {
+    return mConnectionThread;
+  }
+
   void OnObjectStoreCreated(const nsAString& aName);
   void OnIndexCreated(const nsAString& aName);
 
@@ -96,7 +100,7 @@ private:
 
   nsCOMPtr<nsIIDBTransaction> mCurrentTransaction;
 
-  nsRefPtr<LazyIdleThread> mStorageThread;
+  nsRefPtr<LazyIdleThread> mConnectionThread;
 
   // Only touched on mStorageThread!
   nsCOMPtr<mozIStorageConnection> mConnection;

@@ -142,6 +142,22 @@ protected:
   PRUint16 mMode;
 };
 
+class RemoveObjectStoreHelper : public AsyncConnectionHelper
+{
+public:
+  RemoveObjectStoreHelper(IDBDatabaseRequest* aDatabase,
+                          nsIDOMEventTarget* aTarget,
+                          const nsAString& aName)
+  : AsyncConnectionHelper(aDatabase, aTarget), mName(aName)
+  { }
+
+  PRUint16 DoDatabaseWork();
+
+private:
+  // In-params.
+  nsString mName;
+};
+
 /**
  * Creates the needed tables and their indexes.
  *
@@ -252,11 +268,11 @@ IDBDatabaseRequest::Create(const nsAString& aName,
 
   nsRefPtr<IDBDatabaseRequest> db(new IDBDatabaseRequest());
 
-  db->mStorageThread = new LazyIdleThread(kDefaultThreadTimeoutMS);
+  db->mConnectionThread = new LazyIdleThread(kDefaultThreadTimeoutMS);
 
   // Circular reference! Will be broken when the thread times out, when XPCOM is
   // shutting down, or if we explicitly call Shutdown on the thread.
-  db->mStorageThread->SetIdleObserver(db);
+  db->mConnectionThread->SetIdleObserver(db);
 
   db->mASCIIOrigin.Assign(origin);
   db->mName.Assign(aName);
@@ -340,8 +356,8 @@ IDBDatabaseRequest::IDBDatabaseRequest()
 
 IDBDatabaseRequest::~IDBDatabaseRequest()
 {
-  if (mStorageThread) {
-    mStorageThread->Shutdown();
+  if (mConnectionThread) {
+    mConnectionThread->Shutdown();
   }
 }
 
@@ -579,7 +595,7 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
     nsRefPtr<CreateObjectStoreHelper> helper =
       new CreateObjectStoreHelper(this, request, aName, aKeyPath,
                                   !!aAutoIncrement);
-    rv = helper->Dispatch(mStorageThread);
+    rv = helper->Dispatch(mConnectionThread);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -621,7 +637,7 @@ IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
   else {
     nsRefPtr<OpenObjectStoreHelper> helper =
       new OpenObjectStoreHelper(this, request, aName, aMode);
-    rv = helper->Dispatch(mStorageThread);
+    rv = helper->Dispatch(mConnectionThread);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -659,15 +675,38 @@ IDBDatabaseRequest::OpenIndex(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::RemoveObjectStore(const nsAString& aStoreName,
+IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
                                       nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
 
-  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+
+  bool exists = false;
+  PRUint32 count = mObjectStoreNames.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    if (mObjectStoreNames[index].Equals(aName)) {
+      exists = true;
+      break;
+    }
+  }
+
+  nsresult rv;
+  if (NS_UNLIKELY(!exists)) {
+    nsCOMPtr<nsIRunnable> runnable =
+      IDBErrorEvent::CreateRunnable(request,
+                                    nsIIDBDatabaseError::NOT_FOUND_ERR);
+    NS_ENSURE_TRUE(runnable, NS_ERROR_UNEXPECTED);
+    rv = NS_DispatchToCurrentThread(runnable);
+  }
+  else {
+    nsRefPtr<RemoveObjectStoreHelper> helper =
+      new RemoveObjectStoreHelper(this, request, aName);
+    rv = helper->Dispatch(mConnectionThread);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
   request.forget(_retval);
-
   return NS_OK;
 }
 
@@ -867,4 +906,29 @@ OpenObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ASSERTION(result, "Failed to QI!");
 
   aResult->SetAsISupports(result);
+}
+
+PRUint16
+RemoveObjectStoreHelper::DoDatabaseWork()
+{
+  nsresult rv = mDatabase->EnsureConnection();
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM object_store "
+    "WHERE name = :name "
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  if (NS_FAILED(stmt->Execute())) {
+    return nsIIDBDatabaseError::NOT_FOUND_ERR;
+  }
+
+  return OK;
 }
