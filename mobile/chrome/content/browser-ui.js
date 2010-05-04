@@ -1034,6 +1034,9 @@ var PageActions = {
     picker.defaultExtension = "pdf";
     picker.defaultString = contentWindow.document.title + ".pdf";
 
+    let dnldMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    picker.displayDirectory = dnldMgr.defaultDownloadsDirectory;
+
     let rv = picker.show();
     if (rv == Ci.nsIFilePicker.returnCancel)
       return;
