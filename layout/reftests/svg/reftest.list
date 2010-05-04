@@ -115,6 +115,7 @@ fails == inline-in-xul-basic-01.xul pass.svg
 == opacity-and-gradient-01.svg pass.svg
 == opacity-and-gradient-02.svg opacity-and-gradient-02-ref.svg
 == opacity-and-pattern-01.svg pass.svg
+== polyline-points-invalid-01.svg pass.svg
 == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
 == pattern-live-01a.svg pattern-live-01-ref.svg
@@ -159,6 +160,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != text-language-01.xhtml text-language-01
 == thin-stroke-01.svg pass.svg
 == userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01-ref.svg
 == viewBox-and-pattern-01.svg pass.svg
+== viewBox-invalid-01.svg pass.svg
+== viewBox-valid-01.svg pass.svg
 == viewport-percent-graphic-user-01.svg pass.svg
 
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed-ref.xhtml
