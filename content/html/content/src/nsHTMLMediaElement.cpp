@@ -1329,7 +1329,7 @@ static CanPlayStatus GetCanPlay(const nsAString& aType)
       // Totally unsupported codec
       return CANPLAY_NO;
     }
-    expectMoreTokens = tokenizer.lastTokenEndedWithComma();
+    expectMoreTokens = tokenizer.lastTokenEndedWithSeparator();
   }
   if (expectMoreTokens) {
     // Last codec name was empty
