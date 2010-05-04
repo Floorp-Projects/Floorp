@@ -250,8 +250,8 @@ if test "$target" = "arm-android-eabi" ; then
     STRIP="$android_toolchain"/bin/arm-eabi-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
-    CXXFLAGS="-mandroid -std=gnu++0x -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CXXFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -std=gnu++0x -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CXXFLAGS"
     LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
@@ -996,6 +996,8 @@ USE_DEPENDENT_LIBS=1
 _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
 
 MOZ_ENABLE_POSTSCRIPT=1 
+
+MOZ_THUMB2=
 
 if test -n "$CROSS_COMPILE"; then
     OS_TARGET="${target_os}"
@@ -4046,6 +4048,32 @@ dnl ========================================================
 MOZ_ARG_HEADER(Components and Features)
 
 dnl ========================================================
+
+dnl ========================================================
+dnl = Enable building the Thumb2 instruction set
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(thumb2,
+ [  --enable-thumb2              Enable Thumb2 instruction set],
+    MOZ_THUMB2=1,)
+
+if test -n "$MOZ_THUMB2"; then
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+        CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
+      else
+        AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
+      fi
+    ;;
+    *)
+      AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
+    ;;
+  esac
+fi
+
+dnl ========================================================
 dnl = Localization
 dnl ========================================================
 MOZ_ARG_ENABLE_STRING(ui-locale,
@@ -5401,6 +5429,9 @@ if test "$JS_HAS_CTYPES"; then
   fi
   if test "$OS_ARCH" = "OS2"; then
     ac_configure_args="$ac_configure_args CFLAGS=-Zomf AR=emxomfar"
+  fi
+  if test -n "$MOZ_THUMB2"; then
+    ac_configure_args="$ac_configure_args --enable-thumb2"
   fi
 
   # Use a separate cache file for libffi, since it does things differently
