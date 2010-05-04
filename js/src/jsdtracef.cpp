@@ -52,7 +52,7 @@
 static char dempty[] = "<null>";
 
 static char *
-jsdtrace_fun_classname(JSFunction *fun)
+jsdtrace_fun_classname(const JSFunction *fun)
 {
     return (fun &&
             !FUN_INTERPRETED(fun) &&
@@ -71,7 +71,7 @@ jsdtrace_filename(JSStackFrame *fp)
 }
 
 static int
-jsdtrace_fun_linenumber(JSContext *cx, JSFunction *fun)
+jsdtrace_fun_linenumber(JSContext *cx, const JSFunction *fun)
 {
     if (fun && FUN_INTERPRETED(fun))
         return (int) JS_GetScriptBaseLineNumber(cx, FUN_SCRIPT(fun));
@@ -109,7 +109,7 @@ jsdtrace_frame_linenumber(JSContext *cx, JSStackFrame *fp)
  * provide raw (unmasked) jsvals should type info be useful from D scripts.
  */
 static void *
-jsdtrace_jsvaltovoid(JSContext *cx, jsval argval)
+jsdtrace_jsvaltovoid(JSContext *cx, const jsval argval)
 {
     JSType type = TYPEOF(cx, argval);
 
@@ -136,7 +136,7 @@ jsdtrace_jsvaltovoid(JSContext *cx, jsval argval)
 }
 
 static char *
-jsdtrace_fun_name(JSContext *cx, JSFunction *fun)
+jsdtrace_fun_name(JSContext *cx, const JSFunction *fun)
 {
     JSAtom *atom;
     char *name;
@@ -166,7 +166,7 @@ jsdtrace_fun_name(JSContext *cx, JSFunction *fun)
  * a number of usually unused lines of code would cause.
  */
 void
-jsdtrace_function_entry(JSContext *cx, JSStackFrame *fp, JSFunction *fun)
+jsdtrace_function_entry(JSContext *cx, JSStackFrame *fp, const JSFunction *fun)
 {
     JAVASCRIPT_FUNCTION_ENTRY(
         jsdtrace_filename(fp),
@@ -190,7 +190,8 @@ jsdtrace_function_info(JSContext *cx, JSStackFrame *fp, JSStackFrame *dfp,
 }
 
 void
-jsdtrace_function_args(JSContext *cx, JSStackFrame *fp, JSFunction *fun, jsuint argc, jsval *argv)
+jsdtrace_function_args(JSContext *cx, JSStackFrame *fp, const JSFunction *fun,
+                       jsuint argc, jsval *argv)
 {
     JAVASCRIPT_FUNCTION_ARGS(
         jsdtrace_filename(fp),

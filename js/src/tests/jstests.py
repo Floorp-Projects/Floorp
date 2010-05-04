@@ -125,10 +125,10 @@ class ResultsSink:
     #      key   is (result, expect, random)
     #      value is (tinderbox label, dev test category)
     LABELS = {
-        (TestResult.CRASH, False, False): ('TEST-KNOWN-FAIL',                    ''),
-        (TestResult.CRASH, False, True):  ('TEST-KNOWN-FAIL (EXPECTED RANDOM)',  ''),
+        (TestResult.CRASH, False, False): ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
+        (TestResult.CRASH, False, True):  ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
         (TestResult.CRASH, True,  False): ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
-        (TestResult.CRASH, True,  True):  ('TEST-KNOWN-FAIL (EXPECTED RANDOM)',  ''),
+        (TestResult.CRASH, True,  True):  ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
 
         (TestResult.FAIL,  False, False): ('TEST-KNOWN-FAIL',                    ''),
         (TestResult.FAIL,  False, True):  ('TEST-KNOWN-FAIL (EXPECTED RANDOM)',  ''),
@@ -201,7 +201,7 @@ if __name__ == '__main__':
     op.add_option('-t', '--timeout', dest='timeout', type=float, default=60.0,
                   help='set test timeout in seconds')
     op.add_option('-d', '--exclude-random', dest='random', action='store_false',
-                  help='exclude tests marked random')
+                  help='exclude tests marked random', default=True)
     op.add_option('--run-skipped', dest='run_skipped', action='store_true',
                   help='run skipped tests')
     op.add_option('--run-only-skipped', dest='run_only_skipped', action='store_true',

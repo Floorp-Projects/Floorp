@@ -137,7 +137,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp)
         JSObject *argsobj = JSVAL_TO_OBJECT(fp->argsobj);
         if (arg < fp->argc) {
             if (argsobj) {
-                jsval v = GetArgsSlot(argsobj, arg);
+                jsval v = argsobj->getArgsElement(arg);
                 if (v == JSVAL_HOLE)
                     return argsobj->getProperty(cx, id, vp);
             }
@@ -197,9 +197,9 @@ PutArguments(JSContext *cx, JSObject *argsobj, jsval *args)
 {
     uint32 argc = argsobj->getArgsLength();
     for (uint32 i = 0; i != argc; ++i) {
-        jsval v = argsobj->dslots[i];
+        jsval v = argsobj->getArgsElement(i);
         if (v != JSVAL_HOLE)
-            argsobj->dslots[i] = args[i];
+            argsobj->setArgsElement(i, args[i]);
     }
 }
 
@@ -301,7 +301,7 @@ args_delProperty(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
     if (JSVAL_IS_INT(idval)) {
         uintN arg = uintN(JSVAL_TO_INT(idval));
         if (arg < obj->getArgsLength())
-            SetArgsSlot(obj, arg, JSVAL_HOLE);
+            obj->setArgsElement(arg, JSVAL_HOLE);
     } else if (idval == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
         obj->setArgsLengthOverridden();
     } else if (idval == ATOM_KEY(cx->runtime->atomState.calleeAtom)) {
@@ -508,7 +508,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
             if (fp) {
                 *vp = fp->argv[arg];
             } else {
-                jsval v = GetArgsSlot(obj, arg);
+                jsval v = obj->getArgsElement(arg);
                 if (v != JSVAL_HOLE)
                     *vp = v;
             }
@@ -595,7 +595,7 @@ args_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     jsid id = 0;
     if (JSVAL_IS_INT(idval)) {
         uint32 arg = uint32(JSVAL_TO_INT(idval));
-        if (arg < obj->getArgsLength() && GetArgsSlot(obj, arg) != JSVAL_HOLE)
+        if (arg < obj->getArgsLength() && obj->getArgsElement(arg) != JSVAL_HOLE)
             id = INT_JSVAL_TO_JSID(idval);
     } else if (idval == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
         if (!obj->isArgsLengthOverridden())
@@ -2040,19 +2040,19 @@ js_fun_apply(JSContext *cx, uintN argc, jsval *vp)
         /*
          * Two cases, two loops: note how in the case of an active stack frame
          * backing aobj, even though we copy from fp->argv, we still must check
-         * aobj->dslots[i] for a hole, to handle a delete on the corresponding
-         * arguments element. See args_delProperty.
+         * aobj->getArgsElement(i) for a hole, to handle a delete on the
+         * corresponding arguments element. See args_delProperty.
          */
         JSStackFrame *fp = (JSStackFrame *) aobj->getPrivate();
         if (fp) {
             memcpy(sp, fp->argv, argc * sizeof(jsval));
             for (i = 0; i < argc; i++) {
-                if (aobj->dslots[i] == JSVAL_HOLE) // suppress deleted element
+                if (aobj->getArgsElement(i) == JSVAL_HOLE) // suppress deleted element
                     sp[i] = JSVAL_VOID;
             }
         } else {
-            memcpy(sp, aobj->dslots, argc * sizeof(jsval));
             for (i = 0; i < argc; i++) {
+                sp[i] = aobj->getArgsElement(i);
                 if (sp[i] == JSVAL_HOLE)
                     sp[i] = JSVAL_VOID;
             }

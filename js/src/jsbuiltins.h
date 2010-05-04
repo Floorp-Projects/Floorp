@@ -48,7 +48,7 @@
 #undef THIS
 #endif
 
-enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_COOKIE };
+enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_VOID };
 enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10,
        JSTN_CONSTRUCTOR = 0x20 };
 
@@ -101,14 +101,6 @@ struct JSNativeTraceInfo {
     JSSpecializedNative     *specializations;
 };
 
-/*
- * We use a magic boxed pointer value to represent error conditions that
- * trigger a side exit. The address is so low that it should never be actually
- * in use. If it is, a performance regression occurs, not an actual runtime
- * error.
- */
-#define JSVAL_ERROR_COOKIE OBJECT_TO_JSVAL((JSObject*)0x10)
-
 /* Macros used by JS_DEFINE_CALLINFOn. */
 #ifdef DEBUG
 #define _JS_CI_NAME(op) ,#op
@@ -160,7 +152,6 @@ struct ClosureVarInfo;
  *         INT32_RETRY: any negative value
  *         STRING_RETRY: NULL
  *         OBJECT_RETRY_NULL: NULL
- *         JSVAL_RETRY: JSVAL_ERROR_COOKIE
  *
  *     _RETRY function calls are faster than _FAIL calls.  Each _RETRY call
  *     saves two writes to cx->bailExit and a read from state->builtinStatus.
@@ -194,7 +185,6 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVALPTR          _JS_CTYPE(jsval *,                _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVAL             _JS_JSVAL_CTYPE(                  _JS_PTR, "","v", INFALLIBLE)
-#define _JS_CTYPE_JSVAL_RETRY       _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_COOKIE)
 #define _JS_CTYPE_JSVAL_FAIL        _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_STATUS)
 #define _JS_CTYPE_JSID              _JS_CTYPE(jsid,                   _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_BOOL              _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)

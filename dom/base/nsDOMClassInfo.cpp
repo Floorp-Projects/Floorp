@@ -6859,9 +6859,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       // Since we always create the undeclared property here without given a
       // chance for the interpreter to report applicable strict mode warnings,
       // we must take care to check those warnings here.
-
       JSString *str = JSVAL_TO_STRING(id);
-      if (!::js_CheckUndeclaredVarAssignment(cx) ||
+      if ((!(flags & JSRESOLVE_QUALIFIED) &&
+           !js_CheckUndeclaredVarAssignment(cx, id)) ||
           !::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                                  ::JS_GetStringLength(str), JSVAL_VOID,
                                  JS_PropertyStub, JS_PropertyStub,
