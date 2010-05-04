@@ -162,14 +162,6 @@ private:
     }
 };
 
-class nsCommaSeparatedTokenizer : public nsCharSeparatedTokenizer
-{
-public:
-    nsCommaSeparatedTokenizer(const nsSubstring& aSource)
-        : nsCharSeparatedTokenizer(aSource, ',') {}
-};
-
-
 class nsCCommaSeparatedTokenizer
 {
 public:
