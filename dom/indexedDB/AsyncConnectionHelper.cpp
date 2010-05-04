@@ -97,11 +97,8 @@ NS_IMETHODIMP
 AsyncConnectionHelper::Run()
 {
   if (NS_IsMainThread()) {
-    if (mError) {
+    if (mError || ((mErrorCode = OnSuccess(mTarget)) != OK)) {
       OnError(mTarget, mErrorCode);
-    }
-    else {
-      OnSuccess(mTarget);
     }
 
     mDatabase = nsnull;
@@ -157,7 +154,7 @@ AsyncConnectionHelper::Init()
   return NS_OK;
 }
 
-void
+PRUint16
 AsyncConnectionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -166,24 +163,25 @@ AsyncConnectionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
     do_CreateInstance(NS_VARIANT_CONTRACTID);
   if (!variant) {
     NS_ERROR("Couldn't create variant!");
-    return;
+    return nsIIDBDatabaseError::UNKNOWN_ERR;
   }
 
   GetSuccessResult(variant);
 
   if (NS_FAILED(variant->SetWritable(PR_FALSE))) {
     NS_ERROR("Failed to make variant readonly!");
-    return;
+    return nsIIDBDatabaseError::UNKNOWN_ERR;
   }
 
   nsCOMPtr<nsIDOMEvent> event(IDBSuccessEvent::Create(variant));
   if (!event) {
     NS_ERROR("Failed to create event!");
-    return;
+    return nsIIDBDatabaseError::UNKNOWN_ERR;
   }
 
   PRBool dummy;
   aTarget->DispatchEvent(event, &dummy);
+  return OK;
 }
 
 void

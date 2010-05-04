@@ -42,7 +42,6 @@
 #include "mozilla/Storage.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
-#include "nsCRTGlue.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsHashKeys.h"
@@ -104,8 +103,8 @@ public:
     mAutoIncrement(aAutoIncrement), mId(LL_MININT)
   { }
 
-  nsresult Init();
   PRUint16 DoDatabaseWork();
+  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
   void GetSuccessResult(nsIWritableVariant* aResult);
 
 protected:
@@ -132,8 +131,8 @@ public:
     mMode(aMode)
   { }
 
-  nsresult Init();
   PRUint16 DoDatabaseWork();
+  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
   void GetSuccessResult(nsIWritableVariant* aResult);
 
 protected:
@@ -302,12 +301,6 @@ IDBDatabaseRequest::Create(const nsAString& aName,
       nsAutoString filename;
       filename.AppendInt(HashString(origin));
 
-      nsString sanitizedName(aName);
-      sanitizedName.ReplaceChar(FILE_ILLEGAL_CHARACTERS FILE_PATH_SEPARATOR,
-                                '_');
-      filename.Append(sanitizedName);
-      filename.AppendLiteral(".sqlite");
-
       rv = dbFile->Append(filename);
       NS_ENSURE_SUCCESS(rv, nsnull);
 
@@ -315,31 +308,49 @@ IDBDatabaseRequest::Create(const nsAString& aName,
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       if (exists) {
-        nsCOMPtr<mozIStorageService> ss =
-          do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-
-        nsCOMPtr<mozIStorageConnection> connection;
-        rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
+        rv = dbFile->IsDirectory(&isDirectory);
         NS_ENSURE_SUCCESS(rv, nsnull);
 
-        // Check to make sure that the database schema is correct.
-        PRInt32 schemaVersion;
-        rv = connection->GetSchemaVersion(&schemaVersion);
-        NS_ENSURE_SUCCESS(rv, nsnull);
+        if (isDirectory) {
+          filename.Truncate();
+          filename.AppendInt(HashString(aName));
+          filename.AppendLiteral(".sqlite");
 
-        if (schemaVersion == DB_SCHEMA_VERSION) {
-          nsCOMPtr<mozIStorageStatement> stmt;
-          rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-            "SELECT name "
-            "FROM object_store"
-          ), getter_AddRefs(stmt));
+          rv = dbFile->Append(filename);
           NS_ENSURE_SUCCESS(rv, nsnull);
 
-          PRBool hasResult;
-          while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-            nsString name;
-            (void)stmt->GetString(0, name);
-            NS_ENSURE_TRUE(db->mObjectStoreNames.AppendElement(name), nsnull);
+          rv = dbFile->Exists(&exists);
+          NS_ENSURE_SUCCESS(rv, nsnull);
+
+          if (exists) {
+            nsCOMPtr<mozIStorageService> ss =
+              do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+
+            nsCOMPtr<mozIStorageConnection> connection;
+            rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
+            NS_ENSURE_SUCCESS(rv, nsnull);
+
+            // Check to make sure that the database schema is correct.
+            PRInt32 schemaVersion;
+            rv = connection->GetSchemaVersion(&schemaVersion);
+            NS_ENSURE_SUCCESS(rv, nsnull);
+
+            if (schemaVersion == DB_SCHEMA_VERSION) {
+              nsCOMPtr<mozIStorageStatement> stmt;
+              rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+                "SELECT name "
+                "FROM object_store"
+              ), getter_AddRefs(stmt));
+              NS_ENSURE_SUCCESS(rv, nsnull);
+
+              PRBool hasResult;
+              while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+                nsString name;
+                (void)stmt->GetString(0, name);
+                NS_ENSURE_TRUE(db->mObjectStoreNames.AppendElement(name),
+                               nsnull);
+              }
+            }
           }
         }
       }
@@ -402,20 +413,28 @@ IDBDatabaseRequest::EnsureConnection()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Build the filename.
   nsAutoString filename;
   filename.AppendInt(HashString(mASCIIOrigin));
 
-#if 1
-  // XXX This is wrong! We do want one file per origin, but the schema doesn't
-  //     support multiple database names per file yet.
-  NS_WARNING("Using mutliple files per origin! Fix this now!");
-  nsString sanitizedName(mName);
-  sanitizedName.ReplaceChar(FILE_ILLEGAL_CHARACTERS FILE_PATH_SEPARATOR,
-                            '_');
-  filename.Append(sanitizedName);
-#endif
+  rv = dbFile->Append(filename);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = dbFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (exists) {
+    PRBool isDirectory;
+    rv = dbFile->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(isDirectory, NS_ERROR_UNEXPECTED);
+  }
+  else {
+    rv = dbFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  filename.Truncate();
+  filename.AppendInt(HashString(mName));
   filename.AppendLiteral(".sqlite");
 
   rv = dbFile->Append(filename);
@@ -823,17 +842,6 @@ IDBDatabaseRequest::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-nsresult
-CreateObjectStoreHelper::Init()
-{
-  mObjectStore =
-    IDBObjectStoreRequest::Create(mDatabase, mName, mKeyPath, mAutoIncrement,
-                                  nsIIDBObjectStore::READ_WRITE);
-  NS_ENSURE_TRUE(mObjectStore, NS_ERROR_UNEXPECTED);
-
-  return NS_OK;
-}
-
 PRUint16
 CreateObjectStoreHelper::DoDatabaseWork()
 {
@@ -879,28 +887,27 @@ CreateObjectStoreHelper::DoDatabaseWork()
          nsIIDBDatabaseError::UNKNOWN_ERR;
 }
 
+PRUint16
+CreateObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+{
+  mObjectStore =
+    IDBObjectStoreRequest::Create(mDatabase, mName, mKeyPath, mAutoIncrement,
+                                  nsIIDBObjectStore::READ_WRITE, mId);
+  NS_ENSURE_TRUE(mObjectStore, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  mDatabase->OnObjectStoreCreated(mName);
+
+  return AsyncConnectionHelper::OnSuccess(aTarget);
+}
+
 void
 CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
-  NS_ASSERTION(mObjectStore, "Init failed?!");
-  mObjectStore->SetId(mId);
-  mDatabase->OnObjectStoreCreated(mName);
-
   nsCOMPtr<nsISupports> result =
     do_QueryInterface(static_cast<nsIIDBObjectStoreRequest*>(mObjectStore));
   NS_ASSERTION(result, "Failed to QI!");
 
   aResult->SetAsISupports(result);
-}
-
-nsresult
-OpenObjectStoreHelper::Init()
-{
-  mObjectStore =
-    IDBObjectStoreRequest::Create(mDatabase, mName, mMode);
-  NS_ENSURE_TRUE(mObjectStore, NS_ERROR_UNEXPECTED);
-
-  return NS_OK;
 }
 
 PRUint16
@@ -936,14 +943,20 @@ OpenObjectStoreHelper::DoDatabaseWork()
   return OK;
 }
 
+PRUint16
+OpenObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+{
+  mObjectStore =
+    IDBObjectStoreRequest::Create(mDatabase, mName, mKeyPath, mAutoIncrement,
+                                  mMode, mId);
+  NS_ENSURE_TRUE(mObjectStore, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  return AsyncConnectionHelper::OnSuccess(aTarget);
+}
+
 void
 OpenObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
-  NS_ASSERTION(mObjectStore, "Init failed?!");
-  mObjectStore->SetId(mId);
-  mObjectStore->SetKeyPath(mKeyPath);
-  mObjectStore->SetAutoIncrement(mAutoIncrement);
-
   nsCOMPtr<nsISupports> result =
     do_QueryInterface(static_cast<nsIIDBObjectStoreRequest*>(mObjectStore));
   NS_ASSERTION(result, "Failed to QI!");
