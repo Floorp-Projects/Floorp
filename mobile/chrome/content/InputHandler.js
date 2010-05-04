@@ -121,17 +121,17 @@ function InputHandler(browserViewContainer) {
   this._suppressNextClick = false;
 
   /* these handle dragging of both chrome elements and content */
-  this.listenFor(window, "mousedown");
-  this.listenFor(window, "mouseup");
-  this.listenFor(window, "mousemove");
-  this.listenFor(window, "click");
+  window.addEventListener("mousedown", this, true);
+  window.addEventListener("mouseup", this, true);
+  window.addEventListener("mousemove", this, true);
+  window.addEventListener("click", this, true);
 
   /* these handle key strokes in the browser view (where page content appears) */
-  this.listenFor(browserViewContainer, "keydown");
-  this.listenFor(browserViewContainer, "keyup");
-  this.listenFor(browserViewContainer, "DOMMouseScroll");
-  this.listenFor(browserViewContainer, "MozMousePixelScroll");
-  this.listenFor(browserViewContainer, "contextmenu");
+  browserViewContainer.addEventListener("keydown", this, true);
+  browserViewContainer.addEventListener("keyup", this, true);
+  browserViewContainer.addEventListener("DOMMouseScroll", this, true);
+  browserViewContainer.addEventListener("MozMousePixelScroll", this, true);
+  browserViewContainer.addEventListener("contextmenu", this, false);
 
   this.addModule(new MouseModule(this, browserViewContainer));
   this.addModule(new ScrollwheelModule(this, browserViewContainer));
@@ -139,14 +139,6 @@ function InputHandler(browserViewContainer) {
 
 
 InputHandler.prototype = {
-  /**
-   * Tell the InputHandler to begin handling events from target of type
-   * eventType.
-   */
-  listenFor: function listenFor(target, eventType) {
-    target.addEventListener(eventType, this, true);
-  },
-
   /**
    * Add a module.  Module priority is first come, first served, so modules
    * added later have lower priority.
@@ -359,20 +351,11 @@ function MouseModule(owner, browserViewContainer) {
 
 MouseModule.prototype = {
   handleEvent: function handleEvent(evInfo) {
-    // TODO: Make "contextmenu" a first class part of InputHandler
-    // Bug 554639
-    if (evInfo.event.type == "contextmenu") {
-      if (this._clicker)
-        this._clicker.panBegin();
-      if (this._dragger)
-        this._dragger.dragStop(0, 0, this._targetScrollInterface);
-      this.cancelPending();
-    }
-
-    if (evInfo.event.button !== 0) // avoid all but a clean left click
+    let evt = evInfo.event;
+    if (evt.button !== 0 && evt.type != "contextmenu")
       return;
 
-    switch (evInfo.event.type) {
+    switch (evt.type) {
       case "mousedown":
         this._onMouseDown(evInfo);
         break;
@@ -381,6 +364,17 @@ MouseModule.prototype = {
         break;
       case "mouseup":
         this._onMouseUp(evInfo);
+        break;
+      case "contextmenu":
+        // TODO: Make "contextmenu" a first class part of InputHandler
+        // Bug 554639
+        if (ContextHelper.popupNode) {
+          if (this._clicker)
+            this._clicker.panBegin();
+          if (this._dragger)
+            this._dragger.dragStop(0, 0, this._targetScrollInterface);
+          this.cancelPending();
+        }
         break;
     }
   },

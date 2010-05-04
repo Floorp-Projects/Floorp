@@ -2228,7 +2228,7 @@ var ContextHelper = {
               (elem instanceof HTMLAreaElement && elem.href) ||
               elem instanceof HTMLLinkElement ||
               elem.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
-            
+
           // Target is a link or a descendant of a link.
           this.linkURL = this._getLinkURL(elem);
           this.linkProtocol = this._getProtocol(this._getURI(this.linkURL));
@@ -2307,8 +2307,8 @@ var ContextHelper = {
     container.hidden = true;
 
     BrowserUI.popPopup();
-   }
- };
+  }
+};
 
 var ContextCommands = {
   openInNewTab: function cc_openInNewTab(aEvent) {
