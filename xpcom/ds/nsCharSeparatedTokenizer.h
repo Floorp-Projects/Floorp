@@ -144,7 +144,7 @@ public:
                 ++mIter;
             }
         }
-        
+
         return Substring(begin, end);
     }
 
@@ -204,7 +204,7 @@ public:
               ++mIter;
           }
         }
-        
+
         // Skip separator (and any whitespace after it).
         if (mIter != mEnd) {
             NS_ASSERTION(*mIter == mSeparatorChar, "Ended loop too soon");
@@ -214,7 +214,7 @@ public:
                 ++mIter;
             }
         }
-        
+
         return Substring(begin, end);
     }
 
