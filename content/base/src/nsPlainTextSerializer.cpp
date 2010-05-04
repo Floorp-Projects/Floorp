@@ -290,7 +290,7 @@ nsPlainTextSerializer::Initialize(nsAString* aOutString,
 }
 
 NS_IMETHODIMP 
-nsPlainTextSerializer::AppendText(nsIDOMText* aText, 
+nsPlainTextSerializer::AppendText(nsIContent* aText,
                                   PRInt32 aStartOffset,
                                   PRInt32 aEndOffset, 
                                   nsAString& aStr)
@@ -309,7 +309,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
   PRInt32 length = 0;
   nsAutoString textstr;
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aText);
+  nsIContent* content = aText;
   const nsTextFragment* frag;
   if (!content || !(frag = content->GetText())) {
     return NS_ERROR_FAILURE;
@@ -372,7 +372,7 @@ nsPlainTextSerializer::AppendText(nsIDOMText* aText,
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::AppendCDATASection(nsIDOMCDATASection* aCDATASection,
+nsPlainTextSerializer::AppendCDATASection(nsIContent* aCDATASection,
                                           PRInt32 aStartOffset,
                                           PRInt32 aEndOffset,
                                           nsAString& aStr)
@@ -381,14 +381,13 @@ nsPlainTextSerializer::AppendCDATASection(nsIDOMCDATASection* aCDATASection,
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
-                                          nsIDOMElement *aOriginalElement,
+nsPlainTextSerializer::AppendElementStart(nsIContent *aElement,
+                                          nsIContent *aOriginalElement,
                                           nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
-  mContent = do_QueryInterface(aElement);
-  if (!mContent) return NS_ERROR_FAILURE;
+  mContent = aElement;
 
   nsresult rv;
   PRInt32 id = GetIdForContent(mContent);
@@ -415,13 +414,12 @@ nsPlainTextSerializer::AppendElementStart(nsIDOMElement *aElement,
 } 
  
 NS_IMETHODIMP 
-nsPlainTextSerializer::AppendElementEnd(nsIDOMElement *aElement,
+nsPlainTextSerializer::AppendElementEnd(nsIContent *aElement,
                                         nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
-  mContent = do_QueryInterface(aElement);
-  if (!mContent) return NS_ERROR_FAILURE;
+  mContent = aElement;
 
   nsresult rv;
   PRInt32 id = GetIdForContent(mContent);
@@ -456,8 +454,8 @@ nsPlainTextSerializer::Flush(nsAString& aStr)
 }
 
 NS_IMETHODIMP
-nsPlainTextSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
-                                             nsAString& aStr)
+nsPlainTextSerializer::AppendDocumentStart(nsIDocument *aDocument,
+                                           nsAString& aStr)
 {
   return NS_OK;
 }
