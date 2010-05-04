@@ -73,6 +73,10 @@ IndexedDatabaseRequest::Open(const nsAString& aName,
                              PRUint8 aOptionalArgCount,
                              nsIIDBDatabaseRequest** _retval)
 {
+  if (aName.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   if (!aOptionalArgCount) {
     // aModifyDatabase defaults to true.
     aModifyDatabase = PR_TRUE;

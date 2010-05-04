@@ -53,32 +53,32 @@ interface nsIIDBRequest;
 interface nsIIDBDatabaseRequest : nsIIDBDatabase
 {
   nsIIDBRequest
-  createObjectStore(in DOMString name,
-                    in DOMString keyPath,
+  createObjectStore(in AString name,
+                    in AString keyPath,
                     [optional /* false */] in boolean autoIncrement);
 
   [optional_argc]
   nsIIDBRequest
-  openObjectStore(in DOMString name,
+  openObjectStore(in AString name,
                   [optional /* READ_WRITE */] in unsigned short mode);
 
   nsIIDBRequest
-  createIndex(in DOMString name,
-              in DOMString storeName,
-              in DOMString keyPath,
+  createIndex(in AString name,
+              in AString storeName,
+              in AString keyPath,
               [optional /* false */] in boolean unique);
 
   nsIIDBRequest
-  openIndex(in DOMString name);
+  openIndex(in AString name);
 
   nsIIDBRequest
-  removeObjectStore(in DOMString name);
+  removeObjectStore(in AString name);
 
   nsIIDBRequest
-  removeIndex(in DOMString indexName);
+  removeIndex(in AString indexName);
 
   nsIIDBRequest
-  setVersion(in DOMString version);
+  setVersion(in AString version);
 
   [optional_argc]
   nsIIDBRequest
