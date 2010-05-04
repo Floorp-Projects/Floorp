@@ -233,7 +233,7 @@ namespace nanojit {
     public:
         // All Nanojit and jstracer printing should be routed through
         // this function.
-        virtual ~LogControl() {} 
+        virtual ~LogControl() {}
         #ifdef NJ_VERBOSE
         virtual void printf( const char* format, ... ) PRINTF_CHECK(2,3);
         #endif

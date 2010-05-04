@@ -237,7 +237,7 @@ namespace nanojit
         X64_jnp8    = 0x007B000000000002LL, // jump near if not parity (PF == 0)
         X64_jneg8   = 0x0001000000000000LL, // xor with this mask to negate the condition
         X64_leaqrm  = 0x00000000808D4807LL, // 64bit load effective addr reg <- disp32+base
-        X64_learm   = 0x00000000808D4007LL, // 32bit load effective addr reg <- disp32+base
+        X64_lealrm  = 0x00000000808D4007LL, // 32bit load effective addr reg <- disp32+base
         X64_learip  = 0x00000000058D4807LL, // 64bit RIP-relative lea. reg <- disp32+rip (modrm = 00rrr101 = 05)
         X64_movlr   = 0xC08B400000000003LL, // 32bit mov r <- b
         X64_movbmr  = 0x0000000080884007LL, // 8bit store r -> [b+d32]
@@ -521,6 +521,7 @@ namespace nanojit
         void IMULI(Register l, Register r, int32_t i32);\
         void MOVQI(Register r, uint64_t u64);\
         void LEARIP(Register r, int32_t d);\
+        void LEALRM(Register r, int d, Register b);\
         void LEAQRM(Register r, int d, Register b);\
         void MOVLRM(Register r, int d, Register b);\
         void MOVQRM(Register r, int d, Register b);\

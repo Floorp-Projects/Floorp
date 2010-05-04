@@ -115,7 +115,7 @@ namespace nanojit
 
         /** Cached value of VMPI_getVMPageSize */
         const size_t bytesPerPage;
-        
+
         /** Number of bytes to request from VMPI layer, always a multiple of the page size */
         const size_t bytesPerAlloc;
 

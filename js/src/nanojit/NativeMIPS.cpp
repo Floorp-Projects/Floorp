@@ -397,7 +397,7 @@ namespace nanojit
             if (p->isImmI())
                 asm_li(r, p->immI());
             else {
-                if (p->isUsed()) {
+                if (p->isExtant()) {
                     if (!p->deprecated_hasKnownReg()) {
                         // load it into the arg reg
                         int d = findMemFor(p);
@@ -427,7 +427,7 @@ namespace nanojit
     {
         bool isF64 = arg->isD();
         Register rr;
-        if (arg->isUsed() && (rr = arg->deprecated_getReg(), deprecated_isKnownReg(rr))) {
+        if (arg->isExtant() && (rr = arg->deprecated_getReg(), deprecated_isKnownReg(rr))) {
             // The argument resides somewhere in registers, so we simply need to
             // push it onto the stack.
             if (!cpu_has_fpu || !isF64) {
@@ -1136,7 +1136,7 @@ namespace nanojit
 
     bool Assembler::canRemat(LIns* ins)
     {
-        return ins->isImmAny() || ins->isop(LIR_alloc);
+        return ins->isImmI() || ins->isop(LIR_alloc);
     }
 
     void Assembler::asm_restore(LIns *i, Register r)

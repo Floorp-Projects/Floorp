@@ -257,6 +257,62 @@ static struct {
     },
 };
 static struct {
+    jsbytecode incelem[7];
+    jsbytecode eleminc[15];
+} incelem_imacros = {
+    {
+/* 0*/  JSOP_DUP2,
+/* 1*/  JSOP_GETELEM,
+/* 2*/  JSOP_POS,
+/* 3*/  JSOP_ONE,
+/* 4*/  JSOP_ADD,
+/* 5*/  JSOP_SETELEM,
+/* 6*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_DUP2,
+/* 1*/  JSOP_GETELEM,
+/* 2*/  JSOP_POS,
+/* 3*/  JSOP_DUP,
+/* 4*/  JSOP_ONE,
+/* 5*/  JSOP_ADD,
+/* 6*/  JSOP_PICK, 3,
+/* 8*/  JSOP_PICK, 3,
+/*10*/  JSOP_PICK, 2,
+/*12*/  JSOP_SETELEM,
+/*13*/  JSOP_POP,
+/*14*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode decelem[7];
+    jsbytecode elemdec[15];
+} decelem_imacros = {
+    {
+/* 0*/  JSOP_DUP2,
+/* 1*/  JSOP_GETELEM,
+/* 2*/  JSOP_POS,
+/* 3*/  JSOP_ONE,
+/* 4*/  JSOP_SUB,
+/* 5*/  JSOP_SETELEM,
+/* 6*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_DUP2,
+/* 1*/  JSOP_GETELEM,
+/* 2*/  JSOP_POS,
+/* 3*/  JSOP_DUP,
+/* 4*/  JSOP_ONE,
+/* 5*/  JSOP_SUB,
+/* 6*/  JSOP_PICK, 3,
+/* 8*/  JSOP_PICK, 3,
+/*10*/  JSOP_PICK, 2,
+/*12*/  JSOP_SETELEM,
+/*13*/  JSOP_POP,
+/*14*/  JSOP_STOP,
+    },
+};
+static struct {
     jsbytecode String[38];
 } call_imacros = {
     {
@@ -744,16 +800,16 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_VOID */
     0,  /* JSOP_INCNAME */
     0,  /* JSOP_INCPROP */
-    0,  /* JSOP_INCELEM */
+    3,  /* JSOP_INCELEM */
     0,  /* JSOP_DECNAME */
     0,  /* JSOP_DECPROP */
-    0,  /* JSOP_DECELEM */
+    3,  /* JSOP_DECELEM */
     0,  /* JSOP_NAMEINC */
     0,  /* JSOP_PROPINC */
-    0,  /* JSOP_ELEMINC */
+    3,  /* JSOP_ELEMINC */
     0,  /* JSOP_NAMEDEC */
     0,  /* JSOP_PROPDEC */
-    0,  /* JSOP_ELEMDEC */
+    3,  /* JSOP_ELEMDEC */
     1,  /* JSOP_GETPROP */
     0,  /* JSOP_SETPROP */
     0,  /* JSOP_GETELEM */
@@ -963,6 +1019,10 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_MOD \
  || x == JSOP_NEG \
  || x == JSOP_POS \
+ || x == JSOP_INCELEM \
+ || x == JSOP_DECELEM \
+ || x == JSOP_ELEMINC \
+ || x == JSOP_ELEMDEC \
  || x == JSOP_GETPROP \
  || x == JSOP_CALL \
  || x == JSOP_ITER \
@@ -986,6 +1046,10 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - add_imacros.obj_any) < 38) return add_imacros.obj_any;
     if (size_t(pc - add_imacros.obj_obj) < 72) return add_imacros.obj_obj;
     if (size_t(pc - unary_imacros.sign) < 41) return unary_imacros.sign;
+    if (size_t(pc - incelem_imacros.incelem) < 7) return incelem_imacros.incelem;
+    if (size_t(pc - incelem_imacros.eleminc) < 15) return incelem_imacros.eleminc;
+    if (size_t(pc - decelem_imacros.decelem) < 7) return decelem_imacros.decelem;
+    if (size_t(pc - decelem_imacros.elemdec) < 15) return decelem_imacros.elemdec;
     if (size_t(pc - call_imacros.String) < 38) return call_imacros.String;
     if (size_t(pc - new_imacros.String) < 38) return new_imacros.String;
     if (size_t(pc - apply_imacros.apply0) < 8) return apply_imacros.apply0;
