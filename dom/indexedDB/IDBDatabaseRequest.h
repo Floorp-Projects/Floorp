@@ -44,10 +44,11 @@
 #include "mozilla/dom/indexedDB/LazyIdleThread.h"
 
 #include "mozIStorageConnection.h"
-#include "nsIDOMDOMStringList.h"
 #include "nsIIDBDatabaseRequest.h"
 #include "nsIIDBTransaction.h"
 #include "nsIObserver.h"
+
+#include "nsDOMLists.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -65,7 +66,7 @@ public:
   NS_DECL_NSIIDBDATABASEREQUEST
   NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<nsIIDBDatabaseRequest>
+  static already_AddRefed<IDBDatabaseRequest>
   Create(const nsAString& aName,
          const nsAString& aDescription,
          PRBool aReadOnly);
@@ -75,6 +76,9 @@ public:
 
   // Only meant to be called on mStorageThread!
   nsresult EnsureConnection();
+
+  void OnObjectStoreCreated(const nsAString& aName);
+  void OnIndexCreated(const nsAString& aName);
 
 protected:
   IDBDatabaseRequest();
@@ -86,8 +90,10 @@ private:
   nsString mDescription;
   PRBool mReadOnly;
   nsString mVersion;
-  nsCOMPtr<nsIDOMDOMStringList> mObjectStores;
-  nsCOMPtr<nsIDOMDOMStringList> mIndexes;
+
+  nsTArray<nsString> mObjectStoreNames;
+  nsTArray<nsString> mIndexNames;
+
   nsCOMPtr<nsIIDBTransaction> mCurrentTransaction;
 
   nsRefPtr<LazyIdleThread> mStorageThread;

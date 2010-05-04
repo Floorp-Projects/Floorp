@@ -42,6 +42,7 @@
 #include "nsIPrivateDOMEvent.h"
 
 #include "nsDOMClassInfo.h"
+#include "nsThreadUtils.h"
 
 #include "IDBDatabaseError.h"
 
@@ -65,6 +66,24 @@ idomevent_cast(nsRefPtr<Class> aClassAutoPtr)
   return idomevent_cast(aClassAutoPtr.get());
 }
 
+class EventFiringRunnable : public nsRunnable
+{
+public:
+  EventFiringRunnable(nsIDOMEventTarget* aTarget,
+                      nsIDOMEvent* aEvent)
+  : mTarget(aTarget), mEvent(aEvent)
+  { }
+
+  NS_IMETHOD Run() {
+    PRBool dummy;
+    return mTarget->DispatchEvent(mEvent, &dummy);
+  }
+
+private:
+  nsCOMPtr<nsIDOMEventTarget> mTarget;
+  nsCOMPtr<nsIDOMEvent> mEvent;
+};
+
 } // anonymous namespace
 
 // static
@@ -79,6 +98,18 @@ IDBErrorEvent::Create(PRUint16 aCode)
 
   nsCOMPtr<nsIDOMEvent> result(idomevent_cast(event));
   return result.forget();
+}
+
+// static
+already_AddRefed<nsIRunnable>
+IDBErrorEvent::CreateRunnable(nsIDOMEventTarget* aTarget,
+                              PRUint16 aCode)
+{
+  nsCOMPtr<nsIDOMEvent> event(IDBErrorEvent::Create(aCode));
+  NS_ENSURE_TRUE(event, nsnull);
+
+  nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aTarget, event));
+  return runnable.forget();
 }
 
 nsresult
@@ -123,6 +154,18 @@ IDBSuccessEvent::Create(nsIVariant* aResult)
 
   nsCOMPtr<nsIDOMEvent> result(idomevent_cast(event));
   return result.forget();
+}
+
+// static
+already_AddRefed<nsIRunnable>
+IDBSuccessEvent::CreateRunnable(nsIDOMEventTarget* aTarget,
+                                nsIVariant* aResult)
+{
+  nsCOMPtr<nsIDOMEvent> event(IDBSuccessEvent::Create(aResult));
+  NS_ENSURE_TRUE(event, nsnull);
+
+  nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aTarget, event));
+  return runnable.forget();
 }
 
 nsresult

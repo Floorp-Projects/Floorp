@@ -44,7 +44,6 @@
 #include "nsContentUtils.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfo.h"
-#include "nsDOMLists.h"
 #include "nsHashKeys.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -134,7 +133,9 @@ public:
     mMode(aMode)
   { }
 
+  nsresult Init();
   PRUint16 DoDatabaseWork();
+  void GetSuccessResult(nsIWritableVariant* aResult);
 
 protected:
   // In-params.
@@ -228,7 +229,7 @@ CreateTables(mozIStorageConnection* aDBConn)
 } // anonymous namespace
 
 // static
-already_AddRefed<nsIIDBDatabaseRequest>
+already_AddRefed<IDBDatabaseRequest>
 IDBDatabaseRequest::Create(const nsAString& aName,
                            const nsAString& aDescription,
                            PRBool aReadOnly)
@@ -262,12 +263,73 @@ IDBDatabaseRequest::Create(const nsAString& aName,
   db->mDescription.Assign(aDescription);
   db->mReadOnly = aReadOnly;
 
-  db->mObjectStores = new nsDOMStringList();
-  db->mIndexes = new nsDOMStringList();
+#if 1
+  // XXX Do this before we load the page! This is all duplicated code that needs
+  // to be totally removed before this code sees the light of day!
+  NS_WARNING("Using a sync algorithm to open indexedDB data! Fix this now!");
 
-  nsIIDBDatabaseRequest* result;
-  db.forget(&result);
-  return result;
+  nsCOMPtr<nsIFile> dbFile;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                              getter_AddRefs(dbFile));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  rv = dbFile->Append(NS_LITERAL_STRING("indexedDB"));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  PRBool exists;
+  rv = dbFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  if (exists) {
+    PRBool isDirectory;
+    rv = dbFile->IsDirectory(&isDirectory);
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    if (isDirectory) {
+      nsCString filename;
+      filename.AppendInt(HashString(origin));
+      filename.AppendLiteral(".sqlite");
+
+      rv = dbFile->Append(NS_ConvertASCIItoUTF16(filename));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+
+      rv = dbFile->Exists(&exists);
+      NS_ENSURE_SUCCESS(rv, nsnull);
+
+      if (exists) {
+        nsCOMPtr<mozIStorageService> ss =
+          do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
+
+        nsCOMPtr<mozIStorageConnection> connection;
+        rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+
+        // Check to make sure that the database schema is correct.
+        PRInt32 schemaVersion;
+        rv = connection->GetSchemaVersion(&schemaVersion);
+        NS_ENSURE_SUCCESS(rv, nsnull);
+
+        if (schemaVersion == DB_SCHEMA_VERSION) {
+          nsCOMPtr<mozIStorageStatement> stmt;
+          rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+            "SELECT name "
+            "FROM object_store"
+          ), getter_AddRefs(stmt));
+          NS_ENSURE_SUCCESS(rv, nsnull);
+
+          PRBool hasResult;
+          while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+            nsString name;
+            (void)stmt->GetString(0, name);
+            NS_ENSURE_TRUE(db->mObjectStoreNames.AppendElement(name), nsnull);
+          }
+        }
+      }
+    }
+  }
+#endif
+
+  return db.forget();
 }
 
 IDBDatabaseRequest::IDBDatabaseRequest()
@@ -384,6 +446,26 @@ IDBDatabaseRequest::EnsureConnection()
   return NS_OK;
 }
 
+void
+IDBDatabaseRequest::OnObjectStoreCreated(const nsAString& aName)
+{
+  NS_ASSERTION(!mObjectStoreNames.Contains(aName),
+               "Already got this object store in the list!");
+  if (!mObjectStoreNames.AppendElement(aName)) {
+    NS_ERROR("Failed to add object store name! OOM?");
+  }
+}
+
+void
+IDBDatabaseRequest::OnIndexCreated(const nsAString& aName)
+{
+  NS_ASSERTION(!mIndexNames.Contains(aName),
+               "Already got this index in the list!");
+  if (!mIndexNames.AppendElement(aName)) {
+    NS_ERROR("Failed to add index name! OOM?");
+  }
+}
+
 NS_IMPL_ADDREF(IDBDatabaseRequest)
 NS_IMPL_RELEASE(IDBDatabaseRequest)
 
@@ -400,6 +482,8 @@ DOMCI_DATA(IDBDatabaseRequest, IDBDatabaseRequest)
 NS_IMETHODIMP
 IDBDatabaseRequest::GetName(nsAString& aName)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   aName.Assign(mName);
   return NS_OK;
 }
@@ -407,6 +491,8 @@ IDBDatabaseRequest::GetName(nsAString& aName)
 NS_IMETHODIMP
 IDBDatabaseRequest::GetDescription(nsAString& aDescription)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   aDescription.Assign(mDescription);
   return NS_OK;
 }
@@ -414,6 +500,8 @@ IDBDatabaseRequest::GetDescription(nsAString& aDescription)
 NS_IMETHODIMP
 IDBDatabaseRequest::GetVersion(nsAString& aVersion)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   aVersion.Assign(mVersion);
   return NS_OK;
 }
@@ -421,22 +509,39 @@ IDBDatabaseRequest::GetVersion(nsAString& aVersion)
 NS_IMETHODIMP
 IDBDatabaseRequest::GetObjectStores(nsIDOMDOMStringList** aObjectStores)
 {
-  nsCOMPtr<nsIDOMDOMStringList> objectStores(mObjectStores);
-  objectStores.forget(aObjectStores);
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
+  PRUint32 count = mObjectStoreNames.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    NS_ENSURE_TRUE(list->Add(mObjectStoreNames[index]), NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  list.forget(aObjectStores);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBDatabaseRequest::GetIndexes(nsIDOMDOMStringList** aIndexes)
 {
-  nsCOMPtr<nsIDOMDOMStringList> indexes(mIndexes);
-  indexes.forget(aIndexes);
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
+  PRUint32 count = mIndexNames.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    NS_ENSURE_TRUE(list->Add(mIndexNames[index]), NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  
+  list.forget(aIndexes);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBDatabaseRequest::GetCurrentTransaction(nsIIDBTransaction** aTransaction)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   nsCOMPtr<nsIIDBTransaction> transaction(mCurrentTransaction);
   transaction.forget(aTransaction);
   return NS_OK;
@@ -448,19 +553,37 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
                                       PRBool aAutoIncrement,
                                       nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
-  nsRefPtr<CreateObjectStoreHelper> helper =
-    new CreateObjectStoreHelper(this, request, aName, aKeyPath,
-                                !!aAutoIncrement);
+  bool exists = false;
+  PRUint32 count = mObjectStoreNames.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    if (mObjectStoreNames[index].Equals(aName)) {
+      exists = true;
+      break;
+    }
+  }
 
-  nsresult rv = helper->Dispatch(mStorageThread);
+  nsresult rv;
+  if (NS_UNLIKELY(exists)) {
+    nsCOMPtr<nsIRunnable> runnable =
+      IDBErrorEvent::CreateRunnable(request,
+                                    nsIIDBDatabaseError::CONSTRAINT_ERR);
+    NS_ENSURE_TRUE(runnable, NS_ERROR_UNEXPECTED);
+    rv = NS_DispatchToCurrentThread(runnable);
+  }
+  else {
+    nsRefPtr<CreateObjectStoreHelper> helper =
+      new CreateObjectStoreHelper(this, request, aName, aKeyPath,
+                                  !!aAutoIncrement);
+    rv = helper->Dispatch(mStorageThread);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  IDBRequest* retval;
-  request.forget(&retval);
-  *_retval = retval;
+  request.forget(_retval);
   return NS_OK;
 }
 
@@ -470,21 +593,39 @@ IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
                                     PRUint8 aArgCount,
                                     nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   if (aArgCount < 2) {
     aMode = nsIIDBObjectStore::READ_WRITE;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
 
-  nsRefPtr<OpenObjectStoreHelper> helper =
-    new OpenObjectStoreHelper(this, request, aName, aMode);
+  bool exists = false;
+  PRUint32 count = mObjectStoreNames.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    if (mObjectStoreNames[index].Equals(aName)) {
+      exists = true;
+      break;
+    }
+  }
 
-  nsresult rv = helper->Dispatch(mStorageThread);
+  nsresult rv;
+  if (NS_UNLIKELY(!exists)) {
+    nsCOMPtr<nsIRunnable> runnable =
+      IDBErrorEvent::CreateRunnable(request,
+                                    nsIIDBDatabaseError::CONSTRAINT_ERR);
+    NS_ENSURE_TRUE(runnable, NS_ERROR_UNEXPECTED);
+    rv = NS_DispatchToCurrentThread(runnable);
+  }
+  else {
+    nsRefPtr<OpenObjectStoreHelper> helper =
+      new OpenObjectStoreHelper(this, request, aName, aMode);
+    rv = helper->Dispatch(mStorageThread);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  IDBRequest* retval;
-  request.forget(&retval);
-  *_retval = retval;
+  request.forget(_retval);
   return NS_OK;
 }
 
@@ -495,6 +636,7 @@ IDBDatabaseRequest::CreateIndex(const nsAString& aName,
                                 PRBool aUnique,
                                 nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_NOTYETIMPLEMENTED("Implement me!");
 
   nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
@@ -507,6 +649,7 @@ NS_IMETHODIMP
 IDBDatabaseRequest::OpenIndex(const nsAString& aName,
                               nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_NOTYETIMPLEMENTED("Implement me!");
 
   nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
@@ -519,6 +662,7 @@ NS_IMETHODIMP
 IDBDatabaseRequest::RemoveObjectStore(const nsAString& aStoreName,
                                       nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_NOTYETIMPLEMENTED("Implement me!");
 
   nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
@@ -531,6 +675,7 @@ NS_IMETHODIMP
 IDBDatabaseRequest::RemoveIndex(const nsAString& aIndexName,
                                 nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_NOTYETIMPLEMENTED("Implement me!");
 
   nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
@@ -543,6 +688,7 @@ NS_IMETHODIMP
 IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
                                nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_NOTYETIMPLEMENTED("Implement me!");
 
   nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
@@ -557,6 +703,7 @@ IDBDatabaseRequest::OpenTransaction(nsIDOMDOMStringList* aStoreNames,
                                     PRUint8 aArgCount,
                                     nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_NOTYETIMPLEMENTED("Implement me!");
 
   if (aArgCount < 2) {
@@ -574,6 +721,7 @@ IDBDatabaseRequest::Observe(nsISupports* aSubject,
                             const char* aTopic,
                             const PRUnichar* aData)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ENSURE_FALSE(strcmp(aTopic, IDLE_THREAD_TOPIC), NS_ERROR_UNEXPECTED);
 
   // This should be safe to clear mStorage before we're deleted since we own
@@ -603,7 +751,7 @@ CreateObjectStoreHelper::Init()
 PRUint16
 CreateObjectStoreHelper::DoDatabaseWork()
 {
-  if (mName.IsEmpty() || (!mKeyPath.IsVoid() && mKeyPath.IsEmpty())) {
+  if (mName.IsEmpty() || (mKeyPath.IsEmpty() && !mKeyPath.IsVoid())) {
     return nsIIDBDatabaseError::CONSTRAINT_ERR;
   }
 
@@ -637,14 +785,16 @@ CreateObjectStoreHelper::DoDatabaseWork()
                              mAutoIncrement ? 1 : 0);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
-  rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::CONSTRAINT_ERR);
+  if (NS_FAILED(stmt->Execute())) {
+    return nsIIDBDatabaseError::CONSTRAINT_ERR;
+  }
 
   // Get the id of this object store, and store it for future use.
   (void)connection->GetLastInsertRowID(&mId);
 
-  return NS_SUCCEEDED(transaction.Commit()) ? OK :
-                                              nsIIDBDatabaseError::UNKNOWN_ERR;
+  return NS_SUCCEEDED(transaction.Commit()) ?
+         OK :
+         nsIIDBDatabaseError::UNKNOWN_ERR;
 }
 
 void
@@ -652,12 +802,23 @@ CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_ASSERTION(mObjectStore, "Init failed?!");
   mObjectStore->SetId(mId);
+  mDatabase->OnObjectStoreCreated(mName);
 
   nsCOMPtr<nsISupports> result =
     do_QueryInterface(static_cast<nsIIDBObjectStoreRequest*>(mObjectStore));
   NS_ASSERTION(result, "Failed to QI!");
 
   aResult->SetAsISupports(result);
+}
+
+nsresult
+OpenObjectStoreHelper::Init()
+{
+  mObjectStore =
+    IDBObjectStoreRequest::Create(mDatabase, mName, mMode);
+  NS_ENSURE_TRUE(mObjectStore, NS_ERROR_UNEXPECTED);
+
+  return NS_OK;
 }
 
 PRUint16
@@ -681,7 +842,7 @@ OpenObjectStoreHelper::DoDatabaseWork()
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
-  PRBool hasReslt;
+  PRBool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
   NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseError::NOT_FOUND_ERR);
@@ -691,4 +852,19 @@ OpenObjectStoreHelper::DoDatabaseWork()
   mAutoIncrement = !!stmt->AsInt32(2);
 
   return OK;
+}
+
+void
+OpenObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
+{
+  NS_ASSERTION(mObjectStore, "Init failed?!");
+  mObjectStore->SetId(mId);
+  mObjectStore->SetKeyPath(mKeyPath);
+  mObjectStore->SetAutoIncrement(mAutoIncrement);
+
+  nsCOMPtr<nsISupports> result =
+    do_QueryInterface(static_cast<nsIIDBObjectStoreRequest*>(mObjectStore));
+  NS_ASSERTION(result, "Failed to QI!");
+
+  aResult->SetAsISupports(result);
 }
