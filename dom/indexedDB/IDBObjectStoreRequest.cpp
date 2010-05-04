@@ -58,84 +58,6 @@ USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-// XXX this goes away when we use jsvals
-void
-VariantToString(nsIVariant* aValue,
-                nsString& _retval)
-{
-  _retval.SetIsVoid(PR_TRUE);
-
-  PRUint16 type;
-  (void)aValue->GetDataType(&type);
-  switch (type) {
-    case nsIDataType::VTYPE_INT8:
-    case nsIDataType::VTYPE_INT16:
-    case nsIDataType::VTYPE_INT32:
-    case nsIDataType::VTYPE_UINT8:
-    case nsIDataType::VTYPE_UINT16:
-    {
-      PRInt32 value;
-      nsresult rv = aValue->GetAsInt32(&value);
-      if (NS_SUCCEEDED(rv)) {
-        _retval.AppendInt(value);
-      }
-    }
-    case nsIDataType::VTYPE_UINT32: // Try to preserve full range
-    case nsIDataType::VTYPE_INT64:
-    // Data loss possible, but there is no unsigned types in SQLite
-    case nsIDataType::VTYPE_UINT64:
-    {
-      PRInt64 value;
-      nsresult rv = aValue->GetAsInt64(&value);
-      if (NS_SUCCEEDED(rv)) {
-        _retval.AppendInt(value);
-      }
-    }
-    case nsIDataType::VTYPE_FLOAT:
-    case nsIDataType::VTYPE_DOUBLE:
-    {
-      double value;
-      nsresult rv = aValue->GetAsDouble(&value);
-      if (NS_SUCCEEDED(rv)) {
-        _retval.AppendFloat(value);
-      }
-    }
-    case nsIDataType::VTYPE_BOOL:
-    {
-      PRBool value;
-      nsresult rv = aValue->GetAsBool(&value);
-      if (NS_SUCCEEDED(rv)) {
-        _retval.AppendInt(value ? 1 : 0);
-      }
-    }
-    case nsIDataType::VTYPE_CHAR:
-    case nsIDataType::VTYPE_CHAR_STR:
-    case nsIDataType::VTYPE_STRING_SIZE_IS:
-    case nsIDataType::VTYPE_UTF8STRING:
-    case nsIDataType::VTYPE_CSTRING:
-    {
-      nsCAutoString value;
-      nsresult rv = aValue->GetAsAUTF8String(value);
-      if (NS_SUCCEEDED(rv)) {
-        _retval = NS_ConvertUTF8toUTF16(value);
-      }
-    }
-    case nsIDataType::VTYPE_WCHAR:
-    case nsIDataType::VTYPE_DOMSTRING:
-    case nsIDataType::VTYPE_WCHAR_STR:
-    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-    case nsIDataType::VTYPE_ASTRING:
-    {
-      // GetAsAString does proper conversion to UCS2 from all string-like types.
-      // It can be used universally without problems (unless someone implements
-      // their own variant, but that's their problem).
-      (void)aValue->GetAsAString(_retval);
-    }
-    default:
-      NS_WARNING("Unknown type; cannot handle!");
-  }
-}
-
 class PutHelper : public AsyncConnectionHelper
 {
 public:
@@ -143,13 +65,23 @@ public:
             nsIDOMEventTarget* aTarget,
             PRInt64 aObjectStoreID,
             const nsAString& aValue,
-            const nsAString& aKey,
+            const nsAString& aKeyString,
+            PRInt64 aKeyInt,
             bool aAutoIncrement,
             bool aNoOverwrite)
   : AsyncConnectionHelper(aDatabase, aTarget), mOSID(aObjectStoreID),
-    mValue(aValue), mKey(aKey), mAutoIncrement(aAutoIncrement),
+    mValue(aValue), mKeyInt(aKeyInt), mAutoIncrement(aAutoIncrement),
     mNoOverwrite(aNoOverwrite)
-  { }
+  {
+    if (!mAutoIncrement) {
+      if (aKeyString.IsVoid()) {
+        mKeyString.SetIsVoid(PR_TRUE);
+      }
+      else {
+        mKeyString.Assign(aKeyString);
+      }
+    }
+  }
 
   PRUint16 DoDatabaseWork();
   void GetSuccessResult(nsIWritableVariant* aResult);
@@ -158,7 +90,8 @@ private:
   // In-params.
   const PRInt64 mOSID;
   nsString mValue;
-  nsString mKey;
+  nsString mKeyString;
+  PRInt64 mKeyInt;
   const bool mAutoIncrement;
   const bool mNoOverwrite;
 };
@@ -169,11 +102,19 @@ public:
   GetHelper(IDBDatabaseRequest* aDatabase,
             nsIDOMEventTarget* aTarget,
             PRInt64 aObjectStoreID,
-            nsIVariant* aKey,
+            const nsAString& aKeyString,
+            PRInt64 aKeyInt,
             bool aAutoIncrement)
   : AsyncConnectionHelper(aDatabase, aTarget), mOSID(aObjectStoreID),
-    mKey(aKey), mAutoIncrement(aAutoIncrement)
-  { }
+    mKeyInt(aKeyInt), mAutoIncrement(aAutoIncrement)
+  {
+    if (aKeyString.IsVoid()) {
+      mKeyString.SetIsVoid(PR_TRUE);
+    }
+    else {
+      mKeyString.Assign(aKeyString);
+    }
+  }
 
   PRUint16 DoDatabaseWork();
   PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
@@ -184,7 +125,8 @@ public:
 private:
   // In-params.
   const PRInt64 mOSID;
-  nsCOMPtr<nsIVariant> mKey;
+  nsString mKeyString;
+  const PRInt64 mKeyInt;
   const bool mAutoIncrement;
 
   // Out-params.
@@ -208,6 +150,40 @@ public:
 private:
   nsString mValue;
 };
+
+inline
+nsresult
+GetKeyFromVariant(nsIVariant* aKey,
+                  nsAString& aKeyString,
+                  PRInt64* aKeyInt)
+{
+  NS_ASSERTION(aKey && aKeyInt, "Null pointers!");
+
+  PRUint16 type;
+  nsresult rv = aKey->GetDataType(&type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // See xpcvariant.cpp, these are the only types we should expect.
+  switch (type) {
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
+      rv = aKey->GetAsAString(aKeyString);
+      NS_ENSURE_SUCCESS(rv, rv);
+      *aKeyInt = 0;
+      break;
+
+    case nsIDataType::VTYPE_INT32:
+    case nsIDataType::VTYPE_DOUBLE:
+      rv = aKey->GetAsInt64(aKeyInt);
+      NS_ENSURE_SUCCESS(rv, rv);
+      aKeyString.SetIsVoid(PR_TRUE);
+      break;
+
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  return NS_OK;
+}
 
 } // anonymous namespace
 
@@ -319,6 +295,19 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  nsresult rv;
+
+  nsString keyString;
+  PRInt64 keyInt;
+
+  if (aKey) {
+    rv = GetKeyFromVariant(aKey, keyString, &keyInt);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else if (!mAutoIncrement) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   // This is the slow path, need to do this better once nsIVariants can have
   // raw jsvals inside them.
   NS_WARNING("Using a slow path for Put! Fix this now!");
@@ -327,7 +316,7 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
   NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
 
   nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  rv = xpc->GetCurrentNativeCallContext(&cc);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
 
@@ -361,15 +350,11 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
   rv = json->EncodeFromJSVal(clone.addr(), cx, jsonString);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsString keyString;
-  VariantToString(aKey, keyString);
-  NS_ENSURE_TRUE(mAutoIncrement == keyString.IsVoid(), NS_ERROR_INVALID_ARG);
-
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<PutHelper> helper =
-    new PutHelper(mDatabase, request, mId, jsonString, keyString,
+    new PutHelper(mDatabase, request, mId, jsonString, keyString, keyInt,
                   !!mAutoIncrement, !!aNoOverwrite);
   rv = helper->Dispatch(mDatabase->ConnectionThread());
   NS_ENSURE_SUCCESS(rv, rv);
@@ -392,12 +377,24 @@ IDBObjectStoreRequest::Get(nsIVariant* aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  nsresult rv;
+
+  nsString keyString;
+  PRInt64 keyInt;
+
+  if (!aKey) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  rv = GetKeyFromVariant(aKey, keyString, &keyInt);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetHelper> helper =
-    new GetHelper(mDatabase, request, mId, aKey, !!mAutoIncrement);
-  nsresult rv = helper->Dispatch(mDatabase->ConnectionThread());
+    new GetHelper(mDatabase, request, mId, keyString, keyInt, !!mAutoIncrement);
+  rv = helper->Dispatch(mDatabase->ConnectionThread());
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -420,7 +417,6 @@ PutHelper::DoDatabaseWork()
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
   nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
-  return OK;
 
   // Rollback on any errors.
   mozStorageTransaction transaction(connection, PR_FALSE);
@@ -442,7 +438,14 @@ PutHelper::DoDatabaseWork()
     ), getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
-    stmt->BindStringByName(NS_LITERAL_CSTRING("key_value"), mKey);
+    NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
+
+    if (mKeyString.IsVoid()) {
+      rv = stmt->BindInt64ByName(keyValue, mKeyInt);
+    }
+    else {
+      rv = stmt->BindStringByName(keyValue, mKeyString);
+    }
   }
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
@@ -456,7 +459,10 @@ PutHelper::DoDatabaseWork()
     return nsIIDBDatabaseError::CONSTRAINT_ERR;
   }
 
-  // TODO set mKey to the key we used
+  if (mAutoIncrement) {
+    rv = connection->GetLastInsertRowID(&mKeyInt);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  }
 
   // TODO update indexes if needed
 
@@ -468,8 +474,12 @@ PutHelper::DoDatabaseWork()
 void
 PutHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
-  // XXX this is wrong if they pass a number; we are giving back a string
-  aResult->SetAsAString(mKey);
+  if (mAutoIncrement || mKeyString.IsVoid()) {
+    aResult->SetAsInt64(mKeyInt);
+  }
+  else {
+    aResult->SetAsAString(mKeyString);
+  }
 }
 
 PRUint16
@@ -486,7 +496,7 @@ GetHelper::DoDatabaseWork()
     rv = connection->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT data "
       "FROM ai_object_data "
-      "WERE id = :id "
+      "WHERE id = :id "
       "AND object_store_id = :osid"
     ), getter_AddRefs(stmt));
   }
@@ -494,7 +504,7 @@ GetHelper::DoDatabaseWork()
     rv = connection->CreateStatement(NS_LITERAL_CSTRING(
       "SELECT data "
       "FROM object_data "
-      "WERE key_value = :id "
+      "WHERE key_value = :id "
       "AND object_store_id = :osid"
     ), getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
@@ -503,10 +513,14 @@ GetHelper::DoDatabaseWork()
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
-  // TODO probably should switch on type for this
-  nsString id;
-  VariantToString(mKey, id);
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("id"), id);
+  NS_NAMED_LITERAL_CSTRING(id, "id");
+
+  if (mKeyString.IsVoid()) {
+    rv = stmt->BindInt64ByName(id, mKeyInt);
+  }
+  else {
+    rv = stmt->BindStringByName(id, mKeyString);
+  }
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
   // Search for it!
