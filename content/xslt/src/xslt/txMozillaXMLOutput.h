@@ -106,8 +106,9 @@ public:
     TX_DECL_TXAXMLEVENTHANDLER
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER
 
-private:
     nsresult closePrevious(PRBool aFlushText);
+
+private:
     nsresult createTxWrapper();
     nsresult startHTMLElement(nsIContent* aElement, PRBool aXHTML);
     nsresult endHTMLElement(nsIContent* aElement);
