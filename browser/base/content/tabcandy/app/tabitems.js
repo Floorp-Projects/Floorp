@@ -2,6 +2,7 @@
 window.TabItem = function(container, tab) {
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this._init(container);
+  this._hasBeenDrawn = false;
   this.tab = tab;
   this.setResizable(true);
 };
@@ -93,8 +94,9 @@ window.TabItem.prototype = $.extend(new Item(), {
       return;
       
     this.bounds.copy(rect);
-
-    if(immediately) {
+    // If this is a brand new tab don't animate it in from
+    // nowhere in particular (i.e., from [0,0])
+    if(immediately || (!this._hasBeenDrawn) ) {
       $container.css(css);
     } else {
       TabMirror.pausePainting();
@@ -123,6 +125,7 @@ window.TabItem.prototype = $.extend(new Item(), {
     }    
 
     this._updateDebugBounds();
+    this._hasBeenDrawn = true;
   },
 
   // ----------
