@@ -58,6 +58,84 @@ USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
+// XXX this goes away when we use jsvals
+void
+VariantToString(nsIVariant* aValue,
+                nsString& _retval)
+{
+  _retval.SetIsVoid(PR_TRUE);
+
+  PRUint16 type;
+  (void)aValue->GetDataType(&type);
+  switch (type) {
+    case nsIDataType::VTYPE_INT8:
+    case nsIDataType::VTYPE_INT16:
+    case nsIDataType::VTYPE_INT32:
+    case nsIDataType::VTYPE_UINT8:
+    case nsIDataType::VTYPE_UINT16:
+    {
+      PRInt32 value;
+      nsresult rv = aValue->GetAsInt32(&value);
+      if (NS_SUCCEEDED(rv)) {
+        _retval.AppendInt(value);
+      }
+    }
+    case nsIDataType::VTYPE_UINT32: // Try to preserve full range
+    case nsIDataType::VTYPE_INT64:
+    // Data loss possible, but there is no unsigned types in SQLite
+    case nsIDataType::VTYPE_UINT64:
+    {
+      PRInt64 value;
+      nsresult rv = aValue->GetAsInt64(&value);
+      if (NS_SUCCEEDED(rv)) {
+        _retval.AppendInt(value);
+      }
+    }
+    case nsIDataType::VTYPE_FLOAT:
+    case nsIDataType::VTYPE_DOUBLE:
+    {
+      double value;
+      nsresult rv = aValue->GetAsDouble(&value);
+      if (NS_SUCCEEDED(rv)) {
+        _retval.AppendFloat(value);
+      }
+    }
+    case nsIDataType::VTYPE_BOOL:
+    {
+      PRBool value;
+      nsresult rv = aValue->GetAsBool(&value);
+      if (NS_SUCCEEDED(rv)) {
+        _retval.AppendInt(value ? 1 : 0);
+      }
+    }
+    case nsIDataType::VTYPE_CHAR:
+    case nsIDataType::VTYPE_CHAR_STR:
+    case nsIDataType::VTYPE_STRING_SIZE_IS:
+    case nsIDataType::VTYPE_UTF8STRING:
+    case nsIDataType::VTYPE_CSTRING:
+    {
+      nsCAutoString value;
+      nsresult rv = aValue->GetAsAUTF8String(value);
+      if (NS_SUCCEEDED(rv)) {
+        _retval = NS_ConvertUTF8toUTF16(value);
+      }
+    }
+    case nsIDataType::VTYPE_WCHAR:
+    case nsIDataType::VTYPE_DOMSTRING:
+    case nsIDataType::VTYPE_WCHAR_STR:
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS:
+    case nsIDataType::VTYPE_ASTRING:
+    {
+      // GetAsAString does proper conversion to UCS2 from all string-like types.
+      // It can be used universally without problems (unless someone implements
+      // their own variant, but that's their problem).
+      (void)aValue->GetAsAString(_retval);
+    }
+    default:
+      NS_WARNING("Unknown type; cannot handle!");
+  }
+}
+
 class PutHelper : public AsyncConnectionHelper
 {
 public:
@@ -65,7 +143,7 @@ public:
             nsIDOMEventTarget* aTarget,
             PRInt64 aObjectStoreID,
             const nsAString& aValue,
-            nsIVariant* aKey,
+            const nsAString& aKey,
             bool aAutoIncrement,
             bool aNoOverwrite)
   : AsyncConnectionHelper(aDatabase, aTarget), mOSID(aObjectStoreID),
@@ -80,7 +158,7 @@ private:
   // In-params.
   const PRInt64 mOSID;
   nsString mValue;
-  nsCOMPtr<nsIVariant> mKey;
+  nsString mKey;
   const bool mAutoIncrement;
   const bool mNoOverwrite;
 };
@@ -283,12 +361,16 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
   rv = json->EncodeFromJSVal(clone.addr(), cx, jsonString);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsString keyString;
+  VariantToString(aKey, keyString);
+  NS_ENSURE_TRUE(mAutoIncrement == keyString.IsVoid(), NS_ERROR_INVALID_ARG);
+
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<PutHelper> helper =
-    new PutHelper(mDatabase, request, mId, jsonString, aKey, mAutoIncrement,
-                  aNoOverwrite);
+    new PutHelper(mDatabase, request, mId, jsonString, keyString,
+                  !!mAutoIncrement, !!aNoOverwrite);
   rv = helper->Dispatch(mDatabase->ConnectionThread());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -314,7 +396,7 @@ IDBObjectStoreRequest::Get(nsIVariant* aKey,
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetHelper> helper =
-    new GetHelper(mDatabase, request, mId, aKey, mAutoIncrement);
+    new GetHelper(mDatabase, request, mId, aKey, !!mAutoIncrement);
   nsresult rv = helper->Dispatch(mDatabase->ConnectionThread());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -360,19 +442,21 @@ PutHelper::DoDatabaseWork()
     ), getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
-    // TODO get string rep
-    // stmt->BindStringByName(NS_LITERAL_CSTRING("key_value"), mKey);
+    stmt->BindStringByName(NS_LITERAL_CSTRING("key_value"), mKey);
   }
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
-  // TODO bind data
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
   if (NS_FAILED(stmt->Execute())) {
     return nsIIDBDatabaseError::CONSTRAINT_ERR;
   }
+
+  // TODO set mKey to the key we used
 
   // TODO update indexes if needed
 
@@ -384,7 +468,8 @@ PutHelper::DoDatabaseWork()
 void
 PutHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
-  aResult->SetFromVariant(mKey);
+  // XXX this is wrong if they pass a number; we are giving back a string
+  aResult->SetAsAString(mKey);
 }
 
 PRUint16
