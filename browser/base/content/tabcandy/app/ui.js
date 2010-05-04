@@ -136,10 +136,6 @@ window.Page = {
       var group = Groups.getActiveGroup();
       if( group && group._children.length == 0 )
         Page.show();
-      else {
-        Utils.homeTab.focus();
-        UI.tabBar.hide(false);        
-      }
       return false;
     });
         
