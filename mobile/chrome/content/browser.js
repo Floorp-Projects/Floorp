@@ -1160,12 +1160,10 @@ var Browser = {
     if (!zoomRect && bv.isDefaultZoom())
       zoomRect = this._getZoomRectForPoint(elementX, elementY, bv.getZoomLevel() * 2);
 
-    if (zoomRect) {
+    if (zoomRect)
       this.setVisibleRect(zoomRect);
-      return true;
-    } else {
-      return false;
-    }
+
+    return zoomRect;
   },
 
   zoomFromPoint: function zoomFromPoint(cX, cY) {
@@ -1950,14 +1948,14 @@ const ElementTouchHelper = {
                                                true,   /* ignore root scroll frame*/
                                                false); /* don't flush layout */
 
-    // return early if the click is just over a clickable element
-    if (this._isElementClickable(target))
-      return target;
-
     let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.bottom,
                                                    this.radius.right,
                                                    this.radius.top,
                                                    this.radius.left, true, false);
+
+    // return early if the click is just over a clickable element
+    if (this._isElementClickable(target, nodes))
+      return target;
 
     let threshold = Number.POSITIVE_INFINITY;
     for (let i = 0; i < nodes.length; i++) {
@@ -1981,8 +1979,37 @@ const ElementTouchHelper = {
     return target;
   },
 
-  _isElementClickable: function _isElementClickable(aElement) {
-    return aElement && aElement.mozMatchesSelector("*:link,*:visited,*[role=button],button,input,select,label");
+  _els: Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService),
+  _clickableEvents: ["mousedown", "mouseup", "click"],
+  _hasMouseListener: function _hasMouseListener(aElement) {
+    let els = this._els;
+    let listeners = els.getListenerInfoFor(aElement, {});
+    for (let i = 0; i < listeners.length; i++) {
+      if (this._clickableEvents.indexOf(listeners[i].type) != -1)
+        return true;
+    }
+  },
+
+  _isElementClickable: function _isElementClickable(aElement, aElementsInRect) {
+    let isClickable = this._hasMouseListener(aElement);
+
+    // If possible looks in the parents node to find a target
+    if (!isClickable && aElementsInRect) {
+      let parentNode = aElement.parentNode;
+      let count = aElementsInRect.length;
+      for (let i = 0; i < count && parentNode; i++) {
+        if (aElementsInRect[i] != parentNode)
+          continue;
+
+        isClickable = this._hasMouseListener(parentNode);
+        if (isClickable)
+          break;
+
+        parentNode = parentNode.parentNode;
+      }
+    }
+
+    return aElement && (isClickable || aElement.mozMatchesSelector("*:link,*:visited,*[role=button],button,input,select,label"));
   },
 
   _computeDistanceFromRect: function _computeDistanceFromRect(aX, aY, aRect) {
