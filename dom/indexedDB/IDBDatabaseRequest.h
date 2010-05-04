@@ -83,6 +83,7 @@ public:
 
   void OnObjectStoreCreated(const nsAString& aName);
   void OnIndexCreated(const nsAString& aName);
+  void OnObjectStoreRemoved(const nsAString& aName);
 
 protected:
   IDBDatabaseRequest();
