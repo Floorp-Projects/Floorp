@@ -130,6 +130,14 @@ window.Page = {
     Utils.homeTab.raw.maxWidth = 60;
     Utils.homeTab.raw.minWidth = 60;
     
+    /*try{
+    Tabs.onMove(function(){
+      Utils.log('mooooori');
+    })
+    }catch(e){
+      Utils.log(e)
+    }*/
+    
     Tabs.onClose(function(){
       // Only go back to the TabCandy tab when there you close the last
       // tab of a group.
@@ -144,6 +152,8 @@ window.Page = {
     Tabs.onFocus(function(){
       // If we switched to TabCandy window...
       if( this.contentWindow == window && lastTab != null && lastTab.mirror != null){
+        Groups.getActiveGroup().reorderBasedOnTabOrder();        
+
         UI.tabBar.hide(false);
         // If there was a lastTab we want to animate
         // its mirror for the zoom out.
