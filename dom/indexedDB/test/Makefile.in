@@ -39,13 +39,17 @@ DEPTH = ../../..
 topsrcdir = @top_srcdir@
 srcdir = @srcdir@
 VPATH = @srcdir@
-relativesrcdir = dom/src/indexeddb/test
+relativesrcdir = dom/indexedDB/test
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
   test_property_on_window.html \
+  test_open_empty_db.html \
+  test_create_objectStore.html \
+  test_open_objectStore.html \
+  test_remove_objectStore.html \
   $(NULL)
 
 libs:: $(_TEST_FILES)

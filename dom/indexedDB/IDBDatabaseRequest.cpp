@@ -42,6 +42,7 @@
 #include "mozilla/Storage.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
+#include "nsCRTGlue.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsHashKeys.h"
@@ -75,22 +76,20 @@ class CloseConnectionRunnable : public nsRunnable
 {
 public:
   CloseConnectionRunnable(nsCOMPtr<mozIStorageConnection>& aConnection)
-  : mConnection(aConnection)
-  { }
+  {
+    mConnection.swap(aConnection);
+  }
 
   NS_IMETHOD Run()
   {
-    if (mConnection) {
-      if (NS_FAILED(mConnection->Close())) {
-        NS_WARNING("Failed to close connection!");
-      }
-      mConnection = nsnull;
+    if (mConnection && NS_FAILED(mConnection->Close())) {
+      NS_WARNING("Failed to close connection!");
     }
     return NS_OK;
   }
 
 private:
-  nsCOMPtr<mozIStorageConnection>& mConnection;
+  nsCOMPtr<mozIStorageConnection> mConnection;
 };
 
 class CreateObjectStoreHelper : public AsyncConnectionHelper
@@ -152,6 +151,7 @@ public:
   { }
 
   PRUint16 DoDatabaseWork();
+  void GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
   // In-params.
@@ -269,10 +269,7 @@ IDBDatabaseRequest::Create(const nsAString& aName,
   nsRefPtr<IDBDatabaseRequest> db(new IDBDatabaseRequest());
 
   db->mConnectionThread = new LazyIdleThread(kDefaultThreadTimeoutMS);
-
-  // Circular reference! Will be broken when the thread times out, when XPCOM is
-  // shutting down, or if we explicitly call Shutdown on the thread.
-  db->mConnectionThread->SetIdleObserver(db);
+  db->mConnectionThread->SetWeakIdleObserver(db);
 
   db->mASCIIOrigin.Assign(origin);
   db->mName.Assign(aName);
@@ -302,11 +299,16 @@ IDBDatabaseRequest::Create(const nsAString& aName,
     NS_ENSURE_SUCCESS(rv, nsnull);
 
     if (isDirectory) {
-      nsCString filename;
+      nsAutoString filename;
       filename.AppendInt(HashString(origin));
+
+      nsString sanitizedName(aName);
+      sanitizedName.ReplaceChar(FILE_ILLEGAL_CHARACTERS FILE_PATH_SEPARATOR,
+                                '_');
+      filename.Append(sanitizedName);
       filename.AppendLiteral(".sqlite");
 
-      rv = dbFile->Append(NS_ConvertASCIItoUTF16(filename));
+      rv = dbFile->Append(filename);
       NS_ENSURE_SUCCESS(rv, nsnull);
 
       rv = dbFile->Exists(&exists);
@@ -401,11 +403,19 @@ IDBDatabaseRequest::EnsureConnection()
   }
 
   // Build the filename.
-  nsCString filename;
+  nsAutoString filename;
   filename.AppendInt(HashString(mASCIIOrigin));
+
+  // XXX This is wrong! We do want one file per origin, but the schema doesn't
+  //     support multiple database names per file yet.
+  NS_WARNING("Using mutliple files per origin! Fix this now!");
+  nsString sanitizedName(mName);
+  sanitizedName.ReplaceChar(FILE_ILLEGAL_CHARACTERS FILE_PATH_SEPARATOR,
+                            '_');
+  filename.Append(sanitizedName);
   filename.AppendLiteral(".sqlite");
 
-  rv = dbFile->Append(NS_ConvertASCIItoUTF16(filename));
+  rv = dbFile->Append(filename);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = dbFile->Exists(&exists);
@@ -480,6 +490,21 @@ IDBDatabaseRequest::OnIndexCreated(const nsAString& aName)
   if (!mIndexNames.AppendElement(aName)) {
     NS_ERROR("Failed to add index name! OOM?");
   }
+}
+
+void
+IDBDatabaseRequest::OnObjectStoreRemoved(const nsAString& aName)
+{
+  NS_ASSERTION(mObjectStoreNames.Contains(aName),
+               "Didn't know about this object store before!");
+  PRUint32 count = mObjectStoreNames.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    if (mObjectStoreNames[index].Equals(aName)) {
+      mObjectStoreNames.RemoveElementAt(index);
+      return;
+    }
+  }
+  NS_NOTREACHED("Shouldn't get here!");
 }
 
 NS_IMPL_ADDREF(IDBDatabaseRequest)
@@ -606,12 +631,12 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
 NS_IMETHODIMP
 IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
                                     PRUint16 aMode,
-                                    PRUint8 aArgCount,
+                                    PRUint8 aOptionalArgCount,
                                     nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (aArgCount < 2) {
+  if (!aOptionalArgCount) {
     aMode = nsIIDBObjectStore::READ_WRITE;
   }
 
@@ -739,13 +764,13 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
 NS_IMETHODIMP
 IDBDatabaseRequest::OpenTransaction(nsIDOMDOMStringList* aStoreNames,
                                     PRUint32 aTimeout,
-                                    PRUint8 aArgCount,
+                                    PRUint8 aOptionalArgCount,
                                     nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_NOTYETIMPLEMENTED("Implement me!");
 
-  if (aArgCount < 2) {
+  if (!aOptionalArgCount) {
     aTimeout = kDefaultDatabaseTimeoutMS;
   }
 
@@ -931,4 +956,10 @@ RemoveObjectStoreHelper::DoDatabaseWork()
   }
 
   return OK;
+}
+
+void
+RemoveObjectStoreHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
+{
+  mDatabase->OnObjectStoreRemoved(mName);
 }

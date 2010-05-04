@@ -82,9 +82,11 @@ public:
    * Add an observer that will be notified when the thread is idle and about to
    * be shut down. The aSubject argument can be QueryInterface'd to an nsIThread
    * that can be used to post cleanup events. The aTopic argument will be
-   * IDLE_THREAD_TOPIC, and aData will be null.
+   * IDLE_THREAD_TOPIC, and aData will be null. The LazyIdleThread does not add
+   * a reference to the observer to avoid circular references as it is assumed
+   * to be the owner.
    */
-  void SetIdleObserver(nsIObserver* aObserver);
+  void SetWeakIdleObserver(nsIObserver* aObserver);
 
 private:
   /**
@@ -156,7 +158,7 @@ private:
    * Idle observer. Called when the thread is about to be shut down. Released
    * only when Shutdown() is called.
    */
-  nsCOMPtr<nsIObserver> mIdleObserver;
+  nsIObserver* mIdleObserver;
 };
 
 END_INDEXEDDB_NAMESPACE
