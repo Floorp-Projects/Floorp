@@ -78,7 +78,7 @@ IndexedDatabaseRequest::Open(const nsAString& aName,
     aModifyDatabase = PR_TRUE;
   }
 
-  nsCOMPtr<nsIIDBDatabaseRequest> database =
+  nsRefPtr<IDBDatabaseRequest> database =
     IDBDatabaseRequest::Create(aName, aDescription, !aModifyDatabase);
   database.forget(_retval);
   return NS_OK;

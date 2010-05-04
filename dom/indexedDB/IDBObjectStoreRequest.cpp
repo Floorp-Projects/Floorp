@@ -70,6 +70,24 @@ IDBObjectStoreRequest::Create(IDBDatabaseRequest* aDatabase,
   return objectStore.forget();
 }
 
+// static
+already_AddRefed<IDBObjectStoreRequest>
+IDBObjectStoreRequest::Create(IDBDatabaseRequest* aDatabase,
+                              const nsAString& aName,
+                              PRUint16 aMode)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsRefPtr<IDBObjectStoreRequest> objectStore = new IDBObjectStoreRequest();
+
+  objectStore->mDatabase = aDatabase;
+  objectStore->mName.Assign(aName);
+  objectStore->mKeyPath.SetIsVoid(PR_TRUE);
+  objectStore->mMode = aMode;
+
+  return objectStore.forget();
+}
+
 IDBObjectStoreRequest::IDBObjectStoreRequest()
 : mAutoIncrement(PR_FALSE),
   mMode(nsIIDBObjectStore::READ_WRITE),
@@ -81,6 +99,31 @@ IDBObjectStoreRequest::IDBObjectStoreRequest()
 IDBObjectStoreRequest::~IDBObjectStoreRequest()
 {
 
+}
+
+void
+IDBObjectStoreRequest::SetId(PRInt64 aId)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mId == LL_MININT, "Overwriting mId!");
+  mId = aId;
+}
+
+void
+IDBObjectStoreRequest::SetKeyPath(const nsAString& aKeyPath)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mKeyPath.IsVoid(), "Overwriting mKeyPath!");
+  if (!aKeyPath.IsVoid()) {
+    mKeyPath.Assign(aKeyPath);
+  }
+}
+
+void
+IDBObjectStoreRequest::SetAutoIncrement(PRBool aAutoIncrement)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  mAutoIncrement = aAutoIncrement;
 }
 
 NS_IMPL_ADDREF(IDBObjectStoreRequest)
