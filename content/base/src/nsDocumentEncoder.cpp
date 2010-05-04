@@ -292,45 +292,44 @@ nsDocumentEncoder::SerializeNodeStart(nsINode* aNode,
   if (!node)
     node = aNode;
 
-  //XXX Remove QIing to nsIDOM* when fixing bug 562321.
   node->GetNodeType(&type);
   switch (type) {
     case nsIDOMNode::ELEMENT_NODE:
     {
-      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-      nsCOMPtr<nsIDOMElement> originalElement = do_QueryInterface(aOriginalNode);
-      mSerializer->AppendElementStart(element, originalElement, aStr);
+      nsIContent* originalElement =
+        aOriginalNode && aOriginalNode->IsElement() ?
+          static_cast<nsIContent*>(aOriginalNode) : nsnull;
+      mSerializer->AppendElementStart(static_cast<nsIContent*>(node),
+                                      originalElement, aStr);
       break;
     }
     case nsIDOMNode::TEXT_NODE:
     {
-      nsCOMPtr<nsIDOMText> text = do_QueryInterface(node);
-      mSerializer->AppendText(text, aStartOffset, aEndOffset, aStr);
+      mSerializer->AppendText(static_cast<nsIContent*>(node),
+                              aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsIDOMNode::CDATA_SECTION_NODE:
     {
-      nsCOMPtr<nsIDOMCDATASection> cdata = do_QueryInterface(node);
-      mSerializer->AppendCDATASection(cdata, aStartOffset, aEndOffset, aStr);
+      mSerializer->AppendCDATASection(static_cast<nsIContent*>(node),
+                                      aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
     {
-      nsCOMPtr<nsIDOMProcessingInstruction> pi = do_QueryInterface(node);
-      mSerializer->AppendProcessingInstruction(pi, aStartOffset, aEndOffset,
-                                               aStr);
+      mSerializer->AppendProcessingInstruction(static_cast<nsIContent*>(node),
+                                               aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsIDOMNode::COMMENT_NODE:
     {
-      nsCOMPtr<nsIDOMComment> comment = do_QueryInterface(node);
-      mSerializer->AppendComment(comment, aStartOffset, aEndOffset, aStr);
+      mSerializer->AppendComment(static_cast<nsIContent*>(node),
+                                 aStartOffset, aEndOffset, aStr);
       break;
     }
     case nsIDOMNode::DOCUMENT_TYPE_NODE:
     {
-      nsCOMPtr<nsIDOMDocumentType> doctype = do_QueryInterface(node);
-      mSerializer->AppendDoctype(doctype, aStr);
+      mSerializer->AppendDoctype(static_cast<nsIContent*>(node), aStr);
       break;
     }
   }
@@ -342,10 +341,8 @@ nsresult
 nsDocumentEncoder::SerializeNodeEnd(nsINode* aNode,
                                     nsAString& aStr)
 {
-  //XXX Remove QIing to nsIDOM* when fixing bug 562321.
   if (aNode->IsElement()) {
-    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
-    mSerializer->AppendElementEnd(element, aStr);
+    mSerializer->AppendElementEnd(static_cast<nsIContent*>(aNode), aStr);
   }
   return NS_OK;
 }
@@ -953,8 +950,7 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
     rv = SerializeToStringRecursive(mNode, aOutputString, mNodeIsContainer);
     mNode = nsnull;
   } else {
-    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
-    rv = mSerializer->AppendDocumentStart(domdoc, aOutputString);
+    rv = mSerializer->AppendDocumentStart(mDocument, aOutputString);
 
     if (NS_SUCCEEDED(rv)) {
       rv = SerializeToStringRecursive(mDocument, aOutputString, PR_FALSE);
