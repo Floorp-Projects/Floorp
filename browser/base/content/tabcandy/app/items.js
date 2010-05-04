@@ -499,7 +499,7 @@ window.Items = {
     }
     
     if(rows == 1) {
-      tabWidth = Math.min(bounds.width / Math.max(2, count), bounds.height / tabAspect);
+      tabWidth = Math.min(Math.min(TabItems.tabWidth, bounds.width / count), bounds.height / tabAspect);
       tabHeight = tabWidth * tabAspect;
     }
     

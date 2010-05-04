@@ -365,27 +365,29 @@ window.TabItems = {
   
   // ----------
   reconnect: function(item) {
+    if(item.reconnected)
+      return true;
+      
     var found = false;
     if(this.storageData && this.storageData.tabs) {
+      var self = this;
       $.each(this.storageData.tabs, function(index, tab) {
         if(tab.url == 'about:blank')
           return;
           
         if(item.getURL() == tab.url) {
-          if(!item.reconnected) {
-            if(item.parent)
-              item.parent.remove(item);
-              
-            item.setBounds(tab.bounds, true);
-            item.userSize = tab.userSize;
-            if(tab.groupID) {
-              var group = Groups.group(tab.groupID);
-              group.add(item);
-            }
+          if(item.parent)
+            item.parent.remove(item);
             
-            item.reconnected = true;
+          item.setBounds(tab.bounds, true);
+          item.userSize = tab.userSize;
+          if(tab.groupID) {
+            var group = Groups.group(tab.groupID);
+            group.add(item);
           }
           
+          self.storageData.tabs.splice(index, 1);
+          item.reconnected = true;
           found = true;
           return false;
         }      
