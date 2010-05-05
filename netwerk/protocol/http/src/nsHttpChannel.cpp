@@ -923,6 +923,7 @@ nsHttpChannel::ProcessFailedSSLConnect(PRUint32 httpStatus)
     LOG(("Cancelling failed SSL proxy connection [this=%p httpStatus=%u]\n",
          this, httpStatus)); 
     Cancel(rv);
+    CallOnStartRequest();
     return rv;
 }
 
