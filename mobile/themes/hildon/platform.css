@@ -117,7 +117,7 @@ textbox[isempty="true"] {
   -moz-box-shadow: black 0 2px 2px;
 }
 
-.prompt-header {
+dialog .prompt-header {
   padding: 8px;
   font-size: 18px !important;
   -moz-border-radius: 8px 8px 0 0;
@@ -140,7 +140,7 @@ dialog[closebutton="true"] hbox > .close-button {
   display: -moz-box;
 }
 
-.prompt-title {
+dialog .prompt-title {
   font-size: 24px !important;
 }
 
@@ -149,21 +149,21 @@ dialog[closebutton="true"] hbox > .close-button {
     padding: 32px;
   }
 
-  .prompt-header {
+  dialog .prompt-header {
     font-size: 16px !important;
   }
 
-  .prompt-title {
+  dialog .prompt-title {
     font-size: 18px !important;
   }
 }
 
-.prompt-message {
+dialog .prompt-message {
   margin-top: 8px;
 }
 
-.prompt-checkbox-label {
-  text-align: right;
+dialog .button-checkbox {
+  margin-left: 24px;
 }
 
 /* buttons ----------------------------------------------------------------- */
@@ -191,6 +191,10 @@ button:not([disabled="true"]):active:hover {
 
 button[disabled="true"] {
   color: #aaa !important;
+}
+
+button:focus > .button-box {
+  border: 1px solid transparent;
 }
 
 /* dark buttons ------------------------------------------------------------ */
@@ -319,6 +323,32 @@ toolbarbutton.button-dark[type="checkbox"][checked="true"] {
   border: none !important;
   min-width: 0 !important; /* the image drives the size */
   min-height: 0 !important; /* the image drives the size */
+}
+
+/* checkbox buttons ----------------------------------------------------------- */
+.button-checkbox {
+  color: #fff;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  -moz-border-image: none !important;
+}
+
+.button-checkbox .button-image-icon {
+  -moz-margin-end: 8px;
+  list-style-image: url("chrome://browser/skin/images/check-unselected-30.png");
+}
+
+.button-checkbox[checked="true"] .button-image-icon {
+  list-style-image: url("chrome://browser/skin/images/check-selected-30.png");
+}
+
+.button-checkbox:hover:active > .button-box,
+.button-checkbox[checked="true"] > .button-box {
+  padding-top: 1px;
+  padding-bottom: 2px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 4px;
 }
 
 /* radio buttons ----------------------------------------------------------- */

@@ -28,10 +28,10 @@
       <description id="prompt-confirm-message"/>
     </scrollbox>
 
-    <hbox id="prompt-confirm-checkbox-box" collapsed="true" align="center" class="prompt-message" flex="1">
+    <button id="prompt-confirm-checkbox" type="checkbox" class="button-checkbox" collapsed="true" pack="start" flex="1">
+      <image class="button-image-icon"/>
       <description id="prompt-confirm-checkbox-label" class="prompt-checkbox-label" flex="1"/>
-      <checkbox class="toggle-dark" id="prompt-confirm-checkbox"/>
-    </hbox>
+    </button>
   </vbox>
 
   <hbox id="prompt-confirm-buttons-box" class="prompt-buttons">
