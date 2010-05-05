@@ -5,5 +5,5 @@
 == 272830-1.html 272830-1-ref.html
 == 318022-1.html 318022-1-ref.html
 == 403669-1.html 403669-1-ref.html
-== 381497-n.html 381497-f.html
+asserts(5) == 381497-n.html 381497-f.html # bug 563837
 == test-async-print.html 272830-1-ref.html
