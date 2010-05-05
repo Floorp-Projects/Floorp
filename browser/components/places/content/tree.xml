@@ -36,14 +36,14 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK ***** 
+# ***** END LICENSE BLOCK *****
 
 <bindings id="placesTreeBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xbl="http://www.mozilla.org/xbl"
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
+
   <binding id="places-tree" extends="chrome://global/content/bindings/tree.xml#tree">
     <implementation>
       <constructor><![CDATA[
@@ -56,7 +56,7 @@
         // Break the treeviewer->result->treeviewer cycle.
         // Note: unsetting the result's viewer also unsets
         // the viewer's reference to our treeBoxObject.
-        var result = this.getResult();
+        var result = this.result;
         if (result) {
           result.root.containerOpen = false;
         }
@@ -65,7 +65,7 @@
 
       <property name="controller"
                 readonly="true"
-                onget="return this._controller;"/>
+                onget="return this._controller"/>
 
       <!-- overriding -->
       <property name="view">
@@ -77,28 +77,17 @@
             return null;
           }
         ]]></getter>
-        <setter><![CDATA[ 
+        <setter><![CDATA[
           return this.treeBoxObject.view = val;
         ]]></setter>
       </property>
-
-      <method name="getBestOptions">
-        <body><![CDATA[
-          // Get the best set of grouping options to use, either reuse the 
-          // existing ones or create new ones. 
-          var options = this.getResult().queryOptions;
-          if (!options)
-            options = PlacesUtils.history.getNewQueryOptions();
-          return options;
-        ]]></body>
-      </method>
 
       <method name="applyFilter">
         <parameter name="filterString"/>
         <parameter name="folderRestrict"/>
         <body><![CDATA[
           // preserve grouping
-          var queryNode = PlacesUtils.asQuery(this.getResultNode());
+          var queryNode = PlacesUtils.asQuery(this.result.root);
           var options = queryNode.queryOptions.clone();
 
           // Make sure we're getting uri results.
@@ -120,13 +109,13 @@
           this.load([query], options);
         ]]></body>
       </method>
-      
+
       <method name="load">
         <parameter name="queries"/>
         <parameter name="options"/>
         <body><![CDATA[
           // Cleanup old result if exists.
-          let oldResult = this.getResult();
+          let oldResult = this.result;
           if (oldResult) {
             oldResult.removeObserver(this.view);
             oldResult.root.containerOpen = false;
@@ -183,10 +172,10 @@
         ]]></setter>
       </property>
 
-      <!-- 
+      <!--
         Causes a particular node represented by the specified placeURI to be
         selected in the tree. All containers above the node in the hierarchy
-        will be opened, so that the node is visible. 
+        will be opened, so that the node is visible.
         -->
       <method name="selectPlaceURI">
         <parameter name="placeURI"/>
@@ -226,7 +215,7 @@
             return null;
           }
 
-          var container = this.getResultNode();
+          var container = this.result.root;
           NS_ASSERT(container, "No result, cannot select place URI!");
           if (!container)
             return;
@@ -242,22 +231,22 @@
         ]]></body>
       </method>
 
-      <!-- 
-        Causes a particular node to be selected in the tree, resulting in all 
+      <!--
+        Causes a particular node to be selected in the tree, resulting in all
         containers above the node in the hierarchy to be opened, so that the
-        node is visible. 
+        node is visible.
         -->
       <method name="selectNode">
         <parameter name="node"/>
-        <body><![CDATA[ 
+        <body><![CDATA[
           var view = this.view;
 
           var parent = node.parent;
           if (parent && !parent.containerOpen) {
-            // Build a list of all of the nodes that are the parent of this one 
-            // in the result. 
+            // Build a list of all of the nodes that are the parent of this one
+            // in the result.
             var parents = [];
-            var root = this.getResultNode();
+            var root = this.result.root;
             while (parent && parent != root) {
               parents.push(parent);
               parent = parent.parent;
@@ -279,29 +268,22 @@
             return;
 
           view.selection.select(index);
-          // ... and ensure it's visible, not scrolled off somewhere. 
+          // ... and ensure it's visible, not scrolled off somewhere.
           this.treeBoxObject.ensureRowIsVisible(index);
         ]]></body>
       </method>
 
       <!-- nsIPlacesView -->
-      <method name="getResult">
-        <body><![CDATA[
+      <property name="result">
+        <getter><![CDATA[
           try {
             return this.view.QueryInterface(Ci.nsINavHistoryResultObserver).result;
           }
           catch (e) {
             return null;
           }
-        ]]></body>
-      </method>
-
-      <!-- nsIPlacesView -->
-      <method name="getResultNode">
-        <body><![CDATA[
-          return this.getResult().root;
-        ]]></body>
-      </method>
+        ]]></getter>
+      </property>
 
       <!-- nsIPlacesView -->
       <property name="place">
@@ -332,10 +314,10 @@
           return this.view && this.view.selection.count >= 1;
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
-      <method name="getSelectionNodes">
-        <body><![CDATA[ 
+      <property name="selectedNodes">
+        <getter><![CDATA[
           let nodes = [];
           if (!this.hasSelection)
             return nodes;
@@ -351,22 +333,22 @@
               nodes.push(resultview.nodeForTreeIndex(j));
           }
           return nodes;
-        ]]></body>
-      </method>
+        ]]></getter>
+      </property>
 
       <!-- nsIPlacesView -->
-      <method name="getRemovableSelectionRanges">
-        <body><![CDATA[ 
-          // This function exists in addition to getSelectionNodes because it
+      <property name="removableSelectionRanges">
+        <getter><![CDATA[
+          // This property exists in addition to selectedNodes because it
           // encodes selection ranges (which only occur in list views) into
           // the return value. For each removed range, the index at which items
           // will be re-inserted upon the remove transaction being performed is
-          // the first index of the range, so that the view updates correctly. 
+          // the first index of the range, so that the view updates correctly.
           //
           // For example, if we remove rows 2,3,4 and 7,8 from a list, when we
           // undo that operation, if we insert what was at row 3 at row 3 again,
-          // it will show up _after_ the item that was at row 5. So we need to 
-          // insert all items at row 2, and the tree view will update correctly. 
+          // it will show up _after_ the item that was at row 5. So we need to
+          // insert all items at row 2, and the tree view will update correctly.
           //
           // Also, this function collapses the selection to remove redundant
           // data, e.g. when deleting this selection:
@@ -375,10 +357,10 @@
           //  (-) Some Folder
           //        http://www.bar.com/
           //
-          // ... returning http://www.bar.com/ as part of the selection is 
-          // redundant because it is implied by removing "Some Folder". We 
+          // ... returning http://www.bar.com/ as part of the selection is
+          // redundant because it is implied by removing "Some Folder". We
           // filter out all such redundancies since some partial amount of
-          // the folder's children may be selected.          
+          // the folder's children may be selected.
           //
           let nodes = [];
           if (!this.hasSelection)
@@ -396,7 +378,7 @@
             var range = [];
             var min = { }, max = { };
             selection.getRangeAt(i, min, max);
-            
+
             for (var j = min.value; j <= max.value; ++j) {
               if (this.view.isContainer(j))
                 containers[j] = true;
@@ -406,16 +388,13 @@
             nodes.push(range);
           }
           return nodes;
-        ]]></body>
-      </method>
-      
+        ]]></getter>
+      </property>
+
       <!-- nsIPlacesView -->
-      <method name="getDraggableSelection">
-        <body><![CDATA[
-          return this.getSelectionNodes();
-        ]]></body>
-      </method>
-      
+      <property name="draggableSelection"
+                onget="return this.selectedNodes"/>
+
       <!-- nsIPlacesView -->
       <property name="selectedNode">
         <getter><![CDATA[
@@ -440,14 +419,14 @@
 
           // there is no insertion point for history queries
           // so bail out now and save a lot of work when updating commands
-          var resultNode = this.getResultNode();
+          var resultNode = this.result.root;
           if (PlacesUtils.nodeIsQuery(resultNode) &&
               PlacesUtils.asQuery(resultNode).queryOptions.queryType ==
                 Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY)
               return this._cachedInsertionPoint = null;
 
           var orientation = Ci.nsITreeView.DROP_BEFORE;
-          // If there is no selection, insert at the end of the container. 
+          // If there is no selection, insert at the end of the container.
           if (!this.hasSelection) {
             var index = this.view.rowCount - 1;
             this._cachedInsertionPoint =
@@ -462,18 +441,18 @@
           //   is to drop _into_ that container.
           //
           // Warning: It may be tempting to use tree indexes in this code, but
-          //          you must not, since the tree is nested and as your tree 
+          //          you must not, since the tree is nested and as your tree
           //          index may change when folders before you are opened and
           //          closed. You must convert your tree index to a node, and
           //          then use getChildIndex to find your absolute index in
-          //          the parent container instead. 
+          //          the parent container instead.
           //
           var resultView = this.view;
           var selection = resultView.selection;
           var rc = selection.getRangeCount();
           var min = { }, max = { };
           selection.getRangeAt(rc - 1, min, max);
-          
+
           // If the sole selection is a container, and we are not in
           // a flatlist, insert into it.
           // Note that this only applies to _single_ selections,
@@ -498,7 +477,7 @@
         <parameter name="index"/>
         <parameter name="orientation"/>
         <body><![CDATA[
-          var result = this.getResult();
+          var result = this.result;
           var resultview = this.view;
           var container = result.root;
           var dropNearItemId = -1;
@@ -509,7 +488,7 @@
             var lastSelected = resultview.nodeForTreeIndex(index);
             if (resultview.isContainer(index) && orientation == Ci.nsITreeView.DROP_ON) {
               // If the last selected item is an open container, append _into_
-              // it, rather than insert adjacent to it. 
+              // it, rather than insert adjacent to it.
               container = lastSelected;
               index = -1;
             }
@@ -569,7 +548,7 @@
 
       <!-- nsIPlacesView -->
       <method name="selectAll">
-        <body><![CDATA[ 
+        <body><![CDATA[
           this.view.selection.selectAll();
         ]]></body>
       </method>
@@ -657,12 +636,12 @@
           }
 
           // Disable notifications while looking for nodes.
-          let result = this.getResult();
+          let result = this.result;
           let didSuppressNotifications = result.suppressNotifications;
           if (!didSuppressNotifications)
             result.suppressNotifications = true
           try {
-            findNodes(this.getResultNode());
+            findNodes(this.result.root);
           }
           finally {
             if (!didSuppressNotifications)
@@ -727,7 +706,7 @@
         if (event.target.localName != "treechildren")
           return;
 
-        let nodes = this.getSelectionNodes();
+        let nodes = this.selectedNodes;
         for (let i = 0; i < nodes.length; i++) {
           let node = nodes[i];
 
@@ -759,7 +738,7 @@
                                      row, col, child);
         let node = row.value != -1 ?
                    this.view.nodeForTreeIndex(row.value) :
-                   this.getResultNode();
+                   this.result.root;
         // cache the dropTarget for the view
         PlacesControllerDragHelper.currentDropTarget = node;
 

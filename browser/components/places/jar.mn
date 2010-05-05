@@ -9,11 +9,11 @@ browser.jar:
 *   content/browser/places/bookmarkProperties.xul        (content/bookmarkProperties.xul)
 *   content/browser/places/bookmarkProperties.js         (content/bookmarkProperties.js)
 *   content/browser/places/placesOverlay.xul             (content/placesOverlay.xul)
-*   content/browser/places/toolbar.xml                   (content/toolbar.xml)
 *   content/browser/places/menu.xml                      (content/menu.xml)
 *   content/browser/places/tree.xml                      (content/tree.xml)
 *   content/browser/places/controller.js                 (content/controller.js)
 *   content/browser/places/treeView.js                   (content/treeView.js)
+*   content/browser/places/browserPlacesViews.js         (content/browserPlacesViews.js)
 # keep the Places version of the history sidebar at history/history-panel.xul 
 # to prevent having to worry about between versions of the browser
 *   content/browser/history/history-panel.xul            (content/history-panel.xul) 

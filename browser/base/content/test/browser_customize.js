@@ -23,8 +23,10 @@ function testCustomizeFrameLoaded()
   var frame = document.getElementById("customizeToolbarSheetIFrame");
   frame.removeEventListener("load", testCustomizeFrameLoadedPre, true);
 
-  var menu = document.getElementById("bookmarksMenuPopup");
-  ok("getResult" in menu, "menu has binding");
+  if (navigator.platform.indexOf("Mac") == -1) {
+    var menu = document.getElementById("bookmarksMenuPopup");
+    ok("result" in menu, "menu has binding");
+  }
 
   var framedoc = document.getElementById("customizeToolbarSheetIFrame").contentDocument;
   var b = framedoc.getElementById("donebutton");
