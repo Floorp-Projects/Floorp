@@ -46,10 +46,7 @@
 #include "jsiter.h"
 #include "jsobj.h"
 #include "jsscope.h"
-
-#ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
-#endif
 
 #include "jsscopeinlines.h"
 
@@ -512,10 +509,7 @@ static inline JSObject *
 NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                         JSObject *parent, size_t objectSize = 0)
 {
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_CREATE_START_ENABLED())
-        jsdtrace_object_create_start(cx->fp, clasp);
-#endif
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
 
     /* Assert that the class is a proper class. */
     JS_ASSERT_IF(clasp->flags & JSCLASS_IS_EXTENDED,
@@ -581,12 +575,7 @@ NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     }
 
 out:
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_CREATE_ENABLED())
-        jsdtrace_object_create(cx, clasp, obj);
-    if (JAVASCRIPT_OBJECT_CREATE_DONE_ENABLED())
-        jsdtrace_object_create_done(cx->fp, clasp);
-#endif
+    objectCreationScope.handleCreation(obj);
     return obj;
 }
 
