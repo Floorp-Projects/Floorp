@@ -1882,7 +1882,7 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
     }
 
     blockObj->scope()->freeslot = JSSLOT_FREE(&js_BlockClass);
-    return js_GrowSlots(cx, blockObj, JSSLOT_FREE(&js_BlockClass));
+    return blockObj->growSlots(cx, JSSLOT_FREE(&js_BlockClass));
 }
 
 /*

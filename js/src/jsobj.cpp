@@ -1908,13 +1908,12 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = OBJECT_TO_JSVAL(aobj);
 
-    jsval *slots = aobj->dslots;
     size_t len = ida.length();
     JS_ASSERT(aobj->getDenseArrayCapacity() >= len);
     for (size_t i = 0; i < len; i++) {
         jsid id = ida[i];
         if (JSID_IS_INT(id)) {
-            if (!js_ValueToStringId(cx, INT_JSID_TO_JSVAL(id), &slots[i]))
+            if (!js_ValueToStringId(cx, INT_JSID_TO_JSVAL(id), aobj->addressOfDenseArrayElement(i)))
                 return JS_FALSE;
         } else {
             /*
@@ -1924,7 +1923,7 @@ obj_keys(JSContext *cx, uintN argc, jsval *vp)
              * to by a QName, actually appears as a string jsid -- but in the
              * interests of fidelity we pass object jsids through unchanged.
              */
-            slots[i] = ID_TO_VALUE(id);
+            aobj->setDenseArrayElement(i, ID_TO_VALUE(id));
         }
     }
 
@@ -3094,7 +3093,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     if (normalUnwind && count > 1) {
         --count;
         JS_LOCK_OBJ(cx, obj);
-        if (!js_AllocSlots(cx, obj, JS_INITIAL_NSLOTS + count))
+        if (!obj->allocSlots(cx, JS_INITIAL_NSLOTS + count))
             normalUnwind = JS_FALSE;
         else
             memcpy(obj->dslots, fp->slots + depth + 1, count * sizeof(jsval));
@@ -3478,35 +3477,28 @@ bad:
     goto out;
 }
 
-#define SLOTS_TO_DYNAMIC_WORDS(nslots)                                        \
-  (JS_ASSERT((nslots) > JS_INITIAL_NSLOTS), (nslots) + 1 - JS_INITIAL_NSLOTS)
-
-#define DYNAMIC_WORDS_TO_SLOTS(words)                                         \
-  (JS_ASSERT((words) > 1), (words) - 1 + JS_INITIAL_NSLOTS)
-
-
 bool
-js_AllocSlots(JSContext *cx, JSObject *obj, size_t nslots)
+JSObject::allocSlots(JSContext *cx, size_t nslots)
 {
-    JS_ASSERT(!obj->dslots);
+    JS_ASSERT(!dslots);
     JS_ASSERT(nslots > JS_INITIAL_NSLOTS);
 
-    jsval* slots;
-    slots = (jsval*) cx->malloc(SLOTS_TO_DYNAMIC_WORDS(nslots) * sizeof(jsval));
-    if (!slots)
+    size_t nwords = slotsToDynamicWords(nslots);
+    dslots = (jsval*) cx->malloc(nwords * sizeof(jsval));
+    if (!dslots)
         return false;
 
-    *slots++ = nslots;
+    dslots++;
+    dslots[-1] = nslots;
     /* clear the newly allocated cells. */
-    for (jsuint n = JS_INITIAL_NSLOTS; n < nslots; ++n)
-        slots[n - JS_INITIAL_NSLOTS] = JSVAL_VOID;
-    obj->dslots = slots;
+    for (jsuint i = JS_INITIAL_NSLOTS; i < nslots; i++)
+        dslots[i - JS_INITIAL_NSLOTS] = JSVAL_VOID;
 
     return true;
 }
 
 bool
-js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
+JSObject::growSlots(JSContext *cx, size_t nslots)
 {
     /*
      * Minimal number of dynamic slots to allocate.
@@ -3523,7 +3515,7 @@ js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
     if (nslots <= JS_INITIAL_NSLOTS)
         return JS_TRUE;
 
-    size_t nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);
+    size_t nwords = slotsToDynamicWords(nslots);
 
     /*
      * Round up nslots so the number of bytes in dslots array is power
@@ -3538,55 +3530,55 @@ js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots)
     } else {
         nwords = JS_ROUNDUP(nwords, LINEAR_GROWTH_STEP);
     }
-    nslots = DYNAMIC_WORDS_TO_SLOTS(nwords);
+    nslots = dynamicWordsToSlots(nwords);
 
     /*
      * If nothing was allocated yet, treat it as initial allocation (but with
      * the exponential growth algorithm applied).
      */
-    jsval* slots = obj->dslots;
-    if (!slots)
-        return js_AllocSlots(cx, obj, nslots);
+    if (!dslots)
+        return allocSlots(cx, nslots);
 
-    size_t oslots = size_t(slots[-1]);
+    size_t oldnslots = size_t(dslots[-1]);
 
-    slots = (jsval*) cx->realloc(slots - 1, nwords * sizeof(jsval));
-    if (!slots)
-        return false;
+    jsval *tmpdslots = (jsval*) cx->realloc(dslots - 1, nwords * sizeof(jsval));
+    if (!tmpdslots)
+        return false;   /* Leave dslots at its old size. */
+    dslots = tmpdslots;
 
-    *slots++ = nslots;
-    obj->dslots = slots;
+    dslots++;
+    dslots[-1] = nslots;
 
     /* Initialize the additional slots we added. */
-    JS_ASSERT(nslots > oslots);
-    for (size_t i = oslots; i < nslots; i++)
-        slots[i - JS_INITIAL_NSLOTS] = JSVAL_VOID;
+    JS_ASSERT(nslots > oldnslots);
+    for (size_t i = oldnslots; i < nslots; i++)
+        dslots[i - JS_INITIAL_NSLOTS] = JSVAL_VOID;
 
     return true;
 }
 
 void
-js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots)
+JSObject::shrinkSlots(JSContext *cx, size_t nslots)
 {
-    jsval* slots = obj->dslots;
-
     /* Nothing to shrink? */
-    if (!slots)
+    if (!dslots)
         return;
 
-    JS_ASSERT(size_t(slots[-1]) > JS_INITIAL_NSLOTS);
-    JS_ASSERT(nslots <= size_t(slots[-1]));
+    JS_ASSERT(size_t(dslots[-1]) > JS_INITIAL_NSLOTS);
+    JS_ASSERT(nslots <= size_t(dslots[-1]));
 
     if (nslots <= JS_INITIAL_NSLOTS) {
-        obj->freeSlotsArray(cx);
-        obj->dslots = NULL;
+        freeSlotsArray(cx);
+        dslots = NULL;
     } else {
-        size_t nwords = SLOTS_TO_DYNAMIC_WORDS(nslots);
-        slots = (jsval*) cx->realloc(slots - 1, nwords * sizeof(jsval));
-        if (!slots)
-            return;  /* Leave obj->dslots at its old size. */
-        *slots++ = nslots;
-        obj->dslots = slots;
+        size_t nwords = slotsToDynamicWords(nslots);
+        jsval *tmpdslots = (jsval*) cx->realloc(dslots - 1, nwords * sizeof(jsval));
+        if (!tmpdslots)
+            return;  /* Leave dslots at its old size. */
+        dslots = tmpdslots;
+
+        dslots++;
+        dslots[-1] = nslots;
     }
 }
 
@@ -3594,10 +3586,9 @@ bool
 js_EnsureReservedSlots(JSContext *cx, JSObject *obj, size_t nreserved)
 {
     JS_ASSERT(obj->isNative());
-    JS_ASSERT(!obj->dslots);
 
     uintN nslots = JSSLOT_FREE(obj->getClass()) + nreserved;
-    if (nslots > obj->numSlots() && !js_AllocSlots(cx, obj, nslots))
+    if (nslots > obj->numSlots() && !obj->allocSlots(cx, nslots))
         return false;
 
     JSScope *scope = obj->scope();
@@ -3857,7 +3848,7 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
     }
 
     if (scope->freeslot >= obj->numSlots() &&
-        !js_GrowSlots(cx, obj, scope->freeslot + 1)) {
+        !obj->growSlots(cx, scope->freeslot + 1)) {
         return JS_FALSE;
     }
 
@@ -6261,7 +6252,7 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
          */
         size_t slots = scope->freeslot;
         if (obj->numSlots() != slots)
-            js_ShrinkSlots(cx, obj, slots);
+            obj->shrinkSlots(cx, slots);
     }
 
 #ifdef JS_DUMP_SCOPE_METERS
@@ -6389,17 +6380,17 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
 #endif
 
     uint32 slot = JSSLOT_START(clasp) + index;
-    if (slot >= JS_INITIAL_NSLOTS && !obj->dslots) {
+    if (slot >= obj->numSlots()) {
         /*
          * At this point, obj may or may not own scope, and we may or may not
-         * need to allocate dslots. If scope is shared, scope->freeslot may not
+         * need to allocate slots. If scope is shared, scope->freeslot may not
          * be accurate for obj (see comment below).
          */
         uint32 nslots = JSSLOT_FREE(clasp);
         if (clasp->reserveSlots)
             nslots += clasp->reserveSlots(cx, obj);
         JS_ASSERT(slot < nslots);
-        if (!js_AllocSlots(cx, obj, nslots)) {
+        if (!obj->allocSlots(cx, nslots)) {
             JS_UNLOCK_OBJ(cx, obj);
             return false;
         }
