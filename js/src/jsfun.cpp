@@ -576,9 +576,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsval idval, jsval *vp)
      * args_delete to clear the corresponding reserved slot so the GC can
      * collect its value.
      */
-    jsid id;
-    if (!JS_ValueToId(cx, idval, &id))
-        return false;
+    JS_ASSERT_IF(JSVAL_IS_STRING(idval), JSVAL_TO_STRING(idval)->isAtomized());
+    jsid id = (jsid)idval;
 
     AutoValueRooter tvr(cx);
     return js_DeleteProperty(cx, obj, id, tvr.addr()) &&
@@ -1151,7 +1150,6 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
 {
     jsval callee;
     JSFunction *fun;
-    jsid id;
     JSLocalKind localKind;
     JSPropertyOp getter, setter;
     uintN slot, attrs;
@@ -1162,13 +1160,13 @@ call_resolve(JSContext *cx, JSObject *obj, jsval idval, uintN flags,
     if (!JSVAL_IS_STRING(idval))
         return JS_TRUE;
 
+    JS_ASSERT(JSVAL_TO_STRING(idval)->isAtomized());
+    jsid id = (jsval)idval;
+
     callee = obj->getSlot(JSSLOT_CALLEE);
     if (JSVAL_IS_VOID(callee))
         return JS_TRUE;
     fun = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(callee));
-
-    if (!js_ValueToStringId(cx, idval, &id))
-        return JS_FALSE;
 
     /*
      * Check whether the id refers to a formal parameter, local variable or
