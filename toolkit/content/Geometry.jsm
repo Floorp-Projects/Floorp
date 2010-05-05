@@ -123,19 +123,25 @@ let Util = {
   },
 
   getViewportMetadata: function getViewportMetadata(browser) {
+    let dpiScale = gPrefService.getIntPref("zoom.dpiScale") / 100;
+
+    // Device size in CSS pixels:
+    let deviceWidth  = window.innerWidth  / dpiScale;
+    let deviceHeight = window.innerHeight / dpiScale;
+
     let doctype = browser.contentDocument.doctype;
     if (doctype && /(WAP|WML|Mobile)/.test(doctype.publicId))
-      return { reason: "doctype", result: true, scale: 1.0 };
+      return { reason: "doctype", result: true, defaultZoom: dpiScale, width: deviceWidth };
 
     let windowUtils = browser.contentWindow
                              .QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);
     let handheldFriendly = windowUtils.getDocumentMetadata("HandheldFriendly");
     if (handheldFriendly == "true")
-      return { reason: "handheld", result: true, scale: 1.0 };
+      return { reason: "handheld", defaultZoom: dpiScale, width: deviceWidth };
 
     if (browser.contentDocument instanceof XULDocument)
-      return { reason: "chrome", result: true, scale: 1.0, autoSize: true, allowZoom: false };
+      return { reason: "chrome", defaultZoom: 1.0, autoSize: true, allowZoom: false };
 
     // viewport details found here
     // http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/MetaTags.html
@@ -157,24 +163,33 @@ let Util = {
     if (viewportScale == 1.0 && !viewportWidthStr)
       viewportWidthStr = "device-width";
 
-    let viewportWidth = viewportWidthStr == "device-width" ? window.innerWidth : parseInt(viewportWidthStr);
-    let viewportHeight = viewportHeightStr == "device-height" ? window.innerHeight : parseInt(viewportHeightStr);
+    let viewportWidth = viewportWidthStr == "device-width" ? deviceWidth
+      : Util.clamp(parseInt(viewportWidthStr), kViewportMinWidth, kViewportMaxWidth);
+    let viewportHeight = viewportHeightStr == "device-height" ? deviceHeight
+      : Util.clamp(parseInt(viewportHeightStr), kViewportMinHeight, kViewportMaxHeight);
 
-    viewportWidth  = Util.clamp(viewportWidth,  kViewportMinWidth,  kViewportMaxWidth);
-    viewportHeight = Util.clamp(viewportHeight, kViewportMinHeight, kViewportMaxHeight);
- 
+    // Zoom level is the final (device pixel : CSS pixel) ratio for content.
+    // Since web content specifies scale as (reference pixel : CSS pixel) ratio,
+    // multiply the requested scale by a constant (device pixel : reference pixel)
+    // factor to account for high DPI devices.
+    //
+    // See bug 561445 or any of the examples of chrome/tests/browser_viewport_XX.html
+    // for more information and examples.
+    let defaultZoom = viewportScale    * dpiScale;
+    let minZoom     = viewportMinScale * dpiScale;
+    let maxZoom     = viewportMaxScale * dpiScale;
+
     // If (scale * width) < device-width, increase the width (bug 561413).
-    let maxInitialScale = viewportScale || viewportMaxScale;
-    if (maxInitialScale && viewportWidth)
-      viewportWidth = Math.max(viewportWidth, window.innerWidth / maxInitialScale);
+    let maxInitialZoom = defaultZoom || maxZoom;
+    if (maxInitialZoom && viewportWidth)
+      viewportWidth = Math.max(viewportWidth, window.innerWidth / maxInitialZoom);
 
     if (viewportScale > 0 || viewportWidth > 0 || viewportHeight > 0 || viewportMinScale > 0 || viewportMaxScale > 0) {
       return {
         reason: "viewport",
-        result: true,
-        scale: viewportScale,
-        minScale: viewportMinScale,
-        maxScale: viewportMaxScale,
+        defaultZoom: defaultZoom,
+        minZoom: minZoom,
+        maxZoom: maxZoom,
         width: viewportWidth,
         height: viewportHeight,
         autoSize: viewportWidthStr == "device-width" || viewportHeightStr == "device-height",
@@ -182,7 +197,7 @@ let Util = {
       };
     }
 
-    return { reason: "", result: false, allowZoom: true };
+    return { reason: null, allowZoom: true };
   },
 
   clamp: function(num, min, max) {
