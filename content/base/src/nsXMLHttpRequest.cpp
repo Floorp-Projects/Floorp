@@ -1157,17 +1157,16 @@ nsXMLHttpRequest::ConvertBodyToText(nsAString& aOutBuffer)
     }
   }
 
+  // XXXbz is the charset ever "ASCII" as opposed to "us-ascii"?
   if (dataCharset.EqualsLiteral("ASCII")) {
     CopyASCIItoUTF16(mResponseBody, mResponseBodyUnicode);
     aOutBuffer = mResponseBodyUnicode;
     return NS_OK;
   }
 
-  if (dataCharset.EqualsLiteral("UTF-8")) {
-    CopyUTF8toUTF16(mResponseBody, mResponseBodyUnicode);
-    aOutBuffer = mResponseBodyUnicode;
-    return NS_OK;
-  }
+  // can't fast-path UTF-8 using CopyUTF8toUTF16, since above we assumed UTF-8
+  // by default and CopyUTF8toUTF16 will stop if it encounters bytes that aren't
+  // valid UTF-8.  So we have to do the whole unicode decoder thing.
 
   nsCOMPtr<nsICharsetConverterManager> ccm =
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
