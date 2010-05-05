@@ -439,6 +439,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     bindingManager->RemoveLoadingDocListener(documentURI);
 
     if (!bindingDocument->GetRootElement()) {
+      // FIXME: How about an error console warning?
       NS_WARNING("*** XBL doc with no root element! Something went horribly wrong! ***");
       return NS_ERROR_FAILURE;
     }
@@ -449,7 +450,8 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
       xblDocBindingManager->GetXBLDocumentInfo(documentURI);
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
-      NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
+      // FIXME: How about an error console warning?
+      NS_WARNING("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
       return NS_ERROR_FAILURE;
     }
 
