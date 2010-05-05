@@ -3198,7 +3198,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
      */
     uintN slot = JSSLOT_FREE(&js_BlockClass) + n;
     if (slot >= blockObj->numSlots() &&
-        !js_GrowSlots(cx, blockObj, slot + 1)) {
+        !blockObj->growSlots(cx, slot + 1)) {
         return JS_FALSE;
     }
     blockObj->scope()->freeslot = slot + 1;

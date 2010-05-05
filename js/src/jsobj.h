@@ -296,6 +296,22 @@ struct JSObject {
         return dslots ? (uint32)dslots[-1] : (uint32)JS_INITIAL_NSLOTS;
     }
 
+  private:
+    static size_t slotsToDynamicWords(size_t nslots) {
+        JS_ASSERT(nslots > JS_INITIAL_NSLOTS);
+        return nslots + 1 - JS_INITIAL_NSLOTS;
+    }
+
+    static size_t dynamicWordsToSlots(size_t nwords) {
+        JS_ASSERT(nwords > 1);
+        return nwords - 1 + JS_INITIAL_NSLOTS;
+    }
+
+  public:
+    bool allocSlots(JSContext *cx, size_t nslots);
+    bool growSlots(JSContext *cx, size_t nslots);
+    void shrinkSlots(JSContext *cx, size_t nslots);
+
     jsval& getSlotRef(uintN slot) {
         return (slot < JS_INITIAL_NSLOTS)
                ? fslots[slot]
@@ -436,6 +452,7 @@ struct JSObject {
     inline bool isDenseArrayMinLenCapOk(bool strictAboutLength = true) const;
 
     inline jsval getDenseArrayElement(uint32 i) const;
+    inline jsval *addressOfDenseArrayElement(uint32 i);
     inline void setDenseArrayElement(uint32 i, jsval v);
 
     inline jsval *getDenseArrayElements() const;   // returns pointer to the Array's elements array
@@ -871,15 +888,6 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp);
 
 extern void
 js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot);
-
-extern bool
-js_AllocSlots(JSContext *cx, JSObject *obj, size_t nslots);
-
-extern bool
-js_GrowSlots(JSContext *cx, JSObject *obj, size_t nslots);
-
-extern void
-js_ShrinkSlots(JSContext *cx, JSObject *obj, size_t nslots);
 
 /*
  * Ensure that the object has at least JSCLASS_RESERVED_SLOTS(clasp)+nreserved
