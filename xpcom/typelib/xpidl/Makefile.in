@@ -44,12 +44,18 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 
+ifneq (,$(filter-out WINCE SYMBIAN,$(OS_ARCH)))
+# Sadly, the code here is too smart for the WinCE/Symbian compiler's brain
+PROGRAM		= xpidl$(BIN_SUFFIX)
+SDK_BINARY  = $(PROGRAM)
+endif
+
 INTERNAL_TOOLS	= 1
 
 # glib and libIDL link against the non-debug msvcrt
 MOZ_NO_DEBUG_RTL=1
 
-XPIDL_CSRCS	= \
+CSRCS		= \
 		xpidl.c \
 		xpidl_idl.c \
 		xpidl_util.c \
@@ -60,28 +66,11 @@ XPIDL_CSRCS	= \
 		$(NULL)
 
 ifdef CROSS_COMPILE
-
 HOST_PROGRAM	= host_xpidl$(HOST_BIN_SUFFIX)
-HOST_CSRCS	= $(XPIDL_CSRCS)
-
+HOST_CSRCS	= $(CSRCS)
 ifdef WINCE
 HOST_LDFLAGS += -ladvapi32.lib
 endif
-
-ifdef LIBIDL_LIBS
-BUILD_TARGET = 1
-endif
-
-else # CROSS_COMPILE
-
-BUILD_TARGET = 1
-
-endif # CROSS_COMPILE
-
-ifdef BUILD_TARGET
-PROGRAM		= xpidl$(BIN_SUFFIX)
-CSRCS 		= $(XPIDL_CSRCS)
-SDK_BINARY  	= $(PROGRAM)
 endif
 
 USE_STATIC_LIBS = 1
@@ -93,7 +82,37 @@ ifeq ($(OS_ARCH),Darwin)
 # case in order to successfully link.  Because the target xpidl isn't
 # currently built in a cross compile, though, this point is moot for the
 # time being.
+
+ifndef CROSS_COMPILE
+# When doing a native build, don't build xpidl against the SDK.  libIDL
+# was most likely configured for the system headers, and bringing in the
+# SDK's headers instead will cause problems.
 _STRIP_SDK = 1
+else
+
+# Cross-compiling
+
+# Don't build xpidl for the target.  This is not intended to be a permanent
+# solution.  It's necessary because it is presently difficult to build
+# xpidl's prerequisites (libIDL and glib) as fat and suitable for a cross.
+# This will be fixed.  -mm
+PROGRAM=
+
+# Since only host_xpidl will be built for now, always strip out the SDK
+# (as above).
+_STRIP_SDK=1
+
+# When fat xpidl prerequisites are available, the PROGRAM= and _STRIP_SDK=1
+# above are expected to disappear, and be replaced with the following
+# conditonal.
+
+# ifeq (86_powerpc,$(findstring 86,$(host_cpu))_$(TARGET_CPU))
+# # When cross-compiling from x86 to ppc, an old (10.2-ish) SDK might be in
+# # use, and libIDL will have been configured for new (10.4-ish) headers.
+# _STRIP_SDK = 1
+# endif
+
+endif # CROSS_COMPILE
 
 ifneq (,$(_STRIP_SDK)$(MACOS_SDK_DIR))
 # libIDL is configured for the system's headers, with no SDK involved.
