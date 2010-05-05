@@ -115,12 +115,13 @@ bits_image_fetch_pixel_alpha (bits_image_t *image, int x, int y)
     }
     else
     {
-	pixel_a = image->fetch_pixel_raw_32 (
+	pixel_a = image->common.alpha_map->fetch_pixel_raw_32 (
 	    image->common.alpha_map, x, y);
 	pixel_a = ALPHA_8 (pixel_a);
     }
 
-    UN8x4_MUL_UN8 (pixel, pixel_a);
+    pixel &= 0x00ffffff;
+    pixel |= (pixel_a << 24);
 
     return pixel;
 }
@@ -874,55 +875,6 @@ bits_image_fetch_untransformed_64 (pixman_image_t * image,
     }
 }
 
-static pixman_bool_t out_of_bounds_workaround = TRUE;
-
-/* Old X servers rely on out-of-bounds accesses when they are asked
- * to composite with a window as the source. They create a pixman image
- * pointing to some bogus position in memory, but then they set a clip
- * region to the position where the actual bits are.
- *
- * Due to a bug in old versions of pixman, where it would not clip
- * against the image bounds when a clip region was set, this would
- * actually work. So by default we allow certain out-of-bound access
- * to happen unless explicitly disabled.
- *
- * Fixed X servers should call this function to disable the workaround.
- */
-PIXMAN_EXPORT void
-pixman_disable_out_of_bounds_workaround (void)
-{
-    out_of_bounds_workaround = FALSE;
-}
-
-static pixman_bool_t
-source_image_needs_out_of_bounds_workaround (bits_image_t *image)
-{
-    if (image->common.clip_sources                      &&
-        image->common.repeat == PIXMAN_REPEAT_NONE      &&
-	image->common.have_clip_region			&&
-        out_of_bounds_workaround)
-    {
-	if (!image->common.client_clip)
-	{
-	    /* There is no client clip, so if the clip region extends beyond the
-	     * drawable geometry, it must be because the X server generated the
-	     * bogus clip region.
-	     */
-	    const pixman_box32_t *extents = pixman_region32_extents (&image->common.clip_region);
-
-	    if (extents->x1 >= 0 && extents->x2 <= image->width &&
-		extents->y1 >= 0 && extents->y2 <= image->height)
-	    {
-		return FALSE;
-	    }
-	}
-
-	return TRUE;
-    }
-
-    return FALSE;
-}
-
 static void
 bits_image_property_changed (pixman_image_t *image)
 {
@@ -984,9 +936,6 @@ bits_image_property_changed (pixman_image_t *image)
 
     bits->store_scanline_64 = bits_image_store_scanline_64;
     bits->store_scanline_32 = bits_image_store_scanline_32;
-
-    bits->common.need_workaround =
-        source_image_needs_out_of_bounds_workaround (bits);
 }
 
 static uint32_t *
@@ -1040,8 +989,10 @@ pixman_image_create_bits (pixman_format_code_t format,
 
     /* must be a whole number of uint32_t's
      */
-    return_val_if_fail (bits == NULL ||
-                        (rowstride_bytes % sizeof (uint32_t)) == 0, NULL);
+    return_val_if_fail (
+	bits == NULL || (rowstride_bytes % sizeof (uint32_t)) == 0, NULL);
+
+    return_val_if_fail (PIXMAN_FORMAT_BPP (format) >= PIXMAN_FORMAT_DEPTH (format), NULL);
 
     if (!bits && width && height)
     {
