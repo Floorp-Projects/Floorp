@@ -84,7 +84,7 @@
 #include "nsIDOMNodeFilter.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
