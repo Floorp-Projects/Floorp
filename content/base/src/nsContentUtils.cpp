@@ -61,7 +61,7 @@
 #include "nsIContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIContent.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsReadableUtils.h"
