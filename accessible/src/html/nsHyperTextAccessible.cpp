@@ -1133,7 +1133,7 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(node));
-  if (content && content->IsNodeOfType(nsINode::eELEMENT))
+  if (content && content->IsElement())
     node = do_QueryInterface(content->GetChildAt(nodeOffset));
 
   if (!node)

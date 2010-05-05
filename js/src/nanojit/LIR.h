@@ -560,6 +560,13 @@ namespace nanojit
         NanoAssert(isCses[op] != -1);   // see LIRopcode.tbl to understand this
         return isCses[op] == 1;
     }
+    inline bool isLiveOpcode(LOpcode op) {
+        return 
+#if defined NANOJIT_64BIT
+               op == LIR_liveq ||
+#endif
+               op == LIR_livei || op == LIR_lived;
+    }
     inline bool isRetOpcode(LOpcode op) {
         return
 #if defined NANOJIT_64BIT
@@ -769,20 +776,27 @@ namespace nanojit
     class LIns
     {
     private:
-        // SharedFields: fields shared by all LIns kinds.  The .inReg, .reg,
-        // .inAr and .arIndex fields form a "reservation" that is used
-        // temporarily during assembly to record information relating to
-        // register allocation.  See class RegAlloc for more details.
+        // SharedFields: fields shared by all LIns kinds.
         //
-        // Note: all combinations of .inReg/.inAr are possible, ie. 0/0, 0/1,
-        // 1/0, 1/1.
+        // The .inReg, .reg, .inAr and .arIndex fields form a "reservation"
+        // that is used temporarily during assembly to record information
+        // relating to register allocation.  See class RegAlloc for more
+        // details.  Note: all combinations of .inReg/.inAr are possible, ie.
+        // 0/0, 0/1, 1/0, 1/1.
+        //
+        // The .isResultLive field is only used for instructions that return
+        // results.  It indicates if the result is live.  It's set (if
+        // appropriate) and used only during the codegen pass.
+        //
         struct SharedFields {
-            uint32_t inReg:1;       // if 1, 'reg' is active
+            uint32_t inReg:1;           // if 1, 'reg' is active
             Register reg:7;
-            uint32_t inAr:1;        // if 1, 'arIndex' is active
-            uint32_t arIndex:15;    // index into stack frame;  displ is -4*arIndex
+            uint32_t inAr:1;            // if 1, 'arIndex' is active
+            uint32_t isResultLive:1;    // if 1, the instruction's result is live
+                                    
+            uint32_t arIndex:14;        // index into stack frame;  displ is -4*arIndex
 
-            LOpcode  opcode:8;      // instruction's opcode
+            LOpcode  opcode:8;          // instruction's opcode
         };
 
         union {
@@ -795,8 +809,8 @@ namespace nanojit
 
         inline void initSharedFields(LOpcode opcode)
         {
-            // We must zero .inReg and .inAR, but zeroing the whole word is
-            // easier.  Then we set the opcode.
+            // We must zero .inReg, .inAR and .isResultLive, but zeroing the
+            // whole word is easier.  Then we set the opcode.
             wholeWord = 0;
             sharedFields.opcode = opcode;
         }
@@ -836,6 +850,20 @@ namespace nanojit
 
         LOpcode opcode() const { return sharedFields.opcode; }
 
+        // Generally, void instructions (statements) are always live and
+        // non-void instructions (expressions) are live if used by another
+        // live instruction.  But there are some trickier cases.
+        bool isLive() const { 
+            return isV() ||
+                   sharedFields.isResultLive ||
+                   (isCall() && !callInfo()->_isPure) ||    // impure calls are always live
+                   isop(LIR_paramp);                        // LIR_paramp is always live
+        }
+        void setResultLive() {
+            NanoAssert(!isV());
+            sharedFields.isResultLive = 1;
+        }
+
         // XXX: old reservation manipulating functions.  See bug 538924.
         // Replacement strategy:
         // - deprecated_markAsClear() --> clearReg() and/or clearArIndex()
@@ -847,20 +875,25 @@ namespace nanojit
             sharedFields.inAr = 0;
         }
         bool deprecated_hasKnownReg() {
-            NanoAssert(isUsed());
+            NanoAssert(isExtant());
             return isInReg();
         }
         Register deprecated_getReg() {
-            NanoAssert(isUsed());
+            NanoAssert(isExtant());
             return ( isInReg() ? sharedFields.reg : deprecated_UnknownReg );
         }
         uint32_t deprecated_getArIndex() {
-            NanoAssert(isUsed());
+            NanoAssert(isExtant());
             return ( isInAr() ? sharedFields.arIndex : 0 );
         }
 
         // Reservation manipulation.
-        bool isUsed() {
+        //
+        // "Extant" mean "in existence, still existing, surviving".  In other
+        // words, has the value been computed explicitly (not folded into
+        // something else) and is it still available (in a register or spill
+        // slot) for use?
+        bool isExtant() {
             return isInReg() || isInAr();
         }
         bool isInReg() {
@@ -1004,13 +1037,6 @@ namespace nanojit
         bool isRet() const {
             return isRetOpcode(opcode());
         }
-        bool isLive() const {
-            return isop(LIR_livei) ||
-#if defined NANOJIT_64BIT
-                   isop(LIR_liveq) ||
-#endif
-                   isop(LIR_lived);
-        }
         bool isCmp() const {
             LOpcode op = opcode();
             return isCmpIOpcode(op) ||
@@ -1115,22 +1141,6 @@ namespace nanojit
 #else
             return isI();
 #endif
-        }
-
-        // Return true if removal of 'ins' from a LIR fragment could
-        // possibly change the behaviour of that fragment, even if any
-        // value computed by 'ins' is not used later in the fragment.
-        // In other words, can 'ins' possibly alter control flow or memory?
-        // Note, this assumes that loads will never fault and hence cannot
-        // affect the control flow.
-        bool isStmt() {
-            NanoAssert(!isop(LIR_skip));
-            // All instructions with Void retType are statements, as are calls
-            // to impure functions.
-            if (isCall())
-                return !callInfo()->_isPure;
-            else
-                return isV();
         }
 
         inline void* immP() const
@@ -1805,8 +1815,9 @@ namespace nanojit
     private:
         Allocator& alloc;
 
-        void formatImm(RefBuf* buf, int32_t c);
-        void formatImmq(RefBuf* buf, uint64_t c);
+        char *formatImmI(RefBuf* buf, int32_t c);
+        char *formatImmQ(RefBuf* buf, uint64_t c);
+        char *formatImmD(RefBuf* buf, double c);
         void formatGuard(InsBuf* buf, LInsp ins);
         void formatGuardXov(InsBuf* buf, LInsp ins);
 
@@ -1819,7 +1830,7 @@ namespace nanojit
         }
 
         char *formatAddr(RefBuf* buf, void* p);
-        char *formatRef(RefBuf* buf, LInsp ref);
+        char *formatRef(RefBuf* buf, LInsp ref, bool showImmValue = true);
         char *formatIns(InsBuf* buf, LInsp ins);
         char *formatAccSet(RefBuf* buf, AccSet accSet);
 
@@ -1946,57 +1957,63 @@ namespace nanojit
         LIns* insLoad(LOpcode op, LInsp base, int32_t off, AccSet accSet);
     };
 
-    enum LInsHashKind {
-        // We divide instruction kinds into groups for the use of LInsHashSet.
-        // LIns0 isn't present because we don't need to record any 0-ary
-        // instructions.
-        LInsImmI  = 0,
-        LInsImmQ = 1,   // only occurs on 64-bit platforms
-        LInsImmD = 2,
-        LIns1    = 3,
-        LIns2    = 4,
-        LIns3    = 5,
-        LInsCall = 6,
-
-        // Loads are special.  We group them by access region:  one table for
-        // each region, and then a catch-all table for any loads marked with
-        // multiple regions.  This arrangement makes the removal of
-        // invalidated loads fast -- eg. we can invalidate all STACK loads by
-        // just clearing the LInsLoadStack table.  The disadvantage is that
-        // loads marked with multiple regions must be invalidated
-        // conservatively, eg. if any intervening stores occur.  But loads
-        // marked with multiple regions should be rare.
-        LInsLoadReadOnly = 7,
-        LInsLoadStack    = 8,
-        LInsLoadRStack   = 9,
-        LInsLoadOther    = 10,
-        LInsLoadMultiple = 11,
-
-        LInsFirst = 0,
-        LInsLast = 11,
-        // need a value after "last" to outsmart compilers that will insist last+1 is impossible
-        LInsInvalid = 12
-    };
-    #define nextKind(kind)  LInsHashKind(kind+1)
-
-    class LInsHashSet
+    class CseFilter: public LirWriter
     {
-        // Must be a power of 2.
-        // Don't start too small, or we'll waste time growing and rehashing.
-        // Don't start too large, will waste memory.
-        static const uint32_t kInitialCap[LInsLast + 1];
+        enum LInsHashKind {
+            // We divide instruction kinds into groups.  LIns0 isn't present
+            // because we don't need to record any 0-ary instructions.
+            LInsImmI = 0,
+            LInsImmQ = 1,   // only occurs on 64-bit platforms
+            LInsImmD = 2,
+            LIns1    = 3,
+            LIns2    = 4,
+            LIns3    = 5,
+            LInsCall = 6,
+
+            // Loads are special.  We group them by access region:  one table for
+            // each region, and then a catch-all table for any loads marked with
+            // multiple regions.  This arrangement makes the removal of
+            // invalidated loads fast -- eg. we can invalidate all STACK loads by
+            // just clearing the LInsLoadStack table.  The disadvantage is that
+            // loads marked with multiple regions must be invalidated
+            // conservatively, eg. if any intervening stores occur.  But loads
+            // marked with multiple regions should be rare.
+            LInsLoadReadOnly = 7,
+            LInsLoadStack    = 8,
+            LInsLoadRStack   = 9,
+            LInsLoadOther    = 10,
+            LInsLoadMultiple = 11,
+
+            LInsFirst = 0,
+            LInsLast = 11,
+            // Need a value after "last" to outsmart compilers that insist last+1 is impossible.
+            LInsInvalid = 12
+        };
+        #define nextKind(kind)  LInsHashKind(kind+1)
 
         // There is one list for each instruction kind.  This lets us size the
         // lists appropriately (some instructions are more common than others).
         // It also lets us have kind-specific find/add/grow functions, which
         // are faster than generic versions.
-        LInsp *m_list[LInsLast + 1];
-        uint32_t m_cap[LInsLast + 1];
-        uint32_t m_used[LInsLast + 1];
-        typedef uint32_t (LInsHashSet::*find_t)(LInsp);
-        find_t m_find[LInsLast + 1];
+        //
+        // Nb: Size must be a power of 2.
+        //     Don't start too small, or we'll waste time growing and rehashing.
+        //     Don't start too large, will waste memory.
+        //
+        LInsp*      m_list[LInsLast + 1];
+        uint32_t    m_cap[LInsLast + 1];
+        uint32_t    m_used[LInsLast + 1];
+        typedef uint32_t (CseFilter::*find_t)(LInsp);
+        find_t      m_find[LInsLast + 1];
+
+        AccSet      storesSinceLastLoad;    // regions stored to since the last load
 
         Allocator& alloc;
+
+        static uint32_t hash8(uint32_t hash, const uint8_t data);
+        static uint32_t hash32(uint32_t hash, const uint32_t data);
+        static uint32_t hashptr(uint32_t hash, const void* data);
+        static uint32_t hashfinish(uint32_t hash);
 
         static uint32_t hashImmI(int32_t);
         static uint32_t hashImmQorD(uint64_t);     // not NANOJIT_64BIT-only -- used by findImmD()
@@ -2006,8 +2023,22 @@ namespace nanojit
         static uint32_t hashLoad(LOpcode op, LInsp, int32_t, AccSet);
         static uint32_t hashCall(const CallInfo *call, uint32_t argc, LInsp args[]);
 
-        // These private versions are used after an LIns has been created;
-        // they are used for rehashing after growing.
+        // These versions are used before an LIns has been created.
+        LInsp findImmI(int32_t a, uint32_t &k);
+#ifdef NANOJIT_64BIT
+        LInsp findImmQ(uint64_t a, uint32_t &k);
+#endif
+        LInsp findImmD(uint64_t d, uint32_t &k);
+        LInsp find1(LOpcode v, LInsp a, uint32_t &k);
+        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
+        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
+        LInsp findLoad(LOpcode v, LInsp a, int32_t b, AccSet accSet, LInsHashKind kind,
+                       uint32_t &k);
+        LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
+
+        // These versions are used after an LIns has been created; they are
+        // used for rehashing after growing.  They just call onto the
+        // multi-arg versions above.
         uint32_t findImmI(LInsp ins);
 #ifdef NANOJIT_64BIT
         uint32_t findImmQ(LInsp ins);
@@ -2025,35 +2056,11 @@ namespace nanojit
 
         void grow(LInsHashKind kind);
 
-    public:
-        // kInitialCaps[i] holds the initial size for m_list[i].
-        LInsHashSet(Allocator&, uint32_t kInitialCaps[]);
-
-        // These public versions are used before an LIns has been created.
-        LInsp findImmI(int32_t a, uint32_t &k);
-#ifdef NANOJIT_64BIT
-        LInsp findImmQ(uint64_t a, uint32_t &k);
-#endif
-        LInsp findImmD(uint64_t d, uint32_t &k);
-        LInsp find1(LOpcode v, LInsp a, uint32_t &k);
-        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
-        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
-        LInsp findLoad(LOpcode v, LInsp a, int32_t b, AccSet accSet, LInsHashKind kind,
-                       uint32_t &k);
-        LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
-
         // 'k' is the index found by findXYZ().
         void add(LInsHashKind kind, LInsp ins, uint32_t k);
 
         void clear();               // clears all tables
         void clear(LInsHashKind);   // clears one table
-    };
-
-    class CseFilter: public LirWriter
-    {
-    private:
-        LInsHashSet* exprs;
-        AccSet       storesSinceLastLoad;   // regions stored to since the last load
 
     public:
         CseFilter(LirWriter *out, Allocator&);

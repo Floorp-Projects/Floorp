@@ -722,7 +722,6 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   nscoord             twipsRadii[8];
 
   // Get our style context's color struct.
-  const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
   const nsStyleOutline* ourOutline = aStyleContext->GetStyleOutline();
 
   nscoord width;

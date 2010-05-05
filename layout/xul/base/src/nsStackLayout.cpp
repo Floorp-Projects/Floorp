@@ -279,7 +279,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         childRect.height = 0;
 
       nsRect oldRect(child->GetRect());
-      PRBool sizeChanged = (oldRect != childRect);
+      PRBool sizeChanged = !oldRect.IsExactEqual(childRect);
 
       // only lay out dirty children or children whose sizes have changed
       if (sizeChanged || NS_SUBTREE_DIRTY(child)) {

@@ -97,6 +97,8 @@
 #include "SetDocTitleTxn.h"
 #include "nsGUIEvent.h"
 #include "nsTextFragment.h"
+#include "nsFocusManager.h"
+#include "nsPIDOMWindow.h"
 
 // netwerk
 #include "nsIURI.h"
@@ -1992,7 +1994,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
 /* 
   InsertNodeAtPoint: attempts to insert aNode into the document, at a point specified by 
       {*ioParent,*ioOffset}.  Checks with strict dtd to see if containment is allowed.  If not
-      allowed, will attempt to find a parent in the parent heirarchy of *ioParent that will
+      allowed, will attempt to find a parent in the parent hierarchy of *ioParent that will
       accept aNode as a child.  If such a parent is found, will split the document tree from
       {*ioParent,*ioOffset} up to parent, and then insert aNode.  ioParent & ioOffset are then
       adjusted to point to the actual location that aNode was inserted at.  aNoEmptyNodes
@@ -3309,7 +3311,7 @@ nsHTMLEditor::GetLinkedObjects(nsISupportsArray** aNodeList)
     if (!doc)
       return NS_ERROR_UNEXPECTED;
 
-    iter->Init(doc->GetRootContent());
+    iter->Init(doc->GetRootElement());
 
     // loop through the content iterator for each content node
     while (!iter->IsDone())
@@ -3642,7 +3644,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
     if (!doc)
       return NS_ERROR_UNEXPECTED;
 
-    iter->Init(doc->GetRootContent());
+    iter->Init(doc->GetRootElement());
 
     // loop through the content iterator for each content node
     while (!iter->IsDone())
@@ -4269,8 +4271,7 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
   if (!doc)
     return 0;
 
-  nsCOMPtr<nsIContent> rootContent;
-  doc->GetRootContent(getter_AddRefs(rootContent));
+  nsCOMPtr<nsIContent> rootContent = doc->GetRootElement();
   if (!rootContent)
     return 0;
 
@@ -5631,5 +5632,80 @@ nsresult
 nsHTMLEditor::GetReturnInParagraphCreatesNewParagraph(PRBool *aCreatesNewParagraph)
 {
   *aCreatesNewParagraph = mCRInParagraphCreatesParagraph;
+  return NS_OK;
+}
+
+PRBool
+nsHTMLEditor::HasFocus()
+{
+  NS_ENSURE_TRUE(mDocWeak, PR_FALSE);
+
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE(fm, PR_FALSE);
+
+  nsCOMPtr<nsIContent> focusedContent = fm->GetFocusedContent();
+
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  PRBool inDesignMode = doc->HasFlag(NODE_IS_EDITABLE);
+  if (!focusedContent) {
+    // in designMode, nobody gets focus in most cases.
+    return inDesignMode ? OurWindowHasFocus() : PR_FALSE;
+  }
+
+  if (inDesignMode) {
+    return OurWindowHasFocus() ?
+      nsContentUtils::ContentIsDescendantOf(focusedContent, doc) : PR_FALSE;
+  }
+
+  // We're HTML editor for contenteditable
+
+  // If the focused content isn't editable, or it has independent selection,
+  // we don't have focus.
+  if (!focusedContent->HasFlag(NODE_IS_EDITABLE) ||
+      IsIndependentSelectionContent(focusedContent)) {
+    return PR_FALSE;
+  }
+  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(GetRoot());
+  if (!rootContent) {
+    return PR_FALSE;
+  }
+  // If the focused content is a descendant of our editor root, we're focused.
+  return nsContentUtils::ContentIsDescendantOf(focusedContent, rootContent);
+}
+
+PRBool
+nsHTMLEditor::OurWindowHasFocus()
+{
+  NS_ENSURE_TRUE(mDocWeak, PR_FALSE);
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  NS_ENSURE_TRUE(fm, PR_FALSE);
+  nsCOMPtr<nsIDOMWindow> focusedWindow;
+  fm->GetFocusedWindow(getter_AddRefs(focusedWindow));
+  if (!focusedWindow) {
+    return PR_FALSE;
+  }
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
+  nsCOMPtr<nsIDOMWindow> ourWindow = do_QueryInterface(doc->GetWindow());
+  return ourWindow == focusedWindow;
+}
+
+PRBool
+nsHTMLEditor::IsIndependentSelectionContent(nsIContent* aContent)
+{
+  NS_PRECONDITION(aContent, "aContent must not be null");
+  nsIFrame* frame = aContent->GetPrimaryFrame();
+  return (frame && (frame->GetStateBits() & NS_FRAME_INDEPENDENT_SELECTION));
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::GetPreferredIMEState(PRUint32 *aState)
+{
+  if (IsReadonly() || IsDisabled()) {
+    *aState = nsIContent::IME_STATUS_DISABLE;
+    return NS_OK;
+  }
+
+  // HTML editor don't prefer the CSS ime-mode because IE didn't do so too.
+  *aState = nsIContent::IME_STATUS_ENABLE;
   return NS_OK;
 }

@@ -277,8 +277,7 @@ nsUserActivityObserver::Observe(nsISupports* aSubject, const char* aTopic,
     sUserIsActive = PR_TRUE;
     higherProbability = (mUserActivityCounter > NS_CC_SOFT_LIMIT_ACTIVE);
   } else if (!strcmp(aTopic, "xpcom-shutdown")) {
-    nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->RemoveObserver(this, "user-interaction-active");
       obs->RemoveObserver(this, "user-interaction-inactive");
@@ -4020,9 +4019,9 @@ nsJSRuntime::Init()
   SetMemoryGCFrequencyPrefChangedCallback("javascript.options.mem.gc_frequency",
                                           nsnull);
 
-  nsCOMPtr<nsIObserverService> obs =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (!obs)
+    return NS_ERROR_FAILURE;
   nsIObserver* activityObserver = new nsUserActivityObserver();
   NS_ENSURE_TRUE(activityObserver, NS_ERROR_OUT_OF_MEMORY);
   obs->AddObserver(activityObserver, "user-interaction-inactive", PR_FALSE);
@@ -4035,7 +4034,7 @@ nsJSRuntime::Init()
 
   sIsInitialized = PR_TRUE;
 
-  return rv;
+  return NS_OK;
 }
 
 //static

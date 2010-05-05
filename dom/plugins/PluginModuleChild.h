@@ -298,6 +298,35 @@ public: // called by PluginInstanceChild
 
 private:
     static PLDHashOperator CollectForInstance(NPObjectData* d, void* userArg);
+
+#if defined(OS_WIN)
+    NS_OVERRIDE
+    virtual void EnteredCall();
+    NS_OVERRIDE
+    virtual void ExitedCall();
+
+    // Entered/ExitedCall notifications keep track of whether the plugin has
+    // entered a nested event loop within this RPC call.
+    struct IncallFrame
+    {
+        IncallFrame()
+            : _spinning(false)
+            , _savedNestableTasksAllowed(false)
+        { }
+
+        bool _spinning;
+        bool _savedNestableTasksAllowed;
+    };
+
+    nsAutoTArray<IncallFrame, 8> mIncallPumpingStack;
+
+    static LRESULT CALLBACK NestedInputEventHook(int code,
+                                                 WPARAM wParam,
+                                                 LPARAM lParam);
+    void SetNestedInputEventHook();
+    void ResetNestedInputEventHook();
+    HHOOK mNestedEventHook;
+#endif
 };
 
 } /* namespace plugins */

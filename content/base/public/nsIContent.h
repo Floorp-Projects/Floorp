@@ -615,20 +615,7 @@ public:
                               IME_STATUS_PASSWORD | IME_STATUS_PLUGIN,
     IME_STATUS_MASK_OPENED  = IME_STATUS_OPEN | IME_STATUS_CLOSE
   };
-  virtual PRUint32 GetDesiredIMEState()
-  {
-    if (!IsEditableInternal())
-      return IME_STATUS_DISABLE;
-    nsIContent *editableAncestor = nsnull;
-    for (nsIContent* parent = GetParent();
-         parent && parent->HasFlag(NODE_IS_EDITABLE);
-         parent = parent->GetParent())
-      editableAncestor = parent;
-    // This is in another editable content, use the result of it.
-    if (editableAncestor)
-      return editableAncestor->GetDesiredIMEState();
-    return IME_STATUS_ENABLE;
-  }
+  virtual PRUint32 GetDesiredIMEState();
 
   /**
    * Gets content node with the binding (or native code, possibly on the

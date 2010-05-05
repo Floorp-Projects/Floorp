@@ -804,7 +804,7 @@ nsImageMap::SearchForAreas(nsIContent* aParent, PRBool& aFoundArea,
       }
     }
 
-    if (child->IsNodeOfType(nsINode::eELEMENT)) {
+    if (child->IsElement()) {
       mContainsBlockContents = PR_TRUE;
       rv = SearchForAreas(child, aFoundArea, aFoundAnchor);
       NS_ENSURE_SUCCESS(rv, rv);

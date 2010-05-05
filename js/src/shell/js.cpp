@@ -712,7 +712,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'Z':
             if (++i == argc)
                 return usage();
-            JS_SetGCZeal(cx, atoi(argv[i]));
+            JS_SetGCZeal(cx, !!(atoi(argv[i])));
             break;
 #endif
 
@@ -1457,12 +1457,12 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
 
 static JSTrapStatus
 TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-            void *closure)
+            jsval closure)
 {
     JSString *str;
     JSStackFrame *caller;
 
-    str = (JSString *) closure;
+    str = JSVAL_TO_STRING(closure);
     caller = JS_GetScriptedCaller(cx, NULL);
     if (!JS_EvaluateUCInStackFrame(cx, caller,
                                    JS_GetStringChars(str), JS_GetStringLength(str),
@@ -1493,7 +1493,7 @@ Trap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     argv[argc] = STRING_TO_JSVAL(str);
     if (!GetTrapArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
-    return JS_SetTrap(cx, script, script->code + i, TrapHandler, str);
+    return JS_SetTrap(cx, script, script->code + i, TrapHandler, STRING_TO_JSVAL(str));
 }
 
 static JSBool
@@ -3056,7 +3056,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     JSString *str = JSVAL_TO_STRING(argv[1]);
 
     bool saveCurrent = (argc >= 3 && JSVAL_IS_BOOLEAN(argv[2]))
-                        ? (bool)JSVAL_TO_SPECIAL(argv[2])
+                        ? !!(JSVAL_TO_SPECIAL(argv[2]))
                         : false;
 
     JS_ASSERT(cx->fp);
@@ -3749,7 +3749,8 @@ Parse(JSContext *cx, uintN argc, jsval *vp)
     js::Parser parser(cx);
     parser.init(JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
                 NULL, "<string>", 0);
-    parser.parse(NULL);
+    if (!parser.parse(NULL))
+        return JS_FALSE;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }

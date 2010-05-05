@@ -118,6 +118,7 @@
 #include "gfxContext.h"
 #include "gfxTextRunWordCache.h"
 #include "gfxImageSurface.h"
+#include "Element.h"
 
 #ifdef NS_DEBUG
 #undef NOISY_BLINK
@@ -130,6 +131,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static void DestroyTabWidth(void* aPropertyValue)
 {
@@ -3125,7 +3127,7 @@ nsTextPaintStyle::InitCommonColors()
   mInitCommonColors = PR_TRUE;
 }
 
-static nsIContent*
+static Element*
 FindElementAncestorForMozSelection(nsIContent* aContent)
 {
   NS_ENSURE_TRUE(aContent, nsnull);
@@ -3133,10 +3135,10 @@ FindElementAncestorForMozSelection(nsIContent* aContent)
     aContent = aContent->GetBindingParent();
   }
   NS_ASSERTION(aContent, "aContent isn't in non-anonymous tree?");
-  while (aContent && !aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  while (aContent && !aContent->IsElement()) {
     aContent = aContent->GetParent();
   }
-  return aContent;
+  return aContent ? aContent->AsElement() : nsnull;
 }
 
 PRBool
@@ -3158,14 +3160,14 @@ nsTextPaintStyle::InitSelectionColors()
   mInitSelectionColors = PR_TRUE;
 
   nsIFrame* nonGeneratedAncestor = nsLayoutUtils::GetNonGeneratedAncestor(mFrame);
-  nsIContent* selectionContent =
+  Element* selectionElement =
     FindElementAncestorForMozSelection(nonGeneratedAncestor->GetContent());
 
-  if (selectionContent &&
+  if (selectionElement &&
       selectionStatus == nsISelectionController::SELECTION_ON) {
     nsRefPtr<nsStyleContext> sc = nsnull;
     sc = mPresContext->StyleSet()->
-      ProbePseudoElementStyle(selectionContent,
+      ProbePseudoElementStyle(selectionElement,
                               nsCSSPseudoElements::ePseudo_mozSelection,
                               mFrame->GetStyleContext());
     // Use -moz-selection pseudo class.

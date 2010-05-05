@@ -102,6 +102,8 @@ native-clipping.patch: Add support for a native clipping api
 
 quartz-is-clear.patch: Propagate the quartz is_clear flag.
 
+cairo-qt-compile.patch: Fix compile error, return not reached, and clone_similar interface
+
 ==== pixman patches ====
 
 pixman-rename-and-endian.patch: include cairo-platform.h for renaming of external symbols and endian macros

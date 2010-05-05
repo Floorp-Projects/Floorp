@@ -479,7 +479,7 @@ protected:
 public:
     static nsresult
     Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument,
-           PRBool aIsScriptable, nsIContent** aResult);
+           PRBool aIsScriptable, mozilla::dom::Element** aResult);
 
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED

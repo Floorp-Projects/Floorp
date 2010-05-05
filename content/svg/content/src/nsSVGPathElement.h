@@ -56,6 +56,7 @@ public:
   nsSVGPathList() : mArguments(nsnull), mNumCommands(0), mNumArguments(0) {}
   ~nsSVGPathList() { Clear(); }
   void Playback(gfxContext *aCtx);
+  already_AddRefed<gfxFlattenedPath> GetFlattenedPath(const gfxMatrix &aMatrix);
   void Clear();
 
 protected:

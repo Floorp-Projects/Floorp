@@ -78,7 +78,7 @@ static const unsigned char TIS620CharToOrderMap[] =
 //first 1024 sequences:7.3177%
 //rest  sequences:     1.0230%
 //negative sequences:  0.0436% 
-static const char ThaiLangModel[] = 
+static const PRUint8 ThaiLangModel[] = 
 {
 0,1,3,3,3,3,0,0,3,3,0,3,3,0,3,3,3,3,3,3,3,3,0,0,3,3,3,0,3,3,3,3,
 0,3,3,0,0,0,1,3,0,3,3,2,3,3,0,1,2,3,3,3,3,0,2,0,2,0,0,3,2,1,2,2,
