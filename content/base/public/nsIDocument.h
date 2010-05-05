@@ -670,7 +670,8 @@ public:
   /**
    * Add a new observer of document change notifications. Whenever
    * content is changed, appended, inserted or removed the observers are
-   * informed.
+   * informed.  An observer that is already observing the document must
+   * not be added without being removed first.
    */
   virtual void AddObserver(nsIDocumentObserver* aObserver) = 0;
 
