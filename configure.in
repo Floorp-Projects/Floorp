@@ -5629,9 +5629,6 @@ dnl ========================================================
 dnl = Disable IPC support for tabs and plugins
 dnl ========================================================
 case "${target}" in
-powerpc-apple-darwin*)
-    MOZ_IPC=
-    ;;
 *-wince*)
     MOZ_IPC=
     ;;
