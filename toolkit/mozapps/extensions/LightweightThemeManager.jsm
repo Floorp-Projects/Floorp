@@ -394,9 +394,17 @@ function AddonWrapper(aTheme, aBeingEnabled) {
     return false;
   });
 
-  ["name", "version", "description", "homepageURL", "iconURL"].forEach(function(prop) {
-    this.__defineGetter__(prop, function() aTheme[prop]);
+  this.__defineGetter__("name", function() aTheme.name);
+  this.__defineGetter__("version", function() {
+    return "version" in aTheme ? aTheme.version : "";
+  });
+
+  ["description", "homepageURL", "iconURL"].forEach(function(prop) {
+    this.__defineGetter__(prop, function() {
+      return prop in aTheme ? aTheme[prop] : null;
+    });
   }, this);
+
   this.__defineGetter__("creator", function() aTheme.author);
   this.__defineGetter__("screenshots", function() [aTheme.previewURL]);
 
