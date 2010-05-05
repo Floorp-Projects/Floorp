@@ -153,7 +153,6 @@ COMPONENT_LIBS += \
 	toolkitcomps \
 	pipboot \
 	pipnss \
-	mozfind \
 	appcomps \
 	$(NULL)
 
@@ -244,7 +243,6 @@ ifdef MOZ_RDF
 COMPONENT_LIBS += \
 	rdf \
 	windowds \
-	intlapp \
 	$(NULL)
 endif
 

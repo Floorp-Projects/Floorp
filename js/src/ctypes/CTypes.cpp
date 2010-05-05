@@ -96,7 +96,7 @@ namespace CType {
   static JSBool SizeGetter(JSContext* cx, JSObject* obj, jsval idval,
     jsval* vp);
   static JSBool PtrGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp);
-  static JSBool Array(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool CreateArray(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToString(JSContext* cx, uintN argc, jsval* vp);
   static JSBool ToSource(JSContext* cx, uintN argc, jsval* vp);
   static JSBool HasInstance(JSContext* cx, JSObject* obj, jsval v, JSBool* bp);
@@ -142,6 +142,7 @@ namespace StructType {
   static JSBool FieldSetter(JSContext* cx, JSObject* obj, jsval idval,
     jsval* vp);
   static JSBool AddressOfField(JSContext* cx, uintN argc, jsval* vp);
+  static JSBool Define(JSContext* cx, uintN argc, jsval* vp);
 }
 
 namespace FunctionType {
@@ -300,7 +301,7 @@ static JSPropertySpec sCTypeProps[] = {
 };
 
 static JSFunctionSpec sCTypeFunctions[] = {
-  JS_FN("array", CType::Array, 0, CTYPESFN_FLAGS),
+  JS_FN("array", CType::CreateArray, 0, CTYPESFN_FLAGS),
   JS_FN("toString", CType::ToString, 0, CTYPESFN_FLAGS),
   JS_FN("toSource", CType::ToSource, 0, CTYPESFN_FLAGS),
   JS_FS_END
@@ -365,6 +366,11 @@ static JSFunctionSpec sStructFunction =
 static JSPropertySpec sStructProps[] = {
   { "fields", 0, CTYPESPROP_FLAGS, StructType::FieldsArrayGetter, NULL },
   { 0, 0, 0, NULL, NULL }
+};
+
+static JSFunctionSpec sStructFunctions[] = {
+  JS_FN("define", StructType::Define, 1, CDATAFN_FLAGS),
+  JS_FS_END
 };
 
 static JSFunctionSpec sStructInstanceFunctions[] = {
@@ -628,6 +634,7 @@ InitTypeConstructor(JSContext* cx,
                     JSObject* CTypeProto,
                     JSObject* CDataProto,
                     JSFunctionSpec spec,
+                    JSFunctionSpec* fns,
                     JSPropertySpec* props,
                     JSFunctionSpec* instanceFns,
                     JSPropertySpec* instanceProps,
@@ -651,6 +658,9 @@ InitTypeConstructor(JSContext* cx,
   // Define property before proceeding, for GC safety.
   if (!JS_DefineProperty(cx, obj, "prototype", OBJECT_TO_JSVAL(typeProto),
          NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
+    return false;
+
+  if (fns && !JS_DefineFunctions(cx, typeProto, fns))
     return false;
 
   if (!JS_DefineProperties(cx, typeProto, props))
@@ -802,26 +812,28 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
   //     * 'constructor' property === 't'
   JSObject* protos[CTYPEPROTO_SLOTS];
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sPointerFunction, sPointerProps, sPointerInstanceFunctions,
-         sPointerInstanceProps, protos[SLOT_POINTERPROTO],
-         protos[SLOT_POINTERDATAPROTO]))
+         sPointerFunction, NULL, sPointerProps,
+         sPointerInstanceFunctions, sPointerInstanceProps,
+         protos[SLOT_POINTERPROTO], protos[SLOT_POINTERDATAPROTO]))
     return false;
   js::AutoValueRooter proot(cx, protos[SLOT_POINTERDATAPROTO]);
 
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sArrayFunction, sArrayProps, sArrayInstanceFunctions, sArrayInstanceProps,
+         sArrayFunction, NULL, sArrayProps,
+         sArrayInstanceFunctions, sArrayInstanceProps,
          protos[SLOT_ARRAYPROTO], protos[SLOT_ARRAYDATAPROTO]))
     return false;
   js::AutoValueRooter aroot(cx, protos[SLOT_ARRAYDATAPROTO]);
 
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sStructFunction, sStructProps, sStructInstanceFunctions, NULL,
+         sStructFunction, sStructFunctions, sStructProps,
+         sStructInstanceFunctions, NULL,
          protos[SLOT_STRUCTPROTO], protos[SLOT_STRUCTDATAPROTO]))
     return false;
   js::AutoValueRooter sroot(cx, protos[SLOT_STRUCTDATAPROTO]);
 
   if (!InitTypeConstructor(cx, parent, CTypeProto, CDataProto,
-         sFunctionFunction, sFunctionProps, NULL, NULL,
+         sFunctionFunction, NULL, sFunctionProps, NULL, NULL,
          protos[SLOT_FUNCTIONPROTO], protos[SLOT_FUNCTIONDATAPROTO]))
     return false;
   js::AutoValueRooter froot(cx, protos[SLOT_FUNCTIONDATAPROTO]);
@@ -893,7 +905,7 @@ InitTypeClasses(JSContext* cx, JSObject* parent)
   if (!typeObj)
     return false;
 
-  typeObj = PointerType::CreateInternal(cx, NULL, typeObj, NULL);
+  typeObj = PointerType::CreateInternal(cx, typeObj);
   if (!typeObj)
     return false;
   if (!JS_DefineProperty(cx, parent, "voidptr_t", OBJECT_TO_JSVAL(typeObj),
@@ -1691,20 +1703,18 @@ ImplicitConvert(JSContext* cx,
   }
 #include "typedefs.h"
   case TYPE_pointer: {
-    JSObject* baseType = PointerType::GetBaseType(cx, targetType);
-
     if (JSVAL_IS_NULL(val)) {
       // Convert to a null pointer.
       *static_cast<void**>(buffer) = NULL;
       break;
     }
 
+    JSObject* baseType = PointerType::GetBaseType(cx, targetType);
     if (sourceData) {
       // First, determine if the targetType is ctypes.void_t.ptr.
       TypeCode sourceCode = CType::GetTypeCode(cx, sourceType);
       void* sourceBuffer = CData::GetData(cx, sourceData);
-      bool voidptrTarget = baseType &&
-                           CType::GetTypeCode(cx, baseType) == TYPE_void_t;
+      bool voidptrTarget = CType::GetTypeCode(cx, baseType) == TYPE_void_t;
 
       if (sourceCode == TYPE_pointer && voidptrTarget) {
         // Autoconvert if targetType is ctypes.voidptr_t.
@@ -1721,7 +1731,7 @@ ImplicitConvert(JSContext* cx,
         }
       }
 
-    } else if (isArgument && baseType && JSVAL_IS_STRING(val)) {
+    } else if (isArgument && JSVAL_IS_STRING(val)) {
       // Convert the string for the ffi call. This requires allocating space
       // which the caller assumes ownership of.
       // TODO: Extend this so we can safely convert strings at other times also.
@@ -1899,7 +1909,7 @@ ImplicitConvert(JSContext* cx,
           return false;
         }
 
-        FieldInfo* field = StructType::LookupField(cx, targetType,
+        const FieldInfo* field = StructType::LookupField(cx, targetType,
           fieldVal.value());
         if (!field)
           return false;
@@ -1917,8 +1927,8 @@ ImplicitConvert(JSContext* cx,
         ++i;
       }
 
-      Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, targetType);
-      if (i != fields->length()) {
+      const FieldInfoHash* fields = StructType::GetFieldInfo(cx, targetType);
+      if (i != fields->count()) {
         JS_ReportError(cx, "missing fields");
         return false;
       }
@@ -2025,23 +2035,15 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
   // pointers on the left and arrays on the right. An excellent description
   // of the rules for building C type declarations can be found at:
   // http://unixwiz.net/techtips/reading-cdecl.html
-  JSObject* currentType = typeObj;
-  JSObject* nextType;
-  TypeCode prevGrouping = CType::GetTypeCode(cx, currentType), currentGrouping;
+  TypeCode prevGrouping = CType::GetTypeCode(cx, typeObj), currentGrouping;
   while (1) {
-    currentGrouping = CType::GetTypeCode(cx, currentType);
+    currentGrouping = CType::GetTypeCode(cx, typeObj);
     switch (currentGrouping) {
     case TYPE_pointer: {
-      nextType = PointerType::GetBaseType(cx, currentType);
-      if (!nextType) {
-        // Opaque pointer type. Use the type's name as the base type.
-        break;
-      }
-
       // Pointer types go on the left.
       PrependString(result, "*");
 
-      currentType = nextType;
+      typeObj = PointerType::GetBaseType(cx, typeObj);
       prevGrouping = currentGrouping;
       continue;
     }
@@ -2055,17 +2057,17 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
       // Array types go on the right.
       AppendString(result, "[");
       size_t length;
-      if (ArrayType::GetSafeLength(cx, currentType, &length))
+      if (ArrayType::GetSafeLength(cx, typeObj, &length))
         IntegerToString(length, 10, result);
 
       AppendString(result, "]");
 
-      currentType = ArrayType::GetBaseType(cx, currentType);
+      typeObj = ArrayType::GetBaseType(cx, typeObj);
       prevGrouping = currentGrouping;
       continue;
     }
     case TYPE_function: {
-      FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, currentType);
+      FunctionInfo* fninfo = FunctionType::GetFunctionInfo(cx, typeObj);
 
       // Add in the calling convention, if it's not cdecl.
       if (GetABICode(cx, fninfo->mABI) == ABI_STDCALL)
@@ -2088,10 +2090,10 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
         AppendString(result, "...");
       AppendString(result, ")");
 
-      // Set 'currentType' to the return type, and let the loop process it.
+      // Set 'typeObj' to the return type, and let the loop process it.
       // 'prevGrouping' doesn't matter here, because functions cannot return
       // arrays -- thus the parenthetical rules don't get tickled.
-      currentType = fninfo->mReturnType;
+      typeObj = fninfo->mReturnType;
       continue;
     }
     default:
@@ -2102,7 +2104,7 @@ BuildTypeName(JSContext* cx, JSObject* typeObj)
   }
 
   // Stick the base type and derived type parts together.
-  JSString* baseName = CType::GetName(cx, currentType);
+  JSString* baseName = CType::GetName(cx, typeObj);
   PrependString(result, baseName);
   return NewUCString(cx, result);
 }
@@ -2134,14 +2136,6 @@ BuildTypeSource(JSContext* cx,
   }
   case TYPE_pointer: {
     JSObject* baseType = PointerType::GetBaseType(cx, typeObj);
-    if (!baseType) {
-      // Opaque pointer type. Use the type's name.
-      AppendString(result, "ctypes.PointerType(\"");
-      JSString* baseName = CType::GetName(cx, typeObj);
-      AppendString(result, baseName);
-      AppendString(result, "\")");
-      break;
-    }
 
     // Specialcase ctypes.voidptr_t.
     if (CType::GetTypeCode(cx, baseType) == TYPE_void_t) {
@@ -2219,17 +2213,33 @@ BuildTypeSource(JSContext* cx,
     // Write the full struct declaration.
     AppendString(result, "ctypes.StructType(\"");
     AppendString(result, name);
-    AppendString(result, "\", [");
+    AppendString(result, "\"");
 
-    Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
-    for (size_t i = 0; i < fields->length(); ++i) {
-      FieldInfo* field = fields->begin() + i;
+    // If it's an opaque struct, we're done.
+    if (!CType::IsSizeDefined(cx, typeObj)) {
+      AppendString(result, ")");
+      break;
+    }
+
+    AppendString(result, ", [");
+
+    const FieldInfoHash* fields = StructType::GetFieldInfo(cx, typeObj);
+    size_t length = fields->count();
+    Array<const FieldInfoHash::Entry*, 64> fieldsArray;
+    if (!fieldsArray.resize(length))
+      break;
+
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront())
+      fieldsArray[r.front().value.mIndex] = &r.front();
+
+    for (size_t i = 0; i < length; ++i) {
+      const FieldInfoHash::Entry* entry = fieldsArray[i];
       AppendString(result, "{ \"");
-      AppendString(result, field->mName);
+      AppendString(result, entry->key);
       AppendString(result, "\": ");
-      BuildTypeSource(cx, field->mType, true, result);
+      BuildTypeSource(cx, entry->value.mType, true, result);
       AppendString(result, " }");
-      if (i != fields->length() - 1)
+      if (i != length - 1)
         AppendString(result, ", ");
     }
 
@@ -2364,21 +2374,29 @@ BuildDataSource(JSContext* cx,
 
     // Serialize each field of the struct recursively. Each field must
     // be able to ImplicitConvert successfully.
-    Array<FieldInfo>* fields = StructType::GetFieldInfo(cx, typeObj);
-    for (size_t i = 0; i < fields->length(); ++i) {
-      FieldInfo* field = fields->begin() + i;
-      char* fieldData = static_cast<char*>(data) + field->mOffset;
+    const FieldInfoHash* fields = StructType::GetFieldInfo(cx, typeObj);
+    size_t length = fields->count();
+    Array<const FieldInfoHash::Entry*, 64> fieldsArray;
+    if (!fieldsArray.resize(length))
+      return false;
+
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront())
+      fieldsArray[r.front().value.mIndex] = &r.front();
+
+    for (size_t i = 0; i < length; ++i) {
+      const FieldInfoHash::Entry* entry = fieldsArray[i];
 
       if (isImplicit) {
         AppendString(result, "\"");
-        AppendString(result, field->mName);
+        AppendString(result, entry->key);
         AppendString(result, "\": ");
       }
 
-      if (!BuildDataSource(cx, field->mType, fieldData, true, result))
+      char* fieldData = static_cast<char*>(data) + entry->value.mOffset;
+      if (!BuildDataSource(cx, entry->value.mType, fieldData, true, result))
         return false;
 
-      if (i + 1 != fields->length())
+      if (i + 1 != length)
         AppendString(result, ", ");
     }
 
@@ -2486,8 +2504,7 @@ CType::Create(JSContext* cx,
               JSString* name,
               jsval size,
               jsval align,
-              ffi_type* ffiType,
-              PropertySpec* ps)
+              ffi_type* ffiType)
 {
   JSObject* parent = JS_GetParent(cx, typeProto);
   JS_ASSERT(parent);
@@ -2515,40 +2532,30 @@ CType::Create(JSContext* cx,
 
   // Set up the reserved slots.
   if (!JS_SetReservedSlot(cx, typeObj, SLOT_TYPECODE, INT_TO_JSVAL(type)) ||
-      !JS_SetReservedSlot(cx, typeObj, SLOT_FFITYPE, PRIVATE_TO_JSVAL(ffiType)) ||
+      (ffiType && !JS_SetReservedSlot(cx, typeObj, SLOT_FFITYPE, PRIVATE_TO_JSVAL(ffiType))) ||
       (name && !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(name))) ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_SIZE, size) ||
       !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, align))
     return NULL;
 
-  // Set up the 'prototype' and 'prototype.constructor' properties.
-  JSObject* prototype = JS_NewObject(cx, &sCDataProtoClass, dataProto, parent);
-  if (!prototype)
-    return NULL;
-  js::AutoValueRooter protoroot(cx, prototype);
+  if (dataProto) {
+    // Set up the 'prototype' and 'prototype.constructor' properties.
+    JSObject* prototype = JS_NewObject(cx, &sCDataProtoClass, dataProto, parent);
+    if (!prototype)
+      return NULL;
+    js::AutoValueRooter protoroot(cx, prototype);
 
-  if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(typeObj),
-         NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
-    return NULL;
+    if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(typeObj),
+           NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
+      return NULL;
 
-  // If required, define properties on the 'prototype' object. (These will
-  // become properties on CData objects created from this CType.)
-  if (ps) {
-    while (ps->name) {
-      if (!JS_DefineUCProperty(cx, prototype, ps->name, ps->namelen, JSVAL_VOID,
-             ps->getter, ps->setter, ps->flags))
-        return NULL;
-
-      ++ps;
-    }
+    // Set the 'prototype' object.
+    if (//!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
+        !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
+      return NULL;
   }
 
-  // Set the 'prototype' object.
-  if (!JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
-    return NULL;
-
-  if (//!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
-      !JS_SealObject(cx, typeObj, JS_FALSE))
+  if (!JS_SealObject(cx, typeObj, JS_FALSE))
     return NULL;
 
   // Assert a sanity check on size and alignment: size % alignment should always
@@ -2578,7 +2585,7 @@ CType::DefineBuiltin(JSContext* cx,
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = Create(cx, typeProto, dataProto, type, nameStr, size,
-                        align, ffiType, NULL);
+                        align, ffiType);
   if (!typeObj)
     return NULL;
 
@@ -2612,7 +2619,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
     if (!JSVAL_IS_VOID(slot)) {
       void* info = JSVAL_TO_PRIVATE(slot);
-      delete static_cast<js::ctypes::Array<FieldInfo>*>(info);
+      delete static_cast<FieldInfoHash*>(info);
     }
 
     // Fall through.
@@ -2620,7 +2627,7 @@ CType::Finalize(JSContext* cx, JSObject* obj)
     // Free the ffi_type info.
     jsval slot;
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FFITYPE, &slot));
-    if (!JSVAL_IS_VOID(slot) && JSVAL_TO_PRIVATE(slot)) {
+    if (!JSVAL_IS_VOID(slot)) {
       ffi_type* ffiType = static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
       delete[] ffiType->elements;
       delete ffiType;
@@ -2663,6 +2670,20 @@ CType::Trace(JSTracer* trc, JSObject* obj)
 
   // The contents of our slots depends on what kind of type we are.
   switch (TypeCode(JSVAL_TO_INT(slot))) {
+  case TYPE_struct: {
+    ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
+    if (JSVAL_IS_VOID(slot))
+      return;
+
+    FieldInfoHash* fields =
+      static_cast<FieldInfoHash*>(JSVAL_TO_PRIVATE(slot));
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+      JS_CALL_TRACER(trc, r.front().key, JSTRACE_STRING, "fieldName");
+      JS_CALL_TRACER(trc, r.front().value.mType, JSTRACE_OBJECT, "fieldType");
+    }
+
+    break;
+  }
   case TYPE_function: {
     // Check if we have a FunctionInfo.
     ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FNINFO, &slot));
@@ -2720,18 +2741,9 @@ CType::TypesEqual(JSContext* cx, JSObject* t1, JSObject* t2)
   // Determine whether the types require shallow or deep comparison.
   switch (c1) {
   case TYPE_pointer: {
+    // Compare base types.
     JSObject* b1 = PointerType::GetBaseType(cx, t1);
     JSObject* b2 = PointerType::GetBaseType(cx, t2);
-
-    if (!b1 || !b2) {
-      // One or both pointers are opaque.
-      // If both are opaque, compare names.
-      JSString* n1 = GetName(cx, t1);
-      JSString* n2 = GetName(cx, t2);
-      return b1 == b2 && JS_CompareStrings(n1, n2) == 0;
-    }
-
-    // Compare base types.
     return TypesEqual(cx, b1, b2);
   }
   case TYPE_function: {
@@ -2853,9 +2865,29 @@ CType::GetFFIType(JSContext* cx, JSObject* obj)
   jsval slot;
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FFITYPE, &slot));
 
-  ffi_type* result = static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
-  JS_ASSERT(result);
-  return result;
+  if (!JSVAL_IS_VOID(slot)) {
+    return static_cast<ffi_type*>(JSVAL_TO_PRIVATE(slot));
+  }
+
+  AutoPtr<ffi_type> result;
+  switch (CType::GetTypeCode(cx, obj)) {
+  case TYPE_array:
+    result = ArrayType::BuildFFIType(cx, obj);
+    break;
+
+  case TYPE_struct:
+    result = StructType::BuildFFIType(cx, obj);
+    break;
+
+  default:
+    JS_NOT_REACHED("simple types must have an ffi_type");
+  }
+
+  if (!result ||
+      !JS_SetReservedSlot(cx, obj, SLOT_FFITYPE, PRIVATE_TO_JSVAL(result.get())))
+    return NULL;
+
+  return result.forget();
 }
 
 JSString*
@@ -2865,6 +2897,15 @@ CType::GetName(JSContext* cx, JSObject* obj)
 
   jsval string;
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_NAME, &string));
+  if (JSVAL_IS_VOID(string)) {
+    // Build the type name lazily.
+    JSString* name = BuildTypeName(cx, obj);
+    if (!name || !JS_SetReservedSlot(cx, obj, SLOT_NAME, STRING_TO_JSVAL(name)))
+      return NULL;
+
+    return name;
+  }
+
   return JSVAL_TO_STRING(string);
 }
 
@@ -2910,7 +2951,7 @@ CType::PrototypeGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
   }
 
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_PROTO, vp));
-  JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp));
+  JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp) || JSVAL_IS_VOID(*vp));
   return JS_TRUE;
 }
 
@@ -2922,8 +2963,11 @@ CType::NameGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
     return JS_FALSE;
   }
 
-  ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_NAME, vp));
-  JS_ASSERT(JSVAL_IS_STRING(*vp));
+  JSString* name = CType::GetName(cx, obj);
+  if (!name)
+    return JS_FALSE;
+
+  *vp = STRING_TO_JSVAL(name);
   return JS_TRUE;
 }
 
@@ -2948,7 +2992,7 @@ CType::PtrGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
     return JS_FALSE;
   }
 
-  JSObject* pointerType = PointerType::CreateInternal(cx, NULL, obj, NULL);
+  JSObject* pointerType = PointerType::CreateInternal(cx, obj);
   if (!pointerType)
     return JS_FALSE;
 
@@ -2957,7 +3001,7 @@ CType::PtrGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
 }
 
 JSBool
-CType::Array(JSContext* cx, uintN argc, jsval *vp)
+CType::CreateArray(JSContext* cx, uintN argc, jsval *vp)
 {
   JSObject* baseType = JS_THIS_OBJECT(cx, vp);
   JS_ASSERT(baseType);
@@ -3072,23 +3116,12 @@ PointerType::Create(JSContext* cx, uintN argc, jsval* vp)
   }
 
   jsval arg = JS_ARGV(cx, vp)[0];
-  JSObject* baseType = NULL;
-  JSString* name = NULL;
-  if (!JSVAL_IS_PRIMITIVE(arg) &&
-      CType::IsCType(cx, JSVAL_TO_OBJECT(arg))) {
-    baseType = JSVAL_TO_OBJECT(arg);
-
-  } else if (JSVAL_IS_STRING(arg)) {
-    // Construct an opaque pointer type from a string.
-    name = JSVAL_TO_STRING(arg);
-
-  } else {
-    JS_ReportError(cx, "first argument must be a CType or a string");
+  if (JSVAL_IS_PRIMITIVE(arg) || !CType::IsCType(cx, JSVAL_TO_OBJECT(arg))) {
+    JS_ReportError(cx, "first argument must be a CType");
     return JS_FALSE;
   }
 
-  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-  JSObject* result = CreateInternal(cx, callee, baseType, name);
+  JSObject* result = CreateInternal(cx, JSVAL_TO_OBJECT(arg));
   if (!result)
     return JS_FALSE;
 
@@ -3097,39 +3130,26 @@ PointerType::Create(JSContext* cx, uintN argc, jsval* vp)
 }
 
 JSObject*
-PointerType::CreateInternal(JSContext* cx,
-                            JSObject* ctor,
-                            JSObject* baseType,
-                            JSString* name)
+PointerType::CreateInternal(JSContext* cx, JSObject* baseType)
 {
-  JS_ASSERT(ctor || baseType);
-  JS_ASSERT((baseType && !name) || (!baseType && name));
-
-  if (baseType) {
-    // check if we have a cached PointerType on our base CType.
-    jsval slot;
-    ASSERT_OK(JS_GetReservedSlot(cx, baseType, SLOT_PTR, &slot));
-    if (!JSVAL_IS_VOID(slot))
-      return JSVAL_TO_OBJECT(slot);
-  }
+  // check if we have a cached PointerType on our base CType.
+  jsval slot;
+  ASSERT_OK(JS_GetReservedSlot(cx, baseType, SLOT_PTR, &slot));
+  if (!JSVAL_IS_VOID(slot))
+    return JSVAL_TO_OBJECT(slot);
 
   // Get ctypes.PointerType.prototype and the common prototype for CData objects
-  // of this type, either from ctor or the baseType, whichever was provided.
+  // of this type.
   JSObject* typeProto;
   JSObject* dataProto;
-  if (ctor) {
-    typeProto = CType::GetProtoFromCtor(cx, ctor, SLOT_POINTERPROTO);
-    dataProto = CType::GetProtoFromCtor(cx, ctor, SLOT_POINTERDATAPROTO);
-  } else {
-    typeProto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERPROTO);
-    dataProto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERDATAPROTO);
-  }
+  typeProto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERPROTO);
+  dataProto = CType::GetProtoFromType(cx, baseType, SLOT_POINTERDATAPROTO);
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_pointer,
-                        name, INT_TO_JSVAL(sizeof(void*)),
+                        NULL, INT_TO_JSVAL(sizeof(void*)),
                         INT_TO_JSVAL(ffi_type_pointer.alignment),
-                        &ffi_type_pointer, NULL);
+                        &ffi_type_pointer);
   if (!typeObj)
     return NULL;
   js::AutoValueRooter root(cx, typeObj);
@@ -3138,17 +3158,9 @@ PointerType::CreateInternal(JSContext* cx,
   if (!JS_SetReservedSlot(cx, typeObj, SLOT_TARGET_T, OBJECT_TO_JSVAL(baseType)))
     return NULL;
 
-  if (baseType) {
-    // Determine the name of the PointerType, since it wasn't supplied.
-    JSString* nameStr = BuildTypeName(cx, typeObj);
-    if (!nameStr ||
-        !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(nameStr)))
-      return NULL;
-
-    // Finally, cache our newly-created PointerType on our pointed-to CType.
-    if (!JS_SetReservedSlot(cx, baseType, SLOT_PTR, OBJECT_TO_JSVAL(typeObj)))
-      return NULL;
-  }
+  // Finally, cache our newly-created PointerType on our pointed-to CType.
+  if (!JS_SetReservedSlot(cx, baseType, SLOT_PTR, OBJECT_TO_JSVAL(typeObj)))
+    return NULL;
 
   return typeObj;
 }
@@ -3183,7 +3195,7 @@ PointerType::ConstructData(JSContext* cx,
 
   if (argc >= 1) {
     JSObject* baseObj = PointerType::GetBaseType(cx, obj);
-    if (baseObj && CType::GetTypeCode(cx, baseObj) == TYPE_function &&
+    if (CType::GetTypeCode(cx, baseObj) == TYPE_function &&
         JSVAL_IS_OBJECT(argv[0]) &&
         JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(argv[0]))) {
       // Construct a FunctionType.ptr from a JS function, and allow an
@@ -3218,6 +3230,7 @@ PointerType::GetBaseType(JSContext* cx, JSObject* obj)
 
   jsval type;
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_TARGET_T, &type));
+  JS_ASSERT(!JSVAL_IS_NULL(type));
   return JSVAL_TO_OBJECT(type);
 }
 
@@ -3280,11 +3293,6 @@ PointerType::ContentsGetter(JSContext* cx,
   }
 
   JSObject* baseType = GetBaseType(cx, typeObj);
-  if (!baseType) {
-    JS_ReportError(cx, "cannot get contents of an opaque pointer type");
-    return JS_FALSE;
-  }
-
   if (!CType::IsSizeDefined(cx, baseType)) {
     JS_ReportError(cx, "cannot get contents of undefined size");
     return JS_FALSE;
@@ -3323,13 +3331,8 @@ PointerType::ContentsSetter(JSContext* cx,
   }
 
   JSObject* baseType = GetBaseType(cx, typeObj);
-  if (!baseType) {
-    JS_ReportError(cx, "cannot set contents of an opaque pointer type");
-    return JS_FALSE;
-  }
-
   if (!CType::IsSizeDefined(cx, baseType)) {
-    JS_ReportError(cx, "cannot get contents of undefined size");
+    JS_ReportError(cx, "cannot set contents of undefined size");
     return JS_FALSE;
   }
 
@@ -3398,9 +3401,6 @@ ArrayType::CreateInternal(JSContext* cx,
     return NULL;
   }
 
-  ffi_type* ffiType = NULL;
-  size_t align = CType::GetAlignment(cx, baseType);
-
   jsval sizeVal = JSVAL_VOID;
   jsval lengthVal = JSVAL_VOID;
   if (lengthDefined) {
@@ -3413,39 +3413,13 @@ ArrayType::CreateInternal(JSContext* cx,
     if (!SizeTojsval(cx, size, &sizeVal) ||
         !SizeTojsval(cx, length, &lengthVal))
       return NULL;
-
-    // Create an ffi_type to represent the array. This is necessary for the case
-    // where the array is part of a struct. Since libffi has no intrinsic
-    // support for array types, we approximate it by creating a struct type
-    // with elements of type 'baseType' and with appropriate size and alignment
-    // values. It would be nice to not do all the work of setting up 'elements',
-    // but some libffi platforms currently require that it be meaningful. I'm
-    // looking at you, x86_64.
-    ffiType = new ffi_type;
-    if (!ffiType) {
-      JS_ReportOutOfMemory(cx);
-      return NULL;
-    }
-
-    ffiType->type = FFI_TYPE_STRUCT;
-    ffiType->size = size;
-    ffiType->alignment = align;
-    ffiType->elements = new ffi_type*[length + 1];
-    if (!ffiType->elements) {
-      delete ffiType;
-      JS_ReportAllocationOverflow(cx);
-      return NULL;
-    }
-
-    ffi_type* ffiBaseType = CType::GetFFIType(cx, baseType);
-    for (size_t i = 0; i < length; ++i)
-      ffiType->elements[i] = ffiBaseType;
-    ffiType->elements[length] = NULL;
   }
+
+  size_t align = CType::GetAlignment(cx, baseType);
 
   // Create a new CType object with the common properties and slots.
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_array, NULL,
-                        sizeVal, INT_TO_JSVAL(align), ffiType, NULL);
+                        sizeVal, INT_TO_JSVAL(align), NULL);
   if (!typeObj)
     return NULL;
   js::AutoValueRooter root(cx, typeObj);
@@ -3456,12 +3430,6 @@ ArrayType::CreateInternal(JSContext* cx,
 
   // Set the length.
   if (!JS_SetReservedSlot(cx, typeObj, SLOT_LENGTH, lengthVal))
-    return NULL;
-
-  // Determine the name of the ArrayType.
-  JSString* name = BuildTypeName(cx, typeObj);
-  if (!name ||
-      !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(name)))
     return NULL;
 
   return typeObj;
@@ -3577,6 +3545,7 @@ ArrayType::GetBaseType(JSContext* cx, JSObject* obj)
 
   jsval type;
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_ELEMENT_T, &type));
+  JS_ASSERT(!JSVAL_IS_NULL(type));
   return JSVAL_TO_OBJECT(type);
 }
 
@@ -3621,6 +3590,49 @@ ArrayType::GetLength(JSContext* cx, JSObject* obj)
   if (JSVAL_IS_INT(length))
     return JSVAL_TO_INT(length);
   return Convert<size_t>(*JSVAL_TO_DOUBLE(length));
+}
+
+ffi_type*
+ArrayType::BuildFFIType(JSContext* cx, JSObject* obj)
+{
+  JS_ASSERT(CType::IsCType(cx, obj));
+  JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_array);
+  JS_ASSERT(CType::IsSizeDefined(cx, obj));
+
+  JSObject* baseType = ArrayType::GetBaseType(cx, obj);
+  ffi_type* ffiBaseType = CType::GetFFIType(cx, baseType);
+  if (!ffiBaseType)
+    return NULL;
+
+  size_t length = ArrayType::GetLength(cx, obj);
+
+  // Create an ffi_type to represent the array. This is necessary for the case
+  // where the array is part of a struct. Since libffi has no intrinsic
+  // support for array types, we approximate it by creating a struct type
+  // with elements of type 'baseType' and with appropriate size and alignment
+  // values. It would be nice to not do all the work of setting up 'elements',
+  // but some libffi platforms currently require that it be meaningful. I'm
+  // looking at you, x86_64.
+  AutoPtr<ffi_type> ffiType(new ffi_type);
+  if (!ffiType) {
+    JS_ReportOutOfMemory(cx);
+    return NULL;
+  }
+
+  ffiType->type = FFI_TYPE_STRUCT;
+  ffiType->size = CType::GetSize(cx, obj);
+  ffiType->alignment = CType::GetAlignment(cx, obj);
+  ffiType->elements = new ffi_type*[length + 1];
+  if (!ffiType->elements) {
+    JS_ReportAllocationOverflow(cx);
+    return NULL;
+  }
+
+  for (size_t i = 0; i < length; ++i)
+    ffiType->elements[i] = ffiBaseType;
+  ffiType->elements[length] = NULL;
+
+  return ffiType.forget();
 }
 
 JSBool
@@ -3747,7 +3759,7 @@ ArrayType::AddressOfElement(JSContext* cx, uintN argc, jsval *vp)
   }
 
   JSObject* baseType = GetBaseType(cx, typeObj);
-  JSObject* pointerType = PointerType::CreateInternal(cx, NULL, baseType, NULL);
+  JSObject* pointerType = PointerType::CreateInternal(cx, baseType);
   if (!pointerType)
     return JS_FALSE;
   js::AutoValueRooter root(cx, pointerType);
@@ -3780,66 +3792,63 @@ ArrayType::AddressOfElement(JSContext* cx, uintN argc, jsval *vp)
 *******************************************************************************/
 
 // For a struct field descriptor 'val' of the form { name : type }, extract
-// 'name' and 'type', and populate 'field' with the information.
-static JSBool
-ExtractStructField(JSContext* cx, jsval val, FieldInfo* field)
+// 'name' and 'type'.
+static JSString*
+ExtractStructField(JSContext* cx, jsval val, JSObject** typeObj)
 {
   if (JSVAL_IS_PRIMITIVE(val)) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
-    return false;
+    return NULL;
   }
 
   JSObject* obj = JSVAL_TO_OBJECT(val);
   JSObject* iter = JS_NewPropertyIterator(cx, obj);
   if (!iter)
-    return false;
+    return NULL;
   js::AutoValueRooter iterroot(cx, iter);
 
   jsid id;
   if (!JS_NextProperty(cx, iter, &id))
-    return false;
+    return NULL;
 
   js::AutoValueRooter nameVal(cx);
   if (!JS_IdToValue(cx, id, nameVal.addr()))
-    return false;
+    return NULL;
   if (!JSVAL_IS_STRING(nameVal.value())) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
-    return false;
+    return NULL;
   }
+  JSString* name = JSVAL_TO_STRING(nameVal.value());
 
   // make sure we have one, and only one, property
   if (!JS_NextProperty(cx, iter, &id))
-    return false;
+    return NULL;
   if (!JSVAL_IS_VOID(id)) {
     JS_ReportError(cx, "struct field descriptors must contain one property");
-    return false;
+    return NULL;
   }
-
-  JSString* name = JSVAL_TO_STRING(nameVal.value());
-  field->mName.clear();
-  AppendString(field->mName, name);
 
   js::AutoValueRooter propVal(cx);
   if (!JS_GetUCProperty(cx, obj, name->chars(), name->length(), propVal.addr()))
-    return false;
+    return NULL;
 
   if (JSVAL_IS_PRIMITIVE(propVal.value()) ||
       !CType::IsCType(cx, JSVAL_TO_OBJECT(propVal.value()))) {
     JS_ReportError(cx, "struct field descriptors require a valid name and type");
-    return false;
+    return NULL;
   }
 
   // Undefined size or zero size struct members are illegal.
   // (Zero-size arrays are legal as struct members in C++, but libffi will
   // choke on a zero-size struct, so we disallow them.)
-  field->mType = JSVAL_TO_OBJECT(propVal.value());
+  *typeObj = JSVAL_TO_OBJECT(propVal.value());
   size_t size;
-  if (!CType::GetSafeSize(cx, field->mType, &size) || size == 0) {
+  if (!CType::GetSafeSize(cx, *typeObj, &size) || size == 0) {
     JS_ReportError(cx, "struct field types must have defined and nonzero size");
-    return false;
+    return NULL;
   }
 
-  return true;
+  return name;
 }
 
 // For a struct field with 'name' and 'type', add an element to field
@@ -3848,7 +3857,7 @@ static JSBool
 AddFieldToArray(JSContext* cx,
                 JSObject* arrayObj,
                 jsval* element,
-                const String& name,
+                JSString* name,
                 JSObject* typeObj)
 {
   JSObject* fieldObj = JS_NewObject(cx, NULL, NULL, arrayObj);
@@ -3858,7 +3867,7 @@ AddFieldToArray(JSContext* cx,
   *element = OBJECT_TO_JSVAL(fieldObj);
 
   if (!JS_DefineUCProperty(cx, fieldObj,
-         name.begin(), name.length(),
+         name->chars(), name->length(),
          OBJECT_TO_JSVAL(typeObj), NULL, NULL,
          JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
     return false;
@@ -3870,8 +3879,8 @@ JSBool
 StructType::Create(JSContext* cx, uintN argc, jsval* vp)
 {
   // Construct and return a new StructType object.
-  if (argc != 2) {
-    JS_ReportError(cx, "StructType takes two arguments");
+  if (argc < 1 || argc > 2) {
+    JS_ReportError(cx, "StructType takes one or two arguments");
     return JS_FALSE;
   }
 
@@ -3882,91 +3891,108 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
   }
 
-  if (JSVAL_IS_PRIMITIVE(argv[1]) ||
-      !JS_IsArrayObject(cx, JSVAL_TO_OBJECT(argv[1]))) {
-    JS_ReportError(cx, "second argument must be an array");
+  // Get ctypes.StructType.prototype from the ctypes.StructType constructor.
+  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
+  JSObject* typeProto = CType::GetProtoFromCtor(cx, callee, SLOT_STRUCTPROTO);
+
+  // Create a simple StructType with no defined fields. The result will be
+  // non-instantiable as CData, will have no 'prototype' property, and will
+  // have undefined size and alignment and no ffi_type.
+  JSObject* result = CType::Create(cx, typeProto, NULL, TYPE_struct,
+                       JSVAL_TO_STRING(name), JSVAL_VOID, JSVAL_VOID, NULL);
+  if (!result)
     return JS_FALSE;
+  js::AutoValueRooter root(cx, result);
+
+  if (argc == 2) {
+    if (JSVAL_IS_PRIMITIVE(argv[1]) ||
+        !JS_IsArrayObject(cx, JSVAL_TO_OBJECT(argv[1]))) {
+      JS_ReportError(cx, "second argument must be an array");
+      return JS_FALSE;
+    }
+
+    // Define the struct fields.
+    if (!DefineInternal(cx, result, JSVAL_TO_OBJECT(argv[1])))
+      return JS_FALSE;
   }
 
-  JSObject* fieldsObj = JSVAL_TO_OBJECT(argv[1]);
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(result));
+  return JS_TRUE;
+}
+
+JSBool
+StructType::DefineInternal(JSContext* cx, JSObject* typeObj, JSObject* fieldsObj)
+{
   jsuint len;
   ASSERT_OK(JS_GetArrayLength(cx, fieldsObj, &len));
 
-  // Prepare a new array for the .fields property of the StructType.
-  jsval* fieldsVec;
-  JSObject* fieldsProp =
-    js_NewArrayObjectWithCapacity(cx, len, &fieldsVec);
-  if (!fieldsProp)
-    return JS_FALSE;
-  js::AutoValueRooter root(cx, fieldsProp);
-  JS_ASSERT(len == 0 || fieldsVec);
+  // Get the common prototype for CData objects of this type from
+  // ctypes.CType.prototype.
+  JSObject* dataProto =
+    CType::GetProtoFromType(cx, typeObj, SLOT_STRUCTDATAPROTO);
 
-  AutoPtr<ffi_type> ffiType(new ffi_type);
-  if (!ffiType) {
+  // Set up the 'prototype' and 'prototype.constructor' properties.
+  // The prototype will reflect the struct fields as properties on CData objects
+  // created from this type.
+  JSObject* prototype = JS_NewObject(cx, &sCDataProtoClass, dataProto, NULL);
+  if (!prototype)
+    return JS_FALSE;
+  js::AutoValueRooter protoroot(cx, prototype);
+
+  if (!JS_DefineProperty(cx, prototype, "constructor", OBJECT_TO_JSVAL(typeObj),
+         NULL, NULL, JSPROP_READONLY | JSPROP_PERMANENT))
+    return JS_FALSE;
+
+  // Create a hash of FieldInfo objects to stash on the type object.
+  FieldInfoHash* fields(new FieldInfoHash);
+  if (!fields || !fields->init(len)) {
+    delete fields;
     JS_ReportOutOfMemory(cx);
     return JS_FALSE;
   }
-  ffiType->type = FFI_TYPE_STRUCT;
 
-  // Create an array of FieldInfo objects to stash on the type object, and an
-  // array of PropertySpecs to reflect the struct fields as properties
-  // on CData objects created from this type.
-  AutoPtr< Array<FieldInfo> > fields(new Array<FieldInfo>);
-  Array<PropertySpec> instanceProps;
-  if (!fields ||
-      !fields->resize(len) ||
-      !instanceProps.resize(len + 1)) {
-    JS_ReportOutOfMemory(cx);
+  // Stash the FieldInfo hash in a reserved slot now, for GC safety of its
+  // constituents.
+  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FIELDINFO,
+         PRIVATE_TO_JSVAL(fields)))
     return JS_FALSE;
-  }
 
-  AutoPtr<ffi_type*>::Array elements;
-
-  // Process the field types and fill in the ffi_type fields.
-  size_t structSize = 0, structAlign = 0;
+  // Process the field types.
+  size_t structSize, structAlign;
   if (len != 0) {
-    elements = new ffi_type*[len + 1];
-    if (!elements) {
-      JS_ReportOutOfMemory(cx);
-      return JS_FALSE;
-    }
-    elements[len] = NULL;
+    structSize = 0;
+    structAlign = 0;
 
     for (jsuint i = 0; i < len; ++i) {
       js::AutoValueRooter item(cx);
       if (!JS_GetElement(cx, fieldsObj, i, item.addr()))
         return JS_FALSE;
 
-      FieldInfo* info = fields->begin() + i;
-      if (!ExtractStructField(cx, item.value(), info))
+      JSObject* fieldType;
+      JSString* name = ExtractStructField(cx, item.value(), &fieldType);
+      if (!name)
         return JS_FALSE;
 
-      // Make sure each field name is unique.
-      for (size_t j = 0; j < i; ++j) {
-        FieldInfo* field = fields->begin() + j;
-        if (StringsEqual(field->mName, info->mName)) {
-          JS_ReportError(cx, "struct fields must have unique names");
-          return JS_FALSE;
-        }
+      // Make sure each field name is unique, and add it to the hash.
+      FieldInfoHash::AddPtr entryPtr = fields->lookupForAdd(name);
+      if (entryPtr) {
+        JS_ReportError(cx, "struct fields must have unique names");
+        return JS_FALSE;
       }
+      ASSERT_OK(fields->add(entryPtr, name, FieldInfo()));
+      FieldInfo& info = entryPtr->value;
+      info.mType = fieldType;
+      info.mIndex = i;
 
-      // Duplicate the object for the fields property.
-      if (!AddFieldToArray(cx, fieldsProp, &fieldsVec[i],
-             info->mName, info->mType))
+      // Add the field to the StructType's 'prototype' property.
+      if (!JS_DefineUCProperty(cx, prototype,
+             name->chars(), name->length(), JSVAL_VOID,
+             StructType::FieldGetter, StructType::FieldSetter,
+             JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT))
         return JS_FALSE;
 
-      // Fill in the PropertySpec for the field.
-      PropertySpec* instanceProp = instanceProps.begin() + i;
-      instanceProp->name = info->mName.begin();
-      instanceProp->namelen = info->mName.length();
-      instanceProp->flags = JSPROP_SHARED | JSPROP_ENUMERATE | JSPROP_PERMANENT;
-      instanceProp->getter = StructType::FieldGetter;
-      instanceProp->setter = StructType::FieldSetter;
-
-      elements[i] = CType::GetFFIType(cx, info->mType);
-
-      size_t fieldSize = CType::GetSize(cx, info->mType);
-      size_t fieldAlign = CType::GetAlignment(cx, info->mType);
+      size_t fieldSize = CType::GetSize(cx, fieldType);
+      size_t fieldAlign = CType::GetAlignment(cx, fieldType);
       size_t fieldOffset = Align(structSize, fieldAlign);
       // Check for overflow. Since we hold invariant that fieldSize % fieldAlign
       // be zero, we can safely check fieldOffset + fieldSize without first
@@ -3975,7 +4001,7 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
         JS_ReportError(cx, "size overflow");
         return JS_FALSE;
       }
-      info->mOffset = fieldOffset;
+      info.mOffset = fieldOffset;
       structSize = fieldOffset + fieldSize;
 
       if (fieldAlign > structAlign)
@@ -3997,10 +4023,66 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
     // no getters or setters, and will be initialized to zero.
     structSize = 1;
     structAlign = 1;
+  }
+
+  jsval sizeVal;
+  if (!SizeTojsval(cx, structSize, &sizeVal))
+    return JS_FALSE;
+
+  if (!JS_SetReservedSlot(cx, typeObj, SLOT_SIZE, sizeVal) ||
+      !JS_SetReservedSlot(cx, typeObj, SLOT_ALIGN, INT_TO_JSVAL(structAlign)) ||
+      //!JS_SealObject(cx, prototype, JS_FALSE) || // XXX fixme - see bug 541212!
+      !JS_SetReservedSlot(cx, typeObj, SLOT_PROTO, OBJECT_TO_JSVAL(prototype)))
+    return JS_FALSE;
+
+  return JS_TRUE;
+}
+
+ffi_type*
+StructType::BuildFFIType(JSContext* cx, JSObject* obj)
+{
+  JS_ASSERT(CType::IsCType(cx, obj));
+  JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
+  JS_ASSERT(CType::IsSizeDefined(cx, obj));
+
+  const FieldInfoHash* fields = GetFieldInfo(cx, obj);
+  size_t len = fields->count();
+
+  size_t structSize = CType::GetSize(cx, obj);
+  size_t structAlign = CType::GetAlignment(cx, obj);
+
+  AutoPtr<ffi_type> ffiType(new ffi_type);
+  if (!ffiType) {
+    JS_ReportOutOfMemory(cx);
+    return NULL;
+  }
+  ffiType->type = FFI_TYPE_STRUCT;
+
+  AutoPtr<ffi_type*>::Array elements;
+  if (len != 0) {
+    elements = new ffi_type*[len + 1];
+    if (!elements) {
+      JS_ReportOutOfMemory(cx);
+      return NULL;
+    }
+    elements[len] = NULL;
+
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+      const FieldInfoHash::Entry& entry = r.front();
+      ffi_type* fieldType = CType::GetFFIType(cx, entry.value.mType);
+      if (!fieldType)
+        return NULL;
+      elements[entry.value.mIndex] = fieldType;
+    }
+
+  } else {
+    // Represent an empty struct as having a size of 1 byte, just like C++.
+    JS_ASSERT(structSize == 1);
+    JS_ASSERT(structAlign == 1);
     elements = new ffi_type*[2];
     if (!elements) {
       JS_ReportOutOfMemory(cx);
-      return JS_FALSE;
+      return NULL;
     }
     elements[0] = &ffi_type_uint8;
     elements[1] = NULL;
@@ -4028,44 +4110,39 @@ StructType::Create(JSContext* cx, uintN argc, jsval* vp)
   ffiType->alignment = structAlign;
 #endif
 
-  // Terminate the PropertySpec array.
-  instanceProps[len].name = NULL;
-
-  jsval sizeVal;
-  if (!SizeTojsval(cx, structSize, &sizeVal))
-    return JS_FALSE;
-
-  // Get ctypes.StructType.prototype and the common prototype for CData objects
-  // of this type, from the ctypes.StructType constructor.
-  JSObject* callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-  JSObject* typeProto = CType::GetProtoFromCtor(cx, callee, SLOT_STRUCTPROTO);
-  JSObject* dataProto = CType::GetProtoFromCtor(cx, callee, SLOT_STRUCTDATAPROTO);
-
-  // Create a new CType object with the common properties and slots.
-  JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_struct,
-                        JSVAL_TO_STRING(name), sizeVal,
-                        INT_TO_JSVAL(structAlign), ffiType.get(),
-                        instanceProps.begin());
-  if (!typeObj)
-    return JS_FALSE;
-  ffiType.forget();
   elements.forget();
+  return ffiType.forget();
+}
 
-  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(typeObj));
+JSBool
+StructType::Define(JSContext* cx, uintN argc, jsval* vp)
+{
+  JSObject* obj = JS_THIS_OBJECT(cx, vp);
+  JS_ASSERT(obj);
 
-  // Seal and attach the fields array. (The fields array also prevents the
-  // type objects we depend on from being GC'ed).
-  if (!JS_SealObject(cx, fieldsProp, JS_FALSE) ||
-      !JS_SetReservedSlot(cx, typeObj, SLOT_FIELDS, OBJECT_TO_JSVAL(fieldsProp)))
+  if (!CType::IsCType(cx, obj) || CType::GetTypeCode(cx, obj) != TYPE_struct) {
+    JS_ReportError(cx, "not a StructType");
     return JS_FALSE;
+  }
 
-  // Stash the FieldInfo array in a reserved slot.
-  if (!JS_SetReservedSlot(cx, typeObj, SLOT_FIELDINFO,
-         PRIVATE_TO_JSVAL(fields.get())))
+  if (CType::IsSizeDefined(cx, obj)) {
+    JS_ReportError(cx, "StructType has already been defined");
     return JS_FALSE;
-  fields.forget();
+  }
 
-  return JS_TRUE;
+  if (argc != 1) {
+    JS_ReportError(cx, "define takes one argument");
+    return JS_FALSE;
+  }
+
+  jsval arg = JS_ARGV(cx, vp)[0];
+  if (JSVAL_IS_PRIMITIVE(arg) ||
+      !JS_IsArrayObject(cx, JSVAL_TO_OBJECT(arg))) {
+    JS_ReportError(cx, "argument must be an array");
+    return JS_FALSE;
+  }
+
+  return DefineInternal(cx, obj, JSVAL_TO_OBJECT(arg));
 }
 
 JSBool
@@ -4080,6 +4157,11 @@ StructType::ConstructData(JSContext* cx,
     return JS_FALSE;
   }
 
+  if (!CType::IsSizeDefined(cx, obj)) {
+    JS_ReportError(cx, "cannot construct an opaque StructType");
+    return JS_FALSE;
+  }
+
   JSObject* result = CData::Create(cx, obj, NULL, NULL, true);
   if (!result)
     return JS_FALSE;
@@ -4090,7 +4172,7 @@ StructType::ConstructData(JSContext* cx,
     return JS_TRUE;
 
   char* buffer = static_cast<char*>(CData::GetData(cx, result));
-  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
+  const FieldInfoHash* fields = GetFieldInfo(cx, obj);
 
   if (argc == 1) {
     // There are two possible interpretations of the argument:
@@ -4105,7 +4187,7 @@ StructType::ConstructData(JSContext* cx,
     if (ExplicitConvert(cx, argv[0], obj, buffer))
       return JS_TRUE;
 
-    if (fields->length() != 1)
+    if (fields->count() != 1)
       return JS_FALSE;
 
     // If ExplicitConvert failed, and there is no pending exception, then assume
@@ -4122,10 +4204,11 @@ StructType::ConstructData(JSContext* cx,
 
   // We have a type constructor of the form 'ctypes.StructType(a, b, c, ...)'.
   // ImplicitConvert each field.
-  if (argc == fields->length()) {
-    for (size_t i = 0; i < fields->length(); ++i) {
-      FieldInfo* field = fields->begin() + i;
-      if (!ImplicitConvert(cx, argv[i], field->mType, buffer + field->mOffset,
+  if (argc == fields->count()) {
+    for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+      const FieldInfo& field = r.front().value;
+      if (!ImplicitConvert(cx, argv[field.mIndex], field.mType,
+             buffer + field.mOffset,
              false, NULL))
         return JS_FALSE;
     }
@@ -4134,11 +4217,11 @@ StructType::ConstructData(JSContext* cx,
   }
 
   JS_ReportError(cx, "constructor takes 0, 1, or %u arguments",
-    fields->length());
+    fields->count());
   return JS_FALSE;
 }
 
-Array<FieldInfo>*
+const FieldInfoHash*
 StructType::GetFieldInfo(JSContext* cx, JSObject* obj)
 {
   JS_ASSERT(CType::IsCType(cx, obj));
@@ -4148,23 +4231,19 @@ StructType::GetFieldInfo(JSContext* cx, JSObject* obj)
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDINFO, &slot));
   JS_ASSERT(!JSVAL_IS_VOID(slot) && JSVAL_TO_PRIVATE(slot));
 
-  return static_cast<Array<FieldInfo>*>(JSVAL_TO_PRIVATE(slot));
+  return static_cast<const FieldInfoHash*>(JSVAL_TO_PRIVATE(slot));
 }
 
-FieldInfo*
+const FieldInfo*
 StructType::LookupField(JSContext* cx, JSObject* obj, jsval idval)
 {
   JS_ASSERT(CType::IsCType(cx, obj));
   JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
 
-  Array<FieldInfo>* fields = GetFieldInfo(cx, obj);
-
   JSString* name = JSVAL_TO_STRING(idval);
-  for (size_t i = 0; i < fields->length(); ++i) {
-    FieldInfo* field = fields->begin() + i;
-    if (StringsEqual(field->mName, name))
-      return field;
-  }
+  FieldInfoHash::Ptr ptr = GetFieldInfo(cx, obj)->lookup(name);
+  if (ptr)
+    return &ptr->value;
 
   const char* bytes = JS_GetStringBytesZ(cx, name);
   if (!bytes)
@@ -4172,6 +4251,40 @@ StructType::LookupField(JSContext* cx, JSObject* obj, jsval idval)
 
   JS_ReportError(cx, "%s does not name a field", bytes);
   return NULL;
+}
+
+JSObject*
+StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
+{
+  JS_ASSERT(CType::IsCType(cx, obj));
+  JS_ASSERT(CType::GetTypeCode(cx, obj) == TYPE_struct);
+  JS_ASSERT(CType::IsSizeDefined(cx, obj));
+
+  const FieldInfoHash* fields = GetFieldInfo(cx, obj);
+  size_t len = fields->count();
+
+  // Prepare a new array for the 'fields' property of the StructType.
+  jsval* fieldsVec;
+  JSObject* fieldsProp =
+    js_NewArrayObjectWithCapacity(cx, len, &fieldsVec);
+  if (!fieldsProp)
+    return NULL;
+  js::AutoValueRooter root(cx, fieldsProp);
+  JS_ASSERT(len == 0 || fieldsVec);
+
+  for (FieldInfoHash::Range r = fields->all(); !r.empty(); r.popFront()) {
+    const FieldInfoHash::Entry& entry = r.front();
+    // Add the field descriptor to the array.
+    if (!AddFieldToArray(cx, fieldsProp, &fieldsVec[entry.value.mIndex],
+           entry.key, entry.value.mType))
+      return NULL;
+  }
+
+  // Seal the fields array.
+  if (!JS_SealObject(cx, fieldsProp, JS_FALSE))
+    return NULL;
+
+  return fieldsProp;
 }
 
 JSBool
@@ -4183,6 +4296,22 @@ StructType::FieldsArrayGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* 
   }
 
   ASSERT_OK(JS_GetReservedSlot(cx, obj, SLOT_FIELDS, vp));
+
+  if (!CType::IsSizeDefined(cx, obj)) {
+    JS_ASSERT(JSVAL_IS_VOID(*vp));
+    return JS_TRUE;
+  }
+
+  if (JSVAL_IS_VOID(*vp)) {
+    // Build the 'fields' array lazily.
+    JSObject* fields = BuildFieldsArray(cx, obj);
+    if (!fields ||
+        !JS_SetReservedSlot(cx, obj, SLOT_FIELDS, OBJECT_TO_JSVAL(fields)))
+      return JS_FALSE;
+
+    *vp = OBJECT_TO_JSVAL(fields);
+  }
+
   JS_ASSERT(!JSVAL_IS_PRIMITIVE(*vp) &&
             JS_IsArrayObject(cx, JSVAL_TO_OBJECT(*vp)));
   return JS_TRUE;
@@ -4202,7 +4331,7 @@ StructType::FieldGetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
     return JS_FALSE;
   }
 
-  FieldInfo* field = LookupField(cx, typeObj, idval);
+  const FieldInfo* field = LookupField(cx, typeObj, idval);
   if (!field)
     return JS_FALSE;
 
@@ -4224,7 +4353,7 @@ StructType::FieldSetter(JSContext* cx, JSObject* obj, jsval idval, jsval* vp)
     return JS_FALSE;
   }
 
-  FieldInfo* field = LookupField(cx, typeObj, idval);
+  const FieldInfo* field = LookupField(cx, typeObj, idval);
   if (!field)
     return JS_FALSE;
 
@@ -4254,12 +4383,12 @@ StructType::AddressOfField(JSContext* cx, uintN argc, jsval *vp)
     return JS_FALSE;
   }
 
-  FieldInfo* field = LookupField(cx, typeObj, JS_ARGV(cx, vp)[0]);
+  const FieldInfo* field = LookupField(cx, typeObj, JS_ARGV(cx, vp)[0]);
   if (!field)
     return JS_FALSE;
 
   JSObject* baseType = field->mType;
-  JSObject* pointerType = PointerType::CreateInternal(cx, NULL, baseType, NULL);
+  JSObject* pointerType = PointerType::CreateInternal(cx, baseType);
   if (!pointerType)
     return JS_FALSE;
   js::AutoValueRooter root(cx, pointerType);
@@ -4345,13 +4474,18 @@ PrepareType(JSContext* cx, jsval type)
     // convert array argument types to pointers, just like C.
     // ImplicitConvert will do the same, when passing an array as data.
     JSObject* baseType = ArrayType::GetBaseType(cx, result);
-    result = PointerType::CreateInternal(cx, NULL, baseType, NULL);
+    result = PointerType::CreateInternal(cx, baseType);
     if (!result)
       return NULL;
 
   } else if (typeCode == TYPE_void_t || typeCode == TYPE_function) {
     // disallow void or function argument types
     JS_ReportError(cx, "Cannot have void or function argument type");
+    return NULL;
+  }
+
+  if (!CType::IsSizeDefined(cx, result)) {
+    JS_ReportError(cx, "Argument type must have defined size");
     return NULL;
   }
 
@@ -4376,6 +4510,11 @@ PrepareReturnType(JSContext* cx, jsval type)
   // Arrays and functions can never be return types.
   if (typeCode == TYPE_array || typeCode == TYPE_function) {
     JS_ReportError(cx, "Return type cannot be an array or function");
+    return NULL;
+  }
+
+  if (typeCode != TYPE_void_t && !CType::IsSizeDefined(cx, result)) {
+    JS_ReportError(cx, "Return type must have defined size");
     return NULL;
   }
 
@@ -4409,11 +4548,15 @@ PrepareCIF(JSContext* cx,
     return false;
   }
 
+  ffi_type* rtype = CType::GetFFIType(cx, fninfo->mReturnType);
+  if (!rtype)
+    return false;
+
   ffi_status status =
     ffi_prep_cif(&fninfo->mCIF,
                  abi,
                  fninfo->mFFITypes.length(),
-                 CType::GetFFIType(cx, fninfo->mReturnType),
+                 rtype,
                  fninfo->mFFITypes.begin());
 
   switch (status) {
@@ -4490,8 +4633,12 @@ NewFunctionInfo(JSContext* cx,
     if (!argType)
       return NULL;
 
+    ffi_type* ffiType = CType::GetFFIType(cx, argType);
+    if (!ffiType)
+      return NULL;
+
     fninfo->mArgTypes.append(argType);
-    fninfo->mFFITypes.append(CType::GetFFIType(cx, argType));
+    fninfo->mFFITypes.append(ffiType);
   }
 
   if (fninfo->mIsVariadic)
@@ -4575,9 +4722,8 @@ FunctionType::CreateInternal(JSContext* cx,
                                                 SLOT_FUNCTIONDATAPROTO);
 
   // Create a new CType object with the common properties and slots.
-  // We use ffi_type_void here in its capacity as "a type of undefined size".
   JSObject* typeObj = CType::Create(cx, typeProto, dataProto, TYPE_function,
-                        NULL, JSVAL_VOID, JSVAL_VOID, &ffi_type_void, NULL);
+                        NULL, JSVAL_VOID, JSVAL_VOID, NULL);
   if (!typeObj)
     return NULL;
   js::AutoValueRooter root(cx, typeObj);
@@ -4587,12 +4733,6 @@ FunctionType::CreateInternal(JSContext* cx,
          PRIVATE_TO_JSVAL(fninfo.get())))
     return NULL;
   fninfo.forget();
-
-  // Determine the name of the FunctionType.
-  JSString* name = BuildTypeName(cx, typeObj);
-  if (!name ||
-      !JS_SetReservedSlot(cx, typeObj, SLOT_NAME, STRING_TO_JSVAL(name)))
-    return NULL;
 
   return typeObj;
 }
@@ -4679,9 +4819,13 @@ FunctionType::Call(JSContext* cx,
   }
 
   JSObject* typeObj = CData::GetCType(cx, obj);
-  if (CType::GetTypeCode(cx, typeObj) != TYPE_pointer ||
-      !(typeObj = PointerType::GetBaseType(cx, typeObj)) ||
-      CType::GetTypeCode(cx, typeObj) != TYPE_function) {
+  if (CType::GetTypeCode(cx, typeObj) != TYPE_pointer) {
+    JS_ReportError(cx, "not a FunctionType.ptr");
+    return false;
+  }
+
+  typeObj = PointerType::GetBaseType(cx, typeObj);
+  if (CType::GetTypeCode(cx, typeObj) != TYPE_function) {
     JS_ReportError(cx, "not a FunctionType.ptr");
     return false;
   }
@@ -4740,11 +4884,11 @@ FunctionType::Call(JSContext* cx,
           !(type = PrepareType(cx, OBJECT_TO_JSVAL(type))) ||
           // Relying on ImplicitConvert only for the limited purpose of
           // converting one CType to another (e.g., T[] to T*).
-          !ConvertArgument(cx, argv[i], type, &values[i], &strings)) {
+          !ConvertArgument(cx, argv[i], type, &values[i], &strings) ||
+          !(fninfo->mFFITypes[i] = CType::GetFFIType(cx, type))) {
         // These functions report their own errors.
         return false;
       }
-      fninfo->mFFITypes[i] = CType::GetFFIType(cx, type);
     }
     if (!PrepareCIF(cx, fninfo))
       return false;
@@ -5162,7 +5306,7 @@ CData::Create(JSContext* cx,
   *buffer = data;
   if (!JS_SetReservedSlot(cx, dataObj, SLOT_DATA, PRIVATE_TO_JSVAL(buffer))) {
     if (ownResult)
-      delete data;
+      delete[] data;
     delete buffer;
     return NULL;
   }
@@ -5264,7 +5408,7 @@ CData::Address(JSContext* cx, uintN argc, jsval *vp)
   }
 
   JSObject* typeObj = CData::GetCType(cx, obj);
-  JSObject* pointerType = PointerType::CreateInternal(cx, NULL, typeObj, NULL);
+  JSObject* pointerType = PointerType::CreateInternal(cx, typeObj);
   if (!pointerType)
     return JS_FALSE;
   js::AutoValueRooter root(cx, pointerType);
@@ -5351,11 +5495,6 @@ CData::ReadString(JSContext* cx, uintN argc, jsval *vp)
   switch (typeCode) {
   case TYPE_pointer:
     baseType = PointerType::GetBaseType(cx, typeObj);
-    if (!baseType) {
-      JS_ReportError(cx, "cannot read contents of pointer to opaque type");
-      return JS_FALSE;
-    }
-
     data = *static_cast<void**>(GetData(cx, obj));
     if (data == NULL) {
       JS_ReportError(cx, "cannot read contents of null pointer");

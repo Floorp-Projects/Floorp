@@ -141,7 +141,7 @@ protected:
 //  data
 //  --BoundaryToken-- (end delimited by final "--")
 //
-// linebreaks can be either CRLF or LFLF. linebreaks preceeding
+// linebreaks can be either CRLF or LFLF. linebreaks preceding
 // boundary tokens are considered part of the data. BoundaryToken
 // is any opaque string.
 //  

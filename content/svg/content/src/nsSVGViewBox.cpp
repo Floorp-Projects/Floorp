@@ -40,11 +40,13 @@
 #include "nsSVGUtils.h"
 #include "prdtoa.h"
 #include "nsTextFormatter.h"
+#include "nsCharSeparatedTokenizer.h"
 #ifdef MOZ_SMIL
 #include "nsSMILValue.h"
 #include "SVGViewBoxSMILType.h"
 #endif // MOZ_SMIL
 
+#define NUM_VIEWBOX_COMPONENTS 4
 using namespace mozilla;
 
 /* Implementation of nsSVGViewBoxRect methods */
@@ -140,27 +142,29 @@ nsSVGViewBox::SetBaseValue(float aX, float aY, float aWidth, float aHeight,
 static nsresult
 ToSVGViewBoxRect(const nsAString& aStr, nsSVGViewBoxRect *aViewBox)
 {
-  nsresult rv = NS_OK;
-
-  char *str = ToNewUTF8String(aStr);
-
-  char *rest = str;
-  char *token;
-
-  float vals[4];
+  nsCharSeparatedTokenizer
+    tokenizer(aStr, ',',
+              nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
+  float vals[NUM_VIEWBOX_COMPONENTS];
   PRUint32 i;
-  for (i = 0; i < 4; ++i) {
-    if (!(token = nsCRT::strtok(rest, SVG_COMMA_WSP_DELIM, &rest)))
-      break; // parse error
+  for (i = 0; i < NUM_VIEWBOX_COMPONENTS && tokenizer.hasMoreTokens(); ++i) {
+    NS_ConvertUTF16toUTF8 utf8Token(tokenizer.nextToken());
+    const char *token = utf8Token.get();
+    if (*token == '\0') {
+      return NS_ERROR_DOM_SYNTAX_ERR; // empty string (e.g. two commas in a row)
+    }
 
     char *end;
     vals[i] = float(PR_strtod(token, &end));
-    if (*end != '\0' || !NS_FloatIsFinite(vals[i]))
-      break; // parse error
+    if (*end != '\0' || !NS_FloatIsFinite(vals[i])) {
+      return NS_ERROR_DOM_SYNTAX_ERR; // parse error
+    }
   }
-  if (i != 4 || (nsCRT::strtok(rest, SVG_COMMA_WSP_DELIM, &rest) != 0)) {
-    // there was a parse error.
-    rv = NS_ERROR_DOM_SYNTAX_ERR;
+
+  if (i != NUM_VIEWBOX_COMPONENTS ||              // Too few values.
+      tokenizer.hasMoreTokens() ||                // Too many values.
+      tokenizer.lastTokenEndedWithSeparator()) {  // Trailing comma.
+    return NS_ERROR_DOM_SYNTAX_ERR;
   } else {
     aViewBox->x = vals[0];
     aViewBox->y = vals[1];
@@ -168,9 +172,7 @@ ToSVGViewBoxRect(const nsAString& aStr, nsSVGViewBoxRect *aViewBox)
     aViewBox->height = vals[3];
   }
 
-  nsMemory::Free(str);
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult

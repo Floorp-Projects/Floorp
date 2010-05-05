@@ -21,23 +21,23 @@ CPPSRCS = yuv_convert.cpp \
           yuv_row_c.cpp \
           $(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifdef _MSC_VER
 CPPSRCS += yuv_row_win.cpp \
            $(NULL)
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+ifeq ($(OS_ARCH),Linux)
 CPPSRCS += yuv_row_linux.cpp \
            $(NULL)
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+ifeq ($(OS_ARCH),Darwin)
 CPPSRCS += yuv_row_mac.cpp \
            $(NULL)
 else
 CPPSRCS += yuv_row_other.cpp \
            $(NULL)
-endif
-endif
-endif
+endif # mac
+endif # linux
+endif # windows
 
 EXTRA_DSO_LDOPTS += \
         $(LIBS_DIR) \

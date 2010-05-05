@@ -11,3 +11,6 @@ script regress-546615.js
 script regress-555246-0.js
 fails script regress-555246-1.js
 script regress-559438.js
+script regress-560101.js
+script regress-560998-1.js
+script regress-560998-2.js

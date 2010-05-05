@@ -72,6 +72,10 @@ JSBackgroundThread::init()
 void
 JSBackgroundThread::cancel()
 {
+    /* We allow to call the cancel method after failed init. */
+    if (!thread)
+        return;
+
     PR_Lock(lock);
     if (shutdown) {
         PR_Unlock(lock);

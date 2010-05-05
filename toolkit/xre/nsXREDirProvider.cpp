@@ -64,6 +64,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsEnumeratorUtils.h"
 #include "nsReadableUtils.h"
+#include "mozilla/Services.h"
 
 #include <stdlib.h>
 
@@ -800,8 +801,8 @@ NS_IMETHODIMP
 nsXREDirProvider::DoStartup()
 {
   if (!mProfileNotified) {
-    nsCOMPtr<nsIObserverService> obsSvc
-      (do_GetService("@mozilla.org/observer-service;1"));
+    nsCOMPtr<nsIObserverService> obsSvc =
+      mozilla::services::GetObserverService();
     if (!obsSvc) return NS_ERROR_FAILURE;
 
     mProfileNotified = PR_TRUE;
@@ -850,15 +851,15 @@ void
 nsXREDirProvider::DoShutdown()
 {
   if (mProfileNotified) {
-    nsCOMPtr<nsIObserverService> obssvc
-      (do_GetService("@mozilla.org/observer-service;1"));
-    NS_ASSERTION(obssvc, "No observer service?");
-    if (obssvc) {
+    nsCOMPtr<nsIObserverService> obsSvc =
+      mozilla::services::GetObserverService();
+    NS_ASSERTION(obsSvc, "No observer service?");
+    if (obsSvc) {
       nsCOMPtr<nsIProfileChangeStatus> cs = new ProfileChangeStatusImpl();
       static const PRUnichar kShutdownPersist[] =
         {'s','h','u','t','d','o','w','n','-','p','e','r','s','i','s','t','\0'};
-      obssvc->NotifyObservers(cs, "profile-change-net-teardown", kShutdownPersist);
-      obssvc->NotifyObservers(cs, "profile-change-teardown", kShutdownPersist);
+      obsSvc->NotifyObservers(cs, "profile-change-net-teardown", kShutdownPersist);
+      obsSvc->NotifyObservers(cs, "profile-change-teardown", kShutdownPersist);
 
       // Phase 2c: Now that things are torn down, force JS GC so that things which depend on
       // resources which are about to go away in "profile-before-change" are destroyed first.
@@ -873,7 +874,7 @@ nsXREDirProvider::DoShutdown()
       }
 
       // Phase 3: Notify observers of a profile change
-      obssvc->NotifyObservers(cs, "profile-before-change", kShutdownPersist);
+      obsSvc->NotifyObservers(cs, "profile-before-change", kShutdownPersist);
     }
     mProfileNotified = PR_FALSE;
   }

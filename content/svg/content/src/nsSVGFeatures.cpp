@@ -51,7 +51,7 @@
 #include "nsIContent.h"
 #include "nsContentUtils.h"
 #include "nsWhitespaceTokenizer.h"
-#include "nsCommaSeparatedTokenizer.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsStyleUtil.h"
 #include "nsSVGUtils.h"
 
@@ -113,11 +113,11 @@ nsSVGFeatures::MatchesLanguagePreferences(const nsSubstring& aAttribute,
 {
   const nsDefaultStringComparator defaultComparator;
 
-  nsCommaSeparatedTokenizer attributeTokenizer(aAttribute);
+  nsCharSeparatedTokenizer attributeTokenizer(aAttribute, ',');
 
   while (attributeTokenizer.hasMoreTokens()) {
     const nsSubstring &attributeToken = attributeTokenizer.nextToken();
-    nsCommaSeparatedTokenizer languageTokenizer(aAcceptLangs);
+    nsCharSeparatedTokenizer languageTokenizer(aAcceptLangs, ',');
     while (languageTokenizer.hasMoreTokens()) {
       if (nsStyleUtil::DashMatchCompare(attributeToken,
                                         languageTokenizer.nextToken(),
@@ -135,12 +135,12 @@ nsSVGFeatures::GetBestLanguagePreferenceRank(const nsSubstring& aAttribute,
 {
   const nsDefaultStringComparator defaultComparator;
 
-  nsCommaSeparatedTokenizer attributeTokenizer(aAttribute);
+  nsCharSeparatedTokenizer attributeTokenizer(aAttribute, ',');
   PRInt32 lowestRank = -1;
 
   while (attributeTokenizer.hasMoreTokens()) {
     const nsSubstring &attributeToken = attributeTokenizer.nextToken();
-    nsCommaSeparatedTokenizer languageTokenizer(aAcceptLangs);
+    nsCharSeparatedTokenizer languageTokenizer(aAcceptLangs, ',');
     PRInt32 index = 0;
     while (languageTokenizer.hasMoreTokens()) {
       const nsSubstring &languageToken = languageTokenizer.nextToken();
@@ -179,7 +179,7 @@ const nsString * const nsSVGFeatures::kIgnoreSystemLanguage = (nsString *) 0x01;
 nsSVGFeatures::PassesConditionalProcessingTests(nsIContent *aContent,
                                                 const nsString *aAcceptLangs)
 {
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  if (!aContent->IsElement()) {
     return PR_FALSE;
   }
 

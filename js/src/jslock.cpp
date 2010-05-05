@@ -1413,13 +1413,14 @@ js_IsTitleLocked(JSContext *cx, JSTitle *title)
         return JS_TRUE;
 
     /*
-     * General case: the title is either exclusively owned (by cx), or it has
-     * a thin or fat lock to cope with shared (concurrent) ownership.
+     * General case: the title is either exclusively owned by some context, or
+     * it has a thin or fat lock to cope with shared (concurrent) ownership.
+     *
+     * js_LockTitle(cx, title) must set ownercx to cx when claiming the title
+     * from another context on the same thread.
      */
-    if (title->ownercx) {
-        JS_ASSERT(title->ownercx == cx || title->ownercx->thread == cx->thread);
-        return JS_TRUE;
-    }
+    if (title->ownercx)
+        return title->ownercx == cx;
     return js_CurrentThreadId() ==
            ((JSThread *)Thin_RemoveWait(ReadWord(title->lock.owner)))->id;
 }

@@ -165,6 +165,9 @@ protected:
     NS_OVERRIDE
     virtual bool AnswerProcessSomeEvents();
 
+    NS_OVERRIDE virtual bool
+    RecvProcessNativeEventsInRPCCall();
+
     virtual bool
     RecvAppendNotesToCrashReport(const nsCString& aNotes);
 

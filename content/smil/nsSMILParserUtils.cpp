@@ -48,6 +48,7 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "prlong.h"
+#include "nsCharSeparatedTokenizer.h"
 
 //------------------------------------------------------------------------------
 // Helper functions and Constants
@@ -494,8 +495,9 @@ nsSMILParserUtils::ParseKeySplines(const nsAString& aSpec,
 }
 
 nsresult
-nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
-                                 nsTArray<double>& aTimeArray)
+nsSMILParserUtils::ParseSemicolonDelimitedProgressList(const nsAString& aSpec,
+                                                       PRBool aNonDecreasing,
+                                                       nsTArray<double>& aArray)
 {
   nsresult rv = NS_OK;
 
@@ -512,12 +514,13 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
     if (NS_FAILED(rv))
       break;
 
-    if (value > 1.0 || value < 0.0 || value < previousValue) {
+    if (value > 1.0 || value < 0.0 ||
+        (aNonDecreasing && value < previousValue)) {
       rv = NS_ERROR_FAILURE;
       break;
     }
 
-    if (!aTimeArray.AppendElement(value)) {
+    if (!aArray.AppendElement(value)) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
     }
@@ -538,6 +541,43 @@ nsSMILParserUtils::ParseKeyTimes(const nsAString& aSpec,
   return rv;
 }
 
+// Helper class for ParseValues
+class SMILValueParser : public nsSMILParserUtils::GenericValueParser
+{
+public:
+  SMILValueParser(const nsISMILAnimationElement* aSrcElement,
+                  const nsISMILAttr* aSMILAttr,
+                  nsTArray<nsSMILValue>* aValuesArray,
+                  PRBool* aCanCache) :
+    mSrcElement(aSrcElement),
+    mSMILAttr(aSMILAttr),
+    mValuesArray(aValuesArray),
+    mCanCache(aCanCache)
+  {}
+
+  virtual nsresult Parse(const nsAString& aValueStr) {
+    nsSMILValue newValue;
+    PRBool tmpCanCache;
+    nsresult rv = mSMILAttr->ValueFromString(aValueStr, mSrcElement,
+                                             newValue, tmpCanCache);
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (!mValuesArray->AppendElement(newValue)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (!tmpCanCache) {
+      *mCanCache = PR_FALSE;
+    }
+    return NS_OK;
+  }
+protected:
+  const nsISMILAnimationElement* mSrcElement;
+  const nsISMILAttr* mSMILAttr;
+  nsTArray<nsSMILValue>* mValuesArray;
+  PRBool* mCanCache;
+};
+
 nsresult
 nsSMILParserUtils::ParseValues(const nsAString& aSpec,
                                const nsISMILAnimationElement* aSrcElement,
@@ -545,59 +585,35 @@ nsSMILParserUtils::ParseValues(const nsAString& aSpec,
                                nsTArray<nsSMILValue>& aValuesArray,
                                PRBool& aCanCache)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-
-  const PRUnichar* start = aSpec.BeginReading();
-  const PRUnichar* end = aSpec.EndReading();
-  const PRUnichar* substrEnd = nsnull;
-  const PRUnichar* next = nsnull;
-
   // Assume all results can be cached, until we find one that can't.
   aCanCache = PR_TRUE;
+  SMILValueParser valueParser(aSrcElement, &aAttribute,
+                              &aValuesArray, &aCanCache);
+  return ParseValuesGeneric(aSpec, valueParser);
+}
 
-  while (start != end) {
-    rv = NS_ERROR_FAILURE;
-
-    SkipBeginWsp(start, end);
-
-    if (start == end || *start == ';')
-      break;
-
-    substrEnd = start;
-
-    while (substrEnd != end && *substrEnd != ';') {
-      ++substrEnd;
-    }
-
-    next = substrEnd;
-    if (*substrEnd == ';') {
-      ++next;
-      if (next == end)
-        break;
-    }
-
-    while (substrEnd != start && NS_IS_SPACE(*(substrEnd-1)))
-      --substrEnd;
-
-    nsSMILValue newValue;
-    PRBool tmpCanCache;
-    rv = aAttribute.ValueFromString(Substring(start, substrEnd),
-                                    aSrcElement, newValue, tmpCanCache);
-    if (NS_FAILED(rv))
-      break;
-
-    if (!aValuesArray.AppendElement(newValue)) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-      break;
-    }
-    if (!tmpCanCache) {
-      aCanCache = PR_FALSE;
-    }
-
-    start = next;
+nsresult
+nsSMILParserUtils::ParseValuesGeneric(const nsAString& aSpec,
+                                      GenericValueParser& aParser)
+{
+  nsCharSeparatedTokenizer tokenizer(aSpec, ';');
+  if (!tokenizer.hasMoreTokens()) { // Empty list
+    return NS_ERROR_FAILURE;
   }
 
-  return rv;
+  while (tokenizer.hasMoreTokens()) {
+    nsresult rv = aParser.Parse(tokenizer.nextToken());
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // Disallow ;-terminated values lists.
+  if (tokenizer.lastTokenEndedWithSeparator()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 nsresult

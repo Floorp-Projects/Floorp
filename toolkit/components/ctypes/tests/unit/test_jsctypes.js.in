@@ -1348,10 +1348,9 @@ function run_StructType_tests() {
   run_type_ctor_class_tests(ctypes.StructType,
     ctypes.StructType("s", [{"a": ctypes.int32_t}, {"b": ctypes.int64_t}]),
     ctypes.StructType("t", [{"c": ctypes.int32_t}, {"d": ctypes.int64_t}]),
-    [ "fields" ], [], [], [ "addressOfField" ], [ "a", "b" ]);
+    [ "fields" ], [ "define" ], [], [ "addressOfField" ], [ "a", "b" ]);
 
   do_check_throws(function() { ctypes.StructType(); }, Error);
-  do_check_throws(function() { ctypes.StructType("a"); }, Error);
   do_check_throws(function() { ctypes.StructType("a", [], 5); }, Error);
   do_check_throws(function() { ctypes.StructType(null, []); }, Error);
   do_check_throws(function() { ctypes.StructType("a", null); }, Error);
@@ -1377,6 +1376,53 @@ function run_StructType_tests() {
   }, Error);
   do_check_throws(function() {
     ctypes.StructType("a", [{"x":ctypes.int32_t()}]);
+  }, Error);
+
+  // Check that opaque structs work.
+  let opaque_t = ctypes.StructType("a");
+  do_check_eq(opaque_t.name, "a");
+  do_check_eq(opaque_t.toString(), "type a");
+  do_check_eq(opaque_t.toSource(), 'ctypes.StructType("a")');
+  do_check_true(opaque_t.prototype === undefined);
+  do_check_true(opaque_t.fields === undefined);
+  do_check_true(opaque_t.size === undefined);
+  do_check_throws(function() { opaque_t(); }, Error);
+  let opaqueptr_t = opaque_t.ptr;
+  do_check_true(opaqueptr_t.targetType === opaque_t);
+  do_check_eq(opaqueptr_t.name, "a*");
+  do_check_eq(opaqueptr_t.toString(), "type a*");
+  do_check_eq(opaqueptr_t.toSource(), 'ctypes.StructType("a").ptr');
+
+  // Check that type checking works with opaque structs.
+  let opaqueptr = opaqueptr_t();
+  opaqueptr.value = opaqueptr_t(1);
+  do_check_eq(ptrValue(opaqueptr), 1);
+  do_check_throws(function() {
+    opaqueptr.value = ctypes.StructType("a").ptr();
+  }, TypeError);
+
+  // Check that 'define' works.
+  do_check_throws(function() { opaque_t.define(); }, Error);
+  do_check_throws(function() { opaque_t.define([], 0); }, Error);
+  do_check_throws(function() { opaque_t.define([{}]); }, Error);
+  do_check_throws(function() { opaque_t.define([{ a: 0 }]); }, Error);
+  do_check_throws(function() {
+    opaque_t.define([{ a: ctypes.int32_t, b: ctypes.int64_t }]);
+  }, Error);
+
+  // Check that circular references work with opaque structs...
+  // but not crazy ones.
+  do_check_throws(function() { opaque_t.define([{ b: opaque_t }]); }, Error);
+  let circular_t = ctypes.StructType("circular", [{ a: opaqueptr_t }]);
+  opaque_t.define([{ b: circular_t }]);
+  let opaque = opaque_t();
+  let circular = circular_t(opaque.address());
+  opaque.b = circular;
+  do_check_eq(circular.a.toSource(), opaque.address().toSource());
+  do_check_eq(opaque.b.toSource(), circular.toSource());
+
+  do_check_throws(function() {
+    opaque_t.define([{ c: ctypes.int32_t }]);
   }, Error);
 
   // StructType size, alignment, and offset calculations have already been
@@ -1408,69 +1454,57 @@ function run_StructType_tests() {
   do_check_throws(function() { t_t.fields[4].e = 0; }, Error);
 
   // Check that struct size bounds work, and that large, but not illegal, sizes
-  // are OK. This gets tricky. The type constructor needs to allocate 'n'
-  // fields for the type descriptor, so we have to build up structs of structs
-  // to avoid trying to allocate an insane size.
+  // are OK.
   if (ctypes.size_t.size == 4) {
     // Test 1: overflow struct size + field padding + field size.
-    let large_t = ctypes.int8_t;
-    while (large_t.size != 0xffffffff)
-      large_t = ctypes.StructType("large_t",
-        [{"a": large_t.array(2)}, {"b": ctypes.int8_t}]);
+    let large_t = ctypes.StructType("large_t",
+        [{"a": ctypes.int8_t.array(0xffffffff)}]);
+    do_check_eq(large_t.size, 0xffffffff);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
     }, Error);
 
     // Test 2: overflow struct size + struct tail padding.
     // To do this, we use a struct with maximum size and alignment 2.
-    large_t = ctypes.int16_t;
-    while (large_t.size != 0xfffffffe)
-      large_t = ctypes.StructType("large_t",
-        [{"a": large_t.array(2)}, {"b": ctypes.int16_t}]);
+    large_t = ctypes.StructType("large_t",
+      [{"a": ctypes.int16_t.array(0xfffffffe / 2)}]);
+    do_check_eq(large_t.size, 0xfffffffe);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
     }, Error);
 
   } else {
     // Test 1: overflow struct size when converting from size_t to jsdouble.
-    let small_t = ctypes.int8_t.array(0x800);
-    let large_t = small_t;
-    while (large_t.size != 0xfffffffffffff800)
-      large_t = ctypes.StructType("large_t",
-        [{"a": large_t.array(2)}, {"b": small_t}]);
+    let large_t = ctypes.StructType("large_t",
+        [{"a": ctypes.int8_t.array(0xfffffffffffff800)}]);
+    do_check_eq(large_t.size, 0xfffffffffffff800);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": ctypes.int8_t}]);
     }, Error);
-    small_t = ctypes.int8_t.array(0x400);
+    let small_t = ctypes.int8_t.array(0x400);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
     }, Error);
 
-    large_t = ctypes.int8_t;
-    while (large_t.size != 0x1fffffffffffff)
-      large_t = ctypes.StructType("large_t",
-        [{"a": large_t.array(2)}, {"b": ctypes.int8_t}]);
+    large_t = ctypes.StructType("large_t",
+      [{"a": ctypes.int8_t.array(0x1fffffffffffff)}]);
+    do_check_eq(large_t.size, 0x1fffffffffffff);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t.array(2)}, {"b": ctypes.int8_t}]);
     }, Error);
 
     // Test 2: overflow struct size + field padding + field size.
+    large_t = ctypes.int8_t.array(0xfffffffffffff800);
     small_t = ctypes.int8_t.array(0x800);
-    large_t = small_t;
-    while (large_t.size != 0xfffffffffffff800)
-      large_t = ctypes.StructType("large_t",
-        [{"a": large_t.array(2)}, {"b": small_t}]);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
     }, Error);
 
     // Test 3: overflow struct size + struct tail padding.
     // To do this, we use a struct with maximum size and alignment 2.
-    small_t = ctypes.int16_t.array(0x800);
-    large_t = small_t;
-    while (large_t.size != 0xfffffffffffff000)
-      large_t = ctypes.StructType("large_t",
-        [{"a": large_t.array(2)}, {"b": small_t}]);
+    large_t = ctypes.StructType("large_t",
+      [{"a": ctypes.int16_t.array(0xfffffffffffff000 / 2)}]);
+    do_check_eq(large_t.size, 0xfffffffffffff000);
     small_t = ctypes.int8_t.array(0xfff);
     do_check_throws(function() {
       ctypes.StructType("large_t", [{"a": large_t}, {"b": small_t}]);
@@ -1587,13 +1621,14 @@ function ptrValue(p) {
 
 function run_PointerType_tests() {
   run_type_ctor_class_tests(ctypes.PointerType,
-    ctypes.PointerType(ctypes.int32_t), ctypes.PointerType("FILE"),
+    ctypes.PointerType(ctypes.int32_t), ctypes.PointerType(ctypes.int64_t),
     [ "targetType" ], [], [ "contents" ], [ "isNull" ], []);
 
   do_check_throws(function() { ctypes.PointerType(); }, Error);
   do_check_throws(function() { ctypes.PointerType(ctypes.int32_t, 5); }, Error);
   do_check_throws(function() { ctypes.PointerType(null); }, Error);
   do_check_throws(function() { ctypes.PointerType(ctypes.int32_t()); }, Error);
+  do_check_throws(function() { ctypes.PointerType("void"); }, Error);
 
   let name = "g_t";
   let g_t = ctypes.StructType(name, [{ a: ctypes.int32_t }, { b: ctypes.double }]);
@@ -1629,15 +1664,15 @@ function run_PointerType_tests() {
   do_check_throws(function() { p.value = 5; }, Error);
 
   // Test opaque pointers.
-  let f_t = ctypes.PointerType("FILE*");
+  let f_t = ctypes.StructType("FILE").ptr;
   do_check_eq(f_t.name, "FILE*");
-  do_check_eq(f_t.toSource(), "ctypes.PointerType(\"FILE*\")");
+  do_check_eq(f_t.toSource(), 'ctypes.StructType("FILE").ptr');
   let f = new f_t();
   do_check_throws(function() { f.contents; }, Error);
   do_check_throws(function() { f.contents = 0; }, Error);
   let f = f_t(5);
   do_check_throws(function() { f.contents = 0; }, Error);
-  do_check_eq(f.toSource(), "ctypes.PointerType(\"FILE*\")(ctypes.UInt64(\"0x5\"))");
+  do_check_eq(f.toSource(), 'FILE.ptr(ctypes.UInt64("0x5"))');
 
   do_check_throws(function() { f_t(p); }, Error);
   do_check_throws(function() { f.value = p; }, Error);
@@ -1849,9 +1884,7 @@ function run_ArrayType_tests() {
   do_check_eq(b_t.length, 0xffff);
 
   // Check that array size bounds work, and that large, but not illegal, sizes
-  // are OK. This gets tricky. The type constructor needs to allocate 'n'
-  // elements for the type descriptor, so we have to build up arrays of arrays
-  // to avoid trying to allocate an insane size.
+  // are OK.
   if (ctypes.size_t.size == 4) {
     do_check_throws(function() {
       ctypes.ArrayType(ctypes.int8_t, 0x100000000);
@@ -1860,9 +1893,7 @@ function run_ArrayType_tests() {
       ctypes.ArrayType(ctypes.int16_t, 0x80000000);
     }, Error);
 
-    let large_t = ctypes.int8_t;
-    while (large_t.size != 0x80000000)
-      large_t = large_t.array(2);
+    let large_t = ctypes.int8_t.array(0x80000000);
     do_check_throws(function() { large_t.array(2); }, Error);
 
   } else {
@@ -1873,9 +1904,7 @@ function run_ArrayType_tests() {
       ctypes.ArrayType(ctypes.int16_t, ctypes.UInt64("0x8000000000000000"));
     }, Error);
 
-    let large_t = ctypes.int8_t;
-    while (large_t.size != 0x8000000000000000)
-      large_t = large_t.array(2);
+    let large_t = ctypes.int8_t.array(0x8000000000000000);
     do_check_throws(function() { large_t.array(2); }, Error);
   }
 

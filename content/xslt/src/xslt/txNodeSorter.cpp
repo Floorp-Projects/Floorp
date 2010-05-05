@@ -253,7 +253,7 @@ txNodeSorter::compareNodes(const void* aIndexA, const void* aIndexB,
     TxObject** sortValuesB = sortData->mSortValues +
                              indexB * sortData->mNodeSorter->mNKeys;
 
-    int i;
+    unsigned int i;
     // Step through each key until a difference is found
     for (i = 0; i < sortData->mNodeSorter->mNKeys; ++i) {
         SortKey* key = (SortKey*)iter.next();
