@@ -47,7 +47,7 @@
  *
  * Basically, fully tests sorting the placeContent tree in the Places Library
  * window.  Sorting is verified by comparing the nsINavHistoryResult returned by
- * placeContent.getResult to the expected sort values.
+ * placeContent.result to the expected sort values.
  */
 
 // Two properties of nsINavHistoryResult control the sort of the tree:
@@ -103,9 +103,9 @@ let prevSortKey = null;
 function checkSort(aTree, aSortingMode, aSortingAnno) {
   // The placeContent tree's sort is determined by the nsINavHistoryResult it
   // stores.  Get it and check that the sort is what the caller expects.
-  let res = aTree.getResult();
+  let res = aTree.result;
   isnot(res, null,
-        "sanity check: placeContent.getResult() should not return null");
+        "sanity check: placeContent.result should not return null");
 
   // Check sortingMode.
   is(res.sortingMode, aSortingMode,

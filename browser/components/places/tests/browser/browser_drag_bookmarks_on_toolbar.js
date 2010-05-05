@@ -38,7 +38,7 @@
 const TEST_URL = "http://www.mozilla.org";
 const TEST_TITLE = "example_title";
 
-var gBookmarksToolbar = window.document.getElementById("bookmarksBarContent");
+var gBookmarksToolbar = window.document.getElementById("PlacesToolbar");
 var dragDirections = { LEFT: 0, UP: 1, RIGHT: 2, DOWN: 3 };
 
 /**
@@ -145,10 +145,10 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection) {
 }
 
 function getToolbarNodeForItemId(aItemId) {
-  var children = gBookmarksToolbar.childNodes;
+  var children = document.getElementById("PlacesToolbarItems").childNodes;
   var node = null;
   for (var i = 0; i < children.length; i++) {
-    if (aItemId == children[i].node.itemId) {
+    if (aItemId == children[i]._placesNode.itemId) {
       node = children[i];
       break;
     }
@@ -187,8 +187,8 @@ var gTests = [
       var element = getToolbarNodeForItemId(folderId);
       isnot(element, null, "Found node on toolbar");
 
-      isnot(element.node, null, "Toolbar node has an associated Places node.");
-      var expectedData = getExpectedDataForPlacesNode(element.node);
+      isnot(element._placesNode, null, "Toolbar node has an associated Places node.");
+      var expectedData = getExpectedDataForPlacesNode(element._placesNode);
 
       ok(true, "Dragging left");
       synthesizeDragWithDirection(element, expectedData, dragDirections.LEFT);
@@ -218,8 +218,8 @@ var gTests = [
       var element = getToolbarNodeForItemId(itemId);
       isnot(element, null, "Found node on toolbar");
 
-      isnot(element.node, null, "Toolbar node has an associated Places node.");
-      var expectedData = getExpectedDataForPlacesNode(element.node);
+      isnot(element._placesNode, null, "Toolbar node has an associated Places node.");
+      var expectedData = getExpectedDataForPlacesNode(element._placesNode);
 
       ok(true, "Dragging left");
       synthesizeDragWithDirection(element, expectedData, dragDirections.LEFT);
