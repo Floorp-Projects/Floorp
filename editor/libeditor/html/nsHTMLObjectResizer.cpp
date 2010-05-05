@@ -439,7 +439,10 @@ nsHTMLEditor::HideResizers(void)
 
   // get the presshell's document observer interface.
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  if (!ps) {
+    NS_WARNING("no pres shell; can't remove resizers");
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   nsresult res;
   nsCOMPtr<nsIDOMNode> parentNode;

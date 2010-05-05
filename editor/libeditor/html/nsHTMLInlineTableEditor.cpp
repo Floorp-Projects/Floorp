@@ -125,14 +125,20 @@ nsHTMLEditor::HideInlineTableEditingUI()
 
   // get the presshell's document observer interface.
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  if (!ps) {
+    NS_WARNING("no pres shell; can't remove inline table editing");
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   // get the root content node.
 
   nsIDOMElement *bodyElement = GetRoot();
 
   nsCOMPtr<nsIContent> bodyContent( do_QueryInterface(bodyElement) );
-  if (!bodyContent) return NS_ERROR_FAILURE;
+  if (!bodyContent) {
+    NS_WARNING("no body; can't remove inline table editing");
+    return NS_ERROR_FAILURE;
+  }
 
   DeleteRefToAnonymousNode(mAddColumnBeforeButton, bodyContent, ps);
   mAddColumnBeforeButton = nsnull;
