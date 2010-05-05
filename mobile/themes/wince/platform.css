@@ -89,7 +89,7 @@ textbox[isempty="true"] {
   -moz-box-shadow: black 0 0.1mm 0.1mm;
 }
 
-.prompt-header {
+dialog .prompt-header {
   padding: 1mm;
   font-size: 8pt !important;
   -moz-border-radius: 1mm 1mm 0 0;
@@ -112,16 +112,16 @@ dialog[closebutton="true"] hbox > .close-button {
   display: -moz-box;
 }
 
-.prompt-title {
+dialog .prompt-title {
   font-size: 9pt !important;
 }
 
-.prompt-message {
+dialog .prompt-message {
   margin-top: 1mm;
 }
 
-.prompt-checkbox-label {
-  text-align: right;
+dialog .button-checkbox {
+  margin-left: 3mm;
 }
 
 /* buttons ----------------------------------------------------------------- */
@@ -168,6 +168,10 @@ button[disabled="true"] {
   button:not([disabled="true"]):active:hover {
     -moz-border-image: url("chrome://browser/skin/images/button-active-36.png") 4 repeat repeat;
   }
+}
+
+button:focus > .button-box {
+  border: 1px solid transparent;
 }
 
 /* dark buttons ------------------------------------------------------------ */
@@ -382,6 +386,32 @@ toolbarbutton.button-dark[type="checkbox"][checked="true"] {
   padding: 0 !important;
   background: #36373b !important;
   border: none !important;
+}
+
+/* checkbox buttons ----------------------------------------------------------- */
+.button-checkbox {
+  color: #fff;
+  padding: 0 !important;
+  background: none !important;
+  border: none !important;
+  -moz-border-image: none !important;
+}
+
+.button-checkbox .button-image-icon {
+  -moz-margin-end: 8px;
+  list-style-image: url("chrome://browser/skin/images/check-unselected-30.png");
+}
+
+.button-checkbox[checked="true"] .button-image-icon {
+  list-style-image: url("chrome://browser/skin/images/check-selected-30.png");
+}
+
+.button-checkbox:hover:active > .button-box,
+.button-checkbox[checked="true"] > .button-box {
+  padding-top: 1px;
+  padding-bottom: 2px;
+  -moz-padding-start: 3px;
+  -moz-padding-end: 4px;
 }
 
 /* radio buttons ----------------------------------------------------------- */

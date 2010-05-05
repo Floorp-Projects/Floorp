@@ -94,16 +94,15 @@ promptService.prototype = {
     
     doc.getElementById("prompt-alert-checkbox").checked = aCheckState.value;
     this.setLabelForNode(doc.getElementById("prompt-alert-checkbox-label"), aCheckMsg);
-    doc.getElementById("prompt-alert-checkbox-box").removeAttribute("collapsed");
+    doc.getElementById("prompt-alert-checkbox").removeAttribute("collapsed");
     
     dialog.waitForClose();
   },
   
   confirm: function(aParent, aTitle, aText) {
     let doc = this.getDocument();
-    if (!doc) {
+    if (!doc)
       return this._getFallbackService().confirm(aParent, aTitle, aText);
-    }
 
     var params = new Object();
     params.result = false;
@@ -118,9 +117,8 @@ promptService.prototype = {
   
   confirmCheck: function(aParent, aTitle, aText, aCheckMsg, aCheckState) {
     let doc = this.getDocument();
-    if (!doc) {
+    if (!doc)
       return this._getFallbackService().confirmCheck(aParent, aTitle, aText, aCheckMsg, aCheckState);
-    }
 
     var params = new Object();
     params.result = false;
@@ -132,7 +130,7 @@ promptService.prototype = {
 
     doc.getElementById("prompt-confirm-checkbox").checked = aCheckState.value;
     this.setLabelForNode(doc.getElementById("prompt-confirm-checkbox-label"), aCheckMsg);
-    doc.getElementById("prompt-confirm-checkbox-box").removeAttribute("collapsed");
+    doc.getElementById("prompt-confirm-checkbox").removeAttribute("collapsed");
     
     dialog.waitForClose();
     return params.result;
@@ -214,15 +212,14 @@ promptService.prototype = {
 
     doc.getElementById("prompt-confirm-checkbox").checked = aCheckState.value;
     this.setLabelForNode(doc.getElementById("prompt-confirm-checkbox-label"), aCheckMsg);
-    if (aCheckMsg) {
-      doc.getElementById("prompt-confirm-checkbox-box").removeAttribute("collapsed");
-    }
-    
+    if (aCheckMsg)
+      doc.getElementById("prompt-confirm-checkbox").removeAttribute("collapsed");
+
+
     let bbox = doc.getElementById("prompt-confirm-buttons-box");
-    while (bbox.lastChild) {
+    while (bbox.lastChild)
       bbox.removeChild(bbox.lastChild);
-    }
-    
+
     for (let i = 0; i < 3; i++) {
       let bTitle = null;
       switch (aButtonFlags & 0xff) {
@@ -274,10 +271,9 @@ promptService.prototype = {
   
   commonPrompt : function(aParent, aTitle, aText, aValue, aCheckMsg, aCheckState, isPassword) {
     let doc = this.getDocument();
-    if (!doc) {
+    if (!doc)
       throw "No document !";
-    }
-    
+
     var params = new Object();
     params.result = false;
     params.checkbox = aCheckState;
@@ -290,12 +286,11 @@ promptService.prototype = {
     doc.getElementById("prompt-prompt-checkbox").checked = aCheckState.value;
     this.setLabelForNode(doc.getElementById("prompt-prompt-checkbox-label"), aCheckMsg);
     doc.getElementById("prompt-prompt-textbox").value = aValue.value;
-    if (aCheckMsg) {
-      doc.getElementById("prompt-prompt-checkbox-box").removeAttribute("collapsed");
-    }
-    if (isPassword) {
+    if (aCheckMsg)
+      doc.getElementById("prompt-prompt-checkbox").removeAttribute("collapsed");
+
+    if (isPassword)
       doc.getElementById("prompt-prompt-textbox").type = "password";
-    }
     
     dialog.waitForClose();
     return params.result;
@@ -319,9 +314,8 @@ promptService.prototype = {
   
   promptUsernameAndPassword: function(aParent, aTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState) {
     let doc = this.getDocument();
-    if (!doc) {
+    if (!doc)
       return this._getFallbackService().promptUsernameAndPassword(aParent, aTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState);
-    }
 
     var params = new Object();
     params.result = false;
@@ -337,7 +331,7 @@ promptService.prototype = {
     doc.getElementById("prompt-password-user").value = aUsername.value;
     doc.getElementById("prompt-password-password").value = aPassword.value;
     if (aCheckMsg) {
-      doc.getElementById("prompt-password-checkbox-box").removeAttribute("collapsed");
+      doc.getElementById("prompt-password-checkbox").removeAttribute("collapsed");
       this.setLabelForNode(doc.getElementById("prompt-password-checkbox-label"), aCheckMsg);
     }
     
@@ -422,11 +416,10 @@ promptService.prototype = {
     let message = this.makeDialogText(aChannel, aAuthInfo);
     let title = this.getLocaleString("PromptUsernameAndPassword2");
     
-    if (aAuthInfo.flags & aAuthInfo.ONLY_PASSWORD) {
+    if (aAuthInfo.flags & aAuthInfo.ONLY_PASSWORD)
       res = this.promptPassword(aParent, title, message, password, aCheckMsg, aCheckState);
-    } else {
+    else
       res = this.promptUsernameAndPassword(aParent, title, message, username, password, aCheckMsg, aCheckState);
-    }
     
     if (res) {
       aAuthInfo.username = username.value;
@@ -443,9 +436,8 @@ promptService.prototype = {
   
   select: function(aParent, aTitle, aText, aCount, aSelectList, aOutSelection) {
     let doc = this.getDocument();
-    if (!doc) {
+    if (!doc)
       return this._getFallbackService().select(aParent, aTitle, aText, aCount, aSelectList, aOutSelection);
-    }
 
     var params = new Object();
     params.result = false;
