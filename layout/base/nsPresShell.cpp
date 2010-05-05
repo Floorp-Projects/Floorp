@@ -58,7 +58,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsStubDocumentObserver.h"

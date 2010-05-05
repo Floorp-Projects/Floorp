@@ -203,7 +203,7 @@
 #include "nsIPopupWindowManager.h"
 
 #include "nsIDragService.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds

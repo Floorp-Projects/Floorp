@@ -78,7 +78,7 @@
 #include "nsCSSProps.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
 

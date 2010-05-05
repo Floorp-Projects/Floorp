@@ -46,7 +46,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMEventTarget.h"

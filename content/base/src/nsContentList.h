@@ -56,7 +56,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsCRT.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 // Magic namespace id that means "match all namespaces".  This is
 // negative so it won't collide with actual namespace constants.

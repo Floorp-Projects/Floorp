@@ -119,7 +119,7 @@
 #include "nsBox.h"
 #include "nsTArray.h"
 #include "nsGenericDOMDataNode.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
