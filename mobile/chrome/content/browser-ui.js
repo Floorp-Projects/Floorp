@@ -2158,7 +2158,9 @@ var ContextHelper = {
   popupNode: null,
   onLink: false,
   onSaveableLink: false,
+  onVoiceLink: false,
   onImage: false,
+  onLoadedImage: false,
   linkURL: "",
   linkProtocol: null,
   mediaURL: "",
@@ -2167,7 +2169,9 @@ var ContextHelper = {
     this.popupNode = null;
     this.onLink = false;
     this.onSaveableLink = false;
+    this.onVoiceLink = false;
     this.onImage = false;
+    this.onLoadedImage = false;
     this.linkURL = "";
     this.linkProtocol = null;
     this.mediaURL = "";
@@ -2207,6 +2211,11 @@ var ContextHelper = {
     return aProtocol && !(aProtocol == "mailto" || aProtocol == "javascript" || aProtocol == "news" || aProtocol == "snews");
   },
 
+  _isVoice: function ch_isVoice(aProtocol) {
+    // Collection of protocols related to voice or data links
+    return aProtocol && (aProtocol == "tel" || aProtocol == "callto" || aProtocol == "sip" || aProtocol == "voipto");
+  },
+
   handleEvent: function ch_handleEvent(aEvent) {
     this._clearState();
 
@@ -2219,6 +2228,10 @@ var ContextHelper = {
       if (this.popupNode instanceof Ci.nsIImageLoadingContent && this.popupNode.currentURI) {
         this.onImage = true;
         this.mediaURL = this.popupNode.currentURI.spec;
+
+        let request = this.popupNode.getRequest(Ci.nsIImageLoadingContent.CURRENT_REQUEST);
+        if (request && (request.imageStatus & request.STATUS_SIZE_AVAILABLE))
+          this.onLoadedImage = true;
       }
     }
 
@@ -2237,6 +2250,7 @@ var ContextHelper = {
           this.linkProtocol = this._getProtocol(this._getURI(this.linkURL));
           this.onLink = true;
           this.onSaveableLink = this._isSaveable(this.linkProtocol);
+          this.onVoiceLink = this._isVoice(this.linkProtocol);
         }
       }
 
@@ -2247,19 +2261,29 @@ var ContextHelper = {
     let commands = document.getElementById("context-commands");
     for (let i=0; i<commands.childElementCount; i++) {
       let command = commands.children[i];
-      let type = command.getAttribute("type");
+      let types = command.getAttribute("type").split(/\s+/);
       command.removeAttribute("selector");
-      if (type.indexOf("image") != -1 && this.onImage) {
+      if (types.indexOf("image") != -1 && this.onImage) {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
         continue;
-      } else if (type.indexOf("link") != -1 && this.onLink  && this.onSaveableLink) {
+      } else if (types.indexOf("image-loaded") != -1 && this.onLoadedImage) {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
         continue;
-      } else if (type.indexOf("mailto") != -1 && this.onLink  && this.linkProtocol == "mailto") {
+      } else if (types.indexOf("link") != -1 && this.onSaveableLink) {
+        first = (first ? first : command);
+        last = command;
+        command.hidden = false;
+        continue;
+      } else if (types.indexOf("callto") != -1 && this.onVoiceLink) {
+        first = (first ? first : command);
+        last = command;
+        command.hidden = false;
+        continue;
+      } else if (types.indexOf("mailto") != -1 && this.onLink && this.linkProtocol == "mailto") {
         first = (first ? first : command);
         last = command;
         command.hidden = false;
