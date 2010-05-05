@@ -222,6 +222,14 @@ JSObject::getDenseArrayElement(uint32 i) const
     return dslots[i];
 }
 
+inline jsval *
+JSObject::addressOfDenseArrayElement(uint32 i)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(i < getDenseArrayCapacity());
+    return &dslots[i];
+}
+
 inline void
 JSObject::setDenseArrayElement(uint32 i, jsval v)
 {
@@ -485,7 +493,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSClass *clasp, JSObject* proto
         /* Let JSScope::create set freeslot so as to reserve slots. */
         JS_ASSERT(scope->freeslot >= JSSLOT_PRIVATE);
         if (scope->freeslot > JS_INITIAL_NSLOTS &&
-            !js_AllocSlots(cx, obj, scope->freeslot)) {
+            !obj->allocSlots(cx, scope->freeslot)) {
             scope->destroy(cx);
             goto bad;
         }
