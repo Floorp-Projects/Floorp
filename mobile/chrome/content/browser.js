@@ -380,7 +380,7 @@ var Browser = {
     bv.beginBatchOperation();
 
     let stylesheet = document.styleSheets[0];
-    for each (let style in ["window-width", "window-height", "toolbar-height", "browser", "browser-handheld", "browser-viewport"]) {
+    for each (let style in ["viewport-width", "viewport-height", "window-width", "window-height", "toolbar-height", "browser", "browser-viewport"]) {
       let index = stylesheet.insertRule("." + style + " {}", stylesheet.cssRules.length);
       this.styles[style] = stylesheet.cssRules[index].style;
     }
@@ -401,14 +401,15 @@ var Browser = {
       let toolbarHeight = Math.round(document.getElementById("toolbar-main").getBoundingClientRect().height);
       let scaledDefaultH = (kDefaultBrowserWidth * (h / w));
       let scaledScreenH = (window.screen.width * (h / w));
+      let dpiScale = gPrefService.getIntPref("zoom.dpiScale") / 100;
 
+      Browser.styles["viewport-width"].width = (w / dpiScale) + "px";
+      Browser.styles["viewport-height"].height = (h / dpiScale) + "px";
       Browser.styles["window-width"].width = w + "px";
       Browser.styles["window-height"].height = h + "px";
       Browser.styles["toolbar-height"].height = toolbarHeight + "px";
       Browser.styles["browser"].width = kDefaultBrowserWidth + "px";
       Browser.styles["browser"].height = scaledDefaultH + "px";
-      Browser.styles["browser-handheld"].width = window.screen.width + "px";
-      Browser.styles["browser-handheld"].height = scaledScreenH + "px";
 
       // Cause a resize of the viewport if the current browser holds a XUL document
       let browser = Browser.selectedBrowser;
@@ -3027,13 +3028,11 @@ Tab.prototype = {
     browser.style.removeProperty("width");
     browser.style.removeProperty("height");
 
-    if (metaData.reason == "handheld" || metaData.reason == "doctype") {
-      browser.className = "browser-handheld";
-    } else if (metaData.reason == "viewport") {  
+    if (metaData.reason == "handheld" || metaData.reason == "doctype" || metaData.reason == "viewport") {  
       browser.className = "browser-viewport";
       if (metaData.autoSize) {
-        browser.classList.add("window-width");
-        browser.classList.add("window-height");
+        browser.classList.add("viewport-width");
+        browser.classList.add("viewport-height");
       }
       else {
         let screenW = window.innerWidth;

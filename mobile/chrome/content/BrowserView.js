@@ -340,10 +340,10 @@ BrowserView.prototype = {
     let bvs = this._browserViewportState;
     if (bvs) {
       let md = bvs.metaData;
-      if (md && md.minScale)
-        bounded = Math.max(bounded, md.minScale);
-      if (md && md.maxScale)
-        bounded = Math.min(bounded, md.maxScale);
+      if (md && md.minZoom)
+        bounded = Math.max(bounded, md.minZoom);
+      if (md && md.maxZoom)
+        bounded = Math.min(bounded, md.maxZoom);
     }
 
     let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
@@ -625,8 +625,8 @@ BrowserView.prototype = {
       pageZoom = 1;
 
     let md = bvs.metaData;
-    if (md && md.scale)
-      pageZoom = Math.max(pageZoom, md.scale);
+    if (md && md.defaultZoom)
+      pageZoom = Math.max(pageZoom, md.defaultZoom);
 
     return pageZoom;
   },

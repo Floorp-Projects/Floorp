@@ -2,6 +2,17 @@
 <head>
     <title>Browser Viewport Page 02</title>
     <meta name="viewport" content="width=320, initial-scale=1"/>
+
+    <!--
+    Expected width calculation:
+      width = 320
+      since initial scale is specified, expand width to full screen (width = 533.33)
+
+    Expected scale calculation:
+      account for high DPI (1 * 1.5 = 1.5)
+    -->
+    <meta name="expected-width" content="533.33"/>
+    <meta name="expected-scale" content="1.5"/>
 </head>
 <body>
     <p>Browser Viewport Page 02</p>

@@ -50,6 +50,7 @@ pref("toolkit.screen.lock", false);
 pref("zoom.minPercent", 20);
 pref("zoom.maxPercent", 400);
 pref("toolkit.zoomManager.zoomValues", ".2,.3,.5,.67,.8,.9,1,1.1,1.2,1.33,1.5,1.7,2,2.4,3,4");
+pref("zoom.dpiScale", 150);
 
 /* use custom widget for html:select */
 pref("ui.use_native_popup_windows", true);
