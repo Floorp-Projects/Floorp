@@ -317,7 +317,7 @@
   margin: 7px 5px;
   width: 32px;
   height: 32px;
-  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png")
+  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
 }
 
 .addon[type="theme"] .icon {
@@ -455,7 +455,7 @@
   width: 32px;
   height: 32px;
   -moz-margin-end: 10px;
-  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png")
+  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
 }
 
 #detail-view[type="theme"] #detail-icon {
@@ -467,7 +467,7 @@
 }
 
 #detail-name {
-  font-size: 200%
+  font-size: 200%;
 }
 
 #detail-screenshot {
@@ -492,7 +492,7 @@
   padding: 4px 20px;
   background-color: #FDFFA8;
   -moz-border-radius: 8px;
-  font-size: 120%
+  font-size: 120%;
   border: 2px solid #F0F6A3;
 }
 
