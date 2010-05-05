@@ -153,14 +153,6 @@ nsXPConnect::~nsXPConnect()
         mRuntime->SystemIsBeingShutDown(cx);
 
         JS_EndRequest(cx);
-
-        // Temporary code to debug a persistent leak on tinderbox
-        // unit tests (bug 538462).
-#if defined(DEBUG_cltbld) && defined(XP_MACOSX)
-        printf("Dump of entire JS heap at shutdown:\n");
-        JS_DumpHeap(cx, stdout, nsnull, 0, nsnull, size_t(-1), nsnull);
-#endif
-
         JS_DestroyContext(cx);
     }
 
@@ -233,6 +225,19 @@ nsXPConnect::ReleaseXPConnectSingleton()
         {
             xpc->mProfiler->Stop();
             xpc->mProfiler->WriteResults(xpc->mProfilerOutputFile);
+        }
+#endif
+
+        // Temporary code to debug a persistent leak on tinderbox
+        // unit tests (bug 538462).
+#if defined(DEBUG_cltbld) && defined(XP_MACOSX)
+        {
+            XPCCallContext ccx(NATIVE_CALLER);
+            if(ccx.IsValid())
+            {
+                printf("Dump of entire JS heap at shutdown:\n");
+                JS_DumpHeap(ccx, stdout, nsnull, 0, nsnull, size_t(-1), nsnull);
+            }
         }
 #endif
 
