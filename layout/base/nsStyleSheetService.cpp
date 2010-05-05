@@ -151,7 +151,7 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
     const char* message = (aSheetType == AGENT_SHEET) ?
       "agent-sheet-added" : "user-sheet-added";
     nsCOMPtr<nsIObserverService> serv =
-      do_GetService("@mozilla.org/observer-service;1");
+      mozilla::services::GetObserverService();
     if (serv) {
       // We're guaranteed that the new sheet is the last sheet in
       // mSheets[aSheetType]
@@ -212,10 +212,9 @@ nsStyleSheetService::UnregisterSheet(nsIURI *sheetURI, PRUint32 aSheetType)
   const char* message = (aSheetType == AGENT_SHEET) ?
       "agent-sheet-removed" : "user-sheet-removed";
   nsCOMPtr<nsIObserverService> serv =
-    do_GetService("@mozilla.org/observer-service;1");
-  if (serv) {
+    mozilla::services::GetObserverService();
+  if (serv)
     serv->NotifyObservers(sheet, message, nsnull);
-  }
-  
+
   return NS_OK;
 }

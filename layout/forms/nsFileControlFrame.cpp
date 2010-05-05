@@ -90,6 +90,7 @@
 #include "nsIVariant.h"
 #include "nsIContentPrefService.h"
 #include "nsIContentURIGrouper.h"
+#include "mozilla/Services.h"
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
@@ -493,7 +494,7 @@ void nsFileControlFrame::InitUploadLastDir() {
   NS_IF_ADDREF(gUploadLastDir);
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService && gUploadLastDir) {
     observerService->AddObserver(gUploadLastDir, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_TRUE);
     observerService->AddObserver(gUploadLastDir, "browser:purge-session-history", PR_TRUE);
@@ -843,12 +844,10 @@ NS_IMETHODIMP nsFileControlFrame::GetAccessible(nsIAccessible** aAccessible)
 {
   // Accessible object exists just to hold onto its children, for later shutdown
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+  if (!accService)
+    return NS_ERROR_FAILURE;
 
-  if (accService) {
-    return accService->CreateHTMLGenericAccessible(static_cast<nsIFrame*>(this), aAccessible);
-  }
-
-  return NS_ERROR_FAILURE;
+  return accService->CreateHTMLGenericAccessible(static_cast<nsIFrame*>(this), aAccessible);
 }
 #endif
 

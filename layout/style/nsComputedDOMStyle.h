@@ -83,11 +83,12 @@ public:
   }
 
   static already_AddRefed<nsStyleContext>
-  GetStyleContextForContent(nsIContent* aContent, nsIAtom* aPseudo,
+  GetStyleContextForElement(mozilla::dom::Element* aElement, nsIAtom* aPseudo,
                             nsIPresShell* aPresShell);
 
   static already_AddRefed<nsStyleContext>
-  GetStyleContextForContentNoFlush(nsIContent* aContent, nsIAtom* aPseudo,
+  GetStyleContextForElementNoFlush(mozilla::dom::Element* aElement,
+                                   nsIAtom* aPseudo,
                                    nsIPresShell* aPresShell);
 
   static nsIPresShell*

@@ -1440,7 +1440,13 @@ NS_EnsureSafeToReturn(nsIURI* uri, nsIURI** result)
         return NS_OK;
     }
 
-    return uri->Clone(result);
+    nsresult rv = uri->Clone(result);
+    if (NS_SUCCEEDED(rv) && !*result) {
+        NS_ERROR("nsIURI.clone contract was violated");
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    return rv;
 }
 
 /**

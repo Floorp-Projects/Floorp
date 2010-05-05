@@ -1533,7 +1533,8 @@ nsPluginHost::nsPluginHost()
 #endif
   }
 
-  nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> obsService =
+    mozilla::services::GetObserverService();
   if (obsService) {
     obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
     obsService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
@@ -3555,8 +3556,8 @@ NS_IMETHODIMP nsPluginHost::LoadPlugins()
 
   // only if plugins have changed will we notify plugin-change observers
   if (pluginschanged) {
-    nsCOMPtr<nsIObserverService>
-      obsService(do_GetService("@mozilla.org/observer-service;1"));
+    nsCOMPtr<nsIObserverService> obsService =
+      mozilla::services::GetObserverService();
     if (obsService)
       obsService->NotifyObservers(nsnull, "plugins-list-updated", nsnull);
   }
@@ -5068,7 +5069,7 @@ nsPluginHost::PluginCrashed(nsNPAPIPlugin* aPlugin,
   // a crashreport.
   PRBool submittedCrashReport = PR_FALSE;
   nsCOMPtr<nsIObserverService> obsService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   nsCOMPtr<nsIWritablePropertyBag2> propbag =
     do_CreateInstance("@mozilla.org/hash-property-bag;1");
   if (obsService && propbag) {

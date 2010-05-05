@@ -165,7 +165,7 @@ mozSanitizingHTMLSerializer::Flush(nsAString& aStr)
 }
 
 NS_IMETHODIMP
-mozSanitizingHTMLSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
+mozSanitizingHTMLSerializer::AppendDocumentStart(nsIDocument *aDocument,
                                                  nsAString& aStr)
 {
   return NS_OK;
@@ -225,7 +225,7 @@ mozSanitizingHTMLSerializer::GetIdForContent(nsIContent* aContent)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::AppendText(nsIDOMText* aText, 
+mozSanitizingHTMLSerializer::AppendText(nsIContent* aText,
                                         PRInt32 aStartOffset,
                                         PRInt32 aEndOffset, 
                                         nsAString& aStr)
@@ -241,14 +241,13 @@ mozSanitizingHTMLSerializer::AppendText(nsIDOMText* aText,
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::AppendElementStart(nsIDOMElement *aElement,
-                                                nsIDOMElement *aOriginalElement,
+mozSanitizingHTMLSerializer::AppendElementStart(nsIContent *aElement,
+                                                nsIContent *aOriginalElement,
                                                 nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
-  mContent = do_QueryInterface(aElement);
-  NS_ENSURE_TRUE(mContent, NS_ERROR_FAILURE);
+  mContent = aElement;
 
   mOutputString = &aStr;
 
@@ -271,13 +270,12 @@ mozSanitizingHTMLSerializer::AppendElementStart(nsIDOMElement *aElement,
 } 
  
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::AppendElementEnd(nsIDOMElement *aElement,
+mozSanitizingHTMLSerializer::AppendElementEnd(nsIContent *aElement,
                                               nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
-  mContent = do_QueryInterface(aElement);
-  NS_ENSURE_TRUE(mContent, NS_ERROR_FAILURE);
+  mContent = aElement;
 
   mOutputString = &aStr;
 

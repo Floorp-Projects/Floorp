@@ -1035,10 +1035,10 @@ class TypedArrayTemplate
     {
         NativeType *dest = static_cast<NativeType*>(data);
 
-        if (ar->isDenseArray() && js_DenseArrayCapacity(ar) >= len) {
+        if (ar->isDenseArray() && ar->getDenseArrayCapacity() >= len) {
             JS_ASSERT(ar->getArrayLength() == len);
 
-            jsval *src = ar->dslots;
+            jsval *src = ar->getDenseArrayElements();
 
             for (uintN i = 0; i < len; ++i) {
                 jsval v = *src++;

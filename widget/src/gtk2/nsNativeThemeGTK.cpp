@@ -61,6 +61,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
 #include "nsWidgetAtoms.h"
+#include "mozilla/Services.h"
 
 #include <gdk/gdkprivate.h>
 #include <gtk/gtk.h>
@@ -82,7 +83,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
 
   // We have to call moz_gtk_shutdown before the event loop stops running.
   nsCOMPtr<nsIObserverService> obsServ =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   obsServ->AddObserver(this, "xpcom-shutdown", PR_FALSE);
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));

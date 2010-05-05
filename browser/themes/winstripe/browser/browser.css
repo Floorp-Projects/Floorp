@@ -310,7 +310,7 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 #TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 {
   -moz-appearance: toolbarbutton;
   margin: 0;
-  padding: 3px;
+  padding: 0 3px;
   border: none !important;
   color: inherit !important;
   background: transparent !important;
@@ -1197,7 +1197,8 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   width: 31px;
 }
 
-.tabs-newtab-button:hover:active {
+.tabs-newtab-button:hover:active,
+#TabsToolbar > #new-tab-button:hover:active {
   -moz-image-region: rect(0, 32px, 18px, 16px);
 }
 

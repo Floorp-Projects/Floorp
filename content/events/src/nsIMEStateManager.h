@@ -80,10 +80,11 @@ public:
   // Get the focused editor's selection and root
   static nsresult GetFocusSelectionAndRoot(nsISelection** aSel,
                                            nsIContent** aRoot);
+  // This method changes the current IME state forcedly.
+  // So, the caller should check whether you're focused or not.
+  static void ChangeIMEStateTo(PRUint32 aNewIMEState);
 protected:
-  static void SetIMEState(nsPresContext* aPresContext,
-                          PRUint32 aState,
-                          nsIWidget* aKB);
+  static void SetIMEState(PRUint32 aState, nsIWidget* aWidget);
   static PRUint32 GetNewIMEState(nsPresContext* aPresContext,
                                  nsIContent* aContent);
 

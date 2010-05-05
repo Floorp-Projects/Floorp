@@ -52,19 +52,6 @@
 
 JS_BEGIN_EXTERN_C
 
-struct JSRegExpStatics {
-    JSString    *input;         /* input string to match (perl $_, GC root) */
-    JSBool      multiline;      /* whether input contains newlines (perl $*) */
-    uint16      parenCount;     /* number of valid elements in parens[] */
-    uint16      moreLength;     /* number of allocated elements in moreParens */
-    JSSubString parens[9];      /* last set of parens matched (perl $1, $2) */
-    JSSubString *moreParens;    /* null or realloc'd vector for $10, etc. */
-    JSSubString lastMatch;      /* last string matched (perl $&) */
-    JSSubString lastParen;      /* last paren matched (perl $+) */
-    JSSubString leftContext;    /* input to left of last match (perl $`) */
-    JSSubString rightContext;   /* input to right of last match (perl $') */
-};
-
 namespace js { class AutoValueRooter; }
 
 extern JS_FRIEND_API(void)
@@ -95,17 +82,6 @@ typedef struct RECharSet {
         } src;
     } u;
 } RECharSet;
-
-/*
- * This macro is safe because moreParens is guaranteed to be allocated and big
- * enough to hold parenCount, or else be null when parenCount is 0.
- */
-#define REGEXP_PAREN_SUBSTRING(res, num)                                      \
-    (((jsuint)(num) < (jsuint)(res)->parenCount)                              \
-     ? ((jsuint)(num) < 9)                                                    \
-       ? &(res)->parens[num]                                                  \
-       : &(res)->moreParens[(num) - 9]                                        \
-     : &js_EmptySubString)
 
 typedef struct RENode RENode;
 

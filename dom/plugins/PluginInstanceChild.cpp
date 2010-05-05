@@ -101,8 +101,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mPluginWindowHWND(0)
     , mPluginWndProc(0)
     , mPluginParentHWND(0)
-    , mNestedEventHook(0)
-    , mNestedEventLevelDepth(0)
     , mCachedWinlessPluginHWND(0)
     , mWinlessPopupSurrogateHWND(0)
     , mWinlessThrottleOldWndProc(0)
@@ -799,9 +797,11 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
                          &mWsInfo.visual, &mWsInfo.depth))
         return false;
 
-    if (aWindow.type == NPWindowTypeWindow) {
 #ifdef MOZ_WIDGET_GTK2
-        if (GdkWindow* socket_window = gdk_window_lookup(aWindow.window)) {
+    if (aWindow.type == NPWindowTypeWindow
+        && gtk_check_version(2,18,7) != NULL) { // older
+        GdkWindow* socket_window = gdk_window_lookup(aWindow.window);
+        if (socket_window) {
             // A GdkWindow for the socket already exists.  Need to
             // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
             // See wrap_gtk_plug_embedded in PluginModuleChild.cpp.
@@ -809,8 +809,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
                               "moz-existed-before-set-window",
                               GUINT_TO_POINTER(1));
         }
-#endif
     }
+#endif
 
     if (mPluginIface->setwindow)
         (void) mPluginIface->setwindow(&mData, &mWindow);
@@ -1092,61 +1092,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
     return res;
 }
 
-/* winless modal ui loop logic */
-
-// gTempChildPointer is only in use from the time we enter handle event, to the
-// point where ui might be created by that call. If ui isn't created, there's
-// no issue. If ui is created, the parent can't start processing messages in
-// spin loop until SendSetNestedEventState, at which point,
-// gTempChildPointer is no longer needed.
-static PluginInstanceChild* gTempChildPointer;
-
-LRESULT CALLBACK
-PluginInstanceChild::NestedInputEventHook(int nCode,
-                                          WPARAM wParam,
-                                          LPARAM lParam)
-{
-    if (!gTempChildPointer) {
-        return CallNextHookEx(NULL, nCode, wParam, lParam);
-    }
-
-    if (nCode >= 0) {
-        NS_ASSERTION(gTempChildPointer, "Never should be null here!");
-        gTempChildPointer->ResetNestedEventHook();
-        gTempChildPointer->SendProcessNativeEventsInRPCCall();
-
-        gTempChildPointer = NULL;
-    }
-    return CallNextHookEx(NULL, nCode, wParam, lParam);
-}
-
-void
-PluginInstanceChild::SetNestedInputEventHook()
-{
-    NS_ASSERTION(!mNestedEventHook,
-        "mNestedEventHook already setup in call to SetNestedInputEventHook?");
-
-    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-
-    // WH_GETMESSAGE hooks are triggered by peek message calls in parent due to
-    // attached message queues, resulting in stomped in-process ipc calls.  So
-    // we use a filter hook specific to dialogs, menus, and scroll bars to kick
-    // things off.
-    mNestedEventHook = SetWindowsHookEx(WH_MSGFILTER,
-                                        NestedInputEventHook,
-                                        NULL,
-                                        GetCurrentThreadId());
-}
-
-void
-PluginInstanceChild::ResetNestedEventHook()
-{
-    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-    if (mNestedEventHook)
-        UnhookWindowsHookEx(mNestedEventHook);
-    mNestedEventHook = NULL;
-}
-
 /* windowless track popup menu helpers */
 
 BOOL
@@ -1329,16 +1274,6 @@ PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
     // special handling during delivery.
     int16_t handled;
 
-    mNestedEventLevelDepth++;
-    PLUGIN_LOG_DEBUG(("WinlessHandleEvent start depth: %i", mNestedEventLevelDepth));
-
-    // On the first, non-reentrant call, setup our modal ui detection hook.
-    if (mNestedEventLevelDepth == 1) {
-        NS_ASSERTION(!gTempChildPointer, "valid gTempChildPointer here?");
-        gTempChildPointer = this;
-        SetNestedInputEventHook();
-    }
-
     // TrackPopupMenu will fail if the parent window is not associated with
     // our ui thread. So we hook TrackPopupMenu so we can hand in a surrogate
     // parent created in the child process.
@@ -1348,21 +1283,10 @@ PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
       sWinlessPopupSurrogateHWND = mWinlessPopupSurrogateHWND;
     }
 
-    bool old_state = MessageLoop::current()->NestableTasksAllowed();
-    MessageLoop::current()->SetNestableTasksAllowed(true);
     handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
-    MessageLoop::current()->SetNestableTasksAllowed(old_state);
 
-    gTempChildPointer = NULL;
     sWinlessPopupSurrogateHWND = NULL;
 
-    mNestedEventLevelDepth--;
-    PLUGIN_LOG_DEBUG(("WinlessHandleEvent end depth: %i", mNestedEventLevelDepth));
-
-    NS_ASSERTION(!(mNestedEventLevelDepth < 0), "mNestedEventLevelDepth < 0?");
-    if (mNestedEventLevelDepth <= 0) {
-        ResetNestedEventHook();
-    }
     return handled;
 }
 
@@ -2082,7 +2006,6 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 
 #if defined(OS_WIN)
     SharedSurfaceRelease();
-    ResetNestedEventHook();
     DestroyWinlessPopupSurrogate();
 #endif
 

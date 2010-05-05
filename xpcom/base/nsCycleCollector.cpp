@@ -138,12 +138,14 @@
 #include "prtime.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsIObserverService.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsTPtrArray.h"
 #include "nsTArray.h"
+#include "mozilla/Services.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -2494,6 +2496,8 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
     if (mCollectionInProgress)
         return 0;
 
+    NS_TIME_FUNCTION;
+
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: Starting nsCycleCollector::Collect(%d)\n", aTryCollections);
     PRTime start = PR_Now();
@@ -2502,10 +2506,9 @@ nsCycleCollector::Collect(PRUint32 aTryCollections)
     mCollectionInProgress = PR_TRUE;
 
     nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (obs) {
+        mozilla::services::GetObserverService();
+    if (obs)
         obs->NotifyObservers(nsnull, "cycle-collector-begin", nsnull);
-    }
 
     mFollowupCollection = PR_FALSE;
     mCollectedObjects = 0;

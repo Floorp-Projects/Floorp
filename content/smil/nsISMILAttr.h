@@ -43,6 +43,7 @@
 class nsSMILValue;
 class nsISMILType;
 class nsISMILAnimationElement;
+class nsIContent;
 
 ////////////////////////////////////////////////////////////////////////
 // nsISMILAttr: A variable targeted by SMIL for animation and can therefore have
@@ -104,9 +105,19 @@ public:
   virtual nsresult SetAnimValue(const nsSMILValue& aValue) = 0;
 
   /**
+   * Returns the targeted content node, for any nsISMILAttr implementations
+   * that want to expose that to the animation logic.  Otherwise, returns
+   * null.
+   *
+   * @return the targeted content node, if this nsISMILAttr implementation
+   * wishes to make it avaiable.  Otherwise, nsnull.
+   */
+  virtual const nsIContent* GetTargetNode() const { return nsnull; }
+
+  /**
    * Virtual destructor, to make sure subclasses can clean themselves up.
    */
-  virtual ~nsISMILAttr() {};
+  virtual ~nsISMILAttr() {}
 };
 
 #endif // NS_ISMILATTR_H_

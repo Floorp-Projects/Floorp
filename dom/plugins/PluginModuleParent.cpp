@@ -784,6 +784,20 @@ PluginModuleParent::AnswerProcessSomeEvents()
 }
 #endif
 
+bool
+PluginModuleParent::RecvProcessNativeEventsInRPCCall()
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+#if defined(OS_WIN)
+    ProcessNativeEventsInRPCCall();
+    return true;
+#else
+    NS_NOTREACHED(
+        "PluginInstanceParent::AnswerSetNestedEventState not implemented!");
+    return false;
+#endif
+}
+
 #ifdef OS_MACOSX
 #define DEFAULT_REFRESH_MS 20 // CoreAnimation: 50 FPS
 void

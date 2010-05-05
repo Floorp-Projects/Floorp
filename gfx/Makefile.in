@@ -52,13 +52,15 @@ endif
 # the link line on linux. This order is defined by the
 # order listed in DIRS. On shared builds ycbcr must
 # be built first so the order is reversed.
-ifdef BUILD_STATIC_LIBS
-DIRS		+= layers ycbcr
-else
-DIRS            += ycbcr layers
+ifndef BUILD_STATIC_LIBS
+DIRS		+= ycbcr
 endif
 
-DIRS		+= public idl src qcms thebes
+DIRS		+= public idl src qcms layers thebes src/thebes
+
+ifdef BUILD_STATIC_LIBS
+DIRS		+= ycbcr
+endif
 
 ifdef MOZ_IPC
 DIRS		+= ipc

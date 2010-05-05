@@ -164,6 +164,7 @@
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
 #include "nsIURIFixup.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsEventDispatcher.h"
 #include "nsIObserverService.h"
@@ -202,6 +203,7 @@
 #include "nsIPopupWindowManager.h"
 
 #include "nsIDragService.h"
+#include "Element.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -214,6 +216,8 @@
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
+
+using namespace mozilla::dom;
 
 nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
 
@@ -682,8 +686,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mObserver = new nsGlobalWindowObserver(this);
     if (mObserver) {
       NS_ADDREF(mObserver);
-      nsCOMPtr<nsIObserverService> os =
-        do_GetService("@mozilla.org/observer-service;1");
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       if (os) {
         // Watch for online/offline status changes so we can fire events. Use
         // a strong reference.
@@ -775,8 +778,7 @@ nsGlobalWindow::~nsGlobalWindow()
 #endif
 
   if (mObserver) {
-    nsCOMPtr<nsIObserverService> os =
-      do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       os->RemoveObserver(mObserver, "dom-storage2-changed");
@@ -1624,6 +1626,8 @@ nsresult
 nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                nsISupports* aState)
 {
+  NS_TIME_FUNCTION;
+
   NS_PRECONDITION(mDocumentPrincipal == nsnull,
                   "mDocumentPrincipal prematurely set!");
 
@@ -2116,7 +2120,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   }
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService) {
     nsAutoString origin;
     nsIPrincipal* principal = aDocument->NodePrincipal();
@@ -4478,7 +4482,7 @@ nsGlobalWindow::Blur()
       nsCOMPtr<nsIDOMElement> element;
       fm->GetFocusedElementForWindow(this, PR_FALSE, nsnull, getter_AddRefs(element));
       nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-      if (content == doc->GetRootContent())
+      if (content == doc->GetRootElement())
         fm->ClearFocus(this);
     }
   }
@@ -7046,7 +7050,7 @@ nsGlobalWindow::TakeFocus(PRBool aFocus, PRUint32 aFocusMethod)
   // true to tell the calling focus manager that a focus event is expected. If
   // there is no root content node, the document hasn't loaded enough yet, or
   // there isn't one and there is no point in firing a focus event.
-  if (aFocus && mNeedsFocus && mDoc && mDoc->GetRootContent() != nsnull) {
+  if (aFocus && mNeedsFocus && mDoc && mDoc->GetRootElement() != nsnull) {
     mNeedsFocus = PR_FALSE;
     return PR_TRUE;
   }
@@ -7268,16 +7272,16 @@ nsGlobalWindow::UpdateCanvasFocus(PRBool aFocusChanged, nsIContent* aNewContent)
     return;
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-  nsIContent *rootContent = doc->GetRootContent();
-  if (rootContent) {
+  Element *rootElement = doc->GetRootElement();
+  if (rootElement) {
       if ((mHasFocus || aFocusChanged) &&
-          (mFocusedNode == rootContent || aNewContent == rootContent)) {
-          nsIFrame* frame = rootContent->GetPrimaryFrame();
+          (mFocusedNode == rootElement || aNewContent == rootElement)) {
+          nsIFrame* frame = rootElement->GetPrimaryFrame();
           if (frame) {
               frame = frame->GetParent();
               nsCanvasFrame* canvasFrame = do_QueryFrame(frame);
               if (canvasFrame) {
-                  canvasFrame->SetHasFocus(mHasFocus && rootContent == aNewContent);
+                  canvasFrame->SetHasFocus(mHasFocus && rootElement == aNewContent);
               }
           }
       }

@@ -47,6 +47,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "nsCRT.h"
+#include "mozilla/Services.h"
 
 #include "nsThebesDeviceContext.h"
 #include "nsThebesRenderingContext.h"
@@ -307,7 +308,7 @@ static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
 
 nsThebesDeviceContext::~nsThebesDeviceContext()
 {
-    nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs)
         obs->RemoveObserver(this, "memory-pressure");
 
@@ -709,7 +710,7 @@ nsThebesDeviceContext::Init(nsIWidget *aWidget)
 
     // register as a memory-pressure observer to free font resources
     // in low-memory situations.
-    nsCOMPtr<nsIObserverService> obs(do_GetService("@mozilla.org/observer-service;1"));
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs)
         obs->AddObserver(this, "memory-pressure", PR_TRUE);
 

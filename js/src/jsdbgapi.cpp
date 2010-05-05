@@ -77,7 +77,7 @@ typedef struct JSTrap {
     jsbytecode      *pc;
     JSOp            op;
     JSTrapHandler   handler;
-    void            *closure;
+    jsval           closure;
 } JSTrap;
 
 #define DBG_LOCK(rt)            JS_ACQUIRE_LOCK((rt)->debuggerLock)
@@ -142,7 +142,7 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
 
 JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-           JSTrapHandler handler, void *closure)
+           JSTrapHandler handler, jsval closure)
 {
     JSTrap *junk, *trap, *twin;
     JSRuntime *rt;
@@ -168,7 +168,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
         trap = (JSTrap *) cx->malloc(sizeof *trap);
         if (!trap)
             return JS_FALSE;
-        trap->closure = NULL;
+        trap->closure = JSVAL_NULL;
         DBG_LOCK(rt);
         twin = (rt->debuggerMutations != sample)
                ? FindTrap(rt, script, pc)
@@ -220,7 +220,7 @@ DestroyTrapAndUnlock(JSContext *cx, JSTrap *trap)
 
 JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
-             JSTrapHandler *handlerp, void **closurep)
+             JSTrapHandler *handlerp, jsval *closurep)
 {
     JSTrap *trap;
 
@@ -229,7 +229,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
     if (handlerp)
         *handlerp = trap ? trap->handler : NULL;
     if (closurep)
-        *closurep = trap ? trap->closure : NULL;
+        *closurep = trap ? trap->closure : JSVAL_NULL;
     if (trap)
         DestroyTrapAndUnlock(cx, trap);
     else
@@ -295,10 +295,8 @@ js_MarkTraps(JSTracer *trc)
     for (JSTrap *trap = (JSTrap *) rt->trapList.next;
          &trap->links != &rt->trapList;
          trap = (JSTrap *) trap->links.next) {
-        if (trap->closure) {
-            JS_SET_TRACING_NAME(trc, "trap->closure");
-            js_CallValueTracerIfGCThing(trc, (jsval) trap->closure);
-        }
+        JS_SET_TRACING_NAME(trc, "trap->closure");
+        js_CallValueTracerIfGCThing(trc, trap->closure);
     }
 }
 
@@ -375,15 +373,15 @@ LeaveTraceRT(JSRuntime *rt)
 #endif
 
 JS_PUBLIC_API(JSBool)
-JS_SetInterrupt(JSRuntime *rt, JSTrapHandler handler, void *closure)
+JS_SetInterrupt(JSRuntime *rt, JSInterruptHook hook, void *closure)
 {
 #ifdef JS_TRACER
     {
         AutoLockGC lock(rt);
         bool wasInhibited = rt->debuggerInhibitsJIT();
 #endif
-        rt->globalDebugHooks.interruptHandler = handler;
-        rt->globalDebugHooks.interruptHandlerData = closure;
+        rt->globalDebugHooks.interruptHook = hook;
+        rt->globalDebugHooks.interruptHookData = closure;
 #ifdef JS_TRACER
         JITInhibitingHookChange(rt, wasInhibited);
     }
@@ -393,18 +391,18 @@ JS_SetInterrupt(JSRuntime *rt, JSTrapHandler handler, void *closure)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep)
+JS_ClearInterrupt(JSRuntime *rt, JSInterruptHook *hoop, void **closurep)
 {
 #ifdef JS_TRACER
     AutoLockGC lock(rt);
     bool wasInhibited = rt->debuggerInhibitsJIT();
 #endif
-    if (handlerp)
-        *handlerp = rt->globalDebugHooks.interruptHandler;
+    if (hoop)
+        *hoop = rt->globalDebugHooks.interruptHook;
     if (closurep)
-        *closurep = rt->globalDebugHooks.interruptHandlerData;
-    rt->globalDebugHooks.interruptHandler = 0;
-    rt->globalDebugHooks.interruptHandlerData = 0;
+        *closurep = rt->globalDebugHooks.interruptHookData;
+    rt->globalDebugHooks.interruptHook = 0;
+    rt->globalDebugHooks.interruptHookData = 0;
 #ifdef JS_TRACER
     JITInhibitingHookChange(rt, wasInhibited);
 #endif
@@ -506,10 +504,8 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
          wp = (JSWatchPoint *)wp->links.next) {
         if (wp->object == obj) {
             wp->sprop->trace(trc);
-            if (wp->sprop->hasSetterValue() && wp->setter) {
-                JS_CALL_OBJECT_TRACER(trc, js_CastAsObject(wp->setter),
-                                      "wp->setter");
-            }
+            if (wp->sprop->hasSetterValue() && wp->setter)
+                JS_CALL_OBJECT_TRACER(trc, CastAsObject(wp->setter), "wp->setter");
             JS_SET_TRACING_NAME(trc, "wp->closure");
             js_CallValueTracerIfGCThing(trc, OBJECT_TO_JSVAL(wp->closure));
         }
@@ -735,7 +731,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 ok = !wp->setter ||
                      (sprop->hasSetterValue()
                       ? js_InternalCall(cx, obj,
-                                        js_CastAsObjectJSVal(wp->setter),
+                                        CastAsObjectJSVal(wp->setter),
                                         1, vp, vp)
                       : wp->setter(cx, obj, userid, vp));
                 if (injectFrame) {
@@ -774,7 +770,7 @@ IsWatchedProperty(JSContext *cx, JSScopeProperty *sprop)
 {
     if (sprop->hasSetterValue()) {
         JSObject *funobj = sprop->setterObject();
-        if (!funobj->isFunction())
+        if (!funobj || !funobj->isFunction())
             return false;
 
         JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
@@ -803,10 +799,10 @@ js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter)
     }
 
     wrapper = js_NewFunction(cx, NULL, js_watch_set_wrapper, 1, 0,
-                             setter ? js_CastAsObject(setter)->getParent() : NULL, atom);
+                             setter ? CastAsObject(setter)->getParent() : NULL, atom);
     if (!wrapper)
         return NULL;
-    return js_CastAsPropertyOp(FUN_OBJECT(wrapper));
+    return CastAsPropertyOp(FUN_OBJECT(wrapper));
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1563,7 +1559,7 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
 /************************************************************************/
 
 JS_PUBLIC_API(JSBool)
-JS_SetDebuggerHandler(JSRuntime *rt, JSTrapHandler handler, void *closure)
+JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler handler, void *closure)
 {
     rt->globalDebugHooks.debuggerHandler = handler;
     rt->globalDebugHooks.debuggerHandlerData = closure;
@@ -1625,7 +1621,7 @@ JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_SetThrowHook(JSRuntime *rt, JSTrapHandler hook, void *closure)
+JS_SetThrowHook(JSRuntime *rt, JSThrowHook hook, void *closure)
 {
     rt->globalDebugHooks.throwHook = hook;
     rt->globalDebugHooks.throwHookData = closure;

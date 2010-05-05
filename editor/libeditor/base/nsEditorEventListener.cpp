@@ -912,11 +912,14 @@ FindSelectionRoot(nsEditor *aEditor, nsIContent *aContent)
 
   nsIContent *root;
   if (document->HasFlag(NODE_IS_EDITABLE)) {
-    NS_IF_ADDREF(root = document->GetRootContent());
+    NS_IF_ADDREF(root = document->GetRootElement());
 
     return root;
   }
 
+  // XXX If the editor is HTML editor and has readonly flag, shouldn't return
+  // the element which has contenteditable="true"?  However, such case isn't
+  // there without chrome permission script.
   if (aEditor->IsReadonly()) {
     // We still want to allow selection in a readonly editor.
     nsCOMPtr<nsIDOMElement> rootElement;
@@ -936,6 +939,11 @@ FindSelectionRoot(nsEditor *aEditor, nsIContent *aContent)
 
   // For non-readonly editors we want to find the root of the editable subtree
   // containing aContent.
+  // XXX This is wrong in meaning of this method if the editor is form control.
+  // The editable form controls are also have NODE_IS_EDITABLE flag but it can
+  // be in contenteditable elements.  So, at this time, this climbs up to the
+  // root editable element.  But fortunately, we don't have any problem by
+  // another issue, see the XXX comment in focus event handler.
   nsIContent *parent, *content = aContent;
   while ((parent = content->GetParent()) && parent->HasFlag(NODE_IS_EDITABLE)) {
     content = parent;
@@ -965,6 +973,12 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
   PRBool targetIsEditableDoc = PR_FALSE;
   nsCOMPtr<nsIContent> editableRoot;
   if (content) {
+    // XXX If the focus event target is a form control in contenteditable
+    // element, perhaps, the parent HTML editor should do nothing by this
+    // handler.  However, FindSelectionRoot() returns the root element of the
+    // contenteditable editor.  So, the editableRoot value is invalid for
+    // the plain text editor, and it will be set to the wrong limiter of
+    // the selection.  However, fortunately, actual bugs are not found yet.
     editableRoot = FindSelectionRoot(mEditor, content);
 
     // make sure that the element is really focused in case an earlier

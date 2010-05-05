@@ -3559,7 +3559,7 @@ void
 nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFoster(PRInt32 ns, nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes, nsIContent** form)
 {
   flushCharacters();
-  nsIContent** elt = createElement(ns, elementName->name, attributes, form);
+  nsIContent** elt = createElement(ns, elementName->name, attributes, fragment ? nsnull : form);
   nsHtml5StackNode* current = stack[currentPtr];
   if (current->fosterParenting) {
 
@@ -3576,7 +3576,7 @@ void
 nsHtml5TreeBuilder::appendVoidElementToCurrentMayFoster(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form)
 {
   flushCharacters();
-  nsIContent** elt = createElement(ns, name, attributes, form);
+  nsIContent** elt = createElement(ns, name, attributes, fragment ? nsnull : form);
   nsHtml5StackNode* current = stack[currentPtr];
   if (current->fosterParenting) {
 
@@ -3629,7 +3629,7 @@ void
 nsHtml5TreeBuilder::appendVoidElementToCurrent(PRInt32 ns, nsIAtom* name, nsHtml5HtmlAttributes* attributes, nsIContent** form)
 {
   flushCharacters();
-  nsIContent** elt = createElement(ns, name, attributes, form);
+  nsIContent** elt = createElement(ns, name, attributes, fragment ? nsnull : form);
   nsHtml5StackNode* current = stack[currentPtr];
   appendElement(elt, current->node);
   elementPushed(ns, name, elt);
