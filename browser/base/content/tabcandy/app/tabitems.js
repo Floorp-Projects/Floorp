@@ -249,12 +249,17 @@ window.TabItems = {
                   })
                   .removeClass("front");  
                 Navbar.show();
-                              
-                var gID = self.getItemByTab(this).parent.id;
-                if(gID) {
+                       
+                // If the tab is in a group set then set the active
+                // group to the tab's parent. 
+                if( self.getItemByTab(this).parent ){
+                  var gID = self.getItemByTab(this).parent.id;
                   var group = Groups.group(gID);
-                  Groups.setActiveGroup( group );                   
+                  Groups.setActiveGroup( group );                  
                 }
+                else
+                  Groups.setActiveGroup( null );
+                
               
                 $("body").css("overflow", overflow);              
               }
@@ -332,7 +337,7 @@ window.TabItems = {
     
     return items;
   },
-  
+    
   // ----------
   getItemByTab: function(tab) {
     return $(tab).data("tabItem");
