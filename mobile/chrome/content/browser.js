@@ -2744,8 +2744,9 @@ ProgressController.prototype = {
       if (this._tab == Browser.selectedTab) {
         BrowserUI.updateURI();
 
-       // We're about to have new page content, to scroll the content area
+       // We're about to have new page content, so scroll the content area
        // to the top so the new paints will draw correctly.
+       // (background tabs are delayed scrolled to top in _documentStop)
        Browser.scrollContentToTop();
       }
     }
@@ -2826,6 +2827,11 @@ ProgressController.prototype = {
     else {
       let scroll = BrowserView.Util.getContentScrollOffset(this._tab.browser);
       this._tab.contentScrollOffset = new Point(scroll.x, scroll.y);
+
+      // If the document content is scrolled to the top, make sure the URLbar is in view.
+      // If this were the selected tab, onLocationChange would scroll to top.
+      if (scroll.isZero())
+        this._tab.pageScrollOffset = new Point(0, 0);
     }
   }
 };
