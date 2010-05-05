@@ -57,7 +57,8 @@
  *    setters, it's updated automatically by setDenseArrayLength() and
  *    setDenseArrayCapacity().  There are also no explicit getters, the only
  *    user is TraceRecorder which can access it directly because it's a
- *    friend.
+ *    friend.  The function isDenseArrayMinLenCapOk() checks that it is set
+ *    correctly;  a call to it should be put in an assertion at use points.
  *
  * In dense mode, holes in the array are represented by JSVAL_HOLE.  The final
  * slot in fslots is unused.
@@ -1273,8 +1274,7 @@ JSClass js_ArrayClass = {
     "Array",
     JSCLASS_HAS_RESERVED_SLOTS(2) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
-    JSCLASS_NEW_ENUMERATE |
-    JSCLASS_CONSTRUCT_PROTOTYPE,
+    JSCLASS_NEW_ENUMERATE,
     JS_PropertyStub,    JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,   JS_ResolveStub,    js_TryValueOf,     array_finalize,
     array_getObjectOps, NULL,              NULL,              NULL,
