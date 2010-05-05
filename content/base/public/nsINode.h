@@ -704,14 +704,43 @@ public:
    * observer, which means that it is the responsibility of the observer to
    * remove itself in case it dies before the node.  If an observer is added
    * while observers are being notified, it may also be notified.  In general,
-   * adding observers while inside a notification is not a good idea.
+   * adding observers while inside a notification is not a good idea.  An
+   * observer that is already observing the node must not be added without
+   * being removed first.
    */
-  virtual void AddMutationObserver(nsIMutationObserver* aMutationObserver);
+  void AddMutationObserver(nsIMutationObserver* aMutationObserver)
+  {
+    nsSlots* slots = GetSlots();
+    if (slots) {
+      NS_ASSERTION(slots->mMutationObservers.IndexOf(aMutationObserver) ==
+                   nsTArray_base::NoIndex,
+                   "Observer already in the list");
+      slots->mMutationObservers.AppendElement(aMutationObserver);
+    }
+  }
+
+  /**
+   * Same as above, but only adds the observer if its not observing
+   * the node already.
+   */
+  void AddMutationObserverUnlessExists(nsIMutationObserver* aMutationObserver)
+  {
+    nsSlots* slots = GetSlots();
+    if (slots) {
+      slots->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
+    }
+  }
 
   /**
    * Removes a mutation observer.
    */
-  virtual void RemoveMutationObserver(nsIMutationObserver* aMutationObserver);
+  void RemoveMutationObserver(nsIMutationObserver* aMutationObserver)
+  {
+    nsSlots* slots = GetExistingSlots();
+    if (slots) {
+      slots->mMutationObservers.RemoveElement(aMutationObserver);
+    }
+  }
 
   /**
    * Clones this node. This needs to be overriden by all node classes. aNodeInfo
