@@ -147,7 +147,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 180085-2.html 180085-2-ref.html
 == 185388-1.html 185388-1-ref.html
 == 192902-1.html 192902-ref.html
-asserts(30-35) != 200774-1.html about:blank # really a crashtest; assertions bug 563837
+!= 200774-1.html about:blank # really a crashtest
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
 == 201293-1b.html 201293-1-ref.html
@@ -937,7 +937,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 416752-1.html 416752-1-ref.html
 == 417178-1.html 417178-1-ref.html
 == 417246-1.html 417246-1-ref.html
-asserts(10) == 417676.html 417676-ref.html # bug 563837
+== 417676.html 417676-ref.html
 asserts(1) == 418574-1.html 418574-1-ref.html # bug 478135
 asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 418766-1a.html 418766-1-ref.html
@@ -999,7 +999,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
 == 426629-1.html 426629-1-ref.html
-asserts(15) != 427017-1.xhtml about:blank    # crash test (needs reftest-print); assertions bug 563837
+asserts(3) != 427017-1.xhtml about:blank    # crash test (needs reftest-print)
 == 427129-scrollframe.html 427129-ref.html
 == 427129-table.html 427129-ref.html
 == 427129-image.html 427129-ref.html
