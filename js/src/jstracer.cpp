@@ -13143,6 +13143,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         }
 
         /* If not idx < min(length, capacity), stay on trace (and read value as undefined). */
+        JS_ASSERT(obj->isDenseArrayMinLenCapOk());
         LIns* minLenCap =
             addName(stobj_get_fslot(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
         LIns* br2 = lir->insBranch(LIR_jf,
@@ -13173,6 +13174,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     }
 
     /* Guard array min(length, capacity). */
+    JS_ASSERT(obj->isDenseArrayMinLenCapOk());
     LIns* minLenCap =
         addName(stobj_get_fslot(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
     guard(true,
