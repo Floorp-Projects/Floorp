@@ -45,6 +45,18 @@ const Ci = Components.interfaces;
 
 #expand const CTYPES_TEST_LIB = __CTYPES_TEST_LIB__;
 
+function getParent(obj, fun)
+{
+  if (typeof parent === "function")
+    fun(parent(obj));
+}
+
+function checkParentIsCTypes(o)
+{
+  function parentIsCTypes(p) { do_check_true(p === ctypes); }
+  getParent(o, parentIsCTypes);
+}
+
 function do_check_throws(f, type, stack)
 {
   if (!stack)
@@ -233,16 +245,20 @@ function run_abstract_class_tests()
   do_check_class(ctypes.CType, "Function");
   do_check_class(ctypes.CType.prototype, "CType");
 
-  do_check_true(parent(ctypes.CType) === ctypes);
-  do_check_true(ctypes.CType.__proto__ === parent(ctypes).Function.prototype);
-  do_check_true(ctypes.CType instanceof parent(ctypes).Function);
+  checkParentIsCTypes(ctypes.CType);
+  getParent(ctypes, function(p) {
+    do_check_true(Object.getPrototypeOf(ctypes.CType) === p.Function.prototype);
+    do_check_true(ctypes.CType instanceof p.Function);
+  });
 
   do_check_true(ctypes.CType.hasOwnProperty("prototype"));
   do_check_throws(function() { ctypes.CType.prototype(); }, Error);
   do_check_throws(function() { new ctypes.CType.prototype() }, Error);
-  do_check_true(parent(ctypes.CType.prototype) === ctypes);
-  do_check_true(ctypes.CType.prototype.__proto__ === parent(ctypes).Function.prototype);
-  do_check_true(ctypes.CType.prototype instanceof parent(ctypes).Function);
+  checkParentIsCTypes(ctypes.CType.prototype);
+  getParent(ctypes, function(p) {
+    do_check_true(Object.getPrototypeOf(ctypes.CType.prototype) === p.Function.prototype);
+    do_check_true(ctypes.CType.prototype instanceof p.Function);
+  });
   do_check_true(ctypes.CType.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.CType.prototype.constructor === ctypes.CType);
 
@@ -270,13 +286,15 @@ function run_abstract_class_tests()
   do_check_class(ctypes.CData, "Function");
   do_check_class(ctypes.CData.prototype, "CData");
 
-  do_check_true(parent(ctypes.CData) === ctypes);
+  checkParentIsCTypes(ctypes.CData);
   do_check_true(ctypes.CData.__proto__ === ctypes.CType.prototype);
   do_check_true(ctypes.CData instanceof ctypes.CType);
 
   do_check_true(ctypes.CData.hasOwnProperty("prototype"));
-  do_check_true(parent(ctypes.CData.prototype) === ctypes);
-  do_check_true(ctypes.CData.prototype.__proto__ === parent(ctypes).Object.prototype);
+  checkParentIsCTypes(ctypes.CData.prototype);
+  getParent(ctypes, function(p) {
+    do_check_true(Object.getPrototypeOf(ctypes.CData.prototype) === p.Object.prototype);
+  });
   do_check_true(ctypes.CData.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.CData.prototype.constructor === ctypes.CData);
 
@@ -303,12 +321,14 @@ function run_Int64_tests() {
   do_check_class(ctypes.Int64, "Function");
   do_check_class(ctypes.Int64.prototype, "Int64");
 
-  do_check_true(parent(ctypes.Int64) === ctypes);
-  do_check_true(ctypes.Int64.__proto__ === parent(ctypes).Function.prototype);
+  checkParentIsCTypes(ctypes.Int64);
+  getParent(ctypes, function(p) {
+    do_check_true(Object.getPrototypeOf(ctypes.Int64) === p.Function.prototype);
+    do_check_true(Object.getPrototypeOf(ctypes.Int64.prototype) === p.Object.prototype);
+  });
 
   do_check_true(ctypes.Int64.hasOwnProperty("prototype"));
-  do_check_true(parent(ctypes.Int64.prototype) === ctypes);
-  do_check_true(ctypes.Int64.prototype.__proto__ === parent(ctypes).Object.prototype);
+  checkParentIsCTypes(ctypes.Int64.prototype);
   do_check_true(ctypes.Int64.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.Int64.prototype.constructor === ctypes.Int64);
 
@@ -326,7 +346,7 @@ function run_Int64_tests() {
   do_check_throws(function() { ctypes.Int64.prototype.toSource(); }, Error);
 
   let i = ctypes.Int64(0);
-  do_check_true(parent(i) === ctypes);
+  checkParentIsCTypes(i);
   do_check_true(i.__proto__ === ctypes.Int64.prototype);
   do_check_true(i instanceof ctypes.Int64);
 
@@ -480,12 +500,16 @@ function run_UInt64_tests() {
   do_check_class(ctypes.UInt64, "Function");
   do_check_class(ctypes.UInt64.prototype, "UInt64");
 
-  do_check_true(parent(ctypes.UInt64) === ctypes);
-  do_check_true(ctypes.UInt64.__proto__ === parent(ctypes).Function.prototype);
+  checkParentIsCTypes(ctypes.UInt64);
+  getParent(ctypes, function(p) {
+    do_check_true(Object.getPrototypeOf(ctypes.UInt64) === p.Function.prototype);
+  });
 
   do_check_true(ctypes.UInt64.hasOwnProperty("prototype"));
-  do_check_true(parent(ctypes.UInt64.prototype) === ctypes);
-  do_check_true(ctypes.UInt64.prototype.__proto__ === parent(ctypes).Object.prototype);
+  checkParentIsCTypes(ctypes.UInt64.prototype);
+  getParent(ctypes, function(p) {
+    do_check_true(Object.getPrototypeOf(ctypes.UInt64.prototype) === p.Object.prototype);
+  });
   do_check_true(ctypes.UInt64.prototype.hasOwnProperty("constructor"));
   do_check_true(ctypes.UInt64.prototype.constructor === ctypes.UInt64);
 
@@ -503,7 +527,7 @@ function run_UInt64_tests() {
   do_check_throws(function() { ctypes.UInt64.prototype.toSource(); }, Error);
 
   let i = ctypes.UInt64(0);
-  do_check_true(parent(i) === ctypes);
+  checkParentIsCTypes(i);
   do_check_true(i.__proto__ === ctypes.UInt64.prototype);
   do_check_true(i instanceof ctypes.UInt64);
 
@@ -720,11 +744,11 @@ function run_basic_class_tests(t)
   do_check_class(t, "CType");
   do_check_class(t.prototype, "CData");
 
-  do_check_true(parent(t) === ctypes);
+  checkParentIsCTypes(t);
   do_check_true(t.__proto__ === ctypes.CType.prototype);
   do_check_true(t instanceof ctypes.CType);
 
-  do_check_true(parent(t.prototype) === ctypes);
+  checkParentIsCTypes(t.prototype);
   do_check_true(t.prototype.__proto__ === ctypes.CData.prototype);
   do_check_true(t.prototype instanceof ctypes.CData);
   do_check_true(t.prototype.constructor === t);
@@ -740,7 +764,7 @@ function run_basic_class_tests(t)
   // Test that an instance 'd' of 't' is a CData.
   let d = t();
   do_check_class(d, "CData");
-  do_check_true(parent(d) === ctypes);
+  checkParentIsCTypes(d);
   do_check_true(d.__proto__ === t.prototype);
   do_check_true(d instanceof t);
   do_check_true(d.constructor === t);
@@ -1265,11 +1289,13 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
   do_check_class(c, "Function");
   do_check_class(c.prototype, "CType");
 
-  do_check_true(parent(c) === ctypes);
-  do_check_true(c.__proto__ === parent(ctypes).Function.prototype);
-  do_check_true(c instanceof parent(ctypes).Function);
+  checkParentIsCTypes(c);
+  getParent(ctypes, function(p) {
+    do_check_true(Object.getPrototypeOf(c) === p.Function.prototype);
+    do_check_true(c instanceof p.Function);
+  });
 
-  do_check_true(parent(c.prototype) === ctypes);
+  checkParentIsCTypes(c.prototype);
   do_check_true(c.prototype.__proto__ === ctypes.CType.prototype);
   do_check_true(c.prototype instanceof ctypes.CType);
   do_check_true(c.prototype.constructor === c);
@@ -1291,18 +1317,18 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
   do_check_class(t, "CType");
   do_check_class(t.prototype, "CData");
 
-  do_check_true(parent(t) === ctypes);
+  checkParentIsCTypes(t);
   do_check_true(t.__proto__ === c.prototype);
   do_check_true(t instanceof c);
 
-  do_check_true(parent(t.prototype) === ctypes);
+  checkParentIsCTypes(t.prototype);
   do_check_class(t.prototype.__proto__, "CData");
   // 't.prototype.__proto__' is the common ancestor of all types constructed
   // from 'c'; while not available from 'c' directly, it should be identically
   // equal to 't2.prototype.__proto__' where 't2' is a different CType
   // constructed from 'c'.
   do_check_true(t.prototype.__proto__ === t2.prototype.__proto__);
-  do_check_true(parent(t.prototype.__proto__) === ctypes);
+  checkParentIsCTypes(Object.getPrototypeOf(t.prototype));
   do_check_true(t.prototype.__proto__.__proto__ === ctypes.CData.prototype);
   do_check_true(t.prototype instanceof ctypes.CData);
   do_check_true(t.prototype.constructor === t);
@@ -1337,7 +1363,7 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
   if (t.__proto__ != ctypes.FunctionType.prototype) {
     let d = t();
     do_check_class(d, "CData");
-    do_check_true(parent(d) === ctypes);
+    checkParentIsCTypes(d);
     do_check_true(d.__proto__ === t.prototype);
     do_check_true(d instanceof t);
     do_check_true(d.constructor === t);
