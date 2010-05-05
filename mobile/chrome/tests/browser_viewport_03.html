@@ -2,6 +2,18 @@
 <head>
     <title>Browser Viewport Page 03</title>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+
+    <!--
+    Expected width calculation:
+      since initial scale is specified, default width is viewport width (533.33px)
+
+    Expected scale calculation:
+      account for high DPI (1 * 1.5 = 1.5)
+    -->
+
+    <meta name="expected-width" content="533.33"/>
+    <meta name="expected-scale" content="1.5"/>
+    <meta name="expected-disableZoom" content="true"/>
 </head>
 <body>
     <p>Browser Viewport Page 03</p>

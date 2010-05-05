@@ -44,22 +44,11 @@ let testURL = function testURL(n) {
   return "chrome://mochikit/content/browser/mobile/chrome/browser_viewport_" +
          (n<10 ? "0" : "") + n + ".html";
 }
-let deviceWidth = {};
 
 let working_tab;
 let isLoading = function() { return !working_tab.isLoading(); };
 
-let testData = [
-  { width: undefined,   scale: undefined },
-  { width: deviceWidth, scale: 1 },
-  { width: 320,         scale: 1 },
-  { width: undefined,   scale: 1,        disableZoom: true },
-  { width: 200,         scale: undefined },
-  { width: 2000,        minScale: 0.75 },
-  { width: 100,         maxScale: 2 },
-  { width: 2000,        scale: 0.75 },
-  { width: 10000,       scale: 10 }
-];
+let numberTests = 10;
 
 //------------------------------------------------------------------------------
 // Entry point (must be named "test")
@@ -94,45 +83,58 @@ function verifyBlank(n) {
 
 function loadTest(n) {
   BrowserUI.goToURI(testURL(n));
-  waitFor(verifyTest(n), isLoading);
+  waitFor(function() {
+    // 1) endLoading is called
+    // 2) updateDefaultZoom sees meta tag for the first time
+    // 3) endLoading updates the browser style width or height
+    // 4) browser flags as stopped loading
+    //
+    // At this point tests would be run without the setTimeout.  Then:
+    // 6) screen size change event is received
+    // 7) updateDefaultZoomLevel is called and scale changes
+    //
+    // setTimeout ensures that screen size event happens first
+    setTimeout(verifyTest(n), 0);
+  }, isLoading);
+}
+
+function is_approx(actual, expected, fuzz, description) {
+  is(Math.abs(actual - expected) <= fuzz,
+     true,
+     description + " [got " + actual + ", expected " + expected + "]");
+}
+
+function getMetaTag(name) {
+  let doc = working_tab.browser.contentDocument;
+  let elements = doc.querySelectorAll("meta[name=\"" + name + "\"]");
+  return elements[0] ? elements[0].getAttribute("content") : undefined;
 }
 
 function verifyTest(n) {
   return function() {
-    let data = testData[n];
+    is(window.innerWidth, 800, "Test assumes window width is 800px");
+    is(gPrefService.getIntPref("zoom.dpiScale") / 100, 1.5, "Test assumes zoom.dpiScale is 1.5");
 
     // Do sanity tests
     var uri = working_tab.browser.currentURI.spec;
-    is(uri, testURL(n), "URL Matches newly created Tab "+n);
+    is(uri, testURL(n), "URL is "+testURL(n));
 
-    // Check viewport settings
-    let width = data.width || (data.scale ? window.innerWidth : 800);
-    if (width == deviceWidth) {
-      width = window.innerWidth;
-      ok(working_tab.browser.classList.contains("browser-viewport"), "Viewport 'browser-viewport' class");
-    }
+    // Expected results are grabbed from the test HTML file
+    let data = (function() {
+      let result = {};
+      for (let i = 0; i < arguments.length; i++)
+        result[arguments[i]] = getMetaTag("expected-" + arguments[i]);
 
-    let scale = data.scale || window.innerWidth / width;
-    let minScale = data.minScale || 0.2;
-    let maxScale = data.maxScale || 4;
-
-    scale = Math.min(scale, maxScale);
-    scale = Math.max(scale, minScale);
-
-    // If pageZoom is "almost" 100%, zoom in to exactly 100% (bug 454456).
-    if (0.9 < scale && scale < 1)
-      scale = 1;
-
-    // Width at initial scale can't be less than screen width (Bug 561413).
-    if (width * scale < window.innerWidth)
-      width = window.innerWidth / scale;
+      return result;
+    })("width", "scale", "minWidth", "maxWidth", "disableZoom");
 
     let style = window.getComputedStyle(working_tab.browser, null);
-    is(style.width, width + "px", "Viewport width="+width);
+    let actualWidth = parseFloat(style.width.replace(/[^\d\.]+/, ""));
+    is_approx(actualWidth, parseFloat(data.width), .01, "Viewport width="+data.width);
 
     let bv = Browser._browserView;
     let zoomLevel = bv.getZoomLevel();
-    is(bv.getZoomLevel(), scale, "Viewport scale="+scale);
+    is_approx(bv.getZoomLevel(), parseFloat(data.scale), .01, "Viewport scale="+data.scale);
 
     // Test zooming
     if (data.disableZoom) {
@@ -170,7 +172,7 @@ function verifyTest(n) {
 }
 
 function finishTest(n) {
-  if (n+1 < testData.length) {
+  if (n+1 < numberTests) {
     startTest(n+1);
   } else {
     Browser.closeTab(working_tab);

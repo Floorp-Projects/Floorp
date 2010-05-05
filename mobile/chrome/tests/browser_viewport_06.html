@@ -2,6 +2,19 @@
 <head>
     <title>Browser Viewport Page 06</title>
     <meta name="viewport" content="width=100, maximum-scale=2.0"/>
+
+    <!--
+    Expected width calculation:
+      100px
+      since expected scale is 3.00, expand width to fill screen (800 / 3 = 266.67)
+
+    Expected scale calculation:
+      determine from width (800 / 100 = 8)
+      max scale is 3.00
+    -->
+    <meta name="expected-width" content="266.67"/>
+    <meta name="expected-scale" content="3"/>
+    <meta name="expected-maxScale" content="3"/>
 </head>
 <body>
     <p>Browser Viewport Page 06</p>
