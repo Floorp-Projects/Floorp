@@ -2156,7 +2156,6 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd)
     RefPtr<IDXGIDevice> dxgiDevice;
     RefPtr<IDXGIAdapter> dxgiAdapter;
     RefPtr<IDXGIFactory> dxgiFactory;
-    RefPtr<IDXGISurface> dxgiSurface;
     D2D1_RENDER_TARGET_PROPERTIES props;    
     D2D1_BITMAP_PROPERTIES bitProps;
 
@@ -2209,15 +2208,12 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd)
     size.width = sizePixels.width * dpiX;
     size.height = sizePixels.height * dpiY;
 
-    /** Create the DXGI surface. */
-    hr = newSurf->surface->QueryInterface(IID_IDXGISurface, (void**)&dxgiSurface);
-
     props = D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_DEFAULT,
 								       D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
 								       dpiX,
 								       dpiY,
 								       D2D1_RENDER_TARGET_USAGE_NONE);
-    hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(dxgiSurface,
+    hr = D2DSurfFactory::Instance()->CreateDxgiSurfaceRenderTarget(newSurf->backBuf,
 								   props,
 								   &newSurf->rt);
     if (FAILED(hr)) {
