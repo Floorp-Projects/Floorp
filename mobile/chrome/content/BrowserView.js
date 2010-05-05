@@ -347,7 +347,7 @@ BrowserView.prototype = {
     }
 
     let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
-    return (rounded) ? rounded : 1.0;
+    return rounded || 1.0;
   },
 
   beginOffscreenOperation: function beginOffscreenOperation(rect) {
@@ -595,8 +595,6 @@ BrowserView.prototype = {
     if (!bvs)
       return false;
 
-    bvs.metaData = Util.getViewportMetadata(this._browser);
-
     let isDefault = (bvs.zoomLevel == bvs.defaultZoomLevel);
     bvs.defaultZoomLevel = this.getDefaultZoomLevel();
     if (isDefault)
@@ -626,7 +624,7 @@ BrowserView.prototype = {
 
     let md = bvs.metaData;
     if (md && md.defaultZoom)
-      pageZoom = Math.max(pageZoom, md.defaultZoom);
+      return Math.max(pageZoom, this.clampZoomLevel(md.defaultZoom));
 
     return pageZoom;
   },
