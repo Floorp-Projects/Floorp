@@ -1,11 +1,12 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at:
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -13,14 +14,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Fake Mozilla Plugin App.
+ * The Original Code is Mozilla Code.
  *
  * The Initial Developer of the Original Code is
- *   Josh Aas <josh@mozilla.com>.
+ *   The Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,10 +38,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <stdio.h>
+#include "base/atomicops.h"
 
-int main()
-{
-  printf ("All your process are belong to us.\n");
-  return 0;
-}
+namespace base {
+namespace subtle {
+
+Lock gAtomicsMutex;
+
+}  // namespace subtle
+}  // namespace base
