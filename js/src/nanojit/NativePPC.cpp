@@ -413,8 +413,12 @@ namespace nanojit
         asm_cond(ins);
     }
 
-    // cause 32bit sign extension to test bits
-    #define isS14(i) ((int32_t(bd<<18)>>18) == (i))
+    // cause sign extension to test bits.  ptrdiff_t is a signed,
+    // pointer-sized int
+    static inline bool isS14(ptrdiff_t d) {
+        const int shift = sizeof(ptrdiff_t) * 8 - 14; // 18 or 50
+        return ((d << shift) >> shift) == d;
+    }
 
     NIns* Assembler::asm_branch(bool onfalse, LIns *cond, NIns * const targ) {
         LOpcode condop = cond->opcode();
@@ -1231,7 +1235,7 @@ namespace nanojit
         verbose_only(if (_logc->lcbits & LC_Assembly) outputf("%p:",after);)
         MR(rr,rf);
 
-        NanoAssert(isS24(after - (_nIns-1)));
+        NanoAssert(isS14(after - (_nIns-1)));
         asm_branch_near(false, condval, after);
 
         if (rr != rt)
