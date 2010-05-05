@@ -1313,7 +1313,17 @@ nsDOMWindowUtils::GetParent()
   if(JSVAL_IS_PRIMITIVE(argv[0]))
     return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-  *rval = OBJECT_TO_JSVAL(JS_GetParent(cx, JSVAL_TO_OBJECT(argv[0])));
+  JSObject *parent = JS_GetParent(cx, JSVAL_TO_OBJECT(argv[0]));
+  *rval = OBJECT_TO_JSVAL(parent);
+
+  // Outerize if necessary.  Embrace the ugliness!
+  JSClass *clasp = JS_GetClass(cx, parent);
+  if (clasp->flags & JSCLASS_IS_EXTENDED) {
+    JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
+    if (JSObjectOp outerize = xclasp->outerObject)
+      *rval = OBJECT_TO_JSVAL(outerize(cx, parent));
+  }
+
   cc->SetReturnValueWasSet(PR_TRUE);
   return NS_OK;
 }
