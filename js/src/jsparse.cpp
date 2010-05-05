@@ -6274,6 +6274,7 @@ Parser::unaryExpr()
         break;
 
       case TOK_DELETE:
+      {
         pn = UnaryNode::create(tc);
         if (!pn)
             return NULL;
@@ -6301,12 +6302,14 @@ Parser::unaryExpr()
                                        JSMSG_DEPRECATED_DELETE_OPERAND))
                 return NULL;
             pn2->pn_op = JSOP_DELNAME;
+            if (pn2->pn_atom == context->runtime->atomState.argumentsAtom)
+                tc->flags |= TCF_FUN_HEAVYWEIGHT;
             break;
           default:;
         }
         pn->pn_kid = pn2;
         break;
-
+      }
       case TOK_ERROR:
         return NULL;
 
