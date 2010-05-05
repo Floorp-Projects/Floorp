@@ -1162,15 +1162,40 @@ window.Groups = {
   },
   
   // ----------
+  // Function: getActiveGroup
+  // Returns the active group. Active means the group where a new
+  // tab will live when it is created as well as what tabs are
+  // shown in the tab bar when not in the TabCandy interface.
   getActiveGroup: function() {
     return this._activeGroup;
   },
   
   // ----------
+  // Function: setActiveGroup
+  // Sets the active group, thereby showing only the relavent tabs
+  // to that group. The change is visible only if the tab bar is
+  // visible.
+  //
+  // Paramaters
+  //  group - the active <Group> or <null> if no group is active
+  //          (which means we have an orphaned tab selected)
   setActiveGroup: function(group) {
     this._activeGroup = group;
     if(group)
-      UI.tabBar.showOnlyTheseTabs( group._children );    
+      UI.tabBar.showOnlyTheseTabs( group._children );
+    else if( group == null)
+      UI.tabBar.showOnlyTheseTabs( this.getOrphanedTabs() );
+  },
+  
+  // ----------
+  // Function: getOrphanedTabs
+  // Returns an array of all tabs that aren't in a group
+  getOrphanedTabs: function(){
+    var tabs = TabItems.getItems();
+    tabs = tabs.filter(function(tab){
+      return tab.parent == null;
+    })
+    return tabs
   }
   
 };

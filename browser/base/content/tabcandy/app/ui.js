@@ -143,7 +143,8 @@ window.Page = {
     Tabs.onFocus(function(){
       // If we switched to TabCandy window...
       if( this.contentWindow == window && lastTab != null && lastTab.mirror != null){
-        Groups.getActiveGroup().reorderBasedOnTabOrder();        
+        var activeGroup = Groups.getActiveGroup();
+        if( activeGroup ) activeGroup.reorderBasedOnTabOrder();        
 
         UI.tabBar.hide(false);
         // If there was a lastTab we want to animate
@@ -305,10 +306,14 @@ function UIClass(){
   this.navBar.hide();
   
   Tabs.onFocus(function() {
-    if(this.contentWindow.location.host == "tabcandy")
-      self.navBar.hide();
-    else
-      self.navBar.show();
+    try{
+      if(this.contentWindow.location.host == "tabcandy")
+        self.navBar.hide();
+      else
+        self.navBar.show();      
+    }catch(e){
+      Utils.log()
+    }
   });
 
   Tabs.onOpen(function(a, b) {
