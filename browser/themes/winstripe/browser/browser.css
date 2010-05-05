@@ -1186,6 +1186,11 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   height: auto;
 }
 
+.tabs-newtab-button > .toolbarbutton-icon {
+  margin-top: -1px;
+  margin-bottom: -1px;
+}
+
 .tabs-newtab-button,
 #TabsToolbar > #new-tab-button,
 #TabsToolbar > toolbarpaletteitem > #new-tab-button {
