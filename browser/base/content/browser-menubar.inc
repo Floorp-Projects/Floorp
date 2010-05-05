@@ -455,16 +455,18 @@
             </menu>
 
             <menu id="history-menu"
-                  oncommand="var node = event.target.node; if (node) { PlacesUIUtils.markPageAsTyped(node.uri); openUILink(node.uri, event, false, true); }"
+                  oncommand="this._placesView._onCommand(event);"
                   onclick="checkForMiddleClick(this, event);"
                   label="&historyMenu.label;"
                   accesskey="&historyMenu.accesskey;">
               <menupopup id="goPopup"
-                         type="places"
-                         onpopupshowing="HistoryMenu.onPopupShowing(event);"
-                         onpopuphidden="HistoryMenu.onPopupHidden(event);"
-                         place="place:redirectsMode=2&amp;sort=4&amp;maxResults=10"
-                         tooltip="bhTooltip" popupsinherittooltip="true">
+#ifndef XP_MACOSX
+                         placespopup="true"
+#endif
+                         onpopupshowing="if (!document.getElementById('history-menu')._placesView)
+                                           new HistoryMenu(event);"
+                         tooltip="bhTooltip"
+                         popupsinherittooltip="true">
                 <menuitem id="historyMenuBack"
                           label="&backCmd.label;"
 #ifdef XP_MACOSX
@@ -499,14 +501,20 @@
                 <menu id="historyUndoMenu"
                       label="&historyUndoMenu.label;"
                       disabled="true">
-                  <menupopup id="historyUndoPopup" placespopup="true"
-                             onpopupshowing="HistoryMenu.populateUndoSubmenu();"/>
+                  <menupopup id="historyUndoPopup"
+#ifndef XP_MACOSX
+                             placespopup="true"
+#endif
+                             onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoSubmenu();"/>
                 </menu>
                 <menu id="historyUndoWindowMenu"
                       label="&historyUndoWindowMenu.label;"
                       disabled="true">
-                  <menupopup id="historyUndoWindowPopup" placespopup="true"
-                             onpopupshowing="HistoryMenu.populateUndoWindowSubmenu();"/>
+                  <menupopup id="historyUndoWindowPopup"
+#ifndef XP_MACOSX
+                             placespopup="true"
+#endif
+                             onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoWindowSubmenu();"/>
                 </menu>
               </menupopup>
             </menu>
@@ -518,13 +526,15 @@
         ondragover="BookmarksMenuDropHandler.onDragOver(event);"
         ondrop="BookmarksMenuDropHandler.onDrop(event);">
     <menupopup id="bookmarksMenuPopup"
-               type="places"
-               place="place:folder=BOOKMARKS_MENU"
+#ifndef XP_MACOSX
+               placespopup="true"
+#endif
                context="placesContext"
                openInTabs="children"
                oncommand="BookmarksEventHandler.onCommand(event);"
                onclick="BookmarksEventHandler.onClick(event);"
-               onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"
+               onpopupshowing="if (!document.getElementById('bookmarksMenu')._placesView)
+                                 new PlacesMenu(event, 'place:folder=BOOKMARKS_MENU');"
                tooltip="bhTooltip" popupsinherittooltip="true">
       <menuitem id="menu_bookmarkThisPage"
                 label="&bookmarkThisPageCmd.label;"
@@ -556,11 +566,13 @@
             class="menu-iconic bookmark-item"
             label="&personalbarCmd.label;"
             container="true">
-        <menupopup id="bookmarksToolbarFolderPopup"
-                   type="places"
-                   place="place:folder=TOOLBAR"
+        <menupopup id="bookmarksToolbarFolderPopup"  
+#ifndef XP_MACOSX
+                   placespopup="true"
+#endif
                    context="placesContext"
-                   onpopupshowing="BookmarksEventHandler.onPopupShowing(event);"/>
+                   onpopupshowing="if (!this.parentNode._placesView)
+                                     new PlacesMenu(event, 'place:folder=TOOLBAR');"/>
       </menu>
       <menuseparator/>
     </menupopup>
