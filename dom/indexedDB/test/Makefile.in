@@ -50,6 +50,8 @@ _TEST_FILES = \
   test_create_objectStore.html \
   test_open_objectStore.html \
   test_remove_objectStore.html \
+  test_put_get_values.html \
+  test_put_get_values_autoIncrement.html \
   $(NULL)
 
 libs:: $(_TEST_FILES)
