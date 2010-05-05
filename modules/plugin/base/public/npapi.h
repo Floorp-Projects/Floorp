@@ -45,37 +45,34 @@
 #include "nptypes.h"
 
 #if defined (__OS2__) || defined (OS2)
-#ifndef XP_OS2
-#define XP_OS2 1
-#endif
-#endif
+# ifndef XP_OS2
+#  define XP_OS2 1
+# endif /* XP_OS2 */
+#endif /* __OS2__ */
 
 #ifdef _WINDOWS
-#include <windef.h>
-#ifndef XP_WIN
-#define XP_WIN 1
-#endif
-#endif
-
-#if defined(XP_MACOSX) && defined(__LP64__)
-#define NP_NO_QUICKDRAW
-#define NP_NO_CARBON
-#endif
+# include <windef.h>
+# ifndef XP_WIN
+#  define XP_WIN 1
+# endif /* XP_WIN */
+#endif /* _WINDOWS */
 
 #ifdef XP_MACOSX
+#ifdef __LP64__
+#define NP_NO_QUICKDRAW
+#define NP_NO_CARBON
 #include <ApplicationServices/ApplicationServices.h>
-#include <OpenGL/OpenGL.h>
-#ifndef NP_NO_CARBON
+#else
 #include <Carbon/Carbon.h>
 #endif
 #endif
 
 #if defined(XP_UNIX) 
-#include <stdio.h>
-#if defined(MOZ_X11)
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#endif
+# include <stdio.h>
+# if defined(MOZ_X11)
+#  include <X11/Xlib.h>
+#  include <X11/Xutil.h>
+# endif
 #endif
 
 /*----------------------------------------------------------------------*/
@@ -142,7 +139,7 @@ typedef char*         NPMIMEType;
 /*----------------------------------------------------------------------*/
 
 #if !defined(__LP64__)
-#if defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #pragma options align=mac68k
 #endif
 #endif /* __LP64__ */
@@ -205,11 +202,6 @@ typedef struct _NPSize
   int32_t height; 
 } NPSize; 
 
-/* Return values for NPP_HandleEvent */
-const int16_t kNPEventNotHandled = 0;
-const int16_t kNPEventHandled = 1;
-const int16_t kNPEventStartIME = 2; /* Exact meaning must be spec'd in event model. */
-
 #ifdef XP_UNIX
 /*
  * Unix specific structures and definitions
@@ -255,7 +247,6 @@ typedef enum {
   NPDrawingModelQuickDraw = 0,
 #endif
   NPDrawingModelCoreGraphics = 1,
-  NPDrawingModelOpenGL = 2,
   NPDrawingModelCoreAnimation = 3
 } NPDrawingModel;
 
@@ -308,23 +299,29 @@ typedef enum {
   NPPVpluginDescriptionString,
   NPPVpluginWindowBool,
   NPPVpluginTransparentBool,
-  NPPVjavaClass,
+  NPPVjavaClass,                /* Not implemented in Mozilla 1.0 */
   NPPVpluginWindowSize,
   NPPVpluginTimerInterval,
+
   NPPVpluginScriptableInstance = (10 | NP_ABI_MASK),
   NPPVpluginScriptableIID = 11,
+
+  /* Introduced in Mozilla 0.9.9 */
   NPPVjavascriptPushCallerBool = 12,
+
+  /* Introduced in Mozilla 1.0 */
   NPPVpluginKeepLibraryInMemory = 13,
   NPPVpluginNeedsXEmbed         = 14,
 
-  /* Get the NPObject for scripting the plugin. Introduced in NPAPI minor version 14.
+  /* Get the NPObject for scripting the plugin. Introduced in Firefox
+   * 1.0 (NPAPI minor version 14).
    */
   NPPVpluginScriptableNPObject  = 15,
 
   /* Get the plugin value (as \0-terminated UTF-8 string data) for
    * form submission if the plugin is part of a form. Use
    * NPN_MemAlloc() to allocate memory for the string data. Introduced
-   * in NPAPI minor version 15.
+   * in Mozilla 1.8b2 (NPAPI minor version 15).
    */
   NPPVformValue = 16,
   
@@ -333,13 +330,7 @@ typedef enum {
   /* Checks if the plugin is interested in receiving the http body of
    * all http requests (including failed ones, http status != 200).
    */
-  NPPVpluginWantsAllNetworkStreams = 18,
-
-  /* Browsers can retrieve a native ATK accessibility plug ID via this variable. */
-  NPPVpluginNativeAccessibleAtkPlugId = 19,
-
-  /* Checks to see if the plug-in would like the browser to load the "src" attribute. */
-  NPPVpluginCancelSrcStream = 20
+  NPPVpluginWantsAllNetworkStreams = 18
 
 #ifdef XP_MACOSX
   /* Used for negotiating drawing models */
@@ -356,7 +347,7 @@ typedef enum {
 } NPPVariable;
 
 /*
- * List of variable names for which NPN_GetValue should be implemented.
+ * List of variable names for which NPN_GetValue is implemented by Mozilla
  */
 typedef enum {
   NPNVxDisplay = 1,
@@ -366,8 +357,9 @@ typedef enum {
   NPNVasdEnabledBool,
   NPNVisOfflineBool,
 
+  /* 10 and over are available on Mozilla builds starting with 0.9.4 */
   NPNVserviceManager = (10 | NP_ABI_MASK),
-  NPNVDOMElement     = (11 | NP_ABI_MASK),
+  NPNVDOMElement     = (11 | NP_ABI_MASK),   /* available in Mozilla 1.2 */
   NPNVDOMWindow      = (12 | NP_ABI_MASK),
   NPNVToolkit        = (13 | NP_ABI_MASK),
   NPNVSupportsXEmbedBool = 14,
@@ -389,7 +381,6 @@ typedef enum {
   , NPNVsupportsQuickDrawBool = 2000
 #endif
   , NPNVsupportsCoreGraphicsBool = 2001
-  , NPNVsupportsOpenGLBool = 2002
   , NPNVsupportsCoreAnimationBool = 2003
 #ifndef NP_NO_CARBON
   , NPNVsupportsCarbonBool = 3000 /* TRUE if the browser supports the Carbon event model */
@@ -554,21 +545,6 @@ typedef struct NP_CGContext
 #endif
 } NP_CGContext;
 
-/* 
- * NP_GLContext is the type of the NPWindow's 'window' when the plugin specifies NPDrawingModelOpenGL as its
- * drawing model.
- */
-
-typedef struct NP_GLContext
-{
-  CGLContextObj context;
-#ifdef NP_NO_CARBON
-  NPNSWindow *window;
-#else
-  void *window; // Can be either an NSWindow or a WindowRef depending on the event model
-#endif
-} NP_GLContext;
-
 typedef enum {
   NPCocoaEventDrawRect = 1,
   NPCocoaEventMouseDown,
@@ -634,6 +610,11 @@ enum NPEventType {
   NPEventType_ScrollingBeginsEvent = 1000,
   NPEventType_ScrollingEndsEvent
 };
+#ifdef OBSOLETE
+#define getFocusEvent     (osEvt + 16)
+#define loseFocusEvent    (osEvt + 17)
+#define adjustCursorEvent (osEvt + 18)
+#endif /* OBSOLETE */
 #endif /* NP_NO_CARBON */
 
 #endif /* XP_MACOSX */
@@ -655,7 +636,7 @@ enum NPEventType {
 #define NP_MAXREADY (((unsigned)(~0)<<1)>>1)
 
 #if !defined(__LP64__)
-#if defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
 #pragma options align=reset
 #endif
 #endif /* __LP64__ */
