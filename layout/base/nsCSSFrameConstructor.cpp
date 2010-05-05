@@ -747,6 +747,14 @@ public:
   // we have not yet created the relevant frame.
   PRPackedBool              mHavePendingPopupgroup;
 
+  // If true (which is the default) then call SetPrimaryFrame() as needed
+  // during frame construction.  If false, don't make any SetPrimaryFrame()
+  // calls.  The mSetPrimaryFrames == PR_FALSE mode is meant to be used for
+  // construction of random "extra" frames for elements via normal frame
+  // construction APIs (e.g. replication of things across pages in paginated
+  // mode).
+  PRPackedBool              mSetPrimaryFrames;
+
   nsCOMArray<nsIContent>    mGeneratedTextNodesWithInitializer;
 
   // Constructor
@@ -910,6 +918,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
                       aAbsoluteContainingBlock->GetStyleDisplay()->
                         HasTransform()),
     mHavePendingPopupgroup(PR_FALSE),
+    mSetPrimaryFrames(PR_TRUE),
     mCurrentPendingBindingInsertionPoint(&mPendingBindings)
 {
 #ifdef MOZ_XUL
@@ -941,6 +950,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
                       aAbsoluteContainingBlock->GetStyleDisplay()->
                         HasTransform()),
     mHavePendingPopupgroup(PR_FALSE),
+    mSetPrimaryFrames(PR_TRUE),
     mCurrentPendingBindingInsertionPoint(&mPendingBindings)
 {
 #ifdef MOZ_XUL
@@ -2167,13 +2177,15 @@ nsCSSFrameConstructor::ConstructTableCell(nsFrameConstructorState& aState,
   return NS_OK;
 }
 
-static PRBool 
-NeedFrameFor(nsIFrame*   aParentFrame,
+static inline PRBool 
+NeedFrameFor(const nsFrameConstructorState& aState,
+             nsIFrame*   aParentFrame,
              nsIContent* aChildContent) 
 {
   // XXX the GetContent() != aChildContent check is needed due to bug 135040.
   // Remove it once that's fixed.
   NS_PRECONDITION(!aChildContent->GetPrimaryFrame() ||
+                  !aState.mSetPrimaryFrames ||
                   aChildContent->GetPrimaryFrame()->GetContent() != aChildContent,
                   "Why did we get called?");
 
@@ -3433,7 +3445,8 @@ nsCSSFrameConstructor::ConstructTextFrame(const FrameConstructionData* aData,
   // Add the newly constructed frame to the flow
   aFrameItems.AddChild(newFrame);
 
-  aContent->SetPrimaryFrame(newFrame);
+  if (aState.mSetPrimaryFrames)
+    aContent->SetPrimaryFrame(newFrame);
   
   return rv;
 }
@@ -3859,7 +3872,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                ((bits & FCDATA_IS_LINE_PARTICIPANT) != 0),
                "Incorrectly set FCDATA_IS_LINE_PARTICIPANT bits");
 
-  if (!(bits & FCDATA_SKIP_FRAMESET)) {
+  if (aState.mSetPrimaryFrames && !(bits & FCDATA_SKIP_FRAMESET)) {
     aItem.mContent->SetPrimaryFrame(primaryFrame);
   }
 
@@ -5008,7 +5021,7 @@ nsCSSFrameConstructor::AddFrameConstructionItems(nsFrameConstructorState& aState
   aContent->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
 
   // don't create a whitespace frame if aParent doesn't want it
-  if (!NeedFrameFor(aParentFrame, aContent)) {
+  if (!NeedFrameFor(aState, aParentFrame, aContent)) {
     return;
   }
 
@@ -5409,7 +5422,7 @@ nsCSSFrameConstructor::ConstructFramesFromItem(nsFrameConstructorState& aState,
         aIter.List()->ParentHasNoXBLChildren() &&
         !(aState.mAdditionalStateBits & NS_FRAME_GENERATED_CONTENT) &&
         (item.mFCData->mBits & FCDATA_IS_LINE_PARTICIPANT) &&
-        item.IsWhitespace())
+        item.IsWhitespace(aState))
       return NS_OK;
 
     return ConstructTextFrame(item.mFCData, aState, item.mContent,
@@ -8410,6 +8423,7 @@ nsCSSFrameConstructor::CreateContinuingTableFrame(nsIPresShell* aPresShell,
         nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                       GetAbsoluteContainingBlock(newFrame),
                                       nsnull);
+        state.mSetPrimaryFrames = PR_FALSE;
 
         headerFooterFrame = static_cast<nsTableRowGroupFrame*>
                                        (NS_NewTableRowGroupFrame(aPresShell, rowGroupFrame->GetStyleContext()));
@@ -8736,6 +8750,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   nsFrameConstructorState state(mPresShell, aParentFrame,
                                 nsnull,
                                 mRootElementFrame);
+  state.mSetPrimaryFrames = PR_FALSE;
 
   // Iterate across fixed frames and replicate each whose placeholder is a
   // descendant of aFrame. (We don't want to explicitly copy placeholders that
@@ -9272,7 +9287,8 @@ nsCSSFrameConstructor::sPseudoParentData[eParentTypeCount] = {
  * contain only items for frames that can be direct kids of aParentFrame.
  */
 nsresult
-nsCSSFrameConstructor::CreateNeededTablePseudos(FrameConstructionItemList& aItems,
+nsCSSFrameConstructor::CreateNeededTablePseudos(nsFrameConstructorState& aState,
+                                                FrameConstructionItemList& aItems,
                                                 nsIFrame* aParentFrame)
 {
   ParentType ourParentType = GetParentType(aParentFrame);
@@ -9322,8 +9338,8 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(FrameConstructionItemList& aItem
         FCItemIterator spaceEndIter(endIter);
         if (prevParentType != eTypeBlock &&
             !aParentFrame->IsGeneratedContentFrame() &&
-            spaceEndIter.item().IsWhitespace()) {
-          PRBool trailingSpaces = spaceEndIter.SkipWhitespace();
+            spaceEndIter.item().IsWhitespace(aState)) {
+          PRBool trailingSpaces = spaceEndIter.SkipWhitespace(aState);
 
           // See whether we can drop the whitespace
           if (trailingSpaces ||
@@ -9469,13 +9485,13 @@ nsCSSFrameConstructor::CreateNeededTablePseudos(FrameConstructionItemList& aItem
   return NS_OK;
 }
 
-nsresult
+inline nsresult
 nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aState,
                                                    FrameConstructionItemList& aItems,
                                                    nsIFrame* aParentFrame,
                                                    nsFrameItems& aFrameItems)
 {
-  nsresult rv = CreateNeededTablePseudos(aItems, aParentFrame);
+  nsresult rv = CreateNeededTablePseudos(aState, aItems, aParentFrame);
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -11040,7 +11056,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
         // iter points to an item that wants a different parent.  If it's not
         // whitespace, we're done; no more point scanning the list.
-        if (!iter.item().IsWhitespace()) {
+        if (!iter.item().IsWhitespace(aState)) {
           break;
         }
 
@@ -11072,7 +11088,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
 
         FCItemIterator spaceEndIter(iter);
         // Advance spaceEndIter past any whitespace
-        PRBool trailingSpaces = spaceEndIter.SkipWhitespace();
+        PRBool trailingSpaces = spaceEndIter.SkipWhitespace(aState);
 
         PRBool okToDrop;
         if (trailingSpaces) {
@@ -11841,9 +11857,11 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
 // nsCSSFrameConstructor::FrameConstructionItem methods //
 //////////////////////////////////////////////////////////
 PRBool
-nsCSSFrameConstructor::FrameConstructionItem::IsWhitespace() const
+nsCSSFrameConstructor::
+FrameConstructionItem::IsWhitespace(nsFrameConstructorState& aState) const
 {
-  NS_PRECONDITION(!mContent->GetPrimaryFrame(), "How did that happen?");
+  NS_PRECONDITION(!aState.mSetPrimaryFrames ||
+                  !mContent->GetPrimaryFrame(), "How did that happen?");
   if (!mIsText) {
     return PR_FALSE;
   }
@@ -11892,16 +11910,16 @@ Iterator::SkipItemsWantingParentType(ParentType aParentType)
 
 inline PRBool
 nsCSSFrameConstructor::FrameConstructionItemList::
-Iterator::SkipWhitespace()
+Iterator::SkipWhitespace(nsFrameConstructorState& aState)
 {
   NS_PRECONDITION(!IsDone(), "Shouldn't be done yet");
-  NS_PRECONDITION(item().IsWhitespace(), "Not pointing to whitespace?");
+  NS_PRECONDITION(item().IsWhitespace(aState), "Not pointing to whitespace?");
   do {
     Next();
     if (IsDone()) {
       return PR_TRUE;
     }
-  } while (item().IsWhitespace());
+  } while (item().IsWhitespace(aState));
 
   return PR_FALSE;
 }
