@@ -516,7 +516,7 @@
         <richlistitem id="context-openinnewtab" type="link" onclick="ContextCommands.openInNewTab(event);">
           <label value="&contextOpenInNewTab.label;"/>
         </richlistitem>
-        <richlistitem id="context-saveimage" type="image" onclick="ContextCommands.saveImage(event);">
+        <richlistitem id="context-saveimage" type="image-loaded" onclick="ContextCommands.saveImage(event);">
           <label value="&contextSaveImage.label;"/>
         </richlistitem>
       </richlistbox>
