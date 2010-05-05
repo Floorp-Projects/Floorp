@@ -1186,7 +1186,7 @@ class TraceRecorder
                                          nanojit::LIns* s0, nanojit::LIns* s1);
 
     nanojit::LIns* i2d(nanojit::LIns* i);
-    nanojit::LIns* d2i(nanojit::LIns* f);
+    nanojit::LIns* d2i(nanojit::LIns* f, bool resultCanBeImpreciseIfFractional = false);
     nanojit::LIns* f2u(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* makeNumberInt32(nanojit::LIns* f);
     JS_REQUIRES_STACK nanojit::LIns* stringify(jsval& v);
