@@ -249,13 +249,13 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
   if (instanceData->eventModel == NPEventModelCarbon) {
     EventRecord* carbonEvent = (EventRecord*)event;
     if (!carbonEvent)
-      return kNPEventNotHandled;
-
+      return 1;
+    
     NPWindow* w = &instanceData->window;
     switch (carbonEvent->what) {
       case updateEvt:
         pluginDraw(instanceData, NULL);
-        break;
+        return 1;
       case mouseDown:
       case mouseUp:
       case osEvt:
@@ -266,45 +266,44 @@ pluginHandleEvent(InstanceData* instanceData, void* event)
           ::GetWindowBounds(nativeWindow, kWindowStructureRgn, &globalBounds);
         instanceData->lastMouseX = carbonEvent->where.h - w->x - globalBounds.left;
         instanceData->lastMouseY = carbonEvent->where.v - w->y - globalBounds.top;
-        break;
+        return 1;
       }
       default:
-        return kNPEventNotHandled;
+        return 1;
     }
-
-    return kNPEventHandled;
+    return 1;
   }
 #endif
 
   NPCocoaEvent* cocoaEvent = (NPCocoaEvent*)event;
   if (!cocoaEvent)
-    return kNPEventNotHandled;
+    return 1;
 
   switch (cocoaEvent->type) {
     case NPCocoaEventDrawRect:
       pluginDraw(instanceData, cocoaEvent);
-      break;
+      return 1;
     case NPCocoaEventMouseDown:
     case NPCocoaEventMouseUp:
     case NPCocoaEventMouseMoved:
       instanceData->lastMouseX = (int32_t)cocoaEvent->data.mouse.pluginX;
       instanceData->lastMouseY = (int32_t)cocoaEvent->data.mouse.pluginY;
-      break;
+      return 1;
     case NPCocoaEventWindowFocusChanged:
       instanceData->topLevelWindowActivationState = cocoaEvent->data.focus.hasFocus ?
         ACTIVATION_STATE_ACTIVATED : ACTIVATION_STATE_DEACTIVATED;
       instanceData->topLevelWindowActivationEventCount = instanceData->topLevelWindowActivationEventCount + 1;
-      break;
+      return 1;
     case NPCocoaEventFocusChanged:
       instanceData->focusState = cocoaEvent->data.focus.hasFocus ?
       ACTIVATION_STATE_ACTIVATED : ACTIVATION_STATE_DEACTIVATED;
       instanceData->focusEventCount = instanceData->focusEventCount + 1;
-      break;
+      return 1;
     default:
-      return kNPEventNotHandled;
+      return 1;
   }
 
-  return kNPEventHandled;
+  return 1;
 }
 
 int32_t pluginGetEdge(InstanceData* instanceData, RectEdge edge)
