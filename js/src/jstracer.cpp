@@ -8272,7 +8272,7 @@ TraceRecorder::i2d(LIns* i)
 }
 
 LIns*
-TraceRecorder::d2i(LIns* f)
+TraceRecorder::d2i(LIns* f, bool resultCanBeImpreciseIfFractional)
 {
     if (f->isImmD())
         return lir->insImmI(js_DoubleToECMAInt32(f->immD()));
@@ -8311,7 +8311,9 @@ TraceRecorder::d2i(LIns* f)
             return lir->insCall(&js_String_p_charCodeAt_double_int_ci, args);
         }
     }
-    return lir->insCall(&js_DoubleToInt32_ci, &f);
+    return resultCanBeImpreciseIfFractional
+         ? lir->ins1(LIR_d2i, f)
+         : lir->insCall(&js_DoubleToInt32_ci, &f);
 }
 
 LIns*
@@ -8330,7 +8332,10 @@ TraceRecorder::makeNumberInt32(LIns* f)
     JS_ASSERT(f->isD());
     LIns* x;
     if (!isPromote(f)) {
-        x = d2i(f);
+        // This means "convert double to int if it's integral, otherwise
+        // exit".  We first convert the double to an int, then convert it back
+        // and exit if the two doubles don't match.
+        x = d2i(f, /* resultCanBeImpreciseIfFractional = */true);
         guard(true, lir->ins2(LIR_feq, f, lir->ins1(LIR_i2f, x)), MISMATCH_EXIT);
     } else {
         x = demote(lir, f);
