@@ -154,6 +154,8 @@ private:
 inline
 nsresult
 GetKeyFromVariant(nsIVariant* aKey,
+                  PRBool aAutoIncrement,
+                  PRBool aGetting,
                   nsAString& aKeyString,
                   PRInt64* aKeyInt)
 {
@@ -165,7 +167,18 @@ GetKeyFromVariant(nsIVariant* aKey,
 
   // See xpcvariant.cpp, these are the only types we should expect.
   switch (type) {
+    case nsIDataType::VTYPE_EMPTY:
+      if (!aAutoIncrement || aGetting) {
+        return NS_ERROR_INVALID_ARG;
+      }
+      aKeyString.SetIsVoid(PR_TRUE);
+      *aKeyInt = 0;
+      break;
+
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
+      if (aAutoIncrement) {
+        return NS_ERROR_INVALID_ARG;
+      }
       rv = aKey->GetAsAString(aKeyString);
       NS_ENSURE_SUCCESS(rv, rv);
       *aKeyInt = 0;
@@ -173,6 +186,9 @@ GetKeyFromVariant(nsIVariant* aKey,
 
     case nsIDataType::VTYPE_INT32:
     case nsIDataType::VTYPE_DOUBLE:
+      if (aAutoIncrement && !aGetting) {
+        return NS_ERROR_INVALID_ARG;
+      }
       rv = aKey->GetAsInt64(aKeyInt);
       NS_ENSURE_SUCCESS(rv, rv);
       aKeyString.SetIsVoid(PR_TRUE);
@@ -295,18 +311,12 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsresult rv;
-
   nsString keyString;
   PRInt64 keyInt;
 
-  if (aKey) {
-    rv = GetKeyFromVariant(aKey, keyString, &keyInt);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else if (!mAutoIncrement) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  nsresult rv = GetKeyFromVariant(aKey, mAutoIncrement, PR_FALSE,
+                                  keyString, &keyInt);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // This is the slow path, need to do this better once nsIVariants can have
   // raw jsvals inside them.
@@ -324,7 +334,7 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
   rv = cc->GetArgc(&argc);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (argc < 2) {
+  if (argc < 1) {
     return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
   }
 
@@ -377,16 +387,11 @@ IDBObjectStoreRequest::Get(nsIVariant* aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsresult rv;
-
   nsString keyString;
   PRInt64 keyInt;
 
-  if (!aKey) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  rv = GetKeyFromVariant(aKey, keyString, &keyInt);
+  nsresult rv = GetKeyFromVariant(aKey, mAutoIncrement, PR_TRUE,
+                                  keyString, &keyInt);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<IDBRequest> request = GenerateRequest();

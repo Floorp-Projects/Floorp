@@ -1,0 +1,66 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript">
+    function run_test()
+    {
+      const name = window.location.pathname;
+      const description = "My Test Database";
+      const objectStoreName = "Objects";
+
+      var testString = { key: 0, value: "testString" };
+      var testInt = { key: 1, value: 1002 };
+
+      function errorHandler(event) {
+        ok(false, "indexedDB error (" + event.error.code + "): " +
+           event.error.message);
+        SimpleTest.finish();
+      }
+
+      var objectStore;
+      var db = indexedDB.open(name, description);
+      var request = db.createObjectStore(objectStoreName, null);
+      request.onerror = errorHandler;
+      request.onsuccess = function(event) {
+        objectStore = event.result;
+        request = objectStore.put(testString.value, testString.key);
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          is(event.result, testString.key, "Bad key");
+          request = objectStore.get(testString.key);
+          request.onerror = errorHandler;
+          request.onsuccess = function(event) {
+            is(event.result, testString.value, "Bad value");
+          };
+        };
+        request = objectStore.put(testInt.value, testInt.key);
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          is(event.result, testInt.key, "Bad key");
+          request = objectStore.get(testInt.key);
+          request.onerror = errorHandler;
+          request.onsuccess = function(event) {
+            is(event.result, testInt.value, "Bad value");
+            SimpleTest.finish();
+          };
+        };
+      };
+    }
+
+    SimpleTest.waitForExplicitFinish();
+  </script>
+
+</head>
+
+<body onload="run_test();">
+</body>
+</html>
