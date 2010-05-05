@@ -964,7 +964,7 @@ private:
       // Skip over whitespace.  Return whether the iterator is done after doing
       // that.  The iterator must not be done, and must be pointing to a
       // whitespace item when this is called.
-      inline PRBool SkipWhitespace();
+      inline PRBool SkipWhitespace(nsFrameConstructorState& aState);
 
       // Remove the item pointed to by this iterator from its current list and
       // Append it to aTargetList.  This iterator is advanced to point to the
@@ -1064,7 +1064,7 @@ private:
     // Don't call this unless the frametree really depends on the answer!
     // Especially so for generated content, where we don't want to reframe
     // things.
-    PRBool IsWhitespace() const;
+    PRBool IsWhitespace(nsFrameConstructorState& aState) const;
 
     PRBool IsLineBoundary() const {
       return mIsBlock || (mFCData->mBits & FCDATA_IS_LINE_BREAK);
@@ -1133,8 +1133,9 @@ private:
    * @param aItems the child frame construction items before pseudo creation
    * @param aParentFrame the parent frame we're creating pseudos for
    */
-  nsresult CreateNeededTablePseudos(FrameConstructionItemList& aItems,
-                                    nsIFrame* aParentFrame);
+  inline nsresult CreateNeededTablePseudos(nsFrameConstructorState& aState,
+                                           FrameConstructionItemList& aItems,
+                                           nsIFrame* aParentFrame);
 
   /**
    * Function to adjust aParentFrame to deal with captions.
