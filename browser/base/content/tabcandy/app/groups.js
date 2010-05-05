@@ -853,7 +853,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
      
     this._children.sort(function(a,b){
       return groupTabs.indexOf(a.tab.raw) - groupTabs.indexOf(b.tab.raw)
-    })
+    });
+    
+    this.arrange({animate: false});
   },
   
   // ----------
