@@ -29,7 +29,7 @@
     </scrollbox>
 
     <hbox id="prompt-confirm-checkbox-box" collapsed="true" align="center" class="prompt-message" flex="1">
-      <label id="prompt-confirm-checkbox-label" class="prompt-checkbox-label" crop="center" flex="1"/>
+      <description id="prompt-confirm-checkbox-label" class="prompt-checkbox-label" flex="1"/>
       <checkbox class="toggle-dark" id="prompt-confirm-checkbox"/>
     </hbox>
   </vbox>

@@ -31,7 +31,7 @@
     <textbox id="prompt-prompt-textbox"/>
 
     <hbox id="prompt-prompt-checkbox-box" collapsed="true" align="center" class="prompt-message" flex="1">
-      <label id="prompt-prompt-checkbox-label" class="prompt-checkbox-label" crop="center" flex="1"/>
+      <description id="prompt-prompt-checkbox-label" class="prompt-checkbox-label" flex="1"/>
       <checkbox id="prompt-prompt-checkbox" class="toggle-dark"/>
     </hbox>
   </vbox>
