@@ -73,7 +73,6 @@ function verifyBlank(n) {
     is(uri, testURL_blank, "URL Matches blank page "+n);
 
     // Check viewport settings
-    ok(working_tab.browser.classList.contains("browser"), "Normal 'browser' class");
     let style = window.getComputedStyle(working_tab.browser, null);
     is(style.width, "800px", "Normal 'browser' width is 800 pixels");
 
