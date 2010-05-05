@@ -6651,9 +6651,8 @@ nsGlobalWindow::RemoveGroupedEventListener(const nsAString & aType,
 
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
                                                 aEvtGrp);
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
