@@ -313,20 +313,14 @@ nsHTMLEditor::HideGrabber()
 
   // get the presshell's document observer interface.
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) {
-    NS_WARNING("no pres shell; can't remove grabber");
-    return NS_ERROR_NOT_INITIALIZED;
-  }
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNode> parentNode;
   res = mGrabber->GetParentNode(getter_AddRefs(parentNode));
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr<nsIContent> parentContent = do_QueryInterface(parentNode);
-  if (!parentContent) {
-    NS_WARNING("no parent content; can't remove grabber");
-    return NS_ERROR_NULL_POINTER;
-  }
+  if (!parentContent) return NS_ERROR_NULL_POINTER;
 
   DeleteRefToAnonymousNode(mGrabber, parentContent, ps);
   mGrabber = nsnull;

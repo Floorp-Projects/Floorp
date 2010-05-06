@@ -2075,12 +2075,6 @@ nsGenericElement::~nsGenericElement()
 {
   NS_PRECONDITION(!IsInDoc(),
                   "Please remove this from the document properly");
-#ifdef DEBUG
-  if (IsInDoc()) {
-    printf("The element still in the document is:\n");
-    List(stdout, 2, nsCString());
-  }
-#endif
 }
 
 NS_IMETHODIMP
