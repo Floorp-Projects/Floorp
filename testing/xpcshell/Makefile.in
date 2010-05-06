@@ -63,6 +63,7 @@ TEST_HARNESS_FILES := \
 # Extra files needed from $(topsrcdir)/build
 EXTRA_BUILD_FILES := \
   automationutils.py \
+  poster.zip \
   $(NULL)
 
 # And files for running xpcshell remotely from $(topsrcdir)/build/mobile
