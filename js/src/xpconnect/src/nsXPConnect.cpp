@@ -228,19 +228,6 @@ nsXPConnect::ReleaseXPConnectSingleton()
         }
 #endif
 
-        // Temporary code to debug a persistent leak on tinderbox
-        // unit tests (bug 538462).
-#if defined(DEBUG_cltbld) && defined(XP_MACOSX)
-        {
-            XPCCallContext ccx(NATIVE_CALLER);
-            if(ccx.IsValid())
-            {
-                printf("Dump of entire JS heap at shutdown:\n");
-                JS_DumpHeap(ccx, stdout, nsnull, 0, nsnull, size_t(-1), nsnull);
-            }
-        }
-#endif
-
 #ifdef DEBUG
         // force a dump of the JavaScript gc heap if JS is still alive
         // if requested through XPC_SHUTDOWN_HEAP_DUMP environment variable
