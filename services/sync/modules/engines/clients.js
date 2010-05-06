@@ -59,6 +59,9 @@ ClientEngine.prototype = {
   _storeObj: ClientStore,
   _recordObj: ClientsRec,
 
+  // Always sync client data as it controls other sync behavior
+  get enabled() true,
+
   // Aggregate some stats on the composition of clients on this account
   get stats() {
     let stats = {
@@ -191,12 +194,9 @@ ClientStore.prototype = {
   create: function create(record) this.update(record),
 
   update: function update(record) {
-    // Unpack the individual components of the local client
-    if (record.id == Clients.localID) {
-      Clients.localName = record.name;
-      Clients.localType = record.type;
+    // Only grab commands from the server; local name/type always wins
+    if (record.id == Clients.localID)
       Clients.localCommands = record.commands;
-    }
     else
       this._remoteClients[record.id] = record.cleartext;
   },
