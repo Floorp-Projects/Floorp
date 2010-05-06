@@ -6356,7 +6356,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // child frame. Define a property for this index.
 
         *_retval = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID,
-                                      nsnull, nsnull, 0);
+                                      nsnull, nsnull, JSPROP_SHARED);
 
         if (*_retval) {
           *objp = obj;
