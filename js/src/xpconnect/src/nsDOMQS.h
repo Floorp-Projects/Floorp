@@ -55,7 +55,7 @@ xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
                                                 pThisRef, pThisVal, lccx,     \
                                                 &rv);                         \
     if(!native)                                                               \
-        return JS_FALSE;                                                      \
+        return xpc_qsThrow(cx, rv);                                           \
     *ppThis = static_cast<_interface*>(native);                               \
     return JS_TRUE;                                                           \
 }                                                                             \
