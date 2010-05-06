@@ -759,6 +759,24 @@ Options(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+Parent(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    jsval v = JS_ARGV(cx, vp)[0];
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        JS_ReportError(cx, "Only objects have parents!");
+        return JS_FALSE;
+    }
+
+    *vp = OBJECT_TO_JSVAL(JS_GetParent(cx, JSVAL_TO_OBJECT(v)));
+    return JS_TRUE;
+}
+
 static JSFunctionSpec glob_functions[] = {
     {"print",           Print,          0,0,0},
     {"readline",        ReadLine,       1,0,0},
@@ -774,6 +792,7 @@ static JSFunctionSpec glob_functions[] = {
 #endif
     {"clear",           Clear,          1,0,0},
     {"options",         Options,        0,0,0},
+    JS_FN("parent",     Parent,         1,0),
 #ifdef DEBUG
     {"dumpHeap",        DumpHeap,       5,0,0},
 #endif
