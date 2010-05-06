@@ -799,7 +799,7 @@ var gSearchView = {
 
   calculateMatchScore: function(aStr, aQuery, aMultiplier) {
     var score = 0;
-    if (aQuery.length == 0)
+    if (!aStr || aQuery.length == 0)
       return score;
 
     aStr = aStr.trim().toLocaleLowerCase();
