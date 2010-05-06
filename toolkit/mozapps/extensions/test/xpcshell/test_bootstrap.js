@@ -77,30 +77,36 @@ function run_test_1() {
 }
 
 function check_test_1() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
-    do_check_neq(b1, null);
-    do_check_eq(b1.version, "1.0");
-    do_check_false(b1.appDisabled);
-    do_check_false(b1.userDisabled);
-    do_check_true(b1.isActive);
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
-    do_check_eq(getStartupReason(), ADDON_INSTALL);
-    do_check_true(b1.hasResource("install.rdf"));
-    do_check_true(b1.hasResource("bootstrap.js"));
-    do_check_false(b1.hasResource("foo.bar"));
-    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+  AddonManager.getAllInstalls(function(installs) {
+    // There should be no active installs now since the install completed and
+    // doesn't require a restart.
+    do_check_eq(installs.length, 0);
 
-    let dir = profileDir.clone();
-    dir.append("bootstrap1@tests.mozilla.org");
-    dir.append("bootstrap.js");
-    let uri = Services.io.newFileURI(dir).spec;
-    do_check_eq(b1.getResourceURL("bootstrap.js"), uri);
+    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+      do_check_neq(b1, null);
+      do_check_eq(b1.version, "1.0");
+      do_check_false(b1.appDisabled);
+      do_check_false(b1.userDisabled);
+      do_check_true(b1.isActive);
+      do_check_eq(getInstalledVersion(), 1);
+      do_check_eq(getActiveVersion(), 1);
+      do_check_eq(getStartupReason(), ADDON_INSTALL);
+      do_check_true(b1.hasResource("install.rdf"));
+      do_check_true(b1.hasResource("bootstrap.js"));
+      do_check_false(b1.hasResource("foo.bar"));
+      do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
-    AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
-      do_check_eq(list.length, 0);
+      let dir = profileDir.clone();
+      dir.append("bootstrap1@tests.mozilla.org");
+      dir.append("bootstrap.js");
+      let uri = Services.io.newFileURI(dir).spec;
+      do_check_eq(b1.getResourceURL("bootstrap.js"), uri);
 
-      run_test_2();
+      AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
+        do_check_eq(list.length, 0);
+
+        run_test_2();
+      });
     });
   });
 }

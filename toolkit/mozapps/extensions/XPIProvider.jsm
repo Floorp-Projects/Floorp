@@ -3888,6 +3888,9 @@ AddonInstall.prototype = {
                                                  createWrapper(this.addon));
       }
       else {
+        // The install is completed so it should be removed from the active list
+        XPIProvider.removeActiveInstall(this);
+
         // TODO We can probably reduce the number of DB operations going on here
         // We probably also want to support rolling back failed upgrades etc.
         // See bug 553015.
