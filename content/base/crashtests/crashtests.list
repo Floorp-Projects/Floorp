@@ -64,3 +64,4 @@ asserts(1) load 554230-1.xhtml # bug 336104
 load 552651.html
 load 558973.html
 load 564079-1.html 
+load 564114.html
