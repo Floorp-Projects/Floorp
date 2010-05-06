@@ -578,13 +578,114 @@ TestRunner.prototype =
           print("Starting test with old descriptor " + old.toSource() + "...");
 
           for (var j = 0, sz2 = VALID_DESCRIPTORS.length; j < sz2; j++)
-            self._runSinglePropertyPresentTest(old, VALID_DESCRIPTORS[j]);
+            self._runSinglePropertyPresentTest(old, VALID_DESCRIPTORS[j], []);
         }
       }
 
       this._runTestSet(propertyPresentTests,
                        "Property-present fraction " + part + " of " + parts +
                        " completed!");
+    },
+
+    runNonTerminalPropertyPresentTestsFraction:
+    function runNonTerminalPropertyPresentTestsFraction(part, parts)
+    {
+      var self = this;
+
+      /*
+       * A plain old property to define on the object before redefining the
+       * originally-added property, to test redefinition of a property that's
+       * not also lastProperty.  NB: we could loop over every possible
+       * descriptor here if we wanted, even try adding more than one, but we'd
+       * hit cubic complexity and worse, and SpiderMonkey only distinguishes by
+       * the mere presence of the middle property, not its precise details.
+       */
+      var middleDefines =
+        [{
+           property: "middle",
+           descriptor:
+             { value: 17, writable: true, configurable: true, enumerable: true }
+         }];
+
+      function nonTerminalPropertyPresentTests()
+      {
+        print("Running non-terminal already-present tests now...");
+
+        var total = VALID_DESCRIPTORS.length;
+        var start = Math.floor((part - 1) / parts * total);
+        var end = Math.floor(part / parts * total);
+
+        for (var i = start; i < end; i++)
+        {
+          var old = VALID_DESCRIPTORS[i];
+          print("Starting test with old descriptor " + old.toSource() + "...");
+
+          for (var j = 0, sz2 = VALID_DESCRIPTORS.length; j < sz2; j++)
+          {
+            self._runSinglePropertyPresentTest(old, VALID_DESCRIPTORS[j],
+                                               middleDefines);
+          }
+        }
+      }
+
+      this._runTestSet(nonTerminalPropertyPresentTests,
+                       "Non-terminal property-present fraction " +
+                       part + " of " + parts + " completed!");
+    },
+
+    runDictionaryPropertyPresentTestsFraction:
+    function runDictionaryPropertyPresentTestsFraction(part, parts)
+    {
+      var self = this;
+
+      /*
+       * Add and readd properties such that the scope for the object is in
+       * dictionary mode.
+       */
+      var middleDefines =
+        [
+         {
+           property: "mid1",
+           descriptor:
+             { value: 17, writable: true, configurable: true, enumerable: true }
+         },
+         {
+           property: "mid2",
+           descriptor:
+             { value: 17, writable: true, configurable: true, enumerable: true }
+         },
+         {
+           property: "mid1",
+           descriptor:
+             { get: function g() { }, set: function s(v){}, configurable: false,
+               enumerable: true }
+         },
+         ];
+
+      function dictionaryPropertyPresentTests()
+      {
+        print("Running dictionary already-present tests now...");
+
+        var total = VALID_DESCRIPTORS.length;
+        var start = Math.floor((part - 1) / parts * total);
+        var end = Math.floor(part / parts * total);
+
+        for (var i = start; i < end; i++)
+        {
+          var old = VALID_DESCRIPTORS[i];
+          print("Starting test with old descriptor " + old.toSource() + "...");
+
+          for (var j = 0, sz2 = VALID_DESCRIPTORS.length; j < sz2; j++)
+          {
+            self._runSinglePropertyPresentTest(old, VALID_DESCRIPTORS[j],
+                                               middleDefines);
+          }
+        }
+      }
+
+      this._runTestSet(dictionaryPropertyPresentTests,
+                       "Dictionary property-present fraction " +
+                       part + " of " + parts + " completed!");
     },
 
 
@@ -600,7 +701,7 @@ TestRunner.prototype =
         print("Starting test with old descriptor " + old.toSource() + "...");
 
         for (var j = 0, sz2 = VALID_DESCRIPTORS.length; j < sz2; j++)
-          this._runSinglePropertyPresentTest(old, VALID_DESCRIPTORS[j]);
+          this._runSinglePropertyPresentTest(old, VALID_DESCRIPTORS[j], []);
       }
     },
     _runTestSet: function _runTestSet(fun, completeMessage)
@@ -724,7 +825,8 @@ TestRunner.prototype =
         return;
       }
     },
-    _runSinglePropertyPresentTest: function _runSinglePropertyPresentTest(old, add)
+    _runSinglePropertyPresentTest:
+    function _runSinglePropertyPresentTest(old, add, middleDefines)
     {
       var nativeObj = NativeTest.newObject();
       var reimplObj = ReimplTest.newObject();
@@ -779,6 +881,35 @@ TestRunner.prototype =
                   "behavior when adding descriptor " + add.toSource() +
                   ", error: " + e);
         return;
+      }
+
+      // Now add (or even readd) however many properties were specified between
+      // the original property to add and the new one, to test redefining
+      // non-last-properties and properties in scopes in dictionary mode.
+      for (var i = 0, sz = middleDefines.length; i < sz; i++)
+      {
+        var middle = middleDefines[i];
+        var prop = middle.property;
+        var desc = middle.descriptor;
+
+        try
+        {
+          NativeTest.defineProperty(nativeObj, prop, desc);
+          ReimplTest.defineProperty(reimplObj, prop, desc);
+        }
+        catch (e)
+        {
+          this._log("failure defining middle descriptor: " + desc.toSource() +
+                    ", error " + e);
+          return;
+        }
+
+        // Sanity check
+        var nativeDesc = NativeTest.getDescriptor(nativeObj, prop);
+        var reimplDesc = ReimplTest.getDescriptor(reimplObj, prop);
+
+        compareDescriptors(nativeDesc, reimplDesc);
+        compareDescriptors(nativeDesc, desc);
       }
 
       try
@@ -900,3 +1031,72 @@ TestRunner.prototype =
       }
     }
   };
+
+function runDictionaryPropertyPresentTestsFraction(PART, PARTS)
+{
+  var testfile =
+    '15.2.3.6-dictionary-redefinition-' + PART + '-of-' + PARTS + '.js';
+  var BUGNUMBER = 560566;
+  var summary =
+    'ES5 Object.defineProperty(O, P, Attributes): dictionary redefinition ' +
+    PART + ' of ' + PARTS;
+
+  print(BUGNUMBER + ": " + summary);
+
+  try
+  {
+    new TestRunner().runDictionaryPropertyPresentTestsFraction(PART, PARTS);
+  }
+  catch (e)
+  {
+    throw "Error thrown during testing: " + e +
+            " at line " + e.lineNumber + "\n" +
+          (e.stack
+            ? "Stack: " + e.stack.split("\n").slice(2).join("\n") + "\n"
+            : "");
+  }
+
+  if (typeof reportCompare === "function")
+    reportCompare(true, true);
+
+  print("Tests complete!");
+}
+
+function runNonTerminalPropertyPresentTestsFraction(PART, PARTS)
+{
+  var PART = 1, PARTS = 4;
+
+  var gTestfile =
+    '15.2.3.6-middle-redefinition-' + PART + '-of-' + PARTS + '.js';
+  var BUGNUMBER = 560566;
+  var summary =
+    'ES5 Object.defineProperty(O, P, Attributes): middle redefinition ' +
+    PART + ' of ' + PARTS;
+
+  print(BUGNUMBER + ": " + summary);
+
+
+  /**************
+   * BEGIN TEST *
+   **************/
+
+  try
+  {
+    new TestRunner().runNonTerminalPropertyPresentTestsFraction(PART, PARTS);
+  }
+  catch (e)
+  {
+    throw "Error thrown during testing: " + e +
+            " at line " + e.lineNumber + "\n" +
+          (e.stack
+            ? "Stack: " + e.stack.split("\n").slice(2).join("\n") + "\n"
+            : "");
+  }
+
+  /******************************************************************************/
+
+  if (typeof reportCompare === "function")
+    reportCompare(true, true);
+
+  print("Tests complete!");
+}

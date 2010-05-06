@@ -53,7 +53,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(22a62b54-bcf5-422a-a329-fed4de5e78b2)]
+[scriptable, uuid(352ff0af-bb38-496a-a067-b54771168d6d)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -655,4 +655,12 @@ interface nsIDOMWindowUtils : nsISupports {
   AString getVisitedDependentComputedStyle(in nsIDOMElement aElement,
                                            in AString aPseudoElement,
                                            in AString aPropertyName);
+
+  /**
+   * Returns the parent of obj.
+   *
+   * @param obj The JavaScript object whose parent is to be gotten.
+   * @return the parent.
+   */
+  void getParent(/* obj */);
 };

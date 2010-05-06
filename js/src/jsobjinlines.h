@@ -46,10 +46,7 @@
 #include "jsiter.h"
 #include "jsobj.h"
 #include "jsscope.h"
-
-#ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
-#endif
 
 #include "jsscopeinlines.h"
 
@@ -110,18 +107,26 @@ JSObject::setPrimitiveThis(jsval pthis)
     fslots[JSSLOT_PRIMITIVE_THIS] = pthis;
 }
 
-inline void JSObject::staticAssertArrayLengthIsInPrivateSlot()
+inline void
+JSObject::staticAssertArrayLengthIsInPrivateSlot()
 {
     JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH == JSSLOT_PRIVATE);
 }
 
-inline bool JSObject::isDenseArrayMinLenCapOk() const
+inline bool
+JSObject::isDenseArrayMinLenCapOk(bool strictAboutLength) const
 {
     JS_ASSERT(isDenseArray());
     uint32 length = uncheckedGetArrayLength();
     uint32 capacity = uncheckedGetDenseArrayCapacity();
     uint32 minLenCap = uint32(fslots[JSSLOT_DENSE_ARRAY_MINLENCAP]);
-    return minLenCap == JS_MIN(length, capacity);
+
+    // This function can be called while the LENGTH and MINLENCAP slots are
+    // still set to JSVAL_VOID and there are no dslots (ie. the capacity is
+    // zero).  If 'strictAboutLength' is false we allow this.
+    return minLenCap == JS_MIN(length, capacity) ||
+           (!strictAboutLength && minLenCap == uint32(JSVAL_VOID) &&
+            length == uint32(JSVAL_VOID) && capacity == 0);
 }
 
 inline uint32
@@ -192,7 +197,7 @@ inline uint32
 JSObject::getDenseArrayCapacity() const
 {
     JS_ASSERT(isDenseArray());
-    JS_ASSERT(isDenseArrayMinLenCapOk());
+    JS_ASSERT(isDenseArrayMinLenCapOk(/* strictAboutLength = */false));
     return uncheckedGetDenseArrayCapacity();
 }
 
@@ -212,6 +217,14 @@ JSObject::getDenseArrayElement(uint32 i) const
     JS_ASSERT(isDenseArray());
     JS_ASSERT(i < getDenseArrayCapacity());
     return dslots[i];
+}
+
+inline jsval *
+JSObject::addressOfDenseArrayElement(uint32 i)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(i < getDenseArrayCapacity());
+    return &dslots[i];
 }
 
 inline void
@@ -477,7 +490,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSClass *clasp, JSObject* proto
         /* Let JSScope::create set freeslot so as to reserve slots. */
         JS_ASSERT(scope->freeslot >= JSSLOT_PRIVATE);
         if (scope->freeslot > JS_INITIAL_NSLOTS &&
-            !js_AllocSlots(cx, obj, scope->freeslot)) {
+            !obj->allocSlots(cx, scope->freeslot)) {
             scope->destroy(cx);
             goto bad;
         }
@@ -496,10 +509,7 @@ static inline JSObject *
 NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                         JSObject *parent, size_t objectSize = 0)
 {
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_CREATE_START_ENABLED())
-        jsdtrace_object_create_start(cx->fp, clasp);
-#endif
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
 
     /* Assert that the class is a proper class. */
     JS_ASSERT_IF(clasp->flags & JSCLASS_IS_EXTENDED,
@@ -565,12 +575,7 @@ NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     }
 
 out:
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_CREATE_ENABLED())
-        jsdtrace_object_create(cx, clasp, obj);
-    if (JAVASCRIPT_OBJECT_CREATE_DONE_ENABLED())
-        jsdtrace_object_create_done(cx->fp, clasp);
-#endif
+    objectCreationScope.handleCreation(obj);
     return obj;
 }
 

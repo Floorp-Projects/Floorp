@@ -77,21 +77,6 @@ function inspect(obj) {
     return;
   }
   print("* Object type: "+typeof obj+"\n");
-  if (typeof obj != "xml") {
-    print("* Parent chain: ");
-    try {
-      var parent = obj.__parent__;
-      while(parent) {
-        try {
-          print(parent);
-        }
-        catch(e) { dump("(?)"); }
-        finally { dump(" "); }
-        parent = parent.__parent__;
-      }
-    } catch(e) { dump("...(?)"); }
-    print("\n");
-  }
   switch(typeof obj) {
     case "object":
       print("* Prototype chain: ");

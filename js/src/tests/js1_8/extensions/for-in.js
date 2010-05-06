@@ -27,7 +27,7 @@ function makeWorkerFn(id) {
     for (n in bar) {
       for (m in bar[n]) {}
     }
-    for (n in {}.__parent__) {}
+    for (n in parent({})) {}
   };
 }
 
@@ -42,8 +42,8 @@ var actual;
 expect = actual = 'No crash';
 if (typeof scatter == 'undefined') {
   print('Test skipped. scatter not defined.');
-} else if (!("__parent__" in {})) {
-  print('Test skipped. __parent__ not defined.');
+} else if (typeof parent === "undefined") {
+  print('Test skipped, no parent() function.');
 } else {
   for (let i = 0; i < LOOP_COUNT; i++) {
     foo = 0;

@@ -3333,9 +3333,8 @@ BEGIN_CASE(JSOP_INITMETHOD)
      * So check first.
      *
      * On a hit, if the cached sprop has a non-default setter, it must be
-     * __proto__ or __parent__. If sprop->parent != scope->lastProperty(),
-     * there is a repeated property name. The fast path does not handle these
-     * two cases.
+     * __proto__. If sprop->parent != scope->lastProperty(), there is a
+     * repeated property name. The fast path does not handle these two cases.
      */
     if (CX_OWNS_OBJECT_TITLE(cx, obj) &&
         JS_PROPERTY_CACHE(cx).testForInit(rt, regs.pc, obj, scope, &sprop, &entry) &&
