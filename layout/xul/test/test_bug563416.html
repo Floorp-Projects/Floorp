@@ -11,7 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=563416
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=563416">Mozilla Bug 563416</a>
-<p id="display"><iframe id="test" src='data:text/html,<textarea style="-moz-box-sizing:content-box; height: 0px;" cols="20" rows="10">hsldkjvmshlkkajskdlfksdjflskdjflskdjflskdjflskdjfddddddddd</textarea>'></iframe></p>
+<p id="display"><iframe id="test" src='data:text/html,<textarea style="-moz-box-sizing:content-box; -moz-appearance:none; height: 0px;" cols="20" rows="10">hsldkjvmshlkkajskdlfksdjflskdjflskdjflskdjflskdjfddddddddd</textarea>'></iframe></p>
 <div id="content" style="display: none">
   
 </div>
@@ -24,17 +24,6 @@ var result = -1;
 var expected = -2;
 var i = 0;
 
-function continueTest() {
-  var frame = document.getElementById('test');
-  frame.contentWindow.location.reload();
-  if (i < 2)
-    setTimeout(continueTest,20)
-  else {
-    is(result, expected, "setting style.width changes clientWidth");
-    SimpleTest.finish();
-  }
-}
-
 function runTest() {
   i = 0;
   var frame = document.getElementById('test');
@@ -43,9 +32,16 @@ function runTest() {
     expected = t.clientWidth + 10;
     t.style.width = expected + 'px';
     result = t.clientWidth;
-    i++;
+    if (i == 0) {
+      i++;
+      setTimeout(function(){frame.contentWindow.location.reload();},0);
+    }
+    else {
+      is(result, expected, "setting style.width changes clientWidth");
+      SimpleTest.finish();
+    }
   }
-  continueTest();
+  frame.contentWindow.location.reload();
 }
 
 SimpleTest.waitForExplicitFinish();
