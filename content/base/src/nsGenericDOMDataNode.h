@@ -286,7 +286,7 @@ protected:
   {
     nsINode *parent = GetNodeParent();
 
-    return parent->IsElement() ? parent->AsElement() : nsnull;
+    return parent && parent->IsElement() ? parent->AsElement() : nsnull;
   }
 
   /**
