@@ -53,6 +53,7 @@ components/nsBackgroundUpdateService.js
 components/nsBookmarkTransactionManager.js
 components/nsCloseAllWindows.js
 components/nsDictionary.js
+components/nsExtensionManager.js
 components/nsInterfaceInfoToIDL.js
 components/nsScriptableIO.js
 components/nsUrlClassifierTable.js
