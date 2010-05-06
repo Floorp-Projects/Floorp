@@ -197,13 +197,11 @@ var BrowserUI = {
 
   _updateToolbar: function _updateToolbar() {
     let icons = document.getElementById("urlbar-icons");
-    if (Browser.selectedTab.isLoading() && icons.getAttribute("mode") != "loading") {
-      this.lockToolbar();
+    let mode = icons.getAttribute("mode");
+    if (Browser.selectedTab.isLoading() && mode != "loading") {
       icons.setAttribute("mode", "loading");
     }
-    else if (icons.getAttribute("mode") != "view") {
-      if (this.isToolbarLocked())
-        this.unlockToolbar();
+    else if (mode != "view") {
       icons.setAttribute("mode", "view");
     }
   },
@@ -463,6 +461,7 @@ var BrowserUI = {
           this._updateToolbar();
 
         this._updateIcon(browser.mIconURL);
+        this.unlockToolbar();
         break;
 
       case TOOLBARSTATE_LOADING:
@@ -471,6 +470,7 @@ var BrowserUI = {
 
         browser.mIconURL = "";
         this._updateIcon();
+        this.lockToolbar();
         break;
     }
   },
@@ -754,11 +754,9 @@ var BrowserUI = {
         break;
       // URL textbox events
       case "mouseup":
-        if (!this._isEventInsidePopup(aEvent))
-          this._hidePopup();
-
-        if (aEvent.detail < 2 && aEvent.button == 0)
+        if (aEvent.detail < 2 && aEvent.button == 0 && gFocusManager.focusedElement == this._edit.inputField) {
           this.doCommand("cmd_openLocation");
+        }
         break;
       case "mousedown":
         if (!this._isEventInsidePopup(aEvent))
