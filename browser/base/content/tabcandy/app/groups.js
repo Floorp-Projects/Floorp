@@ -924,10 +924,14 @@ DragInfo.prototype = {
   stop: function() {
     this.$el.data('isDragging', false);    
 
+    // I'm commenting this out for a while as I believe it feels uncomfortable
+    // that groups go away when there is still a tab in them. I do this at
+    // the cost of symmetry. -- Aza
+    /*
     if(this.parent && !this.parent.locked && this.parent != this.item.parent 
         && this.parent._children.length == 1 && !this.parent.getTitle()) {
       this.parent.remove(this.parent._children[0]);
-    }
+    }*/
      
     if(this.item && !this.$el.hasClass('willGroup') && !this.item.parent) {
       this.item.setZ(drag.zIndex);
