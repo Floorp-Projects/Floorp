@@ -1,11 +1,7 @@
-hbox.addon-name-version {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#addon-name-version");
-}
-
 .hardBlockedAddon {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#hardblockedaddon");
+  -moz-binding: url("chrome://mozapps/content/extensions/blocklist.xml#hardblockedaddon");
 }
 
 .softBlockedAddon {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#softblockedaddon");
+  -moz-binding: url("chrome://mozapps/content/extensions/blocklist.xml#softblockedaddon");
 }

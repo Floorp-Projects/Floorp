@@ -790,7 +790,8 @@ Blocklist.prototype = {
                                                   oldAddonEntries);
         let state = self.getAddonBlocklistState(addons[i].id, addons[i].version);
 
-        LOG("Blocklist state for " + addons[i].id + " changed from " + oldState + " to " + state);
+        LOG("Blocklist state for " + addons[i].id + " changed from " +
+            oldState + " to " + state);
 
         // Don't warn about add-ons becoming unblocked.
         if (state == 0)
@@ -834,6 +835,8 @@ Blocklist.prototype = {
         if (oldPluginEntries)
           oldState = self._getPluginBlocklistState(plugins[i], oldPluginEntries);
         let state = self.getPluginBlocklistState(plugins[i]);
+        LOG("Blocklist state for " + plugins[i].name + " changed from " +
+            oldState + " to " + state);
         // We don't want to re-warn about items
         if (state == oldState)
           continue;
