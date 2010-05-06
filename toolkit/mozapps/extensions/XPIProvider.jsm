@@ -2320,8 +2320,8 @@ var XPIDatabase = {
                                         ":maxVersion)",
 
     clearVisibleAddons: "UPDATE addon SET visible=0 WHERE id=:id",
-    deactivateThemes: "UPDATE addon SET active=:active WHERE " +
-                      "internal_id=:internal_id",
+    updateAddonActive: "UPDATE addon SET active=:active WHERE " +
+                       "internal_id=:internal_id",
 
     getActiveAddons: "SELECT " + FIELDS_ADDON + " FROM addon WHERE active=1 AND " +
                      "type<>'theme' AND bootstrap=0",
@@ -3079,6 +3079,9 @@ var XPIDatabase = {
       return row;
     }
 
+    aAddon.active = (aAddon.visible && !aAddon.userDisabled &&
+                     !aAddon.appDisabled);
+
     if (aAddon.visible) {
       let stmt = this.getStatement("clearVisibleAddons");
       stmt.params.id = aAddon.id;
@@ -3097,8 +3100,7 @@ var XPIDatabase = {
      "bootstrap"].forEach(function(aProp) {
       stmt.params[aProp] = aAddon[aProp] ? 1 : 0;
     });
-    stmt.params.active = (aAddon.visible && !aAddon.userDisabled &&
-                          !aAddon.appDisabled) ? 1 : 0;
+    stmt.params.active = aAddon.active ? 1 : 0;
     stmt.execute();
     let internal_id = this.connection.lastInsertRowID;
 
@@ -3236,7 +3238,7 @@ var XPIDatabase = {
   updateAddonActive: function XPIDB_updateAddonActive(aAddon) {
     LOG("Updating add-on state");
 
-    stmt = this.getStatement("deactivateThemes");
+    stmt = this.getStatement("updateAddonActive");
     stmt.params.internal_id = aAddon._internal_id;
     stmt.params.active = aAddon.active ? 1 : 0;
     stmt.execute();
