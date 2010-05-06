@@ -426,23 +426,10 @@ PutHelper::DoDatabaseWork()
   // Rollback on any errors.
   mozStorageTransaction transaction(connection, PR_FALSE);
 
-  // TODO handle overwrite = true (use OR REPLACE?)
-
-  // XXX pull statement creation into mDatabase or something for efficiency.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  if (mAutoIncrement) {
-    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO ai_object_data (object_store_id, data)"
-      "VALUES (:osid, :data)"
-    ), getter_AddRefs(stmt));
-  }
-  else {
-    rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO object_data (object_store_id, key_value, data)"
-      "VALUES (:osid, :key_value, :data)"
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
-
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mDatabase->PutStatement(!mNoOverwrite, mAutoIncrement);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseError::UNKNOWN_ERR);
+  if (!mAutoIncrement || mAutoIncrement && !mNoOverwrite) {
     NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
 
     if (mKeyString.IsVoid()) {
