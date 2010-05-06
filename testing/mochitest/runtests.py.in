@@ -225,7 +225,6 @@ If --browser-chrome is specified, browser-chrome tests will be run instead of we
 See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logging levels."""
     self.set_usage(usage)
 
-
   def verifyOptions(self, options, mochitest):
     """ verify correct options and cleanup paths """
 
@@ -260,7 +259,7 @@ See <http://mochikit.com/doc/html/MochiKit/Logging.html> for details on the logg
 
     options.utilityPath = mochitest.getFullPath(options.utilityPath)
     options.certPath = mochitest.getFullPath(options.certPath)
-    if options.symbolsPath:
+    if options.symbolsPath and not isURL(options.symbolsPath):
       options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
 
     options.webServer = self._automation.DEFAULT_WEB_SERVER
@@ -688,7 +687,7 @@ def main():
 
   options.utilityPath = mochitest.getFullPath(options.utilityPath)
   options.certPath = mochitest.getFullPath(options.certPath)
-  if options.symbolsPath:
+  if options.symbolsPath and not isURL(options.symbolsPath):
     options.symbolsPath = mochitest.getFullPath(options.symbolsPath)
 
   automation.setServerInfo(options.webServer, options.httpPort, options.sslPort)
