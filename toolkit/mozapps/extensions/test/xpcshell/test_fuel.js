@@ -48,10 +48,22 @@ var testdata = {
   dummy: "fuel.fuel-test"
 };
 
-var Application = AM_Cc["@mozilla.org/fuel/application;1"].
-                  getService(AM_Ci.nsISupports);
+var Application = null
 
 function run_test() {
+  var cm = AM_Cc["@mozilla.org/categorymanager;1"].
+           getService(AM_Ci.nsICategoryManager);
+
+  try {
+    var contract = cm.getCategoryEntry("JavaScript global privileged property",
+                                       "Application");
+    Application = AM_Cc[contract].getService(AM_Ci.extIApplication);
+  }
+  catch (e) {
+    // This application does not include a FUEL variant.
+    return;
+  }
+
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
