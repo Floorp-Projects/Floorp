@@ -61,5 +61,5 @@ _TEST_FILES = \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - browserscope) | (cd $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir) && tar -xf -)
+	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - browserscope 2> /dev/null) | (cd $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir) && tar -xf -)
 
