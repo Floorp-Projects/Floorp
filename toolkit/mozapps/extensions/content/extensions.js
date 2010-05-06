@@ -314,7 +314,7 @@ var gViewController = {
 
           if (numUpdated == 0) {
             document.getElementById("updates-checkNow").hidden = false;
-            document.getElementById("updates-nonefound").hidden = false;
+            document.getElementById("updates-noneFound").hidden = false;
             return;
           }
 
