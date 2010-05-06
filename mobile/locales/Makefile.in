@@ -53,6 +53,14 @@ ifdef LOCALE_MERGEDIR
 vpath book%.inc @srcdir@/en-US/profile
 endif
 
+ifdef LOCALE_MERGEDIR
+vpath crashreporter%.ini $(LOCALE_MERGEDIR)/mobile/crashreporter
+endif
+vpath crashreporter%.ini $(LOCALE_SRCDIR)/crashreporter
+ifdef LOCALE_MERGEDIR
+vpath crashreporter%.ini @srcdir@/en-US/crashreporter
+endif
+
 SUBMAKEFILES += \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/Makefile \
         $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales/Makefile \
@@ -144,6 +152,11 @@ libs:: $(UPDATER_INI)
 	  sed -e "s/^InfoText=/Info=/" -e "s/^TitleText=/Title=/" | \
 	  sed -e "s/%MOZ_APP_DISPLAYNAME%/$(MOZ_APP_DISPLAYNAME)/" > \
 	  $(FINAL_TARGET)/updater.ini
+endif
+
+ifdef MOZ_CRASHREPORTER
+libs:: crashreporter-override.ini
+	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
 endif
 
 ifdef WINCE_WINDOWS_MOBILE
