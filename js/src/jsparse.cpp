@@ -8066,18 +8066,23 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         pn->pn_num = (jsint) tokenStream.currentToken().t_dval;
         tt = tokenStream.getToken(TSF_OPERAND);
-        if (tt == TOK_USESHARP || tt == TOK_DEFSHARP ||
-#if JS_HAS_XML_SUPPORT
-            tt == TOK_STAR || tt == TOK_AT ||
-            tt == TOK_XMLSTAGO /* XXXbe could be sharp? */ ||
-#endif
-            tt == TOK_STRING || tt == TOK_NUMBER || tt == TOK_PRIMARY) {
-            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
-            return NULL;
-        }
         pn->pn_kid = primaryExpr(tt, JS_FALSE);
         if (!pn->pn_kid)
             return NULL;
+        if (PN_TYPE(pn->pn_kid) == TOK_USESHARP ||
+            PN_TYPE(pn->pn_kid) == TOK_DEFSHARP ||
+#if JS_HAS_XML_SUPPORT
+            PN_TYPE(pn->pn_kid) == TOK_XMLCOMMENT ||
+            PN_TYPE(pn->pn_kid) == TOK_XMLCDATA ||
+            PN_TYPE(pn->pn_kid) == TOK_XMLPTAGC ||
+            PN_TYPE(pn->pn_kid) == TOK_XMLELEM ||
+#endif
+            PN_TYPE(pn->pn_kid) == TOK_STRING ||
+            PN_TYPE(pn->pn_kid) == TOK_NUMBER ||
+            PN_TYPE(pn->pn_kid) == TOK_PRIMARY) {
+            reportErrorNumber(pn->pn_kid, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
+            return NULL;
+        }
         if (!tc->ensureSharpSlots())
             return NULL;
         break;
