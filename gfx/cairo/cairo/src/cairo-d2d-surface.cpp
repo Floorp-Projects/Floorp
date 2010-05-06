@@ -1175,6 +1175,9 @@ static void _cairo_d2d_clear_geometry(cairo_d2d_surface_t *d2dsurf,
     RefPtr<IDXGISurface> dxgiSurface;
     RefPtr<ID2D1Bitmap> bitmp;
 
+    /** We flush here, this takes us out of drawing state! */
+    _cairo_d2d_flush(d2dsurf);
+
     /** Create a temporary buffer for our surface content */
     RefPtr<ID3D10Texture2D> bufTexture = _cairo_d2d_get_buffer_texture(d2dsurf);
 
@@ -1189,6 +1192,9 @@ static void _cairo_d2d_clear_geometry(cairo_d2d_surface_t *d2dsurf,
 						 dxgiSurface,
 						 &props,
 						 &bitmp);
+
+    /** We need to manually BeginDraw here, since we're outside of the normal drawing state */
+    d2dsurf->rt->BeginDraw();
 
     /** Clear our original surface */
     d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
@@ -1223,11 +1229,6 @@ static void _cairo_d2d_clear_geometry(cairo_d2d_surface_t *d2dsurf,
 	clearGeometry = clipPathUnion;
     }
 
-    if (d2dsurf->clipMask) {
-	/** If we have a clip mask, we'll need to pop the surface clip */
-	_cairo_d2d_surface_pop_clip(d2dsurf);
-    }
-
     /**
      * Calculate the inverse of the geometry to clear. This is the clip mask
      * when drawing our original content back to the surface.
@@ -1244,10 +1245,8 @@ static void _cairo_d2d_clear_geometry(cairo_d2d_surface_t *d2dsurf,
     d2dsurf->rt->DrawBitmap(bitmp);
     d2dsurf->rt->PopLayer();
 
-    if (d2dsurf->clipMask) {
-	/** If we have a clip mask, we'll need to push back the surface clip */
-	_cairo_d2d_surface_push_clip(d2dsurf);
-    }
+    /** We're not in drawing state, make sure our D2D RT isn't either */
+    d2dsurf->rt->EndDraw();
 }
 
 static cairo_operator_t _cairo_d2d_simplify_operator(cairo_operator_t op,
