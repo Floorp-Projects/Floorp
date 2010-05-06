@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 /*
-Each video element for an Ogg file has two additional threads beyond
+Each video element for a media file has two additional threads beyond
 those needed by nsBuiltinDecoder.
 
   1) The Audio thread writes the decoded audio data to the audio
@@ -65,73 +65,6 @@ shutdown).
 The decode thread has its own monitor to ensure that its internal
 state is independent of the other threads, and to ensure that it's not
 hogging the nsBuiltinDecoder monitor while decoding.
-
-The nsOggPlayStateMachine class is the event that gets dispatched to
-the state machine thread. It has the following states:
-
-DECODING_METADATA
-  The Ogg headers are being loaded, and things like framerate, etc are
-  being determined, and the first frame of audio/video data is being decoded.
-DECODING
-  The decode and audio threads are started and video frames displayed at
-  the required time. 
-SEEKING
-  A seek operation is in progress.
-BUFFERING
-  Decoding is paused while data is buffered for smooth playback.
-COMPLETED
-  The resource has completed decoding, but not finished playback. 
-SHUTDOWN
-  The decoder object is about to be destroyed.
-
-The following result in state transitions.
-
-Shutdown()
-  Clean up any resources the nsOggPlayStateMachine owns.
-Decode()
-  Start decoding video frames.
-Buffer
-  This is not user initiated. It occurs when the
-  available data in the stream drops below a certain point.
-Complete
-  This is not user initiated. It occurs when the
-  stream is completely decoded.
-Seek(float)
-  Seek to the time position given in the resource.
-
-A state transition diagram:
-
-DECODING_METADATA
-  |      |
-  v      | Shutdown()
-  |      |
-  v      -->-------------------->--------------------------|
-  |---------------->----->------------------------|        v
-DECODING             |          |  |              |        |
-  ^                  v Seek(t)  |  |              |        |
-  |         Decode() |          v  |              |        |
-  ^-----------<----SEEKING      |  v Complete     v        v
-  |                  |          |  |              |        |
-  |                  |          |  COMPLETED    SHUTDOWN-<-|
-  ^                  ^          |  |Shutdown()    |
-  |                  |          |  >-------->-----^
-  |         Decode() |Seek(t)   |Buffer()         |
-  -----------<--------<-------BUFFERING           |
-                                |                 ^
-                                v Shutdown()      |
-                                |                 |
-                                ------------>-----|
-
-The following represents the states that the nsBuiltinDecoder object
-can be in, and the valid states the decode thread can be in at that
-time:
-
-player LOADING   decoder DECODING_METADATA
-player PLAYING   decoder DECODING, BUFFERING, SEEKING, COMPLETED
-player PAUSED    decoder DECODING, BUFFERING, SEEKING, COMPLETED
-player SEEKING   decoder SEEKING
-player COMPLETED decoder SHUTDOWN
-player SHUTDOWN  decoder SHUTDOWN
 
 a/v synchronisation is handled by the state machine thread. It
 examines the audio playback time and compares this to the next frame
@@ -176,22 +109,19 @@ hardware (via nsAudioStream and libsydneyaudio).
 The decode thread idles if the video queue is empty or if it is
 not yet time to display the next frame.
 */
-#if !defined(nsOggPlayStateMachine_h__)
-#define nsOggPlayStateMachine_h__
+#if !defined(nsBuiltinDecoderStateMachine_h__)
+#define nsBuiltinDecoderStateMachine_h__
 
 #include "prmem.h"
 #include "nsThreadUtils.h"
-#include "nsOggReader.h"
 #include "nsBuiltinDecoder.h"
+#include "nsBuiltinDecoderReader.h"
 #include "nsHTMLMediaElement.h"
 #include "mozilla/Monitor.h"
 
-using mozilla::TimeDuration;
-using mozilla::TimeStamp;
-
 /*
   The playback state machine class. This manages the decoding in the
-  nsOggReader on the decode thread, seeking and in-sync-playback on the
+  nsBuiltinDecoderReader on the decode thread, seeking and in-sync-playback on the
   state machine thread, and controls the audio "push" thread.
 
   All internal state is synchronised via the decoder monitor. NotifyAll
@@ -199,31 +129,30 @@ using mozilla::TimeStamp;
   by the main thread. The following changes to state cause a notify:
 
     mState and data related to that state changed (mSeekTime, etc)
-    Ogg Metadata Loaded
+    Metadata Loaded
     First Frame Loaded
     Frame decoded
     data pushed or popped from the video and audio queues
 
-  See nsOggDecoder.h for more details.
+  See nsBuiltinDecoder.h for more details.
 */
-class nsOggPlayStateMachine : public nsDecoderStateMachine
+class nsBuiltinDecoderStateMachine : public nsDecoderStateMachine
 {
 public:
-  // Enumeration for the valid states
-  enum State {
-    DECODER_STATE_DECODING_METADATA,
-    DECODER_STATE_DECODING,
-    DECODER_STATE_SEEKING,
-    DECODER_STATE_BUFFERING,
-    DECODER_STATE_COMPLETED,
-    DECODER_STATE_SHUTDOWN
-  };
+  typedef mozilla::Monitor Monitor;
+  typedef mozilla::TimeStamp TimeStamp;
+  typedef mozilla::TimeDuration TimeDuration;
 
-  nsOggPlayStateMachine(nsBuiltinDecoder* aDecoder);
-  ~nsOggPlayStateMachine();
+  nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder, nsBuiltinDecoderReader* aReader);
+  ~nsBuiltinDecoderStateMachine();
 
   // nsDecoderStateMachine interface
   virtual nsresult Init();
+  State GetState()
+  { 
+    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    return mState; 
+  }
   virtual void SetVolume(float aVolume);
   virtual void Shutdown();
   virtual PRInt64 GetDuration();
@@ -238,6 +167,12 @@ public:
   virtual float GetCurrentTime();
   virtual void ClearPositionChangeFlag();
   virtual void SetSeekable(PRBool aSeekable);
+  virtual void UpdatePlaybackPosition(PRInt64 aTime);
+
+
+  // Load metadata Called on the state machine thread. The decoder monitor must be held with
+  // exactly one lock count.
+  virtual void LoadMetadata();
 
   // State machine thread run function. Polls the state, sends frames to be
   // displayed at appropriate times, and generally manages the decode.
@@ -269,14 +204,14 @@ public:
   PRBool IsBuffering() const {
     mDecoder->GetMonitor().AssertCurrentThreadIn();
 
-    return mState == nsOggPlayStateMachine::DECODER_STATE_BUFFERING;
+    return mState == nsBuiltinDecoderStateMachine::DECODER_STATE_BUFFERING;
   }
 
   // Must be called with the decode monitor held.
   PRBool IsSeeking() const {
     mDecoder->GetMonitor().AssertCurrentThreadIn();
 
-    return mState == nsOggPlayStateMachine::DECODER_STATE_SEEKING;
+    return mState == nsBuiltinDecoderStateMachine::DECODER_STATE_SEEKING;
   }
 
   // Functions used by assertions to ensure we're calling things
@@ -297,20 +232,13 @@ public:
   // read only on the AV, state machine, audio and main thread.
   nsBuiltinDecoder* mDecoder;
 
-  // Update the playback position. This can result in a timeupdate event
-  // and an invalidate of the frame being dispatched asynchronously if
-  // there is no such event currently queued.
-  // Only called on the decoder thread. Must be called with
-  // the decode monitor held.
-  void UpdatePlaybackPosition(PRInt64 aTime);
-
   // The decoder monitor must be obtained before modifying this state.
   // NotifyAll on the monitor must be called when the state is changed by
   // the main thread so the decoder thread can wake up.
   // Accessed on state machine, audio, main, and AV thread. 
   State mState;
 
-private:
+protected:
 
   // Waits on the decoder Monitor for aMs. If the decoder monitor is awoken
   // by a Notify() call, we'll continue waiting, unless we've moved into
@@ -337,7 +265,7 @@ private:
   // machine thread.
   VideoData* FindStartTime();
 
-  // Finds the end time of the last page in the Ogg file, storing the value
+  // Finds the end time of the last frame of data in the file, storing the value
   // in mEndTime if successful. The decoder must be held with exactly one lock
   // count. Called on the state machine thread.
   void FindEndTime();
@@ -360,11 +288,6 @@ private:
   // Starts the decode threads. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
   nsresult StartDecodeThreads();
-
-  // Reads the Ogg headers using the nsOggReader, and initializes playback.
-  // Called on the state machine thread. The decoder monitor must be held with
-  // exactly one lock count.
-  void LoadOggHeaders();
 
   // The main loop for the audio thread. Sent to the thread as
   // an nsRunnableMethod. This continually does blocking writes to
@@ -394,19 +317,11 @@ private:
   // be held.
   PRBool IsPlaying();
 
-  // Stores presentation info about required for playback of the media.
-  nsOggInfo mInfo;
-
   // Monitor on mAudioStream. This monitor must be held in order to delete
   // or use the audio stream. This stops us destroying the audio stream
   // while it's being used on another thread (typically when it's being
   // written to on the audio thread).
   Monitor mAudioMonitor;
-
-  // The reader, don't call its methods with the decoder monitor held.
-  // This is created in the play state machine's constructor, and destroyed
-  // in the play state machine's destructor.
-  nsAutoPtr<nsOggReader> mReader;
 
   // The size of the decoded YCbCr frame.
   // Accessed on state machine thread.
@@ -460,6 +375,14 @@ private:
   // threads. You must hold the mAudioMonitor, and must NOT hold the decoder
   // monitor when using the audio stream!
   nsAutoPtr<nsAudioStream> mAudioStream;
+
+  // Stores presentation info about required for playback of the media.
+  nsVideoInfo mInfo;
+
+  // The reader, don't call its methods with the decoder monitor held.
+  // This is created in the play state machine's constructor, and destroyed
+  // in the play state machine's destructor.
+  nsAutoPtr<nsBuiltinDecoderReader> mReader;
 
   // The time of the current frame in milliseconds. This is referenced from
   // 0 which is the initial playback position. Set by the state machine
