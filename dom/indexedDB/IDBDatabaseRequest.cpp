@@ -74,20 +74,30 @@ isupports_cast(IDBDatabaseRequest* aClassPtr)
 class CloseConnectionRunnable : public nsRunnable
 {
 public:
-  CloseConnectionRunnable(nsCOMPtr<mozIStorageConnection>& aConnection)
+  CloseConnectionRunnable(nsIThread* aThread,
+                          nsCOMPtr<mozIStorageConnection>& aConnection)
+  : mThread(aThread)
   {
+    NS_ASSERTION(mThread, "No thread!");
     mConnection.swap(aConnection);
   }
 
   NS_IMETHOD Run()
   {
-    if (mConnection && NS_FAILED(mConnection->Close())) {
-      NS_WARNING("Failed to close connection!");
-    }
+    nsresult rv = mConnection->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
 
+  void Dispatch()
+  {
+    if (mConnection && NS_FAILED(mThread->Dispatch(this, NS_DISPATCH_NORMAL))) {
+      NS_WARNING("Dispatch failed!");
+    }
+  }
+
 private:
+  nsCOMPtr<nsIThread> mThread;
   nsCOMPtr<mozIStorageConnection> mConnection;
 };
 
@@ -267,8 +277,7 @@ IDBDatabaseRequest::Create(const nsAString& aName,
 
   nsRefPtr<IDBDatabaseRequest> db(new IDBDatabaseRequest());
 
-  db->mConnectionThread = new LazyIdleThread(kDefaultThreadTimeoutMS);
-  db->mConnectionThread->SetWeakIdleObserver(db);
+  db->mConnectionThread = new LazyIdleThread(kDefaultThreadTimeoutMS, db);
 
   db->mASCIIOrigin.Assign(origin);
   db->mName.Assign(aName);
@@ -369,9 +378,8 @@ IDBDatabaseRequest::IDBDatabaseRequest()
 
 IDBDatabaseRequest::~IDBDatabaseRequest()
 {
-  if (mConnectionThread) {
-    mConnectionThread->Shutdown();
-  }
+  mConnectionThread->SetWeakIdleObserver(nsnull);
+  FireCloseConnectionRunnable();
 }
 
 nsCOMPtr<mozIStorageConnection>&
@@ -492,6 +500,14 @@ IDBDatabaseRequest::EnsureConnection()
 
   connection.swap(mConnection);
   return NS_OK;
+}
+
+void
+IDBDatabaseRequest::FireCloseConnectionRunnable()
+{
+  nsRefPtr<CloseConnectionRunnable> runnable =
+    new CloseConnectionRunnable(mConnectionThread, mConnection);
+  runnable->Dispatch();
 }
 
 void
@@ -829,15 +845,7 @@ IDBDatabaseRequest::Observe(nsISupports* aSubject,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ENSURE_FALSE(strcmp(aTopic, IDLE_THREAD_TOPIC), NS_ERROR_UNEXPECTED);
 
-  // This should be safe to clear mStorage before we're deleted since we own
-  // the thread and must join with it before we can be deleted.
-  nsCOMPtr<nsIRunnable> runnable = new CloseConnectionRunnable(mConnection);
-
-  nsCOMPtr<nsIThread> thread(do_QueryInterface(aSubject));
-  NS_ENSURE_TRUE(thread, NS_NOINTERFACE);
-
-  nsresult rv = thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-  NS_ENSURE_SUCCESS(rv, rv);
+  FireCloseConnectionRunnable();
 
   return NS_OK;
 }
