@@ -6945,7 +6945,18 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
-dnl Disable runtime logging checks
+dnl = Disable any treating of compile warnings as errors
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
+[  --disable-warnings-as-errors       Disable treating of warnings as errors],
+    MOZ_DISABLE_WARNINGS_AS_ERRORS=1,
+    MOZ_DISABLE_WARNINGS_AS_ERRORS= )
+if test "$MOZ_DISABLE_WARNINGS_AS_ERRORS"; then
+   WARNINGS_AS_ERRORS=''
+fi
+
+dnl ========================================================
+dnl = Disable runtime logging checks
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(logging,
 [  --disable-logging       Disable logging facilities],
@@ -6958,7 +6969,7 @@ else
 fi
 
 dnl ========================================================
-dnl = dnl This will enable logging of addref, release, ctor, dtor.
+dnl = This will enable logging of addref, release, ctor, dtor.
 dnl ========================================================
 _ENABLE_LOGREFCNT=42
 MOZ_ARG_ENABLE_BOOL(logrefcnt,
