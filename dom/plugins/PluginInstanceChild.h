@@ -237,6 +237,7 @@ private:
     void DestroyWinlessPopupSurrogate();
     void InitPopupMenuHook();
     void SetupFlashMsgThrottle();
+    void UnhookWinlessFlashThrottle();
     void FlashThrottleMessage(HWND, UINT, WPARAM, LPARAM, bool);
     static LRESULT CALLBACK DummyWindowProc(HWND hWnd,
                                             UINT message,
@@ -315,6 +316,7 @@ private:
     nsIntPoint mPluginSize;
     nsIntPoint mPluginOffset;
     WNDPROC mWinlessThrottleOldWndProc;
+    HWND mWinlessHiddenMsgHWND;
 #endif
 
     friend class ChildAsyncCall;
