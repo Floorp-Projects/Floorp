@@ -36,14 +36,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined(nsOggReader_h_)
-#define nsOggReader_h_
+#if !defined(nsBuiltinDecoderReader_h_)
+#define nsBuiltinDecoderReader_h_
 
 #include <nsDeque.h>
-#include "nsOggCodecState.h"
-#include <ogg/ogg.h>
-#include <theora/theoradec.h>
-#include <vorbis/codec.h>
 #include "nsAutoLock.h"
 #include "nsClassHashtable.h"
 #include "mozilla/TimeStamp.h"
@@ -51,12 +47,7 @@
 #include "nsRect.h"
 #include "mozilla/Monitor.h"
 
-class nsOggPlayStateMachine;
-
-using mozilla::Monitor;
-using mozilla::MonitorAutoEnter;
-using mozilla::TimeDuration;
-using mozilla::TimeStamp;
+class nsBuiltinDecoderStateMachine;
 
 // Holds chunk a decoded sound samples.
 class SoundData {
@@ -112,34 +103,49 @@ public:
   nsAutoArrayPtr<float> mAudioData;
 };
 
-// Holds a decoded Theora frame, in YCbCr format. These are queued in the reader.
+// Holds a decoded video frame, in YCbCr format. These are queued in the reader.
 class VideoData {
 public:
+  // YCbCr data obtained from decoding the video. The index's are:
+  //   0 = Y
+  //   1 = Cb
+  //   2 = Cr
+  struct YCbCrBuffer {
+    struct Plane {
+      PRUint8* mData;
+      PRUint32 mWidth;
+      PRUint32 mHeight;
+      PRUint32 mStride;
+    };
+
+    Plane mPlanes[3];
+  };
 
   // Constructs a VideoData object. Makes a copy of YCbCr data in aBuffer.
   // This may return nsnull if we run out of memory when allocating buffers
-  // to store the frame.
+  // to store the frame. aTimecode is a codec specific number representing
+  // the timestamp of the frame of video data.
   static VideoData* Create(PRInt64 aOffset,
                            PRInt64 aTime,
-                           th_ycbcr_buffer aBuffer,
+                           const YCbCrBuffer &aBuffer,
                            PRBool aKeyframe,
-                           PRInt64 aGranulepos);
+                           PRInt64 aTimecode);
 
   // Constructs a duplicate VideoData object. This intrinsically tells the
   // player that it does not need to update the displayed frame when this
   // frame is played; this frame is identical to the previous.
   static VideoData* CreateDuplicate(PRInt64 aOffset,
                                     PRInt64 aTime,
-                                    PRInt64 aGranulepos)
+                                    PRInt64 aTimecode)
   {
-    return new VideoData(aOffset, aTime, aGranulepos);
+    return new VideoData(aOffset, aTime, aTimecode);
   }
 
   ~VideoData()
   {
     MOZ_COUNT_DTOR(VideoData);
     for (PRUint32 i = 0; i < 3; ++i) {
-      delete mBuffer[i].data;
+      moz_free(mBuffer.mPlanes[i].mData);
     }
   }
 
@@ -148,34 +154,37 @@ public:
 
   // Start time of frame in milliseconds.
   PRInt64 mTime;
-  PRInt64 mGranulepos;
 
-  th_ycbcr_buffer mBuffer;
+  // Codec specific internal time code. For Ogg based codecs this is the
+  // granulepos.
+  PRInt64 mTimecode;
+
+  YCbCrBuffer mBuffer;
 
   // When PR_TRUE, denotes that this frame is identical to the frame that
   // came before; it's a duplicate. mBuffer will be empty.
   PRPackedBool mDuplicate;
   PRPackedBool mKeyframe;
 
-private:
-  VideoData(PRInt64 aOffset, PRInt64 aTime, PRInt64 aGranulepos)
+public:
+  VideoData(PRInt64 aOffset, PRInt64 aTime, PRInt64 aTimecode)
     : mOffset(aOffset),
       mTime(aTime),
-      mGranulepos(aGranulepos),
+      mTimecode(aTimecode),
       mDuplicate(PR_TRUE),
       mKeyframe(PR_FALSE)
   {
     MOZ_COUNT_CTOR(VideoData);
-    memset(&mBuffer, 0, sizeof(th_ycbcr_buffer));
+    memset(&mBuffer, 0, sizeof(YCbCrBuffer));
   }
 
   VideoData(PRInt64 aOffset,
             PRInt64 aTime,
             PRBool aKeyframe,
-            PRInt64 aGranulepos)
+            PRInt64 aTimecode)
     : mOffset(aOffset),
       mTime(aTime),
-      mGranulepos(aGranulepos),
+      mTimecode(aTimecode),
       mDuplicate(PR_FALSE),
       mKeyframe(aKeyframe)
   {
@@ -195,7 +204,9 @@ class MediaQueueDeallocator : public nsDequeFunctor {
 
 template <class T> class MediaQueue : private nsDeque {
  public:
-  
+   typedef mozilla::MonitorAutoEnter MonitorAutoEnter;
+   typedef mozilla::Monitor Monitor;
+
    MediaQueue()
      : nsDeque(new MediaQueueDeallocator<T>()),
        mMonitor("mediaqueue"),
@@ -284,8 +295,8 @@ template <class T> class MediaQueue : private nsDeque {
 private:
   Monitor mMonitor;
 
-  // PR_TRUE when we've decoded the last packet in the bitstream for which
-  // we're queueing sample-data.
+  // PR_TRUE when we've decoded the last frame of data in the
+  // bitstream for which we're queueing sample-data.
   PRBool mEndOfStream;
 };
 
@@ -323,9 +334,9 @@ public:
 };
 
 // Stores info relevant to presenting media samples.
-class nsOggInfo {
+class nsVideoInfo {
 public:
-  nsOggInfo()
+  nsVideoInfo()
     : mFramerate(0.0),
       mAspectRatio(1.0),
       mCallbackPeriod(1),
@@ -339,7 +350,7 @@ public:
   // Frames per second.
   float mFramerate;
 
-  // Aspect ratio, as stored in the video header packet.
+  // Aspect ratio, as stored in the metadata.
   float mAspectRatio;
 
   // Length of a video frame in milliseconds, or the callback period if
@@ -369,33 +380,46 @@ public:
   PRPackedBool mHasVideo;
 };
 
-// Encapsulates the decoding and reading of Ogg data. Reading can be done
+// Encapsulates the decoding and reading of media data. Reading can be done
 // on either the state machine thread (when loading and seeking) or on
 // the reader thread (when it's reading and decoding). The reader encapsulates
 // the reading state and maintains it's own monitor to ensure thread safety
-// and correctness. Never hold the nsOggDecoder's monitor when calling into
+// and correctness. Never hold the nsBuiltinDecoder's monitor when calling into
 // this class.
-class nsOggReader : public nsRunnable {
+class nsBuiltinDecoderReader : public nsRunnable {
 public:
-  nsOggReader(nsOggPlayStateMachine* aStateMachine);
-  ~nsOggReader();
+  typedef mozilla::Monitor Monitor;
 
-  PRBool HasAudio()
-  {
-    MonitorAutoEnter mon(mMonitor);
-    return mVorbisState != 0 && mVorbisState->mActive;
-  }
+  nsBuiltinDecoderReader(nsBuiltinDecoder* aDecoder);
+  ~nsBuiltinDecoderReader();
 
-  PRBool HasVideo()
-  {
-    MonitorAutoEnter mon(mMonitor);
-    return mTheoraState != 0 && mTheoraState->mActive;
-  }
+  // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
+  // on failure.
+  virtual nsresult Init() = 0;
 
-  // Read header data for all bitstreams in the Ogg file. Fills aInfo with
+  // Resets all state related to decoding, emptying all buffers etc.
+  virtual nsresult ResetDecode();
+
+  // Decodes an unspecified amount of audio data, enqueuing the audio data
+  // in mAudioQueue. Returns PR_TRUE when there's more audio to decode,
+  // PR_FALSE if the audio is finished, end of file has been reached,
+  // or an un-recoverable read error has occured.
+  virtual PRBool DecodeAudioData() = 0;
+
+  // Reads and decodes one video frame. Packets with a timestamp less
+  // than aTimeThreshold will be decoded (unless they're not keyframes
+  // and aKeyframeSkip is PR_TRUE), but will not be added to the queue.
+  virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
+                                  PRInt64 aTimeThreshold) = 0;
+
+  virtual PRBool HasAudio() = 0;
+  virtual PRBool HasVideo() = 0;
+
+  // Read header data for all bitstreams in the file. Fills aInfo with
   // the data required to present the media. Returns NS_OK on success,
   // or NS_ERROR_FAILURE on failure.
-  nsresult ReadOggHeaders(nsOggInfo& aInfo);
+  virtual nsresult ReadMetadata(nsVideoInfo& aInfo) = 0;
+
 
   // Stores the presentation time of the first sample in the stream in
   // aOutStartTime, and returns the first video sample, if we have video.
@@ -404,26 +428,11 @@ public:
 
   // Returns the end time of the last page which occurs before aEndOffset.
   // This will not read past aEndOffset. Returns -1 on failure.
-  PRInt64 FindEndTime(PRInt64 aEndOffset);
-
-  // Decodes one Vorbis page, enqueuing the audio data in mAudioQueue.
-  // Returns PR_TRUE when there's more audio to decode, PR_FALSE if the
-  // audio is finished, end of file has been reached, or an un-recoverable
-  // read error has occured.
-  PRBool DecodeAudioPage();
-  
-  // Reads and decodes one video frame. If the Theora granulepos has not
-  // been captured, it may read several packets until one with a granulepos
-  // has been captured, to ensure that all packets read have valid time info.
-  // Packets with a timestamp less than aTimeThreshold will be decoded (unless
-  // they're not keyframes and aKeyframeSkip is PR_TRUE), but will not be
-  // added to the queue.
-  PRBool DecodeVideoPage(PRBool &aKeyframeSkip,
-                         PRInt64 aTimeThreshold);
+  virtual PRInt64 FindEndTime(PRInt64 aEndOffset) = 0;
 
   // Moves the decode head to aTime milliseconds. aStartTime and aEndTime
   // denote the start and end times of the media.
-  nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime);
+  virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime) = 0;
 
   // Queue of audio samples. This queue is threadsafe.
   MediaQueue<SoundData> mAudioQueue;
@@ -431,15 +440,11 @@ public:
   // Queue of video samples. This queue is threadsafe.
   MediaQueue<VideoData> mVideoQueue;
 
-  // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
-  // on failure.
-  nsresult Init();
+protected:
 
-private:
-
-  // Ogg reader decode function. Matches DecodeVideoPage() and
-  // DecodeAudioPage().
-  typedef PRBool (nsOggReader::*DecodeFn)();
+  // Reader decode function. Matches DecodeVideoFrame() and
+  // DecodeAudioData().
+  typedef PRBool (nsBuiltinDecoderReader::*DecodeFn)();
 
   // Calls aDecodeFn on *this until aQueue has a sample, whereupon
   // we return the first sample.
@@ -447,42 +452,12 @@ private:
   Data* DecodeToFirstData(DecodeFn aDecodeFn,
                           MediaQueue<Data>& aQueue);
 
-  // Wrapper so that DecodeVideoPage(PRBool&,PRInt64) can be called from
+  // Wrapper so that DecodeVideoFrame(PRBool&,PRInt64) can be called from
   // DecodeToFirstData().
-  PRBool DecodeVideoPage() {
+  PRBool DecodeVideoFrame() {
     PRBool f = PR_FALSE;
-    return DecodeVideoPage(f, 0);
+    return DecodeVideoFrame(f, 0);
   }
-
-  // Decodes one packet of Vorbis data, storing the resulting chunks of
-  // PCM samples in aChunks.
-  nsresult DecodeVorbis(nsTArray<SoundData*>& aChunks,
-                        ogg_packet* aPacket);
-
-  // May return NS_ERROR_OUT_OF_MEMORY.
-  nsresult DecodeTheora(nsTArray<VideoData*>& aFrames,
-                        ogg_packet* aPacket);
-
-  // Resets all state related to decoding, emptying all buffers etc.
-  nsresult ResetDecode();
-
-  // Read a page of data from the Ogg file. Returns the offset of the start
-  // of the page, or -1 if the page read failed.
-  PRInt64 ReadOggPage(ogg_page* aPage);
-
-  // Read a packet for an Ogg bitstream/codec state. Returns PR_TRUE on
-  // success, or PR_FALSE if the read failed.
-  PRBool ReadOggPacket(nsOggCodecState* aCodecState, ogg_packet* aPacket);
-
-  // Performs a seek bisection to move the media stream's read cursor to the
-  // last ogg page boundary which has end time before aTarget ms on both the
-  // Theora and Vorbis bitstreams. Limits its search to data inside aRange;
-  // i.e. it will only read inside of the aRange's start and end offsets.
-  // aFuzz is the number of ms of leniency we'll allow; we'll terminate the
-  // seek when we land in the range (aTime - aFuzz, aTime) ms.
-  nsresult SeekBisection(PRInt64 aTarget,
-                         const ByteRange& aRange,
-                         PRUint32 aFuzz);
 
   // Fills aRanges with ByteRanges denoting the sections of the media which
   // have been downloaded and are stored in the media cache. The reader
@@ -508,39 +483,13 @@ private:
   // safety of the reader and its data fields.
   Monitor mMonitor;
 
-  // Reference to the owning player state machine object. Do not hold the
-  // reader's monitor when accessing the player.
-  nsOggPlayStateMachine* mPlayer;
-
-  // Maps Ogg serialnos to nsOggStreams.
-  nsClassHashtable<nsUint32HashKey, nsOggCodecState> mCodecStates;
-
-  // Decode state of the Theora bitstream we're decoding, if we have video.
-  nsTheoraState* mTheoraState;
-
-  // Decode state of the Vorbis bitstream we're decoding, if we have audio.
-  nsVorbisState* mVorbisState;
-
-  // Ogg decoding state.
-  ogg_sync_state mOggState;
-
-  // The offset of the end of the last page we've read, or the start of
-  // the page we're about to read.
-  PRInt64 mPageOffset;
+  // Reference to the owning decoder object. Do not hold the
+  // reader's monitor when accessing this.
+  nsBuiltinDecoder* mDecoder;
 
   // The offset of the start of the first non-header page in the file.
   // Used to seek to media start time.
   PRInt64 mDataOffset;
-
-  // The granulepos of the last decoded Theora frame.
-  PRInt64 mTheoraGranulepos;
-
-  // The granulepos of the last decoded Vorbis sample.
-  PRInt64 mVorbisGranulepos;
-
-  // Number of milliseconds of data video/audio data held in a frame.
-  PRUint32 mCallbackPeriod;
-
 };
 
 #endif
