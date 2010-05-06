@@ -2403,7 +2403,7 @@ Assembler::asm_arith(LInsp ins)
     // trace-tests.js so it is very unlikely to be worthwhile implementing it.
     if (rhs->isImmI() && op != LIR_muli && op != LIR_mulxovi)
     {
-        if ((op == LIR_addi || op == LIR_addxovi) && lhs->isop(LIR_alloci)) {
+        if ((op == LIR_addi || op == LIR_addxovi) && lhs->isop(LIR_allocp)) {
             // Add alloc+const. The result should be the address of the
             // allocated space plus a constant.
             Register    rs = deprecated_prepResultReg(ins, allow);
