@@ -1,326 +1,334 @@
 <?xml version="1.0"?>
-
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is The Extension Manager.
-#
-# The Initial Developer of the Original Code is
-# Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2004
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#   Ben Goodger <ben@bengoodger.com>
-#   Robert Strong <robert.bugzilla@gmail.com>
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the GPL or the LGPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK *****
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is the Extension Manager UI.
+   -
+   - The Initial Developer of the Original Code is
+   - the Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2010
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Blair McBride <bmcbride@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://mozapps/content/extensions/extensions.css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/extensions/extensions.css"?>
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
-%brandDTD;
+<!DOCTYPE page [
 <!ENTITY % extensionsDTD SYSTEM "chrome://mozapps/locale/extensions/extensions.dtd">
 %extensionsDTD;
 ]>
 
-<window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        id="extensionsManager" windowtype="Extension:Manager"
-        orient="vertical" title="&addons.title;"
-        screenX="10" screenY="10" width="&em.width;" height="&em.height;"
-        persist="width height screenX screenY sizemode"
-        onload="Startup();" onunload="Shutdown();"
-        onclose="return closeWindow(false);">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      id="addons-page" title="&addons.title;">
 
-  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
-  <script type="application/javascript" src="chrome://mozapps/content/extensions/extensions.js"/>
+  <script type="application/javascript"
+          src="chrome://mozapps/content/extensions/extensions.js"/>
 
-  <stringbundleset id="extensionsSet">
-    <stringbundle id="brandStrings" src="chrome://branding/locale/brand.properties"/>
-    <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
-    <stringbundle id="xpinstallStrings" src="chrome://global/locale/xpinstall/xpinstall.properties"/>
-  </stringbundleset>
+  <popupset>
+    <!-- menu for an addon item -->
+    <menupopup id="addonitem-popup">
+      <menuitem id="menuitem_showDetails" command="cmd_showItemDetails"
+                default="true" label="&cmd.showDetails.label;"
+                accesskey="&cmd.showDetails.accesskey;"/>
+      <menuitem id="menuitem_findUpdates" command="cmd_findItemUpdates"
+                label="&cmd.findUpdates.label;"
+                accesskey="&cmd.findUpdates.accesskey;"/>
+      <menuseparator/>
+      <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
+                label="&cmd.preferences.label;"
+                accesskey="&cmd.preferences.accesskey;"/>
+      <menuitem id="menuitem_about" command="cmd_showItemAbout"
+                label="&cmd.about.label;"
+                accesskey="&cmd.about.accesskey;"/>
+    </menupopup>
+  </popupset>
 
-  <keyset id="extensionsKeys">
-    <key id="key_close"   key="&cmd.close.commandKey;"    modifiers="accel" command="cmd_close"/>
-    <key id="key_close2"  keycode="VK_ESCAPE" command="cmd_close"/>
-    <key id="key_about"   key="&cmd.info.commandKey;"     modifiers="accel"
-         oncommand="gExtensionsViewController.doCommand('cmd_about');"/>
-    <key id="key_options" key="&cmd.options.commandKey;"  modifiers="accel"
-         oncommand="gExtensionsViewController.doCommand('cmd_options');"/>
-    <key id="key_uninstall" keycode="VK_DELETE"
-         oncommand="gExtensionsViewController.doCommand('cmd_uninstall');"/>
-#ifdef XP_MACOSX
-    <key id="key_uninstall_mac" keycode="VK_BACK"
-         oncommand="gExtensionsViewController.doCommand('cmd_uninstall');"/>
-#endif
-  </keyset>
-
-  <commandset id="extensionsCommands"
-              events="richlistbox-select"
-              commandupdater="true"
-              oncommandupdate="gExtensionsViewController.onCommandUpdate();"
-              oncommand="gExtensionsViewController.doCommand(event.target.id);">
-    <command id="cmd_options"/>
-    <command id="cmd_about"/>
-    <command id="cmd_homepage"/>
-    <command id="cmd_uninstall"/>
-    <command id="cmd_cancelUninstall"/>
-    <command id="cmd_cancelInstall"/>
-    <command id="cmd_cancelUpgrade"/>
-    <command id="cmd_checkUpdate"/>
-    <command id="cmd_includeUpdate"/>
-    <command id="cmd_installUpdate"/>
-    <command id="cmd_enable"/>
-    <command id="cmd_disable"/>
-    <command id="cmd_useTheme"/>
-    <command id="cmd_installSearchResult"/>
-  </commandset>
-  
-  <commandset id="globalCommands">
-    <command id="cmd_installFile" oncommand="installWithFilePicker();"/>
-    <command id="cmd_checkUpdatesAll" oncommand="checkUpdatesAll();"/>
-    <command id="cmd_installUpdatesAll" oncommand="installUpdatesAll();"/>
-    <command id="cmd_continue" oncommand="closeEM();" disabled="true"/>
-    <command id="cmd_close" oncommand="closeEM();"/>
-    <command id="cmd_showUpdateInfo" oncommand="showUpdateInfo();"/>
-    <command id="cmd_hideUpdateInfo" oncommand="hideUpdateInfo();"/>
-    <command id="cmd_resetSearch" oncommand="resetSearch();"/>
+  <!-- global commands - these act on all addons, or affect the addons manager
+       in some other way -->
+  <commandset id="globalCommandSet"
+              oncommand="gViewController.doCommand(event.target.id);">
+    <command id="cmd_findAllUpdates"/>
+    <command id="cmd_restartApp"/>
+    <command id="cmd_goToDiscoverPane"/>
   </commandset>
 
-  <vbox id="addonContextMenuPalette" hidden="true">
-    <menuitem id="menuitem_useTheme" default="true" command="cmd_useTheme"
-              label="&cmd.useTheme.label;" accesskey="&cmd.useTheme.accesskey;"/>
-    <menuitem id="menuitem_options" default="true" command="cmd_options"
-#ifdef XP_WIN
-              label="&cmd.options.label;" accesskey="&cmd.options.accesskey;"/>
-#else
-              label="&cmd.optionsUnix.label;" accesskey="&cmd.optionsUnix.accesskey;"/>
-#endif
-    <menuitem id="menuitem_homepage" command="cmd_homepage"
-              label="&cmd.homepage.label;" accesskey="&cmd.homepage.accesskey;"/>
-    <menuitem id="menuitem_about" command="cmd_about"
-              label="&cmd.about2.label;" accesskey="&cmd.about.accesskey;"/>
-    <menuseparator id="menuseparator_1"/>
-    <menuitem id="menuitem_uninstall" command="cmd_uninstall"
-              label="&cmd.uninstall.label;" accesskey="&cmd.uninstall2.accesskey;"/>
-    <menuitem id="menuitem_cancelUninstall" command="cmd_cancelUninstall"
-              label="&cmd.cancelUninstall.label;" accesskey="&cmd.cancelUninstall.accesskey;"/>
-    <menuitem id="menuitem_cancelInstall" command="cmd_cancelInstall"
-              label="&cmd.cancelInstall.label;" accesskey="&cmd.cancelInstall.accesskey;"/>
-    <menuitem id="menuitem_cancelUpgrade" command="cmd_cancelUpgrade"
-              label="&cmd.cancelUpgrade.label;" accesskey="&cmd.cancelUpgrade.accesskey;"/>
-    <menuitem id="menuitem_checkUpdate" command="cmd_checkUpdate"
-              label="&cmd.checkUpdate.label;" accesskey="&cmd.checkUpdate.accesskey;"/>
-    <menuitem id="menuitem_enable" command="cmd_enable"
-              label="&cmd.enable.label;" accesskey="&cmd.enable.accesskey;"/>
-    <menuitem id="menuitem_disable" command="cmd_disable"
-              label="&cmd.disable.label;" accesskey="&cmd.disable.accesskey;"/>
-    <menuitem id="menuitem_installUpdate" command="cmd_installUpdate"
-              label="&cmd.installUpdate.label;" accesskey="&cmd.installUpdate.accesskey;"/>
-    <menuitem id="menuitem_includeUpdate" command="cmd_includeUpdate"
-              label="&cmd.includeUpdate.label;" accesskey="&cmd.includeUpdate.accesskey;"
-              type="checkbox"/>
-    <menuitem id="menuitem_learnMore" command="cmd_homepage"
-              label="&searchResultHomepage.value;"/>
-    <menuitem id="menuitem_installSearchResult" command="cmd_installSearchResult"
-              label="&cmd.installSearchResult.label;"/>
-  </vbox>
+  <!-- view commands - these act on the selected addon -->
+  <commandset id="viewCommandSet"
+              events="richlistbox-select" commandupdater="true"
+              oncommandupdate="gViewController.updateCommands();"
+              oncommand="gViewController.doCommand(event.target.id);">
+    <command id="cmd_showItemDetails"/>
+    <command id="cmd_findItemUpdates"/>
+    <command id="cmd_showItemPreferences"/>
+    <command id="cmd_showItemAbout"/>
+    <command id="cmd_enableItem"/>
+    <command id="cmd_disableItem"/>
+    <command id="cmd_uninstallItem"/>
+    <command id="cmd_cancelUninstallItem"/>
+  </commandset>
 
-  <popup id="addonContextMenu" onpopupshowing="return buildContextMenu(event);"/>
+  <hbox flex="1">
+    <!-- left pane -->
+    <vbox id="right-pane">
 
-  <windowdragbox id="topBar" class="chromeclass-toolbar">
-    <deck flex="1">
-      <hbox class="viewGroupWrapper">
-        <radiogroup id="viewGroup" xhtml:role="listbox" persist="last-selected"
-                    orient="horizontal">
-          <radio id="search-view" label="&search.label;" oncommand="showView('search');" persist="last-selected"/>
-          <radio id="extensions-view" label="&extensions.label;" oncommand="showView('extensions');" persist="last-selected"/>
-          <radio id="themes-view" label="&themes.label;" oncommand="showView('themes');" persist="last-selected"/>
-          <radio id="locales-view" label="&locales.label;" oncommand="showView('locales');" persist="last-selected"/>
-          <radio id="plugins-view" label="&plugins.label;" oncommand="showView('plugins');" persist="last-selected"/>
-          <radio id="updates-view" label="&update.label;" oncommand="showView('updates');"/>
-          <radio id="installs-view" label="&install.label;" oncommand="showView('installs');" hidden="true"/>
-        </radiogroup>
-      </hbox>
-      <vbox id="progressBox" flex="1">
-        <spacer flex="1"/>
-        <hbox>
-          <image class="addonThrobber"/>
-          <label id="progressStatus" value="&progressStatus.label;"/>
-        </hbox>
-        <progressmeter id="addonsProgress" class="extension-item-progress" flex="1"/>
-        <spacer flex="1"/>
-      </vbox>
-    </deck>
-  </windowdragbox>
-  <notificationbox id="addonsMsg" flex="1">
-    <vbox id="extensionsBox" flex="1">
-      <hbox id="searchPanel" align="center">
-        <textbox id="searchfield" placeholder="&searchAddons.label;"
-                 type="search" searchbutton="true" class="compact"
-                 oncommand="retrieveRepositoryAddons(this.value);"/>
-        <spacer flex="1"/>
-        <label id="browseAddons" class="text-link" value="&browseAddons.label;"
-               onclick="if (event.button == 0) { openURL(this.getAttribute('homepageURL')); }"/>
-      </hbox>
-      
-      <hbox flex="1">
-        <richlistbox id="extensionsView" flex="1" sort="?name"
-                     datasources="rdf:null" context="addonContextMenu"
-                     ondragenter="gExtensionsDNDObserver.onDragOver(event)"
-                     ondragover="gExtensionsDNDObserver.onDragOver(event)"
-                     ondrop="gExtensionsDNDObserver.onDrop(event)"
-                     ondblclick="onViewDoubleClick(event);"/>
-  
-        <splitter id="themeSplitter" hidden="true" collapse="none" persist="state"/>
-  
-        <vbox id="themePreviewArea" hidden="true" width="220" flex="1" persist="width">
-          <deck id="previewImageDeck" flex="1">
-            <vbox id="noThemeSelected" pack="center" align="center">
-              <label class="previewText">&previewNoThemeSelected.label;</label>
-            </vbox>
-            <vbox id="noPreviewImage" pack="center" align="center">
-              <label class="previewText">&previewNoPreviewImage.label;</label>
-            </vbox>
-            <vbox id="previewImageContainer" align="center" pack="center">
-              <hbox>
-                <image id="previewImage" onerror="onPreviewImageError(event)"/>
-              </hbox>
-            </vbox>
-            <vbox id="infoNoAddonSelected" align="center" pack="center">
-              <label class="previewText">&infoNoAddonSelected.label;</label>
-            </vbox>
-            <vbox id="infoNoUpdateInfo" align="center" pack="center">
-              <label class="previewText">&infoNoUpdateInfo.label;</label>
-            </vbox>
-            <vbox id="infoLoadingInfo" align="center" pack="center">
-              <image class="addonThrobber"/>
-            </vbox>
-            <vbox id="infoUpdateInfoError" align="center" pack="center">
-              <label class="previewText">&infoUpdateInfoError.label;</label>
-            </vbox>
-            <vbox id="infoDisplay">
-            </vbox>
-          </deck>
-        </vbox>
-      </hbox>
+      <!-- category list -->
+      <richlistbox id="categories" flex="1">
+        <richlistitem id="category-search" value="addons://search/"
+                      class="category"
+                      name="&view.search.label;" disabled="true"/>
+        <richlistitem id="category-discover" value="addons://discover/"
+                      class="category"
+                      name="&view.discover.label;"/>
+        <richlistitem id="category-languages" value="addons://list/language"
+                      class="category"
+                      name="&view.languages.label;"/>
+        <richlistitem id="category-searchengines"
+                      value="addons://list/searchengine"
+                      class="category"
+                      name="&view.searchengines.label;"/>
+        <richlistitem id="category-extensions" value="addons://list/extension"
+                      class="category"
+                      name="&view.features.label;"/>
+        <richlistitem id="category-themes" value="addons://list/theme"
+                      class="category"
+                      name="&view.appearance.label;"/>
+        <richlistitem id="category-plugins" value="addons://list/plugin"
+                      class="category"
+                      name="&view.plugins.label;"/>
+      </richlistbox>
+
     </vbox>
-  </notificationbox>
-  <vbox>
-    <hbox id="commandBarBottom" align="center">
-#ifdef XP_UNIX
-      <button id="showUpdateInfoButton" label="&cmd.showUpdateInfo.label;"
-              accesskey="&cmd.showUpdateInfo.accesskey;"
-              tooltiptext="&cmd.showUpdateInfo.tooltip;"
-              command="cmd_showUpdateInfo"/>
-      <button id="hideUpdateInfoButton" label="&cmd.hideUpdateInfo.label;"
-              accesskey="&cmd.hideUpdateInfo.accesskey;"
-              tooltiptext="&cmd.hideUpdateInfo.tooltip;"
-              command="cmd_hideUpdateInfo"/>
-      <button id="installFileButton" label="&cmd.installLocalFile.label;"
-              accesskey="&cmd.installLocalFile.accesskey;"
-              tooltiptextaddons="&cmd.installFileAddon.tooltip;"
-              tooltiptextthemes="&cmd.installFileTheme.tooltip;"
-              command="cmd_installFile"/>
-      <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
-              accesskey="&cmd.checkUpdatesAll.accesskey;"
-              tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
-              tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
-              tooltiptextplugins="&cmd.checkUpdatesAllPlugin.tooltip;"
-              command="cmd_checkUpdatesAll"/>
-      <label id="getMore" class="text-link"
-             onclick="if (event.button == 0) { openURL(this.getAttribute('getMoreURL')); }"
-             valuethemes="&getThemes.label;"
-             valueplugins="&getPlugins.label;"
-             valueextensions="&getExtensions.label;"/>
-      <spacer flex="1"/>
-      <button id="skipDialogButton" label="&cmd.skip.label;"
-              accesskey="&cmd.skip.accesskey;"
-              tooltiptext="&cmd.skip.tooltip;"
-              command="cmd_close"/>
-      <button id="continueDialogButton" label="&cmd.continue.label;"
-              accesskey="&cmd.continue.accesskey;"
-              tooltiptext="&cmd.continue.tooltip;"
-              command="cmd_continue"
-              hidden="true"/>
-      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll2.label;"
-              accesskey="&cmd.installUpdatesAll2.accesskey;"
-              tooltiptext="&cmd.installUpdatesAll2.tooltip;"
-              command="cmd_installUpdatesAll"/>
-#else
-      <button id="installFileButton" label="&cmd.installLocalFile.label;"
-              accesskey="&cmd.installLocalFile.accesskey;"
-              tooltiptextaddons="&cmd.installFileAddon.tooltip;"
-              tooltiptextthemes="&cmd.installFileTheme.tooltip;"
-              command="cmd_installFile"/>
-      <spacer flex="1"/>
-      <label id="getMore" class="text-link"
-             onclick="if (event.button == 0) { openURL(this.getAttribute('getMoreURL')); }"
-             valuethemes="&getThemes.label;"
-             valueplugins="&getPlugins.label;"
-             valueextensions="&getExtensions.label;"/>
-      <button id="continueDialogButton" label="&cmd.continue.label;"
-              accesskey="&cmd.continue.accesskey;"
-              tooltiptext="&cmd.continue.tooltip;"
-              command="cmd_continue"
-              hidden="true"/>
-      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll2.label;"
-              accesskey="&cmd.installUpdatesAll2.accesskey;"
-              tooltiptext="&cmd.installUpdatesAll2.tooltip;"
-              command="cmd_installUpdatesAll"/>
-      <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
-              accesskey="&cmd.checkUpdatesAll.accesskey;"
-              tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
-              tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
-              command="cmd_checkUpdatesAll"/>
-      <button id="skipDialogButton" label="&cmd.skip.label;"
-              accesskey="&cmd.skip.accesskey;"
-              tooltiptext="&cmd.skip.tooltip;"
-              command="cmd_close"/>
-      <button id="showUpdateInfoButton" label="&cmd.showUpdateInfo.label;"
-              accesskey="&cmd.showUpdateInfo.accesskey;"
-              tooltiptext="&cmd.showUpdateInfo.tooltip;"
-              command="cmd_showUpdateInfo"/>
-      <button id="hideUpdateInfoButton" label="&cmd.hideUpdateInfo.label;"
-              accesskey="&cmd.hideUpdateInfo.accesskey;"
-              tooltiptext="&cmd.hideUpdateInfo.tooltip;"
-              command="cmd_hideUpdateInfo"/>
-#endif
-    </hbox>
-    <hbox id="resizerBox" style="min-width:1px;">
-      <spacer flex="1"/>
-      <resizer dir="bottomend"/>
-    </hbox>
-  </vbox>
-</window>
 
+    <splitter class="pane-splitter" collapse="none"/>
+
+    <!-- right pane -->
+    <vbox id="view-container" flex="4">
+
+      <!-- main header -->
+      <hbox id="header">
+        <label id="header-name"/>
+        <button id="header-link"/>
+        <spacer flex="1"/>
+        <hbox id="updates-container">
+          <image class="spinner"/>
+          <label id="updates-noneFound" hidden="true"
+                 value="&updates.noneFound.label;"/>
+          <button id="updates-checkNow" class="button-link"
+                  label="&updates.updateNow.label;"
+                  command="cmd_findAllUpdates"/>
+          <label id="updates-progress" hidden="true"
+                 value="&updates.updating.label;"/>
+          <label id="updates-installed" hidden="true"
+                 value="&updates.installed.label;"/>
+          <label id="updates-downloaded" hidden="true"
+                 value="&updates.downloaded.label;"/>
+          <button id="updates-restart" class="button-link" hidden="true"
+                  label="&updates.restart.label;"
+                  command="cmd_restartApp"/>
+        </hbox>
+        <textbox id="header-search" type="search" searchbutton="true"
+                 placeholder="&search.placeholder;"/>
+      </hbox>
+
+      <!-- view port -->
+      <deck id="view-port" flex="1">
+
+        <!-- discover view -->
+        <vbox id="discover-view" flex="1" class="view-pane">
+          <browser id="discover-browser" type="content" flex="1"
+                   disablehistory="true"/>
+        </vbox>
+
+        <!-- search view -->
+        <vbox id="search-view" flex="1" class="view-pane">
+          <hbox class="view-header" pack="end">
+            <hbox id="search-sorters" class="sort-controls" sortby="name"
+                  ascending="true"/>
+          </hbox>
+          <vbox class="list-container" flex="1">
+            <hbox class="search-filter">
+              <label value="&search.filter.label;"/>
+              <checkbox id="search-filter-local" checked="true" disabled="true"
+                        label="&search.filter.installed.label;"/>
+              <checkbox id="search-filter-remote"
+                        checked="false" disabled="true"
+                        label="&search.filter.available.label;"/>
+            </hbox>
+            <vbox id="search-list-empty" class="empty-list-notice"
+                  flex="1" hidden="true">
+              <spacer flex="1"/>
+              <label value="&listEmpty.search.label;"/>
+              <button label="&listEmpty.button.label;" class="addon-control"
+                      command="cmd_goToDiscoverPane"/>
+              <spacer flex="3"/>
+            </vbox>
+            <richlistbox id="search-list" class="list"/>
+          </vbox>
+        </vbox>
+
+        <!-- list view -->
+        <vbox id="list-view" flex="1" class="view-pane">
+          <hbox class="view-header" pack="end">
+            <hbox id="list-sorters" class="sort-controls" sortby="name"
+                  ascending="true"/>
+          </hbox>
+          <vbox class="list-container" flex="1">
+            <vbox id="addon-list-empty" class="empty-list-notice"
+                  flex="1" hidden="true">
+              <spacer flex="1"/>
+              <label value="&listEmpty.installed.label;"/>
+              <button label="&listEmpty.button.label;" class="addon-control"
+                      command="cmd_goToDiscoverPane"/>
+              <spacer flex="3"/>
+            </vbox>
+            <richlistbox id="addon-list" class="list"/>
+          </vbox>
+        </vbox>
+
+        <!-- detail view -->
+        <hbox id="detail-view" flex="1" class="view-pane">
+          <spacer flex="1"/>
+          <!-- "loading" splash screen -->
+          <hbox class="loading" flex="1">
+            <image/>
+            <label value="&loading.label;"/>
+          </hbox>
+          <!-- actual detail view -->
+          <vbox class="detail-view-container" flex="8">
+            <!-- restart notification -->
+            <hbox id="detail-notification" hidden="true">
+              <label id="detail-notification-text"/>
+              <button class="button-link" label="&addon.restartNow.label;"
+                      command="cmd_restartApp"/>
+              <button id="detail-cancel-uninstall" class="button-link"
+                      label="&addon.undoUninstall.label;"
+                      command="cmd_cancelUninstallItem"/>
+            </hbox>
+            <hbox class="detail-basicinfo fade">
+              <image id="detail-icon"/>
+              <vbox>
+                <label id="detail-name"/>
+                <label id="detail-creator" class="creator"/>
+              </vbox>
+              <spacer flex="1"/>
+              <label id="detail-dateUpdated"/>
+            </hbox>
+            <hbox class="detail-desc">
+              <!-- XXXunf placeholder - bug 553461 -->
+              <vbox hidden="true" class="fade">
+                <image id="detail-screenshot"/>
+                <label value="1 of 5"/>
+                <spacer flex="1"/>
+              </vbox>
+              <vbox flex="1">
+                <description flex="1" id="detail-desc" class="fade"/>
+                <hbox>
+                <!-- XXXunf placeholder - bug 553463 -->
+                  <label value="&rating.yourRating.label;"/>
+                  <label class="meta-value meta-rating" userrating="3"
+                         showrating="user"/>
+                  <spacer flex="1"/>
+                  <label id="detail-homepage" class="text-link" value="&addon.homepage;"/>
+                </hbox>
+                <hbox>
+                  <button id="detail-contribute" class="contribute"
+                          label="&cmd.contribute.label;"
+                          accesskey="&cmd.contribute.accesskey;"
+                          tooltiptext="&cmd.contribute.tooltip;"/>
+                  <spacer flex="1"/>
+                  <button id="detail-uninstall" class="addon-control remove"
+                          label="&cmd.uninstall.label;"
+                          accesskey="&cmd.uninstall.accesskey;"
+                          tooltiptext="&cmd.uninstall.tooltip;"
+                          command="cmd_uninstallItem"/>
+                  <button id="detail-enable" class="addon-control enable"
+                          label="&cmd.enable.label;"
+                          accesskey="&cmd.enable.accesskey;"
+                          tooltiptext="&cmd.enable.tooltip;"
+                          command="cmd_enableItem"/>
+                  <button id="detail-disable" class="addon-control disable"
+                          label="&cmd.disable.label;"
+                          accesskey="&cmd.disable.accesskey;"
+                          tooltiptext="&cmd.disable.tooltip;"
+                          command="cmd_disableItem"/>
+                </hbox>
+              </vbox>
+            </hbox>
+            <hbox class="detail-extra">
+               <vbox class="detail-prefs" flex="1">
+                  <checkbox id="detail-autoUpdate" checked="true"
+                            label="&detail.updateAutomatically.label;"
+                            accesskey="&detail.updateAutomatically.accesskey;"
+                            tooltiptext="&detail.updateAutomatically.tooltip;"/>
+                  <button id="detail-findUpdates" class="addon-control"
+                          label="&detail.checkForUpdates.label;"
+                          accesskey="&detail.checkForUpdates.accesskey;"
+                          tooltiptext="&detail.checkForUpdates.tooltip;"
+                          command="cmd_findItemUpdates"/>
+                  <button id="detail-prefs" class="addon-control"
+                          label="&detail.showPreferences.label;"
+                          accesskey="&detail.showPreferences.accesskey;"
+                          tooltiptext="&detail.showPreferences.tooltip;"
+                          command="cmd_showItemPreferences"/>
+               </vbox>
+               <grid class="detail-meta fade" flex="1">
+                  <columns>
+                     <column flex="1"/>
+                     <column flex="2"/>
+                  </columns>
+                  <rows>
+                     <row>
+                        <label class="meta-label"
+                               value="&detail.version.label;"/>
+                        <label class="meta-value" id="detail-version"/>
+                     </row>
+                     <row>
+                        <label class="meta-label"
+                               value="&detail.updated.label;"/>
+                        <label class="meta-value" id="detail-updatedate"/>
+                     </row>
+                     <row>
+                        <label class="meta-label"
+                               value="&detail.numberOfDownloads.label;"/>
+                        <!-- XXXunf placeholder - bug 553475 -->
+                        <label class="meta-value" value="5,341"/>
+                     </row>
+                  </rows>
+               </grid>
+            </hbox>
+          </vbox>
+          <spacer flex="1"/>
+        </hbox>
+
+      </deck>
+    </vbox>
+  </hbox>
+
+</page>
