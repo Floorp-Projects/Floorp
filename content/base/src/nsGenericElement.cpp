@@ -999,11 +999,8 @@ nsNode3Tearoff::CompareDocumentPosition(nsIDOMNode* aOther,
                                         PRUint16* aReturn)
 {
   nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  NS_ENSURE_ARG(other);
 
-  *aReturn = mNode->CompareDocumentPosition(other);
-
-  return NS_OK;
+  return mNode->CompareDocumentPosition(other, aReturn);
 }
 
 NS_IMETHODIMP
