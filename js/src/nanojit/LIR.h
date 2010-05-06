@@ -64,8 +64,6 @@ namespace nanojit
 
         LIR_paramp  = PTR_SIZE(LIR_parami, LIR_paramq),
 
-        LIR_allocp  = PTR_SIZE(LIR_alloci, LIR_allocq),
-
         LIR_retp    = PTR_SIZE(LIR_reti,   LIR_retq),
 
         LIR_livep   = PTR_SIZE(LIR_livei,  LIR_liveq),
@@ -116,9 +114,9 @@ namespace nanojit
 #endif
 
 #ifndef NANOJIT_64BIT
-        LIR_ialloc  = LIR_alloci,
+        LIR_ialloc  = LIR_allocp,
 #else
-        LIR_qalloc  = LIR_allocq,
+        LIR_qalloc  = LIR_allocp,
 #endif
 
         LIR_ret     = LIR_reti,
