@@ -440,9 +440,6 @@ protected:
   PRBool SetCaretInTableCell(nsIDOMElement* aElement);
   PRBool IsElementInBody(nsIDOMElement* aElement);
 
-  // inline style caching
-  void ClearInlineStylesCache();
-  
   // key event helpers
   NS_IMETHOD TabInTable(PRBool inIsShift, PRBool *outHandled);
   NS_IMETHOD CreateBR(nsIDOMNode *aNode, PRInt32 aOffset, 
@@ -741,8 +738,6 @@ protected:
   nsCOMArray<nsIContentFilter> mContentFilters;
 
   TypeInState*         mTypeInState;
-
-  nsCOMPtr<nsIDOMNode> mCachedNode;
 
   PRPackedBool mCRInParagraphCreatesParagraph;
 
