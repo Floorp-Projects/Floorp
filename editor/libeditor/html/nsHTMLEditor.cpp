@@ -3947,8 +3947,6 @@ NS_IMETHODIMP
 nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 {
   nsEditor::StartOperation(opID, aDirection);  // will set mAction, mDirection
-  if (! ((mAction==kOpInsertText) || (mAction==kOpInsertIMEText)) )
-    ClearInlineStylesCache();
   if (mRules) return mRules->BeforeEdit(mAction, mDirection);
   return NS_OK;
 }
@@ -3960,8 +3958,6 @@ NS_IMETHODIMP
 nsHTMLEditor::EndOperation()
 {
   // post processing
-  if (! ((mAction==kOpInsertText) || (mAction==kOpInsertIMEText) || (mAction==kOpIgnore)) )
-    ClearInlineStylesCache();
   nsresult res = NS_OK;
   if (mRules) res = mRules->AfterEdit(mAction, mDirection);
   nsEditor::EndOperation();  // will clear mAction, mDirection
@@ -4253,11 +4249,6 @@ nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
 #ifdef XP_MAC
 #pragma mark -
 #endif
-
-void nsHTMLEditor::ClearInlineStylesCache()
-{
-  mCachedNode = nsnull;
-}
 
 #ifdef PRE_NODE_IN_BODY
 nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
