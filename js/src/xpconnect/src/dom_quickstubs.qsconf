@@ -723,9 +723,7 @@ customMethodCalls = {
         },
     'nsIDOM3Node_CompareDocumentPosition': {
         'thisType': 'nsINode',
-        'arg0Type': 'nsINode',
-        'code': '    PRUint16 result = self->CompareDocumentPosition(arg0);',
-        'canFail': False
+        'arg0Type': 'nsINode'
         },
     'nsIDOM3Node_GetTextContent': {
         'thisType': 'nsINode',
