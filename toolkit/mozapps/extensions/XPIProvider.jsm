@@ -784,8 +784,11 @@ var XPIProvider = {
   installs: null,
   // The default skin for the application
   defaultSkin: "classic/1.0",
-  // The currently selected skin or the skin that will be switched to after a
-  // restart
+  // The current skin used by the application
+  currentSkin: null,
+  // The selected skin to be used by the application when it is restarted. This
+  // will be the same as currentSkin when it is the skin to be used when the
+  // application is restarted
   selectedSkin: null,
   // The name of the checkCompatibility preference for the current application
   // version
@@ -889,8 +892,9 @@ var XPIProvider = {
 
     this.defaultSkin = Prefs.getDefaultCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
                                                 "classic/1.0");
-    this.selectedSkin = Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
-                                          this.defaultSkin);
+    this.currentSkin = Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN,
+                                         this.defaultSkin);
+    this.selectedSkin = this.currentSkin;
 
     // Tell the Chrome Registry which Skin to select
     if (Prefs.getBoolPref(PREF_DSS_SWITCHPENDING, false)) {
@@ -900,6 +904,7 @@ var XPIProvider = {
                                    this.selectedSkin);
         Services.prefs.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
         LOG("Changed skin to " + this.selectedSkin);
+        this.currentSkin = this.selectedSkin;
       }
       catch (e) {
         ERROR(e);
@@ -919,7 +924,7 @@ var XPIProvider = {
         Services.appinfo instanceof Ci.nsICrashReporter) {
       // Annotate the crash report with relevant add-on information.
       try {
-        Services.appinfo.annotateCrashReport("Theme", this.selectedSkin);
+        Services.appinfo.annotateCrashReport("Theme", this.currentSkin);
       } catch (e) { }
       try {
         Services.appinfo.annotateCrashReport("EMCheckCompatibility",
@@ -1833,8 +1838,19 @@ var XPIProvider = {
       Services.prefs.setBoolPref(PREF_DSS_SWITCHPENDING, true);
       Services.prefs.setCharPref(PREF_DSS_SKIN_TO_SELECT, newSkin);
     }
+    else if (newSkin == this.currentSkin) {
+      try {
+        Services.prefs.clearUserPref(PREF_DSS_SWITCHPENDING);
+      }
+      catch (e) { }
+      try {
+        Services.prefs.clearUserPref(PREF_DSS_SKIN_TO_SELECT);
+      }
+      catch (e) { }
+    }
     else {
       Services.prefs.setCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN, newSkin);
+      this.currentSkin = newSkin;
     }
     this.selectedSkin = newSkin;
 
@@ -1898,8 +1914,7 @@ var XPIProvider = {
     // If the theme we're enabling is the skin currently selected then it doesn't
     // require a restart to enable it.
     if (aAddon.type == "theme")
-      return aAddon.internalName !=
-             Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+      return aAddon.internalName != this.currentSkin;
 
     return !aAddon.bootstrap;
   },
@@ -1917,8 +1932,7 @@ var XPIProvider = {
     // a restart if enabling the other theme does too. If the selected skin doesn't
     // match the current skin then a restart is necessary.
     if (aAddon.type == "theme")
-      return this.selectedSkin !=
-             Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+      return this.selectedSkin != this.currentSkin;
 
     return !aAddon.bootstrap;
   },
@@ -1933,8 +1947,7 @@ var XPIProvider = {
   installRequiresRestart: function XPI_installRequiresRestart(aAddon) {
     // Themes not currently in use can be installed immediately
     if (aAddon.type == "theme")
-      return aAddon.internalName ==
-             Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+      return aAddon.internalName == this.currentSkin;
 
     return !aAddon.bootstrap;
   },
@@ -1949,8 +1962,7 @@ var XPIProvider = {
   uninstallRequiresRestart: function XPI_uninstallRequiresRestart(aAddon) {
     // Themes not currently in use can be uninstalled immediately
     if (aAddon.type == "theme")
-      return aAddon.internalName ==
-             Prefs.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
+      return aAddon.internalName == this.currentSkin;
 
     return !aAddon.bootstrap;
   },
