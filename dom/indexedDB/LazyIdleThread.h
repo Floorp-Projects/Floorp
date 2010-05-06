@@ -76,7 +76,8 @@ public:
    * Create a new LazyIdleThread that will destroy its thread after the given
    * number of milliseconds.
    */
-  LazyIdleThread(PRUint32 aIdleTimeoutMS);
+  LazyIdleThread(PRUint32 aIdleTimeoutMS,
+                 nsIObserver* aIdleObserver = nsnull);
 
   /**
    * Add an observer that will be notified when the thread is idle and about to
@@ -84,7 +85,8 @@ public:
    * that can be used to post cleanup events. The aTopic argument will be
    * IDLE_THREAD_TOPIC, and aData will be null. The LazyIdleThread does not add
    * a reference to the observer to avoid circular references as it is assumed
-   * to be the owner.
+   * to be the owner. It is the caller's responsibility to clear this observer
+   * if the pointer becomes invalid.
    */
   void SetWeakIdleObserver(nsIObserver* aObserver);
 
@@ -93,6 +95,11 @@ private:
    * Calls Shutdown().
    */
   ~LazyIdleThread();
+
+  /**
+   * Called just before dispatching to mThread.
+   */
+  void PreDispatch();
 
   /**
    * Makes sure a valid thread lives in mThread.
@@ -105,17 +112,29 @@ private:
   void InitThread();
 
   /**
+   * Called on mThread to clean up the thread observer.
+   */
+  void CleanupThread();
+
+  /**
+   * Called on the main thread when mThread believes itself to be idle. Sets up
+   * the idle timer.
+   */
+  void ScheduleTimer();
+
+  /**
    * Called when we are shutting down mThread.
    */
-  void ShutdownThread();
+  nsresult ShutdownThread();
 
   /**
-   * Called to cancel any pending timer.
+   * Deletes this object. Used to delay calling mThread->Shutdown() during the
+   * final release (during a GC, for instance).
    */
-  void CancelTimer(nsITimer* aTimer);
+  void SelfDestruct();
 
   /**
-   * Protects mIdleTimer and mThreadHasTimedOut.
+   * Protects data that is accessed on both threads.
    */
   mozilla::Mutex mMutex;
 
@@ -126,20 +145,9 @@ private:
   nsCOMPtr<nsIThread> mOwningThread;
 
   /**
-   * The number of milliseconds a thread should be idle before dying.
-   */
-  const PRUint32 mIdleTimeoutMS;
-
-  /**
    * Only accessed on the owning thread. Set by EnsureThread().
    */
   nsCOMPtr<nsIThread> mThread;
-
-  /**
-   * Only accessed on the owning thread. Set to true when Shutdown() has been
-   * called and prevents EnsureThread() from recreating mThread.
-   */
-  PRBool mShutdown;
 
   /**
    * Protected by mMutex. Created when mThread has no pending events and fired
@@ -149,16 +157,40 @@ private:
   nsCOMPtr<nsITimer> mIdleTimer;
 
   /**
-   * Protected by mMutex. Effectively makes the thread observer methods no-ops
-   * when we're in the process of shutting down mThread.
-   */
-  PRBool mThreadHasTimedOut;
-
-  /**
    * Idle observer. Called when the thread is about to be shut down. Released
    * only when Shutdown() is called.
    */
   nsIObserver* mIdleObserver;
+
+  /**
+   * The number of milliseconds a thread should be idle before dying.
+   */
+  const PRUint32 mIdleTimeoutMS;
+
+  /**
+   * The number of events that are pending on mThread. A nonzero value means
+   * that the thread cannot be cleaned up.
+   */
+  PRUint32 mPendingEventCount;
+
+  /**
+   * The number of times that mThread has dispatched an idle notification. Any
+   * timer that fires while this count is nonzero can safely be ignored as
+   * another timer will be on the way.
+   */
+  PRUint32 mIdleNotificationCount;
+
+  /**
+   * Only accessed on the owning thread. Set to true when Shutdown() has been
+   * called and prevents EnsureThread() from recreating mThread.
+   */
+  PRPackedBool mShutdown;
+
+  /**
+   * Set from CleanupThread and lasting until the thread has shut down. Prevents
+   * further idle notifications during the shutdown process.
+   */
+  PRPackedBool mThreadIsShuttingDown;
 };
 
 END_INDEXEDDB_NAMESPACE
