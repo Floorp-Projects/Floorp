@@ -72,7 +72,7 @@ EXPORTS         += \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += \
-	        $(LIBS_DIR) \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
