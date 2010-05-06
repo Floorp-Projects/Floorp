@@ -2704,7 +2704,6 @@ alpha*-*-osf*)
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
     LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
-    MOZ_MEMORY=1
     if test "$SOLARIS_SUNPRO_CC"; then
        LIBS="-lCrun -lCstd $LIBS"
        NS_USE_NATIVE=1
