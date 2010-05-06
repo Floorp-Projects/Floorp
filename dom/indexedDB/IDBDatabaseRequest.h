@@ -77,6 +77,21 @@ public:
   // Only meant to be called on mStorageThread!
   nsresult EnsureConnection();
 
+  /**
+   * Obtains a cached statement for the put operation on object stores.
+   *
+   * @pre Called from mStorageThread.
+   *
+   * @param aOverwrite
+   *        Indicating if the operation should overwrite an existing entry or
+   *        not.
+   * @param aAutoIncrement
+   *        Indicating if the operation should use our key generator or not.
+   * @returns a mozIStorageStatement to use for the put operation.
+   */
+  already_AddRefed<mozIStorageStatement> PutStatement(bool aOverwrite,
+                                                      bool aAutoIncrement);
+
   nsIThread* ConnectionThread() {
     return mConnectionThread;
   }
@@ -107,6 +122,10 @@ private:
 
   // Only touched on mStorageThread!
   nsCOMPtr<mozIStorageConnection> mConnection;
+  nsCOMPtr<mozIStorageStatement> mPutStmt;
+  nsCOMPtr<mozIStorageStatement> mPutAutoIncrementStmt;
+  nsCOMPtr<mozIStorageStatement> mPutOverwriteStmt;
+  nsCOMPtr<mozIStorageStatement> mPutOverwriteAutoIncrementStmt;
 };
 
 END_INDEXEDDB_NAMESPACE
