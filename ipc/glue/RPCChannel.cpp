@@ -342,7 +342,9 @@ RPCChannel::MaybeProcessDeferredIncall()
     --mRemoteStackDepthGuess;
 
     MutexAutoUnlock unlock(mMutex);
-    fprintf(stderr, "  (processing deferred in-call)\n");
+
+    if (LoggingEnabled())
+        fprintf(stderr, "  (processing deferred in-call)\n");
 
     CxxStackFrame f(*this, IN_MESSAGE, &call);
     Incall(call, stackDepth);
@@ -447,8 +449,10 @@ RPCChannel::Incall(const Message& call, size_t stackDepth)
             return;
         }
 
-        fprintf(stderr, "  (%s won, so we're%sdeferring)\n",
-                winner, defer ? " " : " not ");
+        if (LoggingEnabled()) {
+            fprintf(stderr, "  (%s won, so we're%sdeferring)\n",
+                    winner, defer ? " " : " not ");
+        }
 
         if (defer) {
             // we now know the other side's stack has one more frame
