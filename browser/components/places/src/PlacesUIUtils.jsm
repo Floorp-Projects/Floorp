@@ -1248,47 +1248,6 @@ var PlacesUIUtils = {
     return queryName; 
   },
 
-  /**
-  * Add, update or remove the livemark status menuitem.
-  * @param aPopup
-  *        The livemark container popup
-  */
-  ensureLivemarkStatusMenuItem:
-  function PUIU_ensureLivemarkStatusMenuItem(aPopup) {
-    var itemId = aPopup._resultNode.itemId;
-
-    var lmStatus = null;
-    if (PlacesUtils.annotations
-                   .itemHasAnnotation(itemId, "livemark/loadfailed"))
-      lmStatus = "bookmarksLivemarkFailed";
-    else if (PlacesUtils.annotations
-                        .itemHasAnnotation(itemId, "livemark/loading"))
-      lmStatus = "bookmarksLivemarkLoading";
-
-    if (lmStatus && !aPopup._lmStatusMenuItem) {
-      // Create the status menuitem and cache it in the popup object.
-      let document = aPopup.ownerDocument;
-      aPopup._lmStatusMenuItem = document.createElement("menuitem");
-      aPopup._lmStatusMenuItem.setAttribute("lmStatus", lmStatus);
-      aPopup._lmStatusMenuItem.setAttribute("label", this.getString(lmStatus));
-      aPopup._lmStatusMenuItem.setAttribute("disabled", true);
-      aPopup.insertBefore(aPopup._lmStatusMenuItem,
-                          aPopup.childNodes.item(aPopup._startMarker + 1));
-      aPopup._startMarker++;
-    }
-    else if (lmStatus &&
-             aPopup._lmStatusMenuItem.getAttribute("lmStatus") != lmStatus) {
-      // Status has changed, update the cached status menuitem.
-      aPopup._lmStatusMenuItem.setAttribute("label",
-                                            this.getString(lmStatus));
-    }
-    else if (!lmStatus && aPopup._lmStatusMenuItem){
-      // No status, remove the cached menuitem.
-      aPopup.removeChild(aPopup._lmStatusMenuItem);
-      aPopup._lmStatusMenuItem = null;
-      aPopup._startMarker--;
-    }
-  }
 };
 
 XPCOMUtils.defineLazyServiceGetter(PlacesUIUtils, "RDF",

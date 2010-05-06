@@ -412,6 +412,7 @@ PlacesViewBase.prototype = {
       lmStatusElt.setAttribute("disabled", true);
       aPopup.insertBefore(lmStatusElt,
                           aPopup.childNodes.item(aPopup._startMarker + 1));
+      aPopup._lmStatusMenuItem = lmStatusElt;
       aPopup._startMarker++;
     }
     else if (lmStatus && lmStatusElt.getAttribute("lmStatus") != lmStatus) {
