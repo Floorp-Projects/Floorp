@@ -1073,6 +1073,7 @@ nsTextControlFrame::PreDestroy()
 
   mUseEditor = PR_FALSE;
   mEditor = nsnull;
+  mScrollEvent.Revoke();
   if (mSelCon) {
     mSelCon->SetScrollableFrame(nsnull);
     mSelCon = nsnull;
@@ -1887,9 +1888,24 @@ nsTextControlFrame::IsLeaf() const
   return PR_TRUE;
 }
 
+NS_IMETHODIMP
+nsTextControlFrame::ScrollOnFocusEvent::Run()
+{
+  if (mFrame && mFrame->mSelCon) {
+    mFrame->mScrollEvent.Forget();
+    mFrame->mSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
+                                             nsISelectionController::SELECTION_FOCUS_REGION,
+                                             PR_TRUE);
+  }
+  return NS_OK;
+}
+
 //IMPLEMENTING NS_IFORMCONTROLFRAME
 void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
+  // Revoke the previous scroll event if one exists
+  mScrollEvent.Revoke();
+
   if (!aOn) {
     nsWeakFrame weakFrame(this);
 
@@ -1923,9 +1939,11 @@ void nsTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     MaybeBeginSecureKeyboardInput();
 
   // Scroll the current selection into view
-  mSelCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_NORMAL,
-                                   nsISelectionController::SELECTION_FOCUS_REGION,
-                                   PR_FALSE);
+  nsRefPtr<ScrollOnFocusEvent> event = new ScrollOnFocusEvent(this);
+  nsresult rv = NS_DispatchToCurrentThread(event);
+  if (NS_SUCCEEDED(rv)) {
+    mScrollEvent = event;
+  }
 
   // tell the caret to use our selection
 
