@@ -3101,10 +3101,10 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     //
     // Compiling it using (for example) the first document's global
     // object would cause JS to keep a reference via the __proto__ or
-    // __parent__ pointer to the first document's global. If that
-    // happened, our script object would reference the first document,
-    // and the first document would indirectly reference the prototype
-    // document because it keeps the prototype cache alive. Circularity!
+    // parent pointer to the first document's global. If that happened,
+    // our script object would reference the first document, and the
+    // first document would indirectly reference the prototype document
+    // because it keeps the prototype cache alive. Circularity!
     nsresult rv;
 
     // Use the prototype document's special context
