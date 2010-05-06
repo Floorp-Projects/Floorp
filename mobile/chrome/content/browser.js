@@ -182,9 +182,9 @@ function onDebugKeyPress(ev) {
   const l = 76;  // restart lazy crawl
   const m = 77;  // fix mouseout
   const n = 78;
-  const o = 79;  // toggle orientation
+  const o = 79;
   const p = 80;  // debug tiles in pool order
-  const q = 81;
+  const q = 81;  // toggle orientation
   const r = 82;  // reset visible rect
   const s = 83;
   const t = 84;  // debug given list of tiles separated by space
@@ -301,12 +301,6 @@ function onDebugKeyPress(ev) {
     Util.dumpLn("batchOps:",bv._batchOps.length);
     bv.resumeRendering();
     break;
-  case o:
-    if (Util.isPortrait())
-      window.top.resizeTo(800,480);
-    else
-      window.top.resizeTo(480,800);
-    break;
   case p:
     let tc = bv._tileManager._tileCache;
     dump('************* TILE POOL ****************\n');
@@ -318,6 +312,14 @@ function onDebugKeyPress(ev) {
     }
     dump('****************************************\n');
     break;
+#ifndef MOZ_PLATFORM_MAEMO
+  case q:
+    if (Util.isPortrait())
+      window.top.resizeTo(800,480);
+    else
+      window.top.resizeTo(480,800);
+    break;
+#endif
   case z:
     bv.setZoomLevel(1.0);
     break;
