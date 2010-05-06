@@ -1966,7 +1966,6 @@ Lirasm::Lirasm(bool verbose) :
 #undef OP___
 
     // XXX: could add more pointer-sized synonyms here
-    mOpMap["allocp"] = mOpMap[PTR_SIZE("alloci", "allocq")];
     mOpMap["paramp"] = mOpMap[PTR_SIZE("parami", "paramq")];
 }
 
