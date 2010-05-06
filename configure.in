@@ -2100,7 +2100,7 @@ ia64*-hpux*)
             # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
         MOZ_DEBUG_FLAGS="-g"
     fi
 
@@ -7522,7 +7522,7 @@ MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
 AC_SUBST(MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE)
 
 _SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fprofile-generate"
+CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
 
 AC_MSG_CHECKING([whether C compiler supports -fprofile-generate])
 AC_TRY_COMPILE([], [return 0;],
@@ -7532,7 +7532,7 @@ AC_MSG_RESULT([$result])
 
 if test $result = "yes"; then
   PROFILE_GEN_LDFLAGS="-fprofile-generate"
-  PROFILE_USE_CFLAGS="-fprofile-use"
+  PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freorder-blocks-and-partition"
   PROFILE_USE_LDFLAGS="-fprofile-use"
 else
   CFLAGS="$_SAVE_CFLAGS -fprofile-arcs"
