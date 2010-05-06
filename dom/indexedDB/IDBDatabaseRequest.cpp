@@ -502,6 +502,56 @@ IDBDatabaseRequest::EnsureConnection()
   return NS_OK;
 }
 
+already_AddRefed<mozIStorageStatement>
+IDBDatabaseRequest::PutStatement(bool aOverwrite,
+                                 bool aAutoIncrement)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  (void)EnsureConnection();
+
+  if (aOverwrite) {
+    if (aAutoIncrement) {
+      if (!mPutOverwriteAutoIncrementStmt) {
+        nsresult rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
+          "VALUES (:osid, :key_value, :data)"
+        ), getter_AddRefs(mPutOverwriteAutoIncrementStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      return mPutOverwriteAutoIncrementStmt;
+    }
+
+    if (!mPutOverwriteStmt) {
+      nsresult rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "INSERT OR REPLACE INTO object_data (object_store_id, key_value, data) "
+        "VALUES (:osid, :key_value, :data)"
+      ), getter_AddRefs(mPutOverwriteStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    return mPutOverwriteStmt;
+  }
+
+  if (aAutoIncrement) {
+    if (!mPutAutoIncrementStmt) {
+      nsresult rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "INSERT INTO ai_object_data (object_store_id, data) "
+        "VALUES (:osid, :data)"
+      ), getter_AddRefs(mPutAutoIncrementStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    return mPutAutoIncrementStmt;
+  }
+
+  if (!mPutStmt) {
+    nsresult rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "INSERT INTO object_data (object_store_id, key_value, data) "
+      "VALUES (:osid, :key_value, :data)"
+    ), getter_AddRefs(mPutStmt));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+  }
+  return mPutStmt;
+}
+
 void
 IDBDatabaseRequest::FireCloseConnectionRunnable()
 {
