@@ -292,6 +292,10 @@ window.TabItems = {
           var item = new TabItem(this, tab);
           $(this).data('tabItem', item);    
           
+          item.addOnClose(self, function() {
+            Items.unsquish(null, item);
+          });
+
           if(TabItems.reconnect(item))
             reconnected = true;
           else if(!tab.url || tab.url == 'about:blank') {

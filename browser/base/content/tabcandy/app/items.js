@@ -38,7 +38,11 @@ window.Item = function() {
   
   // Variable: locked
   // Affects whether an item can be pushed, closed, renamed, etc
-  this.locked = false;
+  // The object may have properties to specify what can't be changed: 
+  //   .bounds is true if it can't be pushed, dragged, resized, etc
+  //   .close is true if it can't be closed
+  //   .title is true if it can't be renamed
+  this.locked = {};
   
   // Variable: parent
   // The group that this item is a child of
@@ -48,10 +52,6 @@ window.Item = function() {
   // A <Point> that describes the last size specifically chosen by the user.
   // Used by unsquish.
   this.userSize = null;
-  
-  // Variable: locked
-  // True if the item should not be changed.
-  this.locked = false;
 };
 
 window.Item.prototype = { 
@@ -169,7 +169,7 @@ window.Item.prototype = {
       var bbc = bb.center();
     
       $.each(items, function(index, item) {
-        if(item == baseItem || item.locked)
+        if(item == baseItem || item.locked.bounds)
           return;
           
         var data = item.pushAwayData;
@@ -212,7 +212,7 @@ window.Item.prototype = {
     if(Items.squishMode == 'squish') {
       $.each(items, function(index, item) {
         var data = item.pushAwayData;
-        if(data.generation == 0 || item.locked)
+        if(data.generation == 0 || item.locked.bounds)
           return;
   
         function apply(item, posStep, posStep2, sizeStep) {
@@ -276,7 +276,7 @@ window.Item.prototype = {
     } else if(Items.squishMode == 'all') {
       var newPageBounds = null;
       $.each(items, function(index, item) {
-        if(item.locked)
+        if(item.locked.bounds)
           return;
           
         var data = item.pushAwayData;
@@ -288,7 +288,7 @@ window.Item.prototype = {
       var hScale = pageBounds.height / newPageBounds.height;
       var scale = Math.min(hScale, wScale);
       $.each(items, function(index, item) {
-        if(item.locked)
+        if(item.locked.bounds)
           return;
           
         var data = item.pushAwayData;
@@ -305,65 +305,16 @@ window.Item.prototype = {
     }
 
     // ___ Unsquish
+    var pairs = [];
     $.each(items, function(index, item) {
-      if(item.locked)
-        return;
-        
       var data = item.pushAwayData;
-      var bounds = data.bounds;
-      var newBounds = new Rect(bounds);
-
-      var newSize;
-      if(item.userSize) 
-        newSize = new Point(item.userSize);
-      else
-        newSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
-        
-      if(item.isAGroup) {
-          newBounds.width = Math.max(newBounds.width, newSize.x);
-          newBounds.height = Math.max(newBounds.height, newSize.y);
-      } else {
-        if(bounds.width < newSize.x) {
-          newBounds.width = newSize.x;
-          newBounds.height = newSize.y;
-        }
-      }
-
-      newBounds.left -= (newBounds.width - bounds.width) / 2;
-      newBounds.top -= (newBounds.height - bounds.height) / 2;
-      
-      var offset = new Point();
-      if(newBounds.left < pageBounds.left)
-        offset.x = pageBounds.left - newBounds.left;
-      else if(newBounds.right > pageBounds.right)
-        offset.x = pageBounds.right - newBounds.right;
-
-      if(newBounds.top < pageBounds.top)
-        offset.y = pageBounds.top - newBounds.top;
-      else if(newBounds.bottom > pageBounds.bottom)
-        offset.y = pageBounds.bottom - newBounds.bottom;
-        
-      newBounds.offset(offset);
-
-      if(!bounds.equals(newBounds)) {        
-        var blocked = false;
-        $.each(items, function(index, item2) {
-          if(item2 == item)
-            return;
-            
-          var data2 = item2.pushAwayData;
-          var bounds2 = data2.bounds;
-          if(bounds2.intersects(newBounds)) {
-            blocked = true;
-            return false;
-          }
-        });
-        
-        if(!blocked) {
-          data.bounds = newBounds;
-        }
-      }
+      pairs.push({
+        item: item,
+        bounds: data.bounds
+      });
     });
+    
+    Items.unsquish(pairs);
 
     // ___ Apply changes
     $.each(items, function(index, item) {
@@ -521,7 +472,7 @@ window.Items = {
         rects.push(new Rect(box));
       else if(items && a < items.length) {
         var item = items[a];
-        if(!item.locked) {
+        if(!item.locked.bounds) {
           item.setBounds(box, immediately);
           item.setRotation(0);
           if(options.z)
@@ -545,6 +496,95 @@ window.Items = {
     }
     
     return rects;
+  },
+  
+  // ----------
+  // Function: unsquish
+  // Checks to see which items can now be unsquished. 
+  //
+  // Parameters: 
+  //   pairs - an array of objects, each with two properties: item and bounds. The bounds are 
+  //     modified as appropriate, but the items are not changed. If pairs is null, the
+  //     operation is performed directly on all of the top level items. 
+  //   ignore - an <Item> to not include in calculations (because it's about to be closed, for instance)
+  unsquish: function(pairs, ignore) {
+    var pairsProvided = (pairs ? true : false);
+    if(!pairsProvided) {
+      var items = Items.getTopLevelItems();
+      pairs = [];
+      $.each(items, function(index, item) {
+        pairs.push({
+          item: item,
+          bounds: item.getBounds()
+        });
+      });
+    }
+  
+    var pageBounds = Items.getPageBounds();
+    $.each(pairs, function(index, pair) {
+      var item = pair.item;
+      if(item.locked.bounds || item == ignore)
+        return;
+        
+      var bounds = pair.bounds;
+      var newBounds = new Rect(bounds);
+
+      var newSize;
+      if(item.userSize) 
+        newSize = new Point(item.userSize);
+      else
+        newSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
+        
+      if(item.isAGroup) {
+          newBounds.width = Math.max(newBounds.width, newSize.x);
+          newBounds.height = Math.max(newBounds.height, newSize.y);
+      } else {
+        if(bounds.width < newSize.x) {
+          newBounds.width = newSize.x;
+          newBounds.height = newSize.y;
+        }
+      }
+
+      newBounds.left -= (newBounds.width - bounds.width) / 2;
+      newBounds.top -= (newBounds.height - bounds.height) / 2;
+      
+      var offset = new Point();
+      if(newBounds.left < pageBounds.left)
+        offset.x = pageBounds.left - newBounds.left;
+      else if(newBounds.right > pageBounds.right)
+        offset.x = pageBounds.right - newBounds.right;
+
+      if(newBounds.top < pageBounds.top)
+        offset.y = pageBounds.top - newBounds.top;
+      else if(newBounds.bottom > pageBounds.bottom)
+        offset.y = pageBounds.bottom - newBounds.bottom;
+        
+      newBounds.offset(offset);
+
+      if(!bounds.equals(newBounds)) {        
+        var blocked = false;
+        $.each(pairs, function(index, pair2) {
+          if(pair2 == pair || pair2.item == ignore)
+            return;
+            
+          var bounds2 = pair2.bounds;
+          if(bounds2.intersects(newBounds)) {
+            blocked = true;
+            return false;
+          }
+        });
+        
+        if(!blocked) {
+          pair.bounds.copy(newBounds);
+        }
+      }
+    });
+
+    if(!pairsProvided) {
+      $.each(pairs, function(index, pair) {
+        pair.item.setBounds(pair.bounds);
+      });
+    }
   }
 };
 
