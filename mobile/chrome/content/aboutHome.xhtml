@@ -91,6 +91,8 @@
   <!-- l10n hack -->
   <div style="display: none">
     <span id="text-openalltabs">&aboutHome.openAllTabs;</span>
+    <span id="text-notabs">&aboutHome.noTabs;</span>
+    <span id="text-noaddons">&aboutHome.noAddons;</span>
   </div>
 
   <script type="application/javascript;version=1.8"><![CDATA[
@@ -214,7 +216,8 @@
           list.appendChild(outer);
         }
       } else {
-        list.style.display = "none";
+        let placeHolder = document.getElementById("loadingTabs");
+        placeHolder.innerHTML = "<div class='no-items'>" + document.getElementById("text-notabs").textContent + "</div>";
       }
     }
 
@@ -245,7 +248,8 @@
       searchSucceeded: function(aAddons, aAddonCount, aTotalResults) {
         let list = document.getElementById("newAddons");
         if (aAddons.length == 0) {
-          list.style.display = "none";
+          let placeHolder = document.getElementById("loadingAddons");
+          placeHolder.innerHTML = "<div class='no-items'>" + document.getElementById("text-noaddons").textContent + "</div>";
           return;
         }
 
