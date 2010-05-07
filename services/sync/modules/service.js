@@ -635,6 +635,8 @@ WeaveSvc.prototype = {
     this.resetClient();
     // Reset Weave prefs
     Svc.Prefs.resetBranch("");
+    // set lastversion pref
+    Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
     Svc.Login.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
       Svc.Login.removeLogin(login);
