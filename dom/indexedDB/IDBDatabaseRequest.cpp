@@ -572,6 +572,41 @@ IDBDatabaseRequest::PutStatement(bool aOverwrite,
   return result.forget();
 }
 
+already_AddRefed<mozIStorageStatement>
+IDBDatabaseRequest::RemoveStatement(bool aAutoIncrement)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  nsresult rv = EnsureConnection();
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<mozIStorageStatement> result;
+
+  if (aAutoIncrement) {
+    if (mRemoveAutoIncrementStmt) {
+      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM ai_object_data "
+        "WHERE id = :key_value "
+        "AND object_store_id = :osid"
+      ), getter_AddRefs(mRemoveAutoIncrementStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    result = mRemoveAutoIncrementStmt;
+  }
+  else {
+    if (mRemoveStmt) {
+      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM object_data "
+        "WHERE key_value = :key_value "
+        "AND object_store_id = :osid"
+      ), getter_AddRefs(mRemoveStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    result = mRemoveStmt;
+  }
+
+  return result.forget();
+}
+
 void
 IDBDatabaseRequest::FireCloseConnectionRunnable()
 {
@@ -589,6 +624,8 @@ IDBDatabaseRequest::FireCloseConnectionRunnable()
   SwapCOMPtrs(doomedObjects[index++], mPutAutoIncrementStmt);
   SwapCOMPtrs(doomedObjects[index++], mPutOverwriteStmt);
   SwapCOMPtrs(doomedObjects[index++], mPutOverwriteAutoIncrementStmt);
+  SwapCOMPtrs(doomedObjects[index++], mRemoveStmt);
+  SwapCOMPtrs(doomedObjects[index++], mRemoveAutoIncrementStmt);
 
   NS_ASSERTION(index == kDoomedObjectCount, "Fix this!");
 

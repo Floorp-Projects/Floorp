@@ -122,15 +122,33 @@ public:
   // Disabled until we can use nsIVariants with jsvals
   //void GetSuccessResult(nsIWritableVariant* aResult);
 
-private:
+protected:
   // In-params.
   const PRInt64 mOSID;
   nsString mKeyString;
   const PRInt64 mKeyInt;
   const bool mAutoIncrement;
 
+private:
   // Out-params.
   nsString mValue;
+};
+
+class RemoveHelper : public GetHelper
+{
+public:
+  RemoveHelper(IDBDatabaseRequest* aDatabase,
+               nsIDOMEventTarget* aTarget,
+               PRInt64 aObjectStoreID,
+               const nsAString& aKeyString,
+               PRInt64 aKeyInt,
+               bool aAutoIncrement)
+  : GetHelper(aDatabase, aTarget, aObjectStoreID, aKeyString, aKeyInt,
+              aAutoIncrement)
+  {
+  }
+
+  PRUint16 DoDatabaseWork();
 };
 
 // Remove once nsIVariant can handle jsvals
@@ -383,7 +401,25 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
                               nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsString keyString;
+  PRInt64 keyInt;
+
+  nsresult rv = GetKeyFromVariant(aKey, mAutoIncrement, PR_TRUE,
+                                  keyString, &keyInt);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<RemoveHelper> helper =
+    new RemoveHelper(mDatabase, request, mId, keyString, keyInt,
+                     !!mAutoIncrement);
+  rv = helper->Dispatch(mDatabase->ConnectionThread());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -540,6 +576,39 @@ GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 
   PRBool dummy;
   aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
+  return OK;
+}
+
+PRUint16
+RemoveHelper::DoDatabaseWork()
+{
+  nsresult rv = mDatabase->EnsureConnection();
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
+
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mDatabase->RemoveStatement(mAutoIncrement);
+
+  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  NS_NAMED_LITERAL_CSTRING(key_value, "key_value");
+
+  if (mKeyString.IsVoid()) {
+    rv = stmt->BindInt64ByName(key_value, mKeyInt);
+  }
+  else {
+    rv = stmt->BindStringByName(key_value, mKeyString);
+  }
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+
+  // Search for it!
+  PRBool hasResult;
+  rv = stmt->ExecuteStep(&hasResult);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseError::NOT_FOUND_ERR);
+
   return OK;
 }
 
