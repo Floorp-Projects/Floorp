@@ -52,6 +52,7 @@ _TEST_FILES = \
   test_remove_objectStore.html \
   test_put_get_values.html \
   test_put_get_values_autoIncrement.html \
+  test_objectStore_remove_values.html \
   $(NULL)
 
 libs:: $(_TEST_FILES)

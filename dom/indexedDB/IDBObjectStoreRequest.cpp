@@ -599,10 +599,8 @@ RemoveHelper::DoDatabaseWork()
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
 
   // Search for it!
-  PRBool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
+  rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
-  NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseError::NOT_FOUND_ERR);
 
   return OK;
 }
