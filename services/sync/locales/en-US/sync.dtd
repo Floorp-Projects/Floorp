@@ -1,4 +1,6 @@
-<!ENTITY syncMenu.label       "Weave">
+<!ENTITY syncBrand.shortName.label  "Sync">
+
+<!ENTITY syncMenu.label       "&syncBrand.shortName.label;">
 <!ENTITY logInItem.label      "Connect">
 <!ENTITY logOutItem.label     "Disconnect">
 <!ENTITY syncNowItem.label    "Sync Now">

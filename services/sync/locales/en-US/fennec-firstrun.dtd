@@ -1,6 +1,9 @@
-<!ENTITY firstrun.title    "Weave Installed">
+<!ENTITY syncBrand.shortName.label  "Sync">
+<!ENTITY syncBrand.fullName.label   "Firefox Sync">
+
+<!ENTITY firstrun.title    "&syncBrand.fullName.label; Installed">
 <!ENTITY intro.description "You're almost ready to share your browsing history, passwords, bookmarks and more between your PC and mobile.">
-<!ENTITY step1.description "Make sure you've installed Weave on your PC Firefox and created a Weave account.">
-<!ENTITY step2.description "After syncing your PC, return here to Connect to Weave.">
+<!ENTITY step1.description "Make sure you've installed &syncBrand.fullName.label; on your PC Firefox and created a Weave account.">
+<!ENTITY step2.description "After syncing your PC, return here to Connect to &syncBrand.shortName.label;.">
 <!ENTITY step3.description "Once you've connected, your PC will know about this mobile after it syncs again.">
-<!ENTITY connect.label     "Connect to Weave">
+<!ENTITY connect.label     "Connect to &syncBrand.shortName.label;">
