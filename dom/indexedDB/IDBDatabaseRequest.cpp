@@ -71,27 +71,14 @@ isupports_cast(IDBDatabaseRequest* aClassPtr)
     static_cast<IDBRequest::Generator*>(aClassPtr));
 }
 
-template<class T1, class T2>
+template<class T>
 inline
-void
-SwapCOMPtrs(nsCOMPtr<T1>& a1,
-            nsCOMPtr<T2>& a2)
+already_AddRefed<nsISupports>
+do_QIAndNull(nsCOMPtr<T>& aCOMPtr)
 {
-  nsCOMPtr<T1> temp1;
-  temp1.swap(a1);
-
-  nsCOMPtr<T2> temp2;
-  temp2.swap(a2);
-
-  a1 = do_QueryInterface(temp2);
-  if (temp2) {
-    NS_ASSERTION(a1, "QI failed!");
-  }
-
-  a2 = do_QueryInterface(temp1);
-  if (temp1) {
-    NS_ASSERTION(a2, "QI failed!");
-  }
+  nsCOMPtr<nsISupports> temp(do_QueryInterface(aCOMPtr));
+  aCOMPtr = nsnull;
+  return temp.forget();
 }
 
 class CloseConnectionRunnable : public nsRunnable
@@ -610,24 +597,15 @@ IDBDatabaseRequest::RemoveStatement(bool aAutoIncrement)
 void
 IDBDatabaseRequest::FireCloseConnectionRunnable()
 {
-  // Keep this in sync with the number of nsCOMPtrs we destroy!
-  static const PRUint32 kDoomedObjectCount = 5;
-  PRUint32 index = 0;
-
   nsTArray<nsCOMPtr<nsISupports> > doomedObjects;
-  if (!doomedObjects.SetLength(kDoomedObjectCount)) {
-    NS_ERROR("OOM!");
-  }
 
-  SwapCOMPtrs(doomedObjects[index++], mConnection);
-  SwapCOMPtrs(doomedObjects[index++], mPutStmt);
-  SwapCOMPtrs(doomedObjects[index++], mPutAutoIncrementStmt);
-  SwapCOMPtrs(doomedObjects[index++], mPutOverwriteStmt);
-  SwapCOMPtrs(doomedObjects[index++], mPutOverwriteAutoIncrementStmt);
-  SwapCOMPtrs(doomedObjects[index++], mRemoveStmt);
-  SwapCOMPtrs(doomedObjects[index++], mRemoveAutoIncrementStmt);
-
-  NS_ASSERTION(index == kDoomedObjectCount, "Fix this!");
+  doomedObjects.AppendElement(do_QIAndNull(mConnection));
+  doomedObjects.AppendElement(do_QIAndNull(mPutStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mPutAutoIncrementStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mPutOverwriteStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mPutOverwriteAutoIncrementStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mRemoveStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mRemoveAutoIncrementStmt));
 
   mConnectionThread->Dispatch(new CloseConnectionRunnable(doomedObjects),
                               NS_DISPATCH_NORMAL);

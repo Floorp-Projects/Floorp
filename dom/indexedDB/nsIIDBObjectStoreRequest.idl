@@ -51,11 +51,10 @@ interface nsIVariant;
 [scriptable, uuid(ce65fbc2-06a0-4f1c-89e4-0d9a636179c7)]
 interface nsIIDBObjectStoreRequest : nsIIDBObjectStore
 {
-  [optional_argc]
   nsIIDBRequest
   put (in nsIVariant value,
        [optional /* null */] in nsIVariant key,
-       [optional /* true */] in boolean noOverwrite);
+       [optional /* false */] in boolean overwrite);
 
   nsIIDBRequest
   remove(in nsIVariant key);

@@ -68,10 +68,10 @@ public:
             const nsAString& aKeyString,
             PRInt64 aKeyInt,
             bool aAutoIncrement,
-            bool aNoOverwrite)
+            bool aOverwrite)
   : AsyncConnectionHelper(aDatabase, aTarget), mOSID(aObjectStoreID),
     mValue(aValue), mKeyInt(aKeyInt), mAutoIncrement(aAutoIncrement),
-    mNoOverwrite(aNoOverwrite)
+    mOverwrite(aOverwrite)
   {
     if (!mAutoIncrement) {
       if (aKeyString.IsVoid()) {
@@ -93,7 +93,7 @@ private:
   nsString mKeyString;
   PRInt64 mKeyInt;
   const bool mAutoIncrement;
-  const bool mNoOverwrite;
+  const bool mOverwrite;
 };
 
 class GetHelper : public AsyncConnectionHelper
@@ -324,15 +324,10 @@ IDBObjectStoreRequest::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 NS_IMETHODIMP
 IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
                            nsIVariant* aKey,
-                           PRBool aNoOverwrite,
-                           PRUint8 aOptionalArgCount,
+                           PRBool aOverwrite,
                            nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (aOptionalArgCount < 2) {
-    aNoOverwrite = PR_TRUE;
-  }
 
   nsString keyString;
   PRInt64 keyInt;
@@ -388,7 +383,7 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
 
   nsRefPtr<PutHelper> helper =
     new PutHelper(mDatabase, request, mId, jsonString, keyString, keyInt,
-                  !!mAutoIncrement, !!aNoOverwrite);
+                  !!mAutoIncrement, !!aOverwrite);
   rv = helper->Dispatch(mDatabase->ConnectionThread());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -468,9 +463,9 @@ PutHelper::DoDatabaseWork()
   mozStorageTransaction transaction(connection, PR_FALSE);
 
   nsCOMPtr<mozIStorageStatement> stmt =
-    mDatabase->PutStatement(!mNoOverwrite, mAutoIncrement);
+    mDatabase->PutStatement(!mOverwrite, mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseError::UNKNOWN_ERR);
-  if (!mAutoIncrement || mAutoIncrement && !mNoOverwrite) {
+  if (!mAutoIncrement || mAutoIncrement && mOverwrite) {
     NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
 
     if (mKeyString.IsVoid()) {
