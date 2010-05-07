@@ -49,6 +49,13 @@
 #include <QFlags>
 #include <QStyleOptionComboBox>
 
+/*
+ * "slots" gets #defined by Qt, unfortunately its a common identifier,
+ * especially it is used as a local variable name in nsIFrame.h - since
+ * we don't use the Qt #defined "slots" we undefine it again here.
+ */
+#undef slots
+
 #include "nsIFrame.h"
 
 #include "nsCoord.h"
