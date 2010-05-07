@@ -1035,7 +1035,12 @@ var PageActions = {
     picker.init(window, strings.getString("pageactions.saveas.pdf"), Ci.nsIFilePicker.modeSave);
     picker.appendFilter("PDF", "*.pdf");
     picker.defaultExtension = "pdf";
-    picker.defaultString = contentWindow.document.title + ".pdf";
+
+    let fileName = getDefaultFileName(null, null, contentWindow.document, null);
+#ifdef MOZ_PLATFORM_MAEMO
+    fileName = fileName.replace(/[\*\:\?]+/g, " ");
+#endif
+    picker.defaultString = fileName + ".pdf";
 
     let dnldMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
     picker.displayDirectory = dnldMgr.defaultDownloadsDirectory;
