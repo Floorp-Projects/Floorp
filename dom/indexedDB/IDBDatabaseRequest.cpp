@@ -71,34 +71,45 @@ isupports_cast(IDBDatabaseRequest* aClassPtr)
     static_cast<IDBRequest::Generator*>(aClassPtr));
 }
 
+template<class T1, class T2>
+inline
+void
+SwapCOMPtrs(nsCOMPtr<T1>& a1,
+            nsCOMPtr<T2>& a2)
+{
+  nsCOMPtr<T1> temp1;
+  temp1.swap(a1);
+
+  nsCOMPtr<T2> temp2;
+  temp2.swap(a2);
+
+  a1 = do_QueryInterface(temp2);
+  if (temp2) {
+    NS_ASSERTION(a1, "QI failed!");
+  }
+
+  a2 = do_QueryInterface(temp1);
+  if (temp1) {
+    NS_ASSERTION(a2, "QI failed!");
+  }
+}
+
 class CloseConnectionRunnable : public nsRunnable
 {
 public:
-  CloseConnectionRunnable(nsIThread* aThread,
-                          nsCOMPtr<mozIStorageConnection>& aConnection)
-  : mThread(aThread)
+  CloseConnectionRunnable(nsTArray<nsCOMPtr<nsISupports> >& aDoomedObjects)
   {
-    NS_ASSERTION(mThread, "No thread!");
-    mConnection.swap(aConnection);
+    mDoomedObjects.SwapElements(aDoomedObjects);
   }
 
   NS_IMETHOD Run()
   {
-    nsresult rv = mConnection->Close();
-    NS_ENSURE_SUCCESS(rv, rv);
+    mDoomedObjects.Clear();
     return NS_OK;
   }
 
-  void Dispatch()
-  {
-    if (mConnection && NS_FAILED(mThread->Dispatch(this, NS_DISPATCH_NORMAL))) {
-      NS_WARNING("Dispatch failed!");
-    }
-  }
-
 private:
-  nsCOMPtr<nsIThread> mThread;
-  nsCOMPtr<mozIStorageConnection> mConnection;
+  nsTArray<nsCOMPtr<nsISupports> > mDoomedObjects;
 };
 
 class CreateObjectStoreHelper : public AsyncConnectionHelper
@@ -507,57 +518,84 @@ IDBDatabaseRequest::PutStatement(bool aOverwrite,
                                  bool aAutoIncrement)
 {
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
-  (void)EnsureConnection();
+  nsresult rv = EnsureConnection();
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<mozIStorageStatement> result;
 
   if (aOverwrite) {
     if (aAutoIncrement) {
       if (!mPutOverwriteAutoIncrementStmt) {
-        nsresult rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
           "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
           "VALUES (:osid, :key_value, :data)"
         ), getter_AddRefs(mPutOverwriteAutoIncrementStmt));
         NS_ENSURE_SUCCESS(rv, nsnull);
       }
-      return mPutOverwriteAutoIncrementStmt;
+      result = mPutOverwriteAutoIncrementStmt;
     }
-
-    if (!mPutOverwriteStmt) {
-      nsresult rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "INSERT OR REPLACE INTO object_data (object_store_id, key_value, data) "
-        "VALUES (:osid, :key_value, :data)"
-      ), getter_AddRefs(mPutOverwriteStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
+    else {
+      if (!mPutOverwriteStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "INSERT OR REPLACE INTO object_data (object_store_id, key_value, "
+                                              "data) "
+          "VALUES (:osid, :key_value, :data)"
+        ), getter_AddRefs(mPutOverwriteStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mPutOverwriteStmt;
     }
-    return mPutOverwriteStmt;
+  }
+  else {
+    if (aAutoIncrement) {
+      if (!mPutAutoIncrementStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "INSERT INTO ai_object_data (object_store_id, data) "
+          "VALUES (:osid, :data)"
+        ), getter_AddRefs(mPutAutoIncrementStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mPutAutoIncrementStmt;
+    }
+    else {
+      if (!mPutStmt) {
+        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+          "INSERT INTO object_data (object_store_id, key_value, data) "
+          "VALUES (:osid, :key_value, :data)"
+        ), getter_AddRefs(mPutStmt));
+        NS_ENSURE_SUCCESS(rv, nsnull);
+      }
+      result = mPutStmt;
+    }
   }
 
-  if (aAutoIncrement) {
-    if (!mPutAutoIncrementStmt) {
-      nsresult rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "INSERT INTO ai_object_data (object_store_id, data) "
-        "VALUES (:osid, :data)"
-      ), getter_AddRefs(mPutAutoIncrementStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-    }
-    return mPutAutoIncrementStmt;
-  }
-
-  if (!mPutStmt) {
-    nsresult rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "INSERT INTO object_data (object_store_id, key_value, data) "
-      "VALUES (:osid, :key_value, :data)"
-    ), getter_AddRefs(mPutStmt));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-  }
-  return mPutStmt;
+  return result.forget();
 }
 
 void
 IDBDatabaseRequest::FireCloseConnectionRunnable()
 {
-  nsRefPtr<CloseConnectionRunnable> runnable =
-    new CloseConnectionRunnable(mConnectionThread, mConnection);
-  runnable->Dispatch();
+  // Keep this in sync with the number of nsCOMPtrs we destroy!
+  static const PRUint32 kDoomedObjectCount = 5;
+  PRUint32 index = 0;
+
+  nsTArray<nsCOMPtr<nsISupports> > doomedObjects;
+  if (!doomedObjects.SetLength(kDoomedObjectCount)) {
+    NS_ERROR("OOM!");
+  }
+
+  SwapCOMPtrs(doomedObjects[index++], mConnection);
+  SwapCOMPtrs(doomedObjects[index++], mPutStmt);
+  SwapCOMPtrs(doomedObjects[index++], mPutAutoIncrementStmt);
+  SwapCOMPtrs(doomedObjects[index++], mPutOverwriteStmt);
+  SwapCOMPtrs(doomedObjects[index++], mPutOverwriteAutoIncrementStmt);
+
+  NS_ASSERTION(index == kDoomedObjectCount, "Fix this!");
+
+  mConnectionThread->Dispatch(new CloseConnectionRunnable(doomedObjects),
+                              NS_DISPATCH_NORMAL);
+
+  NS_ASSERTION(doomedObjects.Length() == 0, "Should have swapped!");
 }
 
 void
