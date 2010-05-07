@@ -167,6 +167,7 @@ window.Rect.prototype = {
         && a.bottom == this.bottom);
   },
   
+  // ----------
   union: function(a){
     var newLeft = Math.min(a.left, this.left);
     var newTop = Math.min(a.top, this.top);
