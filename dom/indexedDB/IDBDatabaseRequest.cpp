@@ -607,8 +607,8 @@ IDBDatabaseRequest::FireCloseConnectionRunnable()
   doomedObjects.AppendElement(do_QIAndNull(mRemoveStmt));
   doomedObjects.AppendElement(do_QIAndNull(mRemoveAutoIncrementStmt));
 
-  mConnectionThread->Dispatch(new CloseConnectionRunnable(doomedObjects),
-                              NS_DISPATCH_NORMAL);
+  nsCOMPtr<nsIRunnable> runnable(new CloseConnectionRunnable(doomedObjects));
+  mConnectionThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
   NS_ASSERTION(doomedObjects.Length() == 0, "Should have swapped!");
 }
