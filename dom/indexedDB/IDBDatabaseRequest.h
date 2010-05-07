@@ -120,7 +120,8 @@ private:
 
   nsRefPtr<LazyIdleThread> mConnectionThread;
 
-  // Only touched on mStorageThread!
+  // Only touched on mStorageThread! These must be destroyed in the
+  // FireCloseConnectionRunnable method.
   nsCOMPtr<mozIStorageConnection> mConnection;
   nsCOMPtr<mozIStorageStatement> mPutStmt;
   nsCOMPtr<mozIStorageStatement> mPutAutoIncrementStmt;
