@@ -1,7 +1,7 @@
-<!ENTITY syncBrand.shortName.label  "Weave">
-<!ENTITY syncBrand.fullName.label   "Mozilla Weave">
+<!ENTITY syncBrand.shortName.label  "Sync">
+<!ENTITY syncBrand.fullName.label   "Firefox Sync">
 
-<!ENTITY weavePrefPane.label        "Sync">
+<!ENTITY weavePrefPane.label        "&syncBrand.shortName.label;">
 <!ENTITY accountSetupTitle.label    "&syncBrand.fullName.label; Setup">
 
 <!ENTITY connectTo.label            "Connect to">
@@ -29,12 +29,12 @@
 <!ENTITY setup.tosAgree3.label      "">
 <!ENTITY setup.tosAgree2.accesskey  "">
 
-<!ENTITY weaveDesc.label            "&brandShortName; can use a &syncBrand.fullName.label; account to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
+<!ENTITY weaveDesc.label            "&syncBrand.fullName.label; lets you access your history, bookmarks, passwords and open tabs across all your devices.">
 
 <!ENTITY setup.choicePage.title.label     "Have you used &syncBrand.shortName.label; before?">
 <!ENTITY setup.choicePage.description     "&syncBrand.shortName.label; will allow you to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
-<!ENTITY setup.choicePage.new.label       "I've never used Weave before">
-<!ENTITY setup.choicePage.existing.label  "I'm already using Weave on another computer">
+<!ENTITY setup.choicePage.new.label       "I've never used &syncBrand.shortName.label; before">
+<!ENTITY setup.choicePage.existing.label  "I'm already using &syncBrand.shortName.label; on another computer">
 
 <!ENTITY setup.newAccountPage.title.label  "Create your &syncBrand.shortName.label; Account">
 <!ENTITY setup.newPPPage.title.label       "Enter your Secret Phrase">
@@ -45,16 +45,13 @@
 <!ENTITY setup.existingAccount.title.label "Enter Account Information">
 
 <!ENTITY setup.successPage.title.label   "Setup Complete!">
-<!ENTITY setup.successPage.desc.label    "You have successfully set up Mozilla Weave to use with &brandShortName;.  Your data will start syncing automatically.">
+<!ENTITY setup.successPage.desc.label    "You have successfully set up &syncBrand.fullName.label; to use with &brandShortName;.  Your data will start syncing automatically.">
 
 <!ENTITY signIn.button.label        "Sign In">
 <!ENTITY signIn.button.accesskey    "S">
 
-<!ENTITY setupButton.label          "Set Up Mozilla Weave">
+<!ENTITY setupButton.label          "Set Up &syncBrand.fullName.label;">
 <!ENTITY setupButton.accesskey      "S">
-
-<!ENTITY createAccountButton.label      "Create Mozilla Weave Account">
-<!ENTITY createAccountButton.accesskey  "C">
 
 <!ENTITY goBack.label                 "Back">
 <!ENTITY goBack.accesskey             "B">
@@ -74,26 +71,26 @@
 <!ENTITY verifying.label              "Verifying…">
 
 <!ENTITY choice.caption.label         "Choose what you want to happen to this computer">
-<!ENTITY choice.merge.main.label      "Merge this computer's data with your Weave data">
-<!ENTITY choice.merge.secondary.label "This will combine the data from this computer with the devices already syncing with Weave.">
+<!ENTITY choice.merge.main.label      "Merge this computer's data with your &syncBrand.shortName.label; data">
+<!ENTITY choice.merge.secondary.label "This will combine the data from this computer with the devices already syncing with &syncBrand.shortName.label;.">
 <!ENTITY choice.merge.recommend.label "This option is strongly recommended by Mozilla for all users.">
-<!ENTITY choice.client.main.label     "Replace all data on this computer with your Weave data">
-<!ENTITY choice.client.secondary.label  "All of your local data will be deleted and replaced by your Weave data.">
+<!ENTITY choice.client.main.label     "Replace all data on this computer with your &syncBrand.fullName.label; data">
+<!ENTITY choice.client.secondary.label  "All of your local data will be deleted and replaced by your &syncBrand.fullName.label; data.">
 <!ENTITY choice.server.main.label     "Replace all other devices with your local data">
-<!ENTITY choice.server.secondary.label  "All data on your devices using Weave will be replaced with your local data.">
+<!ENTITY choice.server.secondary.label  "All data on your devices using &syncBrand.fullName.label; will be replaced with your local data.">
 
 <!ENTITY confirm.caption.label        "Confirm your choice">
-<!ENTITY confirm.merge.label          "You have chosen to merge your data on this computer with the data on your other devices running Weave.">
+<!ENTITY confirm.merge.label          "You have chosen to merge your data on this computer with the data on your other devices running &syncBrand.fullName.label;.">
 <!ENTITY confirm.merge.start.label    "Start Syncing Now">
 <!ENTITY confirm.client.label         "All &brandShortName; data on this computer will be deleted, including the following:">
-<!ENTITY confirm.client.moreinfo.label "&brandShortName; will then copy your Weave data to this computer.">
+<!ENTITY confirm.client.moreinfo.label "&brandShortName; will then copy your &syncBrand.fullName.label; data to this computer.">
 <!ENTITY confirm.client.warning.label "WARNING: This will result in all &brandShortName; data on this computer being replaced!">
 <!ENTITY confirm.client.start.label   "Delete and Replace Local Data">
 <!ENTITY confirm.server.label         "The following devices will be overwritten with your local data:">
 <!ENTITY confirm.server.warning.label "WARNING: Your local data will replace all &brandShortName; data on these devices!">
 <!ENTITY confirm.server.start.label   "Replace Everything on These Devices">
 
-<!ENTITY accountGroupboxCaption.label "Mozilla Weave Account">
+<!ENTITY accountGroupboxCaption.label "&syncBrand.fullName.label; Account">
 
 <!ENTITY currentUser.label            "Current User:">
 
