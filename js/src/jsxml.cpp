@@ -3816,7 +3816,7 @@ GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         return true;
 
     if (js_IdIsIndex(id, &index)) {
-        if (xml->xml_class != JSXML_CLASS_LIST) {
+        if (!JSXML_HAS_KIDS(xml)) {
             *vp = (index == 0) ? OBJECT_TO_JSVAL(obj) : JSVAL_VOID;
         } else {
             /*
