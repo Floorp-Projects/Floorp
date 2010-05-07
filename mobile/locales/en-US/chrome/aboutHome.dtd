@@ -4,3 +4,5 @@
 <!ENTITY aboutHome.recommendedAddons2           "Add-ons for your &brandShortName;">
 <!ENTITY aboutHome.aboutMozilla                 "About Mozilla">
 <!ENTITY aboutHome.openAllTabs                  "Open all in tabs">
+<!ENTITY aboutHome.noTabs                       "No tabs from last time">
+<!ENTITY aboutHome.noAddons                     "No recommended add-ons">

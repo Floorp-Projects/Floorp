@@ -176,6 +176,10 @@ html {
   margin: 0 auto;
 }
 
+.no-items {
+  text-align: center;
+}
+
 #about {
   font-size: 18px;
   text-align: center;
