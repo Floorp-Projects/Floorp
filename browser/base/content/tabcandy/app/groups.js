@@ -36,13 +36,15 @@ window.Group = function(listOfEls, options) {
 
   this._children = []; // an array of Items
   this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
-  this.locked = options.locked || false;
   this.isAGroup = true;
   this.id = options.id || Groups.getNextID();
   this.userSize = options.userSize || null;
   this._isStacked = false;
   this._stackAngles = [0];
   this.expanded = null;
+  
+  if(typeof(options.locked) == 'object')  
+    this.locked = $.extend({}, options.locked);
 
   var self = this;
 
@@ -132,7 +134,7 @@ window.Group = function(listOfEls, options) {
     .css({backgroundRepeat: 'no-repeat'})
     .blur(titleUnfocus)
     .focus(function() {
-      if(self.locked) {
+      if(self.locked.title) {
         self.$title.blur();
         return;
       }  
@@ -147,7 +149,7 @@ window.Group = function(listOfEls, options) {
   
   titleUnfocus();
   
-  if(this.locked)
+  if(this.locked.title)
     this.$title.addClass('name-locked');
 
   // ___ Content
@@ -160,10 +162,11 @@ window.Group = function(listOfEls, options) {
     .appendTo($container);
   
   // ___ locking
-  if(this.locked) {
+  if(this.locked.bounds)
     $container.css({cursor: 'default'});    
-/*     $close.hide(); */
-  }
+    
+//  if(this.locked.close)
+//    $close.hide();
     
   // ___ Superclass initialization
   this._init($container.get(0));
@@ -179,7 +182,7 @@ window.Group = function(listOfEls, options) {
   // ___ Finish Up
   this._addHandlers($container);
   
-  if(!this.locked)
+  if(!this.locked.bounds)
     this.setResizable(true);
   
   Groups.register(this);
@@ -200,8 +203,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   getStorageData: function() {
     var data = {
       bounds: this.getBounds(), 
-      userSize: this.userSize,
-      locked: this.locked, 
+      userSize: $.extend({}, this.userSize),
+      locked: $.extend({}, this.locked), 
       title: this.getTitle(),
       id: this.id
     };
@@ -250,7 +253,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     box.top += titleHeight;
     box.height -= titleHeight;
     box.inset(6, 6);
-    box.height -= 15; // For new tab button
+    box.height -= 33; // For new tab button
     return box;
   },
   
@@ -353,6 +356,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     Groups.unregister(this);
     $(this.container).fadeOut(function() {
       $(this).remove();
+      Items.unsquish();
     });
   },
   
@@ -363,7 +367,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       $.each(toClose, function(index, child) {
         child.close();
       });
-    } else if(!this.locked)
+    } else if(!this.locked.close)
       this.close();
   },
     
@@ -387,7 +391,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       item = Items.item($el);
     }    
     
-    Utils.assert('shouldn\'t already be in a group', !item.parent || item.parent == this);
+    Utils.assert('shouldn\'t already be in another group', !item.parent || item.parent == this);
 
     if(!dropPos) 
       dropPos = {top:window.innerWidth, left:window.innerHeight};
@@ -510,7 +514,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     if(typeof(item.setResizable) == 'function')
       item.setResizable(true);
 
-    if(this._children.length == 0 && !this.locked && !this.getTitle()){  
+    if(this._children.length == 0 && !this.locked.close && !this.getTitle()){  
       this.close();
     } else if(!options.dontArrange) {
       this.arrange();
@@ -590,7 +594,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
     var self = this;
     $.each(this._children, function(index, child) {
-      if(!child.locked) {
+      if(!child.locked.bounds) {
         child.setZ(zIndex);
         zIndex--;
         
@@ -731,7 +735,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   _addHandlers: function(container) {
     var self = this;
     
-    if(!this.locked) {
+    if(!this.locked.bounds) {
       $(container).draggable({
         scroll: false,
         cancel: '.close, .name',
@@ -746,6 +750,12 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
           drag.info = null;
         }
       });
+      
+/*
+      this.$title.mousedown(function() {
+        Utils.log('wtf');
+      });
+*/
     }
     
     $(container).droppable({
@@ -925,9 +935,9 @@ DragInfo.prototype = {
       var now = Utils.getMilliseconds();
       var distance = this.startPosition.distance(new Point(event.clientX, event.clientY));
       if(now - this.startTime > 500 && distance > 100) {
-        this.item.locked = true;
+        this.item.locked.bounds = true;
         this.parent.collapse();
-        this.item.locked = false;
+        this.item.locked.bounds = false;
       }
     }
   },
@@ -940,7 +950,7 @@ DragInfo.prototype = {
     // that groups go away when there is still a tab in them. I do this at
     // the cost of symmetry. -- Aza
     /*
-    if(this.parent && !this.parent.locked && this.parent != this.item.parent 
+    if(this.parent && !this.parent.locked.close && this.parent != this.item.parent 
         && this.parent._children.length == 1 && !this.parent.getTitle()) {
       this.parent.remove(this.parent._children[0]);
     }*/
@@ -1060,14 +1070,33 @@ window.Groups = {
       
     if(data && data.groups) {
       $.each(data.groups, function(index, group) {
-        new Group([], $.extend({}, group, {locked: false, dontPush: true})); 
+        var isNewTabsGroup = (group.title == 'New Tabs');
+        var options = {
+          locked: {
+            close: isNewTabsGroup, 
+            title: isNewTabsGroup
+          },
+          dontPush: true
+        };
+        
+        new Group([], $.extend({}, group, options)); 
       });
     }
     
     var group = this.getNewTabGroup();
     if(!group) {
       var box = this.getBoundsForNewTabGroup();
-      new Group([], {bounds: box, title: 'New Tabs', dontPush: true}); 
+      var options = {
+        locked: {
+          close: true, 
+          title: true
+        },
+        dontPush: true, 
+        bounds: box,
+        title: 'New Tabs'
+      };
+
+      new Group([], options); 
     } 
   },
   

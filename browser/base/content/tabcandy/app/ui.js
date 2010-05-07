@@ -363,7 +363,7 @@ UIClass.prototype = {
     itemBounds.width = 1;
     itemBounds.height = 1;
     $.each(items, function(index, item) {
-      if(item.locked)
+      if(item.locked.bounds)
         return;
         
       var bounds = item.getBounds();
@@ -392,8 +392,9 @@ UIClass.prototype = {
     
     var scale = Math.min(hScale, wScale);
     var self = this;
+    var pairs = [];
     $.each(items, function(index, item) {
-      if(item.locked)
+      if(item.locked.bounds)
         return;
         
       var bounds = item.getBounds();
@@ -406,9 +407,18 @@ UIClass.prototype = {
       bounds.top *= scale;
       bounds.height *= scale;
       
-      item.setBounds(bounds, true);
+      pairs.push({
+        item: item,
+        bounds: bounds
+      });
     });
     
+    Items.unsquish(pairs);
+    
+    $.each(pairs, function(index, pair) {
+      pair.item.setBounds(pair.bounds, true);
+    });
+
     this.pageBounds = Items.getPageBounds();
   },
   
