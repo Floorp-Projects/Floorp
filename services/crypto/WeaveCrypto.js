@@ -1123,7 +1123,7 @@ WeaveCrypto.prototype = {
     }
 };
 
-let component = Services == null || ctypes == null ? [] : [WeaveCrypto];
+let component = typeof Services == "undefined" || typeof ctypes == "undefined" ? [] : [WeaveCrypto];
 function NSGetModule (compMgr, fileSpec) {
     return XPCOMUtils.generateModule(component);
 }
