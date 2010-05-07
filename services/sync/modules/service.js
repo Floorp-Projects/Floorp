@@ -638,6 +638,8 @@ WeaveSvc.prototype = {
     // set lastversion pref
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
+    this.password = "";
+    this.passphrase = "";
     Svc.Login.findLogins({}, PWDMGR_HOST, "", "").map(function(login) {
       Svc.Login.removeLogin(login);
     });
