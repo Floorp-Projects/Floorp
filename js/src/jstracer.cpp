@@ -7274,14 +7274,28 @@ static bool arm_has_iwmmxt = false;
 static bool arm_tests_initialized = false;
 
 #ifdef ANDROID
-// android doesn't have Elf32_auxv_t defined in elf.h, but it does have /proc/self/auxv
-typedef struct {
-    uint32_t a_type;
-    union {
-       uint32_t a_val;
-    } a_un;
-} Elf32_auxv_t;
-#endif
+// we're actually reading /proc/cpuinfo, but oh well
+static void
+arm_read_auxv()
+{
+  char buf[1024];
+  char* pos;
+  const char* ver_token = "CPU architecture: ";
+  FILE* f = fopen("/proc/cpuinfo", "r");
+  fread(buf, sizeof(char), 1024, f);
+  fclose(f);
+  pos = strstr(buf, ver_token);
+  if (pos) {
+    int ver = *(pos + strlen(ver_token)) - '0';
+    arm_arch = ver;
+  }
+  arm_has_neon = strstr(buf, "neon") != NULL;
+  arm_has_vfp = strstr(buf, "vfp") != NULL;
+  arm_has_iwmmxt = strstr(buf, "iwmmxt") != NULL;
+  arm_tests_initialized = true;
+}
+
+#else
 
 static void
 arm_read_auxv()
@@ -7333,6 +7347,8 @@ arm_read_auxv()
 
     arm_tests_initialized = true;
 }
+
+#endif
 
 static unsigned int
 arm_check_arch()

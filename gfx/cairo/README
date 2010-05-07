@@ -114,6 +114,8 @@ cairo-qt-compile.patch: Fix compile error, return not reached, and clone_similar
 
 ==== pixman patches ====
 
+pixman-android-cpu-detect.patch: Add CPU detection support for Android, where we can't reliably access /proc/self/auxv.
+
 pixman-rename-and-endian.patch: include cairo-platform.h for renaming of external symbols and endian macros
 
 NOTE: we previously supported ARM assembler on MSVC, this has been removed because of the maintenance burden
