@@ -569,7 +569,7 @@ IDBDatabaseRequest::RemoveStatement(bool aAutoIncrement)
   nsCOMPtr<mozIStorageStatement> result;
 
   if (aAutoIncrement) {
-    if (mRemoveAutoIncrementStmt) {
+    if (!mRemoveAutoIncrementStmt) {
       rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
         "DELETE FROM ai_object_data "
         "WHERE id = :key_value "
@@ -580,7 +580,7 @@ IDBDatabaseRequest::RemoveStatement(bool aAutoIncrement)
     result = mRemoveAutoIncrementStmt;
   }
   else {
-    if (mRemoveStmt) {
+    if (!mRemoveStmt) {
       rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
         "DELETE FROM object_data "
         "WHERE key_value = :key_value "
