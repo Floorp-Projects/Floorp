@@ -92,7 +92,69 @@ AboutWeaveTabs.prototype = {
     return ch;
   }
 };
+
+function AboutWeaveLog() {}
+AboutWeaveLog.prototype = {
+  classDescription: "about:weave-log",
+  contractID: "@mozilla.org/network/protocol/about;1?what=weave-log",
+  classID: Components.ID("{d28f8a0b-95da-48f4-b712-caf37097be41}"),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule,
+                                         Ci.nsISupportsWeakReference]),
+
+  getURIFlags: function(aURI) {
+    return 0;
+  },
+
+  newChannel: function(aURI) {
+    let dir = Cc["@mozilla.org/file/directory_service;1"].
+      getService(Ci.nsIProperties);
+    let file = dir.get("ProfD", Ci.nsILocalFile);
+    file.append("weave");
+    file.append("logs");
+    file.append("verbose-log.txt");
+    let ios = Cc["@mozilla.org/network/io-service;1"].
+      getService(Ci.nsIIOService);
+    let ch = ios.newChannel(ios.newFileURI(file).spec, null, null);
+    ch.originalURI = aURI;
+    return ch;
+  }
+};
+
+function AboutWeaveLog1() {}
+AboutWeaveLog1.prototype = {
+  classDescription: "about:weave-log.1",
+  contractID: "@mozilla.org/network/protocol/about;1?what=weave-log.1",
+  classID: Components.ID("{a08ee179-df50-48e0-9c87-79e4dd5caeb1}"),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule,
+                                         Ci.nsISupportsWeakReference]),
+
+  getURIFlags: function(aURI) {
+    return 0;
+  },
+
+  newChannel: function(aURI) {
+    let dir = Cc["@mozilla.org/file/directory_service;1"].
+      getService(Ci.nsIProperties);
+    let file = dir.get("ProfD", Ci.nsILocalFile);
+    file.append("weave");
+    file.append("logs");
+    file.append("verbose-log.txt.1");
+    let ios = Cc["@mozilla.org/network/io-service;1"].
+      getService(Ci.nsIIOService);
+    let ch = ios.newChannel(ios.newFileURI(file).spec, null, null);
+    ch.originalURI = aURI;
+    return ch;
+  }
+};
+
 function NSGetModule(compMgr, fileSpec) {
-  return XPCOMUtils.generateModule([WeaveService, AboutWeaveTabs]);
+  return XPCOMUtils.generateModule([
+    WeaveService,
+    AboutWeaveTabs,
+    AboutWeaveLog,
+    AboutWeaveLog1
+  ]);
 }
 
