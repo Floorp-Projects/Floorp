@@ -307,9 +307,14 @@ NS_IMETHODIMP
 IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
                            nsIVariant* aKey,
                            PRBool aNoOverwrite,
+                           PRUint8 aOptionalArgCount,
                            nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (aOptionalArgCount < 2) {
+    aNoOverwrite = PR_TRUE;
+  }
 
   nsString keyString;
   PRInt64 keyInt;
