@@ -73,8 +73,8 @@ WeaveService.prototype = {
 
 function AboutWeaveTabs() {}
 AboutWeaveTabs.prototype = {
-  classDescription: "about:weave-tabs",
-  contractID: "@mozilla.org/network/protocol/about;1?what=weave-tabs",
+  classDescription: "about:sync-tabs",
+  contractID: "@mozilla.org/network/protocol/about;1?what=sync-tabs",
   classID: Components.ID("{ecb6987d-9d71-475d-a44d-a5ff2099b08c}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule,
@@ -95,8 +95,8 @@ AboutWeaveTabs.prototype = {
 
 function AboutWeaveLog() {}
 AboutWeaveLog.prototype = {
-  classDescription: "about:weave-log",
-  contractID: "@mozilla.org/network/protocol/about;1?what=weave-log",
+  classDescription: "about:sync-log",
+  contractID: "@mozilla.org/network/protocol/about;1?what=sync-log",
   classID: Components.ID("{d28f8a0b-95da-48f4-b712-caf37097be41}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule,
@@ -123,8 +123,8 @@ AboutWeaveLog.prototype = {
 
 function AboutWeaveLog1() {}
 AboutWeaveLog1.prototype = {
-  classDescription: "about:weave-log.1",
-  contractID: "@mozilla.org/network/protocol/about;1?what=weave-log.1",
+  classDescription: "about:sync-log.1",
+  contractID: "@mozilla.org/network/protocol/about;1?what=sync-log.1",
   classID: Components.ID("{a08ee179-df50-48e0-9c87-79e4dd5caeb1}"),
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule,
