@@ -32,6 +32,7 @@
 <!ENTITY weaveDesc.label            "&brandShortName; can use a &syncBrand.fullName.label; account to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
 
 <!ENTITY setup.choicePage.title.label     "Have you used &syncBrand.shortName.label; before?">
+<!ENTITY setup.choicePage.description     "&syncBrand.shortName.label; will allow you to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
 <!ENTITY setup.choicePage.new.label       "I've never used Weave before">
 <!ENTITY setup.choicePage.existing.label  "I'm already using Weave on another computer">
 
