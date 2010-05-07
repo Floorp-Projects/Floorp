@@ -757,8 +757,13 @@ WeaveSvc.prototype = {
     let data = "";
     try {
       data = res.get();
-      if (data.status == 200 && data == "0")
-        return "available";
+      if (data.status == 200) {
+        if (data == "0")
+          return "available";
+        else if (data == "1")
+          return "notAvailable";
+      }
+
     }
     catch(ex) {}
 
