@@ -31,21 +31,23 @@
 
 <!ENTITY weaveDesc.label            "&syncBrand.fullName.label; lets you access your history, bookmarks, passwords and open tabs across all your devices.">
 
-<!ENTITY setup.choicePage.title.label     "Have you used &syncBrand.shortName.label; before?">
+<!ENTITY setup.choicePage.title.label     "Have you used &syncBrand.fullName.label; before?">
 <!ENTITY setup.choicePage.description     "&syncBrand.shortName.label; will allow you to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
 <!ENTITY setup.choicePage.new.label       "I've never used &syncBrand.shortName.label; before">
 <!ENTITY setup.choicePage.existing.label  "I'm already using &syncBrand.shortName.label; on another computer">
 
 <!ENTITY setup.newAccountPage.title.label  "Create your &syncBrand.shortName.label; Account">
 <!ENTITY setup.newPPPage.title.label       "Enter your Secret Phrase">
-<!ENTITY setup.newAccountPrefs.title.label "What do you want &syncBrand.shortName.label; to sync">
+<!ENTITY setup.newAccountPrefs.title.label "What do you want &brandShortName; to sync?">
 <!ENTITY setup.captchaPage.title.label     "Please confirm you're not a robot ;)">
 
 <!ENTITY setup.mergeChoicePage.title.label "How do you want to start off?">
 <!ENTITY setup.existingAccount.title.label "Enter Account Information">
 
 <!ENTITY setup.successPage.title.label   "Setup Complete!">
-<!ENTITY setup.successPage.desc.label    "You have successfully set up &syncBrand.fullName.label; to use with &brandShortName;.  Your data will start syncing automatically.">
+<!ENTITY setup.successPage.desc.label    "Congratulations! &brandShortName; is now set up to automatically sync your
+information. Don't forget to install &syncBrand.fullName.label; on all your devices.
+You can now continue using &brandShortName;.">
 
 <!ENTITY signIn.button.label        "Sign In">
 <!ENTITY signIn.button.accesskey    "S">
@@ -115,7 +117,7 @@
 <!ENTITY syncEverything.label         "Sync Everything">
 <!ENTITY customSync.label             "Use my custom settings">
 
-<!ENTITY syncEverythingDescription.label  "Your bookmarks, history, passwords, preferences, and tabs will be synced using your Weave account.">
+<!ENTITY syncEverythingDescription.label  "Your bookmarks, history, passwords, preferences, and tabs will be synced.">
 
 <!ENTITY syncItem.bookmarks.label     "Sync Bookmarks">
 <!ENTITY syncItem.bookmarks.accesskey "m">
