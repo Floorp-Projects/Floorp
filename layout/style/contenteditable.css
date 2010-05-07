@@ -36,11 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-::-moz-canvas {
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
+
+*|*::-moz-canvas {
   cursor: text;
 }
 
-:focus:-moz-read-write :-moz-read-only {
+*|*:focus:-moz-read-write :-moz-read-only {
   -moz-user-select: all !important;
 }
 
@@ -63,7 +65,7 @@ a:-moz-read-write:active img, a:-moz-read-write:-moz-only-whitespace[name] {
   cursor: default;
 }
 
-:-moz-any-link:-moz-read-write {
+*|*:-moz-any-link:-moz-read-write {
   cursor: text;
 }
 
@@ -83,9 +85,9 @@ a:link:-moz-read-write {
 
 /* Allow double-clicks on these widgets to open properties dialogs
    XXX except when the widget has disabled attribute */
-:-moz-read-write > input:-moz-read-only,
-:-moz-read-write > button:-moz-read-only,
-:-moz-read-write > textarea:-moz-read-only {
+*|*:-moz-read-write > input:-moz-read-only,
+*|*:-moz-read-write > button:-moz-read-only,
+*|*:-moz-read-write > textarea:-moz-read-only {
   -moz-user-select: all !important;
   -moz-user-input: auto !important;
   -moz-user-focus: none !important;
@@ -93,10 +95,10 @@ a:link:-moz-read-write {
 
 /* XXX Still need a better way of blocking other events to these widgets */
 select:-moz-read-write,
-:-moz-read-write > input[disabled],
-:-moz-read-write > input[type="checkbox"],
-:-moz-read-write > input[type="radio"],
-:-moz-read-write > input[type="file"],
+*|*:-moz-read-write > input[disabled],
+*|*:-moz-read-write > input[type="checkbox"],
+*|*:-moz-read-write > input[type="radio"],
+*|*:-moz-read-write > input[type="file"],
 input[contenteditable="true"][disabled],
 input[contenteditable="true"][type="checkbox"],
 input[contenteditable="true"][type="radio"],
@@ -122,7 +124,7 @@ marquee[direction="up"]:-moz-read-write, marquee[direction="down"]:-moz-read-wri
   -moz-binding: url('chrome://xbl-marquee/content/xbl-marquee.xml#marquee-vertical-editable');
 }
 
-:-moz-read-write > input[type="hidden"],
+*|*:-moz-read-write > input[type="hidden"],
 input[contenteditable="true"][type="hidden"] {
   border: 1px solid black !important;
   visibility: visible !important;
@@ -132,7 +134,7 @@ label:-moz-read-write {
     -moz-user-select: all !important;
 }
 
-::-moz-display-comboboxcontrol-frame {
+*|*::-moz-display-comboboxcontrol-frame {
   -moz-user-select: text !important;
 }
 
