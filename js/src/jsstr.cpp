@@ -2193,7 +2193,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
             break;
 
         JSString *sub = js_NewDependentString(cx, str, i, size_t(j - i));
-        if (!sub || !splits.push(sub))
+        if (!sub || !splits.append(sub))
             return false;
         len++;
 
@@ -2209,7 +2209,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
                     break;
                 JSSubString *parsub = &res->parens[num];
                 sub = js_NewStringCopyN(cx, parsub->chars, parsub->length);
-                if (!sub || !splits.push(sub))
+                if (!sub || !splits.append(sub))
                     return false;
                 len++;
             }
@@ -2221,7 +2221,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
     if (j == -2)
         return false;
 
-    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.buffer());
+    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.begin());
     if (!aobj)
         return false;
     *vp = OBJECT_TO_JSVAL(aobj);

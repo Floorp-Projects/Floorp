@@ -207,8 +207,6 @@ BEGIN_CASE(JSOP_STOP)
          * current frame.
          */
         JS_ASSERT(op == JSOP_STOP);
-
-      end_imacro:
         JS_ASSERT((uintN)(regs.sp - fp->slots) <= script->nslots);
         regs.pc = fp->imacpc + js_CodeSpec[*fp->imacpc].length;
         fp->imacpc = NULL;
@@ -468,56 +466,62 @@ BEGIN_CASE(JSOP_ITER)
         goto error;
     CHECK_INTERRUPT_HANDLER();
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
-    PUSH(JSVAL_VOID);
 END_CASE(JSOP_ITER)
 
-BEGIN_CASE(JSOP_NEXTITER)
-    JS_ASSERT(regs.sp - 2 >= StackBase(fp));
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-2]));
-    if (!js_CallIteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-2]), &regs.sp[-1]))
+BEGIN_CASE(JSOP_MOREITER)
+    JS_ASSERT(regs.sp - 1 >= StackBase(fp));
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
+    if (!IteratorMore(cx, JSVAL_TO_OBJECT(regs.sp[-1]), &cond, &regs.sp[0]))
         goto error;
     CHECK_INTERRUPT_HANDLER();
-    rval = BOOLEAN_TO_JSVAL(regs.sp[-1] != JSVAL_HOLE);
-    PUSH(rval);
-END_CASE(JSOP_NEXTITER)
+    TRY_BRANCH_AFTER_COND(cond, 0);
+    JS_ASSERT(regs.pc[1] == JSOP_IFNEX);
+    PUSH_OPND(BOOLEAN_TO_JSVAL(cond));
+END_CASE(JSOP_MOREITER)
 
 BEGIN_CASE(JSOP_ENDITER)
-    /*
-     * Decrease the stack pointer even when !ok -- see comments in the
-     * exception capturing code for details.
-     */
-    JS_ASSERT(regs.sp - 2 >= StackBase(fp));
-    ok = js_CloseIterator(cx, regs.sp[-2]);
-    regs.sp -= 2;
+    JS_ASSERT(regs.sp - 1 >= StackBase(fp));
+    ok = js_CloseIterator(cx, regs.sp[-1]);
+    regs.sp--;
     if (!ok)
         goto error;
 END_CASE(JSOP_ENDITER)
 
 BEGIN_CASE(JSOP_FORARG)
-    JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+    JS_ASSERT(regs.sp - 1 >= StackBase(fp));
     slot = GET_ARGNO(regs.pc);
     JS_ASSERT(slot < fp->fun->nargs);
-    fp->argv[slot] = regs.sp[-1];
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
+    if (!IteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-1]), &fp->argv[slot]))
+        goto error;
 END_CASE(JSOP_FORARG)
 
 BEGIN_CASE(JSOP_FORLOCAL)
-    JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+    JS_ASSERT(regs.sp - 1 >= StackBase(fp));
     slot = GET_SLOTNO(regs.pc);
     JS_ASSERT(slot < fp->script->nslots);
-    fp->slots[slot] = regs.sp[-1];
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
+    if (!IteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-1]), &fp->slots[slot]))
+        goto error;
 END_CASE(JSOP_FORLOCAL)
 
 BEGIN_CASE(JSOP_FORNAME)
-    JS_ASSERT(regs.sp - 2 >= StackBase(fp));
+    JS_ASSERT(regs.sp - 1 >= StackBase(fp));
     LOAD_ATOM(0);
     id = ATOM_TO_JSID(atom);
     if (!js_FindProperty(cx, id, &obj, &obj2, &prop))
         goto error;
     if (prop)
         obj2->dropProperty(cx, prop);
-    ok = obj->setProperty(cx, id, &regs.sp[-1]);
-    if (!ok)
-        goto error;
+    {
+        AutoValueRooter tvr(cx);
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
+        if (!IteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-1]), tvr.addr()))
+            goto error;
+        ok = obj->setProperty(cx, id, tvr.addr());
+        if (!ok)
+            goto error;
+    }
 END_CASE(JSOP_FORNAME)
 
 BEGIN_CASE(JSOP_FORPROP)
@@ -525,9 +529,15 @@ BEGIN_CASE(JSOP_FORPROP)
     LOAD_ATOM(0);
     id = ATOM_TO_JSID(atom);
     FETCH_OBJECT(cx, -1, lval, obj);
-    ok = obj->setProperty(cx, id, &regs.sp[-2]);
-    if (!ok)
-        goto error;
+    {
+        AutoValueRooter tvr(cx);
+        JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-2]));
+        if (!IteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-2]), tvr.addr()))
+            goto error;
+        ok = obj->setProperty(cx, id, tvr.addr());
+        if (!ok)
+            goto error;
+    }
     regs.sp--;
 END_CASE(JSOP_FORPROP)
 
@@ -538,9 +548,11 @@ BEGIN_CASE(JSOP_FORELEM)
      * side expression evaluation and assignment. This opcode exists solely to
      * help the decompiler.
      */
-    JS_ASSERT(regs.sp - 2 >= StackBase(fp));
-    rval = FETCH_OPND(-1);
-    PUSH(rval);
+    JS_ASSERT(regs.sp - 1 >= StackBase(fp));
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
+    if (!IteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-1]), &regs.sp[0]))
+        goto error;
+    regs.sp++;
 END_CASE(JSOP_FORELEM)
 
 BEGIN_CASE(JSOP_DUP)
@@ -794,11 +806,9 @@ END_CASE(JSOP_BITAND)
 #define EXTENDED_EQUALITY_OP(OP)                                              \
     if (ltmp == JSVAL_OBJECT &&                                               \
         (obj2 = JSVAL_TO_OBJECT(lval)) &&                                     \
-        ((clasp = obj2->getClass())->flags & JSCLASS_IS_EXTENDED)) {          \
-        JSExtendedClass *xclasp;                                              \
-                                                                              \
-        xclasp = (JSExtendedClass *) clasp;                                   \
-        if (!xclasp->equality(cx, obj2, rval, &cond))                         \
+        ((clasp = obj2->getClass())->flags & JSCLASS_IS_EXTENDED) &&          \
+        (((JSExtendedClass *) clasp)->equality)) {                            \
+        if (!((JSExtendedClass *) clasp)->equality(cx, obj2, rval, &cond))    \
             goto error;                                                       \
         cond = cond OP JS_TRUE;                                               \
     } else
@@ -2199,25 +2209,8 @@ BEGIN_CASE(JSOP_APPLY)
             ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
             DTrace::exitJSFun(cx, NULL, fun, *vp, &lval);
             regs.sp = vp + 1;
-            if (!ok) {
-                /*
-                 * If we are executing the JSOP_NEXTITER imacro and a
-                 * Stopiteration exception is raised, transform it into a
-                 * JSVAL_HOLE return value.  The tracer generates equivalent
-                 * code by calling CatchStopIteration_tn.
-                 */
-                if (fp->imacpc && *fp->imacpc == JSOP_NEXTITER &&
-                    cx->throwing && js_ValueIsStopIteration(cx->exception)) {
-                    // pc may point to JSOP_DUP here due to bug 474854.
-                    JS_ASSERT(*regs.pc == JSOP_CALL ||
-                              *regs.pc == JSOP_DUP);
-                    cx->throwing = JS_FALSE;
-                    cx->exception = JSVAL_VOID;
-                    regs.sp[-1] = JSVAL_HOLE;
-                } else {
-                    goto error;
-                }
-            }
+            if (!ok)
+                goto error;
             TRACE_0(NativeCallComplete);
             goto end_call;
         }
@@ -3977,19 +3970,6 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
 }
 END_CASE(JSOP_LEAVEBLOCK)
 
-BEGIN_CASE(JSOP_CALLBUILTIN)
-#ifdef JS_TRACER
-    obj = GetBuiltinFunction(cx, GET_INDEX(regs.pc));
-    if (!obj)
-        goto error;
-    rval = FETCH_OPND(-1);
-    PUSH_OPND(rval);
-    STORE_OPND(-2, OBJECT_TO_JSVAL(obj));
-#else
-    goto bad_opcode;  /* This is an imacro-only opcode. */
-#endif
-END_CASE(JSOP_CALLBUILTIN)
-
 #if JS_HAS_GENERATORS
 BEGIN_CASE(JSOP_GENERATOR)
     ASSERT_NOT_THROWING(cx);
@@ -4080,4 +4060,7 @@ END_CASE(JSOP_ARRAYPUSH)
   L_JSOP_ANYNAME:
   L_JSOP_DEFXMLNS:
 # endif
+
+  L_JSOP_UNUSED218:
+
 #endif /* !JS_THREADED_INTERP */

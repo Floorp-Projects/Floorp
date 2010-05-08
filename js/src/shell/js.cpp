@@ -1404,7 +1404,7 @@ ValueToScript(JSContext *cx, jsval v)
 
         if (clasp == &js_ScriptClass) {
             script = (JSScript *) JS_GetPrivate(cx, obj);
-        } else if (clasp == &js_GeneratorClass) {
+        } else if (clasp == &js_GeneratorClass.base) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
             fun = gen->frame.fun;
             script = FUN_SCRIPT(fun);

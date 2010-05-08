@@ -4836,7 +4836,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
               default:
                 if (js_Emit1(cx, cg, JSOP_FORELEM) < 0)
                     return JS_FALSE;
-                JS_ASSERT(cg->stackDepth >= 3);
+                JS_ASSERT(cg->stackDepth >= 2);
 
 #if JS_HAS_DESTRUCTURING
                 if (pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC) {
@@ -4885,10 +4885,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             } while ((stmt = stmt->down) != NULL && stmt->type == STMT_LABEL);
 
             /*
-             * Fixup the goto that starts the loop to jump down to JSOP_NEXTITER.
+             * Fixup the goto that starts the loop to jump down to JSOP_MOREITER.
              */
             CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
-            if (js_Emit1(cx, cg, JSOP_NEXTITER) < 0)
+            if (js_Emit1(cx, cg, JSOP_MOREITER) < 0)
                 return JS_FALSE;
             beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
             if (beq < 0)
@@ -5034,13 +5034,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         if (pn2->pn_type == TOK_IN) {
-            /*
-             * JSOP_ENDITER must have a slot to save an exception thrown from
-             * the body of for-in loop when closing the iterator object, and
-             * fortunately it does: the slot that was set by JSOP_NEXTITER to
-             * the return value of iterator.next().
-             */
-            JS_ASSERT(js_CodeSpec[JSOP_ENDITER].nuses == 2);
             if (!NewTryNote(cx, cg, JSTRY_ITER, cg->stackDepth, top, CG_OFFSET(cg)) ||
                 js_Emit1(cx, cg, JSOP_ENDITER) < 0) {
                 return JS_FALSE;

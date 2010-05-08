@@ -122,6 +122,7 @@ using namespace js;
 /* Small arrays are dense, no matter what. */
 #define MIN_SPARSE_INDEX 256
 
+/* Iteration depends on all indexes of a dense array to fit into a JSVAL-sized int. */
 static inline bool
 INDEX_TOO_BIG(jsuint index)
 {
@@ -827,10 +828,6 @@ slowarray_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-slowarray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                    jsval *statep, jsid *idp);
-
 static JSType
 array_typeOf(JSContext *cx, JSObject *obj)
 {
@@ -844,7 +841,7 @@ static JSObjectOps js_SlowArrayObjectOps = {
     js_GetProperty,         js_SetProperty,
     js_GetAttributes,       js_SetAttributes,
     js_DeleteProperty,      js_DefaultValue,
-    slowarray_enumerate,    js_CheckAccess,
+    js_Enumerate,           js_CheckAccess,
     array_typeOf,           js_TraceObject,
     NULL,                   NATIVE_DROP_PROPERTY,
     NULL,                   js_Construct,
@@ -1057,170 +1054,6 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsval id, jsval *rval)
     return JS_TRUE;
 }
 
-/*
- * JSObjectOps.enumerate implementation.
- *
- * For a fast array, JSENUMERATE_INIT captures in the enumeration state both
- * the length of the array and the bitmap indicating the positions of holes in
- * the array. This ensures that adding or deleting array elements does not
- * affect the sequence of indexes JSENUMERATE_NEXT returns.
- *
- * For a common case of an array without holes, to represent the state we pack
- * the (nextEnumerationIndex, arrayLength) pair as a pseudo-boolean jsval.
- * This is possible when length <= PACKED_UINT_PAIR_BITS. For arrays with
- * greater length or holes we allocate the JSIndexIterState structure and
- * store it as an int-tagged private pointer jsval. For a slow array we
- * delegate the enumeration implementation to js_Enumerate in
- * slowarray_enumerate.
- *
- * Array mutations can turn a fast array into a slow one after the enumeration
- * starts. When this happens, slowarray_enumerate receives a state created
- * when the array was fast. To distinguish such fast state from a slow state,
- * which is an int-tagged pointer that js_Enumerate creates, we set not one
- * but two lowest bits when tagging a JSIndexIterState pointer -- see
- * INDEX_ITER_TAG usage below. Thus, when slowarray_enumerate receives a state
- * tagged with JSVAL_SPECIAL or with two lowest bits set, it knows that this
- * is a fast state so it calls array_enumerate to continue enumerating the
- * indexes present in the original fast array.
- */
-
-#define PACKED_UINT_PAIR_BITS           14
-#define PACKED_UINT_PAIR_MASK           JS_BITMASK(PACKED_UINT_PAIR_BITS)
-
-#define UINT_PAIR_TO_SPECIAL_JSVAL(i,j)                                \
-    (JS_ASSERT((uint32) (i) <= PACKED_UINT_PAIR_MASK),                        \
-     JS_ASSERT((uint32) (j) <= PACKED_UINT_PAIR_MASK),                        \
-     ((jsval) (i) << (PACKED_UINT_PAIR_BITS + JSVAL_TAGBITS)) |               \
-     ((jsval) (j) << (JSVAL_TAGBITS)) |                                       \
-     (jsval) JSVAL_SPECIAL)
-
-#define SPECIAL_JSVAL_TO_UINT_PAIR(v,i,j)                              \
-    (JS_ASSERT(JSVAL_IS_SPECIAL(v)),                                   \
-     (i) = (uint32) ((v) >> (PACKED_UINT_PAIR_BITS + JSVAL_TAGBITS)),         \
-     (j) = (uint32) ((v) >> JSVAL_TAGBITS) & PACKED_UINT_PAIR_MASK,           \
-     JS_ASSERT((i) <= PACKED_UINT_PAIR_MASK))
-
-JS_STATIC_ASSERT(PACKED_UINT_PAIR_BITS * 2 + JSVAL_TAGBITS <= JS_BITS_PER_WORD);
-
-typedef struct JSIndexIterState {
-    uint32          index;
-    uint32          length;
-    JSBool          hasHoles;
-
-    /*
-     * Variable-length bitmap representing array's holes. It must not be
-     * accessed when hasHoles is false.
-     */
-    jsbitmap        holes[1];
-} JSIndexIterState;
-
-#define INDEX_ITER_TAG      3
-
-JS_STATIC_ASSERT(JSVAL_INT == 1);
-
-static JSBool
-array_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                jsval *statep, jsid *idp)
-{
-    uint32 capacity, i;
-    JSIndexIterState *ii;
-
-    switch (enum_op) {
-      case JSENUMERATE_INIT:
-        JS_ASSERT(obj->isDenseArray());
-        capacity = obj->getDenseArrayCapacity();
-        if (idp)
-            *idp = INT_TO_JSVAL(obj->getDenseArrayCount());
-        ii = NULL;
-        for (i = 0; i != capacity; ++i) {
-            if (obj->getDenseArrayElement(i) == JSVAL_HOLE) {
-                if (!ii) {
-                    ii = (JSIndexIterState *)
-                         cx->malloc(offsetof(JSIndexIterState, holes) +
-                                   JS_BITMAP_SIZE(capacity));
-                    if (!ii)
-                        return JS_FALSE;
-                    ii->hasHoles = JS_TRUE;
-                    memset(ii->holes, 0, JS_BITMAP_SIZE(capacity));
-                }
-                JS_SET_BIT(ii->holes, i);
-            }
-        }
-        if (!ii) {
-            /* Array has no holes. */
-            if (capacity <= PACKED_UINT_PAIR_MASK) {
-                *statep = UINT_PAIR_TO_SPECIAL_JSVAL(0, capacity);
-                break;
-            }
-            ii = (JSIndexIterState *)
-                 cx->malloc(offsetof(JSIndexIterState, holes));
-            if (!ii)
-                return JS_FALSE;
-            ii->hasHoles = JS_FALSE;
-        }
-        ii->index = 0;
-        ii->length = capacity;
-        *statep = (jsval) ii | INDEX_ITER_TAG;
-        JS_ASSERT(*statep & JSVAL_INT);
-        break;
-
-      case JSENUMERATE_NEXT:
-        if (JSVAL_IS_SPECIAL(*statep)) {
-            SPECIAL_JSVAL_TO_UINT_PAIR(*statep, i, capacity);
-            if (i != capacity) {
-                *idp = INT_TO_JSID(i);
-                *statep = UINT_PAIR_TO_SPECIAL_JSVAL(i + 1, capacity);
-                break;
-            }
-        } else {
-            JS_ASSERT((*statep & INDEX_ITER_TAG) == INDEX_ITER_TAG);
-            ii = (JSIndexIterState *) (*statep & ~INDEX_ITER_TAG);
-            i = ii->index;
-            if (i != ii->length) {
-                /* Skip holes if any. */
-                if (ii->hasHoles) {
-                    while (JS_TEST_BIT(ii->holes, i) && ++i != ii->length)
-                        continue;
-                }
-                if (i != ii->length) {
-                    ii->index = i + 1;
-                    return js_IndexToId(cx, i, idp);
-                }
-            }
-        }
-        /* FALL THROUGH */
-
-      case JSENUMERATE_DESTROY:
-        if (!JSVAL_IS_SPECIAL(*statep)) {
-            JS_ASSERT((*statep & INDEX_ITER_TAG) == INDEX_ITER_TAG);
-            ii = (JSIndexIterState *) (*statep & ~INDEX_ITER_TAG);
-            cx->free(ii);
-        }
-        *statep = JSVAL_NULL;
-        break;
-    }
-    return JS_TRUE;
-}
-
-static JSBool
-slowarray_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                    jsval *statep, jsid *idp)
-{
-    JSBool ok;
-
-    /* Are we continuing an enumeration that started when we were dense? */
-    if (enum_op != JSENUMERATE_INIT) {
-        if (JSVAL_IS_SPECIAL(*statep) ||
-            (*statep & INDEX_ITER_TAG) == INDEX_ITER_TAG) {
-            return array_enumerate(cx, obj, enum_op, statep, idp);
-        }
-        JS_ASSERT((*statep & INDEX_ITER_TAG) == JSVAL_INT);
-    }
-    ok = js_Enumerate(cx, obj, enum_op, statep, idp);
-    JS_ASSERT(*statep == JSVAL_NULL || (*statep & INDEX_ITER_TAG) == JSVAL_INT);
-    return ok;
-}
-
 static void
 array_finalize(JSContext *cx, JSObject *obj)
 {
@@ -1257,7 +1090,7 @@ JSObjectOps js_ArrayObjectOps = {
     array_getProperty,    array_setProperty,
     array_getAttributes,  array_setAttributes,
     array_deleteProperty, js_DefaultValue,
-    array_enumerate,      js_CheckAccess,
+    js_Enumerate,         js_CheckAccess,
     array_typeOf,         array_trace,
     NULL,                 array_dropProperty,
     NULL,                 NULL,
@@ -1273,8 +1106,7 @@ array_getObjectOps(JSContext *cx, JSClass *clasp)
 JSClass js_ArrayClass = {
     "Array",
     JSCLASS_HAS_RESERVED_SLOTS(2) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array) |
-    JSCLASS_NEW_ENUMERATE,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     JS_PropertyStub,    JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
     JS_EnumerateStub,   JS_ResolveStub,    js_TryValueOf,     array_finalize,
     array_getObjectOps, NULL,              NULL,              NULL,
@@ -3567,7 +3399,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
             return JS_TRUE;
         }
 
-        vector.push(val);
+        vector.append(val);
     }
 
     jsval *buffer;
@@ -3577,7 +3409,7 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
 
     AutoObjectRooter cloneRoot(cx, *clone);
 
-    memcpy(buffer, vector.buffer(), jsvalCount * sizeof (jsval));
+    memcpy(buffer, vector.begin(), jsvalCount * sizeof (jsval));
     (*clone)->setDenseArrayLength(length);
     (*clone)->setDenseArrayCount(length - holeCount);
 

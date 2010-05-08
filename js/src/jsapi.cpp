@@ -1323,8 +1323,8 @@ static JSStdName standard_class_names[] = {
 #endif
 
 #if JS_HAS_GENERATORS
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Iterator)},
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Generator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Iterator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Generator)},
 #endif
 
     /* Typed Arrays */
@@ -1508,8 +1508,10 @@ NewIdArray(JSContext *cx, jsint length)
 
     ida = (JSIdArray *)
         cx->malloc(offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (ida)
+    if (ida) {
+        ida->self = ida;
         ida->length = length;
+    }
     return ida;
 }
 
@@ -1524,10 +1526,12 @@ SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
     rida = (JSIdArray *)
            JS_realloc(cx, ida,
                       offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (!rida)
+    if (!rida) {
         JS_DestroyIdArray(cx, ida);
-    else
+    } else {
+        rida->self = rida;
         rida->length = length;
+    }
     return rida;
 }
 
@@ -2518,7 +2522,7 @@ JS_SetScriptStackQuota(JSContext *cx, size_t quota)
 JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 {
-    cx->free(ida);
+    cx->free(ida->self);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3819,59 +3823,14 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj)
 {
-    jsint i, n;
-    jsid id;
-    JSIdArray *ida;
-    jsval *vector;
-
     CHECK_REQUEST(cx);
 
-    ida = NULL;
-    AutoEnumStateRooter iterState(cx, obj);
-
-    /* Get the number of properties to enumerate. */
-    jsval num_properties;
-    if (!obj->enumerate(cx, JSENUMERATE_INIT, iterState.addr(), &num_properties))
-        goto error;
-    if (!JSVAL_IS_INT(num_properties)) {
-        JS_ASSERT(0);
-        goto error;
-    }
-
-    /* Grow as needed if we don't know the exact amount ahead of time. */
-    n = JSVAL_TO_INT(num_properties);
-    if (n <= 0)
-        n = 8;
-
-    /* Create an array of jsids large enough to hold all the properties */
-    ida = NewIdArray(cx, n);
-    if (!ida)
-        goto error;
-
-    i = 0;
-    vector = &ida->vector[0];
-    for (;;) {
-        if (!obj->enumerate(cx, JSENUMERATE_NEXT, iterState.addr(), &id))
-            goto error;
-
-        /* No more jsid's to enumerate ? */
-        if (iterState.state() == JSVAL_NULL)
-            break;
-
-        if (i == ida->length) {
-            ida = SetIdArrayLength(cx, ida, ida->length * 2);
-            if (!ida)
-                goto error;
-            vector = &ida->vector[0];
-        }
-        vector[i++] = id;
-    }
-    return SetIdArrayLength(cx, ida, i);
-
-error:
-    if (ida)
-        JS_DestroyIdArray(cx, ida);
-    return NULL;
+    JSIdArray *ida;
+    if (!EnumerateOwnProperties(cx, obj, &ida))
+        return false;
+    for (size_t n = 0; n < size_t(ida->length); ++n)
+        JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
+    return ida;
 }
 
 /*

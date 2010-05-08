@@ -339,10 +339,6 @@ extern JSString *
 js_MakeXMLPIString(JSContext *cx, JSString *name, JSString *str);
 
 extern JSBool
-js_EnumerateXMLValues(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
-                      jsval *statep, jsid *idp, jsval *vp);
-
-extern JSBool
 js_TestXMLEquality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 extern JSBool

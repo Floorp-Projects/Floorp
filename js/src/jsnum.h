@@ -219,7 +219,9 @@ js_NewNumberInRootedValue(JSContext *cx, jsdouble d, jsval *vp);
 extern JSBool
 js_NewWeaklyRootedNumber(JSContext *cx, jsdouble d, jsval *vp);
 
-/* Convert a number to a GC'ed string. */
+extern JSString * JS_FASTCALL
+js_IntToString(JSContext *cx, jsint i);
+
 extern JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d);
 
