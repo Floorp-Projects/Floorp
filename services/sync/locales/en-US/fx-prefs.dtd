@@ -32,7 +32,6 @@
 <!ENTITY weaveDesc.label            "&syncBrand.fullName.label; lets you access your history, bookmarks, passwords and open tabs across all your devices.">
 
 <!ENTITY setup.choicePage.title.label     "Have you used &syncBrand.fullName.label; before?">
-<!ENTITY setup.choicePage.description     "&syncBrand.shortName.label; will allow you to sync your bookmarks, history, passwords, preferences, and tabs across multiple computers.">
 <!ENTITY setup.choicePage.new.label       "I've never used &syncBrand.shortName.label; before">
 <!ENTITY setup.choicePage.existing.label  "I'm already using &syncBrand.shortName.label; on another computer">
 
