@@ -2202,7 +2202,7 @@
               return;
             }
 #endif
-            if (aEvent.target == this) {
+            if (aEvent.target.parentNode == this.tabContainer) {
               switch (aEvent.keyCode) {
                 case KeyEvent.DOM_VK_UP:
                   this.moveTabBackward();
