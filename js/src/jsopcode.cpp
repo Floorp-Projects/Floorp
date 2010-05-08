@@ -1812,7 +1812,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
     static const char exception_cookie[] = "/*EXCEPTION*/";
     static const char retsub_pc_cookie[] = "/*RETSUB_PC*/";
-    static const char iter_cookie[]      = "/*ITER*/";
     static const char forelem_cookie[]   = "/*FORELEM*/";
     static const char with_cookie[]      = "/*WITH*/";
     static const char dot_format[]       = "%s.%s";
@@ -3018,7 +3017,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                  * in the single string of accumulated |for| heads and optional
                  * final |if (condition)|.
                  */
-                forpos = pos + 2;
+                forpos = pos + 1;
                 LOCAL_ASSERT(forpos < ss->top);
 
                 /*
@@ -3093,11 +3092,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_ITER:
                 foreach = (pc[1] & (JSITER_FOREACH | JSITER_KEYVALUE)) ==
                           JSITER_FOREACH;
-                todo = SprintCString(&ss->sprinter, iter_cookie);
+                todo = -2;
                 break;
 
-              case JSOP_NEXTITER:
-                JS_NOT_REACHED("JSOP_NEXTITER");
+              case JSOP_MOREITER:
+                JS_NOT_REACHED("JSOP_MOREITER");
                 break;
 
               case JSOP_ENDITER:
@@ -3105,7 +3104,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = -2;
                 if (sn && SN_TYPE(sn) == SRC_HIDDEN)
                     break;
-                (void) PopOff(ss, op);
                 (void) PopOff(ss, op);
                 break;
 
@@ -3124,16 +3122,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     cond = GetJumpOffset(pc, pc);
                     next = js_GetSrcNoteOffset(sn, 0);
                     tail = js_GetSrcNoteOffset(sn, 1);
-                    JS_ASSERT(pc[cond] == JSOP_NEXTITER);
+                    JS_ASSERT(pc[cond] == JSOP_MOREITER);
                     DECOMPILE_CODE(pc + oplen, next - oplen);
                     lval = POP_STR();
-                    LOCAL_ASSERT(ss->top >= 2);
+                    LOCAL_ASSERT(ss->top >= 1);
 
                     if (ss->inArrayInit || ss->inGenExp) {
-                        (void) PopOff(ss, JSOP_NOP);
-                        rval = TOP_STR();
-                        if (ss->top >= 2 && ss->opcodes[ss->top - 2] == JSOP_FORLOCAL) {
-                            ss->sprinter.offset = ss->offsets[ss->top - 1] - PAREN_SLOP;
+                        rval = POP_STR();
+                        if (ss->top >= 1 && ss->opcodes[ss->top - 1] == JSOP_FORLOCAL) {
+                            ss->sprinter.offset = ss->offsets[ss->top] - PAREN_SLOP;
                             if (Sprint(&ss->sprinter, " %s (%s in %s)",
                                        foreach ? js_for_each_str : js_for_str,
                                        lval, rval) < 0) {
@@ -3160,7 +3157,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                          * As above, rval or an extension of it must remain
                          * stacked during loop body decompilation.
                          */
-                        rval = GetStr(ss, ss->top - 2);
+                        rval = GetStr(ss, ss->top - 1);
                         js_printf(jp, "\t%s (%s in %s) {\n",
                                   foreach ? js_for_each_str : js_for_str,
                                   lval, rval);

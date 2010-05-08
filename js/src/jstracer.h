@@ -1286,6 +1286,8 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus getProp(jsval& v);
     JS_REQUIRES_STACK RecordingStatus getThis(nanojit::LIns*& this_ins);
 
+    JS_REQUIRES_STACK AbortableRecordingStatus unboxNextValue(nanojit::LIns* &v_ins);
+
     JS_REQUIRES_STACK VMSideExit* enterDeepBailCall();
     JS_REQUIRES_STACK void leaveDeepBailCall();
 
@@ -1547,9 +1549,6 @@ SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 
 extern bool
 NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot);
-
-extern bool
-InCustomIterNextTryRegion(jsbytecode *pc);
 
 #ifdef MOZ_TRACEVIS
 

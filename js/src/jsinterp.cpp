@@ -2220,6 +2220,40 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 # define ABORT_RECORDING(cx, reason)    ((void) 0)
 #endif
 
+/*
+ * Inline fast paths for iteration. js_IteratorMore and js_IteratorNext handle
+ * all cases, but we inline the most frequently taken paths here.
+ */
+static inline bool
+IteratorMore(JSContext *cx, JSObject *iterobj, JSBool *cond, jsval *rval)
+{
+    if (iterobj->getClass() == &js_IteratorClass.base) {
+        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        *cond = (ni->props_cursor < ni->props_end);
+    } else {
+        if (!js_IteratorMore(cx, iterobj, rval))
+            return false;
+        *cond = (*rval == JSVAL_TRUE);
+    }
+    return true;
+}
+
+static inline bool
+IteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
+{
+    if (iterobj->getClass() == &js_IteratorClass.base) {
+        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        JS_ASSERT(ni->props_cursor < ni->props_end);
+        *rval = *ni->props_cursor;
+        if (JSVAL_IS_STRING(*rval) || (ni->flags & JSITER_FOREACH)) {
+            ni->props_cursor++;
+            return true;
+        }
+        /* Take the slow path if we have to stringify a numeric property name. */
+    }
+    return js_IteratorNext(cx, iterobj, rval);
+}
+
 JS_REQUIRES_STACK JSBool
 js_Interpret(JSContext *cx)
 {
@@ -2646,22 +2680,6 @@ js_Interpret(JSContext *cx)
   error:
 #ifdef JS_TRACER
     if (fp->imacpc && cx->throwing) {
-        // To keep things simple, we hard-code imacro exception handlers here.
-        if (*fp->imacpc == JSOP_NEXTITER &&
-            InCustomIterNextTryRegion(regs.pc) &&
-            js_ValueIsStopIteration(cx->exception)) {
-            // If the other NEXTITER imacro, native_iter_next, throws
-            // StopIteration, do not catch it here. See bug 547911.
-
-            // pc may point to JSOP_DUP here due to bug 474854.
-            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP);
-            cx->throwing = JS_FALSE;
-            cx->exception = JSVAL_VOID;
-            regs.sp[-1] = JSVAL_HOLE;
-            PUSH(JSVAL_FALSE);
-            goto end_imacro;
-        }
-
         // Handle other exceptions as if they came from the imacro-calling pc.
         regs.pc = fp->imacpc;
         fp->imacpc = NULL;
@@ -2791,24 +2809,19 @@ js_Interpret(JSContext *cx)
                 len = 0;
                 DO_NEXT_OP(len);
 
-              case JSTRY_ITER:
-                /*
-                 * This is similar to JSOP_ENDITER in the interpreter loop,
-                 * except the code now uses the stack slot normally used by
-                 * JSOP_NEXTITER, namely regs.sp[-1] before the regs.sp -= 2
-                 * adjustment and regs.sp[1] after, to save and restore the
-                 * pending exception.
-                 */
+              case JSTRY_ITER: {
+                /* This is similar to JSOP_ENDITER in the interpreter loop. */
                 JS_ASSERT(js_GetOpcode(cx, fp->script, regs.pc) == JSOP_ENDITER);
-                regs.sp[-1] = cx->exception;
-                cx->throwing = JS_FALSE;
-                ok = js_CloseIterator(cx, regs.sp[-2]);
-                regs.sp -= 2;
+                AutoValueRooter tvr(cx, cx->exception);
+                cx->throwing = false;
+                ok = js_CloseIterator(cx, regs.sp[-1]);
+                regs.sp -= 1;
                 if (!ok)
                     goto error;
-                cx->throwing = JS_TRUE;
-                cx->exception = regs.sp[1];
-            }
+                cx->throwing = true;
+                cx->exception = tvr.value();
+              }
+           }
         } while (++tn != tnlimit);
 
       no_catch:
