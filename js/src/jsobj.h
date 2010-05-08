@@ -198,6 +198,8 @@ private:
     void operator=(JSObjectMap &);
 };
 
+struct NativeIterator;
+
 const uint32 JS_INITIAL_NSLOTS = 5;
 
 const uint32 JSSLOT_PROTO   = 0;
@@ -533,6 +535,13 @@ struct JSObject {
     inline jsval getRegExpLastIndex() const;
     inline jsval *addressOfRegExpLastIndex();
     inline void zeroRegExpLastIndex();
+
+    /*
+     * Iterator-specific getters and setters.
+     */
+
+    inline NativeIterator *getNativeIterator() const;
+    inline void setNativeIterator(NativeIterator *);
 
     /*
      * Back to generic stuff.
@@ -1112,12 +1121,6 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp);
 extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);
-
-extern void
-js_MarkEnumeratorState(JSTracer *trc, JSObject *obj, jsval state);
-
-extern void
-js_PurgeCachedNativeEnumerators(JSContext *cx, JSThreadData *data);
 
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,

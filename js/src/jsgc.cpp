@@ -758,7 +758,6 @@ GetFinalizableThingSize(unsigned thingKind)
 
     static const uint8 map[FINALIZE_LIMIT] = {
         sizeof(JSObject),   /* FINALIZE_OBJECT */
-        sizeof(JSObject),   /* FINALIZE_ITER */
         sizeof(JSFunction), /* FINALIZE_FUNCTION */
 #if JS_HAS_XML_SUPPORT
         sizeof(JSXML),      /* FINALIZE_XML */
@@ -785,7 +784,6 @@ GetFinalizableTraceKind(size_t thingKind)
 
     static const uint8 map[FINALIZE_LIMIT] = {
         JSTRACE_OBJECT,     /* FINALIZE_OBJECT */
-        JSTRACE_OBJECT,     /* FINALIZE_ITER */
         JSTRACE_OBJECT,     /* FINALIZE_FUNCTION */
 #if JS_HAS_XML_SUPPORT      /* FINALIZE_XML */
         JSTRACE_XML,
@@ -994,7 +992,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     static const char *const GC_ARENA_NAMES[] = {
         "double",
         "object",
-        "iter",
         "function",
 #if JS_HAS_XML_SUPPORT
         "xml",
@@ -2304,7 +2301,6 @@ JSWeakRoots::mark(JSTracer *trc)
 #ifdef DEBUG
     const char * const newbornNames[] = {
         "newborn_object",             /* FINALIZE_OBJECT */
-        "newborn_iter",               /* FINALIZE_ITER */
         "newborn_function",           /* FINALIZE_FUNCTION */
 #if JS_HAS_XML_SUPPORT
         "newborn_xml",                /* FINALIZE_XML */
@@ -2402,6 +2398,8 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 
     js_TraceRegExpStatics(trc, acx);
 
+    JS_CALL_VALUE_TRACER(trc, acx->iterValue, "iterValue");
+
 #ifdef JS_TRACER
     TracerState* state = acx->tracerState;
     while (state) {
@@ -2432,13 +2430,6 @@ js_TraceRuntime(JSTracer *trc)
 
     if (rt->gcExtraRootsTraceOp)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
-
-#ifdef JS_TRACER
-    for (int i = 0; i < JSBUILTIN_LIMIT; i++) {
-        if (rt->builtinFunctions[i])
-            JS_CALL_OBJECT_TRACER(trc, rt->builtinFunctions[i], "builtin function");
-    }
-#endif
 }
 
 void
@@ -2505,7 +2496,6 @@ inline void
 FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
 {
     JS_ASSERT(thingKind == FINALIZE_OBJECT ||
-              thingKind == FINALIZE_ITER ||
               thingKind == FINALIZE_FUNCTION);
 
     /* Cope with stillborn objects that have no map. */
@@ -2959,13 +2949,6 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
             acx->purge();
     }
 
-#ifdef JS_TRACER
-    if (gckind == GC_LAST_CONTEXT) {
-        /* Clear builtin functions, which are recreated on demand. */
-        PodArrayZero(rt->builtinFunctions);
-    }
-#endif
-
     JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
 }
 
@@ -3062,11 +3045,9 @@ GC(JSContext *cx  GCTIMER_PARAM)
      */
     JS_ASSERT(!rt->gcEmptyArenaList);
     if (!cx->debugHooks->objectHook) {
-        FinalizeArenaList<JSObject, FinalizeObject>(cx, FINALIZE_ITER);
         FinalizeArenaList<JSObject, FinalizeObject>(cx, FINALIZE_OBJECT);
         FinalizeArenaList<JSFunction, FinalizeFunction>(cx, FINALIZE_FUNCTION);
     } else {
-        FinalizeArenaList<JSObject, FinalizeHookedObject>(cx, FINALIZE_ITER);
         FinalizeArenaList<JSObject, FinalizeHookedObject>(cx, FINALIZE_OBJECT);
         FinalizeArenaList<JSFunction, FinalizeHookedFunction>(cx, FINALIZE_FUNCTION);
     }

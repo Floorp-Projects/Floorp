@@ -1532,6 +1532,7 @@ struct JSExtendedClass {
 #define JSCLASS_NO_RESERVED_MEMBERS     0,0,0
 
 struct JSIdArray {
+    void *self;
     jsint length;
     jsid  vector[1];    /* actually, length jsid words */
 };

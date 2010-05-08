@@ -130,8 +130,6 @@ JSThreadData::finish()
     JS_ASSERT(gcFreeLists.isEmpty());
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
         JS_ASSERT(!scriptsToGC[i]);
-    for (size_t i = 0; i != JS_ARRAY_LENGTH(nativeEnumCache); ++i)
-        JS_ASSERT(!nativeEnumCache[i]);
     JS_ASSERT(!localRootStack);
 #endif
 
@@ -158,8 +156,6 @@ JSThreadData::mark(JSTracer *trc)
 void
 JSThreadData::purge(JSContext *cx)
 {
-    cachedIteratorObject = NULL;
-
     purgeGCFreeLists();
 
     js_PurgeGSNCache(&gsnCache);
@@ -179,7 +175,8 @@ JSThreadData::purge(JSContext *cx)
     /* Destroy eval'ed scripts. */
     js_DestroyScriptsToGC(cx, this);
 
-    js_PurgeCachedNativeEnumerators(cx, this);
+    /* Purge cached native iterators. */
+    memset(cachedNativeIterators, 0, sizeof(cachedNativeIterators));
 
     dtoaCache.s = NULL;
 }
@@ -335,7 +332,6 @@ thread_purger(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 /* index */,
          * in data, but the code simplicity wins here.
          */
         thread->data.purgeGCFreeLists();
-        js_PurgeCachedNativeEnumerators(cx, &thread->data);
         DestroyThread(thread);
         return JS_DHASH_REMOVE;
     }

@@ -232,7 +232,6 @@ js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind);
  */
 enum JSFinalizeGCThingKind {
     FINALIZE_OBJECT,
-    FINALIZE_ITER,
     FINALIZE_FUNCTION,
 #if JS_HAS_XML_SUPPORT
     FINALIZE_XML,
@@ -270,12 +269,6 @@ static inline JSObject *
 js_NewGCObject(JSContext *cx)
 {
     return (JSObject *) js_NewFinalizableGCThing(cx, FINALIZE_OBJECT);
-}
-
-static inline JSObject *
-js_NewGCIter(JSContext *cx)
-{
-    return (JSObject *) js_NewFinalizableGCThing(cx, FINALIZE_ITER);
 }
 
 static inline JSString *
