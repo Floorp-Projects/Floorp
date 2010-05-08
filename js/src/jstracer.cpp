@@ -13657,6 +13657,12 @@ JS_DEFINE_CALLINFO_2(extern, BOOL_FAIL, CloseIterator, CONTEXT, OBJECT, 0, nanoj
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENDITER()
 {
+    jsval& v = stackval(-1);
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+
+    if (JSVAL_TO_OBJECT(v)->getClass() == &js_GeneratorClass.base)
+        RETURN_STOP_A("can't trace ENDITER for generators");
+
     enterDeepBailCall();
 
     LIns* args[] = { stack(-1), cx_ins };
