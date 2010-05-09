@@ -8336,9 +8336,9 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 {
   if (JSVAL_IS_STRING(id) && !ObjectIsNativeWrapper(cx, obj)) {
     nsresult rv = NS_OK;
+    nsWrapperCache *cache = nsnull;
     nsISupports* item = GetNamedItem(GetNative(wrapper, obj),
-                                     nsDependentJSString(id),
-                                     &rv);
+                                     nsDependentJSString(id), &cache, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (item) {
@@ -8371,11 +8371,12 @@ nsNamedNodeMapSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsISupports*
 nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                               nsresult *aResult)
+                               nsWrapperCache **aCache, nsresult *aResult)
 {
   nsDOMAttributeMap* map = nsDOMAttributeMap::FromSupports(aNative);
 
-  nsINode *attr = map->GetNamedItem(aName, aResult);
+  nsINode *attr;
+  *aCache = attr = map->GetNamedItem(aName, aResult);
   return attr;
 }
 
@@ -8427,6 +8428,7 @@ nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 nsISupports*
 nsHTMLCollectionSH::GetNamedItem(nsISupports *aNative,
                                  const nsAString& aName,
+                                 nsWrapperCache **aCache,
                                  nsresult *aResult)
 {
   nsIHTMLCollection* collection = static_cast<nsIHTMLCollection*>(aNative);
@@ -8441,7 +8443,7 @@ nsHTMLCollectionSH::GetNamedItem(nsISupports *aNative,
   }
 #endif
 
-  return collection->GetNamedItem(aName, aResult);
+  return collection->GetNamedItem(aName, aCache, aResult);
 }
 
 
@@ -8487,11 +8489,11 @@ nsContentListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsISupports*
 nsContentListSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                              nsresult *aResult)
+                              nsWrapperCache **aCache, nsresult *aResult)
 {
   nsContentList *list = nsContentList::FromSupports(aNative);
 
-  return list->GetNamedItem(aName, aResult);
+  return list->GetNamedItem(aName, aCache, aResult);
 }
 
 NS_IMETHODIMP
@@ -10050,7 +10052,7 @@ nsPluginSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsISupports*
 nsPluginSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                         nsresult *aResult)
+                         nsWrapperCache **aCache, nsresult *aResult)
 {
   nsPluginElement* plugin = nsPluginElement::FromSupports(aNative);
 
@@ -10071,7 +10073,7 @@ nsPluginArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsISupports*
 nsPluginArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                              nsresult *aResult)
+                              nsWrapperCache **aCache, nsresult *aResult)
 {
   nsPluginArray* array = nsPluginArray::FromSupports(aNative);
 
@@ -10092,7 +10094,7 @@ nsMimeTypeArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsISupports*
 nsMimeTypeArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                                nsresult *aResult)
+                                nsWrapperCache **aCache, nsresult *aResult)
 {
   nsMimeTypeArray* array = nsMimeTypeArray::FromSupports(aNative);
 
@@ -10314,6 +10316,7 @@ nsTreeColumnsSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 nsISupports*
 nsTreeColumnsSH::GetNamedItem(nsISupports *aNative,
                               const nsAString& aName,
+                              nsWrapperCache **aCache,
                               nsresult *aResult)
 {
   nsTreeColumns* columns = nsTreeColumns::FromSupports(aNative);
@@ -10386,7 +10389,7 @@ nsStorageSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 nsISupports*
 nsStorageSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                          nsresult *aResult)
+                          nsWrapperCache **aCache, nsresult *aResult)
 {
   nsDOMStorage* storage = nsDOMStorage::FromSupports(aNative);
 
@@ -10701,7 +10704,7 @@ nsStorage2SH::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 nsISupports*
 nsStorageListSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
-                              nsresult *aResult)
+                              nsWrapperCache **aCache, nsresult *aResult)
 {
   nsDOMStorageList* storagelist = static_cast<nsDOMStorageList*>(aNative);
 
