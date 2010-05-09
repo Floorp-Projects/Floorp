@@ -110,11 +110,15 @@ public:
 
     return mElements.SafeElementAt(aIndex, nsnull);
   }
-  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult)
+  virtual nsISupports* GetNamedItem(const nsAString& aName,
+                                    nsWrapperCache **aCache,
+                                    nsresult* aResult)
   {
     *aResult = NS_OK;
 
-    return NamedItemInternal(aName, PR_TRUE);
+    nsISupports *item = NamedItemInternal(aName, PR_TRUE);
+    *aCache = nsnull;
+    return item;
   }
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,

@@ -1952,14 +1952,13 @@ nsHTMLOptionCollection::GetNodeAt(PRUint32 aIndex, nsresult* aResult)
   return static_cast<nsIContent*>(ItemAsOption(aIndex));
 }
 
-nsISupports*
-nsHTMLOptionCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
+static nsHTMLOptionElement*
+GetNamedItemHelper(nsTArray<nsRefPtr<nsHTMLOptionElement> > &aElements,
+                   const nsAString& aName)
 {
-  *aResult = NS_OK;
-
-  PRUint32 count = mElements.Length();
+  PRUint32 count = aElements.Length();
   for (PRUint32 i = 0; i < count; i++) {
-    nsIContent *content = ItemAsOption(i);
+    nsHTMLOptionElement *content = aElements.ElementAt(i);
     if (content &&
         (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aName,
                               eCaseMatters) ||
@@ -1972,19 +1971,25 @@ nsHTMLOptionCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
   return nsnull;
 }
 
+nsISupports*
+nsHTMLOptionCollection::GetNamedItem(const nsAString& aName,
+                                     nsWrapperCache **aCache,
+                                     nsresult* aResult)
+{
+  *aResult = NS_OK;
+
+  nsINode *item = GetNamedItemHelper(mElements, aName);
+  *aCache = item;
+  return item;
+}
+
 NS_IMETHODIMP
 nsHTMLOptionCollection::NamedItem(const nsAString& aName,
                                   nsIDOMNode** aReturn)
 {
-  nsresult rv;
-  nsISupports* item = GetNamedItem(aName, &rv);
-  if (!item) {
-    *aReturn = nsnull;
+  NS_IF_ADDREF(*aReturn = GetNamedItemHelper(mElements, aName));
 
-    return rv;
-  }
-
-  return CallQueryInterface(item, aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

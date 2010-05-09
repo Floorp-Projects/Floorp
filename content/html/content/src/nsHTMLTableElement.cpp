@@ -120,7 +120,9 @@ public:
   NS_DECL_NSIDOMHTMLCOLLECTION
 
   virtual nsIContent* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
-  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
+  virtual nsISupports* GetNamedItem(const nsAString& aName,
+                                    nsWrapperCache **aCache,
+                                    nsresult* aResult);
 
   NS_IMETHOD    ParentDestroyed();
 
@@ -328,12 +330,12 @@ TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 static nsISupports*
-GetNamedItemInRowGroup(nsIDOMHTMLCollection* aRows,
-                       const nsAString& aName, nsresult* aResult)
+GetNamedItemInRowGroup(nsIDOMHTMLCollection* aRows, const nsAString& aName,
+                       nsWrapperCache** aCache, nsresult* aResult)
 {
   nsCOMPtr<nsIHTMLCollection> rows = do_QueryInterface(aRows);
   if (rows) {
-    return rows->GetNamedItem(aName, aResult);
+    return rows->GetNamedItem(aName, aCache, aResult);
   }
 
   *aResult = NS_OK;
@@ -341,15 +343,18 @@ GetNamedItemInRowGroup(nsIDOMHTMLCollection* aRows,
 }
 
 nsISupports* 
-TableRowsCollection::GetNamedItem(const nsAString& aName, nsresult* aResult)
+TableRowsCollection::GetNamedItem(const nsAString& aName,
+                                  nsWrapperCache** aCache,
+                                  nsresult* aResult)
 {
   nsresult rv = NS_OK;
   DO_FOR_EACH_ROWGROUP(
-    nsISupports* item = GetNamedItemInRowGroup(rows, aName, aResult);
+    nsISupports* item = GetNamedItemInRowGroup(rows, aName, aCache, aResult);
     if (NS_FAILED(*aResult) || item) {
       return item;
     }
   );
+  *aCache = nsnull;
   *aResult = rv;
   return nsnull;
 }
@@ -359,7 +364,8 @@ TableRowsCollection::NamedItem(const nsAString& aName,
                                nsIDOMNode** aReturn)
 {
   nsresult rv;
-  nsISupports* item = GetNamedItem(aName, &rv);
+  nsWrapperCache *cache;
+  nsISupports* item = GetNamedItem(aName, &cache, &rv);
   if (!item) {
     *aReturn = nsnull;
 
