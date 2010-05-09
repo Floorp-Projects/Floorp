@@ -40,6 +40,7 @@
 #include "AsyncConnectionHelper.h"
 
 #include "mozIStorageConnection.h"
+#include "nsIIDBDatabaseException.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsProxyRelease.h"
@@ -50,15 +51,15 @@
 USING_INDEXEDDB_NAMESPACE
 
 AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
-                                             nsIDOMEventTarget* aTarget)
+                                             IDBRequest* aRequest)
 : mDatabase(aDatabase),
-  mTarget(aTarget),
+  mRequest(aRequest),
   mErrorCode(0),
   mError(PR_FALSE)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mDatabase, "Null owner!");
-  NS_ASSERTION(mTarget, "Null target!");
+  NS_ASSERTION(mRequest, "Null request!");
 }
 
 AsyncConnectionHelper::~AsyncConnectionHelper()
@@ -70,22 +71,22 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
     IDBDatabaseRequest* database;
     mDatabase.forget(&database);
 
-    nsIDOMEventTarget* target;
-    mTarget.forget(&target);
+    IDBRequest* request;
+    mRequest.forget(&request);
 
     nsCOMPtr<nsIThread> mainThread;
     NS_GetMainThread(getter_AddRefs(mainThread));
 
     if (mainThread) {
       NS_ProxyRelease(mainThread, static_cast<nsIIDBDatabase*>(database));
-      NS_ProxyRelease(mainThread, target);
+      NS_ProxyRelease(mainThread, static_cast<nsIDOMEventTarget*>(request));
     }
     else {
       NS_WARNING("Couldn't get the main thread?! Leaking instead of crashing.");
     }
 
     NS_ASSERTION(!mDatabase, "Should have been released before now!");
-    NS_ASSERTION(!mTarget, "Should have been released before now!");
+    NS_ASSERTION(!mRequest, "Should have been released before now!");
   }
 
   NS_ASSERTION(!mDatabaseThread, "Should have been released before now!");
@@ -97,12 +98,12 @@ NS_IMETHODIMP
 AsyncConnectionHelper::Run()
 {
   if (NS_IsMainThread()) {
-    if (mError || ((mErrorCode = OnSuccess(mTarget)) != OK)) {
-      OnError(mTarget, mErrorCode);
+    if (mError || ((mErrorCode = OnSuccess(mRequest)) != OK)) {
+      OnError(mRequest, mErrorCode);
     }
 
     mDatabase = nsnull;
-    mTarget = nsnull;
+    mRequest = nsnull;
     return NS_OK;
   }
 
@@ -163,20 +164,20 @@ AsyncConnectionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
     do_CreateInstance(NS_VARIANT_CONTRACTID);
   if (!variant) {
     NS_ERROR("Couldn't create variant!");
-    return nsIIDBDatabaseError::UNKNOWN_ERR;
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
   GetSuccessResult(variant);
 
   if (NS_FAILED(variant->SetWritable(PR_FALSE))) {
     NS_ERROR("Failed to make variant readonly!");
-    return nsIIDBDatabaseError::UNKNOWN_ERR;
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
-  nsCOMPtr<nsIDOMEvent> event(IDBSuccessEvent::Create(variant));
+  nsCOMPtr<nsIDOMEvent> event(IDBSuccessEvent::Create(mRequest, variant));
   if (!event) {
     NS_ERROR("Failed to create event!");
-    return nsIIDBDatabaseError::UNKNOWN_ERR;
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
   PRBool dummy;
@@ -191,7 +192,7 @@ AsyncConnectionHelper::OnError(nsIDOMEventTarget* aTarget,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   // Make an error event and fire it at the target.
-  nsCOMPtr<nsIDOMEvent> event(IDBErrorEvent::Create(aErrorCode));
+  nsCOMPtr<nsIDOMEvent> event(IDBErrorEvent::Create(mRequest, aErrorCode));
   if (!event) {
     NS_ERROR("Failed to create event!");
     return;

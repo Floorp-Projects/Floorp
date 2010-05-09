@@ -46,7 +46,7 @@
 
 #include "IDBObjectStoreRequest.h"
 
-#include "nsIIDBDatabaseError.h"
+#include "nsIIDBDatabaseException.h"
 
 #include "nsDOMClassInfo.h"
 #include "nsThreadUtils.h"
@@ -62,14 +62,14 @@ class PutHelper : public AsyncConnectionHelper
 {
 public:
   PutHelper(IDBDatabaseRequest* aDatabase,
-            nsIDOMEventTarget* aTarget,
+            IDBRequest* aRequest,
             PRInt64 aObjectStoreID,
             const nsAString& aValue,
             const nsAString& aKeyString,
             PRInt64 aKeyInt,
             bool aAutoIncrement,
             bool aOverwrite)
-  : AsyncConnectionHelper(aDatabase, aTarget), mOSID(aObjectStoreID),
+  : AsyncConnectionHelper(aDatabase, aRequest), mOSID(aObjectStoreID),
     mValue(aValue), mKeyInt(aKeyInt), mAutoIncrement(aAutoIncrement),
     mOverwrite(aOverwrite)
   {
@@ -100,12 +100,12 @@ class GetHelper : public AsyncConnectionHelper
 {
 public:
   GetHelper(IDBDatabaseRequest* aDatabase,
-            nsIDOMEventTarget* aTarget,
+            IDBRequest* aRequest,
             PRInt64 aObjectStoreID,
             const nsAString& aKeyString,
             PRInt64 aKeyInt,
             bool aAutoIncrement)
-  : AsyncConnectionHelper(aDatabase, aTarget), mOSID(aObjectStoreID),
+  : AsyncConnectionHelper(aDatabase, aRequest), mOSID(aObjectStoreID),
     mKeyInt(aKeyInt), mAutoIncrement(aAutoIncrement)
   {
     if (aKeyString.IsVoid()) {
@@ -138,12 +138,12 @@ class RemoveHelper : public GetHelper
 {
 public:
   RemoveHelper(IDBDatabaseRequest* aDatabase,
-               nsIDOMEventTarget* aTarget,
+               IDBRequest* aRequest,
                PRInt64 aObjectStoreID,
                const nsAString& aKeyString,
                PRInt64 aKeyInt,
                bool aAutoIncrement)
-  : GetHelper(aDatabase, aTarget, aObjectStoreID, aKeyString, aKeyInt,
+  : GetHelper(aDatabase, aRequest, aObjectStoreID, aKeyString, aKeyInt,
               aAutoIncrement)
   {
   }
@@ -161,8 +161,17 @@ public:
 
   NS_IMETHOD GetResult(nsIVariant** aResult);
 
-  void Init() {
-    IDBSuccessEvent::Init();
+  nsresult Init(IDBRequest* aRequest) {
+    mSource = aRequest->GetGenerator();
+
+    nsresult rv = InitEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR), PR_FALSE,
+                            PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SetTrusted(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
   }
 
 private:
@@ -455,7 +464,7 @@ PRUint16
 PutHelper::DoDatabaseWork()
 {
   nsresult rv = mDatabase->EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
 
@@ -464,7 +473,7 @@ PutHelper::DoDatabaseWork()
 
   nsCOMPtr<mozIStorageStatement> stmt =
     mDatabase->PutStatement(!mOverwrite, mAutoIncrement);
-  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
   if (!mAutoIncrement || mAutoIncrement && mOverwrite) {
     NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
 
@@ -475,28 +484,28 @@ PutHelper::DoDatabaseWork()
       rv = stmt->BindStringByName(keyValue, mKeyString);
     }
   }
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   if (NS_FAILED(stmt->Execute())) {
-    return nsIIDBDatabaseError::CONSTRAINT_ERR;
+    return nsIIDBDatabaseException::CONSTRAINT_ERR;
   }
 
   if (mAutoIncrement) {
     rv = connection->GetLastInsertRowID(&mKeyInt);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
 
   // TODO update indexes if needed
 
   return NS_SUCCEEDED(transaction.Commit()) ?
          OK :
-         nsIIDBDatabaseError::UNKNOWN_ERR;
+         nsIIDBDatabaseException::UNKNOWN_ERR;
 }
 
 void
@@ -514,7 +523,7 @@ PRUint16
 GetHelper::DoDatabaseWork()
 {
   nsresult rv = mDatabase->EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
 
@@ -535,11 +544,11 @@ GetHelper::DoDatabaseWork()
       "WHERE key_value = :id "
       "AND object_store_id = :osid"
     ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
   }
 
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   NS_NAMED_LITERAL_CSTRING(id, "id");
 
@@ -549,13 +558,13 @@ GetHelper::DoDatabaseWork()
   else {
     rv = stmt->BindStringByName(id, mKeyString);
   }
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   // Search for it!
   PRBool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
-  NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseError::NOT_FOUND_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseException::NOT_FOUND_ERR);
 
   // Set the value based on results.
   (void)stmt->GetString(0, mValue);
@@ -567,7 +576,8 @@ PRUint16
 GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   nsRefPtr<GetSuccessEvent> event(new GetSuccessEvent(mValue));
-  event->Init();
+  nsresult rv = event->Init(mRequest);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   PRBool dummy;
   aTarget->DispatchEvent(static_cast<nsDOMEvent*>(event), &dummy);
@@ -578,7 +588,7 @@ PRUint16
 RemoveHelper::DoDatabaseWork()
 {
   nsresult rv = mDatabase->EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
 
@@ -586,7 +596,7 @@ RemoveHelper::DoDatabaseWork()
     mDatabase->RemoveStatement(mAutoIncrement);
 
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   NS_NAMED_LITERAL_CSTRING(key_value, "key_value");
 
@@ -596,11 +606,11 @@ RemoveHelper::DoDatabaseWork()
   else {
     rv = stmt->BindStringByName(key_value, mKeyString);
   }
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   // Search for it!
   rv = stmt->Execute();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   return OK;
 }

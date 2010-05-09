@@ -39,6 +39,8 @@
 
 #include "IDBDatabaseRequest.h"
 
+#include "nsIIDBDatabaseException.h"
+
 #include "mozilla/Storage.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsContentUtils.h"
@@ -103,12 +105,12 @@ class CreateObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
   CreateObjectStoreHelper(IDBDatabaseRequest* aDatabase,
-                          nsIDOMEventTarget* aTarget,
+                          IDBRequest* aRequest,
                           const nsAString& aName,
                           const nsAString& aKeyPath,
                           bool aAutoIncrement)
-  : AsyncConnectionHelper(aDatabase, aTarget), mName(aName), mKeyPath(aKeyPath),
-    mAutoIncrement(aAutoIncrement), mId(LL_MININT)
+  : AsyncConnectionHelper(aDatabase, aRequest), mName(aName),
+    mKeyPath(aKeyPath), mAutoIncrement(aAutoIncrement), mId(LL_MININT)
   { }
 
   PRUint16 DoDatabaseWork();
@@ -132,10 +134,10 @@ class OpenObjectStoreHelper : public CreateObjectStoreHelper
 {
 public:
   OpenObjectStoreHelper(IDBDatabaseRequest* aDatabase,
-                        nsIDOMEventTarget* aTarget,
+                        IDBRequest* aRequest,
                         const nsAString& aName,
                         PRUint16 aMode)
-  : CreateObjectStoreHelper(aDatabase, aTarget, aName, EmptyString(), false),
+  : CreateObjectStoreHelper(aDatabase, aRequest, aName, EmptyString(), false),
     mMode(aMode)
   { }
 
@@ -152,9 +154,9 @@ class RemoveObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
   RemoveObjectStoreHelper(IDBDatabaseRequest* aDatabase,
-                          nsIDOMEventTarget* aTarget,
+                          IDBRequest* aRequest,
                           const nsAString& aName)
-  : AsyncConnectionHelper(aDatabase, aTarget), mName(aName)
+  : AsyncConnectionHelper(aDatabase, aRequest), mName(aName)
   { }
 
   PRUint16 DoDatabaseWork();
@@ -757,7 +759,7 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
   if (NS_UNLIKELY(exists)) {
     nsCOMPtr<nsIRunnable> runnable =
       IDBErrorEvent::CreateRunnable(request,
-                                    nsIIDBDatabaseError::CONSTRAINT_ERR);
+                                    nsIIDBDatabaseException::CONSTRAINT_ERR);
     NS_ENSURE_TRUE(runnable, NS_ERROR_UNEXPECTED);
     rv = NS_DispatchToCurrentThread(runnable);
   }
@@ -811,7 +813,7 @@ IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
   if (NS_UNLIKELY(!exists)) {
     nsCOMPtr<nsIRunnable> runnable =
       IDBErrorEvent::CreateRunnable(request,
-                                    nsIIDBDatabaseError::CONSTRAINT_ERR);
+                                    nsIIDBDatabaseException::CONSTRAINT_ERR);
     NS_ENSURE_TRUE(runnable, NS_ERROR_UNEXPECTED);
     rv = NS_DispatchToCurrentThread(runnable);
   }
@@ -880,7 +882,7 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
   if (NS_UNLIKELY(!exists)) {
     nsCOMPtr<nsIRunnable> runnable =
       IDBErrorEvent::CreateRunnable(request,
-                                    nsIIDBDatabaseError::NOT_FOUND_ERR);
+                                    nsIIDBDatabaseException::NOT_FOUND_ERR);
     NS_ENSURE_TRUE(runnable, NS_ERROR_UNEXPECTED);
     rv = NS_DispatchToCurrentThread(runnable);
   }
@@ -957,7 +959,7 @@ PRUint16
 CreateObjectStoreHelper::DoDatabaseWork()
 {
   nsresult rv = mDatabase->EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
 
@@ -970,24 +972,24 @@ CreateObjectStoreHelper::DoDatabaseWork()
     "INSERT INTO object_store (name, key_path, auto_increment) "
     "VALUES (:name, :key_path, :auto_increment)"
   ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   if (mKeyPath.IsVoid()) {
     rv = stmt->BindNullByName(NS_LITERAL_CSTRING("key_path"));
   } else {
     rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"), mKeyPath);
   }
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("auto_increment"),
                              mAutoIncrement ? 1 : 0);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   if (NS_FAILED(stmt->Execute())) {
-    return nsIIDBDatabaseError::CONSTRAINT_ERR;
+    return nsIIDBDatabaseException::CONSTRAINT_ERR;
   }
 
   // Get the id of this object store, and store it for future use.
@@ -995,7 +997,7 @@ CreateObjectStoreHelper::DoDatabaseWork()
 
   return NS_SUCCEEDED(transaction.Commit()) ?
          OK :
-         nsIIDBDatabaseError::UNKNOWN_ERR;
+         nsIIDBDatabaseException::UNKNOWN_ERR;
 }
 
 PRUint16
@@ -1004,7 +1006,7 @@ CreateObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   mObjectStore =
     IDBObjectStoreRequest::Create(mDatabase, mName, mKeyPath, mAutoIncrement,
                                   nsIIDBObjectStore::READ_WRITE, mId);
-  NS_ENSURE_TRUE(mObjectStore, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(mObjectStore, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   mDatabase->OnObjectStoreCreated(mName);
 
@@ -1025,7 +1027,7 @@ PRUint16
 OpenObjectStoreHelper::DoDatabaseWork()
 {
   nsresult rv = mDatabase->EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
 
@@ -1037,15 +1039,15 @@ OpenObjectStoreHelper::DoDatabaseWork()
     "FROM object_store "
     "WHERE name = :name"
   ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   PRBool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
-  NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseError::NOT_FOUND_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseException::NOT_FOUND_ERR);
 
   mId = stmt->AsInt64(0);
   (void)stmt->GetString(1, mKeyPath);
@@ -1060,7 +1062,7 @@ OpenObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   mObjectStore =
     IDBObjectStoreRequest::Create(mDatabase, mName, mKeyPath, mAutoIncrement,
                                   mMode, mId);
-  NS_ENSURE_TRUE(mObjectStore, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_TRUE(mObjectStore, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   return AsyncConnectionHelper::OnSuccess(aTarget);
 }
@@ -1079,7 +1081,7 @@ PRUint16
 RemoveObjectStoreHelper::DoDatabaseWork()
 {
   nsresult rv = mDatabase->EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
 
@@ -1088,13 +1090,13 @@ RemoveObjectStoreHelper::DoDatabaseWork()
     "DELETE FROM object_store "
     "WHERE name = :name "
   ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseError::UNKNOWN_ERR);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   if (NS_FAILED(stmt->Execute())) {
-    return nsIIDBDatabaseError::NOT_FOUND_ERR;
+    return nsIIDBDatabaseException::NOT_FOUND_ERR;
   }
 
   return OK;

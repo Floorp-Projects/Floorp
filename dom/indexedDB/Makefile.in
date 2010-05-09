@@ -53,7 +53,6 @@ EXPORTS_NAMESPACES = mozilla/dom/indexedDB
 
 CPPSRCS = \
   AsyncConnectionHelper.cpp \
-  IDBDatabaseError.cpp \
   IDBDatabaseRequest.cpp \
   IDBEvents.cpp \
   IDBObjectStoreRequest.cpp \
@@ -63,7 +62,6 @@ CPPSRCS = \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
-  IDBDatabaseError.h \
   IDBDatabaseRequest.h \
   IDBEvents.h \
   IDBObjectStoreRequest.h \
@@ -86,8 +84,9 @@ DEFINES += -D_IMPL_NS_LAYOUT
 XPIDLSRCS = \
   nsIIDBCursor.idl \
   nsIIDBDatabase.idl \
-  nsIIDBDatabaseError.idl \
+  nsIIDBDatabaseException.idl \
   nsIIDBDatabaseRequest.idl \
+  nsIIDBEvent.idl \
   nsIIDBErrorEvent.idl \
   nsIIDBIndex.idl \
   nsIIDBIndexRequest.idl \

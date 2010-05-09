@@ -37,12 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMEvent.idl"
+#include "nsIIDBEvent.idl"
 
 interface nsIVariant;
 
 [scriptable, uuid(9275d34f-54e1-4ab0-b4ca-f8d4359eec9c)]
-interface nsIIDBSuccessEvent : nsIDOMEvent
+interface nsIIDBSuccessEvent : nsIIDBEvent
 {
   readonly attribute nsIVariant result;
 };
