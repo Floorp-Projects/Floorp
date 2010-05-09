@@ -37,13 +37,10 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsIDOMHTMLOptionElement.h"
-#include "nsIDOMNSHTMLOptionElement.h"
-#include "nsIOptionElement.h"
+#include "nsHTMLOptionElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventTarget.h"
-#include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsIFormControl.h"
@@ -52,7 +49,6 @@
 #include "nsIDOMNode.h"
 #include "nsGenericElement.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIJSNativeInitializer.h"
 #include "nsISelectElement.h"
 #include "nsISelectControlFrame.h"
 
@@ -68,74 +64,6 @@
 #include "nsIDOMDocument.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozAutoDocUpdate.h"
-
-/**
- * Implementation of &lt;option&gt;
- */
-class nsHTMLOptionElement : public nsGenericHTMLElement,
-                            public nsIDOMHTMLOptionElement,
-                            public nsIDOMNSHTMLOptionElement,
-                            public nsIJSNativeInitializer,
-                            public nsIOptionElement
-{
-public:
-  nsHTMLOptionElement(nsINodeInfo *aNodeInfo);
-  virtual ~nsHTMLOptionElement();
-
-  // nsISupports
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIDOMNode
-  NS_FORWARD_NSIDOMNODE(nsGenericHTMLElement::)
-
-  // nsIDOMElement
-  NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
-
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
-
-  // nsIDOMHTMLOptionElement
-  NS_DECL_NSIDOMHTMLOPTIONELEMENT
-
-  // nsIDOMNSHTMLOptionElement
-  NS_IMETHOD SetText(const nsAString & aText); 
-
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner, JSContext* aContext,
-                        JSObject *aObj, PRUint32 argc, jsval *argv);
-
-  virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                              PRInt32 aModType) const;
-
-  virtual nsresult BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify);
-  
-  // nsIOptionElement
-  NS_IMETHOD SetSelectedInternal(PRBool aValue, PRBool aNotify);
-
-  // nsIContent
-  virtual PRInt32 IntrinsicState() const;
-
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-
-  nsresult CopyInnerTo(nsGenericElement* aDest) const;
-
-protected:
-  /**
-   * Get the select content element that contains this option, this
-   * intentionally does not return nsresult, all we care about is if
-   * there's a select associated with this option or not.
-   * @param aSelectElement the select element (out param)
-   */
-  nsIContent* GetSelect();
-
-  PRPackedBool mSelectedChanged;
-  PRPackedBool mIsSelected;
-
-  // True only while we're under the SetOptionsSelectedByIndex call when our
-  // "selected" attribute is changing and mSelectedChanged is false.
-  PRPackedBool mIsInSetDefaultSelected;
-};
 
 nsGenericHTMLElement*
 NS_NewHTMLOptionElement(nsINodeInfo *aNodeInfo, PRUint32 aFromParser)
@@ -201,7 +129,8 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   NS_ENSURE_ARG_POINTER(aForm);
   *aForm = nsnull;
 
-  nsCOMPtr<nsIFormControl> selectControl = do_QueryInterface(GetSelect());
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectControl =
+    do_QueryInterface(GetSelect());
 
   if (selectControl) {
     selectControl->GetForm(aForm);

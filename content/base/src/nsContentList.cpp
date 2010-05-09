@@ -170,15 +170,11 @@ nsFormContentList::nsFormContentList(nsIDOMHTMLFormElement *aForm,
   // move elements that belong to mForm into this content list
 
   PRUint32 i, length = 0;
-  nsCOMPtr<nsIDOMNode> item;
 
   aContentList.GetLength(&length);
 
   for (i = 0; i < length; i++) {
-    aContentList.Item(i, getter_AddRefs(item));
-
-    nsCOMPtr<nsIContent> c(do_QueryInterface(item));
-
+    nsIContent *c = aContentList.GetNodeAt(i);
     if (c && nsContentUtils::BelongsInForm(aForm, c)) {
       AppendElement(c);
     }
