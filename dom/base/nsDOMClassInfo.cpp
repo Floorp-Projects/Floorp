@@ -8216,7 +8216,9 @@ nsArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // Make sure rv == NS_OK here, so GetItemAt implementations that never fail
     // don't have to set rv.
     rv = NS_OK;
-    nsISupports* array_item = GetItemAt(GetNative(wrapper, obj), n, &rv);
+    nsWrapperCache *cache = nsnull;
+    nsISupports* array_item =
+      GetItemAt(GetNative(wrapper, obj), n, &cache, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (array_item) {
@@ -8279,7 +8281,7 @@ nsNodeListSH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 nsISupports*
 nsNodeListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                        nsresult *aResult)
+                        nsWrapperCache **aCache, nsresult *aResult)
 {
   nsINodeList* list = static_cast<nsINodeList*>(aNative);
 #ifdef DEBUG
@@ -8293,7 +8295,9 @@ nsNodeListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   }
 #endif
 
-  return list->GetNodeAt(aIndex);
+  nsINode *node;
+  *aCache = node = list->GetNodeAt(aIndex);
+  return node;
 }
 
 
@@ -8356,11 +8360,12 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 nsISupports*
 nsNamedNodeMapSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                            nsresult *aResult)
+                            nsWrapperCache **aCache, nsresult *aResult)
 {
   nsDOMAttributeMap* map = nsDOMAttributeMap::FromSupports(aNative);
 
-  nsINode *attr = map->GetItemAt(aIndex, aResult);
+  nsINode *attr;
+  *aCache = attr = map->GetItemAt(aIndex, aResult);
   return attr;
 }
 
@@ -8400,7 +8405,7 @@ nsHTMLCollectionSH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 nsISupports*
 nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                              nsresult *aResult)
+                              nsWrapperCache **aCache, nsresult *aResult)
 {
   nsIHTMLCollection* collection = static_cast<nsIHTMLCollection*>(aNative);
 #ifdef DEBUG
@@ -8414,7 +8419,9 @@ nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   }
 #endif
 
-  return collection->GetNodeAt(aIndex, aResult);
+  nsINode *item;
+  *aCache = item = collection->GetNodeAt(aIndex, aResult);
+  return item;
 }
 
 nsISupports*
@@ -8469,11 +8476,13 @@ nsContentListSH::GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 nsISupports*
 nsContentListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                           nsresult *aResult)
+                           nsWrapperCache **aCache, nsresult *aResult)
 {
   nsContentList *list = nsContentList::FromSupports(aNative);
 
-  return list->GetNodeAt(aIndex, aResult);
+  nsIContent *item;
+  *aCache = item = list->GetNodeAt(aIndex, aResult);
+  return item;
 }
 
 nsISupports*
@@ -10032,7 +10041,7 @@ nsHTMLOptionsCollectionSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 
 nsISupports*
 nsPluginSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                      nsresult *aResult)
+                      nsWrapperCache **aCache, nsresult *aResult)
 {
   nsPluginElement* plugin = nsPluginElement::FromSupports(aNative);
 
@@ -10053,7 +10062,7 @@ nsPluginSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
 
 nsISupports*
 nsPluginArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                           nsresult *aResult)
+                           nsWrapperCache **aCache, nsresult *aResult)
 {
   nsPluginArray* array = nsPluginArray::FromSupports(aNative);
 
@@ -10074,7 +10083,7 @@ nsPluginArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
 
 nsISupports*
 nsMimeTypeArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                             nsresult *aResult)
+                             nsWrapperCache **aCache, nsresult *aResult)
 {
   nsMimeTypeArray* array = nsMimeTypeArray::FromSupports(aNative);
 
@@ -10188,7 +10197,7 @@ nsMediaListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
 nsISupports*
 nsStyleSheetListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                              nsresult *rv)
+                              nsWrapperCache **aCache, nsresult *rv)
 {
   nsDOMStyleSheetList* list = nsDOMStyleSheetList::FromSupports(aNative);
 
@@ -10200,7 +10209,7 @@ nsStyleSheetListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsISupports*
 nsCSSValueListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                            nsresult *aResult)
+                            nsWrapperCache **aCache, nsresult *aResult)
 {
   nsDOMCSSValueList* list = nsDOMCSSValueList::FromSupports(aNative);
 
@@ -10251,7 +10260,7 @@ nsCSSStyleDeclSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
 nsISupports*
 nsCSSRuleListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                           nsresult *aResult)
+                           nsWrapperCache **aCache, nsresult *aResult)
 {
   nsICSSRuleList* list = static_cast<nsICSSRuleList*>(aNative);
 #ifdef DEBUG
@@ -10272,7 +10281,7 @@ nsCSSRuleListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsISupports*
 nsClientRectListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                              nsresult *aResult)
+                              nsWrapperCache **aCache, nsresult *aResult)
 {
   nsClientRectList* list = nsClientRectList::FromSupports(aNative);
 
@@ -10283,7 +10292,7 @@ nsClientRectListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsISupports*
 nsPaintRequestListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                nsresult *aResult)
+                                nsWrapperCache **aCache, nsresult *aResult)
 {
   nsPaintRequestList* list = nsPaintRequestList::FromSupports(aNative);
 
@@ -10295,7 +10304,7 @@ nsPaintRequestListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsISupports*
 nsTreeColumnsSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                           nsresult *aResult)
+                           nsWrapperCache **aCache, nsresult *aResult)
 {
   nsTreeColumns* columns = nsTreeColumns::FromSupports(aNative);
 
@@ -10824,7 +10833,7 @@ nsOfflineResourceListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 // nsFileListSH
 nsISupports*
 nsFileListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                        nsresult *aResult)
+                        nsWrapperCache **aCache, nsresult *aResult)
 {
   nsDOMFileList* list = nsDOMFileList::FromSupports(aNative);
 
