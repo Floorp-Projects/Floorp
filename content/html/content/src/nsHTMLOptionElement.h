@@ -55,6 +55,14 @@ public:
   nsHTMLOptionElement(nsINodeInfo *aNodeInfo);
   virtual ~nsHTMLOptionElement();
 
+  /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
+  static nsHTMLOptionElement* FromContent(nsIContent *aContent)
+  {
+    if (aContent->NodeInfo()->Equals(nsGkAtoms::option, kNameSpaceID_XHTML))
+      return static_cast<nsHTMLOptionElement*>(aContent);
+    return nsnull;
+  }
+
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
