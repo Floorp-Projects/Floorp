@@ -727,7 +727,7 @@ protected:
   // Subclasses need to override this, if the implementation can't fail it's
   // allowed to not set *aResult.
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult) = 0;
+                                 nsWrapperCache **aCache, nsresult *aResult) = 0;
 
 public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
@@ -755,7 +755,7 @@ public:
   virtual nsresult GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, PRUint32 *length);
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
  
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
@@ -805,7 +805,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
@@ -836,7 +836,7 @@ protected:
   virtual nsresult GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, PRUint32 *length);
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
@@ -867,7 +867,7 @@ public:
   virtual nsresult GetLength(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                              JSObject *obj, PRUint32 *length);
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
                                     nsresult *aResult);
@@ -1151,7 +1151,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
@@ -1180,7 +1180,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
@@ -1209,7 +1209,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
@@ -1361,7 +1361,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -1385,7 +1385,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -1436,7 +1436,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -1459,7 +1459,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -1483,7 +1483,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -1508,7 +1508,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
@@ -1548,7 +1548,7 @@ protected:
                           jsid *idp, PRBool *_retval);
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult)
+                                 nsWrapperCache **aCache, nsresult *aResult)
   {
     return nsnull;
   }
@@ -1608,7 +1608,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult)
+                                 nsWrapperCache **aCache, nsresult *aResult)
   {
     return nsnull;
   }
@@ -1754,7 +1754,7 @@ protected:
   }
 
   virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
-                                 nsresult *aResult);
+                                 nsWrapperCache **aCache, nsresult *aResult);
 
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)

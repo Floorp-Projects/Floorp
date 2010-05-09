@@ -1944,12 +1944,12 @@ nsHTMLOptionCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   return CallQueryInterface(item, aReturn);
 }
 
-nsISupports*
+nsIContent*
 nsHTMLOptionCollection::GetNodeAt(PRUint32 aIndex, nsresult* aResult)
 {
   *aResult = NS_OK;
 
-  return static_cast<Element*>(ItemAsOption(aIndex));
+  return static_cast<nsIContent*>(ItemAsOption(aIndex));
 }
 
 nsISupports*
