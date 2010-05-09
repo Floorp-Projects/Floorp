@@ -779,6 +779,7 @@ protected:
 
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult) = 0;
 
 public:
@@ -810,6 +811,7 @@ protected:
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult);
 
 public:
@@ -841,6 +843,7 @@ protected:
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult);
 
 public:
@@ -870,6 +873,7 @@ public:
                                  nsWrapperCache **aCache, nsresult *aResult);
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -1156,6 +1160,7 @@ protected:
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult);
 
 public:
@@ -1185,6 +1190,7 @@ protected:
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult);
 
 public:
@@ -1214,6 +1220,7 @@ protected:
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult);
 
 public:
@@ -1513,6 +1520,7 @@ protected:
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult);
 
 public:
@@ -1555,6 +1563,7 @@ protected:
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult);
 
 public:
@@ -1615,6 +1624,7 @@ protected:
   // Override nsNamedArraySH::GetNamedItem()
   virtual nsISupports* GetNamedItem(nsISupports *aNative,
                                     const nsAString& aName,
+                                    nsWrapperCache **cache,
                                     nsresult *aResult);
 
 public:

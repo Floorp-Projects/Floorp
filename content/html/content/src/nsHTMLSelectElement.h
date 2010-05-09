@@ -88,7 +88,9 @@ public:
   // nsIDOMHTMLOptionsCollection
 
   virtual nsIContent* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
-  virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
+  virtual nsISupports* GetNamedItem(const nsAString& aName,
+                                    nsWrapperCache** aCache,
+                                    nsresult* aResult);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHTMLOptionCollection,
                                            nsIHTMLCollection)

@@ -594,10 +594,14 @@ nsContentList::GetNodeAt(PRUint32 aIndex, nsresult* aResult)
 }
 
 nsISupports*
-nsContentList::GetNamedItem(const nsAString& aName, nsresult* aResult)
+nsContentList::GetNamedItem(const nsAString& aName, nsWrapperCache **aCache,
+                            nsresult* aResult)
 {
   *aResult = NS_OK;
-  return NamedItem(aName, PR_TRUE);
+
+  nsIContent *item;
+  *aCache = item = NamedItem(aName, PR_TRUE);
+  return item;
 }
 
 void
