@@ -476,6 +476,7 @@
 #include "nsIEventListenerService.h"
 #include "nsIFrameMessageManager.h"
 #include "mozilla/dom/Element.h"
+#include "nsHTMLSelectElement.h"
 
 using namespace mozilla::dom;
 
@@ -7415,8 +7416,7 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
         nsCOMPtr<nsIFormControl> form_control(do_QueryInterface(node));
 
         if (form_control) {
-          nsCOMPtr<nsIDOMHTMLFormElement> form;
-          form_control->GetForm(getter_AddRefs(form));
+          Element *form = form_control->GetFormElement();
 
           if (form) {
             // Found a form, use it.
@@ -9441,15 +9441,13 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
 
   nsresult rv = NS_OK;
   if (n >= 0) {
-    nsCOMPtr<nsIDOMHTMLSelectElement> s = do_QueryWrappedNative(wrapper, obj);
+    nsHTMLSelectElement *s =
+      nsHTMLSelectElement::FromSupports(GetNative(wrapper, obj));
 
-    nsCOMPtr<nsIDOMHTMLOptionsCollection> options;
-    s->GetOptions(getter_AddRefs(options));
+    nsHTMLOptionCollection *options = s->GetOptions();
 
     if (options) {
-      nsCOMPtr<nsIDOMNode> node;
-
-      options->Item(n, getter_AddRefs(node));
+      nsISupports *node = options->GetNodeAt(n, &rv);
 
       rv = WrapNative(cx, obj, node, &NS_GET_IID(nsIDOMNode), PR_TRUE, vp);
       if (NS_SUCCEEDED(rv)) {
