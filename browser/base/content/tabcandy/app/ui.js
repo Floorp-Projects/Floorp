@@ -167,14 +167,14 @@ window.Page = {
       var group = Groups.getActiveGroup();
       if( group && group._children.length == 0 )
         Page.show();
-        
+
       // Take care of the case where you've closed the last tab in
       // an un-named group, which means that the group is gone (null) and
       // there are no visible tabs.
       if( group == null && Tabbar.getVisibleTabs().length == 0){
         Page.show();
       }
-        
+
       return false;
     });
         
