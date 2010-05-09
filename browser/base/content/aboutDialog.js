@@ -37,7 +37,7 @@
 
 var gSelectedPage = 0;
 
-function init(aEvent) 
+function init(aEvent)
 {
   if (aEvent.target != document)
     return;
