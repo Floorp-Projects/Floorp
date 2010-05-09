@@ -477,6 +477,7 @@
 #include "nsIFrameMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "nsHTMLSelectElement.h"
+#include "nsHTMLLegendElement.h"
 
 using namespace mozilla::dom;
 
@@ -7475,9 +7476,8 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
                   hasHadScriptHandlingObject ||
                   IsPrivilegedScript());
 
-  nsISupports *native_parent;
+  nsINode *native_parent;
 
-  PRBool slimWrappers = PR_TRUE;
   PRBool nodeIsElement = node->IsElement();
   if (nodeIsElement && node->AsElement()->IsXUL()) {
     // For XUL elements, use the parent, if any.
@@ -7507,15 +7507,14 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
             native_parent = form;
           }
         }
-      // Legend isn't an HTML form control but should have its fieldset form
-      // as scope parent at least for backward compatibility.
-      } else if (node->AsElement()->IsHTML() &&
-                 node->AsElement()->Tag() == nsGkAtoms::legend) {
-        nsCOMPtr<nsIDOMHTMLLegendElement> legend(do_QueryInterface(node));
-
+      }
+      else {
+        // Legend isn't an HTML form control but should have its fieldset form
+        // as scope parent at least for backward compatibility.
+        nsHTMLLegendElement *legend =
+          nsHTMLLegendElement::FromContent(node->AsElement());
         if (legend) {
-          nsCOMPtr<nsIDOMHTMLFormElement> form;
-          legend->GetForm(getter_AddRefs(form));
+          Element *form = legend->GetFormElement();
 
           if (form) {
             native_parent = form;
@@ -7528,19 +7527,27 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
     // document's global object, if there is one
 
     // Get the scope object from the document.
-    native_parent = doc->GetScopeObject();
+    nsISupports *scope = doc->GetScopeObject();
 
-    if (!native_parent) {
+    if (scope) {
+        jsval v;
+        nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+        nsresult rv = WrapNative(cx, globalObj, scope, nsnull, PR_FALSE, &v,
+                                 getter_AddRefs(holder));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        holder->GetJSObject(parentObj);
+    }
+    else {
       // No global object reachable from this document, use the
       // global object that was passed to this method.
 
       *parentObj = globalObj;
-
-      return node->IsInNativeAnonymousSubtree() ?
-        NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
     }
 
-    slimWrappers = PR_FALSE;
+    // No slim wrappers for a document's scope object.
+    return node->IsInNativeAnonymousSubtree() ?
+      NS_SUCCESS_CHROME_ACCESS_ONLY : NS_OK;
   }
 
   // XXXjst: Maybe we need to find the global to use from the
@@ -7548,22 +7555,12 @@ nsNodeSH::PreCreate(nsISupports *nativeObj, JSContext *cx, JSObject *globalObj,
   // to wrap here? But that's not always reachable, let's use
   // globalObj for now...
 
-  if (native_parent == doc && (*parentObj = doc->GetWrapper()))
-    return node->IsInNativeAnonymousSubtree() ?
-      NS_SUCCESS_CHROME_ACCESS_ONLY :
-      (slimWrappers ? NS_SUCCESS_ALLOW_SLIM_WRAPPERS : NS_OK);
-
-  jsval v;
-  nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsresult rv = WrapNative(cx, globalObj, native_parent, PR_FALSE, &v,
-                           getter_AddRefs(holder));
+  nsresult rv = WrapNativeParent(cx, globalObj, native_parent, native_parent,
+                                 parentObj);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *parentObj = JSVAL_TO_OBJECT(v);
-
   return node->IsInNativeAnonymousSubtree() ?
-    NS_SUCCESS_CHROME_ACCESS_ONLY :
-    (slimWrappers ? NS_SUCCESS_ALLOW_SLIM_WRAPPERS : NS_OK);
+    NS_SUCCESS_CHROME_ACCESS_ONLY : NS_SUCCESS_ALLOW_SLIM_WRAPPERS;
 }
 
 NS_IMETHODIMP
