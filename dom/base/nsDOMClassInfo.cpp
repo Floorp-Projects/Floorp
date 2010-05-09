@@ -475,7 +475,6 @@ using namespace mozilla::dom;
 
 #include "mozilla/dom/indexedDB/IndexedDatabaseRequest.h"
 #include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/IDBDatabaseError.h"
 #include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
 #include "mozilla/dom/indexedDB/IDBEvents.h"
 #include "mozilla/dom/indexedDB/IDBObjectStoreRequest.h"
@@ -1399,8 +1398,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(IDBRequest, nsEventTargetSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBDatabaseRequest, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(IDBDatabaseError, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(IDBErrorEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -3875,17 +3872,15 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBDatabase)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(IDBDatabaseError, nsIIDBDatabaseError)
-    DOM_CLASSINFO_MAP_ENTRY(nsIIDBDatabaseError)
-  DOM_CLASSINFO_MAP_END
-
   DOM_CLASSINFO_MAP_BEGIN(IDBErrorEvent, nsIIDBErrorEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBErrorEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(IDBSuccessEvent, nsIIDBSuccessEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIIDBSuccessEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIIDBEvent)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEvent)
   DOM_CLASSINFO_MAP_END
 

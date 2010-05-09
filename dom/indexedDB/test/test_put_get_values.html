@@ -21,8 +21,7 @@
       var testInt = { key: 1, value: 1002 };
 
       function errorHandler(event) {
-        ok(false, "indexedDB error (" + event.error.code + "): " +
-           event.error.message);
+        ok(false, "indexedDB error (" + event.code + "): " + event.message);
         SimpleTest.finish();
       }
 

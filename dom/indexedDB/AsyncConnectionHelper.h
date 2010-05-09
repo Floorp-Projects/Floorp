@@ -43,9 +43,9 @@
 // Only meant to be included in IndexedDB source files, not exported.
 #include "IndexedDatabase.h"
 #include "IDBDatabaseRequest.h"
+#include "IDBRequest.h"
 
 #include "mozIStorageConnection.h"
-#include "nsIDOMEventTarget.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsIVariant.h"
@@ -87,7 +87,7 @@ public:
 
 protected:
   AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
-                        nsIDOMEventTarget* aTarget);
+                        IDBRequest* aRequest);
 
   virtual ~AsyncConnectionHelper();
 
@@ -132,9 +132,7 @@ protected:
 
 protected:
   nsRefPtr<IDBDatabaseRequest> mDatabase;
-
-private:
-  nsCOMPtr<nsIDOMEventTarget> mTarget;
+  nsRefPtr<IDBRequest> mRequest;
 
 #ifdef DEBUG
   nsCOMPtr<nsIThread> mDatabaseThread;

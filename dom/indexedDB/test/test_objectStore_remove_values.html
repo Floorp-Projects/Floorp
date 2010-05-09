@@ -23,8 +23,7 @@ function continueTest(aEvent)
 
 function errorHandler(aEvent)
 {
-  ok(false, "indexedDB error (" + aEvent.error.code + "): " +
-     aEvent.error.message);
+  ok(false, "indexedDB error (" + event.code + "): " + event.message);
   SimpleTest.executeSoon(finishTest);
 }
 
@@ -41,7 +40,7 @@ function ExpectError(aCode)
 ExpectError.prototype = {
   handleEvent: function(aEvent)
   {
-    is(this._code, aEvent.error.code, "Expected error was thrown.");
+    is(this._code, aEvent.code, "Expected error was thrown.");
     continueTest();
   },
 };
@@ -49,7 +48,7 @@ ExpectError.prototype = {
 function testSteps()
 {
   const IDBObjectStore = Components.interfaces.nsIIDBObjectStore;
-  const IDBDatabaseError = Components.interfaces.nsIIDBDatabaseError;
+  const IDBDatabaseException = Components.interfaces.nsIIDBDatabaseException;
   const name = window.location.pathname;
   const description = "My Test Database";
 
@@ -91,7 +90,7 @@ function testSteps()
 
   // Make sure it was removed.
   request = objectStore.get(id);
-  request.onerror = new ExpectError(IDBDatabaseError.NOT_FOUND_ERR);
+  request.onerror = new ExpectError(IDBDatabaseException.NOT_FOUND_ERR);
   request.onsuccess = unexpectedSuccessHandler;
   yield;
 

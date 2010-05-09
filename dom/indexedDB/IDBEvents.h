@@ -42,7 +42,7 @@
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-#include "nsIIDBDatabaseError.h"
+#include "nsIIDBEvent.h"
 #include "nsIIDBErrorEvent.h"
 #include "nsIIDBSuccessEvent.h"
 #include "nsIRunnable.h"
@@ -53,58 +53,68 @@
 #define SUCCESS_EVT_STR "success"
 #define ERROR_EVT_STR "error"
 
-class nsIDOMEventTarget;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBErrorEvent : public nsDOMEvent,
+class IDBRequest;
+
+class IDBEvent : public nsDOMEvent,
+                 public nsIIDBEvent
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIIDBEVENT
+  NS_FORWARD_TO_NSDOMEVENT
+
+protected:
+  IDBEvent() : nsDOMEvent(nsnull, nsnull) { }
+
+  nsCOMPtr<nsISupports> mSource;
+};
+
+class IDBErrorEvent : public IDBEvent,
                       public nsIIDBErrorEvent
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBERROREVENT
-  NS_FORWARD_TO_NSDOMEVENT
+  NS_FORWARD_NSIDOMEVENT(IDBEvent::)
+  NS_FORWARD_NSIIDBEVENT(IDBEvent::)
 
   static already_AddRefed<nsIDOMEvent>
-  Create(PRUint16 aCode);
+  Create(IDBRequest* aRequest,
+         PRUint16 aCode);
 
   static already_AddRefed<nsIRunnable>
-  CreateRunnable(nsIDOMEventTarget* aTarget,
+  CreateRunnable(IDBRequest* aRequest,
                  PRUint16 aCode);
 
 protected:
-  IDBErrorEvent()
-  : nsDOMEvent(nsnull, nsnull)
-  { }
+  IDBErrorEvent() { }
 
-  nsresult
-  Init();
-
-  nsCOMPtr<nsIIDBDatabaseError> mError;
+  PRUint16 mCode;
+  nsString mMessage;
 };
 
-class IDBSuccessEvent : public nsDOMEvent,
+class IDBSuccessEvent : public IDBEvent,
                         public nsIIDBSuccessEvent
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBSUCCESSEVENT
-  NS_FORWARD_TO_NSDOMEVENT
+  NS_FORWARD_NSIDOMEVENT(IDBEvent::)
+  NS_FORWARD_NSIIDBEVENT(IDBEvent::)
 
   static already_AddRefed<nsIDOMEvent>
-  Create(nsIVariant* aResult);
+  Create(IDBRequest* aRequest,
+         nsIVariant* aResult);
 
   static already_AddRefed<nsIRunnable>
-  CreateRunnable(nsIDOMEventTarget* aTarget,
+  CreateRunnable(IDBRequest* aRequest,
                  nsIVariant* aResult);
 
 protected:
-  IDBSuccessEvent()
-  : nsDOMEvent(nsnull, nsnull)
-  { }
-
-  nsresult
-  Init();
+  IDBSuccessEvent() { }
 
   nsCOMPtr<nsIVariant> mResult;
 };
