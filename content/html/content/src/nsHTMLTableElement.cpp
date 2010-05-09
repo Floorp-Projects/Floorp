@@ -119,7 +119,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsISupports* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
+  virtual nsIContent* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
   virtual nsISupports* GetNamedItem(const nsAString& aName, nsresult* aResult);
 
   NS_IMETHOD    ParentDestroyed();
@@ -275,7 +275,7 @@ TableRowsCollection::GetLength(PRUint32* aLength)
 // Returns the item at index aIndex if available. If null is returned,
 // then aCount will be set to the number of rows in this row collection.
 // Otherwise, the value of aCount is undefined.
-static nsINode*
+static nsIContent*
 GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
                          PRUint32 aIndex, PRUint32* aCount)
 {
@@ -292,13 +292,13 @@ GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
   return nsnull;
 }
 
-nsISupports* 
+nsIContent*
 TableRowsCollection::GetNodeAt(PRUint32 aIndex, nsresult *aResult)
 {
   nsresult rv = NS_OK;
   DO_FOR_EACH_ROWGROUP(
     PRUint32 count;
-    nsINode* node = GetItemOrCountInRowGroup(rows, aIndex, &count);
+    nsIContent* node = GetItemOrCountInRowGroup(rows, aIndex, &count);
     if (node) {
       return node; 
     }
