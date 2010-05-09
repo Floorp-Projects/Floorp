@@ -39,12 +39,13 @@
 
 #include "IDBEvents.h"
 
+#include "nsIIDBDatabaseException.h"
 #include "nsIPrivateDOMEvent.h"
 
 #include "nsDOMClassInfo.h"
 #include "nsThreadUtils.h"
 
-#include "IDBDatabaseError.h"
+#include "IDBRequest.h"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -84,17 +85,113 @@ private:
   nsCOMPtr<nsIDOMEvent> mEvent;
 };
 
+void
+GetMessageForErrorCode(PRUint16 aCode,
+                       nsAString& aMessage)
+{
+  switch (aCode) {
+    case nsIIDBDatabaseException::NON_TRANSIENT_ERR:
+      aMessage.AssignLiteral("This error occurred because an operation was not "
+                             "allowed on an object. A retry of the same "
+                             "operation would fail unless the cause of the "
+                             "error is corrected.");
+      break;
+    case nsIIDBDatabaseException::NOT_FOUND_ERR:
+      aMessage.AssignLiteral("The operation failed because the requested "
+                             "database object could not be found. For example, "
+                             "an object store did not exist but was being "
+                             "opened.");
+      break;
+    case nsIIDBDatabaseException::CONSTRAINT_ERR:
+      aMessage.AssignLiteral("A mutation operation in the transaction failed "
+                             "due to a because a constraint was not satisfied. "
+                             "For example, an object such as an object store "
+                             "or index already exists and a new one was being "
+                             "attempted to be created.");
+      break;
+    case nsIIDBDatabaseException::DATA_ERR:
+      aMessage.AssignLiteral("Data provided to an operation does not meet "
+                             "requirements.");
+      break;
+    case nsIIDBDatabaseException::NOT_ALLOWED_ERR:
+      aMessage.AssignLiteral("A mutation operation was attempted on a database "
+                             "that did not allow mutations.");
+      break;
+    case nsIIDBDatabaseException::SERIAL_ERR:
+      aMessage.AssignLiteral("The operation failed because of the size of the "
+                             "data set being returned or because there was a "
+                             "problem in serializing or deserializing the "
+                             "object being processed.");
+      break;
+    case nsIIDBDatabaseException::RECOVERABLE_ERR:
+      aMessage.AssignLiteral("The operation failed because the database was "
+                             "prevented from taking an action. The operation "
+                             "might be able to succeed if the application "
+                             "performs some recovery steps and retries the "
+                             "entire transaction. For example, there was not "
+                             "enough remaining storage space, or the storage "
+                             "quota was reached and the user declined to give "
+                             "more space to the database.");
+      break;
+    case nsIIDBDatabaseException::TRANSIENT_ERR:
+      aMessage.AssignLiteral("The operation failed because of some temporary "
+                             "problems. The failed operation might be able to "
+                             "succeed when the operation is retried without "
+                             "any intervention by application-level "
+                             "functionality.");
+      break;
+    case nsIIDBDatabaseException::TIMEOUT_ERR:
+      aMessage.AssignLiteral("A lock for the transaction could not be obtained "
+                             "in a reasonable time.");
+      break;
+    case nsIIDBDatabaseException::DEADLOCK_ERR:
+      aMessage.AssignLiteral("The current transaction was automatically rolled "
+                             "back by the database becuase of deadlock or "
+                             "other transaction serialization failures.");
+      break;
+    case nsIIDBDatabaseException::UNKNOWN_ERR:
+      // Fall through.
+    default:
+      aMessage.AssignLiteral("The operation failed for reasons unrelated to "
+                             "the database itself and not covered by any other "
+                             "error code.");
+  }
+}
+
 } // anonymous namespace
+
+NS_IMPL_ADDREF_INHERITED(IDBEvent, nsDOMEvent)
+NS_IMPL_RELEASE_INHERITED(IDBEvent, nsDOMEvent)
+
+NS_INTERFACE_MAP_BEGIN(IDBEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIIDBEvent)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+
+NS_IMETHODIMP
+IDBEvent::GetSource(nsISupports** aSource)
+{
+  nsCOMPtr<nsISupports> source(mSource);
+  source.forget(aSource);
+  return NS_OK;
+}
 
 // static
 already_AddRefed<nsIDOMEvent>
-IDBErrorEvent::Create(PRUint16 aCode)
+IDBErrorEvent::Create(IDBRequest* aRequest,
+                      PRUint16 aCode)
 {
   nsRefPtr<IDBErrorEvent> event(new IDBErrorEvent());
-  nsresult rv = event->Init();
+
+  event->mSource = aRequest->GetGenerator();
+  event->mCode = aCode;
+  GetMessageForErrorCode(aCode, event->mMessage);
+
+  nsresult rv = event->InitEvent(NS_LITERAL_STRING(ERROR_EVT_STR), PR_FALSE,
+                                 PR_FALSE);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  event->mError = new IDBDatabaseError(aCode);
+  rv = event->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   nsCOMPtr<nsIDOMEvent> result(idomevent_cast(event));
   return result.forget();
@@ -102,55 +199,70 @@ IDBErrorEvent::Create(PRUint16 aCode)
 
 // static
 already_AddRefed<nsIRunnable>
-IDBErrorEvent::CreateRunnable(nsIDOMEventTarget* aTarget,
+IDBErrorEvent::CreateRunnable(IDBRequest* aRequest,
                               PRUint16 aCode)
 {
-  nsCOMPtr<nsIDOMEvent> event(IDBErrorEvent::Create(aCode));
+  nsCOMPtr<nsIDOMEvent> event(IDBErrorEvent::Create(aRequest, aCode));
   NS_ENSURE_TRUE(event, nsnull);
 
-  nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aTarget, event));
+  nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aRequest, event));
   return runnable.forget();
 }
 
-nsresult
-IDBErrorEvent::Init()
-{
-  nsresult rv = InitEvent(NS_LITERAL_STRING(ERROR_EVT_STR), PR_FALSE, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = SetTrusted(PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMPL_ADDREF_INHERITED(IDBErrorEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(IDBErrorEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(IDBErrorEvent, IDBEvent)
+NS_IMPL_RELEASE_INHERITED(IDBErrorEvent, IDBEvent)
 
 NS_INTERFACE_MAP_BEGIN(IDBErrorEvent)
   NS_INTERFACE_MAP_ENTRY(nsIIDBErrorEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBErrorEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(IDBEvent)
 
 DOMCI_DATA(IDBErrorEvent, IDBErrorEvent)
 
 NS_IMETHODIMP
-IDBErrorEvent::GetError(nsIIDBDatabaseError** aError)
+IDBErrorEvent::GetCode(PRUint16* aCode)
 {
-  nsCOMPtr<nsIIDBDatabaseError> error(mError);
-  error.forget(aError);
+  *aCode = mCode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBErrorEvent::SetCode(PRUint16 aCode)
+{
+  mCode = aCode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBErrorEvent::GetMessage(nsAString& aMessage)
+{
+  aMessage.Assign(mMessage);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBErrorEvent::SetMessage(const nsAString& aMessage)
+{
+  mMessage.Assign(aMessage);
   return NS_OK;
 }
 
 // static
 already_AddRefed<nsIDOMEvent>
-IDBSuccessEvent::Create(nsIVariant* aResult)
+IDBSuccessEvent::Create(IDBRequest* aRequest,
+                        nsIVariant* aResult)
 {
   nsRefPtr<IDBSuccessEvent> event(new IDBSuccessEvent());
-  nsresult rv = event->Init();
+
+  event->mSource = aRequest->GetGenerator();
+  event->mResult = aResult;
+
+  nsresult rv = event->InitEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR), PR_FALSE,
+                          PR_FALSE);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  event->mResult = aResult;
+  rv = event->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
   nsCOMPtr<nsIDOMEvent> result(idomevent_cast(event));
   return result.forget();
@@ -158,36 +270,23 @@ IDBSuccessEvent::Create(nsIVariant* aResult)
 
 // static
 already_AddRefed<nsIRunnable>
-IDBSuccessEvent::CreateRunnable(nsIDOMEventTarget* aTarget,
+IDBSuccessEvent::CreateRunnable(IDBRequest* aRequest,
                                 nsIVariant* aResult)
 {
-  nsCOMPtr<nsIDOMEvent> event(IDBSuccessEvent::Create(aResult));
+  nsCOMPtr<nsIDOMEvent> event(IDBSuccessEvent::Create(aRequest, aResult));
   NS_ENSURE_TRUE(event, nsnull);
 
-  nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aTarget, event));
+  nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aRequest, event));
   return runnable.forget();
 }
 
-nsresult
-IDBSuccessEvent::Init()
-{
-  nsresult rv = InitEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR), PR_FALSE,
-                          PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = SetTrusted(PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-NS_IMPL_ADDREF_INHERITED(IDBSuccessEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(IDBSuccessEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(IDBSuccessEvent, IDBEvent)
+NS_IMPL_RELEASE_INHERITED(IDBSuccessEvent, IDBEvent)
 
 NS_INTERFACE_MAP_BEGIN(IDBSuccessEvent)
   NS_INTERFACE_MAP_ENTRY(nsIIDBSuccessEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBSuccessEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(IDBEvent)
 
 DOMCI_DATA(IDBSuccessEvent, IDBSuccessEvent)
 

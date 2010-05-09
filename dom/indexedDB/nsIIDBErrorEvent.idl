@@ -37,12 +37,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMEvent.idl"
-
-interface nsIIDBDatabaseError;
+#include "nsIIDBEvent.idl"
 
 [scriptable, uuid(70420fe2-363a-43fc-a11c-636a809f7598)]
-interface nsIIDBErrorEvent : nsIDOMEvent
+interface nsIIDBErrorEvent : nsIIDBEvent
 {
-  readonly attribute nsIIDBDatabaseError error;
+  /**
+   * See nsIIDBDatabaseException.idl
+   */
+  attribute unsigned short code;
+
+  attribute DOMString message;
 };

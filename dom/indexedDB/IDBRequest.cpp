@@ -113,12 +113,6 @@ IDBRequest::GetOnerror(nsIDOMEventListener** aErrorListener)
   return GetInnerEventListener(mOnErrorListener, aErrorListener);
 }
 
-NS_IMETHODIMP
-IDBRequest::GetSource(nsISupports** aSource)
-{
-  return CallQueryInterface(mGenerator, aSource);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 

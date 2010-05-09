@@ -19,8 +19,7 @@
       const objectStoreName = "Objects";
 
       function errorHandler(event) {
-        ok(false, "indexedDB error (" + event.error.code + "): " +
-           event.error.message);
+        ok(false, "indexedDB error (" + event.code + "): " + event.message);
         SimpleTest.finish();
       }
 

@@ -482,8 +482,9 @@ members = [
     # dom/indexedDB
     'nsIIDBCursor.*',
     'nsIIDBDatabase.*',
-    'nsIIDBDatabaseError.*',
+    'nsIIDBDatabaseException.*',
     'nsIIDBDatabaseRequest.*',
+    'nsIIDBEvent.*',
     'nsIIDBErrorEvent.*',
     'nsIIDBIndex.*',
     'nsIIDBIndexRequest.*',

@@ -37,28 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIDOMEvent.idl"
 
-/**
- * IDBDatabaseError interface.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBDatabaseError for more
- * information.
- */
-[scriptable, uuid(7369d3ad-8742-4642-a538-e93bfcf896b3)]
-interface nsIIDBDatabaseError : nsISupports
+[scriptable, uuid(d5623e5f-e19d-4234-8259-343a5a21c83a)]
+interface nsIIDBEvent : nsIDOMEvent
 {
-  const unsigned short UNKNOWN_ERR = 0;
-  const unsigned short NON_TRANSIENT_ERR = 1;
-  const unsigned short NOT_FOUND_ERR = 2;
-  const unsigned short CONSTRAINT_ERR = 3;
-  const unsigned short DATA_ERR = 4;
-  const unsigned short NOT_ALLOWED_ERR = 5;
-  const unsigned short SERIAL_ERR = 11;
-  const unsigned short RECOVERABLE_ERR = 21;
-  const unsigned short TRANSIENT_ERR = 31;
-  const unsigned short TIMEOUT_ERR = 32;
-  const unsigned short DEADLOCK_ERR = 33;
-  attribute unsigned short code;
-
-  attribute DOMString message;
+  readonly attribute nsISupports source;
 };

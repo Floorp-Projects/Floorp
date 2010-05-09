@@ -61,6 +61,4 @@ interface nsIIDBRequest : nsISupports
   attribute nsIDOMEventListener onsuccess;
 
   attribute nsIDOMEventListener onerror;
-
-  readonly attribute nsISupports source;
 };

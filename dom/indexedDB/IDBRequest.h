@@ -49,8 +49,6 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 
-class nsIIDBDatabaseError;
-
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IndexedDatabaseRequest;
@@ -102,6 +100,12 @@ public:
   NS_DECL_NSIIDBREQUEST
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBRequest,
                                            nsDOMEventTargetHelper)
+
+  already_AddRefed<nsISupports> GetGenerator()
+  {
+    nsCOMPtr<nsISupports> generator(mGenerator);
+    return generator.forget();
+  }
 
 private:
   // Only called by IDBRequestGenerator::Generate().
