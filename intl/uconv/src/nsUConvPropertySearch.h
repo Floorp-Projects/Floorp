@@ -1,4 +1,3 @@
-/* vim: set sts=2 sw=2 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is gre/res property file loading code.
+ * The Original Code is Property file to C++ array conversion code.
  *
  * The Initial Developer of the Original Code is
- * Christian Biesinger <cbiesinger@web.de>.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Henri Sivonen <hsivonen@iki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,32 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsGREResProperties_h__
-#define nsGREResProperties_h__
+#ifndef nsUConvPropertySearch_h_
+#define nsUConvPropertySearch_h_
 
 #include "nsString.h"
-#include "nsIPersistentProperties2.h"
-#include "nsCOMPtr.h"
 
-/**
- * This class loads a .properties file from the gre/res directory; the file
- * to load is specified as a constructor argument.
- */
-class nsGREResProperties {
-public:
-  /**
-   * @param aFile The file to load. Must be an ASCII string.
-   */
-  nsGREResProperties(const nsACString& aFile);
-
-  /**
-   * Returns whether loading the file succeeded.
-   */
-  PRBool DidLoad() const;
-  nsresult Get(const nsAString& aKey, nsAString& value);
-
-private:
-  nsCOMPtr<nsIPersistentProperties> mProps;
+class nsUConvPropertySearch
+{
+  public:
+    /**
+     * Looks up a property by value.
+     *
+     * @param aProperties
+     *   the static property array
+     * @param aKey
+     *   the key to look up
+     * @param aValue
+     *   the return value (empty string if not found)
+     * @return NS_OK if found or NS_ERROR_FAILURE if not found
+     */
+    static nsresult SearchPropertyValue(const char* aProperties[][3],
+                                        PRInt32 aNumberOfProperties,
+                                        const nsACString& aKey,
+                                        nsACString& aValue);
 };
 
-#endif // nsGREResProperties_h__
+#endif /* nsUConvPropertySearch_h_ */

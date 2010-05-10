@@ -1,4 +1,3 @@
-/* vim: set sts=2 sw=2 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is gre/res property file loading code.
+ * The Original Code is Property file to C++ array conversion code.
  *
  * The Initial Developer of the Original Code is
- * Christian Biesinger <cbiesinger@web.de>.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Henri Sivonen <hsivonen@iki.fi>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,52 +35,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsGREResProperties.h"
-#include "nsILocalFile.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsNetUtil.h"
+#include "nsUConvPropertySearch.h"
+#include "nsCRT.h"
 
-nsGREResProperties::nsGREResProperties(const nsACString& aFile)
+// static
+nsresult
+nsUConvPropertySearch::SearchPropertyValue(const char* aProperties[][3],
+                                           PRInt32 aNumberOfProperties,
+                                           const nsACString& aKey,
+                                           nsACString& aValue)
 {
-  nsresult rv;
-  nsCOMPtr<nsIIOService> ioservice(do_GetIOService(&rv));
-  nsCOMPtr<nsIInputStream> inStr;
-  nsCOMPtr<nsIURI> uri;
-  nsCOMPtr<nsIChannel> channel;
-  if (NS_FAILED(rv))
-    return;
-
-  rv = ioservice->NewURI(NS_LITERAL_CSTRING("resource://gre-resources/") + aFile,
-                         nsnull, nsnull, getter_AddRefs(uri));
-  if (NS_FAILED(rv))
-    return;
-
-  rv = NS_NewChannel(getter_AddRefs(channel), uri, ioservice);
-  if (NS_FAILED(rv))
-    return;
-
-  rv = channel->Open(getter_AddRefs(inStr));
-  if (NS_FAILED(rv))
-    return;
-
-  mProps = do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
-  if (mProps) {
-    rv = mProps->Load(inStr);
-    if (NS_FAILED(rv))
-      mProps = nsnull;
+  const char* key = PromiseFlatCString(aKey).get();
+  PRInt32 lo = 0;
+  PRInt32 hi = aNumberOfProperties - 1;
+  while (lo <= hi) {
+    PRUint32 mid = (lo + hi) / 2;
+    PRInt32 comp = nsCRT::strcmp(aProperties[mid][0], key);
+    if (comp > 0) {
+      hi = mid - 1;
+    } else if (comp < 0) {
+      lo = mid + 1;
+    } else {
+      nsDependentCString val(aProperties[mid][1],
+                             NS_PTR_TO_UINT32(aProperties[mid][2]));
+      aValue.Assign(val);
+      return NS_OK;
+    }
   }
-}
-
-PRBool nsGREResProperties::DidLoad() const
-{
-  return mProps != nsnull;
-}
-
-nsresult nsGREResProperties::Get(const nsAString& aKey, nsAString& aValue)
-{
-  if (!mProps)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  return mProps->GetStringProperty(NS_ConvertUTF16toUTF8(aKey), aValue);
+  aValue.Truncate();
+  return NS_ERROR_FAILURE;
 }
