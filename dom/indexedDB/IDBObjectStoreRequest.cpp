@@ -228,6 +228,56 @@ GetKeyFromVariant(nsIVariant* aKey,
   return NS_OK;
 }
 
+inline
+nsresult
+GetKeyFromValue(JSContext* aCx,
+                jsval aValue,
+                const nsString& aKeyPath,
+                PRBool aAutoIncrement,
+                nsAString& aKeyString,
+                PRInt64* aKeyInt)
+{
+  NS_PRECONDITION(aCx && aKeyInt, "Null pointers!");
+
+  if (!JSVAL_IS_OBJECT(aValue)) {
+    fprintf(stderr, "not an object!\n");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  jsval key;
+  JSBool rc = JS_GetUCProperty(aCx, JSVAL_TO_OBJECT(aValue),
+                               reinterpret_cast<const jschar*>(aKeyPath.get()),
+                               aKeyPath.Length(), &key);
+  NS_ENSURE_TRUE(key, NS_ERROR_UNEXPECTED);
+
+  if (JSVAL_IS_INT(key)) {
+    *aKeyInt = JSVAL_TO_INT(key);
+    aKeyString.SetIsVoid(PR_TRUE);
+    return NS_OK;
+  }
+  else if (JSVAL_IS_STRING(key)) {
+    JSString* keyString = JSVAL_TO_STRING(key);
+    size_t len = JS_GetStringLength(keyString);
+    if (len) {
+      aKeyString.Assign(
+        reinterpret_cast<const PRUnichar*>(JS_GetStringChars(keyString)),
+        len
+      );
+    }
+    else {
+      aKeyString.SetIsVoid(PR_TRUE);
+    }
+    return NS_OK;
+  }
+  else if (key == JSVAL_VOID && aAutoIncrement) {
+    aKeyString.SetIsVoid(PR_TRUE);
+    return NS_OK;
+  }
+
+  fprintf(stderr, "invalid type\n");
+  return NS_ERROR_INVALID_ARG;
+}
+
 } // anonymous namespace
 
 // static
@@ -341,10 +391,6 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
   nsString keyString;
   PRInt64 keyInt;
 
-  nsresult rv = GetKeyFromVariant(aKey, mAutoIncrement, PR_FALSE,
-                                  keyString, &keyInt);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // This is the slow path, need to do this better once nsIVariants can have
   // raw jsvals inside them.
   NS_WARNING("Using a slow path for Put! Fix this now!");
@@ -353,7 +399,7 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
   NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
 
   nsAXPCNativeCallContext* cc;
-  rv = xpc->GetCurrentNativeCallContext(&cc);
+  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
 
@@ -385,6 +431,16 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
 
   nsString jsonString;
   rv = json->EncodeFromJSVal(clone.addr(), cx, jsonString);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Inline keys should check the object first.
+  if (!mKeyPath.IsVoid()) {
+    rv = GetKeyFromValue(cx, clone.value(), mKeyPath, mAutoIncrement,
+                         keyString, &keyInt);
+  }
+  else {
+    rv = GetKeyFromVariant(aKey, mAutoIncrement, PR_FALSE, keyString, &keyInt);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
