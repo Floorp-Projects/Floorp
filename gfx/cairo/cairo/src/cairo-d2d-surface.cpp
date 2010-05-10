@@ -632,10 +632,7 @@ static void _d2d_snapshot_detached(cairo_surface_t *surface)
 /**
  * This creates an ID2D1Brush that will fill with the correct pattern.
  * This function passes a -strong- reference to the caller, the brush
- * needs to be released, even if it is not unique. This function can
- * potentially return multiple brushes, in order to facilitate drawing
- * surfaces which do not fit in a single bitmap. It will then be responsible
- * for providing the proper clipping.
+ * needs to be released, even if it is not unique.
  *
  * \param d2dsurf Surface to create a brush for
  * \param pattern The pattern to create a brush for
@@ -647,14 +644,8 @@ static void _d2d_snapshot_detached(cairo_surface_t *surface)
 RefPtr<ID2D1Brush>
 _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf, 
 				    const cairo_pattern_t *pattern,
-				    unsigned int last_run,
-				    unsigned int *remaining_runs,
-				    bool *pushed_clip,
 				    bool unique)
 {
-    *remaining_runs = 1;
-    *pushed_clip = false;
-
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *sourcePattern =
 	    (cairo_solid_pattern_t*)pattern;
@@ -663,7 +654,6 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	    RefPtr<ID2D1SolidColorBrush> brush;
 	    d2dsurf->rt->CreateSolidColorBrush(color,
 					       &brush);
-	    *remaining_runs = 0;
 	    return brush;
 	} else {
 	    if (d2dsurf->solidColorBrush->GetColor().a != color.a ||
@@ -672,7 +662,6 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 		d2dsurf->solidColorBrush->GetColor().b != color.b) {
 		d2dsurf->solidColorBrush->SetColor(color);
 	    }
-	    *remaining_runs = 0;
 	    return d2dsurf->solidColorBrush;
 	}
 
@@ -706,7 +695,6 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 					       stopCollection,
 					       &brush);
 	delete [] stops;
-	*remaining_runs = 0;
 	return brush;
 
     } else if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
@@ -753,7 +741,6 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 					       stopCollection,
 					       &brush);
 	delete [] stops;
-	*remaining_runs = 0;
 	return brush;
 
     } else if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
@@ -784,6 +771,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	} else {
 	    extendMode = D2D1_EXTEND_MODE_CLAMP;
 	}
+
 	RefPtr<ID2D1Bitmap> sourceBitmap;
 	bool partial = false;
 	unsigned int xoffset = 0;
@@ -792,7 +780,7 @@ _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf,
 	unsigned int height;
 	unsigned char *data = NULL;
  	unsigned int stride = 0;
-	*remaining_runs = 0;
+
 	if (surfacePattern->surface->type == CAIRO_SURFACE_TYPE_D2D) {
 	    /**
 	     * \todo We need to somehow get a rectangular transparent
@@ -1789,43 +1777,31 @@ _cairo_d2d_paint(void			*surface,
 
     d2dsurf->rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
 
-    unsigned int runs_remaining = 1;
-    unsigned int last_run = 0;
-    bool pushed_clip = false;
-
-    while (runs_remaining) {
-	RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
-								       source,
-								       last_run++,
-								       &runs_remaining,
-								       &pushed_clip);
-
-	if (!brush) {
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
-	if (op == CAIRO_OPERATOR_OVER) {
-	    D2D1_SIZE_F size = d2dsurf->rt->GetSize();
-	    d2dsurf->rt->FillRectangle(D2D1::RectF((FLOAT)0,
-						   (FLOAT)0,
-						   (FLOAT)size.width,
-						   (FLOAT)size.height),
-				       brush);
-        } else if (op == CAIRO_OPERATOR_SOURCE) {
-	    D2D1_SIZE_F size = d2dsurf->rt->GetSize();
-            d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
-            d2dsurf->rt->FillRectangle(D2D1::RectF((FLOAT)0,
-						   (FLOAT)0,
-						   (FLOAT)size.width,
-						   (FLOAT)size.height),
-				       brush);
-        } else {
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-	}
-
-	if (pushed_clip) {
-	    d2dsurf->rt->PopLayer();
-	}
+    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
+								   source);
+    
+    if (!brush) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
+    if (op == CAIRO_OPERATOR_OVER) {
+	D2D1_SIZE_F size = d2dsurf->rt->GetSize();
+	d2dsurf->rt->FillRectangle(D2D1::RectF((FLOAT)0,
+					       (FLOAT)0,
+					       (FLOAT)size.width,
+					       (FLOAT)size.height),
+				   brush);
+    } else if (op == CAIRO_OPERATOR_SOURCE) {
+	D2D1_SIZE_F size = d2dsurf->rt->GetSize();
+	d2dsurf->rt->Clear(D2D1::ColorF(0, 0));
+	d2dsurf->rt->FillRectangle(D2D1::RectF((FLOAT)0,
+					       (FLOAT)0,
+					       (FLOAT)size.width,
+					       (FLOAT)size.height),
+				   brush);
+    } else {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     return CAIRO_INT_STATUS_SUCCESS;
 }
 
@@ -1839,8 +1815,6 @@ _cairo_d2d_mask(void			*surface,
     cairo_d2d_surface_t *d2dsurf = static_cast<cairo_d2d_surface_t*>(surface);
     cairo_rectangle_int_t extents;
 
-    unsigned int runs_remaining = 0;
-    bool pushed_clip;
     cairo_int_status_t status;
 
     status = (cairo_int_status_t)_cairo_surface_clipper_set_clip (&d2dsurf->clipper, clip);
@@ -1857,14 +1831,11 @@ _cairo_d2d_mask(void			*surface,
 	    return status;
 
 
-    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, source, 0, &runs_remaining, &pushed_clip);
+    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf, source);
     if (!brush) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    if (runs_remaining) {
-	// TODO: Implement me!!
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
+
     D2D1_RECT_F rect = D2D1::RectF(0,
 				   0,
 				   (FLOAT)d2dsurf->rt->GetPixelSize().width,
@@ -1887,13 +1858,12 @@ _cairo_d2d_mask(void			*surface,
 	    return CAIRO_INT_STATUS_SUCCESS;
 	}
     }
-    RefPtr<ID2D1Brush> opacityBrush = _cairo_d2d_create_brush_for_pattern(d2dsurf, mask, 0, &runs_remaining, &pushed_clip, true);
+
+    RefPtr<ID2D1Brush> opacityBrush = _cairo_d2d_create_brush_for_pattern(d2dsurf, mask, true);
     if (!opacityBrush) {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    if (runs_remaining) {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
+
     if (!d2dsurf->maskLayer) {
 	d2dsurf->rt->CreateLayer(&d2dsurf->maskLayer);
     }
@@ -1979,58 +1949,33 @@ _cairo_d2d_stroke(void			*surface,
 
     d2dsurf->rt->SetTransform(mat);
 
-    unsigned int runs_remaining = 1;
-    unsigned int last_run = 0;
-    bool pushed_clip = false;
     cairo_box_t box;
+
+    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
+								   source);
+    if (!brush) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     if (_cairo_path_fixed_is_box(path, &box)) {
 	float x1 = _cairo_fixed_to_float(box.p1.x);    
 	float y1 = _cairo_fixed_to_float(box.p1.y);    
 	float x2 = _cairo_fixed_to_float(box.p2.x);    
 	float y2 = _cairo_fixed_to_float(box.p2.y);
-	while (runs_remaining) {
-	    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
-			    						   source,
-									   last_run++,
-									   &runs_remaining,
-									   &pushed_clip);
 
-	    if (!brush) {
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	    }
-	    d2dsurf->rt->DrawRectangle(D2D1::RectF(x1,
-						   y1,
-						   x2,
-						   y2),
-				       brush,
-				       (FLOAT)style->line_width,
-				       strokeStyle);
+	d2dsurf->rt->DrawRectangle(D2D1::RectF(x1,
+					       y1,
+					       x2,
+					       y2),
+				   brush,
+				   (FLOAT)style->line_width,
+				   strokeStyle);
 
-	    if (pushed_clip) {
-		d2dsurf->rt->PopLayer();
-	    }
-	}
     } else {
 	RefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, 
 			    							 CAIRO_FILL_RULE_WINDING, 
 										 D2D1_FIGURE_BEGIN_HOLLOW);
-	while (runs_remaining) {
-	    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
-									   source,
-									   last_run++,
-									   &runs_remaining,
-									   &pushed_clip);
-
-	    if (!brush) {
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	    }
-	    d2dsurf->rt->DrawGeometry(d2dpath, brush, (FLOAT)style->line_width, strokeStyle);
-
-	    if (pushed_clip) {
-		d2dsurf->rt->PopLayer();
-	    }
-	}
+	d2dsurf->rt->DrawGeometry(d2dpath, brush, (FLOAT)style->line_width, strokeStyle);
     }
 
     _cairo_path_fixed_transform(path, ctm);
@@ -2076,9 +2021,6 @@ _cairo_d2d_fill(void			*surface,
 	d2dsurf->rt->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     }
 
-    unsigned int runs_remaining = 1;
-    unsigned int last_run = 0;
-    bool pushed_clip = false;
     cairo_box_t box;
 
     if (op == CAIRO_OPERATOR_CLEAR) {
@@ -2106,41 +2048,26 @@ _cairo_d2d_fill(void			*surface,
 	float y1 = _cairo_fixed_to_float(box.p1.y);    
 	float x2 = _cairo_fixed_to_float(box.p2.x);    
 	float y2 = _cairo_fixed_to_float(box.p2.y);
-	while (runs_remaining) {
-	    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
-									   source,
-									   last_run++,
-									   &runs_remaining,
-									   &pushed_clip);
-	    if (!brush) {
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	    }
-
-	    d2dsurf->rt->FillRectangle(D2D1::RectF(x1,
-						   y1,
-						   x2,
-						   y2),
-				       brush);
-	    if (pushed_clip) {
-		d2dsurf->rt->PopLayer();
-	    }
+	RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
+								       source);
+	if (!brush) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
+
+	d2dsurf->rt->FillRectangle(D2D1::RectF(x1,
+					       y1,
+					       x2,
+					       y2),
+				   brush);
     } else {
 	RefPtr<ID2D1Geometry> d2dpath = _cairo_d2d_create_path_geometry_for_path(path, fill_rule, D2D1_FIGURE_BEGIN_FILLED);
-	while (runs_remaining) {
-	    RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
-									   source,
-									   last_run++,
-									   &runs_remaining,
-									   &pushed_clip);
-	    if (!brush) {
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	    }
-	    d2dsurf->rt->FillGeometry(d2dpath, brush);
-	    if (pushed_clip) {
-		d2dsurf->rt->PopLayer();
-	    }
+
+	RefPtr<ID2D1Brush> brush = _cairo_d2d_create_brush_for_pattern(d2dsurf,
+								       source);
+	if (!brush) {
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
+	d2dsurf->rt->FillGeometry(d2dpath, brush);
     }
     return CAIRO_INT_STATUS_SUCCESS;
 }
