@@ -234,48 +234,55 @@ nsresult
 GetKeyFromValue(JSContext* aCx,
                 jsval aValue,
                 const nsString& aKeyPath,
-                PRBool aAutoIncrement,
                 nsAString& aKeyString,
                 PRInt64* aKeyInt)
 {
   NS_PRECONDITION(aCx && aKeyInt, "Null pointers!");
+  NS_ASSERTION(!aKeyPath.IsVoid(), "This will explode!");
 
   if (!JSVAL_IS_OBJECT(aValue)) {
-    fprintf(stderr, "not an object!\n");
     return NS_ERROR_INVALID_ARG;
   }
 
   jsval key;
-  JSBool rc = JS_GetUCProperty(aCx, JSVAL_TO_OBJECT(aValue),
+  JSBool ok = JS_GetUCProperty(aCx, JSVAL_TO_OBJECT(aValue),
                                reinterpret_cast<const jschar*>(aKeyPath.get()),
                                aKeyPath.Length(), &key);
-  NS_ENSURE_TRUE(key, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+
+  if (JSVAL_IS_VOID(key) || JSVAL_IS_NULL(key)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   if (JSVAL_IS_INT(key)) {
     *aKeyInt = JSVAL_TO_INT(key);
     aKeyString.SetIsVoid(PR_TRUE);
     return NS_OK;
   }
-  else if (JSVAL_IS_STRING(key)) {
-    JSString* keyString = JSVAL_TO_STRING(key);
-    size_t len = JS_GetStringLength(keyString);
-    if (len) {
-      aKeyString.Assign(
-        reinterpret_cast<const PRUnichar*>(JS_GetStringChars(keyString)),
-        len
-      );
+
+  if (JSVAL_IS_DOUBLE(key)) {
+    jsdouble d = *JSVAL_TO_DOUBLE(key);
+    if (d < PR_INT32_MIN || d > PR_INT32_MAX) {
+      return NS_ERROR_INVALID_ARG;
     }
-    else {
-      aKeyString.SetIsVoid(PR_TRUE);
-    }
-    return NS_OK;
-  }
-  else if (key == JSVAL_VOID && aAutoIncrement) {
+    *aKeyInt = d;
     aKeyString.SetIsVoid(PR_TRUE);
     return NS_OK;
   }
 
-  fprintf(stderr, "invalid type\n");
+  if (JSVAL_IS_STRING(key)) {
+    JSString* str = JSVAL_TO_STRING(key);
+    size_t len = JS_GetStringLength(str);
+    if (!len) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    const PRUnichar* chars =
+      reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
+    aKeyString.Assign(chars, len);
+    *aKeyInt = 0;
+    return NS_OK;
+  }
+
   return NS_ERROR_INVALID_ARG;
 }
 
@@ -436,8 +443,7 @@ IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
 
   // Inline keys should check the object first.
   if (!mKeyPath.IsVoid()) {
-    rv = GetKeyFromValue(cx, clone.value(), mKeyPath, mAutoIncrement,
-                         keyString, &keyInt);
+    rv = GetKeyFromValue(cx, clone.value(), mKeyPath, keyString, &keyInt);
   }
   else {
     rv = GetKeyFromVariant(aKey, mAutoIncrement, PR_FALSE, keyString, &keyInt);
