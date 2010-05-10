@@ -57,47 +57,58 @@ function testSteps()
 
   var db = event.result;
 
-  // Check removal for inline keys, with a key generator.
-  var objectStoreName = "inline key; key generator";
-  var request = db.createObjectStore(objectStoreName, "id", true);
-  request.onerror = errorHandler;
-  request.onsuccess = continueTest;
-  event = yield;
+  var data = [
+    { name: "inline key; key generator",
+      autoIncrement: true,
+      storedObject: {name: "Lincoln"},
+      keyValue: undefined,
+    },
+    { name: "inline key; no key generator",
+      autoIncrement: false,
+      storedObject: {id: 1, name: "Lincoln"},
+      keyValue: undefined,
+    },
+    // TODO add the other two cases
+  ];
+  for (let i = 0; i < data.length; i++) {
+    let test = data[i];
+    let request = db.createObjectStore(test.name, "id", test.autoIncrement);
+    request.onerror = errorHandler;
+    request.onsuccess = continueTest;
+    event = yield;
 
-  request = db.openObjectStore(objectStoreName);
-  request.onerror = errorHandler;
-  request.onsuccess = continueTest;
-  event = yield;
+    request = db.openObjectStore(test.name);
+    request.onerror = errorHandler;
+    request.onsuccess = continueTest;
+    event = yield;
 
-  var objectStore = event.result;
-  var storedObject = {name: "Lincoln"};
-  request = objectStore.put(storedObject);
-  request.onerror = errorHandler;
-  request.onsuccess = continueTest;
-  event = yield;
+    let objectStore = event.result;
+    request = objectStore.put(test.storedObject, test.keyValue);
+    request.onerror = errorHandler;
+    request.onsuccess = continueTest;
+    event = yield;
 
-  var id = event.result;
-  request = objectStore.get(id);
-  request.onerror = errorHandler;
-  request.onsuccess = continueTest;
-  event = yield;
+    let id = event.result;
+    request = objectStore.get(id);
+    request.onerror = errorHandler;
+    request.onsuccess = continueTest;
+    event = yield;
 
-  // Sanity check!
-  SimpleTest.is(storedObject.name, event.result.name,
-                "The correct object was stored.");
+    // Sanity check!
+    SimpleTest.is(test.storedObject.name, event.result.name,
+                  "The correct object was stored.");
 
-  request = objectStore.remove(id);
-  request.onerror = errorHandler;
-  request.onsuccess = continueTest;
-  event = yield;
+    request = objectStore.remove(id);
+    request.onerror = errorHandler;
+    request.onsuccess = continueTest;
+    event = yield;
 
-  // Make sure it was removed.
-  request = objectStore.get(id);
-  request.onerror = new ExpectError(IDBDatabaseException.NOT_FOUND_ERR);
-  request.onsuccess = unexpectedSuccessHandler;
-  event = yield;
-
-  // TODO test the other cases!
+    // Make sure it was removed.
+    request = objectStore.get(id);
+    request.onerror = new ExpectError(IDBDatabaseException.NOT_FOUND_ERR);
+    request.onsuccess = unexpectedSuccessHandler;
+    event = yield;
+  }
 
   SimpleTest.executeSoon(finishTest);
   yield;
