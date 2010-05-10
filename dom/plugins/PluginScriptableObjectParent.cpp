@@ -465,7 +465,7 @@ PluginScriptableObjectParent::ScriptableEnumerate(NPObject* aObject,
   for (PRUint32 index = 0; index < *aCount; index++) {
     PluginIdentifierParent* id =
       static_cast<PluginIdentifierParent*>(identifiers[index]);
-    *aIdentifiers[index] = id->ToNPIdentifier();
+    (*aIdentifiers)[index] = id->ToNPIdentifier();
   }
   return true;
 }
