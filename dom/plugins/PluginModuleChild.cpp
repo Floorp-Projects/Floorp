@@ -1850,7 +1850,7 @@ PluginModuleChild::NPN_IntFromIdentifier(NPIdentifier aIdentifier)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
 
-    if (static_cast<PluginIdentifierChild*>(aIdentifier)->IsString()) {
+    if (!static_cast<PluginIdentifierChild*>(aIdentifier)->IsString()) {
       return static_cast<PluginIdentifierChildInt*>(aIdentifier)->ToInt();
     }
     return PR_INT32_MIN;

@@ -542,9 +542,6 @@ PluginModuleParent::GetIdentifierForNPIdentifier(NPIdentifier aIdentifier)
         }
         else {
             intval = mozilla::plugins::parent::_intfromidentifier(aIdentifier);
-            if (intval == -1) {
-                return nsnull;
-            }
             string.SetIsVoid(PR_TRUE);
         }
         ident = new PluginIdentifierParent(aIdentifier);
