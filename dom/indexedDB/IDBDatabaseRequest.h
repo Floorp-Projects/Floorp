@@ -69,7 +69,13 @@ public:
   static already_AddRefed<IDBDatabaseRequest>
   Create(const nsAString& aName,
          const nsAString& aDescription,
-         PRBool aReadOnly);
+         PRBool aReadOnly,
+         nsTArray<nsString>& aObjectStoreNames,
+         nsTArray<nsString>& aIndexNames,
+         const nsAString& aVersion,
+         LazyIdleThread* aThread,
+         const nsAString& aDatabaseFilePath,
+         nsCOMPtr<mozIStorageConnection>& aConnection);
 
   // Only meant to be called on mStorageThread!
   nsCOMPtr<mozIStorageConnection>& Connection();
@@ -119,11 +125,11 @@ protected:
   ~IDBDatabaseRequest();
 
 private:
-  nsCString mASCIIOrigin;
   nsString mName;
   nsString mDescription;
   PRBool mReadOnly;
   nsString mVersion;
+  nsString mDatabaseFilePath;
 
   nsTArray<nsString> mObjectStoreNames;
   nsTArray<nsString> mIndexNames;

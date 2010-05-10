@@ -40,7 +40,7 @@
 
 #include "nsISupports.idl"
 
-interface nsIIDBDatabaseRequest;
+interface nsIIDBRequest;
 
 /**
  * Interface that defines the indexedDB property on a window.  See
@@ -51,7 +51,7 @@ interface nsIIDBDatabaseRequest;
 interface nsIIndexedDatabaseRequest : nsISupports
 {
   [optional_argc]
-  nsIIDBDatabaseRequest
+  nsIIDBRequest
   open(in AString name,
        in AString description,
        [optional /* true */] in boolean modifyDatabase);
