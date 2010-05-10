@@ -1388,7 +1388,10 @@ var XPIProvider = {
 
       // If there is migration data then apply it.
       if (aMigrateData) {
-        newAddon.userDisabled = aMigrateData.userDisabled;
+        // A theme's disabled state is determined by the selected theme
+        // preference which is read in loadManifestFromRDF
+        if (newAddon.type != "theme")
+          newAddon.userDisabled = aMigrateData.userDisabled;
         if ("installDate" in aMigrateData)
           newAddon.installDate = aMigrateData.installDate;
         if ("targetApplications" in aMigrateData)

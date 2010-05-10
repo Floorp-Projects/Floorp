@@ -48,6 +48,32 @@ var addon4 = {
   }]
 };
 
+var theme1 = {
+  id: "theme1@tests.mozilla.org",
+  version: "1.0",
+  name: "Theme 1",
+  type: 4,
+  internalName: "theme1/1.0",
+  targetApplications: [{
+    id: "xpcshell@tests.mozilla.org",
+    minVersion: "1",
+    maxVersion: "2"
+  }]
+};
+
+var theme2 = {
+  id: "theme2@tests.mozilla.org",
+  version: "1.0",
+  name: "Theme 2",
+  type: 4,
+  internalName: "theme2/1.0",
+  targetApplications: [{
+    id: "xpcshell@tests.mozilla.org",
+    minVersion: "1",
+    maxVersion: "2"
+  }]
+};
+
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
@@ -67,15 +93,28 @@ function run_test() {
   dest = profileDir.clone();
   dest.append("addon4@tests.mozilla.org");
   writeInstallRDFToDir(addon4, dest);
+  dest = profileDir.clone();
+  dest.append("theme1@tests.mozilla.org");
+  writeInstallRDFToDir(theme1, dest);
+  dest = profileDir.clone();
+  dest.append("theme2@tests.mozilla.org");
+  writeInstallRDFToDir(theme2, dest);
 
   let old = do_get_file("data/test_migrate.rdf");
   old.copyTo(gProfD, "extensions.rdf");
+
+  // Theme state is determined by the selected theme pref
+  Services.prefs.setCharPref("general.skins.selectedSkin", "theme1/1.0");
 
   startupManager(1);
   AddonManager.getAddonsByIDs(["addon1@tests.mozilla.org",
                                "addon2@tests.mozilla.org",
                                "addon3@tests.mozilla.org",
-                               "addon4@tests.mozilla.org"], function([a1, a2, a3, a4]) {
+                               "addon4@tests.mozilla.org",
+                               "theme1@tests.mozilla.org",
+                               "theme2@tests.mozilla.org"], function([a1, a2,
+                                                                      a3, a4,
+                                                                      t1, t2]) {
     // addon1 was user and app enabled in the old extensions.rdf
     do_check_neq(a1, null);
     do_check_false(a1.userDisabled);
@@ -95,6 +134,18 @@ function run_test() {
     do_check_neq(a4, null);
     do_check_false(a4.userDisabled);
     do_check_true(a4.appDisabled);
+
+    // Theme 1 was previously enabled
+    do_check_neq(t1, null);
+    do_check_false(t1.userDisabled);
+    do_check_false(t1.appDisabled);
+    do_check_false(hasFlag(t1.permissions, AddonManager.PERM_CAN_ENABLE));
+
+    // Theme 2 was previously disabled
+    do_check_neq(t1, null);
+    do_check_true(t2.userDisabled);
+    do_check_false(t2.appDisabled);
+    do_check_true(hasFlag(t2.permissions, AddonManager.PERM_CAN_ENABLE));
 
     do_test_finished();
   });
