@@ -23,31 +23,35 @@
         SimpleTest.finish();
       }
 
-      var db = indexedDB.open(name, description);
-
-      var count = db.objectStores.length;
-      is(count, 0, "Bad objectStores list");
-
-      var request = db.createObjectStore(objectStoreName, "foo");
+      var db;
+      var request = indexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        is(db.objectStores.length, 1, "Bad objectStores list");
-        request = db.openObjectStore(objectStoreName,
-                                     nsIIDBObjectStore.READ_ONLY);
+        db = event.result;
+        var count = db.objectStores.length;
+        is(count, 0, "Bad objectStores list");
+
+        request = db.createObjectStore(objectStoreName, "foo");
         request.onerror = errorHandler;
         request.onsuccess = function(event) {
-          var objectStore = event.result;
-          is(objectStore.name, objectStoreName, "Bad name");
-          is(objectStore.mode, nsIIDBObjectStore.READ_ONLY, "Bad mode");
-          is(objectStore.keyPath, "foo", "Bad keyPath");
-          if(objectStore.indexNames.length, 0, "Bad indexNames");
           is(db.objectStores.length, 1, "Bad objectStores list");
-          request = db.removeObjectStore(objectStoreName);
+          request = db.openObjectStore(objectStoreName,
+                                       nsIIDBObjectStore.READ_ONLY);
           request.onerror = errorHandler;
           request.onsuccess = function(event) {
-            is(event.result, undefined, "Bad result");
-            is(db.objectStores.length, 0, "Bad objectStores list");
-            SimpleTest.finish();
+            var objectStore = event.result;
+            is(objectStore.name, objectStoreName, "Bad name");
+            is(objectStore.mode, nsIIDBObjectStore.READ_ONLY, "Bad mode");
+            is(objectStore.keyPath, "foo", "Bad keyPath");
+            if(objectStore.indexNames.length, 0, "Bad indexNames");
+            is(db.objectStores.length, 1, "Bad objectStores list");
+            request = db.removeObjectStore(objectStoreName);
+            request.onerror = errorHandler;
+            request.onsuccess = function(event) {
+              is(event.result, undefined, "Bad result");
+              is(db.objectStores.length, 0, "Bad objectStores list");
+              SimpleTest.finish();
+            };
           };
         };
       };

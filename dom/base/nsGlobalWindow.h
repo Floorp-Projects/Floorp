@@ -101,6 +101,7 @@
 #include "nsPIDOMEventTarget.h"
 #include "nsIArray.h"
 #include "nsIContent.h"
+#include "nsIIndexedDatabaseRequest.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -818,6 +819,8 @@ protected:
   nsDataHashtable<nsVoidPtrHashKey, void*> mCachedXBLPrototypeHandlers;
 
   nsCOMPtr<nsIDocument> mSuspendedDoc;
+
+  nsCOMPtr<nsIIndexedDatabaseRequest> mIndexedDB;
 
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;

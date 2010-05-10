@@ -58,7 +58,7 @@ AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
   mError(PR_FALSE)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(mDatabase, "Null owner!");
+  // mDatabase may be null if we're opening the database.
   NS_ASSERTION(mRequest, "Null request!");
 }
 
@@ -76,17 +76,16 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
 
     nsCOMPtr<nsIThread> mainThread;
     NS_GetMainThread(getter_AddRefs(mainThread));
+    NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread!");
 
     if (mainThread) {
-      NS_ProxyRelease(mainThread, static_cast<nsIIDBDatabase*>(database));
-      NS_ProxyRelease(mainThread, static_cast<nsIDOMEventTarget*>(request));
+      if (database) {
+        NS_ProxyRelease(mainThread, static_cast<nsIIDBDatabase*>(database));
+      }
+      if (request) {
+        NS_ProxyRelease(mainThread, static_cast<nsIDOMEventTarget*>(request));
+      }
     }
-    else {
-      NS_WARNING("Couldn't get the main thread?! Leaking instead of crashing.");
-    }
-
-    NS_ASSERTION(!mDatabase, "Should have been released before now!");
-    NS_ASSERTION(!mRequest, "Should have been released before now!");
   }
 
   NS_ASSERTION(!mDatabaseThread, "Should have been released before now!");

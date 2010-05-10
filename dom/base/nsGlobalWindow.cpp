@@ -915,6 +915,7 @@ nsGlobalWindow::CleanUp(PRBool aIgnoreModalDialog)
   mLocation = nsnull;
   mFrames = nsnull;
   mApplicationCache = nsnull;
+  mIndexedDB = nsnull;
 
   ClearControllers();
 
@@ -1074,6 +1075,8 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
     static_cast<nsDOMOfflineResourceList*>(mApplicationCache.get())->Disconnect();
     mApplicationCache = nsnull;
   }
+
+  mIndexedDB = nsnull;
 
   if (aClearScope) {
     // NB: This might not clear our scope, but fire an event to do so
@@ -7489,11 +7492,13 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
 NS_IMETHODIMP
 nsGlobalWindow::GetIndexedDB(nsIIndexedDatabaseRequest** _retval)
 {
-  nsCOMPtr<nsIIndexedDatabaseRequest> indexedDB =
-    mozilla::dom::indexedDB::IndexedDatabaseRequest::Create();
-  NS_ENSURE_TRUE(indexedDB, NS_ERROR_FAILURE);
+  if (!mIndexedDB) {
+    mIndexedDB = mozilla::dom::indexedDB::IndexedDatabaseRequest::Create();
+    NS_ENSURE_TRUE(mIndexedDB, NS_ERROR_FAILURE);
+  }
 
-  indexedDB.forget(_retval);
+  nsCOMPtr<nsIIndexedDatabaseRequest> request(mIndexedDB);
+  request.forget(_retval);
   return NS_OK;
 }
 
