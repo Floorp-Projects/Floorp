@@ -191,6 +191,7 @@ window.Page = {
         // Zoom out!
         var $tab = $(lastTab.mirror.el);
         
+        var rotation = $tab.css("-moz-transform");
         var [w,h, pos, z] = [$tab.width(), $tab.height(), $tab.position(), $tab.css("zIndex")];
         var scale = window.innerWidth / w;
 
@@ -204,11 +205,15 @@ window.Page = {
             width: window.innerWidth,
             height: h * (window.innerWidth/w),
             zIndex: 999999,
+            '-moz-transform': 'rotate(0deg)'
         }).animate({
             top: pos.top, left: pos.left,
             width: w, height: h
         },350, '', function() {
-          $tab.css("zIndex",z);
+          $tab.css({
+            zIndex: z,
+            '-moz-transform': rotation
+          });
           $("body").css("overflow", overflow);
           window.Groups.setActiveGroup(null);
           TabMirror.resumePainting();
@@ -301,6 +306,7 @@ function UIClass(){
   this.navBar = Navbar;
   this.tabBar = Tabbar;
   this.devMode = false;
+  this.focused = true;
   
   var self = this;
   
@@ -324,10 +330,13 @@ function UIClass(){
   
   Tabs.onFocus(function() {
     try{
-      if(this.contentWindow.location.host == "tabcandy")
+      if(this.contentWindow.location.host == "tabcandy") {
+        self.focused = true;
         self.navBar.hide();
-      else
+      } else {
+        self.focused = false;
         self.navBar.show();      
+      }
     }catch(e){
       Utils.log()
     }
