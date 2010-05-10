@@ -80,7 +80,7 @@ public:
   { }
 
   PRUint16 DoDatabaseWork();
-  void GetSuccessResult(nsIWritableVariant* aResult);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
   // In-params.
@@ -443,7 +443,7 @@ OpenDatabaseHelper::DoDatabaseWork()
   return OK;
 }
 
-void
+PRUint16
 OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_ASSERTION(mConnection, "Should have a connection!");
@@ -457,4 +457,5 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ASSERTION(!mConnection, "Should have swapped out!");
 
   aResult->SetAsISupports(static_cast<IDBRequest::Generator*>(db));
+  return OK;
 }

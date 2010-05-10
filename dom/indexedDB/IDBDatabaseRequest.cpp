@@ -43,7 +43,6 @@
 
 #include "mozilla/Storage.h"
 #include "nsDOMClassInfo.h"
-#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
 #include "AsyncConnectionHelper.h"
@@ -108,7 +107,7 @@ public:
 
   PRUint16 DoDatabaseWork();
   PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
-  void GetSuccessResult(nsIWritableVariant* aResult);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 protected:
   // In-params.
@@ -136,7 +135,7 @@ public:
 
   PRUint16 DoDatabaseWork();
   PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
-  void GetSuccessResult(nsIWritableVariant* aResult);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 protected:
   // In-params.
@@ -153,7 +152,7 @@ public:
   { }
 
   PRUint16 DoDatabaseWork();
-  void GetSuccessResult(nsIWritableVariant* aResult);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
   // In-params.
@@ -737,7 +736,7 @@ CreateObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   return AsyncConnectionHelper::OnSuccess(aTarget);
 }
 
-void
+PRUint16
 CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   nsCOMPtr<nsISupports> result =
@@ -745,6 +744,7 @@ CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ASSERTION(result, "Failed to QI!");
 
   aResult->SetAsISupports(result);
+  return OK;
 }
 
 PRUint16
@@ -791,7 +791,7 @@ OpenObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
   return AsyncConnectionHelper::OnSuccess(aTarget);
 }
 
-void
+PRUint16
 OpenObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   nsCOMPtr<nsISupports> result =
@@ -799,6 +799,7 @@ OpenObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ASSERTION(result, "Failed to QI!");
 
   aResult->SetAsISupports(result);
+  return OK;
 }
 
 PRUint16
@@ -826,8 +827,9 @@ RemoveObjectStoreHelper::DoDatabaseWork()
   return OK;
 }
 
-void
+PRUint16
 RemoveObjectStoreHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
 {
   mDatabase->OnObjectStoreRemoved(mName);
+  return OK;
 }

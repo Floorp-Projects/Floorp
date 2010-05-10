@@ -84,7 +84,7 @@ public:
   }
 
   PRUint16 DoDatabaseWork();
-  void GetSuccessResult(nsIWritableVariant* aResult);
+  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
   // In-params.
@@ -120,7 +120,7 @@ public:
   PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
 
   // Disabled until we can use nsIVariants with jsvals
-  //void GetSuccessResult(nsIWritableVariant* aResult);
+  //PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 protected:
   // In-params.
@@ -508,7 +508,7 @@ PutHelper::DoDatabaseWork()
          nsIIDBDatabaseException::UNKNOWN_ERR;
 }
 
-void
+PRUint16
 PutHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   if (mAutoIncrement || mKeyString.IsVoid()) {
@@ -517,6 +517,7 @@ PutHelper::GetSuccessResult(nsIWritableVariant* aResult)
   else {
     aResult->SetAsAString(mKeyString);
   }
+  return OK;
 }
 
 PRUint16
