@@ -61,18 +61,32 @@ function testSteps()
     { name: "inline key; key generator",
       autoIncrement: true,
       storedObject: {name: "Lincoln"},
+      keyName: "id",
       keyValue: undefined,
     },
     { name: "inline key; no key generator",
       autoIncrement: false,
       storedObject: {id: 1, name: "Lincoln"},
+      keyName: "id",
       keyValue: undefined,
     },
-    // TODO add the other two cases
+    { name: "out of line key; key generator",
+      autoIncrement: true,
+      storedObject: {name: "Lincoln"},
+      keyName: null,
+      keyValue: undefined,
+    },
+    { name: "out of line key; no key generator",
+      autoIncrement: false,
+      storedObject: {name: "Lincoln"},
+      keyName: null,
+      keyValue: 1,
+    },
   ];
   for (let i = 0; i < data.length; i++) {
     let test = data[i];
-    let request = db.createObjectStore(test.name, "id", test.autoIncrement);
+    let request = db.createObjectStore(test.name, test.keyName,
+                                       test.autoIncrement);
     request.onerror = errorHandler;
     request.onsuccess = continueTest;
     event = yield;
