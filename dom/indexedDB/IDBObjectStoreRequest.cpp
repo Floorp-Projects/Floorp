@@ -194,6 +194,7 @@ GetKeyFromVariant(nsIVariant* aKey,
 
   // See xpcvariant.cpp, these are the only types we should expect.
   switch (type) {
+    case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_EMPTY:
       if (!aAutoIncrement || aGetting) {
         return NS_ERROR_INVALID_ARG;
