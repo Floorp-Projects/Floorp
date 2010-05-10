@@ -12,18 +12,16 @@
 
   <script type="text/javascript;version=1.7">
 
-var event;
 function continueTest(aEvent)
 {
   SimpleTest.executeSoon(function() {
-    event = aEvent;
-    gGen.next();
+    gGen.send(aEvent);
   });
 }
 
 function errorHandler(aEvent)
 {
-  ok(false, "indexedDB error (" + event.code + "): " + event.message);
+  ok(false, "indexedDB error (" + aEvent.code + "): " + aEvent.message);
   SimpleTest.executeSoon(finishTest);
 }
 
@@ -41,7 +39,7 @@ ExpectError.prototype = {
   handleEvent: function(aEvent)
   {
     is(this._code, aEvent.code, "Expected error was thrown.");
-    continueTest();
+    continueTest(aEvent);
   },
 };
 
@@ -55,7 +53,7 @@ function testSteps()
   var request = indexedDB.open(name, description);
   request.onerror = errorHandler;
   request.onsuccess = continueTest;
-  yield;
+  var event = yield;
 
   var db = event.result;
 
@@ -64,25 +62,25 @@ function testSteps()
   var request = db.createObjectStore(objectStoreName, "id", true);
   request.onerror = errorHandler;
   request.onsuccess = continueTest;
-  yield;
+  event = yield;
 
   request = db.openObjectStore(objectStoreName);
   request.onerror = errorHandler;
   request.onsuccess = continueTest;
-  yield;
+  event = yield;
 
   var objectStore = event.result;
   var storedObject = {name: "Lincoln"};
   request = objectStore.put(storedObject);
   request.onerror = errorHandler;
   request.onsuccess = continueTest;
-  yield;
+  event = yield;
 
   var id = event.result;
   request = objectStore.get(id);
   request.onerror = errorHandler;
   request.onsuccess = continueTest;
-  yield;
+  event = yield;
 
   // Sanity check!
   SimpleTest.is(storedObject.name, event.result.name,
@@ -91,13 +89,13 @@ function testSteps()
   request = objectStore.remove(id);
   request.onerror = errorHandler;
   request.onsuccess = continueTest;
-  yield;
+  event = yield;
 
   // Make sure it was removed.
   request = objectStore.get(id);
   request.onerror = new ExpectError(IDBDatabaseException.NOT_FOUND_ERR);
   request.onsuccess = unexpectedSuccessHandler;
-  yield;
+  event = yield;
 
   // TODO test the other cases!
 
