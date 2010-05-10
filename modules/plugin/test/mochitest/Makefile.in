@@ -91,6 +91,7 @@ _MOCHITEST_FILES = \
   test_propertyAndMethod.html \
   test_bug539565-1.html \
   test_bug539565-2.html \
+  test_enumerate.html \
   $(NULL)
 
 #  test_npruntime_npnsetexception.html \ Disabled for e10s
