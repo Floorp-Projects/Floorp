@@ -2070,7 +2070,7 @@ var XPIProvider = {
       this.bootstrapScopes[aId][aMethod](params, aReason);
     }
     catch (e) {
-      WARN("Exception running bootstrap method " + aMethods + " on " +
+      WARN("Exception running bootstrap method " + aMethod + " on " +
            aId + ": " + e);
     }
   },
@@ -3732,7 +3732,7 @@ AddonInstall.prototype = {
         if (this.hash && hash != this.hash) {
           this.downloadFailed(AddonManager.ERROR_INCORRECT_HASH,
                               "Downloaded file hash (" + hash +
-                              ") did not match provded hash (" + this.hash + ")");
+                              ") did not match provided hash (" + this.hash + ")");
           return;
         }
         try {
