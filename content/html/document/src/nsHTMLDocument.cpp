@@ -2650,9 +2650,11 @@ FindNamedItems(nsIAtom* aName, nsIContent *aContent,
 nsresult
 nsHTMLDocument::ResolveName(const nsAString& aName,
                             nsIDOMHTMLFormElement *aForm,
-                            nsISupports **aResult)
+                            nsISupports **aResult,
+                            nsWrapperCache **aCache)
 {
   *aResult = nsnull;
+  *aCache = nsnull;
 
   // We have built a table and cache the named items. The table will
   // be updated as content is added and removed.
@@ -2701,19 +2703,11 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
       // Only one element in the list, return the element instead of
       // returning the list
 
-      nsCOMPtr<nsIDOMNode> node;
-
-      list->Item(0, getter_AddRefs(node));
-
-      nsCOMPtr<nsIContent> ourContent(do_QueryInterface(node));
-      if (aForm && ourContent &&
-          !nsContentUtils::BelongsInForm(aForm, ourContent)) {
-        // This is not the content you are looking for
-        node = nsnull;
+      nsIContent *node = list->GetNodeAt(0);
+      if (!aForm || nsContentUtils::BelongsInForm(aForm, node)) {
+        NS_ADDREF(*aResult = node);
+        *aCache = node;
       }
-
-      *aResult = node;
-      NS_IF_ADDREF(*aResult);
 
       return NS_OK;
     }
@@ -2737,11 +2731,10 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
         // nothing or one element in the list.  Return that element, or null
         // if there's no element in the list.
 
-        nsCOMPtr<nsIDOMNode> node;
-
-        fc_list->Item(0, getter_AddRefs(node));
+        nsIContent *node = fc_list->GetNodeAt(0);
 
         NS_IF_ADDREF(*aResult = node);
+        *aCache = node;
 
         delete fc_list;
 
@@ -2770,6 +2763,7 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
          tag == nsGkAtoms::applet) &&
         (!aForm || nsContentUtils::BelongsInForm(aForm, e))) {
       NS_ADDREF(*aResult = e);
+      *aCache = e;
     }
   }
 
@@ -3116,17 +3110,24 @@ DocAllResultMatch(nsIContent* aContent, PRInt32 aNamespaceID, nsIAtom* aAtom,
 }
 
 
-nsresult
-nsHTMLDocument::GetDocumentAllResult(const nsAString& aID, nsISupports** aResult)
+nsISupports*
+nsHTMLDocument::GetDocumentAllResult(const nsAString& aID,
+                                     nsWrapperCache** aCache,
+                                     nsresult *aResult)
 {
-  *aResult = nsnull;
+  *aCache = nsnull;
+  *aResult = NS_OK;
 
   nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aID);
-  NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+  if (!entry) {
+    *aResult = NS_ERROR_OUT_OF_MEMORY;
+
+    return nsnull;
+  }
 
   Element* root = GetRootElement();
   if (!root) {
-    return NS_OK;
+    return nsnull;
   }
 
   nsRefPtr<nsContentList> docAllList = entry->GetDocAllList();
@@ -3135,7 +3136,6 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID, nsISupports** aResult
 
     docAllList = new nsContentList(root, DocAllResultMatch,
                                    nsnull, nsnull, PR_TRUE, id);
-    NS_ENSURE_TRUE(docAllList, NS_ERROR_OUT_OF_MEMORY);
     entry->SetDocAllList(docAllList);
   }
 
@@ -3145,14 +3145,14 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID, nsISupports** aResult
 
   nsIContent* cont = docAllList->Item(1, PR_TRUE);
   if (cont) {
-    NS_ADDREF(*aResult = static_cast<nsIDOMNodeList*>(docAllList));
-    return NS_OK;
+    *aCache = docAllList;
+    return static_cast<nsINodeList*>(docAllList);
   }
 
   // There's only 0 or 1 items. Return the first one or null.
-  NS_IF_ADDREF(*aResult = docAllList->Item(0, PR_TRUE));
+  *aCache = cont = docAllList->Item(0, PR_TRUE);
 
-  return NS_OK;
+  return cont;
 }
 
 static void
