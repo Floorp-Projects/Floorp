@@ -6,8 +6,10 @@ const CHROMEROOT = "chrome://mochikit/content/browser/" + RELATIVE_DIR;
 const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PROMPT_URL = "chrome://global/content/commonDialog.xul";
 const ADDONS_URL = "chrome://mozapps/content/extensions/extensions.xul";
+const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 /**
  * This is a test harness designed to handle responding to UI during the process
@@ -54,14 +56,9 @@ var Harness = {
   // Setup and tear down functions
   setup: function() {
     waitForExplicitFinish();
-
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
-    os.addObserver(this, "addon-install-blocked", false);
-
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    wm.addListener(this);
+    Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
+    Services.obs.addObserver(this, "addon-install-blocked", false);
+    Services.wm.addListener(this);
 
     AddonManager.addInstallListener(this);
     this.installCount = 0;
@@ -69,14 +66,11 @@ var Harness = {
   },
 
   finish: function() {
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Components.interfaces.nsIObserverService);
-    os.removeObserver(this, "addon-install-blocked");
+    Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
+    Services.obs.removeObserver(this, "addon-install-blocked");
+    Services.wm.removeListener(this);
 
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    wm.removeListener(this);
-    var win = wm.getMostRecentWindow("Extension:Manager");
+    var win = Services.wm.getMostRecentWindow("Extension:Manager");
     if (win)
       win.close();
 

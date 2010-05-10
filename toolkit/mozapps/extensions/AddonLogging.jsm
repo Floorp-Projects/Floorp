@@ -43,6 +43,9 @@ const Cr = Components.results;
 
 const KEY_PROFILEDIR                  = "ProfD";
 const FILE_EXTENSIONS_LOG             = "extensions.log";
+const PREF_LOGGING_ENABLED            = "extensions.logging.enabled";
+
+const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -130,8 +133,27 @@ var LogManager = {
   }
 };
 
-try {
-  gDebugLogEnabled = Services.prefs.getBoolPref("extensions.logging.enabled");
-}
-catch (e) {
-}
+var PrefObserver = {
+  init: function() {
+    Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "xpcom-shutdown") {
+      Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
+      Services.obs.removeObserver(this, "xpcom-shutdown");
+    }
+    else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
+      try {
+        gDebugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED);
+      }
+      catch (e) {
+        gDebugLogEnabled = false;
+      }
+    }
+  }
+};
+
+PrefObserver.init();
