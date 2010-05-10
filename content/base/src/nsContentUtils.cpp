@@ -5353,7 +5353,7 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
 // static
 nsresult
 nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
-                           const nsIID* aIID, jsval *vp,
+                           nsWrapperCache *cache, const nsIID* aIID, jsval *vp,
                            nsIXPConnectJSObjectHolder **aHolder,
                            PRBool aAllowWrapping)
 {
@@ -5390,7 +5390,7 @@ nsContentUtils::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
       rv = sThreadJSContextStack->Push(cx);
     }
     if (NS_SUCCEEDED(rv)) {
-      rv = sXPConnect->WrapNativeToJSVal(cx, scope, native, aIID,
+      rv = sXPConnect->WrapNativeToJSVal(cx, scope, native, cache, aIID,
                                          aAllowWrapping, vp, aHolder);
       if (push) {
         sThreadJSContextStack->Pop(nsnull);

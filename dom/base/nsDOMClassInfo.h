@@ -153,7 +153,7 @@ public:
                                           nsWrapperCache *nativeWrapperCache,
                                           JSObject **parentObj);
 
-  // Same as the WrapNative above, but use this one if aIID is nsISupports' IID.
+  // Same as the WrapNative above, but use these if aIID is nsISupports' IID.
   static nsresult WrapNative(JSContext *cx, JSObject *scope,
                              nsISupports *native, PRBool aAllowWrapping,
                              jsval *vp,
@@ -161,7 +161,18 @@ public:
                              // while there's a ref to it
                              nsIXPConnectJSObjectHolder** aHolder = nsnull)
   {
-    return WrapNative(cx, scope, native, nsnull, aAllowWrapping, vp, aHolder);
+    return nsContentUtils::WrapNative(cx, scope, native, vp, aHolder,
+                                      aAllowWrapping);
+  }
+  static nsresult WrapNative(JSContext *cx, JSObject *scope,
+                             nsISupports *native, nsWrapperCache *cache,
+                             PRBool aAllowWrapping, jsval *vp,
+                             // If non-null aHolder will keep the jsval alive
+                             // while there's a ref to it
+                             nsIXPConnectJSObjectHolder** aHolder = nsnull)
+  {
+    return nsContentUtils::WrapNative(cx, scope, native, cache, vp, aHolder,
+                                      aAllowWrapping);
   }
 
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
