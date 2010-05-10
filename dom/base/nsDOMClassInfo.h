@@ -929,14 +929,11 @@ protected:
   {
   }
 
-  static nsresult ResolveImpl(JSContext *cx,
-                              nsIXPConnectWrappedNative *wrapper, jsval id,
-                              nsISupports **result);
   static JSBool DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
                              jsval *argv, jsval *rval);
   static JSBool GetDocumentAllNodeList(JSContext *cx, JSObject *obj,
-                                       nsIDOMDocument *doc,
-                                       nsIDOMNodeList **nodeList);
+                                       nsDocument *doc,
+                                       nsContentList **nodeList);
 
 public:
   static JSBool DocumentAllGetProperty(JSContext *cx, JSObject *obj, jsval id,
@@ -1014,7 +1011,7 @@ protected:
   }
 
   static nsresult FindNamedItem(nsIForm *aForm, JSString *str,
-                                nsISupports **aResult);
+                                nsISupports **aResult, nsWrapperCache **aCache);
 
 public:
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
