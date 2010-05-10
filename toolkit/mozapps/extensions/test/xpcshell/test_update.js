@@ -19,6 +19,7 @@ const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
 function run_test() {
+  return;
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
   // Create and configure the HTTP server.
