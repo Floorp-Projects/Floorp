@@ -52,7 +52,12 @@ function testSteps()
   const name = window.location.pathname;
   const description = "My Test Database";
 
-  var db = indexedDB.open(name, description);
+  var request = indexedDB.open(name, description);
+  request.onerror = errorHandler;
+  request.onsuccess = continueTest;
+  yield;
+
+  var db = event.result;
 
   // Check removal for inline keys, with a key generator.
   var objectStoreName = "inline key; key generator";

@@ -19,36 +19,40 @@
       const objectStoreName = "Objects";
 
       function errorHandler(event) {
-        ok(false, "indexedDB error (" + event.error.code + "): " +
-           event.error.message);
+        ok(false, "indexedDB error (" + event.code + "): " + event.message);
         SimpleTest.finish();
       }
 
-      var db = indexedDB.open(name, description);
-
-      var count = db.objectStores.length;
-      is(count, 0, "Bad objectStores list");
-
-      var request;
-
-      try {
-        request = db.createObjectStore(null, null);
-        ok(false, "createObjectStore with null name should have thrown!");
-      }
-      catch(e) {
-        is(request, undefined, "Shouldn't be set to anything");
-      }
-
-      request = db.createObjectStore(objectStoreName, null);
+      var request = indexedDB.open(name, description);
       request.onerror = errorHandler;
       request.onsuccess = function(event) {
-        var objectStore = event.result;
-        is(objectStore.name, objectStoreName, "Bad name");
-        is(objectStore.mode, nsIIDBObjectStore.READ_WRITE, "Bad mode");
-        is(objectStore.keyPath, null, "Bad keyPath");
-        if(objectStore.indexNames.length, 0, "Bad indexNames");
-        is(db.objectStores.length, 1, "Bad objectStores list");
-        SimpleTest.finish();
+        ok(event.source === indexedDB, "correct event.source");
+        var db = event.result;
+
+        var count = db.objectStores.length;
+        is(count, 0, "correct objectStores list");
+
+        try {
+          request = db.createObjectStore(null, null);
+          ok(false, "createObjectStore with null name should throw");
+        }
+        catch(e) {
+          ok(true, "createObjectStore with null name should throw");
+        }
+
+        request = db.createObjectStore(objectStoreName, null);
+        request.onerror = errorHandler;
+        request.onsuccess = function(event) {
+          ok(event.source === db, "correct event.source");
+          var objectStore = event.result;
+
+          is(objectStore.name, objectStoreName, "Bad name");
+          is(objectStore.mode, nsIIDBObjectStore.READ_WRITE, "Bad mode");
+          is(objectStore.keyPath, null, "Bad keyPath");
+          if(objectStore.indexNames.length, 0, "Bad indexNames");
+          is(db.objectStores.length, 1, "Bad objectStores list");
+          SimpleTest.finish();
+        }
       }
     }
 

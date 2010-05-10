@@ -42,28 +42,21 @@
 #include "nsIIDBDatabaseException.h"
 
 #include "mozilla/Storage.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsContentUtils.h"
-#include "nsDirectoryServiceUtils.h"
 #include "nsDOMClassInfo.h"
-#include "nsHashKeys.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
 #include "AsyncConnectionHelper.h"
 #include "IDBEvents.h"
 #include "IDBObjectStoreRequest.h"
-#include "IDBRequest.h"
+#include "IndexedDatabaseRequest.h"
 #include "LazyIdleThread.h"
-
-#define DB_SCHEMA_VERSION 1
 
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
 const PRUint32 kDefaultDatabaseTimeoutMS = 5000;
-const PRUint32 kDefaultThreadTimeoutMS = 30000;
 
 inline
 nsISupports*
@@ -167,205 +160,36 @@ private:
   nsString mName;
 };
 
-/**
- * Creates the needed tables and their indexes.
- *
- * @param aDBConn
- *        The database connection to create the tables on.
- */
-nsresult
-CreateTables(mozIStorageConnection* aDBConn)
-{
-  NS_PRECONDITION(!NS_IsMainThread(),
-                  "Creating tables on the main thread!");
-  NS_PRECONDITION(aDBConn, "Passing a null database connection!");
-
-  // Table `database`
-  nsresult rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE database ("
-      "name TEXT NOT NULL, "
-      "description TEXT NOT NULL, "
-      "version TEXT DEFAULT NULL, "
-      "UNIQUE (name)"
-    ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Table `object_store`
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE object_store ("
-      "id INTEGER, "
-      "name TEXT NOT NULL, "
-      "key_path TEXT DEFAULT NULL, "
-      "auto_increment INTEGER NOT NULL DEFAULT 0, "
-      "readers INTEGER NOT NULL DEFAULT 0, "
-      "is_writing INTEGER NOT NULL DEFAULT 0, "
-      "PRIMARY KEY (id), "
-      "UNIQUE (name)"
-    ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Table `object_data`
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE object_data ("
-      "id INTEGER, "
-      "object_store_id INTEGER NOT NULL, "
-      "data TEXT NOT NULL, "
-      "key_value TEXT DEFAULT NULL, "
-      "PRIMARY KEY (id), "
-      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
-        "CASCADE"
-    ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX key_index "
-    "ON object_data (id, object_store_id);"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Table `ai_object_data`
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE ai_object_data ("
-      "id INTEGER, "
-      "object_store_id INTEGER NOT NULL, "
-      "data TEXT NOT NULL, "
-      "PRIMARY KEY (id), "
-      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
-        "CASCADE"
-    ");"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE INDEX ai_key_index "
-    "ON ai_object_data (id, object_store_id);"
-  ));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 } // anonymous namespace
 
 // static
 already_AddRefed<IDBDatabaseRequest>
 IDBDatabaseRequest::Create(const nsAString& aName,
                            const nsAString& aDescription,
-                           PRBool aReadOnly)
+                           PRBool aReadOnly,
+                           nsTArray<nsString>& aObjectStoreNames,
+                           nsTArray<nsString>& aIndexNames,
+                           const nsAString& aVersion,
+                           LazyIdleThread* aThread,
+                           const nsAString& aDatabaseFilePath,
+                           nsCOMPtr<mozIStorageConnection>& aConnection)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = nsContentUtils::GetSecurityManager()->
-    GetSubjectPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  nsCString origin;
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
-    origin.AssignLiteral("chrome");
-  }
-  else {
-    rv = nsContentUtils::GetASCIIOrigin(principal, origin);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-  }
-
   nsRefPtr<IDBDatabaseRequest> db(new IDBDatabaseRequest());
 
-  db->mConnectionThread = new LazyIdleThread(kDefaultThreadTimeoutMS, db);
-
-  db->mASCIIOrigin.Assign(origin);
   db->mName.Assign(aName);
   db->mDescription.Assign(aDescription);
   db->mReadOnly = aReadOnly;
+  db->mObjectStoreNames.SwapElements(aObjectStoreNames);
+  db->mIndexNames.SwapElements(aIndexNames);
+  db->mVersion.Assign(aVersion);
+  db->mDatabaseFilePath.Assign(aDatabaseFilePath);
 
-#if 1
-  // XXX Do this before we load the page! This is all duplicated code that needs
-  // to be totally removed before this code sees the light of day!
-  NS_WARNING("Using a sync algorithm to open indexedDB data! Fix this now!");
+  aThread->SetWeakIdleObserver(db);
+  db->mConnectionThread = aThread;
 
-  nsCOMPtr<nsIFile> dbFile;
-  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                              getter_AddRefs(dbFile));
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  rv = dbFile->Append(NS_LITERAL_STRING("indexedDB"));
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  PRBool exists;
-  rv = dbFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  if (exists) {
-    PRBool isDirectory;
-    rv = dbFile->IsDirectory(&isDirectory);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    if (isDirectory) {
-      nsAutoString filename;
-      filename.AppendInt(HashString(origin));
-
-      rv = dbFile->Append(filename);
-      NS_ENSURE_SUCCESS(rv, nsnull);
-
-      rv = dbFile->Exists(&exists);
-      NS_ENSURE_SUCCESS(rv, nsnull);
-
-      if (exists) {
-        rv = dbFile->IsDirectory(&isDirectory);
-        NS_ENSURE_SUCCESS(rv, nsnull);
-
-        if (isDirectory) {
-          filename.Truncate();
-          filename.AppendInt(HashString(aName));
-          filename.AppendLiteral(".sqlite");
-
-          rv = dbFile->Append(filename);
-          NS_ENSURE_SUCCESS(rv, nsnull);
-
-          rv = dbFile->Exists(&exists);
-          NS_ENSURE_SUCCESS(rv, nsnull);
-
-          if (exists) {
-            nsCOMPtr<mozIStorageService> ss =
-              do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-
-            nsCOMPtr<mozIStorageConnection> connection;
-            rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
-            NS_ENSURE_SUCCESS(rv, nsnull);
-
-            // Check to make sure that the database schema is correct.
-            PRInt32 schemaVersion;
-            rv = connection->GetSchemaVersion(&schemaVersion);
-            NS_ENSURE_SUCCESS(rv, nsnull);
-
-            if (schemaVersion == DB_SCHEMA_VERSION) {
-              nsCOMPtr<mozIStorageStatement> stmt;
-              rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-                "SELECT name "
-                "FROM object_store"
-              ), getter_AddRefs(stmt));
-              NS_ENSURE_SUCCESS(rv, nsnull);
-
-              PRBool hasResult;
-              while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-                nsString name;
-                (void)stmt->GetString(0, name);
-                NS_ENSURE_TRUE(db->mObjectStoreNames.AppendElement(name),
-                               nsnull);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-#endif
+  db->mConnection.swap(aConnection);
 
   return db.forget();
 }
@@ -394,111 +218,11 @@ IDBDatabaseRequest::EnsureConnection()
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
-  if (Connection()) {
-    return NS_OK;
+  if (!mConnection) {
+    mConnection = IndexedDatabaseRequest::GetConnection(mDatabaseFilePath);
+    NS_ENSURE_TRUE(mConnection, NS_ERROR_FAILURE);
   }
 
-  nsCOMPtr<nsIFile> dbFile;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(dbFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = dbFile->Append(NS_LITERAL_STRING("indexedDB"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool exists;
-  rv = dbFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (exists) {
-    PRBool isDirectory;
-    rv = dbFile->IsDirectory(&isDirectory);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(isDirectory, NS_ERROR_UNEXPECTED);
-  }
-  else {
-    rv = dbFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsAutoString filename;
-  filename.AppendInt(HashString(mASCIIOrigin));
-
-  rv = dbFile->Append(filename);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = dbFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (exists) {
-    PRBool isDirectory;
-    rv = dbFile->IsDirectory(&isDirectory);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(isDirectory, NS_ERROR_UNEXPECTED);
-  }
-  else {
-    rv = dbFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  filename.Truncate();
-  filename.AppendInt(HashString(mName));
-  filename.AppendLiteral(".sqlite");
-
-  rv = dbFile->Append(filename);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = dbFile->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageService> ss =
-    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-
-  nsCOMPtr<mozIStorageConnection> connection;
-  rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // Nuke the database file.  The web services can recreate their data.
-    rv = dbFile->Remove(PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    exists = PR_FALSE;
-
-    rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check to make sure that the database schema is correct.
-  PRInt32 schemaVersion;
-  rv = connection->GetSchemaVersion(&schemaVersion);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (schemaVersion != DB_SCHEMA_VERSION) {
-    if (exists) {
-      // If the connection is not at the right schema version, nuke it.
-      rv = dbFile->Remove(PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    rv = CreateTables(connection);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-#ifdef DEBUG
-  // Check to make sure that the database schema is correct again.
-  NS_ASSERTION(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)) &&
-               schemaVersion == DB_SCHEMA_VERSION,
-               "CreateTables failed!");
-
-  // Turn on foreign key constraints in debug builds to catch bugs!
-  (void)connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "PRAGMA foreign_keys = ON;"
-  ));
-#endif
-
-  connection.swap(mConnection);
   return NS_OK;
 }
 
