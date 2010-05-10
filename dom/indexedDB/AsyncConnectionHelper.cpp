@@ -166,7 +166,10 @@ AsyncConnectionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
     return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
-  GetSuccessResult(variant);
+  PRUint16 result = GetSuccessResult(variant);
+  if (result != OK) {
+    return result;
+  }
 
   if (NS_FAILED(variant->SetWritable(PR_FALSE))) {
     NS_ERROR("Failed to make variant readonly!");
@@ -201,10 +204,12 @@ AsyncConnectionHelper::OnError(nsIDOMEventTarget* aTarget,
   aTarget->DispatchEvent(event, &dummy);
 }
 
-void
+PRUint16
 AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   // Leave the variant set to empty.
+
+  return OK;
 }

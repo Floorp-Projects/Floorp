@@ -126,9 +126,10 @@ protected:
    * This function is called from the default implementation of OnSuccess. A
    * valid nsIWritableVariant is passed into the function which can be modified
    * by the subclass. The default implementation returns an nsIVariant that is
-   * set to nsIDataType::VTYPE_EMPTY.
+   * set to nsIDataType::VTYPE_EMPTY. Returning anything other than OK from the
+   * GetSuccessResult function will trigger the OnError callback.
    */
-  virtual void GetSuccessResult(nsIWritableVariant* aVariant);
+  virtual PRUint16 GetSuccessResult(nsIWritableVariant* aVariant);
 
 protected:
   nsRefPtr<IDBDatabaseRequest> mDatabase;
