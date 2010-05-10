@@ -3,20 +3,24 @@
  */
 
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 const xpi = "browser/toolkit/mozapps/extensions/test/browser/browser_installssl.xpi";
 const redirect = "browser/toolkit/mozapps/extensions/test/browser/redirect.sjs?";
 const SUCCESS = 0;
+const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 
 var gTests = [];
 
 function test() {
   waitForExplicitFinish();
+  Services.prefs.setBoolPref(PREF_LOGGING_ENABLED, true);
 
   run_next_test();
 }
 
 function end_test() {
+  Services.prefs.clearUserPref(PREF_LOGGING_ENABLED);
   var cos = Cc["@mozilla.org/security/certoverride;1"].
             getService(Ci.nsICertOverrideService);
   cos.clearValidityOverride("nocert.example.com", -1);
