@@ -1676,7 +1676,15 @@ scriptableRemoveProperty(NPObject* npobj, NPIdentifier name)
 bool
 scriptableEnumerate(NPObject* npobj, NPIdentifier** identifier, uint32_t* count)
 {
-  return false;
+  const int bufsize = sizeof(NPIdentifier) * ARRAY_LENGTH(sPluginMethodIdentifierNames);
+  NPIdentifier* ids = (NPIdentifier*) NPN_MemAlloc(bufsize);
+  if (!ids)
+    return false;
+
+  memcpy(ids, sPluginMethodIdentifiers, bufsize);
+  *identifier = ids;
+  *count = ARRAY_LENGTH(sPluginMethodIdentifierNames);
+  return true;
 }
 
 bool
