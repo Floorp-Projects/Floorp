@@ -67,7 +67,7 @@ private:
     typedef mozilla::ipc::TestShellParent TestShellParent;
 
 public:
-    static ContentProcessParent* GetSingleton();
+    static ContentProcessParent* GetSingleton(PRBool aForceNew = PR_TRUE);
 
 #if 0
     // TODO: implement this somewhere!
