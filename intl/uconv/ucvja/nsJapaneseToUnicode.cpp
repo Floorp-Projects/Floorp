@@ -344,10 +344,10 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
                 goto error_invalidchar;
               *dest++ = 0xFFFD;
                // if the first byte is valid for EUC-JP but the second 
-               // is not while being a valid US-ASCII(i.e. < 0xc0), save it
+               // is not while being a valid US-ASCII, save it
                // instead of eating it up !
-               if ( ! (*src & 0xc0)  )
-                 *dest++ = (PRUnichar) *src;;
+              if ( (PRUint8)*src < (PRUint8)0x7f )
+                --src;
             } else {
                *dest++ = gJapaneseMap[mData+off];
             }
@@ -368,7 +368,7 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
               // if 0x8e is not followed by a valid JIS X 0201 byte
               // but by a valid US-ASCII, save it instead of eating it up.
               if ( (PRUint8)*src < (PRUint8)0x7f )
-                 *dest++ = (PRUnichar) *src;
+                --src;
             }
             mState = 0;
             if(dest >= destEnd)
