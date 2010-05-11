@@ -272,6 +272,13 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
     imgLoader::SetHasProxies(mKeyURI);
   }
 
+  // If we don't have any current observers, we should restart any animation.
+  if (mImage && !HaveProxyWithObserver(proxy) && proxy->HasObserver()) {
+    LOG_MSG(gImgLog, "imgRequest::AddProxy", "resetting animation");
+
+    mImage->ResetAnimation();
+  }
+
   return mObservers.AppendElementUnlessExists(proxy) ?
     NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -390,12 +397,6 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
 
     if (mState & stateRequestStopped)
       proxy->OnStopFrame(frame);
-  }
-
-  if (mImage && !HaveProxyWithObserver(proxy) && proxy->HasObserver()) {
-    LOG_MSG(gImgLog, "imgRequest::NotifyProxyListener", "resetting animation");
-
-    mImage->ResetAnimation();
   }
 
   // The "real" OnStopDecode - Fix this with bug 505385.
