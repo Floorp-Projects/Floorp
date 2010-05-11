@@ -58,8 +58,8 @@ public:
     enum RenderMode {
         /* Use QPainter surfaces */
         RENDER_QPAINTER = 0,
-        /* Use image surfaces and XShmPutImage to QPixmap */
-        RENDER_SHARED_IMAGE,
+        /* Use offscreen buffer for rendering with image or xlib gfx backend */
+        RENDER_BUFFERED,
         /* max */
         RENDER_MODE_MAX
     };
