@@ -56,6 +56,7 @@ LIBS = \
 LOCAL_INCLUDES	= -I$(srcdir)
 
 DEFINES += -DXPCOM_GLUE
+STL_FLAGS=
 
 OS_LIBS		+= $(call EXPAND_LIBNAME,ole32 comdlg32 shell32 version)
 

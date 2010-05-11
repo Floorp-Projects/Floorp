@@ -48,11 +48,11 @@
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
 #ifdef XP_MACOSX
 @BINPATH@/XUL
-@BINPATH@/mozilla-runtime@BIN_SUFFIX@
+@BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #else
 @BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
 #ifdef MOZ_IPC
-@BINPATH@/mozilla-runtime@BIN_SUFFIX@
+@BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
 #endif
 #ifdef WINCE
@@ -96,7 +96,6 @@
 @BINPATH@/mozsqlt3@DLL_SUFFIX@
 #endif
 @BINPATH@/README.txt
-@BINPATH@/LICENSE
 @BINPATH@/blocklist.xml
 #ifdef XP_UNIX
 @BINPATH@/run-mozilla.sh
@@ -190,11 +189,6 @@
 #endif
 @BINPATH@/components/layout_xul_tree.xpt
 @BINPATH@/components/layout_xul.xpt
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-@BINPATH@/components/libimgicon@DLL_SUFFIX@
-#endif
-#endif
 @BINPATH@/components/locale.xpt
 @BINPATH@/components/lwbrk.xpt
 #ifndef WINCE
@@ -332,6 +326,7 @@
 @BINPATH@/components/nsBadCertHandler.js
 @BINPATH@/components/nsFormAutoComplete.js
 @BINPATH@/components/contentSecurityPolicy.js
+@BINPATH@/components/contentAreaDropListener.js
 #ifdef XP_MACOSX
 @BINPATH@/components/libalerts_s.dylib
 #endif

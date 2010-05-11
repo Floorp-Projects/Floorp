@@ -139,6 +139,7 @@ CPPSRCS		= \
 		jsexn.cpp \
 		jsfun.cpp \
 		jsgc.cpp \
+		jsgcchunk.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -280,9 +281,11 @@ endif
 endif # ENABLE_TRACEJIT
 
 ifdef JS_HAS_CTYPES
+VPATH += $(srcdir)/ctypes
+
 CPPSRCS += \
-    ctypes/CTypes.cpp \
-    ctypes/Library.cpp \
+    CTypes.cpp \
+    Library.cpp \
     $(NULL)
 
 LOCAL_INCLUDES = \
@@ -290,14 +293,15 @@ LOCAL_INCLUDES = \
     $(NULL)
 
 ifeq ($(OS_ARCH),OS2)
-# libffi builds an aout lib on OS/2; convert it to an OMF lib.
-ctypes/libffi/.libs/libffi.$(LIB_SUFFIX): ctypes/libffi/.libs/libffi.a
-	emxomf $<
-endif
-
-SHARED_LIBRARY_LIBS = \
+SHARED_LIBRARY_LIBS += \
+    ctypes/libffi/.libs/ffi.a \
+    $(NULL)
+else
+SHARED_LIBRARY_LIBS += \
     ctypes/libffi/.libs/libffi.$(LIB_SUFFIX) \
     $(NULL)
+endif
+
 endif # JS_HAS_CTYPES
 
 ifdef HAVE_DTRACE
@@ -375,8 +379,8 @@ ifdef JS_HAS_CTYPES
 export::
 		$(call SUBMAKE,,ctypes/libffi)
 
-clean::
-		$(call SUBMAKE,clean,ctypes/libffi)
+distclean clean::
+		$(call SUBMAKE,$@,ctypes/libffi)
 endif
 
 ifdef MOZ_SYNC_BUILD_FILES
@@ -417,6 +421,7 @@ endif
 endif
 
 DIST_GARBAGE = config.cache config.log config.status \
+   config/autoconf.mk \
    unallmakefiles js-config js-config.h js-confdefs.h
 
 distclean::

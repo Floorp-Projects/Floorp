@@ -93,6 +93,7 @@ GARBAGE += css_properties.js
 
 
 _TEST_FILES =	test_acid3_test46.html \
+		test_any_dynamic.html \
 		test_at_rule_parse_serialize.html \
 		test_bug73586.html \
 		test_bug74880.html \
@@ -176,6 +177,8 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_value_cloning.html \
 		test_value_computation.html \
 		test_value_storage.html \
+		test_visited_image_loading.html \
+		test_visited_image_loading_empty.html \
 		test_visited_lying.html \
 		test_visited_pref.html \
 		test_visited_reftests.html \
@@ -204,6 +207,9 @@ _TEST_FILES =	test_acid3_test46.html \
 		ccd.sjs \
 		visited-pref-iframe.html \
 		visited-lying-inner.html \
+		visited_image_loading.sjs \
+		visited_image_loading_frame.html \
+		visited_image_loading_frame_empty.html \
 		$(NULL)
 
 _VISITED_REFTEST_FILES = \

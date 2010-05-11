@@ -109,6 +109,14 @@ XPCOMUtils.defineLazyServiceGetter(Services, "tm",
                                    "@mozilla.org/thread-manager;1",
                                    "nsIThreadManager");
 
+XPCOMUtils.defineLazyServiceGetter(Services, "droppedLinkHandler",
+                                   "@mozilla.org/content/dropped-link-handler;1",
+                                   "nsIDroppedLinkHandler");
+
 XPCOMUtils.defineLazyServiceGetter(Services, "console",
                                    "@mozilla.org/consoleservice;1",
                                    "nsIConsoleService");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "strings",
+                                   "@mozilla.org/intl/stringbundle;1",
+                                   "nsIStringBundleService");

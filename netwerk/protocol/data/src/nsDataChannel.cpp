@@ -37,6 +37,7 @@
 
 // data implementation
 
+#include "nsIOService.h"
 #include "nsDataChannel.h"
 #include "nsDataHandler.h"
 #include "nsNetUtil.h"
@@ -44,7 +45,6 @@
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsReadableUtils.h"
-#include "nsNetSegmentUtils.h"
 #include "nsEscape.h"
 #include "plbase64.h"
 #include "plstr.h"
@@ -82,7 +82,8 @@ nsDataChannel::OpenContentStream(PRBool async, nsIInputStream **result,
     // create an unbounded pipe.
     rv = NS_NewPipe(getter_AddRefs(bufInStream),
                     getter_AddRefs(bufOutStream),
-                    NET_DEFAULT_SEGMENT_SIZE, PR_UINT32_MAX,
+                    nsIOService::gDefaultSegmentSize,
+                    PR_UINT32_MAX,
                     async, PR_TRUE);
     if (NS_FAILED(rv))
         return rv;

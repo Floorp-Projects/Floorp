@@ -258,7 +258,8 @@ class ProtocolType(IPDLType):
         if self.isToplevel():
             return self
         for mgr in self.managers:
-            return mgr.toplevel()
+            if mgr is not self:
+                return mgr.toplevel()
 
     def isManagerOf(self, pt):
         for managed in self.manages:
@@ -267,13 +268,17 @@ class ProtocolType(IPDLType):
         return False
     def isManagedBy(self, pt):
         return pt in self.managers
-    
+
     def isManager(self):
         return len(self.manages) > 0
     def isManaged(self):
         return 0 < len(self.managers)
     def isToplevel(self):
         return not self.isManaged()
+
+    def manager(self):
+        assert 1 == len(self.managers)
+        for mgr in self.managers: return mgr
 
 class ActorType(IPDLType):
     def __init__(self, protocol, state=None, nullable=0):
@@ -946,6 +951,30 @@ class GatherDecls(TcheckVisitor):
 
 ##-----------------------------------------------------------------------------
 
+def checkcycles(p, stack=None):
+    cycles = []
+
+    if stack is None:
+        stack = []
+
+    for cp in p.manages:
+        # special case for self-managed protocols
+        if cp is p:
+            continue
+        
+        if cp in stack:
+            return [stack + [p, cp]]
+        cycles += checkcycles(cp, stack + [p])
+
+    return cycles
+
+def formatcycles(cycles):
+    r = []
+    for cycle in cycles:
+        s = " -> ".join([ptype.name() for ptype in cycle])
+        r.append("`%s'" % s)
+    return ", ".join(r)
+
 class CheckTypes(TcheckVisitor):
     def __init__(self, errors):
         # don't need the symbol table, we just want the error reporting
@@ -971,7 +1000,7 @@ class CheckTypes(TcheckVisitor):
 
         # XXX currently we don't require a delete() message of top-level
         # actors.  need to let experience guide this decision
-        if not p.decl.type.isToplevel():
+        if not ptype.isToplevel():
             for md in p.messageDecls:
                 if _DELETE_MSG == md.name: break
             else:
@@ -979,6 +1008,19 @@ class CheckTypes(TcheckVisitor):
                     p.decl.loc,
                    "managed protocol `%s' requires a `delete()' message to be declared",
                     p.name)
+        else:
+            cycles = checkcycles(p.decl.type)
+            if cycles:
+                self.error(
+                    p.decl.loc,
+                    "cycle(s) detected in manager/manages heirarchy: %s",
+                    formatcycles(cycles))
+
+        if 1 == len(ptype.managers) and ptype is ptype.manager():
+            self.error(
+                p.decl.loc,
+                "top-level protocol `%s' cannot manage itself",
+                p.name)
 
         return Visitor.visitProtocol(self, p)
         

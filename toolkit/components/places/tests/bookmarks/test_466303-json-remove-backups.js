@@ -36,8 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/utils.js");
-
 const NUMBER_OF_BACKUPS = 1;
 
 function run_test() {

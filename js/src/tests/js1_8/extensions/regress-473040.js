@@ -47,7 +47,11 @@ printStatus (summary);
  
 jit(true);
 
-__proto__.functional getter= (new Function("gc()"));
+Object.defineProperty(__proto__, "functional",
+{
+  enumerable: true, configurable: true,
+  get: new Function("gc()")
+});
 for each (let x in [new Boolean(true), new Boolean(true), -0, new
                     Boolean(true), -0]) { undefined; }
 

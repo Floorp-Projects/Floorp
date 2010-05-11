@@ -1,4 +1,4 @@
-/* vim: set shiftwidth=4 tabstop=8 autoindent cindent expandtab: */
+/* vim: set shiftwidth=2 tabstop=8 autoindent cindent expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -386,6 +386,100 @@ namespace mozilla {
 #endif
 
 #if defined(_M_AMD64)
+  // MMX is always available on AMD64.
+  #define MOZILLA_PRESUME_MMX
+  // SSE is always available on AMD64.
+  #define MOZILLA_PRESUME_SSE
+  // SSE2 is always available on AMD64.
+  #define MOZILLA_PRESUME_SSE2
+#endif
+
+#if defined(MOZILLA_COMPILE_WITH_MMX) && \
+    defined(MOZILLA_SSE_INCLUDE_HEADER_FOR_MMX)
+#include <mmintrin.h>
+#endif
+
+#if defined(MOZILLA_COMPILE_WITH_SSE) && \
+    defined(MOZILLA_SSE_INCLUDE_HEADER_FOR_SSE)
+#include <xmmintrin.h>
+#endif
+
+#if defined(MOZILLA_COMPILE_WITH_SSE2) && \
+    defined(MOZILLA_SSE_INCLUDE_HEADER_FOR_SSE2)
+#include <emmintrin.h>
+#endif
+
+#elif defined(__SUNPRO_CC) && (defined(__i386) || defined(__x86_64__))
+// Sun Studio on x86 or amd64
+
+#define MOZILLA_COMPILE_WITH_MMX 1
+#define MOZILLA_COMPILE_WITH_SSE 1
+#define MOZILLA_COMPILE_WITH_SSE2 1
+
+#define MOZILLA_SSE_HAVE_CPUID_DETECTION
+
+namespace mozilla {
+
+  namespace sse_private {
+
+    enum CPUIDRegister { eax = 0, ebx = 1, ecx = 2, edx = 3 };
+
+#ifdef __i386
+    inline void
+    moz_cpuid(int CPUInfo[4], int InfoType)
+    {
+      asm (
+        "xchg %esi, %ebx\n"
+        "cpuid\n"
+        "movl %eax, (%edi)\n"
+        "movl %ebx, 4(%edi)\n"
+        "movl %ecx, 8(%edi)\n"
+        "movl %edx, 12(%edi)\n"
+        "xchg %esi, %ebx\n"
+        :
+        : "a"(InfoType), // %eax
+          "D"(CPUInfo) // %edi
+        : "%ecx", "%edx", "%esi"
+      );
+    }
+#else
+    inline void
+    moz_cpuid(int CPUInfo[4], int InfoType)
+    {
+      asm (
+        "xchg %rsi, %rbx\n"
+        "cpuid\n"
+        "movl %eax, (%rdi)\n"
+        "movl %ebx, 4(%rdi)\n"
+        "movl %ecx, 8(%rdi)\n"
+        "movl %edx, 12(%rdi)\n"
+        "xchg %rsi, %rbx\n"
+        :
+        : "a"(InfoType), // %eax
+          "D"(CPUInfo) // %rdi
+        : "%ecx", "%edx", "%rsi"
+      );
+    }
+#endif
+
+    inline bool
+    has_cpuid_bit(unsigned int level, CPUIDRegister reg, unsigned int bit)
+    {
+      // Check that the level in question is supported.
+      volatile int regs[4];
+      moz_cpuid((int *)regs, level & 0x80000000u);
+      if (unsigned(regs[0]) < level)
+        return false;
+
+      moz_cpuid((int *)regs, level);
+      return !!(unsigned(regs[reg]) & bit);
+    }
+
+  }
+
+}
+
+#if defined(__x86_64__)
   // MMX is always available on AMD64.
   #define MOZILLA_PRESUME_MMX
   // SSE is always available on AMD64.

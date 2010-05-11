@@ -353,9 +353,6 @@ var successAndFailedObserver = {
 // Index of the currently running test.  See doNextTest().
 var currTestIndex = -1;
 
-// Need JSON import/export in toolkit/components/places/src/utils.js
-Components.utils.import("resource://gre/modules/utils.js");
-
 var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
             getService(Ci.nsINavBookmarksService);
 

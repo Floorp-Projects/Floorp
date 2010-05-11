@@ -55,6 +55,8 @@ nsDOMCSSValueList::~nsDOMCSSValueList()
 NS_IMPL_ADDREF(nsDOMCSSValueList)
 NS_IMPL_RELEASE(nsDOMCSSValueList)
 
+DOMCI_DATA(CSSValueList, nsDOMCSSValueList)
+
 // QueryInterface implementation for nsDOMCSSValueList
 NS_INTERFACE_MAP_BEGIN(nsDOMCSSValueList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSValueList)

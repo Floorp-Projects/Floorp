@@ -85,6 +85,14 @@ public:
   // cleared. This should return true if the menu should be deselected
   // by the caller.
   virtual PRBool MenuClosed() = 0;
+
+  // Lock this menu and its parents until they're closed or unlocked.
+  // A menu being "locked" means that all events inside it that would change the
+  // selected menu item should be ignored.
+  // This is used when closing the popup is delayed because of a blink or fade
+  // animation.
+  virtual void LockMenuUntilClosed(PRBool aLock) = 0;
+  virtual PRBool IsMenuLocked() = 0;
 };
 
 #endif

@@ -48,6 +48,14 @@
    (NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCONNECT,1))
 #define NS_SUCCESS_CHROME_ACCESS_ONLY \
    (NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCONNECT,2))
+
+/**
+ * Classes that want slim wrappers should return NS_SUCCESS_ALLOW_SLIM_WRAPPERS
+ * from their scriptable helper's PreCreate hook. They must also force a parent
+ * for their wrapper (from the PreCreate hook), they must implement
+ * nsWrapperCache and their scriptable helper must implement nsXPCClassInfo and
+ * must return DONT_ASK_INSTANCE_FOR_SCRIPTABLE in the flags.
+ */
 #define NS_SUCCESS_ALLOW_SLIM_WRAPPERS \
    (NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_XPCONNECT,3))
 %}
@@ -181,3 +189,38 @@ interface nsIXPCScriptable : nsISupports
 
     void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);
 };
+
+%{ C++
+
+#include "nsAutoPtr.h"
+
+#define NS_XPCCLASSINFO_IID \
+{ 0x9a5b0342, 0x0f70, 0x4d31, \
+ { 0xb7, 0xd7, 0x29, 0x68, 0xa5, 0x70, 0x4b, 0xd8 } }
+
+class NS_NO_VTABLE nsXPCClassInfo : public nsIClassInfo,
+                                    public nsIXPCScriptable
+{
+public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_XPCCLASSINFO_IID)
+
+  NS_IMETHOD_(nsrefcnt) AddRef() = 0;
+  NS_IMETHOD_(nsrefcnt) Release() = 0;
+
+  virtual void PreserveWrapper(nsISupports *aNative) = 0;
+
+  virtual PRUint32 GetInterfacesBitmap() = 0;
+};
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCClassInfo, NS_XPCCLASSINFO_IID)
+
+inline
+nsresult
+CallQueryInterface(nsISupports* aSourcePtr,
+                   nsRefPtrGetterAddRefs<nsXPCClassInfo> aDestPtr)
+{
+  return CallQueryInterface(aSourcePtr,
+                            static_cast<nsXPCClassInfo**>(aDestPtr));
+}
+
+%}

@@ -100,26 +100,34 @@ nsOSHelperAppService::~nsOSHelperAppService()
 
 nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists)
 {
+  // CFStringCreateWithBytes() can fail even if we're not out of memory --
+  // for example if the 'bytes' parameter is something very wierd (like "ÿÿ~"
+  // aka "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
+  // specified in the 'encoding' parameter.  See bug 548719.
   CFStringRef schemeString = ::CFStringCreateWithBytes(kCFAllocatorDefault,
                                                        (const UInt8*)aProtocolScheme,
                                                        strlen(aProtocolScheme),
                                                        kCFStringEncodingUTF8,
                                                        false);
-  // LSCopyDefaultHandlerForURLScheme() can fail to find the default handler
-  // for aProtocolScheme when it's never been explicitly set (using
-  // LSSetDefaultHandlerForURLScheme()).  For example, Safari is the default
-  // handler for the "http" scheme on a newly installed copy of OS X.  But
-  // this (presumably) wasn't done using LSSetDefaultHandlerForURLScheme(),
-  // so LSCopyDefaultHandlerForURLScheme() will fail to find Safari.  To get
-  // around this we use LSCopyAllHandlersForURLScheme() instead -- which seems
-  // never to fail.
-  // http://lists.apple.com/archives/Carbon-dev/2007/May/msg00349.html
-  // http://www.realsoftware.com/listarchives/realbasic-nug/2008-02/msg00119.html
-  CFArrayRef handlerArray = ::LSCopyAllHandlersForURLScheme(schemeString);
-  *aHandlerExists = !!handlerArray;
-  if (handlerArray)
-    ::CFRelease(handlerArray);
-  ::CFRelease(schemeString);
+  if (schemeString) {
+    // LSCopyDefaultHandlerForURLScheme() can fail to find the default handler
+    // for aProtocolScheme when it's never been explicitly set (using
+    // LSSetDefaultHandlerForURLScheme()).  For example, Safari is the default
+    // handler for the "http" scheme on a newly installed copy of OS X.  But
+    // this (presumably) wasn't done using LSSetDefaultHandlerForURLScheme(),
+    // so LSCopyDefaultHandlerForURLScheme() will fail to find Safari.  To get
+    // around this we use LSCopyAllHandlersForURLScheme() instead -- which seems
+    // never to fail.
+    // http://lists.apple.com/archives/Carbon-dev/2007/May/msg00349.html
+    // http://www.realsoftware.com/listarchives/realbasic-nug/2008-02/msg00119.html
+    CFArrayRef handlerArray = ::LSCopyAllHandlersForURLScheme(schemeString);
+    *aHandlerExists = !!handlerArray;
+    if (handlerArray)
+      ::CFRelease(handlerArray);
+    ::CFRelease(schemeString);
+  } else {
+    *aHandlerExists = PR_FALSE;
+  }
   return NS_OK;
 }
 
@@ -270,23 +278,36 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
 
   if (!aMIMEType.IsEmpty()) {
     CFURLRef appURL = NULL;
+    // CFStringCreateWithCString() can fail even if we're not out of memory --
+    // for example if the 'cStr' parameter is something very wierd (like "ÿÿ~"
+    // aka "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
+    // specified in the 'encoding' parameter.  See bug 548719.
     CFStringRef CFType = ::CFStringCreateWithCString(NULL, flatType.get(), kCFStringEncodingUTF8);
-    err = ::LSCopyApplicationForMIMEType(CFType, kLSRolesAll, &appURL);
-    if ((err == noErr) && appURL && ::CFURLGetFSRef(appURL, &typeAppFSRef)) {
-      haveAppForType = PR_TRUE;
-      PR_LOG(mLog, PR_LOG_DEBUG, ("LSCopyApplicationForMIMEType found a default application\n"));
+    if (CFType) {
+      err = ::LSCopyApplicationForMIMEType(CFType, kLSRolesAll, &appURL);
+      if ((err == noErr) && appURL && ::CFURLGetFSRef(appURL, &typeAppFSRef)) {
+        haveAppForType = PR_TRUE;
+        PR_LOG(mLog, PR_LOG_DEBUG, ("LSCopyApplicationForMIMEType found a default application\n"));
+      }
+      if (appURL)
+        ::CFRelease(appURL);
+      ::CFRelease(CFType);
     }
-    if (appURL)
-      ::CFRelease(appURL);
-    ::CFRelease(CFType);
   }
   if (!aFileExt.IsEmpty()) {
+    // CFStringCreateWithCString() can fail even if we're not out of memory --
+    // for example if the 'cStr' parameter is something very wierd (like "ÿÿ~"
+    // aka "\xFF\xFF~"), or possibly if it can't be interpreted as using what's
+    // specified in the 'encoding' parameter.  See bug 548719.
     CFStringRef CFExt = ::CFStringCreateWithCString(NULL, flatExt.get(), kCFStringEncodingUTF8);
-    err = ::LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, CFExt,
-                                    kLSRolesAll, &extAppFSRef, nsnull);
-    if (err == noErr) {
-      haveAppForExt = PR_TRUE;
-      PR_LOG(mLog, PR_LOG_DEBUG, ("LSGetApplicationForInfo found a default application\n"));
+    if (CFExt) {
+      err = ::LSGetApplicationForInfo(kLSUnknownType, kLSUnknownCreator, CFExt,
+                                      kLSRolesAll, &extAppFSRef, nsnull);
+      if (err == noErr) {
+        haveAppForExt = PR_TRUE;
+        PR_LOG(mLog, PR_LOG_DEBUG, ("LSGetApplicationForInfo found a default application\n"));
+      }
+      ::CFRelease(CFExt);
     }
   }
 

@@ -45,12 +45,13 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMEventTarget.h"
 #include "nsPIDOMWindow.h"
-#include "nsPresContext.h"
 #include "nsPoint.h"
 #include "nsGUIEvent.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsAutoPtr.h"
 
 class nsIContent;
+class nsPresContext;
  
 class nsDOMEvent : public nsIDOMEvent,
                    public nsIDOMNSEvent,

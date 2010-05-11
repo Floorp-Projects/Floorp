@@ -56,6 +56,7 @@ JS_BEGIN_EXTERN_C
 extern jsbytecode *
 js_UntrapScriptCode(JSContext *cx, JSScript *script);
 
+/* The closure argument will be marked. */
 extern JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
            JSTrapHandler handler, jsval closure);
@@ -365,7 +366,7 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda);
 /************************************************************************/
 
 extern JS_PUBLIC_API(JSBool)
-JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler handler, void *closure);
+JS_SetDebuggerHandler(JSRuntime *rt, JSDebuggerHandler hook, void *closure);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetSourceHandler(JSRuntime *rt, JSSourceHandler handler, void *closure);
@@ -380,7 +381,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_SetObjectHook(JSRuntime *rt, JSObjectHook hook, void *closure);
 
 extern JS_PUBLIC_API(JSBool)
-JS_SetThrowHook(JSRuntime *rt, JSTrapHandler hook, void *closure);
+JS_SetThrowHook(JSRuntime *rt, JSThrowHook hook, void *closure);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SetDebugErrorHook(JSRuntime *rt, JSDebugErrorHook hook, void *closure);

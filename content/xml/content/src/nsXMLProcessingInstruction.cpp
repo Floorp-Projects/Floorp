@@ -89,6 +89,8 @@ nsXMLProcessingInstruction::~nsXMLProcessingInstruction()
 }
 
 
+DOMCI_DATA(ProcessingInstruction, nsXMLProcessingInstruction)
+
 // QueryInterface implementation for nsXMLProcessingInstruction
 NS_INTERFACE_TABLE_HEAD(nsXMLProcessingInstruction)
   NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXMLProcessingInstruction)

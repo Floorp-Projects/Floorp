@@ -97,7 +97,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      */
     PRBool                               mSuppressEOF;
     
-    PRBool                               mHasProcessedBase;
     PRBool                               mReadingFromStage;
     nsTArray<nsHtml5TreeOperation>       mOpQueue;
     nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
@@ -188,7 +187,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     virtual nsISupports *GetTarget();
   
     // nsContentSink methods
-    virtual nsresult ProcessBASETag(nsIContent* aContent);
     virtual void UpdateChildCounts();
     virtual nsresult FlushTags();
     virtual void PostEvaluateScript(nsIScriptElement *aElement);
@@ -212,11 +210,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     PRBool IsScriptExecuting() {
       return IsScriptExecutingImpl();
-    }
-    
-    void SetBaseUriFromDocument() {
-      mDocumentBaseURI = mDocument->GetBaseURI();
-      mHasProcessedBase = PR_TRUE;
     }
     
     void SetNodeInfoManager(nsNodeInfoManager* aManager) {
@@ -274,7 +267,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
           break;
         }
       }
-      if (aChild->IsNodeOfType(nsINode::eELEMENT)) {
+      if (aChild->IsElement()) {
         mElementsSeenInThisAppendBatch.AppendElement(aChild);
       }
       mElementsSeenInThisAppendBatch.AppendElement(aParent);
@@ -325,7 +318,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     void StartLayout();
     
-    void DocumentMode(nsHtml5DocumentMode m);
+    void SetDocumentMode(nsHtml5DocumentMode m);
 
     nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
                   nsISupports* aContainer, nsIChannel* aChannel);
@@ -366,6 +359,10 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     
     inline void HoldElement(nsIContent* aContent) {
       mOwnedElements.AppendObject(aContent);
+    }
+
+    void DropHeldElements() {
+      mOwnedElements.Clear();
     }
 
     /**

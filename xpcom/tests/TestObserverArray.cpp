@@ -39,10 +39,9 @@
 
 #include "TestHarness.h"
 #include "nsTObserverArray.h"
+#include "nsMemory.h" // for NS_ARRAY_LENGTH
 
 typedef nsTObserverArray<int> Array;
-
-#define NS_ARRAY_LENGTH(_x) (sizeof(_x)/sizeof(*_x))
 
 #define DO_TEST(_type, _exp, _code)                                   \
   do {                                                                \

@@ -163,7 +163,7 @@ nsHttpResponseHead::Parse(char *block)
 }
 
 void
-nsHttpResponseHead::ParseStatusLine(char *line)
+nsHttpResponseHead::ParseStatusLine(const char *line)
 {
     //
     // Parse Status-Line:: HTTP-Version SP Status-Code SP Reason-Phrase CRLF
@@ -198,7 +198,7 @@ nsHttpResponseHead::ParseStatusLine(char *line)
 }
 
 void
-nsHttpResponseHead::ParseHeaderLine(char *line)
+nsHttpResponseHead::ParseHeaderLine(const char *line)
 {
     nsHttpAtom hdr = {0};
     char *val;
@@ -534,7 +534,10 @@ nsHttpResponseHead::GetMaxAgeValue(PRUint32 *result)
     if (!p)
         return NS_ERROR_NOT_AVAILABLE;
 
-    *result = (PRUint32) atoi(p + 8);
+    int maxAgeValue = atoi(p + 8);
+    if (maxAgeValue < 0)
+        maxAgeValue = 0;
+    *result = PRUint32(maxAgeValue);
     return NS_OK;
 }
 

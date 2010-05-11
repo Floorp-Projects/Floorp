@@ -42,7 +42,6 @@
 // that a data provider can supply are:
 //
 // name: The name of the provider
-// lookupURL: The URL to send requests to in enhanced mode
 // keyURL: Before we send URLs in enhanced mode, we need to encrypt them
 // reportURL: When shown a warning bubble, we send back the user decision
 //            (get me out of here/ignore warning) to this URL (strip cookies
@@ -104,7 +103,6 @@ PROT_DataProvider.prototype.loadDataProviderPrefs_ = function() {
   this.name_ = this.prefs_.getPref(basePref + "name", "");
 
   // Urls used to get data from a provider
-  this.lookupURL_ = this.getUrlPref_(basePref + "lookupURL");
   this.keyURL_ = this.getUrlPref_(basePref + "keyURL");
   this.reportURL_ = this.getUrlPref_(basePref + "reportURL");
   this.gethashURL_ = this.getUrlPref_(basePref + "gethashURL");
@@ -203,10 +201,6 @@ PROT_DataProvider.prototype.getName = function() {
 
 PROT_DataProvider.prototype.getUpdateURL = function() {
   return this.updateURL_;
-}
-
-PROT_DataProvider.prototype.getLookupURL = function() {
-  return this.lookupURL_;
 }
 
 PROT_DataProvider.prototype.getGethashURL = function() {

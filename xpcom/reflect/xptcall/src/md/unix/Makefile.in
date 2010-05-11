@@ -83,7 +83,7 @@ endif
 endif
 endif
 
-ifneq (,$(filter NetBSD OpenBSD BSD_OS,$(OS_ARCH)))
+ifneq (,$(filter NetBSD OpenBSD BSD_OS GNU,$(OS_ARCH)))
 ifeq (86,$(findstring 86,$(OS_TEST)))
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
@@ -247,7 +247,7 @@ endif
 # Linux/HPPA/gcc
 #
 ifeq ($(OS_ARCH),Linux)
-ifneq (,$(filter hppa2.0 hppa1.1,$(OS_TEST)))
+ifneq (,$(filter hppa hppa2.0 hppa1.1,$(OS_TEST)))
 ifndef GNU_CXX
 $(error Unknown C++ compiler, xptcall assembly will probably be incorrect.)
 else

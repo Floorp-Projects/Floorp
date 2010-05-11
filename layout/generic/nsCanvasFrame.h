@@ -42,7 +42,6 @@
 
 
 #include "nsHTMLContainerFrame.h"
-#include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsIRenderingContext.h"
 #include "nsGUIEvent.h"
@@ -50,6 +49,8 @@
 #include "nsIScrollPositionListener.h"
 #include "nsDisplayList.h"
 #include "nsAbsoluteContainingBlock.h"
+
+class nsPresContext;
 
 /**
  * Root frame class.
@@ -63,7 +64,9 @@ class nsCanvasFrame : public nsHTMLContainerFrame,
 {
 public:
   nsCanvasFrame(nsStyleContext* aContext)
-  : nsHTMLContainerFrame(aContext), mDoPaintFocus(PR_FALSE),
+  : nsHTMLContainerFrame(aContext),
+    mDoPaintFocus(PR_FALSE),
+    mAddedScrollPositionListener(PR_FALSE),
     mAbsoluteContainer(nsGkAtoms::absoluteList) {}
 
   NS_DECL_QUERYFRAME_TARGET(nsCanvasFrame)

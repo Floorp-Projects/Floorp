@@ -143,3 +143,8 @@ interface nsIWorker : nsIAbstractWorker
 
   void terminate();
 };
+
+[scriptable, uuid(c40dfe2c-c9d4-4c48-8e5d-adc99f207dd2)]
+interface nsIChromeWorker : nsIWorker
+{
+};

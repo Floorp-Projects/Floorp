@@ -1,9 +1,9 @@
 url-prefix ../../jsreftest.html?test=js1_8_5/extensions/
 script typedarray.js
-fails-if(!xulRuntime.shell) script worker-error.js  # bug 557346
-script worker-error-propagation.js
-script worker-fib.js
-script worker-init.js
-script worker-simple.js
-script worker-terminate.js
-script worker-timeout.js
+skip-if(!xulRuntime.shell) script worker-error.js  # these tests sometimes hang in browser, bug 559954, bug 562333
+skip-if(!xulRuntime.shell) script worker-error-propagation.js
+skip-if(!xulRuntime.shell) script worker-fib.js
+skip-if(!xulRuntime.shell) script worker-init.js
+skip-if(!xulRuntime.shell) script worker-simple.js
+skip-if(!xulRuntime.shell) script worker-terminate.js
+skip-if(!xulRuntime.shell) script worker-timeout.js

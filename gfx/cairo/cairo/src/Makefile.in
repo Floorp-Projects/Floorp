@@ -54,6 +54,7 @@ LIBRARY_NAME    = mozcairo
 LIBXUL_LIBRARY = 1
 
 ifdef GNU_CC
+OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
 MODULE_OPTIMIZE_FLAGS = -O2
 else
 ifeq ($(OS_ARCH),SunOS)
@@ -74,7 +75,10 @@ CSRCS   = \
         cairo-array.c \
 	cairo-atomic.c \
         cairo-bentley-ottmann.c \
-        cairo-cache.c \
+	cairo-bentley-ottmann-rectilinear.c \
+	cairo-bentley-ottmann-rectangular.c \
+        cairo-base64-stream.c \
+	cairo-cache.c \
         cairo-clip.c \
         cairo-color.c \
         cairo-debug.c \
@@ -92,7 +96,6 @@ CSRCS   = \
         cairo-image-surface.c \
         cairo-lzw.c \
         cairo-matrix.c \
-        cairo-meta-surface.c \
 	cairo-misc.c \
 	cairo-mutex.c \
         cairo-output-stream.c \
@@ -106,17 +109,20 @@ CSRCS   = \
         cairo-pattern.c \
         cairo-pen.c \
         cairo-polygon.c \
+	cairo-recording-surface.c \
         cairo-rectangle.c \
         cairo-region.c \
         cairo-scaled-font.c \
         cairo-scaled-font-subsets.c \
-        cairo-skiplist.c \
         cairo-slope.c \
         cairo-spans.c \
         cairo-spline.c \
         cairo-stroke-style.c \
         cairo-surface.c \
+	cairo-surface-clipper.c \
         cairo-surface-fallback.c \
+	cairo-surface-wrapper.c \
+	cairo-tee-surface.c \
         cairo-tor-scan-converter.c \
         cairo-toy-font-face.c \
         cairo-traps.c \
@@ -204,8 +210,8 @@ EXPORTS_cairo += $(PDF_EXPORTS) $(PS_EXPORTS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += cairo-qpainter-surface.cpp
-EXPORTS_cairo += cairo-qpainter.h
+CPPSRCS += cairo-qt-surface.cpp
+EXPORTS_cairo += cairo-qt.h
 OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 

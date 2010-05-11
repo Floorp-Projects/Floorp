@@ -175,7 +175,7 @@ function run_test() {
   // Observe expirations.
   observer = {
     observe: function(aSubject, aTopic, aData) {
-      os.removeObserver(observer, TOPIC_EXPIRATION_FINISHED);
+      os.removeObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
 
       ["expire_days", "expire_weeks", "expire_months"].forEach(function(aAnno) {
         let pages = as.getPagesWithAnnotation(aAnno);
@@ -202,7 +202,7 @@ function run_test() {
       do_test_finished();
     }
   };
-  os.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+  os.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
   // Expire all visits for the bookmarks.
   force_expiration_step(5);

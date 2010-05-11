@@ -153,8 +153,6 @@ private:
 
     txOutputFormat mOutputFormat;
 
-    PRPackedBool mHaveBaseElement;
-
     PRPackedBool mCreatingNewDocument;
 
     PRPackedBool mOpenedElementIsHTML;

@@ -256,6 +256,7 @@ class HashTable : AllocPolicy
     static const unsigned sGoldenRatio  = 0x9E3779B9U;       /* taken from jsdhash.h */
     static const uint8    sMinAlphaFrac = 64;  /* (0x100 * .25) taken from jsdhash.h */
     static const uint8    sMaxAlphaFrac = 192; /* (0x100 * .75) taken from jsdhash.h */
+    static const uint8    sInvMaxAlpha  = 171; /* (ceil(0x100 / .75) >> 1) */
     static const unsigned sCollisionBit = 1;
 
     static Entry *createTable(AllocPolicy &alloc, uint32 capacity)
@@ -287,13 +288,19 @@ class HashTable : AllocPolicy
 #endif
     {}
 
-    bool init(uint32 capacity)
+    bool init(uint32 length)
     {
+        /*
+         * Correct for sMaxAlphaFrac such that the table will not resize
+         * when adding 'length' entries.
+         */
+        JS_ASSERT(length < (uint32(1) << 23));
+        uint32 capacity = (length * sInvMaxAlpha) >> 7;
+
         if (capacity < sMinSize)
             capacity = sMinSize;
 
         /* FIXME: use JS_CEILING_LOG2 when PGO stops crashing (bug 543034). */
-        JS_ASSERT(capacity < (uint32(1) << 31));
         uint32 roundUp = sMinSize, roundUpLog2 = sMinSizeLog2;
         while (roundUp < capacity) {
             roundUp <<= 1;
@@ -722,7 +729,7 @@ class HashMap
      * init after constructing a HashMap and check the return value.
      */
     HashMap(AllocPolicy a = AllocPolicy()) : impl(a) {}
-    bool init(uint32 cap = 0)                         { return impl.init(cap); }
+    bool init(uint32 len = 0)                         { return impl.init(len); }
     bool initialized() const                          { return impl.initialized(); }
 
     /*
@@ -870,7 +877,7 @@ class HashSet
      * init after constructing a HashSet and check the return value.
      */
     HashSet(AllocPolicy a = AllocPolicy()) : impl(a) {}
-    bool init(uint32 cap = 0)                         { return impl.init(cap); }
+    bool init(uint32 len = 0)                         { return impl.init(len); }
     bool initialized() const                          { return impl.initialized(); }
 
     /*

@@ -152,8 +152,6 @@ protected:
   void PopContent();
   PRBool HaveNotifiedForCurrentContent() const;
 
-  void ProcessBASETag(nsIContent* aContent);
-
   nsresult FlushTags();
 
   void UpdateChildCounts();
@@ -206,7 +204,6 @@ protected:
   PRUint8 mPrettyPrintXML : 1;
   PRUint8 mPrettyPrintHasSpecialRoot : 1;
   PRUint8 mPrettyPrintHasFactoredElements : 1;
-  PRUint8 mHasProcessedBase : 1;
   PRUint8 mPrettyPrinting : 1;  // True if we called PrettyPrint() and it
                                 // decided we should in fact prettyprint.
   

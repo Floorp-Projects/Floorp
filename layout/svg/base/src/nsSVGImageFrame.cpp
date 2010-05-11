@@ -257,6 +257,7 @@ nsSVGImageFrame::PaintSVG(nsSVGRenderState *aContext,
   if (thebesPattern) {
 
     thebesPattern->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+    thebesPattern->SetExtend(gfxPattern::EXTEND_PAD_EDGE);
 
     gfxContext *gfx = aContext->GetGfxContext();
 

@@ -41,7 +41,6 @@
 #include "nsILink.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
@@ -146,6 +145,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLLinkElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLLinkElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLLinkElement, nsHTMLLinkElement)
+
 // QueryInterface implementation for nsHTMLLinkElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLLinkElement)
   NS_HTML_CONTENT_INTERFACE_TABLE5(nsHTMLLinkElement,
@@ -212,9 +213,8 @@ nsHTMLLinkElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsContentUtils::AddScriptRunner(
-    new nsRunnableMethod<nsHTMLLinkElement>(this,
-                                            &nsHTMLLinkElement::UpdateStyleSheetInternal));
+  void (nsHTMLLinkElement::*update)() = &nsHTMLLinkElement::UpdateStyleSheetInternal;
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
 
   CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMLinkAdded"));
 

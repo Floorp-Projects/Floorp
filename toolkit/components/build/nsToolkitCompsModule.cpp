@@ -39,6 +39,7 @@
 #include "nsAppStartup.h"
 #include "nsUserInfo.h"
 #include "nsToolkitCompsCID.h"
+#include "nsFindService.h"
 
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
 #include "nsParentalControlsServiceWin.h"
@@ -51,6 +52,8 @@
 #ifdef MOZ_RDF
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
+#include "nsCharsetMenu.h"
+#include "rdf.h"
 #endif
 
 #include "nsTypeAheadFind.h"
@@ -73,6 +76,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindService)
 
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsServiceWin)
@@ -156,6 +160,10 @@ static const nsModuleComponentInfo components[] =
     NS_TRANSFER_CONTRACTID,
     nsDownloadProxyConstructor },
 #endif
+  { "Find Service",
+    NS_FIND_SERVICE_CID,
+    NS_FIND_SERVICE_CONTRACTID,
+    nsFindServiceConstructor },
   { "TypeAheadFind Component",
     NS_TYPEAHEADFIND_CID,
     NS_TYPEAHEADFIND_CONTRACTID,
@@ -193,6 +201,10 @@ static const nsModuleComponentInfo components[] =
     NS_BROWSERSTATUSFILTER_CID,
     NS_BROWSERSTATUSFILTER_CONTRACTID,
     nsBrowserStatusFilterConstructor },
+  { "nsCharsetMenu",
+    NS_CHARSETMENU_CID,
+    NS_RDF_DATASOURCE_CONTRACTID_PREFIX NS_CHARSETMENU_PID,
+    NS_NewCharsetMenu },
 };
 
 NS_IMPL_NSGETMODULE(nsToolkitCompsModule, components)

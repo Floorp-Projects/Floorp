@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tests for Content Security Policy during redirects</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+
+<iframe style="width:100%;height:300px;" id="harness"></iframe>
+<pre id="log"></pre>
+<script class="testbody" type="text/javascript">
+
+var path = "/tests/content/base/test/";
+
+// debugging
+function log(s) {
+  return;
+  var log = document.getElementById("log");
+  log.textContent = log.textContent+s+"\n";
+}
+
+// used to watch if requests are blocked by CSP or allowed through
+function examiner() {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                        .getService(Components.interfaces.nsIObserverService);
+  obsvc.addObserver(this, "csp-on-violate-policy", false);
+  obsvc.addObserver(this, "http-on-modify-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    // subject should be an nsURI, and should be either allowed or blocked.
+    if(!subject.QueryInterface)
+      return;
+
+    var testpat = new RegExp("testid=([a-z0-9-]+)");
+    var uri;
+    var testid;
+
+    if (topic === "http-on-modify-request") {
+      // request was sent
+      uri = subject.QueryInterface(Components.interfaces.nsIHttpChannel).URI;
+      if (!testpat.test(uri.asciiSpec)) return;
+      testid = testpat.exec(uri.asciiSpec)[1];
+      if (testExpectedResults[testid] == "completed") return;
+      log("allowed: "+uri.asciiSpec);
+      window.testResult(testid, uri.asciiSpec, true);
+    }
+
+    else if (topic === "csp-on-violate-policy") {
+      // request was blocked
+      uri = subject.QueryInterface(Components.interfaces.nsIURI);
+      if (!testpat.test(uri.asciiSpec)) return;
+      testid = testpat.exec(uri.asciiSpec)[1];
+      // had to add this check because http-on-modify-request can fire after
+      // csp-on-violate-policy, apparently, even though the request does
+      // not hit the wire.
+      if (testExpectedResults[testid] == "completed") return;
+      log("BLOCKED: "+uri.asciiSpec);
+      window.testResult(testid, uri.asciiSpec, false);
+    }
+  },
+
+  remove: function() {
+    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+    var obsvc = Components.classes['@mozilla.org/observer-service;1']
+                          .getService(Components.interfaces.nsIObserverService);
+    obsvc.removeObserver(this, "csp-on-violate-policy");
+    obsvc.removeObserver(this, "http-on-modify-request");
+  }
+}
+window.examiner = new examiner();
+
+// contains { test_frame_id : expected_result }
+var testExpectedResults = { "font-src": true,
+                            "font-src-redir": false,
+                            "frame-src": true,
+                            "frame-src-redir": false,
+//                            "img-src": true,
+//                            "img-src-redir": false,
+                            "media-src": true,
+                            "media-src-redir": false,
+                            "object-src": true,
+                            "object-src-redir": false,
+                            "script-src": true,
+                            "script-src-redir": false,
+                            "style-src": true,
+                            "style-src-redir": false,
+                            "worker": true,
+                            "worker-redir": false,
+                            "xhr-src": true,
+                            "xhr-src-redir": false,
+                          };
+
+// takes the name of the test, the URL that was tested, and whether the
+// load occured
+var testResult = function(testName, url, result) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+  log("  testName: "+testName+", result: "+result+", expected: "+testExpectedResults[testName]+"\n");
+  is(result, testExpectedResults[testName], testName+" test: "+url);
+
+ // mark test as completed
+  testExpectedResults[testName] = "completed";
+
+  // don't finish until we've run all the tests
+  for (var t in testExpectedResults) {
+    if (testExpectedResults[t] != "completed")
+      return;
+  }
+
+  window.examiner.remove();
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// load the test harness
+document.getElementById("harness").src = "file_csp_redirects_main.html";
+
+</script>
+</pre>
+
+</body>
+</html>

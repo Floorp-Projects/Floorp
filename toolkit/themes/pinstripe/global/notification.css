@@ -80,7 +80,7 @@ notification[type="critical"] .messageImage {
   list-style-image: url("chrome://global/skin/icons/closetab-active.png");
 }
 
-.messageCloseButton:focus > .toolbarbutton-icon {
+.messageCloseButton:-moz-focusring > .toolbarbutton-icon {
   -moz-border-radius: 100%;
   -moz-box-shadow: 0 0 3px 1px -moz-mac-focusring,
                    0 0 0 2px -moz-mac-focusring inset;

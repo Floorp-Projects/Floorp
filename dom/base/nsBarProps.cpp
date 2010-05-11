@@ -60,6 +60,8 @@ nsBarProp::~nsBarProp()
 }
 
 
+DOMCI_DATA(BarProp, nsBarProp)
+
 // QueryInterface implementation for BarProp
 NS_INTERFACE_MAP_BEGIN(nsBarProp)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBarProp)

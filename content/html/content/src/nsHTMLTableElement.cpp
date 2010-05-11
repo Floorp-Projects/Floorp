@@ -408,6 +408,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTableElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLTableElement, nsHTMLTableElement)
+
 // QueryInterface implementation for nsHTMLTableElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLTableElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLTableElement, nsIDOMHTMLTableElement)
@@ -1011,13 +1013,13 @@ nsHTMLTableElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseColor(aValue, GetOwnerDoc());
     }
     if (aAttribute == nsGkAtoms::frame) {
-      return aResult.ParseEnumValue(aValue, kFrameTable);
+      return aResult.ParseEnumValue(aValue, kFrameTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::layout) {
-      return aResult.ParseEnumValue(aValue, kLayoutTable);
+      return aResult.ParseEnumValue(aValue, kLayoutTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::rules) {
-      return aResult.ParseEnumValue(aValue, kRulesTable);
+      return aResult.ParseEnumValue(aValue, kRulesTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::hspace ||
         aAttribute == nsGkAtoms::vspace) {

@@ -172,7 +172,6 @@ _test_fallback_surface_release_dest_image (void			   *abstract_surface,
 static cairo_status_t
 _test_fallback_surface_clone_similar (void		  *abstract_surface,
 				      cairo_surface_t     *src,
-				      cairo_content_t      content,
 				      int                  src_x,
 				      int                  src_y,
 				      int                  width,
@@ -194,7 +193,7 @@ _test_fallback_surface_clone_similar (void		  *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static cairo_int_status_t
+static cairo_bool_t
 _test_fallback_surface_get_extents (void		  *abstract_surface,
 				    cairo_rectangle_int_t *rectangle)
 {
@@ -219,8 +218,6 @@ static const cairo_surface_backend_t test_fallback_surface_backend = {
     NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
-    NULL, /* set_clip_region */
-    NULL, /* intersect_clip_path */
     _test_fallback_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */

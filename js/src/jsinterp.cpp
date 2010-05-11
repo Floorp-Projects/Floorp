@@ -78,16 +78,14 @@
 #include "jsvector.h"
 
 #include "jsatominlines.h"
-#include "jspropertycacheinlines.h"
+#include "jscntxtinlines.h"
+#include "jsdtracef.h"
 #include "jsobjinlines.h"
+#include "jspropertycacheinlines.h"
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsstrinlines.h"
 #include "jscntxtinlines.h"
-
-#ifdef INCLUDE_MOZILLA_DTRACE
-#include "jsdtracef.h"
-#endif
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -228,16 +226,19 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
 }
 
 JSBool
-js_GetPrimitiveThis(JSContext *cx, Value *vp, Class *clasp, Value *thisvp)
+js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
 {
-    Value *p = &vp[1];
-    if (p->isObject()) {
-        JSObject *obj = ComputeThisObjectFromVp(cx, vp);
-        if (!InstanceOf(cx, obj, clasp, vp + 2))
+    jsval v;
+    JSObject *obj;
+
+    v = vp[1];
+    if (JSVAL_IS_OBJECT(v)) {
+        obj = JS_THIS_OBJECT(cx, vp);
+        if (!JS_InstanceOf(cx, obj, clasp, vp + 2))
             return JS_FALSE;
-        p = &obj->fslots[JSSLOT_PRIMITIVE_THIS];
+        v = obj->getPrimitiveThis();
     }
-    thisvp->copy(*p);
+    *thisvp = v;
     return JS_TRUE;
 }
 
@@ -355,8 +356,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
                 vp[0].copy(IdToValue(id));
         }
 #endif
-        obj = js_NewObjectWithGivenProto(cx, &js_NoSuchMethodClass,
-                                                   NULL, NULL);
+        obj = NewObjectWithGivenProto(cx, &js_NoSuchMethodClass, NULL, NULL);
         if (!obj)
             return false;
         obj->fslots[JSSLOT_FOUND_FUNCTION].copy(tvr.value());
@@ -375,10 +375,10 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
 
     JS_ASSERT(!vp[0].isPrimitive());
     JS_ASSERT(!vp[1].isPrimitive());
-    JSObject *obj = &vp[0].asObject();
+    JSObject *obj = JSVAL_TO_OBJECT(vp[0]);
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
-    Value *invokevp = args.getvp();
+    jsval *invokevp = args.getvp();
     invokevp[0].copy(obj->fslots[JSSLOT_FOUND_FUNCTION]);
     invokevp[1].copy(vp[1]);
     invokevp[2].copy(obj->fslots[JSSLOT_SAVED_ID]);
@@ -387,8 +387,8 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
         return JS_FALSE;
     invokevp[3].setNonFunObj(*argsobj);
     JSBool ok = (flags & JSINVOKE_CONSTRUCT)
-                 ? InvokeConstructor(cx, args, JS_TRUE)
-                 : Invoke(cx, args, flags);
+                ? InvokeConstructor(cx, args, JS_TRUE)
+                : Invoke(cx, args, flags);
     vp[0].copy(invokevp[0]);
     return ok;
 }
@@ -419,7 +419,6 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 {
     Value *vp = args.getvp();
     uintN argc = args.getArgc();
-
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     JS_ASSERT(!vp[1].isUndefined());
 
@@ -430,7 +429,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 
     JSObject *funobj = &vp[0].asObject();
     JSObject *parent = funobj->getParent();
-    Class *clasp = funobj->getClass();
+    JSClass *clasp = funobj->getClass();
 
     /* Filled by the following if/else statement. */
     Native native;
@@ -547,7 +546,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         nvars = nmissing = 0;
     }
 
-    uintN nslots = script ? script->nslots : 0;
+    uintN nfixed = script ? script->nslots : 0;
 
     /*
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
@@ -555,7 +554,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
      */
     JSFrameRegs regs;
     InvokeFrameGuard frame;
-    if (!cx->stack().getInvokeFrame(cx, args, nmissing, nslots, frame))
+    if (!cx->stack().getInvokeFrame(cx, args, nmissing, nfixed, frame))
         return false;
     JSStackFrame *fp = frame.getFrame();
 
@@ -619,15 +618,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
     if (hook)
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    /* DTrace function entry, non-inlines */
-    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
-        jsdtrace_function_entry(cx, fp, fun);
-    if (JAVASCRIPT_FUNCTION_INFO_ENABLED())
-        jsdtrace_function_info(cx, fp, fp->down, fun);
-    if (JAVASCRIPT_FUNCTION_ARGS_ENABLED())
-        jsdtrace_function_args(cx, fp, fun, fp->argc, fp->argv);
-#endif
+    DTrace::enterJSFun(cx, fp, fun, fp->down, fp->argc, fp->argv);
 
     /* Call the function, either a native method or an interpreted script. */
     JSBool ok;
@@ -649,13 +640,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         ok = Interpret(cx);
     }
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    /* DTrace function return, non-inlines */
-    if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
-        jsdtrace_function_rval(cx, fp, fun, fp->rval);
-    if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
-        jsdtrace_function_return(cx, fp, fun);
-#endif
+    DTrace::exitJSFun(cx, fp, fun, fp->rval);
 
     if (hookData) {
         hook = cx->debugHooks->callHook;
@@ -739,21 +724,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     LeaveTrace(cx);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    struct JSDNotifyGuard {
-        JSScript *script;
-        JSDNotifyGuard(JSScript *s) : script(s) {
-            if (JAVASCRIPT_EXECUTE_START_ENABLED())
-                jsdtrace_execute_start(script);
-        }
-        ~JSDNotifyGuard() {
-            if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
-                jsdtrace_execute_done(script);
-        }
-
-    } jsdNotifyGuard(script);
-#endif
-
+    DTrace::ExecutionScope executionScope(script);
     /*
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
      * code before pushExecuteFrame must not reenter the interpreter.
@@ -768,7 +739,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     JSStackFrame *fp = frame.getFrame();
 
     /* Initialize fixed slots. */
-    memset(fp->slots(), 0, script->nfixed * sizeof(*fp->slots()));
+    PodZero(fp->slots(), script->nfixed);
 #if JS_HAS_SHARP_VARS
     JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
     if (script->hasSharps) {
@@ -812,16 +783,14 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
          * this only happens with indirect eval and JS_EvaluateInStackFrame.
          */
         initialVarObj = (down == cx->fp)
-                          ? down->varobj(cx)
-                          : down->varobj(cx->containingCallStack(down));
+                        ? down->varobj(cx)
+                        : down->varobj(cx->containingCallStack(down));
     } else {
         fp->callobj = NULL;
         fp->argsobj = NULL;
         JSObject *obj = chain;
-        if (cx->options & JSOPTION_VAROBJFIX) {
-            while (JSObject *tmp = obj->getParent())
-                obj = tmp;
-        }
+        if (cx->options & JSOPTION_VAROBJFIX)
+            obj = obj->getGlobal();
         fp->fun = NULL;
         JSObject *thisp = chain->thisObject(cx);
         if (!thisp)
@@ -1103,8 +1072,7 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn
             return JS_FALSE;
     }
 
-    JSObject *proto;
-    JSObject *parent;
+    JSObject *proto, *parent;
     Class *clasp = &js_ObjectClass;
     if (vp->isPrimitive()) {
         proto = NULL;
@@ -1135,7 +1103,7 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn
                 clasp = f->u.n.clasp;
         }
     }
-    JSObject *obj = js_NewObject(cx, clasp, proto, parent);
+    JSObject *obj = NewObject(cx, clasp, proto, parent);
     if (!obj)
         return JS_FALSE;
 
@@ -1356,6 +1324,8 @@ js_TraceOpcode(JSContext *cx)
                             (n == -ndefs) ? "  output:" : ",",
                             bytes);
                     cx->free(bytes);
+                } else {
+                    JS_ClearPendingException(cx);
                 }
             }
             fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - fp->base()));
@@ -1363,10 +1333,12 @@ js_TraceOpcode(JSContext *cx)
         fprintf(tracefp, "  stack: ");
         for (Value *siter = fp->base(); siter < regs->sp; siter++) {
             str = js_ValueToString(cx, *siter);
-            if (!str)
+            if (!str) {
                 fputs("<null>", tracefp);
-            else
+            } else {
+                JS_ClearPendingException(cx);
                 js_FileEscapedString(tracefp, str, 0);
+            }
             fputc(' ', tracefp);
         }
         fputc('\n', tracefp);
@@ -1389,6 +1361,8 @@ js_TraceOpcode(JSContext *cx)
                         (n == -nuses) ? "  inputs:" : ",",
                         bytes);
                 cx->free(bytes);
+            } else {
+                JS_ClearPendingException(cx);
             }
         }
         fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - fp->base()));
@@ -2071,6 +2045,41 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
 # define ABORT_RECORDING(cx, reason)    ((void) 0)
 #endif
 
+/*
+ * Inline fast paths for iteration. js_IteratorMore and js_IteratorNext handle
+ * all cases, but we inline the most frequently taken paths here.
+ */
+static inline bool
+IteratorMore(JSContext *cx, JSObject *iterobj, JSBool *cond, jsval *rval)
+{
+    if (iterobj->getClass() == &js_IteratorClass.base) {
+        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        *cond = (ni->props_cursor < ni->props_end);
+    } else {
+        if (!js_IteratorMore(cx, iterobj, rval))
+            return false;
+        *cond = (*rval == JSVAL_TRUE);
+    }
+    return true;
+}
+
+static inline bool
+IteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
+{
+    if (iterobj->getClass() == &js_IteratorClass.base) {
+        NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
+        JS_ASSERT(ni->props_cursor < ni->props_end);
+        *rval = *ni->props_cursor;
+        if (JSVAL_IS_STRING(*rval) || (ni->flags & JSITER_FOREACH)) {
+            ni->props_cursor++;
+            return true;
+        }
+        /* Take the slow path if we have to stringify a numeric property name. */
+    }
+    return js_IteratorNext(cx, iterobj, rval);
+}
+
+
 namespace js {
 
 JS_REQUIRES_STACK bool
@@ -2224,6 +2233,24 @@ Interpret(JSContext *cx)
      */
     JSAtom **atoms = script->atomMap.vector;
 
+
+#error "TODO: merge this where it needs to go"
+#define MONITOR_BRANCH(reason)                                                \
+    JS_BEGIN_MACRO                                                            \
+        if (TRACING_ENABLED(cx)) {                                            \
+            MonitorResult r = MonitorLoopEdge(cx, inlineCallCount, reason);   \
+            if (r == MONITOR_RECORDING) {                                     \
+                JS_ASSERT(TRACE_RECORDER(cx));                                \
+                MONITOR_BRANCH_TRACEVIS;                                      \
+                ENABLE_INTERRUPTS();                                          \
+            }                                                                 \
+            RESTORE_INTERP_VARS();                                            \
+            JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
+            if (r == MONITOR_ERROR)                                           \
+                goto error;                                                   \
+        }                                                                     \
+    JS_END_MACRO
+    
     MUST_FLOW_THROUGH("exit");
     ++cx->interpLevel;
 
@@ -2369,22 +2396,6 @@ Interpret(JSContext *cx)
     JS_ASSERT(cx->regs == &regs);
 #ifdef JS_TRACER
     if (fp->imacpc && cx->throwing) {
-        // To keep things simple, we hard-code imacro exception handlers here.
-        if (*fp->imacpc == JSOP_NEXTITER &&
-            InCustomIterNextTryRegion(regs.pc) &&
-            js_ValueIsStopIteration(cx->exception)) {
-            // If the other NEXTITER imacro, native_iter_next, throws
-            // StopIteration, do not catch it here. See bug 547911.
-
-            // pc may point to JSOP_DUP here due to bug 474854.
-            JS_ASSERT(*regs.pc == JSOP_CALL || *regs.pc == JSOP_DUP);
-            cx->throwing = JS_FALSE;
-            cx->exception = JSVAL_VOID;
-            regs.sp[-1] = JSVAL_HOLE;
-            PUSH(JSVAL_FALSE);
-            goto end_imacro;
-        }
-
         // Handle other exceptions as if they came from the imacro-calling pc.
         regs.pc = fp->imacpc;
         fp->imacpc = NULL;
@@ -2519,24 +2530,19 @@ Interpret(JSContext *cx)
                     DO_NEXT_OP(len);
                 }
 
-              case JSTRY_ITER:
-                /*
-                 * This is similar to JSOP_ENDITER in the interpreter loop,
-                 * except the code now uses the stack slot normally used by
-                 * JSOP_NEXTITER, namely regs.sp[-1] before the regs.sp -= 2
-                 * adjustment and regs.sp[1] after, to save and restore the
-                 * pending exception.
-                 */
+              case JSTRY_ITER: {
+                /* This is similar to JSOP_ENDITER in the interpreter loop. */
                 JS_ASSERT(js_GetOpcode(cx, fp->script, regs.pc) == JSOP_ENDITER);
-                regs.sp[-1].copy(cx->exception);
-                cx->throwing = JS_FALSE;
-                JSBool ok = js_CloseIterator(cx, regs.sp[-2]);
-                regs.sp -= 2;
+                AutoValueRooter tvr(cx, cx->exception);
+                cx->throwing = false;
+                ok = js_CloseIterator(cx, regs.sp[-1]);
+                regs.sp -= 1;
                 if (!ok)
                     goto error;
-                cx->throwing = JS_TRUE;
-                cx->exception.copy(regs.sp[1]);
-            }
+                cx->throwing = true;
+                cx->exception = tvr.value();
+              }
+           }
         } while (++tn != tnlimit);
 
       no_catch:

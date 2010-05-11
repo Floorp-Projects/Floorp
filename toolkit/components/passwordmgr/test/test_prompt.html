@@ -23,11 +23,22 @@ Login Manager test: username/password prompts
 /** Test for Login Manager: username / password prompts. **/
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-var pwmgr, tmplogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4;
+var pwmgr, ioService
+var tmplogin, login1, login2A, login2B, login2C, login2D, login2E, login3A, login3B, login4, proxyLogin;
+var mozproxy, proxiedHost = "http://mochi.test:8888";
 
 function initLogins() {
   pwmgr = Cc["@mozilla.org/login-manager;1"].
           getService(Ci.nsILoginManager);
+  ioService = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+
+  // Figure out what our proxy is set to -- can't just hardcode this, because
+  // mobile platforms don't use localhost.
+  var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
+  var uri = ioService.newURI(proxiedHost, null, null);
+  var pi = pps.resolve(uri, 0);
+  mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
 
   tmpLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
              createInstance(Ci.nsILoginInfo);
@@ -50,6 +61,8 @@ function initLogins() {
             createInstance(Ci.nsILoginInfo);
   login4  = Cc["@mozilla.org/login-manager/loginInfo;1"].
             createInstance(Ci.nsILoginInfo);
+  proxyLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+               createInstance(Ci.nsILoginInfo);
 
   login1.init("http://example.com", null, "http://example.com",
               "", "examplepass", "", "");
@@ -69,6 +82,8 @@ function initLogins() {
                "mochiuser2", "mochipass2", "", "");
   login4.init("http://mochi.test:8888", null, "mochitest3",
                "mochiuser3", "mochipass3-old", "", "");
+  proxyLogin.init(mozproxy, null, "Proxy Realm",
+                  "proxuser", "proxpass", "", "");
 
   pwmgr.addLogin(login1);
   pwmgr.addLogin(login2A);
@@ -79,6 +94,7 @@ function initLogins() {
   pwmgr.addLogin(login3A);
   pwmgr.addLogin(login3B);
   pwmgr.addLogin(login4);
+  pwmgr.addLogin(proxyLogin);
 }
 
 function finishTest() {
@@ -92,6 +108,7 @@ function finishTest() {
   pwmgr.removeLogin(login3A);
   pwmgr.removeLogin(login3B);
   pwmgr.removeLogin(login4);
+  pwmgr.removeLogin(proxyLogin);
 
   SimpleTest.finish();
 }
@@ -265,6 +282,23 @@ function handleDialog(doc, testNum) {
         passfield.setAttribute("value", "user2pass");
         break;
 
+    case 508:
+        is(username, "proxuser", "Checking filled username");
+        is(password, "proxpass", "Checking filled password");
+        break;
+
+    // No case 509, it's unprompted.
+
+    case 510:
+        is(username, "proxuser", "Checking filled username");
+        is(password, "proxpass", "Checking filled password");
+        break;
+
+    case 511:
+        is(username, "proxuser", "Checking filled username");
+        is(password, "proxpass", "Checking filled password");
+        break;
+
     case 1000:
         is(username, "mochiuser1", "Checking filled username");
         is(password, "mochipass1", "Checking filled password");
@@ -349,14 +383,12 @@ function handleLoad() {
         // Now make a load that requests the realm from test 1000. It was
         // already provided there, so auth will *not* be prompted for -- the
         // networking layer already knows it!
-        didDialog = false; // [normally reset by startCallbackTimer()]
         iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
         break;
 
 
     case 1002:
         testNum++;
-        ok(!didDialog, "handleDialog was NOT invoked");
         is(authok, "PASS", "Checking for successful authentication");
         is(username, "mochiuser1", "Checking for echoed username");
         is(password, "mochipass1", "Checking for echoed password");
@@ -441,7 +473,6 @@ function handleLoad() {
 initLogins();
 
 var authinfo = {
-    // QueryInterface : ... ?
     username : "",
     password : "",
     domain   : "",
@@ -450,6 +481,24 @@ var authinfo = {
     authenticationScheme : "basic",
     realm : ""
 };
+
+var proxyAuthinfo = {
+    username : "",
+    password : "",
+    domain   : "",
+
+    flags : Ci.nsIAuthInformation.AUTH_PROXY,
+    authenticationScheme : "basic",
+    realm : ""
+};
+
+var prefs = Cc["@mozilla.org/preferences-service;1"].
+            getService(Ci.nsIPrefBranch);
+var pb;
+try {
+    pb = Cc["@mozilla.org/privatebrowsing;1"].
+         getService(Ci.nsIPrivateBrowsingService);
+} catch (e) {}
 
 const Cc_promptFac= Cc["@mozilla.org/passwordmanager/authpromptfactory;1"];
 ok(Cc_promptFac != null, "Access Cc[@mozilla.org/passwordmanager/authpromptfactory;1]");
@@ -486,6 +535,7 @@ isOk = prompter1.prompt(dialogTitle(), dialogText, "http://example.com",
                         Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
 
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(result.value, "xyz", "Checking prompt() returned value");
 
 
@@ -494,6 +544,7 @@ testNum++;
 startCallbackTimer();
 isOk = prompter1.prompt(dialogTitle(), dialogText, "http://example.com",
                         Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, "abc", result);
+ok(didDialog, "handleDialog was invoked");
 ok(!isOk, "Checking dialog return value (cancel)");
 
 
@@ -505,6 +556,7 @@ startCallbackTimer();
 isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(pword.value, "secret", "Checking returned password");
 
 // ===== test 11 =====
@@ -515,6 +567,7 @@ startCallbackTimer();
 isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
 ok(!isOk, "Checking dialog return value (cancel)");
+ok(didDialog, "handleDialog was invoked");
 
 // ===== test 12 =====
 // No default password provided, realm does not match existing login.
@@ -524,6 +577,7 @@ startCallbackTimer();
 isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://nonexample.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(pword.value, "secret", "Checking returned password");
 
 // ===== test 13 =====
@@ -544,6 +598,7 @@ startCallbackTimer();
 isOk = prompter1.promptPassword(dialogTitle(), dialogText, "http://example2.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(pword.value, "secret", "Checking returned password");
 
 // ===== test 15 =====
@@ -603,6 +658,7 @@ startCallbackTimer();
 isOk = prompter1.promptPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(pword.value, "fill2pass", "Checking returned password");
 
 // ===== test 31 =====
@@ -613,6 +669,7 @@ startCallbackTimer();
 isOk = prompter1.promptPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(pword.value, "fill2pass", "Checking returned password");
 
 
@@ -624,6 +681,7 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://nonexample.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(uname.value, "outuser", "Checking returned username");
 is(pword.value, "outpass", "Checking returned password");
 
@@ -635,6 +693,7 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://nonexample.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
 ok(!isOk, "Checking dialog return value (cancel)");
+ok(didDialog, "handleDialog was invoked");
 
 // ===== test 102 =====
 // test filling in existing password-only login
@@ -645,6 +704,7 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(uname.value, "", "Checking returned username");
 is(pword.value, "examplepass", "Checking returned password");
 
@@ -657,6 +717,7 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 ok(uname.value == "user1name" || uname.value == "user2name", "Checking returned username");
 ok(pword.value == "user1pass" || uname.value == "user2pass", "Checking returned password");
 
@@ -669,6 +730,7 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(uname.value, "user1name", "Checking returned username");
 is(pword.value, "user1pass", "Checking returned password");
 
@@ -681,6 +743,7 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(uname.value, "user2name", "Checking returned username");
 is(pword.value, "user2pass", "Checking returned password");
 
@@ -693,6 +756,7 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(uname.value, "user2name", "Checking returned username");
 is(pword.value, "NEWuser2pass", "Checking returned password");
 
@@ -705,6 +769,7 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "http://example2.com",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(uname.value, "user2name", "Checking returned username");
 is(pword.value, "user2pass", "Checking returned password");
 
@@ -717,6 +782,7 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_NEVER, uname, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(uname.value, "fill2user", "Checking returned username");
 is(pword.value, "fill2pass", "Checking returned password");
 
@@ -729,16 +795,21 @@ startCallbackTimer();
 isOk = prompter1.promptUsernameAndPassword(dialogTitle(), dialogText, "example2.com:80 (somerealm)",
                                 Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, uname, pword);
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(uname.value, "fill2user", "Checking returned username");
 is(pword.value, "fill2pass", "Checking returned password");
 
 
-var channel1 = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService).
-              newChannel("http://example.com", null, null);
-var channel2 = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService).
-              newChannel("http://example2.com", null, null);
+var channel1 = ioService.newChannel("http://example.com", null, null);
+var channel2 = ioService.newChannel("http://example2.com", null, null);
+
+// I'm cheating a bit here... We should probably do some magic foo to get
+// something implementing nsIProxiedProtocolHandler and then call
+// NewProxiedChannel(), so we have something that's definately a proxied
+// channel. But Mochitests use a proxy for a number of hosts, so just
+// requesting a normal channel will give us a channel that's proxied.
+var proxyChannel = ioService.newChannel(proxiedHost, null, null);
+
 var level = Ci.nsIAuthPrompt2.LEVEL_NONE;
 
 
@@ -752,6 +823,7 @@ startCallbackTimer();
 isOk = prompter2.promptAuth(channel1, level, authinfo);
 
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(authinfo.username, "outuser", "Checking returned username");
 is(authinfo.password, "outpass", "Checking returned password");
 
@@ -761,6 +833,7 @@ startCallbackTimer();
 isOk = prompter2.promptAuth(channel1, level, authinfo);
 
 ok(!isOk, "Checking dialog return value (cancel)");
+ok(didDialog, "handleDialog was invoked");
 
 // ===== test 502 =====
 // test filling in password-only login
@@ -773,6 +846,7 @@ startCallbackTimer();
 isOk = prompter2.promptAuth(channel1, level, authinfo);
 
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(authinfo.username, "", "Checking returned username");
 is(authinfo.password, "examplepass", "Checking returned password");
 
@@ -787,6 +861,7 @@ startCallbackTimer();
 isOk = prompter2.promptAuth(channel2, level, authinfo);
 
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 ok(authinfo.username == "user1name" || authinfo.username == "user2name", "Checking returned username");
 ok(authinfo.password == "user1pass" || authinfo.password == "user2pass", "Checking returned password");
 
@@ -801,6 +876,7 @@ startCallbackTimer();
 isOk = prompter2.promptAuth(channel2, level, authinfo);
 
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(authinfo.username, "user1name", "Checking returned username");
 is(authinfo.password, "user1pass", "Checking returned password");
 
@@ -815,6 +891,7 @@ startCallbackTimer();
 isOk = prompter2.promptAuth(channel2, level, authinfo);
 
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(authinfo.username, "user2name", "Checking returned username");
 is(authinfo.password, "user2pass", "Checking returned password");
 
@@ -829,6 +906,7 @@ startCallbackTimer();
 isOk = prompter2.promptAuth(channel2, level, authinfo);
 
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(authinfo.username, "user2name", "Checking returned username");
 is(authinfo.password, "NEWuser2pass", "Checking returned password");
 
@@ -843,9 +921,100 @@ startCallbackTimer();
 isOk = prompter2.promptAuth(channel2, level, authinfo);
 
 ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
 is(authinfo.username, "user2name", "Checking returned username");
 is(authinfo.password, "user2pass", "Checking returned password");
 
+// ===== test 508 =====
+// test proxy login (default = no autologin), make sure it prompts.
+testNum++;
+proxyAuthinfo.username = "";
+proxyAuthinfo.password = "";
+proxyAuthinfo.realm    = "Proxy Realm";
+proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
+
+var time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+startCallbackTimer();
+isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+var time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
+isnot(time1, time2, "Checking that timeLastUsed was updated");
+is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+
+// ===== test 509 =====
+// test proxy login (with autologin)
+testNum++;
+
+// Enable the autologin pref.
+prefs.setBoolPref("signon.autologin.proxy", true);
+
+proxyAuthinfo.username = "";
+proxyAuthinfo.password = "";
+proxyAuthinfo.realm    = "Proxy Realm";
+proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
+
+time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+ok(isOk, "Checking dialog return value (accept)");
+isnot(time1, time2, "Checking that timeLastUsed was updated");
+is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+
+// ===== test 510 =====
+// test proxy login (with autologin), ensure it prompts after a failed auth.
+testNum++;
+
+proxyAuthinfo.username = "";
+proxyAuthinfo.password = "";
+proxyAuthinfo.realm    = "Proxy Realm";
+proxyAuthinfo.flags    = (Ci.nsIAuthInformation.AUTH_PROXY | Ci.nsIAuthInformation.PREVIOUS_FAILED);
+
+time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+startCallbackTimer();
+isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+ok(isOk, "Checking dialog return value (accept)");
+ok(didDialog, "handleDialog was invoked");
+isnot(time1, time2, "Checking that timeLastUsed was updated");
+is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+
+// ===== test 511 =====
+// test proxy login (with autologin), ensure it prompts in Private Browsing mode.
+testNum++;
+
+proxyAuthinfo.username = "";
+proxyAuthinfo.password = "";
+proxyAuthinfo.realm    = "Proxy Realm";
+proxyAuthinfo.flags    = Ci.nsIAuthInformation.AUTH_PROXY;
+
+if (pb) {
+  prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
+  pb.privateBrowsingEnabled = true;
+
+  time1 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+  startCallbackTimer();
+  isOk = prompter2.promptAuth(proxyChannel, level, proxyAuthinfo);
+  time2 = pwmgr.findLogins({}, mozproxy, null, "Proxy Realm")[0].QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
+
+  ok(isOk, "Checking dialog return value (accept)");
+  ok(didDialog, "handleDialog was invoked");
+  is(time1, time2, "Checking that timeLastUsed was not updated");
+  is(proxyAuthinfo.username, "proxuser", "Checking returned username");
+  is(proxyAuthinfo.password, "proxpass", "Checking returned password");
+
+  pb.privateBrowsingEnabled = false;
+  prefs.clearUserPref("browser.privatebrowsing.keep_current_session");
+}
+
+
+prefs.clearUserPref("signon.autologin.proxy");
 
 // XXX check for and kill notification bar??
 // XXX check for checkbox / checkstate on old prompts?

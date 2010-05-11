@@ -62,41 +62,41 @@ namespace nanojit
 
         // Pointer-sized synonyms.
 
-        LIR_paramp  = PTR_SIZE(LIR_paraml, LIR_paramq),
+        LIR_paramp  = PTR_SIZE(LIR_parami, LIR_paramq),
 
-        LIR_allocp  = PTR_SIZE(LIR_allocl, LIR_allocq),
+        LIR_allocp  = PTR_SIZE(LIR_alloci, LIR_allocq),
 
-        LIR_retp    = PTR_SIZE(LIR_retl,   LIR_retq),
+        LIR_retp    = PTR_SIZE(LIR_reti,   LIR_retq),
 
-        LIR_livep   = PTR_SIZE(LIR_livel,  LIR_liveq),
+        LIR_livep   = PTR_SIZE(LIR_livei,  LIR_liveq),
 
-        LIR_ldp     = PTR_SIZE(LIR_ldl,    LIR_ldq),
+        LIR_ldp     = PTR_SIZE(LIR_ldi,    LIR_ldq),
 
-        LIR_stp     = PTR_SIZE(LIR_stl,    LIR_stq),
+        LIR_stp     = PTR_SIZE(LIR_sti,    LIR_stq),
 
-        LIR_callp   = PTR_SIZE(LIR_calll,  LIR_callq),
+        LIR_callp   = PTR_SIZE(LIR_calli,  LIR_callq),
 
-        LIR_eqp     = PTR_SIZE(LIR_eql,    LIR_eqq),
-        LIR_ltp     = PTR_SIZE(LIR_ltl,    LIR_ltq),
-        LIR_gtp     = PTR_SIZE(LIR_gtl,    LIR_gtq),
-        LIR_lep     = PTR_SIZE(LIR_lel,    LIR_leq),
-        LIR_gep     = PTR_SIZE(LIR_gel,    LIR_geq),
-        LIR_ltup    = PTR_SIZE(LIR_ltul,   LIR_ltuq),
-        LIR_gtup    = PTR_SIZE(LIR_gtul,   LIR_gtuq),
-        LIR_leup    = PTR_SIZE(LIR_leul,   LIR_leuq),
-        LIR_geup    = PTR_SIZE(LIR_geul,   LIR_geuq),
+        LIR_eqp     = PTR_SIZE(LIR_eqi,    LIR_eqq),
+        LIR_ltp     = PTR_SIZE(LIR_lti,    LIR_ltq),
+        LIR_gtp     = PTR_SIZE(LIR_gti,    LIR_gtq),
+        LIR_lep     = PTR_SIZE(LIR_lei,    LIR_leq),
+        LIR_gep     = PTR_SIZE(LIR_gei,    LIR_geq),
+        LIR_ltup    = PTR_SIZE(LIR_ltui,   LIR_ltuq),
+        LIR_gtup    = PTR_SIZE(LIR_gtui,   LIR_gtuq),
+        LIR_leup    = PTR_SIZE(LIR_leui,   LIR_leuq),
+        LIR_geup    = PTR_SIZE(LIR_geui,   LIR_geuq),
 
-        LIR_addp    = PTR_SIZE(LIR_addl,   LIR_addq),
+        LIR_addp    = PTR_SIZE(LIR_addi,   LIR_addq),
 
-        LIR_andp    = PTR_SIZE(LIR_andl,   LIR_andq),
-        LIR_orp     = PTR_SIZE(LIR_orl,    LIR_orq),
-        LIR_xorp    = PTR_SIZE(LIR_xorl,   LIR_xorq),
+        LIR_andp    = PTR_SIZE(LIR_andi,   LIR_andq),
+        LIR_orp     = PTR_SIZE(LIR_ori,    LIR_orq),
+        LIR_xorp    = PTR_SIZE(LIR_xori,   LIR_xorq),
 
-        LIR_lshp    = PTR_SIZE(LIR_lshl,   LIR_lshq),
-        LIR_rshp    = PTR_SIZE(LIR_rshl,   LIR_rshq),
-        LIR_rshup   = PTR_SIZE(LIR_rshul,  LIR_rshuq),
+        LIR_lshp    = PTR_SIZE(LIR_lshi,   LIR_lshq),
+        LIR_rshp    = PTR_SIZE(LIR_rshi,   LIR_rshq),
+        LIR_rshup   = PTR_SIZE(LIR_rshui,  LIR_rshuq),
 
-        LIR_cmovp   = PTR_SIZE(LIR_cmovl,  LIR_cmovq),
+        LIR_cmovp   = PTR_SIZE(LIR_cmovi,  LIR_cmovq),
 
         // XXX: temporary synonyms for old opcode names and old pointer-sized
         // synonyms, for the Great Opcode Renaming transition period (bug
@@ -110,24 +110,24 @@ namespace nanojit
         // LIR_skip
 
 #ifndef NANOJIT_64BIT
-        LIR_iparam  = LIR_paraml,
+        LIR_iparam  = LIR_parami,
 #else
         LIR_qparam  = LIR_paramq,
 #endif
 
 #ifndef NANOJIT_64BIT
-        LIR_ialloc  = LIR_allocl,
+        LIR_ialloc  = LIR_alloci,
 #else
         LIR_qalloc  = LIR_allocq,
 #endif
 
-        LIR_ret     = LIR_retl,
+        LIR_ret     = LIR_reti,
 #ifdef NANOJIT_64BIT
         LIR_qret    = LIR_retq,
 #endif
         LIR_fret    = LIR_retd,
 
-        LIR_live    = LIR_livel,
+        LIR_live    = LIR_livei,
 #ifdef NANOJIT_64BIT
         LIR_qlive   = LIR_liveq,
 #endif
@@ -136,25 +136,24 @@ namespace nanojit
         // file
         // line
 
-        LIR_ldsb    = LIR_ldb2l,
-        LIR_ldss    = LIR_ldw2l,
-        LIR_ldzb    = LIR_ldub2ul,
-        LIR_ldzs    = LIR_lduw2ul,
-        LIR_ld      = LIR_ldl,
+        LIR_ldsb    = LIR_ldc2i,
+        LIR_ldss    = LIR_lds2i,
+        LIR_ldzb    = LIR_lduc2ui,
+        LIR_ldzs    = LIR_ldus2ui,
+        LIR_ld      = LIR_ldi,
         // LIR_ldq
         LIR_ldf     = LIR_ldd,
-        LIR_ld32f   = LIR_lds2d,
+        LIR_ld32f   = LIR_ldf2d,
 
-        // LIR_stb
-        LIR_sts     = LIR_stw,
-        LIR_sti     = LIR_stl,
+        LIR_stb     = LIR_sti2c,
+        LIR_sts     = LIR_sti2s,
 #ifdef NANOJIT_64BIT
         LIR_stqi    = LIR_stq,
 #endif
         LIR_stfi    = LIR_std,
-        LIR_st32f   = LIR_std2s,
+        LIR_st32f   = LIR_std2f,
 
-        LIR_icall   = LIR_calll,
+        LIR_icall   = LIR_calli,
 #ifdef NANOJIT_64BIT
         LIR_qcall   = LIR_callq,
 #endif
@@ -173,21 +172,21 @@ namespace nanojit
         // LIR_xtbl
         // LIR_xbarrier
 
-        LIR_int     = LIR_imml,
+        LIR_int     = LIR_immi,
 #ifdef NANOJIT_64BIT
         LIR_quad    = LIR_immq,
 #endif
         LIR_float   = LIR_immd,
 
-        LIR_eq      = LIR_eql,
-        LIR_lt      = LIR_ltl,
-        LIR_gt      = LIR_gtl,
-        LIR_le      = LIR_lel,
-        LIR_ge      = LIR_gel,
-        LIR_ult     = LIR_ltul,
-        LIR_ugt     = LIR_gtul,
-        LIR_ule     = LIR_leul,
-        LIR_uge     = LIR_geul,
+        LIR_eq      = LIR_eqi,
+        LIR_lt      = LIR_lti,
+        LIR_gt      = LIR_gti,
+        LIR_le      = LIR_lei,
+        LIR_ge      = LIR_gei,
+        LIR_ult     = LIR_ltui,
+        LIR_ugt     = LIR_gtui,
+        LIR_ule     = LIR_leui,
+        LIR_uge     = LIR_geui,
 
 #ifdef NANOJIT_64BIT
         LIR_qeq     = LIR_eqq,
@@ -207,23 +206,23 @@ namespace nanojit
         LIR_fle     = LIR_led,
         LIR_fge     = LIR_ged,
 
-        LIR_neg     = LIR_negl,
-        LIR_add     = LIR_addl,
-        LIR_sub     = LIR_subl,
-        LIR_mul     = LIR_mull,
+        LIR_neg     = LIR_negi,
+        LIR_add     = LIR_addi,
+        LIR_sub     = LIR_subi,
+        LIR_mul     = LIR_muli,
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
-        LIR_div     = LIR_divl,
-        LIR_mod     = LIR_modl,
+        LIR_div     = LIR_divi,
+        LIR_mod     = LIR_modi,
 #endif
 
-        LIR_not     = LIR_notl,
-        LIR_and     = LIR_andl,
-        LIR_or      = LIR_orl,
-        LIR_xor     = LIR_xorl,
+        LIR_not     = LIR_noti,
+        LIR_and     = LIR_andi,
+        LIR_or      = LIR_ori,
+        LIR_xor     = LIR_xori,
 
-        LIR_lsh     = LIR_lshl,
-        LIR_rsh     = LIR_rshl,
-        LIR_ush     = LIR_rshul,
+        LIR_lsh     = LIR_lshi,
+        LIR_rsh     = LIR_rshi,
+        LIR_ush     = LIR_rshui,
 
 #ifdef NANOJIT_64BIT
         LIR_qiadd   = LIR_addq,
@@ -244,90 +243,88 @@ namespace nanojit
         LIR_fdiv    = LIR_divd,
         LIR_fmod    = LIR_modd,
 
-        LIR_cmov    = LIR_cmovl,
+        LIR_cmov    = LIR_cmovi,
 #ifdef NANOJIT_64BIT
         LIR_qcmov   = LIR_cmovq,
 #endif
 
 #ifdef NANOJIT_64BIT
-        LIR_i2q     = LIR_l2q,
-        LIR_u2q     = LIR_ul2uq,
-        LIR_q2i     = LIR_q2l,
+        LIR_u2q     = LIR_ui2uq,
 #endif
 
-        LIR_i2f     = LIR_l2d,
-        LIR_u2f     = LIR_ul2d,
-        LIR_f2i     = LIR_d2l,
+        LIR_i2f     = LIR_i2d,
+        LIR_u2f     = LIR_ui2d,
+        LIR_f2i     = LIR_d2i,
 
-        LIR_addxov  = LIR_addxovl,
-        LIR_subxov  = LIR_subxovl,
-        LIR_mulxov  = LIR_mulxovl,
+        LIR_addxov  = LIR_addxovi,
+        LIR_subxov  = LIR_subxovi,
+        LIR_mulxov  = LIR_mulxovi,
 
 #if NJ_SOFTFLOAT_SUPPORTED
-        LIR_qlo     = LIR_dlo2l,
-        LIR_qhi     = LIR_dhi2l,
-        LIR_qjoin   = LIR_ll2d,
-        LIR_callh   = LIR_hcalll,
+        LIR_qlo     = LIR_dlo2i,
+        LIR_qhi     = LIR_dhi2i,
+        LIR_qjoin   = LIR_ii2d,
+        LIR_callh   = LIR_hcalli,
 #endif
 
-        LIR_param   = PTR_SIZE(LIR_iparam, LIR_qparam),
+        LIR_param   = LIR_paramp,
 
-        LIR_alloc   = PTR_SIZE(LIR_ialloc, LIR_qalloc),
+        LIR_alloc   = LIR_allocp,
 
-        LIR_pret    = PTR_SIZE(LIR_ret,    LIR_qret),
+        LIR_pret    = LIR_retp,
 
-        LIR_plive   = PTR_SIZE(LIR_live,   LIR_qlive),
+        LIR_plive   = LIR_livep,
 
-        LIR_stpi    = PTR_SIZE(LIR_sti,    LIR_stqi),
+        LIR_stpi    = LIR_stp,
 
-        LIR_pcall   = PTR_SIZE(LIR_icall,  LIR_qcall),
+        LIR_pcall   = LIR_callp,
 
-        LIR_peq     = PTR_SIZE(LIR_eq,     LIR_qeq),
-        LIR_plt     = PTR_SIZE(LIR_lt,     LIR_qlt),
-        LIR_pgt     = PTR_SIZE(LIR_gt,     LIR_qgt),
-        LIR_ple     = PTR_SIZE(LIR_le,     LIR_qle),
-        LIR_pge     = PTR_SIZE(LIR_ge,     LIR_qge),
-        LIR_pult    = PTR_SIZE(LIR_ult,    LIR_qult),
-        LIR_pugt    = PTR_SIZE(LIR_ugt,    LIR_qugt),
-        LIR_pule    = PTR_SIZE(LIR_ule,    LIR_qule),
-        LIR_puge    = PTR_SIZE(LIR_uge,    LIR_quge),
-        LIR_piadd   = PTR_SIZE(LIR_add,    LIR_qiadd),
+        LIR_peq     = LIR_eqp,
+        LIR_plt     = LIR_ltp,
+        LIR_pgt     = LIR_gtp,
+        LIR_ple     = LIR_lep,
+        LIR_pge     = LIR_gep,
+        LIR_pult    = LIR_ltup,
+        LIR_pugt    = LIR_gtup,
+        LIR_pule    = LIR_leup,
+        LIR_puge    = LIR_geup,
+        LIR_piadd   = LIR_addp,
 
-        LIR_piand   = PTR_SIZE(LIR_and,    LIR_qiand),
-        LIR_pior    = PTR_SIZE(LIR_or,     LIR_qior),
-        LIR_pxor    = PTR_SIZE(LIR_xor,    LIR_qxor),
+        LIR_piand   = LIR_andp,
+        LIR_pior    = LIR_orp,
+        LIR_pxor    = LIR_xorp,
 
-        LIR_pilsh   = PTR_SIZE(LIR_lsh,    LIR_qilsh),
-        LIR_pirsh   = PTR_SIZE(LIR_rsh,    LIR_qirsh),
-        LIR_pursh   = PTR_SIZE(LIR_ush,    LIR_qursh),
+        LIR_pilsh   = LIR_lshp,
+        LIR_pirsh   = LIR_rshp,
+        LIR_pursh   = LIR_rshup,
 
-        LIR_pcmov   = PTR_SIZE(LIR_cmov,   LIR_qcmov)
+        LIR_pcmov   = LIR_cmovp
     };
 
     // 32-bit integer comparisons must be contiguous, as must 64-bit integer
     // comparisons and 64-bit float comparisons.
-    NanoStaticAssert(LIR_eq + 1 == LIR_lt  &&
-                     LIR_eq + 2 == LIR_gt  &&
-                     LIR_eq + 3 == LIR_le  &&
-                     LIR_eq + 4 == LIR_ge  &&
-                     LIR_eq + 5 == LIR_ult &&
-                     LIR_eq + 6 == LIR_ugt &&
-                     LIR_eq + 7 == LIR_ule &&
-                     LIR_eq + 8 == LIR_uge);
+    NanoStaticAssert(LIR_eqi + 1 == LIR_lti  &&
+                     LIR_eqi + 2 == LIR_gti  &&
+                     LIR_eqi + 3 == LIR_lei  &&
+                     LIR_eqi + 4 == LIR_gei  &&
+                     LIR_eqi + 5 == LIR_ltui &&
+                     LIR_eqi + 6 == LIR_gtui &&
+                     LIR_eqi + 7 == LIR_leui &&
+                     LIR_eqi + 8 == LIR_geui);
 #ifdef NANOJIT_64BIT
-    NanoStaticAssert(LIR_qeq + 1 == LIR_qlt  &&
-                     LIR_qeq + 2 == LIR_qgt  &&
-                     LIR_qeq + 3 == LIR_qle  &&
-                     LIR_qeq + 4 == LIR_qge  &&
-                     LIR_qeq + 5 == LIR_qult &&
-                     LIR_qeq + 6 == LIR_qugt &&
-                     LIR_qeq + 7 == LIR_qule &&
-                     LIR_qeq + 8 == LIR_quge);
+    NanoStaticAssert(LIR_eqq + 1 == LIR_ltq  &&
+                     LIR_eqq + 2 == LIR_gtq  &&
+                     LIR_eqq + 3 == LIR_leq  &&
+                     LIR_eqq + 4 == LIR_geq  &&
+                     LIR_eqq + 5 == LIR_ltuq &&
+                     LIR_eqq + 6 == LIR_gtuq &&
+                     LIR_eqq + 7 == LIR_leuq &&
+                     LIR_eqq + 8 == LIR_geuq);
 #endif
-    NanoStaticAssert(LIR_feq + 1 == LIR_flt &&
-                     LIR_feq + 2 == LIR_fgt &&
-                     LIR_feq + 3 == LIR_fle &&
-                     LIR_feq + 4 == LIR_fge);
+    NanoStaticAssert(LIR_eqd + 1 == LIR_ltd &&
+                     LIR_eqd + 2 == LIR_gtd &&
+                     LIR_eqd + 3 == LIR_led &&
+                     LIR_eqd + 4 == LIR_ged);
 
     // Various opcodes must be changeable to their opposite with op^1
     // (although we use invertXyz() when possible, ie. outside static
@@ -336,20 +333,20 @@ namespace nanojit
 
     NanoStaticAssert((LIR_xt^1) == LIR_xf && (LIR_xf^1) == LIR_xt);
 
-    NanoStaticAssert((LIR_lt^1)  == LIR_gt  && (LIR_gt^1)  == LIR_lt);
-    NanoStaticAssert((LIR_le^1)  == LIR_ge  && (LIR_ge^1)  == LIR_le);
-    NanoStaticAssert((LIR_ult^1) == LIR_ugt && (LIR_ugt^1) == LIR_ult);
-    NanoStaticAssert((LIR_ule^1) == LIR_uge && (LIR_uge^1) == LIR_ule);
+    NanoStaticAssert((LIR_lti^1)  == LIR_gti  && (LIR_gti^1)  == LIR_lti);
+    NanoStaticAssert((LIR_lei^1)  == LIR_gei  && (LIR_gei^1)  == LIR_lei);
+    NanoStaticAssert((LIR_ltui^1) == LIR_gtui && (LIR_gtui^1) == LIR_ltui);
+    NanoStaticAssert((LIR_leui^1) == LIR_geui && (LIR_geui^1) == LIR_leui);
 
 #ifdef NANOJIT_64BIT
-    NanoStaticAssert((LIR_qlt^1)  == LIR_qgt  && (LIR_qgt^1)  == LIR_qlt);
-    NanoStaticAssert((LIR_qle^1)  == LIR_qge  && (LIR_qge^1)  == LIR_qle);
-    NanoStaticAssert((LIR_qult^1) == LIR_qugt && (LIR_qugt^1) == LIR_qult);
-    NanoStaticAssert((LIR_qule^1) == LIR_quge && (LIR_quge^1) == LIR_qule);
+    NanoStaticAssert((LIR_ltq^1)  == LIR_gtq  && (LIR_gtq^1)  == LIR_ltq);
+    NanoStaticAssert((LIR_leq^1)  == LIR_geq  && (LIR_geq^1)  == LIR_leq);
+    NanoStaticAssert((LIR_ltuq^1) == LIR_gtuq && (LIR_gtuq^1) == LIR_ltuq);
+    NanoStaticAssert((LIR_leuq^1) == LIR_geuq && (LIR_geuq^1) == LIR_leuq);
 #endif
 
-    NanoStaticAssert((LIR_flt^1) == LIR_fgt && (LIR_fgt^1) == LIR_flt);
-    NanoStaticAssert((LIR_fle^1) == LIR_fge && (LIR_fge^1) == LIR_fle);
+    NanoStaticAssert((LIR_ltd^1) == LIR_gtd && (LIR_gtd^1) == LIR_ltd);
+    NanoStaticAssert((LIR_led^1) == LIR_ged && (LIR_ged^1) == LIR_led);
 
 
     struct GuardRecord;
@@ -365,9 +362,9 @@ namespace nanojit
     // All values must fit into three bits.  See CallInfo for details.
     enum ArgType {
         ARGTYPE_V = 0,      // void
-        ARGTYPE_F = 1,      // double (64bit)
+        ARGTYPE_D = 1,      // double (64bit)
         ARGTYPE_I = 2,      // int32_t
-        ARGTYPE_U = 3,      // uint32_t
+        ARGTYPE_UI = 3,      // uint32_t
 #ifdef NANOJIT_64BIT
         ARGTYPE_Q = 4,      // uint64_t
 #endif
@@ -563,42 +560,49 @@ namespace nanojit
         NanoAssert(isCses[op] != -1);   // see LIRopcode.tbl to understand this
         return isCses[op] == 1;
     }
+    inline bool isLiveOpcode(LOpcode op) {
+        return 
+#if defined NANOJIT_64BIT
+               op == LIR_liveq ||
+#endif
+               op == LIR_livei || op == LIR_lived;
+    }
     inline bool isRetOpcode(LOpcode op) {
         return
 #if defined NANOJIT_64BIT
-            op == LIR_qret ||
+            op == LIR_retq ||
 #endif
-            op == LIR_ret || op == LIR_fret;
+            op == LIR_reti || op == LIR_retd;
     }
     inline bool isCmovOpcode(LOpcode op) {
         return
 #if defined NANOJIT_64BIT
-            op == LIR_qcmov ||
+            op == LIR_cmovq ||
 #endif
-            op == LIR_cmov;
+            op == LIR_cmovi;
     }
-    inline bool isICmpOpcode(LOpcode op) {
-        return LIR_eq <= op && op <= LIR_uge;
+    inline bool isCmpIOpcode(LOpcode op) {
+        return LIR_eqi <= op && op <= LIR_geui;
     }
-    inline bool isSICmpOpcode(LOpcode op) {
-        return LIR_eq <= op && op <= LIR_ge;
+    inline bool isCmpSIOpcode(LOpcode op) {
+        return LIR_eqi <= op && op <= LIR_gei;
     }
-    inline bool isUICmpOpcode(LOpcode op) {
-        return LIR_eq == op || (LIR_ult <= op && op <= LIR_uge);
+    inline bool isCmpUIOpcode(LOpcode op) {
+        return LIR_eqi == op || (LIR_ltui <= op && op <= LIR_geui);
     }
 #ifdef NANOJIT_64BIT
-    inline bool isQCmpOpcode(LOpcode op) {
-        return LIR_qeq <= op && op <= LIR_quge;
+    inline bool isCmpQOpcode(LOpcode op) {
+        return LIR_eqq <= op && op <= LIR_geuq;
     }
-    inline bool isSQCmpOpcode(LOpcode op) {
-        return LIR_qeq <= op && op <= LIR_qge;
+    inline bool isCmpSQOpcode(LOpcode op) {
+        return LIR_eqq <= op && op <= LIR_geq;
     }
-    inline bool isUQCmpOpcode(LOpcode op) {
-        return LIR_qeq == op || (LIR_qult <= op && op <= LIR_quge);
+    inline bool isCmpUQOpcode(LOpcode op) {
+        return LIR_eqq == op || (LIR_ltuq <= op && op <= LIR_geuq);
     }
 #endif
-    inline bool isFCmpOpcode(LOpcode op) {
-        return LIR_feq <= op && op <= LIR_fge;
+    inline bool isCmpDOpcode(LOpcode op) {
+        return LIR_eqd <= op && op <= LIR_ged;
     }
 
     inline LOpcode invertCondJmpOpcode(LOpcode op) {
@@ -609,55 +613,55 @@ namespace nanojit
         NanoAssert(op == LIR_xt || op == LIR_xf);
         return LOpcode(op ^ 1);
     }
-    inline LOpcode invertICmpOpcode(LOpcode op) {
-        NanoAssert(isICmpOpcode(op));
+    inline LOpcode invertCmpIOpcode(LOpcode op) {
+        NanoAssert(isCmpIOpcode(op));
         return LOpcode(op ^ 1);
     }
 #ifdef NANOJIT_64BIT
-    inline LOpcode invertQCmpOpcode(LOpcode op) {
-        NanoAssert(isQCmpOpcode(op));
+    inline LOpcode invertCmpQOpcode(LOpcode op) {
+        NanoAssert(isCmpQOpcode(op));
         return LOpcode(op ^ 1);
     }
 #endif
-    inline LOpcode invertFCmpOpcode(LOpcode op) {
-        NanoAssert(isFCmpOpcode(op));
+    inline LOpcode invertCmpDOpcode(LOpcode op) {
+        NanoAssert(isCmpDOpcode(op));
         return LOpcode(op ^ 1);
     }
 
     inline LOpcode getCallOpcode(const CallInfo* ci) {
-        LOpcode op = LIR_pcall;
+        LOpcode op = LIR_callp;
         switch (ci->returnType()) {
-        case ARGTYPE_V: op = LIR_pcall; break;
+        case ARGTYPE_V: op = LIR_callp; break;
         case ARGTYPE_I:
-        case ARGTYPE_U: op = LIR_icall; break;
-        case ARGTYPE_F: op = LIR_fcall; break;
+        case ARGTYPE_UI: op = LIR_calli; break;
+        case ARGTYPE_D: op = LIR_calld; break;
 #ifdef NANOJIT_64BIT
-        case ARGTYPE_Q: op = LIR_qcall; break;
+        case ARGTYPE_Q: op = LIR_callq; break;
 #endif
         default:        NanoAssert(0);  break;
         }
         return op;
     }
 
-    LOpcode f64arith_to_i32arith(LOpcode op);
+    LOpcode arithOpcodeD2I(LOpcode op);
 #ifdef NANOJIT_64BIT
-    LOpcode i32cmp_to_i64cmp(LOpcode op);
+    LOpcode cmpOpcodeI2Q(LOpcode op);
 #endif
-    LOpcode f64cmp_to_i32cmp(LOpcode op);
-    LOpcode f64cmp_to_u32cmp(LOpcode op);
+    LOpcode cmpOpcodeD2I(LOpcode op);
+    LOpcode cmpOpcodeD2UI(LOpcode op);
 
     // Array holding the 'repKind' field from LIRopcode.tbl.
     extern const uint8_t repKinds[];
 
     enum LTy {
-        LTy_Void,   // no value/no type
-        LTy_I32,    // 32-bit integer
+        LTy_V,   // no value/no type
+        LTy_I,    // 32-bit integer
 #ifdef NANOJIT_64BIT
-        LTy_I64,    // 64-bit integer
+        LTy_Q,    // 64-bit integer
 #endif
-        LTy_F64,    // 64-bit float
+        LTy_D,    // 64-bit float
 
-        LTy_Ptr  = PTR_SIZE(LTy_I32, LTy_I64)   // word-sized integer
+        LTy_P  = PTR_SIZE(LTy_I, LTy_Q)   // word-sized integer
     };
 
     // Array holding the 'retType' field from LIRopcode.tbl.
@@ -675,7 +679,7 @@ namespace nanojit
     // - Instruction size is always an integral multiple of word size.
     //
     // - Every instruction has at least one word, holding the opcode and the
-    //   reservation info.  That word is in class LIns.
+    //   reservation info ("SharedFields").  That word is in class LIns.
     //
     // - Beyond that, most instructions have 1, 2 or 3 extra words.  These
     //   extra words are in classes LInsOp1, LInsOp2, etc (collectively called
@@ -751,7 +755,7 @@ namespace nanojit
         LRK_C,
         LRK_P,
         LRK_I,
-        LRK_N64,
+        LRK_QorD,
         LRK_Jtbl,
         LRK_None    // this one is used for unused opcode numbers
     };
@@ -766,35 +770,50 @@ namespace nanojit
     class LInsC;
     class LInsP;
     class LInsI;
-    class LInsN64;
+    class LInsQorD;
     class LInsJtbl;
 
     class LIns
     {
     private:
-        // LastWord: fields shared by all LIns kinds.  The .inReg, .reg,
-        // .inAr and .arIndex fields form a "reservation" that is used
-        // temporarily during assembly to record information relating to
-        // register allocation.  See class RegAlloc for more details.
+        // SharedFields: fields shared by all LIns kinds.
         //
-        // Note: all combinations of .inReg/.inAr are possible, ie. 0/0, 0/1,
-        // 1/0, 1/1.
-        struct LastWord {
-            uint32_t inReg:1;       // if 1, 'reg' is active
+        // The .inReg, .reg, .inAr and .arIndex fields form a "reservation"
+        // that is used temporarily during assembly to record information
+        // relating to register allocation.  See class RegAlloc for more
+        // details.  Note: all combinations of .inReg/.inAr are possible, ie.
+        // 0/0, 0/1, 1/0, 1/1.
+        //
+        // The .isResultLive field is only used for instructions that return
+        // results.  It indicates if the result is live.  It's set (if
+        // appropriate) and used only during the codegen pass.
+        //
+        struct SharedFields {
+            uint32_t inReg:1;           // if 1, 'reg' is active
             Register reg:7;
-            uint32_t inAr:1;        // if 1, 'arIndex' is active
-            uint32_t arIndex:15;    // index into stack frame;  displ is -4*arIndex
+            uint32_t inAr:1;            // if 1, 'arIndex' is active
+            uint32_t isResultLive:1;    // if 1, the instruction's result is live
+                                    
+            uint32_t arIndex:14;        // index into stack frame;  displ is -4*arIndex
 
-            LOpcode  opcode:8;      // instruction's opcode
+            LOpcode  opcode:8;          // instruction's opcode
         };
 
         union {
-            LastWord lastWord;
+            SharedFields sharedFields;
             // Force sizeof(LIns)==8 and 8-byte alignment on 64-bit machines.
-            // This is necessary because sizeof(LastWord)==4 and we want all
+            // This is necessary because sizeof(SharedFields)==4 and we want all
             // instances of LIns to be pointer-aligned.
-            void* dummy;
+            void* wholeWord;
         };
+
+        inline void initSharedFields(LOpcode opcode)
+        {
+            // We must zero .inReg, .inAR and .isResultLive, but zeroing the
+            // whole word is easier.  Then we set the opcode.
+            wholeWord = 0;
+            sharedFields.opcode = opcode;
+        }
 
         // LIns-to-LInsXYZ converters.
         inline LInsOp0* toLInsOp0() const;
@@ -807,7 +826,7 @@ namespace nanojit
         inline LInsC*   toLInsC()   const;
         inline LInsP*   toLInsP()   const;
         inline LInsI*   toLInsI()   const;
-        inline LInsN64* toLInsN64() const;
+        inline LInsQorD* toLInsQorD() const;
         inline LInsJtbl*toLInsJtbl()const;
 
         void staticSanityCheck();
@@ -825,11 +844,25 @@ namespace nanojit
         // initLInsC() just copies the pointer into the LInsC.
         inline void initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci);
         inline void initLInsP(int32_t arg, int32_t kind);
-        inline void initLInsI(LOpcode opcode, int32_t imm32);
-        inline void initLInsN64(LOpcode opcode, int64_t imm64);
+        inline void initLInsI(LOpcode opcode, int32_t immI);
+        inline void initLInsQorD(LOpcode opcode, int64_t imm64);
         inline void initLInsJtbl(LIns* index, uint32_t size, LIns** table);
 
-        LOpcode opcode() const { return lastWord.opcode; }
+        LOpcode opcode() const { return sharedFields.opcode; }
+
+        // Generally, void instructions (statements) are always live and
+        // non-void instructions (expressions) are live if used by another
+        // live instruction.  But there are some trickier cases.
+        bool isLive() const { 
+            return isV() ||
+                   sharedFields.isResultLive ||
+                   (isCall() && !callInfo()->_isPure) ||    // impure calls are always live
+                   isop(LIR_paramp);                        // LIR_paramp is always live
+        }
+        void setResultLive() {
+            NanoAssert(!isV());
+            sharedFields.isResultLive = 1;
+        }
 
         // XXX: old reservation manipulating functions.  See bug 538924.
         // Replacement strategy:
@@ -838,56 +871,61 @@ namespace nanojit
         // - deprecated_getReg() --> getReg() after checking isInReg()
         //
         void deprecated_markAsClear() {
-            lastWord.inReg = 0;
-            lastWord.inAr = 0;
+            sharedFields.inReg = 0;
+            sharedFields.inAr = 0;
         }
         bool deprecated_hasKnownReg() {
-            NanoAssert(isUsed());
+            NanoAssert(isExtant());
             return isInReg();
         }
         Register deprecated_getReg() {
-            NanoAssert(isUsed());
-            return ( isInReg() ? lastWord.reg : deprecated_UnknownReg );
+            NanoAssert(isExtant());
+            return ( isInReg() ? sharedFields.reg : deprecated_UnknownReg );
         }
         uint32_t deprecated_getArIndex() {
-            NanoAssert(isUsed());
-            return ( isInAr() ? lastWord.arIndex : 0 );
+            NanoAssert(isExtant());
+            return ( isInAr() ? sharedFields.arIndex : 0 );
         }
 
         // Reservation manipulation.
-        bool isUsed() {
+        //
+        // "Extant" mean "in existence, still existing, surviving".  In other
+        // words, has the value been computed explicitly (not folded into
+        // something else) and is it still available (in a register or spill
+        // slot) for use?
+        bool isExtant() {
             return isInReg() || isInAr();
         }
         bool isInReg() {
-            return lastWord.inReg;
+            return sharedFields.inReg;
         }
         bool isInRegMask(RegisterMask allow) {
             return isInReg() && (rmask(getReg()) & allow);
         }
         Register getReg() {
             NanoAssert(isInReg());
-            return lastWord.reg;
+            return sharedFields.reg;
         }
         void setReg(Register r) {
-            lastWord.inReg = 1;
-            lastWord.reg = r;
+            sharedFields.inReg = 1;
+            sharedFields.reg = r;
         }
         void clearReg() {
-            lastWord.inReg = 0;
+            sharedFields.inReg = 0;
         }
         bool isInAr() {
-            return lastWord.inAr;
+            return sharedFields.inAr;
         }
         uint32_t getArIndex() {
             NanoAssert(isInAr());
-            return lastWord.arIndex;
+            return sharedFields.arIndex;
         }
         void setArIndex(uint32_t arIndex) {
-            lastWord.inAr = 1;
-            lastWord.arIndex = arIndex;
+            sharedFields.inAr = 1;
+            sharedFields.arIndex = arIndex;
         }
         void clearArIndex() {
-            lastWord.inAr = 0;
+            sharedFields.inAr = 0;
         }
 
         // For various instruction kinds.
@@ -914,15 +952,15 @@ namespace nanojit
         inline uint8_t  paramKind() const;
 
         // For LInsI.
-        inline int32_t  imm32() const;
+        inline int32_t  immI() const;
 
-        // For LInsN64.
-        inline int32_t  imm64_0() const;
-        inline int32_t  imm64_1() const;
-        inline uint64_t imm64()   const;
-        inline double   imm64f()  const;
+        // For LInsQorD.
+        inline int32_t  immQorDlo() const;
+        inline int32_t  immQorDhi() const;
+        inline uint64_t immQ()   const;
+        inline double   immD()  const;
 
-        // For LIR_alloc.
+        // For LIR_allocp.
         inline int32_t  size()    const;
         inline void     setSize(int32_t nbytes);
 
@@ -983,9 +1021,9 @@ namespace nanojit
             NanoAssert(LRK_None != repKinds[opcode()]);
             return LRK_I == repKinds[opcode()];
         }
-        bool isLInsN64() const {
+        bool isLInsQorD() const {
             NanoAssert(LRK_None != repKinds[opcode()]);
-            return LRK_N64 == repKinds[opcode()];
+            return LRK_QorD == repKinds[opcode()];
         }
         bool isLInsJtbl() const {
             NanoAssert(LRK_None != repKinds[opcode()]);
@@ -999,27 +1037,20 @@ namespace nanojit
         bool isRet() const {
             return isRetOpcode(opcode());
         }
-        bool isLive() const {
-            return isop(LIR_live) ||
-#if defined NANOJIT_64BIT
-                   isop(LIR_qlive) ||
-#endif
-                   isop(LIR_flive);
-        }
         bool isCmp() const {
             LOpcode op = opcode();
-            return isICmpOpcode(op) ||
+            return isCmpIOpcode(op) ||
 #if defined NANOJIT_64BIT
-                   isQCmpOpcode(op) ||
+                   isCmpQOpcode(op) ||
 #endif
-                   isFCmpOpcode(op);
+                   isCmpDOpcode(op);
         }
         bool isCall() const {
-            return isop(LIR_icall) ||
+            return isop(LIR_calli) ||
 #if defined NANOJIT_64BIT
-                   isop(LIR_qcall) ||
+                   isop(LIR_callq) ||
 #endif
-                   isop(LIR_fcall);
+                   isop(LIR_calld);
         }
         bool isCmov() const {
             return isCmovOpcode(opcode());
@@ -1033,47 +1064,47 @@ namespace nanojit
         bool isGuard() const {
             return isop(LIR_x) || isop(LIR_xf) || isop(LIR_xt) ||
                    isop(LIR_xbarrier) || isop(LIR_xtbl) ||
-                   isop(LIR_addxov) || isop(LIR_subxov) || isop(LIR_mulxov);
+                   isop(LIR_addxovi) || isop(LIR_subxovi) || isop(LIR_mulxovi);
         }
         // True if the instruction is a 32-bit integer immediate.
-        bool isconst() const {
-            return isop(LIR_int);
+        bool isImmI() const {
+            return isop(LIR_immi);
         }
         // True if the instruction is a 32-bit integer immediate and
         // has the value 'val' when treated as a 32-bit signed integer.
-        bool isconstval(int32_t val) const {
-            return isconst() && imm32()==val;
+        bool isImmI(int32_t val) const {
+            return isImmI() && immI()==val;
         }
 #ifdef NANOJIT_64BIT
         // True if the instruction is a 64-bit integer immediate.
-        bool isconstq() const {
-            return isop(LIR_quad);
+        bool isImmQ() const {
+            return isop(LIR_immq);
         }
 #endif
         // True if the instruction is a pointer-sized integer immediate.
-        bool isconstp() const
+        bool isImmP() const
         {
 #ifdef NANOJIT_64BIT
-            return isconstq();
+            return isImmQ();
 #else
-            return isconst();
+            return isImmI();
 #endif
         }
         // True if the instruction is a 64-bit float immediate.
-        bool isconstf() const {
-            return isop(LIR_float);
+        bool isImmD() const {
+            return isop(LIR_immd);
         }
         // True if the instruction is a 64-bit integer or float immediate.
-        bool isconstqf() const {
+        bool isImmQorD() const {
             return
 #ifdef NANOJIT_64BIT
-                isconstq() ||
+                isImmQ() ||
 #endif
-                isconstf();
+                isImmD();
         }
         // True if the instruction an any type of immediate.
         bool isImmAny() const {
-            return isconst() || isconstqf();
+            return isImmI() || isImmQorD();
         }
 
         bool isBranch() const {
@@ -1083,57 +1114,41 @@ namespace nanojit
         LTy retType() const {
             return retTypes[opcode()];
         }
-        bool isVoid() const {
-            return retType() == LTy_Void;
+        bool isV() const {
+            return retType() == LTy_V;
         }
-        bool isI32() const {
-            return retType() == LTy_I32;
+        bool isI() const {
+            return retType() == LTy_I;
         }
 #ifdef NANOJIT_64BIT
-        bool isI64() const {
-            return retType() == LTy_I64;
+        bool isQ() const {
+            return retType() == LTy_Q;
         }
 #endif
-        bool isF64() const {
-            return retType() == LTy_F64;
+        bool isD() const {
+            return retType() == LTy_D;
         }
-        bool isN64() const {
+        bool isQorD() const {
             return
 #ifdef NANOJIT_64BIT
-                isI64() ||
+                isQ() ||
 #endif
-                isF64();
+                isD();
         }
-        bool isPtr() const {
+        bool isP() const {
 #ifdef NANOJIT_64BIT
-            return isI64();
+            return isQ();
 #else
-            return isI32();
+            return isI();
 #endif
         }
 
-        // Return true if removal of 'ins' from a LIR fragment could
-        // possibly change the behaviour of that fragment, even if any
-        // value computed by 'ins' is not used later in the fragment.
-        // In other words, can 'ins' possibly alter control flow or memory?
-        // Note, this assumes that loads will never fault and hence cannot
-        // affect the control flow.
-        bool isStmt() {
-            NanoAssert(!isop(LIR_skip));
-            // All instructions with Void retType are statements, as are calls
-            // to impure functions.
-            if (isCall())
-                return !callInfo()->_isPure;
-            else
-                return isVoid();
-        }
-
-        inline void* constvalp() const
+        inline void* immP() const
         {
         #ifdef NANOJIT_64BIT
-            return (void*)imm64();
+            return (void*)immQ();
         #else
-            return (void*)imm32();
+            return (void*)immI();
         #endif
         }
     };
@@ -1155,7 +1170,7 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // 1-operand form.  Used for LIR_ret, unary arithmetic/logic ops, etc.
+    // 1-operand form.  Used for LIR_reti, unary arithmetic/logic ops, etc.
     class LInsOp1
     {
     private:
@@ -1225,7 +1240,7 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // Used for LIR_sti and LIR_stqi.
+    // Used for LIR_sti and LIR_stq.
     class LInsSti
     {
     private:
@@ -1277,7 +1292,7 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // Used for LIR_iparam, LIR_qparam.
+    // Used for LIR_paramp.
     class LInsP
     {
     private:
@@ -1292,13 +1307,13 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // Used for LIR_int and LIR_alloc.
+    // Used for LIR_immi and LIR_allocp.
     class LInsI
     {
     private:
         friend class LIns;
 
-        int32_t     imm32;
+        int32_t     immI;
 
         LIns        ins;
 
@@ -1306,15 +1321,15 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // Used for LIR_quad and LIR_float.
-    class LInsN64
+    // Used for LIR_immq and LIR_immd.
+    class LInsQorD
     {
     private:
         friend class LIns;
 
-        int32_t     imm64_0;
+        int32_t     immQorDlo;
 
-        int32_t     imm64_1;
+        int32_t     immQorDhi;
 
         LIns        ins;
 
@@ -1356,43 +1371,33 @@ namespace nanojit
     LInsC*   LIns::toLInsC()   const { return (LInsC*  )( uintptr_t(this+1) - sizeof(LInsC  ) ); }
     LInsP*   LIns::toLInsP()   const { return (LInsP*  )( uintptr_t(this+1) - sizeof(LInsP  ) ); }
     LInsI*   LIns::toLInsI()   const { return (LInsI*  )( uintptr_t(this+1) - sizeof(LInsI  ) ); }
-    LInsN64* LIns::toLInsN64() const { return (LInsN64*)( uintptr_t(this+1) - sizeof(LInsN64) ); }
+    LInsQorD* LIns::toLInsQorD() const { return (LInsQorD*)( uintptr_t(this+1) - sizeof(LInsQorD) ); }
     LInsJtbl*LIns::toLInsJtbl()const { return (LInsJtbl*)(uintptr_t(this+1) - sizeof(LInsJtbl)); }
 
     void LIns::initLInsOp0(LOpcode opcode) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         NanoAssert(isLInsOp0());
     }
     void LIns::initLInsOp1(LOpcode opcode, LIns* oprnd1) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsOp1()->oprnd_1 = oprnd1;
         NanoAssert(isLInsOp1());
     }
     void LIns::initLInsOp2(LOpcode opcode, LIns* oprnd1, LIns* oprnd2) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsOp2()->oprnd_1 = oprnd1;
         toLInsOp2()->oprnd_2 = oprnd2;
         NanoAssert(isLInsOp2());
     }
     void LIns::initLInsOp3(LOpcode opcode, LIns* oprnd1, LIns* oprnd2, LIns* oprnd3) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsOp3()->oprnd_1 = oprnd1;
         toLInsOp3()->oprnd_2 = oprnd2;
         toLInsOp3()->oprnd_3 = oprnd3;
         NanoAssert(isLInsOp3());
     }
     void LIns::initLInsLd(LOpcode opcode, LIns* val, int32_t d, AccSet accSet) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsLd()->oprnd_1 = val;
         NanoAssert(d == int16_t(d));
         toLInsLd()->disp = int16_t(d);
@@ -1400,9 +1405,7 @@ namespace nanojit
         NanoAssert(isLInsLd());
     }
     void LIns::initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d, AccSet accSet) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsSti()->oprnd_1 = val;
         toLInsSti()->oprnd_2 = base;
         NanoAssert(d == int16_t(d));
@@ -1411,48 +1414,36 @@ namespace nanojit
         NanoAssert(isLInsSti());
     }
     void LIns::initLInsSk(LIns* prevLIns) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = LIR_skip;
+        initSharedFields(LIR_skip);
         toLInsSk()->prevLIns = prevLIns;
         NanoAssert(isLInsSk());
     }
     void LIns::initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
+        initSharedFields(opcode);
         toLInsC()->args = args;
         toLInsC()->ci = ci;
         NanoAssert(isLInsC());
     }
     void LIns::initLInsP(int32_t arg, int32_t kind) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = LIR_param;
+        initSharedFields(LIR_paramp);
         NanoAssert(isU8(arg) && isU8(kind));
         toLInsP()->arg = arg;
         toLInsP()->kind = kind;
         NanoAssert(isLInsP());
     }
-    void LIns::initLInsI(LOpcode opcode, int32_t imm32) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
-        toLInsI()->imm32 = imm32;
+    void LIns::initLInsI(LOpcode opcode, int32_t immI) {
+        initSharedFields(opcode);
+        toLInsI()->immI = immI;
         NanoAssert(isLInsI());
     }
-    void LIns::initLInsN64(LOpcode opcode, int64_t imm64) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = opcode;
-        toLInsN64()->imm64_0 = int32_t(imm64);
-        toLInsN64()->imm64_1 = int32_t(imm64 >> 32);
-        NanoAssert(isLInsN64());
+    void LIns::initLInsQorD(LOpcode opcode, int64_t imm64) {
+        initSharedFields(opcode);
+        toLInsQorD()->immQorDlo = int32_t(imm64);
+        toLInsQorD()->immQorDhi = int32_t(imm64 >> 32);
+        NanoAssert(isLInsQorD());
     }
     void LIns::initLInsJtbl(LIns* index, uint32_t size, LIns** table) {
-        clearReg();
-        clearArIndex();
-        lastWord.opcode = LIR_jtbl;
+        initSharedFields(LIR_jtbl);
         toLInsJtbl()->oprnd_1 = index;
         toLInsJtbl()->table = table;
         toLInsJtbl()->size = size;
@@ -1506,9 +1497,9 @@ namespace nanojit
         case LIR_xbarrier:
             return (GuardRecord*)oprnd2();
 
-        case LIR_addxov:
-        case LIR_subxov:
-        case LIR_mulxov:
+        case LIR_addxovi:
+        case LIR_subxovi:
+        case LIR_mulxovi:
             return (GuardRecord*)oprnd3();
 
         default:
@@ -1540,36 +1531,36 @@ namespace nanojit
         return toLInsSk()->prevLIns;
     }
 
-    inline uint8_t LIns::paramArg()  const { NanoAssert(isop(LIR_param)); return toLInsP()->arg; }
-    inline uint8_t LIns::paramKind() const { NanoAssert(isop(LIR_param)); return toLInsP()->kind; }
+    inline uint8_t LIns::paramArg()  const { NanoAssert(isop(LIR_paramp)); return toLInsP()->arg; }
+    inline uint8_t LIns::paramKind() const { NanoAssert(isop(LIR_paramp)); return toLInsP()->kind; }
 
-    inline int32_t LIns::imm32()     const { NanoAssert(isconst());  return toLInsI()->imm32; }
+    inline int32_t LIns::immI()     const { NanoAssert(isImmI());  return toLInsI()->immI; }
 
-    inline int32_t LIns::imm64_0()   const { NanoAssert(isconstqf()); return toLInsN64()->imm64_0; }
-    inline int32_t LIns::imm64_1()   const { NanoAssert(isconstqf()); return toLInsN64()->imm64_1; }
-    uint64_t       LIns::imm64()     const {
-        NanoAssert(isconstqf());
-        return (uint64_t(toLInsN64()->imm64_1) << 32) | uint32_t(toLInsN64()->imm64_0);
+    inline int32_t LIns::immQorDlo()   const { NanoAssert(isImmQorD()); return toLInsQorD()->immQorDlo; }
+    inline int32_t LIns::immQorDhi()   const { NanoAssert(isImmQorD()); return toLInsQorD()->immQorDhi; }
+    uint64_t       LIns::immQ()     const {
+        NanoAssert(isImmQorD());
+        return (uint64_t(toLInsQorD()->immQorDhi) << 32) | uint32_t(toLInsQorD()->immQorDlo);
     }
-    double         LIns::imm64f()    const {
-        NanoAssert(isconstf());
+    double         LIns::immD()    const {
+        NanoAssert(isImmD());
         union {
             double f;
             uint64_t q;
         } u;
-        u.q = imm64();
+        u.q = immQ();
         return u.f;
     }
 
     int32_t LIns::size() const {
-        NanoAssert(isop(LIR_alloc));
-        return toLInsI()->imm32 << 2;
+        NanoAssert(isop(LIR_allocp));
+        return toLInsI()->immI << 2;
     }
 
     void LIns::setSize(int32_t nbytes) {
-        NanoAssert(isop(LIR_alloc));
+        NanoAssert(isop(LIR_allocp));
         NanoAssert(nbytes > 0);
-        toLInsI()->imm32 = (nbytes+3)>>2; // # of required 32bit words
+        toLInsI()->immI = (nbytes+3)>>2; // # of required 32bit words
     }
 
     // Index args in reverse order, i.e. arg(0) returns the rightmost arg.
@@ -1637,16 +1628,16 @@ namespace nanojit
         virtual LInsp insParam(int32_t arg, int32_t kind) {
             return out->insParam(arg, kind);
         }
-        virtual LInsp insImm(int32_t imm) {
-            return out->insImm(imm);
+        virtual LInsp insImmI(int32_t imm) {
+            return out->insImmI(imm);
         }
 #ifdef NANOJIT_64BIT
-        virtual LInsp insImmq(uint64_t imm) {
-            return out->insImmq(imm);
+        virtual LInsp insImmQ(uint64_t imm) {
+            return out->insImmQ(imm);
         }
 #endif
-        virtual LInsp insImmf(double d) {
-            return out->insImmf(d);
+        virtual LInsp insImmD(double d) {
+            return out->insImmD(d);
         }
         virtual LInsp insLoad(LOpcode op, LIns* base, int32_t d, AccSet accSet) {
             return out->insLoad(op, base, d, accSet);
@@ -1670,47 +1661,47 @@ namespace nanojit
 
         // Inserts a conditional to execute and branches to execute if
         // the condition is true and false respectively.
-        LIns* ins_choose(LIns* cond, LIns* iftrue, LIns* iffalse, bool use_cmov);
+        LIns* insChoose(LIns* cond, LIns* iftrue, LIns* iffalse, bool use_cmov);
 
         // Inserts an integer comparison to 0
-        LIns* ins_eq0(LIns* oprnd1) {
-            return ins2i(LIR_eq, oprnd1, 0);
+        LIns* insEqI_0(LIns* oprnd1) {
+            return ins2ImmI(LIR_eqi, oprnd1, 0);
         }
 
         // Inserts a pointer comparison to 0
-        LIns* ins_peq0(LIns* oprnd1) {
-            return ins2(LIR_peq, oprnd1, insImmWord(0));
+        LIns* insEqP_0(LIns* oprnd1) {
+            return ins2(LIR_eqp, oprnd1, insImmWord(0));
         }
 
         // Inserts a binary operation where the second operand is an
         // integer immediate.
-        LIns* ins2i(LOpcode v, LIns* oprnd1, int32_t imm) {
-            return ins2(v, oprnd1, insImm(imm));
+        LIns* ins2ImmI(LOpcode v, LIns* oprnd1, int32_t imm) {
+            return ins2(v, oprnd1, insImmI(imm));
         }
 
 #if NJ_SOFTFLOAT_SUPPORTED
         LIns* qjoin(LInsp lo, LInsp hi) {
-            return ins2(LIR_qjoin, lo, hi);
+            return ins2(LIR_ii2d, lo, hi);
         }
 #endif
-        LIns* insImmPtr(const void *ptr) {
+        LIns* insImmP(const void *ptr) {
 #ifdef NANOJIT_64BIT
-            return insImmq((uint64_t)ptr);
+            return insImmQ((uint64_t)ptr);
 #else
-            return insImm((int32_t)ptr);
+            return insImmI((int32_t)ptr);
 #endif
         }
 
         LIns* insImmWord(intptr_t value) {
 #ifdef NANOJIT_64BIT
-            return insImmq(value);
+            return insImmQ(value);
 #else
-            return insImm(value);
+            return insImmI(value);
 #endif
         }
 
         // Sign-extend integers to native integers. On 32-bit this is a no-op.
-        LIns* ins_i2p(LIns* intIns) {
+        LIns* insI2P(LIns* intIns) {
 #ifdef NANOJIT_64BIT
             return ins1(LIR_i2q, intIns);
 #else
@@ -1719,16 +1710,16 @@ namespace nanojit
         }
 
         // Zero-extend integers to native integers. On 32-bit this is a no-op.
-        LIns* ins_u2p(LIns* uintIns) {
+        LIns* insUI2P(LIns* uintIns) {
     #ifdef NANOJIT_64BIT
-            return ins1(LIR_u2q, uintIns);
+            return ins1(LIR_ui2uq, uintIns);
     #else
             return uintIns;
     #endif
         }
 
-        // Chooses LIR_sti or LIR_stqi based on size of value.
-        LIns* insStorei(LIns* value, LIns* base, int32_t d, AccSet accSet);
+        // Chooses LIR_sti or LIR_stq based on size of value.
+        LIns* insStore(LIns* value, LIns* base, int32_t d, AccSet accSet);
     };
 
 
@@ -1824,8 +1815,9 @@ namespace nanojit
     private:
         Allocator& alloc;
 
-        void formatImm(RefBuf* buf, int32_t c);
-        void formatImmq(RefBuf* buf, uint64_t c);
+        char *formatImmI(RefBuf* buf, int32_t c);
+        char *formatImmQ(RefBuf* buf, uint64_t c);
+        char *formatImmD(RefBuf* buf, double c);
         void formatGuard(InsBuf* buf, LInsp ins);
         void formatGuardXov(InsBuf* buf, LInsp ins);
 
@@ -1838,7 +1830,7 @@ namespace nanojit
         }
 
         char *formatAddr(RefBuf* buf, void* p);
-        char *formatRef(RefBuf* buf, LInsp ref);
+        char *formatRef(RefBuf* buf, LInsp ref, bool showImmValue = true);
         char *formatIns(InsBuf* buf, LInsp ins);
         char *formatAccSet(RefBuf* buf, AccSet accSet);
 
@@ -1937,16 +1929,16 @@ namespace nanojit
         LIns* insAlloc(int32_t size) {
             return add(out->insAlloc(size));
         }
-        LIns* insImm(int32_t imm) {
-            return add(out->insImm(imm));
+        LIns* insImmI(int32_t imm) {
+            return add(out->insImmI(imm));
         }
 #ifdef NANOJIT_64BIT
-        LIns* insImmq(uint64_t imm) {
-            return add(out->insImmq(imm));
+        LIns* insImmQ(uint64_t imm) {
+            return add(out->insImmQ(imm));
         }
 #endif
-        LIns* insImmf(double d) {
-            return add(out->insImmf(d));
+        LIns* insImmD(double d) {
+            return add(out->insImmD(d));
         }
     };
 
@@ -1965,73 +1957,93 @@ namespace nanojit
         LIns* insLoad(LOpcode op, LInsp base, int32_t off, AccSet accSet);
     };
 
-    enum LInsHashKind {
-        // We divide instruction kinds into groups for the use of LInsHashSet.
-        // LIns0 isn't present because we don't need to record any 0-ary
-        // instructions.
-        LInsImm  = 0,
-        LInsImmq = 1,   // only occurs on 64-bit platforms
-        LInsImmf = 2,
-        LIns1    = 3,
-        LIns2    = 4,
-        LIns3    = 5,
-        LInsCall = 6,
-
-        // Loads are special.  We group them by access region:  one table for
-        // each region, and then a catch-all table for any loads marked with
-        // multiple regions.  This arrangement makes the removal of
-        // invalidated loads fast -- eg. we can invalidate all STACK loads by
-        // just clearing the LInsLoadStack table.  The disadvantage is that
-        // loads marked with multiple regions must be invalidated
-        // conservatively, eg. if any intervening stores occur.  But loads
-        // marked with multiple regions should be rare.
-        LInsLoadReadOnly = 7,
-        LInsLoadStack    = 8,
-        LInsLoadRStack   = 9,
-        LInsLoadOther    = 10,
-        LInsLoadMultiple = 11,
-
-        LInsFirst = 0,
-        LInsLast = 11,
-        // need a value after "last" to outsmart compilers that will insist last+1 is impossible
-        LInsInvalid = 12
-    };
-    #define nextKind(kind)  LInsHashKind(kind+1)
-
-    class LInsHashSet
+    class CseFilter: public LirWriter
     {
-        // Must be a power of 2.
-        // Don't start too small, or we'll waste time growing and rehashing.
-        // Don't start too large, will waste memory.
-        static const uint32_t kInitialCap[LInsLast + 1];
+        enum LInsHashKind {
+            // We divide instruction kinds into groups.  LIns0 isn't present
+            // because we don't need to record any 0-ary instructions.
+            LInsImmI = 0,
+            LInsImmQ = 1,   // only occurs on 64-bit platforms
+            LInsImmD = 2,
+            LIns1    = 3,
+            LIns2    = 4,
+            LIns3    = 5,
+            LInsCall = 6,
+
+            // Loads are special.  We group them by access region:  one table for
+            // each region, and then a catch-all table for any loads marked with
+            // multiple regions.  This arrangement makes the removal of
+            // invalidated loads fast -- eg. we can invalidate all STACK loads by
+            // just clearing the LInsLoadStack table.  The disadvantage is that
+            // loads marked with multiple regions must be invalidated
+            // conservatively, eg. if any intervening stores occur.  But loads
+            // marked with multiple regions should be rare.
+            LInsLoadReadOnly = 7,
+            LInsLoadStack    = 8,
+            LInsLoadRStack   = 9,
+            LInsLoadOther    = 10,
+            LInsLoadMultiple = 11,
+
+            LInsFirst = 0,
+            LInsLast = 11,
+            // Need a value after "last" to outsmart compilers that insist last+1 is impossible.
+            LInsInvalid = 12
+        };
+        #define nextKind(kind)  LInsHashKind(kind+1)
 
         // There is one list for each instruction kind.  This lets us size the
         // lists appropriately (some instructions are more common than others).
         // It also lets us have kind-specific find/add/grow functions, which
         // are faster than generic versions.
-        LInsp *m_list[LInsLast + 1];
-        uint32_t m_cap[LInsLast + 1];
-        uint32_t m_used[LInsLast + 1];
-        typedef uint32_t (LInsHashSet::*find_t)(LInsp);
-        find_t m_find[LInsLast + 1];
+        //
+        // Nb: Size must be a power of 2.
+        //     Don't start too small, or we'll waste time growing and rehashing.
+        //     Don't start too large, will waste memory.
+        //
+        LInsp*      m_list[LInsLast + 1];
+        uint32_t    m_cap[LInsLast + 1];
+        uint32_t    m_used[LInsLast + 1];
+        typedef uint32_t (CseFilter::*find_t)(LInsp);
+        find_t      m_find[LInsLast + 1];
+
+        AccSet      storesSinceLastLoad;    // regions stored to since the last load
 
         Allocator& alloc;
 
-        static uint32_t hashImm(int32_t);
-        static uint32_t hashImmq(uint64_t);     // not NANOJIT_64BIT-only -- used by findImmf()
+        static uint32_t hash8(uint32_t hash, const uint8_t data);
+        static uint32_t hash32(uint32_t hash, const uint32_t data);
+        static uint32_t hashptr(uint32_t hash, const void* data);
+        static uint32_t hashfinish(uint32_t hash);
+
+        static uint32_t hashImmI(int32_t);
+        static uint32_t hashImmQorD(uint64_t);     // not NANOJIT_64BIT-only -- used by findImmD()
         static uint32_t hash1(LOpcode op, LInsp);
         static uint32_t hash2(LOpcode op, LInsp, LInsp);
         static uint32_t hash3(LOpcode op, LInsp, LInsp, LInsp);
         static uint32_t hashLoad(LOpcode op, LInsp, int32_t, AccSet);
         static uint32_t hashCall(const CallInfo *call, uint32_t argc, LInsp args[]);
 
-        // These private versions are used after an LIns has been created;
-        // they are used for rehashing after growing.
-        uint32_t findImm(LInsp ins);
+        // These versions are used before an LIns has been created.
+        LInsp findImmI(int32_t a, uint32_t &k);
 #ifdef NANOJIT_64BIT
-        uint32_t findImmq(LInsp ins);
+        LInsp findImmQ(uint64_t a, uint32_t &k);
 #endif
-        uint32_t findImmf(LInsp ins);
+        LInsp findImmD(uint64_t d, uint32_t &k);
+        LInsp find1(LOpcode v, LInsp a, uint32_t &k);
+        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
+        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
+        LInsp findLoad(LOpcode v, LInsp a, int32_t b, AccSet accSet, LInsHashKind kind,
+                       uint32_t &k);
+        LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
+
+        // These versions are used after an LIns has been created; they are
+        // used for rehashing after growing.  They just call onto the
+        // multi-arg versions above.
+        uint32_t findImmI(LInsp ins);
+#ifdef NANOJIT_64BIT
+        uint32_t findImmQ(LInsp ins);
+#endif
+        uint32_t findImmD(LInsp ins);
         uint32_t find1(LInsp ins);
         uint32_t find2(LInsp ins);
         uint32_t find3(LInsp ins);
@@ -2044,44 +2056,20 @@ namespace nanojit
 
         void grow(LInsHashKind kind);
 
-    public:
-        // kInitialCaps[i] holds the initial size for m_list[i].
-        LInsHashSet(Allocator&, uint32_t kInitialCaps[]);
-
-        // These public versions are used before an LIns has been created.
-        LInsp findImm(int32_t a, uint32_t &k);
-#ifdef NANOJIT_64BIT
-        LInsp findImmq(uint64_t a, uint32_t &k);
-#endif
-        LInsp findImmf(uint64_t d, uint32_t &k);
-        LInsp find1(LOpcode v, LInsp a, uint32_t &k);
-        LInsp find2(LOpcode v, LInsp a, LInsp b, uint32_t &k);
-        LInsp find3(LOpcode v, LInsp a, LInsp b, LInsp c, uint32_t &k);
-        LInsp findLoad(LOpcode v, LInsp a, int32_t b, AccSet accSet, LInsHashKind kind,
-                       uint32_t &k);
-        LInsp findCall(const CallInfo *call, uint32_t argc, LInsp args[], uint32_t &k);
-
         // 'k' is the index found by findXYZ().
         void add(LInsHashKind kind, LInsp ins, uint32_t k);
 
         void clear();               // clears all tables
         void clear(LInsHashKind);   // clears one table
-    };
-
-    class CseFilter: public LirWriter
-    {
-    private:
-        LInsHashSet* exprs;
-        AccSet       storesSinceLastLoad;   // regions stored to since the last load
 
     public:
         CseFilter(LirWriter *out, Allocator&);
 
-        LIns* insImm(int32_t imm);
+        LIns* insImmI(int32_t imm);
 #ifdef NANOJIT_64BIT
-        LIns* insImmq(uint64_t q);
+        LIns* insImmQ(uint64_t q);
 #endif
-        LIns* insImmf(double d);
+        LIns* insImmD(double d);
         LIns* ins0(LOpcode v);
         LIns* ins1(LOpcode v, LInsp);
         LIns* ins2(LOpcode v, LInsp, LInsp);
@@ -2152,11 +2140,11 @@ namespace nanojit
             LInsp   ins2(LOpcode op, LInsp o1, LInsp o2);
             LInsp   ins3(LOpcode op, LInsp o1, LInsp o2, LInsp o3);
             LInsp   insParam(int32_t i, int32_t kind);
-            LInsp   insImm(int32_t imm);
+            LInsp   insImmI(int32_t imm);
 #ifdef NANOJIT_64BIT
-            LInsp   insImmq(uint64_t imm);
+            LInsp   insImmQ(uint64_t imm);
 #endif
-            LInsp   insImmf(double d);
+            LInsp   insImmD(double d);
             LInsp   insCall(const CallInfo *call, LInsp args[]);
             LInsp   insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
             LInsp   insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr);
@@ -2247,9 +2235,9 @@ namespace nanojit
         SoftFloatFilter(LirWriter *out);
         LIns *split(LIns *a);
         LIns *split(const CallInfo *call, LInsp args[]);
-        LIns *fcall1(const CallInfo *call, LIns *a);
-        LIns *fcall2(const CallInfo *call, LIns *a, LIns *b);
-        LIns *fcmp(const CallInfo *call, LIns *a, LIns *b);
+        LIns *callD1(const CallInfo *call, LIns *a);
+        LIns *callD2(const CallInfo *call, LIns *a, LIns *b);
+        LIns *cmpD(const CallInfo *call, LIns *a, LIns *b);
         LIns *ins1(LOpcode op, LIns *a);
         LIns *ins2(LOpcode op, LIns *a, LIns *b);
         LIns *insCall(const CallInfo *ci, LInsp args[]);
@@ -2299,11 +2287,11 @@ namespace nanojit
         LIns* ins2(LOpcode v, LIns* a, LIns* b);
         LIns* ins3(LOpcode v, LIns* a, LIns* b, LIns* c);
         LIns* insParam(int32_t arg, int32_t kind);
-        LIns* insImm(int32_t imm);
+        LIns* insImmI(int32_t imm);
 #ifdef NANOJIT_64BIT
-        LIns* insImmq(uint64_t imm);
+        LIns* insImmQ(uint64_t imm);
 #endif
-        LIns* insImmf(double d);
+        LIns* insImmD(double d);
         LIns* insCall(const CallInfo *call, LIns* args[]);
         LIns* insGuard(LOpcode v, LIns *c, GuardRecord *gr);
         LIns* insGuardXov(LOpcode v, LIns* a, LIns* b, GuardRecord* gr);

@@ -230,13 +230,15 @@ interface mozIStorageConnection : nsISupports {
 
   /**
    * Commits the current transaction.  If no transaction is active,
-   * @throws NS_ERROR_STORAGE_NO_TRANSACTION.
+   * @throws NS_ERROR_UNEXPECTED.
+   * @throws NS_ERROR_NOT_INITIALIZED.
    */
   void commitTransaction();
 
   /**
    * Rolls back the current transaction.  If no transaction is active,
-   * @throws NS_ERROR_STORAGE_NO_TRANSACTION.
+   * @throws NS_ERROR_UNEXPECTED.
+   * @throws NS_ERROR_NOT_INITIALIZED.
    */
   void rollbackTransaction();
 

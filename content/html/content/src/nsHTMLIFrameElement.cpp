@@ -42,8 +42,6 @@
 #include "nsIDOMSVGDocument.h"
 #endif
 #include "nsGkAtoms.h"
-#include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsMappedAttributes.h"
 #include "nsDOMError.h"
@@ -107,6 +105,8 @@ nsHTMLIFrameElement::~nsHTMLIFrameElement()
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameElement,nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameElement,nsGenericElement)
+
+DOMCI_DATA(HTMLIFrameElement, nsHTMLIFrameElement)
 
 // QueryInterface implementation for nsHTMLIFrameElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLIFrameElement)

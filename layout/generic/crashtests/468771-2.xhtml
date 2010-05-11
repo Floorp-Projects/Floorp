@@ -1,0 +1,22 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<script type="text/javascript">
+
+function boom()
+{
+  var newTD = document.createElementNS("http://www.w3.org/1999/xhtml", "td");
+  newTD.setAttribute("rowspan", 3);
+  document.getElementById("tr1").appendChild(newTD);
+}
+
+</script>
+
+</head>
+
+<body onload="boom();">
+
+<table id="table" border="1">AAAA<tr id="tr1"></tr><tr><td><div style="-moz-column-width: 1px;">B C</div></td></tr></table>
+
+</body>
+</html>

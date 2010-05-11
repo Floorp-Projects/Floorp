@@ -70,79 +70,6 @@ extern PRUint32          gLastModifierState;
 // defined in nsCocoaWindow.mm
 extern PRInt32             gXULModalLevel;
 
-#ifndef __LP64__
-#include <dlfcn.h>
-
-void (*WebKit_WebInitForCarbon)() = NULL;
-
-// Plugins may exist that use the WebKit framework.  Those that are
-// Carbon-based need to call WebKit's WebInitForCarbon() method.  There
-// currently appears to be only one Carbon WebKit plugin --
-// DivXBrowserPlugin (included with the DivX Web Player,
-// http://www.divx.com/en/downloads/divx/mac).  See bug 509130.
-//
-// The source-code for WebInitForCarbon() is in the WebKit source tree's
-// WebKit/mac/Carbon/CarbonUtils.mm file.  Among other things it installs
-// an idle timer on the main event loop, whose target is the PoolCleaner()
-// function (also in CarbonUtils.mm).  WebInitForCarbon() allocates an
-// NSAutoreleasePool object which it stores in the global sPool variable.
-// PoolCleaner() periodically releases/drains sPool and creates another
-// NSAutoreleasePool object to take its place.  The intention is to ensure
-// an autorelease pool is in place for whatever Objective-C code may be
-// called by WebKit code, and that it periodically gets "cleaned".  But
-// PoolCleaner()'s periodic cleaning has a very bad effect on us -- it
-// causes objects to be deleted prematurely, so that attempts to access them
-// cause crashes.  This is probably because, when WebInitForCarbon() is
-// called from a plugin in a Cocoa browser, one or more autorelease pools
-// are already in place.  So, other things being equal, PoolCleaner() should
-// have a similar effect on any Cocoa app that hosts a Carbon WebKit plugin.
-//
-// PoolCleaner() only "works" if the autorelease pool count (returned by
-// WKGetNSAutoreleasePoolCount(), stored in numPools) is the same as when
-// sPool was last set.  So we can permanently disable it by ensuring that,
-// when sPool is first set, numPools gets set to a value that it will never
-// have again until just after the app shell is destroyed.  To accomplish
-// this we need to call WebInitForCarbon() ourselves, before any plugin
-// calls it (subsequent calls to WebInitForCarbon() (after the first) are
-// no-ops):  We release all of the app shell's autorelease pools (including
-// mMainPool) just before calling WebInitForCarbon(), then restore mMainPool
-// just afterwards (before the idle timer has time to call PoolCleaner()).
-//
-// WKGetNSAutoreleasePoolCount() only works on OS X 10.5 and below -- not on
-// OS X 10.6 and above.  So PoolCleaner() is always disabled on 10.6 and
-// above -- we needn't do anything to explicitly disable it.
-//
-// WKGetNSAutoreleasePoolCount() is a thin wrapper around the following code:
-//
-//   unsigned count = NSPushAutoreleasePool(0);
-//   NSPopAutoreleasePool(count);
-//   return count;
-//
-// NSPushAutoreleasePool() and NSPopAutoreleasePool() are undocumented
-// functions from the Foundation framework.  On OS X 10.5.X and below their
-// declarations are (as best I can tell) as follows.  ('capacity' is
-// presumably the initial capacity, in number of items, of the autorelease
-// pool to be created.)
-//
-//   unsigned NSPushAutoreleasePool(unsigned capacity);
-//   void NSPopAutoreleasePool(unsigned offset);
-//
-// But as of OS X 10.6 these functions appear to have changed as follows:
-//
-//   AutoreleasePool *NSPushAutoreleasePool(unsigned capacity);
-//   void NSPopAutoreleasePool(AutoreleasePool *aPool);
-static void InitCarbonWebKit()
-{
-  if (!WebKit_WebInitForCarbon) {
-    void* webkithandle = dlopen("/System/Library/Frameworks/WebKit.framework/WebKit", RTLD_LAZY);
-    if (webkithandle)
-      *(void **)(&WebKit_WebInitForCarbon) = dlsym(webkithandle, "WebInitForCarbon");
-  }
-  if (WebKit_WebInitForCarbon)
-    WebKit_WebInitForCarbon();
-}
-#endif // __LP64__
-
 static PRBool gAppShellMethodsSwizzled = PR_FALSE;
 // List of current Cocoa app-modal windows (nested if more than one).
 nsCocoaAppModalWindowList *gCocoaAppModalWindowList = NULL;
@@ -288,14 +215,6 @@ nsAppShell::nsAppShell()
 , mNativeEventCallbackDepth(0)
 , mNativeEventScheduledDepth(0)
 {
-  // mMainPool sits low on the autorelease pool stack to serve as a catch-all
-  // for autoreleased objects on this thread.  Because it won't be popped
-  // until the appshell is destroyed, objects attached to this pool will
-  // be leaked until app shutdown.  You probably don't want this!
-  //
-  // Objects autoreleased to this pool may result in warnings in the future.
-  mMainPool = [[NSAutoreleasePool alloc] init];
-
   // A Cocoa event loop is running here if (and only if) we've been embedded
   // by a Cocoa app (like Camino).
   mRunningCocoaEmbedded = [NSApp isRunning] ? PR_TRUE : PR_FALSE;
@@ -321,31 +240,6 @@ nsAppShell::~nsAppShell()
   }
 
   [mDelegate release];
-  // Cocoa-based embedders (like Camino) call NS_TermEmbedding() (which
-  // destroys us) before their own Cocoa infrastructure is fully shut down.
-  // This infrastructure assumes that various objects which have a retain
-  // count >= 1 will remain in existence, and that an autorelease pool will
-  // still be available.  But because mMainPool sits so low on the autorelease
-  // stack, if we release it here there's a good chance that all the
-  // aforementioned objects (including the other autorelease pools) will be
-  // released, and havoc will result.
-  //
-  // So if we've been called from a Cocoa embedder, or in general if we've
-  // been terminated using [NSApplication terminate:], we don't release
-  // mMainPool here.  This won't cause leaks, because after [NSApplication
-  // terminate:] sends an NSApplicationWillTerminate notification it calls
-  // [NSApplication _deallocHardCore:], which (after it uses [NSArray
-  // makeObjectsPerformSelector:] to close all remaining windows) calls
-  // [NSAutoreleasePool releaseAllPools] (to release all autorelease pools
-  // on the current thread, which is the main thread).
-  //
-  // Cocoa embedders will almost certainly be terminated using [NSApplication
-  // terminate:].  But we can be called from a Cocoa embedder's will-terminate
-  // notification handler before our own is called (so that
-  // mNotifiedWillTerminate isn't yet TRUE).  To avoid this, we also check
-  // mRunningCocoaEmbedded here.  See bug 471948.
-  if (!mNotifiedWillTerminate && !mRunningCocoaEmbedded)
-    [mMainPool release];
 
   NS_OBJC_END_TRY_ABORT_BLOCK
 }
@@ -362,9 +256,7 @@ nsAppShell::Init()
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // No event loop is running yet (unless Camino is running, or another
-  // embedding app that uses NSApplicationMain()).  Avoid autoreleasing
-  // objects to mMainPool.  The appshell retains objects it needs to be
-  // long-lived and will release them as appropriate.
+  // embedding app that uses NSApplicationMain()).
   NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
 
   // mAutoreleasePools is used as a stack of NSAutoreleasePool objects created
@@ -447,14 +339,6 @@ nsAppShell::Init()
   }
 
   [localPool release];
-
-#ifndef __LP64__
-  if (!nsToolkit::OnSnowLeopardOrLater()) {
-    [mMainPool release];
-    InitCarbonWebKit();
-    mMainPool = [[NSAutoreleasePool alloc] init];
-  }
-#endif
 
   return rv;
 

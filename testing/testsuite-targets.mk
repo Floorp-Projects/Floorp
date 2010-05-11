@@ -48,7 +48,8 @@ endif
 SYMBOLS_PATH := --symbols-path=$(DIST)/crashreporter-symbols
 
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] mochitest*|.
-mochitest:: mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins
+MOCHITESTS := mochitest-plain mochitest-chrome mochitest-a11y mochitest-ipcplugins
+mochitest:: $(MOCHITESTS)
 
 RUN_MOCHITEST = \
 	rm -f ./$@.log && \
@@ -104,6 +105,8 @@ jstestbrowser:
 	$(call RUN_REFTEST,$(topsrcdir)/$(TEST_PATH) --extra-profile-file=$(topsrcdir)/js/src/tests/user.js)
 	$(CHECK_TEST_ERROR)
 
+GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
+
 # Execute all xpcshell tests in the directories listed in the manifest.
 # See also config/rules.mk 'xpcshell-tests' target for local execution.
 # Usage: |make [TEST_PATH=...] [EXTRA_TEST_ARGS=...] xpcshell-tests|.
@@ -131,7 +134,9 @@ endif
 
 package-tests:
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	@(cd $(PKG_STAGE) && tar $(TAR_CREATE_FLAGS) - *) | bzip2 -f > "$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)"
+	@rm -f "$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)"
+	cd $(PKG_STAGE) && \
+	  zip -r9D "$(call core_abspath,$(DIST)/$(PKG_PATH)$(TEST_PACKAGE))" *
 
 make-stage-dir:
 	rm -rf $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE) && $(NSINSTALL) -D $(PKG_STAGE)/bin && $(NSINSTALL) -D $(PKG_STAGE)/bin/components && $(NSINSTALL) -D $(PKG_STAGE)/certs

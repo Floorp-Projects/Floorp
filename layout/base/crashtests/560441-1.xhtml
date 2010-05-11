@@ -1,0 +1,12 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="foo"><content><frame xmlns="http://www.w3.org/1999/xhtml"><children xmlns="http://www.mozilla.org/xbl"/></frame></content></binding></bindings>
+</head>
+
+<frameset 
+  onload="document.getElementById('y').appendChild(document.createElementNS('http://www.w3.org/1999/xhtml', 'span'));" 
+  style="-moz-binding: url(#foo)"
+>
+<frame id="y"></frame>
+</frameset>
+</html>

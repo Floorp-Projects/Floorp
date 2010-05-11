@@ -530,6 +530,10 @@ gTests.push({
 
 function test() {
   waitForExplicitFinish();
+  // This test can take some time, if we timeout too early it could run
+  // in the middle of other tests, or hang them.
+  requestLongerTimeout(2);
+
   // Sanity checks.
   ok(PlacesUtils, "PlacesUtils in context");
   ok(PlacesUIUtils, "PlacesUIUtils in context");

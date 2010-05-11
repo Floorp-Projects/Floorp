@@ -84,7 +84,7 @@ script regress-256798.js
 skip-if(xulRuntime.shell) script regress-259935.js # browser only
 script regress-260541.js
 script regress-261886.js
-script regress-261887.js
+skip script regress-261887.js # we violate the spec here with our new iterators
 skip script regress-271716-n.js # never terminates
 script regress-274035.js
 script regress-274888.js
@@ -243,7 +243,7 @@ skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) script regress-418540.js # slow
 script regress-419018.js
 script regress-419803.js
 script regress-420919.js
-fails-if(xulRuntime.OS=="Linux"&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-422348.js # No test results
+skip-if(xulRuntime.OS=="Linux"&&xulRuntime.XPCOMABI.match(/x86_64/)) script regress-422348.js # On 64-bit Linux, takes forever rather than throwing
 script regress-424311.js
 skip-if(xulRuntime.OS=="WINNT"&&isDebugBuild) script regress-425360.js # slow
 script regress-426827.js

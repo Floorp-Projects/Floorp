@@ -332,9 +332,6 @@ nsSVGAnimationElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsSVGAnimationElementBase::UnbindFromTree(aDeep, aNullParent);
 }
 
-//----------------------------------------------------------------------
-// nsIContent methods
-
 PRBool
 nsSVGAnimationElement::ParseAttribute(PRInt32 aNamespaceID,
                                       nsIAtom* aAttribute,
@@ -411,7 +408,7 @@ nsSVGAnimationElement::UnsetAttr(PRInt32 aNamespaceID,
 PRBool
 nsSVGAnimationElement::IsNodeOfType(PRUint32 aFlags) const
 {
-  return !(aFlags & ~(eCONTENT | eELEMENT | eSVG | eANIMATION));
+  return !(aFlags & ~(eCONTENT | eSVG | eANIMATION));
 }
 
 //----------------------------------------------------------------------

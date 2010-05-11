@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
- *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   Mats Palmgren <matspal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -80,6 +80,9 @@
 #include "nsBidiUtils.h"
 #include "nsFrameManager.h"
 #include "nsIPrefService.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 
@@ -1620,9 +1623,13 @@ SortBlitRectsForCopy(nsIntPoint aPixDelta, nsTArray<nsIntRect>* aRects)
 }
 
 static PRBool
-CanScrollWithBlitting(nsIFrame* aFrame)
+CanScrollWithBlitting(nsIFrame* aFrame, nsIFrame* aDisplayRoot, nsRect* aClippedScrollPort)
 {
-  for (nsIFrame* f = aFrame; f; f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+  nsPoint offset(0, 0);
+  *aClippedScrollPort = nsRect(nsPoint(0, 0), aFrame->GetSize());
+
+  for (nsIFrame* f = aFrame; f;
+       f = nsLayoutUtils::GetCrossDocParentFrame(f, &offset)) {
     if (f->GetStyleDisplay()->HasTransform()) {
       return PR_FALSE;
     }
@@ -1632,6 +1639,18 @@ CanScrollWithBlitting(nsIFrame* aFrame)
       return PR_FALSE;
     }
 #endif
+
+    nsIScrollableFrame* sf = do_QueryFrame(f);
+    if (sf) {
+      // Note that this will always happen on the first iteration of the loop,
+      // ensuring that we clip to our own scrollframe's scrollport
+      aClippedScrollPort->IntersectRect(*aClippedScrollPort,
+                                        sf->GetScrollPortRect() - offset);
+    }
+
+    offset += f->GetPosition();
+    if (f == aDisplayRoot)
+      break;
   }
   return PR_TRUE;
 }
@@ -1658,9 +1677,11 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
     rootPresContext->GetPluginGeometryUpdates(mOuter, &configurations);
   }
 
+  nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
+  nsRect clippedScrollPort;
   if (!nearestWidget ||
       nearestWidget->GetTransparencyMode() == eTransparencyTransparent ||
-      !CanScrollWithBlitting(mOuter)) {
+      !CanScrollWithBlitting(mOuter, displayRoot, &clippedScrollPort)) {
     // Just invalidate the frame and adjust child widgets
     // Recall that our widget's origin is at our bounds' top-left
     if (nearestWidget) {
@@ -1672,7 +1693,6 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
     mOuter->InvalidateWithFlags(mScrollPort,
                                 nsIFrame::INVALIDATE_REASON_SCROLL_REPAINT);
   } else {
-    nsIFrame* displayRoot = nsLayoutUtils::GetDisplayRootFrame(mOuter);
     nsRegion blitRegion;
     nsRegion repaintRegion;
     nsPresContext* presContext = mOuter->PresContext();
@@ -1681,7 +1701,7 @@ void nsGfxScrollFrameInner::ScrollVisual(nsIntPoint aPixDelta)
     nsPoint offsetToDisplayRoot = mOuter->GetOffsetTo(displayRoot);
     nscoord appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
     nsRect scrollPort =
-      (mScrollPort + offsetToDisplayRoot).ToNearestPixels(appUnitsPerDevPixel).
+      (clippedScrollPort + offsetToDisplayRoot).ToNearestPixels(appUnitsPerDevPixel).
       ToAppUnits(appUnitsPerDevPixel);
     nsresult rv =
       nsLayoutUtils::ComputeRepaintRegionForCopy(displayRoot, mScrolledFrame,
@@ -2209,11 +2229,8 @@ nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
   // of the viewport (good!).
   PRBool canHaveHorizontal;
   PRBool canHaveVertical;
-  // Hack to try to avoid Tsspider regression: always call
-  // GetScrollbarStyles here, even if we plan to ignore the return
-  // value.
-  ScrollbarStyles styles = scrollable->GetScrollbarStyles();
   if (!mIsRoot) {
+    ScrollbarStyles styles = scrollable->GetScrollbarStyles();
     canHaveHorizontal = styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN;
     canHaveVertical = styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN;
     if (!canHaveHorizontal && !canHaveVertical && !isResizable) {
@@ -2673,14 +2690,14 @@ nsGfxScrollFrameInner::IsLTR() const
     // If we're the root scrollframe, we need the root element's style data.
     nsPresContext *presContext = mOuter->PresContext();
     nsIDocument *document = presContext->Document();
-    nsIContent *root = document->GetRootContent();
+    Element *root = document->GetRootElement();
 
-    // But for HTML we want the body element.
+    // But for HTML and XHTML we want the body element.
     nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(document);
     if (htmlDoc) {
-      nsIContent *bodyContent = htmlDoc->GetBodyContentExternal();
-      if (bodyContent)
-        root = bodyContent; // we can trust the document to hold on to it
+      Element *bodyElement = document->GetBodyElement();
+      if (bodyElement)
+        root = bodyElement; // we can trust the document to hold on to it
     }
 
     if (root) {
@@ -2697,6 +2714,12 @@ PRBool
 nsGfxScrollFrameInner::IsScrollbarOnRight() const
 {
   nsPresContext *presContext = mOuter->PresContext();
+
+  // The position of the scrollbar in top-level windows depends on the pref
+  // layout.scrollbar.side. For non-top-level elements, it depends only on the
+  // directionaliy of the element (equivalent to a value of "1" for the pref).
+  if (!mIsRoot)
+    return IsLTR();
   switch (presContext->GetCachedIntPref(kPresContext_ScrollbarSide)) {
     default:
     case 0: // UI directionality

@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIOService.h"
 #include "nsFileChannel.h"
 #include "nsBaseContentStream.h"
 #include "nsDirectoryIndexStream.h"
@@ -46,7 +47,6 @@
 #include "nsURLHelper.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
-#include "nsNetSegmentUtils.h"
 #include "nsProxyRelease.h"
 #include "nsAutoPtr.h"
 #include "nsStandardURL.h"
@@ -107,7 +107,7 @@ nsFileCopyEvent::DoCopy()
 {
   // We'll copy in chunks this large by default.  This size affects how
   // frequently we'll check for interrupts.
-  const PRInt32 chunk = NET_DEFAULT_SEGMENT_SIZE * NET_DEFAULT_SEGMENT_COUNT;
+  const PRInt32 chunk = nsIOService::gDefaultSegmentSize * nsIOService::gDefaultSegmentCount;
 
   nsresult rv = NS_OK;
 
@@ -255,8 +255,7 @@ nsFileUploadContentStream::AsyncWait(nsIInputStreamCallback *callback,
 
   if (IsNonBlocking()) {
     nsCOMPtr<nsIRunnable> callback =
-        NS_NEW_RUNNABLE_METHOD(nsFileUploadContentStream, this,
-                               OnCopyComplete);
+      NS_NewRunnableMethod(this, &nsFileUploadContentStream::OnCopyComplete);
     mCopyEvent->Dispatch(callback, mSink, target);
   }
 

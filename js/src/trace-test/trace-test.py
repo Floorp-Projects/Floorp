@@ -92,6 +92,8 @@ class Test:
 def find_tests(dir, substring = None):
     ans = []
     for dirpath, dirnames, filenames in os.walk(dir):
+        dirnames.sort()
+        filenames.sort()
         if dirpath == '.':
             continue
         for filename in filenames:

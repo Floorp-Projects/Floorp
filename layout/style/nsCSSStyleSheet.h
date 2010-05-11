@@ -57,6 +57,7 @@ class nsIURI;
 class nsMediaList;
 class nsMediaQueryResultCacheKey;
 class nsCSSStyleSheet;
+class nsPresContext;
 
 // -------------------------------
 // CSS Style Sheet Inner Data Container
@@ -151,14 +152,14 @@ public:
   NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const;
   NS_IMETHOD SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
                      nsIURI* aBaseURI);
-  virtual NS_HIDDEN_(void) SetPrincipal(nsIPrincipal* aPrincipal);
-  virtual NS_HIDDEN_(nsIPrincipal*) Principal() const;
+  virtual void SetPrincipal(nsIPrincipal* aPrincipal);
+  virtual nsIPrincipal* Principal() const;
   NS_IMETHOD SetTitle(const nsAString& aTitle);
   NS_IMETHOD SetMedia(nsMediaList* aMedia);
   NS_IMETHOD SetOwningNode(nsIDOMNode* aOwningNode);
   NS_IMETHOD SetOwnerRule(nsICSSImportRule* aOwnerRule);
   NS_IMETHOD GetOwnerRule(nsICSSImportRule** aOwnerRule);
-  virtual NS_HIDDEN_(nsXMLNameSpaceMap*) GetNameSpaceMap() const;
+  virtual nsXMLNameSpaceMap* GetNameSpaceMap() const;
   NS_IMETHOD Clone(nsICSSStyleSheet* aCloneParent,
                    nsICSSImportRule* aCloneOwnerRule,
                    nsIDocument* aCloneDocument,

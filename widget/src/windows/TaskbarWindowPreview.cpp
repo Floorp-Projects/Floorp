@@ -102,7 +102,7 @@ TaskbarWindowPreview::TaskbarWindowPreview(ITaskbarList4 *aTaskbar, nsITaskbarPr
 
 TaskbarWindowPreview::~TaskbarWindowPreview() {
   if (mWnd)
-    DetachFromNSWindow(PR_TRUE);
+    DetachFromNSWindow();
 }
 
 nsresult
@@ -272,18 +272,16 @@ TaskbarWindowPreview::Disable() {
 }
 
 void
-TaskbarWindowPreview::DetachFromNSWindow(PRBool windowIsAlive) {
-  if (windowIsAlive) {
-    // Remove the hooks we have for drawing
-    SetEnableCustomDrawing(PR_FALSE);
+TaskbarWindowPreview::DetachFromNSWindow() {
+  // Remove the hooks we have for drawing
+  SetEnableCustomDrawing(PR_FALSE);
 
-    WindowHook &hook = GetWindowHook();
-    (void) hook.RemoveHook(WM_COMMAND, WindowHookProc, this);
-    (void) hook.RemoveMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
-                              TaskbarProgressWindowHook, this);
-  }
+  WindowHook &hook = GetWindowHook();
+  (void) hook.RemoveHook(WM_COMMAND, WindowHookProc, this);
+  (void) hook.RemoveMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(),
+                            TaskbarProgressWindowHook, this);
 
-  TaskbarPreview::DetachFromNSWindow(windowIsAlive);
+  TaskbarPreview::DetachFromNSWindow();
 }
 
 nsresult

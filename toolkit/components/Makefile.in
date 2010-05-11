@@ -58,6 +58,7 @@ PARALLEL_DIRS += \
   cookie \
   exthelper \
   filepicker \
+  find \
   microformats \
   parentalcontrols \
   passwordmgr \
@@ -109,7 +110,10 @@ PARALLEL_DIRS += search
 endif
 
 ifdef MOZ_RDF
-PARALLEL_DIRS += downloads
+PARALLEL_DIRS += \
+  downloads \
+  intl \
+  $(NULL)
 endif
 
 ifdef MOZ_URL_CLASSIFIER
@@ -125,10 +129,5 @@ DIRS += \
   $(NULL)
 
 EXTRA_PP_COMPONENTS = nsDefaultCLH.js
-
-ifeq ($(MOZ_BUILD_APP),camino)
-DIRS += autocomplete/public
-DIRS += downloads/public
-endif
 
 include $(topsrcdir)/config/rules.mk

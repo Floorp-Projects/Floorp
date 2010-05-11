@@ -59,7 +59,7 @@ UrlClassifierTable.prototype.QueryInterface = function(iid) {
 }
 
 /**
- * Subclasses need to implment this method.
+ * Subclasses need to implement this method.
  */
 UrlClassifierTable.prototype.exists = function(url, callback) {
   throw Components.results.NS_ERROR_NOT_IMPLEMENTED;

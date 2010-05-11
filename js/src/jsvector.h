@@ -208,7 +208,7 @@ class Vector : AllocPolicy
     /*
      * Since a vector either stores elements inline or in a heap-allocated
      * buffer, reuse the storage. mLengthOrCapacity serves as the union
-     * discriminator. In inline mode (when elements are stored in u.mBuf),
+     * discriminator. In inline mode (when elements are stored in u.storage),
      * mLengthOrCapacity holds the vector's length. In heap mode (when elements
      * are stored in [u.ptrs.mBegin, u.ptrs.mEnd)), mLengthOrCapacity holds the
      * vector's capacity.
@@ -228,22 +228,7 @@ class Vector : AllocPolicy
 
     union {
         BufferPtrs ptrs;
-        char mBuf[sInlineBytes];
-
-#if __GNUC__
-        /*
-         * GCC thinks there is a strict aliasing warning since mBuf is a char
-         * array but we read and write to it as a T array. This is not an error
-         * since there are no reads and writes to the mBuf memory except those
-         * that treat it as a T array. Sadly,
-         *   #pragma GCC diagnostic ignore "-Wstrict-aliasing"
-         * doesn't silence the warning. Type punning is allowed through a union
-         * of the involved types, so, for now, this error can be silenced by
-         * adding each offending T to this union. (This won't work for non-POD
-         * T's, but there don't seem to be any with warnings yet...)
-         */
-        jschar unused1_;
-#endif
+        AlignedStorage<sInlineBytes> storage;
     } u;
 
     /* Only valid when usingInlineStorage() */
@@ -259,12 +244,12 @@ class Vector : AllocPolicy
 
     T *inlineBegin() const {
         JS_ASSERT(usingInlineStorage());
-        return (T *)u.mBuf;
+        return (T *)u.storage.addr();
     }
 
     T *inlineEnd() const {
         JS_ASSERT(usingInlineStorage());
-        return (T *)u.mBuf + mLengthOrCapacity;
+        return (T *)u.storage.addr() + mLengthOrCapacity;
     }
 
     /* Only valid when !usingInlineStorage() */

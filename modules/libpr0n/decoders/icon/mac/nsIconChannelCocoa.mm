@@ -274,7 +274,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
     NSString* fileExtension = [NSString stringWithUTF8String:PromiseFlatCString(fileExt).get()];
     iconImage = [[NSWorkspace sharedWorkspace] iconForFileType:fileExtension];
   }
-  
+
+  // If we still don't have an icon, get the generic document icon.
+  if (!iconImage)
+    iconImage = [[NSWorkspace sharedWorkspace] iconForFileType:NSFileTypeUnknown];
+
   if (!iconImage)
     return NS_ERROR_FAILURE;
   

@@ -75,8 +75,7 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory() :
   mLoadedAllLanguages(PR_FALSE)
 {
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
-
+    mozilla::services::GetObserverService();
   if (observerService) {
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }

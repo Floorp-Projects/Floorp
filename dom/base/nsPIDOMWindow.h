@@ -49,6 +49,7 @@
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
+#include "nsGUIEvent.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 
@@ -70,7 +71,6 @@ class nsIDocShell;
 class nsIContent;
 class nsIDocument;
 class nsIScriptTimeoutHandler;
-class nsPresContext;
 struct nsTimeout;
 class nsScriptObjectHolder;
 class nsXBLPrototypeHandler;
@@ -78,8 +78,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xC5CB154D, 0x17C0, 0x49E9, \
-  { 0x9C, 0x83, 0xFF, 0xC7, 0x2C, 0x93, 0xAF, 0x24 } }
+{ 0x7cbe5277, 0x5de8, 0x45e4, \
+  { 0x9c, 0x2d, 0x81, 0x37, 0xa9, 0x5b, 0x42, 0xc6 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -432,7 +432,13 @@ public:
    * DO NOT CALL EITHER OF THESE METHODS DIRECTLY. USE THE FOCUS MANAGER
    * INSTEAD.
    */
-  virtual nsIContent* GetFocusedNode() = 0;
+  nsIContent* GetFocusedNode()
+  {
+    if (IsOuterWindow()) {
+      return mInnerWindow ? mInnerWindow->mFocusedNode.get() : nsnull;
+    }
+    return mFocusedNode;
+  }
   virtual void SetFocusedNode(nsIContent* aNode,
                               PRUint32 aFocusMethod = 0,
                               PRBool aNeedsFocus = PR_FALSE) = 0;
@@ -459,6 +465,23 @@ public:
    * should be called once a document has been loaded into the window.
    */
   virtual void SetReadyForFocus() = 0;
+
+  /**
+   * Whether the focused content within the window should show a focus ring.
+   */
+  virtual PRBool ShouldShowFocusRing() = 0;
+
+  /**
+   * Set the keyboard indicator state for accelerators and focus rings.
+   */
+  virtual void SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
+                                     UIStateChangeType aShowFocusRings) = 0;
+
+  /**
+   * Get the keyboard indicator state for accelerators and focus rings.
+   */
+  virtual void GetKeyboardIndicators(PRBool* aShowAccelerators,
+                                     PRBool* aShowFocusRings) = 0;
 
   /**
    * Indicates that the page in the window has been hidden. This is used to
@@ -495,15 +518,9 @@ protected:
   // be null if and only if the created window itself is an outer
   // window. In all other cases aOuterWindow should be the outer
   // window for the inner window that is being created.
-  nsPIDOMWindow(nsPIDOMWindow *aOuterWindow)
-    : mFrameElement(nsnull), mDocShell(nsnull), mModalStateDepth(0),
-      mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
-      mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
-      mMayHavePaintEventListener(PR_FALSE),
-      mIsModalContentWindow(PR_FALSE), mIsActive(PR_FALSE),
-      mInnerWindow(nsnull), mOuterWindow(aOuterWindow)
-  {
-  }
+  nsPIDOMWindow(nsPIDOMWindow *aOuterWindow);
+
+  ~nsPIDOMWindow();
 
   void SetChromeEventHandlerInternal(nsPIDOMEventTarget* aChromeEventHandler) {
     mChromeEventHandler = aChromeEventHandler;
@@ -541,6 +558,10 @@ protected:
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;
   nsPIDOMWindow         *mOuterWindow;
+
+  // the element within the document that is currently focused when this
+  // window is active
+  nsCOMPtr<nsIContent> mFocusedNode;
 };
 
 

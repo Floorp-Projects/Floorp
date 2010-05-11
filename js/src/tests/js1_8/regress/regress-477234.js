@@ -57,7 +57,11 @@ function test()
  
   for (iters = 0; iters < 11500; ++iters) {
     for each (let x in ['', '', '']){}
-    eval("__proto__.x getter = function(){}");
+    eval("Object.defineProperty(__proto__, 'x', " +
+         "{" +
+         "  enumerable: true, configurable: true," +
+         "  get: function(){}" +
+         "});");
     var a = uneval;
     delete uneval;
     uneval = a;

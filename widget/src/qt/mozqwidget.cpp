@@ -108,17 +108,24 @@ void MozQWidget::hoverMoveEvent(QGraphicsSceneHoverEvent* aEvent)
 
 void MozQWidget::keyPressEvent(QKeyEvent* aEvent)
 {
-    mReceiver->OnKeyPressEvent(aEvent);
+    // Below removed to prevent invertion of upper and lower case
+    // See bug 561234
+    // mReceiver->OnKeyPressEvent(aEvent);
 }
 
 void MozQWidget::keyReleaseEvent(QKeyEvent* aEvent)
 {
+    // Below line should be removed when bug 561234 is fixed
+    mReceiver->OnKeyPressEvent(aEvent);
+
     mReceiver->OnKeyReleaseEvent(aEvent);
 }
 
 void MozQWidget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* aEvent)
 {
-    mReceiver->mouseDoubleClickEvent(aEvent);
+    // Qt sends double click event, but not second press event.
+    mReceiver->OnButtonPressEvent(aEvent);
+    mReceiver->OnMouseDoubleClickEvent(aEvent);
 }
 
 void MozQWidget::mouseMoveEvent(QGraphicsSceneMouseEvent* aEvent)

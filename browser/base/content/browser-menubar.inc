@@ -213,6 +213,11 @@
                       onpopupshowing="onViewToolbarsPopupShowing(event);">
                   <menupopup>
                     <menuseparator/>
+                    <menuitem command="cmd_ToggleTabsOnTop"
+                              type="checkbox"
+                              label="&viewTabsOnTop.label;"
+                              accesskey="&viewTabsOnTop.accesskey;"/>
+                    <menuseparator/>
                     <menuitem id="menu_customizeToolbars"
                               label="&viewCustomizeToolbar.label;"
                               accesskey="&viewCustomizeToolbar.accesskey;"

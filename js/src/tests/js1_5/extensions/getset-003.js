@@ -65,8 +65,12 @@ var s = '';
 obj = new Object();
 obj.nameSETS = 0;
 obj.nameGETS = 0;
-obj.name setter = function(newValue) {this._name=newValue; this.nameSETS++;}
-  obj.name getter = function() {this.nameGETS++; return this._name;}
+Object.defineProperty(obj, "name",
+{
+  enumerable: true, configurable: true,
+  set: function(newValue) {this._name=newValue; this.nameSETS++;},
+  get: function() {this.nameGETS++; return this._name;}
+});
 
     status = 'In SECTION1 of test after 0 sets, 0 gets';
 actual = [obj.nameSETS,obj.nameGETS];
@@ -95,8 +99,12 @@ addThis();
 // SECTION2: define getter/setter in Object.prototype
 Object.prototype.nameSETS = 0;
 Object.prototype.nameGETS = 0;
-Object.prototype.name setter = function(newValue) {this._name=newValue; this.nameSETS++;}
-  Object.prototype.name getter = function() {this.nameGETS++; return this._name;}
+Object.defineProperty(Object.prototype, "name",
+{
+  enumerable: true, configurable: true,
+  set: function(newValue) {this._name=newValue; this.nameSETS++;},
+  get: function() {this.nameGETS++; return this._name;}
+});
 
     obj = new Object();
 status = 'In SECTION2 of test after 0 sets, 0 gets';
@@ -129,8 +137,12 @@ function TestObject()
 }
 TestObject.prototype.nameSETS = 0;
 TestObject.prototype.nameGETS = 0;
-TestObject.prototype.name setter = function(newValue) {this._name=newValue; this.nameSETS++;}
-  TestObject.prototype.name getter = function() {this.nameGETS++; return this._name;}
+Object.defineProperty(TestObject.prototype, "name",
+{
+  enumerable: true, configurable: true,
+  set: function(newValue) {this._name=newValue; this.nameSETS++;},
+  get: function() {this.nameGETS++; return this._name;}
+});
     TestObject.prototype.name = cnDEFAULT;
 
 obj = new TestObject();

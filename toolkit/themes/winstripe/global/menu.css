@@ -236,7 +236,7 @@ menulist > menupopup > menu > label {
   padding-bottom: 0px;
 }
 
-menulist > menupopup > menuitem[_moz-menuactive="true"] {
+menulist:-moz-focusring > menupopup > menuitem[_moz-menuactive="true"] {
   border: 1px dotted #F5DB95;
   background-color: highlight;
   color: highlighttext;

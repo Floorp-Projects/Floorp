@@ -62,10 +62,15 @@ namespace nanojit
 #  define NJ_ARM_EABI  1
 #endif
 
-// only d0-d6 are actually used; we'll use d7 as s14-s15 for i2f/u2f/etc.
+// only d0-d6 are actually used; we'll use d7 as s14-s15 for i2d/u2f/etc.
 #define NJ_VFP_MAX_REGISTERS            8
 #define NJ_MAX_REGISTERS                (11 + NJ_VFP_MAX_REGISTERS)
-#define NJ_MAX_STACK_ENTRY              256
+
+// fixme: bug 556175: this cant be over 1024, because
+// the ARM backend cannot support more than 12-bit displacements
+// in a single load/store instruction, for spilling.  see asm_spill().
+#define NJ_MAX_STACK_ENTRY              1024
+
 #define NJ_MAX_PARAMETERS               16
 #define NJ_ALIGN_STACK                  8
 
@@ -112,7 +117,7 @@ typedef enum {
     D4 = 20,
     D5 = 21,
     D6 = 22,
-    // S14 overlaps with D7 and is hard-coded into i2f and u2f operations, but
+    // S14 overlaps with D7 and is hard-coded into i2d and u2f operations, but
     // D7 is still listed here for completeness and to facilitate assertions.
     D7 = 23,
 
@@ -170,7 +175,7 @@ static const RegisterMask SavedFpRegs = 0;
 static const RegisterMask SavedRegs = 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10;
 static const int NumSavedRegs = 7;
 
-static const RegisterMask FpRegs = 1<<D0 | 1<<D1 | 1<<D2 | 1<<D3 | 1<<D4 | 1<<D5 | 1<<D6; // no D7; S14-S15 are used for i2f/u2f.
+static const RegisterMask FpRegs = 1<<D0 | 1<<D1 | 1<<D2 | 1<<D3 | 1<<D4 | 1<<D5 | 1<<D6; // no D7; S14-S15 are used for i2d/u2f.
 static const RegisterMask GpRegs = 0xFFFF;
 static const RegisterMask AllowableFlagRegs = 1<<R0 | 1<<R1 | 1<<R2 | 1<<R3 | 1<<R4 | 1<<R5 | 1<<R6 | 1<<R7 | 1<<R8 | 1<<R9 | 1<<R10;
 

@@ -39,8 +39,6 @@
 #include "nsIDOMHTMLSourceElement.h"
 #include "nsHTMLAudioElement.h"
 #include "nsGenericHTMLElement.h"
-#include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsSize.h"
 #include "nsIFrame.h"
@@ -93,6 +91,8 @@ NS_NewHTMLAudioElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLAudioElement, nsHTMLMediaElement)
+
+DOMCI_DATA(HTMLAudioElement, nsHTMLAudioElement)
 
 NS_INTERFACE_TABLE_HEAD(nsHTMLAudioElement)
 NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLAudioElement, nsIDOMHTMLMediaElement,

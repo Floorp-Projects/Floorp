@@ -69,7 +69,7 @@ checkbox {
 
 /* ..... focused state ..... */
 
-checkbox:focus > .checkbox-label-box {
+checkbox:-moz-focusring > .checkbox-label-box {
   border: 1px dotted ThreeDDarkShadow;
 }
 

@@ -45,10 +45,14 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _BROWSER_FILES = \
-	browser_bug511456.js \
 	browser_bug537449.js \
 	beforeunload.html \
 	$(NULL)
+
+# too frequent timeouts on Linux, see bug 542928
+ifneq (gtk2,$(MOZ_WIDGET_TOOLKIT))
+_BROWSER_FILES += browser_bug511456.js
+endif
 
 libs:: $(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)

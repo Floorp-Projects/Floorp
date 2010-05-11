@@ -136,9 +136,6 @@ public:
   nsresult AddText(const nsAString& aString);
   nsresult FlushText();
 
-  void ProcessBaseTag(nsIContent* aContent);
-  void AddBaseTagInfo(nsIContent* aContent);
-
   nsresult Init();
 
   PRPackedBool mAllContent;
@@ -155,9 +152,6 @@ public:
   PRUnichar* mText;
   PRInt32 mTextLength;
   PRInt32 mTextSize;
-
-  nsCOMPtr<nsIURI> mBaseHref;
-  nsCOMPtr<nsIAtom> mBaseTarget;
 
   nsCOMPtr<nsIDocument> mTargetDocument;
   nsRefPtr<nsNodeInfoManager> mNodeInfoManager;
@@ -328,63 +322,6 @@ nsHTMLFragmentContentSink::OpenHead()
   return NS_OK;
 }
 
-void
-nsHTMLFragmentContentSink::ProcessBaseTag(nsIContent* aContent)
-{
-  nsAutoString value;
-  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::href, value)) {
-    nsCOMPtr<nsIURI> baseHrefURI;
-    nsresult rv = 
-      nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(baseHrefURI),
-                                                value, mTargetDocument,
-                                                nsnull);
-    if (NS_FAILED(rv))
-      return;
-
-    nsIScriptSecurityManager *securityManager =
-      nsContentUtils::GetSecurityManager();
-
-    NS_ASSERTION(aContent->NodePrincipal() == mTargetDocument->NodePrincipal(),
-                 "How'd that happpen?");
-    
-    rv = securityManager->
-      CheckLoadURIWithPrincipal(mTargetDocument->NodePrincipal(), baseHrefURI,
-                                nsIScriptSecurityManager::STANDARD);
-    if (NS_SUCCEEDED(rv)) {
-      mBaseHref = baseHrefURI;
-    }
-  }
-  if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::target, value)) {
-    mBaseTarget = do_GetAtom(value);
-  }
-}
-
-void
-nsHTMLFragmentContentSink::AddBaseTagInfo(nsIContent* aContent)
-{
-  if (!aContent) {
-    return;
-  }
-
-  nsresult rv;
-  if (mBaseHref) {
-    rv = aContent->SetProperty(nsGkAtoms::htmlBaseHref, mBaseHref,
-                               nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      // circumvent nsDerivedSafe
-      NS_ADDREF(static_cast<nsIURI*>(mBaseHref));
-    }
-  }
-  if (mBaseTarget) {
-    rv = aContent->SetProperty(nsGkAtoms::htmlBaseTarget, mBaseTarget,
-                               nsPropertyTable::SupportsDtorFunc, PR_TRUE);
-    if (NS_SUCCEEDED(rv)) {
-      // circumvent nsDerivedSafe
-      NS_ADDREF(static_cast<nsIAtom*>(mBaseTarget));
-    }
-  }
-}
-
 NS_IMETHODIMP
 nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 {
@@ -459,16 +396,6 @@ nsHTMLFragmentContentSink::OpenContainer(const nsIParserNode& aNode)
 
     parent->AppendChildTo(content, PR_FALSE);
     PushContent(content);
-
-    if (nodeType == eHTMLTag_table
-        || nodeType == eHTMLTag_thead
-        || nodeType == eHTMLTag_tbody
-        || nodeType == eHTMLTag_tfoot
-        || nodeType == eHTMLTag_tr
-        || nodeType == eHTMLTag_td
-        || nodeType == eHTMLTag_th)
-      // XXX if navigator_quirks_mode (only body in html supports background)
-      AddBaseTagInfo(content); 
   }
   else if (mProcessing && mIgnoreContainer) {
     mIgnoreContainer = PR_FALSE;
@@ -553,12 +480,6 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
         }
 
         parent->AppendChildTo(content, PR_FALSE);
-
-        if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
-            || nodeType == eHTMLTag_input)    // elements with 'SRC='
-            AddBaseTagInfo(content);
-        else if (nodeType == eHTMLTag_base)
-            ProcessBaseTag(content);
       }
       break;
     case eToken_text:
@@ -1073,16 +994,6 @@ nsHTMLParanoidFragmentSink::AddAttributes(const nsIParserNode& aNode,
       // Add attribute to content
       aContent->SetAttr(kNameSpaceID_None, keyAtom, v, PR_FALSE);
     }
-
-    if (nodeType == eHTMLTag_a || 
-        nodeType == eHTMLTag_form ||
-        nodeType == eHTMLTag_img ||
-        nodeType == eHTMLTag_map ||
-        nodeType == eHTMLTag_q ||
-        nodeType == eHTMLTag_blockquote ||
-        nodeType == eHTMLTag_input) {
-      AddBaseTagInfo(aContent);
-    }
   }
 
   return NS_OK;
@@ -1150,21 +1061,8 @@ nsHTMLParanoidFragmentSink::AddLeaf(const nsIParserNode& aNode)
     rv = NameFromNode(aNode, getter_AddRefs(name));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // We will process base tags, but we won't include them
-    // in the output
+    // Don't include base tags in output.
     if (name == nsGkAtoms::base) {
-      nsCOMPtr<nsIContent> content;
-      nsCOMPtr<nsINodeInfo> nodeInfo;
-      nsIParserService* parserService = nsContentUtils::GetParserService();
-      if (!parserService)
-        return NS_ERROR_OUT_OF_MEMORY;
-      nodeInfo = mNodeInfoManager->GetNodeInfo(name, nsnull,
-                                               kNameSpaceID_XHTML);
-      NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
-      rv = NS_NewHTMLElement(getter_AddRefs(content), nodeInfo, PR_FALSE);
-      NS_ENSURE_SUCCESS(rv, rv);
-      AddAttributes(aNode, content);
-      ProcessBaseTag(content);
       return NS_OK;
     }
 

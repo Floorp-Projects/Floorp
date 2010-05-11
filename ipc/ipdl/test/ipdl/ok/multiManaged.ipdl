@@ -1,5 +1,5 @@
-include protocol "multiManager1.ipdl";
-include protocol "multiManager2.ipdl";
+include protocol multiManager1;
+include protocol multiManager2;
 
 protocol multiManaged {
     manager multiManager1 or multiManager2;

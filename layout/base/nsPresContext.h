@@ -810,13 +810,26 @@ public:
                               mType == eContext_PrintPreview); }
 
   // Is this presentation in a chrome docshell?
-  PRBool IsChrome() const;
+  PRBool IsChrome()
+  {
+    return mIsChromeIsCached ? mIsChrome : IsChromeSlow();
+  }
+
+  virtual void InvalidateIsChromeCacheExternal();
+  void InvalidateIsChromeCacheInternal();
+#ifdef _IMPL_NS_LAYOUT
+  void InvalidateIsChromeCache()
+  { InvalidateIsChromeCacheInternal(); }
+#else
+  void InvalidateIsChromeCache()
+  { InvalidateIsChromeCacheExternal(); }
+#endif
 
   // Public API for native theme code to get style internals.
-  virtual PRBool HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const;
+  virtual PRBool HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask);
 
   // Is it OK to let the page specify colors and backgrounds?
-  PRBool UseDocumentColors() const {
+  PRBool UseDocumentColors() {
     return GetCachedBoolPref(kPresContext_UseDocumentColors) || IsChrome();
   }
 
@@ -980,6 +993,8 @@ protected:
   // Can't be inline because we can't include nsStyleSet.h.
   PRBool HasCachedStyleData();
 
+  PRBool IsChromeSlow();
+
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
@@ -1114,6 +1129,12 @@ protected:
 
   unsigned              mProcessingRestyles : 1;
   unsigned              mProcessingAnimationStyleChange : 1;
+
+  // Cache whether we are chrome or not because it is expensive.  
+  // mIsChromeIsCached tells us if mIsChrome is valid or we need to get the
+  // value the slow way.
+  unsigned              mIsChromeIsCached : 1;
+  unsigned              mIsChrome : 1;
 
 #ifdef DEBUG
   PRBool                mInitialized;

@@ -48,7 +48,6 @@ EXPORTS_NAMESPACES = mozilla
 
 EXPORTS_mozilla = \
   PluginLibrary.h \
-  PluginPRLibrary.h \
   $(NULL)
 
 ifdef MOZ_IPC

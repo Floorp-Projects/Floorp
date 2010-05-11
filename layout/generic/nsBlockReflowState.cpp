@@ -943,7 +943,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame*       aFloat,
     // area into which the float has grown or from which the float has
     // shrunk.
     nscoord top = NS_MIN(region.y, oldRegion.y) - borderPadding.top;
-    nscoord bottom = NS_MAX(region.YMost(), oldRegion.YMost()) - borderPadding.left;
+    nscoord bottom = NS_MAX(region.YMost(), oldRegion.YMost()) - borderPadding.top;
     mFloatManager->IncludeInDamage(top, bottom);
   }
 

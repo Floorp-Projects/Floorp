@@ -182,6 +182,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
 nsDocumentFragment::nsDocumentFragment(nsINodeInfo *aNodeInfo)
   : nsGenericElement(aNodeInfo)
 {
+  UnsetFlags(NODE_IS_ELEMENT);
 }
 
 nsDocumentFragment::~nsDocumentFragment()
@@ -193,6 +194,8 @@ nsDocumentFragment::IsNodeOfType(PRUint32 aFlags) const
 {
   return !(aFlags & ~(eCONTENT | eDOCUMENT_FRAGMENT));
 }
+
+DOMCI_DATA(DocumentFragment, nsDocumentFragment)
 
 // QueryInterface implementation for nsDocumentFragment
 NS_INTERFACE_TABLE_HEAD(nsDocumentFragment)

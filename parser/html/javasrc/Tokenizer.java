@@ -66,6 +66,8 @@ import org.xml.sax.SAXParseException;
  */
 public class Tokenizer implements Locator {
 
+    private static final int DATA_AND_RCDATA_MASK = ~1;
+
     public static final int DATA = 0;
 
     public static final int RCDATA = 1;
@@ -411,9 +413,9 @@ public class Tokenizer implements Locator {
     /**
      * The element whose end tag closes the current CDATA or RCDATA element.
      */
-    protected ElementName contentModelElement = null;
+    protected ElementName endTagExpectation = null;
 
-    private char[] contentModelElementNameAsArray;
+    private char[] endTagExpectationAsArray;
 
     /**
      * <code>true</code> if tokenizing an end tag
@@ -659,76 +661,79 @@ public class Tokenizer implements Locator {
 
     // For the token handler to call
     /**
-     * Sets the content model flag and the associated element name.
+     * Sets the tokenizer state and the associated element name. This should 
+     * only ever used to put the tokenizer into one of the states that have
+     * a special end tag expectation.
      * 
-     * @param contentModelFlag
-     *            the flag
-     * @param contentModelElement
-     *            the element causing the flag to be set
+     * @param specialTokenizerState
+     *            the tokenizer state to set
+     * @param endTagExpectation
+     *            the expected end tag for transitioning back to normal
      */
-    public void setContentModelFlag(int contentModelFlag,
-            @Local String contentModelElement) {
-        this.stateSave = contentModelFlag;
-        if (contentModelFlag == Tokenizer.DATA) {
+    public void setStateAndEndTagExpectation(int specialTokenizerState,
+            @Local String endTagExpectation) {
+        this.stateSave = specialTokenizerState;
+        if (specialTokenizerState == Tokenizer.DATA) {
             return;
         }
-        // XXX does this make any sense?
-        char[] asArray = Portability.newCharArrayFromLocal(contentModelElement);
-        this.contentModelElement = ElementName.elementNameByBuffer(asArray, 0,
+        char[] asArray = Portability.newCharArrayFromLocal(endTagExpectation);
+        this.endTagExpectation = ElementName.elementNameByBuffer(asArray, 0,
                 asArray.length, interner);
         Portability.releaseArray(asArray);
-        contentModelElementToArray();
+        endTagExpectationToArray();
     }
 
     /**
-     * Sets the content model flag and the associated element name.
+     * Sets the tokenizer state and the associated element name. This should 
+     * only ever used to put the tokenizer into one of the states that have
+     * a special end tag expectation.
      * 
-     * @param contentModelFlag
-     *            the flag
-     * @param contentModelElement
-     *            the element causing the flag to be set
+     * @param specialTokenizerState
+     *            the tokenizer state to set
+     * @param endTagExpectation
+     *            the expected end tag for transitioning back to normal
      */
-    public void setContentModelFlag(int contentModelFlag,
-            ElementName contentModelElement) {
-        this.stateSave = contentModelFlag;
-        this.contentModelElement = contentModelElement;
-        contentModelElementToArray();
+    public void setStateAndEndTagExpectation(int specialTokenizerState,
+            ElementName endTagExpectation) {
+        this.stateSave = specialTokenizerState;
+        this.endTagExpectation = endTagExpectation;
+        endTagExpectationToArray();
     }
 
-    private void contentModelElementToArray() {
-        switch (contentModelElement.group) {
+    private void endTagExpectationToArray() {
+        switch (endTagExpectation.group) {
             case TreeBuilder.TITLE:
-                contentModelElementNameAsArray = TITLE_ARR;
+                endTagExpectationAsArray = TITLE_ARR;
                 return;
             case TreeBuilder.SCRIPT:
-                contentModelElementNameAsArray = SCRIPT_ARR;
+                endTagExpectationAsArray = SCRIPT_ARR;
                 return;
             case TreeBuilder.STYLE:
-                contentModelElementNameAsArray = STYLE_ARR;
+                endTagExpectationAsArray = STYLE_ARR;
                 return;
             case TreeBuilder.PLAINTEXT:
-                contentModelElementNameAsArray = PLAINTEXT_ARR;
+                endTagExpectationAsArray = PLAINTEXT_ARR;
                 return;
             case TreeBuilder.XMP:
-                contentModelElementNameAsArray = XMP_ARR;
+                endTagExpectationAsArray = XMP_ARR;
                 return;
             case TreeBuilder.TEXTAREA:
-                contentModelElementNameAsArray = TEXTAREA_ARR;
+                endTagExpectationAsArray = TEXTAREA_ARR;
                 return;
             case TreeBuilder.IFRAME:
-                contentModelElementNameAsArray = IFRAME_ARR;
+                endTagExpectationAsArray = IFRAME_ARR;
                 return;
             case TreeBuilder.NOEMBED:
-                contentModelElementNameAsArray = NOEMBED_ARR;
+                endTagExpectationAsArray = NOEMBED_ARR;
                 return;
             case TreeBuilder.NOSCRIPT:
-                contentModelElementNameAsArray = NOSCRIPT_ARR;
+                endTagExpectationAsArray = NOSCRIPT_ARR;
                 return;
             case TreeBuilder.NOFRAMES:
-                contentModelElementNameAsArray = NOFRAMES_ARR;
+                endTagExpectationAsArray = NOFRAMES_ARR;
                 return;
             default:
-                assert false;
+                assert false: "Bad end tag expectation.";
                 return;
         }
     }
@@ -798,24 +803,13 @@ public class Tokenizer implements Locator {
         // ]NOCPP]
     }
 
-    private void clearStrBufAndAppendCurrentC(char c) {
+    @Inline private void clearStrBufAndAppend(char c) {
         strBuf[0] = c;
-
         strBufLen = 1;
-        // strBufOffset = pos;
     }
 
-    private void clearStrBufAndAppendForceWrite(char c) {
-        strBuf[0] = c; // test
-
-        strBufLen = 1;
-        // strBufOffset = pos;
-        // buf[pos] = c;
-    }
-
-    private void clearStrBufForNextState() {
+    @Inline private void clearStrBuf() {
         strBufLen = 0;
-        // strBufOffset = pos + 1;
     }
 
     /**
@@ -825,9 +819,6 @@ public class Tokenizer implements Locator {
      *            the UTF-16 code unit to append
      */
     private void appendStrBuf(char c) {
-        // if (strBufOffset != -1) {
-        // strBufLen++;
-        // } else {
         if (strBufLen == strBuf.length) {
             char[] newBuf = new char[strBuf.length + Tokenizer.BUFFER_GROW_BY];
             System.arraycopy(strBuf, 0, newBuf, 0, strBuf.length);
@@ -835,7 +826,6 @@ public class Tokenizer implements Locator {
             strBuf = newBuf;
         }
         strBuf[strBufLen++] = c;
-        // }
     }
 
     /**
@@ -847,11 +837,7 @@ public class Tokenizer implements Locator {
      * @return the smaller buffer as a string
      */
     protected String strBufToString() {
-        // if (strBufOffset != -1) {
-        // return Portability.newStringFromBuffer(buf, strBufOffset, strBufLen);
-        // } else {
         return Portability.newStringFromBuffer(strBuf, 0, strBufLen);
-        // }
     }
 
     /**
@@ -873,33 +859,16 @@ public class Tokenizer implements Locator {
      */
     private void emitStrBuf() throws SAXException {
         if (strBufLen > 0) {
-            // if (strBufOffset != -1) {
-            // tokenHandler.characters(buf, strBufOffset, strBufLen);
-            // } else {
             tokenHandler.characters(strBuf, 0, strBufLen);
-            // }
         }
     }
 
-    private void clearLongStrBufForNextState() {
-        // longStrBufOffset = pos + 1;
+    @Inline private void clearLongStrBuf() {
         longStrBufLen = 0;
     }
 
-    private void clearLongStrBuf() {
-        // longStrBufOffset = pos;
-        longStrBufLen = 0;
-    }
-
-    private void clearLongStrBufAndAppendCurrentC(char c) {
+    @Inline private void clearLongStrBufAndAppend(char c) {
         longStrBuf[0] = c;
-        longStrBufLen = 1;
-        // longStrBufOffset = pos;
-    }
-
-    private void clearLongStrBufAndAppendToComment(char c) {
-        longStrBuf[0] = c;
-        // longStrBufOffset = pos;
         longStrBufLen = 1;
     }
 
@@ -910,9 +879,6 @@ public class Tokenizer implements Locator {
      *            the UTF-16 code unit to append
      */
     private void appendLongStrBuf(char c) {
-        // if (longStrBufOffset != -1) {
-        // longStrBufLen++;
-        // } else {
         if (longStrBufLen == longStrBuf.length) {
             char[] newBuf = new char[longStrBufLen + (longStrBufLen >> 1)];
             System.arraycopy(longStrBuf, 0, newBuf, 0, longStrBuf.length);
@@ -920,10 +886,9 @@ public class Tokenizer implements Locator {
             longStrBuf = newBuf;
         }
         longStrBuf[longStrBufLen++] = c;
-        // }
     }
 
-    private void appendSecondHyphenToBogusComment() throws SAXException {
+    @Inline private void appendSecondHyphenToBogusComment() throws SAXException {
         // [NOCPP[
         switch (commentPolicy) {
             case ALTER_INFOSET:
@@ -961,7 +926,7 @@ public class Tokenizer implements Locator {
 
     // ]NOCPP]
 
-    private void adjustDoubleHyphenAndAppendToLongStrBufAndErr(char c)
+    @Inline private void adjustDoubleHyphenAndAppendToLongStrBufAndErr(char c)
             throws SAXException {
         errConsecutiveHyphens();
         // [NOCPP[
@@ -998,26 +963,10 @@ public class Tokenizer implements Locator {
     }
 
     /**
-     * Appends to the larger buffer.
-     * 
-     * @param arr
-     *            the UTF-16 code units to append
-     */
-    private void appendLongStrBuf(char[] arr) {
-        // assert longStrBufOffset == -1;
-        appendLongStrBuf(arr, 0, arr.length);
-    }
-
-    /**
      * Append the contents of the smaller buffer to the larger one.
      */
-    private void appendStrBufToLongStrBuf() {
-        // assert longStrBufOffset == -1;
-        // if (strBufOffset != -1) {
-        // appendLongStrBuf(buf, strBufOffset, strBufLen);
-        // } else {
+    @Inline private void appendStrBufToLongStrBuf() {
         appendLongStrBuf(strBuf, 0, strBufLen);
-        // }
     }
 
     /**
@@ -1029,12 +978,7 @@ public class Tokenizer implements Locator {
      * @return the larger buffer as a string
      */
     private String longStrBufToString() {
-        // if (longStrBufOffset != -1) {
-        // return Portability.newStringFromBuffer(buf, longStrBufOffset,
-        // longStrBufLen);
-        // } else {
         return Portability.newStringFromBuffer(longStrBuf, 0, longStrBufLen);
-        // }
     }
 
     /**
@@ -1078,7 +1022,7 @@ public class Tokenizer implements Locator {
         if (pos > cstart) {
             tokenHandler.characters(buf, cstart, pos - cstart);
         }
-        cstart = 0x7fffffff;
+        cstart = Integer.MAX_VALUE;
     }
 
     /**
@@ -1189,6 +1133,10 @@ public class Tokenizer implements Locator {
         tagName.release();
         tagName = null;
         resetAttributes();
+        /*
+         * The token handler may have called setStateAndEndTagExpectation
+         * and changed stateSave since the start of this method.
+         */
         return stateSave;
     }
 
@@ -1312,12 +1260,12 @@ public class Tokenizer implements Locator {
         return new String(buf);
     }
 
-    // ]NOCPP]
-
     protected void startErrorReporting() throws SAXException {
 
     }
 
+    // ]NOCPP]
+    
     public void start() throws SAXException {
         initializeWithoutStarting();
         tokenHandler.startTokenization(this);
@@ -1478,8 +1426,8 @@ public class Tokenizer implements Locator {
                                  * reference in data state.
                                  */
                                 flushChars(buf, pos);
-                                clearStrBufAndAppendCurrentC(c);
-                                rememberAmpersandLocation('\u0000');
+                                clearStrBufAndAppend(c);
+                                setAdditionalAndRememberAmpersandLocation('\u0000');
                                 returnState = state;
                                 state = Tokenizer.CONSUME_CHARACTER_REFERENCE;
                                 continue stateloop;
@@ -1538,7 +1486,7 @@ public class Tokenizer implements Locator {
                              * input character (add 0x0020 to the character's
                              * code point),
                              */
-                            clearStrBufAndAppendForceWrite((char) (c + 0x20));
+                            clearStrBufAndAppend((char) (c + 0x20));
                             /* then switch to the tag name state. */
                             state = Tokenizer.TAG_NAME;
                             /*
@@ -1557,7 +1505,7 @@ public class Tokenizer implements Locator {
                             /*
                              * set its tag name to the input character,
                              */
-                            clearStrBufAndAppendCurrentC(c);
+                            clearStrBufAndAppend(c);
                             /* then switch to the tag name state. */
                             state = Tokenizer.TAG_NAME;
                             /*
@@ -1590,7 +1538,7 @@ public class Tokenizer implements Locator {
                                 /*
                                  * Switch to the bogus comment state.
                                  */
-                                clearLongStrBufAndAppendToComment(c);
+                                clearLongStrBufAndAppend(c);
                                 state = Tokenizer.BOGUS_COMMENT;
                                 continue stateloop;
                             case '>':
@@ -1792,7 +1740,7 @@ public class Tokenizer implements Locator {
                                  * Set that attribute's name to the current
                                  * input character,
                                  */
-                                clearStrBufAndAppendCurrentC(c);
+                                clearStrBufAndAppend(c);
                                 /*
                                  * and its value to the empty string.
                                  */
@@ -1937,7 +1885,7 @@ public class Tokenizer implements Locator {
                                  * U+0022 QUOTATION MARK (") Switch to the
                                  * attribute value (double-quoted) state.
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 state = Tokenizer.ATTRIBUTE_VALUE_DOUBLE_QUOTED;
                                 break beforeattributevalueloop;
                             // continue stateloop;
@@ -1957,7 +1905,7 @@ public class Tokenizer implements Locator {
                                  * U+0027 APOSTROPHE (') Switch to the attribute
                                  * value (single-quoted) state.
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 state = Tokenizer.ATTRIBUTE_VALUE_SINGLE_QUOTED;
                                 continue stateloop;
                             case '>':
@@ -2000,7 +1948,7 @@ public class Tokenizer implements Locator {
                                  * Anything else Append the current input
                                  * character to the current attribute's value.
                                  */
-                                clearLongStrBufAndAppendCurrentC(c);
+                                clearLongStrBufAndAppend(c);
                                 /*
                                  * Switch to the attribute value (unquoted)
                                  * state.
@@ -2043,8 +1991,8 @@ public class Tokenizer implements Locator {
                                  * additional allowed character being U+0022
                                  * QUOTATION MARK (").
                                  */
-                                clearStrBufAndAppendCurrentC(c);
-                                rememberAmpersandLocation('\"');
+                                clearStrBufAndAppend(c);
+                                setAdditionalAndRememberAmpersandLocation('\"');
                                 returnState = state;
                                 state = Tokenizer.CONSUME_CHARACTER_REFERENCE;
                                 continue stateloop;
@@ -2212,8 +2160,8 @@ public class Tokenizer implements Locator {
                                  * additional allowed character being U+003E
                                  * GREATER-THAN SIGN (>)
                                  */
-                                clearStrBufAndAppendCurrentC(c);
-                                rememberAmpersandLocation('>');
+                                clearStrBufAndAppend(c);
+                                setAdditionalAndRememberAmpersandLocation('>');
                                 returnState = state;
                                 state = Tokenizer.CONSUME_CHARACTER_REFERENCE;
                                 continue stateloop;
@@ -2351,7 +2299,7 @@ public class Tokenizer implements Locator {
                                  * Set that attribute's name to the current
                                  * input character,
                                  */
-                                clearStrBufAndAppendCurrentC(c);
+                                clearStrBufAndAppend(c);
                                 /*
                                  * and its value to the empty string.
                                  */
@@ -2484,19 +2432,19 @@ public class Tokenizer implements Locator {
                          */
                         switch (c) {
                             case '-':
-                                clearLongStrBufAndAppendToComment(c);
+                                clearLongStrBufAndAppend(c);
                                 state = Tokenizer.MARKUP_DECLARATION_HYPHEN;
                                 break markupdeclarationopenloop;
                             // continue stateloop;
                             case 'd':
                             case 'D':
-                                clearLongStrBufAndAppendToComment(c);
+                                clearLongStrBufAndAppend(c);
                                 index = 0;
                                 state = Tokenizer.MARKUP_DECLARATION_OCTYPE;
                                 continue stateloop;
                             case '[':
-                                if (tokenHandler.inForeign()) {
-                                    clearLongStrBufAndAppendToComment(c);
+                                if (tokenHandler.isInForeign()) {
+                                    clearLongStrBufAndAppend(c);
                                     index = 0;
                                     state = Tokenizer.CDATA_START;
                                     continue stateloop;
@@ -2522,7 +2470,7 @@ public class Tokenizer implements Locator {
                             case '\u0000':
                                 break stateloop;
                             case '-':
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 state = Tokenizer.COMMENT_START;
                                 break markupdeclarationhyphenloop;
                             // continue stateloop;
@@ -3087,7 +3035,7 @@ public class Tokenizer implements Locator {
                                  * Set the token's name name to the current
                                  * input character.
                                  */
-                                clearStrBufAndAppendCurrentC(c);
+                                clearStrBufAndAppend(c);
                                 /*
                                  * Switch to the DOCTYPE name state.
                                  */
@@ -3308,7 +3256,7 @@ public class Tokenizer implements Locator {
                                  * Set the DOCTYPE token's public identifier to
                                  * the empty string (not missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE public identifier
                                  * (double-quoted) state.
@@ -3324,7 +3272,7 @@ public class Tokenizer implements Locator {
                                  * Set the DOCTYPE token's public identifier to
                                  * the empty string (not missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE public identifier
                                  * (single-quoted) state.
@@ -3395,7 +3343,7 @@ public class Tokenizer implements Locator {
                                  * token's public identifier to the empty string
                                  * (not missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE public identifier
                                  * (double-quoted) state.
@@ -3409,7 +3357,7 @@ public class Tokenizer implements Locator {
                                  * public identifier to the empty string (not
                                  * missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE public identifier
                                  * (single-quoted) state.
@@ -3560,7 +3508,7 @@ public class Tokenizer implements Locator {
                                  * Set the DOCTYPE token's system identifier to
                                  * the empty string (not missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE system identifier
                                  * (double-quoted) state.
@@ -3576,7 +3524,7 @@ public class Tokenizer implements Locator {
                                  * Set the DOCTYPE token's system identifier to
                                  * the empty string (not missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE system identifier
                                  * (single-quoted) state.
@@ -3641,7 +3589,7 @@ public class Tokenizer implements Locator {
                                  * token's system identifier to the empty string
                                  * (not missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE system identifier
                                  * (double-quoted) state.
@@ -3655,7 +3603,7 @@ public class Tokenizer implements Locator {
                                  * system identifier to the empty string (not
                                  * missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE system identifier
                                  * (single-quoted) state.
@@ -3904,7 +3852,7 @@ public class Tokenizer implements Locator {
                                  * Set the DOCTYPE token's system identifier to
                                  * the empty string (not missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE public identifier
                                  * (double-quoted) state.
@@ -3920,7 +3868,7 @@ public class Tokenizer implements Locator {
                                  * Set the DOCTYPE token's public identifier to
                                  * the empty string (not missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE public identifier
                                  * (single-quoted) state.
@@ -3991,7 +3939,7 @@ public class Tokenizer implements Locator {
                                  * token's system identifier to the empty string
                                  * (not missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE system identifier
                                  * (double-quoted) state.
@@ -4004,7 +3952,7 @@ public class Tokenizer implements Locator {
                                  * system identifier to the empty string (not
                                  * missing),
                                  */
-                                clearLongStrBufForNextState();
+                                clearLongStrBuf();
                                 /*
                                  * then switch to the DOCTYPE system identifier
                                  * (single-quoted) state.
@@ -4285,8 +4233,8 @@ public class Tokenizer implements Locator {
                                  * + additional allowed character being U+0027
                                  * APOSTROPHE (').
                                  */
-                                clearStrBufAndAppendCurrentC(c);
-                                rememberAmpersandLocation('\'');
+                                clearStrBufAndAppend(c);
+                                setAdditionalAndRememberAmpersandLocation('\'');
                                 returnState = state;
                                 state = Tokenizer.CONSUME_CHARACTER_REFERENCE;
                                 break attributevaluesinglequotedloop;
@@ -4348,7 +4296,7 @@ public class Tokenizer implements Locator {
                         case '<':
                         case '&':
                             emitOrAppendStrBuf(returnState);
-                            if ((returnState & (~1)) == 0) {
+                            if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                 cstart = pos;
                             }
                             state = returnState;
@@ -4381,7 +4329,7 @@ public class Tokenizer implements Locator {
                                  */
                                 errNoNamedCharacterMatch();
                                 emitOrAppendStrBuf(returnState);
-                                if ((returnState & (~1)) == 0) {
+                                if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos;
                                 }
                                 state = returnState;
@@ -4455,7 +4403,7 @@ public class Tokenizer implements Locator {
                              */
                             errNoNamedCharacterMatch();
                             emitOrAppendStrBuf(returnState);
-                            if ((returnState & (~1)) == 0) {
+                            if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                 cstart = pos;
                             }
                             state = returnState;
@@ -4537,7 +4485,7 @@ public class Tokenizer implements Locator {
                          */
                         errNoNamedCharacterMatch();
                         emitOrAppendStrBuf(returnState);
-                        if ((returnState & (~1)) == 0) {
+                        if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                             cstart = pos;
                         }
                         state = returnState;
@@ -4552,7 +4500,7 @@ public class Tokenizer implements Locator {
                              * If the last character matched is not a U+003B
                              * SEMICOLON (;), there is a parse error.
                              */
-                            if ((returnState & (~1)) != 0) {
+                            if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
                                 /*
                                  * If the entity is being consumed as part of an
                                  * attribute, and the last character matched is
@@ -4589,7 +4537,7 @@ public class Tokenizer implements Locator {
                                     continue stateloop;
                                 }
                             }
-                            if ((returnState & (~1)) != 0) {
+                            if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
                                 errUnescapedAmpersandInterpretedAsCharacterReference();
                             } else {
                                 errNotSemicolonTerminated();
@@ -4622,7 +4570,7 @@ public class Tokenizer implements Locator {
                             // - strBufMark);
                             // }
                             // } else {
-                            if ((returnState & (~1)) != 0) {
+                            if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
                                 for (int i = strBufMark; i < strBufLen; i++) {
                                     appendLongStrBuf(strBuf[i]);
                                 }
@@ -4632,7 +4580,7 @@ public class Tokenizer implements Locator {
                             }
                             // }
                         }
-                        if ((returnState & (~1)) == 0) {
+                        if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                             cstart = pos;
                         }
                         state = returnState;
@@ -4722,7 +4670,7 @@ public class Tokenizer implements Locator {
                             continue;
                         } else if (c == ';') {
                             if (seenDigits) {
-                                if ((returnState & (~1)) == 0) {
+                                if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos + 1;
                                 }
                                 state = Tokenizer.HANDLE_NCR_VALUE;
@@ -4732,7 +4680,7 @@ public class Tokenizer implements Locator {
                                 errNoDigitsInNCR();
                                 appendStrBuf(';');
                                 emitOrAppendStrBuf(returnState);
-                                if ((returnState & (~1)) == 0) {
+                                if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos + 1;
                                 }
                                 state = returnState;
@@ -4753,7 +4701,7 @@ public class Tokenizer implements Locator {
                             if (!seenDigits) {
                                 errNoDigitsInNCR();
                                 emitOrAppendStrBuf(returnState);
-                                if ((returnState & (~1)) == 0) {
+                                if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos;
                                 }
                                 state = returnState;
@@ -4761,7 +4709,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             } else {
                                 errCharRefLacksSemicolon();
-                                if ((returnState & (~1)) == 0) {
+                                if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos;
                                 }
                                 state = Tokenizer.HANDLE_NCR_VALUE;
@@ -4813,7 +4761,7 @@ public class Tokenizer implements Locator {
                             continue;
                         } else if (c == ';') {
                             if (seenDigits) {
-                                if ((returnState & (~1)) == 0) {
+                                if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos + 1;
                                 }
                                 state = Tokenizer.HANDLE_NCR_VALUE;
@@ -4822,7 +4770,7 @@ public class Tokenizer implements Locator {
                                 errNoDigitsInNCR();
                                 appendStrBuf(';');
                                 emitOrAppendStrBuf(returnState);
-                                if ((returnState & (~1)) == 0) {
+                                if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos + 1;
                                 }
                                 state = returnState;
@@ -4843,7 +4791,7 @@ public class Tokenizer implements Locator {
                             if (!seenDigits) {
                                 errNoDigitsInNCR();
                                 emitOrAppendStrBuf(returnState);
-                                if ((returnState & (~1)) == 0) {
+                                if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos;
                                 }
                                 state = returnState;
@@ -4851,7 +4799,7 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             } else {
                                 errCharRefLacksSemicolon();
-                                if ((returnState & (~1)) == 0) {
+                                if ((returnState & DATA_AND_RCDATA_MASK) == 0) {
                                     cstart = pos;
                                 }
                                 state = Tokenizer.HANDLE_NCR_VALUE;
@@ -4943,7 +4891,7 @@ public class Tokenizer implements Locator {
                                  * data end tag open state.
                                  */
                                 index = 0;
-                                clearStrBufForNextState();
+                                clearStrBuf();
                                 state = Tokenizer.NON_DATA_END_TAG_NAME;
                                 continue stateloop;
                             case '!':
@@ -5201,7 +5149,7 @@ public class Tokenizer implements Locator {
                                  * data escaped end tag open state.
                                  */
                                 index = 0;
-                                clearStrBufForNextState();
+                                clearStrBuf();
                                 returnState = Tokenizer.SCRIPT_DATA_ESCAPED;
                                 state = Tokenizer.NON_DATA_END_TAG_NAME;
                                 continue stateloop;
@@ -5564,7 +5512,7 @@ public class Tokenizer implements Locator {
                             /*
                              * Switch to the bogus comment state.
                              */
-                            clearLongStrBufAndAppendToComment('\n');
+                            clearLongStrBufAndAppend('\n');
                             state = Tokenizer.BOGUS_COMMENT;
                             break stateloop;
                         case '\n':
@@ -5574,7 +5522,7 @@ public class Tokenizer implements Locator {
                             /*
                              * Switch to the bogus comment state.
                              */
-                            clearLongStrBufAndAppendToComment('\n');
+                            clearLongStrBufAndAppend('\n');
                             state = Tokenizer.BOGUS_COMMENT;
                             continue stateloop;
                         case '\u0000':
@@ -5594,7 +5542,7 @@ public class Tokenizer implements Locator {
                                 /*
                                  * set its tag name to the input character,
                                  */
-                                clearStrBufAndAppendCurrentC(c);
+                                clearStrBufAndAppend(c);
                                 /*
                                  * then switch to the tag name state. (Don't
                                  * emit the token yet; further details will be
@@ -5608,7 +5556,7 @@ public class Tokenizer implements Locator {
                                 /*
                                  * Switch to the bogus comment state.
                                  */
-                                clearLongStrBufAndAppendToComment(c);
+                                clearLongStrBufAndAppend(c);
                                 state = Tokenizer.BOGUS_COMMENT;
                                 continue stateloop;
                             }
@@ -5631,7 +5579,7 @@ public class Tokenizer implements Locator {
                                  * reference in RCDATA state.
                                  */
                                 flushChars(buf, pos);
-                                clearStrBufAndAppendCurrentC(c);
+                                clearStrBufAndAppend(c);
                                 additional = '\u0000';
                                 returnState = state;
                                 state = Tokenizer.CONSUME_CHARACTER_REFERENCE;
@@ -5716,7 +5664,7 @@ public class Tokenizer implements Locator {
                                  * data end tag open state.
                                  */
                                 index = 0;
-                                clearStrBufForNextState();
+                                clearStrBuf();
                                 state = Tokenizer.NON_DATA_END_TAG_NAME;
                                 break rawtextrcdatalessthansignloop;
                             // FALL THRU continue stateloop;
@@ -5749,8 +5697,8 @@ public class Tokenizer implements Locator {
                          * null); Let's implement the above without lookahead.
                          * strBuf is the 'temporary buffer'.
                          */
-                        if (index < contentModelElementNameAsArray.length) {
-                            char e = contentModelElementNameAsArray[index];
+                        if (index < endTagExpectationAsArray.length) {
+                            char e = endTagExpectationAsArray[index];
                             char folded = c;
                             if (c >= 'A' && c <= 'Z') {
                                 folded += 0x20;
@@ -5774,7 +5722,7 @@ public class Tokenizer implements Locator {
                             endTag = true;
                             // XXX replace contentModelElement with different
                             // type
-                            tagName = contentModelElement;
+                            tagName = endTagExpectation;
                             switch (c) {
                                 case '\r':
                                     silentCarriageReturn();
@@ -5916,7 +5864,7 @@ public class Tokenizer implements Locator {
         cstart = Integer.MAX_VALUE;
     }
 
-    private void rememberAmpersandLocation(char add) {
+    private void setAdditionalAndRememberAmpersandLocation(char add) {
         additional = add;
         // [NOCPP[
         ampersandLocation = new LocatorImpl(this);
@@ -5934,7 +5882,7 @@ public class Tokenizer implements Locator {
     }
 
     private void emitOrAppendStrBuf(int returnState) throws SAXException {
-        if ((returnState & (~1)) != 0) {
+        if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
             appendStrBufToLongStrBuf();
         } else {
             emitStrBuf();
@@ -6439,7 +6387,7 @@ public class Tokenizer implements Locator {
                              * If the last character matched is not a U+003B
                              * SEMICOLON (;), there is a parse error.
                              */
-                            if ((returnState & (~1)) != 0) {
+                            if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
                                 /*
                                  * If the entity is being consumed as part of an
                                  * attribute, and the last character matched is
@@ -6471,7 +6419,7 @@ public class Tokenizer implements Locator {
                                     continue eofloop;
                                 }
                             }
-                            if ((returnState & (~1)) != 0) {
+                            if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
                                 errUnescapedAmpersandInterpretedAsCharacterReference();
                             } else {
                                 errNotSemicolonTerminated();
@@ -6493,7 +6441,7 @@ public class Tokenizer implements Locator {
                         }
                         // this is so complicated!
                         if (strBufMark < strBufLen) {
-                            if ((returnState & (~1)) != 0) {
+                            if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
                                 for (int i = strBufMark; i < strBufLen; i++) {
                                     appendLongStrBuf(strBuf[i]);
                                 }
@@ -6595,7 +6543,7 @@ public class Tokenizer implements Locator {
      */
     private void emitOrAppendTwo(@Const @NoLength char[] val, int returnState)
             throws SAXException {
-        if ((returnState & (~1)) != 0) {
+        if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
             appendLongStrBuf(val[0]);
             appendLongStrBuf(val[1]);
         } else {
@@ -6605,7 +6553,7 @@ public class Tokenizer implements Locator {
 
     private void emitOrAppendOne(@Const @NoLength char[] val, int returnState)
             throws SAXException {
-        if ((returnState & (~1)) != 0) {
+        if ((returnState & DATA_AND_RCDATA_MASK) != 0) {
             appendLongStrBuf(val[0]);
         } else {
             tokenHandler.characters(val, 0, 1);
@@ -6647,6 +6595,8 @@ public class Tokenizer implements Locator {
         shouldSuspend = true;
     }
 
+    // [NOCPP[
+    
     public void becomeConfident() {
         confident = true;
     }
@@ -6682,6 +6632,8 @@ public class Tokenizer implements Locator {
         return -1;
     }
 
+    // ]NOCPP]
+    
     public boolean isInDataState() {
         return (stateSave == DATA);
     }
@@ -6744,8 +6696,8 @@ public class Tokenizer implements Locator {
 
         stateSave = other.stateSave;
         returnStateSave = other.returnStateSave;
-        contentModelElement = other.contentModelElement;
-        contentModelElementNameAsArray = other.contentModelElementNameAsArray;
+        endTagExpectation = other.endTagExpectation;
+        endTagExpectationAsArray = other.endTagExpectationAsArray;
         // line = 1; XXX line numbers
         lastCR = other.lastCR;
         index = other.index;

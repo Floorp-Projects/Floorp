@@ -44,7 +44,6 @@
 #include "nsCSSProperty.h"
 #include "nscore.h" // For NS_OVERRIDE
 
-class nsPresContext;
 class nsIContent;
 class nsAString;
 

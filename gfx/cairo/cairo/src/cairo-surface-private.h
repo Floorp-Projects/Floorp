@@ -42,6 +42,7 @@
 
 #include "cairo-types-private.h"
 #include "cairo-reference-count-private.h"
+#include "cairo-clip-private.h"
 
 typedef void (*cairo_surface_func_t) (cairo_surface_t *);
 
@@ -57,8 +58,11 @@ struct _cairo_surface {
 
     cairo_reference_count_t ref_count;
     cairo_status_t status;
-    cairo_bool_t finished;
     unsigned int unique_id;
+
+    unsigned finished : 1;
+    unsigned is_clear : 1;
+    unsigned has_font_options : 1;
 
     cairo_user_data_array_t user_data;
     cairo_user_data_array_t mime_data;
@@ -77,24 +81,6 @@ struct _cairo_surface {
     double x_fallback_resolution;
     double y_fallback_resolution;
 
-    cairo_clip_t *clip;
-
-    /*
-     * Each time a clip region is modified, it gets the next value in this
-     * sequence.  This means that clip regions for this surface are uniquely
-     * identified and updates to the clip can be readily identified
-     */
-    unsigned int next_clip_serial;
-    /*
-     * The serial number of the current clip.  This is set when
-     * the surface clipping is set.  The gstate can then cheaply
-     * check whether the surface clipping is already correct before
-     * performing a rendering operation.
-     *
-     * The special value '0' is reserved for the unclipped case.
-     */
-    unsigned int current_clip_serial;
-
     /* A "snapshot" surface is immutable. See _cairo_surface_snapshot. */
     cairo_surface_t *snapshot_of;
     cairo_surface_func_t snapshot_detach;
@@ -106,7 +92,6 @@ struct _cairo_surface {
      * and set using _cairo_surface_set_font_options(), and propagated by
      * cairo_surface_create_similar().
      */
-    cairo_bool_t has_font_options;
     cairo_font_options_t font_options;
 };
 

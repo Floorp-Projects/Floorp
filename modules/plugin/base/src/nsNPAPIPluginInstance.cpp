@@ -1436,6 +1436,18 @@ nsresult nsNPAPIPluginInstance::GetCallbacks(const NPPluginFuncs ** aCallbacks)
 NPError nsNPAPIPluginInstance::SetWindowless(PRBool aWindowless)
 {
   mWindowless = aWindowless;
+
+  if (mMIMEType) {
+      // bug 558434 - Prior to 3.6.4, we assumed windowless was transparent.
+      // Silverlight apparently relied on this quirk, so we default to
+      // transparent unless they specify otherwise after setting the windowless
+      // property. (Last tested version: sl 3.0). 
+      NS_NAMED_LITERAL_CSTRING(silverlight, "application/x-silverlight");
+      if (!PL_strncasecmp(mMIMEType, silverlight.get(), silverlight.Length())) {
+          mTransparent = PR_TRUE;
+      }
+  }
+
   return NPERR_NO_ERROR;
 }
 
@@ -1737,8 +1749,10 @@ nsNPAPIPluginInstance::ScheduleTimer(uint32_t interval, NPBool repeat, void (*ti
   // create new xpcom timer, scheduled correctly
   nsresult rv;
   nsCOMPtr<nsITimer> xpcomTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
+    delete newTimer;
     return 0;
+  }
   const short timerType = (repeat ? (short)nsITimer::TYPE_REPEATING_SLACK : (short)nsITimer::TYPE_ONE_SHOT);
   xpcomTimer->InitWithFuncCallback(PluginTimerCallback, newTimer, interval, timerType);
   newTimer->timer = xpcomTimer;

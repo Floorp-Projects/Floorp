@@ -1,0 +1,18 @@
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/MochiKit.js"></script>
+    <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+</head>
+<body>
+
+<pre id="test">
+<script type="text/javascript">
+    is( isUndefined(null), false, "null is not undefined" );
+    is( isUndefined(""), false, "empty string is not undefined" );
+    is( isUndefined(undefined), true, "undefined is undefined" );
+    is( isUndefined({}.foo), true, "missing property is undefined" );
+</script>
+</pre>
+</body>
+</html>

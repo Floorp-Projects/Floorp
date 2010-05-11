@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=539565
+-->
+<head>
+  <title>Test #1 for Bug 539565</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script class="testbody" type="text/javascript">
+function runTests() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  viewer = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                 .getInterface(Components.interfaces.nsIWebNavigation)
+                 .QueryInterface(Components.interfaces.nsIDocShell)
+                 .contentViewer
+                 .QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+
+  var moveBy = 17;
+  var waitedForPaint = 0;
+  function waitForPaint(func) {
+    waitedForPaint = 0;
+    var testplugin = $("plugin1");
+    testplugin.last_paint_count = testplugin.getPaintCount ? testplugin.getPaintCount() : -2;
+    function waitForPaintCountIncrement() {
+      waitedForPaint++;
+      moveBy = -moveBy;
+      $("abs").style.left = ($("abs").offsetLeft + moveBy) + 'px';
+      var x = document.documentElement.offsetHeight;
+      var pc = testplugin.getPaintCount ? testplugin.getPaintCount() : -2;
+      if (waitedForPaint == 20 || (pc != testplugin.last_paint_count && pc >= 0)) {
+        setTimeout(func,0);
+      } else
+        setTimeout(waitForPaintCountIncrement, 50);
+    }
+    waitForPaintCountIncrement();
+  }
+
+  function doClick(x,y,func) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    synthesizeMouse($("plugin1"), x, y, {}, window); 
+    setTimeout(func,0);
+  }
+
+  function verify(test,x,y,next) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    var p = $("plugin1").getLastMouseX();
+    const delta = 2;
+    ok(p-delta <= x && x <= p+delta, "test"+test+" LastMouseX got " + p + " expected" + x + 
+                                     " with fullZoom="+viewer.fullZoom+" MozTransform='"+$("container").style.MozTransform+"'");
+    p = $("plugin1").getLastMouseY();
+    ok(p-delta <= y && y <= p+delta, "test"+test+" LastMouseY got " + p + " expected" + y +
+                                     " with fullZoom="+viewer.fullZoom+" MozTransform='"+$("container").style.MozTransform+"'");
+    if (next) next();
+  }
+
+  function click(x,y,next) {
+    waitForPaint(function(){doClick(x,y,next);})
+  }
+  function zoom(factor) {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    viewer.fullZoom = factor;
+  }
+
+  function test1() { // fullZoom=1 (sanity check)
+    zoom(1);
+    click(55,136, function(){verify("1",55,136,test2)});
+  }
+  function test2() { // fullZoom=2
+    zoom(2);
+    click(40,108, function(){verify("2",80,216,test2b)})
+  }
+  function test2b() {
+    click(108,112, function(){verify("2c",216,224,endTest)})
+  }
+
+  function endTest() {
+    zoom(1);
+    SimpleTest.finish();
+  }
+
+  setTimeout(function(){waitForPaint(test1)},1000);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+  </script>
+</head>
+
+<body onload="runTests()">
+ <div id="container" style="position:relative;top: 0px; left: 0px; width: 640px; height: 480px;"> 
+  <div id="abs" style="position:absolute; left:90px; top:90px; width:20px; height:20px; background:blue; pointer-events:none;"></div>
+  <embed id="plugin1" type="application/x-test" wmode="transparent" width="200" height="200"></embed>
+ </div>
+</body>
+</html>

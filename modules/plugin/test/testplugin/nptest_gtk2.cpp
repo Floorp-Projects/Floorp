@@ -35,12 +35,15 @@
 
 #include "nptest_platform.h"
 #include "npapi.h"
+#include <pthread.h>
 #include <gdk/gdk.h>
 #ifdef MOZ_X11
 #include <gdk/gdkx.h>
 #include <X11/extensions/shape.h>
 #endif
+#include <glib.h>
 #include <gtk/gtk.h>
+#include <unistd.h>
 
  using namespace std;
 
@@ -105,7 +108,14 @@ pluginInstanceShutdown(InstanceData* instanceData)
   GtkWidget* plug = instanceData->platformData->plug;
   if (plug) {
     instanceData->platformData->plug = 0;
-    gtk_widget_destroy(plug);
+    if (instanceData->cleanupWidget) {
+      // Default/tidy behavior
+      gtk_widget_destroy(plug);
+    } else {
+      // Flash Player style: let the GtkPlug destroy itself on disconnect.
+      g_signal_handlers_disconnect_matched(plug, G_SIGNAL_MATCH_DATA, 0, 0,
+                                           NULL, NULL, instanceData);
+    }
   }
 
   NPN_MemFree(instanceData->platformData);
@@ -281,6 +291,10 @@ pluginWidgetInit(InstanceData* instanceData, void* oldWindow)
 
   /* create a GtkPlug container */
   GtkWidget* plug = gtk_plug_new(nativeWinId);
+
+  // Test for bugs 539138 and 561308
+  if (!plug->window)
+    g_error("Plug has no window"); // aborts
 
   /* make sure the widget is capable of receiving focus */
   GTK_WIDGET_SET_FLAGS (GTK_WIDGET(plug), GTK_CAN_FOCUS);
@@ -634,4 +648,80 @@ pluginGetClipboardText(InstanceData* instanceData)
   g_free(text);
 
   return retText;
+}
+
+//-----------------------------------------------------------------------------
+// NB: this test is quite gross in that it's not only
+// nondeterministic, but dependent on the guts of the nested glib
+// event loop handling code in PluginModule.  We first sleep long
+// enough to make sure that the "detection timer" will be pending when
+// we enter the nested glib loop, then similarly for the "process browser
+// events" timer.  Then we "schedule" the crasher thread to run at about the
+// same time we expect that the PluginModule "process browser events" task
+// will run.  If all goes well, the plugin process will crash and generate the
+// XPCOM "plugin crashed" task, and the browser will run that task while still
+// in the "process some events" loop.
+
+static void*
+CrasherThread(void* data)
+{
+  // Give the parent thread a chance to send the message.
+  usleep(200);
+
+  // Exit (without running atexit hooks) rather than crashing with a signal
+  // so as to make timing more reliable.  The process terminates immediately
+  // rather than waiting for a thread in the parent process to attach and
+  // generate a minidump.
+  _exit(1);
+
+  // not reached
+  return(NULL);
+}
+
+bool
+pluginCrashInNestedLoop(InstanceData* instanceData)
+{
+  // wait at least long enough for nested loop detector task to be pending ...
+  sleep(1);
+
+  // Run the nested loop detector by processing all events that are waiting.
+  bool found_event = false;
+  while (g_main_context_iteration(NULL, FALSE)) {
+    found_event = true;
+  }
+  if (!found_event) {
+    g_warning("DetectNestedEventLoop did not fire");
+    return true; // trigger a test failure
+  }
+
+  // wait at least long enough for the "process browser events" task to be
+  // pending ...
+  sleep(1);
+
+  // we'll be crashing soon, note that fact now to avoid messing with
+  // timing too much
+  NoteIntentionalCrash();
+
+  // schedule the crasher thread ...
+  pthread_t crasherThread;
+  if (0 != pthread_create(&crasherThread, NULL, CrasherThread, NULL)) {
+    g_warning("Failed to create thread");
+    return true; // trigger a test failure
+  }
+
+  // .. and hope it crashes at about the same time as the "process browser
+  // events" task (that should run in this loop) is being processed in the
+  // parent.
+  found_event = false;
+  while (g_main_context_iteration(NULL, FALSE)) {
+    found_event = true;
+  }
+  if (found_event) {
+    g_warning("Should have crashed in ProcessBrowserEvents");
+  } else {
+    g_warning("ProcessBrowserEvents did not fire");
+  }
+
+  // if we get here without crashing, then we'll trigger a test failure
+  return true;
 }

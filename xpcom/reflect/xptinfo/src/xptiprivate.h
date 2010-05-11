@@ -309,7 +309,7 @@ private:
 class xptiWorkingSet
 {
 public:
-    xptiWorkingSet(); // not implmented
+    xptiWorkingSet(); // not implemented
     xptiWorkingSet(nsISupportsArray* aDirectories);
     ~xptiWorkingSet();
     
@@ -910,7 +910,7 @@ public:
 
 private:
     ~xptiInterfaceInfoManager();
-    xptiInterfaceInfoManager(); // not implmented
+    xptiInterfaceInfoManager(); // not implemented
     xptiInterfaceInfoManager(nsISupportsArray* aSearchPath);
 
     enum AutoRegMode {

@@ -61,6 +61,12 @@ typedef enum {
   FUNCTION_NPP_WRITE_RPC
 } TestFunction;
 
+typedef enum {
+  ACTIVATION_STATE_UNKNOWN,
+  ACTIVATION_STATE_ACTIVATED,
+  ACTIVATION_STATE_DEACTIVATED
+} ActivationState;
+
 typedef struct FunctionTable {
   TestFunction funcId;
   const char* funcName;
@@ -123,8 +129,16 @@ typedef struct InstanceData {
   void* streamBuf;
   void* fileBuf;
   bool crashOnDestroy;
+  bool cleanupWidget;
+  ActivationState topLevelWindowActivationState;
+  int32_t topLevelWindowActivationEventCount;
+  ActivationState focusState;
+  int32_t focusEventCount;
+  int32_t eventModel;
 } InstanceData;
 
 void notifyDidPaint(InstanceData* instanceData);
+
+void NoteIntentionalCrash();
 
 #endif // nptest_h_

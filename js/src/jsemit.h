@@ -163,88 +163,6 @@ struct JSStmtInfo {
 # define JS_SCOPE_DEPTH_METERING_IF(code, x) ((void) 0)
 #endif
 
-struct JSTreeContext {              /* tree context for semantic checks */
-    uint32          flags;          /* statement state flags, see below */
-    uint16          ngvars;         /* max. no. of global variables/regexps */
-    uint32          bodyid;         /* block number of program/function body */
-    uint32          blockidGen;     /* preincremented block number generator */
-    JSStmtInfo      *topStmt;       /* top of statement info stack */
-    JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
-    JSObject        *blockChain;    /* compile time block scope chain (NB: one
-                                       deeper than the topScopeStmt/downScope
-                                       chain when in head of let block/expr) */
-    JSParseNode     *blockNode;     /* parse node for a block with let declarations
-                                       (block with its own lexical scope)  */
-    JSAtomList      decls;          /* function, const, and var declarations */
-    JSCompiler      *compiler;      /* ptr to common parsing and lexing data */
-
-    union {
-        JSFunction  *fun;           /* function to store argument and variable
-                                       names when flags & TCF_IN_FUNCTION */
-        JSObject    *scopeChain;    /* scope chain object for the script */
-    };
-
-    JSAtomList      lexdeps;        /* unresolved lexical name dependencies */
-    JSTreeContext   *parent;        /* enclosing function or global context */
-    uintN           staticLevel;    /* static compilation unit nesting level */
-
-    JSFunctionBox   *funbox;        /* null or box for function we're compiling
-                                       if (flags & TCF_IN_FUNCTION) and not in
-                                       JSCompiler::compileFunctionBody */
-    JSFunctionBox   *functionList;
-
-#ifdef JS_SCOPE_DEPTH_METER
-    uint16          scopeDepth;     /* current lexical scope chain depth */
-    uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
-#endif
-
-    JSTreeContext(JSCompiler *jsc)
-      : flags(0), ngvars(0), bodyid(0), blockidGen(0),
-        topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
-        compiler(jsc), scopeChain(NULL), parent(jsc->tc), staticLevel(0),
-        funbox(NULL), functionList(NULL), sharpSlotBase(-1)
-    {
-        jsc->tc = this;
-        JS_SCOPE_DEPTH_METERING(scopeDepth = maxScopeDepth = 0);
-    }
-
-    /*
-     * For functions the tree context is constructed and destructed a second
-     * time during code generation. To avoid a redundant stats update in such
-     * cases, we store uint16(-1) in maxScopeDepth.
-     */
-    ~JSTreeContext() {
-        compiler->tc = this->parent;
-        JS_SCOPE_DEPTH_METERING_IF((maxScopeDepth != uint16(-1)),
-                                   JS_BASIC_STATS_ACCUM(&compiler
-                                                          ->context
-                                                          ->runtime
-                                                          ->lexicalScopeDepthStats,
-                                                        maxScopeDepth));
-    }
-
-    uintN blockid() { return topStmt ? topStmt->blockid : bodyid; }
-
-    bool atTopLevel() { return !topStmt || (topStmt->flags & SIF_BODY_BLOCK); }
-
-    /* Test whether we're in a statement of given type. */
-    bool inStatement(JSStmtType type);
-
-    inline bool needStrictChecks();
-
-    /* 
-     * sharpSlotBase is -1 or first slot of pair for [sharpArray, sharpDepth].
-     * The parser calls ensureSharpSlots to allocate these two stack locals.
-     */
-    int sharpSlotBase;
-    bool ensureSharpSlots();
-
-    // Return true there is a generator function within |skip| lexical scopes
-    // (going upward) from this context's lexical scope. Always return true if
-    // this context is itself a generator.
-    bool skipSpansGenerator(unsigned skip);
-};
-
 #define TCF_COMPILING           0x01 /* JSTreeContext is JSCodeGenerator */
 #define TCF_IN_FUNCTION         0x02 /* parsing inside function body */
 #define TCF_RETURN_EXPR         0x04 /* function has 'return expr;' */
@@ -260,7 +178,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                         own name */
 #define TCF_HAS_FUNCTION_STMT  0x800 /* block contains a function statement */
 #define TCF_GENEXP_LAMBDA     0x1000 /* flag lambda from generator expression */
-#define TCF_COMPILE_N_GO      0x2000 /* compiler-and-go mode of script, can
+#define TCF_COMPILE_N_GO      0x2000 /* compile-and-go mode of script, can
                                         optimize name references based on scope
                                         chain */
 #define TCF_NO_SCRIPT_RVAL    0x4000 /* API caller does not want result value
@@ -281,7 +199,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_DECL_DESTRUCTURING  0x10000
 
 /*
- * A request flag passed to JSCompiler::compileScript and then down via
+ * A request flag passed to Compiler::compileScript and then down via
  * JSCodeGenerator to js_NewScriptFromCG, from script_compile_sub and any
  * kindred functions that need to make mutable scripts (even empty ones;
  * i.e., they can't share the const JSScript::emptyScript() singleton).
@@ -314,6 +232,15 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_FUN_MODULE_PATTERN 0x200000
 
 /*
+ * Flag to prevent a non-escaping function from being optimized into a null
+ * closure (i.e., a closure that needs only its global object for free variable
+ * resolution, thanks to JSOP_{GET,CALL}UPVAR), because this function contains
+ * a closure that needs one or more scope objects surrounding it (i.e., Call
+ * object for a heavyweight outer function). See bug 560234.
+ */
+#define TCF_FUN_ENTRAINS_SCOPES 0x400000
+
+/*
  * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
@@ -330,12 +257,98 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                  TCF_HAS_SHARPS          |                    \
                                  TCF_STRICT_MODE_CODE)
 
+struct JSTreeContext {              /* tree context for semantic checks */
+    uint32          flags;          /* statement state flags, see above */
+    uint16          ngvars;         /* max. no. of global variables/regexps */
+    uint32          bodyid;         /* block number of program/function body */
+    uint32          blockidGen;     /* preincremented block number generator */
+    JSStmtInfo      *topStmt;       /* top of statement info stack */
+    JSStmtInfo      *topScopeStmt;  /* top lexical scope statement */
+    JSObject        *blockChain;    /* compile time block scope chain (NB: one
+                                       deeper than the topScopeStmt/downScope
+                                       chain when in head of let block/expr) */
+    JSParseNode     *blockNode;     /* parse node for a block with let declarations
+                                       (block with its own lexical scope)  */
+    JSAtomList      decls;          /* function, const, and var declarations */
+    js::Parser      *parser;        /* ptr to common parsing and lexing data */
+
+    union {
+        JSFunction  *fun;           /* function to store argument and variable
+                                       names when flags & TCF_IN_FUNCTION */
+        JSObject    *scopeChain;    /* scope chain object for the script */
+    };
+
+    JSAtomList      lexdeps;        /* unresolved lexical name dependencies */
+    JSTreeContext   *parent;        /* enclosing function or global context */
+    uintN           staticLevel;    /* static compilation unit nesting level */
+
+    JSFunctionBox   *funbox;        /* null or box for function we're compiling
+                                       if (flags & TCF_IN_FUNCTION) and not in
+                                       Compiler::compileFunctionBody */
+    JSFunctionBox   *functionList;
+
+#ifdef JS_SCOPE_DEPTH_METER
+    uint16          scopeDepth;     /* current lexical scope chain depth */
+    uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
+#endif
+
+    JSTreeContext(js::Parser *prs)
+      : flags(0), ngvars(0), bodyid(0), blockidGen(0),
+        topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
+        parser(prs), scopeChain(NULL), parent(prs->tc), staticLevel(0),
+        funbox(NULL), functionList(NULL), sharpSlotBase(-1)
+    {
+        prs->tc = this;
+        JS_SCOPE_DEPTH_METERING(scopeDepth = maxScopeDepth = 0);
+    }
+
+    /*
+     * For functions the tree context is constructed and destructed a second
+     * time during code generation. To avoid a redundant stats update in such
+     * cases, we store uint16(-1) in maxScopeDepth.
+     */
+    ~JSTreeContext() {
+        parser->tc = this->parent;
+        JS_SCOPE_DEPTH_METERING_IF((maxScopeDepth != uint16(-1)),
+                                   JS_BASIC_STATS_ACCUM(&parser
+                                                          ->context
+                                                          ->runtime
+                                                          ->lexicalScopeDepthStats,
+                                                        maxScopeDepth));
+    }
+
+    uintN blockid() { return topStmt ? topStmt->blockid : bodyid; }
+
+    bool atTopLevel() { return !topStmt || (topStmt->flags & SIF_BODY_BLOCK); }
+
+    /* Test whether we're in a statement of given type. */
+    bool inStatement(JSStmtType type);
+
+    inline bool needStrictChecks();
+
+    /* 
+     * sharpSlotBase is -1 or first slot of pair for [sharpArray, sharpDepth].
+     * The parser calls ensureSharpSlots to allocate these two stack locals.
+     */
+    int sharpSlotBase;
+    bool ensureSharpSlots();
+
+    // Return true there is a generator function within |skip| lexical scopes
+    // (going upward) from this context's lexical scope. Always return true if
+    // this context is itself a generator.
+    bool skipSpansGenerator(unsigned skip);
+
+    bool compileAndGo() { return !!(flags & TCF_COMPILE_N_GO); }
+    bool inFunction() { return !!(flags & TCF_IN_FUNCTION); }
+    bool compiling() { return !!(flags & TCF_COMPILING); }
+};
+
 /*
  * Return true if we need to check for conditions that elicit
  * JSOPTION_STRICT warnings or strict mode errors.
  */
 inline bool JSTreeContext::needStrictChecks() {
-    return JS_HAS_STRICT_OPTION(compiler->context) ||
+    return JS_HAS_STRICT_OPTION(parser->context) ||
            (flags & TCF_STRICT_MODE_CODE);
 }
 
@@ -469,16 +482,18 @@ struct JSCodeGenerator : public JSTreeContext
     /*
      * Initialize cg to allocate bytecode space from codePool, source note
      * space from notePool, and all other arena-allocated temporaries from
-     * jsc->context->tempPool.
+     * parser->context->tempPool.
      */
-    JSCodeGenerator(JSCompiler *jsc,
+    JSCodeGenerator(js::Parser *parser,
                     JSArenaPool *codePool, JSArenaPool *notePool,
                     uintN lineno);
 
     bool init();
 
+    bool init();
+
     /*
-     * Release cg->codePool, cg->notePool, and compiler->context->tempPool to
+     * Release cg->codePool, cg->notePool, and parser->context->tempPool to
      * marks set by JSCodeGenerator's ctor. Note that cgs are magic: they own
      * the arena pool "tops-of-stack" space above their codeMark, noteMark, and
      * tempMark points.  This means you cannot alloc from tempPool and save the
@@ -497,7 +512,7 @@ struct JSCodeGenerator : public JSTreeContext
     }
 };
 
-#define CG_TS(cg)               TS((cg)->compiler)
+#define CG_TS(cg)               TS((cg)->parser)
 
 #define CG_BASE(cg)             ((cg)->current->base)
 #define CG_LIMIT(cg)            ((cg)->current->limit)

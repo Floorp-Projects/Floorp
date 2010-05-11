@@ -56,8 +56,8 @@ class nsCxPusher;
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0x2412fcd0, 0xd168, 0x4a1c, \
-  { 0xaa, 0x28, 0x70, 0xed, 0x58, 0xf0, 0x4c, 0xec } }
+{ 0xe86a148b, 0x0563, 0x454f, \
+  { 0x8c, 0xf2, 0xbd, 0xc4, 0x7c, 0xe6, 0xbe, 0x91 } }
 
 class nsIEventListenerManager : public nsISupports {
 
@@ -139,19 +139,6 @@ public:
                                         nsISupports *aObject,
                                         nsIAtom* aName,
                                         PRBool *aDidCompile) = 0;
-
-  /**
-  * Causes a check for event listeners and processing by them if they exist.
-  * Event flags live in nsGUIEvent.h
-  * @param an event listener
-  */
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
-                         nsEvent* aEvent,
-                         nsIDOMEvent** aDOMEvent,
-                         nsPIDOMEventTarget* aCurrentTarget,
-                         PRUint32 aFlags,
-                         nsEventStatus* aEventStatus,
-                         nsCxPusher* aPusher) = 0;
 
   /**
   * Tells the event listener manager that its target (which owns it) is

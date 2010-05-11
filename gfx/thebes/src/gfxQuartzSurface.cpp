@@ -87,6 +87,12 @@ gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
     Init(csurf, PR_TRUE);
 }
 
+CGContextRef
+gfxQuartzSurface::GetCGContextWithClip(gfxContext *ctx)
+{
+	return cairo_quartz_get_cg_context_with_clip(ctx->GetCairo());
+}
+
 PRInt32 gfxQuartzSurface::GetDefaultContextFlags() const
 {
     if (mForPrinting)

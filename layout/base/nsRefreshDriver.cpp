@@ -242,8 +242,7 @@ nsRefreshDriver::Thaw()
   NS_ASSERTION(mFrozen, "Thaw called on an unfrozen refresh driver");
   mFrozen = PR_FALSE;
   if (ObserverCount()) {
-    NS_DispatchToCurrentThread(NS_NEW_RUNNABLE_METHOD(nsRefreshDriver, this,
-                                                      DoRefresh));
+    NS_DispatchToCurrentThread(NS_NewRunnableMethod(this, &nsRefreshDriver::DoRefresh));
     EnsureTimerStarted();
   }
 }

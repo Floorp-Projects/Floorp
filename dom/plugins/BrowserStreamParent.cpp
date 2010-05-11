@@ -3,6 +3,8 @@
 #include "BrowserStreamParent.h"
 #include "PluginInstanceParent.h"
 
+#include "mozilla/unused.h"
+
 // How much data are we willing to send across the wire
 // in one chunk?
 static const int32_t kSendDataChunk = 0x1000;
@@ -84,7 +86,7 @@ BrowserStreamParent::NPP_DestroyStream(NPReason reason)
 {
   NS_ASSERTION(ALIVE == mState, "NPP_DestroyStream called twice?");
   mState = DYING;
-  SendNPP_DestroyStream(reason);
+  unused << SendNPP_DestroyStream(reason);
 }
 
 bool
@@ -96,8 +98,7 @@ BrowserStreamParent::RecvStreamDestroyed()
   }
 
   mState = DELETING;
-  Send__delete__(this);
-  return true;
+  return Send__delete__(this);
 }
 
 int32_t
@@ -119,11 +120,10 @@ BrowserStreamParent::Write(int32_t offset,
   if (len > kSendDataChunk)
     len = kSendDataChunk;
 
-  SendWrite(offset,
-    nsCString(static_cast<char*>(buffer), len),
-    mStream->end);
-
-  return len;
+  return SendWrite(offset,
+                   nsCString(static_cast<char*>(buffer), len),
+                   mStream->end) ?
+    len : -1;
 }
 
 void
@@ -134,7 +134,7 @@ BrowserStreamParent::StreamAsFile(const char* fname)
   NS_ASSERTION(ALIVE == mState,
                "Calling streamasfile after NPP_DestroyStream?");
 
-  CallNPP_StreamAsFile(nsCString(fname));
+  unused << CallNPP_StreamAsFile(nsCString(fname));
   return;
 }
 

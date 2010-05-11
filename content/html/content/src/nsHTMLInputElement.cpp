@@ -110,6 +110,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsHTMLFormElement.h"
 
+#include "nsTextEditRules.h"
+
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
@@ -150,6 +152,23 @@ static const char kWhitespace[] = "\n\r\t\b";
 // whether textfields should be selected once focused:
 //  -1: no, 1: yes, 0: uninitialized
 static PRInt32 gSelectTextFieldOnFocus;
+
+static const nsAttrValue::EnumTable kInputTypeTable[] = {
+  { "button", NS_FORM_INPUT_BUTTON },
+  { "checkbox", NS_FORM_INPUT_CHECKBOX },
+  { "file", NS_FORM_INPUT_FILE },
+  { "hidden", NS_FORM_INPUT_HIDDEN },
+  { "reset", NS_FORM_INPUT_RESET },
+  { "image", NS_FORM_INPUT_IMAGE },
+  { "password", NS_FORM_INPUT_PASSWORD },
+  { "radio", NS_FORM_INPUT_RADIO },
+  { "submit", NS_FORM_INPUT_SUBMIT },
+  { "text", NS_FORM_INPUT_TEXT },
+  { 0 }
+};
+
+// Default type is 'text'.
+static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[9];
 
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
@@ -423,6 +442,12 @@ protected:
    */
   nsresult UpdateFileList();
 
+  /**
+   * Determine whether the editor needs to be initialized explicitly for
+   * a particular event.
+   */
+  PRBool NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const;
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /**
@@ -470,7 +495,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Input)
 nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo,
                                        PRBool aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
-    mType(NS_FORM_INPUT_TEXT), // default value
+    mType(kInputDefaultType->value),
     mBitField(0),
     mValue(nsnull)
 {
@@ -497,6 +522,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsHTMLInputElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement) 
 
+
+DOMCI_DATA(HTMLInputElement, nsHTMLInputElement)
 
 // QueryInterface implementation for nsHTMLInputElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLInputElement)
@@ -666,7 +693,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         // We're now a text input.  Note that we have to handle this manually,
         // since removing an attribute (which is what happened, since aValue is
         // null) doesn't call ParseAttribute.
-        mType = NS_FORM_INPUT_TEXT;
+        mType = kInputDefaultType->value;
       }
     
       // If we are changing type from File/Text/Passwd to other input types
@@ -763,8 +790,9 @@ NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, TabIndex, tabindex, 0)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, UseMap, usemap)
 //NS_IMPL_STRING_ATTR(nsHTMLInputElement, Value, value)
 //NS_IMPL_INT_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Size, size, 0)
-//NS_IMPL_STRING_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type, "text")
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Placeholder, placeholder)
+NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLInputElement, Type, type,
+                                kInputDefaultType->tag)
 
 NS_IMETHODIMP
 nsHTMLInputElement::GetDefaultValue(nsAString& aValue)
@@ -872,6 +900,13 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
       } else {
         CopyUTF8toUTF16(mValue, aValue);
       }
+
+      // If the value is not owned by the frame, then we should handle any
+      // exiting newline characters inside it, instead of relying on the
+      // editor to do it for us.
+      nsString value(aValue);
+      nsTextEditRules::HandleNewLines(value, -1);
+      aValue.Assign(value);
     }
 
     return NS_OK;
@@ -999,7 +1034,9 @@ nsHTMLInputElement::TakeTextFrameValue(const nsAString& aValue)
   if (mValue) {
     nsMemory::Free(mValue);
   }
-  mValue = ToNewUTF8String(aValue);
+  nsString value(aValue);
+  nsContentUtils::PlatformToDOMLineBreaks(value);
+  mValue = ToNewUTF8String(value);
   return NS_OK;
 }
 
@@ -1120,9 +1157,8 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
       // value yet (per OwnsValue()), it will turn around and call
       // TakeTextFrameValue() on us, but will update its display with the new
       // value if needed.
-      formControlFrame->SetFormProperty(
+      return formControlFrame->SetFormProperty(
         aUserInput ? nsGkAtoms::userInput : nsGkAtoms::value, aValue);
-      return NS_OK;
     }
 
     SetValueChanged(PR_TRUE);
@@ -1557,6 +1593,7 @@ nsHTMLInputElement::Click()
       // is called from chrome code.
       nsMouseEvent event(nsContentUtils::IsCallerChrome(),
                          NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
+      event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
       nsEventStatus status = nsEventStatus_eIgnore;
 
       SET_BOOLBIT(mBitField, BF_HANDLING_CLICK, PR_TRUE);
@@ -1569,6 +1606,32 @@ nsHTMLInputElement::Click()
   }
 
   return NS_OK;
+}
+
+PRBool
+nsHTMLInputElement::NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const
+{
+  // We only need to initialize the editor for text input controls because they
+  // are lazily initialized.  We don't need to initialize the control for
+  // certain types of events, because we know that those events are safe to be
+  // handled without the editor being initialized.  These events include:
+  // mousein/move/out, and DOM mutation events.
+  if ((mType == NS_FORM_INPUT_TEXT ||
+       mType == NS_FORM_INPUT_PASSWORD) &&
+      aVisitor.mEvent->eventStructType != NS_MUTATION_EVENT) {
+
+    switch (aVisitor.mEvent->message) {
+    case NS_MOUSE_MOVE:
+    case NS_MOUSE_ENTER:
+    case NS_MOUSE_EXIT:
+    case NS_MOUSE_ENTER_SYNTH:
+    case NS_MOUSE_EXIT_SYNTH:
+      return PR_FALSE;
+      break;
+    }
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 nsresult
@@ -1595,6 +1658,13 @@ nsHTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
         return NS_OK;
       }
     }
+  }
+
+  // Initialize the editor if needed.
+  if (NeedToInitializeEditorForEvent(aVisitor)) {
+    nsITextControlFrame* textControlFrame = do_QueryFrame(GetPrimaryFrame());
+    if (textControlFrame)
+      textControlFrame->EnsureEditorInitialized();
   }
 
   //FIXME Allow submission etc. also when there is no prescontext, Bug 329509.
@@ -1916,6 +1986,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               {
                 nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                    NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
+                event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
                 nsEventStatus status = nsEventStatus_eIgnore;
 
                 nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
@@ -1951,6 +2022,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                       nsMouseEvent event(NS_IS_TRUSTED_EVENT(aVisitor.mEvent),
                                          NS_MOUSE_CLICK, nsnull,
                                          nsMouseEvent::eReal);
+                      event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
                       rv = nsEventDispatcher::Dispatch(radioContent,
                                                        aVisitor.mPresContext,
                                                        &event, nsnull, &status);
@@ -2127,8 +2199,7 @@ nsHTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     if (HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
       ClearBrokenState();
       nsContentUtils::AddScriptRunner(
-        new nsRunnableMethod<nsHTMLInputElement>(this,
-                                                 &nsHTMLInputElement::MaybeLoadImage));
+        NS_NewRunnableMethod(this, &nsHTMLInputElement::MaybeLoadImage));
     }
   }
 
@@ -2156,20 +2227,6 @@ nsHTMLInputElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-static const nsAttrValue::EnumTable kInputTypeTable[] = {
-  { "button", NS_FORM_INPUT_BUTTON },
-  { "checkbox", NS_FORM_INPUT_CHECKBOX },
-  { "file", NS_FORM_INPUT_FILE },
-  { "hidden", NS_FORM_INPUT_HIDDEN },
-  { "reset", NS_FORM_INPUT_RESET },
-  { "image", NS_FORM_INPUT_IMAGE },
-  { "password", NS_FORM_INPUT_PASSWORD },
-  { "radio", NS_FORM_INPUT_RADIO },
-  { "submit", NS_FORM_INPUT_SUBMIT },
-  { "text", NS_FORM_INPUT_TEXT },
-  { 0 }
-};
-
 PRBool
 nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
                                    nsIAtom* aAttribute,
@@ -2181,11 +2238,11 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
       // XXX ARG!! This is major evilness. ParseAttribute
       // shouldn't set members. Override SetAttr instead
       PRInt32 newType;
-      PRBool success;
-      if ((success = aResult.ParseEnumValue(aValue, kInputTypeTable))) {
+      PRBool success = aResult.ParseEnumValue(aValue, kInputTypeTable, PR_FALSE);
+      if (success) {
         newType = aResult.GetEnumValue();
       } else {
-        newType = NS_FORM_INPUT_TEXT;
+        newType = kInputDefaultType->value;
       }
 
       if (newType != mType) {
@@ -2236,34 +2293,6 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                               aResult);
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::GetType(nsAString& aValue)
-{
-  const nsAttrValue::EnumTable *table = kInputTypeTable;
-
-  while (table->tag) {
-    if (mType == table->value) {
-      CopyUTF8toUTF16(table->tag, aValue);
-
-      return NS_OK;
-    }
-
-    ++table;
-  }
-
-  NS_ERROR("Shouldn't get here!");
-
-  aValue.Truncate();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLInputElement::SetType(const nsAString& aValue)
-{
-  return SetAttrHelper(nsGkAtoms::type, aValue);
 }
 
 static void

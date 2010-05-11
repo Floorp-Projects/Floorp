@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
+#include "nsIOService.h"
 #include "nsFTPChannel.h"
 #include "nsFtpControlConnection.h"
 #include "nsFtpProtocolHandler.h"
@@ -153,8 +153,8 @@ nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo,
     // open buffered, non-blocking/asynchronous input stream to socket.
     nsCOMPtr<nsIInputStream> inStream;
     rv = mSocket->OpenInputStream(0,
-                                  FTP_COMMAND_CHANNEL_SEG_SIZE, 
-                                  FTP_COMMAND_CHANNEL_SEG_COUNT,
+                                  nsIOService::gDefaultSegmentSize,
+                                  nsIOService::gDefaultSegmentCount,
                                   getter_AddRefs(inStream));
     if (NS_SUCCEEDED(rv))
         mSocketInput = do_QueryInterface(inStream);

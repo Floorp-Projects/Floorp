@@ -39,21 +39,14 @@
 #include "nsSVGStylableElement.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGTSpanElement.h"
-#include "nsCOMPtr.h"
-#include "nsSVGAnimatedLengthList.h"
-#include "nsSVGAnimatedNumberList.h"
-#include "nsSVGLengthList.h"
-#include "nsSVGNumberList.h"
 #include "nsSVGSVGElement.h"
-#include "nsSVGTextContentElement.h"
-#include "nsIFrame.h"
-#include "nsDOMError.h"
+#include "nsSVGTextPositioningElement.h"
 
 typedef nsSVGStylableElement nsSVGTSpanElementBase;
 
 class nsSVGTSpanElement : public nsSVGTSpanElementBase,
-                          public nsIDOMSVGTSpanElement,  // : nsIDOMSVGTextPositioningElement
-                          public nsSVGTextContentElement // = nsIDOMSVGTextContentElement
+                          public nsIDOMSVGTSpanElement,
+                          public nsSVGTextPositioningElement // = nsIDOMSVGTextPositioningElement
 {
 protected:
   friend nsresult NS_NewSVGTSpanElement(nsIContent **aResult,
@@ -66,7 +59,6 @@ public:
   
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGTSPANELEMENT
-  NS_DECL_NSIDOMSVGTEXTPOSITIONINGELEMENT
 
   // xxx If xpcom allowed virtual inheritance we wouldn't need to
   // forward here :-(
@@ -74,6 +66,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT(nsSVGTSpanElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTSpanElementBase::)
   NS_FORWARD_NSIDOMSVGTEXTCONTENTELEMENT(nsSVGTextContentElement::)
+  NS_FORWARD_NSIDOMSVGTEXTPOSITIONINGELEMENT(nsSVGTextPositioningElement::)
 
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -87,14 +80,6 @@ protected:
 
   // nsSVGElement overrides
   virtual PRBool IsEventName(nsIAtom* aName);
-
-  // nsIDOMSVGTextPositioning properties:
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mX;
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mY;
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mdX;
-  nsCOMPtr<nsIDOMSVGAnimatedLengthList> mdY;
-  nsCOMPtr<nsIDOMSVGAnimatedNumberList> mRotate;
-
 };
 
 
@@ -106,6 +91,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(TSpan)
 
 NS_IMPL_ADDREF_INHERITED(nsSVGTSpanElement,nsSVGTSpanElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGTSpanElement,nsSVGTSpanElementBase)
+
+DOMCI_DATA(SVGTSpanElement, nsSVGTSpanElement)
 
 NS_INTERFACE_TABLE_HEAD(nsSVGTSpanElement)
   NS_NODE_INTERFACE_TABLE6(nsSVGTSpanElement, nsIDOMNode, nsIDOMElement,
@@ -131,67 +118,8 @@ nsSVGTSpanElement::Init()
   nsresult rv = nsSVGTSpanElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // Create mapped properties:
-
-  // DOM property: nsIDOMSVGTextPositioningElement::x, #IMPLIED attrib: x
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::X);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mX),
-                                     lengthList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::x, mX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-  
-  // DOM property: nsIDOMSVGTextPositioningElement::y, #IMPLIED attrib: y
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::Y);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mY),
-                                     lengthList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::y, mY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: nsIDOMSVGTextPositioningElement::dx, #IMPLIED attrib: dx
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::X);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdX),
-                                     lengthList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::dx, mdX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-  
-  // DOM property: nsIDOMSVGTextPositioningElement::dy, #IMPLIED attrib: dy
-  {
-    nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::Y);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdY),
-                                     lengthList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::dy, mdY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: nsIDOMSVGTextPositioningElement::rotate, #IMPLIED attrib: rotate
-  {
-    nsCOMPtr<nsIDOMSVGNumberList> numberList;
-    rv = NS_NewSVGNumberList(getter_AddRefs(numberList));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedNumberList(getter_AddRefs(mRotate),
-                                     numberList);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::rotate, mRotate);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
+  rv = Initialise(this);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   return rv;
 }
@@ -207,49 +135,6 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGTSpanElement)
 // nsIDOMSVGTSpanElement methods
 
 // - no methods -
-
-//----------------------------------------------------------------------
-// nsIDOMSVGTextPositioningElement methods
-
-/* readonly attribute nsIDOMSVGAnimatedLengthList x; */
-NS_IMETHODIMP nsSVGTSpanElement::GetX(nsIDOMSVGAnimatedLengthList * *aX)
-{
-  *aX = mX;
-  NS_IF_ADDREF(*aX);
-  return NS_OK;
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLengthList y; */
-NS_IMETHODIMP nsSVGTSpanElement::GetY(nsIDOMSVGAnimatedLengthList * *aY)
-{
-  *aY = mY;
-  NS_IF_ADDREF(*aY);
-  return NS_OK;
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLengthList dx; */
-NS_IMETHODIMP nsSVGTSpanElement::GetDx(nsIDOMSVGAnimatedLengthList * *aDx)
-{
-  *aDx = mdX;
-  NS_IF_ADDREF(*aDx);
-  return NS_OK;
-}
-
-/* readonly attribute nsIDOMSVGAnimatedLengthList dy; */
-NS_IMETHODIMP nsSVGTSpanElement::GetDy(nsIDOMSVGAnimatedLengthList * *aDy)
-{
-  *aDy = mdY;
-  NS_IF_ADDREF(*aDy);
-  return NS_OK;
-}
-
-/* readonly attribute nsIDOMSVGAnimatedNumberList rotate; */
-NS_IMETHODIMP nsSVGTSpanElement::GetRotate(nsIDOMSVGAnimatedNumberList * *aRotate)
-{
-  *aRotate = mRotate;
-  NS_IF_ADDREF(*aRotate);
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // nsIContent methods

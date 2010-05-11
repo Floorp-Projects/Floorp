@@ -104,6 +104,8 @@ nsSVGMatrix::nsSVGMatrix(float a, float b, float c,
 NS_IMPL_ADDREF(nsSVGMatrix)
 NS_IMPL_RELEASE(nsSVGMatrix)
 
+DOMCI_DATA(SVGMatrix, nsSVGMatrix)
+
 NS_INTERFACE_MAP_BEGIN(nsSVGMatrix)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGMatrix)

@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
+<window title="Browser Drop Tests"
+        onload="loaded()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+<script>
+<![CDATA[
+
+var link = null, name = null;
+function handleLink(event, uri, linkname) { link = uri; name = linkname; }
+
+function runTest()
+{
+  function expectLink(element, expectedLink, expectedName, data, testid)
+  {
+    link = "";
+    name = "";
+    synthesizeDrop(element, data, "", element.ownerDocument.defaultView);
+
+    is(link, expectedLink, testid + " link");
+    is(name, expectedName, testid + " name");
+  }
+
+  ["chrome", "content"].forEach(function (type) {
+    var child = document.getElementById(type + "child");
+    child.droppedLinkHandler = handleLink;
+
+    expectLink(child, "http://www.mozilla.org", "http://www.mozilla.org",
+               [ [ { type: "text/plain", data: "http://www.mozilla.org" } ] ],
+               "text/plain drop on browser " + type);
+    expectLink(child, "", "",
+               [ [ { type: "text/link", data: "http://www.mozilla.org" } ] ],
+               "text/link drop on browser " + type);
+    expectLink(child, "http://www.example.com", "http://www.example.com",
+               [ [ { type: "text/uri-list", data: "http://www.example.com\nhttp://www.mozilla.org" } ] ],
+               "text/uri-list drop on browser " + type);
+    expectLink(child, "http://www.example.com", "Example.com",
+               [ [ { type: "text/x-moz-url", data: "http://www.example.com\nExample.com" } ] ],
+               "text/x-moz-url drop on browser " + type);
+    // dropping a chrome url should fail as we don't have a source node set,
+    // defaulting to a source of file:///
+    expectLink(child, "", "",
+               [ [ { type: "text/x-moz-url", data: "chrome://browser/content/browser.xul" } ] ],
+               "text/x-moz-url chrome url drop on browser " + type);
+  });
+
+  // stopPropagation should not prevent the browser link handling from occuring
+  frames[1].stopMode = true;
+  var body = document.getElementById("contentchild").contentDocument.body;
+  expectLink(body, "http://www.mozilla.org", "http://www.mozilla.org",
+             [ [ { type: "text/uri-list", data: "http://www.mozilla.org" } ] ],
+             "text/x-moz-url drop on browser with stopPropagation drop event");
+
+  // canceling the event, however, should prevent the link from being handled
+  frames[1].cancelMode = true;
+  expectLink(body, "", "",
+             [ [ { type: "text/uri-list", data: "http://www.example.org" } ] ],
+             "text/x-moz-url drop on browser with cancelled drop event");
+
+  window.close();
+  window.opener.wrappedJSObject.SimpleTest.finish();
+}
+
+function is(l, r, n) { window.opener.wrappedJSObject.SimpleTest.is(l,r,n); }
+function ok(v, n) { window.opener.wrappedJSObject.SimpleTest.ok(v,n); }
+
+function loaded()
+{
+  SimpleTest.waitForFocus(runTest);
+}
+
+]]>
+</script>
+
+<browser id="chromechild" src="about:blank"/>
+<browser id="contentchild" type="content" width="100" height="100"
+         src="data:text/html,&lt;body draggable='true' style='width: 100px; height: 100px;' ondrop='if (window.stopMode) event.stopPropagation(); if (window.cancelMode) event.preventDefault();'&gt;&lt;/body&gt;"/>
+
+</window>

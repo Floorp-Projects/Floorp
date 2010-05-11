@@ -40,8 +40,11 @@
 
 #include "nsMaiInterfaceAction.h"
 
+#include "nsAccUtils.h"
 #include "nsRoleMap.h"
 #include "nsString.h"
+
+#include "nsIDOMDOMStringList.h"
 
 void
 actionInterfaceInitCB(AtkActionIface *aIface)

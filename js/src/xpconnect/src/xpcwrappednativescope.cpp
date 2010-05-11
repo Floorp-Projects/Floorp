@@ -1116,6 +1116,8 @@ XPCWrappedNativeScope::GetWrapperFor(JSContext *cx, JSObject *obj,
                      "touching non-wrappednative object cross origin?");
         NS_ASSERTION(hint == SJOW || hint == COW || hint == UNKNOWN, "bad hint");
 #endif
+        if(hint & XPCNW)
+            hint = SJOW;
         return hint;
     }
 

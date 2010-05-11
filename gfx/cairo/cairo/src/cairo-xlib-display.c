@@ -38,7 +38,31 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
 
+#include "cairo-freelist-private.h"
+
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
+
+struct _cairo_xlib_display {
+    cairo_xlib_display_t *next;
+    cairo_reference_count_t ref_count;
+    cairo_mutex_t mutex;
+
+    Display *display;
+    cairo_xlib_screen_t *screens;
+
+    int render_major;
+    int render_minor;
+    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_A1 + 1];
+
+    cairo_xlib_job_t *workqueue;
+    cairo_freelist_t wq_freelist;
+
+    cairo_xlib_hook_t *close_display_hooks;
+    unsigned int buggy_gradients :1;
+    unsigned int buggy_pad_reflect :1;
+    unsigned int buggy_repeat :1;
+    unsigned int closed :1;
+};
 
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
@@ -71,14 +95,14 @@ _cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
 static void
 _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 {
-    cairo_xlib_screen_info_t	    *screen;
+    cairo_xlib_screen_t	    *screen;
     cairo_xlib_hook_t		    *hook;
 
     /* call all registered shutdown routines */
     CAIRO_MUTEX_LOCK (display->mutex);
 
     for (screen = display->screens; screen != NULL; screen = screen->next)
-	_cairo_xlib_screen_info_close_display (screen);
+	_cairo_xlib_screen_close_display (screen);
 
     while (TRUE) {
 	hook = display->close_display_hooks;
@@ -99,7 +123,7 @@ _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 static void
 _cairo_xlib_display_discard_screens (cairo_xlib_display_t *display)
 {
-    cairo_xlib_screen_info_t *screens;
+    cairo_xlib_screen_t *screens;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     screens = display->screens;
@@ -107,10 +131,10 @@ _cairo_xlib_display_discard_screens (cairo_xlib_display_t *display)
     CAIRO_MUTEX_UNLOCK (display->mutex);
 
     while (screens != NULL) {
-	cairo_xlib_screen_info_t *screen = screens;
+	cairo_xlib_screen_t *screen = screens;
 	screens = screen->next;
 
-	_cairo_xlib_screen_info_destroy (screen);
+	_cairo_xlib_screen_destroy (screen);
     }
 }
 
@@ -213,7 +237,7 @@ _cairo_xlib_display_get (Display *dpy,
     cairo_xlib_display_t *display;
     cairo_xlib_display_t **prev;
     XExtCodes *codes;
-    int render_major, render_minor;
+    const char *env;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     static int buggy_repeat_force = -1;
@@ -259,13 +283,23 @@ _cairo_xlib_display_get (Display *dpy,
      * add our hook. For now, that means Render, so we call into its
      * QueryVersion function to ensure it gets initialized.
      */
-    Status s = XRenderQueryVersion (dpy, &render_major, &render_minor);
-    if (s == 0) {
-        /* XRenderQueryVersion failed, possibly because the server
-         * doesn't have the RENDER extension.  Don't leave the version
-         * numbers uninitialised.  See #548793.
-         */
-        render_major = render_minor = 0;
+    display->render_major = display->render_minor = -1;
+    XRenderQueryVersion (dpy, &display->render_major, &display->render_minor);
+    env = getenv ("CAIRO_DEBUG");
+    if (env != NULL && (env = strstr (env, "xrender-version=")) != NULL) {
+	int max_render_major, max_render_minor;
+
+	env += sizeof ("xrender-version=") - 1;
+	if (sscanf (env, "%d.%d", &max_render_major, &max_render_minor) != 2)
+	    max_render_major = max_render_minor = -1;
+
+	if (max_render_major < display->render_major ||
+	    (max_render_major == display->render_major &&
+	     max_render_minor < display->render_minor))
+	{
+	    display->render_major = max_render_major;
+	    display->render_minor = max_render_minor;
+	}
     }
 
     codes = XAddExtension (dpy);
@@ -288,13 +322,19 @@ _cairo_xlib_display_get (Display *dpy,
     display->close_display_hooks = NULL;
     display->closed = FALSE;
 
-    display->render_major = render_major;
-    display->render_minor = render_minor;
     memset (display->cached_xrender_formats, 0,
 	    sizeof (display->cached_xrender_formats));
 
+    /* Prior to Render 0.10, there is no protocol support for gradients and
+     * we call function stubs instead, which would silently consume the drawing.
+     */
+#if RENDER_MAJOR == 0 && RENDER_MINOR < 10
+    display->buggy_gradients = TRUE;
+#else
+    display->buggy_gradients = FALSE;
+#endif
+    display->buggy_pad_reflect = FALSE;
     display->buggy_repeat = FALSE;
-    display->buggy_pad_reflect = TRUE;
 
     /* This buggy_repeat condition is very complicated because there
      * are multiple X server code bases (with multiple versioning
@@ -338,23 +378,38 @@ _cairo_xlib_display_get (Display *dpy,
      *    exactly when second the bug started, but since bug 1 is
      *    present through 6.8.2 and bug 2 is present in 6.9.0 it seems
      *    safest to just blacklist all old-versioning-scheme X servers,
-     *    (just using VendorRelase < 70000000), as buggy_repeat=TRUE.
+     *    (just using VendorRelease < 70000000), as buggy_repeat=TRUE.
      */
     if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
 	if (VendorRelease (dpy) >= 60700000) {
 	    if (VendorRelease (dpy) < 70000000)
 		display->buggy_repeat = TRUE;
+
+	    /* We know that gradients simply do not work in early Xorg servers */
+	    if (VendorRelease (dpy) < 70200000)
+		display->buggy_gradients = TRUE;
+
+	    /* And the extended repeat modes were not fixed until much later */
+	    display->buggy_pad_reflect = TRUE;
 	} else {
 	    if (VendorRelease (dpy) < 10400000)
 		display->buggy_repeat = TRUE;
-	    if (VendorRelease (dpy) >= 10699000)
-		display->buggy_pad_reflect = FALSE;
+
+	    /* Too many bugs in the early drivers */
+	    if (VendorRelease (dpy) < 10699000)
+		display->buggy_pad_reflect = TRUE;
 	}
     } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {
 	if (VendorRelease (dpy) <= 40500000)
 	    display->buggy_repeat = TRUE;
 
+	display->buggy_gradients = TRUE;
+	display->buggy_pad_reflect = TRUE;
     }
+
+    /* gradients don't seem to work */
+    display->buggy_gradients = TRUE;
+
 
     /* XXX workaround; see https://bugzilla.mozilla.org/show_bug.cgi?id=413583 */
     /* If buggy_repeat_force == -1, then initialize.
@@ -486,6 +541,12 @@ _cairo_xlib_display_notify (cairo_xlib_display_t *display)
     cairo_xlib_job_t *jobs, *job, *freelist;
     Display *dpy = display->display;
 
+    /* Optimistic atomic pointer read -- don't care if it is wrong due to
+     * contention as we will check again very shortly.
+     */
+    if (display->workqueue == NULL)
+	return;
+
     CAIRO_MUTEX_LOCK (display->mutex);
     jobs = display->workqueue;
     while (jobs != NULL) {
@@ -537,6 +598,12 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 {
     XRenderPictFormat *xrender_format;
 
+#if ! ATOMIC_OP_NEEDS_MEMORY_BARRIER
+    xrender_format = display->cached_xrender_formats[format];
+    if (likely (xrender_format != NULL))
+	return xrender_format;
+#endif
+
     CAIRO_MUTEX_LOCK (display->mutex);
     xrender_format = display->cached_xrender_formats[format];
     if (xrender_format == NULL) {
@@ -561,4 +628,96 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
     CAIRO_MUTEX_UNLOCK (display->mutex);
 
     return xrender_format;
+}
+
+Display *
+_cairo_xlib_display_get_dpy (cairo_xlib_display_t *display)
+{
+    return display->display;
+}
+
+void
+_cairo_xlib_display_remove_screen (cairo_xlib_display_t *display,
+				   cairo_xlib_screen_t *screen)
+{
+    cairo_xlib_screen_t **prev;
+    cairo_xlib_screen_t *list;
+
+    CAIRO_MUTEX_LOCK (display->mutex);
+    for (prev = &display->screens; (list = *prev); prev = &list->next) {
+	if (list == screen) {
+	    *prev = screen->next;
+	    break;
+	}
+    }
+    CAIRO_MUTEX_UNLOCK (display->mutex);
+}
+
+cairo_status_t
+_cairo_xlib_display_get_screen (cairo_xlib_display_t *display,
+				Screen *screen,
+				cairo_xlib_screen_t **out)
+{
+    cairo_xlib_screen_t *info = NULL, **prev;
+
+    CAIRO_MUTEX_LOCK (display->mutex);
+    if (display->closed) {
+	CAIRO_MUTEX_UNLOCK (display->mutex);
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+    }
+
+    for (prev = &display->screens; (info = *prev); prev = &(*prev)->next) {
+	if (info->screen == screen) {
+	    /*
+	     * MRU the list
+	     */
+	    if (prev != &display->screens) {
+		*prev = info->next;
+		info->next = display->screens;
+		display->screens = info;
+	    }
+	    break;
+	}
+    }
+    CAIRO_MUTEX_UNLOCK (display->mutex);
+
+    *out = info;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
+void
+_cairo_xlib_display_add_screen (cairo_xlib_display_t *display,
+				cairo_xlib_screen_t *screen)
+{
+    CAIRO_MUTEX_LOCK (display->mutex);
+    screen->next = display->screens;
+    display->screens = screen;
+    CAIRO_MUTEX_UNLOCK (display->mutex);
+}
+
+void
+_cairo_xlib_display_get_xrender_version (cairo_xlib_display_t *display,
+					 int *major, int *minor)
+{
+    *major = display->render_major;
+    *minor = display->render_minor;
+}
+
+cairo_bool_t
+_cairo_xlib_display_has_repeat (cairo_xlib_display_t *display)
+{
+    return ! display->buggy_repeat;
+}
+
+cairo_bool_t
+_cairo_xlib_display_has_reflect (cairo_xlib_display_t *display)
+{
+    return ! display->buggy_pad_reflect;
+}
+
+cairo_bool_t
+_cairo_xlib_display_has_gradients (cairo_xlib_display_t *display)
+{
+    return ! display->buggy_gradients;
 }

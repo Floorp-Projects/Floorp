@@ -37,8 +37,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsDocAccessible.h"
+
 #include "nsIAccessible.h"
+
+#include "nsAccCache.h"
 #include "nsAccessibilityAtoms.h"
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
+
 #include "nsHashtable.h"
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
@@ -46,7 +52,6 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -67,6 +72,7 @@
 #include "nsRootAccessible.h"
 #include "nsFocusManager.h"
 #include "nsIObserverService.h"
+#include "mozilla/Services.h"
 
 /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
@@ -166,8 +172,7 @@ nsAccessNode::Init()
 
   void* uniqueID;
   GetUniqueID(&uniqueID);
-  nsRefPtr<nsDocAccessible> docAcc =
-    nsAccUtils::QueryAccessibleDocument(docAccessible);
+  nsRefPtr<nsDocAccessible> docAcc = do_QueryObject(docAccessible);
   NS_ASSERTION(docAcc, "No nsDocAccessible for document accessible!");
 
   if (!docAcc->CacheAccessNode(uniqueID, this))
@@ -277,14 +282,15 @@ void nsAccessNode::InitXPAccessibility()
 void nsAccessNode::NotifyA11yInitOrShutdown(PRBool aIsInit)
 {
   nsCOMPtr<nsIObserverService> obsService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   NS_ASSERTION(obsService, "No observer service to notify of a11y init/shutdown");
-  if (obsService) {
-    static const PRUnichar kInitIndicator[] = { '1', 0 };
-    static const PRUnichar kShutdownIndicator[] = { '0', 0 }; 
-    obsService->NotifyObservers(nsnull, "a11y-init-or-shutdown",
-                                aIsInit ? kInitIndicator  : kShutdownIndicator);
-  }
+  if (!obsService)
+    return;
+
+  static const PRUnichar kInitIndicator[] = { '1', 0 };
+  static const PRUnichar kShutdownIndicator[] = { '0', 0 }; 
+  obsService->NotifyObservers(nsnull, "a11y-init-or-shutdown",
+                              aIsInit ? kInitIndicator  : kShutdownIndicator);
 }
 
 void nsAccessNode::ShutdownXPAccessibility()
@@ -506,11 +512,10 @@ nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
     GetAccService()->GetCachedAccessNode(aNode, mWeakShell);
 
   if (!accessNode) {
-    nsCOMPtr<nsIAccessible> accessible;
-    GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell,
-                                              getter_AddRefs(accessible));
+    nsRefPtr<nsAccessible> accessible =
+      GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
 
-    accessNode = do_QueryInterface(accessible);
+    accessNode = accessible;
   }
 
   if (accessNode) {

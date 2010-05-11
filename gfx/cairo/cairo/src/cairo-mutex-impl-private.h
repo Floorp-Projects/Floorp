@@ -168,30 +168,16 @@
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) CAIRO_MUTEX_IMPL_NOOP1(mutex)
 # define CAIRO_MUTEX_IMPL_NIL_INITIALIZER 0
 
-#elif HAVE_PTHREAD_H /*******************************************************/
+#elif defined(_WIN32) /******************************************************/
 
-# include <pthread.h>
-
-  typedef pthread_mutex_t cairo_mutex_impl_t;
-
-# define CAIRO_MUTEX_IMPL_PTHREAD 1
-#if HAVE_LOCKDEP
-/* expose all mutexes to the validator */
-# define CAIRO_MUTEX_IMPL_INIT(mutex) pthread_mutex_init (&(mutex), NULL)
+#define WIN32_LEAN_AND_MEAN
+/* We require Windows 2000 features such as ETO_PDY */
+#if !defined(WINVER) || (WINVER < 0x0500)
+# define WINVER 0x0500
 #endif
-# define CAIRO_MUTEX_IMPL_LOCK(mutex) pthread_mutex_lock (&(mutex))
-# define CAIRO_MUTEX_IMPL_UNLOCK(mutex) pthread_mutex_unlock (&(mutex))
-#if HAVE_LOCKDEP
-# define CAIRO_MUTEX_IS_LOCKED(mutex) LOCKDEP_IS_LOCKED (&(mutex))
-# define CAIRO_MUTEX_IS_UNLOCKED(mutex) LOCKDEP_IS_UNLOCKED (&(mutex))
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
+# define _WIN32_WINNT 0x0500
 #endif
-# define CAIRO_MUTEX_IMPL_FINI(mutex) pthread_mutex_destroy (&(mutex))
-#if ! HAVE_LOCKDEP
-# define CAIRO_MUTEX_IMPL_FINALIZE() CAIRO_MUTEX_IMPL_NOOP
-#endif
-# define CAIRO_MUTEX_IMPL_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
-
-#elif defined(HAVE_WINDOWS_H) || defined(_MSC_VER) /*************************/
 
 # include <windows.h>
 
@@ -229,6 +215,30 @@
 # define CAIRO_MUTEX_IMPL_INIT(mutex) (mutex) = new BLocker()
 # define CAIRO_MUTEX_IMPL_FINI(mutex) delete (mutex)
 # define CAIRO_MUTEX_IMPL_NIL_INITIALIZER NULL
+
+#elif CAIRO_HAS_PTHREAD /* and finally if there are no native mutexes ********/
+
+# include <pthread.h>
+
+  typedef pthread_mutex_t cairo_mutex_impl_t;
+
+# define CAIRO_MUTEX_IMPL_PTHREAD 1
+#if HAVE_LOCKDEP
+/* expose all mutexes to the validator */
+# define CAIRO_MUTEX_IMPL_INIT(mutex) pthread_mutex_init (&(mutex), NULL)
+#endif
+# define CAIRO_MUTEX_IMPL_LOCK(mutex) pthread_mutex_lock (&(mutex))
+# define CAIRO_MUTEX_IMPL_UNLOCK(mutex) pthread_mutex_unlock (&(mutex))
+#if HAVE_LOCKDEP
+# define CAIRO_MUTEX_IS_LOCKED(mutex) LOCKDEP_IS_LOCKED (&(mutex))
+# define CAIRO_MUTEX_IS_UNLOCKED(mutex) LOCKDEP_IS_UNLOCKED (&(mutex))
+#endif
+# define CAIRO_MUTEX_IMPL_FINI(mutex) pthread_mutex_destroy (&(mutex))
+#if ! HAVE_LOCKDEP
+# define CAIRO_MUTEX_IMPL_FINALIZE() CAIRO_MUTEX_IMPL_NOOP
+#endif
+# define CAIRO_MUTEX_IMPL_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
+
 
 #else /**********************************************************************/
 

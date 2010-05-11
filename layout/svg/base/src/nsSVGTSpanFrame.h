@@ -52,7 +52,7 @@ class nsSVGTSpanFrame : public nsSVGTSpanFrameBase,
   NS_NewSVGTSpanFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 protected:
   nsSVGTSpanFrame(nsStyleContext* aContext) :
-    nsSVGTextContainerFrame(aContext) {}
+    nsSVGTSpanFrameBase(aContext) {}
 
 public:
   NS_DECL_QUERYFRAME

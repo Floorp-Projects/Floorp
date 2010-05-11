@@ -56,6 +56,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsISimpleEnumerator.h"
+#include "nsGUIEvent.h"
 
 // Interfaces needed to be included
 #include "nsPresContext.h"
@@ -105,6 +106,9 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 #include "nsPIDOMEventTarget.h"
+#include "nsIEventListenerManager.h"
+#include "nsIDOMEventGroup.h"
+#include "nsIDOMDragEvent.h"
 
 //
 // GetEventReceiver
@@ -167,6 +171,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
     NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
     NS_INTERFACE_MAP_ENTRY(nsICDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
@@ -869,17 +874,23 @@ nsDocShellTreeOwner::AddChromeListeners()
         rv = NS_ERROR_OUT_OF_MEMORY;
     }
   }
-   
-  // install the external dragDrop handler
-  if ( !mChromeDragHandler ) {
-    mChromeDragHandler = do_CreateInstance("@mozilla.org:/content/content-area-dragdrop;1", &rv);
-    NS_ASSERTION(mChromeDragHandler, "Couldn't create the chrome drag handler");
-    if ( mChromeDragHandler ) {
-      nsCOMPtr<nsPIDOMEventTarget> piTarget;
-      GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
-      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(piTarget));
-      mChromeDragHandler->HookupTo(target, static_cast<nsIWebNavigation*>(mWebBrowser));
-    }
+
+  // register dragover and drop event listeners with the listener manager
+  nsCOMPtr<nsPIDOMEventTarget> piTarget;
+  GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
+
+  nsCOMPtr<nsIDOMEventGroup> sysGroup;
+  piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
+  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
+  if (sysGroup && elmP)
+  {
+    rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("dragover"),
+                                      NS_EVENT_FLAG_BUBBLE,
+                                      sysGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = elmP->AddEventListenerByType(this, NS_LITERAL_STRING("drop"),
+                                      NS_EVENT_FLAG_BUBBLE,
+                                      sysGroup);
   }
 
   return rv;
@@ -898,8 +909,67 @@ nsDocShellTreeOwner::RemoveChromeListeners()
     mChromeContextMenuListener->RemoveChromeListeners();
     NS_RELEASE(mChromeContextMenuListener);
   }
-  if ( mChromeDragHandler )
-    mChromeDragHandler->Detach();
+
+  nsCOMPtr<nsPIDOMEventTarget> piTarget;
+  GetPIDOMEventTarget(mWebBrowser, getter_AddRefs(piTarget));
+
+  nsCOMPtr<nsIDOMEventGroup> sysGroup;
+  piTarget->GetSystemEventGroup(getter_AddRefs(sysGroup));
+  nsIEventListenerManager* elmP = piTarget->GetListenerManager(PR_TRUE);
+  if (sysGroup && elmP)
+  {
+    nsresult rv =
+      elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("dragover"),
+                                      NS_EVENT_FLAG_BUBBLE,
+                                      sysGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = elmP->RemoveEventListenerByType(this, NS_LITERAL_STRING("drop"),
+                                         NS_EVENT_FLAG_BUBBLE,
+                                         sysGroup);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellTreeOwner::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMDragEvent> dragEvent = do_QueryInterface(aEvent);
+  NS_ENSURE_TRUE(dragEvent, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent = do_QueryInterface(aEvent);
+  if (nsuiEvent) {
+    PRBool defaultPrevented;
+    nsuiEvent->GetPreventDefault(&defaultPrevented);
+    if (defaultPrevented)
+      return NS_OK;
+  }
+
+  nsCOMPtr<nsIDroppedLinkHandler> handler = do_GetService("@mozilla.org/content/dropped-link-handler;1");
+  if (handler) {
+    nsAutoString eventType;
+    aEvent->GetType(eventType);
+    if (eventType.EqualsLiteral("dragover")) {
+      PRBool canDropLink;
+      handler->CanDropLink(dragEvent, PR_FALSE, &canDropLink);
+      if (canDropLink)
+        aEvent->PreventDefault();
+    }
+    else if (eventType.EqualsLiteral("drop")) {
+      nsIWebNavigation* webnav = static_cast<nsIWebNavigation *>(mWebBrowser);
+
+      nsAutoString link, name;
+      if (webnav && NS_SUCCEEDED(handler->DropLink(dragEvent, link, name))) {
+        if (!link.IsEmpty()) {
+          webnav->LoadURI(link.get(), 0, nsnull, nsnull, nsnull);
+        }
+      }
+      else {
+        aEvent->StopPropagation();
+        aEvent->PreventDefault();
+      }
+    }
+  }
 
   return NS_OK;
 }

@@ -58,7 +58,7 @@ interface nsIDOMWindow;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(427597a3-1737-4743-bf43-2311a1ed5fbd)]
+[scriptable, uuid(471909e7-0ea4-4ce0-bf31-a1372b2b285c)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -84,7 +84,7 @@ interface nsIAccessibleDocument : nsISupports
   /**
    * The nsIDOMDocument interface associated with this document.
    */
-  readonly attribute nsIDOMDocument document;
+  readonly attribute nsIDOMDocument DOMDocument;
 
   /**
    * The nsIDOMWindow that the document resides in.

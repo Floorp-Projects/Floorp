@@ -135,7 +135,7 @@ nsIsIndexFrame::UpdatePromptLabel(PRBool aNotify)
     // it might not be the string "This is a searchable index. Enter search keywords: "
     result =
       nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                         "IsIndexPrompt", prompt);
+                                         "IsIndexPromptWithSpace", prompt);
   }
 
   mTextContent->SetText(prompt, aNotify);

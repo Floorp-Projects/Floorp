@@ -1,7 +1,7 @@
-# Usage: ./update.sh <oggplay_src_directory>
+# Usage: ./update.sh <libsydneyaudio_src_directory>
 #
 # Copies the needed files from a directory containing the original
-# liboggplay source that we need for the Mozilla HTML5 media support.
+# libsydneyaudio source that we need for the Mozilla HTML5 media support.
 cp $1/include/sydney_audio.h include/sydney_audio.h
 cp $1/src/*.c src/
 cp $1/AUTHORS ./AUTHORS
@@ -13,3 +13,5 @@ patch -p3 <bug495794_closeAudio.patch
 patch -p3 <bug495558_alsa_endian.patch
 patch -p3 <bug525401_drain_deadlock.patch
 patch -p3 <bug526411_latency.patch
+patch -p3 <sydney_aix.patch
+patch -p3 <bug562488_oss_destroy_crash.patch

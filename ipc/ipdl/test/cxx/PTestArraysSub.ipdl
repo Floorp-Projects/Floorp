@@ -1,4 +1,4 @@
-include protocol "PTestArrays.ipdl";
+include protocol PTestArrays;
 
 namespace mozilla {
 namespace _ipdltest {

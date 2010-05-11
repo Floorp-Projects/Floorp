@@ -50,7 +50,6 @@
 
 class nsIDOMHTMLAreaElement;
 class nsIDOMHTMLMapElement;
-class nsPresContext;
 class nsIRenderingContext;
 class nsIURI;
 class nsString;

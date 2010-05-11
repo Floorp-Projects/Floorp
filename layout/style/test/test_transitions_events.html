@@ -20,6 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=531585
 #four, #five, #six {
   -moz-transition: 500ms color;
   border-color: black; /* don't derive from color */
+  -moz-column-rule-color: black; /* don't derive from color */
 }
 
 #four {
@@ -61,6 +62,7 @@ var got_one_target_bordertop = false;
 var got_one_target_borderright = false;
 var got_one_target_borderbottom = false;
 var got_one_target_borderleft = false;
+var got_one_target_columnrule = false;
 var got_two_target = false;
 var got_three_top = false;
 var got_three_right = false;
@@ -68,6 +70,7 @@ var got_three_bottom = false;
 var got_three_left = false;
 var got_four_root = false;
 var got_body = false;
+var did_stops = false;
 
 document.documentElement.addEventListener("transitionend",
   function(event) {
@@ -103,6 +106,12 @@ document.documentElement.addEventListener("transitionend",
       got_body = true;
       finished_test();
     } else {
+      if (!did_stops &&
+          (event.target == $("five") || event.target == $("six"))) {
+        todo(false,
+             "timeout to stop transitions firing later than it should be");
+        return;
+      }
       ok(false,
          "unexpected event on " + event.target.nodeName +
          " element with id '" + event.target.id + "' " +
@@ -115,28 +124,39 @@ $("one").addEventListener("transitionend",
   function(event) {
     switch (event.propertyName) {
       case "color":
-        ok(!got_one_target, "transitionend on one on target");
+        ok(!got_one_target,
+           "transitionend on one on target (color)");
         got_one_target = true;
         event.stopPropagation();
         break;
       case "border-top-color":
-        ok(!got_one_target_bordertop, "transitionend on one on target");
+        ok(!got_one_target_bordertop,
+           "transitionend on one on target (border-top-color)");
         got_one_target_bordertop = true;
         event.stopPropagation();
         break;
       case "border-right-color":
-        ok(!got_one_target_borderright, "transitionend on one on target");
+        ok(!got_one_target_borderright,
+           "transitionend on one on target (border-right-color)");
         got_one_target_borderright = true;
         // Let this event through to body
         break;
       case "border-bottom-color":
-        ok(!got_one_target_borderbottom, "transitionend on one on target");
+        ok(!got_one_target_borderbottom,
+           "transitionend on one on target (border-bottom-color)");
         got_one_target_borderbottom = true;
         event.stopPropagation();
         break;
       case "border-left-color":
-        ok(!got_one_target_borderleft, "transitionend on one on target");
+        ok(!got_one_target_borderleft,
+           "transitionend on one on target (border-left-color)");
         got_one_target_borderleft = true;
+        event.stopPropagation();
+        break;
+      case "-moz-column-rule-color":
+        ok(!got_one_target_columnrule,
+           "transitionend on one on target (-moz-column-rule-color)");
+        got_one_target_columnrule = true;
         event.stopPropagation();
         break;
       default:
@@ -147,7 +167,6 @@ $("one").addEventListener("transitionend",
        "elapsedTime for transitionend on one");
     is(cs("one").getPropertyValue(event.propertyName), "rgb(0, 255, 0)",
        "computed style of " + event.propertyName + " for transitionend on one");
-    got_one_target = true;
     finished_test();
   }, false);
 
@@ -230,6 +249,11 @@ $("five").style.color = "lime";
 $("six").style.color = "lime";
 
 setTimeout(function() {
+             if (cs("five") != "rgb(0, 255, 0)" &&
+                 cs("six") != "rgb(0, 255, 0)") {
+               // The transition hasn't finished already.
+               did_stops = true;
+             }
              $("five").style.MozTransitionProperty = "margin-left";
              $("six").style.MozTransitionDuration = "0s";
              $("six").style.MozTransitionDelay = "0s";

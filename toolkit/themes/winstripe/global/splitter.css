@@ -56,6 +56,20 @@ splitter {
   background-color: ThreeDFace;
 }
 
+splitter[state="collapsed"][collapse="before"],
+splitter[state="collapsed"][substate="before"],
+splitter[state="collapsed"][collapse="after"]:-moz-locale-dir(rtl),
+splitter[state="collapsed"][substate="after"]:-moz-locale-dir(rtl) {
+  cursor: e-resize;
+}
+
+splitter[state="collapsed"][collapse="after"],
+splitter[state="collapsed"][substate="after"],
+splitter[state="collapsed"][collapse="before"]:-moz-locale-dir(rtl),
+splitter[state="collapsed"][substate="before"]:-moz-locale-dir(rtl) {
+  cursor: w-resize;
+}
+
 splitter:-moz-lwtheme {
   background: none;
 }
@@ -68,6 +82,16 @@ splitter[orient="vertical"] {
   -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDFace;
   min-height: 6px;
+}
+
+splitter[orient="vertical"][state="collapsed"][collapse="before"],
+splitter[orient="vertical"][state="collapsed"][substate="before"] {
+  cursor: s-resize;
+}
+
+splitter[orient="vertical"][state="collapsed"][collapse="after"],
+splitter[orient="vertical"][state="collapsed"][substate="after"] {
+  cursor: n-resize;
 }
 
 /* ::::: splitter grippy ::::: */
@@ -98,40 +122,44 @@ splitter[orient="vertical"] > grippy {
 /* ..... normal state ..... */
 
 /* vertical grippies */
-splitter[collapse="before"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-vrt-before.gif");
+splitter[collapse="before"] > grippy,
+splitter[collapse="after"] > grippy:-moz-locale-dir(rtl) {
+  background-image: url("chrome://global/skin/splitter/grip-left.gif");
 }
 
-splitter[collapse="after"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-vrt-after.gif");
+splitter[collapse="after"] > grippy,
+splitter[collapse="before"] > grippy:-moz-locale-dir(rtl) {
+  background-image: url("chrome://global/skin/splitter/grip-right.gif");
 }
 
 /* horizontal grippies */
 splitter[collapse="before"][orient="vertical"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-hrz-before.gif");
+  background-image: url("chrome://global/skin/splitter/grip-top.gif");
 }  
 
 splitter[collapse="after"][orient="vertical"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-hrz-after.gif");
+  background-image: url("chrome://global/skin/splitter/grip-bottom.gif");
 }  
   
 /* ..... collapsed state ..... */
 
 /* vertical grippies */
-splitter[collapse="before"][state="collapsed"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-vrt-after.gif");
+splitter[collapse="before"][state="collapsed"] > grippy,
+splitter[collapse="after"][state="collapsed"] > grippy:-moz-locale-dir(rtl) {
+  background-image: url("chrome://global/skin/splitter/grip-right.gif");
 }
 
-splitter[collapse="after"][state="collapsed"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-vrt-before.gif");
+splitter[collapse="after"][state="collapsed"] > grippy,
+splitter[collapse="before"][state="collapsed"] > grippy:-moz-locale-dir(rtl) {
+  background-image: url("chrome://global/skin/splitter/grip-left.gif");
 }
 
 /* horizontal grippies */
 splitter[collapse="before"][state="collapsed"][orient="vertical"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-hrz-after.gif");
+  background-image: url("chrome://global/skin/splitter/grip-bottom.gif");
 }  
 
 splitter[collapse="after"][state="collapsed"][orient="vertical"] > grippy {
-  background-image: url("chrome://global/skin/splitter/grip-hrz-before.gif");
+  background-image: url("chrome://global/skin/splitter/grip-top.gif");
 }  
 

@@ -41,6 +41,9 @@
 
 NS_IMPL_ADDREF(nsXPathNamespace)
 NS_IMPL_RELEASE(nsXPathNamespace)
+
+DOMCI_DATA(XPathNamespace, nsXPathNamespace)
+
 NS_INTERFACE_MAP_BEGIN(nsXPathNamespace)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathNamespace)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNode)

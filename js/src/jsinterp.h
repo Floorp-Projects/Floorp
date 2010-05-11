@@ -55,20 +55,22 @@ typedef struct JSFrameRegs {
 } JSFrameRegs;
 
 /* JS stack frame flags. */
-#define JSFRAME_CONSTRUCTING        0x01 /* frame is for a constructor invocation */
-#define JSFRAME_COMPUTED_THIS       0x02 /* frame.thisv was computed already and
-                                            JSVAL_IS_OBJECT(thisv) */
-#define JSFRAME_ASSIGNING           0x04 /* a complex (not simplex JOF_ASSIGNING) op
-                                            is currently assigning to a property */
-#define JSFRAME_DEBUGGER            0x08 /* frame for JS_EvaluateInStackFrame */
-#define JSFRAME_EVAL                0x10 /* frame for obj_eval */
-#define JSFRAME_FLOATING_GENERATOR  0x20 /* frame copy stored in a generator obj */
-#define JSFRAME_YIELDING            0x40 /* js_Interpret dispatched JSOP_YIELD */
-#define JSFRAME_ITERATOR            0x80 /* trying to get an iterator for for-in */
-#define JSFRAME_GENERATOR          0x200 /* frame belongs to generator-iterator */
-#define JSFRAME_OVERRIDE_ARGS      0x400 /* overridden arguments local variable */
+enum JSFrameFlags {
+    JSFRAME_CONSTRUCTING       =  0x01, /* frame is for a constructor invocation */
+    JSFRAME_COMPUTED_THIS      =  0x02, /* frame.thisv was computed already and
+                                           JSVAL_IS_OBJECT(thisv) */
+    JSFRAME_ASSIGNING          =  0x04, /* a complex (not simplex JOF_ASSIGNING) op
+                                           is currently assigning to a property */
+    JSFRAME_DEBUGGER           =  0x08, /* frame for JS_EvaluateInStackFrame */
+    JSFRAME_EVAL               =  0x10, /* frame for obj_eval */
+    JSFRAME_FLOATING_GENERATOR =  0x20, /* frame copy stored in a generator obj */
+    JSFRAME_YIELDING           =  0x40, /* js_Interpret dispatched JSOP_YIELD */
+    JSFRAME_ITERATOR           =  0x80, /* trying to get an iterator for for-in */
+    JSFRAME_GENERATOR          = 0x200, /* frame belongs to generator-iterator */
+    JSFRAME_OVERRIDE_ARGS      = 0x400, /* overridden arguments local variable */
 
-#define JSFRAME_SPECIAL       (JSFRAME_DEBUGGER | JSFRAME_EVAL)
+    JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
+};
 
 /*
  * JS stack frame, may be allocated on the C stack by native callers.  Always
@@ -166,6 +168,12 @@ struct JSStackFrame
 
     js::Value *argEnd() const {
         return (js::Value *)this;
+    }
+
+    jsval *slots() const {
+        return (jsval *)(this + 1);
+    }
+
     }
 
     js::Value *slots() const {
@@ -349,8 +357,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JSStackFrame *down, uintN flags, Value *result);
 
 extern JS_REQUIRES_STACK bool
-InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args,
-                  JSBool clampReturn);
+InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn);
 
 extern JS_REQUIRES_STACK bool
 Interpret(JSContext *cx);

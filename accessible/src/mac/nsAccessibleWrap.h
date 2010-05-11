@@ -43,13 +43,14 @@
 #ifndef _nsAccessibleWrap_H_
 #define _nsAccessibleWrap_H_
 
+#include "nsAccessible.h"
+#include "nsAccUtils.h"
+
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
-
-#include "nsAccessible.h"
 
 struct AccessibleWrapper;
 struct objc_class;
@@ -99,23 +100,10 @@ class nsAccessibleWrap : public nsAccessible
 
     virtual nsresult FirePlatformEvent(nsAccEvent *aEvent);
 
-    PRBool AncestorIsFlat() {
-      // we don't create a native object if we're child of a "flat" accessible; for example, on OS X buttons 
-      // shouldn't have any children, because that makes the OS confused. 
-      //
-      // to maintain a scripting environment where the XPCOM accessible hierarchy look the same 
-      // on all platforms, we still let the C++ objects be created though.
-
-      nsAccessible* parent(GetParent());
-      while (parent) {
-        if (nsAccUtils::MustPrune(parent))
-          return PR_TRUE;
-
-        parent = parent->GetParent();
-      }
-      // no parent was flat
-      return PR_FALSE;
-    }
+  /**
+   * Return true if the parent doesn't have children to expose to AT.
+   */
+  PRBool AncestorIsFlat();
 
     // Wrapper around our native object.
     AccessibleWrapper *mNativeWrapper;

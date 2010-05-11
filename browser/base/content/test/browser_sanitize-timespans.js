@@ -242,24 +242,31 @@ function test() {
   // Clear Today
   Sanitizer.prefs.setIntPref("timeSpan", 4);
   s.sanitize();
-  
-  ok(!bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should now be deleted");
+
+  // Be careful.  If we add our objectss just before midnight, and sanitize
+  // runs immediately after, they won't be expired.  This is expected, but
+  // we should not test in that case.  We cannot just test for opposite
+  // condition because we could cross midnight just one moment after we
+  // cache our time, then we would have an even worse random failure.
+  var today = isToday(new Date(now_uSec/1000));
+  if (today) {
+    ok(!bhist.isVisited(makeURI("http://today.com")), "Pretend visit to today.com should now be deleted");
+    ok(!formhist.nameExists("today"), "today form entry should be deleted");
+    ok(!downloadExists(5555554), "'Today' download should now be deleted");
+  }
+
   ok(bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should still exist");
-
-  ok(!formhist.nameExists("today"), "today form entry should be deleted");
   ok(formhist.nameExists("b4today"), "b4today form entry should still exist");
-
-  ok(!downloadExists(5555554), "'Today' download should now be deleted");
   ok(downloadExists(5555550), "Year old download should still be present");
 
   // Choose everything
   Sanitizer.prefs.setIntPref("timeSpan", 0);
   s.sanitize();
-  
+
   ok(!bhist.isVisited(makeURI("http://before-today.com")), "Pretend visit to before-today.com should now be deleted");
 
   ok(!formhist.nameExists("b4today"), "b4today form entry should be deleted");
-  
+
   ok(!downloadExists(5555550), "Year old download should now be deleted");
 
 }
@@ -594,4 +601,8 @@ function downloadExists(aID)
   var rows = stmt.executeStep();
   stmt.finalize();
   return rows;
+}
+
+function isToday(aDate) {
+  return aDate.getDate() == new Date().getDate();
 }

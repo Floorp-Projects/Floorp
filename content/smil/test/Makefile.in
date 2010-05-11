@@ -45,13 +45,18 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
+	  db_smilAnimateMotion.js \
 	  db_smilCSSFromBy.js \
 	  db_smilCSSFromTo.js \
 	  db_smilCSSPaced.js \
 	  db_smilCSSPropertyList.js \
 	  db_smilMappedAttrList.js \
+	  smilAnimateMotionValueLists.js \
 	  smilTestUtils.js \
 	  smilXHR_helper.svg \
+	  test_smilAnimateMotion.xhtml \
+	  test_smilAnimateMotionInvalidValues.xhtml \
+	  test_smilAnimateMotionOverrideRules.xhtml \
 	  test_smilChangeAfterFrozen.xhtml \
 	  test_smilContainerBinding.xhtml \
 	  test_smilCrossContainer.xhtml \
@@ -70,6 +75,7 @@ _TEST_FILES = \
 	  test_smilGetStartTime.xhtml \
 	  test_smilGetSimpleDuration.xhtml \
 	  test_smilKeySplines.xhtml \
+	  test_smilKeyTimesPacedMode.xhtml \
 	  test_smilSetCurrentTime.xhtml \
 	  test_smilSync.xhtml \
 	  test_smilSyncbaseTarget.xhtml \

@@ -37,12 +37,18 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessNodeWrap.h"
+
+#include "AccessibleApplication.h"
 #include "ISimpleDOMNode_i.c"
+
 #include "nsAccessibilityAtoms.h"
-#include "nsIAccessible.h"
+#include "nsAccessibilityService.h"
+#include "nsApplicationAccessibleWrap.h"
+#include "nsCoreUtils.h"
+#include "nsRootAccessible.h"
+
 #include "nsAttrName.h"
 #include "nsIDocument.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMViewCSS.h"
@@ -50,12 +56,8 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIPresShell.h"
 #include "nsPIDOMWindow.h"
-#include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
-#include "AccessibleApplication.h"
-#include "nsApplicationAccessibleWrap.h"
 
 /// the accessible library and cached methods
 HINSTANCE nsAccessNodeWrap::gmAccLib = nsnull;
@@ -411,14 +413,11 @@ ISimpleDOMNode* nsAccessNodeWrap::MakeAccessNode(nsIDOMNode *node)
     return NULL;
 
   ISimpleDOMNode *iNode = NULL;
-  nsCOMPtr<nsIAccessible> nsAcc;
-  GetAccService()->GetAccessibleInWeakShell(node, mWeakShell, 
-                                            getter_AddRefs(nsAcc));
-  if (nsAcc) {
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(nsAcc));
-    NS_ASSERTION(accessNode, "nsIAccessible impl does not inherit from nsIAccessNode");
-    IAccessible *msaaAccessible;
-    nsAcc->GetNativeInterface((void**)&msaaAccessible); // addrefs
+  nsRefPtr<nsAccessible> acc =
+    GetAccService()->GetAccessibleInWeakShell(node, mWeakShell);
+  if (acc) {
+    IAccessible *msaaAccessible = nsnull;
+    acc->GetNativeInterface((void**)&msaaAccessible); // addrefs
     msaaAccessible->QueryInterface(IID_ISimpleDOMNode, (void**)&iNode); // addrefs
     msaaAccessible->Release(); // Release IAccessible
   }

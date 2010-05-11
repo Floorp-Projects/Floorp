@@ -127,6 +127,10 @@ new Test.Unit.Runner({
   }
 });
 
+/* This test was disabled in bug 486256, because we don't support having two
+ * Runners in one file.
+ */
+/*
 new Test.Unit.Runner({
   testDummy: function() {
     this.assert(true);
@@ -136,3 +140,4 @@ new Test.Unit.Runner({
     this.assertEqual('passed', $('testlog_2').down('td', 1).innerHTML);
   }
 }, {testLog: 'testlog_2'});
+*/

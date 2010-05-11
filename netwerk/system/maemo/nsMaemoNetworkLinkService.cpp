@@ -29,6 +29,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsMaemoNetworkManager.h"
+#include "mozilla/Services.h"
 
 NS_IMPL_ISUPPORTS2(nsMaemoNetworkLinkService,
                    nsINetworkLinkService,
@@ -70,13 +71,12 @@ nsMaemoNetworkLinkService::Observe(nsISupports *aSubject,
 nsresult
 nsMaemoNetworkLinkService::Init(void)
 {
-  nsresult rv;
-
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    mozilla::services::GetObserverService();
+  if (!observerService)
+    return NS_ERROR_FAILURE;
 
-  rv = observerService->AddObserver(this, "xpcom-shutdown", PR_FALSE);
+  nsresult rv = observerService->AddObserver(this, "xpcom-shutdown", PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!nsMaemoNetworkManager::Startup())

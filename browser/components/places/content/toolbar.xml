@@ -250,7 +250,7 @@
               var popup = document.createElement("menupopup");
               popup.setAttribute("placespopup", "true");
               button.appendChild(popup);
-              popup._resultNode = asContainer(aChild);
+              popup._resultNode = PlacesUtils.asContainer(aChild);
 #ifndef XP_MACOSX
               popup.setAttribute("context", "placesContext");
 #endif
@@ -736,6 +736,9 @@
           this.invalidateContainer(aContainer);
         },
 
+        containerStateChanged:
+        function TV_V_containerStateChanged(aNode, aOldState, aNewState) {},
+
         invalidateContainer: function TV_V_invalidateContainer(aContainer) {
           let containerNodeElt = aContainer._DOMElement;
           NS_ASSERT(containerNodeElt, "node must have _DOMElement set");
@@ -806,7 +809,8 @@
         <parameter name="aParentPopup"/>
         <parameter name="aBefore"/>
         <body><![CDATA[
-          var element = PlacesUIUtils.createMenuItemForNode(aChild);
+          var element = PlacesUIUtils.createMenuItemForNode(aChild,
+                                                            aParentPopup.ownerDocument);
 
           if (aBefore)
             aParentPopup.insertBefore(element, aBefore);
