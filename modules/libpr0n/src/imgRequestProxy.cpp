@@ -613,7 +613,7 @@ void imgRequestProxy::OnDiscard()
 
 
 
-void imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
+void imgRequestProxy::OnStartRequest()
 {
 #ifdef PR_LOGGING
   nsCAutoString name;
@@ -630,8 +630,7 @@ void imgRequestProxy::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   }
 }
 
-void imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                                    nsresult statusCode, PRBool lastPart)
+void imgRequestProxy::OnStopRequest(PRBool lastPart)
 {
 #ifdef PR_LOGGING
   nsCAutoString name;
