@@ -131,12 +131,14 @@ nsNodeUtils::AttributeChanged(nsIContent* aContent,
 
 void
 nsNodeUtils::ContentAppended(nsIContent* aContainer,
+                             nsIContent* aFirstNewContent,
                              PRInt32 aNewIndexInContainer)
 {
   nsIDocument* doc = aContainer->GetOwnerDoc();
 
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
-                             (doc, aContainer, aNewIndexInContainer));
+                             (doc, aContainer, aFirstNewContent,
+                              aNewIndexInContainer));
 }
 
 void

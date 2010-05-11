@@ -100,10 +100,12 @@ public:
   /**
    * Send ContentAppended notifications to nsIMutationObservers
    * @param aContainer           Node into which new child/children were added
+   * @param aFirstNewContent     First new child
    * @param aNewIndexInContainer Index of first new child
    * @see nsIMutationObserver::ContentAppended
    */
   static void ContentAppended(nsIContent* aContainer,
+                              nsIContent* aFirstNewContent,
                               PRInt32 aNewIndexInContainer);
 
   /**

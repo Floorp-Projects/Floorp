@@ -146,6 +146,7 @@ nsHTMLTitleElement::CharacterDataChanged(nsIDocument *aDocument,
 void
 nsHTMLTitleElement::ContentAppended(nsIDocument *aDocument,
                                     nsIContent *aContainer,
+                                    nsIContent *aFirstNewContent,
                                     PRInt32 aNewIndexInContainer)
 {
   SendTitleChangeEvent(PR_FALSE);

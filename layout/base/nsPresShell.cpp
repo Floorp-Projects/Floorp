@@ -4783,6 +4783,7 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
 void
 PresShell::ContentAppended(nsIDocument *aDocument,
                            nsIContent* aContainer,
+                           nsIContent* aFirstNewContent,
                            PRInt32     aNewIndexInContainer)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
@@ -4800,7 +4801,8 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   // frame reconstruction.
   mFrameConstructor->RestyleForAppend(aContainer, aNewIndexInContainer);
 
-  mFrameConstructor->ContentAppended(aContainer, aNewIndexInContainer, PR_TRUE);
+  mFrameConstructor->ContentAppended(aContainer, aFirstNewContent,
+                                     aNewIndexInContainer, PR_TRUE);
   VERIFY_STYLE_TREE;
 }
 

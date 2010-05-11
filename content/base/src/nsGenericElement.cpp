@@ -3619,7 +3619,7 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     // Note that we always want to call ContentInserted when things are added
     // as kids to documents
     if (parent && isAppend) {
-      nsNodeUtils::ContentAppended(parent, aIndex);
+      nsNodeUtils::ContentAppended(parent, aKid, aIndex);
     } else {
       nsNodeUtils::ContentInserted(this, aKid, aIndex);
     }
@@ -4204,6 +4204,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     PRBool appending =
       !IsNodeOfType(eDOCUMENT) && PRUint32(insPos) == GetChildCount();
     PRBool firstInsPos = insPos;
+    nsIContent* firstInsertedContent = fragChildren[0];
 
     // Iterate through the fragment's children, and insert them in the new
     // parent
@@ -4217,6 +4218,7 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
         // Make sure to notify on any children that we did succeed to insert
         if (appending && i != 0) {
           nsNodeUtils::ContentAppended(static_cast<nsIContent*>(this),
+                                       firstInsertedContent,
                                        firstInsPos);
         }
         return res;
@@ -4229,7 +4231,8 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
 
     // Notify
     if (appending) {
-      nsNodeUtils::ContentAppended(static_cast<nsIContent*>(this), firstInsPos);
+      nsNodeUtils::ContentAppended(static_cast<nsIContent*>(this),
+                                   firstInsertedContent, firstInsPos);
     }
 
     // Fire mutation events. Optimize for the case when there are no listeners
