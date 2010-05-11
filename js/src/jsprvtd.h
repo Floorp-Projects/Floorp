@@ -57,26 +57,6 @@
 #include "jspubtd.h"
 #include "jsutil.h"
 
-/* Internal identifier (jsid) macros. */
-
-#define JSID_IS_ATOM(id)            JSVAL_IS_STRING((jsval)(id))
-#define JSID_TO_ATOM(id)            ((JSAtom *)(id))
-#define ATOM_TO_JSID(atom)          (JS_ASSERT(ATOM_IS_STRING(atom)),         \
-                                     (jsid)(atom))
-
-#define JSID_IS_INT(id)             JSVAL_IS_INT((jsval)(id))
-#define JSID_TO_INT(id)             JSVAL_TO_INT((jsval)(id))
-#define INT_TO_JSID(i)              ((jsid)INT_TO_JSVAL(i))
-#define INT_JSVAL_TO_JSID(v)        ((jsid)(v))
-#define INT_JSID_TO_JSVAL(id)       ((jsval)(id))
-
-#define JSID_IS_OBJECT(id)          JSVAL_IS_OBJECT((jsval)(id))
-#define JSID_TO_OBJECT(id)          JSVAL_TO_OBJECT((jsval)(id))
-#define OBJECT_TO_JSID(obj)         ((jsid)OBJECT_TO_JSVAL(obj))
-#define OBJECT_JSVAL_TO_JSID(v)     ((jsid)v)
-
-#define ID_TO_VALUE(id)             ((jsval)(id))
-
 /*
  * Convenience constants.
  */
@@ -179,16 +159,11 @@ class DeflatedStringCache;
 
 class PropertyCache;
 struct PropertyCacheEntry;
+
 } /* namespace js */
 
 /* Common instantiations. */
 typedef js::Vector<jschar, 32> JSCharBuffer;
-
-static inline JSPropertyOp
-js_CastAsPropertyOp(JSObject *object)
-{
-    return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
-}
 
 } /* export "C++" */
 #endif  /* __cplusplus */
@@ -204,10 +179,21 @@ typedef enum JSTrapStatus {
 
 typedef JSTrapStatus
 (* JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-                  void *closure);
+                  jsval closure);
+
+typedef JSTrapStatus
+(* JSInterruptHook)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                    void *closure); 
+typedef JSTrapStatus
+(* JSDebuggerHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                      void *closure);
+
+typedef JSTrapStatus
+(* JSThrowHook)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+                void *closure);
 
 typedef JSBool
-(* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id, jsval old,
+(* JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsid id, jsval old,
                         jsval *newp, void *closure);
 
 /* called just after script creation */
@@ -266,13 +252,13 @@ typedef JSBool
                      void *closure);
 
 typedef struct JSDebugHooks {
-    JSTrapHandler       interruptHandler;
-    void                *interruptHandlerData;
+    JSInterruptHook     interruptHook;
+    void                *interruptHookData;
     JSNewScriptHook     newScriptHook;
     void                *newScriptHookData;
     JSDestroyScriptHook destroyScriptHook;
     void                *destroyScriptHookData;
-    JSTrapHandler       debuggerHandler;
+    JSDebuggerHandler   debuggerHandler;
     void                *debuggerHandlerData;
     JSSourceHandler     sourceHandler;
     void                *sourceHandlerData;
@@ -282,7 +268,7 @@ typedef struct JSDebugHooks {
     void                *callHookData;
     JSObjectHook        objectHook;
     void                *objectHookData;
-    JSTrapHandler       throwHook;
+    JSThrowHook         throwHook;
     void                *throwHookData;
     JSDebugErrorHook    debugErrorHook;
     void                *debugErrorHookData;
@@ -316,7 +302,7 @@ typedef JSBool
  * value, with the specified getter, setter, and attributes.
  */
 typedef JSBool
-(* JSDefinePropOp)(JSContext *cx, JSObject *obj, jsid id, jsval value,
+(* JSDefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const jsval *value,
                    JSPropertyOp getter, JSPropertyOp setter, uintN attrs);
 
 /*
@@ -367,5 +353,58 @@ typedef void
 #else
 extern JSBool js_CStringsAreUTF8;
 #endif
+
+#ifdef __cplusplus
+namespace js {
+
+class Value;
+
+typedef JSBool
+(* DefinePropOp)(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+                 PropertyOp getter, PropertyOp setter, uintN attrs);
+typedef JSBool
+(* CheckAccessIdOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
+                    Value *vp, uintN *attrsp);
+typedef JSBool
+(* WatchPointHandler)(JSContext *cx, JSObject *obj, jsid id,
+                      const Value *old, Value *newp, void *closure);
+typedef JSBool
+(* PropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+
+/*
+ * Since jsval and Value are layout-compatible, pointers to otherwise-identical
+ * functions can be cast back and forth. To avoid widespread casting, the
+ * following safe casts are provided.
+ *
+ * See also Valueify and Jsvalify overloads in jspubtd.h.
+ */
+
+static inline DefinePropOp        Valueify(JSDefinePropOp f)      { return (DefinePropOp)f; }
+static inline JSDefinePropOp      Jsvalify(DefinePropOp f)        { return (JSDefinePropOp)f; }
+static inline CheckAccessIdOp     Valueify(JSCheckAccessIdOp f)   { return (CheckAccessIdOp)f; }
+static inline JSCheckAccessIdOp   Jsvalify(CheckAccessIdOp f)     { return (JSCheckAccessIdOp)f; }
+static inline WatchPointHandler   Valueify(JSWatchPointHandler f) { return (WatchPointHandler)f; }
+static inline JSWatchPointHandler Jsvalify(WatchPointHandler f)   { return (JSWatchPointHandler)f; }
+static inline PropertyIdOp        Valueify(JSPropertyIdOp f);     /* Same type as JSPropertyOp */
+static inline JSPropertyIdOp      Jsvalify(PropertyIdOp f);       /* Same type as PropertyOp */
+
+/*
+ * Internal utilities
+ */
+static JS_ALWAYS_INLINE void
+SetValueRangeToUndefined(Value *vec, Value *end)
+{
+    for (Value *v = vec; v != end; ++v)
+        v->setUndefined();
+}
+
+static JS_ALWAYS_INLINE void
+SetValueRangeToUndefined(Value *vec, uintN len)
+{
+    return SetValueRangeToUndefined(vec, vec + len);
+}
+
+}  /* namespace js */
+#endif /* __cplusplus */
 
 #endif /* jsprvtd_h___ */

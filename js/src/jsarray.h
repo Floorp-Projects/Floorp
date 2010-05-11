@@ -46,14 +46,12 @@
 #include "jspubtd.h"
 #include "jsobj.h"
 
-JS_BEGIN_EXTERN_C
-
 #define ARRAY_CAPACITY_MIN      7
 
 extern JSBool
-js_IdIsIndex(jsval id, jsuint *indexp);
+js_IdIsIndex(jsid id, jsuint *indexp);
 
-extern JSClass js_ArrayClass, js_SlowArrayClass;
+extern js::Class js_ArrayClass, js_SlowArrayClass;
 
 inline bool
 JSObject::isDenseArray() const
@@ -112,7 +110,7 @@ extern JSObject * JS_FASTCALL
 js_NewArrayWithSlots(JSContext* cx, JSObject* proto, uint32 len);
 
 extern JSObject *
-js_NewArrayObject(JSContext *cx, jsuint length, const jsval *vector, bool holey = false);
+js_NewArrayObject(JSContext *cx, jsuint length, const js::Value *vector, bool holey = false);
 
 /* Create an array object that starts out already made slow/sparse. */
 extern JSObject *
@@ -125,7 +123,7 @@ static JS_INLINE uint32
 js_DenseArrayCapacity(JSObject *obj)
 {
     JS_ASSERT(obj->isDenseArray());
-    return obj->dslots ? (uint32) obj->dslots[-1] : 0;
+    return obj->dslots ? obj->dslotLength() : 0;
 }
 
 static JS_INLINE void
@@ -133,7 +131,7 @@ js_SetDenseArrayCapacity(JSObject *obj, uint32 capacity)
 {
     JS_ASSERT(obj->isDenseArray());
     JS_ASSERT(obj->dslots);
-    obj->dslots[-1] = (jsval) capacity;
+    obj->dslots[-1].setPrivateUint32(capacity);
 }
 
 extern JSBool
@@ -167,21 +165,23 @@ typedef JSBool (*JSComparator)(void *arg, const void *a, const void *b,
  * NB: vec is the array to be sorted, tmp is temporary space at least as big
  * as vec. Both should be GC-rooted if appropriate.
  *
+ * isValue should true iff vec points to an array of js::Value
+ *
  * The sorted result is in vec. vec may be in an inconsistent state if the
  * comparator function cmp returns an error inside a comparison, so remember
  * to check the return value of this function.
  */
-extern JSBool
+extern bool
 js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
-             void *arg, void *tmp);
+             void *arg, void *tmp, bool isValue);
 
 #ifdef DEBUG_ARRAYS
 extern JSBool
-js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+js_ArrayInfo(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
 #endif
 
 extern JSBool JS_FASTCALL
-js_ArrayCompPush(JSContext *cx, JSObject *obj, jsval v);
+js_ArrayCompPush(JSContext *cx, JSObject *obj, const js::Value &v);
 
 /*
  * Fast dense-array-to-buffer conversion for use by canvas.
@@ -211,11 +211,11 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj);
  */
 JSBool
 js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, JSProperty *prop,
-                             jsval *vp);
+                             js::Value *vp);
 
 /* Array constructor native. Exposed only so the JIT can know its address. */
 JSBool
-js_Array(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
+js_Array(JSContext* cx, JSObject* obj, uintN argc, js::Value* argv, js::Value* rval);
 
 /*
  * Friend api function that allows direct creation of an array object with a
@@ -229,8 +229,6 @@ js_Array(JSContext* cx, JSObject* obj, uintN argc, jsval* argv, jsval* rval);
  * resulting array has length and count both equal to |capacity|.
  */
 JS_FRIEND_API(JSObject *)
-js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, jsval **vector);
-
-JS_END_EXTERN_C
+js_NewArrayObjectWithCapacity(JSContext *cx, jsuint capacity, js::Value **vector);
 
 #endif /* jsarray_h___ */

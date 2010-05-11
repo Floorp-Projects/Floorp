@@ -402,7 +402,7 @@ script_trace(JSTracer *trc, JSObject *obj)
         js_TraceScript(trc, script);
 }
 
-JSClass js_ScriptClass = {
+Class js_ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSCRIPT_RESERVED_SLOTS) |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),

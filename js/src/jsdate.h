@@ -44,9 +44,7 @@
 #ifndef jsdate_h___
 #define jsdate_h___
 
-JS_BEGIN_EXTERN_C
-
-extern JSClass js_DateClass;
+extern js::Class js_DateClass;
 
 extern JSObject *
 js_InitDateClass(JSContext *cx, JSObject *obj);
@@ -126,8 +124,6 @@ js_IntervalNow();
 
 /* Date constructor native. Exposed only so the JIT can know its address. */
 JSBool
-js_Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
-
-JS_END_EXTERN_C
+js_Date(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
 
 #endif /* jsdate_h___ */

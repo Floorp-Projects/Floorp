@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS atom table.
  */
@@ -58,7 +60,13 @@
 #include "jsscan.h"
 #include "jsstr.h"
 #include "jsversion.h"
+#include "jsxml.h"
+
 #include "jsstrinlines.h"
+#include "jsatominlines.h"
+#include "jsobjinlines.h"
+
+using namespace js;
 
 /*
  * ATOM_HASH assumes that JSHashNumber is 32-bit even on 64-bit systems.
@@ -85,7 +93,7 @@ JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
 const char *
 js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
 {
-    return js_ValueToPrintableString(cx, ATOM_KEY(atom));
+    return js_ValueToPrintableString(cx, Value(ATOM_TO_STRING(atom)));
 }
 
 #define JS_PROTO(name,code,init) const char js_##name##_str[] = #name;
@@ -269,12 +277,12 @@ const char js_current_str[]          = "current";
  */
 typedef struct JSAtomHashEntry {
     JSDHashEntryHdr hdr;
-    jsuword         keyAndFlags;
+    jsboxedword     keyAndFlags;
 } JSAtomHashEntry;
 
 #define ATOM_ENTRY_FLAG_MASK            (ATOM_PINNED | ATOM_INTERNED)
 
-JS_STATIC_ASSERT(ATOM_ENTRY_FLAG_MASK < JSVAL_ALIGN);
+JS_STATIC_ASSERT(ATOM_ENTRY_FLAG_MASK < JSBOXEDWORD_ALIGN);
 
 /*
  * Helper macros to access and modify JSAtomHashEntry.
@@ -536,8 +544,8 @@ js_locked_atom_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
         return JS_DHASH_NEXT;
     }
     JS_SET_TRACING_INDEX(trc, "locked_atom", (size_t)number);
-    js_CallGCMarker(trc, ATOM_ENTRY_KEY(entry),
-                    IS_STRING_TABLE(table) ? JSTRACE_STRING : JSTRACE_DOUBLE);
+    CallGCMarker(trc, ATOM_ENTRY_KEY(entry),
+                 IS_STRING_TABLE(table) ? JSTRACE_STRING : JSTRACE_DOUBLE);
     return JS_DHASH_NEXT;
 }
 
@@ -556,7 +564,7 @@ js_pinned_atom_tracer(JSDHashTable *table, JSDHashEntryHdr *hdr,
                              ? "pinned_atom"
                              : "interned_atom",
                              (size_t)number);
-        js_CallGCMarker(trc, ATOM_ENTRY_KEY(entry), JSTRACE_STRING);
+        CallGCMarker(trc, ATOM_ENTRY_KEY(entry), JSTRACE_STRING);
     }
     return JS_DHASH_NEXT;
 }
@@ -619,7 +627,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
     JSAtomHashEntry *entry;
     uint32 gen;
     jsdouble *key;
-    jsval v;
+    jsboxedword w;
 
     state = &cx->runtime->atomState;
     table = &state->doubleAtoms;
@@ -632,7 +640,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
         gen = ++table->generation;
         JS_UNLOCK(cx, &state->lock);
 
-        key = js_NewWeaklyRootedDouble(cx, d);
+        key = js_NewWeaklyRootedDoubleAtom(cx, d);
         if (!key)
             return NULL;
 
@@ -652,11 +660,11 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
     }
 
   finish:
-    v = DOUBLE_TO_JSVAL((jsdouble *)ATOM_ENTRY_KEY(entry));
-    cx->weakRoots.lastAtom = v;
+    w = DOUBLE_TO_JSBOXEDWORD((jsdouble *)ATOM_ENTRY_KEY(entry));
+    cx->weakRoots.lastAtom = (JSAtom *)w;
     JS_UNLOCK(cx, &state->lock);
 
-    return (JSAtom *)v;
+    return (JSAtom *)w;
 
   failed_hash_add:
     JS_UNLOCK(cx, &state->lock);
@@ -667,7 +675,7 @@ js_AtomizeDouble(JSContext *cx, jsdouble d)
 JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 {
-    jsval v;
+    JSAtom *atom;
     JSAtomState *state;
     JSDHashTable *table;
     JSAtomHashEntry *entry;
@@ -678,13 +686,13 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     JS_ASSERT_IF(flags & ATOM_NOCOPY, flags & ATOM_TMPSTR);
 
     if (str->isAtomized())
-        return (JSAtom *) STRING_TO_JSVAL(str);
+        return STRING_TO_ATOM(str);
 
     size_t length = str->length();
     if (length == 1) {
         jschar c = str->chars()[0];
         if (c < UNIT_STRING_LIMIT)
-            return (JSAtom *) STRING_TO_JSVAL(JSString::unitString(c));
+            return STRING_TO_ATOM(JSString::unitString(c));
     }
 
     /*
@@ -705,7 +713,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
             if (length == 3)
                 i = i * 10 + chars[2] - '0'; 
             if (jsuint(i) < INT_STRING_LIMIT)
-                return (JSAtom *) STRING_TO_JSVAL(JSString::intString(i));
+                return STRING_TO_ATOM(JSString::intString(i));
         }
     }
 
@@ -775,10 +783,10 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
   finish:
     ADD_ATOM_ENTRY_FLAGS(entry, flags & (ATOM_PINNED | ATOM_INTERNED));
     JS_ASSERT(key->isAtomized());
-    v = STRING_TO_JSVAL(key);
-    cx->weakRoots.lastAtom = v;
+    atom = STRING_TO_ATOM(key);
+    cx->weakRoots.lastAtom = atom;
     JS_UNLOCK(cx, &state->lock);
-    return (JSAtom *)v;
+    return atom;
 
   failed_hash_add:
     JS_UNLOCK(cx, &state->lock);
@@ -842,7 +850,7 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
     if (length == 1) {
         jschar c = *chars;
         if (c < UNIT_STRING_LIMIT)
-            return (JSAtom *) STRING_TO_JSVAL(JSString::unitString(c));
+            return STRING_TO_ATOM(JSString::unitString(c));
     }
 
     str.initFlat((jschar *)chars, length);
@@ -855,26 +863,26 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
            : NULL;
     JS_UNLOCK(cx, &state->lock);
 
-    return str2 ? (JSAtom *)STRING_TO_JSVAL(str2) : NULL;
+    return str2 ? STRING_TO_ATOM(str2) : NULL;
 }
 
 JSBool
-js_AtomizePrimitiveValue(JSContext *cx, jsval v, JSAtom **atomp)
+js_AtomizePrimitiveValue(JSContext *cx, jsboxedword w, JSAtom **atomp)
 {
     JSAtom *atom;
 
-    if (JSVAL_IS_STRING(v)) {
-        atom = js_AtomizeString(cx, JSVAL_TO_STRING(v), 0);
+    if (JSBOXEDWORD_IS_STRING(w)) {
+        atom = js_AtomizeString(cx, JSBOXEDWORD_TO_STRING(w), 0);
         if (!atom)
             return JS_FALSE;
-    } else if (JSVAL_IS_DOUBLE(v)) {
-        atom = js_AtomizeDouble(cx, *JSVAL_TO_DOUBLE(v));
+    } else if (JSBOXEDWORD_IS_DOUBLE(w)) {
+        atom = js_AtomizeDouble(cx, *JSBOXEDWORD_TO_DOUBLE(w));
         if (!atom)
             return JS_FALSE;
     } else {
-        JS_ASSERT(JSVAL_IS_INT(v) || JSVAL_IS_BOOLEAN(v) ||
-                  JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v));
-        atom = (JSAtom *)v;
+        JS_ASSERT(JSBOXEDWORD_IS_INT(w) || JSBOXEDWORD_IS_BOOLEAN(w) ||
+                  JSBOXEDWORD_IS_NULL(w) || JSBOXEDWORD_IS_VOID(w));
+        atom = (JSAtom *)w;
     }
     *atomp = atom;
     return JS_TRUE;
@@ -1265,3 +1273,96 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
     }
     al->clear();
 }
+
+#if JS_HAS_XML_SUPPORT
+bool
+js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
+                             jsid *idp)
+{
+    JS_ASSERT(idval.isObject());
+    if (obj->isXML()) {
+        *idp = OBJECT_TO_JSID(&idval.asObject());
+        return true;
+    }
+
+    if (!js_IsFunctionQName(cx, &idval.asObject(), idp))
+        return JS_FALSE;
+    if (*idp != 0)
+        return true;
+
+    return js_ValueToStringId(cx, idval, idp);
+}
+
+bool
+js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
+                             jsid *idp, Value *vp)
+{
+    JS_ASSERT(idval.isObject());
+    if (obj->isXML()) {
+        JSObject &idobj = idval.asObject();
+        *idp = OBJECT_TO_JSID(&idobj);
+        SetObject(vp, idobj);
+        return true;
+    }
+
+    if (!js_IsFunctionQName(cx, &idval.asObject(), idp))
+        return JS_FALSE;
+    if (*idp != 0) {
+        vp->copy(IdToValue(*idp));
+        return true;
+    }
+
+    if (js_ValueToStringId(cx, idval, idp)) {
+        vp->setString(ATOM_TO_STRING(JSID_TO_ATOM(*idp)));
+        return true;
+    }
+    return false;
+}
+#endif
+
+namespace js {
+
+bool
+ValueToId(JSContext *cx, const Value *vp, jsid *idp)
+{
+    int32_t i;
+    if (ValueFitsInInt32(*vp, &i) && INT32_FITS_IN_JSID(i)) {
+        *idp = INT_TO_JSID(i);
+        return true;
+    }
+
+#if JS_HAS_XML_SUPPORT
+    if (vp->isObject()) {
+        Class *clasp = vp->asObject().getClass();
+        if (JS_UNLIKELY(clasp == &js_QNameClass.base ||
+                        clasp == &js_AttributeNameClass ||
+                        clasp == &js_AnyNameClass)) {
+            *idp = OBJECT_TO_JSID(&vp->asObject());
+            return true;
+        }
+    }
+#endif
+
+    return js_ValueToStringId(cx, *vp, idp);
+}
+
+/*
+ * Normally, js::Value should not be passed by value, but this function should
+ * only be used on cold paths, so ease of use wins out.
+ */
+Value
+IdToValue(jsid id)
+{
+    ExplicitlyConstructedValue v;
+    if (JSID_IS_INT(id))
+        v.setInt32(JSID_TO_INT(id));
+    else if (JSID_IS_ATOM(id))
+        v.setString(ATOM_TO_STRING(JSID_TO_ATOM(id)));
+    else if (JSID_IS_NULL(id))
+        v.setNull();
+    else
+        SetObject(&v, *JSID_TO_OBJECT(id));
+    return v;
+}
+
+} /* namespace js */

@@ -343,6 +343,44 @@ PodArrayZero(T (&t)[N])
     memset(t, 0, N * sizeof(T));
 }
 
+template <class T>
+class AlignedPtrAndFlag
+{
+    uintptr_t bits;
+
+  public:
+    AlignedPtrAndFlag(T *t, bool flag) {
+        JS_ASSERT((uintptr_t(t) & 1) == 0);
+        bits = uintptr_t(t) | flag;
+    }
+
+    T *ptr() const {
+        return (T *)(bits & ~uintptr_t(1));
+    }
+
+    bool flag() const {
+        return (bits & 1) != 0;
+    }
+
+    void setPtr(T *t) const {
+        JS_ASSERT((uintptr_t(t) & 1) == 0);
+        bits = uintptr_t(t) | flag();
+    }
+
+    void setFlag() {
+        bits |= 1;
+    }
+
+    void unsetFlag() {
+        bits &= ~uintptr_t(1);
+    }
+
+    void set(T *t, bool flag) {
+        JS_ASSERT((uintptr_t(t) & 1) == 0);
+        bits = uintptr_t(t) | flag;
+    }
+};
+
 } /* namespace js */
 
 #endif /* jstl_h_ */

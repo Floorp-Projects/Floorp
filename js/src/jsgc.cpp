@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS Mark-and-Sweep Garbage Collector.
  *
@@ -115,20 +117,15 @@ using namespace js;
  * JSTRACE_STRING.
  */
 JS_STATIC_ASSERT(JSTRACE_OBJECT == 0);
-JS_STATIC_ASSERT(JSTRACE_DOUBLE == 1);
-JS_STATIC_ASSERT(JSTRACE_STRING == 2);
+JS_STATIC_ASSERT(JSTRACE_STRING == 1);
+JS_STATIC_ASSERT(JSTRACE_DOUBLE == 2);
 JS_STATIC_ASSERT(JSTRACE_XML    == 3);
 
 /*
  * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_STRING is the last non-xml
  * trace kind when JS_HAS_XML_SUPPORT is false.
  */
-JS_STATIC_ASSERT(JSTRACE_STRING + 1 == JSTRACE_XML);
-
-/*
- * Check that we can use memset(p, 0, ...) to implement JS_CLEAR_WEAK_ROOTS.
- */
-JS_STATIC_ASSERT(JSVAL_NULL == 0);
+JS_STATIC_ASSERT(JSTRACE_DOUBLE + 1 == JSTRACE_XML);
 
 /*
  * Check consistency of external string constants from JSFinalizeGCThingKind.
@@ -900,13 +897,6 @@ js_IsAboutToBeFinalized(void *thing)
     return !IsMarkedGCThing(a, thing);
 }
 
-/* This is compatible with JSDHashEntryStub. */
-typedef struct JSGCRootHashEntry {
-    JSDHashEntryHdr hdr;
-    void            *root;
-    const char      *name;
-} JSGCRootHashEntry;
-
 /*
  * Initial size of the gcRootsHash and gcLocksHash tables (SWAG, small enough
  * to amortize).
@@ -923,11 +913,8 @@ JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
     InitGCArenaLists(rt);
-    if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
-                           sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
-        rt->gcRootsHash.ops = NULL;
+    if (!rt->gcRootsHash.init(GC_ROOTS_SIZE))
         return false;
-    }
     if (!JS_DHashTableInit(&rt->gcLocksHash, JS_DHashGetStubOps(), NULL,
                            sizeof(JSGCLockHashEntry), GC_ROOTS_SIZE)) {
         rt->gcLocksHash.ops = NULL;
@@ -1150,12 +1137,10 @@ js_FinishGC(JSRuntime *rt)
     rt->gcIteratorTable.clear();
     FinishGCArenaLists(rt);
 
-    if (rt->gcRootsHash.ops) {
+    if (rt->gcRootsHash.initialized()) {
 #ifdef DEBUG
         CheckLeakedRoots(rt);
 #endif
-        JS_DHashTableFinish(&rt->gcRootsHash);
-        rt->gcRootsHash.ops = NULL;
     }
     if (rt->gcLocksHash.ops) {
         JS_DHashTableFinish(&rt->gcLocksHash);
@@ -1164,20 +1149,26 @@ js_FinishGC(JSRuntime *rt)
 }
 
 JSBool
-js_AddRoot(JSContext *cx, void *rp, const char *name)
+js_AddRoot(JSContext *cx, Value *vp, const char *name)
 {
-    JSBool ok = js_AddRootRT(cx->runtime, rp, name);
+    JSBool ok = js_AddRootRT(cx->runtime, vp, name);
     if (!ok)
         JS_ReportOutOfMemory(cx);
     return ok;
 }
 
 JSBool
-js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
+js_AddGCThingRoot(JSContext *cx, void **rp, const char *name)
 {
-    JSBool ok;
-    JSGCRootHashEntry *rhe;
+    JSBool ok = js_AddGCThingRootRT(cx->runtime, rp, name);
+    if (!ok)
+        JS_ReportOutOfMemory(cx);
+    return ok;
+}
 
+JSBool
+js_AddRootRT(JSRuntime *rt, Value *vp, const char *name)
+{
     /*
      * Due to the long-standing, but now removed, use of rt->gcLock across the
      * bulk of js_GC, API users have come to depend on JS_AddRoot etc. locking
@@ -1187,16 +1178,26 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
      */
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
-    rhe = (JSGCRootHashEntry *)
-          JS_DHashTableOperate(&rt->gcRootsHash, rp, JS_DHASH_ADD);
-    if (rhe) {
-        rhe->root = rp;
-        rhe->name = name;
-        ok = JS_TRUE;
-    } else {
-        ok = JS_FALSE;
-    }
-    return ok;
+
+    void *key = vp;
+    return !!rt->gcRootsHash.put(key, JSRootInfo(name, JS_GC_ROOT_VALUE_PTR));
+}
+
+JSBool
+js_AddRootRT(JSRuntime *rt, void **rp, const char *name)
+{
+    /*
+     * Due to the long-standing, but now removed, use of rt->gcLock across the
+     * bulk of js_GC, API users have come to depend on JS_AddRoot etc. locking
+     * properly with a racing GC, without calling JS_AddRoot from a request.
+     * We have to preserve API compatibility here, now that we avoid holding
+     * rt->gcLock across the mark phase (including the root hashtable mark).
+     */
+    AutoLockGC lock(rt);
+    js_WaitForGC(rt);
+
+    void *key = rp;
+    return !!rt->gcRootsHash.put(key, JSRootInfo(name, JS_GC_ROOT_GCTHING_PTR));
 }
 
 JSBool
@@ -1208,26 +1209,16 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
      */
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
-    (void) JS_DHashTableOperate(&rt->gcRootsHash, rp, JS_DHASH_REMOVE);
+    rt->gcRootsHash.remove(rp);
     rt->gcPoke = JS_TRUE;
     return JS_TRUE;
 }
 
+typedef JSRootedValueMap::Range RootRange;
+typedef JSRootedValueMap::Entry RootEntry;
+typedef JSRootedValueMap::Enum RootEnum;
+
 #ifdef DEBUG
-
-static JSDHashOperator
-js_root_printer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 i, void *arg)
-{
-    uint32 *leakedroots = (uint32 *)arg;
-    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
-
-    (*leakedroots)++;
-    fprintf(stderr,
-            "JS engine warning: leaking GC root \'%s\' at %p\n",
-            rhe->name ? (char *)rhe->name : "", rhe->root);
-
-    return JS_DHASH_NEXT;
-}
 
 static void
 CheckLeakedRoots(JSRuntime *rt)
@@ -1235,8 +1226,14 @@ CheckLeakedRoots(JSRuntime *rt)
     uint32 leakedroots = 0;
 
     /* Warn (but don't assert) debug builds of any remaining roots. */
-    JS_DHashTableEnumerate(&rt->gcRootsHash, js_root_printer,
-                           &leakedroots);
+    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
+        RootEntry &entry = r.front();
+        leakedroots++;
+        fprintf(stderr,
+                "JS engine warning: leaking GC root \'%s\' at %p\n",
+                entry.value.name ? entry.value.name : "", entry.key);
+    }
+
     if (leakedroots > 0) {
         if (leakedroots == 1) {
             fprintf(stderr,
@@ -1254,74 +1251,38 @@ CheckLeakedRoots(JSRuntime *rt)
     }
 }
 
-typedef struct NamedRootDumpArgs {
-    void (*dump)(const char *name, void *rp, void *data);
-    void *data;
-} NamedRootDumpArgs;
-
-static JSDHashOperator
-js_named_root_dumper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
-                     void *arg)
-{
-    NamedRootDumpArgs *args = (NamedRootDumpArgs *) arg;
-    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
-
-    if (rhe->name)
-        args->dump(rhe->name, rhe->root, args->data);
-    return JS_DHASH_NEXT;
-}
-
 void
 js_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, void *data),
+                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
                   void *data)
 {
-    NamedRootDumpArgs args;
-
-    args.dump = dump;
-    args.data = data;
-    JS_DHashTableEnumerate(&rt->gcRootsHash, js_named_root_dumper, &args);
+    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
+        RootEntry &entry = r.front();
+        if (const char *name = entry.value.name)
+            dump(name, entry.key, entry.value.type, data);
+    }
 }
 
 #endif /* DEBUG */
 
-typedef struct GCRootMapArgs {
-    JSGCRootMapFun map;
-    void *data;
-} GCRootMapArgs;
-
-static JSDHashOperator
-js_gcroot_mapper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
-                 void *arg)
-{
-    GCRootMapArgs *args = (GCRootMapArgs *) arg;
-    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
-    intN mapflags;
-    int op;
-
-    mapflags = args->map(rhe->root, rhe->name, args->data);
-
-#if JS_MAP_GCROOT_NEXT == JS_DHASH_NEXT &&                                     \
-    JS_MAP_GCROOT_STOP == JS_DHASH_STOP &&                                     \
-    JS_MAP_GCROOT_REMOVE == JS_DHASH_REMOVE
-    op = (JSDHashOperator)mapflags;
-#else
-    op = JS_DHASH_NEXT;
-    if (mapflags & JS_MAP_GCROOT_STOP)
-        op |= JS_DHASH_STOP;
-    if (mapflags & JS_MAP_GCROOT_REMOVE)
-        op |= JS_DHASH_REMOVE;
-#endif
-
-    return (JSDHashOperator) op;
-}
-
 uint32
 js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
 {
-    GCRootMapArgs args = {map, data};
     AutoLockGC lock(rt);
-    return JS_DHashTableEnumerate(&rt->gcRootsHash, js_gcroot_mapper, &args);
+    int ct = 0;
+    for (RootEnum e(rt->gcRootsHash); !e.empty(); e.popFront()) {
+        RootEntry &entry = e.front();
+
+        ct++;
+        intN mapflags = map(entry.key, entry.value.type, entry.value.name, data);
+
+        if (mapflags & JS_MAP_GCROOT_REMOVE)
+            e.removeFront();
+        if (mapflags & JS_MAP_GCROOT_STOP)
+            break;
+    }
+
+    return ct;
 }
 
 JSBool
@@ -1582,7 +1543,7 @@ js_NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
          * this reference, allowing thing to be GC'd if it has no other refs.
          * See JS_EnterLocalRootScope and related APIs.
          */
-        if (js_PushLocalRoot(cx, lrs, (jsval) thing) < 0) {
+        if (js_PushLocalRoot(cx, lrs, thing) < 0) {
             JS_ASSERT(thing->link == *freeListp);
             *freeListp = thing;
             return NULL;
@@ -1728,8 +1689,8 @@ RefillDoubleFreeList(JSContext *cx)
     return MakeNewArenaFreeList(a, sizeof(jsdouble));
 }
 
-JSBool
-js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
+jsdouble *
+js_NewWeaklyRootedDoubleAtom(JSContext *cx, jsdouble d)
 {
     /* Updates of metering counters here are not thread-safe. */
     METER(cx->runtime->gcStats.doubleArenaStats.alloc++);
@@ -1744,8 +1705,8 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
 
         jsdouble *dp = reinterpret_cast<jsdouble *>(thing);
         *dp = d;
-        *vp = DOUBLE_TO_JSVAL(dp);
-        return true;
+        cx->weakRoots.newbornDouble = dp;
+        return dp;
     }
 
     JSLocalRootStack *lrs = JS_THREAD_DATA(cx)->localRootStack;
@@ -1769,7 +1730,7 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
             js_ReportOutOfMemory(cx);
             METER(cx->runtime->gcStats.doubleArenaStats.fail++);
         }
-        return false;
+        return NULL;
     }
 
     CheckGCFreeListLink(thing);
@@ -1777,19 +1738,11 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
 
     jsdouble *dp = reinterpret_cast<jsdouble *>(thing);
     *dp = d;
-    *vp = DOUBLE_TO_JSVAL(dp);
-    return !lrs || js_PushLocalRoot(cx, lrs, *vp) >= 0;
-}
-
-jsdouble *
-js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d)
-{
-    jsval v;
-    if (!js_NewDoubleInRootedValue(cx, d, &v))
-        return NULL;
-
-    jsdouble *dp = JSVAL_TO_DOUBLE(v);
     cx->weakRoots.newbornDouble = dp;
+    /*
+     * N.B. We any active local root scope, since this function is called only
+     * from the compiler to create double atoms.
+     */
     return dp;
 }
 
@@ -2049,8 +2002,10 @@ MarkDelayedChildren(JSTracer *trc)
     JS_ASSERT(rt->gcMarkLaterCount == 0);
 }
 
+namespace js {
+
 void
-js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind)
+CallGCMarker(JSTracer *trc, void *thing, uint32 kind)
 {
     JSContext *cx;
     JSRuntime *rt;
@@ -2152,40 +2107,42 @@ js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind)
 }
 
 void
-js_CallValueTracerIfGCThing(JSTracer *trc, jsval v)
+CallGCMarkerForGCThing(JSTracer *trc, void *thing)
 {
-    void *thing;
-    uint32 kind;
-
-    if (JSVAL_IS_DOUBLE(v) || JSVAL_IS_STRING(v)) {
-        thing = JSVAL_TO_TRACEABLE(v);
-        kind = JSVAL_TRACE_KIND(v);
-        JS_ASSERT(kind == js_GetGCThingTraceKind(thing));
-    } else if (JSVAL_IS_OBJECT(v) && v != JSVAL_NULL) {
-        /* v can be an arbitrary GC thing reinterpreted as an object. */
-        thing = JSVAL_TO_OBJECT(v);
-        kind = js_GetGCThingTraceKind(thing);
-    } else {
+#ifdef DEBUG
+    /*
+     * The incoming thing should be a real gc-thing, not a boxed, word-sized
+     * primitive value.
+     */
+    jsboxedword w = (jsboxedword)thing;
+    JS_ASSERT(JSBOXEDWORD_IS_OBJECT(w));
+#endif
+    
+    if (!thing)
         return;
-    }
-    js_CallGCMarker(trc, thing, kind);
+
+    uint32 kind = js_GetGCThingTraceKind(thing);
+    CallGCMarker(trc, thing, kind);
 }
 
-static JSDHashOperator
-gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
-                  void *arg)
-{
-    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
-    JSTracer *trc = (JSTracer *)arg;
-    jsval *rp = (jsval *)rhe->root;
-    jsval v = *rp;
+} /* namespace js */
 
-    /* Ignore null reference, scalar values, and static strings. */
-    if (JSVAL_IS_TRACEABLE(v)) {
+static void
+gc_root_traversal(JSTracer *trc, const RootEntry &entry)
+{
 #ifdef DEBUG
-        if (!JSString::isStatic(JSVAL_TO_GCTHING(v))) {
+    void *ptr;
+    if (entry.value.type == JS_GC_ROOT_GCTHING_PTR) {
+        ptr = entry.key;
+    } else {
+        Value *vp = static_cast<Value *>(entry.key);
+        ptr = vp->isGCThing() ? vp->asGCThing() : NULL;
+    }
+
+    if (ptr) {
+        if (!JSString::isStatic(ptr)) {
             bool root_points_to_gcArenaList = false;
-            jsuword thing = (jsuword) JSVAL_TO_GCTHING(v);
+            jsuword thing = (jsuword) ptr;
             JSRuntime *rt = trc->context->runtime;
             for (unsigned i = 0; i != FINALIZE_LIMIT; i++) {
                 JSGCArenaList *arenaList = &rt->gcArenaList[i];
@@ -2209,21 +2166,23 @@ gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
                     }
                 }
             }
-            if (!root_points_to_gcArenaList && rhe->name) {
+            if (!root_points_to_gcArenaList && entry.value.name) {
                 fprintf(stderr,
 "JS API usage error: the address passed to JS_AddNamedRoot currently holds an\n"
-"invalid jsval.  This is usually caused by a missing call to JS_RemoveRoot.\n"
+"invalid gcthing.  This is usually caused by a missing call to JS_RemoveRoot.\n"
 "The root's name is \"%s\".\n",
-                        rhe->name);
+                        entry.value.name);
             }
             JS_ASSERT(root_points_to_gcArenaList);
         }
-#endif
-        JS_SET_TRACING_NAME(trc, rhe->name ? rhe->name : "root");
-        js_CallValueTracerIfGCThing(trc, v);
     }
+#endif
 
-    return JS_DHASH_NEXT;
+    JS_SET_TRACING_NAME(trc, entry.value.name ? entry.value.name : "root");
+    if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
+        CallGCMarkerForGCThing(trc, entry.key);
+    else
+        CallGCMarkerIfGCThing(trc, *static_cast<Value *>(entry.key));
 }
 
 static JSDHashOperator
@@ -2249,7 +2208,7 @@ TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len)
     for (uint32 i = 0; i < len; i++) {
         if (JSObject *obj = vec[i]) {
             JS_SET_TRACING_INDEX(trc, "vector", i);
-            js_CallGCMarker(trc, obj, JSTRACE_OBJECT);
+            CallGCMarker(trc, obj, JSTRACE_OBJECT);
         }
     }
 }
@@ -2263,14 +2222,13 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
     if (fp->callobj)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
     if (fp->argsobj)
-        JS_CALL_OBJECT_TRACER(trc, JSVAL_TO_OBJECT(fp->argsobj), "arguments");
+        JS_CALL_OBJECT_TRACER(trc, fp->argsobj, "arguments");
     if (fp->script)
         js_TraceScript(trc, fp->script);
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
-    JS_CALL_VALUE_TRACER(trc, fp->thisv, "this");
-
-    JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
+    CallGCMarkerIfGCThing(trc, fp->thisv, "this");
+    CallGCMarkerIfGCThing(trc, fp->rval, "rval");
     if (fp->scopeChain)
         JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
 }
@@ -2305,9 +2263,8 @@ JSWeakRoots::mark(JSTracer *trc)
     }
     if (newbornDouble)
         JS_CALL_DOUBLE_TRACER(trc, newbornDouble, "newborn_double");
-    JS_CALL_VALUE_TRACER(trc, lastAtom, "lastAtom");
-    JS_SET_TRACING_NAME(trc, "lastInternalResult");
-    js_CallValueTracerIfGCThing(trc, lastInternalResult);
+    CallGCMarkerIfGCThing(trc, ATOM_TO_JSID(lastAtom), "lastAtom");
+    CallGCMarkerForGCThing(trc, lastInternalResult, "lastInternalResult");
 }
 
 void
@@ -2320,10 +2277,10 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
         JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "global object");
     acx->weakRoots.mark(trc);
     if (acx->throwing) {
-        JS_CALL_VALUE_TRACER(trc, acx->exception, "exception");
+        CallGCMarkerIfGCThing(trc, acx->exception, "exception");
     } else {
         /* Avoid keeping GC-ed junk stored in JSContext.exception. */
-        acx->exception = JSVAL_NULL;
+        acx->exception.setNull();
     }
 
     for (js::AutoGCRooter *gcr = acx->autoGCRooters; gcr; gcr = gcr->down)
@@ -2350,7 +2307,9 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
     JSRuntime *rt = trc->context->runtime;
     JSContext *iter, *acx;
 
-    JS_DHashTableEnumerate(&rt->gcRootsHash, gc_root_traversal, trc);
+    for (RootRange r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
+        gc_root_traversal(trc, r.front());
+
     JS_DHashTableEnumerate(&rt->gcLocksHash, gc_lock_traversal, trc);
     js_TraceAtomState(trc, allAtoms);
     js_TraceRuntimeNumberState(trc);
@@ -2406,12 +2365,12 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
             ssr->cycle = true;
             return;
         }
-        pobj = JSVAL_TO_OBJECT(pobj->getSlot(slot));
+        pobj = pobj->getSlot(slot).asObjectOrNull();
     }
 
     pobj = ssr->pobj;
     if (slot == JSSLOT_PROTO) {
-        obj->setProto(pobj);
+        obj->setProto(ToObjPtr(pobj));
     } else {
         JS_ASSERT(slot == JSSLOT_PARENT);
         obj->setParent(pobj);
@@ -2443,7 +2402,7 @@ FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
         return;
 
     /* Finalize obj first, in case it needs map and slots. */
-    JSClass *clasp = obj->getClass();
+    Class *clasp = obj->getClass();
     if (clasp->finalize)
         clasp->finalize(cx, obj);
 

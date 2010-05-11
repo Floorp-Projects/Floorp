@@ -800,29 +800,6 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     return proto;
 }
 
-JSBool
-js_NewNumberInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
-{
-    jsint i;
-
-    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
-        *vp = INT_TO_JSVAL(i);
-        return JS_TRUE;
-    }
-    return js_NewDoubleInRootedValue(cx, d, vp);
-}
-
-JSBool
-js_NewWeaklyRootedNumber(JSContext *cx, jsdouble d, jsval *rval)
-{
-    jsint i;
-    if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
-        *rval = INT_TO_JSVAL(i);
-        return JS_TRUE;
-    }
-    return JS_NewDoubleValue(cx, d, rval);
-}
-
 /*
  * Convert a number to C string. The buf must be large enough to accommodate
  * the result, including '-' and '\0', if base == 10 or d is an integer that
@@ -936,8 +913,8 @@ js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 
 namespace js {
 
-jsval
-ValueToNumberSlow(JSContext *cx, jsval v, double *out)
+bool
+ValueToNumberSlow(JSContext *cx, Value *vp, double *out)
 {
     JS_ASSERT(!JSVAL_IS_INT(v) && !JSVAL_IS_DOUBLE(v));
     goto skip_int_double;
@@ -999,24 +976,7 @@ ValueToNumberSlow(JSContext *cx, jsval v, double *out)
 }
 
 bool
-ValueToNumberValueSlow(JSContext *cx, jsval *vp, double *out)
-{
-    jsval v = *vp = ValueToNumberSlow(cx, *vp, out);
-    return !JSVAL_IS_NULL(v) &&
-           (v != JSVAL_TRUE || js_NewNumberInRootedValue(cx, *out, vp));
-}
-
-bool
-ValueToNumberValueSlow(JSContext *cx, jsval *vp)
-{
-    double d;
-    jsval v = *vp = ValueToNumberSlow(cx, *vp, &d);
-    return !JSVAL_IS_NULL(v) &&
-           (v != JSVAL_TRUE || js_NewNumberInRootedValue(cx, d, vp));
-}
-
-bool
-ValueToECMAInt32Slow(JSContext *cx, jsval v, int32_t *out)
+ValueToECMAInt32Slow(JSContext *cx, js::Value *vp, int32_t *out)
 {
     JS_ASSERT(!JSVAL_IS_INT(v));
     jsdouble d;
@@ -1031,7 +991,7 @@ ValueToECMAInt32Slow(JSContext *cx, jsval v, int32_t *out)
 }
 
 bool
-ValueToECMAUint32Slow(JSContext *cx, jsval v, uint32_t *out)
+ValueToECMAUint32Slow(JSContext *cx, js::Value *vp, uint32_t *out)
 {
     JS_ASSERT(!JSVAL_IS_INT(v));
     jsdouble d;
@@ -1079,7 +1039,7 @@ js_DoubleToECMAUint32(jsdouble d)
 namespace js {
 
 bool
-ValueToInt32Slow(JSContext *cx, jsval v, int32_t *out)
+ValueToInt32Slow(JSContext *cx, js::Value *vp, int32_t *out)
 {
     JS_ASSERT(!JSVAL_IS_INT(v));
     jsdouble d;
@@ -1105,7 +1065,7 @@ ValueToInt32Slow(JSContext *cx, jsval v, int32_t *out)
 }
 
 bool
-ValueToUint16Slow(JSContext *cx, jsval v, uint16_t *out)
+ValueToUint16Slow(JSContext *cx, js::Value *vp, uint16_t *out)
 {
     JS_ASSERT(!JSVAL_IS_INT(v));
     jsdouble d;

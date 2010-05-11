@@ -55,7 +55,7 @@ namespace js {
  * TypedArray with a size.
  */
 struct JS_FRIEND_API(ArrayBuffer) {
-    static JSClass jsclass;
+    static js::Class jsclass;
     static JSPropertySpec jsprops[];
 
     static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
@@ -113,11 +113,11 @@ struct JS_FRIEND_API(TypedArray) {
     };
 
     // and MUST NOT be used to construct new objects.
-    static JSClass fastClasses[TYPE_MAX];
+    static js::Class fastClasses[TYPE_MAX];
 
     // These are the slow/original classes, used
     // fo constructing new objects
-    static JSClass slowClasses[TYPE_MAX];
+    static js::Class slowClasses[TYPE_MAX];
 
     static JSPropertySpec jsprops[];
 

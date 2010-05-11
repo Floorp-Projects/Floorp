@@ -54,8 +54,6 @@
 #include "jshashtable.h"
 #include "jslock.h"
 
-JS_BEGIN_EXTERN_C
-
 #define JSSTRING_BIT(n)             ((size_t)1 << (n))
 #define JSSTRING_BITMASK(n)         (JSSTRING_BIT(n) - 1)
 
@@ -471,7 +469,7 @@ JS_ISSPACE(jschar c)
 #define JS7_ISLET(c)    ((c) < 128 && isalpha(c))
 
 /* Initialize the String class, returning its prototype object. */
-extern JSClass js_StringClass;
+extern js::Class js_StringClass;
 
 extern JSObject *
 js_InitStringClass(JSContext *cx, JSObject *obj);
@@ -511,10 +509,10 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s);
 /*
  * Convert a value to a printable C string.
  */
-typedef JSString *(*JSValueToStringFun)(JSContext *cx, jsval v);
+typedef JSString *(*JSValueToStringFun)(JSContext *cx, const js::Value &v);
 
 extern JS_FRIEND_API(const char *)
-js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun);
+js_ValueToPrintable(JSContext *cx, const js::Value &, JSValueToStringFun v2sfun);
 
 #define js_ValueToPrintableString(cx,v) \
     js_ValueToPrintable(cx, v, js_ValueToString)
@@ -526,23 +524,23 @@ js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun);
  * Convert a value to a string, returning null after reporting an error,
  * otherwise returning a new string reference.
  */
-extern JS_FRIEND_API(JSString *)
-js_ValueToString(JSContext *cx, jsval v);
+extern JSString *
+js_ValueToString(JSContext *cx, const js::Value &v);
 
 /*
  * This function implements E-262-3 section 9.8, toString. Convert the given
  * value to a string of jschars appended to the given buffer. On error, the
  * passed buffer may have partial results appended.
  */
-extern JS_FRIEND_API(JSBool)
-js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb);
+extern JSBool
+js_ValueToCharBuffer(JSContext *cx, const js::Value &v, JSCharBuffer &cb);
 
 /*
  * Convert a value to its source expression, returning null after reporting
  * an error, otherwise returning a new string reference.
  */
 extern JS_FRIEND_API(JSString *)
-js_ValueToSource(JSContext *cx, jsval v);
+js_ValueToSource(JSContext *cx, const js::Value &v);
 
 /*
  * Compute a hash function from str. The caller can call this function even if
@@ -712,8 +710,6 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
 
 extern JSBool
 js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
-
-JS_END_EXTERN_C
 
 namespace js {
 

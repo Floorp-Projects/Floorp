@@ -51,171 +51,257 @@
 
 JS_BEGIN_EXTERN_C
 
-/*
- * Type tags stored in the low bits of a jsval.
- */
-typedef enum jsvaltag {
-    JSVAL_OBJECT  =             0x0,     /* untagged reference to object */
-    JSVAL_INT     =             0x1,     /* tagged 31-bit integer value */
-    JSVAL_DOUBLE  =             0x2,     /* tagged reference to double */
-    JSVAL_STRING  =             0x4,     /* tagged reference to string */
-    JSVAL_SPECIAL =             0x6      /* tagged boolean or private value */
-} jsvaltag;
-
-/* Type tag bitfield length and derived macros. */
-#define JSVAL_TAGBITS           3
-#define JSVAL_TAGMASK           ((jsval) JS_BITMASK(JSVAL_TAGBITS))
-#define JSVAL_ALIGN             JS_BIT(JSVAL_TAGBITS)
-
-/* Not a function, because we have static asserts that use it */
-#define JSVAL_TAG(v)            ((jsvaltag)((v) & JSVAL_TAGMASK))
-
-/* Not a function, because we have static asserts that use it */
-#define JSVAL_SETTAG(v, t) ((v) | (t))
-
-static JS_ALWAYS_INLINE jsval
-JSVAL_CLRTAG(jsval v)
-{
-    return v & ~(jsval)JSVAL_TAGMASK;
-}
+/* Well-known JS values, initialized on startup. */
+extern jsval JSVAL_NULL;
+extern jsval JSVAL_ZERO;
+extern jsval JSVAL_ONE;
+extern jsval JSVAL_FALSE;
+extern jsval JSVAL_TRUE;
+extern jsval JSVAL_VOID;
 
 /*
- * Well-known JS values.  The extern'd variables are initialized when the
- * first JSContext is created by JS_NewContext (see below).
- */
-#define JSVAL_NULL              ((jsval) 0)
-#define JSVAL_ZERO              INT_TO_JSVAL(0)
-#define JSVAL_ONE               INT_TO_JSVAL(1)
-#define JSVAL_FALSE             SPECIAL_TO_JSVAL(JS_FALSE)
-#define JSVAL_TRUE              SPECIAL_TO_JSVAL(JS_TRUE)
-#define JSVAL_VOID              SPECIAL_TO_JSVAL(2)
-
-/*
- * A "special" value is a 29-bit (for 32-bit jsval) or 61-bit (for 64-bit jsval)
- * value whose tag is JSVAL_SPECIAL.  These values include the booleans 0 and 1.
+ * Exact value equality, corresponding to == on old word-sized jsvals.
  *
- * JSVAL_VOID is a non-boolean special value, but embedders MUST NOT rely on
- * this. All other possible special values are implementation-reserved
- * and MUST NOT be constructed by any embedding of SpiderMonkey.
+ * To have simple byte-equality we would need the keep all sizeof(Data) bytes
+ * of data in a well-defined state for every type. On 32-bit systems, this
+ * isn't true for non-doubles. On 64-bit systems, this isn't true for undefined
+ * and booleans.
+ *
+ * N.B. it is much faster to use specific queries like JSVAL_IS_NULL than
+ * IS_SAME_JSVAL(v, JSVAL_NULL).
  */
-#define JSVAL_TO_SPECIAL(v) ((JSBool) ((v) >> JSVAL_TAGBITS))
-#define SPECIAL_TO_JSVAL(b)                                                   \
-    JSVAL_SETTAG((jsval) (b) << JSVAL_TAGBITS, JSVAL_SPECIAL)
+inline JSBool
+IS_SAME_JSVAL(const jsval *lval, const jsval *rval)
+{
+    JSValueMaskType lmask = lval->mask, rmask = rval->mask;
+    jsval_data ldata = lval->data, rdata = rval->data;
+
+    JSBool sameType = lmask == rmask;
+    JSBool noPayload = (lmask & (JSVAL_UNDEFINED_MASK |
+                                 JSVAL_MAGIC_MASK)) != 0;
+    JSBool firstWordEqual = ldata.bits.first == rdata.bits.first;
+    JSBool secondWordEqual = ldata.bits.second == rdata.bits.second;
+
+    /* N.B. JSVAL_NULL_MASK == 0. */
+#if JS_BITS_PER_WORD == 32
+    JSBool noSecondWord = (lmask == 0) |
+                          ((lmask & (JSVAL_INT32_MASK |
+                                     JSVAL_BOOLEAN_MASK |
+                                     JSVAL_STRING_MASK |
+                                     JSVAL_NONFUNOBJ_MASK |
+                                     JSVAL_FUNOBJ_MASK)) != 0);
+#elif JS_BITS_PER_WORD == 64
+    JSBool noSecondWord = (lmask & JSVAL_INT32_MASK |
+                                   JSVAL_BOOLEAN_MASK)
+#else
+# error "Unsupported word size"
+#endif
+
+    return sameType &
+           (noPayload | (firstWordEqual & (secondWordEqual | noSecondWord)));
+}
 
 /* Predicates for type testing. */
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_OBJECT(jsval v)
-{
-    return JSVAL_TAG(v) == JSVAL_OBJECT;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_INT(jsval v)
-{
-    return v & JSVAL_INT;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_DOUBLE(jsval v)
-{
-    return JSVAL_TAG(v) == JSVAL_DOUBLE;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_NUMBER(jsval v)
-{
-    return JSVAL_IS_INT(v) || JSVAL_IS_DOUBLE(v);
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_STRING(jsval v)
-{
-    return JSVAL_TAG(v) == JSVAL_STRING;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_SPECIAL(jsval v)
-{
-    return JSVAL_TAG(v) == JSVAL_SPECIAL;
-}
-
-static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_BOOLEAN(jsval v)
-{
-    return (v & ~((jsval)1 << JSVAL_TAGBITS)) == JSVAL_SPECIAL;
-}
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_NULL(jsval v)
 {
-    return v == JSVAL_NULL;
+    return v.mask == JSVAL_NULL_MASK;
 }
 
 static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_VOID(jsval v)
 {
-    return v == JSVAL_VOID;
+    return v.mask == JSVAL_UNDEFINED_MASK;
 }
 
 static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_PRIMITIVE(jsval v)
+JSVAL_IS_INT(jsval v)
 {
-    return !JSVAL_IS_OBJECT(v) || JSVAL_IS_NULL(v);
+    return v.mask == JSVAL_INT32_MASK;
 }
 
-/* Objects, strings, and doubles are GC'ed. */
+static JS_ALWAYS_INLINE jsint
+JSVAL_TO_INT(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_INT(v));
+    return v.data.i32;
+}
+
+#define JSVAL_INT_BITS          32
+#define JSVAL_INT_MIN           ((jsint)0x80000000)
+#define JSVAL_INT_MAX           ((jsint)0x7fffffff)
+
+static JS_ALWAYS_INLINE bool
+INT_FITS_IN_JSVAL(jsint i)
+{
+    return JS_TRUE;
+}
+
+static JS_ALWAYS_INLINE jsval
+INT_TO_JSVAL(int32 i)
+{
+    jsval v;
+    v.mask = JSVAL_INT32_MASK;
+    v.data.i32 = i;
+    return v;
+}
+
 static JS_ALWAYS_INLINE JSBool
-JSVAL_IS_GCTHING(jsval v)
+JSVAL_IS_DOUBLE(jsval v)
 {
-    return !(v & JSVAL_INT) && JSVAL_TAG(v) != JSVAL_SPECIAL;
+    return v.mask == JSVAL_DOUBLE_MASK;
 }
 
-static JS_ALWAYS_INLINE void *
-JSVAL_TO_GCTHING(jsval v)
-{
-    JS_ASSERT(JSVAL_IS_GCTHING(v));
-    return (void *) JSVAL_CLRTAG(v);
-}
-
-static JS_ALWAYS_INLINE JSObject *
-JSVAL_TO_OBJECT(jsval v)
-{
-    JS_ASSERT(JSVAL_IS_OBJECT(v));
-    return (JSObject *) JSVAL_TO_GCTHING(v);
-}
-
-static JS_ALWAYS_INLINE jsdouble *
+static JS_ALWAYS_INLINE jsdouble
 JSVAL_TO_DOUBLE(jsval v)
 {
     JS_ASSERT(JSVAL_IS_DOUBLE(v));
-    return (jsdouble *) JSVAL_TO_GCTHING(v);
+    return v.data.dbl;
+}
+
+static JS_ALWAYS_INLINE jsval
+DOUBLE_TO_JSVAL(jsdouble d)
+{
+    jsval v;
+    v.mask = JSVAL_DOUBLE_MASK;
+    v.data.dbl = d;
+    return v;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_NUMBER(jsval v)
+{
+    return v.mask & (JSVAL_INT32_MASK | JSVAL_DOUBLE_MASK);
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_STRING(jsval v)
+{
+    return v.mask == JSVAL_STRING_MASK;
 }
 
 static JS_ALWAYS_INLINE JSString *
 JSVAL_TO_STRING(jsval v)
 {
     JS_ASSERT(JSVAL_IS_STRING(v));
-    return (JSString *) JSVAL_TO_GCTHING(v);
-}
-
-static JS_ALWAYS_INLINE jsval
-OBJECT_TO_JSVAL(JSObject *obj)
-{
-    JS_ASSERT(((jsval) obj & JSVAL_TAGMASK) == JSVAL_OBJECT);
-    return (jsval) obj;
-}
-
-static JS_ALWAYS_INLINE jsval
-DOUBLE_TO_JSVAL(jsdouble *dp)
-{
-    JS_ASSERT(((jsword) dp & JSVAL_TAGMASK) == 0);
-    return JSVAL_SETTAG((jsval) dp, JSVAL_DOUBLE);
+    return v.data.str;
 }
 
 static JS_ALWAYS_INLINE jsval
 STRING_TO_JSVAL(JSString *str)
 {
-    return JSVAL_SETTAG((jsval) str, JSVAL_STRING);
+    jsval v;
+    v.mask = JSVAL_STRING_MASK;
+    v.data.str = str;
+    return v;
+}
+
+/*
+ * N.B. These functions use the older meaning of "object" as "object or null".
+ * This is not a problem if code only works with jsvals or only works with
+ * js::Value, but if both uses are mixed, it is important not to get confused
+ * by the two meanings. For example, JSVAL_IS_OBJECT(v) does not imply
+ * v.isObject().
+ */
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_OBJECT(jsval v)
+{
+    return !(v.mask & ~(JSVAL_FUNOBJ_MASK | JSVAL_NONFUNOBJ_MASK));
+}
+
+static JS_ALWAYS_INLINE JSObject *
+JSVAL_TO_OBJECT(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_OBJECT(v));
+    return v.data.obj;
+}
+
+static JS_ALWAYS_INLINE jsval
+OBJECT_TO_JSVAL(JSObject *obj)
+{
+    extern JS_PUBLIC_API(JSBool)
+    JS_ObjectIsFunction(JSContext *cx, JSObject *obj);
+
+    jsval v;
+    if (!obj)
+        v.mask = JSVAL_NULL_MASK;
+    else if (JS_ObjectIsFunction(NULL, obj))
+        v.mask = JSVAL_FUNOBJ_MASK;
+    else
+        v.mask = JSVAL_NONFUNOBJ_MASK;
+    v.data.obj = obj;
+    return v;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_BOOLEAN(jsval v)
+{
+    return v.mask == JSVAL_BOOLEAN_MASK;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_TO_BOOLEAN(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    return v.data.boo;
+}
+
+static JS_ALWAYS_INLINE jsval
+BOOLEAN_TO_JSVAL(JSBool b)
+{
+    jsval v;
+    v.data.boo = b;
+    v.mask = JSVAL_BOOLEAN_MASK;
+    return v;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_TRUE(jsval v)
+{
+    return v.mask == JSVAL_BOOLEAN_MASK && v.data.boo == JS_TRUE;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_FALSE(jsval v)
+{
+    return v.mask == JSVAL_BOOLEAN_MASK && v.data.boo == JS_FALSE;
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_PRIMITIVE(jsval v)
+{
+    return !(v.mask & (JSVAL_NONFUNOBJ_MASK | JSVAL_FUNOBJ_MASK));
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_GCTHING(jsval v)
+{
+    return v.mask & (JSVAL_STRING_MASK | JSVAL_NONFUNOBJ_MASK |
+                     JSVAL_FUNOBJ_MASK);
+}
+
+static JS_ALWAYS_INLINE void *
+JSVAL_TO_GCTHING(jsval v)
+{
+    JS_ASSERT(JSVAL_IS_GCTHING(v));
+    return v.data.ptr;
+}
+
+static JS_ALWAYS_INLINE jsval
+PRIVATE_TO_JSVAL(void *ptr)
+{
+    jsval v;
+    v.mask = JSVAL_INT32_MASK;
+    v.data.ptr = ptr;
+    return v;
+}
+
+static JS_ALWAYS_INLINE void *
+JSVAL_TO_PRIVATE(jsval v)
+{
+    JS_ASSERT(v.mask == JSVAL_INT32_MASK);
+    return v.data.ptr;
 }
 
 /* Lock and unlock the GC thing held by a jsval. */
@@ -225,52 +311,6 @@ STRING_TO_JSVAL(JSString *str)
 #define JSVAL_UNLOCK(cx,v)      (JSVAL_IS_GCTHING(v)                          \
                                  ? JS_UnlockGCThing(cx, JSVAL_TO_GCTHING(v))  \
                                  : JS_TRUE)
-
-/* Domain limits for the jsval int type. */
-#define JSVAL_INT_BITS          31
-#define JSVAL_INT_POW2(n)       ((jsval)1 << (n))
-#define JSVAL_INT_MIN           (-JSVAL_INT_POW2(30))
-#define JSVAL_INT_MAX           (JSVAL_INT_POW2(30) - 1)
-
-/* Not a function, because we have static asserts that use it */
-#define INT_FITS_IN_JSVAL(i)    ((jsuint)(i) - (jsuint)JSVAL_INT_MIN <=       \
-                                 (jsuint)(JSVAL_INT_MAX - JSVAL_INT_MIN))
-
-static JS_ALWAYS_INLINE jsint
-JSVAL_TO_INT(jsval v)
-{
-    JS_ASSERT(JSVAL_IS_INT(v));
-    return (jsint) v >> 1;
-}
-
-/* Not a function, because we have static asserts that use it */
-#define INT_TO_JSVAL_CONSTEXPR(i)  (((jsval)(i) << 1) | JSVAL_INT)
-
-static JS_ALWAYS_INLINE jsval
-INT_TO_JSVAL(jsint i)
-{
-    JS_ASSERT(INT_FITS_IN_JSVAL(i));
-    return INT_TO_JSVAL_CONSTEXPR(i);
-}
-
-/* Convert between boolean and jsval, asserting that inputs are valid. */
-static JS_ALWAYS_INLINE JSBool
-JSVAL_TO_BOOLEAN(jsval v)
-{
-    JS_ASSERT(v == JSVAL_TRUE || v == JSVAL_FALSE);
-    return JSVAL_TO_SPECIAL(v);
-}
-
-static JS_ALWAYS_INLINE jsval
-BOOLEAN_TO_JSVAL(JSBool b)
-{
-    JS_ASSERT(b == JS_TRUE || b == JS_FALSE);
-    return SPECIAL_TO_JSVAL(b);
-}
-
-/* A private data pointer (2-byte-aligned) can be stored as an int jsval. */
-#define JSVAL_TO_PRIVATE(v)     ((void *)((v) & ~JSVAL_INT))
-#define PRIVATE_TO_JSVAL(p)     ((jsval)(p) | JSVAL_INT)
 
 /* Property attributes, set in JSPropertySpec and passed to API functions. */
 #define JSPROP_ENUMERATE        0x01    /* property is visible to for/in loop */
@@ -798,7 +838,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj);
  * loops any classes not yet resolved lazily.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
+JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id,
                         JSBool *resolved);
 
 extern JS_PUBLIC_API(JSBool)
@@ -860,7 +900,7 @@ JS_InitCTypesClass(JSContext *cx, JSObject *global);
 #define JS_CALLEE(cx,vp)        ((vp)[0])
 #define JS_ARGV_CALLEE(argv)    ((argv)[-2])
 #define JS_THIS(cx,vp)          JS_ComputeThis(cx, vp)
-#define JS_THIS_OBJECT(cx,vp)   ((JSObject *) JS_THIS(cx,vp))
+#define JS_THIS_OBJECT(cx,vp)   (JSVAL_TO_OBJECT(JS_THIS(cx,vp)))
 #define JS_ARGV(cx,vp)          ((vp) + 2)
 #define JS_RVAL(cx,vp)          (*(vp))
 #define JS_SET_RVAL(cx,vp,v)    (*(vp) = (v))
@@ -883,24 +923,23 @@ JS_updateMallocCounter(JSContext *cx, size_t nbytes);
 extern JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s);
 
-extern JS_PUBLIC_API(jsdouble *)
-JS_NewDouble(JSContext *cx, jsdouble d);
-
-extern JS_PUBLIC_API(JSBool)
-JS_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval);
-
-extern JS_PUBLIC_API(JSBool)
-JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
-
 /*
- * A JS GC root is a pointer to a JSObject *, JSString *, or jsdouble * that
- * itself points into the GC heap (more recently, we support this extension:
- * a root may be a pointer to a jsval v for which JSVAL_IS_GCTHING(v) is true).
+ * A GC root is a pointer to a jsval, JSObject *, or JSString * that itself
+ * points into the GC heap. JS_AddValueRoot takes pointers to jsvals and
+ * JS_AddGCThingRoot takes pointers to a JSObject * or JString *.
  *
- * Therefore, you never pass JSObject *obj to JS_AddRoot(cx, obj).  You always
- * call JS_AddRoot(cx, &obj), passing obj by reference.  And later, before obj
- * or the structure it is embedded within goes out of scope or is freed, you
- * must call JS_RemoveRoot(cx, &obj).
+ * Note that, since JS_Add*Root stores the address of a (jsval, JSString *, or
+ * JSObject *) variable, that variable must be alive until JS_RemoveRoot is
+ * called to remove that variable. For example, after writing:
+ *
+ *   jsval v;
+ *   JS_AddNamedRootedValue(cx, &v, "name");
+ *
+ * the caller must perform
+ *
+ *   JS_RemoveRootedValue(cx, &v);
+ *
+ * before 'v' goes out of scope.
  *
  * Also, use JS_AddNamedRoot(cx, &structPtr->memberObj, "structPtr->memberObj")
  * in preference to JS_AddRoot(cx, &structPtr->memberObj), in order to identify
@@ -909,25 +948,57 @@ JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
  * before freeing structPtr's memory.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_AddRoot(JSContext *cx, void *rp);
+JS_AddValueRoot(JSContext *cx, js::Value *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddStringRoot(JSContext *cx, JSString **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddObjectRoot(JSContext *cx, JSObject **rp);
 
 #ifdef NAME_ALL_GC_ROOTS
 #define JS_DEFINE_TO_TOKEN(def) #def
 #define JS_DEFINE_TO_STRING(def) JS_DEFINE_TO_TOKEN(def)
-#define JS_AddRoot(cx,rp) JS_AddNamedRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#define JS_AddValueRoot(cx,vp) JS_AddNamedValueRoot((cx), (vp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#define JS_AddStringRoot(cx,rp) JS_AddNamedStringRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
+#define JS_AddObjectRoot(cx,rp) JS_AddNamedObjectRoot((cx), (rp), (__FILE__ ":" JS_TOKEN_TO_STRING(__LINE__))
 #endif
 
 extern JS_PUBLIC_API(JSBool)
-JS_AddNamedRoot(JSContext *cx, void *rp, const char *name);
+JS_AddNamedValueRoot(JSContext *cx, js::Value *vp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
-JS_AddNamedRootRT(JSRuntime *rt, void *rp, const char *name);
+JS_AddNamedStringRoot(JSContext *cx, JSString **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RemoveRoot(JSContext *cx, void *rp);
+JS_AddNamedObjectRoot(JSContext *cx, JSObject **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RemoveRootRT(JSRuntime *rt, void *rp);
+JS_AddNamedValueRootRT(JSRuntime *rt, js::Value *vp, const char *name);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddNamedStringRootRT(JSRuntime *rt, JSString **rp, const char *name);
+
+extern JS_PUBLIC_API(JSBool)
+JS_AddNamedObjectRootRT(JSRuntime *rt, JSObject **rp, const char *name);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveValueRoot(JSContext *cx, js::Value *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveStringRoot(JSContext *cx, JSString **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveObjectRoot(JSContext *cx, JSObject **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveValueRootRT(JSRuntime *rt, js::Value *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveStringRootRT(JSRuntime *rt, JSString **rp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_RemoveObjectRootRT(JSRuntime *rt, JSObject **rp);
 
 /*
  * The last GC thing of each type (object, string, double, external string
@@ -963,7 +1034,7 @@ JS_ClearNewbornRoots(JSContext *cx);
  * associated with cx.  For example:
  *
  *    JSBool
- *    my_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+ *    my_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
  *    {
  *        JSBool ok;
  *
@@ -1040,10 +1111,15 @@ class JSAutoLocalRootScope {
 JS_BEGIN_EXTERN_C
 #endif
 
+typedef enum JSGCRootType {
+    JS_GC_ROOT_VALUE_PTR,
+    JS_GC_ROOT_GCTHING_PTR
+} JSGCRootType;
+
 #ifdef DEBUG
 extern JS_PUBLIC_API(void)
 JS_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, void *data),
+                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
                   void *data);
 #endif
 
@@ -1063,6 +1139,10 @@ JS_DumpNamedRoots(JSRuntime *rt,
  * or any JS API entry point that acquires locks, without double-tripping or
  * deadlocking on the GC lock.
  *
+ * The JSGCRootType parameter indicates whether rp is a pointer to a Value
+ * (which is obtained by '(Value *)rp') or a pointer to a GC-thing pointer
+ * (which is obtained by '(void **)rp').
+ *
  * JS_MapGCRoots returns the count of roots that were successfully mapped.
  */
 #define JS_MAP_GCROOT_NEXT      0       /* continue mapping entries */
@@ -1070,7 +1150,7 @@ JS_DumpNamedRoots(JSRuntime *rt,
 #define JS_MAP_GCROOT_REMOVE    2       /* remove and free the current entry */
 
 typedef intN
-(* JSGCRootMapFun)(void *rp, const char *name, void *data);
+(* JSGCRootMapFun)(void *rp, JSGCRootType type, const char *name, void *data);
 
 extern JS_PUBLIC_API(uint32)
 JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data);
@@ -1102,7 +1182,7 @@ JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
  * instead.
  */
 extern JS_PUBLIC_API(void)
-JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg);
+JS_MarkGCThing(JSContext *cx, jsval v, const char *name, void *arg);
 
 /*
  * JS_CallTracer API and related macros for implementors of JSTraceOp, to
@@ -1118,16 +1198,32 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg);
 
 /* Trace kinds to pass to JS_Tracing. */
 #define JSTRACE_OBJECT  0
-#define JSTRACE_DOUBLE  1
-#define JSTRACE_STRING  2
+#define JSTRACE_STRING  1
 
 /*
  * Use the following macros to check if a particular jsval is a traceable
  * thing and to extract the thing and its kind to pass to JS_CallTracer.
  */
-#define JSVAL_IS_TRACEABLE(v)   (JSVAL_IS_GCTHING(v) && !JSVAL_IS_NULL(v))
-#define JSVAL_TO_TRACEABLE(v)   (JSVAL_TO_GCTHING(v))
-#define JSVAL_TRACE_KIND(v)     (JSVAL_TAG(v) >> 1)
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_TRACEABLE(jsval v)
+{
+    /* Depend on the value representation */
+    return v.mask & (JSVAL_STRING_MASK | JSVAL_NONFUNOBJ_MASK |
+                     JSVAL_FUNOBJ_MASK);
+}
+
+static JS_ALWAYS_INLINE void *
+JSVAL_TO_TRACEABLE(jsval v)
+{
+    return JSVAL_TO_GCTHING(v);
+}
+
+static JS_ALWAYS_INLINE uint32
+JSVAL_TRACE_KIND(jsval v)
+{
+    /* Depend on the value representation */
+    return (uint32)(v.mask == JSVAL_STRING_MASK);
+}
 
 struct JSTracer {
     JSContext           *context;
@@ -1381,7 +1477,7 @@ JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer);
 
 /*
  * Create a new JSString whose chars member refers to external memory, i.e.,
- * memory requiring special, type-specific finalization.  The type code must
+ * memory requiring spe, type-specific finalization.  The type code must
  * be a nonnegative return value from JS_AddExternalStringFinalizer.
  */
 extern JS_PUBLIC_API(JSString *)
@@ -1562,20 +1658,11 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_CLASSNAME     0x10    /* class name used when constructing */
 #define JSRESOLVE_WITH          0x20    /* resolve inside a with statement */
 
-extern JS_PUBLIC_API(JSBool)
-JS_PropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
-
-extern JS_PUBLIC_API(JSBool)
-JS_EnumerateStub(JSContext *cx, JSObject *obj);
-
-extern JS_PUBLIC_API(JSBool)
-JS_ResolveStub(JSContext *cx, JSObject *obj, jsval id);
-
-extern JS_PUBLIC_API(JSBool)
-JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
-
-extern JS_PUBLIC_API(void)
-JS_FinalizeStub(JSContext *cx, JSObject *obj);
+extern JS_PUBLIC_DATA(JSPropertyOp)  JS_PropertyStub;
+extern JS_PUBLIC_DATA(JSEnumerateOp) JS_EnumerateStub;
+extern JS_PUBLIC_DATA(JSResolveOp)   JS_ResolveStub;
+extern JS_PUBLIC_DATA(JSConvertOp)   JS_ConvertStub;
+extern JS_PUBLIC_DATA(JSFinalizeOp)  JS_FinalizeStub;
 
 struct JSConstDoubleSpec {
     jsdouble        dval;
@@ -2851,5 +2938,734 @@ JS_SetGCZeal(JSContext *cx, uint8 zeal);
 #endif
 
 JS_END_EXTERN_C
+
+/************************************************************************/
+
+#ifdef __cplusplus
+
+/*
+ * Spanky new C++ API
+ */
+
+namespace js {
+
+/*
+ * An ObjPtr is a restriction of a Value (below) to the three types: null,
+ * non-function object and function object. ObjPtr is useful when code
+ * conceptually is working with a JSObject*, but wants to avoid unnecessarily
+ * querying obj->isFunction() by passing around the type tag as well. Also,
+ * ObjPtr provides syntactic sugar so that it behaves more like a JSObject*.
+ *
+ * N.B. ObjPtr is not layout compatible with Value: on 32-bit systems, it does
+ * not need the extra 2 words needed by Value.
+ */
+class ObjPtr
+{
+  protected:
+    typedef JSValueMaskType MaskType;
+
+    static const MaskType NullMask         = JSVAL_NULL_MASK;
+    static const MaskType NonFunObjMask    = JSVAL_NONFUNOBJ_MASK;
+    static const MaskType FunObjMask       = JSVAL_FUNOBJ_MASK;
+
+    static const MaskType ObjectMask       = NonFunObjMask | FunObjMask;
+
+    MaskType mask;
+    JSObject *obj;
+
+  private:
+    friend class Value;
+    explicit ObjPtr(MaskType m, JSObject *o) : mask(m), obj(o) {}
+
+  public:
+    /* Constructors */
+
+    /* N.B. defualt construction yields a ObjPtr in an undefined state. */
+    ObjPtr() {}
+
+    /*
+     * To construct a null pointer, use NullObjPtr. To construct pointers to
+     * objects statically known to be, or not to be, function objects, use
+     * FunObjPtr, NonFunObjPtr.
+     */
+
+    /* Accessors */
+
+    bool isNull() const {
+        return mask == NullMask;
+    }
+
+    bool isFunObj() const {
+        return mask == FunObjMask;
+    }
+
+    JSObject &asFunObj() const {
+        JS_ASSERT(isFunObj());
+        return *obj;
+    }
+
+    bool isNonFunObj() const {
+        return mask == NonFunObjMask;
+    }
+
+    JSObject &asNonFunObj() const {
+        JS_ASSERT(isNonFunObj());
+        return *obj;
+    }
+
+    bool isObject() const {
+        JS_ASSERT((mask != NullMask) == bool(mask & ObjectMask));
+        return mask != NullMask;
+    }
+
+    operator JSObject *() const {
+        return obj;
+    }
+
+    JSObject *operator->() const {
+        JS_ASSERT(isObject());
+        return obj;
+    }
+
+    JSObject &operator*() const {
+        JS_ASSERT(isObject());
+        return *obj;
+    }
+
+    /* Assignment */
+
+    void setNull() {
+        mask = NullMask;
+        obj = NULL;
+    }
+
+    void setFunObj(JSObject &o) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
+        mask = FunObjMask;
+        obj = &o;
+    }
+
+    void setNonFunObj(JSObject &o) {
+        JS_ASSERT(!JS_ObjectIsFunction(NULL, &o));
+        mask = NonFunObjMask;
+        obj = &o;
+    }
+
+    void setNonFunObjOrNull(JSObject *o) {
+        if (o) {
+            JS_ASSERT(!JS_ObjectIsFunction(NULL, o));
+            mask = NonFunObjMask;
+            obj = o;
+        } else {
+            mask = NullMask;
+            obj = o;
+        }
+    }
+};
+
+inline bool operator==(ObjPtr lhs, ObjPtr rhs) { return lhs == rhs; }
+inline bool operator==(ObjPtr lhs, JSObject *rhs) { return lhs == rhs; } 
+inline bool operator==(JSObject *lhs, ObjPtr rhs) { return lhs == rhs; }
+inline bool operator!=(ObjPtr lhs, ObjPtr rhs) { return !(lhs == rhs); }
+inline bool operator!=(ObjPtr lhs, JSObject *rhs) { return !(lhs == rhs); }
+inline bool operator!=(JSObject *lhs, ObjPtr rhs) { return !(lhs == rhs); }
+
+/*
+ * These types are intended to be used like:
+ *
+ *   ObjPtr p = NullObjPtr();
+ *   void f1(ObjPtr);
+ *   f1(FunObjPtr(funobj));
+ */
+
+struct NullObjPtr : ObjPtr
+{
+    explicit NullObjPtr() {
+        mask = NullMask;
+        obj = NULL;
+    }
+};
+
+struct FunObjPtr : ObjPtr
+{
+    explicit FunObjPtr(JSObject &o) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
+        mask = FunObjMask;
+        obj = &o;
+    }
+};
+
+struct NonFunObjPtr : ObjPtr
+{
+    explicit NonFunObjPtr(JSObject &o) {
+        JS_ASSERT(!JS_ObjectIsFunction(NULL, &o));
+        mask = NonFunObjMask;
+        obj = &o;
+    }
+};
+
+struct NonFunObjOrNullPtr : ObjPtr
+{
+    explicit NonFunObjOrNullPtr(JSObject *o) {
+        if (o) {
+            JS_ASSERT(!JS_ObjectIsFunction(NULL, o));
+            mask = NonFunObjMask;
+            obj = o;
+        } else {
+            mask = NullMask;
+            obj = NULL;
+        }
+    }
+};
+
+/* TODO: this can be removed when copying is implicit/public. */
+class ExplicitlyConstructedValue;
+
+/*
+ * While there is a single representation for values, there are two declared
+ * types for dealing with these values: jsval and js::Value. jsval allows a
+ * high-degree of source compatibility with the old word-sized boxed value
+ * representation. js::Value is a new C++-only type and more accurately
+ * reflects the current, unboxed value representation. As these two types are
+ * layout-compatible, pointers to jsval and js::Value are interchangeable and
+ * may be cast safely and canonically using js::Jsvalify and js::asValue.
+ */
+class Value
+{
+    /*
+     * Generally, we'd like to keep the exact representation encapsulated so
+     * that it may be tweaked in the future. Engine internals that need to
+     * break this encapsulation should be listed as friends below. Also see
+     * uses of public jsval members in jsapi.h/jspubtd.h.
+     */
+    friend bool StrictlyEqual(JSContext *, const Value &, const Value &);
+    friend bool Interpret(JSContext *);  /* grep "value representation" */
+    friend bool PrimitiveThisTest(JSFunction *, const Value &);
+    friend class PrimitiveValue;
+
+  protected:
+    /* Type masks */
+    typedef JSValueMaskType MaskType;
+    static const MaskType NullMask      = JSVAL_NULL_MASK;
+    static const MaskType UndefinedMask = JSVAL_UNDEFINED_MASK;
+    static const MaskType Int32Mask     = JSVAL_INT32_MASK;
+    static const MaskType DoubleMask    = JSVAL_DOUBLE_MASK;
+    static const MaskType StringMask    = JSVAL_STRING_MASK;
+    static const MaskType NonFunObjMask = JSVAL_NONFUNOBJ_MASK;
+    static const MaskType FunObjMask    = JSVAL_FUNOBJ_MASK;
+    static const MaskType BooleanMask   = JSVAL_BOOLEAN_MASK;
+    static const MaskType MagicMask     = JSVAL_MAGIC_MASK;
+
+    /* Standard collections of types. */
+    static const MaskType NumberMask    = Int32Mask | DoubleMask;
+    static const MaskType ObjectMask    = NonFunObjMask | FunObjMask;
+    static const MaskType GCThingMask   = ObjectMask | StringMask;
+
+    static bool isSingleton(MaskType m) { return !(m & ~UndefinedMask); }
+    static bool isObjectOrNull(MaskType m) { return !(m & ~ObjectMask); }
+
+    union Data
+    {
+        int32           i32;
+        uint32          u32;
+        double          dbl;
+        JSString        *str;
+        JSObject        *obj;
+        void            *ptr;
+        JSBool          boo;
+#ifdef DEBUG
+        JSWhyMagic      why;
+#endif
+        struct { int32 first; int32 second; } bits;
+    };
+
+    MaskType mask;
+    JS_INSERT_VALUE_PADDING()
+    Data data;
+
+    friend class AssertLayoutCompatible;
+
+    /*
+     * To copy, use explicit copy().
+     *
+     * XXX This may be made public later, right now its just being used to
+     * identify unnecessary copying.
+     */
+    Value &operator=(const Value &);
+
+  public:
+    /* XXX: this can be removed when copying is public/implicit */
+    inline Value(const ExplicitlyConstructedValue &v);
+
+    /*
+     * Constructors
+     *
+     * To construct a null value, use NullValue. To construct pointers to
+     * objects statically known to be, or not to be, function objects, use
+     * FunObjValue, NonFunObjValue.
+     */
+
+    /* N.B. default construction yields a Value in an undefined state. */
+    Value() {}
+
+    /* XXX: 'explicit' can be removed when copying is public/implicit */
+    explicit Value(const Value &v)
+     : mask(v.mask), data(v.data)
+    {}
+
+    explicit Value(int32 i32) {
+        mask = Int32Mask;
+        data.i32 = i32;
+    }
+
+    explicit Value(double dbl) {
+        mask = DoubleMask;
+        data.dbl = dbl;
+    }
+
+    Value(JSString *str) {
+        mask = StringMask;
+        data.str = str;
+    }
+
+    explicit Value(bool b) {
+        mask = BooleanMask;
+        data.boo = b;
+    }
+
+    explicit Value(JSWhyMagic why) {
+        mask = MagicMask;
+#ifdef DEBUG
+        data.why = why;
+#endif
+    }
+
+    Value(ObjPtr ptr) {
+        mask = ptr.mask;
+        data.obj = ptr.obj;
+    }
+
+    /* Mutators */
+
+    void setNull() {
+        mask = NullMask;
+        data.obj = NULL;
+    }
+
+    void setUndefined() {
+        /* N.B. data is undefined. */
+        mask = UndefinedMask;
+    }
+
+    void setInt32(int32 i) {
+        mask = Int32Mask;
+        data.i32 = i;
+    }
+
+    int32_t &asInt32Ref() {
+        JS_ASSERT(isInt32());
+        return data.i32;
+    }
+
+    void setDouble(double d) {
+        JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
+        mask = DoubleMask;
+        data.dbl = d;
+    }
+
+    double &asDoubleRef() {
+        JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
+        JS_ASSERT(isDouble());
+        return data.dbl;
+    }
+
+    void setString(JSString *str) {
+        mask = StringMask;
+        data.str = str;
+    }
+
+    void setBoolean(bool b) {
+        mask = BooleanMask;
+        data.boo = b;
+    }
+
+    void setMagic(JSWhyMagic why) {
+        mask = MagicMask;
+#ifdef DEBUG
+        data.why = why;
+#endif
+    }
+
+    void setFunObj(JSObject &o) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
+        mask = FunObjMask;
+        data.obj = &o;
+    }
+
+    void setNonFunObj(JSObject &o) {
+        JS_ASSERT(!JS_ObjectIsFunction(NULL, &o));
+        mask = NonFunObjMask;
+        data.obj = &o;
+    }
+
+    void setNonFunObjOrNull(JSObject *o) {
+        if (o) {
+            mask = NonFunObjMask;
+            data.obj = o;
+        } else {
+            mask = NullMask;
+            data.obj = NULL;
+        }
+    }
+
+    /* Mutators */
+
+    /* XXX: to be removed when copying is implicit/public */
+    void copy(ObjPtr ptr) {
+        data.obj = ptr.obj;
+        mask = ptr.mask;
+    }
+
+    /* XXX: to be removed when copying is implicit/public */
+    void copy(const Value &v) {
+        data = v.data;
+        mask = v.mask;
+    }
+
+    void swap(Value &rhs) {
+        MaskType m = mask;
+        mask = rhs.mask;
+        rhs.mask = m;
+        Data d = data;
+        data = rhs.data;
+        rhs.data = d;
+    }
+
+    /* Accessors */
+
+    bool isUndefined() const {
+        return mask == UndefinedMask;
+    }
+
+    bool isNull() const {
+        return mask == NullMask;
+    }
+
+    bool isNullOrUndefined() const {
+        return isSingleton(mask);
+    }
+
+    bool isInt32() const {
+        return mask == Int32Mask;
+    }
+
+    int32 asInt32() const {
+        JS_ASSERT(isInt32());
+        return data.i32;
+    }
+
+    bool isDouble() const {
+        return mask == DoubleMask;
+    }
+
+    double asDouble() const {
+        JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
+        return data.dbl;
+    }
+
+    bool isNumber() const {
+        return bool(mask & NumberMask);
+    }
+
+    double asNumber() const {
+        JS_ASSERT(isNumber());
+        return isDouble() ? asDouble() : double(asInt32());
+    }
+
+    bool isString() const {
+        return mask == StringMask;
+    }
+
+    JSString *asString() const {
+        JS_ASSERT(isString());
+        return data.str;
+    }
+
+    bool isNonFunObj() const {
+        return mask == NonFunObjMask;
+    }
+
+    JSObject &asNonFunObj() const {
+        JS_ASSERT(isNonFunObj());
+        return *data.obj;
+    }
+
+    bool isFunObj() const {
+        return mask == FunObjMask;
+    }
+
+    JSObject &asFunObj() const {
+        JS_ASSERT(isFunObj());
+        return *data.obj;
+    }
+
+    bool isObject() const {
+        return bool(mask & ObjectMask);
+    }
+
+    bool isPrimitive() const {
+        return !isObject();
+    }
+
+    JSObject &asObject() const {
+        JS_ASSERT(isObject());
+        return *data.obj;
+    }
+
+    bool isObjectOrNull() const {
+        return isObjectOrNull(mask);
+    }
+
+    JSObject *asObjectOrNull() const {
+        JS_ASSERT(isObjectOrNull());
+        return data.obj;
+    }
+
+    ObjPtr asObjPtr() const {
+        JS_ASSERT(isObjectOrNull());
+        return ObjPtr(mask, data.obj);
+    }
+
+    bool isGCThing() const {
+        return bool(mask & GCThingMask);
+    }
+
+    void *asGCThing() const {
+        JS_ASSERT(isGCThing());
+        return data.ptr;
+    }
+
+    int32 traceKind() const {
+        JS_ASSERT(isGCThing());
+        return mask == StringMask;
+    }
+
+    bool isBoolean() const {
+        return mask == BooleanMask;
+    }
+
+    bool asBoolean() const {
+        JS_ASSERT(isBoolean());
+        return data.boo;
+    }
+
+    bool isMagic() const {
+        return mask == MagicMask;
+    }
+
+    bool isMagic(JSWhyMagic why) const {
+        JS_ASSERT_IF(mask == MagicMask, data.why == why);
+        return isMagic();
+    }
+
+    JSWhyMagic whyMagic() const {
+        JS_ASSERT(mask == MagicMask);
+        return data.why;
+    }
+
+    /* See IS_SAME_JSVAL. */
+    bool isSame(const Value &v) const;
+
+    /*
+     * Private API
+     *
+     * Private setters/getters allow the caller to read/write arbitrary types
+     * that fit in the 64-bit payload. It is the caller's responsibility, after
+     * storing to a value with setPrivateX to only read with getPrivateX.
+     * Privates values are given a valid type of Int32 and are thus GC-safe.
+     */
+
+    void setPrivateVoidPtr(void *p) {
+        mask = Int32Mask;
+        data.ptr = p;
+    }
+
+    void *asPrivateVoidPtr() const {
+        JS_ASSERT(mask == Int32Mask);
+        return data.ptr;
+    }
+
+    void setPrivateUint32(uint32 u) {
+        mask = Int32Mask;
+        data.u32 = u;
+    }
+
+    uint32 asPrivateUint32() const {
+        JS_ASSERT(mask == Int32Mask);
+        return data.u32;
+    }
+
+    uint32 &asPrivateUint32Ref() {
+        JS_ASSERT(mask == Int32Mask);
+        return data.u32;
+    }
+};
+
+/*
+ * These types are intended to be used like:
+ *
+ *   Value v = NullValue();
+ *   void f1(Value);
+ *   f1(FunObjValue(funobj));
+ */
+
+/* TODO: this hackiness will be removed once copying is public/implicit */
+struct ExplicitlyConstructedValue : Value {};
+
+JS_ALWAYS_INLINE
+Value::Value(const ExplicitlyConstructedValue &v)
+  : mask(v.mask), data(v.data)
+{}
+
+struct NullValue : ExplicitlyConstructedValue
+{
+    explicit NullValue() {
+        mask = NullMask;
+        data.obj = NULL;
+    }
+};
+
+struct UndefinedValue : ExplicitlyConstructedValue
+{
+    explicit UndefinedValue() {
+        mask = UndefinedMask;
+    }
+};
+
+struct FunObjValue : ExplicitlyConstructedValue
+{
+    explicit FunObjValue(JSObject &o) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
+        mask = FunObjMask;
+        data.obj = &o;
+    }
+};
+
+struct NonFunObjValue : ExplicitlyConstructedValue
+{
+    explicit NonFunObjValue(JSObject &o) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
+        mask = NonFunObjMask;
+        data.obj = &o;
+    }
+};
+
+struct NonFunObjOrNullValue : ExplicitlyConstructedValue
+{
+    explicit NonFunObjOrNullValue(JSObject *o) {
+        if (o) {
+            JS_ASSERT(JS_ObjectIsFunction(NULL, o));
+            mask = NonFunObjMask;
+            data.obj = o;
+        } else {
+            mask = NullMask;
+            data.obj = NULL;
+        }
+    }
+};
+
+struct AssertLayoutCompatible 
+{
+    JS_STATIC_ASSERT(sizeof(jsval) == 16);
+    JS_STATIC_ASSERT(sizeof(Value::MaskType) == 4);
+    JS_STATIC_ASSERT(sizeof(Value::Data) == 8);
+    JS_STATIC_ASSERT(offsetof(jsval, mask) == 0);
+    JS_STATIC_ASSERT(offsetof(jsval, mask) == offsetof(Value, mask));
+    JS_STATIC_ASSERT(sizeof(Value) == sizeof(jsval));
+    JS_STATIC_ASSERT(sizeof(Value::Data) == sizeof(((jsval *)0)->data));
+    JS_STATIC_ASSERT(offsetof(Value, data) == offsetof(jsval, data));
+    JS_STATIC_ASSERT(sizeof(Value::MaskType) == sizeof(JSValueMaskType));
+    JS_STATIC_ASSERT(sizeof(Value::MaskType) == sizeof(((jsval *)0)->mask));
+    JS_STATIC_ASSERT(offsetof(Value, mask) == offsetof(jsval, mask));
+    JS_STATIC_ASSERT(sizeof(NullValue) == sizeof(Value));
+    JS_STATIC_ASSERT(sizeof(UndefinedValue) == sizeof(Value));
+    JS_STATIC_ASSERT(sizeof(FunObjValue) == sizeof(Value));
+    JS_STATIC_ASSERT(sizeof(NonFunObjValue) == sizeof(Value));
+};
+
+/*
+ * As asserted above, js::Value and jsval are layout equivalent. To provide
+ * widespread casting, the following safe casts are provided.
+ */
+static JS_ALWAYS_INLINE jsval *       Jsvalify(Value *v)       { return (jsval *)v; }
+static JS_ALWAYS_INLINE const jsval * Jsvalify(const Value *v) { return (const jsval *)v; }
+static JS_ALWAYS_INLINE jsval &       Jsvalify(Value &v)       { return (jsval &)v; }
+static JS_ALWAYS_INLINE const jsval & Jsvalify(const Value &v) { return (const jsval &)v; }
+static JS_ALWAYS_INLINE Value *       Valueify(jsval *v)       { return (Value *)v; }
+static JS_ALWAYS_INLINE const Value * Valueify(const jsval *v) { return (const Value *)v; }
+static JS_ALWAYS_INLINE Value &       Valueify(jsval &v)       { return (Value &)v; }
+static JS_ALWAYS_INLINE const Value & Valueify(const jsval &v) { return (const Value &)v; }
+
+/*
+ * N.B. It is more efficient to use setNull/isNull/setUndefined/isUndefined
+ * than to copy/compare these global values.
+ */
+extern const Value sNullValue;
+extern const Value sUndefinedValue;
+extern const ObjPtr sNullObjPtr;
+
+/*
+ * js::Class is layout compatible and thus 
+ */
+struct Class {
+    const char          *name;
+    uint32              flags;
+
+    /* Mandatory non-null function pointer members. */
+    PropertyOp          addProperty;
+    PropertyOp          delProperty;
+    PropertyOp          getProperty;
+    PropertyOp          setProperty;
+    JSEnumerateOp       enumerate;
+    JSResolveOp         resolve;
+    ConvertOp           convert;
+    JSFinalizeOp        finalize;
+
+    /* Optionally non-null members start here. */
+    GetObjectOps        getObjectOps;
+    CheckAccessOp       checkAccess;
+    Native              call;
+    Native              construct;
+    JSXDRObjectOp       xdrObject;
+    HasInstanceOp       hasInstance;
+    JSMarkOp            mark;
+    JSReserveSlotsOp    reserveSlots;
+};
+
+JS_STATIC_ASSERT(sizeof(JSClass) == sizeof(Class));
+
+struct ExtendedClass {
+    Class               base;
+    EqualityOp          equality;
+    JSObjectOp          outerObject;
+    JSObjectOp          innerObject;
+    JSIteratorOp        iteratorObject;
+    JSObjectOp          wrappedObject;          /* NB: infallible, null
+                                                   returns are treated as
+                                                   the original object */
+    void                (*reserved0)(void);
+    void                (*reserved1)(void);
+    void                (*reserved2)(void);
+};
+
+JS_STATIC_ASSERT(sizeof(JSExtendedClass) == sizeof(ExtendedClass));
+
+static JS_ALWAYS_INLINE JSClass *         Jsvalify(Class *c)           { return (JSClass *)c; }
+static JS_ALWAYS_INLINE Class *           Valueify(JSClass *c)         { return (Class *)c; }
+static JS_ALWAYS_INLINE JSExtendedClass * Jsvalify(ExtendedClass *c)   { return (JSExtendedClass *)c; }
+static JS_ALWAYS_INLINE ExtendedClass *   Valueify(JSExtendedClass *c) { return (ExtendedClass *)c; }
+
+} /* namespace js */
+#endif  /* __cplusplus */
 
 #endif /* jsapi_h___ */
