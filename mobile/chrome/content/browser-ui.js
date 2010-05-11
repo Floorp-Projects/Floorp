@@ -1042,8 +1042,8 @@ var PageActions = {
 #endif
     picker.defaultString = fileName + ".pdf";
 
-    let dnldMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-    picker.displayDirectory = dnldMgr.defaultDownloadsDirectory;
+    let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    picker.displayDirectory = dm.defaultDownloadsDirectory;
 
     let rv = picker.show();
     if (rv == Ci.nsIFilePicker.returnCancel)
@@ -1070,7 +1070,6 @@ var PageActions = {
     printSettings.headerStrRight  = '';
 
     // We must manually add this to the download system
-    let dm = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
     let db = dm.DBConnection;
 
     let stmt = db.createStatement(
