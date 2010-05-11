@@ -84,9 +84,6 @@ const int kFlashWMUSERMessageThrottleDelayMs = 5;
 
 #define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
 
-#ifndef WM_MOUSEHWHEEL
-#define WM_MOUSEHWHEEL                    0x020E
-#endif
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
 #endif // defined(XP_MACOSX)
@@ -1059,21 +1056,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
     // The plugin received keyboard focus, let the parent know so the dom is up to date.
     if (message == WM_MOUSEACTIVATE)
         self->CallPluginGotFocus();
-
-    // Prevent lockups due to plugins making rpc calls when the parent
-    // is making a synchronous SendMessage call to the child window. Add
-    // more messages as needed.
-    if ((InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
-        switch(message) {
-            case WM_KILLFOCUS:
-            case WM_MOUSEHWHEEL:
-            case WM_MOUSEWHEEL:
-            case WM_HSCROLL:
-            case WM_VSCROLL:
-            ReplyMessage(0);
-            break;
-        }
-    }
 
     if (message == WM_USER+1 &&
         (self->mQuirks & PluginInstanceChild::QUIRK_FLASH_THROTTLE_WMUSER_EVENTS)) {
