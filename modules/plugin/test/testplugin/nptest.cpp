@@ -1378,6 +1378,12 @@ NPN_MemAlloc(uint32_t size)
   return sBrowserFuncs->memalloc(size);
 }
 
+char*
+NPN_StrDup(const char* str)
+{
+  return strcpy((char*)sBrowserFuncs->memalloc(strlen(str) + 1), str);
+}
+
 void
 NPN_MemFree(void* ptr)
 {
@@ -1631,7 +1637,7 @@ scriptableInvokeDefault(NPObject* npobj, const NPVariant* args, uint32_t argCoun
         value << ";other";
     }
   }
-  STRINGZ_TO_NPVARIANT(strdup(value.str().c_str()), *result);
+  STRINGZ_TO_NPVARIANT(NPN_StrDup(value.str().c_str()), *result);
   return true;
 }
 
@@ -2124,9 +2130,9 @@ getError(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* r
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
   if (id->err.str().length() == 0)
-    STRINGZ_TO_NPVARIANT(strdup(SUCCESS_STRING), *result);
+    STRINGZ_TO_NPVARIANT(NPN_StrDup(SUCCESS_STRING), *result);
   else
-    STRINGZ_TO_NPVARIANT(strdup(id->err.str().c_str()), *result);
+    STRINGZ_TO_NPVARIANT(NPN_StrDup(id->err.str().c_str()), *result);
   return true;
 }
 
