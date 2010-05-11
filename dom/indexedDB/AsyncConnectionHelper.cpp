@@ -72,19 +72,6 @@ AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
   NS_ASSERTION(mRequest, "Null request!");
 }
 
-AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
-                                             IDBRequest* aRequest,
-                                             PRUint32 aTimeoutMS)
-: mDatabase(aDatabase),
-  mRequest(aRequest),
-  mTimeoutDuration(TimeDuration::FromMilliseconds(aTimeoutMS)),
-  mErrorCode(0),
-  mError(PR_FALSE)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(mRequest, "Null request!");
-}
-
 AsyncConnectionHelper::~AsyncConnectionHelper()
 {
   if (!NS_IsMainThread()) {
