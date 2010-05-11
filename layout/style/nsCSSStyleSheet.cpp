@@ -556,11 +556,9 @@ nsMediaList::SetText(const nsAString& aMediaText)
   NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   PRBool htmlMode = PR_FALSE;
-  nsCOMPtr<nsIDOMStyleSheet> domSheet =
-    do_QueryInterface(static_cast<nsICSSStyleSheet*>(mStyleSheet));
-  if (domSheet) {
+  if (mStyleSheet) {
     nsCOMPtr<nsIDOMNode> node;
-    domSheet->GetOwnerNode(getter_AddRefs(node));
+    mStyleSheet->GetOwnerNode(getter_AddRefs(node));
     htmlMode = !!node;
   }
 
@@ -581,11 +579,11 @@ nsMediaList::Matches(nsPresContext* aPresContext,
 }
 
 nsresult
-nsMediaList::SetStyleSheet(nsICSSStyleSheet *aSheet)
+nsMediaList::SetStyleSheet(nsCSSStyleSheet *aSheet)
 {
   NS_ASSERTION(aSheet == mStyleSheet || !aSheet || !mStyleSheet,
                "multiple style sheets competing for one media list");
-  mStyleSheet = static_cast<nsCSSStyleSheet*>(aSheet);
+  mStyleSheet = aSheet;
   return NS_OK;
 }
 
@@ -770,7 +768,7 @@ nsMediaList::Append(const nsAString& aNewMedium)
 //
 
 
-nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsICSSStyleSheet* aPrimarySheet)
+nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet)
   : mSheets(),
     mComplete(PR_FALSE)
 #ifdef DEBUG
@@ -786,7 +784,7 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsICSSStyleSheet* aPrimarySheet)
 static PRBool SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
 {
   if (aRule) {
-    aRule->SetStyleSheet((nsICSSStyleSheet*)aSheet);
+    aRule->SetStyleSheet(static_cast<nsCSSStyleSheet*>(aSheet));
   }
   return PR_TRUE;
 }
@@ -842,12 +840,12 @@ nsCSSStyleSheet::RebuildChildList(nsICSSRule* aRule, void* aBuilder)
 
   // Have to do this QI to be safe, since XPConnect can fake
   // nsIDOMCSSStyleSheets
-  nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(childSheet);
+  nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(childSheet);
   if (!cssSheet) {
     return PR_TRUE;
   }
 
-  (*builder->sheetSlot) = static_cast<nsCSSStyleSheet*>(cssSheet.get());
+  (*builder->sheetSlot) = cssSheet;
   builder->SetParentLinks(*builder->sheetSlot);
   builder->sheetSlot = &(*builder->sheetSlot)->mNext;
   return PR_TRUE;
@@ -889,13 +887,13 @@ nsCSSStyleSheetInner::CloneFor(nsCSSStyleSheet* aPrimarySheet)
 }
 
 void
-nsCSSStyleSheetInner::AddSheet(nsICSSStyleSheet* aSheet)
+nsCSSStyleSheetInner::AddSheet(nsCSSStyleSheet* aSheet)
 {
   mSheets.AppendElement(aSheet);
 }
 
 void
-nsCSSStyleSheetInner::RemoveSheet(nsICSSStyleSheet* aSheet)
+nsCSSStyleSheetInner::RemoveSheet(nsCSSStyleSheet* aSheet)
 {
   if (1 == mSheets.Length()) {
     NS_ASSERTION(aSheet == mSheets.ElementAt(0), "bad parent");
@@ -972,8 +970,7 @@ nsCSSStyleSheetInner::CreateNamespaceMap()
 //
 
 nsCSSStyleSheet::nsCSSStyleSheet()
-  : nsICSSStyleSheet(),
-    mRefCnt(0),
+  : mRefCnt(0),
     mTitle(), 
     mMedia(nsnull),
     mParent(nsnull),
@@ -990,12 +987,11 @@ nsCSSStyleSheet::nsCSSStyleSheet()
 }
 
 nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
-                                 nsICSSStyleSheet* aParentToUse,
+                                 nsCSSStyleSheet* aParentToUse,
                                  nsICSSImportRule* aOwnerRuleToUse,
                                  nsIDocument* aDocumentToUse,
                                  nsIDOMNode* aOwningNodeToUse)
-  : nsICSSStyleSheet(),
-    mRefCnt(0),
+  : mRefCnt(0),
     mTitle(aCopy.mTitle), 
     mMedia(nsnull),
     mParent(aParentToUse),
@@ -1060,13 +1056,15 @@ DOMCI_DATA(CSSStyleSheet, nsCSSStyleSheet)
 
 // QueryInterface implementation for nsCSSStyleSheet
 NS_INTERFACE_MAP_BEGIN(nsCSSStyleSheet)
-  NS_INTERFACE_MAP_ENTRY(nsICSSStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSStyleSheet)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleSheet)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleSheet)
+  if (aIID.Equals(NS_GET_IID(nsCSSStyleSheet)))
+    foundInterface = reinterpret_cast<nsISupports*>(this);
+  else
 NS_INTERFACE_MAP_END
 
 
@@ -1280,7 +1278,7 @@ nsCSSStyleSheet::GetOwnerRule()
 }
 
 void
-nsCSSStyleSheet::AppendStyleSheet(nsICSSStyleSheet* aSheet)
+nsCSSStyleSheet::AppendStyleSheet(nsCSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
 
@@ -1302,7 +1300,7 @@ nsCSSStyleSheet::AppendStyleSheet(nsICSSStyleSheet* aSheet)
 }
 
 void
-nsCSSStyleSheet::InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex)
+nsCSSStyleSheet::InsertStyleSheetAt(nsCSSStyleSheet* aSheet, PRInt32 aIndex)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
 
@@ -1434,7 +1432,7 @@ nsCSSStyleSheet::StyleSheetCount() const
   return count;
 }
 
-already_AddRefed<nsICSSStyleSheet>
+already_AddRefed<nsCSSStyleSheet>
 nsCSSStyleSheet::GetStyleSheetAt(PRInt32 aIndex) const
 {
   // XXX Ughh...an O(n^2) method for doing iteration. Again, we hope
@@ -1483,8 +1481,8 @@ nsCSSStyleSheet::AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray)
   return PR_TRUE;
 }
 
-already_AddRefed<nsICSSStyleSheet>
-nsCSSStyleSheet::Clone(nsICSSStyleSheet* aCloneParent,
+already_AddRefed<nsCSSStyleSheet>
+nsCSSStyleSheet::Clone(nsCSSStyleSheet* aCloneParent,
                        nsICSSImportRule* aCloneOwnerRule,
                        nsIDocument* aCloneDocument,
                        nsIDOMNode* aCloneOwningNode) const
@@ -2120,18 +2118,14 @@ nsCSSStyleSheet::ReplaceRuleInGroup(nsICSSGroupRule* aGroup,
 
 // nsICSSLoaderObserver implementation
 NS_IMETHODIMP
-nsCSSStyleSheet::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+nsCSSStyleSheet::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                   PRBool aWasAlternate,
                                   nsresult aStatus)
 {
 #ifdef DEBUG
-  nsCOMPtr<nsIStyleSheet> styleSheet(do_QueryInterface(aSheet));
-  NS_ASSERTION(styleSheet, "Sheet not implementing nsIStyleSheet!\n");
   nsCOMPtr<nsIStyleSheet> parentSheet;
   aSheet->GetParentSheet(*getter_AddRefs(parentSheet));
-  nsCOMPtr<nsIStyleSheet> thisSheet;
-  QueryInterface(NS_GET_IID(nsIStyleSheet), getter_AddRefs(thisSheet));
-  NS_ASSERTION(thisSheet == parentSheet, "We are being notified of a sheet load for a sheet that is not our child!\n");
+  NS_ASSERTION(this == parentSheet, "We are being notified of a sheet load for a sheet that is not our child!\n");
 #endif
   
   if (mDocument && NS_SUCCEEDED(aStatus)) {
@@ -2156,7 +2150,7 @@ nsCSSStyleSheet::GetOriginalURI() const
 }
 
 nsresult
-NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult)
+NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult)
 {
   *aInstancePtrResult = nsnull;
   nsCSSStyleSheet  *it = new nsCSSStyleSheet();

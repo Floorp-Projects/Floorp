@@ -42,7 +42,7 @@
 #include "nsStyleSheetService.h"
 #include "nsIStyleSheet.h"
 #include "nsCSSLoader.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIURI.h"
 #include "nsContentCID.h"
 #include "nsCOMPtr.h"
@@ -172,7 +172,7 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
   nsRefPtr<mozilla::css::Loader> loader = new mozilla::css::Loader();
   NS_ENSURE_TRUE(loader, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsRefPtr<nsCSSStyleSheet> sheet;
   // Allow UA sheets, but not user sheets, to use unsafe rules
   nsresult rv = loader->LoadSheetSync(aSheetURI, aSheetType == AGENT_SHEET,
                                       PR_TRUE, getter_AddRefs(sheet));

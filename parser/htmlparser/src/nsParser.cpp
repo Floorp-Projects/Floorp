@@ -71,7 +71,6 @@
 #include "nsDataHashtable.h"
 #include "nsIThreadPool.h"
 #include "nsXPCOMCIDInternal.h"
-#include "nsICSSStyleSheet.h"
 #include "nsMimeTypes.h"
 
 #ifdef MOZ_VIEW_SOURCE

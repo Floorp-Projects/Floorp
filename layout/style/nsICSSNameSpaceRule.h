@@ -44,11 +44,10 @@
 //#include "nsString.h"
 
 class nsIAtom;
-class nsIURI;
 
-// IID for the nsICSSNameSpaceRule interface {2469c930-1a09-11d3-805a-006008159b5a}
+// IID for the nsICSSNameSpaceRule interface {c2116a9f-370d-458a-80c1-c6445089a8b7}
 #define NS_ICSS_NAMESPACE_RULE_IID     \
-{0x2469c930, 0x1a09, 0x11d3, {0x80, 0x5a, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+{0xc2116a9f, 0x370d, 0x458a, {0x80, 0xc1, 0xc6, 0x44, 0x50, 0x89, 0xa8, 0xb7}}
 
 class nsICSSNameSpaceRule : public nsICSSRule {
 public:
