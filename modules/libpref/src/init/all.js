@@ -738,6 +738,7 @@ pref("network.IDN.whitelist.jp", true);
 pref("network.IDN.whitelist.kr", true);
 pref("network.IDN.whitelist.li", true);
 pref("network.IDN.whitelist.lt", true);
+pref("network.IDN.whitelist.lu", true);
 pref("network.IDN.whitelist.no", true);
 pref("network.IDN.whitelist.nu", true);
 pref("network.IDN.whitelist.nz", true);
@@ -750,7 +751,15 @@ pref("network.IDN.whitelist.tm", true);
 pref("network.IDN.whitelist.tw", true);
 pref("network.IDN.whitelist.vn", true);
 
-// non-ccTLDs
+// IDN ccTLDs
+// sa, Saudi Arabia, .<al-Saudiah>
+pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true); 
+// ru, Russian Federation, .<RF>
+pref("network.IDN.whitelist.xn--p1ai", true);
+// jo, Jordan, .<Al-Ordon>
+pref("network.IDN.whitelist.xn--mgbayh7gpa", true);
+
+// gTLDs
 pref("network.IDN.whitelist.biz", true);
 pref("network.IDN.whitelist.cat", true);
 pref("network.IDN.whitelist.info", true);
@@ -2822,6 +2831,7 @@ pref("signon.debug",                        false);
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
 pref("browser.formfill.enable",           true);
+pref("browser.formfill.expire_days",      180);
 pref("browser.formfill.saveHttpsForms",   true);
 pref("browser.formfill.agedWeight",       2);
 pref("browser.formfill.bucketSize",       1);
@@ -2873,13 +2883,13 @@ pref("geo.enabled", true);
 pref("accelerometer.enabled", true);
 
 // Enable/Disable HTML5 parser
-pref("html5.enable", false);
+pref("html5.enable", true);
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
 // Time in milliseconds between the time a network buffer is seen and the 
 // timer firing when the timer hasn't fired previously in this parse in the 
 // off-the-main-thread HTML5 parser.
-pref("html5.flushtimer.initialdelay", 200);
+pref("html5.flushtimer.initialdelay", 120);
 // Time in milliseconds between the time a network buffer is seen and the 
 // timer firing when the timer has already fired previously in this parse.
 pref("html5.flushtimer.subsequentdelay", 120);
@@ -2889,6 +2899,9 @@ pref("browser.history.allowPushState", true);
 pref("browser.history.allowReplaceState", true);
 pref("browser.history.allowPopState", true);
 pref("browser.history.maxStateObjectSize", 655360);
+
+// XPInstall prefs
+pref("xpinstall.whitelist.required", true);
 
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  4096);

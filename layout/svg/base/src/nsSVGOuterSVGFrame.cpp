@@ -164,13 +164,12 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
   nsIDocument* doc = mContent->GetCurrentDoc();
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root element
-    if (doc->GetRootContent() == mContent) {
+    if (doc->GetRootElement() == mContent) {
       mIsRootContent = PR_TRUE;
     }
-    // AddMutationObserver checks that the observer is not already added.
     // sSVGMutationObserver has the same lifetime as the document so does
     // not need to be removed
-    doc->AddMutationObserver(&sSVGMutationObserver);
+    doc->AddMutationObserverUnlessExists(&sSVGMutationObserver);
   }
 
   SuspendRedraw();  // UnsuspendRedraw is in DidReflow

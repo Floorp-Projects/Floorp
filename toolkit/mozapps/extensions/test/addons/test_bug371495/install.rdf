@@ -18,6 +18,7 @@
     <!-- Front End MetaData -->
     <em:name>Test theme</em:name>
     <em:type>4</em:type>
+    <em:internalName>test/1.0</em:internalName>
     <em:optionsURL>chrome://foo/content/bar.xul</em:optionsURL>
     <em:aboutURL>chrome://foo/content/bar.xul</em:aboutURL>
 

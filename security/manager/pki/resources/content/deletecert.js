@@ -70,9 +70,9 @@ function setWindowName()
   }
   else if(typeFlag == "ca_tab")
   {
-     title = bundle.GetStringFromName("deleteCaCertTitle");
-     confirm = bundle.GetStringFromName("deleteCaCertConfirm");
-     impact = bundle.GetStringFromName("deleteCaCertImpactX");
+     title = bundle.GetStringFromName("deleteCaCertTitle2");
+     confirm = bundle.GetStringFromName("deleteCaCertConfirm2");
+     impact = bundle.GetStringFromName("deleteCaCertImpactX2");
   }
   else if(typeFlag == "others_tab")
   {

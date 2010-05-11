@@ -2214,14 +2214,8 @@ static PRBool
 nsCertAlreadyExists(SECItem *derCert)
 {
   CERTCertDBHandle *handle = CERT_GetDefaultCertDB();
-  PRArenaPool *arena;
   CERTCertificate *cert;
   PRBool retVal = PR_FALSE;
-
-  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  NS_ASSERTION(arena, "Couldn't allocate an arena!");
-  if (!arena)
-    return PR_FALSE; //What else could we return?
 
   cert = CERT_FindCertByDERCert(handle, derCert);
   if (cert) {

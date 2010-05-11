@@ -88,32 +88,32 @@ public:
   PRBool         operator==(const nsStyleCoord& aOther) const;
   PRBool         operator!=(const nsStyleCoord& aOther) const;
 
-  nsStyleUnit GetUnit(void) const {
+  nsStyleUnit GetUnit() const {
     NS_ASSERTION(mUnit != eStyleUnit_Null, "reading uninitialized value");
     return mUnit;
   }
 
-  PRBool IsAngleValue(void) const {
+  PRBool IsAngleValue() const {
     return eStyleUnit_Degree <= mUnit && mUnit <= eStyleUnit_Radian;
   }
 
-  nscoord     GetCoordValue(void) const;
-  PRInt32     GetIntValue(void) const;
-  float       GetPercentValue(void) const;
-  float       GetFactorValue(void) const;
-  float       GetAngleValue(void) const;
-  double      GetAngleValueInRadians(void) const;
+  nscoord     GetCoordValue() const;
+  PRInt32     GetIntValue() const;
+  float       GetPercentValue() const;
+  float       GetFactorValue() const;
+  float       GetAngleValue() const;
+  double      GetAngleValueInRadians() const;
   void        GetUnionValue(nsStyleUnion& aValue) const;
 
-  void  Reset(void);  // sets to null
+  void  Reset();  // sets to null
   void  SetCoordValue(nscoord aValue);
   void  SetIntValue(PRInt32 aValue, nsStyleUnit aUnit);
   void  SetPercentValue(float aValue);
   void  SetFactorValue(float aValue);
   void  SetAngleValue(float aValue, nsStyleUnit aUnit);
-  void  SetNormalValue(void);
-  void  SetAutoValue(void);
-  void  SetNoneValue(void);
+  void  SetNormalValue();
+  void  SetAutoValue();
+  void  SetNoneValue();
 
 public:
   nsStyleUnit   mUnit;
@@ -128,17 +128,17 @@ public:
  */
 class nsStyleSides {
 public:
-  nsStyleSides(void);
+  nsStyleSides();
 
 //  nsStyleSides&  operator=(const nsStyleSides& aCopy);  // use compiler's version
   PRBool         operator==(const nsStyleSides& aOther) const;
   PRBool         operator!=(const nsStyleSides& aOther) const;
 
   inline nsStyleUnit GetUnit(mozilla::css::Side aSide) const;
-  inline nsStyleUnit GetLeftUnit(void) const;
-  inline nsStyleUnit GetTopUnit(void) const;
-  inline nsStyleUnit GetRightUnit(void) const;
-  inline nsStyleUnit GetBottomUnit(void) const;
+  inline nsStyleUnit GetLeftUnit() const;
+  inline nsStyleUnit GetTopUnit() const;
+  inline nsStyleUnit GetRightUnit() const;
+  inline nsStyleUnit GetBottomUnit() const;
 
   inline nsStyleCoord Get(mozilla::css::Side aSide) const;
   inline nsStyleCoord GetLeft() const;
@@ -146,7 +146,7 @@ public:
   inline nsStyleCoord GetRight() const;
   inline nsStyleCoord GetBottom() const;
 
-  void  Reset(void);
+  void  Reset();
 
   inline void Set(mozilla::css::Side aSide, const nsStyleCoord& aCoord);
   inline void SetLeft(const nsStyleCoord& aCoord);
@@ -166,7 +166,7 @@ protected:
  */
 class nsStyleCorners {
 public:
-  nsStyleCorners(void);
+  nsStyleCorners();
 
   // use compiler's version
   //nsStyleCorners&  operator=(const nsStyleCorners& aCopy);
@@ -178,7 +178,7 @@ public:
 
   inline nsStyleCoord Get(PRUint8 aHalfCorner) const;
 
-  void  Reset(void);
+  void  Reset();
 
   inline void Set(PRUint8 aHalfCorner, const nsStyleCoord& aCoord);
 
@@ -223,7 +223,7 @@ inline PRBool nsStyleCoord::operator!=(const nsStyleCoord& aOther) const
   return !((*this) == aOther);
 }
 
-inline PRInt32 nsStyleCoord::GetCoordValue(void) const
+inline PRInt32 nsStyleCoord::GetCoordValue() const
 {
   NS_ASSERTION((mUnit == eStyleUnit_Coord), "not a coord value");
   if (mUnit == eStyleUnit_Coord) {
@@ -232,7 +232,7 @@ inline PRInt32 nsStyleCoord::GetCoordValue(void) const
   return 0;
 }
 
-inline PRInt32 nsStyleCoord::GetIntValue(void) const
+inline PRInt32 nsStyleCoord::GetIntValue() const
 {
   NS_ASSERTION((mUnit == eStyleUnit_Enumerated) ||
                (mUnit == eStyleUnit_Integer), "not an int value");
@@ -243,7 +243,7 @@ inline PRInt32 nsStyleCoord::GetIntValue(void) const
   return 0;
 }
 
-inline float nsStyleCoord::GetPercentValue(void) const
+inline float nsStyleCoord::GetPercentValue() const
 {
   NS_ASSERTION(mUnit == eStyleUnit_Percent, "not a percent value");
   if (mUnit == eStyleUnit_Percent) {
@@ -252,7 +252,7 @@ inline float nsStyleCoord::GetPercentValue(void) const
   return 0.0f;
 }
 
-inline float nsStyleCoord::GetFactorValue(void) const
+inline float nsStyleCoord::GetFactorValue() const
 {
   NS_ASSERTION(mUnit == eStyleUnit_Factor, "not a factor value");
   if (mUnit == eStyleUnit_Factor) {
@@ -261,7 +261,7 @@ inline float nsStyleCoord::GetFactorValue(void) const
   return 0.0f;
 }
 
-inline float nsStyleCoord::GetAngleValue(void) const
+inline float nsStyleCoord::GetAngleValue() const
 {
   NS_ASSERTION(mUnit >= eStyleUnit_Degree &&
                mUnit <= eStyleUnit_Radian, "not an angle value");
@@ -289,22 +289,22 @@ inline nsStyleUnit nsStyleSides::GetUnit(mozilla::css::Side aSide) const
   return (nsStyleUnit)mUnits[aSide];
 }
 
-inline nsStyleUnit nsStyleSides::GetLeftUnit(void) const
+inline nsStyleUnit nsStyleSides::GetLeftUnit() const
 {
   return GetUnit(NS_SIDE_LEFT);
 }
 
-inline nsStyleUnit nsStyleSides::GetTopUnit(void) const
+inline nsStyleUnit nsStyleSides::GetTopUnit() const
 {
   return GetUnit(NS_SIDE_TOP);
 }
 
-inline nsStyleUnit nsStyleSides::GetRightUnit(void) const
+inline nsStyleUnit nsStyleSides::GetRightUnit() const
 {
   return GetUnit(NS_SIDE_RIGHT);
 }
 
-inline nsStyleUnit nsStyleSides::GetBottomUnit(void) const
+inline nsStyleUnit nsStyleSides::GetBottomUnit() const
 {
   return GetUnit(NS_SIDE_BOTTOM);
 }

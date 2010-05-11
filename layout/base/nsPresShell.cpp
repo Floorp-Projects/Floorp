@@ -58,6 +58,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMXULDocument.h"
 #include "nsStubDocumentObserver.h"
@@ -210,6 +211,7 @@
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
 
 using namespace mozilla::layers;
+using namespace mozilla::dom;
 
 PRBool nsIPresShell::gIsAccessibilityActive = PR_FALSE;
 CapturingContentInfo nsIPresShell::gCaptureInfo;
@@ -1647,8 +1649,7 @@ PresShell::Init(nsIDocument* aDocument,
   }
 
   {
-    nsCOMPtr<nsIObserverService> os =
-      do_GetService("@mozilla.org/observer-service;1", &result);
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       os->AddObserver(this, "agent-sheet-added", PR_FALSE);
       os->AddObserver(this, "user-sheet-added", PR_FALSE);
@@ -1723,8 +1724,7 @@ PresShell::Destroy()
   }
 
   {
-    nsCOMPtr<nsIObserverService> os =
-      do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       os->RemoveObserver(this, "agent-sheet-added");
       os->RemoveObserver(this, "user-sheet-added");
@@ -2487,7 +2487,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsIContent *root = mDocument->GetRootContent();
+  Element *root = mDocument->GetRootElement();
 
   if (root) {
     {
@@ -3237,9 +3237,9 @@ PresShell::FrameNeedsReflow(nsIFrame *aFrame, IntrinsicDirty aIntrinsicDirty,
     printf("\nPresShell@%p: frame %p needs reflow\n", (void*)this, (void*)aFrame);
     if (VERIFY_REFLOW_REALLY_NOISY_RC & gVerifyReflowFlags) {
       printf("Current content model:\n");
-      nsIContent *rootContent = mDocument->GetRootContent();
-      if (rootContent) {
-        rootContent->List(stdout, 0);
+      Element *rootElement = mDocument->GetRootElement();
+      if (rootElement) {
+        rootElement->List(stdout, 0);
       }
     }
   }  
@@ -4730,9 +4730,9 @@ PresShell::DocumentStatesChanged(nsIDocument* aDocument,
 
   if (mDidInitialReflow &&
       mStyleSet->HasDocumentStateDependentStyle(mPresContext,
-                                                mDocument->GetRootContent(),
+                                                mDocument->GetRootElement(),
                                                 aStateMask)) {
-    mFrameConstructor->PostRestyleEvent(mDocument->GetRootContent(),
+    mFrameConstructor->PostRestyleEvent(mDocument->GetRootElement(),
                                         eRestyle_Self, NS_STYLE_HINT_NONE);
     VERIFY_STYLE_TREE;
   }
@@ -4783,6 +4783,7 @@ PresShell::AttributeChanged(nsIDocument* aDocument,
 void
 PresShell::ContentAppended(nsIDocument *aDocument,
                            nsIContent* aContainer,
+                           nsIContent* aFirstNewContent,
                            PRInt32     aNewIndexInContainer)
 {
   NS_PRECONDITION(!mIsDocumentGone, "Unexpected ContentAppended");
@@ -4800,7 +4801,8 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   // frame reconstruction.
   mFrameConstructor->RestyleForAppend(aContainer, aNewIndexInContainer);
 
-  mFrameConstructor->ContentAppended(aContainer, aNewIndexInContainer, PR_TRUE);
+  mFrameConstructor->ContentAppended(aContainer, aFirstNewContent,
+                                     aNewIndexInContainer, PR_TRUE);
   VERIFY_STYLE_TREE;
 }
 
@@ -4896,7 +4898,7 @@ nsIPresShell::ReconstructStyleDataInternal()
     mPresContext->RebuildUserFontSet();
   }
 
-  nsIContent* root = mDocument->GetRootContent();
+  Element* root = mDocument->GetRootElement();
   if (!mDidInitialReflow) {
     // Nothing to do here, since we have no frames yet
     return;
@@ -6168,7 +6170,7 @@ PresShell::HandleEvent(nsIView         *aView,
       // still get sent to the window properly if nothing is focused or if a
       // frame goes away while it is focused.
       if (!mCurrentEventContent || !GetCurrentEventFrame())
-        mCurrentEventContent = mDocument->GetRootContent();
+        mCurrentEventContent = mDocument->GetRootElement();
       mCurrentEventFrame = nsnull;
         
       if (!mCurrentEventContent || !GetCurrentEventFrame() ||
@@ -6253,8 +6255,7 @@ PresShell::HandlePositionedEvent(nsIView*       aView,
       //
       // We use weak pointers because during this tight loop, the node
       // will *not* go away.  And this happens on every mousemove.
-      while (targetElement &&
-             !targetElement->IsNodeOfType(nsINode::eELEMENT)) {
+      while (targetElement && !targetElement->IsElement()) {
         targetElement = targetElement->GetParent();
       }
 

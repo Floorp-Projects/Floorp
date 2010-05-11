@@ -259,7 +259,6 @@ struct JSAtomState {
     JSAtom              *nameAtom;
     JSAtom              *nextAtom;
     JSAtom              *noSuchMethodAtom;
-    JSAtom              *parentAtom;
     JSAtom              *protoAtom;
     JSAtom              *setAtom;
     JSAtom              *stackAtom;
@@ -388,7 +387,6 @@ extern const char   js_namespace_str[];
 extern const char   js_next_str[];
 extern const char   js_noSuchMethod_str[];
 extern const char   js_object_str[];
-extern const char   js_parent_str[];
 extern const char   js_proto_str[];
 extern const char   js_ptagc_str[];
 extern const char   js_qualifier_str[];

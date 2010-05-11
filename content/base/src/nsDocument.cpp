@@ -78,6 +78,7 @@
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMDocumentXBL.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsGenericElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMEventGroup.h"
@@ -181,6 +182,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #endif // MOZ_MEDIA
 
 #include "mozAutoDocUpdate.h"
+#include "nsGlobalWindow.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -257,17 +259,17 @@ nsIdentifierMapEntry::CreateNameContentList()
   return NS_OK;
 }
 
-nsIContent*
-nsIdentifierMapEntry::GetIdContent()
+Element*
+nsIdentifierMapEntry::GetIdElement()
 {
-  return static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
+  return static_cast<Element*>(mIdContentList.SafeElementAt(0));
 }
 
 void
 nsIdentifierMapEntry::AppendAllIdContent(nsCOMArray<nsIContent>* aElements)
 {
   for (PRInt32 i = 0; i < mIdContentList.Count(); ++i) {
-    aElements->AppendObject(static_cast<nsIContent*>(mIdContentList[i]));
+    aElements->AppendObject(static_cast<Element*>(mIdContentList[i]));
   }
 }
 
@@ -300,8 +302,8 @@ nsIdentifierMapEntry::RemoveContentChangeCallback(nsIDocument::IDTargetObserver 
 }
 
 struct FireChangeArgs {
-  nsIContent* mFrom;
-  nsIContent* mTo;
+  Element* mFrom;
+  Element* mTo;
 };
 
 static PLDHashOperator
@@ -313,35 +315,35 @@ FireChangeEnumerator(nsIdentifierMapEntry::ChangeCallbackEntry *aEntry, void *aA
 }
 
 void
-nsIdentifierMapEntry::FireChangeCallbacks(nsIContent* aOldContent,
-                                          nsIContent* aNewContent)
+nsIdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
+                                          Element* aNewElement)
 {
   if (!mChangeCallbacks)
     return;
 
-  FireChangeArgs args = { aOldContent, aNewContent };
+  FireChangeArgs args = { aOldElement, aNewElement };
   mChangeCallbacks->EnumerateEntries(FireChangeEnumerator, &args);
 }
 
 PRBool
-nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
+nsIdentifierMapEntry::AddIdElement(Element* aElement)
 {
-  NS_PRECONDITION(aContent, "Must have content");
+  NS_PRECONDITION(aElement, "Must have element");
   NS_PRECONDITION(mIdContentList.IndexOf(nsnull) < 0,
                   "Why is null in our list?");
 
 #ifdef DEBUG
-  nsIContent* currentContent =
-    static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
+  Element* currentElement =
+    static_cast<Element*>(mIdContentList.SafeElementAt(0));
 #endif
 
   // Common case
   if (mIdContentList.Count() == 0) {
-    if (!mIdContentList.AppendElement(aContent))
+    if (!mIdContentList.AppendElement(aElement))
       return PR_FALSE;
-    NS_ADDREF(aContent);
-    NS_ASSERTION(currentContent == nsnull, "How did that happen?");
-    FireChangeCallbacks(nsnull, aContent);
+    NS_ADDREF(aElement);
+    NS_ASSERTION(currentElement == nsnull, "How did that happen?");
+    FireChangeCallbacks(nsnull, aElement);
     return PR_TRUE;
   }
 
@@ -355,56 +357,57 @@ nsIdentifierMapEntry::AddIdContent(nsIContent* aContent)
     PRInt32 cur = (start + end) / 2;
     NS_ASSERTION(cur >= start && cur < end, "What happened here?");
 
-    nsIContent* curContent = static_cast<nsIContent*>(mIdContentList[cur]);
-    if (curContent == aContent) {
+    Element* curElement = static_cast<Element*>(mIdContentList[cur]);
+    if (curElement == aElement) {
       // Already in the list, so already in the right spot.  Get out of here.
       // XXXbz this only happens because XUL does all sorts of random
       // UpdateIdTableEntry calls.  Hate, hate, hate!
       return PR_TRUE;
     }
 
-    if (nsContentUtils::PositionIsBefore(aContent, curContent)) {
+    if (nsContentUtils::PositionIsBefore(aElement, curElement)) {
       end = cur;
     } else {
       start = cur + 1;
     }
   } while (start != end);
 
-  if (!mIdContentList.InsertElementAt(aContent, start))
+  if (!mIdContentList.InsertElementAt(aElement, start))
     return PR_FALSE;
-  NS_ADDREF(aContent);
+  NS_ADDREF(aElement);
   if (start == 0) {
-    nsIContent* oldContent =
-      static_cast<nsIContent*>(mIdContentList.SafeElementAt(1));
-    NS_ASSERTION(currentContent == oldContent, "How did that happen?");
-    FireChangeCallbacks(oldContent, aContent);
+    Element* oldElement =
+      static_cast<Element*>(mIdContentList.SafeElementAt(1));
+    NS_ASSERTION(currentElement == oldElement, "How did that happen?");
+    FireChangeCallbacks(oldElement, aElement);
   }
   return PR_TRUE;
 }
 
 PRBool
-nsIdentifierMapEntry::RemoveIdContent(nsIContent* aContent)
+nsIdentifierMapEntry::RemoveIdElement(Element* aElement)
 {
   // This should only be called while the document is in an update.
   // Assertions near the call to this method guarantee this.
 
   // XXXbz should this ever Compact() I guess when all the content is gone
   // we'll just get cleaned up in the natural order of things...
-  nsIContent* currentContent = static_cast<nsIContent*>(mIdContentList.SafeElementAt(0));
-  if (!mIdContentList.RemoveElement(aContent))
+  Element* currentElement =
+    static_cast<Element*>(mIdContentList.SafeElementAt(0));
+  if (!mIdContentList.RemoveElement(aElement))
     return PR_FALSE;
-  if (currentContent == aContent) {
-    FireChangeCallbacks(currentContent,
-                        static_cast<nsIContent*>(mIdContentList.SafeElementAt(0)));
+  if (currentElement == aElement) {
+    FireChangeCallbacks(currentElement,
+                        static_cast<Element*>(mIdContentList.SafeElementAt(0)));
   }
   // Make sure the release happens after the check above, since it'll
   // null out aContent.
-  NS_RELEASE(aContent);
+  NS_RELEASE(aElement);
   return mIdContentList.Count() == 0 && !mNameContentList && !mChangeCallbacks;
 }
 
 void
-nsIdentifierMapEntry::AddNameContent(nsIContent* aContent)
+nsIdentifierMapEntry::AddNameElement(Element* aElement)
 {
   if (!mNameContentList || mNameContentList == NAME_NOT_VALID)
     return;
@@ -413,16 +416,17 @@ nsIdentifierMapEntry::AddNameContent(nsIContent* aContent)
   // content notifications when we do document.foo resolution.  So
   // aContent may be in our list already and just now getting notified
   // for!
-  if (mNameContentList->IndexOf(aContent, PR_FALSE) < 0) {
-    mNameContentList->AppendElement(aContent);
+  // XXXbz with the HTML5 parser we can stop doing this!
+  if (mNameContentList->IndexOf(aElement, PR_FALSE) < 0) {
+    mNameContentList->AppendElement(aElement);
   }
 }
 
 void
-nsIdentifierMapEntry::RemoveNameContent(nsIContent* aContent)
+nsIdentifierMapEntry::RemoveNameElement(Element* aElement)
 {
   if (mNameContentList && mNameContentList != NAME_NOT_VALID) {
-    mNameContentList->RemoveElement(aContent);
+    mNameContentList->RemoveElement(aElement);
   }
 }
 
@@ -1457,7 +1461,8 @@ nsDocument::~nsDocument()
     mChildren.ChildAt(indx)->UnbindFromTree();
     mChildren.RemoveChildAt(indx);
   }
-  mCachedRootContent = nsnull;
+  mFirstChild = nsnull;
+  mCachedRootElement = nsnull;
 
   // Let the stylesheets know we're going away
   indx = mStyleSheets.Count();
@@ -1520,7 +1525,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsDocument)
 NS_INTERFACE_TABLE_HEAD(nsDocument)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_DOCUMENT_INTERFACE_TABLE_BEGIN(nsDocument)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsINode)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOM3DocumentEvent)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentStyle)
@@ -1534,12 +1538,15 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsISupportsWeakReference)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMNodeSelector)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
-    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMXPathNSResolver)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOM3Node, new nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMXPathNSResolver,
+                                 new nsNode3Tearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNodeSelector,
+                                 new nsNodeSelectorTearoff(this))
   if (aIID.Equals(NS_GET_IID(nsIDOMXPathEvaluator)) ||
       aIID.Equals(NS_GET_IID(nsIXPathEvaluatorInternal))) {
     if (!mXPathEvaluatorTearoff) {
@@ -1647,7 +1654,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
 
   // Traverse all nsIDocument pointer members.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedRootContent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedRootElement)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mNodeInfoManager,
                                                   nsNodeInfoManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mSecurityInfo)
@@ -1713,8 +1720,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
     tmp->mChildren.ChildAt(indx)->UnbindFromTree();
     tmp->mChildren.RemoveChildAt(indx);
   }
+  tmp->mFirstChild = nsnull;
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedRootContent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedRootElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBaseNodeWithHref)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDOMImplementation)
@@ -1806,7 +1814,7 @@ nsPropertyTable*
 nsIDocument::GetExtraPropertyTable(PRUint16 aCategory)
 {
   NS_ASSERTION(aCategory > 0, "Category 0 should have already been handled");
-  while (aCategory - 1 >= mExtraPropertyTables.Length()) {
+  while (aCategory >= mExtraPropertyTables.Length() + 1) {
     mExtraPropertyTables.AppendElement(new nsPropertyTable());
   }
   return mExtraPropertyTables[aCategory - 1];
@@ -1897,12 +1905,15 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
       nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
 
+      if (nsINode::GetFirstChild() == content) {
+        mFirstChild = content->GetNextSibling();
+      }
       mChildren.RemoveChildAt(i);
       nsNodeUtils::ContentRemoved(this, content, i);
       content->UnbindFromTree();
     }
   }
-  mCachedRootContent = nsnull;
+  mCachedRootElement = nsnull;
 
   // Reset our stylesheets
   ResetStylesheetsToURI(aURI);
@@ -2294,9 +2305,9 @@ nsDocument::StopDocumentLoad()
 void
 nsDocument::SetDocumentURI(nsIURI* aURI)
 {
-  nsCOMPtr<nsIURI> oldBase = nsIDocument::GetBaseURI();
+  nsCOMPtr<nsIURI> oldBase = GetDocBaseURI();
   mDocumentURI = NS_TryToMakeImmutable(aURI);
-  nsIURI* newBase = nsIDocument::GetBaseURI();
+  nsIURI* newBase = GetDocBaseURI();
 
   PRBool equalBases = PR_FALSE;
   if (oldBase && newBase) {
@@ -2328,12 +2339,12 @@ nsDocument::GetLastModified(nsAString& aLastModified)
 }
 
 void
-nsDocument::UpdateNameTableEntry(nsIContent *aContent)
+nsDocument::UpdateNameTableEntry(Element *aElement)
 {
   if (!mIsRegularHTML)
     return;
 
-  nsIAtom* name = nsContentUtils::IsNamedItem(aContent);
+  nsIAtom* name = nsContentUtils::IsNamedItem(aElement);
   if (!name)
     return;
 
@@ -2343,16 +2354,16 @@ nsDocument::UpdateNameTableEntry(nsIContent *aContent)
     return;
   }
 
-  entry->AddNameContent(aContent);
+  entry->AddNameElement(aElement);
 }
 
 void
-nsDocument::RemoveFromNameTable(nsIContent *aContent)
+nsDocument::RemoveFromNameTable(Element *aElement)
 {
   if (!mIsRegularHTML)
     return;
 
-  nsIAtom* name = nsContentUtils::IsNamedItem(aContent);
+  nsIAtom* name = nsContentUtils::IsNamedItem(aElement);
   if (!name)
     return;
 
@@ -2362,27 +2373,27 @@ nsDocument::RemoveFromNameTable(nsIContent *aContent)
     return;
   }
 
-  entry->RemoveNameContent(aContent);
+  entry->RemoveNameElement(aElement);
 }
 
 void
-nsDocument::UpdateIdTableEntry(nsIContent *aContent)
+nsDocument::UpdateIdTableEntry(Element *aElement)
 {
-  nsIAtom* id = aContent->GetID();
+  nsIAtom* id = aElement->GetID();
   if (!id)
     return;
 
   nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(id);
 
   if (entry) { /* True except on OOM */
-    entry->AddIdContent(aContent);
+    entry->AddIdElement(aElement);
   }
 }
 
 void
-nsDocument::RemoveFromIdTable(nsIContent *aContent)
+nsDocument::RemoveFromIdTable(Element *aElement)
 {
-  nsIAtom* id = aContent->GetID();
+  nsIAtom* id = aElement->GetID();
   if (!id)
     return;
 
@@ -2390,7 +2401,7 @@ nsDocument::RemoveFromIdTable(nsIContent *aContent)
   if (!entry) /* Should be false unless we had OOM when adding the entry */
     return;
 
-  if (entry->RemoveIdContent(aContent)) {
+  if (entry->RemoveIdElement(aElement)) {
     mIdentifierMap.RemoveEntry(id);
   }
 }
@@ -2398,13 +2409,13 @@ nsDocument::RemoveFromIdTable(nsIContent *aContent)
 void
 nsDocument::UnregisterNamedItems(nsIContent *aContent)
 {
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  if (!aContent->IsElement()) {
     // non-element nodes are not named items nor can they have children.
     return;
   }
 
-  RemoveFromNameTable(aContent);
-  RemoveFromIdTable(aContent);
+  RemoveFromNameTable(aContent->AsElement());
+  RemoveFromIdTable(aContent->AsElement());
 
   for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
     UnregisterNamedItems(iter);
@@ -2414,13 +2425,13 @@ nsDocument::UnregisterNamedItems(nsIContent *aContent)
 void
 nsDocument::RegisterNamedItems(nsIContent *aContent)
 {
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  if (!aContent->IsElement()) {
     // non-element nodes are not named items nor can they have children.
     return;
   }
 
-  UpdateNameTableEntry(aContent);
-  UpdateIdTableEntry(aContent);
+  UpdateNameTableEntry(aContent->AsElement());
+  UpdateIdTableEntry(aContent->AsElement());
 
   for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
     RegisterNamedItems(iter);
@@ -2430,6 +2441,7 @@ nsDocument::RegisterNamedItems(nsIContent *aContent)
 void
 nsDocument::ContentAppended(nsIDocument* aDocument,
                             nsIContent* aContainer,
+                            nsIContent* aFirstNewContent,
                             PRInt32 aNewIndexInContainer)
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
@@ -2472,15 +2484,15 @@ nsDocument::AttributeWillChange(nsIDocument* aDocument,
                                 nsIContent* aContent, PRInt32 aNameSpaceID,
                                 nsIAtom* aAttribute, PRInt32 aModType)
 {
-  NS_ABORT_IF_FALSE(aContent, "Null content!");
+  NS_ABORT_IF_FALSE(aContent && aContent->IsElement(), "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
   if (aNameSpaceID != kNameSpaceID_None)
     return;
   if (aAttribute == nsGkAtoms::name) {
-    RemoveFromNameTable(aContent);
+    RemoveFromNameTable(aContent->AsElement());
   } else if (aAttribute == aContent->GetIDAttributeName()) {
-    RemoveFromIdTable(aContent);
+    RemoveFromIdTable(aContent->AsElement());
   }
 }
 
@@ -2491,15 +2503,15 @@ nsDocument::AttributeChanged(nsIDocument* aDocument,
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
 
-  NS_ABORT_IF_FALSE(aContent, "Null content!");
+  NS_ABORT_IF_FALSE(aContent && aContent->IsElement(), "Null content!");
   NS_PRECONDITION(aAttribute, "Must have an attribute that's changing!");
 
   if (aNameSpaceID != kNameSpaceID_None)
     return;
   if (aAttribute == nsGkAtoms::name) {
-    UpdateNameTableEntry(aContent);
+    UpdateNameTableEntry(aContent->AsElement());
   } else if (aAttribute == aContent->GetIDAttributeName()) {
-    UpdateIdTableEntry(aContent);
+    UpdateIdTableEntry(aContent->AsElement());
   }
 }
 
@@ -2705,7 +2717,7 @@ nsDocument::ElementFromPointHelper(float aX, float aY,
   // or a node that isn't an element (such as a text frame node),
   // replace it with the first non-anonymous parent node of type element.
   while (ptContent &&
-         (!ptContent->IsNodeOfType(nsINode::eELEMENT) ||
+         (!ptContent->IsElement() ||
           ptContent->IsInAnonymousSubtree())) {
     // XXXldb: Faster to jump to GetBindingParent if non-null?
     ptContent = ptContent->GetParent();
@@ -2789,7 +2801,7 @@ nsDocument::NodesFromRectHelper(float aX, float aY,
     // or a node that isn't an element or a text node,
     // replace it with the first non-anonymous parent node.
     while (ptContent &&
-           (!(ptContent->IsNodeOfType(nsINode::eELEMENT) ||
+           (!(ptContent->IsElement() ||
               ptContent->IsNodeOfType(nsINode::eTEXT)) ||
             ptContent->IsInAnonymousSubtree())) {
       // XXXldb: Faster to jump to GetBindingParent if non-null?
@@ -2808,94 +2820,7 @@ NS_IMETHODIMP
 nsDocument::GetElementsByClassName(const nsAString& aClasses,
                                    nsIDOMNodeList** aReturn)
 {
-  return GetElementsByClassNameHelper(this, aClasses, aReturn);
-}
-
-struct ClassMatchingInfo {
-  nsCOMArray<nsIAtom> mClasses;
-  nsCaseTreatment mCaseTreatment;
-};
-
-// static GetElementsByClassName helpers
-nsresult
-nsDocument::GetElementsByClassNameHelper(nsINode* aRootNode,
-                                         const nsAString& aClasses,
-                                         nsIDOMNodeList** aReturn)
-{
-  NS_PRECONDITION(aRootNode, "Must have root node");
-  
-  nsAttrValue attrValue;
-  attrValue.ParseAtomArray(aClasses);
-  // nsAttrValue::Equals is sensitive to order, so we'll send an array
-  ClassMatchingInfo* info = new ClassMatchingInfo;
-  NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
-
-  if (attrValue.Type() == nsAttrValue::eAtomArray) {
-    info->mClasses.AppendObjects(*(attrValue.GetAtomArrayValue()));
-  } else if (attrValue.Type() == nsAttrValue::eAtom) {
-    info->mClasses.AppendObject(attrValue.GetAtomValue());
-  }
-
-  nsBaseContentList* elements;
-  if (info->mClasses.Count() > 0) {
-    info->mCaseTreatment =
-      aRootNode->GetOwnerDoc()->GetCompatibilityMode() ==
-        eCompatibility_NavQuirks ?
-          eIgnoreCase : eCaseMatters;
-
-    elements =
-      NS_GetFuncStringContentList(aRootNode, MatchClassNames,
-                                  DestroyClassNameArray, info,
-                                  aClasses).get();
-  } else {
-    delete info;
-    info = nsnull;
-    elements = new nsBaseContentList();
-    NS_IF_ADDREF(elements);
-  }
-  if (!elements) {
-    delete info;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // Transfer ownership
-  *aReturn = elements;
-
-  return NS_OK;
-}
-
-// static
-PRBool
-nsDocument::MatchClassNames(nsIContent* aContent,
-                            PRInt32 aNamespaceID,
-                            nsIAtom* aAtom, void* aData)
-{
-  // We can't match if there are no class names
-  const nsAttrValue* classAttr = aContent->GetClasses();
-  if (!classAttr) {
-    return PR_FALSE;
-  }
-  
-  // need to match *all* of the classes
-  ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
-  PRInt32 length = info->mClasses.Count();
-  PRInt32 i;
-  for (i = 0; i < length; ++i) {
-    if (!classAttr->Contains(info->mClasses.ObjectAt(i),
-                             info->mCaseTreatment)) {
-      return PR_FALSE;
-    }
-  }
-  
-  return PR_TRUE;
-}
-
-// static
-void
-nsDocument::DestroyClassNameArray(void* aData)
-{
-  ClassMatchingInfo* info = static_cast<ClassMatchingInfo*>(aData);
-  delete info;
+  return nsContentUtils::GetElementsByClassName(this, aClasses, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2940,7 +2865,7 @@ void
 nsDocument::GetBaseTarget(nsAString &aBaseTarget)
 {
   aBaseTarget.Truncate();
-  nsIContent* head = GetHeadContent();
+  Element* head = GetHeadElement();
   if (!head) {
     return;
   }
@@ -3059,7 +2984,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
 
   // Set the default script-type on the root element.
   if (aHeaderField == nsGkAtoms::headerContentScriptType) {
-    nsIContent *root = GetRootContent();
+    Element *root = GetRootElement();
     if (root) {
       // Get the script-type ID for this value.
       nsresult rv;
@@ -3328,21 +3253,21 @@ nsDocument::IsNodeOfType(PRUint32 aFlags) const
     return !(aFlags & ~eDOCUMENT);
 }
 
-nsIContent*
-nsDocument::GetRootContentInternal() const
+Element*
+nsDocument::GetRootElementInternal() const
 {
   // Loop backwards because any non-elements, such as doctypes and PIs
   // are likely to appear before the root element.
   PRUint32 i;
   for (i = mChildren.ChildCount(); i > 0; --i) {
     nsIContent* child = mChildren.ChildAt(i - 1);
-    if (child->IsNodeOfType(nsINode::eELEMENT)) {
-      const_cast<nsDocument*>(this)->mCachedRootContent = child;
-      return child;
+    if (child->IsElement()) {
+      const_cast<nsDocument*>(this)->mCachedRootElement = child;
+      return child->AsElement();
     }
   }
   
-  const_cast<nsDocument*>(this)->mCachedRootContent = nsnull;
+  const_cast<nsDocument*>(this)->mCachedRootElement = nsnull;
   return nsnull;
 }
 
@@ -3375,14 +3300,12 @@ nsresult
 nsDocument::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                           PRBool aNotify)
 {
-  if (aKid->IsNodeOfType(nsINode::eELEMENT) &&
-      GetRootContent()) {
+  if (aKid->IsElement() && GetRootElement()) {
     NS_ERROR("Inserting element child when we already have one");
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  return nsGenericElement::doInsertChildAt(aKid, aIndex, aNotify,
-                                           nsnull, this, mChildren);
+  return doInsertChildAt(aKid, aIndex, aNotify, mChildren);
 }
 
 nsresult
@@ -3405,15 +3328,14 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent
     return NS_OK;
   }
 
-  if (oldKid->IsNodeOfType(nsINode::eELEMENT)) {
+  if (oldKid->IsElement()) {
     // Destroy the link map up front before we mess with the child list.
     DestroyLinkMap();
   }
 
-  nsresult rv = nsGenericElement::doRemoveChildAt(aIndex, aNotify, oldKid,
-                                                  nsnull, this, mChildren, 
-                                                  aMutationEvent);
-  mCachedRootContent = nsnull;
+  nsresult rv =
+    doRemoveChildAt(aIndex, aNotify, oldKid, mChildren, aMutationEvent);
+  mCachedRootElement = nsnull;
   return rv;
 }
 
@@ -3852,8 +3774,9 @@ nsDocument::ScriptLoader()
 void
 nsDocument::AddObserver(nsIDocumentObserver* aObserver)
 {
-  // The array makes sure the observer isn't already in the list
-  mObservers.AppendElementUnlessExists(aObserver);
+  NS_ASSERTION(mObservers.IndexOf(aObserver) == nsTArray_base::NoIndex,
+               "Observer already in the list");
+  mObservers.AppendElement(aObserver);
   AddMutationObserver(aObserver);
 }
 
@@ -3968,7 +3891,7 @@ nsDocument::GetElementByIdInternal(nsIAtom* aID)
   nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aID);
   NS_ENSURE_TRUE(entry, nsnull);
 
-  if (entry->GetIdContent())
+  if (entry->GetIdElement())
     return entry;
 
   // Now we have to flush.  It could be that we know nothing about this ID yet
@@ -4006,7 +3929,7 @@ nsDocument::GetElementById(const nsAString& aElementId,
   nsIdentifierMapEntry *entry = GetElementByIdInternal(idAtom);
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
-  nsIContent *e = entry->GetIdContent();
+  Element *e = entry->GetIdElement();
   if (!e)
     return NS_OK;
 
@@ -4024,7 +3947,7 @@ nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
   NS_ENSURE_TRUE(entry, nsnull);
 
   entry->AddContentChangeCallback(aObserver, aData);
-  return entry->GetIdContent();
+  return entry->GetIdElement();
 }
 
 void
@@ -4048,6 +3971,7 @@ nsDocument::RemoveIDTargetObserver(nsIAtom* aID,
 void
 nsDocument::DispatchContentLoadedEvents()
 {
+  NS_TIME_FUNCTION;
   // If you add early returns from this method, make sure you're
   // calling UnblockOnload properly.
   
@@ -4126,7 +4050,7 @@ nsDocument::DispatchContentLoadedEvents()
 
   // If the document has a manifest attribute, fire a MozApplicationManifest
   // event.
-  nsIContent* root = GetRootContent();
+  Element* root = GetRootElement();
   if (root && root->HasAttr(kNameSpaceID_None, nsGkAtoms::manifest)) {
     nsContentUtils::DispatchChromeEvent(this, static_cast<nsIDocument*>(this),
                                         NS_LITERAL_STRING("MozApplicationManifest"),
@@ -4253,7 +4177,7 @@ nsDocument::GetDocumentElement(nsIDOMElement** aDocumentElement)
 {
   NS_ENSURE_ARG_POINTER(aDocumentElement);
 
-  nsIContent* root = GetRootContent();
+  Element* root = GetRootElement();
   if (root) {
     return CallQueryInterface(root, aDocumentElement);
   }
@@ -4800,7 +4724,7 @@ nsDocument::LoadBindingDocument(const nsAString& aURI)
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURI,
                           mCharacterSet.get(),
-                          static_cast<nsIDocument *>(this)->GetBaseURI());
+                          GetDocBaseURI());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Figure out the right principal to use
@@ -5012,20 +4936,20 @@ nsDocument::GetLocation(nsIDOMLocation **_retval)
   return w->GetLocation(_retval);
 }
 
-nsIContent*
-nsIDocument::GetHtmlContent()
+Element*
+nsIDocument::GetHtmlElement()
 {
-  nsIContent* rootContent = GetRootContent();
-  if (rootContent && rootContent->Tag() == nsGkAtoms::html &&
-      rootContent->IsHTML())
-    return rootContent;
+  Element* rootElement = GetRootElement();
+  if (rootElement && rootElement->Tag() == nsGkAtoms::html &&
+      rootElement->IsHTML())
+    return rootElement;
   return nsnull;
 }
 
-nsIContent*
-nsIDocument::GetHtmlChildContent(nsIAtom* aTag)
+Element*
+nsIDocument::GetHtmlChildElement(nsIAtom* aTag)
 {
-  nsIContent* html = GetHtmlContent();
+  Element* html = GetHtmlElement();
   if (!html)
     return nsnull;
 
@@ -5034,7 +4958,7 @@ nsIDocument::GetHtmlChildContent(nsIAtom* aTag)
   for (PRUint32 i = 0; i < html->GetChildCount(); ++i) {
     nsIContent* result = html->GetChildAt(i);
     if (result->Tag() == aTag && result->IsHTML())
-      return result;
+      return result->AsElement();
   }
   return nsnull;
 }
@@ -5072,21 +4996,21 @@ nsDocument::GetTitle(nsAString& aTitle)
 {
   aTitle.Truncate();
 
-  nsIContent *rootContent = GetRootContent();
-  if (!rootContent)
+  nsIContent *rootElement = GetRootElement();
+  if (!rootElement)
     return NS_OK;
 
   nsAutoString tmp;
 
-  switch (rootContent->GetNameSpaceID()) {
+  switch (rootElement->GetNameSpaceID()) {
 #ifdef MOZ_XUL
     case kNameSpaceID_XUL:
-      rootContent->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
+      rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
       break;
 #endif
 #ifdef MOZ_SVG
     case kNameSpaceID_SVG:
-      if (rootContent->Tag() == nsGkAtoms::svg) {
+      if (rootElement->Tag() == nsGkAtoms::svg) {
         GetTitleFromElement(kNameSpaceID_SVG, tmp);
         break;
       } // else fall through
@@ -5104,18 +5028,18 @@ nsDocument::GetTitle(nsAString& aTitle)
 NS_IMETHODIMP
 nsDocument::SetTitle(const nsAString& aTitle)
 {
-  nsIContent *rootContent = GetRootContent();
-  if (!rootContent)
+  Element *rootElement = GetRootElement();
+  if (!rootElement)
     return NS_OK;
 
-  switch (rootContent->GetNameSpaceID()) {
+  switch (rootElement->GetNameSpaceID()) {
 #ifdef MOZ_SVG
     case kNameSpaceID_SVG:
       return NS_OK; // SVG doesn't support setting a title
 #endif
 #ifdef MOZ_XUL
     case kNameSpaceID_XUL:
-      return rootContent->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
+      return rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title,
                                   aTitle, PR_TRUE);
 #endif
   }
@@ -5126,7 +5050,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
 
   nsIContent* title = GetTitleContent(kNameSpaceID_XHTML);
   if (!title) {
-    nsIContent *head = GetHeadContent();
+    Element *head = GetHeadElement();
     if (!head)
       return NS_OK;
 
@@ -5714,90 +5638,27 @@ nsDocument::IsSupported(const nsAString& aFeature, const nsAString& aVersion,
                                                aFeature, aVersion, aReturn);
 }
 
-NS_IMETHODIMP
-nsDocument::GetBaseURI(nsAString &aURI)
-{
-  nsCAutoString spec;
-  if (nsIDocument::GetBaseURI()) {
-    nsIDocument::GetBaseURI()->GetSpec(spec);
-  }
-
-  CopyUTF8toUTF16(spec, aURI);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsDocument::GetTextContent(nsAString &aTextContent)
 {
   SetDOMStringToNull(aTextContent);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDocument::SetTextContent(const nsAString& aTextContent)
+PRBool
+nsDocument::IsEqualNode(nsINode* aOther)
 {
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsDocument::CompareDocumentPosition(nsIDOMNode* aOther, PRUint16* aReturn)
-{
-  NS_ENSURE_ARG_POINTER(aOther);
-
-  // We could optimize this by getting the other nodes current document
-  // and comparing with ourself. But then we'd have to deal with the
-  // current document being null and such so it's easier this way.
-  // It's hardly a case to optimize anyway.
-
-  nsCOMPtr<nsINode> other = do_QueryInterface(aOther);
-  NS_ENSURE_TRUE(other, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-  *aReturn = nsContentUtils::ComparePosition(other, this);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::IsSameNode(nsIDOMNode* aOther, PRBool* aReturn)
-{
-  PRBool sameNode = PR_FALSE;
-
-  if (this == aOther) {
-    sameNode = PR_TRUE;
-  }
-
-  *aReturn = sameNode;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
-{
-  *aReturn = PR_FALSE;
-
-  if (!aOther)
-    return NS_OK;
-
-  // Node type check by QI.  We also reuse this later.
-  nsCOMPtr<nsIDocument> aOtherDoc = do_QueryInterface(aOther);
-  if (!aOtherDoc) {
-    return NS_OK;
-  }
+  if (!aOther || !aOther->IsNodeOfType(eDOCUMENT))
+    return PR_FALSE;
 
   // Child nodes check.
   PRUint32 childCount = GetChildCount();
-  if (childCount != aOtherDoc->GetChildCount()) {
-    return NS_OK;
+  if (childCount != aOther->GetChildCount()) {
+    return PR_FALSE;
   }
 
   for (PRUint32 i = 0; i < childCount; i++) {
-    nsIContent* aChild1 = GetChildAt(i);
-    nsIContent* aChild2 = aOtherDoc->GetChildAt(i);
-    if (!nsNode3Tearoff::AreNodesEqual(aChild1, aChild2)) {
-      return NS_OK;
+    if (!GetChildAt(i)->IsEqual(aOther->GetChildAt(i))) {
+      return PR_FALSE;
     }
   }
 
@@ -5805,68 +5666,7 @@ nsDocument::IsEqualNode(nsIDOMNode* aOther, PRBool* aReturn)
      node value, attributes.
    */
 
-  *aReturn = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::IsDefaultNamespace(const nsAString& aNamespaceURI,
-                               PRBool* aReturn)
-{
-  nsAutoString defaultNamespace;
-  LookupNamespaceURI(EmptyString(), defaultNamespace);
-  *aReturn = aNamespaceURI.Equals(defaultNamespace);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::GetFeature(const nsAString& aFeature,
-                       const nsAString& aVersion,
-                       nsISupports** aReturn)
-{
-  return nsGenericElement::InternalGetFeature(static_cast<nsIDOMDocument*>(this),
-                                              aFeature, aVersion, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::SetUserData(const nsAString &aKey,
-                        nsIVariant *aData,
-                        nsIDOMUserDataHandler *aHandler,
-                        nsIVariant **aResult)
-{
-  return nsNodeUtils::SetUserData(this, aKey, aData, aHandler, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::GetUserData(const nsAString &aKey,
-                        nsIVariant **aResult)
-{
-  return nsNodeUtils::GetUserData(this, aKey, aResult);
-}
-
-NS_IMETHODIMP
-nsDocument::LookupPrefix(const nsAString& aNamespaceURI,
-                         nsAString& aPrefix)
-{
-  nsCOMPtr<nsIDOM3Node> root(do_QueryInterface(GetRootContent()));
-  if (root) {
-    return root->LookupPrefix(aNamespaceURI, aPrefix);
-  }
-
-  SetDOMStringToNull(aPrefix);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                               nsAString& aNamespaceURI)
-{
-  if (NS_FAILED(nsContentUtils::LookupNamespaceURI(GetRootContent(),
-                                                   aNamespacePrefix,
-                                                   aNamespaceURI))) {
-    SetDOMStringToNull(aNamespaceURI);
-  }
-  return NS_OK;
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -5986,7 +5786,7 @@ static void
 BlastSubtreeToPieces(nsINode *aNode)
 {
   PRUint32 i, count;
-  if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+  if (aNode->IsElement()) {
     nsGenericElement *element = static_cast<nsGenericElement*>(aNode);
     const nsDOMAttributeMap *map = element->GetAttributeMap();
     if (map) {
@@ -6248,8 +6048,8 @@ nsDocument::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 
   // Load events must not propagate to |window| object, see bug 335251.
   if (aVisitor.mEvent->message != NS_LOAD) {
-    nsCOMPtr<nsPIDOMEventTarget> parentTarget = do_QueryInterface(GetWindow());
-    aVisitor.mParentTarget = parentTarget;
+    nsGlobalWindow* window = static_cast<nsGlobalWindow*>(GetWindow());
+    aVisitor.mParentTarget = static_cast<nsPIDOMEventTarget*>(window);
   }
   return NS_OK;
 }
@@ -7368,7 +7168,7 @@ nsDocument::OnPageShow(PRBool aPersisted,
   EnumerateFreezableElements(NotifyActivityChanged, nsnull);
   EnumerateExternalResources(NotifyPageShow, &aPersisted);
 
-  nsIContent* root = GetRootContent();
+  Element* root = GetRootElement();
   if (aPersisted && root) {
     // Send out notifications that our <link> elements are attached.
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
@@ -7418,7 +7218,7 @@ nsDocument::OnPageHide(PRBool aPersisted,
 {
   // Send out notifications that our <link> elements are detached,
   // but only if this is not a full unload.
-  nsIContent* root = GetRootContent();
+  Element* root = GetRootElement();
   if (aPersisted && root) {
     nsRefPtr<nsContentList> links = NS_GetContentList(root,
                                                       nsGkAtoms::link,
@@ -7599,20 +7399,6 @@ nsDocument::SetScriptTypeID(PRUint32 aScriptType)
 {
     NS_ERROR("Can't change default script type for a document");
     return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::QuerySelector(const nsAString& aSelector,
-                          nsIDOMElement **aReturn)
-{
-  return nsGenericElement::doQuerySelector(this, aSelector, aReturn);
-}
-
-NS_IMETHODIMP
-nsDocument::QuerySelectorAll(const nsAString& aSelector,
-                             nsIDOMNodeList **aReturn)
-{
-  return nsGenericElement::doQuerySelectorAll(this, aSelector, aReturn);
 }
 
 nsresult

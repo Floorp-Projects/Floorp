@@ -3271,8 +3271,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                          */
                         cond = js_GetSrcNoteOffset(sn, 1);
                         if (cond != 0) {
+                            cond -= tail;
                             DECOMPILE_CODE(pc + oplen, cond - oplen);
                             pc += cond;
+                            oplen = js_CodeSpec[*pc].length;
                             elseif = JS_TRUE;
                             goto if_again;
                         }

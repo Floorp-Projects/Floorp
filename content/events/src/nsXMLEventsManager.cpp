@@ -77,7 +77,7 @@ PRBool nsXMLEventsListener::InitXMLEventsListener(nsIDocument * aDocument,
     nsCOMPtr<nsIURI> handlerURI;
     PRBool equals = PR_FALSE;
     nsIURI *docURI = aDocument->GetDocumentURI();
-    nsIURI *baseURI = aDocument->GetBaseURI();
+    nsIURI *baseURI = aDocument->GetDocBaseURI();
     rv = NS_NewURI( getter_AddRefs(handlerURI), handlerURIStr, nsnull, baseURI);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIURL> handlerURL(do_QueryInterface(handlerURI));
@@ -407,6 +407,7 @@ nsXMLEventsManager::AttributeChanged(nsIDocument* aDocument,
 void
 nsXMLEventsManager::ContentAppended(nsIDocument* aDocument,
                                     nsIContent* aContainer,
+                                    nsIContent* aFirstNewContent,
                                     PRInt32 aNewIndexInContainer)
 {
   AddListeners(aDocument);
@@ -427,7 +428,7 @@ nsXMLEventsManager::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aChild,
                                    PRInt32 aIndexInContainer)
 {
-  if (!aChild || !aChild->IsNodeOfType(nsINode::eELEMENT))
+  if (!aChild || !aChild->IsElement())
     return;
   //Note, we can't use IDs here, the observer may not always have an ID.
   //And to remember: the same observer can be referenced by many 

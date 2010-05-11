@@ -144,7 +144,7 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
         // then, re-resolve our style
         nsStyleContext* parentStyleContext = GetStyleContext()->GetParent();
         newStyleContext = PresContext()->StyleSet()->
-          ResolveStyleFor(aContent, parentStyleContext);
+          ResolveStyleFor(aContent->AsElement(), parentStyleContext);
 
         if (!newStyleContext) 
           mRestyle.Truncate();

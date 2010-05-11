@@ -820,6 +820,10 @@ protected:
 
   nsCOMPtr<nsIDocument> mSuspendedDoc;
 
+  // A unique (as long as our 64-bit counter doesn't roll over) id for
+  // this window.
+  PRUint64 mWindowID;
+
   friend class nsDOMScriptableHelper;
   friend class nsDOMWindowUtils;
   friend class PostMessageEvent;

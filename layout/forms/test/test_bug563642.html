@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=563642
+-->
+<head>
+  <title>Test for Bug 563642</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=563642">Mozilla Bug 563642</a>
+<p id="display">
+<select id="test1" multiple="multiple" size="1">
+	<option>Item 1</option>
+	<option>Item 2</option>
+	<option>Item 3</option>
+	<option>Item 4</option>
+	<option>Item 5</option>
+</select>
+<select id="test2" multiple="multiple" size="1">
+	<option>Item 1</option>
+	<option disabled>Item 2</option>
+	<option>Item 3</option>
+	<option disabled>Item 4</option>
+	<option>Item 5</option>
+</select>
+<select id="test3" multiple="multiple"></select>
+<select id="test4" multiple="multiple" size="1"></select>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 563642 **/
+
+function pageUpDownTest(id,index) {
+  var elm = document.getElementById(id);
+  elm.focus();
+  elm.selectedIndex = 0;
+  sendKey("page_down", elm);
+  sendKey("page_down", elm);
+  sendKey("page_down", elm);
+  sendKey("page_up", elm);
+  sendKey("page_down", elm);
+  is(elm.selectedIndex, index, "pageUpDownTest: selectedIndex for " + id + " is " + index);
+}
+
+function upDownTest(id,index) {
+  var elm = document.getElementById(id);
+  elm.focus();
+  elm.selectedIndex = 0;
+  sendKey("down", elm);
+  sendKey("down", elm);
+  sendKey("down", elm);
+  sendKey("up", elm);
+  sendKey("down", elm);
+  is(elm.selectedIndex, index, "upDownTest: selectedIndex for " + id + " is " + index);
+}
+
+function runTest() {
+  pageUpDownTest("test1",3);
+  pageUpDownTest("test2",4);
+  pageUpDownTest("test3",-1);
+  pageUpDownTest("test4",-1);
+  upDownTest("test1",3);
+  upDownTest("test2",4);
+  upDownTest("test3",-1);
+  upDownTest("test4",-1);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTest)
+
+</script>
+</pre>
+</body>
+</html>

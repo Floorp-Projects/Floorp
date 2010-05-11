@@ -80,6 +80,12 @@ nsReferencedElement.h \
 nsXMLNameSpaceMap.h \
 $(NULL)
 
+EXPORTS_NAMESPACES = mozilla/dom
+
+EXPORTS_mozilla/dom = \
+Element.h \
+$(NULL)
+
 ifndef DISABLE_XFORMS_HOOKS
 EXPORTS += nsIXFormsUtilityService.h
 endif

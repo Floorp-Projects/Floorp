@@ -181,6 +181,8 @@ INCLUDES	+= \
 		-I$(srcdir)/../../xml/document/src \
 		-I$(topsrcdir)/xpcom/io \
 		-I$(topsrcdir)/dom/ipc \
+		-I$(topsrcdir)/js/src/xpconnect/src \
+		-I$(topsrcdir)/caps/include \
 		$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT

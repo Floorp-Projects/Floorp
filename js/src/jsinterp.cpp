@@ -81,10 +81,7 @@
 #include "jsscopeinlines.h"
 #include "jsscriptinlines.h"
 #include "jsstrinlines.h"
-
-#ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
-#endif
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
@@ -814,15 +811,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     if (hook)
         hookData = hook(cx, &frame, JS_TRUE, 0, cx->debugHooks->callHookData);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    /* DTrace function entry, non-inlines */
-    if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
-        jsdtrace_function_entry(cx, &frame, fun);
-    if (JAVASCRIPT_FUNCTION_INFO_ENABLED())
-        jsdtrace_function_info(cx, &frame, frame.down, fun);
-    if (JAVASCRIPT_FUNCTION_ARGS_ENABLED())
-        jsdtrace_function_args(cx, &frame, fun, frame.argc, frame.argv);
-#endif
+    DTrace::enterJSFun(cx, &frame, fun, frame.down, frame.argc, frame.argv);
 
     /* Call the function, either a native method or an interpreted script. */
     if (native) {
@@ -842,13 +831,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
         ok = js_Interpret(cx);
     }
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    /* DTrace function return, non-inlines */
-    if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
-        jsdtrace_function_rval(cx, &frame, fun, &frame.rval);
-    if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
-        jsdtrace_function_return(cx, &frame, fun);
-#endif
+    DTrace::exitJSFun(cx, &frame, fun, frame.rval);
 
 out:
     if (hookData) {
@@ -948,20 +931,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     LeaveTrace(cx);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    struct JSDNotifyGuard {
-        JSScript *script;
-        JSDNotifyGuard(JSScript *s) : script(s) {
-            if (JAVASCRIPT_EXECUTE_START_ENABLED())
-                jsdtrace_execute_start(script);
-        }
-        ~JSDNotifyGuard() {
-            if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
-                jsdtrace_execute_done(script);
-        }
-
-    } jsdNotifyGuard(script);
-#endif
+    DTrace::ExecutionScope executionScope(script);
 
     JSInterpreterHook hook = cx->debugHooks->executeHook;
     void *hookData = NULL;
@@ -1589,6 +1559,8 @@ js_TraceOpcode(JSContext *cx)
                             (n == -ndefs) ? "  output:" : ",",
                             bytes);
                     cx->free(bytes);
+                } else {
+                    JS_ClearPendingException(cx);
                 }
             }
             fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
@@ -1596,10 +1568,12 @@ js_TraceOpcode(JSContext *cx)
         fprintf(tracefp, "  stack: ");
         for (siter = StackBase(fp); siter < regs->sp; siter++) {
             str = js_ValueToString(cx, *siter);
-            if (!str)
+            if (!str) {
                 fputs("<null>", tracefp);
-            else
+            } else {
+                JS_ClearPendingException(cx);
                 js_FileEscapedString(tracefp, str, 0);
+            }
             fputc(' ', tracefp);
         }
         fputc('\n', tracefp);
@@ -1621,6 +1595,8 @@ js_TraceOpcode(JSContext *cx)
                         (n == -nuses) ? "  inputs:" : ",",
                         bytes);
                 cx->free(bytes);
+            } else {
+                JS_ClearPendingException(cx);
             }
         }
         fprintf(tracefp, " @ %u\n", (uintN) (regs->sp - StackBase(fp)));
@@ -2464,19 +2440,21 @@ js_Interpret(JSContext *cx)
         atoms = FrameAtomBase(cx, fp);                                        \
         currentVersion = (JSVersion) script->version;                         \
         JS_ASSERT(fp->regs == &regs);                                         \
-        if (cx->throwing)                                                     \
-            goto error;                                                       \
     JS_END_MACRO
 
 #define MONITOR_BRANCH(reason)                                                \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            if (MonitorLoopEdge(cx, inlineCallCount, reason)) {               \
+            MonitorResult r = MonitorLoopEdge(cx, inlineCallCount, reason);   \
+            if (r == MONITOR_RECORDING) {                                     \
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
                 MONITOR_BRANCH_TRACEVIS;                                      \
                 ENABLE_INTERRUPTS();                                          \
             }                                                                 \
             RESTORE_INTERP_VARS();                                            \
+            JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
+            if (r == MONITOR_ERROR)                                           \
+                goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
 
@@ -2547,7 +2525,7 @@ js_Interpret(JSContext *cx)
 
 # define CHECK_INTERRUPT_HANDLER()                                            \
     JS_BEGIN_MACRO                                                            \
-        if (cx->debugHooks->interruptHandler)                                 \
+        if (cx->debugHooks->interruptHook)                                    \
             ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
@@ -2707,7 +2685,7 @@ js_Interpret(JSContext *cx)
         /* This is an error, not a catchable exception, quit the frame ASAP. */
         ok = JS_FALSE;
     } else {
-        JSTrapHandler handler;
+        JSThrowHook handler;
         JSTryNote *tn, *tnlimit;
         uint32 offset;
 

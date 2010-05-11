@@ -272,7 +272,7 @@ nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
     aOffset = 0;
   }
 
-  if (aOffset + aCount > GetLength()) {
+  if (PRUint32(aOffset + aCount) > GetLength()) {
     aCount = mState.mLength - aOffset;
   }
 

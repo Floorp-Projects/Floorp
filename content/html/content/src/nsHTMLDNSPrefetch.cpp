@@ -295,10 +295,9 @@ nsHTMLDNSPrefetch::nsDeferrals::Activate()
     progress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
 
   // Register as an observer for xpcom shutdown events so we can drop any element refs
-  nsresult rv;
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_SUCCEEDED(rv))
+    mozilla::services::GetObserverService();
+  if (observerService)
     observerService->AddObserver(this, "xpcom-shutdown", PR_TRUE);
 }
 

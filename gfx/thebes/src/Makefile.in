@@ -49,6 +49,7 @@ endif
 
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_CAIRO_LIBS) \
+	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(XPCOM_LIBS) \
@@ -101,6 +102,16 @@ endif
 OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
 
 ACDEFINES +=	-UWIN32_LEAN_AND_MEAN
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CPPSRCS += \
+	gfxAndroidPlatform.cpp \
+	gfxFT2Fonts.cpp \
+	gfxFT2FontBase.cpp \
+	gfxFT2Utils.cpp \
+	nsUnicodeRange.cpp \
+	$(NULL)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
@@ -222,6 +233,10 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 ifdef WINCE
 CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)

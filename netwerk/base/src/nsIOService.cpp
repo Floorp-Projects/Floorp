@@ -230,7 +230,7 @@ nsIOService::Init()
     
     // Register for profile change notifications
     nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1");
+        mozilla::services::GetObserverService();
     if (observerService) {
         observerService->AddObserver(this, kProfileChangeNetTeardownTopic, PR_TRUE);
         observerService->AddObserver(this, kProfileChangeNetRestoreTopic, PR_TRUE);
@@ -667,7 +667,7 @@ nsIOService::SetOffline(PRBool offline)
     mSettingOffline = PR_TRUE;
 
     nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1");
+        mozilla::services::GetObserverService();
 
     NS_ASSERTION(observerService, "The observer service should not be null");
 

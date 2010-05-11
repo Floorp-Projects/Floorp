@@ -100,6 +100,21 @@ void SaveSettings()
                      "Crash Reporter", settings, true);
 }
 
+/*
+ * Check if a crashreporter.crt file exists next
+ * to the crashreporter binary, and if so set gCACertificateFile
+ * to its path. The CA cert will then be used by libcurl to authenticate
+ * the server's SSL certificate.
+ */
+static void FindCACertificateFile()
+{
+  string path = gArgv[0];
+  path += ".crt";
+  if (UIFileExists(path)) {
+    gCACertificateFile = path;
+  }
+}
+
 void SendReport()
 {
   // disable all our gui controls, show the throbber + change the progress text
@@ -116,6 +131,8 @@ void SendReport()
 #ifdef MOZ_ENABLE_GCONF
   LoadProxyinfo();
 #endif
+
+  FindCACertificateFile();
 
   // and spawn a thread to do the sending
   GError* err;

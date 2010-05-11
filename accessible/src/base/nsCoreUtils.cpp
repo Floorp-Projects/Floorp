@@ -242,7 +242,7 @@ nsCoreUtils::GetDOMElementFor(nsIDOMNode *aNode)
   nsCOMPtr<nsINode> node(do_QueryInterface(aNode));
   nsIDOMElement *element = nsnull;
 
-  if (node->IsNodeOfType(nsINode::eELEMENT))
+  if (node->IsElement())
     CallQueryInterface(node, &element);
 
   else if (node->IsNodeOfType(nsINode::eTEXT)) {
@@ -276,7 +276,7 @@ nsCoreUtils::GetDOMNodeFromDOMPoint(nsIDOMNode *aNode, PRUint32 aOffset)
   nsIDOMNode *resultNode = nsnull;
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  if (content && content->IsNodeOfType(nsINode::eELEMENT)) {
+  if (content && content->IsElement()) {
 
     PRUint32 childCount = content->GetChildCount();
     NS_ASSERTION(aOffset >= 0 && aOffset <= childCount,

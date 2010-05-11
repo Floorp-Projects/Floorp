@@ -37,7 +37,7 @@ extern "C" {
  *  AtkObject in a sequential way, (for instance text-flow).
  *@ATK_RELATION_FLOWS_FROM: Indicates that the object has content that flows logically from
  *  another AtkObject in a sequential way, (for instance text-flow).
- *@ATK_RELATION_SUBWINDOW_OF: Indicates a subwindow attached to a component but otherwise has no connection in  the UI heirarchy to that component.
+ *@ATK_RELATION_SUBWINDOW_OF: Indicates a subwindow attached to a component but otherwise has no connection in  the UI hierarchy to that component.
  *@ATK_RELATION_EMBEDS: Indicates that the object visually embeds 
  *  another object's content, i.e. this object's content flows around 
  *  another's content.

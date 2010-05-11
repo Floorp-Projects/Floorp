@@ -56,6 +56,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsCRT.h"
+#include "mozilla/dom/Element.h"
 
 // Magic namespace id that means "match all namespaces".  This is
 // negative so it won't collide with actual namespace constants.
@@ -238,8 +239,7 @@ public:
    * @param aFunc the function to be called to determine whether we match.
    *              This function MUST NOT ever cause mutation of the DOM.
    *              The nsContentList implementation guarantees that everything
-   *              passed to the function will be
-   *              IsNodeOfType(nsINode::eELEMENT).
+   *              passed to the function will be IsElement().
    * @param aDestroyFunc the function that will be called to destroy aData
    * @param aData closure data that will need to be passed back to aFunc
    * @param aDeep If false, then look only at children of the root, nothing
@@ -308,52 +308,21 @@ public:
 
 protected:
   /**
-   * Returns whether the content element matches our criterion
+   * Returns whether the element matches our criterion
    *
-   * @param  aContent the content to attempt to match
+   * @param  aElement the element to attempt to match
    * @return whether we match
    */
-  PRBool Match(nsIContent *aContent);
+  PRBool Match(mozilla::dom::Element *aElement);
   /**
-   * Match recursively. See if anything in the subtree rooted at
-   * aContent matches our criterion.
+   * See if anything in the subtree rooted at aContent, including
+   * aContent itself, matches our criterion.
    *
    * @param  aContent the root of the subtree to match against
    * @return whether we match something in the tree rooted at aContent
    */
   PRBool MatchSelf(nsIContent *aContent);
 
-  /**
-   * Add elements in the subtree rooted in aContent that match our
-   * criterion to our list until we've picked up aElementsToAppend
-   * elements.  This function enforces the invariant that
-   * |aElementsToAppend + mElements.Count()| is a constant.
-   *
-   * @param aContent the root of the subtree we want to traverse. This node
-   *                 is always included in the traversal and is thus the
-   *                 first node tested.  This must be
-   *                 IsNodeOfType(nsINode::eELEMENT).
-   * @param aElementsToAppend how many elements to append to the list
-   *        before stopping
-   */
-  void NS_FASTCALL PopulateWith(nsIContent *aContent,
-                                PRUint32 & aElementsToAppend);
-
-  /**
-   * Populate our list starting at the child of aStartRoot that comes
-   * after aStartChild (if such exists) and continuing in document
-   * order. Stop once we've picked up aElementsToAppend elements.
-   * This function enforces the invariant that |aElementsToAppend +
-   * mElements.Count()| is a constant.
-   *
-   * @param aStartRoot the node with whose children we want to start traversal
-   * @param aStartChild the child after which we want to start
-   * @param aElementsToAppend how many elements to append to the list
-   *        before stopping
-   */
-  void PopulateWithStartingAfter(nsINode *aStartRoot,
-                                 nsINode *aStartChild,
-                                 PRUint32 & aElementsToAppend);
   /**
    * Populate our list.  Stop once we have at least aNeededLength
    * elements.  At the end of PopulateSelf running, either the last

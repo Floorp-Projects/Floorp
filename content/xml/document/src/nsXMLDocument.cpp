@@ -314,9 +314,23 @@ nsXMLDocument::SetAsync(PRBool aAsync)
   return NS_OK;
 }
 
+static void
+ReportUseOfDeprecatedMethod(nsIDocument *aDoc, const char* aWarning)
+{
+  nsContentUtils::ReportToConsole(nsContentUtils::eDOM_PROPERTIES,
+                                  aWarning,
+                                  nsnull, 0,
+                                  aDoc->GetDocumentURI(),
+                                  EmptyString(), 0, 0,
+                                  nsIScriptError::warningFlag,
+                                  "DOM3 Load");
+}
+
 NS_IMETHODIMP
 nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 {
+  ReportUseOfDeprecatedMethod(this, "UseOfDOM3LoadMethodWarning");
+
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = PR_FALSE;
 
@@ -327,7 +341,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   nsCAutoString charset;
 
   if (callingDoc) {
-    baseURI = callingDoc->GetBaseURI();
+    baseURI = callingDoc->GetDocBaseURI();
     charset = callingDoc->GetDocumentCharacterSet();
   }
 
@@ -463,7 +477,7 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     }
 
     // We set return to true unless there was a parsing error
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(GetRootContent());
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(GetRootElement());
     if (node) {
       nsAutoString name, ns;      
       if (NS_SUCCEEDED(node->GetLocalName(name)) &&
