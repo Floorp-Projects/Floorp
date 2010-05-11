@@ -1422,8 +1422,8 @@ nsContentUtils::IsCallerTrustedForWrite()
 
 // static
 PRBool
-nsContentUtils::ContentIsDescendantOf(nsINode* aPossibleDescendant,
-                                      nsINode* aPossibleAncestor)
+nsContentUtils::ContentIsDescendantOf(const nsINode* aPossibleDescendant,
+                                      const nsINode* aPossibleAncestor)
 {
   NS_PRECONDITION(aPossibleDescendant, "The possible descendant is null!");
   NS_PRECONDITION(aPossibleAncestor, "The possible ancestor is null!");
