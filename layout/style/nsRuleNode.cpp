@@ -2659,6 +2659,59 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
 }
 #endif
 
+struct SetFontSizeCalcOps : public mozilla::css::BasicCoordCalcOps,
+                            public mozilla::css::NumbersAlreadyNormalizedOps
+{
+  struct ComputeData {
+    // The parameters beyond aValue that we need for CalcLengthWith.
+    nscoord mParentSize;
+    const nsStyleFont* mParentFont;
+    nsPresContext* mPresContext;
+    PRBool mAtRoot;
+    PRBool& mCanStoreInRuleTree;
+
+    ComputeData(nscoord aParentSize, const nsStyleFont* aParentFont,
+                nsPresContext* aPresContext, PRBool aAtRoot,
+                PRBool& aCanStoreInRuleTree)
+      : mParentSize(aParentSize),
+        mParentFont(aParentFont),
+        mPresContext(aPresContext),
+        mAtRoot(aAtRoot),
+        mCanStoreInRuleTree(aCanStoreInRuleTree)
+    {
+    }
+  };
+
+  static result_type ComputeLeafValue(const nsCSSValue& aValue,
+                                      const ComputeData& aClosure)
+  {
+    nscoord size;
+    if (aValue.IsLengthUnit()) {
+      // Note that font-based length units use the parent's size
+      // unadjusted for scriptlevel changes. A scriptlevel change
+      // between us and the parent is simply ignored.
+      size = CalcLengthWith(aValue, aClosure.mParentSize, aClosure.mParentFont,
+                            nsnull, aClosure.mPresContext, aClosure.mAtRoot,
+                            PR_TRUE, aClosure.mCanStoreInRuleTree);
+      if (aValue.IsFixedLengthUnit() || aValue.GetUnit() == eCSSUnit_Pixel) {
+        size = nsStyleFont::ZoomText(aClosure.mPresContext, size);
+      }
+    }
+    else if (eCSSUnit_Percent == aValue.GetUnit()) {
+      aClosure.mCanStoreInRuleTree = PR_FALSE;
+      // Note that % units use the parent's size unadjusted for scriptlevel
+      // changes. A scriptlevel change between us and the parent is simply
+      // ignored.
+      size = NSToCoordRound(aClosure.mParentSize * aValue.GetPercentValue());
+    } else {
+      NS_ABORT_IF_FALSE(PR_FALSE, "unexpected value");
+      size = aClosure.mParentSize;
+    }
+
+    return size;
+  }
+};
+
 /* static */ void
 nsRuleNode::SetFontSize(nsPresContext* aPresContext,
                         const nsRuleDataFont& aFontData,
@@ -2720,23 +2773,21 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
       NS_NOTREACHED("unexpected value");
     }
   }
-  else if (aFontData.mSize.IsLengthUnit()) {
-    // Note that font-based length units use the parent's size unadjusted
-    // for scriptlevel changes. A scriptlevel change between us and the parent
-    // is simply ignored.
-    *aSize = CalcLengthWith(aFontData.mSize, aParentSize, aParentFont, nsnull,
-                            aPresContext, aAtRoot, PR_TRUE,
-                            aCanStoreInRuleTree);
-    zoom = aFontData.mSize.IsFixedLengthUnit() ||
-           aFontData.mSize.GetUnit() == eCSSUnit_Pixel;
-  }
-  else if (eCSSUnit_Percent == aFontData.mSize.GetUnit()) {
-    aCanStoreInRuleTree = PR_FALSE;
-    // Note that % units use the parent's size unadjusted for scriptlevel
-    // changes. A scriptlevel change between us and the parent is simply
-    // ignored.
-    *aSize = NSToCoordRound(aParentSize *
-                            aFontData.mSize.GetPercentValue());
+  else if (aFontData.mSize.IsLengthUnit() ||
+           aFontData.mSize.GetUnit() == eCSSUnit_Percent ||
+           aFontData.mSize.IsCalcUnit()) {
+    SetFontSizeCalcOps::ComputeData data(aParentSize, aParentFont,
+                                         aPresContext, aAtRoot,
+                                         aCanStoreInRuleTree);
+    *aSize =
+      mozilla::css::ComputeCalc<SetFontSizeCalcOps>(aFontData.mSize, data);
+    if (*aSize < 0) {
+      NS_ABORT_IF_FALSE(aFontData.mSize.IsCalcUnit(),
+                        "negative lengths and percents should be rejected "
+                        "by parser");
+      *aSize = 0;
+    }
+    // Zoom is handled inside the calc ops when needed.
     zoom = PR_FALSE;
   }
   else if (eCSSUnit_System_Font == aFontData.mSize.GetUnit()) {
