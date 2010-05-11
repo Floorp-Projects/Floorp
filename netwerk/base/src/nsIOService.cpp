@@ -675,7 +675,7 @@ nsIOService::SetOffline(PRBool offline)
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
         if (observerService) {
             (void)observerService->NotifyObservers(nsnull,
-                NS_E10S_IOSERVICE_SET_OFFLINE_TOPIC, offline ? 
+                NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, offline ? 
                 NS_LITERAL_STRING("true").get() :
                 NS_LITERAL_STRING("false").get());
         }
