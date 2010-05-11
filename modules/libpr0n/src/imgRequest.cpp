@@ -302,7 +302,7 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
 
   // make sure that observer gets an OnStopRequest message sent to it
   if (!(mState & stateRequestStopped)) {
-    proxy->OnStopRequest(nsnull, nsnull, NS_BINDING_ABORTED, PR_TRUE);
+    proxy->OnStopRequest(PR_TRUE);
   }
 
   if (mImage && !HaveProxyWithObserver(nsnull)) {
@@ -361,7 +361,7 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
 
   // OnStartRequest
   if (mState & stateRequestStarted)
-    proxy->OnStartRequest(nsnull, nsnull);
+    proxy->OnStartRequest();
 
   // OnStartContainer
   if (mState & stateHasSize)
@@ -404,9 +404,7 @@ nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
 
   if (mState & stateRequestStopped) {
     proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
-    proxy->OnStopRequest(nsnull, nsnull,
-                         GetResultFromImageStatus(mImageStatus),
-                         mHadLastPart);
+    proxy->OnStopRequest(mHadLastPart);
   }
 
   return NS_OK;
@@ -895,7 +893,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   /* notify our kids */
   nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
   while (iter.HasMore()) {
-    iter.GetNext()->OnStartRequest(aRequest, ctxt);
+    iter.GetNext()->OnStartRequest();
   }
 
   /* Get our principal */
@@ -1043,7 +1041,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
   nsTObserverArray<imgRequestProxy*>::ForwardIterator srIter(mObservers);
   while (srIter.HasMore()) {
-    srIter.GetNext()->OnStopRequest(aRequest, ctxt, status, mHadLastPart);
+    srIter.GetNext()->OnStopRequest(mHadLastPart);
   }
 
   return NS_OK;
