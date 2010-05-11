@@ -251,6 +251,7 @@ GetKeyFromValue(JSContext* aCx,
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
   if (JSVAL_IS_VOID(key) || JSVAL_IS_NULL(key)) {
+    NS_WARNING("Maybe set the keyPath here?! Fix before shipping!");
     return NS_ERROR_INVALID_ARG;
   }
 

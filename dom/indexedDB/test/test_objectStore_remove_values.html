@@ -14,21 +14,19 @@
 
 function continueTest(aEvent)
 {
-  SimpleTest.executeSoon(function() {
-    gGen.send(aEvent);
-  });
+  gGen.send(aEvent);
 }
 
 function errorHandler(aEvent)
 {
   ok(false, "indexedDB error (" + aEvent.code + "): " + aEvent.message);
-  SimpleTest.executeSoon(finishTest);
+  finishTest();
 }
 
 function unexpectedSuccessHandler()
 {
   ok(false, "Got success, but did not expect it!");
-  SimpleTest.executeSoon(finishTest);
+  finishTest();
 }
 
 function ExpectError(aCode)
@@ -58,12 +56,15 @@ function testSteps()
   var db = event.result;
 
   var data = [
+
+    /* // Disabled until we can work out the way this should function.
     { name: "inline key; key generator",
       autoIncrement: true,
       storedObject: {name: "Lincoln"},
       keyName: "id",
       keyValue: undefined,
-    },
+    }, */
+
     { name: "inline key; no key generator",
       autoIncrement: false,
       storedObject: {id: 1, name: "Lincoln"},
@@ -83,6 +84,7 @@ function testSteps()
       keyValue: 1,
     },
   ];
+
   for (let i = 0; i < data.length; i++) {
     let test = data[i];
     let request = db.createObjectStore(test.name, test.keyName,
