@@ -715,12 +715,12 @@ public:
    */
   void AddMutationObserver(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* slots = GetSlots();
-    if (slots) {
-      NS_ASSERTION(slots->mMutationObservers.IndexOf(aMutationObserver) ==
+    nsSlots* s = GetSlots();
+    if (s) {
+      NS_ASSERTION(s->mMutationObservers.IndexOf(aMutationObserver) ==
                    nsTArray_base::NoIndex,
                    "Observer already in the list");
-      slots->mMutationObservers.AppendElement(aMutationObserver);
+      s->mMutationObservers.AppendElement(aMutationObserver);
     }
   }
 
@@ -730,9 +730,9 @@ public:
    */
   void AddMutationObserverUnlessExists(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* slots = GetSlots();
-    if (slots) {
-      slots->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
+    nsSlots* s = GetSlots();
+    if (s) {
+      s->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
     }
   }
 
@@ -741,9 +741,9 @@ public:
    */
   void RemoveMutationObserver(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* slots = GetExistingSlots();
-    if (slots) {
-      slots->mMutationObservers.RemoveElement(aMutationObserver);
+    nsSlots* s = GetExistingSlots();
+    if (s) {
+      s->mMutationObservers.RemoveElement(aMutationObserver);
     }
   }
 
