@@ -59,7 +59,6 @@
 #include "mozilla/plugins/StreamNotifyChild.h"
 #include "mozilla/plugins/BrowserStreamChild.h"
 #include "mozilla/plugins/PluginStreamChild.h"
-#include "mozilla/plugins/PluginThreadChild.h"
 #include "PluginIdentifierChild.h"
 
 #include "nsNPAPIPlugin.h"

@@ -83,29 +83,28 @@
 #include "chrome/common/child_process.h"
 #include "chrome/common/notification_service.h"
 
-#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/ipc/IOThreadChild.h"
+#include "mozilla/ipc/ProcessChild.h"
 #include "ScopedXREEmbed.h"
 
-#include "mozilla/plugins/PluginThreadChild.h"
-
-#include "mozilla/Monitor.h"
+#include "mozilla/plugins/PluginProcessChild.h"
 
 #ifdef MOZ_IPDL_TESTS
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
-#include "mozilla/_ipdltest/IPDLUnitTestThreadChild.h"
+#include "mozilla/_ipdltest/IPDLUnitTestProcessChild.h"
 
-using mozilla::_ipdltest::IPDLUnitTestThreadChild;
+using mozilla::_ipdltest::IPDLUnitTestProcessChild;
 #endif  // ifdef MOZ_IPDL_TESTS
 
-using mozilla::ipc::GeckoChildProcessHost;
 using mozilla::ipc::BrowserProcessSubThread;
+using mozilla::ipc::GeckoChildProcessHost;
+using mozilla::ipc::IOThreadChild;
+using mozilla::ipc::ProcessChild;
 using mozilla::ipc::ScopedXREEmbed;
 
-using mozilla::plugins::PluginThreadChild;
-
-using mozilla::Monitor;
-using mozilla::MonitorAutoEnter;
+using mozilla::plugins::PluginProcessChild;
 
 using mozilla::startup::sChildProcessType;
 #endif
@@ -250,8 +249,6 @@ GeckoProcessType sChildProcessType = GeckoProcessType_Default;
 }
 }
 
-static MessageLoop* sIOMessageLoop;
-
 #if defined(MOZ_CRASHREPORTER)
 // FIXME/bug 539522: this out-of-place function is stuck here because
 // IPDL wants access to this crashreporter interface, and
@@ -332,10 +329,10 @@ XRE_InitChildProcess(int aArgc,
     return NS_ERROR_FAILURE;
   }
 
-  MessageLoopForIO mainMessageLoop;
-
+  // Associate this thread with a UI MessageLoop
+  MessageLoopForUI uiMessageLoop;
   {
-    ChildThread* mainThread;
+    nsAutoPtr<ProcessChild> process;
 
     switch (aProcess) {
     case GeckoProcessType_Default:
@@ -343,13 +340,13 @@ XRE_InitChildProcess(int aArgc,
       break;
 
     case GeckoProcessType_Plugin:
-      mainThread = new PluginThreadChild(parentHandle);
+      process = new PluginProcessChild(parentHandle);
       break;
 
     case GeckoProcessType_IPDLUnitTest:
 #ifdef MOZ_IPDL_TESTS
-      mainThread = new IPDLUnitTestThreadChild(parentHandle);
-#else
+      process = new IPDLUnitTestProcessChild(parentHandle);
+#else 
       NS_RUNTIMEABORT("rebuild with --enable-ipdl-tests");
 #endif
       break;
@@ -358,14 +355,17 @@ XRE_InitChildProcess(int aArgc,
       NS_RUNTIMEABORT("Unknown main thread class");
     }
 
-    ChildProcess process(mainThread);
+    if (!process->Init()) {
+      NS_LogTerm();
+      return NS_ERROR_FAILURE;
+    }
 
-    // Do IPC event loop
-    sIOMessageLoop = MessageLoop::current();
+    // Run the UI event loop on the main thread.
+    uiMessageLoop.MessageLoop::Run();
 
-    sIOMessageLoop->Run();
-
-    sIOMessageLoop = nsnull;
+    // Allow ProcessChild to clean up after itself before going out of
+    // scope and being deleted
+    process->CleanUp();
   }
 
   NS_LogTerm();
@@ -376,10 +376,9 @@ MessageLoop*
 XRE_GetIOMessageLoop()
 {
   if (sChildProcessType == GeckoProcessType_Default) {
-    NS_ASSERTION(!sIOMessageLoop, "Shouldn't be set on parent process!");
     return BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
   }
-  return sIOMessageLoop;
+  return IOThreadChild::message_loop();
 }
 
 namespace {
@@ -492,7 +491,13 @@ XRE_ShutdownChildProcess()
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   NS_ABORT_IF_FALSE(!!ioLoop, "Bad shutdown order");
 
-  ioLoop->PostTask(FROM_HERE, new MessageLoop::QuitTask());
+  // Quit() sets off the following chain of events
+  //  (1) UI loop starts quitting
+  //  (2) UI loop returns from Run() in XRE_InitChildProcess()
+  //  (3) ProcessChild goes out of scope and terminates the IO thread
+  //  (4) ProcessChild joins the IO thread
+  //  (5) exit()
+  MessageLoop::current()->Quit(); 
 }
 
 #ifdef MOZ_X11

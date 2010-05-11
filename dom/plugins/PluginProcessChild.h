@@ -1,5 +1,6 @@
-/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: sw=4 ts=4 et :
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla IPC.
+ * The Original Code is Mozilla Plugin App.
  *
  * The Initial Developer of the Original Code is
- *   The Mozilla Foundation.
+ *   Ben Turner <bent.mozilla@gmail.com>.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>.
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +37,45 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "IPDLUnitTestThreadChild.h"
+#ifndef dom_plugins_PluginProcessChild_h
+#define dom_plugins_PluginProcessChild_h 1
 
-#include "IPDLUnitTests.h"
-
-using mozilla::ipc::MozillaChildThread;
+#include "mozilla/ipc/ProcessChild.h"
+#include "mozilla/plugins/PluginModuleChild.h"
 
 namespace mozilla {
-namespace _ipdltest {
+namespace plugins {
+//-----------------------------------------------------------------------------
 
-IPDLUnitTestThreadChild::IPDLUnitTestThreadChild(ProcessHandle aParentHandle) :
-    MozillaChildThread(aParentHandle)
-{
-}
+class PluginProcessChild : public mozilla::ipc::ProcessChild {
+protected:
+    typedef mozilla::ipc::ProcessChild ProcessChild;
 
-IPDLUnitTestThreadChild::~IPDLUnitTestThreadChild()
-{
-}
+public:
+    PluginProcessChild(ProcessHandle parentHandle) : ProcessChild(parentHandle)
+    { }
 
-void
-IPDLUnitTestThreadChild::Init()
-{
-    MozillaChildThread::Init();
-    IPDLUnitTestChildInit(channel(), GetParentProcessHandle(), owner_loop());
-}
+    virtual ~PluginProcessChild()
+    { }
 
-} // namespace _ipdltest
-} // namespace mozilla
+    NS_OVERRIDE virtual bool Init();
+    NS_OVERRIDE virtual void CleanUp();
+
+    // For use on the plugin thread.
+    static void AppendNotesToCrashReport(const nsCString& aNotes);
+
+protected:
+    static PluginProcessChild* current() {
+        return static_cast<PluginProcessChild*>(ProcessChild::current());
+    }
+
+private:
+    PluginModuleChild mPlugin;
+
+    DISALLOW_EVIL_CONSTRUCTORS(PluginProcessChild);
+};
+
+}  // namespace plugins
+}  // namespace mozilla
+
+#endif  // ifndef dom_plugins_PluginProcessChild_h

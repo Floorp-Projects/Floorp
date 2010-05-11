@@ -1,11 +1,12 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at:
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -13,15 +14,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is Mozilla Code.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ *   The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,49 +37,57 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef dom_plugins_PluginThreadChild_h
-#define dom_plugins_PluginThreadChild_h 1
+#ifndef mozilla_ipc_ProcessChild_h
+#define mozilla_ipc_ProcessChild_h
 
-#include "base/basictypes.h"
-
-#include "mozilla/ipc/MozillaChildThread.h"
-#include "base/file_path.h"
+#include "base/message_loop.h"
 #include "base/process.h"
 
-#include "mozilla/plugins/PluginModuleChild.h"
+#include "chrome/common/child_process.h"
+
+// ProcessChild is the base class for all subprocesses of the main
+// browser process.  Its code runs on the thread that started in
+// main().
 
 namespace mozilla {
-namespace plugins {
-//-----------------------------------------------------------------------------
+namespace ipc {
 
-// The PluginThreadChild class represents a background thread where plugin instances
-// live.
-class PluginThreadChild : public mozilla::ipc::MozillaChildThread {
+class ProcessChild : public ChildProcess {
+protected:
+  typedef base::ProcessHandle ProcessHandle;
+
 public:
-    PluginThreadChild(ProcessHandle aParentHandle);
-    ~PluginThreadChild();
+  ProcessChild(ProcessHandle parentHandle);
+  virtual ~ProcessChild();
 
-    static PluginThreadChild* current() {
-        return gInstance;
-    }
+  virtual bool Init() = 0;
+  virtual void CleanUp()
+  { }
 
-    // For use on the plugin thread.
-    static void AppendNotesToCrashReport(const nsCString& aNotes);
+  static MessageLoop* message_loop() {
+    return gProcessChild->mUILoop;
+  }
+
+protected:
+  static ProcessChild* current() {
+    return gProcessChild;
+  }
+
+  ProcessHandle ParentHandle() {
+    return mParentHandle;
+  }
 
 private:
-    static PluginThreadChild* gInstance;
+  static ProcessChild* gProcessChild;
 
-    // Thread implementation:
-    virtual void Init();
-    virtual void CleanUp();
+  MessageLoop* mUILoop;
+  ProcessHandle mParentHandle;
 
-    PluginModuleChild mPlugin;
-    IPC::Channel* mChannel;
-
-    DISALLOW_EVIL_CONSTRUCTORS(PluginThreadChild);
+  DISALLOW_EVIL_CONSTRUCTORS(ProcessChild);
 };
 
-}  // namespace plugins
-}  // namespace mozilla
+} // namespace ipc
+} // namespace mozilla
 
-#endif  // ifndef dom_plugins_PluginThreadChild_h
+
+#endif // ifndef mozilla_ipc_ProcessChild_h

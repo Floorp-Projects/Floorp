@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=8 et :
- */
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is Mozilla IPC.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>.
+ *   The Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Chris Jones <jones.chris.g@gmail.com>.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,53 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_ipc_MozillaChildThread_h
-#define mozilla_ipc_MozillaChildThread_h
+#include "mozilla/ipc/IOThreadChild.h"
 
-#include "base/thread.h"
-#include "base/process.h"
+#include "IPDLUnitTestProcessChild.h"
+#include "IPDLUnitTests.h"
 
-#include "chrome/common/child_thread.h"
+using mozilla::ipc::IOThreadChild;
 
 namespace mozilla {
-namespace ipc {
+namespace _ipdltest {
 
-/**
- * A MozillaChildThread is the main thread in a child process. It will
- * initialize XPCOM leak detectors (NS_LogInit) but it will not initialize
- * XPCOM (see ContentProcessThread for a child which uses XPCOM).
- */
-class MozillaChildThread : public ChildThread
+bool
+IPDLUnitTestProcessChild::Init()
 {
-public:
-  typedef base::ProcessHandle ProcessHandle;
+    IPDLUnitTestChildInit(IOThreadChild::channel(),
+                          ParentHandle(),
+                          IOThreadChild::message_loop());
+    return true;
+}
 
-  MozillaChildThread(ProcessHandle aParentProcessHandle,
-		     MessageLoop::Type type=MessageLoop::TYPE_UI)
-  : ChildThread(base::Thread::Options(type,    // message loop type
-				      0,       // stack size
-				      false)), // wait for Init()?
-    mParentProcessHandle(aParentProcessHandle)
-  { }
-
-protected:
-  virtual void OnControlMessageReceived(const IPC::Message& aMessage);
-
-  ProcessHandle GetParentProcessHandle() {
-    return mParentProcessHandle;
-  }
-
-  // Thread implementation:
-  virtual void Init();
-  virtual void CleanUp();
-
-private:
-  ProcessHandle mParentProcessHandle;
-
-  DISALLOW_EVIL_CONSTRUCTORS(MozillaChildThread);
-};
-
-} /* namespace ipc */
-} /* namespace mozilla */
-
-#endif /* mozilla_ipc_MozillaChildThread_h */
+} // namespace _ipdltest
+} // namespace mozilla
