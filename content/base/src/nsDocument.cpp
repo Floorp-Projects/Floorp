@@ -2441,6 +2441,7 @@ nsDocument::RegisterNamedItems(nsIContent *aContent)
 void
 nsDocument::ContentAppended(nsIDocument* aDocument,
                             nsIContent* aContainer,
+                            nsIContent* aFirstNewContent,
                             PRInt32 aNewIndexInContainer)
 {
   NS_ASSERTION(aDocument == this, "unexpected doc");
