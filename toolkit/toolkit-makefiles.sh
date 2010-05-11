@@ -209,7 +209,7 @@ MAKEFILES_xpconnect="
 "
 
 MAKEFILES_jsipc="
-  js/src/ipc/Makefile
+  js/ipc/Makefile
 "
 
 MAKEFILES_jsdebugger="
