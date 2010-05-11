@@ -549,8 +549,7 @@ nsDocAccessible::GetCachedAccessNode(void *aUniqueID)
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
-  nsRefPtr<nsAccessible> acc =
-    nsAccUtils::QueryObject<nsAccessible>(accessNode);
+  nsRefPtr<nsAccessible> acc = do_QueryObject(accessNode);
 
   if (acc) {
     nsAccessible* parent(acc->GetCachedParent());
@@ -1418,7 +1417,7 @@ nsDocAccessible::GetParent()
       // It should be changed to use GetAccessibleInWeakShell()
       nsCOMPtr<nsIAccessible> parent;
       accService->GetAccessibleFor(ownerNode, getter_AddRefs(parent));
-      mParent = nsAccUtils::QueryObject<nsAccessible>(parent);
+      mParent = do_QueryObject(parent);
     }
   }
 
@@ -1771,8 +1770,7 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
 
 void nsDocAccessible::InvalidateChildrenInSubtree(nsIDOMNode *aStartNode)
 {
-  nsRefPtr<nsAccessible> acc =
-    nsAccUtils::QueryObject<nsAccessible>(GetCachedAccessNode(aStartNode));
+  nsRefPtr<nsAccessible> acc = do_QueryObject(GetCachedAccessNode(aStartNode));
   if (acc)
     acc->InvalidateChildren();
 
@@ -1796,8 +1794,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
 
   // Shut down accessible subtree, which may have been created for
   // anonymous content subtree
-  nsRefPtr<nsAccessible> accessible =
-    nsAccUtils::QueryObject<nsAccessible>(accessNode);
+  nsRefPtr<nsAccessible> accessible = do_QueryObject(accessNode);
   if (accessible) {
     // Fire menupopup end if a menu goes away
     PRUint32 role = nsAccUtils::Role(accessible);
