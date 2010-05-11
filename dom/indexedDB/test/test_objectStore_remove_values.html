@@ -8,38 +8,10 @@
 
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="helpers.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
-
-function continueTest(aEvent)
-{
-  gGen.send(aEvent);
-}
-
-function errorHandler(aEvent)
-{
-  ok(false, "indexedDB error (" + aEvent.code + "): " + aEvent.message);
-  finishTest();
-}
-
-function unexpectedSuccessHandler()
-{
-  ok(false, "Got success, but did not expect it!");
-  finishTest();
-}
-
-function ExpectError(aCode)
-{
-  this._code = aCode;
-}
-ExpectError.prototype = {
-  handleEvent: function(aEvent)
-  {
-    is(this._code, aEvent.code, "Expected error was thrown.");
-    continueTest(aEvent);
-  },
-};
 
 function testSteps()
 {
@@ -128,12 +100,6 @@ function testSteps()
 
   SimpleTest.executeSoon(finishTest);
   yield;
-}
-
-function finishTest()
-{
-  gGen.close();
-  SimpleTest.finish();
 }
 
 var gGen = testSteps();
