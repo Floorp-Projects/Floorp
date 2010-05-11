@@ -200,47 +200,6 @@ nsChromeRegistry::Init()
   // before we are actually fully initialized.
   gChromeRegistry = this;
 
-  PRBool safeMode = PR_FALSE;
-  nsCOMPtr<nsIXULRuntime> xulrun (do_GetService(XULAPPINFO_SERVICE_CONTRACTID));
-  if (xulrun)
-    xulrun->GetInSafeMode(&safeMode);
-  
-  nsCOMPtr<nsIPrefService> prefserv (do_GetService(NS_PREFSERVICE_CONTRACTID));
-  nsCOMPtr<nsIPrefBranch> prefs;
-
-  if (safeMode)
-    prefserv->GetDefaultBranch(nsnull, getter_AddRefs(prefs));
-  else
-    prefs = do_QueryInterface(prefserv);
-
-  if (!prefs) {
-    NS_WARNING("Could not get pref service!");
-  }
-  else {
-    nsXPIDLCString provider;
-    rv = prefs->GetCharPref(SELECTED_SKIN_PREF, getter_Copies(provider));
-    if (NS_SUCCEEDED(rv))
-      mSelectedSkin = provider;
-
-    SelectLocaleFromPref(prefs);
-
-    nsCOMPtr<nsIPrefBranch2> prefs2 (do_QueryInterface(prefs));
-    if (prefs2) {
-      rv = prefs2->AddObserver(MATCH_OS_LOCALE_PREF, this, PR_TRUE);
-      rv = prefs2->AddObserver(SELECTED_LOCALE_PREF, this, PR_TRUE);
-      rv = prefs2->AddObserver(SELECTED_SKIN_PREF, this, PR_TRUE);
-    }
-  }
-
-  nsCOMPtr<nsIObserverService> obsService =
-    mozilla::services::GetObserverService();
-  if (obsService) {
-    obsService->AddObserver(this, "command-line-startup", PR_TRUE);
-    obsService->AddObserver(this, "profile-initial-state", PR_TRUE);
-  }
-
-  CheckForNewChrome();
-
   mInitialized = PR_TRUE;
 
   return NS_OK;
