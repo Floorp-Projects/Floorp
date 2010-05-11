@@ -648,8 +648,7 @@ customMethodCalls = {
         },
     'nsIDOMHTMLDocument_GetBody': {
         'thisType': 'nsHTMLDocument',
-        'code': '    nsIContent *result = self->GetBody();',
-        'canFail': False
+        'code': '    nsIContent *result = self->GetBody(&rv);'
         },
     'nsIDOMHTMLDocument_GetElementsByName': {
         'thisType': 'nsHTMLDocument',

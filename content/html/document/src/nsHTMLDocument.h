@@ -160,7 +160,7 @@ public:
                                nsIDOMNodeList **_retval);
   virtual nsresult GetDocumentAllResult(const nsAString& aID,
                                         nsISupports** aResult);
-  nsIContent *GetBody();
+  nsIContent *GetBody(nsresult *aResult);
   already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
   {
     nsString* elementNameData = new nsString(aName);
