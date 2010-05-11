@@ -152,38 +152,70 @@ public:
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
-  
+
   void AppendStyleSheet(nsCSSStyleSheet* aSheet);
   void InsertStyleSheetAt(nsCSSStyleSheet* aSheet, PRInt32 aIndex);
+
+  // XXX do these belong here or are they generic?
   void PrependStyleRule(nsICSSRule* aRule);
   void AppendStyleRule(nsICSSRule* aRule);
   void ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew);
+
   PRInt32 StyleRuleCount() const;
   nsresult GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
+
   nsresult DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
   nsresult ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
+
   PRInt32 StyleSheetCount() const;
   already_AddRefed<nsCSSStyleSheet> GetStyleSheetAt(PRInt32 aIndex) const;
+
+  /**
+   * SetURIs must be called on all sheets before parsing into them.
+   * SetURIs may only be called while the sheet is 1) incomplete and 2)
+   * has no rules in it
+   */
   void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
+
+  /**
+   * SetPrincipal should be called on all sheets before parsing into them.
+   * This can only be called once with a non-null principal.  Calling this with
+   * a null pointer is allowed and is treated as a no-op.
+   */
   void SetPrincipal(nsIPrincipal* aPrincipal);
+
+  // Principal() never returns a null pointer.
   nsIPrincipal* Principal() const;
+
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
   void SetMedia(nsMediaList* aMedia);
   void SetOwningNode(nsIDOMNode* aOwningNode) { mOwningNode = aOwningNode; /* Not ref counted */ }
+
   void SetOwnerRule(nsICSSImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
   already_AddRefed<nsICSSImportRule> GetOwnerRule();
+
   nsXMLNameSpaceMap* GetNameSpaceMap() const;
+
   already_AddRefed<nsCSSStyleSheet> Clone(nsCSSStyleSheet* aCloneParent,
                                           nsICSSImportRule* aCloneOwnerRule,
                                           nsIDocument* aCloneDocument,
                                           nsIDOMNode* aCloneOwningNode) const;
+
   PRBool IsModified() const { return mDirty; }
   void SetModified(PRBool aModified) { mDirty = aModified; }
+
   nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
   nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
+
+  /**
+   * Like the DOM insertRule() method, but doesn't do any security checks
+   */
   nsresult InsertRuleInternal(const nsAString& aRule,
                               PRUint32 aIndex, PRUint32* aReturn);
+
+  /* Get the URI this sheet was originally loaded from, if any.  Can
+     return null */
   virtual nsIURI* GetOriginalURI() const;
 
   // nsICSSLoaderObserver interface
