@@ -1578,9 +1578,11 @@ nsHTMLDocument::GetURL(nsAString& aURL)
 }
 
 nsIContent*
-nsHTMLDocument::GetBody()
+nsHTMLDocument::GetBody(nsresult *aResult)
 {
   Element* body = GetBodyElement();
+
+  *aResult = NS_OK;
 
   if (body) {
     // There is a body element, return that as the body.
@@ -1599,20 +1601,24 @@ nsHTMLDocument::GetBody()
                              NS_LITERAL_STRING("frameset"));
   }
 
-  return nodeList ? nodeList->GetNodeAt(0) : nsnull;
+  if (!nodeList) {
+    *aResult = NS_ERROR_OUT_OF_MEMORY;
+
+    return nsnull;
+  }
+
+  return nodeList->GetNodeAt(0);
 }
 
 NS_IMETHODIMP
 nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 {
-  nsIContent *body = GetBody();
-  if (!body) {
-    *aBody = nsnull;
+  *aBody = nsnull;
 
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  nsresult rv;
+  nsIContent *body = GetBody(&rv);
 
-  return CallQueryInterface(body, aBody);
+  return body ? CallQueryInterface(body, aBody) : rv;
 }
 
 NS_IMETHODIMP
