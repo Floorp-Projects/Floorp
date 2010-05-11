@@ -95,6 +95,13 @@ protected:
   AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
                         IDBRequest* aRequest);
 
+  /**
+   * Additional constructor to use a custom timeout.
+   */
+  AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
+                        IDBRequest* aRequest,
+                        PRUint32 aTimeoutMS);
+
   virtual ~AsyncConnectionHelper();
 
   /**
@@ -148,7 +155,9 @@ private:
   nsCOMPtr<nsIThread> mDatabaseThread;
 #endif
 
-  mozilla::TimeStamp mRunStartTime;
+  mozilla::TimeStamp mStartTime;
+  mozilla::TimeDuration mTimeoutDuration;
+
   PRUint16 mErrorCode;
   PRPackedBool mError;
 };
