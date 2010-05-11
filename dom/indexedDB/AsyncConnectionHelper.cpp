@@ -64,11 +64,24 @@ AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
                                              IDBRequest* aRequest)
 : mDatabase(aDatabase),
   mRequest(aRequest),
+  mTimeoutDuration(TimeDuration::FromMilliseconds(kDefaultTimeoutMS)),
   mErrorCode(0),
   mError(PR_FALSE)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  // mDatabase may be null if we're opening the database.
+  NS_ASSERTION(mRequest, "Null request!");
+}
+
+AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
+                                             IDBRequest* aRequest,
+                                             PRUint32 aTimeoutMS)
+: mDatabase(aDatabase),
+  mRequest(aRequest),
+  mTimeoutDuration(TimeDuration::FromMilliseconds(aTimeoutMS)),
+  mErrorCode(0),
+  mError(PR_FALSE)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mRequest, "Null request!");
 }
 
@@ -142,7 +155,7 @@ AsyncConnectionHelper::Run()
                                           getter_AddRefs(mOldProgressHandler));
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetProgressHandler failed!");
       if (NS_SUCCEEDED(rv)) {
-        mRunStartTime = TimeStamp::Now();
+        mStartTime = TimeStamp::Now();
       }
     }
   }
@@ -159,7 +172,7 @@ AsyncConnectionHelper::Run()
     mErrorCode = nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
-  if (!mRunStartTime.IsNull()) {
+  if (!mStartTime.IsNull()) {
     nsCOMPtr<mozIStorageProgressHandler> handler;
     rv = connection->RemoveProgressHandler(getter_AddRefs(handler));
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "RemoveProgressHandler failed!");
@@ -171,7 +184,7 @@ AsyncConnectionHelper::Run()
       NS_ASSERTION(thisSupports == handlerSupports, "Mismatch!");
     }
 #endif
-    mRunStartTime = TimeStamp();
+    mStartTime = TimeStamp();
   }
 
   if (mErrorCode != NOREPLY) {
@@ -187,8 +200,8 @@ NS_IMETHODIMP
 AsyncConnectionHelper::OnProgress(mozIStorageConnection* aConnection,
                                   PRBool* _retval)
 {
-  TimeDuration elapsed = TimeStamp::Now() - mRunStartTime;
-  if (elapsed >= TimeDuration::FromMilliseconds(kDefaultTimeoutMS)) {
+  TimeDuration elapsed = TimeStamp::Now() - mStartTime;
+  if (elapsed >= mTimeoutDuration) {
     *_retval = PR_TRUE;
     return NS_OK;
   }
