@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsICSSStyleSheet.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
@@ -103,7 +102,7 @@ static PRBool IsChromeURI(nsIURI* aURI)
 nsresult
 nsXBLPrototypeResources::FlushSkinSheets()
 {
-  if (mStyleSheetList.Count() == 0)
+  if (mStyleSheetList.Length() == 0)
     return NS_OK;
 
   nsCOMPtr<nsIDocument> doc;
@@ -115,18 +114,17 @@ nsXBLPrototypeResources::FlushSkinSheets()
   // they'll still be in the chrome cache.
   mRuleProcessor = nsnull;
 
-  nsCOMArray<nsICSSStyleSheet> oldSheets(mStyleSheetList);
+  sheet_array_type oldSheets(mStyleSheetList);
   mStyleSheetList.Clear();
 
-  PRInt32 i;
-  PRInt32 count = oldSheets.Count();
-  for (i = 0; i < count; i++) {
-    nsICSSStyleSheet* oldSheet = oldSheets[i];
+  for (sheet_array_type::size_type i = 0, count = oldSheets.Length();
+       i < count; ++i) {
+    nsCSSStyleSheet* oldSheet = oldSheets[i];
 
     nsCOMPtr<nsIURI> uri;
     oldSheet->GetSheetURI(getter_AddRefs(uri));
 
-    nsCOMPtr<nsICSSStyleSheet> newSheet;
+    nsRefPtr<nsCSSStyleSheet> newSheet;
     if (IsChromeURI(uri)) {
       if (NS_FAILED(cssLoader->LoadSheetSync(uri, getter_AddRefs(newSheet))))
         continue;
@@ -135,7 +133,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
       newSheet = oldSheet;
     }
 
-    mStyleSheetList.AppendObject(newSheet);
+    mStyleSheetList.AppendElement(newSheet);
   }
   mRuleProcessor = new nsCSSRuleProcessor(mStyleSheetList, 
                                           nsStyleSet::eDocSheet);

@@ -45,6 +45,7 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXULRuntime.h"
+#include "nsCSSStyleSheet.h"
 
 NS_IMPL_ISUPPORTS1(nsLayoutStylesheetCache, nsIObserver)
 
@@ -71,7 +72,7 @@ nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-nsICSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::ScrollbarsSheet()
 {
   EnsureGlobal();
@@ -92,7 +93,7 @@ nsLayoutStylesheetCache::ScrollbarsSheet()
   return gStyleCache->mScrollbarsSheet;
 }
 
-nsICSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::FormsSheet()
 {
   EnsureGlobal();
@@ -114,7 +115,7 @@ nsLayoutStylesheetCache::FormsSheet()
   return gStyleCache->mFormsSheet;
 }
 
-nsICSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::UserContentSheet()
 {
   EnsureGlobal();
@@ -124,7 +125,7 @@ nsLayoutStylesheetCache::UserContentSheet()
   return gStyleCache->mUserContentSheet;
 }
 
-nsICSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::UserChromeSheet()
 {
   EnsureGlobal();
@@ -134,7 +135,7 @@ nsLayoutStylesheetCache::UserChromeSheet()
   return gStyleCache->mUserChromeSheet;
 }
 
-nsICSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::UASheet()
 {
   EnsureGlobal();
@@ -144,7 +145,7 @@ nsLayoutStylesheetCache::UASheet()
   return gStyleCache->mUASheet;
 }
 
-nsICSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::QuirkSheet()
 {
   EnsureGlobal();
@@ -240,7 +241,7 @@ nsLayoutStylesheetCache::InitFromProfile()
 }
 
 void
-nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsCOMPtr<nsICSSStyleSheet> &aSheet)
+nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsRefPtr<nsCSSStyleSheet> &aSheet)
 {
   PRBool exists = PR_FALSE;
   aFile->Exists(&exists);
@@ -255,7 +256,7 @@ nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsCOMPtr<nsICSSStyleSheet
 
 void
 nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
-                                   nsCOMPtr<nsICSSStyleSheet> &aSheet,
+                                   nsRefPtr<nsCSSStyleSheet> &aSheet,
                                    PRBool aEnableUnsafeRules)
 {
   if (!aURI) {

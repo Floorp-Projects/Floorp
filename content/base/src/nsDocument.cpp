@@ -3556,7 +3556,7 @@ nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aStyleSheetURI);
     if (uri) {
-      nsCOMPtr<nsICSSStyleSheet> sheet;
+      nsRefPtr<nsCSSStyleSheet> sheet;
       cssLoader->LoadSheetSync(uri, PR_TRUE, PR_TRUE, getter_AddRefs(sheet));
       if (sheet) {
         BeginUpdate(UPDATE_STYLE);
@@ -7585,7 +7585,7 @@ namespace {
 class StubCSSLoaderObserver : public nsICSSLoaderObserver {
 public:
   NS_IMETHOD
-  StyleSheetLoaded(nsICSSStyleSheet*, PRBool, nsresult)
+  StyleSheetLoaded(nsCSSStyleSheet*, PRBool, nsresult)
   {
     return NS_OK;
   }
@@ -7609,7 +7609,7 @@ nsDocument::PreloadStyle(nsIURI* uri, const nsAString& charset)
 
 nsresult
 nsDocument::LoadChromeSheetSync(nsIURI* uri, PRBool isAgentSheet,
-                                nsICSSStyleSheet** sheet)
+                                nsCSSStyleSheet** sheet)
 {
   return CSSLoader()->LoadSheetSync(uri, isAgentSheet, isAgentSheet, sheet);
 }
@@ -7745,13 +7745,12 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
       clonedDoc->mOriginalDocument = this;
       PRInt32 sheetsCount = GetNumberOfStyleSheets();
       for (PRInt32 i = 0; i < sheetsCount; ++i) {
-        nsCOMPtr<nsICSSStyleSheet> sheet =
-          do_QueryInterface(GetStyleSheetAt(i));
+        nsRefPtr<nsCSSStyleSheet> sheet = do_QueryObject(GetStyleSheetAt(i));
         if (sheet) {
           PRBool applicable = PR_TRUE;
           sheet->GetApplicable(applicable);
           if (applicable) {
-            nsCOMPtr<nsICSSStyleSheet> clonedSheet =
+            nsRefPtr<nsCSSStyleSheet> clonedSheet =
               sheet->Clone(nsnull, nsnull, clonedDoc, nsnull);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
             if (clonedSheet) {
@@ -7763,13 +7762,13 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
 
       sheetsCount = GetNumberOfCatalogStyleSheets();
       for (PRInt32 i = 0; i < sheetsCount; ++i) {
-        nsCOMPtr<nsICSSStyleSheet> sheet =
-          do_QueryInterface(GetCatalogStyleSheetAt(i));
+        nsRefPtr<nsCSSStyleSheet> sheet =
+          do_QueryObject(GetCatalogStyleSheetAt(i));
         if (sheet) {
           PRBool applicable = PR_TRUE;
           sheet->GetApplicable(applicable);
           if (applicable) {
-            nsCOMPtr<nsICSSStyleSheet> clonedSheet =
+            nsRefPtr<nsCSSStyleSheet> clonedSheet =
               sheet->Clone(nsnull, nsnull, clonedDoc, nsnull);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
             if (clonedSheet) {

@@ -56,7 +56,7 @@
 #include "nsCSSRules.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsCSSDeclaration.h"
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
@@ -170,7 +170,7 @@ public:
   CSSParserImpl();
   ~CSSParserImpl();
 
-  nsresult SetStyleSheet(nsICSSStyleSheet* aSheet);
+  nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
 
   nsresult SetQuirkMode(PRBool aQuirkMode);
 
@@ -628,7 +628,7 @@ protected:
   nsCOMPtr<nsIPrincipal> mSheetPrincipal;
 
   // The sheet we're parsing into
-  nsCOMPtr<nsICSSStyleSheet> mSheet;
+  nsRefPtr<nsCSSStyleSheet> mSheet;
 
   // Used for @import rules
   mozilla::css::Loader* mChildLoader; // not ref counted, it owns us
@@ -769,7 +769,7 @@ CSSParserImpl::~CSSParserImpl()
 }
 
 nsresult
-CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
+CSSParserImpl::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   if (aSheet != mSheet) {
     // Switch to using the new sheet, if any
@@ -9552,7 +9552,7 @@ CSSParserImpl::ParseMarker()
 static CSSParserImpl* gFreeList = nsnull;
 
 nsCSSParser::nsCSSParser(mozilla::css::Loader* aLoader,
-                         nsICSSStyleSheet* aSheet)
+                         nsCSSStyleSheet* aSheet)
 {
   CSSParserImpl *impl = gFreeList;
   if (impl) {
@@ -9598,7 +9598,7 @@ nsCSSParser::Shutdown()
 // Wrapper methods
 
 nsresult
-nsCSSParser::SetStyleSheet(nsICSSStyleSheet* aSheet)
+nsCSSParser::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     SetStyleSheet(aSheet);

@@ -45,7 +45,7 @@
 #include "nsContentUtils.h"
 #include "plstr.h"
 #include "nsXULPrototypeDocument.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIScriptRuntime.h"
 #include "nsIServiceManager.h"
 #include "nsIURI.h"
@@ -243,7 +243,7 @@ nsXULPrototypeCache::PutPrototype(nsXULPrototypeDocument* aDocument)
 }
 
 nsresult
-nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
+nsXULPrototypeCache::PutStyleSheet(nsCSSStyleSheet* aStyleSheet)
 {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = aStyleSheet->GetSheetURI(getter_AddRefs(uri));
@@ -345,7 +345,7 @@ FlushSkinXBL(nsIURI* aKey, nsCOMPtr<nsIXBLDocumentInfo>& aDocInfo, void* aClosur
 }
 
 static PLDHashOperator
-FlushSkinSheets(nsIURI* aKey, nsCOMPtr<nsICSSStyleSheet>& aSheet, void* aClosure)
+FlushSkinSheets(nsIURI* aKey, nsRefPtr<nsCSSStyleSheet>& aSheet, void* aClosure)
 {
   nsCOMPtr<nsIURI> uri;
   aSheet->GetSheetURI(getter_AddRefs(uri));

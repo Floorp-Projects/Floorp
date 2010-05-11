@@ -53,7 +53,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
 #include "nsCSSScanner.h"
-#include "nsICSSStyleSheet.h"
 #include "nsDOMAttribute.h"
 #include "nsDOMClassInfo.h"
 #include "nsEventListenerManager.h"

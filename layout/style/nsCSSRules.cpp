@@ -49,7 +49,7 @@
 
 #include "nsCSSRule.h"
 #include "nsCSSProps.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 
 #include "nsCOMPtr.h"
 #include "nsIDOMCSSStyleSheet.h"
@@ -75,7 +75,7 @@
 
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
-NS_IMETHODIMP _class::SetStyleSheet(nsICSSStyleSheet* aSheet) { return super::SetStyleSheet(aSheet); }  \
+NS_IMETHODIMP _class::SetStyleSheet(nsCSSStyleSheet* aSheet) { return super::SetStyleSheet(aSheet); }  \
 NS_IMETHODIMP _class::SetParentRule(nsICSSGroupRule* aRule) { return super::SetParentRule(aRule); }  \
 nsIDOMCSSRule* _class::GetDOMRuleWeak(nsresult *aResult) { *aResult = NS_OK; return this; }  \
 NS_IMETHODIMP _class::MapRuleInfoInto(nsRuleData* aRuleData) { return NS_OK; } 
@@ -393,7 +393,7 @@ public:
   NS_IMETHOD SetMedia(const nsString& aMedia);
   NS_IMETHOD GetMedia(nsString& aMedia) const;
 
-  NS_IMETHOD SetSheet(nsICSSStyleSheet*);
+  NS_IMETHOD SetSheet(nsCSSStyleSheet*);
   
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -404,7 +404,7 @@ public:
 protected:
   nsString  mURLSpec;
   nsRefPtr<nsMediaList> mMedia;
-  nsCOMPtr<nsICSSStyleSheet> mChildSheet;
+  nsRefPtr<nsCSSStyleSheet> mChildSheet;
 };
 
 CSSImportRuleImpl::CSSImportRuleImpl(nsMediaList* aMedia)
@@ -421,7 +421,7 @@ CSSImportRuleImpl::CSSImportRuleImpl(const CSSImportRuleImpl& aCopy)
   : nsCSSRule(aCopy),
     mURLSpec(aCopy.mURLSpec)
 {
-  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsRefPtr<nsCSSStyleSheet> sheet;
   if (aCopy.mChildSheet) {
     sheet = aCopy.mChildSheet->Clone(nsnull, this, nsnull, nsnull);
   }
@@ -528,7 +528,7 @@ CSSImportRuleImpl::GetMedia(nsString& aMedia) const
 }
 
 NS_IMETHODIMP
-CSSImportRuleImpl::SetSheet(nsICSSStyleSheet* aSheet)
+CSSImportRuleImpl::SetSheet(nsCSSStyleSheet* aSheet)
 {
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aSheet);
@@ -538,10 +538,8 @@ CSSImportRuleImpl::SetSheet(nsICSSStyleSheet* aSheet)
   aSheet->SetOwnerRule(this);
 
   // set our medialist to be the same as the sheet's medialist
-  nsCOMPtr<nsIDOMStyleSheet> sheet(do_QueryInterface(mChildSheet, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIDOMMediaList> mediaList;
-  rv = sheet->GetMedia(getter_AddRefs(mediaList));
+  rv = mChildSheet->GetMedia(getter_AddRefs(mediaList));
   NS_ENSURE_SUCCESS(rv, rv);
   mMedia = static_cast<nsMediaList*>(mediaList.get());
   
@@ -697,13 +695,13 @@ IMPL_STYLE_RULE_INHERIT2(nsCSSGroupRule, nsCSSRule)
 static PRBool
 SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
 {
-  nsICSSStyleSheet* sheet = (nsICSSStyleSheet*)aSheet;
+  nsCSSStyleSheet* sheet = (nsCSSStyleSheet*)aSheet;
   aRule->SetStyleSheet(sheet);
   return PR_TRUE;
 }
 
 NS_IMETHODIMP
-nsCSSGroupRule::SetStyleSheet(nsICSSStyleSheet* aSheet)
+nsCSSGroupRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   mRules.EnumerateForwards(SetStyleSheetReference, aSheet);
   return nsCSSRule::SetStyleSheet(aSheet);
@@ -935,7 +933,7 @@ NS_INTERFACE_MAP_BEGIN(nsCSSMediaRule)
 NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
-nsCSSMediaRule::SetStyleSheet(nsICSSStyleSheet* aSheet)
+nsCSSMediaRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   if (mMedia) {
     // Set to null so it knows it's leaving one sheet and joining another.
