@@ -4187,7 +4187,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
          * may not have changed and we may be overwriting a function-valued
          * property. See bug 560998.
          */
-        if (scope->shape == oldShape && scope->branded())
+        if (scope->shape == oldShape && scope->branded() && sprop->slot != SPROP_INVALID_SLOT)
             scope->methodWriteBarrier(cx, sprop->slot, value);
     }
 
