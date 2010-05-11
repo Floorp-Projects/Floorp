@@ -74,6 +74,7 @@
 #include "nsTArray.h"
 #include "nsIConsoleService.h"
 #include "nsIUploadChannel2.h"
+#include "nsXULAppAPI.h"
 
 #if defined(XP_WIN) || defined(MOZ_ENABLE_LIBCONIC)
 #include "nsNativeConnectionHelper.h"
@@ -662,10 +663,24 @@ nsIOService::SetOffline(PRBool offline)
     if (mSettingOffline) {
         return NS_OK;
     }
+
     mSettingOffline = PR_TRUE;
 
     nsCOMPtr<nsIObserverService> observerService =
         do_GetService("@mozilla.org/observer-service;1");
+
+    NS_ASSERTION(observerService, "The observer service should not be null");
+
+#ifdef MOZ_IPC
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        if (observerService) {
+            (void)observerService->NotifyObservers(nsnull,
+                NS_E10S_IOSERVICE_SET_OFFLINE_TOPIC, offline ? 
+                NS_LITERAL_STRING("true").get() :
+                NS_LITERAL_STRING("false").get());
+        }
+    }
+#endif
 
     while (mSetOfflineValue != mOffline) {
         offline = mSetOfflineValue;

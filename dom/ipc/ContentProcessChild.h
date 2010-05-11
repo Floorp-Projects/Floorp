@@ -83,6 +83,8 @@ public:
                                     const nsTArray<ResourceMapping>& resources,
                                     const nsTArray<OverrideMapping>& overrides);
 
+    virtual bool RecvSetOffline(const PRBool& offline);
+
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);

@@ -152,6 +152,17 @@ ContentProcessChild::RecvRegisterChrome(const nsTArray<ChromePackage>& packages,
     return true;
 }
 
+bool
+ContentProcessChild::RecvSetOffline(const PRBool& offline)
+{
+  nsCOMPtr<nsIIOService> io (do_GetIOService());
+  NS_ASSERTION(io, "IO Service can not be null");
+
+  io->SetOffline(offline);
+    
+  return true;
+}
+
 void
 ContentProcessChild::Quit()
 {
