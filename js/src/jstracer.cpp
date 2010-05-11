@@ -3365,7 +3365,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, TraceType t,
     jsuword* localNames = NULL;
     const char* funName = NULL;
     if (*prefix == 'a' || *prefix == 'v') {
-        mark = cx->tempPool.getMark();
+        mark = JS_ARENA_MARK(&cx->tempPool);
         if (fp->fun->hasLocalNames())
             localNames = js_GetLocalNameArray(cx, fp->fun, &cx->tempPool);
         funName = fp->fun->atom ? js_AtomToPrintableString(cx, fp->fun->atom) : "<anonymous>";
@@ -3385,7 +3385,7 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, TraceType t,
     }
 
     if (mark)
-        cx->tempPool.release(mark);
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
     addName(ins, name);
 
     static const char* typestr[] = {
@@ -5388,8 +5388,8 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     size_t nbytes = (nframeslots + script->nslots) * sizeof(jsval);
 
     /* Code duplicated from inline_call: case in js_Interpret (FIXME). */
-    JSArena* a = cx->stackPool.getCurrent();
-    void* newmark = (void*) a->getAvail();
+    JSArena* a = cx->stackPool.current;
+    void* newmark = (void*) a->avail;
     uintN argc = fi.get_argc();
     jsval* vp = fp->slots + fi.spdist - (2 + argc);
     uintN missing = 0;
@@ -5400,9 +5400,9 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
 
         newsp = vp + 2 + fun->nargs;
         JS_ASSERT(newsp > regs.sp);
-        if ((jsuword) newsp <= a->getLimit()) {
-            if ((jsuword) newsp > a->getAvail())
-                a->setAvail(jsuword(newsp));
+        if ((jsuword) newsp <= a->limit) {
+            if ((jsuword) newsp > a->avail)
+                a->avail = (jsuword) newsp;
             jsval* argsp = newsp;
             do {
                 *--argsp = JSVAL_VOID;
@@ -5415,12 +5415,12 @@ SynthesizeFrame(JSContext* cx, const FrameInfo& fi, JSObject* callee)
     }
 
     /* Allocate the inline frame with its vars and operands. */
-    if (a->getAvail() + nbytes <= a->getLimit()) {
-        newsp = (jsval *) a->getAvail();
-        a->setAvail(a->getAvail() + nbytes);
+    if (a->avail + nbytes <= a->limit) {
+        newsp = (jsval *) a->avail;
+        a->avail += nbytes;
         JS_ASSERT(missing == 0);
     } else {
-        cx->stackPool.allocateCast<jsval *>(newsp, nbytes);
+        JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool, nbytes);
         if (!newsp)
             OutOfMemoryAbort();
 
@@ -5529,10 +5529,12 @@ SynthesizeSlowNativeFrame(TracerState& state, JSContext *cx, VMSideExit *exit)
 {
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
-    /* This allocation is infallible: ExecuteTree reserved enough stack. */
-    void *mark = cx->stackPool.getMark();
+    void *mark;
     JSInlineFrame *ifp;
-    cx->stackPool.allocateCast<JSInlineFrame *>(ifp, sizeof *ifp);
+
+    /* This allocation is infallible: ExecuteTree reserved enough stack. */
+    mark = JS_ARENA_MARK(&cx->stackPool);
+    JS_ARENA_ALLOCATE_CAST(ifp, JSInlineFrame *, &cx->stackPool, sizeof(JSInlineFrame));
     if (!ifp)
         OutOfMemoryAbort();
 
@@ -6593,7 +6595,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
             JS_ASSERT(!fp->regs);
             JS_ASSERT(fp->down->regs != &((JSInlineFrame *) fp)->callerRegs);
             cx->fp = fp->down;
-            cx->stackPool.release(((JSInlineFrame *) fp)->mark);
+            JS_ARENA_RELEASE(&cx->stackPool, ((JSInlineFrame *) fp)->mark);
         }
         JS_ASSERT(cx->fp->script);
 
@@ -12560,7 +12562,7 @@ TraceRecorder::interpretedFunctionCall(jsval& fval, JSFunction* fun, uintN argc,
 
     // TODO: track the copying via the tracker...
     if (argc < fun->nargs &&
-        jsuword(fp->regs->sp + (fun->nargs - argc)) > cx->stackPool.getCurrent()->getLimit()) {
+        jsuword(fp->regs->sp + (fun->nargs - argc)) > cx->stackPool.current->limit) {
         RETURN_STOP("can't trace calls with too few args requiring argv move");
     }
 
