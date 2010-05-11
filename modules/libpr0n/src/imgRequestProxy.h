@@ -121,9 +121,9 @@ protected:
   /* non-virtual imgIContainerObserver methods */
   void FrameChanged(imgIContainer *aContainer, nsIntRect * aDirtyRect);
 
-  /* non-virtual nsIRequestObserver (plus some) methods */
-  void OnStartRequest(nsIRequest *request, nsISupports *ctxt);
-  void OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode, PRBool aLastPart); 
+  /* non-virtual sort-of-nsIRequestObserver methods */
+  void OnStartRequest();
+  void OnStopRequest(PRBool aLastPart);
 
   inline PRBool HasObserver() const {
     return mListener != nsnull;
