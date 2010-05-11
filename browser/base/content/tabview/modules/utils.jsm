@@ -27,14 +27,19 @@ var extensionManager = Cc["@mozilla.org/extensions/manager;1"]
 // and creates a Point with it along with y. If either a or y are omitted, 
 // 0 is used in their place. 
 window.Point = function(a, y) {
-  if(a && typeof(a.x) != 'undefined' && typeof(a.y) != 'undefined') {
+  if(isPoint(a)) {
     this.x = a.x;
     this.y = a.y;
   } else {
-    this.x = (typeof(a) == 'undefined' ? 0 : a);
-    this.y = (typeof(y) == 'undefined' ? 0 : y);
+    this.x = (Utils.isNumber(a) ? a : 0);
+    this.y = (Utils.isNumber(y) ? y : 0);
   }
-}
+};
+
+// ----------
+window.isPoint = function(p) {
+  return (p && Utils.isNumber(p.x) && Utils.isNumber(p.y));
+};
 
 window.Point.prototype = { 
   // ---------- 
@@ -59,8 +64,7 @@ window.Point.prototype = {
 // and creates a Rect with it along with top, width, and height. 
 window.Rect = function(a, top, width, height) {
   // Note: perhaps 'a' should really be called 'rectOrLeft'
-  if(typeof(a.left) != 'undefined' && typeof(a.top) != 'undefined'
-      && typeof(a.width) != 'undefined' && typeof(a.height) != 'undefined') {
+  if(isRect(a)) {
     this.left = a.left;
     this.top = a.top;
     this.width = a.width;
@@ -71,7 +75,15 @@ window.Rect = function(a, top, width, height) {
     this.width = width;
     this.height = height;
   }
-}
+};
+
+// ----------
+window.isRect = function(r) {
+  return (Utils.isNumber(r.left)
+      && Utils.isNumber(r.top)
+      && Utils.isNumber(r.width)
+      && Utils.isNumber(r.height));
+};
 
 window.Rect.prototype = {
   // ----------
@@ -512,7 +524,12 @@ var Utils = {
   isDOMElement: function(object) {
     // TODO: need more robust way 
     return (object && typeof(object.tagName) != 'undefined' ? true : false);
-  }   
+  },
+ 
+  // ----------
+  isNumber: function(n) {
+    return (typeof(n) == 'number' && !isNaN(n));
+  }
 };
 
 window.Utils = Utils;
