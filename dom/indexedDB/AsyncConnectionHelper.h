@@ -45,10 +45,14 @@
 #include "IDBDatabaseRequest.h"
 #include "IDBRequest.h"
 
-#include "mozIStorageConnection.h"
+#include "mozIStorageProgressHandler.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
 #include "nsIVariant.h"
+
+#include "mozilla/TimeStamp.h"
+
+class mozIStorageConnection;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -61,11 +65,13 @@ BEGIN_INDEXEDDB_NAMESPACE
  * and Dispatched from the main thread only. Target thread may not be the main
  * thread.
  */
-class AsyncConnectionHelper : public nsIRunnable
+class AsyncConnectionHelper : public nsIRunnable,
+                              public mozIStorageProgressHandler
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRUNNABLE
+  NS_DECL_MOZISTORAGEPROGRESSHANDLER
 
   /**
    * Return this code from DoDatabaseWork to signal the main thread that the
@@ -103,7 +109,7 @@ protected:
    * This callback is run on the database thread. It should return a valid error
    * code from nsIIDBDatabaseError or one of the two special values above.
    */
-  virtual PRUint16 DoDatabaseWork() = 0;
+  virtual PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection) = 0;
 
   /**
    * This callback is run on the main thread if the DoDatabaseWork returned OK.
@@ -135,10 +141,14 @@ protected:
   nsRefPtr<IDBDatabaseRequest> mDatabase;
   nsRefPtr<IDBRequest> mRequest;
 
+private:
+  nsCOMPtr<mozIStorageProgressHandler> mOldProgressHandler;
+
 #ifdef DEBUG
   nsCOMPtr<nsIThread> mDatabaseThread;
 #endif
 
+  mozilla::TimeStamp mRunStartTime;
   PRUint16 mErrorCode;
   PRPackedBool mError;
 };

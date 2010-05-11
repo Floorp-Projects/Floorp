@@ -39,16 +39,26 @@
 
 #include "AsyncConnectionHelper.h"
 
-#include "mozIStorageConnection.h"
 #include "nsIIDBDatabaseException.h"
 
+#include "mozilla/Storage.h"
 #include "nsComponentManagerUtils.h"
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
 
+using mozilla::TimeStamp;
+using mozilla::TimeDuration;
+
 USING_INDEXEDDB_NAMESPACE
+
+namespace {
+
+const PRUint32 kProgressHandlerGranularity = 1000;
+const PRUint32 kDefaultTimeoutMS = 30000;
+
+} // anonymous namespace
 
 AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
                                              IDBRequest* aRequest)
@@ -89,9 +99,11 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
   }
 
   NS_ASSERTION(!mDatabaseThread, "Should have been released before now!");
+  NS_ASSERTION(!mOldProgressHandler, "Should not have anything here!");
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(AsyncConnectionHelper, nsIRunnable)
+NS_IMPL_THREADSAFE_ISUPPORTS2(AsyncConnectionHelper, nsIRunnable,
+                                                     mozIStorageProgressHandler)
 
 NS_IMETHODIMP
 AsyncConnectionHelper::Run()
@@ -115,7 +127,52 @@ AsyncConnectionHelper::Run()
   }
 #endif
 
-  mErrorCode = DoDatabaseWork();
+  nsresult rv = NS_OK;
+  nsCOMPtr<mozIStorageConnection> connection;
+
+  if (mDatabase) {
+    rv = mDatabase->EnsureConnection();
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "EnsureConnection failed!");
+
+    if (NS_SUCCEEDED(rv)) {
+      connection = mDatabase->Connection();
+      NS_ASSERTION(connection, "EnsureConnection succeeded but gave us null!");
+
+      rv = connection->SetProgressHandler(kProgressHandlerGranularity, this,
+                                          getter_AddRefs(mOldProgressHandler));
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetProgressHandler failed!");
+      if (NS_SUCCEEDED(rv)) {
+        mRunStartTime = TimeStamp::Now();
+      }
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    mozStorageTransaction transaction(connection, PR_FALSE);
+    mErrorCode = DoDatabaseWork(connection);
+    if (mErrorCode == OK) {
+      rv = transaction.Commit();
+      mErrorCode = NS_SUCCEEDED(rv) ? OK : nsIIDBDatabaseException::UNKNOWN_ERR;
+    }
+  }
+  else {
+    mErrorCode = nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  if (!mRunStartTime.IsNull()) {
+    nsCOMPtr<mozIStorageProgressHandler> handler;
+    rv = connection->RemoveProgressHandler(getter_AddRefs(handler));
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "RemoveProgressHandler failed!");
+#ifdef DEBUG
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsISupports> handlerSupports(do_QueryInterface(handler));
+      nsCOMPtr<nsISupports> thisSupports =
+        do_QueryInterface(static_cast<nsIRunnable*>(this));
+      NS_ASSERTION(thisSupports == handlerSupports, "Mismatch!");
+    }
+#endif
+    mRunStartTime = TimeStamp();
+  }
 
   if (mErrorCode != NOREPLY) {
     mError = mErrorCode != OK;
@@ -123,6 +180,24 @@ AsyncConnectionHelper::Run()
     return NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AsyncConnectionHelper::OnProgress(mozIStorageConnection* aConnection,
+                                  PRBool* _retval)
+{
+  TimeDuration elapsed = TimeStamp::Now() - mRunStartTime;
+  if (elapsed >= TimeDuration::FromMilliseconds(kDefaultTimeoutMS)) {
+    *_retval = PR_TRUE;
+    return NS_OK;
+  }
+
+  if (mOldProgressHandler) {
+    return mOldProgressHandler->OnProgress(aConnection, _retval);
+  }
+
+  *_retval = PR_FALSE;
   return NS_OK;
 }
 
@@ -209,7 +284,7 @@ AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  // Leave the variant set to empty.
+  // Leave the variant remain set to empty.
 
   return OK;
 }

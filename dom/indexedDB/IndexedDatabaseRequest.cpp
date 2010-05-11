@@ -79,7 +79,7 @@ public:
     mASCIIOrigin(aASCIIOrigin), mThread(aThread)
   { }
 
-  PRUint16 DoDatabaseWork();
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
@@ -407,7 +407,7 @@ IndexedDatabaseRequest::Open(const nsAString& aName,
 }
 
 PRUint16
-OpenDatabaseHelper::DoDatabaseWork()
+OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
 #ifdef DEBUG
   {
@@ -417,6 +417,8 @@ OpenDatabaseHelper::DoDatabaseWork()
                  "Running on the wrong thread!");
   }
 #endif
+  NS_ASSERTION(!aConnection, "Huh?!");
+
   nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDatabaseFilePath,
                                          getter_AddRefs(mConnection));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
