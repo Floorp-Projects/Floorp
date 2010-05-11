@@ -105,7 +105,7 @@ public:
     mKeyPath(aKeyPath), mAutoIncrement(aAutoIncrement), mId(LL_MININT)
   { }
 
-  PRUint16 DoDatabaseWork();
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
@@ -133,7 +133,7 @@ public:
     mMode(aMode)
   { }
 
-  PRUint16 DoDatabaseWork();
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
@@ -151,7 +151,7 @@ public:
   : AsyncConnectionHelper(aDatabase, aRequest), mName(aName)
   { }
 
-  PRUint16 DoDatabaseWork();
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 private:
@@ -679,19 +679,11 @@ IDBDatabaseRequest::Observe(nsISupports* aSubject,
 }
 
 PRUint16
-CreateObjectStoreHelper::DoDatabaseWork()
+CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  nsresult rv = mDatabase->EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-
-  nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
-
-  // Rollback on any errors.
-  mozStorageTransaction transaction(connection, PR_FALSE);
-
   // Insert the data into the database.
   nsCOMPtr<mozIStorageStatement> stmt;
-  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO object_store (name, key_path, auto_increment) "
     "VALUES (:name, :key_path, :auto_increment)"
   ), getter_AddRefs(stmt));
@@ -716,11 +708,9 @@ CreateObjectStoreHelper::DoDatabaseWork()
   }
 
   // Get the id of this object store, and store it for future use.
-  (void)connection->GetLastInsertRowID(&mId);
+  (void)aConnection->GetLastInsertRowID(&mId);
 
-  return NS_SUCCEEDED(transaction.Commit()) ?
-         OK :
-         nsIIDBDatabaseException::UNKNOWN_ERR;
+  return OK;
 }
 
 PRUint16
@@ -748,17 +738,12 @@ CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 }
 
 PRUint16
-OpenObjectStoreHelper::DoDatabaseWork()
+OpenObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  nsresult rv = mDatabase->EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-
-  nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
-
   // TODO pull this up to the connection and cache it so opening these is
   // cheaper.
   nsCOMPtr<mozIStorageStatement> stmt;
-  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, key_path, auto_increment "
     "FROM object_store "
     "WHERE name = :name"
@@ -803,15 +788,10 @@ OpenObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
 }
 
 PRUint16
-RemoveObjectStoreHelper::DoDatabaseWork()
+RemoveObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  nsresult rv = mDatabase->EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-
-  nsCOMPtr<mozIStorageConnection> connection = mDatabase->Connection();
-
   nsCOMPtr<mozIStorageStatement> stmt;
-  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM object_store "
     "WHERE name = :name "
   ), getter_AddRefs(stmt));
