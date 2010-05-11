@@ -182,39 +182,34 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
 struct CalcLengthCalcOps : public mozilla::css::BasicCoordCalcOps,
                            public mozilla::css::NumbersAlreadyNormalizedOps
 {
-  struct ComputeData {
-    // All of the parameters to CalcLengthWith except aValue.
-    nscoord mFontSize;
-    const nsStyleFont* mStyleFont;
-    nsStyleContext* mStyleContext;
-    nsPresContext* mPresContext;
-    PRBool mUseProvidedRootEmSize;
-    PRBool mUseUserFontSet;
-    PRBool& mCanStoreInRuleTree;
+  // All of the parameters to CalcLengthWith except aValue.
+  const nscoord mFontSize;
+  const nsStyleFont* const mStyleFont;
+  nsStyleContext* const mStyleContext;
+  nsPresContext* const mPresContext;
+  const PRBool mUseProvidedRootEmSize;
+  const PRBool mUseUserFontSet;
+  PRBool& mCanStoreInRuleTree;
 
-    ComputeData(nscoord aFontSize, const nsStyleFont* aStyleFont,
-                nsStyleContext* aStyleContext, nsPresContext* aPresContext,
-                PRBool aUseProvidedRootEmSize, PRBool aUseUserFontSet,
-                PRBool& aCanStoreInRuleTree)
-      : mFontSize(aFontSize),
-        mStyleFont(aStyleFont),
-        mStyleContext(aStyleContext),
-        mPresContext(aPresContext),
-        mUseProvidedRootEmSize(aUseProvidedRootEmSize),
-        mUseUserFontSet(aUseUserFontSet),
-        mCanStoreInRuleTree(aCanStoreInRuleTree)
-    {
-    }
-  };
-
-  static result_type ComputeLeafValue(const nsCSSValue& aValue,
-                                      const ComputeData& aClosure)
+  CalcLengthCalcOps(nscoord aFontSize, const nsStyleFont* aStyleFont,
+                    nsStyleContext* aStyleContext, nsPresContext* aPresContext,
+                    PRBool aUseProvidedRootEmSize, PRBool aUseUserFontSet,
+                    PRBool& aCanStoreInRuleTree)
+    : mFontSize(aFontSize),
+      mStyleFont(aStyleFont),
+      mStyleContext(aStyleContext),
+      mPresContext(aPresContext),
+      mUseProvidedRootEmSize(aUseProvidedRootEmSize),
+      mUseUserFontSet(aUseUserFontSet),
+      mCanStoreInRuleTree(aCanStoreInRuleTree)
   {
-    return CalcLengthWith(aValue, aClosure.mFontSize, aClosure.mStyleFont,
-                          aClosure.mStyleContext, aClosure.mPresContext,
-                          aClosure.mUseProvidedRootEmSize,
-                          aClosure.mUseUserFontSet,
-                          aClosure.mCanStoreInRuleTree);
+  }
+
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
+  {
+    return CalcLengthWith(aValue, mFontSize, mStyleFont, mStyleContext,
+                          mPresContext, mUseProvidedRootEmSize,
+                          mUseUserFontSet, mCanStoreInRuleTree);
   }
 };
 
@@ -329,10 +324,10 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     case eCSSUnit_Calc_Divided:
     case eCSSUnit_Calc_Minimum:
     case eCSSUnit_Calc_Maximum: {
-      CalcLengthCalcOps::ComputeData
-        data(aFontSize, aStyleFont, aStyleContext, aPresContext,
-             aUseProvidedRootEmSize, aUseUserFontSet, aCanStoreInRuleTree);
-      return mozilla::css::ComputeCalc<CalcLengthCalcOps>(aValue, data);
+      CalcLengthCalcOps ops(aFontSize, aStyleFont, aStyleContext, aPresContext,
+                            aUseProvidedRootEmSize, aUseUserFontSet,
+                            aCanStoreInRuleTree);
+      return mozilla::css::ComputeCalc(aValue, ops);
     }
     default:
       NS_NOTREACHED("unexpected unit");
@@ -2662,50 +2657,47 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
 struct SetFontSizeCalcOps : public mozilla::css::BasicCoordCalcOps,
                             public mozilla::css::NumbersAlreadyNormalizedOps
 {
-  struct ComputeData {
-    // The parameters beyond aValue that we need for CalcLengthWith.
-    nscoord mParentSize;
-    const nsStyleFont* mParentFont;
-    nsPresContext* mPresContext;
-    PRBool mAtRoot;
-    PRBool& mCanStoreInRuleTree;
+  // The parameters beyond aValue that we need for CalcLengthWith.
+  const nscoord mParentSize;
+  const nsStyleFont* const mParentFont;
+  nsPresContext* const mPresContext;
+  const PRBool mAtRoot;
+  PRBool& mCanStoreInRuleTree;
 
-    ComputeData(nscoord aParentSize, const nsStyleFont* aParentFont,
-                nsPresContext* aPresContext, PRBool aAtRoot,
-                PRBool& aCanStoreInRuleTree)
-      : mParentSize(aParentSize),
-        mParentFont(aParentFont),
-        mPresContext(aPresContext),
-        mAtRoot(aAtRoot),
-        mCanStoreInRuleTree(aCanStoreInRuleTree)
-    {
-    }
-  };
+  SetFontSizeCalcOps(nscoord aParentSize, const nsStyleFont* aParentFont,
+                     nsPresContext* aPresContext, PRBool aAtRoot,
+                     PRBool& aCanStoreInRuleTree)
+    : mParentSize(aParentSize),
+      mParentFont(aParentFont),
+      mPresContext(aPresContext),
+      mAtRoot(aAtRoot),
+      mCanStoreInRuleTree(aCanStoreInRuleTree)
+  {
+  }
 
-  static result_type ComputeLeafValue(const nsCSSValue& aValue,
-                                      const ComputeData& aClosure)
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
   {
     nscoord size;
     if (aValue.IsLengthUnit()) {
       // Note that font-based length units use the parent's size
       // unadjusted for scriptlevel changes. A scriptlevel change
       // between us and the parent is simply ignored.
-      size = CalcLengthWith(aValue, aClosure.mParentSize, aClosure.mParentFont,
-                            nsnull, aClosure.mPresContext, aClosure.mAtRoot,
-                            PR_TRUE, aClosure.mCanStoreInRuleTree);
+      size = CalcLengthWith(aValue, mParentSize, mParentFont,
+                            nsnull, mPresContext, mAtRoot,
+                            PR_TRUE, mCanStoreInRuleTree);
       if (aValue.IsFixedLengthUnit() || aValue.GetUnit() == eCSSUnit_Pixel) {
-        size = nsStyleFont::ZoomText(aClosure.mPresContext, size);
+        size = nsStyleFont::ZoomText(mPresContext, size);
       }
     }
     else if (eCSSUnit_Percent == aValue.GetUnit()) {
-      aClosure.mCanStoreInRuleTree = PR_FALSE;
+      mCanStoreInRuleTree = PR_FALSE;
       // Note that % units use the parent's size unadjusted for scriptlevel
       // changes. A scriptlevel change between us and the parent is simply
       // ignored.
-      size = NSToCoordRound(aClosure.mParentSize * aValue.GetPercentValue());
+      size = NSToCoordRound(mParentSize * aValue.GetPercentValue());
     } else {
       NS_ABORT_IF_FALSE(PR_FALSE, "unexpected value");
-      size = aClosure.mParentSize;
+      size = mParentSize;
     }
 
     return size;
@@ -2776,11 +2768,9 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
   else if (aFontData.mSize.IsLengthUnit() ||
            aFontData.mSize.GetUnit() == eCSSUnit_Percent ||
            aFontData.mSize.IsCalcUnit()) {
-    SetFontSizeCalcOps::ComputeData data(aParentSize, aParentFont,
-                                         aPresContext, aAtRoot,
-                                         aCanStoreInRuleTree);
-    *aSize =
-      mozilla::css::ComputeCalc<SetFontSizeCalcOps>(aFontData.mSize, data);
+    SetFontSizeCalcOps ops(aParentSize, aParentFont, aPresContext, aAtRoot,
+                           aCanStoreInRuleTree);
+    *aSize = mozilla::css::ComputeCalc(aFontData.mSize, ops);
     if (*aSize < 0) {
       NS_ABORT_IF_FALSE(aFontData.mSize.IsCalcUnit(),
                         "negative lengths and percents should be rejected "

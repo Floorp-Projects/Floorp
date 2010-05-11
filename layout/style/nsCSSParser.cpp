@@ -7291,19 +7291,15 @@ CSSParserImpl::ParseCalcAdditiveExpression(nsCSSValue& aValue,
 
 struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps
 {
-  struct ComputeData {};
-
-  static result_type ComputeLeafValue(const nsCSSValue& aValue,
-                                      const ComputeData& aClosure)
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
   {
     NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
     return aValue.GetFloatValue();
   }
 
-  static float ComputeNumber(const nsCSSValue& aValue)
+  float ComputeNumber(const nsCSSValue& aValue)
   {
-    return mozilla::css::ComputeCalc<ReduceNumberCalcOps>(
-             aValue, ReduceNumberCalcOps::ComputeData());
+    return mozilla::css::ComputeCalc(aValue, *this);
   }
 };
 
@@ -7348,8 +7344,8 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
     if (variantMask & VARIANT_NUMBER) {
       // Simplify the value immediately so we can check for division by
       // zero.
-      float number = mozilla::css::ComputeCalc<ReduceNumberCalcOps>(
-                       *storage, ReduceNumberCalcOps::ComputeData());
+      ReduceNumberCalcOps ops;
+      float number = mozilla::css::ComputeCalc(*storage, ops);
       if (number == 0.0 && afterDivision)
         return PR_FALSE;
       storage->SetFloatValue(number, eCSSUnit_Number);
@@ -7362,8 +7358,8 @@ CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
         NS_ABORT_IF_FALSE(storage == &aValue.GetArrayValue()->Item(1),
                           "unexpected relationship to current storage");
         nsCSSValue &leftValue = aValue.GetArrayValue()->Item(0);
-        float number = mozilla::css::ComputeCalc<ReduceNumberCalcOps>(
-                         leftValue, ReduceNumberCalcOps::ComputeData());
+        ReduceNumberCalcOps ops;
+        float number = mozilla::css::ComputeCalc(leftValue, ops);
         leftValue.SetFloatValue(number, eCSSUnit_Number);
       }
     }

@@ -51,24 +51,23 @@ namespace css {
  *
  *   typedef ... result_type;
  *
- *   static result_type
+ *   result_type
  *   MergeAdditive(nsCSSUnit aCalcFunction,
  *                 result_type aValue1, result_type aValue2);
  *
- *   static result_type
+ *   result_type
  *   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
  *                        float aValue1, result_type aValue2);
  *
- *   static result_type
+ *   result_type
  *   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
  *                        result_type aValue1, float aValue2);
  *
- *   struct ComputeData { ... };
+ *   result_type
+ *   ComputeLeafValue(const nsCSSValue& aValue);
  *
- *   static result_type ComputeLeafValue(const nsCSSValue& aValue,
- *                                       const ComputeData& aClosure);
- *
- *   static float ComputeNumber(const nsCSSValue& aValue);
+ *   float
+ *   ComputeNumber(const nsCSSValue& aValue);
  *
  * The CalcOps methods might compute the calc() expression down to a
  * number, reduce some parts of it to a number but replicate other
@@ -92,55 +91,49 @@ namespace css {
  */
 template <class CalcOps>
 static typename CalcOps::result_type
-ComputeCalc(const nsCSSValue& aValue,
-            const typename CalcOps::ComputeData &aClosure)
+ComputeCalc(const nsCSSValue& aValue, CalcOps &aOps)
 {
   switch (aValue.GetUnit()) {
     case eCSSUnit_Calc: {
       nsCSSValue::Array *arr = aValue.GetArrayValue();
       NS_ABORT_IF_FALSE(arr->Count() == 1, "unexpected length");
-      return ComputeCalc<CalcOps>(arr->Item(0), aClosure);
+      return ComputeCalc(arr->Item(0), aOps);
     }
     case eCSSUnit_Calc_Plus:
     case eCSSUnit_Calc_Minus: {
       nsCSSValue::Array *arr = aValue.GetArrayValue();
       NS_ABORT_IF_FALSE(arr->Count() == 2, "unexpected length");
-      typename CalcOps::result_type
-        lhs = ComputeCalc<CalcOps>(arr->Item(0), aClosure),
-        rhs = ComputeCalc<CalcOps>(arr->Item(1), aClosure);
-      return CalcOps::MergeAdditive(aValue.GetUnit(), lhs, rhs);
+      typename CalcOps::result_type lhs = ComputeCalc(arr->Item(0), aOps),
+                                    rhs = ComputeCalc(arr->Item(1), aOps);
+      return aOps.MergeAdditive(aValue.GetUnit(), lhs, rhs);
     }
     case eCSSUnit_Calc_Times_L: {
       nsCSSValue::Array *arr = aValue.GetArrayValue();
       NS_ABORT_IF_FALSE(arr->Count() == 2, "unexpected length");
-      float lhs = CalcOps::ComputeNumber(arr->Item(0));
-      typename CalcOps::result_type rhs =
-        ComputeCalc<CalcOps>(arr->Item(1), aClosure);
-      return CalcOps::MergeMultiplicativeL(aValue.GetUnit(), lhs, rhs);
+      float lhs = aOps.ComputeNumber(arr->Item(0));
+      typename CalcOps::result_type rhs = ComputeCalc(arr->Item(1), aOps);
+      return aOps.MergeMultiplicativeL(aValue.GetUnit(), lhs, rhs);
     }
     case eCSSUnit_Calc_Times_R:
     case eCSSUnit_Calc_Divided: {
       nsCSSValue::Array *arr = aValue.GetArrayValue();
       NS_ABORT_IF_FALSE(arr->Count() == 2, "unexpected length");
-      typename CalcOps::result_type lhs =
-        ComputeCalc<CalcOps>(arr->Item(0), aClosure);
-      float rhs = CalcOps::ComputeNumber(arr->Item(1));
-      return CalcOps::MergeMultiplicativeR(aValue.GetUnit(), lhs, rhs);
+      typename CalcOps::result_type lhs = ComputeCalc(arr->Item(0), aOps);
+      float rhs = aOps.ComputeNumber(arr->Item(1));
+      return aOps.MergeMultiplicativeR(aValue.GetUnit(), lhs, rhs);
     }
     case eCSSUnit_Calc_Minimum:
     case eCSSUnit_Calc_Maximum: {
       nsCSSValue::Array *arr = aValue.GetArrayValue();
-      typename CalcOps::result_type result =
-        ComputeCalc<CalcOps>(arr->Item(0), aClosure);
+      typename CalcOps::result_type result = ComputeCalc(arr->Item(0), aOps);
       for (PRUint32 i = 1, i_end = arr->Count(); i < i_end; ++i) {
-        typename CalcOps::result_type tmp =
-          ComputeCalc<CalcOps>(arr->Item(i), aClosure);
-        result = CalcOps::MergeAdditive(aValue.GetUnit(), result, tmp);
+        typename CalcOps::result_type tmp = ComputeCalc(arr->Item(i), aOps);
+        result = aOps.MergeAdditive(aValue.GetUnit(), result, tmp);
       }
       return result;
     }
     default: {
-      return CalcOps::ComputeLeafValue(aValue, aClosure);
+      return aOps.ComputeLeafValue(aValue);
     }
   }
 }
@@ -155,7 +148,7 @@ struct BasicCalcOpsAdditive
 {
   typedef T result_type;
 
-  static result_type
+  result_type
   MergeAdditive(nsCSSUnit aCalcFunction,
                 result_type aValue1, result_type aValue2)
   {
@@ -176,7 +169,7 @@ struct BasicCalcOpsAdditive
 
 struct BasicCoordCalcOps : public BasicCalcOpsAdditive<nscoord>
 {
-  static result_type
+  result_type
   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
                        float aValue1, result_type aValue2)
   {
@@ -185,7 +178,7 @@ struct BasicCoordCalcOps : public BasicCalcOpsAdditive<nscoord>
     return NSToCoordRound(aValue1 * aValue2);
   }
 
-  static result_type
+  result_type
   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
                        result_type aValue1, float aValue2)
   {
@@ -200,7 +193,7 @@ struct BasicCoordCalcOps : public BasicCalcOpsAdditive<nscoord>
 
 struct BasicFloatCalcOps : public BasicCalcOpsAdditive<float>
 {
-  static result_type
+  result_type
   MergeMultiplicativeL(nsCSSUnit aCalcFunction,
                        float aValue1, result_type aValue2)
   {
@@ -209,7 +202,7 @@ struct BasicFloatCalcOps : public BasicCalcOpsAdditive<float>
     return aValue1 * aValue2;
   }
 
-  static result_type
+  result_type
   MergeMultiplicativeR(nsCSSUnit aCalcFunction,
                        result_type aValue1, float aValue2)
   {
@@ -228,7 +221,7 @@ struct BasicFloatCalcOps : public BasicCalcOpsAdditive<float>
  */
 struct NumbersAlreadyNormalizedOps
 {
-  static float ComputeNumber(const nsCSSValue& aValue)
+  float ComputeNumber(const nsCSSValue& aValue)
   {
     NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
     return aValue.GetFloatValue();
