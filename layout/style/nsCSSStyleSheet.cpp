@@ -72,6 +72,7 @@
 #include "mozAutoDocUpdate.h"
 #include "nsCSSDeclaration.h"
 #include "nsRuleNode.h"
+#include "nsMediaFeatures.h"
 
 namespace css = mozilla::css;
 
@@ -1144,12 +1145,6 @@ nsCSSStyleSheet::GetBaseURI(nsIURI** aBaseURI) const
   return NS_OK;
 }
 
-void
-nsCSSStyleSheet::SetTitle(const nsAString& aTitle)
-{
-  mTitle = aTitle;
-}
-
 NS_IMETHODIMP
 nsCSSStyleSheet::GetType(nsString& aType) const
 {
@@ -1256,18 +1251,6 @@ nsCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
     }
   }
   return NS_OK;
-}
-
-void
-nsCSSStyleSheet::SetOwningNode(nsIDOMNode* aOwningNode)
-{ // not ref counted
-  mOwningNode = aOwningNode;
-}
-
-void
-nsCSSStyleSheet::SetOwnerRule(nsICSSImportRule* aOwnerRule)
-{ // not ref counted
-  mOwnerRule = aOwnerRule;
 }
 
 already_AddRefed<nsICSSImportRule>
@@ -1625,18 +1608,6 @@ nsCSSStyleSheet::RegisterNamespaceRule(nsICSSRule* aRule)
 
   AddNamespaceRuleToMap(aRule, mInner->mNameSpaceMap);
   return NS_OK;
-}
-
-PRBool
-nsCSSStyleSheet::IsModified() const
-{
-  return mDirty;
-}
-
-void
-nsCSSStyleSheet::SetModified(PRBool aModified)
-{
-  mDirty = aModified;
 }
 
   // nsIDOMStyleSheet interface

@@ -88,6 +88,7 @@
 #include "nsTArray.h"
 #include "prlog.h"
 #include "CSSCalc.h"
+#include "nsMediaFeatures.h"
 
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
