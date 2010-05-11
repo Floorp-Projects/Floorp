@@ -170,7 +170,7 @@ imgRequest::imgRequest() :
   mValidator(nsnull), mImageSniffers("image-sniffing-services"),
   mDeferredLocks(0), mDecodeRequested(PR_FALSE),
   mIsMultiPartChannel(PR_FALSE), mLoading(PR_FALSE),
-  mHadLastPart(PR_FALSE), mGotData(PR_FALSE), mIsInCache(PR_FALSE)
+  mGotData(PR_FALSE), mIsInCache(PR_FALSE)
 {
   /* member initializers and constructor code */
 }
@@ -204,7 +204,6 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
   if (!mProperties)
     return NS_ERROR_OUT_OF_MEMORY;
-
 
   mURI = aURI;
   mKeyURI = aKeyURI;
@@ -278,6 +277,9 @@ nsresult imgRequest::AddProxy(imgRequestProxy *proxy)
 
     mImage->ResetAnimation();
   }
+
+  proxy->SetImage(mImage);
+  proxy->SetPrincipal(mPrincipal);
 
   return mObservers.AppendElementUnlessExists(proxy) ?
     NS_OK : NS_ERROR_OUT_OF_MEMORY;
@@ -360,57 +362,6 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBoo
   return NS_OK;
 }
 
-nsresult imgRequest::NotifyProxyListener(imgRequestProxy *proxy)
-{
-  nsCOMPtr<imgIRequest> kungFuDeathGrip(proxy);
-
-  // Keep these notifications in sync with imgContainerRequest::Clone!
-
-  // OnStartRequest
-  if (mState & stateRequestStarted)
-    proxy->OnStartRequest();
-
-  // OnStartContainer
-  if (mState & stateHasSize)
-    proxy->OnStartContainer(mImage);
-
-  // OnStartDecode
-  if (mState & stateDecodeStarted)
-    proxy->OnStartDecode();
-
-  // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
-  PRUint32 nframes = 0;
-  if (mImage)
-    mImage->GetNumFrames(&nframes);
-
-  if (nframes > 0) {
-    PRUint32 frame;
-    mImage->GetCurrentFrameIndex(&frame);
-    proxy->OnStartFrame(frame);
-
-    // OnDataAvailable
-    // XXX - Should only send partial rects here, but that needs to
-    // wait until we fix up the observer interface
-    nsIntRect r;
-    mImage->GetCurrentFrameRect(r);
-    proxy->OnDataAvailable(frame, &r);
-
-    if (mState & stateRequestStopped)
-      proxy->OnStopFrame(frame);
-  }
-
-  // The "real" OnStopDecode - Fix this with bug 505385.
-  if (mState & stateDecodeStopped)
-    proxy->OnStopContainer(mImage);
-
-  if (mState & stateRequestStopped) {
-    proxy->OnStopDecode(GetResultFromImageStatus(mImageStatus), nsnull);
-    proxy->OnStopRequest(mHadLastPart);
-  }
-
-  return NS_OK;
-}
-
 void imgRequest::Cancel(nsresult aStatus)
 {
   /* The Cancel() method here should only be called by this class. */
@@ -467,18 +418,6 @@ nsresult imgRequest::GetKeyURI(nsIURI **aKeyURI)
   if (mKeyURI) {
     *aKeyURI = mKeyURI;
     NS_ADDREF(*aKeyURI);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-nsresult imgRequest::GetPrincipal(nsIPrincipal **aPrincipal)
-{
-  LOG_FUNC(gImgLog, "imgRequest::GetPrincipal");
-
-  if (mPrincipal) {
-    NS_ADDREF(*aPrincipal = mPrincipal);
     return NS_OK;
   }
 
@@ -575,16 +514,6 @@ void imgRequest::UpdateCacheEntrySize()
 #endif
   }
 
-}
-
-nsresult
-imgRequest::GetImage(imgIContainer **aImage)
-{
-  LOG_FUNC(gImgLog, "imgRequest::GetImage");
-
-  *aImage = mImage;
-  NS_IF_ADDREF(*aImage);
-  return NS_OK;
 }
 
 nsresult
@@ -908,6 +837,12 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
       if (NS_FAILED(rv)) {
         return rv;
       }
+
+      // Tell all of our proxies that we have a principal.
+      nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+      while (iter.HasMore()) {
+        iter.GetNext()->SetPrincipal(mPrincipal);
+      }
     }
   }
 
@@ -979,14 +914,10 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   /* set our loading flag to false */
   mLoading = PR_FALSE;
 
-  mHadLastPart = PR_TRUE;
+  PRBool lastPart = PR_TRUE;
   nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
-  if (mpchan) {
-    PRBool lastPart;
-    nsresult rv = mpchan->GetIsLastPart(&lastPart);
-    if (NS_SUCCEEDED(rv))
-      mHadLastPart = lastPart;
-  }
+  if (mpchan)
+    mpchan->GetIsLastPart(&lastPart);
 
   // XXXldb What if this is a non-last part of a multipart request?
   // xxx before we release our reference to mRequest, lets
@@ -1042,7 +973,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
   nsTObserverArray<imgRequestProxy*>::ForwardIterator srIter(mObservers);
   while (srIter.HasMore()) {
-    srIter.GetNext()->OnStopRequest(mHadLastPart);
+    srIter.GetNext()->OnStopRequest(lastPart);
   }
 
   return NS_OK;
@@ -1213,6 +1144,12 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     while (mDeferredLocks) {
       mImage->LockImage();
       mDeferredLocks--;
+    }
+
+    // Tell all of our proxies that we have an image.
+    nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mObservers);
+    while (iter.HasMore()) {
+      iter.GetNext()->SetImage(mImage);
     }
   }
 

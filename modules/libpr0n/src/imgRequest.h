@@ -96,12 +96,11 @@ public:
                 void *aCacheId,
                 void *aLoadId);
 
-  // Callers must call NotifyProxyListener later.
+  // Callers must call imgRequestProxy::Notify later.
   nsresult AddProxy(imgRequestProxy *proxy);
 
   // aNotify==PR_FALSE still sends OnStopRequest.
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBool aNotify);
-  nsresult NotifyProxyListener(imgRequestProxy *proxy);
 
   void SniffMimeType(const char *buf, PRUint32 len);
 
@@ -114,8 +113,6 @@ public:
   // only when the channel has failed to open, and so calling Cancel() on it
   // won't be sufficient.
   void CancelAndAbort(nsresult aStatus);
-
-  nsresult GetImage(imgIContainer **aImage);
 
   // Methods that get forwarded to the imgContainer, or deferred until it's
   // instantiated.
@@ -146,7 +143,6 @@ private:
   void Cancel(nsresult aStatus);
   nsresult GetURI(nsIURI **aURI);
   nsresult GetKeyURI(nsIURI **aURI);
-  nsresult GetPrincipal(nsIPrincipal **aPrincipal);
   nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
   void RemoveFromCache();
   inline const char *GetMimeType() const {
@@ -233,7 +229,6 @@ private:
 
   PRPackedBool mIsMultiPartChannel : 1;
   PRPackedBool mLoading : 1;
-  PRPackedBool mHadLastPart : 1;
   PRPackedBool mGotData : 1;
   PRPackedBool mIsInCache : 1;
 };
