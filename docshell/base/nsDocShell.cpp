@@ -49,6 +49,7 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsIComponentManager.h"
 #include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOM3Document.h"
@@ -85,6 +86,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsIUploadChannel.h"
 #include "nsISecurityEventSink.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIJSContextStack.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -222,6 +224,8 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 #include "nsContentErrors.h"
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
+
+using namespace mozilla;
 
 // Number of documents currently loading
 static PRInt32 gNumberOfDocumentsLoading = 0;
@@ -1040,6 +1044,9 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     case nsIDocShellLoadInfo::loadStopContentAndReplace:
         loadType = LOAD_STOP_CONTENT_AND_REPLACE;
         break;
+    case nsIDocShellLoadInfo::loadPushState:
+        loadType = LOAD_PUSHSTATE;
+        break;
     default:
         NS_NOTREACHED("Unexpected nsDocShellInfoLoadType value");
     }
@@ -1104,6 +1111,9 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
         break;
     case LOAD_STOP_CONTENT_AND_REPLACE:
         docShellLoadType = nsIDocShellLoadInfo::loadStopContentAndReplace;
+        break;
+    case LOAD_PUSHSTATE:
+        docShellLoadType = nsIDocShellLoadInfo::loadPushState;
         break;
     default:
         NS_NOTREACHED("Unexpected load type value");
@@ -2833,13 +2843,13 @@ PrintDocTree(nsIDocShellTreeItem * aParentNode, int aLevel)
   if (vm) {
     vm->GetWidget(getter_AddRefs(widget));
   }
-  nsIContent* rootContent = doc->GetRootContent();
+  dom::Element* rootElement = doc->GetRootElement();
 
   printf("DS %p  Ty %s  Doc %p DW %p EM %p CN %p\n",  
     (void*)parentAsDocShell.get(), 
     type==nsIDocShellTreeItem::typeChrome?"Chr":"Con", 
      (void*)doc, (void*)domwin.get(),
-     (void*)presContext->EventStateManager(), (void*)rootContent);
+     (void*)presContext->EventStateManager(), (void*)rootElement);
 
   if (childWebshellCount > 0) {
     for (PRInt32 i=0;i<childWebshellCount;i++) {
@@ -5691,6 +5701,12 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
         aNewChannel->GetURI(getter_AddRefs(newURI));
         appCacheChannel->SetChooseApplicationCache(ShouldCheckAppCache(newURI));
     }
+
+    if (!(aRedirectFlags & nsIChannelEventSink::REDIRECT_INTERNAL) && 
+        mLoadType & (LOAD_CMD_RELOAD | LOAD_CMD_HISTORY)) {
+        mLoadType = LOAD_NORMAL_REPLACE;
+        SetHistoryEntry(&mLSHE, nsnull);
+    }
 }
 
 NS_IMETHODIMP
@@ -6088,6 +6104,8 @@ nsDocShell::EnsureContentViewer()
         return NS_OK;
     if (mIsBeingDestroyed)
         return NS_ERROR_FAILURE;
+
+    NS_TIME_FUNCTION;
 
     nsIPrincipal* principal = nsnull;
     nsCOMPtr<nsIURI> baseURI;
@@ -9223,11 +9241,12 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // Default max length: 640k chars.
     PRInt32 maxStateObjSize = 0xA0000;
     if (mPrefs) {
-      mPrefs->GetIntPref("browser.history.maxStateObjectSize",
-                         &maxStateObjSize);
+        mPrefs->GetIntPref("browser.history.maxStateObjectSize",
+                           &maxStateObjSize);
     }
-    if (maxStateObjSize < 0)
-      maxStateObjSize = 0;
+    if (maxStateObjSize < 0) {
+        maxStateObjSize = 0;
+    }
     NS_ENSURE_TRUE(dataStr.Length() <= (PRUint32)maxStateObjSize,
                    NS_ERROR_ILLEGAL_VALUE);
 
@@ -9236,12 +9255,12 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     nsCOMPtr<nsIURI> oldURI = mCurrentURI;
     nsCOMPtr<nsIURI> newURI;
     if (aURL.Length() == 0) {
-      newURI = mCurrentURI;
+        newURI = mCurrentURI;
     }
     else {
         // 2a: Resolve aURL relative to mURI
 
-        nsIURI* docBaseURI = document->GetBaseURI();
+        nsIURI* docBaseURI = document->GetDocBaseURI();
         if (!docBaseURI)
             return NS_ERROR_FAILURE;
 
@@ -9320,7 +9339,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     NS_ENSURE_TRUE(sessionHistory, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsISHistoryInternal> shInternal =
-      do_QueryInterface(sessionHistory, &rv);
+        do_QueryInterface(sessionHistory, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Step 3: Create a new entry in the session history; this will erase
@@ -9377,21 +9396,25 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     }
 
     // Step 6: If the document's URI changed, update document's URI and update
-    // global history
+    // global history.
+    //
+    // We need to call FireOnLocationChange so that the browser's address bar
+    // gets updated and the back button is enabled, but we only need to
+    // explicitly call FireOnLocationChange if we're not calling SetCurrentURI,
+    // since SetCurrentURI will call FireOnLocationChange for us.
     if (!equalURIs) {
         SetCurrentURI(newURI, nsnull, PR_TRUE);
         document->SetDocumentURI(newURI);
 
         AddToGlobalHistory(newURI, PR_FALSE, oldURI);
     }
+    else {
+        FireOnLocationChange(this, nsnull, mCurrentURI);
+    }
 
     // Try to set the title of the current history element
     if (mOSHE)
-      mOSHE->SetTitle(aTitle);
-
-    // We need this to ensure that the back button is enabled after a
-    // pushState, if it wasn't already enabled.
-    FireOnLocationChange(this, nsnull, mCurrentURI);
+        mOSHE->SetTitle(aTitle);
 
     return NS_OK;
 }
@@ -10123,7 +10146,7 @@ nsDocShell::AddToGlobalHistory(nsIURI * aURI, PRBool aRedirect,
 
     if (!visited) {
         nsCOMPtr<nsIObserverService> obsService =
-            do_GetService("@mozilla.org/observer-service;1");
+            mozilla::services::GetObserverService();
         if (obsService) {
             obsService->NotifyObservers(aURI, NS_LINK_VISITED_EVENT_TOPIC, nsnull);
         }
@@ -10295,6 +10318,8 @@ nsDocShell::EnsureScriptEnvironment()
     if (mIsBeingDestroyed) {
         return NS_ERROR_NOT_AVAILABLE;
     }
+
+    NS_TIME_FUNCTION;
 
 #ifdef DEBUG
     NS_ASSERTION(!mInEnsureScriptEnv,

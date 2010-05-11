@@ -480,7 +480,6 @@ case "$target" in
     ;;
 esac
 
-
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
                           Highest Windows version to target using this SDK
@@ -500,27 +499,12 @@ case "$WINSDK_TARGETVER" in
 
 esac
 
-dnl Vista SDK specific api (deprecated)
-MOZ_ARG_DISABLE_BOOL(vista-sdk-requirements,
-[  --disable-vista-sdk-requirements
-                           Do not build Vista SDK specific code],
-   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1,
-   MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=$_PLATFORM_MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 if test -n "$COMPILE_ENVIRONMENT"; then
-if test -n "$MOZ_DISABLE_VISTA_SDK_REQUIREMENTS"; then
-    AC_MSG_WARN([--disable-vista-sdk-requirements is deprecated, use --with-windows-version=502 instead])
-    MOZ_WINSDK_TARGETVER=05020000
-fi
-
 if test "$MOZ_WINSDK_TARGETVER" -lt "06000000"; then
-    MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1
-    AC_DEFINE(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
     # We can't build parental controls either
     MOZ_DISABLE_PARENTAL_CONTROLS=1
 fi
 fi
-
-AC_SUBST(MOZ_DISABLE_VISTA_SDK_REQUIREMENTS)
 
 case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mks*|*-wince|*-winmo)
@@ -2116,7 +2100,7 @@ ia64*-hpux*)
             # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
         MOZ_DEBUG_FLAGS="-g"
     fi
 
@@ -2141,7 +2125,6 @@ ia64*-hpux*)
 *-wince*|*-winmo*)
     TARGET_COMPILER_ABI=msvc
     _PLATFORM_DEFAULT_TOOLKIT=cairo-windows
-    _PLATFORM_MOZ_DISABLE_VISTA_SDK_REQUIREMENTS=1
     MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd -W`
     MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
     AR_LIST="$AR -list"
@@ -2721,7 +2704,6 @@ alpha*-*-osf*)
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
     LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
-    MOZ_MEMORY=1
     if test "$SOLARIS_SUNPRO_CC"; then
        LIBS="-lCrun -lCstd $LIBS"
        NS_USE_NATIVE=1
@@ -4922,7 +4904,6 @@ MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
 MOZ_USE_NATIVE_UCONV=
 MOZ_VIEW_SOURCE=1
-MOZ_XPINSTALL=1
 MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
@@ -5089,8 +5070,6 @@ MOZ_ARG_HEADER(Toolkit Options)
         AC_MSG_ERROR([You must specify a default toolkit (perhaps $_PLATFORM_DEFAULT_TOOLKIT).])
     fi
 
-AC_DEFINE_UNQUOTED(MOZ_DEFAULT_TOOLKIT,"$MOZ_WIDGET_TOOLKIT")
-
 dnl ========================================================
 dnl = Enable the toolkit as needed                         =
 dnl ========================================================
@@ -5210,7 +5189,6 @@ if test "$COMPILE_ENVIRONMENT"; then
 
 fi # COMPILE_ENVIRONMENT
 
-AC_SUBST(MOZ_DEFAULT_TOOLKIT)
 AC_SUBST(MOZ_FS_LAYOUT)
 
 dnl ========================================================
@@ -5735,17 +5713,6 @@ case "$target" in
     fi
     ;;
 esac
-fi
-
-dnl ========================================================
-dnl xpinstall support on by default
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(xpinstall,
-[  --disable-xpinstall     Disable xpinstall support],
-    MOZ_XPINSTALL=,
-    MOZ_XPINSTALL=1 )
-if test "$MOZ_XPINSTALL"; then
-    AC_DEFINE(MOZ_XPINSTALL)
 fi
 
 dnl ========================================================
@@ -6340,10 +6307,6 @@ if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     fi
 fi
 
-# Automatically disable installer if xpinstall isn't built
-if test -z "$MOZ_XPINSTALL"; then
-    MOZ_INSTALLER=
-fi
 AC_SUBST(MOZ_INSTALLER)
 
 AC_MSG_CHECKING([for tar archiver])
@@ -6966,7 +6929,18 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
-dnl Disable runtime logging checks
+dnl = Disable any treating of compile warnings as errors
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
+[  --disable-warnings-as-errors       Disable treating of warnings as errors],
+    MOZ_DISABLE_WARNINGS_AS_ERRORS=1,
+    MOZ_DISABLE_WARNINGS_AS_ERRORS= )
+if test "$MOZ_DISABLE_WARNINGS_AS_ERRORS"; then
+   WARNINGS_AS_ERRORS=''
+fi
+
+dnl ========================================================
+dnl = Disable runtime logging checks
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(logging,
 [  --disable-logging       Disable logging facilities],
@@ -6979,7 +6953,7 @@ else
 fi
 
 dnl ========================================================
-dnl = dnl This will enable logging of addref, release, ctor, dtor.
+dnl = This will enable logging of addref, release, ctor, dtor.
 dnl ========================================================
 _ENABLE_LOGREFCNT=42
 MOZ_ARG_ENABLE_BOOL(logrefcnt,
@@ -7507,23 +7481,26 @@ else
     AC_MSG_RESULT([no])
 fi
 
-dnl pass -Wno-long-long to the compiler
-MOZ_ARG_ENABLE_BOOL(long-long-warning,
-[  --enable-long-long-warning 
-                          Warn about use of non-ANSI long long type],
-    _IGNORE_LONG_LONG_WARNINGS=,
-    _IGNORE_LONG_LONG_WARNINGS=1)
+dnl ========================================================
+dnl Pass -Wno-long-long to the compiler
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(long-long-warning,
+[  --disable-long-long-warning
+                          Do not warn about use of non-ANSI long long type (if supported)],
+    _IGNORE_LONG_LONG_WARNINGS=1,
+    _IGNORE_LONG_LONG_WARNINGS=)
 
-if test "$_IGNORE_LONG_LONG_WARNINGS"; then
-     _SAVE_CFLAGS="$CFLAGS"
-     CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
-     AC_MSG_CHECKING([whether compiler supports -Wno-long-long])
-     AC_TRY_COMPILE([], [return(0);], 
-	[ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  result="yes" ], result="no")
-     AC_MSG_RESULT([$result])
-     CFLAGS="$_SAVE_CFLAGS"
+if test -n "$_IGNORE_LONG_LONG_WARNINGS"; then
+    _SAVE_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
+    AC_MSG_CHECKING([whether compiler supports -Wno-long-long])
+    AC_TRY_COMPILE([], [return(0);],
+      [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
+        result="yes" ],
+      result="no")
+    AC_MSG_RESULT([$result])
+    CFLAGS="$_SAVE_CFLAGS"
 fi
 
 dnl ========================================================
@@ -7543,7 +7520,7 @@ MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
 AC_SUBST(MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE)
 
 _SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fprofile-generate"
+CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
 
 AC_MSG_CHECKING([whether C compiler supports -fprofile-generate])
 AC_TRY_COMPILE([], [return 0;],
@@ -7553,7 +7530,7 @@ AC_MSG_RESULT([$result])
 
 if test $result = "yes"; then
   PROFILE_GEN_LDFLAGS="-fprofile-generate"
-  PROFILE_USE_CFLAGS="-fprofile-use"
+  PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freorder-blocks-and-partition"
   PROFILE_USE_LDFLAGS="-fprofile-use"
 else
   CFLAGS="$_SAVE_CFLAGS -fprofile-arcs"
@@ -8423,7 +8400,6 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
-AC_SUBST(MOZ_XPINSTALL)
 AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_USER_DIR)

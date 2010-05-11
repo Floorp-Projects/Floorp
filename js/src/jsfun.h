@@ -429,22 +429,6 @@ const uint32 JS_ARGS_LENGTH_MAX = JS_BIT(24) - 1;
 JS_STATIC_ASSERT(JS_ARGS_LENGTH_MAX <= JS_BIT(30));
 JS_STATIC_ASSERT(jsval((JS_ARGS_LENGTH_MAX << 1) | 1) <= JSVAL_INT_MAX);
 
-namespace js {
-
-inline jsval
-GetArgsSlot(JSObject *argsobj, uint32 arg)
-{
-    return argsobj->dslots[arg];
-}
-
-inline void
-SetArgsSlot(JSObject *argsobj, uint32 arg, jsval v)
-{
-    argsobj->dslots[arg] = v;
-}
-
-} /* namespace js */
-
 extern JSBool
 js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp);
 

@@ -57,13 +57,8 @@ ifdef MOZ_SUNBIRD
 MOZ_HAVE_BROWSER=
 endif
 
-DIRS = \
-        find \
-        $(NULL)
-
 ifdef MOZ_RDF
 DIRS += \
-        intl \
         windowds \
         $(NULL)
 endif

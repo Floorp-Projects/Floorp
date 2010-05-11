@@ -235,7 +235,7 @@ void
 nsContentSink::InitializeStatics()
 {
   nsContentUtils::AddBoolPrefVarCache("content.notify.ontimer",
-                                      &sNotifyOnTimer);
+                                      &sNotifyOnTimer, PR_TRUE);
   // -1 means never.
   nsContentUtils::AddIntPrefVarCache("content.notify.backoffcount",
                                      &sBackoffCount, -1);
@@ -801,7 +801,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
 
   nsCOMPtr<nsIURI> url;
   nsresult rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull,
-                          mDocument->GetBaseURI());
+                          mDocument->GetDocBaseURI());
   
   if (NS_FAILED(rv)) {
     // The URI is bad, move along, don't propagate the error (for now)
@@ -910,7 +910,7 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aHref,
               charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
-              mDocument->GetBaseURI());
+              mDocument->GetDocBaseURI());
     if (uri) {
       nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
       prefetchService->PrefetchURI(uri, mDocumentURI, domNode, aExplicit);
@@ -1096,7 +1096,7 @@ void
 nsContentSink::ProcessOfflineManifest(nsIContent *aElement)
 {
   // Only check the manifest for root document nodes.
-  if (aElement != mDocument->GetRootContent()) {
+  if (aElement != mDocument->GetRootElement()) {
     return;
   }
 
@@ -1369,7 +1369,9 @@ nsContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
   {
     // Scope so we call EndUpdate before we decrease mInNotification
     MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_CONTENT_MODEL, !mBeganUpdate);
-    nsNodeUtils::ContentAppended(aContainer, aStartIndex);
+    nsNodeUtils::ContentAppended(aContainer,
+                                 aContainer->GetChildAt(aStartIndex),
+                                 aStartIndex);
     mLastNotificationTime = PR_Now();
   }
 

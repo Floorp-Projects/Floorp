@@ -164,6 +164,7 @@
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
 #include "nsIURIFixup.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsEventDispatcher.h"
 #include "nsIObserverService.h"
@@ -202,6 +203,7 @@
 #include "nsIPopupWindowManager.h"
 
 #include "nsIDragService.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -213,6 +215,8 @@
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
 
+using namespace mozilla::dom;
+
 nsIDOMStorageList *nsGlobalWindow::sGlobalStorageList  = nsnull;
 
 static nsIEntropyCollector *gEntropyCollector          = nsnull;
@@ -223,6 +227,7 @@ static PRInt32              gRunningTimeoutDepth       = 0;
 static PRPackedBool         gMouseDown                 = PR_FALSE;
 static PRPackedBool         gDragServiceDisabled       = PR_FALSE;
 static FILE                *gDumpFile                  = nsnull;
+static PRUint64             gNextWindowID              = 0;
 
 #ifdef DEBUG
 static PRUint32             gSerialCounter             = 0;
@@ -673,6 +678,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     , mCleanedUp(PR_FALSE)
     , mCallCleanUpAfterModalDialogCloses(PR_FALSE)
+    , mWindowID(gNextWindowID++)
 {
   memset(mScriptGlobals, 0, sizeof(mScriptGlobals));
   nsLayoutStatics::AddRef();
@@ -691,8 +697,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mObserver = new nsGlobalWindowObserver(this);
     if (mObserver) {
       NS_ADDREF(mObserver);
-      nsCOMPtr<nsIObserverService> os =
-        do_GetService("@mozilla.org/observer-service;1");
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
       if (os) {
         // Watch for online/offline status changes so we can fire events. Use
         // a strong reference.
@@ -784,8 +789,7 @@ nsGlobalWindow::~nsGlobalWindow()
 #endif
 
   if (mObserver) {
-    nsCOMPtr<nsIObserverService> os =
-      do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os) {
       os->RemoveObserver(mObserver, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
       os->RemoveObserver(mObserver, "dom-storage2-changed");
@@ -1633,6 +1637,8 @@ nsresult
 nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
                                nsISupports* aState)
 {
+  NS_TIME_FUNCTION;
+
   NS_PRECONDITION(mDocumentPrincipal == nsnull,
                   "mDocumentPrincipal prematurely set!");
 
@@ -2125,7 +2131,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   }
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   if (observerService) {
     nsAutoString origin;
     nsIPrincipal* principal = aDocument->NodePrincipal();
@@ -4487,7 +4493,7 @@ nsGlobalWindow::Blur()
       nsCOMPtr<nsIDOMElement> element;
       fm->GetFocusedElementForWindow(this, PR_FALSE, nsnull, getter_AddRefs(element));
       nsCOMPtr<nsIContent> content = do_QueryInterface(element);
-      if (content == doc->GetRootContent())
+      if (content == doc->GetRootElement())
         fm->ClearFocus(this);
     }
   }
@@ -5184,7 +5190,7 @@ nsGlobalWindow::FireAbuseEvents(PRBool aBlocked, PRBool aWindow,
   contextWindow->GetDocument(getter_AddRefs(domdoc));
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
   if (doc)
-    baseURL = doc->GetBaseURI();
+    baseURL = doc->GetDocBaseURI();
 
   // use the base URI to build what would have been the popup's URI
   nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));
@@ -6658,9 +6664,8 @@ nsGlobalWindow::RemoveGroupedEventListener(const nsAString & aType,
 
     mListenerManager->RemoveEventListenerByType(aListener, aType, flags,
                                                 aEvtGrp);
-    return NS_OK;
   }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -7055,7 +7060,7 @@ nsGlobalWindow::TakeFocus(PRBool aFocus, PRUint32 aFocusMethod)
   // true to tell the calling focus manager that a focus event is expected. If
   // there is no root content node, the document hasn't loaded enough yet, or
   // there isn't one and there is no point in firing a focus event.
-  if (aFocus && mNeedsFocus && mDoc && mDoc->GetRootContent() != nsnull) {
+  if (aFocus && mNeedsFocus && mDoc && mDoc->GetRootElement() != nsnull) {
     mNeedsFocus = PR_FALSE;
     return PR_TRUE;
   }
@@ -7277,16 +7282,16 @@ nsGlobalWindow::UpdateCanvasFocus(PRBool aFocusChanged, nsIContent* aNewContent)
     return;
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-  nsIContent *rootContent = doc->GetRootContent();
-  if (rootContent) {
+  Element *rootElement = doc->GetRootElement();
+  if (rootElement) {
       if ((mHasFocus || aFocusChanged) &&
-          (mFocusedNode == rootContent || aNewContent == rootContent)) {
-          nsIFrame* frame = rootContent->GetPrimaryFrame();
+          (mFocusedNode == rootElement || aNewContent == rootElement)) {
+          nsIFrame* frame = rootElement->GetPrimaryFrame();
           if (frame) {
               frame = frame->GetParent();
               nsCanvasFrame* canvasFrame = do_QueryFrame(frame);
               if (canvasFrame) {
-                  canvasFrame->SetHasFocus(mHasFocus && rootContent == aNewContent);
+                  canvasFrame->SetHasFocus(mHasFocus && rootElement == aNewContent);
               }
           }
       }
@@ -8993,7 +8998,7 @@ nsGlobalWindow::BuildURIfromBase(const char *aURL, nsIURI **aBuiltURI,
     sourceWindow->GetDocument(getter_AddRefs(domDoc));
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
     if (doc) {
-      baseURI = doc->GetBaseURI();
+      baseURI = doc->GetDocBaseURI();
       charset = doc->GetDocumentCharacterSet();
     }
   }

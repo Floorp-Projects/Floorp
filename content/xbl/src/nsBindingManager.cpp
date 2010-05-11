@@ -52,6 +52,7 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
+#include "mozilla/FunctionTimer.h"
 #include "nsContentUtils.h"
 #include "nsIPresShell.h"
 #include "nsIXMLContentSink.h"
@@ -146,7 +147,10 @@ NS_INTERFACE_TABLE_HEAD(nsAnonymousContentList)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsAnonymousContentList)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsAnonymousContentList)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsAnonymousContentList)
+  tmp->mElements->Clear();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAnonymousContentList)
   {
     PRInt32 i, count = tmp->mElements->Length();
@@ -1004,6 +1008,8 @@ nsBindingManager::ProcessAttachedQueue(PRUint32 aSkipSize)
   if (mProcessingAttachedStack || mAttachedStack.Length() <= aSkipSize)
     return;
 
+  NS_TIME_FUNCTION;
+
   mProcessingAttachedStack = PR_TRUE;
 
   // Excute constructors. Do this from high index to low
@@ -1274,11 +1280,11 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
 {
   *aCutOffInheritance = PR_FALSE;
   
-  NS_ASSERTION(aData->mContent, "How did that happen?");
+  NS_ASSERTION(aData->mElement, "How did that happen?");
 
   // Walk the binding scope chain, starting with the binding attached to our
   // content, up till we run out of scopes or we get cut off.
-  nsIContent *content = aData->mContent;
+  nsIContent *content = aData->mElement;
   
   do {
     nsXBLBinding *binding = GetBinding(content);
@@ -1287,7 +1293,7 @@ nsBindingManager::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc,
       binding->WalkRules(aFunc, aData);
       // If we're not looking at our original content, allow the binding to cut
       // off style inheritance
-      if (content != aData->mContent) {
+      if (content != aData->mElement) {
         if (!binding->InheritsStyle()) {
           // Go no further; we're not inheriting style from anything above here
           break;
@@ -1516,6 +1522,7 @@ nsBindingManager::FindInsertionPointAndIndex(nsIContent* aContainer,
 void
 nsBindingManager::ContentAppended(nsIDocument* aDocument,
                                   nsIContent* aContainer,
+                                  nsIContent* aFirstNewContent,
                                   PRInt32     aNewIndexInContainer)
 {
   if (aNewIndexInContainer != -1 &&
@@ -1688,7 +1695,8 @@ nsBindingManager::Traverse(nsIContent *aContent,
     cb.NoteXPCOMChild(value);
   }
 
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  // XXXbz how exactly would NODE_MAY_BE_IN_BINDING_MNGR end up on non-elements?
+  if (!aContent->IsElement()) {
     return;
   }
 

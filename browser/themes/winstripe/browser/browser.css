@@ -310,7 +310,7 @@ toolbar[mode="full"] .toolbarbutton-menubutton-button {
 #TabsToolbar > toolbarpaletteitem > .toolbarbutton-1 {
   -moz-appearance: toolbarbutton;
   margin: 0;
-  padding: 3px;
+  padding: 0 3px;
   border: none !important;
   color: inherit !important;
   background: transparent !important;
@@ -1186,6 +1186,11 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   height: auto;
 }
 
+.tabs-newtab-button > .toolbarbutton-icon {
+  margin-top: -1px;
+  margin-bottom: -1px;
+}
+
 .tabs-newtab-button,
 #TabsToolbar > #new-tab-button,
 #TabsToolbar > toolbarpaletteitem > #new-tab-button {
@@ -1197,7 +1202,8 @@ richlistitem[type="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-i
   width: 31px;
 }
 
-.tabs-newtab-button:hover:active {
+.tabs-newtab-button:hover:active,
+#TabsToolbar > #new-tab-button:hover:active {
   -moz-image-region: rect(0, 32px, 18px, 16px);
 }
 
@@ -1332,7 +1338,7 @@ toolbar[mode="text"] toolbarbutton.chevron > .toolbarbutton-icon {
 }
 
 /* Bookmarks toolbar */
-.toolbar-drop-indicator {
+#PlacesToolbarDropIndicator {
   list-style-image: url(chrome://browser/skin/places/toolbarDropMarker.png);
 }
 

@@ -169,7 +169,8 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsPresContext*  aPresContext,
     nsCSSPseudoElements::ePseudo_mozMathAnonymous; // savings
   nsRefPtr<nsStyleContext> newStyleContext;
   newStyleContext = aPresContext->StyleSet()->
-    ResolvePseudoElementStyle(aContent, pseudoType, aParentStyleContext);
+    ResolvePseudoElementStyle(aContent->AsElement(), pseudoType,
+                              aParentStyleContext);
 
   if (newStyleContext)
     aMathMLChar->SetStyleContext(newStyleContext);

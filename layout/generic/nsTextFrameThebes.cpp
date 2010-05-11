@@ -118,6 +118,7 @@
 #include "gfxContext.h"
 #include "gfxTextRunWordCache.h"
 #include "gfxImageSurface.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef NS_DEBUG
 #undef NOISY_BLINK
@@ -130,6 +131,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 static void DestroyTabWidth(void* aPropertyValue)
 {
@@ -1331,16 +1333,9 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   if (textStyle1->NewlineIsSignificant() && HasTerminalNewline(aFrame1))
     return PR_FALSE;
 
-  if (aFrame1->GetContent() == aFrame2->GetContent() &&
-      aFrame1->GetNextInFlow() != aFrame2) {
-    // aFrame2 must be a non-fluid continuation of aFrame1. This can happen
-    // sometimes when the unicode-bidi property is used; the bidi resolver
-    // breaks text into different frames even though the text has the same
-    // direction. We can't allow these two frames to share the same textrun
-    // because that would violate our invariant that two flows in the same
-    // textrun have different content elements.
-    return PR_FALSE;
-  }
+  NS_ASSERTION(aFrame1->GetContent() != aFrame2->GetContent() ||
+               aFrame1->GetNextInFlow() == aFrame2,
+               "can't continue text run across non-fluid continuations");
 
   nsStyleContext* sc2 = aFrame2->GetStyleContext();
   if (sc1 == sc2)
@@ -3125,7 +3120,7 @@ nsTextPaintStyle::InitCommonColors()
   mInitCommonColors = PR_TRUE;
 }
 
-static nsIContent*
+static Element*
 FindElementAncestorForMozSelection(nsIContent* aContent)
 {
   NS_ENSURE_TRUE(aContent, nsnull);
@@ -3133,10 +3128,10 @@ FindElementAncestorForMozSelection(nsIContent* aContent)
     aContent = aContent->GetBindingParent();
   }
   NS_ASSERTION(aContent, "aContent isn't in non-anonymous tree?");
-  while (aContent && !aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  while (aContent && !aContent->IsElement()) {
     aContent = aContent->GetParent();
   }
-  return aContent;
+  return aContent ? aContent->AsElement() : nsnull;
 }
 
 PRBool
@@ -3158,14 +3153,14 @@ nsTextPaintStyle::InitSelectionColors()
   mInitSelectionColors = PR_TRUE;
 
   nsIFrame* nonGeneratedAncestor = nsLayoutUtils::GetNonGeneratedAncestor(mFrame);
-  nsIContent* selectionContent =
+  Element* selectionElement =
     FindElementAncestorForMozSelection(nonGeneratedAncestor->GetContent());
 
-  if (selectionContent &&
+  if (selectionElement &&
       selectionStatus == nsISelectionController::SELECTION_ON) {
     nsRefPtr<nsStyleContext> sc = nsnull;
     sc = mPresContext->StyleSet()->
-      ProbePseudoElementStyle(selectionContent,
+      ProbePseudoElementStyle(selectionElement,
                               nsCSSPseudoElements::ePseudo_mozSelection,
                               mFrame->GetStyleContext());
     // Use -moz-selection pseudo class.
@@ -3529,10 +3524,8 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
     // advantage of the propTable's cache and simplify the assertion below
     void* embeddingLevel = propTable->Get(aPrevInFlow, EmbeddingLevelProperty());
     void* baseLevel = propTable->Get(aPrevInFlow, BaseLevelProperty());
-    void* charType = propTable->Get(aPrevInFlow, CharTypeProperty());
     propTable->Set(this, EmbeddingLevelProperty(), embeddingLevel);
     propTable->Set(this, BaseLevelProperty(), baseLevel);
-    propTable->Set(this, CharTypeProperty(), charType);
 
     if (nextContinuation) {
       SetNextContinuation(nextContinuation);
@@ -3542,8 +3535,7 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
              nextContinuation->GetContentOffset() < mContentOffset) {
         NS_ASSERTION(
           embeddingLevel == propTable->Get(nextContinuation, EmbeddingLevelProperty()) &&
-          baseLevel == propTable->Get(nextContinuation, BaseLevelProperty()) &&
-          charType == propTable->Get(nextContinuation, CharTypeProperty()),
+          baseLevel == propTable->Get(nextContinuation, BaseLevelProperty()),
           "stealing text from different type of BIDI continuation");
         nextContinuation->mContentOffset = mContentOffset;
         nextContinuation = static_cast<nsTextFrame*>(nextContinuation->GetNextContinuation());

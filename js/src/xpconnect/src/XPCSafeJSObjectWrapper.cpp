@@ -534,7 +534,7 @@ XPC_SJOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 NS_STACK_CLASS class SafeCallGuard {
 public:
   SafeCallGuard(JSContext *cx, nsIPrincipal *principal)
-    : cx(cx), tvr(cx) {
+    : cx(cx), statics(cx), tvr(cx) {
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (ssm) {
       // Note: We pass null as the target frame pointer because we know that
@@ -843,7 +843,7 @@ XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
   }
 
-  return WrapJSValue(cx, obj, *rval, rval);
+  return WrapJSValue(cx, safeObj, *rval, rval);
 }
 
 static JSBool

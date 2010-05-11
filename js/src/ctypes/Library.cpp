@@ -253,7 +253,7 @@ Library::Declare(JSContext* cx, uintN argc, jsval* vp)
     root.setObject(typeObj);
 
     // Make a function pointer type.
-    typeObj = PointerType::CreateInternal(cx, NULL, typeObj, NULL);
+    typeObj = PointerType::CreateInternal(cx, typeObj);
     if (!typeObj)
       return JS_FALSE;
     root.setObject(typeObj);

@@ -84,10 +84,7 @@
 #include "jsxml.h"
 #endif
 
-#ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
-#endif
-
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
@@ -937,6 +934,11 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
         return false;
     }
 
+#ifdef JS_THREADSAFE
+    if (!rt->gcHelperThread.init())
+        return false;
+#endif
+
     /*
      * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
      * for default backward API compatibility.
@@ -1151,6 +1153,9 @@ js_FinishGC(JSRuntime *rt)
         js_DumpGCStats(rt, stdout);
 #endif
 
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.cancel();
+#endif
     FinishGCArenaLists(rt);
 
     if (rt->gcRootsHash.ops) {
@@ -1408,7 +1413,7 @@ LastDitchGC(JSContext *cx)
     JS_ASSERT(!JS_ON_TRACE(cx));
 
     /* The last ditch GC preserves weak roots and all atoms. */
-    AutoSaveRestoreWeakRoots save(cx);
+    AutoPreserveWeakRoots save(cx);
     AutoKeepAtoms keep(cx->runtime);
 
     /*
@@ -2512,10 +2517,7 @@ FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
     if (clasp->finalize)
         clasp->finalize(cx, obj);
 
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED())
-        jsdtrace_object_finalize(obj);
-#endif
+    DTrace::finalizeObject(obj);
 
     if (JS_LIKELY(obj->isNative())) {
         JSScope *scope = obj->scope();
@@ -2869,6 +2871,49 @@ SweepDoubles(JSRuntime *rt)
     rt->gcDoubleArenaList.cursor = rt->gcDoubleArenaList.head;
 }
 
+#ifdef JS_THREADSAFE
+
+namespace js {
+
+JS_FRIEND_API(void)
+BackgroundSweepTask::replenishAndFreeLater(void *ptr)
+{
+    JS_ASSERT(freeCursor == freeCursorEnd);
+    do {
+        if (freeCursor && !freeVector.append(freeCursorEnd - FREE_ARRAY_LENGTH))
+            break;
+        freeCursor = (void **) js_malloc(FREE_ARRAY_SIZE);
+        if (!freeCursor) {
+            freeCursorEnd = NULL;
+            break;
+        }
+        freeCursorEnd = freeCursor + FREE_ARRAY_LENGTH;
+        *freeCursor++ = ptr;
+        return;
+    } while (false);
+    js_free(ptr);
+}
+
+void
+BackgroundSweepTask::run()
+{
+    if (freeCursor) {
+        void **array = freeCursorEnd - FREE_ARRAY_LENGTH;
+        freeElementsAndArray(array, freeCursor);
+        freeCursor = freeCursorEnd = NULL;
+    } else {
+        JS_ASSERT(!freeCursorEnd);
+    }
+    for (void ***iter = freeVector.begin(); iter != freeVector.end(); ++iter) {
+        void **array = *iter;
+        freeElementsAndArray(array, array + FREE_ARRAY_LENGTH);
+    }
+}
+
+}
+
+#endif /* JS_THREADSAFE */
+
 /*
  * Common cache invalidation and so forth that must be done before GC. Even if
  * GCUntilDone calls GC several times, this work only needs to be done once.
@@ -2889,10 +2934,6 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
         extern void js_DumpScopeMeters(JSRuntime *rt);
         js_DumpScopeMeters(rt);
     }
-#endif
-
-#ifdef JS_TRACER
-    PurgeJITOracle();
 #endif
 
     /*
@@ -2978,7 +3019,9 @@ GC(JSContext *cx  GCTIMER_PARAM)
     rt->gcMarkingTracer = NULL;
 
 #ifdef JS_THREADSAFE
-    cx->createDeallocatorTask();
+    JS_ASSERT(!cx->gcSweepTask);
+    if (!rt->gcHelperThread.busy())
+        cx->gcSweepTask = new js::BackgroundSweepTask();
 #endif
 
     /*
@@ -3071,7 +3114,10 @@ GC(JSContext *cx  GCTIMER_PARAM)
     TIMESTAMP(sweepDestroyEnd);
 
 #ifdef JS_THREADSAFE
-    cx->submitDeallocatorTask();
+    if (cx->gcSweepTask) {
+        rt->gcHelperThread.schedule(cx->gcSweepTask);
+        cx->gcSweepTask = NULL;
+    }
 #endif
 
     if (rt->gcCallback)
@@ -3359,7 +3405,7 @@ FireGCEnd(JSContext *cx, JSGCInvocationKind gckind)
      * interlock mechanism here.
      */
     if (gckind != GC_SET_SLOT_REQUEST && callback) {
-        Conditionally<AutoUnlockGC> unlockIf(gckind & GC_LOCK_HELD, rt);
+        Conditionally<AutoUnlockGC> unlockIf(!!(gckind & GC_LOCK_HELD), rt);
 
         (void) callback(cx, JSGC_END);
 

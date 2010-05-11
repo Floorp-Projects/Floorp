@@ -67,6 +67,13 @@ obs.prototype = {
 
     var channel = theSubject.QueryInterface(
                     this.window.Components.interfaces.nsIHttpChannel);
+
+    // Ignore notifications we don't care about (like favicons)
+    if (channel.URI.spec.indexOf(
+          "http://example.org/tests/extensions/cookie/test/") == -1) {
+      return;
+    }
+
     this.window.isnot(channel.getRequestHeader("Cookie").indexOf("oh=hai"), -1,
                       "cookie 'oh=hai' is in header for " + channel.URI.spec);
     ++gHeaders;

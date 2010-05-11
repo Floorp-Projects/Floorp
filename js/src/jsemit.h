@@ -163,8 +163,102 @@ struct JSStmtInfo {
 # define JS_SCOPE_DEPTH_METERING_IF(code, x) ((void) 0)
 #endif
 
+#define TCF_COMPILING           0x01 /* JSTreeContext is JSCodeGenerator */
+#define TCF_IN_FUNCTION         0x02 /* parsing inside function body */
+#define TCF_RETURN_EXPR         0x04 /* function has 'return expr;' */
+#define TCF_RETURN_VOID         0x08 /* function has 'return;' */
+#define TCF_IN_FOR_INIT         0x10 /* parsing init expr of for; exclude 'in' */
+#define TCF_FUN_SETS_OUTER_NAME 0x20 /* function set outer name (lexical or free) */
+#define TCF_FUN_PARAM_ARGUMENTS 0x40 /* function has parameter named arguments */
+#define TCF_FUN_USES_ARGUMENTS  0x80 /* function uses arguments except as a
+                                        parameter name */
+#define TCF_FUN_HEAVYWEIGHT    0x100 /* function needs Call object per call */
+#define TCF_FUN_IS_GENERATOR   0x200 /* parsed yield statement in function */
+#define TCF_FUN_USES_OWN_NAME  0x400 /* named function expression that uses its
+                                        own name */
+#define TCF_HAS_FUNCTION_STMT  0x800 /* block contains a function statement */
+#define TCF_GENEXP_LAMBDA     0x1000 /* flag lambda from generator expression */
+#define TCF_COMPILE_N_GO      0x2000 /* compile-and-go mode of script, can
+                                        optimize name references based on scope
+                                        chain */
+#define TCF_NO_SCRIPT_RVAL    0x4000 /* API caller does not want result value
+                                        from global script */
+#define TCF_HAS_SHARPS        0x8000 /* source contains sharp defs or uses */
+
+/*
+ * Set when parsing a declaration-like destructuring pattern.  This
+ * flag causes PrimaryExpr to create PN_NAME parse nodes for variable
+ * references which are not hooked into any definition's use chain,
+ * added to any tree context's AtomList, etc. etc.  CheckDestructuring
+ * will do that work later.
+ *
+ * The comments atop CheckDestructuring explain the distinction
+ * between assignment-like and declaration-like destructuring
+ * patterns, and why they need to be treated differently.
+ */
+#define TCF_DECL_DESTRUCTURING  0x10000
+
+/*
+ * A request flag passed to Compiler::compileScript and then down via
+ * JSCodeGenerator to js_NewScriptFromCG, from script_compile_sub and any
+ * kindred functions that need to make mutable scripts (even empty ones;
+ * i.e., they can't share the const JSScript::emptyScript() singleton).
+ */
+#define TCF_NEED_MUTABLE_SCRIPT 0x20000
+
+/*
+ * This function/global/eval code body contained a Use Strict Directive. Treat
+ * certain strict warnings as errors, and forbid the use of 'with'. See also
+ * TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and JSREPORT_STRICT_ERROR.
+ */
+#define TCF_STRICT_MODE_CODE    0x40000
+
+/* Function has parameter named 'eval'. */
+#define TCF_FUN_PARAM_EVAL      0x80000
+
+/*
+ * Flag signifying that the current function seems to be a constructor that
+ * sets this.foo to define "methods", at least one of which can't be a null
+ * closure, so we should avoid over-specializing property cache entries and
+ * trace inlining guards to method function object identity, which will vary
+ * per instance.
+ */
+#define TCF_FUN_UNBRAND_THIS   0x100000
+
+/*
+ * "Module pattern", i.e., a lambda that is immediately applied and the whole
+ * of an expression statement.
+ */
+#define TCF_FUN_MODULE_PATTERN 0x200000
+
+/*
+ * Flag to prevent a non-escaping function from being optimized into a null
+ * closure (i.e., a closure that needs only its global object for free variable
+ * resolution, thanks to JSOP_{GET,CALL}UPVAR), because this function contains
+ * a closure that needs one or more scope objects surrounding it (i.e., Call
+ * object for a heavyweight outer function). See bug 560234.
+ */
+#define TCF_FUN_ENTRAINS_SCOPES 0x400000
+
+/*
+ * Flags to check for return; vs. return expr; in a function.
+ */
+#define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
+
+/*
+ * Sticky deoptimization flags to propagate from FunctionBody.
+ */
+#define TCF_FUN_FLAGS           (TCF_FUN_SETS_OUTER_NAME |                    \
+                                 TCF_FUN_USES_ARGUMENTS  |                    \
+                                 TCF_FUN_PARAM_ARGUMENTS |                    \
+                                 TCF_FUN_HEAVYWEIGHT     |                    \
+                                 TCF_FUN_IS_GENERATOR    |                    \
+                                 TCF_FUN_USES_OWN_NAME   |                    \
+                                 TCF_HAS_SHARPS          |                    \
+                                 TCF_STRICT_MODE_CODE)
+
 struct JSTreeContext {              /* tree context for semantic checks */
-    uint32          flags;          /* statement state flags, see below */
+    uint32          flags;          /* statement state flags, see above */
     uint16          ngvars;         /* max. no. of global variables/regexps */
     uint32          bodyid;         /* block number of program/function body */
     uint32          blockidGen;     /* preincremented block number generator */
@@ -243,92 +337,11 @@ struct JSTreeContext {              /* tree context for semantic checks */
     // (going upward) from this context's lexical scope. Always return true if
     // this context is itself a generator.
     bool skipSpansGenerator(unsigned skip);
+
+    bool compileAndGo() { return !!(flags & TCF_COMPILE_N_GO); }
+    bool inFunction() { return !!(flags & TCF_IN_FUNCTION); }
+    bool compiling() { return !!(flags & TCF_COMPILING); }
 };
-
-#define TCF_COMPILING           0x01 /* JSTreeContext is JSCodeGenerator */
-#define TCF_IN_FUNCTION         0x02 /* parsing inside function body */
-#define TCF_RETURN_EXPR         0x04 /* function has 'return expr;' */
-#define TCF_RETURN_VOID         0x08 /* function has 'return;' */
-#define TCF_IN_FOR_INIT         0x10 /* parsing init expr of for; exclude 'in' */
-#define TCF_FUN_SETS_OUTER_NAME 0x20 /* function set outer name (lexical or free) */
-#define TCF_FUN_PARAM_ARGUMENTS 0x40 /* function has parameter named arguments */
-#define TCF_FUN_USES_ARGUMENTS  0x80 /* function uses arguments except as a
-                                        parameter name */
-#define TCF_FUN_HEAVYWEIGHT    0x100 /* function needs Call object per call */
-#define TCF_FUN_IS_GENERATOR   0x200 /* parsed yield statement in function */
-#define TCF_FUN_USES_OWN_NAME  0x400 /* named function expression that uses its
-                                        own name */
-#define TCF_HAS_FUNCTION_STMT  0x800 /* block contains a function statement */
-#define TCF_GENEXP_LAMBDA     0x1000 /* flag lambda from generator expression */
-#define TCF_COMPILE_N_GO      0x2000 /* compile-and-go mode of script, can
-                                        optimize name references based on scope
-                                        chain */
-#define TCF_NO_SCRIPT_RVAL    0x4000 /* API caller does not want result value
-                                        from global script */
-#define TCF_HAS_SHARPS        0x8000 /* source contains sharp defs or uses */
-
-/*
- * Set when parsing a declaration-like destructuring pattern.  This
- * flag causes PrimaryExpr to create PN_NAME parse nodes for variable
- * references which are not hooked into any definition's use chain,
- * added to any tree context's AtomList, etc. etc.  CheckDestructuring
- * will do that work later.
- *
- * The comments atop CheckDestructuring explain the distinction
- * between assignment-like and declaration-like destructuring
- * patterns, and why they need to be treated differently.
- */
-#define TCF_DECL_DESTRUCTURING  0x10000
-
-/*
- * A request flag passed to Compiler::compileScript and then down via
- * JSCodeGenerator to js_NewScriptFromCG, from script_compile_sub and any
- * kindred functions that need to make mutable scripts (even empty ones;
- * i.e., they can't share the const JSScript::emptyScript() singleton).
- */
-#define TCF_NEED_MUTABLE_SCRIPT 0x20000
-
-/*
- * This function/global/eval code body contained a Use Strict Directive. Treat
- * certain strict warnings as errors, and forbid the use of 'with'. See also
- * TSF_STRICT_MODE_CODE, JSScript::strictModeCode, and JSREPORT_STRICT_ERROR.
- */
-#define TCF_STRICT_MODE_CODE    0x40000
-
-/* Function has parameter named 'eval'. */
-#define TCF_FUN_PARAM_EVAL      0x80000
-
-/*
- * Flag signifying that the current function seems to be a constructor that
- * sets this.foo to define "methods", at least one of which can't be a null
- * closure, so we should avoid over-specializing property cache entries and
- * trace inlining guards to method function object identity, which will vary
- * per instance.
- */
-#define TCF_FUN_UNBRAND_THIS   0x100000
-
-/*
- * "Module pattern", i.e., a lambda that is immediately applied and the whole
- * of an expression statement.
- */
-#define TCF_FUN_MODULE_PATTERN 0x200000
-
-/*
- * Flags to check for return; vs. return expr; in a function.
- */
-#define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
-
-/*
- * Sticky deoptimization flags to propagate from FunctionBody.
- */
-#define TCF_FUN_FLAGS           (TCF_FUN_SETS_OUTER_NAME |                    \
-                                 TCF_FUN_USES_ARGUMENTS  |                    \
-                                 TCF_FUN_PARAM_ARGUMENTS |                    \
-                                 TCF_FUN_HEAVYWEIGHT     |                    \
-                                 TCF_FUN_IS_GENERATOR    |                    \
-                                 TCF_FUN_USES_OWN_NAME   |                    \
-                                 TCF_HAS_SHARPS          |                    \
-                                 TCF_STRICT_MODE_CODE)
 
 /*
  * Return true if we need to check for conditions that elicit
@@ -455,7 +468,9 @@ struct JSCodeGenerator : public JSTreeContext
     uintN           arrayCompDepth; /* stack depth of array in comprehension */
 
     uintN           emitLevel;      /* js_EmitTree recursion level */
-    JSAtomList      constList;      /* compile time constants */
+
+    typedef js::HashMap<JSAtom *, jsval> ConstMap;
+    ConstMap        constMap;       /* compile time constants */
 
     JSCGObjectList  objectList;     /* list of emitted objects */
     JSCGObjectList  regexpList;     /* list of emitted regexp that will be
@@ -472,6 +487,8 @@ struct JSCodeGenerator : public JSTreeContext
     JSCodeGenerator(js::Parser *parser,
                     JSArenaPool *codePool, JSArenaPool *notePool,
                     uintN lineno);
+
+    bool init();
 
     /*
      * Release cg->codePool, cg->notePool, and parser->context->tempPool to

@@ -48,7 +48,6 @@ XPCSHELL_TESTS = unit
 
 LIBRARY_NAME = testcrasher
 IS_COMPONENT    = 1
-USE_STATIC_LIBS = 1
 
 XPIDLSRCS = nsITestCrasher.idl
 

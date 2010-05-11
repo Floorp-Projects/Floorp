@@ -549,8 +549,7 @@ nsDocAccessible::GetCachedAccessNode(void *aUniqueID)
   // It will assert if not all the children were created
   // when they were first cached, and no invalidation
   // ever corrected parent accessible's child cache.
-  nsRefPtr<nsAccessible> acc =
-    nsAccUtils::QueryObject<nsAccessible>(accessNode);
+  nsRefPtr<nsAccessible> acc = do_QueryObject(accessNode);
 
   if (acc) {
     nsAccessible* parent(acc->GetCachedParent());
@@ -1309,7 +1308,8 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
 
 void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
                                       nsIContent* aContainer,
-                                      PRInt32 aNewIndexInContainer)
+                                      nsIContent* aFirstNewContent,
+                                      PRInt32 /* unused */)
 {
   if ((!mIsContentLoaded || !mDocument) && mAccessNodeCache.Count() <= 1) {
     // See comments in nsDocAccessible::InvalidateCacheSubtree
@@ -1317,14 +1317,13 @@ void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
     return;
   }
 
-  PRUint32 childCount = aContainer->GetChildCount();
-  for (PRUint32 index = aNewIndexInContainer; index < childCount; index ++) {
-    nsCOMPtr<nsIContent> child(aContainer->GetChildAt(index));
+  // Does this need to be a strong ref?  If so, why?
+  for (nsIContent* cur = aFirstNewContent; cur; cur = cur->GetNextSibling()) {
     // InvalidateCacheSubtree will not fire the EVENT_SHOW for the new node
     // unless an accessible can be created for the passed in node, which it
     // can't do unless the node is visible. The right thing happens there so
     // no need for an extra visibility check here.
-    InvalidateCacheSubtree(child, nsIAccessibilityService::NODE_APPEND);
+    InvalidateCacheSubtree(cur, nsIAccessibilityService::NODE_APPEND);
   }
 }
 
@@ -1363,7 +1362,7 @@ void nsDocAccessible::CharacterDataChanged(nsIDocument *aDocument,
 
 void
 nsDocAccessible::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
-                                 nsIContent* aChild, PRInt32 aIndexInContainer)
+                                 nsIContent* aChild, PRInt32 /* unused */)
 {
   // InvalidateCacheSubtree will not fire the EVENT_SHOW for the new node
   // unless an accessible can be created for the passed in node, which it
@@ -1374,7 +1373,7 @@ nsDocAccessible::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
 
 void
 nsDocAccessible::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
-                                nsIContent* aChild, PRInt32 aIndexInContainer)
+                                nsIContent* aChild, PRInt32 /* unused */)
 {
   // It's no needed to invalidate the subtree of the removed element,
   // because we get notifications directly from content (see
@@ -1418,7 +1417,7 @@ nsDocAccessible::GetParent()
       // It should be changed to use GetAccessibleInWeakShell()
       nsCOMPtr<nsIAccessible> parent;
       accService->GetAccessibleFor(ownerNode, getter_AddRefs(parent));
-      mParent = nsAccUtils::QueryObject<nsAccessible>(parent);
+      mParent = do_QueryObject(parent);
     }
   }
 
@@ -1771,8 +1770,7 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
 
 void nsDocAccessible::InvalidateChildrenInSubtree(nsIDOMNode *aStartNode)
 {
-  nsRefPtr<nsAccessible> acc =
-    nsAccUtils::QueryObject<nsAccessible>(GetCachedAccessNode(aStartNode));
+  nsRefPtr<nsAccessible> acc = do_QueryObject(GetCachedAccessNode(aStartNode));
   if (acc)
     acc->InvalidateChildren();
 
@@ -1796,8 +1794,7 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
 
   // Shut down accessible subtree, which may have been created for
   // anonymous content subtree
-  nsRefPtr<nsAccessible> accessible =
-    nsAccUtils::QueryObject<nsAccessible>(accessNode);
+  nsRefPtr<nsAccessible> accessible = do_QueryObject(accessNode);
   if (accessible) {
     // Fire menupopup end if a menu goes away
     PRUint32 role = nsAccUtils::Role(accessible);

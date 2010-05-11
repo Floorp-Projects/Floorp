@@ -265,7 +265,7 @@ txMozillaXMLOutput::endDocument(nsresult aResult)
             nsCOMPtr<nsIRefreshURI> refURI =
                 do_QueryInterface(win->GetDocShell());
             if (refURI) {
-                refURI->SetupRefreshURIFromHeader(mDocument->GetBaseURI(),
+                refURI->SetupRefreshURIFromHeader(mDocument->GetDocBaseURI(),
                                                   mRefreshString);
             }
         }
@@ -295,10 +295,8 @@ txMozillaXMLOutput::endElement()
     nsresult rv = closePrevious(PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_ASSERTION(mCurrentNode->IsNodeOfType(nsINode::eELEMENT),
-                 "borked mCurrentNode");
-    NS_ENSURE_TRUE(mCurrentNode->IsNodeOfType(nsINode::eELEMENT),
-                   NS_ERROR_UNEXPECTED);
+    NS_ASSERTION(mCurrentNode->IsElement(), "borked mCurrentNode");
+    NS_ENSURE_TRUE(mCurrentNode->IsElement(), NS_ERROR_UNEXPECTED);
 
     nsIContent* element = static_cast<nsIContent*>
                                      (static_cast<nsINode*>
@@ -643,7 +641,7 @@ txMozillaXMLOutput::createTxWrapper()
         nsCOMPtr<nsIContent> childContent = mDocument->GetChildAt(j);
 
 #ifdef DEBUG
-        if (childContent->IsNodeOfType(nsINode::eELEMENT)) {
+        if (childContent->IsElement()) {
             rootLocation = j;
         }
 #endif

@@ -12,7 +12,7 @@
 # insert several elements
 == insertmultiple.html insertmultiple-ref.html
 
-# insert multiple nodes to a parent and one of its child
+# insert multiple nodes to a parent and one of its children
 == inserttoparentandchild-1.html inserttoparentandchild-ref.html
 == inserttoparentandchild-2.html inserttoparentandchild-ref.html
 

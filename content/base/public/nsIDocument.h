@@ -111,12 +111,13 @@ class Loader;
 
 namespace dom {
 class Link;
+class Element;
 } // namespace dom
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0x56d981ce, 0x7f03, 0x4d90, \
-  { 0xb2, 0x40, 0x72, 0x08, 0xb6, 0x28, 0x73, 0x06 } }
+{ 0xa979dabe, 0x75de, 0x4c2d, \
+  { 0x8b, 0x83, 0x17, 0xb2, 0xde, 0x9d, 0x9d, 0x37 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -240,10 +241,17 @@ public:
    * unless it's overridden by SetBaseURI, HTML <base> tags, etc.).  The
    * returned URI could be null if there is no document URI.
    */
-  nsIURI* GetBaseURI() const
+  nsIURI* GetDocBaseURI() const
   {
     return mDocumentBaseURI ? mDocumentBaseURI : mDocumentURI;
   }
+  virtual already_AddRefed<nsIURI> GetBaseURI() const
+  {
+    nsCOMPtr<nsIURI> uri = GetDocBaseURI();
+
+    return uri.forget();
+  }
+
   virtual nsresult SetBaseURI(nsIURI* aURI) = 0;
 
   /**
@@ -470,32 +478,34 @@ public:
   virtual nsIContent *FindContentForSubDocument(nsIDocument *aDocument) const = 0;
 
   /**
-   * Return the root content object for this document.
+   * Return the root element for this document.
    */
-  nsIContent *GetRootContent() const
+  mozilla::dom::Element *GetRootElement() const
   {
-    return (mCachedRootContent &&
-            mCachedRootContent->GetNodeParent() == this) ?
-           reinterpret_cast<nsIContent*>(mCachedRootContent.get()) :
-           GetRootContentInternal();
+    return (mCachedRootElement &&
+            mCachedRootElement->GetNodeParent() == this) ?
+           reinterpret_cast<mozilla::dom::Element*>(mCachedRootElement.get()) :
+           GetRootElementInternal();
   }
-  virtual nsIContent *GetRootContentInternal() const = 0;
+protected:
+  virtual mozilla::dom::Element *GetRootElementInternal() const = 0;
 
+public:
   // Get the root <html> element, or return null if there isn't one (e.g.
   // if the root isn't <html>)
-  nsIContent* GetHtmlContent();
+  mozilla::dom::Element* GetHtmlElement();
   // Returns the first child of GetHtmlContent which has the given tag,
   // or nsnull if that doesn't exist.
-  nsIContent* GetHtmlChildContent(nsIAtom* aTag);
+  mozilla::dom::Element* GetHtmlChildElement(nsIAtom* aTag);
   // Get the canonical <body> element, or return null if there isn't one (e.g.
   // if the root isn't <html> or if the <body> isn't there)
-  nsIContent* GetBodyContent() {
-    return GetHtmlChildContent(nsGkAtoms::body);
+  mozilla::dom::Element* GetBodyElement() {
+    return GetHtmlChildElement(nsGkAtoms::body);
   }
   // Get the canonical <head> element, or return null if there isn't one (e.g.
   // if the root isn't <html> or if the <head> isn't there)
-  nsIContent* GetHeadContent() {
-    return GetHtmlChildContent(nsGkAtoms::head);
+  mozilla::dom::Element* GetHeadElement() {
+    return GetHtmlChildElement(nsGkAtoms::head);
   }
   
   /**
@@ -660,7 +670,8 @@ public:
   /**
    * Add a new observer of document change notifications. Whenever
    * content is changed, appended, inserted or removed the observers are
-   * informed.
+   * informed.  An observer that is already observing the document must
+   * not be added without being removed first.
    */
   virtual void AddObserver(nsIDocumentObserver* aObserver) = 0;
 
@@ -1366,6 +1377,11 @@ protected:
   virtual void MutationEventDispatched(nsINode* aTarget) = 0;
   friend class mozAutoSubtreeModified;
 
+  virtual mozilla::dom::Element* GetNameSpaceElement()
+  {
+    return GetRootElement();
+  }
+
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
 
@@ -1379,10 +1395,10 @@ protected:
   // This is just a weak pointer; the parent document owns its children.
   nsIDocument* mParentDocument;
 
-  // A reference to the content last returned from GetRootContent().
-  // This should be an nsIContent, but that would force us to pull in
-  // nsIContent.h
-  nsCOMPtr<nsINode> mCachedRootContent;
+  // A reference to the element last returned from GetRootElement().
+  // This should be an Element, but that would force us to pull in
+  // Element.h and therefore nsIContent.h.
+  nsCOMPtr<nsINode> mCachedRootElement;
 
   // We'd like these to be nsRefPtrs, but that'd require us to include
   // additional headers that we don't want to expose.

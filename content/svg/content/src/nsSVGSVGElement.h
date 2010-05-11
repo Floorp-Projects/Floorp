@@ -233,7 +233,7 @@ protected:
 
   PRBool IsRoot() {
     NS_ASSERTION((IsInDoc() && !GetParent()) ==
-                 (GetOwnerDoc() && (GetOwnerDoc()->GetRootContent() == this)),
+                 (GetOwnerDoc() && (GetOwnerDoc()->GetRootElement() == this)),
                  "Can't determine if we're root");
     return IsInDoc() && !GetParent();
   }

@@ -1420,6 +1420,8 @@ nsCanvasRenderingContext2D::SetStrokeStyle(nsIVariant *aValue)
         nsCOMPtr<nsISupports> sup;
         rv = aValue->GetAsInterface(&iid, getter_AddRefs(sup));
         NS_ENSURE_SUCCESS(rv, rv);
+        if (iid)
+            NS_Free(iid);
 
         str.SetIsVoid(PR_TRUE);
         return SetStrokeStyle_multi(str, sup);
@@ -2115,7 +2117,7 @@ CreateFontStyleRule(const nsAString& aFont,
     nsIPrincipal* principal = aNode->NodePrincipal();
     nsIDocument* document = aNode->GetOwnerDoc();
     nsIURI* docURL = document->GetDocumentURI();
-    nsIURI* baseURL = document->GetBaseURI();
+    nsIURI* baseURL = document->GetDocBaseURI();
 
     nsresult rv = parser.ParseStyleAttribute(styleAttr, docURL, baseURL,
                                              principal, aResult);
@@ -2167,8 +2169,8 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
 
     if (content && content->IsInDoc()) {
         // inherit from the canvas element
-        parentContext = nsComputedDOMStyle::GetStyleContextForContent(
-                content,
+        parentContext = nsComputedDOMStyle::GetStyleContextForElement(
+                content->AsElement(),
                 nsnull,
                 presShell);
     } else {
@@ -2518,7 +2520,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     if (content && content->IsInDoc()) {
         // try to find the closest context
         nsRefPtr<nsStyleContext> canvasStyle =
-            nsComputedDOMStyle::GetStyleContextForContent(content,
+            nsComputedDOMStyle::GetStyleContextForElement(content->AsElement(),
                                                           nsnull,
                                                           presShell);
         if (!canvasStyle)

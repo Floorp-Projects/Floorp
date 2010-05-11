@@ -121,21 +121,6 @@ js_NewSlowArrayObject(JSContext *cx);
 extern JSBool
 js_MakeArraySlow(JSContext *cx, JSObject *obj);
 
-static JS_INLINE uint32
-js_DenseArrayCapacity(JSObject *obj)
-{
-    JS_ASSERT(obj->isDenseArray());
-    return obj->dslots ? (uint32) obj->dslots[-1] : 0;
-}
-
-static JS_INLINE void
-js_SetDenseArrayCapacity(JSObject *obj, uint32 capacity)
-{
-    JS_ASSERT(obj->isDenseArray());
-    JS_ASSERT(obj->dslots);
-    obj->dslots[-1] = (jsval) capacity;
-}
-
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 

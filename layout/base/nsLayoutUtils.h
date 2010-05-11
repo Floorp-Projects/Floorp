@@ -348,7 +348,8 @@ public:
     nsRefPtr<nsStyleContext> pseudoContext;
     if (aContent) {
       pseudoContext = aPresContext->StyleSet()->
-        ProbePseudoElementStyle(aContent, aPseudoElement, aStyleContext);
+        ProbePseudoElementStyle(aContent->AsElement(), aPseudoElement,
+                                aStyleContext);
     }
     return pseudoContext != nsnull;
   }
@@ -1187,6 +1188,8 @@ class nsSetAttrRunnable : public nsRunnable
 public:
   nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
                     const nsAString& aValue);
+  nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
+                    PRInt32 aValue);
 
   NS_DECL_NSIRUNNABLE
 

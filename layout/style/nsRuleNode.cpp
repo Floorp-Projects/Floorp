@@ -78,6 +78,10 @@
 #include "nsCSSProps.h"
 #include "nsTArray.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/Element.h"
+#include "CSSCalc.h"
+
+using namespace mozilla::dom;
 
 #define NS_SET_IMAGE_REQUEST(method_, context_, request_)                   \
   if ((context_)->PresContext()->IsDynamic()) {                               \
@@ -166,6 +170,49 @@ static void EnsureBlockDisplay(PRUint8& display)
   }
 }
 
+static nscoord CalcLengthWith(const nsCSSValue& aValue,
+                              nscoord aFontSize,
+                              const nsStyleFont* aStyleFont,
+                              nsStyleContext* aStyleContext,
+                              nsPresContext* aPresContext,
+                              PRBool aUseProvidedRootEmSize,
+                              PRBool aUseUserFontSet,
+                              PRBool& aCanStoreInRuleTree);
+
+struct CalcLengthCalcOps : public mozilla::css::BasicCoordCalcOps,
+                           public mozilla::css::NumbersAlreadyNormalizedOps
+{
+  // All of the parameters to CalcLengthWith except aValue.
+  const nscoord mFontSize;
+  const nsStyleFont* const mStyleFont;
+  nsStyleContext* const mStyleContext;
+  nsPresContext* const mPresContext;
+  const PRBool mUseProvidedRootEmSize;
+  const PRBool mUseUserFontSet;
+  PRBool& mCanStoreInRuleTree;
+
+  CalcLengthCalcOps(nscoord aFontSize, const nsStyleFont* aStyleFont,
+                    nsStyleContext* aStyleContext, nsPresContext* aPresContext,
+                    PRBool aUseProvidedRootEmSize, PRBool aUseUserFontSet,
+                    PRBool& aCanStoreInRuleTree)
+    : mFontSize(aFontSize),
+      mStyleFont(aStyleFont),
+      mStyleContext(aStyleContext),
+      mPresContext(aPresContext),
+      mUseProvidedRootEmSize(aUseProvidedRootEmSize),
+      mUseUserFontSet(aUseUserFontSet),
+      mCanStoreInRuleTree(aCanStoreInRuleTree)
+  {
+  }
+
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
+  {
+    return CalcLengthWith(aValue, mFontSize, mStyleFont, mStyleContext,
+                          mPresContext, mUseProvidedRootEmSize,
+                          mUseUserFontSet, mCanStoreInRuleTree);
+  }
+};
+
 static inline nscoord ScaleCoord(const nsCSSValue &aValue, float factor)
 {
   return NSToCoordRoundWithClamp(aValue.GetFloatValue() * factor);
@@ -183,7 +230,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
                               PRBool aUseUserFontSet,
                               PRBool& aCanStoreInRuleTree)
 {
-  NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
+  NS_ASSERTION(aValue.IsLengthUnit() || aValue.IsCalcUnit(),
+               "not a length or calc unit");
   NS_ASSERTION(aStyleFont || aStyleContext, "Must have style data");
   NS_ASSERTION(!aStyleFont || !aStyleContext, "Duplicate sources of data");
   NS_ASSERTION(aPresContext, "Must have prescontext");
@@ -197,13 +245,12 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   }
   // Common code for all units other than pixels:
   aCanStoreInRuleTree = PR_FALSE;
-  if (!aStyleFont) {
-    aStyleFont = aStyleContext->GetStyleFont();
-  }
+  const nsStyleFont *styleFont =
+    aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
   if (aFontSize == -1) {
-    // XXX Should this be aStyleFont->mSize instead to avoid taking minfontsize
+    // XXX Should this be styleFont->mSize instead to avoid taking minfontsize
     // prefs into account?
-    aFontSize = aStyleFont->mFont.size;
+    aFontSize = styleFont->mFont.size;
   }
   switch (unit) {
     case eCSSUnit_RootEM: {
@@ -221,13 +268,13 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
         // nsRuleNode::SetFont makes the same assumption!), so we should
         // use GetStyleFont on this context to get the root element's
         // font size.
-        rootFontSize = aStyleFont->mFont.size;
+        rootFontSize = styleFont->mFont.size;
       } else {
         // This is not the root element or we are calculating something other
         // than font size, so rem is relative to the root element's font size.
         nsRefPtr<nsStyleContext> rootStyle;
-        const nsStyleFont *rootStyleFont = aStyleFont;
-        nsIContent* docElement = aPresContext->Document()->GetRootContent();
+        const nsStyleFont *rootStyleFont = styleFont;
+        Element* docElement = aPresContext->Document()->GetRootElement();
 
         rootStyle = aPresContext->StyleSet()->ResolveStyleFor(docElement,
                                                               nsnull);
@@ -244,7 +291,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       // XXX scale against font metrics height instead?
     }
     case eCSSUnit_XHeight: {
-      nsFont font = aStyleFont->mFont;
+      nsFont font = styleFont->mFont;
       font.size = aFontSize;
       nsCOMPtr<nsIFontMetrics> fm =
         aPresContext->GetMetricsFor(font, aUseUserFontSet);
@@ -253,7 +300,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       return ScaleCoord(aValue, float(xHeight));
     }
     case eCSSUnit_Char: {
-      nsFont font = aStyleFont->mFont;
+      nsFont font = styleFont->mFont;
       font.size = aFontSize;
       nsCOMPtr<nsIFontMetrics> fm =
         aPresContext->GetMetricsFor(font, aUseUserFontSet);
@@ -263,6 +310,24 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
 
       return ScaleCoord(aValue, NS_ceil(aPresContext->AppUnitsPerDevPixel() *
                                         zeroWidth));
+    }
+    // For properties for which lengths are the *only* units accepted in
+    // calc(), we can handle calc() here and just compute a final
+    // result.  We ensure that we don't get to this code for other
+    // properties by not calling CalcLength in those cases:  SetCoord
+    // only calls CalcLength for a calc when it is appropriate to do so.
+    case eCSSUnit_Calc:
+    case eCSSUnit_Calc_Plus:
+    case eCSSUnit_Calc_Minus:
+    case eCSSUnit_Calc_Times_L:
+    case eCSSUnit_Calc_Times_R:
+    case eCSSUnit_Calc_Divided:
+    case eCSSUnit_Calc_Minimum:
+    case eCSSUnit_Calc_Maximum: {
+      CalcLengthCalcOps ops(aFontSize, aStyleFont, aStyleContext, aPresContext,
+                            aUseProvidedRootEmSize, aUseUserFontSet,
+                            aCanStoreInRuleTree);
+      return mozilla::css::ComputeCalc(aValue, ops);
     }
     default:
       NS_NOTREACHED("unexpected unit");
@@ -317,6 +382,8 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
 #define SETCOORD_INITIAL_NONE           0x800
 #define SETCOORD_INITIAL_NORMAL         0x1000
 #define SETCOORD_INITIAL_HALF           0x2000
+#define SETCOORD_CALC_LENGTH_ONLY       0x4000
+#define SETCOORD_CALC_CLAMP_NONNEGATIVE 0x8000 // modifier for CALC_LENGTH_ONLY
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -345,10 +412,18 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   if (aValue.GetUnit() == eCSSUnit_Null) {
     result = PR_FALSE;
   }
-  else if (((aMask & SETCOORD_LENGTH) != 0) &&
-           aValue.IsLengthUnit()) {
-    aCoord.SetCoordValue(CalcLength(aValue, aStyleContext, aPresContext,
-                                    aCanStoreInRuleTree));
+  else if ((((aMask & SETCOORD_LENGTH) != 0) &&
+            aValue.IsLengthUnit()) ||
+           (((aMask & SETCOORD_CALC_LENGTH_ONLY) != 0) &&
+            aValue.IsCalcUnit())) {
+    nscoord len = CalcLength(aValue, aStyleContext, aPresContext,
+                             aCanStoreInRuleTree);
+    if ((aMask & SETCOORD_CALC_CLAMP_NONNEGATIVE) && len < 0) {
+      NS_ASSERTION(aValue.IsCalcUnit(),
+                   "parser should have ensured no nonnegative lengths");
+      len = 0;
+    }
+    aCoord.SetCoordValue(len);
   }
   else if (((aMask & SETCOORD_PERCENT) != 0) &&
            (aValue.GetUnit() == eCSSUnit_Percent)) {
@@ -2579,6 +2654,56 @@ ComputeScriptLevelSize(const nsStyleFont* aFont, const nsStyleFont* aParentFont,
 }
 #endif
 
+struct SetFontSizeCalcOps : public mozilla::css::BasicCoordCalcOps,
+                            public mozilla::css::NumbersAlreadyNormalizedOps
+{
+  // The parameters beyond aValue that we need for CalcLengthWith.
+  const nscoord mParentSize;
+  const nsStyleFont* const mParentFont;
+  nsPresContext* const mPresContext;
+  const PRBool mAtRoot;
+  PRBool& mCanStoreInRuleTree;
+
+  SetFontSizeCalcOps(nscoord aParentSize, const nsStyleFont* aParentFont,
+                     nsPresContext* aPresContext, PRBool aAtRoot,
+                     PRBool& aCanStoreInRuleTree)
+    : mParentSize(aParentSize),
+      mParentFont(aParentFont),
+      mPresContext(aPresContext),
+      mAtRoot(aAtRoot),
+      mCanStoreInRuleTree(aCanStoreInRuleTree)
+  {
+  }
+
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
+  {
+    nscoord size;
+    if (aValue.IsLengthUnit()) {
+      // Note that font-based length units use the parent's size
+      // unadjusted for scriptlevel changes. A scriptlevel change
+      // between us and the parent is simply ignored.
+      size = CalcLengthWith(aValue, mParentSize, mParentFont,
+                            nsnull, mPresContext, mAtRoot,
+                            PR_TRUE, mCanStoreInRuleTree);
+      if (aValue.IsFixedLengthUnit() || aValue.GetUnit() == eCSSUnit_Pixel) {
+        size = nsStyleFont::ZoomText(mPresContext, size);
+      }
+    }
+    else if (eCSSUnit_Percent == aValue.GetUnit()) {
+      mCanStoreInRuleTree = PR_FALSE;
+      // Note that % units use the parent's size unadjusted for scriptlevel
+      // changes. A scriptlevel change between us and the parent is simply
+      // ignored.
+      size = NSToCoordRound(mParentSize * aValue.GetPercentValue());
+    } else {
+      NS_ABORT_IF_FALSE(PR_FALSE, "unexpected value");
+      size = mParentSize;
+    }
+
+    return size;
+  }
+};
+
 /* static */ void
 nsRuleNode::SetFontSize(nsPresContext* aPresContext,
                         const nsRuleDataFont& aFontData,
@@ -2640,23 +2765,19 @@ nsRuleNode::SetFontSize(nsPresContext* aPresContext,
       NS_NOTREACHED("unexpected value");
     }
   }
-  else if (aFontData.mSize.IsLengthUnit()) {
-    // Note that font-based length units use the parent's size unadjusted
-    // for scriptlevel changes. A scriptlevel change between us and the parent
-    // is simply ignored.
-    *aSize = CalcLengthWith(aFontData.mSize, aParentSize, aParentFont, nsnull,
-                            aPresContext, aAtRoot, PR_TRUE,
-                            aCanStoreInRuleTree);
-    zoom = aFontData.mSize.IsFixedLengthUnit() ||
-           aFontData.mSize.GetUnit() == eCSSUnit_Pixel;
-  }
-  else if (eCSSUnit_Percent == aFontData.mSize.GetUnit()) {
-    aCanStoreInRuleTree = PR_FALSE;
-    // Note that % units use the parent's size unadjusted for scriptlevel
-    // changes. A scriptlevel change between us and the parent is simply
-    // ignored.
-    *aSize = NSToCoordRound(aParentSize *
-                            aFontData.mSize.GetPercentValue());
+  else if (aFontData.mSize.IsLengthUnit() ||
+           aFontData.mSize.GetUnit() == eCSSUnit_Percent ||
+           aFontData.mSize.IsCalcUnit()) {
+    SetFontSizeCalcOps ops(aParentSize, aParentFont, aPresContext, aAtRoot,
+                           aCanStoreInRuleTree);
+    *aSize = mozilla::css::ComputeCalc(aFontData.mSize, ops);
+    if (*aSize < 0) {
+      NS_ABORT_IF_FALSE(aFontData.mSize.IsCalcUnit(),
+                        "negative lengths and percents should be rejected "
+                        "by parser");
+      *aSize = 0;
+    }
+    // Zoom is handled inside the calc ops when needed.
     zoom = PR_FALSE;
   }
   else if (eCSSUnit_System_Font == aFontData.mSize.GetUnit()) {
@@ -3194,22 +3315,23 @@ nsRuleNode::GetShadowData(nsCSSValueList* aList,
     nsCSSValue::Array *arr = aList->mValue.GetArrayValue();
     // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
     unitOK = SetCoord(arr->Item(0), tempCoord, nsStyleCoord(),
-                      SETCOORD_LENGTH, aContext, mPresContext,
-                      canStoreInRuleTree);
+                      SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
+                      aContext, mPresContext, canStoreInRuleTree);
     NS_ASSERTION(unitOK, "unexpected unit");
     item->mXOffset = tempCoord.GetCoordValue();
 
     unitOK = SetCoord(arr->Item(1), tempCoord, nsStyleCoord(),
-                      SETCOORD_LENGTH, aContext, mPresContext,
-                      canStoreInRuleTree);
+                      SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
+                      aContext, mPresContext, canStoreInRuleTree);
     NS_ASSERTION(unitOK, "unexpected unit");
     item->mYOffset = tempCoord.GetCoordValue();
 
     // Blur radius is optional in the current box-shadow spec
     if (arr->Item(2).GetUnit() != eCSSUnit_Null) {
       unitOK = SetCoord(arr->Item(2), tempCoord, nsStyleCoord(),
-                        SETCOORD_LENGTH, aContext, mPresContext,
-                        canStoreInRuleTree);
+                        SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY |
+                          SETCOORD_CALC_CLAMP_NONNEGATIVE,
+                        aContext, mPresContext, canStoreInRuleTree);
       NS_ASSERTION(unitOK, "unexpected unit");
       item->mRadius = tempCoord.GetCoordValue();
     } else {
@@ -3219,8 +3341,8 @@ nsRuleNode::GetShadowData(nsCSSValueList* aList,
     // Find the spread radius
     if (aIsBoxShadow && arr->Item(3).GetUnit() != eCSSUnit_Null) {
       unitOK = SetCoord(arr->Item(3), tempCoord, nsStyleCoord(),
-                        SETCOORD_LENGTH, aContext, mPresContext,
-                        canStoreInRuleTree);
+                        SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
+                        aContext, mPresContext, canStoreInRuleTree);
       NS_ASSERTION(unitOK, "unexpected unit");
       item->mSpread = tempCoord.GetCoordValue();
     } else {
@@ -3265,7 +3387,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
 
   // letter-spacing: normal, length, inherit
   SetCoord(textData.mLetterSpacing, text->mLetterSpacing, parentText->mLetterSpacing,
-           SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
+           SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL |
+             SETCOORD_CALC_LENGTH_ONLY,
            aContext, mPresContext, canStoreInRuleTree);
 
   // text-shadow: none, list, inherit, initial
@@ -3361,7 +3484,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
   if (SetCoord(textData.mWordSpacing, tempCoord,
                nsStyleCoord(parentText->mWordSpacing,
                             nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
+               SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL |
+                 SETCOORD_CALC_LENGTH_ONLY,
                aContext, mPresContext, canStoreInRuleTree)) {
     if (tempCoord.GetUnit() == eStyleUnit_Coord) {
       text->mWordSpacing = tempCoord.GetCoordValue();
@@ -5041,8 +5165,8 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   if (SetCoord(marginData.mOutlineOffset, tempCoord,
                nsStyleCoord(parentOutline->mOutlineOffset,
                             nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO, aContext, mPresContext,
-               canStoreInRuleTree)) {
+               SETCOORD_LH | SETCOORD_INITIAL_ZERO | SETCOORD_CALC_LENGTH_ONLY,
+               aContext, mPresContext, canStoreInRuleTree)) {
     outline->mOutlineOffset = tempCoord.GetCoordValue();
   } else {
     NS_ASSERTION(marginData.mOutlineOffset.GetUnit() == eCSSUnit_Null,
@@ -5304,7 +5428,8 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
   if (SetCoord(tableData.mBorderSpacing.mXValue, tempCoord,
                nsStyleCoord(parentTable->mBorderSpacingX,
                             nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO,
+               SETCOORD_LH | SETCOORD_INITIAL_ZERO |
+               SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
                aContext, mPresContext, canStoreInRuleTree)) {
     table->mBorderSpacingX = tempCoord.GetCoordValue();
   } else {
@@ -5316,7 +5441,8 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
   if (SetCoord(tableData.mBorderSpacing.mYValue, tempCoord,
                nsStyleCoord(parentTable->mBorderSpacingY,
                             nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO,
+               SETCOORD_LH | SETCOORD_INITIAL_ZERO |
+               SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
                aContext, mPresContext, canStoreInRuleTree)) {
     table->mBorderSpacingY = tempCoord.GetCoordValue();
   } else {
@@ -5520,8 +5646,9 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
 
   // marker-offset: length, auto, inherit
   SetCoord(contentData.mMarkerOffset, content->mMarkerOffset, parentContent->mMarkerOffset,
-           SETCOORD_LH | SETCOORD_AUTO | SETCOORD_INITIAL_AUTO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LH | SETCOORD_AUTO | SETCOORD_INITIAL_AUTO |
+             SETCOORD_CALC_LENGTH_ONLY,
+           aContext, mPresContext, canStoreInRuleTree);
 
   COMPUTE_END_RESET(Content, content)
 }
@@ -5640,7 +5767,8 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   // column-width: length, auto, inherit
   SetCoord(columnData.mColumnWidth,
            column->mColumnWidth, parent->mColumnWidth,
-           SETCOORD_LAH | SETCOORD_INITIAL_AUTO,
+           SETCOORD_LAH | SETCOORD_INITIAL_AUTO |
+           SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
            aContext, mPresContext, canStoreInRuleTree);
 
   // column-gap: length, percentage, inherit, normal
@@ -5680,9 +5808,18 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
     column->SetColumnRuleWidth(parent->GetComputedColumnRuleWidth());
     canStoreInRuleTree = PR_FALSE;
   }
-  else if (widthValue.IsLengthUnit()) {
-    column->SetColumnRuleWidth(CalcLength(widthValue, aContext,
-                                          mPresContext, canStoreInRuleTree));
+  else if (widthValue.IsLengthUnit() || widthValue.IsCalcUnit()) {
+    nscoord len =
+      CalcLength(widthValue, aContext, mPresContext, canStoreInRuleTree);
+    if (len < 0) {
+      // FIXME: This is untested (by test_value_storage.html) for
+      // column-rule-width since it gets covered up by the border
+      // rounding code.
+      NS_ASSERTION(widthValue.IsCalcUnit(),
+                   "parser should have rejected negative length");
+      len = 0;
+    }
+    column->SetColumnRuleWidth(len);
   }
 
   // column-rule-style: enum, inherit

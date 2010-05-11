@@ -810,6 +810,7 @@ nsHttpChannel::ProcessFailedSSLConnect(PRUint32 httpStatus)
     LOG(("Cancelling failed SSL proxy connection [this=%p httpStatus=%u]\n",
          this, httpStatus)); 
     Cancel(rv);
+    CallOnStartRequest();
     return rv;
 }
 
@@ -2380,11 +2381,13 @@ nsHttpChannel::InitCacheEntry()
 nsresult
 nsHttpChannel::InitOfflineCacheEntry()
 {
+    // This function can be called even when we fail to connect (bug 551990)
+
     if (!mOfflineCacheEntry) {
         return NS_OK;
     }
 
-    if (mResponseHead->NoStore()) {
+    if (mResponseHead && mResponseHead->NoStore()) {
         CloseOfflineCacheEntry();
 
         return NS_OK;

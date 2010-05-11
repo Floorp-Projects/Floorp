@@ -876,17 +876,22 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   if (SSL_HandshakeNegotiatedExtension(fd, ssl_renegotiation_info_xtn, &siteSupportsSafeRenego) != SECSuccess
       || !siteSupportsSafeRenego) {
 
+    PRBool wantWarning = (nsSSLIOLayerHelpers::getWarnLevelMissingRFC5746() > 0);
+
     nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
-    nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-    if (infoObject && console) {
-      nsXPIDLCString hostName;
-      infoObject->GetHostName(getter_Copies(hostName));
+    nsCOMPtr<nsIConsoleService> console;
+    if (infoObject && wantWarning) {
+      console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
+      if (console) {
+        nsXPIDLCString hostName;
+        infoObject->GetHostName(getter_Copies(hostName));
 
-      nsAutoString msg;
-      msg.Append(NS_ConvertASCIItoUTF16(hostName));
-      msg.Append(NS_LITERAL_STRING(" : potentially vulnerable to CVE-2009-3555"));
+        nsAutoString msg;
+        msg.Append(NS_ConvertASCIItoUTF16(hostName));
+        msg.Append(NS_LITERAL_STRING(" : server does not support RFC 5746, see CVE-2009-3555"));
 
-      console->LogStringMessage(msg.get());
+        console->LogStringMessage(msg.get());
+      }
     }
     if (nsSSLIOLayerHelpers::treatUnsafeNegotiationAsBroken()) {
       secStatus = nsIWebProgressListener::STATE_IS_BROKEN;

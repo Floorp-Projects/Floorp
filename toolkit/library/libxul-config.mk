@@ -126,23 +126,19 @@ STATIC_LIBS += chromium_s
 endif
 
 ifndef WINCE
-ifdef MOZ_XPINSTALL
 STATIC_LIBS += \
 	mozreg_s \
 	$(NULL)
 endif
-endif
 
 # component libraries
 COMPONENT_LIBS += \
-	xpconnect \
 	necko \
 	uconv \
 	i18n \
 	chardet \
 	jar$(VERSION_NUMBER) \
 	pref \
-	caps \
 	htmlpars \
 	imglib2 \
 	gklayout \
@@ -153,10 +149,10 @@ COMPONENT_LIBS += \
 	txmgr \
 	chrome \
 	commandlines \
+	extensions \
 	toolkitcomps \
 	pipboot \
 	pipnss \
-	mozfind \
 	appcomps \
 	$(NULL)
 
@@ -201,13 +197,6 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifdef MOZ_XPINSTALL
-DEFINES += -DMOZ_XPINSTALL
-COMPONENT_LIBS += \
-	xpinstall \
-	$(NULL)
-endif
-
 ifdef MOZ_JSDEBUGGER
 DEFINES += -DMOZ_JSDEBUGGER
 COMPONENT_LIBS += \
@@ -247,7 +236,6 @@ ifdef MOZ_RDF
 COMPONENT_LIBS += \
 	rdf \
 	windowds \
-	intlapp \
 	$(NULL)
 endif
 

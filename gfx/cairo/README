@@ -8,7 +8,7 @@ http://www.cairographics.org/.
 VERSIONS:
 
   cairo (12d521df8acc483b2daa844d4f05dc2fe2765ba6)
-  pixman (7862f9b96e8e8456cc60852790c7f244a5e3425e)
+  pixman (2f4f2fb4859931bf6dc5632d8c919e7296736427)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
 
@@ -107,6 +107,8 @@ cairo-qt-compile.patch: Fix compile error, return not reached, and clone_similar
 ==== pixman patches ====
 
 pixman-rename-and-endian.patch: include cairo-platform.h for renaming of external symbols and endian macros
+
+NOTE: we previously supported ARM assembler on MSVC, this has been removed because of the maintenance burden
 
 ==== disable printing patch ====
 

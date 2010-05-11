@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -198,7 +197,8 @@ nsSVGRenderingObserver::AttributeChanged(nsIDocument *aDocument,
 void
 nsSVGRenderingObserver::ContentAppended(nsIDocument *aDocument,
                                         nsIContent *aContainer,
-                                        PRInt32 aNewIndexInContainer)
+                                        nsIContent *aFirstNewContent,
+                                        PRInt32 /* unused */)
 {
   DoUpdate();
 }
@@ -207,7 +207,7 @@ void
 nsSVGRenderingObserver::ContentInserted(nsIDocument *aDocument,
                                         nsIContent *aContainer,
                                         nsIContent *aChild,
-                                        PRInt32 aIndexInContainer)
+                                        PRInt32 /* unused */)
 {
   DoUpdate();
 }
@@ -407,7 +407,7 @@ nsSVGEffects::EffectProperties::GetMaskFrame(PRBool *aOK)
 void
 nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 {
-  NS_ASSERTION(aFrame->GetContent()->IsNodeOfType(nsINode::eELEMENT),
+  NS_ASSERTION(aFrame->GetContent()->IsElement(),
                "aFrame's content should be an element");
 
   FrameProperties props = aFrame->Properties();
@@ -438,7 +438,7 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 
   nsIFrame *kid = aFrame->GetFirstChild(nsnull);
   while (kid) {
-    if (kid->GetContent()->IsNodeOfType(nsINode::eELEMENT)) {
+    if (kid->GetContent()->IsElement()) {
       UpdateEffects(kid);
     }
     kid = kid->GetNextSibling();

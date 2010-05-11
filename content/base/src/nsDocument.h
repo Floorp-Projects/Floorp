@@ -164,8 +164,8 @@ public:
 
   void SetInvalidName();
   PRBool IsInvalidName();
-  void AddNameContent(nsIContent* aContent);
-  void RemoveNameContent(nsIContent* aContent);
+  void AddNameElement(mozilla::dom::Element* aElement);
+  void RemoveNameElement(mozilla::dom::Element* aElement);
   PRBool HasNameContentList() {
     return mNameContentList != nsnull;
   }
@@ -178,7 +178,7 @@ public:
    * Returns the element if we know the element associated with this
    * id. Otherwise returns null.
    */
-  nsIContent* GetIdContent();
+  mozilla::dom::Element* GetIdElement();
   /**
    * Append all the elements with this id to aElements
    */
@@ -188,12 +188,12 @@ public:
    * @return true if the content could be added, false if we failed due
    * to OOM.
    */
-  PRBool AddIdContent(nsIContent* aContent);
+  PRBool AddIdElement(mozilla::dom::Element* aElement);
   /**
    * This can fire ID change callbacks.
    * @return true if this map entry should be removed
    */
-  PRBool RemoveIdContent(nsIContent* aContent);
+  PRBool RemoveIdElement(mozilla::dom::Element* aElement);
 
   PRBool HasContentChangeCallback() { return mChangeCallbacks != nsnull; }
   void AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback, void* aData);
@@ -236,12 +236,14 @@ public:
   };
 
 private:
-  void FireChangeCallbacks(nsIContent* aOldContent, nsIContent* aNewContent);
+  void FireChangeCallbacks(mozilla::dom::Element* aOldElement,
+                           mozilla::dom::Element* aNewElement);
 
-  // empty if there are no nodes with this ID.
-  // The content nodes are stored addrefed.
+  // empty if there are no elementswith this ID.
+  // The elementsnodes are stored addrefed.
   nsSmallVoidArray mIdContentList;
-  // NAME_NOT_VALID if this id cannot be used as a 'name'
+  // NAME_NOT_VALID if this id cannot be used as a 'name'.  Otherwise
+  // stores Elements.
   nsBaseContentList *mNameContentList;
   nsRefPtr<nsContentList> mDocAllList;
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
@@ -492,9 +494,7 @@ class nsDocument : public nsIDocument,
                    public nsIDOMNSEventTarget,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer,
-                   public nsIDOMNodeSelector,
                    public nsIApplicationCacheContainer,
-                   public nsIDOMXPathNSResolver,
                    public nsStubMutationObserver
 {
 public:
@@ -589,7 +589,7 @@ public:
                                      nsIDocument* aSubDoc);
   virtual nsIDocument* GetSubDocumentFor(nsIContent *aContent) const;
   virtual nsIContent* FindContentForSubDocument(nsIDocument *aDocument) const;
-  virtual nsIContent* GetRootContentInternal() const;
+  virtual mozilla::dom::Element* GetRootElementInternal() const;
 
   /**
    * Get the style sheets owned by this document.
@@ -736,6 +736,8 @@ public:
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  virtual PRBool IsEqualNode(nsINode* aOther);
+  virtual void GetTextContent(nsAString &aTextContent);
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
@@ -763,9 +765,6 @@ public:
 
   // nsIDOMNode
   NS_DECL_NSIDOMNODE
-
-  // nsIDOM3Node
-  NS_DECL_NSIDOM3NODE
 
   // nsIDOMDocument
   NS_DECL_NSIDOMDOCUMENT
@@ -811,9 +810,6 @@ public:
 
   // nsIDOMNSEventTarget
   NS_DECL_NSIDOMNSEVENTTARGET
-
-  // nsIDOMNodeSelector
-  NS_DECL_NSIDOMNODESELECTOR
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
@@ -903,14 +899,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsDocument,
                                                          nsIDocument)
 
-  /**
-   * Utility method for getElementsByClassName.  aRootNode is the node (either
-   * document or element), which getElementsByClassName was called on.
-   */
-  static nsresult GetElementsByClassNameHelper(nsINode* aRootNode,
-                                               const nsAString& aClasses,
-                                               nsIDOMNodeList** aReturn);
-
   void DoNotifyPossibleTitleChange();
 
   nsExternalResourceMap& ExternalResourceMap()
@@ -946,10 +934,10 @@ protected:
   friend class nsNodeUtils;
   void RegisterNamedItems(nsIContent *aContent);
   void UnregisterNamedItems(nsIContent *aContent);
-  void UpdateNameTableEntry(nsIContent *aContent);
-  void UpdateIdTableEntry(nsIContent *aContent);
-  void RemoveFromNameTable(nsIContent *aContent);
-  void RemoveFromIdTable(nsIContent *aContent);
+  void UpdateNameTableEntry(mozilla::dom::Element *aElement);
+  void UpdateIdTableEntry(mozilla::dom::Element *aElement);
+  void RemoveFromNameTable(mozilla::dom::Element *aElement);
+  void RemoveFromIdTable(mozilla::dom::Element *aElement);
 
   /**
    * Check that aId is not empty and log a message to the console
@@ -1008,12 +996,6 @@ protected:
 
   virtual nsPIDOMWindow *GetWindowInternal();
   virtual nsPIDOMWindow *GetInnerWindowInternal();
-
-  // nsContentList match functions for GetElementsByClassName
-  static PRBool MatchClassNames(nsIContent* aContent, PRInt32 aNamespaceID,
-                                nsIAtom* aAtom, void* aData);
-
-  static void DestroyClassNameArray(void* aData);
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                  \
   NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIDocumentObserver, \
@@ -1222,7 +1204,6 @@ protected:
                                      nsDocument)                              \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMEventTarget, nsDocument)   \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNode, nsDocument)          \
-  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOM3Node, nsDocument)         \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOM3Document, nsDocument)
 
 #endif /* nsDocument_h___ */

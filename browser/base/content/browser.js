@@ -597,8 +597,8 @@ const gXPInstallObserver = {
   {
     var brandBundle = document.getElementById("bundle_brand");
     switch (aTopic) {
-    case "xpinstall-install-blocked":
-      var installInfo = aSubject.QueryInterface(Components.interfaces.nsIXPIInstallInfo);
+    case "addon-install-blocked":
+      var installInfo = aSubject.QueryInterface(Components.interfaces.amIWebInstallInfo);
       var win = installInfo.originatingWindow;
       var shell = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                      .getInterface(Components.interfaces.nsIWebNavigation)
@@ -608,7 +608,13 @@ const gXPInstallObserver = {
         var host = installInfo.originatingURI.host;
         var brandShortName = brandBundle.getString("brandShortName");
         var notificationName, messageString, buttons;
-        if (!gPrefService.getBoolPref("xpinstall.enabled")) {
+        var enabled = true;
+        try {
+          enabled = gPrefService.getBoolPref("xpinstall.enabled");
+        }
+        catch (e) {
+        }
+        if (!enabled) {
           notificationName = "xpinstall-disabled"
           if (gPrefService.prefIsLocked("xpinstall.enabled")) {
             messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
@@ -639,9 +645,7 @@ const gXPInstallObserver = {
             accessKey: gNavigatorBundle.getString("xpinstallPromptAllowButton.accesskey"),
             popup: null,
             callback: function() {
-              var mgr = Components.classes["@mozilla.org/xpinstall/install-manager;1"]
-                                  .createInstance(Components.interfaces.nsIXPInstallManager);
-              mgr.initManagerWithInstallInfo(installInfo);
+              installInfo.install();
               return false;
             }
           }];
@@ -1183,7 +1187,7 @@ function prepareForStartup() {
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
-  Services.obs.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
+  Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
 
   BrowserOffline.init();
   OfflineApps.init();
@@ -1301,6 +1305,8 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
     dump("nsSessionStore could not be initialized: " + ex + "\n");
   }
 
+  PlacesToolbarHelper.updateState();
+
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler.init();
 
@@ -1401,7 +1407,7 @@ function BrowserShutdown()
   }
 
   Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
-  Services.obs.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
+  Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
   Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
 
   try {
@@ -3350,6 +3356,8 @@ function BrowserToolboxCustomizeDone(aToolboxChanged) {
     updateEditUIVisibility();
 #endif
   }
+
+  PlacesToolbarHelper.updateState();
 
   UpdateUrlbarSearchSplitterState();
 
@@ -5719,21 +5727,8 @@ var MailIntegration = {
 };
 
 function BrowserOpenAddonsMgr(aPane) {
-  const EMTYPE = "Extension:Manager";
-  var theEM = Services.wm.getMostRecentWindow(EMTYPE);
-  if (theEM) {
-    theEM.focus();
-    if (aPane)
-      theEM.showView(aPane);
-    return;
-  }
-
-  const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
-  const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
-  if (aPane)
-    window.openDialog(EMURL, "", EMFEATURES, aPane);
-  else
-    window.openDialog(EMURL, "", EMFEATURES);
+  // TODO need to implement switching to the relevant view - see bug 560449
+  switchToTabHavingURI("about:addons", true);
 }
 
 function AddKeywordForSearchField() {
@@ -7516,23 +7511,6 @@ var LightWeightThemeWebInstaller = {
   _isAllowed: function (node) {
     var pm = Services.perms;
 
-    var prefs = [["xpinstall.whitelist.add", pm.ALLOW_ACTION],
-                 ["xpinstall.whitelist.add.36", pm.ALLOW_ACTION],
-                 ["xpinstall.blacklist.add", pm.DENY_ACTION]];
-    prefs.forEach(function ([pref, permission]) {
-      try {
-        var hosts = gPrefService.getCharPref(pref);
-      } catch (e) {}
-
-      if (hosts) {
-        hosts.split(",").forEach(function (host) {
-          pm.add(makeURI("http://" + host), "install", permission);
-        });
-
-        gPrefService.setCharPref(pref, "");
-      }
-    });
-
     var uri = node.ownerDocument.documentURIObject;
     return pm.testPermission(uri, "install") == pm.ALLOW_ACTION;
   },
@@ -7543,7 +7521,18 @@ var LightWeightThemeWebInstaller = {
   }
 }
 
-function switchToTabHavingURI(aURI) {
+/**
+ * Switch to a tab that has a given URI, and focusses its browser window.
+ * If a matching tab is in this window, it will be switched to. Otherwise, other
+ * windows will be searched.
+ *
+ * @param aURI
+ *        URI to search for
+ * @param aOpenNew
+ *        True to open a new tab and switch to it, if no existing tab is found
+ * @return True if a tab was switched to (or opened), false otherwise
+ */
+function switchToTabHavingURI(aURI, aOpenNew) {
   function switchIfURIInWindow(aWindow) {
     if (!("gBrowser" in aWindow))
       return false;
@@ -7578,7 +7567,13 @@ function switchToTabHavingURI(aURI) {
     if (switchIfURIInWindow(browserWin))
       return true;
   }
+
   // No opened tab has that url.
+  if (aOpenNew) {
+    gBrowser.selectedTab = gBrowser.addTab(aURI.spec);
+    return true;
+  }
+
   return false;
 }
 

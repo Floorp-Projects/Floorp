@@ -61,6 +61,8 @@ MODULE_OPTIMIZE_FLAGS = -O2
 endif
 endif
 
+DEFINES += -DPIXMAN_NO_TLS
+
 # Build MMX code either with VC or with gcc-on-x86
 ifdef _MSC_VER
 ifeq (86,$(findstring 86,$(OS_TEST)))
@@ -76,7 +78,6 @@ endif
 endif
 
 ifdef GNU_CC
-
 ifeq (86,$(findstring 86,$(OS_TEST)))
 USE_MMX=1
 MMX_CFLAGS=-mmmx -Winline
@@ -141,7 +142,8 @@ DEFINES += -DUSE_VMX
 endif
 
 ifdef USE_ARM_SIMD_GCC
-CSRCS += pixman-arm-simd.c pixman-arm-simd-asm.c
+CSRCS += pixman-arm-simd.c
+SSRCS += pixman-arm-simd-asm.S
 DEFINES += -DUSE_ARM_SIMD
 endif
 
@@ -150,13 +152,6 @@ CSRCS += pixman-arm-neon.c
 SSRCS += pixman-arm-neon-asm.S
 DEFINES += -DUSE_ARM_NEON
 ARM_NEON_CFLAGS = -mfloat-abi=softfp -mfpu=neon
-endif
-
-ifdef USE_ARM_SIMD_MSVC
-ASFILES += pixman-arm-detect-win32.asm pixman-wce-arm-simd.asm
-CSRCS += pixman-arm-simd.c
-DEFINES += -DUSE_ARM_SIMD
-AS_DASH_C_FLAG = 
 endif
 
 EXPORTS		= pixman.h pixman-version.h

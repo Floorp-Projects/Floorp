@@ -712,7 +712,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'Z':
             if (++i == argc)
                 return usage();
-            JS_SetGCZeal(cx, atoi(argv[i]));
+            JS_SetGCZeal(cx, !!(atoi(argv[i])));
             break;
 #endif
 
@@ -1457,12 +1457,12 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
 
 static JSTrapStatus
 TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-            void *closure)
+            jsval closure)
 {
     JSString *str;
     JSStackFrame *caller;
 
-    str = (JSString *) closure;
+    str = JSVAL_TO_STRING(closure);
     caller = JS_GetScriptedCaller(cx, NULL);
     if (!JS_EvaluateUCInStackFrame(cx, caller,
                                    JS_GetStringChars(str), JS_GetStringLength(str),
@@ -1493,7 +1493,7 @@ Trap(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     argv[argc] = STRING_TO_JSVAL(str);
     if (!GetTrapArgs(cx, argc, argv, &script, &i))
         return JS_FALSE;
-    return JS_SetTrap(cx, script, script->code + i, TrapHandler, str);
+    return JS_SetTrap(cx, script, script->code + i, TrapHandler, STRING_TO_JSVAL(str));
 }
 
 static JSBool
@@ -3056,7 +3056,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     JSString *str = JSVAL_TO_STRING(argv[1]);
 
     bool saveCurrent = (argc >= 3 && JSVAL_IS_BOOLEAN(argv[2]))
-                        ? (bool)JSVAL_TO_SPECIAL(argv[2])
+                        ? !!(JSVAL_TO_SPECIAL(argv[2]))
                         : false;
 
     JS_ASSERT(cx->fp);
@@ -3658,6 +3658,34 @@ Elapsed(JSContext *cx, uintN argc, jsval *vp)
     return JS_FALSE;
 }
 
+static JSBool
+Parent(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return JS_FALSE;
+    }
+
+    jsval v = JS_ARGV(cx, vp)[0];
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        JS_ReportError(cx, "Only objects have parents!");
+        return JS_FALSE;
+    }
+
+    JSObject *parent = JS_GetParent(cx, JSVAL_TO_OBJECT(v));
+    *vp = OBJECT_TO_JSVAL(parent);
+
+    /* Outerize if necessary.  Embrace the ugliness! */
+    JSClass *clasp = JS_GET_CLASS(cx, parent);
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
+        if (JSObjectOp outerize = xclasp->outerObject)
+            *vp = OBJECT_TO_JSVAL(outerize(cx, parent));
+    }
+
+    return JS_TRUE;
+}
+
 #ifdef XP_UNIX
 
 #include <fcntl.h>
@@ -3749,7 +3777,8 @@ Parse(JSContext *cx, uintN argc, jsval *vp)
     js::Parser parser(cx);
     parser.init(JS_GetStringCharsZ(cx, scriptContents), JS_GetStringLength(scriptContents),
                 NULL, "<string>", 0);
-    parser.parse(NULL);
+    if (!parser.parse(NULL))
+        return JS_FALSE;
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return JS_TRUE;
 }
@@ -3910,6 +3939,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("parse",          Parse,          1,0),
     JS_FN("timeout",        Timeout,        1,0),
     JS_FN("elapsed",        Elapsed,        0,0),
+    JS_FN("parent",         Parent,         1,0),
     JS_FS_END
 };
 
@@ -4017,7 +4047,8 @@ static const char *const shell_help_messages[] = {
 "timeout([seconds])\n"
 "  Get/Set the limit in seconds for the execution time for the current context.\n"
 "  A negative value (default) means that the execution time is unlimited.",
-"elapsed()                Execution time elapsed for the current context.\n",
+"elapsed()                Execution time elapsed for the current context.",
+"parent(obj)              Returns the parent of obj.\n",
 };
 
 /* Help messages must match shell functions. */
@@ -4978,6 +5009,13 @@ main(int argc, char **argv, char **envp)
 
     argc--;
     argv++;
+
+#ifdef XP_WIN
+    // Set the timer calibration delay count to 0 so we get high
+    // resolution right away, which we need for precise benchmarking.
+    extern int CALIBRATION_DELAY_COUNT;
+    CALIBRATION_DELAY_COUNT = 0;
+#endif
 
     rt = JS_NewRuntime(64L * 1024L * 1024L);
     if (!rt)

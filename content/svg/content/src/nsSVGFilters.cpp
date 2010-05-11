@@ -519,13 +519,13 @@ static PRUint32 ComputeScaledDivisor(PRUint32 aDivisor)
 static void
 BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
         PRInt32 aStrideMinor, PRInt32 aStartMinor, PRInt32 aEndMinor,
-        PRUint32 aLeftLobe, PRUint32 aRightLobe, PRBool aAlphaOnly)
+        PRInt32 aLeftLobe, PRInt32 aRightLobe, PRBool aAlphaOnly)
 {
-  PRUint32 boxSize = aLeftLobe + aRightLobe + 1;
-  PRUint32 scaledDivisor = ComputeScaledDivisor(boxSize);
-  PRUint32 sums[4] = {0, 0, 0, 0};
+  PRInt32 boxSize = aLeftLobe + aRightLobe + 1;
+  PRInt32 scaledDivisor = ComputeScaledDivisor(boxSize);
+  PRInt32 sums[4] = {0, 0, 0, 0};
 
-  for (PRUint32 i=0; i < boxSize; i++) {
+  for (PRInt32 i=0; i < boxSize; i++) {
     PRInt32 pos = aStartMinor - aLeftLobe + i;
     pos = NS_MAX(pos, aStartMinor);
     pos = NS_MIN(pos, aEndMinor - 1);
@@ -551,13 +551,17 @@ BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
                            SUM(GFX_ARGB32_OFFSET_G); \
                            SUM(GFX_ARGB32_OFFSET_R); } \
         SUM(GFX_ARGB32_OFFSET_A);
-    for (PRInt32 minor = aStartMinor; minor < aStartMinor + aLeftLobe; minor++) {
+    for (PRInt32 minor = aStartMinor;
+         minor < aStartMinor + aLeftLobe;
+         minor++) {
       OUTPUT_PIXEL();
       SUM_PIXEL();
       nextInput += aStrideMinor;
       aOutput += aStrideMinor;
     }
-    for (PRInt32 minor = aStartMinor + aLeftLobe; minor < aEndMinor - aRightLobe - 1; minor++) {
+    for (PRInt32 minor = aStartMinor + aLeftLobe;
+         minor < aEndMinor - aRightLobe - 1;
+         minor++) {
       OUTPUT_PIXEL();
       SUM_PIXEL();
       lastInput += aStrideMinor;
@@ -2961,10 +2965,10 @@ nsSVGFETileElement::Filter(nsSVGFilterInstance *instance,
   nsIntPoint offset(-tile.x + tile.width, -tile.y + tile.height);
   for (PRInt32 y = rect.y; y < rect.YMost(); y++) {
     PRUint32 tileY = tile.y + WrapInterval(y + offset.y, tile.height);
-    if (tileY < surfaceRect.height) {
+    if (tileY < (PRUint32)surfaceRect.height) {
       for (PRInt32 x = rect.x; x < rect.XMost(); x++) {
         PRUint32 tileX = tile.x + WrapInterval(x + offset.x, tile.width);
-        if (tileX < surfaceRect.width) {
+        if (tileX < (PRUint32)surfaceRect.width) {
           *(PRUint32*)(targetData + y * stride + 4 * x) =
             *(PRUint32*)(sourceData + tileY * stride + 4 * tileX);
         }

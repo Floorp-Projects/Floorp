@@ -84,9 +84,6 @@ const int kFlashWMUSERMessageThrottleDelayMs = 5;
 
 #define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
 
-#ifndef WM_MOUSEHWHEEL
-#define WM_MOUSEHWHEEL                    0x020E
-#endif
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
 #endif // defined(XP_MACOSX)
@@ -101,11 +98,10 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mPluginWindowHWND(0)
     , mPluginWndProc(0)
     , mPluginParentHWND(0)
-    , mNestedEventHook(0)
-    , mNestedEventLevelDepth(0)
     , mCachedWinlessPluginHWND(0)
     , mWinlessPopupSurrogateHWND(0)
     , mWinlessThrottleOldWndProc(0)
+    , mWinlessHiddenMsgHWND(0)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
 #if defined(OS_MACOSX)  
@@ -799,9 +795,11 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
                          &mWsInfo.visual, &mWsInfo.depth))
         return false;
 
-    if (aWindow.type == NPWindowTypeWindow) {
 #ifdef MOZ_WIDGET_GTK2
-        if (GdkWindow* socket_window = gdk_window_lookup(aWindow.window)) {
+    if (aWindow.type == NPWindowTypeWindow
+        && gtk_check_version(2,18,7) != NULL) { // older
+        GdkWindow* socket_window = gdk_window_lookup(aWindow.window);
+        if (socket_window) {
             // A GdkWindow for the socket already exists.  Need to
             // workaround https://bugzilla.gnome.org/show_bug.cgi?id=607061
             // See wrap_gtk_plug_embedded in PluginModuleChild.cpp.
@@ -809,8 +807,8 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
                               "moz-existed-before-set-window",
                               GUINT_TO_POINTER(1));
         }
-#endif
     }
+#endif
 
     if (mPluginIface->setwindow)
         (void) mPluginIface->setwindow(&mData, &mWindow);
@@ -1059,21 +1057,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
     if (message == WM_MOUSEACTIVATE)
         self->CallPluginGotFocus();
 
-    // Prevent lockups due to plugins making rpc calls when the parent
-    // is making a synchronous SendMessage call to the child window. Add
-    // more messages as needed.
-    if ((InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
-        switch(message) {
-            case WM_KILLFOCUS:
-            case WM_MOUSEHWHEEL:
-            case WM_MOUSEWHEEL:
-            case WM_HSCROLL:
-            case WM_VSCROLL:
-            ReplyMessage(0);
-            break;
-        }
-    }
-
     if (message == WM_USER+1 &&
         (self->mQuirks & PluginInstanceChild::QUIRK_FLASH_THROTTLE_WMUSER_EVENTS)) {
         self->FlashThrottleMessage(hWnd, message, wParam, lParam, true);
@@ -1090,61 +1073,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
         RemoveProp(hWnd, kPluginInstanceChildProperty);
 
     return res;
-}
-
-/* winless modal ui loop logic */
-
-// gTempChildPointer is only in use from the time we enter handle event, to the
-// point where ui might be created by that call. If ui isn't created, there's
-// no issue. If ui is created, the parent can't start processing messages in
-// spin loop until SendSetNestedEventState, at which point,
-// gTempChildPointer is no longer needed.
-static PluginInstanceChild* gTempChildPointer;
-
-LRESULT CALLBACK
-PluginInstanceChild::NestedInputEventHook(int nCode,
-                                          WPARAM wParam,
-                                          LPARAM lParam)
-{
-    if (!gTempChildPointer) {
-        return CallNextHookEx(NULL, nCode, wParam, lParam);
-    }
-
-    if (nCode >= 0) {
-        NS_ASSERTION(gTempChildPointer, "Never should be null here!");
-        gTempChildPointer->ResetNestedEventHook();
-        gTempChildPointer->SendProcessNativeEventsInRPCCall();
-
-        gTempChildPointer = NULL;
-    }
-    return CallNextHookEx(NULL, nCode, wParam, lParam);
-}
-
-void
-PluginInstanceChild::SetNestedInputEventHook()
-{
-    NS_ASSERTION(!mNestedEventHook,
-        "mNestedEventHook already setup in call to SetNestedInputEventHook?");
-
-    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-
-    // WH_GETMESSAGE hooks are triggered by peek message calls in parent due to
-    // attached message queues, resulting in stomped in-process ipc calls.  So
-    // we use a filter hook specific to dialogs, menus, and scroll bars to kick
-    // things off.
-    mNestedEventHook = SetWindowsHookEx(WH_MSGFILTER,
-                                        NestedInputEventHook,
-                                        NULL,
-                                        GetCurrentThreadId());
-}
-
-void
-PluginInstanceChild::ResetNestedEventHook()
-{
-    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
-    if (mNestedEventHook)
-        UnhookWindowsHookEx(mNestedEventHook);
-    mNestedEventHook = NULL;
 }
 
 /* windowless track popup menu helpers */
@@ -1329,16 +1257,6 @@ PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
     // special handling during delivery.
     int16_t handled;
 
-    mNestedEventLevelDepth++;
-    PLUGIN_LOG_DEBUG(("WinlessHandleEvent start depth: %i", mNestedEventLevelDepth));
-
-    // On the first, non-reentrant call, setup our modal ui detection hook.
-    if (mNestedEventLevelDepth == 1) {
-        NS_ASSERTION(!gTempChildPointer, "valid gTempChildPointer here?");
-        gTempChildPointer = this;
-        SetNestedInputEventHook();
-    }
-
     // TrackPopupMenu will fail if the parent window is not associated with
     // our ui thread. So we hook TrackPopupMenu so we can hand in a surrogate
     // parent created in the child process.
@@ -1348,21 +1266,10 @@ PluginInstanceChild::WinlessHandleEvent(NPEvent& event)
       sWinlessPopupSurrogateHWND = mWinlessPopupSurrogateHWND;
     }
 
-    bool old_state = MessageLoop::current()->NestableTasksAllowed();
-    MessageLoop::current()->SetNestableTasksAllowed(true);
     handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&event));
-    MessageLoop::current()->SetNestableTasksAllowed(old_state);
 
-    gTempChildPointer = NULL;
     sWinlessPopupSurrogateHWND = NULL;
 
-    mNestedEventLevelDepth--;
-    PLUGIN_LOG_DEBUG(("WinlessHandleEvent end depth: %i", mNestedEventLevelDepth));
-
-    NS_ASSERTION(!(mNestedEventLevelDepth < 0), "mNestedEventLevelDepth < 0?");
-    if (mNestedEventLevelDepth <= 0) {
-        ResetNestedEventHook();
-    }
     return handled;
 }
 
@@ -1551,6 +1458,30 @@ PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
 // windowing events they use for timing. We throttle these by dropping the
 // delivery priority below any other event, including pending ipc io
 // notifications. We do this for both windowed and windowless controls.
+// Note flash's windowless msg window can last longer than our instance,
+// so we try to unhook when the window is destroyed and in NPP_Destroy.
+
+void
+PluginInstanceChild::UnhookWinlessFlashThrottle()
+{
+  // We may have already unhooked
+  if (!mWinlessThrottleOldWndProc)
+      return;
+
+  WNDPROC tmpProc = mWinlessThrottleOldWndProc;
+  mWinlessThrottleOldWndProc = nsnull;
+
+  NS_ASSERTION(mWinlessHiddenMsgHWND,
+               "Missing mWinlessHiddenMsgHWND w/subclass set??");
+
+  // reset the subclass
+  SetWindowLongPtr(mWinlessHiddenMsgHWND, GWLP_WNDPROC,
+                   reinterpret_cast<LONG>(tmpProc));
+
+  // Remove our instance prop
+  RemoveProp(mWinlessHiddenMsgHWND, kPluginInstanceChildProperty);
+  mWinlessHiddenMsgHWND = nsnull;
+}
 
 // static
 LRESULT CALLBACK
@@ -1576,13 +1507,10 @@ PluginInstanceChild::WinlessHiddenFlashWndProc(HWND hWnd,
      }
 
     // Unhook
-    if (message == WM_NCDESTROY) {
+    if (message == WM_CLOSE || message == WM_NCDESTROY) {
         WNDPROC tmpProc = self->mWinlessThrottleOldWndProc;
-        self->mWinlessThrottleOldWndProc = nsnull;
-        SetWindowLongPtr(hWnd, GWLP_WNDPROC,
-                         reinterpret_cast<LONG>(tmpProc));
+        self->UnhookWinlessFlashThrottle();
         LRESULT res = CallWindowProc(tmpProc, hWnd, message, wParam, lParam);
-        RemoveProp(hWnd, kPluginInstanceChildProperty);
         return res;
     }
 
@@ -1617,6 +1545,7 @@ PluginInstanceChild::EnumThreadWindowsCallback(HWND hWnd,
                 return FALSE;
             }
             // Subsclass and store self as a property
+            self->mWinlessHiddenMsgHWND = hWnd;
             self->mWinlessThrottleOldWndProc =
                 reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWnd, GWLP_WNDPROC,
                 reinterpret_cast<LONG>(WinlessHiddenFlashWndProc)));
@@ -2082,8 +2011,8 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 
 #if defined(OS_WIN)
     SharedSurfaceRelease();
-    ResetNestedEventHook();
     DestroyWinlessPopupSurrogate();
+    UnhookWinlessFlashThrottle();
 #endif
 
     return true;
