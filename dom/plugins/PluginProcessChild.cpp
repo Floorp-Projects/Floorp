@@ -37,38 +37,35 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/plugins/PluginThreadChild.h"
+#include "mozilla/ipc/IOThreadChild.h"
+#include "mozilla/plugins/PluginProcessChild.h"
 
 #include "prlink.h"
 
 #include "base/command_line.h"
 #include "base/string_util.h"
-#include "chrome/common/child_process.h"
 #include "chrome/common/chrome_switches.h"
 
-using mozilla::ipc::MozillaChildThread;
+#ifdef XP_WIN
+#include <objbase.h>
+#endif
+
+using mozilla::ipc::IOThreadChild;
 
 namespace mozilla {
 namespace plugins {
 
-PluginThreadChild::PluginThreadChild(ProcessHandle aParentHandle) :
-    MozillaChildThread(aParentHandle, MessageLoop::TYPE_UI)
+bool
+PluginProcessChild::Init()
 {
-    NS_ASSERTION(!gInstance, "Two PluginThreadChild?");
-    gInstance = this;
-}
+#ifdef XP_WIN
+    // Silverlight depends on the host calling CoInitialize.
+    ::CoInitialize(NULL);
+#endif
 
-PluginThreadChild::~PluginThreadChild()
-{
-    gInstance = NULL;
-}
-
-PluginThreadChild* PluginThreadChild::gInstance;
-
-void
-PluginThreadChild::Init()
-{
-    MozillaChildThread::Init();
+    // Certain plugins, such as flash, steal the unhandled exception filter
+    // thus we never get crash reports when they fault. This call fixes it.
+    message_loop()->set_exception_restoration(true);
 
     std::string pluginFilename;
 
@@ -92,26 +89,30 @@ PluginThreadChild::Init()
 #  error Sorry
 #endif
 
-    // FIXME owner_loop() is bad here
-    mPlugin.Init(pluginFilename,
-                 GetParentProcessHandle(), owner_loop(), channel());
+    mPlugin.Init(pluginFilename, ParentHandle(),
+                 IOThreadChild::message_loop(),
+                 IOThreadChild::channel());
+
+    return true;
 }
 
 void
-PluginThreadChild::CleanUp()
+PluginProcessChild::CleanUp()
 {
-    mPlugin.CleanUp();
-    MozillaChildThread::CleanUp();
+#ifdef XP_WIN
+    ::CoUninitialize();
+#endif
 }
 
 /* static */
 void
-PluginThreadChild::AppendNotesToCrashReport(const nsCString& aNotes)
+PluginProcessChild::AppendNotesToCrashReport(const nsCString& aNotes)
 {
     AssertPluginThread();
 
-    if (gInstance) {
-        gInstance->mPlugin.SendAppendNotesToCrashReport(aNotes);
+    PluginProcessChild* p = PluginProcessChild::current();
+    if (p) {
+        p->mPlugin.SendAppendNotesToCrashReport(aNotes);
     }
 }
 
