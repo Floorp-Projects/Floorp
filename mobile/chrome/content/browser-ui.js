@@ -925,7 +925,7 @@ var BrowserUI = {
         let strings = Elements.browserBundle;
         let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
         alerts.showAlertNotification(null, strings.getString("alertLockScreen"),
-                                     strings.getString("alertLockScreen." + (locked ? "locked" : "unlocked")), false, "", null);
+                                     strings.getString("alertLockScreen." + (!locked ? "locked" : "unlocked")), false, "", null);
         break;
       }
     }
