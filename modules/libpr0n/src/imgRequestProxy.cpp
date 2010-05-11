@@ -53,20 +53,25 @@
 #include "ImageLogging.h"
 
 #include "nspr.h"
-#include "imgContainerRequest.h"
 
 NS_IMPL_ISUPPORTS4(imgRequestProxy, imgIRequest, nsIRequest,
                    nsISupportsPriority, nsISecurityInfoProvider)
 
 imgRequestProxy::imgRequestProxy() :
   mOwner(nsnull),
+  mURI(nsnull),
+  mImage(nsnull),
+  mPrincipal(nsnull),
+  mImageStatus(0),
+  mState(0),
   mListener(nsnull),
   mLoadFlags(nsIRequest::LOAD_NORMAL),
   mLocksHeld(0),
   mCanceled(PR_FALSE),
   mIsInLoadGroup(PR_FALSE),
   mListenerIsStrongRef(PR_FALSE),
-  mDecodeRequested(PR_FALSE)
+  mDecodeRequested(PR_FALSE),
+  mHadLastPart(PR_FALSE)
 {
   /* member initializers and constructor code */
 
@@ -107,7 +112,8 @@ imgRequestProxy::~imgRequestProxy()
   }
 }
 
-nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver)
+nsresult imgRequestProxy::Init(imgRequest* request, nsILoadGroup* aLoadGroup, nsIURI* aURI,
+                               imgIDecoderObserver* aObserver)
 {
   NS_PRECONDITION(!mOwner && !mListener, "imgRequestProxy is already initialized");
   NS_PRECONDITION(request, "no request");
@@ -126,6 +132,7 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
     NS_ADDREF(mListener);
   }
   mLoadGroup = aLoadGroup;
+  mURI = aURI;
 
   // Note: AddProxy won't send all the On* notifications immediately
   request->AddProxy(this);
@@ -135,6 +142,8 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
 
 nsresult imgRequestProxy::ChangeOwner(imgRequest *aNewOwner)
 {
+  NS_PRECONDITION(mOwner, "Cannot ChangeOwner on a proxy without an owner!");
+
   if (mCanceled)
     return NS_OK;
 
@@ -207,12 +216,10 @@ void imgRequestProxy::RemoveFromLoadGroup(PRBool releaseLoadGroup)
 NS_IMETHODIMP imgRequestProxy::GetName(nsACString &aName)
 {
   aName.Truncate();
-  if (mOwner) {
-    nsCOMPtr<nsIURI> uri;
-    mOwner->GetURI(getter_AddRefs(uri));
-    if (uri)
-      uri->GetSpec(aName);
-  }
+
+  if (mURI)
+    mURI->GetSpec(aName);
+
   return NS_OK;
 }
 
@@ -301,29 +308,25 @@ imgRequestProxy::RequestDecode()
 NS_IMETHODIMP
 imgRequestProxy::LockImage()
 {
-  if (!mOwner)
+  if (!mImage)
     return NS_ERROR_FAILURE;
 
-  // Increment our lock count
   mLocksHeld++;
 
-  // Forward the request
-  return mOwner->LockImage();
+  return mImage->LockImage();
 }
 
 /* void unlockImage (); */
 NS_IMETHODIMP
 imgRequestProxy::UnlockImage()
 {
-  if (!mOwner)
+  if (!mImage)
     return NS_ERROR_FAILURE;
 
-  // Decrement our lock count
   NS_ABORT_IF_FALSE(mLocksHeld > 0, "calling unlock but no locks!");
   mLocksHeld--;
 
-  // Forward the request
-  return mOwner->UnlockImage();
+  return mImage->UnlockImage();
 }
 
 /* void suspend (); */
@@ -367,32 +370,42 @@ NS_IMETHODIMP imgRequestProxy::SetLoadFlags(nsLoadFlags flags)
 /* attribute imgIContainer image; */
 NS_IMETHODIMP imgRequestProxy::GetImage(imgIContainer * *aImage)
 {
-  if (!mOwner)
+  if (!mImage)
     return NS_ERROR_FAILURE;
 
-  mOwner->GetImage(aImage);
+  NS_ADDREF(*aImage = mImage);
+
   return NS_OK;
 }
 
 /* readonly attribute unsigned long imageStatus; */
 NS_IMETHODIMP imgRequestProxy::GetImageStatus(PRUint32 *aStatus)
 {
-  if (!mOwner) {
+  if (!mOwner && !mImage) {
     *aStatus = imgIRequest::STATUS_ERROR;
     return NS_ERROR_FAILURE;
   }
 
-  *aStatus = mOwner->GetImageStatus();
+  if (mOwner) {
+    *aStatus = mOwner->GetImageStatus();
+    return NS_OK;
+  }
+
+  // If we don't have an owner, we have an image, and have cached the image's
+  // status.
+  *aStatus = mImageStatus;
   return NS_OK;
 }
 
 /* readonly attribute nsIURI URI; */
 NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
 {
-  if (!mOwner)
+  if (!mURI)
     return NS_ERROR_FAILURE;
 
-  return mOwner->GetURI(aURI);
+  NS_ADDREF(*aURI = mURI);
+
+  return NS_OK;
 }
 
 /* readonly attribute imgIDecoderObserver decoderObserver; */
@@ -423,11 +436,7 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
 {
   NS_PRECONDITION(aClone, "Null out param");
   *aClone = nsnull;
-  imgRequestProxy* clone = new imgRequestProxy();
-  if (!clone) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(clone);
+  nsRefPtr<imgRequestProxy> clone = new imgRequestProxy();
 
   // It is important to call |SetLoadFlags()| before calling |Init()| because
   // |Init()| adds the request to the loadgroup.
@@ -436,19 +445,32 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
   // XXXldb That's not true anymore.  Stuff from imgLoader adds the
   // request to the loadgroup.
   clone->SetLoadFlags(mLoadFlags);
-  nsresult rv = clone->Init(mOwner, mLoadGroup, aObserver);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(clone);
+  nsresult rv = clone->Init(mOwner, mLoadGroup, mURI, aObserver);
+  if (NS_FAILED(rv))
     return rv;
-  }
 
-  // Assign to *aClone before calling NotifyProxyListener so that if
-  // the caller expects to only be notified for requests it's already
-  // holding pointers to it won't be surprised.
-  *aClone = clone;
+  clone->mHadLastPart = mHadLastPart;
+  clone->SetImage(mImage);
+  clone->SetPrincipal(mPrincipal);
+
+  // Temporary hack - must be removed in patch to centralize image state tracking.
+  PRUint32 imageStatus = 0;
+  GetImageStatus(&imageStatus);
+  PRUint32 state = 0;
+  GetState(&state);
+  clone->mImageStatus = imageStatus;
+  clone->mState = state;
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Assign to *aClone before calling Notify so that if the caller expects to
+  // only be notified for requests it's already holding pointers to it won't be
+  // surprised.
+  *aClone = clone.forget().get();
 
   // Send the notifications to the clone's observer
-  mOwner->NotifyProxyListener(clone);
+  static_cast<imgRequestProxy*>(*aClone)->NotifyListener();
 
   return NS_OK;
 }
@@ -456,10 +478,12 @@ NS_IMETHODIMP imgRequestProxy::Clone(imgIDecoderObserver* aObserver,
 /* readonly attribute nsIPrincipal imagePrincipal; */
 NS_IMETHODIMP imgRequestProxy::GetImagePrincipal(nsIPrincipal **aPrincipal)
 {
-  if (!mOwner)
+  if (!mPrincipal)
     return NS_ERROR_FAILURE;
 
-  return mOwner->GetPrincipal(aPrincipal);
+  NS_ADDREF(*aPrincipal = mPrincipal);
+
+  return NS_OK;
 }
 
 /** nsISupportsPriority methods **/
@@ -610,9 +634,6 @@ void imgRequestProxy::OnDiscard()
   }
 }
 
-
-
-
 void imgRequestProxy::OnStartRequest()
 {
 #ifdef PR_LOGGING
@@ -641,6 +662,8 @@ void imgRequestProxy::OnStopRequest(PRBool lastPart)
   // on the listener, the removal from the loadgroup, the release of the
   // listener, etc).  Don't let them do it.
   nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
+
+  mHadLastPart = lastPart;
 
   if (mListener) {
     // Hold a ref to the listener while we call it, just in case.
@@ -685,20 +708,40 @@ void imgRequestProxy::NullOutListener()
   }
 }
 
+nsresult imgRequestProxy::GetState(PRUint32 *aState)
+{
+  if (!mOwner && !mImage) {
+    *aState = 0;
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mOwner) {
+    *aState = mOwner->GetState();
+    return NS_OK;
+  }
+
+  // If we don't have an owner, we have an image, and have cached the image's
+  // state.
+  *aState = mState;
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
 {
   *aReturn = nsnull;
-  nsCOMPtr<imgIContainer> img, currentFrame;
-  GetImage(getter_AddRefs(img));
-  if (img) {
-    PRBool animated = PR_FALSE;
-    nsresult rv = img->GetAnimated(&animated);
-    if (NS_SUCCEEDED(rv) && !animated) {
-      NS_ADDREF(*aReturn = this);
-      return NS_OK;
-    }
 
+  nsCOMPtr<imgIContainer> img;
+  nsCOMPtr<imgIContainer> currentFrame;
+  GetImage(getter_AddRefs(img));
+  PRBool animated;
+
+  if (img && NS_SUCCEEDED(img->GetAnimated(&animated)) && !animated) {
+    // Early exit - we're not animated, so we don't have to do anything.
+    NS_ADDREF(*aReturn = this);
+    return NS_OK;
+  } else if (img) {
+    // We are animated. We need to extract the current frame from this image.
     PRInt32 w = 0;
     PRInt32 h = 0;
     img->GetWidth(&w);
@@ -709,22 +752,90 @@ imgRequestProxy::GetStaticRequest(imgIRequest** aReturn)
                       getter_AddRefs(currentFrame));
   }
 
-  nsCOMPtr<nsIURI> uri;
-  GetURI(getter_AddRefs(uri));
+  // Now, we're creating a static imgRequestProxy, so we have to extract this
+  // image's status and other ancillary information.
   PRUint32 imageStatus = 0;
   GetImageStatus(&imageStatus);
-  nsCOMPtr<nsIPrincipal> principal;
-  GetImagePrincipal(getter_AddRefs(principal));
+  PRUint32 state = 0;
+  GetState(&state);
 
-  imgContainerRequest* req =
-    new imgContainerRequest(currentFrame, uri, imageStatus,
-                            mOwner ? mOwner->GetState() : 0,
-                            principal);
-  if (!req) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  imgRequestProxy* req = new imgRequestProxy();
+  req->Init(nsnull, nsnull, mURI, nsnull);
+  req->SetImage(currentFrame);
+  req->SetPrincipal(mPrincipal);
+
+  // Temporary hack - must be removed in patch to centralize image state tracking.
+  req->mImageStatus = imageStatus;
+  req->mState = state;
 
   NS_ADDREF(*aReturn = req);
+
   return NS_OK;
 }
 
+void imgRequestProxy::SetPrincipal(nsIPrincipal *aPrincipal)
+{
+  mPrincipal = aPrincipal;
+}
+
+void imgRequestProxy::SetImage(imgIContainer *aImage)
+{
+  mImage = aImage;
+}
+
+nsresult imgRequestProxy::NotifyListener()
+{
+  nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
+
+  PRUint32 imageStatus = 0;
+  GetImageStatus(&imageStatus);
+  PRUint32 state = 0;
+  GetState(&state);
+
+  nsCOMPtr<imgIContainer> image;
+  GetImage(getter_AddRefs(image));
+
+  // OnStartRequest
+  if (state & stateRequestStarted)
+    OnStartRequest();
+
+  // OnStartContainer
+  if (state & stateHasSize)
+    OnStartContainer(image);
+
+  // OnStartDecode
+  if (state & stateDecodeStarted)
+    OnStartDecode();
+
+  // Send frame messages (OnStartFrame, OnDataAvailable, OnStopFrame)
+  PRUint32 nframes = 0;
+  if (image)
+    image->GetNumFrames(&nframes);
+
+  if (nframes > 0) {
+    PRUint32 frame;
+    image->GetCurrentFrameIndex(&frame);
+    OnStartFrame(frame);
+
+    // OnDataAvailable
+    // XXX - Should only send partial rects here, but that needs to
+    // wait until we fix up the observer interface
+    nsIntRect r;
+    image->GetCurrentFrameRect(r);
+    OnDataAvailable(frame, &r);
+
+    if (state & stateRequestStopped)
+      OnStopFrame(frame);
+  }
+
+  // The "real" OnStopDecode - Fix this with bug 505385.
+  if (state & stateDecodeStopped)
+    OnStopContainer(image);
+
+  if (state & stateRequestStopped) {
+    OnStopDecode(imgRequest::GetResultFromImageStatus(imageStatus), nsnull);
+    OnStopRequest(mHadLastPart);
+  }
+
+  return NS_OK;
+}
