@@ -1,7 +1,10 @@
 // ##########
 window.TabItem = function(container, tab) {
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
+  this.locked = {};
+
   this._init(container);
+
   this._hasBeenDrawn = false;
   this.tab = tab;
   this.setResizable(true);
@@ -11,8 +14,8 @@ window.TabItem.prototype = $.extend(new Item(), {
   // ----------  
   getStorageData: function() {
     return {
-      bounds: this.bounds, 
-      userSize: this.userSize,
+      bounds: this.getBounds(), 
+      userSize: (isPoint(this.userSize) ? new Point(this.userSize) : null),
       url: this.tab.url,
       groupID: (this.parent ? this.parent.id : 0)
     };
@@ -384,6 +387,23 @@ window.TabItems = {
   },
   
   // ----------
+  storageSanity: function(data) {
+    // TODO: check everything 
+    if(!data.tabs)
+      return false;
+      
+    var sane = true;
+    $.each(data.tabs, function(index, tab) {
+      if(!isRect(tab.bounds)) {
+        Utils.log('TabItems.storageSanity: bad bounds', tab.bounds);
+        sane = false;
+      }
+    });
+    
+    return sane;
+  },
+
+  // ----------
   reconnect: function(item) {
     if(item.reconnected)
       return true;
@@ -400,7 +420,10 @@ window.TabItems = {
             item.parent.remove(item);
             
           item.setBounds(tab.bounds, true);
-          item.userSize = tab.userSize;
+          
+          if(isPoint(tab.userSize))
+            item.userSize = new Point(tab.userSize);
+            
           if(tab.groupID) {
             var group = Groups.group(tab.groupID);
             group.add(item);

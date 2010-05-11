@@ -13,6 +13,7 @@
 //   removeOnClose: function(referenceObject)
 // ... and this property: 
 //   defaultSize, a Point
+//   <locked>, an object 
 // Make sure to call _init() from your subclass's constructor. 
 window.Item = function() {
   // Variable: isAnItem
@@ -42,7 +43,7 @@ window.Item = function() {
   //   .bounds is true if it can't be pushed, dragged, resized, etc
   //   .close is true if it can't be closed
   //   .title is true if it can't be renamed
-  this.locked = {};
+  this.locked = null;
   
   // Variable: parent
   // The group that this item is a child of
@@ -69,7 +70,8 @@ window.Item.prototype = {
     Utils.assert('Subclass must provide close', typeof(this.close) == 'function');
     Utils.assert('Subclass must provide addOnClose', typeof(this.addOnClose) == 'function');
     Utils.assert('Subclass must provide removeOnClose', typeof(this.removeOnClose) == 'function');
-    Utils.assert('Subclass must provide defaultSize', this.defaultSize);
+    Utils.assert('Subclass must provide defaultSize', isPoint(this.defaultSize));
+    Utils.assert('Subclass must provide locked', this.locked);
     
     this.container = container;
     
@@ -93,6 +95,7 @@ window.Item.prototype = {
   // Function: getBounds
   // Returns a copy of the Item's bounds as a <Rect>.
   getBounds: function() {
+    Utils.assert('this.bounds', isRect(this.bounds));
     return new Rect(this.bounds);    
   },
   
@@ -106,6 +109,7 @@ window.Item.prototype = {
   //   immediately - if false or omitted, animates to the new position;
   //   otherwise goes there immediately
   setPosition: function(left, top, immediately) {
+    Utils.assert('this.bounds', isRect(this.bounds));
     this.setBounds(new Rect(left, top, this.bounds.width, this.bounds.height), immediately);
   },
 
@@ -119,6 +123,7 @@ window.Item.prototype = {
   //   immediately - if false or omitted, animates to the new size;
   //   otherwise resizes immediately
   setSize: function(width, height, immediately) {
+    Utils.assert('this.bounds', isRect(this.bounds));
     this.setBounds(new Rect(this.bounds.left, this.bounds.top, width, height), immediately);
   },
 
@@ -126,6 +131,7 @@ window.Item.prototype = {
   // Function: setUserSize
   // Remembers the current size as one the user has chosen. 
   setUserSize: function() {
+    Utils.assert('this.bounds', isRect(this.bounds));
     this.userSize = new Point(this.bounds.width, this.bounds.height);
   },
   
@@ -530,7 +536,7 @@ window.Items = {
       var newBounds = new Rect(bounds);
 
       var newSize;
-      if(item.userSize) 
+      if(isPoint(item.userSize)) 
         newSize = new Point(item.userSize);
       else
         newSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
