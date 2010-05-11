@@ -66,6 +66,12 @@
 
 using namespace mozilla::plugins;
 
+#if defined(XP_WIN)
+#ifndef WM_MOUSEHWHEEL
+#define WM_MOUSEHWHEEL     0x020E
+#endif
+#endif
+
 namespace {
 PluginModuleChild* gInstance = nsnull;
 }
@@ -82,6 +88,7 @@ PluginModuleChild::PluginModuleChild() :
 #endif
 #ifdef OS_WIN
   , mNestedEventHook(NULL)
+  , mGlobalCallWndProcHook(NULL)
 #endif
 {
     NS_ASSERTION(!gInstance, "Something terribly wrong here!");
@@ -488,7 +495,7 @@ PluginModuleChild::AnswerNP_Shutdown(NPError *rv)
     memset(&mFunctions, 0, sizeof(mFunctions));
 
 #ifdef OS_WIN
-    ResetNestedInputEventHook();
+    ResetEventHooks();
 #endif
 
     return true;
@@ -1496,7 +1503,7 @@ PluginModuleChild::AnswerNP_Initialize(NativeThreadId* tid, NPError* _retval)
 #endif
 
 #ifdef OS_WIN
-    SetNestedInputEventHook();
+    SetEventHooks();
 #endif
 
 #if defined(OS_LINUX)
@@ -1876,6 +1883,59 @@ PluginModuleChild::ExitedCall()
 }
 
 LRESULT CALLBACK
+PluginModuleChild::CallWindowProcHook(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    // Trap and reply to anything we recognize as the source of a
+    // potential send message deadlock.
+    if (nCode >= 0 &&
+        (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
+        CWPSTRUCT* pCwp = reinterpret_cast<CWPSTRUCT*>(lParam);
+        switch(pCwp->message) {
+            // Sync messages we can reply to:
+            case WM_SETFOCUS:
+            case WM_KILLFOCUS:
+            case WM_MOUSEHWHEEL:
+            case WM_MOUSEWHEEL:
+            case WM_HSCROLL:
+            case WM_VSCROLL:
+            case WM_CONTEXTMENU:
+            case WM_IME_SETCONTEXT:
+            case WM_WINDOWPOSCHANGED:
+                ReplyMessage(0);
+            break;
+            // Sync message that can't be handled:
+            case WM_WINDOWPOSCHANGING:
+            case WM_DESTROY:
+            case WM_PAINT:
+            break;
+            // Everything else:
+            default: {
+#ifdef DEBUG
+              nsCAutoString log("Child plugin module received untrapped ");
+              log.AppendLiteral("synchronous message for window. msg=");
+              char szTmp[40];
+              sprintf(szTmp, "0x%06X", pCwp->message);
+              log.Append(szTmp);
+              log.AppendLiteral(" hwnd=");
+              sprintf(szTmp, "0x%08X", pCwp->hwnd);
+              log.Append(szTmp);
+              PRUnichar className[256] = { 0 };
+              if (GetClassNameW(pCwp->hwnd, className,
+                                sizeof(className)/sizeof(PRUnichar)) > 0) {
+                  log.AppendLiteral(" class='");
+                  log.Append(NS_ConvertUTF16toUTF8((PRUnichar*)className));
+                  log.AppendLiteral("'");
+              }
+              NS_WARNING(log.get());
+#endif
+            }
+        }
+    }
+
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+LRESULT CALLBACK
 PluginModuleChild::NestedInputEventHook(int nCode, WPARAM wParam, LPARAM lParam)
 {
     PluginModuleChild* self = current();
@@ -1893,29 +1953,38 @@ PluginModuleChild::NestedInputEventHook(int nCode, WPARAM wParam, LPARAM lParam)
 }
 
 void
-PluginModuleChild::SetNestedInputEventHook()
+PluginModuleChild::SetEventHooks()
 {
     NS_ASSERTION(!mNestedEventHook,
         "mNestedEventHook already setup in call to SetNestedInputEventHook?");
+    NS_ASSERTION(!mGlobalCallWndProcHook,
+        "mGlobalCallWndProcHook already setup in call to CallWindowProcHook?");
 
     PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
 
-    // WH_GETMESSAGE hooks are triggered by peek message calls in parent due to
-    // attached message queues, resulting in stomped in-process ipc calls.  So
-    // we use a filter hook specific to dialogs, menus, and scroll bars to kick
-    // things off.
+    // WH_MSGFILTER event hook for detecting modal loops in the child.
     mNestedEventHook = SetWindowsHookEx(WH_MSGFILTER,
                                         NestedInputEventHook,
                                         NULL,
                                         GetCurrentThreadId());
+
+    // WH_CALLWNDPROC event hook for trapping sync messages sent from
+    // parent that can cause deadlocks.
+    mGlobalCallWndProcHook = SetWindowsHookEx(WH_CALLWNDPROC,
+                                              CallWindowProcHook,
+                                              NULL,
+                                              GetCurrentThreadId());
 }
 
 void
-PluginModuleChild::ResetNestedInputEventHook()
+PluginModuleChild::ResetEventHooks()
 {
     PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
     if (mNestedEventHook)
         UnhookWindowsHookEx(mNestedEventHook);
     mNestedEventHook = NULL;
+    if (mGlobalCallWndProcHook)
+        UnhookWindowsHookEx(mGlobalCallWndProcHook);
+    mGlobalCallWndProcHook = NULL;
 }
 #endif
