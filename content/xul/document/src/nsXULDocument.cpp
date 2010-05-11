@@ -1089,20 +1089,20 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
 void
 nsXULDocument::ContentAppended(nsIDocument* aDocument,
                                nsIContent* aContainer,
+                               nsIContent* aFirstNewContent,
                                PRInt32 aNewIndexInContainer)
 {
     NS_ASSERTION(aDocument == this, "unexpected doc");
     
     // Update our element map
-    PRUint32 count = aContainer->GetChildCount();
-
     nsresult rv = NS_OK;
-    for (PRUint32 i = aNewIndexInContainer; i < count && NS_SUCCEEDED(rv);
-         ++i) {
-        rv = AddSubtreeToDocument(aContainer->GetChildAt(i));
+    for (nsIContent* cur = aFirstNewContent; cur && NS_SUCCEEDED(rv);
+         cur = cur->GetNextSibling()) {
+        rv = AddSubtreeToDocument(cur);
     }
 
-    nsXMLDocument::ContentAppended(aDocument, aContainer, aNewIndexInContainer);
+    nsXMLDocument::ContentAppended(aDocument, aContainer, aFirstNewContent,
+                                   aNewIndexInContainer);
 }
 
 void

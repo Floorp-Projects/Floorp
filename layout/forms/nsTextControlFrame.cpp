@@ -3095,7 +3095,8 @@ nsAnonDivObserver::CharacterDataChanged(nsIDocument*             aDocument,
 void
 nsAnonDivObserver::ContentAppended(nsIDocument* aDocument,
                                    nsIContent*  aContainer,
-                                   PRInt32      aNewIndexInContainer)
+                                   nsIContent*  aFirstNewContent,
+                                   PRInt32      /* unused */)
 {
   mTextControl->ClearValueCache();
 }
@@ -3104,7 +3105,7 @@ void
 nsAnonDivObserver::ContentInserted(nsIDocument* aDocument,
                                    nsIContent*  aContainer,
                                    nsIContent*  aChild,
-                                   PRInt32      aIndexInContainer)
+                                   PRInt32      /* unused */)
 {
   mTextControl->ClearValueCache();
 }

@@ -940,7 +940,8 @@ nsImageMap::AttributeChanged(nsIDocument* aDocument,
 void
 nsImageMap::ContentAppended(nsIDocument *aDocument,
                             nsIContent* aContainer,
-                            PRInt32     aNewIndexInContainer)
+                            nsIContent* aFirstNewContent,
+                            PRInt32     /* unused */)
 {
   MaybeUpdateAreas(aContainer);
 }
@@ -949,7 +950,7 @@ void
 nsImageMap::ContentInserted(nsIDocument *aDocument,
                             nsIContent* aContainer,
                             nsIContent* aChild,
-                            PRInt32 aIndexInContainer)
+                            PRInt32 /* unused */)
 {
   MaybeUpdateAreas(aContainer);
 }
