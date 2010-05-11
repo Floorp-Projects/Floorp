@@ -168,18 +168,18 @@ public:
   virtual void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
   virtual void SetPrincipal(nsIPrincipal* aPrincipal);
   virtual nsIPrincipal* Principal() const;
-  virtual void SetTitle(const nsAString& aTitle);
+  void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
   virtual void SetMedia(nsMediaList* aMedia);
-  virtual void SetOwningNode(nsIDOMNode* aOwningNode);
-  virtual void SetOwnerRule(nsICSSImportRule* aOwnerRule);
+  void SetOwningNode(nsIDOMNode* aOwningNode) { mOwningNode = aOwningNode; /* Not ref counted */ }
+  void SetOwnerRule(nsICSSImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
   virtual already_AddRefed<nsICSSImportRule> GetOwnerRule();
   virtual nsXMLNameSpaceMap* GetNameSpaceMap() const;
   virtual already_AddRefed<nsCSSStyleSheet> Clone(nsCSSStyleSheet* aCloneParent,
                                                   nsICSSImportRule* aCloneOwnerRule,
                                                   nsIDocument* aCloneDocument,
                                                   nsIDOMNode* aCloneOwningNode) const;
-  virtual PRBool IsModified() const;
-  virtual void SetModified(PRBool aModified);
+  PRBool IsModified() const { return mDirty; }
+  void SetModified(PRBool aModified) { mDirty = aModified; }
   virtual nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
   virtual nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
   virtual nsresult InsertRuleInternal(const nsAString& aRule,
@@ -247,7 +247,7 @@ protected:
 
 protected:
   nsString              mTitle;
-  nsCOMPtr<nsMediaList> mMedia;
+  nsRefPtr<nsMediaList> mMedia;
   nsRefPtr<nsCSSStyleSheet> mNext;
   nsCSSStyleSheet*      mParent;    // weak ref
   nsICSSImportRule*     mOwnerRule; // weak ref
