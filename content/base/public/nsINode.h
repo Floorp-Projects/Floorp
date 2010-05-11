@@ -68,6 +68,7 @@ class nsNodeSupportsWeakRefTearoff;
 class nsIEditor;
 class nsIVariant;
 class nsIDOMUserDataHandler;
+class nsAttrAndChildArray;
 
 namespace mozilla {
 namespace dom {
@@ -288,12 +289,15 @@ public:
   friend class nsNodeUtils;
   friend class nsNodeWeakReference;
   friend class nsNodeSupportsWeakRefTearoff;
+  friend class nsAttrAndChildArray;
 
 #ifdef MOZILLA_INTERNAL_API
   nsINode(nsINodeInfo* aNodeInfo)
     : mNodeInfo(aNodeInfo),
       mParentPtrBits(0),
-      mFlagsOrSlots(NODE_DOESNT_HAVE_SLOTS)
+      mFlagsOrSlots(NODE_DOESNT_HAVE_SLOTS),
+      mNextSibling(nsnull),
+      mPreviousSibling(nsnull)
   {
   }
 #endif
@@ -1087,6 +1091,9 @@ public:
   void LookupNamespaceURI(const nsAString& aNamespacePrefix,
                           nsAString& aNamespaceURI);
 
+  nsIContent* GetNextSibling() const { return mNextSibling; }
+  nsIContent* GetPreviousSibling() const { return mPreviousSibling; }
+
 protected:
 
   // Override this function to create a custom slots class.
@@ -1185,6 +1192,9 @@ protected:
    * member.
    */
   PtrBits mFlagsOrSlots;
+
+  nsIContent* mNextSibling;
+  nsIContent* mPreviousSibling;
 };
 
 
