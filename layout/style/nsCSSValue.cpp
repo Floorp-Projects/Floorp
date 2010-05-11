@@ -99,8 +99,7 @@ nsCSSValue::nsCSSValue(const nsString& aValue, nsCSSUnit aUnit)
 nsCSSValue::nsCSSValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
   : mUnit(aUnit)
 {
-  NS_ASSERTION(eCSSUnit_Array <= aUnit && aUnit <= eCSSUnit_Function,
-               "bad unit");
+  NS_ASSERTION(UnitHasArrayValue(), "bad unit");
   mValue.mArray = aValue;
   mValue.mArray->AddRef();
 }
@@ -145,7 +144,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   else if (eCSSUnit_Color == mUnit) {
     mValue.mColor = aCopy.mValue.mColor;
   }
-  else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Function) {
+  else if (UnitHasArrayValue()) {
     mValue.mArray = aCopy.mValue.mArray;
     mValue.mArray->AddRef();
   }
@@ -191,7 +190,7 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
     else if (eCSSUnit_Color == mUnit) {
       return mValue.mColor == aOther.mValue.mColor;
     }
-    else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Function) {
+    else if (UnitHasArrayValue()) {
       return *mValue.mArray == *aOther.mValue.mArray;
     }
     else if (eCSSUnit_URL == mUnit) {
@@ -261,7 +260,7 @@ void nsCSSValue::DoReset()
 {
   if (UnitHasStringValue()) {
     mValue.mString->Release();
-  } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Function) {
+  } else if (UnitHasArrayValue()) {
     mValue.mArray->Release();
   } else if (eCSSUnit_URL == mUnit) {
     mValue.mURL->Release();
@@ -328,10 +327,9 @@ void nsCSSValue::SetColorValue(nscolor aValue)
 
 void nsCSSValue::SetArrayValue(nsCSSValue::Array* aValue, nsCSSUnit aUnit)
 {
-  NS_ASSERTION(eCSSUnit_Array <= aUnit && aUnit <= eCSSUnit_Function,
-               "bad unit");
   Reset();
   mUnit = aUnit;
+  NS_ASSERTION(UnitHasArrayValue(), "bad unit");
   mValue.mArray = aValue;
   mValue.mArray->AddRef();
 }
