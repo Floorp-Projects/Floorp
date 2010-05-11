@@ -79,6 +79,7 @@
 #include "nsTArray.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Element.h"
+#include "CSSCalc.h"
 
 using namespace mozilla::dom;
 
@@ -169,6 +170,54 @@ static void EnsureBlockDisplay(PRUint8& display)
   }
 }
 
+static nscoord CalcLengthWith(const nsCSSValue& aValue,
+                              nscoord aFontSize,
+                              const nsStyleFont* aStyleFont,
+                              nsStyleContext* aStyleContext,
+                              nsPresContext* aPresContext,
+                              PRBool aUseProvidedRootEmSize,
+                              PRBool aUseUserFontSet,
+                              PRBool& aCanStoreInRuleTree);
+
+struct CalcLengthCalcOps : public mozilla::css::BasicCoordCalcOps,
+                           public mozilla::css::NumbersAlreadyNormalizedOps
+{
+  struct ComputeData {
+    // All of the parameters to CalcLengthWith except aValue.
+    nscoord mFontSize;
+    const nsStyleFont* mStyleFont;
+    nsStyleContext* mStyleContext;
+    nsPresContext* mPresContext;
+    PRBool mUseProvidedRootEmSize;
+    PRBool mUseUserFontSet;
+    PRBool& mCanStoreInRuleTree;
+
+    ComputeData(nscoord aFontSize, const nsStyleFont* aStyleFont,
+                nsStyleContext* aStyleContext, nsPresContext* aPresContext,
+                PRBool aUseProvidedRootEmSize, PRBool aUseUserFontSet,
+                PRBool& aCanStoreInRuleTree)
+      : mFontSize(aFontSize),
+        mStyleFont(aStyleFont),
+        mStyleContext(aStyleContext),
+        mPresContext(aPresContext),
+        mUseProvidedRootEmSize(aUseProvidedRootEmSize),
+        mUseUserFontSet(aUseUserFontSet),
+        mCanStoreInRuleTree(aCanStoreInRuleTree)
+    {
+    }
+  };
+
+  static result_type ComputeLeafValue(const nsCSSValue& aValue,
+                                      const ComputeData& aClosure)
+  {
+    return CalcLengthWith(aValue, aClosure.mFontSize, aClosure.mStyleFont,
+                          aClosure.mStyleContext, aClosure.mPresContext,
+                          aClosure.mUseProvidedRootEmSize,
+                          aClosure.mUseUserFontSet,
+                          aClosure.mCanStoreInRuleTree);
+  }
+};
+
 static inline nscoord ScaleCoord(const nsCSSValue &aValue, float factor)
 {
   return NSToCoordRoundWithClamp(aValue.GetFloatValue() * factor);
@@ -186,7 +235,8 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
                               PRBool aUseUserFontSet,
                               PRBool& aCanStoreInRuleTree)
 {
-  NS_ASSERTION(aValue.IsLengthUnit(), "not a length unit");
+  NS_ASSERTION(aValue.IsLengthUnit() || aValue.IsCalcUnit(),
+               "not a length or calc unit");
   NS_ASSERTION(aStyleFont || aStyleContext, "Must have style data");
   NS_ASSERTION(!aStyleFont || !aStyleContext, "Duplicate sources of data");
   NS_ASSERTION(aPresContext, "Must have prescontext");
@@ -200,13 +250,12 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
   }
   // Common code for all units other than pixels:
   aCanStoreInRuleTree = PR_FALSE;
-  if (!aStyleFont) {
-    aStyleFont = aStyleContext->GetStyleFont();
-  }
+  const nsStyleFont *styleFont =
+    aStyleFont ? aStyleFont : aStyleContext->GetStyleFont();
   if (aFontSize == -1) {
-    // XXX Should this be aStyleFont->mSize instead to avoid taking minfontsize
+    // XXX Should this be styleFont->mSize instead to avoid taking minfontsize
     // prefs into account?
-    aFontSize = aStyleFont->mFont.size;
+    aFontSize = styleFont->mFont.size;
   }
   switch (unit) {
     case eCSSUnit_RootEM: {
@@ -224,12 +273,12 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
         // nsRuleNode::SetFont makes the same assumption!), so we should
         // use GetStyleFont on this context to get the root element's
         // font size.
-        rootFontSize = aStyleFont->mFont.size;
+        rootFontSize = styleFont->mFont.size;
       } else {
         // This is not the root element or we are calculating something other
         // than font size, so rem is relative to the root element's font size.
         nsRefPtr<nsStyleContext> rootStyle;
-        const nsStyleFont *rootStyleFont = aStyleFont;
+        const nsStyleFont *rootStyleFont = styleFont;
         Element* docElement = aPresContext->Document()->GetRootElement();
 
         rootStyle = aPresContext->StyleSet()->ResolveStyleFor(docElement,
@@ -247,7 +296,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       // XXX scale against font metrics height instead?
     }
     case eCSSUnit_XHeight: {
-      nsFont font = aStyleFont->mFont;
+      nsFont font = styleFont->mFont;
       font.size = aFontSize;
       nsCOMPtr<nsIFontMetrics> fm =
         aPresContext->GetMetricsFor(font, aUseUserFontSet);
@@ -256,7 +305,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       return ScaleCoord(aValue, float(xHeight));
     }
     case eCSSUnit_Char: {
-      nsFont font = aStyleFont->mFont;
+      nsFont font = styleFont->mFont;
       font.size = aFontSize;
       nsCOMPtr<nsIFontMetrics> fm =
         aPresContext->GetMetricsFor(font, aUseUserFontSet);
@@ -266,6 +315,24 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
 
       return ScaleCoord(aValue, NS_ceil(aPresContext->AppUnitsPerDevPixel() *
                                         zeroWidth));
+    }
+    // For properties for which lengths are the *only* units accepted in
+    // calc(), we can handle calc() here and just compute a final
+    // result.  We ensure that we don't get to this code for other
+    // properties by not calling CalcLength in those cases:  SetCoord
+    // only calls CalcLength for a calc when it is appropriate to do so.
+    case eCSSUnit_Calc:
+    case eCSSUnit_Calc_Plus:
+    case eCSSUnit_Calc_Minus:
+    case eCSSUnit_Calc_Times_L:
+    case eCSSUnit_Calc_Times_R:
+    case eCSSUnit_Calc_Divided:
+    case eCSSUnit_Calc_Minimum:
+    case eCSSUnit_Calc_Maximum: {
+      CalcLengthCalcOps::ComputeData
+        data(aFontSize, aStyleFont, aStyleContext, aPresContext,
+             aUseProvidedRootEmSize, aUseUserFontSet, aCanStoreInRuleTree);
+      return mozilla::css::ComputeCalc<CalcLengthCalcOps>(aValue, data);
     }
     default:
       NS_NOTREACHED("unexpected unit");
@@ -320,6 +387,7 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
 #define SETCOORD_INITIAL_NONE           0x800
 #define SETCOORD_INITIAL_NORMAL         0x1000
 #define SETCOORD_INITIAL_HALF           0x2000
+#define SETCOORD_CALC_LENGTH_ONLY       0x4000
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -348,8 +416,10 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   if (aValue.GetUnit() == eCSSUnit_Null) {
     result = PR_FALSE;
   }
-  else if (((aMask & SETCOORD_LENGTH) != 0) &&
-           aValue.IsLengthUnit()) {
+  else if ((((aMask & SETCOORD_LENGTH) != 0) &&
+            aValue.IsLengthUnit()) ||
+           (((aMask & SETCOORD_CALC_LENGTH_ONLY) != 0) &&
+            aValue.IsCalcUnit())) {
     aCoord.SetCoordValue(CalcLength(aValue, aStyleContext, aPresContext,
                                     aCanStoreInRuleTree));
   }
