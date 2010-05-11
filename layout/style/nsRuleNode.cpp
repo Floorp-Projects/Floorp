@@ -388,6 +388,7 @@ nsRuleNode::CalcLengthWithInitialFont(nsPresContext* aPresContext,
 #define SETCOORD_INITIAL_NORMAL         0x1000
 #define SETCOORD_INITIAL_HALF           0x2000
 #define SETCOORD_CALC_LENGTH_ONLY       0x4000
+#define SETCOORD_CALC_CLAMP_NONNEGATIVE 0x8000 // modifier for CALC_LENGTH_ONLY
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -420,8 +421,14 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
             aValue.IsLengthUnit()) ||
            (((aMask & SETCOORD_CALC_LENGTH_ONLY) != 0) &&
             aValue.IsCalcUnit())) {
-    aCoord.SetCoordValue(CalcLength(aValue, aStyleContext, aPresContext,
-                                    aCanStoreInRuleTree));
+    nscoord len = CalcLength(aValue, aStyleContext, aPresContext,
+                             aCanStoreInRuleTree);
+    if ((aMask & SETCOORD_CALC_CLAMP_NONNEGATIVE) && len < 0) {
+      NS_ASSERTION(aValue.IsCalcUnit(),
+                   "parser should have ensured no nonnegative lengths");
+      len = 0;
+    }
+    aCoord.SetCoordValue(len);
   }
   else if (((aMask & SETCOORD_PERCENT) != 0) &&
            (aValue.GetUnit() == eCSSUnit_Percent)) {
