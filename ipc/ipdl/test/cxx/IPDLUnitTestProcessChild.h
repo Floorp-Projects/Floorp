@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=8 et :
- */
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Plugin App.
+ * The Original Code is Mozilla IPC.
  *
  * The Initial Developer of the Original Code is
- *   Ben Turner <bent.mozilla@gmail.com>.
+ *   The Mozilla Foundation
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Chris Jones <jones.chris.g@gmail.com>.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,52 +36,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "mozilla/ipc/MozillaChildThread.h"
+#ifndef mozilla__ipdltest_IPDLUnitTestThreadChild_h
+#define mozilla__ipdltest_IPDLUnitTestThreadChild_h 1
 
-#include "nsXPCOM.h"
-
-#ifdef XP_WIN
-#include <objbase.h>
-#endif
+#include "mozilla/ipc/ProcessChild.h"
 
 namespace mozilla {
-namespace ipc {
+namespace _ipdltest {
 
-void
-MozillaChildThread::OnControlMessageReceived(const IPC::Message& aMessage) {
-  /*
-  IPC_BEGIN_MESSAGE_MAP(MozillaChildThread, aMessage)
-  IPC_END_MESSAGE_MAP()
-  */
-}
-
-void
-MozillaChildThread::Init()
+class IPDLUnitTestProcessChild : public mozilla::ipc::ProcessChild
 {
-  ChildThread::Init();
+  typedef mozilla::ipc::ProcessChild ProcessChild;
 
-#ifdef XP_WIN
-  // Silverlight depends on the host calling CoInitialize.
-  ::CoInitialize(NULL);
-#endif
-  // Add notification service here once bug 560630 is fixed
+public:
+  IPDLUnitTestProcessChild(ProcessHandle aParentHandle) :
+    ProcessChild(aParentHandle)
+  { }
 
-  // Certain plugins, such as flash, steal the unhandled exception filter
-  // thus we never get crash reports when they fault. This call fixes it.
-  message_loop()->set_exception_restoration(true);
+  ~IPDLUnitTestProcessChild()
+  { }
 
-  NS_LogInit();
-}
+  virtual bool Init();
+};
 
-void
-MozillaChildThread::CleanUp()
-{
-  NS_LogTerm();
-
-#ifdef XP_WIN
-  ::CoUninitialize();
-#endif
-}
-
-} // namespace ipc
+} // namespace _ipdltest
 } // namespace mozilla
+
+#endif // ifndef mozilla__ipdltest_IPDLUnitTestThreadChild_h
