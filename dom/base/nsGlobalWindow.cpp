@@ -227,6 +227,7 @@ static PRInt32              gRunningTimeoutDepth       = 0;
 static PRPackedBool         gMouseDown                 = PR_FALSE;
 static PRPackedBool         gDragServiceDisabled       = PR_FALSE;
 static FILE                *gDumpFile                  = nsnull;
+static PRUint64             gNextWindowID              = 0;
 
 #ifdef DEBUG
 static PRUint32             gSerialCounter             = 0;
@@ -666,6 +667,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 #endif
     , mCleanedUp(PR_FALSE)
     , mCallCleanUpAfterModalDialogCloses(PR_FALSE)
+    , mWindowID(gNextWindowID++)
 {
   memset(mScriptGlobals, 0, sizeof(mScriptGlobals));
   nsLayoutStatics::AddRef();
