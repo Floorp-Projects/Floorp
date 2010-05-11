@@ -49,11 +49,9 @@
 #include "jsopcode.h"
 #include "jsscript.h"
 
-JS_BEGIN_EXTERN_C
-
 typedef struct JSFrameRegs {
     jsbytecode      *pc;            /* program counter */
-    jsval           *sp;            /* stack pointer */
+    js::Value       *sp;            /* stack pointer */
 } JSFrameRegs;
 
 /* JS stack frame flags. */
@@ -82,16 +80,17 @@ typedef struct JSFrameRegs {
  */
 struct JSStackFrame
 {
+    /* N.B. alignment (TODO: remove these members) */
+    js::Value           thisv;          /* "this" pointer if in method */
+    js::Value           rval;           /* function return value */
+
     jsbytecode          *imacpc;        /* null or interpreter macro call pc */
     JSObject            *callobj;       /* lazily created Call object */
-    jsval               argsobj;        /* lazily created arguments object, must be
-                                           JSVAL_OBJECT */
+    JSObject            *argsobj;       /* lazily created arguments object */
     JSScript            *script;        /* script being interpreted */
     JSFunction          *fun;           /* function being called or null */
-    jsval               thisv;          /* "this" pointer if in method */
     uintN               argc;           /* actual argument count */
-    jsval               *argv;          /* base of argument stack slots */
-    jsval               rval;           /* function return value */
+    js::Value           *argv;          /* base of argument stack slots */
     void                *annotation;    /* used by Java security */
 
     /* Maintained by StackSpace operations */
@@ -138,10 +137,7 @@ struct JSStackFrame
      * also used in some other cases --- entering 'with' blocks, for
      * example.
      */
-    union {
-        JSObject    *scopeChain;
-        jsval       scopeChainVal;
-    };
+    JSObject        *scopeChain;
     JSObject        *blockChain;
 
     uint32          flags;          /* frame flags -- see below */
@@ -168,26 +164,25 @@ struct JSStackFrame
     /* Get the frame's current bytecode, assuming |this| is in |cx|. */
     jsbytecode *pc(JSContext *cx) const;
 
-    jsval *argEnd() const {
-        return (jsval *)this;
+    js::Value *argEnd() const {
+        return (js::Value *)this;
     }
 
-    jsval *slots() const {
-        return (jsval *)(this + 1);
+    js::Value *slots() const {
+        return (js::Value *)(this + 1);
     }
 
-    jsval calleeValue() {
+    js::Value *base() const {
+        return slots() + script->nfixed;
+    }
+
+    const js::Value &calleeValue() {
         JS_ASSERT(argv);
         return argv[-2];
     }
 
-    JSObject *calleeObject() {
-        JS_ASSERT(argv);
-        return JSVAL_TO_OBJECT(argv[-2]);
-    }
-
     JSObject *callee() {
-        return argv ? JSVAL_TO_OBJECT(argv[-2]) : NULL;
+        return argv ? &argv[-2].asObject() : NULL;
     }
 
     /*
@@ -200,7 +195,7 @@ struct JSStackFrame
     /* Short for: varobj(cx->activeCallStack()). */
     JSObject *varobj(JSContext *cx) const;
 
-    inline JSObject *getThisObject(JSContext *cx);
+    inline js::ObjPtr getThisObject(JSContext *cx);
 
     bool isGenerator() const { return flags & JSFRAME_GENERATOR; }
     bool isFloatingGenerator() const {
@@ -211,16 +206,10 @@ struct JSStackFrame
 
 namespace js {
 
-JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(jsval) == 0);
-static const size_t ValuesPerStackFrame = sizeof(JSStackFrame) / sizeof(jsval);
+JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(Value) == 0);
+static const size_t ValuesPerStackFrame = sizeof(JSStackFrame) / sizeof(Value);
 
-}
-
-static JS_INLINE jsval *
-StackBase(JSStackFrame *fp)
-{
-    return fp->slots() + fp->script->nfixed;
-}
+} /* namespace js */
 
 static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
@@ -246,10 +235,12 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp);
  * instance of clasp and extract its private slot value to return via *thisvp.
  *
  * NB: this function loads and uses *vp before storing *thisvp, so the two may
- * alias the same jsval.
+ * alias the same Value.
  */
 extern JSBool
-js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp);
+js_GetPrimitiveThis(JSContext *cx, js::Value *vp, js::Class *clasp, js::Value *thisvp);
+
+namespace js {
 
 /*
  * For a call with arguments argv including argv[-1] (nominal |this|) and
@@ -258,15 +249,43 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp);
  * objects as, per ECMA-262, they may not be referred to by |this|. argv[-1]
  * must not be a JSVAL_VOID.
  */
-extern JSObject *
-js_ComputeThis(JSContext *cx, jsval *argv);
+extern bool
+ComputeThisFromArgv(JSContext *cx, js::Value *argv);
 
-extern const uint16 js_PrimitiveTestFlags[];
+JS_ALWAYS_INLINE JSObject *
+ComputeThisObjectFromVp(JSContext *cx, js::Value *vp)
+{
+    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
+    return ComputeThisFromArgv(cx, vp + 2) ? &vp->asObject() : NULL;
+}
 
-#define PRIMITIVE_THIS_TEST(fun,thisv)                                        \
-    (JS_ASSERT(!JSVAL_IS_VOID(thisv)),                                        \
-     JSFUN_THISP_TEST(JSFUN_THISP_FLAGS((fun)->flags),                        \
-                      js_PrimitiveTestFlags[JSVAL_TAG(thisv) - 1]))
+JS_ALWAYS_INLINE bool
+ComputeThisValueFromVp(JSContext *cx, js::Value *vp, js::Value **thisvpp)
+{
+    extern bool ComputeThisFromArgv(JSContext *, js::Value *);
+    if (ComputeThisFromArgv(cx, vp + 2)) {
+        *thisvpp = vp + 1;
+        return true;
+    }
+    return false;
+}
+
+class PrimitiveValue
+{
+    static const unsigned THISP_MASK       = 0x7;
+    static const unsigned THISP_ARRAY_SIZE = 8;
+    static const unsigned THISP_SHIFT      = 8;
+
+    JS_STATIC_ASSERT(JSFUN_THISP_PRIMITIVE >> THISP_SHIFT == THISP_MASK);
+    JS_STATIC_ASSERT(THISP_MASK == THISP_ARRAY_SIZE - 1);
+
+    static const Value::MaskType Masks[THISP_ARRAY_SIZE];
+
+  public:
+    static bool test(JSFunction *fun, const Value &v) {
+        return bool(Masks[(fun->flags >> THISP_SHIFT) & THISP_MASK] & v.mask);
+    }
+};
 
 /*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
@@ -276,8 +295,11 @@ extern const uint16 js_PrimitiveTestFlags[];
  * and the range [args.getvp() + 2, args.getvp() + 2 + args.getArgc()) should
  * be initialized actual arguments.
  */
-extern JS_REQUIRES_STACK JS_FRIEND_API(JSBool)
-js_Invoke(JSContext *cx, const js::InvokeArgsGuard &args, uintN flags);
+extern JS_REQUIRES_STACK bool
+Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags);
+
+extern JS_REQUIRES_STACK JS_FRIEND_API(bool)
+InvokeFriendAPI(JSContext *cx, const InvokeArgsGuard &args, uintN flags);
 
 /*
  * Consolidated js_Invoke flags simply rename certain JSFRAME_* flags, so that
@@ -300,56 +322,79 @@ js_Invoke(JSContext *cx, const js::InvokeArgsGuard &args, uintN flags);
  */
 #define JSINVOKE_FUNFLAGS       (JSINVOKE_CONSTRUCT | JSINVOKE_ITERATOR)
 
-/*
- * "Internal" calls may come from C or C++ code using a JSContext on which no
- * JS is running (!cx->fp), so they may need to push a dummy JSStackFrame.
- */
-#define js_InternalCall(cx,obj,fval,argc,argv,rval)                           \
-    js_InternalInvoke(cx, obj, fval, 0, argc, argv, rval)
+extern bool
+InternalInvoke(JSContext *cx, JSObject *obj, const Value &fval, uintN flags,
+               uintN argc, const Value *argv, Value *rval);
 
-#define js_InternalConstruct(cx,obj,fval,argc,argv,rval)                      \
-    js_InternalInvoke(cx, obj, fval, JSINVOKE_CONSTRUCT, argc, argv, rval)
+static JS_ALWAYS_INLINE bool
+InternalCall(JSContext *cx, JSObject *obj, const Value &fval, uintN argc,
+             const Value *argv, Value *rval)
+{
+    return InternalInvoke(cx, obj, fval, 0, argc, argv, rval);
+}
 
-extern JSBool
-js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
-                  uintN argc, jsval *argv, jsval *rval);
+static JS_ALWAYS_INLINE bool
+InternalConstruct(JSContext *cx, JSObject *obj, const Value &fval, uintN argc,
+                  const Value *argv, Value *rval)
+{
+    return InternalInvoke(cx, obj, fval, JSINVOKE_CONSTRUCT, argc, argv, rval);
+}
 
-extern JSBool
-js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
-                    JSAccessMode mode, uintN argc, jsval *argv, jsval *rval);
+extern bool
+InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
+                 JSAccessMode mode, uintN argc, const Value *argv, Value *rval);
 
-extern JS_FORCES_STACK JSBool
-js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
-           JSStackFrame *down, uintN flags, jsval *result);
+extern JS_FORCES_STACK bool
+Execute(JSContext *cx, JSObject *chain, JSScript *script,
+        JSStackFrame *down, uintN flags, Value *result);
 
-extern JS_REQUIRES_STACK JSBool
-js_InvokeConstructor(JSContext *cx, const js::InvokeArgsGuard &args,
-                     JSBool clampReturn);
+extern JS_REQUIRES_STACK bool
+InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args,
+                  JSBool clampReturn);
 
-extern JS_REQUIRES_STACK JSBool
-js_Interpret(JSContext *cx);
+extern JS_REQUIRES_STACK bool
+Interpret(JSContext *cx);
 
 #define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
 
-extern JSBool
-js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
-                      JSObject **objp, JSProperty **propp);
+extern bool
+CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
+                   JSObject **objp, JSProperty **propp);
 
-extern JSBool
-js_StrictlyEqual(JSContext *cx, jsval lval, jsval rval);
+extern bool
+StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval);
 
 /* === except that NaN is the same as NaN and -0 is not the same as +0. */
-extern JSBool
-js_SameValue(jsval v1, jsval v2, JSContext *cx);
+extern bool
+SameValue(JSContext *cx, const Value &v1, const Value &v2);
 
-extern JSBool
-js_InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp);
+JSType
+TypeOfValue(JSContext *cx, const js::Value &v);
+
+inline bool
+InstanceOf(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
+{
+    if (obj && obj->getClass() == clasp)
+        return true;
+    extern bool InstanceOfSlow(JSContext *, JSObject *, Class *, Value *);
+    return InstanceOfSlow(cx, obj, clasp, argv);
+}
+
+inline void *
+GetInstancePrivate(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
+{
+    if (!InstanceOf(cx, obj, clasp, argv))
+        return NULL;
+    return obj->getPrivate();
+}
+
+} /* namespace js */
 
 /*
  * Given an active context, a static scope level, and an upvar cookie, return
  * the value of the upvar.
  */
-extern jsval&
+extern const js::Value &
 js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
 
 /*
@@ -378,31 +423,13 @@ js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
 #else
 # define JS_STATIC_INTERPRET
 
-/*
- * ECMA requires "the global object", but in embeddings such as the browser,
- * which have multiple top-level objects (windows, frames, etc. in the DOM),
- * we prefer fun's parent.  An example that causes this code to run:
- *
- *   // in window w1
- *   function f() { return this }
- *   function g() { return f }
- *
- *   // in window w2
- *   var h = w1.g()
- *   alert(h() == w1)
- *
- * The alert should display "true".
- */
-extern JSObject *
-js_ComputeGlobalThis(JSContext *cx, jsval *argv);
-
 extern JS_REQUIRES_STACK JSBool
 js_EnterWith(JSContext *cx, jsint stackIndex);
 
 extern JS_REQUIRES_STACK void
 js_LeaveWith(JSContext *cx);
 
-extern JS_REQUIRES_STACK JSClass *
+extern JS_REQUIRES_STACK js::Class *
 js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
 
 /*
@@ -413,7 +440,7 @@ extern JS_REQUIRES_STACK JSBool
 js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
 
 extern JSBool
-js_OnUnknownMethod(JSContext *cx, jsval *vp);
+js_OnUnknownMethod(JSContext *cx, js::Value *vp);
 
 /*
  * Find the results of incrementing or decrementing *vp. For pre-increments,
@@ -422,7 +449,7 @@ js_OnUnknownMethod(JSContext *cx, jsval *vp);
  * the result. Both vp and vp2 must be roots.
  */
 extern JSBool
-js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, jsval *vp, jsval *vp2);
+js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, js::Value *vp, js::Value *vp2);
 
 /*
  * Opcode tracing helper. When len is not 0, cx->fp->regs->pc[-len] gives the
@@ -442,19 +469,16 @@ js_MeterSlotOpcode(JSOp op, uint32 slot);
 
 #endif /* JS_LONE_INTERPRET */
 
-JS_END_EXTERN_C
-
-inline JSObject *
+inline js::ObjPtr
 JSStackFrame::getThisObject(JSContext *cx)
 {
     if (flags & JSFRAME_COMPUTED_THIS)
-        return JSVAL_TO_OBJECT(thisv);  /* JSVAL_COMPUTED_THIS invariant */
-    JSObject* obj = js_ComputeThis(cx, argv);
-    if (!obj)
-        return NULL;
-    thisv = OBJECT_TO_JSVAL(obj);
+        return thisv.asObjPtr();  /* JSVAL_COMPUTED_THIS invariant */
+    if (!js::ComputeThisFromArgv(cx, argv))
+        return js::NullObjPtr();
+    thisv.copy(argv[-1]);
     flags |= JSFRAME_COMPUTED_THIS;
-    return obj;
+    return thisv.asObjPtr();
 }
 
 #endif /* jsinterp_h___ */

@@ -149,7 +149,7 @@ class HashTable : AllocPolicy
             return cur == end;
         }
 
-        const T &front() const {
+        T &front() const {
             JS_ASSERT(!empty());
             return cur->t;
         }
@@ -312,6 +312,8 @@ class HashTable : AllocPolicy
         METER(memset(&stats, 0, sizeof(stats)));
         return true;
     }
+
+    bool initialized() const { return table; }
 
     ~HashTable()
     {
@@ -721,6 +723,7 @@ class HashMap
      */
     HashMap(AllocPolicy a = AllocPolicy()) : impl(a) {}
     bool init(uint32 cap = 0)                         { return impl.init(cap); }
+    bool initialized() const                          { return impl.initialized(); }
 
     /*
      * Return whether the given lookup value is present in the map. E.g.:
@@ -868,6 +871,7 @@ class HashSet
      */
     HashSet(AllocPolicy a = AllocPolicy()) : impl(a) {}
     bool init(uint32 cap = 0)                         { return impl.init(cap); }
+    bool initialized() const                          { return impl.initialized(); }
 
     /*
      * Return whether the given lookup value is present in the map. E.g.:

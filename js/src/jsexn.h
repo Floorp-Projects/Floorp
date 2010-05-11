@@ -44,9 +44,7 @@
 #ifndef jsexn_h___
 #define jsexn_h___
 
-JS_BEGIN_EXTERN_C
-
-extern JSClass js_ErrorClass;
+extern js::Class js_ErrorClass;
 
 /*
  * Initialize the exception constructor/prototype hierarchy.
@@ -91,7 +89,5 @@ js_ErrorFromException(JSContext *cx, jsval exn);
 extern const JSErrorFormatString *
 js_GetLocalizedErrorMessage(JSContext* cx, void *userRef, const char *locale,
                             const uintN errorNumber);
-
-JS_END_EXTERN_C
 
 #endif /* jsexn_h___ */

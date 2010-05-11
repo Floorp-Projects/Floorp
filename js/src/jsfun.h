@@ -46,8 +46,6 @@
 #include "jspubtd.h"
 #include "jsobj.h"
 
-JS_BEGIN_EXTERN_C
-
 typedef struct JSLocalNameMap JSLocalNameMap;
 
 /*
@@ -137,8 +135,8 @@ struct JSFunction : public JSObject
         struct {
             uint16      extra;    /* number of arg slots for local GC roots */
             uint16      spare;    /* reserved for future use */
-            JSNative    native;   /* native method pointer or null */
-            JSClass     *clasp;   /* class of objects constructed
+            js::Native  native;   /* native method pointer or null */
+            js::Class   *clasp;   /* class of objects constructed
                                      by this function */
             JSNativeTraceInfo *trcinfo;
         } n;
@@ -231,7 +229,7 @@ struct JSFunction : public JSObject
  * Yes, this is an incompatible change, which prefigures the impending move to
  * single-threaded objects and GC heaps.
  */
-extern JSClass js_ArgumentsClass;
+extern js::Class js_ArgumentsClass;
 
 inline bool
 JSObject::isArguments() const
@@ -239,12 +237,12 @@ JSObject::isArguments() const
     return getClass() == &js_ArgumentsClass;
 }
 
-extern JS_FRIEND_DATA(JSClass) js_CallClass;
-extern JSClass js_DeclEnvClass;
+extern JS_FRIEND_DATA(js::Class) js_CallClass;
+extern js::Class js_DeclEnvClass;
 extern const uint32 CALL_CLASS_FIXED_RESERVED_SLOTS;
 
 /* JS_FRIEND_DATA so that VALUE_IS_FUNCTION is callable from the shell. */
-extern JS_FRIEND_DATA(JSClass) js_FunctionClass;
+extern JS_FRIEND_DATA(js::Class) js_FunctionClass;
 
 inline bool
 JSObject::isFunction() const
@@ -253,6 +251,7 @@ JSObject::isFunction() const
 }
 
 /*
+ * TODO: remove once all internal jsval use goes away.
  * NB: jsapi.h and jsobj.h must be included before any call to this macro.
  */
 #define VALUE_IS_FUNCTION(cx, v)                                              \
@@ -300,7 +299,7 @@ extern JSObject *
 js_InitArgumentsClass(JSContext *cx, JSObject *obj);
 
 extern JSFunction *
-js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
+js_NewFunction(JSContext *cx, JSObject *funobj, js::Native native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom);
 
 extern void
@@ -309,9 +308,9 @@ js_TraceFunction(JSTracer *trc, JSFunction *fun);
 extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
-extern JSObject * JS_FASTCALL
-js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
-                       JSObject *proto);
+extern JSObject *
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, const js::Value &parent,
+                       const js::Value &proto);
 
 inline JSObject *
 CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
@@ -320,8 +319,8 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
     JSObject *proto;
     if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
         return NULL;
-    JS_ASSERT(proto);
-    return js_CloneFunctionObject(cx, fun, parent, proto);
+    return js_CloneFunctionObject(cx, fun, js::NonFunObjValue(*parent),
+                                  js::FunObjValue(*proto));
 }
 
 extern JS_REQUIRES_STACK JSObject *
@@ -331,7 +330,7 @@ extern JS_REQUIRES_STACK JSObject *
 js_NewDebuggableFlatClosure(JSContext *cx, JSFunction *fun);
 
 extern JSFunction *
-js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
+js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, js::Native native,
                   uintN nargs, uintN flags);
 
 /*
@@ -344,16 +343,16 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, JSNative native,
 #define JSV2F_SEARCH_STACK      0x10000
 
 extern JSFunction *
-js_ValueToFunction(JSContext *cx, jsval *vp, uintN flags);
+js_ValueToFunction(JSContext *cx, const js::Value *vp, uintN flags);
 
 extern JSObject *
-js_ValueToFunctionObject(JSContext *cx, jsval *vp, uintN flags);
+js_ValueToFunctionObject(JSContext *cx, js::Value *vp, uintN flags);
 
 extern JSObject *
-js_ValueToCallableObject(JSContext *cx, jsval *vp, uintN flags);
+js_ValueToCallableObject(JSContext *cx, js::Value *vp, uintN flags);
 
 extern void
-js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags);
+js_ReportIsNotFunction(JSContext *cx, const js::Value *vp, uintN flags);
 
 extern JSObject *
 js_GetCallObject(JSContext *cx, JSStackFrame *fp);
@@ -365,23 +364,23 @@ extern void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 
 extern JSBool JS_FASTCALL
-js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs, jsval *argv,
-                        uint32 nvars, jsval *slots);
+js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs,
+                        js::Value *argv, uint32 nvars, js::Value *slots);
 
 extern JSFunction *
 js_GetCallObjectFunction(JSObject *obj);
 
 extern JSBool
-js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+js_GetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_GetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+js_GetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-SetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+SetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+SetCallVar(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 /*
  * js_SetCallArg and js_SetCallVar are extern fastcall copies of the setter
@@ -390,23 +389,23 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
  * property ops map.
  */
 extern JSBool JS_FASTCALL
-js_SetCallArg(JSContext *cx, JSObject *obj, jsid id, jsval v);
+js_SetCallArg(JSContext *cx, JSObject *obj, jsid id, const js::Value &v);
 
 extern JSBool JS_FASTCALL
-js_SetCallVar(JSContext *cx, JSObject *obj, jsid id, jsval v);
+js_SetCallVar(JSContext *cx, JSObject *obj, jsid id, const js::Value &v);
 
 /*
  * Slower version of js_GetCallVar used when call_resolve detects an attempt to
  * leak an optimized closure via indirect or debugger eval.
  */
 extern JSBool
-js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+js_GetCallVarChecked(JSContext *cx, JSObject *obj, jsid id, const js::Value *vp);
 
 extern JSBool
-js_GetArgsValue(JSContext *cx, JSStackFrame *fp, jsval *vp);
+js_GetArgsValue(JSContext *cx, JSStackFrame *fp, js::Value *vp);
 
 extern JSBool
-js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, jsval *vp);
+js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, js::Value *vp);
 
 extern JSObject *
 js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
@@ -455,34 +454,30 @@ const uint32 ARGS_FIXED_RESERVED_SLOTS = JSSLOT_ARGS_START - JSSLOT_ARGS_LENGTH;
 const uint32 JS_ARGS_LENGTH_MAX = JS_BIT(19) - 1024;
 
 /*
- * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as int jsval.
- * Thus (JS_ARGS_LENGTH_MAX << 1) | 1 must fit JSVAL_INT_MAX. To assert that
- * we check first that the shift does not overflow uint32.
+ * JSSLOT_ARGS_LENGTH stores ((argc << 1) | overwritten_flag) as int value.
+ * Thus (JS_ARGS_LENGTH_MAX << 1) | 1 must into an int32.
  */
 JS_STATIC_ASSERT(JS_ARGS_LENGTH_MAX <= JS_BIT(30));
-JS_STATIC_ASSERT(jsval((JS_ARGS_LENGTH_MAX << 1) | 1) <= JSVAL_INT_MAX);
 
 namespace js {
 
-inline jsval
+inline const Value &
 GetArgsSlot(JSObject *argsobj, uint32 arg)
 {
     return argsobj->dslots[arg];
 }
 
 inline void
-SetArgsSlot(JSObject *argsobj, uint32 arg, jsval v)
+SetArgsSlot(JSObject *argsobj, uint32 arg, const Value &v)
 {
-    argsobj->dslots[arg] = v;
+    argsobj->dslots[arg].copy(v);
 }
 
 inline bool
 IsOverriddenArgsLength(JSObject *obj)
 {
     JS_ASSERT(obj->isArguments());
-
-    jsval v = obj->fslots[JSSLOT_ARGS_LENGTH];
-    return (JSVAL_TO_INT(v) & 1) != 0;
+    return (obj->fslots[JSSLOT_ARGS_LENGTH].asInt32() & 1) != 0;
 }
 
 inline uint32
@@ -490,7 +485,7 @@ GetArgsLength(JSObject *obj)
 {
     JS_ASSERT(obj->isArguments());
 
-    uint32 argc = uint32(JSVAL_TO_INT(obj->fslots[JSSLOT_ARGS_LENGTH])) >> 1;
+    uint32 argc = uint32(obj->fslots[JSSLOT_ARGS_LENGTH].asInt32()) >> 1;
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     return argc;
 }
@@ -538,7 +533,7 @@ js_LookupLocal(JSContext *cx, JSFunction *fun, JSAtom *atom, uintN *indexp);
  * If nameWord does not name a formal parameter, use JS_LOCAL_NAME_IS_CONST to
  * check if nameWord corresponds to the const declaration.
  */
-extern JS_FRIEND_API(jsuword *)
+extern jsuword *
 js_GetLocalNameArray(JSContext *cx, JSFunction *fun, struct JSArenaPool *pool);
 
 #define JS_LOCAL_NAME_TO_ATOM(nameWord)                                       \
@@ -551,12 +546,9 @@ extern void
 js_FreezeLocalNames(JSContext *cx, JSFunction *fun);
 
 extern JSBool
-js_fun_apply(JSContext *cx, uintN argc, jsval *vp);
+js_fun_apply(JSContext *cx, uintN argc, js::Value *vp);
 
 extern JSBool
-js_fun_call(JSContext *cx, uintN argc, jsval *vp);
-
-
-JS_END_EXTERN_C
+js_fun_call(JSContext *cx, uintN argc, js::Value *vp);
 
 #endif /* jsfun_h___ */

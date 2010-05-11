@@ -44,7 +44,7 @@
 #include "jsobj.h"
 #include "jsscope.h"
 
-inline jsval
+inline const js::Value &
 JSObject::getSlotMT(JSContext *cx, uintN slot)
 {
 #ifdef JS_THREADSAFE
@@ -54,7 +54,7 @@ JSObject::getSlotMT(JSContext *cx, uintN slot)
      * (obj->scope()->ownercx == cx), to avoid needlessly switching from
      * lock-free to lock-full scope when doing GC on a different context
      * from the last one to own the scope.  The caller in this case is
-     * probably a JSClass.mark function, e.g., fun_mark, or maybe a
+     * probably a Class.mark function, e.g., fun_mark, or maybe a
      * finalizer.
      */
     OBJ_CHECK_SLOT(this, slot);
@@ -67,7 +67,7 @@ JSObject::getSlotMT(JSContext *cx, uintN slot)
 }
 
 inline void
-JSObject::setSlotMT(JSContext *cx, uintN slot, jsval value)
+JSObject::setSlotMT(JSContext *cx, uintN slot, const js::Value &value)
 {
 #ifdef JS_THREADSAFE
     /* Thread-safe way to set a slot. */
@@ -90,61 +90,55 @@ inline uint32
 JSObject::getArrayLength() const
 {
     JS_ASSERT(isArray());
-    return uint32(fslots[JSSLOT_ARRAY_LENGTH]);
+    return fslots[JSSLOT_ARRAY_LENGTH].asPrivateUint32();
 }
 
 inline uint32 
 JSObject::getArrayCount() const
 {
     JS_ASSERT(isArray());
-    return uint32(fslots[JSSLOT_ARRAY_COUNT]);
+    return fslots[JSSLOT_ARRAY_COUNT].asPrivateUint32();
 }
 
 inline void 
 JSObject::setArrayLength(uint32 length)
 {
     JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_LENGTH] = length;
+    fslots[JSSLOT_ARRAY_LENGTH].setPrivateUint32(length);
 }
 
 inline void 
 JSObject::setArrayCount(uint32 count)
 {
     JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_COUNT] = count;
+    fslots[JSSLOT_ARRAY_COUNT].setPrivateUint32(count);
 }
 
 inline void 
 JSObject::voidDenseArrayCount()
 {
     JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_ARRAY_COUNT] = JSVAL_VOID;
+    fslots[JSSLOT_ARRAY_COUNT].setUndefined();
 }
 
 inline void 
 JSObject::incArrayCountBy(uint32 posDelta)
 {
     JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_COUNT] += posDelta;
+    fslots[JSSLOT_ARRAY_COUNT].asPrivateUint32Ref() += posDelta;
 }
 
 inline void 
 JSObject::decArrayCountBy(uint32 negDelta)
 {
     JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_COUNT] -= negDelta;
+    fslots[JSSLOT_ARRAY_COUNT].asPrivateUint32Ref() -= negDelta;
 }
 
 inline void
-JSObject::voidArrayUnused()
-{
-    JS_ASSERT(isArray());
-    fslots[JSSLOT_ARRAY_COUNT] = JSVAL_VOID;
-}
-
-inline void
-JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
-                                jsval privateSlotValue)
+JSObject::initSharingEmptyScope(js::Class *clasp,
+                                js::ObjPtr proto, JSObject *parent,
+                                const js::Value &privateSlotValue)
 {
     init(clasp, proto, parent, privateSlotValue);
 
@@ -158,7 +152,7 @@ inline void
 JSObject::freeSlotsArray(JSContext *cx)
 {
     JS_ASSERT(hasSlotsArray());
-    JS_ASSERT(size_t(dslots[-1]) > JS_INITIAL_NSLOTS);
+    JS_ASSERT(dslotLength() > JS_INITIAL_NSLOTS);
     cx->free(dslots - 1);
 }
 
@@ -179,6 +173,46 @@ JSObject::unbrand(JSContext *cx)
         JS_UNLOCK_SCOPE(cx, scope);
     }
     return true;
+}
+
+inline void
+JSObject::initArrayClass()
+{
+    clasp = &js_ArrayClass;
+}
+
+inline void
+JSObject::changeClassToSlowArray()
+{
+    JS_ASSERT(clasp == &js_ArrayClass);
+    clasp = &js_SlowArrayClass;
+}
+
+inline void
+JSObject::changeClassToFastArray()
+{
+    JS_ASSERT(clasp == &js_SlowArrayClass);
+    clasp = &js_ArrayClass;
+}
+
+inline JSObject *
+JSObject::thisObject(JSContext *cx)
+{
+    if (JSObjectOp thisOp = map->ops->thisObject)
+        return thisOp(cx, this);
+    return this;
+}
+
+inline js::ObjPtr
+JSObject::thisObject(JSContext *cx, js::ObjPtr obj)
+{
+    if (JSObjectOp thisOp = obj->map->ops->thisObject) {
+        JSObject *o = thisOp(cx, obj);
+        if (!o)
+            return js::NullObjPtr();
+        SetObject(&obj, *o);
+    }
+    return obj;
 }
 
 namespace js {
@@ -209,6 +243,82 @@ class AutoDescriptorArray : private AutoGCRooter
     PropertyDescriptorArray descriptors;
 };
 
+JS_ALWAYS_INLINE ObjPtr
+ToObjPtr(JSObject *pobj)
+{
+    if (pobj)
+        return NullObjPtr();
+    if (pobj->isFunction())
+        return FunObjPtr(*pobj);
+    return NonFunObjPtr(*pobj);
 }
+
+JS_ALWAYS_INLINE ObjPtr
+ToObjPtr(JSObject &obj)
+{
+    if (obj.isFunction())
+        return FunObjPtr(obj);
+    return NonFunObjPtr(obj);
+}
+
+JS_ALWAYS_INLINE Value
+ToValue(JSObject *pobj)
+{
+    if (pobj)
+        return NullValue();
+    if (pobj->isFunction())
+        return FunObjValue(*pobj);
+    return NonFunObjValue(*pobj);
+}
+
+JS_ALWAYS_INLINE Value
+ToValue(JSObject &obj)
+{
+    if (obj.isFunction())
+        return FunObjValue(obj);
+    return NonFunObjValue(obj);
+}
+
+JS_ALWAYS_INLINE void
+SetObject(ObjPtr *vp, JSObject *pobj)
+{
+    if (!pobj)
+        vp->setNull();
+    else if (pobj->isFunction())
+        vp->setFunObj(*pobj);
+    else
+        vp->setNonFunObj(*pobj);
+}
+
+JS_ALWAYS_INLINE void
+SetObject(Value *vp, JSObject *pobj)
+{
+    if (!pobj)
+        vp->setNull();
+    if (pobj->isFunction())
+        vp->setFunObj(*pobj);
+    else
+        vp->setNonFunObj(*pobj);
+}
+
+JS_ALWAYS_INLINE void
+SetObject(ObjPtr *vp, JSObject &obj)
+{
+    if (obj.isFunction())
+        vp->setFunObj(obj);
+    else
+        vp->setNonFunObj(obj);
+}
+
+JS_ALWAYS_INLINE void
+SetObject(Value *vp, JSObject &obj)
+{
+    if (obj.isFunction())
+        vp->setFunObj(obj);
+    else
+        vp->setNonFunObj(obj);
+}
+
+} /* namespace js */
 
 #endif /* jsobjinlines_h___ */

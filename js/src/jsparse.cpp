@@ -760,7 +760,6 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
                           JSString *source /* = NULL */,
                           unsigned staticLevel /* = 0 */)
 {
-    JSCompiler jsc(cx, principals, callerFrame);
     JSArenaPool codePool, notePool;
     TokenKind tt;
     JSParseNode *pn;
@@ -780,6 +779,7 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
     JS_ASSERT_IF(callerFrame, tcflags & TCF_COMPILE_N_GO);
     JS_ASSERT_IF(staticLevel != 0, callerFrame);
 
+    JSCompiler jsc(cx, principals, callerFrame);
     if (!jsc.init(chars, length, file, filename, lineno))
         return NULL;
 
@@ -789,6 +789,8 @@ JSCompiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *cal
                      &cx->scriptStackQuota);
 
     JSCodeGenerator cg(&jsc, &codePool, &notePool, jsc.tokenStream.getLineno());
+    if (!cg.init())
+        return NULL;
 
     MUST_FLOW_THROUGH("out");
 
@@ -1561,6 +1563,9 @@ JSCompiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *pr
                      &cx->scriptStackQuota);
 
     JSCodeGenerator funcg(&jsc, &codePool, &notePool, jsc.tokenStream.getLineno());
+    if (!funcg.init())
+        return NULL;
+
     funcg.flags |= TCF_IN_FUNCTION;
     funcg.fun = fun;
     if (!GenerateBlockId(&funcg, funcg.bodyid))

@@ -227,7 +227,7 @@ StackDepth(JSScript *script)
         }                                                                     \
     JS_END_MACRO
 
-extern JS_FRIEND_DATA(JSClass) js_ScriptClass;
+extern JS_FRIEND_DATA(js::Class) js_ScriptClass;
 
 extern JSObject *
 js_InitScriptClass(JSContext *cx, JSObject *obj);

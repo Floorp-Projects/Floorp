@@ -59,13 +59,13 @@ extern void
 jsdtrace_function_return(JSContext *cx, JSStackFrame *fp, JSFunction *fun);
 
 extern void
-jsdtrace_object_create_start(JSStackFrame *fp, JSClass *clasp);
+jsdtrace_object_create_start(JSStackFrame *fp, js::Class *clasp);
 
 extern void
-jsdtrace_object_create_done(JSStackFrame *fp, JSClass *clasp);
+jsdtrace_object_create_done(JSStackFrame *fp, js::Class *clasp);
 
 extern void
-jsdtrace_object_create(JSContext *cx, JSClass *clasp, JSObject *obj);
+jsdtrace_object_create(JSContext *cx, js::Class *clasp, JSObject *obj);
 
 extern void
 jsdtrace_object_finalize(JSObject *obj);

@@ -50,8 +50,6 @@
 #include "jsdhash.h"
 #endif
 
-JS_BEGIN_EXTERN_C
-
 struct JSRegExpStatics {
     JSString    *input;         /* input string to match (perl $_, GC root) */
     JSBool      multiline;      /* whether input contains newlines (perl $*) */
@@ -153,7 +151,7 @@ js_FreeRegExpStatics(JSContext *cx);
 #define VALUE_IS_REGEXP(cx, v)                                                \
     (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isRegExp())
 
-extern JSClass js_RegExpClass;
+extern js::Class js_RegExpClass;
 
 inline bool
 JSObject::isRegExp() const
@@ -202,13 +200,11 @@ static inline void
 js_ClearRegExpLastIndex(JSObject *obj)
 {
     JS_ASSERT(obj->getClass() == &js_RegExpClass);
-    obj->fslots[JSSLOT_REGEXP_LAST_INDEX] = JSVAL_ZERO;
+    obj->fslots[JSSLOT_REGEXP_LAST_INDEX].setInt32(0);
 }
 
 /* Return whether the given character array contains RegExp meta-characters. */
 extern bool
 js_ContainsRegExpMetaChars(const jschar *chars, size_t length);
-
-JS_END_EXTERN_C
 
 #endif /* jsregexp_h___ */

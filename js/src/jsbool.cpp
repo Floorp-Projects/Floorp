@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS boolean implementation.
  */
@@ -54,20 +56,15 @@
 #include "jsstr.h"
 #include "jsvector.h"
 
+#include "jsobjinlines.h"
 
-/* Check pseudo-booleans values. */
-JS_STATIC_ASSERT(!(JSVAL_TRUE & JSVAL_HOLE_FLAG));
-JS_STATIC_ASSERT(!(JSVAL_FALSE & JSVAL_HOLE_FLAG));
-JS_STATIC_ASSERT(!(JSVAL_VOID & JSVAL_HOLE_FLAG));
-JS_STATIC_ASSERT((JSVAL_HOLE & JSVAL_HOLE_FLAG));
-JS_STATIC_ASSERT((JSVAL_HOLE & ~JSVAL_HOLE_FLAG) == JSVAL_VOID);
-JS_STATIC_ASSERT(!(JSVAL_ARETURN & JSVAL_HOLE_FLAG));
+using namespace js;
 
-JSClass js_BooleanClass = {
+Class js_BooleanClass = {
     "Boolean",
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_HAS_CACHED_PROTO(JSProto_Boolean),
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
+    PropertyStub,  PropertyStub,  PropertyStub,  PropertyStub,
+    EnumerateStub, ResolveStub,   ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -75,46 +72,46 @@ JSClass js_BooleanClass = {
 #include "jsprf.h"
 
 static JSBool
-bool_toSource(JSContext *cx, uintN argc, jsval *vp)
+bool_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    jsval v;
+    Value v;
     char buf[32];
     JSString *str;
 
     if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &v))
         return JS_FALSE;
-    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
+    JS_ASSERT(v.isBoolean());
     JS_snprintf(buf, sizeof buf, "(new %s(%s))",
                 js_BooleanClass.name,
-                JS_BOOLEAN_STR(JSVAL_TO_BOOLEAN(v)));
+                JS_BOOLEAN_STR(v.asBoolean()));
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 #endif
 
 static JSBool
-bool_toString(JSContext *cx, uintN argc, jsval *vp)
+bool_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    jsval v;
+    Value v;
     JSAtom *atom;
     JSString *str;
 
     if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &v))
         return JS_FALSE;
-    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-    atom = cx->runtime->atomState.booleanAtoms[JSVAL_TO_BOOLEAN(v) ? 1 : 0];
+    JS_ASSERT(v.isBoolean());
+    atom = cx->runtime->atomState.booleanAtoms[v.asBoolean() ? 1 : 0];
     str = ATOM_TO_STRING(atom);
     if (!str)
         return JS_FALSE;
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
 static JSBool
-bool_valueOf(JSContext *cx, uintN argc, jsval *vp)
+bool_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
     return js_GetPrimitiveThis(cx, vp, &js_BooleanClass, vp);
 }
@@ -130,17 +127,18 @@ static JSFunctionSpec boolean_methods[] = {
 };
 
 static JSBool
-Boolean(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+Boolean(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
-    jsval bval;
+    Value bval;
 
-    bval = (argc != 0)
-           ? BOOLEAN_TO_JSVAL(js_ValueToBoolean(argv[0]))
-           : JSVAL_FALSE;
-    if (!JS_IsConstructing(cx))
-        *rval = bval;
+    if (argc != 0)
+        bval.setBoolean(js_ValueToBoolean(argv[0]));
     else
-        obj->fslots[JSSLOT_PRIMITIVE_THIS] = bval;
+        bval.setBoolean(false);
+    if (!JS_IsConstructing(cx))
+        rval->copy(bval);
+    else
+        obj->fslots[JSSLOT_PRIMITIVE_THIS].copy(bval);
     return true;
 }
 
@@ -149,11 +147,11 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto;
 
-    proto = JS_InitClass(cx, obj, NULL, &js_BooleanClass, Boolean, 1,
-                        NULL, boolean_methods, NULL, NULL);
+    proto = js_InitClass(cx, obj, NULL, &js_BooleanClass, Boolean, 1,
+                         NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;
-    proto->fslots[JSSLOT_PRIMITIVE_THIS] = JSVAL_FALSE;
+    proto->fslots[JSSLOT_PRIMITIVE_THIS].setBoolean(false);
     return proto;
 }
 
@@ -171,22 +169,22 @@ js_BooleanToCharBuffer(JSContext *cx, JSBool b, JSCharBuffer &cb)
 }
 
 JSBool
-js_ValueToBoolean(jsval v)
+js_ValueToBoolean(const Value &v)
 {
-    if (JSVAL_IS_NULL(v) || JSVAL_IS_VOID(v))
+    if (v.isNullOrUndefined())
         return JS_FALSE;
-    if (JSVAL_IS_OBJECT(v))
+    if (v.isObject())
         return JS_TRUE;
-    if (JSVAL_IS_STRING(v))
-        return JSVAL_TO_STRING(v)->length() != 0;
-    if (JSVAL_IS_INT(v))
-        return JSVAL_TO_INT(v) != 0;
-    if (JSVAL_IS_DOUBLE(v)) {
+    if (v.isString())
+        return v.asString()->length() != 0;
+    if (v.isInt32())
+        return v.asInt32() != 0;
+    if (v.isDouble()) {
         jsdouble d;
 
-        d = *JSVAL_TO_DOUBLE(v);
+        d = v.asDouble();
         return !JSDOUBLE_IS_NaN(d) && d != 0;
     }
-    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-    return JSVAL_TO_BOOLEAN(v);
+    JS_ASSERT(v.isBoolean());
+    return v.asBoolean();
 }

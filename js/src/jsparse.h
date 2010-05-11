@@ -320,7 +320,7 @@ struct JSParseNode {
         struct {                        /* two kids if binary */
             JSParseNode *left;
             JSParseNode *right;
-            jsval       val;            /* switch case value */
+            jsboxedword val;            /* switch case value */
             uintN       iflags;         /* JSITER_* flags for TOK_FOR node */
         } binary;
         struct {                        /* one kid if unary */
