@@ -60,6 +60,11 @@
 
 #define NS_N(x) (sizeof(x)/sizeof(*x))
 
+// We don't want to expose this observer topic.
+// Intended internal use only for remoting offline/inline events.
+// See Bug 552829
+#define NS_E10S_IOSERVICE_SET_OFFLINE_TOPIC "e10s:network:set-offline"
+
 static const char gScheme[][sizeof("resource")] =
     {"chrome", "file", "http", "jar", "resource"};
 

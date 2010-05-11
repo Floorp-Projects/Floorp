@@ -57,6 +57,8 @@ using mozilla::MonitorAutoEnter;
 namespace mozilla {
 namespace dom {
 
+#define NS_E10S_IOSERVICE_SET_OFFLINE_TOPIC "e10s:network:set-offline"
+
 ContentProcessParent* ContentProcessParent::gSingleton;
 
 ContentProcessParent*
@@ -75,6 +77,8 @@ ContentProcessParent::GetSingleton(PRBool aForceNew)
                                                   PR_FALSE))) {
                     gSingleton = parent;
                 }
+                obs->AddObserver(
+                  parent, NS_E10S_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE); 
             }
             nsCOMPtr<nsIThreadInternal>
                 threadInt(do_QueryInterface(NS_GetCurrentThread()));
@@ -179,6 +183,12 @@ ContentProcessParent::Observe(nsISupports* aSubject,
             FROM_HERE,
             NewRunnableFunction(DeleteSubprocess, mSubprocess));
         mSubprocess = nsnull;
+    }
+
+    if (!strcmp(aTopic, NS_E10S_IOSERVICE_SET_OFFLINE_TOPIC) && mSubprocess) {
+      NS_ConvertUTF16toUTF8 dataStr(aData);
+      const char *offline = dataStr.get();
+      SendSetOffline(!strcmp(offline, "true") ? true : false);
     }
     return NS_OK;
 }
