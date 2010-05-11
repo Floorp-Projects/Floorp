@@ -72,6 +72,7 @@ window.Group = function(listOfEls, options) {
   
   $container
     .css({zIndex: -100})
+    .data('isDragging', false)
     .appendTo("body")
     .dequeue();
     
@@ -92,9 +93,14 @@ window.Group = function(listOfEls, options) {
     .hide();
 
   // ___ Titlebar
-  var html = "<div class='titlebar'><input class='name' value='"
-      + (options.title || "")
-      + "'/><div class='close'></div></div>";
+  var html =
+    "<div class='titlebar'>" + 
+      "<div class='title-container'>" +
+        "<input class='name' value='" + (options.title || "") + "'/>" + 
+        "<div class='title-shield' />" + 
+      "</div>" + 
+      "<div class='close' />" + 
+    "</div>";
        
   this.$titlebar = $(html)        
     .appendTo($container);
@@ -108,7 +114,12 @@ window.Group = function(listOfEls, options) {
   });
   
   // ___ Title 
+  this.$titleContainer = $('.title-container', this.$titlebar);
+  this.$title = $('.name', this.$titlebar);
+  this.$titleShield = $('.title-shield', this.$titlebar);
+  
   var titleUnfocus = function() {
+    self.$titleShield.show();
     if(!self.getTitle()) {
       self.$title
         .addClass("defaultName")
@@ -130,7 +141,7 @@ window.Group = function(listOfEls, options) {
       self.adjustTitleSize();
   }
   
-  this.$title = $('.name', this.$titlebar)
+  this.$title
     .css({backgroundRepeat: 'no-repeat'})
     .blur(titleUnfocus)
     .focus(function() {
@@ -151,7 +162,24 @@ window.Group = function(listOfEls, options) {
   
   if(this.locked.title)
     this.$title.addClass('name-locked');
-
+  else {
+    this.$titleShield
+      .mousedown(function(e) {
+        self.lastMouseDownTarget = (Utils.isRightClick(e) ? null : e.target);
+      })
+      .mouseup(function(e) { 
+        var same = (e.target == self.lastMouseDownTarget);
+        self.lastMouseDownTarget = null;
+        if(!same)
+          return;
+        
+        if(!$container.data('isDragging')) {        
+          self.$titleShield.hide();
+          self.$title.get(0).focus();
+        }
+      });
+  }
+    
   // ___ Content
   this.$content = $('<div class="group-content"/>')
     .css({
@@ -227,9 +255,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   adjustTitleSize: function() {
     Utils.assert('bounds needs to have been set', this.bounds);
     var w = Math.min(this.bounds.width - 35, Math.max(150, this.getTitle().length * 6));
-    this.$title.css({
-      width: w
-    });
+    var css = {width: w};
+    this.$title.css(css);
+    this.$titleShield.css(css);
   },
   
   // ----------  
@@ -755,12 +783,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
           drag.info = null;
         }
       });
-      
-/*
-      this.$title.mousedown(function() {
-        Utils.log('wtf');
-      });
-*/
     }
     
     $(container).droppable({

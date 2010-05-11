@@ -252,6 +252,20 @@ input.defaultName:hover{
   color: #CCC;
 }
 
+.title-container {
+}
+
+.title-shield {
+  position:absolute; 
+  margin: 3px 0px 0px 3px;
+  padding: 1px;
+  left:0; 
+  top:0; 
+  width:100%; 
+  height:100%; 
+  z-index:10; 
+}
+
 .transparentBorder{
   border: 1px solid transparent !important;  
 }

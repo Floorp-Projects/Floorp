@@ -225,7 +225,7 @@ window.Page = {
   
   // ----------  
   createGroupOnDrag: function(e){
-    e.preventDefault();
+/*     e.preventDefault(); */
     const minSize = 60;
     
     var startPos = {x:e.clientX, y:e.clientY}
