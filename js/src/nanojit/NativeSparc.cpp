@@ -153,7 +153,7 @@ namespace nanojit
 
     void Assembler::asm_call(LInsp ins)
     {
-        Register retReg = ( ins->isop(LIR_fcall) ? F0 : retRegs[0] );
+        Register retReg = ( ins->isop(LIR_calld) ? F0 : retRegs[0] );
         deprecated_prepResultReg(ins, rmask(retReg));
 
         // Do this after we've handled the call result, so we don't
@@ -169,7 +169,7 @@ namespace nanojit
         ArgType argTypes[MAXARGS];
         uint32_t argc = ci->getArgTypes(argTypes);
 
-        NanoAssert(ins->isop(LIR_pcall) || ins->isop(LIR_fcall));
+        NanoAssert(ins->isop(LIR_callp) || ins->isop(LIR_calld));
         verbose_only(if (_logc->lcbits & LC_Assembly)
                      outputf("        %p:", _nIns);
                      )
@@ -252,13 +252,13 @@ namespace nanojit
 
     bool Assembler::canRemat(LIns* ins)
     {
-        return ins->isImmI() || ins->isop(LIR_alloc);
+        return ins->isImmI() || ins->isop(LIR_allocp);
     }
 
     void Assembler::asm_restore(LInsp i, Register r)
     {
         underrunProtect(24);
-        if (i->isop(LIR_alloc)) {
+        if (i->isop(LIR_allocp)) {
             ADD(FP, L2, r);
             int32_t d = deprecated_disp(i);
             SET32(d, L2);
@@ -280,10 +280,10 @@ namespace nanojit
     {
         switch (op) {
             case LIR_sti:
-            case LIR_stb:
+            case LIR_sti2c:
                 // handled by mainline code below for now
                 break;
-            case LIR_sts:
+            case LIR_sti2s:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
             default:
@@ -300,7 +300,7 @@ namespace nanojit
                 case LIR_sti:
                     STW32(L2, dr, rb);
                     break;
-                case LIR_stb:
+                case LIR_sti2c:
                     STB32(L2, dr, rb);
                     break;
                 }
@@ -322,7 +322,7 @@ namespace nanojit
                 case LIR_sti:
                     STW32(ra, dr, rb);
                     break;
-                case LIR_stb:
+                case LIR_sti2c:
                     STB32(ra, dr, rb);
                     break;
                 }
@@ -344,10 +344,10 @@ namespace nanojit
     void Assembler::asm_load64(LInsp ins)
     {
         switch (ins->opcode()) {
-            case LIR_ldf:
+            case LIR_ldd:
                 // handled by mainline code below for now
                 break;
-            case LIR_ld32f:
+            case LIR_ldf2d:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
             default:
@@ -362,7 +362,7 @@ namespace nanojit
 
         int dr = deprecated_disp(ins);
         Register rb;
-        if (base->isop(LIR_alloc)) {
+        if (base->isop(LIR_allocp)) {
             rb = FP;
             db += findMemFor(base);
         } else {
@@ -387,10 +387,10 @@ namespace nanojit
     void Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
     {
         switch (op) {
-            case LIR_stfi:
+            case LIR_std:
                 // handled by mainline code below for now
                 break;
-            case LIR_st32f:
+            case LIR_std2f:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
             default:
@@ -411,7 +411,7 @@ namespace nanojit
                 return;
             }
 
-        if (value->isop(LIR_ldf))
+        if (value->isop(LIR_ldd))
             {
                 // value is 64bit struct or int64_t, or maybe a double.
                 // it may be live in an FPU reg.  Either way, don't
@@ -424,7 +424,7 @@ namespace nanojit
 
                 int da = findMemFor(value);
                 Register rb;
-                if (base->isop(LIR_alloc)) {
+                if (base->isop(LIR_allocp)) {
                     rb = FP;
                     dr += findMemFor(base);
                 } else {
@@ -435,7 +435,7 @@ namespace nanojit
             }
 
         Register rb;
-        if (base->isop(LIR_alloc)) {
+        if (base->isop(LIR_allocp)) {
             rb = FP;
             dr += findMemFor(base);
         } else {
@@ -491,44 +491,44 @@ namespace nanojit
         // produce the branch
         if (branchOnFalse)
             {
-                if (condop == LIR_eq)
+                if (condop == LIR_eqi)
                     BNE(0, tt);
-                else if (condop == LIR_lt)
+                else if (condop == LIR_lti)
                     BGE(0, tt);
-                else if (condop == LIR_le)
+                else if (condop == LIR_lei)
                     BG(0, tt);
-                else if (condop == LIR_gt)
+                else if (condop == LIR_gti)
                     BLE(0, tt);
-                else if (condop == LIR_ge)
+                else if (condop == LIR_gei)
                     BL(0, tt);
-                else if (condop == LIR_ult)
+                else if (condop == LIR_ltui)
                     BCC(0, tt);
-                else if (condop == LIR_ule)
+                else if (condop == LIR_leui)
                     BGU(0, tt);
-                else if (condop == LIR_ugt)
+                else if (condop == LIR_gtui)
                     BLEU(0, tt);
-                else //if (condop == LIR_uge)
+                else //if (condop == LIR_geui)
                     BCS(0, tt);
             }
         else // op == LIR_xt
             {
-                if (condop == LIR_eq)
+                if (condop == LIR_eqi)
                     BE(0, tt);
-                else if (condop == LIR_lt)
+                else if (condop == LIR_lti)
                     BL(0, tt);
-                else if (condop == LIR_le)
+                else if (condop == LIR_lei)
                     BLE(0, tt);
-                else if (condop == LIR_gt)
+                else if (condop == LIR_gti)
                     BG(0, tt);
-                else if (condop == LIR_ge)
+                else if (condop == LIR_gei)
                     BGE(0, tt);
-                else if (condop == LIR_ult)
+                else if (condop == LIR_ltui)
                     BCS(0, tt);
-                else if (condop == LIR_ule)
+                else if (condop == LIR_leui)
                     BLEU(0, tt);
-                else if (condop == LIR_ugt)
+                else if (condop == LIR_gtui)
                     BGU(0, tt);
-                else //if (condop == LIR_uge)
+                else //if (condop == LIR_geui)
                     BCC(0, tt);
             }
         asm_cmp(cond);
@@ -565,7 +565,7 @@ namespace nanojit
             {
                 int c = rhs->immI();
                 Register r = findRegFor(lhs, GpRegs);
-                if (c == 0 && cond->isop(LIR_eq)) {
+                if (c == 0 && cond->isop(LIR_eqi)) {
                     ANDCC(r, r, G0);
                 }
                 else {
@@ -588,15 +588,15 @@ namespace nanojit
         underrunProtect(8);
         LOpcode condop = ins->opcode();
         NanoAssert(isCmpDOpcode(condop));
-        if (condop == LIR_feq)
+        if (condop == LIR_eqd)
             MOVFEI(1, 0, 0, 0, r);
-        else if (condop == LIR_fle)
+        else if (condop == LIR_led)
             MOVFLEI(1, 0, 0, 0, r);
-        else if (condop == LIR_flt)
+        else if (condop == LIR_ltd)
             MOVFLI(1, 0, 0, 0, r);
-        else if (condop == LIR_fge)
+        else if (condop == LIR_ged)
             MOVFGEI(1, 0, 0, 0, r);
-        else // if (condop == LIR_fgt)
+        else // if (condop == LIR_gtd)
             MOVFGI(1, 0, 0, 0, r);
         ORI(G0, 0, r);
         asm_fcmp(ins);
@@ -609,23 +609,23 @@ namespace nanojit
         LOpcode op = ins->opcode();
         Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
 
-        if (op == LIR_eq)
+        if (op == LIR_eqi)
             MOVEI(1, 1, 0, 0, r);
-        else if (op == LIR_lt)
+        else if (op == LIR_lti)
             MOVLI(1, 1, 0, 0, r);
-        else if (op == LIR_le)
+        else if (op == LIR_lei)
             MOVLEI(1, 1, 0, 0, r);
-        else if (op == LIR_gt)
+        else if (op == LIR_gti)
             MOVGI(1, 1, 0, 0, r);
-        else if (op == LIR_ge)
+        else if (op == LIR_gei)
             MOVGEI(1, 1, 0, 0, r);
-        else if (op == LIR_ult)
+        else if (op == LIR_ltui)
             MOVCSI(1, 1, 0, 0, r);
-        else if (op == LIR_ule)
+        else if (op == LIR_leui)
             MOVLEUI(1, 1, 0, 0, r);
-        else if (op == LIR_ugt)
+        else if (op == LIR_gtui)
             MOVGUI(1, 1, 0, 0, r);
-        else // if (op == LIR_uge)
+        else // if (op == LIR_geui)
             MOVCCI(1, 1, 0, 0, r);
         ORI(G0, 0, r);
         asm_cmp(ins);
@@ -640,7 +640,7 @@ namespace nanojit
 
         Register rb = deprecated_UnknownReg;
         RegisterMask allow = GpRegs;
-        bool forceReg = (op == LIR_mul || op == LIR_mulxov || !rhs->isImmI());
+        bool forceReg = (op == LIR_muli || op == LIR_mulxovi || !rhs->isImmI());
 
         if (lhs != rhs && forceReg)
             {
@@ -649,7 +649,7 @@ namespace nanojit
                 }
                 allow &= ~rmask(rb);
             }
-        else if ((op == LIR_add || op == LIR_addxov) && lhs->isop(LIR_alloc) && rhs->isImmI()) {
+        else if ((op == LIR_addi || op == LIR_addxovi) && lhs->isop(LIR_allocp) && rhs->isImmI()) {
             // add alloc+const, use lea
             Register rr = deprecated_prepResultReg(ins, allow);
             int d = findMemFor(lhs) + rhs->immI();
@@ -669,23 +669,23 @@ namespace nanojit
                 if (lhs == rhs)
                     rb = ra;
 
-                if (op == LIR_add || op == LIR_addxov)
+                if (op == LIR_addi || op == LIR_addxovi)
                     ADDCC(rr, rb, rr);
-                else if (op == LIR_sub || op == LIR_subxov)
+                else if (op == LIR_subi || op == LIR_subxovi)
                     SUBCC(rr, rb, rr);
-                else if (op == LIR_mul || op == LIR_mulxov)
+                else if (op == LIR_muli || op == LIR_mulxovi)
                     MULX(rr, rb, rr);
-                else if (op == LIR_and)
+                else if (op == LIR_andi)
                     AND(rr, rb, rr);
-                else if (op == LIR_or)
+                else if (op == LIR_ori)
                     OR(rr, rb, rr);
-                else if (op == LIR_xor)
+                else if (op == LIR_xori)
                     XOR(rr, rb, rr);
-                else if (op == LIR_lsh)
+                else if (op == LIR_lshi)
                     SLL(rr, rb, rr);
-                else if (op == LIR_rsh)
+                else if (op == LIR_rshi)
                     SRA(rr, rb, rr);
-                else if (op == LIR_ush)
+                else if (op == LIR_rshui)
                     SRL(rr, rb, rr);
                 else
                     NanoAssertMsg(0, "Unsupported");
@@ -693,21 +693,21 @@ namespace nanojit
         else
             {
                 int c = rhs->immI();
-                if (op == LIR_add || op == LIR_addxov)
+                if (op == LIR_addi || op == LIR_addxovi)
                     ADDCC(rr, L2, rr);
-                else if (op == LIR_sub || op == LIR_subxov)
+                else if (op == LIR_subi || op == LIR_subxovi)
                     SUBCC(rr, L2, rr);
-                else if (op == LIR_and)
+                else if (op == LIR_andi)
                     AND(rr, L2, rr);
-                else if (op == LIR_or)
+                else if (op == LIR_ori)
                     OR(rr, L2, rr);
-                else if (op == LIR_xor)
+                else if (op == LIR_xori)
                     XOR(rr, L2, rr);
-                else if (op == LIR_lsh)
+                else if (op == LIR_lshi)
                     SLL(rr, L2, rr);
-                else if (op == LIR_rsh)
+                else if (op == LIR_rshi)
                     SRA(rr, L2, rr);
-                else if (op == LIR_ush)
+                else if (op == LIR_rshui)
                     SRL(rr, L2, rr);
                 else
                     NanoAssertMsg(0, "Unsupported");
@@ -731,7 +731,7 @@ namespace nanojit
                       ? findSpecificRegFor(lhs, rr)
                       : lhs->deprecated_getReg() );
 
-        if (op == LIR_not)
+        if (op == LIR_noti)
             ORN(G0, rr, rr);
         else
             SUB(G0, rr, rr);
@@ -749,17 +749,17 @@ namespace nanojit
         Register rr = deprecated_prepResultReg(ins, GpRegs);
         Register ra = getBaseReg(base, d, GpRegs);
         switch(op) {
-            case LIR_ldzb:
+            case LIR_lduc2ui:
                 LDUB32(ra, d, rr);
                 break;
-            case LIR_ldzs:
+            case LIR_ldus2ui:
                 LDUH32(ra, d, rr);
                 break;
-            case LIR_ld:
+            case LIR_ldi:
                 LDSW32(ra, d, rr);
                 break;
-            case LIR_ldsb:
-            case LIR_ldss:
+            case LIR_ldc2i:
+            case LIR_lds2i:
                 NanoAssertMsg(0, "NJ_EXPANDED_LOADSTORE_SUPPORTED not yet supported for this architecture");
                 return;
             default:
@@ -777,25 +777,25 @@ namespace nanojit
         LIns* iffalse = ins->oprnd3();
 
         NanoAssert(condval->isCmp());
-        NanoAssert(op == LIR_cmov && iftrue->isI() && iffalse->isI());
+        NanoAssert(op == LIR_cmovi && iftrue->isI() && iffalse->isI());
 
         const Register rr = deprecated_prepResultReg(ins, GpRegs);
 
         // this code assumes that neither LD nor MR nor MRcc set any of the condition flags.
         // (This is true on Intel, is it true on all architectures?)
         const Register iffalsereg = findRegFor(iffalse, GpRegs & ~rmask(rr));
-        if (op == LIR_cmov) {
+        if (op == LIR_cmovi) {
             switch (condval->opcode()) {
                 // note that these are all opposites...
-            case LIR_eq:  MOVNE (iffalsereg, 1, 0, 0, rr); break;
-            case LIR_lt:  MOVGE (iffalsereg, 1, 0, 0, rr); break;
-            case LIR_le:  MOVG  (iffalsereg, 1, 0, 0, rr); break;
-            case LIR_gt:  MOVLE (iffalsereg, 1, 0, 0, rr); break;
-            case LIR_ge:  MOVL  (iffalsereg, 1, 0, 0, rr); break;
-            case LIR_ult: MOVCC (iffalsereg, 1, 0, 0, rr); break;
-            case LIR_ule: MOVGU (iffalsereg, 1, 0, 0, rr); break;
-            case LIR_ugt: MOVLEU(iffalsereg, 1, 0, 0, rr); break;
-            case LIR_uge: MOVCS (iffalsereg, 1, 0, 0, rr); break;
+            case LIR_eqi:  MOVNE (iffalsereg, 1, 0, 0, rr); break;
+            case LIR_lti:  MOVGE (iffalsereg, 1, 0, 0, rr); break;
+            case LIR_lei:  MOVG  (iffalsereg, 1, 0, 0, rr); break;
+            case LIR_gti:  MOVLE (iffalsereg, 1, 0, 0, rr); break;
+            case LIR_gei:  MOVL  (iffalsereg, 1, 0, 0, rr); break;
+            case LIR_ltui: MOVCC (iffalsereg, 1, 0, 0, rr); break;
+            case LIR_leui: MOVGU (iffalsereg, 1, 0, 0, rr); break;
+            case LIR_gtui: MOVLEU(iffalsereg, 1, 0, 0, rr); break;
+            case LIR_geui: MOVCS (iffalsereg, 1, 0, 0, rr); break;
                 debug_only( default: NanoAssert(0); break; )
                     }
         }
@@ -877,13 +877,13 @@ namespace nanojit
 
         Register rr = deprecated_prepResultReg(ins, allow);
 
-        if (op == LIR_fadd)
+        if (op == LIR_addd)
             FADDD(ra, rb, rr);
-        else if (op == LIR_fsub)
+        else if (op == LIR_subd)
             FSUBD(ra, rb, rr);
-        else if (op == LIR_fmul)
+        else if (op == LIR_muld)
             FMULD(ra, rb, rr);
-        else //if (op == LIR_fdiv)
+        else //if (op == LIR_divd)
             FDIVD(ra, rb, rr);
 
     }
@@ -954,28 +954,28 @@ namespace nanojit
         // produce the branch
         if (branchOnFalse)
             {
-                if (condop == LIR_feq)
+                if (condop == LIR_eqd)
                     FBNE(0, tt);
-                else if (condop == LIR_fle)
+                else if (condop == LIR_led)
                     FBUG(0, tt);
-                else if (condop == LIR_flt)
+                else if (condop == LIR_ltd)
                     FBUGE(0, tt);
-                else if (condop == LIR_fge)
+                else if (condop == LIR_ged)
                     FBUL(0, tt);
-                else //if (condop == LIR_fgt)
+                else //if (condop == LIR_gtd)
                     FBULE(0, tt);
             }
         else // op == LIR_xt
             {
-                if (condop == LIR_feq)
+                if (condop == LIR_eqd)
                     FBE(0, tt);
-                else if (condop == LIR_fle)
+                else if (condop == LIR_led)
                     FBLE(0, tt);
-                else if (condop == LIR_flt)
+                else if (condop == LIR_ltd)
                     FBL(0, tt);
-                else if (condop == LIR_fge)
+                else if (condop == LIR_ged)
                     FBGE(0, tt);
-                else //if (condop == LIR_fgt)
+                else //if (condop == LIR_gtd)
                     FBG(0, tt);
             }
         asm_fcmp(cond);
@@ -1036,10 +1036,10 @@ namespace nanojit
         releaseRegisters();
         assignSavedRegs();
         LIns *val = ins->oprnd1();
-        if (ins->isop(LIR_ret)) {
+        if (ins->isop(LIR_reti)) {
             findSpecificRegFor(val, retRegs[0]);
         } else {
-            NanoAssert(ins->isop(LIR_fret));
+            NanoAssert(ins->isop(LIR_retd));
             findSpecificRegFor(val, F0);
         }
     }
