@@ -2426,8 +2426,7 @@ js_TraceRuntime(JSTracer *trc)
     while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
         js_TraceContext(trc, acx);
 
-    for (ThreadDataIter i(rt); !i.empty(); i.popFront())
-        i.threadData()->mark(trc);
+    js_TraceThreads(rt, trc);
 
     if (rt->gcExtraRootsTraceOp)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
