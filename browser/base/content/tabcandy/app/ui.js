@@ -351,27 +351,22 @@ function UIClass(){
   
   // ___ Storage
   var data = Storage.read();
-  this.storageSanity(data);
-    
-  if(data.dataVersion < 2) {
+  var sane = this.storageSanity(data);
+  if(!sane || data.dataVersion < 2) {
     data.groups = null;
     data.tabs = null;
+    data.pageBounds = null;
+    
+    if(!sane)
+      alert('storage data is bad; starting fresh');
   }
-      
+   
   Groups.reconstitute(data.groups);
   TabItems.reconstitute(data.tabs);
   
   $(window).bind('beforeunload', function() {
-    if(self.initialized) {
-      var data = {
-        dataVersion: 2,
-        groups: Groups.getStorageData(),
-        tabs: TabItems.getStorageData(), 
-        pageBounds: Items.getPageBounds()
-      };
-      
-      Storage.write(data);
-    }
+    if(self.initialized) 
+      self.save();
   });
   
   // ___ resizing
@@ -464,12 +459,15 @@ UIClass.prototype = {
   
   // ----------
   addDevMenu: function() {
+    var self = this;
+    
     var html = '<select style="position:absolute; top:5px;">'; 
     var $select = $(html)
       .appendTo('body')
       .change(function () {
         var index = $(this).val();
         commands[index].code();
+        $(this).val(0);
       });
       
     var commands = [{
@@ -480,6 +478,11 @@ UIClass.prototype = {
       name: 'home', 
       code: function() {
         location.href = '../../index.html';
+      }
+    }, {
+      name: 'save', 
+      code: function() {
+        self.save();
       }
     }];
       
@@ -497,10 +500,35 @@ UIClass.prototype = {
   },
 
   // ----------
+  save: function() {  
+    var data = {
+      dataVersion: 2,
+      groups: Groups.getStorageData(),
+      tabs: TabItems.getStorageData(), 
+      pageBounds: Items.getPageBounds()
+    };
+    
+    if(this.storageSanity(data))
+      Storage.write(data);
+    else
+      alert('storage data is bad; reverting to previous version');
+  },
+
+  // ----------
   storageSanity: function(data) {
+    var sane = true;
     if(data) {
-      // TODO: cleanliness check
+      sane = sane && typeof(data.dataVersion) == 'number';
+      sane = sane && isRect(data.pageBounds);
+      
+      if(data.tabs)
+        sane = sane && TabItems.storageSanity(data.tabs);
+        
+      if(data.groups)
+        sane = sane && Groups.storageSanity(data.groups);
     }
+    
+    return sane;
   },
   
   // ----------

@@ -38,13 +38,13 @@ window.Group = function(listOfEls, options) {
   this.defaultSize = new Point(TabItems.tabWidth * 1.5, TabItems.tabHeight * 1.5);
   this.isAGroup = true;
   this.id = options.id || Groups.getNextID();
-  this.userSize = options.userSize || null;
   this._isStacked = false;
   this._stackAngles = [0];
   this.expanded = null;
+  this.locked = (options.locked ? $.extend({}, options.locked) : {});
   
-  if(typeof(options.locked) == 'object')  
-    this.locked = $.extend({}, options.locked);
+  if(isPoint(options.userSize))  
+    this.userSize = new Point(options.userSize);
 
   var self = this;
 
@@ -231,12 +231,15 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   getStorageData: function() {
     var data = {
       bounds: this.getBounds(), 
-      userSize: $.extend({}, this.userSize),
+      userSize: null,
       locked: $.extend({}, this.locked), 
       title: this.getTitle(),
       id: this.id
     };
     
+    if(isPoint(this.userSize))  
+      data.userSize = new Point(this.userSize);
+  
     return data;
   },
   
@@ -297,6 +300,11 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   
   // ----------  
   setBounds: function(rect, immediately) {
+    if(!isRect(rect)) {
+      Utils.trace('Group.setBounds: rect is not a real rectangle!', rect);
+      return;
+    }
+    
     var titleHeight = this.$titlebar.height();
     
     // ___ Determine what has changed
@@ -358,6 +366,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     this.adjustTitleSize();
 
     this._updateDebugBounds();
+
+    if(!isRect(this.bounds))
+      Utils.trace('Group.setBounds: this.bounds is not a real rectangle!', this.bounds);
   },
   
   // ----------
@@ -1125,6 +1136,23 @@ window.Groups = {
 
       new Group([], options); 
     } 
+  },
+  
+  // ----------
+  storageSanity: function(data) {
+    // TODO: check everything 
+    if(!data.groups)
+      return false;
+      
+    var sane = true;
+    $.each(data.groups, function(index, group) {
+      if(!isRect(group.bounds)) {
+        Utils.log('Groups.storageSanity: bad bounds', group.bounds);
+        sane = false;
+      }
+    });
+    
+    return sane;
   },
   
   // ----------
