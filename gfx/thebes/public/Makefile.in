@@ -60,6 +60,14 @@ endif
 
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+EXPORTS += \
+	gfxAndroidPlatform.h \
+	gfxFT2Fonts.h \
+	gfxFT2FontBase.h \
+	$(NULL)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 
 ifdef MOZ_X11
