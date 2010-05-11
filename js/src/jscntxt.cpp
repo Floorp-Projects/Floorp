@@ -489,8 +489,11 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_STATIC_ASSERT(JSVERSION_DEFAULT == 0);
     JS_ASSERT(cx->version == JSVERSION_DEFAULT);
     VOUCH_DOES_NOT_REQUIRE_STACK();
-    cx->stackPool.init("stack", stackChunkSize, sizeof(jsval), &cx->scriptStackQuota);
-    cx->tempPool.init("temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble), &cx->scriptStackQuota);
+    JS_InitArenaPool(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval),
+                     &cx->scriptStackQuota);
+
+    JS_InitArenaPool(&cx->tempPool, "temp", TEMP_POOL_CHUNK_SIZE, sizeof(jsdouble),
+                     &cx->scriptStackQuota);
 
     js_InitRegExpStatics(cx);
     JS_ASSERT(cx->resolveFlags == 0);
@@ -847,8 +850,8 @@ FreeContext(JSContext *cx)
     /* Free the stuff hanging off of cx. */
     js_FreeRegExpStatics(cx);
     VOUCH_DOES_NOT_REQUIRE_STACK();
-    cx->stackPool.finish();
-    cx->tempPool.finish();
+    JS_FinishArenaPool(&cx->stackPool);
+    JS_FinishArenaPool(&cx->tempPool);
 
     if (cx->lastMessage)
         js_free(cx->lastMessage);
@@ -2027,11 +2030,11 @@ JSContext::isConstructing()
 inline void
 FreeOldArenas(JSRuntime *rt, JSArenaPool *pool)
 {
-    const JSArena *a = pool->getCurrent();
-    if (a == pool->getSecond() && a->getAvail() == a->getBase() + sizeof(int64)) {
-        int64 age = JS_Now() - *(int64 *) a->getBase();
+    JSArena *a = pool->current;
+    if (a == pool->first.next && a->avail == a->base + sizeof(int64)) {
+        int64 age = JS_Now() - *(int64 *) a->base;
         if (age > int64(rt->gcEmptyArenaPoolLifespan) * 1000)
-            pool->free();
+            JS_FreeArenaPool(pool);
     }
 }
 

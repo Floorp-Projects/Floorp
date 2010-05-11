@@ -90,7 +90,7 @@ JSCodeGenerator::JSCodeGenerator(Parser *parser,
                                  uintN lineno)
   : JSTreeContext(parser),
     codePool(cpool), notePool(npool),
-    codeMark(cpool->getMark()), noteMark(npool->getMark()),
+    codeMark(JS_ARENA_MARK(cpool)), noteMark(JS_ARENA_MARK(npool)),
     stackDepth(0), maxStackDepth(0),
     ntrynotes(0), lastTryNode(NULL),
     spanDeps(NULL), jumpTargets(NULL), jtFreeList(NULL),
@@ -115,8 +115,8 @@ bool JSCodeGenerator::init()
 
 JSCodeGenerator::~JSCodeGenerator()
 {
-    codePool->release(codeMark);
-    notePool->release(noteMark);
+    JS_ARENA_RELEASE(codePool, codeMark);
+    JS_ARENA_RELEASE(notePool, noteMark);
 
     /* NB: non-null only after OOM. */
     if (spanDeps)
@@ -144,11 +144,11 @@ EmitCheck(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t delta)
                  : JS_BIT(JS_CeilingLog2(length));
         incr = BYTECODE_SIZE(length);
         if (!base) {
-            cg->codePool->allocateCast<jsbytecode *>(base, incr);
+            JS_ARENA_ALLOCATE_CAST(base, jsbytecode *, cg->codePool, incr);
         } else {
             size = BYTECODE_SIZE(limit - base);
             incr -= size;
-            cg->codePool->growCast<jsbytecode *>(base, size, incr);
+            JS_ARENA_GROW_CAST(base, jsbytecode *, cg->codePool, size, incr);
         }
         if (!base) {
             js_ReportOutOfScriptQuota(cx);
@@ -461,7 +461,8 @@ AddJumpTarget(AddJumpTargetArgs *args, JSJumpTarget **jtp)
         if (jt) {
             cg->jtFreeList = jt->kids[JT_LEFT];
         } else {
-            args->cx->tempPool.allocateCast<JSJumpTarget *>(jt, sizeof *jt);
+            JS_ARENA_ALLOCATE_CAST(jt, JSJumpTarget *, &args->cx->tempPool,
+                                   sizeof *jt);
             if (!jt) {
                 js_ReportOutOfScriptQuota(args->cx);
                 return 0;
@@ -919,7 +920,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
             JS_ASSERT(length > BYTECODE_CHUNK);
             size = BYTECODE_SIZE(limit - base);
             incr = BYTECODE_SIZE(length) - size;
-            cg->codePool->growCast<jsbytecode *>(base, size, incr);
+            JS_ARENA_GROW_CAST(base, jsbytecode *, cg->codePool, size, incr);
             if (!base) {
                 js_ReportOutOfScriptQuota(cx);
                 return JS_FALSE;
@@ -4379,9 +4380,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                      FUN_KIND(fun) == JSFUN_INTERPRETED);
 
         /* Generate code for the function's body. */
-        void *cg2mark = cg->codePool->getMark();
-        JSCodeGenerator *cg2space;
-        cg->codePool->allocateType<JSCodeGenerator>(cg2space);
+        void *cg2mark = JS_ARENA_MARK(cg->codePool);
+        void *cg2space;
+        JS_ARENA_ALLOCATE_TYPE(cg2space, JSCodeGenerator, cg->codePool);
         if (!cg2space) {
             js_ReportOutOfScriptQuota(cx);
             return JS_FALSE;
@@ -4420,7 +4421,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             pn = NULL;
 
         cg2->~JSCodeGenerator();
-        cg->codePool->release(cg2mark);
+        JS_ARENA_RELEASE(cg->codePool, cg2mark);
         cg2 = NULL;
         if (!pn)
             return JS_FALSE;
@@ -6982,10 +6983,10 @@ AllocSrcNote(JSContext *cx, JSCodeGenerator *cg)
         size = SRCNOTE_SIZE(CG_NOTE_MASK(cg) + 1);
         if (!CG_NOTES(cg)) {
             /* Allocate the first note array lazily; leave noteMask alone. */
-            pool->allocateCast<jssrcnote *>(CG_NOTES(cg), size);
+            JS_ARENA_ALLOCATE_CAST(CG_NOTES(cg), jssrcnote *, pool, size);
         } else {
             /* Grow by doubling note array size; update noteMask on success. */
-            pool->growCast<jssrcnote *>(CG_NOTES(cg), size, size);
+            JS_ARENA_GROW_CAST(CG_NOTES(cg), jssrcnote *, pool, size, size);
             if (CG_NOTES(cg))
                 CG_NOTE_MASK(cg) = (CG_NOTE_MASK(cg) << 1) | 1;
         }
@@ -7086,7 +7087,7 @@ GrowSrcNotes(JSContext *cx, JSCodeGenerator *cg)
     /* Grow by doubling note array size; update noteMask on success. */
     pool = cg->notePool;
     size = SRCNOTE_SIZE(CG_NOTE_MASK(cg) + 1);
-    pool->growCast<jssrcnote *>(CG_NOTES(cg), size, size);
+    JS_ARENA_GROW_CAST(CG_NOTES(cg), jssrcnote *, pool, size, size);
     if (!CG_NOTES(cg)) {
         js_ReportOutOfScriptQuota(cx);
         return JS_FALSE;
@@ -7324,7 +7325,7 @@ NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
     JS_ASSERT((size_t)(uint32)start == start);
     JS_ASSERT((size_t)(uint32)end == end);
 
-    cx->tempPool.allocateType<JSTryNode>(tryNode);
+    JS_ARENA_ALLOCATE_TYPE(tryNode, JSTryNode, &cx->tempPool);
     if (!tryNode) {
         js_ReportOutOfScriptQuota(cx);
         return JS_FALSE;

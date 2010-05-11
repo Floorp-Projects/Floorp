@@ -288,7 +288,7 @@ BEGIN_CASE(JSOP_STOP)
         cx->fp = fp = fp->down;
         JS_ASSERT(fp->regs == &ifp->callerRegs);
         fp->regs = &regs;
-        cx->stackPool.release(ifp->mark);
+        JS_ARENA_RELEASE(&cx->stackPool, ifp->mark);
 
         /* Restore the calling script's interpreter registers. */
         script = fp->script;
@@ -2021,6 +2021,7 @@ BEGIN_CASE(JSOP_APPLY)
       inline_call:
         {
             uintN nframeslots, nvars, missing;
+            JSArena *a;
             jsuword nbytes;
             void *newmark;
             jsval *newsp;
@@ -2048,16 +2049,16 @@ BEGIN_CASE(JSOP_APPLY)
             nbytes = (nframeslots + script->nslots) * sizeof(jsval);
 
             /* Allocate missing expected args adjacent to actuals. */
-            JSArena *a = cx->stackPool.getCurrent();
-            newmark = (void *) a->getAvail();
+            a = cx->stackPool.current;
+            newmark = (void *) a->avail;
             if (fun->nargs <= argc) {
                 missing = 0;
             } else {
                 newsp = vp + 2 + fun->nargs;
                 JS_ASSERT(newsp > regs.sp);
-                if ((jsuword) newsp <= a->getLimit()) {
-                    if ((jsuword) newsp > a->getAvail())
-                        a->setAvail(jsuword(newsp));
+                if ((jsuword) newsp <= a->limit) {
+                    if ((jsuword) newsp > a->avail)
+                        a->avail = (jsuword) newsp;
                     jsval *argsp = newsp;
                     do {
                         *--argsp = JSVAL_VOID;
@@ -2070,12 +2071,13 @@ BEGIN_CASE(JSOP_APPLY)
             }
 
             /* Allocate the inline frame with its slots and operands. */
-            if (a->getAvail() + nbytes <= a->getLimit()) {
-                newsp = (jsval *) a->getAvail();
-                a->setAvail(a->getAvail() + nbytes);
+            if (a->avail + nbytes <= a->limit) {
+                newsp = (jsval *) a->avail;
+                a->avail += nbytes;
                 JS_ASSERT(missing == 0);
             } else {
-                cx->stackPool.allocateCast<jsval *>(newsp, nbytes);
+                JS_ARENA_ALLOCATE_CAST(newsp, jsval *, &cx->stackPool,
+                                       nbytes);
                 if (!newsp) {
                     js_ReportOutOfScriptQuota(cx);
                     goto bad_inline_call;
@@ -2636,7 +2638,7 @@ BEGIN_CASE(JSOP_CALLUPVAR_DBG)
 
     /* Scope for tempPool mark and local names allocation in it. */
     {
-        void *mark = cx->tempPool.getMark();
+        void *mark = JS_ARENA_MARK(&cx->tempPool);
         jsuword *names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
         if (!names)
             goto error;
@@ -2646,7 +2648,7 @@ BEGIN_CASE(JSOP_CALLUPVAR_DBG)
         id = ATOM_TO_JSID(atom);
 
         ok = js_FindProperty(cx, id, &obj, &obj2, &prop);
-        cx->tempPool.release(mark);
+        JS_ARENA_RELEASE(&cx->tempPool, mark);
         if (!ok)
             goto error;
     }
