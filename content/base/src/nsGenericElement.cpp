@@ -3549,26 +3549,17 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
 {
   NS_PRECONDITION(aKid, "null ptr");
 
-  return doInsertChildAt(aKid, aIndex, aNotify, this, GetCurrentDoc(),
-                         mAttrsAndChildren);
+  return doInsertChildAt(aKid, aIndex, aNotify, mAttrsAndChildren);
 }
 
 
-/* static */
 nsresult
-nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                  PRBool aNotify, nsIContent* aParent,
-                                  nsIDocument* aDocument,
-                                  nsAttrAndChildArray& aChildArray)
+nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                         PRBool aNotify, nsAttrAndChildArray& aChildArray)
 {
-  NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
-  NS_PRECONDITION(!aParent || aParent->GetCurrentDoc() == aDocument,
-                  "Incorrect aDocument");
-
   nsresult rv;
-  nsINode* container = NODE_FROM(aParent, aDocument);
 
-  if (!container->HasSameOwnerDoc(aKid)) {
+  if (!HasSameOwnerDoc(aKid)) {
     nsCOMPtr<nsIDOMNode> kid = do_QueryInterface(aKid, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
  
@@ -3576,8 +3567,7 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     rv = kid->GetNodeType(&nodeType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOM3Document> domDoc =
-      do_QueryInterface(container->GetOwnerDoc());
+    nsCOMPtr<nsIDOM3Document> domDoc = do_QueryInterface(GetOwnerDoc());
 
     // DocumentType nodes are the only nodes that can have a null
     // ownerDocument according to the DOM spec, and we need to allow
@@ -3600,38 +3590,48 @@ nsGenericElement::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 
   PRBool isAppend = (aIndex == childCount);
 
-  mozAutoDocUpdate updateBatch(aDocument, UPDATE_CONTENT_MODEL, aNotify);
+  nsIDocument* doc = GetCurrentDoc();
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
   rv = aChildArray.InsertChildAt(aKid, aIndex);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (aIndex == 0) {
+    mFirstChild = aKid;
+  }
 
-  rv = aKid->BindToTree(aDocument, aParent, nsnull, PR_TRUE);
+  nsIContent* parent =
+    IsNodeOfType(eDOCUMENT) ? nsnull : static_cast<nsIContent*>(this);
+
+  rv = aKid->BindToTree(doc, parent, nsnull, PR_TRUE);
   if (NS_FAILED(rv)) {
+    if (GetFirstChild() == aKid) {
+      mFirstChild = aKid->GetNextSibling();
+    }
     aChildArray.RemoveChildAt(aIndex);
     aKid->UnbindFromTree();
     return rv;
   }
 
-  NS_ASSERTION(aKid->GetNodeParent() == container,
+  NS_ASSERTION(aKid->GetNodeParent() == this,
                "Did we run script inappropriately?");
 
   if (aNotify) {
     // Note that we always want to call ContentInserted when things are added
     // as kids to documents
-    if (aParent && isAppend) {
-      nsNodeUtils::ContentAppended(aParent, aIndex);
+    if (parent && isAppend) {
+      nsNodeUtils::ContentAppended(parent, aIndex);
     } else {
-      nsNodeUtils::ContentInserted(container, aKid, aIndex);
+      nsNodeUtils::ContentInserted(this, aKid, aIndex);
     }
 
     if (nsContentUtils::HasMutationListeners(aKid,
-          NS_EVENT_BITS_MUTATION_NODEINSERTED, container)) {
-      mozAutoRemovableBlockerRemover blockerRemover(container->GetOwnerDoc());
+          NS_EVENT_BITS_MUTATION_NODEINSERTED, this)) {
+      mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
       
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
-      mutation.mRelatedNode = do_QueryInterface(container);
+      mutation.mRelatedNode = do_QueryInterface(this);
 
-      mozAutoSubtreeModified subtree(container->GetOwnerDoc(), container);
+      mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
       nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
     }
   }
@@ -3646,30 +3646,24 @@ nsGenericElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutatio
   NS_ASSERTION(oldKid == GetChildAt(aIndex), "Unexpected child in RemoveChildAt");
 
   if (oldKid) {
-    return doRemoveChildAt(aIndex, aNotify, oldKid, this, GetCurrentDoc(),
-                           mAttrsAndChildren, aMutationEvent);
+    return doRemoveChildAt(aIndex, aNotify, oldKid, mAttrsAndChildren,
+                           aMutationEvent);
   }
 
   return NS_OK;
 }
 
-/* static */
 nsresult
-nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
-                                  nsIContent* aKid, nsIContent* aParent,
-                                  nsIDocument* aDocument,
-                                  nsAttrAndChildArray& aChildArray,
-                                  PRBool aMutationEvent)
+nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
+                         nsIContent* aKid, nsAttrAndChildArray& aChildArray,
+                         PRBool aMutationEvent)
 {
-  NS_PRECONDITION(aParent || aDocument, "Must have document if no parent!");
-  NS_PRECONDITION(!aParent || aParent->GetCurrentDoc() == aDocument,
-                  "Incorrect aDocument");
-
+  nsIDocument* doc = GetCurrentDoc();
 #ifdef ACCESSIBILITY
   // A11y needs to be notified of content removals first, so accessibility
   // events can be fired before any changes occur
-  if (aNotify && aDocument) {
-    nsIPresShell *presShell = aDocument->GetPrimaryShell();
+  if (aNotify && doc) {
+    nsIPresShell *presShell = doc->GetPrimaryShell();
     if (presShell && presShell->IsAccessibilityActive()) {
       nsCOMPtr<nsIAccessibilityService> accService = 
         do_GetService("@mozilla.org/accessibilityService;1");
@@ -3683,13 +3677,11 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
 
   nsMutationGuard::DidMutate();
 
-  nsINode* container = NODE_FROM(aParent, aDocument);
-  
-  NS_PRECONDITION(aKid && aKid->GetParent() == aParent &&
-                  aKid == container->GetChildAt(aIndex) &&
-                  container->IndexOf(aKid) == (PRInt32)aIndex, "Bogus aKid");
+  NS_PRECONDITION(aKid && aKid->GetNodeParent() == this &&
+                  aKid == GetChildAt(aIndex) &&
+                  IndexOf(aKid) == (PRInt32)aIndex, "Bogus aKid");
 
-  mozAutoDocUpdate updateBatch(aDocument, UPDATE_CONTENT_MODEL, aNotify);
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
   nsMutationGuard guard;
 
@@ -3697,29 +3689,33 @@ nsGenericElement::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
   if (aNotify &&
       aMutationEvent &&
       nsContentUtils::HasMutationListeners(aKid,
-        NS_EVENT_BITS_MUTATION_NODEREMOVED, container)) {
-    mozAutoRemovableBlockerRemover blockerRemover(container->GetOwnerDoc());
+        NS_EVENT_BITS_MUTATION_NODEREMOVED, this)) {
+    mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
 
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
-    mutation.mRelatedNode = do_QueryInterface(container);
+    mutation.mRelatedNode = do_QueryInterface(this);
 
-    subtree.UpdateTarget(container->GetOwnerDoc(), container);
+    subtree.UpdateTarget(GetOwnerDoc(), this);
     nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
   }
 
   // Someone may have removed the kid or any of its siblings while that event
   // was processing.
   if (guard.Mutated(0)) {
-    aIndex = container->IndexOf(aKid);
+    aIndex = IndexOf(aKid);
     if (static_cast<PRInt32>(aIndex) < 0) {
       return NS_OK;
     }
   }
 
+  if (GetFirstChild() == aKid) {
+    mFirstChild = aKid->GetNextSibling();
+  }
+
   aChildArray.RemoveChildAt(aIndex);
 
   if (aNotify) {
-    nsNodeUtils::ContentRemoved(container, aKid, aIndex);
+    nsNodeUtils::ContentRemoved(this, aKid, aIndex);
   }
 
   aKid->UnbindFromTree();
@@ -4345,6 +4341,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
         tmp->mAttrsAndChildren.ChildAt(childCount)->UnbindFromTree();
         tmp->mAttrsAndChildren.RemoveChildAt(childCount);
       }
+      tmp->mFirstChild = nsnull;
     }
   }  
 

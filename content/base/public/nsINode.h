@@ -297,7 +297,8 @@ public:
       mParentPtrBits(0),
       mFlagsOrSlots(NODE_DOESNT_HAVE_SLOTS),
       mNextSibling(nsnull),
-      mPreviousSibling(nsnull)
+      mPreviousSibling(nsnull),
+      mFirstChild(nsnull)
   {
   }
 #endif
@@ -926,6 +927,7 @@ public:
 
     return parent->GetChildAt(parent->IndexOf(this) + aOffset);
   }
+  nsIContent* GetFirstChild() const { return mFirstChild; }
   nsIContent* GetLastChild() const
   {
     PRUint32 count;
@@ -1094,6 +1096,47 @@ public:
   nsIContent* GetNextSibling() const { return mNextSibling; }
   nsIContent* GetPreviousSibling() const { return mPreviousSibling; }
 
+  /**
+   * Get the next node in the pre-order tree traversal of the DOM.  If
+   * aRoot is non-null, then it must be an ancestor of |this|
+   * (possibly equal to |this|) and only nodes that are descendants of
+   * aRoot, not including aRoot itself, will be returned.  Returns
+   * null if there are no more nodes to traverse.
+   */
+  nsIContent* GetNextNode(const nsINode* aRoot = nsnull) const
+  {
+    // Can't use nsContentUtils::ContentIsDescendantOf here, since we
+    // can't include it here.
+#ifdef DEBUG
+    if (aRoot) {
+      const nsINode* cur = this;
+      for (; cur; cur = cur->GetNodeParent())
+        if (cur == aRoot) break;
+      NS_ASSERTION(cur, "aRoot not an ancestor of |this|?");
+    }
+#endif
+    nsIContent* kid = GetFirstChild();
+    if (kid) {
+      return kid;
+    }
+    if (this == aRoot) {
+      return nsnull;
+    }
+    const nsINode* cur = this;
+    while (1) {
+      nsIContent* next = cur->GetNextSibling();
+      if (next) {
+        return next;
+      }
+      nsINode* parent = cur->GetNodeParent();
+      if (parent == aRoot) {
+        return nsnull;
+      }
+      cur = parent;
+    }
+    NS_NOTREACHED("How did we get here?");
+  }
+
 protected:
 
   // Override this function to create a custom slots class.
@@ -1178,6 +1221,34 @@ protected:
    */
   virtual mozilla::dom::Element* GetNameSpaceElement() = 0;
 
+  /**
+   * Most of the implementation of the nsINode RemoveChildAt method.
+   * Should only be called on document, element, and document fragment
+   * nodes.  The aChildArray passed in should be the one for |this|.
+   *
+   * @param aIndex The index to remove at.
+   * @param aNotify Whether to notify.
+   * @param aKid The kid at aIndex.  Must not be null.
+   * @param aChildArray The child array to work with.
+   * @param aMutationEvent whether to fire a mutation event for this removal.
+   */
+  nsresult doRemoveChildAt(PRUint32 aIndex, PRBool aNotify, nsIContent* aKid,
+                           nsAttrAndChildArray& aChildArray,
+                           PRBool aMutationEvent);
+
+  /**
+   * Most of the implementation of the nsINode InsertChildAt method.
+   * Should only be called on document, element, and document fragment
+   * nodes.  The aChildArray passed in should be the one for |this|.
+   *
+   * @param aKid The child to insert.
+   * @param aIndex The index to insert at.
+   * @param aNotify Whether to notify.
+   * @param aChildArray The child array to work with
+   */
+  nsresult doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
+                           PRBool aNotify, nsAttrAndChildArray& aChildArray);
+
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 
   enum { PARENT_BIT_INDOCUMENT = 1 << 0, PARENT_BIT_PARENT_IS_CONTENT = 1 << 1 };
@@ -1195,6 +1266,7 @@ protected:
 
   nsIContent* mNextSibling;
   nsIContent* mPreviousSibling;
+  nsIContent* mFirstChild;
 };
 
 

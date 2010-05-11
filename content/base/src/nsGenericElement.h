@@ -591,45 +591,6 @@ public:
   static PRBool ShouldBlur(nsIContent *aContent);
 
   /**
-   * Most of the implementation of the nsINode InsertChildAt method.  Shared by
-   * nsDocument.  When called from nsDocument, aParent will be null.
-   *
-   * @param aKid The child to insert.
-   * @param aIndex The index to insert at.
-   * @param aNotify Whether to notify.
-   * @param aParent The parent to use for the new child.
-   * @param aDocument The document to use for the notifications.  Must be
-   *                  non-null if aParent is null (in which case aKid is being
-   *                  inserted as its child) and must match
-   *                  aParent->GetCurrentDoc() if aParent is not null.
-   * @param aChildArray The child array to work with
-   */
-  static nsresult doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
-                                  PRBool aNotify, nsIContent* aParent,
-                                  nsIDocument* aDocument,
-                                  nsAttrAndChildArray& aChildArray);
-
-  /**
-   * Most of the implementation of the nsINode RemoveChildAt method.  Shared by
-   * nsDocument.  When called from nsDocument, aParent will be null.
-   *
-   * @param aIndex The index to remove at.
-   * @param aNotify Whether to notify.
-   * @param aKid The kid at aIndex.  Must not be null.
-   * @param aParent The parent we're removing from.
-   * @param aDocument The document to use for the notifications.  Must be
-   *                  non-null if aParent is null (in which case aKid is being
-   *                  removed as its child) and must match
-   *                  aParent->GetCurrentDoc() if aParent is not null.
-   * @param aChildArray The child array to work with
-   */
-  static nsresult doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
-                                  nsIContent* aKid, nsIContent* aParent,
-                                  nsIDocument* aDocument,
-                                  nsAttrAndChildArray& aChildArray,
-                                  PRBool aMutationEvent);
-
-  /**
    * If there are listeners for DOMNodeInserted event, fires the event on all
    * aNodes
    */
