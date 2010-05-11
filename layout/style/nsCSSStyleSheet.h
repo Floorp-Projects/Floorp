@@ -153,37 +153,37 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
   
-  virtual void AppendStyleSheet(nsCSSStyleSheet* aSheet);
-  virtual void InsertStyleSheetAt(nsCSSStyleSheet* aSheet, PRInt32 aIndex);
-  virtual void PrependStyleRule(nsICSSRule* aRule);
-  virtual void AppendStyleRule(nsICSSRule* aRule);
-  virtual void ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew);
-  virtual PRInt32 StyleRuleCount() const;
-  virtual nsresult GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
-  virtual nsresult DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
-  virtual nsresult InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
-  virtual nsresult ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
-  virtual PRInt32 StyleSheetCount() const;
-  virtual already_AddRefed<nsCSSStyleSheet> GetStyleSheetAt(PRInt32 aIndex) const;
-  virtual void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
-  virtual void SetPrincipal(nsIPrincipal* aPrincipal);
-  virtual nsIPrincipal* Principal() const;
+  void AppendStyleSheet(nsCSSStyleSheet* aSheet);
+  void InsertStyleSheetAt(nsCSSStyleSheet* aSheet, PRInt32 aIndex);
+  void PrependStyleRule(nsICSSRule* aRule);
+  void AppendStyleRule(nsICSSRule* aRule);
+  void ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew);
+  PRInt32 StyleRuleCount() const;
+  nsresult GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
+  nsresult DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
+  nsresult InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
+  nsresult ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
+  PRInt32 StyleSheetCount() const;
+  already_AddRefed<nsCSSStyleSheet> GetStyleSheetAt(PRInt32 aIndex) const;
+  void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
+  void SetPrincipal(nsIPrincipal* aPrincipal);
+  nsIPrincipal* Principal() const;
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
-  virtual void SetMedia(nsMediaList* aMedia);
+  void SetMedia(nsMediaList* aMedia);
   void SetOwningNode(nsIDOMNode* aOwningNode) { mOwningNode = aOwningNode; /* Not ref counted */ }
   void SetOwnerRule(nsICSSImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
-  virtual already_AddRefed<nsICSSImportRule> GetOwnerRule();
-  virtual nsXMLNameSpaceMap* GetNameSpaceMap() const;
-  virtual already_AddRefed<nsCSSStyleSheet> Clone(nsCSSStyleSheet* aCloneParent,
-                                                  nsICSSImportRule* aCloneOwnerRule,
-                                                  nsIDocument* aCloneDocument,
-                                                  nsIDOMNode* aCloneOwningNode) const;
+  already_AddRefed<nsICSSImportRule> GetOwnerRule();
+  nsXMLNameSpaceMap* GetNameSpaceMap() const;
+  already_AddRefed<nsCSSStyleSheet> Clone(nsCSSStyleSheet* aCloneParent,
+                                          nsICSSImportRule* aCloneOwnerRule,
+                                          nsIDocument* aCloneDocument,
+                                          nsIDOMNode* aCloneOwningNode) const;
   PRBool IsModified() const { return mDirty; }
   void SetModified(PRBool aModified) { mDirty = aModified; }
-  virtual nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
-  virtual nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
-  virtual nsresult InsertRuleInternal(const nsAString& aRule,
-                                PRUint32 aIndex, PRUint32* aReturn);
+  nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
+  nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
+  nsresult InsertRuleInternal(const nsAString& aRule,
+                              PRUint32 aIndex, PRUint32* aReturn);
   virtual nsIURI* GetOriginalURI() const;
 
   // nsICSSLoaderObserver interface
