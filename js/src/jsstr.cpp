@@ -3851,55 +3851,50 @@ char *
 DeflatedStringCache::getBytes(JSContext *cx, JSString *str)
 {
     JS_ACQUIRE_LOCK(lock);
-
-    char *bytes;
-    do {
-        Map::AddPtr p = map.lookupForAdd(str);
-        if (p) {
-            bytes = p->value;
-            break;
-        }
-#ifdef JS_THREADSAFE
-        unsigned generation = map.generation();
-        JS_RELEASE_LOCK(lock);
-#endif
-        bytes = js_DeflateString(cx, str->chars(), str->length());
-        if (!bytes)
-            return NULL;
-#ifdef JS_THREADSAFE
-        JS_ACQUIRE_LOCK(lock);
-        if (generation != map.generation()) {
-            p = map.lookupForAdd(str);
-            if (p) {
-                /* Some other thread has asked for str bytes .*/
-                if (cx)
-                    cx->free(bytes);
-                else
-                    js_free(bytes);
-                bytes = p->value;
-                break;
-            }
-        }
-#endif
-        if (!map.add(p, str, bytes)) {
-            JS_RELEASE_LOCK(lock);
-            if (cx) {
-                cx->free(bytes);
-                js_ReportOutOfMemory(cx);
-            } else {
-                js_free(bytes);
-            }
-            return NULL;
-        }
-    } while (false);
-
-    JS_ASSERT(bytes);
-
-    /* Try to catch failure to JS_ShutDown between runtime epochs. */
-    JS_ASSERT_IF(!js_CStringsAreUTF8 && *bytes != (char) str->chars()[0],
-                 *bytes == '\0' && str->empty());
-
+    Map::AddPtr p = map.lookupForAdd(str);
+    char *bytes = p ? p->value : NULL;
     JS_RELEASE_LOCK(lock);
+
+    if (bytes)
+        return bytes;
+
+    bytes = js_DeflateString(cx, str->chars(), str->length());
+    if (!bytes)
+        return NULL;
+
+    /*
+     * In the single-threaded case we use the add method as js_DeflateString
+     * cannot mutate the map. In particular, it cannot run the GC that may
+     * delete entries from the map. But the JS_THREADSAFE version requires to
+     * deal with other threads adding the entries to the map.
+     */
+    char *bytesToFree = NULL;
+#ifdef JS_THREADSAFE
+    JS_ACQUIRE_LOCK(lock);
+    bool ok = map.relookupOrAdd(p, str, bytes);
+    if (!ok) {
+        bytesToFree = bytes;
+        bytes = NULL;
+    } else if (p->value != bytes) {
+        /* Some other thread has asked for str bytes .*/
+        JS_ASSERT(!strcmp(p->value, bytes));
+        bytesToFree = bytes;
+        bytes = p->value;
+    }
+    JS_RELEASE_LOCK(lock);
+#else  /* !JS_THREADSAFE */
+    if (!map.add(p, str, bytes)) {
+        bytesToFree = bytes;
+        bytes = NULL;
+    }
+#endif
+
+    if (bytesToFree) {
+        if (cx)
+            cx->free(bytesToFree);
+        else
+            js_free(bytesToFree);
+    }
     return bytes;
 }
 
