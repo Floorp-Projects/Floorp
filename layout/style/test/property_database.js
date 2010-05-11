@@ -374,13 +374,15 @@ var gCSSProperties = {
 		other_values: [ "2px", "4em" ],
 		invalid_values: [ "3%", "-1px" ]
 	},
-	"-moz-column-width": {
-		domProp: "MozColumnWidth",
+	"-moz-column-rule": {
+		domProp: "MozColumnRule",
 		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "auto" ],
-		other_values: [ "15px" ],
-		invalid_values: [ "20", "-1px", "50%" ]
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		prerequisites: { "color": "green" },
+		subproperties: [ "-moz-column-rule-width", "-moz-column-rule-style", "-moz-column-rule-color" ],
+		initial_values: [ "medium none currentColor" ],
+		other_values: [ "2px blue solid", "red dotted 1px", "ridge 4px orange" ],
+		invalid_values: [ "2px 3px 4px red", "dotted dashed", "5px dashed green 3px" ]
 	},
 	"-moz-column-rule-width": {
 		domProp: "MozColumnRuleWidth",
@@ -408,15 +410,13 @@ var gCSSProperties = {
 		other_values: [ "red", "blue", "#ffff00" ],
 		invalid_values: [ ]
 	},
-	"-moz-column-rule": {
-		domProp: "MozColumnRule",
+	"-moz-column-width": {
+		domProp: "MozColumnWidth",
 		inherited: false,
-		type: CSS_TYPE_TRUE_SHORTHAND,
-		prerequisites: { "color": "green" },
-		subproperties: [ "-moz-column-rule-width", "-moz-column-rule-style", "-moz-column-rule-color" ],
-		initial_values: [ "medium none currentColor" ],
-		other_values: [ "2px blue solid", "red dotted 1px", "ridge 4px orange" ],
-		invalid_values: [ "2px 3px 4px red", "dotted dashed", "5px dashed green 3px" ]
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [ "15px" ],
+		invalid_values: [ "20", "-1px", "50%" ]
 	},
 	"-moz-float-edge": {
 		domProp: "MozFloatEdge",
@@ -544,6 +544,14 @@ var gCSSProperties = {
 		other_values: [ "both", "horizontal", "vertical" ],
 		invalid_values: []
 	},
+	"-moz-stack-sizing": {
+		domProp: "MozStackSizing",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch-to-fit" ],
+		other_values: [ "ignore" ],
+		invalid_values: []
+	},
 	"-moz-tab-size": {
 		domProp: "MozTabSize",
 		inherited: true,
@@ -576,14 +584,6 @@ var gCSSProperties = {
 		invalid_values: ["red", "auto", "none", "0.5 0.5", "40px #0000ff",
 						 "border", "center red", "right diagonal",
 						 "#00ffff bottom"]
-	},
-	"-moz-stack-sizing": {
-		domProp: "MozStackSizing",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "stretch-to-fit" ],
-		other_values: [ "ignore" ],
-		invalid_values: []
 	},
 	"-moz-user-focus": {
 		domProp: "MozUserFocus",
