@@ -324,8 +324,7 @@ nsApplicationAccessible::AddRootAccessible(nsIAccessible *aRootAccessible)
 {
   NS_ENSURE_ARG_POINTER(aRootAccessible);
 
-  nsRefPtr<nsAccessible> rootAcc =
-    nsAccUtils::QueryObject<nsAccessible>(aRootAccessible);
+  nsRefPtr<nsAccessible> rootAcc = do_QueryObject(aRootAccessible);
 
   if (!mChildren.AppendElement(rootAcc))
     return NS_ERROR_FAILURE;

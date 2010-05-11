@@ -40,20 +40,15 @@
 
 #include "nsISupports.h"
 
-class nsIDOMText; /* forward declaration */
-class nsIDOMCDATASection; /* forward declaration */
-class nsIDOMProcessingInstruction; /* forward declaration */
-class nsIDOMComment; /* forward declaration */
-class nsIDOMDocumentType; /* forward declaration */
-class nsIDOMElement; /* forward declaration */
-class nsIDOMDocument; /* forward declaration */
+class nsIContent;
+class nsIDocument;
 class nsAString;
 
 /* starting interface:    nsIContentSerializer */
 
 #define NS_ICONTENTSERIALIZER_IID \
-{ 0x34769de0, 0x30d0, 0x4cef, \
-  { 0x89, 0x4a, 0xfc, 0xd8, 0xbb, 0x27, 0xc4, 0xb4 } }
+{ 0xb1ee32f2, 0xb8c4, 0x49b9, \
+  { 0x93, 0xdf, 0xb6, 0xfa, 0xb5, 0xd5, 0x46, 0x88 } }
 
 class nsIContentSerializer : public nsISupports {
  public: 
@@ -64,29 +59,29 @@ class nsIContentSerializer : public nsISupports {
                   const char* aCharSet, PRBool aIsCopying,
                   PRBool aIsWholeDocument) = 0;
 
-  NS_IMETHOD AppendText(nsIDOMText* aText, PRInt32 aStartOffset,
+  NS_IMETHOD AppendText(nsIContent* aText, PRInt32 aStartOffset,
                         PRInt32 aEndOffset, nsAString& aStr) = 0;
 
-  NS_IMETHOD AppendCDATASection(nsIDOMCDATASection* aCDATASection,
+  NS_IMETHOD AppendCDATASection(nsIContent* aCDATASection,
                                 PRInt32 aStartOffset, PRInt32 aEndOffset,
                                 nsAString& aStr) = 0;
 
-  NS_IMETHOD AppendProcessingInstruction(nsIDOMProcessingInstruction* aPI,
+  NS_IMETHOD AppendProcessingInstruction(nsIContent* aPI,
                                          PRInt32 aStartOffset,
                                          PRInt32 aEndOffset,
                                          nsAString& aStr) = 0;
 
-  NS_IMETHOD AppendComment(nsIDOMComment* aComment, PRInt32 aStartOffset,
+  NS_IMETHOD AppendComment(nsIContent* aComment, PRInt32 aStartOffset,
                            PRInt32 aEndOffset, nsAString& aStr) = 0;
 
-  NS_IMETHOD AppendDoctype(nsIDOMDocumentType *aDoctype,
+  NS_IMETHOD AppendDoctype(nsIContent *aDoctype,
                            nsAString& aStr) = 0;
 
-  NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
-                                nsIDOMElement *aOriginalElement,
+  NS_IMETHOD AppendElementStart(nsIContent *aElement,
+                                nsIContent *aOriginalElement,
                                 nsAString& aStr) = 0;
 
-  NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
+  NS_IMETHOD AppendElementEnd(nsIContent *aElement,
                               nsAString& aStr) = 0;
 
   NS_IMETHOD Flush(nsAString& aStr) = 0;
@@ -96,7 +91,7 @@ class nsIContentSerializer : public nsISupports {
    * serialized by other methods. XML declaration is the most likely 
    * thing this method can produce.
    */
-  NS_IMETHOD AppendDocumentStart(nsIDOMDocument *aDocument,
+  NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
                                  nsAString& aStr) = 0;
 };
 

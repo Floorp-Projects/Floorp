@@ -39,6 +39,7 @@
 #include "nsContentUtils.h"
 #include "nsINode.h"
 #include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIMutationObserver.h"
 #include "nsIDocument.h"
 #include "nsIDOMUserDataHandler.h"
@@ -59,6 +60,8 @@
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
+
+using namespace mozilla::dom;
 
 // This macro expects the ownerDocument of content_ to be in scope as
 // |nsIDocument* doc|
@@ -128,12 +131,14 @@ nsNodeUtils::AttributeChanged(nsIContent* aContent,
 
 void
 nsNodeUtils::ContentAppended(nsIContent* aContainer,
+                             nsIContent* aFirstNewContent,
                              PRInt32 aNewIndexInContainer)
 {
   nsIDocument* doc = aContainer->GetOwnerDoc();
 
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
-                             (doc, aContainer, aNewIndexInContainer));
+                             (doc, aContainer, aFirstNewContent,
+                              aNewIndexInContainer));
 }
 
 void
@@ -262,94 +267,16 @@ nsNodeUtils::LastRelease(nsINode* aNode)
     aNode->UnsetFlags(NODE_HAS_LISTENERMANAGER);
   }
 
-  if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+  if (aNode->IsElement()) {
     nsIDocument* ownerDoc = aNode->GetOwnerDoc();
     if (ownerDoc) {
-      ownerDoc->ClearBoxObjectFor(static_cast<nsIContent*>(aNode));
+      ownerDoc->ClearBoxObjectFor(aNode->AsElement());
     }
   }
 
   nsContentUtils::ReleaseWrapper(aNode, aNode);
 
   delete aNode;
-}
-
-static nsresult
-SetUserDataProperty(PRUint16 aCategory, nsINode *aNode, nsIAtom *aKey,
-                    nsISupports* aValue, void** aOldValue)
-{
-  nsresult rv = aNode->SetProperty(aCategory, aKey, aValue,
-                                   nsPropertyTable::SupportsDtorFunc, PR_TRUE,
-                                   aOldValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Property table owns it now.
-  NS_ADDREF(aValue);
-
-  return NS_OK;
-}
-
-/* static */
-nsresult
-nsNodeUtils::SetUserData(nsINode *aNode, const nsAString &aKey,
-                         nsIVariant *aData, nsIDOMUserDataHandler *aHandler,
-                         nsIVariant **aResult)
-{
-  *aResult = nsnull;
-
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv;
-  void *data;
-  if (aData) {
-    rv = SetUserDataProperty(DOM_USER_DATA, aNode, key, aData, &data);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    data = aNode->UnsetProperty(DOM_USER_DATA, key);
-  }
-
-  // Take over ownership of the old data from the property table.
-  nsCOMPtr<nsIVariant> oldData = dont_AddRef(static_cast<nsIVariant*>(data));
-
-  if (aData && aHandler) {
-    nsCOMPtr<nsIDOMUserDataHandler> oldHandler;
-    rv = SetUserDataProperty(DOM_USER_DATA_HANDLER, aNode, key, aHandler,
-                             getter_AddRefs(oldHandler));
-    if (NS_FAILED(rv)) {
-      // We failed to set the handler, remove the data.
-      aNode->DeleteProperty(DOM_USER_DATA, key);
-
-      return rv;
-    }
-  }
-  else {
-    aNode->DeleteProperty(DOM_USER_DATA_HANDLER, key);
-  }
-
-  oldData.swap(*aResult);
-
-  return NS_OK;
-}
-
-/* static */
-nsresult
-nsNodeUtils::GetUserData(nsINode *aNode, const nsAString &aKey,
-                         nsIVariant **aResult)
-{
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aResult = static_cast<nsIVariant*>
-                        (aNode->GetProperty(DOM_USER_DATA, key));
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
 }
 
 struct NS_STACK_CLASS nsHandlerData
@@ -465,58 +392,6 @@ nsNodeUtils::CloneNodeImpl(nsINode *aNode, PRBool aDeep, nsIDOMNode **aResult)
   return NS_OK;
 }
 
-class AdoptFuncData {
-public:
-  AdoptFuncData(nsGenericElement *aElement,
-                nsNodeInfoManager *aNewNodeInfoManager, JSContext *aCx,
-                JSObject *aOldScope, JSObject *aNewScope,
-                nsCOMArray<nsINode> &aNodesWithProperties)
-    : mElement(aElement),
-      mNewNodeInfoManager(aNewNodeInfoManager),
-      mCx(aCx),
-      mOldScope(aOldScope),
-      mNewScope(aNewScope),
-      mNodesWithProperties(aNodesWithProperties)
-  {
-  }
-
-  nsGenericElement *mElement;
-  nsNodeInfoManager *mNewNodeInfoManager;
-  JSContext *mCx;
-  JSObject *mOldScope;
-  JSObject *mNewScope;
-  nsCOMArray<nsINode> &mNodesWithProperties;
-};
-
-PLDHashOperator
-AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg)
-{
-  nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aData);
-  NS_ASSERTION(attr, "non-nsIAttribute somehow made it into the hashmap?!");
-
-  AdoptFuncData *data = static_cast<AdoptFuncData*>(aUserArg);
-
-  // If we were passed an element we need to clone the attribute nodes and
-  // insert them into the element.
-  PRBool clone = data->mElement != nsnull;
-  nsCOMPtr<nsINode> node;
-  nsresult rv = nsNodeUtils::CloneAndAdopt(attr, clone, PR_TRUE,
-                                           data->mNewNodeInfoManager,
-                                           data->mCx, data->mOldScope,
-                                           data->mNewScope,
-                                           data->mNodesWithProperties,
-                                           nsnull, getter_AddRefs(node));
-
-  if (NS_SUCCEEDED(rv) && clone) {
-    nsCOMPtr<nsIDOMAttr> dummy, attribute = do_QueryInterface(node, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = data->mElement->SetAttributeNode(attribute, getter_AddRefs(dummy));
-    }
-  }
-
-  return NS_SUCCEEDED(rv) ? PL_DHASH_NEXT : PL_DHASH_STOP;
-}
-
 /* static */
 nsresult
 nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
@@ -569,7 +444,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     nodeInfo = newNodeInfo;
   }
 
-  nsGenericElement *elem = aNode->IsNodeOfType(nsINode::eELEMENT) ?
+  nsGenericElement *elem = aNode->IsElement() ?
                            static_cast<nsGenericElement*>(aNode) :
                            nsnull;
 
@@ -597,10 +472,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   else if (nodeInfoManager) {
     nsIDocument* oldDoc = aNode->GetOwnerDoc();
     PRBool wasRegistered = PR_FALSE;
-    if (oldDoc && aNode->IsNodeOfType(nsINode::eELEMENT)) {
-      nsIContent* content = static_cast<nsIContent*>(aNode);
-      oldDoc->ClearBoxObjectFor(content);
-      wasRegistered = oldDoc->UnregisterFreezableElement(content);
+    if (oldDoc && aNode->IsElement()) {
+      Element* element = aNode->AsElement();
+      oldDoc->ClearBoxObjectFor(element);
+      wasRegistered = oldDoc->UnregisterFreezableElement(element);
     }
 
     aNode->mNodeInfo.swap(newNodeInfo);
@@ -610,7 +485,7 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
       // XXX what if oldDoc is null, we don't know if this should be
       // registered or not! Can that really happen?
       if (wasRegistered) {
-        newDoc->RegisterFreezableElement(static_cast<nsIContent*>(aNode));
+        newDoc->RegisterFreezableElement(aNode->AsElement());
       }
 
       nsPIDOMWindow* window = newDoc->GetInnerWindow();
@@ -654,22 +529,10 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
     }
   }
 
-  if (elem) {
-    // aNode's attributes.
-    const nsDOMAttributeMap *map = elem->GetAttributeMap();
-    if (map) {
-      // If we're cloning we need to insert the cloned attribute nodes into the
-      // cloned element. We assume that the clone of an nsGenericElement is also
-      // an nsGenericElement.
-      nsGenericElement* elemClone =
-        aClone ? static_cast<nsGenericElement*>(clone.get()) : nsnull;
-      AdoptFuncData data(elemClone, nodeInfoManager, aCx, aOldScope, aNewScope,
-                         aNodesWithProperties);
-
-      PRUint32 count = map->Enumerate(AdoptFunc, &data);
-      NS_ENSURE_TRUE(count == map->Count(), NS_ERROR_FAILURE);
-    }
-  }
+  // XXX If there are any attribute nodes on this element with UserDataHandlers
+  // we should technically adopt/clone/import such attribute nodes and notify
+  // those handlers. However we currently don't have code to do so without
+  // also notifying when it's not safe so we're not doing that at this time.
 
   // The DOM spec says to always adopt/clone/import the children of attribute
   // nodes.
@@ -723,7 +586,8 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
   // cloning, so kids of the new node aren't confused about whether they're
   // in a document.
 #ifdef MOZ_XUL
-  if (aClone && !aParent && aNode->IsNodeOfType(nsINode::eELEMENT) && static_cast<nsIContent*>(aNode)->IsXUL()) {
+  if (aClone && !aParent && aNode->IsElement() &&
+      aNode->AsElement()->IsXUL()) {
     nsXULElement *xulElem = static_cast<nsXULElement*>(elem);
     if (!xulElem->mPrototype || xulElem->IsInDoc()) {
       clone->SetFlags(NODE_FORCE_XBL_BINDINGS);

@@ -86,7 +86,7 @@ private:
     static PRBool calcSortValue(TxObject*& aSortValue, SortKey* aKey,
                                 SortData* aSortData, PRUint32 aNodeIndex);
     txList mSortKeys;
-    int mNKeys;
+    unsigned int mNKeys;
 };
 
 #endif

@@ -65,6 +65,7 @@ JS_STATIC_ASSERT(sizeof(void *) == sizeof(void (*)()));
 JS_PUBLIC_API(void) JS_Assert(const char *s, const char *file, JSIntn ln)
 {
     fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
+    fflush(stderr);
 #if defined(WIN32)
     DebugBreak();
     exit(3);

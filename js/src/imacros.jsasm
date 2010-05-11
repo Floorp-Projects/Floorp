@@ -298,6 +298,60 @@
 
 .end unary
 
+.igroup incelem JSOP_INCELEM,JSOP_ELEMINC
+    .imacro incelem                     # obj id
+        dup2                            # obj id obj id
+        getelem                         # obj id val
+        pos                             # obj id n
+        one                             # obj id n 1
+        add                             # obj id m
+        setelem                         # m
+        stop
+    .end
+
+    .imacro eleminc                     # obj id
+        dup2                            # obj id obj id
+        getelem                         # obj id val
+        pos                             # obj id n
+        dup                             # obj id n n
+        one                             # obj id n n 1
+        add                             # obj id n m
+        pick 3                          # id n m obj
+        pick 3                          # n m obj id
+        pick 2                          # n obj id m
+        setelem                         # n m
+        pop                             # n
+        stop
+    .end
+.end incelem
+
+.igroup decelem JSOP_DECELEM,JSOP_ELEMDEC
+    .imacro decelem                     # obj id
+        dup2                            # obj id obj id
+        getelem                         # obj id val
+        pos                             # obj id n
+        one                             # obj id n 1
+        sub                             # obj id m
+        setelem                         # m
+        stop
+    .end
+
+    .imacro elemdec                     # obj id
+        dup2                            # obj id obj id
+        getelem                         # obj id val
+        pos                             # obj id n
+        dup                             # obj id n n
+        one                             # obj id n n 1
+        sub                             # obj id n m
+        pick 3                          # id n m obj
+        pick 3                          # n m obj id
+        pick 2                          # n obj id m
+        setelem                         # n m
+        pop                             # n
+        stop
+    .end
+.end decelem
+
 .igroup call JSOP_CALL
 
     .imacro String                          # String this obj

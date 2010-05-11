@@ -233,14 +233,11 @@ private:
     void ReparentPluginWindow(HWND hWndParent);
     void SizePluginWindow(int width, int height);
     int16_t WinlessHandleEvent(NPEvent& event);
-    void SetNestedInputEventHook();
-    void ResetNestedEventHook();
-    void SetNestedInputPumpHook();
-    void ResetPumpHooks();
     void CreateWinlessPopupSurrogate();
     void DestroyWinlessPopupSurrogate();
     void InitPopupMenuHook();
     void SetupFlashMsgThrottle();
+    void UnhookWinlessFlashThrottle();
     void FlashThrottleMessage(HWND, UINT, WPARAM, LPARAM, bool);
     static LRESULT CALLBACK DummyWindowProc(HWND hWnd,
                                             UINT message,
@@ -250,16 +247,6 @@ private:
                                              UINT message,
                                              WPARAM wParam,
                                              LPARAM lParam);
-    static VOID CALLBACK PumpTimerProc(HWND hwnd,
-                                       UINT uMsg,
-                                       UINT_PTR idEvent,
-                                       DWORD dwTime);
-    static LRESULT CALLBACK NestedInputEventHook(int code,
-                                                 WPARAM wParam,
-                                                 LPARAM lParam);
-    static LRESULT CALLBACK NestedInputPumpHook(int code,
-                                                WPARAM wParam,
-                                                LPARAM lParam);
     static BOOL WINAPI TrackPopupHookProc(HMENU hMenu,
                                           UINT uFlags,
                                           int x,
@@ -323,13 +310,13 @@ private:
     HWND mPluginWindowHWND;
     WNDPROC mPluginWndProc;
     HWND mPluginParentHWND;
-    HHOOK mNestedEventHook;
     int mNestedEventLevelDepth;
     HWND mCachedWinlessPluginHWND;
     HWND mWinlessPopupSurrogateHWND;
     nsIntPoint mPluginSize;
     nsIntPoint mPluginOffset;
     WNDPROC mWinlessThrottleOldWndProc;
+    HWND mWinlessHiddenMsgHWND;
 #endif
 
     friend class ChildAsyncCall;

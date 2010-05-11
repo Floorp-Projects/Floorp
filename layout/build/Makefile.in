@@ -108,6 +108,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DEPTH)/editor/libeditor/text/$(LIB_PREFIX)texteditor_s.$(LIB_SUFFIX) \
 	$(DEPTH)/editor/libeditor/base/$(LIB_PREFIX)editorbase_s.$(LIB_SUFFIX) \
 	$(DEPTH)/parser/html/$(LIB_PREFIX)html5p_s.$(LIB_SUFFIX) \
+	$(DEPTH)/caps/src/$(LIB_PREFIX)caps_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifdef MOZ_MEDIA
@@ -200,6 +201,9 @@ ifdef ENABLE_EDITOR_API_LOG
 DEFINES += -DENABLE_EDITOR_API_LOG
 endif
 
+SHARED_LIBRARY_LIBS += \
+	$(DEPTH)/js/src/xpconnect/src/$(LIB_PREFIX)xpconnect_s.$(LIB_SUFFIX)
+
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
@@ -269,6 +273,9 @@ LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(topsrcdir)/editor/libeditor/html \
 		   -I$(topsrcdir)/editor/txtsvc/src \
 		   -I$(topsrcdir)/editor/composer/src \
+		   -I$(topsrcdir)/js/src/xpconnect/src \
+		   -I$(topsrcdir)/js/src/xpconnect/loader \
+		   -I$(topsrcdir)/caps/include \
 		   $(NULL)
 
 ifdef MOZ_MATHML

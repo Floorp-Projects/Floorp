@@ -88,6 +88,8 @@ static RedirEntry kRedirMap[] = {
       nsIAboutModule::HIDE_FROM_ABOUTABOUT },
     { "memory", "chrome://global/content/aboutMemory.xhtml",
       nsIAboutModule::ALLOW_SCRIPT },
+    { "addons", "chrome://mozapps/content/extensions/extensions.xul",
+      nsIAboutModule::ALLOW_SCRIPT },
     { "support", "chrome://global/content/aboutSupport.xhtml",
       nsIAboutModule::ALLOW_SCRIPT }
 };

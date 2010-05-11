@@ -105,7 +105,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass) NS_HIDDEN;
     virtual ~nsMIMEInfoBase();        // must be virtual, as the the base class's Release should call the subclass's destructor
 
-    void SetMIMEType(const nsACString & aMIMEType) { mType = aMIMEType; }
+    void SetMIMEType(const nsACString & aMIMEType) { mSchemeOrType = aMIMEType; }
 
     void SetDefaultDescription(const nsString& aDesc) { mDefaultAppDescription = aDesc; }
 
@@ -170,7 +170,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     // member variables
     nsTArray<nsCString>    mExtensions; ///< array of file extensions associated w/ this MIME obj
     nsString               mDescription; ///< human readable description
-    nsCString              mType;
+    nsCString              mSchemeOrType;
     HandlerClass           mClass;
     nsCOMPtr<nsIHandlerApp> mPreferredApplication;
     nsCOMPtr<nsIMutableArray> mPossibleApplications;

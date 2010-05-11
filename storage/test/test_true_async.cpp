@@ -112,8 +112,8 @@ void hook_sqlite_mutex()
 {
   // We need to initialize and teardown SQLite to get it to set up the
   // default mutex handlers for us so we can steal them and wrap them.
-  sqlite3_initialize();
-  sqlite3_shutdown();
+  do_check_ok(sqlite3_initialize());
+  do_check_ok(sqlite3_shutdown());
   do_check_ok(::sqlite3_config(SQLITE_CONFIG_GETMUTEX, &orig_mutex_methods));
   do_check_ok(::sqlite3_config(SQLITE_CONFIG_GETMUTEX, &wrapped_mutex_methods));
   wrapped_mutex_methods.xMutexEnter = wrapped_MutexEnter;

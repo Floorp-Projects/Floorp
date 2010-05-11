@@ -369,7 +369,8 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
       nsRefPtr<nsStyleContext> kidSC;
       nsresult result;
 
-      kidSC = shell->StyleSet()->ResolveStyleFor(child, mStyleContext);
+      kidSC = shell->StyleSet()->ResolveStyleFor(child->AsElement(),
+                                                 mStyleContext);
       if (tag == nsGkAtoms::frameset) {
         frame = NS_NewHTMLFramesetFrame(shell, kidSC);
         if (NS_UNLIKELY(!frame))

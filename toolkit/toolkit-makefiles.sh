@@ -557,21 +557,11 @@ MAKEFILES_xpcom_tests="
   xpcom/tests/static-checker/Makefile
 "
 
-MAKEFILES_xpinstall="
-  xpinstall/Makefile
-  xpinstall/public/Makefile
-  xpinstall/src/Makefile
-"
-
 MAKEFILES_xpfe="
   widget/src/xremoteclient/Makefile
   toolkit/components/remote/Makefile
   xpfe/components/Makefile
   xpfe/components/directory/Makefile
-  xpfe/components/find/Makefile
-  xpfe/components/find/public/Makefile
-  xpfe/components/find/src/Makefile
-  xpfe/components/intl/Makefile
   xpfe/components/autocomplete/Makefile
   xpfe/components/autocomplete/public/Makefile
   xpfe/components/autocomplete/src/Makefile
@@ -679,7 +669,11 @@ MAKEFILES_xulapp="
   toolkit/components/filepicker/Makefile
   toolkit/components/filepicker/public/Makefile
   toolkit/components/filepicker/src/Makefile
+  toolkit/components/find/Makefile
+  toolkit/components/find/public/Makefile
+  toolkit/components/find/src/Makefile
   toolkit/components/help/Makefile
+  toolkit/components/intl/Makefile
   toolkit/components/microformats/Makefile
   toolkit/components/microformats/src/Makefile
   toolkit/components/parentalcontrols/Makefile
@@ -845,7 +839,6 @@ add_makefiles "
   $MAKEFILES_widget
   $MAKEFILES_xpcom
   $MAKEFILES_xpcom_tests
-  $MAKEFILES_xpinstall
   $MAKEFILES_xpfe
   $MAKEFILES_embedding
   $MAKEFILES_xulapp
@@ -1008,7 +1001,6 @@ if [ "$ENABLE_TESTS" ]; then
     widget/tests/Makefile
     xpcom/sample/program/Makefile
     xpcom/tests/external/Makefile
-    xpinstall/tests/Makefile
   "
 fi
 

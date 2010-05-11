@@ -190,20 +190,14 @@ JS_DumpBacktrace(JSCallsite *trace);
 #else
 
 static JS_INLINE void* js_malloc(size_t bytes) {
-    if (bytes < sizeof(void*)) /* for asyncFree */
-        bytes = sizeof(void*);
     return malloc(bytes);
 }
 
 static JS_INLINE void* js_calloc(size_t bytes) {
-    if (bytes < sizeof(void*)) /* for asyncFree */
-        bytes = sizeof(void*);
     return calloc(bytes, 1);
 }
 
 static JS_INLINE void* js_realloc(void* p, size_t bytes) {
-    if (bytes < sizeof(void*)) /* for asyncFree */
-        bytes = sizeof(void*);
     return realloc(p, bytes);
 }
 

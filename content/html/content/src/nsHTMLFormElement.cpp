@@ -906,16 +906,16 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
   }
 
   // Notify observers that the form is being submitted.
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIObserverService> service =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    mozilla::services::GetObserverService();
+  if (!service)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISimpleEnumerator> theEnum;
-  rv = service->EnumerateObservers(aEarlyNotify ?
-                                   NS_EARLYFORMSUBMIT_SUBJECT :
-                                   NS_FORMSUBMIT_SUBJECT,
-                                   getter_AddRefs(theEnum));
+  nsresult rv = service->EnumerateObservers(aEarlyNotify ?
+                                            NS_EARLYFORMSUBMIT_SUBJECT :
+                                            NS_FORMSUBMIT_SUBJECT,
+                                            getter_AddRefs(theEnum));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (theEnum) {

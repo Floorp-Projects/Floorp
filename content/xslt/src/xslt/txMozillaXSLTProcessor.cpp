@@ -613,7 +613,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
     
     nsCOMPtr<nsINode> styleNode = do_QueryInterface(aStyle);
     NS_ENSURE_TRUE(styleNode &&
-                   (styleNode->IsNodeOfType(nsINode::eELEMENT) ||
+                   (styleNode->IsElement() ||
                     styleNode->IsNodeOfType(nsINode::eDOCUMENT)),
                    NS_ERROR_INVALID_ARG);
 
@@ -622,7 +622,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
     // XXX set up exception context, bug 204658
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (styleNode->IsNodeOfType(nsINode::eELEMENT)) {
+    if (styleNode->IsElement()) {
         mStylesheetDocument = styleNode->GetOwnerDoc();
         NS_ENSURE_TRUE(mStylesheetDocument, NS_ERROR_UNEXPECTED);
 
@@ -1238,7 +1238,8 @@ txMozillaXSLTProcessor::AttributeChanged(nsIDocument* aDocument,
 void
 txMozillaXSLTProcessor::ContentAppended(nsIDocument* aDocument,
                                         nsIContent* aContainer,
-                                        PRInt32 aNewIndexInContainer)
+                                        nsIContent* aFirstNewContent,
+                                        PRInt32 /* unused */)
 {
     mStylesheet = nsnull;
 }
@@ -1247,7 +1248,7 @@ void
 txMozillaXSLTProcessor::ContentInserted(nsIDocument* aDocument,
                                         nsIContent* aContainer,
                                         nsIContent* aChild,
-                                        PRInt32 aIndexInContainer)
+                                        PRInt32 /* unused */)
 {
     mStylesheet = nsnull;
 }

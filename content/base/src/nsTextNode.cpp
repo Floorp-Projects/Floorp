@@ -140,7 +140,7 @@ NS_NewTextNode(nsIContent** aInstancePtrResult,
 }
 
 nsTextNode::nsTextNode(nsINodeInfo *aNodeInfo)
-  : nsGenericDOMDataNode(aNodeInfo)
+  : nsGenericTextNode(aNodeInfo)
 {
 }
 
@@ -236,6 +236,8 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, "Text@%p", static_cast<const void*>(this));
   fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
+  fprintf(out, " flags=[%08x]", GetFlags());
+  fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
   nsAutoString tmp;

@@ -59,6 +59,7 @@
 #include "nsIEditorIMESupport.h"
 #include "nsIPhonetic.h"
 #include "nsIEditorObserver.h"
+#include "nsEditProperty.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
@@ -2975,11 +2976,7 @@ nsTextControlFrame::UpdateValueDisplay(PRBool aNotify,
   if (!aBeforeEditorInit)
   {
     nsWeakFrame weakFrame(this);
-    if (value.IsEmpty()) {
-      ShowPlaceholder();
-    } else {
-      HidePlaceholder();
-    }
+    SetPlaceholderClass(value.IsEmpty(), aNotify);
     NS_ENSURE_STATE(weakFrame.IsAlive());
   }
 
@@ -3098,7 +3095,8 @@ nsAnonDivObserver::CharacterDataChanged(nsIDocument*             aDocument,
 void
 nsAnonDivObserver::ContentAppended(nsIDocument* aDocument,
                                    nsIContent*  aContainer,
-                                   PRInt32      aNewIndexInContainer)
+                                   nsIContent*  aFirstNewContent,
+                                   PRInt32      /* unused */)
 {
   mTextControl->ClearValueCache();
 }
@@ -3107,7 +3105,7 @@ void
 nsAnonDivObserver::ContentInserted(nsIDocument* aDocument,
                                    nsIContent*  aContainer,
                                    nsIContent*  aChild,
-                                   PRInt32      aIndexInContainer)
+                                   PRInt32      /* unused */)
 {
   mTextControl->ClearValueCache();
 }

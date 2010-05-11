@@ -37,7 +37,7 @@
 
 var gSelectedPage = 0;
 
-function init(aEvent) 
+function init(aEvent)
 {
   if (aEvent.target != document)
     return;
@@ -101,7 +101,7 @@ function switchPage(aEvent)
     return;
 
   var iframe = document.getElementById("creditsIframe");
-  if (gSelectedPage == 0) { 
+  if (gSelectedPage == 0) {
     iframe.setAttribute("src", "chrome://browser/content/credits.xhtml");
     button.setAttribute("label", document.documentElement.getAttribute("aboutlabel"));
     button.setAttribute("accesskey", document.documentElement.getAttribute("aboutaccesskey"));

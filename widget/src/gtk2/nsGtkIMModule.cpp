@@ -53,6 +53,7 @@
 #ifdef MOZ_PLATFORM_MAEMO
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
+#include "mozilla/Services.h"
 #endif
 
 #ifdef PR_LOGGING
@@ -587,7 +588,7 @@ nsGtkIMModule::SetIMEEnabled(nsWindow* aCaller, PRUint32 aState)
     }
 
     nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1");
+        mozilla::services::GetObserverService();
     if (observerService) {
         nsAutoString rectBuf;
         PRInt32 x, y, w, h;

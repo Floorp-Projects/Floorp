@@ -629,7 +629,7 @@ namespace nanojit
 
     bool Assembler::canRemat(LIns* ins)
     {
-        return ins->isImmAny() || ins->isop(LIR_alloc);
+        return ins->isImmI() || ins->isop(LIR_alloc);
     }
 
     void Assembler::asm_restore(LIns *i, Register r) {
@@ -641,8 +641,6 @@ namespace nanojit
         else if (i->isImmI()) {
             asm_li(r, i->immI());
         }
-        // XXX: should really rematerializable isImmD() and isImmQ() cases
-        // here; canRemat() assumes they will be rematerialized.
         else {
             d = findMemFor(i);
             if (IsFpReg(r)) {
@@ -779,7 +777,7 @@ namespace nanojit
             if (p->isImmI()) {
                 asm_li(r, p->immI());
             } else {
-                if (p->isUsed()) {
+                if (p->isExtant()) {
                     if (!p->deprecated_hasKnownReg()) {
                         // load it into the arg reg
                         int d = findMemFor(p);
@@ -804,7 +802,7 @@ namespace nanojit
             }
         }
         else {
-            if (p->isUsed()) {
+            if (p->isExtant()) {
                 Register rp = p->deprecated_getReg();
                 if (!deprecated_isKnownReg(rp) || !IsFpReg(rp)) {
                     // load it into the arg reg
@@ -1209,12 +1207,12 @@ namespace nanojit
     #endif
     }
 
-    void Assembler::asm_cmov(LIns *ins) {
-        LIns* cond    = ins->oprnd1();
+    void Assembler::asm_cmov(LInsp ins)
+    {
+        LIns* condval = ins->oprnd1();
         LIns* iftrue  = ins->oprnd2();
         LIns* iffalse = ins->oprnd3();
 
-        NanoAssert(cond->isCmp());
     #ifdef NANOJIT_64BIT
         NanoAssert((ins->opcode() == LIR_cmov  && iftrue->isI() && iffalse->isI()) ||
                    (ins->opcode() == LIR_qcmov && iftrue->isQ() && iffalse->isQ()));
@@ -1222,14 +1220,30 @@ namespace nanojit
         NanoAssert((ins->opcode() == LIR_cmov  && iftrue->isI() && iffalse->isI()));
     #endif
 
-        // fixme: we could handle fpu registers here, too, since we're just branching
-        Register rr = deprecated_prepResultReg(ins, GpRegs);
-        findSpecificRegFor(iftrue, rr);
+        Register rr = prepareResultReg(ins, GpRegs);
         Register rf = findRegFor(iffalse, GpRegs & ~rmask(rr));
+
+        // If 'iftrue' isn't in a register, it can be clobbered by 'ins'.
+        Register rt = iftrue->isInReg() ? iftrue->getReg() : rr;
+
+        underrunProtect(16); // make sure branch target and branch are on same page and thus near
         NIns *after = _nIns;
         verbose_only(if (_logc->lcbits & LC_Assembly) outputf("%p:",after);)
-        MR(rr, rf);
-        asm_branch(false, cond, after);
+        MR(rr,rf);
+
+        NanoAssert(isS24(after - (_nIns-1)));
+        asm_branch_near(false, condval, after);
+
+        if (rr != rt)
+            MR(rr, rt);
+
+        freeResourcesOf(ins);
+        if (!iftrue->isInReg()) {
+            NanoAssert(rt == rr);
+            findSpecificRegForUnallocated(iftrue, rr);
+        }
+
+        asm_cmp(condval->opcode(), condval->oprnd1(), condval->oprnd2(), CR7);
     }
 
     RegisterMask Assembler::hint(LIns* ins) {

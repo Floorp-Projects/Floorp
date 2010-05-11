@@ -289,9 +289,13 @@ public:
 
   static nsCStringHashSet *mRenegoUnrestrictedSites;
   static PRBool mTreatUnsafeNegotiationAsBroken;
+  static PRInt32 mWarnLevelMissingRFC5746;
 
   static void setTreatUnsafeNegotiationAsBroken(PRBool broken);
   static PRBool treatUnsafeNegotiationAsBroken();
+
+  static void setWarnLevelMissingRFC5746(PRInt32 level);
+  static PRInt32 getWarnLevelMissingRFC5746();
 
   static void getSiteKey(nsNSSSocketInfo *socketInfo, nsCSubstring &key);
   static PRBool rememberPossibleTLSProblemSite(PRFileDesc* fd, nsNSSSocketInfo *socketInfo);
