@@ -64,6 +64,8 @@ child:
     RegisterChrome(ChromePackage[] packages, ResourceMapping[] resources,
                    OverrideMapping[] overrides);
 
+    async SetOffline(PRBool offline);
+
 parent:
     PNecko();
 };
