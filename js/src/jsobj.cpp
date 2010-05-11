@@ -973,8 +973,7 @@ obj_valueOf(JSContext *cx, uintN argc, jsval *vp)
 JSBool
 js_CheckContentSecurityPolicy(JSContext *cx)
 {
-    JSSecurityCallbacks *callbacks;
-    callbacks = JS_GetSecurityCallbacks(cx);
+    JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
 
     // if there are callbacks, make sure that the CSP callback is installed and
     // that it permits eval().
