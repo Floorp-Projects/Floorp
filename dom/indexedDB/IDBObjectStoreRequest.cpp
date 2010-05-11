@@ -527,10 +527,14 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aRange,
 PRUint16
 PutHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
-  nsresult rv;
+  NS_PRECONDITION(aConnection, "Passed a null connection!");
+
   nsCOMPtr<mozIStorageStatement> stmt =
     mDatabase->PutStatement(!mOverwrite, mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  mozStorageTransaction transaction(aConnection, PR_FALSE);
+  nsresult rv;
   if (!mAutoIncrement || mAutoIncrement && mOverwrite) {
     NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
 
@@ -560,7 +564,8 @@ PutHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   // TODO update indexes if needed
 
-  return OK;
+  rv = transaction.Commit();
+  return NS_SUCCEEDED(rv) ? OK : nsIIDBDatabaseException::UNKNOWN_ERR;
 }
 
 PRUint16
@@ -578,6 +583,8 @@ PutHelper::GetSuccessResult(nsIWritableVariant* aResult)
 PRUint16
 GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
+  NS_PRECONDITION(aConnection, "Passed a null connection!");
+
   // XXX pull statement creation into mDatabase or something for efficiency.
   nsresult rv;
   nsCOMPtr<mozIStorageStatement> stmt;
@@ -639,6 +646,8 @@ GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 PRUint16
 RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
+  NS_PRECONDITION(aConnection, "Passed a null connection!");
+
   nsCOMPtr<mozIStorageStatement> stmt =
     mDatabase->RemoveStatement(mAutoIncrement);
 
