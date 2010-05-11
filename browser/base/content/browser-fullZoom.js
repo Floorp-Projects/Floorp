@@ -130,7 +130,7 @@ var FullZoom = {
 
     this._siteSpecificPref =
       gPrefService.getBoolPref("browser.zoom.siteSpecific");
-    this.updateBackgroundTabs = 
+    this.updateBackgroundTabs =
       gPrefService.getBoolPref("browser.zoom.updateBackgroundTabs");
     // Listen for changes to the browser.zoom branch so we can enable/disable
     // updating background tabs and per-site saving and restoring of zoom levels.
