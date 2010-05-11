@@ -3274,22 +3274,23 @@ nsRuleNode::GetShadowData(nsCSSValueList* aList,
     nsCSSValue::Array *arr = aList->mValue.GetArrayValue();
     // OK to pass bad aParentCoord since we're not passing SETCOORD_INHERIT
     unitOK = SetCoord(arr->Item(0), tempCoord, nsStyleCoord(),
-                      SETCOORD_LENGTH, aContext, mPresContext,
-                      canStoreInRuleTree);
+                      SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
+                      aContext, mPresContext, canStoreInRuleTree);
     NS_ASSERTION(unitOK, "unexpected unit");
     item->mXOffset = tempCoord.GetCoordValue();
 
     unitOK = SetCoord(arr->Item(1), tempCoord, nsStyleCoord(),
-                      SETCOORD_LENGTH, aContext, mPresContext,
-                      canStoreInRuleTree);
+                      SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
+                      aContext, mPresContext, canStoreInRuleTree);
     NS_ASSERTION(unitOK, "unexpected unit");
     item->mYOffset = tempCoord.GetCoordValue();
 
     // Blur radius is optional in the current box-shadow spec
     if (arr->Item(2).GetUnit() != eCSSUnit_Null) {
       unitOK = SetCoord(arr->Item(2), tempCoord, nsStyleCoord(),
-                        SETCOORD_LENGTH, aContext, mPresContext,
-                        canStoreInRuleTree);
+                        SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY |
+                          SETCOORD_CALC_CLAMP_NONNEGATIVE,
+                        aContext, mPresContext, canStoreInRuleTree);
       NS_ASSERTION(unitOK, "unexpected unit");
       item->mRadius = tempCoord.GetCoordValue();
     } else {
@@ -3299,8 +3300,8 @@ nsRuleNode::GetShadowData(nsCSSValueList* aList,
     // Find the spread radius
     if (aIsBoxShadow && arr->Item(3).GetUnit() != eCSSUnit_Null) {
       unitOK = SetCoord(arr->Item(3), tempCoord, nsStyleCoord(),
-                        SETCOORD_LENGTH, aContext, mPresContext,
-                        canStoreInRuleTree);
+                        SETCOORD_LENGTH | SETCOORD_CALC_LENGTH_ONLY,
+                        aContext, mPresContext, canStoreInRuleTree);
       NS_ASSERTION(unitOK, "unexpected unit");
       item->mSpread = tempCoord.GetCoordValue();
     } else {
