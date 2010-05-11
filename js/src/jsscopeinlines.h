@@ -147,7 +147,7 @@ JSScope::methodWriteBarrier(JSContext *cx, JSScopeProperty *sprop,
     if (flags & (BRANDED | METHOD_BARRIER)) {
         const js::Value &prev = object->lockedGetSlot(sprop->slot);
         if (ChangesMethodValue(prev, v))
-            return methodShapeChange(cx, sprop, v);
+            return methodShapeChange(cx, sprop);
     }
     return true;
 }
@@ -158,7 +158,7 @@ JSScope::methodWriteBarrier(JSContext *cx, uint32 slot, const js::Value &v)
     if (flags & (BRANDED | METHOD_BARRIER)) {
         const js::Value &prev = object->lockedGetSlot(slot);
         if (ChangesMethodValue(prev, v))
-            return methodShapeChange(cx, slot, v);
+            return methodShapeChange(cx, slot);
     }
     return true;
 }

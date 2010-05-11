@@ -274,7 +274,7 @@ NS_IMETHODIMP imgRequestProxy::CancelAndForgetObserver(nsresult aStatus)
 
   if (mIsInLoadGroup) {
     nsCOMPtr<nsIRunnable> ev =
-      NS_NEW_RUNNABLE_METHOD(imgRequestProxy, this, DoRemoveFromLoadGroup);
+      NS_NewRunnableMethod(this, &imgRequestProxy::DoRemoveFromLoadGroup);
     NS_DispatchToCurrentThread(ev);
   }
 

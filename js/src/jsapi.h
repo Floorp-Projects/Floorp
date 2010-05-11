@@ -1563,7 +1563,7 @@ struct JSExtendedClass {
 #define JSCLASS_NEW_ENUMERATE           (1<<1)  /* has JSNewEnumerateOp hook */
 #define JSCLASS_NEW_RESOLVE             (1<<2)  /* has JSNewResolveOp hook */
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  /* private is (nsISupports *) */
-#define JSCLASS_SHARE_ALL_PROPERTIES    (1<<4)  /* all properties are SHARED */
+/* (1<<4) was JSCLASS_SHARE_ALL_PROPERTIES, now obsolete. See bug 527805. */
 #define JSCLASS_NEW_RESOLVE_GETS_START  (1<<5)  /* JSNewResolveOp gets starting
                                                    object in prototype chain
                                                    passed in via *objp in/out
@@ -1628,6 +1628,7 @@ struct JSExtendedClass {
 #define JSCLASS_NO_RESERVED_MEMBERS     0,0,0
 
 struct JSIdArray {
+    void *self;
     jsint length;
     jsid  vector[1];    /* actually, length jsid words */
 };
@@ -3227,6 +3228,15 @@ class Value
         mask = StringMask;
         data.str = str;
     }
+
+  private:
+    /*
+     * This overload catches values constructed with unsupported T* types
+     * before they are implicitly converted to bool.
+     */
+    template <class T> Value(T *);  /* undefined */
+
+  public:
 
     explicit Value(bool b) {
         mask = BooleanMask;

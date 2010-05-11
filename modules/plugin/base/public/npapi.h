@@ -478,8 +478,8 @@ typedef EventRecord NPEvent;
 typedef struct _NPEvent
 {
   uint16_t event;
-  uint32_t wParam;
-  uint32_t lParam;
+  uintptr_t wParam;
+  uintptr_t lParam;
 } NPEvent;
 #elif defined(XP_OS2)
 typedef struct _NPEvent

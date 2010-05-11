@@ -80,6 +80,8 @@ struct nsDOMClassInfoData
   const nsIID **mInterfaces;
   PRUint32 mScriptableFlags : 31; // flags must not use more than 31 bits!
   PRUint32 mHasClassInterface : 1;
+  PRUint32 mInterfacesBitmap;
+  PRBool mChromeOnly;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
@@ -101,16 +103,9 @@ typedef PRUptrdiff PtrBits;
 #define IS_EXTERNAL(_ptr) (PtrBits(_ptr) & 0x1)
 
 
-#define NS_DOMCLASSINFO_IID   \
-{ 0x7da6858c, 0x5c12, 0x4588, \
- { 0x82, 0xbe, 0x01, 0xa2, 0x45, 0xc5, 0xc0, 0xb0 } }
-
-class nsDOMClassInfo : public nsIXPCScriptable,
-                       public nsIClassInfo
+class nsDOMClassInfo : public nsXPCClassInfo
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMCLASSINFO_IID)
-
   nsDOMClassInfo(nsDOMClassInfoData* aData);
   virtual ~nsDOMClassInfo();
 
@@ -203,8 +198,6 @@ public:
       ::JS_GET_CLASS(cx, obj)->getProperty == sXPCNativeWrapperGetPropertyOp;
   }
 
-  static void PreserveNodeWrapper(nsIXPConnectWrappedNative *aWrapper);
-
   static nsISupports *GetNative(nsIXPConnectWrappedNative *wrapper, JSObject *obj);
 
   static nsIXPConnect *XPConnect()
@@ -219,6 +212,11 @@ protected:
 
   virtual void PreserveWrapper(nsISupports *aNative)
   {
+  }
+
+  virtual PRUint32 GetInterfacesBitmap()
+  {
+    return mData->mInterfacesBitmap;
   }
 
   static nsresult Init();

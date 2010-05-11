@@ -33,6 +33,17 @@
       ok(true, "p.crash() should throw an exception");
     }
 
+    // Create random identifiers to test bug 560213
+    for (var i = 0; i < 5; ++i) {
+      var r = 'rid_' + Math.floor(Math.random() * 10000 + 1);
+      try {
+        ok(!(r in p), "unknown identifier in crashed plugin should fail silently");
+      }
+      catch (e) {
+        ok(false, "unknown identifier check threw");
+      }
+    }
+
     try {
       p.setColor("FFFF0000");
       ok(false, "p.setColor should throw after the plugin crashes");

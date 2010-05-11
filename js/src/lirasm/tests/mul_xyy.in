@@ -1,11 +1,11 @@
 ; 46340 * 46340 < 2^31, and will not overflow.
-big = imml 46340
+big = immi 46340
 
-res = mulxovl big big    ; no overflow, so we don't exit here
+res = mulxovi big big    ; no overflow, so we don't exit here
 
 ; Ensure that 'big' gets its own register and isn't shared with 'res'.
 ; Also store 'res' so it isn't dead.
 m = allocp 8
-stl big m 0
-stl res m 4
+sti big m 0
+sti res m 4
 x                       ; we exit here

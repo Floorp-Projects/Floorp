@@ -54,6 +54,7 @@ XPIDLSRCS = \
 
 EXPORTS = \
   nsDOMCID.h \
+  nsDOMClassInfoClasses.h \
   nsDOMClassInfoID.h \
   nsDOMError.h \
   nsDOMJSUtils.h \

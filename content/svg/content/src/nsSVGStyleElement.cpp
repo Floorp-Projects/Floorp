@@ -123,6 +123,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Style)
 NS_IMPL_ADDREF_INHERITED(nsSVGStyleElement,nsSVGStyleElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGStyleElement,nsSVGStyleElementBase)
 
+DOMCI_DATA(SVGStyleElement, nsSVGStyleElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGStyleElement)
   NS_NODE_INTERFACE_TABLE7(nsSVGStyleElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGStyleElement,
@@ -161,9 +163,8 @@ nsSVGStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                   aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsContentUtils::AddScriptRunner(
-    new nsRunnableMethod<nsSVGStyleElement>(this,
-                                            &nsSVGStyleElement::UpdateStyleSheetInternal));
+  void (nsSVGStyleElement::*update)() = &nsSVGStyleElement::UpdateStyleSheetInternal;
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
 
   return rv;  
 }
@@ -293,7 +294,7 @@ NS_IMETHODIMP nsSVGStyleElement::GetMedia(nsAString & aMedia)
 }
 NS_IMETHODIMP nsSVGStyleElement::SetMedia(const nsAString & aMedia)
 {
-  return SetAttr(kNameSpaceID_XML, nsGkAtoms::media, aMedia, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia, PR_TRUE);
 }
 
 /* attribute DOMString title; */
@@ -305,7 +306,7 @@ NS_IMETHODIMP nsSVGStyleElement::GetTitle(nsAString & aTitle)
 }
 NS_IMETHODIMP nsSVGStyleElement::SetTitle(const nsAString & aTitle)
 {
-  return SetAttr(kNameSpaceID_XML, nsGkAtoms::title, aTitle, PR_TRUE);
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle, PR_TRUE);
 }
 
 //----------------------------------------------------------------------

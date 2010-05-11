@@ -66,6 +66,7 @@ private:
   nsAutoPtr<nsString> mAnimVal;
   PRUint8 mAttrEnum; // element specified tracking for attribute
 
+public:
   struct DOMAnimatedString : public nsIDOMSVGAnimatedString
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS

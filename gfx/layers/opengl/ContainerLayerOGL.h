@@ -48,7 +48,7 @@ class ContainerLayerOGL : public ContainerLayer,
                           public LayerOGL
 {
 public:
-  ContainerLayerOGL(LayerManager *aManager);
+  ContainerLayerOGL(LayerManagerOGL *aManager);
 
   const nsIntRect &GetVisibleRect();
 

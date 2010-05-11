@@ -71,6 +71,29 @@ _cairo_box_from_rectangle (cairo_box_t                 *box,
     box->p2.y = _cairo_fixed_from_int (rect->y + rect->height);
 }
 
+void
+_cairo_boxes_get_extents (const cairo_box_t *boxes,
+			  int num_boxes,
+			  cairo_box_t *extents)
+{
+    int n;
+
+    assert (num_boxes > 0);
+    *extents = *boxes;
+
+    for (n = 1; n < num_boxes; n++) {
+	if (boxes[n].p1.x < extents->p1.x)
+	    extents->p1.x = boxes[n].p1.x;
+	if (boxes[n].p2.x > extents->p2.x)
+	    extents->p2.x = boxes[n].p2.x;
+
+	if (boxes[n].p1.y < extents->p1.y)
+	    extents->p1.y = boxes[n].p1.y;
+	if (boxes[n].p2.y > extents->p2.y)
+	    extents->p2.y = boxes[n].p2.y;
+    }
+}
+
 /* XXX We currently have a confusing mix of boxes and rectangles as
  * exemplified by this function.  A #cairo_box_t is a rectangular area
  * represented by the coordinates of the upper left and lower right

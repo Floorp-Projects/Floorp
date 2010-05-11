@@ -62,7 +62,8 @@ def main(outdir, compiler, template_file, header_list_file):
         os.mkdir(outdir)
 
     template = open(template_file, 'r').read()
-    
+    path_to_new = header_path('new', compiler)
+
     for header in open(header_list_file, 'r'):
         header = header.rstrip()
         if 0 == len(header) or is_comment(header):
@@ -72,7 +73,8 @@ def main(outdir, compiler, template_file, header_list_file):
         try:
             f = open(os.path.join(outdir, header), 'w')
             f.write(string.Template(template).substitute(HEADER=header,
-                                                         HEADER_PATH=path))
+                                                         HEADER_PATH=path,
+                                                         NEW_HEADER_PATH=path_to_new))
         finally:
             f.close()
 

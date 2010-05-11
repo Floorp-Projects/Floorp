@@ -1967,11 +1967,12 @@ jsdStackFrame::Eval (const nsAString &bytes, const nsACString &fileName,
 
     nsresult rv;
     nsCOMPtr<nsIJSContextStack> stack = do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-    if (NS_FAILED(rv))
+    if (NS_SUCCEEDED(rv))
+        rv = stack->Push(cx);
+    if (NS_FAILED(rv)) {
+        JS_RestoreExceptionState (cx, estate);
         return rv;
-    rv = stack->Push(cx);
-    if (NS_FAILED(rv))
-        return rv;
+    }
 
     *_rval = JSD_AttemptUCScriptInStackFrame (mCx, mThreadState,
                                               mStackFrameInfo,

@@ -34,16 +34,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIOService.h"
 #include "nsSyncStreamListener.h"
 #include "nsIPipe.h"
-#include "nsNetSegmentUtils.h"
 
 nsresult
 nsSyncStreamListener::Init()
 {
     return NS_NewPipe(getter_AddRefs(mPipeIn),
                       getter_AddRefs(mPipeOut),
-                      NET_DEFAULT_SEGMENT_SIZE,
+                      nsIOService::gDefaultSegmentSize,
                       PR_UINT32_MAX, // no size limit
                       PR_FALSE,
                       PR_FALSE);

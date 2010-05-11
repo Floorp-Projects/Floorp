@@ -381,13 +381,17 @@ protected:
                                                          nsIAtom*       aPseudo,
                                                          nsCSSPseudoClasses::Type aType);
 
+  nsSelectorParsingStatus ParsePseudoClassWithSelectorListArg(nsCSSSelector& aSelector,
+                                                              nsIAtom*       aPseudo,
+                                                              nsCSSPseudoClasses::Type aType);
+
   nsSelectorParsingStatus ParseNegatedSimpleSelector(PRInt32&       aDataMask,
                                                      nsCSSSelector& aSelector);
 
-  // If aTerminateAtBrace is true, the selector list is done when we
-  // hit a '{'.  Otherwise, it's done when we hit EOF.
+  // If aStopChar is non-zero, the selector list is done when we hit
+  // aStopChar.  Otherwise, it's done when we hit EOF.
   PRBool ParseSelectorList(nsCSSSelectorList*& aListHead,
-                           PRBool aTerminateAtBrace);
+                           PRUnichar aStopChar);
   PRBool ParseSelectorGroup(nsCSSSelectorList*& aListHead);
   PRBool ParseSelector(nsCSSSelectorList* aList, PRUnichar aPrevCombinator);
 
@@ -403,13 +407,19 @@ protected:
   // |mTempData| to |mData|.  Set |*aChanged| to true if something
   // changed, but leave it unmodified otherwise.  If aMustCallValueAppended
   // is false, will not call ValueAppended on aDeclaration if the property
-  // is already set in it.
+  // is already set in it.  If aOverrideImportant is true, new data will
+  // replace old settings of the same properties, even if the old settings
+  // are !important and the new data aren't.
   void TransferTempData(nsCSSDeclaration* aDeclaration,
-                        nsCSSProperty aPropID, PRBool aIsImportant,
+                        nsCSSProperty aPropID,
+                        PRBool aIsImportant,
+                        PRBool aOverrideImportant,
                         PRBool aMustCallValueAppended,
                         PRBool* aChanged);
   void DoTransferTempData(nsCSSDeclaration* aDeclaration,
-                          nsCSSProperty aPropID, PRBool aIsImportant,
+                          nsCSSProperty aPropID,
+                          PRBool aIsImportant,
+                          PRBool aOverrideImportant,
                           PRBool aMustCallValueAppended,
                           PRBool* aChanged);
   // Used to do a fast copy of a property value from source location to
@@ -1144,7 +1154,8 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
       CopyValue(mTempData.PropertyAt(aPropID), valueSlot, aPropID, aChanged);
       mTempData.ClearPropertyBit(aPropID);
     } else {
-      TransferTempData(aDeclaration, aPropID, aIsImportant, PR_FALSE, aChanged);
+      TransferTempData(aDeclaration, aPropID, aIsImportant,
+                       PR_TRUE, PR_FALSE, aChanged);
     }
   } else {
     if (parsedOK) {
@@ -1280,7 +1291,7 @@ CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
   // so this is the only place that bothers clearing it.
   mFoundUnresolvablePrefix = PR_FALSE;
 
-  PRBool success = ParseSelectorList(*aSelectorList, PR_FALSE);
+  PRBool success = ParseSelectorList(*aSelectorList, PRUnichar(0));
   PRBool prefixErr = mFoundUnresolvablePrefix;
 
   OUTPUT_ERROR();
@@ -2415,7 +2426,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
   // First get the list of selectors for the rule
   nsCSSSelectorList* slist = nsnull;
   PRUint32 linenum = mScanner.GetLineNumber();
-  if (! ParseSelectorList(slist, PR_TRUE)) {
+  if (! ParseSelectorList(slist, PRUnichar('{'))) {
     REPORT_UNEXPECTED(PEBadSelectorRSIgnored);
     OUTPUT_ERROR();
     SkipRuleSet(aInsideBraces);
@@ -2456,7 +2467,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
 
 PRBool
 CSSParserImpl::ParseSelectorList(nsCSSSelectorList*& aListHead,
-                                 PRBool aTerminateAtBrace)
+                                 PRUnichar aStopChar)
 {
   nsCSSSelectorList* list = nsnull;
   if (! ParseSelectorGroup(list)) {
@@ -2468,11 +2479,11 @@ CSSParserImpl::ParseSelectorList(nsCSSSelectorList*& aListHead,
   aListHead = list;
 
   // After that there must either be a "," or a "{" (the latter if
-  // aTerminateAtBrace is true)
+  // StopChar is nonzero)
   nsCSSToken* tk = &mToken;
   for (;;) {
     if (! GetToken(PR_TRUE)) {
-      if (!aTerminateAtBrace) {
+      if (aStopChar == PRUnichar(0)) {
         return PR_TRUE;
       }
 
@@ -2491,7 +2502,7 @@ CSSParserImpl::ParseSelectorList(nsCSSSelectorList*& aListHead,
         list->mNext = newList;
         list = newList;
         continue;
-      } else if ('{' == tk->mSymbol && aTerminateAtBrace) {
+      } else if (aStopChar == tk->mSymbol && aStopChar != PRUnichar(0)) {
         UngetToken();
         return PR_TRUE;
       }
@@ -2549,7 +2560,7 @@ CSSParserImpl::ParseSelectorGroup(nsCSSSelectorList*& aList)
         combinator = mToken.mSymbol;
       } else {
         UngetToken(); // not a combinator
-        if (symbol == ',' || symbol == '{') {
+        if (symbol == ',' || symbol == '{' || symbol == ')') {
           break; // end of selector group
         }
       }
@@ -3049,7 +3060,8 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
 #endif
        nsCSSPseudoClasses::notPseudo == pseudo ||
        nsCSSPseudoClasses::HasStringArg(pseudo) ||
-       nsCSSPseudoClasses::HasNthPairArg(pseudo))) {
+       nsCSSPseudoClasses::HasNthPairArg(pseudo) ||
+       nsCSSPseudoClasses::HasSelectorListArg(pseudo))) {
     // There are no other function pseudos
     REPORT_UNEXPECTED_TOKEN(PEPseudoSelNonFunc);
     UngetToken();
@@ -3080,17 +3092,26 @@ CSSParserImpl::ParsePseudoSelector(PRInt32&       aDataMask,
   }
   else if (!parsingPseudoElement && isPseudoClass) {
     aDataMask |= SEL_MASK_PCLASS;
-    if (nsCSSPseudoClasses::HasStringArg(pseudo)) {
-      nsSelectorParsingStatus parsingStatus =
-        ParsePseudoClassWithIdentArg(aSelector, pseudo, pseudoClassType);
-      if (eSelectorParsingStatus_Continue != parsingStatus) {
-        return parsingStatus;
+    if (eCSSToken_Function == mToken.mType) {
+      nsSelectorParsingStatus parsingStatus;
+      if (nsCSSPseudoClasses::HasStringArg(pseudo)) {
+        parsingStatus =
+          ParsePseudoClassWithIdentArg(aSelector, pseudo, pseudoClassType);
       }
-    }
-    else if (nsCSSPseudoClasses::HasNthPairArg(pseudo)) {
-      nsSelectorParsingStatus parsingStatus =
-        ParsePseudoClassWithNthPairArg(aSelector, pseudo, pseudoClassType);
+      else if (nsCSSPseudoClasses::HasNthPairArg(pseudo)) {
+        parsingStatus =
+          ParsePseudoClassWithNthPairArg(aSelector, pseudo, pseudoClassType);
+      }
+      else {
+        NS_ABORT_IF_FALSE(nsCSSPseudoClasses::HasSelectorListArg(pseudo),
+                          "unexpected pseudo with function token");
+        parsingStatus = ParsePseudoClassWithSelectorListArg(aSelector, pseudo,
+                                                            pseudoClassType);
+      }
       if (eSelectorParsingStatus_Continue != parsingStatus) {
+        if (eSelectorParsingStatus_Error == parsingStatus) {
+          SkipUntil(')');
+        }
         return parsingStatus;
       }
     }
@@ -3258,15 +3279,14 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
   if (eCSSToken_Ident != mToken.mType) {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotIdent);
     UngetToken();
-    // XXX Call SkipUntil to the next ")"?
-    return eSelectorParsingStatus_Error;
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
 
   // -moz-locale-dir can only have values of 'ltr' or 'rtl'.
   if (aPseudo == nsCSSPseudoClasses::mozLocaleDir) {
     if (!mToken.mIdent.EqualsLiteral("ltr") &&
         !mToken.mIdent.EqualsLiteral("rtl")) {
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
   }
 
@@ -3276,8 +3296,7 @@ CSSParserImpl::ParsePseudoClassWithIdentArg(nsCSSSelector& aSelector,
   // close the parenthesis
   if (!ExpectSymbol(')', PR_TRUE)) {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoClose);
-    // XXX Call SkipUntil to the next ")"?
-    return eSelectorParsingStatus_Error;
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
 
   return eSelectorParsingStatus_Continue;
@@ -3338,15 +3357,13 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     }
     else {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      // XXX Call SkipUntil to the next ")"?
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
   }
   else if (eCSSToken_Number == mToken.mType) {
     if (!mToken.mIntegerValid) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      // XXX Call SkipUntil to the next ")"?
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
     numbers[1] = mToken.mInteger;
     lookForB = PR_FALSE;
@@ -3354,16 +3371,15 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
   else if (eCSSToken_Dimension == mToken.mType) {
     if (!mToken.mIntegerValid || !mToken.mIdent.EqualsIgnoreCase("n")) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      // XXX Call SkipUntil to the next ")"?
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
     numbers[0] = mToken.mInteger;
   }
   // XXX If it's a ')', is that valid?  (as 0n+0)
   else {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-    // XXX Call SkipUntil to the next ")" (unless this is one already)?
-    return eSelectorParsingStatus_Error;
+    UngetToken();
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
 
   if (! GetToken(PR_TRUE)) {
@@ -3389,8 +3405,7 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
     if (eCSSToken_Number != mToken.mType ||
         !mToken.mIntegerValid || mToken.mHasSign == haveSign) {
       REPORT_UNEXPECTED_TOKEN(PEPseudoClassArgNotNth);
-      // XXX Call SkipUntil to the next ")"?
-      return eSelectorParsingStatus_Error;
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
     }
     numbers[1] = mToken.mInteger * sign;
     if (! GetToken(PR_TRUE)) {
@@ -3400,10 +3415,45 @@ CSSParserImpl::ParsePseudoClassWithNthPairArg(nsCSSSelector& aSelector,
   }
   if (!mToken.IsSymbol(')')) {
     REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoClose);
-    // XXX Call SkipUntil to the next ")"?
-    return eSelectorParsingStatus_Error;
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
   }
   aSelector.AddPseudoClass(aPseudo, aType, numbers);
+  return eSelectorParsingStatus_Continue;
+}
+
+//
+// Parse the argument of a pseudo-class that has a selector list argument.
+// Such selector lists cannot contain combinators, but can contain
+// anything that goes between a pair of combinators.
+//
+CSSParserImpl::nsSelectorParsingStatus
+CSSParserImpl::ParsePseudoClassWithSelectorListArg(nsCSSSelector& aSelector,
+                                                   nsIAtom*       aPseudo,
+                                                   nsCSSPseudoClasses::Type aType)
+{
+  nsAutoPtr<nsCSSSelectorList> slist;
+  if (! ParseSelectorList(*getter_Transfers(slist), PRUnichar(')'))) {
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+  }
+
+  // Check that none of the selectors in the list have combinators or
+  // pseudo-elements.
+  for (nsCSSSelectorList *l = slist; l; l = l->mNext) {
+    nsCSSSelector *s = l->mSelectors;
+    if (s->mNext || s->IsPseudoElement()) {
+      return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+    }
+  }
+
+  // Add the pseudo with the selector list parameter
+  aSelector.AddPseudoClass(aPseudo, aType, slist.forget());
+
+  // close the parenthesis
+  if (!ExpectSymbol(')', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(PEPseudoClassNoClose);
+    return eSelectorParsingStatus_Error; // our caller calls SkipUntil(')')
+  }
+
   return eSelectorParsingStatus_Continue;
 }
 
@@ -3983,7 +4033,7 @@ CSSParserImpl::ParseDeclaration(nsCSSDeclaration* aDeclaration,
   PRBool isImportant = PR_FALSE;
   if (!GetToken(PR_TRUE)) {
     // EOF is a perfectly good way to end a declaration and declaration block
-    TransferTempData(aDeclaration, propID, isImportant,
+    TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
                      aMustCallValueAppended, aChanged);
     return PR_TRUE;
   }
@@ -4016,13 +4066,13 @@ CSSParserImpl::ParseDeclaration(nsCSSDeclaration* aDeclaration,
   // aCheckForBraces is true).
   if (!GetToken(PR_TRUE)) {
     // EOF is a perfectly good way to end a declaration and declaration block
-    TransferTempData(aDeclaration, propID, isImportant,
+    TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
                      aMustCallValueAppended, aChanged);
     return PR_TRUE;
   }
   if (eCSSToken_Symbol == tk->mType) {
     if (';' == tk->mSymbol) {
-      TransferTempData(aDeclaration, propID, isImportant,
+      TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
                        aMustCallValueAppended, aChanged);
       return PR_TRUE;
     }
@@ -4030,7 +4080,7 @@ CSSParserImpl::ParseDeclaration(nsCSSDeclaration* aDeclaration,
       // Unget the '}' so we'll be able to tell that this is the end
       // of the declaration block when we unwind from here.
       UngetToken();
-      TransferTempData(aDeclaration, propID, isImportant,
+      TransferTempData(aDeclaration, propID, isImportant, PR_FALSE,
                        aMustCallValueAppended, aChanged);
       return PR_TRUE;
     }
@@ -4060,17 +4110,19 @@ CSSParserImpl::ClearTempData(nsCSSProperty aPropID)
 
 void
 CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
-                                nsCSSProperty aPropID, PRBool aIsImportant,
+                                nsCSSProperty aPropID,
+                                PRBool aIsImportant,
+                                PRBool aOverrideImportant,
                                 PRBool aMustCallValueAppended,
                                 PRBool* aChanged)
 {
   if (nsCSSProps::IsShorthand(aPropID)) {
     CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aPropID) {
-      DoTransferTempData(aDeclaration, *p, aIsImportant,
+      DoTransferTempData(aDeclaration, *p, aIsImportant, aOverrideImportant,
                          aMustCallValueAppended, aChanged);
     }
   } else {
-    DoTransferTempData(aDeclaration, aPropID, aIsImportant,
+    DoTransferTempData(aDeclaration, aPropID, aIsImportant, aOverrideImportant,
                        aMustCallValueAppended, aChanged);
   }
   mTempData.AssertInitialState();
@@ -4081,7 +4133,9 @@ CSSParserImpl::TransferTempData(nsCSSDeclaration* aDeclaration,
 // can't think of why).
 void
 CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
-                                  nsCSSProperty aPropID, PRBool aIsImportant,
+                                  nsCSSProperty aPropID,
+                                  PRBool aIsImportant,
+                                  PRBool aOverrideImportant,
                                   PRBool aMustCallValueAppended,
                                   PRBool* aChanged)
 {
@@ -4092,8 +4146,17 @@ CSSParserImpl::DoTransferTempData(nsCSSDeclaration* aDeclaration,
     mData.SetImportantBit(aPropID);
   } else {
     if (mData.HasImportantBit(aPropID)) {
-      mTempData.ClearProperty(aPropID);
-      return;
+      // When parsing a declaration block, an !important declaration
+      // is not overwritten by an ordinary declaration of the same
+      // property later in the block.  However, CSSOM manipulations
+      // come through here too, and in that case we do want to
+      // overwrite the property.
+      if (!aOverrideImportant) {
+        mTempData.ClearProperty(aPropID);
+        return;
+      }
+      *aChanged = PR_TRUE;
+      mData.ClearImportantBit(aPropID);
     }
   }
 

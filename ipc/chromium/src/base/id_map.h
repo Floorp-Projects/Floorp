@@ -72,6 +72,12 @@ class IDMap {
     return data_.empty();
   }
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+  void Clear() {
+    data_.clear();
+  }
+#endif
+
   T* Lookup(int32 id) const {
     const_iterator i = data_.find(id);
     if (i == data_.end())

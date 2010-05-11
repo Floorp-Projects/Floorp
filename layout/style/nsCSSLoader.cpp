@@ -97,6 +97,9 @@
 #include "nsIDOMCSSImportRule.h"
 #include "nsContentErrors.h"
 
+#include "nsIChannelPolicy.h"
+#include "nsIContentSecurityPolicy.h"
+
 /**
  * OVERALL ARCHITECTURE
  *
@@ -1514,10 +1517,20 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   mSyncCallback = PR_TRUE;
 #endif
   nsCOMPtr<nsILoadGroup> loadGroup;
+  // Content Security Policy information to pass into channel
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
   if (mDocument) {
     loadGroup = mDocument->GetDocumentLoadGroup();
     NS_ASSERTION(loadGroup,
                  "No loadgroup for stylesheet; onload will fire early");
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    rv = mDocument->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (csp) {
+      channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+      channelPolicy->SetContentSecurityPolicy(csp);
+      channelPolicy->SetLoadType(nsIContentPolicy::TYPE_STYLESHEET);
+    }
   }
 
 #ifdef MOZ_TIMELINE
@@ -1528,7 +1541,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      aLoadData->mURI, nsnull, loadGroup,
-                     nsnull, nsIChannel::LOAD_NORMAL);
+                     nsnull, nsIChannel::LOAD_NORMAL, channelPolicy);
   
   if (NS_FAILED(rv)) {
 #ifdef DEBUG

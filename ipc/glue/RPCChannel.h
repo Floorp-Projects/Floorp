@@ -94,6 +94,16 @@ public:
             NS_RUNTIMEABORT("default impl shouldn't be invoked");
         }
 
+        virtual void OnEnteredCall()
+        {
+            NS_RUNTIMEABORT("default impl shouldn't be invoked");
+        }
+
+        virtual void OnExitedCall()
+        {
+            NS_RUNTIMEABORT("default impl shouldn't be invoked");
+        }
+
         virtual RacyRPCPolicy MediateRPCRace(const Message& parent,
                                              const Message& child)
         {
@@ -157,35 +167,11 @@ public:
     virtual void OnChannelError();
 
 #ifdef OS_WIN
-    static bool IsSpinLoopActive() {
-        return (sModalEventCount > 0);
-    }
+    void ProcessNativeEventsInRPCCall();
+
 protected:
     bool WaitForNotify();
     void SpinInternalEventLoop();
-    static bool WaitNeedsSpinLoop() {
-        return (IsSpinLoopActive() && 
-                (sModalEventCount > sInnerEventLoopDepth));
-    }
-    static void EnterSpinLoop() {
-        sInnerEventLoopDepth++;
-    }
-    static void ExitSpinLoop() {
-        sInnerEventLoopDepth--;
-        NS_ASSERTION(sInnerEventLoopDepth >= 0,
-            "sInnerEventLoopDepth dropped below zero!");
-    }
-    static void IncModalLoopCnt() {
-        sModalEventCount++;
-    }
-    static void DecModalLoopCnt() {
-        sModalEventCount--;
-        NS_ASSERTION(sModalEventCount >= 0,
-            "sModalEventCount dropped below zero!");
-    }
-
-    static int sInnerEventLoopDepth;
-    static int sModalEventCount;
 #endif
 
   private:
@@ -196,11 +182,11 @@ protected:
     }
 
     NS_OVERRIDE
-    virtual bool ShouldDeferNotifyMaybeError() {
+    virtual bool ShouldDeferNotifyMaybeError() const {
         return IsOnCxxStack();
     }
 
-    bool EventOccurred();
+    bool EventOccurred() const;
 
     void MaybeProcessDeferredIncall();
     void EnqueuePendingMessages();
@@ -223,15 +209,34 @@ protected:
 
     void ExitedCxxStack();
 
+    void EnteredCall()
+    {
+        Listener()->OnEnteredCall();
+    }
+
+    void ExitedCall()
+    {
+        Listener()->OnExitedCall();
+    }
+
     enum Direction { IN_MESSAGE, OUT_MESSAGE };
     struct RPCFrame {
         RPCFrame(Direction direction, const Message* msg) :
             mDirection(direction), mMsg(msg)
         { }
 
+        bool IsRPCIncall() const
+        {
+            return mMsg->is_rpc() && IN_MESSAGE == mDirection;
+        }
+
+        bool IsRPCOutcall() const
+        {
+            return mMsg->is_rpc() && OUT_MESSAGE == mDirection;
+        }
+
         void Describe(int32* id, const char** dir, const char** sems,
-                      const char** name)
-            const
+                      const char** name) const
         {
             *id = mMsg->routing_id();
             *dir = (IN_MESSAGE == mDirection) ? "in" : "out";
@@ -255,11 +260,16 @@ protected:
                 mThat.EnteredCxxStack();
 
             mThat.mCxxStackFrames.push_back(RPCFrame(direction, msg));
-            mThat.mSawRPCOutMsg |= (direction == OUT_MESSAGE) &&
-                                   (msg->is_rpc());
+            const RPCFrame& frame = mThat.mCxxStackFrames.back();
+
+            if (frame.IsRPCIncall())
+                mThat.EnteredCall();
+
+            mThat.mSawRPCOutMsg |= frame.IsRPCOutcall();
         }
 
         ~CxxStackFrame() {
+            bool exitingCall = mThat.mCxxStackFrames.back().IsRPCIncall();
             mThat.mCxxStackFrames.pop_back();
             bool exitingStack = mThat.mCxxStackFrames.empty();
 
@@ -269,6 +279,9 @@ protected:
                 return;
 
             mThat.AssertWorkerThread();
+            if (exitingCall)
+                mThat.ExitedCall();
+
             if (exitingStack)
                 mThat.ExitedCxxStack();
         }
@@ -282,18 +295,18 @@ protected:
     };
 
     // Called from both threads
-    size_t StackDepth() {
+    size_t StackDepth() const {
         mMutex.AssertCurrentThreadOwns();
         return mStack.size();
     }
 
     void DebugAbort(const char* file, int line, const char* cond,
                     const char* why,
-                    const char* type="rpc", bool reply=false);
+                    const char* type="rpc", bool reply=false) const;
 
     // This method is only safe to call on the worker thread, or in a
     // debugger with all threads paused.  |outfile| defaults to stdout.
-    void DumpRPCStack(FILE* outfile=NULL, const char* const pfx="");
+    void DumpRPCStack(FILE* outfile=NULL, const char* const pfx="") const;
 
     // 
     // Queue of all incoming messages, except for replies to sync
@@ -334,8 +347,9 @@ protected:
     // one RPC call on our stack, the other side *better* not have
     // sent us another blocking message, because it's blocked on a
     // reply from us.
-    // 
-    std::queue<Message> mPending;
+    //
+    typedef std::queue<Message> MessageQueue;
+    MessageQueue mPending;
 
     // 
     // Stack of all the RPC out-calls on which this RPCChannel is

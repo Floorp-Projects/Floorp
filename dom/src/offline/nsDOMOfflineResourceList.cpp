@@ -115,6 +115,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMOfflineResourceList,
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
+DOMCI_DATA(OfflineResourceList, nsDOMOfflineResourceList)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMOfflineResourceList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMOfflineResourceList)
   NS_INTERFACE_MAP_ENTRY(nsIOfflineCacheUpdateObserver)
@@ -191,13 +193,14 @@ nsDOMOfflineResourceList::Init()
   }
 
   // watch for new offline cache updates
-  nsCOMPtr<nsIObserverService> observerServ =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
+  if (!observerService)
+    return NS_ERROR_FAILURE;
 
-  rv = observerServ->AddObserver(this, "offline-cache-update-added", PR_TRUE);
+  rv = observerService->AddObserver(this, "offline-cache-update-added", PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = observerServ->AddObserver(this, "offline-cache-update-completed", PR_TRUE);
+  rv = observerService->AddObserver(this, "offline-cache-update-completed", PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mInitialized = PR_TRUE;

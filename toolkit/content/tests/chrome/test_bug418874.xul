@@ -72,7 +72,7 @@
     function doTest() {
       var t1 = $("t1");
       var t2 = $("t2");
-      t1.value = "1";
+      setTextboxValue(t1, "1");
       var t1Enabled = {};
       var t1CanUndo = {};
       t1.editor.canUndo(t1Enabled, t1CanUndo);
@@ -80,7 +80,7 @@
          "undo correctly enabled when placeholder was not changed through property");
 
       t2.placeholder = "reallyempty";
-      t2.value = "2";
+      setTextboxValue(t2, "2");
       var t2Enabled = {};
       var t2CanUndo = {};
       t2.editor.canUndo(t2Enabled, t2CanUndo);
@@ -88,6 +88,14 @@
          "undo correctly enabled when placeholder explicitly changed through property");
 
       SimpleTest.finish();
+   }
+
+   function setTextboxValue(textbox, value) {
+      textbox.focus();
+      for (var i = 0; i < value.length; ++i) {
+          synthesizeKey(value.charAt(i), {});
+      }
+      textbox.blur();
    }
 
    SimpleTest.waitForFocus(doTest);

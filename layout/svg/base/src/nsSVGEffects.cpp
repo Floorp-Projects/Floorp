@@ -407,7 +407,7 @@ nsSVGEffects::EffectProperties::GetMaskFrame(PRBool *aOK)
 void
 nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 {
-  NS_ASSERTION(aFrame->GetContent()->IsNodeOfType(nsINode::eELEMENT),
+  NS_ASSERTION(aFrame->GetContent()->IsElement(),
                "aFrame's content should be an element");
 
   FrameProperties props = aFrame->Properties();
@@ -438,7 +438,7 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 
   nsIFrame *kid = aFrame->GetFirstChild(nsnull);
   while (kid) {
-    if (kid->GetContent()->IsNodeOfType(nsINode::eELEMENT)) {
+    if (kid->GetContent()->IsElement()) {
       UpdateEffects(kid);
     }
     kid = kid->GetNextSibling();

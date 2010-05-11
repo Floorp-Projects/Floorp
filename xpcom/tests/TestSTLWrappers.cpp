@@ -12,7 +12,7 @@
 
 // gcc errors out if we |try ... catch| with -fno-exceptions, but we
 // can still test on windows
-#ifdef XP_WIN
+#ifdef _MSC_VER
 #  define TRY       try
 #  define CATCH(e)  catch (e)
 #else
@@ -22,14 +22,21 @@
 
 int main() {
     std::vector<int> v;
+    int rv = 1;
 
     TRY {
-      // this should abort; NOT throw an exception
-      int unused = v.at(1);
+      // v.at(1) on empty v should abort; NOT throw an exception
+
+      // (Do some arithmetic with result of v.at() to avoid
+      // compiler warnings for unused variable/result.)
+      rv += v.at(1) ? 1 : 2;
     } CATCH(const std::out_of_range& e) {
-      fputs("TEST-FAIL | TestSTLWrappers.cpp | caught an exception!\n",
+      fputs("TEST-FAIL | TestSTLWrappers.cpp | caught an exception?\n",
             stderr);
+      return 1;
     }
 
-    return 0;
+    fputs("TEST-FAIL | TestSTLWrappers.cpp | didn't abort()?\n",
+          stderr);
+    return rv;
 }

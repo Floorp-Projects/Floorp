@@ -570,11 +570,11 @@ PlacesTreeView.prototype = {
       case Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_DESCENDING:
         return [this.COLUMN_TYPE_KEYWORD, true];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_ASCENDING:
-        if (this._result.sortingAnnotation == DESCRIPTION_ANNO)
+        if (this._result.sortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
           return [this.COLUMN_TYPE_DESCRIPTION, false];
         break;
       case Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING:
-        if (this._result.sortingAnnotation == DESCRIPTION_ANNO)
+        if (this._result.sortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
           return [this.COLUMN_TYPE_DESCRIPTION, true];
       case Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_ASCENDING:
         return [this.COLUMN_TYPE_DATEADDED, false];
@@ -653,7 +653,7 @@ PlacesTreeView.prototype = {
     this._rows.splice(row, 0, aNode);
     this._tree.rowCountChanged(row, 1);
 
-    if (PlacesUtils.nodeIsContainer(aNode) && asContainer(aNode).containerOpen)
+    if (PlacesUtils.nodeIsContainer(aNode) && PlacesUtils.asContainer(aNode).containerOpen)
       this.invalidateContainer(aNode);
   },
 
@@ -827,7 +827,7 @@ PlacesTreeView.prototype = {
   },
 
   nodeAnnotationChanged: function PTV_nodeAnnotationChanged(aNode, aAnno) {
-    if (aAnno == DESCRIPTION_ANNO)
+    if (aAnno == PlacesUIUtils.DESCRIPTION_ANNO)
       this._invalidateCellValue(aNode, this.COLUMN_TYPE_DESCRIPTION);
   },
 
@@ -847,6 +847,9 @@ PlacesTreeView.prototype = {
   containerClosed: function PTV_containerClosed(aNode) {
     this.invalidateContainer(aNode);
   },
+
+  containerStateChanged:
+  function PTV_containerStateChanged(aNode, aOldState, aNewState) {},
 
   invalidateContainer: function PTV_invalidateContainer(aContainer) {
     NS_ASSERT(this._result, "Need to have a result to update");
@@ -1121,7 +1124,7 @@ PlacesTreeView.prototype = {
         if ((PlacesUtils.nodeIsQuery(parent) ||
              PlacesUtils.nodeIsFolder(parent)) &&
             !node.hasChildren)
-          return asQuery(parent).queryOptions.expandQueries;
+          return PlacesUtils.asQuery(parent).queryOptions.expandQueries;
       }
       return true;
     }
@@ -1207,7 +1210,7 @@ PlacesTreeView.prototype = {
         if (PlacesControllerDragHelper.disallowInsertion(container))
           return null;
 
-        let queryOptions = asQuery(this._result.root).queryOptions;
+        let queryOptions = PlacesUtils.asQuery(this._result.root).queryOptions;
         if (queryOptions.sortingMode !=
               Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
           // If we are within a sorted view, insert at the end.
@@ -1335,7 +1338,7 @@ PlacesTreeView.prototype = {
         if (node.itemId != -1) {
           try {
             return PlacesUtils.annotations.
-                               getItemAnnotation(node.itemId, DESCRIPTION_ANNO);
+                               getItemAnnotation(node.itemId, PlacesUIUtils.DESCRIPTION_ANNO);
           }
           catch (ex) { /* has no description */ }
         }
@@ -1469,17 +1472,17 @@ PlacesTreeView.prototype = {
         break;
       case this.COLUMN_TYPE_DESCRIPTION:
         if (oldSort == NHQO.SORT_BY_ANNOTATION_ASCENDING &&
-            oldSortingAnnotation == DESCRIPTION_ANNO) {
+            oldSortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO) {
           newSort = NHQO.SORT_BY_ANNOTATION_DESCENDING;
-          newSortingAnnotation = DESCRIPTION_ANNO;
+          newSortingAnnotation = PlacesUIUtils.DESCRIPTION_ANNO;
         }
         else if (allowTriState &&
                  oldSort == NHQO.SORT_BY_ANNOTATION_DESCENDING &&
-                 oldSortingAnnotation == DESCRIPTION_ANNO)
+                 oldSortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
           newSort = NHQO.SORT_BY_NONE;
         else {
           newSort = NHQO.SORT_BY_ANNOTATION_ASCENDING;
-          newSortingAnnotation = DESCRIPTION_ANNO;
+          newSortingAnnotation = PlacesUIUtils.DESCRIPTION_ANNO;
         }
 
         break;

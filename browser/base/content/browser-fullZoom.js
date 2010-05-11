@@ -58,7 +58,7 @@ var FullZoom = {
   // The global value (if any) for the setting.  Lazily loaded from the service
   // when first requested, then updated by the pref change listener as it changes.
   // If there is no global value, then this should be undefined.
-  get globalValue FullZoom_get_globalValue() {
+  get globalValue() {
     var globalValue = this._cps.getPref(null, this.name);
     if (typeof globalValue != "undefined")
       globalValue = this._ensureValid(globalValue);
@@ -71,7 +71,7 @@ var FullZoom = {
   // Convenience Getters
 
   // Content Pref Service
-  get _cps FullZoom_get__cps() {
+  get _cps() {
     delete this._cps;
     return this._cps = Cc["@mozilla.org/content-pref/service;1"].
                        getService(Ci.nsIContentPrefService);
@@ -86,7 +86,7 @@ var FullZoom = {
   // whether we are in private browsing mode
   _inPrivateBrowsing: false,
 
-  get siteSpecific FullZoom_get_siteSpecific() {
+  get siteSpecific() {
     return !this._inPrivateBrowsing && this._siteSpecificPref;
   },
 

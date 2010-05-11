@@ -41,6 +41,10 @@
 
 #include "base/string_util.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include "mozilla/plugins/PluginMessageUtils.h"
+
+using std::vector;
+using std::string;
 
 using mozilla::ipc::BrowserProcessSubThread;
 using mozilla::ipc::GeckoChildProcessHost;
@@ -66,12 +70,8 @@ PluginProcessParent::~PluginProcessParent()
 bool
 PluginProcessParent::Launch()
 {
-    std::vector<std::string> args;
-#if defined(XP_WIN)
-    args.push_back("\""+ mPluginFilePath +"\"");
-#else
-    args.push_back(mPluginFilePath);
-#endif
+    vector<string> args;
+    args.push_back(MungePluginDsoPath(mPluginFilePath));
     return SyncLaunch(args);
 }
 
@@ -79,8 +79,7 @@ void
 PluginProcessParent::Delete()
 {
   MessageLoop* currentLoop = MessageLoop::current();
-  MessageLoop* ioLoop = 
-    BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO);
+  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
 
   if (currentLoop == ioLoop) {
       delete this;

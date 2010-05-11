@@ -41,33 +41,28 @@
 
 #include "nsAccessNodeWrap.h"
 
-#include "nsARIAMap.h"
-#include "nsEventShell.h"
-#include "nsRelUtils.h"
-#include "nsTextEquivUtils.h"
-
 #include "nsIAccessible.h"
 #include "nsIAccessibleHyperLink.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIAccessibleValue.h"
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleStates.h"
-#include "nsIAccessibleEvent.h"
 
-#include "nsIDOMNodeList.h"
-#include "nsINameSpaceManager.h"
-#include "nsWeakReference.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "nsIDOMDOMStringList.h"
+
+class nsAccessible;
+class nsAccEvent;
+struct nsRoleMapEntry;
 
 struct nsRect;
 class nsIContent;
 class nsIFrame;
-class nsIPresShell;
-class nsIDOMNode;
 class nsIAtom;
 class nsIView;
+
+typedef nsRefPtrHashtable<nsVoidPtrHashKey, nsAccessible>
+  nsAccessibleHashtable;
 
 // see nsAccessible::GetAttrValue
 #define NS_OK_NO_ARIA_VALUE \
@@ -81,29 +76,8 @@ NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x23)
 #define NS_OK_NAME_FROM_TOOLTIP \
 NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x25)
 
-// Saves a data member -- if child count equals this value we haven't
-// cached children or child count yet
-enum { eChildCountUninitialized = -1 };
 
-class nsAccessibleDOMStringList : public nsIDOMDOMStringList
-{
-public:
-  nsAccessibleDOMStringList();
-  virtual ~nsAccessibleDOMStringList();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMDOMSTRINGLIST
-
-  PRBool Add(const nsAString& aName) {
-    return mNames.AppendElement(aName) != nsnull;
-  }
-
-private:
-  nsTArray<nsString> mNames;
-};
-
-
-#define NS_ACCESSIBLE_IMPL_CID                          \
+#define NS_ACCESSIBLE_IMPL_IID                          \
 {  /* 133c8bf4-4913-4355-bd50-426bd1d6e1ad */           \
   0x133c8bf4,                                           \
   0x4913,                                               \
@@ -128,7 +102,7 @@ public:
   NS_DECL_NSIACCESSIBLEHYPERLINK
   NS_DECL_NSIACCESSIBLESELECTABLE
   NS_DECL_NSIACCESSIBLEVALUE
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_CID)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_IID)
 
   //////////////////////////////////////////////////////////////////////////////
   // nsAccessNode
@@ -232,6 +206,11 @@ public:
   void SetParent(nsAccessible *aParent);
 
   /**
+   * Cache children if necessary. Return true if the accessible is defunct.
+   */
+  PRBool EnsureChildren();
+
+  /**
    * Set the child count to -1 (unknown) and null out cached child pointers.
    * Should be called when accessible tree is changed because document has
    * transformed.
@@ -318,11 +297,6 @@ protected:
   virtual void CacheChildren();
 
   /**
-   * Cache children if necessary. Return true if the accessible is defunct.
-   */
-  PRBool EnsureChildren();
-
-  /**
    * Return sibling accessible at the given offset.
    */
   virtual nsAccessible* GetSiblingAtOffset(PRInt32 aOffset,
@@ -351,10 +325,6 @@ protected:
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
   static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
-
-  // nsCOMPtr<>& is useful here, because getter_AddRefs() nulls the comptr's value, and NextChild
-  // depends on the passed-in comptr being null or already set to a child (finding the next sibling).
-  nsIAccessible *NextChild(nsCOMPtr<nsIAccessible>& aAccessible);
     
   already_AddRefed<nsIAccessible> GetNextWithState(nsIAccessible *aStart, PRUint32 matchState);
 
@@ -366,7 +336,7 @@ protected:
    * @param  aStartNode  [in] the DOM node to start from
    * @return              the resulting accessible
    */   
-  already_AddRefed<nsIAccessible>
+  already_AddRefed<nsAccessible>
     GetFirstAvailableAccessible(nsIDOMNode *aStartNode);
 
   // Hyperlink helpers
@@ -446,7 +416,7 @@ protected:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAccessible,
-                              NS_ACCESSIBLE_IMPL_CID)
+                              NS_ACCESSIBLE_IMPL_IID)
 
 #endif  
 

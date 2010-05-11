@@ -68,6 +68,9 @@ _MOCHITEST_FILES = \
   test_pluginstream_poststream.html \
   test_pluginstream_seek.html \
   test_pluginstream_newstream.html \
+  test_fullpage.html \
+  loremipsum.xtest \
+  loremipsum.xtest^headers^ \
   test_multipleinstanceobjects.html \
   test_streamNotify.html \
   test_instantiation.html \
@@ -85,6 +88,9 @@ _MOCHITEST_FILES = \
   test_hanging.html \
   crashing_subpage.html \
   test_GCrace.html \
+  test_propertyAndMethod.html \
+  test_bug539565-1.html \
+  test_bug539565-2.html \
   $(NULL)
 
 #  test_npruntime_npnsetexception.html \ Disabled for e10s
@@ -108,11 +114,19 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _MOCHICHROME_FILES += \
   test_convertpoint.xul \
   $(NULL)
+
+_MOCHITEST_FILES += \
+  test_cocoa_window_focus.html \
+  cocoa_window_focus.html \
+  test_cocoa_focus.html \
+  cocoa_focus.html \
+  $(NULL)
 endif
 
 ifeq (gtk2,$(MOZ_WIDGET_TOOLKIT))
 _MOCHITEST_FILES += \
 		test_copyText.html \
+		test_crash_nested_loop.html \
 		$(NULL)
 endif
 
@@ -120,4 +134,4 @@ libs:: $(_MOCHICHROME_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
 
 libs:: $(_MOCHITEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

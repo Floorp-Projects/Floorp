@@ -39,8 +39,6 @@
 
 #undef NECKO_DISK_CACHE
 
-#undef NECKO_SMALL_BUFFERS
-
 #undef NECKO_COOKIES
 
 #undef NECKO_WIFI

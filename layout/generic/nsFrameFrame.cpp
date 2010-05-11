@@ -102,6 +102,8 @@
 #endif
 #include "nsIServiceManager.h"
 
+class AsyncFrameInit;
+
 static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
 /******************************************************************************
@@ -186,6 +188,8 @@ public:
   virtual void ReflowCallbackCanceled();
 
 protected:
+  friend class AsyncFrameInit;
+
   // Helper method to look up the HTML marginwidth & marginheight attributes
   nsIntSize GetMarginAttributes();
 
@@ -246,6 +250,21 @@ NS_QUERYFRAME_HEAD(nsSubDocumentFrame)
   NS_QUERYFRAME_ENTRY(nsIFrameFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafFrame)
 
+class AsyncFrameInit : public nsRunnable
+{
+public:
+  AsyncFrameInit(nsIFrame* aFrame) : mFrame(aFrame) {}
+  NS_IMETHOD Run()
+  {
+    if (mFrame.IsAlive()) {
+      static_cast<nsSubDocumentFrame*>(mFrame.GetFrame())->ShowViewer();
+    }
+    return NS_OK;
+  }
+private:
+  nsWeakFrame mFrame;
+};
+
 NS_IMETHODIMP
 nsSubDocumentFrame::Init(nsIContent*     aContent,
                          nsIFrame*       aParent,
@@ -285,7 +304,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   // can find it if necessary.
   aContent->SetPrimaryFrame(this);
 
-  ShowViewer();
+  nsContentUtils::AddScriptRunner(new AsyncFrameInit(this));
   return NS_OK;
 }
 

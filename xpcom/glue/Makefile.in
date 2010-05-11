@@ -132,13 +132,8 @@ EXPORTS_mozilla = \
   Monitor.h \
   Mutex.h \
   SSE.h \
+  unused.h \
   $(NULL)
-
-ifdef WRAP_STL_INCLUDES
-ifdef GCC_VERSION
-EXPORTS_mozilla += functexcept.h
-endif
-endif
 
 SDK_LIBRARY     =                        \
 		$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \

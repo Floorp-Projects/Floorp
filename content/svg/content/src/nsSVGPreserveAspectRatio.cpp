@@ -64,6 +64,10 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGPreserveAspectRatio::DOMAnimVal)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
 
+DOMCI_DATA(SVGPreserveAspectRatio, nsSVGPreserveAspectRatio::DOMBaseVal)
+DOMCI_DATA(SVGAnimatedPreserveAspectRatio,
+           nsSVGPreserveAspectRatio::DOMAnimPAspectRatio)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsSVGPreserveAspectRatio::DOMBaseVal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPreserveAspectRatio)
   NS_INTERFACE_MAP_ENTRY(nsISupports)

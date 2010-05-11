@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIOService.h"
 #include "nsAsyncStreamCopier.h"
 #include "nsIEventTarget.h"
 #include "nsStreamUtils.h"
@@ -56,7 +57,7 @@ static PRLogModuleInfo *gStreamCopierLog = nsnull;
 nsAsyncStreamCopier::nsAsyncStreamCopier()
     : mLock(nsnull)
     , mMode(NS_ASYNCCOPY_VIA_READSEGMENTS)
-    , mChunkSize(NET_DEFAULT_SEGMENT_SIZE)
+    , mChunkSize(nsIOService::gDefaultSegmentSize)
     , mStatus(NS_OK)
     , mIsPending(PR_FALSE)
 {
@@ -234,7 +235,7 @@ nsAsyncStreamCopier::Init(nsIInputStream *source,
         return NS_ERROR_OUT_OF_MEMORY;
 
     if (chunkSize == 0)
-        chunkSize = NET_DEFAULT_SEGMENT_SIZE;
+        chunkSize = nsIOService::gDefaultSegmentSize;
     mChunkSize = chunkSize;
 
     mSource = source;

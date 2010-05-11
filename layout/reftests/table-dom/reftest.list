@@ -20,6 +20,10 @@
 == deleteRowsShrink1.html deleteRowsShrink1-ref.html
 == deleteTbodyExpand1.html deleteTbodyExpand1-ref.html
 == deleteTbodyRebuild1.html deleteTbodyRebuild1-ref.html
+== insertCaptionsAndRows1.html insertCaptionsAndRows1-ref.html
+== insertCaptionsAndRows2.html insertCaptionsAndRows2-ref.html
+== insertCaptionsAndRows3.html insertCaptionsAndRows3-ref.html
+== insertCaptionsAndRows4.html insertCaptionsAndRows4-ref.html
 == insertCellsExpand1.html insertCellsExpand1-ref.html
 == insertCellsExpand2.html insertCellsExpand2-ref.html
 == insertCellsExpandZeroRowspan.html insertCellsExpandZeroRowspan-ref.html
@@ -28,6 +32,7 @@
 == insertCellsZeroColspan.html insertCellsZeroColspan-ref.html
 == insertColGroups1.html insertColGroups1-ref.html
 == insertColGroups2.html insertColGroups2-ref.html
+== insertColgroupAndRowgroup.html insertColgroupAndRowgroup-ref.html
 == insertCols1.html insertCols1-ref.html
 == insertCols2.html insertCols2-ref.html
 == insertCols3.html insertCols3-ref.html

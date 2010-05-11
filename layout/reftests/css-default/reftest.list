@@ -1,0 +1,2 @@
+# submit button default tests
+include submit-button/reftest.list

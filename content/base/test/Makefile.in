@@ -64,6 +64,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = 	test_bug5141.html \
 		test_bug51034.html \
+		test_bug166235.html \
 		test_bug199959.html \
 		test_bug218236.html \
 		file_bug218236_multipart.txt \
@@ -250,6 +251,7 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug518104.html \
 		bug457746.sjs \
 		test_CrossSiteXHR.html \
+		test_CrossSiteXHR_origin.html \
 		file_CrossSiteXHR_inner.html \
 		file_CrossSiteXHR_inner_data.sjs \
 		file_CrossSiteXHR_inner.jar \
@@ -364,9 +366,21 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug545644.html \
 		test_bug545644.xhtml \
 		test_bug553896.xhtml \
+		test_bug515401.html \
 		test_bug541937.html \
 		file_bug541937.html \
 		file_bug541937.xhtml \
+		test_bug558726.html \
+		test_bug557892.html \
+		file_bug557892.html \
+		test_bug559526.html \
+		test_csp_redirects.html \
+		file_csp_redirects_page.sjs \
+		file_csp_redirects_main.html \
+		file_csp_redirects_resource.sjs \
+		test_bug346485.html \
+		test_bug560780.html \
+		test_bug562652.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason

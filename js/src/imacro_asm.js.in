@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* vim: set sw=4 ts=8 et tw=78 ft=javascript: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -124,11 +125,33 @@ function immediate(op) {
     throw new Error(info.jsop + " format not yet implemented");
 }
 
-function simulate_cfg(imacro, depth, i) {
+function simulate_cfg(igroup, imacro, depth, i) {
+    let any_group_opcode = undefined;
+    let expected_depth = undefined;
+    for (let opcode in igroup.ops) {
+        let opi = opinfo[opcode];
+        if (any_group_opcode === undefined) {
+            any_group_opcode = opcode;
+            expected_depth = (opi.pops < 0) ? undefined : opi.pushes - opi.pops;
+        } else if (expected_depth === undefined) {
+            if (opi.pops >= 0)
+                throw Error("imacro shared by constant- and variable-stack-defs/uses instructions");
+        } else {
+            if (opi.pops < 0)
+                throw Error("imacro shared by constant- and variable-stack-defs/uses instructions");
+            if (opi.pushes - opi.pops != expected_depth)
+                throw Error("imacro shared by instructions with different stack depths");
+        }
+    }
+
     while (i < imacro.code.length) {
         let op = imacro.code[i];
-        depth -= (op.info.pops < 0) ? 2 + Number(op.imm1) : op.info.pops;
-        depth += op.info.pushes;
+        let opi = op.info;
+        if (opi.opname == 'imacop')
+            opi = opinfo[any_group_opcode];
+
+        depth -= (opi.pops < 0) ? 2 + Number(op.imm1) : opi.pops;
+        depth += opi.pushes;
 
         if (imacro.depths.hasOwnProperty(i) && imacro.depths[i] != depth)
             throw Error("Mismatched depth at " + imacro.filename + ":" + op.line);
@@ -150,13 +173,16 @@ function simulate_cfg(imacro, depth, i) {
             if (op.target_index <= i)
                 throw Error("Backward jump at " + imacro.filename + ":" + op.line);
 
-            simulate_cfg(imacro, depth, op.target_index);
+            simulate_cfg(igroup, imacro, depth, op.target_index);
 
             if (op.info.opname == "goto" || op.info.opname == "gotox")
                 return;
         }
         ++i;
     }
+
+    if (expected_depth !== undefined && depth != expected_depth)
+        throw Error("Expected depth " + expected_depth + ", got " + depth);
 }
 
 /*
@@ -181,7 +207,7 @@ function simulate_cfg(imacro, depth, i) {
 const line_regexp_parts = [
     "^(?:(\\w+):)?",                    // optional label at start of line
     "\\s*(\\.?\\w+)",                   // optional spaces, (pseudo-)opcode
-    "(?:\\s+(\\w+|\\([^)]*\\)))?",      // optional first immediate operand
+    "(?:\\s+([+-]?\\w+|\\([^)]*\\)))?", // optional first immediate operand
     "(?:\\s+([\\w-,]+|\\([^)]*\\)))?",  // optional second immediate operand
     "(?:\\s*(?:#.*))?$"                 // optional spaces and comment
 ];
@@ -258,8 +284,24 @@ function assemble(filename) {
                     labeldef_indexes: {},
                     labelrefs: {},
                     filename: filename,
-                    depths: {}
+                    depths: {},
+                    initdepth: 0,
                 };
+                break;
+
+              case ".fixup":
+                if (!imacro)
+                    throw new Error(".fixup outside of .imacro");
+                if (imacro.code.length !== 0)
+                    throw new Error(".fixup must be first item in .imacro");
+                if (!imm1)
+                    throw new Error("missing .fixup argument");
+                let fixup = Number(imm1);
+                if (isNaN(fixup) || fixup !== parseInt(imm1) || fixup == 0)
+                    throw new Error(".fixup argument must be a nonzero integer");
+                if (imacro.initdepth !== 0)
+                    throw new Error("more than one .fixup in .imacro");
+                imacro.initdepth = fixup;
                 break;
 
               case ".end":
@@ -291,8 +333,8 @@ function assemble(filename) {
 
                         }
 
-                        imacro.maxdepth = 0;
-                        simulate_cfg(imacro, 0, 0);
+                        imacro.maxdepth = imacro.initdepth;
+                        simulate_cfg(igroup, imacro, imacro.initdepth, 0);
                         if (imacro.maxdepth > maxdepth)
                             maxdepth = imacro.maxdepth;
 

@@ -386,18 +386,26 @@ XPC_COW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   JSObject *scope = JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(funToCall));
   for (uintN i = 0; i < argc; ++i) {
     if (!JSVAL_IS_PRIMITIVE(argv[i]) &&
-        !RewrapObject(cx, scope, JSVAL_TO_OBJECT(argv[i]), UNKNOWN, &argv[i])) {
+        !RewrapObject(cx, scope, JSVAL_TO_OBJECT(argv[i]), XPCNW_EXPLICIT,
+                      &argv[i])) {
       return JS_FALSE;
     }
   }
 
-  if (!RewrapObject(cx, scope, obj, UNKNOWN, rval) ||
+  if (!RewrapObject(cx, scope, obj, XPCNW_EXPLICIT, rval) ||
       !JS_CallFunctionValue(cx, JSVAL_TO_OBJECT(*rval), funToCall, argc, argv,
                             rval)) {
     return JS_FALSE;
   }
 
-  return RewrapForContent(cx, obj, rval);
+  scope = JS_GetScopeChain(cx);
+  if (!scope) {
+    return JS_FALSE;
+  }
+
+  return JSVAL_IS_PRIMITIVE(*rval) ||
+         RewrapObject(cx, JS_GetGlobalForObject(cx, scope),
+                      JSVAL_TO_OBJECT(*rval), COW, rval);
 }
 
 static JSBool
@@ -415,7 +423,6 @@ WrapFunction(JSContext *cx, JSObject *scope, JSObject *funobj, jsval *rval)
     }
 
     JS_GetReservedSlot(cx, funobj, XPCWrapper::eWrappedFunctionSlot, &funobjVal);
-    funobj = JSVAL_TO_OBJECT(funobjVal);
   }
 
   JSFunction *funWrapper =
@@ -443,8 +450,9 @@ RewrapForChrome(JSContext *cx, JSObject *wrapperObj, jsval *vp)
     return JS_TRUE;
   }
 
-  return RewrapObject(cx, JS_GetGlobalForObject(cx, GetWrappedObject(cx, wrapperObj)),
-                      JSVAL_TO_OBJECT(v), UNKNOWN, vp);
+  JSObject *scope =
+    JS_GetGlobalForObject(cx, GetWrappedObject(cx, wrapperObj));
+  return RewrapObject(cx, scope, JSVAL_TO_OBJECT(v), XPCNW_EXPLICIT, vp);
 }
 
 JSBool
@@ -586,9 +594,8 @@ XPC_COW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   }
 
   if (interned_id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTO) ||
-      interned_id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PARENT) ||
       interned_id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS)) {
-    // No getting or setting __proto__ or __parent__ on my object.
+    // No getting or setting __proto__ on my object.
     return ThrowException(NS_ERROR_INVALID_ARG, cx); // XXX better error message
   }
 

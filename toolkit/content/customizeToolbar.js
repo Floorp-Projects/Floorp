@@ -66,10 +66,10 @@ function InitWithToolbox(aToolbox)
   gToolboxDocument = gToolbox.ownerDocument;
   gToolbox.customizing = true;
 
-  gToolbox.addEventListener("dragstart", onToolbarDragStart, false);
-  gToolbox.addEventListener("dragover", onToolbarDragOver, false);
-  gToolbox.addEventListener("dragleave", onToolbarDragLeave, false);
-  gToolbox.addEventListener("drop", onToolbarDrop, false);
+  gToolbox.addEventListener("dragstart", onToolbarDragStart, true);
+  gToolbox.addEventListener("dragover", onToolbarDragOver, true);
+  gToolbox.addEventListener("dragleave", onToolbarDragLeave, true);
+  gToolbox.addEventListener("drop", onToolbarDrop, true);
 
   initDialog();
 }
@@ -132,10 +132,10 @@ function repositionDialog()
 
 function removeToolboxListeners()
 {
-  gToolbox.removeEventListener("dragstart", onToolbarDragStart, false);
-  gToolbox.removeEventListener("dragover", onToolbarDragOver, false);
-  gToolbox.removeEventListener("dragleave", onToolbarDragLeave, false);
-  gToolbox.removeEventListener("drop", onToolbarDrop, false);
+  gToolbox.removeEventListener("dragstart", onToolbarDragStart, true);
+  gToolbox.removeEventListener("dragover", onToolbarDragOver, true);
+  gToolbox.removeEventListener("dragleave", onToolbarDragLeave, true);
+  gToolbox.removeEventListener("drop", onToolbarDrop, true);
 }
 
 /**
@@ -755,6 +755,7 @@ function onToolbarDragOver(aEvent)
   setDragActive(gCurrentDragOverItem, true);
 
   aEvent.preventDefault();
+  aEvent.stopPropagation();
 }
 
 function onToolbarDrop(aEvent)

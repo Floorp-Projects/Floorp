@@ -174,7 +174,7 @@ var gEditItemOverlay = {
         // Load In Sidebar checkbox
         this._element("loadInSidebarCheckbox").checked =
           PlacesUtils.annotations.itemHasAnnotation(this._itemId,
-                                                    LOAD_IN_SIDEBAR_ANNO);
+                                                    PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
       }
       else {
         if (!this._readOnly) // If readOnly wasn't forced through aInfo
@@ -446,8 +446,8 @@ var gEditItemOverlay = {
       if (this._itemId != -1 &&
           this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK &&
           !this._readOnly)
-        this._microsummaries = PlacesUIUtils.microsummaries
-                                            .getMicrosummaries(this._uri, -1);
+        this._microsummaries = PlacesUtils.microsummaries
+                                          .getMicrosummaries(this._uri, -1);
     }
     catch(ex) {
       // getMicrosummaries will throw an exception in at least two cases:
@@ -458,6 +458,7 @@ var gEditItemOverlay = {
       //    content types the service knows how to summarize).
       this._microsummaries = null;
     }
+
     if (this._microsummaries) {
       var enumerator = this._microsummaries.Enumerate();
 
@@ -468,8 +469,8 @@ var gEditItemOverlay = {
           var microsummary = enumerator.getNext()
                                        .QueryInterface(Ci.nsIMicrosummary);
           var menuItem = this._createMicrosummaryMenuItem(microsummary);
-          if (PlacesUIUtils.microsummaries
-                           .isMicrosummary(this._itemId, microsummary))
+          if (PlacesUtils.microsummaries
+                         .isMicrosummary(this._itemId, microsummary))
             itemToSelect = menuItem;
 
           menupopup.appendChild(menuItem);
@@ -693,7 +694,7 @@ var gEditItemOverlay = {
     var newTitle = this._element("userEnteredName").label;
     if (this._getItemStaticTitle() != newTitle) {
       this._mayUpdateFirstEditField("namePicker");
-      if (PlacesUIUtils.microsummaries.hasMicrosummary(this._itemId)) {
+      if (PlacesUtils.microsummaries.hasMicrosummary(this._itemId)) {
         // Note: this implicitly also takes care of the microsummary->static
         // title case, the removeMicorosummary method in the service will set
         // the item-title to the value of this annotation.
@@ -714,10 +715,10 @@ var gEditItemOverlay = {
     // bookmark previously had one, or the user selected a microsummary which
     // is not the one the bookmark previously had
     if ((newMicrosummary == null &&
-         PlacesUIUtils.microsummaries.hasMicrosummary(this._itemId)) ||
+         PlacesUtils.microsummaries.hasMicrosummary(this._itemId)) ||
         (newMicrosummary != null &&
-         !PlacesUIUtils.microsummaries
-                       .isMicrosummary(this._itemId, newMicrosummary))) {
+         !PlacesUtils.microsummaries
+                     .isMicrosummary(this._itemId, newMicrosummary))) {
       txns.push(ptm.editBookmarkMicrosummary(this._itemId, newMicrosummary));
     }
 
@@ -1122,20 +1123,20 @@ var gEditItemOverlay = {
                           PlacesUtils.bookmarks
                                      .getKeywordForBookmark(this._itemId));
       break;
-    case DESCRIPTION_ANNO:
+    case PlacesUIUtils.DESCRIPTION_ANNO:
       this._initTextField("descriptionField",
                           PlacesUIUtils.getItemDescription(this._itemId));
       break;
-    case LOAD_IN_SIDEBAR_ANNO:
+    case PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO:
       this._element("loadInSidebarCheckbox").checked =
         PlacesUtils.annotations.itemHasAnnotation(this._itemId,
-                                                  LOAD_IN_SIDEBAR_ANNO);
+                                                  PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO);
       break;
-    case LMANNO_FEEDURI:
+    case PlacesUtils.LMANNO_FEEDURI:
       var feedURISpec = PlacesUtils.livemarks.getFeedURI(this._itemId).spec;
       this._initTextField("feedLocationField", feedURISpec);
       break;
-    case LMANNO_SITEURI:
+    case PlacesUtils.LMANNO_SITEURI:
       var siteURISpec = "";
       var siteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
       if (siteURI)

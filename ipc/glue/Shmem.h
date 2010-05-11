@@ -42,6 +42,7 @@
 #define mozilla_ipc_Shmem_h
 
 #include "base/basictypes.h"
+#include "base/process.h"
 
 #include "nscore.h"
 #include "nsDebug.h"
@@ -65,8 +66,8 @@
  *  means is OS specific.)
  *
  *  (4a) The child receives the special IPC message, and using the
- *  |mozilla::ipc::SharedMemoryHandle| (which is an fd or HANDLE) it
- *  was passed, creates a |mozilla::ipc::SharedMemory| in the child
+ *  |SharedMemory{SysV,Basic}::Handle| it was passed, creates a
+ *  |mozilla::ipc::SharedMemory| in the child
  *  process.
  *
  *  (4b) After sending the "shmem-created" IPC message, IPDL-generated
@@ -86,7 +87,6 @@
 namespace mozilla {
 namespace ipc {
 
-
 class NS_FINAL_CLASS Shmem
 {
   friend struct IPC::ParamTraits<mozilla::ipc::Shmem>;
@@ -95,7 +95,7 @@ public:
   typedef int32 id_t;
   // Low-level wrapper around platform shmem primitives.
   typedef mozilla::ipc::SharedMemory SharedMemory;
-  typedef SharedMemory::SharedMemoryHandle SharedMemoryHandle;
+  typedef SharedMemory::SharedMemoryType SharedMemoryType;
   struct IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead {};
 
   Shmem() :
@@ -186,15 +186,20 @@ public:
     return mSize / sizeof(T);
   }
 
+  int GetSysVID() const;
+
   // These shouldn't be used directly, use the IPDL interface instead.
   id_t Id(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead) {
     return mId;
   }
 
+#ifndef DEBUG
   void RevokeRights(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead)
   {
-    Protect(mSegment);
   }
+#else
+  void RevokeRights(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead);
+#endif
 
   void forget(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead)
   {
@@ -207,15 +212,35 @@ public:
   static SharedMemory*
   Alloc(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
         size_t aNBytes,
+        SharedMemoryType aType,
         bool aProtect=false);
 
+  // Prepare this to be shared with |aProcess|.  Return an IPC message
+  // that contains enough information for the other process to map
+  // this segment in OpenExisting() below.  Return a new message if
+  // successful (owned by the caller), NULL if not.
+  IPC::Message*
+  ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
+          base::ProcessHandle aProcess,
+          int32 routingId);
+
+  // Stop sharing this with |aProcess|.  Return an IPC message that
+  // contains enough information for the other process to unmap this
+  // segment.  Return a new message if successful (owned by the
+  // caller), NULL if not.
+  IPC::Message*
+  UnshareFrom(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
+              base::ProcessHandle aProcess,
+              int32 routingId);
+
   // Return a SharedMemory instance in this process using the
-  // SharedMemoryHandle (fd/HANDLE) shared to us by the process that
-  // created the underlying OS shmem resource
+  // descriptor shared to us by the process that created the
+  // underlying OS shmem resource.  The contents of the descriptor
+  // depend on the type of SharedMemory that was passed to us.
   static SharedMemory*
   OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
-               SharedMemoryHandle aHandle,
-               size_t aNBytes,
+               const IPC::Message& aDescriptor,
+               id_t* aId,
                bool aProtect=false);
 
   static void
@@ -233,10 +258,6 @@ private:
 #if !defined(DEBUG)
   void AssertInvariants() const
   { }
-  static void Unprotect(SharedMemory* aSegment)
-  { }
-  static void Protect(SharedMemory* aSegment)
-  { }
 
   static size_t*
   PtrToSize(SharedMemory* aSegment)
@@ -248,20 +269,7 @@ private:
 
 #else
   void AssertInvariants() const;
-
-  static void Unprotect(SharedMemory* aSegment);
-  static void Protect(SharedMemory* aSegment);
 #endif
-
-  static SharedMemory*
-  CreateSegment(size_t aNBytes,
-                SharedMemoryHandle aHandle=SharedMemory::NULLHandle());
-
-  static void
-  DestroySegment(SharedMemory* aSegment);
-
-  static size_t
-  PageAlignedSize(size_t aSize);
 
   SharedMemory* mSegment;
   void* mData;
@@ -285,13 +293,14 @@ struct ParamTraits<mozilla::ipc::Shmem>
 {
   typedef mozilla::ipc::Shmem paramType;
 
+  // NB: Read()/Write() look creepy in that Shmems have a pointer
+  // member, but IPDL internally uses mId to properly initialize a
+  // "real" Shmem
+
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.mId);
   }
-
-  // NB: Read()/Write() look creepy, but IPDL internally uses mId to
-  // properly initialize a "real" Shmem
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {

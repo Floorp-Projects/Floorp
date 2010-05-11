@@ -36,6 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIOService.h"
 #include "nsInputStreamPump.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamTransportService.h"
@@ -44,7 +45,6 @@
 #include "nsITransport.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "nsNetSegmentUtils.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
 
@@ -138,8 +138,10 @@ nsInputStreamPump::PeekStream(PeekSegmentFun callback, void* closure)
     return rv;
 
   PeekData data(callback, closure);
-  return mAsyncStream->ReadSegments(CallPeekFunc, &data,
-                                    NET_DEFAULT_SEGMENT_SIZE, &dummy);
+  return mAsyncStream->ReadSegments(CallPeekFunc,
+                                    &data,
+                                    nsIOService::gDefaultSegmentSize,
+                                    &dummy);
 }
 
 nsresult

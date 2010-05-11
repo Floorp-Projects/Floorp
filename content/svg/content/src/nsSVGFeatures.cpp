@@ -179,7 +179,7 @@ const nsString * const nsSVGFeatures::kIgnoreSystemLanguage = (nsString *) 0x01;
 nsSVGFeatures::PassesConditionalProcessingTests(nsIContent *aContent,
                                                 const nsString *aAcceptLangs)
 {
-  if (!aContent->IsNodeOfType(nsINode::eELEMENT)) {
+  if (!aContent->IsElement()) {
     return PR_FALSE;
   }
 

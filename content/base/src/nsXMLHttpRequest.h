@@ -405,7 +405,15 @@ protected:
     nsCString mHeaders;
   };
 
+  // The bytes of our response body
   nsCString mResponseBody;
+
+  // The Unicode version of our response body.  This is just a cache; if the
+  // string is not void, we have a cached value.  This works because we only
+  // allow looking at this value once state is INTERACTIVE, and at that
+  // point our charset can only change due to more data coming in, which
+  // will cause us to clear the cached value anyway.
+  nsString mResponseBodyUnicode;
 
   nsCString mOverrideMimeType;
 

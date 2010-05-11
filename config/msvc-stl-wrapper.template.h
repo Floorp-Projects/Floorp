@@ -45,13 +45,22 @@
 #  error "STL code can only be used with -fno-exceptions"
 #endif
 
+// Code built with !_HAS_EXCEPTIONS calls std::_Throw(), but the win2k
+// CRT doesn't export std::_Throw().  So we define it.
+#ifndef mozilla_Throw_h
+#  include "mozilla/throw_msvc.h"
+#endif
+
+// Code might include <new> before other wrapped headers, but <new>
+// includes <exception> and so we want to wrap it.  But mozalloc.h
+// wants <new> also, so we break the cycle by always explicitly
+// including <new> here.
+#include <${NEW_HEADER_PATH}>
+
 // See if we're in code that can use mozalloc.  NB: this duplicates
 // code in nscore.h because nscore.h pulls in prtypes.h, and chromium
 // can't build with that being included before base/basictypes.h.
 #if !defined(XPCOM_GLUE) && !defined(NS_NO_XPCOM) && !defined(MOZ_NO_MOZALLOC)
-#  include <new>              // to give mozalloc std::bad_alloc
-#  include <stdlib.h>         // to give mozalloc malloc/free decls
-#  include <string.h>
 #  include "mozilla/mozalloc.h"
 #else
 #  error "STL code can only be used with infallible ::operator new()"

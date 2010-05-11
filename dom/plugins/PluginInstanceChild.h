@@ -44,6 +44,9 @@
 #include "mozilla/plugins/StreamNotifyChild.h"
 #if defined(OS_WIN)
 #include "mozilla/gfx/SharedDIBWin.h"
+#elif defined(OS_MACOSX)
+#include "nsCoreAnimationSupport.h"
+#include "base/timer.h"
 #endif
 
 #include "npfunctions.h"
@@ -90,6 +93,8 @@ protected:
     AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled);
     virtual bool
     AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event, Shmem& mem, int16_t* handled, Shmem* rtnmem);
+    virtual bool
+    AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event, const uint32_t& surface, int16_t* handled);
 
     NS_OVERRIDE
     virtual bool
@@ -204,11 +209,15 @@ private:
         // Win32: Translate mouse input based on WM_WINDOWPOSCHANGED
         // windowing events due to winless shared dib rendering. See
         // WinlessHandleEvent for details.
-        QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION = 1,
+        QUIRK_SILVERLIGHT_WINLESS_INPUT_TRANSLATION     = 1 << 0,
         // Win32: Hook TrackPopupMenu api so that we can swap out parent
         // hwnds. The api will fail with parents not associated with our
         // child ui thread. See WinlessHandleEvent for details.
-        QUIRK_WINLESS_TRACKPOPUP_HOOK = 2,
+        QUIRK_WINLESS_TRACKPOPUP_HOOK                   = 1 << 1,
+        // Win32: Throttle flash WM_USER+1 heart beat messages to prevent
+        // flooding chromium's dispatch loop, which can cause ipc traffic
+        // processing lag.
+        QUIRK_FLASH_THROTTLE_WMUSER_EVENTS              = 1 << 2,
     };
 
     void InitQuirksModes(const nsCString& aMimeType);
@@ -224,14 +233,11 @@ private:
     void ReparentPluginWindow(HWND hWndParent);
     void SizePluginWindow(int width, int height);
     int16_t WinlessHandleEvent(NPEvent& event);
-    void SetNestedInputEventHook();
-    void ResetNestedEventHook();
-    void SetNestedInputPumpHook();
-    void ResetPumpHooks();
     void CreateWinlessPopupSurrogate();
     void DestroyWinlessPopupSurrogate();
     void InitPopupMenuHook();
-    void InternalCallSetNestedEventState(bool aState);
+    void SetupFlashMsgThrottle();
+    void FlashThrottleMessage(HWND, UINT, WPARAM, LPARAM, bool);
     static LRESULT CALLBACK DummyWindowProc(HWND hWnd,
                                             UINT message,
                                             WPARAM wParam,
@@ -240,16 +246,6 @@ private:
                                              UINT message,
                                              WPARAM wParam,
                                              LPARAM lParam);
-    static VOID CALLBACK PumpTimerProc(HWND hwnd,
-                                       UINT uMsg,
-                                       UINT_PTR idEvent,
-                                       DWORD dwTime);
-    static LRESULT CALLBACK NestedInputEventHook(int code,
-                                                 WPARAM wParam,
-                                                 LPARAM lParam);
-    static LRESULT CALLBACK NestedInputPumpHook(int code,
-                                                WPARAM wParam,
-                                                LPARAM lParam);
     static BOOL WINAPI TrackPopupHookProc(HMENU hMenu,
                                           UINT uFlags,
                                           int x,
@@ -257,6 +253,45 @@ private:
                                           int nReserved,
                                           HWND hWnd,
                                           CONST RECT *prcRect);
+    static BOOL CALLBACK EnumThreadWindowsCallback(HWND hWnd,
+                                                   LPARAM aParam);
+    static LRESULT CALLBACK WinlessHiddenFlashWndProc(HWND hWnd,
+                                                      UINT message,
+                                                      WPARAM wParam,
+                                                      LPARAM lParam);
+
+    class FlashThrottleAsyncMsg : public ChildAsyncCall
+    {
+      public:
+        FlashThrottleAsyncMsg();
+        FlashThrottleAsyncMsg(PluginInstanceChild* aInst, 
+                              HWND aWnd, UINT aMsg,
+                              WPARAM aWParam, LPARAM aLParam,
+                              bool isWindowed)
+          : ChildAsyncCall(aInst, nsnull, nsnull),
+          mWnd(aWnd),
+          mMsg(aMsg),
+          mWParam(aWParam),
+          mLParam(aLParam),
+          mWindowed(isWindowed)
+        {}
+
+        NS_OVERRIDE void Run();
+
+        WNDPROC GetProc();
+        HWND GetWnd() { return mWnd; }
+        UINT GetMsg() { return mMsg; }
+        WPARAM GetWParam() { return mWParam; }
+        LPARAM GetLParam() { return mLParam; }
+
+      private:
+        HWND                 mWnd;
+        UINT                 mMsg;
+        WPARAM               mWParam;
+        LPARAM               mLParam;
+        bool                 mWindowed;
+    };
+
 #endif
 
     const NPPluginFuncs* mPluginIface;
@@ -274,13 +309,12 @@ private:
     HWND mPluginWindowHWND;
     WNDPROC mPluginWndProc;
     HWND mPluginParentHWND;
-    HHOOK mNestedEventHook;
     int mNestedEventLevelDepth;
-    bool mNestedEventState;
     HWND mCachedWinlessPluginHWND;
     HWND mWinlessPopupSurrogateHWND;
     nsIntPoint mPluginSize;
     nsIntPoint mPluginOffset;
+    WNDPROC mWinlessThrottleOldWndProc;
 #endif
 
     friend class ChildAsyncCall;
@@ -323,7 +357,9 @@ private:
 #if defined(OS_MACOSX)
 private:
     CGColorSpaceRef mShColorSpace;
-    CGContextRef mShContext;
+    CGContextRef    mShContext;
+    int16_t         mDrawingModel;
+    nsCARenderer    mCARenderer;
 #endif
 };
 

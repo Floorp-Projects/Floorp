@@ -40,7 +40,6 @@
 #include "nsIStyleRuleProcessor.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsIPresShell.h"
 #include "nsIXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsXBLResourceLoader.h"

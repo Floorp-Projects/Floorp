@@ -46,7 +46,6 @@
 #include "nsIForm.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsGUIEvent.h"
 #include "nsIEventStateManager.h"
 #include "nsEventDispatcher.h"
@@ -136,6 +135,8 @@ nsHTMLLabelElement::~nsHTMLLabelElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLLabelElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLLabelElement, nsGenericElement) 
 
+
+DOMCI_DATA(HTMLLabelElement, nsHTMLLabelElement)
 
 // QueryInterface implementation for nsHTMLLabelElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLLabelElement)
@@ -383,6 +384,7 @@ nsHTMLLabelElement::PerformAccesskey(PRBool aKeyCausesActivation,
     // Click on it if the users prefs indicate to do so.
     nsMouseEvent event(aIsTrustedEvent, NS_MOUSE_CLICK,
                        nsnull, nsMouseEvent::eReal);
+    event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD;
 
     nsAutoPopupStatePusher popupStatePusher(aIsTrustedEvent ?
                                             openAllowed : openAbused);

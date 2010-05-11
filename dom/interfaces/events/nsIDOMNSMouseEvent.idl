@@ -43,12 +43,22 @@
  * by providing various information related to the mouse event.
  */
 
-[scriptable, uuid(1b8e528d-7dca-44ee-8ee6-c44594ebcef1)]
+[scriptable, uuid(f5dd5fbb-f4ff-4277-819c-f31aa1dafc32)]
 interface nsIDOMNSMouseEvent : nsIDOMMouseEvent
 {
   // Finger or touch pressure event value
   // ranges between 0.0 and 1.0
   readonly attribute float mozPressure;
+
+  const unsigned short    MOZ_SOURCE_UNKNOWN    = 0;
+  const unsigned short    MOZ_SOURCE_MOUSE      = 1;
+  const unsigned short    MOZ_SOURCE_PEN        = 2;
+  const unsigned short    MOZ_SOURCE_ERASER     = 3;
+  const unsigned short    MOZ_SOURCE_CURSOR     = 4;
+  const unsigned short    MOZ_SOURCE_TOUCH      = 5;
+  const unsigned short    MOZ_SOURCE_KEYBOARD   = 6;
+
+  readonly attribute unsigned short mozInputSource;
 
   void                initNSMouseEvent(in DOMString typeArg,
                                        in boolean canBubbleArg,
@@ -65,5 +75,6 @@ interface nsIDOMNSMouseEvent : nsIDOMMouseEvent
                                        in boolean metaKeyArg,
                                        in unsigned short buttonArg,
                                        in nsIDOMEventTarget relatedTargetArg,
-                                       in float pressure);
+                                       in float pressure,
+                                       in unsigned short inputSourceArg);
 };

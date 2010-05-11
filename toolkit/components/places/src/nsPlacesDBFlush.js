@@ -48,7 +48,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-const kXPComShutdown = "xpcom-shutdown";
+const kTopicShutdown = "places-shutdown";
 const kSyncFinished = "places-sync-finished";
 const kDebugStopSync = "places-debug-stop-sync";
 const kDebugStartSync = "places-debug-start-sync";
@@ -84,7 +84,7 @@ function nsPlacesDBFlush()
   // Register observers
   this._os = Cc["@mozilla.org/observer-service;1"].
              getService(Ci.nsIObserverService);
-  this._os.addObserver(this, kXPComShutdown, false);
+  this._os.addObserver(this, kTopicShutdown, false);
   this._os.addObserver(this, kDebugStopSync, false);
   this._os.addObserver(this, kDebugStartSync, false);
 
@@ -118,8 +118,8 @@ nsPlacesDBFlush.prototype = {
 
   observe: function DBFlush_observe(aSubject, aTopic, aData)
   {
-    if (aTopic == kXPComShutdown) {
-      this._os.removeObserver(this, kXPComShutdown);
+    if (aTopic == kTopicShutdown) {
+      this._os.removeObserver(this, kTopicShutdown);
       this._os.removeObserver(this, kDebugStopSync);
       this._os.removeObserver(this, kDebugStartSync);
 
@@ -134,7 +134,7 @@ nsPlacesDBFlush.prototype = {
       // Other components could still make changes to history at this point,
       // for example to clear private data on shutdown, so here we dispatch
       // an event to the main thread so that we will sync after
-      // xpcom-shutdown ensuring all data have been saved.
+      // Places shutdown ensuring all data have been saved.
       let tm = Cc["@mozilla.org/thread-manager;1"].
           getService(Ci.nsIThreadManager);
       tm.mainThread.dispatch({

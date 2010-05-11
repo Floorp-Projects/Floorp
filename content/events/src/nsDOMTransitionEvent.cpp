@@ -37,6 +37,9 @@
 
 #include "nsDOMTransitionEvent.h"
 #include "nsGUIEvent.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIClassInfo.h"
+#include "nsIXPCScriptable.h"
 
 nsDOMTransitionEvent::nsDOMTransitionEvent(nsPresContext *aPresContext,
                                            nsTransitionEvent *aEvent)
@@ -61,6 +64,8 @@ nsDOMTransitionEvent::~nsDOMTransitionEvent()
     mEvent = nsnull;
   }
 }
+
+DOMCI_DATA(TransitionEvent, nsDOMTransitionEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMTransitionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTransitionEvent)

@@ -40,7 +40,6 @@
 #define __NS_SVGGENERICCONTAINERFRAME_H__
 
 #include "nsIDOMSVGGElement.h"
-#include "nsPresContext.h"
 #include "nsSVGContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "gfxMatrix.h"

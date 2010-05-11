@@ -467,7 +467,7 @@ PrivateBrowsingService.prototype = {
     }
   },
 
-  get helpInfo PBS_get_helpInfo() {
+  get helpInfo() {
     return "  -private            Enable private browsing mode.\n" +
            "  -private-toggle     Toggle private browsing mode.\n";
   },
@@ -477,14 +477,14 @@ PrivateBrowsingService.prototype = {
   /**
    * Return the current status of private browsing.
    */
-  get privateBrowsingEnabled PBS_get_privateBrowsingEnabled() {
+  get privateBrowsingEnabled() {
     return this._inPrivateBrowsing;
   },
 
   /**
    * Enter or leave private browsing mode.
    */
-  set privateBrowsingEnabled PBS_set_privateBrowsingEnabled(val) {
+  set privateBrowsingEnabled(val) {
     // Allowing observers to set the private browsing status from their
     // notification handlers is not desired, because it will change the
     // status of the service while it's in the process of another transition.
@@ -546,7 +546,7 @@ PrivateBrowsingService.prototype = {
   /**
    * Whether private browsing has been started automatically.
    */
-  get autoStarted PBS_get_autoStarted() {
+  get autoStarted() {
     return this._inPrivateBrowsing && this._autoStarted;
   },
 

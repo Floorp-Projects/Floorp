@@ -46,7 +46,6 @@
 
 // Forward declarations
 class nsIAtom;
-class nsPresContext;
 class nsIDOMEvent;
 class nsIContent;
 class nsIEventListenerManager;
@@ -72,8 +71,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x07734640, 0x0900, 0x480d, \
- { 0x97, 0x5a, 0x31, 0xc7, 0x0e, 0xcd, 0x15, 0x2b } }
+{ 0x51dcc330, 0x78f0, 0x47c9, \
+  { 0x95, 0x6f, 0xf9, 0x8a, 0x04, 0xb9, 0x74, 0x51 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -559,7 +558,7 @@ public:
    *         > 0 can be tabbed to in the order specified by this value
    * @return whether the content is focusable via mouse, kbd or script.
    */
-  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull)
+  virtual PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE)
   {
     if (aTabIndex) 
       *aTabIndex = -1; // Default, not tabbable
@@ -642,6 +641,14 @@ public:
    * @return the binding parent
    */
   virtual nsIContent *GetBindingParent() const = 0;
+
+  /**
+   * Returns the content node that is the parent of this node in the flattened
+   * tree.
+   *
+   * @return the flattened tree parent
+   */
+  nsIContent *GetFlattenedTreeParent() const;
 
   /**
    * Get the base URI for any relative URIs within this piece of

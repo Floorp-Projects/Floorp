@@ -37,10 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsOuterDocAccessible.h"
-#include "nsIAccessibilityService.h"
-#include "nsIAccessibleDocument.h"
+
+#include "nsAccessibilityService.h"
+#include "nsAccUtils.h"
+
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIContent.h"
 
@@ -122,7 +123,7 @@ nsOuterDocAccessible::CacheChildren()
   nsCOMPtr<nsIAccessible> innerAccessible;
   nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
   accService->GetAccessibleFor(innerNode, getter_AddRefs(innerAccessible));
-  nsRefPtr<nsAccessible> innerAcc(nsAccUtils::QueryAccessible(innerAccessible));
+  nsRefPtr<nsAccessible> innerAcc(do_QueryObject(innerAccessible));
   if (!innerAcc)
     return;
 

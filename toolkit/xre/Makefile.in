@@ -126,6 +126,7 @@ OS_CXXFLAGS += -fexceptions
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += MacApplicationDelegate.mm
+CMMSRCS += MacAutoreleasePool.mm
 endif
 
 ifdef MOZ_X11
@@ -201,7 +202,7 @@ LOCAL_INCLUDES += \
 	-I$(topsrcdir)/config \
 	$(NULL)
 
-CXXFLAGS += $(TK_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
+CXXFLAGS += $(TK_CFLAGS) $(MOZ_DBUS_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CXXFLAGS += $(MOZ_PANGO_CFLAGS)
@@ -249,6 +250,13 @@ ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
 INIARGS += --sourcerepo=$(SOURCE_REPO)
 endif
 endif
+
+GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt)
+GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
+ 
+DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID)
+
+$(srcdir)/nsAppRunner.cpp: $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
 
 platform.ini: FORCE
 	$(PYTHON) $(srcdir)/make-platformini.py --buildid=$(shell cat $(DEPTH)/config/buildid) $(INIARGS) $(topsrcdir)/config/milestone.txt > $@

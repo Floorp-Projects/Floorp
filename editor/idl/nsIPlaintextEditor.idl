@@ -44,18 +44,34 @@ interface nsIPlaintextEditor : nsISupports
 {
 
   // XXX Why aren't these in nsIEditor?
-  const long eEditorPlaintextMask       = 0x0001; /* only plain text entry is allowed via events */
-  const long eEditorSingleLineMask      = 0x0002; /* enter key and CR-LF handled specially */
-  const long eEditorPasswordMask        = 0x0004; /* text is not entered into content, only a representative character */
-  const long eEditorReadonlyMask        = 0x0008; /* editing events are disabled.  Editor may still accept focus. */
-  const long eEditorDisabledMask        = 0x0010; /* all events are disabled (like scrolling).  Editor will not accept focus. */
-  const long eEditorFilterInputMask     = 0x0020; /* text input is limited to certain character types, use mFilter */
-  const long eEditorMailMask            = 0x0040; /* use mail-compose editing rules */
-  const long eEditorUseAsyncUpdatesMask = 0x0080; /* prevent immediate reflows and view refreshes */
-  const long eEditorEnableWrapHackMask  = 0x0100; /* allow the editor to set font: monospace on the root node */
-  const long eEditorWidgetMask          = 0x0200; /* bit for widgets */
-  const long eEditorNoCSSMask           = 0x0400; /* this HTML editor should not create css styles */
-  const long eEditorAllowInteraction    = 0x0800; /*  */
+  // only plain text entry is allowed via events
+  const long eEditorPlaintextMask       = 0x0001;
+  // enter key and CR-LF handled specially
+  const long eEditorSingleLineMask      = 0x0002;
+  // text is not entered into content, only a representative character
+  const long eEditorPasswordMask        = 0x0004;
+  // editing events are disabled.  Editor may still accept focus.
+  const long eEditorReadonlyMask        = 0x0008;
+  // all events are disabled (like scrolling).  Editor will not accept focus.
+  const long eEditorDisabledMask        = 0x0010;
+  // text input is limited to certain character types, use mFilter
+  const long eEditorFilterInputMask     = 0x0020;
+  // use mail-compose editing rules
+  const long eEditorMailMask            = 0x0040;
+  // prevent immediate reflows and view refreshes
+  const long eEditorUseAsyncUpdatesMask = 0x0080;
+  // allow the editor to set font: monospace on the root node
+  const long eEditorEnableWrapHackMask  = 0x0100;
+  // bit for widgets (form elements)
+  const long eEditorWidgetMask          = 0x0200;
+  // this HTML editor should not create css styles
+  const long eEditorNoCSSMask           = 0x0400;
+  // whether HTML document specific actions are executed or not.
+  // e.g., if this flag is set, the editor doesn't handle Tab key.
+  // besides, anchors of HTML are not clickable.
+  const long eEditorAllowInteraction    = 0x0800;
+  // when this is set, the characters in password editor are always masked.
+  // see bug 530367 for the detail.
   const long eEditorDontEchoPassword    = 0x1000;
 
   /*

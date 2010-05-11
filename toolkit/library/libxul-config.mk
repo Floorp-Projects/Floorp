@@ -115,6 +115,7 @@ STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
 	gkgfx \
+	gfxutils \
 	$(NULL)
 
 ifdef MOZ_IPC
@@ -152,7 +153,6 @@ COMPONENT_LIBS += \
 	toolkitcomps \
 	pipboot \
 	pipnss \
-	mozfind \
 	appcomps \
 	$(NULL)
 
@@ -243,7 +243,6 @@ ifdef MOZ_RDF
 COMPONENT_LIBS += \
 	rdf \
 	windowds \
-	intlapp \
 	$(NULL)
 endif
 
@@ -302,13 +301,11 @@ STATIC_LIBS += gfxpsshar
 endif
 
 ifneq (,$(filter icon,$(MOZ_IMG_DECODERS)))
-ifndef MOZ_ENABLE_GTK2
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
-endif
 
-STATIC_LIBS += thebes layers
+STATIC_LIBS += thebes ycbcr
 COMPONENT_LIBS += gkgfxthebes
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
@@ -375,6 +372,10 @@ endif
 
 ifdef MOZ_NATIVE_HUNSPELL
 EXTRA_DSO_LDOPTS += $(MOZ_HUNSPELL_LIBS)
+endif
+
+ifdef MOZ_NATIVE_LIBEVENT
+EXTRA_DSO_LDOPTS += $(MOZ_LIBEVENT_LIBS)
 endif
 
 ifdef MOZ_SYDNEYAUDIO

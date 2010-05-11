@@ -104,7 +104,7 @@ test(
     do_check_eq(null, h); // "wildcard in wrong place worked"
 
     h = CSPHost.fromString("com");
-    do_check_eq(null, h); // "lone symbol should fail"
+    do_check_neq(null, h); // "lone symbol should not fail"
 
     h = CSPHost.fromString("f00b4r.com");
     do_check_neq(null, h); // "Numbers in hosts should work"

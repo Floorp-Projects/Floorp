@@ -53,6 +53,7 @@ nsIContentIterator.h \
 nsContentErrors.h \
 nsContentPolicyUtils.h \
 nsContentUtils.h \
+nsIContentUtils.h \
 nsIDocument.h \
 nsIDocumentObserver.h \
 nsIMutationObserver.h \
@@ -77,6 +78,7 @@ nsDOMFile.h \
 nsLineBreaker.h \
 nsReferencedElement.h \
 nsXMLNameSpaceMap.h \
+Element.h \
 $(NULL)
 
 ifndef DISABLE_XFORMS_HOOKS
@@ -107,7 +109,7 @@ XPIDLSRCS	= \
 		nsISelectionPrivate.idl  \
 		nsIScriptLoaderObserver.idl  \
 		nsISyncLoadDOMService.idl  \
-		nsIDragDropHandler.idl \
+		nsIDroppedLinkHandler.idl \
 		nsIScriptEventHandler.idl \
 		nsIScriptEventManager.idl \
 		nsIImageLoadingContent.idl \

@@ -101,7 +101,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   if (!result) {
     // We missed the cache. Resolve this pseudo-style.
     result = aPresContext->StyleSet()->
-      ResolveXULTreePseudoStyle(aContent, aPseudoElement,
+      ResolveXULTreePseudoStyle(aContent->AsElement(), aPseudoElement,
                                 aContext, aComparator).get();
 
     // Put the style context in our table, transferring the owning reference to the table.

@@ -58,6 +58,7 @@
 
 #include "jsobjinlines.h"
 
+
 using namespace js;
 
 Class js_BooleanClass = {
@@ -138,7 +139,7 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     if (!JS_IsConstructing(cx))
         rval->copy(bval);
     else
-        obj->fslots[JSSLOT_PRIMITIVE_THIS].copy(bval);
+        obj->setPrimitiveThis(bval);
     return true;
 }
 
@@ -151,7 +152,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
                          NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;
-    proto->fslots[JSSLOT_PRIMITIVE_THIS].setBoolean(false);
+    proto->setPrimitiveThis(JSVAL_FALSE);
     return proto;
 }
 

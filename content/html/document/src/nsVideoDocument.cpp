@@ -41,6 +41,9 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsHTMLMediaElement.h"
 #include "nsIDocShellTreeItem.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 class nsVideoDocument : public nsMediaDocument
 {
@@ -100,7 +103,7 @@ nsVideoDocument::CreateSyntheticVideoDocument(nsIChannel* aChannel,
   nsresult rv = nsMediaDocument::CreateSyntheticDocument();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIContent* body = GetBodyContent();
+  Element* body = GetBodyElement();
   if (!body) {
     NS_WARNING("no body on video document!");
     return NS_ERROR_FAILURE;

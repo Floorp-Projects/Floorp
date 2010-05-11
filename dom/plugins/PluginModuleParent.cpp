@@ -42,6 +42,7 @@
 
 #include "base/process_util.h"
 
+#include "mozilla/unused.h"
 #include "mozilla/ipc/SyncChannel.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
@@ -390,7 +391,7 @@ PluginModuleParent::NPP_Destroy(NPP instance,
     NPError retval = parentInstance->Destroy();
     instance->pdata = nsnull;
 
-    (void) PluginInstanceParent::Call__delete__(parentInstance);
+    unused << PluginInstanceParent::Call__delete__(parentInstance);
     return retval;
 }
 
@@ -547,10 +548,9 @@ PluginModuleParent::GetIdentifierForNPIdentifier(NPIdentifier aIdentifier)
             string.SetIsVoid(PR_TRUE);
         }
         ident = new PluginIdentifierParent(aIdentifier);
-        if (!SendPPluginIdentifierConstructor(ident, string, intval)) {
-            delete ident;
+        if (!SendPPluginIdentifierConstructor(ident, string, intval))
             return nsnull;
-        }
+
         mIdentifiers.Put(aIdentifier, ident);
     }
     return ident;
@@ -715,7 +715,8 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
     }
 
     PluginInstanceParent* parentInstance =
-        new PluginInstanceParent(this, instance, mNPNIface);
+        new PluginInstanceParent(this, instance,
+                                 nsDependentCString(pluginType), mNPNIface);
 
     if (!parentInstance->Init()) {
         delete parentInstance;
@@ -780,5 +781,51 @@ PluginModuleParent::AnswerProcessSomeEvents()
     PLUGIN_LOG_DEBUG(("... quitting mini nested loop; processed %i tasks", i));
 
     return true;
+}
+#endif
+
+bool
+PluginModuleParent::RecvProcessNativeEventsInRPCCall()
+{
+    PLUGIN_LOG_DEBUG(("%s", FULLFUNCTION));
+#if defined(OS_WIN)
+    ProcessNativeEventsInRPCCall();
+    return true;
+#else
+    NS_NOTREACHED(
+        "PluginInstanceParent::AnswerSetNestedEventState not implemented!");
+    return false;
+#endif
+}
+
+#ifdef OS_MACOSX
+#define DEFAULT_REFRESH_MS 20 // CoreAnimation: 50 FPS
+void
+PluginModuleParent::AddToRefreshTimer(PluginInstanceParent *aInstance) {
+    if (mCATimerTargets.Contains(aInstance)) {
+        return;
+    }
+
+    mCATimerTargets.AppendElement(aInstance);
+    if (mCATimerTargets.Length() == 1) {
+        mCATimer.Start(base::TimeDelta::FromMilliseconds(DEFAULT_REFRESH_MS),
+                       this, &PluginModuleParent::CAUpdate);
+    }
+}
+
+void
+PluginModuleParent::RemoveFromRefreshTimer(PluginInstanceParent *aInstance) {
+    PRBool visibleRemoved = mCATimerTargets.RemoveElement(aInstance);
+    if (visibleRemoved && mCATimerTargets.IsEmpty()) {
+        mCATimer.Stop();
+    }
+}
+
+void
+PluginModuleParent::CAUpdate() {
+    nsTObserverArray<PluginInstanceParent*>::ForwardIterator iter(mCATimerTargets);
+    while (iter.HasMore()) {
+        iter.GetNext()->Invalidate();
+    }
 }
 #endif

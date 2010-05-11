@@ -38,6 +38,9 @@
 
 #include "nsARIAGridAccessible.h"
 
+#include "nsAccUtils.h"
+
+#include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -765,7 +768,7 @@ nsresult
 nsARIAGridAccessible::SetARIASelected(nsIAccessible *aAccessible,
                                       PRBool aIsSelected, PRBool aNotify)
 {
-  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryAccessible(aAccessible);
+  nsRefPtr<nsAccessible> acc = do_QueryObject(aAccessible);
   nsCOMPtr<nsIDOMNode> node;
   acc->GetDOMNode(getter_AddRefs(node));
   NS_ENSURE_STATE(node);
@@ -1097,7 +1100,7 @@ nsARIAGridCellAccessible::GetARIAState(PRUint32 *aState, PRUint32 *aExtraState)
   if (nsAccUtils::Role(row) != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
-  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryAccessible(row);
+  nsRefPtr<nsAccessible> acc = do_QueryObject(row);
   nsCOMPtr<nsIDOMNode> rowNode;
   acc->GetDOMNode(getter_AddRefs(rowNode));
   NS_ENSURE_STATE(rowNode);

@@ -314,15 +314,7 @@ gfxWindowsPlatform::CreateFontGroup(const nsAString &aFamilies,
 #ifdef MOZ_FT2_FONTS
     return new gfxFT2FontGroup(aFamilies, aStyle);
 #else
-#ifdef CAIRO_HAS_DWRITE_FONT
-    if (GetDWriteFactory()) {
-        return new gfxDWriteFontGroup(aFamilies, aStyle, aUserFontSet);
-    } else {
-#endif
-        return new gfxFontGroup(aFamilies, aStyle, aUserFontSet);
-#ifdef CAIRO_HAS_DWRITE_FONT
-    }
-#endif
+    return new gfxFontGroup(aFamilies, aStyle, aUserFontSet);
 #endif
 }
 

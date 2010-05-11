@@ -54,6 +54,7 @@
 
 #include "plstr.h"
 #include "nsCRT.h"
+#include "mozilla/Services.h"
 
 #include "prefapi_private_data.h"
 
@@ -89,8 +90,8 @@ nsPrefBranch::nsPrefBranch(const char *aPrefRoot, PRBool aDefaultBranch)
   mPrefRootLength = mPrefRoot.Length();
   mIsDefault = aDefaultBranch;
 
-  nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService("@mozilla.org/observer-service;1");
+  nsCOMPtr<nsIObserverService> observerService =
+    mozilla::services::GetObserverService();
   if (observerService) {
     ++mRefCnt;    // Our refcnt must be > 0 when we call this, or we'll get deleted!
     // add weak so we don't have to clean up at shutdown

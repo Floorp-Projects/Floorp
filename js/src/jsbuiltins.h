@@ -48,7 +48,7 @@
 #undef THIS
 #endif
 
-enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_VOID, FAIL_COOKIE };
+enum JSTNErrType { INFALLIBLE, FAIL_STATUS, FAIL_NULL, FAIL_NEG, FAIL_VOID };
 enum { JSTN_ERRTYPE_MASK = 0x07, JSTN_UNBOX_AFTER = 0x08, JSTN_MORE = 0x10,
        JSTN_CONSTRUCTOR = 0x20 };
 
@@ -101,14 +101,6 @@ struct JSNativeTraceInfo {
     JSSpecializedNative     *specializations;
 };
 
-/*
- * We use a magic boxed pointer value to represent error conditions that
- * trigger a side exit. The address is so low that it should never be actually
- * in use. If it is, a performance regression occurs, not an actual runtime
- * error.
- */
-#define JSVAL_ERROR_COOKIE OBJECT_TO_JSVAL((JSObject*)0x10)
-
 /* Macros used by JS_DEFINE_CALLINFOn. */
 #ifdef DEBUG
 #define _JS_CI_NAME(op) ,#op
@@ -118,8 +110,8 @@ struct JSNativeTraceInfo {
 
 #define _JS_I32_ARGTYPE    nanojit::ARGTYPE_I
 #define _JS_I32_RETTYPE    nanojit::ARGTYPE_I
-#define _JS_F64_ARGTYPE    nanojit::ARGTYPE_F
-#define _JS_F64_RETTYPE    nanojit::ARGTYPE_F
+#define _JS_F64_ARGTYPE    nanojit::ARGTYPE_D
+#define _JS_F64_RETTYPE    nanojit::ARGTYPE_D
 #define _JS_PTR_ARGTYPE    nanojit::ARGTYPE_P
 #define _JS_PTR_RETTYPE    nanojit::ARGTYPE_P
 
@@ -160,7 +152,6 @@ struct ClosureVarInfo;
  *         INT32_RETRY: any negative value
  *         STRING_RETRY: NULL
  *         OBJECT_RETRY_NULL: NULL
- *         JSVAL_RETRY: JSVAL_ERROR_COOKIE
  *
  *     _RETRY function calls are faster than _FAIL calls.  Each _RETRY call
  *     saves two writes to cx->bailExit and a read from state->builtinStatus.
@@ -194,12 +185,12 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_PC                _JS_CTYPE(jsbytecode *,           _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVALPTR          _JS_CTYPE(jsval *,                _JS_PTR,"P", "", INFALLIBLE)
 #define _JS_CTYPE_JSVAL             _JS_JSVAL_CTYPE(                  _JS_PTR, "","v", INFALLIBLE)
-#define _JS_CTYPE_JSVAL_RETRY       _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_COOKIE)
 #define _JS_CTYPE_JSVAL_FAIL        _JS_JSVAL_CTYPE(                  _JS_PTR, --, --, FAIL_STATUS)
 #define _JS_CTYPE_JSID              _JS_CTYPE(jsid,                   _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_BOOL              _JS_CTYPE(JSBool,                 _JS_I32, "","i", INFALLIBLE)
 #define _JS_CTYPE_BOOL_RETRY        _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_VOID)
 #define _JS_CTYPE_BOOL_FAIL         _JS_CTYPE(JSBool,                 _JS_I32, --, --, FAIL_STATUS)
+#define _JS_CTYPE_BOOLPTR           _JS_CTYPE(JSBool *,               _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_INT32             _JS_CTYPE(int32,                  _JS_I32, "","i", INFALLIBLE)
 #define _JS_CTYPE_INT32_RETRY       _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_NEG)
 #define _JS_CTYPE_INT32_FAIL        _JS_CTYPE(int32,                  _JS_I32, --, --, FAIL_STATUS)
@@ -216,11 +207,12 @@ struct ClosureVarInfo;
 #define _JS_CTYPE_OBJECT            _JS_CTYPE(JSObject *,             _JS_PTR, "","o", INFALLIBLE)
 #define _JS_CTYPE_OBJECT_RETRY      _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_NULL)
 #define _JS_CTYPE_OBJECT_FAIL       _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_STATUS)
+#define _JS_CTYPE_OBJECTPTR         _JS_CTYPE(JSObject **,            _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CONSTRUCTOR_RETRY _JS_CTYPE(JSObject *,             _JS_PTR, --, --, FAIL_NULL | \
                                                                                   JSTN_CONSTRUCTOR)
 #define _JS_CTYPE_REGEXP            _JS_CTYPE(JSObject *,             _JS_PTR, "","r", INFALLIBLE)
 #define _JS_CTYPE_SCOPEPROP         _JS_CTYPE(JSScopeProperty *,      _JS_PTR, --, --, INFALLIBLE)
-#define _JS_CTYPE_INTERPSTATE       _JS_CTYPE(InterpState *,          _JS_PTR, --, --, INFALLIBLE)
+#define _JS_CTYPE_TRACERSTATE       _JS_CTYPE(TracerState *,          _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_FRAGMENT          _JS_CTYPE(nanojit::Fragment *,    _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_CLASS             _JS_CTYPE(js::Class *,            _JS_PTR, --, --, INFALLIBLE)
 #define _JS_CTYPE_DOUBLEPTR         _JS_CTYPE(double *,               _JS_PTR, --, --, INFALLIBLE)
@@ -560,9 +552,6 @@ JS_DECLARE_CALLINFO(js_SetCallArg)
 JS_DECLARE_CALLINFO(js_CloneFunctionObject)
 JS_DECLARE_CALLINFO(js_CreateCallObjectOnTrace)
 JS_DECLARE_CALLINFO(js_Arguments)
-
-/* Defined in jsiter.cpp. */
-JS_DECLARE_CALLINFO(js_CloseIterator)
 
 /* Defined in jsnum.cpp. */
 JS_DECLARE_CALLINFO(js_NumberToString)

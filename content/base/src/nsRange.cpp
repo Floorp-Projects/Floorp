@@ -238,6 +238,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsRange)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsRange)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsRange)
 
+DOMCI_DATA(Range, nsRange)
+
 // QueryInterface implementation for nsRange
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsRange)
   NS_INTERFACE_MAP_ENTRY(nsIDOMRange)
@@ -867,8 +869,8 @@ RangeSubtreeIterator::Init(nsIDOMRange *aRange)
     PRInt32 startIndex;
     aRange->GetStartOffset(&startIndex);
     nsCOMPtr<nsINode> iNode = do_QueryInterface(node);
-    if (iNode->IsNodeOfType(nsINode::eELEMENT) && 
-        PRInt32(iNode->GetChildCount()) == startIndex) {
+    if (iNode->IsElement() && 
+        PRInt32(iNode->AsElement()->GetChildCount()) == startIndex) {
       mStart = node;
     }
   }
@@ -887,7 +889,7 @@ RangeSubtreeIterator::Init(nsIDOMRange *aRange)
     PRInt32 endIndex;
     aRange->GetEndOffset(&endIndex);
     nsCOMPtr<nsINode> iNode = do_QueryInterface(node);
-    if (iNode->IsNodeOfType(nsINode::eELEMENT) && endIndex == 0) {
+    if (iNode->IsElement() && endIndex == 0) {
       mEnd = node;
     }
   }
@@ -1343,10 +1345,10 @@ nsresult nsRange::CutContents(nsIDOMDocumentFragment** aFragment)
     if (!handled && (node == endContainer || node == startContainer))
     {
       nsCOMPtr<nsINode> iNode = do_QueryInterface(node);
-      if (iNode && iNode->IsNodeOfType(nsINode::eELEMENT) &&
+      if (iNode && iNode->IsElement() &&
           ((node == endContainer && endOffset == 0) ||
            (node == startContainer &&
-            PRInt32(iNode->GetChildCount()) == startOffset)))
+            PRInt32(iNode->AsElement()->GetChildCount()) == startOffset)))
       {
         if (retval) {
           nsCOMPtr<nsIDOMNode> clone;
@@ -1622,10 +1624,11 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   {
     nsCOMPtr<nsIDOMNode> node(iter.GetCurrentNode());
     nsCOMPtr<nsINode> iNode = do_QueryInterface(node);
-    PRBool deepClone = !(iNode->IsNodeOfType(nsINode::eELEMENT)) ||
+    PRBool deepClone = !iNode->IsElement() ||
                        (!(iNode == mEndParent && mEndOffset == 0) &&
                         !(iNode == mStartParent &&
-                          mStartOffset == PRInt32(iNode->GetChildCount())));
+                          mStartOffset ==
+                            PRInt32(iNode->AsElement()->GetChildCount())));
 
     // Clone the current subtree!
 
@@ -2031,10 +2034,9 @@ NS_IMETHODIMP
 nsRange::CreateContextualFragment(const nsAString& aFragment,
                                   nsIDOMDocumentFragment** aReturn)
 {
-  nsCOMPtr<nsIDOMNode> start = do_QueryInterface(mStartParent);
   if (mIsPositioned) {
-    return nsContentUtils::CreateContextualFragment(start, aFragment, PR_TRUE,
-                                                    aReturn);
+    return nsContentUtils::CreateContextualFragment(mStartParent, aFragment,
+                                                    PR_TRUE, aReturn);
   }
   return NS_ERROR_FAILURE;
 }
@@ -2070,18 +2072,20 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
     nsIFrame* relativeTo = nsLayoutUtils::GetContainingBlockForClientRect(textFrame);
     for (nsTextFrame* f = textFrame; f; f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
       PRInt32 fstart = f->GetContentOffset(), fend = f->GetContentEnd();
-      PRBool rtl = f->GetTextRun()->IsRightToLeft();
       if (fend <= aStartOffset || fstart >= aEndOffset)
         continue;
 
-      //overlaping with the offset we want
+      // overlapping with the offset we want
+      f->EnsureTextRun();
+      NS_ENSURE_TRUE(f->GetTextRun(), NS_ERROR_OUT_OF_MEMORY);
+      PRBool rtl = f->GetTextRun()->IsRightToLeft();
       nsRect r(f->GetOffsetTo(relativeTo), f->GetSize());
       if (fstart < aStartOffset) {
-        //aStartOffset is within this frame
+        // aStartOffset is within this frame
         ExtractRectFromOffset(f, relativeTo, aStartOffset, &r, rtl);
       }
       if (fend > aEndOffset) {
-        //aEndOffset is in the middle of this frame
+        // aEndOffset is in the middle of this frame
         ExtractRectFromOffset(f, relativeTo, aEndOffset, &r, !rtl);
       }
       aCallback->AddRect(r);

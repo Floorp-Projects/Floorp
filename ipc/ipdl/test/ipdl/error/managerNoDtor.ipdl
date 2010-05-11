@@ -1,4 +1,4 @@
-include protocol "managedNoDtor.ipdl";
+include protocol managedNoDtor;
 
 protocol managerNoDtor {
     manages managedNoDtor;

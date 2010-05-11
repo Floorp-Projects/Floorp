@@ -1,0 +1,72 @@
+<html>
+<head>
+  <title>NPCocoaEventWindowFocusChanged Tests</title>
+</head>
+<body onload="runTests()">
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+  <embed id="plugin2" type="application/x-test" width="400" height="400"></embed>
+  <script type="application/javascript">
+    function is(aLeft, aRight, aMessage) {
+      window.opener.SimpleTest.is(aLeft, aRight, aMessage);
+    }
+
+    function ok(aValue, aMessage) {
+      window.opener.SimpleTest.ok(aValue, aMessage);
+    }
+
+    function runTests() {
+      var plugin1 = document.getElementById("plugin1");
+      var plugin2 = document.getElementById("plugin2");
+
+      // Don't run any tests if we're not testing the Cocoa event model.
+      if (plugin1.getEventModel() != 1) {
+        window.opener.testsFinished();
+        return;
+      }
+
+      // The first plugin will have in-page focus for these tests.
+      plugin1.focus();
+
+      // The expected event count which applies to all instances.
+      // Initialize to 1 to account for the initial state event.
+      var expectedEventCount = 1;
+
+      // First make sure the plugins got an initial window focus event.
+      // Since this window was just opened it should be in the front. If
+      // the plugin has not been sent an initial window state then it will
+      // be in an unknown state and it will throw an exception.
+      try {
+        is(plugin1.getTopLevelWindowActivationState(), true, "Activation state should be: activated");
+        is(plugin1.getTopLevelWindowActivationEventCount(), expectedEventCount, "Window focus event count should be " + expectedEventCount);
+
+        is(plugin2.getTopLevelWindowActivationState(), true, "Activation state should be: activated");
+        is(plugin2.getTopLevelWindowActivationEventCount(), expectedEventCount, "Window focus event count should be " + expectedEventCount);
+      } catch (e) {
+        ok(false, "Plugin does not know its initial top-level window activation state!");
+      }
+
+      // Send our window to the back and make sure plugins were properly notified.
+      window.blur();
+      expectedEventCount++;
+
+      is(plugin1.getTopLevelWindowActivationState(), false, "Activation state should be: deactivated");
+      is(plugin1.getTopLevelWindowActivationEventCount(), expectedEventCount, "Window focus event count should be " + expectedEventCount);
+
+      is(plugin2.getTopLevelWindowActivationState(), false, "Activation state should be: deactivated");
+      is(plugin2.getTopLevelWindowActivationEventCount(), expectedEventCount, "Window focus event count should be " + expectedEventCount);
+
+      // Bring our window back to the front and make sure plugins were properly notified.
+      window.focus();
+      expectedEventCount++;
+
+      is(plugin1.getTopLevelWindowActivationState(), true, "Activation state should be: activated");
+      is(plugin1.getTopLevelWindowActivationEventCount(), expectedEventCount, "Window focus event count should be " + expectedEventCount);
+
+      is(plugin2.getTopLevelWindowActivationState(), true, "Activation state should be: activated");
+      is(plugin2.getTopLevelWindowActivationEventCount(), expectedEventCount, "Window focus event count should be " + expectedEventCount);
+
+      window.opener.testsFinished();
+    }
+  </script>
+</body>
+</html>

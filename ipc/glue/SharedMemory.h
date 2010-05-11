@@ -18,7 +18,7 @@
  *
  * The Initial Developer of the Original Code is
  *   The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2009-2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -40,8 +40,6 @@
 #ifndef mozilla_ipc_SharedMemory_h
 #define mozilla_ipc_SharedMemory_h
 
-#include "base/shared_memory.h"
-
 #include "nsDebug.h"
 
 //
@@ -59,35 +57,25 @@ enum Rights {
 namespace mozilla {
 namespace ipc {
 
-class SharedMemory : public base::SharedMemory
+class SharedMemory
 {
 public:
-  typedef base::SharedMemoryHandle SharedMemoryHandle;
+  enum SharedMemoryType {
+    TYPE_BASIC,
+    TYPE_SYSV,
+    TYPE_UNKNOWN
+  };
 
-  SharedMemory() :
-    base::SharedMemory(),
-    mSize(0)
-  {
-  }
+  virtual ~SharedMemory() { }
 
-  SharedMemory(const SharedMemoryHandle& aHandle) :
-    base::SharedMemory(aHandle, false),
-    mSize(0)
-  {
-  }
+  virtual size_t Size() const = 0;
 
-  bool Map(size_t nBytes)
-  {
-    bool ok = base::SharedMemory::Map(nBytes);
-    if (ok)
-      mSize = nBytes;
-    return ok;
-  }
+  virtual void* memory() const = 0;
 
-  size_t Size()
-  {
-    return mSize;
-  }
+  virtual bool Create(size_t size) = 0;
+  virtual bool Map(size_t nBytes) = 0;
+
+  virtual SharedMemoryType Type() const = 0;
 
   void
   Protect(char* aAddr, size_t aSize, int aRights)
@@ -112,10 +100,6 @@ public:
 
   static void SystemProtect(char* aAddr, size_t aSize, int aRights);
   static size_t SystemPageSize();
-
-private:
-  // NB: we have to track this because shared_memory_win.cc doesn't
-  size_t mSize;
 };
 
 } // namespace ipc

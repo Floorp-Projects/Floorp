@@ -45,7 +45,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
 #include "nsIEventStateManager.h"

@@ -15,7 +15,8 @@ function test()
     {elem: 'd', expected: expectScrollVert},
     {elem: 'e', expected: expectScrollVert},
     {elem: 'f', expected: expectScrollNone},
-    {elem: 'g', expected: expectScrollBoth}
+    {elem: 'g', expected: expectScrollBoth},
+    {elem: 'h', expected: expectScrollNone}
   ];
 
   var doc;
@@ -62,6 +63,7 @@ function test()
     <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option>\
     <option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option><option>a</option></select>\
     <div id="g" style="width: 99px; height: 99px; padding: 10px; border: 10px solid black; margin: 10px; overflow: auto;"><div style="width: 100px; height: 100px;"></div></div>\
+    <div id="h" style="width: 100px; height: 100px; overflow: -moz-hidden-unscrollable;"><div style="width: 200px; height: 200px;"></div></div>\
     </body>';
   gBrowser.selectedBrowser.addEventListener("pageshow", onLoad, false);
   gBrowser.loadURI(dataUri);

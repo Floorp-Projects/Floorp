@@ -545,7 +545,7 @@ nsCookieService::Init()
   if (NS_FAILED(rv))
     COOKIE_LOGSTRING(PR_LOG_WARNING, ("Init(): InitDB() gave error %x", rv));
 
-  mObserverService = do_GetService("@mozilla.org/observer-service;1");
+  mObserverService = mozilla::services::GetObserverService();
   if (mObserverService) {
     mObserverService->AddObserver(this, "profile-before-change", PR_TRUE);
     mObserverService->AddObserver(this, "profile-do-change", PR_TRUE);

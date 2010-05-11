@@ -38,6 +38,9 @@
 #include "nsDOMScrollAreaEvent.h"
 #include "nsGUIEvent.h"
 #include "nsClientRect.h"
+#include "nsDOMClassInfoID.h"
+#include "nsIClassInfo.h"
+#include "nsIXPCScriptable.h"
 
 nsDOMScrollAreaEvent::nsDOMScrollAreaEvent(nsPresContext *aPresContext,
                                            nsScrollAreaEvent *aEvent)
@@ -58,6 +61,8 @@ nsDOMScrollAreaEvent::~nsDOMScrollAreaEvent()
 
 NS_IMPL_ADDREF_INHERITED(nsDOMScrollAreaEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMScrollAreaEvent, nsDOMUIEvent)
+
+DOMCI_DATA(ScrollAreaEvent, nsDOMScrollAreaEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMScrollAreaEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScrollAreaEvent)

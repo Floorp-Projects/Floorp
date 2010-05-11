@@ -71,6 +71,9 @@ class Visitor:
     def visitTypedef(self, tdef):
         tdef.fromtype.accept(self)
 
+    def visitUsing(self, us):
+        us.type.accept(self)
+
     def visitForwardDecl(self, fd):
         pass
 
@@ -384,6 +387,11 @@ class Typedef(Node):
         self.fromtype = fromtype
         self.totypename = totypename
 
+class Using(Node):
+    def __init__(self, type):
+        Node.__init__(self)
+        self.type = type
+
 class ForwardDecl(Node):
     def __init__(self, pqname, cls=0, struct=0):
         assert (not cls and struct) or (cls and not struct)
@@ -447,7 +455,7 @@ class FriendClassDecl(Node):
 
 class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
-                 virtual=0, const=0, pure=0, static=0,
+                 virtual=0, const=0, pure=0, static=0, warn_unused=0,
                  typeop=None):
         assert not (virtual and static)
         assert not pure or virtual      # pure => virtual
@@ -467,6 +475,7 @@ class MethodDecl(Node):
         self.const = const              # bool
         self.pure = pure                # bool
         self.static = static            # bool
+        self.warn_unused = warn_unused  # bool
         self.typeop = typeop            # Type or None
 
     def __deepcopy__(self, memo):
@@ -474,7 +483,7 @@ class MethodDecl(Node):
             self.name,
             copy.deepcopy(self.params, memo),
             copy.deepcopy(self.ret, memo),
-            self.virtual, self.const, self.pure, self.static,
+            self.virtual, self.const, self.pure, self.static, self.warn_unused,
             copy.deepcopy(self.typeop, memo))
 
 class MethodDefn(Block):
@@ -657,6 +666,7 @@ class StmtDecl(Node):
     def __init__(self, decl, init=None, initargs=None):
         assert not (init and initargs)
         assert not isinstance(init, str) # easy to confuse with Decl
+        assert not isinstance(init, list)
         assert not isinstance(decl, tuple)
         
         Node.__init__(self)

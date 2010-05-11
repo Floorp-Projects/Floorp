@@ -46,8 +46,6 @@
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMClassInfo.h"
-#include "nsIPresShell.h"
-#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
@@ -276,6 +274,8 @@ NS_IMPL_CYCLE_COLLECTION_2(nsTreeSelection, mTree, mCurrentColumn)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeSelection)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeSelection)
+
+DOMCI_DATA(TreeSelection, nsTreeSelection)
 
 // QueryInterface implementation for nsBoxObject
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeSelection)

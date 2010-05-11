@@ -1,0 +1,84 @@
+<html>
+<head>
+    <script type="text/javascript" src="../MochiKit/Base.js"></script>
+    <script type="text/javascript" src="../MochiKit/Iter.js"></script>
+    <script type="text/javascript" src="../MochiKit/DOM.js"></script>
+    <script type="text/javascript" src="../MochiKit/Style.js"></script>
+    <script type="text/javascript" src="../MochiKit/Logging.js"></script>
+    <script type="text/javascript" src="../MochiKit/Color.js"></script>
+    <script type="text/javascript" src="SimpleTest/SimpleTest.js"></script>        
+    <link rel="stylesheet" type="text/css" href="SimpleTest/test.css">
+    <style type="text/css">.redtext {color: red}</style>
+</head>
+<body>
+<div style="position:absolute; top: 0px; left:0px; width:0px; height:0px">
+    <span style="color: red" id="c_direct"></span>
+    <span class="redtext" id="c_indirect"></span>
+</div>
+<pre id="test">
+<script type="text/javascript" src="test_Color.js"></script>
+<script type="text/javascript">
+try {
+        
+    var t = {ok:ok, is:is};
+    tests.test_Color({ok:ok, is:is});
+    is(
+        Color.fromText(SPAN()).toHexString(),
+        "#000000",
+        "fromText no style"
+    );
+
+    is(
+        Color.fromText("c_direct").toHexString(),
+        Color.fromName("red").toHexString(),
+        "fromText direct style"
+    );
+
+    is(
+        Color.fromText("c_indirect").toHexString(),
+        Color.fromName("red").toHexString(),
+        "fromText indirect style"
+    );
+
+    is(
+        Color.fromComputedStyle("c_direct", "color").toHexString(),
+        Color.fromName("red").toHexString(),
+        "fromComputedStyle direct style"
+    );
+
+    is(
+        Color.fromComputedStyle("c_indirect", "color").toHexString(),
+        Color.fromName("red").toHexString(),
+        "fromComputedStyle indirect style"
+    );
+
+    is(
+        Color.fromBackground((SPAN(null, 'test'))).toHexString(),
+        Color.fromName("white").toHexString(),
+        "fromBackground with DOM"
+    );
+
+
+    // Done!
+
+    ok( true, "test suite finished!");
+    
+} catch (err) {
+    
+    var s = "test suite failure!\n";
+    var o = {};
+    var k = null;
+    for (k in err) {
+        // ensure unique keys?!
+        if (!o[k]) {
+            s +=  k + ": " + err[k] + "\n";
+            o[k] = err[k];
+        }
+    }
+    ok ( false, s );
+
+}
+</script>
+</pre>
+</body>
+</html>

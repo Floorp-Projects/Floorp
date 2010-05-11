@@ -40,10 +40,8 @@ const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
 const NS_APP_HISTORY_50_FILE = "UHist";
 const NS_APP_BOOKMARKS_50_FILE = "BMarks";
 
-const TOPIC_EXPIRATION_FINISHED = "places-expiration-finished";
-const TOPIC_SHUTDOWN = "xpcom-shutdown";
-const TOPIC_PLACES_INIT_COMPLETE = "places-init-complete";
-const TOPIC_PLACES_DATABASE_LOCKED = "places-database-locked";
+// Backwards compatible consts, use PlacesUtils properties if possible.
+const TOPIC_GLOBAL_SHUTDOWN = "profile-before-change";
 
 // Shortcuts to transactions type.
 const TRANSITION_LINK = Ci.nsINavHistoryService.TRANSITION_LINK;
@@ -68,7 +66,7 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "PlacesUtils", function() {
-  Cu.import("resource://gre/modules/utils.js");
+  Cu.import("resource://gre/modules/PlacesUtils.jsm");
   return PlacesUtils;
 });
 
@@ -341,11 +339,11 @@ function setPageTitle(aURI, aTitle) {
 function waitForClearHistory(aCallback) {
   let observer = {
     observe: function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, TOPIC_EXPIRATION_FINISHED);
+      Services.obs.removeObserver(this, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
       aCallback();
     }
   };
-  Services.obs.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+  Services.obs.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
   PlacesUtils.bhistory.removeAllPages();
 }
@@ -358,15 +356,7 @@ function shutdownPlaces()
 {
   let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
            getService(Ci.nsIObserver);
-  hs.observe(null, TOPIC_SHUTDOWN, null);
-
-  let sync = Cc["@mozilla.org/places/sync;1"].
-             getService(Ci.nsIObserver);
-  sync.observe(null, TOPIC_SHUTDOWN, null);
-
-  let expire = Cc["@mozilla.org/places/expiration;1"].
-               getService(Ci.nsIObserver);
-  expire.observe(null, TOPIC_SHUTDOWN, null);
+  hs.observe(null, TOPIC_GLOBAL_SHUTDOWN, null);
 }
 
 
@@ -477,6 +467,26 @@ function check_JSON_backup() {
 }
 
 
+/**
+ * Compares two times in usecs, considering eventual platform timers skews.
+ *
+ * @param aTimeBefore
+ *        The older time in usecs.
+ * @param aTimeAfter
+ *        The newer time in usecs.
+ * @return true if times are ordered, false otherwise.
+ */
+function is_time_ordered(before, after) {
+  // Windows has an estimated 16ms timers precision, since Date.now() and
+  // PR_Now() use different code atm, the results can be unordered by this
+  // amount of time.  See bug 558745 and bug 557406.
+  let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
+  // Just to be safe we consider 20ms.
+  let skew = isWindows ? 20000000 : 0;
+  return after - before > -skew;
+}
+
+
 // These tests are known to randomly fail due to bug 507790 when database
 // flushes are active, so we turn off syncing for them.
 let (randomFailingSyncTests = [
@@ -493,6 +503,10 @@ let (randomFailingSyncTests = [
   "test_containersQueries_sorting.js",
   "test_browserGlue_smartBookmarks.js",
   "test_browserGlue_distribution.js",
+  "test_331487.js",
+  "test_tags.js",
+  "test_385829.js",
+  "test_405938_restore_queries.js",
 ]) {
   let currentTestFilename = do_get_file(_TEST_FILE[0], true).leafName;
   if (randomFailingSyncTests.indexOf(currentTestFilename) != -1) {

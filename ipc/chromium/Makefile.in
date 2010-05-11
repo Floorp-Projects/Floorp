@@ -51,9 +51,15 @@ EXPORT_LIBRARY = 1
 ENABLE_CXX_EXCEPTIONS = 1
 ACDEFINES =
 
+ifndef MOZ_NATIVE_LIBEVENT # {
 vpath %.c \
   $(srcdir)/src/third_party/libevent \
   $(NULL)
+else # } else {
+# message_pump_libevent.cc includes third_party/libevent/event.h,
+# which we put in $(DIST), see export rule below
+LOCAL_INCLUDES += -I$(DIST)
+endif # }
 
 vpath %.cc \
   $(srcdir)/src/base \
@@ -272,6 +278,8 @@ endif # } OS_LINUX
 
 # libevent
 
+ifndef MOZ_NATIVE_LIBEVENT # {
+
 ifdef OS_POSIX # {
 
 LOCAL_INCLUDES += -I$(srcdir)/src/third_party/libevent
@@ -308,4 +316,12 @@ endif # }
 
 endif # }
 
+endif # }
+
 include $(topsrcdir)/config/rules.mk
+
+ifdef MOZ_NATIVE_LIBEVENT # {
+export::
+	mkdir -p $(DIST)/third_party/libevent
+	echo "#include <event.h>" > $(DIST)/third_party/libevent/event.h
+endif # }

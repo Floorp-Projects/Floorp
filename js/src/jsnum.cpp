@@ -70,8 +70,10 @@
 #include "jsprf.h"
 #include "jsscope.h"
 #include "jsstr.h"
-#include "jsstrinlines.h"
 #include "jsvector.h"
+
+#include "jsobjinlines.h"
+#include "jsstrinlines.h"
 
 using namespace js;
 
@@ -288,7 +290,7 @@ Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!JS_IsConstructing(cx))
         *rval = v;
     else
-        obj->fslots[JSSLOT_PRIMITIVE_THIS] = v;
+        obj->setPrimitiveThis(v);
     return true;
 }
 
@@ -526,7 +528,7 @@ num_valueOf(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!JS_InstanceOf(cx, obj, &js_NumberClass, vp + 2))
         return JS_FALSE;
-    *vp = obj->fslots[JSSLOT_PRIMITIVE_THIS];
+    *vp = obj->getPrimitiveThis();
     return JS_TRUE;
 }
 
@@ -780,7 +782,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
-    proto->fslots[JSSLOT_PRIMITIVE_THIS] = JSVAL_ZERO;
+    proto->setPrimitiveThis(JSVAL_ZERO);
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return NULL;
 
@@ -829,6 +831,16 @@ NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize
     return numStr;
 }
 
+JSString * JS_FASTCALL
+js_IntToString(JSContext *cx, jsint i)
+{
+    if (jsuint(i) < INT_STRING_LIMIT)
+        return JSString::intString(i);
+
+    char buf[12];
+    return JS_NewStringCopyZ(cx, IntToCString(i, 10, buf, sizeof buf));
+}
+
 static JSString * JS_FASTCALL
 js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 {
@@ -860,12 +872,18 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
             return JSString::unitString(jschar('a' + i - 10));
         }
     }
+    JSThreadData *data = JS_THREAD_DATA(cx);
+    if (data->dtoaCache.s && data->dtoaCache.base == base && data->dtoaCache.d == d)
+        return data->dtoaCache.s;
     numStr = NumberToCString(cx, d, base, buf, sizeof buf);
     if (!numStr)
         return NULL;
     s = JS_NewStringCopyZ(cx, numStr);
     if (!(numStr >= buf && numStr < buf + sizeof buf))
         js_free(numStr);
+    data->dtoaCache.base = base;
+    data->dtoaCache.d = d;
+    data->dtoaCache.s = s;
     return s;
 }
 

@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=346485
+-->
+<head>
+  <title>Test for Bug 346485</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=346485">Mozilla Bug 346485</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <input id='a'>
+  <input id='b'>
+  <output id='o' for='a b'></output>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 346485 **/
+
+/**
+ * This test is testing DOMSettableTokenList used by the output element.
+ */
+
+var o = document.getElementById('o');
+
+is(o.htmlFor, 'a b',
+  "htmlFor IDL attribute should reflect for content attribute");
+
+is(o.htmlFor.value, 'a b',
+  "value should return the underlying string");
+
+is(o.htmlFor.length, 2, "Size should be '2'");
+
+ok(o.htmlFor.contains('a'), "It should contain 'a' token'");
+ok(!o.htmlFor.contains('c'), "It should not contain 'c' token");
+
+is(o.htmlFor.item(0), 'a', "First item is 'a' token'");
+is(o.htmlFor.item(42), null, "Out-of-range should return null");
+
+o.htmlFor.add('c');
+is(o.htmlFor, 'a b c', "'c' token should have been added");
+is(o.htmlFor.length, 3, "Size should be '3'");
+
+o.htmlFor.add('a');
+is(o.htmlFor, 'a b c', "Nothing should have changed");
+is(o.htmlFor.length, 3, "Size should be '3'");
+
+o.htmlFor.remove('a');
+is(o.htmlFor, 'b c', "'a' token should have been removed");
+is(o.htmlFor.length, 2, "Size should be '2'");
+
+o.htmlFor.remove('d');
+is(o.htmlFor, 'b c', "Nothing should have been removed");
+is(o.htmlFor.length, 2, "Size should be '2'");
+
+o.htmlFor.toggle('a');
+is(o.htmlFor, 'b c a', "'a' token should have been added");
+is(o.htmlFor.length, 3, "Size should be '3'");
+
+o.htmlFor.toggle('b');
+is(o.htmlFor, 'c a', "Nothing should have changed");
+is(o.htmlFor.length, 2, "Size should be '2'");
+
+o.htmlFor.value = "foo bar";
+is(o.htmlFor, 'foo bar', "The underlying string should have changed");
+is(o.htmlFor.length, 2, "Size should be '2'");
+ok(o.htmlFor.contains('foo'), "It should contain 'foo'");
+
+</script>
+</pre>
+</body>
+</html>

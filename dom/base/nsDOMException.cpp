@@ -70,6 +70,8 @@ public:                                                                      \
 classname::classname() {}                                                    \
 classname::~classname() {}                                                   \
                                                                              \
+DOMCI_DATA(domname, classname)                                               \
+                                                                             \
 NS_IMPL_ADDREF_INHERITED(classname, nsBaseDOMException)                      \
 NS_IMPL_RELEASE_INHERITED(classname, nsBaseDOMException)                     \
 NS_INTERFACE_MAP_BEGIN(classname)                                            \

@@ -180,7 +180,9 @@ FontTypeToOutPrecision(PRUint8 fontType)
 
 GDIFontEntry::GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
                                    PRBool aItalic, PRUint16 aWeight, gfxUserFontData *aUserFontData) : 
-    gfxFontEntry(aFaceName), mFontType(aFontType),
+    gfxFontEntry(aFaceName), 
+    mWindowsFamily(0), mWindowsPitch(0),
+    mFontType(aFontType),
     mForceGDI(PR_FALSE), mUnknownCMAP(PR_FALSE),
     mUnicodeFont(PR_FALSE),
     mCharset(), mUnicodeRanges()

@@ -44,11 +44,12 @@
 #include "cairo-svg.h"
 #include "cairo-analysis-surface-private.h"
 #include "cairo-image-info-private.h"
-#include "cairo-meta-surface-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-scaled-font-subsets-private.h"
+#include "cairo-surface-clipper-private.h"
 #include "cairo-svg-surface-private.h"
 
 typedef struct cairo_svg_page cairo_svg_page_t;
@@ -62,6 +63,11 @@ static const cairo_svg_version_t _cairo_svg_versions[] =
 };
 
 #define CAIRO_SVG_VERSION_LAST ARRAY_LENGTH (_cairo_svg_versions)
+
+static void
+_cairo_svg_surface_emit_path (cairo_output_stream_t *output,
+			      cairo_path_fixed_t    *path,
+			      cairo_matrix_t	    *ctm_inverse);
 
 static cairo_bool_t
 _cairo_svg_version_has_page_set_support (cairo_svg_version_t version)
@@ -99,7 +105,6 @@ struct cairo_svg_document {
     cairo_output_stream_t *xml_node_defs;
     cairo_output_stream_t *xml_node_glyphs;
 
-    unsigned int surface_id;
     unsigned int linear_pattern_id;
     unsigned int radial_pattern_id;
     unsigned int pattern_id;
@@ -109,17 +114,10 @@ struct cairo_svg_document {
 
     cairo_bool_t alpha_filter;
 
-    cairo_array_t meta_snapshots;
-
     cairo_svg_version_t svg_version;
 
     cairo_scaled_font_subsets_t *font_subsets;
 };
-
-typedef struct {
-    unsigned int id;
-    cairo_meta_surface_t *meta;
-} cairo_meta_snapshot_t;
 
 static cairo_status_t
 _cairo_svg_document_create (cairo_output_stream_t	 *stream,
@@ -278,8 +276,8 @@ _extract_svg_surface (cairo_surface_t		 *surface,
  * Since: 1.2
  **/
 void
-cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
-				       cairo_svg_version_t  	 version)
+cairo_svg_surface_restrict_to_version (cairo_surface_t		*abstract_surface,
+				       cairo_svg_version_t	 version)
 {
     cairo_svg_surface_t *surface = NULL; /* hide compiler warning */
     cairo_status_t status;
@@ -306,7 +304,7 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
  **/
 void
 cairo_svg_get_versions (cairo_svg_version_t const	**versions,
-                        int                     	 *num_versions)
+                        int				 *num_versions)
 {
     if (versions != NULL)
 	*versions = _cairo_svg_versions;
@@ -336,6 +334,73 @@ cairo_svg_version_to_string (cairo_svg_version_t version)
     return _cairo_svg_version_strings[version];
 }
 
+static cairo_bool_t
+_cliprect_covers_surface (cairo_svg_surface_t *surface,
+			  cairo_path_fixed_t *path)
+{
+    cairo_box_t box;
+
+    if (_cairo_path_fixed_is_box (path, &box)) {
+	if (box.p1.x <= 0 &&
+	    box.p1.y <= 0 &&
+	    _cairo_fixed_to_double (box.p2.x) >= surface->width &&
+	    _cairo_fixed_to_double (box.p2.y) >= surface->height)
+	{
+	    return TRUE;
+	}
+    }
+
+    return FALSE;
+}
+
+static cairo_status_t
+_cairo_svg_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
+						cairo_path_fixed_t	*path,
+						cairo_fill_rule_t	 fill_rule,
+						double			 tolerance,
+						cairo_antialias_t	 antialias)
+{
+    cairo_svg_surface_t *surface = cairo_container_of (clipper,
+						       cairo_svg_surface_t,
+						       clipper);
+    cairo_svg_document_t *document = surface->document;
+    unsigned int i;
+
+    if (path == NULL) {
+	for (i = 0; i < surface->clip_level; i++)
+	    _cairo_output_stream_printf (surface->xml_node, "</g>\n");
+
+	surface->clip_level = 0;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    /* skip trivial whole-page clips */
+    if (_cliprect_covers_surface (surface, path))
+	return CAIRO_STATUS_SUCCESS;
+
+    _cairo_output_stream_printf (document->xml_node_defs,
+				 "<clipPath id=\"clip%d\">\n"
+				 "  <path ",
+				 document->clip_id);
+    _cairo_svg_surface_emit_path (document->xml_node_defs, path, NULL);
+
+    _cairo_output_stream_printf (document->xml_node_defs,
+				 "/>\n"
+				 "</clipPath>\n");
+
+    _cairo_output_stream_printf (surface->xml_node,
+				 "<g clip-path=\"url(#clip%d)\" "
+				 "clip-rule=\"%s\">\n",
+				 document->clip_id,
+				 fill_rule == CAIRO_FILL_RULE_EVEN_ODD ?
+				 "evenodd" : "nonzero");
+
+    document->clip_id++;
+    surface->clip_level++;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_surface_t *
 _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 					cairo_content_t		 content,
@@ -359,8 +424,9 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     surface->document = _cairo_svg_document_reference (document);
 
     surface->clip_level = 0;
+    _cairo_surface_clipper_init (&surface->clipper,
+				 _cairo_svg_surface_clipper_intersect_clip_path);
 
-    surface->id = document->surface_id++;
     surface->base_clip = document->clip_id++;
     surface->is_base_clip_emitted = FALSE;
 
@@ -388,8 +454,6 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 
     paginated = _cairo_paginated_surface_create (&surface->base,
 					         surface->content,
-					         surface->width,
-						 surface->height,
 						 &cairo_svg_surface_paginated_backend);
     status = paginated->status;
     if (status == CAIRO_STATUS_SUCCESS) {
@@ -457,7 +521,7 @@ _cairo_svg_surface_store_page (cairo_svg_surface_t *surface)
 	return NULL;
     }
 
-    page.surface_id = surface->id;
+    page.surface_id = surface->base.unique_id;
     page.clip_level = surface->clip_level;
     page.xml_node = surface->xml_node;
 
@@ -468,11 +532,13 @@ _cairo_svg_surface_store_page (cairo_svg_surface_t *surface)
 
     surface->xml_node = stream;
     surface->clip_level = 0;
-
     for (i = 0; i < page.clip_level; i++)
 	_cairo_output_stream_printf (page.xml_node, "</g>\n");
 
-    return _cairo_array_index (&surface->page_set, surface->page_set.num_elements - 1);
+    _cairo_surface_clipper_reset (&surface->clipper);
+
+    return _cairo_array_index (&surface->page_set,
+			       surface->page_set.num_elements - 1);
 }
 
 static cairo_int_status_t
@@ -486,7 +552,6 @@ _cairo_svg_surface_copy_page (void *abstract_surface)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _cairo_memory_stream_copy (page->xml_node, surface->xml_node);
-    surface->clip_level = page->clip_level;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -596,7 +661,7 @@ _cairo_svg_path_close_path (void *closure)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_svg_surface_emit_path (cairo_output_stream_t *output,
 			      cairo_path_fixed_t    *path,
 			      cairo_matrix_t	    *ctm_inverse)
@@ -615,12 +680,9 @@ _cairo_svg_surface_emit_path (cairo_output_stream_t *output,
 					  _cairo_svg_path_curve_to,
 					  _cairo_svg_path_close_path,
 					  &info);
-    if (unlikely (status))
-	return status;
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     _cairo_output_stream_printf (output, "\"");
-
-    return status;
 }
 
 static cairo_int_status_t
@@ -642,9 +704,8 @@ _cairo_svg_document_emit_outline_glyph_data (cairo_svg_document_t	*document,
     _cairo_output_stream_printf (document->xml_node_glyphs,
 				 "<path style=\"stroke:none;\" ");
 
-    status = _cairo_svg_surface_emit_path (document->xml_node_glyphs, scaled_glyph->path, NULL);
-    if (unlikely (status))
-	return status;
+    _cairo_svg_surface_emit_path (document->xml_node_glyphs,
+				  scaled_glyph->path, NULL);
 
     _cairo_output_stream_printf (document->xml_node_glyphs,
 				 "/>\n");
@@ -787,6 +848,12 @@ _cairo_svg_surface_operators[] = {
 
     "xor", "plus",
     "color-dodge", /* FIXME: saturate ? */
+
+    "multiply",	"screen", "overlay",
+    "darken", "lighten",
+    "color-dodge", "color-burn",
+    "hard-light", "soft-light",
+    "difference", "exclusion"
 };
 
 static cairo_bool_t
@@ -841,22 +908,7 @@ _cairo_svg_surface_operation_supported (cairo_svg_surface_t	*surface,
 					cairo_operator_t	 op,
 					const cairo_pattern_t	*pattern)
 {
-    if (_cairo_svg_surface_analyze_operation (surface, op, pattern)
-	!= CAIRO_INT_STATUS_UNSUPPORTED)
-    {
-	return TRUE;
-    } else {
-	return FALSE;
-    }
-}
-
-static cairo_surface_t *
-_cairo_svg_surface_create_similar (void			*abstract_src,
-				   cairo_content_t	 content,
-				   int			 width,
-				   int			 height)
-{
-    return cairo_meta_surface_create (content, width, height);
+    return _cairo_svg_surface_analyze_operation (surface, op, pattern) != CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static cairo_status_t
@@ -887,12 +939,15 @@ _cairo_svg_surface_finish (void *abstract_surface)
     }
     _cairo_array_fini (&surface->page_set);
 
+    _cairo_surface_clipper_reset (&surface->clipper);
+
     status2 = _cairo_svg_document_destroy (document);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
 
     return status;
 }
+
 
 static void
 _cairo_svg_surface_emit_alpha_filter (cairo_svg_document_t *document)
@@ -1114,112 +1169,139 @@ _cairo_svg_surface_emit_operator_for_style (cairo_output_stream_t *output,
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t   *output,
-						 cairo_svg_surface_t	 *svg_surface,
-						 cairo_operator_t	  op,
-						 cairo_surface_pattern_t *pattern,
-						 int			  pattern_id,
-						 const cairo_matrix_t	 *parent_matrix,
-						 const char		 *extra_attributes)
+_cairo_svg_surface_emit_surface (cairo_svg_document_t *document,
+				 cairo_surface_t *surface)
 {
     cairo_rectangle_int_t extents;
+    cairo_bool_t is_bounded;
     cairo_status_t status;
-    cairo_matrix_t p2u;
 
-    status = _cairo_surface_get_extents (pattern->surface, &extents);
+    if (_cairo_user_data_array_get_data (&surface->user_data,
+					 (cairo_user_data_key_t *) document))
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    is_bounded = _cairo_surface_get_extents (surface, &extents);
+    assert (is_bounded);
+
+    _cairo_output_stream_printf (document->xml_node_defs,
+				 "<image id=\"image%d\" width=\"%d\" height=\"%d\"",
+				 surface->unique_id,
+				 extents.width, extents.height);
+
+    _cairo_output_stream_printf (document->xml_node_defs, " xlink:href=\"");
+
+    status = _cairo_surface_base64_encode (surface,
+					   document->xml_node_defs);
     if (unlikely (status))
 	return status;
+
+    _cairo_output_stream_printf (document->xml_node_defs, "\"/>\n");
+
+    /* and tag it */
+    return _cairo_user_data_array_set_data (&surface->user_data,
+					    (cairo_user_data_key_t *) document,
+					    document, NULL);
+}
+
+static cairo_status_t
+_cairo_svg_surface_emit_composite_surface_pattern (cairo_output_stream_t   *output,
+						   cairo_svg_surface_t	 *svg_surface,
+						   cairo_operator_t	  op,
+						   cairo_surface_pattern_t *pattern,
+						   int			  pattern_id,
+						   const cairo_matrix_t	 *parent_matrix,
+						   const char		 *extra_attributes)
+{
+    cairo_status_t status;
+    cairo_matrix_t p2u;
 
     p2u = pattern->base.matrix;
     status = cairo_matrix_invert (&p2u);
     /* cairo_pattern_set_matrix ensures the matrix is invertible */
     assert (status == CAIRO_STATUS_SUCCESS);
 
+    status = _cairo_svg_surface_emit_surface (svg_surface->document,
+					      pattern->surface);
+    if (unlikely (status))
+	return status;
+
     if (pattern_id != invalid_pattern_id) {
+	cairo_rectangle_int_t extents;
+	cairo_bool_t is_bounded;
+
+	is_bounded = _cairo_surface_get_extents (pattern->surface, &extents);
+	assert (is_bounded);
+
 	_cairo_output_stream_printf (output,
 				     "<pattern id=\"pattern%d\" "
 				     "patternUnits=\"userSpaceOnUse\" "
-				     "width=\"%d\" height=\"%d\"",
+				     "width=\"%d\" height=\"%d\" ",
 				     pattern_id,
 				     extents.width, extents.height);
-	_cairo_svg_surface_emit_transform (output, " patternTransform", &p2u, parent_matrix);
-	_cairo_output_stream_printf (output, ">\n");
+	_cairo_svg_surface_emit_transform (output,
+					   " patternTransform",
+					   &p2u, parent_matrix);
+	_cairo_output_stream_printf (output, ">\n  ");
     }
 
     _cairo_output_stream_printf (output,
-				 "  <image width=\"%d\" height=\"%d\"",
-				 extents.width, extents.height);
-
-    if (pattern_id == invalid_pattern_id) {
-	_cairo_svg_surface_emit_operator (output, svg_surface, op);
-	_cairo_svg_surface_emit_transform (output, " transform", &p2u, parent_matrix);
-    }
-
+				 "<use xlink:href=\"#image%d\"",
+				 pattern->surface->unique_id);
     if (extra_attributes)
 	_cairo_output_stream_printf (output, " %s", extra_attributes);
 
-    _cairo_output_stream_printf (output, " xlink:href=\"");
+    if (pattern_id == invalid_pattern_id) {
+	_cairo_svg_surface_emit_operator (output, svg_surface, op);
+	_cairo_svg_surface_emit_transform (output,
+					   " transform",
+					   &p2u, parent_matrix);
+    }
+    _cairo_output_stream_printf (output, "/>\n");
 
-    status = _cairo_surface_base64_encode (pattern->surface, output);
-
-    _cairo_output_stream_printf (output, "\"/>\n");
 
     if (pattern_id != invalid_pattern_id)
 	_cairo_output_stream_printf (output, "</pattern>\n");
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
-				      cairo_meta_surface_t *surface,
-				      int		   *id)
+_cairo_svg_surface_emit_recording_surface (cairo_svg_document_t      *document,
+					   cairo_recording_surface_t *source)
 {
     cairo_status_t status;
     cairo_surface_t *paginated_surface;
     cairo_svg_surface_t *svg_surface;
-    cairo_meta_snapshot_t new_snapshot;
     cairo_array_t *page_set;
 
     cairo_output_stream_t *contents;
-    cairo_meta_surface_t *meta;
-    cairo_meta_snapshot_t *snapshot;
-    unsigned int num_elements;
-    unsigned int i;
 
-    /* search in already emitted meta snapshots */
-    num_elements = document->meta_snapshots.num_elements;
-    for (i = 0; i < num_elements; i++) {
-	snapshot = _cairo_array_index (&document->meta_snapshots, i);
-	meta = snapshot->meta;
-	if (meta->commands.num_elements == surface->commands.num_elements &&
-	    _cairo_array_index (&meta->commands, 0) == _cairo_array_index (&surface->commands, 0)) {
-	    *id = snapshot->id;
-	    return CAIRO_STATUS_SUCCESS;
-	}
+    if (_cairo_user_data_array_get_data (&source->base.user_data,
+					 (cairo_user_data_key_t *) document))
+    {
+	return CAIRO_STATUS_SUCCESS;
     }
-
-    meta = (cairo_meta_surface_t *) _cairo_surface_snapshot (&surface->base);
-    if (unlikely (meta->base.status))
-	return meta->base.status;
 
     paginated_surface = _cairo_svg_surface_create_for_document (document,
-								meta->content,
-								meta->width_pixels,
-								meta->height_pixels);
-    if (paginated_surface->status) {
-	cairo_surface_destroy (&meta->base);
+								source->content,
+								source->extents_pixels.width,
+								source->extents_pixels.height);
+    if (unlikely (paginated_surface->status))
 	return paginated_surface->status;
-    }
 
-    svg_surface = (cairo_svg_surface_t *) _cairo_paginated_surface_get_target (paginated_surface);
+    svg_surface = (cairo_svg_surface_t *)
+    _cairo_paginated_surface_get_target (paginated_surface);
     cairo_surface_set_fallback_resolution (paginated_surface,
 					   document->owner->x_fallback_resolution,
 					   document->owner->y_fallback_resolution);
+    cairo_surface_set_device_offset (&svg_surface->base,
+				     -source->extents_pixels.x,
+				     -source->extents_pixels.y);
 
-    status = cairo_meta_surface_replay (&meta->base, paginated_surface);
+    status = _cairo_recording_surface_replay (&source->base, paginated_surface);
     if (unlikely (status)) {
-	cairo_surface_destroy (&meta->base);
 	cairo_surface_destroy (paginated_surface);
 	return status;
     }
@@ -1227,21 +1309,11 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
     cairo_surface_show_page (paginated_surface);
     status = cairo_surface_status (paginated_surface);
     if (unlikely (status)) {
-	cairo_surface_destroy (&meta->base);
 	cairo_surface_destroy (paginated_surface);
 	return status;
     }
 
-    new_snapshot.meta = meta;
-    new_snapshot.id = svg_surface->id;
-    status = _cairo_array_append (&document->meta_snapshots, &new_snapshot);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&meta->base);
-	cairo_surface_destroy (paginated_surface);
-	return status;
-    }
-
-    if (!svg_surface->is_base_clip_emitted) {
+    if (! svg_surface->is_base_clip_emitted) {
 	svg_surface->is_base_clip_emitted = TRUE;
 	_cairo_output_stream_printf (document->xml_node_defs,
 				     "<clipPath id=\"clip%d\">\n"
@@ -1252,19 +1324,19 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 				     svg_surface->height);
     }
 
-    if (meta->content == CAIRO_CONTENT_ALPHA) {
+    if (source->content == CAIRO_CONTENT_ALPHA) {
 	_cairo_svg_surface_emit_alpha_filter (document);
 	_cairo_output_stream_printf (document->xml_node_defs,
 				     "<g id=\"surface%d\" "
 				     "clip-path=\"url(#clip%d)\" "
 				     "filter=\"url(#alpha)\">\n",
-				     svg_surface->id,
+				     source->base.unique_id,
 				     svg_surface->base_clip);
     } else {
 	_cairo_output_stream_printf (document->xml_node_defs,
 				     "<g id=\"surface%d\" "
 				     "clip-path=\"url(#clip%d)\">\n",
-				     svg_surface->id,
+				     source->base.unique_id,
 				     svg_surface->base_clip);
     }
 
@@ -1287,44 +1359,39 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 
     _cairo_output_stream_printf (document->xml_node_defs, "</g>\n");
 
-    *id = new_snapshot.id;
-
     status = cairo_surface_status (paginated_surface);
     cairo_surface_destroy (paginated_surface);
 
-    /* FIXME: cairo_paginated_surface doesn't take a ref to the
-     * passed in target surface so we can't call destroy here.
-     * cairo_paginated_surface should be fixed, but for now just
-     * work around it. */
+    if (unlikely (status))
+	return status;
 
-    /* cairo_surface_destroy (svg_surface); */
-
-    return status;
+    /* and tag it */
+    return _cairo_user_data_array_set_data (&source->base.user_data,
+					    (cairo_user_data_key_t *) document,
+					    document, NULL);
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
-						cairo_svg_surface_t	*surface,
-						cairo_operator_t	 op,
-						cairo_surface_pattern_t	*pattern,
-						int			 pattern_id,
-						const cairo_matrix_t	*parent_matrix,
-						const char		*extra_attributes)
+_cairo_svg_surface_emit_composite_recording_pattern (cairo_output_stream_t	*output,
+						     cairo_svg_surface_t	*surface,
+						     cairo_operator_t	         op,
+						     cairo_surface_pattern_t	*pattern,
+						     int			 pattern_id,
+						     const cairo_matrix_t	*parent_matrix,
+						     const char			*extra_attributes)
 {
     cairo_svg_document_t *document = surface->document;
-    cairo_meta_surface_t *meta_surface;
+    cairo_recording_surface_t *recording_surface;
     cairo_matrix_t p2u;
     cairo_status_t status;
-    int id = 0;
 
     p2u = pattern->base.matrix;
     status = cairo_matrix_invert (&p2u);
     /* cairo_pattern_set_matrix ensures the matrix is invertible */
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    meta_surface = (cairo_meta_surface_t *) pattern->surface;
-
-    status = _cairo_svg_surface_emit_meta_surface (document, meta_surface, &id);
+    recording_surface = (cairo_recording_surface_t *) pattern->surface;
+    status = _cairo_svg_surface_emit_recording_surface (document, recording_surface);
     if (unlikely (status))
 	return status;
 
@@ -1334,15 +1401,15 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
 				     "patternUnits=\"userSpaceOnUse\" "
 				     "width=\"%d\" height=\"%d\"",
 				     pattern_id,
-				     (int) ceil (meta_surface->width_pixels),
-				     (int) ceil (meta_surface->height_pixels));
+				     recording_surface->extents.width,
+				     recording_surface->extents.height);
 	_cairo_svg_surface_emit_transform (output, " patternTransform", &p2u, parent_matrix);
 	_cairo_output_stream_printf (output, ">\n");
     }
 
     _cairo_output_stream_printf (output,
 				 "<use xlink:href=\"#surface%d\"",
-				 id);
+				 recording_surface->base.unique_id);
 
     if (pattern_id == invalid_pattern_id) {
 	_cairo_svg_surface_emit_operator (output, surface, op);
@@ -1370,13 +1437,19 @@ _cairo_svg_surface_emit_composite_pattern (cairo_output_stream_t   *output,
 					   const char		   *extra_attributes)
 {
 
-    if (_cairo_surface_is_meta (pattern->surface)) {
-	return _cairo_svg_surface_emit_composite_meta_pattern (output, surface, op, pattern,
-					    pattern_id, parent_matrix, extra_attributes);
+    if (_cairo_surface_is_recording (pattern->surface)) {
+	return _cairo_svg_surface_emit_composite_recording_pattern (output, surface,
+								    op, pattern,
+								    pattern_id,
+								    parent_matrix,
+								    extra_attributes);
     }
 
-    return _cairo_svg_surface_emit_composite_image_pattern (output, surface, op, pattern,
-					 pattern_id, parent_matrix, extra_attributes);
+    return _cairo_svg_surface_emit_composite_surface_pattern (output, surface,
+							      op, pattern,
+							      pattern_id,
+							      parent_matrix,
+							      extra_attributes);
 }
 
 static cairo_status_t
@@ -1710,7 +1783,9 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 				     document->radial_pattern_id,
 				     x1, y1,
 				     x1, y1, r1);
-	_cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", &p2u, parent_matrix);
+	_cairo_svg_surface_emit_transform (document->xml_node_defs,
+					   "gradientTransform",
+					   &p2u, parent_matrix);
 	_cairo_output_stream_printf (document->xml_node_defs, ">\n");
 
 	if (extend == CAIRO_EXTEND_NONE || n_stops < 1)
@@ -1975,10 +2050,14 @@ _cairo_svg_surface_fill_stroke (void			*abstract_surface,
 				cairo_matrix_t		*stroke_ctm_inverse,
 				double			 stroke_tolerance,
 				cairo_antialias_t	 stroke_antialias,
-				cairo_rectangle_int_t    *extents)
+				cairo_clip_t		*clip)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_status_t status;
+
+    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    if (unlikely (status))
+	return status;
 
     _cairo_output_stream_printf (surface->xml_node, "<path style=\"");
     status = _cairo_svg_surface_emit_fill_style (surface->xml_node, surface, fill_op,
@@ -1993,9 +2072,7 @@ _cairo_svg_surface_fill_stroke (void			*abstract_surface,
 
     _cairo_output_stream_printf (surface->xml_node, "\" ");
 
-    status = _cairo_svg_surface_emit_path (surface->xml_node, path, stroke_ctm_inverse);
-    if (unlikely (status))
-	return status;
+    _cairo_svg_surface_emit_path (surface->xml_node, path, stroke_ctm_inverse);
 
     _cairo_svg_surface_emit_transform (surface->xml_node, " transform", stroke_ctm, NULL);
     _cairo_output_stream_printf (surface->xml_node, "/>\n");
@@ -2011,7 +2088,7 @@ _cairo_svg_surface_fill (void			*abstract_surface,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
 			 cairo_antialias_t	 antialias,
-			 cairo_rectangle_int_t  *extents)
+			 cairo_clip_t		*clip)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -2021,6 +2098,10 @@ _cairo_svg_surface_fill (void			*abstract_surface,
 
     assert (_cairo_svg_surface_operation_supported (surface, op, source));
 
+    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    if (unlikely (status))
+	return status;
+
     _cairo_output_stream_printf (surface->xml_node, "<path style=\" stroke:none;");
     status = _cairo_svg_surface_emit_fill_style (surface->xml_node, surface, op, source, fill_rule, NULL);
     if (unlikely (status))
@@ -2028,16 +2109,14 @@ _cairo_svg_surface_fill (void			*abstract_surface,
 
     _cairo_output_stream_printf (surface->xml_node, "\" ");
 
-    status = _cairo_svg_surface_emit_path (surface->xml_node, path, NULL);
-    if (unlikely (status))
-	return status;
+    _cairo_svg_surface_emit_path (surface->xml_node, path, NULL);
 
     _cairo_output_stream_printf (surface->xml_node, "/>\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t
+static cairo_bool_t
 _cairo_svg_surface_get_extents (void		        *abstract_surface,
 				cairo_rectangle_int_t   *rectangle)
 {
@@ -2047,13 +2126,13 @@ _cairo_svg_surface_get_extents (void		        *abstract_surface,
     rectangle->y = 0;
 
     /* XXX: The conversion to integers here is pretty bogus, (not to
-     * mention the aribitray limitation of width to a short(!). We
+     * mention the arbitrary limitation of width to a short(!). We
      * may need to come up with a better interface for get_size.
      */
-    rectangle->width  = (int) ceil (surface->width);
-    rectangle->height = (int) ceil (surface->height);
+    rectangle->width  = ceil (surface->width);
+    rectangle->height = ceil (surface->height);
 
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 static cairo_status_t
@@ -2100,51 +2179,62 @@ static cairo_int_status_t
 _cairo_svg_surface_paint (void		    *abstract_surface,
 			  cairo_operator_t   op,
 			  const cairo_pattern_t   *source,
-			  cairo_rectangle_int_t   *extents)
+			  cairo_clip_t		  *clip)
 {
     cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_svg_surface_analyze_operation (surface, op, source);
-
-    assert (_cairo_svg_surface_operation_supported (surface, op, source));
-
     /* Emulation of clear and source operators, when no clipping region
      * is defined. We just delete existing content of surface root node,
      * and exit early if operator is clear.
-     * XXX: optimization of SOURCE operator doesn't work, since analyze
-     * above always return FALSE. In order to make it work, we need a way
-     * to know if there's an active clipping path.
-     * Optimization of CLEAR works because of a test in paginated surface,
-     * and an optimization in meta surface. */
-    if (surface->clip_level == 0 && op == CAIRO_OPERATOR_CLEAR) {
-	status = _cairo_output_stream_destroy (surface->xml_node);
-	if (unlikely (status)) {
-	    surface->xml_node = NULL;
-	    return status;
-	}
-
-	surface->xml_node = _cairo_memory_stream_create ();
-	if (_cairo_output_stream_get_status (surface->xml_node)) {
-	    status = _cairo_output_stream_destroy (surface->xml_node);
-	    surface->xml_node = NULL;
-	    return status;
-	}
-
-	if (op == CAIRO_OPERATOR_CLEAR) {
-	    if (surface->content == CAIRO_CONTENT_COLOR) {
-		_cairo_output_stream_printf (surface->xml_node,
-					     "<rect "
-					     "width=\"%f\" height=\"%f\" "
-					     "style=\"opacity:1;"
-					     "stroke:none;"
-					     "fill:rgb(0,0,0);\"/>\n",
-					     surface->width, surface->height);
-	    }
+     */
+    if ((op == CAIRO_OPERATOR_CLEAR || op == CAIRO_OPERATOR_SOURCE) &&
+	clip == NULL)
+    {
+	switch (surface->paginated_mode) {
+	case CAIRO_PAGINATED_MODE_FALLBACK:
+	    ASSERT_NOT_REACHED;
+	case CAIRO_PAGINATED_MODE_ANALYZE:
 	    return CAIRO_STATUS_SUCCESS;
+
+	case CAIRO_PAGINATED_MODE_RENDER:
+	    status = _cairo_output_stream_destroy (surface->xml_node);
+	    if (unlikely (status)) {
+		surface->xml_node = NULL;
+		return status;
+	    }
+
+	    surface->xml_node = _cairo_memory_stream_create ();
+	    if (_cairo_output_stream_get_status (surface->xml_node)) {
+		status = _cairo_output_stream_destroy (surface->xml_node);
+		surface->xml_node = NULL;
+		return status;
+	    }
+
+	    if (op == CAIRO_OPERATOR_CLEAR) {
+		if (surface->content == CAIRO_CONTENT_COLOR) {
+		    _cairo_output_stream_printf (surface->xml_node,
+						 "<rect "
+						 "width=\"%f\" height=\"%f\" "
+						 "style=\"opacity:1;"
+						 "stroke:none;"
+						 "fill:rgb(0,0,0);\"/>\n",
+						 surface->width, surface->height);
+		}
+		return CAIRO_STATUS_SUCCESS;
+	    }
+	    break;
 	}
+    } else {
+	if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	    return _cairo_svg_surface_analyze_operation (surface, op, source);
+
+	assert (_cairo_svg_surface_operation_supported (surface, op, source));
     }
+
+    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    if (unlikely (status))
+	return status;
 
     return _cairo_svg_surface_emit_paint (surface->xml_node,
 					  surface, op, source, 0, NULL);
@@ -2155,7 +2245,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 			 cairo_operator_t     op,
 			 const cairo_pattern_t	    *source,
 			 const cairo_pattern_t	    *mask,
-			 cairo_rectangle_int_t      *extents)
+			 cairo_clip_t		    *clip)
 {
     cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
@@ -2172,9 +2262,13 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 	if (_cairo_status_is_error (source_status))
 	    return source_status;
 
-	mask_status = _cairo_svg_surface_analyze_operation (surface, op, mask);
-	if (_cairo_status_is_error (mask_status))
-	    return mask_status;
+	if (mask->has_component_alpha) {
+	    mask_status = CAIRO_INT_STATUS_UNSUPPORTED;
+	} else {
+	    mask_status = _cairo_svg_surface_analyze_operation (surface, op, mask);
+	    if (_cairo_status_is_error (mask_status))
+		return mask_status;
+	}
 
 	return _cairo_analysis_surface_merge_status (source_status,
 						     mask_status);
@@ -2182,6 +2276,10 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 
     assert (_cairo_svg_surface_operation_supported (surface, op, source));
     assert (_cairo_svg_surface_operation_supported (surface, CAIRO_OPERATOR_OVER, mask));
+
+    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    if (unlikely (status))
+	return status;
 
     if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	const cairo_surface_pattern_t *surface_pattern = (const cairo_surface_pattern_t*) mask;
@@ -2243,7 +2341,7 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 			   cairo_matrix_t	*ctm_inverse,
 			   double		 tolerance,
 			   cairo_antialias_t	 antialias,
-			   cairo_rectangle_int_t *extents)
+			   cairo_clip_t		*clip)
 {
     cairo_svg_surface_t *surface = abstract_dst;
     cairo_status_t status;
@@ -2253,6 +2351,10 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 
     assert (_cairo_svg_surface_operation_supported (surface, op, source));
 
+    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    if (unlikely (status))
+	return status;
+
     _cairo_output_stream_printf (surface->xml_node, "<path style=\"fill:none;");
     status = _cairo_svg_surface_emit_stroke_style (surface->xml_node, surface, op,
 						   source, stroke_style, ctm_inverse);
@@ -2261,9 +2363,7 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 
     _cairo_output_stream_printf (surface->xml_node, "\" ");
 
-    status = _cairo_svg_surface_emit_path (surface->xml_node, path, ctm_inverse);
-    if (unlikely (status))
-	return status;
+    _cairo_svg_surface_emit_path (surface->xml_node, path, ctm_inverse);
 
     _cairo_svg_surface_emit_transform (surface->xml_node, " transform", ctm, NULL);
     _cairo_output_stream_printf (surface->xml_node, "/>\n");
@@ -2278,8 +2378,8 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				int			*remaining_glyphs,
-				cairo_rectangle_int_t   *extents)
+				cairo_clip_t		*clip,
+				int			*remaining_glyphs)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
@@ -2295,6 +2395,10 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 
     if (num_glyphs <= 0)
 	return CAIRO_STATUS_SUCCESS;
+
+    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    if (unlikely (status))
+	return status;
 
     /* FIXME it's probably possible to apply a pattern of a gradient to
      * a group of symbols, but I don't know how yet. Gradients or patterns
@@ -2343,7 +2447,9 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 FALLBACK:
     _cairo_path_fixed_init (&path);
 
-    status = _cairo_scaled_font_glyph_path (scaled_font,(cairo_glyph_t *) glyphs, num_glyphs, &path);
+    status = _cairo_scaled_font_glyph_path (scaled_font,
+					    (cairo_glyph_t *) glyphs,
+					    num_glyphs, &path);
 
     if (unlikely (status)) {
 	_cairo_path_fixed_fini (&path);
@@ -2351,56 +2457,13 @@ FALLBACK:
     }
 
     status = _cairo_svg_surface_fill (abstract_surface, op, pattern,
-				      &path, CAIRO_FILL_RULE_WINDING, 0.0, CAIRO_ANTIALIAS_SUBPIXEL, NULL);
+				      &path, CAIRO_FILL_RULE_WINDING,
+				      0.0, CAIRO_ANTIALIAS_SUBPIXEL,
+				      clip);
 
     _cairo_path_fixed_fini (&path);
 
     return status;
-}
-
-static cairo_int_status_t
-_cairo_svg_surface_intersect_clip_path (void			*dst,
-					cairo_path_fixed_t	*path,
-					cairo_fill_rule_t	 fill_rule,
-					double			 tolerance,
-					cairo_antialias_t	 antialias)
-{
-    cairo_svg_surface_t *surface = dst;
-    cairo_svg_document_t *document = surface->document;
-    cairo_status_t status;
-    unsigned int i;
-
-    if (path == NULL) {
-	for (i = 0; i < surface->clip_level; i++)
-	    _cairo_output_stream_printf (surface->xml_node, "</g>\n");
-
-	surface->clip_level = 0;
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    _cairo_output_stream_printf (document->xml_node_defs,
-				 "<clipPath id=\"clip%d\">\n"
-				 "  <path ",
-				 document->clip_id);
-    status = _cairo_svg_surface_emit_path (document->xml_node_defs, path, NULL);
-    if (unlikely (status))
-	return status;
-
-    _cairo_output_stream_printf (document->xml_node_defs,
-				 "/>\n"
-				 "</clipPath>\n");
-
-    _cairo_output_stream_printf (surface->xml_node,
-				 "<g clip-path=\"url(#clip%d)\" "
-				 "clip-rule=\"%s\">\n",
-				 document->clip_id,
-				 fill_rule == CAIRO_FILL_RULE_EVEN_ODD ?
-				 "evenodd" : "nonzero");
-
-    document->clip_id++;
-    surface->clip_level++;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -2416,7 +2479,7 @@ _cairo_svg_surface_get_font_options (void                  *abstract_surface,
 
 static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	CAIRO_SURFACE_TYPE_SVG,
-	_cairo_svg_surface_create_similar,
+	NULL, /* create_similar: handled by wrapper */
 	_cairo_svg_surface_finish,
 	NULL, /* acquire_source_image */
 	NULL, /* release_source_image */
@@ -2430,8 +2493,6 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	NULL, /* check_span_renderer */
 	_cairo_svg_surface_copy_page,
 	_cairo_svg_surface_show_page,
-	NULL, /* set_clip_region */
-	_cairo_svg_surface_intersect_clip_path,
 	_cairo_svg_surface_get_extents,
 	NULL, /* _cairo_svg_surface_old_show_glyphs, */
 	_cairo_svg_surface_get_font_options,
@@ -2446,7 +2507,6 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	_cairo_svg_surface_show_glyphs,
 	NULL, /* snapshot */
 	NULL, /* is_similar */
-	NULL, /* reset */
 	_cairo_svg_surface_fill_stroke
 };
 
@@ -2481,7 +2541,6 @@ _cairo_svg_document_create (cairo_output_stream_t	 *output_stream,
     document->width = width;
     document->height = height;
 
-    document->surface_id = 0;
     document->linear_pattern_id = 0;
     document->radial_pattern_id = 0;
     document->pattern_id = 0;
@@ -2500,9 +2559,6 @@ _cairo_svg_document_create (cairo_output_stream_t	 *output_stream,
 	goto CLEANUP_NODE_GLYPHS;
 
     document->alpha_filter = FALSE;
-
-    _cairo_array_init (&document->meta_snapshots,
-		       sizeof (cairo_meta_snapshot_t));
 
     document->svg_version = version;
 
@@ -2554,7 +2610,6 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 {
     cairo_status_t status, status2;
     cairo_output_stream_t *output = document->output_stream;
-    cairo_meta_snapshot_t *snapshot;
     cairo_svg_page_t *page;
     unsigned int i;
 
@@ -2655,16 +2710,6 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
     status2 = _cairo_output_stream_destroy (output);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
-
-    for (i = 0; i < document->meta_snapshots.num_elements; i++) {
-	snapshot = _cairo_array_index (&document->meta_snapshots, i);
-	cairo_surface_finish (&snapshot->meta->base);
-	status2 = cairo_surface_status (&snapshot->meta->base);
-	cairo_surface_destroy (&snapshot->meta->base);
-	if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
-    _cairo_array_fini (&document->meta_snapshots);
 
     document->finished = TRUE;
 

@@ -61,37 +61,27 @@ static const cairo_surface_backend_t test_paginated_surface_backend;
 static const cairo_paginated_surface_backend_t test_paginated_surface_paginated_backend;
 
 cairo_surface_t *
-_cairo_test_paginated_surface_create_for_data (unsigned char		*data,
-					 cairo_content_t	 content,
-					 int		 	 width,
-					 int		 	 height,
-					 int		 	 stride)
+_cairo_test_paginated_surface_create (cairo_surface_t *target)
 {
     cairo_status_t status;
-    cairo_surface_t *target;
     cairo_surface_t *paginated;
     test_paginated_surface_t *surface;
 
-    target =  _cairo_image_surface_create_for_data_with_content (data, content,
-								width, height,
-								stride);
     status = cairo_surface_status (target);
-    if (status)
-	return target;
+    if (unlikely (status))
+	return _cairo_surface_create_in_error (status);
 
     surface = malloc (sizeof (test_paginated_surface_t));
-    if (unlikely (surface == NULL)) {
-	cairo_surface_destroy (target);
+    if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-    }
 
     _cairo_surface_init (&surface->base, &test_paginated_surface_backend,
-			 content);
+			 target->content);
 
-    surface->target = target;
+    surface->target = cairo_surface_reference (target);
 
     paginated =  _cairo_paginated_surface_create (&surface->base,
-	                                          content, width, height,
+						  target->content,
 						  &test_paginated_surface_paginated_backend);
     status = paginated->status;
     if (status == CAIRO_STATUS_SUCCESS) {
@@ -115,49 +105,7 @@ _test_paginated_surface_finish (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t
-_test_paginated_surface_set_clip_region (void *abstract_surface,
-					 cairo_region_t *region)
-{
-    test_paginated_surface_t *surface = abstract_surface;
-
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return CAIRO_STATUS_SUCCESS;
-
-    /* XXX: The whole surface backend clipping interface is a giant
-     * disaster right now. In particular, its uncleanness shows up
-     * when trying to implement one surface that wraps another one (as
-     * we are doing here).
-     *
-     * Here are two of the problems that show up:
-     *
-     * 1. The most critical piece of information in all this stuff,
-     * the "clip" isn't getting passed to the backend
-     * functions. Instead the generic surface layer is caching that as
-     * surface->clip. This is a problem for surfaces like this one
-     * that do wrapping. Our base surface will have the clip set, but
-     * our target's surface will not.
-     *
-     * 2. We're here in our backend's set_clip_region function, and we
-     * want to call into our target surface's set_clip_region.
-     * Generally, we would do this by calling an equivalent
-     * _cairo_surface function, but _cairo_surface_set_clip_region
-     * does not have the same signature/semantics, (it has the
-     * clip_serial stuff as well).
-     *
-     * We kludge around each of these by manually copying the clip
-     * object from our base surface into the target's base surface
-     * (yuck!) and by reaching directly into the image surface's
-     * set_clip_region instead of calling into the generic
-     * _cairo_surface_set_clip_region (double yuck!).
-     */
-
-    surface->target->clip = surface->base.clip;
-
-    return _cairo_image_surface_set_clip_region (surface->target, region);
-}
-
-static cairo_int_status_t
+static cairo_bool_t
 _test_paginated_surface_get_extents (void			*abstract_surface,
 				     cairo_rectangle_int_t	*rectangle)
 {
@@ -170,14 +118,14 @@ static cairo_int_status_t
 _test_paginated_surface_paint (void		*abstract_surface,
 			       cairo_operator_t	 op,
 			       const cairo_pattern_t	*source,
-			       cairo_rectangle_int_t *extents)
+			       cairo_clip_t		*clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_STATUS_SUCCESS;
 
-    return _cairo_surface_paint (surface->target, op, source, extents);
+    return _cairo_surface_paint (surface->target, op, source, clip);
 }
 
 static cairo_int_status_t
@@ -185,14 +133,15 @@ _test_paginated_surface_mask (void		*abstract_surface,
 			      cairo_operator_t	 op,
 			      const cairo_pattern_t	*source,
 			      const cairo_pattern_t	*mask,
-			      cairo_rectangle_int_t     *extents)
+			      cairo_clip_t		*clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_STATUS_SUCCESS;
 
-    return _cairo_surface_mask (surface->target, op, source, mask, extents);
+    return _cairo_surface_mask (surface->target,
+				op, source, mask, clip);
 }
 
 static cairo_int_status_t
@@ -205,7 +154,7 @@ _test_paginated_surface_stroke (void				*abstract_surface,
 				cairo_matrix_t			*ctm_inverse,
 				double				 tolerance,
 				cairo_antialias_t		 antialias,
-				cairo_rectangle_int_t           *extents)
+				cairo_clip_t			*clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
@@ -215,7 +164,8 @@ _test_paginated_surface_stroke (void				*abstract_surface,
     return _cairo_surface_stroke (surface->target, op, source,
 				  path, style,
 				  ctm, ctm_inverse,
-				  tolerance, antialias, extents);
+				  tolerance, antialias,
+				  clip);
 }
 
 static cairo_int_status_t
@@ -226,7 +176,7 @@ _test_paginated_surface_fill (void				*abstract_surface,
 			      cairo_fill_rule_t			 fill_rule,
 			      double				 tolerance,
 			      cairo_antialias_t			 antialias,
-			      cairo_rectangle_int_t     	*extents)
+			      cairo_clip_t			*clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
@@ -235,7 +185,8 @@ _test_paginated_surface_fill (void				*abstract_surface,
 
     return _cairo_surface_fill (surface->target, op, source,
 				path, fill_rule,
-				tolerance, antialias, extents);
+				tolerance, antialias,
+				clip);
 }
 
 static cairo_bool_t
@@ -258,7 +209,7 @@ _test_paginated_surface_show_text_glyphs (void			    *abstract_surface,
 					  int			     num_clusters,
 					  cairo_text_cluster_flags_t cluster_flags,
 					  cairo_scaled_font_t	    *scaled_font,
-					  cairo_rectangle_int_t     *extents)
+					  cairo_clip_t		    *clip)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
@@ -268,8 +219,10 @@ _test_paginated_surface_show_text_glyphs (void			    *abstract_surface,
     return _cairo_surface_show_text_glyphs (surface->target, op, source,
 					    utf8, utf8_len,
 					    glyphs, num_glyphs,
-					    clusters, num_clusters, cluster_flags,
-					    scaled_font, extents);
+					    clusters, num_clusters,
+					    cluster_flags,
+					    scaled_font,
+					    clip);
 }
 
 
@@ -302,8 +255,6 @@ static const cairo_surface_backend_t test_paginated_surface_backend = {
     NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
-    _test_paginated_surface_set_clip_region,
-    NULL, /* intersect_clip_path */
     _test_paginated_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
@@ -319,11 +270,10 @@ static const cairo_surface_backend_t test_paginated_surface_backend = {
     _test_paginated_surface_mask,
     _test_paginated_surface_stroke,
     _test_paginated_surface_fill,
-    NULL, /* show_glyphs */
+    NULL, /* replaced by show_text_glyphs */
 
     NULL, /* snapshot */
     NULL, /* is_similar */
-    NULL, /* reset */
     NULL, /* fill_stroke */
     NULL, /* create_solid_pattern_surface */
     NULL, /* can_repaint_solid_pattern_surface */

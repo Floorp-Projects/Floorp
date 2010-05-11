@@ -41,8 +41,9 @@
 
 #include "nsAccEvent.h"
 
+#include "a11yGeneric.h"
+
 #include "nsAutoPtr.h"
-#include "nsCoreUtils.h"
 
 class nsIPersistentProperties;
 

@@ -190,7 +190,7 @@ nsresult
 nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
                                    const char *aCategory,
                                    nsGlobalNameStruct::nametype aType,
-                                   PRBool aPrivilegedOnly)
+                                   PRBool aChromeOnly)
 {
   nsCOMPtr<nsIComponentRegistrar> registrar;
   nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(registrar));
@@ -254,7 +254,7 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
             return NS_ERROR_OUT_OF_MEMORY;
           }
           s->mType = nsGlobalNameStruct::eTypeExternalConstructorAlias;
-          s->mPrivilegedOnly = PR_FALSE;
+          s->mChromeOnly = PR_FALSE;
           s->mAlias->mCID = cid;
           AppendASCIItoUTF16(constructorProto, s->mAlias->mProtoName);
           s->mAlias->mProto = nsnull;
@@ -272,7 +272,7 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
     if (s->mType == nsGlobalNameStruct::eTypeNotInitialized) {
       s->mType = aType;
       s->mCID = cid;
-      s->mPrivilegedOnly = aPrivilegedOnly;
+      s->mChromeOnly = aChromeOnly;
     } else {
       NS_WARNING("Global script name not overwritten!");
     }
@@ -577,6 +577,7 @@ nsScriptNameSpaceManager::LookupName(const nsAString& aName,
 nsresult
 nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
                                             PRInt32 aDOMClassInfoID,
+                                            PRBool aPrivileged,
                                             const PRUnichar **aResult)
 {
   if (!nsCRT::IsAscii(aClassName)) {
@@ -603,6 +604,7 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
 
   s->mType = nsGlobalNameStruct::eTypeClassConstructor;
   s->mDOMClassInfoID = aDOMClassInfoID;
+  s->mChromeOnly = aPrivileged;
 
   return NS_OK;
 }

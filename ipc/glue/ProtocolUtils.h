@@ -52,6 +52,7 @@
 // enum in ipc_channel.h.  They need to be kept in sync.
 namespace {
 enum {
+    SHMEM_DESTROYED_MESSAGE_TYPE = kuint16max - 5,
     UNBLOCK_CHILD_MESSAGE_TYPE = kuint16max - 4,
     BLOCK_CHILD_MESSAGE_TYPE   = kuint16max - 3,
     SHMEM_CREATED_MESSAGE_TYPE = kuint16max - 2,
@@ -90,58 +91,13 @@ public:
     virtual void Unregister(int32) = 0;
     virtual void RemoveManagee(int32, ListenerT*) = 0;
 
-    virtual Shmem::SharedMemory* CreateSharedMemory(size_t, int32*) = 0;
+    virtual Shmem::SharedMemory* CreateSharedMemory(
+        size_t, SharedMemory::SharedMemoryType, int32*) = 0;
     virtual Shmem::SharedMemory* LookupSharedMemory(int32) = 0;
+    virtual bool DestroySharedMemory(Shmem&) = 0;
 
     // XXX odd duck, acknowledged
     virtual ProcessHandle OtherProcess() const = 0;
-};
-
-
-// This message is automatically sent by IPDL-generated code when a
-// new shmem segment is allocated.  It should never be used directly.
-class __internal__ipdl__ShmemCreated : public IPC::Message
-{
-private:
-    typedef Shmem::id_t id_t;
-    typedef Shmem::SharedMemoryHandle SharedMemoryHandle;
-
-public:
-    enum { ID = SHMEM_CREATED_MESSAGE_TYPE };
-
-    __internal__ipdl__ShmemCreated(
-        int32 routingId,
-        const SharedMemoryHandle& aHandle,
-        const id_t& aIPDLId,
-        const size_t& aSize) :
-        IPC::Message(routingId, ID, PRIORITY_NORMAL)
-    {
-        IPC::WriteParam(this, aHandle);
-        IPC::WriteParam(this, aIPDLId);
-        IPC::WriteParam(this, aSize);
-    }
-
-    static bool Read(const Message* msg,
-                     SharedMemoryHandle* aHandle,
-                     id_t* aIPDLId,
-                     size_t* aSize)
-    {
-        void* iter = 0;
-        if (!IPC::ReadParam(msg, &iter, aHandle))
-            return false;
-        if (!IPC::ReadParam(msg, &iter, aIPDLId))
-            return false;
-        if (!IPC::ReadParam(msg, &iter, aSize))
-            return false;
-        msg->EndRead(iter);
-        return true;
-    }
-
-    void Log(const std::string& aPrefix,
-             FILE* aOutf) const
-    {
-        fputs("(special ShmemCreated msg)", aOutf);
-    }
 };
 
 

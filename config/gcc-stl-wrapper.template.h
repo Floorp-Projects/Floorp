@@ -45,13 +45,23 @@
 #  error "STL code can only be used with -fno-exceptions"
 #endif
 
+// Silence "warning: #include_next is a GCC extension"
+#pragma GCC system_header
+
+// mozalloc.h wants <new>; break the cycle by always explicitly
+// including <new> here.  NB: this is a tad sneaky.  Sez the gcc docs:
+//
+//    `#include_next' does not distinguish between <file> and "file"
+//    inclusion, nor does it check that the file you specify has the
+//    same name as the current file. It simply looks for the file
+//    named, starting with the directory in the search path after the
+//    one where the current file was found.
+#include_next <new>
+
 // See if we're in code that can use mozalloc.  NB: this duplicates
 // code in nscore.h because nscore.h pulls in prtypes.h, and chromium
 // can't build with that being included before base/basictypes.h.
 #if !defined(XPCOM_GLUE) && !defined(NS_NO_XPCOM) && !defined(MOZ_NO_MOZALLOC)
-#  include <new>              // to give mozalloc std::bad_alloc
-#  include <stdlib.h>         // to give mozalloc malloc/free decls
-#  include <string.h>
 #  include "mozilla/mozalloc.h"
 #else
 #  error "STL code can only be used with infallible ::operator new()"
@@ -78,8 +88,8 @@
 // these __throw_*() functions will always throw exceptions (shades of
 // -fshort-wchar).  We don't want that and so define our own inlined
 // __throw_*().
-#ifndef mozilla_functexcept_h
-#  include "mozilla/functexcept.h"
+#ifndef mozilla_throw_gcc_h
+#  include "mozilla/throw_gcc.h"
 #endif
 
 #endif  // if mozilla_${HEADER}_h

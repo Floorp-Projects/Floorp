@@ -467,6 +467,9 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
       aMetric = [[NSUserDefaults standardUserDefaults] boolForKey:@"AppleScrollerPagingBehavior"];
     }
       break;
+    case eMetric_ChosenMenuItemsShouldBlink:
+      aMetric = 1;
+      break;
     case eMetric_IMERawInputUnderlineStyle:
     case eMetric_IMEConvertedTextUnderlineStyle:
     case eMetric_IMESelectedRawTextUnderlineStyle:

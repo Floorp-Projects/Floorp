@@ -40,7 +40,7 @@
 
 #include "nsQueryFrame.h"
 #include "nsFont.h"
-class nsPresContext;
+
 class nsAString;
 class nsIContent;
 

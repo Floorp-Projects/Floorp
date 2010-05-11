@@ -1,4 +1,4 @@
-include protocol "PTestManyChildAllocsSub.ipdl";
+include protocol PTestManyChildAllocsSub;
 
 namespace mozilla {
 namespace _ipdltest {

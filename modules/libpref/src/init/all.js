@@ -739,6 +739,8 @@ pref("network.IDN.whitelist.kr", true);
 pref("network.IDN.whitelist.li", true);
 pref("network.IDN.whitelist.lt", true);
 pref("network.IDN.whitelist.no", true);
+pref("network.IDN.whitelist.nu", true);
+pref("network.IDN.whitelist.nz", true);
 pref("network.IDN.whitelist.pl", true);
 pref("network.IDN.whitelist.pr", true);
 pref("network.IDN.whitelist.se", true);
@@ -754,6 +756,7 @@ pref("network.IDN.whitelist.cat", true);
 pref("network.IDN.whitelist.info", true);
 pref("network.IDN.whitelist.museum", true);
 pref("network.IDN.whitelist.org", true);
+pref("network.IDN.whitelist.tel", true);
 
 // NOTE: Before these can be removed, one of bug 414812's tests must be updated
 //       or it will likely fail!  Please CC jwalden+bmo on the bug associated
@@ -2812,12 +2815,15 @@ pref("signon.rememberSignons",              true);
 pref("signon.SignonFileName",               "signons.txt"); // obsolete 
 pref("signon.SignonFileName2",              "signons2.txt"); // obsolete
 pref("signon.SignonFileName3",              "signons3.txt"); // obsolete
-pref("signon.autofillForms",                true); 
-pref("signon.debug",                        false); // logs to Error Console
+pref("signon.autofillForms",                true);
+pref("signon.autologin.proxy",              false);
+pref("signon.debug",                        false);
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
 pref("browser.formfill.enable",           true);
+pref("browser.formfill.expire_days",      180);
+pref("browser.formfill.saveHttpsForms",   true);
 pref("browser.formfill.agedWeight",       2);
 pref("browser.formfill.bucketSize",       1);
 pref("browser.formfill.maxTimeGroupings", 25);
@@ -2871,18 +2877,19 @@ pref("accelerometer.enabled", true);
 pref("html5.enable", false);
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
-// Time in milliseconds between the start of the network stream and the 
-// first time the flush timer fires in the off-the-main-thread HTML5 parser.
-pref("html5.flushtimer.startdelay", 200);
-// Time in milliseconds between the return to non-speculating more and the 
-// first time the flush timer fires thereafter.
-pref("html5.flushtimer.continuedelay", 150);
-// Time in milliseconds between timer firings once the timer has starting 
-// firing.
-pref("html5.flushtimer.interval", 120);
+// Time in milliseconds between the time a network buffer is seen and the 
+// timer firing when the timer hasn't fired previously in this parse in the 
+// off-the-main-thread HTML5 parser.
+pref("html5.flushtimer.initialdelay", 200);
+// Time in milliseconds between the time a network buffer is seen and the 
+// timer firing when the timer has already fired previously in this parse.
+pref("html5.flushtimer.subsequentdelay", 120);
 
 // Push/Pop/Replace State prefs
 pref("browser.history.allowPushState", true);
 pref("browser.history.allowReplaceState", true);
 pref("browser.history.allowPopState", true);
 pref("browser.history.maxStateObjectSize", 655360);
+
+pref("network.buffer.cache.count", 24);
+pref("network.buffer.cache.size",  4096);
