@@ -1461,6 +1461,7 @@ nsDocument::~nsDocument()
     mChildren.ChildAt(indx)->UnbindFromTree();
     mChildren.RemoveChildAt(indx);
   }
+  mFirstChild = nsnull;
   mCachedRootElement = nsnull;
 
   // Let the stylesheets know we're going away
@@ -1719,6 +1720,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
     tmp->mChildren.ChildAt(indx)->UnbindFromTree();
     tmp->mChildren.RemoveChildAt(indx);
   }
+  tmp->mFirstChild = nsnull;
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedRootElement)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDisplayDocument)
@@ -1903,6 +1905,9 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
     for (PRInt32 i = PRInt32(count) - 1; i >= 0; i--) {
       nsCOMPtr<nsIContent> content = mChildren.ChildAt(i);
 
+      if (nsINode::GetFirstChild() == content) {
+        mFirstChild = content->GetNextSibling();
+      }
       mChildren.RemoveChildAt(i);
       nsNodeUtils::ContentRemoved(this, content, i);
       content->UnbindFromTree();
@@ -3299,8 +3304,7 @@ nsDocument::InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  return nsGenericElement::doInsertChildAt(aKid, aIndex, aNotify,
-                                           nsnull, this, mChildren);
+  return doInsertChildAt(aKid, aIndex, aNotify, mChildren);
 }
 
 nsresult
@@ -3328,9 +3332,8 @@ nsDocument::RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent
     DestroyLinkMap();
   }
 
-  nsresult rv = nsGenericElement::doRemoveChildAt(aIndex, aNotify, oldKid,
-                                                  nsnull, this, mChildren, 
-                                                  aMutationEvent);
+  nsresult rv =
+    doRemoveChildAt(aIndex, aNotify, oldKid, mChildren, aMutationEvent);
   mCachedRootElement = nsnull;
   return rv;
 }
