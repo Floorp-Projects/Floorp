@@ -47,9 +47,9 @@ class nsIAtom;
 class nsIURI;
 class nsMediaList;
 
-// IID for the nsICSSImportRule interface {33824a60-1a09-11d3-805a-006008159b5a}
+// IID for the nsICSSImportRule interface {b2e65d15-6673-4548-a65a-c45ce87304f2}
 #define NS_ICSS_IMPORT_RULE_IID     \
-{0x33824a60, 0x1a09, 0x11d3, {0x80, 0x5a, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+{0xb2e65d15, 0x6673, 0x4548, {0xa6, 0x5a, 0xc4, 0x5c, 0xe8, 0x73, 0x04, 0xf2}}
 
 class nsICSSImportRule : public nsICSSRule {
 public:
@@ -61,7 +61,7 @@ public:
   NS_IMETHOD SetMedia(const nsString& aMedia) = 0;
   NS_IMETHOD GetMedia(nsString& aMedia) const = 0;
 
-  NS_IMETHOD SetSheet(nsICSSStyleSheet*) = 0;
+  NS_IMETHOD SetSheet(nsCSSStyleSheet*) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSImportRule, NS_ICSS_IMPORT_RULE_IID)

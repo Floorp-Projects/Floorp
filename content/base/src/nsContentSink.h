@@ -127,7 +127,7 @@ class nsContentSink : public nsICSSLoaderObserver,
   NS_DECL_NSITIMERCALLBACK
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
 
   virtual nsresult ProcessMETATag(nsIContent* aContent);

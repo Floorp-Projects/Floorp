@@ -44,7 +44,6 @@
 #define nsXULPrototypeCache_h__
 
 #include "nsCOMPtr.h"
-#include "nsICSSStyleSheet.h"
 #include "nsIObserver.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIXULPrototypeCache.h"
@@ -55,6 +54,7 @@
 #include "nsXULPrototypeDocument.h"
 
 class nsIFastLoadService;
+class nsCSSStyleSheet;
 
 struct CacheScriptEntry
 {
@@ -125,7 +125,7 @@ public:
      * Get a style sheet by URI. If the style sheet is not in the cache,
      * returns nsnull.
      */
-    nsICSSStyleSheet* GetStyleSheet(nsIURI* aURI) {
+    nsCSSStyleSheet* GetStyleSheet(nsIURI* aURI) {
         return mStyleSheetTable.GetWeak(aURI);
     }
 
@@ -133,7 +133,7 @@ public:
      * Store a style sheet in the cache. The key, style sheet's URI is obtained
      * from the style sheet itself.
      */
-    nsresult PutStyleSheet(nsICSSStyleSheet* aStyleSheet);
+    nsresult PutStyleSheet(nsCSSStyleSheet* aStyleSheet);
 
 
     static nsXULPrototypeCache* GetInstance();
@@ -157,7 +157,7 @@ protected:
     void FlushSkinFiles();
 
     nsRefPtrHashtable<nsURIHashKey,nsXULPrototypeDocument>  mPrototypeTable; // owns the prototypes
-    nsInterfaceHashtable<nsURIHashKey,nsICSSStyleSheet>    mStyleSheetTable;
+    nsRefPtrHashtable<nsURIHashKey,nsCSSStyleSheet>        mStyleSheetTable;
     nsDataHashtable<nsURIHashKey,CacheScriptEntry>         mScriptTable;
     nsInterfaceHashtable<nsURIHashKey,nsIXBLDocumentInfo>  mXBLDocTable;
 

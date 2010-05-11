@@ -47,7 +47,7 @@
 
 #include "nsIContent.h"
 #include "nsCSSLoader.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIDocument.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMNode.h"
@@ -77,13 +77,13 @@ nsStyleLinkElement::~nsStyleLinkElement()
 NS_IMETHODIMP 
 nsStyleLinkElement::SetStyleSheet(nsIStyleSheet* aStyleSheet)
 {
-  nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(mStyleSheet);
+  nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(mStyleSheet);
   if (cssSheet) {
     cssSheet->SetOwningNode(nsnull);
   }
 
   mStyleSheet = aStyleSheet;
-  cssSheet = do_QueryInterface(mStyleSheet);
+  cssSheet = do_QueryObject(mStyleSheet);
   if (cssSheet) {
     nsCOMPtr<nsIDOMNode> node;
     CallQueryInterface(this,

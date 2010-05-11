@@ -54,7 +54,7 @@
 #include "nsCSSValue.h"
 
 class nsPresContext;
-class nsICSSStyleSheet;
+class nsCSSStyleSheet;
 class nsCSSStyleSheet;
 
 struct nsMediaExpression {
@@ -188,7 +188,7 @@ public:
   nsresult SetText(const nsAString& aMediaText);
   PRBool Matches(nsPresContext* aPresContext,
                  nsMediaQueryResultCacheKey& aKey);
-  nsresult SetStyleSheet(nsICSSStyleSheet* aSheet);
+  nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
   nsresult AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
     // Takes ownership of aQuery (if it succeeds)
     if (!mArray.AppendElement(aQuery.get())) {

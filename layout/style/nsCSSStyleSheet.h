@@ -47,11 +47,18 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsICSSStyleSheet.h"
+#include "nsIStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsCOMArray.h"
 
+class nsICSSRule;
+class nsXMLNameSpaceMap;
+class nsCSSRuleProcessor;
+class nsMediaList;
+class nsICSSGroupRule;
+class nsICSSImportRule;
+class nsIPrincipal;
 class nsIURI;
 class nsMediaList;
 class nsMediaQueryResultCacheKey;
@@ -67,23 +74,23 @@ class nsCSSStyleSheetInner {
 public:
   friend class nsCSSStyleSheet;
   friend class nsCSSRuleProcessor;
-  friend nsresult NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
+  friend nsresult NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult);
 private:
-  nsCSSStyleSheetInner(nsICSSStyleSheet* aPrimarySheet);
+  nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet);
   nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
                        nsCSSStyleSheet* aPrimarySheet);
   ~nsCSSStyleSheetInner();
 
   nsCSSStyleSheetInner* CloneFor(nsCSSStyleSheet* aPrimarySheet);
-  void AddSheet(nsICSSStyleSheet* aSheet);
-  void RemoveSheet(nsICSSStyleSheet* aSheet);
+  void AddSheet(nsCSSStyleSheet* aSheet);
+  void RemoveSheet(nsCSSStyleSheet* aSheet);
 
   void RebuildNameSpaces();
 
   // Create a new namespace map
   nsresult CreateNamespaceMap();
 
-  nsAutoTArray<nsICSSStyleSheet*, 8> mSheets;
+  nsAutoTArray<nsCSSStyleSheet*, 8> mSheets;
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
   nsCOMPtr<nsIURI>       mOriginalSheetURI;  // for GetHref.  Can be null.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
@@ -111,7 +118,14 @@ private:
 class CSSRuleListImpl;
 struct ChildSheetListBuilder;
 
-class nsCSSStyleSheet : public nsICSSStyleSheet, 
+// CID for the nsCSSStyleSheet class
+// 55f243d9-d985-490c-9eea-095c7fa35cf4
+#define NS_CSS_STYLE_SHEET_IMPL_CID     \
+{ 0x55f243d9, 0xd985, 0x490c, \
+ { 0x9e, 0xea, 0x09, 0x5c, 0x7f, 0xa3, 0x5c, 0xf4 } }
+
+
+class nsCSSStyleSheet : public nsIStyleSheet,
                         public nsIDOMCSSStyleSheet,
                         public nsICSSLoaderObserver
 {
@@ -119,6 +133,8 @@ public:
   nsCSSStyleSheet();
 
   NS_DECL_ISUPPORTS
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_SHEET_IMPL_CID)
 
   // nsIStyleSheet interface
   NS_IMETHOD GetSheetURI(nsIURI** aSheetURI) const;
@@ -137,9 +153,8 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
   
-  // nsICSSStyleSheet interface
-  virtual void AppendStyleSheet(nsICSSStyleSheet* aSheet);
-  virtual void InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
+  virtual void AppendStyleSheet(nsCSSStyleSheet* aSheet);
+  virtual void InsertStyleSheetAt(nsCSSStyleSheet* aSheet, PRInt32 aIndex);
   virtual void PrependStyleRule(nsICSSRule* aRule);
   virtual void AppendStyleRule(nsICSSRule* aRule);
   virtual void ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew);
@@ -149,7 +164,7 @@ public:
   virtual nsresult InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
   virtual nsresult ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
   virtual PRInt32 StyleSheetCount() const;
-  virtual already_AddRefed<nsICSSStyleSheet> GetStyleSheetAt(PRInt32 aIndex) const;
+  virtual already_AddRefed<nsCSSStyleSheet> GetStyleSheetAt(PRInt32 aIndex) const;
   virtual void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
   virtual void SetPrincipal(nsIPrincipal* aPrincipal);
   virtual nsIPrincipal* Principal() const;
@@ -159,10 +174,10 @@ public:
   virtual void SetOwnerRule(nsICSSImportRule* aOwnerRule);
   virtual already_AddRefed<nsICSSImportRule> GetOwnerRule();
   virtual nsXMLNameSpaceMap* GetNameSpaceMap() const;
-  virtual already_AddRefed<nsICSSStyleSheet> Clone(nsICSSStyleSheet* aCloneParent,
-                                                   nsICSSImportRule* aCloneOwnerRule,
-                                                   nsIDocument* aCloneDocument,
-                                                   nsIDOMNode* aCloneOwningNode) const;
+  virtual already_AddRefed<nsCSSStyleSheet> Clone(nsCSSStyleSheet* aCloneParent,
+                                                  nsICSSImportRule* aCloneOwnerRule,
+                                                  nsIDocument* aCloneDocument,
+                                                  nsIDOMNode* aCloneOwningNode) const;
   virtual PRBool IsModified() const;
   virtual void SetModified(PRBool aModified);
   virtual nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
@@ -172,7 +187,7 @@ public:
   virtual nsIURI* GetOriginalURI() const;
 
   // nsICSSLoaderObserver interface
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
 
   enum EnsureUniqueInnerResult {
@@ -205,11 +220,11 @@ public:
 
 private:
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
-                  nsICSSStyleSheet* aParentToUse,
+                  nsCSSStyleSheet* aParentToUse,
                   nsICSSImportRule* aOwnerRuleToUse,
                   nsIDocument* aDocumentToUse,
                   nsIDOMNode* aOwningNodeToUse);
-  
+
   // These are not supported and are not implemented! 
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy); 
   nsCSSStyleSheet& operator=(const nsCSSStyleSheet& aCopy); 
@@ -234,7 +249,7 @@ protected:
   nsString              mTitle;
   nsCOMPtr<nsMediaList> mMedia;
   nsRefPtr<nsCSSStyleSheet> mNext;
-  nsICSSStyleSheet*     mParent;    // weak ref
+  nsCSSStyleSheet*      mParent;    // weak ref
   nsICSSImportRule*     mOwnerRule; // weak ref
 
   CSSRuleListImpl*      mRuleCollection;
@@ -249,8 +264,12 @@ protected:
 
   friend class nsMediaList;
   friend class nsCSSRuleProcessor;
-  friend nsresult NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult);
+  friend nsresult NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult);
   friend struct ChildSheetListBuilder;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsCSSStyleSheet, NS_CSS_STYLE_SHEET_IMPL_CID)
+
+nsresult NS_NewCSSStyleSheet(nsCSSStyleSheet** aInstancePtrResult);
 
 #endif /* !defined(nsCSSStyleSheet_h_) */

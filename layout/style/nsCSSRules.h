@@ -58,7 +58,7 @@ class nsMediaList;
 
 #define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
 NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const; \
-NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet); \
+NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aSheet); \
 NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule); \
 NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
@@ -128,7 +128,7 @@ public:
 #endif
 
   // nsICSSRule methods
-  NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet); //override nsCSSGroupRule
+  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aSheet); //override nsCSSGroupRule
   NS_IMETHOD GetType(PRInt32& aType) const;
   NS_IMETHOD Clone(nsICSSRule*& aClone) const;
   nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
