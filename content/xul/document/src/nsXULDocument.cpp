@@ -187,10 +187,10 @@ struct BroadcastListener {
     nsCOMPtr<nsIAtom> mAttribute;
 };
 
-Element*
-nsRefMapEntry::GetFirstElement()
+nsIContent*
+nsRefMapEntry::GetFirstContent()
 {
-    return static_cast<Element*>(mRefContentList.SafeElementAt(0));
+    return static_cast<nsIContent*>(mRefContentList.SafeElementAt(0));
 }
 
 void
@@ -202,17 +202,17 @@ nsRefMapEntry::AppendAll(nsCOMArray<nsIContent>* aElements)
 }
 
 PRBool
-nsRefMapEntry::AddElement(Element* aElement)
+nsRefMapEntry::AddContent(nsIContent* aContent)
 {
-    if (mRefContentList.IndexOf(aElement) >= 0)
+    if (mRefContentList.IndexOf(aContent) >= 0)
         return PR_TRUE;
-    return mRefContentList.AppendElement(aElement);
+    return mRefContentList.AppendElement(aContent);
 }
 
 PRBool
-nsRefMapEntry::RemoveElement(Element* aElement)
+nsRefMapEntry::RemoveContent(nsIContent* aContent)
 {
-    mRefContentList.RemoveElement(aElement);
+    mRefContentList.RemoveElement(aContent);
     return mRefContentList.Count() == 0;
 }
 
@@ -978,7 +978,7 @@ nsXULDocument::AttributeWillChange(nsIDocument* aDocument,
     // See if we need to update our ref map.
     if (aAttribute == nsGkAtoms::ref ||
         (aAttribute == nsGkAtoms::id && !aContent->GetIDAttributeName())) {
-        RemoveElementFromRefMap(aContent->AsElement());
+        RemoveElementFromRefMap(aContent);
     }
     
     nsXMLDocument::AttributeWillChange(aDocument, aContent, aNameSpaceID,
@@ -1323,7 +1323,7 @@ nsXULDocument::Persist(const nsAString& aID,
     nsresult rv;
 
     nsCOMPtr<nsIDOMElement> domelement;
-    rv = nsDocument::GetElementById(aID, getter_AddRefs(domelement));
+    rv = GetElementById(aID, getter_AddRefs(domelement));
     if (NS_FAILED(rv)) return rv;
 
     if (! domelement)
@@ -1660,34 +1660,33 @@ nsXULDocument::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
     return NS_OK;
 }
 
-Element*
-nsXULDocument::GetElementById(const nsAString& aId, nsresult *aResult)
+NS_IMETHODIMP
+nsXULDocument::GetElementById(const nsAString& aId,
+                              nsIDOMElement** aReturn)
 {
-    nsCOMPtr<nsIAtom> atom(do_GetAtom(aId));
-    if (!atom) {
-        *aResult = NS_ERROR_OUT_OF_MEMORY;
+    NS_ENSURE_ARG_POINTER(aReturn);
+    *aReturn = nsnull;
 
-        return nsnull;
-    }
-
-    *aResult = NS_OK;
+    nsCOMPtr<nsIAtom> atom = do_GetAtom(aId);
+    if (!atom)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     if (!CheckGetElementByIdArg(atom))
-        return nsnull;
+        return NS_OK;
 
     nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(atom);
     if (entry) {
         Element* element = entry->GetIdElement();
         if (element)
-            return element;
+            return CallQueryInterface(element, aReturn);
     }
     nsRefMapEntry* refEntry = mRefMap.GetEntry(atom);
     if (refEntry) {
-        NS_ASSERTION(refEntry->GetFirstElement(),
+        NS_ASSERTION(refEntry->GetFirstContent(),
                      "nsRefMapEntries should have nonempty content lists");
-        return refEntry->GetFirstElement();
+        return CallQueryInterface(refEntry->GetFirstContent(), aReturn);
     }
-    return nsnull;
+    return NS_OK;
 }
 
 nsresult
@@ -1899,7 +1898,7 @@ nsXULDocument::GetTemplateBuilderFor(nsIContent* aContent,
 }
 
 static void
-GetRefMapAttribute(Element* aElement, nsAutoString* aValue)
+GetRefMapAttribute(nsIContent* aElement, nsAutoString* aValue)
 {
     aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, *aValue);
     if (aValue->IsEmpty() && !aElement->GetIDAttributeName()) {
@@ -1908,7 +1907,7 @@ GetRefMapAttribute(Element* aElement, nsAutoString* aValue)
 }
 
 nsresult
-nsXULDocument::AddElementToRefMap(Element* aElement)
+nsXULDocument::AddElementToRefMap(nsIContent* aElement)
 {
     // Look at the element's 'ref' attribute, and if set,
     // add an entry in the resource-to-element map to the element.
@@ -1921,7 +1920,7 @@ nsXULDocument::AddElementToRefMap(Element* aElement)
         nsRefMapEntry *entry = mRefMap.PutEntry(atom);
         if (!entry)
             return NS_ERROR_OUT_OF_MEMORY;
-        if (!entry->AddElement(aElement))
+        if (!entry->AddContent(aElement))
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -1929,7 +1928,7 @@ nsXULDocument::AddElementToRefMap(Element* aElement)
 }
 
 void
-nsXULDocument::RemoveElementFromRefMap(Element* aElement)
+nsXULDocument::RemoveElementFromRefMap(nsIContent* aElement)
 {
     // Remove the element from the resource-to-element map.
     nsAutoString value;
@@ -1941,7 +1940,7 @@ nsXULDocument::RemoveElementFromRefMap(Element* aElement)
         nsRefMapEntry *entry = mRefMap.GetEntry(atom);
         if (!entry)
             return;
-        if (entry->RemoveElement(aElement)) {
+        if (entry->RemoveContent(aElement)) {
             mRefMap.RemoveEntry(atom);
         }
     }

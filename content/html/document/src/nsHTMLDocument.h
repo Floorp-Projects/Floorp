@@ -160,17 +160,6 @@ public:
                                nsIDOMNodeList **_retval);
   virtual nsresult GetDocumentAllResult(const nsAString& aID,
                                         nsISupports** aResult);
-  nsIContent *GetBody(nsresult *aResult);
-  already_AddRefed<nsContentList> GetElementsByName(const nsAString & aName)
-  {
-    nsString* elementNameData = new nsString(aName);
-
-    return NS_GetFuncStringContentList(this,
-                                       MatchNameAttribute,
-                                       nsContentUtils::DestroyMatchString,
-                                       elementNameData,
-                                       *elementNameData);
-  }
 
   // nsIDOMNSHTMLDocument interface
   NS_DECL_NSIDOMNSHTMLDOCUMENT
@@ -238,12 +227,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual NS_HIDDEN_(void) RemovedFromDocShell();
-
-  virtual mozilla::dom::Element *GetElementById(const nsAString& aElementId,
-                                                nsresult *aResult)
-  {
-    return nsDocument::GetElementById(aElementId, aResult);
-  }
 
 protected:
   nsresult GetBodySize(PRInt32* aWidth,
