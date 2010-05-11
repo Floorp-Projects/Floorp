@@ -41,7 +41,7 @@
 #define nsICSSStyleSheet_h___
 
 #include "nsIStyleSheet.h"
-#include "nsString.h"
+#include "nsCOMPtr.h"
 
 class nsICSSRule;
 class nsIDOMNode;
@@ -51,42 +51,45 @@ class nsMediaList;
 class nsICSSGroupRule;
 class nsICSSImportRule;
 class nsIPrincipal;
+class nsAString;
 
 // IID for the nsICSSStyleSheet interface
-// ba09b3a4-4a29-495d-987b-cfbb58c5c6ec
+// 94d4d747-f690-4eb6-96c0-196a1b3659dc
 #define NS_ICSS_STYLE_SHEET_IID     \
-{ 0xba09b3a4, 0x4a29, 0x495d, \
- { 0x98, 0x7b, 0xcf, 0xbb, 0x58, 0xc5, 0xc6, 0xec } }
+{ 0x94d4d747, 0xf690, 0x4eb6, \
+ { 0x96, 0xc0, 0x19, 0x6a, 0x1b, 0x36, 0x59, 0xdc } }
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_STYLE_SHEET_IID)
 
-  NS_IMETHOD  AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
-  NS_IMETHOD  InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex) = 0;
+  virtual void AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
+  virtual void InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex) = 0;
 
   // XXX do these belong here or are they generic?
-  NS_IMETHOD  PrependStyleRule(nsICSSRule* aRule) = 0;
-  NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule) = 0;
-  NS_IMETHOD  ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew) = 0;
+  virtual void PrependStyleRule(nsICSSRule* aRule) = 0;
+  virtual void AppendStyleRule(nsICSSRule* aRule) = 0;
+  virtual void ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew) = 0;
 
-  NS_IMETHOD  StyleRuleCount(PRInt32& aCount) const = 0;
-  NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const = 0;
+  virtual PRInt32 StyleRuleCount() const = 0;
+  virtual nsresult GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const = 0;
 
-  NS_IMETHOD  DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex) = 0;
-  NS_IMETHOD  InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval) = 0;
-  NS_IMETHOD  ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew) = 0;
+  virtual nsresult DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex) = 0;
+  virtual nsresult InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule* aGroup,
+                                       PRUint32 aIndex, PRUint32* _retval) = 0;
+  virtual nsresult ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld,
+                                      nsICSSRule* aNew) = 0;
 
-  NS_IMETHOD  StyleSheetCount(PRInt32& aCount) const = 0;
-  NS_IMETHOD  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
+  virtual PRInt32 StyleSheetCount() const = 0;
+  virtual already_AddRefed<nsICSSStyleSheet> GetStyleSheetAt(PRInt32 aIndex) const = 0;
 
   /**
    * SetURIs must be called on all sheets before parsing into them.
    * SetURIs may only be called while the sheet is 1) incomplete and 2)
    * has no rules in it
    */
-  NS_IMETHOD  SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
-                      nsIURI* aBaseURI) = 0;
+  virtual void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
+                       nsIURI* aBaseURI) = 0;
 
   /**
    * SetPrincipal should be called on all sheets before parsing into them.
@@ -97,38 +100,37 @@ public:
 
   // Principal() never returns a null pointer.
   virtual nsIPrincipal* Principal() const = 0;
-  
-  NS_IMETHOD  SetTitle(const nsAString& aTitle) = 0;
-  NS_IMETHOD  SetMedia(nsMediaList* aMedia) = 0;
-  NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
 
-  NS_IMETHOD  SetOwnerRule(nsICSSImportRule* aOwnerRule) = 0;
-  NS_IMETHOD  GetOwnerRule(nsICSSImportRule** aOwnerRule) = 0;
+  virtual void SetTitle(const nsAString& aTitle) = 0;
+  virtual void SetMedia(nsMediaList* aMedia) = 0;
+  virtual void SetOwningNode(nsIDOMNode* aOwningNode) = 0;
+
+  virtual void SetOwnerRule(nsICSSImportRule* aOwnerRule) = 0;
+  virtual already_AddRefed<nsICSSImportRule> GetOwnerRule() = 0;
   
   // get namespace map for sheet
   virtual nsXMLNameSpaceMap* GetNameSpaceMap() const = 0;
 
-  NS_IMETHOD  Clone(nsICSSStyleSheet* aCloneParent,
-                    nsICSSImportRule* aCloneOwnerRule,
-                    nsIDocument* aCloneDocument,
-                    nsIDOMNode* aCloneOwningNode,
-                    nsICSSStyleSheet** aClone) const = 0;
+  virtual already_AddRefed<nsICSSStyleSheet> Clone(nsICSSStyleSheet* aCloneParent,
+                                                   nsICSSImportRule* aCloneOwnerRule,
+                                                   nsIDocument* aCloneDocument,
+                                                   nsIDOMNode* aCloneOwningNode) const = 0;
 
-  NS_IMETHOD  IsModified(PRBool* aModified) const = 0; // returns the mDirty status of the sheet
-  NS_IMETHOD  SetModified(PRBool aModified) = 0;
+  virtual PRBool IsModified() const = 0; // returns the mDirty status of the sheet
+  virtual void SetModified(PRBool aModified) = 0;
 
-  NS_IMETHOD  AddRuleProcessor(nsCSSRuleProcessor* aProcessor) = 0;
-  NS_IMETHOD  DropRuleProcessor(nsCSSRuleProcessor* aProcessor) = 0;
+  virtual nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor) = 0;
+  virtual nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor) = 0;
 
   /**
    * Like the DOM insertRule() method, but doesn't do any security checks
    */
-  NS_IMETHOD InsertRuleInternal(const nsAString& aRule,
+  virtual nsresult InsertRuleInternal(const nsAString& aRule,
                                 PRUint32 aIndex, PRUint32* aReturn) = 0;
 
   /* Get the URI this sheet was originally loaded from, if any.  Can
      return null */
-  NS_IMETHOD_(nsIURI*) GetOriginalURI() const = 0;
+  virtual nsIURI* GetOriginalURI() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSStyleSheet, NS_ICSS_STYLE_SHEET_IID)

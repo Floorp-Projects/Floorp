@@ -50,7 +50,6 @@
 #include "nsICSSStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsTArray.h"
 #include "nsCOMArray.h"
 
 class nsIURI;
@@ -58,6 +57,7 @@ class nsMediaList;
 class nsMediaQueryResultCacheKey;
 class nsCSSStyleSheet;
 class nsPresContext;
+template<class E> class nsTArray;
 
 // -------------------------------
 // CSS Style Sheet Inner Data Container
@@ -138,40 +138,38 @@ public:
 #endif
   
   // nsICSSStyleSheet interface
-  NS_IMETHOD AppendStyleSheet(nsICSSStyleSheet* aSheet);
-  NS_IMETHOD InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
-  NS_IMETHOD PrependStyleRule(nsICSSRule* aRule);
-  NS_IMETHOD AppendStyleRule(nsICSSRule* aRule);
-  NS_IMETHOD ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew);
-  NS_IMETHOD StyleRuleCount(PRInt32& aCount) const;
-  NS_IMETHOD GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
-  NS_IMETHOD DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
-  NS_IMETHOD InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
-  NS_IMETHOD ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
-  NS_IMETHOD StyleSheetCount(PRInt32& aCount) const;
-  NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const;
-  NS_IMETHOD SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI,
-                     nsIURI* aBaseURI);
+  virtual void AppendStyleSheet(nsICSSStyleSheet* aSheet);
+  virtual void InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
+  virtual void PrependStyleRule(nsICSSRule* aRule);
+  virtual void AppendStyleRule(nsICSSRule* aRule);
+  virtual void ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew);
+  virtual PRInt32 StyleRuleCount() const;
+  virtual nsresult GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
+  virtual nsresult DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
+  virtual nsresult InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
+  virtual nsresult ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
+  virtual PRInt32 StyleSheetCount() const;
+  virtual already_AddRefed<nsICSSStyleSheet> GetStyleSheetAt(PRInt32 aIndex) const;
+  virtual void SetURIs(nsIURI* aSheetURI, nsIURI* aOriginalSheetURI, nsIURI* aBaseURI);
   virtual void SetPrincipal(nsIPrincipal* aPrincipal);
   virtual nsIPrincipal* Principal() const;
-  NS_IMETHOD SetTitle(const nsAString& aTitle);
-  NS_IMETHOD SetMedia(nsMediaList* aMedia);
-  NS_IMETHOD SetOwningNode(nsIDOMNode* aOwningNode);
-  NS_IMETHOD SetOwnerRule(nsICSSImportRule* aOwnerRule);
-  NS_IMETHOD GetOwnerRule(nsICSSImportRule** aOwnerRule);
+  virtual void SetTitle(const nsAString& aTitle);
+  virtual void SetMedia(nsMediaList* aMedia);
+  virtual void SetOwningNode(nsIDOMNode* aOwningNode);
+  virtual void SetOwnerRule(nsICSSImportRule* aOwnerRule);
+  virtual already_AddRefed<nsICSSImportRule> GetOwnerRule();
   virtual nsXMLNameSpaceMap* GetNameSpaceMap() const;
-  NS_IMETHOD Clone(nsICSSStyleSheet* aCloneParent,
-                   nsICSSImportRule* aCloneOwnerRule,
-                   nsIDocument* aCloneDocument,
-                   nsIDOMNode* aCloneOwningNode,
-                   nsICSSStyleSheet** aClone) const;
-  NS_IMETHOD IsModified(PRBool* aSheetModified) const;
-  NS_IMETHOD SetModified(PRBool aModified);
-  NS_IMETHOD AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
-  NS_IMETHOD DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
-  NS_IMETHOD InsertRuleInternal(const nsAString& aRule,
+  virtual already_AddRefed<nsICSSStyleSheet> Clone(nsICSSStyleSheet* aCloneParent,
+                                                   nsICSSImportRule* aCloneOwnerRule,
+                                                   nsIDocument* aCloneDocument,
+                                                   nsIDOMNode* aCloneOwningNode) const;
+  virtual PRBool IsModified() const;
+  virtual void SetModified(PRBool aModified);
+  virtual nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
+  virtual nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);
+  virtual nsresult InsertRuleInternal(const nsAString& aRule,
                                 PRUint32 aIndex, PRUint32* aReturn);
-  NS_IMETHOD_(nsIURI*) GetOriginalURI() const;
+  virtual nsIURI* GetOriginalURI() const;
 
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
