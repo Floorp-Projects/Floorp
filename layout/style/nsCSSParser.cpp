@@ -904,8 +904,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
   InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI, aSheetPrincipal);
 
-  PRInt32 ruleCount = 0;
-  mSheet->StyleRuleCount(ruleCount);
+  PRInt32 ruleCount = mSheet->StyleRuleCount();
   if (0 < ruleCount) {
     nsICSSRule* lastRule = nsnull;
     mSheet->GetStyleRuleAt(ruleCount - 1, lastRule);

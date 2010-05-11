@@ -423,8 +423,7 @@ CSSImportRuleImpl::CSSImportRuleImpl(const CSSImportRuleImpl& aCopy)
 {
   nsCOMPtr<nsICSSStyleSheet> sheet;
   if (aCopy.mChildSheet) {
-    aCopy.mChildSheet->Clone(nsnull, this, nsnull, nsnull,
-                             getter_AddRefs(sheet));
+    sheet = aCopy.mChildSheet->Clone(nsnull, this, nsnull, nsnull);
   }
   SetSheet(sheet);
   // SetSheet sets mMedia appropriately
