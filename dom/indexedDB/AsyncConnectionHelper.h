@@ -95,14 +95,15 @@ protected:
   AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
                         IDBRequest* aRequest);
 
-  /**
-   * Additional constructor to use a custom timeout.
-   */
-  AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
-                        IDBRequest* aRequest,
-                        PRUint32 aTimeoutMS);
-
   virtual ~AsyncConnectionHelper();
+
+  /**
+   * Set the timeout duration in milliseconds.
+   */
+  void SetTimeoutMS(PRUint32 aTimeoutMS)
+  {
+    mTimeoutDuration = TimeDuration::FromMilliseconds(aTimeoutMS);
+  }
 
   /**
    * This is called on the main thread after Dispatch is called but before the
