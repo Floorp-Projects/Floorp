@@ -1389,7 +1389,11 @@ NS_IMETHODIMP
 nsHTMLDocument::GetElementsByTagName(const nsAString& aTagname,
                                      nsIDOMNodeList** aReturn)
 {
-  return nsDocument::GetElementsByTagName(aTagname, aReturn);
+  nsAutoString tmp(aTagname);
+  if (IsHTML()) {
+    ToLowerCase(tmp); // HTML elements are lower case internally.
+  }
+  return nsDocument::GetElementsByTagName(tmp, aReturn);
 }
 
 // nsIDOM3Document interface implementation
@@ -1577,48 +1581,37 @@ nsHTMLDocument::GetURL(nsAString& aURL)
   return NS_OK;
 }
 
-nsIContent*
-nsHTMLDocument::GetBody(nsresult *aResult)
-{
-  Element* body = GetBodyElement();
-
-  *aResult = NS_OK;
-
-  if (body) {
-    // There is a body element, return that as the body.
-    return body;
-  }
-
-  // The document is most likely a frameset document so look for the
-  // outer most frameset element
-  nsRefPtr<nsContentList> nodeList;
-
-  if (IsHTML()) {
-    nodeList = nsDocument::GetElementsByTagName(NS_LITERAL_STRING("frameset"));
-  } else {
-    nodeList =
-      nsDocument::GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
-                             NS_LITERAL_STRING("frameset"));
-  }
-
-  if (!nodeList) {
-    *aResult = NS_ERROR_OUT_OF_MEMORY;
-
-    return nsnull;
-  }
-
-  return nodeList->GetNodeAt(0);
-}
-
 NS_IMETHODIMP
 nsHTMLDocument::GetBody(nsIDOMHTMLElement** aBody)
 {
   *aBody = nsnull;
 
-  nsresult rv;
-  nsIContent *body = GetBody(&rv);
+  Element* body = GetBodyElement();
 
-  return body ? CallQueryInterface(body, aBody) : rv;
+  if (body) {
+    // There is a body element, return that as the body.
+    return CallQueryInterface(body, aBody);
+  }
+
+  // The document is most likely a frameset document so look for the
+  // outer most frameset element
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+
+  nsresult rv;
+  if (IsHTML()) {
+    rv = GetElementsByTagName(NS_LITERAL_STRING("frameset"),
+                              getter_AddRefs(nodeList));
+  } else {
+    rv = GetElementsByTagNameNS(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml"),
+                                NS_LITERAL_STRING("frameset"),
+                                getter_AddRefs(nodeList));
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> node;
+  nodeList->Item(0, getter_AddRefs(node));
+
+  return node ? CallQueryInterface(node, aBody) : NS_OK;
 }
 
 NS_IMETHODIMP
@@ -2294,11 +2287,18 @@ NS_IMETHODIMP
 nsHTMLDocument::GetElementsByName(const nsAString& aElementName,
                                   nsIDOMNodeList** aReturn)
 {
-  nsRefPtr<nsContentList> list = GetElementsByName(aElementName);
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
+  nsString* elementNameData = new nsString(aElementName);
+  NS_ENSURE_TRUE(elementNameData, NS_ERROR_OUT_OF_MEMORY);
+  nsContentList* elements =
+    NS_GetFuncStringContentList(this,
+                                MatchNameAttribute,
+                                nsContentUtils::DestroyMatchString,
+                                elementNameData,
+                                *elementNameData).get();
+  NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
 
   // Transfer ownership
-  list.forget(aReturn);
+  *aReturn = elements;
 
   return NS_OK;
 }

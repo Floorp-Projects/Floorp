@@ -560,12 +560,6 @@ xpc_qsVariantToJsval(XPCLazyCallContext &ccx,
                      nsIVariant *p,
                      jsval *rval);
 
-inline nsISupports*
-ToSupports(nsISupports *p)
-{
-    return p;
-}
-
 #ifdef DEBUG
 void
 xpc_qsAssertContextOK(JSContext *cx);
