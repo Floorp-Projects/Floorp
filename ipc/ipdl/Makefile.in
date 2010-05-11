@@ -61,7 +61,7 @@ IPDLDIRS =  \
   netwerk/cookie/src  \
   ipc/ipdl/test/cxx  \
   ipc/testshell  \
-  js/src/ipc  \
+  js/ipc  \
   $(NULL)
 ##-----------------------------------------------------------------------------
 
