@@ -532,6 +532,7 @@ PutHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsCOMPtr<mozIStorageStatement> stmt =
     mDatabase->PutStatement(!mOverwrite, mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  mozStorageStatementScoper scoper(stmt);
 
   mozStorageTransaction transaction(aConnection, PR_FALSE);
   nsresult rv;
@@ -585,28 +586,11 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
-  // XXX pull statement creation into mDatabase or something for efficiency.
-  nsresult rv;
-  nsCOMPtr<mozIStorageStatement> stmt;
-  if (mAutoIncrement) {
-    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT data "
-      "FROM ai_object_data "
-      "WHERE id = :id "
-      "AND object_store_id = :osid"
-    ), getter_AddRefs(stmt));
-  }
-  else {
-    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT data "
-      "FROM object_data "
-      "WHERE key_value = :id "
-      "AND object_store_id = :osid"
-    ), getter_AddRefs(stmt));
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-  }
+  nsCOMPtr<mozIStorageStatement> stmt = mDatabase->GetStatement(mAutoIncrement);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  mozStorageStatementScoper scoper(stmt);
 
-  rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
+  nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   NS_NAMED_LITERAL_CSTRING(id, "id");
@@ -650,6 +634,8 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   nsCOMPtr<mozIStorageStatement> stmt =
     mDatabase->RemoveStatement(mAutoIncrement);
+  NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
+  mozStorageStatementScoper scoper(stmt);
 
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
