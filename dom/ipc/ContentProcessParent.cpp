@@ -60,12 +60,12 @@ namespace dom {
 ContentProcessParent* ContentProcessParent::gSingleton;
 
 ContentProcessParent*
-ContentProcessParent::GetSingleton()
+ContentProcessParent::GetSingleton(PRBool aForceNew)
 {
     if (gSingleton && !gSingleton->IsAlive())
         gSingleton = nsnull;
     
-    if (!gSingleton) {
+    if (!gSingleton && aForceNew) {
         nsRefPtr<ContentProcessParent> parent = new ContentProcessParent();
         if (parent) {
             nsCOMPtr<nsIObserverService> obs =
