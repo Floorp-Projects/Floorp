@@ -401,8 +401,7 @@ nsAccessNode::IsInCache()
   void* uniqueID = nsnull;
   GetUniqueID(&uniqueID);
 
-  nsRefPtr<nsDocAccessible> docAccessible =
-    nsAccUtils::QueryObject<nsDocAccessible>(accessibleDoc);
+  nsRefPtr<nsDocAccessible> docAccessible = do_QueryObject(accessibleDoc);
   return docAccessible->GetCachedAccessNode(uniqueID) ? PR_TRUE : PR_FALSE;
 }
 #endif

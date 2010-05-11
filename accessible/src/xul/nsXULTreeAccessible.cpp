@@ -269,8 +269,7 @@ nsXULTreeAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   nsAccessible *child = GetTreeItemAccessible(row);
   if (aDeepestChild && child) {
     // Look for accessible cell for the found item accessible.
-    nsRefPtr<nsXULTreeItemAccessibleBase> treeitem =
-      nsAccUtils::QueryObject<nsXULTreeItemAccessibleBase>(child);
+    nsRefPtr<nsXULTreeItemAccessibleBase> treeitem = do_QueryObject(child);
 
     nsAccessible *cell = treeitem->GetCellAccessible(column);
     if (cell)
@@ -481,8 +480,7 @@ nsXULTreeAccessible::GetIndexOf(nsIAccessible *aChild)
   if (IsDefunct())
     return -1;
 
-  nsRefPtr<nsXULTreeItemAccessibleBase> item =
-    nsAccUtils::QueryObject<nsXULTreeItemAccessibleBase>(aChild);
+  nsRefPtr<nsXULTreeItemAccessibleBase> item = do_QueryObject(aChild);
 
   // If the given child is not treeitem then it should be treecols accessible.
   if (!item)
@@ -632,8 +630,7 @@ nsXULTreeAccessible::TreeViewInvalidated(PRInt32 aStartRow, PRInt32 aEndRow,
     nsAccessible *accessible = mAccessibleCache.GetWeak(key);
 
     if (accessible) {
-      nsRefPtr<nsXULTreeItemAccessibleBase> treeitemAcc =
-        nsAccUtils::QueryObject<nsXULTreeItemAccessibleBase>(accessible);
+      nsRefPtr<nsXULTreeItemAccessibleBase> treeitemAcc = do_QueryObject(accessible);
       NS_ASSERTION(treeitemAcc, "Wrong accessible at the given key!");
 
       treeitemAcc->RowInvalidated(aStartCol, endCol);

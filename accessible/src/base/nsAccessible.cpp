@@ -175,8 +175,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }                       
 
   if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperLink))) {
-    nsCOMPtr<nsIAccessibleHyperText> hyperTextParent =
-      nsAccUtils::QueryObject<nsIAccessibleHyperText>(GetParent());
+    nsCOMPtr<nsIAccessibleHyperText> hyperTextParent = do_QueryObject(GetParent());
 
     if (hyperTextParent) {
       *aInstancePtr = static_cast<nsIAccessibleHyperLink*>(this);
