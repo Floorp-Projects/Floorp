@@ -315,44 +315,14 @@ protected:
    */
   PRBool Match(mozilla::dom::Element *aElement);
   /**
-   * Match recursively. See if anything in the subtree rooted at
-   * aContent matches our criterion.
+   * See if anything in the subtree rooted at aContent, including
+   * aContent itself, matches our criterion.
    *
    * @param  aContent the root of the subtree to match against
    * @return whether we match something in the tree rooted at aContent
    */
   PRBool MatchSelf(nsIContent *aContent);
 
-  /**
-   * Add elements in the subtree rooted in aElement that match our
-   * criterion to our list until we've picked up aElementsToAppend
-   * elements.  This function enforces the invariant that
-   * |aElementsToAppend + mElements.Count()| is a constant.
-   *
-   * @param aElement the root of the subtree we want to traverse. This element
-   *                 is always included in the traversal and is thus the
-   *                 first element tested.
-   * @param aElementsToAppend how many elements to append to the list
-   *        before stopping
-   */
-  void NS_FASTCALL PopulateWith(mozilla::dom::Element *aElement,
-                                PRUint32 & aElementsToAppend);
-
-  /**
-   * Populate our list starting at the child of aStartRoot that comes
-   * after aStartChild (if such exists) and continuing in document
-   * order. Stop once we've picked up aElementsToAppend elements.
-   * This function enforces the invariant that |aElementsToAppend +
-   * mElements.Count()| is a constant.
-   *
-   * @param aStartRoot the node with whose children we want to start traversal
-   * @param aStartChild the child after which we want to start
-   * @param aElementsToAppend how many elements to append to the list
-   *        before stopping
-   */
-  void PopulateWithStartingAfter(nsINode *aStartRoot,
-                                 nsINode *aStartChild,
-                                 PRUint32 & aElementsToAppend);
   /**
    * Populate our list.  Stop once we have at least aNeededLength
    * elements.  At the end of PopulateSelf running, either the last
