@@ -46,16 +46,14 @@
 #define nsIMediaList_h_
 
 #include "nsIDOMMediaList.h"
-#include "nsAString.h"
 #include "nsTArray.h"
-#include "nsTPtrArray.h"
 #include "nsIAtom.h"
-#include "nsMediaFeatures.h"
 #include "nsCSSValue.h"
 
 class nsPresContext;
 class nsCSSStyleSheet;
-class nsCSSStyleSheet;
+class nsAString;
+struct nsMediaFeature;
 
 struct nsMediaExpression {
   enum Range { eMin, eMax, eEqual };
