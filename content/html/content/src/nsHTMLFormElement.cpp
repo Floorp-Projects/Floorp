@@ -42,7 +42,6 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsDOMError.h"
@@ -192,6 +191,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   case NS_FORM_TEXTAREA :
   case NS_FORM_FIELDSET :
   case NS_FORM_OBJECT :
+  case NS_FORM_OUTPUT :
     return PR_TRUE;
   }
 
@@ -300,6 +300,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsHTMLFormElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement) 
 
+
+DOMCI_DATA(HTMLFormElement, nsHTMLFormElement)
 
 // QueryInterface implementation for nsHTMLFormElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLFormElement)
@@ -435,10 +437,10 @@ nsHTMLFormElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::method) {
-      return aResult.ParseEnumValue(aValue, kFormMethodTable);
+      return aResult.ParseEnumValue(aValue, kFormMethodTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::enctype) {
-      return aResult.ParseEnumValue(aValue, kFormEnctypeTable);
+      return aResult.ParseEnumValue(aValue, kFormEnctypeTable, PR_FALSE);
     }
   }
 
@@ -904,16 +906,16 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
   }
 
   // Notify observers that the form is being submitted.
-  nsresult rv = NS_OK;
   nsCOMPtr<nsIObserverService> service =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    mozilla::services::GetObserverService();
+  if (!service)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsISimpleEnumerator> theEnum;
-  rv = service->EnumerateObservers(aEarlyNotify ?
-                                   NS_EARLYFORMSUBMIT_SUBJECT :
-                                   NS_FORMSUBMIT_SUBJECT,
-                                   getter_AddRefs(theEnum));
+  nsresult rv = service->EnumerateObservers(aEarlyNotify ?
+                                            NS_EARLYFORMSUBMIT_SUBJECT :
+                                            NS_FORMSUBMIT_SUBJECT,
+                                            getter_AddRefs(theEnum));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (theEnum) {
@@ -1874,6 +1876,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormControlList)
   tmp->mNameLookupTable.EnumerateRead(ControlTraverser, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+DOMCI_DATA(HTMLCollection, nsFormControlList)
 
 // XPConnect interface list for nsFormControlList
 NS_INTERFACE_TABLE_HEAD(nsFormControlList)

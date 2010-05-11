@@ -68,13 +68,24 @@ typedef uint8  jsbytecode;
 typedef uint8  jssrcnote;
 typedef uint32 jsatomid;
 
+#ifdef __cplusplus
+
+/* Class and struct forward declarations in namespace js. */
+extern "C++" {
+namespace js {
+struct Parser;
+struct Compiler;
+}
+}
+
+#endif
+
 /* Struct typedefs. */
 typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
 typedef struct JSCodeGenerator      JSCodeGenerator;
 typedef struct JSGCThing            JSGCThing;
 typedef struct JSGenerator          JSGenerator;
 typedef struct JSNativeEnumerator   JSNativeEnumerator;
-typedef struct JSCompiler           JSCompiler;
 typedef struct JSFunctionBox        JSFunctionBox;
 typedef struct JSObjectBox          JSObjectBox;
 typedef struct JSParseNode          JSParseNode;
@@ -160,6 +171,7 @@ class DeflatedStringCache;
 class PropertyCache;
 struct PropertyCacheEntry;
 
+
 } /* namespace js */
 
 /* Common instantiations. */
@@ -183,7 +195,8 @@ typedef JSTrapStatus
 
 typedef JSTrapStatus
 (* JSInterruptHook)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-                    void *closure); 
+                    void *closure);
+
 typedef JSTrapStatus
 (* JSDebuggerHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
                       void *closure);

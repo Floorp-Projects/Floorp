@@ -281,7 +281,7 @@ description {
   cursor: pointer;
 }
   
-.text-link:focus {
+.text-link:-moz-focusring {
   border: 1px dotted -moz-DialogText;
 }
 
@@ -307,11 +307,11 @@ notification > button:active:hover {
   -moz-box-shadow: @roundButtonPressedShadow@;
 }
 
-notification > button:focus {
+notification > button:-moz-focusring {
   -moz-box-shadow: @focusRingShadow@, @roundButtonShadow@;
 }
 
-notification > button:active:hover:focus {
+notification > button:active:hover:-moz-focusring {
   -moz-box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
 }
 

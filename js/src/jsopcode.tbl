@@ -124,8 +124,8 @@ OPDEF(JSOP_IFNE,      8,  "ifne",       NULL,         3,  1,  0,  0,  JOF_JUMP|J
 OPDEF(JSOP_ARGUMENTS, 9, js_arguments_str, js_arguments_str, 1, 0, 1, 18, JOF_BYTE)
 
 /* ECMA-compliant for-in loop with argument or local loop control. */
-OPDEF(JSOP_FORARG,    10, "forarg",     NULL,         3,  2,  2, 19,  JOF_QARG|JOF_NAME|JOF_FOR)
-OPDEF(JSOP_FORLOCAL,  11, "forlocal",   NULL,         3,  2,  2, 19,  JOF_LOCAL|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORARG,    10, "forarg",     NULL,         3,  1,  1, 19,  JOF_QARG|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORLOCAL,  11, "forlocal",   NULL,         3,  1,  1, 19,  JOF_LOCAL|JOF_NAME|JOF_FOR)
 
 /* More long-standing bytecodes. */
 OPDEF(JSOP_DUP,       12, "dup",        NULL,         1,  1,  2,  0,  JOF_BYTE)
@@ -205,19 +205,19 @@ OPDEF(JSOP_SETCALL,   74, "setcall",    NULL,         3, -1,  2, 18,  JOF_UINT16
 
 /*
  * JSOP_ITER sets up a for-in or for-each-in loop using the JSITER_* flag bits
- * in this op's uint8 immediate operand. It replaces the top of stack object
- * with an iterator for that object, and pushes a slot used by JSOP_NEXTITER.
+ * in this op's uint8 immediate operand. It replaces the top of stack value
+ * with an iterator for that value.
  *
- * JSOP_NEXTITER stores the next iterated value in the top of stack slot which
- * was allocated by JSOP_ITER and pushes true, or stores JSVAL_HOLE and pushes
- * false. It is followed immediately by JSOP_IFNE{,X}.
+ * JSOP_MOREITER stores the next iterated value into cx->iterValue and pushes
+ * true if another value is available, and false otherwise. It is followed
+ * immediately by JSOP_IFNE{,X}.
  *
  * JSOP_ENDITER cleans up after the loop. It uses the slot above the iterator
  * for temporary GC rooting.
  */
-OPDEF(JSOP_ITER,      75, "iter",       NULL,         2,  1,  2,  0,  JOF_UINT8)
-OPDEF(JSOP_NEXTITER,  76, "nextiter",   NULL,         1,  2,  3,  0,  JOF_BYTE)
-OPDEF(JSOP_ENDITER,   77, "enditer",    NULL,         1,  2,  0,  0,  JOF_BYTE)
+OPDEF(JSOP_ITER,      75, "iter",       NULL,         2,  1,  1,  0,  JOF_UINT8)
+OPDEF(JSOP_MOREITER,  76, "moreiter",   NULL,         1,  1,  2,  0,  JOF_BYTE)
+OPDEF(JSOP_ENDITER,   77, "enditer",    NULL,         1,  1,  0,  0,  JOF_BYTE)
 
 OPDEF(JSOP_APPLY,     78, "apply",      NULL,         3, -1,  1, 18,  JOF_UINT16|JOF_INVOKE)
 OPDEF(JSOP_SWAP,      79, "swap",       NULL,         1,  2,  2,  0,  JOF_BYTE)
@@ -265,9 +265,9 @@ OPDEF(JSOP_LOCALDEC,  102,"localdec",   NULL,         3,  0,  1, 15,  JOF_LOCAL|
 OPDEF(JSOP_IMACOP,    103,"imacop",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* ECMA-compliant for/in ops. */
-OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  2,  2, 19,  JOF_ATOM|JOF_NAME|JOF_FOR)
-OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  3,  2, 18,  JOF_ATOM|JOF_PROP|JOF_FOR)
-OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  2,  3, 18,  JOF_BYTE |JOF_ELEM|JOF_FOR)
+OPDEF(JSOP_FORNAME,   104,"forname",    NULL,         3,  1,  1, 19,  JOF_ATOM|JOF_NAME|JOF_FOR)
+OPDEF(JSOP_FORPROP,   105,"forprop",    NULL,         3,  2,  1, 18,  JOF_ATOM|JOF_PROP|JOF_FOR)
+OPDEF(JSOP_FORELEM,   106,"forelem",    NULL,         1,  1,  2, 18,  JOF_BYTE |JOF_ELEM|JOF_FOR)
 OPDEF(JSOP_POPN,      107,"popn",       NULL,         3, -1,  0,  0,  JOF_UINT16)
 
 /* ECMA-compliant assignment ops. */
@@ -536,7 +536,7 @@ OPDEF(JSOP_INDEXBASE3,    214,"atombase3",     NULL,  1,  0,  0,  0,  JOF_BYTE |
 OPDEF(JSOP_CALLGVAR,      215, "callgvar",     NULL,  3,  0,  2, 19,  JOF_ATOM|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALLLOCAL,     216, "calllocal",    NULL,  3,  0,  2, 19,  JOF_LOCAL|JOF_NAME|JOF_CALLOP)
 OPDEF(JSOP_CALLARG,       217, "callarg",      NULL,  3,  0,  2, 19,  JOF_QARG |JOF_NAME|JOF_CALLOP)
-OPDEF(JSOP_CALLBUILTIN,   218, "callbuiltin",  NULL,  3,  1,  2,  0,  JOF_UINT16)
+OPDEF(JSOP_UNUSED218,     218, "unused218",    NULL,  1,  0,  0,  0,  JOF_BYTE)
 
 /*
  * Opcodes to hold 8-bit and 32-bit immediate integer operands.

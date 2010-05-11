@@ -7,6 +7,7 @@
 #import <Foundation/Foundation.h>
 
 #include "base/logging.h"
+#include "base/scoped_nsautorelease_pool.h"
 
 // A simple class that demonstrates our impressive ability to do nothing.
 @interface NoOp : NSObject
@@ -34,6 +35,10 @@ namespace base {
 //
 // http://developer.apple.com/documentation/Cocoa/Conceptual/Multithreading/CreatingThreads/chapter_4_section_4.html
 void InitThreading() {
+  // this is called early in startup, before the event loop, so provide
+  // an autorelease pool to prevent leaks here
+  ScopedNSAutoreleasePool pool;
+
   static BOOL multithreaded = [NSThread isMultiThreaded];
   if (!multithreaded) {
     [NSThread detachNewThreadSelector:@selector(noOp)

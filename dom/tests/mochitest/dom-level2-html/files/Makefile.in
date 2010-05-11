@@ -70,9 +70,6 @@ _TEST_FILES	= \
 		base2.html \
 		base2.xhtml \
 		base2.xml \
-		basefont.html \
-		basefont.xhtml \
-		basefont.xml \
 		body.html \
 		body.xhtml \
 		body.xml \
@@ -124,9 +121,6 @@ _TEST_FILES	= \
 		frameset.html \
 		frameset.xhtml \
 		frameset.xml \
-		head.html \
-		head.xhtml \
-		head.xml \
 		heading.html \
 		heading.xhtml \
 		heading.xml \

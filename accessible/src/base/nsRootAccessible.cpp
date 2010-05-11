@@ -35,9 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// NOTE: alphabetically ordered
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
+#include "nsRelUtils.h"
 
 #include "nsHTMLSelectAccessible.h"
 #include "nsIDocShell.h"
@@ -74,12 +76,16 @@
 #include "nsIDOMNSEventTarget.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsFocusManager.h"
+#include "Element.h"
+
 
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
 #include "nsIXULDocument.h"
 #include "nsIXULWindow.h"
 #endif
+
+using namespace mozilla::dom;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
@@ -141,9 +147,9 @@ nsRootAccessible::GetRoleInternal(PRUint32 *aRole)
   }
 
   // If it's a <dialog> or <wizard>, use nsIAccessibleRole::ROLE_DIALOG instead
-  nsIContent *rootContent = mDocument->GetRootContent();
-  if (rootContent) {
-    nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(rootContent));
+  Element *root = mDocument->GetRootElement();
+  if (root) {
+    nsCOMPtr<nsIDOMElement> rootElement(do_QueryInterface(root));
     if (rootElement) {
       nsAutoString name;
       rootElement->GetLocalName(name);
@@ -622,7 +628,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(aTargetNode));
     nsCOMPtr<nsIAccessibleDocument> accDoc = GetDocAccessibleFor(doc);
     if (accDoc) {
-      nsRefPtr<nsAccessNode> docAccNode = nsAccUtils::QueryAccessNode(accDoc);
+      nsRefPtr<nsAccessNode> docAccNode = do_QueryObject(accDoc);
       docAccNode->Shutdown();
     }
 
@@ -649,14 +655,13 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   if (eventType.EqualsLiteral("popuphiding"))
     return HandlePopupHidingEvent(aTargetNode, accessible);
 
-  nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(accessible));
+  nsRefPtr<nsAccessible> acc(do_QueryObject(accessible));
   if (!acc)
     return NS_OK;
 
 #ifdef MOZ_XUL
   if (isTree) {
-    nsRefPtr<nsXULTreeAccessible> treeAcc =
-      nsAccUtils::QueryAccessibleTree(accessible);
+    nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(accessible);
     NS_ASSERTION(treeAcc,
                  "Accessible for xul:tree isn't nsXULTreeAccessible.");
 
@@ -720,8 +725,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
       PRInt32 treeIndex = -1;
       multiSelect->GetCurrentIndex(&treeIndex);
       if (treeIndex >= 0) {
-        nsRefPtr<nsXULTreeAccessible> treeAcc =
-          nsAccUtils::QueryAccessibleTree(accessible);
+        nsRefPtr<nsXULTreeAccessible> treeAcc = do_QueryObject(accessible);
         if (treeAcc) {
           treeItemAccessible = treeAcc->GetTreeItemAccessible(treeIndex);
           if (treeItemAccessible)
@@ -832,8 +836,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
         return NS_OK; // Tree with nothing selected
       }
 #endif
-      nsRefPtr<nsAccessNode> menuAccessNode =
-        nsAccUtils::QueryAccessNode(accessible);
+      nsRefPtr<nsAccessNode> menuAccessNode = do_QueryObject(accessible);
   
       nsIFrame* menuFrame = menuAccessNode->GetFrame();
       NS_ENSURE_TRUE(menuFrame, NS_ERROR_FAILURE);
@@ -1125,7 +1128,7 @@ nsRootAccessible::HandlePopupShownEvent(nsIAccessible *aAccessible)
                                   PR_FALSE, PR_TRUE);
       NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
-      nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(comboboxAcc));
+      nsRefPtr<nsAccessible> acc(do_QueryObject(comboboxAcc));
       nsEventShell::FireEvent(event);
       return NS_OK;
     }

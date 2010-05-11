@@ -4,6 +4,12 @@
 
 The test plugin registers itself for the MIME type "application/x-test".
 
+== Event Model ==
+
+* getEventModel()
+Returns the NPAPI event model in use. On platforms without event models,
+simply returns 0;
+
 == Rendering ==
 
 By default, the plugin fills its rectangle with gray, with a black border, and
@@ -31,6 +37,28 @@ returns true if it succeeds and false if it doesn't. It should never succeed.
 * convertPointY(sourceSpace, sourceX, sourceY, destSpace)
 The plugin uses NPN_ConvertPoint to convert sourceX and sourceY from the source
 to dest space and returns the X or Y result based on the call.
+
+== NPCocoaEventWindowFocusChanged ==
+
+* getTopLevelWindowActivationState()
+Returns the activation state for the top-level window as set by the last
+NPCocoaEventWindowFocusChanged event. Returns true for active, false for
+inactive, and throws an exception if the state is unknown (uninitialized).
+
+* getTopLevelWindowActivationEventCount()
+Returns the number of NPCocoaEventWindowFocusChanged events received by
+the instance.
+
+== Focus Tests ==
+
+* getFocusState()
+Returns the plugin's focus state. Returns true for focused, false for unfocused,
+and throws an exception if the state is unknown (uninitialized). This does not
+necessarily correspond to actual input focus - this corresponds to focus as
+defined by the NPAPI event model in use.
+
+* getFocusEventCount()
+Returns the number of focus events received by the instance.
 
 == NPRuntime testing ==
 
@@ -297,6 +325,10 @@ The attributes which control stream tests are:
 
 "failurecode": one of the NPError constants.  Used to specify the error
   that will be returned by the "functiontofail".
+
+If the plugin is instantiated as a full-page plugin, the following defaults
+are used:
+  streammode="seek" frame="testframe" range="100,100"
 
 The .streamTest(url, doPost, postData, callback) function will test how
 NPN_GetURLNotify and NPN_PostURLNotify behave when they are called with

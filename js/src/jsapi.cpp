@@ -90,6 +90,7 @@
 #include "jstypedarray.h"
 
 #include "jsatominlines.h"
+#include "jscntxtinlines.h"
 #include "jsscopeinlines.h"
 #include "jscntxtinlines.h"
 
@@ -570,9 +571,6 @@ JSRuntime::init(uint32 maxbytes)
     debuggerLock = JS_NEW_LOCK();
     if (!debuggerLock)
         return false;
-    deallocatorThread = new JSBackgroundThread();
-    if (!deallocatorThread || !deallocatorThread->init())
-        return false;
 #endif
     return propertyTree.init() && js_InitThreads(this);
 }
@@ -621,10 +619,6 @@ JSRuntime::~JSRuntime()
         JS_DESTROY_CONDVAR(titleSharingDone);
     if (debuggerLock)
         JS_DESTROY_LOCK(debuggerLock);
-    if (deallocatorThread) {
-        deallocatorThread->cancel();
-        delete deallocatorThread;
-    }
 #endif
     propertyTree.finish();
 }
@@ -1293,8 +1287,8 @@ static JSStdName standard_class_names[] = {
 #endif
 
 #if JS_HAS_GENERATORS
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Iterator)},
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Generator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Iterator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Generator)},
 #endif
 
     /* Typed Arrays */
@@ -1315,7 +1309,6 @@ static JSStdName standard_class_names[] = {
 static JSStdName object_prototype_names[] = {
     /* Object.prototype properties (global delegates to Object.prototype). */
     {js_InitObjectClass,        EAGER_ATOM(proto), NULL},
-    {js_InitObjectClass,        EAGER_ATOM(parent), NULL},
 #if JS_HAS_TOSOURCE
     {js_InitObjectClass,        EAGER_ATOM(toSource), NULL},
 #endif
@@ -1329,7 +1322,7 @@ static JSStdName object_prototype_names[] = {
     {js_InitObjectClass,        LAZY_ATOM(hasOwnProperty), NULL},
     {js_InitObjectClass,        LAZY_ATOM(isPrototypeOf), NULL},
     {js_InitObjectClass,        LAZY_ATOM(propertyIsEnumerable), NULL},
-#if JS_HAS_GETTER_SETTER
+#if OLD_GETTER_SETTER_METHODS
     {js_InitObjectClass,        LAZY_ATOM(defineGetter), NULL},
     {js_InitObjectClass,        LAZY_ATOM(defineSetter), NULL},
     {js_InitObjectClass,        LAZY_ATOM(lookupGetter), NULL},
@@ -1401,7 +1394,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
                 if (!atom)
                     return JS_FALSE;
                 if (idstr == ATOM_TO_STRING(atom)) {
-                    stdnm = &standard_class_names[i];
+                    stdnm = &object_prototype_names[i];
                     break;
                 }
             }
@@ -1479,8 +1472,10 @@ NewIdArray(JSContext *cx, jsint length)
 
     ida = (JSIdArray *)
         cx->malloc(offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (ida)
+    if (ida) {
+        ida->self = ida;
         ida->length = length;
+    }
     return ida;
 }
 
@@ -1495,10 +1490,12 @@ SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
     rida = (JSIdArray *)
            JS_realloc(cx, ida,
                       offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (!rida)
+    if (!rida) {
         JS_DestroyIdArray(cx, ida);
-    else
+    } else {
+        rida->self = rida;
         rida->length = length;
+    }
     return rida;
 }
 
@@ -1883,10 +1880,8 @@ JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer *trc)
 {
-    JSBool allAtoms = trc->context->runtime->gcKeepAtoms != 0;
-
     LeaveTrace(trc->context);
-    js_TraceRuntime(trc, allAtoms);
+    js_TraceRuntime(trc);
 }
 
 JS_PUBLIC_API(void)
@@ -2530,7 +2525,7 @@ JS_SetScriptStackQuota(JSContext *cx, size_t quota)
 JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 {
-    cx->free(ida);
+    cx->free(ida->self);
 }
 
 JS_PUBLIC_API(jsval)
@@ -2578,6 +2573,7 @@ ResolveStub(JSContext *cx, JSObject *obj, jsid id)
 JSBool
 ConvertStub(JSContext *cx, JSObject *obj, JSType type, Value *vp)
 {
+    JS_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
     return js_TryValueOf(cx, obj, type, vp);
 }
 
@@ -2726,7 +2722,7 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObject(cx, clasp, proto, parent);
+    return NewObject(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -2737,7 +2733,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto,
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_NewObjectWithGivenProto(cx, clasp, proto, parent);
+    return NewObjectWithGivenProto(cx, clasp, proto, parent);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2895,7 +2891,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     Class *clasp = Valueify(jsclasp);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    JSObject *nobj = js_NewObject(cx, clasp, proto, obj);
+    JSObject *nobj = NewObject(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
     if (!DefineProperty(cx, obj, name, Value(nobj), NULL, NULL, attrs,
@@ -3828,59 +3824,14 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj)
 {
-    jsint i, n;
-    jsid id;
-    JSIdArray *ida;
-    jsid *vector;
-
     CHECK_REQUEST(cx);
 
-    ida = NULL;
-    AutoEnumStateRooter iterState(cx, obj);
-
-    /* Get the number of properties to enumerate. */
-    jsid num_properties;
-    if (!obj->enumerate(cx, JSENUMERATE_INIT, iterState.addr(), &num_properties))
-        goto error;
-    if (!JSID_IS_INT(num_properties)) {
-        JS_ASSERT(0);
-        goto error;
-    }
-
-    /* Grow as needed if we don't know the exact amount ahead of time. */
-    n = JSID_TO_INT(num_properties);
-    if (n <= 0)
-        n = 8;
-
-    /* Create an array of jsids large enough to hold all the properties */
-    ida = NewIdArray(cx, n);
-    if (!ida)
-        goto error;
-
-    i = 0;
-    vector = &ida->vector[0];
-    for (;;) {
-        if (!obj->enumerate(cx, JSENUMERATE_NEXT, iterState.addr(), &id))
-            goto error;
-
-        /* No more jsid's to enumerate ? */
-        if (iterState.state().isNull())
-            break;
-
-        if (i == ida->length) {
-            ida = SetIdArrayLength(cx, ida, ida->length * 2);
-            if (!ida)
-                goto error;
-            vector = &ida->vector[0];
-        }
-        vector[i++] = id;
-    }
-    return SetIdArrayLength(cx, ida, i);
-
-error:
-    if (ida)
-        JS_DestroyIdArray(cx, ida);
-    return NULL;
+    JSIdArray *ida;
+    if (!EnumerateOwnProperties(cx, obj, &ida))
+        return false;
+    for (size_t n = 0; n < size_t(ida->length); ++n)
+        JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
+    return ida;
 }
 
 /*
@@ -3945,7 +3896,7 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj)
     JSIdArray *ida;
 
     CHECK_REQUEST(cx);
-    iterobj = js_NewObject(cx, &prop_iter_class, NULL, obj);
+    iterobj = NewObject(cx, &prop_iter_class, NULL, obj);
     if (!iterobj)
         return NULL;
 
@@ -4244,12 +4195,11 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
     fs = (JSFunctionSpec *) fsv.asPrivateVoidPtr();
     JS_ASSERT((~fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) == 0);
 
-    /*
-     * We know that vp[2] is valid because JS_DefineFunctions, which is our
-     * only (indirect) referrer, defined us as requiring at least one argument
-     * (notice how it passes fs->nargs + 1 as the next-to-last argument to
-     * JS_DefineFunction).
-     */
+    if (argc < 1) {
+        js_ReportMissingArg(cx, vp, 0);
+        return JS_FALSE;
+    }
+
     if (vp[2].isPrimitive()) {
         /*
          * Make sure that this is an object or null, as required by the generic
@@ -4273,15 +4223,9 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
      */
     if (!ComputeThisFromArgv(cx, vp + 2))
         return JS_FALSE;
-    /*
-     * Protect against argc underflowing. By calling js_ComputeThis, we made
-     * it as if the static was called with one parameter, the explicit |this|
-     * object.
-     */
-    if (argc != 0) {
-        /* Clear the last parameter in case too few arguments were passed. */
-        vp[2 + --argc].setUndefined();
-    }
+
+    /* Clear the last parameter in case too few arguments were passed. */
+    vp[2 + --argc].setUndefined();
 
     native =
 #ifdef JS_TRACER
@@ -4306,12 +4250,11 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
     JS_ASSERT((fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) ==
               JSFUN_GENERIC_NATIVE);
 
-    /*
-     * We know that argv[0] is valid because JS_DefineFunctions, which is our
-     * only (indirect) referrer, defined us as requiring at least one argument
-     * (notice how it passes fs->nargs + 1 as the next-to-last argument to
-     * JS_DefineFunction).
-     */
+    if (argc < 1) {
+        js_ReportMissingArg(cx, argv - 2, 0);
+        return JS_FALSE;
+    }
+
     if (argv[0].isPrimitive()) {
         /*
          * Make sure that this is an object or null, as required by the generic
@@ -4338,15 +4281,8 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
     js_GetTopStackFrame(cx)->thisv.copy(argv[-1]);
     JS_ASSERT(cx->fp->argv == argv);
 
-    /*
-     * Protect against argc underflowing. By calling js_ComputeThis, we made
-     * it as if the static was called with one parameter, the explicit |this|
-     * object.
-     */
-    if (argc != 0) {
-        /* Clear the last parameter in case too few arguments were passed. */
-        argv[--argc].setUndefined();
-    }
+    /* Clear the last parameter in case too few arguments were passed. */
+    argv[--argc].setUndefined();
 
     return fs->call(cx, &argv[-1].asObject(), argc, Jsvalify(argv), Jsvalify(rval));
 }
@@ -4508,8 +4444,8 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx) | TCF_NEED_MUTABLE_SCRIPT;
-    script = JSCompiler::compileScript(cx, obj, NULL, principals, tcflags,
-                                       chars, length, NULL, filename, lineno);
+    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
+                                     chars, length, NULL, filename, lineno);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4535,11 +4471,11 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
     result = JS_TRUE;
     exnState = JS_SaveExceptionState(cx);
     {
-        JSCompiler jsc(cx);
-        if (jsc.init(chars, length, NULL, NULL, 1)) {
+        Parser parser(cx);
+        if (parser.init(chars, length, NULL, NULL, 1)) {
             older = JS_SetErrorReporter(cx, NULL);
-            if (!jsc.parse(obj) &&
-                (jsc.tokenStream.flags & TSF_UNEXPECTED_EOF)) {
+            if (!parser.parse(obj) &&
+                parser.tokenStream.isUnexpectedEOF()) {
                 /*
                  * We ran into an error. If it was because we ran out of
                  * source, we return false so our caller knows to try to
@@ -4575,8 +4511,8 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
     }
 
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
-    script = JSCompiler::compileScript(cx, obj, NULL, NULL, tcflags,
-                                       NULL, 0, fp, filename, 1);
+    script = Compiler::compileScript(cx, obj, NULL, NULL, tcflags,
+                                     NULL, 0, fp, filename, 1);
     if (fp != stdin)
         fclose(fp);
     LAST_FRAME_CHECKS(cx, script);
@@ -4600,8 +4536,8 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
 
     CHECK_REQUEST(cx);
     tcflags = JS_OPTIONS_TO_TCFLAGS(cx);
-    script = JSCompiler::compileScript(cx, obj, NULL, principals, tcflags,
-                                       NULL, 0, file, filename, 1);
+    script = Compiler::compileScript(cx, obj, NULL, principals, tcflags,
+                                     NULL, 0, file, filename, 1);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4613,14 +4549,14 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
 
     CHECK_REQUEST(cx);
     if (!script)
-        return js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+        return NewObject(cx, &js_ScriptClass, NULL, NULL);
 
     JS_ASSERT(!script->u.object);
 
     {
         AutoScriptRooter root(cx, script);
 
-        obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
+        obj = NewObject(cx, &js_ScriptClass, NULL, NULL);
         if (obj) {
             obj->setPrivate(script);
             script->u.object = obj;
@@ -4740,8 +4676,8 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
             }
         }
 
-        if (!JSCompiler::compileFunctionBody(cx, fun, principals,
-                                             chars, length, filename, lineno)) {
+        if (!Compiler::compileFunctionBody(cx, fun, principals,
+                                           chars, length, filename, lineno)) {
             fun = NULL;
             goto out;
         }
@@ -4890,11 +4826,11 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    script = JSCompiler::compileScript(cx, obj, NULL, principals,
-                                       !rval
-                                       ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
-                                       : TCF_COMPILE_N_GO,
-                                       chars, length, NULL, filename, lineno);
+    script = Compiler::compileScript(cx, obj, NULL, principals,
+                                     !rval
+                                     ? TCF_COMPILE_N_GO | TCF_NO_SCRIPT_RVAL
+                                     : TCF_COMPILE_N_GO,
+                                     chars, length, NULL, filename, lineno);
     if (!script) {
         LAST_FRAME_CHECKS(cx, script);
         return JS_FALSE;
@@ -5514,39 +5450,23 @@ JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline)
     CHECK_REQUEST(cx);
     /* No locking required, cx is thread-private and input must be live. */
     res = &cx->regExpStatics;
+    res->clearRoots();
     res->input = input;
     res->multiline = multiline;
-    cx->runtime->gcPoke = JS_TRUE;
 }
 
 JS_PUBLIC_API(void)
 JS_ClearRegExpStatics(JSContext *cx)
 {
-    JSRegExpStatics *res;
-
     /* No locking required, cx is thread-private and input must be live. */
-    res = &cx->regExpStatics;
-    res->input = NULL;
-    res->multiline = JS_FALSE;
-    res->parenCount = 0;
-    res->lastMatch = res->lastParen = js_EmptySubString;
-    res->leftContext = res->rightContext = js_EmptySubString;
-    if (res->moreParens) {
-      cx->free(res->moreParens);
-      res->moreParens = NULL;
-    }
-    cx->runtime->gcPoke = JS_TRUE;
+    cx->regExpStatics.clear();
 }
 
 JS_PUBLIC_API(void)
 JS_ClearRegExpRoots(JSContext *cx)
 {
-    JSRegExpStatics *res;
-
     /* No locking required, cx is thread-private and input must be live. */
-    res = &cx->regExpStatics;
-    res->input = NULL;
-    cx->runtime->gcPoke = JS_TRUE;
+    cx->regExpStatics.clearRoots();
 }
 
 /* TODO: compile, execute, get/set other statics... */

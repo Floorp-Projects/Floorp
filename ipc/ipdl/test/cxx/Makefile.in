@@ -72,11 +72,16 @@ IPDLTESTS = \
   TestRPCShutdownRace \
   TestRacyRPCReplies  \
   TestSanity  \
+  TestSelfManageRoot \
   TestShmem \
   TestShutdown \
   TestStackHooks \
   TestSyncWakeup \
   $(NULL)
+
+ifeq ($(OS_ARCH),Linux)
+IPDLTESTS += TestSysVShmem
+endif
 
 IPDLTESTSRCS = $(addsuffix .cpp,$(IPDLTESTS))
 IPDLTESTHDRS = $(addprefix $(srcdir)/,$(addsuffix .h,$(IPDLTESTS)))

@@ -45,6 +45,7 @@
 #include "nsRuleData.h"
 #include "nsRuleNode.h"
 #include "nsStyleSet.h"
+#include "nsStyleContext.h"
 
 /*
  * nsCSSCompressedDataBlock holds property-value pairs corresponding to
@@ -203,6 +204,20 @@ TryToStartImageLoad(const nsCSSValue& aValue, nsIDocument* aDocument,
   }
 }
 
+static inline PRBool
+ShouldStartImageLoads(nsRuleData *aRuleData, nsCSSProperty aProperty)
+{
+  // Don't initiate image loads for if-visited styles.  This is
+  // important because:
+  //  (1) it's a waste of CPU and bandwidth
+  //  (2) in some cases we'd start the image load on a style change
+  //      where we wouldn't have started the load initially, which makes
+  //      which links are visited detectable to Web pages (see bug
+  //      557287)
+  return !aRuleData->mStyleContext->IsStyleIfVisited() &&
+         nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_START_IMAGE_LOADS);
+}
+
 nsresult
 nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
 {
@@ -231,8 +246,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                     if (target->GetUnit() == eCSSUnit_Null) {
                         const nsCSSValue *val = ValueAtCursor(cursor);
                         NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
-                        if (nsCSSProps::PropHasFlags(iProp,
-                                CSS_PROPERTY_START_IMAGE_LOADS)) {
+                        if (ShouldStartImageLoads(aRuleData, iProp)) {
                             TryToStartImageLoad(*val, doc, iProp);
                         }
                         *target = *val;
@@ -301,8 +315,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 case eCSSType_ValuePairList: {
                     void** target = static_cast<void**>(prop);
                     if (!*target) {
-                        if (nsCSSProps::PropHasFlags(iProp,
-                                CSS_PROPERTY_START_IMAGE_LOADS)) {
+                        if (ShouldStartImageLoads(aRuleData, iProp)) {
                             for (nsCSSValueList* l = ValueListAtCursor(cursor);
                                  l; l = l->mNext) {
                                 TryToStartImageLoad(l->mValue, doc, iProp);
@@ -597,7 +610,7 @@ nsCSSExpandedDataBlock::DoExpand(nsRefPtr<nsCSSCompressedDataBlock> *aBlock,
         // FIXME (maybe): We really don't need to clone the block
         // itself, just all the data inside it.
         *aBlock = (*aBlock)->Clone();
-        if (!aBlock) {
+        if (!*aBlock) {
             // Not much we can do; just lose the properties.
             NS_WARNING("out of memory");
             return;
@@ -701,10 +714,10 @@ nsCSSExpandedDataBlock::ComputeSizeResult
 nsCSSExpandedDataBlock::ComputeSize()
 {
     ComputeSizeResult result = {0, 0};
-    for (PRUint32 iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
+    for (size_t iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
         if (!mPropertiesSet.HasPropertyInChunk(iHigh))
             continue;
-        for (PRInt32 iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
+        for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
             if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
                 continue;
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
@@ -795,10 +808,10 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
      * corresponding to the stored data in the expanded block, and then
      * clearing the data in the expanded block.
      */
-    for (PRUint32 iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
+    for (size_t iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
         if (!mPropertiesSet.HasPropertyInChunk(iHigh))
             continue;
-        for (PRInt32 iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
+        for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
             if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
                 continue;
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);
@@ -883,10 +896,10 @@ nsCSSExpandedDataBlock::Compress(nsCSSCompressedDataBlock **aNormalBlock,
 void
 nsCSSExpandedDataBlock::Clear()
 {
-    for (PRUint32 iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
+    for (size_t iHigh = 0; iHigh < nsCSSPropertySet::kChunkCount; ++iHigh) {
         if (!mPropertiesSet.HasPropertyInChunk(iHigh))
             continue;
-        for (PRInt32 iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
+        for (size_t iLow = 0; iLow < nsCSSPropertySet::kBitsInChunk; ++iLow) {
             if (!mPropertiesSet.HasPropertyAt(iHigh, iLow))
                 continue;
             nsCSSProperty iProp = nsCSSPropertySet::CSSPropertyAt(iHigh, iLow);

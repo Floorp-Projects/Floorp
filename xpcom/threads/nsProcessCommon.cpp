@@ -56,6 +56,7 @@
 #include "nsAutoLock.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
+#include "mozilla/Services.h"
 
 #include <stdlib.h>
 
@@ -284,7 +285,8 @@ void PR_CALLBACK nsProcess::Monitor(void *arg)
         process->ProcessComplete();
     }
     else {
-        nsCOMPtr<nsIRunnable> event = new nsRunnableMethod<nsProcess>(process, &nsProcess::ProcessComplete);
+        nsCOMPtr<nsIRunnable> event =
+            NS_NewRunnableMethod(process, &nsProcess::ProcessComplete);
         NS_DispatchToMainThread(event);
     }
 }
@@ -292,7 +294,8 @@ void PR_CALLBACK nsProcess::Monitor(void *arg)
 void nsProcess::ProcessComplete()
 {
     if (mThread) {
-        nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+        nsCOMPtr<nsIObserverService> os =
+            mozilla::services::GetObserverService();
         if (os)
             os->RemoveObserver(this, "xpcom-shutdown");
         PR_JoinThread(mThread);
@@ -518,7 +521,8 @@ nsProcess::RunProcess(PRBool blocking, char **my_argv, PRUint32 count,
         }
 
         // It isn't a failure if we just can't watch for shutdown
-        nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+        nsCOMPtr<nsIObserverService> os =
+          mozilla::services::GetObserverService();
         if (os)
             os->AddObserver(this, "xpcom-shutdown", PR_FALSE);
     }
@@ -559,14 +563,14 @@ nsProcess::Kill()
         if (TerminateProcess(mProcess, NULL) == 0)
             return NS_ERROR_FAILURE;
 #else
-        if (PR_KillProcess(mProcess) != PR_SUCCESS)
+        if (!mProcess || (PR_KillProcess(mProcess) != PR_SUCCESS))
             return NS_ERROR_FAILURE;
 #endif
     }
 
     // We must null out mThread if we want IsRunning to return false immediately
     // after this call.
-    nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     if (os)
         os->RemoveObserver(this, "xpcom-shutdown");
     PR_JoinThread(mThread);
@@ -590,7 +594,8 @@ nsProcess::Observe(nsISupports* subject, const char* topic, const PRUnichar* dat
 {
     // Shutting down, drop all references
     if (mThread) {
-        nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
+        nsCOMPtr<nsIObserverService> os =
+          mozilla::services::GetObserverService();
         if (os)
             os->RemoveObserver(this, "xpcom-shutdown");
         mThread = nsnull;

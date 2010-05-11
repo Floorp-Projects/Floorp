@@ -42,13 +42,14 @@
 #include "nsIAccessibleStates.h"
 #include "nsIAccessibleTypes.h"
 
+#include "nsAccessibilityService.h"
+#include "nsAccessibilityAtoms.h"
+#include "nsAccessible.h"
+#include "nsAccTreeWalker.h"
+#include "nsARIAMap.h"
+#include "nsDocAccessible.h"
 #include "nsHyperTextAccessible.h"
 #include "nsHTMLTableAccessible.h"
-#include "nsDocAccessible.h"
-#include "nsAccessibilityAtoms.h"
-#include "nsAccTreeWalker.h"
-#include "nsAccessible.h"
-#include "nsARIAMap.h"
 #include "nsXULTreeGridAccessible.h"
 
 #include "nsIDOMXULContainerElement.h"
@@ -528,7 +529,7 @@ nsAccUtils::GetMultiSelectableContainer(nsIDOMNode *aNode)
 PRBool
 nsAccUtils::IsARIASelected(nsIAccessible *aAccessible)
 {
-  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryAccessible(aAccessible);
+  nsRefPtr<nsAccessible> acc = do_QueryObject(aAccessible);
   nsCOMPtr<nsIDOMNode> node;
   acc->GetDOMNode(getter_AddRefs(node));
   NS_ASSERTION(node, "No DOM node!");
@@ -686,11 +687,11 @@ nsAccUtils::GetScreenCoordsForParent(nsIAccessNode *aAccessNode)
   if (accessible) {
     nsCOMPtr<nsIAccessible> parentAccessible;
     accessible->GetParent(getter_AddRefs(parentAccessible));
-    parent = nsAccUtils::QueryAccessNode(parentAccessible);
+    parent = do_QueryObject(parentAccessible);
   } else {
     nsCOMPtr<nsIAccessNode> parentAccessNode;
     aAccessNode->GetParentNode(getter_AddRefs(parentAccessNode));
-    parent = nsAccUtils::QueryAccessNode(parentAccessNode);
+    parent = do_QueryObject(parentAccessNode);
   }
 
   if (!parent)
@@ -785,68 +786,6 @@ nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
   return PR_FALSE;
 }
 
-already_AddRefed<nsAccessible>
-nsAccUtils::QueryAccessible(nsIAccessible *aAccessible)
-{
-  nsAccessible* acc = nsnull;
-  if (aAccessible)
-    CallQueryInterface(aAccessible, &acc);
-
-  return acc;
-}
-
-already_AddRefed<nsAccessible>
-nsAccUtils::QueryAccessible(nsIAccessNode *aAccessNode)
-{
-  nsAccessible* acc = nsnull;
-  if (aAccessNode)
-    CallQueryInterface(aAccessNode, &acc);
-
-  return acc;
-}
-
-already_AddRefed<nsHTMLTableAccessible>
-nsAccUtils::QueryAccessibleTable(nsIAccessibleTable *aAccessibleTable)
-{
-  nsHTMLTableAccessible* accessible = nsnull;
-  if (aAccessibleTable)
-    CallQueryInterface(aAccessibleTable, &accessible);
-  
-  return accessible;
-}
-
-already_AddRefed<nsDocAccessible>
-nsAccUtils::QueryAccessibleDocument(nsIAccessible *aAccessible)
-{
-  nsDocAccessible* accessible = nsnull;
-  if (aAccessible)
-    CallQueryInterface(aAccessible, &accessible);
-
-  return accessible;
-}
-
-already_AddRefed<nsDocAccessible>
-nsAccUtils::QueryAccessibleDocument(nsIAccessibleDocument *aAccessibleDocument)
-{
-  nsDocAccessible* accessible = nsnull;
-  if (aAccessibleDocument)
-    CallQueryInterface(aAccessibleDocument, &accessible);
-
-  return accessible;
-}
-
-#ifdef MOZ_XUL
-already_AddRefed<nsXULTreeAccessible>
-nsAccUtils::QueryAccessibleTree(nsIAccessible *aAccessible)
-{
-  nsXULTreeAccessible* accessible = nsnull;
-  if (aAccessible)
-    CallQueryInterface(aAccessible, &accessible);
-
-  return accessible;
-}
-#endif
-
 #ifdef DEBUG_A11Y
 
 PRBool
@@ -889,7 +828,7 @@ nsAccUtils::TextLength(nsIAccessible *aAccessible)
   if (!IsText(aAccessible))
     return 1;
   
-  nsRefPtr<nsAccessNode> accNode = nsAccUtils::QueryAccessNode(aAccessible);
+  nsRefPtr<nsAccessNode> accNode = do_QueryObject(aAccessible);
   
   nsIFrame *frame = accNode->GetFrame();
   if (frame && frame->GetType() == nsAccessibilityAtoms::textFrame) {
@@ -908,7 +847,7 @@ nsAccUtils::TextLength(nsIAccessible *aAccessible)
   // text. They don't have their own frame.
   // XXX In the future, list bullets may have frame and anon content, so 
   // we should be able to remove this at that point
-  nsRefPtr<nsAccessible> acc(nsAccUtils::QueryAccessible(aAccessible));
+  nsRefPtr<nsAccessible> acc(do_QueryObject(aAccessible));
 
   nsAutoString text;
   acc->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text

@@ -348,15 +348,7 @@ endif
 endif # !GNU_CC
 
 ifdef ENABLE_CXX_EXCEPTIONS
-ifdef GNU_CC
-CXXFLAGS		+= -fexceptions
-else
-ifeq (,$(filter-out 1200 1300 1310,$(_MSC_VER)))
-CXXFLAGS		+= -GX
-else
-CXXFLAGS		+= -EHsc
-endif # _MSC_VER
-endif # GNU_CC
+CXXFLAGS += $(MOZ_EXCEPTIONS_FLAGS_ON) -DMOZ_CPP_EXCEPTIONS=1
 endif # ENABLE_CXX_EXCEPTIONS
 endif # WINNT
 
@@ -614,15 +606,6 @@ endif
 endif
 endif
 
-ifeq ($(OS_ARCH),Linux)
-ifneq (,$(filter mips mipsel,$(OS_TEST)))
-ifeq ($(MODULE),layout)
-OS_CFLAGS += -Wa,-xgot
-OS_CXXFLAGS += -Wa,-xgot
-endif
-endif
-endif
-
 #
 # HP-UXBeOS specific section: for COMPONENTS only, add -Bsymbolic flag
 # which uses internal symbols first
@@ -671,6 +654,14 @@ ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
 endif
 endif 
+
+#
+# GNU doesn't have path length limitation
+#
+
+ifeq ($(OS_ARCH),GNU)
+OS_CPPFLAGS += -DPATH_MAX=1024 -DMAXPATHLEN=1024
+endif
 
 #
 # MINGW32
@@ -1055,11 +1046,15 @@ ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
 ifdef MSMANIFEST_TOOL
 	@if test -f $@.manifest; then \
 		if test -f "$(srcdir)/$@.manifest"; then \
+			echo "Embedding manifest from $(srcdir)/$@.manifest and $@.manifest"; \
 			mt.exe -NOLOGO -MANIFEST "$(win_srcdir)/$@.manifest" $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		else \
+			echo "Embedding manifest from $@.manifest"; \
 			mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;1; \
 		fi; \
-		rm -f $@.manifest; \
+	elif test -f "$(srcdir)/$@.manifest"; then \
+		echo "Embedding manifest from $(srcdir)/$@.manifest"; \
+		mt.exe -NOLOGO -MANIFEST "$(win_srcdir)/$@.manifest" -OUTPUTRESOURCE:$@\;1; \
 	fi
 endif	# MSVC with manifest tool
 else
@@ -1247,7 +1242,7 @@ endif
 # symlinks back to the originals. The symlinks are a no-op for stabs debugging,
 # so no need to conditionalize on OS version or debugging format.
 
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) $(DSO_LDOPTS_DEPS) $(GLOBAL_DEPS)
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS) $(LIBRARY) $(EXTRA_DEPS) $(DSO_LDOPTS_DEPS) $(GLOBAL_DEPS)
 ifndef INCREMENTAL_LINKER
 	rm -f $@
 endif

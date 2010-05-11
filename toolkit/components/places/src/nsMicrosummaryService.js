@@ -78,6 +78,8 @@ const MIN_GENERATOR_NAME_LENGTH = 6;
 
 const USER_MICROSUMMARY_GENS_DIR = "microsummary-generators";
 
+const TOPIC_SHUTDOWN = "places-shutdown";
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
@@ -85,15 +87,10 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   return NetUtil;
 });
 
-XPCOMUtils.defineLazyServiceGetter(this, "gObsSvc",
-                                   "@mozilla.org/observer-service;1",
-                                   "nsIObserverService");
-XPCOMUtils.defineLazyServiceGetter(this, "gPrefBranch",
-                                   "@mozilla.org/preferences-service;1",
-                                   "nsIPrefBranch");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function MicrosummaryService() {
-  gObsSvc.addObserver(this, "xpcom-shutdown", true);
+  Services.obs.addObserver(this, TOPIC_SHUTDOWN, true);
 
   this._ans = Cc["@mozilla.org/browser/annotation-service;1"].
               getService(Ci.nsIAnnotationService);
@@ -105,6 +102,7 @@ function MicrosummaryService() {
   this._initTimers();
   this._cacheLocalGenerators();
 }
+
 MicrosummaryService.prototype = {
   get _bms() {
     var svc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
@@ -112,12 +110,7 @@ MicrosummaryService.prototype = {
     this.__defineGetter__("_bms", function() svc);
     return this._bms;
   },
-  get _dirs() {
-    var svc = Cc["@mozilla.org/file/directory_service;1"].
-              getService(Ci.nsIProperties);
-    this.__defineGetter__("_dirs", function() svc);
-    return this._dirs;
-  },
+
   // The update interval as specified by the user.
   get _updateInterval() {
     var updateInterval = getPref("browser.microsummary.updateInterval",
@@ -151,7 +144,7 @@ MicrosummaryService.prototype = {
   // nsIObserver
   observe: function MSS_observe(subject, topic, data) {
     switch (topic) {
-      case "xpcom-shutdown":
+      case TOPIC_SHUTDOWN:
         this._destroy();
         break;
       case "nsPref:changed":
@@ -182,7 +175,7 @@ MicrosummaryService.prototype = {
   },
 
   _destroy: function MSS__destroy() {
-    gObsSvc.removeObserver(this, "xpcom-shutdown", true);
+    Services.obs.removeObserver(this, TOPIC_SHUTDOWN, true);
     this._ans.removeObserver(this);
     Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService).
                                              getBranch("browser.microsummary.").
@@ -244,7 +237,7 @@ MicrosummaryService.prototype = {
       LOG("updated live title for " + bookmarkIdentity +
           " from '" + (title == null ? "<no live title>" : title) +
           "' to '" + microsummary.content + "'");
-      gObsSvc.notifyObservers(subject, "microsummary-livetitle-updated", title);
+      Services.obs.notifyObservers(subject, "microsummary-livetitle-updated", title);
     }
     else {
       LOG("didn't update live title for " + bookmarkIdentity + "; it hasn't changed");
@@ -263,7 +256,7 @@ MicrosummaryService.prototype = {
    */
   _cacheLocalGenerators: function MSS__cacheLocalGenerators() {
     // Load generators from the user's profile.
-    var msDir = this._dirs.get("ProfDS", Ci.nsIFile);
+    var msDir = Services.dirsvc.get("ProfDS", Ci.nsIFile);
     msDir.append(USER_MICROSUMMARY_GENS_DIR);
     if (msDir.exists())
       this._cacheLocalGeneratorDir(msDir);
@@ -407,7 +400,7 @@ MicrosummaryService.prototype = {
       topic = "microsummary-generator-installed";
       var generatorName = rootNode.getAttribute("name");
       var fileName = sanitizeName(generatorName) + ".xml";
-      var file = this._dirs.get("ProfDS", Ci.nsIFile);
+      var file = Services.dirsvc.get("ProfDS", Ci.nsIFile);
       file.append(USER_MICROSUMMARY_GENS_DIR);
       if (!file.exists() || !file.isDirectory()) {
         file.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
@@ -427,7 +420,7 @@ MicrosummaryService.prototype = {
 
     LOG("installed generator " + generatorID);
 
-    gObsSvc.notifyObservers(generator, topic, null);
+    Services.obs.notifyObservers(generator, topic, null);
 
     return generator;
   },
@@ -1414,7 +1407,7 @@ MicrosummaryGenerator.prototype = {
     this.saveXMLToFile(resource.content);
 
     // Let observers know we've updated this generator
-    gObsSvc.notifyObservers(this, "microsummary-generator-updated", null);
+    Services.obs.notifyObservers(this, "microsummary-generator-updated", null);
   }
 };
 
@@ -1988,9 +1981,7 @@ MicrosummaryResource.prototype = {
    */
   _parse: function MSR__parse(htmlText) {
     // Find a window to stick our hidden iframe into.
-    var windowMediator = Cc['@mozilla.org/appshell/window-mediator;1'].
-                         getService(Ci.nsIWindowMediator);
-    var window = windowMediator.getMostRecentWindow("navigator:browser");
+    var window = Services.wm.getMostRecentWindow("navigator:browser");
     // XXX We can use other windows, too, so perhaps we should try to get
     // some other window if there's no browser window open.  Perhaps we should
     // even prefer other windows, since there's less chance of any browser
@@ -2103,12 +2094,10 @@ MicrosummaryResource.prototype = {
  *          into a browser window; otherwise null
  */
 function getLoadedMicrosummaryResource(uri) {
-  var mediator = Cc["@mozilla.org/appshell/window-mediator;1"].
-                 getService(Ci.nsIWindowMediator);
 
   // Apparently the Z order enumerator is broken on Linux per bug 156333.
   //var windows = mediator.getZOrderDOMWindowEnumerator("navigator:browser", true);
-  var windows = mediator.getEnumerator("navigator:browser");
+  var windows = Services.wm.getEnumerator("navigator:browser");
   while (windows.hasMoreElements()) {
     var win = windows.getNext();
     if (win.closed)
@@ -2136,12 +2125,12 @@ function getLoadedMicrosummaryResource(uri) {
  */
 function getPref(prefName, defaultValue) {
   try {
-    var type = gPrefBranch.getPrefType(prefName);
+    var type = Services.prefs.getPrefType(prefName);
     switch (type) {
-      case gPrefBranch.PREF_BOOL:
-        return gPrefBranch.getBoolPref(prefName);
-      case gPrefBranch.PREF_INT:
-        return gPrefBranch.getIntPref(prefName);
+      case Services.prefs.PREF_BOOL:
+        return Services.prefs.getBoolPref(prefName);
+      case Services.prefs.PREF_INT:
+        return Services.prefs.getIntPref(prefName);
     }
   }
   catch (ex) {}

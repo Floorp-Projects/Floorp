@@ -57,17 +57,30 @@ class nsSMILTimeValueSpecParams;
 class nsSMILParserUtils
 {
 public:
+  // Abstract helper-class for assisting in parsing |values| attribute
+  class GenericValueParser {
+  public:
+    virtual nsresult Parse(const nsAString& aValueStr) = 0;
+  };
+
   static nsresult ParseKeySplines(const nsAString& aSpec,
                                   nsTArray<double>& aSplineArray);
 
-  static nsresult ParseKeyTimes(const nsAString& aSpec,
-                                nsTArray<double>& aTimesArray);
+  // Used for parsing the |keyTimes| and |keyPoints| attributes.
+  static nsresult ParseSemicolonDelimitedProgressList(const nsAString& aSpec,
+                                                      PRBool aNonDecreasing,
+                                                      nsTArray<double>& aArray);
 
   static nsresult ParseValues(const nsAString& aSpec,
                               const nsISMILAnimationElement* aSrcElement,
                               const nsISMILAttr& aAttribute,
                               nsTArray<nsSMILValue>& aValuesArray,
                               PRBool& aCanCache);
+
+  // Generic method that will run some code on each sub-section of an animation
+  // element's "values" list.
+  static nsresult ParseValuesGeneric(const nsAString& aSpec,
+                                     GenericValueParser& aParser);
 
   static nsresult ParseRepeatCount(const nsAString& aSpec,
                                    nsSMILRepeatCount& aResult);

@@ -40,9 +40,7 @@ script regress-353120.js
 script regress-353146.js
 skip script regress-354878.js # obsolete test
 script regress-354910.js
-script regress-355992.js
 script regress-356083.js
-script regress-356248.js
 script regress-371692.js
 skip script regress-373678.js # obsolete test
 script regress-375639.js

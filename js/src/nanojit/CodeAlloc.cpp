@@ -210,41 +210,6 @@ namespace nanojit
         debug_only(sanity_check();)
     }
 
-    void CodeAlloc::sweep() {
-        debug_only(sanity_check();)
-
-        // Pass #1: remove fully-coalesced blocks from availblocks.
-        CodeList** prev = &availblocks;
-        for (CodeList* ab = availblocks; ab != 0; ab = *prev) {
-            NanoAssert(ab->higher != 0);
-            NanoAssert(ab->isFree);
-            if (!ab->higher->higher && !ab->lower) {
-                *prev = ab->next;
-                debug_only(ab->next = 0;)
-            } else {
-                prev = &ab->next;
-            }
-        }
-
-        // Pass #2: remove same blocks from heapblocks, and free them.
-        prev = &heapblocks;
-        for (CodeList* hb = heapblocks; hb != 0; hb = *prev) {
-            NanoAssert(hb->lower != 0);
-            if (!hb->lower->lower && hb->lower->isFree) {
-                NanoAssert(!hb->lower->next);
-                // whole page is unused
-                void* mem = hb->lower;
-                *prev = hb->next;
-                _nvprof("free page",1);
-                markBlockWrite(firstBlock(hb));
-                freeCodeChunk(mem, bytesPerAlloc);
-                totalAllocated -= bytesPerAlloc;
-            } else {
-                prev = &hb->next;
-            }
-        }
-    }
-
     void CodeAlloc::freeAll(CodeList* &code) {
         while (code) {
             CodeList *b = removeBlock(code);
@@ -463,50 +428,8 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         }
     }
 
-    size_t CodeAlloc::size(const CodeList* blocks) {
-        size_t size = 0;
-        for (const CodeList* b = blocks; b != 0; b = b->next)
-            size += int((uintptr_t)b->end - (uintptr_t)b);
-        return size;
-    }
-
     size_t CodeAlloc::size() {
         return totalAllocated;
-    }
-
-    bool CodeAlloc::contains(const CodeList* blocks, NIns* p) {
-        for (const CodeList *b = blocks; b != 0; b = b->next) {
-            _nvprof("block contains",1);
-            if (b->contains(p))
-                return true;
-        }
-        return false;
-    }
-
-    void CodeAlloc::moveAll(CodeList* &blocks, CodeList* &other) {
-        if (other) {
-            CodeList* last = other;
-            while (last->next)
-                last = last->next;
-            last->next = blocks;
-            blocks = other;
-            other = 0;
-        }
-    }
-
-    // figure out whether this is a pointer into allocated/free code,
-    // or something we don't manage.
-    CodeAlloc::CodePointerKind CodeAlloc::classifyPtr(NIns *p) {
-        for (CodeList* hb = heapblocks; hb != 0; hb = hb->next) {
-            CodeList* b = firstBlock(hb);
-            if (!containsPtr((NIns*)b, (NIns*)((uintptr_t)b + bytesPerAlloc), p))
-                continue;
-            do {
-                if (b->contains(p))
-                    return b->isFree ? kFree : kUsed;
-            } while ((b = b->higher) != 0);
-        }
-        return kUnknown;
     }
 
     // check that all block neighbors are correct

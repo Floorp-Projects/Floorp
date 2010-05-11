@@ -692,7 +692,6 @@ pref("browser.safebrowsing.dataProvider", 0);
 
 // Does the provider name need to be localizable?
 pref("browser.safebrowsing.provider.0.name", "Google");
-pref("browser.safebrowsing.provider.0.lookupURL", "http://safebrowsing.clients.google.com/safebrowsing/lookup?sourceid=firefox-antiphish&features=TrustRank&client={moz:client}&appver={moz:version}&");
 pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/newkey?client={moz:client}&appver={moz:version}&pver=2.2");
 pref("browser.safebrowsing.provider.0.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/report?");
 pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
@@ -905,10 +904,21 @@ pref("toolbar.customization.usesheet", true);
 pref("toolbar.customization.usesheet", false);
 #endif
 
+// The default for this pref reflects whether the build is capable of IPC.
+// (Turning it on in a no-IPC build will have no effect.)
 #ifdef XP_MACOSX
+// OSX still has only partial support for IPC.  Note that the PowerPC
+// and x86 builds must generate identical copies of this file, so we
+// can't make the prefs indicate that IPC is not available at all in
+// PowerPC builds.
 pref("dom.ipc.plugins.enabled", false);
-#else
+// These plug-ins will run OOP by default
+pref("dom.ipc.plugins.enabled.flash player.plugin", true);
+pref("dom.ipc.plugins.enabled.javaplugin2_npapi.plugin", true);
+#elifdef MOZ_IPC
 pref("dom.ipc.plugins.enabled", true);
+#else
+pref("dom.ipc.plugins.enabled", false);
 #endif
 
 #ifdef XP_WIN

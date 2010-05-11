@@ -38,6 +38,11 @@
 #ifndef nsAHtml5TreeBuilderState_h___
 #define nsAHtml5TreeBuilderState_h___
 
+/**
+ * Interface for exposing the internal state of the HTML5 tree builder.
+ * For more documentation, please see
+ * http://hg.mozilla.org/projects/htmlparser/file/tip/src/nu/validator/htmlparser/impl/StateSnapshot.java
+ */
 class nsAHtml5TreeBuilderState {
   public:
   
@@ -47,7 +52,7 @@ class nsAHtml5TreeBuilderState {
     
     virtual PRInt32 getStackLength() = 0;
 
-    virtual PRInt32 getListLength() = 0;
+    virtual PRInt32 getListOfActiveFormattingElementsLength() = 0;
 
     virtual nsIContent** getFormPointer() = 0;
     
@@ -59,7 +64,7 @@ class nsAHtml5TreeBuilderState {
 
     virtual PRBool isFramesetOk() = 0;
 
-    virtual PRInt32 getForeignFlag() = 0;
+    virtual PRBool isInForeign() = 0;
 
     virtual PRBool isNeedToDropLF() = 0;
 

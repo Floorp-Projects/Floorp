@@ -1,8 +1,6 @@
 % include all of the Luna styles
 %include menulist.css
 
-menulist:focus > .menulist-label-box {
+menulist:-moz-focusring:not([open="true"]):not(.menulist-compact) > .menulist-label-box {
   border: 1px dotted ThreeDDarkShadow;
-  background-color: transparent;
-  color: inherit;
 }

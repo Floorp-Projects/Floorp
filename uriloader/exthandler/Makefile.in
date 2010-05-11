@@ -131,8 +131,8 @@ CPPSRCS	= \
 
 ifdef MOZ_ENABLE_DBUS
 CPPSRCS += nsDBusHandlerApp.cpp
-LOCAL_INCLUDES   += $(TK_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
-EXTRA_DSO_LDOPTS += $(MOZ_DBUS_GLIB_LIBS)
+LOCAL_INCLUDES   += $(TK_CFLAGS) $(MOZ_DBUS_CFLAGS)
+EXTRA_DSO_LDOPTS += $(MOZ_DBUS_LIBS)
 endif
 
 ifdef MOZ_PLATFORM_MAEMO
@@ -162,8 +162,8 @@ FORCE_STATIC_LIB = 1
 SRCS_IN_OBJDIR	= 1
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-CXXFLAGS += $(TK_CFLAGS)
+ifneq (,$(filter qt gtk2, $(MOZ_WIDGET_TOOLKIT)))
+CXXFLAGS += $(TK_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
 endif
 
 # the use of multiple VPATH dirs is broken in cygwin make

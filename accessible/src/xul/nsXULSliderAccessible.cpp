@@ -38,8 +38,11 @@
 
 #include "nsXULSliderAccessible.h"
 
+#include "nsAccessibilityAtoms.h"
+
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentXBL.h"
+#include "nsIFrame.h"
 
 // nsXULSliderAccessible
 

@@ -60,7 +60,6 @@
 #include <View.h>
 
 #include "prlog.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h"
 #include "nsIView.h"

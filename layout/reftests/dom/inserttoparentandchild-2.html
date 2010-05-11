@@ -1,0 +1,47 @@
+<html class="reftest-wait">
+<head>
+
+<script>
+function boom()
+{
+  document.body.offsetHeight;
+
+  var eightdiv = document.getElementById("eight");
+  var parent = eightdiv.parentNode;
+
+  for (var i = 6; i <= 7; i++) {
+    var newdiv = document.createElement("div");
+    newdiv.appendChild(document.createTextNode(i));
+    parent.insertBefore(newdiv, eightdiv);
+  }
+
+  var fivedeediv = document.getElementById("fivedee");
+  parent = fivedeediv.parentNode;
+
+  var newdiv = document.createElement("div");
+  newdiv.appendChild(document.createTextNode("5b"));
+  parent.insertBefore(newdiv, fivedeediv);
+
+  newdiv = document.createElement("div");
+  newdiv.appendChild(document.createTextNode("5c"));
+  parent.insertBefore(newdiv, fivedeediv);
+
+  document.body.offsetHeight;
+  document.documentElement.className = "";
+}
+</script>
+
+</head>
+<body onload="boom();">
+<div>1</div>
+<div>2</div>
+<div>3</div>
+<div>4</div>
+<div id="five">
+  <div>5a</div>
+  <div id="fivedee">5d</div>
+</div>
+<div id="eight">8</div>
+<div>9</div>
+</body>
+</html>

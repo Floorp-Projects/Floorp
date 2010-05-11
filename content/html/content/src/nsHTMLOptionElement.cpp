@@ -46,7 +46,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
 #include "nsIDOMText.h"
@@ -60,7 +59,6 @@
 // Notify/query select frame for selected state
 #include "nsIFormControlFrame.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsNodeInfoManager.h"
@@ -179,6 +177,8 @@ nsHTMLOptionElement::~nsHTMLOptionElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLOptionElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLOptionElement, nsGenericElement)
 
+
+DOMCI_DATA(HTMLOptionElement, nsHTMLOptionElement)
 
 // QueryInterface implementation for nsHTMLOptionElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLOptionElement)

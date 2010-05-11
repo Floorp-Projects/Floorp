@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Justin Dolske <dolske@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -91,6 +92,9 @@
 
 #include "nsObjectLoadingContent.h"
 #include "mozAutoDocUpdate.h"
+#include "nsIContentSecurityPolicy.h"
+#include "nsIChannelPolicy.h"
+#include "nsChannelPolicy.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gObjectLog = PR_NewLogModule("objlc");
@@ -224,17 +228,20 @@ public:
   nsString mPluginDumpID;
   nsString mBrowserDumpID;
   nsString mPluginName;
+  nsString mPluginFilename;
   PRBool mSubmittedCrashReport;
 
   nsPluginCrashedEvent(nsIContent* aContent,
                        const nsAString& aPluginDumpID,
                        const nsAString& aBrowserDumpID,
                        const nsAString& aPluginName,
+                       const nsAString& aPluginFilename,
                        PRBool submittedCrashReport)
     : mContent(aContent),
       mPluginDumpID(aPluginDumpID),
       mBrowserDumpID(aBrowserDumpID),
       mPluginName(aPluginName),
+      mPluginFilename(aPluginFilename),
       mSubmittedCrashReport(submittedCrashReport)
   {}
 
@@ -298,6 +305,15 @@ nsPluginCrashedEvent::Run()
   }
   variant->SetAsAString(mPluginName);
   containerEvent->SetData(NS_LITERAL_STRING("pluginName"), variant);
+
+  // add a "pluginFilename" property to this event
+  variant = do_CreateInstance("@mozilla.org/variant;1");
+  if (!variant) {
+    NS_WARNING("Couldn't create pluginFilename variant for PluginCrashed event!");
+    return NS_OK;
+  }
+  variant->SetAsAString(mPluginFilename);
+  containerEvent->SetData(NS_LITERAL_STRING("pluginFilename"), variant);
 
   // add a "submittedCrashReport" property to this event
   variant = do_CreateInstance("@mozilla.org/variant;1");
@@ -1410,8 +1426,18 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   nsCOMPtr<nsILoadGroup> group = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> chan;
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (csp) {
+    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_OBJECT);
+  }
   rv = NS_NewChannel(getter_AddRefs(chan), aURI, nsnull, group, this,
-                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS);
+                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS, 
+                     channelPolicy);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Referrer
@@ -2046,11 +2072,14 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
   // out any data we need now.
   nsCAutoString pluginName;
   aPluginTag->GetName(pluginName);
+  nsCAutoString pluginFilename;
+  aPluginTag->GetFilename(pluginFilename);
 
   nsCOMPtr<nsIRunnable> ev = new nsPluginCrashedEvent(thisContent,
                                                       pluginDumpID,
                                                       browserDumpID,
                                                       NS_ConvertUTF8toUTF16(pluginName),
+                                                      NS_ConvertUTF8toUTF16(pluginFilename),
                                                       submittedCrashReport);
   nsresult rv = NS_DispatchToCurrentThread(ev);
   if (NS_FAILED(rv)) {

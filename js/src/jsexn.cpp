@@ -65,6 +65,7 @@
 #include "jsstaticcheck.h"
 
 #include "jscntxtinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 
@@ -696,7 +697,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
          * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
          * called as functions, without operator new.  But as we do not give
          * each constructor a distinct JSClass, whose .name member is used by
-         * js_NewObject to find the class prototype, we must get the class
+         * NewObject to find the class prototype, we must get the class
          * prototype ourselves.
          */
         if (!argv[-2].asObject().getProperty(cx,
@@ -705,7 +706,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
                                              rval)) {
             return JS_FALSE;
         }
-        obj = js_NewObject(cx, &js_ErrorClass, &rval->asObject(), NULL);
+        obj = NewObject(cx, &js_ErrorClass, &rval->asObject(), NULL);
         if (!obj)
             return JS_FALSE;
         rval->setNonFunObj(*obj);
@@ -981,11 +982,11 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
      * If lazy class initialization occurs for any Error subclass, then all
      * classes are initialized, starting with Error.  To avoid reentry and
      * redundant initialization, we must not pass a null proto parameter to
-     * js_NewObject below, when called for the Error superclass.  We need to
+     * NewObject below, when called for the Error superclass.  We need to
      * ensure that Object.prototype is the proto of Error.prototype.
      *
      * See the equivalent code to ensure that parent_proto is non-null when
-     * JS_InitClass calls js_NewObject, in jsapi.c.
+     * JS_InitClass calls NewObject, in jsapi.c.
      */
     if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
         return NULL;
@@ -1005,9 +1006,9 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         JSFunction *fun;
 
         /* Make the prototype for the current constructor name. */
-        proto = js_NewObject(cx, &js_ErrorClass,
-                             (i != JSEXN_ERR) ? error_proto : obj_proto,
-                             obj);
+        proto = NewObject(cx, &js_ErrorClass,
+                          (i != JSEXN_ERR) ? error_proto : obj_proto,
+                          obj);
         if (!proto)
             return NULL;
         if (i == JSEXN_ERR) {
@@ -1162,7 +1163,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
         goto out;
     tv[0] = OBJECT_TO_JSVAL(errProto);
 
-    errObject = js_NewObject(cx, &js_ErrorClass, errProto, NULL);
+    errObject = NewObject(cx, &js_ErrorClass, errProto, NULL);
     if (!errObject) {
         ok = JS_FALSE;
         goto out;
@@ -1274,6 +1275,11 @@ js_ReportUncaughtException(JSContext *cx)
         PodZero(&report);
         report.filename = filename;
         report.lineno = (uintN) lineno;
+        if (JSVAL_IS_STRING(roots[2])) {
+            report.ucmessage = js_GetStringChars(cx, JSVAL_TO_STRING(roots[2]));
+            if (!report.ucmessage)
+                return false;
+        }
     }
 
     if (!reportp) {

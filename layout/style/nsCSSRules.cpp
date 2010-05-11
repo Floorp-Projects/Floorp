@@ -119,6 +119,8 @@ CSSGroupRuleRuleListImpl::~CSSGroupRuleRuleListImpl()
 {
 }
 
+DOMCI_DATA(CSSGroupRuleRuleList, CSSGroupRuleRuleListImpl)
+
 // QueryInterface implementation for CSSGroupRuleRuleList
 NS_INTERFACE_MAP_BEGIN(CSSGroupRuleRuleListImpl)
   NS_INTERFACE_MAP_ENTRY(nsICSSRuleList)
@@ -234,6 +236,8 @@ CSSCharsetRuleImpl::~CSSCharsetRuleImpl(void)
 
 NS_IMPL_ADDREF_INHERITED(CSSCharsetRuleImpl, nsCSSRule)
 NS_IMPL_RELEASE_INHERITED(CSSCharsetRuleImpl, nsCSSRule)
+
+DOMCI_DATA(CSSCharsetRule, CSSCharsetRuleImpl)
 
 // QueryInterface implementation for CSSCharsetRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSCharsetRuleImpl)
@@ -435,6 +439,8 @@ CSSImportRuleImpl::~CSSImportRuleImpl(void)
 
 NS_IMPL_ADDREF_INHERITED(CSSImportRuleImpl, nsCSSRule)
 NS_IMPL_RELEASE_INHERITED(CSSImportRuleImpl, nsCSSRule)
+
+DOMCI_DATA(CSSImportRule, CSSImportRuleImpl)
 
 // QueryInterface implementation for CSSImportRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSImportRuleImpl)
@@ -916,6 +922,8 @@ nsCSSMediaRule::~nsCSSMediaRule()
 NS_IMPL_ADDREF_INHERITED(nsCSSMediaRule, nsCSSRule)
 NS_IMPL_RELEASE_INHERITED(nsCSSMediaRule, nsCSSRule)
 
+DOMCI_DATA(CSSMediaRule, nsCSSMediaRule)
+
 // QueryInterface implementation for nsCSSMediaRule
 NS_INTERFACE_MAP_BEGIN(nsCSSMediaRule)
   NS_INTERFACE_MAP_ENTRY(nsICSSGroupRule)
@@ -1085,6 +1093,8 @@ nsCSSDocumentRule::~nsCSSDocumentRule(void)
 
 NS_IMPL_ADDREF_INHERITED(nsCSSDocumentRule, nsCSSRule)
 NS_IMPL_RELEASE_INHERITED(nsCSSDocumentRule, nsCSSRule)
+
+DOMCI_DATA(CSSMozDocumentRule, nsCSSDocumentRule)
 
 // QueryInterface implementation for nsCSSDocumentRule
 NS_INTERFACE_MAP_BEGIN(nsCSSDocumentRule)
@@ -1324,6 +1334,8 @@ CSSNameSpaceRuleImpl::~CSSNameSpaceRuleImpl(void)
 
 NS_IMPL_ADDREF_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule)
 NS_IMPL_RELEASE_INHERITED(CSSNameSpaceRuleImpl, nsCSSRule)
+
+DOMCI_DATA(CSSNameSpaceRule, CSSNameSpaceRuleImpl)
 
 // QueryInterface implementation for CSSNameSpaceRuleImpl
 NS_INTERFACE_MAP_BEGIN(CSSNameSpaceRuleImpl)
@@ -1590,6 +1602,8 @@ nsCSSFontFaceStyleDecl::Fields[] = {
     &nsCSSFontFaceStyleDecl::mUnicodeRange
 };
 
+DOMCI_DATA(CSSFontFaceStyleDecl, nsCSSFontFaceStyleDecl)
+
 // QueryInterface implementation for nsCSSFontFaceStyleDecl
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceStyleDecl)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleDeclaration)
@@ -1812,6 +1826,8 @@ nsCSSFontFaceRule::Clone(nsICSSRule*& aClone) const
 
 NS_IMPL_ADDREF_INHERITED(nsCSSFontFaceRule, nsCSSRule)
 NS_IMPL_RELEASE_INHERITED(nsCSSFontFaceRule, nsCSSRule)
+
+DOMCI_DATA(CSSFontFaceRule, nsCSSFontFaceRule)
 
 // QueryInterface implementation for nsCSSFontFaceRule
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceRule)

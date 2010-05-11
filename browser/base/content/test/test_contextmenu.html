@@ -50,7 +50,8 @@ function getVisibleMenuItems(aMenu) {
 
         if (item.nodeName == "menuitem") {
             ok(item.id, "child menuitem #" + i + " has an ID");
-            ok(key, "menuitem has an access key");
+            ok(item.label.length, "menuitem " + item.id + " has a label");
+            ok(key, "menuitem " + item.id + " has an access key");
             if (accessKeys[key])
                 ok(false, "menuitem " + item.id + " has same accesskey as " + accessKeys[key]);
             else

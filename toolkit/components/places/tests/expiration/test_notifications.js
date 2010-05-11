@@ -54,7 +54,7 @@ let gObserver = {
     this.notifications++;
   }
 };
-os.addObserver(gObserver, TOPIC_EXPIRATION_FINISHED, false);
+os.addObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
 function run_test() {
   // Set interval to a large value so we don't expire on it.
@@ -67,7 +67,7 @@ function run_test() {
 }
 
 function check_result() {
-  os.removeObserver(gObserver, TOPIC_EXPIRATION_FINISHED);
+  os.removeObserver(gObserver, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
   do_check_eq(gObserver.notifications, 1);
   do_test_finished();
 }

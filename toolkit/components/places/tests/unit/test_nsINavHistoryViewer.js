@@ -108,6 +108,7 @@ var resultObserver = {
   containerClosed: function(node) {
     this.closedContainer = node;
   },
+  containerStateChanged: function (node, oldState, newState) {},
   invalidatedContainer: null,
   invalidateContainer: function(node) {    
     this.invalidatedContainer = node;

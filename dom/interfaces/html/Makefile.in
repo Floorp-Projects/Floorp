@@ -52,7 +52,6 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLAreaElement.idl		\
 	nsIDOMHTMLBRElement.idl			\
 	nsIDOMHTMLBaseElement.idl		\
-	nsIDOMHTMLBaseFontElement.idl		\
 	nsIDOMHTMLBodyElement.idl		\
 	nsIDOMHTMLButtonElement.idl		\
 	nsIDOMHTMLCollection.idl		\
@@ -88,6 +87,7 @@ SDK_XPIDLSRCS =					\
 	nsIDOMHTMLOptGroupElement.idl		\
 	nsIDOMHTMLOptionElement.idl		\
 	nsIDOMHTMLOptionsCollection.idl		\
+	nsIDOMHTMLOutputElement.idl		\
 	nsIDOMHTMLParagraphElement.idl		\
 	nsIDOMHTMLParamElement.idl		\
 	nsIDOMHTMLPreElement.idl		\

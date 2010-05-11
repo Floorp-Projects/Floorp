@@ -687,6 +687,7 @@ if test -n "$_WIN32_MSVC"; then
     # Common to all MSVC environments:
     # Windows lacks <stdint.h>, but has __int8, and so on.
     AC_DEFINE(JS_HAVE___INTN)
+    AC_DEFINE(HAVE_LOCALECONV)
 
     case "$target" in
     *-wince|*-winmo)
@@ -997,6 +998,7 @@ if test -n "$CROSS_COMPILE"; then
     case "${target_os}" in
         linux*)       OS_ARCH=Linux OS_TARGET=Linux ;;
         kfreebsd*-gnu) OS_ARCH=GNU_kFreeBSD OS_TARGET=GNU_kFreeBSD ;;
+        gnu*)         OS_ARCH=GNU ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
         wince*)       OS_ARCH=WINCE ;;
@@ -1592,7 +1594,7 @@ case "$host" in
     LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) $(LIBXUL_DIST)/bin/XUL'
     ;;
 
-*-linux*|*-kfreebsd*-gnu)
+*-linux*|*-kfreebsd*-gnu|*-gnu*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
@@ -1774,6 +1776,25 @@ case "$target" in
 #	MKSHLIB_UNFORCE_ALL=''
 #    fi
     ;; 
+
+ia64*-hpux*)
+    DLL_SUFFIX=".so"
+    if test ! "$GNU_CC"; then
+       DSO_LDOPTS='-b'
+       DSO_CFLAGS=""
+       DSO_PIC_CFLAGS=
+       MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
+       CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
+    else
+       DSO_LDOPTS='-b -E'
+       MKSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+       MKCSHLIB='$(LD) $(DSO_LDOPTS) -o $@'
+    fi
+    MOZ_FIX_LINK_PATHS=
+    SYSTEM_MAKEDEPEND=
+    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
+    ;;
 
 *-hpux*)
     DLL_SUFFIX=".sl"
@@ -2398,6 +2419,8 @@ alpha*-*-osf*)
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        CFLAGS="$CFLAGS -xlibmieee -xstrconst -xbuiltin=%all"
        CXXFLAGS="$CXXFLAGS -xlibmieee -xbuiltin=%all -features=tmplife,tmplrefstatic -norunpath"
+       _MOZ_EXCEPTIONS_FLAGS_ON='-features=except'
+       _MOZ_EXCEPTIONS_FLAGS_OFF='-features=no%except'
        LDFLAGS="-xildoff -z lazyload -z combreloc $LDFLAGS"
        if test -z "$CROSS_COMPILE" && test -f /usr/lib/ld/map.noexstk; then
            _SAVE_LDFLAGS=$LDFLAGS
@@ -2517,7 +2540,7 @@ dnl ========================================================
 dnl = Flags to strip unused symbols from .so components
 dnl ========================================================
 case "$target" in
-    *-linux*|*-kfreebsd*-gnu)
+    *-linux*|*-kfreebsd*-gnu|*-gnu*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         ;;
     *-solaris*)
@@ -2607,6 +2630,9 @@ case "$target" in
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
 *-freebsd*|*-kfreebsd*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
+*-gnu*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
 *-cygwin*|*-mingw*|*-mks*|*-msvc*|*-wince|*-winmo)
@@ -3162,7 +3188,7 @@ then
 			fi
 			;;
 
-	    *-*-linux*|*-*-kfreebsd*-gnu)
+	    *-*-linux*|*-*-kfreebsd*-gnu|*-*-gnu*)
 			AC_DEFINE(_REENTRANT) 
 			;;
 
@@ -4793,7 +4819,7 @@ fi
 AC_SUBST(_MOZ_RTTI_FLAGS_ON)
 
 dnl ========================================================
-dnl C++ exceptions (g++/egcs only - for now)
+dnl C++ exceptions (g++/VC/irix6/Sun only - for now)
 dnl Should be smarter and check that the compiler does indeed have exceptions
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
@@ -4803,6 +4829,7 @@ MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
 
 if test "$_MOZ_CPP_EXCEPTIONS"; then
     _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_ON
+    AC_DEFINE(MOZ_CPP_EXCEPTIONS)
 else
     _MOZ_EXCEPTIONS_FLAGS=$_MOZ_EXCEPTIONS_FLAGS_OFF
 fi
@@ -5286,8 +5313,6 @@ MAKEFILES="
   Makefile
   shell/Makefile
   lirasm/Makefile
-  ctypes/Makefile
-  ctypes/tests/Makefile
   jsapi-tests/Makefile
   tests/Makefile
   config/Makefile
@@ -5377,11 +5402,15 @@ if test "$JS_HAS_CTYPES"; then
     # Always use gcc for libffi on Solaris
     ac_configure_args="$ac_configure_args CC=gcc"
   fi
+  if test "$OS_ARCH" = "OS2"; then
+    ac_configure_args="$ac_configure_args CFLAGS=-Zomf AR=emxomfar"
+  fi
 
   # Use a separate cache file for libffi, since it does things differently
   # from our configure.
+  mkdir -p $_objdir/ctypes/libffi
   old_cache_file=$cache_file
-  cache_file=ctypes/libffi/config.cache
+  cache_file=$_objdir/ctypes/libffi/config.cache
   old_config_files=$CONFIG_FILES
   unset CONFIG_FILES
   AC_OUTPUT_SUBDIRS(ctypes/libffi)

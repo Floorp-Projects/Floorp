@@ -104,6 +104,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLTableCellElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLTableCellElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLTableCellElement, nsHTMLTableCellElement)
+
 // QueryInterface implementation for nsHTMLTableCellElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLTableCellElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLTableCellElement,
@@ -314,7 +316,7 @@ nsHTMLTableCellElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseColor(aValue, GetOwnerDoc());
     }
     if (aAttribute == nsGkAtoms::scope) {
-      return aResult.ParseEnumValue(aValue, kCellScopeTable);
+      return aResult.ParseEnumValue(aValue, kCellScopeTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::valign) {
       return ParseTableVAlignValue(aValue, aResult);

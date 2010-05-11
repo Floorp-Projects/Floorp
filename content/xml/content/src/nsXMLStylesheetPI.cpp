@@ -89,6 +89,8 @@ protected:
 
 // nsISupports implementation
 
+DOMCI_DATA(XMLStylesheetProcessingInstruction, nsXMLStylesheetPI)
+
 NS_INTERFACE_TABLE_HEAD(nsXMLStylesheetPI)
   NS_NODE_INTERFACE_TABLE4(nsXMLStylesheetPI, nsIDOMNode,
                            nsIDOMProcessingInstruction, nsIDOMLinkStyle,
@@ -123,9 +125,8 @@ nsXMLStylesheetPI::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                        aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsContentUtils::AddScriptRunner(
-    new nsRunnableMethod<nsXMLStylesheetPI>(this,
-                                            &nsXMLStylesheetPI::UpdateStyleSheetInternal));
+  void (nsXMLStylesheetPI::*update)() = &nsXMLStylesheetPI::UpdateStyleSheetInternal;
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
 
   return rv;  
 }

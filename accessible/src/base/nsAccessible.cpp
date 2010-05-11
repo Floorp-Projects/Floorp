@@ -41,9 +41,15 @@
 
 #include "nsIXBLAccessible.h"
 
-#include "nsAccTreeWalker.h"
-#include "nsAccessibleRelation.h"
+#include "nsAccUtils.h"
+#include "nsARIAMap.h"
 #include "nsDocAccessible.h"
+#include "nsEventShell.h"
+
+#include "nsAccessibilityService.h"
+#include "nsAccTreeWalker.h"
+#include "nsRelUtils.h"
+#include "nsTextEquivUtils.h"
 
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -95,50 +101,6 @@
 #include "nsIDOMCharacterData.h"
 #endif
 
-/**
- * nsAccessibleDOMStringList implementation
- */
-nsAccessibleDOMStringList::nsAccessibleDOMStringList()
-{
-}
-
-nsAccessibleDOMStringList::~nsAccessibleDOMStringList()
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsAccessibleDOMStringList, nsIDOMDOMStringList)
-
-NS_IMETHODIMP
-nsAccessibleDOMStringList::Item(PRUint32 aIndex, nsAString& aResult)
-{
-  if (aIndex >= mNames.Length()) {
-    SetDOMStringToNull(aResult);
-  } else {
-    aResult = mNames.ElementAt(aIndex);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibleDOMStringList::GetLength(PRUint32 *aLength)
-{
-  *aLength = mNames.Length();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibleDOMStringList::Contains(const nsAString& aString, PRBool *aResult)
-{
-  *aResult = mNames.Contains(aString);
-
-  return NS_OK;
-}
-
-/*
- * Class nsAccessible
- */
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible. nsISupports
@@ -443,7 +405,7 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
     return NS_ERROR_FAILURE;
 
   PRUint32 key = nsCoreUtils::GetAccessKeyFor(content);
-  if (!key && content->IsNodeOfType(nsIContent::eELEMENT)) {
+  if (!key && content->IsElement()) {
     // Copy access key from label node unless it is labeled
     // via an ancestor <label>, in which case that would be redundant
     nsCOMPtr<nsIContent> labelContent(nsCoreUtils::GetLabelContent(content));
@@ -603,18 +565,6 @@ nsAccessible::GetChildren(nsIArray **aOutChildren)
 
   NS_ADDREF(*aOutChildren = children);
   return NS_OK;
-}
-
-nsIAccessible *nsAccessible::NextChild(nsCOMPtr<nsIAccessible>& aAccessible)
-{
-  nsCOMPtr<nsIAccessible> nextChild;
-  if (!aAccessible) {
-    GetFirstChild(getter_AddRefs(nextChild));
-  }
-  else {
-    aAccessible->GetNextSibling(getter_AddRefs(nextChild));
-  }
-  return (aAccessible = nextChild);
 }
 
 PRBool
@@ -791,7 +741,7 @@ nsAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
   if (isDisabled) {
     *aState |= nsIAccessibleStates::STATE_UNAVAILABLE;
   }
-  else if (content->IsNodeOfType(nsINode::eELEMENT)) {
+  else if (content->IsElement()) {
     nsIFrame *frame = GetFrame();
     if (frame && frame->IsFocusable()) {
       *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
@@ -836,12 +786,8 @@ NS_IMETHODIMP nsAccessible::GetFocusedChild(nsIAccessible **aFocusedChild)
     focusedChild = this;
   }
   else if (gLastFocusedNode) {
-    nsCOMPtr<nsIAccessibilityService> accService =
-      do_GetService("@mozilla.org/accessibilityService;1");
-    NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
-
-    accService->GetAccessibleFor(gLastFocusedNode,
-                                 getter_AddRefs(focusedChild));
+    GetAccService()->GetAccessibleFor(gLastFocusedNode,
+                                      getter_AddRefs(focusedChild));
     if (focusedChild) {
       nsCOMPtr<nsIAccessible> focusedParentAccessible;
       focusedChild->GetParent(getter_AddRefs(focusedParentAccessible));
@@ -903,17 +849,17 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY, PRBool aDeepestChild,
   }
 
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-  nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
 
   nsCOMPtr<nsIDOMNode> relevantNode;
-  accService->GetRelevantContentNodeFor(node, getter_AddRefs(relevantNode));
+  GetAccService()->GetRelevantContentNodeFor(node,
+                                             getter_AddRefs(relevantNode));
   if (!relevantNode) {
     NS_IF_ADDREF(*aChild = fallbackAnswer);
     return NS_OK;
   }
 
   nsCOMPtr<nsIAccessible> accessible;
-  accService->GetAccessibleFor(relevantNode, getter_AddRefs(accessible));
+  GetAccService()->GetAccessibleFor(relevantNode, getter_AddRefs(accessible));
   if (!accessible) {
     // No accessible for the node with the point, so find the first
     // accessible in the DOM parent chain
@@ -931,8 +877,10 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY, PRBool aDeepestChild,
     // where layout won't walk into things for us, such as image map areas and
     // sub documents (XXX: subdocuments should be handled by methods of
     // nsOuterDocAccessibles).
-    nsCOMPtr<nsIAccessible> child;
-    while (NextChild(child)) {
+    PRInt32 childCount = GetChildCount();
+    for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+      nsAccessible *child = GetChildAt(childIdx);
+
       PRInt32 childX, childY, childWidth, childHeight;
       child->GetBounds(&childX, &childY, &childWidth, &childHeight);
       if (aX >= childX && aX < childX + childWidth &&
@@ -1357,7 +1305,7 @@ nsAccessible::HandleAccEvent(nsAccEvent *aEvent)
   NS_ENSURE_TRUE(nsAccUtils::IsNodeRelevant(eventNode), NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIObserverService> obsService =
-    do_GetService("@mozilla.org/observer-service;1");
+    mozilla::services::GetObserverService();
   NS_ENSURE_TRUE(obsService, NS_ERROR_FAILURE);
 
   return obsService->NotifyObservers(aEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
@@ -2904,7 +2852,7 @@ nsAccessible::GetParent()
   docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE,
                                             getter_AddRefs(parent));
 
-  nsRefPtr<nsAccessible> parentAcc = nsAccUtils::QueryAccessible(parent);
+  nsRefPtr<nsAccessible> parentAcc = do_QueryObject(parent);
 
 #ifdef DEBUG
   NS_ASSERTION(!parentAcc->IsDefunct(), "Defunct parent!");
@@ -2994,7 +2942,7 @@ void
 nsAccessible::TestChildCache(nsAccessible *aCachedChild)
 {
 #ifdef DEBUG
-  PRUint32 childCount = mChildren.Length();
+  PRInt32 childCount = mChildren.Length();
   if (childCount == 0) {
     NS_ASSERTION(!mAreChildrenInitialized, "No children but initialized!");
     return;
@@ -3012,6 +2960,7 @@ nsAccessible::TestChildCache(nsAccessible *aCachedChild)
 #endif
 }
 
+// nsAccessible public
 PRBool
 nsAccessible::EnsureChildren()
 {
@@ -3070,16 +3019,15 @@ nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError)
   return child;
 }
 
-already_AddRefed<nsIAccessible>
+already_AddRefed<nsAccessible>
 nsAccessible::GetFirstAvailableAccessible(nsIDOMNode *aStartNode)
 {
-  nsCOMPtr<nsIAccessible> accessible;
   nsCOMPtr<nsIDOMTreeWalker> walker; 
   nsCOMPtr<nsIDOMNode> currentNode(aStartNode);
 
   while (currentNode) {
-    GetAccService()->GetAccessibleInWeakShell(currentNode, mWeakShell,
-                                              getter_AddRefs(accessible));
+    nsRefPtr<nsAccessible> accessible =
+      GetAccService()->GetAccessibleInWeakShell(currentNode, mWeakShell);
     if (accessible)
       return accessible.forget();
 

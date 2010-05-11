@@ -227,7 +227,7 @@ Line: 1 Col: 30 Expected closing tag. Unexpected end of file.
 #data
 <h1>Hello<h2>World
 #errors
-4: Start tag seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
+4: Start tag seen without seeing a doctype first. Expected â€œ<!DOCTYPE html>â€.
 13: Heading cannot be a child of another heading.
 18: End of file seen and there were open elements.
 #document
@@ -269,6 +269,20 @@ Line: 1 Col: 15 End tag (b) violates step 1, paragraph 1 of the adoption agency 
 |   <body>
 |     <b>
 |       <button>
+
+#data
+<!DOCTYPE html><span><button>foo</span>bar
+#errors
+39: End tag â€œspanâ€ seen but there were unclosed elements.
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <span>
+|       <button>
+|         "foo"
+|     "bar"
 
 #data
 <p><b><div><marquee></p></b></div>X
@@ -1438,7 +1452,7 @@ Line: 1 Col: 29 Expected closing tag. Unexpected end of file.
 #data
 <h1><h2>
 #errors
-4: Start tag seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
+4: Start tag seen without seeing a doctype first. Expected â€œ<!DOCTYPE html>â€.
 8: Heading cannot be a child of another heading.
 8: End of file seen and there were open elements.
 #document
@@ -1634,11 +1648,11 @@ Line: 1 Col: 10 Unexpected start tag (frameset). Expected DOCTYPE.
 #data
 <h1><table><td><h3></table><h3></h1>
 #errors
-4: Start tag seen without seeing a doctype first. Expected “<!DOCTYPE html>”.
-15: “td” start tag in table body.
+4: Start tag seen without seeing a doctype first. Expected â€œ<!DOCTYPE html>â€.
+15: â€œtdâ€ start tag in table body.
 27: Unclosed elements.
 31: Heading cannot be a child of another heading.
-36: End tag “h1” seen but there were unclosed elements.
+36: End tag â€œh1â€ seen but there were unclosed elements.
 #document
 | <html>
 |   <head>

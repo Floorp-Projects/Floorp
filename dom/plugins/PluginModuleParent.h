@@ -60,6 +60,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIFileStreams.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla {
 namespace plugins {
@@ -125,6 +126,7 @@ public:
         return mNPNIface;
     }
 
+    PluginProcessParent* Process() const { return mSubprocess; }
     base::ProcessHandle ChildProcessHandle() { return mSubprocess->GetChildProcessHandle(); }
 
     bool OkToCleanup() const {
@@ -133,6 +135,11 @@ public:
 
     PPluginIdentifierParent*
     GetIdentifierForNPIdentifier(NPIdentifier aIdentifier);
+
+#ifdef OS_MACOSX
+    void AddToRefreshTimer(PluginInstanceParent *aInstance);
+    void RemoveFromRefreshTimer(PluginInstanceParent *aInstance);
+#endif
 
 protected:
     NS_OVERRIDE
@@ -157,6 +164,9 @@ protected:
 
     NS_OVERRIDE
     virtual bool AnswerProcessSomeEvents();
+
+    NS_OVERRIDE virtual bool
+    RecvProcessNativeEventsInRPCCall();
 
     virtual bool
     RecvAppendNotesToCrashReport(const nsCString& aNotes);
@@ -240,6 +250,12 @@ private:
     nsString mPluginDumpID;
     nsString mBrowserDumpID;
     nsString mHangID;
+
+#ifdef OS_MACOSX
+    void CAUpdate();
+    base::RepeatingTimer<PluginModuleParent> mCATimer;
+    nsTObserverArray<PluginInstanceParent*> mCATimerTargets;
+#endif
 };
 
 } // namespace plugins

@@ -221,6 +221,11 @@
     <popup id="toolbar-context-menu"
            onpopupshowing="onViewToolbarsPopupShowing(event);">
       <menuseparator/>
+      <menuitem command="cmd_ToggleTabsOnTop"
+                type="checkbox"
+                label="&viewTabsOnTop.label;"
+                accesskey="&viewTabsOnTop.accesskey;"/>
+      <menuseparator/>
       <menuitem command="cmd_CustomizeToolbars"
                 label="&viewCustomizeToolbar.label;"
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
@@ -350,11 +355,12 @@
     <tooltip id="tabbrowser-tab-tooltip" onpopupshowing="gBrowser.createTooltip(event);"/>
   </popupset>
 
-  <toolbox id="navigator-toolbox" class="toolbox-top" mode="icons"
+  <toolbox id="navigator-toolbox"
+           defaultmode="icons" mode="icons"
 #ifdef WINCE
            defaulticonsize="small" iconsize="small"
 #endif
-           defaultmode="icons">
+           persist="tabsontop">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
              defaultset="menubar-items"
@@ -557,8 +563,13 @@
 
     <toolbar id="TabsToolbar"
              fullscreentoolbar="true"
-             ordinal="100"
+             customizable="true"
+             mode="icons" lockmode="true"
+             iconsize="small" defaulticonsize="small" lockiconsize="true"
+             context="toolbar-context-menu"
+             defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
              collapsed="true">
+
       <tabs id="tabbrowser-tabs"
             class="tabbrowser-tabs"
             context="tabContextMenu"
@@ -568,6 +579,34 @@
             tooltip="tabbrowser-tab-tooltip">
         <tab class="tabbrowser-tab" selected="true"/>
       </tabs>
+
+      <toolbarbutton id="new-tab-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     label="&tabCmd.label;"
+                     command="cmd_newNavigatorTab"
+                     tooltiptext="&newTabButton.tooltip;"
+                     ondrop="newTabButtonObserver.onDrop(event)"
+                     ondragover="newTabButtonObserver.onDragOver(event)"
+                     ondragenter="newTabButtonObserver.onDragOver(event)"
+                     ondragleave="newTabButtonObserver.onDragLeave(event)"
+                     removable="true"/>
+
+      <toolbarbutton id="alltabs-button"
+                     class="toolbarbutton-1 chromeclass-toolbar-additional tabs-alltabs-button"
+                     type="menu"
+                     label="&listAllTabs.label;"
+                     tooltiptext="&listAllTabs.label;"
+                     removable="true">
+        <menupopup id="alltabs-popup"
+                   position="after_end"/>
+      </toolbarbutton>
+
+      <toolbarbutton id="tabs-closebutton"
+                     class="close-button tabs-closebutton"
+                     command="cmd_close"
+                     label="&closeTab.label;"
+                     tooltiptext="&closeTab.label;"/>
+
     </toolbar>
 
     <toolbarpalette id="BrowserToolbarPalette">
@@ -601,15 +640,6 @@
                      ondragover="bookmarksButtonObserver.onDragOver(event)"
                      ondragenter="bookmarksButtonObserver.onDragOver(event)"
                      ondragleave="bookmarksButtonObserver.onDragLeave(event)"/>
-
-      <toolbarbutton id="new-tab-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                     label="&tabCmd.label;"
-                     command="cmd_newNavigatorTab"
-                     tooltiptext="&newTabButton.tooltip;"
-                     ondrop="newTabButtonObserver.onDrop(event)"
-                     ondragover="newTabButtonObserver.onDragOver(event)"
-                     ondragenter="newTabButtonObserver.onDragOver(event)"
-                     ondragleave="newTabButtonObserver.onDragLeave(event)"/>
 
       <toolbarbutton id="new-window-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&newNavigatorCmd.label;"
@@ -660,7 +690,6 @@
                   tabcontainer="tabbrowser-tabs"
                   contentcontextmenu="contentAreaContextMenu"
                   autocompletepopup="PopupAutoComplete"
-                  ondrop="contentAreaDNDObserver.onDrop(event)"
                   onclick="return contentAreaClick(event, false);"/>
     </vbox>
   </hbox>
@@ -672,7 +701,7 @@
 #ifdef WINCE
                hidden="true"
 #endif
-               ondrop="contentAreaDNDObserver.onDrop(event)">
+               >
       <statusbarpanel id="statusbar-display" label="" flex="1"/>
       <statusbarpanel class="statusbarpanel-progress" collapsed="true" id="statusbar-progresspanel">
         <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>

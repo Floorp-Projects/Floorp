@@ -65,6 +65,7 @@ MozillaChildThread::Init()
   // Silverlight depends on the host calling CoInitialize.
   ::CoInitialize(NULL);
 #endif
+  // Add notification service here once bug 560630 is fixed
 
   // Certain plugins, such as flash, steal the unhandled exception filter
   // thus we never get crash reports when they fault. This call fixes it.

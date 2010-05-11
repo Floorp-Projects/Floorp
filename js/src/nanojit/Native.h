@@ -70,8 +70,8 @@
 #error "unknown nanojit architecture"
 #endif
 
-#ifndef NJ_USES_QUAD_CONSTANTS
-#  define NJ_USES_QUAD_CONSTANTS 0
+#ifndef NJ_USES_IMMD_POOL
+#  define NJ_USES_IMMD_POOL 0
 #endif
 
 #ifndef NJ_JTBL_SUPPORTED
@@ -150,7 +150,6 @@ namespace nanojit {
         // but only outputs if LC_Assembly is set.  Also prepends the output
         // with the address of the current native instruction.
         #define asm_output(...) do { \
-            counter_increment(native); \
             if (_logc->lcbits & LC_Assembly) { \
                 outline[0]='\0'; \
                VMPI_sprintf(outline, "%010lx   ", (unsigned long)_nIns); \

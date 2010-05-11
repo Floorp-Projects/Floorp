@@ -93,6 +93,8 @@ nsresult nsSVGTransform::Init()
 NS_IMPL_ADDREF(nsSVGTransform)
 NS_IMPL_RELEASE(nsSVGTransform)
 
+DOMCI_DATA(SVGTransform, nsSVGTransform)
+
 NS_INTERFACE_MAP_BEGIN(nsSVGTransform)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTransform)

@@ -55,7 +55,6 @@ class nsIDOMNode;
 class nsIDOMNodeList;
 class nsINodeList;
 class nsIPresShell;
-class nsPresContext;
 class nsEventChainVisitor;
 class nsEventChainPreVisitor;
 class nsEventChainPostVisitor;
@@ -66,6 +65,12 @@ class nsChildContentList;
 class nsNodeWeakReference;
 class nsNodeSupportsWeakRefTearoff;
 class nsIEditor;
+
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
 
 enum {
   // This bit will be set if the node doesn't have nsSlots
@@ -146,8 +151,20 @@ enum {
   NODE_ATTACH_BINDING_ON_POSTCREATE
                                = 0x00040000U,
 
+  // This node needs to go through frame construction to get a frame (or
+  // undisplayed entry).
+  NODE_NEEDS_FRAME =             0x00080000U,
+
+  // At least one descendant in the flattened tree has NODE_NEEDS_FRAME set.
+  // This should be set on every node on the flattened tree path between the
+  // node(s) with NODE_NEEDS_FRAME and the root content.
+  NODE_DESCENDANTS_NEED_FRAMES = 0x00100000U,
+
+  // Set if the node is an element.
+  NODE_IS_ELEMENT              = 0x00200000U,
+
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               20,
+  NODE_SCRIPT_TYPE_OFFSET =               22,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
@@ -241,11 +258,19 @@ private:
   static PRUint32 sMutationCount;
 };
 
+// Categories of node properties
+// 0 is global.
+#define DOM_USER_DATA         1
+#define DOM_USER_DATA_HANDLER 2
+#ifdef MOZ_SMIL
+#define SMIL_MAPPED_ATTR_ANIMVAL 3
+#endif // MOZ_SMIL
+
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0xe71b48a8, 0xeead, 0x4320, \
- { 0xb4, 0xb0, 0x15, 0xcd, 0x7c, 0x53, 0x96, 0x8c } }
- 
+{ 0xbc347b50, 0xa9b8, 0x419e, \
+ { 0xb1, 0x21, 0x76, 0x8f, 0x90, 0x05, 0x8d, 0xbf } } 
+
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
  * nsIContent and nsIDocument share.  An instance of this interface has a list
@@ -282,27 +307,25 @@ public:
     eDOCUMENT            = 1 << 1,
     /** nsIAttribute nodes */
     eATTRIBUTE           = 1 << 2,
-    /** elements */
-    eELEMENT             = 1 << 3,
     /** text nodes */
-    eTEXT                = 1 << 4,
+    eTEXT                = 1 << 3,
     /** xml processing instructions */
-    ePROCESSING_INSTRUCTION = 1 << 5,
+    ePROCESSING_INSTRUCTION = 1 << 4,
     /** comment nodes */
-    eCOMMENT             = 1 << 6,
+    eCOMMENT             = 1 << 5,
     /** form control elements */
-    eHTML_FORM_CONTROL   = 1 << 7,
+    eHTML_FORM_CONTROL   = 1 << 6,
     /** svg elements */
-    eSVG                 = 1 << 8,
+    eSVG                 = 1 << 7,
     /** document fragments */
-    eDOCUMENT_FRAGMENT   = 1 << 9,
+    eDOCUMENT_FRAGMENT   = 1 << 8,
     /** data nodes (comments, PIs, text). Nodes of this type always
      returns a non-null value for nsIContent::GetText() */
-    eDATA_NODE           = 1 << 10,
+    eDATA_NODE           = 1 << 19,
     /** nsHTMLMediaElement */
-    eMEDIA               = 1 << 11,
+    eMEDIA               = 1 << 10,
     /** animation elements */
-    eANIMATION           = 1 << 12
+    eANIMATION           = 1 << 11
   };
 
   /**
@@ -314,6 +337,19 @@ public:
    * @return whether the content matches ALL flags passed in
    */
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const = 0;
+
+  /**
+   * Return whether the node is an Element node
+   */
+  PRBool IsElement() const {
+    return HasFlag(NODE_IS_ELEMENT);
+  }
+
+  /**
+   * Return this node as an Element.  Should only be used for nodes
+   * for which IsElement() is true.
+   */
+  mozilla::dom::Element* AsElement();
 
   /**
    * Get the number of children
@@ -404,6 +440,10 @@ public:
       return NS_ERROR_NULL_POINTER;
     }
 
+    if (IsNodeOfType(eDATA_NODE)) {
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+
     PRInt32 index = IndexOf(aOldChild);
     if (index == -1) {
       // aOldChild isn't one of our children.
@@ -427,7 +467,7 @@ public:
    * @throws NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have more
    * than one element node as a child of a document.  Doing this will also
    * assert -- you shouldn't be doing it!  Check with
-   * nsIDocument::GetRootContent() first if you're not sure.  Apart from this
+   * nsIDocument::GetRootElement() first if you're not sure.  Apart from this
    * one constraint, this doesn't do any checking on whether aKid is a valid
    * child of |this|.
    *
@@ -448,7 +488,7 @@ public:
    * @throws NS_ERROR_DOM_HIERARCHY_REQUEST_ERR if one attempts to have more
    * than one element node as a child of a document.  Doing this will also
    * assert -- you shouldn't be doing it!  Check with
-   * nsIDocument::GetRootContent() first if you're not sure.  Apart from this
+   * nsIDocument::GetRootElement() first if you're not sure.  Apart from this
    * one constraint, this doesn't do any checking on whether aKid is a valid
    * child of |this|.
    *
@@ -766,7 +806,9 @@ public:
     NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS |
                                   NODE_IS_NATIVE_ANONYMOUS_ROOT |
                                   NODE_IS_IN_ANONYMOUS_SUBTREE |
-                                  NODE_ATTACH_BINDING_ON_POSTCREATE)) ||
+                                  NODE_ATTACH_BINDING_ON_POSTCREATE |
+                                  NODE_DESCENDANTS_NEED_FRAMES |
+                                  NODE_NEEDS_FRAME)) ||
                  IsNodeOfType(eCONTENT),
                  "Flag only permitted on nsIContent nodes");
     PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :

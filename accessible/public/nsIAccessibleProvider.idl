@@ -98,7 +98,7 @@ interface nsIAccessibleProvider : nsISupports
   /** A combination of a tabs object and a tabpanels object */
   const long XULTabBox = 0x00001018;
 
-  /** The collection of tab objects, useable in the TabBox and independant of
+  /** The collection of tab objects, usable in the TabBox and independent of it
    as well */
   const long XULTabs = 0x00001019;
 

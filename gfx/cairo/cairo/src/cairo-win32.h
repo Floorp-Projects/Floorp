@@ -65,6 +65,9 @@ cairo_win32_surface_create_with_dib (cairo_format_t format,
 cairo_public HDC
 cairo_win32_surface_get_dc (cairo_surface_t *surface);
 
+cairo_public HDC
+cairo_win32_get_dc_with_clip (cairo_t *cr);
+
 cairo_public cairo_surface_t *
 cairo_win32_surface_get_image (cairo_surface_t *surface);
 

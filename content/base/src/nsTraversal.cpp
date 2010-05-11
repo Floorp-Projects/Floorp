@@ -54,7 +54,8 @@ nsTraversal::nsTraversal(nsINode *aRoot,
     mRoot(aRoot),
     mWhatToShow(aWhatToShow),
     mFilter(aFilter),
-    mExpandEntityReferences(aExpandEntityReferences)
+    mExpandEntityReferences(aExpandEntityReferences),
+    mInAcceptNode(PR_FALSE)
 {
     NS_ASSERTION(aRoot, "invalid root in call to nsTraversal constructor");
 }
@@ -73,13 +74,15 @@ nsTraversal::~nsTraversal()
  */
 nsresult nsTraversal::TestNode(nsINode* aNode, PRInt16* _filtered)
 {
+    NS_ENSURE_TRUE(!mInAcceptNode, NS_ERROR_DOM_INVALID_STATE_ERR);
+
     nsresult rv;
 
     *_filtered = nsIDOMNodeFilter::FILTER_SKIP;
 
     PRUint16 nodeType = 0;
     // Check the most common cases
-    if (aNode->IsNodeOfType(nsINode::eELEMENT)) {
+    if (aNode->IsElement()) {
         nodeType = nsIDOMNode::ELEMENT_NODE;
     }
     else if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
@@ -114,7 +117,10 @@ nsresult nsTraversal::TestNode(nsINode* aNode, PRInt16* _filtered)
             domNode = do_QueryInterface(aNode);
         }
 
-        return mFilter->AcceptNode(domNode, _filtered);
+        mInAcceptNode = PR_TRUE;
+        rv = mFilter->AcceptNode(domNode, _filtered);
+        mInAcceptNode = PR_FALSE;
+        return rv;
     }
 
     *_filtered = nsIDOMNodeFilter::FILTER_ACCEPT;

@@ -144,6 +144,12 @@
     <button type="submit">Submit</button>
   </form>
 
+  <!-- form data submitted through HTTPS, when browser.formfill.saveHttpsForms is false -->
+  <form id="form20" action="https://www.example.com/" onsubmit="return checkSubmit(20)">
+    <input type="text" name="test1">
+    <button type="submit">Submit</button>
+  </form>
+
   <!-- ===== Things that should be saved ===== -->
 
 
@@ -213,6 +219,21 @@
         form.appendChild(input);
       }
     </script>
+    <button type="submit">Submit</button>
+  </form>
+
+  <iframe id="iframe1" src="https://example.com/tests/toolkit/components/satchel/test/subtst_form_submission_1.html"></iframe>
+  <iframe id="iframe2" src="https://example.com/tests/toolkit/components/satchel/test/subtst_form_submission_1.html"></iframe>
+
+  <!-- form data submitted through HTTPS, when browser.formfill.saveHttpsForms is true -->
+  <form id="form109" action="https://www.example.com/" onsubmit="return checkSubmit(109)">
+    <input type="text" name="test9">
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- regular form data, when browser.formfill.saveHttpsForms is false -->
+  <form id="form110" onsubmit="return checkSubmit(110)">
+    <input type="text" name="test10">
     <button type="submit">Submit</button>
   </form>
 
@@ -291,6 +312,7 @@ function startTest() {
   $_(17, "test1").value = "001064088";
   $_(18, "test1").value = "0000-0000-0080-4609";
   $_(19, "test1").value = "0000 0000 0222 331";
+  $_(20, "test1").value = "dontSaveThis";
 
   $_(101, "test1").value = "savedValue";
   $_(102, "test2").value = "savedValue";
@@ -309,6 +331,9 @@ function startTest() {
     $_(108, "test8_" + (i + 1)).value = testData[i];
   }
 
+  $_(109, "test9").value = "savedValue";
+  $_(110, "test10").value = "savedValue";
+
   // submit the first form.
   var button = getFormSubmitButton(1);
   button.click();
@@ -325,7 +350,7 @@ function checkSubmit(formNum) {
   
   // Check for expected storage state.
   switch (formNum) {
-    // Test 1-19 should not save anything.
+    // Test 1-20 should not save anything.
     case 1:
     case 2:
     case 3:
@@ -345,6 +370,7 @@ function checkSubmit(formNum) {
     case 17:
     case 18:
     case 19:
+    case 20:
         ok(!fh.hasEntries, "checking for empty storage");
         break;
     // The other tests do save data...
@@ -376,6 +402,12 @@ function checkSubmit(formNum) {
           ok(fh.entryExists("test8_" + (i + 1), ccNumbers.invalid15[i]), "checking saved value");
         }
         break;
+    case 109:
+        ok(fh.entryExists("test9", "savedValue"), "checking saved value");
+        break;
+    case 110:
+        ok(fh.entryExists("test10", "savedValue"), "checking saved value");
+        break;
     default:
         ok(false, "Unexpected form submission");
         break;
@@ -388,15 +420,46 @@ function checkSubmit(formNum) {
   if (formNum == 14)
       prefBranch.clearUserPref("signon.rememberSignons");
 
+  // Form 20 requires browser.formfill.saveHttpsForms to be false
+  // Run a couple subtests here, which submit forms from an HTTPS origin,
+  // these are loaded in iframes since the test suite isn't HTTPS. The subtest
+  // before the pref change should save a value, the (same) subtest run after
+  // the pref change should not.
+  if (formNum == 19) {
+    ok(true, "submitting subtest1");
+    var iframe = document.getElementById("iframe1");
+    iframe.contentDocument.forms[0].submit();
+    ok(fh.entryExists("subtest1", "subtestValue"), "checking saved subtest value");
+    fh.removeEntriesForName("subtest1");
+
+    prefBranch.setBoolPref("browser.formfill.saveHttpsForms", false);
+
+    ok(true, "submitting subtest1");
+    iframe = document.getElementById("iframe2");
+    iframe.contentDocument.forms[0].submit();
+    ok(!fh.entryExists("subtest1", "subtestValue"), "checking unsaved subtest value");
+  }
+  if (formNum == 20)
+    prefBranch.clearUserPref("browser.formfill.saveHttpsForms");
+
+  // Form 109 requires browser.formfill.save_https_forms to be true;
+  // Form 110 requires it to be false.
+  if (formNum == 108)
+    prefBranch.setBoolPref("browser.formfill.saveHttpsForms", true);
+  if (formNum == 109)
+    prefBranch.setBoolPref("browser.formfill.saveHttpsForms", false);
+  if (formNum == 110)
+    prefBranch.clearUserPref("browser.formfill.saveHttpsForms");
+
   // End the test at the last form.
-  if (formNum == 108) {
-    is(numSubmittedForms, 27, "Ensuring all forms were submitted.");
+  if (formNum == 110) {
+    is(numSubmittedForms, 30, "Ensuring all forms were submitted.");
     SimpleTest.finish();
     return false; // return false to cancel current form submission
   }
 
   // submit the next form.
-  var button = getFormSubmitButton(formNum == 19 ? 101 : (formNum + 1));
+  var button = getFormSubmitButton(formNum == 20 ? 101 : (formNum + 1));
   button.click();
 
   return false; // cancel current form submission

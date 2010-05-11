@@ -257,6 +257,62 @@ static struct {
     },
 };
 static struct {
+    jsbytecode incelem[7];
+    jsbytecode eleminc[15];
+} incelem_imacros = {
+    {
+/* 0*/  JSOP_DUP2,
+/* 1*/  JSOP_GETELEM,
+/* 2*/  JSOP_POS,
+/* 3*/  JSOP_ONE,
+/* 4*/  JSOP_ADD,
+/* 5*/  JSOP_SETELEM,
+/* 6*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_DUP2,
+/* 1*/  JSOP_GETELEM,
+/* 2*/  JSOP_POS,
+/* 3*/  JSOP_DUP,
+/* 4*/  JSOP_ONE,
+/* 5*/  JSOP_ADD,
+/* 6*/  JSOP_PICK, 3,
+/* 8*/  JSOP_PICK, 3,
+/*10*/  JSOP_PICK, 2,
+/*12*/  JSOP_SETELEM,
+/*13*/  JSOP_POP,
+/*14*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode decelem[7];
+    jsbytecode elemdec[15];
+} decelem_imacros = {
+    {
+/* 0*/  JSOP_DUP2,
+/* 1*/  JSOP_GETELEM,
+/* 2*/  JSOP_POS,
+/* 3*/  JSOP_ONE,
+/* 4*/  JSOP_SUB,
+/* 5*/  JSOP_SETELEM,
+/* 6*/  JSOP_STOP,
+    },
+    {
+/* 0*/  JSOP_DUP2,
+/* 1*/  JSOP_GETELEM,
+/* 2*/  JSOP_POS,
+/* 3*/  JSOP_DUP,
+/* 4*/  JSOP_ONE,
+/* 5*/  JSOP_SUB,
+/* 6*/  JSOP_PICK, 3,
+/* 8*/  JSOP_PICK, 3,
+/*10*/  JSOP_PICK, 2,
+/*12*/  JSOP_SETELEM,
+/*13*/  JSOP_POP,
+/*14*/  JSOP_STOP,
+    },
+};
+static struct {
     jsbytecode String[38];
 } call_imacros = {
     {
@@ -590,68 +646,6 @@ static struct {
     },
 };
 static struct {
-    jsbytecode for_in[13];
-    jsbytecode for_each[13];
-    jsbytecode for_in_native[10];
-    jsbytecode for_each_native[10];
-} iter_imacros = {
-    {
-/* 0*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(iterator),
-/* 3*/  JSOP_INT8, (JSITER_ENUMERATE),
-/* 5*/  JSOP_CALL, 0, 1,
-/* 8*/  JSOP_OBJTOP, ((JSMSG_BAD_ITERATOR_RETURN) & 0xff00) >> 8, ((JSMSG_BAD_ITERATOR_RETURN) & 0xff),
-/*11*/  JSOP_PUSH,
-/*12*/  JSOP_STOP,
-    },
-    {
-/* 0*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(iterator),
-/* 3*/  JSOP_INT8, (JSITER_ENUMERATE|JSITER_FOREACH),
-/* 5*/  JSOP_CALL, 0, 1,
-/* 8*/  JSOP_OBJTOP, ((JSMSG_BAD_ITERATOR_RETURN) & 0xff00) >> 8, ((JSMSG_BAD_ITERATOR_RETURN) & 0xff),
-/*11*/  JSOP_PUSH,
-/*12*/  JSOP_STOP,
-    },
-    {
-/* 0*/  JSOP_CALLBUILTIN, ((JSBUILTIN_ObjectToIterator) & 0xff00) >> 8, ((JSBUILTIN_ObjectToIterator) & 0xff),
-/* 3*/  JSOP_INT8, (JSITER_ENUMERATE),
-/* 5*/  JSOP_CALL, 0, 1,
-/* 8*/  JSOP_PUSH,
-/* 9*/  JSOP_STOP,
-    },
-    {
-/* 0*/  JSOP_CALLBUILTIN, ((JSBUILTIN_ObjectToIterator) & 0xff00) >> 8, ((JSBUILTIN_ObjectToIterator) & 0xff),
-/* 3*/  JSOP_INT8, (JSITER_ENUMERATE|JSITER_FOREACH),
-/* 5*/  JSOP_CALL, 0, 1,
-/* 8*/  JSOP_PUSH,
-/* 9*/  JSOP_STOP,
-    },
-};
-static struct {
-    jsbytecode custom_iter_next[12];
-    jsbytecode native_iter_next[12];
-} nextiter_imacros = {
-    {
-/* 0*/  JSOP_POP,
-/* 1*/  JSOP_DUP,
-/* 2*/  JSOP_CALLPROP, 0, COMMON_ATOM_INDEX(next),
-/* 5*/  JSOP_CALL, 0, 0,
-/* 8*/  JSOP_DUP,
-/* 9*/  JSOP_HOLE,
-/*10*/  JSOP_STRICTNE,
-/*11*/  JSOP_STOP,
-    },
-    {
-/* 0*/  JSOP_POP,
-/* 1*/  JSOP_DUP,
-/* 2*/  JSOP_CALLBUILTIN, ((JSBUILTIN_CallIteratorNext) & 0xff00) >> 8, ((JSBUILTIN_CallIteratorNext) & 0xff),
-/* 5*/  JSOP_CALL, 0, 0,
-/* 8*/  JSOP_DUP,
-/* 9*/  JSOP_HOLE,
-/*10*/  JSOP_STRICTNE,
-/*11*/  JSOP_STOP,
-    },
-};
-static struct {
     jsbytecode toString[35];
 } objtostr_imacros = {
     {
@@ -673,6 +667,31 @@ static struct {
 /*32*/  JSOP_SWAP,
 /*33*/  JSOP_POP,
 /*34*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode scriptgetter[4];
+} getprop_imacros = {
+    {
+/* 0*/  JSOP_CALL, 0, 0,
+/* 3*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode scriptgetter[5];
+} callprop_imacros = {
+    {
+/* 0*/  JSOP_CALL, 0, 0,
+/* 3*/  JSOP_SWAP,
+/* 4*/  JSOP_STOP,
+    },
+};
+static struct {
+    jsbytecode scriptgetter[4];
+} getthisprop_imacros = {
+    {
+/* 0*/  JSOP_CALL, 0, 0,
+/* 3*/  JSOP_STOP,
     },
 };
 uint8 js_opcode2extra[JSOP_LIMIT] = {
@@ -719,17 +738,17 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_VOID */
     0,  /* JSOP_INCNAME */
     0,  /* JSOP_INCPROP */
-    0,  /* JSOP_INCELEM */
+    3,  /* JSOP_INCELEM */
     0,  /* JSOP_DECNAME */
     0,  /* JSOP_DECPROP */
-    0,  /* JSOP_DECELEM */
+    3,  /* JSOP_DECELEM */
     0,  /* JSOP_NAMEINC */
     0,  /* JSOP_PROPINC */
-    0,  /* JSOP_ELEMINC */
+    3,  /* JSOP_ELEMINC */
     0,  /* JSOP_NAMEDEC */
     0,  /* JSOP_PROPDEC */
-    0,  /* JSOP_ELEMDEC */
-    0,  /* JSOP_GETPROP */
+    3,  /* JSOP_ELEMDEC */
+    1,  /* JSOP_GETPROP */
     0,  /* JSOP_SETPROP */
     0,  /* JSOP_GETELEM */
     0,  /* JSOP_SETELEM */
@@ -751,8 +770,8 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_STRICTEQ */
     0,  /* JSOP_STRICTNE */
     0,  /* JSOP_SETCALL */
-    2,  /* JSOP_ITER */
-    2,  /* JSOP_NEXTITER */
+    0,  /* JSOP_ITER */
+    0,  /* JSOP_MOREITER */
     0,  /* JSOP_ENDITER */
     8,  /* JSOP_APPLY */
     0,  /* JSOP_SWAP */
@@ -860,7 +879,7 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_XMLCDATA */
     0,  /* JSOP_XMLCOMMENT */
     0,  /* JSOP_XMLPI */
-    0,  /* JSOP_CALLPROP */
+    2,  /* JSOP_CALLPROP */
     0,  /* JSOP_GETUPVAR */
     0,  /* JSOP_CALLUPVAR */
     0,  /* JSOP_DELDESC */
@@ -885,16 +904,16 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_GETFUNNS */
     0,  /* JSOP_ENUMCONSTELEM */
     0,  /* JSOP_LEAVEBLOCKEXPR */
-    0,  /* JSOP_GETTHISPROP */
-    0,  /* JSOP_GETARGPROP */
-    0,  /* JSOP_GETLOCALPROP */
+    2,  /* JSOP_GETTHISPROP */
+    2,  /* JSOP_GETARGPROP */
+    2,  /* JSOP_GETLOCALPROP */
     0,  /* JSOP_INDEXBASE1 */
     0,  /* JSOP_INDEXBASE2 */
     0,  /* JSOP_INDEXBASE3 */
     0,  /* JSOP_CALLGVAR */
     0,  /* JSOP_CALLLOCAL */
     0,  /* JSOP_CALLARG */
-    0,  /* JSOP_CALLBUILTIN */
+    0,  /* JSOP_UNUSED218 */
     0,  /* JSOP_INT8 */
     0,  /* JSOP_INT32 */
     0,  /* JSOP_LENGTH */
@@ -938,11 +957,18 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
  || x == JSOP_MOD \
  || x == JSOP_NEG \
  || x == JSOP_POS \
+ || x == JSOP_INCELEM \
+ || x == JSOP_DECELEM \
+ || x == JSOP_ELEMINC \
+ || x == JSOP_ELEMDEC \
+ || x == JSOP_GETPROP \
  || x == JSOP_CALL \
- || x == JSOP_ITER \
- || x == JSOP_NEXTITER \
  || x == JSOP_APPLY \
  || x == JSOP_NEW \
+ || x == JSOP_CALLPROP \
+ || x == JSOP_GETTHISPROP \
+ || x == JSOP_GETARGPROP \
+ || x == JSOP_GETLOCALPROP \
  || x == JSOP_OBJTOSTR \
 )
 jsbytecode*
@@ -956,6 +982,10 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - add_imacros.obj_any) < 38) return add_imacros.obj_any;
     if (size_t(pc - add_imacros.obj_obj) < 72) return add_imacros.obj_obj;
     if (size_t(pc - unary_imacros.sign) < 41) return unary_imacros.sign;
+    if (size_t(pc - incelem_imacros.incelem) < 7) return incelem_imacros.incelem;
+    if (size_t(pc - incelem_imacros.eleminc) < 15) return incelem_imacros.eleminc;
+    if (size_t(pc - decelem_imacros.decelem) < 7) return decelem_imacros.decelem;
+    if (size_t(pc - decelem_imacros.elemdec) < 15) return decelem_imacros.elemdec;
     if (size_t(pc - call_imacros.String) < 38) return call_imacros.String;
     if (size_t(pc - new_imacros.String) < 38) return new_imacros.String;
     if (size_t(pc - apply_imacros.apply0) < 8) return apply_imacros.apply0;
@@ -976,12 +1006,9 @@ js_GetImacroStart(jsbytecode* pc) {
     if (size_t(pc - apply_imacros.call6) < 7) return apply_imacros.call6;
     if (size_t(pc - apply_imacros.call7) < 7) return apply_imacros.call7;
     if (size_t(pc - apply_imacros.call8) < 7) return apply_imacros.call8;
-    if (size_t(pc - iter_imacros.for_in) < 13) return iter_imacros.for_in;
-    if (size_t(pc - iter_imacros.for_each) < 13) return iter_imacros.for_each;
-    if (size_t(pc - iter_imacros.for_in_native) < 10) return iter_imacros.for_in_native;
-    if (size_t(pc - iter_imacros.for_each_native) < 10) return iter_imacros.for_each_native;
-    if (size_t(pc - nextiter_imacros.custom_iter_next) < 12) return nextiter_imacros.custom_iter_next;
-    if (size_t(pc - nextiter_imacros.native_iter_next) < 12) return nextiter_imacros.native_iter_next;
     if (size_t(pc - objtostr_imacros.toString) < 35) return objtostr_imacros.toString;
+    if (size_t(pc - getprop_imacros.scriptgetter) < 4) return getprop_imacros.scriptgetter;
+    if (size_t(pc - callprop_imacros.scriptgetter) < 5) return callprop_imacros.scriptgetter;
+    if (size_t(pc - getthisprop_imacros.scriptgetter) < 4) return getthisprop_imacros.scriptgetter;
     return NULL;
 }

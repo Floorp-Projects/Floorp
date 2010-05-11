@@ -121,6 +121,7 @@ nsDOMDocumentType::~nsDOMDocumentType()
 {
 }
 
+DOMCI_DATA(DocumentType, nsDOMDocumentType)
 
 // QueryInterface implementation for nsDOMDocumentType
 NS_INTERFACE_TABLE_HEAD(nsDOMDocumentType)

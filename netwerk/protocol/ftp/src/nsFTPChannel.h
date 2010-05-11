@@ -63,12 +63,6 @@
 #include "nsIResumableChannel.h"
 #include "nsHashPropertyBag.h"
 
-#define FTP_COMMAND_CHANNEL_SEG_SIZE 64
-#define FTP_COMMAND_CHANNEL_SEG_COUNT 8
-
-#define FTP_DATA_CHANNEL_SEG_SIZE  (4*1024)
-#define FTP_DATA_CHANNEL_SEG_COUNT 8
-
 class nsFtpChannel : public nsBaseChannel,
                      public nsIFTPChannel,
                      public nsIUploadChannel,

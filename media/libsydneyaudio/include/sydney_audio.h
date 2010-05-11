@@ -85,6 +85,8 @@ async-signal safe.
 #   else
 #       define SA_LITTLE_ENDIAN 1
 #   endif
+#elif defined(AIX)
+#	define SA_BIG_ENDIAN 1
 #else
 #    error "Cannot determine byte order!"
 #endif

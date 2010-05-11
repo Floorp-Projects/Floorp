@@ -59,7 +59,6 @@ _TEST_FILES_A	= \
 		test_area02.html \
 		test_area03.html \
 		test_area04.html \
-		test_basefont01.html \
 		test_body01.html \
 		test_button01.html \
 		test_button02.html \
@@ -96,9 +95,6 @@ _TEST_FILES_A	= \
 		test_HTMLAreaElement08.html \
 		test_HTMLBaseElement01.html \
 		test_HTMLBaseElement02.html \
-		test_HTMLBaseFontElement01.html \
-		test_HTMLBaseFontElement02.html \
-		test_HTMLBaseFontElement03.html \
 		test_HTMLBodyElement01.html \
 		test_HTMLBodyElement02.html \
 		test_HTMLBodyElement03.html \
@@ -339,7 +335,6 @@ _TEST_FILES_C	= \
 		test_HTMLFrameElement09.html \
 		test_HTMLFrameSetElement01.html \
 		test_HTMLFrameSetElement02.html \
-		test_HTMLHeadElement01.html \
 		test_HTMLHeadingElement01.html \
 		test_HTMLHeadingElement02.html \
 		test_HTMLHeadingElement03.html \

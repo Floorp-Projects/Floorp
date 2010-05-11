@@ -202,15 +202,20 @@ for (var d = -4; d <= 4; ++d) {
 
 // Test that changing the value on an already-running transition to the
 // value it currently happens to have resets the transition.
-var p = document.createElement("p");
-var t = document.createTextNode("transition-delay reset to starting point");
-p.appendChild(t);
-p.style.marginLeft = "0px";
-p.style.MozTransition = "4s margin-left ease-out 4s";
-div.appendChild(p);
-is(getComputedStyle(p, "").marginLeft, "0px",
-   "should be zero before changing value");
-var reset_test = p;
+function make_reset_test(transition, description)
+{
+    var p = document.createElement("p");
+    var t = document.createTextNode(description);
+    p.appendChild(t);
+    p.style.marginLeft = "0px";
+    p.style.MozTransition = transition;
+    div.appendChild(p);
+    is(getComputedStyle(p, "").marginLeft, "0px",
+       "should be zero before changing value");
+    return p;
+}
+var reset_test = make_reset_test("4s margin-left ease-out 4s", "transition-delay reset to starting point");
+var reset_test_reference = make_reset_test("4s margin-left linear -3s", "reference for previous test (reset test)");
 
 // Test that transitions on descendants do not trigger when the
 // inherited value is itself transitioning.  In other words, when
@@ -361,6 +366,7 @@ for (var d in delay_tests) {
     p.style.marginLeft = "100px";
 }
 reset_test.style.marginLeft = "100px";
+reset_test_reference.style.marginLeft = "100px";
 for (var i in descendant_tests) {
     var test = descendant_tests[i];
     test.parentNode.style.textIndent = "150px";
@@ -541,7 +547,13 @@ function check_reset_test(time)
     is(getComputedStyle(reset_test, "").marginLeft, "0px",
        "reset test value at time " + time + "s.");
 }
-setTimeout(reset_reset_test, 1000); // must always run, even if late
+check_reset_test(0);
+// reset the reset test right now so we don't have to worry about clock skew
+// To make sure that this is valid, check that a pretty-much-identical test is
+// already transitioning.
+is(getComputedStyle(reset_test_reference, "").marginLeft, "75px",
+   "reset test reference value");
+reset_reset_test();
 check_reset_test(0);
 for (var i = 1; i <= 8; ++i) {
     (function(j) {

@@ -255,18 +255,19 @@ nsDOMStorageManager::Initialize()
 
   NS_ADDREF(gStorageManager);
 
-  nsCOMPtr<nsIObserverService> os = do_GetService("@mozilla.org/observer-service;1");
-  if (os) {
-    os->AddObserver(gStorageManager, "cookie-changed", PR_FALSE);
-    os->AddObserver(gStorageManager, "offline-app-removed", PR_FALSE);
-    os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
-    os->AddObserver(gStorageManager, "perm-changed", PR_FALSE);
+  nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+  if (!os)
+    return NS_OK;
 
-    nsCOMPtr<nsIPrivateBrowsingService> pbs =
-      do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
-    if (pbs)
-      pbs->GetPrivateBrowsingEnabled(&gStorageManager->mInPrivateBrowsing);
-  }
+  os->AddObserver(gStorageManager, "cookie-changed", PR_FALSE);
+  os->AddObserver(gStorageManager, "offline-app-removed", PR_FALSE);
+  os->AddObserver(gStorageManager, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
+  os->AddObserver(gStorageManager, "perm-changed", PR_FALSE);
+
+  nsCOMPtr<nsIPrivateBrowsingService> pbs =
+    do_GetService(NS_PRIVATE_BROWSING_SERVICE_CONTRACTID);
+  if (pbs)
+    pbs->GetPrivateBrowsingEnabled(&gStorageManager->mInPrivateBrowsing);
 
   return NS_OK;
 }
@@ -517,6 +518,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorage)
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+DOMCI_DATA(StorageObsolete, nsDOMStorage)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage, nsIDOMStorageObsolete)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage, nsIDOMStorageObsolete)
@@ -1271,8 +1274,7 @@ nsDOMStorage::SetDBValue(const nsAString& aKey,
       }
     }
 
-    nsCOMPtr<nsIObserverService> os =
-      do_GetService("@mozilla.org/observer-service;1");
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
     os->NotifyObservers(window, "dom-storage-warn-quota-exceeded",
                         NS_ConvertUTF8toUTF16(mDomain).get());
   }
@@ -1421,10 +1423,9 @@ nsDOMStorage::BroadcastChangeNotification(const nsSubstring &aKey,
                                           const nsSubstring &aOldValue,
                                           const nsSubstring &aNewValue)
 {
-  nsresult rv;
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_FAILED(rv)) {
+    mozilla::services::GetObserverService();
+  if (!observerService) {
     return;
   }
 
@@ -1447,6 +1448,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorage2)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mStorage, nsIDOMStorageObsolete)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+DOMCI_DATA(Storage, nsDOMStorage2)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
@@ -1612,8 +1615,8 @@ nsDOMStorage2::BroadcastChangeNotification(const nsSubstring &aKey,
   }
 
   nsCOMPtr<nsIObserverService> observerService =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_FAILED(rv)) {
+    mozilla::services::GetObserverService();
+  if (!observerService) {
     return;
   }
 
@@ -1675,6 +1678,8 @@ nsDOMStorage2::Clear()
 //
 // nsDOMStorageList
 //
+
+DOMCI_DATA(StorageList, nsDOMStorageList)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMStorageList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -1863,6 +1868,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
+
+DOMCI_DATA(StorageItem, nsDOMStorageItem)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorageItem)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorageItem)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageItem)
@@ -1971,6 +1979,8 @@ nsDOMStorageItem::ToString(nsAString& aStr)
   return GetValue(aStr);
 }
 
+DOMCI_DATA(StorageEvent, nsDOMStorageEvent)
+
 // QueryInterface implementation for nsDOMStorageEvent
 NS_INTERFACE_MAP_BEGIN(nsDOMStorageEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageEvent)
@@ -2043,6 +2053,8 @@ NS_IMETHODIMP nsDOMStorageEvent::InitStorageEvent(const nsAString & typeArg,
 }
 
 // Obsolete globalStorage event
+
+DOMCI_DATA(StorageEventObsolete, nsDOMStorageEventObsolete)
 
 // QueryInterface implementation for nsDOMStorageEventObsolete
 NS_INTERFACE_MAP_BEGIN(nsDOMStorageEventObsolete)

@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/utils.js");
-
 function run_test() {
   let bookmarksBackupDir = PlacesUtils.backups.folder;
   // Remove all files from backups folder.

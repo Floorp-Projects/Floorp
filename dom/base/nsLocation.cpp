@@ -145,6 +145,7 @@ nsLocation::~nsLocation()
 {
 }
 
+DOMCI_DATA(Location, nsLocation)
 
 // QueryInterface implementation for nsLocation
 NS_INTERFACE_MAP_BEGIN(nsLocation)

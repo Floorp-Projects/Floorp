@@ -130,6 +130,7 @@ PRBool NS_SVGEnabled();
 
 #include "nsCycleCollector.h"
 #include "nsJSEnvironment.h"
+#include "nsContentSink.h"
 
 extern void NS_ShutdownChainItemPool();
 
@@ -283,6 +284,7 @@ nsLayoutStatics::Initialize()
   nsAudioStream::InitLibrary();
 #endif
 
+  nsContentSink::InitializeStatics();
   nsHtml5Module::InitializeStatics();
   
   nsCrossSiteListenerProxy::Startup();

@@ -76,6 +76,7 @@ include $(topsrcdir)/config/rules.mk
 LIBS += $(XPCOM_STANDALONE_GLUE_LDOPTS)
 
 DEFINES += -DXPCOM_GLUE
+STL_FLAGS =
 
 CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
 

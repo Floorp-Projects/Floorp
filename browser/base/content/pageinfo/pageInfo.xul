@@ -215,7 +215,7 @@
       <tree id="imagetree" onselect="onImageSelect();" contextmenu="picontext"
             ondragstart="onBeginLinkDrag(event,'image-address','image-alt')">
         <treecols>
-          <treecol sortSeparators="true" persist="hidden width" flex="10"
+          <treecol sortSeparators="true" primary="true" persist="width" flex="10"
                         width="10" id="image-address" label="&mediaAddress;"/>
           <splitter class="tree-splitter"/>
           <treecol sortSeparators="true" persist="hidden width" flex="2"

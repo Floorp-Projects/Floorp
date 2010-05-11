@@ -45,7 +45,6 @@
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
-#include "nsIPresShell.h"
 #include "nsIEventStateManager.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
@@ -114,10 +113,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsDOMUIEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMUIEvent, nsDOMEvent)
 
+DOMCI_DATA(UIEvent, nsDOMUIEvent)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMUIEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMUIEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSUIEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIPrivateCompositionEvent)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(UIEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
@@ -366,17 +366,6 @@ nsDOMUIEvent::GetIsChar(PRBool* aIsChar)
       *aIsChar = PR_FALSE;
       return NS_OK;
   }
-}
-
-NS_METHOD nsDOMUIEvent::GetCompositionReply(nsTextEventReply** aReply)
-{
-  if((mEvent->message == NS_COMPOSITION_START))
-  {
-    *aReply = &(static_cast<nsCompositionEvent*>(mEvent)->theReply);
-    return NS_OK;
-  }
-  *aReply = nsnull;
-  return NS_ERROR_FAILURE;
 }
 
 NS_METHOD

@@ -14,7 +14,7 @@ TestShmemParent::Main()
 {
     Shmem mem;
     size_t size = 12345;
-    if (!AllocShmem(size, &mem))
+    if (!AllocShmem(size, SharedMemory::TYPE_BASIC, &mem))
         fail("can't alloc shmem");
 
     if (mem.Size<char>() != size)
@@ -43,6 +43,9 @@ TestShmemParent::RecvTake(Shmem& mem, const size_t& expectedSize)
 
     if (strcmp(mem.get<char>(), "And yourself!"))
         fail("expected message was not written");
+
+    if (!DeallocShmem(mem))
+        fail("DeallocShmem");
 
     Close();
 

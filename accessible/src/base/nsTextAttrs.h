@@ -45,7 +45,6 @@ class nsHyperTextAccessible;
 
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 
 #include "nsIContent.h"
 #include "nsIFrame.h"

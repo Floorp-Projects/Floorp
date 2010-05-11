@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2008-2009 Mozilla Foundation
+ * Copyright (c) 2008-2010 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -32,8 +32,14 @@ import org.xml.sax.SAXException;
 
 public abstract class MetaScanner {
 
+    /**
+     * Constant for "charset".
+     */
     private static final @NoLength char[] CHARSET = "charset".toCharArray();
     
+    /**
+     * Constant for "content".
+     */
     private static final @NoLength char[] CONTENT = "content".toCharArray();
 
     private static final int NO = 0;
@@ -86,18 +92,39 @@ public abstract class MetaScanner {
     
     private static final int SELF_CLOSING_START_TAG = 20;
     
+    /**
+     * The data source.
+     */
     protected ByteReadable readable;
     
+    /**
+     * The state of the state machine that recognizes the tag name "meta".
+     */
     private int metaState = NO;
 
+    /**
+     * The current position in recognizing the attribute name "content".
+     */
     private int contentIndex = -1;
     
+    /**
+     * The current position in recognizing the attribute name "charset".
+     */
     private int charsetIndex = -1;
 
+    /**
+     * The tokenizer state.
+     */
     protected int stateSave = DATA;
 
+    /**
+     * The currently filled length of strBuf.
+     */
     private int strBufLen;
 
+    /**
+     * Accumulation buffer for attribute values.
+     */
     private char[] strBuf;
     
     // [NOCPP[
@@ -119,6 +146,8 @@ public abstract class MetaScanner {
     }
     
     /**
+     * Reads a byte from the data source.
+     * 
      * -1 means end.
      * @return
      * @throws IOException
@@ -131,6 +160,9 @@ public abstract class MetaScanner {
 
     // WARNING When editing this, makes sure the bytecode length shown by javap
     // stays under 8000 bytes!
+    /**
+     * The runs the meta scanning algorithm.
+     */
     protected final void stateLoop(int state)
             throws SAXException, IOException {
         int c = -1;
@@ -658,6 +690,10 @@ public abstract class MetaScanner {
         stateSave  = state;
     }
 
+    /**
+     * Adds a character to the accumulation buffer.
+     * @param c the character to add
+     */
     private void addToBuffer(int c) {
         if (strBufLen == strBuf.length) {
             char[] newBuf = new char[strBuf.length + (strBuf.length << 1)];
@@ -668,6 +704,11 @@ public abstract class MetaScanner {
         strBuf[strBufLen++] = (char)c;
     }
 
+    /**
+     * Attempts to extract a charset name from the accumulation buffer.
+     * @return <code>true</code> if successful
+     * @throws SAXException
+     */
     private boolean tryCharset() throws SAXException {
         if (metaState != A || !(contentIndex == 6 || charsetIndex == 6)) {
             return false;
@@ -690,6 +731,13 @@ public abstract class MetaScanner {
         return success;
     }
     
+    /**
+     * Tries to switch to an encoding.
+     * 
+     * @param encoding
+     * @return <code>true</code> if successful
+     * @throws SAXException
+     */
     protected abstract boolean tryCharset(String encoding) throws SAXException;
 
     

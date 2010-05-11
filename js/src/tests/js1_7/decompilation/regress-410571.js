@@ -111,23 +111,6 @@ var tests =
        }
       ]
    },
-   {
-    fun: function()
-    {
-      function q() { return 32; }
-      var x = { x getter: q };
-      yield x;
-    },
-    generates:
-      [
-       function(rv)
-       {
-         return typeof rv === "object" &&
-                getProps(rv) === "x" &&
-                rv.x === 32;
-       }
-      ]
-   },
   ];
 
 function checkItems(name, gen)

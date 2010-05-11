@@ -41,7 +41,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
 #include "nsIEventStateManager.h"
@@ -127,6 +126,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLLegendElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLLegendElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLLegendElement, nsHTMLLegendElement)
+
 // QueryInterface implementation for nsHTMLLegendElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLLegendElement)
   NS_HTML_CONTENT_INTERFACE_TABLE1(nsHTMLLegendElement, nsIDOMHTMLLegendElement)
@@ -168,7 +169,7 @@ nsHTMLLegendElement::ParseAttribute(PRInt32 aNamespaceID,
                                     nsAttrValue& aResult)
 {
   if (aAttribute == nsGkAtoms::align && aNamespaceID == kNameSpaceID_None) {
-    return aResult.ParseEnumValue(aValue, kAlignTable);
+    return aResult.ParseEnumValue(aValue, kAlignTable, PR_FALSE);
   }
 
   return nsGenericHTMLElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
@@ -261,7 +262,7 @@ nsHTMLLegendElement::Focus()
     return NS_OK;
 
   PRInt32 tabIndex;
-  if (frame->IsFocusable(&tabIndex))
+  if (frame->IsFocusable(&tabIndex, PR_FALSE))
     return nsGenericHTMLElement::Focus();
 
   // If the legend isn't focusable, focus whatever is focusable following

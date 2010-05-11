@@ -55,7 +55,7 @@ CallStack::getCurrentFrame() const
     return isSuspended() ? getSuspendedFrame() : cx->fp;
 }
 
-JS_REQUIRES_STACK inline Value *
+JS_REQUIRES_STACK inline jsval *
 StackSpace::firstUnused() const
 {
     CallStack *ccs = currentCallStack;
@@ -69,20 +69,19 @@ StackSpace::firstUnused() const
     return ccs->getInitialArgEnd();
 }
 
-#ifdef DEBUG
 /* Inline so we don't need the friend API. */
-JS_ALWAYS_INLINE bool
-StackSpace::isCurrent(JSContext *cx) const
+JS_ALWAYS_INLINE void
+StackSpace::assertIsCurrent(JSContext *cx) const
 {
+#ifdef DEBUG
     JS_ASSERT(cx == currentCallStack->maybeContext());
     JS_ASSERT(cx->getCurrentCallStack() == currentCallStack);
-    JS_ASSERT(cx->callStackInSync());
-    return true;
-}
+    cx->assertCallStacksInSync();
 #endif
+}
 
 JS_ALWAYS_INLINE bool
-StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
+StackSpace::ensureSpace(JSContext *maybecx, jsval *from, ptrdiff_t nvals) const
 {
     JS_ASSERT(from == firstUnused());
 #ifdef XP_WIN
@@ -114,26 +113,20 @@ JS_ALWAYS_INLINE bool
 StackSpace::ensureEnoughSpaceToEnterTrace()
 {
 #ifdef XP_WIN
-    return ensureSpace(NULL, firstUnused(), sMaxJSValsNeededForTrace);
+    return ensureSpace(NULL, firstUnused(), MAX_TRACE_SPACE_VALS);
 #endif
-    return end - firstUnused() > sMaxJSValsNeededForTrace;
-}
-
-JS_ALWAYS_INLINE void
-StackSpace::popInvokeArgs(JSContext *cx, Value *vp)
-{
-    JS_ASSERT(!currentCallStack->inContext());
-    currentCallStack = currentCallStack->getPreviousInThread();
+    return end - firstUnused() > MAX_TRACE_SPACE_VALS;
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
-StackSpace::getInlineFrame(JSContext *cx, Value *sp,
-                           uintN nmissing, uintN nslots) const
+StackSpace::getInlineFrame(JSContext *cx, jsval *sp,
+                           uintN nmissing, uintN nfixed) const
 {
-    JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
+    assertIsCurrent(cx);
+    JS_ASSERT(cx->hasActiveCallStack());
     JS_ASSERT(cx->regs->sp == sp);
 
-    ptrdiff_t nvals = nmissing + ValuesPerStackFrame + nslots;
+    ptrdiff_t nvals = nmissing + VALUES_PER_STACK_FRAME + nfixed;
     if (!ensureSpace(cx, sp, nvals))
         return NULL;
 
@@ -145,7 +138,8 @@ JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 StackSpace::pushInlineFrame(JSContext *cx, JSStackFrame *fp, jsbytecode *pc,
                             JSStackFrame *newfp)
 {
-    JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
+    assertIsCurrent(cx);
+    JS_ASSERT(cx->hasActiveCallStack());
     JS_ASSERT(cx->fp == fp && cx->regs->pc == pc);
 
     fp->savedPC = pc;
@@ -159,7 +153,8 @@ StackSpace::pushInlineFrame(JSContext *cx, JSStackFrame *fp, jsbytecode *pc,
 JS_REQUIRES_STACK JS_ALWAYS_INLINE void
 StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
 {
-    JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
+    assertIsCurrent(cx);
+    JS_ASSERT(cx->hasActiveCallStack());
     JS_ASSERT(cx->fp == up && up->down == down);
     JS_ASSERT(up->savedPC == JSStackFrame::sInvalidPC);
 
@@ -170,29 +165,6 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
     down->savedPC = JSStackFrame::sInvalidPC;
 #endif
     cx->setCurrentFrame(down);
-}
-
-/*
- * InvokeArgsGuard is used outside the JS engine. To simplify symbol visibility
- * issues, force InvokeArgsGuard members inline:
- */
-JS_ALWAYS_INLINE
-InvokeArgsGuard::InvokeArgsGuard()
-  : cx(NULL), cs(NULL), vp(NULL)
-{}
-
-JS_ALWAYS_INLINE
-InvokeArgsGuard::InvokeArgsGuard(Value *vp, uintN argc)
-  : cx(NULL), cs(NULL), vp(vp), argc(argc)
-{}
-
-JS_ALWAYS_INLINE
-InvokeArgsGuard::~InvokeArgsGuard()
-{
-    if (!cs)
-        return;
-    JS_ASSERT(cs == cx->stack().getCurrentCallStack());
-    cx->stack().popInvokeArgs(cx, vp);
 }
 
 void
@@ -226,11 +198,11 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case WEAKROOTS:
-        static_cast<AutoSaveWeakRoots *>(this)->savedRoots.mark(trc);
+        static_cast<AutoPreserveWeakRoots *>(this)->savedRoots.mark(trc);
         return;
 
-      case COMPILER:
-        static_cast<JSCompiler *>(this)->trace(trc);
+      case PARSER:
+        static_cast<Parser *>(this)->trace(trc);
         return;
 
       case SCRIPT:
@@ -254,12 +226,9 @@ AutoGCRooter::trace(JSTracer *trc)
         for (size_t i = 0, len = descriptors.length(); i < len; i++) {
             PropertyDescriptor &desc = descriptors[i];
 
-            JS_SET_TRACING_NAME(trc, "PropertyDescriptor::value");
-            CallGCMarkerIfGCThing(trc, desc.value);
-            JS_SET_TRACING_NAME(trc, "PropertyDescriptor::get");
-            CallGCMarkerIfGCThing(trc, desc.get);
-            JS_SET_TRACING_NAME(trc, "PropertyDescriptor::set");
-            CallGCMarkerIfGCThing(trc, desc.set);
+            CallGCMarkerIfGCThing(trc, desc.value, "PropertyDescriptor::value");
+            CallGCMarkerIfGCThing(trc, desc.get, "PropertyDescriptor::get");
+            CallGCMarkerIfGCThing(trc, desc.set, "PropertyDescriptor::set");
             js_TraceId(trc, desc.id);
         }
         return;

@@ -38,7 +38,6 @@
 
 #include "nsEditor.h"
 
-#include "nsIPresShell.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"

@@ -40,10 +40,10 @@
 #include "nsHTMLTextAccessible.h"
 
 #include "nsDocAccessible.h"
+#include "nsTextEquivUtils.h"
 
 #include "nsIFrame.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsComponentManagerUtils.h"

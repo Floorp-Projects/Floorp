@@ -65,7 +65,7 @@ ifdef WINCE_WINDOWS_MOBILE
 CPPSRCS         += WinMobileLocationProvider.cpp
 endif
 
-ifdef  MOZ_PLATFORM_MAEMO
+ifdef MOZ_MAEMO_LIBLOCATION
 CPPSRCS         += MaemoLocationProvider.cpp
 LOCAL_INCLUDES	+= $(MOZ_PLATFORM_MAEMO_CFLAGS)
 endif

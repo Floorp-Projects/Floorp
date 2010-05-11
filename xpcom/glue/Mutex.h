@@ -41,6 +41,7 @@
 
 #include "prlock.h"
 
+#include "mozilla/AutoRestore.h"
 #include "mozilla/BlockingResourceBase.h"
 
 //
@@ -116,7 +117,7 @@ public:
      * AssertCurrentThreadOwns
      * @see prlock.h
      **/
-    void AssertCurrentThreadOwns ()
+    void AssertCurrentThreadOwns () const
     {
     }
 
@@ -124,7 +125,7 @@ public:
      * AssertNotCurrentThreadOwns
      * @see prlock.h
      **/
-    void AssertNotCurrentThreadOwns ()
+    void AssertNotCurrentThreadOwns () const
     {
     }
 
@@ -132,12 +133,12 @@ public:
     void Lock();
     void Unlock();
 
-    void AssertCurrentThreadOwns ()
+    void AssertCurrentThreadOwns () const
     {
         PR_ASSERT_CURRENT_THREAD_OWNS_LOCK(mLock);
     }
 
-    void AssertNotCurrentThreadOwns ()
+    void AssertNotCurrentThreadOwns () const
     {
         // FIXME bug 476536
     }
@@ -173,9 +174,10 @@ public:
      * @param aLock A valid mozilla::Mutex* returned by 
      *              mozilla::Mutex::NewMutex. 
      **/
-    MutexAutoLock(mozilla::Mutex& aLock) :
+    MutexAutoLock(mozilla::Mutex& aLock MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
         mLock(&aLock)
     {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
         NS_ASSERTION(mLock, "null mutex");
         mLock->Lock();
     }
@@ -192,6 +194,7 @@ private:
     static void operator delete(void*);
 
     mozilla::Mutex* mLock;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 
@@ -205,9 +208,10 @@ private:
 class NS_COM_GLUE NS_STACK_CLASS MutexAutoUnlock 
 {
 public:
-    MutexAutoUnlock(mozilla::Mutex& aLock) :
+    MutexAutoUnlock(mozilla::Mutex& aLock MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM) :
         mLock(&aLock)
     {
+        MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
         NS_ASSERTION(mLock, "null lock");
         mLock->Unlock();
     }
@@ -225,6 +229,7 @@ private:
     static void operator delete(void*);
      
     mozilla::Mutex* mLock;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 

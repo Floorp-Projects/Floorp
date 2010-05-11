@@ -99,6 +99,8 @@ private:
     PRBool mIsCaseSensitive;
 };
 
+DOMCI_DATA(XPathEvaluator, nsXPathEvaluator)
+
 NS_IMPL_AGGREGATED(nsXPathEvaluator)
 NS_INTERFACE_MAP_BEGIN_AGGREGATED(nsXPathEvaluator)
     NS_INTERFACE_MAP_ENTRY(nsIDOMXPathEvaluator)

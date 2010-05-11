@@ -43,8 +43,8 @@
 #include "nsIPrivateTextRange.h"
 
 #define NS_IPRIVATETEXTEVENT_IID \
-{0xeee4a0f0, 0x7fb0, 0x494c, \
-{0x80, 0xe3, 0x30, 0xd3, 0x08, 0x95, 0x15, 0x2c}}
+{ 0xb6840e02, 0x9e56, 0x49d8, \
+  { 0x84, 0xd, 0x5f, 0xc1, 0xcb, 0x6c, 0xff, 0xb3 } }
 
 class nsIPrivateTextEvent : public nsISupports {
 
@@ -53,7 +53,6 @@ public:
 
 	NS_IMETHOD GetText(nsString& aText) = 0;
 	NS_IMETHOD_(already_AddRefed<nsIPrivateTextRangeList>) GetInputRange() = 0;
-	NS_IMETHOD_(nsTextEventReply*) GetEventReply() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPrivateTextEvent, NS_IPRIVATETEXTEVENT_IID)

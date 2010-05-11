@@ -277,6 +277,8 @@ gfxFontUtils::ReadCMAPTableFormat12(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBi
         prevEndCharCode = endCharCode;
     }
 
+    aCharacterMap.mBlocks.Compact();
+
     return NS_OK;
 }
 
@@ -352,28 +354,40 @@ gfxFontUtils::ReadCMAPTableFormat4(PRUint8 *aBuf, PRUint32 aLength, gfxSparseBit
         }
     }
 
+    aCharacterMap.mBlocks.Compact();
+
     return NS_OK;
 }
 
 // Windows requires fonts to have a format-4 cmap with a Microsoft ID (3).  On the Mac, fonts either have
 // a format-4 cmap with Microsoft platform/encoding id or they have one with a platformID == Unicode (0)
-// For fonts with two format-4 tables, the first one (Unicode platform) is preferred on the Mac.
+
+// For fonts with two format-4 tables, the first one (Unicode platform) 
+// used to be preferred on the Mac, but this causes problems on OS X 10.6
+// where ATS appears to synthesize a platform-0 subtable that claims support
+// for additional codepoints that Cocoa Text will simulate.
+// Therefore, we prefer the later (MS) format-4 table if available.
 
 #if defined(XP_MACOSX)
-    #define acceptablePlatform(p)    ((p) == PLATFORM_ID_UNICODE || (p) == PLATFORM_ID_MICROSOFT)
-    #define acceptableFormat4(p,e,k) ( ((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDMicrosoft && (k) != 4) || \
-                                       ((p) == PLATFORM_ID_UNICODE) )
-    #define isSymbol(p,e)            ((p) == PLATFORM_ID_MICROSOFT && (e) == EncodingIDSymbol)
+    #define acceptablePlatform(p)    ((p) == PLATFORM_ID_UNICODE || \
+                                      (p) == PLATFORM_ID_MICROSOFT)
+    #define acceptableFormat4(p,e)   (((p) == PLATFORM_ID_MICROSOFT && \
+                                       (e) == EncodingIDMicrosoft) || \
+                                      ((p) == PLATFORM_ID_UNICODE))
+    #define isSymbol(p,e)            ((p) == PLATFORM_ID_MICROSOFT && \
+                                      (e) == EncodingIDSymbol)
 #else
     #define acceptablePlatform(p)    ((p) == PLATFORM_ID_MICROSOFT)
-    #define acceptableFormat4(p,e,k) ((e) == EncodingIDMicrosoft)
+    #define acceptableFormat4(p,e)   ((e) == EncodingIDMicrosoft)
     #define isSymbol(p,e)            ((e) == EncodingIDSymbol)
 #endif
 
 #define acceptableUCS4Encoding(p, e) \
-    ((platformID == PLATFORM_ID_MICROSOFT && encodingID == EncodingIDUCS4ForMicrosoftPlatform) || \
+    ((platformID == PLATFORM_ID_MICROSOFT && \
+      encodingID == EncodingIDUCS4ForMicrosoftPlatform) || \
      (platformID == PLATFORM_ID_UNICODE   && \
-      (encodingID == EncodingIDDefaultForUnicodePlatform || encodingID >= EncodingIDUCS4ForUnicodePlatform)))
+      (encodingID == EncodingIDDefaultForUnicodePlatform || \
+       encodingID >= EncodingIDUCS4ForUnicodePlatform)))
 
 PRUint32
 gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
@@ -425,7 +439,7 @@ gfxFontUtils::FindPreferredSubtable(PRUint8 *aBuf, PRUint32 aBufLength,
             *aTableOffset = offset;
             *aSymbolEncoding = PR_TRUE;
             break;
-        } else if (format == 4 && acceptableFormat4(platformID, encodingID, keepFormat)) {
+        } else if (format == 4 && acceptableFormat4(platformID, encodingID)) {
             keepFormat = format;
             *aTableOffset = offset;
             *aSymbolEncoding = PR_FALSE;
@@ -483,6 +497,8 @@ typedef struct {
 
     AutoSwap_PRUint16 arrays[1];
 } Format4Cmap;
+
+#pragma pack()
 
 PRUint32
 gfxFontUtils::MapCharToGlyphFormat4(const PRUint8 *aBuf, PRUnichar aCh)
@@ -768,6 +784,8 @@ struct KernTableSubtableHeaderVersion1 {
     AutoSwap_PRUint16    coverage;
     AutoSwap_PRUint16    tupleIndex;
 };
+
+#pragma pack()
 
 static PRBool
 IsValidSFNTVersion(PRUint32 version)
@@ -1534,6 +1552,8 @@ gfxFontUtils::ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID,
     return NS_OK;
 }
 
+#ifdef XP_WIN
+
 // Embedded OpenType (EOT) handling
 // needed for dealing with downloadable fonts on Windows
 //
@@ -1546,6 +1566,8 @@ gfxFontUtils::ReadNames(nsTArray<PRUint8>& aNameTable, PRUint32 aNameID,
 // stored in big-endian format)
 //
 // EOT header is stored in *little* endian order!!
+
+#pragma pack(1)
 
 struct EOTFixedHeader {
 
@@ -1583,9 +1605,9 @@ struct EOTFixedHeader {
 
 };
 
-// EOT headers are only used on Windows
+#pragma pack()
 
-#ifdef XP_WIN
+// EOT headers are only used on Windows
 
 // EOT variable-sized header (version 0x00020001 - contains 4 name
 // fields, each with the structure):
@@ -1798,8 +1820,8 @@ gfxFontUtils::MakeEOTHeader(const PRUint8 *aFontData, PRUint32 aFontDataLength,
             break;
     }
 
-    if (needNames != 0) 
-    {
+    // the Version name is allowed to be null
+    if ((needNames & ~(1 << EOTFixedHeader::EOT_VERSION_NAME_INDEX)) != 0) {
         return NS_ERROR_FAILURE;
     }
 

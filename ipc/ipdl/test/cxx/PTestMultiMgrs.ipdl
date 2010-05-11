@@ -1,5 +1,5 @@
-include protocol "PTestMultiMgrsLeft.ipdl";
-include protocol "PTestMultiMgrsRight.ipdl";
+include protocol PTestMultiMgrsLeft;
+include protocol PTestMultiMgrsRight;
 
 namespace mozilla {
 namespace _ipdltest {

@@ -79,6 +79,8 @@ NS_IMPL_NS_NEW_SVG_ELEMENT(Defs)
 NS_IMPL_ADDREF_INHERITED(nsSVGDefsElement,nsSVGDefsElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGDefsElement,nsSVGDefsElementBase)
 
+DOMCI_DATA(SVGDefsElement, nsSVGDefsElement)
+
 NS_INTERFACE_TABLE_HEAD(nsSVGDefsElement)
   NS_NODE_INTERFACE_TABLE4(nsSVGDefsElement, nsIDOMNode, nsIDOMElement,
                            nsIDOMSVGElement, nsIDOMSVGDefsElement)

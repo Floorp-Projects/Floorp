@@ -151,6 +151,7 @@ nsTextNode::~nsTextNode()
 NS_IMPL_ADDREF_INHERITED(nsTextNode, nsGenericDOMDataNode)
 NS_IMPL_RELEASE_INHERITED(nsTextNode, nsGenericDOMDataNode)
 
+DOMCI_DATA(Text, nsTextNode)
 
 // QueryInterface implementation for nsTextNode
 NS_INTERFACE_TABLE_HEAD(nsTextNode)
@@ -235,6 +236,8 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, "Text@%p", static_cast<const void*>(this));
   fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
+  fprintf(out, " flags=[%08x]", GetFlags());
+  fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
   nsAutoString tmp;
@@ -344,8 +347,8 @@ nsAttributeTextNode::AttributeChanged(nsIDocument* aDocument,
     // XXXbz ideally we'd either process this on layout flushes or do it right
     // after nsIMutationObserver notifications are over or something, instead
     // of doing it fully async.
-    nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsAttributeTextNode>(
-            this, &nsAttributeTextNode::UpdateText);
+    void (nsAttributeTextNode::*update)() = &nsAttributeTextNode::UpdateText;
+    nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this, update);
     NS_DispatchToCurrentThread(ev);
   }
 }

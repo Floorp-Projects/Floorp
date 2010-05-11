@@ -175,6 +175,10 @@ public:
 
   nsTArray< nsAutoPtr<nsPluginInstanceTag> > *InstanceTagArray();
 
+  // Return the tag for |aLibrary| if found, nsnull if not.
+  nsPluginTag*
+  FindTagForLibrary(PRLibrary* aLibrary);
+
 private:
   nsresult
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
@@ -188,7 +192,7 @@ private:
   NewEmbeddedPluginStream(nsIURI* aURL, nsIPluginInstanceOwner *aOwner, nsIPluginInstance* aInstance);
 
   nsresult
-  NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance);
+  NewFullPagePluginStream(nsIStreamListener *&aStreamListener, nsIURI* aURI, nsIPluginInstance *aInstance);
 
   // Return an nsPluginTag for this type, if any.  If aCheckEnabled is
   // true, only enabled plugins will be returned.
@@ -198,7 +202,7 @@ private:
   nsPluginTag*
   FindPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
 
-  // Return the tag for |plugin| if found, nsnull if not.
+  // Return the tag for |aPlugin| if found, nsnull if not.
   nsPluginTag*
   FindTagForPlugin(nsIPlugin* aPlugin);
 

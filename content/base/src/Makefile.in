@@ -76,6 +76,7 @@ CPPSRCS		= \
 		nsAttrAndChildArray.cpp \
 		nsAttrValue.cpp \
 		nsCCUncollectableMarker.cpp \
+		nsChannelPolicy.cpp \
 		nsCommentNode.cpp \
 		nsContentAreaDragDrop.cpp \
 		nsContentIterator.cpp \
@@ -96,6 +97,7 @@ CPPSRCS		= \
 		nsDOMParser.cpp \
 		nsDOMSerializer.cpp \
 		nsDOMTokenList.cpp \
+		nsDOMSettableTokenList.cpp \
 		nsDocument.cpp \
 		nsDocumentEncoder.cpp \
 		nsDocumentFragment.cpp \
@@ -153,6 +155,7 @@ FORCE_STATIC_LIB = 1
 EXTRA_COMPONENTS = \
 		$(srcdir)/nsBadCertHandler.js \
 		contentSecurityPolicy.js \
+		contentAreaDropListener.js \
 		$(NULL)
 
 EXTRA_JS_MODULES = \

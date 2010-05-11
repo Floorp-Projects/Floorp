@@ -311,6 +311,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(txMozillaXSLTProcessor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(txMozillaXSLTProcessor)
+
+DOMCI_DATA(XSLTProcessor, txMozillaXSLTProcessor)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(txMozillaXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIXSLTProcessorObsolete)
@@ -610,7 +613,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
     
     nsCOMPtr<nsINode> styleNode = do_QueryInterface(aStyle);
     NS_ENSURE_TRUE(styleNode &&
-                   (styleNode->IsNodeOfType(nsINode::eELEMENT) ||
+                   (styleNode->IsElement() ||
                     styleNode->IsNodeOfType(nsINode::eDOCUMENT)),
                    NS_ERROR_INVALID_ARG);
 
@@ -619,7 +622,7 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
     // XXX set up exception context, bug 204658
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (styleNode->IsNodeOfType(nsINode::eELEMENT)) {
+    if (styleNode->IsElement()) {
         mStylesheetDocument = styleNode->GetOwnerDoc();
         NS_ENSURE_TRUE(mStylesheetDocument, NS_ERROR_UNEXPECTED);
 

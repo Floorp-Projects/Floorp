@@ -97,6 +97,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLHRElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLHRElement, nsGenericElement) 
 
 
+DOMCI_DATA(HTMLHRElement, nsHTMLHRElement)
+
 // QueryInterface implementation for nsHTMLHRElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLHRElement)
   NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLHRElement,
@@ -137,7 +139,7 @@ nsHTMLHRElement::ParseAttribute(PRInt32 aNamespaceID,
       return aResult.ParseIntWithBounds(aValue, 1, 1000);
     }
     if (aAttribute == nsGkAtoms::align) {
-      return aResult.ParseEnumValue(aValue, kAlignTable);
+      return aResult.ParseEnumValue(aValue, kAlignTable, PR_FALSE);
     }
     if (aAttribute == nsGkAtoms::color) {
       return aResult.ParseColor(aValue, GetOwnerDoc());

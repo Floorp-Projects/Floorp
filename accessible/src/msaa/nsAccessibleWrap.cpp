@@ -37,7 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessibleWrap.h"
+
 #include "nsAccessibilityAtoms.h"
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
+#include "nsRelUtils.h"
 
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleSelectable.h"
@@ -497,7 +501,7 @@ __try {
   if (!content)
     return E_FAIL;
 
-  if (content->IsNodeOfType(nsINode::eELEMENT)) {
+  if (content->IsElement()) {
     nsAutoString roleString;
     if (msaaRole != ROLE_SYSTEM_CLIENT &&
         !content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, roleString)) {
@@ -1751,7 +1755,7 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 HWND
 nsAccessibleWrap::GetHWNDFor(nsIAccessible *aAccessible)
 {
-  nsRefPtr<nsAccessNode> accessNode = nsAccUtils::QueryAccessNode(aAccessible);
+  nsRefPtr<nsAccessNode> accessNode = do_QueryObject(aAccessible);
   if (!accessNode)
     return 0;
 

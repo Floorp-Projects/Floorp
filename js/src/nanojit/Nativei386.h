@@ -96,7 +96,7 @@ namespace nanojit
     #define NJ_MAX_STACK_ENTRY           4096
     #define NJ_MAX_PARAMETERS               1
 
-    #define NJ_USES_QUAD_CONSTANTS          1
+    #define NJ_USES_IMMD_POOL          1
 
     #define NJ_JTBL_SUPPORTED               1
     #define NJ_EXPANDED_LOADSTORE_SUPPORTED 1

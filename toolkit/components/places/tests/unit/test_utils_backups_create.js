@@ -41,8 +41,6 @@
   * Check for correct functionality of PlacesUtils.archiveBookmarksFile
   */
 
-Components.utils.import("resource://gre/modules/utils.js");
-
 const PREFIX = "bookmarks-";
 // The localized prefix must be "bigger" and associated to older backups.
 const LOCALIZED_PREFIX = "segnalibri-";

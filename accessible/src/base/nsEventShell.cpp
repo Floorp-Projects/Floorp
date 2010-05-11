@@ -38,6 +38,8 @@
 
 #include "nsEventShell.h"
 
+#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
 
 ////////////////////////////////////////////////////////////////////////////////

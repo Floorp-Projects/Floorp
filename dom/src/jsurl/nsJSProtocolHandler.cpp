@@ -693,7 +693,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 
     mPopupState = win->GetPopupControlState();
 
-    nsRunnableMethod<nsJSChannel>::Method method;
+    void (nsJSChannel::*method)();
     if (mIsAsync) {
         // post an event to do the rest
         method = &nsJSChannel::EvaluateScript;
@@ -724,7 +724,7 @@ nsJSChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
         method = &nsJSChannel::NotifyListener;            
     }
 
-    nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsJSChannel>(this, method);
+    nsCOMPtr<nsIRunnable> ev = NS_NewRunnableMethod(this, method);
     nsresult rv = NS_DispatchToCurrentThread(ev);
 
     if (NS_FAILED(rv)) {

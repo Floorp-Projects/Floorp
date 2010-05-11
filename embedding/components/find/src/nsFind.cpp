@@ -48,7 +48,6 @@
 #include "nsIDOMDocumentTraversal.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
-#include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsITextControlFrame.h"
 #include "nsIFormControl.h"
@@ -945,7 +944,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     ToLowerCase(patAutoStr);
 
   // Ignore soft hyphens in the pattern  
-  static const char kShy[] = { CH_SHY, 0 };
+  static const char kShy[] = { char(CH_SHY), 0 };
   patAutoStr.StripChars(kShy);
 
   const PRUnichar* patStr = patAutoStr.get();

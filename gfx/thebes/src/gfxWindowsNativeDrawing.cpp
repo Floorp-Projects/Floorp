@@ -155,11 +155,8 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
     if (mRenderState == RENDER_STATE_NATIVE_DRAWING) {
         // we can just do native drawing directly to the context's surface
 
-        // Need to force the clip to be set
-        mContext->UpdateSurfaceClip();
-
         // grab the DC
-        mDC = mWinSurface->GetDC();
+        mDC = mWinSurface->GetDCWithClip(mContext);
 
         // do we need to use SetWorldTransform?
         if (mTransformType != TRANSLATION_ONLY) {

@@ -197,6 +197,7 @@ ACCESSIBILITY_ATOM(tabindex, "tabindex")
 ACCESSIBILITY_ATOM(title, "title")
 ACCESSIBILITY_ATOM(tooltiptext, "tooltiptext")
 ACCESSIBILITY_ATOM(type, "type")
+ACCESSIBILITY_ATOM(usemap, "usemap")
 ACCESSIBILITY_ATOM(value, "value")
 
   // Alphabetical list of object attributes

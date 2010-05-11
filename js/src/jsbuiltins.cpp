@@ -103,10 +103,6 @@ js_imod(int32 a, int32 b)
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_imod, INT32, INT32, 1, ACC_NONE)
 
-/* The following boxing/unboxing primitives we can't emit inline because
-   they either interact with the GC and depend on Spidermonkey's 32-bit
-   integer representation. */
-
 jsval FASTCALL
 js_BoxDouble(JSContext* cx, jsdouble d)
 {
@@ -116,7 +112,7 @@ js_BoxDouble(JSContext* cx, jsdouble d)
     JS_ASSERT(JS_ON_TRACE(cx));
     jsval v; /* not rooted but ok here because we know GC won't run */
     if (!js_NewDoubleInRootedValue(cx, d, &v))
-        return JSVAL_ERROR_COOKIE;
+        return JSVAL_NULL;
     return v;
 }
 JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxDouble, CONTEXT, DOUBLE, 1, ACC_NONE)
@@ -130,7 +126,7 @@ js_BoxInt32(JSContext* cx, int32 i)
     jsval v; /* not rooted but ok here because we know GC won't run */
     jsdouble d = (jsdouble)i;
     if (!js_NewDoubleInRootedValue(cx, d, &v))
-        return JSVAL_ERROR_COOKIE;
+        return JSVAL_NULL;
     return v;
 }
 JS_DEFINE_CALLINFO_2(extern, JSVAL, js_BoxInt32, CONTEXT, INT32, 1, ACC_NONE)
@@ -348,7 +344,7 @@ JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewNullClosure, CONTEXT, OBJECT, OBJECT,
                      ACC_STORE_ANY)
 
 JS_REQUIRES_STACK JSBool FASTCALL
-js_PopInterpFrame(JSContext* cx, InterpState* state)
+js_PopInterpFrame(JSContext* cx, TracerState* state)
 {
     JS_ASSERT(cx->fp && cx->fp->down);
     JSStackFrame* const fp = cx->fp;
@@ -382,7 +378,7 @@ js_PopInterpFrame(JSContext* cx, InterpState* state)
     *state->inlineCallCountp = *state->inlineCallCountp - 1;
     return JS_TRUE;
 }
-JS_DEFINE_CALLINFO_2(extern, BOOL, js_PopInterpFrame, CONTEXT, INTERPSTATE, 0, ACC_STORE_ANY)
+JS_DEFINE_CALLINFO_2(extern, BOOL, js_PopInterpFrame, CONTEXT, TRACERSTATE, 0, ACC_STORE_ANY)
 
 JSString* FASTCALL
 js_ConcatN(JSContext *cx, JSString **strArray, uint32 size)

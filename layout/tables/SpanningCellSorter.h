@@ -40,8 +40,10 @@
  * Code to sort cells by their colspan, used by BasicTableLayoutStrategy.
  */
 
-#include "nsIPresShell.h"
 #include "pldhash.h"
+#include "nsDebug.h"
+
+class nsIPresShell;
 
 /**
  * The SpanningCellSorter is responsible for accumulating lists of cells

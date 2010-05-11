@@ -68,6 +68,9 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 #include "nsCrossSiteListenerProxy.h"
+#include "nsIContentSecurityPolicy.h"
+#include "nsIChannelPolicy.h"
+#include "nsChannelPolicy.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gFontDownloaderLog = PR_NewLogModule("fontdownloader");
@@ -266,13 +269,24 @@ nsUserFontSet::StartLoad(gfxFontEntry *aFontToLoad,
   nsCOMPtr<nsILoadGroup> loadGroup(ps->GetDocument()->GetDocumentLoadGroup());
 
   nsCOMPtr<nsIChannel> channel;
+  // get Content Security Policy from principal to pass into channel
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = principal->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (csp) {
+    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_FONT);
+  }
   rv = NS_NewChannel(getter_AddRefs(channel),
                      aFontFaceSrc->mURI,
                      nsnull,
                      loadGroup,
                      nsnull,
-                     nsIRequest::LOAD_NORMAL);
-                     
+                     nsIRequest::LOAD_NORMAL,
+                     channelPolicy);
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<nsFontFaceLoader> fontLoader =

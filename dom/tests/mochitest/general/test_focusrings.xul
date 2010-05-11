@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/javascript"
+        src="chrome://mochikit/content/MochiKit/packed.js"></script>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+<html:style xmlns:html="http://www.w3.org/1999/xhtml" type="text/css">
+* { outline: none; }
+#l1:-moz-focusring, #l3:-moz-focusring, #b1:-moz-focusring { outline: 2px solid red; }
+#l2:focus, #b2:focus { outline: 2px solid red; }
+</html:style>
+
+<script>
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest()
+{
+  var isMac = (navigator.platform.indexOf("Mac") >= 0);
+  var isWin = (navigator.platform.indexOf("Win") >= 0);
+
+  function checkFocus(element, visible, testid)
+  {
+    var outline = getComputedStyle(element, "").outlineWidth;
+    is(outline, visible ? "2px" : "0px", testid);
+  }
+
+  checkFocus($("l1"), false, "initial appearance");
+
+  $("l1").focus();
+
+  // we can't really test the situation on Windows where a dialog doesn't show
+  // focus rings until a key is pressed, as the default state depends on what
+  // kind of real user input, mouse or key, was last entered. But we can handle
+  // the test regardless of which user input last occured.
+  var expectedVisible = (!isWin || getComputedStyle($("l1"), "").outlineWidth == "2px");
+
+  var listExpectedVisible = isMac ? false: expectedVisible;
+
+  checkFocus($("l1"), listExpectedVisible, "appearance on list after focus() with :moz-focusring");
+  $("l2").focus();
+
+  checkFocus($("l2"), true, "appearance on list after focus() with :focus");
+
+  is(getComputedStyle($("l1"), "").outlineWidth, "0px", "appearance on previous list after focus() with :focus");
+
+  synthesizeMouse($("l1"), 4, 4, { });
+  checkFocus($("l1"), listExpectedVisible, "appearance on list after mouse focus with :moz-focusring");
+  synthesizeMouse($("l2"), 4, 4, { });
+  checkFocus($("l2"), true, "appearance on list after mouse focus with :focus");
+
+  synthesizeMouse($("b1"), 4, 4, { });
+  checkFocus($("b1"), !isMac && expectedVisible, "appearance on button after mouse focus with :moz-focusring");
+
+  synthesizeMouse($("b2"), 4, 4, { });
+  checkFocus($("b2"), !isMac, "appearance on button after mouse focus with :focus");
+
+  // after a key is pressed, the focus ring will always be visible
+  $("l2").focus();
+  synthesizeKey("VK_TAB", { });
+  checkFocus($("l3"), true, "appearance on list after tab focus");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(runTest);
+
+]]>
+</script>
+
+<listbox id="l1" class="plain" height="20"/>
+<listbox id="l2" class="plain" height="20"/>
+<listbox id="l3" class="plain" height="20"/>
+<button id="b1" label="Button"/>
+<button id="b2" label="Button"/>
+
+<body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+</window>

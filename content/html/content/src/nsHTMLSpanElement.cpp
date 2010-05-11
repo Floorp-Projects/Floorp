@@ -39,7 +39,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsIAtom.h"
 #include "nsRuleData.h"
 
@@ -86,6 +85,8 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLSpanElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLSpanElement, nsGenericElement)
 
 
+DOMCI_DATA(HTMLSpanElement, nsHTMLSpanElement)
+
 // QueryInterface implementation for nsHTMLSpanElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLSpanElement)
   NS_HTML_CONTENT_INTERFACE_TABLE0(nsHTMLSpanElement)
@@ -130,6 +131,8 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
   nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
+
+DOMCI_DATA(HTMLUnknownElement, nsHTMLUnknownElement)
 
 NS_INTERFACE_MAP_BEGIN(nsHTMLUnknownElement)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(HTMLUnknownElement)

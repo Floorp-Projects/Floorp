@@ -36,6 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef MOZ_IPC
+#include "base/basictypes.h"
+#endif
+
 // FIXME(bug 332648): Give me a real API please!
 #include "jscntxt.h"
 
@@ -54,6 +58,12 @@
 #include "nsIContent.h"
 
 using namespace mozilla::plugins::parent;
+
+#ifdef MOZ_IPC
+#include "mozilla/plugins/PluginScriptableObjectParent.h"
+using mozilla::plugins::PluginScriptableObjectParent;
+using mozilla::plugins::ParentNPObject;
+#endif
 
 // Hash of JSObject wrappers that wraps JSObjects as NPObjects. There
 // will be one wrapper per JSObject per plugin instance, i.e. if two
@@ -81,6 +91,20 @@ static JSRuntime *sJSRuntime;
 static nsIJSContextStack *sContextStack;
 
 static nsTArray<NPObject*>* sDelayedReleases;
+
+namespace {
+
+inline bool
+NPObjectIsOutOfProcessProxy(NPObject *obj)
+{
+#ifdef MOZ_IPC
+  return obj->_class == PluginScriptableObjectParent::GetClass();
+#else
+  return false;
+#endif
+}
+
+} // anonymous namespace
 
 // Helper class that reports any JS exceptions that were thrown while
 // the plugin executed JS.
@@ -155,8 +179,8 @@ NPObjWrapper_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                        jsval *rval);
 
 static JSBool
-CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
-                     NPObject *npobj, jsval id, jsval *vp);
+CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject *npobj,
+                     jsval id, NPVariant* getPropertyResult, jsval *vp);
 
 static JSClass sNPObjectJSWrapperClass =
   {
@@ -598,7 +622,6 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier identifier)
   JSContext *cx = GetJSContext(npp);
 
   if (!cx) {
-    NS_ERROR("Null cx in nsJSObjWrapper::NP_HasMethod!");
     return PR_FALSE;
   }
 
@@ -630,7 +653,6 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
   JSContext *cx = GetJSContext(npp);
 
   if (!cx) {
-    NS_ERROR("Null cx in doInvoke!");
     return PR_FALSE;
   }
 
@@ -744,7 +766,6 @@ nsJSObjWrapper::NP_HasProperty(NPObject *npobj, NPIdentifier identifier)
   JSContext *cx = GetJSContext(npp);
 
   if (!cx) {
-    NS_ERROR("Null cx in nsJSObjWrapper::NP_HasProperty!");
     return PR_FALSE;
   }
 
@@ -786,7 +807,6 @@ nsJSObjWrapper::NP_GetProperty(NPObject *npobj, NPIdentifier identifier,
   JSContext *cx = GetJSContext(npp);
 
   if (!cx) {
-    NS_ERROR("Null cx in nsJSObjWrapper::NP_GetProperty!");
     return PR_FALSE;
   }
 
@@ -817,7 +837,6 @@ nsJSObjWrapper::NP_SetProperty(NPObject *npobj, NPIdentifier identifier,
   JSContext *cx = GetJSContext(npp);
 
   if (!cx) {
-    NS_ERROR("Null cx in nsJSObjWrapper::NP_SetProperty!");
     return PR_FALSE;
   }
 
@@ -863,7 +882,6 @@ nsJSObjWrapper::NP_RemoveProperty(NPObject *npobj, NPIdentifier identifier)
   JSContext *cx = GetJSContext(npp);
 
   if (!cx) {
-    NS_ERROR("Null cx in nsJSObjWrapper::NP_RemoveProperty!");
     return PR_FALSE;
   }
 
@@ -942,7 +960,6 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **identifier,
   *count = 0;
 
   if (!cx) {
-    NS_ERROR("Null cx in nsJSObjWrapper::NP_Enumerate!");
     return PR_FALSE;
   }
 
@@ -1182,6 +1199,10 @@ NPObjWrapper_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
+  if (NPObjectIsOutOfProcessProxy(npobj)) {
+    return JS_TRUE;
+  }
+
   PluginDestructionGuard pdg(LookupNPP(npobj));
 
   JSBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
@@ -1220,12 +1241,14 @@ NPObjWrapper_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(LookupNPP(npobj));
 
-  JSBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
-  if (!ReportExceptionIfPending(cx))
-    return JS_FALSE;
+  if (!NPObjectIsOutOfProcessProxy(npobj)) {
+    JSBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
+    if (!ReportExceptionIfPending(cx))
+      return JS_FALSE;
 
-  if (!hasProperty)
-    return JS_TRUE;
+    if (!hasProperty)
+      return JS_TRUE;
+  }
 
   if (!npobj->_class->removeProperty(npobj, (NPIdentifier)id))
     *vp = JSVAL_FALSE;
@@ -1257,14 +1280,16 @@ NPObjWrapper_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(npp);
 
-  JSBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
-  if (!ReportExceptionIfPending(cx))
-    return JS_FALSE;
+  if (!NPObjectIsOutOfProcessProxy(npobj)) {
+    JSBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
+    if (!ReportExceptionIfPending(cx))
+      return JS_FALSE;
 
-  if (!hasProperty) {
-    ThrowJSException(cx, "Trying to set unsupported property on NPObject!");
+    if (!hasProperty) {
+      ThrowJSException(cx, "Trying to set unsupported property on NPObject!");
 
-    return JS_FALSE;
+      return JS_FALSE;
+    }
   }
 
   NPVariant npv;
@@ -1311,22 +1336,53 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   PluginDestructionGuard pdg(npp);
 
-  PRBool hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
+  PRBool hasProperty, hasMethod;
+
+  NPVariant npv;
+  VOID_TO_NPVARIANT(npv);
+
+#ifdef MOZ_IPC
+  if (NPObjectIsOutOfProcessProxy(npobj)) {
+    PluginScriptableObjectParent* actor =
+      static_cast<ParentNPObject*>(npobj)->parent;
+    JSBool success = actor->GetPropertyHelper((NPIdentifier)id, &hasProperty,
+                                              &hasMethod, &npv);
+    if (!ReportExceptionIfPending(cx)) {
+      if (success)
+        _releasevariantvalue(&npv);
+      return JS_FALSE;
+    }
+
+    if (success) {
+      // We return NPObject Member class here to support ambiguous members.
+      if (hasProperty && hasMethod)
+        return CreateNPObjectMember(npp, cx, obj, npobj, id, &npv, vp);
+
+      if (hasProperty) {
+        *vp = NPVariantToJSVal(npp, cx, &npv);
+        _releasevariantvalue(&npv);
+
+        if (!ReportExceptionIfPending(cx))
+          return JS_FALSE;
+      }
+    }
+    return JS_TRUE;
+  }
+#endif
+
+  hasProperty = npobj->_class->hasProperty(npobj, (NPIdentifier)id);
   if (!ReportExceptionIfPending(cx))
     return JS_FALSE;
 
-  PRBool hasMethod = npobj->_class->hasMethod(npobj, (NPIdentifier)id);
+  hasMethod = npobj->_class->hasMethod(npobj, (NPIdentifier)id);
   if (!ReportExceptionIfPending(cx))
     return JS_FALSE;
 
   // We return NPObject Member class here to support ambiguous members.
   if (hasProperty && hasMethod)
-    return CreateNPObjectMember(npp, cx, obj, npobj, id, vp);
+    return CreateNPObjectMember(npp, cx, obj, npobj, id, nsnull, vp);
 
   if (hasProperty) {
-    NPVariant npv;
-    VOID_TO_NPVARIANT(npv);
-
     if (npobj->_class->getProperty(npobj, (NPIdentifier)id, &npv))
       *vp = NPVariantToJSVal(npp, cx, &npv);
 
@@ -2048,8 +2104,8 @@ LookupNPP(NPObject *npobj)
 }
 
 JSBool
-CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
-                     NPObject* npobj, jsval id, jsval *vp)
+CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj, NPObject* npobj,
+                     jsval id,  NPVariant* getPropertyResult, jsval *vp)
 {
   NS_ENSURE_TRUE(vp, JS_FALSE);
 
@@ -2082,18 +2138,27 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
 
   jsval fieldValue;
   NPVariant npv;
-  VOID_TO_NPVARIANT(npv);
+  NPBool hasProperty;
 
-  NPBool hasProperty = npobj->_class->getProperty(npobj, (NPIdentifier)id,
-                                                  &npv);
-  if (ReportExceptionIfPending(cx)) {
-    ::JS_RemoveRoot(cx, vp);
-    return JS_FALSE;
+  if (getPropertyResult) {
+    // Plugin has already handed us the value we want here.
+    npv = *getPropertyResult;
+    hasProperty = true;
   }
+  else {
+    VOID_TO_NPVARIANT(npv);
 
-  if (!hasProperty) {
-    ::JS_RemoveRoot(cx, vp);
-    return JS_FALSE;
+    NPBool hasProperty = npobj->_class->getProperty(npobj, (NPIdentifier)id,
+                                                    &npv);
+    if (!ReportExceptionIfPending(cx)) {
+      ::JS_RemoveRoot(cx, vp);
+      return JS_FALSE;
+    }
+
+    if (!hasProperty) {
+      ::JS_RemoveRoot(cx, vp);
+      return JS_FALSE;
+    }
   }
 
   fieldValue = NPVariantToJSVal(npp, cx, &npv);

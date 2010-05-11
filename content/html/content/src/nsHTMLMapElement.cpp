@@ -39,7 +39,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsContentList.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
@@ -100,6 +99,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_ADDREF_INHERITED(nsHTMLMapElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLMapElement, nsGenericElement) 
 
+
+DOMCI_DATA(HTMLMapElement, nsHTMLMapElement)
 
 // QueryInterface implementation for nsHTMLMapElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLMapElement)

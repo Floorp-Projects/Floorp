@@ -1,27 +1,27 @@
 .begin a
 ptr = allocp 8
-a = imml 65
-stl a ptr 0
-b = imml 66
-stl b ptr 1
-c = imml 67
-stl c ptr 2
-zero = imml 0
-stl zero ptr 3
-ss = calll puts cdecl ptr
-nn = gel ss zero
-retl nn
+a = immi 65
+sti a ptr 0
+b = immi 66
+sti b ptr 1
+c = immi 67
+sti c ptr 2
+zero = immi 0
+sti zero ptr 3
+ss = calli puts cdecl ptr
+nn = gei ss zero
+reti nn
 .end
 
 .begin b
-rr = calll a fastcall
-retl rr
+rr = calli a fastcall
+reti rr
 .end
 
 .begin main
-ans = calll b fastcall
-five = imml 5
-res = addl five ans
-retl res
+ans = calli b fastcall
+five = immi 5
+res = addi five ans
+reti res
 .end
 

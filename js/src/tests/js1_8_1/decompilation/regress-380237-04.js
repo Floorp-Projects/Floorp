@@ -127,7 +127,6 @@ needParens(51, "void xx;");
 needParens(52, "({ a: xx })");
 needParens(53, "({ a: 1, b: xx })");
 needParens(54, "({ a: xx, b: 1 })");
-needParens(55, "({ a getter: xx })");
 needParens(56, "<x a={xx}/>");
 doesNotNeedParens(57, "new (xx);");
 doesNotNeedParens(58, "new a(xx);");

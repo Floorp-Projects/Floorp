@@ -66,30 +66,17 @@
 #define DEFINED_CSS_STATE_PSEUDO_CLASS
 #endif
 
+// The CSS_PSEUDO_CLASS entries should all come before the
+// CSS_STATE_PSEUDO_CLASS entries.  The CSS_PSEUDO_CLASS entry order
+// must be the same as the order of cases in SelectorMatches.
+
 CSS_PSEUDO_CLASS(empty, ":empty")
 CSS_PSEUDO_CLASS(mozOnlyWhitespace, ":-moz-only-whitespace")
 CSS_PSEUDO_CLASS(mozEmptyExceptChildrenWithLocalname, ":-moz-empty-except-children-with-localname")
 CSS_PSEUDO_CLASS(lang, ":lang")
-CSS_PSEUDO_CLASS(notPseudo, ":not")
 CSS_PSEUDO_CLASS(mozBoundElement, ":-moz-bound-element")
 CSS_PSEUDO_CLASS(root, ":root")
-
-CSS_STATE_PSEUDO_CLASS(link, ":link", NS_EVENT_STATE_UNVISITED)
-// what matches :link or :visited
-CSS_STATE_PSEUDO_CLASS(mozAnyLink, ":-moz-any-link",
-                       NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)
-CSS_STATE_PSEUDO_CLASS(visited, ":visited", NS_EVENT_STATE_VISITED)
-
-CSS_STATE_PSEUDO_CLASS(active, ":active", NS_EVENT_STATE_ACTIVE)
-CSS_STATE_PSEUDO_CLASS(checked, ":checked", NS_EVENT_STATE_CHECKED)
-CSS_STATE_PSEUDO_CLASS(disabled, ":disabled", NS_EVENT_STATE_DISABLED)
-CSS_STATE_PSEUDO_CLASS(enabled, ":enabled", NS_EVENT_STATE_ENABLED)
-CSS_STATE_PSEUDO_CLASS(focus, ":focus", NS_EVENT_STATE_FOCUS)
-CSS_STATE_PSEUDO_CLASS(hover, ":hover", NS_EVENT_STATE_HOVER)
-CSS_STATE_PSEUDO_CLASS(mozDragOver, ":-moz-drag-over", NS_EVENT_STATE_DRAGOVER)
-CSS_STATE_PSEUDO_CLASS(target, ":target", NS_EVENT_STATE_URLTARGET)
-CSS_STATE_PSEUDO_CLASS(indeterminate, ":indeterminate",
-                       NS_EVENT_STATE_INDETERMINATE)
+CSS_PSEUDO_CLASS(any, ":-moz-any")
 
 CSS_PSEUDO_CLASS(firstChild, ":first-child")
 CSS_PSEUDO_CLASS(firstNode, ":-moz-first-node")
@@ -103,22 +90,6 @@ CSS_PSEUDO_CLASS(nthChild, ":nth-child")
 CSS_PSEUDO_CLASS(nthLastChild, ":nth-last-child")
 CSS_PSEUDO_CLASS(nthOfType, ":nth-of-type")
 CSS_PSEUDO_CLASS(nthLastOfType, ":nth-last-of-type")
-
-// Image, object, etc state pseudo-classes
-CSS_STATE_PSEUDO_CLASS(mozBroken, ":-moz-broken", NS_EVENT_STATE_BROKEN)
-CSS_STATE_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled",
-                       NS_EVENT_STATE_USERDISABLED)
-CSS_STATE_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed",
-                       NS_EVENT_STATE_SUPPRESSED)
-CSS_STATE_PSEUDO_CLASS(mozLoading, ":-moz-loading", NS_EVENT_STATE_LOADING)
-CSS_STATE_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported",
-                       NS_EVENT_STATE_TYPE_UNSUPPORTED)
-CSS_STATE_PSEUDO_CLASS(mozHandlerDisabled, ":-moz-handler-disabled",
-                       NS_EVENT_STATE_HANDLER_DISABLED)
-CSS_STATE_PSEUDO_CLASS(mozHandlerBlocked, ":-moz-handler-blocked",
-                       NS_EVENT_STATE_HANDLER_BLOCKED)
-CSS_STATE_PSEUDO_CLASS(mozHandlerCrashed, ":-moz-handler-crashed",
-                       NS_EVENT_STATE_HANDLER_CRASHED)
 
 CSS_PSEUDO_CLASS(mozHasHandlerRef, ":-moz-has-handlerref")
 
@@ -143,6 +114,46 @@ CSS_PSEUDO_CLASS(mozLWThemeDarkText, ":-moz-lwtheme-darktext")
 
 // Matches anything when the containing window is inactive
 CSS_PSEUDO_CLASS(mozWindowInactive, ":-moz-window-inactive")
+
+// :not needs to come at the end of the non-bit pseudo-class list, since
+// it doesn't actually get directly matched on in SelectorMatches.
+CSS_PSEUDO_CLASS(notPseudo, ":not")
+
+CSS_STATE_PSEUDO_CLASS(link, ":link", NS_EVENT_STATE_UNVISITED)
+// what matches :link or :visited
+CSS_STATE_PSEUDO_CLASS(mozAnyLink, ":-moz-any-link",
+                       NS_EVENT_STATE_VISITED | NS_EVENT_STATE_UNVISITED)
+CSS_STATE_PSEUDO_CLASS(visited, ":visited", NS_EVENT_STATE_VISITED)
+
+CSS_STATE_PSEUDO_CLASS(active, ":active", NS_EVENT_STATE_ACTIVE)
+CSS_STATE_PSEUDO_CLASS(checked, ":checked", NS_EVENT_STATE_CHECKED)
+CSS_STATE_PSEUDO_CLASS(disabled, ":disabled", NS_EVENT_STATE_DISABLED)
+CSS_STATE_PSEUDO_CLASS(enabled, ":enabled", NS_EVENT_STATE_ENABLED)
+CSS_STATE_PSEUDO_CLASS(focus, ":focus", NS_EVENT_STATE_FOCUS)
+CSS_STATE_PSEUDO_CLASS(hover, ":hover", NS_EVENT_STATE_HOVER)
+CSS_STATE_PSEUDO_CLASS(mozDragOver, ":-moz-drag-over", NS_EVENT_STATE_DRAGOVER)
+CSS_STATE_PSEUDO_CLASS(target, ":target", NS_EVENT_STATE_URLTARGET)
+CSS_STATE_PSEUDO_CLASS(indeterminate, ":indeterminate",
+                       NS_EVENT_STATE_INDETERMINATE)
+
+// Matches if the element is focused and should show a focus ring
+CSS_STATE_PSEUDO_CLASS(mozFocusRing, ":-moz-focusring", NS_EVENT_STATE_FOCUSRING)
+
+// Image, object, etc state pseudo-classes
+CSS_STATE_PSEUDO_CLASS(mozBroken, ":-moz-broken", NS_EVENT_STATE_BROKEN)
+CSS_STATE_PSEUDO_CLASS(mozUserDisabled, ":-moz-user-disabled",
+                       NS_EVENT_STATE_USERDISABLED)
+CSS_STATE_PSEUDO_CLASS(mozSuppressed, ":-moz-suppressed",
+                       NS_EVENT_STATE_SUPPRESSED)
+CSS_STATE_PSEUDO_CLASS(mozLoading, ":-moz-loading", NS_EVENT_STATE_LOADING)
+CSS_STATE_PSEUDO_CLASS(mozTypeUnsupported, ":-moz-type-unsupported",
+                       NS_EVENT_STATE_TYPE_UNSUPPORTED)
+CSS_STATE_PSEUDO_CLASS(mozHandlerDisabled, ":-moz-handler-disabled",
+                       NS_EVENT_STATE_HANDLER_DISABLED)
+CSS_STATE_PSEUDO_CLASS(mozHandlerBlocked, ":-moz-handler-blocked",
+                       NS_EVENT_STATE_HANDLER_BLOCKED)
+CSS_STATE_PSEUDO_CLASS(mozHandlerCrashed, ":-moz-handler-crashed",
+                       NS_EVENT_STATE_HANDLER_CRASHED)
 
 #ifdef MOZ_MATHML
 CSS_STATE_PSEUDO_CLASS(mozMathIncrementScriptLevel,

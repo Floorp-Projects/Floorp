@@ -48,19 +48,12 @@
 
 #include "nsISupports.idl"
 
-interface nsIXPConnectWrappedNative;
-
-[uuid(b804504d-0025-4d6b-8ced-d94e41102a7f)]
+[uuid(13aceb15-812a-476a-9326-2adc00250b76)]
 interface nsIXPCScriptNotify : nsISupports
 {
     /**
      * Method invoked when a script has been executed by XPConnect
      */
     void ScriptExecuted();
-
-    /**
-     * Method invoked to preserve an nsIXPConnectWrappedNative as needed
-     */
-    void preserveWrapper(in nsIXPConnectWrappedNative wrapper);
 };
 

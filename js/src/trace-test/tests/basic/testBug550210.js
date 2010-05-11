@@ -1,16 +1,16 @@
 function g(e) {
-    return ("" + e)
+    return ("" + e);
 }
+
 function blah() {
     do {
-        yield
-    } while ({}(p = arguments))
+        yield;
+    } while ({}(p = arguments));
 }
 rv = blah();
 try {
     for (a in rv) ;
 } catch (e) {
-    print("" + g(e))
+    print("" + g(e));
 }
-gc()
-
+gc();

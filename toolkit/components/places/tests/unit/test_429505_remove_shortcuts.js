@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://gre/modules/utils.js");
-
 /*
 
 - add a folder

@@ -87,7 +87,7 @@ function run_test() {
   // Observe expirations.
   observer = {
     observe: function(aSubject, aTopic, aData) {
-      os.removeObserver(observer, TOPIC_EXPIRATION_FINISHED);
+      os.removeObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED);
 
       let pages = as.getPagesWithAnnotation("test1");
       do_check_eq(pages.length, 0);
@@ -101,7 +101,7 @@ function run_test() {
       do_test_finished();
     }
   };
-  os.addObserver(observer, TOPIC_EXPIRATION_FINISHED, false);
+  os.addObserver(observer, PlacesUtils.TOPIC_EXPIRATION_FINISHED, false);
 
   shutdownExpiration();
   do_test_pending();

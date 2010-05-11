@@ -74,6 +74,7 @@ XPIDLSRCS	= \
 		nsIAsyncStreamCopier.idl \
 		nsIBufferedStreams.idl \
 		nsICancelable.idl \
+		nsIChannelPolicy.idl \
 		nsICryptoHash.idl \
 		nsICryptoHMAC.idl \
 		nsIDownloader.idl \

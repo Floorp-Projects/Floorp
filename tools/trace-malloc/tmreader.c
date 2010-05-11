@@ -321,7 +321,7 @@ static int get_tmevent(FILE *fp, tmevent *event)
 #endif
         break;
       default:
-        fprintf(stderr, "Unknown event type %c\n", event->type);
+        fprintf(stderr, "Unknown event type 0x%x\n", (unsigned int)event->type);
         return 0;
     }
     return 1;

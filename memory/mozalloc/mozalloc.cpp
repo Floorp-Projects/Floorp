@@ -47,6 +47,18 @@
 #endif // if defined(MALLOC_H)
 #include <stddef.h>             // for size_t
 #include <stdlib.h>             // for malloc, free
+#if defined(XP_UNIX)
+#  include <unistd.h>           // for valloc on *BSD
+#endif //if defined(XP_UNIX)
+
+#if defined(MOZ_MEMORY)
+// jemalloc.h doesn't redeclare symbols if they're provided by the OS
+#  include "jemalloc.h"
+#endif
+
+#if defined(XP_WIN) || (defined(XP_OS2) && defined(__declspec))
+#  define MOZALLOC_EXPORT __declspec(dllexport)
+#endif
 
 // Make sure that "malloc" et al. resolve to their libc variants.
 #define MOZALLOC_DONT_DEFINE_MACRO_WRAPPERS
@@ -151,7 +163,7 @@ moz_strndup(const char* str, size_t strsize)
 }
 #endif  // if defined(HAVE_STRNDUP)
 
-#if defined(HAVE_POSIX_MEMALIGN)
+#if defined(HAVE_POSIX_MEMALIGN) || defined(HAVE_JEMALLOC_POSIX_MEMALIGN)
 int
 moz_xposix_memalign(void **ptr, size_t alignment, size_t size)
 {
@@ -170,7 +182,7 @@ moz_posix_memalign(void **ptr, size_t alignment, size_t size)
 }
 #endif // if defined(HAVE_POSIX_MEMALIGN)
 
-#if defined(HAVE_MEMALIGN)
+#if defined(HAVE_MEMALIGN) || defined(HAVE_JEMALLOC_MEMALIGN)
 void*
 moz_xmemalign(size_t boundary, size_t size)
 {

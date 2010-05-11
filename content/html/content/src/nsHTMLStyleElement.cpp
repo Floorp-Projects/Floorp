@@ -41,7 +41,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsPresContext.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsIStyleSheet.h"
 #include "nsStyleLinkElement.h"
@@ -49,6 +48,7 @@
 #include "nsIDocument.h"
 #include "nsUnicharUtils.h"
 #include "nsParserUtils.h"
+#include "nsThreadUtils.h"
 
 
 class nsHTMLStyleElement : public nsGenericHTMLElement,
@@ -134,6 +134,8 @@ nsHTMLStyleElement::~nsHTMLStyleElement()
 NS_IMPL_ADDREF_INHERITED(nsHTMLStyleElement, nsGenericElement) 
 NS_IMPL_RELEASE_INHERITED(nsHTMLStyleElement, nsGenericElement) 
 
+
+DOMCI_DATA(HTMLStyleElement, nsHTMLStyleElement)
 
 // QueryInterface implementation for nsHTMLStyleElement
 NS_INTERFACE_TABLE_HEAD(nsHTMLStyleElement)
@@ -240,9 +242,8 @@ nsHTMLStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsContentUtils::AddScriptRunner(
-    new nsRunnableMethod<nsHTMLStyleElement>(this,
-                                             &nsHTMLStyleElement::UpdateStyleSheetInternal));
+  void (nsHTMLStyleElement::*update)() = &nsHTMLStyleElement::UpdateStyleSheetInternal;
+  nsContentUtils::AddScriptRunner(NS_NewRunnableMethod(this, update));
 
   return rv;  
 }

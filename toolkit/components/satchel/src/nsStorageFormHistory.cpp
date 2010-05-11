@@ -25,6 +25,7 @@
  *   Michael Ventnor <m.ventnor@gmail.com>
  *   Ehsan Akhgari <ehsan.akhgari@gmail.com>
  *   Justin Dolske <dolske@mozilla.com>
+ *   Eddy Ferreira <eddy.b.ferreira@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,6 +43,8 @@
 
 #include "nsStorageFormHistory.h"
 
+#include "plbase64.h"
+#include "prmem.h"
 #include "nsIServiceManager.h"
 #include "nsIObserverService.h"
 #include "nsICategoryManager.h"
@@ -51,10 +54,14 @@
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
+#include "nsISupportsPrimitives.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIURI.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
@@ -62,10 +69,12 @@
 #include "mozStorageHelper.h"
 #include "mozStorageCID.h"
 #include "nsTArray.h"
+#include "nsIMutableArray.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
+#include "mozilla/Services.h"
 
-#define DB_SCHEMA_VERSION   2
+#define DB_SCHEMA_VERSION   3
 #define DB_FILENAME         NS_LITERAL_STRING("formhistory.sqlite")
 #define DB_CORRUPT_FILENAME NS_LITERAL_STRING("formhistory.sqlite.corrupt")
 
@@ -79,6 +88,7 @@
 
 #define PREF_FORMFILL_BRANCH "browser.formfill."
 #define PREF_FORMFILL_ENABLE "enable"
+#define PREF_FORMFILL_SAVE_HTTPS_FORMS "saveHttpsForms"
 
 // Default number of days for expiration.  Used if browser.formfill.expire_days
 // is not set.
@@ -96,7 +106,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsFormHistory)
 NS_IMPL_RELEASE(nsFormHistory)
 
-PRBool nsFormHistory::gFormHistoryEnabled = PR_FALSE;
+PRBool nsFormHistory::gFormHistoryEnabled = PR_TRUE;
+PRBool nsFormHistory::gSaveHttpsForms = PR_TRUE;
 PRBool nsFormHistory::gPrefsInitialized = PR_FALSE;
 nsFormHistory* nsFormHistory::gFormHistory = nsnull;
 
@@ -118,6 +129,9 @@ nsFormHistory::Init()
 {
   PRBool doImport;
 
+  mUUIDService = do_GetService("@mozilla.org/uuid-generator;1");
+  NS_ENSURE_TRUE(mUUIDService, NS_ERROR_OUT_OF_MEMORY);
+
   nsresult rv = OpenDatabase(&doImport);
   if (rv == NS_ERROR_FILE_CORRUPTED) {
     /* If the DB is corrupt, nuke it and try again with a new DB. */
@@ -128,35 +142,68 @@ nsFormHistory::Init()
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIObserverService> service = do_GetService("@mozilla.org/observer-service;1");
-  if (service) {
-    service->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
-    service->AddObserver(this, "idle-daily", PR_TRUE);
-    service->AddObserver(this, "formhistory-expire-now", PR_TRUE);
+  mObserverService = mozilla::services::GetObserverService();
+  if (mObserverService) {
+    mObserverService->AddObserver(this, NS_EARLYFORMSUBMIT_SUBJECT, PR_TRUE);
+    mObserverService->AddObserver(this, "idle-daily", PR_TRUE);
+    mObserverService->AddObserver(this, "formhistory-expire-now", PR_TRUE);
   }
 
   return NS_OK;
 }
 
+/* static */ nsresult
+nsFormHistory::InitPrefs()
+{
+  nsCOMPtr<nsIPrefService> prefService =
+      do_GetService(NS_PREFSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(prefService, NS_ERROR_FAILURE);
+  prefService->GetBranch(PREF_FORMFILL_BRANCH,
+                         getter_AddRefs(gFormHistory->mPrefBranch));
+  NS_ENSURE_TRUE(gFormHistory->mPrefBranch, NS_ERROR_FAILURE);
+  gFormHistory->mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE,
+                                         &gFormHistoryEnabled);
+  gFormHistory->mPrefBranch->GetBoolPref(PREF_FORMFILL_SAVE_HTTPS_FORMS,
+                                         &gSaveHttpsForms);
+  nsCOMPtr<nsIPrefBranch2> branchInternal =
+      do_QueryInterface(gFormHistory->mPrefBranch);
+  NS_ENSURE_TRUE(branchInternal, NS_ERROR_FAILURE);
+  branchInternal->AddObserver("", gFormHistory, PR_TRUE);
+  gPrefsInitialized = PR_TRUE;
+  return NS_OK;
+}
+
+/* static */ PRBool
+nsFormHistory::SaveHttpsForms()
+{
+  if (!gPrefsInitialized) {
+    InitPrefs();
+  }
+  return gSaveHttpsForms;
+}
+
 /* static */ PRBool
 nsFormHistory::FormHistoryEnabled()
 {
-  if (!gPrefsInitialized) {
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-    prefService->GetBranch(PREF_FORMFILL_BRANCH,
-                           getter_AddRefs(gFormHistory->mPrefBranch));
-    gFormHistory->mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE,
-                                           &gFormHistoryEnabled);
-
-    nsCOMPtr<nsIPrefBranch2> branchInternal =
-      do_QueryInterface(gFormHistory->mPrefBranch);
-    branchInternal->AddObserver(PREF_FORMFILL_ENABLE, gFormHistory, PR_TRUE);
-
-    gPrefsInitialized = PR_TRUE;
-  }
-
+  if (!gPrefsInitialized)
+    InitPrefs();
   return gFormHistoryEnabled;
+}
+
+nsresult
+nsFormHistory::GenerateGUID(nsACString &guidString) {
+  nsID rawguid;
+  nsresult rv = mUUIDService->GenerateUUIDInPlace(&rawguid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Encode 12 bytes (96bits) of randomness into a 16 character base-64 string.
+  char *b64 = PL_Base64Encode(reinterpret_cast<const char *>(&rawguid), 12, nsnull);
+  if (!b64)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  guidString.Assign(b64);
+  PR_Free(b64);
+  return NS_OK;
 }
 
 
@@ -192,7 +239,8 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
   if (!FormHistoryEnabled())
     return NS_OK;
 
-  PRInt64 existingID = GetExistingEntryID(aName, aValue);
+  nsAutoString existingGUID;
+  PRInt64 existingID = GetExistingEntryID(aName, aValue, existingGUID);
 
   if (existingID != -1) {
     mozStorageStatementScoper scope(mDBUpdateEntry);
@@ -205,7 +253,13 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
 
     rv = mDBUpdateEntry->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
+
+    SendNotification(NS_LITERAL_STRING("modifyEntry"), aName, aValue, existingGUID);
   } else {
+    nsCAutoString guid;
+    rv = GenerateGUID(guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     PRInt64 now = PR_Now();
 
     mozStorageStatementScoper scope(mDBInsertNameValue);
@@ -224,9 +278,14 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
     // lastUsed
     rv = mDBInsertNameValue->BindInt64Parameter(4, now);
     NS_ENSURE_SUCCESS(rv, rv);
+    // guid
+    rv = mDBInsertNameValue->BindUTF8StringParameter(5, guid);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     rv = mDBInsertNameValue->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
+
+    SendNotification(NS_LITERAL_STRING("addEntry"), aName, aValue, NS_ConvertUTF8toUTF16(guid));
   }
   return NS_OK;
 }
@@ -234,7 +293,8 @@ nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
 /* Returns -1 if entry not found, or the ID if it was. */
 PRInt64
 nsFormHistory::GetExistingEntryID (const nsAString &aName, 
-                                   const nsAString &aValue)
+                                   const nsAString &aValue,
+                                   nsAString &aGuid)
 {
   mozStorageStatementScoper scope(mDBFindEntry);
 
@@ -248,13 +308,26 @@ nsFormHistory::GetExistingEntryID (const nsAString &aName,
   rv = mDBFindEntry->ExecuteStep(&hasMore);
   NS_ENSURE_SUCCESS(rv, -1);
 
+  nsCAutoString guid;
   PRInt64 ID = -1;
   if (hasMore) {
-    mDBFindEntry->GetInt64(0, &ID);
+    rv = mDBFindEntry->GetInt64(0, &ID);
     NS_ENSURE_SUCCESS(rv, -1);
+    rv = mDBFindEntry->GetUTF8String(1, guid);
+    NS_ENSURE_SUCCESS(rv, -1);
+    CopyUTF8toUTF16(guid, aGuid);
   }
 
   return ID;
+}
+
+/* Returns -1 if entry not found, or the ID if it was. */
+PRInt64
+nsFormHistory::GetExistingEntryID (const nsAString &aName,
+                                   const nsAString &aValue)
+{
+  nsString guid;
+  return GetExistingEntryID(aName, aValue, guid);
 }
 
 NS_IMETHODIMP
@@ -283,23 +356,32 @@ nsFormHistory::NameExists(const nsAString &aName, PRBool *_retval)
 NS_IMETHODIMP
 nsFormHistory::RemoveEntry(const nsAString &aName, const nsAString &aValue)
 {
+  nsAutoString existingGUID;
+  PRInt64 existingID = GetExistingEntryID(aName, aValue, existingGUID);
+
+  SendNotification(NS_LITERAL_STRING("before-removeEntry"), aName, aValue, existingGUID);
+
   nsCOMPtr<mozIStorageStatement> dbDelete;
-  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_formhistory WHERE fieldname=?1 AND value=?2"),
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_formhistory WHERE id=?1"),
                                          getter_AddRefs(dbDelete));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = dbDelete->BindStringParameter(0, aName);
+  rv = dbDelete->BindInt64Parameter(0, existingID);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = dbDelete->BindStringParameter(1, aValue);
+  rv = dbDelete->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return dbDelete->Execute();
+  SendNotification(NS_LITERAL_STRING("removeEntry"), aName, aValue, existingGUID);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFormHistory::RemoveEntriesForName(const nsAString &aName)
 {
+  SendNotification(NS_LITERAL_STRING("before-removeEntriesForName"), aName);
+
   nsCOMPtr<mozIStorageStatement> dbDelete;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_formhistory WHERE fieldname=?1"),
                                          getter_AddRefs(dbDelete));
@@ -308,12 +390,19 @@ nsFormHistory::RemoveEntriesForName(const nsAString &aName)
   rv = dbDelete->BindStringParameter(0, aName);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  return dbDelete->Execute();
+  rv = dbDelete->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SendNotification(NS_LITERAL_STRING("removeEntriesForName"), aName);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFormHistory::RemoveAllEntries()
 {
+  SendNotification(NS_LITERAL_STRING("before-removeAllEntries"), (nsISupports*)nsnull);
+
   nsCOMPtr<mozIStorageStatement> dbDeleteAll;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("DELETE FROM moz_formhistory"),
                                          getter_AddRefs(dbDeleteAll));
@@ -334,13 +423,20 @@ nsFormHistory::RemoveAllEntries()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return dbDeleteAll->Execute();
+  rv = dbDeleteAll->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  SendNotification(NS_LITERAL_STRING("removeAllEntries"), (nsISupports*)nsnull);
+
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsFormHistory::RemoveEntriesByTimeframe(PRInt64 aStartTime, PRInt64 aEndTime)
 {
+  SendNotification(NS_LITERAL_STRING("before-removeEntriesByTimeframe"), aStartTime, aEndTime);
+
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_formhistory "
@@ -355,6 +451,8 @@ nsFormHistory::RemoveEntriesByTimeframe(PRInt64 aStartTime, PRInt64 aEndTime)
   NS_ENSURE_SUCCESS(rv, rv);
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  SendNotification(NS_LITERAL_STRING("removeEntriesByTimeframe"), aStartTime, aEndTime);
 
   return NS_OK;
 }
@@ -374,6 +472,7 @@ nsFormHistory::Observe(nsISupports *aSubject, const char *aTopic, const PRUnicha
 {
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     mPrefBranch->GetBoolPref(PREF_FORMFILL_ENABLE, &gFormHistoryEnabled);
+    mPrefBranch->GetBoolPref(PREF_FORMFILL_SAVE_HTTPS_FORMS, &gSaveHttpsForms);
   } else if (!strcmp(aTopic, "idle-daily") ||
              !strcmp(aTopic, "formhistory-expire-now")) {
       ExpireOldEntries();
@@ -390,6 +489,25 @@ nsFormHistory::Notify(nsIDOMHTMLFormElement* formElt, nsIDOMWindowInternal* aWin
 {
   if (!FormHistoryEnabled())
     return NS_OK;
+
+  if (!SaveHttpsForms()) {
+    PRBool isHttps = PR_FALSE;
+    aActionURL->SchemeIs("https", &isHttps);
+    if (isHttps)
+      return NS_OK;
+
+    nsresult rv;
+    nsCOMPtr<nsIContent> formCont = do_QueryInterface(formElt, &rv);
+    NS_ENSURE_SUCCESS(rv, NS_OK);
+    nsCOMPtr<nsIDocument> doc;
+    doc = formCont->GetOwnerDoc();
+    NS_ENSURE_TRUE(doc, NS_OK);
+    nsIURI *docURI = doc->GetDocumentURI();
+    NS_ENSURE_TRUE(docURI, NS_OK);
+    docURI->SchemeIs("https", &isHttps);
+    if (isHttps)
+      return NS_OK;
+  }
 
   NS_NAMED_LITERAL_STRING(kAutoComplete, "autocomplete");
   nsAutoString autocomplete;
@@ -502,6 +620,7 @@ nsFormHistory::ExpireOldEntries()
     expireDays = DEFAULT_EXPIRE_DAYS;
   PRInt64 expireTime = PR_Now() - expireDays * 24 * PR_HOURS;
 
+  SendNotification(NS_LITERAL_STRING("before-expireOldEntries"), expireTime);
 
   PRInt32 beginningCount = CountAllEntries();
 
@@ -526,6 +645,8 @@ nsFormHistory::ExpireOldEntries()
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  SendNotification(NS_LITERAL_STRING("expireOldEntries"), expireTime);
 
   return NS_OK;
 }
@@ -558,11 +679,13 @@ nsFormHistory::CreateTable()
          "CREATE TABLE moz_formhistory ("
            "id INTEGER PRIMARY KEY, fieldname TEXT NOT NULL, "
            "value TEXT NOT NULL, timesUsed INTEGER, "
-           "firstUsed INTEGER, lastUsed INTEGER)"));
+           "firstUsed INTEGER, lastUsed INTEGER, guid TEXT)"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_index ON moz_formhistory (fieldname)"));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_lastused_index ON moz_formhistory (lastUsed)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX moz_formhistory_guid_index ON moz_formhistory (guid)"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
@@ -581,7 +704,7 @@ nsFormHistory::CreateStatements()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-         "SELECT id FROM moz_formhistory WHERE fieldname=?1 AND value=?2"),
+         "SELECT id, guid FROM moz_formhistory WHERE fieldname=?1 AND value=?2"),
          getter_AddRefs(mDBFindEntry));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -592,7 +715,7 @@ nsFormHistory::CreateStatements()
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
         "INSERT INTO moz_formhistory (fieldname, value, timesUsed, "
-        "firstUsed, lastUsed) VALUES (?1, ?2, ?3, ?4, ?5)"),
+        "firstUsed, lastUsed, guid) VALUES (?1, ?2, ?3, ?4, ?5, ?6)"),
         getter_AddRefs(mDBInsertNameValue));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -667,6 +790,10 @@ nsFormHistory::dbMigrate()
       // (fallthrough to the next upgrade)
     case 1:
       rv = MigrateToVersion2();
+      NS_ENSURE_SUCCESS(rv, rv);
+      // (fallthrough to the next upgrade)
+    case 2:
+      rv = MigrateToVersion3();
       NS_ENSURE_SUCCESS(rv, rv);
       // (fallthrough to the next upgrade)
     case DB_SCHEMA_VERSION:
@@ -771,6 +898,72 @@ nsFormHistory::MigrateToVersion2()
 }
 
 
+/*
+ * MigrateToVersion3
+ *
+ * Updates the DB schema to v3 (bug 506402).
+ * Adds guid column and index.
+ */
+nsresult
+nsFormHistory::MigrateToVersion3()
+{
+  nsresult rv;
+
+  // Check to see if the new column already exists (could be a v3 DB that
+  // was downgraded to v2). If they exist, we don't need to add them.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+         "SELECT guid FROM moz_formhistory"),
+         getter_AddRefs(stmt));
+
+  PRBool columnExists = !!NS_SUCCEEDED(rv);
+
+  if (!columnExists) {
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_formhistory ADD COLUMN guid TEXT"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS moz_formhistory_guid_index ON moz_formhistory (guid)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
+
+  nsCOMPtr<mozIStorageStatement> selectStatement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+         "SELECT id FROM moz_formhistory WHERE guid isnull"),
+         getter_AddRefs(selectStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> updateStatement;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+         "UPDATE moz_formhistory SET guid = ?1 WHERE id = ?2"),
+         getter_AddRefs(updateStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore;
+  while (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasMore)) && hasMore) {
+    PRUint64 id = selectStatement->AsInt64(0);
+
+    nsCAutoString guid;
+    rv = GenerateGUID(guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = updateStatement->BindInt64Parameter(1, id);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStatement->BindUTF8StringParameter(0, guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = updateStatement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = mDBConn->SetSchemaVersion(3);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return transaction.Commit();
+}
+
+
 nsresult
 nsFormHistory::GetDatabaseFile(nsIFile** aFile)
 {
@@ -817,7 +1010,137 @@ nsFormHistory::dbAreExpectedColumnsPresent()
   // If the statement succeeds, all the columns are there.
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-                  "SELECT fieldname, value, timesUsed, firstUsed, lastUsed "
+                  "SELECT fieldname, value, timesUsed, firstUsed, lastUsed, guid "
                   "FROM moz_formhistory"), getter_AddRefs(stmt));
   return NS_SUCCEEDED(rv) ? PR_TRUE : PR_FALSE;
+}
+
+/*
+ * Send a notification when stored data is changed
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType, nsISupports *aData)
+{
+  return mObserverService->NotifyObservers(aData,
+                                           "satchel-storage-changed",
+                                           PromiseFlatString(aChangeType).get());
+}
+
+/*
+ * Send a notification with a field name
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType,
+                                const nsAString &aName)
+{
+  nsCOMPtr<nsISupportsString> fieldName = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!fieldName)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  fieldName->SetData(aName);
+
+  nsresult rv = SendNotification(aChangeType, fieldName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/*
+ * Send a notification with a name and value entry
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType,
+                                const nsAString &aName,
+                                const nsAString &aValue,
+                                const nsAutoString &aGuid)
+{
+  nsCOMPtr<nsISupportsString> fieldName = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!fieldName)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  fieldName->SetData(aName);
+
+  nsCOMPtr<nsISupportsString> fieldValue = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!fieldValue)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  fieldValue->SetData(aValue);
+
+  nsCOMPtr<nsISupportsString> guid = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
+  if (!guid)
+    return NS_ERROR_OUT_OF_MEMORY;
+  guid->SetData(aGuid);
+
+  nsCOMPtr<nsIMutableArray> notifyData = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!notifyData)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = notifyData->AppendElement(fieldName, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = notifyData->AppendElement(fieldValue, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = notifyData->AppendElement(guid, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SendNotification(aChangeType, notifyData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/*
+ * Send a notification with a PRInt64
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType,
+                                const PRInt64 &aNumber)
+{
+  nsCOMPtr<nsISupportsPRInt64> valOne = do_CreateInstance(NS_SUPPORTS_PRINT64_CONTRACTID);
+  if (!valOne)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  valOne->SetData(aNumber);
+
+  nsresult rv = SendNotification(aChangeType, valOne);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+/*
+ * Send a notification with an array of 2 PRInt64 entries
+ */
+nsresult
+nsFormHistory::SendNotification(const nsAString &aChangeType,
+                                const PRInt64 &aOne,
+                                const PRInt64 &aTwo)
+{
+  nsCOMPtr<nsISupportsPRInt64> valOne = do_CreateInstance(NS_SUPPORTS_PRINT64_CONTRACTID);
+  if (!valOne)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  valOne->SetData(aOne);
+
+  nsCOMPtr<nsISupportsPRInt64> valTwo = do_CreateInstance(NS_SUPPORTS_PRINT64_CONTRACTID);
+  if (!valTwo)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  valTwo->SetData(aTwo);
+
+  nsCOMPtr<nsIMutableArray> notifyData = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  if (!notifyData)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = notifyData->AppendElement(valOne, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = notifyData->AppendElement(valTwo, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = SendNotification(aChangeType, notifyData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }

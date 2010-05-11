@@ -303,7 +303,7 @@ nsresult
 nsXULElement::Create(nsXULPrototypeElement* aPrototype,
                      nsIDocument* aDocument,
                      PRBool aIsScriptable,
-                     nsIContent** aResult)
+                     Element** aResult)
 {
     // Create an nsXULElement from a prototype
     NS_PRECONDITION(aPrototype != nsnull, "null ptr");
@@ -365,6 +365,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsStyledElement)
 NS_IMPL_RELEASE_INHERITED(nsXULElement, nsStyledElement)
+
+DOMCI_DATA(XULElement, nsXULElement)
 
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsXULElement)
     NS_NODE_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsXULElement)
@@ -497,7 +499,7 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
         return NS_ERROR_UNEXPECTED; // XXX
 
     nsPIDOMWindow *window;
-    nsIContent *root = doc->GetRootContent();
+    Element *root = doc->GetRootElement();
     if ((!root || root == this) && !mNodeInfo->Equals(nsGkAtoms::overlay) &&
         (window = doc->GetInnerWindow()) && window->IsInnerWindow()) {
 
@@ -518,8 +520,16 @@ nsXULElement::GetEventListenerManagerForAttr(nsIEventListenerManager** aManager,
                                                            aDefer);
 }
 
+// returns true if the element is not a list
+static PRBool IsNonList(nsINodeInfo* aNodeInfo)
+{
+  return !aNodeInfo->Equals(nsGkAtoms::tree) &&
+         !aNodeInfo->Equals(nsGkAtoms::listbox) &&
+         !aNodeInfo->Equals(nsGkAtoms::richlistbox);
+}
+
 PRBool
-nsXULElement::IsFocusable(PRInt32 *aTabIndex)
+nsXULElement::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
 {
   /* 
    * Returns true if an element may be focused, and false otherwise. The inout
@@ -551,6 +561,12 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
 
   // elements are not focusable by default
   PRBool shouldFocus = PR_FALSE;
+
+#ifdef XP_MACOSX
+  // on Mac, mouse interactions only focus the element if it's a list
+  if (aWithMouse && IsNonList(mNodeInfo))
+    return PR_FALSE;
+#endif
 
   nsCOMPtr<nsIDOMXULControlElement> xulControl = 
     do_QueryInterface(static_cast<nsIContent*>(this));
@@ -593,7 +609,7 @@ nsXULElement::IsFocusable(PRInt32 *aTabIndex)
         // (textboxes are handled as html:input)
         // For compatibility, we only do this for controls, otherwise elements like <browser>
         // cannot take this focus.
-        if (!mNodeInfo->Equals(nsGkAtoms::tree) && !mNodeInfo->Equals(nsGkAtoms::listbox))
+        if (IsNonList(mNodeInfo))
           *aTabIndex = -1;
       }
     }
@@ -669,8 +685,9 @@ nsXULElement::PerformAccesskey(PRBool aKeyCausesActivation,
               fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
           }
         }
-        if (aKeyCausesActivation && tag != nsGkAtoms::textbox && tag != nsGkAtoms::menulist)
-            elm->Click();
+        if (aKeyCausesActivation && tag != nsGkAtoms::textbox && tag != nsGkAtoms::menulist) {
+            ClickWithInputSource(nsIDOMNSMouseEvent::MOZ_SOURCE_KEYBOARD);
+        }
     }
     else {
         content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
@@ -1098,7 +1115,7 @@ nsXULElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         // title, (in)activetitlebarcolor and drawintitlebar are settable on
         // any root node (windows, dialogs, etc)
         nsIDocument *document = GetCurrentDoc();
-        if (document && document->GetRootContent() == this) {
+        if (document && document->GetRootElement() == this) {
             if (aName == nsGkAtoms::title) {
                 document->NotifyPossibleTitleChange(PR_FALSE);
             }
@@ -1348,7 +1365,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
             HideWindowChrome(PR_FALSE);
         }
 
-        if (doc && doc->GetRootContent() == this) {
+        if (doc && doc->GetRootElement() == this) {
             if ((aName == nsGkAtoms::activetitlebarcolor ||
                  aName == nsGkAtoms::inactivetitlebarcolor)) {
                 // Use 0, 0, 0, 0 as the "none" color.
@@ -1940,8 +1957,8 @@ nsXULElement::LoadSrc()
         return NS_OK;
     }
     if (!IsInDoc() ||
-        !GetOwnerDoc()->GetRootContent() ||
-        GetOwnerDoc()->GetRootContent()->
+        !GetOwnerDoc()->GetRootElement() ||
+        GetOwnerDoc()->GetRootElement()->
             NodeInfo()->Equals(nsGkAtoms::overlay, kNameSpaceID_XUL)) {
         return NS_OK;
     }
@@ -2050,6 +2067,12 @@ nsXULElement::Blur()
 NS_IMETHODIMP
 nsXULElement::Click()
 {
+  return ClickWithInputSource(nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN);
+}
+
+nsresult
+nsXULElement::ClickWithInputSource(PRUint16 aInputSource)
+{
     if (BoolAttrIsTrue(nsGkAtoms::disabled))
         return NS_OK;
 
@@ -2068,6 +2091,8 @@ nsXULElement::Click()
                                  nsnull, nsMouseEvent::eReal);
             nsMouseEvent eventClick(isCallerChrome, NS_MOUSE_CLICK, nsnull,
                                     nsMouseEvent::eReal);
+            eventDown.inputSource = eventUp.inputSource = eventClick.inputSource 
+                                  = aInputSource;
 
             // send mouse down
             nsEventStatus status = nsEventStatus_eIgnore;
@@ -2110,7 +2135,7 @@ nsXULElement::GetBindingParent() const
 PRBool
 nsXULElement::IsNodeOfType(PRUint32 aFlags) const
 {
-    return !(aFlags & ~(eCONTENT | eELEMENT));
+    return !(aFlags & ~eCONTENT);
 }
 
 static void
@@ -2302,7 +2327,7 @@ nsresult
 nsXULElement::HideWindowChrome(PRBool aShouldHide)
 {
     nsIDocument* doc = GetCurrentDoc();
-    if (!doc || doc->GetRootContent() != this)
+    if (!doc || doc->GetRootElement() != this)
       return NS_ERROR_UNEXPECTED;
 
     // only top level chrome documents can hide the window chrome
@@ -3076,10 +3101,10 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     //
     // Compiling it using (for example) the first document's global
     // object would cause JS to keep a reference via the __proto__ or
-    // __parent__ pointer to the first document's global. If that
-    // happened, our script object would reference the first document,
-    // and the first document would indirectly reference the prototype
-    // document because it keeps the prototype cache alive. Circularity!
+    // parent pointer to the first document's global. If that happened,
+    // our script object would reference the first document, and the
+    // first document would indirectly reference the prototype document
+    // because it keeps the prototype cache alive. Circularity!
     nsresult rv;
 
     // Use the prototype document's special context

@@ -225,6 +225,7 @@ public:
     eMetric_TreeScrollDelay,                              // delay for scrolling the tree
     eMetric_TreeScrollLinesMax,                           // the maximum number of lines to be scrolled at ones
     eMetric_TabFocusModel,                                // What type of tab-order to use
+    eMetric_ChosenMenuItemsShouldBlink,                   // Should menu items blink when they're chosen?
 
     /*
      * A Boolean value to determine whether the Windows default theme is

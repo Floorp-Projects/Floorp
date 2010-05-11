@@ -1377,7 +1377,7 @@ var gDownloadingPage = {
    * When the user closes the Wizard UI by clicking the Hide button
    */
   onHide: function() {
-    // Set _hiding to false to prevent onWizardCancel from cancelling the update
+    // Set _hiding to true to prevent onWizardCancel from cancelling the update
     // that is in progress.
     this._hiding = true;
 

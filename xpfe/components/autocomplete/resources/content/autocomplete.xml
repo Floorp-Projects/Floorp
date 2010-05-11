@@ -1467,7 +1467,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content>
+    <content ignorekeys="true" level="top">
       <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
         <xul:treecols anonid="treecols">
           <xul:treecol class="autocomplete-treecol" id="treecolAutoCompleteValue" flex="2"/>

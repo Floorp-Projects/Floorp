@@ -204,17 +204,17 @@ struct nsCSSRendering {
   }
 
   /**
-   * Find a style context containing a non-transparent background,
+   * Find a frame which draws a non-transparent background,
    * for various table-related and HR-related backwards-compatibility hacks.
-   * This function will also stop if it finds a -moz-appearance value, as
-   * the theme may draw a widget as a background.
+   * This function will also stop if it finds themed frame which might draw
+   * background.
    *
    * Be very hesitant if you're considering calling this function -- it's
    * usually not what you want.
    */
-  static nsStyleContext*
-  FindNonTransparentBackground(nsStyleContext* aContext,
-                               PRBool aStartAtParent = PR_FALSE);
+  static nsIFrame*
+  FindNonTransparentBackgroundFrame(nsIFrame* aFrame,
+                                    PRBool aStartAtParent = PR_FALSE);
 
   /**
    * Determine the background color to draw taking into account print settings.
@@ -428,6 +428,9 @@ public:
    * @param aDirtyRect           The absolute dirty rect in app units. Used to
    *                             optimize the temporary surface size and speed up blur.
    *
+   * @param aSkipRect            An area in device pixels (NOT app units!) to avoid
+   *                             blurring over, to prevent unnecessary work.
+   *
    * @return            A blank 8-bit alpha-channel-only graphics context to
    *                    draw on, or null on error. Must not be freed. The
    *                    context has a device offset applied to it given by
@@ -443,7 +446,7 @@ public:
    */
   gfxContext* Init(const nsRect& aRect, nscoord aBlurRadius,
                    PRInt32 aAppUnitsPerDevPixel, gfxContext* aDestinationCtx,
-                   const nsRect& aDirtyRect);
+                   const nsRect& aDirtyRect, const gfxRect* aSkipRect);
 
   /**
    * Does the actual blurring and mask applying. Users of this object *must*

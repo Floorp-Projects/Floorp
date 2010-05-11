@@ -711,7 +711,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
   }
 
   if (!rootContent)
-    rootContent = doc->GetRootContent();
+    rootContent = doc->GetRootElement();
  
   nsCOMPtr<nsIDOMNode> rootNode(do_QueryInterface(rootContent));
 
@@ -797,7 +797,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
   }
   origContent = startContent;
 
-  if (startContent->IsNodeOfType(nsINode::eELEMENT)) {
+  if (startContent->IsElement()) {
     nsIContent *childContent = startContent->GetChildAt(startOffset);
     if (childContent) {
       startContent = childContent;
@@ -1007,7 +1007,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, PRBool aLinksOnly,
         // If the root element is focused, then it's actually the document
         // that has the focus, so ignore this.
         if (focusedElement &&
-            !SameCOMIdentity(focusedElement, document->GetRootContent())) {
+            !SameCOMIdentity(focusedElement, document->GetRootElement())) {
           fm->MoveCaretToFocus(window);
           isFirstVisiblePreferred = PR_FALSE;
         }

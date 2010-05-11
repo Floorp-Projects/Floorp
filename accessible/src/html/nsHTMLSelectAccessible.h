@@ -240,7 +240,11 @@ protected:
   virtual void CacheChildren();
 
   // nsHTMLComboboxAccessible
-  already_AddRefed<nsIAccessible> GetFocusedOptionAccessible();
+
+  /**
+   * Return focused option accessible.
+   */
+  already_AddRefed<nsAccessible> GetFocusedOptionAccessible();
 
 private:
   nsRefPtr<nsHTMLComboboxListAccessible> mListAccessible;

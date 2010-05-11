@@ -43,7 +43,7 @@ relativesrcdir	= layout/base/tests
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS += \
+PARALLEL_DIRS += \
   chrome \
   $(NULL)
 
@@ -58,7 +58,6 @@ CPPSRCS += $(BARE_UNIT_TESTS)
 SIMPLE_PROGRAMS += $(BARE_UNIT_TESTS:.cpp=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
-
 
 DEFINES += -D_IMPL_NS_LAYOUT
 
@@ -109,9 +108,6 @@ _TEST_FILES =	\
 		test_scroll_selection_into_view.html \
 		test_scrolling.html \
 		$(NULL)
-# test_bug396024.html is currently disabled because it interacts badly with
-# the "You can't print-preview while the page is loading" dialog.
-# (See bug 407080)
 
 # Tests for bugs 441782 and 467672 don't pass reliably on Windows, because of bug 469208
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))

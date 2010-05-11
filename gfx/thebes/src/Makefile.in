@@ -15,7 +15,6 @@ EXPORT_LIBRARY	= 1
 CPPSRCS	= \
 	gfxASurface.cpp \
 	gfxAlphaRecovery.cpp \
-	gfxBlur.cpp \
 	gfxContext.cpp \
 	gfxImageSurface.cpp \
 	gfxFont.cpp \
@@ -33,16 +32,24 @@ CPPSRCS	= \
 	gfxTextRunCache.cpp \
 	gfxTextRunWordCache.cpp \
 	gfxUserFontSet.cpp \
+	GLContext.cpp \
 	$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += \
-	gfxSharedImageSurface.cpp \
+SHARED_LIBRARY_LIBS += \
+	../../layers/$(LIB_PREFIX)layers.$(LIB_SUFFIX) \
 	$(NULL)
+
+
+ifndef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LIBS	= gkgfx ycbcr
+ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
+CPPSRCS += gfxDllDeps.cpp
+endif
 endif
 
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_CAIRO_LIBS) \
+	$(EXTRA_DSO_LIBS) \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
@@ -71,6 +78,7 @@ OS_LIBS += $(call EXPAND_LIBNAME,ddraw)
 else
 ifdef MOZ_ENABLE_DWRITE_FONT
 CPPSRCS	+= gfxDWriteFonts.cpp \
+	   gfxDWriteShaper.cpp \
 	   gfxDWriteTextAnalysis.cpp \
 	   gfxDWriteCommon.cpp \
 	   gfxD2DSurface.cpp \
@@ -182,12 +190,26 @@ CPPSRCS +=      gfxQuartzNativeDrawing.cpp
 CMMSRCS = gfxMacPlatformFontList.mm
 
 # Always link with OpenGL/AGL
-EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime
+EXTRA_DSO_LDOPTS += -framework OpenGL -framework AGL -framework QuickTime -framework AppKit
 endif
 
 CSRCS += woff.c
 
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifndef WINCE
+CPPSRCS += GLContextProviderWGL.cpp
+else
+CPPSRCS += GLContextProviderNull.cpp
+endif
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS += GLContextProviderCGL.mm
+else
+CPPSRCS += GLContextProviderNull.cpp
+endif
+endif
 
 DEFINES += -DIMPL_THEBES -DWOFF_MOZILLA_CLIENT
 

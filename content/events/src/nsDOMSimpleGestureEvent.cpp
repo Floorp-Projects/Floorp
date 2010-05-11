@@ -51,6 +51,7 @@ nsDOMSimpleGestureEvent::nsDOMSimpleGestureEvent(nsPresContext* aPresContext, ns
     mEventIsInternal = PR_TRUE;
     mEvent->time = PR_Now();
     mEvent->refPoint.x = mEvent->refPoint.y = 0;
+    static_cast<nsMouseEvent*>(mEvent)->inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
   }
 }
 
@@ -64,6 +65,8 @@ nsDOMSimpleGestureEvent::~nsDOMSimpleGestureEvent()
 
 NS_IMPL_ADDREF_INHERITED(nsDOMSimpleGestureEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMSimpleGestureEvent, nsDOMUIEvent)
+
+DOMCI_DATA(SimpleGestureEvent, nsDOMSimpleGestureEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMSimpleGestureEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSimpleGestureEvent)

@@ -53,7 +53,8 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  this.x setter= Function; this.watch('x', function () { }); x = 3;
+  Object.defineProperty(this, "x", { set: Function, enumerable: true, configurable: true });
+  this.watch('x', function () { }); x = 3;
 
   reportCompare(expect, actual, summary);
 

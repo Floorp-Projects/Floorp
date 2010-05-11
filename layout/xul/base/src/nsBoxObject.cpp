@@ -58,6 +58,9 @@
 #include "nsISupportsPrimitives.h"
 #include "prtypes.h"
 #include "nsSupportsPrimitives.h"
+#include "Element.h"
+
+using namespace mozilla::dom;
 
 // Implementation /////////////////////////////////////////////////////////////////
 
@@ -69,6 +72,8 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsBoxObject)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBoxObject)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBoxObject)
+
+DOMCI_DATA(BoxObject, nsBoxObject)
 
 // QueryInterface implementation for nsBoxObject
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsBoxObject)
@@ -195,7 +200,7 @@ nsBoxObject::GetOffsetRect(nsIntRect& aRect)
     nsPoint origin = frame->GetPositionIgnoringScrolling();
 
     // Find the frame parent whose content is the document element.
-    nsIContent *docElement = mContent->GetCurrentDoc()->GetRootContent();
+    Element *docElement = mContent->GetCurrentDoc()->GetRootElement();
     nsIFrame* parent = frame->GetParent();
     for (;;) {
       // If we've hit the document element, break here

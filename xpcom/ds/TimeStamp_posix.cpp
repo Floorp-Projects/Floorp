@@ -163,10 +163,25 @@ TimeDuration::Resolution()
   return TimeDuration::FromTicks(sResolution);
 }
 
+struct TimeStampInitialization
+{
+  TimeStampInitialization() {
+    TimeStamp::Startup();
+  }
+  ~TimeStampInitialization() {
+    TimeStamp::Shutdown();
+  }
+};
+
+static TimeStampInitialization initOnce;
+static PRBool gInitialized = PR_FALSE;
 
 nsresult
 TimeStamp::Startup()
 {
+  if (gInitialized)
+    return NS_OK;
+
   struct timespec dummy;
   if (0 != clock_gettime(CLOCK_MONOTONIC, &dummy))
       NS_RUNTIMEABORT("CLOCK_MONOTONIC is absent!");
@@ -180,6 +195,7 @@ TimeStamp::Startup()
          || 10*sResolutionSigDigs > sResolution);
        sResolutionSigDigs *= 10);
 
+  gInitialized = PR_TRUE;
   return NS_OK;
 }
 

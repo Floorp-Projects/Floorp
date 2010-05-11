@@ -36,6 +36,8 @@
  * 
  * ***** END LICENSE BLOCK ***** */
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 function test() {
   // Due to LAZY_ADD this is an async test.
   waitForExplicitFinish();
@@ -78,7 +80,8 @@ function test() {
   function confirm_results() {
     hs.removeObserver(historyObserver, false);
     for (let aURI in historyObserver.visitCount) {
-      is(historyObserver.visitCount[aURI], 1, "onVisit has been received right number of times for " + aURI);
+      is(historyObserver.visitCount[aURI], 1,
+         "onVisit has been received right number of times for " + aURI);
     }
     hs.QueryInterface(Ci.nsIBrowserHistory).removeAllPages();
     finish();
@@ -104,7 +107,7 @@ function test() {
       content.location.href = uri;
     }
     else {
-      setTimeout(confirm_results, LAZY_ADD_TIMER * 2);
+      setTimeout(confirm_results, LAZY_ADD_TIMER * 2.5);
     }
   }
   executeSoon(check_next_uri);

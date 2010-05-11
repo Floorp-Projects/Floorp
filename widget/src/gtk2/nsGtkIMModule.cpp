@@ -53,6 +53,7 @@
 #ifdef MOZ_PLATFORM_MAEMO
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
+#include "mozilla/Services.h"
 #endif
 
 #ifdef PR_LOGGING
@@ -493,6 +494,10 @@ nsGtkIMModule::CancelIMEComposition(nsWindow* aCaller)
         return NS_OK;
     }
 
+    if (!mIsComposing) {
+        return NS_OK;
+    }
+
     GtkIMContext *im = GetContext();
     if (NS_UNLIKELY(!im)) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
@@ -583,7 +588,7 @@ nsGtkIMModule::SetIMEEnabled(nsWindow* aCaller, PRUint32 aState)
     }
 
     nsCOMPtr<nsIObserverService> observerService =
-        do_GetService("@mozilla.org/observer-service;1");
+        mozilla::services::GetObserverService();
     if (observerService) {
         nsAutoString rectBuf;
         PRInt32 x, y, w, h;
@@ -770,13 +775,15 @@ nsGtkIMModule::OnEndCompositionNative(GtkIMContext *aContext)
         return;
     }
 
+    PRBool shouldIgnoreThisEvent = ShouldIgnoreNativeCompositionEvent();
+
     // Finish the cancelling mode here rather than DispatchCompositionEnd()
     // because DispatchCompositionEnd() is called ourselves when we need to
     // commit the composition string *before* the focus moves completely.
     // Note that the native commit can be fired *after* ResetIME().
     mIgnoreNativeCompositionEvent = PR_FALSE;
 
-    if (!mIsComposing) {
+    if (!mIsComposing || shouldIgnoreThisEvent) {
         // If we already handled the commit event, we should do nothing here.
         return;
     }
@@ -988,12 +995,13 @@ nsGtkIMModule::GetCompositionString(nsAString &aCompositionString)
     } else {
         aCompositionString.Truncate();
     }
-    pango_attr_list_unref(feedback_list);
-    g_free(preedit_string);
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("GtkIMModule(%p): GetCompositionString, result=\"%s\"",
          this, preedit_string));
+
+    pango_attr_list_unref(feedback_list);
+    g_free(preedit_string);
 }
 
 PRBool

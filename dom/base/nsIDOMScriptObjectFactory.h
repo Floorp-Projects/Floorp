@@ -43,15 +43,15 @@
 #include "nsStringGlue.h"
 
 #define NS_IDOM_SCRIPT_OBJECT_FACTORY_IID   \
-{ 0xd5a4f935, 0xe428, 0x47ec, \
-  { 0x8f, 0x36, 0x44, 0x23, 0xfa, 0xa2, 0x21, 0x90 } }
+{ 0x8c0eb687, 0xa859, 0x4a62, \
+ { 0x99, 0x82, 0xea, 0xbf, 0x9e, 0xf5, 0x59, 0x5f } }
 
 class nsIScriptContext;
 class nsIScriptGlobalObject;
 class nsIScriptRuntime;
 class nsIDOMEventListener;
 
-typedef nsIClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
+typedef nsXPCClassInfo* (*nsDOMClassInfoExternalConstructorFnc)
   (const char* aName);
 
 class nsIDOMScriptObjectFactory : public nsISupports {

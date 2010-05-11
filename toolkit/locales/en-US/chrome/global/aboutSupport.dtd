@@ -1,0 +1,37 @@
+<!ENTITY aboutSupport.pageTitle "Troubleshooting Information">
+
+<!-- LOCALIZATION NOTE (aboutSupport.pageSubtitle): don't change the 'supportLink' id. -->
+<!ENTITY aboutSupport.pageSubtitle "
+  This page contains technical information that might be useful when you're
+  trying to solve a problem. If you are looking for answers to common questions
+  about &brandShortName;, check out our <a id='supportLink'>support web site</a>.
+">
+
+<!ENTITY aboutSupport.extensionsTitle "Extensions">
+<!ENTITY aboutSupport.extensionName "Name">
+<!ENTITY aboutSupport.extensionEnabled "Enabled">
+<!ENTITY aboutSupport.extensionVersion "Version">
+<!ENTITY aboutSupport.extensionId "ID">
+
+<!ENTITY aboutSupport.appBasicsTitle "Application Basics">
+<!ENTITY aboutSupport.appBasicsName "Name">
+<!ENTITY aboutSupport.appBasicsVersion "Version">
+<!ENTITY aboutSupport.appBasicsProfileDir "Profile Directory">
+<!ENTITY aboutSupport.appBasicsPlugins "Installed Plugins">
+<!ENTITY aboutSupport.appBasicsBuildConfig "Build Configuration">
+
+<!ENTITY aboutSupport.show.label "Open Containing Folder">
+
+<!-- LOCALIZATION NOTE (aboutSupport.showMac.label): This is the Mac-specific
+variant of aboutSupport.show.label.  This allows us to use the preferred
+"Finder" terminology on Mac. -->
+<!ENTITY aboutSupport.showMac.label "Show in Finder">
+
+<!ENTITY aboutSupport.modifiedPrefsTitle "Modified Preferences">
+<!ENTITY aboutSupport.modifiedPrefsName "Name">
+<!ENTITY aboutSupport.modifiedPrefsValue "Value">
+
+<!ENTITY aboutSupport.installationHistoryTitle "Installation History">
+<!ENTITY aboutSupport.updateHistoryTitle "Update History">
+
+<!ENTITY aboutSupport.copyToClipboard.label "Copy all to clipboard">

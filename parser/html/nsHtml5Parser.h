@@ -62,11 +62,9 @@
 #include "nsHtml5StreamParser.h"
 #include "nsHtml5AtomTable.h"
 #include "nsWeakReference.h"
-#include "nsAHtml5EncodingDeclarationHandler.h"
 
 class nsHtml5Parser : public nsIParser,
-                      public nsSupportsWeakReference,
-                      public nsAHtml5EncodingDeclarationHandler
+                      public nsSupportsWeakReference
 {
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -84,9 +82,9 @@ class nsHtml5Parser : public nsIParser,
     NS_IMETHOD_(void) SetContentSink(nsIContentSink* aSink);
 
     /**
-     * Returns |this| for backwards compat.
+     * Returns the tree op executor for backwards compat.
      */
-    NS_IMETHOD_(nsIContentSink*) GetContentSink(void);
+    NS_IMETHOD_(nsIContentSink*) GetContentSink();
 
     /**
      * Always returns "view" for backwards compat.
@@ -203,7 +201,7 @@ class nsHtml5Parser : public nsIParser,
     /**
      * Stops the parser prematurely
      */
-    NS_IMETHOD        Terminate(void);
+    NS_IMETHOD Terminate();
 
     /**
      * Don't call. For interface backwards compat only.
@@ -233,7 +231,7 @@ class nsHtml5Parser : public nsIParser,
     /**
      * Don't call. For interface compat only.
      */
-    NS_IMETHOD BuildModel(void);
+    NS_IMETHOD BuildModel();
 
     /**
      * Don't call. For interface compat only.
@@ -278,12 +276,6 @@ class nsHtml5Parser : public nsIParser,
 
     /* End nsIParser  */
 
-    // nsAHtml5EncodingDeclarationHandler
-    /**
-     * Tree builder uses this to report a late <meta charset>
-     */
-    virtual void internalEncodingDeclaration(nsString* aEncoding);
-
     // Not from an external interface
     // Non-inherited methods
 
@@ -304,7 +296,10 @@ class nsHtml5Parser : public nsIParser,
     void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, PRInt32 aLine);
 
     void DropStreamParser() {
-      mStreamParser = nsnull;
+      if (mStreamParser) {
+        mStreamParser->DropTimer();
+        mStreamParser = nsnull;
+      }
     }
     
     void StartTokenizer(PRBool aScriptingEnabled);
@@ -323,13 +318,6 @@ class nsHtml5Parser : public nsIParser,
   private:
 
     // State variables
-
-    /**
-     * The charset source. This variable is used for script-created parsers
-     * only. When parsing from the stream, this variable can have a bogus 
-     * value.
-     */
-    PRInt32                       mCharsetSource;
 
     /**
      * Whether the last character tokenized was a carriage return (for CRLF)
