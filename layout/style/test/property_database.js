@@ -1480,9 +1480,23 @@ var gCSSProperties = {
 		domProp: "fontSize",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "medium" ],
-		other_values: [ "large", "2em", "50%", "xx-small", "36pt", "8px" ],
-		invalid_values: []
+		initial_values: [ "medium",
+			"1rem",
+			"-moz-calc(1rem)",
+			"-moz-calc(0.75rem + 200% - 125% + 0.25rem - 75%)"
+		],
+		other_values: [ "large", "2em", "50%", "xx-small", "36pt", "8px",
+			"0px",
+			"0%",
+			"-moz-calc(2em)",
+			"-moz-min(36pt, 2em)",
+			"-moz-max(50%, 8px)",
+			"-moz-min(36pt + 75%, 30% + 2em + 2px)",
+			"-moz-calc(-2em)",
+			"-moz-calc(-50%)",
+			"-moz-calc(-1px)"
+		],
+		invalid_values: [ "-2em", "-50%", "-1px" ]
 	},
 	"font-size-adjust": {
 		domProp: "fontSizeAdjust",

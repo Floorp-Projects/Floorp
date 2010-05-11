@@ -5985,7 +5985,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseFamily(aValue);
   case eCSSProperty_font_size:
     return ParseNonNegativeVariant(aValue,
-                                   VARIANT_HKLP | VARIANT_SYSFONT,
+                                   VARIANT_HKLP | VARIANT_SYSFONT |
+                                     VARIANT_CALC,
                                    nsCSSProps::kFontSizeKTable);
   case eCSSProperty_font_size_adjust:
     return ParseVariant(aValue, VARIANT_HON | VARIANT_SYSFONT,
