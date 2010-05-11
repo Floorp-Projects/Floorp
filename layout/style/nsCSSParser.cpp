@@ -5830,14 +5830,14 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_border_start_width_value: // for internal use
   case eCSSProperty_border_top_width:
   case eCSSProperty__moz_column_rule_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKL,
+    return ParseNonNegativeVariant(aValue, VARIANT_HKL | VARIANT_CALC,
                                    nsCSSProps::kBorderWidthKTable);
   case eCSSProperty__moz_column_count:
     // Need to reject 0 in addition to negatives.  If we accept 0, we
     // need to change NS_STYLE_COLUMN_COUNT_AUTO to something else.
     return ParsePositiveNonZeroVariant(aValue, VARIANT_AHI, nsnull);
   case eCSSProperty__moz_column_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_AHL, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
   case eCSSProperty__moz_column_gap:
     return ParseNonNegativeVariant(aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
   case eCSSProperty_bottom:
@@ -6008,7 +6008,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
   case eCSSProperty_letter_spacing:
   case eCSSProperty_word_spacing:
-    return ParseVariant(aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
+    return ParseVariant(aValue, VARIANT_HL | VARIANT_NORMAL | VARIANT_CALC,
+                        nsnull);
   case eCSSProperty_line_height:
     return ParseNonNegativeVariant(aValue, VARIANT_HLPN | VARIANT_KEYWORD | VARIANT_NORMAL | VARIANT_SYSFONT, nsCSSProps::kLineHeightKTable);
   case eCSSProperty_list_style_image:
@@ -6025,7 +6026,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_margin_top:
     return ParseVariant(aValue, VARIANT_AHLP, nsnull);
   case eCSSProperty_marker_offset:
-    return ParseVariant(aValue, VARIANT_AHL, nsnull);
+    return ParseVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
   case eCSSProperty_marks:
     return ParseMarks(aValue);
   case eCSSProperty_max_height:
@@ -6053,7 +6054,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseNonNegativeVariant(aValue, VARIANT_HKL,
                                    nsCSSProps::kBorderWidthKTable);
   case eCSSProperty_outline_offset:
-    return ParseVariant(aValue, VARIANT_HL, nsnull);
+    return ParseVariant(aValue, VARIANT_HL | VARIANT_CALC, nsnull);
   case eCSSProperty_overflow_x:
   case eCSSProperty_overflow_y:
     return ParseVariant(aValue, VARIANT_HK,
@@ -6969,11 +6970,12 @@ PRBool
 CSSParserImpl::ParseBorderSpacing()
 {
   nsCSSValue  xValue;
-  if (ParseNonNegativeVariant(xValue, VARIANT_HL, nsnull)) {
-    if (xValue.IsLengthUnit()) {
+  if (ParseNonNegativeVariant(xValue, VARIANT_HL | VARIANT_CALC, nsnull)) {
+    if (xValue.IsLengthUnit() || xValue.IsCalcUnit()) {
       // We have one length. Get the optional second length.
       nsCSSValue yValue;
-      if (ParseNonNegativeVariant(yValue, VARIANT_LENGTH, nsnull)) {
+      if (ParseNonNegativeVariant(yValue, VARIANT_LENGTH | VARIANT_CALC,
+                                  nsnull)) {
         // We have two numbers
         if (ExpectEndProperty()) {
           mTempData.mTable.mBorderSpacing.mXValue = xValue;

@@ -3345,7 +3345,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
 
   // letter-spacing: normal, length, inherit
   SetCoord(textData.mLetterSpacing, text->mLetterSpacing, parentText->mLetterSpacing,
-           SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
+           SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL |
+             SETCOORD_CALC_LENGTH_ONLY,
            aContext, mPresContext, canStoreInRuleTree);
 
   // text-shadow: none, list, inherit, initial
@@ -3441,7 +3442,8 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
   if (SetCoord(textData.mWordSpacing, tempCoord,
                nsStyleCoord(parentText->mWordSpacing,
                             nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
+               SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL |
+                 SETCOORD_CALC_LENGTH_ONLY,
                aContext, mPresContext, canStoreInRuleTree)) {
     if (tempCoord.GetUnit() == eStyleUnit_Coord) {
       text->mWordSpacing = tempCoord.GetCoordValue();
@@ -5121,8 +5123,8 @@ nsRuleNode::ComputeOutlineData(void* aStartStruct,
   if (SetCoord(marginData.mOutlineOffset, tempCoord,
                nsStyleCoord(parentOutline->mOutlineOffset,
                             nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO, aContext, mPresContext,
-               canStoreInRuleTree)) {
+               SETCOORD_LH | SETCOORD_INITIAL_ZERO | SETCOORD_CALC_LENGTH_ONLY,
+               aContext, mPresContext, canStoreInRuleTree)) {
     outline->mOutlineOffset = tempCoord.GetCoordValue();
   } else {
     NS_ASSERTION(marginData.mOutlineOffset.GetUnit() == eCSSUnit_Null,
@@ -5384,7 +5386,8 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
   if (SetCoord(tableData.mBorderSpacing.mXValue, tempCoord,
                nsStyleCoord(parentTable->mBorderSpacingX,
                             nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO,
+               SETCOORD_LH | SETCOORD_INITIAL_ZERO |
+               SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
                aContext, mPresContext, canStoreInRuleTree)) {
     table->mBorderSpacingX = tempCoord.GetCoordValue();
   } else {
@@ -5396,7 +5399,8 @@ nsRuleNode::ComputeTableBorderData(void* aStartStruct,
   if (SetCoord(tableData.mBorderSpacing.mYValue, tempCoord,
                nsStyleCoord(parentTable->mBorderSpacingY,
                             nsStyleCoord::CoordConstructor),
-               SETCOORD_LH | SETCOORD_INITIAL_ZERO,
+               SETCOORD_LH | SETCOORD_INITIAL_ZERO |
+               SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
                aContext, mPresContext, canStoreInRuleTree)) {
     table->mBorderSpacingY = tempCoord.GetCoordValue();
   } else {
@@ -5600,8 +5604,9 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
 
   // marker-offset: length, auto, inherit
   SetCoord(contentData.mMarkerOffset, content->mMarkerOffset, parentContent->mMarkerOffset,
-           SETCOORD_LH | SETCOORD_AUTO | SETCOORD_INITIAL_AUTO, aContext,
-           mPresContext, canStoreInRuleTree);
+           SETCOORD_LH | SETCOORD_AUTO | SETCOORD_INITIAL_AUTO |
+             SETCOORD_CALC_LENGTH_ONLY,
+           aContext, mPresContext, canStoreInRuleTree);
 
   COMPUTE_END_RESET(Content, content)
 }
@@ -5720,7 +5725,8 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
   // column-width: length, auto, inherit
   SetCoord(columnData.mColumnWidth,
            column->mColumnWidth, parent->mColumnWidth,
-           SETCOORD_LAH | SETCOORD_INITIAL_AUTO,
+           SETCOORD_LAH | SETCOORD_INITIAL_AUTO |
+           SETCOORD_CALC_LENGTH_ONLY | SETCOORD_CALC_CLAMP_NONNEGATIVE,
            aContext, mPresContext, canStoreInRuleTree);
 
   // column-gap: length, percentage, inherit, normal
@@ -5760,9 +5766,18 @@ nsRuleNode::ComputeColumnData(void* aStartStruct,
     column->SetColumnRuleWidth(parent->GetComputedColumnRuleWidth());
     canStoreInRuleTree = PR_FALSE;
   }
-  else if (widthValue.IsLengthUnit()) {
-    column->SetColumnRuleWidth(CalcLength(widthValue, aContext,
-                                          mPresContext, canStoreInRuleTree));
+  else if (widthValue.IsLengthUnit() || widthValue.IsCalcUnit()) {
+    nscoord len =
+      CalcLength(widthValue, aContext, mPresContext, canStoreInRuleTree);
+    if (len < 0) {
+      // FIXME: This is untested (by test_value_storage.html) for
+      // column-rule-width since it gets covered up by the border
+      // rounding code.
+      NS_ASSERTION(widthValue.IsCalcUnit(),
+                   "parser should have rejected negative length");
+      len = 0;
+    }
+    column->SetColumnRuleWidth(len);
   }
 
   // column-rule-style: enum, inherit
