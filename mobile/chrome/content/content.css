@@ -68,9 +68,9 @@ thumb {
   -moz-border-radius: 4px !important;
 }
 
-select:not([size]) > scrollbar,
+select:not([size]):not([multiple]) > scrollbar,
 select[size="1"] > scrollbar,
-select:not([size]) scrollbarbutton,
+select:not([size]):not([multiple]) scrollbarbutton,
 select[size="1"] scrollbarbutton {
   display: block !important;
 }
@@ -94,7 +94,7 @@ html input:not([type="image"]) {
   background: -moz-linear-gradient(top, rgb(185,185,185) 0, rgb(235,235,235) 3px, rgb(255,255,255) 16px);
 }
 
-html select:not([size]),
+html select:not([size]):not([multiple]),
 html select[size="0"],
 html select[size="1"],
 html input[type="button"],
@@ -120,7 +120,7 @@ html select {
   padding: 1px;
 }
 
-html select:not([size]),
+html select:not([size]):not([multiple]),
 html select[size="0"],
 html select[size="1"] {
   padding: 2px 1px 2px 1px;
@@ -177,7 +177,7 @@ html input:not([type="image"]):focus {
   background: -moz-linear-gradient(top, rgb(141,184,216) 0, rgba(198,225,246,0.2) 3px, rgb(255,255,255) 16px);
 }
 
-html select:not([size]):focus,
+html select:not([size]):not([multiple]):focus,
 html select[size="0"]:focus,
 html select[size="1"]:focus,
 html input[type="button"]:focus,
