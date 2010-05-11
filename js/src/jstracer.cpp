@@ -11976,7 +11976,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
     LIns* idx_ins = get(&idx);
     LIns* v_ins = get(&v);
 
-    if (JS_InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
+    if (InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
         RETURN_STOP_A("can't trace setting elements of the |arguments| object");
 
     if (!JSVAL_IS_INT(idx)) {
@@ -14564,7 +14564,7 @@ TraceRecorder::record_JSOP_CALLPROP()
 
         if (JSVAL_IS_PRIMITIVE(l)) {
             JSFunction* fun = GET_FUNCTION_PRIVATE(cx, pcval.toObject());
-            if (!PRIMITIVE_THIS_TEST(fun, l))
+            if (!PrimitiveThisTest(fun, l))
                 RETURN_STOP_A("callee does not accept primitive |this|");
         }
 

@@ -799,7 +799,7 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
 static JSString* FASTCALL
 String_p_toString(JSContext* cx, JSObject* obj)
 {
-    if (!JS_InstanceOf(cx, obj, &js_StringClass, NULL))
+    if (!InstanceOf(cx, obj, &js_StringClass, NULL))
         return NULL;
     jsval v = obj->fslots[JSSLOT_PRIMITIVE_THIS];
     JS_ASSERT(JSVAL_IS_STRING(v));
@@ -3230,8 +3230,8 @@ js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun)
     return js_GetStringBytes(cx, str);
 }
 
-JS_FRIEND_API(JSString *)
-js_ValueToString(JSContext *cx, jsval v)
+JSString *
+js_ValueToString(JSContext *cx, const Value &v)
 {
     JSString *str;
 
@@ -3265,7 +3265,7 @@ AppendAtom(JSAtom *atom, JSCharBuffer &cb)
 }
 
 /* This function implements E-262-3 section 9.8, toString. */
-JS_FRIEND_API(JSBool)
+JSBool
 js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 {
     if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))

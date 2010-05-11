@@ -55,7 +55,7 @@ CallStack::getCurrentFrame() const
     return isSuspended() ? getSuspendedFrame() : cx->fp;
 }
 
-JS_REQUIRES_STACK inline jsval *
+JS_REQUIRES_STACK inline Value *
 StackSpace::firstUnused() const
 {
     CallStack *ccs = currentCallStack;
@@ -82,7 +82,7 @@ StackSpace::isCurrent(JSContext *cx) const
 #endif
 
 JS_ALWAYS_INLINE bool
-StackSpace::ensureSpace(JSContext *maybecx, jsval *from, ptrdiff_t nvals) const
+StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 {
     JS_ASSERT(from == firstUnused());
 #ifdef XP_WIN
@@ -120,14 +120,14 @@ StackSpace::ensureEnoughSpaceToEnterTrace()
 }
 
 JS_ALWAYS_INLINE void
-StackSpace::popInvokeArgs(JSContext *cx, jsval *vp)
+StackSpace::popInvokeArgs(JSContext *cx, Value *vp)
 {
     JS_ASSERT(!currentCallStack->inContext());
     currentCallStack = currentCallStack->getPreviousInThread();
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
-StackSpace::getInlineFrame(JSContext *cx, jsval *sp,
+StackSpace::getInlineFrame(JSContext *cx, Value *sp,
                            uintN nmissing, uintN nslots) const
 {
     JS_ASSERT(isCurrent(cx) && cx->hasActiveCallStack());
@@ -182,7 +182,7 @@ InvokeArgsGuard::InvokeArgsGuard()
 {}
 
 JS_ALWAYS_INLINE
-InvokeArgsGuard::InvokeArgsGuard(jsval *vp, uintN argc)
+InvokeArgsGuard::InvokeArgsGuard(Value *vp, uintN argc)
   : cx(NULL), cs(NULL), vp(vp), argc(argc)
 {}
 
@@ -198,7 +198,7 @@ InvokeArgsGuard::~InvokeArgsGuard()
 void
 AutoIdArray::trace(JSTracer *trc) {
     JS_ASSERT(tag == IDARRAY);
-    js::TraceValues(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
+    TraceIds(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
 class AutoNamespaces : protected AutoGCRooter {
@@ -218,7 +218,7 @@ AutoGCRooter::trace(JSTracer *trc)
     switch (tag) {
       case JSVAL:
         JS_SET_TRACING_NAME(trc, "js::AutoValueRooter.val");
-        js_CallValueTracerIfGCThing(trc, static_cast<AutoValueRooter *>(this)->val);
+        CallGCMarkerIfGCThing(trc, static_cast<AutoValueRooter *>(this)->val);
         return;
 
       case SPROP:
@@ -244,7 +244,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IDARRAY: {
         JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        TraceValues(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
+        TraceIds(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
         return;
       }
 
@@ -254,9 +254,12 @@ AutoGCRooter::trace(JSTracer *trc)
         for (size_t i = 0, len = descriptors.length(); i < len; i++) {
             PropertyDescriptor &desc = descriptors[i];
 
-            JS_CALL_VALUE_TRACER(trc, desc.value, "PropertyDescriptor::value");
-            JS_CALL_VALUE_TRACER(trc, desc.get, "PropertyDescriptor::get");
-            JS_CALL_VALUE_TRACER(trc, desc.set, "PropertyDescriptor::set");
+            JS_SET_TRACING_NAME(trc, "PropertyDescriptor::value");
+            CallGCMarkerIfGCThing(trc, desc.value);
+            JS_SET_TRACING_NAME(trc, "PropertyDescriptor::get");
+            CallGCMarkerIfGCThing(trc, desc.get);
+            JS_SET_TRACING_NAME(trc, "PropertyDescriptor::set");
+            CallGCMarkerIfGCThing(trc, desc.set);
             js_TraceId(trc, desc.id);
         }
         return;
@@ -276,18 +279,18 @@ AutoGCRooter::trace(JSTracer *trc)
       case OBJECT:
         if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj) {
             JS_SET_TRACING_NAME(trc, "js::AutoObjectRooter.obj");
-            js_CallGCMarker(trc, obj, JSTRACE_OBJECT);
+            CallGCMarker(trc, obj, JSTRACE_OBJECT);
         }
         return;
 
       case ID:
         JS_SET_TRACING_NAME(trc, "js::AutoIdRooter.val");
-        js_CallValueTracerIfGCThing(trc, static_cast<AutoIdRooter *>(this)->idval);
+        CallGCMarkerIfGCThing(trc, static_cast<AutoIdRooter *>(this)->idval);
         return;
 
       case VECTOR: {
-        js::Vector<jsval, 8> &vector = static_cast<js::AutoValueVector *>(this)->vector;
-        js::TraceValues(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
+        Vector<Value, 8> &vector = static_cast<AutoValueVector *>(this)->vector;
+        TraceValues(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
         return;
       }
     }
@@ -296,6 +299,6 @@ AutoGCRooter::trace(JSTracer *trc)
     TraceValues(trc, tag, static_cast<AutoArrayRooter *>(this)->array, "js::AutoArrayRooter.array");
 }
 
-}
+}  /* namespace js */
 
 #endif /* jscntxtinlines_h___ */

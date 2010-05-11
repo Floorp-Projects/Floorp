@@ -47,7 +47,7 @@
 
 JS_BEGIN_EXTERN_C
 
-extern JSClass js_JSONClass;
+extern js::Class js_JSONClass;
 
 extern JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj);

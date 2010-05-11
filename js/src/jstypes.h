@@ -103,6 +103,18 @@
 
 # ifdef HAVE_VISIBILITY_ATTRIBUTE
 #  define JS_EXTERNAL_VIS __attribute__((visibility ("default")))
+#  if defined(__GNUC__) && __GNUC__ <= 4 && __GNUC_MINOR__ < 5
+    /*
+     * GCC wrongly produces a warning when a type with hidden visibility
+     * (e.g. js::Value) is a member of a local class of a static function.
+     * This is apparently fixed with GCC 4.5 and above.  See:
+     *
+     *   http://gcc.gnu.org/bugzilla/show_bug.cgi?id=40145.
+     */
+#   define DEFINE_LOCAL_CLASS_OF_STATIC_FUNCTION(Name) class __attribute__((visibility ("hidden"))) Name
+#  else
+#   define DEFINE_LOCAL_CLASS_OF_STATIC_FUNCTION class Name
+#  endif
 # elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #  define JS_EXTERNAL_VIS __global
 # else

@@ -50,6 +50,7 @@
 #include "jstask.h"
 #include "jsversion.h"
 
+#define JSTRACE_DOUBLE      2
 #define JSTRACE_XML         3
 
 /*
@@ -98,10 +99,16 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
                                  JSStringFinalizeOp newop);
 
 extern JSBool
-js_AddRoot(JSContext *cx, void *rp, const char *name);
+js_AddRoot(JSContext *cx, js::Value *vp, const char *name);
 
 extern JSBool
-js_AddRootRT(JSRuntime *rt, void *rp, const char *name);
+js_AddRootRT(JSRuntime *rt, js::Value *vp, const char *name);
+
+extern JSBool
+js_AddGCThingRoot(JSContext *cx, void **rp, const char *name);
+
+extern JSBool
+js_AddGCThingRootRT(JSRuntime *rt, void **rp, const char *name);
 
 extern JSBool
 js_RemoveRoot(JSRuntime *rt, void *rp);
@@ -109,7 +116,7 @@ js_RemoveRoot(JSRuntime *rt, void *rp);
 #ifdef DEBUG
 extern void
 js_DumpNamedRoots(JSRuntime *rt,
-                  void (*dump)(const char *name, void *rp, void *data),
+                  void (*dump)(const char *name, void *rp, JSGCRootType type, void *data),
                   void *data);
 #endif
 
@@ -126,18 +133,11 @@ extern JSBool
 js_RegisterCloseableIterator(JSContext *cx, JSObject *obj);
 
 /*
- * Allocate a new double jsval and store the result in *vp. vp must be a root.
- * The function does not copy the result into any weak root.
- */
-extern JSBool
-js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp);
-
-/*
  * Return a pointer to a new GC-allocated and weakly-rooted jsdouble number,
  * or null when the allocation fails.
  */
 extern jsdouble *
-js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d);
+js_NewWeaklyRootedDoubleAtom(JSContext *cx, jsdouble d);
 
 #ifdef JS_TRACER
 extern JSBool
@@ -162,16 +162,8 @@ js_IsAboutToBeFinalized(void *thing);
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) < JSTRACE_LIMIT)
 #else
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_STRING)
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_DOUBLE)
 #endif
-
-/*
- * Trace jsval when JSVAL_IS_OBJECT(v) can be a GC thing pointer tagged as a
- * jsval. NB: punning an arbitrary JSString * as an untagged (object-tagged)
- * jsval no longer works due to static int and unit strings!
- */
-extern void
-js_CallValueTracerIfGCThing(JSTracer *trc, jsval v);
 
 extern void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
@@ -228,9 +220,6 @@ typedef enum JSGCInvocationKind {
 
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
-
-extern void
-js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind);
 
 /*
  * The kind of GC thing with a finalizer. The external strings follow the
@@ -346,14 +335,14 @@ js_DestroyScriptsToGC(JSContext *cx, JSThreadData *data);
 
 struct JSWeakRoots {
     /* Most recently created things by type, members of the GC's root set. */
-    void            *finalizableNewborns[FINALIZE_LIMIT];
-    jsdouble        *newbornDouble;
+    void              *finalizableNewborns[FINALIZE_LIMIT];
+    jsdouble          *newbornDouble;
 
     /* Atom root for the last-looked-up atom on this context. */
-    jsval           lastAtom;
+    JSAtom            *lastAtom;
 
     /* Root for the result of the most recent js_InternalInvoke call. */
-    jsval           lastInternalResult;
+    void              *lastInternalResult;
 
     void mark(JSTracer *trc);
 };
@@ -454,28 +443,86 @@ js_MarkTraps(JSTracer *trc);
 namespace js {
 
 void
+CallGCMarker(JSTracer *trc, void *thing, uint32 kind);
+
+static inline void
+CallGCMarkerForGCThing(JSTracer *trc, const js::Value &v)
+{
+    CallGCMarker(trc, v.asGCThing(), v.traceKind());
+}
+
+void
+CallGCMarkerForGCThing(JSTracer *trc, void *thing);
+
+static inline void
+CallGCMarkerForGCThing(JSTracer *trc, void *thing, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    CallGCMarkerForGCThing(trc, thing);
+}
+
+static inline void
+CallGCMarkerIfGCThing(JSTracer *trc, const js::Value &v)
+{
+    if (v.isGCThing())
+        CallGCMarkerForGCThing(trc, v);
+}
+
+static inline void
+CallGCMarkerIfGCThing(JSTracer *trc, const js::Value &v, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    if (v.isGCThing())
+        CallGCMarkerForGCThing(trc, v);
+}
+
+static inline void
+CallGCMarkerIfGCThing(JSTracer *trc, jsid id)
+{
+    if (JSID_IS_GCTHING(id))
+        CallGCMarker(trc, JSID_TO_GCTHING(id), JSID_TRACE_KIND(id));
+}
+
+static inline void
+CallGCMarkerIfGCThing(JSTracer *trc, jsid id, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    if (JSID_IS_GCTHING(id))
+        CallGCMarker(trc, JSID_TO_GCTHING(id), JSID_TRACE_KIND(id));
+}
+
+void
 TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len);
 
 inline void
-TraceValues(JSTracer *trc, jsval *beg, jsval *end, const char *name)
+TraceValues(JSTracer *trc, Value *beg, Value *end, const char *name)
 {
-    for (jsval *vp = beg; vp < end; ++vp) {
-        jsval v = *vp;
-        if (JSVAL_IS_TRACEABLE(v)) {
+    for (Value *vp = beg; vp < end; ++vp) {
+        if (vp->isGCThing()) {
             JS_SET_TRACING_INDEX(trc, name, vp - beg);
-            js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+            CallGCMarkerForGCThing(trc, *vp);
         }
     }
 }
 
 inline void
-TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
+TraceValues(JSTracer *trc, size_t len, Value *vec, const char *name)
 {
-    for (jsval *vp = vec, *end = vp + len; vp < end; vp++) {
-        jsval v = *vp;
-        if (JSVAL_IS_TRACEABLE(v)) {
+    for (Value *vp = vec, *end = vp + len; vp < end; vp++) {
+        if (vp->isGCThing()) {
             JS_SET_TRACING_INDEX(trc, name, vp - vec);
-            js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+            CallGCMarkerForGCThing(trc, *vp);
+        }
+    }
+}
+
+inline void
+TraceIds(JSTracer *trc, size_t len, jsid *vec, const char *name)
+{
+    for (jsid *idp = vec, *end = idp + len; idp < end; idp++) {
+        if (JSID_IS_GCTHING(*idp)) {
+            JS_SET_TRACING_INDEX(trc, name, idp - vec);
+            CallGCMarker(trc, JSID_TO_GCTHING(*idp), JSID_TRACE_KIND(*idp));
         }
     }
 }

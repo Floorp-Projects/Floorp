@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS execution context.
  */
@@ -104,7 +106,7 @@ CallStack::contains(const JSStackFrame *fp) const
     JSStackFrame *start;
     JSStackFrame *stop;
     if (isSuspended()) {
-        start = suspendedFrame;
+        start = suspendedFrame();
         stop = initialFrame->down;
     } else {
         start = cx->fp;
@@ -129,7 +131,7 @@ StackSpace::init()
     void *check = VirtualAlloc(p, sCommitBytes, MEM_COMMIT, PAGE_READWRITE);
     if (p != check)
         return false;
-    base = reinterpret_cast<jsval *>(p);
+    base = reinterpret_cast<Value *>(p);
     commitEnd = base + sCommitVals;
     end = base + sCapacityVals;
 #else
@@ -137,7 +139,7 @@ StackSpace::init()
     p = mmap(NULL, sCapacityBytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (p == MAP_FAILED)
         return false;
-    base = reinterpret_cast<jsval *>(p);
+    base = reinterpret_cast<Value *>(p);
     end = base + sCapacityVals;
 #endif
     return true;
@@ -147,7 +149,7 @@ void
 StackSpace::finish()
 {
 #ifdef XP_WIN
-    VirtualFree(base, (commitEnd - base) * sizeof(jsval), MEM_DECOMMIT);
+    VirtualFree(base, (commitEnd - base) * sizeof(Value), MEM_DECOMMIT);
     VirtualFree(base, 0, MEM_RELEASE);
 #else
     munmap(base, sCapacityBytes);
@@ -156,11 +158,11 @@ StackSpace::finish()
 
 #ifdef XP_WIN
 JS_FRIEND_API(bool)
-StackSpace::bumpCommit(jsval *from, ptrdiff_t nvals) const
+StackSpace::bumpCommit(Value *from, ptrdiff_t nvals) const
 {
     JS_ASSERT(end - from >= nvals);
-    jsval *newCommit = commitEnd;
-    jsval *request = from + nvals;
+    Value *newCommit = commitEnd;
+    Value *request = from + nvals;
 
     /* Use a dumb loop; will probably execute once. */
     JS_ASSERT((end - newCommit) % sCommitVals == 0);
@@ -170,7 +172,7 @@ StackSpace::bumpCommit(jsval *from, ptrdiff_t nvals) const
     } while(newCommit < request);
 
     /* Cast safe because sCapacityBytes is small. */
-    int32 size = (int32)(newCommit - commitEnd) * sizeof(jsval);
+    int32 size = (int32)(newCommit - commitEnd) * sizeof(Value);
 
     if (!VirtualAlloc(commitEnd, size, MEM_COMMIT, PAGE_READWRITE))
         return false;
@@ -186,7 +188,7 @@ StackSpace::mark(JSTracer *trc)
      * The correctness/completeness of marking depends on the continuity
      * invariants described by the CallStack and StackSpace definitions.
      */
-    jsval *end = firstUnused();
+    Value *end = firstUnused();
     for (CallStack *cs = currentCallStack; cs; cs = cs->getPreviousInThread()) {
         if (!cs->inContext()) {
             /* Mark slots/args trailing off callstack. */
@@ -219,14 +221,14 @@ StackSpace::mark(JSTracer *trc)
 JS_REQUIRES_STACK bool
 StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard &ag)
 {
-    jsval *start = firstUnused();
+    Value *start = firstUnused();
     uintN vplen = 2 + argc;
     ptrdiff_t nvals = ValuesPerCallStack + vplen;
     if (!ensureSpace(cx, start, nvals))
         return false;
-    jsval *vp = start + ValuesPerCallStack;
-    jsval *vpend = vp + vplen;
-    memset(vp, 0, vplen * sizeof(jsval)); /* Init so GC-safe on exit. */
+    Value *vp = start + ValuesPerCallStack;
+    Value *vpend = vp + vplen;
+    memset(vp, 0, vplen * sizeof(*vp)); /* Init so GC-safe on exit. */
 
     CallStack *cs = new(start) CallStack;
     cs->setInitialArgEnd(vpend);
@@ -264,7 +266,7 @@ StackSpace::getInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
 {
     if (ag.cs) {
         JS_ASSERT(ag.cs == currentCallStack && !ag.cs->inContext());
-        jsval *start = ag.cs->getInitialArgEnd();
+        Value *start = ag.cs->getInitialArgEnd();
         ptrdiff_t nvals = nmissing + ValuesPerStackFrame + nslots;
         if (!ensureSpace(cx, start, nvals))
             return false;
@@ -273,7 +275,7 @@ StackSpace::getInvokeFrame(JSContext *cx, const InvokeArgsGuard &ag,
     }
 
     JS_ASSERT(isCurrent(cx) && currentCallStack->isActive());
-    jsval *start = cx->regs->sp;
+    Value *start = cx->regs->sp;
     ptrdiff_t nvals = nmissing + ValuesPerCallStack + ValuesPerStackFrame + nslots;
     if (!ensureSpace(cx, start, nvals))
         return false;
@@ -342,7 +344,7 @@ StackSpace::getExecuteFrame(JSContext *cx, JSStackFrame *down,
                             uintN vplen, uintN nslots,
                             ExecuteFrameGuard &fg) const
 {
-    jsval *start = firstUnused();
+    Value *start = firstUnused();
     ptrdiff_t nvals = ValuesPerCallStack + vplen + ValuesPerStackFrame + nslots;
     if (!ensureSpace(cx, start, nvals))
         return false;
@@ -378,7 +380,7 @@ StackSpace::popExecuteFrame(JSContext *cx)
 JS_REQUIRES_STACK void
 StackSpace::getSynthesizedSlowNativeFrame(JSContext *cx, CallStack *&cs, JSStackFrame *&fp)
 {
-    jsval *start = firstUnused();
+    Value *start = firstUnused();
     JS_ASSERT(size_t(end - start) >= ValuesPerCallStack + ValuesPerStackFrame);
     cs = new(start) CallStack;
     fp = reinterpret_cast<JSStackFrame *>(cs + 1);
@@ -412,16 +414,16 @@ StackSpace::popSynthesizedSlowNativeFrame(JSContext *cx)
  * up-frame's address is the top of the down-frame's stack, modulo missing
  * arguments.
  */
-static inline jsval *
+static inline Value *
 InlineDownFrameSP(JSStackFrame *up)
 {
     JS_ASSERT(up->fun && up->script);
-    jsval *sp = up->argv + up->argc;
+    Value *sp = up->argv + up->argc;
 #ifdef DEBUG
     uint16 nargs = up->fun->nargs;
     uintN argc = up->argc;
     uintN missing = argc < nargs ? nargs - argc : 0;
-    JS_ASSERT(sp == (jsval *)up - missing);
+    JS_ASSERT(sp == (Value *)up - missing);
 #endif
     return sp;
 }
@@ -1351,7 +1353,7 @@ resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
     const JSResolvingKey *key = (const JSResolvingKey *)ptr;
 
-    return (JSDHashNumber(uintptr_t(key->obj)) >> JSVAL_TAGBITS) ^ key->id;
+    return (JSDHashNumber(uintptr_t(key->obj)) >> JSBOXEDWORD_TAGBITS) ^ key->id;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1468,7 +1470,7 @@ js_EnterLocalRootScope(JSContext *cx)
     }
 
     /* Push lrs->scopeMark to save it for restore when leaving. */
-    int mark = js_PushLocalRoot(cx, lrs, INT_TO_JSVAL(lrs->scopeMark));
+    int mark = js_PushLocalRoot(cx, lrs, (void *)lrs->scopeMark);
     if (mark < 0)
         return JS_FALSE;
     lrs->scopeMark = (uint32) mark;
@@ -1476,7 +1478,7 @@ js_EnterLocalRootScope(JSContext *cx)
 }
 
 void
-js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
+js_LeaveLocalRootScopeWithResult(JSContext *cx, const Value &rval)
 {
     JSLocalRootStack *lrs;
     uint32 mark, m, n;
@@ -1512,10 +1514,10 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
      */
     lrc = lrs->topChunk;
     m = mark & JSLRS_CHUNK_MASK;
-    lrs->scopeMark = (uint32) JSVAL_TO_INT(lrc->roots[m]);
-    if (JSVAL_IS_GCTHING(rval) && !JSVAL_IS_NULL(rval)) {
+    lrs->scopeMark = (uint32) lrc->roots[m];
+    if (rval.isGCThing()) {
         if (mark == 0) {
-            cx->weakRoots.lastInternalResult = rval;
+            cx->weakRoots.lastInternalResult = rval.asGCThing();
         } else {
             /*
              * Increment m to avoid the "else if (m == 0)" case below.  If
@@ -1523,7 +1525,7 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
              * any chunk that contained only the old mark.  Since rval *is*
              * a GC-thing here, we want to reuse that old mark's slot.
              */
-            lrc->roots[m++] = rval;
+            lrc->roots[m++] = rval.asGCThing();
             ++mark;
         }
     }
@@ -1551,41 +1553,36 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
 }
 
 void
-js_ForgetLocalRoot(JSContext *cx, jsval v)
+js_ForgetLocalRoot(JSContext *cx, void *thing)
 {
-    JSLocalRootStack *lrs;
-    uint32 i, j, m, n, mark;
-    JSLocalRootChunk *lrc, *lrc2;
-    jsval top;
-
-    lrs = JS_THREAD_DATA(cx)->localRootStack;
+    JSLocalRootStack *lrs = JS_THREAD_DATA(cx)->localRootStack;
     JS_ASSERT(lrs && lrs->rootCount);
     if (!lrs || lrs->rootCount == 0)
         return;
 
     /* Prepare to pop the top-most value from the stack. */
-    n = lrs->rootCount - 1;
-    m = n & JSLRS_CHUNK_MASK;
-    lrc = lrs->topChunk;
-    top = lrc->roots[m];
+    uint32 n = lrs->rootCount - 1;
+    uint32 m = n & JSLRS_CHUNK_MASK;
+    JSLocalRootChunk *lrc = lrs->topChunk;
+    void *top = lrc->roots[m];
 
     /* Be paranoid about calls on an empty scope. */
-    mark = lrs->scopeMark;
+    uint32 mark = lrs->scopeMark;
     JS_ASSERT(mark < n);
     if (mark >= n)
         return;
 
-    /* If v was not the last root pushed in the top scope, find it. */
-    if (top != v) {
-        /* Search downward in case v was recently pushed. */
-        i = n;
-        j = m;
-        lrc2 = lrc;
+    /* If thing was not the last root pushed in the top scope, find it. */
+    if (top != thing) {
+        /* Search downward in case thing was recently pushed. */
+        uint32 i = n;
+        uint32 j = m;
+        JSLocalRootChunk *lrc2 = lrc;
         while (--i > mark) {
             if (j == 0)
                 lrc2 = lrc2->down;
             j = i & JSLRS_CHUNK_MASK;
-            if (lrc2->roots[j] == v)
+            if (lrc2->roots[j] == thing)
                 break;
         }
 
@@ -1599,7 +1596,7 @@ js_ForgetLocalRoot(JSContext *cx, jsval v)
     }
 
     /* Pop the last value from the stack. */
-    lrc->roots[m] = JSVAL_NULL;
+    lrc->roots[m] = NULL;
     lrs->rootCount = n;
     if (m == 0) {
         JS_ASSERT(n != 0);
@@ -1610,7 +1607,7 @@ js_ForgetLocalRoot(JSContext *cx, jsval v)
 }
 
 int
-js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
+js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, void *thing)
 {
     uint32 n, m;
     JSLocalRootChunk *lrc;
@@ -1643,35 +1640,32 @@ js_PushLocalRoot(JSContext *cx, JSLocalRootStack *lrs, jsval v)
         lrs->topChunk = lrc;
     }
     lrs->rootCount = n + 1;
-    lrc->roots[m] = v;
+    lrc->roots[m] = thing;
     return (int) n;
 }
 
 static void
 MarkLocalRoots(JSTracer *trc, JSLocalRootStack *lrs)
 {
-    uint32 n, m, mark;
-    JSLocalRootChunk *lrc;
-    jsval v;
-
-    n = lrs->rootCount;
+    uint32 n = lrs->rootCount;
     if (n == 0)
         return;
 
-    mark = lrs->scopeMark;
-    lrc = lrs->topChunk;
+    uint32 mark = lrs->scopeMark;
+    JSLocalRootChunk *lrc = lrs->topChunk;
     do {
+        uint32 m;
         while (--n > mark) {
             m = n & JSLRS_CHUNK_MASK;
-            v = lrc->roots[m];
-            JS_ASSERT(JSVAL_IS_GCTHING(v) && v != JSVAL_NULL);
+            void *thing = lrc->roots[m];
+            JS_ASSERT(thing != NULL);
             JS_SET_TRACING_INDEX(trc, "local_root", n);
-            js_CallValueTracerIfGCThing(trc, v);
+            CallGCMarkerForGCThing(trc, thing);
             if (m == 0)
                 lrc = lrc->down;
         }
         m = n & JSLRS_CHUNK_MASK;
-        mark = JSVAL_TO_INT(lrc->roots[m]);
+        mark = (uint32)lrc->roots[m];
         if (m == 0)
             lrc = lrc->down;
     } while (n != 0);
@@ -2114,13 +2108,13 @@ js_ReportIsNotDefined(JSContext *cx, const char *name)
 }
 
 JSBool
-js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
+js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, const Value &v,
                            JSString *fallback)
 {
     char *bytes;
     JSBool ok;
 
-    bytes = js_DecompileValueGenerator(cx, spindex, v, fallback);
+    bytes = js_DecompileValueGenerator(cx, spindex, Jsvalify(&v), fallback);
     if (!bytes)
         return JS_FALSE;
 
@@ -2130,13 +2124,13 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
                                           js_GetErrorMessage, NULL,
                                           JSMSG_NO_PROPERTIES, bytes,
                                           NULL, NULL);
-    } else if (JSVAL_IS_VOID(v)) {
+    } else if (v.isUndefined()) {
         ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                           js_GetErrorMessage, NULL,
                                           JSMSG_UNEXPECTED_TYPE, bytes,
                                           js_undefined_str, NULL);
     } else {
-        JS_ASSERT(JSVAL_IS_NULL(v));
+        JS_ASSERT(v.isNull());
         ok = JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                           js_GetErrorMessage, NULL,
                                           JSMSG_UNEXPECTED_TYPE, bytes,
@@ -2148,7 +2142,7 @@ js_ReportIsNullOrUndefined(JSContext *cx, intN spindex, jsval v,
 }
 
 void
-js_ReportMissingArg(JSContext *cx, jsval *vp, uintN arg)
+js_ReportMissingArg(JSContext *cx, const Value &v, uintN arg)
 {
     char argbuf[11];
     char *bytes;
@@ -2156,9 +2150,10 @@ js_ReportMissingArg(JSContext *cx, jsval *vp, uintN arg)
 
     JS_snprintf(argbuf, sizeof argbuf, "%u", arg);
     bytes = NULL;
-    if (VALUE_IS_FUNCTION(cx, *vp)) {
-        atom = GET_FUNCTION_PRIVATE(cx, JSVAL_TO_OBJECT(*vp))->atom;
-        bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, *vp,
+    if (v.isFunObj()) {
+        atom = GET_FUNCTION_PRIVATE(cx, &v.asFunObj())->atom;
+        bytes = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK,
+                                           Jsvalify(&v),
                                            ATOM_TO_STRING(atom));
         if (!bytes)
             return;
@@ -2171,7 +2166,7 @@ js_ReportMissingArg(JSContext *cx, jsval *vp, uintN arg)
 
 JSBool
 js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
-                         intN spindex, jsval v, JSString *fallback,
+                         intN spindex, const Value &v, JSString *fallback,
                          const char *arg1, const char *arg2)
 {
     char *bytes;
@@ -2179,7 +2174,7 @@ js_ReportValueErrorFlags(JSContext *cx, uintN flags, const uintN errorNumber,
 
     JS_ASSERT(js_ErrorFormatString[errorNumber].argCount >= 1);
     JS_ASSERT(js_ErrorFormatString[errorNumber].argCount <= 3);
-    bytes = js_DecompileValueGenerator(cx, spindex, v, fallback);
+    bytes = js_DecompileValueGenerator(cx, spindex, Jsvalify(&v), fallback);
     if (!bytes)
         return JS_FALSE;
 

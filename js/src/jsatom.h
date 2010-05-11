@@ -52,18 +52,18 @@
 #include "jspubtd.h"
 #include "jslock.h"
 
-JS_BEGIN_EXTERN_C
-
 #define ATOM_PINNED     0x1       /* atom is pinned against GC */
 #define ATOM_INTERNED   0x2       /* pinned variant for JS_Intern* API */
 #define ATOM_NOCOPY     0x4       /* don't copy atom string bytes */
 #define ATOM_TMPSTR     0x8       /* internal, to avoid extra string */
 
-#define ATOM_KEY(atom)            ((jsval)(atom))
-#define ATOM_IS_DOUBLE(atom)      JSVAL_IS_DOUBLE(ATOM_KEY(atom))
-#define ATOM_TO_DOUBLE(atom)      JSVAL_TO_DOUBLE(ATOM_KEY(atom))
-#define ATOM_IS_STRING(atom)      JSVAL_IS_STRING(ATOM_KEY(atom))
-#define ATOM_TO_STRING(atom)      JSVAL_TO_STRING(ATOM_KEY(atom))
+#define ATOM_KEY(atom)            ((jsboxedword)(atom))
+#define ATOM_IS_DOUBLE(atom)      JSBOXEDWORD_IS_DOUBLE(ATOM_KEY(atom))
+#define ATOM_TO_DOUBLE(atom)      JSBOXEDWORD_TO_DOUBLE(ATOM_KEY(atom))
+#define ATOM_IS_STRING(atom)      JSBOXEDWORD_IS_STRING(ATOM_KEY(atom))
+#define ATOM_TO_STRING(atom)      JSBOXEDWORD_TO_STRING(ATOM_KEY(atom))
+#define STRING_TO_ATOM(str)       (JS_ASSERT(str->isAtomized()),              \
+                                   (JSAtom *)STRING_TO_JSBOXEDWORD(str))
 
 #if JS_BYTES_PER_WORD == 4
 # define ATOM_HASH(atom)          ((JSHashNumber)(atom) >> 2)
@@ -88,7 +88,7 @@ struct JSAtomListElement {
 
 #define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
 #define ALE_INDEX(ale)  (jsatomid(uintptr_t((ale)->entry.value)))
-#define ALE_VALUE(ale)  ((jsval) (ale)->entry.value)
+#define ALE_VALUE(ale)  ((jsboxedword) (ale)->entry.value)
 #define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
 
 /*
@@ -118,8 +118,6 @@ struct JSAtomSet {
     JSHashTable         *table;         /* hash table if list gets too long */
     jsuint              count;          /* count of indexed literals */
 };
-
-#ifdef __cplusplus
 
 struct JSAtomList : public JSAtomSet
 {
@@ -197,8 +195,6 @@ class JSAtomListIterator {
 
     JSAtomListElement* operator ()();
 };
-
-#endif /* __cplusplus */
 
 struct JSAtomMap {
     JSAtom              **vector;       /* array of ptrs to indexed atoms */
@@ -485,7 +481,7 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length);
  * This variant handles all primitive values.
  */
 JSBool
-js_AtomizePrimitiveValue(JSContext *cx, jsval v, JSAtom **atomp);
+js_AtomizePrimitiveValue(JSContext *cx, jsboxedword w, JSAtom **atomp);
 
 #ifdef DEBUG
 
@@ -494,6 +490,18 @@ js_DumpAtoms(JSContext *cx, FILE *fp);
 
 #endif
 
+inline bool
+js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp);
+
+inline bool
+js_ValueToStringId(JSContext *cx, const js::Value &v, jsid *idp);
+
+inline bool
+js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
+                         jsid *idp);
+inline bool
+js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
+                         jsid *idp, js::Value *vp);
 /*
  * For all unmapped atoms recorded in al, add a mapping from the atom's index
  * to its address. map->length must already be set to the number of atoms in
@@ -502,6 +510,14 @@ js_DumpAtoms(JSContext *cx, FILE *fp);
 extern void
 js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al);
 
-JS_END_EXTERN_C
+namespace js {
+
+Value
+IdToValue(jsid id);
+
+bool
+ValueToId(JSContext *cx, const Value &v, jsid *idp);
+
+} /* namespace js */
 
 #endif /* jsatom_h___ */

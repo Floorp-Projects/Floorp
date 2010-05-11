@@ -132,15 +132,15 @@ JSDOUBLE_IS_NEGZERO(jsdouble d)
 #define JSDOUBLE_HI32_EXPMASK   0x7ff00000
 #define JSDOUBLE_HI32_MANTMASK  0x000fffff
 
-static inline int
-JSDOUBLE_IS_INT(jsdouble d, jsint& i)
+static inline bool
+JSDOUBLE_IS_INT32(jsdouble d, int32_t& i)
 {
     if (JSDOUBLE_IS_NEGZERO(d))
         return false;
-    return d == (i = jsint(d));
+    return d == (i = int32_t(d));
 }
 
-static inline int
+static inline bool
 JSDOUBLE_IS_NEG(jsdouble d)
 {
 #ifdef WIN32
@@ -184,9 +184,9 @@ extern void
 js_FinishRuntimeNumberState(JSContext *cx);
 
 /* Initialize the Number class, returning its prototype object. */
-extern JSClass js_NumberClass;
+extern js::Class js_NumberClass;
 
-extern "C" JSObject *
+extern JSObject *
 js_InitNumberClass(JSContext *cx, JSObject *obj);
 
 /*
@@ -198,19 +198,6 @@ extern const char js_isNaN_str[];
 extern const char js_isFinite_str[];
 extern const char js_parseFloat_str[];
 extern const char js_parseInt_str[];
-
-/*
- * vp must be a root.
- */
-extern JSBool
-js_NewNumberInRootedValue(JSContext *cx, jsdouble d, jsval *vp);
-
-/*
- * Create a weakly rooted integer or double jsval as appropriate for the given
- * jsdouble.
- */
-extern JSBool
-js_NewWeaklyRootedNumber(JSContext *cx, jsdouble d, jsval *vp);
 
 /* Convert a number to a GC'ed string. */
 extern JSString * JS_FASTCALL
@@ -227,106 +214,77 @@ namespace js {
 
 /*
  * Convert a value to a number, returning the converted value in 'out' if the
- * conversion succeeds. v most be a copy of a rooted jsval.
+ * conversion succeeds. As a side effect, *vp will be mutated to match *out.
  */
 JS_ALWAYS_INLINE bool
-ValueToNumber(JSContext *cx, jsval v, double *out)
+ValueToNumber(JSContext *cx, js::Value *vp, double *out)
 {
-    if (JSVAL_IS_INT(v)) {
-        *out = JSVAL_TO_INT(v);
+    if (vp->isInt32()) {
+        *out = vp->asInt32();
         return true;
     }
-    if (JSVAL_IS_DOUBLE(v)) {
-        *out = *JSVAL_TO_DOUBLE(v);
+    if (vp->isDouble()) {
+        *out = vp->asDouble();
         return true;
     }
-    extern jsval ValueToNumberSlow(JSContext *, jsval, double *);
-    return !JSVAL_IS_NULL(ValueToNumberSlow(cx, v, out));
+    extern bool ValueToNumberSlow(JSContext *, js::Value *, double *);
+    return ValueToNumberSlow(cx, vp, out);
 }
 
-/*
- * Convert a value to a number, replacing 'vp' with the converted value and
- * returning the value as a double in 'out'. vp must point to a rooted jsval.
- *
- * N.B. this function will allocate a new double if needed; callers needing
- * only a double, not a value, should use ValueToNumber instead.
- */
+/* Convert a value to a number, replacing 'vp' with the converted value. */
 JS_ALWAYS_INLINE bool
-ValueToNumberValue(JSContext *cx, jsval *vp, double *out)
+ValueToNumber(JSContext *cx, js::Value *vp)
 {
-    jsval v = *vp;
-    if (JSVAL_IS_INT(v)) {
-        *out = JSVAL_TO_INT(v);
+    if (vp->isInt32())
         return true;
-    }
-    if (JSVAL_IS_DOUBLE(v)) {
-        *out = *JSVAL_TO_DOUBLE(v);
+    if (vp->isDouble())
         return true;
-    }
-    extern bool ValueToNumberValueSlow(JSContext *, jsval *, double *);
-    return ValueToNumberValueSlow(cx, vp, out);
-}
-
-/*
- * Convert a value to a number, replacing 'vp' with the converted value. vp
- * must point to a rooted jsval.
- *
- * N.B. this function will allocate a new double if needed; callers needing
- * only a double, not a value, should use ValueToNumber instead.
- */
-JS_ALWAYS_INLINE bool
-ValueToNumberValue(JSContext *cx, jsval *vp)
-{
-    jsval v = *vp;
-    if (JSVAL_IS_INT(v))
-        return true;
-    if (JSVAL_IS_DOUBLE(v))
-        return true;
-    extern bool ValueToNumberValueSlow(JSContext *, jsval *);
-    return ValueToNumberValueSlow(cx, vp);
+    double _;
+    extern bool ValueToNumberSlow(JSContext *, js::Value *, double *);
+    return ValueToNumberSlow(cx, vp, &_);
 }
 
 /*
  * Convert a value to an int32 or uint32, according to the ECMA rules for
- * ToInt32 and ToUint32. Return converted value on success, !ok on failure. v
- * must be a copy of a rooted jsval.
+ * ToInt32 and ToUint32. Return converted value in *out on success, !ok on
+ * failure. As a side effect, *vp will be mutated to match *out.
  */
 JS_ALWAYS_INLINE bool
-ValueToECMAInt32(JSContext *cx, jsval v, int32_t *out)
+ValueToECMAInt32(JSContext *cx, js::Value *vp, int32_t *out)
 {
-    if (JSVAL_IS_INT(v)) {
-        *out = JSVAL_TO_INT(v);
+    if (vp->isInt32()) {
+        *out = vp->asInt32();
         return true;
     }
-    extern bool ValueToECMAInt32Slow(JSContext *, jsval, int32_t *);
-    return ValueToECMAInt32Slow(cx, v, out);
+    extern bool ValueToECMAInt32Slow(JSContext *, js::Value *, int32_t *);
+    return ValueToECMAInt32Slow(cx, vp, out);
 }
 
 JS_ALWAYS_INLINE bool
-ValueToECMAUint32(JSContext *cx, jsval v, uint32_t *out)
+ValueToECMAUint32(JSContext *cx, js::Value *vp, uint32_t *out)
 {
-    if (JSVAL_IS_INT(v)) {
-        *out = (uint32_t)JSVAL_TO_INT(v);
+    if (vp->isInt32()) {
+        *out = (uint32_t)vp->asInt32();
         return true;
     }
-    extern bool ValueToECMAUint32Slow(JSContext *, jsval, uint32_t *);
-    return ValueToECMAUint32Slow(cx, v, out);
+    extern bool ValueToECMAUint32Slow(JSContext *, js::Value *, uint32_t *);
+    return ValueToECMAUint32Slow(cx, vp, out);
 }
 
 /*
  * Convert a value to a number, then to an int32 if it fits by rounding to
- * nearest. Return converted value on success, !ok on failure. v must be a copy
- * of a rooted jsval.
+ * nearest. Return converted value in *out on success, !ok on failure. As a
+ * side effect, *vp will be mutated to match *out.
  */
 JS_ALWAYS_INLINE bool
-ValueToInt32(JSContext *cx, jsval v, int32_t *out)
+ValueToInt32(JSContext *cx, js::Value *vp, int32_t *out)
 {
-    if (JSVAL_IS_INT(v)) {
-        *out = JSVAL_TO_INT(v);
+    if (vp->isInt32()) {
+        *out = vp->asInt32();
         return true;
     }
-    extern bool ValueToInt32Slow(JSContext *, jsval, int32_t *);
-    return ValueToInt32Slow(cx, v, out);
+    extern bool ValueToInt32Slow(JSContext *, js::Value *, int32_t *);
+    return ValueToInt32Slow(cx, vp, out);
 }
 
 /*
@@ -335,14 +293,14 @@ ValueToInt32(JSContext *cx, jsval v, int32_t *out)
  * copy of a rooted jsval.
  */
 JS_ALWAYS_INLINE bool
-ValueToUint16(JSContext *cx, jsval v, uint16_t *out)
+ValueToUint16(JSContext *cx, js::Value *vp, uint16_t *out)
 {
-    if (JSVAL_IS_INT(v)) {
-        *out = (uint16_t)JSVAL_TO_INT(v);
+    if (vp->isInt32()) {
+        *out = (uint16_t)vp->asInt32();
         return true;
     }
-    extern bool ValueToUint16Slow(JSContext *, jsval, uint16_t *);
-    return ValueToUint16Slow(cx, v, out);
+    extern bool ValueToUint16Slow(JSContext *, js::Value *, uint16_t *);
+    return ValueToUint16Slow(cx, vp, out);
 }
 
 }  /* namespace js */
@@ -507,6 +465,25 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
                 const jschar **ep, jsint radix, jsdouble *dp);
 
 namespace js {
+
+static JS_ALWAYS_INLINE bool
+ValueFitsInInt32(const Value &v, int32_t *pi)
+{
+    if (v.isInt32()) {
+        *pi = v.asInt32();
+        return true;
+    }
+    return v.isDouble() && JSDOUBLE_IS_INT32(v.asDouble(), *pi);
+}
+
+static JS_ALWAYS_INLINE void
+Uint32ToValue(uint32_t u, Value *vp)
+{
+    if (JS_UNLIKELY(u > INT32_MAX))
+        vp->setDouble(u);
+    else
+        vp->setInt32((int32_t)u);
+}
 
 template<typename T> struct NumberTraits { };
 template<> struct NumberTraits<int32> {

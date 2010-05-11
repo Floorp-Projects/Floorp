@@ -94,10 +94,9 @@ class PCVal
     bool isNull() const { return v == 0; }
     void setNull() { v = 0; }
 
-    bool isObject() const { return (v & TAG) == OBJECT; }
-    JSObject *toObject() const { JS_ASSERT(isObject()); return reinterpret_cast<JSObject *>(v); }
-    jsval toJsval() const { return OBJECT_TO_JSVAL(toObject()); }
-    void setObject(JSObject *obj) { v = reinterpret_cast<jsuword>(obj); }
+    bool isFunObj() const { return (v & TAG) == OBJECT; }
+    JSObject &toFunObj() const { JS_ASSERT(isFunObj()); return *reinterpret_cast<JSObject *>(v); }
+    void setFunObj(JSObject &obj) { v = reinterpret_cast<jsuword>(&obj); }
 
     bool isSlot() const { return v & SLOT; }
     uint32 toSlot() const { JS_ASSERT(isSlot()); return uint32(v) >> 1; }

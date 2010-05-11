@@ -100,7 +100,7 @@ typedef enum JSOp {
 #define JOF_INCDEC       (3U<<10) /* increment or decrement opcode */
 #define JOF_POST         (1U<<12) /* postorder increment or decrement */
 #define JOF_FOR          (1U<<13) /* for-in property op (akin to JOF_SET) */
-#define JOF_ASSIGNING     JOF_SET /* hint for JSClass.resolve, used for ops
+#define JOF_ASSIGNING     JOF_SET /* hint for Class.resolve, used for ops
                                      that do simplex assignment */
 #define JOF_DETECTING    (1U<<14) /* object detection for JSNewResolveOp */
 #define JOF_BACKPATCH    (1U<<15) /* backpatch placeholder during codegen */
@@ -457,7 +457,7 @@ js_DecompileToString(JSContext *cx, const char *name, JSFunction *fun,
  * The caller must call JS_free on the result after a succsesful call.
  */
 extern char *
-js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
+js_DecompileValueGenerator(JSContext *cx, intN spindex, const jsval *v,
                            JSString *fallback);
 
 #define JSDVG_IGNORE_STACK      0

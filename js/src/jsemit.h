@@ -455,7 +455,9 @@ struct JSCodeGenerator : public JSTreeContext
     uintN           arrayCompDepth; /* stack depth of array in comprehension */
 
     uintN           emitLevel;      /* js_EmitTree recursion level */
-    JSAtomList      constList;      /* compile time constants */
+
+    typedef js::HashMap<JSAtom *, JSAtom *> ConstMap;
+    ConstMap        constMap;       /* compile time constants */
 
     JSCGObjectList  objectList;     /* list of emitted objects */
     JSCGObjectList  regexpList;     /* list of emitted regexp that will be
@@ -472,6 +474,8 @@ struct JSCodeGenerator : public JSTreeContext
     JSCodeGenerator(JSCompiler *jsc,
                     JSArenaPool *codePool, JSArenaPool *notePool,
                     uintN lineno);
+
+    bool init();
 
     /*
      * Release cg->codePool, cg->notePool, and compiler->context->tempPool to
