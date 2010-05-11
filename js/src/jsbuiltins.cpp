@@ -375,7 +375,7 @@ js_PopInterpFrame(JSContext* cx, TracerState* state)
     JS_ASSERT(cx->fp->regs == &ifp->callerRegs);
     cx->fp->regs = ifp->frame.regs;
 
-    JS_ARENA_RELEASE(&cx->stackPool, ifp->mark);
+    cx->stackPool.release(ifp->mark);
 
     /* Update the inline call count. */
     *state->inlineCallCountp = *state->inlineCallCountp - 1;
