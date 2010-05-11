@@ -812,7 +812,9 @@ js_NewGenerator(JSContext *cx)
 
     /* Use slots to carve space out of gen->slots. */
     slots = gen->slots;
-    gen->arena.munge(NULL, jsuword(slots), jsuword(slots + nslots), jsuword(slots + nslots));
+    gen->arena.next = NULL;
+    gen->arena.base = (jsuword) slots;
+    gen->arena.limit = gen->arena.avail = (jsuword) (slots + nslots);
 
     /* Copy rval, argv and vars. */
     gen->frame.rval = fp->rval;
@@ -863,6 +865,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
                 JSGenerator *gen, jsval arg)
 {
     JSStackFrame *fp;
+    JSArena *arena;
     JSBool ok;
 
     if (gen->state == JSGEN_RUNNING || gen->state == JSGEN_CLOSING) {
@@ -898,16 +901,27 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
         break;
     }
 
-    {
-        JSArenaPool::ScopedExtension stackExtension(&cx->stackPool, &gen->arena);
-        /* Push gen->frame around the interpreter activation. */
-        fp = js_GetTopStackFrame(cx);
-        cx->fp = &gen->frame;
-        gen->frame.down = fp;
-        ok = js_Interpret(cx);
-        cx->fp = fp;
-        gen->frame.down = NULL;
-    }
+    /* Extend the current stack pool with gen->arena. */
+    arena = cx->stackPool.current;
+    JS_ASSERT(!arena->next);
+    JS_ASSERT(!gen->arena.next);
+    JS_ASSERT(cx->stackPool.current != &gen->arena);
+    cx->stackPool.current = arena->next = &gen->arena;
+
+    /* Push gen->frame around the interpreter activation. */
+    fp = js_GetTopStackFrame(cx);
+    cx->fp = &gen->frame;
+    gen->frame.down = fp;
+    ok = js_Interpret(cx);
+    cx->fp = fp;
+    gen->frame.down = NULL;
+
+    /* Retract the stack pool and sanitize gen->arena. */
+    JS_ASSERT(!gen->arena.next);
+    JS_ASSERT(arena->next == &gen->arena);
+    JS_ASSERT(cx->stackPool.current == &gen->arena);
+    cx->stackPool.current = arena;
+    arena->next = NULL;
 
     if (gen->frame.flags & JSFRAME_YIELDING) {
         /* Yield cannot fail, throw or be called on closing. */
