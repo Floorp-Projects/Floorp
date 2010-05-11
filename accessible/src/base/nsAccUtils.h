@@ -319,37 +319,6 @@ public:
    */
   static PRBool GetLiveAttrValue(PRUint32 aRule, nsAString& aValue);
 
-  /**
-   * Query DestinationType from the given SourceType.
-   */
-  template<class DestinationType, class SourceType> static inline
-    already_AddRefed<DestinationType> QueryObject(SourceType *aObject)
-  {
-    DestinationType* object = nsnull;
-    if (aObject)
-      CallQueryInterface(aObject, &object);
-
-    return object;
-  }
-  template<class DestinationType, class SourceType> static inline
-    already_AddRefed<DestinationType> QueryObject(nsCOMPtr<SourceType>& aObject)
-  {
-    DestinationType* object = nsnull;
-    if (aObject)
-      CallQueryInterface(aObject, &object);
-
-    return object;
-  }
-  template<class DestinationType, class SourceType> static inline
-  already_AddRefed<DestinationType> QueryObject(nsRefPtr<SourceType>& aObject)
-  {
-    DestinationType* object = nsnull;
-    if (aObject)
-      CallQueryInterface(aObject.get(), &object);
-    
-    return object;
-  }
-
 #ifdef DEBUG_A11Y
   /**
    * Detect whether the given accessible object implements nsIAccessibleText,

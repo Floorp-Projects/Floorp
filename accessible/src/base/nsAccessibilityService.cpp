@@ -987,8 +987,7 @@ nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode,
   if (!accessibleDoc)
     return nsnull;
 
-  nsRefPtr<nsDocAccessible> docAccessible =
-    nsAccUtils::QueryObject<nsDocAccessible>(accessibleDoc);
+  nsRefPtr<nsDocAccessible> docAccessible = do_QueryObject(accessibleDoc);
   return docAccessible->GetCachedAccessNode(static_cast<void*>(aNode));
 }
 
@@ -1346,8 +1345,7 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // XXX: the cache might contain the access node for the DOM node that is not
     // accessible because of wrong cache update. In this case try to create new
     // accessible.
-    nsRefPtr<nsAccessible> cachedAccessible =
-      nsAccUtils::QueryObject<nsAccessible>(cachedAccessNode);
+    nsRefPtr<nsAccessible> cachedAccessible = do_QueryObject(cachedAccessNode);
 
     if (cachedAccessible)
       return cachedAccessible.forget();
@@ -1431,7 +1429,7 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       nsCOMPtr<nsIAccessible> newAccessible;
       weakFrame.GetFrame()->GetAccessible(getter_AddRefs(newAccessible));
       if (newAccessible) {
-        newAcc = nsAccUtils::QueryObject<nsAccessible>(newAccessible);
+        newAcc = do_QueryObject(newAccessible);
         if (InitAccessible(newAcc, nsnull))
           return newAcc.forget();
         return nsnull;
@@ -1599,7 +1597,7 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         // Try using frame to do it.
         nsCOMPtr<nsIAccessible> newAccessible;
         f->GetAccessible(getter_AddRefs(newAccessible));
-        newAcc = nsAccUtils::QueryObject<nsAccessible>(newAccessible);
+        newAcc = do_QueryObject(newAccessible);
       }
     }
   }
@@ -1768,14 +1766,14 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame *aImageFrame,
   nsCOMPtr<nsIDOMNode> imageNode(do_QueryInterface(aImageFrame->GetContent()));
   nsAccessNode *cachedImgAcc = GetCachedAccessNode(imageNode, aWeakShell);
   if (cachedImgAcc)
-    imageAcc = nsAccUtils::QueryObject<nsAccessible>(cachedImgAcc);
+    imageAcc = do_QueryObject(cachedImgAcc);
 
   if (!imageAcc) {
     nsCOMPtr<nsIAccessible> imageAccessible;
     CreateHTMLImageAccessible(aImageFrame,
                               getter_AddRefs(imageAccessible));
 
-    imageAcc = nsAccUtils::QueryObject<nsAccessible>(imageAccessible);
+    imageAcc = do_QueryObject(imageAccessible);
     if (!InitAccessible(imageAcc, nsnull))
       return nsnull;
   }
@@ -1788,8 +1786,7 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame *aImageFrame,
   if (!cachedAreaAcc)
     return nsnull;
 
-  nsRefPtr<nsAccessible> areaAcc =
-    nsAccUtils::QueryObject<nsAccessible>(cachedAreaAcc);
+  nsRefPtr<nsAccessible> areaAcc = do_QueryObject(cachedAreaAcc);
   return areaAcc.forget();
 }
 
