@@ -38,9 +38,6 @@ components/aboutPrivateBrowsing.js
 components/aboutRights.js
 components/aboutRobots.js
 components/aboutSessionRestore.js
-components/addonManager.js
-components/amContentHandler.js
-components/amInstallWebListener.js
 components/autocomplete.xpt
 components/airbag.xpt
 components/bookmarks.xpt
@@ -85,11 +82,6 @@ extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/install.rdf
 install.rdf
 modules/JSON.jsm
-modules/AddonLogging.jsm
-modules/AddonManager.jsm
-modules/AddonUpdateChecker.jsm
-modules/PluginProvider.jsm
-modules/XPIProvider.jsm
 mozilla-runtime@BIN_SUFFIX@
 old-homepage-default.properties
 res/broken-image.gif
