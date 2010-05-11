@@ -56,7 +56,7 @@
 #include "jsutil.h"
 
 #ifdef DEBUG
-const uint8 JS_FREE_PATTERN = 0xDA;
+const uint8_t JS_FREE_PATTERN = 0xDA;
 #endif
 
 #define JS_UPTRDIFF(p,q)        (jsuword(p) - jsuword(q))
