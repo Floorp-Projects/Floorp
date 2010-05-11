@@ -9308,8 +9308,8 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
 
     PRBool isFirstToken = (cur == list && isInset.GetUnit() == eCSSUnit_Null);
     if (!ParseVariant(cur->mValue,
-                      isFirstToken ? VARIANT_HC | VARIANT_LENGTH | VARIANT_NONE
-                                   : VARIANT_COLOR | VARIANT_LENGTH,
+                      ( isFirstToken ? VARIANT_INHERIT | VARIANT_NONE : 0) |
+                      VARIANT_COLOR | VARIANT_LENGTH | VARIANT_CALC,
                       nsnull)) {
       break;
     }
@@ -9323,7 +9323,7 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
         break;
       }
       PRBool haveColor = PR_FALSE;
-      if (cur->mValue.IsLengthUnit()) {
+      if (cur->mValue.IsLengthUnit() || cur->mValue.IsCalcUnit()) {
         val->Item(IndexX) = cur->mValue;
       } else {
         // Must be a color (as string or color value)
@@ -9335,7 +9335,7 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
         val->Item(IndexColor) = cur->mValue;
 
         // Parse the X coordinate
-        if (!ParseVariant(val->Item(IndexX), VARIANT_LENGTH,
+        if (!ParseVariant(val->Item(IndexX), VARIANT_LENGTH | VARIANT_CALC,
                           nsnull)) {
           break;
         }
@@ -9343,7 +9343,8 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
       cur->mValue.SetArrayValue(val, eCSSUnit_Array);
 
       // Y coordinate; this one is not optional
-      if (!ParseVariant(val->Item(IndexY), VARIANT_LENGTH, nsnull)) {
+      if (!ParseVariant(val->Item(IndexY), VARIANT_LENGTH | VARIANT_CALC,
+                        nsnull)) {
         break;
       }
 
@@ -9351,14 +9352,16 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
       // value which we must reject. If we use ParseNonNegativeVariant we can't
       // tell the difference between an unspecified radius and a negative
       // radius, so that's why we don't use it.
-      if (ParseVariant(val->Item(IndexRadius), VARIANT_LENGTH, nsnull) &&
+      if (ParseVariant(val->Item(IndexRadius), VARIANT_LENGTH | VARIANT_CALC,
+                       nsnull) &&
+          val->Item(IndexRadius).IsLengthUnit() &&
           val->Item(IndexRadius).GetFloatValue() < 0) {
         break;
       }
 
       if (aIsBoxShadow) {
         // Optional spread (ignore errors)
-        ParseVariant(val->Item(IndexSpread), VARIANT_LENGTH,
+        ParseVariant(val->Item(IndexSpread), VARIANT_LENGTH | VARIANT_CALC,
                      nsnull);
       }
 
