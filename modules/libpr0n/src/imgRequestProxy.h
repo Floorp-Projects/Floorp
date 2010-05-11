@@ -73,18 +73,24 @@ public:
   imgRequestProxy();
   virtual ~imgRequestProxy();
 
-  // Callers to Init or ChangeOwner are required to call
-  // NotifyProxyListener on the request after (although not immediately
-  // after) doing so.
-  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver);
+  // Callers to Init or ChangeOwner are required to call NotifyListener after
+  // (although not immediately after) doing so.
+  nsresult Init(imgRequest *request, nsILoadGroup *aLoadGroup, nsIURI* aURI, imgIDecoderObserver *aObserver);
+
   nsresult ChangeOwner(imgRequest *aNewOwner); // this will change mOwner.  Do not call this if the previous
                                                // owner has already sent notifications out!
 
   void AddToLoadGroup();
   void RemoveFromLoadGroup(PRBool releaseLoadGroup);
 
+  // Notify this proxy's listener of the current state of the request.
+  nsresult NotifyListener();
+
 protected:
   friend class imgRequest;
+
+  void SetPrincipal(nsIPrincipal *aPrincipal);
+  void SetImage(imgIContainer *aImage);
 
   class imgCancelRunnable;
   friend class imgCancelRunnable;
@@ -105,8 +111,6 @@ protected:
       nsRefPtr<imgRequestProxy> mOwner;
       nsresult mStatus;
   };
-
-
 
   /* non-virtual imgIDecoderObserver methods */
   void OnStartDecode   ();
@@ -138,6 +142,9 @@ protected:
   void DoRemoveFromLoadGroup() {
     RemoveFromLoadGroup(PR_TRUE);
   }
+
+  nsresult GetState(PRUint32 *aState);
+
 private:
   friend class imgCacheValidator;
 
@@ -148,6 +155,20 @@ private:
   // from whatever request it was registered with (if any). This, in turn,
   // means that imgRequest::mObservers will not have any stale pointers in it.
   nsRefPtr<imgRequest> mOwner;
+
+  // The URI of our request.
+  nsCOMPtr<nsIURI> mURI;
+
+  // The image we represent. Is null until data has been received, and is then
+  // set by imgRequest.
+  nsCOMPtr<imgIContainer> mImage;
+
+  // Our principal. Is null until data has been received from the channel, and
+  // is then set by imgRequest.
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  PRUint32 mImageStatus;
+  PRUint32 mState;
 
   // mListener is only promised to be a weak ref (see imgILoader.idl),
   // but we actually keep a strong ref to it until we've seen our
@@ -161,4 +182,8 @@ private:
   PRPackedBool mIsInLoadGroup;
   PRPackedBool mListenerIsStrongRef;
   PRPackedBool mDecodeRequested;
+  // Whether we've seen the last part of the load. For normal,
+  // non-multipart/x-mixed-replace loads, this is true once OnStopRequest has
+  // been received.
+  PRPackedBool mHadLastPart;
 };
