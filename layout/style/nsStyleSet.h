@@ -389,7 +389,6 @@ class nsStyleSet
 
 };
 
-#ifdef _IMPL_NS_LAYOUT
 inline
 void nsRuleNode::AddRef()
 {
@@ -405,6 +404,4 @@ void nsRuleNode::Release()
     mPresContext->StyleSet()->RuleNodeUnused();
   }
 }
-#endif
-
 #endif
