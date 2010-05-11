@@ -1113,9 +1113,7 @@ Loader::CreateSheet(nsIURI* aURI,
                    "Sheet thinks it's not complete while we think it is");
 #endif
       // Make sure it hasn't been modified; if it has, we can't use it
-      PRBool modified = PR_TRUE;
-      sheet->IsModified(&modified);
-      if (modified) {
+      if (sheet->IsModified()) {
         LOG(("  Not cloning completed sheet %p because it's been modified",
              sheet.get()));
         sheet = nsnull;
@@ -1168,17 +1166,14 @@ Loader::CreateSheet(nsIURI* aURI,
     if (sheet) {
       // The sheet we have now should be either incomplete or unmodified
 #ifdef DEBUG
-      PRBool modified = PR_TRUE;
-      sheet->IsModified(&modified);
       PRBool complete = PR_FALSE;
       sheet->GetComplete(complete);
-      NS_ASSERTION(!modified || !complete,
+      NS_ASSERTION(!sheet->IsModified() || !complete,
                    "Unexpected modified complete sheet");
       NS_ASSERTION(complete || aSheetState != eSheetComplete,
                    "Sheet thinks it's not complete while we think it is");
 #endif
-      rv = sheet->Clone(nsnull, nsnull, nsnull, nsnull, aSheet);
-      NS_ENSURE_SUCCESS(rv, rv);
+      *aSheet = sheet->Clone(nsnull, nsnull, nsnull, nsnull).get();
     }
   }
 
@@ -1246,8 +1241,7 @@ Loader::PrepareSheet(nsICSSStyleSheet* aSheet,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = aSheet->SetMedia(mediaList);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aSheet->SetMedia(mediaList);
 
   aSheet->SetTitle(aTitle);
   PRBool alternate = IsAlternate(aTitle, aHasAlternateRel);

@@ -7751,9 +7751,8 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
           PRBool applicable = PR_TRUE;
           sheet->GetApplicable(applicable);
           if (applicable) {
-            nsCOMPtr<nsICSSStyleSheet> clonedSheet;
-            sheet->Clone(nsnull, nsnull, clonedDoc, nsnull,
-                         getter_AddRefs(clonedSheet));
+            nsCOMPtr<nsICSSStyleSheet> clonedSheet =
+              sheet->Clone(nsnull, nsnull, clonedDoc, nsnull);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
             if (clonedSheet) {
               clonedDoc->AddStyleSheet(clonedSheet);
@@ -7770,9 +7769,8 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
           PRBool applicable = PR_TRUE;
           sheet->GetApplicable(applicable);
           if (applicable) {
-            nsCOMPtr<nsICSSStyleSheet> clonedSheet;
-            sheet->Clone(nsnull, nsnull, clonedDoc, nsnull,
-                         getter_AddRefs(clonedSheet));
+            nsCOMPtr<nsICSSStyleSheet> clonedSheet =
+              sheet->Clone(nsnull, nsnull, clonedDoc, nsnull);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
             if (clonedSheet) {
               clonedDoc->AddCatalogStyleSheet(clonedSheet);
