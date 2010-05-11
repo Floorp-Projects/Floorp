@@ -16,7 +16,7 @@
 #
 # The Initial Developer of the Original Code is
 # Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -43,42 +43,62 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= plugin
+LIBRARY_NAME	= npnul32
+RESFILE		= npnul32.res
+DEFFILE		= $(win_srcdir)/npnul32.def
 GRE_MODULE	= 1
 
-EXPORTS		= \
-		nsPluginLogging.h \
-		nsPluginError.h \
-		nsDefaultPlugin.h \
-		nsPluginNativeWindow.h \
-		nsPluginsCID.h \
+
+CPPSRCS		= \
+		maindll.cpp \
+		plugin.cpp \
+		dbg.cpp \
+		dialogs.cpp \
+		npshell.cpp \
+		npwin.cpp \
+		utils.cpp \
 		$(NULL)
 
-SDK_HEADERS	 = \
-		npapi.h \
-		npfunctions.h \
-		nptypes.h \
-		npruntime.h \
-		$(NULL)
+LOCAL_INCLUDES	= -I$(srcdir)
 
-XPIDLSRCS 	= \
-		nspluginroot.idl \
-		nsIPluginStreamInfo.idl \
-		nsIPluginInstanceOwner.idl \
-		nsIPlugin.idl \
-		nsIHTTPHeaderListener.idl \
-		nsIPluginTag.idl \
-		nsIPluginTagInfo.idl \
-		nsIPluginInputStream.idl \
-		nsIPluginStreamListener.idl \
-		nsIPluginInstance.idl \
-		nsIPluginHost.idl \
-		nsIPluginDocument.idl \
-		$(NULL)
+DEFINES += -DXPCOM_GLUE
 
-# Just build headers if we don't want plugins support
-ifndef MOZ_PLUGINS
-NO_GEN_XPT=1
+# plugins should always be shared, even in the "static" build
+FORCE_SHARED_LIB = 1
+
+# Force use of PIC
+FORCE_USE_PIC	= 1
+
+# must link statically with the CRT to avoid problems with VC8
+USE_STATIC_LIBS = 1
+
+NO_DIST_INSTALL	= 1
+NO_INSTALL = 1
+
+ifndef WINCE
+ENABLE_CXX_EXCEPTIONS = 1
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifndef WINCE
+_OS_LIBS	= version
+endif
+
+ifdef GNU_CC
+_OS_LIBS	+= gdi32
+endif
+OS_LIBS		+= $(call EXPAND_LIBNAME,$(_OS_LIBS))
+
+install-plugin: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins
+endif
+
+libs:: install-plugin
+
+install:: $(SHARED_LIBRARY)
+ifdef SHARED_LIBRARY
+	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)/plugins
+endif
 
