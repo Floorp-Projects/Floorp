@@ -148,12 +148,7 @@ AsyncConnectionHelper::Run()
   }
 
   if (NS_SUCCEEDED(rv)) {
-    mozStorageTransaction transaction(connection, PR_FALSE);
     mErrorCode = DoDatabaseWork(connection);
-    if (mErrorCode == OK) {
-      rv = transaction.Commit();
-      mErrorCode = NS_SUCCEEDED(rv) ? OK : nsIIDBDatabaseException::UNKNOWN_ERR;
-    }
   }
   else {
     mErrorCode = nsIIDBDatabaseException::UNKNOWN_ERR;
