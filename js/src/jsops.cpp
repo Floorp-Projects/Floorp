@@ -471,12 +471,13 @@ END_CASE(JSOP_ITER)
 BEGIN_CASE(JSOP_MOREITER)
     JS_ASSERT(regs.sp - 1 >= StackBase(fp));
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
-    if (!IteratorMore(cx, JSVAL_TO_OBJECT(regs.sp[-1]), &cond, &regs.sp[0]))
+    PUSH_OPND(JSVAL_NULL);
+    if (!IteratorMore(cx, JSVAL_TO_OBJECT(regs.sp[-2]), &cond, &regs.sp[-1]))
         goto error;
     CHECK_INTERRUPT_HANDLER();
-    TRY_BRANCH_AFTER_COND(cond, 0);
+    TRY_BRANCH_AFTER_COND(cond, 1);
     JS_ASSERT(regs.pc[1] == JSOP_IFNEX);
-    PUSH_OPND(BOOLEAN_TO_JSVAL(cond));
+    STORE_OPND(-1, BOOLEAN_TO_JSVAL(cond));
 END_CASE(JSOP_MOREITER)
 
 BEGIN_CASE(JSOP_ENDITER)
@@ -550,9 +551,9 @@ BEGIN_CASE(JSOP_FORELEM)
      */
     JS_ASSERT(regs.sp - 1 >= StackBase(fp));
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
-    if (!IteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-1]), &regs.sp[0]))
+    PUSH_OPND(JSVAL_NULL);
+    if (!IteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-2]), &regs.sp[-1]))
         goto error;
-    regs.sp++;
 END_CASE(JSOP_FORELEM)
 
 BEGIN_CASE(JSOP_DUP)
