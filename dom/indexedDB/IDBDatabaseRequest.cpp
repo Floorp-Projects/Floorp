@@ -319,6 +319,43 @@ IDBDatabaseRequest::RemoveStatement(bool aAutoIncrement)
   return result.forget();
 }
 
+already_AddRefed<mozIStorageStatement>
+IDBDatabaseRequest::GetStatement(bool aAutoIncrement)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  nsresult rv = EnsureConnection();
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsCOMPtr<mozIStorageStatement> result;
+
+  if (aAutoIncrement) {
+    if (!mGetAutoIncrementStmt) {
+      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT data "
+        "FROM ai_object_data "
+        "WHERE id = :id "
+        "AND object_store_id = :osid"
+      ), getter_AddRefs(mGetAutoIncrementStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    result = mGetAutoIncrementStmt;
+  }
+  else {
+    if (!mGetStmt) {
+      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT data "
+        "FROM object_data "
+        "WHERE key_value = :id "
+        "AND object_store_id = :osid"
+      ), getter_AddRefs(mGetStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    result = mGetStmt;
+  }
+
+  return result.forget();
+}
+
 void
 IDBDatabaseRequest::FireCloseConnectionRunnable()
 {
@@ -331,6 +368,8 @@ IDBDatabaseRequest::FireCloseConnectionRunnable()
   doomedObjects.AppendElement(do_QIAndNull(mPutOverwriteAutoIncrementStmt));
   doomedObjects.AppendElement(do_QIAndNull(mRemoveStmt));
   doomedObjects.AppendElement(do_QIAndNull(mRemoveAutoIncrementStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mGetStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mGetAutoIncrementStmt));
 
   nsCOMPtr<nsIRunnable> runnable(new CloseConnectionRunnable(doomedObjects));
   mConnectionThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
