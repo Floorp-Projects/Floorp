@@ -93,6 +93,23 @@ private:
   nsTArray<nsCOMPtr<nsISupports> > mDoomedObjects;
 };
 
+class SetVersionHelper : public AsyncConnectionHelper
+{
+public:
+  SetVersionHelper(IDBDatabaseRequest* aDatabase,
+                   IDBRequest* aRequest,
+                   const nsAString& aVersion)
+  : AsyncConnectionHelper(aDatabase, aRequest), mVersion(aVersion)
+  { }
+
+  PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
+  PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
+
+private:
+  // In-params
+  nsString mVersion;
+};
+
 class CreateObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
@@ -378,6 +395,12 @@ IDBDatabaseRequest::FireCloseConnectionRunnable()
 }
 
 void
+IDBDatabaseRequest::OnVersionSet(const nsString& aVersion)
+{
+  mVersion = aVersion;
+}
+
+void
 IDBDatabaseRequest::OnObjectStoreCreated(const nsAString& aName)
 {
   NS_ASSERTION(!mObjectStoreNames.Contains(aName),
@@ -478,7 +501,7 @@ IDBDatabaseRequest::GetIndexes(nsIDOMDOMStringList** aIndexes)
     NS_ENSURE_TRUE(list->Add(mIndexNames[index]), NS_ERROR_OUT_OF_MEMORY);
   }
 
-  
+
   list.forget(aIndexes);
   return NS_OK;
 }
@@ -677,11 +700,15 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
                                nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
 
-  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+
+  nsRefPtr<SetVersionHelper> helper =
+    new SetVersionHelper(this, request, aVersion);
+  nsresult rv = helper->Dispatch(mConnectionThread);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   request.forget(_retval);
-
   return NS_OK;
 }
 
@@ -715,6 +742,36 @@ IDBDatabaseRequest::Observe(nsISupports* aSubject,
   FireCloseConnectionRunnable();
 
   return NS_OK;
+}
+
+PRUint16
+SetVersionHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+{
+  NS_PRECONDITION(aConnection, "Passing a null connection!");
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "UPDATE database "
+    "SET version = :version"
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("version"), mVersion);
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (NS_FAILED(stmt->Execute())) {
+    return nsIIDBDatabaseException::CONSTRAINT_ERR;
+  }
+
+  return OK;
+}
+
+PRUint16
+SetVersionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
+{
+  mDatabase->OnVersionSet(mVersion);
+
+  return AsyncConnectionHelper::OnSuccess(aTarget);
 }
 
 PRUint16
