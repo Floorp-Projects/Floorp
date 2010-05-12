@@ -98,7 +98,7 @@ js_Int32ToId(JSContext* cx, int32 index, jsid* id)
     JSString* str = js_NumberToString(cx, index);
     if (!str)
         return false;
-    return js_ValueToStringId(cx, js::Value(str), id);
+    return js_ValueToStringId(cx, str, id);
 }
 
 inline bool

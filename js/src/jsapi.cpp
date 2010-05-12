@@ -1105,7 +1105,7 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
             goto out;
         }
         obj->defineProperty(cx, ATOM_TO_JSID(CLASS_ATOM(cx, Function)),
-                            FunObjValue(*ctor), 0, 0, 0);
+                            FunObjTag(*ctor), 0, 0, 0);
     }
 
     /* Initialize the object class next so Object.prototype works. */
@@ -1121,9 +1121,9 @@ js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
     }
 
     /* Function.prototype and the global object delegate to Object.prototype. */
-    fun_proto->setProto(NonFunObjPtr(*obj_proto));
+    fun_proto->setProto(NonFunObjTag(*obj_proto));
     if (!obj->getProto())
-        obj->setProto(NonFunObjPtr(*obj_proto));
+        obj->setProto(NonFunObjTag(*obj_proto));
 
 out:
     /* If resolving, remove the other entry (Object or Function) from table. */
@@ -2894,7 +2894,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     JSObject *nobj = NewObject(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
-    if (!DefineProperty(cx, obj, name, ToValue(nobj), NULL, NULL, attrs,
+    if (!DefineProperty(cx, obj, name, ObjectTag(*nobj), NULL, NULL, attrs,
                         0, 0)) {
         return NULL;
     }
@@ -3064,7 +3064,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
         if (sprop->isMethod()) {
             AutoScopePropertyRooter root(cx, sprop);
             JS_UNLOCK_OBJ(cx, obj2);
-            vp->copy(sprop->methodValue());
+            vp->setFunObj(sprop->methodFunObj());
             return obj2->scope()->methodReadBarrier(cx, sprop, vp);
         }
 
@@ -3966,7 +3966,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             *idp = JSID_VOID;
         } else {
             *idp = ida->vector[--i];
-            iterobj->setSlot(JSSLOT_ITER_INDEX, Value(i));
+            iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Tag(i));
         }
     }
     return JS_TRUE;
@@ -4081,7 +4081,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
          * idea, but we changed incompatibly to teach any abusers a lesson!).
          */
         Value v;
-        SetObject(&v, funobj);
+        v.setObject(*funobj);
         js_ReportIsNotFunction(cx, &v, 0);
         return NULL;
     }
@@ -4684,8 +4684,7 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
         }
 
         if (obj && funAtom &&
-            !obj->defineProperty(cx, ATOM_TO_JSID(funAtom),
-                                 FunObjValue(*FUN_OBJECT(fun)),
+            !obj->defineProperty(cx, ATOM_TO_JSID(funAtom), fun->funObjVal(),
                                  NULL, NULL, JSPROP_ENUMERATE)) {
             fun = NULL;
         }
@@ -4849,8 +4848,8 @@ JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
     JSBool ok;
 
     CHECK_REQUEST(cx);
-    ok = InternalCall(cx, obj, FunObjValue(*FUN_OBJECT(fun)), argc,
-                      Valueify(argv), Valueify(rval));
+    ok = InternalCall(cx, obj, fun->funObjVal(), argc, Valueify(argv),
+                      Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -4898,7 +4897,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
         return NULL;
 
     Value *vp = args.getvp();
-    SetObject(&vp[0], ctor);
+    vp[0].setObject(*ctor);
     vp[1].setNull();
     memcpy(vp + 2, argv, argc * sizeof(jsval));
 

@@ -3151,7 +3151,8 @@ BEGIN_CASE(JSOP_DEFFUN)
     MUST_FLOW_THROUGH("restore_scope");
     fp->scopeChain = obj;
 
-    FunObjValue rval(*obj);
+    Value rval;
+    rval.setFunObj(*obj);
 
     /*
      * ECMA requires functions defined when entering Eval code to be
@@ -3250,7 +3251,9 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
                     : js_NewDebuggableFlatClosure(cx, fun);
     if (!obj)
         goto error;
-    FunObjValue rval(*obj);
+
+    Value rval;
+    rval.setFunObj(*obj);
 
     uintN attrs = (fp->flags & JSFRAME_EVAL)
                   ? JSPROP_ENUMERATE
@@ -4044,7 +4047,7 @@ BEGIN_CASE(JSOP_QNAMECONST)
     JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
     if (!obj)
         goto error;
-    SetObject(&regs.sp[-1], *obj);
+    regs.sp[-1].setObject(*obj);
 }
 END_CASE(JSOP_QNAMECONST)
 
@@ -4057,7 +4060,7 @@ BEGIN_CASE(JSOP_QNAME)
     if (!obj)
         goto error;
     regs.sp--;
-    SetObject(&regs.sp[-1], *obj);
+    regs.sp[-1].setObject(*obj);
 }
 END_CASE(JSOP_QNAME)
 
@@ -4107,7 +4110,7 @@ BEGIN_CASE(JSOP_BINDXMLNAME)
     jsid id;
     if (!js_FindXMLProperty(cx, lval, &obj, &id))
         goto error;
-    SetObject(&regs.sp[-1], obj);
+    regs.sp[-1].setObjectOrNull(obj);
     PUSH_COPY(IdToValue(id));
 }
 END_CASE(JSOP_BINDXMLNAME)
@@ -4215,7 +4218,7 @@ BEGIN_CASE(JSOP_TOXML)
     JSObject *obj = js_ValueToXMLObject(cx, rval);
     if (!obj)
         goto error;
-    SetObject(&regs.sp[-1], *obj);
+    regs.sp[-1].setObject(*obj);
 }
 END_CASE(JSOP_TOXML)
 
@@ -4226,7 +4229,7 @@ BEGIN_CASE(JSOP_TOXMLLIST)
     JSObject *obj = js_ValueToXMLListObject(cx, rval);
     if (!obj)
         goto error;
-    SetObject(&regs.sp[-1], *obj);
+    regs.sp[-1].setObject(*obj);
 }
 END_CASE(JSOP_TOXMLLIST)
 
@@ -4305,7 +4308,7 @@ BEGIN_CASE(JSOP_XMLPI)
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION, str, str2);
     if (!obj)
         goto error;
-    SetObject(&regs.sp[-1], *obj);
+    regs.sp[-1].setObject(*obj);
 }
 END_CASE(JSOP_XMLPI)
 

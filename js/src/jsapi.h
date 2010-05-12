@@ -2950,6 +2950,59 @@ JS_END_EXTERN_C
 
 namespace js {
 
+struct NullTag {
+    explicit NullTag() {}
+};
+
+struct UndefinedTag {
+    explicit UndefinedTag() {}
+};
+
+struct Int32Tag {
+    explicit Int32Tag(int32 i32) : i32(i32) {}
+    int32 i32;
+};
+
+struct FunObjTag {
+    explicit FunObjTag(JSObject &obj) : obj(obj) {}
+    JSObject &obj;
+};
+
+struct FunObjOrNull {
+    explicit FunObjOrNull(JSObject *obj) : obj(obj) {}
+    JSObject *obj;
+};
+
+struct FunObjOrUndefinedTag {
+    explicit FunObjOrUndefinedTag(JSObject *obj) : obj(obj) {}
+    JSObject *obj;
+};
+
+struct NonFunObjTag {
+    explicit NonFunObjTag(JSObject &o) : obj(obj) {}
+    JSObject &obj;
+};
+
+struct NonFunObjOrNull {
+    explicit NonFunObjOrNull(JSObject *obj) : obj(obj) {}
+    JSObject *obj;
+};
+
+struct ObjectTag {
+    explicit ObjectTag(JSObject &obj) : obj(obj) {}
+    JSObject &obj;
+};
+
+struct ObjectOrNullTag {
+    explicit ObjectOrNullTag(JSObject *obj) : obj(obj) {}
+    JSObject *obj;
+};
+
+struct BooleanTag {
+    explicit BooleanTag(bool boo) : boo(boo) {}
+    bool boo;
+};
+
 /*
  * An ObjPtr is a restriction of a Value (below) to the three types: null,
  * non-function object and function object. ObjPtr is useful when code
@@ -2980,15 +3033,42 @@ class ObjPtr
 
   public:
     /* Constructors */
+    
+    ObjPtr() {
+        /* N.B. mask and obj are undefined */
+    }
 
-    /* N.B. defualt construction yields a ObjPtr in an undefined state. */
-    ObjPtr() {}
+    ObjPtr(NullTag) {
+        mask = NullMask;
+        obj = NULL;
+    }
 
-    /*
-     * To construct a null pointer, use NullObjPtr. To construct pointers to
-     * objects statically known to be, or not to be, function objects, use
-     * FunObjPtr, NonFunObjPtr.
-     */
+    ObjPtr(FunObjTag arg) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &arg.obj));
+        mask = FunObjMask;
+        obj = &arg.obj;
+    }
+
+    ObjPtr(FunObjOrNull arg) {
+        JS_ASSERT_IF(arg.obj, JS_ObjectIsFunction(NULL, arg.obj));
+        mask = arg.obj ? FunObjMask : NullMask;
+        obj = arg.obj;
+    }
+
+    ObjPtr(NonFunObjTag arg) {
+        JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg.obj));
+        mask = NonFunObjMask;
+        obj = &arg.obj;
+    }
+
+    ObjPtr(NonFunObjOrNull arg) {
+        JS_ASSERT_IF(arg.obj, !JS_ObjectIsFunction(NULL, arg.obj));
+        mask = arg.obj ? NonFunObjMask : NullMask;
+        obj = arg.obj;
+    }
+
+    inline ObjPtr(ObjectTag arg);
+    inline ObjPtr(ObjectOrNullTag arg);
 
     /* Accessors */
 
@@ -3040,28 +3120,32 @@ class ObjPtr
         obj = NULL;
     }
 
-    void setFunObj(JSObject &o) {
-        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
+    void setFunObj(JSObject &arg) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &arg));
         mask = FunObjMask;
-        obj = &o;
+        obj = &arg;
     }
 
-    void setNonFunObj(JSObject &o) {
-        JS_ASSERT(!JS_ObjectIsFunction(NULL, &o));
+    void setFunObjOrNull(JSObject *arg) {
+        JS_ASSERT_IF(arg, JS_ObjectIsFunction(NULL, arg));
+        mask = arg ? FunObjMask : NullMask;
+        obj = arg;
+    }
+
+    void setNonFunObj(JSObject &arg) {
+        JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg));
         mask = NonFunObjMask;
-        obj = &o;
+        obj = &arg;
     }
 
-    void setNonFunObjOrNull(JSObject *o) {
-        if (o) {
-            JS_ASSERT(!JS_ObjectIsFunction(NULL, o));
-            mask = NonFunObjMask;
-            obj = o;
-        } else {
-            mask = NullMask;
-            obj = o;
-        }
+    void setNonFunObjOrNull(JSObject *arg) {
+        JS_ASSERT_IF(arg, !JS_ObjectIsFunction(NULL, arg));
+        mask = arg ? NonFunObjMask : NullMask;
+        obj = arg;
     }
+
+    inline void setObject(JSObject &arg);
+    inline void setObjectOrNull(JSObject *arg);
 };
 
 inline bool operator==(ObjPtr lhs, ObjPtr rhs) { return lhs == rhs; }
@@ -3071,56 +3155,7 @@ inline bool operator!=(ObjPtr lhs, ObjPtr rhs) { return !(lhs == rhs); }
 inline bool operator!=(ObjPtr lhs, JSObject *rhs) { return !(lhs == rhs); }
 inline bool operator!=(JSObject *lhs, ObjPtr rhs) { return !(lhs == rhs); }
 
-/*
- * These types are intended to be used like:
- *
- *   ObjPtr p = NullObjPtr();
- *   void f1(ObjPtr);
- *   f1(FunObjPtr(funobj));
- */
-
-struct NullObjPtr : ObjPtr
-{
-    explicit NullObjPtr() {
-        mask = NullMask;
-        obj = NULL;
-    }
-};
-
-struct FunObjPtr : ObjPtr
-{
-    explicit FunObjPtr(JSObject &o) {
-        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
-        mask = FunObjMask;
-        obj = &o;
-    }
-};
-
-struct NonFunObjPtr : ObjPtr
-{
-    explicit NonFunObjPtr(JSObject &o) {
-        JS_ASSERT(!JS_ObjectIsFunction(NULL, &o));
-        mask = NonFunObjMask;
-        obj = &o;
-    }
-};
-
-struct NonFunObjOrNullPtr : ObjPtr
-{
-    explicit NonFunObjOrNullPtr(JSObject *o) {
-        if (o) {
-            JS_ASSERT(!JS_ObjectIsFunction(NULL, o));
-            mask = NonFunObjMask;
-            obj = o;
-        } else {
-            mask = NullMask;
-            obj = NULL;
-        }
-    }
-};
-
-/* TODO: this can be removed when copying is implicit/public. */
-class ExplicitlyConstructedValue;
+class CopyableValue;
 
 /*
  * While there is a single representation for values, there are two declared
@@ -3195,65 +3230,90 @@ class Value
     Value &operator=(const Value &);
 
   public:
-    /* XXX: this can be removed when copying is public/implicit */
-    inline Value(const ExplicitlyConstructedValue &v);
+    /* Constructors */
 
-    /*
-     * Constructors
-     *
-     * To construct a null value, use NullValue. To construct pointers to
-     * objects statically known to be, or not to be, function objects, use
-     * FunObjValue, NonFunObjValue.
-     */
+    Value() {
+        /* N.B. mask and data are undefined. */
+    }
 
-    /* N.B. default construction yields a Value in an undefined state. */
-    Value() {}
+    Value(NullTag) {
+        mask = NullMask;
+        data.obj = NULL;
+    }
+
+    Value(UndefinedTag) {
+        mask = UndefinedMask;
+        /* N.B. data is undefined */
+    }
+
+    Value(Int32Tag arg) {
+        mask = Int32Mask;
+        data.i32 = arg.i32;
+    }
+
+    Value(double arg) {
+        mask = DoubleMask;
+        data.dbl = arg;
+    }
+
+    Value(JSString *arg) {
+        mask = StringMask;
+        data.str = arg;
+    }
+
+    Value(FunObjTag arg) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &arg.obj));
+        mask = FunObjMask;
+        data.obj = &arg.obj;
+    }
+
+    Value(FunObjOrNull arg) {
+        JS_ASSERT_IF(arg.obj, JS_ObjectIsFunction(NULL, arg.obj));
+        mask = arg.obj ? FunObjMask : NullMask;
+        data.obj = arg.obj;
+    }
+
+    Value(FunObjOrUndefinedTag arg) {
+        JS_ASSERT_IF(arg.obj, JS_ObjectIsFunction(NULL, arg.obj));
+        mask = arg.obj ? FunObjMask : UndefinedMask;
+        data.obj = arg.obj;
+    }
+
+    Value(NonFunObjTag arg) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &arg.obj));
+        mask = NonFunObjMask;
+        data.obj = &arg.obj;
+    }
+
+    Value(NonFunObjOrNull arg) {
+        JS_ASSERT_IF(arg.obj, !JS_ObjectIsFunction(NULL, arg.obj));
+        mask = arg.obj ? NonFunObjMask : NullMask;
+        data.obj = arg.obj;
+    }
+
+    inline Value(ObjectTag arg);
+    inline Value(ObjectOrNullTag arg);
+
+    Value(BooleanTag arg) {
+        mask = BooleanMask;
+        data.boo = arg.boo;
+    }
+
+    Value(JSWhyMagic arg) {
+        mask = MagicMask;
+#ifdef DEBUG
+        data.why = arg;
+#endif
+    }
 
     /* XXX: 'explicit' can be removed when copying is public/implicit */
+
     explicit Value(const Value &v)
      : mask(v.mask), data(v.data)
     {}
 
-    explicit Value(int32 i32) {
-        mask = Int32Mask;
-        data.i32 = i32;
-    }
-
-    explicit Value(double dbl) {
-        mask = DoubleMask;
-        data.dbl = dbl;
-    }
-
-    Value(JSString *str) {
-        mask = StringMask;
-        data.str = str;
-    }
-
-  private:
-    /*
-     * This overload catches values constructed with unsupported T* types
-     * before they are implicitly converted to bool.
-     */
-    template <class T> explicit Value(T *);  /* undefined */
-
-  public:
-
-    explicit Value(bool b) {
-        mask = BooleanMask;
-        data.boo = b;
-    }
-
-    explicit Value(JSWhyMagic why) {
-        mask = MagicMask;
-#ifdef DEBUG
-        data.why = why;
-#endif
-    }
-
-    Value(ObjPtr ptr) {
-        mask = ptr.mask;
-        data.obj = ptr.obj;
-    }
+    /* XXX: can be removed when copy is implicit */
+    Value(const CopyableValue &);
 
     /* Mutators */
 
@@ -3294,6 +3354,39 @@ class Value
         data.str = str;
     }
 
+    void setFunObj(JSObject &arg) {
+        JS_ASSERT(JS_ObjectIsFunction(NULL, &arg));
+        mask = FunObjMask;
+        data.obj = &arg;
+    }
+
+    void setFunObjOrNull(JSObject *arg) {
+        JS_ASSERT_IF(arg, JS_ObjectIsFunction(NULL, arg));
+        mask = arg ? FunObjMask : NullMask;
+        data.obj = arg;
+    }
+
+    void setFunObjOrUndefined(JSObject *arg) {
+        JS_ASSERT_IF(arg, JS_ObjectIsFunction(NULL, arg));
+        mask = arg ? FunObjMask : UndefinedMask;
+        data.obj = arg;
+    }
+
+    void setNonFunObj(JSObject &arg) {
+        JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg));
+        mask = NonFunObjMask;
+        data.obj = &arg;
+    }
+
+    void setNonFunObjOrNull(JSObject *arg) {
+        JS_ASSERT_IF(arg, !JS_ObjectIsFunction(NULL, arg));
+        mask = arg ? NonFunObjMask : NullMask;
+        data.obj = arg;
+    }
+
+    inline void setObject(JSObject &arg);
+    inline void setObjectOrNull(JSObject *arg);
+
     void setBoolean(bool b) {
         mask = BooleanMask;
         data.boo = b;
@@ -3304,28 +3397,6 @@ class Value
 #ifdef DEBUG
         data.why = why;
 #endif
-    }
-
-    void setFunObj(JSObject &o) {
-        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
-        mask = FunObjMask;
-        data.obj = &o;
-    }
-
-    void setNonFunObj(JSObject &o) {
-        JS_ASSERT(!JS_ObjectIsFunction(NULL, &o));
-        mask = NonFunObjMask;
-        data.obj = &o;
-    }
-
-    void setNonFunObjOrNull(JSObject *o) {
-        if (o) {
-            mask = NonFunObjMask;
-            data.obj = o;
-        } else {
-            mask = NullMask;
-            data.obj = NULL;
-        }
     }
 
     /* Mutators */
@@ -3496,7 +3567,7 @@ class Value
      * Private setters/getters allow the caller to read/write arbitrary types
      * that fit in the 64-bit payload. It is the caller's responsibility, after
      * storing to a value with setPrivateX to only read with getPrivateX.
-     * Privates values are given a valid type of Int32 and are thus GC-safe.
+     * Privates values are given a valid type of Int32Tag and are thus GC-safe.
      */
 
     void setPrivateVoidPtr(void *p) {
@@ -3525,69 +3596,6 @@ class Value
     }
 };
 
-/*
- * These types are intended to be used like:
- *
- *   Value v = NullValue();
- *   void f1(Value);
- *   f1(FunObjValue(funobj));
- */
-
-/* TODO: this hackiness will be removed once copying is public/implicit */
-struct ExplicitlyConstructedValue : Value {};
-
-JS_ALWAYS_INLINE
-Value::Value(const ExplicitlyConstructedValue &v)
-  : mask(v.mask), data(v.data)
-{}
-
-struct NullValue : ExplicitlyConstructedValue
-{
-    explicit NullValue() {
-        mask = NullMask;
-        data.obj = NULL;
-    }
-};
-
-struct UndefinedValue : ExplicitlyConstructedValue
-{
-    explicit UndefinedValue() {
-        mask = UndefinedMask;
-    }
-};
-
-struct FunObjValue : ExplicitlyConstructedValue
-{
-    explicit FunObjValue(JSObject &o) {
-        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
-        mask = FunObjMask;
-        data.obj = &o;
-    }
-};
-
-struct NonFunObjValue : ExplicitlyConstructedValue
-{
-    explicit NonFunObjValue(JSObject &o) {
-        JS_ASSERT(JS_ObjectIsFunction(NULL, &o));
-        mask = NonFunObjMask;
-        data.obj = &o;
-    }
-};
-
-struct NonFunObjOrNullValue : ExplicitlyConstructedValue
-{
-    explicit NonFunObjOrNullValue(JSObject *o) {
-        if (o) {
-            JS_ASSERT(JS_ObjectIsFunction(NULL, o));
-            mask = NonFunObjMask;
-            data.obj = o;
-        } else {
-            mask = NullMask;
-            data.obj = NULL;
-        }
-    }
-};
-
 struct AssertLayoutCompatible 
 {
     JS_STATIC_ASSERT(sizeof(jsval) == 16);
@@ -3601,11 +3609,30 @@ struct AssertLayoutCompatible
     JS_STATIC_ASSERT(sizeof(Value::MaskType) == sizeof(JSValueMaskType));
     JS_STATIC_ASSERT(sizeof(Value::MaskType) == sizeof(((jsval *)0)->mask));
     JS_STATIC_ASSERT(offsetof(Value, mask) == offsetof(jsval, mask));
-    JS_STATIC_ASSERT(sizeof(NullValue) == sizeof(Value));
-    JS_STATIC_ASSERT(sizeof(UndefinedValue) == sizeof(Value));
-    JS_STATIC_ASSERT(sizeof(FunObjValue) == sizeof(Value));
-    JS_STATIC_ASSERT(sizeof(NonFunObjValue) == sizeof(Value));
 };
+
+/* XXX: this is a temporary hack until copying is implicit. */
+struct CopyableValue : Value
+{
+    CopyableValue(NullTag arg) : Value(arg) {}
+    CopyableValue(UndefinedTag arg) : Value(arg) {}
+    CopyableValue(Int32Tag arg) : Value(arg) {}
+    CopyableValue(double arg) : Value(arg) {}
+    CopyableValue(JSString *arg) : Value(arg) {}
+    CopyableValue(FunObjTag arg) : Value(arg) {}
+    CopyableValue(NonFunObjTag arg) : Value(arg) {}
+    CopyableValue(ObjectTag arg) : Value(arg) {}
+    CopyableValue(BooleanTag arg) : Value(arg) {}
+    CopyableValue(JSWhyMagic arg) : Value(arg) {}
+};
+
+JS_ALWAYS_INLINE
+Value::Value(const CopyableValue &v) {
+    mask = v.mask;
+    data = v.data;
+}
+
+JS_STATIC_ASSERT(sizeof(CopyableValue) == sizeof(Value));
 
 /*
  * As asserted above, js::Value and jsval are layout equivalent. To provide

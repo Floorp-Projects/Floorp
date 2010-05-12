@@ -470,10 +470,10 @@ inline js::ObjPtr
 JSObject::thisObject(JSContext *cx, js::ObjPtr obj)
 {
     if (JSObjectOp thisOp = obj->map->ops->thisObject) {
-        JSObject *o = thisOp(cx, obj);
-        if (!o)
-            return js::NullObjPtr();
-        SetObject(&obj, *o);
+        JSObject *pobj = thisOp(cx, obj);
+        if (!pobj)
+            return js::NullTag();
+        obj.setObject(*pobj);
     }
     return obj;
 }
@@ -590,7 +590,7 @@ NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto,
      * the parent of the prototype's constructor.
      */
     obj->init(clasp,
-              ToObjPtr(proto),
+              js::ObjectOrNullTag(proto),
               (!parent && proto) ? proto->getParent() : parent,
               JSObject::defaultPrivate(clasp));
 
@@ -650,80 +650,60 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto,
     return NewObjectWithGivenProto(cx, clasp, proto, parent, objectSize);
 }
 
-JS_ALWAYS_INLINE ObjPtr
-ToObjPtr(JSObject *pobj)
+JS_ALWAYS_INLINE
+ObjPtr::ObjPtr(ObjectTag arg)
 {
-    if (pobj)
-        return NullObjPtr();
-    if (pobj->isFunction())
-        return FunObjPtr(*pobj);
-    return NonFunObjPtr(*pobj);
+    mask = arg.obj.isFunction() ? FunObjMask : NonFunObjMask;
+    obj = &arg.obj;
 }
 
-JS_ALWAYS_INLINE ObjPtr
-ToObjPtr(JSObject &obj)
+JS_ALWAYS_INLINE
+ObjPtr::ObjPtr(ObjectOrNullTag arg)
 {
-    if (obj.isFunction())
-        return FunObjPtr(obj);
-    return NonFunObjPtr(obj);
-}
-
-JS_ALWAYS_INLINE Value
-ToValue(JSObject *pobj)
-{
-    if (pobj)
-        return NullValue();
-    if (pobj->isFunction())
-        return FunObjValue(*pobj);
-    return NonFunObjValue(*pobj);
-}
-
-JS_ALWAYS_INLINE Value
-ToValue(JSObject &obj)
-{
-    if (obj.isFunction())
-        return FunObjValue(obj);
-    return NonFunObjValue(obj);
+    mask = arg.obj ? arg.obj->isFunction() ? FunObjMask : NonFunObjMask : NullMask;
+    obj = arg.obj;
 }
 
 JS_ALWAYS_INLINE void
-SetObject(ObjPtr *vp, JSObject *pobj)
+ObjPtr::setObject(JSObject &arg)
 {
-    if (!pobj)
-        vp->setNull();
-    else if (pobj->isFunction())
-        vp->setFunObj(*pobj);
-    else
-        vp->setNonFunObj(*pobj);
+    mask = arg.isFunction() ? FunObjMask : NonFunObjMask;
+    obj = &arg;
 }
 
 JS_ALWAYS_INLINE void
-SetObject(Value *vp, JSObject *pobj)
+ObjPtr::setObjectOrNull(JSObject *arg)
 {
-    if (!pobj)
-        vp->setNull();
-    if (pobj->isFunction())
-        vp->setFunObj(*pobj);
-    else
-        vp->setNonFunObj(*pobj);
+    mask = arg ? arg->isFunction() ? FunObjMask : NonFunObjMask : NullMask;
+    obj = arg;
+}
+
+JS_ALWAYS_INLINE
+Value::Value(ObjectTag arg)
+{
+    mask = arg.obj.isFunction() ? FunObjMask : NonFunObjMask;
+    data.obj = &arg.obj;
+}
+
+JS_ALWAYS_INLINE
+Value::Value(ObjectOrNullTag arg)
+{
+    mask = arg.obj ? arg.obj->isFunction() ? FunObjMask : NonFunObjMask : NullMask;
+    data.obj = arg.obj;
 }
 
 JS_ALWAYS_INLINE void
-SetObject(ObjPtr *vp, JSObject &obj)
+Value::setObject(JSObject &arg)
 {
-    if (obj.isFunction())
-        vp->setFunObj(obj);
-    else
-        vp->setNonFunObj(obj);
+    mask = arg.isFunction() ? FunObjMask : NonFunObjMask;
+    data.obj = &arg;
 }
 
 JS_ALWAYS_INLINE void
-SetObject(Value *vp, JSObject &obj)
+Value::setObjectOrNull(JSObject *arg)
 {
-    if (obj.isFunction())
-        vp->setFunObj(obj);
-    else
-        vp->setNonFunObj(obj);
+    mask = arg ? arg->isFunction() ? FunObjMask : NonFunObjMask : NullMask;
+    data.obj = arg;
 }
 
 } /* namespace js */

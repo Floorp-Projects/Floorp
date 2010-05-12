@@ -273,7 +273,7 @@ ComputeGlobalThis(JSContext *cx, Value *argv)
         thisp = cx->globalObject;
     else
         thisp = argv[-2].asObject().getGlobal();
-    return CallThisObjectHook(cx, NonFunObjPtr(*thisp), argv);
+    return CallThisObjectHook(cx, NonFunObjTag(*thisp), argv);
 }
 
 static bool
@@ -482,7 +482,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 
         if (JSFUN_BOUND_METHOD_TEST(fun->flags)) {
             /* Handle bound method special case. */
-            SetObject(&vp[1], parent);
+            vp[1].setObjectOrNull(parent);
         } else if (vp[1].isPrimitive()) {
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
             if (PrimitiveThisTest(fun, vp[1]))
@@ -667,7 +667,7 @@ InternalInvoke(JSContext *cx, JSObject *obj, const Value &fval, uintN flags,
         return JS_FALSE;
 
     args.getvp()[0].copy(fval);
-    SetObject(&args.getvp()[1], obj);
+    args.getvp()[1].setObjectOrNull(obj);
     memcpy(args.getvp() + 2, argv, argc * sizeof(*argv));
 
     if (!Invoke(cx, args, flags))
@@ -792,7 +792,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JSObject *thisp = chain->thisObject(cx);
         if (!thisp)
             return false;
-        SetObject(&fp->thisv, *thisp);
+        fp->thisv.setObject(*thisp);
         fp->flags = flags | JSFRAME_COMPUTED_THIS;
         fp->argc = 0;
         fp->argv = NULL;
@@ -1105,7 +1105,7 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn
         return JS_FALSE;
 
     /* Now we have an object with a constructor method; call it. */
-    SetObject(&vp[1], *obj);
+    vp[1].setObject(*obj);
     if (!Invoke(cx, args, JSINVOKE_CONSTRUCT))
         return JS_FALSE;
 
@@ -1118,7 +1118,7 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn
                                  js_ValueToPrintableString(cx, *vp));
             return JS_FALSE;
         }
-        SetObject(vp, *obj);
+        vp->setObject(*obj);
     }
 
     JS_RUNTIME_METER(cx->runtime, constructs);
@@ -1676,18 +1676,18 @@ namespace reprmeter {
 }
 #endif /* JS_REPRMETER */
 
-#define PUSH_COPY(v)            regs.sp++->copy(v)
-#define PUSH_NULL()             regs.sp++->setNull()
-#define PUSH_UNDEFINED()        regs.sp++->setUndefined()
-#define PUSH_BOOLEAN(b)         regs.sp++->setBoolean(b)
-#define PUSH_INT32(i)           regs.sp++->setInt32(i)
-#define PUSH_STRING(s)          regs.sp++->setString(s)
-#define PUSH_NONFUNOBJ(o)       regs.sp++->setNonFunObj(o)
-#define PUSH_FUNOBJ(o)          regs.sp++->setFunObj(o)
-#define PUSH_OBJECT(o)          SetObject(regs.sp++, o)
-#define PUSH_OBJECT_OR_NULL(o)  SetObject(regs.sp++, o)
-#define PUSH_HOLE()             regs.sp++->setMagic(JS_ARRAY_HOLE)
-#define POP_COPY_TO(v)          v.copy(*--regs.sp)
+#define PUSH_COPY(v)             regs.sp++->copy(v)
+#define PUSH_NULL()              regs.sp++->setNull()
+#define PUSH_UNDEFINED()         regs.sp++->setUndefined()
+#define PUSH_BOOLEAN(b)          regs.sp++->setBoolean(b)
+#define PUSH_INT32(i)            regs.sp++->setInt32(i)
+#define PUSH_STRING(s)           regs.sp++->setString(s)
+#define PUSH_NONFUNOBJ(obj)      regs.sp++->setNonFunObj(obj)
+#define PUSH_FUNOBJ(obj)         regs.sp++->setFunObj(obj)
+#define PUSH_OBJECT(obj)         regs.sp++->setObject(obj)
+#define PUSH_OBJECT_OR_NULL(obj) regs.sp++->setObject(obj)
+#define PUSH_HOLE()              regs.sp++->setMagic(JS_ARRAY_HOLE)
+#define POP_COPY_TO(v)           v.copy(*--regs.sp)
 
 /*
  * Push the jsdouble d using sp from the lexical environment. Try to convert d
@@ -1859,7 +1859,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     } else if (entry->vword.isSprop()) {
         JS_ASSERT(entry->vword.toSprop() == sprop);
         JS_ASSERT_IF(sprop->isMethod(),
-                     sprop->methodValue().isSame(pobj->lockedGetSlot(sprop->slot)));
+                     &sprop->methodFunObj() == &pobj->lockedGetSlot(sprop->slot).asFunObj());
     } else {
         Value v;
         JS_ASSERT(entry->vword.isFunObj());
@@ -1872,7 +1872,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
 
         if (sprop->isMethod()) {
             JS_ASSERT(js_CodeSpec[*regs.pc].format & JOF_CALLOP);
-            JS_ASSERT(sprop->methodValue().isSame(v));
+            JS_ASSERT(&sprop->methodFunObj() == &v.asFunObj());
         }
     }
 

@@ -2242,7 +2242,7 @@ class AutoValueRooter : private AutoGCRooter
   public:
     explicit AutoValueRooter(JSContext *cx
                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, JSVAL), val(js::NullValue())
+      : AutoGCRooter(cx, JSVAL), val(js::NullTag())
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -2990,7 +2990,7 @@ class AutoValueVector : private AutoGCRooter
     size_t length() const { return vector.length(); }
 
     bool append(const Value &v) { return vector.append(v); }
-    bool append(JSString *str) { return append(Value(str)); }
+    bool append(JSString *str) { return append(str); }
 
     void popBack() { vector.popBack(); }
 

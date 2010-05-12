@@ -176,8 +176,8 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    argsobj->init(&js_ArgumentsClass, NonFunObjPtr(*proto), parent, NullValue());
-    argsobj->setArgsCallee(ToValue(callee));
+    argsobj->init(&js_ArgumentsClass, NonFunObjTag(*proto), parent, NullTag());
+    argsobj->setArgsCallee(ObjectOrNullTag(callee));
     argsobj->setArgsLength(argc);
 
     argsobj->map = cx->runtime->emptyArgumentsScope;
@@ -841,7 +841,7 @@ js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSO
     JSObject *callobj = NewCallObject(cx, fun, scopeChain);
     if (!callobj)
         return NULL;
-    callobj->setSlot(JSSLOT_CALLEE, NonFunObjValue(*callee));
+    callobj->setSlot(JSSLOT_CALLEE, NonFunObjTag(*callee));
     return callobj;
 }
 
@@ -877,7 +877,7 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     /* Get the arguments object to snapshot fp's actual argument values. */
     if (fp->argsobj) {
         if (!(fp->flags & JSFRAME_OVERRIDE_ARGS))
-            callobj->setSlot(JSSLOT_CALL_ARGUMENTS, NonFunObjValue(*fp->argsobj));
+            callobj->setSlot(JSSLOT_CALL_ARGUMENTS, NonFunObjTag(*fp->argsobj));
         js_PutArgsObject(cx, fp);
     }
 
@@ -1723,7 +1723,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
          * Throw a runtime error if instanceof is called on a function that
          * has a non-object as its .prototype value.
          */
-        js_ReportValueError(cx, JSMSG_BAD_PROTOTYPE, -1, ToValue(obj), NULL);
+        js_ReportValueError(cx, JSMSG_BAD_PROTOTYPE, -1, ObjectTag(*obj), NULL);
         return JS_FALSE;
     }
 
@@ -2527,7 +2527,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, JSAtom *atom, Native native,
     fun = js_NewFunction(cx, NULL, native, nargs, attrs, obj, atom);
     if (!fun)
         return NULL;
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), FunObjValue(*FUN_OBJECT(fun)),
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), fun->funObjVal(),
                              gsop, gsop, attrs & ~JSFUN_FLAGS_MASK)) {
         return NULL;
     }

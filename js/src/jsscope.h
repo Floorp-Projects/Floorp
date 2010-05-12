@@ -689,8 +689,7 @@ struct JSScopeProperty {
     bool hasShortID() const { return (flags & HAS_SHORTID) != 0; }
     bool isMethod() const   { return (flags & METHOD) != 0; }
 
-    JSObject *methodObject() const { JS_ASSERT(isMethod()); return getterObj; }
-    js::Value methodValue() const      { return js::FunObjValue(*methodObject()); }
+    JSObject &methodFunObj() const { JS_ASSERT(isMethod()); return *getterObj; }
 
     js::PropertyOp getter() const { return rawGetter; }
     bool hasDefaultGetter() const  { return !rawGetter; }
@@ -698,11 +697,13 @@ struct JSScopeProperty {
     JSObject *getterObject() const { JS_ASSERT(hasGetterValue()); return getterObj; }
 
     // Per ES5, decode null getterObj as the undefined value, which encodes as null.
-    js::Value getterValue() const {
+    js::FunObjOrUndefinedTag getterValue() const {
         JS_ASSERT(hasGetterValue());
-        if (getterObj)
-            return js::FunObjValue(*getterObj);
-        return js::UndefinedValue();
+        return js::FunObjOrUndefinedTag(getterObj);
+    }
+
+    js::FunObjOrUndefinedTag getterOrUndefined() const {
+        return js::FunObjOrUndefinedTag(hasGetterValue() ? getterObj : NULL);
     }
 
     js::PropertyOp setter() const { return rawSetter; }
@@ -711,11 +712,13 @@ struct JSScopeProperty {
     JSObject *setterObject() const { JS_ASSERT(hasSetterValue()); return setterObj; }
 
     // Per ES5, decode null setterObj as the undefined value, which encodes as null.
-    js::Value setterValue() const {
+    js::FunObjOrUndefinedTag setterValue() const {
         JS_ASSERT(hasSetterValue());
-        if (setterObj)
-            return js::FunObjValue(*setterObj);
-        return js::UndefinedValue();
+        return js::FunObjOrUndefinedTag(setterObj);
+    }
+
+    js::FunObjOrUndefinedTag setterOrUndefined() const {
+        return js::FunObjOrUndefinedTag(hasSetterValue() ? setterObj : NULL);
     }
 
     inline JSDHashNumber hash() const;
@@ -964,7 +967,7 @@ JSScopeProperty::get(JSContext* cx, JSObject *obj, JSObject *pobj, js::Value* vp
     }
 
     if (isMethod()) {
-        vp->copy(methodValue());
+        vp->setFunObj(methodFunObj());
 
         JSScope *scope = pobj->scope();
         JS_ASSERT(scope->object == pobj);
