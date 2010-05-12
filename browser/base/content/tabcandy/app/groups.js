@@ -41,7 +41,7 @@ window.Group = function(listOfEls, options) {
   this._isStacked = false;
   this._stackAngles = [0];
   this.expanded = null;
-  this.locked = (options.locked ? $.extend({}, options.locked) : {});
+  this.locked = (options.locked ? Utils.copy(options.locked) : {});
   
   if(isPoint(options.userSize))  
     this.userSize = new Point(options.userSize);
@@ -232,7 +232,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var data = {
       bounds: this.getBounds(), 
       userSize: null,
-      locked: $.extend({}, this.locked), 
+      locked: Utils.copy(this.locked), 
       title: this.getTitle(),
       id: this.id
     };
@@ -543,8 +543,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       this._children.splice(index, 1); 
     
     item.parent = null;
-    $el.removeClass("tabInGroup");
-    
+    item.removeClass("tabInGroup");
+    item.removeClass("stacked");
+    item.removeClass("stack-trayed");
+    item.setRotation(0);
     item.setSize(item.defaultSize.x, item.defaultSize.y);
 
     $el.droppable("enable");    
@@ -571,30 +573,41 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
   // ----------  
   shouldStack: function(count) {
+    if(count <= 1)
+      return false;
+      
     var bb = this.getContentBounds();
-    var result = !(count == 1 || (bb.width * bb.height) / count > 7000);          
-    return result;
+    var options = {
+      pretend: true,
+      count: count
+    };
+    
+    var rects = Items.arrange(null, bb, options);
+    return (rects[0].width < TabItems.minTabWidth * 1.5);
   },
 
   // ----------  
   arrange: function(options) {
-    if(this.expanded)
-      return;
-      
-    var count = this._children.length;
-    if(!count)
-      return;
-
-    var bb = this.getContentBounds();
-    if(!this.shouldStack(count)) {
-      this._children.forEach(function(child){
-          child.removeClass("stacked")
-      });
-
-      Items.arrange(this._children, bb, options);
-      this._isStacked = false;
-    } else
-      this._stackArrange(bb, options);
+    if(this.expanded) {
+      var box = new Rect(this.expanded.bounds);
+      box.inset(8, 8);
+      Items.arrange(this._children, box, $.extend({}, options, {padding: 8, z: 99999}));
+    } else {
+      var count = this._children.length;
+      if(!count)
+        return;
+  
+      var bb = this.getContentBounds();
+      if(!this.shouldStack(count)) {
+        this._children.forEach(function(child){
+            child.removeClass("stacked")
+        });
+  
+        Items.arrange(this._children, bb, options);
+        this._isStacked = false;
+      } else
+        this._stackArrange(bb, options);
+    }
   },
   
   // ----------
@@ -716,10 +729,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       child.addClass("stack-trayed");
     });
 
-    var box = new Rect(pos.left, pos.top, overlayWidth, overlayHeight);
-    box.inset(8, 8);
-    Items.arrange(this._children, box, {padding: 8, z: 99999});
-    
     var $shield = $('<div />')
       .css({
         left: 0,
@@ -739,8 +748,11 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       
     this.expanded = {
       $tray: $tray,
-      $shield: $shield
+      $shield: $shield,
+      bounds: new Rect(pos.left, pos.top, overlayWidth, overlayHeight)
     };
+    
+    this.arrange();
 
     return {};
   },
@@ -972,10 +984,9 @@ DragInfo.prototype = {
     if(this.parent && this.parent.expanded) {
       var now = Utils.getMilliseconds();
       var distance = this.startPosition.distance(new Point(event.clientX, event.clientY));
-      if(now - this.startTime > 500 && distance > 100) {
-        this.item.locked.bounds = true;
+      if(true) { //now - this.startTime > 500 && distance > 100) {
+        this.parent.remove(this.item);
         this.parent.collapse();
-        this.item.locked.bounds = false;
       }
     }
   },
@@ -993,6 +1004,9 @@ DragInfo.prototype = {
       this.parent.remove(this.parent._children[0]);
     }*/
      
+    if(this.parent && this.parent.expanded)
+      this.parent.arrange();
+      
     if(this.item && !this.$el.hasClass('willGroup') && !this.item.parent) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
