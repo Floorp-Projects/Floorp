@@ -218,6 +218,7 @@ EmbedContextMenuInfo::SetFormControlType(nsIDOMEventTarget *originalTarget)
       case NS_FORM_INPUT_SUBMIT:
         break;
       case NS_FORM_INPUT_TEXT:
+      case NS_FORM_INPUT_TEL:
         mEmbedCtxType |= GTK_MOZ_EMBED_CTX_INPUT;
         break;
       case NS_FORM_LABEL:

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <!-- Test: input element in telephone state looks like in text state -->
+  <script type="text/javascript">
+    function setToTel()
+    {
+      document.getElementById('i').type='tel';
+    }
+    function disableReftestWait()
+    {
+      document.documentElement.className = '';
+    }
+  </script>
+
+  <body onload="setToTel(); disableReftestWait();">
+    <input type='checkbox' id='i'>
+  </body>
+</html>

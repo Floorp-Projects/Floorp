@@ -5779,7 +5779,8 @@ function AddKeywordForSearchField() {
 
     type = el.type.toLowerCase();
 
-    if ((type == "text" || type == "hidden" || type == "textarea") ||
+    if (((el instanceof HTMLInputElement && el.mozIsTextField(true)) ||
+        type == "hidden" || type == "textarea") ||
         ((type == "checkbox" || type == "radio") && el.checked)) {
       formData.push(escapeNameValuePair(el.name, el.value, isURLEncoded));
     } else if (el instanceof HTMLSelectElement && el.selectedIndex >= 0) {
