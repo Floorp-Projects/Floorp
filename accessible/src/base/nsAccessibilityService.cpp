@@ -1220,17 +1220,25 @@ nsAccessibilityService::GetAttachedAccessibleFor(nsIDOMNode *aNode,
   return GetAccessibleFor(aNode, aAccessible);
 }
 
-nsAccessible*
+NS_IMETHODIMP
 nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode, 
-                                             nsIPresShell *aPresShell) 
+                                             nsIPresShell *aPresShell,
+                                             nsIAccessible **aAccessible) 
 {
-  if (!aNode || !aPresShell)
-    return nsnull;
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_ARG(aPresShell);
 
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
   nsRefPtr<nsAccessible> accessible =
     GetAccessible(aNode, aPresShell, weakShell);
-  return accessible;
+
+  if (accessible)
+    CallQueryInterface(accessible.get(), aAccessible);
+  
+  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

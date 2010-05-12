@@ -65,7 +65,8 @@
 #endif /* MOZ_X11 */
 
 #ifdef ACCESSIBILITY
-#include "nsAccessible.h"
+#include "nsIAccessNode.h"
+#include "nsIAccessible.h"
 #endif
 
 #include "nsGtkIMModule.h"
@@ -407,11 +408,12 @@ private:
 #endif
 
 #ifdef ACCESSIBILITY
-    nsRefPtr<nsAccessible> mRootAccessible;
+    nsCOMPtr<nsIAccessible> mRootAccessible;
     void                CreateRootAccessible();
+    void                GetRootAccessible(nsIAccessible** aAccessible);
     void                DispatchActivateEventAccessible();
     void                DispatchDeactivateEventAccessible();
-    nsAccessible*       DispatchAccessibleEvent();
+    NS_IMETHOD_(PRBool) DispatchAccessibleEvent(nsIAccessible** aAccessible);
 #endif
 
     // The cursor cache
