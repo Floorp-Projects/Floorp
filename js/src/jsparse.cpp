@@ -107,7 +107,7 @@ JS_STATIC_ASSERT(pn_offsetof(pn_u.name.atom) == pn_offsetof(pn_u.apair.atom));
 #define MUST_MATCH_TOKEN_WITH_FLAGS(tt, errno, __flags)                                     \
     JS_BEGIN_MACRO                                                                          \
         if (tokenStream.getToken((__flags)) != tt) {                                        \
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR, errno);   \
+            reportErrorNumber(NULL, JSREPORT_ERROR, errno);                                 \
             return NULL;                                                                    \
         }                                                                                   \
     JS_END_MACRO
@@ -677,8 +677,7 @@ Parser::parse(JSObject *chain)
     JSParseNode *pn = statements();
     if (pn) {
         if (!tokenStream.matchToken(TOK_EOF)) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_SYNTAX_ERROR);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else {
             if (!js_FoldConstants(context, pn, &globaltc))
@@ -875,8 +874,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
      * https://bugzilla.mozilla.org/show_bug.cgi?id=336551
      */
     if (pn && onlyXML && (tcflags & TCF_NO_SCRIPT_RVAL)) {
-        ReportCompileErrorNumber(cx, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_XML_WHOLE_PROGRAM);
+        parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_XML_WHOLE_PROGRAM);
         goto out;
     }
 #endif
@@ -966,7 +964,7 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *calle
     return script;
 
   too_many_slots:
-    ReportCompileErrorNumber(cx, &tokenStream, NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
+    parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_LOCALS);
     script = NULL;
     goto out;
 }
@@ -1573,8 +1571,7 @@ Compiler::compileFunctionBody(JSContext *cx, JSFunction *fun, JSPrincipals *prin
         if (!CheckStrictFormals(cx, &funcg, fun, pn)) {
             pn = NULL;
         } else if (!tokenStream.matchToken(TOK_EOF)) {
-            ReportCompileErrorNumber(cx, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_SYNTAX_ERROR);
+            parser.reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else if (!js_FoldConstants(cx, pn, &funcg)) {
             /* js_FoldConstants reported the error already. */
@@ -2580,8 +2577,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
             funAtom = tokenStream.currentToken().t_atom;
         } else {
             if (lambda == 0 && (context->options & JSOPTION_ANONFUNFIX)) {
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_SYNTAX_ERROR);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
                 return NULL;
             }
             tokenStream.ungetToken();
@@ -2604,13 +2600,13 @@ Parser::functionDef(uintN lambda, bool namePermitted)
             if (JS_HAS_STRICT_OPTION(context) || dn_kind == JSDefinition::CONST) {
                 const char *name = js_AtomToPrintableString(context, funAtom);
                 if (!name ||
-                    !ReportCompileErrorNumber(context, &tokenStream, NULL,
-                                              (dn_kind != JSDefinition::CONST)
-                                              ? JSREPORT_WARNING | JSREPORT_STRICT
-                                              : JSREPORT_ERROR,
-                                              JSMSG_REDECLARED_VAR,
-                                              JSDefinition::kindString(dn_kind),
-                                              name)) {
+                    !reportErrorNumber(NULL,
+                                       (dn_kind != JSDefinition::CONST)
+                                       ? JSREPORT_WARNING | JSREPORT_STRICT
+                                       : JSREPORT_ERROR,
+                                       JSMSG_REDECLARED_VAR,
+                                       JSDefinition::kindString(dn_kind),
+                                       name)) {
                     return NULL;
                 }
             }
@@ -2803,8 +2799,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
               }
 
               default:
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_MISSING_FORMAL);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_MISSING_FORMAL);
                 /* FALL THROUGH */
               case TOK_ERROR:
                 return NULL;
@@ -2812,8 +2807,7 @@ Parser::functionDef(uintN lambda, bool namePermitted)
 #if JS_HAS_DESTRUCTURING
               report_dup_and_destructuring:
                 JSDefinition *dn = ALE_DEFN(funtc.decls.lookup(duplicatedArg));
-                ReportCompileErrorNumber(context, &tokenStream, dn, JSREPORT_ERROR,
-                                         JSMSG_DESTRUCT_DUP_ARG);
+                reportErrorNumber(dn, JSREPORT_ERROR, JSMSG_DESTRUCT_DUP_ARG);
                 return NULL;
 #endif
             }
@@ -3099,8 +3093,7 @@ Parser::condition()
     if (pn->pn_type == TOK_ASSIGN &&
         pn->pn_op == JSOP_NOP &&
         !pn->pn_parens &&
-        !ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_WARNING | JSREPORT_STRICT,
-                                  JSMSG_EQUAL_AS_ASSIGN, "")) {
+        !reportErrorNumber(NULL, JSREPORT_WARNING | JSREPORT_STRICT, JSMSG_EQUAL_AS_ASSIGN, "")) {
         return NULL;
     }
     return pn;
@@ -4204,8 +4197,7 @@ Parser::returnOrYield(bool useAssignExpr)
 
     tt = tokenStream.currentToken().type;
     if (tt == TOK_RETURN && !tc->inFunction()) {
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_BAD_RETURN_OR_YIELD, js_return_str);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_RETURN_OR_YIELD, js_return_str);
         return NULL;
     }
 
@@ -4580,8 +4572,7 @@ Parser::statement()
             switch (tt) {
               case TOK_DEFAULT:
                 if (seenDefault) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_TOO_MANY_DEFAULTS);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_DEFAULTS);
                     return NULL;
                 }
                 seenDefault = JS_TRUE;
@@ -4598,8 +4589,7 @@ Parser::statement()
                 }
                 pn2->append(pn3);
                 if (pn2->pn_count == JS_BIT(16)) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_TOO_MANY_CASES);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_TOO_MANY_CASES);
                     return NULL;
                 }
                 break;
@@ -4608,8 +4598,7 @@ Parser::statement()
                 return NULL;
 
               default:
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_BAD_SWITCH);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_SWITCH);
                 return NULL;
             }
             MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_AFTER_CASE);
@@ -4816,8 +4805,7 @@ Parser::statement()
                     pn1->pn_op != JSOP_XMLNAME) &&
 #endif
                    pn1->pn_type != TOK_LB)) {
-                ReportCompileErrorNumber(context, &tokenStream, pn1, JSREPORT_ERROR,
-                                         JSMSG_BAD_FOR_LEFTSIDE);
+                reportErrorNumber(pn1, JSREPORT_ERROR, JSMSG_BAD_FOR_LEFTSIDE);
                 return NULL;
             }
 
@@ -5043,8 +5031,7 @@ Parser::statement()
         return pn;
 
       bad_for_each:
-        ReportCompileErrorNumber(context, &tokenStream, pn, JSREPORT_ERROR,
-                                 JSMSG_BAD_FOR_EACH_LOOP);
+        reportErrorNumber(pn, JSREPORT_ERROR, JSMSG_BAD_FOR_EACH_LOOP);
         return NULL;
       }
 
@@ -5098,8 +5085,7 @@ Parser::statement()
 
                 /* Check for another catch after unconditional catch. */
                 if (lastCatch && !lastCatch->pn_kid2) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_CATCH_AFTER_GENERAL);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_CATCH_AFTER_GENERAL);
                     return NULL;
                 }
 
@@ -5157,8 +5143,7 @@ Parser::statement()
                     break;
 
                   default:
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_CATCH_IDENTIFIER);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_CATCH_IDENTIFIER);
                     return NULL;
                 }
 
@@ -5204,8 +5189,7 @@ Parser::statement()
             tokenStream.ungetToken();
         }
         if (!catchList && !pn->pn_kid3) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_CATCH_OR_FINALLY);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_CATCH_OR_FINALLY);
             return NULL;
         }
         return pn;
@@ -5221,8 +5205,7 @@ Parser::statement()
         if (tt == TOK_ERROR)
             return NULL;
         if (tt == TOK_EOF || tt == TOK_EOL || tt == TOK_SEMI || tt == TOK_RC) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_SYNTAX_ERROR);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
             return NULL;
         }
 
@@ -5236,13 +5219,11 @@ Parser::statement()
 
       /* TOK_CATCH and TOK_FINALLY are both handled in the TOK_TRY case */
       case TOK_CATCH:
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_CATCH_WITHOUT_TRY);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_CATCH_WITHOUT_TRY);
         return NULL;
 
       case TOK_FINALLY:
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_FINALLY_WITHOUT_TRY);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_FINALLY_WITHOUT_TRY);
         return NULL;
 
       case TOK_BREAK:
@@ -5256,8 +5237,7 @@ Parser::statement()
         if (label) {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_LABEL_NOT_FOUND);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_LABEL_NOT_FOUND);
                     return NULL;
                 }
                 if (stmt->type == STMT_LABEL && stmt->label == label)
@@ -5266,8 +5246,7 @@ Parser::statement()
         } else {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_TOUGH_BREAK);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_TOUGH_BREAK);
                     return NULL;
                 }
                 if (STMT_IS_LOOP(stmt) || stmt->type == STMT_SWITCH)
@@ -5289,15 +5268,13 @@ Parser::statement()
         if (label) {
             for (stmt2 = NULL; ; stmt = stmt->down) {
                 if (!stmt) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                                JSMSG_LABEL_NOT_FOUND);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_LABEL_NOT_FOUND);
                     return NULL;
                 }
                 if (stmt->type == STMT_LABEL) {
                     if (stmt->label == label) {
                         if (!stmt2 || !STMT_IS_LOOP(stmt2)) {
-                            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                                     JSMSG_BAD_CONTINUE);
+                            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_CONTINUE);
                             return NULL;
                         }
                         break;
@@ -5309,8 +5286,7 @@ Parser::statement()
         } else {
             for (; ; stmt = stmt->down) {
                 if (!stmt) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_BAD_CONTINUE);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_CONTINUE);
                     return NULL;
                 }
                 if (STMT_IS_LOOP(stmt))
@@ -5331,8 +5307,7 @@ Parser::statement()
          * https://bugzilla.mozilla.org/show_bug.cgi?id=514576#c1.
          */
         if (tc->flags & TCF_STRICT_MODE_CODE) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_STRICT_CODE_WITH);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_STRICT_CODE_WITH);
             return NULL;
         }
 
@@ -5398,8 +5373,7 @@ Parser::statement()
         stmt = tc->topStmt;
         if (stmt &&
             (!STMT_MAYBE_SCOPE(stmt) || (stmt->flags & SIF_FOR_BLOCK))) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_LET_DECL_NOT_IN_BLOCK);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_LET_DECL_NOT_IN_BLOCK);
             return NULL;
         }
 
@@ -5548,8 +5522,7 @@ Parser::statement()
             tokenStream.currentToken().t_atom != context->runtime->atomState.namespaceAtom ||
             !tokenStream.matchToken(TOK_ASSIGN) ||
             tokenStream.currentToken().t_op != JSOP_NOP) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_BAD_DEFAULT_XML_NAMESPACE);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_DEFAULT_XML_NAMESPACE);
             return NULL;
         }
 
@@ -5578,15 +5551,13 @@ Parser::statement()
 
         if (tokenStream.peekToken() == TOK_COLON) {
             if (pn2->pn_type != TOK_NAME) {
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_BAD_LABEL);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_LABEL);
                 return NULL;
             }
             label = pn2->pn_atom;
             for (stmt = tc->topStmt; stmt; stmt = stmt->down) {
                 if (stmt->type == STMT_LABEL && stmt->label == label) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_DUPLICATE_LABEL);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_DUPLICATE_LABEL);
                     return NULL;
                 }
             }
@@ -5773,8 +5744,7 @@ Parser::variables(bool inLetHead)
 
         if (tt != TOK_NAME) {
             if (tt != TOK_ERROR) {
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_NO_VARIABLE_NAME);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NO_VARIABLE_NAME);
             }
             return NULL;
         }
@@ -5846,19 +5816,16 @@ Parser::variables(bool inLetHead)
     return pn;
 
 bad_var_init:
-    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                             JSMSG_BAD_VAR_INIT);
+    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_VAR_INIT);
     return NULL;
 }
 
 JSParseNode *
 Parser::expr()
 {
-    JSParseNode *pn, *pn2;
-
-    pn = assignExpr();
+    JSParseNode *pn = assignExpr();
     if (pn && tokenStream.matchToken(TOK_COMMA)) {
-        pn2 = ListNode::create(tc);
+        JSParseNode *pn2 = ListNode::create(tc);
         if (!pn2)
             return NULL;
         pn2->pn_pos.begin = pn->pn_pos.begin;
@@ -5868,9 +5835,7 @@ Parser::expr()
 #if JS_HAS_GENERATORS
             pn2 = pn->last();
             if (pn2->pn_type == TOK_YIELD && !pn2->pn_parens) {
-                ReportCompileErrorNumber(context, &tokenStream, pn2, JSREPORT_ERROR,
-                                         JSMSG_BAD_GENERATOR_SYNTAX,
-                                         js_yield_str);
+                reportErrorNumber(pn2, JSREPORT_ERROR, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
                 return NULL;
             }
 #endif
@@ -5887,10 +5852,6 @@ Parser::expr()
 JSParseNode *
 Parser::assignExpr()
 {
-    JSParseNode *pn, *rhs;
-    TokenKind tt;
-    JSOp op;
-
     JS_CHECK_RECURSION(context, return NULL);
 
 #if JS_HAS_GENERATORS
@@ -5898,17 +5859,17 @@ Parser::assignExpr()
         return returnOrYield(true);
 #endif
 
-    pn = condExpr();
+    JSParseNode *pn = condExpr();
     if (!pn)
         return NULL;
 
-    tt = tokenStream.getToken();
+    TokenKind tt = tokenStream.getToken();
     if (tt != TOK_ASSIGN) {
         tokenStream.ungetToken();
         return pn;
     }
 
-    op = tokenStream.currentToken().t_op;
+    JSOp op = tokenStream.currentToken().t_op;
     switch (pn->pn_type) {
       case TOK_NAME:
         if (!CheckStrictAssignment(context, tc, pn))
@@ -5925,15 +5886,16 @@ Parser::assignExpr()
 #if JS_HAS_DESTRUCTURING
       case TOK_RB:
       case TOK_RC:
+      {
         if (op != JSOP_NOP) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_BAD_DESTRUCT_ASS);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_DESTRUCT_ASS);
             return NULL;
         }
-        rhs = assignExpr();
+        JSParseNode *rhs = assignExpr();
         if (!rhs || !CheckDestructuring(context, NULL, pn, rhs, tc))
             return NULL;
         return JSParseNode::newBinaryOrAppend(TOK_ASSIGN, op, pn, rhs, tc);
+      }
 #endif
       case TOK_LP:
         if (!MakeSetCall(context, pn, tc, JSMSG_BAD_LEFTSIDE_OF_ASS))
@@ -5948,12 +5910,11 @@ Parser::assignExpr()
         /* FALL THROUGH */
 #endif
       default:
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_BAD_LEFTSIDE_OF_ASS);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_LEFTSIDE_OF_ASS);
         return NULL;
     }
 
-    rhs = assignExpr();
+    JSParseNode *rhs = assignExpr();
     if (rhs && PN_TYPE(pn) == TOK_NAME && pn->pn_used) {
         JSDefinition *dn = pn->pn_lexdef;
 
@@ -5976,12 +5937,9 @@ Parser::assignExpr()
 JSParseNode *
 Parser::condExpr()
 {
-    JSParseNode *pn, *pn1, *pn2, *pn3;
-    uintN oldflags;
-
-    pn = orExpr();
+    JSParseNode *pn = orExpr();
     if (pn && tokenStream.matchToken(TOK_HOOK)) {
-        pn1 = pn;
+        JSParseNode *pn1 = pn;
         pn = TernaryNode::create(tc);
         if (!pn)
             return NULL;
@@ -5991,15 +5949,15 @@ Parser::condExpr()
          * where it's unambiguous, even if we might be parsing the init of a
          * for statement.
          */
-        oldflags = tc->flags;
+        uintN oldflags = tc->flags;
         tc->flags &= ~TCF_IN_FOR_INIT;
-        pn2 = assignExpr();
+        JSParseNode *pn2 = assignExpr();
         tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
 
         if (!pn2)
             return NULL;
         MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
-        pn3 = assignExpr();
+        JSParseNode *pn3 = assignExpr();
         if (!pn3)
             return NULL;
         pn->pn_pos.begin = pn1->pn_pos.begin;
@@ -6014,9 +5972,7 @@ Parser::condExpr()
 JSParseNode *
 Parser::orExpr()
 {
-    JSParseNode *pn;
-
-    pn = andExpr();
+    JSParseNode *pn = andExpr();
     while (pn && tokenStream.matchToken(TOK_OR))
         pn = JSParseNode::newBinaryOrAppend(TOK_OR, JSOP_OR, pn, andExpr(), tc);
     return pn;
@@ -6025,9 +5981,7 @@ Parser::orExpr()
 JSParseNode *
 Parser::andExpr()
 {
-    JSParseNode *pn;
-
-    pn = bitOrExpr();
+    JSParseNode *pn = bitOrExpr();
     while (pn && tokenStream.matchToken(TOK_AND))
         pn = JSParseNode::newBinaryOrAppend(TOK_AND, JSOP_AND, pn, bitOrExpr(), tc);
     return pn;
@@ -6036,21 +5990,16 @@ Parser::andExpr()
 JSParseNode *
 Parser::bitOrExpr()
 {
-    JSParseNode *pn;
-
-    pn = bitXorExpr();
-    while (pn && tokenStream.matchToken(TOK_BITOR)) {
+    JSParseNode *pn = bitXorExpr();
+    while (pn && tokenStream.matchToken(TOK_BITOR))
         pn = JSParseNode::newBinaryOrAppend(TOK_BITOR, JSOP_BITOR, pn, bitXorExpr(), tc);
-    }
     return pn;
 }
 
 JSParseNode *
 Parser::bitXorExpr()
 {
-    JSParseNode *pn;
-
-    pn = bitAndExpr();
+    JSParseNode *pn = bitAndExpr();
     while (pn && tokenStream.matchToken(TOK_BITXOR)) {
         pn = JSParseNode::newBinaryOrAppend(TOK_BITXOR, JSOP_BITXOR, pn, bitAndExpr(), tc);
     }
@@ -6060,9 +6009,7 @@ Parser::bitXorExpr()
 JSParseNode *
 Parser::bitAndExpr()
 {
-    JSParseNode *pn;
-
-    pn = eqExpr();
+    JSParseNode *pn = eqExpr();
     while (pn && tokenStream.matchToken(TOK_BITAND))
         pn = JSParseNode::newBinaryOrAppend(TOK_BITAND, JSOP_BITAND, pn, eqExpr(), tc);
     return pn;
@@ -6071,12 +6018,9 @@ Parser::bitAndExpr()
 JSParseNode *
 Parser::eqExpr()
 {
-    JSParseNode *pn;
-    JSOp op;
-
-    pn = relExpr();
+    JSParseNode *pn = relExpr();
     while (pn && tokenStream.matchToken(TOK_EQOP)) {
-        op = tokenStream.currentToken().t_op;
+        JSOp op = tokenStream.currentToken().t_op;
         pn = JSParseNode::newBinaryOrAppend(TOK_EQOP, op, pn, relExpr(), tc);
     }
     return pn;
@@ -6085,9 +6029,6 @@ Parser::eqExpr()
 JSParseNode *
 Parser::relExpr()
 {
-    JSParseNode *pn;
-    TokenKind tt;
-    JSOp op;
     uintN inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
 
     /*
@@ -6096,7 +6037,7 @@ Parser::relExpr()
      */
     tc->flags &= ~TCF_IN_FOR_INIT;
 
-    pn = shiftExpr();
+    JSParseNode *pn = shiftExpr();
     while (pn &&
            (tokenStream.matchToken(TOK_RELOP) ||
             /*
@@ -6105,8 +6046,8 @@ Parser::relExpr()
              */
             (inForInitFlag == 0 && tokenStream.matchToken(TOK_IN)) ||
             tokenStream.matchToken(TOK_INSTANCEOF))) {
-        tt = tokenStream.currentToken().type;
-        op = tokenStream.currentToken().t_op;
+        TokenKind tt = tokenStream.currentToken().type;
+        JSOp op = tokenStream.currentToken().t_op;
         pn = JSParseNode::newBinaryOrAppend(tt, op, pn, shiftExpr(), tc);
     }
     /* Restore previous state of inForInit flag. */
@@ -6118,12 +6059,9 @@ Parser::relExpr()
 JSParseNode *
 Parser::shiftExpr()
 {
-    JSParseNode *pn;
-    JSOp op;
-
-    pn = addExpr();
+    JSParseNode *pn = addExpr();
     while (pn && tokenStream.matchToken(TOK_SHOP)) {
-        op = tokenStream.currentToken().t_op;
+        JSOp op = tokenStream.currentToken().t_op;
         pn = JSParseNode::newBinaryOrAppend(TOK_SHOP, op, pn, addExpr(), tc);
     }
     return pn;
@@ -6132,16 +6070,12 @@ Parser::shiftExpr()
 JSParseNode *
 Parser::addExpr()
 {
-    JSParseNode *pn;
-    TokenKind tt;
-    JSOp op;
-
-    pn = mulExpr();
+    JSParseNode *pn = mulExpr();
     while (pn &&
            (tokenStream.matchToken(TOK_PLUS) ||
             tokenStream.matchToken(TOK_MINUS))) {
-        tt = tokenStream.currentToken().type;
-        op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
+        TokenKind tt = tokenStream.currentToken().type;
+        JSOp op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
         pn = JSParseNode::newBinaryOrAppend(tt, op, pn, mulExpr(), tc);
     }
     return pn;
@@ -6150,16 +6084,10 @@ Parser::addExpr()
 JSParseNode *
 Parser::mulExpr()
 {
-    JSParseNode *pn;
-    TokenKind tt;
-    JSOp op;
-
-    pn = unaryExpr();
-    while (pn &&
-           (tokenStream.matchToken(TOK_STAR) ||
-            tokenStream.matchToken(TOK_DIVOP))) {
-        tt = tokenStream.currentToken().type;
-        op = tokenStream.currentToken().t_op;
+    JSParseNode *pn = unaryExpr();
+    while (pn && (tokenStream.matchToken(TOK_STAR) || tokenStream.matchToken(TOK_DIVOP))) {
+        TokenKind tt = tokenStream.currentToken().type;
+        JSOp op = tokenStream.currentToken().t_op;
         pn = JSParseNode::newBinaryOrAppend(tt, op, pn, unaryExpr(), tc);
     }
     return pn;
@@ -6677,8 +6605,7 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
             break;
 
           default:
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_NO_VARIABLE_NAME);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NO_VARIABLE_NAME);
 
           case TOK_ERROR:
             return NULL;
@@ -6700,8 +6627,7 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
             if (JSVERSION_NUMBER(context) == JSVERSION_1_7) {
                 /* Destructuring requires [key, value] enumeration in JS1.7. */
                 if (pn3->pn_type != TOK_RB || pn3->pn_count != 2) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_BAD_FOR_LEFTSIDE);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_FOR_LEFTSIDE);
                     return NULL;
                 }
 
@@ -6869,9 +6795,7 @@ Parser::argumentList(JSParseNode *listNode)
         if (argNode->pn_type == TOK_YIELD &&
             !argNode->pn_parens &&
             tokenStream.peekToken() == TOK_COMMA) {
-            ReportCompileErrorNumber(context, &tokenStream, argNode, JSREPORT_ERROR,
-                                     JSMSG_BAD_GENERATOR_SYNTAX,
-                                     js_yield_str);
+            reportErrorNumber(argNode, JSREPORT_ERROR, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
             return JS_FALSE;
         }
 #endif
@@ -6885,9 +6809,8 @@ Parser::argumentList(JSParseNode *listNode)
                 return JS_FALSE;
             if (listNode->pn_count > 1 ||
                 tokenStream.peekToken() == TOK_COMMA) {
-                ReportCompileErrorNumber(context, &tokenStream, argNode, JSREPORT_ERROR,
-                                         JSMSG_BAD_GENERATOR_SYNTAX,
-                                         js_generator_str);
+                reportErrorNumber(argNode, JSREPORT_ERROR, JSMSG_BAD_GENERATOR_SYNTAX,
+                                  js_generator_str);
                 return JS_FALSE;
             }
         }
@@ -6896,8 +6819,7 @@ Parser::argumentList(JSParseNode *listNode)
     } while (tokenStream.matchToken(TOK_COMMA));
 
     if (tokenStream.getToken() != TOK_RP) {
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_PAREN_AFTER_ARGS);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_PAREN_AFTER_ARGS);
         return JS_FALSE;
     }
     return JS_TRUE;
@@ -6996,8 +6918,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                     pn2->pn_type = TOK_LB;
                     pn2->pn_op = JSOP_GETELEM;
                 } else {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_NAME_AFTER_DOT);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
                     return NULL;
                 }
                 pn2->pn_arity = PN_BINARY;
@@ -7027,8 +6948,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 pn3->pn_arity = PN_NULLARY;
                 pn3->pn_op = JSOP_QNAMEPART;
             } else if (!TokenKindIsXML(tt)) {
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_NAME_AFTER_DOT);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_NAME_AFTER_DOT);
                 return NULL;
             }
             pn2->pn_op = JSOP_DESCENDANTS;
@@ -7255,8 +7175,7 @@ Parser::qualifiedSuffix(JSParseNode *pn)
     }
 
     if (tt != TOK_LB) {
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_SYNTAX_ERROR);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
         return NULL;
     }
     pn3 = endBracketedExpr();
@@ -7305,8 +7224,7 @@ Parser::attributeIdentifier()
     } else if (tt == TOK_LB) {
         pn2 = endBracketedExpr();
     } else {
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_SYNTAX_ERROR);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
         return NULL;
     }
     if (!pn2)
@@ -7492,8 +7410,7 @@ Parser::xmlTagContent(TokenKind tagtype, JSAtom **namep)
             pn2 = xmlExpr(JS_TRUE);
             pn->pn_xflags |= PNX_CANTFOLD;
         } else {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_BAD_XML_ATTR_VALUE);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_XML_ATTR_VALUE);
             return NULL;
         }
         if (!pn2)
@@ -7509,8 +7426,7 @@ Parser::xmlTagContent(TokenKind tagtype, JSAtom **namep)
     JS_BEGIN_MACRO                                                                          \
         if ((tt) <= TOK_EOF) {                                                              \
             if ((tt) == TOK_EOF) {                                                          \
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,       \
-                                         JSMSG_END_OF_XML_SOURCE);                          \
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_END_OF_XML_SOURCE);           \
             }                                                                               \
             return result;                                                                  \
         }                                                                                   \
@@ -7620,8 +7536,7 @@ Parser::xmlElementOrList(JSBool allowList)
         } else {
             /* We had better have a tag-close (>) at this point. */
             if (tt != TOK_XMLTAGC) {
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_BAD_XML_TAG_SYNTAX);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_XML_TAG_SYNTAX);
                 return NULL;
             }
             pn2->pn_pos.end = tokenStream.currentToken().pos.end;
@@ -7652,8 +7567,7 @@ Parser::xmlElementOrList(JSBool allowList)
             tt = tokenStream.getToken();
             XML_CHECK_FOR_ERROR_AND_EOF(tt, NULL);
             if (tt != TOK_XMLNAME && tt != TOK_LC) {
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_BAD_XML_TAG_SYNTAX);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_XML_TAG_SYNTAX);
                 return NULL;
             }
 
@@ -7663,16 +7577,15 @@ Parser::xmlElementOrList(JSBool allowList)
                 return NULL;
             if (pn2->pn_type == TOK_XMLETAGO) {
                 /* Oops, end tag has attributes! */
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_BAD_XML_TAG_SYNTAX);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_XML_TAG_SYNTAX);
                 return NULL;
             }
             if (endAtom && startAtom && endAtom != startAtom) {
                 JSString *str = ATOM_TO_STRING(startAtom);
 
                 /* End vs. start tag name mismatch: point to the tag name. */
-                ReportCompileErrorNumber(context, &tokenStream, pn2, JSREPORT_UC | JSREPORT_ERROR,
-                                         JSMSG_XML_TAG_NAME_MISMATCH, str->chars());
+                reportErrorNumber(pn2, JSREPORT_UC | JSREPORT_ERROR, JSMSG_XML_TAG_NAME_MISMATCH,
+                                  str->chars());
                 return NULL;
             }
 
@@ -7706,8 +7619,7 @@ Parser::xmlElementOrList(JSBool allowList)
 
         MUST_MATCH_TOKEN(TOK_XMLTAGC, JSMSG_BAD_XML_LIST_SYNTAX);
     } else {
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_BAD_XML_NAME_SYNTAX);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_XML_NAME_SYNTAX);
         return NULL;
     }
     tokenStream.setXMLTagMode(false);
@@ -7751,8 +7663,7 @@ Parser::parseXMLText(JSObject *chain, bool allowList)
 
     JSParseNode *pn;
     if (tt != TOK_XMLSTAGO) {
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_BAD_XML_MARKUP);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_XML_MARKUP);
         pn = NULL;
     } else {
         pn = xmlElementOrListRoot(allowList);
@@ -7845,8 +7756,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         if (!matched) {
             for (index = 0; ; index++) {
                 if (index == JS_ARGS_LENGTH_MAX) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_ARRAY_INIT_TOO_BIG);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_ARRAY_INIT_TOO_BIG);
                     return NULL;
                 }
 
@@ -8039,8 +7949,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
               case TOK_RC:
                 goto end_obj_init;
               default:
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_BAD_PROP_ID);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_PROP_ID);
                 return NULL;
             }
 
@@ -8052,8 +7961,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
 #if JS_HAS_DESTRUCTURING_SHORTHAND
                 if (tt != TOK_COMMA && tt != TOK_RC) {
 #endif
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_COLON_AFTER_ID);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_COLON_AFTER_ID);
                     return NULL;
 #if JS_HAS_DESTRUCTURING_SHORTHAND
                 }
@@ -8132,8 +8040,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             if (tt == TOK_RC)
                 goto end_obj_init;
             if (tt != TOK_COMMA) {
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_CURLY_AFTER_LIST);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_CURLY_AFTER_LIST);
                 return NULL;
             }
             afterComma = JS_TRUE;
@@ -8165,8 +8072,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             tt == TOK_XMLSTAGO /* XXXbe could be sharp? */ ||
 #endif
             tt == TOK_STRING || tt == TOK_NUMBER || tt == TOK_PRIMARY) {
-            ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                     JSMSG_BAD_SHARP_VAR_DEF);
+            reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
             return NULL;
         }
         pn->pn_kid = primaryExpr(tt, JS_FALSE);
@@ -8364,8 +8270,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
                     pn->pn_arity = PN_NULLARY;
                     pn->pn_type = TOK_FUNCTION;
                 } else if (tt != TOK_EOF) {
-                    ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                             JSMSG_KEYWORD_NOT_NS);
+                    reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_KEYWORD_NOT_NS);
                     return NULL;
                 }
             }
@@ -8423,8 +8328,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
         return NULL;
 
       default:
-        ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                 JSMSG_SYNTAX_ERROR);
+        reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_SYNTAX_ERROR);
         return NULL;
     }
     return pn;
@@ -8448,13 +8352,12 @@ Parser::parenExpr(JSParseNode *pn1, JSBool *genexp)
 #if JS_HAS_GENERATOR_EXPRS
     if (tokenStream.matchToken(TOK_FOR)) {
         if (pn->pn_type == TOK_YIELD && !pn->pn_parens) {
-            ReportCompileErrorNumber(context, &tokenStream, pn, JSREPORT_ERROR,
-                                     JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
+            reportErrorNumber(pn, JSREPORT_ERROR, JSMSG_BAD_GENERATOR_SYNTAX, js_yield_str);
             return NULL;
         }
         if (pn->pn_type == TOK_COMMA && !pn->pn_parens) {
-            ReportCompileErrorNumber(context, &tokenStream, pn->last(), JSREPORT_ERROR,
-                                     JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
+            reportErrorNumber(pn->last(), JSREPORT_ERROR, JSMSG_BAD_GENERATOR_SYNTAX,
+                              js_generator_str);
             return NULL;
         }
         if (!pn1) {
@@ -8468,8 +8371,8 @@ Parser::parenExpr(JSParseNode *pn1, JSBool *genexp)
         pn->pn_pos.begin = begin;
         if (genexp) {
             if (tokenStream.getToken() != TOK_RP) {
-                ReportCompileErrorNumber(context, &tokenStream, NULL, JSREPORT_ERROR,
-                                         JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
+                reportErrorNumber(NULL, JSREPORT_ERROR, JSMSG_BAD_GENERATOR_SYNTAX,
+                                  js_generator_str);
                 return NULL;
             }
             pn->pn_pos.end = tokenStream.currentToken().pos.end;
