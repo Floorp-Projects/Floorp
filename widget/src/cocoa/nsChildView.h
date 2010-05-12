@@ -42,7 +42,7 @@
 // formal protocols
 #include "mozView.h"
 #ifdef ACCESSIBILITY
-#include "nsAccessible.h"
+#include "nsIAccessible.h"
 #include "mozAccessibleProtocol.h"
 #endif
 
@@ -366,7 +366,7 @@ public:
   virtual PRBool    DispatchWindowEvent(nsGUIEvent& event);
   
 #ifdef ACCESSIBILITY
-  already_AddRefed<nsAccessible> GetDocumentAccessible();
+  void              GetDocumentAccessible(nsIAccessible** aAccessible);
 #endif
 
   virtual gfxASurface* GetThebesSurface();
