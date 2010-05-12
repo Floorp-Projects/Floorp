@@ -124,6 +124,61 @@ LayerManagerOGL::Initialize()
     return false;
   }
 
+  /**
+   * We'll test the ability here to bind NPOT textures to a framebuffer, if
+   * this fails we'll try EXT_texture_rectangle.
+   */
+  mGLContext->fGenFramebuffers(1, &mFrameBuffer);
+
+  GLenum textureTargets[] = { LOCAL_GL_TEXTURE_2D,
+                              LOCAL_GL_TEXTURE_RECTANGLE_EXT };
+  mFBOTextureTarget = 0;
+
+  for (int i = 0; i < NS_ARRAY_LENGTH(textureTargets); i++) {
+    mGLContext->fGenTextures(1, &mBackBuffer);
+    mGLContext->fBindTexture(textureTargets[i], mBackBuffer);
+    mGLContext->fTexParameteri(textureTargets[i],
+                               LOCAL_GL_TEXTURE_MIN_FILTER,
+                               LOCAL_GL_NEAREST);
+    mGLContext->fTexParameteri(textureTargets[i],
+                               LOCAL_GL_TEXTURE_MAG_FILTER,
+                               LOCAL_GL_NEAREST);
+    mGLContext->fTexImage2D(textureTargets[i],
+                            0,
+                            LOCAL_GL_RGBA,
+                            200,
+                            100,
+                            0,
+                            LOCAL_GL_RGBA,
+                            LOCAL_GL_UNSIGNED_BYTE,
+                            NULL);
+
+    mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mFrameBuffer);
+    mGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                      LOCAL_GL_COLOR_ATTACHMENT0,
+                                      textureTargets[i],
+                                      mBackBuffer,
+                                      0);
+
+    if (mGLContext->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
+        LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+          mFBOTextureTarget = textureTargets[i];
+          break;
+    }
+
+    mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
+    mGLContext->fBindTexture(textureTargets[i], 0);
+    /**
+     * We need to delete this texture since we can't bind a texture multiple
+     * time to different textures.
+     */
+    mGLContext->fDeleteTextures(1, &mBackBuffer);
+  }
+  if (mFBOTextureTarget == 0) {
+    /* Unable to find a texture target that works with FBOs and NPOT textures */
+    return false;
+  }
+
   mRGBLayerProgram = new RGBLayerProgram();
   if (!mRGBLayerProgram->Initialize(mVertexShader, mRGBShader, mGLContext)) {
     return false;
@@ -305,11 +360,14 @@ LayerManagerOGL::Render()
      */
     mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
     mGLContext->fUseProgram(0);
+    if (mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_EXT) {
+      mGLContext->fEnable(LOCAL_GL_TEXTURE_RECTANGLE_EXT);
+    }
     mGLContext->fDisableVertexAttribArray(VERTEX_ATTRIB_LOCATION);
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
     mGLContext->fEnableClientState(LOCAL_GL_VERTEX_ARRAY);
     mGLContext->fEnableClientState(LOCAL_GL_TEXTURE_COORD_ARRAY);
-    mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mBackBuffer);
+    mGLContext->fBindTexture(mFBOTextureTarget, mBackBuffer);
 
     const nsIntRect *r;
     for (nsIntRegionRectIterator iter(mClippingRegion);
@@ -328,7 +386,20 @@ LayerManagerOGL::Render()
                            -(bottom * 2.0f - 1.0f),
                            right * 2.0f - 1.0f,
                            -(bottom * 2.0f - 1.0f) };
-      float coords[] = { left, top, right, top, left, bottom, right, bottom };
+
+      float coords[8];
+      if (mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_EXT) {
+        /* These are in non-normalized texture coords */
+        coords[0] = (GLfloat)r->x; coords[1] = (GLfloat)r->y;
+        coords[2] = (GLfloat)r->XMost(); coords[3] = (GLfloat)r->y;
+        coords[4] = (GLfloat)r->x; coords[5] = (GLfloat)r->YMost();
+        coords[6] = (GLfloat)r->XMost(); coords[7] = (GLfloat)r->YMost();
+      } else {
+        coords[0] = left; coords[1] = top;
+        coords[2] = right; coords[3] = top;
+        coords[4] = left; coords[5] = bottom;
+        coords[6] = right; coords[7] = bottom;
+      }
 
       mGLContext->fVertexPointer(2, LOCAL_GL_FLOAT, 0, vertices);
       mGLContext->fTexCoordPointer(2, LOCAL_GL_FLOAT, 0, coords);
@@ -337,6 +408,9 @@ LayerManagerOGL::Render()
     mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mVBO);
     mGLContext->fEnableVertexAttribArray(VERTEX_ATTRIB_LOCATION);
     mGLContext->fDisableClientState(LOCAL_GL_TEXTURE_COORD_ARRAY);
+    if (mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_EXT) {
+      mGLContext->fDisable(LOCAL_GL_TEXTURE_RECTANGLE_EXT);
+    }
   }
 
   mGLContext->fFinish();
@@ -382,18 +456,14 @@ LayerManagerOGL::SetupBackBuffer()
     return PR_TRUE;
   }
 
-  if (!mBackBuffer) {
-    mGLContext->fGenTextures(1, &mBackBuffer);
-  }
-
   /**
    * Setup the texture used as the backbuffer.
    */
-  mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mBackBuffer);
+  mGLContext->fBindTexture(mFBOTextureTarget, mBackBuffer);
   mGLContext->fTexEnvf(LOCAL_GL_TEXTURE_ENV, LOCAL_GL_TEXTURE_ENV_MODE, LOCAL_GL_MODULATE);
-  mGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
-  mGLContext->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
-  mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+  mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
+  mGLContext->fTexParameteri(mFBOTextureTarget, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
+  mGLContext->fTexImage2D(mFBOTextureTarget,
                         0,
                         LOCAL_GL_RGBA,
                         width,
@@ -403,18 +473,11 @@ LayerManagerOGL::SetupBackBuffer()
                         LOCAL_GL_UNSIGNED_BYTE,
                         NULL);
 
-  /**
-   * Create the framebuffer and bind it to make our content render into our
-   * framebuffer.
-   */
-  if (!mFrameBuffer) {
-    mGLContext->fGenFramebuffers(1, &mFrameBuffer);
-  }
-
+  /* Bind our framebuffer to make our content render into our backbuffer. */
   mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mFrameBuffer);
   mGLContext->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
                                    LOCAL_GL_COLOR_ATTACHMENT0,
-                                   LOCAL_GL_TEXTURE_2D,
+                                   mFBOTextureTarget,
                                    mBackBuffer,
                                    0);
 
