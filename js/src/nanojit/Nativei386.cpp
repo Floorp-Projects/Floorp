@@ -1563,10 +1563,26 @@ namespace nanojit
             // disturb the CCs!
             Register r = findRegFor(lhs, GpRegs);
             if (c == 0 && cond->isop(LIR_eqi)) {
-                NanoAssert(N_LOOKAHEAD >= 3);
-                if ((lhs->isop(LIR_andi) || lhs->isop(LIR_ori)) &&
-                    cond == lookahead[1] && lhs == lookahead[2])
-                {
+                bool canSkipTest = lhs->isop(LIR_andi) || lhs->isop(LIR_ori);
+                if (canSkipTest) {
+                    // Setup a short-lived reader to do lookahead;  does no
+                    // optimisations but that should be good enough for this
+                    // simple case, something like this:
+                    //
+                    //   a = andi x, y      # lhs
+                    //   eq1 = eq a, 0      # cond
+                    //   xt eq1             # currIns
+                    //
+                    // Note that we don't have to worry about lookahead
+                    // hitting the start of the buffer, because read() will
+                    // just return LIR_start repeatedly in that case.
+                    //
+                    LirReader lookahead(currIns);
+                    canSkipTest = currIns == lookahead.read() &&
+                                  cond == lookahead.read() &&
+                                  lhs == lookahead.read();
+                }
+                if (canSkipTest) {
                     // Do nothing.  At run-time, 'lhs' will have just computed
                     // by an i386 instruction that sets ZF for us ('and' or
                     // 'or'), so we don't have to do it ourselves.
