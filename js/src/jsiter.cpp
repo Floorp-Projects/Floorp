@@ -173,7 +173,7 @@ Enumerate(JSContext *cx, JSObject *obj, jsid id, bool enumerable, uintN flags,
 
             if (!obj->getProperty(cx, id, vp))
                 return false;
-            if (flags & JSITER_KEYVALUE && !NewKeyValuePair(cx, id, *vp, vp))
+            if ((flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *vp, vp))
                 return false;
         }
     }
