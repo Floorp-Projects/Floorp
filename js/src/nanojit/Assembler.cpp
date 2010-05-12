@@ -1428,7 +1428,7 @@ namespace nanojit
                 case LIR_immd:
                     countlir_imm();
                     if (ins->isExtant()) {
-                        asm_immf(ins);
+                        asm_immd(ins);
                     }
                     break;
 
@@ -1588,7 +1588,7 @@ namespace nanojit
                     countlir_fpu();
                     ins->oprnd1()->setResultLive();
                     if (ins->isExtant()) {
-                        asm_i2f(ins);
+                        asm_i2d(ins);
                     }
                     break;
 
@@ -1596,7 +1596,7 @@ namespace nanojit
                     countlir_fpu();
                     ins->oprnd1()->setResultLive();
                     if (ins->isExtant()) {
-                        asm_u2f(ins);
+                        asm_ui2d(ins);
                     }
                     break;
 
@@ -1604,7 +1604,7 @@ namespace nanojit
                     countlir_fpu();
                     ins->oprnd1()->setResultLive();
                     if (ins->isExtant()) {
-                        asm_f2i(ins);
+                        asm_d2i(ins);
                     }
                     break;
 
@@ -1804,7 +1804,7 @@ namespace nanojit
                     ins->oprnd1()->setResultLive();
                     ins->oprnd2()->setResultLive();
                     if (ins->isExtant()) {
-                        asm_fcond(ins);
+                        asm_condd(ins);
                     }
                     break;
 

@@ -362,8 +362,8 @@ namespace nanojit
     void Assembler::asm_store_imm64(LIns *value, int dr, Register rbase)
     {
         NanoAssert(value->isImmD());
-        int32_t msw = value->immQorDhi();
-        int32_t lsw = value->immQorDlo();
+        int32_t msw = value->immDhi();
+        int32_t lsw = value->immDlo();
 
         // li $at,lsw                   # iff lsw != 0
         // sw $at,off+LSWOFF($rbase)    # may use $0 instead of $at
@@ -537,7 +537,7 @@ namespace nanojit
             value, lirNames[value->opcode()], dr, base, lirNames[base->opcode()]);
     }
 
-    void Assembler::asm_u2f(LIns *ins)
+    void Assembler::asm_ui2d(LIns *ins)
     {
         Register fr = deprecated_prepResultReg(ins, FpRegs);
         Register v = findRegFor(ins->oprnd1(), GpRegs);
@@ -565,10 +565,10 @@ namespace nanojit
         BGEZ(v,here);
         MTC1(v,ft);
 
-        TAG("asm_u2f(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TAG("asm_ui2d(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
-    void Assembler::asm_f2i(LInsp ins)
+    void Assembler::asm_d2i(LInsp ins)
     {
         NanoAssert(cpu_has_fpu);
 
@@ -578,7 +578,7 @@ namespace nanojit
         // mfc1 $rr,$sr
         MFC1(rr,sr);
         TRUNC_W_D(sr,sr);
-        TAG("asm_u2f(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TAG("asm_d2i(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
     void Assembler::asm_fop(LIns *ins)
@@ -621,7 +621,7 @@ namespace nanojit
         TAG("asm_fneg(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
-    void Assembler::asm_immf(LIns *ins)
+    void Assembler::asm_immd(LIns *ins)
     {
         int d = deprecated_disp(ins);
         Register rr = ins->deprecated_getReg();
@@ -631,13 +631,13 @@ namespace nanojit
         if (cpu_has_fpu && deprecated_isKnownReg(rr)) {
             if (d)
                 asm_spill(rr, d, false, true);
-            asm_li_d(rr, ins->immQorDhi(), ins->immQorDlo());
+            asm_li_d(rr, ins->immDhi(), ins->immDlo());
         }
         else {
             NanoAssert(d);
             asm_store_imm64(ins, d, FP);
         }
-        TAG("asm_immf(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TAG("asm_immd(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
 #ifdef NANOJIT_64BIT
@@ -792,7 +792,7 @@ namespace nanojit
         TAG("asm_cmov(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
-    void Assembler::asm_fcond(LIns *ins)
+    void Assembler::asm_condd(LIns *ins)
     {
         NanoAssert(cpu_has_fpu);
         if (cpu_has_fpu) {
@@ -826,10 +826,10 @@ namespace nanojit
             }
             asm_cmp(op, a, b, r);
         }
-        TAG("asm_fcond(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TAG("asm_condd(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
-    void Assembler::asm_i2f(LIns *ins)
+    void Assembler::asm_i2d(LIns *ins)
     {
         NanoAssert(cpu_has_fpu);
         if (cpu_has_fpu) {
@@ -841,7 +841,7 @@ namespace nanojit
             CVT_D_W(fr,fr);
             MTC1(v,fr);
         }
-        TAG("asm_i2f(ins=%p{%s})", ins, lirNames[ins->opcode()]);
+        TAG("asm_i2d(ins=%p{%s})", ins, lirNames[ins->opcode()]);
     }
 
     void Assembler::asm_ret(LIns *ins)

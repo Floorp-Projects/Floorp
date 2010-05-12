@@ -380,7 +380,7 @@ lexical_cast(in arg)
 }
 
 int32_t
-imm(const string &s)
+immI(const string &s)
 {
     stringstream tmp(s);
     int32_t ret;
@@ -392,7 +392,7 @@ imm(const string &s)
 }
 
 uint64_t
-lquad(const string &s)
+immQ(const string &s)
 {
     stringstream tmp(s);
     uint64_t ret;
@@ -404,7 +404,7 @@ lquad(const string &s)
 }
 
 double
-immf(const string &s)
+immD(const string &s)
 {
     return lexical_cast<double>(s);
 }
@@ -626,7 +626,7 @@ FragmentAssembler::assemble_load()
         mTokens[1].find_first_of("0123456789") == 0) {
         return mLir->insLoad(mOpcode,
                              ref(mTokens[0]),
-                             imm(mTokens[1]), ACC_LOAD_ANY);
+                             immI(mTokens[1]), ACC_LOAD_ANY);
     }
     bad("immediate offset required for load");
     return NULL;  // not reached
@@ -704,7 +704,7 @@ FragmentAssembler::assemble_call(const string &op)
 
         // Select return type from opcode.
         ty = 0;
-        if      (mOpcode == LIR_calli) ty = ARGTYPE_LO;
+        if      (mOpcode == LIR_calli) ty = ARGTYPE_I;
         else if (mOpcode == LIR_calld) ty = ARGTYPE_D;
 #ifdef NANOJIT_64BIT
         else if (mOpcode == LIR_callq) ty = ARGTYPE_Q;
@@ -1024,19 +1024,19 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
 
           case LIR_immi:
             need(1);
-            ins = mLir->insImmI(imm(mTokens[0]));
+            ins = mLir->insImmI(immI(mTokens[0]));
             break;
 
 #ifdef NANOJIT_64BIT
           case LIR_immq:
             need(1);
-            ins = mLir->insImmQ(lquad(mTokens[0]));
+            ins = mLir->insImmQ(immQ(mTokens[0]));
             break;
 #endif
 
           case LIR_immd:
             need(1);
-            ins = mLir->insImmD(immf(mTokens[0]));
+            ins = mLir->insImmD(immD(mTokens[0]));
             break;
 
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED 
@@ -1050,7 +1050,7 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
             need(3);
             ins = mLir->insStore(mOpcode, ref(mTokens[0]),
                                   ref(mTokens[1]),
-                                  imm(mTokens[2]), ACC_STORE_ANY);
+                                  immI(mTokens[2]), ACC_STORE_ANY);
             break;
 
 #if NJ_EXPANDED_LOADSTORE_SUPPORTED 
@@ -1071,14 +1071,14 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
           // this.
           case LIR_paramp:
             need(2);
-            ins = mLir->insParam(imm(mTokens[0]),
-                                 imm(mTokens[1]));
+            ins = mLir->insParam(immI(mTokens[0]),
+                                 immI(mTokens[1]));
             break;
 
           // XXX: similar to iparam/qparam above.
           case LIR_allocp:
             need(1);
-            ins = mLir->insAlloc(imm(mTokens[0]));
+            ins = mLir->insAlloc(immI(mTokens[0]));
             break;
 
           case LIR_skip:
@@ -1326,7 +1326,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     vector<LIns*> Bs;       // boolean values, ie. 32-bit int values produced by tests
     vector<LIns*> Is;       // 32-bit int values
     vector<LIns*> Qs;       // 64-bit int values
-    vector<LIns*> Fs;       // 64-bit float values
+    vector<LIns*> Ds;       // 64-bit double values
     vector<LIns*> M4s;      // 4 byte allocs
     vector<LIns*> M8ps;     // 8+ byte allocs
 
@@ -1425,12 +1425,12 @@ FragmentAssembler::assembleRandomFragment(int nIns)
     D_I_ops.push_back(LIR_i2d);
     D_I_ops.push_back(LIR_ui2d);
 
-    vector<LOpcode> I_F_ops;
+    vector<LOpcode> I_D_ops;
 #if NJ_SOFTFLOAT_SUPPORTED
-    I_F_ops.push_back(LIR_dlo2i);
-    I_F_ops.push_back(LIR_dhi2i);
+    I_D_ops.push_back(LIR_dlo2i);
+    I_D_ops.push_back(LIR_dhi2i);
 #endif
-    I_F_ops.push_back(LIR_d2i);
+    I_D_ops.push_back(LIR_d2i);
 
     vector<LOpcode> D_II_ops;
 #if NJ_SOFTFLOAT_SUPPORTED
@@ -1603,7 +1603,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
                 break;
             }
             ins = mLir->insImmD(imm64f);
-            addOrReplace(Fs, ins);
+            addOrReplace(Ds, ins);
             n++;
             break;
         }
@@ -1619,9 +1619,9 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         // case LOP_Q_Q:  no instruction in this category
 
         case LOP_D_D:
-            if (!Fs.empty()) {
-                ins = mLir->ins1(rndPick(D_D_ops), rndPick(Fs));
-                addOrReplace(Fs, ins);
+            if (!Ds.empty()) {
+                ins = mLir->ins1(rndPick(D_D_ops), rndPick(Ds));
+                addOrReplace(Ds, ins);
                 n++;
             }
             break;
@@ -1689,9 +1689,9 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
 
         case LOP_D_DD:
-            if (!Fs.empty()) {
-                ins = mLir->ins2(rndPick(D_DD_ops), rndPick(Fs), rndPick(Fs));
-                addOrReplace(Fs, ins);
+            if (!Ds.empty()) {
+                ins = mLir->ins2(rndPick(D_DD_ops), rndPick(Ds), rndPick(Ds));
+                addOrReplace(Ds, ins);
                 n++;
             }
             break;
@@ -1733,12 +1733,12 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
 
         case LOP_B_DD:
-            if (!Fs.empty()) {
-                ins = mLir->ins2(rndPick(B_DD_ops), rndPick(Fs), rndPick(Fs));
+            if (!Ds.empty()) {
+                ins = mLir->ins2(rndPick(B_DD_ops), rndPick(Ds), rndPick(Ds));
                 // XXX: we don't push the result, because most (all?) of the
                 // backends currently can't handle cmovs/qcmovs that take
                 // float comparisons for the test (see bug 520944).  This means
-                // that all B_FF values are dead, unfortunately.
+                // that all B_DD values are dead, unfortunately.
                 //addOrReplace(Bs, ins);
                 n++;
             }
@@ -1757,7 +1757,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LOP_D_I:
             if (!Is.empty()) {
                 ins = mLir->ins1(rndPick(D_I_ops), rndPick(Is));
-                addOrReplace(Fs, ins);
+                addOrReplace(Ds, ins);
                 n++;
             }
             break;
@@ -1775,8 +1775,8 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LOP_I_D:
 // XXX: NativeX64 doesn't implement qhi yet (and it may not need to).
 #if !defined NANOJIT_X64
-            if (!Fs.empty()) {
-                ins = mLir->ins1(rndPick(I_F_ops), rndPick(Fs));
+            if (!Ds.empty()) {
+                ins = mLir->ins1(rndPick(I_D_ops), rndPick(Ds));
                 addOrReplace(Is, ins);
                 n++;
             }
@@ -1786,7 +1786,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
         case LOP_D_II:
             if (!Is.empty() && !D_II_ops.empty()) {
                 ins = mLir->ins2(rndPick(D_II_ops), rndPick(Is), rndPick(Is));
-                addOrReplace(Fs, ins);
+                addOrReplace(Ds, ins);
                 n++;
             }
             break;
@@ -1817,7 +1817,7 @@ FragmentAssembler::assembleRandomFragment(int nIns)
             if (!M8ps.empty()) {
                 LIns* base = rndPick(M8ps);
                 ins = mLir->insLoad(rndPick(D_loads), base, rndOffset64(base->size()), ACC_LOAD_ANY);
-                addOrReplace(Fs, ins);
+                addOrReplace(Ds, ins);
                 n++;
             }
             break;
@@ -1843,9 +1843,9 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
 
         case LST_D:
-            if (!M8ps.empty() && !Fs.empty()) {
+            if (!M8ps.empty() && !Ds.empty()) {
                 LIns* base = rndPick(M8ps);
-                mLir->insStore(rndPick(Fs), base, rndOffset64(base->size()), ACC_STORE_ANY);
+                mLir->insStore(rndPick(Ds), base, rndOffset64(base->size()), ACC_STORE_ANY);
                 n++;
             }
             break;
@@ -1891,29 +1891,29 @@ FragmentAssembler::assembleRandomFragment(int nIns)
 #endif
 
         case LCALL_D_D3:
-            if (!Fs.empty()) {
-                LIns* args[3] = { rndPick(Fs), rndPick(Fs), rndPick(Fs) };
+            if (!Ds.empty()) {
+                LIns* args[3] = { rndPick(Ds), rndPick(Ds), rndPick(Ds) };
                 ins = mLir->insCall(&ci_F_F3, args);
-                addOrReplace(Fs, ins);
+                addOrReplace(Ds, ins);
                 n++;
             }
             break;
 
         case LCALL_D_D8:
-            if (!Fs.empty()) {
-                LIns* args[8] = { rndPick(Fs), rndPick(Fs), rndPick(Fs), rndPick(Fs),
-                                  rndPick(Fs), rndPick(Fs), rndPick(Fs), rndPick(Fs) };
+            if (!Ds.empty()) {
+                LIns* args[8] = { rndPick(Ds), rndPick(Ds), rndPick(Ds), rndPick(Ds),
+                                  rndPick(Ds), rndPick(Ds), rndPick(Ds), rndPick(Ds) };
                 ins = mLir->insCall(&ci_F_F8, args);
-                addOrReplace(Fs, ins);
+                addOrReplace(Ds, ins);
                 n++;
             }
             break;
 
 #ifdef NANOJIT_64BIT
         case LCALL_V_IQD:
-            if (!Is.empty() && !Qs.empty() && !Fs.empty()) {
+            if (!Is.empty() && !Qs.empty() && !Ds.empty()) {
                 // Nb: args[] holds the args in reverse order... sigh.
-                LIns* args[3] = { rndPick(Fs), rndPick(Qs), rndPick(Is) };
+                LIns* args[3] = { rndPick(Ds), rndPick(Qs), rndPick(Is) };
                 ins = mLir->insCall(&ci_V_IQF, args);
                 n++;
             }

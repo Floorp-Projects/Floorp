@@ -665,8 +665,8 @@ Assembler::asm_arg_64(LInsp arg, Register& r, int& stkd)
         if (_config.arm_vfp) {
             FMRRD(ra, rb, fp_reg);
         } else {
-            asm_regarg(ARGTYPE_LO, arg->oprnd1(), ra);
-            asm_regarg(ARGTYPE_LO, arg->oprnd2(), rb);
+            asm_regarg(ARGTYPE_I, arg->oprnd1(), ra);
+            asm_regarg(ARGTYPE_I, arg->oprnd2(), rb);
         }
 
 #ifndef NJ_ARM_EABI
@@ -699,7 +699,7 @@ Assembler::asm_arg_64(LInsp arg, Register& r, int& stkd)
             // Without VFP, we can simply use asm_regarg and asm_stkarg to
             // encode the two 32-bit words as we don't need to load from a VFP
             // register.
-            asm_regarg(ARGTYPE_LO, arg->oprnd1(), ra);
+            asm_regarg(ARGTYPE_I, arg->oprnd1(), ra);
             asm_stkarg(arg->oprnd2(), 0);
             stkd += 4;
         }
@@ -914,7 +914,7 @@ Assembler::asm_call(LInsp ins)
         } else {
             BLX(LR);
         }
-        asm_regarg(ARGTYPE_LO, ins->arg(--argc), LR);
+        asm_regarg(ARGTYPE_I, ins->arg(--argc), LR);
     }
 
     // Encode the arguments, starting at R0 and with an empty argument stack.
@@ -1433,9 +1433,9 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
 
                     // XXX use another reg, get rid of dependency
                     STR(IP, rb, dr);
-                    asm_ld_imm(IP, value->immQorDlo(), false);
+                    asm_ld_imm(IP, value->immDlo(), false);
                     STR(IP, rb, dr+4);
-                    asm_ld_imm(IP, value->immQorDhi(), false);
+                    asm_ld_imm(IP, value->immDhi(), false);
 
                     return;
                 }
@@ -1463,7 +1463,7 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
                 // has the right value
                 if (value->isImmD()) {
                     underrunProtect(4*4);
-                    asm_immf_nochk(rv, value->immQorDlo(), value->immQorDhi());
+                    asm_immd_nochk(rv, value->immDlo(), value->immDhi());
                 }
             } else {
                 int da = findMemFor(value);
@@ -1482,9 +1482,9 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
 
                     // XXX use another reg, get rid of dependency
                     STR(IP, rb, dr);
-                    asm_ld_imm(IP, value->immQorDlo(), false);
+                    asm_ld_imm(IP, value->immDlo(), false);
                     STR(IP, rb, dr+4);
-                    asm_ld_imm(IP, value->immQorDhi(), false);
+                    asm_ld_imm(IP, value->immDhi(), false);
 
                     return;
                 }
@@ -1514,7 +1514,7 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
                 // has the right value
                 if (value->isImmD()) {
                     underrunProtect(4*4);
-                    asm_immf_nochk(rv, value->immQorDlo(), value->immQorDhi());
+                    asm_immd_nochk(rv, value->immDlo(), value->immDhi());
                 }
             } else {
                 NanoAssertMsg(0, "st32f not supported with non-VFP, fix me");
@@ -1531,7 +1531,7 @@ Assembler::asm_store64(LOpcode op, LInsp value, int dr, LInsp base)
 // Stick a float into register rr, where p points to the two
 // 32-bit parts of the quad, optinally also storing at FP+d
 void
-Assembler::asm_immf_nochk(Register rr, int32_t immQorDlo, int32_t immQorDhi)
+Assembler::asm_immd_nochk(Register rr, int32_t immDlo, int32_t immDhi)
 {
     // We're not going to use a slot, because it might be too far
     // away.  Instead, we're going to stick a branch in the stream to
@@ -1540,22 +1540,22 @@ Assembler::asm_immf_nochk(Register rr, int32_t immQorDlo, int32_t immQorDhi)
 
     // stream should look like:
     //    branch A
-    //    immQorDlo
-    //    immQorDhi
+    //    immDlo
+    //    immDhi
     // A: FLDD PC-16
 
     FLDD(rr, PC, -16);
 
-    *(--_nIns) = (NIns) immQorDhi;
-    *(--_nIns) = (NIns) immQorDlo;
+    *(--_nIns) = (NIns) immDhi;
+    *(--_nIns) = (NIns) immDlo;
 
     B_nochk(_nIns+2);
 }
 
 void
-Assembler::asm_immf(LInsp ins)
+Assembler::asm_immd(LInsp ins)
 {
-    //asm_output(">>> asm_immf");
+    //asm_output(">>> asm_immd");
 
     int d = deprecated_disp(ins);
     Register rr = ins->deprecated_getReg();
@@ -1567,7 +1567,7 @@ Assembler::asm_immf(LInsp ins)
             asm_spill(rr, d, false, true);
 
         underrunProtect(4*4);
-        asm_immf_nochk(rr, ins->immQorDlo(), ins->immQorDhi());
+        asm_immd_nochk(rr, ins->immDlo(), ins->immDhi());
     } else {
         NanoAssert(d);
         // asm_mmq might spill a reg, so don't call it;
@@ -1575,12 +1575,12 @@ Assembler::asm_immf(LInsp ins)
         //asm_mmq(FP, d, PC, -16);
 
         STR(IP, FP, d+4);
-        asm_ld_imm(IP, ins->immQorDhi());
+        asm_ld_imm(IP, ins->immDhi());
         STR(IP, FP, d);
-        asm_ld_imm(IP, ins->immQorDlo());
+        asm_ld_imm(IP, ins->immDlo());
     }
 
-    //asm_output("<<< asm_immf");
+    //asm_output("<<< asm_immd");
 }
 
 void
@@ -2107,7 +2107,7 @@ Assembler::B_cond_chk(ConditionCode _c, NIns* _t, bool _chk)
  */
 
 void
-Assembler::asm_i2f(LInsp ins)
+Assembler::asm_i2d(LInsp ins)
 {
     Register rr = deprecated_prepResultReg(ins, FpRegs);
     Register srcr = findRegFor(ins->oprnd1(), GpRegs);
@@ -2120,7 +2120,7 @@ Assembler::asm_i2f(LInsp ins)
 }
 
 void
-Assembler::asm_u2f(LInsp ins)
+Assembler::asm_ui2d(LInsp ins)
 {
     Register rr = deprecated_prepResultReg(ins, FpRegs);
     Register sr = findRegFor(ins->oprnd1(), GpRegs);
@@ -2132,7 +2132,7 @@ Assembler::asm_u2f(LInsp ins)
     FMSR(S14, sr);
 }
 
-void Assembler::asm_f2i(LInsp ins)
+void Assembler::asm_d2i(LInsp ins)
 {
     // where our result goes
     Register rr = deprecated_prepResultReg(ins, GpRegs);
@@ -2182,7 +2182,7 @@ Assembler::asm_fop(LInsp ins)
 }
 
 void
-Assembler::asm_fcmp(LInsp ins)
+Assembler::asm_cmpd(LInsp ins)
 {
     LInsp lhs = ins->oprnd1();
     LInsp rhs = ins->oprnd2();
@@ -2262,7 +2262,7 @@ Assembler::asm_branch(bool branchOnFalse, LInsp cond, NIns* targ)
     NIns *at = _nIns;
 
     if (_config.arm_vfp && fp_cond)
-        asm_fcmp(cond);
+        asm_cmpd(cond);
     else
         asm_cmp(cond);
 
@@ -2327,7 +2327,7 @@ Assembler::asm_cmpi(Register r, int32_t imm)
 }
 
 void
-Assembler::asm_fcond(LInsp ins)
+Assembler::asm_condd(LInsp ins)
 {
     // only want certain regs
     Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
@@ -2341,7 +2341,7 @@ Assembler::asm_fcond(LInsp ins)
         default: NanoAssert(0); break;
     }
 
-    asm_fcmp(ins);
+    asm_cmpd(ins);
 }
 
 void
