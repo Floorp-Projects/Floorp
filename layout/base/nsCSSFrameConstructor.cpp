@@ -6228,9 +6228,15 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   // Walk up the tree setting the NODE_DESCENDANTS_NEED_FRAMES bit as we go.
   nsIContent* content = aContainer;
+#ifdef DEBUG
+  // We have to jump through hoops so that we can make some reasonable asserts
+  // due to bug 135040. We detect if we find a bogus primary frame (I'm looking
+  // at you, areas), and relax our assertions for the remaining ancestors.
+  PRBool bogusPrimaryFrame = PR_FALSE;
+#endif
   while (content &&
          !content->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
-    NS_ASSERTION(content->GetPrimaryFrame() ||
+    NS_ASSERTION(content->GetPrimaryFrame() || bogusPrimaryFrame ||
       (content->GetFlattenedTreeParent() &&
        content->GetFlattenedTreeParent()->GetPrimaryFrame() &&
        content->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf()),
@@ -6238,13 +6244,20 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
       // children and may ignore anonymous children (eg framesets).
       "Ancestors of nodes with frames to be constructed lazily should have "
       "frames");
-    NS_ASSERTION(!content->HasFlag(NODE_NEEDS_FRAME) ||
-                 content->GetPrimaryFrame()->GetContent() != content,
+    NS_ASSERTION(!content->HasFlag(NODE_NEEDS_FRAME) || bogusPrimaryFrame ||
+                 (content->GetPrimaryFrame() &&
+                  content->GetPrimaryFrame()->GetContent() != content),
                  //XXX the content->GetPrimaryFrame()->GetContent() != content
                  // check is needed due to bug 135040. Remove it once that's
                  // fixed.
                  "Ancestors of nodes with frames to be constructed lazily "
                  "should not have NEEDS_FRAME bit set");
+#ifdef DEBUG
+    if (!bogusPrimaryFrame && content->GetPrimaryFrame() &&
+        content->GetPrimaryFrame()->GetContent() != content) {
+      bogusPrimaryFrame = PR_TRUE;
+    }
+#endif
     content->SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
     content = content->GetFlattenedTreeParent();
   }
