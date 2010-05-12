@@ -592,6 +592,7 @@
              customizable="true"
              mode="icons" lockmode="true"
              iconsize="small" defaulticonsize="small" lockiconsize="true"
+             aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
              defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
              collapsed="true">
