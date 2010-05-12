@@ -24,7 +24,8 @@ static int sPokeEvent;
 namespace base {
 
 MessagePumpForUI::MessagePumpForUI()
-  : qt_pump(*this)
+  : state_(NULL),
+    qt_pump(*this)
 {
 }
 
