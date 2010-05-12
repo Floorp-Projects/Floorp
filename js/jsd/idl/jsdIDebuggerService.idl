@@ -53,7 +53,7 @@
 [ptr] native JSDValue(JSDValue);
 [ptr] native JSRuntime(JSRuntime);
 [ptr] native JSContext(JSContext);
-native JSVal(jsval);
+native jsval(jsval);
 
 /* interfaces we declare in this file */
 interface jsdIDebuggerService;
@@ -364,7 +364,7 @@ interface jsdIDebuggerService : nsISupports
     /**
      * The same as above but to be called from C++.
      */
-    [noscript] jsdIValue wrapJSValue (in JSVal value);
+    [noscript] jsdIValue wrapJSValue (in jsval value);
     
     /* XXX these two routines are candidates for refactoring.  The only problem
      * is that it is not clear where and how they should land.
