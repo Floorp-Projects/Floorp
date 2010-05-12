@@ -457,12 +457,13 @@ InitJITLogController()
             "  treevis      spew that tracevis/tree.py can parse\n"
             "  ------ options for Nanojit ------\n"
             "  fragprofile  count entries and exits for each fragment\n"
-            "  liveness     show LIR liveness at start of rdr pipeline\n"
+            "  liveness     show LIR liveness at start of reader pipeline\n"
             "  readlir      show LIR as it enters the reader pipeline\n"
             "  aftersf      show LIR after StackFilter\n"
-            "  assembly     show final aggregated assembly code\n"
-            "  regalloc     show regalloc state in 'assembly' output\n"
-            "  activation   show activation state in 'assembly' output\n"
+            "  afterdce     show LIR after dead code elimination\n"
+            "  native       show native code (interleaved with 'afterdce')\n"
+            "  regalloc     show regalloc state in 'native' output\n"
+            "  activation   show activation state in 'native' output\n"
             "\n"
         );
         exit(0);
@@ -483,11 +484,12 @@ InitJITLogController()
     /* flags for nanojit */
     if (strstr(tmf, "fragprofile"))                       bits |= LC_FragProfile;
     if (strstr(tmf, "liveness")   || strstr(tmf, "full")) bits |= LC_Liveness;
-    if (strstr(tmf, "activation") || strstr(tmf, "full")) bits |= LC_Activation;
     if (strstr(tmf, "readlir")    || strstr(tmf, "full")) bits |= LC_ReadLIR;
     if (strstr(tmf, "aftersf")    || strstr(tmf, "full")) bits |= LC_AfterSF;
+    if (strstr(tmf, "afterdce")   || strstr(tmf, "full")) bits |= LC_AfterDCE;
+    if (strstr(tmf, "native")     || strstr(tmf, "full")) bits |= LC_Native;
     if (strstr(tmf, "regalloc")   || strstr(tmf, "full")) bits |= LC_RegAlloc;
-    if (strstr(tmf, "assembly")   || strstr(tmf, "full")) bits |= LC_Assembly;
+    if (strstr(tmf, "activation") || strstr(tmf, "full")) bits |= LC_Activation;
 
     LogController.lcbits = bits;
     return;
