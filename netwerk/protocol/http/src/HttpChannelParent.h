@@ -79,7 +79,10 @@ protected:
 
   virtual bool RecvSetPriority(const PRUint16& priority);
 
+  virtual void ActorDestroy(ActorDestroyReason why);
+
   nsCOMPtr<nsIChannel> mChannel;
+  bool mIPCClosed;                // PHttpChannel actor has been Closed()
 };
 
 } // namespace net
