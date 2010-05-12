@@ -58,6 +58,7 @@ const ROLE_TABLE = nsIAccessibleRole.ROLE_TABLE;
 const ROLE_TEXT_CONTAINER = nsIAccessibleRole.ROLE_TEXT_CONTAINER;
 const ROLE_TEXT_LEAF = nsIAccessibleRole.ROLE_TEXT_LEAF;
 const ROLE_TOGGLE_BUTTON = nsIAccessibleRole.ROLE_TOGGLE_BUTTON;
+const ROLE_TOOLBAR = nsIAccessibleRole.ROLE_TOOLBAR;
 const ROLE_TOOLTIP = nsIAccessibleRole.ROLE_TOOLTIP;
 const ROLE_TREE_TABLE = nsIAccessibleRole.ROLE_TREE_TABLE;
 const ROLE_WHITESPACE = nsIAccessibleRole.ROLE_WHITESPACE;
