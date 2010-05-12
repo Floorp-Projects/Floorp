@@ -144,29 +144,7 @@ obj_getProto(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     /* Let obj->checkAccess get the slot's value, based on the access mode. */
     uintN attrs;
     id = ATOM_TO_JSID(cx->runtime->atomState.protoAtom);
-    if (!obj->checkAccess(cx, id, JSACC_PROTO, vp, &attrs))
-        return JS_FALSE;
-
-    if (JSObject *pobj = JSVAL_TO_OBJECT(*vp)) {
-        JSClass *clasp = pobj->getClass();
-        if (clasp == &js_CallClass || clasp == &js_BlockClass) {
-            /* Censor activations and lexical scopes per ECMA-262. */
-            *vp = JSVAL_NULL;
-        } else {
-            /*
-             * DeclEnv only exists as a parent for a Call object which we
-             * censor. So it cannot escape to scripts.
-             */
-            JS_ASSERT(clasp != &js_DeclEnvClass);
-            if (JSObjectOp thisObject = pobj->map->ops->thisObject) {
-                pobj = thisObject(cx, pobj);
-                if (!pobj)
-                    return JS_FALSE;
-                *vp = OBJECT_TO_JSVAL(pobj);
-            }
-        }
-    }
-    return JS_TRUE;
+    return obj->checkAccess(cx, id, JSACC_PROTO, vp, &attrs);
 }
 
 static JSBool
