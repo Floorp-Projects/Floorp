@@ -2808,6 +2808,9 @@ pref("gfx.color_management.mode", 0);
 // Initialize default render-mode.
 pref("mozilla.widget.render-mode", -1);
 
+// Initialize default accelerated layers
+pref("mozilla.widget.accelerated-layers", true);
+
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
