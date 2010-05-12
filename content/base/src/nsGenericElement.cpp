@@ -5072,7 +5072,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
   ListAttributes(out);
 
   fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
-  fprintf(out, " flags=[%08x]", GetFlags());
+  fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
   fprintf(out, " refcount=%d<", mRefCnt.get());
 
