@@ -457,7 +457,9 @@ LayerManagerOGL::SetupBackBuffer()
   }
 
   /**
-   * Setup the texture used as the backbuffer.
+   * Setup the texture used as the backbuffer. We use a texture as our
+   * backbuffer since we can rely on both GLES and OGL 2.1 to support this
+   * method.
    */
   mGLContext->fBindTexture(mFBOTextureTarget, mBackBuffer);
   mGLContext->fTexEnvf(LOCAL_GL_TEXTURE_ENV, LOCAL_GL_TEXTURE_ENV_MODE, LOCAL_GL_MODULATE);
