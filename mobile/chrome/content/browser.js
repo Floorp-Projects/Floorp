@@ -1960,9 +1960,9 @@ const ElementTouchHelper = {
                                                true,   /* ignore root scroll frame*/
                                                false); /* don't flush layout */
 
-    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.bottom,
+    let nodes = aWindowUtils.nodesFromRect(aX, aY, this.radius.top,
                                                    this.radius.right,
-                                                   this.radius.top,
+                                                   this.radius.bottom,
                                                    this.radius.left, true, false);
 
     // return early if the click is just over a clickable element
