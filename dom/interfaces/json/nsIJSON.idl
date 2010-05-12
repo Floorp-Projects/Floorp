@@ -46,7 +46,7 @@ interface nsIScriptGlobalObject;
 #include "jspubtd.h"
 %}
 
-      native JSVal(jsval);
+      native jsval(jsval);
 [ptr] native JSValPtr(jsval);
 [ptr] native JSContext(JSContext);
 
@@ -71,5 +71,5 @@ interface nsIJSON : nsISupports
   [noscript] AString  encodeFromJSVal(in JSValPtr value, in JSContext cx);
 
   // Make sure you GCroot the result of this function before using it.
-  [noscript] JSVal    decodeToJSVal(in AString str, in JSContext cx);
+  [noscript] jsval    decodeToJSVal(in AString str, in JSContext cx);
 };
