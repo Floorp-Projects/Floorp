@@ -1074,16 +1074,18 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     // If aBoundingBoxType is TIGHT_HINTED_OUTLINE_EXTENTS
     // and the underlying cairo font may be antialiased,
     // we need to create a copy in order to avoid getting cached extents.
-    // This is inefficient, but only used by MathML layout at present.
+    // This is only used by MathML layout at present.
     if (aBoundingBoxType == TIGHT_HINTED_OUTLINE_EXTENTS &&
         mAntialiasOption != kAntialiasNone) {
-        nsAutoPtr<gfxFont> tempFont(CopyWithAntialiasOption(kAntialiasNone));
+        if (!mNonAAFont) {
+            mNonAAFont = CopyWithAntialiasOption(kAntialiasNone);
+        }
         // if font subclass doesn't implement CopyWithAntialiasOption(),
         // it will return null and we'll proceed to use the existing font
-        if (tempFont) {
-            return tempFont->Measure(aTextRun, aStart, aEnd,
-                                     TIGHT_HINTED_OUTLINE_EXTENTS,
-                                     aRefContext, aSpacing);
+        if (mNonAAFont) {
+            return mNonAAFont->Measure(aTextRun, aStart, aEnd,
+                                       TIGHT_HINTED_OUTLINE_EXTENTS,
+                                       aRefContext, aSpacing);
         }
     }
 
