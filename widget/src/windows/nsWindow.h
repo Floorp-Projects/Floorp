@@ -75,7 +75,7 @@
 
 #ifdef ACCESSIBILITY
 #include "OLEACC.H"
-#include "nsIAccessible.h"
+#include "nsAccessible.h"
 #endif
 
 #if !defined(WINCE)
@@ -219,8 +219,8 @@ public:
   void                    SuppressBlurEvents(PRBool aSuppress); // Called from nsFilePicker
   PRBool                  BlurEventsSuppressed();
 #ifdef ACCESSIBILITY
-  virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsIntPoint* aPoint = nsnull);
-  already_AddRefed<nsIAccessible> GetRootAccessible();
+  nsAccessible* DispatchAccessibleEvent(PRUint32 aEventType);
+  nsAccessible* GetRootAccessible();
 #endif // ACCESSIBILITY
 
   /**
