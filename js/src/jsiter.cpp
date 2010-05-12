@@ -147,8 +147,9 @@ NewKeyValuePair(JSContext *cx, jsid key, jsval val, jsval *rval)
 }
 
 static inline bool
-Enumerate(JSContext *cx, JSObject *obj, jsid id, bool enumerable, uintN flags,
-          HashSet<jsid>& ht, AutoValueVector& vec)
+Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
+          bool enumerable, uintN flags, HashSet<jsid>& ht,
+          AutoValueVector& vec)
 {
     JS_ASSERT(JSVAL_IS_INT(id) || JSVAL_IS_STRING(id));
 
@@ -158,7 +159,7 @@ Enumerate(JSContext *cx, JSObject *obj, jsid id, bool enumerable, uintN flags,
         if (JS_UNLIKELY(!!p))
             return true;
         /* no need to add properties to the hash table at the end of the prototype chain */
-        if (obj->getProto() && !ht.add(p, id)) {
+        if (pobj->getProto() && !ht.add(p, id)) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
@@ -171,6 +172,7 @@ Enumerate(JSContext *cx, JSObject *obj, jsid id, bool enumerable, uintN flags,
         if (flags & JSITER_FOREACH) {
             jsval *vp = vec.end() - 1;
 
+            /* Do the lookup on the original object instead of the prototype. */
             if (!obj->getProperty(cx, id, vp))
                 return false;
             if ((flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, *vp, vp))
@@ -181,19 +183,19 @@ Enumerate(JSContext *cx, JSObject *obj, jsid id, bool enumerable, uintN flags,
 }
 
 static bool
-EnumerateNativeProperties(JSContext *cx, JSObject *obj, uintN flags, HashSet<jsid> &ht,
-                          AutoValueVector& props)
+EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
+                          HashSet<jsid> &ht, AutoValueVector& props)
 {
     AutoValueVector sprops(cx);
 
-    JS_LOCK_OBJ(cx, obj);
+    JS_LOCK_OBJ(cx, pobj);
 
     /* Collect all unique properties from this object's scope. */
-    JSScope *scope = obj->scope();
+    JSScope *scope = pobj->scope();
     for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
         if (sprop->id != JSVAL_VOID &&
             !sprop->isAlias() &&
-            !Enumerate(cx, obj, sprop->id, sprop->enumerable(), flags, ht, sprops)) {
+            !Enumerate(cx, obj, pobj, sprop->id, sprop->enumerable(), flags, ht, sprops)) {
             return false;
         }
     }
@@ -212,18 +214,18 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, uintN flags, HashSet<jsi
 }
 
 static bool
-EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, uintN flags, HashSet<jsid> &ht,
-                              AutoValueVector& props)
+EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN flags,
+                              HashSet<jsid> &ht, AutoValueVector& props)
 {
-    size_t count = obj->getDenseArrayCount();
+    size_t count = pobj->getDenseArrayCount();
 
     if (count) {
-        size_t capacity = obj->getDenseArrayCapacity();
-        jsval *vp = obj->dslots;
+        size_t capacity = pobj->getDenseArrayCapacity();
+        jsval *vp = pobj->dslots;
         for (size_t i = 0; i < capacity; ++i, ++vp) {
             if (*vp != JSVAL_HOLE) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
-                if (!Enumerate(cx, obj, INT_TO_JSVAL(i), true, flags, ht, props))
+                if (!Enumerate(cx, obj, pobj, INT_TO_JSVAL(i), true, flags, ht, props))
                     return false;
             }
         }
@@ -243,42 +245,43 @@ InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, ui
 
     AutoValueVector props(cx);
 
-    while (obj) {
-        JSClass *clasp = obj->getClass();
-        if (obj->isNative() &&
-            obj->map->ops->enumerate == js_Enumerate &&
+    JSObject *pobj = obj;
+    while (pobj) {
+        JSClass *clasp = pobj->getClass();
+        if (pobj->isNative() &&
+            pobj->map->ops->enumerate == js_Enumerate &&
             !(clasp->flags & JSCLASS_NEW_ENUMERATE)) {
-            if (!clasp->enumerate(cx, obj))
+            if (!clasp->enumerate(cx, pobj))
                 return false;
-            if (!EnumerateNativeProperties(cx, obj, flags, ht, props))
+            if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
                 return false;
-        } else if (obj->isDenseArray()) {
-            if (!EnumerateDenseArrayProperties(cx, obj, flags, ht, props))
+        } else if (pobj->isDenseArray()) {
+            if (!EnumerateDenseArrayProperties(cx, obj, pobj, flags, ht, props))
                 return false;
         } else {
             jsval state;
-            if (!obj->enumerate(cx, JSENUMERATE_INIT, &state, NULL))
+            if (!pobj->enumerate(cx, JSENUMERATE_INIT, &state, NULL))
                 return false;
             if (state == JSVAL_NATIVE_ENUMERATE_COOKIE) {
-                if (!EnumerateNativeProperties(cx, obj, flags, ht, props))
+                if (!EnumerateNativeProperties(cx, obj, pobj, flags, ht, props))
                     return false;
             } else {
                 while (true) {
                     jsid id;
-                    if (!obj->enumerate(cx, JSENUMERATE_NEXT, &state, &id))
+                    if (!pobj->enumerate(cx, JSENUMERATE_NEXT, &state, &id))
                         return false;
                     if (state == JSVAL_NULL)
                         break;
-                    if (!Enumerate(cx, obj, id, true, flags, ht, props))
+                    if (!Enumerate(cx, obj, pobj, id, true, flags, ht, props))
                         return false;
                 }
             }
         }
 
-        if (JS_UNLIKELY(obj->isXML() || (flags & JSITER_OWNONLY)))
+        if (JS_UNLIKELY(pobj->isXML() || (flags & JSITER_OWNONLY)))
             break;
 
-        obj = obj->getProto();
+        pobj = pobj->getProto();
     }
 
     size_t plength = props.length();
