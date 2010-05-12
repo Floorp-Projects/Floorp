@@ -170,6 +170,7 @@ Enumerate(JSContext *cx, JSObject *obj, jsid id, bool enumerable, uintN flags,
         }
         if (flags & JSITER_FOREACH) {
             jsval *vp = vec.end() - 1;
+
             if (!obj->getProperty(cx, id, vp))
                 return false;
             if (flags & JSITER_KEYVALUE && !NewKeyValuePair(cx, id, *vp, vp))
