@@ -55,7 +55,7 @@ CallStack::getCurrentFrame() const
     return isSuspended() ? getSuspendedFrame() : cx->fp;
 }
 
-JS_REQUIRES_STACK inline jsval *
+JS_REQUIRES_STACK inline Value *
 StackSpace::firstUnused() const
 {
     CallStack *ccs = currentCallStack;
@@ -81,7 +81,7 @@ StackSpace::assertIsCurrent(JSContext *cx) const
 }
 
 JS_ALWAYS_INLINE bool
-StackSpace::ensureSpace(JSContext *maybecx, jsval *from, ptrdiff_t nvals) const
+StackSpace::ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const
 {
     JS_ASSERT(from == firstUnused());
 #ifdef XP_WIN
@@ -119,7 +119,7 @@ StackSpace::ensureEnoughSpaceToEnterTrace()
 }
 
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSStackFrame *
-StackSpace::getInlineFrame(JSContext *cx, jsval *sp,
+StackSpace::getInlineFrame(JSContext *cx, Value *sp,
                            uintN nmissing, uintN nfixed) const
 {
     assertIsCurrent(cx);

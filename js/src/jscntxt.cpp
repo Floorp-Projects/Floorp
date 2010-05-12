@@ -126,7 +126,7 @@ CallStack::contains(const JSStackFrame *fp) const
     JSStackFrame *start;
     JSStackFrame *stop;
     if (isSuspended()) {
-        start = suspendedFrame();
+        start = suspendedFrame;
         stop = initialFrame->down;
     } else {
         start = cx->fp;
@@ -192,7 +192,7 @@ StackSpace::bumpCommit(Value *from, ptrdiff_t nvals) const
     } while (newCommit < request);
 
     /* The cast is safe because CAPACITY_BYTES is small. */
-    int32 size = static_cast<int32>(newCommit - commitEnd) * sizeof(jsval);
+    int32 size = static_cast<int32>(newCommit - commitEnd) * sizeof(Value);
 
     if (!VirtualAlloc(commitEnd, size, MEM_COMMIT, PAGE_READWRITE))
         return false;
@@ -366,7 +366,7 @@ StackSpace::getExecuteFrame(JSContext *cx, JSStackFrame *down,
                             uintN vplen, uintN nfixed,
                             ExecuteFrameGuard &fg) const
 {
-    jsval *start = firstUnused();
+    Value *start = firstUnused();
     ptrdiff_t nvals = VALUES_PER_CALL_STACK + vplen + VALUES_PER_STACK_FRAME + nfixed;
     if (!ensureSpace(cx, start, nvals))
         return false;
@@ -403,7 +403,7 @@ StackSpace::popExecuteFrame(JSContext *cx)
 JS_REQUIRES_STACK void
 StackSpace::getSynthesizedSlowNativeFrame(JSContext *cx, CallStack *&cs, JSStackFrame *&fp)
 {
-    jsval *start = firstUnused();
+    Value *start = firstUnused();
     JS_ASSERT(size_t(end - start) >= VALUES_PER_CALL_STACK + VALUES_PER_STACK_FRAME);
     cs = new(start) CallStack;
     fp = reinterpret_cast<JSStackFrame *>(cs + 1);
@@ -438,16 +438,16 @@ StackSpace::popSynthesizedSlowNativeFrame(JSContext *cx)
  * up-frame's address is the top of the down-frame's stack, modulo missing
  * arguments.
  */
-static inline jsval *
+static inline Value *
 InlineDownFrameSP(JSStackFrame *up)
 {
     JS_ASSERT(up->fun && up->script);
-    jsval *sp = up->argv + up->argc;
+    Value *sp = up->argv + up->argc;
 #ifdef DEBUG
     uint16 nargs = up->fun->nargs;
     uintN argc = up->argc;
     uintN missing = argc < nargs ? nargs - argc : 0;
-    JS_ASSERT(sp == (jsval *)up - missing);
+    JS_ASSERT(sp == (Value *)up - missing);
 #endif
     return sp;
 }
@@ -496,12 +496,12 @@ FrameRegsIter::operator++()
      * scan, keeping track of what is immediately after down in memory.
      */
     curcs = curcs->getPreviousInContext();
-    cursp = curcs->getSuspendedSP();
+    cursp = curcs->getSuspendedRegs()->sp;
     JSStackFrame *f = curcs->getSuspendedFrame();
     while (f != down) {
         if (f == curcs->getInitialFrame()) {
             curcs = curcs->getPreviousInContext();
-            cursp = curcs->getSuspendedSP();
+            cursp = curcs->getSuspendedRegs()->sp;
             f = curcs->getSuspendedFrame();
         } else {
             cursp = InlineDownFrameSP(f);

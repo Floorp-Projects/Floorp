@@ -393,7 +393,7 @@ class AlignedPtrAndFlag
         return (bits & 1) != 0;
     }
 
-    void setPtr(T *t) const {
+    void setPtr(T *t) {
         JS_ASSERT((uintptr_t(t) & 1) == 0);
         bits = uintptr_t(t) | flag();
     }

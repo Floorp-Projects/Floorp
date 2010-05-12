@@ -212,8 +212,10 @@ typedef enum JSWhyMagic
 {
     JS_ARRAY_HOLE,               /* a hole in a dense array */
     JS_ARGS_HOLE,                /* a hole in the args object's array */
-    JS_STOP_ITERATION,           /* value returned by iterator to stop */
-    JS_STOP_ITERATION_EXCEPTION  /* value of cx->exception for a StopIteration exception */
+    JS_NATIVE_ENUMERATE,         /* indicates that a custom enumerate hook forwarded
+                                  * to js_Enumerate, which really means the object can be
+                                  * enumerated like a native object. */
+    JS_GENERATOR_CLOSING         /* exception value thrown when closing a generator */
 } JSWhyMagic;
 
 typedef union jsval_data

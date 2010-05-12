@@ -437,7 +437,7 @@ struct JSGCStats {
     uint32  poke;           /* number of potentially useful GC calls */
     uint32  afree;          /* thing arenas freed so far */
     uint32  stackseg;       /* total extraordinary stack segments scanned */
-    uint32  segslots;       /* total stack segment jsval slots scanned */
+    uint32  segslots;       /* total stack segment value slots scanned */
     uint32  nclose;         /* number of objects with close hooks */
     uint32  maxnclose;      /* max number of objects with close hooks */
     uint32  closelater;     /* number of close hooks scheduled to run */
@@ -519,25 +519,24 @@ TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len);
 
 inline void
 #ifdef DEBUG
-TraceValues(JSTracer *trc, jsval *beg, jsval *end, const char *name)
+TraceValues(JSTracer *trc, Value *beg, Value *end, const char *name)
 #else
-TraceValues(JSTracer *trc, jsval *beg, jsval *end, const char *) /* last arg unused in release. kill unreferenced formal param warnings */
+TraceValues(JSTracer *trc, Value *beg, Value *end, const char *) /* last arg unused in release. kill unreferenced formal param warnings */
 #endif
 {
-    for (jsval *vp = beg; vp < end; ++vp) {
-        jsval v = *vp;
-        if (JSVAL_IS_TRACEABLE(v)) {
+    for (Value *vp = beg; vp < end; ++vp) {
+        if (vp->isGCThing()) {
             JS_SET_TRACING_INDEX(trc, name, vp - beg);
-            js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+            CallGCMarker(trc, vp->asGCThing(), vp->traceKind());
         }
     }
 }
 
 inline void
 #ifdef DEBUG
-TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
+TraceValues(JSTracer *trc, size_t len, Value *vec, const char *name)
 #else
-TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *) /* last arg unused in release. kill unreferenced formal param warnings */
+TraceValues(JSTracer *trc, size_t len, Value *vec, const char *) /* last arg unused in release. kill unreferenced formal param warnings */
 #endif
 {
     TraceValues(trc, vec, vec + len, name);

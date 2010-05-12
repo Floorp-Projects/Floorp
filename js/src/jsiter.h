@@ -47,8 +47,6 @@
 #include "jspubtd.h"
 #include "jsversion.h"
 
-JS_BEGIN_EXTERN_C
-
 /*
  * NB: these flag bits are encoded into the bytecode stream in the immediate
  * operand of JSOP_ITER, so don't change them without advancing jsxdrapi.h's
@@ -60,9 +58,9 @@ JS_BEGIN_EXTERN_C
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 
 struct NativeIterator {
-    jsval     *props_array;
-    jsval     *props_cursor;
-    jsval     *props_end;
+    js::Value *props_array;
+    js::Value *props_cursor;
+    js::Value *props_end;
     uint32    *shapes_array;
     uint32    shapes_length;
     uint32    shapes_key;
@@ -71,13 +69,6 @@ struct NativeIterator {
 
     void mark(JSTracer *trc);
 };
-
-/*
- * Magic jsval that indicates that a custom enumerate hook forwarded
- * to js_Enumerate, which really means the object can be enumerated like
- * a native object.
- */
-static const jsval JSVAL_NATIVE_ENUMERATE_COOKIE = SPECIAL_TO_JSVAL(0x220576);
 
 bool
 EnumerateOwnProperties(JSContext *cx, JSObject *obj, JSIdArray **idap);
@@ -177,9 +168,9 @@ js_LiveFrameIfGenerator(JSStackFrame *fp)
 
 #endif
 
-extern JSExtendedClass js_GeneratorClass;
-extern JSExtendedClass js_IteratorClass;
-extern JSClass         js_StopIterationClass;
+extern js::ExtendedClass js_GeneratorClass;
+extern js::ExtendedClass js_IteratorClass;
+extern js::Class         js_StopIterationClass;
 
 static inline bool
 js_ValueIsStopIteration(const js::Value &v)
@@ -189,7 +180,5 @@ js_ValueIsStopIteration(const js::Value &v)
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, JSObject *obj);
-
-JS_END_EXTERN_C
 
 #endif /* jsiter_h___ */

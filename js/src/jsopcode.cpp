@@ -5149,7 +5149,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * calculated value matching v under assumption that it is
              * it that caused exception, see bug 328664.
              */
-            jsval *stackBase = StackBase(fp);
+            jsval *stackBase = fp->base();
             jsval *sp = i.sp();
             do {
                 if (sp == stackBase) {

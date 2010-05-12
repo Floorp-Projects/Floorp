@@ -170,12 +170,6 @@ struct JSStackFrame
         return (js::Value *)this;
     }
 
-    jsval *slots() const {
-        return (jsval *)(this + 1);
-    }
-
-    }
-
     js::Value *slots() const {
         return (js::Value *)(this + 1);
     }
@@ -215,7 +209,7 @@ struct JSStackFrame
 namespace js {
 
 JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(Value) == 0);
-static const size_t ValuesPerStackFrame = sizeof(JSStackFrame) / sizeof(Value);
+static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(Value);
 
 } /* namespace js */
 
