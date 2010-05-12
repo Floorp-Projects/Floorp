@@ -228,17 +228,14 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
 JSBool
 js_GetPrimitiveThis(JSContext *cx, Value *vp, Class *clasp, Value *thisvp)
 {
-    jsval v;
-    JSObject *obj;
-
-    v = vp[1];
-    if (JSVAL_IS_OBJECT(v)) {
-        obj = JS_THIS_OBJECT(cx, vp);
-        if (!JS_InstanceOf(cx, obj, clasp, vp + 2))
+    const Value *p = &vp[1];
+    if (p->isObject()) {
+        JSObject *obj = ComputeThisObjectFromVp(cx, vp);
+        if (!InstanceOf(cx, obj, clasp, vp + 2))
             return JS_FALSE;
-        v = obj->getPrimitiveThis();
+        p = &obj->getPrimitiveThis();
     }
-    *thisvp = v;
+    thisvp->copy(*p);
     return JS_TRUE;
 }
 
@@ -373,9 +370,9 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     if (!cx->stack().pushInvokeArgs(cx, 2, args))
         return JS_FALSE;
 
-    JS_ASSERT(!vp[0].isPrimitive());
-    JS_ASSERT(!vp[1].isPrimitive());
-    JSObject *obj = JSVAL_TO_OBJECT(vp[0]);
+    JS_ASSERT(vp[0].isObject());
+    JS_ASSERT(vp[1].isObject());
+    JSObject *obj = &vp[0].asObject();
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
     Value *invokevp = args.getvp();
@@ -429,7 +426,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 
     JSObject *funobj = &vp[0].asObject();
     JSObject *parent = funobj->getParent();
-    JSClass *clasp = funobj->getClass();
+    Class *clasp = funobj->getClass();
 
     /* Filled by the following if/else statement. */
     Native native;
@@ -1736,121 +1733,6 @@ namespace reprmeter {
         VALUE_TO_OBJECT(cx, vp_, obj);                                        \
     JS_END_MACRO
 
-#define LOAD_ATOM(PCOFF, atom)                                                \
-    JS_BEGIN_MACRO                                                            \
-        JS_ASSERT(fp->imacpc                                                  \
-                  ? atoms == COMMON_ATOMS_START(&rt->atomState) &&            \
-                    GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
-                  : (size_t)(atoms - script->atomMap.vector) <                \
-                    (size_t)(script->atomMap.length -                         \
-                             GET_INDEX(regs.pc + PCOFF)));                    \
-        atom = atoms[GET_INDEX(regs.pc + PCOFF)];                             \
-    JS_END_MACRO
-
-#define GET_FULL_INDEX(PCOFF)                                                 \
-    (atoms - script->atomMap.vector + GET_INDEX(regs.pc + PCOFF))
-
-#define LOAD_OBJECT(PCOFF, obj)                                               \
-    JS_BEGIN_MACRO                                                            \
-        obj = script->getObject(GET_FULL_INDEX(PCOFF));                       \
-    JS_END_MACRO
-
-#define LOAD_FUNCTION(PCOFF)                                                  \
-    (fun = script->getFunction(GET_FULL_INDEX(PCOFF)))
-
-#ifdef JS_TRACER
-
-#ifdef MOZ_TRACEVIS
-#if JS_THREADED_INTERP
-#define MONITOR_BRANCH_TRACEVIS                                               \
-    JS_BEGIN_MACRO                                                            \
-        if (jumpTable != interruptJumpTable)                                  \
-            EnterTraceVisState(cx, S_RECORD, R_NONE);                         \
-    JS_END_MACRO
-#else /* !JS_THREADED_INTERP */
-#define MONITOR_BRANCH_TRACEVIS                                               \
-    JS_BEGIN_MACRO                                                            \
-        EnterTraceVisState(cx, S_RECORD, R_NONE);                             \
-    JS_END_MACRO
-#endif
-#else
-#define MONITOR_BRANCH_TRACEVIS
-#endif
-
-#define RESTORE_INTERP_VARS()                                                 \
-    JS_BEGIN_MACRO                                                            \
-        fp = cx->fp;                                                          \
-        script = fp->script;                                                  \
-        atoms = FrameAtomBase(cx, fp);                                        \
-        currentVersion = (JSVersion) script->version;                         \
-        JS_ASSERT(cx->regs == &regs);                                         \
-        if (cx->throwing)                                                     \
-            goto error;                                                       \
-    JS_END_MACRO
-
-#define MONITOR_BRANCH(reason)                                                \
-    JS_BEGIN_MACRO                                                            \
-        if (TRACING_ENABLED(cx)) {                                            \
-            MonitorResult r = MonitorLoopEdge(cx, inlineCallCount, reason);   \
-            if (r == MONITOR_RECORDING) {                                     \
-                JS_ASSERT(TRACE_RECORDER(cx));                                \
-                MONITOR_BRANCH_TRACEVIS;                                      \
-                ENABLE_INTERRUPTS();                                          \
-            }                                                                 \
-            RESTORE_INTERP_VARS();                                            \
-            JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
-            if (r == MONITOR_ERROR)                                           \
-                goto error;                                                   \
-        }                                                                     \
-    JS_END_MACRO
-
-#else /* !JS_TRACER */
-
-#define MONITOR_BRANCH(reason) ((void) 0)
-
-#endif /* !JS_TRACER */
-
-#define CHECK_INTERRUPT_HANDLER()                                             \
-    JS_BEGIN_MACRO                                                            \
-        if (cx->debugHooks->interruptHook)                                    \
-            ENABLE_INTERRUPTS();                                              \
-    JS_END_MACRO
-
-    /*
-     * Prepare to call a user-supplied branch handler, and abort the script
-     * if it returns false.
-     */
-#define CHECK_BRANCH()                                                        \
-    JS_BEGIN_MACRO                                                            \
-        if (!JS_CHECK_OPERATION_LIMIT(cx))                                    \
-            goto error;                                                       \
-    JS_END_MACRO
-
-#ifndef TRACE_RECORDER
-#define TRACE_RECORDER(cx) (false)
-#endif
-
-#define BRANCH(n)                                                             \
-    JS_BEGIN_MACRO                                                            \
-        regs.pc += (n);                                                       \
-        op = (JSOp) *regs.pc;                                                 \
-        if ((n) <= 0) {                                                       \
-            CHECK_BRANCH();                                                   \
-            if (op == JSOP_NOP) {                                             \
-                if (TRACE_RECORDER(cx)) {                                     \
-                    MONITOR_BRANCH(Record_Branch);                            \
-                    op = (JSOp) *regs.pc;                                     \
-                } else {                                                      \
-                    op = (JSOp) *++regs.pc;                                   \
-                }                                                             \
-            } else if (op == JSOP_TRACE) {                                    \
-                MONITOR_BRANCH(Record_Branch);                                \
-                op = (JSOp) *regs.pc;                                         \
-            }                                                                 \
-        }                                                                     \
-        DO_OP();                                                              \
-    JS_END_MACRO
-
 /* Test whether v is an int in the range [-2^31 + 1, 2^31 - 2] */
 static JS_ALWAYS_INLINE bool
 CanIncDecWithoutOverflow(const Value &v)
@@ -2089,6 +1971,11 @@ namespace js {
 JS_REQUIRES_STACK bool
 Interpret(JSContext *cx)
 {
+#ifdef MOZ_TRACEVIS
+    TraceVisStateObj tvso(cx, S_INTERP);
+#endif
+    JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
+
 # ifdef DEBUG
     /*
      * We call this macro from BEGIN_CASE in threaded interpreters,
@@ -2167,10 +2054,6 @@ Interpret(JSContext *cx)
 
 #else /* !JS_THREADED_INTERP */
 
-    /*
-     * Macros for classic interpreter loop
-     */
-
     register intN switchMask = 0;
     intN switchOp;
 
@@ -2209,11 +2092,6 @@ Interpret(JSContext *cx)
 
 #endif /* !JS_THREADED_INTERP */
 
-#ifdef MOZ_TRACEVIS
-    TraceVisStateObj tvso(cx, S_INTERP);
-#endif
-    JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
-
     /* Check for too deep of a native thread stack. */
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
@@ -2236,6 +2114,113 @@ Interpret(JSContext *cx)
      * the segment from atoms pointer first.
      */
     JSAtom **atoms = script->atomMap.vector;
+
+#define LOAD_ATOM(PCOFF, atom)                                                \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT(fp->imacpc                                                  \
+                  ? atoms == COMMON_ATOMS_START(&rt->atomState) &&            \
+                    GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
+                  : (size_t)(atoms - script->atomMap.vector) <                \
+                    (size_t)(script->atomMap.length -                         \
+                             GET_INDEX(regs.pc + PCOFF)));                    \
+        atom = atoms[GET_INDEX(regs.pc + PCOFF)];                             \
+    JS_END_MACRO
+
+#define GET_FULL_INDEX(PCOFF)                                                 \
+    (atoms - script->atomMap.vector + GET_INDEX(regs.pc + PCOFF))
+
+#define LOAD_OBJECT(PCOFF, obj)                                               \
+    (obj = script->getObject(GET_FULL_INDEX(PCOFF)))
+
+#define LOAD_FUNCTION(PCOFF)                                                  \
+    (fun = script->getFunction(GET_FULL_INDEX(PCOFF)))
+
+#ifdef JS_TRACER
+
+#ifdef MOZ_TRACEVIS
+#if JS_THREADED_INTERP
+#define MONITOR_BRANCH_TRACEVIS                                               \
+    JS_BEGIN_MACRO                                                            \
+        if (jumpTable != interruptJumpTable)                                  \
+            EnterTraceVisState(cx, S_RECORD, R_NONE);                         \
+    JS_END_MACRO
+#else /* !JS_THREADED_INTERP */
+#define MONITOR_BRANCH_TRACEVIS                                               \
+    JS_BEGIN_MACRO                                                            \
+        EnterTraceVisState(cx, S_RECORD, R_NONE);                             \
+    JS_END_MACRO
+#endif
+#else
+#define MONITOR_BRANCH_TRACEVIS
+#endif
+
+#define RESTORE_INTERP_VARS()                                                 \
+    JS_BEGIN_MACRO                                                            \
+        fp = cx->fp;                                                          \
+        script = fp->script;                                                  \
+        atoms = FrameAtomBase(cx, fp);                                        \
+        currentVersion = (JSVersion) script->version;                         \
+        JS_ASSERT(cx->regs == &regs);                                         \
+        if (cx->throwing)                                                     \
+            goto error;                                                       \
+    JS_END_MACRO
+
+#define MONITOR_BRANCH(reason)                                                \
+    JS_BEGIN_MACRO                                                            \
+        if (TRACING_ENABLED(cx)) {                                            \
+            MonitorResult r = MonitorLoopEdge(cx, inlineCallCount, reason);   \
+            if (r == MONITOR_RECORDING) {                                     \
+                JS_ASSERT(TRACE_RECORDER(cx));                                \
+                MONITOR_BRANCH_TRACEVIS;                                      \
+                ENABLE_INTERRUPTS();                                          \
+            }                                                                 \
+            RESTORE_INTERP_VARS();                                            \
+            JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
+            if (r == MONITOR_ERROR)                                           \
+                goto error;                                                   \
+        }                                                                     \
+    JS_END_MACRO
+
+#else /* !JS_TRACER */
+
+#define MONITOR_BRANCH(reason) ((void) 0)
+
+#endif /* !JS_TRACER */
+
+    /*
+     * Prepare to call a user-supplied branch handler, and abort the script
+     * if it returns false.
+     */
+#define CHECK_BRANCH()                                                        \
+    JS_BEGIN_MACRO                                                            \
+        if (!JS_CHECK_OPERATION_LIMIT(cx))                                    \
+            goto error;                                                       \
+    JS_END_MACRO
+
+#ifndef TRACE_RECORDER
+#define TRACE_RECORDER(cx) (false)
+#endif
+
+#define BRANCH(n)                                                             \
+    JS_BEGIN_MACRO                                                            \
+        regs.pc += (n);                                                       \
+        op = (JSOp) *regs.pc;                                                 \
+        if ((n) <= 0) {                                                       \
+            CHECK_BRANCH();                                                   \
+            if (op == JSOP_NOP) {                                             \
+                if (TRACE_RECORDER(cx)) {                                     \
+                    MONITOR_BRANCH(Record_Branch);                            \
+                    op = (JSOp) *regs.pc;                                     \
+                } else {                                                      \
+                    op = (JSOp) *++regs.pc;                                   \
+                }                                                             \
+            } else if (op == JSOP_TRACE) {                                    \
+                MONITOR_BRANCH(Record_Branch);                                \
+                op = (JSOp) *regs.pc;                                         \
+            }                                                                 \
+        }                                                                     \
+        DO_OP();                                                              \
+    JS_END_MACRO
 
     MUST_FLOW_THROUGH("exit");
     ++cx->interpLevel;
@@ -2260,6 +2245,12 @@ Interpret(JSContext *cx)
         fp->displaySave = *disp;
         *disp = fp;
     }
+
+#define CHECK_INTERRUPT_HANDLER()                                             \
+    JS_BEGIN_MACRO                                                            \
+        if (cx->debugHooks->interruptHook)                                    \
+            ENABLE_INTERRUPTS();                                              \
+    JS_END_MACRO
 
     /*
      * Load the debugger's interrupt hook here and after calling out to native
