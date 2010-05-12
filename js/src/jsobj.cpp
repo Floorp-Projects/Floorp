@@ -2947,12 +2947,12 @@ with_TypeOf(JSContext *cx, JSObject *obj)
 }
 
 static JSObject *
-with_ThisObject(JSContext *cx, JSObject *obj)
+with_ThisObject(JSContext *cx, JSObject *obj, JSObject *scope)
 {
     JSObject *proto = obj->getProto();
     if (!proto)
         return obj;
-    return proto->thisObject(cx);
+    return proto->thisObject(cx, scope);
 }
 
 JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {

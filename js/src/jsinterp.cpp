@@ -371,11 +371,17 @@ js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
 
 /* Some objects (e.g., With) delegate 'this' to another object. */
 static inline JSObject *
-CallThisObjectHook(JSContext *cx, JSObject *obj, jsval *argv)
+CallThisObjectHook(JSContext *cx, JSObject *obj, JSObject *scope, jsval *argv)
 {
-    JSObject *thisp = obj->thisObject(cx);
-    if (!thisp)
-        return NULL;
+    JSObject *thisp = obj;
+    if (JSThisObjectOp thisObject = obj->map->ops->thisObject) {
+        if (!scope)
+            scope = JSVAL_TO_OBJECT(argv[-2])->getGlobal();
+        thisp = thisObject(cx, obj, scope);
+        if (!thisp)
+            return NULL;
+    }
+
     argv[-1] = OBJECT_TO_JSVAL(thisp);
     return thisp;
 }
@@ -398,45 +404,29 @@ CallThisObjectHook(JSContext *cx, JSObject *obj, jsval *argv)
 JS_STATIC_INTERPRET JSObject *
 js_ComputeGlobalThis(JSContext *cx, jsval *argv)
 {
-    JSObject *thisp;
-
-    if (JSVAL_IS_PRIMITIVE(argv[-2]) ||
-        !JSVAL_TO_OBJECT(argv[-2])->getParent()) {
-        thisp = cx->globalObject;
-    } else {
-        thisp = JSVAL_TO_OBJECT(argv[-2])->getGlobal();
-    }
-
-    return CallThisObjectHook(cx, thisp, argv);
-}
-
-static JSObject *
-ComputeThis(JSContext *cx, jsval *argv)
-{
-    JSObject *thisp;
-
-    JS_ASSERT(!JSVAL_IS_NULL(argv[-1]));
-    if (!JSVAL_IS_OBJECT(argv[-1])) {
-        if (!js_PrimitiveToObject(cx, &argv[-1]))
-            return NULL;
-        thisp = JSVAL_TO_OBJECT(argv[-1]);
-        return thisp;
-    } 
-
-    thisp = JSVAL_TO_OBJECT(argv[-1]);
-    if (thisp->getClass() == &js_CallClass || thisp->getClass() == &js_BlockClass)
-        return js_ComputeGlobalThis(cx, argv);
-
-    return CallThisObjectHook(cx, thisp, argv);
+    JSObject *thisp = JSVAL_TO_OBJECT(argv[-2])->getGlobal();
+    return CallThisObjectHook(cx, thisp, thisp, argv);
 }
 
 JSObject *
 js_ComputeThis(JSContext *cx, jsval *argv)
 {
     JS_ASSERT(argv[-1] != JSVAL_HOLE);  // check for SynthesizeFrame poisoning
+
     if (JSVAL_IS_NULL(argv[-1]))
         return js_ComputeGlobalThis(cx, argv);
-    return ComputeThis(cx, argv);
+
+    if (!JSVAL_IS_OBJECT(argv[-1])) {
+        if (!js_PrimitiveToObject(cx, &argv[-1]))
+            return NULL;
+        return JSVAL_TO_OBJECT(argv[-1]);
+    } 
+
+    JSObject *thisp = JSVAL_TO_OBJECT(argv[-1]);
+    if (thisp->getClass() == &js_CallClass || thisp->getClass() == &js_BlockClass)
+        return js_ComputeGlobalThis(cx, argv);
+
+    return CallThisObjectHook(cx, thisp, NULL, argv);
 }
 
 #if JS_HAS_NO_SUCH_METHOD
@@ -1058,7 +1048,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
             return false;
         frame.scopeChain = chain;
 
-        JSObject *thisp = JSVAL_TO_OBJECT(frame.thisv)->thisObject(cx);
+        JSObject *thisp = JSVAL_TO_OBJECT(frame.thisv)->thisObject(cx, chain);
         if (!thisp)
             return false;
         frame.thisv = OBJECT_TO_JSVAL(thisp);
