@@ -95,7 +95,7 @@ JS_STATIC_ASSERT((1 + 2) * sizeof(JSAtom *) ==
 const char *
 js_AtomToPrintableString(JSContext *cx, JSAtom *atom)
 {
-    return js_ValueToPrintableString(cx, Value(ATOM_TO_STRING(atom)));
+    return js_ValueToPrintableString(cx, ATOM_TO_STRING(atom));
 }
 
 #define JS_PROTO(name,code,init) const char js_##name##_str[] = #name;
@@ -1299,7 +1299,7 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
     if (obj->isXML()) {
         JSObject &idobj = idval.asObject();
         *idp = OBJECT_TO_JSID(&idobj);
-        SetObject(vp, idobj);
+        vp->setObject(idobj);
         return true;
     }
 
@@ -1351,16 +1351,13 @@ ValueToId(JSContext *cx, const Value *vp, jsid *idp)
 Value
 IdToValue(jsid id)
 {
-    ExplicitlyConstructedValue v;
     if (JSID_IS_INT(id))
-        v.setInt32(JSID_TO_INT(id));
+        return CopyableValue(Int32Tag(JSID_TO_INT(id)));
     else if (JSID_IS_ATOM(id))
-        v.setString(ATOM_TO_STRING(JSID_TO_ATOM(id)));
+        return CopyableValue(ATOM_TO_STRING(JSID_TO_ATOM(id)));
     else if (JSID_IS_NULL(id))
-        v.setNull();
-    else
-        SetObject(&v, *JSID_TO_OBJECT(id));
-    return v;
+        return CopyableValue(NullTag());
+    return CopyableValue(ObjectTag(*JSID_TO_OBJECT(id)));
 }
 
 } /* namespace js */

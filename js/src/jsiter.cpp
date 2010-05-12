@@ -103,9 +103,9 @@ ExtendedClass js_IteratorClass = {
 void
 NativeIterator::mark(JSTracer *trc)
 {
-    for (jsval *vp = props_array; vp < props_end; ++vp) {
+    for (Value *vp = props_array; vp < props_end; ++vp) {
         JS_SET_TRACING_INDEX(trc, "props", (vp - props_array));
-        js_CallValueTracerIfGCThing(trc, *vp);
+        CallGCMarkerIfGCThing(trc, *vp);
     }
 }
 

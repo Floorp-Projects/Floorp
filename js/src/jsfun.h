@@ -199,6 +199,10 @@ struct JSFunction : public JSObject
     bool mightEscape() const {
         return FUN_INTERPRETED(this) && (FUN_FLAT_CLOSURE(this) || u.i.nupvars == 0);
     }
+
+    js::FunObjTag funObjVal() {
+        return js::FunObjTag(*this);
+    }
 };
 
 /*
@@ -309,8 +313,8 @@ extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
 extern JSObject *
-js_CloneFunctionObject(JSContext *cx, JSFunction *fun, const js::Value &parent,
-                       const js::Value &proto);
+js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
+                       JSObject *proto);
 
 inline JSObject *
 CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
@@ -319,8 +323,7 @@ CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent)
     JSObject *proto;
     if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
         return NULL;
-    return js_CloneFunctionObject(cx, fun, js::NonFunObjValue(*parent),
-                                  js::FunObjValue(*proto));
+    return js_CloneFunctionObject(cx, fun, parent, proto);
 }
 
 extern JS_REQUIRES_STACK JSObject *

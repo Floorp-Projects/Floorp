@@ -1292,21 +1292,4 @@ js_InferFlags(JSContext *cx, uintN defaultFlags);
 JSBool
 js_Object(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv, js::Value *rval);
 
-namespace js {
-
-/*
- * Convenience functions for manipulating objects and values. To be inlined,
- * these functions need to be in jsobj.h, so they cannot be member functions.
- */
-
-JS_ALWAYS_INLINE ObjPtr ToObjPtr(JSObject *pobj);
-JS_ALWAYS_INLINE ObjPtr ToObjPtr(JSObject &obj);
-JS_ALWAYS_INLINE Value ToValue(JSObject *pobj);
-JS_ALWAYS_INLINE Value ToValue(JSObject &obj);
-JS_ALWAYS_INLINE void SetObject(ObjPtr *vp, JSObject *pobj);
-JS_ALWAYS_INLINE void SetObject(Value *vp, JSObject *pobj);
-JS_ALWAYS_INLINE void SetObject(ObjPtr *vp, JSObject &obj);
-JS_ALWAYS_INLINE void SetObject(Value *vp, JSObject &obj);
-
-} /* namespace js */
 #endif /* jsobj_h___ */

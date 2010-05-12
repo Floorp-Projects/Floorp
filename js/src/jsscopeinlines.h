@@ -119,7 +119,7 @@ JSScope::methodReadBarrier(JSContext *cx, JSScopeProperty *sprop, js::Value *vp)
     JS_ASSERT(hasMethodBarrier());
     JS_ASSERT(hasProperty(sprop));
     JS_ASSERT(sprop->isMethod());
-    JS_ASSERT(sprop->methodValue().isSame(*vp));
+    JS_ASSERT(&vp->asFunObj() == &sprop->methodFunObj());
     JS_ASSERT(object->getClass() == &js_ObjectClass);
 
     JSObject *funobj = &vp->asFunObj();

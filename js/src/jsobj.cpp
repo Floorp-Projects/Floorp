@@ -164,7 +164,7 @@ obj_getProto(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 pobj = thisObject(cx, pobj);
                 if (!pobj)
                     return JS_FALSE;
-                SetObject(vp, *pobj);
+                vp->setObject(*pobj);
             }
         }
     }
@@ -239,7 +239,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
 
     if (!pobj || !checkForCycles) {
         if (slot == JSSLOT_PROTO)
-            obj->setProto(ToObjPtr(pobj));
+            obj->setProto(ObjectOrNullTag(pobj));
         else
             obj->setParent(pobj);
     } else {
@@ -332,14 +332,14 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                     JSScopeProperty *sprop = (JSScopeProperty *) prop;
                     val.setUndefined();
                     if (attrs & JSPROP_GETTER)
-                        val.copy(sprop->getterValue());
+                        val.setFunObjOrUndefined(sprop->getterObject());
                     if (attrs & JSPROP_SETTER) {
                         if (!val.isUndefined()) {
                             /* Mark the getter, then set val to setter. */
                             ok = (MarkSharpObjects(cx, &val.asFunObj(), NULL)
                                   != NULL);
                         }
-                        val.copy(sprop->setterValue());
+                        val.setFunObjOrUndefined(sprop->setterObject());
                     }
                 } else {
                     ok = obj->getProperty(cx, id, &val);
@@ -575,7 +575,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    Value localroot[4] = {NullValue(), NullValue(), NullValue(), NullValue()};
+    CopyableValue localroot[4] = { NullTag(), NullTag(), NullTag(), NullTag() };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroot), localroot);
 
     /* If outermost, we need parentheses to be an expression, not a block. */
@@ -674,12 +674,12 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
             if (obj2->isNative() && (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
                 JSScopeProperty *sprop = (JSScopeProperty *) prop;
                 if (attrs & JSPROP_GETTER) {
-                    val[valcnt].copy(sprop->getterValue());
+                    val[valcnt].setFunObjOrUndefined(sprop->getterObject());
                     gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.getAtom);
                     valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
-                    val[valcnt].copy(sprop->setterValue());
+                    val[valcnt].setFunObjOrUndefined(sprop->setterObject());
                     gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.setAtom);
                     valcnt++;
                 }
@@ -1248,7 +1248,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
 
             scopeobj = withGuard.obj;
             JS_ASSERT(argc >= 2);
-            SetObject(&argv[1], *withGuard.obj);
+            argv[1].setObject(*withGuard.obj);
         }
 
         /* We're pretending that we're in global code. */
@@ -1434,7 +1434,7 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, const Value *old,
     argv[0].copy(IdToValue(id));
     argv[1].copy(*old);
     argv[2].copy(*nvp);
-    ok = InternalCall(cx, obj, ToValue(callable), 3, argv, nvp);
+    ok = InternalCall(cx, obj, ObjectOrNullTag(callable), 3, argv, nvp);
     js_StopResolving(cx, &key, JSRESFLAG_WATCH, entry, generation);
     return ok;
 }
@@ -1729,7 +1729,7 @@ obj_lookupGetter(JSContext *cx, uintN argc, Value *vp)
         if (pobj->isNative()) {
             JSScopeProperty *sprop = (JSScopeProperty *) prop;
             if (sprop->hasGetterValue())
-                vp->copy(sprop->getterValue());
+                vp->setFunObjOrUndefined(sprop->getterObject());
         }
         pobj->dropProperty(cx, prop);
     }
@@ -1752,7 +1752,7 @@ obj_lookupSetter(JSContext *cx, uintN argc, Value *vp)
         if (pobj->isNative()) {
             JSScopeProperty *sprop = (JSScopeProperty *) prop;
             if (sprop->hasSetterValue())
-                vp->copy(sprop->setterValue());
+                vp->setFunObjOrUndefined(sprop->setterObject());
         }
         pobj->dropProperty(cx, prop);
     }
@@ -1802,15 +1802,15 @@ js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         return false;
     }
 
-    Value roots[] = { UndefinedValue(), UndefinedValue() };
+    CopyableValue roots[2] = { UndefinedTag(), UndefinedTag() };
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if (obj->isNative()) {
             JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
             if (attrs & JSPROP_GETTER)
-                roots[0].copy(sprop->getterValue());
+                roots[0].setFunObjOrUndefined(sprop->getterObject());
             if (attrs & JSPROP_SETTER)
-                roots[1].copy(sprop->setterValue());
+                roots[1].setFunObjOrUndefined(sprop->setterObject());
         }
 
         pobj->dropProperty(cx, prop);
@@ -1826,7 +1826,7 @@ js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JSObject *desc = NewObject(cx, &js_ObjectClass, NULL, NULL);
     if (!desc)
         return false;
-    SetObject(vp, *desc);    /* Root and return. */
+    vp->setObject(*desc);    /* Root and return. */
 
     const JSAtomState &atomState = cx->runtime->atomState;
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
@@ -1934,9 +1934,9 @@ HasProperty(JSContext* cx, JSObject* obj, jsid id, Value* vp, JSBool* answerp)
 
 PropertyDescriptor::PropertyDescriptor()
   : id(INT_TO_JSID(0)),
-    value(UndefinedValue()),
-    get(UndefinedValue()),
-    set(UndefinedValue()),
+    value(UndefinedTag()),
+    get(UndefinedTag()),
+    set(UndefinedTag()),
     attrs(0),
     hasGet(false),
     hasSet(false),
@@ -2142,14 +2142,12 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &d
                 break;
 
             if (desc.hasGet &&
-                !SameValue(cx, desc.getterValue(),
-                           sprop->hasGetterValue() ? sprop->getterValue() : UndefinedValue())) {
+                !SameValue(cx, desc.getterValue(), sprop->getterOrUndefined())) {
                 break;
             }
 
             if (desc.hasSet &&
-                !SameValue(cx, desc.setterValue(),
-                           sprop->hasSetterValue() ? sprop->setterValue() : UndefinedValue())) {
+                !SameValue(cx, desc.setterValue(), sprop->setterOrUndefined())) {
                 break;
             }
         } else {
@@ -2261,11 +2259,9 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &d
         JS_ASSERT(desc.isAccessorDescriptor() && sprop->isAccessorDescriptor());
         if (!sprop->configurable()) {
             if ((desc.hasSet &&
-                 !SameValue(cx, desc.setterValue(),
-                            sprop->hasSetterValue() ? sprop->setterValue() : UndefinedValue())) ||
+                 !SameValue(cx, desc.setterValue(), sprop->setterOrUndefined())) ||
                 (desc.hasGet &&
-                 !SameValue(cx, desc.getterValue(),
-                            sprop->hasGetterValue() ? sprop->getterValue() : UndefinedValue()))) {
+                 !SameValue(cx, desc.getterValue(), sprop->getterOrUndefined()))) {
                 return Reject(cx, obj2, current, JSMSG_CANT_REDEFINE_UNCONFIGURABLE_PROP,
                               throwError, desc.id, rval);
             }
@@ -3028,7 +3024,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     /* The caller sets parent on its own. */
     Value priv;
     priv.setPrivateVoidPtr(js_FloatingFrameIfGenerator(cx, fp));
-    clone->init(&js_BlockClass, NonFunObjPtr(*proto), NULL, priv);
+    clone->init(&js_BlockClass, NonFunObjTag(*proto), NULL, priv);
     clone->fslots[JSSLOT_BLOCK_DEPTH].copy(proto->fslots[JSSLOT_BLOCK_DEPTH]);
 
     JS_ASSERT(cx->runtime->emptyBlockScope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
@@ -3376,7 +3372,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
             key != JSProto_Null) {
             named = JS_FALSE;
         } else {
-            named = obj->defineProperty(cx, ATOM_TO_JSID(atom), ToValue(proto),
+            named = obj->defineProperty(cx, ATOM_TO_JSID(atom), ObjectOrNullTag(proto),
                                         PropertyStub, PropertyStub,
                                         (clasp->flags & JSCLASS_IS_ANONYMOUS)
                                         ? JSPROP_READONLY | JSPROP_PERMANENT
@@ -3410,7 +3406,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         ctor = FUN_OBJECT(fun);
         if (clasp->flags & JSCLASS_CONSTRUCT_PROTOTYPE) {
             Value rval;
-            if (!InternalConstruct(cx, proto, ToValue(ctor), 0, NULL, &rval))
+            if (!InternalConstruct(cx, proto, ObjectOrNullTag(ctor), 0, NULL, &rval))
                 goto bad;
             if (rval.isObject() && &rval.asObject() != proto)
                 proto = &rval.asObject();
@@ -3424,7 +3420,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         if (ctor->getClass() == clasp)
-            ctor->setProto(ToObjPtr(proto));
+            ctor->setProto(ObjectOrNullTag(proto));
     }
 
     /* Add properties and methods to the prototype and the constructor. */
@@ -3663,7 +3659,7 @@ js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj)
     if (!(obj->getClass()->flags & JSCLASS_IS_GLOBAL))
         return JS_TRUE;
 
-    return js_SetReservedSlot(cx, obj, key, ToValue(cobj));
+    return js_SetReservedSlot(cx, obj, key, ObjectOrNullTag(cobj));
 }
 
 JSBool
@@ -3709,7 +3705,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         if (!js_GetClassObject(cx, obj, protoKey, &cobj))
             return JS_FALSE;
         if (cobj) {
-            SetObject(vp, *cobj);
+            vp->setObject(*cobj);
             return JS_TRUE;
         }
         id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
@@ -4588,7 +4584,7 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
         return true;
 
     if (JS_UNLIKELY(sprop->isMethod()) && (getHow & JSGET_NO_METHOD_BARRIER)) {
-        JS_ASSERT(sprop->methodValue().isSame(*vp));
+        JS_ASSERT(&sprop->methodFunObj() == &vp->asFunObj());
         return true;
     }
 
@@ -5204,7 +5200,7 @@ JSBool
 js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
 {
     Value v;
-    SetObject(&v, obj);
+    v.setObject(*obj);
     if (hint == JSTYPE_STRING) {
     JS_ASSERT(hint != JSTYPE_OBJECT && hint != JSTYPE_FUNCTION);
 
@@ -5281,7 +5277,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
         } else {
             str = NULL;
         }
-        SetObject(vp, *obj);
+        vp->setObject(*obj);
         js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO,
                              JSDVG_SEARCH_STACK, *vp, str,
                              (hint == JSTYPE_VOID)
@@ -5556,7 +5552,7 @@ js_HasInstance(JSContext *cx, JSObject *obj, const Value *vp, JSBool *bp)
     }
 #endif
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
-                        JSDVG_SEARCH_STACK, ToValue(*obj), NULL);
+                        JSDVG_SEARCH_STACK, ObjectTag(*obj), NULL);
     return JS_FALSE;
 }
 
@@ -5682,7 +5678,7 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs
      * DontDelete.
      */
     if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                              ToValue(proto), PropertyStub, PropertyStub, attrs)) {
+                              ObjectOrNullTag(proto), PropertyStub, PropertyStub, attrs)) {
         return JS_FALSE;
     }
 
@@ -5691,7 +5687,7 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs
      * for a user-defined function f, is DontEnum.
      */
     return proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
-                                 ToValue(ctor), CheckCtorGetAccess, CheckCtorSetAccess, 0);
+                                 ObjectOrNullTag(ctor), CheckCtorGetAccess, CheckCtorSetAccess, 0);
 }
 
 JSBool
@@ -6375,11 +6371,11 @@ DumpObject(JSObject *obj)
     }
 
     fprintf(stderr, "proto ");
-    dumpValue(ToValue(obj->getProto()));
+    dumpValue(obj->getProtoValue());
     fputc('\n', stderr);
 
     fprintf(stderr, "parent ");
-    dumpValue(ToValue(obj->getParent()));
+    dumpValue(obj->getParentValue());
     fputc('\n', stderr);
 
     i = JSSLOT_PRIVATE;
@@ -6409,7 +6405,7 @@ MaybeDumpObject(const char *name, JSObject *obj)
 {
     if (obj) {
         fprintf(stderr, "  %s: ", name);
-        dumpValue(ToValue(*obj));
+        dumpValue(ObjectTag(*obj));
         fputc('\n', stderr);
     }
 }
