@@ -172,25 +172,26 @@
             <hbox id="search-sorters" class="sort-controls" sortby="name"
                   ascending="true"/>
           </hbox>
-          <vbox class="list-container" flex="1">
-            <hbox class="search-filter">
-              <label value="&search.filter.label;"/>
-              <checkbox id="search-filter-local" checked="true" disabled="true"
-                        label="&search.filter.installed.label;"/>
-              <checkbox id="search-filter-remote"
-                        checked="false" disabled="true"
-                        label="&search.filter.available.label;"/>
-            </hbox>
-            <vbox id="search-list-empty" class="empty-list-notice"
-                  flex="1" hidden="true">
-              <spacer flex="1"/>
-              <label value="&listEmpty.search.label;"/>
-              <button label="&listEmpty.button.label;" class="addon-control"
-                      command="cmd_goToDiscoverPane"/>
-              <spacer flex="3"/>
+          <richlistbox id="search-list" class="list" flex="1">
+            <vbox flex="1">
+              <hbox class="search-filter">
+                <label value="&search.filter.label;"/>
+                <checkbox id="search-filter-local" checked="true" disabled="true"
+                          label="&search.filter.installed.label;"/>
+                <checkbox id="search-filter-remote"
+                          checked="false" disabled="true"
+                          label="&search.filter.available.label;"/>
+              </hbox>
+              <vbox id="search-list-empty" class="empty-list-notice"
+                    flex="1" hidden="true">
+                <spacer flex="1"/>
+                <label value="&listEmpty.search.label;"/>
+                <button label="&listEmpty.button.label;" class="addon-control"
+                        command="cmd_goToDiscoverPane"/>
+                <spacer flex="3"/>
+              </vbox>
             </vbox>
-            <richlistbox id="search-list" class="list"/>
-          </vbox>
+          </richlistbox>
         </vbox>
 
         <!-- list view -->
@@ -199,17 +200,15 @@
             <hbox id="list-sorters" class="sort-controls" sortby="name"
                   ascending="true"/>
           </hbox>
-          <vbox class="list-container" flex="1">
-            <vbox id="addon-list-empty" class="empty-list-notice"
-                  flex="1" hidden="true">
-              <spacer flex="1"/>
-              <label value="&listEmpty.installed.label;"/>
-              <button label="&listEmpty.button.label;" class="addon-control"
-                      command="cmd_goToDiscoverPane"/>
-              <spacer flex="3"/>
-            </vbox>
-            <richlistbox id="addon-list" class="list"/>
+          <vbox id="addon-list-empty" class="empty-list-notice"
+                flex="1" hidden="true">
+            <spacer flex="1"/>
+            <label value="&listEmpty.installed.label;"/>
+            <button label="&listEmpty.button.label;" class="addon-control"
+                    command="cmd_goToDiscoverPane"/>
+            <spacer flex="3"/>
           </vbox>
+          <richlistbox id="addon-list" class="list" flex="1"/>
         </vbox>
 
         <!-- detail view -->
