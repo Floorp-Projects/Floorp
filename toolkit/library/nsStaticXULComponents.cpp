@@ -79,8 +79,6 @@
 #  define WIDGET_MODULES MODULE(nsWidgetOS2Module)
 #elif defined(MOZ_WIDGET_GTK2)
 #  define WIDGET_MODULES MODULE(nsWidgetGtk2Module)
-#elif defined(MOZ_WIDGET_PHOTON)
-#  define WIDGET_MODULES MODULE(nsWidgetPhModule)
 #elif defined(MOZ_WIDGET_QT)
 #  define WIDGET_MODULES MODULE(nsWidgetQtModule)
 #else

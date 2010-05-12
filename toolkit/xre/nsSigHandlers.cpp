@@ -79,10 +79,6 @@
 #include "nsToolkitCompsCID.h"
 #endif
 
-#ifdef MOZ_WIDGET_PHOTON
-#include <photon/PhProto.h>
-#endif
-
 static char _progname[1024] = "huh?";
 static unsigned int _gdb_sleep_duration = 300;
 
@@ -97,35 +93,7 @@ static const int kClientChannelFd = 3;
 #define CRAWL_STACK_ON_SIGSEGV
 #endif
 
-#ifdef MOZ_WIDGET_PHOTON
-void abnormal_exit_handler(int signum)
-{
-  /* Free any shared memory that has been allocated */
-  PgShmemCleanup();
-
-#if defined(DEBUG)
-  if (    (signum == SIGSEGV)
-       || (signum == SIGILL)
-       || (signum == SIGABRT)
-       || (signum == SIGFPE)
-     )
-  {
-    printf("prog = %s\npid = %d\nsignal = %s\n", 
-           _progname, getpid(), strsignal(signum));
-
-    printf("Sleeping for %d seconds.\n",_gdb_sleep_duration);
-    printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",
-           _progname, getpid());
-
-    sleep(_gdb_sleep_duration);
-
-    printf("Done sleeping...\n");
-  }
-#endif
-
-  _exit(1);
-}
-#elif defined(CRAWL_STACK_ON_SIGSEGV)
+#if defined(CRAWL_STACK_ON_SIGSEGV)
 
 #include <unistd.h>
 #include "nsISupportsUtils.h"
@@ -321,17 +289,7 @@ void InstallSignalHandlers(const char *ProgramName)
     }
   }
 
-#if defined(MOZ_WIDGET_PHOTON)
- /* Neutrino need this to free shared memory in case of a crash */
-  signal(SIGTERM, abnormal_exit_handler);
-  signal(SIGQUIT, abnormal_exit_handler);
-  signal(SIGINT,  abnormal_exit_handler);
-  signal(SIGHUP,  abnormal_exit_handler);
-  signal(SIGSEGV, abnormal_exit_handler);
-  signal(SIGILL,  abnormal_exit_handler);
-  signal(SIGABRT, abnormal_exit_handler);
-
-#elif defined(CRAWL_STACK_ON_SIGSEGV)
+#if defined(CRAWL_STACK_ON_SIGSEGV)
   if (!getenv("XRE_NO_WINDOWS_CRASH_DIALOG")) {
     void (*crap_handler)(int) =
 #ifdef MOZ_IPC
