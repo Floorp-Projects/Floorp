@@ -402,12 +402,8 @@ namespace nanojit
             NIns*       pedanticTop;
         #endif
 
-
-            // Instruction lookahead in gen().  lookahead[0] is the current
-            // instruction.  Nb: lookahead[1..N_LOOKAHEAD] may include dead
-            // instructions, but we won't know that they're dead yet.
-            static const int N_LOOKAHEAD = 3;
-            LInsp       lookahead[N_LOOKAHEAD];
+            // Holds the current instruction during gen().
+            LInsp       currIns;
 
             AR          _activation;
             RegAlloc    _allocator;
