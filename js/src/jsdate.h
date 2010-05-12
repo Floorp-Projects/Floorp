@@ -46,7 +46,7 @@
 
 #include "jsobj.h"
 
-extern JSClass js_DateClass;
+extern js::Class js_DateClass;
 
 inline bool
 JSObject::isDate() const

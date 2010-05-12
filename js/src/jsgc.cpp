@@ -1183,7 +1183,7 @@ js_AddRootRT(JSRuntime *rt, Value *vp, const char *name)
     js_WaitForGC(rt);
 
     void *key = vp;
-    return !!rt->gcRootsHash.put(key, JSRootInfo(name, JS_GC_ROOT_VALUE_PTR));
+    return !!rt->gcRootsHash.put(key, RootInfo(name, JS_GC_ROOT_VALUE_PTR));
 }
 
 JSBool
@@ -1200,7 +1200,7 @@ js_AddRootRT(JSRuntime *rt, void **rp, const char *name)
     js_WaitForGC(rt);
 
     void *key = rp;
-    return !!rt->gcRootsHash.put(key, JSRootInfo(name, JS_GC_ROOT_GCTHING_PTR));
+    return !!rt->gcRootsHash.put(key, RootInfo(name, JS_GC_ROOT_GCTHING_PTR));
 }
 
 JSBool
@@ -1217,9 +1217,9 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
     return JS_TRUE;
 }
 
-typedef JSRootedValueMap::Range RootRange;
-typedef JSRootedValueMap::Entry RootEntry;
-typedef JSRootedValueMap::Enum RootEnum;
+typedef RootedValueMap::Range RootRange;
+typedef RootedValueMap::Entry RootEntry;
+typedef RootedValueMap::Enum RootEnum;
 
 #ifdef DEBUG
 
@@ -2269,7 +2269,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 
     js_TraceRegExpStatics(trc, acx);
 
-    JS_CALL_VALUE_TRACER(trc, acx->iterValue, "iterValue");
+    CallGCMarkerIfGCThing(trc, acx->iterValue, "iterValue");
 
 #ifdef JS_TRACER
     TracerState* state = acx->tracerState;

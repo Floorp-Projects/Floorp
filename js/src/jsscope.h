@@ -586,14 +586,14 @@ struct JSScopeProperty {
 
   private:
     union {
-        js::PropertyOp rawGetter;       /* getter and setter hooks or objects */
+        js::PropertyOp  rawGetter;      /* getter and setter hooks or objects */
         JSObject        *getterObj;     /* user-defined callable "get" object or
                                            null if sprop->hasGetterValue() */
         JSScopeProperty *next;          /* next node in freelist */
     };
 
     union {
-        js::PropertyOp rawSetter;       /* getter is JSObject* and setter is 0
+        js::PropertyOp  rawSetter;      /* getter is JSObject* and setter is 0
                                            if sprop->isMethod() */
         JSObject        *setterObj;     /* user-defined callable "set" object or
                                            null if sprop->hasSetterValue() */
@@ -690,7 +690,7 @@ struct JSScopeProperty {
     bool isMethod() const   { return (flags & METHOD) != 0; }
 
     JSObject *methodObject() const { JS_ASSERT(isMethod()); return getterObj; }
-    jsval methodValue() const      { return OBJECT_TO_JSVAL(methodObject()); }
+    js::Value methodValue() const      { return js::FunObjValue(*methodObject()); }
 
     js::PropertyOp getter() const { return rawGetter; }
     bool hasDefaultGetter() const  { return !rawGetter; }
@@ -700,7 +700,9 @@ struct JSScopeProperty {
     // Per ES5, decode null getterObj as the undefined value, which encodes as null.
     js::Value getterValue() const {
         JS_ASSERT(hasGetterValue());
-        return getterObj ? OBJECT_TO_JSVAL(getterObj) : JSVAL_VOID;
+        if (getterObj)
+            return js::FunObjValue(*getterObj);
+        return js::UndefinedValue();
     }
 
     js::PropertyOp setter() const { return rawSetter; }
@@ -709,9 +711,11 @@ struct JSScopeProperty {
     JSObject *setterObject() const { JS_ASSERT(hasSetterValue()); return setterObj; }
 
     // Per ES5, decode null setterObj as the undefined value, which encodes as null.
-    jsval setterValue() const {
+    js::Value setterValue() const {
         JS_ASSERT(hasSetterValue());
-        return setterObj ? OBJECT_TO_JSVAL(setterObj) : JSVAL_VOID;
+        if (setterObj)
+            return js::FunObjValue(*setterObj);
+        return js::UndefinedValue();
     }
 
     inline JSDHashNumber hash() const;
