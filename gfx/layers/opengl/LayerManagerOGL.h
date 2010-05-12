@@ -259,6 +259,8 @@ private:
   LayerOGL *mRootLayer;
   /** Vertex buffer */
   GLuint mVBO;
+  /** Texture target to use for FBOs */
+  GLenum mFBOTextureTarget;
 
   /**
    * Region we're clipping our current drawing to.
