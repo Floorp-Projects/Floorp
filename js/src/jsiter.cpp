@@ -592,7 +592,6 @@ js_CloseIterator(JSContext *cx, jsval v)
     }
 #if JS_HAS_GENERATORS
     else if (clasp == &js_GeneratorClass.base) {
-        JS_ASSERT_NOT_ON_TRACE(cx);
         return CloseGenerator(cx, obj);
     }
 #endif
