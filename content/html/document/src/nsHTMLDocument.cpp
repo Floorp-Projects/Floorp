@@ -3022,15 +3022,45 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
 
   mContentEditableCount += aChange;
 
+  class DeferredContentEditableCountChangeEvent : public nsRunnable
+  {
+  public:
+    DeferredContentEditableCountChangeEvent(nsHTMLDocument *aDoc, nsIContent *aElement)
+      : mDoc(aDoc)
+      , mElement(aElement)
+    {
+    }
+
+    NS_IMETHOD Run() {
+      if (mElement->GetOwnerDoc() == mDoc) {
+        mDoc->DeferredContentEditableCountChange(mElement);
+      }
+      return NS_OK;
+    }
+
+  private:
+    nsRefPtr<nsHTMLDocument> mDoc;
+    nsCOMPtr<nsIContent> mElement;
+  };
+
+  nsContentUtils::AddScriptRunner(
+    new DeferredContentEditableCountChangeEvent(this, aElement));
+
+  return NS_OK;
+}
+
+void
+nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
+{
   if (mParser ||
       (mUpdateNestLevel > 0 && (mContentEditableCount > 0) != IsEditingOn())) {
-    return NS_OK;
+    return;
   }
 
   EditingState oldState = mEditingState;
 
   nsresult rv = EditingStateChanged();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, );
 
   if (oldState == mEditingState && mEditingState == eContentEditable) {
     // We just changed the contentEditable state of a node, we need to reset
@@ -3039,40 +3069,37 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
     if (node) {
       nsPIDOMWindow *window = GetWindow();
       if (!window)
-        return NS_ERROR_FAILURE;
+        return;
 
       nsIDocShell *docshell = window->GetDocShell();
       if (!docshell)
-        return NS_ERROR_FAILURE;
+        return;
 
       nsCOMPtr<nsIEditorDocShell> editorDocShell =
         do_QueryInterface(docshell, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+      NS_ENSURE_SUCCESS(rv, );
 
       nsCOMPtr<nsIEditor> editor;
       editorDocShell->GetEditor(getter_AddRefs(editor));
       if (editor) {
         nsCOMPtr<nsIDOMRange> range;
         rv = NS_NewRange(getter_AddRefs(range));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, );
 
         rv = range->SelectNode(node);
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, );
 
         nsCOMPtr<nsIInlineSpellChecker> spellChecker;
         rv = editor->GetInlineSpellChecker(PR_FALSE,
                                            getter_AddRefs(spellChecker));
-        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ENSURE_SUCCESS(rv, );
 
         if (spellChecker) {
           rv = spellChecker->SpellCheckRange(range);
-          NS_ENSURE_SUCCESS(rv, rv);
         }
       }
     }
   }
-
-  return NS_OK;
 }
 
 static PRBool
