@@ -96,7 +96,7 @@ namespace nanojit
         }
 
         verbose_only(
-        if (_logc->lcbits & LC_Assembly) {
+        if (_logc->lcbits & LC_Native) {
             outputf("        %p:",_nIns);
             outputf("        patch entry:");
         })
@@ -170,7 +170,7 @@ namespace nanojit
         uint32_t argc = ci->getArgTypes(argTypes);
 
         NanoAssert(ins->isop(LIR_callp) || ins->isop(LIR_calld));
-        verbose_only(if (_logc->lcbits & LC_Assembly)
+        verbose_only(if (_logc->lcbits & LC_Native)
                      outputf("        %p:", _nIns);
                      )
         bool indirect = ci->isIndirect();

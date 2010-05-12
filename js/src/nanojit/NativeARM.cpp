@@ -890,7 +890,7 @@ Assembler::asm_call(LInsp ins)
 
     // Emit the branch.
     if (!indirect) {
-        verbose_only(if (_logc->lcbits & LC_Assembly)
+        verbose_only(if (_logc->lcbits & LC_Native)
             outputf("        %p:", _nIns);
         )
 

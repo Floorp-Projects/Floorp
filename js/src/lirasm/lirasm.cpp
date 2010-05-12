@@ -1954,7 +1954,7 @@ Lirasm::Lirasm(bool verbose) :
     mLirbuf = new (mAlloc) LirBuffer(mAlloc);
 #ifdef DEBUG
     if (mVerbose) {
-        mLogc.lcbits = LC_ReadLIR | LC_Assembly | LC_RegAlloc | LC_Activation;
+        mLogc.lcbits = LC_ReadLIR | LC_AfterDCE | LC_Native | LC_RegAlloc | LC_Activation;
         mLirbuf->printer = new (mAlloc) LInsPrinter(mAlloc);
     }
 #endif
