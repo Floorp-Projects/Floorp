@@ -46,7 +46,6 @@ interface nsIScriptGlobalObject;
 #include "jspubtd.h"
 %}
 
-      native jsval(jsval);
 [ptr] native JSValPtr(jsval);
 [ptr] native JSContext(JSContext);
 
