@@ -396,7 +396,8 @@ class TokenStream
             lookahead--;
             cursor = (cursor + 1) & ntokensMask;
             TokenKind tt = currentToken().type;
-            if (tt != TOK_EOL || (flags & TSF_NEWLINES))
+            JS_ASSERT(!(flags & TSF_NEWLINES));
+            if (tt != TOK_EOL)
                 return tt;
         }
 
@@ -419,6 +420,7 @@ class TokenStream
     TokenKind peekToken(uintN withFlags = 0) {
         Flagger flagger(this, withFlags);
         if (lookahead != 0) {
+            JS_ASSERT(lookahead == 1);
             return tokens[(cursor + lookahead) & ntokensMask].type;
         }
         TokenKind tt = getToken();
