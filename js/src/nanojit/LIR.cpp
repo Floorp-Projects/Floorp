@@ -1111,8 +1111,12 @@ namespace nanojit
              * NB: If there is a backward branch other than the loop-restart branch, this is
              * going to be wrong. Unfortunately there doesn't seem to be an easy way to detect
              * such branches. Just do not create any.
+             *
+             * The isLive() call is valid because liveness will have been
+             * computed by Assembler::gen() for every instruction following
+             * this guard.
              */
-            else if (ins->isGuard()) {
+            else if (ins->isGuard() && ins->isLive()) {
                 stk.reset();
                 top = getTop(ins);
                 top >>= 3;
