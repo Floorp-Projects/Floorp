@@ -9516,7 +9516,7 @@ TraceRecorder::getThis(LIns*& this_ins)
 
     this_ins = get(&thisv);
 
-    JSObject* wrappedGlobal = globalObj->thisObject(cx);
+    JSObject* wrappedGlobal = globalObj->thisObject(cx, globalObj);
     if (!wrappedGlobal)
         RETURN_ERROR("globalObj->thisObject hook threw in getThis");
 

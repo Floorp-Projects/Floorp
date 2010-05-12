@@ -423,9 +423,19 @@ typedef JSBool
 (* JSEqualityOp)(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
 /*
- * A generic type for functions mapping an object to another object, or null
- * if an error or exception was thrown on cx.  Used by JSObjectOps.thisObject
- * at present.
+ * The type of JSObjectOps::thisObject. Return a "stunt this" object for obj,
+ * having a parent chain that ends in scope; or NULL on error.
+ *
+ * The engine guarantees that obj->map->ops->thisObject == the callback
+ * and that cx, obj, and scope are non-null.
+ */
+typedef JSObject *
+(* JSThisObjectOp)(JSContext *cx, JSObject *obj, JSObject *scope);
+
+/*
+ * A generic type for functions mapping an object to another object, or null if
+ * an error or exception was thrown on cx. Used by JSObjectOps.innerObject and
+ * outerObject at present.
  */
 typedef JSObject *
 (* JSObjectOp)(JSContext *cx, JSObject *obj);
