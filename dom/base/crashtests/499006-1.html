@@ -1,0 +1,26 @@
+<html>
+<head>
+<script type="text/javascript">
+
+function select(start, startOffset, end, endOffset) {
+  var sel = getSelection();
+  sel.removeAllRanges();
+  var range = document.createRange();
+  range.setStart(start, startOffset);
+  range.setEnd(end, endOffset);
+  sel.addRange(range);
+}
+
+function boom() {
+  var p = document.body;
+  select(p.childNodes[0],0,p.childNodes[0],1);
+  sel = getSelection();
+  range = sel.getRangeAt(0);
+  range.detach();
+  range.insertNode(p);
+}
+
+</script>
+</head>
+<body onload="boom()"><span>Hello Kitty</span></body>
+</html>
