@@ -768,6 +768,13 @@ js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
 extern JS_REQUIRES_STACK JSObject *
 js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);
 
+inline JSObject *
+js_UnwrapWithObject(JSContext *cx, JSObject *withobj)
+{
+    JS_ASSERT(withobj->getClass() == &js_WithClass);
+    return withobj->getProto();
+}
+
 /*
  * Create a new block scope object not linked to any proto or parent object.
  * Blocks are created by the compiler to reify let blocks and comprehensions.
