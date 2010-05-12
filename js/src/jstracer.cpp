@@ -13587,8 +13587,8 @@ TraceRecorder::record_JSOP_MOREITER()
     bool cond;
     LIns* cond_ins;
 
-    /* JSOP_FOR* is at the top of the loop and it already guarded on the class. */
-    if (clasp == &js_IteratorClass.base) {
+    /* JSOP_FOR* already guards on this, but in certain rare cases we might record misformed loop traces. */
+    if (guardClass(iterobj, iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), ACC_OTHER)) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         jsval *cursor = ni->props_cursor;
         jsval *end = ni->props_end;
