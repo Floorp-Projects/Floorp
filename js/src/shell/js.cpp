@@ -2763,7 +2763,7 @@ split_outerObject(JSContext *cx, JSObject *obj)
 }
 
 static JSObject *
-split_thisObject(JSContext *cx, JSObject *obj, JSObject */*scope*/)
+split_thisObject(JSContext *cx, JSObject *obj)
 {
     OBJ_TO_OUTER_OBJECT(cx, obj);
     if (!obj)
