@@ -3555,9 +3555,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
   if (!mDocument) {
     return NS_ERROR_FAILURE;
   }
-
-  NS_ASSERTION(mDidInitialReflow, "should have done initial reflow by now");
-
+  
   // Hold a reference to the ESM in case event dispatch tears us down.
   nsCOMPtr<nsIEventStateManager> esm = mPresContext->EventStateManager();
 
@@ -3814,8 +3812,6 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
 nsresult
 PresShell::ScrollToAnchor()
 {
-  NS_ASSERTION(mDidInitialReflow, "should have done initial reflow by now");
-
   if (!mLastAnchorScrolledTo)
     return NS_OK;
 
@@ -4015,8 +4011,6 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
   nsCOMPtr<nsIDocument> currentDoc = content->GetCurrentDoc();
   NS_ENSURE_STATE(currentDoc);
 
-  NS_ASSERTION(mDidInitialReflow, "should have done initial reflow by now");
-
   mContentToScrollTo = aContent;
   mContentScrollVPosition = aVPercent;
   mContentScrollHPosition = aHPercent;
@@ -4043,8 +4037,6 @@ PresShell::DoScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
                                    PRIntn      aHPercent)
 {
-  NS_ASSERTION(mDidInitialReflow, "should have done initial reflow by now");
-
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame) {
     mContentToScrollTo = nsnull;

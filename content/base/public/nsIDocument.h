@@ -116,8 +116,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0xeb847679, 0x3b48, 0x411c, \
-  { 0xa9, 0xb8, 0x8a, 0xdc, 0xdb, 0xc6, 0x47, 0xb8 } }
+{ 0x625fe492, 0x0344, 0x406c, \
+  { 0xaf, 0x7f, 0x55, 0xfe, 0xa2, 0x6b, 0x3d, 0x20 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1350,11 +1350,6 @@ public:
    * nsFileDataProtocolHandler::RemoveFileDataEntry
    */
   virtual void RegisterFileDataUri(nsACString& aUri) = 0;
-
-  virtual void SetScrollToRef(nsIURI *aDocumentURI) = 0;
-  virtual void ScrollToRef() = 0;
-  virtual void ResetScrolledToRefAlready() = 0;
-  virtual void SetChangeScrollPosWhenScrollingToRef(PRBool aValue) = 0;
 
 protected:
   ~nsIDocument()
