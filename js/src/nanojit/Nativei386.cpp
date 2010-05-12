@@ -1187,7 +1187,7 @@ namespace nanojit
             asm_immi(r, ins->immI(), /*canClobberCCs*/false);
 
         } else if (ins->isImmD()) {
-            asm_immf(r, ins->immQ(), ins->immD(), /*canClobberCCs*/false);
+            asm_immd(r, ins->immDasQ(), ins->immD(), /*canClobberCCs*/false);
 
         } else if (ins->isop(LIR_paramp) && ins->paramKind() == 0 &&
             (arg = ins->paramArg()) >= (abi_regcount = max_abi_regs[_thisfrag->lirbuf->abi])) {
@@ -1391,8 +1391,8 @@ namespace nanojit
             }
 
         } else if (value->isImmD()) {
-            STi(rb, dr+4, value->immQorDhi());
-            STi(rb, dr,   value->immQorDlo());
+            STi(rb, dr+4, value->immDhi());
+            STi(rb, dr,   value->immDlo());
 
         } else if (value->isop(LIR_ldd)) {
             // value is 64bit struct or int64_t, or maybe a double.
@@ -1455,7 +1455,7 @@ namespace nanojit
 
         // Handle float conditions separately.
         if (isCmpDOpcode(condop)) {
-            return asm_fbranch(branchOnFalse, cond, targ);
+            return asm_branchd(branchOnFalse, cond, targ);
         }
 
         if (branchOnFalse) {
@@ -1583,7 +1583,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_fcond(LInsp ins)
+    void Assembler::asm_condd(LInsp ins)
     {
         LOpcode opcode = ins->opcode();
         Register r = prepareResultReg(ins, AllowableFlagRegs);
@@ -1593,7 +1593,7 @@ namespace nanojit
 
         if (_config.i386_sse2) {
             // LIR_ltd and LIR_gtd are handled by the same case because
-            // asm_fcmp() converts LIR_ltd(a,b) to LIR_gtd(b,a).  Likewise
+            // asm_cmpd() converts LIR_ltd(a,b) to LIR_gtd(b,a).  Likewise
             // for LIR_led/LIR_ged.
             switch (opcode) {
             case LIR_eqd:   SETNP(r);       break;
@@ -1609,7 +1609,7 @@ namespace nanojit
 
         freeResourcesOf(ins);
 
-        asm_fcmp(ins);
+        asm_cmpd(ins);
     }
 
     void Assembler::asm_cond(LInsp ins)
@@ -2091,7 +2091,7 @@ namespace nanojit
             LDi(r, val);
     }
 
-    void Assembler::asm_immf(Register r, uint64_t q, double d, bool canClobberCCs)
+    void Assembler::asm_immd(Register r, uint64_t q, double d, bool canClobberCCs)
     {
         // Floats require non-standard handling. There is no load-64-bit-immediate
         // instruction on i386, so in the general case, we must load it from memory.
@@ -2130,13 +2130,13 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_immf(LInsp ins)
+    void Assembler::asm_immd(LInsp ins)
     {
         NanoAssert(ins->isImmD());
         if (ins->isInReg()) {
             Register rr = ins->getReg();
             NanoAssert(rmask(rr) & FpRegs);
-            asm_immf(rr, ins->immQ(), ins->immD(), /*canClobberCCs*/true);
+            asm_immd(rr, ins->immDasQ(), ins->immD(), /*canClobberCCs*/true);
         } else {
             // Do nothing, will be rematerialized when necessary.
         }
@@ -2386,7 +2386,7 @@ namespace nanojit
             NanoAssert(!lhs->isInReg() || FST0 == lhs->getReg());
 
             if (rhs->isImmD()) {
-                const uint64_t* p = findImmDFromPool(rhs->immQ());
+                const uint64_t* p = findImmDFromPool(rhs->immDasQ());
 
                 switch (op) {
                 case LIR_addd:  FADDdm( (const double*)p);  break;
@@ -2414,7 +2414,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_i2f(LInsp ins)
+    void Assembler::asm_i2d(LInsp ins)
     {
         LIns* lhs = ins->oprnd1();
 
@@ -2432,7 +2432,7 @@ namespace nanojit
         freeResourcesOf(ins);
     }
 
-    void Assembler::asm_u2f(LInsp ins)
+    void Assembler::asm_ui2d(LInsp ins)
     {
         LIns* lhs = ins->oprnd1();
 
@@ -2486,7 +2486,7 @@ namespace nanojit
         freeResourcesOf(ins);
     }
 
-    void Assembler::asm_f2i(LInsp ins)
+    void Assembler::asm_d2i(LInsp ins)
     {
         LIns *lhs = ins->oprnd1();
 
@@ -2519,14 +2519,14 @@ namespace nanojit
         }
     }
 
-    NIns* Assembler::asm_fbranch(bool branchOnFalse, LIns *cond, NIns *targ)
+    NIns* Assembler::asm_branchd(bool branchOnFalse, LIns *cond, NIns *targ)
     {
         NIns* at;
         LOpcode opcode = cond->opcode();
 
         if (_config.i386_sse2) {
             // LIR_ltd and LIR_gtd are handled by the same case because
-            // asm_fcmp() converts LIR_ltd(a,b) to LIR_gtd(b,a).  Likewise
+            // asm_cmpd() converts LIR_ltd(a,b) to LIR_gtd(b,a).  Likewise
             // for LIR_led/LIR_ged.
             if (branchOnFalse) {
                 // op == LIR_xf
@@ -2557,7 +2557,7 @@ namespace nanojit
         }
 
         at = _nIns;
-        asm_fcmp(cond);
+        asm_cmpd(cond);
 
         return at;
     }
@@ -2565,7 +2565,7 @@ namespace nanojit
     // WARNING: This function cannot generate any code that will affect the
     // condition codes prior to the generation of the
     // ucomisd/fcompp/fcmop/fcom.  See asm_cmp() for more details.
-    void Assembler::asm_fcmp(LIns *cond)
+    void Assembler::asm_cmpd(LIns *cond)
     {
         LOpcode condop = cond->opcode();
         NanoAssert(isCmpDOpcode(condop));
@@ -2714,7 +2714,7 @@ namespace nanojit
                 FNSTSW_AX();        // requires EAX to be free
                 if (rhs->isImmD())
                 {
-                    const uint64_t* p = findImmDFromPool(rhs->immQ());
+                    const uint64_t* p = findImmDFromPool(rhs->immDasQ());
                     FCOMdm((pop?1:0), (const double*)p);
                 }
                 else

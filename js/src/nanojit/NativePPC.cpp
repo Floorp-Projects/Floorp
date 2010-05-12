@@ -409,7 +409,7 @@ namespace nanojit
         asm_cmp(op, a, b, cr);
     }
 
-    void Assembler::asm_fcond(LIns *ins) {
+    void Assembler::asm_condd(LIns *ins) {
         asm_cond(ins);
     }
 
@@ -965,7 +965,7 @@ namespace nanojit
         }
     }
 
-    void Assembler::asm_i2f(LIns *ins) {
+    void Assembler::asm_i2d(LIns *ins) {
         Register r = deprecated_prepResultReg(ins, FpRegs);
         Register v = findRegFor(ins->oprnd1(), GpRegs);
         const int d = 16; // natural aligned
@@ -988,7 +988,7 @@ namespace nanojit
     #endif
     }
 
-    void Assembler::asm_u2f(LIns *ins) {
+    void Assembler::asm_ui2d(LIns *ins) {
         Register r = deprecated_prepResultReg(ins, FpRegs);
         Register v = findRegFor(ins->oprnd1(), GpRegs);
         const int d = 16;
@@ -1010,7 +1010,7 @@ namespace nanojit
     #endif
     }
 
-    void Assembler::asm_f2i(LInsp) {
+    void Assembler::asm_d2i(LInsp) {
         NanoAssertMsg(0, "NJ_F2I_SUPPORTED not yet supported for this architecture");
     }
 
@@ -1079,7 +1079,7 @@ namespace nanojit
     }
 #endif
 
-    void Assembler::asm_immf(LIns *ins) {
+    void Assembler::asm_immd(LIns *ins) {
     #ifdef NANOJIT_64BIT
         Register r = ins->deprecated_getReg();
         if (deprecated_isKnownReg(r) && (rmask(r) & FpRegs)) {
@@ -1109,7 +1109,7 @@ namespace nanojit
             asm_li(R0, w.hi);
         }
         else {
-            int64_t q = ins->immQ();
+            int64_t q = ins->immDasQ();
             if (isS32(q)) {
                 asm_li(r, int32_t(q));
                 return;

@@ -208,8 +208,8 @@ namespace nanojit
     void underrunProtect(int bytes); \
     void asm_align_code(); \
     void asm_cmp(LIns *cond); \
-    void asm_fcmp(LIns *cond); \
-    NIns* asm_fbranch(bool, LIns*, NIns*);
+    void asm_cmpd(LIns *cond); \
+    NIns* asm_branchd(bool, LIns*, NIns*);
 
 #define IMM32(i)    \
     --_nIns;        \

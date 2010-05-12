@@ -405,9 +405,9 @@ namespace nanojit
                 // generating a pointless store/load/store sequence
                 Register rb = findRegFor(base, GpRegs);
                 STW32(L2, dr+4, rb);
-                SET32(value->immQorDlo(), L2);
+                SET32(value->immDlo(), L2);
                 STW32(L2, dr, rb);
-                SET32(value->immQorDhi(), L2);
+                SET32(value->immDhi(), L2);
                 return;
             }
 
@@ -473,7 +473,7 @@ namespace nanojit
         NanoAssert(cond->isCmp());
         if (isCmpDOpcode(condop))
             {
-                return asm_fbranch(branchOnFalse, cond, targ);
+                return asm_branchd(branchOnFalse, cond, targ);
             }
 
         underrunProtect(32);
@@ -581,7 +581,7 @@ namespace nanojit
             }
     }
 
-    void Assembler::asm_fcond(LInsp ins)
+    void Assembler::asm_condd(LInsp ins)
     {
         // only want certain regs
         Register r = deprecated_prepResultReg(ins, AllowableFlagRegs);
@@ -599,7 +599,7 @@ namespace nanojit
         else // if (condop == LIR_gtd)
             MOVFGI(1, 0, 0, 0, r);
         ORI(G0, 0, r);
-        asm_fcmp(ins);
+        asm_cmpd(ins);
     }
 
     void Assembler::asm_cond(LInsp ins)
@@ -821,7 +821,7 @@ namespace nanojit
             SET32(val, rr);
     }
 
-    void Assembler::asm_immf(LInsp ins)
+    void Assembler::asm_immd(LInsp ins)
     {
         underrunProtect(64);
         Register rr = ins->deprecated_getReg();
@@ -842,9 +842,9 @@ namespace nanojit
         if (d)
             {
                 STW32(L2, d+4, FP);
-                SET32(ins->immQorDlo(), L2);
+                SET32(ins->immDlo(), L2);
                 STW32(L2, d, FP);
-                SET32(ins->immQorDhi(), L2);
+                SET32(ins->immDhi(), L2);
             }
     }
 
@@ -888,7 +888,7 @@ namespace nanojit
 
     }
 
-    void Assembler::asm_i2f(LInsp ins)
+    void Assembler::asm_i2d(LInsp ins)
     {
         underrunProtect(32);
         // where our result goes
@@ -898,7 +898,7 @@ namespace nanojit
         LDDF32(FP, d, rr);
     }
 
-    void Assembler::asm_u2f(LInsp ins)
+    void Assembler::asm_ui2d(LInsp ins)
     {
         underrunProtect(72);
         // where our result goes
@@ -917,7 +917,7 @@ namespace nanojit
         SETHI(0x43300000, G1);
     }
 
-    void Assembler::asm_f2i(LInsp ins) {
+    void Assembler::asm_d2i(LInsp ins) {
         LIns *lhs = ins->oprnd1();
         Register rr = prepareResultReg(ins, GpRegs);
         Register ra = findRegFor(lhs, FpRegs);
@@ -934,7 +934,7 @@ namespace nanojit
         FMOVD(s, r);
     }
 
-    NIns * Assembler::asm_fbranch(bool branchOnFalse, LIns *cond, NIns *targ)
+    NIns * Assembler::asm_branchd(bool branchOnFalse, LIns *cond, NIns *targ)
     {
         NIns *at = 0;
         LOpcode condop = cond->opcode();
@@ -978,11 +978,11 @@ namespace nanojit
                 else //if (condop == LIR_gtd)
                     FBG(0, tt);
             }
-        asm_fcmp(cond);
+        asm_cmpd(cond);
         return at;
     }
 
-    void Assembler::asm_fcmp(LIns *cond)
+    void Assembler::asm_cmpd(LIns *cond)
     {
         underrunProtect(4);
         LIns* lhs = cond->oprnd1();
