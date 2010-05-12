@@ -44,5 +44,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") != textarea-rtl.html textarea-no-resize.ht
 # placeholder
 include placeholder/reftest.list
 
+# input
+include input/reftest.list
+
 # output element
 include output/reftest.list

@@ -343,10 +343,9 @@ nsFindContentIterator::MaybeSetupInnerIterator()
     return;
 
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
-  PRInt32 controlType = formControl->GetType();
-  if (controlType != NS_FORM_TEXTAREA && 
-      controlType != NS_FORM_INPUT_TEXT)
+  if (!formControl->IsTextControl(PR_TRUE)) {
     return;
+  }
 
   SetupInnerIterator(content);
   if (mInnerIterator) {

@@ -1136,8 +1136,7 @@ PRBool nsTextControlFrame::IsSingleLineTextControl() const
 {
   nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mContent);
   if (formControl) {
-    PRInt32 type = formControl->GetType();
-    return (type == NS_FORM_INPUT_TEXT) || (type == NS_FORM_INPUT_PASSWORD);
+    return formControl->IsSingleLineTextControl(PR_FALSE);
   }
   return PR_FALSE;
 }
