@@ -148,8 +148,8 @@ nsAccessNode::Init()
 #ifdef DEBUG_A11Y
   NS_ASSERTION(!mIsInitialized, "Initialized twice!");
 #endif
-  nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
-  if (!docAccessible) {
+  nsRefPtr<nsDocAccessible> docAcc = GetDocAccessible();
+  if (!docAcc) {
     // No doc accessible yet for this node's document. 
     // There was probably an accessible event fired before the 
     // current document was ever asked for by the assistive technology.
@@ -158,22 +158,19 @@ nsAccessNode::Init()
     if (presShell) {
       nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(presShell->GetDocument()));
       if (docNode) {
-        nsCOMPtr<nsIAccessible> accessible;
-        GetAccService()->GetAccessibleInShell(docNode, presShell,
-                                              getter_AddRefs(accessible));
-        docAccessible = do_QueryInterface(accessible);
+        nsRefPtr<nsAccessible> accessible =
+          GetAccService()->GetAccessibleInWeakShell(docNode, mWeakShell);
+        docAcc = do_QueryObject(accessible);
       }
     }
-    NS_ASSERTION(docAccessible, "Cannot cache new nsAccessNode");
-    if (!docAccessible) {
+    NS_ASSERTION(docAcc, "Cannot cache new nsAccessNode");
+    if (!docAcc) {
       return NS_ERROR_FAILURE;
     }
   }
 
   void* uniqueID;
   GetUniqueID(&uniqueID);
-  nsRefPtr<nsDocAccessible> docAcc = do_QueryObject(docAccessible);
-  NS_ASSERTION(docAcc, "No nsDocAccessible for document accessible!");
 
   if (!docAcc->CacheAccessNode(uniqueID, this))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -185,7 +182,8 @@ nsAccessNode::Init()
   if (content && content->IsInAnonymousSubtree()) {
     // Specific examples of where this is used: <input type="file"> and <xul:findbar>
     nsCOMPtr<nsIAccessible> parentAccessible;
-    docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE, getter_AddRefs(parentAccessible));
+    docAcc->GetAccessibleInParentChain(mDOMNode, PR_TRUE,
+                                       getter_AddRefs(parentAccessible));
     if (parentAccessible) {
       PRInt32 childCountUnused;
       parentAccessible->GetChildCount(&childCountUnused);

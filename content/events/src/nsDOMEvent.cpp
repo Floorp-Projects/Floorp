@@ -939,12 +939,14 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       newEvent = mutationEvent;
       break;
     }
+#ifdef ACCESSIBILITY
     case NS_ACCESSIBLE_EVENT:
     {
       newEvent = new nsAccessibleEvent(PR_FALSE, msg, nsnull);
       isInputEvent = PR_TRUE;
       break;
     }
+#endif
     case NS_FORM_EVENT:
     {
       newEvent = new nsFormEvent(PR_FALSE, msg);
