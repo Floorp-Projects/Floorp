@@ -85,14 +85,14 @@ static void iterator_finalize(JSContext *cx, JSObject *obj);
 static void iterator_trace(JSTracer *trc, JSObject *obj);
 static JSObject *iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
 
-JSExtendedClass js_IteratorClass = {
+ExtendedClass js_IteratorClass = {
   { "Iterator",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator) |
     JSCLASS_MARK_IS_TRACE |
     JSCLASS_IS_EXTENDED,
-    JS_PropertyStub,  JS_PropertyStub, JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,   iterator_finalize,
+    PropertyStub,     PropertyStub,    PropertyStub,     PropertyStub,
+    EnumerateStub,    ResolveStub,     ConvertStub,      iterator_finalize,
     NULL,             NULL,            NULL,             NULL,
     NULL,             NULL,            JS_CLASS_TRACE(iterator_trace), NULL },
     NULL,             NULL,            NULL,             iterator_iterator,
