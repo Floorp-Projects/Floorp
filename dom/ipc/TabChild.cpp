@@ -378,6 +378,7 @@ TabChild::~TabChild()
         JS_DestroyContext(mCx);
       }
     }
+    mTabChildGlobal->mTabChild = nsnull;
 }
 
 NS_IMETHODIMP
@@ -944,6 +945,8 @@ NS_IMETHODIMP
 TabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
 {
   *aDocShell = nsnull;
+  if (!mTabChild)
+    return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mTabChild->WebNavigation());
   docShell.swap(*aDocShell);
   return NS_OK;
@@ -952,11 +955,15 @@ TabChildGlobal::GetDocShell(nsIDocShell** aDocShell)
 JSContext*
 TabChildGlobal::GetJSContextForEventHandlers()
 {
+  if (!mTabChild)
+    return nsnull;
   return mTabChild->GetJSContext();
 }
 
 nsIPrincipal* 
 TabChildGlobal::GetPrincipal()
 {
+  if (!mTabChild)
+    return nsnull;
   return mTabChild->GetPrincipal();
 }
