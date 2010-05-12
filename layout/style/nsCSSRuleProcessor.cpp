@@ -2823,10 +2823,7 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
 /* static */ PRBool
 nsCSSRuleProcessor::CascadeSheet(nsCSSStyleSheet* aSheet, CascadeEnumData* aData)
 {
-  PRBool bSheetApplicable = PR_TRUE;
-  aSheet->GetApplicable(bSheetApplicable);
-
-  if (bSheetApplicable &&
+  if (aSheet->GetApplicable() &&
       aSheet->UseForPresentation(aData->mPresContext, aData->mCacheKey) &&
       aSheet->mInner) {
     nsCSSStyleSheet* child = aSheet->mInner->mFirstChild;

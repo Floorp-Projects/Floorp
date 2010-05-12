@@ -121,8 +121,7 @@ nsXBLPrototypeResources::FlushSkinSheets()
        i < count; ++i) {
     nsCSSStyleSheet* oldSheet = oldSheets[i];
 
-    nsCOMPtr<nsIURI> uri;
-    oldSheet->GetSheetURI(getter_AddRefs(uri));
+    nsCOMPtr<nsIURI> uri = oldSheet->GetSheetURI();
 
     nsRefPtr<nsCSSStyleSheet> newSheet;
     if (IsChromeURI(uri)) {

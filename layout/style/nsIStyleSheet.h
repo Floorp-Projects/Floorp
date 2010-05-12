@@ -46,19 +46,16 @@
 #include <stdio.h>
 #include "nsISupports.h"
 
-class nsIAtom;
 class nsString;
 class nsIURI;
-class nsIStyleRule;
-class nsIContent;
 class nsIDocument;
-class nsIStyleRuleProcessor;
+template<class T> struct already_AddRefed;
 
 // IID for the nsIStyleSheet interface
-// 7b2d31da-c3fb-4537-bd97-337272b83568
+// 0304a68a-3ab2-413e-9979-a256b3416caa
 #define NS_ISTYLE_SHEET_IID     \
-{ 0x7b2d31da, 0xc3fb, 0x4537,   \
- { 0xbd, 0x97, 0x33, 0x72, 0x72, 0xb8, 0x35, 0x68 } }
+{ 0x0304a68a, 0x3ab2, 0x413e,   \
+ { 0x99, 0x79, 0xa2, 0x56, 0xb3, 0x41, 0x6c, 0xaa } }
 
 /**
  * A style sheet is a thing associated with a document that has style
@@ -73,11 +70,11 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISTYLE_SHEET_IID)
 
   // basic style sheet data
-  NS_IMETHOD GetSheetURI(nsIURI** aSheetURI) const = 0;
-  NS_IMETHOD GetBaseURI(nsIURI** aBaseURI) const = 0;
-  NS_IMETHOD GetTitle(nsString& aTitle) const = 0;
-  NS_IMETHOD GetType(nsString& aType) const = 0;
-  NS_IMETHOD_(PRBool) HasRules() const = 0;
+  virtual already_AddRefed<nsIURI> GetSheetURI() const = 0;
+  virtual already_AddRefed<nsIURI> GetBaseURI() const = 0;
+  virtual void GetTitle(nsString& aTitle) const = 0;
+  virtual void GetType(nsString& aType) const = 0;
+  virtual PRBool HasRules() const = 0;
 
   /**
    * Whether the sheet is applicable.  A sheet that is not applicable
@@ -86,7 +83,7 @@ public:
    * being incomplete.
    *
    */
-  NS_IMETHOD GetApplicable(PRBool& aApplicable) const = 0;
+  virtual PRBool GetApplicable() const = 0;
 
   /**
    * Set the stylesheet to be enabled.  This may or may not make it
@@ -97,18 +94,18 @@ public:
    * batched updates are desired.  If you want updates handled for
    * you, see nsIDOMStyleSheet::SetDisabled().
    */
-  NS_IMETHOD SetEnabled(PRBool aEnabled) = 0;
+  virtual void SetEnabled(PRBool aEnabled) = 0;
 
   /**
    * Whether the sheet is complete.
    */
-  NS_IMETHOD GetComplete(PRBool& aComplete) const = 0;
-  NS_IMETHOD SetComplete() = 0;
+  virtual PRBool GetComplete() const = 0;
+  virtual void SetComplete() = 0;
 
   // style sheet owner info
-  NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const = 0;  // may be null
-  NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const = 0; // may be null
-  NS_IMETHOD SetOwningDocument(nsIDocument* aDocument) = 0;
+  virtual already_AddRefed<nsIStyleSheet> GetParentSheet() const = 0;  // may be null
+  virtual already_AddRefed<nsIDocument> GetOwningDocument() const = 0; // may be null
+  virtual void SetOwningDocument(nsIDocument* aDocument) = 0;
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const = 0;

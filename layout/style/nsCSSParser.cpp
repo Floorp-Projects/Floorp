@@ -892,8 +892,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   NS_ENSURE_STATE(mSheet);
 
 #ifdef DEBUG
-  nsCOMPtr<nsIURI> uri;
-  mSheet->GetSheetURI(getter_AddRefs(uri));
+  nsCOMPtr<nsIURI> uri = mSheet->GetSheetURI();
   PRBool equal;
   NS_ASSERTION(NS_SUCCEEDED(aSheetURI->Equals(uri, &equal)) && equal,
                "Sheet URI does not match passed URI");
