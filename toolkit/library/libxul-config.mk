@@ -236,7 +236,7 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifeq (,$(filter qt beos os2 photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter qt beos os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef MOZ_XUL
 COMPONENT_LIBS += fileview
 DEFINES += -DMOZ_FILEVIEW
@@ -312,10 +312,6 @@ COMPONENT_LIBS += widget_mac
 endif
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += widget_qt
-endif
-
-ifdef MOZ_ENABLE_PHOTON
-COMPONENT_LIBS += widget_photon
 endif
 
 ifdef ACCESSIBILITY
