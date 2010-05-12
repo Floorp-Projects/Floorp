@@ -241,7 +241,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
         return true;
     }
 
-    AutoValueRooter tvr(cx, NullValue());
+    AutoValueRooter tvr(cx);
     if (!obj->getProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom), tvr.addr()))
         return false;
 
@@ -276,7 +276,7 @@ js_IndexToId(JSContext *cx, jsuint index, jsid *idp)
     str = js_NumberToString(cx, index);
     if (!str)
         return JS_FALSE;
-    return js_ValueToStringId(cx, Value(str), idp);
+    return js_ValueToStringId(cx, str, idp);
 }
 
 static JSBool
@@ -350,7 +350,7 @@ JSObject::resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
 
     if (initializeAllSlots) {
         for (uint32 i = oldcap; i < newcap; i++)
-            setDenseArrayElement(i, Value(JS_ARRAY_HOLE));
+            setDenseArrayElement(i, JS_ARRAY_HOLE);
     }
 
     return true;
@@ -405,7 +405,7 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uint32 newcap, bool initialize
              * Initialize the slots caller didn't actually ask for.
              */
             for (uint32 i = newcap; i < actualCapacity; i++) {
-                setDenseArrayElement(i, Value(JS_ARRAY_HOLE));
+                setDenseArrayElement(i, JS_ARRAY_HOLE);
             }
         }
     }
@@ -415,7 +415,7 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uint32 newcap, bool initialize
 static bool
 ReallyBigIndexToId(JSContext* cx, jsdouble index, jsid* idp)
 {
-    return js_ValueToStringId(cx, Value(index), idp);
+    return js_ValueToStringId(cx, index, idp);
 }
 
 static bool
@@ -534,7 +534,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index)
             if (!INDEX_TOO_SPARSE(obj, idx) && idx < obj->getDenseArrayCapacity()) {
                 if (!obj->getDenseArrayElement(idx).isMagic(JS_ARRAY_HOLE))
                     obj->decDenseArrayCountBy(1);
-                obj->setDenseArrayElement(idx, Value(JS_ARRAY_HOLE));
+                obj->setDenseArrayElement(idx, JS_ARRAY_HOLE);
                 return JS_TRUE;
             }
         }
@@ -582,7 +582,7 @@ JSBool
 js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
 {
     JSErrorReporter older = JS_SetErrorReporter(cx, NULL);
-    AutoValueRooter tvr(cx, NullValue());
+    AutoValueRooter tvr(cx);
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
     JSBool ok = obj->getProperty(cx, id, tvr.addr());
     JS_SetErrorReporter(cx, older);
@@ -1050,7 +1050,7 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval)
     if (js_IdIsIndex(id, &i) && i < obj->getDenseArrayCapacity() &&
         !obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
         obj->decDenseArrayCountBy(1);
-        obj->setDenseArrayElement(i, Value(JS_ARRAY_HOLE));
+        obj->setDenseArrayElement(i, JS_ARRAY_HOLE);
     }
 
     rval->setBoolean(true);
@@ -1163,7 +1163,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
             goto out_bad;
 
         if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
-            obj->setDenseArrayElement(i, UndefinedValue());
+            obj->setDenseArrayElement(i, UndefinedTag());
             continue;
         }
 
@@ -1528,7 +1528,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     JS_ASSERT(start == MAXINDEX);
     AutoValueRooter tvr(cx);
     AutoIdRooter idr(cx);
-    Value idval(double(MAXINDEX));
+    Value idval(MAXINDEX);
     do {
         tvr.addr()->copy(*vector++);
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
@@ -1601,7 +1601,7 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisObjectFromVp(cx, vp);
     if (!obj || !js_GetLengthProperty(cx, obj, &len))
         return JS_FALSE;
-    SetObject(vp, *obj);
+    vp->setObject(*obj);
 
     if (obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj)) {
         /* An empty array or an array with no elements is already reversed. */
@@ -1899,7 +1899,7 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
     if (!obj || !js_GetLengthProperty(cx, obj, &len))
         return false;
     if (len == 0) {
-        SetObject(vp, *obj);
+        vp->setObject(*obj);
         return true;
     }
 
@@ -2110,7 +2110,7 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
         if (!JS_CHECK_OPERATION_LIMIT(cx) || !DeleteArrayElement(cx, obj, --len))
             return JS_FALSE;
     }
-    SetObject(vp, *obj);
+    vp->setObject(*obj);
     return true;
 }
 
@@ -2273,7 +2273,7 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
                 obj->decDenseArrayCountBy(1);
             Value *elems = obj->getDenseArrayElements();
             memmove(elems, elems + 1, length * sizeof(jsval));
-            obj->setDenseArrayElement(length, Value(JS_ARRAY_HOLE));
+            obj->setDenseArrayElement(length, JS_ARRAY_HOLE);
             obj->setDenseArrayLength(length);
             return JS_TRUE;
         }
@@ -2323,7 +2323,7 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
                 Value *elems = obj->getDenseArrayElements();
                 memmove(elems + argc, elems, length * sizeof(jsval));
                 for (uint32 i = 0; i < argc; i++)
-                    obj->setDenseArrayElement(i, Value(JS_ARRAY_HOLE));
+                    obj->setDenseArrayElement(i, JS_ARRAY_HOLE);
             } else {
                 last = length;
                 jsdouble upperIndex = last + argc;
@@ -2413,7 +2413,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
         argv++;
     }
 
-    AutoValueRooter tvr(cx, NullValue());
+    AutoValueRooter tvr(cx);
 
     /* If there are elements to remove, put them into the return value. */
     if (count > 0) {
@@ -2545,7 +2545,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         length = 0;
     }
 
-    AutoValueRooter tvr(cx, NullValue());
+    AutoValueRooter tvr(cx);
 
     /* Loop over [0, argc] to concat args into nobj, expanding all Arrays. */
     for (uintN i = 0; i <= argc; i++) {
@@ -2874,9 +2874,9 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
     Value *invokevp = args.getvp();
 
     Value calleev, thisv, objv;
-    SetObject(&calleev, callable);
-    SetObject(&thisv, thisp);
-    SetObject(&objv, obj);
+    calleev.setObject(*callable);
+    thisv.setObjectOrNull(thisp);
+    objv.setObject(*obj);
     AutoValueRooter tvr(cx);
     for (jsint i = start; i != end; i += step) {
         JSBool hole;
@@ -3098,7 +3098,7 @@ js_NewEmptyArray(JSContext* cx, JSObject* proto)
     /* Initialize all fields of JSObject. */
     obj->map = const_cast<JSObjectMap *>(&SharedArrayMap);
 
-    obj->init(&js_ArrayClass, NonFunObjPtr(*proto), proto->getParent(), NullValue());
+    obj->init(&js_ArrayClass, NonFunObjTag(*proto), proto->getParent(), NullTag());
     obj->setDenseArrayLength(0);
     obj->setDenseArrayCount(0);
     return obj;

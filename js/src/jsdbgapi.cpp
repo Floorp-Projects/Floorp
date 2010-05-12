@@ -679,7 +679,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 /* Initialize slots/frame. */
                 Value *vp = frame.getvp();
                 PodZero(vp, vplen);
-                SetObject(&vp[0], closure);
+                vp[0].setObject(*closure);
                 JSStackFrame *fp = frame.getFrame();
                 PodZero(fp->slots(), nfixed);
                 PodZero(fp);
@@ -707,7 +707,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             JSBool ok = !wp->setter ||
                         (sprop->hasSetterValue()
                          ? InternalCall(cx, obj,
-                                        ToValue(CastAsObject(wp->setter)),
+                                        ObjectTag(*CastAsObject(wp->setter)),
                                         1, vp, vp)
                          : wp->setter(cx, obj, userid, vp));
 
