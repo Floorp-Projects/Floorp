@@ -148,12 +148,12 @@ OP_64(ldq,      22, Ld,   Q,   -1)  // load quad
 OP___(ldd,      23, Ld,   D,   -1)  // load double
 OP___(ldf2d,    24, Ld,   D,   -1)  // load float and extend to a double
 
-OP___(sti2c,    25, Sti,  V,    0)  // store int truncated to char
-OP___(sti2s,    26, Sti,  V,    0)  // store int truncated to short
-OP___(sti,      27, Sti,  V,    0)  // store int
-OP_64(stq,      28, Sti,  V,    0)  // store quad
-OP___(std,      29, Sti,  V,    0)  // store double
-OP___(std2f,    30, Sti,  V,    0)  // store double as a float (losing precision)
+OP___(sti2c,    25, St,   V,    0)  // store int truncated to char
+OP___(sti2s,    26, St,   V,    0)  // store int truncated to short
+OP___(sti,      27, St,   V,    0)  // store int
+OP_64(stq,      28, St,   V,    0)  // store quad
+OP___(std,      29, St,   V,    0)  // store double
+OP___(std2f,    30, St,   V,    0)  // store double as a float (losing precision)
 
 OP_UN(31)
 OP_UN(32)

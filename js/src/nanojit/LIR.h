@@ -357,19 +357,22 @@ namespace nanojit
         ABI_CDECL
     };
 
+    // This is much the same as LTy, but we need to distinguish signed and
+    // unsigned 32-bit ints so that they will be extended to 64-bits correctly
+    // on 64-bit platforms.
+    //
     // All values must fit into three bits.  See CallInfo for details.
     enum ArgType {
-        ARGTYPE_V = 0,      // void
-        ARGTYPE_D = 1,      // double (64bit)
-        ARGTYPE_I = 2,      // int32_t
-        ARGTYPE_UI = 3,      // uint32_t
+        ARGTYPE_V  = 0,     // void
+        ARGTYPE_I  = 1,     // int32_t
+        ARGTYPE_UI = 2,     // uint32_t
 #ifdef NANOJIT_64BIT
-        ARGTYPE_Q = 4,      // uint64_t
+        ARGTYPE_Q  = 3,     // uint64_t
 #endif
+        ARGTYPE_D  = 4,     // double
 
         // aliases
         ARGTYPE_P = PTR_SIZE(ARGTYPE_I, ARGTYPE_Q), // pointer
-        ARGTYPE_LO = ARGTYPE_I, // int32_t
         ARGTYPE_B = ARGTYPE_I   // bool
     };
 
@@ -652,12 +655,12 @@ namespace nanojit
     extern const uint8_t repKinds[];
 
     enum LTy {
-        LTy_V,   // no value/no type
-        LTy_I,    // 32-bit integer
+        LTy_V,  // void: no value/no type
+        LTy_I,  // int:  32-bit integer
 #ifdef NANOJIT_64BIT
-        LTy_Q,    // 64-bit integer
+        LTy_Q,  // quad: 64-bit integer
 #endif
-        LTy_D,    // 64-bit float
+        LTy_D,  // double: 64-bit float
 
         LTy_P  = PTR_SIZE(LTy_I, LTy_Q)   // word-sized integer
     };
@@ -748,7 +751,7 @@ namespace nanojit
         LRK_Op2,
         LRK_Op3,
         LRK_Ld,
-        LRK_Sti,
+        LRK_St,
         LRK_Sk,
         LRK_C,
         LRK_P,
@@ -763,7 +766,7 @@ namespace nanojit
     class LInsOp2;
     class LInsOp3;
     class LInsLd;
-    class LInsSti;
+    class LInsSt;
     class LInsSk;
     class LInsC;
     class LInsP;
@@ -819,7 +822,7 @@ namespace nanojit
         inline LInsOp2* toLInsOp2() const;
         inline LInsOp3* toLInsOp3() const;
         inline LInsLd*  toLInsLd()  const;
-        inline LInsSti* toLInsSti() const;
+        inline LInsSt*  toLInsSt()  const;
         inline LInsSk*  toLInsSk()  const;
         inline LInsC*   toLInsC()   const;
         inline LInsP*   toLInsP()   const;
@@ -836,14 +839,14 @@ namespace nanojit
         inline void initLInsOp2(LOpcode opcode, LIns* oprnd1, LIns* oprnd2);
         inline void initLInsOp3(LOpcode opcode, LIns* oprnd1, LIns* oprnd2, LIns* oprnd3);
         inline void initLInsLd(LOpcode opcode, LIns* val, int32_t d, AccSet accSet);
-        inline void initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d, AccSet accSet);
+        inline void initLInsSt(LOpcode opcode, LIns* val, LIns* base, int32_t d, AccSet accSet);
         inline void initLInsSk(LIns* prevLIns);
         // Nb: args[] must be allocated and initialised before being passed in;
         // initLInsC() just copies the pointer into the LInsC.
         inline void initLInsC(LOpcode opcode, LIns** args, const CallInfo* ci);
         inline void initLInsP(int32_t arg, int32_t kind);
         inline void initLInsI(LOpcode opcode, int32_t immI);
-        inline void initLInsQorD(LOpcode opcode, int64_t imm64);
+        inline void initLInsQorD(LOpcode opcode, uint64_t immQorD);
         inline void initLInsJtbl(LIns* index, uint32_t size, LIns** table);
 
         LOpcode opcode() const { return sharedFields.opcode; }
@@ -953,10 +956,14 @@ namespace nanojit
         inline int32_t  immI() const;
 
         // For LInsQorD.
-        inline int32_t  immQorDlo() const;
-        inline int32_t  immQorDhi() const;
-        inline uint64_t immQ()   const;
-        inline double   immD()  const;
+#ifdef NANOJIT_64BIT
+        inline int32_t  immQlo() const;
+        inline uint64_t immQ() const;
+#endif
+        inline int32_t  immDlo() const;
+        inline int32_t  immDhi() const;
+        inline double   immD() const;
+        inline uint64_t immDasQ() const;
 
         // For LIR_allocp.
         inline int32_t  size()    const;
@@ -975,7 +982,7 @@ namespace nanojit
 
         // isLInsXYZ() returns true if the instruction has the LInsXYZ form.
         // Note that there is some overlap with other predicates, eg.
-        // isStore()==isLInsSti(), isCall()==isLInsC(), but that's ok;  these
+        // isStore()==isLInsSt(), isCall()==isLInsC(), but that's ok;  these
         // ones are used mostly to check that opcodes are appropriate for
         // instruction layouts, the others are used for non-debugging
         // purposes.
@@ -999,9 +1006,9 @@ namespace nanojit
             NanoAssert(LRK_None != repKinds[opcode()]);
             return LRK_Ld == repKinds[opcode()];
         }
-        bool isLInsSti() const {
+        bool isLInsSt() const {
             NanoAssert(LRK_None != repKinds[opcode()]);
-            return LRK_Sti == repKinds[opcode()];
+            return LRK_St == repKinds[opcode()];
         }
         bool isLInsSk() const {
             NanoAssert(LRK_None != repKinds[opcode()]);
@@ -1054,7 +1061,7 @@ namespace nanojit
             return isCmovOpcode(opcode());
         }
         bool isStore() const {
-            return isLInsSti();
+            return isLInsSt();
         }
         bool isLoad() const {
             return isLInsLd();
@@ -1182,7 +1189,7 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // 2-operand form.  Used for loads, guards, branches, comparisons, binary
+    // 2-operand form.  Used for guards, branches, comparisons, binary
     // arithmetic/logic ops, etc.
     class LInsOp2
     {
@@ -1238,8 +1245,8 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // Used for LIR_sti and LIR_stq.
-    class LInsSti
+    // Used for all stores.
+    class LInsSt
     {
     private:
         friend class LIns;
@@ -1359,18 +1366,18 @@ namespace nanojit
     {
     };
 
-    LInsOp0* LIns::toLInsOp0() const { return (LInsOp0*)( uintptr_t(this+1) - sizeof(LInsOp0) ); }
-    LInsOp1* LIns::toLInsOp1() const { return (LInsOp1*)( uintptr_t(this+1) - sizeof(LInsOp1) ); }
-    LInsOp2* LIns::toLInsOp2() const { return (LInsOp2*)( uintptr_t(this+1) - sizeof(LInsOp2) ); }
-    LInsOp3* LIns::toLInsOp3() const { return (LInsOp3*)( uintptr_t(this+1) - sizeof(LInsOp3) ); }
-    LInsLd*  LIns::toLInsLd()  const { return (LInsLd* )( uintptr_t(this+1) - sizeof(LInsLd ) ); }
-    LInsSti* LIns::toLInsSti() const { return (LInsSti*)( uintptr_t(this+1) - sizeof(LInsSti) ); }
-    LInsSk*  LIns::toLInsSk()  const { return (LInsSk* )( uintptr_t(this+1) - sizeof(LInsSk ) ); }
-    LInsC*   LIns::toLInsC()   const { return (LInsC*  )( uintptr_t(this+1) - sizeof(LInsC  ) ); }
-    LInsP*   LIns::toLInsP()   const { return (LInsP*  )( uintptr_t(this+1) - sizeof(LInsP  ) ); }
-    LInsI*   LIns::toLInsI()   const { return (LInsI*  )( uintptr_t(this+1) - sizeof(LInsI  ) ); }
-    LInsQorD* LIns::toLInsQorD() const { return (LInsQorD*)( uintptr_t(this+1) - sizeof(LInsQorD) ); }
-    LInsJtbl*LIns::toLInsJtbl()const { return (LInsJtbl*)(uintptr_t(this+1) - sizeof(LInsJtbl)); }
+    LInsOp0*  LIns::toLInsOp0()  const { return (LInsOp0* )(uintptr_t(this+1) - sizeof(LInsOp0 )); }
+    LInsOp1*  LIns::toLInsOp1()  const { return (LInsOp1* )(uintptr_t(this+1) - sizeof(LInsOp1 )); }
+    LInsOp2*  LIns::toLInsOp2()  const { return (LInsOp2* )(uintptr_t(this+1) - sizeof(LInsOp2 )); }
+    LInsOp3*  LIns::toLInsOp3()  const { return (LInsOp3* )(uintptr_t(this+1) - sizeof(LInsOp3 )); }
+    LInsLd*   LIns::toLInsLd()   const { return (LInsLd*  )(uintptr_t(this+1) - sizeof(LInsLd  )); }
+    LInsSt*   LIns::toLInsSt()   const { return (LInsSt*  )(uintptr_t(this+1) - sizeof(LInsSt  )); }
+    LInsSk*   LIns::toLInsSk()   const { return (LInsSk*  )(uintptr_t(this+1) - sizeof(LInsSk  )); }
+    LInsC*    LIns::toLInsC()    const { return (LInsC*   )(uintptr_t(this+1) - sizeof(LInsC   )); }
+    LInsP*    LIns::toLInsP()    const { return (LInsP*   )(uintptr_t(this+1) - sizeof(LInsP   )); }
+    LInsI*    LIns::toLInsI()    const { return (LInsI*   )(uintptr_t(this+1) - sizeof(LInsI   )); }
+    LInsQorD* LIns::toLInsQorD() const { return (LInsQorD*)(uintptr_t(this+1) - sizeof(LInsQorD)); }
+    LInsJtbl* LIns::toLInsJtbl() const { return (LInsJtbl*)(uintptr_t(this+1) - sizeof(LInsJtbl)); }
 
     void LIns::initLInsOp0(LOpcode opcode) {
         initSharedFields(opcode);
@@ -1402,14 +1409,14 @@ namespace nanojit
         toLInsLd()->accSet = accSet;
         NanoAssert(isLInsLd());
     }
-    void LIns::initLInsSti(LOpcode opcode, LIns* val, LIns* base, int32_t d, AccSet accSet) {
+    void LIns::initLInsSt(LOpcode opcode, LIns* val, LIns* base, int32_t d, AccSet accSet) {
         initSharedFields(opcode);
-        toLInsSti()->oprnd_1 = val;
-        toLInsSti()->oprnd_2 = base;
+        toLInsSt()->oprnd_1 = val;
+        toLInsSt()->oprnd_2 = base;
         NanoAssert(d == int16_t(d));
-        toLInsSti()->disp = int16_t(d);
-        toLInsSti()->accSet = accSet;
-        NanoAssert(isLInsSti());
+        toLInsSt()->disp = int16_t(d);
+        toLInsSt()->accSet = accSet;
+        NanoAssert(isLInsSt());
     }
     void LIns::initLInsSk(LIns* prevLIns) {
         initSharedFields(LIR_skip);
@@ -1434,10 +1441,10 @@ namespace nanojit
         toLInsI()->immI = immI;
         NanoAssert(isLInsI());
     }
-    void LIns::initLInsQorD(LOpcode opcode, int64_t imm64) {
+    void LIns::initLInsQorD(LOpcode opcode, uint64_t immQorD) {
         initSharedFields(opcode);
-        toLInsQorD()->immQorDlo = int32_t(imm64);
-        toLInsQorD()->immQorDhi = int32_t(imm64 >> 32);
+        toLInsQorD()->immQorDlo = int32_t(immQorD);
+        toLInsQorD()->immQorDhi = int32_t(immQorD >> 32);
         NanoAssert(isLInsQorD());
     }
     void LIns::initLInsJtbl(LIns* index, uint32_t size, LIns** table) {
@@ -1449,11 +1456,11 @@ namespace nanojit
     }
 
     LIns* LIns::oprnd1() const {
-        NanoAssert(isLInsOp1() || isLInsOp2() || isLInsOp3() || isLInsLd() || isLInsSti() || isLInsJtbl());
+        NanoAssert(isLInsOp1() || isLInsOp2() || isLInsOp3() || isLInsLd() || isLInsSt() || isLInsJtbl());
         return toLInsOp2()->oprnd_1;
     }
     LIns* LIns::oprnd2() const {
-        NanoAssert(isLInsOp2() || isLInsOp3() || isLInsSti());
+        NanoAssert(isLInsOp2() || isLInsOp3() || isLInsSt());
         return toLInsOp2()->oprnd_2;
     }
     LIns* LIns::oprnd3() const {
@@ -1507,8 +1514,8 @@ namespace nanojit
     }
 
     int32_t LIns::disp() const {
-        if (isLInsSti()) {
-            return toLInsSti()->disp;
+        if (isLInsSt()) {
+            return toLInsSt()->disp;
         } else {
             NanoAssert(isLInsLd());
             return toLInsLd()->disp;
@@ -1516,8 +1523,8 @@ namespace nanojit
     }
 
     AccSet LIns::accSet() const {
-        if (isLInsSti()) {
-            return toLInsSti()->accSet;
+        if (isLInsSt()) {
+            return toLInsSt()->accSet;
         } else {
             NanoAssert(isLInsLd());
             return toLInsLd()->accSet;
@@ -1534,20 +1541,27 @@ namespace nanojit
 
     inline int32_t LIns::immI()     const { NanoAssert(isImmI());  return toLInsI()->immI; }
 
-    inline int32_t LIns::immQorDlo()   const { NanoAssert(isImmQorD()); return toLInsQorD()->immQorDlo; }
-    inline int32_t LIns::immQorDhi()   const { NanoAssert(isImmQorD()); return toLInsQorD()->immQorDhi; }
+#ifdef NANOJIT_64BIT
+    inline int32_t LIns::immQlo()   const { NanoAssert(isImmQ()); return toLInsQorD()->immQorDlo; }
     uint64_t       LIns::immQ()     const {
-        NanoAssert(isImmQorD());
+        NanoAssert(isImmQ());
         return (uint64_t(toLInsQorD()->immQorDhi) << 32) | uint32_t(toLInsQorD()->immQorDlo);
     }
+#endif
+    inline int32_t LIns::immDlo() const { NanoAssert(isImmD()); return toLInsQorD()->immQorDlo; }
+    inline int32_t LIns::immDhi() const { NanoAssert(isImmD()); return toLInsQorD()->immQorDhi; }
     double         LIns::immD()    const {
         NanoAssert(isImmD());
         union {
             double f;
             uint64_t q;
         } u;
-        u.q = immQ();
+        u.q = immDasQ();
         return u.f;
+    }
+    uint64_t       LIns::immDasQ()  const {
+        NanoAssert(isImmD());
+        return (uint64_t(toLInsQorD()->immQorDhi) << 32) | uint32_t(toLInsQorD()->immQorDlo);
     }
 
     int32_t LIns::size() const {
@@ -1677,11 +1691,6 @@ namespace nanojit
             return ins2(v, oprnd1, insImmI(imm));
         }
 
-#if NJ_SOFTFLOAT_SUPPORTED
-        LIns* qjoin(LInsp lo, LInsp hi) {
-            return ins2(LIR_ii2d, lo, hi);
-        }
-#endif
         LIns* insImmP(const void *ptr) {
 #ifdef NANOJIT_64BIT
             return insImmQ((uint64_t)ptr);
@@ -1716,7 +1725,7 @@ namespace nanojit
     #endif
         }
 
-        // Chooses LIR_sti or LIR_stq based on size of value.
+        // Chooses LIR_sti, LIR_stq or LIR_std according to the type of 'value'.
         LIns* insStore(LIns* value, LIns* base, int32_t d, AccSet accSet);
     };
 

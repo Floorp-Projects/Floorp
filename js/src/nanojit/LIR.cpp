@@ -212,7 +212,7 @@ namespace nanojit
     {
         // Make sure the size is ok
         NanoAssert(0 == szB % sizeof(void*));
-        NanoAssert(sizeof(LIns) <= szB && szB <= sizeof(LInsSti));  // LInsSti is the biggest one
+        NanoAssert(sizeof(LIns) <= szB && szB <= sizeof(LInsSt));  // LInsSt is the biggest one
         NanoAssert(_unused < _limit);
 
         debug_only( bool moved = false; )
@@ -252,9 +252,9 @@ namespace nanojit
     LInsp LirBufWriter::insStore(LOpcode op, LInsp val, LInsp base, int32_t d, AccSet accSet)
     {
         if (isS16(d)) {
-            LInsSti* insSti = (LInsSti*)_buf->makeRoom(sizeof(LInsSti));
-            LIns*    ins    = insSti->getLIns();
-            ins->initLInsSti(op, val, base, d, accSet);
+            LInsSt* insSt = (LInsSt*)_buf->makeRoom(sizeof(LInsSt));
+            LIns*   ins   = insSt->getLIns();
+            ins->initLInsSt(op, val, base, d, accSet);
             return ins;
         } else {
             // If the displacement is more than 16 bits, put it in a separate instruction.
@@ -369,8 +369,8 @@ namespace nanojit
 #ifdef NANOJIT_64BIT
     LInsp LirBufWriter::insImmQ(uint64_t imm)
     {
-        LInsQorD* insN64 = (LInsQorD*)_buf->makeRoom(sizeof(LInsQorD));
-        LIns*    ins    = insN64->getLIns();
+        LInsQorD* insQorD = (LInsQorD*)_buf->makeRoom(sizeof(LInsQorD));
+        LIns*     ins     = insQorD->getLIns();
         ins->initLInsQorD(LIR_immq, imm);
         return ins;
     }
@@ -378,8 +378,8 @@ namespace nanojit
 
     LInsp LirBufWriter::insImmD(double d)
     {
-        LInsQorD* insN64 = (LInsQorD*)_buf->makeRoom(sizeof(LInsQorD));
-        LIns*    ins    = insN64->getLIns();
+        LInsQorD* insQorD = (LInsQorD*)_buf->makeRoom(sizeof(LInsQorD));
+        LIns*     ins     = insQorD->getLIns();
         union {
             double d;
             uint64_t q;
@@ -481,39 +481,37 @@ namespace nanojit
         NanoStaticAssert(sizeof(LIns) == 1*sizeof(void*));
 
         // LInsXYZ have expected sizes too.
-        NanoStaticAssert(sizeof(LInsOp0) == 1*sizeof(void*));
-        NanoStaticAssert(sizeof(LInsOp1) == 2*sizeof(void*));
-        NanoStaticAssert(sizeof(LInsOp2) == 3*sizeof(void*));
-        NanoStaticAssert(sizeof(LInsOp3) == 4*sizeof(void*));
-        NanoStaticAssert(sizeof(LInsLd)  == 3*sizeof(void*));
-        NanoStaticAssert(sizeof(LInsSti) == 4*sizeof(void*));
-        NanoStaticAssert(sizeof(LInsSk)  == 2*sizeof(void*));
-        NanoStaticAssert(sizeof(LInsC)   == 3*sizeof(void*));
-        NanoStaticAssert(sizeof(LInsP)   == 2*sizeof(void*));
-        NanoStaticAssert(sizeof(LInsI)   == 2*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsOp0)  == 1*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsOp1)  == 2*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsOp2)  == 3*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsOp3)  == 4*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsLd)   == 3*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsSt)   == 4*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsSk)   == 2*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsC)    == 3*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsP)    == 2*sizeof(void*));
+        NanoStaticAssert(sizeof(LInsI)    == 2*sizeof(void*));
     #if defined NANOJIT_64BIT
         NanoStaticAssert(sizeof(LInsQorD) == 2*sizeof(void*));
     #else
         NanoStaticAssert(sizeof(LInsQorD) == 3*sizeof(void*));
     #endif
+        NanoStaticAssert(sizeof(LInsJtbl) == 4*sizeof(void*));
 
-        // oprnd_1 must be in the same position in LIns{Op1,Op2,Op3,Ld,Sti}
+        // oprnd_1 must be in the same position in LIns{Op1,Op2,Op3,Ld,St,Jtbl}
         // because oprnd1() is used for all of them.
-        NanoStaticAssert( (offsetof(LInsOp1, ins) - offsetof(LInsOp1, oprnd_1)) ==
-                          (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) );
-        NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_1)) ==
-                          (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_1)) );
-        NanoStaticAssert( (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_1)) ==
-                          (offsetof(LInsLd,  ins) - offsetof(LInsLd,  oprnd_1)) );
-        NanoStaticAssert( (offsetof(LInsLd,  ins) - offsetof(LInsLd,  oprnd_1)) ==
-                          (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_1)) );
+        #define OP1OFFSET (offsetof(LInsOp1,  ins) - offsetof(LInsOp1,  oprnd_1))
+        NanoStaticAssert( OP1OFFSET == (offsetof(LInsOp2,  ins) - offsetof(LInsOp2,  oprnd_1)) );
+        NanoStaticAssert( OP1OFFSET == (offsetof(LInsOp3,  ins) - offsetof(LInsOp3,  oprnd_1)) );
+        NanoStaticAssert( OP1OFFSET == (offsetof(LInsLd,   ins) - offsetof(LInsLd,   oprnd_1)) );
+        NanoStaticAssert( OP1OFFSET == (offsetof(LInsSt,   ins) - offsetof(LInsSt,   oprnd_1)) );
+        NanoStaticAssert( OP1OFFSET == (offsetof(LInsJtbl, ins) - offsetof(LInsJtbl, oprnd_1)) );
 
-        // oprnd_2 must be in the same position in LIns{Op2,Op3,Sti}
-        // because oprnd2() is used for both of them.
-        NanoStaticAssert( (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_2)) ==
-                          (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_2)) );
-        NanoStaticAssert( (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_2)) ==
-                          (offsetof(LInsSti, ins) - offsetof(LInsSti, oprnd_2)) );
+        // oprnd_2 must be in the same position in LIns{Op2,Op3,St}
+        // because oprnd2() is used for all of them.
+        #define OP2OFFSET (offsetof(LInsOp2, ins) - offsetof(LInsOp2, oprnd_2))
+        NanoStaticAssert( OP2OFFSET == (offsetof(LInsOp3, ins) - offsetof(LInsOp3, oprnd_2)) );
+        NanoStaticAssert( OP2OFFSET == (offsetof(LInsSt,  ins) - offsetof(LInsSt,  oprnd_2)) );
     }
 
     bool insIsS16(LInsp i)
@@ -537,19 +535,19 @@ namespace nanojit
 #ifdef NANOJIT_64BIT
         case LIR_q2i:
             if (oprnd->isImmQ())
-                return insImmI(oprnd->immQorDlo());
+                return insImmI(oprnd->immQlo());
             break;
 #endif
 #if NJ_SOFTFLOAT_SUPPORTED
         case LIR_dlo2i:
             if (oprnd->isImmD())
-                return insImmI(oprnd->immQorDlo());
+                return insImmI(oprnd->immDlo());
             if (oprnd->isop(LIR_ii2d))
                 return oprnd->oprnd1();
             break;
         case LIR_dhi2i:
             if (oprnd->isImmD())
-                return insImmI(oprnd->immQorDhi());
+                return insImmI(oprnd->immDhi());
             if (oprnd->isop(LIR_ii2d))
                 return oprnd->oprnd2();
             break;
@@ -990,13 +988,13 @@ namespace nanojit
         // its type.
         LOpcode op = LOpcode(0);
         switch (value->retType()) {
-        case LTy_I:   op = LIR_sti;   break;
+        case LTy_I: op = LIR_sti;   break;
 #ifdef NANOJIT_64BIT
-        case LTy_Q:   op = LIR_stq;  break;
+        case LTy_Q: op = LIR_stq;   break;
 #endif
-        case LTy_D:   op = LIR_std;  break;
-        case LTy_V:  NanoAssert(0);  break;
-        default:        NanoAssert(0);  break;
+        case LTy_D: op = LIR_std;   break;
+        case LTy_V: NanoAssert(0);  break;
+        default:    NanoAssert(0);  break;
         }
         return insStore(op, value, base, d, accSet);
     }
@@ -2014,7 +2012,7 @@ namespace nanojit
             if (!ins)
                 return NULL;
             NanoAssert(ins->isImmD());
-            if (ins->immQ() == a)
+            if (ins->immDasQ() == a)
                 return ins;
             k = (k + n) & bitmask;
             n += 1;
@@ -2024,7 +2022,7 @@ namespace nanojit
     uint32_t CseFilter::findImmD(LInsp ins)
     {
         uint32_t k;
-        findImmD(ins->immQ(), k);
+        findImmD(ins->immDasQ(), k);
         return k;
     }
 
@@ -2234,7 +2232,7 @@ namespace nanojit
             ins = out->insImmD(d);
             add(LInsImmD, ins, k);
         }
-        NanoAssert(ins->isop(LIR_immd) && ins->immQ() == u.u64);
+        NanoAssert(ins->isop(LIR_immd) && ins->immDasQ() == u.u64);
         return ins;
     }
 
