@@ -708,7 +708,7 @@ namespace nanojit
 
         bool indirect;
         if (!(indirect = call->isIndirect())) {
-            verbose_only(if (_logc->lcbits & LC_Assembly)
+            verbose_only(if (_logc->lcbits & LC_Native)
                 outputf("        %p:", _nIns);
             )
             br((NIns*)call->_address, 1);
@@ -1190,7 +1190,7 @@ namespace nanojit
         #endif
             if (pc - instr - br_size < top) {
                 // really do need a page break
-                verbose_only(if (_logc->lcbits & LC_Assembly) outputf("newpage %p:", pc);)
+                verbose_only(if (_logc->lcbits & LC_Native) outputf("newpage %p:", pc);)
                 codeAlloc();
             }
             // now emit the jump, but make sure we won't need another page break.
@@ -1201,7 +1201,7 @@ namespace nanojit
         }
     #else
         if (pc - instr < top) {
-            verbose_only(if (_logc->lcbits & LC_Assembly) outputf("newpage %p:", pc);)
+            verbose_only(if (_logc->lcbits & LC_Native) outputf("newpage %p:", pc);)
             // This may be in a normal code chunk or an exit code chunk.
             codeAlloc(codeStart, codeEnd, _nIns verbose_only(, codeBytes));
             // This jump will call underrunProtect again, but since we're on a new
@@ -1232,7 +1232,7 @@ namespace nanojit
 
         underrunProtect(16); // make sure branch target and branch are on same page and thus near
         NIns *after = _nIns;
-        verbose_only(if (_logc->lcbits & LC_Assembly) outputf("%p:",after);)
+        verbose_only(if (_logc->lcbits & LC_Native) outputf("%p:",after);)
         MR(rr,rf);
 
         NanoAssert(isS14(after - (_nIns-1)));
