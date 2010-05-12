@@ -1,3 +1,5 @@
+// Title: ui.js (revision-a)
+
 (function(){
 
 // ##########
@@ -516,17 +518,18 @@ UIClass.prototype = {
 
   // ----------
   storageSanity: function(data) {
-    var sane = true;
-    if(data) {
-      sane = sane && typeof(data.dataVersion) == 'number';
-      sane = sane && isRect(data.pageBounds);
+    if($.isEmptyObject(data))
+      return true;
       
-      if(data.tabs)
-        sane = sane && TabItems.storageSanity(data.tabs);
-        
-      if(data.groups)
-        sane = sane && Groups.storageSanity(data.groups);
-    }
+    var sane = true;
+    sane = sane && typeof(data.dataVersion) == 'number';
+    sane = sane && isRect(data.pageBounds);
+    
+    if(data.tabs)
+      sane = sane && TabItems.storageSanity(data.tabs);
+      
+    if(data.groups)
+      sane = sane && Groups.storageSanity(data.groups);
     
     return sane;
   },

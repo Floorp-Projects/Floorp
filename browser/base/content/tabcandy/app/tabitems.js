@@ -1,3 +1,5 @@
+// Title: tabitems.js (revision-a)
+
 // ##########
 window.TabItem = function(container, tab) {
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
@@ -63,6 +65,11 @@ window.TabItem.prototype = $.extend(new Item(), {
   
   // ----------  
   setBounds: function(rect, immediately) {
+    if(!isRect(rect)) {
+      Utils.trace('TabItem.setBounds: rect is not a real rectangle!', rect);
+      return;
+    }
+
     var $container = $(this.container);
     var $title = $('.tab-title', $container);
     var $thumb = $('.thumb', $container);
@@ -97,6 +104,7 @@ window.TabItem.prototype = $.extend(new Item(), {
       return;
       
     this.bounds.copy(rect);
+    
     // If this is a brand new tab don't animate it in from
     // a random location (i.e., from [0,0]). Instead, just
     // have it appear where it should be.
@@ -131,6 +139,9 @@ window.TabItem.prototype = $.extend(new Item(), {
 
     this._updateDebugBounds();
     this._hasBeenDrawn = true;
+    
+    if(!isRect(this.bounds))
+      Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
   },
 
   // ----------
