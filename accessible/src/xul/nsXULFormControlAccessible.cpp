@@ -834,6 +834,20 @@ nsXULToolbarAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
+nsresult
+nsXULToolbarAccessible::GetNameInternal(nsAString& aName)
+{
+  nsCOMPtr<nsIContent> content = nsCoreUtils::GetRoleContent(mDOMNode);
+  nsAutoString name;
+  if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::toolbarname,
+                       name)) {
+    name.CompressWhitespace();
+    aName = name;
+  }
+
+  return NS_OK;
+}
+
 /**
   * XUL Toolbar Separator
   */
