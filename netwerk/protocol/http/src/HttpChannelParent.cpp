@@ -51,6 +51,7 @@ namespace net {
 
 // C++ file contents
 HttpChannelParent::HttpChannelParent()
+: mIPCClosed(false)
 {
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
   nsIHttpProtocolHandler* handler;
@@ -61,6 +62,14 @@ HttpChannelParent::HttpChannelParent()
 HttpChannelParent::~HttpChannelParent()
 {
   gHttpHandler->Release();
+}
+
+void
+HttpChannelParent::ActorDestroy(ActorDestroyReason why)
+{
+  // We may still have refcount>0 if nsHttpChannel hasn't called OnStopRequest
+  // yet, but we must not send any more msgs to child.
+  mIPCClosed = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -163,12 +172,8 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
   nsHttpResponseHead *responseHead = chan->GetResponseHead();
   NS_ABORT_IF_FALSE(responseHead, "Missing HTTP responseHead!");
 
-  if (!SendOnStartRequest(*responseHead)) {
-    // IPDL error--child dead/dying & our own destructor will be called
-    // automatically
-    // -- TODO: verify that that's the case :)
+  if (mIPCClosed || !SendOnStartRequest(*responseHead))
     return NS_ERROR_UNEXPECTED; 
-  }
   return NS_OK;
 }
 
@@ -180,11 +185,8 @@ HttpChannelParent::OnStopRequest(nsIRequest *aRequest,
   LOG(("HttpChannelParent::OnStopRequest: [this=%x status=%ul]\n", 
        this, aStatusCode));
 
-  if (!SendOnStopRequest(aStatusCode)) {
-    // IPDL error--child dead/dying & our own destructor will be called
-    // automatically
+  if (mIPCClosed || !SendOnStopRequest(aStatusCode))
     return NS_ERROR_UNEXPECTED; 
-  }
   return NS_OK;
 }
 
@@ -213,11 +215,8 @@ HttpChannelParent::OnDataAvailable(nsIRequest *aRequest,
     return rv;              // TODO: figure out error handling
   }
 
-  if (!SendOnDataAvailable(data, aOffset, bytesRead)) {
-    // IPDL error--child dead/dying & our own destructor will be called
-    // automatically
+  if (mIPCClosed || !SendOnDataAvailable(data, aOffset, bytesRead))
     return NS_ERROR_UNEXPECTED; 
-  }
   return NS_OK;
 }
 
