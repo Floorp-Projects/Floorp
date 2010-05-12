@@ -3052,7 +3052,7 @@ NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
     return NS_OK;
 }
 
-/* XPCNativeInterface FindInterfaceWithMember (in JSVal name); */
+/* XPCNativeInterface FindInterfaceWithMember (in jsval name); */
 NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface;
@@ -3069,7 +3069,7 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterface
     return NS_OK;
 }
 
-/* XPCNativeInterface FindInterfaceWithName (in JSVal name); */
+/* XPCNativeInterface FindInterfaceWithName (in jsval name); */
 NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsval name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);
