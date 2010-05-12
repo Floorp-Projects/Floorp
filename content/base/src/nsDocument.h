@@ -930,6 +930,11 @@ public:
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
+  virtual void SetScrollToRef(nsIURI *aDocumentURI);
+  virtual void ScrollToRef();
+  virtual void ResetScrolledToRefAlready();
+  virtual void SetChangeScrollPosWhenScrollingToRef(PRBool aValue);
+
 protected:
   friend class nsNodeUtils;
   void RegisterNamedItems(nsIContent *aContent);
@@ -1187,6 +1192,10 @@ private:
   nsCOMArray<imgIRequest> mPreloadingImages;
 
   nsCOMPtr<nsIDOMDOMImplementation> mDOMImplementation;
+
+  nsCString mScrollToRef;
+  PRUint8 mScrolledToRefAlready : 1;
+  PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
 
 #ifdef DEBUG
 protected:

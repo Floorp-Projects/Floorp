@@ -804,6 +804,10 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
     }
   }
 
+  if (aDoInitialReflow && mDocument) {
+    mDocument->ScrollToRef();
+  }
+
   return NS_OK;
 }
 
