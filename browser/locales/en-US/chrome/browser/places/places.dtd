@@ -13,8 +13,6 @@
 <!ENTITY edit.accesskey                 "E">
 <!ENTITY views.label                    "Views">
 <!ENTITY views.accesskey                "V">
-<!ENTITY view.toolbar.label             "Toolbar">
-<!ENTITY view.toolbar.accesskey         "o">
 <!ENTITY view.columns.label             "Show Columns">
 <!ENTITY view.columns.accesskey         "C">
 <!ENTITY view.sort.label                "Sort">
@@ -43,28 +41,6 @@
 <!ENTITY cmd.restoreFromFile.label      "Choose File…">
 <!ENTITY cmd.restoreFromFile.accesskey  "C">
 
-<!ENTITY cmd.select_all.label "Select All">
-<!ENTITY cmd.select_all.accesskey "A">
-<!ENTITY cmd.select_all.key "a">
-
-<!ENTITY cmd.edit_cut.label         "Cut">
-<!ENTITY cmd.edit_cut.accesskey     "t">
-<!ENTITY cmd.edit_cut.key           "x">
-<!ENTITY cmd.edit_copy.label        "Copy">
-<!ENTITY cmd.edit_copy.accesskey    "C">
-<!ENTITY cmd.edit_copy.key          "c">
-<!ENTITY cmd.edit_paste.label       "Paste">
-<!ENTITY cmd.edit_paste.accesskey   "P">
-<!ENTITY cmd.edit_paste.key         "v">
-<!ENTITY cmd.edit_delete.label      "Delete">
-<!ENTITY cmd.edit_delete.accesskey  "D">
-<!ENTITY cmd.edit_undo.label        "Undo">
-<!ENTITY cmd.edit_undo.accesskey    "U">
-<!ENTITY cmd.edit_undo.key          "z">
-<!ENTITY cmd.edit_redo.label        "Redo">
-<!ENTITY cmd.edit_redo.accesskey    "R">
-<!ENTITY cmd.edit_redo.key          "y">
-
 <!ENTITY cmd.bookmarkLink.label         "Bookmark This Page…">
 <!ENTITY cmd.bookmarkLink.accesskey     "B">
 <!ENTITY cmd.delete.label               "Delete This Page">
@@ -84,17 +60,12 @@
 <!ENTITY cmd.properties.label      "Properties">
 <!ENTITY cmd.properties.accesskey  "i">
 
-<!ENTITY cmd.rename.label      "Rename">
-<!ENTITY cmd.rename.accesskey  "R">
-
 <!ENTITY cmd.sortby_name.label              "Sort By Name">
 <!ENTITY cmd.sortby_name.accesskey          "S">
 <!ENTITY cmd.context_sortby_name.accesskey  "r">
 
 <!ENTITY cmd.new_bookmark.label            "New Bookmark…">
 <!ENTITY cmd.new_bookmark.accesskey        "B">
-<!ENTITY cmd.new_livemark.label            "New Live Bookmark…">
-<!ENTITY cmd.new_livemark.accesskey        "L">
 <!ENTITY cmd.new_folder.label              "New Folder…">
 <!ENTITY cmd.new_folder.accesskey          "o">
 <!ENTITY cmd.context_new_folder.accesskey  "F">
@@ -133,9 +104,6 @@
 <!ENTITY saveSearch.accesskey                      "S">
 
 <!ENTITY cmd.find.key  "f">
-
-<!ENTITY feed.subscribe.label    "Feed">
-<!ENTITY feed.subscribe.tooltip  "Subscribe">
 
 <!ENTITY maintenance.label      "Import and Backup">
 <!ENTITY maintenance.accesskey  "I">
