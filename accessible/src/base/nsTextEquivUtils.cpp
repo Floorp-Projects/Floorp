@@ -158,9 +158,8 @@ nsTextEquivUtils::AppendTextEquivFromContent(nsIAccessible *aInitiatorAcc,
   PRBool goThroughDOMSubtree = PR_TRUE;
 
   if (isVisible) {
-    nsCOMPtr<nsIAccessible> accessible;
-    GetAccService()->GetAccessibleInShell(DOMNode, shell,
-                                               getter_AddRefs(accessible));
+    nsAccessible *accessible =
+      GetAccService()->GetAccessibleInShell(DOMNode, shell);
     if (accessible) {
       rv = AppendFromAccessible(accessible, aString);
       goThroughDOMSubtree = PR_FALSE;
