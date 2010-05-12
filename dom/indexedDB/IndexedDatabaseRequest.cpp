@@ -111,8 +111,7 @@ CreateTables(mozIStorageConnection* aDBConn)
     "CREATE TABLE database ("
       "name TEXT NOT NULL, "
       "description TEXT NOT NULL, "
-      "version TEXT DEFAULT NULL, "
-      "UNIQUE (name)"
+      "version TEXT DEFAULT NULL"
     ");"
   ));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -178,8 +177,32 @@ CreateTables(mozIStorageConnection* aDBConn)
 }
 
 nsresult
+CreateMetaData(mozIStorageConnection* aConnection,
+               const nsAString& aName,
+               const nsAString& aDescription)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  NS_PRECONDITION(aConnection, "Null database!");
+
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "INSERT OR REPLACE INTO database (name, description) "
+    "VALUES (:name, :description)"
+  ), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), aName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("description"), aDescription);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return stmt->Execute();
+}
+
+nsresult
 CreateDatabaseConnection(const nsACString& aASCIIOrigin,
                          const nsAString& aName,
+                         const nsAString& aDescription,
                          nsAString& aDatabaseFilePath,
                          mozIStorageConnection** aConnection)
 {
@@ -274,6 +297,9 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
     }
 
     rv = CreateTables(connection);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = CreateMetaData(connection, aName, aDescription);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -419,28 +445,52 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 #endif
   NS_ASSERTION(!aConnection, "Huh?!");
 
-  nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDatabaseFilePath,
+  nsresult rv = CreateDatabaseConnection(mASCIIOrigin, mName, mDescription,
+                                         mDatabaseFilePath,
                                          getter_AddRefs(mConnection));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT name "
-    "FROM object_store"
-  ), getter_AddRefs(stmt));
-  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-
-  PRBool hasResult;
-  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-    nsString* name = mObjectStoreNames.AppendElement();
-    NS_ENSURE_TRUE(name, nsIIDBDatabaseException::UNKNOWN_ERR);
-
-    rv = stmt->GetString(0, *name);
+  { // Load object store names.
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT name "
+      "FROM object_store"
+    ), getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    PRBool hasResult;
+    while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
+      nsString* name = mObjectStoreNames.AppendElement();
+      NS_ENSURE_TRUE(name, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      rv = stmt->GetString(0, *name);
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    }
   }
 
-  NS_WARNING("Need to load index names here!");
-  NS_WARNING("Need to load version here!");
+  { // Load index names.
+    NS_WARNING("Need to load index names here!");
+  }
+
+  { // Load version information.
+    nsCOMPtr<mozIStorageStatement> stmt;
+    rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT version "
+      "FROM database"
+    ), getter_AddRefs(stmt));
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    PRBool hasResult;
+    rv = stmt->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    NS_ENSURE_TRUE(hasResult, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    rv = stmt->GetString(0, mVersion);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+    if (mVersion.IsVoid()) {
+      mVersion.Assign(EmptyString());
+    }
+  }
 
   return OK;
 }
