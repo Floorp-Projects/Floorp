@@ -170,6 +170,100 @@ CreateTables(mozIStorageConnection* aDBConn)
   ));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Table `index`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE object_store_index ("
+      "id INTEGER, "
+      "object_store_id INTEGER NOT NULL, "
+      "name TEXT NOT NULL, "
+      "key_path TEXT NOT NULL, "
+      "unique_index INTEGER NOT NULL, "
+      "PRIMARY KEY (id), "
+      "UNIQUE (object_store_id, name), "
+      "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `index_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE index_data ("
+      "id INTEGER, "
+      "index_id INTEGER NOT NULL, "
+      "object_data_id INTEGER NOT NULL, "
+      "value TEXT NOT NULL, "
+      "PRIMARY KEY (id), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX value_index "
+    "ON index_data (index_id, value);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `unique_index_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE unique_index_data ("
+      "id INTEGER, "
+      "index_id INTEGER NOT NULL, "
+      "object_data_id INTEGER NOT NULL, "
+      "value TEXT NOT NULL, "
+      "PRIMARY KEY (id), "
+      "UNIQUE (index_id, value), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (object_data_id) REFERENCES object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `ai_index_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_index_data ("
+      "id INTEGER, "
+      "index_id INTEGER NOT NULL, "
+      "ai_object_data_id INTEGER NOT NULL, "
+      "value TEXT NOT NULL, "
+      "PRIMARY KEY (id), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE INDEX ai_value_index "
+    "ON ai_index_data (index_id, value);"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Table `ai_unique_index_data`
+  rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "CREATE TABLE ai_unique_index_data ("
+      "id INTEGER, "
+      "index_id INTEGER NOT NULL, "
+      "ai_object_data_id INTEGER NOT NULL, "
+      "value TEXT NOT NULL, "
+      "PRIMARY KEY (id), "
+      "UNIQUE (index_id, value), "
+      "FOREIGN KEY (index_id) REFERENCES object_store_index(id) ON DELETE "
+        "CASCADE, "
+      "FOREIGN KEY (ai_object_data_id) REFERENCES ai_object_data(id) ON DELETE "
+        "CASCADE"
+    ");"
+  ));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   rv = aDBConn->SetSchemaVersion(DB_SCHEMA_VERSION);
   NS_ENSURE_SUCCESS(rv, rv);
 
