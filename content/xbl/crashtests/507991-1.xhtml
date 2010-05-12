@@ -1,0 +1,18 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>Crash [@ nsSprocketLayout::PopulateBoxSizes] with object and position:absolute;overflow:scroll in binding</title>
+<bindings xmlns="http://www.mozilla.org/xbl">
+<binding id="a" inheritstyle="false">
+<content>
+<object xmlns="http://www.w3.org/1999/xhtml" style="display: table;"/>
+<div xmlns="http://www.w3.org/1999/xhtml" style="position: absolute;overflow: scroll; "/>
+</content>
+</binding>
+</bindings>
+</head>
+
+<body>
+<span style="-moz-binding:url()"></span>
+</body>
+</html>
