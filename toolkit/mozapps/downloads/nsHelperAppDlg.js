@@ -392,7 +392,7 @@ nsUnknownContentTypeDialog.prototype = {
 
         onRefreshAttempted: function( aWebProgress, aURI, aDelay, aSameURI ) {
           return true;
-	}
+        }
     },
 
     // initDialog:  Fill various dialog fields with initial content.
@@ -403,21 +403,21 @@ nsUnknownContentTypeDialog.prototype = {
       // Some URIs do not implement nsIURL, so we can't just QI.
       var url   = this.mLauncher.source;
       var fname = "";
+      var iconPath = "goat";
       this.mSourcePath = url.prePath;
-      try {
-          url = url.QueryInterface( Components.interfaces.nsIURL );
+      if (url instanceof Components.interfaces.nsIURL) {
           // A url, use file name from it.
-          fname = url.fileName;
+          fname = iconPath = url.fileName;
           this.mSourcePath += url.directory;
-      } catch (ex) {
+      } else {
           // A generic uri, use path.
           fname = url.path;
           this.mSourcePath += url.path;
       }
 
       if (suggestedFileName)
-        fname = suggestedFileName;
-      
+        fname = iconPath = suggestedFileName;
+
       var displayName = fname.replace(/ +/g, " ");
 
       this.mTitle = this.dialogElement("strings").getFormattedString("title", [displayName]);
@@ -426,7 +426,7 @@ nsUnknownContentTypeDialog.prototype = {
       // Put content type, filename and location into intro.
       this.initIntro(url, fname, displayName);
 
-      var iconString = "moz-icon://" + fname + "?size=16&contentType=" + this.mLauncher.MIMEInfo.MIMEType;
+      var iconString = "moz-icon://" + iconPath + "?size=16&contentType=" + this.mLauncher.MIMEInfo.MIMEType;
       this.dialogElement("contentTypeImage").setAttribute("src", iconString);
 
       // if always-save and is-executable and no-handler
