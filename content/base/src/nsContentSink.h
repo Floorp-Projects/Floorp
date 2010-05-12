@@ -315,8 +315,6 @@ protected:
 
   nsCOMArray<nsIScriptElement> mScriptElements;
 
-  nsCString mRef; // ScrollTo #ref
-
   // back off timer notification after count
   PRInt32 mBackoffCount;
 
@@ -330,12 +328,10 @@ protected:
   // Have we already called BeginUpdate for this set of content changes?
   PRUint8 mBeganUpdate : 1;
   PRUint8 mLayoutStarted : 1;
-  PRUint8 mScrolledToRefAlready : 1;
   PRUint8 mCanInterruptParser : 1;
   PRUint8 mDynamicLowerValue : 1;
   PRUint8 mParsing : 1;
   PRUint8 mDroppedTimer : 1;
-  PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
   // If true, we deferred starting layout until sheets load
   PRUint8 mDeferredLayoutStart : 1;
   // If true, we deferred notifications until sheets load
