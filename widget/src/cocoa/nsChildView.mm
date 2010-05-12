@@ -2115,26 +2115,28 @@ nsChildView::EndSecureKeyboardInput()
 }
 
 #ifdef ACCESSIBILITY
-already_AddRefed<nsAccessible>
-nsChildView::GetDocumentAccessible()
+void
+nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 {
-  nsAccessible *docAccessible = nsnull;
-  if (mAccessible) {
-    CallQueryReferent(mAccessible.get(), &docAccessible);
-    return docAccessible;
+  *aAccessible = nsnull;
+  
+  nsCOMPtr<nsIAccessible> accessible = do_QueryReferent(mAccessible);
+  if (!mAccessible) {
+    // need to fetch the accessible anew, because it has gone away.
+    nsEventStatus status;
+    nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
+    DispatchEvent(&event, status);
+  
+    // cache the accessible in our weak ptr
+    mAccessible = do_GetWeakReference(event.accessible);
+    
+    // now try again
+    accessible = do_QueryReferent(mAccessible);
   }
+  
+  NS_IF_ADDREF(*aAccessible = accessible.get());
 
-  // need to fetch the accessible anew, because it has gone away.
-  nsEventStatus status;
-  nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
-  DispatchEvent(&event, status);
-
-  // cache the accessible in our weak ptr
-  mAccessible =
-    do_GetWeakReference(static_cast<nsIAccessible*>(event.mAccessible));
-
-  NS_IF_ADDREF(event.mAccessible);
-  return event.mAccessible;
+  return;
 }
 #endif
 
@@ -6073,7 +6075,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   nsCOMPtr<nsIWidget> kungFuDeathGrip2(mGeckoChild);
-  nsRefPtr<nsAccessible> accessible = mGeckoChild->GetDocumentAccessible();
+  nsCOMPtr<nsIAccessible> accessible;
+  mGeckoChild->GetDocumentAccessible(getter_AddRefs(accessible));
   if (!mGeckoChild)
     return nil;
 
