@@ -648,15 +648,13 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAccessible> accessible;
-  accService->GetAccessibleInShell(aTargetNode, eventShell,
-                                   getter_AddRefs(accessible));
+  nsAccessible *accessible =
+    accService->GetAccessibleInShell(aTargetNode, eventShell);
 
   if (eventType.EqualsLiteral("popuphiding"))
     return HandlePopupHidingEvent(aTargetNode, accessible);
 
-  nsRefPtr<nsAccessible> acc(do_QueryObject(accessible));
-  if (!acc)
+  if (!accessible)
     return NS_OK;
 
 #ifdef MOZ_XUL
@@ -715,7 +713,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAccessible> treeItemAccessible;
+  nsAccessible *treeItemAccessible = nsnull;
 #ifdef MOZ_XUL
   // If it's a tree element, need the currently selected item
   if (isTree) {
@@ -802,8 +800,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
           if (!focusedItem)
             return NS_OK;
 
-          accService->GetAccessibleInShell(focusedItem, eventShell,
-                                           getter_AddRefs(accessible));
+          accessible = accService->GetAccessibleInShell(focusedItem, eventShell);
           if (!accessible)
             return NS_OK;
         }
@@ -836,9 +833,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
         return NS_OK; // Tree with nothing selected
       }
 #endif
-      nsRefPtr<nsAccessNode> menuAccessNode = do_QueryObject(accessible);
-  
-      nsIFrame* menuFrame = menuAccessNode->GetFrame();
+      nsIFrame* menuFrame = accessible->GetFrame();
       NS_ENSURE_TRUE(menuFrame, NS_ERROR_FAILURE);
 
       nsIMenuFrame* imenuFrame = do_QueryFrame(menuFrame);
@@ -851,15 +846,13 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
         // is active.
         return NS_OK;
       } else {
-        nsCOMPtr<nsIAccessible> containerAccessible;
-        accessible->GetParent(getter_AddRefs(containerAccessible));
+        nsAccessible *containerAccessible = accessible->GetParent();
         NS_ENSURE_TRUE(containerAccessible, NS_ERROR_FAILURE);
         // It is not top level menuitem
         // Only fire focus event if it is not inside collapsed popup
         // and not a listitem of a combo box
         if (nsAccUtils::State(containerAccessible) & nsIAccessibleStates::STATE_COLLAPSED) {
-          nsCOMPtr<nsIAccessible> containerParent;
-          containerAccessible->GetParent(getter_AddRefs(containerParent));
+          nsAccessible *containerParent = containerAccessible->GetParent();
           NS_ENSURE_TRUE(containerParent, NS_ERROR_FAILURE);
           if (nsAccUtils::Role(containerParent) != nsIAccessibleRole::ROLE_COMBOBOX) {
             return NS_OK;
