@@ -1082,16 +1082,15 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   if (mRule) {
     mRule->GetStyleSheet(*getter_AddRefs(sheet));
     if (sheet) {
-      sheet->GetSheetURI(aSheetURI);
-      sheet->GetBaseURI(aBaseURI);
+      *aSheetURI = sheet->GetSheetURI().get();
+      *aBaseURI = sheet->GetBaseURI().get();
 
       nsRefPtr<nsCSSStyleSheet> cssSheet(do_QueryObject(sheet));
       if (cssSheet) {
         NS_ADDREF(*aSheetPrincipal = cssSheet->Principal());
       }
 
-      nsCOMPtr<nsIDocument> document;
-      sheet->GetOwningDocument(*getter_AddRefs(document));
+      nsCOMPtr<nsIDocument> document = sheet->GetOwningDocument();
       if (document) {
         NS_ADDREF(*aCSSLoader = document->CSSLoader());
       }
@@ -1130,7 +1129,7 @@ DOMCSSDeclarationImpl::DeclarationChanged()
   nsCOMPtr<nsIStyleSheet> sheet;
   mRule->GetStyleSheet(*getter_AddRefs(sheet));
   if (sheet) {
-    sheet->GetOwningDocument(*getter_AddRefs(owningDoc));
+    owningDoc = sheet->GetOwningDocument();
   }
 
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, PR_TRUE);

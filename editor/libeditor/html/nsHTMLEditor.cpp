@@ -3505,9 +3505,8 @@ nsHTMLEditor::EnableStyleSheet(const nsAString &aURL, PRBool aEnable)
 
   // Ensure the style sheet is owned by our document.
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-  rv = sheet->SetOwningDocument(doc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  sheet->SetOwningDocument(doc);
+
   return sheet->SetDisabled(!aEnable);
 }
 
@@ -3524,9 +3523,7 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
   {
     // Ensure the style sheet is owned by our document.
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
-    rv = sheet->SetOwningDocument(doc);
-    if (NS_FAILED(rv))
-      return PR_FALSE;
+    sheet->SetOwningDocument(doc);
 
     sheet->SetDisabled(PR_FALSE);
     return PR_TRUE;
@@ -3902,22 +3899,18 @@ nsHTMLEditor::StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
     if (NS_SUCCEEDED(rv))
     {
       // Get the URI, then url spec from the sheet
-      nsCOMPtr<nsIURI> uri;
-      rv = aSheet->GetSheetURI(getter_AddRefs(uri));
+      nsCOMPtr<nsIURI> uri = aSheet->GetSheetURI();
+
+      nsCAutoString spec;
+      rv = uri->GetSpec(spec);
 
       if (NS_SUCCEEDED(rv))
       {
-        nsCAutoString spec;
-        rv = uri->GetSpec(spec);
+        // Save it so we can remove before applying the next one
+        mLastStyleSheetURL.AssignWithConversion(spec.get());
 
-        if (NS_SUCCEEDED(rv))
-        {
-          // Save it so we can remove before applying the next one
-          mLastStyleSheetURL.AssignWithConversion(spec.get());
-
-          // Also save in our arrays of urls and sheets
-          AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);
-        }
+        // Also save in our arrays of urls and sheets
+        AddNewStyleSheetToList(mLastStyleSheetURL, aSheet);
       }
     }
   }

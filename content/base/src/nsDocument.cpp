@@ -1983,9 +1983,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     nsIStyleSheet* sheet = mStyleSheets[indx];
     sheet->SetOwningDocument(nsnull);
 
-    PRBool applicable;
-    sheet->GetApplicable(applicable);
-    if (applicable) {
+    if (sheet->GetApplicable()) {
       RemoveStyleSheetFromStyleSets(sheet);
     }
 
@@ -1997,9 +1995,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     nsIStyleSheet* sheet = mCatalogSheets[indx];
     sheet->SetOwningDocument(nsnull);
 
-    PRBool applicable;
-    sheet->GetApplicable(applicable);
-    if (applicable) {
+    if (sheet->GetApplicable()) {
       nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
       if (shell) {
         shell->StyleSet()->RemoveStyleSheet(nsStyleSet::eAgentSheet, sheet);
@@ -2092,18 +2088,14 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
   PRInt32 i;
   for (i = mStyleSheets.Count() - 1; i >= 0; --i) {
     nsIStyleSheet* sheet = mStyleSheets[i];
-    PRBool sheetApplicable;
-    sheet->GetApplicable(sheetApplicable);
-    if (sheetApplicable) {
+    if (sheet->GetApplicable()) {
       aStyleSet->AddDocStyleSheet(sheet, this);
     }
   }
 
   for (i = mCatalogSheets.Count() - 1; i >= 0; --i) {
     nsIStyleSheet* sheet = mCatalogSheets[i];
-    PRBool sheetApplicable;
-    sheet->GetApplicable(sheetApplicable);
-    if (sheetApplicable) {
+    if (sheet->GetApplicable()) {
       aStyleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
     }
   }
@@ -3374,10 +3366,7 @@ nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
   mStyleSheets.AppendObject(aSheet);
   aSheet->SetOwningDocument(this);
 
-  PRBool applicable;
-  aSheet->GetApplicable(applicable);
-
-  if (applicable) {
+  if (aSheet->GetApplicable()) {
     AddStyleSheetToStyleSets(aSheet);
   }
 
@@ -3405,9 +3394,7 @@ nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
   }
 
   if (!mIsGoingAway) {
-    PRBool applicable = PR_TRUE;
-    aSheet->GetApplicable(applicable);
-    if (applicable) {
+    if (aSheet->GetApplicable()) {
       RemoveStyleSheetFromStyleSets(aSheet);
     }
 
@@ -3443,9 +3430,7 @@ nsDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
     if (newSheet) {
       mStyleSheets.InsertObjectAt(newSheet, oldIndex);
       newSheet->SetOwningDocument(this);
-      PRBool applicable = PR_TRUE;
-      newSheet->GetApplicable(applicable);
-      if (applicable) {
+      if (newSheet->GetApplicable()) {
         AddStyleSheetToStyleSets(newSheet);
       }
 
@@ -3464,10 +3449,7 @@ nsDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 
   aSheet->SetOwningDocument(this);
 
-  PRBool applicable;
-  aSheet->GetApplicable(applicable);
-
-  if (applicable) {
+  if (aSheet->GetApplicable()) {
     AddStyleSheetToStyleSets(aSheet);
   }
 
@@ -3520,10 +3502,7 @@ nsDocument::AddCatalogStyleSheet(nsIStyleSheet* aSheet)
   mCatalogSheets.AppendObject(aSheet);
   aSheet->SetOwningDocument(this);
 
-  PRBool applicable;
-  aSheet->GetApplicable(applicable);
-                                                                                
-  if (applicable) {
+  if (aSheet->GetApplicable()) {
     // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
     nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
     if (shell) {
@@ -3544,8 +3523,7 @@ nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
       nsIStyleSheet* sheet = GetCatalogStyleSheetAt(i);
       NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
       if (sheet) {
-        nsCOMPtr<nsIURI> uri;
-        sheet->GetSheetURI(getter_AddRefs(uri));
+        nsCOMPtr<nsIURI> uri = sheet->GetSheetURI();
         nsCAutoString uriStr;
         uri->GetSpec(uriStr);
         if (uriStr.Equals(aStyleSheetURI))
@@ -7752,9 +7730,7 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
       for (PRInt32 i = 0; i < sheetsCount; ++i) {
         nsRefPtr<nsCSSStyleSheet> sheet = do_QueryObject(GetStyleSheetAt(i));
         if (sheet) {
-          PRBool applicable = PR_TRUE;
-          sheet->GetApplicable(applicable);
-          if (applicable) {
+          if (sheet->GetApplicable()) {
             nsRefPtr<nsCSSStyleSheet> clonedSheet =
               sheet->Clone(nsnull, nsnull, clonedDoc, nsnull);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
@@ -7770,9 +7746,7 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
         nsRefPtr<nsCSSStyleSheet> sheet =
           do_QueryObject(GetCatalogStyleSheetAt(i));
         if (sheet) {
-          PRBool applicable = PR_TRUE;
-          sheet->GetApplicable(applicable);
-          if (applicable) {
+          if (sheet->GetApplicable()) {
             nsRefPtr<nsCSSStyleSheet> clonedSheet =
               sheet->Clone(nsnull, nsnull, clonedDoc, nsnull);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
