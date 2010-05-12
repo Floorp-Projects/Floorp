@@ -614,8 +614,7 @@ nsMediaList::GetMediaText(nsAString& aMediaText)
 // nsCOMPtr<nsIDocument>
 #define BEGIN_MEDIA_CHANGE(sheet, doc)                         \
   if (sheet) {                                                 \
-    rv = sheet->GetOwningDocument(*getter_AddRefs(doc));       \
-    NS_ENSURE_SUCCESS(rv, rv);                                 \
+    doc = sheet->GetOwningDocument();                          \
   }                                                            \
   mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, PR_TRUE);    \
   if (sheet) {                                                 \
@@ -1131,25 +1130,26 @@ nsCSSStyleSheet::Principal() const
   return mInner->mPrincipal;
 }
 
-NS_IMETHODIMP
-nsCSSStyleSheet::GetSheetURI(nsIURI** aSheetURI) const
+already_AddRefed<nsIURI>
+nsCSSStyleSheet::GetSheetURI() const
 {
-  NS_IF_ADDREF(*aSheetURI = mInner->mSheetURI.get());
-  return NS_OK;
+  nsIURI* sheetURI = mInner->mSheetURI;
+  NS_IF_ADDREF(sheetURI);
+  return sheetURI;
 }
 
-NS_IMETHODIMP
-nsCSSStyleSheet::GetBaseURI(nsIURI** aBaseURI) const
+already_AddRefed<nsIURI>
+nsCSSStyleSheet::GetBaseURI() const
 {
-  NS_IF_ADDREF(*aBaseURI = mInner->mBaseURI.get());
-  return NS_OK;
+  nsIURI* baseURI = mInner->mBaseURI;
+  NS_IF_ADDREF(baseURI);
+  return baseURI;
 }
 
-NS_IMETHODIMP
+void
 nsCSSStyleSheet::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/css");
-  return NS_OK;
 }
 
 PRBool
@@ -1169,20 +1169,19 @@ nsCSSStyleSheet::SetMedia(nsMediaList* aMedia)
   mMedia = aMedia;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsCSSStyleSheet::HasRules() const
 {
   return StyleRuleCount() != 0;
 }
 
-NS_IMETHODIMP
-nsCSSStyleSheet::GetApplicable(PRBool& aApplicable) const
+PRBool
+nsCSSStyleSheet::GetApplicable() const
 {
-  aApplicable = !mDisabled && mInner->mComplete;
-  return NS_OK;
+  return !mDisabled && mInner->mComplete;
 }
 
-NS_IMETHODIMP
+void
 nsCSSStyleSheet::SetEnabled(PRBool aEnabled)
 {
   // Internal method, so callers must handle BeginUpdate/EndUpdate
@@ -1196,18 +1195,15 @@ nsCSSStyleSheet::SetEnabled(PRBool aEnabled)
       mDocument->SetStyleSheetApplicableState(this, !mDisabled);
     }
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCSSStyleSheet::GetComplete(PRBool& aComplete) const
+PRBool
+nsCSSStyleSheet::GetComplete() const
 {
-  aComplete = mInner->mComplete;
-  return NS_OK;
+  return mInner->mComplete;
 }
 
-NS_IMETHODIMP
+void
 nsCSSStyleSheet::SetComplete()
 {
   NS_ASSERTION(!mDirty, "Can't set a dirty sheet complete!");
@@ -1218,26 +1214,23 @@ nsCSSStyleSheet::SetComplete()
     mDocument->SetStyleSheetApplicableState(this, PR_TRUE);
     mDocument->EndUpdate(UPDATE_STYLE);
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCSSStyleSheet::GetParentSheet(nsIStyleSheet*& aParent) const
+already_AddRefed<nsIStyleSheet>
+nsCSSStyleSheet::GetParentSheet() const
 {
-  aParent = mParent;
-  NS_IF_ADDREF(aParent);
-  return NS_OK;
+  NS_IF_ADDREF(mParent);
+  return mParent;
 }
 
-NS_IMETHODIMP
-nsCSSStyleSheet::GetOwningDocument(nsIDocument*& aDocument) const
+already_AddRefed<nsIDocument>
+nsCSSStyleSheet::GetOwningDocument() const
 {
-  aDocument = mDocument;
-  NS_IF_ADDREF(aDocument);
-  return NS_OK;
+  NS_IF_ADDREF(mDocument);
+  return mDocument;
 }
 
-NS_IMETHODIMP
+void
 nsCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 { // not ref counted
   mDocument = aDocument;
@@ -1250,7 +1243,6 @@ nsCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
       child->SetOwningDocument(aDocument);
     }
   }
-  return NS_OK;
 }
 
 already_AddRefed<nsICSSImportRule>
@@ -1630,8 +1622,8 @@ nsCSSStyleSheet::SetDisabled(PRBool aDisabled)
 {
   // DOM method, so handle BeginUpdate/EndUpdate
   MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_STYLE, PR_TRUE);
-  nsresult rv = nsCSSStyleSheet::SetEnabled(!aDisabled);
-  return rv;
+  nsCSSStyleSheet::SetEnabled(!aDisabled);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1673,11 +1665,10 @@ nsCSSStyleSheet::GetHref(nsAString& aHref)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsCSSStyleSheet::GetTitle(nsString& aTitle) const
 {
   aTitle = mTitle;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1720,9 +1711,7 @@ NS_IMETHODIMP
 nsCSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 {
   // No doing this on incomplete sheets!
-  PRBool complete;
-  GetComplete(complete);
-  if (!complete) {
+  if (!GetComplete()) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
   
@@ -1765,9 +1754,7 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
                                     PRUint32* aReturn)
 {
   // No doing this if the sheet is not complete!
-  PRBool complete;
-  GetComplete(complete);
-  if (!complete) {
+  if (!GetComplete()) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
@@ -1914,9 +1901,7 @@ nsCSSStyleSheet::DeleteRule(PRUint32 aIndex)
 {
   nsresult result = NS_ERROR_DOM_INDEX_SIZE_ERR;
   // No doing this if the sheet is not complete!
-  PRBool complete;
-  GetComplete(complete);
-  if (!complete) {
+  if (!GetComplete()) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
@@ -2094,8 +2079,7 @@ nsCSSStyleSheet::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                   nsresult aStatus)
 {
 #ifdef DEBUG
-  nsCOMPtr<nsIStyleSheet> parentSheet;
-  aSheet->GetParentSheet(*getter_AddRefs(parentSheet));
+  nsCOMPtr<nsIStyleSheet> parentSheet = aSheet->GetParentSheet();
   NS_ASSERTION(this == parentSheet, "We are being notified of a sheet load for a sheet that is not our child!\n");
 #endif
   

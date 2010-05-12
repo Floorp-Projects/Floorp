@@ -791,12 +791,12 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
 already_AddRefed<nsIURI>
 SheetLoadData::GetReferrerURI()
 {
-  nsIURI* uri = nsnull;
+  nsCOMPtr<nsIURI> uri;
   if (mParentData)
-    mParentData->mSheet->GetSheetURI(&uri);
+    uri = mParentData->mSheet->GetSheetURI();
   if (!uri && mLoader->mDocument)
-    NS_IF_ADDREF(uri = mLoader->mDocument->GetDocumentURI());
-  return uri;
+    uri = mLoader->mDocument->GetDocumentURI();
+  return uri.forget();
 }
 
 /*
@@ -1107,8 +1107,7 @@ Loader::CreateSheet(nsIURI* aURI,
 #ifdef DEBUG
       // This sheet came from the XUL cache or our per-document hashtable; it
       // better be a complete sheet.
-      PRBool complete = PR_FALSE;
-      sheet->GetComplete(complete);
+      PRBool complete = sheet->GetComplete();
       NS_ASSERTION(complete,
                    "Sheet thinks it's not complete while we think it is");
 #endif
@@ -1166,8 +1165,7 @@ Loader::CreateSheet(nsIURI* aURI,
     if (sheet) {
       // The sheet we have now should be either incomplete or unmodified
 #ifdef DEBUG
-      PRBool complete = PR_FALSE;
-      sheet->GetComplete(complete);
+      PRBool complete = sheet->GetComplete();
       NS_ASSERTION(!sheet->IsModified() || !complete,
                    "Unexpected modified complete sheet");
       NS_ASSERTION(complete || aSheetState != eSheetComplete,
@@ -1648,8 +1646,8 @@ Loader::ParseSheet(nsIUnicharInputStream* aStream,
   // Push our load data on the stack so any kids can pick it up
   mParsingDatas.AppendElement(aLoadData);
   nsCOMPtr<nsIURI> sheetURI, baseURI;
-  aLoadData->mSheet->GetSheetURI(getter_AddRefs(sheetURI));
-  aLoadData->mSheet->GetBaseURI(getter_AddRefs(baseURI));
+  sheetURI = aLoadData->mSheet->GetSheetURI();
+  baseURI = aLoadData->mSheet->GetBaseURI();
   nsresult rv = parser.Parse(aStream, sheetURI, baseURI,
                              aLoadData->mSheet->Principal(),
                              aLoadData->mLineNumber,
@@ -2003,9 +2001,8 @@ Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
 
   // check for an owning document: if none, don't bother walking up the parent
   // sheets
-  nsCOMPtr<nsIDocument> owningDoc;
-  nsresult rv = aParentSheet->GetOwningDocument(*getter_AddRefs(owningDoc));
-  if (NS_SUCCEEDED(rv) && owningDoc) {
+  nsCOMPtr<nsIDocument> owningDoc = aParentSheet->GetOwningDocument();
+  if (owningDoc) {
     nsCOMPtr<nsIDOMStyleSheet> nextParentSheet(aParentSheet);
     NS_ENSURE_TRUE(nextParentSheet, NS_ERROR_FAILURE); //Not a stylesheet!?
 
@@ -2025,7 +2022,7 @@ Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
   }
 
   nsIPrincipal* principal = aParentSheet->Principal();
-  rv = CheckLoadAllowed(principal, aURL, context);
+  nsresult rv = CheckLoadAllowed(principal, aURL, context);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));

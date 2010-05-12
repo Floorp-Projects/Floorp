@@ -183,90 +183,79 @@ nsHTMLCSSStyleSheet::Reset(nsIURI* aURL)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLCSSStyleSheet::GetSheetURI(nsIURI** aSheetURL) const
+already_AddRefed<nsIURI>
+nsHTMLCSSStyleSheet::GetSheetURI() const
 {
   NS_IF_ADDREF(mURL);
-  *aSheetURL = mURL;
-  return NS_OK;
+  return mURL;
 }
 
-NS_IMETHODIMP
-nsHTMLCSSStyleSheet::GetBaseURI(nsIURI** aBaseURL) const
+already_AddRefed<nsIURI>
+nsHTMLCSSStyleSheet::GetBaseURI() const
 {
   NS_IF_ADDREF(mURL);
-  *aBaseURL = mURL;
-  return NS_OK;
+  return mURL;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLCSSStyleSheet::GetTitle(nsString& aTitle) const
 {
   aTitle.AssignLiteral("Internal HTML/CSS Style Sheet");
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLCSSStyleSheet::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/html");
-  return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsHTMLCSSStyleSheet::HasRules() const
 {
   // Say we always have rules, since we don't know.
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsHTMLCSSStyleSheet::GetApplicable(PRBool& aApplicable) const
+PRBool
+nsHTMLCSSStyleSheet::GetApplicable() const
 {
-  aApplicable = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLCSSStyleSheet::SetEnabled(PRBool aEnabled)
 { // these can't be disabled
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLCSSStyleSheet::GetComplete(PRBool& aComplete) const
+PRBool
+nsHTMLCSSStyleSheet::GetComplete() const
 {
-  aComplete = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLCSSStyleSheet::SetComplete()
 {
-  return NS_OK;
 }
 
 // style sheet owner info
-NS_IMETHODIMP
-nsHTMLCSSStyleSheet::GetParentSheet(nsIStyleSheet*& aParent) const
+already_AddRefed<nsIStyleSheet>
+nsHTMLCSSStyleSheet::GetParentSheet() const
 {
-  aParent = nsnull;
-  return NS_OK;
+  return nsnull;
 }
 
-NS_IMETHODIMP
-nsHTMLCSSStyleSheet::GetOwningDocument(nsIDocument*& aDocument) const
+already_AddRefed<nsIDocument>
+nsHTMLCSSStyleSheet::GetOwningDocument() const
 {
   NS_IF_ADDREF(mDocument);
-  aDocument = mDocument;
-  return NS_OK;
+  return mDocument;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument;
-  return NS_OK;
 }
 
 #ifdef DEBUG
