@@ -320,7 +320,7 @@ struct JSObject {
     }
 
     uint32 numSlots(void) const {
-        return dslots ? (uint32)dslots[-1] : (uint32)JS_INITIAL_NSLOTS;
+        return dslots ? dslots[-1].asPrivateUint32() : (uint32)JS_INITIAL_NSLOTS;
     }
 
   private:
@@ -339,26 +339,26 @@ struct JSObject {
     bool growSlots(JSContext *cx, size_t nslots);
     void shrinkSlots(JSContext *cx, size_t nslots);
 
-    jsval& getSlotRef(uintN slot) {
+    js::Value& getSlotRef(uintN slot) {
         return (slot < JS_INITIAL_NSLOTS)
                ? fslots[slot]
-               : (JS_ASSERT(slot < (uint32)dslots[-1]),
+               : (JS_ASSERT(slot < dslots[-1].asPrivateUint32()),
                   dslots[slot - JS_INITIAL_NSLOTS]);
     }
 
-    jsval getSlot(uintN slot) const {
+    const js::Value &getSlot(uintN slot) const {
         return (slot < JS_INITIAL_NSLOTS)
                ? fslots[slot]
-               : (JS_ASSERT(slot < (uint32)dslots[-1]),
+               : (JS_ASSERT(slot < dslots[-1].asPrivateUint32()),
                   dslots[slot - JS_INITIAL_NSLOTS]);
     }
 
-    void setSlot(uintN slot, jsval value) {
+    void setSlot(uintN slot, const js::Value &value) {
         if (slot < JS_INITIAL_NSLOTS) {
-            fslots[slot] = value;
+            fslots[slot].copy(value);
         } else {
-            JS_ASSERT(slot < (uint32)dslots[-1]);
-            dslots[slot - JS_INITIAL_NSLOTS] = value;
+            JS_ASSERT(slot < dslots[-1].asPrivateUint32());
+            dslots[slot - JS_INITIAL_NSLOTS].copy(value);
         }
     }
 
@@ -447,8 +447,8 @@ struct JSObject {
     static const uint32 JSSLOT_PRIMITIVE_THIS = JSSLOT_PRIVATE;
 
   public:
-    inline jsval getPrimitiveThis() const;
-    inline void setPrimitiveThis(jsval pthis);
+    inline const js::Value &getPrimitiveThis() const;
+    inline void setPrimitiveThis(const js::Value &pthis);
 
     /*
      * Array-specific getters and setters (for both dense and slow arrays).
@@ -485,11 +485,11 @@ struct JSObject {
 
     inline bool isDenseArrayMinLenCapOk(bool strictAboutLength = true) const;
 
-    inline jsval getDenseArrayElement(uint32 i) const;
-    inline jsval *addressOfDenseArrayElement(uint32 i);
-    inline void setDenseArrayElement(uint32 i, jsval v);
+    inline const js::Value &getDenseArrayElement(uint32 i) const;
+    inline js::Value *addressOfDenseArrayElement(uint32 i);
+    inline void setDenseArrayElement(uint32 i, const js::Value &v);
 
-    inline jsval *getDenseArrayElements() const;   // returns pointer to the Array's elements array
+    inline js::Value *getDenseArrayElements() const;   // returns pointer to the Array's elements array
     bool resizeDenseArrayElements(JSContext *cx, uint32 oldcap, uint32 newcap,
                                bool initializeAllSlots = true);
     bool ensureDenseArrayElements(JSContext *cx, uint32 newcap,
@@ -528,11 +528,12 @@ struct JSObject {
     inline void setArgsLengthOverridden();
     inline bool isArgsLengthOverridden() const;
 
-    inline jsval getArgsCallee() const;
-    inline void setArgsCallee(jsval callee);
+    inline const js::Value &getArgsCallee() const;
+    inline void setArgsCallee(const js::Value &callee);
 
-    inline jsval getArgsElement(uint32 i) const;
-    inline void setArgsElement(uint32 i, jsval v);
+    inline const js::Value &getArgsElement(uint32 i) const;
+    inline js::Value *addressOfArgsElement(uint32 i) const;
+    inline void setArgsElement(uint32 i, const js::Value &v);
 
     /*
      * Date-specific getters and setters.
@@ -546,13 +547,11 @@ struct JSObject {
   public:
     static const uint32 DATE_FIXED_RESERVED_SLOTS = 2;
 
-    inline jsval getDateLocalTime() const;
-    inline jsval *addressOfDateLocalTime();
-    inline void setDateLocalTime(jsval pthis);
+    inline const js::Value &getDateLocalTime() const;
+    inline void setDateLocalTime(const js::Value &pthis);
 
-    inline jsval getDateUTCTime() const;
-    inline jsval *addressOfDateUTCTime();
-    inline void setDateUTCTime(jsval pthis);
+    inline const js::Value &getDateUTCTime() const;
+    inline void setDateUTCTime(const js::Value &pthis);
 
     /*
      * RegExp-specific getters and setters.
@@ -564,8 +563,8 @@ struct JSObject {
   public:
     static const uint32 REGEXP_FIXED_RESERVED_SLOTS = 1;
 
-    inline jsval getRegExpLastIndex() const;
-    inline jsval *addressOfRegExpLastIndex();
+    inline const js::Value &getRegExpLastIndex() const;
+    inline js::Value *addressOfRegExpLastIndex();
     inline void zeroRegExpLastIndex();
 
     /*

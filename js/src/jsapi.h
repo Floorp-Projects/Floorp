@@ -3234,7 +3234,7 @@ class Value
      * This overload catches values constructed with unsupported T* types
      * before they are implicitly converted to bool.
      */
-    template <class T> Value(T *);  /* undefined */
+    template <class T> explicit Value(T *);  /* undefined */
 
   public:
 
@@ -3462,6 +3462,10 @@ class Value
 
     bool isBoolean() const {
         return mask == BooleanMask;
+    }
+
+    bool isBoolean(bool b) const {
+        return (mask == BooleanMask) & (data.boo == b);
     }
 
     bool asBoolean() const {

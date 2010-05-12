@@ -93,7 +93,7 @@ JSObject::isPrimitive() const
     return isNumber() || isString() || isBoolean();
 }
 
-inline jsval
+inline const js::Value &
 JSObject::getPrimitiveThis() const
 {
     JS_ASSERT(isPrimitive());
@@ -101,10 +101,10 @@ JSObject::getPrimitiveThis() const
 }
 
 inline void 
-JSObject::setPrimitiveThis(jsval pthis)
+JSObject::setPrimitiveThis(const js::Value &pthis)
 {
     JS_ASSERT(isPrimitive());
-    fslots[JSSLOT_PRIMITIVE_THIS] = pthis;
+    fslots[JSSLOT_PRIMITIVE_THIS].copy(pthis);
 }
 
 inline void
@@ -117,16 +117,21 @@ inline bool
 JSObject::isDenseArrayMinLenCapOk(bool strictAboutLength) const
 {
     JS_ASSERT(isDenseArray());
-    uint32 length = uncheckedGetArrayLength();
-    uint32 capacity = uncheckedGetDenseArrayCapacity();
-    uint32 minLenCap = uint32(fslots[JSSLOT_DENSE_ARRAY_MINLENCAP]);
 
     // This function can be called while the LENGTH and MINLENCAP slots are
     // still set to JSVAL_VOID and there are no dslots (ie. the capacity is
     // zero).  If 'strictAboutLength' is false we allow this.
-    return minLenCap == JS_MIN(length, capacity) ||
-           (!strictAboutLength && minLenCap == uint32(JSVAL_VOID) &&
-            length == uint32(JSVAL_VOID) && capacity == 0);
+    if (!strictAboutLength &&
+        fslots[JSSLOT_ARRAY_LENGTH].isUndefined() &&
+        fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].isUndefined() &&
+        uncheckedGetDenseArrayCapacity() == 0) {
+        return true;
+    }
+
+    uint32 length = uncheckedGetArrayLength();
+    uint32 capacity = uncheckedGetDenseArrayCapacity();
+    uint32 minLenCap = fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].asPrivateUint32();
+    return minLenCap == JS_MIN(length, capacity);
 }
 
 inline uint32
@@ -149,48 +154,48 @@ JSObject::setDenseArrayLength(uint32 length)
     JS_ASSERT(isDenseArray());
     fslots[JSSLOT_ARRAY_LENGTH].setPrivateUint32(length);
     uint32 capacity = uncheckedGetDenseArrayCapacity();
-    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP] = JS_MIN(length, capacity);
+    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].setPrivateUint32(JS_MIN(length, capacity));
 }
 
 inline void 
 JSObject::setSlowArrayLength(uint32 length)
 {
     JS_ASSERT(isSlowArray());
-    fslots[JSSLOT_ARRAY_COUNT].setPrivateUint32(count);
+    fslots[JSSLOT_ARRAY_LENGTH].setPrivateUint32(length);
 }
 
 inline uint32 
 JSObject::getDenseArrayCount() const
 {
     JS_ASSERT(isDenseArray());
-    return uint32(fslots[JSSLOT_DENSE_ARRAY_COUNT]);
+    return fslots[JSSLOT_DENSE_ARRAY_COUNT].asPrivateUint32();
 }
 
 inline void 
 JSObject::setDenseArrayCount(uint32 count)
 {
     JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT] = count;
+    fslots[JSSLOT_DENSE_ARRAY_COUNT].setPrivateUint32(count);
 }
 
 inline void 
 JSObject::incDenseArrayCountBy(uint32 posDelta)
 {
     JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT] += posDelta;
+    fslots[JSSLOT_DENSE_ARRAY_COUNT].asPrivateUint32Ref() += posDelta;
 }
 
 inline void 
 JSObject::decDenseArrayCountBy(uint32 negDelta)
 {
     JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT] -= negDelta;
+    fslots[JSSLOT_DENSE_ARRAY_COUNT].asPrivateUint32Ref() -= negDelta;
 }
 
 inline uint32
 JSObject::uncheckedGetDenseArrayCapacity() const
 {
-    return dslots ? uint32(dslots[-1]) : 0;
+    return dslots ? dslots[-1].asPrivateUint32Ref() : 0;
 }
 
 inline uint32
@@ -206,12 +211,12 @@ JSObject::setDenseArrayCapacity(uint32 capacity)
 {
     JS_ASSERT(isDenseArray());
     JS_ASSERT(dslots);
-    dslots[-1] = capacity;
+    dslots[-1].setPrivateUint32(capacity);
     uint32 length = uncheckedGetArrayLength();
-    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP] = JS_MIN(length, capacity);
+    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].setPrivateUint32(JS_MIN(length, capacity));
 }
 
-inline jsval
+inline const js::Value &
 JSObject::getDenseArrayElement(uint32 i) const
 {
     JS_ASSERT(isDenseArray());
@@ -219,7 +224,7 @@ JSObject::getDenseArrayElement(uint32 i) const
     return dslots[i];
 }
 
-inline jsval *
+inline js::Value *
 JSObject::addressOfDenseArrayElement(uint32 i)
 {
     JS_ASSERT(isDenseArray());
@@ -228,14 +233,14 @@ JSObject::addressOfDenseArrayElement(uint32 i)
 }
 
 inline void
-JSObject::setDenseArrayElement(uint32 i, jsval v)
+JSObject::setDenseArrayElement(uint32 i, const js::Value &v)
 {
     JS_ASSERT(isDenseArray());
     JS_ASSERT(i < getDenseArrayCapacity());
-    dslots[i] = v;
+    dslots[i].copy(v);
 }
 
-inline jsval *
+inline js::Value *
 JSObject::getDenseArrayElements() const
 {
     JS_ASSERT(isDenseArray());
@@ -250,7 +255,7 @@ JSObject::freeDenseArrayElements(JSContext *cx)
         cx->free(dslots - 1);
         dslots = NULL;
     }
-    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP] = 0;
+    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].setPrivateUint32(0);
     JS_ASSERT(isDenseArrayMinLenCapOk());
 }
 
@@ -258,8 +263,8 @@ inline void
 JSObject::voidDenseOnlyArraySlots()
 {
     JS_ASSERT(isDenseArray());
-    fslots[JSSLOT_DENSE_ARRAY_COUNT] = JSVAL_VOID;
-    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP] = JSVAL_VOID;
+    fslots[JSSLOT_DENSE_ARRAY_COUNT].setUndefined();
+    fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].setUndefined();
 }
 
 inline void
@@ -267,7 +272,7 @@ JSObject::setArgsLength(uint32 argc)
 {
     JS_ASSERT(isArguments());
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
-    fslots[JSSLOT_ARGS_LENGTH] = INT_TO_JSVAL(argc << 1);
+    fslots[JSSLOT_ARGS_LENGTH].setInt32(argc << 1);
     JS_ASSERT(!isArgsLengthOverridden());
 }
 
@@ -275,7 +280,7 @@ inline uint32
 JSObject::getArgsLength() const
 {
     JS_ASSERT(isArguments());
-    uint32 argc = uint32(JSVAL_TO_INT(fslots[JSSLOT_ARGS_LENGTH])) >> 1;
+    uint32 argc = uint32(fslots[JSSLOT_ARGS_LENGTH].asInt32()) >> 1;
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
     return argc;
 }
@@ -284,21 +289,18 @@ inline void
 JSObject::setArgsLengthOverridden()
 {
     JS_ASSERT(isArguments());
-    jsval v = fslots[JSSLOT_ARGS_LENGTH];
-    v = INT_TO_JSVAL(JSVAL_TO_INT(v) | 1);
-    JS_ASSERT(JSVAL_IS_INT(v));
-    fslots[JSSLOT_ARGS_LENGTH] = v;
+    fslots[JSSLOT_ARGS_LENGTH].asInt32Ref() |= 1;
 }
 
 inline bool
 JSObject::isArgsLengthOverridden() const
 {
     JS_ASSERT(isArguments());
-    jsval v = fslots[JSSLOT_ARGS_LENGTH];
-    return (JSVAL_TO_INT(v) & 1) != 0;
+    const js::Value &v = fslots[JSSLOT_ARGS_LENGTH];
+    return (v.asInt32() & 1) != 0;
 }
 
-inline jsval 
+inline const js::Value & 
 JSObject::getArgsCallee() const
 {
     JS_ASSERT(isArguments());
@@ -306,13 +308,13 @@ JSObject::getArgsCallee() const
 }
 
 inline void 
-JSObject::setArgsCallee(jsval callee)
+JSObject::setArgsCallee(const js::Value &callee)
 {
     JS_ASSERT(isArguments());
-    fslots[JSSLOT_ARGS_CALLEE] = callee;
+    fslots[JSSLOT_ARGS_CALLEE].copy(callee);
 }
 
-inline jsval
+inline const js::Value &
 JSObject::getArgsElement(uint32 i) const
 {
     JS_ASSERT(isArguments());
@@ -320,64 +322,58 @@ JSObject::getArgsElement(uint32 i) const
     return dslots[i];
 }
 
-inline void
-JSObject::setArgsElement(uint32 i, jsval v)
+inline js::Value *
+JSObject::addressOfArgsElement(uint32 i) const
 {
     JS_ASSERT(isArguments());
     JS_ASSERT(i < numSlots() - JS_INITIAL_NSLOTS);
-    dslots[i] = v;
+    return &dslots[i];
 }
 
-inline jsval
+inline void
+JSObject::setArgsElement(uint32 i, const js::Value &v)
+{
+    JS_ASSERT(isArguments());
+    JS_ASSERT(i < numSlots() - JS_INITIAL_NSLOTS);
+    dslots[i].copy(v);
+}
+
+inline const js::Value &
 JSObject::getDateLocalTime() const
 {
     JS_ASSERT(isDate());
     return fslots[JSSLOT_DATE_LOCAL_TIME];
 }
 
-inline jsval *
-JSObject::addressOfDateLocalTime()
-{
-    JS_ASSERT(isDate());
-    return &fslots[JSSLOT_DATE_LOCAL_TIME];
-}
-
 inline void 
-JSObject::setDateLocalTime(jsval time)
+JSObject::setDateLocalTime(const js::Value &time)
 {
     JS_ASSERT(isDate());
-    fslots[JSSLOT_DATE_LOCAL_TIME] = time;
+    fslots[JSSLOT_DATE_LOCAL_TIME].copy(time);
 }
 
-inline jsval
+inline const js::Value &
 JSObject::getDateUTCTime() const
 {
     JS_ASSERT(isDate());
     return fslots[JSSLOT_DATE_UTC_TIME];
 }
 
-inline jsval *
-JSObject::addressOfDateUTCTime()
-{
-    JS_ASSERT(isDate());
-    return &fslots[JSSLOT_DATE_UTC_TIME];
-}
-
 inline void 
-JSObject::setDateUTCTime(jsval time)
+JSObject::setDateUTCTime(const js::Value &time)
 {
     JS_ASSERT(isDate());
-    fslots[JSSLOT_DATE_UTC_TIME] = time;
+    fslots[JSSLOT_DATE_UTC_TIME].copy(time);
 }
 
-inline jsval
+inline const js::Value &
 JSObject::getRegExpLastIndex() const
 {
     JS_ASSERT(isRegExp());
     return fslots[JSSLOT_REGEXP_LAST_INDEX];
 }
 
-inline jsval *
+inline js::Value *
 JSObject::addressOfRegExpLastIndex()
 {
     JS_ASSERT(isRegExp());
@@ -388,7 +384,7 @@ inline void
 JSObject::zeroRegExpLastIndex()
 {
     JS_ASSERT(isRegExp());
-    fslots[JSSLOT_REGEXP_LAST_INDEX] = JSVAL_ZERO;
+    fslots[JSSLOT_REGEXP_LAST_INDEX].setInt32(0);
 }
 
 inline NativeIterator *
@@ -419,7 +415,7 @@ inline void
 JSObject::freeSlotsArray(JSContext *cx)
 {
     JS_ASSERT(hasSlotsArray());
-    JS_ASSERT(dslotLength() > JS_INITIAL_NSLOTS);
+    JS_ASSERT(dslots[-1].asPrivateUint32() > JS_INITIAL_NSLOTS);
     cx->free(dslots - 1);
 }
 
@@ -511,7 +507,7 @@ class AutoDescriptorArray : private AutoGCRooter
 };
 
 static inline bool
-InitScopeForObject(JSContext* cx, JSObject* obj, JSClass *clasp, JSObject* proto, JSObjectOps* ops)
+InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* proto, JSObjectOps* ops)
 {
     JS_ASSERT(ops->isNative());
     JS_ASSERT(proto == obj->getProto());
@@ -558,7 +554,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSClass *clasp, JSObject* proto
 }
 
 static inline JSObject *
-NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
+NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto,
                         JSObject *parent, size_t objectSize = 0)
 {
     DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
@@ -594,7 +590,7 @@ NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
      * the parent of the prototype's constructor.
      */
     obj->init(clasp,
-              proto,
+              ToObjPtr(proto),
               (!parent && proto) ? proto->getParent() : parent,
               JSObject::defaultPrivate(clasp));
 
@@ -613,7 +609,7 @@ NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
      * builtin. See bug 481444.
      */
     if (cx->debugHooks->objectHook && !JS_ON_TRACE(cx)) {
-        AutoValueRooter tvr(cx, obj);
+        AutoObjectRooter tvr(cx, obj);
         AutoKeepAtoms keep(cx->runtime);
         cx->debugHooks->objectHook(cx, obj, JS_TRUE,
                                    cx->debugHooks->objectHookData);
@@ -626,7 +622,7 @@ out:
 }
 
 static inline JSProtoKey
-GetClassProtoKey(JSClass *clasp)
+GetClassProtoKey(js::Class *clasp)
 {
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
     if (key != JSProto_Null)
@@ -637,7 +633,7 @@ GetClassProtoKey(JSClass *clasp)
 }
 
 static inline JSObject *
-NewObject(JSContext *cx, JSClass *clasp, JSObject *proto,
+NewObject(JSContext *cx, js::Class *clasp, JSObject *proto,
           JSObject *parent, size_t objectSize = 0)
 {
     /* Bootstrap the ur-object, and make it the default prototype object. */

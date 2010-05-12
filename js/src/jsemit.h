@@ -487,9 +487,6 @@ struct JSCodeGenerator : public JSTreeContext
     JSCodeGenerator(js::Parser *parser,
                     JSArenaPool *codePool, JSArenaPool *notePool,
                     uintN lineno);
-
-    bool init();
-
     bool init();
 
     /*

@@ -152,7 +152,7 @@ js_InitBooleanClass(JSContext *cx, JSObject *obj)
                          NULL, boolean_methods, NULL, NULL);
     if (!proto)
         return NULL;
-    proto->setPrimitiveThis(JSVAL_FALSE);
+    proto->setPrimitiveThis(Value(false));
     return proto;
 }
 

@@ -226,7 +226,7 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
 }
 
 JSBool
-js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp)
+js_GetPrimitiveThis(JSContext *cx, Value *vp, Class *clasp, Value *thisvp)
 {
     jsval v;
     JSObject *obj;
@@ -378,7 +378,7 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     JSObject *obj = JSVAL_TO_OBJECT(vp[0]);
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
-    jsval *invokevp = args.getvp();
+    Value *invokevp = args.getvp();
     invokevp[0].copy(obj->fslots[JSSLOT_FOUND_FUNCTION]);
     invokevp[1].copy(vp[1]);
     invokevp[2].copy(obj->fslots[JSSLOT_SAVED_ID]);
@@ -1791,12 +1791,16 @@ namespace reprmeter {
 #define MONITOR_BRANCH(reason)                                                \
     JS_BEGIN_MACRO                                                            \
         if (TRACING_ENABLED(cx)) {                                            \
-            if (MonitorLoopEdge(cx, inlineCallCount, reason)) {               \
+            MonitorResult r = MonitorLoopEdge(cx, inlineCallCount, reason);   \
+            if (r == MONITOR_RECORDING) {                                     \
                 JS_ASSERT(TRACE_RECORDER(cx));                                \
                 MONITOR_BRANCH_TRACEVIS;                                      \
                 ENABLE_INTERRUPTS();                                          \
             }                                                                 \
             RESTORE_INTERP_VARS();                                            \
+            JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
+            if (r == MONITOR_ERROR)                                           \
+                goto error;                                                   \
         }                                                                     \
     JS_END_MACRO
 
@@ -2050,7 +2054,7 @@ JS_STATIC_ASSERT(JSOP_INCNAME_LENGTH == JSOP_NAMEDEC_LENGTH);
  * all cases, but we inline the most frequently taken paths here.
  */
 static inline bool
-IteratorMore(JSContext *cx, JSObject *iterobj, JSBool *cond, jsval *rval)
+IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
@@ -2058,19 +2062,19 @@ IteratorMore(JSContext *cx, JSObject *iterobj, JSBool *cond, jsval *rval)
     } else {
         if (!js_IteratorMore(cx, iterobj, rval))
             return false;
-        *cond = (*rval == JSVAL_TRUE);
+        *cond = rval->isBoolean(true);
     }
     return true;
 }
 
 static inline bool
-IteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval)
+IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
 {
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        *rval = *ni->props_cursor;
-        if (JSVAL_IS_STRING(*rval) || (ni->flags & JSITER_FOREACH)) {
+        rval->copy(*ni->props_cursor);
+        if (rval->isString() || (ni->flags & JSITER_FOREACH)) {
             ni->props_cursor++;
             return true;
         }
@@ -2233,24 +2237,6 @@ Interpret(JSContext *cx)
      */
     JSAtom **atoms = script->atomMap.vector;
 
-
-#error "TODO: merge this where it needs to go"
-#define MONITOR_BRANCH(reason)                                                \
-    JS_BEGIN_MACRO                                                            \
-        if (TRACING_ENABLED(cx)) {                                            \
-            MonitorResult r = MonitorLoopEdge(cx, inlineCallCount, reason);   \
-            if (r == MONITOR_RECORDING) {                                     \
-                JS_ASSERT(TRACE_RECORDER(cx));                                \
-                MONITOR_BRANCH_TRACEVIS;                                      \
-                ENABLE_INTERRUPTS();                                          \
-            }                                                                 \
-            RESTORE_INTERP_VARS();                                            \
-            JS_ASSERT_IF(cx->throwing, r == MONITOR_ERROR);                   \
-            if (r == MONITOR_ERROR)                                           \
-                goto error;                                                   \
-        }                                                                     \
-    JS_END_MACRO
-    
     MUST_FLOW_THROUGH("exit");
     ++cx->interpLevel;
 
@@ -2376,9 +2362,6 @@ Interpret(JSContext *cx)
 #if !JS_THREADED_INTERP
           default:
 #endif
-#ifndef JS_TRACER
-        bad_opcode:
-#endif
           {
             char numBuf[12];
             JS_snprintf(numBuf, sizeof numBuf, "%d", op);
@@ -2503,7 +2486,7 @@ Interpret(JSContext *cx)
 
 #if JS_HAS_GENERATORS
                 /* Catch cannot intercept the closing of a generator. */
-                if (JS_UNLIKELY(cx->exception.isMagic(JS_STOP_ITERATION_EXCEPTION)))
+                if (JS_UNLIKELY(cx->exception.isMagic(JS_GENERATOR_CLOSING)))
                     break;
 #endif
 
@@ -2553,7 +2536,7 @@ Interpret(JSContext *cx)
         interpReturnOK = JS_FALSE;
 #if JS_HAS_GENERATORS
         if (JS_UNLIKELY(cx->throwing &&
-                        cx->exception.isMagic(JS_STOP_ITERATION_EXCEPTION))) {
+                        cx->exception.isMagic(JS_GENERATOR_CLOSING))) {
             cx->throwing = JS_FALSE;
             interpReturnOK = JS_TRUE;
             fp->rval.setUndefined();

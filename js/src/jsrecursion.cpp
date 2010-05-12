@@ -616,13 +616,13 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
                   &info);
     /* stack vals */
     unsigned nfixed = fp->script->nfixed;
-    jsval* stack = StackBase(fp);
+    jsval* stack = fp->base();
     LIns* stack_ins = addName(lir->ins2(LIR_addp,
                                         slots_ins,
                                         INS_CONSTWORD(nfixed * sizeof(jsval))),
                               "stackBase");
 
-    size_t limit = size_t(i.sp() - StackBase(fp));
+    size_t limit = size_t(i.sp() - fp->base());
     if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)
         limit--;
     else

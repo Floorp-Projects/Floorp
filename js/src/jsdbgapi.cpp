@@ -297,8 +297,7 @@ js_MarkTraps(JSTracer *trc)
     for (JSTrap *trap = (JSTrap *) rt->trapList.next;
          &trap->links != &rt->trapList;
          trap = (JSTrap *) trap->links.next) {
-        JS_SET_TRACING_NAME(trc, "trap->closure");
-        js_CallValueTracerIfGCThing(trc, trap->closure);
+        CallGCMarkerIfGCThing(trc, Valueify(trap->closure), "trap->closure");
     }
 }
 
@@ -508,7 +507,7 @@ js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
             wp->sprop->trace(trc);
             if (wp->sprop->hasSetterValue() && wp->setter)
                 JS_CALL_OBJECT_TRACER(trc, CastAsObject(wp->setter), "wp->setter");
-            CallGCMarkerForGCThing(trc, Value(wp->closure), "wp->closure");
+            JS_CALL_OBJECT_TRACER(trc, wp->closure, "wp->closure");
         }
     }
 }
@@ -621,9 +620,9 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             /* NB: wp is held, so we can safely dereference it still. */
             if (!wp->handler(cx, obj, propid,
                              SPROP_HAS_VALID_SLOT(sprop, scope)
-                             ? obj->getSlotMT(cx, sprop->slot)
+                             ? Jsvalify(obj->getSlotMT(cx, sprop->slot))
                              : JSVAL_VOID,
-                             vp, wp->closure)) {
+                             Jsvalify(vp), wp->closure)) {
                 DBG_LOCK(rt);
                 DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
                 return JS_FALSE;
@@ -641,7 +640,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
              * trusted.
              */
             JSObject *closure = wp->closure;
-            JSClass *clasp = closure->getClass();
+            Class *clasp = closure->getClass();
             JSFunction *fun;
             JSScript *script;
             if (clasp == &js_FunctionClass) {
@@ -678,9 +677,9 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 }
 
                 /* Initialize slots/frame. */
-                jsval *vp = frame.getvp();
+                Value *vp = frame.getvp();
                 PodZero(vp, vplen);
-                vp[0] = OBJECT_TO_JSVAL(closure);
+                SetObject(&vp[0], closure);
                 JSStackFrame *fp = frame.getFrame();
                 PodZero(fp->slots(), nfixed);
                 PodZero(fp);
@@ -707,9 +706,9 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
             JSBool ok = !wp->setter ||
                         (sprop->hasSetterValue()
-                         ? js_InternalCall(cx, obj,
-                                           CastAsObjectJSVal(wp->setter),
-                                           1, vp, vp)
+                         ? InternalCall(cx, obj,
+                                        ToValue(CastAsObject(wp->setter)),
+                                        1, vp, vp)
                          : wp->setter(cx, obj, userid, vp));
 
             /* Evil code can cause us to have an arguments object. */
@@ -1660,7 +1659,7 @@ JS_GetObjectTotalSize(JSContext *cx, JSObject *obj)
 
     nbytes = sizeof *obj;
     if (obj->dslots) {
-        nbytes += (obj->dslotLength() - JS_INITIAL_NSLOTS + 1)
+        nbytes += (obj->dslots[-1].asPrivateUint32() - JS_INITIAL_NSLOTS + 1)
                   * sizeof obj->dslots[0];
     }
     if (obj->isNative()) {
@@ -1807,7 +1806,7 @@ JS_NewSystemObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 {
     JSObject *obj;
 
-    obj = NewObject(cx, clasp, proto, parent);
+    obj = NewObject(cx, Valueify(clasp), proto, parent);
     if (obj && system)
         obj->setSystem();
     return obj;

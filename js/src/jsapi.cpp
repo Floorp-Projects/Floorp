@@ -2894,7 +2894,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     JSObject *nobj = NewObject(cx, clasp, proto, obj);
     if (!nobj)
         return NULL;
-    if (!DefineProperty(cx, obj, name, Value(nobj), NULL, NULL, attrs,
+    if (!DefineProperty(cx, obj, name, ToValue(nobj), NULL, NULL, attrs,
                         0, 0)) {
         return NULL;
     }
@@ -4080,7 +4080,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
          * We cannot clone this object, so fail (we used to return funobj, bad
          * idea, but we changed incompatibly to teach any abusers a lesson!).
          */
-        Value v(funobj);
+        Value v;
+        SetObject(&v, funobj);
         js_ReportIsNotFunction(cx, &v, 0);
         return NULL;
     }
@@ -4110,7 +4111,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         }
 
         JSUpvarArray *uva = fun->u.i.script->upvars();
-        JS_ASSERT(uva->length <= clone->dslotLength());
+        JS_ASSERT(uva->length <= clone->dslots[-1].asPrivateUint32());
 
         void *mark = JS_ARENA_MARK(&cx->tempPool);
         jsuword *names = js_GetLocalNameArray(cx, fun, &cx->tempPool);
@@ -4196,7 +4197,7 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, Value *vp)
     JS_ASSERT((~fs->flags & (JSFUN_FAST_NATIVE | JSFUN_GENERIC_NATIVE)) == 0);
 
     if (argc < 1) {
-        js_ReportMissingArg(cx, vp, 0);
+        js_ReportMissingArg(cx, *vp, 0);
         return JS_FALSE;
     }
 
@@ -4251,7 +4252,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
               JSFUN_GENERIC_NATIVE);
 
     if (argc < 1) {
-        js_ReportMissingArg(cx, argv - 2, 0);
+        js_ReportMissingArg(cx, *(argv - 2), 0);
         return JS_FALSE;
     }
 
