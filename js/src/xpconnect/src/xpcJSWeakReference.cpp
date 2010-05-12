@@ -133,16 +133,13 @@ xpcJSWeakReference::Get()
             // nsXPConnect::GetWrapperForObject. But it takes a lot of
             // arguments! It turns out that the thisObject hook on XPConnect
             // objects does the right thing though, so...
-            if (obj->map->ops->thisObject)
+
+            if (obj->map->ops->thisObject &&
+                !(obj = obj->map->ops->thisObject(cx, obj)))
             {
-                JSObject *scope = JS_GetScopeChain(cx);
-                if (!scope)
-                    return NS_ERROR_FAILURE;
-                scope = JS_GetGlobalForObject(cx, scope);
-                obj = obj->map->ops->thisObject(cx, obj, scope);
-                if (!obj)
-                    return NS_ERROR_FAILURE;
+                return NS_ERROR_FAILURE;
             }
+
             *retval = OBJECT_TO_JSVAL(obj);
         }
     }
