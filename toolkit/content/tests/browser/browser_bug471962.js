@@ -40,7 +40,7 @@
  * sent to the address of the inner page.
  */
 function test() {
-
+  /*
   // --- Testing support library ---
 
   // Import the toolkit test support library in the scope of the current test.
@@ -55,12 +55,6 @@ function test() {
   const kBaseUrl =
         "http://mochi.test:8888/browser/toolkit/content/tests/browser/data/";
 
-  // temporary while we fix iteration in bug 565199:
-  function FramePostData_TestGenerator() {
-      ok(true, true);
-  }
-
-  /*
   function FramePostData_TestGenerator() {
     // Display the outer page, and wait for it to be loaded. Loading the URI
     // doesn't generally raise any exception, but if an error page is
@@ -144,9 +138,11 @@ function test() {
     }
   }
 
-*/
-
   // --- Run the test ---
 
-  testRunner.runTest(FramePostData_TestGenerator);
+ testRunner.runTest(FramePostData_TestGenerator);
+*/
+  // Disable this generator-using test until bug 565199 is fixed.
+  ok(true, true);
+    
 }
