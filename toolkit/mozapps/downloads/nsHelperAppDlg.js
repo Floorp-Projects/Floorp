@@ -78,6 +78,7 @@ const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 const nsITimer = Components.interfaces.nsITimer;
 
 Components.utils.import("resource://gre/modules/DownloadLastDir.jsm");
+Components.utils.import("resource://gre/modules/DownloadPaths.jsm");
 
 /* ctor
  */
@@ -313,7 +314,7 @@ nsUnknownContentTypeDialog.prototype = {
         aLeafName = "unnamed" + (aFileExt ? "." + aFileExt : "");
       aLocalFile.append(aLeafName);
 
-      this.makeFileUnique(aLocalFile);
+      var createdFile = DownloadPaths.createNiceUniqueFile(aLocalFile);
 
 #ifdef XP_WIN
       let ext;
@@ -324,66 +325,17 @@ nsUnknownContentTypeDialog.prototype = {
 
       // Append a file extension if it's an executable that doesn't have one
       // but make sure we actually have an extension to add
-      let leaf = aLocalFile.leafName;
-      if (aLocalFile.isExecutable() && ext &&
-          leaf.substring(leaf.length - ext.length) != ext) {
-        let f = aLocalFile.clone();
+      let leaf = createdFile.leafName;
+      if (ext && leaf.slice(-ext.length) != ext && createdFile.isExecutable()) {
+        createdFile.remove(false);
         aLocalFile.leafName = leaf + ext;
-
-        f.remove(false);
-        this.makeFileUnique(aLocalFile);
+        createdFile = DownloadPaths.createNiceUniqueFile(aLocalFile);
       }
 #endif
 
-      return aLocalFile;
+      return createdFile;
     },
 
-    /**
-     * Generates and returns a uniquely-named file from aLocalFile.  If
-     * aLocalFile does not exist, it will be the file returned; otherwise, a
-     * file whose name is similar to that of aLocalFile will be returned.
-     */
-    makeFileUnique: function (aLocalFile)
-    {
-      try {
-        // Note - this code is identical to that in 
-        //   toolkit/content/contentAreaUtils.js.
-        // If you are updating this code, update that code too! We can't share code
-        // here since this is called in a js component. 
-        var collisionCount = 0;
-        while (aLocalFile.exists()) {
-          collisionCount++;
-          if (collisionCount == 1) {
-            // Append "(2)" before the last dot in (or at the end of) the filename
-            // special case .ext.gz etc files so we don't wind up with .tar(2).gz
-            if (aLocalFile.leafName.match(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i)) {
-              aLocalFile.leafName = aLocalFile.leafName.replace(/\.[^\.]{1,3}\.(gz|bz2|Z)$/i, "(2)$&");
-            }
-            else {
-              aLocalFile.leafName = aLocalFile.leafName.replace(/(\.[^\.]*)?$/, "(2)$&");
-            }
-          }
-          else {
-            // replace the last (n) in the filename with (n+1)
-            aLocalFile.leafName = aLocalFile.leafName.replace(/^(.*\()\d+\)/, "$1" + (collisionCount+1) + ")");
-          }
-        }
-        aLocalFile.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0600);
-      }
-      catch (e) {
-        dump("*** exception in validateLeafName: " + e + "\n");
-
-        if (e.result == Components.results.NS_ERROR_FILE_ACCESS_DENIED)
-          throw e;
-
-        if (aLocalFile.leafName == "" || aLocalFile.isDirectory()) {
-          aLocalFile.append("unnamed");
-          if (aLocalFile.exists())
-            aLocalFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0600);
-        }
-      }
-    },
-    
     // ---------- implementation methods ----------
 
     // Web progress listener so we can detect errors while mLauncher is
