@@ -1,0 +1,27 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script type="text/javascript">
+<![CDATA[
+
+function boom()
+{
+  var a = document.createElementNS("http://www.w3.org/1999/xhtml", "frameset");
+  var b = document.createElementNS("http://www.w3.org/1999/xhtml", "frameset");
+  var c = document.createElementNS("http://www.w3.org/1999/xhtml", "frameset");
+  var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+
+  a.appendChild(b);
+  document.documentElement.appendChild(a);
+  document.documentElement.offsetHeight;
+  b.appendChild(c);
+  document.documentElement.offsetHeight;
+  c.appendChild(div)
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script></head>
+
+<body></body>
+</html>
