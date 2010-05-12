@@ -743,7 +743,7 @@ class TypedArrayTemplate
                 delete tarray;
                 return false;
             }
-        } else if (JSVAL_IS_OBJECT(argv[0])) {
+        } else if (!JSVAL_IS_PRIMITIVE(argv[0])) {
             int32_t byteOffset = -1;
             int32_t length = -1;
 
