@@ -367,11 +367,11 @@ pref("browser.ui.kinetic.swipeLength", 160);
 // zooming
 pref("browser.ui.zoom.pageFitGranularity", 10); // don't zoom to fit by less than 1/10.
 
-// Touch radius
+// Touch radius (area around the touch location to look for target elements):
 pref("browser.ui.touch.left", 8);
 pref("browser.ui.touch.right", 8);
-pref("browser.ui.touch.top", 4);
-pref("browser.ui.touch.bottom", 12);
+pref("browser.ui.touch.top", 12);
+pref("browser.ui.touch.bottom", 4);
 pref("browser.ui.touch.weight.visited", 120); // percentage
 
 // plugins
