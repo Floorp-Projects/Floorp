@@ -492,7 +492,6 @@ MAKEFILES_widget="
   widget/src/build/Makefile
   widget/src/gtk2/Makefile
   widget/src/gtkxtbin/Makefile
-  widget/src/photon/Makefile
   widget/src/cocoa/Makefile
   widget/src/os2/Makefile
   widget/src/windows/Makefile
