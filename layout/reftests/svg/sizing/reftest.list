@@ -257,14 +257,14 @@
 # We could certainly expand on these tests, but they provide reasonable base
 # coverage.
 
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--display-block--01.xhtml         inline--display-block--01-ref.xhtml
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--display-inline--01.xhtml        inline--display-inline--01-ref.xhtml
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--display-inline-block--01.xhtml  inline--display-inline-block--01-ref.xhtml
+HTTP(../..) == inline--display-block--01.xhtml        inline--display-block--01-ref.xhtml
+HTTP(../..) == inline--display-inline--01.xhtml       inline--display-inline--01-ref.xhtml
+HTTP(../..) == inline--display-inline-block--01.xhtml inline--display-inline-block--01-ref.xhtml
 == inline--float-left--01.xhtml            inline--float-left--01-ref.xhtml
 == inline--float-right--01.xhtml           inline--float-right--01-ref.xhtml
 == inline--position-absolute--01.xhtml     inline--position-absolute--01-ref.xhtml
 == inline--position-absolute--02.xhtml     pass.svg
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline--position-relative--01.xhtml     inline--position-relative--01-ref.xhtml
+HTTP(../..) == inline--position-relative--01.xhtml    inline--position-relative--01-ref.xhtml
 
 
 # Embedded by reference tests
