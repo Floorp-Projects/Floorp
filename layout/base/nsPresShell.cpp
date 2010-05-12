@@ -3814,6 +3814,8 @@ PresShell::ScrollToAnchor()
   if (!mLastAnchorScrolledTo)
     return NS_OK;
 
+  NS_ASSERTION(mDidInitialReflow, "should have done initial reflow by now");
+
   nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable();
   if (!rootScroll ||
       mLastAnchorScrollPositionY != rootScroll->GetScrollPosition().y)
@@ -4010,6 +4012,8 @@ PresShell::ScrollContentIntoView(nsIContent* aContent,
   nsCOMPtr<nsIDocument> currentDoc = content->GetCurrentDoc();
   NS_ENSURE_STATE(currentDoc);
 
+  NS_ASSERTION(mDidInitialReflow, "should have done initial reflow by now");
+
   mContentToScrollTo = aContent;
   mContentScrollVPosition = aVPercent;
   mContentScrollHPosition = aHPercent;
@@ -4036,6 +4040,8 @@ PresShell::DoScrollContentIntoView(nsIContent* aContent,
                                    PRIntn      aVPercent,
                                    PRIntn      aHPercent)
 {
+  NS_ASSERTION(mDidInitialReflow, "should have done initial reflow by now");
+
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame) {
     mContentToScrollTo = nsnull;
