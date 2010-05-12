@@ -60,9 +60,11 @@
 #include "nsITransferable.h"
 #include "nsIVariant.h"
 
+#ifdef ACCESSIBILITY
+class nsAccessible;
+#endif
 class nsIRenderingContext;
 class nsIMenuItem;
-class nsIAccessible;
 class nsIContent;
 class nsIURI;
 class nsHashKey;
@@ -838,6 +840,7 @@ public:
   PRPackedBool userCancelled;
 };
 
+#ifdef ACCESSIBILITY
 /**
  * Accessible event
  */
@@ -847,12 +850,13 @@ class nsAccessibleEvent : public nsInputEvent
 public:
   nsAccessibleEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
     : nsInputEvent(isTrusted, msg, w, NS_ACCESSIBLE_EVENT),
-      accessible(nsnull)
+      mAccessible(nsnull)
   {
   }
 
-  nsIAccessible*  accessible;     
+  nsAccessible *mAccessible;
 };
+#endif
 
 /**
  * Keyboard event

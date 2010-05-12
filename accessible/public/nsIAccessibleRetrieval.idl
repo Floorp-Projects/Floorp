@@ -56,7 +56,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(3df14f00-7253-4b9c-97c2-b4632090da23)]
+[scriptable, uuid(3e5cbd5c-dbab-4ea3-b82b-4cd6201d6fe0)]
 interface nsIAccessibleRetrieval : nsISupports
 {
   /**
@@ -96,16 +96,6 @@ interface nsIAccessibleRetrieval : nsISupports
    * @return - the DOM node for parent attached accessible
    */
   nsIDOMNode getRelevantContentNodeFor(in nsIDOMNode aNode);
-
-  /**
-   * Return an nsIAccessible for a DOM node in the given pres shell.
-   * Create a new accessible of the appropriate type if necessary,
-   * or use one from the accessibility cache if it already exists.
-   * @param aNode      The DOM node to get an accessible for.
-   * @param aPresShell The presentation shell which contains layout info for the DOM node.
-   * @return The nsIAccessible for the given DOM node.
-   */
-  nsIAccessible getAccessibleInShell(in nsIDOMNode aNode, in nsIPresShell aPresShell);
 
    /**
     * Returns accessible role as a string.
