@@ -5299,6 +5299,10 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op, jsval *statep, j
         JS_ASSERT(enumerate != JS_EnumerateStub);
         return ((JSNewEnumerateOp) enumerate)(cx, obj, enum_op, statep, idp);
     }
+
+    if (!enumerate(cx, obj))
+        return false;
+
     /* Tell InitNativeIterator to treat us like a native object. */
     JS_ASSERT(enum_op == JSENUMERATE_INIT);
     *statep = JSVAL_NATIVE_ENUMERATE_COOKIE;

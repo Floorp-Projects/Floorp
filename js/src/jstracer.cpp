@@ -13582,7 +13582,6 @@ TraceRecorder::record_JSOP_MOREITER()
     RETURN_IF_XML_A(iterobj_val);
 
     JSObject* iterobj = JSVAL_TO_OBJECT(iterobj_val);
-    JSClass* clasp = iterobj->getClass();
     LIns* iterobj_ins = get(&iterobj_val);
     bool cond;
     LIns* cond_ins;
