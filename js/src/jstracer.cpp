@@ -1559,9 +1559,9 @@ isfop(LIns* i, LOpcode op)
         return true;
 #if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float &&
-        i->isop(LIR_qjoin) &&
-        i->oprnd1()->isop(LIR_icall) &&
-        i->oprnd2()->isop(LIR_callh)) {
+        i->isop(LIR_ii2d) &&
+        i->oprnd1()->isop(LIR_calli) &&
+        i->oprnd2()->isop(LIR_hcalli)) {
         return i->oprnd1()->callInfo() == softFloatOps.opmap[op];
     }
 #endif
@@ -1573,13 +1573,13 @@ fcallinfo(LIns *i)
 {
 #if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float) {
-        if (!i->isop(LIR_qjoin))
+        if (!i->isop(LIR_ii2d))
             return NULL;
         i = i->oprnd1();
-        return i->isop(LIR_icall) ? i->callInfo() : NULL;
+        return i->isop(LIR_calli) ? i->callInfo() : NULL;
     }
 #endif
-    return i->isop(LIR_fcall) ? i->callInfo() : NULL;
+    return i->isop(LIR_calld) ? i->callInfo() : NULL;
 }
 
 static LIns*
@@ -1587,11 +1587,11 @@ fcallarg(LIns* i, int n)
 {
 #if NJ_SOFTFLOAT_SUPPORTED
     if (nanojit::AvmCore::config.soft_float) {
-        NanoAssert(i->isop(LIR_qjoin));
+        NanoAssert(i->isop(LIR_ii2d));
         return i->oprnd1()->callArgN(n);
     }
 #endif
-    NanoAssert(i->isop(LIR_fcall));
+    NanoAssert(i->isop(LIR_calld));
     return i->callArgN(n);
 }
 
@@ -1621,7 +1621,7 @@ demote(LirWriter *out, LIns* ins)
     JS_ASSERT(ins->isD());
     if (ins->isCall())
         return ins->callArgN(0);
-    if (isfop(ins, LIR_i2f) || isfop(ins, LIR_u2f))
+    if (isfop(ins, LIR_i2d) || isfop(ins, LIR_ui2d))
         return foprnd1(ins);
     JS_ASSERT(ins->isImmD());
     double cf = ins->immD();
@@ -1632,7 +1632,7 @@ demote(LirWriter *out, LIns* ins)
 static bool
 isPromoteInt(LIns* ins)
 {
-    if (isfop(ins, LIR_i2f))
+    if (isfop(ins, LIR_i2d))
         return true;
     if (ins->isImmD()) {
         jsdouble d = ins->immD();
@@ -1644,7 +1644,7 @@ isPromoteInt(LIns* ins)
 static bool
 isPromoteUint(LIns* ins)
 {
-    if (isfop(ins, LIR_u2f))
+    if (isfop(ins, LIR_ui2d))
         return true;
     if (ins->isImmD()) {
         jsdouble d = ins->immD();
@@ -1668,18 +1668,18 @@ IsOverflowSafe(LOpcode op, LIns* i)
 {
     LIns* c;
     switch (op) {
-      case LIR_add:
-      case LIR_sub:
-          return (i->isop(LIR_and) && ((c = i->oprnd2())->isImmI()) &&
+      case LIR_addi:
+      case LIR_subi:
+          return (i->isop(LIR_andi) && ((c = i->oprnd2())->isImmI()) &&
                   ((c->immI() & 0xc0000000) == 0)) ||
-                 (i->isop(LIR_rsh) && ((c = i->oprnd2())->isImmI()) &&
+                 (i->isop(LIR_rshi) && ((c = i->oprnd2())->isImmI()) &&
                   ((c->immI() > 0)));
     default:
-        JS_ASSERT(op == LIR_mul);
+        JS_ASSERT(op == LIR_muli);
     }
-    return (i->isop(LIR_and) && ((c = i->oprnd2())->isImmI()) &&
+    return (i->isop(LIR_andi) && ((c = i->oprnd2())->isImmI()) &&
             ((c->immI() & 0xffff0000) == 0)) ||
-           (i->isop(LIR_ush) && ((c = i->oprnd2())->isImmI()) &&
+           (i->isop(LIR_rshui) && ((c = i->oprnd2())->isImmI()) &&
             ((c->immI() >= 16)));
 }
 
@@ -1693,12 +1693,12 @@ public:
 
     LIns* ins2(LOpcode v, LIns* s0, LIns* s1)
     {
-        if (s0 == s1 && v == LIR_feq) {
+        if (s0 == s1 && v == LIR_eqd) {
             if (isPromote(s0)) {
                 // double(int) and double(uint) cannot be nan
                 return insImmI(1);
             }
-            if (s0->isop(LIR_fmul) || s0->isop(LIR_fsub) || s0->isop(LIR_fadd)) {
+            if (s0->isop(LIR_muld) || s0->isop(LIR_subd) || s0->isop(LIR_addd)) {
                 LIns* lhs = s0->oprnd1();
                 LIns* rhs = s0->oprnd2();
                 if (isPromote(lhs) && isPromote(rhs)) {
@@ -2306,7 +2306,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         // XXX: this load is volatile.  If bug 545406 (loop-invariant code
         // hoisting) is implemented this fact will need to be made explicit.
         LIns* x =
-            lir->insLoad(LIR_ld, cx_ins, offsetof(JSContext, operationCallbackFlag), ACC_LOAD_ANY);
+            lir->insLoad(LIR_ldi, cx_ins, offsetof(JSContext, operationCallbackFlag), ACC_LOAD_ANY);
         guard(true, lir->insEqI_0(x), snapshot(TIMEOUT_EXIT));
     }
 
@@ -2318,7 +2318,7 @@ TraceRecorder::TraceRecorder(JSContext* cx, VMSideExit* anchor, VMFragment* frag
         LIns* nested_ins = addName(lir->insLoad(LIR_ldp, lirbuf->state,
                                                 offsetof(TracerState, outermostTreeExitGuard),
                                                 ACC_OTHER), "outermostTreeExitGuard");
-        guard(true, lir->ins2(LIR_peq, nested_ins, INS_CONSTPTR(innermost)), NESTED_EXIT);
+        guard(true, lir->ins2(LIR_eqp, nested_ins, INS_CONSTPTR(innermost)), NESTED_EXIT);
     }
 }
 
@@ -3222,8 +3222,8 @@ struct VarClosureTraits
     static inline uint32 adj_slot(JSStackFrame* fp, uint32 slot) { return 4 + fp->argc + slot; }
 
     static inline LIns* adj_slot_lir(LirWriter* lir, LIns* fp_ins, unsigned slot) {
-        LIns *argc_ins = lir->insLoad(LIR_ld, fp_ins, offsetof(JSStackFrame, argc), ACC_OTHER);
-        return lir->ins2(LIR_add, lir->insImmI(4 + slot), argc_ins);
+        LIns *argc_ins = lir->insLoad(LIR_ldi, fp_ins, offsetof(JSStackFrame, argc), ACC_OTHER);
+        return lir->ins2(LIR_addi, lir->insImmI(4 + slot), argc_ins);
     }
 
     // See also UpvarVarTraits.
@@ -3343,14 +3343,14 @@ TraceRecorder::import(LIns* base, ptrdiff_t offset, jsval* p, TraceType t,
          * to see doubles on entry. The first op to use this slot will emit a
          * d2i cast which will cancel out the i2d we insert here.
          */
-        ins = lir->insLoad(LIR_ld, base, offset, accSet);
-        ins = lir->ins1(LIR_i2f, ins);
+        ins = lir->insLoad(LIR_ldi, base, offset, accSet);
+        ins = lir->ins1(LIR_i2d, ins);
     } else {
         JS_ASSERT_IF(t != TT_JSVAL, isNumber(*p) == (t == TT_DOUBLE));
         if (t == TT_DOUBLE) {
-            ins = lir->insLoad(LIR_ldf, base, offset, accSet);
+            ins = lir->insLoad(LIR_ldd, base, offset, accSet);
         } else if (t == TT_SPECIAL) {
-            ins = lir->insLoad(LIR_ld, base, offset, accSet);
+            ins = lir->insLoad(LIR_ldi, base, offset, accSet);
         } else if (t == TT_VOID) {
             ins = INS_VOID();
         } else {
@@ -3595,15 +3595,15 @@ TraceRecorder::set(jsval* p, LIns* i, bool demote)
         nativeFrameTracker.set(p, x);
     } else {
 #if defined NANOJIT_64BIT
-        JS_ASSERT( x->isop(LIR_stqi) || x->isop(LIR_sti) || x->isop(LIR_stfi));
+        JS_ASSERT( x->isop(LIR_stq) || x->isop(LIR_sti) || x->isop(LIR_std));
 #else
-        JS_ASSERT( x->isop(LIR_sti) || x->isop(LIR_stfi));
+        JS_ASSERT( x->isop(LIR_sti) || x->isop(LIR_std));
 #endif
 
         int disp;
         LIns *base = x->oprnd2();
 #ifdef NANOJIT_ARM
-        if (base->isop(LIR_piadd)) {
+        if (base->isop(LIR_addp)) {
             disp = base->oprnd2()->immI();
             base = base->oprnd1();
         } else
@@ -3667,8 +3667,8 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::addr(jsval* p)
 {
     return isGlobal(p)
-           ? lir->ins2(LIR_piadd, eos_ins, INS_CONSTWORD(nativeGlobalOffset(p)))
-           : lir->ins2(LIR_piadd, lirbuf->sp,
+           ? lir->ins2(LIR_addp, eos_ins, INS_CONSTWORD(nativeGlobalOffset(p)))
+           : lir->ins2(LIR_addp, lirbuf->sp,
                        INS_CONSTWORD(nativespOffset(p)));
 }
 
@@ -4127,14 +4127,14 @@ TraceRecorder::guard_xov(LOpcode op, LIns* d0, LIns* d1, VMSideExit* exit)
     JS_ASSERT(exit->exitType == OVERFLOW_EXIT);
 
     switch (op) {
-      case LIR_add:
-        op = LIR_addxov;
+      case LIR_addi:
+        op = LIR_addxovi;
         break;
-      case LIR_sub:
-        op = LIR_subxov;
+      case LIR_subi:
+        op = LIR_subxovi;
         break;
-      case LIR_mul:
-        op = LIR_mulxov;
+      case LIR_muli:
+        op = LIR_mulxovi;
         break;
       default:
         JS_NOT_REACHED("unexpected comparison op");
@@ -4689,7 +4689,7 @@ TraceRecorder::closeLoop(SlotMap& slotMap, VMSideExit* exit)
         JS_ASSERT((fragment == fragment->root) == !!loopLabel);
         if (loopLabel) {
             lir->insBranch(LIR_j, NULL, loopLabel);
-            lir->ins1(LIR_plive, lirbuf->state);
+            lir->ins1(LIR_livep, lirbuf->state);
         }
 
         exit->target = tree;
@@ -4945,22 +4945,22 @@ TraceRecorder::prepareTreeCall(TreeFragment* inner)
                 - tree->nativeStackBase /* rebase sp to beginning of outer tree's stack */
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
                 + inner->maxNativeStackSlots * sizeof(double); /* plus the inner tree's stack */
-        LIns* sp_top = lir->ins2(LIR_piadd, lirbuf->sp, INS_CONSTWORD(sp_offset));
-        guard(true, lir->ins2(LIR_plt, sp_top, eos_ins), exit);
+        LIns* sp_top = lir->ins2(LIR_addp, lirbuf->sp, INS_CONSTWORD(sp_offset));
+        guard(true, lir->ins2(LIR_ltp, sp_top, eos_ins), exit);
 
         /* Guard that we have enough call stack space. */
         ptrdiff_t rp_offset = rp_adj + inner->maxCallDepth * sizeof(FrameInfo*);
-        LIns* rp_top = lir->ins2(LIR_piadd, lirbuf->rp, INS_CONSTWORD(rp_offset));
-        guard(true, lir->ins2(LIR_plt, rp_top, eor_ins), exit);
+        LIns* rp_top = lir->ins2(LIR_addp, lirbuf->rp, INS_CONSTWORD(rp_offset));
+        guard(true, lir->ins2(LIR_ltp, rp_top, eor_ins), exit);
 
         sp_offset =
                 - tree->nativeStackBase /* rebase sp to beginning of outer tree's stack */
                 + sp_adj /* adjust for stack in outer frame inner tree can't see */
                 + inner->nativeStackBase; /* plus the inner tree's stack base */
         /* We have enough space, so adjust sp and rp to their new level. */
-        lir->insStore(lir->ins2(LIR_piadd, lirbuf->sp, INS_CONSTWORD(sp_offset)),
+        lir->insStore(lir->ins2(LIR_addp, lirbuf->sp, INS_CONSTWORD(sp_offset)),
                 lirbuf->state, offsetof(TracerState, sp), ACC_OTHER);
-        lir->insStore(lir->ins2(LIR_piadd, lirbuf->rp, INS_CONSTWORD(rp_adj)),
+        lir->insStore(lir->ins2(LIR_addp, lirbuf->rp, INS_CONSTWORD(rp_adj)),
                 lirbuf->state, offsetof(TracerState, rp), ACC_OTHER);
     }
 
@@ -5014,8 +5014,8 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
     LIns* rec = lir->insCall(ci, args);
     LIns* lr = lir->insLoad(LIR_ldp, rec, offsetof(GuardRecord, exit), ACC_OTHER);
     LIns* nested = lir->insBranch(LIR_jt,
-                                  lir->ins2ImmI(LIR_eq,
-                                             lir->insLoad(LIR_ld, lr,
+                                  lir->ins2ImmI(LIR_eqi,
+                                             lir->insLoad(LIR_ldi, lr,
                                                           offsetof(VMSideExit, exitType),
                                                           ACC_OTHER),
                                              NESTED_EXIT),
@@ -5042,11 +5042,11 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
                                                             ACC_OTHER)),
                                  NULL);
     lir->insStore(lr, lirbuf->state, offsetof(TracerState, lastTreeCallGuard), ACC_OTHER);
-    lir->insStore(lir->ins2(LIR_piadd,
+    lir->insStore(lir->ins2(LIR_addp,
                              lir->insLoad(LIR_ldp, lirbuf->state, offsetof(TracerState, rp),
                                           ACC_OTHER),
-                             lir->insI2P(lir->ins2ImmI(LIR_lsh,
-                                                     lir->insLoad(LIR_ld, lr,
+                             lir->insI2P(lir->ins2ImmI(LIR_lshi,
+                                                     lir->insLoad(LIR_ldi, lr,
                                                                   offsetof(VMSideExit, calldepth),
                                                                   ACC_OTHER),
                                                      sizeof(void*) == 4 ? 2 : 3))),
@@ -5122,7 +5122,7 @@ TraceRecorder::emitTreeCall(TreeFragment* inner, VMSideExit* exit)
      */
     VMSideExit* nestedExit = snapshot(NESTED_EXIT);
     JS_ASSERT(exit->exitType == LOOP_EXIT);
-    guard(true, lir->ins2(LIR_peq, lr, INS_CONSTPTR(exit)), nestedExit);
+    guard(true, lir->ins2(LIR_eqp, lr, INS_CONSTPTR(exit)), nestedExit);
     debug_only_printf(LC_TMTreeVis, "TREEVIS TREECALL INNER=%p EXIT=%p GUARD=%p\n", (void*)inner,
                       (void*)nestedExit, (void*)exit);
 
@@ -8013,7 +8013,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, jsval*& vp,
 
         TraceType type = getCoercedType(nr.v);
         guard(true,
-              addName(lir->ins2(LIR_eq, call_ins, lir->insImmI(type)),
+              addName(lir->ins2(LIR_eqi, call_ins, lir->insImmI(type)),
                       "guard(type-stable name access)"),
               BRANCH_EXIT);
         ins = stackLoad(outp, ACC_OTHER, type);
@@ -8071,7 +8071,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
      */
     if (oracle->isInstructionUndemotable(cx->fp->regs->pc) || !isPromoteInt(s0) || !isPromoteInt(s1)) {
     out:
-        if (v == LIR_fmod) {
+        if (v == LIR_modd) {
             LIns* args[] = { s1, s0 };
             return lir->insCall(&js_dmod_ci, args);
         }
@@ -8082,24 +8082,24 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 
     jsdouble r;
     switch (v) {
-    case LIR_fadd:
+    case LIR_addd:
         r = v0 + v1;
         break;
-    case LIR_fsub:
+    case LIR_subd:
         r = v0 - v1;
         break;
-    case LIR_fmul:
+    case LIR_muld:
         r = v0 * v1;
         if (r == 0.0)
             goto out;
         break;
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
-    case LIR_fdiv:
+    case LIR_divd:
         if (v1 == 0)
             goto out;
         r = v0 / v1;
         break;
-    case LIR_fmod:
+    case LIR_modd:
         if (v0 < 0 || v1 == 0 || (s1->isImmD() && v1 < 0))
             goto out;
         r = js_dmod(v0, v1);
@@ -8127,9 +8127,9 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
     LIns* result;
     switch (v) {
 #if defined NANOJIT_IA32 || defined NANOJIT_X64
-      case LIR_fdiv:
+      case LIR_divd:
         if (d0->isImmI() && d1->isImmI())
-            return lir->ins1(LIR_i2f, lir->insImmI(jsint(r)));
+            return lir->ins1(LIR_i2d, lir->insImmI(jsint(r)));
 
         exit = snapshot(OVERFLOW_EXIT);
 
@@ -8139,35 +8139,35 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * into -2147483648 / -1, because it can raise an overflow exception.
          */
         if (!d1->isImmI()) {
-            LIns* gt = lir->insBranch(LIR_jt, lir->ins2ImmI(LIR_gt, d1, 0), NULL);
+            LIns* gt = lir->insBranch(LIR_jt, lir->ins2ImmI(LIR_gti, d1, 0), NULL);
             guard(false, lir->insEqI_0(d1), exit);
-            guard(false, lir->ins2(LIR_and,
-                                   lir->ins2ImmI(LIR_eq, d0, 0x80000000),
-                                   lir->ins2ImmI(LIR_eq, d1, -1)), exit);
+            guard(false, lir->ins2(LIR_andi,
+                                   lir->ins2ImmI(LIR_eqi, d0, 0x80000000),
+                                   lir->ins2ImmI(LIR_eqi, d1, -1)), exit);
             gt->setTarget(lir->ins0(LIR_label));
         } else {
             if (d1->immI() == -1)
-                guard(false, lir->ins2ImmI(LIR_eq, d0, 0x80000000), exit);
+                guard(false, lir->ins2ImmI(LIR_eqi, d0, 0x80000000), exit);
         }
-        result = lir->ins2(v = LIR_div, d0, d1);
+        result = lir->ins2(v = LIR_divi, d0, d1);
 
         /* As long as the modulus is zero, the result is an integer. */
-        guard(true, lir->insEqI_0(lir->ins1(LIR_mod, result)), exit);
+        guard(true, lir->insEqI_0(lir->ins1(LIR_modi, result)), exit);
 
         /* Don't lose a -0. */
         guard(false, lir->insEqI_0(result), exit);
         break;
 
-      case LIR_fmod: {
+      case LIR_modd: {
         if (d0->isImmI() && d1->isImmI())
-            return lir->ins1(LIR_i2f, lir->insImmI(jsint(r)));
+            return lir->ins1(LIR_i2d, lir->insImmI(jsint(r)));
 
         exit = snapshot(OVERFLOW_EXIT);
 
         /* Make sure we don't trigger division by zero at runtime. */
         if (!d1->isImmI())
             guard(false, lir->insEqI_0(d1), exit);
-        result = lir->ins1(v = LIR_mod, lir->ins2(LIR_div, d0, d1));
+        result = lir->ins1(v = LIR_modi, lir->ins2(LIR_divi, d0, d1));
 
         /* If the result is not 0, it is always within the integer domain. */
         LIns* branch = lir->insBranch(LIR_jf, lir->insEqI_0(result), NULL);
@@ -8176,7 +8176,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
          * If the result is zero, we must exit if the lhs is negative since
          * the result is -0 in this case, which is not in the integer domain.
          */
-        guard(false, lir->ins2ImmI(LIR_lt, d0, 0), exit);
+        guard(false, lir->ins2ImmI(LIR_lti, d0, 0), exit);
         branch->setTarget(lir->ins0(LIR_label));
         break;
       }
@@ -8184,7 +8184,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
 
       default:
         v = arithOpcodeD2I(v);
-        JS_ASSERT(v == LIR_add || v == LIR_mul || v == LIR_sub);
+        JS_ASSERT(v == LIR_addi || v == LIR_muli || v == LIR_subi);
 
         /*
          * If the operands guarantee that the result will be an integer (e.g.
@@ -8196,7 +8196,7 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
         if (!IsOverflowSafe(v, d0) || !IsOverflowSafe(v, d1)) {
             exit = snapshot(OVERFLOW_EXIT);
             result = guard_xov(v, d0, d1, exit);
-            if (v == LIR_mul) // make sure we don't lose a -0
+            if (v == LIR_muli) // make sure we don't lose a -0
                 guard(false, lir->insEqI_0(result), exit);
         } else {
             result = lir->ins2(v, d0, d1);
@@ -8205,13 +8205,13 @@ TraceRecorder::alu(LOpcode v, jsdouble v0, jsdouble v1, LIns* s0, LIns* s1)
     }
     JS_ASSERT_IF(d0->isImmI() && d1->isImmI(),
                  result->isImmI() && result->immI() == jsint(r));
-    return lir->ins1(LIR_i2f, result);
+    return lir->ins1(LIR_i2d, result);
 }
 
 LIns*
 TraceRecorder::i2d(LIns* i)
 {
-    return lir->ins1(LIR_i2f, i);
+    return lir->ins1(LIR_i2d, i);
 }
 
 LIns*
@@ -8219,9 +8219,9 @@ TraceRecorder::d2i(LIns* f, bool resultCanBeImpreciseIfFractional)
 {
     if (f->isImmD())
         return lir->insImmI(js_DoubleToECMAInt32(f->immD()));
-    if (isfop(f, LIR_i2f) || isfop(f, LIR_u2f))
+    if (isfop(f, LIR_i2d) || isfop(f, LIR_ui2d))
         return foprnd1(f);
-    if (isfop(f, LIR_fadd) || isfop(f, LIR_fsub)) {
+    if (isfop(f, LIR_addd) || isfop(f, LIR_subd)) {
         LIns* lhs = foprnd1(f);
         LIns* rhs = foprnd2(f);
         if (isPromote(lhs) && isPromote(rhs)) {
@@ -8264,7 +8264,7 @@ TraceRecorder::f2u(LIns* f)
 {
     if (f->isImmD())
         return lir->insImmI(js_DoubleToECMAUint32(f->immD()));
-    if (isfop(f, LIR_i2f) || isfop(f, LIR_u2f))
+    if (isfop(f, LIR_i2d) || isfop(f, LIR_ui2d))
         return foprnd1(f);
     return lir->insCall(&js_DoubleToUint32_ci, &f);
 }
@@ -8279,7 +8279,7 @@ TraceRecorder::makeNumberInt32(LIns* f)
         // exit".  We first convert the double to an int, then convert it back
         // and exit if the two doubles don't match.
         x = d2i(f, /* resultCanBeImpreciseIfFractional = */true);
-        guard(true, lir->ins2(LIR_feq, f, lir->ins1(LIR_i2f, x)), MISMATCH_EXIT);
+        guard(true, lir->ins2(LIR_eqd, f, lir->ins1(LIR_i2d, x)), MISMATCH_EXIT);
     } else {
         x = demote(lir, f);
     }
@@ -8360,13 +8360,13 @@ TraceRecorder::ifop()
     } else if (JSVAL_IS_SPECIAL(v)) {
         /* Test for boolean is true, negate later if we are testing for false. */
         cond = JSVAL_TO_SPECIAL(v) == JS_TRUE;
-        x = lir->ins2ImmI(LIR_eq, v_ins, 1);
+        x = lir->ins2ImmI(LIR_eqi, v_ins, 1);
     } else if (isNumber(v)) {
         jsdouble d = asNumber(v);
         cond = !JSDOUBLE_IS_NaN(d) && d;
-        x = lir->ins2(LIR_and,
-                      lir->ins2(LIR_feq, v_ins, v_ins),
-                      lir->insEqI_0(lir->ins2(LIR_feq, v_ins, lir->insImmD(0))));
+        x = lir->ins2(LIR_andi,
+                      lir->ins2(LIR_eqd, v_ins, v_ins),
+                      lir->insEqI_0(lir->ins2(LIR_eqd, v_ins, lir->insImmD(0))));
     } else if (JSVAL_IS_STRING(v)) {
         cond = JSVAL_TO_STRING(v)->length() != 0;
         x = lir->insLoad(LIR_ldp, v_ins, offsetof(JSString, mLength), ACC_OTHER);
@@ -8431,8 +8431,8 @@ TraceRecorder::tableswitch()
     si->count = high + 1 - low;
     si->table = 0;
     si->index = (uint32) -1;
-    LIns* diff = lir->ins2(LIR_sub, v_ins, lir->insImmI(low));
-    LIns* cmp = lir->ins2(LIR_ult, diff, lir->insImmI(si->count));
+    LIns* diff = lir->ins2(LIR_subi, v_ins, lir->insImmI(low));
+    LIns* cmp = lir->ins2(LIR_ltui, diff, lir->insImmI(si->count));
     lir->insGuard(LIR_xf, cmp, createGuardRecord(snapshot(DEFAULT_EXIT)));
     lir->insStore(diff, lir->insImmP(&si->index), 0, ACC_OTHER);
     VMSideExit* exit = snapshot(CASE_EXIT);
@@ -8464,7 +8464,7 @@ TraceRecorder::switchop()
     if (isNumber(v)) {
         jsdouble d = asNumber(v);
         guard(true,
-              addName(lir->ins2(LIR_feq, v_ins, lir->insImmD(d)),
+              addName(lir->ins2(LIR_eqd, v_ins, lir->insImmD(d)),
                       "guard(switch on numeric)"),
               BRANCH_EXIT);
     } else if (JSVAL_IS_STRING(v)) {
@@ -8475,7 +8475,7 @@ TraceRecorder::switchop()
               BRANCH_EXIT);
     } else if (JSVAL_IS_SPECIAL(v)) {
         guard(true,
-              addName(lir->ins2(LIR_eq, v_ins, lir->insImmI(UnboxBooleanOrUndefined(v))),
+              addName(lir->ins2(LIR_eqi, v_ins, lir->insImmI(UnboxBooleanOrUndefined(v))),
                       "guard(switch on boolean)"),
               BRANCH_EXIT);
     } else {
@@ -8518,7 +8518,7 @@ TraceRecorder::incHelper(jsval v, LIns* v_ins, LIns*& v_after, jsint incr)
 {
     if (!isNumber(v))
         RETURN_STOP("can only inc numbers");
-    v_after = alu(LIR_fadd, asNumber(v), incr, v_ins, lir->insImmD(incr));
+    v_after = alu(LIR_addd, asNumber(v), incr, v_ins, lir->insImmD(incr));
     return RECORD_CONTINUE;
 }
 
@@ -8576,19 +8576,19 @@ EvalCmp(LOpcode op, double l, double r)
 {
     bool cond;
     switch (op) {
-      case LIR_feq:
+      case LIR_eqd:
         cond = (l == r);
         break;
-      case LIR_flt:
+      case LIR_ltd:
         cond = l < r;
         break;
-      case LIR_fgt:
+      case LIR_gtd:
         cond = l > r;
         break;
-      case LIR_fle:
+      case LIR_led:
         cond = l <= r;
         break;
-      case LIR_fge:
+      case LIR_ged:
         cond = l >= r;
         break;
       default:
@@ -8601,7 +8601,7 @@ EvalCmp(LOpcode op, double l, double r)
 static bool
 EvalCmp(LOpcode op, JSString* l, JSString* r)
 {
-    if (op == LIR_feq)
+    if (op == LIR_eqd)
         return !!js_EqualStrings(l, r);
     return EvalCmp(op, js_CompareStrings(l, r), 0);
 }
@@ -8622,16 +8622,16 @@ TraceRecorder::strictEquality(bool equal, bool cmpCase)
         x = lir->insImmI(cond);
     } else if (ltag == TT_STRING) {
         LIns* args[] = { r_ins, l_ins };
-        x = lir->ins2ImmI(LIR_eq, lir->insCall(&js_EqualStrings_ci, args), equal);
+        x = lir->ins2ImmI(LIR_eqi, lir->insCall(&js_EqualStrings_ci, args), equal);
         cond = !!js_EqualStrings(JSVAL_TO_STRING(l), JSVAL_TO_STRING(r));
     } else {
         LOpcode op;
         if (ltag == TT_DOUBLE)
-            op = LIR_feq;
+            op = LIR_eqd;
         else if (ltag == TT_NULL || ltag == TT_OBJECT || ltag == TT_FUNCTION)
-            op = LIR_peq;
+            op = LIR_eqp;
         else
-            op = LIR_eq;
+            op = LIR_eqi;
         x = lir->ins2(op, l_ins, r_ins);
         if (!equal)
             x = lir->insEqI_0(x);
@@ -8667,7 +8667,7 @@ TraceRecorder::equalityHelper(jsval& l, jsval& r, LIns* l_ins, LIns* r_ins,
                               bool negate, bool tryBranchAfterCond,
                               jsval& rval)
 {
-    LOpcode op = LIR_eq;
+    LOpcode op = LIR_eqi;
     bool cond;
     LIns* args[] = { NULL, NULL };
 
@@ -8686,12 +8686,12 @@ TraceRecorder::equalityHelper(jsval& l, jsval& r, LIns* l_ins, LIns* r_ins,
         if (JSVAL_IS_VOID(l) || JSVAL_IS_NULL(l)) {
             cond = true;
             if (JSVAL_IS_NULL(l))
-                op = LIR_peq;
+                op = LIR_eqp;
         } else if (JSVAL_IS_OBJECT(l)) {
             JSClass *clasp = JSVAL_TO_OBJECT(l)->getClass();
             if ((clasp->flags & JSCLASS_IS_EXTENDED) && ((JSExtendedClass*) clasp)->equality)
                 RETURN_STOP_A("Can't trace extended class equality operator");
-            op = LIR_peq;
+            op = LIR_eqp;
             cond = (l == r);
         } else if (JSVAL_IS_SPECIAL(l)) {
             JS_ASSERT(JSVAL_IS_BOOLEAN(l) && JSVAL_IS_BOOLEAN(r));
@@ -8704,7 +8704,7 @@ TraceRecorder::equalityHelper(jsval& l, jsval& r, LIns* l_ins, LIns* r_ins,
         } else {
             JS_ASSERT(isNumber(l) && isNumber(r));
             cond = (asNumber(l) == asNumber(r));
-            op = LIR_feq;
+            op = LIR_eqd;
         }
     } else if (JSVAL_IS_NULL(l) && JSVAL_IS_VOID(r)) {
         l_ins = INS_VOID();
@@ -8716,12 +8716,12 @@ TraceRecorder::equalityHelper(jsval& l, jsval& r, LIns* l_ins, LIns* r_ins,
         args[0] = r_ins, args[1] = cx_ins;
         r_ins = lir->insCall(&js_StringToNumber_ci, args);
         cond = (asNumber(l) == js_StringToNumber(cx, JSVAL_TO_STRING(r)));
-        op = LIR_feq;
+        op = LIR_eqd;
     } else if (JSVAL_IS_STRING(l) && isNumber(r)) {
         args[0] = l_ins, args[1] = cx_ins;
         l_ins = lir->insCall(&js_StringToNumber_ci, args);
         cond = (js_StringToNumber(cx, JSVAL_TO_STRING(l)) == asNumber(r));
-        op = LIR_feq;
+        op = LIR_eqd;
     } else {
         // Below we may assign to l or r, which modifies the interpreter state.
         // This is fine as long as we also update the tracker.
@@ -8941,7 +8941,7 @@ TraceRecorder::unary(LOpcode op)
             a = d2i(a);
         a = lir->ins1(op, a);
         if (intop)
-            a = lir->ins1(LIR_i2f, a);
+            a = lir->ins1(LIR_i2d, a);
         set(&v, a);
         return RECORD_CONTINUE;
     }
@@ -8978,14 +8978,14 @@ TraceRecorder::binary(LOpcode op)
     jsdouble rnum = rightIsNumber ? asNumber(r) : 0;
 
     if (JSVAL_IS_STRING(l)) {
-        NanoAssert(op != LIR_fadd); // LIR_fadd/IS_STRING case handled by record_JSOP_ADD()
+        NanoAssert(op != LIR_addd); // LIR_addd/IS_STRING case handled by record_JSOP_ADD()
         LIns* args[] = { a, cx_ins };
         a = lir->insCall(&js_StringToNumber_ci, args);
         lnum = js_StringToNumber(cx, JSVAL_TO_STRING(l));
         leftIsNumber = true;
     }
     if (JSVAL_IS_STRING(r)) {
-        NanoAssert(op != LIR_fadd); // LIR_fadd/IS_STRING case handled by record_JSOP_ADD()
+        NanoAssert(op != LIR_addd); // LIR_addd/IS_STRING case handled by record_JSOP_ADD()
         LIns* args[] = { b, cx_ins };
         b = lir->insCall(&js_StringToNumber_ci, args);
         rnum = js_StringToNumber(cx, JSVAL_TO_STRING(r));
@@ -9014,12 +9014,12 @@ TraceRecorder::binary(LOpcode op)
     }
     if (leftIsNumber && rightIsNumber) {
         if (intop) {
-            a = (op == LIR_ush) ? f2u(a) : d2i(a);
+            a = (op == LIR_rshui) ? f2u(a) : d2i(a);
             b = d2i(b);
         }
         a = alu(op, lnum, rnum, a, b);
         if (intop)
-            a = lir->ins1(op == LIR_ush ? LIR_u2f : LIR_i2f, a);
+            a = lir->ins1(op == LIR_rshui ? LIR_ui2d : LIR_i2d, a);
         set(&l, a);
         return RECORD_CONTINUE;
     }
@@ -9086,9 +9086,9 @@ TraceRecorder::guardShape(LIns* obj_ins, JSObject* obj, uint32 shape, const char
 
     // Finally, emit the shape guard.
     LIns* shape_ins =
-        addName(lir->insLoad(LIR_ld, map(obj_ins), offsetof(JSScope, shape), ACC_OTHER), "shape");
+        addName(lir->insLoad(LIR_ldi, map(obj_ins), offsetof(JSScope, shape), ACC_OTHER), "shape");
     guard(true,
-          addName(lir->ins2ImmI(LIR_eq, shape_ins, shape), guardName),
+          addName(lir->ins2ImmI(LIR_eqi, shape_ins, shape), guardName),
           exit);
     return RECORD_CONTINUE;
 }
@@ -9139,7 +9139,7 @@ TraceRecorder::map_is_native(JSObjectMap* map, LIns* map_ins, LIns*& ops_ins, si
                       "ops");
     LIns* n = lir->insLoad(LIR_ldp, ops_ins, op_offset, ACC_READONLY);
     guard(true,
-          addName(lir->ins2(LIR_peq, n, INS_CONSTPTR(ptr)), "guard(native-map)"),
+          addName(lir->ins2(LIR_eqp, n, INS_CONSTPTR(ptr)), "guard(native-map)"),
           BRANCH_EXIT);
 
     return true;
@@ -9263,7 +9263,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
         JSOp op = js_GetOpcode(cx, cx->fp->script, cx->fp->regs->pc);
         if (JOF_OPMODE(op) != JOF_NAME) {
             guard(true,
-                  addName(lir->ins2(LIR_peq, obj_ins, INS_CONSTOBJ(globalObj)), "guard_global"),
+                  addName(lir->ins2(LIR_eqp, obj_ins, INS_CONSTOBJ(globalObj)), "guard_global"),
                   exit);
         }
     } else {
@@ -9272,7 +9272,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
 
     if (entry->adding()) {
         LIns *vshape_ins = addName(
-            lir->insLoad(LIR_ld,
+            lir->insLoad(LIR_ldi,
                          addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, runtime),
                                               ACC_READONLY),
                                  "runtime"),
@@ -9280,7 +9280,7 @@ TraceRecorder::guardPropertyCacheHit(LIns* obj_ins,
             "protoHazardShape");
 
         guard(true,
-              addName(lir->ins2ImmI(LIR_eq, vshape_ins, vshape), "guard_protoHazardShape"),
+              addName(lir->ins2ImmI(LIR_eqi, vshape_ins, vshape), "guard_protoHazardShape"),
               MISMATCH_EXIT);
     }
 
@@ -9380,13 +9380,13 @@ TraceRecorder::box_jsval(jsval v, LIns* v_ins)
     }
     switch (JSVAL_TAG(v)) {
       case JSVAL_SPECIAL:
-        return lir->ins2(LIR_pior, lir->ins2ImmI(LIR_pilsh, lir->insUI2P(v_ins), JSVAL_TAGBITS),
+        return lir->ins2(LIR_orp, lir->ins2ImmI(LIR_lshp, lir->insUI2P(v_ins), JSVAL_TAGBITS),
                          INS_CONSTWORD(JSVAL_SPECIAL));
       case JSVAL_OBJECT:
         return v_ins;
       default:
         JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING);
-        return lir->ins2(LIR_pior, v_ins, INS_CONSTWORD(JSVAL_STRING));
+        return lir->ins2(LIR_orp, v_ins, INS_CONSTWORD(JSVAL_STRING));
     }
 }
 
@@ -9396,10 +9396,10 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
     if (isNumber(v)) {
         // JSVAL_IS_NUMBER(v)
         guard(false,
-              lir->insEqI_0(lir->ins2(LIR_or,
-                                     p2i(lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_INT))),
-                                     lir->ins2(LIR_peq,
-                                               lir->ins2(LIR_piand, v_ins,
+              lir->insEqI_0(lir->ins2(LIR_ori,
+                                     p2i(lir->ins2(LIR_andp, v_ins, INS_CONSTWORD(JSVAL_INT))),
+                                     lir->ins2(LIR_eqp,
+                                               lir->ins2(LIR_andp, v_ins,
                                                          INS_CONSTWORD(JSVAL_TAGMASK)),
                                                INS_CONSTWORD(JSVAL_DOUBLE)))),
               exit);
@@ -9409,17 +9409,17 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
     switch (JSVAL_TAG(v)) {
       case JSVAL_SPECIAL:
         if (JSVAL_IS_VOID(v)) {
-            guard(true, lir->ins2(LIR_peq, v_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
+            guard(true, lir->ins2(LIR_eqp, v_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
             return INS_VOID();
         }
         guard(true,
-              lir->ins2(LIR_peq,
-                        lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+              lir->ins2(LIR_eqp,
+                        lir->ins2(LIR_andp, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                         INS_CONSTWORD(JSVAL_SPECIAL)),
               exit);
         JS_ASSERT(!v_ins->isImmP());
-        guard(false, lir->ins2(LIR_peq, v_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
-        return p2i(lir->ins2ImmI(LIR_pursh, v_ins, JSVAL_TAGBITS));
+        guard(false, lir->ins2(LIR_eqp, v_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
+        return p2i(lir->ins2ImmI(LIR_rshup, v_ins, JSVAL_TAGBITS));
 
       case JSVAL_OBJECT:
         if (JSVAL_IS_NULL(v)) {
@@ -9428,14 +9428,14 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
         } else {
             guard(false, lir->insEqP_0(v_ins), exit);
             guard(true,
-                  lir->ins2(LIR_peq,
-                            lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+                  lir->ins2(LIR_eqp,
+                            lir->ins2(LIR_andp, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                             INS_CONSTWORD(JSVAL_OBJECT)),
                   exit);
 
             guard(JSVAL_TO_OBJECT(v)->isFunction(),
-                  lir->ins2(LIR_peq,
-                            lir->ins2(LIR_piand,
+                  lir->ins2(LIR_eqp,
+                            lir->ins2(LIR_andp,
                                       lir->insLoad(LIR_ldp, v_ins, offsetof(JSObject, classword),
                                                    ACC_OTHER),
                                       INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS)),
@@ -9447,11 +9447,11 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
       default:
         JS_ASSERT(JSVAL_TAG(v) == JSVAL_STRING);
         guard(true,
-              lir->ins2(LIR_peq,
-                        lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+              lir->ins2(LIR_eqp,
+                        lir->ins2(LIR_andp, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                         INS_CONSTWORD(JSVAL_STRING)),
               exit);
-        return lir->ins2(LIR_piand, v_ins, addName(lir->insImmWord(~JSVAL_TAGMASK),
+        return lir->ins2(LIR_andp, v_ins, addName(lir->insImmWord(~JSVAL_TAGMASK),
                                                    "~JSVAL_TAGMASK"));
     }
 }
@@ -9538,7 +9538,7 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideEx
     bool cond = obj->getClass() == clasp;
 
     LIns* class_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, classword), accSet);
-    class_ins = lir->ins2(LIR_piand, class_ins, INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS));
+    class_ins = lir->ins2(LIR_andp, class_ins, INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS));
 
 #ifdef JS_JIT_SPEW
     char namebuf[32];
@@ -9546,7 +9546,7 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideEx
 #else
     static const char namebuf[] = "";
 #endif
-    guard(cond, addName(lir->ins2(LIR_peq, class_ins, INS_CONSTPTR(clasp)), namebuf), exit);
+    guard(cond, addName(lir->ins2(LIR_eqp, class_ins, INS_CONSTPTR(clasp)), namebuf), exit);
     return cond;
 }
 
@@ -10009,7 +10009,7 @@ TraceRecorder::newArguments(LIns* callee_ins)
     LIns* global_ins = INS_CONSTOBJ(globalObj);
     LIns* argc_ins = INS_CONST(cx->fp->argc);
     LIns* argv_ins = cx->fp->argc
-                     ? lir->ins2(LIR_piadd, lirbuf->sp,
+                     ? lir->ins2(LIR_addp, lirbuf->sp,
                                  lir->insImmWord(nativespOffset(&cx->fp->argv[0])))
                      : INS_CONSTPTR((void *) 2);
     ArgsPrivateNative *apn = ArgsPrivateNative::create(traceAlloc(), cx->fp->argc);
@@ -10032,7 +10032,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
     LIns* a_ins = get(&cx->fp->argsobj);
     LIns* args_ins;
     LIns* callee_ins = get(&cx->fp->argv[-2]);
-    if (a_ins->opcode() == LIR_int) {
+    if (a_ins->opcode() == LIR_immi) {
         // |arguments| is set to 0 by EnterFrame on this trace, so call to create it.
         args_ins = newArguments(callee_ins);
     } else {
@@ -10110,19 +10110,19 @@ TraceRecorder::record_JSOP_SETCONST()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_BITOR()
 {
-    return InjectStatus(binary(LIR_or));
+    return InjectStatus(binary(LIR_ori));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_BITXOR()
 {
-    return InjectStatus(binary(LIR_xor));
+    return InjectStatus(binary(LIR_xori));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_BITAND()
 {
-    return InjectStatus(binary(LIR_and));
+    return InjectStatus(binary(LIR_andi));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10140,43 +10140,43 @@ TraceRecorder::record_JSOP_NE()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_LT()
 {
-    return relational(LIR_flt, true);
+    return relational(LIR_ltd, true);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_LE()
 {
-    return relational(LIR_fle, true);
+    return relational(LIR_led, true);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GT()
 {
-    return relational(LIR_fgt, true);
+    return relational(LIR_gtd, true);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GE()
 {
-    return relational(LIR_fge, true);
+    return relational(LIR_ged, true);
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_LSH()
 {
-    return InjectStatus(binary(LIR_lsh));
+    return InjectStatus(binary(LIR_lshi));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_RSH()
 {
-    return InjectStatus(binary(LIR_rsh));
+    return InjectStatus(binary(LIR_rshi));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_URSH()
 {
-    return InjectStatus(binary(LIR_ush));
+    return InjectStatus(binary(LIR_rshui));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10206,31 +10206,31 @@ TraceRecorder::record_JSOP_ADD()
         return ARECORD_CONTINUE;
     }
 
-    return InjectStatus(binary(LIR_fadd));
+    return InjectStatus(binary(LIR_addd));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_SUB()
 {
-    return InjectStatus(binary(LIR_fsub));
+    return InjectStatus(binary(LIR_subd));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_MUL()
 {
-    return InjectStatus(binary(LIR_fmul));
+    return InjectStatus(binary(LIR_muld));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_DIV()
 {
-    return InjectStatus(binary(LIR_fdiv));
+    return InjectStatus(binary(LIR_divd));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_MOD()
 {
-    return InjectStatus(binary(LIR_fmod));
+    return InjectStatus(binary(LIR_modd));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10238,13 +10238,13 @@ TraceRecorder::record_JSOP_NOT()
 {
     jsval& v = stackval(-1);
     if (JSVAL_IS_SPECIAL(v)) {
-        set(&v, lir->insEqI_0(lir->ins2ImmI(LIR_eq, get(&v), 1)));
+        set(&v, lir->insEqI_0(lir->ins2ImmI(LIR_eqi, get(&v), 1)));
         return ARECORD_CONTINUE;
     }
     if (isNumber(v)) {
         LIns* v_ins = get(&v);
-        set(&v, lir->ins2(LIR_or, lir->ins2(LIR_feq, v_ins, lir->insImmD(0)),
-                                  lir->insEqI_0(lir->ins2(LIR_feq, v_ins, v_ins))));
+        set(&v, lir->ins2(LIR_ori, lir->ins2(LIR_eqd, v_ins, lir->insImmD(0)),
+                                  lir->insEqI_0(lir->ins2(LIR_eqd, v_ins, v_ins))));
         return ARECORD_CONTINUE;
     }
     if (JSVAL_TAG(v) == JSVAL_OBJECT) {
@@ -10260,7 +10260,7 @@ TraceRecorder::record_JSOP_NOT()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_BITNOT()
 {
-    return InjectStatus(unary(LIR_not));
+    return InjectStatus(unary(LIR_noti));
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
@@ -10288,13 +10288,13 @@ TraceRecorder::record_JSOP_NEG()
             -asNumber(v) == (int)-asNumber(v))
         {
             VMSideExit* exit = snapshot(OVERFLOW_EXIT);
-            a = guard_xov(LIR_sub, lir->insImmI(0), demote(lir, a), exit);
-            if (!a->isImmI() && a->isop(LIR_subxov)) {
-                guard(false, lir->ins2ImmI(LIR_eq, a, 0), exit); // make sure we don't lose a -0
+            a = guard_xov(LIR_subi, lir->insImmI(0), demote(lir, a), exit);
+            if (!a->isImmI() && a->isop(LIR_subxovi)) {
+                guard(false, lir->ins2ImmI(LIR_eqi, a, 0), exit); // make sure we don't lose a -0
             }
-            a = lir->ins1(LIR_i2f, a);
+            a = lir->ins1(LIR_i2d, a);
         } else {
-            a = lir->ins1(LIR_fneg, a);
+            a = lir->ins1(LIR_negd, a);
         }
 
         set(&v, a);
@@ -10313,13 +10313,13 @@ TraceRecorder::record_JSOP_NEG()
 
     if (JSVAL_IS_STRING(v)) {
         LIns* args[] = { get(&v), cx_ins };
-        set(&v, lir->ins1(LIR_fneg,
+        set(&v, lir->ins1(LIR_negd,
                           lir->insCall(&js_StringToNumber_ci, args)));
         return ARECORD_CONTINUE;
     }
 
     JS_ASSERT(JSVAL_IS_BOOLEAN(v));
-    set(&v, lir->ins1(LIR_fneg, i2d(get(&v))));
+    set(&v, lir->ins1(LIR_negd, i2d(get(&v))));
     return ARECORD_CONTINUE;
 }
 
@@ -10516,11 +10516,11 @@ TraceRecorder::propagateFailureToBuiltinStatus(LIns* ok_ins, LIns*& status_ins)
      */
     JS_STATIC_ASSERT(((JS_TRUE & 1) ^ 1) << 1 == 0);
     JS_STATIC_ASSERT(((JS_FALSE & 1) ^ 1) << 1 == BUILTIN_ERROR);
-    status_ins = lir->ins2(LIR_or,
+    status_ins = lir->ins2(LIR_ori,
                            status_ins,
-                           lir->ins2ImmI(LIR_lsh,
-                                      lir->ins2ImmI(LIR_xor,
-                                                 lir->ins2ImmI(LIR_and, ok_ins, 1),
+                           lir->ins2ImmI(LIR_lshi,
+                                      lir->ins2ImmI(LIR_xori,
+                                                 lir->ins2ImmI(LIR_andi, ok_ins, 1),
                                                  1),
                                       1));
     lir->insStore(status_ins, lirbuf->state, (int) offsetof(TracerState, builtinStatus),
@@ -10569,7 +10569,7 @@ TraceRecorder::emitNativePropertyOp(JSScope* scope, JSScopeProperty* sprop, LIns
     // If the native op succeeds but we deep-bail here, the result value is
     // lost!  Therefore this can only be used for setters of shared properties.
     // In that case we ignore the result value anyway.
-    LIns* status_ins = lir->insLoad(LIR_ld, lirbuf->state,
+    LIns* status_ins = lir->insLoad(LIR_ldi, lirbuf->state,
                                     (int) offsetof(TracerState, builtinStatus), ACC_OTHER);
     propagateFailureToBuiltinStatus(ok_ins, status_ins);
     guard(true, lir->insEqI_0(status_ins), STATUS_EXIT);
@@ -10611,11 +10611,11 @@ TraceRecorder::emitNativeCall(JSSpecializedNative* sn, uintN argc, LIns* args[],
         guard(false, lir->insEqP_0(res_ins), OOM_EXIT);
         break;
       case FAIL_NEG:
-        res_ins = lir->ins1(LIR_i2f, res_ins);
-        guard(false, lir->ins2(LIR_flt, res_ins, lir->insImmD(0)), OOM_EXIT);
+        res_ins = lir->ins1(LIR_i2d, res_ins);
+        guard(false, lir->ins2(LIR_ltd, res_ins, lir->insImmD(0)), OOM_EXIT);
         break;
       case FAIL_VOID:
-        guard(false, lir->ins2ImmI(LIR_eq, res_ins, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
+        guard(false, lir->ins2ImmI(LIR_eqi, res_ins, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
         break;
       default:;
     }
@@ -10779,10 +10779,10 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                 a = demote(lir, a);
                 b = demote(lir, b);
                 set(&vp[0],
-                    lir->ins1(LIR_i2f,
+                    lir->ins1(LIR_i2d,
                               lir->insChoose(lir->ins2((native == js_math_min)
-                                                        ? LIR_lt
-                                                        : LIR_gt, a, b),
+                                                        ? LIR_lti
+                                                        : LIR_gti, a, b),
                                               a, b, avmplus::AvmCore::use_cmov())));
                 pendingSpecializedNative = IGNORE_NATIVE_CALL_COMPLETE_CALLBACK;
                 return RECORD_CONTINUE;
@@ -10913,9 +10913,9 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
                   ARGTYPE_P << (3*ARGTYPE_SHIFT);
     } else {
         int32_t offset = (vplen - 1) * sizeof(jsval);
-        native_rval_ins = lir->ins2(LIR_piadd, invokevp_ins, INS_CONSTWORD(offset));
+        native_rval_ins = lir->ins2(LIR_addp, invokevp_ins, INS_CONSTWORD(offset));
         args[0] = native_rval_ins;
-        args[1] = lir->ins2(LIR_piadd, invokevp_ins, INS_CONSTWORD(2 * sizeof(jsval)));
+        args[1] = lir->ins2(LIR_addp, invokevp_ins, INS_CONSTWORD(2 * sizeof(jsval)));
         args[2] = lir->insImmI(argc);
         args[3] = this_ins;
         args[4] = cx_ins;
@@ -11434,7 +11434,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
     LIns *fp_ins = lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACC_OTHER);
     LIns *fpcallobj_ins = lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, callobj),
                                        ACC_OTHER);
-    LIns *br1 = lir->insBranch(LIR_jf, lir->ins2(LIR_peq, fpcallobj_ins, callobj_ins), NULL);
+    LIns *br1 = lir->insBranch(LIR_jf, lir->ins2(LIR_eqp, fpcallobj_ins, callobj_ins), NULL);
 
     // Case 1: storing to native stack area.
 
@@ -11445,21 +11445,21 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
         slot_ins = ArgClosureTraits::adj_slot_lir(lir, fp_ins, slot);
     else
         slot_ins = VarClosureTraits::adj_slot_lir(lir, fp_ins, slot);
-    LIns *offset_ins = lir->ins2(LIR_mul, slot_ins, INS_CONST(sizeof(double)));
+    LIns *offset_ins = lir->ins2(LIR_muli, slot_ins, INS_CONST(sizeof(double)));
 
     // Guard that we are not changing the type of the slot we are storing to.
     LIns *callstackBase_ins = lir->insLoad(LIR_ldp, lirbuf->state,
                                            offsetof(TracerState, callstackBase), ACC_OTHER);
     LIns *frameInfo_ins = lir->insLoad(LIR_ldp, callstackBase_ins, 0, ACC_OTHER);
-    LIns *typemap_ins = lir->ins2(LIR_piadd, frameInfo_ins, INS_CONSTWORD(sizeof(FrameInfo)));
-    LIns *type_ins = lir->insLoad(LIR_ldzb,
-                                  lir->ins2(LIR_piadd, typemap_ins, lir->insUI2P(slot_ins)), 0,
+    LIns *typemap_ins = lir->ins2(LIR_addp, frameInfo_ins, INS_CONSTWORD(sizeof(FrameInfo)));
+    LIns *type_ins = lir->insLoad(LIR_lduc2ui,
+                                  lir->ins2(LIR_addp, typemap_ins, lir->insUI2P(slot_ins)), 0,
                                   ACC_READONLY);
     TraceType type = getCoercedType(v);
     if (type == TT_INT32 && !isPromoteInt(v_ins))
         type = TT_DOUBLE;
     guard(true,
-          addName(lir->ins2(LIR_eq, type_ins, lir->insImmI(type)),
+          addName(lir->ins2(LIR_eqi, type_ins, lir->insImmI(type)),
                   "guard(type-stable set upvar)"),
           BRANCH_EXIT);
 
@@ -11468,7 +11468,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, JSScopeProperty
                                        offsetof(TracerState, stackBase), ACC_OTHER);
     LIns *storeValue_ins = isPromoteInt(v_ins) ? demote(lir, v_ins) : v_ins;
     lir->insStore(storeValue_ins,
-                   lir->ins2(LIR_piadd, stackBase_ins, lir->insUI2P(offset_ins)), 0, ACC_STORE_ANY);
+                   lir->ins2(LIR_addp, stackBase_ins, lir->insUI2P(offset_ins)), 0, ACC_STORE_ANY);
     LIns *br2 = lir->insBranch(LIR_j, NULL, NULL);
 
     // Case 2: calling builtin.
@@ -11869,11 +11869,11 @@ TraceRecorder::record_JSOP_GETELEM()
                     RETURN_STOP_A("cannot trace arguments with out of range index");
 
                 guard(true,
-                      addName(lir->ins2(LIR_ge, idx_ins, INS_CONST(0)),
+                      addName(lir->ins2(LIR_gei, idx_ins, INS_CONST(0)),
                               "guard(upvar index >= 0)"),
                       MISMATCH_EXIT);
                 guard(true,
-                      addName(lir->ins2(LIR_lt, idx_ins, INS_CONST(afp->argc)),
+                      addName(lir->ins2(LIR_lti, idx_ins, INS_CONST(afp->argc)),
                               "guard(upvar index in range)"),
                       MISMATCH_EXIT);
 
@@ -11899,27 +11899,27 @@ TraceRecorder::record_JSOP_GETELEM()
                     LIns* fip_ins = lir->insLoad(LIR_ldp, lirbuf->rp,
                                                  (callDepth-depth)*sizeof(FrameInfo*),
                                                  ACC_RSTACK);
-                    typemap_ins = lir->ins2(LIR_piadd, fip_ins, INS_CONSTWORD(sizeof(FrameInfo) + 2/*callee,this*/ * sizeof(TraceType)));
+                    typemap_ins = lir->ins2(LIR_addp, fip_ins, INS_CONSTWORD(sizeof(FrameInfo) + 2/*callee,this*/ * sizeof(TraceType)));
                 }
 
-                LIns* typep_ins = lir->ins2(LIR_piadd, typemap_ins,
-                                            lir->insUI2P(lir->ins2(LIR_mul,
+                LIns* typep_ins = lir->ins2(LIR_addp, typemap_ins,
+                                            lir->insUI2P(lir->ins2(LIR_muli,
                                                                    idx_ins,
                                                                    INS_CONST(sizeof(TraceType)))));
-                LIns* type_ins = lir->insLoad(LIR_ldzb, typep_ins, 0, ACC_READONLY);
+                LIns* type_ins = lir->insLoad(LIR_lduc2ui, typep_ins, 0, ACC_READONLY);
                 guard(true,
-                      addName(lir->ins2(LIR_eq, type_ins, lir->insImmI(type)),
+                      addName(lir->ins2(LIR_eqi, type_ins, lir->insImmI(type)),
                               "guard(type-stable upvar)"),
                       BRANCH_EXIT);
 
                 // Read the value out of the native stack area.
-                guard(true, lir->ins2(LIR_ult, idx_ins, INS_CONST(afp->argc)),
+                guard(true, lir->ins2(LIR_ltui, idx_ins, INS_CONST(afp->argc)),
                       snapshot(BRANCH_EXIT));
                 size_t stackOffset = nativespOffset(&afp->argv[0]);
-                LIns* args_addr_ins = lir->ins2(LIR_piadd, lirbuf->sp, INS_CONSTWORD(stackOffset));
-                LIns* argi_addr_ins = lir->ins2(LIR_piadd,
+                LIns* args_addr_ins = lir->ins2(LIR_addp, lirbuf->sp, INS_CONSTWORD(stackOffset));
+                LIns* argi_addr_ins = lir->ins2(LIR_addp,
                                                 args_addr_ins,
-                                                lir->insUI2P(lir->ins2(LIR_mul,
+                                                lir->insUI2P(lir->ins2(LIR_muli,
                                                                        idx_ins,
                                                                        INS_CONST(sizeof(double)))));
                 // The AccSet could be more precise, but ValidateWriter
@@ -12126,9 +12126,9 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
                                                        
         // Ensure idx >= 0 && idx < length (by using uint32)
         lir->insGuard(LIR_xf,
-                      lir->ins2(LIR_ult,
+                      lir->ins2(LIR_ltui,
                                 idx_ins,
-                                lir->insLoad(LIR_ld, priv_ins, js::TypedArray::lengthOffset(),
+                                lir->insLoad(LIR_ldi, priv_ins, js::TypedArray::lengthOffset(),
                                              ACC_READONLY)),
                       createGuardRecord(snapshot(OVERFLOW_EXIT)));
 
@@ -12173,9 +12173,9 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
           case js::TypedArray::TYPE_UINT8_CLAMPED:
             if (isPromoteInt(typed_v_ins)) {
                 typed_v_ins = demote(lir, typed_v_ins);
-                typed_v_ins = lir->insChoose(lir->ins2ImmI(LIR_lt, typed_v_ins, 0),
+                typed_v_ins = lir->insChoose(lir->ins2ImmI(LIR_lti, typed_v_ins, 0),
                                              lir->insImmI(0),
-                                             lir->insChoose(lir->ins2ImmI(LIR_gt,
+                                             lir->insChoose(lir->ins2ImmI(LIR_gti,
                                                                           typed_v_ins,
                                                                           0xff),
                                                             lir->insImmI(0xff),
@@ -12198,26 +12198,26 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
           case js::TypedArray::TYPE_INT8:
           case js::TypedArray::TYPE_UINT8_CLAMPED:
           case js::TypedArray::TYPE_UINT8:
-            addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
-            lir->insStore(LIR_stb, typed_v_ins, addr_ins, 0, ACC_OTHER);
+            addr_ins = lir->ins2(LIR_addp, data_ins, pidx_ins);
+            lir->insStore(LIR_sti2c, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           case js::TypedArray::TYPE_INT16:
           case js::TypedArray::TYPE_UINT16:
-            addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 1));
-            lir->insStore(LIR_sts, typed_v_ins, addr_ins, 0, ACC_OTHER);
+            addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 1));
+            lir->insStore(LIR_sti2s, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           case js::TypedArray::TYPE_INT32:
           case js::TypedArray::TYPE_UINT32:
-            addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 2));
+            addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 2));
             lir->insStore(LIR_sti, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           case js::TypedArray::TYPE_FLOAT32:
-            addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 2));
-            lir->insStore(LIR_st32f, typed_v_ins, addr_ins, 0, ACC_OTHER);
+            addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 2));
+            lir->insStore(LIR_std2f, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           case js::TypedArray::TYPE_FLOAT64:
-            addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 3));
-            lir->insStore(LIR_stfi, typed_v_ins, addr_ins, 0, ACC_OTHER);
+            addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 3));
+            lir->insStore(LIR_std, typed_v_ins, addr_ins, 0, ACC_OTHER);
             break;
           default:
             JS_NOT_REACHED("Unknown typed array type in tracer");       
@@ -12366,7 +12366,7 @@ TraceRecorder::upvar(JSScript* script, JSUpvarArray* uva, uintN index, jsval& v)
     LIns* call_ins = lir->insCall(ci, args);
     TraceType type = getCoercedType(v);
     guard(true,
-          addName(lir->ins2(LIR_eq, call_ins, lir->insImmI(type)),
+          addName(lir->ins2(LIR_eqi, call_ins, lir->insImmI(type)),
                   "guard(type-stable upvar)"),
           BRANCH_EXIT);
     return stackLoad(outp, ACC_OTHER, type);
@@ -12382,7 +12382,7 @@ TraceRecorder::stackLoad(LIns* base, AccSet accSet, uint8 type)
     LOpcode loadOp;
     switch (type) {
       case TT_DOUBLE:
-        loadOp = LIR_ldf;
+        loadOp = LIR_ldd;
         break;
       case TT_OBJECT:
       case TT_STRING:
@@ -12393,7 +12393,7 @@ TraceRecorder::stackLoad(LIns* base, AccSet accSet, uint8 type)
       case TT_INT32:
       case TT_SPECIAL:
       case TT_VOID:
-        loadOp = LIR_ld;
+        loadOp = LIR_ldi;
         break;
       case TT_JSVAL:
       default:
@@ -12403,7 +12403,7 @@ TraceRecorder::stackLoad(LIns* base, AccSet accSet, uint8 type)
 
     LIns* result = lir->insLoad(loadOp, base, 0, accSet);
     if (type == TT_INT32)
-        result = lir->ins1(LIR_i2f, result);
+        result = lir->ins1(LIR_i2d, result);
     return result;
 }
 
@@ -12471,7 +12471,7 @@ TraceRecorder::guardCallee(jsval& callee)
     tree->gcthings.addUnique(callee);
 
     guard(true,
-          lir->ins2(LIR_peq,
+          lir->ins2(LIR_eqp,
                     stobj_get_private(callee_ins),
                     INS_CONSTPTR(callee_fun)),
           branchExit);
@@ -12507,7 +12507,7 @@ TraceRecorder::guardCallee(jsval& callee)
                 RETURN_STOP("closure scoped by neither the global object nor a Call object");
 
             guard(true,
-                  lir->ins2(LIR_peq,
+                  lir->ins2(LIR_eqp,
                             stobj_get_parent(callee_ins),
                             INS_CONSTOBJ(parent)),
                   branchExit);
@@ -12535,7 +12535,7 @@ TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
     guardClass(obj, obj_ins, &js_ArgumentsClass, exit, ACC_READONLY);
 
     LIns* args_ins = get(&afp->argsobj);
-    LIns* cmp = lir->ins2(LIR_peq, args_ins, obj_ins);
+    LIns* cmp = lir->ins2(LIR_eqp, args_ins, obj_ins);
     lir->insGuard(LIR_xf, cmp, createGuardRecord(exit));
     return afp;
 }
@@ -12703,7 +12703,7 @@ TraceRecorder::record_JSOP_APPLY()
             guardDenseArray(aobj, aobj_ins, MISMATCH_EXIT);
             length = aobj->getArrayLength();
             guard(true,
-                  lir->ins2ImmI(LIR_eq,
+                  lir->ins2ImmI(LIR_eqi,
                              p2i(stobj_get_fslot(aobj_ins, JSObject::JSSLOT_ARRAY_LENGTH)),
                              length),
                   BRANCH_EXIT);
@@ -12761,7 +12761,7 @@ TraceRecorder::record_NativeCallComplete()
         /* Keep cx->bailExit null when it's invalid. */
         lir->insStore(INS_NULL(), cx_ins, (int) offsetof(JSContext, bailExit), ACC_OTHER);
 
-        LIns* status = lir->insLoad(LIR_ld, lirbuf->state,
+        LIns* status = lir->insLoad(LIR_ldi, lirbuf->state,
                                     (int) offsetof(TracerState, builtinStatus), ACC_OTHER);
         if (pendingSpecializedNative == &generatedSpecializedNative) {
             LIns* ok_ins = v_ins;
@@ -12773,7 +12773,7 @@ TraceRecorder::record_NativeCallComplete()
              */
             v_ins = lir->insLoad(LIR_ldp, native_rval_ins, 0, ACC_OTHER);
             if (*pc == JSOP_NEW) {
-                LIns* x = lir->insEqP_0(lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)));
+                LIns* x = lir->insEqP_0(lir->ins2(LIR_andp, v_ins, INS_CONSTWORD(JSVAL_TAGMASK)));
                 x = lir->insChoose(x, v_ins, INS_CONSTWORD(0), avmplus::AvmCore::use_cmov());
                 v_ins = lir->insChoose(lir->insEqP_0(x), newobj_ins, x, avmplus::AvmCore::use_cmov());
             }
@@ -12799,7 +12799,7 @@ TraceRecorder::record_NativeCallComplete()
         /* Convert the result to double if the builtin returns int32. */
         if (JSVAL_IS_NUMBER(v) &&
             pendingSpecializedNative->builtin->returnType() == ARGTYPE_I) {
-            set(&v, lir->ins1(LIR_i2f, v_ins));
+            set(&v, lir->ins1(LIR_i2d, v_ins));
         }
     }
 
@@ -13061,7 +13061,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
             /* Only 64-bit machines support large enough arrays for this. */
             JS_ASSERT(sizeof(jsval) == 8);
             br1 = lir->insBranch(LIR_jt,
-                                 lir->ins2ImmI(LIR_lt, idx_ins, 0),
+                                 lir->ins2ImmI(LIR_lti, idx_ins, 0),
                                  NULL);
         }
 
@@ -13070,7 +13070,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         LIns* minLenCap =
             addName(stobj_get_fslot(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
         LIns* br2 = lir->insBranch(LIR_jf,
-                                   lir->ins2(LIR_pult, pidx_ins, minLenCap),
+                                   lir->ins2(LIR_ltup, pidx_ins, minLenCap),
                                    NULL);
 
         lir->insGuard(LIR_x, NULL, createGuardRecord(exit));
@@ -13092,7 +13092,7 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
         /* Only 64-bit machines support large enough arrays for this. */
         JS_ASSERT(sizeof(jsval) == 8);
         guard(false,
-              lir->ins2ImmI(LIR_lt, idx_ins, 0),
+              lir->ins2ImmI(LIR_lti, idx_ins, 0),
               exit);
     }
 
@@ -13101,18 +13101,18 @@ TraceRecorder::denseArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     LIns* minLenCap =
         addName(stobj_get_fslot(obj_ins, JSObject::JSSLOT_DENSE_ARRAY_MINLENCAP), "minLenCap");
     guard(true,
-          lir->ins2(LIR_pult, pidx_ins, minLenCap),
+          lir->ins2(LIR_ltup, pidx_ins, minLenCap),
           exit);
 
     /* Load the value and guard on its type to unbox it. */
     vp = &obj->dslots[jsuint(idx)];
-    addr_ins = lir->ins2(LIR_piadd, dslots_ins,
-                         lir->ins2ImmI(LIR_pilsh, pidx_ins, (sizeof(jsval) == 4) ? 2 : 3));
+    addr_ins = lir->ins2(LIR_addp, dslots_ins,
+                         lir->ins2ImmI(LIR_lshp, pidx_ins, (sizeof(jsval) == 4) ? 2 : 3));
     v_ins = unbox_jsval(*vp, lir->insLoad(LIR_ldp, addr_ins, 0, ACC_OTHER), exit);
 
     if (JSVAL_IS_SPECIAL(*vp) && !JSVAL_IS_VOID(*vp)) {
         JS_ASSERT_IF(!JSVAL_IS_BOOLEAN(*vp), *vp == JSVAL_HOLE);
-        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_eq, v_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))), exit);
+        guard(*vp == JSVAL_HOLE, lir->ins2(LIR_eqi, v_ins, INS_CONST(JSVAL_TO_SPECIAL(JSVAL_HOLE))), exit);
 
         /* Don't let the hole value escape. Turn it into an undefined. */
         if (*vp == JSVAL_HOLE) {
@@ -13144,9 +13144,9 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
     /* for out-of-range, do the same thing that the interpreter does, which is return undefined */
     if ((jsuint) idx >= tarray->length) {
         guard(false,
-              lir->ins2(LIR_ult,
+              lir->ins2(LIR_ltui,
                         idx_ins,
-                        lir->insLoad(LIR_ld, priv_ins, js::TypedArray::lengthOffset(), ACC_READONLY)),
+                        lir->insLoad(LIR_ldi, priv_ins, js::TypedArray::lengthOffset(), ACC_READONLY)),
               BRANCH_EXIT);
         v_ins = INS_VOID();
         return ARECORD_CONTINUE;
@@ -13162,9 +13162,9 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
      * length.
      */
     guard(true,
-          lir->ins2(LIR_ult,
+          lir->ins2(LIR_ltui,
                     idx_ins,
-                    lir->insLoad(LIR_ld, priv_ins, js::TypedArray::lengthOffset(), ACC_READONLY)),
+                    lir->insLoad(LIR_ldi, priv_ins, js::TypedArray::lengthOffset(), ACC_READONLY)),
           BRANCH_EXIT);
 
     /* We are now ready to load.  Do a different type of load
@@ -13173,37 +13173,37 @@ TraceRecorder::typedArrayElement(jsval& oval, jsval& ival, jsval*& vp, LIns*& v_
 
     switch (tarray->type) {
       case js::TypedArray::TYPE_INT8:
-        addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
-        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ldsb, addr_ins, 0, ACC_OTHER));
+        addr_ins = lir->ins2(LIR_addp, data_ins, pidx_ins);
+        v_ins = lir->ins1(LIR_i2d, lir->insLoad(LIR_ldc2i, addr_ins, 0, ACC_OTHER));
         break;
       case js::TypedArray::TYPE_UINT8:
       case js::TypedArray::TYPE_UINT8_CLAMPED:
-        addr_ins = lir->ins2(LIR_piadd, data_ins, pidx_ins);
-        v_ins = lir->ins1(LIR_u2f, lir->insLoad(LIR_ldzb, addr_ins, 0, ACC_OTHER));
+        addr_ins = lir->ins2(LIR_addp, data_ins, pidx_ins);
+        v_ins = lir->ins1(LIR_ui2d, lir->insLoad(LIR_lduc2ui, addr_ins, 0, ACC_OTHER));
         break;
       case js::TypedArray::TYPE_INT16:
-        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 1));
-        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ldss, addr_ins, 0, ACC_OTHER));
+        addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 1));
+        v_ins = lir->ins1(LIR_i2d, lir->insLoad(LIR_lds2i, addr_ins, 0, ACC_OTHER));
         break;
       case js::TypedArray::TYPE_UINT16:
-        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 1));
-        v_ins = lir->ins1(LIR_u2f, lir->insLoad(LIR_ldzs, addr_ins, 0, ACC_OTHER));
+        addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 1));
+        v_ins = lir->ins1(LIR_ui2d, lir->insLoad(LIR_ldus2ui, addr_ins, 0, ACC_OTHER));
         break;
       case js::TypedArray::TYPE_INT32:
-        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 2));
-        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ld, addr_ins, 0, ACC_OTHER));
+        addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 2));
+        v_ins = lir->ins1(LIR_i2d, lir->insLoad(LIR_ldi, addr_ins, 0, ACC_OTHER));
         break;
       case js::TypedArray::TYPE_UINT32:
-        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 2));
-        v_ins = lir->ins1(LIR_u2f, lir->insLoad(LIR_ld, addr_ins, 0, ACC_OTHER));
+        addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 2));
+        v_ins = lir->ins1(LIR_ui2d, lir->insLoad(LIR_ldi, addr_ins, 0, ACC_OTHER));
         break;
       case js::TypedArray::TYPE_FLOAT32:
-        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 2));
-        v_ins = lir->insLoad(LIR_ld32f, addr_ins, 0, ACC_OTHER);
+        addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 2));
+        v_ins = lir->insLoad(LIR_ldf2d, addr_ins, 0, ACC_OTHER);
         break;
       case js::TypedArray::TYPE_FLOAT64:
-        addr_ins = lir->ins2(LIR_piadd, data_ins, lir->ins2ImmI(LIR_pilsh, pidx_ins, 3));
-        v_ins = lir->insLoad(LIR_ldf, addr_ins, 0, ACC_OTHER);
+        addr_ins = lir->ins2(LIR_addp, data_ins, lir->ins2ImmI(LIR_lshp, pidx_ins, 3));
+        v_ins = lir->insLoad(LIR_ldd, addr_ins, 0, ACC_OTHER);
         break;
       default:
         JS_NOT_REACHED("Unknown typed array type in tracer");
@@ -13627,7 +13627,7 @@ TraceRecorder::record_JSOP_MOREITER()
             return ARECORD_ABORTED;
 
         cond = (stackval(0) == JSVAL_TRUE);
-        cond_ins = lir->ins2(LIR_peq,
+        cond_ins = lir->ins2(LIR_eqp,
                              lir->insLoad(LIR_ldp, vp_ins, 0, ACC_OTHER),
                              INS_CONSTWORD(JSVAL_TRUE));
     }
@@ -13658,8 +13658,7 @@ JS_DEFINE_CALLINFO_2(extern, BOOL_FAIL, CloseIterator, CONTEXT, OBJECT, 0, nanoj
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENDITER()
 {
-    jsval& v = stackval(-1);
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(stackval(-1)));
 
     enterDeepBailCall();
 
@@ -13700,7 +13699,7 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
              * any numeric properties, so we guard here instead of branching.
              */
             guard(!JSVAL_IS_INT(v),
-                  lir->insEqP_0(lir->ins2(LIR_piand, v_ins, INS_CONSTWORD(JSVAL_INT))),
+                  lir->insEqP_0(lir->ins2(LIR_andp, v_ins, INS_CONSTWORD(JSVAL_INT))),
                   snapshot(BRANCH_EXIT));
 
             if (JSVAL_IS_INT(v)) {
@@ -13710,14 +13709,14 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
                 guard(false, lir->insEqP_0(v_ins), OOM_EXIT);
             } else {
                 JS_ASSERT(JSVAL_IS_STRING(v));
-                v_ins = lir->ins2(LIR_piand, v_ins, lir->insImmWord(~JSVAL_TAGMASK));
+                v_ins = lir->ins2(LIR_andp, v_ins, lir->insImmWord(~JSVAL_TAGMASK));
             }
         } else {
             v_ins = unbox_jsval(v, v_ins, snapshot(BRANCH_EXIT));
         }
 
         /* Increment the cursor and store it back. */
-        cursor_ins = lir->ins2(LIR_piadd, cursor_ins, INS_CONSTWORD(sizeof(jsval)));
+        cursor_ins = lir->ins2(LIR_addp, cursor_ins, INS_CONSTWORD(sizeof(jsval)));
         lir->insStore(LIR_stp, cursor_ins, ni_ins, offsetof(NativeIterator, props_cursor), ACC_OTHER);
     } else {
         jsval v = cx->iterValue;
@@ -13864,13 +13863,13 @@ TraceRecorder::traverseScopeChain(JSObject *obj, LIns *obj_ins, JSObject *target
             if (obj->getClass() == &js_CallClass &&
                 JSFUN_HEAVYWEIGHT_TEST(js_GetCallObjectFunction(obj)->flags)) {
                 LIns* map_ins = map(obj_ins);
-                LIns* shape_ins = addName(lir->insLoad(LIR_ld, map_ins, offsetof(JSScope, shape),
+                LIns* shape_ins = addName(lir->insLoad(LIR_ldi, map_ins, offsetof(JSScope, shape),
                                                        ACC_OTHER),
                                           "obj_shape");
                 if (!exit)
                     exit = snapshot(BRANCH_EXIT);
                 guard(true,
-                      addName(lir->ins2ImmI(LIR_eq, shape_ins, obj->shape()), "guard_shape"),
+                      addName(lir->ins2ImmI(LIR_eqi, shape_ins, obj->shape()), "guard_shape"),
                       exit);
             }
         }
@@ -13996,8 +13995,8 @@ TraceRecorder::record_JSOP_IN()
         RETURN_STOP_A("string or integer expected");
     }
 
-    guard(false, lir->ins2ImmI(LIR_eq, x, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
-    x = lir->ins2ImmI(LIR_eq, x, 1);
+    guard(false, lir->ins2ImmI(LIR_eqi, x, JSVAL_TO_SPECIAL(JSVAL_VOID)), OOM_EXIT);
+    x = lir->ins2ImmI(LIR_eqi, x, 1);
 
     TraceMonitor &localtm = *traceMonitor;
     JSContext *localcx = cx;
@@ -14059,7 +14058,7 @@ TraceRecorder::record_JSOP_INSTANCEOF()
     enterDeepBailCall();
     LIns* args[] = {val_ins, get(&ctor), cx_ins};
     stack(-2, lir->insCall(&HasInstance_ci, args));
-    LIns* status_ins = lir->insLoad(LIR_ld,
+    LIns* status_ins = lir->insLoad(LIR_ldi,
                                     lirbuf->state,
                                     offsetof(TracerState, builtinStatus), ACC_OTHER);
     pendingGuardCondition = lir->insEqI_0(status_ins);
@@ -14251,7 +14250,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
     };
     LIns* call_ins = lir->insCall(&js_AllocFlatClosure_ci, args);
     guard(false,
-          addName(lir->ins2(LIR_peq, call_ins, INS_NULL()),
+          addName(lir->ins2(LIR_eqp, call_ins, INS_NULL()),
                   "guard(js_AllocFlatClosure)"),
           OOM_EXIT);
 
@@ -14339,7 +14338,7 @@ TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
     // The following implements IsOverriddenArgsLength on trace.
     // The '2' bit is set if length was overridden.
     LIns *len_ins = stobj_get_fslot(argsobj_ins, JSObject::JSSLOT_ARGS_LENGTH);
-    LIns *ovr_ins = lir->ins2(LIR_piand, len_ins, INS_CONSTWORD(2));
+    LIns *ovr_ins = lir->ins2(LIR_andp, len_ins, INS_CONSTWORD(2));
     guard(true, lir->insEqP_0(ovr_ins), snapshot(BRANCH_EXIT));
     return len_ins;
 }
@@ -14792,7 +14791,7 @@ TraceRecorder::record_JSOP_CALLPROP()
         } else if (JSVAL_IS_SPECIAL(l)) {
             if (l == JSVAL_VOID)
                 RETURN_STOP_A("callprop on void");
-            guard(false, lir->ins2ImmI(LIR_eq, get(&l), JSVAL_TO_SPECIAL(JSVAL_VOID)), MISMATCH_EXIT);
+            guard(false, lir->ins2ImmI(LIR_eqi, get(&l), JSVAL_TO_SPECIAL(JSVAL_VOID)), MISMATCH_EXIT);
             protoKey = JSProto_Boolean;
             debug_only_stmt(protoname = "Boolean.prototype";)
         } else {
@@ -15124,7 +15123,7 @@ TraceRecorder::record_JSOP_LENGTH()
     if (JSVAL_IS_PRIMITIVE(l)) {
         if (!JSVAL_IS_STRING(l))
             RETURN_STOP_A("non-string primitive JSOP_LENGTH unsupported");
-        set(&l, lir->ins1(LIR_i2f,
+        set(&l, lir->ins1(LIR_i2d,
                           p2i(lir->insLoad(LIR_ldp, get(&l),
                                            offsetof(JSString, mLength), ACC_OTHER))));
         return ARECORD_CONTINUE;
@@ -15147,7 +15146,7 @@ TraceRecorder::record_JSOP_LENGTH()
 
         // slot_ins is the value from the slot; right-shift by 2 bits to get
         // the length (see GetArgsLength in jsfun.cpp).
-        LIns* v_ins = lir->ins1(LIR_i2f, lir->ins2ImmI(LIR_rsh, p2i(slot_ins), 2));
+        LIns* v_ins = lir->ins1(LIR_i2d, lir->ins2ImmI(LIR_rshi, p2i(slot_ins), 2));
         set(&l, v_ins);
         return ARECORD_CONTINUE;
     }
@@ -15163,11 +15162,11 @@ TraceRecorder::record_JSOP_LENGTH()
             if (!guardClass(obj, obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT), ACC_OTHER))
                 RETURN_STOP_A("can't trace length property access on non-array");
         }
-        v_ins = lir->ins1(LIR_i2f, p2i(stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)));
+        v_ins = lir->ins1(LIR_i2d, p2i(stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)));
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Ensure array is a typed array and is the same type as what was written
         guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), ACC_OTHER);
-        v_ins = lir->ins1(LIR_i2f, lir->insLoad(LIR_ld,
+        v_ins = lir->ins1(LIR_i2d, lir->insLoad(LIR_ldi,
                                                 stobj_get_const_fslot(obj_ins, JSSLOT_PRIVATE),
                                                 js::TypedArray::lengthOffset(), ACC_READONLY));
     } else {
