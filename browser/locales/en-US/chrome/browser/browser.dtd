@@ -475,3 +475,6 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY downloadMonitor2.tooltip "Click to open downloads window">
 
 <!ENTITY allTabs.filter.emptyText "Search Tabs">
+<!-- Name for the tabs toolbar as spoken by screen readers.
+     The word "toolbar" is appended automatically and should not be contained below! -->
+<!ENTITY tabsToolbar.label "Browser tabs">
