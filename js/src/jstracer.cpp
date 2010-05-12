@@ -13582,7 +13582,6 @@ TraceRecorder::record_JSOP_MOREITER()
     RETURN_IF_XML_A(iterobj_val);
 
     JSObject* iterobj = JSVAL_TO_OBJECT(iterobj_val);
-    JSClass* clasp = iterobj->getClass();
     LIns* iterobj_ins = get(&iterobj_val);
     bool cond;
     LIns* cond_ins;
@@ -13659,8 +13658,7 @@ JS_DEFINE_CALLINFO_2(extern, BOOL_FAIL, CloseIterator, CONTEXT, OBJECT, 0, nanoj
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_ENDITER()
 {
-    jsval& v = stackval(-1);
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+    JS_ASSERT(!JSVAL_IS_PRIMITIVE(stackval(-1)));
 
     enterDeepBailCall();
 
