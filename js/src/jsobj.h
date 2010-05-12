@@ -1116,7 +1116,7 @@ js_GetMethod(JSContext *cx, JSObject *obj, jsid id, uintN getHow, js::Value *vp)
  * when it returns false).
  */
 extern JS_FRIEND_API(bool)
-js_CheckUndeclaredVarAssignment(JSContext *cx, jsval propname);
+js_CheckUndeclaredVarAssignment(JSContext *cx, JSString *propname);
 
 extern JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
