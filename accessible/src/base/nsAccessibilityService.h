@@ -76,6 +76,9 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIAccessibilityService
+  virtual nsAccessible* GetAccessibleInShell(nsIDOMNode *aNode,
+                                             nsIPresShell *aPresShell);
+
   virtual nsresult CreateOuterDocAccessible(nsIDOMNode *aNode,
                                             nsIAccessible **aAccessible);
   virtual nsresult CreateHTML4ButtonAccessible(nsIFrame *aFrame,

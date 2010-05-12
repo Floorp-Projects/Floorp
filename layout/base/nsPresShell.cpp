@@ -180,8 +180,7 @@
 #include "nsITimer.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
-#include "nsIAccessible.h"
-#include "nsIAccessibleEvent.h"
+#include "nsAccessible.h"
 #endif
 
 // For style data reconstruction
@@ -6329,8 +6328,10 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
 #ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT)
   {
-    static_cast<nsAccessibleEvent*>(aEvent)->accessible = nsnull;
-    nsCOMPtr<nsIAccessibilityService> accService = 
+    nsAccessibleEvent *accEvent = static_cast<nsAccessibleEvent*>(aEvent);
+    accEvent->mAccessible = nsnull;
+
+    nsCOMPtr<nsIAccessibilityService> accService =
       do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
       nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
@@ -6339,14 +6340,12 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView,
         // preshell is being held onto for fastback.
         return NS_OK;
       }
-      nsIAccessible* acc;
+
       nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mDocument));
       NS_ASSERTION(domNode, "No dom node for doc");
-      accService->GetAccessibleInShell(domNode, this, &acc);
-      // Addref this - it's not a COM Ptr
-      // We'll make sure the right number of Addref's occur before
-      // handing this back to the accessibility client
-      static_cast<nsAccessibleEvent*>(aEvent)->accessible = acc;
+
+      accEvent->mAccessible = accService->GetAccessibleInShell(domNode, this);
+
       // Ensure this is set in case a11y was activated before any
       // nsPresShells existed to observe "a11y-init-or-shutdown" topic
       gIsAccessibilityActive = PR_TRUE;
