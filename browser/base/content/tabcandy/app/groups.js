@@ -972,6 +972,15 @@ var DragInfo = function(element, event) {
 
 DragInfo.prototype = {
   // ----------  
+  snap: function(event, ui){
+    window.console.log( event, ui);
+    // Step 1: Find the closest group by edge
+    
+    // Step 2: Match to the to
+    
+  },
+  
+  // ----------  
   drag: function(event, ui) {
     if(this.item.isAGroup) {
       var bb = this.item.getBounds();
@@ -1035,6 +1044,7 @@ window.Groups = {
     },
     drag: function(e, ui) {
       drag.info.drag(e, ui);
+
     },
     stop: function() {
       drag.info.stop();
