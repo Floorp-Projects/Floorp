@@ -179,9 +179,6 @@ extern JSBool
 js_InitRuntimeNumberState(JSContext *cx);
 
 extern void
-js_TraceRuntimeNumberState(JSTracer *trc);
-
-extern void
 js_FinishRuntimeNumberState(JSContext *cx);
 
 /* Initialize the Number class, returning its prototype object. */
@@ -213,71 +210,68 @@ extern JSString * JS_FASTCALL
 js_NumberToString(JSContext *cx, jsdouble d);
 
 /*
- * Convert an integer or double (contained in the given jsval) to a string and
+ * Convert an integer or double (contained in the given value) to a string and
  * append to the given buffer.
  */
 extern JSBool JS_FASTCALL
-js_NumberValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb);
+js_NumberValueToCharBuffer(JSContext *cx, const js::Value &v, JSCharBuffer &cb);
 
 namespace js {
 
 /*
  * Convert a value to a number, returning the converted value in 'out' if the
- * conversion succeeds. As a side effect, *vp will be mutated to match *out.
+ * conversion succeeds.
  */
 JS_ALWAYS_INLINE bool
-ValueToNumber(JSContext *cx, js::Value *vp, double *out)
+ValueToNumber(JSContext *cx, const js::Value &v, double *out)
 {
-    if (vp->isInt32()) {
-        *out = vp->asInt32();
+    if (v.isNumber()) {
+        *out = v.asNumber();
         return true;
     }
-    if (vp->isDouble()) {
-        *out = vp->asDouble();
-        return true;
-    }
-    extern bool ValueToNumberSlow(JSContext *, js::Value *, double *);
-    return ValueToNumberSlow(cx, vp, out);
+    extern bool ValueToNumberSlow(JSContext *, js::Value, double *);
+    return ValueToNumberSlow(cx, copyable_cast(v), out);
 }
 
 /* Convert a value to a number, replacing 'vp' with the converted value. */
 JS_ALWAYS_INLINE bool
 ValueToNumber(JSContext *cx, js::Value *vp)
 {
-    if (vp->isInt32())
+    if (vp->isNumber())
         return true;
-    if (vp->isDouble())
-        return true;
-    double _;
-    extern bool ValueToNumberSlow(JSContext *, js::Value *, double *);
-    return ValueToNumberSlow(cx, vp, &_);
+    double d;
+    extern bool ValueToNumberSlow(JSContext *, js::Value, double *);
+    if (!ValueToNumberSlow(cx, copyable_cast(*vp), &d))
+        return false;
+    vp->setNumber(d);
+    return true;
 }
 
 /*
  * Convert a value to an int32 or uint32, according to the ECMA rules for
  * ToInt32 and ToUint32. Return converted value in *out on success, !ok on
- * failure. As a side effect, *vp will be mutated to match *out.
+ * failure.
  */
 JS_ALWAYS_INLINE bool
-ValueToECMAInt32(JSContext *cx, js::Value *vp, int32_t *out)
+ValueToECMAInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
-    if (vp->isInt32()) {
-        *out = vp->asInt32();
+    if (v.isInt32()) {
+        *out = v.asInt32();
         return true;
     }
-    extern bool ValueToECMAInt32Slow(JSContext *, js::Value *, int32_t *);
-    return ValueToECMAInt32Slow(cx, vp, out);
+    extern bool ValueToECMAInt32Slow(JSContext *, const js::Value &, int32_t *);
+    return ValueToECMAInt32Slow(cx, v, out);
 }
 
 JS_ALWAYS_INLINE bool
-ValueToECMAUint32(JSContext *cx, js::Value *vp, uint32_t *out)
+ValueToECMAUint32(JSContext *cx, const js::Value &v, uint32_t *out)
 {
-    if (vp->isInt32()) {
-        *out = (uint32_t)vp->asInt32();
+    if (v.isInt32()) {
+        *out = (uint32_t)v.asInt32();
         return true;
     }
-    extern bool ValueToECMAUint32Slow(JSContext *, js::Value *, uint32_t *);
-    return ValueToECMAUint32Slow(cx, vp, out);
+    extern bool ValueToECMAUint32Slow(JSContext *, const js::Value &, uint32_t *);
+    return ValueToECMAUint32Slow(cx, v, out);
 }
 
 /*
@@ -286,30 +280,30 @@ ValueToECMAUint32(JSContext *cx, js::Value *vp, uint32_t *out)
  * side effect, *vp will be mutated to match *out.
  */
 JS_ALWAYS_INLINE bool
-ValueToInt32(JSContext *cx, js::Value *vp, int32_t *out)
+ValueToInt32(JSContext *cx, const js::Value &v, int32_t *out)
 {
-    if (vp->isInt32()) {
-        *out = vp->asInt32();
+    if (v.isInt32()) {
+        *out = v.asInt32();
         return true;
     }
-    extern bool ValueToInt32Slow(JSContext *, js::Value *, int32_t *);
-    return ValueToInt32Slow(cx, vp, out);
+    extern bool ValueToInt32Slow(JSContext *, const js::Value &, int32_t *);
+    return ValueToInt32Slow(cx, v, out);
 }
 
 /*
  * Convert a value to a number, then to a uint16 according to the ECMA rules
  * for ToUint16. Return converted value on success, !ok on failure. v must be a
- * copy of a rooted jsval.
+ * copy of a rooted value.
  */
 JS_ALWAYS_INLINE bool
-ValueToUint16(JSContext *cx, js::Value *vp, uint16_t *out)
+ValueToUint16(JSContext *cx, const js::Value &v, uint16_t *out)
 {
-    if (vp->isInt32()) {
-        *out = (uint16_t)vp->asInt32();
+    if (v.isInt32()) {
+        *out = (uint16_t)v.asInt32();
         return true;
     }
-    extern bool ValueToUint16Slow(JSContext *, js::Value *, uint16_t *);
-    return ValueToUint16Slow(cx, vp, out);
+    extern bool ValueToUint16Slow(JSContext *, const js::Value &, uint16_t *);
+    return ValueToUint16Slow(cx, v, out);
 }
 
 }  /* namespace js */

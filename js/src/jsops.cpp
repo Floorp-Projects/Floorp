@@ -793,9 +793,9 @@ BEGIN_CASE(JSOP_IMACOP)
 #define BITWISE_OP(OP)                                                        \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ValueToECMAInt32(cx, &regs.sp[-2], &i))                          \
+        if (!ValueToECMAInt32(cx, regs.sp[-2], &i))                           \
             goto error;                                                       \
-        if (!ValueToECMAInt32(cx, &regs.sp[-1], &j))                          \
+        if (!ValueToECMAInt32(cx, regs.sp[-1], &j))                           \
             goto error;                                                       \
         i = i OP j;                                                           \
         regs.sp--;                                                            \
@@ -895,8 +895,8 @@ END_CASE(JSOP_BITAND)
                     cond = js_EqualStrings(l, r) OP true;                     \
                 } else {                                                      \
                     double l, r;                                              \
-                    if (!ValueToNumber(cx, &lref, &l) ||                      \
-                        !ValueToNumber(cx, &rref, &r)) {                      \
+                    if (!ValueToNumber(cx, lref, &l) ||                       \
+                        !ValueToNumber(cx, rref, &r)) {                       \
                         goto error;                                           \
                     }                                                         \
                     cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                 \
@@ -996,8 +996,8 @@ END_CASE(JSOP_CASEX)
                 cond = js_CompareStrings(l, r) OP 0;                          \
             } else {                                                          \
                 double l, r;                                                  \
-                if (!ValueToNumber(cx, &lref, &l) ||                          \
-                    !ValueToNumber(cx, &rref, &r)) {                          \
+                if (!ValueToNumber(cx, lref, &l) ||                           \
+                    !ValueToNumber(cx, rref, &r)) {                           \
                     goto error;                                               \
                 }                                                             \
                 cond = JSDOUBLE_COMPARE(l, OP, r, false);                     \
@@ -1029,9 +1029,9 @@ END_CASE(JSOP_GE)
 #define SIGNED_SHIFT_OP(OP)                                                   \
     JS_BEGIN_MACRO                                                            \
         int32_t i, j;                                                         \
-        if (!ValueToECMAInt32(cx, &regs.sp[-2], &i))                          \
+        if (!ValueToECMAInt32(cx, regs.sp[-2], &i))                           \
             goto error;                                                       \
-        if (!ValueToECMAInt32(cx, &regs.sp[-1], &j))                          \
+        if (!ValueToECMAInt32(cx, regs.sp[-1], &j))                           \
             goto error;                                                       \
         i = i OP (j & 31);                                                    \
         regs.sp--;                                                            \
@@ -1051,10 +1051,10 @@ END_CASE(JSOP_RSH)
 BEGIN_CASE(JSOP_URSH)
 {
     uint32_t u;
-    if (!ValueToECMAUint32(cx, &regs.sp[-2], &u))
+    if (!ValueToECMAUint32(cx, regs.sp[-2], &u))
         goto error;
     int32_t j;
-    if (!ValueToECMAInt32(cx, &regs.sp[-1], &j))
+    if (!ValueToECMAInt32(cx, regs.sp[-1], &j))
         goto error;
 
     u >>= (j & 31);
@@ -1123,7 +1123,7 @@ BEGIN_CASE(JSOP_ADD)
             regs.sp[-1].setString(str);
         } else {
             double l, r;
-            if (!ValueToNumber(cx, &lref, &l) || !ValueToNumber(cx, &rref, &r))
+            if (!ValueToNumber(cx, lref, &l) || !ValueToNumber(cx, rref, &r))
                 goto error;
             l += r;
             regs.sp--;
@@ -1165,8 +1165,8 @@ END_CASE(JSOP_CONCATN)
 #define BINARY_OP(OP)                                                         \
     JS_BEGIN_MACRO                                                            \
         double d1, d2;                                                        \
-        if (!ValueToNumber(cx, &regs.sp[-2], &d1) ||                          \
-            !ValueToNumber(cx, &regs.sp[-1], &d2)) {                          \
+        if (!ValueToNumber(cx, regs.sp[-2], &d1) ||                           \
+            !ValueToNumber(cx, regs.sp[-1], &d2)) {                           \
             goto error;                                                       \
         }                                                                     \
         double d = d1 OP d2;                                                  \
@@ -1187,8 +1187,8 @@ END_CASE(JSOP_MUL)
 BEGIN_CASE(JSOP_DIV)
 {
     double d1, d2;
-    if (!ValueToNumber(cx, &regs.sp[-2], &d1) ||
-        !ValueToNumber(cx, &regs.sp[-1], &d2)) {
+    if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
+        !ValueToNumber(cx, regs.sp[-1], &d2)) {
         goto error;
     }
     regs.sp--;
@@ -1226,8 +1226,8 @@ BEGIN_CASE(JSOP_MOD)
         regs.sp[-1].setInt32(mod);
     } else {
         double d1, d2;
-        if (!ValueToNumber(cx, &regs.sp[-2], &d1) ||
-            !ValueToNumber(cx, &regs.sp[-1], &d2)) {
+        if (!ValueToNumber(cx, regs.sp[-2], &d1) ||
+            !ValueToNumber(cx, regs.sp[-1], &d2)) {
             goto error;
         }
         regs.sp--;
@@ -1253,7 +1253,7 @@ END_CASE(JSOP_NOT)
 BEGIN_CASE(JSOP_BITNOT)
 {
     int32_t i;
-    if (!ValueToECMAInt32(cx, &regs.sp[-1], &i))
+    if (!ValueToECMAInt32(cx, regs.sp[-1], &i))
         goto error;
     i = ~i;
     regs.sp[-1].setInt32(i);
@@ -1274,7 +1274,7 @@ BEGIN_CASE(JSOP_NEG)
         regs.sp[-1].setInt32(i);
     } else {
         double d;
-        if (!ValueToNumber(cx, &regs.sp[-1], &d))
+        if (!ValueToNumber(cx, regs.sp[-1], &d))
             goto error;
         d = -d;
         regs.sp[-1].setDouble(d);

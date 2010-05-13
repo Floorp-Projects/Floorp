@@ -751,7 +751,7 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     /* Set the 'lineNumber' property. */
     uint32_t lineno;
     if (argc > 2) {
-        if (!ValueToECMAUint32(cx, &argv[2], &lineno))
+        if (!ValueToECMAUint32(cx, argv[2], &lineno))
             return JS_FALSE;
     } else {
         if (!fp)
@@ -829,7 +829,7 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
     JSString *name, *message, *filename, *lineno_as_str, *result;
-    jsval localroots[4] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
+    jsval localroots[3] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
     size_t lineno_length, name_length, message_length, filename_length, length;
     jschar *chars, *cp;
 
@@ -862,12 +862,11 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
         if (!JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]))
             return false;
         uint32_t lineno;
-        localroots[3] = localroots[2];  /* ValueToECMAUint32 mutates localroots[2] */
-        if (!ValueToECMAUint32(cx, Valueify(&localroots[2]), &lineno))
+        if (!ValueToECMAUint32(cx, Valueify(localroots[2]), &lineno))
             return false;
 
         if (lineno != 0) {
-            lineno_as_str = js_ValueToString(cx, Valueify(localroots[3]));
+            lineno_as_str = js_ValueToString(cx, Valueify(localroots[2]));
             if (!lineno_as_str)
                 return false;
             lineno_length = lineno_as_str->length();
@@ -1269,7 +1268,7 @@ js_ReportUncaughtException(JSContext *cx)
         if (!JS_GetProperty(cx, exnObject, js_lineNumber_str, &roots[4]))
             return false;
         uint32_t lineno;
-        if (!ValueToECMAUint32 (cx, Valueify(&roots[4]), &lineno))
+        if (!ValueToECMAUint32 (cx, Valueify(roots[4]), &lineno))
             return false;
 
         reportp = &report;
