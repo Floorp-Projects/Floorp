@@ -253,6 +253,8 @@ $(error Unknown C++ compiler, xptcall assembly will probably be incorrect.)
 else
 CPPSRCS		:= xptcinvoke_pa32.cpp xptcstubs_pa32.cpp
 ASFILES		:= xptcstubs_asm_parisc_linux.s xptcinvoke_asm_parisc_linux.s
+# #434190 optimized builds crash
+CXXFLAGS 	:=  $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(CXXFLAGS))
 endif
 endif
 endif
