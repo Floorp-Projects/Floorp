@@ -436,6 +436,8 @@ public:
   void   SetRepeatable(PRBool aRepeatable);
   PRBool HasStyleHeight() const;
   void   SetHasStyleHeight(PRBool aValue);
+  PRBool HasInternalBreakBefore() const;
+  PRBool HasInternalBreakAfter() const;
 };
 
 
