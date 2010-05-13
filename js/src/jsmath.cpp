@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS math package.
  */
@@ -95,21 +97,21 @@ static JSConstDoubleSpec math_constants[] = {
     {0,0,0,{0,0,0}}
 };
 
-JSClass js_MathClass = {
+Class js_MathClass = {
     js_Math_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_Math),
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
+    PropertyStub,     PropertyStub,     PropertyStub,     PropertyStub,
+    EnumerateStub,    ResolveStub,      ConvertStub,      NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
-math_abs(JSContext *cx, uintN argc, jsval *vp)
+math_abs(JSContext *cx, uintN argc, Value *vp)
 {
     jsdouble x, z;
 
     if (argc == 0) {
-        *vp = cx->runtime->NaNValue;
+        vp->setDouble(js_NaN);
         return JS_TRUE;
     }
     if (!ValueToNumber(cx, vp[2], &x))

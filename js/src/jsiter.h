@@ -58,14 +58,14 @@
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 
 struct NativeIterator {
-    js::Value *props_array;
-    js::Value *props_cursor;
-    js::Value *props_end;
-    uint32    *shapes_array;
-    uint32    shapes_length;
-    uint32    shapes_key;
-    uintN     flags;
-    JSObject  *next;
+    jsboxedword *props_array;
+    jsboxedword *props_cursor;
+    jsboxedword *props_end;
+    uint32      *shapes_array;
+    uint32      shapes_length;
+    uint32      shapes_key;
+    uintN       flags;
+    JSObject    *next;
 
     void mark(JSTracer *trc);
 };
@@ -118,7 +118,7 @@ struct JSGenerator {
     JSFrameRegs         savedRegs;
     uintN               vplen;
     JSStackFrame        *liveFrame;
-    jsval               floatingStack[1];
+    js::Value           floatingStack[1];
 
     JSStackFrame *getFloatingFrame() {
         return reinterpret_cast<JSStackFrame *>(floatingStack + vplen);

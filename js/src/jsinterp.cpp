@@ -1279,6 +1279,46 @@ js_GetUpvar(JSContext *cx, uintN level, uintN cookie)
     return vp[slot];
 }
 
+bool
+ValueToId(JSContext *cx, const Value *vp, jsid *idp)
+{
+    int32_t i;
+    if (ValueFitsInInt32(*vp, &i) && INT32_FITS_IN_JSID(i)) {
+        *idp = INT_TO_JSID(i);
+        return true;
+    }
+
+#if JS_HAS_XML_SUPPORT
+    if (vp->isObject()) {
+        Class *clasp = vp->asObject().getClass();
+        if (JS_UNLIKELY(clasp == &js_QNameClass.base ||
+                        clasp == &js_AttributeNameClass ||
+                        clasp == &js_AnyNameClass)) {
+            *idp = OBJECT_TO_JSID(&vp->asObject());
+            return true;
+        }
+    }
+#endif
+
+    return js_ValueToStringId(cx, *vp, idp);
+}
+
+/*
+ * Normally, js::Value should not be passed by value, but this function should
+ * only be used on cold paths, so ease of use wins out.
+ */
+Value
+IdToValue(jsid id)
+{
+    if (JSID_IS_INT(id))
+        return CopyableValue(Int32Tag(JSID_TO_INT(id)));
+    else if (JSID_IS_ATOM(id))
+        return CopyableValue(ATOM_TO_STRING(JSID_TO_ATOM(id)));
+    else if (JSID_IS_NULL(id))
+        return CopyableValue(NullTag());
+    return CopyableValue(ObjectTag(*JSID_TO_OBJECT(id)));
+}
+
 #ifdef DEBUG
 
 JS_STATIC_INTERPRET JS_REQUIRES_STACK void
@@ -1955,7 +1995,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        rval->copy(*ni->props_cursor);
+        BoxedWordToValue(*ni->props_cursor, rval);
         if (rval->isString() || (ni->flags & JSITER_FOREACH)) {
             ni->props_cursor++;
             return true;

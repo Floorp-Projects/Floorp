@@ -774,7 +774,7 @@ js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
     obj->getSlot(JSSLOT_BLOCK_DEPTH).asInt32()
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \
-    obj->setSlot(JSSLOT_BLOCK_DEPTH, Value((int32_t)depth))
+    obj->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Tag(depth)))
 
 /*
  * To make sure this slot is well-defined, always call js_NewWithObject to

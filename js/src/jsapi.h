@@ -1200,6 +1200,9 @@ JS_MarkGCThing(JSContext *cx, jsval v, const char *name, void *arg);
 #define JSTRACE_OBJECT  0
 #define JSTRACE_STRING  1
 
+/* Engine private; not the trace kind of any jsval. */
+#define JSTRACE_DOUBLE  2
+
 /*
  * Use the following macros to check if a particular jsval is a traceable
  * thing and to extract the thing and its kind to pass to JS_CallTracer.
@@ -2963,6 +2966,11 @@ struct Int32Tag {
     int32 i32;
 };
 
+struct DoubleTag {
+    explicit DoubleTag(double dbl) : dbl(dbl) {}
+    double dbl;
+};
+
 struct FunObjTag {
     explicit FunObjTag(JSObject &obj) : obj(obj) {}
     JSObject &obj;
@@ -3251,9 +3259,9 @@ class Value
         data.i32 = arg.i32;
     }
 
-    Value(double arg) {
+    Value(DoubleTag arg) {
         mask = DoubleMask;
-        data.dbl = arg;
+        data.dbl = arg.dbl;
     }
 
     Value(JSString *arg) {
@@ -3617,7 +3625,7 @@ struct CopyableValue : Value
     CopyableValue(NullTag arg) : Value(arg) {}
     CopyableValue(UndefinedTag arg) : Value(arg) {}
     CopyableValue(Int32Tag arg) : Value(arg) {}
-    CopyableValue(double arg) : Value(arg) {}
+    CopyableValue(DoubleTag arg) : Value(arg) {}
     CopyableValue(JSString *arg) : Value(arg) {}
     CopyableValue(FunObjTag arg) : Value(arg) {}
     CopyableValue(NonFunObjTag arg) : Value(arg) {}

@@ -506,14 +506,4 @@ js_InternNonIntElementId(JSContext *cx, JSObject *obj, const js::Value &idval,
 extern void
 js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al);
 
-namespace js {
-
-Value
-IdToValue(jsid id);
-
-bool
-ValueToId(JSContext *cx, const Value &v, jsid *idp);
-
-} /* namespace js */
-
 #endif /* jsatom_h___ */
