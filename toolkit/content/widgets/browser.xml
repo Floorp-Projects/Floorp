@@ -1141,6 +1141,16 @@
         if (event.getPreventDefault())
           return;
 
+        // For drags that appear to be internal text (for example, tab drags),
+        // set the dropEffect to 'none'. This prevents the drop even if some
+        // other listener cancelled the event.
+        var types = event.dataTransfer.types;
+        if (types.contains("text/x-moz-text-internal") && !types.contains("text/plain")) {
+          event.dataTransfer.dropEffect = "none";
+          event.stopPropagation();
+          event.preventDefault();
+        }
+
         let linkHandler = Components.classes["@mozilla.org/content/dropped-link-handler;1"].
                             getService(Components.interfaces.nsIDroppedLinkHandler);
         if (linkHandler.canDropLink(event, false))
