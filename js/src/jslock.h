@@ -118,7 +118,7 @@ struct JSTitle {
 #define JS_ATOMIC_ADD(p,v)          PR_AtomicAdd((PRInt32 *)(p), (PRInt32)(v))
 #define JS_ATOMIC_SET(p,v)          PR_AtomicSet((PRInt32 *)(p), (PRInt32)(v))
 
-#define js_CurrentThreadId()        (jsword)PR_GetCurrentThread()
+#define js_CurrentThreadId()        PR_GetCurrentThread()
 #define JS_NEW_LOCK()               PR_NewLock()
 #define JS_DESTROY_LOCK(l)          PR_DestroyLock(l)
 #define JS_ACQUIRE_LOCK(l)          PR_Lock(l)
