@@ -687,7 +687,9 @@ nsNavHistory::InitDB()
     cachePercentage = 50;
   if (cachePercentage < 0)
     cachePercentage = 0;
-  PRInt64 cacheSize = PR_GetPhysicalMemorySize() * cachePercentage / 100;
+
+  static PRInt64 physMem = PR_GetPhysicalMemorySize();
+  PRInt64 cacheSize = physMem * cachePercentage / 100;
 
   // Compute number of cached pages, this will be our cache size.
   PRInt64 cachePages = cacheSize / pageSize;
