@@ -615,6 +615,16 @@ Uint32ToValue(uint32_t u, Value *vp)
         vp->setInt32((int32_t)u);
 }
 
+JS_ALWAYS_INLINE void
+Value::setNumber(double d)
+{
+    int32_t i;
+    if (JSDOUBLE_IS_INT32(d, i))
+        setInt32(i);
+    else
+        setDouble(d);
+}
+
 template<typename T> struct NumberTraits { };
 template<> struct NumberTraits<int32> {
   static JS_ALWAYS_INLINE int32 NaN() { return 0; }
