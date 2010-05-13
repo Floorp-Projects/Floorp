@@ -37,11 +37,6 @@
           }
         ]]>
       </handler>
-      <handler event="input">
-        <![CDATA[
-          this.popup.scrollToTop();
-        ]]>
-      </handler>
     </handlers>
   </binding>
 
@@ -184,12 +179,6 @@
           this.collapsed = true;
           this._popupOpen = false;
 
-          // Scroll to the top left for the next open (only if necessary).
-          // Doing this now rather than in open() turns out to be faster,
-          // possibly because it avoids scrolling too soon after we uncollapse
-          // ourselves
-          this.scrollToTop();
-
           let event = document.createEvent("Events");
           event.initEvent("popuphidden", true, false);
           this.dispatchEvent(event);
@@ -285,6 +274,9 @@
             items.insertBefore(this._allBookmarksItem, items.firstChild);
             this._allBookmarksItem._hidden = false;
           }
+
+          // Make sure the list is scrolled to the top
+          this.scrollToTop();
         ]]></body>
       </method>
 
