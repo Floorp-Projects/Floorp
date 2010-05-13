@@ -16,31 +16,32 @@ window.Switch = {
       + style
       + '">Candy: <select id="visualization-select">';
       
-    var names = Utils.getVisualizationNames();
-    var count = names.length;
-    var a;
-    for(a = 0; a < count; a++) {
-      var name = names[a];
-      html += '<option value="'
-        + name
-        + '"'
-        + (name == myName ? ' selected="true"' : '')
-        + '>'
-        + name
-        + '</option>';
-    }
-    
-    html += '<option disabled="disabled">----------</option>';
-    html += '<option value="">Home</option>';
+    Utils.getVisualizationNames(function(names) {
+      var count = names.length;
+      var a;
+      for(a = 0; a < count; a++) {
+        var name = names[a];
+        html += '<option value="'
+          + name
+          + '"'
+          + (name == myName ? ' selected="true"' : '')
+          + '>'
+          + name
+          + '</option>';
+      }
+      
+      html += '<option disabled="disabled">----------</option>';
+      html += '<option value="">Home</option>';
 
-    html += '</select>';
-    $(selector).prepend(html);
-    $('#visualization-select').change(function () {
-      var name = $(this).val();
-      if(name)
-        location.href = '../' + name + '/index.html';
-      else
-        location.href = '../../index.html';
+      html += '</select>';
+      $(selector).prepend(html);
+      $('#visualization-select').change(function () {
+        var name = $(this).val();
+        if(name)
+          location.href = '../' + name + '/index.html';
+        else
+          location.href = '../../index.html';
+      });
     });
   }
 };

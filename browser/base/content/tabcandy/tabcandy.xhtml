@@ -51,19 +51,20 @@
   <script type="text/javascript;version=1.8" src="js/core/utils.js"></script>
   <script type="text/javascript;version=1.8">
 
-    var names = Utils.getVisualizationNames();
-    var count = names.length;
-    var a;
-    for(a = 0; a < count; a++) {
-      var name = names[a];
-      var html = '<li><a href="candies/'
-        + name
-        + '/index.html">'
-        + name
-        + '</a></li>';
-        
-      $('#list').append(html);
-    }
+    Utils.getVisualizationNames(function(names) {
+      var count = names.length;
+      var a;
+      for(a = 0; a < count; a++) {
+        var name = names[a];
+        var html = '<li><a href="candies/'
+          + name
+          + '/index.html">'
+          + name
+          + '</a></li>';
+          
+        $('#list').append(html);
+      }
+    });
     
   </script>
 
