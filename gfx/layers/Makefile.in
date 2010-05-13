@@ -64,6 +64,7 @@ CPPSRCS = \
         BasicImages.cpp \
         BasicLayers.cpp \
         LayerManagerOGL.cpp \
+        ColorLayerOGL.cpp \
         ThebesLayerOGL.cpp \
         ContainerLayerOGL.cpp \
         ImageLayerOGL.cpp \
