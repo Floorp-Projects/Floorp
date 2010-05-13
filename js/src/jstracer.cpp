@@ -13625,12 +13625,13 @@ TraceRecorder::record_JSOP_MOREITER()
          * carefully protect ourselves against reentrancy.
          */
         JSContext *localCx = cx;
-        if (!js_IteratorMore(cx, iterobj, &stackval(0)))
+        AutoValueRooter rooter(cx);
+        if (!js_IteratorMore(cx, iterobj, rooter.addr()))
             RETURN_ERROR_A("error in js_IteratorMore");
         if (!TRACE_RECORDER(localCx))
             return ARECORD_ABORTED;
 
-        cond = (stackval(0) == JSVAL_TRUE);
+        cond = (rooter.value() == JSVAL_TRUE);
         cond_ins = lir->ins2(LIR_eqp,
                              lir->insLoad(LIR_ldp, vp_ins, 0, ACC_OTHER),
                              INS_CONSTWORD(JSVAL_TRUE));
