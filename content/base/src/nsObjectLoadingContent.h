@@ -336,14 +336,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsresult CheckClassifier(nsIChannel *aChannel);
 
     /**
-     * Whether to treat this content as a plugin, even though we can't handle
-     * the type. This function impl should match the checks in the plugin host.
-     * aContentType is the MIME type we ended up with.
-     */
-    static PRBool ShouldShowDefaultPlugin(nsIContent* aContent,
-                                          const nsCString& aContentType);
-
-    /**
      * Get the plugin support state for the given content node and MIME type.
      * This is used for purposes of determining whether to fire PluginNotFound
      * events etc.  aContentType is the MIME type we ended up with.
