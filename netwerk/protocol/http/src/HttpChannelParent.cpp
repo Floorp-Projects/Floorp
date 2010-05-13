@@ -76,10 +76,11 @@ HttpChannelParent::ActorDestroy(ActorDestroyReason why)
 // HttpChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS3(HttpChannelParent, 
+NS_IMPL_ISUPPORTS4(HttpChannelParent, 
                    nsIRequestObserver, 
                    nsIStreamListener,
-                   nsIInterfaceRequestor);
+                   nsIInterfaceRequestor,
+                   nsIProgressEventSink);
 
 //-----------------------------------------------------------------------------
 // HttpChannelParent::PHttpChannelParent
@@ -263,6 +264,32 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
          "File a bug!\n", 
          aIID.ToString());
   DROP_DEAD();
+}
+
+//-----------------------------------------------------------------------------
+// HttpChannelParent::nsIProgressEventSink
+//-----------------------------------------------------------------------------
+ 
+NS_IMETHODIMP
+HttpChannelParent::OnProgress(nsIRequest *aRequest, 
+                              nsISupports *aContext, 
+                              PRUint64 aProgress, 
+                              PRUint64 aProgressMax)
+{
+  if (mIPCClosed || !SendOnProgress(aProgress, aProgressMax))
+    return NS_ERROR_UNEXPECTED;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelParent::OnStatus(nsIRequest *aRequest, 
+                            nsISupports *aContext, 
+                            nsresult aStatus, 
+                            const PRUnichar *aStatusArg)
+{
+  if (mIPCClosed || !SendOnStatus(aStatus, nsString(aStatusArg)))
+    return NS_ERROR_UNEXPECTED;
+  return NS_OK;
 }
 
 

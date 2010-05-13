@@ -141,15 +141,6 @@ public: /* internal necko use only */
     }
 
 private:
-    // Helper function to simplify getting notification callbacks.
-    template <class T>
-    void GetCallback(nsCOMPtr<T> &aResult)
-    {
-        NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
-                                      NS_GET_TEMPLATE_IID(T),
-                                      getter_AddRefs(aResult));
-    }
-
     // AsyncCall may be used to call a member function asynchronously.
     // retval isn't refcounted and is set only when event was successfully
     // posted, the event is returned for the purpose of cancelling when needed

@@ -126,6 +126,8 @@ protected:
                            const PRUint32& offset,
                            const PRUint32& count);
   bool RecvOnStopRequest(const nsresult& statusCode);
+  bool RecvOnProgress(const PRUint64& progress, const PRUint64& progressMax);
+  bool RecvOnStatus(const nsresult& status, const nsString& statusArg);
 
 private:
   RequestHeaderTuples mRequestHeaders;

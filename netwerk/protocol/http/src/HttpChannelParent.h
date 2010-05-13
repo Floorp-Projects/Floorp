@@ -46,6 +46,7 @@
 #include "mozilla/net/NeckoCommon.h"
 #include "nsIStreamListener.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIProgressEventSink.h"
 
 namespace mozilla {
 namespace net {
@@ -54,12 +55,14 @@ namespace net {
 class HttpChannelParent : public PHttpChannelParent
                         , public nsIStreamListener
                         , public nsIInterfaceRequestor
+                        , public nsIProgressEventSink
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIPROGRESSEVENTSINK
 
   HttpChannelParent();
   virtual ~HttpChannelParent();

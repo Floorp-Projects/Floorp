@@ -84,6 +84,10 @@ child:
                   PRUint32  count);
 
   OnStopRequest(nsresult statusCode);
+
+  OnProgress(PRUint64 progress, PRUint64 progressMax);
+
+  OnStatus(nsresult status, nsString statusArg);
 };
 
 
