@@ -356,30 +356,25 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
   fileInfo.refcount = 1; // In case some GnomeVFS function addrefs and releases it
 
   nsCAutoString spec;
-  nsCOMPtr<nsIURI> fileURI;
-  rv = aIconURI->GetIconFile(getter_AddRefs(fileURI));
-  if (fileURI) {
-    fileURI->GetAsciiSpec(spec);
+  nsCOMPtr<nsIURL> url;
+  rv = aIconURI->GetIconURL(getter_AddRefs(url));
+  if (url) {
+    url->GetAsciiSpec(spec);
     // Only ask gnome-vfs for a GnomeVFSFileInfo for file: uris, to avoid a
     // network request
     PRBool isFile;
-    if (NS_SUCCEEDED(fileURI->SchemeIs("file", &isFile)) && isFile) {
+    if (NS_SUCCEEDED(url->SchemeIs("file", &isFile)) && isFile) {
       _gnome_vfs_get_file_info(spec.get(), &fileInfo, GNOME_VFS_FILE_INFO_DEFAULT);
     }
     else {
-      // We have to get a leaf name from our uri...
-      nsCOMPtr<nsIURL> url(do_QueryInterface(fileURI));
-      if (url) {
-        nsCAutoString name;
-        // The filename we get is UTF-8-compatible, which matches gnome expectations.
-        // See also: http://lists.gnome.org/archives/gnome-vfs-list/2004-March/msg00049.html
-        // "Whenever we can detect the charset used for the URI type we try to
-        //  convert it to/from utf8 automatically inside gnome-vfs."
-        // I'll interpret that as "otherwise, this field is random junk".
-        url->GetFileName(name);
-        fileInfo.name = g_strdup(name.get());
-      }
-      // If this is no nsIURL, nothing we can do really.
+      // The filename we get is UTF-8-compatible, which matches gnome expectations.
+      // See also: http://lists.gnome.org/archives/gnome-vfs-list/2004-March/msg00049.html
+      // "Whenever we can detect the charset used for the URI type we try to
+      //  convert it to/from utf8 automatically inside gnome-vfs."
+      // I'll interpret that as "otherwise, this field is random junk".
+      nsCAutoString name;
+      url->GetFileName(name);
+      fileInfo.name = g_strdup(name.get());
 
       if (!type.IsEmpty()) {
         fileInfo.valid_fields = GNOME_VFS_FILE_INFO_FIELDS_MIME_TYPE;
