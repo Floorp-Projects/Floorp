@@ -185,4 +185,6 @@ INCLUDES	+= \
 		-I$(topsrcdir)/caps/include \
 		$(NULL)
 
+CXXFLAGS += $(TK_CFLAGS)
+
 DEFINES += -D_IMPL_NS_LAYOUT
