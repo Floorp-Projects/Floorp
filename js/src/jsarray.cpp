@@ -1722,12 +1722,15 @@ MergeArrays(MSortArgs *msa, void *src, void *dest, size_t run1, size_t run2)
  */
 bool
 js_MergeSort(void *src, size_t nel, size_t elsize,
-             JSComparator cmp, void *arg, void *tmp, JSBool isValue)
+             JSComparator cmp, void *arg, void *tmp,
+             JSMergeSortElemType elemType)
 {
     void *swap, *vec1, *vec2;
     MSortArgs msa;
     size_t i, j, lo, hi, run;
     int cmp_result;
+
+    bool isValue = elemType == JS_SORTING_VALUES;
 
     /* Avoid memcpy overhead for word-sized and word-aligned elements. */
 #define COPY_ONE(p,q,n) \
@@ -2055,7 +2058,8 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
                 elemsize = 2 * sizeof(Value);
             }
             if (!js_MergeSort(vec, size_t(newlen), elemsize,
-                              sort_compare_strings, cx, mergesort_tmp, true)) {
+                              sort_compare_strings, cx, mergesort_tmp,
+                              JS_SORTING_VALUES)) {
                 return false;
             }
             if (!allStrings) {
@@ -2079,7 +2083,8 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
 
             if (!js_MergeSort(vec, size_t(newlen), sizeof(Value),
                               comparator_stack_cast(sort_compare),
-                              &ca, mergesort_tmp, true)) {
+                              &ca, mergesort_tmp,
+                              JS_SORTING_VALUES)) {
                 return false;
             }
         }

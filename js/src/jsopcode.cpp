@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS bytecode descriptors, disassemblers, and decompilers.
  */
@@ -275,7 +277,7 @@ ToDisassemblySource(JSContext *cx, jsval v)
 {
     if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *obj = JSVAL_TO_OBJECT(v);
-        JSClass *clasp = obj->getClass();
+        Class *clasp = obj->getClass();
 
         if (clasp == &js_BlockClass) {
             char *source = JS_sprintf_append(NULL, "depth %d {", OBJ_BLOCK_DEPTH(cx, obj));
@@ -310,13 +312,13 @@ ToDisassemblySource(JSContext *cx, jsval v)
 
         if (clasp == &js_RegExpClass) {
             AutoValueRooter tvr(cx);
-            if (!js_regexp_toString(cx, obj, tvr.addr()))
+            if (!js_regexp_toString(cx, obj, Jsvalify(tvr.addr())))
                 return NULL;
-            return js_GetStringBytes(cx, JSVAL_TO_STRING(tvr.value()));
+            return js_GetStringBytes(cx, JSVAL_TO_STRING(Jsvalify(tvr.value())));
         }
     }
 
-    return js_ValueToPrintableSource(cx, v);
+    return js_ValueToPrintableSource(cx, Valueify(v));
 }
 
 JS_FRIEND_API(uintN)
@@ -370,7 +372,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         index = js_GetIndexFromBytecode(cx, script, pc, 0);
         if (type == JOF_ATOM) {
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
-            v = ATOM_KEY(atom);
+            v = STRING_TO_JSVAL(ATOM_TO_STRING(atom));
         } else {
             if (type == JOF_OBJECT)
                 obj = script->getObject(index);
@@ -438,7 +440,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             off = GetJumpOffset(pc, pc2);
             pc2 += jmplen;
 
-            bytes = ToDisassemblySource(cx, ATOM_KEY(atom));
+            bytes = ToDisassemblySource(cx, STRING_TO_JSVAL(ATOM_TO_STRING(atom)));
             if (!bytes)
                 return 0;
             fprintf(fp, "\n\t%s: %d", bytes, (intN) off);
@@ -462,7 +464,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         index = js_GetIndexFromBytecode(cx, script, pc, SLOTNO_LEN);
         if (type == JOF_SLOTATOM) {
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
-            v = ATOM_KEY(atom);
+            v = STRING_TO_JSVAL(ATOM_TO_STRING((atom)));
         } else {
             obj = script->getObject(index);
             v = OBJECT_TO_JSVAL(obj);
@@ -1093,7 +1095,7 @@ SprintDoubleValue(Sprinter *sp, jsval v, JSOp *opp)
     char *s, buf[DTOSTR_STANDARD_BUFFER_SIZE];
 
     JS_ASSERT(JSVAL_IS_DOUBLE(v));
-    d = *JSVAL_TO_DOUBLE(v);
+    d = JSVAL_TO_DOUBLE(v);
     if (JSDOUBLE_IS_NEGZERO(d)) {
         todo = SprintCString(sp, "-0");
         *opp = JSOP_NEG;
@@ -1203,7 +1205,7 @@ DecompileSwitch(SprintStack *ss, TableEntry *table, uintN tableLength,
                     todo = SprintDoubleValue(&ss->sprinter, key, &junk);
                     str = NULL;
                 } else {
-                    str = js_ValueToString(cx, key);
+                    str = js_ValueToString(cx, Valueify(key));
                     if (!str)
                         return JS_FALSE;
                 }
@@ -4016,7 +4018,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_DOUBLE:
                 GET_DOUBLE_FROM_BYTECODE(jp->script, pc, 0, atom);
-                val = ATOM_KEY(atom);
+                val = STRING_TO_JSVAL(ATOM_TO_STRING(atom));
                 LOCAL_ASSERT(JSVAL_IS_DOUBLE(val));
                 todo = SprintDoubleValue(&ss->sprinter, val, &saveop);
                 break;
@@ -4249,7 +4251,8 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     if (tmp) {
                         VOUCH_DOES_NOT_REQUIRE_STACK();
                         ok = js_MergeSort(table, (size_t)j, sizeof(TableEntry),
-                                          CompareOffsets, NULL, tmp);
+                                          CompareOffsets, NULL, tmp,
+                                          JS_SORTING_GENERIC);
                         cx->free(tmp);
                     } else {
                         ok = JS_FALSE;
@@ -4301,7 +4304,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     pc2 += INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
-                    table[k].key = ATOM_KEY(atom);
+                    table[k].key = STRING_TO_JSVAL(ATOM_TO_STRING(atom));
                     table[k].offset = off2;
                 }
 
@@ -5096,7 +5099,7 @@ js_DecompileFunction(JSPrinter *jp)
 }
 
 char *
-js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
+js_DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
                            JSString *fallback)
 {
     JSStackFrame *fp;
@@ -5149,14 +5152,14 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * calculated value matching v under assumption that it is
              * it that caused exception, see bug 328664.
              */
-            jsval *stackBase = fp->base();
-            jsval *sp = i.sp();
+            Value *stackBase = fp->base();
+            Value *sp = i.sp();
             do {
                 if (sp == stackBase) {
                     pcdepth = -1;
                     goto release_pcstack;
                 }
-            } while (*--sp != v);
+            } while (!equalTypeAndPayload(*--sp, v));
 
             /*
              * The value may have come from beyond stackBase + pcdepth,

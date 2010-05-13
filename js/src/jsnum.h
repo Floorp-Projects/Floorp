@@ -609,6 +609,16 @@ Uint32ToValue(uint32_t u, Value *vp)
         vp->setInt32((int32_t)u);
 }
 
+JS_ALWAYS_INLINE
+Value::Value(NumberTag arg)
+{
+    int32_t i;
+    if (JSDOUBLE_IS_INT32(arg.dbl, i))
+        setInt32(i);
+    else
+        setDouble(arg.dbl);
+}
+
 JS_ALWAYS_INLINE void
 Value::setNumber(double d)
 {

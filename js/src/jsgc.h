@@ -539,13 +539,13 @@ TraceBoxedWords(JSTracer *trc, jsboxedword *beg, jsboxedword *end, const char *n
     for (jsboxedword *wp = beg; wp < end; ++wp) {
         if (JSBOXEDWORD_IS_GCTHING(*wp)) {
             JS_SET_TRACING_INDEX(trc, name, wp - beg);
-            CallGCMarker(trc, JSBOXEDWORD_TO_GCTHING(*wp), JSID_TRACE_KIND(*wp));
+            CallGCMarker(trc, JSBOXEDWORD_TO_GCTHING(*wp), JSBOXEDWORD_TRACE_KIND(*wp));
         }
     }
 }
 
 inline void
-TraceBoxedWords(JSTracer *trc, size_t len, jsid *vec, const char *name)
+TraceBoxedWords(JSTracer *trc, size_t len, jsboxedword *vec, const char *name)
 {
     TraceBoxedWords(trc, vec, vec + len, name);
 }

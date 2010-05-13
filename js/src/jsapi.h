@@ -68,10 +68,10 @@ extern jsval JSVAL_VOID;
  * and booleans.
  *
  * N.B. it is much faster to use specific queries like JSVAL_IS_NULL than
- * IS_SAME_JSVAL(v, JSVAL_NULL).
+ * EQUAL_TYPE_AND_PAYLOAD(v, JSVAL_NULL).
  */
 inline JSBool
-IS_SAME_JSVAL(const jsval *lval, const jsval *rval)
+EQUAL_TYPE_AND_PAYLOAD(const jsval *lval, const jsval *rval)
 {
     JSValueMaskType lmask = lval->mask, rmask = rval->mask;
     jsval_data ldata = lval->data, rdata = rval->data;
@@ -2971,6 +2971,11 @@ struct DoubleTag {
     double dbl;
 };
 
+struct NumberTag {
+    explicit NumberTag(double dbl) : dbl(dbl) {}
+    double dbl;
+};
+
 struct FunObjTag {
     explicit FunObjTag(JSObject &obj) : obj(obj) {}
     JSObject &obj;
@@ -3009,6 +3014,11 @@ struct ObjectOrNullTag {
 struct BooleanTag {
     explicit BooleanTag(bool boo) : boo(boo) {}
     bool boo;
+};
+
+struct PrivateVoidPtrTag {
+    explicit PrivateVoidPtrTag(void *ptr) : ptr(ptr) {}
+    void *ptr;
 };
 
 /*
@@ -3263,6 +3273,8 @@ class Value
         mask = DoubleMask;
         data.dbl = arg.dbl;
     }
+
+    inline Value(NumberTag arg);
 
     Value(JSString *arg) {
         mask = StringMask;
@@ -3568,9 +3580,6 @@ class Value
         return data.why;
     }
 
-    /* See IS_SAME_JSVAL. */
-    bool isSame(const Value &v) const;
-
     /*
      * Private API
      *
@@ -3580,9 +3589,14 @@ class Value
      * Privates values are given a valid type of Int32Tag and are thus GC-safe.
      */
 
-    void setPrivateVoidPtr(void *p) {
+    Value(PrivateVoidPtrTag arg) {
         mask = Int32Mask;
-        data.ptr = p;
+        data.ptr = arg.ptr;
+    }
+
+    void setPrivateVoidPtr(void *ptr) {
+        mask = Int32Mask;
+        data.ptr = ptr;
     }
 
     void *asPrivateVoidPtr() const {
@@ -3634,7 +3648,6 @@ Value::Value(const CopyableValue &v) {
     data = v.data;
 }
 
-
 /*
  * As asserted above, js::Value and jsval are layout equivalent. To provide
  * widespread casting, the following safe casts are provided.
@@ -3647,6 +3660,12 @@ static JS_ALWAYS_INLINE Value *       Valueify(jsval *v)       { return (Value *
 static JS_ALWAYS_INLINE const Value * Valueify(const jsval *v) { return (const Value *)v; }
 static JS_ALWAYS_INLINE Value &       Valueify(jsval &v)       { return (Value &)v; }
 static JS_ALWAYS_INLINE const Value & Valueify(const jsval &v) { return (const Value &)v; }
+
+JS_ALWAYS_INLINE bool
+equalTypeAndPayload(const Value &l, const Value &r)
+{
+    return EQUAL_TYPE_AND_PAYLOAD(Jsvalify(&l), Jsvalify(&r));
+}
 
 /*
  * N.B. It is more efficient to use setNull/isNull/setUndefined/isUndefined
