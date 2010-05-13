@@ -46,6 +46,9 @@
         onload="onLoad();"
         title="findbar test">
 
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
   <script type="application/javascript"><![CDATA[
     const Ci = Components.interfaces;
     const Cc = Components.classes;
@@ -111,6 +114,7 @@
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testQuickFindText");
       testFindbarSelection();
+      testDrop();
       testQuickFindLink();
       testStatusText();
       testQuickFindClose();
@@ -149,6 +153,12 @@
       // test non-editable nsIDOMNSEditableElement (button)
       gBrowser.contentDocument.getElementById("button").focus();
       checkFindbarState("button", "");
+    }
+
+    function testDrop()
+    {
+      synthesizeDrop(gFindBar._findField, [[ {type: "text/plain", data: "Rabbits" } ]], "copy", window);
+      window.opener.wrappedJSObject.SimpleTest.is(gFindBar._findField.inputField.value, "Rabbits", "drop on findbar");
     }
 
     function testQuickFindClose() {

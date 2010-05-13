@@ -185,11 +185,17 @@
           findbar._setFindCloseTimeout();
       ]]></handler>
 
-      <handler event="drop" phase="capturing"><![CDATA[
+      <handler event="dragover"><![CDATA[
+        if (event.dataTransfer.types.contains("text/plain"))
+          event.preventDefault();
+      ]]></handler>
+
+      <handler event="drop"><![CDATA[
         var value = event.dataTransfer.getData("text/plain");
         this.value = value;
         this.findbar._find(value);
         event.stopPropagation();
+        event.preventDefault();
       ]]></handler>
     </handlers>
   </binding>
