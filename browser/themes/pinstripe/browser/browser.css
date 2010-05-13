@@ -2044,3 +2044,4 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .allTabs-preview:focus > * > .allTabs-preview-inner {
   -moz-box-shadow: @focusRingShadow@;
 }
+
