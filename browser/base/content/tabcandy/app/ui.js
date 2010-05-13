@@ -164,7 +164,8 @@ window.Page = {
           .sort(function(a,b){
             return myCenter.distance(a[0]) - myCenter.distance(b[0]);
           });
-        return matches[0][1];
+        if( matches.length > 0 ) return matches[0][1];
+        else return null;
       }
 
       var norm = null;
@@ -185,7 +186,12 @@ window.Page = {
       
       if( norm != null ){
         var nextTab = getClosestTabBy(norm);
-        self.setActiveTab(nextTab); 
+        if( nextTab ){
+          if( nextTab.inStack() && !nextTab.parent.expanded){
+            nextTab = nextTab.parent.getChild(0);
+          }
+          self.setActiveTab(nextTab);           
+        }
         e.preventDefault();               
       }      
     });

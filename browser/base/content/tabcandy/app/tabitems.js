@@ -120,7 +120,7 @@ window.TabItem.prototype = $.extend(new Item(), {
       }).dequeue();
     }
 
-    if(css.fontSize && !$container.hasClass("stacked")) {
+    if(css.fontSize && !this.inStack()) {
       if(css.fontSize < minFontSize )
         $title.fadeOut().dequeue();
       else
@@ -142,6 +142,11 @@ window.TabItem.prototype = $.extend(new Item(), {
     
     if(!isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
+  },
+
+  // ----------
+  inStack: function(){
+    return $(this.container).hasClass("stacked");
   },
 
   // ----------
