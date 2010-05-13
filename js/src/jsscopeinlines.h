@@ -90,10 +90,10 @@ JSScope::updateShape(JSContext *cx)
 }
 
 inline void
-JSScope::updateFlags(const JSScopeProperty *sprop)
+JSScope::updateFlags(const JSScopeProperty *sprop, bool isDefinitelyAtom)
 {
     jsuint index;
-    if (js_IdIsIndex(sprop->id, &index))
+    if (!isDefinitelyAtom && js_IdIsIndex(sprop->id, &index))
         setIndexedProperties();
 
     if (sprop->isMethod())
@@ -101,12 +101,12 @@ JSScope::updateFlags(const JSScopeProperty *sprop)
 }
 
 inline void
-JSScope::extend(JSContext *cx, JSScopeProperty *sprop)
+JSScope::extend(JSContext *cx, JSScopeProperty *sprop, bool isDefinitelyAtom)
 {
     ++entryCount;
     setLastProperty(sprop);
     updateShape(cx);
-    updateFlags(sprop);
+    updateFlags(sprop, isDefinitelyAtom);
 }
 
 /*

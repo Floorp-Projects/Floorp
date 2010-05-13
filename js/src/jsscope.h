@@ -269,7 +269,7 @@ struct JSScope : public JSObjectMap
 
     /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
     inline void updateShape(JSContext *cx);
-    inline void updateFlags(const JSScopeProperty *sprop);
+    inline void updateFlags(const JSScopeProperty *sprop, bool isDefinitelyAtom = false);
 
   protected:
     void initMinimal(JSContext *cx, uint32 newShape);
@@ -351,7 +351,7 @@ struct JSScope : public JSObjectMap
     void clear(JSContext *cx);
 
     /* Extend this scope to have sprop as its last-added property. */
-    void extend(JSContext *cx, JSScopeProperty *sprop);
+    void extend(JSContext *cx, JSScopeProperty *sprop, bool isDefinitelyAtom = false);
 
     /*
      * Read barrier to clone a joined function object stored as a method.
