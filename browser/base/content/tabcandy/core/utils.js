@@ -310,20 +310,45 @@ window.Subscribable.prototype = {
 // Singelton with common utility functions.
 var Utils = {
   // ___ Windows and Tabs
+
+  // ----------
+  // Variable: activeWindow
   get activeWindow(){
     var win = Cc["@mozilla.org/embedcomp/window-watcher;1"]
                .getService(Ci.nsIWindowWatcher)
                .activeWindow;
                
-    if( win != null ) return win;  
-    else return homeWindow;
+    if( win != null ) 
+      return win;  
+      
+    if(homeWindow != null)
+      return homeWindow;
+      
+    win = Cc["@mozilla.org/appshell/window-mediator;1"]
+      .getService(Components.interfaces.nsIWindowMediator)
+      .getMostRecentWindow("navigator:browser");
+
+    return win;
   },
   
+  // ----------
+  // Variable: activeTab
+  // The <Tabs> tab that represents the active tab in the active window.
   get activeTab(){
     var tabBrowser = this.activeWindow.gBrowser;
-    return tabBrowser.selectedTab;
+    var rawTab = tabBrowser.selectedTab;
+    for( var i=0; i<Tabs.length; i++){
+      if(Tabs[i].raw == rawTab)
+        return Tabs[i];
+    }
+    
+    return null;
   },
   
+  // ----------
+  // Variable: homeTab
+  // The <Tabs> tab that represents the tab candy tab.
+  // TODO: what if there are multiple tab candy tabs?
   get homeTab(){
     for( var i=0; i<Tabs.length; i++){
       if(Tabs[i].contentWindow.location.host == "tabcandy"){
