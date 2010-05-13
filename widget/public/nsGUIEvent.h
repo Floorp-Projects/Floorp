@@ -1378,6 +1378,10 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_MOUSE_EXIT_SYNTH) || \
         ((evnt)->message == NS_MOUSE_MOVE))
 
+#define NS_IS_MOUSE_EVENT_STRUCT(evnt) \
+       ((evnt)->eventStructType == NS_MOUSE_EVENT || \
+        (evnt)->eventStructType == NS_DRAG_EVENT)
+
 #define NS_IS_MOUSE_LEFT_CLICK(evnt) \
        ((evnt)->eventStructType == NS_MOUSE_EVENT && \
         (evnt)->message == NS_MOUSE_CLICK && \
