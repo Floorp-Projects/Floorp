@@ -58,11 +58,11 @@ EXPORTS_mozilla = \
 EXPORTS_mozilla/dom = \
   ContentProcessChild.h \
   ContentProcessParent.h \
-  ContentProcessThread.h \
+  ContentProcessProcess.h \
   $(NULL)
 
 CPPSRCS = \
-  ContentProcessThread.cpp \
+  ContentProcessProcess.cpp \
   ContentProcessParent.cpp \
   ContentProcessChild.cpp \
   TabParent.cpp \
@@ -80,5 +80,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../src/geolocation \
 		-I$(topsrcdir)/chrome/src \
 		$(NULL)
+
+CXXFLAGS += $(TK_CFLAGS)
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'
