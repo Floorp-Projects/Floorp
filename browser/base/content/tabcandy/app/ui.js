@@ -197,8 +197,9 @@ window.Page = {
     });
     
     $(window).keyup(function(e){
-      // If you hit escape or return, zoom into the active tab.
-      if(e.which == 27 || e.which == 13)
+      // If you hit escape or return, zoom into the active tab,
+      // but only if a title or other element isn't focused.
+      if((e.which == 27 || e.which == 13) && $(":focus").length == 0 )
         if( self.getActiveTab() ) self.getActiveTab().zoom();
     });
   },
