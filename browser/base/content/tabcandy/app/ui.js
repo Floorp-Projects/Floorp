@@ -543,7 +543,7 @@ UIClass.prototype = {
   addDevMenu: function() {
     var self = this;
     
-    var html = '<select style="position:absolute; top:5px;">'; 
+    var html = '<select style="position:absolute; bottom:5px; right:5px; opacity:.2;">'; 
     var $select = $(html)
       .appendTo('body')
       .change(function () {
@@ -553,7 +553,7 @@ UIClass.prototype = {
       });
       
     var commands = [{
-      name: '*', 
+      name: 'dev menu', 
       code: function() {
       }
     }, {
