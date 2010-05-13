@@ -1199,7 +1199,7 @@ void
 js_UnlockRuntime(JSRuntime *rt)
 {
 #ifdef DEBUG
-    rt->rtLockOwner = 0;
+    rt->rtLockOwner = NULL;
 #endif
     PR_Unlock(rt->rtLock);
 }
