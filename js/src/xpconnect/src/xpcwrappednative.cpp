@@ -415,7 +415,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     // Gather scriptable create info if we are wrapping something
     // other than an nsIClassInfo object. We need to not do this for
     // nsIClassInfo objects because often nsIClassInfo implementations
-    // are also nsIXPCScriptable helper implmentations, but the helper
+    // are also nsIXPCScriptable helper implementations, but the helper
     // code is obviously intended for the implementation of the class
     // described by the nsIClassInfo, not for the class info object
     // itself.

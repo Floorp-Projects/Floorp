@@ -113,7 +113,7 @@
 #include "nsContentUtils.h"
 #include "nsIParser.h"
 #include "nsIParserService.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsCSSLoader.h"
 #include "nsIScriptError.h"
 #include "nsIStyleSheetLinkingElement.h"
@@ -3153,7 +3153,7 @@ nsXULDocument::DoneWalking()
     // XXXldb This is where we should really be setting the chromehidden
     // attribute.
 
-    PRUint32 count = mOverlaySheets.Count();
+    PRUint32 count = mOverlaySheets.Length();
     for (PRUint32 i = 0; i < count; ++i) {
         AddStyleSheet(mOverlaySheets[i]);
     }
@@ -3263,7 +3263,7 @@ nsXULDocument::DoneWalking()
 }
 
 NS_IMETHODIMP
-nsXULDocument::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+nsXULDocument::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 PRBool aWasAlternate,
                                 nsresult aStatus)
 {
@@ -3893,7 +3893,7 @@ nsXULDocument::AddPrototypeSheets()
     for (PRInt32 i = 0; i < sheets.Count(); i++) {
         nsCOMPtr<nsIURI> uri = sheets[i];
 
-        nsCOMPtr<nsICSSStyleSheet> incompleteSheet;
+        nsRefPtr<nsCSSStyleSheet> incompleteSheet;
         rv = CSSLoader()->LoadSheet(uri,
                                     mCurrentPrototype->DocumentPrincipal(),
                                     EmptyCString(), this,
@@ -3904,7 +3904,7 @@ nsXULDocument::AddPrototypeSheets()
         // from LoadSheet (and thus exit the loop).
         if (NS_SUCCEEDED(rv)) {
             ++mPendingSheets;
-            if (!mOverlaySheets.AppendObject(incompleteSheet)) {
+            if (!mOverlaySheets.AppendElement(incompleteSheet)) {
                 return NS_ERROR_OUT_OF_MEMORY;
             }
         }

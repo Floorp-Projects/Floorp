@@ -3629,6 +3629,7 @@ nsCSSFrameConstructor::FindInputData(nsIContent* aContent,
     SIMPLE_INT_CHAIN(NS_FORM_INPUT_IMAGE,
                      nsCSSFrameConstructor::FindImgControlData),
     SIMPLE_INT_CREATE(NS_FORM_INPUT_TEXT, NS_NewTextControlFrame),
+    SIMPLE_INT_CREATE(NS_FORM_INPUT_TEL, NS_NewTextControlFrame),
     SIMPLE_INT_CREATE(NS_FORM_INPUT_PASSWORD, NS_NewTextControlFrame),
     COMPLEX_INT_CREATE(NS_FORM_INPUT_SUBMIT,
                        &nsCSSFrameConstructor::ConstructButtonFrame),
@@ -3910,6 +3911,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
 
     nsIFrame* newFrame = creator->CreateFrameFor(content);
     if (newFrame) {
+// See bug 565569
+//      NS_ASSERTION(content->GetPrimaryFrame(),
+//                   "Content must have a primary frame now");
       aChildItems.AddChild(newFrame);
     }
     else {
@@ -4702,7 +4706,8 @@ nsCSSFrameConstructor::FindMathMLData(nsIContent* aContent,
     SIMPLE_MATHML_CREATE(maction_, NS_NewMathMLmactionFrame),
     SIMPLE_MATHML_CREATE(mrow_, NS_NewMathMLmrowFrame),
     SIMPLE_MATHML_CREATE(merror_, NS_NewMathMLmrowFrame),
-    SIMPLE_MATHML_CREATE(menclose_, NS_NewMathMLmencloseFrame)
+    SIMPLE_MATHML_CREATE(menclose_, NS_NewMathMLmencloseFrame),
+    SIMPLE_MATHML_CREATE(semantics_, NS_NewMathMLsemanticsFrame)
   };
 
   return FindDataByTag(aTag, aContent, aStyleContext, sMathMLData,
@@ -6228,9 +6233,15 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
 
   // Walk up the tree setting the NODE_DESCENDANTS_NEED_FRAMES bit as we go.
   nsIContent* content = aContainer;
+#ifdef DEBUG
+  // We have to jump through hoops so that we can make some reasonable asserts
+  // due to bug 135040. We detect if we find a bogus primary frame (I'm looking
+  // at you, areas), and relax our assertions for the remaining ancestors.
+  PRBool bogusPrimaryFrame = PR_FALSE;
+#endif
   while (content &&
          !content->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
-    NS_ASSERTION(content->GetPrimaryFrame() ||
+    NS_ASSERTION(content->GetPrimaryFrame() || bogusPrimaryFrame ||
       (content->GetFlattenedTreeParent() &&
        content->GetFlattenedTreeParent()->GetPrimaryFrame() &&
        content->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf()),
@@ -6238,13 +6249,20 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
       // children and may ignore anonymous children (eg framesets).
       "Ancestors of nodes with frames to be constructed lazily should have "
       "frames");
-    NS_ASSERTION(!content->HasFlag(NODE_NEEDS_FRAME) ||
-                 content->GetPrimaryFrame()->GetContent() != content,
+    NS_ASSERTION(!content->HasFlag(NODE_NEEDS_FRAME) || bogusPrimaryFrame ||
+                 (content->GetPrimaryFrame() &&
+                  content->GetPrimaryFrame()->GetContent() != content),
                  //XXX the content->GetPrimaryFrame()->GetContent() != content
                  // check is needed due to bug 135040. Remove it once that's
                  // fixed.
                  "Ancestors of nodes with frames to be constructed lazily "
                  "should not have NEEDS_FRAME bit set");
+#ifdef DEBUG
+    if (!bogusPrimaryFrame && content->GetPrimaryFrame() &&
+        content->GetPrimaryFrame()->GetContent() != content) {
+      bogusPrimaryFrame = PR_TRUE;
+    }
+#endif
     content->SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
     content = content->GetFlattenedTreeParent();
   }
@@ -9138,7 +9156,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       changeType = nsIAccessibilityService::FRAME_SHOW;
     }
 
-    // A significant enough change occured that this part
+    // A significant enough change occurred that this part
     // of the accessible tree is no longer valid.
     nsCOMPtr<nsIAccessibilityService> accService = 
       do_GetService("@mozilla.org/accessibilityService;1");

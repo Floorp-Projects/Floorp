@@ -374,88 +374,77 @@ nsHTMLStyleSheet::RulesMatching(XULTreeRuleProcessorData* aData)
 #endif
 
   // nsIStyleSheet api
-NS_IMETHODIMP
-nsHTMLStyleSheet::GetSheetURI(nsIURI** aSheetURI) const
+already_AddRefed<nsIURI>
+nsHTMLStyleSheet::GetSheetURI() const
 {
-  *aSheetURI = mURL;
-  NS_IF_ADDREF(*aSheetURI);
-  return NS_OK;
+  NS_IF_ADDREF(mURL);
+  return mURL;
 }
 
-NS_IMETHODIMP
-nsHTMLStyleSheet::GetBaseURI(nsIURI** aBaseURI) const
+already_AddRefed<nsIURI>
+nsHTMLStyleSheet::GetBaseURI() const
 {
-  *aBaseURI = mURL;
-  NS_IF_ADDREF(*aBaseURI);
-  return NS_OK;
+  NS_IF_ADDREF(mURL);
+  return mURL;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLStyleSheet::GetTitle(nsString& aTitle) const
 {
   aTitle.Truncate();
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLStyleSheet::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/html");
-  return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsHTMLStyleSheet::HasRules() const
 {
   return PR_TRUE; // We have rules at all reasonable times
 }
 
-NS_IMETHODIMP
-nsHTMLStyleSheet::GetApplicable(PRBool& aApplicable) const
+PRBool
+nsHTMLStyleSheet::GetApplicable() const
 {
-  aApplicable = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLStyleSheet::SetEnabled(PRBool aEnabled)
 { // these can't be disabled
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLStyleSheet::GetComplete(PRBool& aComplete) const
+PRBool
+nsHTMLStyleSheet::GetComplete() const
 {
-  aComplete = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLStyleSheet::SetComplete()
 {
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLStyleSheet::GetParentSheet(nsIStyleSheet*& aParent) const
+already_AddRefed<nsIStyleSheet>
+nsHTMLStyleSheet::GetParentSheet() const
 {
-  aParent = nsnull;
-  return NS_OK;
+  return nsnull;
 }
 
-NS_IMETHODIMP
-nsHTMLStyleSheet::GetOwningDocument(nsIDocument*& aDocument) const
+already_AddRefed<nsIDocument>
+nsHTMLStyleSheet::GetOwningDocument() const
 {
-  aDocument = mDocument;
-  NS_IF_ADDREF(aDocument);
-  return NS_OK;
+  NS_IF_ADDREF(mDocument);
+  return mDocument;
 }
 
-NS_IMETHODIMP
+void
 nsHTMLStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument; // not refcounted
-  return NS_OK;
 }
 
 nsresult

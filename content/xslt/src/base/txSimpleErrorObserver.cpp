@@ -75,6 +75,6 @@ void SimpleErrorObserver::receiveError(const nsAString& errorMessage,
 #endif
 }
 
-void SimpleErrorObserver::supressWarnings(MBool supress) {
-    this->hideWarnings = supress;
-} //-- supressWarnings
+void SimpleErrorObserver::suppressWarnings(MBool suppress) {
+    this->hideWarnings = suppress;
+} //-- suppressWarnings

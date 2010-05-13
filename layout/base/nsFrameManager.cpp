@@ -1308,7 +1308,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     if (fireAccessibilityEvents && mPresShell->IsAccessibilityActive() &&
         aFrame->GetStyleVisibility()->IsVisible() != isVisible &&
         !aFrame->GetPrevContinuation()) {
-      // A significant enough change occured that this part
+      // A significant enough change occurred that this part
       // of the accessible tree is no longer valid. Fire event for primary
       // frames only and if it wasn't fired for parent frame already.
 

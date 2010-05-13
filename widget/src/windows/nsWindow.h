@@ -239,11 +239,9 @@ public:
    */
   virtual PRBool          AutoErase(HDC dc);
   nsIntPoint*             GetLastPoint() { return &mLastPoint; }
-  PRInt32                 GetNewCmdMenuId() { mMenuCmdId++; return mMenuCmdId; }
   PRBool                  GetIMEEnabled() { return mIMEEnabled; }
   // needed in nsIMM32Handler.cpp
   PRBool                  PluginHasFocus() { return mIMEEnabled == nsIWidget::IME_STATUS_PLUGIN; }
-  virtual void            SetUpForPaint(HDC aHDC);
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   PRBool HasTaskbarIconBeenCreated() { return mHasTaskbarIconBeenCreated; }
@@ -342,7 +340,6 @@ protected:
                                     const MSG *aMsg = nsnull,
                                     PRBool *aEventDispatched = nsnull);
   virtual PRBool          OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam);
-  virtual HBRUSH          OnControlColor();
   PRBool                  OnGesture(WPARAM wParam, LPARAM lParam);
   PRBool                  OnHotKey(WPARAM wParam, LPARAM lParam);
   BOOL                    OnInputLangChange(HKL aHKL);
@@ -433,16 +430,13 @@ protected:
   WNDPROC               mPrevWndProc;
   HBRUSH                mBrush;
   PRPackedBool          mIsTopWidgetWindow;
-  PRPackedBool          mHas3DBorder;
   PRPackedBool          mInDtor;
   PRPackedBool          mIsVisible;
   PRPackedBool          mIsInMouseCapture;
   PRPackedBool          mUnicodeWidget;
   PRPackedBool          mPainting;
-  char                  mLeadByte;
   PRUint32              mBlurSuppressLevel;
   nsContentType         mContentType;
-  PRInt32               mMenuCmdId;
   DWORD_PTR             mOldStyle;
   DWORD_PTR             mOldExStyle;
   HIMC                  mOldIMC;

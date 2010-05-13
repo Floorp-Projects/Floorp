@@ -193,12 +193,7 @@ public:
   }
 
   // Should be called by main thread.
-  PRBool HaveNextFrameData() const {
-    PRUint32 audioQueueSize = mReader->mAudioQueue.GetSize();
-    return (mReader->mVideoQueue.GetSize() > 0 &&
-            (!HasAudio() || audioQueueSize > 0)) ||
-           audioQueueSize > 0;
-  }
+  PRBool HaveNextFrameData() const;
 
   // Must be called with the decode monitor held.
   PRBool IsBuffering() const {
@@ -239,6 +234,10 @@ public:
   State mState;
 
 protected:
+
+  // Returns PR_TRUE when there's decoded audio waiting to play.
+  // The decoder monitor must be held.
+  PRBool HasFutureAudio() const;
 
   // Waits on the decoder Monitor for aMs. If the decoder monitor is awoken
   // by a Notify() call, we'll continue waiting, unless we've moved into

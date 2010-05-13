@@ -194,13 +194,13 @@ inline nsINode* NODE_FROM(C& aContent, D& aDocument)
  * Class used to detect unexpected mutations. To use the class create an
  * nsMutationGuard on the stack before unexpected mutations could occur.
  * You can then at any time call Mutated to check if any unexpected mutations
- * have occured.
+ * have occurred.
  *
  * When a guard is instantiated sMutationCount is set to 300. It is then
  * decremented by every mutation (capped at 0). This means that we can only
  * detect 300 mutations during the lifetime of a single guard, however that
  * should be more then we ever care about as we usually only care if more then
- * one mutation has occured.
+ * one mutation has occurred.
  *
  * When the guard goes out of scope it will adjust sMutationCount so that over
  * the lifetime of the guard the guard itself has not affected sMutationCount,
@@ -227,7 +227,7 @@ public:
   }
 
   /**
-   * Returns true if any unexpected mutations have occured. You can pass in
+   * Returns true if any unexpected mutations have occurred. You can pass in
    * an 8-bit ignore count to ignore a number of expected mutations.
    */
   PRBool Mutated(PRUint8 aIgnoreCount)
@@ -715,12 +715,12 @@ public:
    */
   void AddMutationObserver(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* slots = GetSlots();
-    if (slots) {
-      NS_ASSERTION(slots->mMutationObservers.IndexOf(aMutationObserver) ==
+    nsSlots* s = GetSlots();
+    if (s) {
+      NS_ASSERTION(s->mMutationObservers.IndexOf(aMutationObserver) ==
                    nsTArray_base::NoIndex,
                    "Observer already in the list");
-      slots->mMutationObservers.AppendElement(aMutationObserver);
+      s->mMutationObservers.AppendElement(aMutationObserver);
     }
   }
 
@@ -730,9 +730,9 @@ public:
    */
   void AddMutationObserverUnlessExists(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* slots = GetSlots();
-    if (slots) {
-      slots->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
+    nsSlots* s = GetSlots();
+    if (s) {
+      s->mMutationObservers.AppendElementUnlessExists(aMutationObserver);
     }
   }
 
@@ -741,9 +741,9 @@ public:
    */
   void RemoveMutationObserver(nsIMutationObserver* aMutationObserver)
   {
-    nsSlots* slots = GetExistingSlots();
-    if (slots) {
-      slots->mMutationObservers.RemoveElement(aMutationObserver);
+    nsSlots* s = GetExistingSlots();
+    if (s) {
+      s->mMutationObservers.RemoveElement(aMutationObserver);
     }
   }
 

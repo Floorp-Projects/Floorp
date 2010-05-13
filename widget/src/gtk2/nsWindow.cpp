@@ -5402,8 +5402,8 @@ check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
                     GdkWindow* currWindow =
                         (GdkWindow*) widget->GetNativeData(NS_NATIVE_WINDOW);
                     if (is_mouse_in_window(currWindow, aMouseX, aMouseY)) {
-                      // don't roll up if the mouse event occured within a
-                      // menu of the same type. If the mouse event occured
+                      // don't roll up if the mouse event occurred within a
+                      // menu of the same type. If the mouse event occurred
                       // in a menu higher than that, roll up, but pass the
                       // number of popups to Rollup so that only those of the
                       // same type close up.

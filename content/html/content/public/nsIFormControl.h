@@ -58,15 +58,16 @@ class nsFormSubmission;
 #define NS_FORM_INPUT_PASSWORD 11
 #define NS_FORM_INPUT_RADIO    12
 #define NS_FORM_INPUT_SUBMIT   13
-#define NS_FORM_INPUT_TEXT     14
-#define NS_FORM_LABEL          15
-#define NS_FORM_OPTION         16
-#define NS_FORM_OPTGROUP       17
-#define NS_FORM_OUTPUT         18
-#define NS_FORM_LEGEND         19
-#define NS_FORM_SELECT         20
-#define NS_FORM_TEXTAREA       21
-#define NS_FORM_OBJECT         22
+#define NS_FORM_INPUT_TEL      14
+#define NS_FORM_INPUT_TEXT     15
+#define NS_FORM_LABEL          16
+#define NS_FORM_OPTION         17
+#define NS_FORM_OPTGROUP       18
+#define NS_FORM_OUTPUT         19
+#define NS_FORM_LEGEND         20
+#define NS_FORM_SELECT         21
+#define NS_FORM_TEXTAREA       22
+#define NS_FORM_OBJECT         23
 
 #define NS_IFORMCONTROL_IID   \
 { 0x52dc1f0d, 0x1683, 0x4dd7, \
@@ -158,6 +159,20 @@ public:
    * @return Whether this is a submit control.
    */
   virtual PRBool IsSubmitControl() const = 0;
+
+  /**
+   * Returns true if this is a control which has a text field.
+   * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
+   * @return Whether this is a text control.
+   */
+  virtual PRBool IsTextControl(PRBool aExcludePassword) const = 0;
+
+  /**
+   * Returns true if this is a control which has a single line text field.
+   * @param  aExcludePassword  to have NS_FORM_INPUT_PASSWORD returning false.
+   * @return Whether this is a single line text control.
+   */
+  virtual PRBool IsSingleLineTextControl(PRBool aExcludePassword) const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)

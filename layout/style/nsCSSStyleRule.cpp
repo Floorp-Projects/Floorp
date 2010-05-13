@@ -49,7 +49,7 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSGroupRule.h"
 #include "nsCSSDeclaration.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsCSSLoader.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
@@ -535,7 +535,7 @@ PRInt32 nsCSSSelector::CalcWeight() const
 // StyleRule:selectorText
 //
 void
-nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
+nsCSSSelector::ToString(nsAString& aString, nsCSSStyleSheet* aSheet,
                         PRBool aAppend) const
 {
   if (!aAppend)
@@ -578,7 +578,7 @@ nsCSSSelector::ToString(nsAString& aString, nsICSSStyleSheet* aSheet,
 
 void
 nsCSSSelector::AppendToStringWithoutCombinators
-                   (nsAString& aString, nsICSSStyleSheet* aSheet) const
+                   (nsAString& aString, nsCSSStyleSheet* aSheet) const
 {
   AppendToStringWithoutCombinatorsOrNegations(aString, aSheet, PR_FALSE);
 
@@ -593,7 +593,7 @@ nsCSSSelector::AppendToStringWithoutCombinators
 
 void
 nsCSSSelector::AppendToStringWithoutCombinatorsOrNegations
-                   (nsAString& aString, nsICSSStyleSheet* aSheet,
+                   (nsAString& aString, nsCSSStyleSheet* aSheet,
                    PRBool aIsNegated) const
 {
   nsAutoString temp;
@@ -865,7 +865,7 @@ nsCSSSelectorList::AddSelector(PRUnichar aOperator)
 }
 
 void
-nsCSSSelectorList::ToString(nsAString& aResult, nsICSSStyleSheet* aSheet)
+nsCSSSelectorList::ToString(nsAString& aResult, nsCSSStyleSheet* aSheet)
 {
   aResult.Truncate();
   nsCSSSelectorList *p = this;
@@ -1082,16 +1082,15 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   if (mRule) {
     mRule->GetStyleSheet(*getter_AddRefs(sheet));
     if (sheet) {
-      sheet->GetSheetURI(aSheetURI);
-      sheet->GetBaseURI(aBaseURI);
+      *aSheetURI = sheet->GetSheetURI().get();
+      *aBaseURI = sheet->GetBaseURI().get();
 
-      nsCOMPtr<nsICSSStyleSheet> cssSheet(do_QueryInterface(sheet));
+      nsRefPtr<nsCSSStyleSheet> cssSheet(do_QueryObject(sheet));
       if (cssSheet) {
         NS_ADDREF(*aSheetPrincipal = cssSheet->Principal());
       }
 
-      nsCOMPtr<nsIDocument> document;
-      sheet->GetOwningDocument(*getter_AddRefs(document));
+      nsCOMPtr<nsIDocument> document = sheet->GetOwningDocument();
       if (document) {
         NS_ADDREF(*aCSSLoader = document->CSSLoader());
       }
@@ -1130,7 +1129,7 @@ DOMCSSDeclarationImpl::DeclarationChanged()
   nsCOMPtr<nsIStyleSheet> sheet;
   mRule->GetStyleSheet(*getter_AddRefs(sheet));
   if (sheet) {
-    sheet->GetOwningDocument(*getter_AddRefs(owningDoc));
+    owningDoc = sheet->GetOwningDocument();
   }
 
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, PR_TRUE);
@@ -1214,7 +1213,7 @@ DOMCSSStyleRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
     *aSheet = nsnull;
     return NS_OK;
   }
-  nsCOMPtr<nsICSSStyleSheet> sheet;
+  nsRefPtr<nsCSSStyleSheet> sheet;
   Rule()->GetParentStyleSheet(getter_AddRefs(sheet));
   if (!sheet) {
     *aSheet = nsnull;
@@ -1303,13 +1302,13 @@ public:
   virtual void RuleMatched();
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-  NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);
+  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aSheet);
   
   NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule);
 
   virtual nsresult GetCssText(nsAString& aCssText);
   virtual nsresult SetCssText(const nsAString& aCssText);
-  virtual nsresult GetParentStyleSheet(nsICSSStyleSheet** aSheet);
+  virtual nsresult GetParentStyleSheet(nsCSSStyleSheet** aSheet);
   virtual nsresult GetParentRule(nsICSSGroupRule** aParentRule);
   virtual nsresult GetSelectorText(nsAString& aSelectorText);
   virtual nsresult SetSelectorText(const nsAString& aSelectorText);
@@ -1482,7 +1481,7 @@ CSSStyleRuleImpl::GetStyleSheet(nsIStyleSheet*& aSheet) const
 }
 
 NS_IMETHODIMP
-CSSStyleRuleImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
+CSSStyleRuleImpl::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   return nsCSSRule::SetStyleSheet(aSheet);
 }
@@ -1615,7 +1614,7 @@ CSSStyleRuleImpl::SetCssText(const nsAString& aCssText)
 }
 
 /* virtual */ nsresult    
-CSSStyleRuleImpl::GetParentStyleSheet(nsICSSStyleSheet** aSheet)
+CSSStyleRuleImpl::GetParentStyleSheet(nsCSSStyleSheet** aSheet)
 {
   *aSheet = mSheet;
   NS_IF_ADDREF(*aSheet);

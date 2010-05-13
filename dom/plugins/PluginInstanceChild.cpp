@@ -42,10 +42,11 @@
 #include "BrowserStreamChild.h"
 #include "PluginStreamChild.h"
 #include "StreamNotifyChild.h"
-#include "PluginThreadChild.h"
+#include "PluginProcessChild.h"
 
 #include "mozilla/ipc/SyncChannel.h"
 
+using mozilla::ipc::ProcessChild;
 using namespace mozilla::plugins;
 
 #ifdef MOZ_WIDGET_GTK2
@@ -1930,7 +1931,7 @@ PluginInstanceChild::AsyncCall(PluginThreadCallback aFunc, void* aUserData)
         MutexAutoLock lock(mAsyncCallMutex);
         mPendingAsyncCalls.AppendElement(task);
     }
-    PluginThreadChild::current()->message_loop()->PostTask(FROM_HERE, task);
+    ProcessChild::message_loop()->PostTask(FROM_HERE, task);
 }
 
 static PLDHashOperator

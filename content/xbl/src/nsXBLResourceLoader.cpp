@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
@@ -153,7 +153,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
           CheckLoadURIWithPrincipal(docPrincipal, url,
                                     nsIScriptSecurityManager::ALLOW_CHROME);
         if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsICSSStyleSheet> sheet;
+          nsRefPtr<nsCSSStyleSheet> sheet;
           rv = cssLoader->LoadSheetSync(url, getter_AddRefs(sheet));
           NS_ASSERTION(NS_SUCCEEDED(rv), "Load failed!!!");
           if (NS_SUCCEEDED(rv))
@@ -182,7 +182,7 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
 
 // nsICSSLoaderObserver
 NS_IMETHODIMP
-nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+nsXBLResourceLoader::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                       PRBool aWasAlternate,
                                       nsresult aStatus)
 {
@@ -191,7 +191,7 @@ nsXBLResourceLoader::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
     return NS_OK;
   }
    
-  mResources->mStyleSheetList.AppendObject(aSheet);
+  mResources->mStyleSheetList.AppendElement(aSheet);
 
   if (!mInLoadResourcesFunc)
     mPendingSheets--;

@@ -622,9 +622,7 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
         nsRect r = viewportFrame->GetOverflowRect();
         // GetOverflowRect is relative to our border box, but we need it
         // relative to our content box.
-        nsMargin bp = viewportFrame->GetUsedBorderAndPadding();
-        viewportFrame->ApplySkipSides(bp);
-        r.MoveBy(-bp.left, -bp.top);
+        r.MoveBy(viewportFrame->GetPosition() - viewportFrame->GetContentRect().TopLeft());
         return r;
       }
       NS_ASSERTION(viewportFrame->GetType() == nsGkAtoms::svgInnerSVGFrame,
@@ -648,7 +646,13 @@ nsSVGUtils::FindFilterInvalidation(nsIFrame *aFrame, const nsRect& aRect)
     aFrame = aFrame->GetParent();
   }
 
-  return rect.ToAppUnits(appUnitsPerDevPixel);
+  nsRect r = rect.ToAppUnits(appUnitsPerDevPixel);
+  if (aFrame) {
+    NS_ASSERTION(aFrame->GetStateBits() & NS_STATE_IS_OUTER_SVG,
+                 "outer SVG frame expected");
+    r.MoveBy(aFrame->GetContentRect().TopLeft() - aFrame->GetPosition());
+  }
+  return r;
 }
 
 void

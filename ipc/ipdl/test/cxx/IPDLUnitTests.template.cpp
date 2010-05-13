@@ -11,7 +11,6 @@
 #include "base/string_util.h"
 
 #include "IPDLUnitTestSubprocess.h"
-#include "IPDLUnitTestThreadChild.h"
 
 //-----------------------------------------------------------------------------
 //===== TEMPLATED =====
@@ -19,7 +18,6 @@ ${INCLUDES}
 //-----------------------------------------------------------------------------
 
 using mozilla::_ipdltest::IPDLUnitTestSubprocess;
-using mozilla::_ipdltest::IPDLUnitTestThreadChild;
 
 void* mozilla::_ipdltest::gParentActor;
 IPDLUnitTestSubprocess* mozilla::_ipdltest::gSubprocess;

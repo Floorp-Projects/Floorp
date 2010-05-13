@@ -63,7 +63,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsStubDocumentObserver.h"
 #include "nsStyleSet.h"
-#include "nsICSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
+#include "nsCSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
 #include "nsIDOMCSSStyleSheet.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsIServiceManager.h"
@@ -1036,8 +1036,8 @@ protected:
     }
   }
 
-  nsCOMPtr<nsICSSStyleSheet> mPrefStyleSheet; // mStyleSet owns it but we
-                                              // maintain a ref, may be null
+  nsRefPtr<nsCSSStyleSheet> mPrefStyleSheet; // mStyleSet owns it but we
+                                             // maintain a ref, may be null
 #ifdef DEBUG
   PRUint32                  mUpdateCount;
 #endif
@@ -2033,16 +2033,14 @@ nsresult PresShell::CreatePreferenceStyleSheet(void)
     result = NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nsnull);
     if (NS_SUCCEEDED(result)) {
       NS_ASSERTION(uri, "null but no error");
-      result = mPrefStyleSheet->SetURIs(uri, uri, uri);
+      mPrefStyleSheet->SetURIs(uri, uri, uri);
+      mPrefStyleSheet->SetComplete();
+      PRUint32 index;
+      result =
+        mPrefStyleSheet->InsertRuleInternal(NS_LITERAL_STRING("@namespace url(http://www.w3.org/1999/xhtml);"),
+                                            0, &index);
       if (NS_SUCCEEDED(result)) {
-        mPrefStyleSheet->SetComplete();
-        PRUint32 index;
-        result =
-          mPrefStyleSheet->InsertRuleInternal(NS_LITERAL_STRING("@namespace url(http://www.w3.org/1999/xhtml);"),
-                                              0, &index);
-        if (NS_SUCCEEDED(result)) {
-          mStyleSet->AppendStyleSheet(nsStyleSet::eUserSheet, mPrefStyleSheet);
-        }
+        mStyleSet->AppendStyleSheet(nsStyleSet::eUserSheet, mPrefStyleSheet);
       }
     }
   }
@@ -4929,10 +4927,8 @@ PresShell::StyleSheetAdded(nsIDocument *aDocument,
 {
   // We only care when enabled sheets are added
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
-  PRBool applicable;
-  aStyleSheet->GetApplicable(applicable);
 
-  if (applicable && aStyleSheet->HasRules()) {
+  if (aStyleSheet->GetApplicable() && aStyleSheet->HasRules()) {
     mStylesHaveChanged = PR_TRUE;
   }
 }
@@ -4944,9 +4940,8 @@ PresShell::StyleSheetRemoved(nsIDocument *aDocument,
 {
   // We only care when enabled sheets are removed
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
-  PRBool applicable;
-  aStyleSheet->GetApplicable(applicable);
-  if (applicable && aStyleSheet->HasRules()) {
+
+  if (aStyleSheet->GetApplicable() && aStyleSheet->HasRules()) {
     mStylesHaveChanged = PR_TRUE;
   }
 }
@@ -5151,7 +5146,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
       if (aFlags & RENDER_USE_WIDGET_LAYERS) {
         flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
       }
-      list.Paint(&builder, rc, flags);
+      list.PaintRoot(&builder, rc, flags);
       // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
       list.DeleteAll();
 
@@ -5444,7 +5439,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
     aArea.MoveBy(-rangeInfo->mRootOffset.x, -rangeInfo->mRootOffset.y);
     nsRegion visible(aArea);
     rangeInfo->mList.ComputeVisibility(&rangeInfo->mBuilder, &visible, nsnull);
-    rangeInfo->mList.Paint(&rangeInfo->mBuilder, rc, nsDisplayList::PAINT_DEFAULT);
+    rangeInfo->mList.PaintRoot(&rangeInfo->mBuilder, rc, nsDisplayList::PAINT_DEFAULT);
     aArea.MoveBy(rangeInfo->mRootOffset.x, rangeInfo->mRootOffset.y);
   }
 

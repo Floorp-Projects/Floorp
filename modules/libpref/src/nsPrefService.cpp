@@ -682,9 +682,6 @@ static nsresult pref_InitInitialObjects()
 #elif defined(_AIX)
       , "aix.js"
 #endif
-#if defined(MOZ_WIDGET_PHOTON)
-	  , "photon.js"
-#endif		 
 #elif defined(XP_OS2)
       "os2pref.js"
 #elif defined(XP_BEOS)

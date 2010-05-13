@@ -32,7 +32,7 @@ void FastConvertYUVToRGB32Row_C(const uint8* y_buf,
 }  // extern "C"
 
 // x64 uses MMX2 (SSE) so emms is not required.
-#if !defined(ARCH_CPU_X86_64) && !defined(ARCH_CPU_PPC)
+#if defined(ARCH_CPU_X86)
 #if defined(_MSC_VER)
 #define EMMS() __asm emms
 #else
