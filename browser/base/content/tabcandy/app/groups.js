@@ -973,11 +973,19 @@ var DragInfo = function(element, event) {
 DragInfo.prototype = {
   // ----------  
   snap: function(event, ui){
-    window.console.log( event, ui);
+    //window.console.log( event, ui);
     // Step 1: Find the closest group by edge
     
     // Step 2: Match to the to
     
+  },
+  
+  // ----------
+  start: function() {
+    // When a tab drag starts, make it the focused tab.
+    if( !this.item.isAGroup ){
+      Page.setActiveTab(this.item);
+    }    
   },
   
   // ----------  
@@ -1023,6 +1031,7 @@ DragInfo.prototype = {
       this.item.reloadBounds();
       this.item.pushAway();
     }
+    
   }
 };
 
@@ -1041,6 +1050,7 @@ window.Groups = {
     cancel: '.close',
     start: function(e, ui) {
       drag.info = new DragInfo(this, e);
+      drag.info.start();
     },
     drag: function(e, ui) {
       drag.info.drag(e, ui);
