@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var tbody = document.getElementById("tbody");
+  var trX = document.createElement('tr');
+  tbody.insertBefore(trX, tbody.getElementsByTagName("tr")[0]);
+  var trY = document.createElement('tr');
+  tbody.insertBefore(trY, trX);
+  var tdY1 = document.createElement('td');
+  tdY1.setAttribute('rowspan', 0);
+  trY.appendChild(tdY1);
+}
+</script>
+<style>
+td {width: 30px; height: 30px;}
+
+</style>
+</head>
+
+<body onload="boom();">
+ <table border cellspacing="10px" cellpadding="10px">
+  <tbody id="tbody">
+   <tr>
+    <td></td>
+   </tr>
+  </tbody>
+ </table>
+</body>
+</html>
