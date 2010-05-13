@@ -79,17 +79,6 @@
 #endif
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
-#ifdef XP_MACOSX
-@BINPATH@/plugins/DefaultPlugin.plugin/
-#elifdef XP_UNIX
-@BINPATH@/plugins/libnullplugin@DLL_SUFFIX@
-#elifdef XP_WIN32
-#ifndef WINCE
-@BINPATH@/plugins/npnul32.dll
-#endif
-#elifdef XP_OS2
-@BINPATH@/plugins/npnulos2.dll
-#endif
 #ifndef XP_OS2
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
 #else
