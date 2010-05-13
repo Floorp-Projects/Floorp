@@ -422,7 +422,9 @@ protected:
 };
 
 /**
- * A Layer which just renders a solid color in its visible region.
+ * A Layer which just renders a solid color in its visible region. It actually
+ * can fill any area that contains the visible region, so if you need to
+ * restrict the area filled, set a clip region on this layer.
  */
 class THEBES_API ColorLayer : public Layer {
 public:

@@ -1388,7 +1388,8 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
           }
         } else {
           // not moving.
-          if (item->IsUniform(aBuilder)) {
+          nscolor color;
+          if (item->IsUniform(aBuilder, &color)) {
             // If it's uniform, we don't need to invalidate where one part
             // of the item was copied to another part.
             exclude.IntersectRect(r, r + aDelta);
