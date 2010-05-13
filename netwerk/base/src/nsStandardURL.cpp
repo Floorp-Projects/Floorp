@@ -196,7 +196,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
                     pos = 0;
                     len = encBuf.Length();
                 }
-                // else some failure occured... assume UTF-8 is ok.
+                // else some failure occurred... assume UTF-8 is ok.
             }
         }
 

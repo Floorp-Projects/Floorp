@@ -135,7 +135,7 @@ interface nsISearchableInputStream : nsISupports
 /**
  * NS_NewPipe2
  *
- * This function supercedes NS_NewPipe.  It differs from NS_NewPipe in two
+ * This function supersedes NS_NewPipe.  It differs from NS_NewPipe in two
  * major ways:
  *  (1) returns nsIAsyncInputStream and nsIAsyncOutputStream, so it is
  *      not necessary to QI in order to access these interfaces.

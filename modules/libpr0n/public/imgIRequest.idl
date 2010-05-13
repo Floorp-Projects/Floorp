@@ -86,7 +86,7 @@ interface imgIRequest : nsIRequest
    * STATUS_LOAD_COMPLETE: The data has been fully loaded
    * to memory, but not necessarily fully decoded.
    *
-   * STATUS_ERROR: An error occured loading the image.
+   * STATUS_ERROR: An error occurred loading the image.
    *
    * STATUS_FRAME_COMPLETE: The first frame has been
    * completely decoded.

@@ -283,7 +283,7 @@ public:
       {
         // DC00- DFFF - Low Surrogate
 
-        // Found a low surrogate w/o a preceeding high surrogate. Flag
+        // Found a low surrogate w/o a preceding high surrogate. Flag
         // this as an error and return the Unicode replacement
         // character 0xFFFD.
 

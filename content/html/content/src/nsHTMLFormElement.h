@@ -188,7 +188,7 @@ public:
   nsresult RemoveElement(nsGenericHTMLFormElement* aElement, PRBool aNotify);
 
   /**
-   * Remove an element from the lookup table mainted by the form.
+   * Remove an element from the lookup table maintained by the form.
    * We can't fold this method into RemoveElement() because when
    * RemoveElement() is called it doesn't know if the element is
    * removed because the id attribute has changed, or bacause the
@@ -210,7 +210,7 @@ public:
   nsresult AddElement(nsGenericHTMLFormElement* aElement, PRBool aNotify);
 
   /**    
-   * Add an element to the lookup table mainted by the form.
+   * Add an element to the lookup table maintained by the form.
    *
    * We can't fold this method into AddElement() because when
    * AddElement() is called, the form control has no

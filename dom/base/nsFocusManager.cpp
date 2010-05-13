@@ -1522,7 +1522,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
   }
   else if (mActiveWindow) {
     // Otherwise, the blur of the element without blurring the document
-    // occured normally. Call UpdateCaret to redisplay the caret at the right
+    // occurred normally. Call UpdateCaret to redisplay the caret at the right
     // location within the document. This is needed to ensure that the caret
     // used for caret browsing is made visible again when an input field is
     // blurred.

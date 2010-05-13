@@ -1003,7 +1003,7 @@ nsresult nsOggReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime
       // keyframe. It's usually faster to just download this extra data, rather
       // tham perform two bisections to find the seek target's keyframe. We
       // don't do this offsetting when seeking in a buffered ranges (above),
-      // as the extra decoding causes a noticable speed hit when all the data
+      // as the extra decoding causes a noticeable speed hit when all the data
       // is buffered.
       PRInt64 keyframeOffsetMs = 0;
       if (HasVideo() && mTheoraState) {

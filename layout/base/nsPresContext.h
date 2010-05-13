@@ -1121,7 +1121,7 @@ protected:
   // Do we currently have an event posted to call FlushUserFontSet?
   unsigned              mPostedFlushUserFontSet : 1;
 
-  // resize reflow is supressed when the only change has been to zoom
+  // resize reflow is suppressed when the only change has been to zoom
   // the document rather than to change the document's dimensions
   unsigned              mSupressResizeReflow : 1;
 

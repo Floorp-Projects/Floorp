@@ -72,7 +72,7 @@ function run_test() {
   add_uri_to_history(uri3);
   do_check_true(gh.isVisited(uri3));
 
-  // check if a non-existant uri is visited
+  // check if a non-existent uri is visited
   var uri4 = uri("http://foobarcheese.com");
   do_check_false(gh.isVisited(uri4));
 

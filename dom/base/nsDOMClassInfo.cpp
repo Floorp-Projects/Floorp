@@ -1770,7 +1770,7 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
   // XXX This probably wants to be localized, but that can fail in ways that
   // are hard to report correctly.
   JSString *str =
-    JS_NewStringCopyZ(cx, "An error occured throwing an exception");
+    JS_NewStringCopyZ(cx, "An error occurred throwing an exception");
   if (!str) {
     // JS_NewStringCopyZ reported the error for us.
     return NS_OK; 

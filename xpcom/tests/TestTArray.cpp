@@ -438,7 +438,7 @@ static PRBool test_ptrarray() {
 
 //----
 
-// This test relies too heavily on the existance of DebugGetHeader to be
+// This test relies too heavily on the existence of DebugGetHeader to be
 // useful in non-debug builds.
 #ifdef DEBUG
 static PRBool test_autoarray() {

@@ -203,7 +203,7 @@ G_Preferences.prototype.addObserver = function(which, callback) {
  */
 G_Preferences.prototype.removeObserver = function(which, callback) {
   var ix = this.observers_[which].callbacks.indexOf(callback);
-  G_Assert(this, ix != -1, "Tried to unregister a nonexistant observer"); 
+  G_Assert(this, ix != -1, "Tried to unregister a nonexistent observer"); 
   this.observers_[which].callbacks.splice(ix, 1);
   var observer = this.observers_[which].observers.splice(ix, 1)[0];
   this.prefs_.removeObserver(which, observer);

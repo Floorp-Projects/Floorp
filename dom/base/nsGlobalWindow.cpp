@@ -653,7 +653,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mShowFocusRings(PR_TRUE),
 #endif
     mShowFocusRingForContent(PR_FALSE),
-    mFocusByKeyOccured(PR_FALSE),
+    mFocusByKeyOccurred(PR_FALSE),
     mHasAcceleration(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
@@ -6969,7 +6969,7 @@ nsGlobalWindow::SetFocusedNode(nsIContent* aNode,
     // mShowFocusRingForContent, as we don't want this to be permanent for
     // the window.
     if (mFocusMethod == nsIFocusManager::FLAG_BYKEY) {
-      mFocusByKeyOccured = PR_TRUE;
+      mFocusByKeyOccurred = PR_TRUE;
     } else if (aFocusMethod & nsIFocusManager::FLAG_SHOWRING
 #ifdef MOZ_WIDGET_GTK2
              || mFocusedNode->IsXUL()
@@ -6996,7 +6996,7 @@ nsGlobalWindow::ShouldShowFocusRing()
 {
   FORWARD_TO_INNER(ShouldShowFocusRing, (), PR_FALSE);
 
-  return mShowFocusRings || mShowFocusRingForContent || mFocusByKeyOccured;
+  return mShowFocusRings || mShowFocusRingForContent || mFocusByKeyOccurred;
 }
 
 void

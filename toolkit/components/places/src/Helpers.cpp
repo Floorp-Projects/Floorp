@@ -59,7 +59,7 @@ AsyncStatementCallback::HandleError(mozIStorageError *aError)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString warnMsg;
-  warnMsg.Append("An error occured while executing an async statement: ");
+  warnMsg.Append("An error occurred while executing an async statement: ");
   warnMsg.Append(result);
   warnMsg.Append(" ");
   warnMsg.Append(message);

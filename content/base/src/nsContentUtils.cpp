@@ -4571,7 +4571,7 @@ nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
   while ((tip != end) && IS_SEPARATOR(*tip))
     ++tip;
 
-  /* Read through and find tokens seperated by separators. */
+  /* Read through and find tokens separated by separators. */
   while (tip != end) {
     
     /* Synchronize tip and tail. */

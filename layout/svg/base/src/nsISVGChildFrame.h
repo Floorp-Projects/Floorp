@@ -98,7 +98,7 @@ public:
 
   /**
    * Get this frame's contribution to the rect returned by a GetBBox() call
-   * that occured either on this element, or on one of its ancestors.
+   * that occurred either on this element, or on one of its ancestors.
    *
    * SVG defines an element's bbox to be the element's fill bounds in the
    * userspace established by that element. By allowing callers to pass in the

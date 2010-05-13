@@ -107,7 +107,7 @@
  * destroy the old frame and build the new one.
  *
  * @note
- * <li> "Mask", "Alpha", and "Alpha Level" are interchangable phrases in
+ * <li> "Mask", "Alpha", and "Alpha Level" are interchangeable phrases in
  * respects to imgContainer.
  *
  * @par
