@@ -708,6 +708,14 @@ xpicleanup@BIN_SUFFIX@
   plugins/Default Plugin.plugin/Contents/PkgInfo
   plugins/Default Plugin.plugin/Contents/Resources/Default Plugin.rsrc
   plugins/Default Plugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+  plugins/DefaultPlugin.plugin/
+  plugins/DefaultPlugin.plugin/Contents/Info.plist
+  plugins/DefaultPlugin.plugin/Contents/MacOS/
+  plugins/DefaultPlugin.plugin/Contents/MacOS/DefaultPlugin
+  plugins/DefaultPlugin.plugin/Contents/Resources/
+  plugins/DefaultPlugin.plugin/Contents/Resources/English.lproj/
+  plugins/DefaultPlugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+  plugins/DefaultPlugin.plugin/Contents/Resources/plugin.png
   redo-prebinding.sh
   res/bloatcycle.html
   res/cursors/CVS/Entries
@@ -726,6 +734,7 @@ xpicleanup@BIN_SUFFIX@
     icons/mozicon16.xpm
     icons/mozicon50.xpm
     libjemalloc.so
+    plugins/libnullplugin.so
     readme.txt
   #endif
 #endif
@@ -737,6 +746,7 @@ xpicleanup@BIN_SUFFIX@
   components/jsd3250.dll
   components/nsPostUpdateWin.js
   js3250.dll
+  plugins/npnul32.dll
   #ifdef MOZ_MEMORY
     Microsoft.VC80.CRT.manifest
     msvcm80.dll
