@@ -44,7 +44,7 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 
-[scriptable, uuid(f18e491b-0c1a-4a9d-9281-32f39fa2d637)]
+[scriptable, uuid(52d034f1-f1a6-4be7-adc9-b39fa7df51de)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -126,9 +126,7 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
 
   // prompt() should return a null string if cancel is pressed
   DOMString                 prompt([optional] in DOMString aMessage,
-                                   [optional] in DOMString aInitial,
-                                   [optional] in DOMString aTitle,
-                                   [optional] in unsigned long aSavePassword);
+                                   [optional] in DOMString aInitial);
 
   void                      focus();
   void                      blur();
