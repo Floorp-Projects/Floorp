@@ -575,7 +575,8 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
 
     JS_CHECK_RECURSION(cx, return JS_FALSE);
 
-    CopyableValue localroot[4] = { NullTag(), NullTag(), NullTag(), NullTag() };
+    Value localroot[4];
+    PodArrayZero(localroot);
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(localroot), localroot);
 
     /* If outermost, we need parentheses to be an expression, not a block. */
@@ -1802,7 +1803,9 @@ js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         return false;
     }
 
-    CopyableValue roots[2] = { UndefinedTag(), UndefinedTag() };
+    Value roots[2];
+    roots[0].setUndefined();
+    roots[1].setUndefined();
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(roots), roots);
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if (obj->isNative()) {
@@ -1840,17 +1843,17 @@ js_GetOwnPropertyDescriptor(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (!desc->defineProperty(cx, ATOM_TO_JSID(atomState.valueAtom), roots[0],
                                   PropertyStub, PropertyStub, JSPROP_ENUMERATE) ||
             !desc->defineProperty(cx, ATOM_TO_JSID(atomState.writableAtom),
-                                  Value(bool((attrs & JSPROP_READONLY) == 0)),
+                                  Value(BooleanTag((attrs & JSPROP_READONLY) == 0)),
                                   PropertyStub, PropertyStub, JSPROP_ENUMERATE)) {
             return false;
         }
     }
 
     return desc->defineProperty(cx, ATOM_TO_JSID(atomState.enumerableAtom),
-                                Value(bool((attrs & JSPROP_ENUMERATE) != 0)),
+                                Value(BooleanTag((attrs & JSPROP_ENUMERATE) != 0)),
                                 PropertyStub, PropertyStub, JSPROP_ENUMERATE) &&
            desc->defineProperty(cx, ATOM_TO_JSID(atomState.configurableAtom),
-                                Value(bool((attrs & JSPROP_PERMANENT) == 0)),
+                                Value(BooleanTag((attrs & JSPROP_PERMANENT) == 0)),
                                 PropertyStub, PropertyStub, JSPROP_ENUMERATE);
 }
 
@@ -1897,7 +1900,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
     for (size_t i = 0; i < len; i++) {
         jsid id = ida[i];
         if (JSID_IS_INT(id)) {
-            Value idval(JSID_TO_INT(id));
+            Value idval(Int32Tag(JSID_TO_INT(id)));
             jsid id;
             if (!js_ValueToStringId(cx, idval, &id))
                 return JS_FALSE;
@@ -3239,7 +3242,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
     if (xdr->mode == JSXDR_DECODE) {
         depth = (uint16)(tmp >> 16);
         count = (uint16)tmp;
-        obj->setSlot(JSSLOT_BLOCK_DEPTH, Value((int32_t)depth));
+        obj->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Tag(depth)));
     }
 
     /*

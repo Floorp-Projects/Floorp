@@ -686,11 +686,6 @@ Value::Value(ObjectTag arg)
 }
 
 JS_ALWAYS_INLINE
-CopyableValue::CopyableValue(ObjectTag arg)
-  : Value(arg)
-{}
-
-JS_ALWAYS_INLINE
 Value::Value(ObjectOrNullTag arg)
 {
     mask = arg.obj ? arg.obj->isFunction() ? FunObjMask : NonFunObjMask : NullMask;

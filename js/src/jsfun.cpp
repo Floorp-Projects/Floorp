@@ -1857,7 +1857,7 @@ fun_toStringHelper(JSContext *cx, uint32_t indent, uintN argc, Value *vp)
 
     JSObject *obj = &fval.asFunObj();
     if (argc != 0) {
-        if (!ValueToECMAUint32(cx, &vp[2], &indent))
+        if (!ValueToECMAUint32(cx, vp[2], &indent))
             return JS_FALSE;
     }
 

@@ -588,7 +588,7 @@ date_msecFromArgs(JSContext *cx, uintN argc, Value *argv, jsdouble *rval)
     for (loop = 0; loop < MAXARGS; loop++) {
         if (loop < argc) {
             jsdouble d;
-            if (!ValueToNumber(cx, &argv[loop], &d))
+            if (!ValueToNumber(cx, argv[loop], &d))
                 return JS_FALSE;
             /* return NaN if any arg is not finite */
             if (!JSDOUBLE_IS_FINITE(d)) {
@@ -1544,7 +1544,7 @@ date_setTime(JSContext *cx, uintN argc, Value *vp)
     }
 
     jsdouble result;
-    if (!ValueToNumber(cx, &vp[2], &result))
+    if (!ValueToNumber(cx, vp[2], &result))
         return false;
 
     return SetUTCTime(cx, obj, TIMECLIP(result), vp);
@@ -1592,7 +1592,7 @@ date_makeTime(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        if (!ValueToNumber(cx, &argv[i], &args[i]))
+        if (!ValueToNumber(cx, argv[i], &args[i]))
             return false;
         if (!JSDOUBLE_IS_FINITE(args[i])) {
             SetDateToNaN(cx, obj, vp);
@@ -1715,7 +1715,7 @@ date_makeDate(JSContext *cx, uintN maxargs, JSBool local, uintN argc, Value *vp)
 
     argv = vp + 2;
     for (i = 0; i < argc; i++) {
-        if (!ValueToNumber(cx, &argv[i], &args[i]))
+        if (!ValueToNumber(cx, argv[i], &args[i]))
             return JS_FALSE;
         if (!JSDOUBLE_IS_FINITE(args[i])) {
             SetDateToNaN(cx, obj, vp);
@@ -1814,7 +1814,7 @@ date_setYear(JSContext *cx, uintN argc, Value *vp)
     }
 
     jsdouble year;
-    if (!ValueToNumber(cx, &vp[2], &year))
+    if (!ValueToNumber(cx, vp[2], &year))
         return false;
     if (!JSDOUBLE_IS_FINITE(year)) {
         SetDateToNaN(cx, obj, vp);
@@ -2325,7 +2325,7 @@ js_Date(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     } else if (argc == 1) {
         if (!argv[0].isString()) {
             /* the argument is a millisecond number */
-            if (!ValueToNumber(cx, &argv[0], &d))
+            if (!ValueToNumber(cx, argv[0], &d))
                 return JS_FALSE;
             d = TIMECLIP(d);
         } else {

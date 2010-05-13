@@ -1125,10 +1125,10 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn
     return JS_TRUE;
 }
 
-CopyableValue
+Value
 BoxedWordToValue(jsboxedword w)
 {
-    CopyableValue v;
+    Value v;
     if (JSBOXEDWORD_IS_STRING(w))
         v.setString(JSBOXEDWORD_TO_STRING(w));
     else if (JSBOXEDWORD_IS_INT(w))
@@ -1141,7 +1141,7 @@ BoxedWordToValue(jsboxedword w)
         v.setUndefined();
     else
         v.setBoolean(JSBOXEDWORD_TO_BOOLEAN(w));
-    return v;
+    return copyable_cast(v);
 }
 
 bool
@@ -1179,7 +1179,7 @@ ValueToBoxedWord(JSContext *cx, const Value *vp, jsboxedword *wp)
 Value
 IdToValue(jsid id)
 {
-    return BoxedWordToValue(id);
+    return copyable_cast(BoxedWordToValue(id));
 }
 
 bool
@@ -1316,15 +1316,15 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
 {
     if (cs->format & JOF_POST) {
         double d;
-        if (!ValueToNumber(cx, vp, &d))
+        if (!ValueToNumber(cx, *vp, &d))
             return JS_FALSE;
-        JS_ASSERT(vp->asDouble() == d);
+        vp->setDouble(d);
         (cs->format & JOF_INC) ? ++d : --d;
         vp2->setDouble(d);
     }
 
     double d;
-    if (!ValueToNumber(cx, vp, &d))
+    if (!ValueToNumber(cx, *vp, &d))
         return JS_FALSE;
     (cs->format & JOF_INC) ? ++d : --d;
     vp->setDouble(d);
