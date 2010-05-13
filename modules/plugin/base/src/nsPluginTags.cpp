@@ -575,7 +575,8 @@ void nsPluginTag::TryUnloadPlugin()
 
 nsPluginInstanceTag::nsPluginInstanceTag(nsPluginTag* aPluginTag,
                                          nsIPluginInstance* aInstance,
-                                         const char * url)
+                                         const char * url,
+                                         PRBool aDefaultPlugin)
 {
   NS_ASSERTION(aInstance, "Must have a valid plugin instance when creating an nsPluginInstanceTag");
   NS_ADDREF(aInstance);
@@ -584,6 +585,8 @@ nsPluginInstanceTag::nsPluginInstanceTag(nsPluginTag* aPluginTag,
   mPluginTag = aPluginTag;
   
   mURL = PL_strdup(url);
+
+  mDefaultPlugin = aDefaultPlugin;
 }
 
 nsPluginInstanceTag::~nsPluginInstanceTag()
