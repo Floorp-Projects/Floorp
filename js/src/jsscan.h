@@ -256,7 +256,7 @@ enum TokenStreamFlags
     TSF_NEWLINES = 0x04,        /* tokenize newlines */
     TSF_OPERAND = 0x08,         /* looking for operand, not operator */
     TSF_NLFLAG = 0x20,          /* last linebuf ended with \n */
-    TSF_CRFLAG = 0x40,          /* linebuf would have ended with \r */
+    TSF_STRICT_MODE_CODE = 0x40,/* Tokenize as appropriate for strict mode code. */
     TSF_DIRTYLINE = 0x80,       /* non-whitespace since start of line */
     TSF_OWNFILENAME = 0x100,    /* ts->filename is malloc'd */
     TSF_XMLTAGMODE = 0x200,     /* scanning within an XML tag in E4X */
@@ -288,10 +288,7 @@ enum TokenStreamFlags
     TSF_IN_HTML_COMMENT = 0x2000,
 
     /* Ignore keywords and return TOK_NAME instead to the parser. */
-    TSF_KEYWORD_IS_NAME = 0x4000,
-
-    /* Tokenize as appropriate for strict mode code.  */
-    TSF_STRICT_MODE_CODE = 0x8000
+    TSF_KEYWORD_IS_NAME = 0x4000
 };
 
 #define t_op            u.s.op
