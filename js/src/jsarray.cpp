@@ -415,7 +415,7 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uint32 newcap, bool initialize
 static bool
 ReallyBigIndexToId(JSContext* cx, jsdouble index, jsid* idp)
 {
-    return js_ValueToStringId(cx, index, idp);
+    return js_ValueToStringId(cx, DoubleTag(index), idp);
 }
 
 static bool
@@ -1528,7 +1528,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     JS_ASSERT(start == MAXINDEX);
     AutoValueRooter tvr(cx);
     AutoIdRooter idr(cx);
-    Value idval(MAXINDEX);
+    CopyableValue idval(DoubleTag(MAXINDEX));
     do {
         tvr.addr()->copy(*vector++);
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||

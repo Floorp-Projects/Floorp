@@ -215,6 +215,7 @@ typedef enum JSWhyMagic
     JS_NATIVE_ENUMERATE,         /* indicates that a custom enumerate hook forwarded
                                   * to js_Enumerate, which really means the object can be
                                   * enumerated like a native object. */
+    JS_NO_ITER_VALUE,            /* there is not a pending iterator value */
     JS_GENERATOR_CLOSING         /* exception value thrown when closing a generator */
 } JSWhyMagic;
 
@@ -396,6 +397,19 @@ JSBOXEDWORD_TO_GCTHING(jsboxedword w)
     return (void *)JSBOXEDWORD_CLRTAG(w);
 }
 
+static JS_ALWAYS_INLINE uint32
+JSBOXEDWORD_TRACE_KIND(jsboxedword w)
+{
+    JS_ASSERT(w == 0x0 || w == 0x2 || w == 0x4);
+    /*
+     * We need to map:
+     *  XXXXXXXXXXXXXXXXXXXXXXXXXXXXX000 -> 00 (object)
+     *  XXXXXXXXXXXXXXXXXXXXXXXXXXXXX010 -> 10 (double)
+     *  XXXXXXXXXXXXXXXXXXXXXXXXXXXXX100 -> 01 (string)
+     */
+    return (w | ((w & 0x4) >> 2)) & 0x3;
+}
+
 static JS_ALWAYS_INLINE JSBool
 JSBOXEDWORD_IS_OBJECT(jsboxedword w)
 {
@@ -480,11 +494,11 @@ typedef jsboxedword jsid;
 #define OBJECT_TO_JSID(obj)           ((jsid)OBJECT_TO_JSBOXEDWORD((obj)))
 
 /* Objects and strings (no doubles in jsids). */
-#define JSID_IS_GCTHING(id)           (((id) & 0x3) == 0)
+#define JSID_IS_GCTHING(id)           JSBOXEDWORD_IS_GCTHING(id)
 #define JSID_TO_GCTHING(id)           (JS_ASSERT(JSID_IS_GCTHING((id))),       \
                                        JSBOXEDWORD_TO_GCTHING((jsboxedword)(id)))
 #define JSID_TRACE_KIND(id)           (JS_ASSERT(JSID_IS_GCTHING((id))),       \
-                                       (JSBOXEDWORD_TAG((jsboxedword)(id)) == JSBOXEDWORD_TYPE_STRING))
+                                       JSBOXEDWORD_TRACE_KIND((jsboxedword)(id)))
 
 JS_PUBLIC_API(jsval)
 JSID_TO_JSVAL(jsid id);

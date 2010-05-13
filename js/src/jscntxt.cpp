@@ -2539,3 +2539,14 @@ JSContext::purge()
     FreeOldArenas(runtime, &regexpPool);
     classProtoCache.purge();
 }
+
+namespace js {
+
+void
+SetPendingException(JSContext *cx, const Value &v)
+{
+    cx->throwing = JS_TRUE;
+    cx->exception.copy(v);
+}
+
+} /* namespace js */

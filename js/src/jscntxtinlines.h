@@ -170,7 +170,7 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
 void
 AutoIdArray::trace(JSTracer *trc) {
     JS_ASSERT(tag == IDARRAY);
-    TraceIds(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
+    TraceBoxedWords(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
 class AutoNamespaces : protected AutoGCRooter {
@@ -216,7 +216,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IDARRAY: {
         JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        TraceIds(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
+        TraceBoxedWords(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
         return;
       }
 

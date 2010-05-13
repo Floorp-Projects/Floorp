@@ -1233,7 +1233,7 @@ SetUTCTime(JSContext *cx, JSObject *obj, jsdouble t, Value *vp = NULL)
     JS_ASSERT(obj->getClass() == &js_DateClass);
 
     obj->setDateLocalTime(cx->runtime->NaNValue);
-    obj->setDateUTCTime(Value(t));
+    obj->setDateUTCTime(DoubleTag(t));
     if (vp)
         vp->setDouble(t);
     return true;
@@ -1257,7 +1257,7 @@ GetAndCacheLocalTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
         if (JSDOUBLE_IS_FINITE(result))
             result = LocalTime(result);
 
-        obj->setDateLocalTime(Value(result));
+        obj->setDateLocalTime(DoubleTag(result));
     }
 
     *dp = result;

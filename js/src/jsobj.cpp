@@ -6276,11 +6276,12 @@ dumpValue(const Value &v)
         fprintf(stderr, "<invalid");
 #ifdef DEBUG
         switch (v.whyMagic()) {
-          case JS_ARRAY_HOLE:               fprintf(stderr, " array hole");                break;
-          case JS_ARGS_HOLE:                fprintf(stderr, " args hole");                 break;
-          case JS_NATIVE_ENUMERATE:         fprintf(stderr, " native enumeration cookie"); break;
-          case JS_GENERATOR_CLOSING:        fprintf(stderr, " generator closing");         break;
-          default:                          fprintf(stderr, " ?!");                        break;
+          case JS_ARRAY_HOLE:        fprintf(stderr, " array hole");         break;
+          case JS_ARGS_HOLE:         fprintf(stderr, " args hole");          break;
+          case JS_NATIVE_ENUMERATE:  fprintf(stderr, " native enumeration"); break;
+          case JS_NO_ITER_VALUE:     fprintf(stderr, " no iter value");      break;
+          case JS_GENERATOR_CLOSING: fprintf(stderr, " generator closing");  break;
+          default:                   fprintf(stderr, " ?!");                 break;
         }
 #endif
         fprintf(stderr, ">");

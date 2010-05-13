@@ -2909,7 +2909,7 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 
     CHECK_REQUEST(cx);
     for (ok = JS_TRUE; cds->name; cds++) {
-        Value value(cds->dval);
+        Value value(DoubleTag(cds->dval));
         attrs = cds->flags;
         if (!attrs)
             attrs = JSPROP_READONLY | JSPROP_PERMANENT;
@@ -5507,8 +5507,7 @@ JS_PUBLIC_API(void)
 JS_SetPendingException(JSContext *cx, jsval v)
 {
     CHECK_REQUEST(cx);
-    cx->throwing = JS_TRUE;
-    cx->exception.copy(Valueify(v));
+    SetPendingException(cx, Valueify(v));
 }
 
 JS_PUBLIC_API(void)
