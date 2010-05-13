@@ -369,43 +369,86 @@ nsMenuPopupFrame::IsLeaf() const
 }
 
 void
-nsMenuPopupFrame::SetPreferredBounds(nsBoxLayoutState& aState,
-                                     const nsRect& aRect)
+nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu, PRBool aSizedToPopup)
 {
-  nsBox::SetBounds(aState, aRect, PR_FALSE);
-  mPrefSize = aRect.Size();
+  // if the popup is not open, only do layout if the menu is sized to the popup
+  PRBool isOpen = IsOpen();
+  if (!mGeneratedChildren || (!isOpen && !aSizedToPopup))
+    return;
+
+  // get the preferred, minimum and maximum size. If the menu is sized to the
+  // popup, then the popup's width is the menu's width.
+  nsSize prefSize = GetPrefSize(aState);
+  nsSize minSize = GetMinSize(aState); 
+  nsSize maxSize = GetMaxSize(aState);
+
+  if (aSizedToPopup) {
+    prefSize.width = aParentMenu->GetRect().width;
+  }
+  prefSize = BoundsCheck(minSize, prefSize, maxSize);
+
+  // if the size changed then set the bounds to be the preferred size
+  PRBool sizeChanged = (mPrefSize != prefSize);
+  if (sizeChanged) {
+    SetBounds(aState, nsRect(0, 0, prefSize.width, prefSize.height), PR_FALSE);
+    mPrefSize = prefSize;
+  }
+
+  if (isOpen) {
+    SetPopupPosition(aParentMenu, PR_FALSE);
+  }
+
+  nsRect bounds(GetRect());
+  Layout(aState);
+
+  // if the width or height changed, readjust the popup position. This is a
+  // special case for tooltips where the preferred height doesn't include the
+  // real height for its inline element, but does once it is laid out.
+  // This is bug 228673 which doesn't have a simple fix.
+  if (!aParentMenu) {
+    nsSize newsize = GetSize();
+    if (newsize.width > bounds.width || newsize.height > bounds.height) {
+      // the size after layout was larger than the preferred size,
+      // so set the preferred size accordingly
+      mPrefSize = newsize;
+      if (isOpen) {
+        SetPopupPosition(nsnull, PR_FALSE);
+      }
+    }
+  }
+
+  if (isOpen) {
+    AdjustView();
+  }
 }
 
 void
 nsMenuPopupFrame::AdjustView()
 {
-  if ((mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible) &&
-      mGeneratedChildren) {
-    // if the popup has just opened, make sure the scrolled window is at 0,0
-    if (mIsOpenChanged) {
-      nsIBox* child = GetChildBox();
-      nsIScrollableFrame *scrollframe = do_QueryFrame(child);
-      if (scrollframe)
-        scrollframe->ScrollTo(nsPoint(0,0), nsIScrollableFrame::INSTANT);
-    }
+  // if the popup has just opened, make sure the scrolled window is at 0,0
+  if (mIsOpenChanged) {
+    nsIBox* child = GetChildBox();
+    nsIScrollableFrame *scrollframe = do_QueryFrame(child);
+    if (scrollframe)
+      scrollframe->ScrollTo(nsPoint(0,0), nsIScrollableFrame::INSTANT);
+  }
 
-    nsIView* view = GetView();
-    nsIViewManager* viewManager = view->GetViewManager();
-    nsRect rect = GetRect();
-    rect.x = rect.y = 0;
-    viewManager->ResizeView(view, rect);
-    viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
-    mPopupState = ePopupOpenAndVisible;
+  nsIView* view = GetView();
+  nsIViewManager* viewManager = view->GetViewManager();
+  nsRect rect = GetRect();
+  rect.x = rect.y = 0;
+  viewManager->ResizeView(view, rect);
+  viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
+  mPopupState = ePopupOpenAndVisible;
 
-    nsPresContext* pc = PresContext();
-    nsContainerFrame::SyncFrameViewProperties(pc, this, nsnull, view, 0);
+  nsPresContext* pc = PresContext();
+  nsContainerFrame::SyncFrameViewProperties(pc, this, nsnull, view, 0);
 
-    // fire popupshown event when the state has changed
-    if (mIsOpenChanged) {
-      mIsOpenChanged = PR_FALSE;
-      nsCOMPtr<nsIRunnable> event = new nsXULPopupShownEvent(GetContent(), pc);
-      NS_DispatchToCurrentThread(event);
-    }
+  // fire popupshown event when the state has changed
+  if (mIsOpenChanged) {
+    mIsOpenChanged = PR_FALSE;
+    nsCOMPtr<nsIRunnable> event = new nsXULPopupShownEvent(GetContent(), pc);
+    NS_DispatchToCurrentThread(event);
   }
 }
 
