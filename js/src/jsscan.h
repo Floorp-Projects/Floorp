@@ -448,6 +448,7 @@ class TokenStream
 
     TokenKind getTokenInternal();     /* doesn't check for pushback or error flag. */
     int fillUserbuf();
+    int32 getCharFillLinebuf();
     int32 getChar();
     void ungetChar(int32 c);
     Token *newToken(ptrdiff_t adjust);
