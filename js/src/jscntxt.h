@@ -2205,7 +2205,8 @@ class AutoGCRooter {
         XML =         -10, /* js::AutoXMLRooter */
         OBJECT =      -11, /* js::AutoObjectRooter */
         ID =          -12, /* js::AutoIdRooter */
-        VECTOR =      -13  /* js::AutoValueVector */
+        VALVECTOR =   -13, /* js::AutoValueVector */
+        BOXEDVECTOR = -14  /* js::AutoBoxedWordVector */
     };
 
     private:
@@ -2985,7 +2986,7 @@ class AutoValueVector : private AutoGCRooter
   public:
     explicit AutoValueVector(JSContext *cx
                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
-        : AutoGCRooter(cx, VECTOR), vector(cx)
+        : AutoGCRooter(cx, VALVECTOR), vector(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -3020,6 +3021,48 @@ class AutoValueVector : private AutoGCRooter
     
   private:
     Vector<Value, 8> vector;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class AutoBoxedWordVector : private AutoGCRooter
+{
+  public:
+    explicit AutoBoxedWordVector(JSContext *cx
+                          JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : AutoGCRooter(cx, BOXEDVECTOR), vector(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    size_t length() const { return vector.length(); }
+
+    bool append(jsid id) { return vector.append(id); }
+
+    void popBack() { vector.popBack(); }
+
+    bool resize(size_t newLength) {
+        return vector.resize(newLength);
+    }
+
+    bool reserve(size_t newLength) {
+        return vector.reserve(newLength);
+    }
+
+    jsid operator[](size_t i) { return vector[i]; }
+    jsid operator[](size_t i) const { return vector[i]; }
+
+    const jsid *begin() const { return vector.begin(); }
+    jsid *begin() { return vector.begin(); }
+
+    const jsid *end() const { return vector.end(); }
+    jsid *end() { return vector.end(); }
+
+    jsid back() const { return vector.back(); }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    
+  private:
+    Vector<jsboxedword, 8> vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

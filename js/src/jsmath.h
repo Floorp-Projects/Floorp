@@ -52,18 +52,18 @@ extern void
 js_InitRandom(JSContext *cx);
 
 extern JSBool
-js_math_ceil(JSContext *cx, uintN argc, jsval *vp);
+js_math_ceil(JSContext *cx, uintN argc, js::Value *vp);
 
 extern JSBool
-js_math_floor(JSContext *cx, uintN argc, jsval *vp);
+js_math_floor(JSContext *cx, uintN argc, js::Value *vp);
 
 extern JSBool
-js_math_max(JSContext *cx, uintN argc, jsval *vp);
+js_math_max(JSContext *cx, uintN argc, js::Value *vp);
 
 extern JSBool
-js_math_min(JSContext *cx, uintN argc, jsval *vp);
+js_math_min(JSContext *cx, uintN argc, js::Value *vp);
 
 extern JSBool
-js_math_round(JSContext *cx, uintN argc, jsval *vp);
+js_math_round(JSContext *cx, uintN argc, js::Value *vp);
 
 #endif /* jsmath_h___ */
