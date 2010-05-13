@@ -1204,17 +1204,18 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
     PRBool match;
     nsresult rv;
 
-    if (!IsHTML()) {
-      rv = map->GetId(name);
+    rv = map->GetId(name);
+    NS_ENSURE_SUCCESS(rv, nsnull);
 
-      match = name.Equals(aMapName);
-    } else {
+    match = name.Equals(aMapName);
+    if (!match) {
       rv = map->GetName(name);
+      NS_ENSURE_SUCCESS(rv, nsnull);
 
       match = name.Equals(aMapName, nsCaseInsensitiveStringComparator());
     }
 
-    if (match && NS_SUCCEEDED(rv)) {
+    if (match) {
       // Quirk: if the first matching map is empty, remember it, but keep
       // searching for a non-empty one, only use it if none was found (bug 264624).
       if (mCompatMode == eCompatibility_NavQuirks) {
