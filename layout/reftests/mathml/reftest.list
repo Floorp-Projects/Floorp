@@ -10,3 +10,11 @@
 == underbar-width-1.xhtml underbar-width-1-ref.xhtml
 == mathml-type-supported.xhtml mathml-type-supported-ref.xml
 == semantics-1.xhtml semantics-1-ref.xhtml
+!= mathcolor-1.xml mathcolor-1-ref.xml
+!= mathcolor-2.xml mathcolor-2-ref.xml
+!= mathcolor-3.xml mathcolor-3-ref.xml
+== mathcolor-4.xml mathcolor-4-ref.xml
+!= mathbackground-1.xml mathbackground-1-ref.xml
+!= mathbackground-2.xml mathbackground-2-ref.xml
+!= mathbackground-3.xml mathbackground-3-ref.xml
+== mathbackground-4.xml mathbackground-4-ref.xml
