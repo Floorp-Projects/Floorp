@@ -394,7 +394,7 @@ CNavDTD::DidBuildModel(nsresult anErrorCode)
         NS_ENSURE_SUCCESS(result, result);
       } 
     } else {
-      // If you're here, then an error occured, but we still have nodes on the stack.
+      // If you're here, then an error occurred, but we still have nodes on the stack.
       // At a minimum, we should grab the nodes and recycle them.
       // Just to be correct, we'll also recycle the nodes.
       while (mBodyContext->GetCount() > 0) { 
@@ -1168,7 +1168,7 @@ CNavDTD::HandleOmittedTag(CToken* aToken, eHTMLTags aChildTag,
  *   
  *  @update  harishd 05/02/00
  *  @param   aNode -- CParserNode representing keygen
- *  @return  NS_OK if all went well; ERROR if error occured
+ *  @return  NS_OK if all went well; ERROR if error occurred
  */
 nsresult
 CNavDTD::HandleKeyGen(nsIParserNode* aNode)
@@ -1559,7 +1559,7 @@ StripWSFollowingTag(eHTMLTags aChildTag, nsITokenizer* aTokenizer,
  *  yet how to tell the difference.
  *  
  *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occurred
  */
 nsresult
 CNavDTD::HandleEndToken(CToken* aToken)
@@ -1853,7 +1853,7 @@ CNavDTD::HandleSavedTokens(PRInt32 anIndex)
  *  
  *  @update  gess 3/25/98
  *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occurred
  */
 nsresult
 CNavDTD::HandleEntityToken(CToken* aToken)
@@ -1904,7 +1904,7 @@ CNavDTD::HandleEntityToken(CToken* aToken)
  *  
  *  @update  gess 3/25/98
  *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occurred
  */
 nsresult
 CNavDTD::HandleCommentToken(CToken* aToken)
@@ -1930,7 +1930,7 @@ CNavDTD::HandleCommentToken(CToken* aToken)
  *
  *  @update  gess 3/25/98
  *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occurred
  */
 nsresult
 CNavDTD::HandleAttributeToken(CToken* aToken)
@@ -1945,7 +1945,7 @@ CNavDTD::HandleAttributeToken(CToken* aToken)
  *  
  *  @update  gess 3/25/98
  *  @param   aToken -- next (start) token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occurred
  */
 nsresult
 CNavDTD::HandleProcessingInstructionToken(CToken* aToken)
@@ -1968,7 +1968,7 @@ CNavDTD::HandleProcessingInstructionToken(CToken* aToken)
  *  
  *  @update  harishd 09/02/99
  *  @param   aToken -- The very first token to be handled
- *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occurred
  */
 nsresult
 CNavDTD::HandleDocTypeDeclToken(CToken* aToken)

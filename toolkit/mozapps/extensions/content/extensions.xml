@@ -1050,7 +1050,6 @@
         <body><![CDATA[
           this._showStatus("progress");
           this._installStatus.initWithInstall(aInstall);
-          aInstall.install();
         ]]></body>
       </method>
 

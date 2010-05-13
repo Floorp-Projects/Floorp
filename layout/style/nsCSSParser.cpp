@@ -56,7 +56,7 @@
 #include "nsCSSRules.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsCSSDeclaration.h"
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
@@ -88,6 +88,7 @@
 #include "nsTArray.h"
 #include "prlog.h"
 #include "CSSCalc.h"
+#include "nsMediaFeatures.h"
 
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
@@ -170,7 +171,7 @@ public:
   CSSParserImpl();
   ~CSSParserImpl();
 
-  nsresult SetStyleSheet(nsICSSStyleSheet* aSheet);
+  nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
 
   nsresult SetQuirkMode(PRBool aQuirkMode);
 
@@ -628,7 +629,7 @@ protected:
   nsCOMPtr<nsIPrincipal> mSheetPrincipal;
 
   // The sheet we're parsing into
-  nsCOMPtr<nsICSSStyleSheet> mSheet;
+  nsRefPtr<nsCSSStyleSheet> mSheet;
 
   // Used for @import rules
   mozilla::css::Loader* mChildLoader; // not ref counted, it owns us
@@ -769,7 +770,7 @@ CSSParserImpl::~CSSParserImpl()
 }
 
 nsresult
-CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
+CSSParserImpl::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   if (aSheet != mSheet) {
     // Switch to using the new sheet, if any
@@ -891,8 +892,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   NS_ENSURE_STATE(mSheet);
 
 #ifdef DEBUG
-  nsCOMPtr<nsIURI> uri;
-  mSheet->GetSheetURI(getter_AddRefs(uri));
+  nsCOMPtr<nsIURI> uri = mSheet->GetSheetURI();
   PRBool equal;
   NS_ASSERTION(NS_SUCCEEDED(aSheetURI->Equals(uri, &equal)) && equal,
                "Sheet URI does not match passed URI");
@@ -904,8 +904,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
   InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI, aSheetPrincipal);
 
-  PRInt32 ruleCount = 0;
-  mSheet->StyleRuleCount(ruleCount);
+  PRInt32 ruleCount = mSheet->StyleRuleCount();
   if (0 < ruleCount) {
     nsICSSRule* lastRule = nsnull;
     mSheet->GetStyleRuleAt(ruleCount - 1, lastRule);
@@ -9553,7 +9552,7 @@ CSSParserImpl::ParseMarker()
 static CSSParserImpl* gFreeList = nsnull;
 
 nsCSSParser::nsCSSParser(mozilla::css::Loader* aLoader,
-                         nsICSSStyleSheet* aSheet)
+                         nsCSSStyleSheet* aSheet)
 {
   CSSParserImpl *impl = gFreeList;
   if (impl) {
@@ -9599,7 +9598,7 @@ nsCSSParser::Shutdown()
 // Wrapper methods
 
 nsresult
-nsCSSParser::SetStyleSheet(nsICSSStyleSheet* aSheet)
+nsCSSParser::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     SetStyleSheet(aSheet);

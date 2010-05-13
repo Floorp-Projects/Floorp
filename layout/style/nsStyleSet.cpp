@@ -46,7 +46,7 @@
 
 #include "nsStyleSet.h"
 #include "nsNetUtil.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIDocument.h"
 #include "nsRuleWalker.h"
 #include "nsStyleContext.h"
@@ -214,11 +214,11 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
       case eOverrideSheet: {
         // levels containing CSS stylesheets
         nsCOMArray<nsIStyleSheet>& sheets = mSheets[aType];
-        nsCOMArray<nsICSSStyleSheet> cssSheets(sheets.Count());
+        nsTArray<nsRefPtr<nsCSSStyleSheet> > cssSheets(sheets.Count());
         for (PRInt32 i = 0, i_end = sheets.Count(); i < i_end; ++i) {
-          nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(sheets[i]);
+          nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(sheets[i]);
           NS_ASSERTION(cssSheet, "not a CSS sheet");
-          cssSheets.AppendObject(cssSheet);
+          cssSheets.AppendElement(cssSheet);
         }
         mRuleProcessors[aType] = new nsCSSRuleProcessor(cssSheets, 
                                                         PRUint8(aType));
@@ -235,22 +235,12 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
   return NS_OK;
 }
 
-#ifdef DEBUG
-#define CHECK_APPLICABLE \
-PR_BEGIN_MACRO \
-  PRBool applicable = PR_TRUE; \
-  aSheet->GetApplicable(applicable); \
-  NS_ASSERTION(applicable, "Inapplicable sheet being placed in style set"); \
-PR_END_MACRO
-#else
-#define CHECK_APPLICABLE
-#endif
-
 nsresult
 nsStyleSet::AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-  CHECK_APPLICABLE;
+  NS_ASSERTION(aSheet->GetApplicable(),
+               "Inapplicable sheet being placed in style set");
   mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].AppendObject(aSheet))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -266,7 +256,8 @@ nsresult
 nsStyleSet::PrependStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-  CHECK_APPLICABLE;
+  NS_ASSERTION(aSheet->GetApplicable(),
+               "Inapplicable sheet being placed in style set");
   mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].InsertObjectAt(aSheet, 0))
     return NS_ERROR_OUT_OF_MEMORY;
@@ -282,11 +273,8 @@ nsresult
 nsStyleSet::RemoveStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-#ifdef DEBUG
-  PRBool complete = PR_TRUE;
-  aSheet->GetComplete(complete);
-  NS_ASSERTION(complete, "Incomplete sheet being removed from style set");
-#endif
+  NS_ASSERTION(aSheet->GetComplete(),
+               "Incomplete sheet being removed from style set");
   mSheets[aType].RemoveObject(aSheet);
   if (!mBatching)
     return GatherRuleProcessors(aType);
@@ -337,7 +325,8 @@ nsresult
 nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
 {
   NS_PRECONDITION(aSheet && aDocument, "null arg");
-  CHECK_APPLICABLE;
+  NS_ASSERTION(aSheet->GetApplicable(),
+               "Inapplicable sheet being placed in style set");
 
   nsCOMArray<nsIStyleSheet>& docSheets = mSheets[eDocSheet];
 
@@ -360,8 +349,6 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
   mDirty |= 1 << eDocSheet;
   return NS_OK;
 }
-
-#undef CHECK_APPLICABLE
 
 // Batching
 void

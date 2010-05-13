@@ -81,7 +81,7 @@ public:
    * aDragSelection - [out] set to true to indicate that a selection is being
    *                  dragged, rather than a specific node
    * aDragNode - [out] the link, image or area being dragged, or null if the
-   *             drag occured on another element.
+   *             drag occurred on another element.
    */
   static nsresult GetDragData(nsIDOMWindow* aWindow,
                               nsIContent* aTarget,

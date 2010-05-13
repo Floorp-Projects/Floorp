@@ -62,7 +62,7 @@ NS_HIDDEN_(nsresult) ZW_ReadData(nsIInputStream *aStream, char *aBuffer, PRUint3
 }
 
 /*
- * Fully writes the required amount of data. Keeps writing untill all the
+ * Fully writes the required amount of data. Keeps writing until all the
  * data is written or an error is hit.
  */
 NS_HIDDEN_(nsresult) ZW_WriteData(nsIOutputStream *aStream, const char *aBuffer,

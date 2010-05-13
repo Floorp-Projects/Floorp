@@ -70,7 +70,7 @@ class nsIDocShell;
 class nsStyleSet;
 class nsIStyleSheet;
 class nsIStyleRule;
-class nsICSSStyleSheet;
+class nsCSSStyleSheet;
 class nsIViewManager;
 class nsIScriptGlobalObject;
 class nsIDOMEvent;
@@ -116,8 +116,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID      \
-{ 0xa979dabe, 0x75de, 0x4c2d, \
-  { 0x8b, 0x83, 0x17, 0xb2, 0xde, 0x9d, 0x9d, 0x37 } }
+{ 0x625fe492, 0x0344, 0x406c, \
+  { 0xaf, 0x7f, 0x55, 0xfe, 0xa2, 0x6b, 0x3d, 0x20 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1285,7 +1285,7 @@ public:
    * DO NOT USE FOR UNTRUSTED CONTENT.
    */
   virtual nsresult LoadChromeSheetSync(nsIURI* aURI, PRBool aIsAgentSheet,
-                                       nsICSSStyleSheet** aSheet) = 0;
+                                       nsCSSStyleSheet** aSheet) = 0;
 
   /**
    * Returns true if the locale used for the document specifies a direction of

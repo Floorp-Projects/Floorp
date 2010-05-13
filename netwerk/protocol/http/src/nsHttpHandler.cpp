@@ -693,8 +693,6 @@ nsHttpHandler::InitUserAgentComponents()
     mPlatform.AssignLiteral(
 #if defined(ANDROID)
     "Android"
-#elif defined(MOZ_WIDGET_PHOTON)
-    "Photon"
 #elif defined(XP_OS2)
     "OS/2"
 #elif defined(XP_WIN)

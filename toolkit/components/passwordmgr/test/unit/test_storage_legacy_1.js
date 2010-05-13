@@ -54,7 +54,7 @@ if (exists) {
     do_check_false(exists); // fail on purpose
 }
 
-testdesc = "Initialize with a non-existant data file";
+testdesc = "Initialize with a non-existent data file";
 
 storage = LoginTest.initStorage(OUTDIR, filename);
 

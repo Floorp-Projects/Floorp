@@ -808,12 +808,13 @@ nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
     return NS_OK;
   }
 
-  // Is this anything other than a single-line plaintext input?
+  // Is this anything other than an input text?
+  // Other inputs are not spellchecked.
   if (controlType != NS_FORM_INPUT_TEXT) {
     return NS_OK;                       // Not spellchecked by default
   }
 
-  // Does the user want single-line inputs spellchecked by default?
+  // Does the user want input text spellchecked by default?
   // NOTE: Do not reflect a pref value of 0 back to the DOM getter.
   // The web page should not know if the user has disabled spellchecking.
   // We'll catch this in the editor itself.
@@ -1614,8 +1615,7 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState()
   }
 
   PRInt32 formType = GetType();
-  if (formType != NS_FORM_INPUT_PASSWORD && formType != NS_FORM_INPUT_TEXT &&
-      formType != NS_FORM_TEXTAREA) {
+  if (!IsTextControl(PR_FALSE)) {
     SetEditableFlag(PR_FALSE);
     return;
   }
@@ -2609,6 +2609,23 @@ nsGenericHTMLFormElement::IsSubmitControl() const
   return type == NS_FORM_INPUT_SUBMIT ||
          type == NS_FORM_BUTTON_SUBMIT ||
          type == NS_FORM_INPUT_IMAGE;
+}
+
+PRBool
+nsGenericHTMLFormElement::IsTextControl(PRBool aExcludePassword) const
+{
+  PRInt32 type = GetType();
+  return nsGenericHTMLFormElement::IsSingleLineTextControl(aExcludePassword) ||
+         type == NS_FORM_TEXTAREA;
+}
+
+PRBool
+nsGenericHTMLFormElement::IsSingleLineTextControl(PRBool aExcludePassword) const
+{
+  PRInt32 type = GetType();
+  return type == NS_FORM_INPUT_TEXT ||
+         type == NS_FORM_INPUT_TEL ||
+         (!aExcludePassword && type == NS_FORM_INPUT_PASSWORD);
 }
 
 PRInt32

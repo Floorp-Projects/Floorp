@@ -666,6 +666,18 @@ nsAttrAndChildArray::Clear()
     // making this PR_FALSE so tree teardown doesn't end up being
     // O(N*D) (number of nodes times average depth of tree).
     child->UnbindFromTree(PR_FALSE); // XXX is it better to let the owner do this?
+    // Make sure to unlink our kids from each other, since someone
+    // else could stil be holding references to some of them.
+
+    // XXXbz We probably can't push this assignment down into the |aNullParent|
+    // case of UnbindFromTree because we still need the assignment in
+    // RemoveChildAt.  In particular, ContentRemoved fires between
+    // RemoveChildAt and UnbindFromTree, and in ContentRemoved the sibling
+    // chain needs to be correct.  Though maybe we could set the prev and next
+    // to point to each other but keep the kid being removed pointing to them
+    // through ContentRemoved so consumers can find where it used to be in the
+    // list?
+    child->mPreviousSibling = child->mNextSibling = nsnull;
     NS_RELEASE(child);
   }
 

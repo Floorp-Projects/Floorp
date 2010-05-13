@@ -190,7 +190,7 @@ XPC_WN_Shared_ToSource(JSContext *cx, JSObject *obj,
 // returning the underlying JSObject) so that JS callers will see what looks
 // Like any other xpcom object - and be limited to use its interfaces.
 //
-// See the comment preceeding nsIXPCWrappedJSObjectGetter in nsIXPConnect.idl.
+// See the comment preceding nsIXPCWrappedJSObjectGetter in nsIXPConnect.idl.
 
 static JSObject*
 GetDoubleWrappedJSObject(XPCCallContext& ccx, XPCWrappedNative* wrapper)

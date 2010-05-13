@@ -236,7 +236,7 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
 
   fprintf(out, "Text@%p", static_cast<const void*>(this));
   fprintf(out, " intrinsicstate=[%08x]", IntrinsicState());
-  fprintf(out, " flags=[%08x]", GetFlags());
+  fprintf(out, " flags=[%08x]", static_cast<unsigned int>(GetFlags()));
   fprintf(out, " primaryframe=%p", static_cast<void*>(GetPrimaryFrame()));
   fprintf(out, " refcount=%d<", mRefCnt.get());
 

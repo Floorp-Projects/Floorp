@@ -919,7 +919,7 @@ public:
   virtual void PreloadStyle(nsIURI* uri, const nsAString& charset);
 
   virtual nsresult LoadChromeSheetSync(nsIURI* uri, PRBool isAgentSheet,
-                                       nsICSSStyleSheet** sheet);
+                                       nsCSSStyleSheet** sheet);
 
   virtual nsISupports* GetCurrentContentSink();
 

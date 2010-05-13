@@ -397,7 +397,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
         font = value[i] - '0';
         ++i;
         if (font >= mFontName.Length()) {
-          NS_ERROR("Non-existant font referenced in glyph table");
+          NS_ERROR("Nonexistent font referenced in glyph table");
           return kNullGlyph;
         }
         // The char cannot be handled if this font is not installed

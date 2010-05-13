@@ -131,7 +131,7 @@ interface nsIAddonSearchResultsCallback : nsISupports
                        in unsigned long aTotalResults);
 
   /**
-   * Called when an error occured when performing a search.
+   * Called when an error occurred when performing a search.
    */
   void searchFailed();
 };

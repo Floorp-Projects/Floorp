@@ -120,7 +120,7 @@ interface nsIJumpListBuilder : nsISupports
    */
 
   /**
-   * Indicates if a commit has already occured in this session.
+   * Indicates if a commit has already occurred in this session.
    */
   readonly attribute boolean isListCommitted;
 

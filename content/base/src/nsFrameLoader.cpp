@@ -104,7 +104,6 @@
 #include "nsINameSpaceManager.h"
 
 #include "nsThreadUtils.h"
-#include "nsICSSStyleSheet.h"
 #include "nsIContentViewer.h"
 #include "nsIView.h"
 

@@ -203,7 +203,7 @@ nsSegmentEncoder::EncodeSegmentCount(const char *str,
                     pos = 0;
                     len = encBuf.Length();
                 }
-                // else some failure occured... assume UTF-8 is ok.
+                // else some failure occurred... assume UTF-8 is ok.
             }
         }
 
@@ -350,7 +350,6 @@ nsStandardURL::InitGlobalObjects()
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
     PR_INIT_CLIST(&gAllURLs);
-    atexit(DumpLeakedURLs);
 #endif
 }
 
@@ -359,6 +358,11 @@ nsStandardURL::ShutdownGlobalObjects()
 {
     NS_IF_RELEASE(gIDN);
     NS_IF_RELEASE(gCharsetMgr);
+
+#ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
+    if (gInitialized)
+        atexit(DumpLeakedURLs);
+#endif
 }
 
 //----------------------------------------------------------------------------

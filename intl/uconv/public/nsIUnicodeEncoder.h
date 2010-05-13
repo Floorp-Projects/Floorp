@@ -154,7 +154,7 @@ public:
    * method would have as default the assumed network order.
    *
    * For the last converted char, even if there is not enough output 
-   * space, a partial ouput must be done until all available space will be 
+   * space, a partial output must be done until all available space will be 
    * used. The rest of the output should be buffered until more space becomes
    * available. But this is not also true about the error handling method!!!
    * So be very, very careful...
