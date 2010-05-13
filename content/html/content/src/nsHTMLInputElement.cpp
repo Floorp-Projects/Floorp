@@ -1622,13 +1622,12 @@ nsHTMLInputElement::Click()
 PRBool
 nsHTMLInputElement::NeedToInitializeEditorForEvent(nsEventChainPreVisitor& aVisitor) const
 {
-  // We only need to initialize the editor for text input controls because they
+  // We only need to initialize the editor for single line input controls because they
   // are lazily initialized.  We don't need to initialize the control for
   // certain types of events, because we know that those events are safe to be
   // handled without the editor being initialized.  These events include:
   // mousein/move/out, and DOM mutation events.
-  if ((mType == NS_FORM_INPUT_TEXT ||
-       mType == NS_FORM_INPUT_PASSWORD) &&
+  if (IsSingleLineTextControl(PR_FALSE) &&
       aVisitor.mEvent->eventStructType != NS_MUTATION_EVENT) {
 
     switch (aVisitor.mEvent->message) {
