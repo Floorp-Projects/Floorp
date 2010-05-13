@@ -146,6 +146,12 @@ js_IsArrayLike(JSContext *cx, JSObject *obj, JSBool *answerp, jsuint *lengthp);
  */
 typedef JSBool (*JSComparator)(void *arg, const void *a, const void *b,
                                int *result);
+
+enum JSMergeSortElemType {
+    JS_SORTING_VALUES,
+    JS_SORTING_GENERIC
+};
+
 /*
  * NB: vec is the array to be sorted, tmp is temporary space at least as big
  * as vec. Both should be GC-rooted if appropriate.
@@ -158,7 +164,7 @@ typedef JSBool (*JSComparator)(void *arg, const void *a, const void *b,
  */
 extern bool
 js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
-             void *arg, void *tmp, bool isValue);
+             void *arg, void *tmp, JSMergeSortElemType elemType);
 
 #ifdef DEBUG_ARRAYS
 extern JSBool

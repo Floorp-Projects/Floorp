@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS string type implementation.
  *
@@ -48,7 +50,6 @@
  * of rooting things that might lose their newborn root due to subsequent GC
  * allocations in the same native method.
  */
-#define __STDC_LIMIT_MACROS
 
 #include <stdlib.h>
 #include <string.h>

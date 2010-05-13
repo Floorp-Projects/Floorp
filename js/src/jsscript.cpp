@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS script operations.
  */
@@ -309,7 +311,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
         JSObject **objp = &script->objects()->vector[i];
         uint32 isBlock;
         if (xdr->mode == JSXDR_ENCODE) {
-            JSClass *clasp = (*objp)->getClass();
+            Class *clasp = (*objp)->getClass();
             JS_ASSERT(clasp == &js_FunctionClass ||
                       clasp == &js_BlockClass);
             isBlock = (clasp == &js_BlockClass) ? 1 : 0;
@@ -403,8 +405,8 @@ Class js_ScriptClass = {
     "Script",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_MARK_IS_TRACE | JSCLASS_HAS_CACHED_PROTO(JSProto_Object),
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   script_finalize,
+    PropertyStub,     PropertyStub,     PropertyStub,     PropertyStub,
+    EnumerateStub,    ResolveStub,      ConvertStub,      script_finalize,
     NULL,             NULL,             NULL,             NULL,/*XXXbe xdr*/
     NULL,             NULL,             JS_CLASS_TRACE(script_trace), NULL
 };
@@ -1171,50 +1173,38 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 void
 js_TraceScript(JSTracer *trc, JSScript *script)
 {
-    JSAtomMap *map;
-    uintN i, length;
-    JSAtom **vector;
-    jsval v;
-    JSObjectArray *objarray;
-
-    map = &script->atomMap;
-    length = map->length;
-    vector = map->vector;
-    for (i = 0; i < length; i++) {
-        v = ATOM_KEY(vector[i]);
-        if (JSVAL_IS_TRACEABLE(v)) {
-            JS_SET_TRACING_INDEX(trc, "atomMap", i);
-            js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
-        }
-    }
+    JSAtomMap *map = &script->atomMap;
+    uintN length = map->length;
+    jsboxedword *vector = (jsboxedword *)map->vector;
+    TraceBoxedWords(trc, length, vector, "atomMap");
 
     if (script->objectsOffset != 0) {
-        objarray = script->objects();
-        i = objarray->length;
+        JSObjectArray *objarray = script->objects();
+        uintN i = objarray->length;
         do {
             --i;
             if (objarray->vector[i]) {
                 JS_SET_TRACING_INDEX(trc, "objects", i);
-                js_CallGCMarker(trc, objarray->vector[i], JSTRACE_OBJECT);
+                CallGCMarker(trc, objarray->vector[i], JSTRACE_OBJECT);
             }
         } while (i != 0);
     }
 
     if (script->regexpsOffset != 0) {
-        objarray = script->regexps();
-        i = objarray->length;
+        JSObjectArray *objarray = script->regexps();
+        uintN i = objarray->length;
         do {
             --i;
             if (objarray->vector[i]) {
                 JS_SET_TRACING_INDEX(trc, "regexps", i);
-                js_CallGCMarker(trc, objarray->vector[i], JSTRACE_OBJECT);
+                CallGCMarker(trc, objarray->vector[i], JSTRACE_OBJECT);
             }
         } while (i != 0);
     }
 
     if (script->u.object) {
         JS_SET_TRACING_NAME(trc, "object");
-        js_CallGCMarker(trc, script->u.object, JSTRACE_OBJECT);
+        CallGCMarker(trc, script->u.object, JSTRACE_OBJECT);
     }
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
