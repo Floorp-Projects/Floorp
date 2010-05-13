@@ -4577,7 +4577,7 @@ nsContentUtils::ProcessViewportInfo(nsIDocument *aDocument,
   while ((tip != end) && IS_SEPARATOR(*tip))
     ++tip;
 
-  /* Read through and find tokens seperated by separators. */
+  /* Read through and find tokens separated by separators. */
   while (tip != end) {
     
     /* Synchronize tip and tail. */
@@ -5704,7 +5704,9 @@ nsContentUtils::ReparentClonedObjectToScope(JSContext* cx,
   while (!objectData.IsEmpty()) {
     ReparentObjectData& data = objectData[objectData.Length() - 1];
 
-    if (!data.ids && !data.index) {
+    if (!data.ids) {
+      NS_ASSERTION(!data.index, "Shouldn't have index here");
+
       // Typed arrays are special and don't need to be enumerated.
       if (js_IsTypedArray(data.obj)) {
         if (!js_ReparentTypedArrayToScope(cx, data.obj, scope)) {

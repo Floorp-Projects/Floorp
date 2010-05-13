@@ -1,0 +1,5 @@
+<!-- test mathcolor on a token element -->
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mtext mathcolor="green">□■□■□■□</mtext>
+</math>
+

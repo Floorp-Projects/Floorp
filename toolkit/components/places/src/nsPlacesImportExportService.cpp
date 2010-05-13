@@ -200,7 +200,7 @@ public:
   // to see what the text content of that node should be.
   nsString mPreviousText;
 
-  // true when we hit a <dd>, which contains the description for the preceeding
+  // true when we hit a <dd>, which contains the description for the preceding
   // <a> tag. We can't just check for </dd> like we can for </a> or </h3>
   // because if there is a sub-folder, it is actually a child of the <dd>
   // because the tag is never explicitly closed. If this is true and we see a

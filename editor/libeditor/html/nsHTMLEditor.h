@@ -70,6 +70,7 @@
 
 #include "nsPoint.h"
 #include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 class nsIDOMKeyEvent;
 class nsITransferable;
@@ -369,7 +370,7 @@ public:
   NS_IMETHOD SelectAll();
 
   /* ------------ nsICSSLoaderObserver -------------- */
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet*aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
 
   /* ------------ Utility Routines, not part of public API -------------- */
@@ -417,12 +418,12 @@ public:
 
   // Dealing with the internal style sheet lists:
   NS_IMETHOD GetStyleSheetForURL(const nsAString &aURL,
-                               nsICSSStyleSheet **_retval);
-  NS_IMETHOD GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet, nsAString &aURL);
+                                 nsCSSStyleSheet **_retval);
+  NS_IMETHOD GetURLForStyleSheet(nsCSSStyleSheet *aStyleSheet, nsAString &aURL);
 
   // Add a url + known style sheet to the internal lists:
   nsresult AddNewStyleSheetToList(const nsAString &aURL,
-                                  nsICSSStyleSheet *aStyleSheet);
+                                  nsCSSStyleSheet *aStyleSheet);
 
   nsresult RemoveStyleSheetFromList(const nsAString &aURL);
                        
@@ -752,7 +753,7 @@ protected:
 
   // Maintain a list of associated style sheets and their urls.
   nsTArray<nsString> mStyleSheetURLs;
-  nsCOMArray<nsICSSStyleSheet> mStyleSheets;
+  nsTArray<nsRefPtr<nsCSSStyleSheet> > mStyleSheets;
   
   // an array for holding default style settings
   nsTArray<PropItem*> mDefaultStyles;

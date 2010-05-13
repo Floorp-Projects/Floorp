@@ -8,7 +8,7 @@
   <span><m:math><m:mstyle><m:mi style="color: green;">X</m:mi></m:mstyle></m:math></span>
 </p>
 
-<!-- Test that mathcolor works on m:mi and m:mstyle but not m:math -->
+<!-- Test that mathcolor works on m:mi, m:mstyle and m:math -->
 <p>
   <span><m:math mathcolor="green"><m:mstyle><m:mi>X</m:mi></m:mstyle></m:math></span>
   <span><m:math><m:mstyle mathcolor="green"><m:mi>X</m:mi></m:mstyle></m:math></span>
@@ -19,7 +19,7 @@
 <p><m:math><m:mi mathbackground="lightgreen">Y</m:mi></m:math></p>
 <p><m:math><m:mi style="background: lightgreen">Y</m:mi></m:math></p>
 
-<!-- Test that mathbackground does not work on m:mfenced, but CSS background does -->
+<!-- Test that mathbackground and CSS background work on m:mfenced -->
 <p><m:math><m:mfenced mathbackground="lightgreen"><m:mi>x</m:mi></m:mfenced></m:math></p>
 <p><m:math><m:mfenced style="background: lightgreen;"><m:mi>x</m:mi></m:mfenced></m:math></p>
 

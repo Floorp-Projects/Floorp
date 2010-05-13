@@ -316,7 +316,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * If no scripted code is running "above" (or called from) fp, then
      * instead of looking at cx->globalObject, we will return |principal|.
      * This function only affects |cx|. If someone pushes another context onto
-     * the context stack, then it supercedes this call.
+     * the context stack, then it supersedes this call.
      * NOTE: If |fp| is non-null popContextPrincipal must be called before fp
      * has finished executing.
      *

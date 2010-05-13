@@ -119,8 +119,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
-{ 0x84f1a428, 0x6bbe, 0x4958, \
-  { 0xa1, 0x08, 0x8a, 0xe0, 0x78, 0xb8, 0x63, 0xf4 } }
+  { 0x47c5b7c4, 0x8d35, 0x4d36, \
+    { 0xa1, 0xf9, 0x19, 0x44, 0xf8, 0xb9, 0x46, 0xb5 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -984,6 +984,13 @@ public:
     return gCaptureInfo.mPreventDrag && gCaptureInfo.mContent;
   }
 
+  /**
+   * Keep track of how many times this presshell has been rendered to
+   * a window.
+   */
+  PRUint64 GetPaintCount() { return mPaintCount; }
+  void IncrementPaintCount() { ++mPaintCount; }
+
 protected:
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
@@ -1003,6 +1010,10 @@ protected:
 #ifdef NS_DEBUG
   nsIFrame*                 mDrawEventTargetFrame;
 #endif
+
+  // Count of the number of times this presshell has been painted to
+  // a window
+  PRUint64                  mPaintCount;
 
   PRInt16                   mSelectionFlags;
 

@@ -51,6 +51,7 @@
 #   Dietrich Ayala <dietrich@mozilla.com>
 #   Gavin Sharp <gavin@gavinsharp.com>
 #   Justin Dolske <dolske@mozilla.com>
+#   Rob Campbell <rcampbell@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -128,6 +129,7 @@ let gInitialPages = [
 ];
 
 #include browser-fullZoom.js
+#include inspector.js
 #include browser-places.js
 #include browser-tabPreviews.js
 
@@ -5779,7 +5781,8 @@ function AddKeywordForSearchField() {
 
     type = el.type.toLowerCase();
 
-    if ((type == "text" || type == "hidden" || type == "textarea") ||
+    if (((el instanceof HTMLInputElement && el.mozIsTextField(true)) ||
+        type == "hidden" || type == "textarea") ||
         ((type == "checkbox" || type == "radio") && el.checked)) {
       formData.push(escapeNameValuePair(el.name, el.value, isURLEncoded));
     } else if (el instanceof HTMLSelectElement && el.selectedIndex >= 0) {

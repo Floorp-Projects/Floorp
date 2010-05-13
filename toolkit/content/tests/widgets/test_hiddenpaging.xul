@@ -97,6 +97,13 @@ function testListbox()
 {
   var id = "listbox";
   var listbox = document.getElementById(id);
+
+  // Check that a scrollbar is visible by comparing the width of the listitem
+  // with the width of the listbox. This is a simple way to do this without
+  // checking the anonymous content.
+  ok(listbox.firstChild.getBoundingClientRect().width < listbox.getBoundingClientRect().width - 10,
+     id + ": Scrollbar visible");
+
   listbox.selectedIndex = 0;
   sendKey("PAGE_DOWN", id);
   is(listbox.selectedItem.id, id + "_item8", id + ": Page down should go to the item one visible page away");

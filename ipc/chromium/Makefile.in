@@ -324,6 +324,8 @@ CPPSRCS += atomicops_internals_mutex.cc
 endif # }
 endif # }
 
+OS_CXXFLAGS += $(TK_CFLAGS)
+
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_NATIVE_LIBEVENT # {

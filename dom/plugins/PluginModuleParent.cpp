@@ -737,7 +737,7 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
 
     if (*error != NPERR_NO_ERROR) {
         NPP_Destroy(instance, 0);
-        return *error;
+        return NS_ERROR_FAILURE;
     }
 
     return NS_OK;

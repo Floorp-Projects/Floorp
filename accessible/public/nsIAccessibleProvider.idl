@@ -45,7 +45,7 @@
    object. For that XBL binding of element should implement the interface.
  */
 
-[scriptable, uuid(3f7f9194-c625-4a85-8148-6d92d34897fa)]
+[scriptable, uuid(89fb8270-4f25-11df-9879-0800200c9a66)]
 interface nsIAccessibleProvider : nsISupports
 {
   /**
@@ -126,7 +126,7 @@ interface nsIAccessibleProvider : nsISupports
   /** Used for label element */
   const long XFormsLabel = 0x00002001;
   /** Used for output element */
-  const long XFormsOuput = 0x00002002;
+  const long XFormsOutput = 0x00002002;
   /** Used for trigger and submit elements */
   const long XFormsTrigger = 0x00002003;
   /** Used for input and textarea elements */

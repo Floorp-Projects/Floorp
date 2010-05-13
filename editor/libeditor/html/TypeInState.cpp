@@ -319,7 +319,6 @@ nsresult TypeInState::RemovePropFromSetList(nsIAtom *aProp,
                                             const nsString &aAttr)
 {
   PRInt32 index;
-  PropItem *item;
   if (!aProp)
   {
     // clear _all_ props

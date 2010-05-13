@@ -220,10 +220,6 @@
 
 /*** list ***/
 
-.list-container {
-  overflow: auto;
-}
-
 .list {
   -moz-appearance: none;
   margin: 0px;
@@ -398,7 +394,7 @@
 
 /*** search view ***/
 
-#search-view > .list-container > .search-filter {
+.search-filter {
   padding: 20px;
   -moz-box-align: center;
   background-color: #FFF;

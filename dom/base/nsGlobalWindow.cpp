@@ -132,7 +132,6 @@
 #include "nsIPresShell.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIProgrammingLanguage.h"
-#include "nsIAuthPrompt.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIScriptSecurityManager.h"
@@ -142,6 +141,7 @@
 #include "nsISelectionController.h"
 #include "nsISelection.h"
 #include "nsIPrompt.h"
+#include "nsIPromptService.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
@@ -668,7 +668,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mShowFocusRings(PR_TRUE),
 #endif
     mShowFocusRingForContent(PR_FALSE),
-    mFocusByKeyOccured(PR_FALSE),
+    mFocusByKeyOccurred(PR_FALSE),
     mHasAcceleration(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
@@ -3581,6 +3581,25 @@ nsGlobalWindow::GetMozInnerScreenY(float* aScreenY)
 }
 
 NS_IMETHODIMP
+nsGlobalWindow::GetMozPaintCount(PRUint64* aResult)
+{
+  FORWARD_TO_OUTER(GetMozPaintCount, (aResult), NS_ERROR_NOT_INITIALIZED);
+
+  *aResult = 0;
+
+  if (!mDocShell)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  mDocShell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell)
+    return NS_OK;
+
+  *aResult = presShell->GetPaintCount();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsGlobalWindow::SetScreenX(PRInt32 aScreenX)
 {
   FORWARD_TO_OUTER(SetScreenX, (aScreenX), NS_ERROR_NOT_INITIALIZED);
@@ -4241,9 +4260,6 @@ nsGlobalWindow::Alert(const nsAString& aString)
 {
   FORWARD_TO_OUTER(Alert, (aString), NS_ERROR_NOT_INITIALIZED);
 
-  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
-  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
-
   // Reset popup state while opening a modal dialog, and firing events
   // about the dialog, to prevent the current state from being active
   // the whole time a modal dialog is open.
@@ -4268,16 +4284,17 @@ nsGlobalWindow::Alert(const nsAString& aString)
   nsAutoString final;
   nsContentUtils::StripNullChars(*str, final);
 
-  return prompter->Alert(title.get(), final.get());
+  nsresult rv;
+  nsCOMPtr<nsIPromptService> promptSvc = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return promptSvc->Alert(this, title.get(), final.get());
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
 {
   FORWARD_TO_OUTER(Confirm, (aString, aReturn), NS_ERROR_NOT_INITIALIZED);
-
-  nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
-  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
   // Reset popup state while opening a modal dialog, and firing events
   // about the dialog, to prevent the current state from being active
@@ -4298,41 +4315,23 @@ nsGlobalWindow::Confirm(const nsAString& aString, PRBool* aReturn)
   nsAutoString final;
   nsContentUtils::StripNullChars(aString, final);
 
-  return prompter->Confirm(title.get(), final.get(),
-                           aReturn);
+  nsresult rv;
+  nsCOMPtr<nsIPromptService> promptSvc = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return promptSvc->Confirm(this, title.get(), final.get(), aReturn);
 }
 
 NS_IMETHODIMP
 nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
-                       const nsAString& aTitle, PRUint32 aSavePassword,
                        nsAString& aReturn)
 {
-  // We don't use "aTitle" because we ignore the 3rd (title) argument to
-  // prompt(). IE and Opera ignore it too. See Mozilla bug 334893.
   SetDOMStringToNull(aReturn);
-
-  // This code depends on aSavePassword being defaulted to
-  // nsIAuthPrompt::SAVE_PASSWORD_NEVER, which happens to have the
-  // value 0. If that ever changes, this code needs to deal!
-
-  PR_STATIC_ASSERT(nsIAuthPrompt::SAVE_PASSWORD_NEVER == 0);
-
-  nsresult rv;
-  nsCOMPtr<nsIWindowWatcher> wwatch =
-    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAuthPrompt> prompter;
-  wwatch->GetNewAuthPrompter(this, getter_AddRefs(prompter));
-  NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
 
   // Reset popup state while opening a modal dialog, and firing events
   // about the dialog, to prevent the current state from being active
   // the whole time a modal dialog is open.
   nsAutoPopupStatePusher popupStatePusher(openAbused, PR_TRUE);
-
-  PRBool b;
-  nsXPIDLString uniResult;
 
   // Before bringing up the window, unsuppress painting and flush
   // pending reflows.
@@ -4347,13 +4346,22 @@ nsGlobalWindow::Prompt(const nsAString& aMessage, const nsAString& aInitial,
   nsContentUtils::StripNullChars(aMessage, fixedMessage);
   nsContentUtils::StripNullChars(aInitial, fixedInitial);
 
-  rv = prompter->Prompt(title.get(), fixedMessage.get(), nsnull,
-                        aSavePassword, fixedInitial.get(),
-                        getter_Copies(uniResult), &b);
+  nsresult rv;
+  nsCOMPtr<nsIPromptService> promptSvc = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (uniResult && b) {
-    aReturn.Assign(uniResult);
+  // Pass in the default value, if any.
+  PRUnichar *inoutValue = ToNewUnicode(fixedInitial);
+
+  PRBool ok, dummy;
+  rv = promptSvc->Prompt(this, title.get(), fixedMessage.get(),
+                         &inoutValue, nsnull, &dummy, &ok);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAdoptingString outValue(inoutValue);
+
+  if (ok && outValue) {
+    aReturn.Assign(outValue);
   }
 
   return rv;
@@ -6965,7 +6973,7 @@ nsGlobalWindow::SetFocusedNode(nsIContent* aNode,
     // mShowFocusRingForContent, as we don't want this to be permanent for
     // the window.
     if (mFocusMethod == nsIFocusManager::FLAG_BYKEY) {
-      mFocusByKeyOccured = PR_TRUE;
+      mFocusByKeyOccurred = PR_TRUE;
     } else if (aFocusMethod & nsIFocusManager::FLAG_SHOWRING
 #ifdef MOZ_WIDGET_GTK2
              || mFocusedNode->IsXUL()
@@ -6992,7 +7000,7 @@ nsGlobalWindow::ShouldShowFocusRing()
 {
   FORWARD_TO_INNER(ShouldShowFocusRing, (), PR_FALSE);
 
-  return mShowFocusRings || mShowFocusRingForContent || mFocusByKeyOccured;
+  return mShowFocusRings || mShowFocusRingForContent || mFocusByKeyOccurred;
 }
 
 void

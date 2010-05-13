@@ -175,11 +175,7 @@
 
 // for X remote support
 #ifdef MOZ_ENABLE_XREMOTE
-#ifdef MOZ_WIDGET_PHOTON
-#include "PhRemoteClient.h"
-#else
 #include "XRemoteClient.h"
-#endif
 #include "nsIRemoteService.h"
 #endif
 
