@@ -68,6 +68,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
 #include "nsWeakReference.h"
+#include "nsITabChild.h"
 
 class gfxMatrix;
 
@@ -148,7 +149,8 @@ class TabChild : public PIFrameEmbeddingChild,
                  public nsIWebBrowserChromeFocus,
                  public nsIInterfaceRequestor,
                  public nsIWindowProvider,
-                 public nsSupportsWeakReference
+                 public nsSupportsWeakReference,
+                 public nsITabChild
 {
 public:
     TabChild();
@@ -235,6 +237,9 @@ public:
             const PRInt32& aBufW,
             const PRInt32& aBufH,
             Shmem& aBuf);
+
+    virtual PGeolocationRequestChild* AllocPGeolocationRequest(const IPC::URI& uri);
+    virtual bool DeallocPGeolocationRequest(PGeolocationRequestChild* actor);
 
     nsIWebNavigation* WebNavigation() { return mWebNav; }
 
