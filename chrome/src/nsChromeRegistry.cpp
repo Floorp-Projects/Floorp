@@ -45,87 +45,38 @@
 
 #include "prio.h"
 #include "prprf.h"
-#if defined(XP_WIN)
-#include <windows.h>
-#elif defined(XP_MACOSX)
-#include <CoreServices/CoreServices.h>
-#elif defined(MOZ_WIDGET_GTK2)
-#include <gtk/gtk.h>
-#endif
 
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsArrayEnumerator.h"
-#include "nsStringEnumerator.h"
-#include "nsEnumeratorUtils.h"
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
 #include "nsEscape.h"
-#include "nsInt64.h"
 #include "nsLayoutCID.h"
-#include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsWidgetsCID.h"
-#include "nsXPCOMCIDInternal.h"
-#include "nsXPIDLString.h"
-#include "nsXULAppAPI.h"
-#include "nsTextFormatter.h"
 
-#include "nsIAtom.h"
-#include "nsICommandLine.h"
 #include "nsCSSStyleSheet.h"
 #include "nsIConsoleService.h"
-#include "nsIDirectoryService.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocShell.h"
-#include "nsIDocumentObserver.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMLocation.h"
 #include "nsIDOMWindowCollection.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIFileChannel.h"
-#include "nsIFileURL.h"
 #include "nsIIOService.h"
 #include "nsIJARProtocolHandler.h"
-#include "nsIJARURI.h"
-#include "nsILocalFile.h"
-#include "nsILocaleService.h"
-#include "nsILookAndFeel.h"
 #include "nsIObserverService.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefBranch2.h"
 #include "nsIPresShell.h"
 #include "nsIProtocolHandler.h"
-#include "nsIResProtocolHandler.h"
 #include "nsIScriptError.h"
-#include "nsIServiceManager.h"
-#include "nsISimpleEnumerator.h"
-#include "nsIStyleSheet.h"
-#include "nsISupportsArray.h"
-#include "nsIVersionComparator.h"
 #include "nsIWindowMediator.h"
-#include "nsIXPConnect.h"
-#include "nsIXULAppInfo.h"
-#include "nsIXULRuntime.h"
-
-#define UILOCALE_CMD_LINE_ARG "UILocale"
-
-#define MATCH_OS_LOCALE_PREF "intl.locale.matchOS"
-#define SELECTED_LOCALE_PREF "general.useragent.locale"
-#define SELECTED_SKIN_PREF   "general.skins.selectedSkin"
-
-static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 nsChromeRegistry* nsChromeRegistry::gChromeRegistry;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void
-LogMessage(const char* aMsg, ...)
+void
+nsChromeRegistry::LogMessage(const char* aMsg, ...)
 {
   nsCOMPtr<nsIConsoleService> console 
     (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
@@ -143,9 +94,9 @@ LogMessage(const char* aMsg, ...)
   PR_smprintf_free(formatted);
 }
 
-static void
-LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
-                      const char* aMsg, ...)
+void
+nsChromeRegistry::LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
+                                        const char* aMsg, ...)
 {
   nsresult rv;
 
@@ -178,238 +129,6 @@ LogMessageWithContext(nsIURI* aURL, PRUint32 aLineNumber, PRUint32 flags,
     return;
 
   console->LogMessage(error);
-}
-
-// We use a "best-fit" algorithm for matching locales and themes. 
-// 1) the exact selected locale/theme
-// 2) (locales only) same language, different country
-//    e.g. en-GB is the selected locale, only en-US is available
-// 3) any available locale/theme
-
-/**
- * Match the language-part of two lang-COUNTRY codes, hopefully but
- * not guaranteed to be in the form ab-CD or abz-CD. "ab" should also
- * work, any other garbage-in will produce undefined results as long
- * as it does not crash.
- */
-static PRBool
-LanguagesMatch(const nsACString& a, const nsACString& b)
-{
-  if (a.Length() < 2 || b.Length() < 2)
-    return PR_FALSE;
-
-  nsACString::const_iterator as, ae, bs, be;
-  a.BeginReading(as);
-  a.EndReading(ae);
-  b.BeginReading(bs);
-  b.EndReading(be);
-
-  while (*as == *bs) {
-    if (*as == '-')
-      return PR_TRUE;
- 
-    ++as; ++bs;
-
-    // reached the end
-    if (as == ae && bs == be)
-      return PR_TRUE;
-
-    // "a" is short
-    if (as == ae)
-      return (*bs == '-');
-
-    // "b" is short
-    if (bs == be)
-      return (*as == '-');
-  }
-
-  return PR_FALSE;
-}
-
-static PRBool
-CanLoadResource(nsIURI* aResourceURI)
-{
-  PRBool isLocalResource = PR_FALSE;
-  (void)NS_URIChainHasFlags(aResourceURI,
-                            nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-                            &isLocalResource);
-  return isLocalResource;
-}
-
-nsChromeRegistry::ProviderEntry*
-nsChromeRegistry::nsProviderArray::GetProvider(const nsACString& aPreferred, MatchType aType)
-{
-  PRInt32 i = mArray.Count();
-  if (!i)
-    return nsnull;
-
-  ProviderEntry* found = nsnull;  // Only set if we find a partial-match locale
-  ProviderEntry* entry;
-
-  while (i--) {
-    entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
-    if (aPreferred.Equals(entry->provider))
-      return entry;
-
-    if (aType != LOCALE)
-      continue;
-
-    if (LanguagesMatch(aPreferred, entry->provider)) {
-      found = entry;
-      continue;
-    }
-
-    if (!found && entry->provider.EqualsLiteral("en-US"))
-      found = entry;
-  }
-
-  if (!found && aType != EXACT)
-    return entry;
-
-  return found;
-}
-
-nsIURI*
-nsChromeRegistry::nsProviderArray::GetBase(const nsACString& aPreferred, MatchType aType)
-{
-  ProviderEntry* provider = GetProvider(aPreferred, aType);
-
-  if (!provider)
-    return nsnull;
-
-  return provider->baseURI;
-}
-
-const nsACString&
-nsChromeRegistry::nsProviderArray::GetSelected(const nsACString& aPreferred, MatchType aType)
-{
-  ProviderEntry* entry = GetProvider(aPreferred, aType);
-
-  if (entry)
-    return entry->provider;
-
-  return EmptyCString();
-}
-
-void
-nsChromeRegistry::nsProviderArray::SetBase(const nsACString& aProvider, nsIURI* aBaseURL)
-{
-  ProviderEntry* provider = GetProvider(aProvider, EXACT);
-
-  if (provider) {
-    provider->baseURI = aBaseURL;
-    return;
-  }
-
-  // no existing entries, add a new one
-  provider = new ProviderEntry(aProvider, aBaseURL);
-  if (!provider)
-    return; // It's safe to silently fail on OOM
-
-  mArray.AppendElement(provider);
-}
-
-void
-nsChromeRegistry::nsProviderArray::EnumerateToArray(nsTArray<nsCString> *a)
-{
-  PRInt32 i = mArray.Count();
-  while (i--) {
-    ProviderEntry *entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
-    a->AppendElement(entry->provider);
-  }
-}
-
-void
-nsChromeRegistry::nsProviderArray::Clear()
-{
-  PRInt32 i = mArray.Count();
-  while (i--) {
-    ProviderEntry* entry = reinterpret_cast<ProviderEntry*>(mArray[i]);
-    delete entry;
-  }
-
-  mArray.Clear();
-}
-
-nsChromeRegistry::PackageEntry::PackageEntry(const nsACString& aPackage) :
-  package(aPackage), flags(0)
-{
-}
-
-PLHashNumber
-nsChromeRegistry::HashKey(PLDHashTable *table, const void *key)
-{
-  const nsACString& str = *reinterpret_cast<const nsACString*>(key);
-  return HashString(str);
-}
-
-PRBool
-nsChromeRegistry::MatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
-                           const void *key)
-{
-  const nsACString& str = *reinterpret_cast<const nsACString*>(key);
-  const PackageEntry* pentry = static_cast<const PackageEntry*>(entry);
-  return str.Equals(pentry->package);
-}
-
-void
-nsChromeRegistry::ClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
-{
-  PackageEntry* pentry = static_cast<PackageEntry*>(entry);
-  pentry->~PackageEntry();
-}
-
-PRBool
-nsChromeRegistry::InitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
-                            const void *key)
-{
-  const nsACString& str = *reinterpret_cast<const nsACString*>(key);
-
-  new (entry) PackageEntry(str);
-  return PR_TRUE;
-}
-
-const PLDHashTableOps
-nsChromeRegistry::kTableOps = {
-  PL_DHashAllocTable,
-  PL_DHashFreeTable,
-  HashKey,
-  MatchKey,
-  PL_DHashMoveEntryStub,
-  ClearEntry,
-  PL_DHashFinalizeStub,
-  InitEntry
-};
-
-void
-nsChromeRegistry::OverlayListEntry::AddURI(nsIURI* aURI)
-{
-  PRInt32 i = mArray.Count();
-  while (i--) {
-    PRBool equals;
-    if (NS_SUCCEEDED(aURI->Equals(mArray[i], &equals)) && equals)
-        return;
-  }
-
-  mArray.AppendObject(aURI);
-}
-
-void
-nsChromeRegistry::OverlayListHash::Add(nsIURI* aBase, nsIURI* aOverlay)
-{
-  OverlayListEntry* entry = mTable.PutEntry(aBase);
-  if (entry)
-    entry->AddURI(aOverlay);
-}
-
-const nsCOMArray<nsIURI>*
-nsChromeRegistry::OverlayListHash::GetArray(nsIURI* aBase)
-{
-  OverlayListEntry* entry = mTable.GetEntry(aBase);
-  if (!entry)
-    return nsnull;
-
-  return &entry->mArray;
 }
 
 nsChromeRegistry::~nsChromeRegistry()

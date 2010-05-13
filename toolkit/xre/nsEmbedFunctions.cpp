@@ -90,7 +90,7 @@
 #include "ScopedXREEmbed.h"
 
 #include "mozilla/plugins/PluginProcessChild.h"
-include "mozilla/dom/ContentProcessThread.h"
+#include "mozilla/dom/ContentProcessProcess.h"
 #include "mozilla/dom/ContentProcessParent.h"
 #include "mozilla/dom/ContentProcessChild.h"
 
@@ -113,7 +113,7 @@ using mozilla::ipc::ProcessChild;
 using mozilla::ipc::ScopedXREEmbed;
 
 using mozilla::plugins::PluginProcessChild;
-using mozilla::dom::ContentProcessThread;
+using mozilla::dom::ContentProcessProcess;
 using mozilla::dom::ContentProcessParent;
 using mozilla::dom::ContentProcessChild;
 
@@ -362,7 +362,7 @@ XRE_InitChildProcess(int aArgc,
       break;
 
     case GeckoProcessType_Content:
-      process = new ContentProcessChild(parentHandle);
+      process = new ContentProcessProcess(parentHandle);
       break;
 
     case GeckoProcessType_IPDLUnitTest:

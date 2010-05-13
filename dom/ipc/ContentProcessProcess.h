@@ -40,39 +40,42 @@
 #ifndef dom_tabs_ContentProcessThread_h
 #define dom_tabs_ContentProcessThread_h 1
 
-#include "chrome/common/child_thread.h"
-#include "base/file_path.h"
-
-#include "mozilla/ipc/MozillaChildThread.h"
+#include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/ScopedXREEmbed.h"
 #include "ContentProcessChild.h"
 
 #undef _MOZ_LOG
-#define _MOZ_LOG(s)  printf("[ContentProcessThread] %s", s)
+#define _MOZ_LOG(s)  printf("[ContentProcessProcess] %s", s)
 
 namespace mozilla {
 namespace dom {
 
 /**
- * ContentProcessThread is a singleton on the content process which represents
- * a background thread where tab instances live.
+ * ContentProcessProcess is a singleton on the content process which represents
+ * the main thread where tab instances live.
  */
-class ContentProcessThread : public mozilla::ipc::MozillaChildThread
+class ContentProcessProcess : public mozilla::ipc::ProcessChild
 {
-public:
-    ContentProcessThread(ProcessHandle mParentHandle);
-    ~ContentProcessThread();
+    typedef mozilla::ipc::ProcessChild ProcessChild;
 
-private:
-    // Thread implementation:
-    virtual void Init();
+public:
+    ContentProcessProcess(ProcessHandle mParentHandle)
+        : ProcessChild(mParentHandle)
+    { }
+
+    ~ContentProcessProcess()
+    { }
+
+    NS_OVERRIDE
+    virtual bool Init();
+    NS_OVERRIDE
     virtual void CleanUp();
 
+private:
     ContentProcessChild mContentProcess;
-    IPC::Channel* mChannel;
     mozilla::ipc::ScopedXREEmbed mXREEmbed;
 
-    DISALLOW_EVIL_CONSTRUCTORS(ContentProcessThread);
+    DISALLOW_EVIL_CONSTRUCTORS(ContentProcessProcess);
 };
 
 }  // namespace dom

@@ -37,47 +37,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "ContentProcessThread.h"
+#include "mozilla/ipc/IOThreadChild.h"
 
-#include "prlink.h"
+#include "ContentProcessProcess.h"
 
-#include "base/command_line.h"
-#include "base/string_util.h"
-#include "chrome/common/child_process.h"
-#include "chrome/common/chrome_switches.h"
-
-using mozilla::ipc::MozillaChildThread;
+using mozilla::ipc::IOThreadChild;
 
 namespace mozilla {
 namespace dom {
 
-ContentProcessThread::ContentProcessThread(ProcessHandle mParentHandle) :
-    MozillaChildThread(mParentHandle, MessageLoop::TYPE_MOZILLA_UI),
-    mContentProcess()
+bool
+ContentProcessProcess::Init()
 {
-}
-
-ContentProcessThread::~ContentProcessThread()
-{
-}
-
-void
-ContentProcessThread::Init()
-{
-    MozillaChildThread::Init();
     mXREEmbed.Start();
-
-    // FIXME/cjones: set up channel stuff, etc.
-    
-    // FIXME owner_loop() is bad here
-    mContentProcess.Init(owner_loop(), GetParentProcessHandle(), channel());
+    mContentProcess.Init(IOThreadChild::message_loop(),
+                         ParentHandle(),
+                         IOThreadChild::channel());
+    return true;
 }
 
 void
-ContentProcessThread::CleanUp()
+ContentProcessProcess::CleanUp()
 {
     mXREEmbed.Stop();
-    MozillaChildThread::CleanUp();
 }
 
 } // namespace tabs
