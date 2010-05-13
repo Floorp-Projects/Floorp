@@ -180,7 +180,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
     ;
 
   // Some broken http servers just specify parameters
-  // like 'filename' without sepcifying disposition
+  // like 'filename' without specifying disposition
   // method. Rewind to the first non-white-space
   // character.
   
