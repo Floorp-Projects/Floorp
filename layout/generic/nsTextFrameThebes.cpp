@@ -1333,9 +1333,16 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   if (textStyle1->NewlineIsSignificant() && HasTerminalNewline(aFrame1))
     return PR_FALSE;
 
-  NS_ASSERTION(aFrame1->GetContent() != aFrame2->GetContent() ||
-               aFrame1->GetNextInFlow() == aFrame2,
-               "can't continue text run across non-fluid continuations");
+  if (aFrame1->GetContent() == aFrame2->GetContent() &&
+      aFrame1->GetNextInFlow() != aFrame2) {
+    // aFrame2 must be a non-fluid continuation of aFrame1. This can happen
+    // sometimes when the unicode-bidi property is used; the bidi resolver
+    // breaks text into different frames even though the text has the same
+    // direction. We can't allow these two frames to share the same textrun
+    // because that would violate our invariant that two flows in the same
+    // textrun have different content elements.
+    return PR_FALSE;
+  }
 
   nsStyleContext* sc2 = aFrame2->GetStyleContext();
   if (sc1 == sc2)
