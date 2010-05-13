@@ -3911,8 +3911,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
 
     nsIFrame* newFrame = creator->CreateFrameFor(content);
     if (newFrame) {
-      NS_ASSERTION(content->GetPrimaryFrame(),
-                   "Content must have a primary frame now");
+// See bug 565569
+//      NS_ASSERTION(content->GetPrimaryFrame(),
+//                   "Content must have a primary frame now");
       aChildItems.AddChild(newFrame);
     }
     else {
