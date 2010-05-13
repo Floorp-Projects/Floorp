@@ -21,7 +21,6 @@
 #
 # Contributor(s):
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
-#   Rob Campbell <rcampbell@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -599,12 +598,6 @@
                         accesskey="&addons.accesskey;"
                         command="Tools:Addons"/>
               <menuseparator id="devToolsSeparator"/>
-              <menuitem id="menu_pageinspect"
-                        type="checkbox"
-                        label="&inspectMenu.label;"
-                        accesskey="&inspectMenu.accesskey;"
-                        key="&inspectMenu.commandkey;"
-                        command="Tools:Inspect"/>
               <menuitem id="javascriptConsole"
                         label="&errorConsoleCmd.label;"
                         accesskey="&errorConsoleCmd.accesskey;"
