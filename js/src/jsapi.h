@@ -3351,6 +3351,8 @@ class Value
         data.dbl = d;
     }
 
+    inline void setNumber(double d);
+
     double &asDoubleRef() {
         JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
         JS_ASSERT(isDouble());
@@ -3622,6 +3624,7 @@ struct AssertLayoutCompatible
 /* XXX: this is a temporary hack until copying is implicit. */
 struct CopyableValue : Value
 {
+    CopyableValue() {}
     CopyableValue(NullTag arg) : Value(arg) {}
     CopyableValue(UndefinedTag arg) : Value(arg) {}
     CopyableValue(Int32Tag arg) : Value(arg) {}
@@ -3629,7 +3632,7 @@ struct CopyableValue : Value
     CopyableValue(JSString *arg) : Value(arg) {}
     CopyableValue(FunObjTag arg) : Value(arg) {}
     CopyableValue(NonFunObjTag arg) : Value(arg) {}
-    CopyableValue(ObjectTag arg) : Value(arg) {}
+    inline CopyableValue(ObjectTag arg);
     CopyableValue(BooleanTag arg) : Value(arg) {}
     CopyableValue(JSWhyMagic arg) : Value(arg) {}
 };

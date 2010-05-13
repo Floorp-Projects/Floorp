@@ -257,9 +257,15 @@ AutoGCRooter::trace(JSTracer *trc)
         CallGCMarkerIfGCThing(trc, static_cast<AutoIdRooter *>(this)->idval);
         return;
 
-      case VECTOR: {
+      case VALVECTOR: {
         Vector<Value, 8> &vector = static_cast<AutoValueVector *>(this)->vector;
         TraceValues(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
+        return;
+      }
+
+      case BOXEDVECTOR: {
+        Vector<jsboxedword, 8> &vector = static_cast<AutoBoxedWordVector *>(this)->vector;
+        TraceBoxedWords(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
         return;
       }
     }

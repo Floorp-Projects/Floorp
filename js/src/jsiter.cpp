@@ -133,7 +133,7 @@ iterator_trace(JSTracer *trc, JSObject *obj)
 }
 
 static inline bool
-NewKeyValuePair(JSContext *cx, const Value &key, const Value &val, Value *rval)
+NewKeyValuePair(JSContext *cx, const Value &key, const Value &val, jsboxedword *wp)
 {
     Value vec[2]; 
     vec[0].copy(key);
@@ -143,13 +143,13 @@ NewKeyValuePair(JSContext *cx, const Value &key, const Value &val, Value *rval)
     JSObject *aobj = js_NewArrayObject(cx, 2, vec);
     if (!aobj)
         return false;
-    rval->setNonFunObj(*aobj);
+    *wp = OBJECT_TO_JSBOXEDWORD(aobj);
     return true;
 }
 
 static inline bool
 Enumerate(JSContext *cx, JSObject *obj, jsid id, bool enumerable, uintN flags,
-          HashSet<jsid>& ht, AutoValueVector& vec)
+          Value *tmpRoot, HashSet<jsid>& ht, AutoBoxedWordVector& vec)
 {
     JS_ASSERT(JSID_IS_INT(id) || JSID_IS_ATOM(id));
 
@@ -165,27 +165,37 @@ Enumerate(JSContext *cx, JSObject *obj, jsid id, bool enumerable, uintN flags,
         }
     }
     if (enumerable) {
-        Value idval(IdToValue(id));
-        if (!vec.append(idval)) {
+        if (!vec.append(id)) {
             JS_ReportOutOfMemory(cx);
             return false;
         }
         if (flags & JSITER_FOREACH) {
-            Value *vp = vec.end() - 1;
-            if (!obj->getProperty(cx, id, vp))
+            jsboxedword *wp = vec.end() - 1;
+            if (!obj->getProperty(cx, id, tmpRoot))
                 return false;
-            if (flags & JSITER_KEYVALUE && !NewKeyValuePair(cx, idval, *vp, vp))
-                return false;
+            if (flags & JSITER_KEYVALUE) {
+                if (!NewKeyValuePair(cx, IdToValue(id), *tmpRoot, wp))
+                    return false;
+            } else {
+                /*
+                 * TODO: This is expensive and unnecessary if there are a bunch
+                 * of doubles. To fix, we need to change the stored type of
+                 * iterators to something fatter than jsboxedword when
+                 * iterating in a for-each.
+                 */
+                if (!ValueToBoxedWord(cx, *tmpRoot, wp))
+                    return false;
+            }
         }
     }
     return true;
 }
 
 static bool
-EnumerateNativeProperties(JSContext *cx, JSObject *obj, uintN flags, HashSet<jsid> &ht,
-                          AutoValueVector& props)
+EnumerateNativeProperties(JSContext *cx, JSObject *obj, uintN flags, Value *tmpRoot,
+                          HashSet<jsid> &ht, AutoBoxedWordVector& props)
 {
-    AutoValueVector sprops(cx);
+    AutoBoxedWordVector sprops(cx);
 
     JS_LOCK_OBJ(cx, obj);
 
@@ -194,7 +204,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, uintN flags, HashSet<jsi
     for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
         if (!sprop->id != JSBOXEDWORD_VOID &&
             !sprop->isAlias() &&
-            !Enumerate(cx, obj, sprop->id, sprop->enumerable(), flags, ht, sprops)) {
+            !Enumerate(cx, obj, sprop->id, sprop->enumerable(), flags, tmpRoot, ht, sprops)) {
             return false;
         }
     }
@@ -213,8 +223,8 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, uintN flags, HashSet<jsi
 }
 
 static bool
-EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, uintN flags, HashSet<jsid> &ht,
-                              AutoValueVector& props)
+EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, uintN flags, Value *tmpRoot,
+                              HashSet<jsid> &ht, AutoBoxedWordVector& props)
 {
     size_t count = obj->getDenseArrayCount();
 
@@ -224,7 +234,7 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, uintN flags, HashSet
         for (size_t i = 0; i < capacity; ++i, ++vp) {
             if (!vp->isMagic(JS_ARRAY_HOLE)) {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
-                if (!Enumerate(cx, obj, INT_TO_JSID(i), true, flags, ht, props))
+                if (!Enumerate(cx, obj, INT_TO_JSID(i), true, flags, tmpRoot, ht, props))
                     return false;
             }
         }
@@ -242,7 +252,8 @@ InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, ui
         return false;
     }
 
-    AutoValueVector props(cx);
+    AutoBoxedWordVector props(cx);
+    AutoValueRooter avr(cx);
 
     while (obj) {
         Class *clasp = obj->getClass();
@@ -251,17 +262,17 @@ InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, ui
             !(clasp->flags & JSCLASS_NEW_ENUMERATE)) {
             if (!clasp->enumerate(cx, obj))
                 return false;
-            if (!EnumerateNativeProperties(cx, obj, flags, ht, props))
+            if (!EnumerateNativeProperties(cx, obj, flags, avr.addr(), ht, props))
                 return false;
         } else if (obj->isDenseArray()) {
-            if (!EnumerateDenseArrayProperties(cx, obj, flags, ht, props))
+            if (!EnumerateDenseArrayProperties(cx, obj, flags, avr.addr(), ht, props))
                 return false;
         } else {
             Value state;
             if (!obj->enumerate(cx, JSENUMERATE_INIT, &state, NULL))
                 return false;
             if (state.isMagic(JS_NATIVE_ENUMERATE)) {
-                if (!EnumerateNativeProperties(cx, obj, flags, ht, props))
+                if (!EnumerateNativeProperties(cx, obj, flags, avr.addr(), ht, props))
                     return false;
             } else {
                 while (true) {
@@ -270,7 +281,7 @@ InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, ui
                         return false;
                     if (state.isNull())
                         break;
-                    if (!Enumerate(cx, obj, id, true, flags, ht, props))
+                    if (!Enumerate(cx, obj, id, true, flags, avr.addr(), ht, props))
                         return false;
                 }
             }
@@ -285,7 +296,7 @@ InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, ui
     size_t plength = props.length();
 
     NativeIterator *ni = (NativeIterator *)
-        cx->malloc(sizeof(NativeIterator) + plength * sizeof(Value) + slength * sizeof(uint32));
+        cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsboxedword) + slength * sizeof(uint32));
     if (!ni) {
         JS_ReportOutOfMemory(cx);
         return false;
@@ -293,7 +304,7 @@ InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, ui
     ni->props_array = ni->props_cursor = (jsboxedword *) (ni + 1);
     ni->props_end = ni->props_array + plength;
     if (plength)
-        memcpy(ni->props_array, props.begin(), plength * sizeof(Value));
+        memcpy(ni->props_array, props.begin(), plength * sizeof(jsboxedword));
     ni->shapes_array = (uint32 *) ni->props_end;
     ni->shapes_length = slength;
     ni->shapes_key = key;
@@ -482,11 +493,10 @@ iterator_next(JSContext *cx, uintN argc, Value *vp)
 
     if (!js_IteratorMore(cx, obj, vp))
         return false;
-    if (vp->isBoolean(false)) {
+    if (!vp->asBoolean()) {
         js_ThrowStopIteration(cx);
         return false;
     }
-    JS_ASSERT(vp->isBoolean(true));
     return js_IteratorNext(cx, obj, vp);
 }
 
@@ -647,7 +657,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
          */
         NativeIterator *ni = iterobj->getNativeIterator();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        BoxedWordToValue(*ni->props_cursor++, rval);
+        rval->copy(BoxedWordToValue(*ni->props_cursor++));
 
         if (rval->isString() || (ni->flags & JSITER_FOREACH))
             return true;

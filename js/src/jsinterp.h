@@ -389,28 +389,17 @@ GetInstancePrivate(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
     return obj->getPrivate();
 }
 
+extern CopyableValue
+BoxedWordToValue(jsboxedword w);
+
+extern bool
+ValueToBoxedWord(JSContext *cx, const Value &v, jsboxedword *w);
+
 extern Value
 IdToValue(jsid id);
 
 extern bool
 ValueToId(JSContext *cx, const Value &v, jsid *idp);
-
-inline void
-BoxedWordToValue(jsboxedword w, Value *vp)
-{
-    if (JSBOXEDWORD_IS_STRING(w))
-        vp->setString(JSBOXEDWORD_TO_STRING(w));
-    else if (JSBOXEDWORD_IS_INT(w))
-        vp->setInt32(JSBOXEDWORD_TO_INT(w));
-    else if (JSBOXEDWORD_IS_DOUBLE(w))
-        vp->setDouble(*JSBOXEDWORD_TO_DOUBLE(w));
-    else if (JSBOXEDWORD_IS_OBJECT(w))
-        vp->setObjectOrNull(JSBOXEDWORD_TO_OBJECT(w));
-    vp->setBoolean(JSBOXEDWORD_TO_BOOLEAN(w));
-}
-
-bool
-ValueToBoxedWord(JSContext *cx, const Value &v, jsboxedword *w);
 
 } /* namespace js */
 
