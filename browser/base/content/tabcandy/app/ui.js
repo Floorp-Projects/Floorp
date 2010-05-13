@@ -355,9 +355,24 @@ window.Page = {
   //  - Takes a <TabItem>
   //
   setActiveTab: function(tab){
-    if( this._activeTab ) this._activeTab.makeDeactive();
+    if(tab == this._activeTab)
+      return;
+      
+    if(this._activeTab) { 
+      this._activeTab.makeDeactive();
+      this._activeTab.removeOnClose(this);
+    }
+      
     this._activeTab = tab;
-    tab.makeActive();
+    
+    if(this._activeTab) {
+      var self = this;
+      this._activeTab.addOnClose(this, function() {
+        self._activeTab = null;
+      });
+
+      this._activeTab.makeActive();
+    }
   },
   
   // ----------
