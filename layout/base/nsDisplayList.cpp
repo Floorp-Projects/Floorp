@@ -346,8 +346,9 @@ nsDisplayList::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     // Record bounds of moving visible items in movingContentAccumulatedBounds.
     // We do not need to add items that are uniform across the entire visible
     // area, since they have no visible movement.
+    nscolor color;
     if (isMoving &&
-        !(item->IsUniform(aBuilder) &&
+        !(item->IsUniform(aBuilder, &color) &&
           bounds.Contains(aVisibleRegion->GetBounds()) &&
           bounds.Contains(aVisibleRegionBeforeMove->GetBounds()))) {
       if (movingContentAccumulatedBounds.IsEmpty()) {
@@ -570,6 +571,28 @@ CreateEmptyThebesLayer(nsDisplayListBuilder* aBuilder,
   return itemGroup;
 }
 
+static PRBool
+IsAllUniform(nsDisplayListBuilder* aBuilder, nsDisplayList::ItemGroup* aGroup,
+             nscolor* aColor)
+{
+  nsRect visibleRect = aGroup->mStartItem->GetVisibleRect();
+  nscolor finalColor = NS_RGBA(0,0,0,0);
+  for (nsDisplayList::ItemGroup* group = aGroup; group;
+       group = group->mNextItemsForLayer) {
+    for (nsDisplayItem* item = group->mStartItem; item != group->mEndItem;
+         item = item->GetAbove()) {
+      nscolor color;
+      if (visibleRect != item->GetVisibleRect())
+        return PR_FALSE;
+      if (!item->IsUniform(aBuilder, &color))
+        return PR_FALSE;
+      finalColor = NS_ComposeColors(finalColor, color);
+    }
+  }
+  *aColor = finalColor;
+  return PR_TRUE;
+}
+
 /**
  * This is the heart of layout's integration with layers. We
  * use a ClippedItemIterator to iterate through descendant display
@@ -659,6 +682,7 @@ void nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
                        "initial group is empty");
           // This item is above the first Thebes layer.
           areaAboveFirstThebesLayer.Or(areaAboveFirstThebesLayer, bounds);
+          layerItems = &aLayers->ElementAt(aLayers->Length() - 1);
         }
       }
     }
@@ -680,6 +704,21 @@ void nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
 
   for (PRUint32 i = 0; i < aLayers->Length(); ++i) {
     LayerItems* layerItems = &aLayers->ElementAt(i);
+
+    nscolor color;
+    // Only convert layers with identity transform to ColorLayers, for now.
+    // This simplifies the code to set the clip region.
+    if (layerItems->mThebesLayer &&
+        IsAllUniform(aBuilder, layerItems->mItems, &color) &&
+        layerItems->mLayer->GetTransform().IsIdentity()) {
+      nsRefPtr<ColorLayer> layer = aManager->CreateColorLayer();
+      layer->SetClipRect(layerItems->mThebesLayer->GetClipRect());
+      // Clip to mVisibleRect to ensure only the pixels we want are filled.
+      layer->IntersectClipRect(layerItems->mVisibleRect);
+      layer->SetColor(gfxRGBA(color));
+      layerItems->mLayer = layer.forget();
+      layerItems->mThebesLayer = nsnull;
+    }
 
     gfxMatrix transform;
     nsIntRect visibleRect = layerItems->mVisibleRect;
@@ -1099,7 +1138,7 @@ nsDisplayBackground::IsOpaque(nsDisplayListBuilder* aBuilder) {
 }
 
 PRBool
-nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
+nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) {
   // theme background overrides any other background
   if (mIsThemed)
     return PR_FALSE;
@@ -1107,14 +1146,22 @@ nsDisplayBackground::IsUniform(nsDisplayListBuilder* aBuilder) {
   nsStyleContext *bgSC;
   PRBool hasBG =
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
-  if (!hasBG)
+  if (!hasBG) {
+    *aColor = NS_RGBA(0,0,0,0);
     return PR_TRUE;
+  }
   const nsStyleBackground* bg = bgSC->GetStyleBackground();
   if (bg->BottomLayer().mImage.IsEmpty() &&
       bg->mImageCount == 1 &&
       !nsLayoutUtils::HasNonZeroCorner(mFrame->GetStyleBorder()->mBorderRadius) &&
-      bg->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER)
+      bg->BottomLayer().mClip == NS_STYLE_BG_CLIP_BORDER) {
+    // Canvas frames don't actually render their background color, since that
+    // gets propagated to the solid color of the viewport
+    // (see nsCSSRendering::PaintBackgroundWithSC)
+    *aColor = nsCSSRendering::IsCanvasFrame(mFrame) ? NS_RGBA(0,0,0,0)
+        : bg->mBackgroundColor;
     return PR_TRUE;
+  }
   return PR_FALSE;
 }
 
@@ -1426,7 +1473,7 @@ nsDisplayWrapList::IsOpaque(nsDisplayListBuilder* aBuilder) {
   return PR_FALSE;
 }
 
-PRBool nsDisplayWrapList::IsUniform(nsDisplayListBuilder* aBuilder) {
+PRBool nsDisplayWrapList::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) {
   // We could try to do something but let's conservatively just return PR_FALSE.
   return PR_FALSE;
 }
@@ -1996,12 +2043,12 @@ PRBool nsDisplayTransform::IsOpaque(nsDisplayListBuilder *aBuilder)
  * wrapped list is uniform.  See IsOpaque for discussion of why this
  * works.
  */
-PRBool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder)
+PRBool nsDisplayTransform::IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor)
 {
   const nsStyleDisplay* disp = mFrame->GetStyleDisplay();
   return disp->mTransform.GetMainMatrixEntry(1) == 0.0f &&
     disp->mTransform.GetMainMatrixEntry(2) == 0.0f &&
-    mStoredList.IsUniform(aBuilder);
+    mStoredList.IsUniform(aBuilder, aColor);
 }
 
 /* If UNIFIED_CONTINUATIONS is defined, we can merge two display lists that
