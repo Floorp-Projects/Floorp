@@ -5612,7 +5612,7 @@ JS_PUBLIC_API(jsword)
 JS_GetContextThread(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    return JS_THREAD_ID(cx);
+    return reinterpret_cast<jsword>(JS_THREAD_ID(cx));
 #else
     return 0;
 #endif
@@ -5629,7 +5629,7 @@ JS_SetContextThread(JSContext *cx)
     JS_ASSERT(cx->requestDepth == 0);
     if (cx->thread) {
         JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-        return cx->thread->id;
+        return reinterpret_cast<jsword>(cx->thread->id);
     }
 
     if (!js_InitContextThread(cx)) {
@@ -5656,7 +5656,7 @@ JS_ClearContextThread(JSContext *cx)
     if (!cx->thread)
         return 0;
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-    jsword old = cx->thread->id;
+    void *old = cx->thread->id;
 
     /*
      * We must not race with a GC that accesses cx->thread for all threads,
@@ -5666,7 +5666,7 @@ JS_ClearContextThread(JSContext *cx)
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
     js_ClearContextThread(cx);
-    return old;
+    return reinterpret_cast<jsword>(old);
 #else
     return 0;
 #endif

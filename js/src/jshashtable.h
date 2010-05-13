@@ -354,6 +354,11 @@ class HashTable : AllocPolicy
         return true;
     }
 
+    bool initialized() const
+    {
+        return !!table;
+    }
+
     ~HashTable()
     {
         if (table)
@@ -780,6 +785,7 @@ class HashMap
      */
     HashMap(AllocPolicy a = AllocPolicy()) : impl(a) {}
     bool init(uint32 len = 0)                         { return impl.init(len); }
+    bool initialized() const                          { return impl.initialized(); }
 
     /*
      * Return whether the given lookup value is present in the map. E.g.:
@@ -947,6 +953,7 @@ class HashSet
      */
     HashSet(AllocPolicy a = AllocPolicy()) : impl(a) {}
     bool init(uint32 len = 0)                         { return impl.init(len); }
+    bool initialized() const                          { return impl.initialized(); }
 
     /*
      * Return whether the given lookup value is present in the map. E.g.:
