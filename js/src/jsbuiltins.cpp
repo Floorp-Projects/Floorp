@@ -194,8 +194,9 @@ js_StringToInt32(JSContext* cx, JSString* str)
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_StringToInt32, CONTEXT, STRING, 1, ACC_NONE)
 
-JSBool FASTCALL
-js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
+/* Nb: it's always safe to set isDefinitelyAtom to false if you're unsure or don't know. */
+static inline JSBool
+AddPropertyHelper(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, bool isDefinitelyAtom)
 {
     JS_LOCK_OBJ(cx, obj);
 
@@ -227,7 +228,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
             }
         }
 
-        scope->extend(cx, sprop);
+        scope->extend(cx, sprop, isDefinitelyAtom);
     } else {
         JSScopeProperty *sprop2 =
             scope->addProperty(cx, sprop->id, sprop->getter(), sprop->setter(),
@@ -247,7 +248,20 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_FALSE;
 }
+
+JSBool FASTCALL
+js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
+{
+    return AddPropertyHelper(cx, obj, sprop, /* isDefinitelyAtom = */false);
+}
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_AddProperty, CONTEXT, OBJECT, SCOPEPROP, 0, ACC_STORE_ANY)
+
+JSBool FASTCALL
+js_AddAtomProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
+{
+    return AddPropertyHelper(cx, obj, sprop, /* isDefinitelyAtom = */true);
+}
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_AddAtomProperty, CONTEXT, OBJECT, SCOPEPROP, 0, ACC_STORE_ANY)
 
 static JSBool
 HasProperty(JSContext* cx, JSObject* obj, jsid id)

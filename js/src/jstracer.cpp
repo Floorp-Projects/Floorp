@@ -11268,7 +11268,7 @@ JS_DEFINE_CALLINFO_4(static, BOOL_FAIL, MethodWriteBarrier, CONTEXT, OBJECT, SCO
 
 JS_REQUIRES_STACK RecordingStatus
 TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* sprop,
-                       jsval &v, LIns*& v_ins)
+                       jsval &v, LIns*& v_ins, bool isDefinitelyAtom)
 {
     if (entry == JS_NO_PROP_CACHE_FILL)
         RETURN_STOP("can't trace uncacheable property set");
@@ -11335,7 +11335,8 @@ TraceRecorder::setProp(jsval &l, PropertyCacheEntry* entry, JSScopeProperty* spr
             RETURN_STOP("adding a property to the global object");
 
         LIns* args[] = { INS_CONSTSPROP(sprop), obj_ins, cx_ins };
-        LIns* ok_ins = lir->insCall(&js_AddProperty_ci, args);
+        const CallInfo *ci = isDefinitelyAtom ? &js_AddAtomProperty_ci : &js_AddProperty_ci;
+        LIns* ok_ins = lir->insCall(ci, args);
         guard(false, lir->insEqI_0(ok_ins), OOM_EXIT);
     }
 
@@ -11495,9 +11496,12 @@ TraceRecorder::record_SetPropHit(PropertyCacheEntry* entry, JSScopeProperty* spr
     jsval& r = stackval(-1);
     jsval& l = stackval(-2);
     LIns* v_ins;
-    CHECK_STATUS_A(setProp(l, entry, sprop, r, v_ins));
 
     jsbytecode* pc = cx->fp->regs->pc;
+
+    bool isDefinitelyAtom = (*pc == JSOP_SETPROP);
+    CHECK_STATUS_A(setProp(l, entry, sprop, r, v_ins, isDefinitelyAtom));
+
     switch (*pc) {
       case JSOP_SETPROP:
       case JSOP_SETNAME:

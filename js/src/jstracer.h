@@ -1311,7 +1311,8 @@ class TraceRecorder
                                                   jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK RecordingStatus setProp(jsval &l, PropertyCacheEntry* entry,
                                                 JSScopeProperty* sprop,
-                                                jsval &v, nanojit::LIns*& v_ins);
+                                                jsval &v, nanojit::LIns*& v_ins,
+                                                bool isDefinitelyAtom);
     JS_REQUIRES_STACK RecordingStatus setCallProp(JSObject *callobj, nanojit::LIns *callobj_ins,
                                                     JSScopeProperty *sprop, nanojit::LIns *v_ins,
                                                     jsval v);
