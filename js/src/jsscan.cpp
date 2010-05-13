@@ -307,6 +307,93 @@ TokenStream::fillUserbuf()
     return i;
 }
 
+int32
+TokenStream::getCharFillLinebuf()
+{
+    ptrdiff_t ulen = userbuf.limit - userbuf.ptr;
+    if (ulen <= 0) {
+        if (!file) {
+            flags |= TSF_EOF;
+            return EOF;
+        }
+
+        /* Fill userbuf so that \r and \r\n convert to \n. */
+        ulen = fillUserbuf();
+        JS_ASSERT(ulen >= 0);
+        if (ulen == 0) {
+            flags |= TSF_EOF;
+            return EOF;
+        }
+        userbuf.limit = userbuf.base + ulen;
+        userbuf.ptr = userbuf.base;
+    }
+    if (listener)
+        listener(filename, lineno, userbuf.ptr, ulen, &listenerTSData, listenerData);
+
+    /*
+     * Copy from userbuf to linebuf.  Stop when any of these happen:
+     * (a) we reach the end of userbuf;
+     * (b) we reach the end of linebuf;
+     * (c) we hit an EOL.
+     *
+     * "EOL" means any of: \r, \n, \r\n, or the Unicode line and paragraph
+     * separators.
+     */
+    jschar *from = userbuf.ptr;
+    jschar *to = linebuf.base;
+
+    int llenAdjust = 0;
+    int limit = JS_MIN(size_t(ulen), LINE_LIMIT);
+    int i = 0;
+    while (i < limit) {
+        /* Copy the jschar from userbuf to linebuf. */
+        jschar d = to[i] = from[i];
+        i++;
+
+        /*
+         * Normalize the copied jschar if it was a newline.  Try to
+         * prevent multiple tests on most characters by first
+         * filtering out characters that aren't 000x or 202x.
+         */
+        if ((d & 0xDFD0) == 0) {
+            if (d == '\n') {
+                break;
+            }
+
+            if (d == '\r') {
+                to[i - 1] = '\n';       // overwrite with '\n'
+                if (i < ulen && from[i] == '\n') {
+                    i++;                // skip over '\n'
+                    llenAdjust = -1;
+                }
+                break;
+            }
+
+            if (d == LINE_SEPARATOR || d == PARA_SEPARATOR) {
+                to[i - 1] = '\n';       // overwrite with '\n'
+                break;
+            }
+        }
+    }
+    
+    // At this point 'i' is the index one past the last char copied.
+    ulen = i;
+    userbuf.ptr += ulen;
+
+    /* Reset linebuf based on normalized length. */
+    linebuf.ptr = linebuf.base;
+    linebuf.limit = linebuf.base + ulen + llenAdjust;
+
+    /* Update position of linebuf within physical userbuf line. */
+    linepos = lineposNext;
+    if (linebuf.limit[-1] == '\n')
+        lineposNext = 0;
+    else
+        lineposNext += ulen;
+
+    return *linebuf.ptr++;
+}
+
 /*
  * This gets the next char, normalizing all EOL sequences to '\n' as it goes.
  */
@@ -314,93 +401,11 @@ int32
 TokenStream::getChar()
 {
     int32 c;
-    ptrdiff_t ulen;
-
     if (ungetpos != 0) {
         c = ungetbuf[--ungetpos];
+    } else if (linebuf.ptr == linebuf.limit) {
+        c = getCharFillLinebuf();
     } else {
-        if (linebuf.ptr == linebuf.limit) {
-            ulen = userbuf.limit - userbuf.ptr;
-            if (ulen <= 0) {
-                if (!file) {
-                    flags |= TSF_EOF;
-                    return EOF;
-                }
-
-                /* Fill userbuf so that \r and \r\n convert to \n. */
-                ulen = fillUserbuf();
-                JS_ASSERT(ulen >= 0);
-                if (ulen == 0) {
-                    flags |= TSF_EOF;
-                    return EOF;
-                }
-                userbuf.limit = userbuf.base + ulen;
-                userbuf.ptr = userbuf.base;
-            }
-            if (listener)
-                listener(filename, lineno, userbuf.ptr, ulen, &listenerTSData, listenerData);
-
-            /*
-             * Copy from userbuf to linebuf.  Stop when any of these happen:
-             * (a) we reach the end of userbuf;
-             * (b) we reach the end of linebuf;
-             * (c) we hit an EOL.
-             *
-             * "EOL" means any of: \r, \n, \r\n, or the Unicode line and paragraph
-             * separators.
-             */
-            jschar *from = userbuf.ptr;
-            jschar *to = linebuf.base;
-
-            int llenAdjust = 0;
-            int limit = JS_MIN(size_t(ulen), LINE_LIMIT);
-            int i = 0;
-            while (i < limit) {
-                /* Copy the jschar from userbuf to linebuf. */
-                jschar d = to[i] = from[i];
-                i++;
-
-                /*
-                 * Normalize the copied jschar if it was a newline.  Try to
-                 * prevent multiple tests on most characters by first
-                 * filtering out characters that aren't 000x or 202x.
-                 */
-                if ((d & 0xDFD0) == 0) {
-                    if (d == '\n') {
-                        break;
-                    }
-
-                    if (d == '\r') {
-                        to[i - 1] = '\n';       // overwrite with '\n'
-                        if (i < ulen && from[i] == '\n') {
-                            i++;                // skip over '\n'
-                            llenAdjust = -1;
-                        }
-                        break;
-                    }
-
-                    if (d == LINE_SEPARATOR || d == PARA_SEPARATOR) {
-                        to[i - 1] = '\n';       // overwrite with '\n'
-                        break;
-                    }
-                }
-            }
-            
-            // At this point 'i' is the index one past the last char copied.
-            ulen = i;
-            userbuf.ptr += ulen;
-
-            /* Reset linebuf based on normalized length. */
-            linebuf.ptr = linebuf.base;
-            linebuf.limit = linebuf.base + ulen + llenAdjust;
-
-            /* Update position of linebuf within physical userbuf line. */
-            linepos = lineposNext;
-            if (linebuf.limit[-1] == '\n')
-                lineposNext = 0;
-            else
-                lineposNext += ulen;
-        }
         c = *linebuf.ptr++;
     }
     if (c == '\n')
