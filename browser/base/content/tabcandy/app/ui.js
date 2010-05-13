@@ -218,8 +218,9 @@ window.Page = {
     });
     
     $(window).keyup(function(e){
-      // If you hit escape or return, zoom into the active tab.
-      if(e.which == 27 || e.which == 13)
+      // If you hit escape or return, zoom into the active tab,
+      // but only if a title or other element isn't focused.
+      if((e.which == 27 || e.which == 13) && $(":focus").length == 0 )
         if( self.getActiveTab() ) self.getActiveTab().zoom();
     });
   },
@@ -585,7 +586,7 @@ UIClass.prototype = {
   addDevMenu: function() {
     var self = this;
     
-    var html = '<select style="position:absolute; top:5px;">'; 
+    var html = '<select style="position:absolute; bottom:5px; right:5px; opacity:.2;">'; 
     var $select = $(html)
       .appendTo('body')
       .change(function () {
@@ -595,7 +596,7 @@ UIClass.prototype = {
       });
       
     var commands = [{
-      name: '*', 
+      name: 'dev menu', 
       code: function() {
       }
     }, {
