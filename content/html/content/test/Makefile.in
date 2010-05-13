@@ -60,6 +60,9 @@ _TEST_FILES = 	test_bug589.html \
 		bug100533_load.html \
 		bug100533_iframe.html \
 		test_bug100533.html \
+		image.png \
+		test_bug109445.html \
+		test_bug109445.xhtml \
 		test_bug143220.html \
 		test_bug237071.html \
 		bug242709_iframe.html \
