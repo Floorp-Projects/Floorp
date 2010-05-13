@@ -42,11 +42,14 @@ include protocol PDocumentRenderer;
 include protocol PDocumentRendererShmem;
 include protocol PObjectWrapper;
 include protocol PContextWrapper;
+include protocol PGeolocationRequest;
 
 include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";
 include "gfxMatrix.h";
+include "mozilla/net/NeckoMessageUtils.h";
 
+using IPC::URI;
 using MagicWindowHandle;
 using RemoteDOMEvent;
 using gfxMatrix;
@@ -60,6 +63,7 @@ rpc protocol PIFrameEmbedding
     manages PDocumentRenderer;
     manages PDocumentRendererShmem;
     manages PContextWrapper;
+    manages PGeolocationRequest;
 
 child:
     __delete__();
@@ -99,6 +103,9 @@ parent:
       returns (nsString[] retval);
 
     sendAsyncMessageToParent(nsString aMessage, nsString aJSON);
+
+    PGeolocationRequest(URI uri);
+
 child:
     createWidget(MagicWindowHandle parentWidget);
 
