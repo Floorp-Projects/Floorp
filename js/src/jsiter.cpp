@@ -159,10 +159,8 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
         if (JS_UNLIKELY(!!p))
             return true;
         /* no need to add properties to the hash table at the end of the prototype chain */
-        if (pobj->getProto() && !ht.add(p, id)) {
-            JS_ReportOutOfMemory(cx);
+        if (pobj->getProto() && !ht.add(p, id))
             return false;
-        }
     }
     if (enumerable) {
         if (!vec.append(ID_TO_VALUE(id))) {
@@ -238,10 +236,8 @@ InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, ui
                    uint32 key, NativeIterator **nip)
 {
     HashSet<jsid> ht(cx);
-    if (!(flags & JSITER_OWNONLY) && !ht.init(32)) {
-        JS_ReportOutOfMemory(cx);
+    if (!(flags & JSITER_OWNONLY) && !ht.init(32))
         return false;
-    }
 
     AutoValueVector props(cx);
 

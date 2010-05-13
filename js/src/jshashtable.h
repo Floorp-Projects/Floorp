@@ -340,8 +340,10 @@ class HashTable : AllocPolicy
         }
 
         capacity = roundUp;
-        if (capacity >= sSizeLimit)
+        if (capacity >= sSizeLimit) {
+            this->reportAllocOverflow();
             return false;
+        }
 
         table = createTable(*this, capacity);
         if (!table)
@@ -490,8 +492,10 @@ class HashTable : AllocPolicy
         uint32 oldCap = tableCapacity;
         uint32 newLog2 = sHashBits - hashShift + deltaLog2;
         uint32 newCapacity = JS_BIT(newLog2);
-        if (newCapacity >= sSizeLimit)
+        if (newCapacity >= sSizeLimit) {
+            this->reportAllocOverflow();
             return false;
+        }
 
         Entry *newTable = createTable(*this, newCapacity);
         if (!newTable)
