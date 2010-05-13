@@ -10,7 +10,7 @@
      ftp://crl.nmsu.edu/CLR/multiling/unicode/ucdata.zip
 
    After you get the package, you need to put those file into different 
-   place under Mozilla tree untill we check them in.
+   place under Mozilla tree until we check them in.
 
    a. put ucdata.c and ucdata.h into mozilla/modules/unicharutil/src
    b. put MUTTUCData.txt and ucgendat.c into mozilla/modules/unicharutil/tools

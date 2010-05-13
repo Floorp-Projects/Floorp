@@ -139,7 +139,7 @@ public:
   /**
    * Invalidate the accessible tree when DOM tree or frame tree is changed.
    *
-   * @param aPresShell   [in] the presShell where changes occured
+   * @param aPresShell   [in] the presShell where changes occurred
    * @param aContent     [in] the affected DOM content
    * @param aChangeType  [in] the change type (see constants declared above)
    */

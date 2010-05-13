@@ -1971,7 +1971,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XFormsLabel:
       accessible = new nsXFormsLabelAccessible(aNode, aWeakShell);
       break;
-    case nsIAccessibleProvider::XFormsOuput:
+    case nsIAccessibleProvider::XFormsOutput:
       accessible = new nsXFormsOutputAccessible(aNode, aWeakShell);
       break;
     case nsIAccessibleProvider::XFormsTrigger:

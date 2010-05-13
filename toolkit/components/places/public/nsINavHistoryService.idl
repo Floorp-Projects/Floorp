@@ -1008,9 +1008,9 @@ interface nsINavHistoryQuery : nsISupports
   readonly attribute boolean hasUri;
 
   /**
-   * Test for existance or non-existance of a given annotation. We don't
+   * Test for existence or non-existence of a given annotation. We don't
    * currently support >1 annotation name per query. If 'annotationIsNot' is
-   * true, we test for the non-existance of the specified annotation.
+   * true, we test for the non-existence of the specified annotation.
    *
    * Testing for not annotation will do the same thing as a normal query and
    * remove everything that doesn't have that annotation. Asking for things

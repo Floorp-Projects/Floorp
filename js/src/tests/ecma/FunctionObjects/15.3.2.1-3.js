@@ -44,7 +44,7 @@ gTestfile = '15.3.2.1-3.js';
    new Function(p1, p2, ..., pn, body )
 
    Description:        The last argument specifies the body (executable code)
-   of a function; any preceeding arguments sepcify formal
+   of a function; any preceding arguments sepcify formal
    parameters.
 
    See the text for description of this section.

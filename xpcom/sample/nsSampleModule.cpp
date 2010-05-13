@@ -41,7 +41,7 @@
 #include "nsSample.h"
 
 ////////////////////////////////////////////////////////////////////////
-// NOTE this file supercedes nsSampleFactory.cpp.  nsSampleFactory has
+// NOTE this file supersedes nsSampleFactory.cpp.  nsSampleFactory has
 // extensive comments, but it has been CVS removed to reduce clutter
 // in this sample.  It's available to the interested via CVS history:
 // cvs up nsSampleFactory.cpp -r 1.10

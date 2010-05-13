@@ -738,9 +738,9 @@ protected:
   // This will be reset when another element is focused
   PRPackedBool           mShowFocusRingForContent : 1;
 
-  // true if tab navigation has occured for this window. Focus rings
+  // true if tab navigation has occurred for this window. Focus rings
   // should be displayed.
-  PRPackedBool           mFocusByKeyOccured : 1;
+  PRPackedBool           mFocusByKeyOccurred : 1;
 
   // Indicates whether this window is getting acceleration change events
   PRPackedBool           mHasAcceleration  : 1;

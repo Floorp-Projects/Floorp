@@ -168,7 +168,7 @@ sub execute_tests {
         }
 
         # Append the shell.js files to the shell_command if they're there.
-        # (only check for their existance if the suite or test_dir has changed
+        # (only check for their existence if the suite or test_dir has changed
         # since the last time we looked.)
         if ($last_suite ne $suite || $last_test_dir ne $test_dir) {
             $shell_command = &xp_path($engine_command);

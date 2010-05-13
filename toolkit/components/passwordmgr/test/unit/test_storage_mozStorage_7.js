@@ -100,7 +100,7 @@ try {
 } catch (e) {
     error = e;
 }
-LoginTest.checkExpectedError(/Unexpected field/, error, "nonexistant field should throw");
+LoginTest.checkExpectedError(/Unexpected field/, error, "nonexistent field should throw");
 
 LoginTest.deleteFile(OUTDIR, "output-searchLogins-1.sqlite");
 

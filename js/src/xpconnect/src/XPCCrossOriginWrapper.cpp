@@ -120,7 +120,7 @@ ThrowException(nsresult ex, JSContext *cx)
   return JS_FALSE;
 }
 
-// Get the (possibly non-existant) XOW off of an object
+// Get the (possibly nonexistent) XOW off of an object
 static inline
 JSObject *
 GetWrapper(JSObject *obj)

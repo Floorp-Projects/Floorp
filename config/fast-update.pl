@@ -4,7 +4,7 @@
 #
 # This command, fast-update.pl, does a (fast) cvs update of the current 
 # directory. It is fast because the cvs up command is only run on those 
-# directories / sub-directories where changes have occured since the 
+# directories / sub-directories where changes have occurred since the 
 # last fast-update.
 #
 # The last update time is stored in a ".fast-update" file in the current

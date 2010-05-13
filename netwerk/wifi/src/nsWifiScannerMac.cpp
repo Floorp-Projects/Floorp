@@ -55,7 +55,7 @@
 
 // defined in osx_corewlan.mm
 // basically relaces accesspoints in the passed reference
-// it lives in a seperate file so that we can use objective c.
+// it lives in a separate file so that we can use objective c.
 extern nsresult GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints);
 
 nsresult

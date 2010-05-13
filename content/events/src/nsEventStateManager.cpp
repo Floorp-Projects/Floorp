@@ -2048,7 +2048,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
     if (NS_SUCCEEDED(dsti->GetItemType(&type)) &&
         type != nsIDocShellTreeItem::typeChrome) {
       // mGestureDownContent is the node where the mousedown event for the drag
-      // occured, and aSelectionTarget is the node to use when a selection is used
+      // occurred, and aSelectionTarget is the node to use when a selection is used
       nsresult rv =
         nsContentAreaDragDrop::GetDragData(window, mGestureDownContent,
                                            aSelectionTarget, mGestureDownAlt,

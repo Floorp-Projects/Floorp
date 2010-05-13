@@ -99,7 +99,7 @@ public:
     **/
     void receiveError(const nsAString& errorMessage, nsresult aRes);
 
-    virtual void supressWarnings(MBool supress);
+    virtual void suppressWarnings(MBool suppress);
 
 private:
 

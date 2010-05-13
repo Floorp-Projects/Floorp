@@ -2831,8 +2831,8 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
           nsIWidget* widget = widgetChain[i];
           NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
           if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
-            // don't roll up if the mouse event occured within a menu of the
-            // same type. If the mouse event occured in a menu higher than
+            // don't roll up if the mouse event occurred within a menu of the
+            // same type. If the mouse event occurred in a menu higher than
             // that, roll up, but pass the number of popups to Rollup so
             // that only those of the same type close up.
             if (i < sameTypeCount) {
