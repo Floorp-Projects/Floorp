@@ -634,7 +634,7 @@ BasicLayerManager::BeginPaintingLayer(Layer* aLayer)
     if (aLayer->GetClipRect()) {
       const nsIntRect& r = *aLayer->GetClipRect();
       mTarget->NewPath();
-      mTarget->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
+      mTarget->Rectangle(gfxRect(r.x, r.y, r.width, r.height), PR_TRUE);
       mTarget->Clip();
     }
 
