@@ -150,7 +150,7 @@ DWORD nsPluginThread::callNPP(npapiAction aAction, DWORD aP1, DWORD aP2,
                               DWORD aP3, DWORD aP4, DWORD aP5, 
                               DWORD aP6, DWORD aP7)
 {
-  // don't enter untill thread is ready
+  // don't enter until thread is ready
   while (isBusy()) {
     Sleep(0);
   }
@@ -165,7 +165,7 @@ DWORD nsPluginThread::callNPP(npapiAction aAction, DWORD aP1, DWORD aP2,
 
   doAction(aAction);
 
-  // don't return untill thread is ready
+  // don't return until thread is ready
   while (isBusy()) {
     Sleep(0);
   }

@@ -132,7 +132,7 @@ public:
      * Adds a match/use pair.
      * @param aMatch  match-pattern
      * @param aUse    use-expression
-     * @return PR_FALSE if an error occured, PR_TRUE otherwise
+     * @return PR_FALSE if an error occurred, PR_TRUE otherwise
      */
     PRBool addKey(nsAutoPtr<txPattern> aMatch, nsAutoPtr<Expr> aUse);
 

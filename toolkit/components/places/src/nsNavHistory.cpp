@@ -7329,7 +7329,7 @@ nsNavHistory::AddPageWithVisits(nsIURI *aURI,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NS_ASSERTION(placeId != 0, "Cannot add a visit to a not existant page");
+  NS_ASSERTION(placeId != 0, "Cannot add a visit to a nonexistent page");
 
   if (aFirstVisitDate != -1) {
     // Add the first visit

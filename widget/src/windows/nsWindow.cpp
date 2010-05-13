@@ -7213,8 +7213,8 @@ nsWindow::DealWithPopups(HWND inWnd, UINT inMsg, WPARAM inWParam, LPARAM inLPara
           for ( PRUint32 i = 0; i < widgetChain.Length(); ++i ) {
             nsIWidget* widget = widgetChain[i];
             if ( nsWindow::EventIsInsideWindow(inMsg, (nsWindow*)widget) ) {
-              // don't roll up if the mouse event occured within a menu of the
-              // same type. If the mouse event occured in a menu higher than
+              // don't roll up if the mouse event occurred within a menu of the
+              // same type. If the mouse event occurred in a menu higher than
               // that, roll up, but pass the number of popups to Rollup so
               // that only those of the same type close up.
               if (i < sameTypeCount) {

@@ -9143,7 +9143,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
       changeType = nsIAccessibilityService::FRAME_SHOW;
     }
 
-    // A significant enough change occured that this part
+    // A significant enough change occurred that this part
     // of the accessible tree is no longer valid.
     nsCOMPtr<nsIAccessibilityService> accService = 
       do_GetService("@mozilla.org/accessibilityService;1");

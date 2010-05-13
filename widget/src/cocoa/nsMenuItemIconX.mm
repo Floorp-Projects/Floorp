@@ -133,7 +133,7 @@ nsMenuItemIconX::SetupIcon()
 
   rv = LoadIcon(iconURI);
   if (NS_FAILED(rv)) {
-    // There is no icon for this menu item, as an error occured while loading it.
+    // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
     // been set.  Clear it.
     [mNativeMenuItem setImage:nil];

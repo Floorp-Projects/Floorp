@@ -61,7 +61,7 @@ public:
    * returning. 
    * aRegressionOutput will vary output, 0 is full output, 1 is brief
    */
-  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2,PRInt32 aRegressionOuput) = 0;
+  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2,PRInt32 aRegressionOutput) = 0;
 
   /**
    * Display the regression dump data stored in aInputFile1 to

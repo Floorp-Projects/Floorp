@@ -123,7 +123,7 @@ public:
   nsView* GetNextSibling() const { return mNextSibling; }
   nsView* GetParent() const { return mParent; }
   nsViewManager* GetViewManager() const { return mViewManager; }
-  // These are superceded by a better interface in nsIView
+  // These are superseded by a better interface in nsIView
   PRInt32 GetZIndex() const { return mZIndex; }
   PRBool GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
   // This is a better interface than GetDimensions(nsRect&) above

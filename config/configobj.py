@@ -261,7 +261,7 @@ class DuplicateError(ConfigObjError):
 
 class ConfigspecError(ConfigObjError):
     """
-    An error occured whilst parsing a configspec.
+    An error occurred whilst parsing a configspec.
     """
 
 class InterpolationError(ConfigObjError):
@@ -1600,7 +1600,7 @@ class ConfigObj(Section):
         Handle an error according to the error settings.
         
         Either raise the error or store it.
-        The error will have occured at ``cur_index``
+        The error will have occurred at ``cur_index``
         """
         line = infile[cur_index]
         cur_index += 1

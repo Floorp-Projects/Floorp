@@ -955,7 +955,7 @@ class nsIWidget : public nsISupports {
      * Activates a native menu item at the position specified by the index
      * string. The index string is a string of positive integers separated
      * by the "|" (pipe) character. The last integer in the string represents
-     * the item index in a submenu located using the integers preceeding it.
+     * the item index in a submenu located using the integers preceding it.
      *
      * Example: 1|0|4
      * In this string, the first integer represents the top-level submenu

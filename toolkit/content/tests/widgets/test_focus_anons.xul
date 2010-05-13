@@ -31,20 +31,20 @@ var gBlurs = 0, gFocuses = 0;
 var gExpectedBlur = "";
 var gExpectedFocus = "";
 
-function blurOccured(event) {
+function blurOccurred(event) {
   gBlurs++;
   is(event.originalTarget, gExpectedBlur, "blur " + gBlurs + "," + event.originalTarget.localName);
 }
 
-function focusOccured(event) {
+function focusOccurred(event) {
   gFocuses++;
   is(event.originalTarget, gExpectedFocus, "focus " + gFocuses + "," + event.originalTarget.localName);
 }
 
 function runTests()
 {
-  addEventListener("focus", focusOccured, true);
-  addEventListener("blur", blurOccured, true);
+  addEventListener("focus", focusOccurred, true);
+  addEventListener("blur", blurOccurred, true);
 
   gExpectedBlur = null;
   gExpectedFocus = $("menulist").inputField;

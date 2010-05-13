@@ -686,7 +686,7 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
   /* We're searching for the following pattern:
      LT_DELIMITER - "*" - ALPHA -
      [ some text (maybe more "*"-pairs) - ALPHA ] "*" - LT_DELIMITER.
-     <strong> is only inserted, if existance of a pair could be verified
+     <strong> is only inserted, if existence of a pair could be verified
      We use the first opening/closing tag, if we can choose */
 
   const PRUnichar * newOffset = aInString;

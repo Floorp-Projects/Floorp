@@ -55,7 +55,7 @@ typedef enum {
   eXBL_InResources,      /* Inside a <resources> */
   eXBL_InImplementation, /* Inside a <implementation> */
   eXBL_InHandlers,       /* Inside a <handlers> */
-  eXBL_Error             /* An error has occured.  Suspend binding construction */
+  eXBL_Error             /* An error has occurred.  Suspend binding construction */
 } XBLPrimaryState;
 
 /*

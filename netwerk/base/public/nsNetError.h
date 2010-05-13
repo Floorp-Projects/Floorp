@@ -73,7 +73,7 @@
 
 /**
  * The async request has been "redirected" to a different async request.
- * (e.g., an HTTP redirect occured).
+ * (e.g., an HTTP redirect occurred).
  *
  * This error code is used with load groups to notify the load group observer
  * when a request in the load group is redirected to another request.

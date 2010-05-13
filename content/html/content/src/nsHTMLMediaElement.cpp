@@ -739,7 +739,7 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   }
 
   // Else the channel must be open and starting to download. If it encounters
-  // a non-catestrophic failure, it will set a new task to continue loading
+  // a non-catastrophic failure, it will set a new task to continue loading
   // another candidate.
   return NS_OK;
 }
