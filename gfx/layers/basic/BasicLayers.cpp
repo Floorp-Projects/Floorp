@@ -343,6 +343,41 @@ BasicImageLayer::Paint(gfxContext* aContext)
   aContext->Fill();
 }
 
+class BasicColorLayer : public ColorLayer, BasicImplData {
+public:
+  BasicColorLayer(BasicLayerManager* aLayerManager) :
+    ColorLayer(aLayerManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicColorLayer);
+  }
+  virtual ~BasicColorLayer()
+  {
+    MOZ_COUNT_DTOR(BasicColorLayer);
+  }
+
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion)
+  {
+    NS_ASSERTION(BasicManager()->InConstruction(),
+                 "Can only set properties in construction phase");
+    mVisibleRegion = aRegion;
+  }
+
+  virtual void Paint(gfxContext* aContext);
+
+protected:
+  BasicLayerManager* BasicManager()
+  {
+    return static_cast<BasicLayerManager*>(mManager);
+  }
+};
+
+void
+BasicColorLayer::Paint(gfxContext* aContext)
+{
+  aContext->SetColor(mColor);
+  aContext->Paint();
+}
+
 BasicLayerManager::BasicLayerManager(gfxContext* aContext) :
   mDefaultTarget(aContext), mLastPainted(nsnull)
 #ifdef DEBUG
@@ -581,6 +616,14 @@ BasicLayerManager::CreateImageLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
   nsRefPtr<ImageLayer> layer = new BasicImageLayer(this);
+  return layer.forget();
+}
+
+already_AddRefed<ColorLayer>
+BasicLayerManager::CreateColorLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<ColorLayer> layer = new BasicColorLayer(this);
   return layer.forget();
 }
 
