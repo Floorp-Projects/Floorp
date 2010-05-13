@@ -18,10 +18,10 @@
         <xul:image xbl:inherits="src=iconURL"/>
         <xul:vbox flex="1">
           <xul:hbox align="center">
-            <xul:label class="title" xbl:inherits="value=name"/>
+            <xul:label class="title" xbl:inherits="value=name" crop="end" flex="1"/>
             <xul:label class="normal" xbl:inherits="value=version"/>
-            <xul:spacer flex="1"/>
-            <xul:label class="normal" crop="end" xbl:inherits="value=typeLabel"/>
+            <xul:spacer flex="1000"/>
+            <xul:label class="normal" xbl:inherits="value=typeLabel"/>
           </xul:hbox>
           <xul:vbox>
             <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
@@ -133,9 +133,9 @@
         <xul:image width="32" height="32" xbl:inherits="src=iconURL"/>
         <xul:vbox flex="1">
           <xul:hbox align="center">
-            <xul:label class="title" xbl:inherits="value=name"/>
-            <xul:spacer flex="1"/>
-            <xul:label class="normal" crop="end" xbl:inherits="value=typeLabel"/>
+            <xul:label class="title" xbl:inherits="value=name" crop="end" flex="1"/>
+            <xul:spacer flex="1000"/>
+            <xul:label class="normal" xbl:inherits="value=typeLabel"/>
           </xul:hbox>
           <xul:vbox>
             <xul:label class="normal hide-on-select" xbl:inherits="value=description" crop="end" flex="1"/>
@@ -173,9 +173,9 @@
         <xul:image xbl:inherits="src=iconURL"/>
         <xul:vbox flex="1">
           <xul:hbox align="center">
-            <xul:label class="title" xbl:inherits="value=name"/>
+            <xul:label class="title" xbl:inherits="value=name" crop="end" flex="1"/>
             <xul:label class="normal" xbl:inherits="value=version"/>
-            <xul:spacer flex="1"/>
+            <xul:spacer flex="1000"/>
             <xul:hbox class="addon-type-or-rating" align="center" xbl:inherits="rating"/>
           </xul:hbox>
           <xul:vbox>
@@ -210,7 +210,7 @@
 
   <binding id="extension-search-recommended">
     <content>
-      <xul:label class="normal" value="&addonsSearch.recommended;" crop="end"/>
+      <xul:label class="normal" value="&addonsSearch.recommended;"/>
     </content>
   </binding>
 
