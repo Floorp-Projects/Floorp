@@ -129,12 +129,14 @@ struct nsPluginInstanceTag
   char*                  mURL;
   nsRefPtr<nsPluginTag>  mPluginTag;
   nsNPAPIPluginInstance* mInstance; // this must always be valid
+  PRBool                 mDefaultPlugin;
   // Array holding all opened stream listeners for this entry
   nsCOMArray<nsIPluginStreamInfo> mStreams; 
   
   nsPluginInstanceTag(nsPluginTag* aPluginTag,
                       nsIPluginInstance* aInstance, 
-                      const char * url);
+                      const char * url,
+                      PRBool aDefaultPlugin);
   ~nsPluginInstanceTag();
 };
 
