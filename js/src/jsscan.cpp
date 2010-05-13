@@ -315,10 +315,8 @@ int32
 TokenStream::getChar()
 {
     int32 c;
-    ptrdiff_t i, j, len, olen;
-    JSBool crflag;
+    ptrdiff_t len, olen;
     char cbuf[LINE_LIMIT];
-    jschar *ubuf, *nl;
 
     if (ungetpos != 0) {
         c = ungetbuf[--ungetpos];
@@ -332,32 +330,21 @@ TokenStream::getChar()
                 }
 
                 /* Fill userbuf so that \r and \r\n convert to \n. */
-                crflag = (flags & TSF_CRFLAG) != 0;
-                len = getLineFromFile(cbuf, LINE_LIMIT - crflag, file);
+                len = getLineFromFile(cbuf, LINE_LIMIT, file);
                 if (len <= 0) {
                     flags |= TSF_EOF;
                     return EOF;
                 }
                 olen = len;
-                ubuf = userbuf.base;
-                i = 0;
-                if (crflag) {
-                    flags &= ~TSF_CRFLAG;
-                    if (cbuf[0] != '\n') {
-                        ubuf[i++] = '\n';
-                        len++;
-                        linepos--;
-                    }
-                }
-                for (j = 0; i < len; i++, j++)
-                    ubuf[i] = (jschar) (unsigned char) cbuf[j];
-                userbuf.limit = ubuf + len;
-                userbuf.ptr = ubuf;
+                for (int i = 0; i < len; i++)
+                    userbuf.base[i] = (jschar) (unsigned char) cbuf[i];
+                userbuf.limit = userbuf.base + len;
+                userbuf.ptr = userbuf.base;
             }
             if (listener)
                 listener(filename, lineno, userbuf.ptr, len, &listenerTSData, listenerData);
 
-            nl = saveEOL;
+            jschar *nl = saveEOL;
             if (!nl) {
                 /*
                  * Any one of \n, \r, or \r\n ends a line (the longest
