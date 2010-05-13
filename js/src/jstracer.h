@@ -672,6 +672,7 @@ struct LinkableFragment : public VMFragment
     uint32                  branchCount;
     TypeMap                 typeMap;
     unsigned                nStackTypes;
+    unsigned                spOffsetAtEntry;
     SlotList*               globalSlots;
 };
 

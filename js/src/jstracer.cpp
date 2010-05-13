@@ -1462,6 +1462,7 @@ TreeFragment::initialize(JSContext* cx, SlotList *globalSlots)
     /* Capture the coerced type of each active slot in the type map. */
     this->typeMap.captureTypes(cx, globalObj, *globalSlots, 0 /* callDepth */);
     this->nStackTypes = this->typeMap.length() - globalSlots->length();
+    this->spOffsetAtEntry = cx->fp->regs->sp - StackBase(cx->fp);
 
 #ifdef DEBUG
     this->treeFileName = cx->fp->script->filename;
@@ -5211,11 +5212,10 @@ TraceRecorder::checkTraceEnd(jsbytecode *pc)
          */
         if (pendingLoop) {
             JS_ASSERT(!cx->fp->imacpc && (pc == cx->fp->regs->pc || pc == cx->fp->regs->pc + 1));
-            bool fused = pc != cx->fp->regs->pc;
             JSFrameRegs orig = *cx->fp->regs;
 
             cx->fp->regs->pc = (jsbytecode*)tree->ip;
-            cx->fp->regs->sp -= fused ? (*orig.pc == JSOP_MOREITER ? 0 : 2) : 1;
+            cx->fp->regs->sp = StackBase(cx->fp) + tree->spOffsetAtEntry;
 
             JSContext* localcx = cx;
             AbortableRecordingStatus ars = closeLoop();
