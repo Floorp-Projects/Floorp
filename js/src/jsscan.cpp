@@ -400,43 +400,30 @@ TokenStream::getChar()
             olen = len;
 
             /*
-             * Make sure linebuf contains \n for EOL (don't do this in
+             * Normalize all EOL sequences to \n in linebuf (don't do this in
              * userbuf because the user's string might be readonly).
              */
             if (nl < userbuf.limit) {
                 if (*nl == '\r') {
-                    if (linebuf.base[len-1] == '\r') {
-                        /*
-                         * Does the line segment end in \r?  We must check
-                         * for a \n at the front of the next segment before
-                         * storing a \n into linebuf.  This case matters
-                         * only when we're reading from a file.
-                         */
-                        if (nl + 1 == userbuf.limit && file) {
-                            len--;
-                            flags |= TSF_CRFLAG; /* clear NLFLAG? */
-                            if (len == 0) {
-                                /*
-                                 * This can happen when a segment ends in
-                                 * \r\r.  Start over.  ptr == limit in this
-                                 * case, so we'll fall into buffer-filling
-                                 * code.
-                                 */
-                                return getChar();
-                            }
-                        } else {
-                            linebuf.base[len-1] = '\n';
-                        }
-                    }
+                    // If nl points to a \r that means it mustn't be followed
+                    // by a \n, in which case \r must have been the last char
+                    // copied.  Replace it with \n.
+                    JS_ASSERT(linebuf.base[len-1] == '\r');
+                    linebuf.base[len-1] = '\n';
                 } else if (*nl == '\n') {
-                    if (nl > userbuf.base &&
-                        nl[-1] == '\r' &&
-                        linebuf.base[len-2] == '\r') {
+                    if (nl > userbuf.base && nl[-1] == '\r') {
+                        // If nl points to a \n that's preceded by a \r, we
+                        // overwrite the \r with \n and pull len back by one
+                        // so the \n pointed to by nl ends up beyond
+                        // linebuf.limit.
+                        JS_ASSERT(linebuf.base[len-2] == '\r' &&
+                                  linebuf.base[len-1] == '\n');
+                        linebuf.base[len-2] = '\n';
                         len--;
-                        JS_ASSERT(linebuf.base[len] == '\n');
-                        linebuf.base[len-1] = '\n';
                     }
                 } else if (*nl == LINE_SEPARATOR || *nl == PARA_SEPARATOR) {
+                    JS_ASSERT(linebuf.base[len-1] == LINE_SEPARATOR ||
+                              linebuf.base[len-1] == PARA_SEPARATOR);
                     linebuf.base[len-1] = '\n';
                 }
             }
