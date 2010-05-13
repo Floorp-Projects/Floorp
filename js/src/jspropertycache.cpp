@@ -139,26 +139,23 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
          * getter, so get of a function is idempotent.
          */
         if (cs->format & JOF_CALLOP) {
-            jsval v;
-
             if (sprop->isMethod()) {
                 /*
                  * A compiler-created function object, AKA a method, already
                  * memoized in the property tree.
                  */
                 JS_ASSERT(scope->hasMethodBarrier());
-                v = sprop->methodValue();
-                JS_ASSERT(VALUE_IS_FUNCTION(cx, v));
-                JS_ASSERT(v == pobj->lockedGetSlot(sprop->slot));
-                vword.setObject(JSVAL_TO_OBJECT(v));
+                JSObject &funobj = sprop->methodFunObj();
+                JS_ASSERT(&funobj == &pobj->lockedGetSlot(sprop->slot).asFunObj());
+                vword.setFunObj(funobj);
                 break;
             }
 
             if (!scope->generic() &&
                 sprop->hasDefaultGetter() &&
                 SPROP_HAS_VALID_SLOT(sprop, scope)) {
-                v = pobj->lockedGetSlot(sprop->slot);
-                if (VALUE_IS_FUNCTION(cx, v)) {
+                const Value &v = pobj->lockedGetSlot(sprop->slot);
+                if (v.isFunObj()) {
                     /*
                      * Great, we have a function-valued prototype property
                      * where the getter is JS_PropertyStub. The type id in
@@ -184,7 +181,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                         if (!scope->brand(cx, sprop->slot, v))
                             return JS_NO_PROP_CACHE_FILL;
                     }
-                    vword.setObject(JSVAL_TO_OBJECT(v));
+                    vword.setFunObj(v.asFunObj());
                     break;
                 }
             }

@@ -129,10 +129,10 @@ extern JSBool
 js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, js::Value *argv,
                      js::Value *rval);
 
-#endif
+extern js::PropertyOp
+js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, js::PropertyOp setter);
 
-extern JSPropertyOp
-js_WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, JSPropertyOp setter);
+#endif
 
 #endif /* JS_HAS_OBJ_WATCHPOINT */
 

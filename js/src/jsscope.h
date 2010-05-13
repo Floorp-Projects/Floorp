@@ -423,7 +423,7 @@ struct JSScope : public JSObjectMap
      */
     bool branded()              { JS_ASSERT(!generic()); return flags & BRANDED; }
 
-    bool brand(JSContext *cx, uint32 slot) {
+    bool brand(JSContext *cx, uint32 slot, const js::Value &) {
         JS_ASSERT(!branded());
         generateOwnShape(cx);
         if (js_IsPropertyCacheDisabled(cx))  // check for rt->shapeGen overflow
@@ -974,15 +974,10 @@ JSScopeProperty::get(JSContext* cx, JSObject *obj, JSObject *pobj, js::Value* vp
         return scope->methodReadBarrier(cx, this, vp);
     }
 
-    /*
-     * JSObjectOps is private, so we know there are only two implementations
-     * of the thisObject hook: with objects and XPConnect wrapped native
-     * objects.  XPConnect objects don't expect the hook to be called here,
-     * but with objects do.
-     */
+    /* See the comment in JSScopeProperty::get as to why we check for With. */
     if (obj->getClass() == &js_WithClass)
-        obj = obj->thisObject(cx);
-    return getterOp()(cx, obj, SPROP_USERID(this), vp);
+        obj = js_UnwrapWithObject(cx, obj);
+    return setterOp()(cx, obj, SPROP_USERID(this), vp);
 }
 
 inline bool

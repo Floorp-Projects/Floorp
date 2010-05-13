@@ -373,11 +373,11 @@ JSObject::getRegExpLastIndex() const
     return fslots[JSSLOT_REGEXP_LAST_INDEX];
 }
 
-inline js::Value *
-JSObject::addressOfRegExpLastIndex()
+inline void
+JSObject::setRegExpLastIndex(const js::Value &v)
 {
     JS_ASSERT(isRegExp());
-    return &fslots[JSSLOT_REGEXP_LAST_INDEX];
+    fslots[JSSLOT_REGEXP_LAST_INDEX].copy(v);
 }
 
 inline void 

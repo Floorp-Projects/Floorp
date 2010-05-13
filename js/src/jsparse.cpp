@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS parser.
  *
@@ -3202,7 +3204,7 @@ BindLet(JSContext *cx, BindData *data, JSAtom *atom, JSTreeContext *tc)
         return JS_FALSE;
     }
     blockObj->scope()->freeslot = slot + 1;
-    blockObj->setSlot(slot, PRIVATE_TO_JSVAL(pn));
+    blockObj->setSlot(slot, PrivateVoidPtrTag(pn));
     return JS_TRUE;
 }
 
@@ -3920,7 +3922,7 @@ CheckDestructuring(JSContext *cx, BindData *data,
         ok = !!js_DefineNativeProperty(cx, tc->blockChain,
                                        ATOM_TO_JSID(cx->runtime->
                                                     atomState.emptyAtom),
-                                       JSVAL_VOID, NULL, NULL,
+                                       sUndefinedValue, NULL, NULL,
                                        JSPROP_ENUMERATE |
                                        JSPROP_PERMANENT |
                                        JSPROP_SHARED,
@@ -8493,7 +8495,7 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
           case TOK_NUMBER:
             if (pn->pn_type == TOK_STRING) {
                 jsdouble d;
-                if (!JS_ValueToNumber(cx, ATOM_KEY(pn->pn_atom), &d))
+                if (!ValueToNumber(cx, ATOM_TO_STRING(pn->pn_atom), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;
@@ -9252,15 +9254,14 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
 
       case TOK_AT:
         if (pn1->pn_type == TOK_XMLNAME) {
-            jsval v;
             JSObjectBox *xmlbox;
 
-            v = ATOM_KEY(pn1->pn_atom);
+            Value v(ATOM_TO_STRING(pn1->pn_atom));
             if (!js_ToAttributeName(cx, &v))
                 return JS_FALSE;
-            JS_ASSERT(!JSVAL_IS_PRIMITIVE(v));
+            JS_ASSERT(v.isObject());
 
-            xmlbox = tc->parser->newObjectBox(JSVAL_TO_OBJECT(v));
+            xmlbox = tc->parser->newObjectBox(&v.asObject());
             if (!xmlbox)
                 return JS_FALSE;
 
