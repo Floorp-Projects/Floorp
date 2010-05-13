@@ -33,6 +33,7 @@
 #   Dão Gottwald <dao@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #   Robert Strong <robert.bugzilla@gmail.com>
+#   Rob Campbell <rcampbell@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -216,6 +217,35 @@
                 oncommand="StarUI.panel.hidePopup();"/>
 #endif
       </hbox>
+    </panel>
+
+    <panel id="highlighter-panel"
+           hidden="true"
+           ignorekeys="true"
+           noautofocus="true"
+           noautohide="true"
+           onclick="InspectorUI.stopInspecting();"
+           onmousemove="InspectorUI.highlighter.handleMouseMove(event);"/>
+
+    <panel id="inspector-panel"
+           orient="vertical"
+           hidden="true"
+           ignorekeys="true"
+           noautofocus="true"
+           noautohide="true"
+           level="top"
+           aria-labelledby="inspectPagePanelTitle">
+      <tree id="inspector-tree" class="plain" seltype="single" treelines="true"
+            onselect="InspectorUI.onTreeSelected()" flex="1">
+        <treecols>
+          <treecol id="colNodeName" label="nodeName" primary="true"
+                   persist="width,hidden,ordinal" flex="1"/>
+          <splitter class="tree-splitter"/>
+          <treecol id="colNodeValue" label="nodeValue"
+                   persist="width,hidden,ordinal" flex="1"/>
+        </treecols>
+        <treechildren id="inspector-tree-body"/>
+      </tree>
     </panel>
 
     <popup id="toolbar-context-menu"
@@ -691,11 +721,13 @@
                      label="&pasteCmd.label;"
                      command="cmd_paste"
                      tooltiptext="&pasteButton.tooltip;"/>
+
       <toolbarbutton id="fullscreen-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      observes="View:FullScreen"
                      type="checkbox"
                      label="&fullScreenCmd.label;"
                      tooltiptext="&fullScreenButton.tooltip;"/>
+
     </toolbarpalette>
   </toolbox>
 
