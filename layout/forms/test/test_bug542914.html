@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=542914
 
 /** Test for Bug 542914 **/
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() {
+function runTests(callback, type) {
   var a = $("a");
 
   // Test that the initial value of the control is available to script
@@ -70,7 +70,7 @@ addLoadEvent(function() {
   is(c.value, "ab", "Control retains caret position after being re-focused");
 
   var d = document.createElement("input");
-  d.setAttribute("type", "text");
+  d.setAttribute("type", type);
   $("display").appendChild(d);
   document.body.offsetHeight;
 
@@ -83,7 +83,29 @@ addLoadEvent(function() {
   $("display").removeChild(d);
   is(d.value, "newx", "Dynamic control retains value after being removed from the document");
 
-  SimpleTest.finish();
+  callback();
+}
+
+var gPreviousType = "text";
+function setTypes(aType) {
+  var content = document.getElementById("display");
+  content.innerHTML = content.innerHTML.replace(gPreviousType, aType);
+  gPreviousType = aType;
+}
+
+addLoadEvent(function() {
+  ok(true, "Running tests on <input type=text>");
+  runTests(function() {
+    ok(true, "Running tests on <input type=password>");
+    setTypes("password");
+    runTests(function() {
+      ok(true, "Running tests on <input type=tel>");
+      setTypes("tel");
+      runTests(function() {
+        SimpleTest.finish();
+      }, "tel");
+    }, "password");
+  }, "text");
 });
 
 </script>
