@@ -39,6 +39,7 @@
 #include "ThebesLayerOGL.h"
 #include "ContainerLayerOGL.h"
 #include "ImageLayerOGL.h"
+#include "ColorLayerOGL.h"
 #include "LayerManagerOGLShaders.h"
 
 #include "gfxContext.h"
@@ -76,6 +77,7 @@ LayerManagerOGL::~LayerManagerOGL()
 {
   mGLContext->MakeCurrent();
   delete mRGBLayerProgram;
+  delete mColorLayerProgram;
   delete mYCbCrLayerProgram;
 }
 
@@ -97,14 +99,17 @@ LayerManagerOGL::Initialize()
 
   mVertexShader = mGLContext->fCreateShader(LOCAL_GL_VERTEX_SHADER);
   mRGBShader = mGLContext->fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
+  mColorShader = mGLContext->fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
   mYUVShader = mGLContext->fCreateShader(LOCAL_GL_FRAGMENT_SHADER);
 
   mGLContext->fShaderSource(mVertexShader, 1, (const GLchar**)&sVertexShader, NULL);
   mGLContext->fShaderSource(mRGBShader, 1, (const GLchar**)&sRGBLayerPS, NULL);
+  mGLContext->fShaderSource(mColorShader, 1, (const GLchar**)&sColorLayerPS, NULL);
   mGLContext->fShaderSource(mYUVShader, 1, (const GLchar**)&sYUVLayerPS, NULL);
 
   mGLContext->fCompileShader(mVertexShader);
   mGLContext->fCompileShader(mRGBShader);
+  mGLContext->fCompileShader(mColorShader);
   mGLContext->fCompileShader(mYUVShader);
 
   GLint status;
@@ -118,8 +123,12 @@ LayerManagerOGL::Initialize()
     return false;
   }
 
-  mGLContext->fGetShaderiv(mYUVShader, LOCAL_GL_COMPILE_STATUS, &status);
+  mGLContext->fGetShaderiv(mColorShader, LOCAL_GL_COMPILE_STATUS, &status);
+  if (!status) {
+    return false;
+  }
 
+  mGLContext->fGetShaderiv(mYUVShader, LOCAL_GL_COMPILE_STATUS, &status);
   if (!status) {
     return false;
   }
@@ -183,12 +192,17 @@ LayerManagerOGL::Initialize()
   if (!mRGBLayerProgram->Initialize(mVertexShader, mRGBShader, mGLContext)) {
     return false;
   }
+  mColorLayerProgram = new ColorLayerProgram();
+  if (!mColorLayerProgram->Initialize(mVertexShader, mColorShader, mGLContext)) {
+    return false;
+  }
   mYCbCrLayerProgram = new YCbCrLayerProgram();
   if (!mYCbCrLayerProgram->Initialize(mVertexShader, mYUVShader, mGLContext)) {
     return false;
   }
 
   mRGBLayerProgram->UpdateLocations();
+  mColorLayerProgram->UpdateLocations();
   mYCbCrLayerProgram->UpdateLocations();
 
   mGLContext->fGenBuffers(1, &mVBO);
@@ -200,6 +214,13 @@ LayerManagerOGL::Initialize()
   mGLContext->fBufferData(LOCAL_GL_ARRAY_BUFFER, sizeof(vertices), vertices, LOCAL_GL_STATIC_DRAW);
 
   mRGBLayerProgram->Activate();
+  mGLContext->fVertexAttribPointer(VERTEX_ATTRIB_LOCATION,
+                        2,
+                        LOCAL_GL_FLOAT,
+                        LOCAL_GL_FALSE,
+                        0,
+                        0);
+  mColorLayerProgram->Activate();
   mGLContext->fVertexAttribPointer(VERTEX_ATTRIB_LOCATION,
                         2,
                         LOCAL_GL_FLOAT,
@@ -301,6 +322,13 @@ already_AddRefed<ImageLayer>
 LayerManagerOGL::CreateImageLayer()
 {
   nsRefPtr<ImageLayer> layer = new ImageLayerOGL(this);
+  return layer.forget();
+}
+
+already_AddRefed<ColorLayer>
+LayerManagerOGL::CreateColorLayer()
+{
+  nsRefPtr<ColorLayer> layer = new ColorLayerOGL(this);
   return layer.forget();
 }
 
@@ -439,6 +467,9 @@ LayerManagerOGL::SetupPipeline()
   
   mRGBLayerProgram->Activate();
   mRGBLayerProgram->SetMatrixProj(&viewMatrix[0][0]);
+
+  mColorLayerProgram->Activate();
+  mColorLayerProgram->SetMatrixProj(&viewMatrix[0][0]);
 
   mYCbCrLayerProgram->Activate();
   mYCbCrLayerProgram->SetMatrixProj(&viewMatrix[0][0]);
@@ -626,6 +657,12 @@ LayerProgram::SetInt(GLint aLocation, GLint aValue)
 }
 
 void
+LayerProgram::SetColor(GLint aLocation, const gfxRGBA& aColor)
+{
+  mGLContext->fUniform4f(aLocation, aColor.r, aColor.g, aColor.b, aColor.a);
+}
+
+void
 LayerProgram::SetLayerOpacity(GLfloat aValue)
 {
   mGLContext->fUniform1f(mLayerOpacityLocation, aValue);
@@ -665,6 +702,14 @@ RGBLayerProgram::UpdateLocations()
   LayerProgram::UpdateLocations();
 
   mLayerTextureLocation = mGLContext->fGetUniformLocation(mProgram, "uLayerTexture");
+}
+
+void
+ColorLayerProgram::UpdateLocations()
+{
+  LayerProgram::UpdateLocations();
+
+  mRenderColorLocation = mGLContext->fGetUniformLocation(mProgram, "uRenderColor");
 }
 
 void
