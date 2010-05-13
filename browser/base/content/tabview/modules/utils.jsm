@@ -360,11 +360,22 @@ var Utils = {
   },
     
   // ___ Files
-  getInstallDirectory: function(id) { 
-    var extensionManager = Cc["@mozilla.org/extensions/manager;1"]  
-                           .getService(Ci.nsIExtensionManager);  
-    var file = extensionManager.getInstallLocation(id).getItemFile(id, "install.rdf"); 
-    return file.parent;  
+  getInstallDirectory: function(id, callback) { 
+    if (Cc["@mozilla.org/extensions/manager;1"]) {
+      var extensionManager = Cc["@mozilla.org/extensions/manager;1"]  
+                             .getService(Ci.nsIExtensionManager);  
+      var file = extensionManager.getInstallLocation(id).getItemFile(id, "install.rdf"); 
+      callback(file.parent);  
+    }
+    else {
+      Components.utils.import("resource://gre/modules/AddonManager.jsm");
+      AddonManager.getAddonByID(id, function(addon) {
+        var fileStr = addon.getResourceURL("install.rdf");
+        var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);  
+        var url = ios.newURI(fileStr, null, null);
+        callback(url.QueryInterface(Ci.nsIFileURL).file.parent);
+      });
+    }
   }, 
   
   getFiles: function(dir) {
@@ -381,23 +392,23 @@ var Utils = {
     return files;
   },
 
-  getVisualizationNames: function() {
-    var names = [];
-    /*
-    var dir = this.getInstallDirectory('tabcandy@aza.raskin');  
-    dir.append('content');
-    dir.append('candies');
-    var files = this.getFiles(dir);
-    var count = files.length;
-    var a;
-    for(a = 0; a < count; a++) {
-      var file = files[a];
-      if(file.isDirectory()) 
-        names.push(file.leafName);
-    }
-
-    */
-    return names;
+  getVisualizationNames: function(callback) {
+    var self = this;
+    this.getInstallDirectory("tabcandy@aza.raskin", function(dir) {
+      var names = [];
+      dir.append('content');
+      dir.append('candies');
+      var files = self.getFiles(dir);
+      var count = files.length;
+      var a;
+      for(a = 0; a < count; a++) {
+        var file = files[a];
+        if(file.isDirectory()) 
+          names.push(file.leafName);
+      }
+ 
+      callback(names);
+    });
   },
     
   // ___ Logging
