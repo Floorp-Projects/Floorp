@@ -188,8 +188,7 @@ GetScrollableLineHeight(nsIFrame* aTargetFrame);
 static inline PRBool
 IsMouseEventReal(nsEvent* aEvent)
 {
-  NS_ABORT_IF_FALSE(aEvent->eventStructType == NS_MOUSE_EVENT,
-                    "Not a mouse event");
+  NS_ABORT_IF_FALSE(NS_IS_MOUSE_EVENT_STRUCT(aEvent), "Not a mouse event");
   // Return true if not synthesized.
   return static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal;
 }
