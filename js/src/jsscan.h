@@ -255,16 +255,14 @@ enum TokenStreamFlags
     TSF_EOF = 0x02,             /* hit end of file */
     TSF_NEWLINES = 0x04,        /* tokenize newlines */
     TSF_OPERAND = 0x08,         /* looking for operand, not operator */
-    TSF_NLFLAG = 0x20,          /* last linebuf ended with \n */
+    TSF_UNEXPECTED_EOF = 0x10,  /* unexpected end of input, i.e. TOK_EOF not at top-level. */
+    TSF_KEYWORD_IS_NAME = 0x20, /* Ignore keywords and return TOK_NAME instead to the parser. */
     TSF_STRICT_MODE_CODE = 0x40,/* Tokenize as appropriate for strict mode code. */
     TSF_DIRTYLINE = 0x80,       /* non-whitespace since start of line */
     TSF_OWNFILENAME = 0x100,    /* ts->filename is malloc'd */
     TSF_XMLTAGMODE = 0x200,     /* scanning within an XML tag in E4X */
     TSF_XMLTEXTMODE = 0x400,    /* scanning XMLText terminal from E4X */
     TSF_XMLONLYMODE = 0x800,    /* don't scan {expr} within text/tag */
-
-    /* Flag indicating unexpected end of input, i.e. TOK_EOF not at top-level. */
-    TSF_UNEXPECTED_EOF = 0x1000,
 
     /*
      * To handle the hard case of contiguous HTML comments, we want to clear the
@@ -285,10 +283,7 @@ enum TokenStreamFlags
      * It does not cope with malformed comment hiding hacks where --> is hidden
      * by C-style comments, or on a dirty line.  Such cases are already broken.
      */
-    TSF_IN_HTML_COMMENT = 0x2000,
-
-    /* Ignore keywords and return TOK_NAME instead to the parser. */
-    TSF_KEYWORD_IS_NAME = 0x4000
+    TSF_IN_HTML_COMMENT = 0x2000
 };
 
 #define t_op            u.s.op
@@ -487,8 +482,8 @@ class TokenStream
     uintN               ungetpos;       /* next free char slot in ungetbuf */
     jschar              ungetbuf[6];    /* at most 6, for \uXXXX lookahead */
     uintN               flags;          /* flags -- see above */
-    uint32              linelen;        /* physical linebuf segment length */
     uint32              linepos;        /* linebuf offset in physical line */
+    uint32              lineposNext;    /* the next value of linepos */
     TokenBuf            linebuf;        /* line buffer for diagnostics */
     TokenBuf            userbuf;        /* user input buffer if !file */
     const char          *filename;      /* input filename or null */
