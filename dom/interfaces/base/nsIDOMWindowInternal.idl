@@ -44,7 +44,7 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 
-[scriptable, uuid(c2f4433a-8b4c-4676-ab30-3bffd26fb29e)]
+[scriptable, uuid(f18e491b-0c1a-4a9d-9281-32f39fa2d637)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -218,4 +218,10 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    */
   [binaryname(PostMessageMoz)] void postMessage(in DOMString message,
                                                 in DOMString targetOrigin);
+
+  /**
+   * Returns the number of times this document for this window has
+   * been painted to the screen.
+   */
+  readonly attribute unsigned long long mozPaintCount;
 };

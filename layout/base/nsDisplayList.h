@@ -250,6 +250,10 @@ public:
    */
   void IgnorePaintSuppression() { mIsBackgroundOnly = PR_FALSE; }
   /**
+   * Call this if we're doing normal painting to the window.
+   */
+  void SetPaintingToWindow(PRBool aToWindow) { mIsPaintingToWindow = aToWindow; }
+  /**
    * Display the caret if needed.
    */
   nsresult DisplayCaret(nsIFrame* aFrame, const nsRect& aDirtyRect,
@@ -424,6 +428,7 @@ private:
   // under an nsDisplayTransform
   PRPackedBool                   mInTransform;
   PRPackedBool                   mSyncDecodeImages;
+  PRPackedBool                   mIsPaintingToWindow;
 };
 
 class nsDisplayItem;
