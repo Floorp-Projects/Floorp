@@ -297,7 +297,7 @@ enum TokenStreamFlags
 #define t_atom2         u.p.atom2
 #define t_dval          u.dval
 
-const size_t LINE_LIMIT = 256;  /* logical line buffer size limit
+const size_t LINE_LIMIT = 1024; /* logical line buffer size limit
                                    -- physical line length is unlimited */
 
 class TokenStream
