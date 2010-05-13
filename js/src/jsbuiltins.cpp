@@ -63,7 +63,6 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
-#include "jscntxtinlines.h"
 
 using namespace avmplus;
 using namespace nanojit;
@@ -361,35 +360,36 @@ JS_REQUIRES_STACK JSBool FASTCALL
 js_PopInterpFrame(JSContext* cx, TracerState* state)
 {
     JS_ASSERT(cx->fp && cx->fp->down);
-    JSStackFrame* const fp = cx->fp;
+    JSInlineFrame* ifp = (JSInlineFrame*)cx->fp;
 
     /*
      * Mirror frame popping code from inline_return in js_Interpret. There are
      * some things we just don't want to handle. In those cases, the trace will
      * MISMATCH_EXIT.
      */
-    if (fp->hookData)
+    if (ifp->hookData)
         return JS_FALSE;
-    if (cx->version != fp->callerVersion)
+    if (cx->version != ifp->callerVersion)
         return JS_FALSE;
-    if (fp->flags & JSFRAME_CONSTRUCTING)
+    if (cx->fp->flags & JSFRAME_CONSTRUCTING)
         return JS_FALSE;
-    if (fp->imacpc)
+    if (cx->fp->imacpc)
         return JS_FALSE;
-    if (fp->blockChain)
+    if (cx->fp->blockChain)
         return JS_FALSE;
 
-    fp->putActivationObjects(cx);
+    cx->fp->putActivationObjects(cx);
     
     /* Update display table. */
-    if (fp->script->staticLevel < JS_DISPLAY_SIZE)
-        cx->display[fp->script->staticLevel] = fp->displaySave;
+    if (cx->fp->script->staticLevel < JS_DISPLAY_SIZE)
+        cx->display[cx->fp->script->staticLevel] = cx->fp->displaySave;
 
     /* Pop the frame and its memory. */
-    JSStackFrame *down = fp->down;
-    cx->stack().popInlineFrame(cx, fp, down);
-    JS_ASSERT(cx->fp == down && cx->fp->regs == &fp->callerRegs);
-    down->regs = fp->regs;
+    cx->fp = cx->fp->down;
+    JS_ASSERT(cx->fp->regs == &ifp->callerRegs);
+    cx->fp->regs = ifp->frame.regs;
+
+    JS_ARENA_RELEASE(&cx->stackPool, ifp->mark);
 
     /* Update the inline call count. */
     *state->inlineCallCountp = *state->inlineCallCountp - 1;
