@@ -137,11 +137,12 @@ TabChild::Init()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS10(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
+NS_IMPL_ISUPPORTS11(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
                     nsIEmbeddingSiteWindow, nsIEmbeddingSiteWindow2,
                     nsIWebBrowserChromeFocus, nsIInterfaceRequestor,
                     nsIWindowProvider, nsIWebProgressListener,
-                    nsIWebProgressListener2, nsSupportsWeakReference)
+                    nsIWebProgressListener2, nsSupportsWeakReference,
+                    nsITabChild)
 
 NS_IMETHODIMP
 TabChild::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
@@ -668,6 +669,22 @@ TabChild::RecvPDocumentRendererShmemConstructor(
     return PDocumentRendererShmemChild::Send__delete__(__a, dirtyArea.X(), dirtyArea.Y(), 
                                                        dirtyArea.Width(), dirtyArea.Height(),
                                                        aBuf);
+}
+
+/* The PGeolocationRequestChild actor is implemented by a refcounted
+   nsGeolocationRequest, and has an identical lifetime. */
+
+PGeolocationRequestChild*
+TabChild::AllocPGeolocationRequest(const IPC::URI&)
+{
+  NS_RUNTIMEABORT("unused");
+  return nsnull;
+}
+
+bool
+TabChild::DeallocPGeolocationRequest(PGeolocationRequestChild* actor)
+{
+  return true;
 }
 
 bool

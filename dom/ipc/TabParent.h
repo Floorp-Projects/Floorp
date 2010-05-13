@@ -160,6 +160,9 @@ public:
     virtual PContextWrapperParent* AllocPContextWrapper();
     virtual bool DeallocPContextWrapper(PContextWrapperParent* actor);
 
+    virtual PGeolocationRequestParent* AllocPGeolocationRequest(const IPC::URI& uri);
+    virtual bool DeallocPGeolocationRequest(PGeolocationRequestParent* actor);
+
     JSBool GetGlobalJSObject(JSContext* cx, JSObject** globalp);
 
     NS_DECL_ISUPPORTS

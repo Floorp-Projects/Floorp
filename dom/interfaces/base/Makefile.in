@@ -81,6 +81,7 @@ XPIDLSRCS =					\
         nsIDOMClientRectList.idl		\
 	nsIFocusManager.idl			\
 	nsIQueryContentEventResult.idl		\
+	nsITabChild.idl                         \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

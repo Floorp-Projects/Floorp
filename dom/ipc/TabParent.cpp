@@ -57,6 +57,8 @@
 #include "nsNetUtil.h"
 #include "jsarray.h"
 #include "nsContentUtils.h"
+#include "nsGeolocationOOP.h"
+#include "nsIDOMNSHTMLFrameElement.h"
 
 using mozilla::ipc::DocumentRendererParent;
 using mozilla::ipc::DocumentRendererShmemParent;
@@ -447,6 +449,19 @@ TabParent::DeallocPContextWrapper(PContextWrapperParent* actor)
 {
     delete actor;
     return true;
+}
+
+PGeolocationRequestParent*
+TabParent::AllocPGeolocationRequest(const URI::URI& uri)
+{
+  return new GeolocationRequestParent(mFrameElement, uri);
+}
+  
+bool
+TabParent::DeallocPGeolocationRequest(PGeolocationRequestParent* actor)
+{
+  delete actor;
+  return true;
 }
 
 JSBool
