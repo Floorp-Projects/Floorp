@@ -135,6 +135,18 @@ HistoryStore.prototype = {
     return stm;
   },
 
+  get _allUrlStm() {
+    this._log.trace("Creating SQL statement: _allUrlStm");
+    let stm = this._db.createStatement(
+      "SELECT url " +
+      "FROM moz_places " +
+      "WHERE last_visit_date > :cutoff_date " +
+      "ORDER BY frecency DESC " +
+      "LIMIT 5000");
+    this.__defineGetter__("_allUrlStm", function() stm);
+    return stm;
+  },
+
   // See bug 320831 for why we use SQL here
   _getVisits: function HistStore__getVisits(uri) {
     this._visitStm.params.url = uri;
@@ -188,25 +200,25 @@ HistoryStore.prototype = {
 
 
   getAllIDs: function HistStore_getAllIDs() {
-    let query = this._hsvc.getNewQuery(),
-        options = this._hsvc.getNewQueryOptions();
-
-    query.minVisits = 1;
-    options.maxResults = 1000;
-    options.sortingMode = options.SORT_BY_DATE_DESCENDING;
-    options.queryType = options.QUERY_TYPE_HISTORY;
-
-    let root = this._hsvc.executeQuery(query, options).root;
-    root.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-    root.containerOpen = true;
-
-    let items = {};
-    for (let i = 0; i < root.childCount; i++) {
-      let item = root.getChild(i);
-      let guid = GUIDForUri(item.uri, true);
-      items[guid] = item.uri;
-    }
-    return items;
+    // Only get places visited within the last 30 days (30*24*60*60*1000ms)
+    this._allUrlStm.params.cutoff_date = (Date.now() - 2592000000) * 1000;
+    let [exec, execCb] = Sync.withCb(this._allUrlStm.executeAsync, this._allUrlStm);
+    return exec({
+      ids: {},
+      handleResult: function handleResult(results) {
+        let row;
+        while ((row = results.getNextRow()) != null) {
+          let url = row.getResultByName("url");
+          this.ids[GUIDForUri(url, true)] = url;
+        }
+      },
+      handleError: function handleError(error) {
+        execCb.throw(error);
+      },
+      handleCompletion: function handleCompletion(reason) {
+        execCb(this.ids);
+      }
+    });
   },
 
   create: function HistStore_create(record) {
