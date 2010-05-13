@@ -263,6 +263,54 @@ js_fgets(char *buf, int size, FILE *file)
     return i;
 }
 
+/*
+ * Nb: This does *not* append a terminating '\0'.  Returns the number of chars
+ * read from the file.
+ */
+int
+TokenStream::getLineFromFile(char *buf, int size, FILE *file)
+{
+    // We must be careful with ASCII newlines:
+    //
+    // - \n ends a line
+    // - \r not followed by \n ends a line
+    // - \r\n ends a line at the \n
+    //
+    // For the last case, we avoid splitting a \r\n pair in order to keep
+    // things simpler for getChar().  To do this we keep one element in buf in
+    // reserve;  that way, if the nth char we get is \r, we can peek ahead one
+    // more and get \n as the (n+1)th char if it follows.
+
+    int n = size - 1;   // reserve space for \n following a \r
+    JS_ASSERT(n > 0);
+    int i;
+    for (i = 0; i < n; i++) {
+        int c = fast_getc(file);
+        if (c == EOF)
+            break;
+        buf[i] = c;
+        if (c == '\n') {
+            i++;
+            break;
+        }
+        if (c == '\r') { 
+            i++;
+            // Look for a following \n.  We know we have space in buf for it.
+            c = fast_getc(file);
+            if (c == EOF)
+                break;
+            buf[i] = c;
+            if (c == '\n') {
+                i++;
+                break;
+            }
+            ungetc(c, file);    // \r wasn't followed by \n, unget
+            break;
+        }
+    }
+    return i;
+}
+
 int32
 TokenStream::getChar()
 {
@@ -285,7 +333,7 @@ TokenStream::getChar()
 
                 /* Fill userbuf so that \r and \r\n convert to \n. */
                 crflag = (flags & TSF_CRFLAG) != 0;
-                len = js_fgets(cbuf, LINE_LIMIT - crflag, file);
+                len = getLineFromFile(cbuf, LINE_LIMIT - crflag, file);
                 if (len <= 0) {
                     flags |= TSF_EOF;
                     return EOF;
