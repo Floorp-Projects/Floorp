@@ -210,7 +210,7 @@ ValueIsLength(JSContext *cx, Value* vp)
     }
 
     jsdouble d;
-    if (!ValueToNumber(cx, vp, &d))
+    if (!ValueToNumber(cx, *vp, &d))
         goto error;
 
     if (JSDOUBLE_IS_NaN(d))
@@ -251,7 +251,7 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     }
 
     JS_STATIC_ASSERT(sizeof(jsuint) == sizeof(uint32_t));
-    return ValueToECMAUint32(cx, tvr.addr(), (uint32_t *)lengthp);
+    return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)lengthp);
 }
 
 static inline void
@@ -1528,7 +1528,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     JS_ASSERT(start == MAXINDEX);
     AutoValueRooter tvr(cx);
     AutoIdRooter idr(cx);
-    CopyableValue idval(DoubleTag(MAXINDEX));
+    Value idval(DoubleTag(MAXINDEX));
     do {
         tvr.addr()->copy(*vector++);
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
@@ -1836,7 +1836,7 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
         return JS_FALSE;
 
     jsdouble cmp;
-    if (!ValueToNumber(cx, invokevp, &cmp))
+    if (!ValueToNumber(cx, *invokevp, &cmp))
         return JS_FALSE;
 
     /* Clamp cmp to -1, 0, 1. */
@@ -2380,7 +2380,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
 
     /* Convert the first argument into a starting index. */
     jsdouble d;
-    if (!ValueToNumber(cx, argv, &d))
+    if (!ValueToNumber(cx, *argv, &d))
         return JS_FALSE;
     d = js_DoubleToInteger(d);
     if (d < 0) {
@@ -2400,7 +2400,7 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
         count = delta;
         end = length;
     } else {
-        if (!ValueToNumber(cx, argv, &d))
+        if (!ValueToNumber(cx, *argv, &d))
             return JS_FALSE;
         d = js_DoubleToInteger(d);
         if (d < 0)
@@ -2611,7 +2611,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
 
     if (argc > 0) {
         jsdouble d;
-        if (!ValueToNumber(cx, &argv[0], &d))
+        if (!ValueToNumber(cx, argv[0], &d))
             return JS_FALSE;
         d = js_DoubleToInteger(d);
         if (d < 0) {
@@ -2624,7 +2624,7 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
         begin = (jsuint)d;
 
         if (argc > 1) {
-            if (!ValueToNumber(cx, &argv[1], &d))
+            if (!ValueToNumber(cx, argv[1], &d))
                 return JS_FALSE;
             d = js_DoubleToInteger(d);
             if (d < 0) {
@@ -2693,7 +2693,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
         jsdouble start;
 
         tosearch.copy(vp[2]);
-        if (!ValueToNumber(cx, &vp[3], &start))
+        if (!ValueToNumber(cx, vp[3], &start))
             return JS_FALSE;
         start = js_DoubleToInteger(start);
         if (start < 0) {

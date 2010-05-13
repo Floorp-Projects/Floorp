@@ -436,7 +436,7 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
     CHECK_REQUEST(cx);
 
     AutoValueRooter tvr(cx, Valueify(v));
-    return ValueToNumber(cx, tvr.addr(), dp);
+    return ValueToNumber(cx, tvr.value(), dp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -451,7 +451,7 @@ JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
     CHECK_REQUEST(cx);
 
     AutoValueRooter tvr(cx, Valueify(v));
-    return ValueToECMAInt32(cx, tvr.addr(), (int32_t *)ip);
+    return ValueToECMAInt32(cx, tvr.value(), (int32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -460,7 +460,7 @@ JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
     CHECK_REQUEST(cx);
 
     AutoValueRooter tvr(cx, Valueify(v));
-    return ValueToECMAUint32(cx, tvr.addr(), (uint32_t *)ip);
+    return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -469,7 +469,7 @@ JS_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
     CHECK_REQUEST(cx);
 
     AutoValueRooter tvr(cx, Valueify(v));
-    return ValueToInt32(cx, tvr.addr(), (int32_t *)ip);
+    return ValueToInt32(cx, tvr.value(), (int32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -478,7 +478,7 @@ JS_ValueToUint16(JSContext *cx, jsval v, uint16 *ip)
     CHECK_REQUEST(cx);
 
     AutoValueRooter tvr(cx, Valueify(v));
-    return ValueToUint16(cx, tvr.addr(), (uint16_t *)ip);
+    return ValueToUint16(cx, tvr.value(), (uint16_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)

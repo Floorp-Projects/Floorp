@@ -3622,20 +3622,11 @@ struct AssertLayoutCompatible
 };
 
 /* XXX: this is a temporary hack until copying is implicit. */
-struct CopyableValue : Value
-{
-    CopyableValue() {}
-    CopyableValue(NullTag arg) : Value(arg) {}
-    CopyableValue(UndefinedTag arg) : Value(arg) {}
-    CopyableValue(Int32Tag arg) : Value(arg) {}
-    CopyableValue(DoubleTag arg) : Value(arg) {}
-    CopyableValue(JSString *arg) : Value(arg) {}
-    CopyableValue(FunObjTag arg) : Value(arg) {}
-    CopyableValue(NonFunObjTag arg) : Value(arg) {}
-    inline CopyableValue(ObjectTag arg);
-    CopyableValue(BooleanTag arg) : Value(arg) {}
-    CopyableValue(JSWhyMagic arg) : Value(arg) {}
-};
+struct CopyableValue : Value {};
+JS_STATIC_ASSERT(sizeof(CopyableValue) == sizeof(Value));
+
+CopyableValue &copyable_cast(Value &v) { return static_cast<CopyableValue &>(v); }
+const CopyableValue &copyable_cast(const Value &v) { return static_cast<const CopyableValue &>(v); }
 
 JS_ALWAYS_INLINE
 Value::Value(const CopyableValue &v) {
@@ -3643,7 +3634,6 @@ Value::Value(const CopyableValue &v) {
     data = v.data;
 }
 
-JS_STATIC_ASSERT(sizeof(CopyableValue) == sizeof(Value));
 
 /*
  * As asserted above, js::Value and jsval are layout equivalent. To provide

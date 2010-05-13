@@ -389,7 +389,7 @@ GetInstancePrivate(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
     return obj->getPrivate();
 }
 
-extern CopyableValue
+extern Value
 BoxedWordToValue(jsboxedword w);
 
 extern bool

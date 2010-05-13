@@ -2292,7 +2292,6 @@ js_TraceRuntime(JSTracer *trc)
 
     JS_DHashTableEnumerate(&rt->gcLocksHash, gc_lock_traversal, trc);
     js_TraceAtomState(trc);
-    js_TraceRuntimeNumberState(trc);
     js_MarkTraps(trc);
 
     iter = NULL;

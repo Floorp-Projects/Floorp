@@ -39,6 +39,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 #include <string.h>
 #include "jsapi.h"
 #include "jsarena.h"
@@ -96,11 +98,11 @@ struct JSONParser
 #pragma warning(pop)
 #endif
 
-JSClass js_JSONClass = {
+Class js_JSONClass = {
     js_JSON_str,
     JSCLASS_HAS_CACHED_PROTO(JSProto_JSON),
-    JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   NULL,
+    PropertyStub,  PropertyStub,  PropertyStub,  PropertyStub,
+    EnumerateStub, ResolveStub,   ConvertStub,   NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
@@ -109,7 +111,7 @@ js_json_parse(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *s = NULL;
     jsval *argv = vp + 2;
-    AutoValueRooter reviver(cx, JSVAL_NULL);
+    AutoValueRooter reviver(cx);
 
     if (!JS_ConvertArguments(cx, argc, argv, "S / v", &s, reviver.addr()))
         return JS_FALSE;
