@@ -958,6 +958,12 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 });
 
 // ##########
+// Class: DragInfo
+// Helper class for dragging <Item>s
+// 
+// ----------
+// Constructor: DragInfo
+// Called to create a DragInfo in response to a jQuery-UI draggable "start" event.
 var DragInfo = function(element, event) {
   this.el = element;
   this.$el = $(this.el);
@@ -968,6 +974,16 @@ var DragInfo = function(element, event) {
   
   this.$el.data('isDragging', true);
   this.item.setZ(99999);
+  
+  // When a tab drag starts, make it the focused tab.
+  if(this.item.isAGroup) {
+    var tab = Page.getActiveTab();
+    if(!tab || tab.parent != this.item) {
+      if(this.item._children.length)
+        Page.setActiveTab(this.item._children[0]);
+    }
+  } else
+    Page.setActiveTab(this.item);
 };
 
 DragInfo.prototype = {
@@ -978,17 +994,15 @@ DragInfo.prototype = {
     
     // Step 2: Match to the to
     
-  },
-  
-  // ----------
-  start: function() {
-    // When a tab drag starts, make it the focused tab.
-    if( !this.item.isAGroup ){
-      Page.setActiveTab(this.item);
-    }    
+    // Step 3: Profit!
+    
+    // TODO: Refactor these comments. Also, does this routine belong in DragInfo?
+    
   },
   
   // ----------  
+  // Function: drag
+  // Called in response to a jQuery-UI draggable "drag" event.
   drag: function(event, ui) {
     if(this.item.isAGroup) {
       var bb = this.item.getBounds();
@@ -1009,6 +1023,8 @@ DragInfo.prototype = {
   },
 
   // ----------  
+  // Function: stop
+  // Called in response to a jQuery-UI draggable "stop" event.
   stop: function() {
     this.$el.data('isDragging', false);    
 
@@ -1035,6 +1051,9 @@ DragInfo.prototype = {
   }
 };
 
+// ----------
+// Variable: drag
+// The DragInfo that's currently in process. 
 var drag = {
   info: null,
   zIndex: 100
@@ -1050,11 +1069,9 @@ window.Groups = {
     cancel: '.close',
     start: function(e, ui) {
       drag.info = new DragInfo(this, e);
-      drag.info.start();
     },
     drag: function(e, ui) {
       drag.info.drag(e, ui);
-
     },
     stop: function() {
       drag.info.stop();
