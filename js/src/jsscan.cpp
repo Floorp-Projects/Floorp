@@ -270,14 +270,15 @@ js_fgets(char *buf, int size, FILE *file)
 int
 TokenStream::fillUserbuf()
 {
-    // We avoid splitting a \r\n pair, because this makes things much easier
-    // for getChar().  To do this, we only try to fill userbuf up with
-    // LINE_LIMIT-1 chars.  Once we've reached that number, if the last one is
-    // \r then we check if the following one is \n;  if so we get it too,
-    // knowing that we have space for it.
-
+    /*
+     * We avoid splitting a \r\n pair, because this makes things much easier
+     * for getChar().  To do this, we only try to fill userbuf up with
+     * LINE_LIMIT-1 chars.  Once we've reached that number, if the last one is
+     * \r then we check if the following one is \n;  if so we get it too,
+     * knowing that we have space for it.
+     */
     jschar *buf = userbuf.base;
-    int n = LINE_LIMIT - 1;     // reserve space for \n following a \r
+    int n = LINE_LIMIT - 1;     /* reserve space for \n following a \r */
     JS_ASSERT(n > 0);
     int i;
     i = 0;
@@ -290,7 +291,7 @@ TokenStream::fillUserbuf()
 
         if (i == n) {
             if (buf[i - 1] == '\r') {
-                // Look for a following \n.  We know we have space in buf for it.
+                /* Look for a following \n.  We know we have space in buf for it. */
                 c = fast_getc(file);
                 if (c == EOF)
                     break;
@@ -299,7 +300,7 @@ TokenStream::fillUserbuf()
                     i++;
                     break;
                 }
-                ungetc(c, file);    // \r wasn't followed by \n, unget
+                ungetc(c, file);    /* \r wasn't followed by \n, unget */
             }
             break;
         }
@@ -361,22 +362,22 @@ TokenStream::getCharFillLinebuf()
             }
 
             if (d == '\r') {
-                to[i - 1] = '\n';       // overwrite with '\n'
+                to[i - 1] = '\n';       /* overwrite with '\n' */
                 if (i < ulen && from[i] == '\n') {
-                    i++;                // skip over '\n'
+                    i++;                /* skip over '\n' */
                     llenAdjust = -1;
                 }
                 break;
             }
 
             if (d == LINE_SEPARATOR || d == PARA_SEPARATOR) {
-                to[i - 1] = '\n';       // overwrite with '\n'
+                to[i - 1] = '\n';       /* overwrite with '\n' */
                 break;
             }
         }
     }
     
-    // At this point 'i' is the index one past the last char copied.
+    /* At this point 'i' is the index one past the last char copied. */
     ulen = i;
     userbuf.ptr += ulen;
 
