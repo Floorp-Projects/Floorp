@@ -319,6 +319,8 @@ function EventListenerMixIn(options) {
     });
 }
 
+// Class: Tabs
+// Singelton for dealing with the actual tabs in the browser. 
 function Tabs() {
   var trackedWindows = new Dictionary();
   var trackedTabs = new Dictionary();
