@@ -177,7 +177,7 @@ js_IsIdentifier(JSString *str)
 /* Initialize members that aren't initialized in |init|. */
 TokenStream::TokenStream(JSContext *cx)
   : cx(cx), tokens(), cursor(), lookahead(), ungetpos(), ungetbuf(), flags(),
-    linelen(), linepos(), file(), listenerTSData(), saveEOL(), tokenbuf(cx)
+    linelen(), linepos(), file(), listenerTSData(), tokenbuf(cx)
 {}
 
 #ifdef _MSC_VER
@@ -319,7 +319,7 @@ int32
 TokenStream::getChar()
 {
     int32 c;
-    ptrdiff_t llen, ulen;
+    ptrdiff_t ulen;
 
     if (ungetpos != 0) {
         c = ungetbuf[--ungetpos];
@@ -345,84 +345,59 @@ TokenStream::getChar()
             if (listener)
                 listener(filename, lineno, userbuf.ptr, ulen, &listenerTSData, listenerData);
 
-            jschar *nl = saveEOL;
-            if (!nl) {
+            /*
+             * Copy from userbuf to linebuf.  Stop when any of these happen:
+             * (a) we reach the end of userbuf;
+             * (b) we reach the end of linebuf;
+             * (c) we hit an EOL.
+             *
+             * "EOL" means any of: \r, \n, \r\n, or the Unicode line and paragraph
+             * separators.
+             */
+            jschar *from = userbuf.ptr;
+            jschar *to = linebuf.base;
+
+            int llenAdjust = 0;
+            int limit = JS_MIN(size_t(ulen), LINE_LIMIT);
+            int i = 0;
+            while (i < limit) {
+                /* Copy the jschar from userbuf to linebuf. */
+                jschar d = to[i] = from[i];
+                i++;
+
                 /*
-                 * Any one of \n, \r, or \r\n ends a line (the longest
-                 * match wins).  Also allow the Unicode line and paragraph
-                 * separators.
+                 * Normalize the copied jschar if it was a newline.  Try to
+                 * prevent multiple tests on most characters by first
+                 * filtering out characters that aren't 000x or 202x.
                  */
-                for (nl = userbuf.ptr; nl < userbuf.limit; nl++) {
-                    /*
-                     * Try to prevent value-testing on most characters by
-                     * filtering out characters that aren't 000x or 202x.
-                     */
-                    if ((*nl & 0xDFD0) == 0) {
-                        if (*nl == '\n')
-                            break;
-                        if (*nl == '\r') {
-                            if (nl + 1 < userbuf.limit && nl[1] == '\n')
-                                nl++;
-                            break;
+                if ((d & 0xDFD0) == 0) {
+                    if (d == '\n') {
+                        break;
+                    }
+
+                    if (d == '\r') {
+                        to[i - 1] = '\n';       // overwrite with '\n'
+                        if (i < ulen && from[i] == '\n') {
+                            i++;                // skip over '\n'
+                            llenAdjust = -1;
                         }
-                        if (*nl == LINE_SEPARATOR || *nl == PARA_SEPARATOR)
-                            break;
+                        break;
+                    }
+
+                    if (d == LINE_SEPARATOR || d == PARA_SEPARATOR) {
+                        to[i - 1] = '\n';       // overwrite with '\n'
+                        break;
                     }
                 }
-            } else {
-                JS_ASSERT(!file);   // must be scanning from memory to have saved 'nl'
             }
-
-            /*
-             * If there was a line terminator, copy thru it into linebuf.
-             * Else copy at most LINE_LIMIT-1 bytes into linebuf.
-             */
-            if (nl < userbuf.limit)
-                ulen = (nl - userbuf.ptr) + 1;
-
-            if (ulen >= (ptrdiff_t) LINE_LIMIT) {
-                JS_ASSERT(!file);
-                ulen = LINE_LIMIT - 1;
-                saveEOL = nl;       // remember the position to avoid looking for it next time
-            } else {
-                saveEOL = NULL;
-            }
-            js_strncpy(linebuf.base, userbuf.ptr, ulen);
+            
+            // At this point 'i' is the index one past the last char copied.
+            ulen = i;
             userbuf.ptr += ulen;
-            llen = ulen;    // llen == ulen at first, but it may be shortened during normalization
-
-            /*
-             * Normalize all EOL sequences to \n in linebuf (don't do this in
-             * userbuf because the user's string might be readonly).
-             */
-            if (nl < userbuf.limit) {
-                if (*nl == '\r') {
-                    // If nl points to a \r that means it mustn't be followed
-                    // by a \n, in which case \r must have been the last char
-                    // copied.  Replace it with \n.
-                    JS_ASSERT(linebuf.base[llen-1] == '\r');
-                    linebuf.base[llen-1] = '\n';
-                } else if (*nl == '\n') {
-                    if (nl > userbuf.base && nl[-1] == '\r') {
-                        // If nl points to a \n that's preceded by a \r, we
-                        // overwrite the \r with \n and pull llen back by one
-                        // so the \n pointed to by nl ends up beyond
-                        // linebuf.limit.
-                        JS_ASSERT(linebuf.base[llen-2] == '\r' &&
-                                  linebuf.base[llen-1] == '\n');
-                        linebuf.base[llen-2] = '\n';
-                        llen--;
-                    }
-                } else if (*nl == LINE_SEPARATOR || *nl == PARA_SEPARATOR) {
-                    JS_ASSERT(linebuf.base[llen-1] == LINE_SEPARATOR ||
-                              linebuf.base[llen-1] == PARA_SEPARATOR);
-                    linebuf.base[llen-1] = '\n';
-                }
-            }
 
             /* Reset linebuf based on normalized length. */
-            linebuf.limit = linebuf.base + llen;
             linebuf.ptr = linebuf.base;
+            linebuf.limit = linebuf.base + ulen + llenAdjust;
 
             /* Update position of linebuf within physical userbuf line. */
             if (!(flags & TSF_NLFLAG))
@@ -496,7 +471,7 @@ TokenStream::reportCompileErrorNumberVA(JSParseNode *pn, uintN flags, uintN erro
     uintN index, i;
     JSErrorReporter onError;
 
-    JS_ASSERT(linebuf.limit < linebuf.base + LINE_LIMIT);
+    JS_ASSERT(linebuf.limit <= linebuf.base + LINE_LIMIT);
 
     if (JSREPORT_IS_STRICT(flags) && !JS_HAS_STRICT_OPTION(cx))
         return JS_TRUE;
