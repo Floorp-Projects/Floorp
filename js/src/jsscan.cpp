@@ -268,7 +268,7 @@ js_fgets(char *buf, int size, FILE *file)
  * read from the file.
  */
 int
-TokenStream::getLineFromFile(char *buf, int size, FILE *file)
+TokenStream::fillUserbuf()
 {
     // We must be careful with ASCII newlines:
     //
@@ -281,14 +281,15 @@ TokenStream::getLineFromFile(char *buf, int size, FILE *file)
     // reserve;  that way, if the nth char we get is \r, we can peek ahead one
     // more and get \n as the (n+1)th char if it follows.
 
-    int n = size - 1;   // reserve space for \n following a \r
+    jschar *buf = userbuf.base;
+    int n = LINE_LIMIT - 1;     // reserve space for \n following a \r
     JS_ASSERT(n > 0);
     int i;
     for (i = 0; i < n; i++) {
         int c = fast_getc(file);
         if (c == EOF)
             break;
-        buf[i] = c;
+        buf[i] = (jschar) (unsigned char) c;
         if (c == '\n') {
             i++;
             break;
@@ -299,7 +300,7 @@ TokenStream::getLineFromFile(char *buf, int size, FILE *file)
             c = fast_getc(file);
             if (c == EOF)
                 break;
-            buf[i] = c;
+            buf[i] = (jschar) (unsigned char) c;
             if (c == '\n') {
                 i++;
                 break;
@@ -311,12 +312,14 @@ TokenStream::getLineFromFile(char *buf, int size, FILE *file)
     return i;
 }
 
+/*
+ * This gets the next char, normalizing all EOL sequences to '\n' as it goes.
+ */
 int32
 TokenStream::getChar()
 {
     int32 c;
     ptrdiff_t len, olen;
-    char cbuf[LINE_LIMIT];
 
     if (ungetpos != 0) {
         c = ungetbuf[--ungetpos];
@@ -330,14 +333,13 @@ TokenStream::getChar()
                 }
 
                 /* Fill userbuf so that \r and \r\n convert to \n. */
-                len = getLineFromFile(cbuf, LINE_LIMIT, file);
-                if (len <= 0) {
+                len = fillUserbuf();
+                JS_ASSERT(len >= 0);
+                if (len == 0) {
                     flags |= TSF_EOF;
                     return EOF;
                 }
                 olen = len;
-                for (int i = 0; i < len; i++)
-                    userbuf.base[i] = (jschar) (unsigned char) cbuf[i];
                 userbuf.limit = userbuf.base + len;
                 userbuf.ptr = userbuf.base;
             }
