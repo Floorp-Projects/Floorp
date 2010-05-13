@@ -181,6 +181,50 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
   return true;
 }
 
+bool
+HttpChannelChild::RecvOnProgress(const PRUint64& progress,
+                                 const PRUint64& progressMax)
+{
+  LOG(("HttpChannelChild::RecvOnProgress [this=%p progress=%llu/%llu]\n",
+       this, progress, progressMax));
+
+  // cache the progress sink so we don't have to query for it each time.
+  if (!mProgressSink)
+    GetCallback(mProgressSink);
+
+  // block socket status event after Cancel or OnStopRequest has been called.
+  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending && 
+      !(mLoadFlags & LOAD_BACKGROUND)) 
+  {
+     if (progress > 0) {
+      NS_ASSERTION(progress <= progressMax, "unexpected progress values");
+      mProgressSink->OnProgress(this, nsnull, progress, progressMax);
+    }
+  }
+
+  return true;
+}
+
+bool
+HttpChannelChild::RecvOnStatus(const nsresult& status,
+                               const nsString& statusArg)
+{
+  LOG(("HttpChannelChild::RecvOnStatus [this=%p status=%x]\n", this, status));
+
+  // cache the progress sink so we don't have to query for it each time.
+  if (!mProgressSink)
+    GetCallback(mProgressSink);
+
+  // block socket status event after Cancel or OnStopRequest has been called.
+  if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending && 
+      !(mLoadFlags & LOAD_BACKGROUND)) 
+  {
+    mProgressSink->OnStatus(this, nsnull, status, statusArg.get());
+  }
+
+  return true;
+}
+
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsIRequest
 //-----------------------------------------------------------------------------
