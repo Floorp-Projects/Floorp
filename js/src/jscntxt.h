@@ -2913,7 +2913,10 @@ CanLeaveTrace(JSContext *cx)
 #endif
 }
 
-}       /* namespace js */
+extern void
+SetPendingException(JSContext *cx, const Value &v);
+
+} /* namespace js */
 
 /*
  * Get the current cx->fp, first lazily instantiating stack frames if needed.

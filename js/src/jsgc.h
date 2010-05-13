@@ -51,7 +51,6 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
-#define JSTRACE_DOUBLE      2
 #define JSTRACE_XML         3
 
 /*
@@ -517,12 +516,8 @@ CallGCMarkerIfGCThing(JSTracer *trc, jsid id, const char *name)
 void
 TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len);
 
-inline void
-#ifdef DEBUG
+JS_ALWAYS_INLINE void
 TraceValues(JSTracer *trc, Value *beg, Value *end, const char *name)
-#else
-TraceValues(JSTracer *trc, Value *beg, Value *end, const char *) /* last arg unused in release. kill unreferenced formal param warnings */
-#endif
 {
     for (Value *vp = beg; vp < end; ++vp) {
         if (vp->isGCThing()) {
@@ -532,25 +527,27 @@ TraceValues(JSTracer *trc, Value *beg, Value *end, const char *) /* last arg unu
     }
 }
 
-inline void
-#ifdef DEBUG
+JS_ALWAYS_INLINE void
 TraceValues(JSTracer *trc, size_t len, Value *vec, const char *name)
-#else
-TraceValues(JSTracer *trc, size_t len, Value *vec, const char *) /* last arg unused in release. kill unreferenced formal param warnings */
-#endif
 {
     TraceValues(trc, vec, vec + len, name);
 }
 
-inline void
-TraceIds(JSTracer *trc, size_t len, jsid *vec, const char *name)
+JS_ALWAYS_INLINE void
+TraceBoxedWords(JSTracer *trc, jsboxedword *beg, jsboxedword *end, const char *name)
 {
-    for (jsid *idp = vec, *end = idp + len; idp < end; idp++) {
-        if (JSID_IS_GCTHING(*idp)) {
-            JS_SET_TRACING_INDEX(trc, name, idp - vec);
-            CallGCMarker(trc, JSID_TO_GCTHING(*idp), JSID_TRACE_KIND(*idp));
+    for (jsboxedword *wp = beg; wp < end; ++wp) {
+        if (JSBOXEDWORD_IS_GCTHING(*wp)) {
+            JS_SET_TRACING_INDEX(trc, name, wp - beg);
+            CallGCMarker(trc, JSBOXEDWORD_TO_GCTHING(*wp), JSID_TRACE_KIND(*wp));
         }
     }
+}
+
+inline void
+TraceBoxedWords(JSTracer *trc, size_t len, jsid *vec, const char *name)
+{
+    TraceBoxedWords(trc, vec, vec + len, name);
 }
 
 } /* namespace js */
