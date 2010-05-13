@@ -199,6 +199,23 @@ window.TabItem.prototype = $.extend(new Item(), {
       $resizer.fadeOut();
       $(this.container).resizable('destroy');
     }
+  },
+  
+  // ----------  
+  makeActive: function(){
+   $(this.container).find("canvas").addClass("focus")
+  },
+
+  // ----------    
+  makeDeactive: function(){
+   $(this.container).find("canvas").removeClass("focus")
+  },
+  
+  // ----------
+  // Function: zoom
+  // Zooms into this tab thereby allowing you to interact with it.
+  zoom: function(){
+    TabItems.zoomTo(this.container);
   }
 });
 
@@ -235,66 +252,7 @@ window.TabItems = {
           $(this).find("canvas").data("link").tab.close(); }
         else {
           if(!$(this).data('isDragging')) {        
-            var item = $(this).data('tabItem');
-            var childHitResult = { shouldZoom: true };
-            if(item.parent)
-              childHitResult = item.parent.childHit(item);
-              
-            if(childHitResult.shouldZoom) {
-              // Zoom in! 
-              var orig = {
-                width: $(this).width(),
-                height:  $(this).height(),
-                pos: $(this).position()
-              }
-  
-              var scale = window.innerWidth/orig.width;
-              
-              var tab = Tabs.tab(this);
-              var mirror = tab.mirror;
-              
-              var overflow = $("body").css("overflow");
-              $("body").css("overflow", "hidden");
-              
-              function onZoomDone(){
-                UI.tabBar.show(false);              
-                TabMirror.resumePainting();
-                $(this).find("canvas").data("link").tab.focus();
-                $(this).css({
-                  top:   orig.pos.top,
-                  left:  orig.pos.left,
-                  width: orig.width,
-                  height:orig.height,
-                  })
-                  .removeClass("front");  
-                Navbar.show();
-                       
-                // If the tab is in a group set then set the active
-                // group to the tab's parent. 
-                if( self.getItemByTab(this).parent ){
-                  var gID = self.getItemByTab(this).parent.id;
-                  var group = Groups.group(gID);
-                  Groups.setActiveGroup( group );                  
-                }
-                else
-                  Groups.setActiveGroup( null );
-              
-                $("body").css("overflow", overflow); 
-                
-                if(childHitResult.callback)
-                  childHitResult.callback();             
-              }
-    
-              TabMirror.pausePainting();
-              $(this)
-                .addClass("front")
-                .animate({
-                  top:    -10,
-                  left:   0,
-                  width:  orig.width*scale,
-                  height: orig.height*scale
-                  }, 200, "easeInQuad", onZoomDone);
-            }
+            self.zoomTo(this);
           } else {
             $(this).find("canvas").data("link").tab.raw.pos = $(this).position();
           }
@@ -351,6 +309,76 @@ window.TabItems = {
     }
     
     window.TabMirror.customize(mod);
+  },
+  
+  // ----------
+  // Function: zoomTo(container)
+  // Given the containing element of a tab, allows you to
+  // select that tab and zoom in on it, thereby bringing you
+  // to the tab in Firefox to interact with.
+  //
+  zoomTo: function(tabEl){
+    var self = this;
+    var item = $(tabEl).data('tabItem');
+    var childHitResult = { shouldZoom: true };
+    if(item.parent)
+      childHitResult = item.parent.childHit(item);
+      
+    if(childHitResult.shouldZoom) {
+      // Zoom in! 
+      var orig = {
+        width: $(tabEl).width(),
+        height:  $(tabEl).height(),
+        pos: $(tabEl).position()
+      }
+
+      var scale = window.innerWidth/orig.width;
+      
+      var tab = Tabs.tab(tabEl);
+      var mirror = tab.mirror;
+      
+      var overflow = $("body").css("overflow");
+      $("body").css("overflow", "hidden");
+      
+      function onZoomDone(){
+        UI.tabBar.show(false);              
+        TabMirror.resumePainting();
+        $(tabEl).find("canvas").data("link").tab.focus();
+        $(tabEl).css({
+          top:   orig.pos.top,
+          left:  orig.pos.left,
+          width: orig.width,
+          height:orig.height,
+          })
+          .removeClass("front");  
+        Navbar.show();
+               
+        // If the tab is in a group set then set the active
+        // group to the tab's parent. 
+        if( self.getItemByTab(tabEl).parent ){
+          var gID = self.getItemByTab(tabEl).parent.id;
+          var group = Groups.group(gID);
+          Groups.setActiveGroup( group );                  
+        }
+        else
+          Groups.setActiveGroup( null );
+      
+        $("body").css("overflow", overflow); 
+        
+        if(childHitResult.callback)
+          childHitResult.callback();             
+      }
+
+      TabMirror.pausePainting();
+      $(tabEl)
+        .addClass("front")
+        .animate({
+          top:    -10,
+          left:   0,
+          width:  orig.width*scale,
+          height: orig.height*scale
+          }, 200, "easeInQuad", onZoomDone);
+    }    
   },
 
   // ----------

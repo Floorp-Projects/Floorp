@@ -149,9 +149,57 @@ window.Page = {
     Utils.homeTab.focus();
     UI.tabBar.hide(false);
   },
+  
+  setupKeyHandlers: function(){
+    var self = this;
+    $(window).keydown(function(e){
+      if( !self.getActiveTab() ) return;
+      
+      var centers = [[item.bounds.center(), item] for each(item in TabItems.getItems())];
+      myCenter = self.getActiveTab().bounds.center();
+
+      function getClosestTabBy(norm){
+        var matches = centers
+          .filter(function(item){return norm(item[0], myCenter)})
+          .sort(function(a,b){
+            return myCenter.distance(a[0]) - myCenter.distance(b[0]);
+          });
+        return matches[0][1];
+      }
+
+      var norm = null;
+      switch(e.which){
+        case 39: // Right
+          norm = function(a, me){return a.x > me.x};
+          break;
+        case 37: // Left
+          norm = function(a, me){return a.x < me.x};
+          break;
+        case 40: // Down
+          norm = function(a, me){return a.y > me.y};
+          break;
+        case 38: // Up
+          norm = function(a, me){return a.y < me.y}
+          break;
+      }
+      
+      if( norm != null ){
+        var nextTab = getClosestTabBy(norm);
+        self.setActiveTab(nextTab); 
+        e.preventDefault();               
+      }      
+    });
+    
+    $(window).keyup(function(e){
+      // If you hit escape or return, zoom into the active tab.
+      if(e.which == 27 || e.which == 13)
+        if( self.getActiveTab() ) self.getActiveTab().zoom();
+    });
+  },
     
   // ----------  
-  init: function() {    
+  init: function() {
+    var self = this;
     Utils.homeTab.raw.maxWidth = 60;
     Utils.homeTab.raw.minWidth = 60;
 
@@ -162,6 +210,7 @@ window.Page = {
         Page.createGroupOnDrag(e)
     })
 
+    this.setupKeyHandlers();
         
     Tabs.onClose(function(){
       // Only go back to the TabCandy tab when there you close the last
@@ -179,7 +228,7 @@ window.Page = {
 
       return false;
     });
-        
+    
     var lastTab = null;
     Tabs.onFocus(function(){
       // If we switched to TabCandy window...
@@ -192,6 +241,7 @@ window.Page = {
         // its mirror for the zoom out.
         // Zoom out!
         var $tab = $(lastTab.mirror.el);
+        self.setActiveTab($(lastTab.mirror.el).data().tabItem);
         
         var rotation = $tab.css("-moz-transform");
         var [w,h, pos, z] = [$tab.width(), $tab.height(), $tab.position(), $tab.css("zIndex")];
@@ -286,6 +336,30 @@ window.Page = {
     $("html").mousemove(updateSize)
     $("html").one('mouseup',finalize);
     return false;
+  },
+  
+  // ----------
+  // Function: setActiveTab
+  // Sets the currently active tab. The idea of a focused tab is useful
+  // for keyboard navigation and returning to the last zoomed-in tab.
+  // Hiting return/esc brings you to the focused tab, and using the
+  // arrow keys lets you navigate between open tabs.
+  //
+  // Parameters
+  //  - Takes a <TabItem>
+  //
+  setActiveTab: function(tab){
+    if( this._activeTab ) this._activeTab.makeDeactive();
+    this._activeTab = tab;
+    tab.makeActive();
+  },
+  
+  // ----------
+  // Function: getActiveTab
+  // Returns the currently active tab as a <TabItem>
+  //
+  getActiveTab: function(){
+    return this._activeTab;
   }
 }
 

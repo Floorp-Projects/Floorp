@@ -6,8 +6,8 @@ html {
 body { 
 	font-family: Tahoma, sans-serif !important;
 	padding: 0px;
-	background-color: rgba(240,240,240,1);
-	color: rgba(0,0,0,0.4);;
+	background-color: rgba(233,233,233,1);
+	color: rgba(0,0,0,0.4);
 	font-size:12px;
 	line-height: 16px;
 	margin: 0 auto;	
@@ -131,6 +131,10 @@ body {
   font-size: 11px;
 }
 .stack-trayed .thumb{ -moz-box-shadow: none !important;}
+
+.focus{
+  -moz-box-shadow: rgba(54,79,225,1) 0px 0px 5px !important;
+}
 
 /* Tab Group
 ----------------------------------*/
