@@ -270,42 +270,37 @@ js_fgets(char *buf, int size, FILE *file)
 int
 TokenStream::fillUserbuf()
 {
-    // We must be careful with ASCII newlines:
-    //
-    // - \n ends a line
-    // - \r not followed by \n ends a line
-    // - \r\n ends a line at the \n
-    //
-    // For the last case, we avoid splitting a \r\n pair in order to keep
-    // things simpler for getChar().  To do this we keep one element in buf in
-    // reserve;  that way, if the nth char we get is \r, we can peek ahead one
-    // more and get \n as the (n+1)th char if it follows.
+    // We avoid splitting a \r\n pair, because this makes things much easier
+    // for getChar().  To do this, we only try to fill userbuf up with
+    // LINE_LIMIT-1 chars.  Once we've reached that number, if the last one is
+    // \r then we check if the following one is \n;  if so we get it too,
+    // knowing that we have space for it.
 
     jschar *buf = userbuf.base;
     int n = LINE_LIMIT - 1;     // reserve space for \n following a \r
     JS_ASSERT(n > 0);
     int i;
-    for (i = 0; i < n; i++) {
+    i = 0;
+    while (true) {
         int c = fast_getc(file);
         if (c == EOF)
             break;
         buf[i] = (jschar) (unsigned char) c;
-        if (c == '\n') {
-            i++;
-            break;
-        }
-        if (c == '\r') { 
-            i++;
-            // Look for a following \n.  We know we have space in buf for it.
-            c = fast_getc(file);
-            if (c == EOF)
-                break;
-            buf[i] = (jschar) (unsigned char) c;
-            if (c == '\n') {
-                i++;
-                break;
+        i++;
+
+        if (i == n) {
+            if (buf[i - 1] == '\r') {
+                // Look for a following \n.  We know we have space in buf for it.
+                c = fast_getc(file);
+                if (c == EOF)
+                    break;
+                if (c == '\n') {
+                    buf[i] = (jschar) (unsigned char) c;
+                    i++;
+                    break;
+                }
+                ungetc(c, file);    // \r wasn't followed by \n, unget
             }
-            ungetc(c, file);    // \r wasn't followed by \n, unget
             break;
         }
     }
