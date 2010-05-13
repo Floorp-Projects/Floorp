@@ -319,32 +319,31 @@ int32
 TokenStream::getChar()
 {
     int32 c;
-    ptrdiff_t len, olen;
+    ptrdiff_t llen, ulen;
 
     if (ungetpos != 0) {
         c = ungetbuf[--ungetpos];
     } else {
         if (linebuf.ptr == linebuf.limit) {
-            len = userbuf.limit - userbuf.ptr;
-            if (len <= 0) {
+            ulen = userbuf.limit - userbuf.ptr;
+            if (ulen <= 0) {
                 if (!file) {
                     flags |= TSF_EOF;
                     return EOF;
                 }
 
                 /* Fill userbuf so that \r and \r\n convert to \n. */
-                len = fillUserbuf();
-                JS_ASSERT(len >= 0);
-                if (len == 0) {
+                ulen = fillUserbuf();
+                JS_ASSERT(ulen >= 0);
+                if (ulen == 0) {
                     flags |= TSF_EOF;
                     return EOF;
                 }
-                olen = len;
-                userbuf.limit = userbuf.base + len;
+                userbuf.limit = userbuf.base + ulen;
                 userbuf.ptr = userbuf.base;
             }
             if (listener)
-                listener(filename, lineno, userbuf.ptr, len, &listenerTSData, listenerData);
+                listener(filename, lineno, userbuf.ptr, ulen, &listenerTSData, listenerData);
 
             jschar *nl = saveEOL;
             if (!nl) {
@@ -370,23 +369,27 @@ TokenStream::getChar()
                             break;
                     }
                 }
+            } else {
+                JS_ASSERT(!file);   // must be scanning from memory to have saved 'nl'
             }
 
             /*
              * If there was a line terminator, copy thru it into linebuf.
-             * Else copy LINE_LIMIT-1 bytes into linebuf.
+             * Else copy at most LINE_LIMIT-1 bytes into linebuf.
              */
             if (nl < userbuf.limit)
-                len = (nl - userbuf.ptr) + 1;
-            if (len >= (ptrdiff_t) LINE_LIMIT) {
-                len = LINE_LIMIT - 1;
-                saveEOL = nl;
+                ulen = (nl - userbuf.ptr) + 1;
+
+            if (ulen >= (ptrdiff_t) LINE_LIMIT) {
+                JS_ASSERT(!file);
+                ulen = LINE_LIMIT - 1;
+                saveEOL = nl;       // remember the position to avoid looking for it next time
             } else {
                 saveEOL = NULL;
             }
-            js_strncpy(linebuf.base, userbuf.ptr, len);
-            userbuf.ptr += len;
-            olen = len;
+            js_strncpy(linebuf.base, userbuf.ptr, ulen);
+            userbuf.ptr += ulen;
+            llen = ulen;    // llen == ulen at first, but it may be shortened during normalization
 
             /*
              * Normalize all EOL sequences to \n in linebuf (don't do this in
@@ -397,28 +400,28 @@ TokenStream::getChar()
                     // If nl points to a \r that means it mustn't be followed
                     // by a \n, in which case \r must have been the last char
                     // copied.  Replace it with \n.
-                    JS_ASSERT(linebuf.base[len-1] == '\r');
-                    linebuf.base[len-1] = '\n';
+                    JS_ASSERT(linebuf.base[llen-1] == '\r');
+                    linebuf.base[llen-1] = '\n';
                 } else if (*nl == '\n') {
                     if (nl > userbuf.base && nl[-1] == '\r') {
                         // If nl points to a \n that's preceded by a \r, we
-                        // overwrite the \r with \n and pull len back by one
+                        // overwrite the \r with \n and pull llen back by one
                         // so the \n pointed to by nl ends up beyond
                         // linebuf.limit.
-                        JS_ASSERT(linebuf.base[len-2] == '\r' &&
-                                  linebuf.base[len-1] == '\n');
-                        linebuf.base[len-2] = '\n';
-                        len--;
+                        JS_ASSERT(linebuf.base[llen-2] == '\r' &&
+                                  linebuf.base[llen-1] == '\n');
+                        linebuf.base[llen-2] = '\n';
+                        llen--;
                     }
                 } else if (*nl == LINE_SEPARATOR || *nl == PARA_SEPARATOR) {
-                    JS_ASSERT(linebuf.base[len-1] == LINE_SEPARATOR ||
-                              linebuf.base[len-1] == PARA_SEPARATOR);
-                    linebuf.base[len-1] = '\n';
+                    JS_ASSERT(linebuf.base[llen-1] == LINE_SEPARATOR ||
+                              linebuf.base[llen-1] == PARA_SEPARATOR);
+                    linebuf.base[llen-1] = '\n';
                 }
             }
 
-            /* Reset linebuf based on adjusted segment length. */
-            linebuf.limit = linebuf.base + len;
+            /* Reset linebuf based on normalized length. */
+            linebuf.limit = linebuf.base + llen;
             linebuf.ptr = linebuf.base;
 
             /* Update position of linebuf within physical userbuf line. */
@@ -431,8 +434,8 @@ TokenStream::getChar()
             else
                 flags &= ~TSF_NLFLAG;
 
-            /* Update linelen from original segment length. */
-            linelen = olen;
+            /* Update linelen from un-normalized length. */
+            linelen = ulen;
         }
         c = *linebuf.ptr++;
     }
