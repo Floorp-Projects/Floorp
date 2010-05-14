@@ -315,18 +315,20 @@ public:
   // Restyling for a ContentInserted (notification after insertion) or
   // for a CharacterDataChanged.  |aContainer| must be non-null; when
   // the container is null, no work is needed.
-  void RestyleForInsertOrChange(nsIContent* aContainer,
+  void RestyleForInsertOrChange(mozilla::dom::Element* aContainer,
                                 nsIContent* aChild);
   // This would be the same as RestyleForInsertOrChange if we got the
   // notification before the removal.  However, we get it after, so we
   // have to use the index.  |aContainer| must be non-null; when the
-  // container is null, no work is needed.
-  void RestyleForRemove(nsIContent* aContainer, nsIContent* aOldChild,
-                        PRInt32 aIndexInContainer);
+  // container is null, no work is needed.  aFollowingSibling is the
+  // sibling that used to come after aOldChild before the removal.
+  void RestyleForRemove(mozilla::dom::Element* aContainer,
+                        nsIContent* aOldChild,
+                        nsIContent* aFollowingSibling);
   // Same for a ContentAppended.  |aContainer| must be non-null; when
   // the container is null, no work is needed.
-  void RestyleForAppend(nsIContent* aContainer,
-                        PRInt32 aNewIndexInContainer);
+  void RestyleForAppend(mozilla::dom::Element* aContainer,
+                        nsIContent* aFirstNewContent);
 
   // Process any pending restyles. This should be called after
   // CreateNeededFrames.
