@@ -8065,22 +8065,22 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 }
 
 void
-nsCSSFrameConstructor::RestyleElement(nsIContent     *aContent,
+nsCSSFrameConstructor::RestyleElement(Element        *aElement,
                                       nsIFrame       *aPrimaryFrame,
                                       nsChangeHint   aMinHint)
 {
-  NS_ASSERTION(aPrimaryFrame == aContent->GetPrimaryFrame(),
+  NS_ASSERTION(aPrimaryFrame == aElement->GetPrimaryFrame(),
                "frame/content mismatch");
-  if (aPrimaryFrame && aPrimaryFrame->GetContent() != aContent) {
+  if (aPrimaryFrame && aPrimaryFrame->GetContent() != aElement) {
     // XXXbz this is due to image maps messing with the primary frame pointer
     // of <area>s.  See bug 135040.  We can remove this block once that's fixed.
     aPrimaryFrame = nsnull;
   }
-  NS_ASSERTION(!aPrimaryFrame || aPrimaryFrame->GetContent() == aContent,
+  NS_ASSERTION(!aPrimaryFrame || aPrimaryFrame->GetContent() == aElement,
                "frame/content mismatch");
 
   if (aMinHint & nsChangeHint_ReconstructFrame) {
-    RecreateFramesForContent(aContent, PR_FALSE);
+    RecreateFramesForContent(aElement, PR_FALSE);
   } else if (aPrimaryFrame) {
     nsStyleChangeList changeList;
     mPresShell->FrameManager()->
@@ -8088,26 +8088,21 @@ nsCSSFrameConstructor::RestyleElement(nsIContent     *aContent,
     ProcessRestyledFrames(changeList);
   } else {
     // no frames, reconstruct for content
-    MaybeRecreateFramesForContent(aContent);
+    MaybeRecreateFramesForElement(aElement);
   }
 }
 
 void
-nsCSSFrameConstructor::RestyleLaterSiblings(nsIContent *aContent)
+nsCSSFrameConstructor::RestyleLaterSiblings(Element *aElement)
 {
-  nsIContent *parent = aContent->GetParent();
-  if (!parent)
-    return; // root element has no later siblings
-
-  for (PRInt32 index = parent->IndexOf(aContent) + 1,
-               index_end = parent->GetChildCount();
-       index != index_end; ++index) {
-    nsIContent *child = parent->GetChildAt(index);
-    if (!child->IsElement())
+  for (nsIContent* sibling = aElement->GetNextSibling();
+       sibling;
+       sibling = sibling->GetNextSibling()) {
+    if (!sibling->IsElement())
       continue;
 
-    nsIFrame* primaryFrame = child->GetPrimaryFrame();
-    RestyleElement(child, primaryFrame, NS_STYLE_HINT_NONE);
+    RestyleElement(sibling->AsElement(), sibling->GetPrimaryFrame(),
+                   NS_STYLE_HINT_NONE);
   }
 }
 
@@ -8898,21 +8893,20 @@ nsCSSFrameConstructor::CaptureStateFor(nsIFrame* aFrame,
 }
 
 nsresult
-nsCSSFrameConstructor::MaybeRecreateFramesForContent(nsIContent* aContent)
+nsCSSFrameConstructor::MaybeRecreateFramesForElement(Element* aElement)
 {
   nsresult result = NS_OK;
   nsFrameManager *frameManager = mPresShell->FrameManager();
 
-  nsStyleContext *oldContext = frameManager->GetUndisplayedContent(aContent);
+  nsStyleContext *oldContext = frameManager->GetUndisplayedContent(aElement);
   if (oldContext) {
     // The parent has a frame, so try resolving a new context.
-    // XXXbz this should take Element, not nsIContent
     nsRefPtr<nsStyleContext> newContext = mPresShell->StyleSet()->
-      ResolveStyleFor(aContent->AsElement(), oldContext->GetParent());
+      ResolveStyleFor(aElement, oldContext->GetParent());
 
-    frameManager->ChangeUndisplayedContent(aContent, newContext);
+    frameManager->ChangeUndisplayedContent(aElement, newContext);
     if (newContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_NONE) {
-      result = RecreateFramesForContent(aContent, PR_FALSE);
+      result = RecreateFramesForContent(aElement, PR_FALSE);
     }
   }
   return result;
@@ -11547,7 +11541,7 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
 
 
 static PLDHashOperator
-CollectRestyles(nsISupports* aContent,
+CollectRestyles(nsISupports* aElement,
                 nsCSSFrameConstructor::RestyleData& aData,
                 void* aRestyleArrayPtr)
 {
@@ -11556,7 +11550,7 @@ CollectRestyles(nsISupports* aContent,
                (aRestyleArrayPtr);
   nsCSSFrameConstructor::RestyleEnumerateData* currentRestyle =
     *restyleArrayPtr;
-  currentRestyle->mContent = static_cast<nsIContent*>(aContent);
+  currentRestyle->mElement = static_cast<Element*>(aElement);
   currentRestyle->mRestyleHint = aData.mRestyleHint;
   currentRestyle->mChangeHint = aData.mChangeHint;
 
@@ -11567,33 +11561,33 @@ CollectRestyles(nsISupports* aContent,
 }
 
 void
-nsCSSFrameConstructor::ProcessOneRestyle(nsIContent* aContent,
+nsCSSFrameConstructor::ProcessOneRestyle(Element* aElement,
                                          nsRestyleHint aRestyleHint,
                                          nsChangeHint aChangeHint)
 {
-  NS_PRECONDITION(aContent, "Must have content node");
+  NS_PRECONDITION(aElement, "Must have element");
   
-  if (!aContent->IsInDoc() ||
-      aContent->GetCurrentDoc() != mDocument) {
+  if (!aElement->IsInDoc() ||
+      aElement->GetCurrentDoc() != mDocument) {
     // Content node has been removed from our document; nothing else
     // to do here
     return;
   }
   
-  nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
+  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
   if (aRestyleHint & eRestyle_Self) {
-    RestyleElement(aContent, primaryFrame, aChangeHint);
+    RestyleElement(aElement, primaryFrame, aChangeHint);
   } else if (aChangeHint &&
                (primaryFrame ||
                 (aChangeHint & nsChangeHint_ReconstructFrame))) {
     // Don't need to recompute style; just apply the hint
     nsStyleChangeList changeList;
-    changeList.AppendChange(primaryFrame, aContent, aChangeHint);
+    changeList.AppendChange(primaryFrame, aElement, aChangeHint);
     ProcessRestyledFrames(changeList);
   }
 
   if (aRestyleHint & eRestyle_LaterSiblings) {
-    RestyleLaterSiblings(aContent);
+    RestyleLaterSiblings(aElement);
   }
 }
 
@@ -11689,7 +11683,7 @@ nsCSSFrameConstructor::ProcessPendingRestyleTable(
     for (RestyleEnumerateData* currentRestyle = restylesToProcess;
          currentRestyle != lastRestyle;
          ++currentRestyle) {
-      ProcessOneRestyle(currentRestyle->mContent,
+      ProcessOneRestyle(currentRestyle->mElement,
                         currentRestyle->mRestyleHint,
                         currentRestyle->mChangeHint);
     }
