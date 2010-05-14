@@ -3914,7 +3914,7 @@ nsDocument::GetElementById(const nsAString& aElementId,
   return CallQueryInterface(e, aReturn);
 }
 
-nsIContent*
+Element*
 nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
                                 void* aData)
 {

@@ -3200,27 +3200,22 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
 }
 
 /* static */
-nsIContent*
+Element*
 nsContentUtils::MatchElementId(nsIContent *aContent, nsIAtom* aId)
 {
-  if (aId == aContent->GetID()) {
-    return aContent;
-  }
-  
-  nsIContent *result = nsnull;
-  PRUint32 i, count = aContent->GetChildCount();
-
-  for (i = 0; i < count && result == nsnull; i++) {
-    result = MatchElementId(aContent->GetChildAt(i), aId);
+  for (nsIContent* cur = aContent;
+       cur;
+       cur = cur->GetNextNode(aContent)) {
+    if (aId == cur->GetID()) {
+      return cur->AsElement();
+    }
   }
 
-  return result;
+  return nsnull;
 }
 
-// Id attribute matching function used by nsXMLDocument and
-// nsHTMLDocument and others.
 /* static */
-nsIContent *
+Element *
 nsContentUtils::MatchElementId(nsIContent *aContent, const nsAString& aId)
 {
   NS_PRECONDITION(!aId.IsEmpty(), "Will match random elements");

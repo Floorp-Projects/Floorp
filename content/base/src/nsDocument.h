@@ -151,6 +151,8 @@ class nsChildContentList;
 class nsIdentifierMapEntry : public nsISupportsHashKey
 {
 public:
+  typedef mozilla::dom::Element Element;
+  
   nsIdentifierMapEntry(const nsISupports* aKey) :
     nsISupportsHashKey(aKey), mNameContentList(nsnull)
   {
@@ -164,8 +166,8 @@ public:
 
   void SetInvalidName();
   PRBool IsInvalidName();
-  void AddNameElement(mozilla::dom::Element* aElement);
-  void RemoveNameElement(mozilla::dom::Element* aElement);
+  void AddNameElement(Element* aElement);
+  void RemoveNameElement(Element* aElement);
   PRBool HasNameContentList() {
     return mNameContentList != nsnull;
   }
@@ -178,7 +180,7 @@ public:
    * Returns the element if we know the element associated with this
    * id. Otherwise returns null.
    */
-  mozilla::dom::Element* GetIdElement();
+  Element* GetIdElement();
   /**
    * Append all the elements with this id to aElements
    */
@@ -188,12 +190,12 @@ public:
    * @return true if the content could be added, false if we failed due
    * to OOM.
    */
-  PRBool AddIdElement(mozilla::dom::Element* aElement);
+  PRBool AddIdElement(Element* aElement);
   /**
    * This can fire ID change callbacks.
    * @return true if this map entry should be removed
    */
-  PRBool RemoveIdElement(mozilla::dom::Element* aElement);
+  PRBool RemoveIdElement(Element* aElement);
 
   PRBool HasContentChangeCallback() { return mChangeCallbacks != nsnull; }
   void AddContentChangeCallback(nsIDocument::IDTargetObserver aCallback, void* aData);
@@ -236,8 +238,7 @@ public:
   };
 
 private:
-  void FireChangeCallbacks(mozilla::dom::Element* aOldElement,
-                           mozilla::dom::Element* aNewElement);
+  void FireChangeCallbacks(Element* aOldElement, Element* aNewElement);
 
   // empty if there are no elementswith this ID.
   // The elementsnodes are stored addrefed.
@@ -562,8 +563,8 @@ public:
    */
   virtual void RemoveCharSetObserver(nsIObserver* aObserver);
 
-  virtual nsIContent* AddIDTargetObserver(nsIAtom* aID,
-                                          IDTargetObserver aObserver, void* aData);
+  virtual Element* AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+                                       void* aData);
   virtual void RemoveIDTargetObserver(nsIAtom* aID,
                                       IDTargetObserver aObserver, void* aData);
 
@@ -589,7 +590,7 @@ public:
                                      nsIDocument* aSubDoc);
   virtual nsIDocument* GetSubDocumentFor(nsIContent *aContent) const;
   virtual nsIContent* FindContentForSubDocument(nsIDocument *aDocument) const;
-  virtual mozilla::dom::Element* GetRootElementInternal() const;
+  virtual Element* GetRootElementInternal() const;
 
   /**
    * Get the style sheets owned by this document.
@@ -934,10 +935,10 @@ protected:
   friend class nsNodeUtils;
   void RegisterNamedItems(nsIContent *aContent);
   void UnregisterNamedItems(nsIContent *aContent);
-  void UpdateNameTableEntry(mozilla::dom::Element *aElement);
-  void UpdateIdTableEntry(mozilla::dom::Element *aElement);
-  void RemoveFromNameTable(mozilla::dom::Element *aElement);
-  void RemoveFromIdTable(mozilla::dom::Element *aElement);
+  void UpdateNameTableEntry(Element *aElement);
+  void UpdateIdTableEntry(Element *aElement);
+  void RemoveFromNameTable(Element *aElement);
+  void RemoveFromIdTable(Element *aElement);
 
   /**
    * Check that aId is not empty and log a message to the console

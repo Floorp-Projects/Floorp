@@ -136,6 +136,8 @@ class Element;
 class nsIDocument : public nsINode
 {
 public:
+  typedef mozilla::dom::Element Element;
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDOCUMENT_IID)
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -303,8 +305,8 @@ public:
    * @return PR_TRUE to keep the callback in the callback set, PR_FALSE
    * to remove it.
    */
-  typedef PRBool (* IDTargetObserver)(nsIContent* aOldContent,
-                                      nsIContent* aNewContent, void* aData);
+  typedef PRBool (* IDTargetObserver)(Element* aOldElement,
+                                      Element* aNewelement, void* aData);
 
   /**
    * Add an IDTargetObserver for a specific ID. The IDTargetObserver
@@ -313,8 +315,8 @@ public:
    * for each ID.
    * @return the content currently associated with the ID.
    */
-  virtual nsIContent* AddIDTargetObserver(nsIAtom* aID,
-                                          IDTargetObserver aObserver, void* aData) = 0;
+  virtual Element* AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
+                                       void* aData) = 0;
   /**
    * Remove the (aObserver, aData) pair for a specific ID, if registered.
    */
@@ -480,31 +482,31 @@ public:
   /**
    * Return the root element for this document.
    */
-  mozilla::dom::Element *GetRootElement() const
+  Element *GetRootElement() const
   {
     return (mCachedRootElement &&
             mCachedRootElement->GetNodeParent() == this) ?
-           reinterpret_cast<mozilla::dom::Element*>(mCachedRootElement.get()) :
+           reinterpret_cast<Element*>(mCachedRootElement.get()) :
            GetRootElementInternal();
   }
 protected:
-  virtual mozilla::dom::Element *GetRootElementInternal() const = 0;
+  virtual Element *GetRootElementInternal() const = 0;
 
 public:
   // Get the root <html> element, or return null if there isn't one (e.g.
   // if the root isn't <html>)
-  mozilla::dom::Element* GetHtmlElement();
+  Element* GetHtmlElement();
   // Returns the first child of GetHtmlContent which has the given tag,
   // or nsnull if that doesn't exist.
-  mozilla::dom::Element* GetHtmlChildElement(nsIAtom* aTag);
+  Element* GetHtmlChildElement(nsIAtom* aTag);
   // Get the canonical <body> element, or return null if there isn't one (e.g.
   // if the root isn't <html> or if the <body> isn't there)
-  mozilla::dom::Element* GetBodyElement() {
+  Element* GetBodyElement() {
     return GetHtmlChildElement(nsGkAtoms::body);
   }
   // Get the canonical <head> element, or return null if there isn't one (e.g.
   // if the root isn't <html> or if the <head> isn't there)
-  mozilla::dom::Element* GetHeadElement() {
+  Element* GetHeadElement() {
     return GetHtmlChildElement(nsGkAtoms::head);
   }
   
@@ -1377,7 +1379,7 @@ protected:
   virtual void MutationEventDispatched(nsINode* aTarget) = 0;
   friend class mozAutoSubtreeModified;
 
-  virtual mozilla::dom::Element* GetNameSpaceElement()
+  virtual Element* GetNameSpaceElement()
   {
     return GetRootElement();
   }
