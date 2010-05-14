@@ -1043,6 +1043,7 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            var aFromExternal;
             var aRelatedToCurrent;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
@@ -1053,6 +1054,7 @@
               aPostData             = params.postData;
               aLoadInBackground     = params.inBackground;
               aAllowThirdPartyFixup = params.allowThirdPartyFixup;
+              aFromExternal         = params.fromExternal;
               aRelatedToCurrent     = params.relatedToCurrent;
             }
 
@@ -1065,6 +1067,7 @@
                                   postData: aPostData,
                                   ownerTab: owner,
                                   allowThirdPartyFixup: aAllowThirdPartyFixup,
+                                  fromExternal: aFromExternal,
                                   relatedToCurrent: aRelatedToCurrent});
             if (!bgLoad)
               this.selectedTab = tab;
@@ -1134,6 +1137,7 @@
         <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
+            var aFromExternal;
             var aRelatedToCurrent;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
@@ -1144,6 +1148,7 @@
               aPostData             = params.postData;
               aOwner                = params.ownerTab;
               aAllowThirdPartyFixup = params.allowThirdPartyFixup;
+              aFromExternal         = params.fromExternal;
               aRelatedToCurrent     = params.relatedToCurrent;
             }
 
@@ -1265,17 +1270,19 @@
               // trouble with multiple parallel loads running at once.
               b.stop();
 
-              // pretend the user typed this so it'll be available till
-              // the document successfully loads
-              b.userTypedValue = aURI;
-
-              let flags = aAllowThirdPartyFixup ?
-                          Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP :
-                          Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+              let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+              if (aAllowThirdPartyFixup)
+                flags |= Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+              if (aFromExternal)
+                flags |= Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
               try {
                 b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
               }
               catch (ex) { }
+
+              // pretend the user typed this so it'll be available till
+              // the document successfully loads
+              b.userTypedValue = aURI;
             }
 
             // Check if we're opening a tab related to the current tab and
