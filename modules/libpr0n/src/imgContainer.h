@@ -64,6 +64,7 @@
 #include "imgFrame.h"
 #include "nsThreadUtils.h"
 #include "imgDiscardTracker.h"
+#include "imgStatusTracker.h"
 
 #define NS_IMGCONTAINER_CID \
 { /* c76ff2c1-9bf6-418a-b143-3340c00112f7 */         \
@@ -160,6 +161,9 @@ public:
 
   /* Triggers discarding. */
   void Discard();
+
+  imgStatusTracker& GetStatusTracker() { return mStatusTracker; }
+  PRBool IsInitialized() const { return mInitialized; }
 
 private:
   struct Anim
@@ -330,6 +334,8 @@ private: // data
   // Source data members
   nsTArray<char>             mSourceData;
   nsCString                  mSourceDataMimeType;
+
+  imgStatusTracker    mStatusTracker;
 
   friend class imgDecodeWorker;
   friend class imgDiscardTracker;
