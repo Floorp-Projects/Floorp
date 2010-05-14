@@ -204,6 +204,8 @@
 
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"
+#include "nsISupportsPrimitives.h"
+#include "nsXPCOMCID.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -655,6 +657,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mShowFocusRingForContent(PR_FALSE),
     mFocusByKeyOccurred(PR_FALSE),
     mHasAcceleration(PR_FALSE),
+    mNotifiedIDDestroyed(PR_FALSE),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -1012,6 +1015,8 @@ nsGlobalWindow::ReallyClearScope(nsRunnable *aRunnable)
     NS_DispatchToMainThread(aRunnable);
     return;
   }
+
+  NotifyWindowIDDestroyed("inner-window-destroyed");
 
   PRUint32 lang_id;
   NS_STID_FOR_ID(lang_id) {
@@ -2199,6 +2204,8 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
 
     // Make sure that this is called before we null out the document.
     NotifyDOMWindowDestroyed(this);
+
+    NotifyWindowIDDestroyed("outer-window-destroyed");
 
     nsGlobalWindow *currentInner = GetCurrentInnerWindowInternal();
 
@@ -5990,6 +5997,42 @@ nsGlobalWindow::NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow) {
     observerService->
       NotifyObservers(static_cast<nsIScriptGlobalObject*>(aWindow),
                       DOM_WINDOW_DESTROYED_TOPIC, nsnull);
+  }
+}
+
+class WindowDestroyedEvent : public nsRunnable
+{
+public:
+  WindowDestroyedEvent(PRUint64 aID, const char* aTopic) :
+    mID(aID), mTopic(aTopic) {}
+
+  NS_IMETHOD Run()
+  {
+    nsCOMPtr<nsIObserverService> observerService =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (observerService) {
+      nsCOMPtr<nsISupportsPRUint64> wrapper =
+        do_CreateInstance(NS_SUPPORTS_PRUINT64_CONTRACTID);
+      if (wrapper) {
+        wrapper->SetData(mID);
+        observerService->NotifyObservers(wrapper, mTopic.get(), nsnull);
+      }
+    }
+    return NS_OK;
+  }
+
+private:
+  PRUint64 mID;
+  nsCString mTopic;
+};
+
+void
+nsGlobalWindow::NotifyWindowIDDestroyed(const char* aTopic)
+{
+  nsRefPtr<nsIRunnable> runnable = new WindowDestroyedEvent(mWindowID, aTopic);
+  nsresult rv = NS_DispatchToCurrentThread(runnable);
+  if (NS_SUCCEEDED(rv)) {
+    mNotifiedIDDestroyed = PR_TRUE;
   }
 }
 
