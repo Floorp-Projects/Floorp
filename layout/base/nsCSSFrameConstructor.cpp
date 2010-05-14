@@ -8185,10 +8185,11 @@ nsCSSFrameConstructor::AttributeWillChange(nsIContent* aContent,
                                            PRInt32 aModType)
 {
   nsRestyleHint rshint =
-    mPresShell->FrameManager()->HasAttributeDependentStyle(aContent,
-                                                           aAttribute,
-                                                           aModType,
-                                                           PR_FALSE);
+    mPresShell->StyleSet()->HasAttributeDependentStyle(mPresShell->GetPresContext(),
+                                                       aContent,
+                                                       aAttribute,
+                                                       aModType,
+                                                       PR_FALSE);
   PostRestyleEvent(aContent, rshint, NS_STYLE_HINT_NONE);
 }
 
@@ -8270,11 +8271,12 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 
   // See if we can optimize away the style re-resolution -- must be called after
   // the frame's AttributeChanged() in case it does something that affects the style
-  nsFrameManager *frameManager = shell->FrameManager();
-  nsRestyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
-                                                                  aAttribute,
-                                                                  aModType,
-                                                                  PR_TRUE);
+  nsRestyleHint rshint =
+    mPresShell->StyleSet()->HasAttributeDependentStyle(mPresShell->GetPresContext(),
+                                                       aContent,
+                                                       aAttribute,
+                                                       aModType,
+                                                       PR_TRUE);
 
   PostRestyleEvent(aContent, rshint, hint);
 }

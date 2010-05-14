@@ -161,6 +161,12 @@ nsHTMLCSSStyleSheet::HasDocumentStateDependentStyle(StateRuleProcessorData* aDat
 nsRestyleHint
 nsHTMLCSSStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
+  // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
+  // it doesn't really matter.
+  if (aData->mAttrHasChanged && aData->mAttribute == nsGkAtoms::style) {
+    return eRestyle_Self;
+  }
+
   return nsRestyleHint(0);
 }
 
