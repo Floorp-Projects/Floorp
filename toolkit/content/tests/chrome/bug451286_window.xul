@@ -90,7 +90,11 @@
       }, Ci.nsIThread.DISPATCH_NORMAL);
     }
 
-    function onPageShow() {
+    function onPageShow(aEvent) {
+      // Don't respond to pageshow events coming from the <iframes>
+      if (aEvent.target != gBrowser.contentDocument)
+        return;
+
       gBrowser.removeEventListener("pageshow", onPageShow, false);
 
       // First, take a snapshot of the window without highlighting
