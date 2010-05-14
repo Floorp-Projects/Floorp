@@ -42,7 +42,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 relativesrcdir  = accessible
 
-DIRS	= actions attributes events selectable states tree
+DIRS	= actions attributes events relations selectable states tree
 
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
@@ -104,9 +104,6 @@ _TEST_FILES =\
 		test_nsIAccessibleImage.html \
 		test_nsIAccessNode_utils.html \
 		test_nsOuterDocAccessible.html \
-		test_relations.html \
-		test_relations.xul \
-		test_relations_tree.xul \
 		test_role_nsHyperTextAcc.html \
 		test_table_1.html \
 		test_table_4.html \

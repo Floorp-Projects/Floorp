@@ -45,7 +45,7 @@
    object. For that XBL binding of element should implement the interface.
  */
 
-[scriptable, uuid(89fb8270-4f25-11df-9879-0800200c9a66)]
+[scriptable, uuid(ac0639d5-f95b-4e2b-970c-9eab281fb6a5)]
 interface nsIAccessibleProvider : nsISupports
 {
   /**
@@ -92,15 +92,12 @@ interface nsIAccessibleProvider : nsISupports
   const long XULRadioButton = 0x00001015;
   const long XULRadioGroup = 0x00001016;
 
-  /** The single tab in a dialog or tabbrowser/editor interface */
+  /** Used for XUL tab element */
   const long XULTab = 0x00001017;
-
-  /** A combination of a tabs object and a tabpanels object */
-  const long XULTabBox = 0x00001018;
-
-  /** The collection of tab objects, usable in the TabBox and independent of it
-   as well */
-  const long XULTabs = 0x00001019;
+  /** Used for XUL tabs element, a container for tab elements */
+  const long XULTabs = 0x00001018;
+  /** Used for XUL tabpanels container element */
+  const long XULTabpanels = 0x00001019;
 
   const long XULText             = 0x0000101A;
   const long XULTextBox          = 0x0000101B;

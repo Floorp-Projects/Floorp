@@ -1916,11 +1916,11 @@ nsAccessibilityService::CreateAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULTab:
       accessible = new nsXULTabAccessible(aNode, aWeakShell);
       break;
-    case nsIAccessibleProvider::XULTabBox:
-      accessible = new nsXULTabBoxAccessible(aNode, aWeakShell);
-      break;
     case nsIAccessibleProvider::XULTabs:
       accessible = new nsXULTabsAccessible(aNode, aWeakShell);
+      break;
+    case nsIAccessibleProvider::XULTabpanels:
+      accessible = new nsXULTabpanelsAccessible(aNode, aWeakShell);
       break;
     case nsIAccessibleProvider::XULText:
       accessible = new nsXULTextAccessible(aNode, aWeakShell);

@@ -1,18 +1,12 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-
-<!-- Firefox tabbrowser -->
-<?xml-stylesheet href="chrome://browser/content/browser.css"
-                 type="text/css"?>
-<!-- Seamonkey tabbrowser -->
-<?xml-stylesheet href="chrome://navigator/content/navigator.css"
-                 type="text/css"?>
-
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser.css"
                  type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="Accessible XUL tabbrowser hierarchy tests">
+        title="Accessible XUL tabbrowser relation tests">
 
   <script type="application/javascript" 
           src="chrome://mochikit/content/MochiKit/packed.js" />
@@ -23,6 +17,8 @@
           src="chrome://mochikit/content/a11y/accessible/common.js" />
   <script type="application/javascript"
           src="chrome://mochikit/content/a11y/accessible/role.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/relations.js" />
 
   <script type="application/javascript">
   <![CDATA[
@@ -32,8 +28,8 @@
     const Ci = Components.interfaces;
 
     // Hack to make xul:tabbrowser work.
+    var handleDroppedLink  = null;
     Components.utils.import("resource://gre/modules/Services.jsm");
-    var handleDroppedLink = null;
     var XULBrowserWindow = {
       isBusy: false,
       setOverLink: function (link, b) {
@@ -55,7 +51,7 @@
                                               aStatus)
        {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
-          testAccTree();
+          testRelations();
        }
       };
 
@@ -65,48 +61,18 @@
       tabBrowser.loadTabs(["about:", "about:mozilla"], false, true);
     }
 
-    function testAccTree()
+    function testRelations()
     {
-      var tabsAccTree = {
-        role: ROLE_PAGETABLIST,
-        children: [
-          {
-            role: ROLE_PAGETAB,
-            children: [
-              {
-                role: ROLE_PUSHBUTTON
-              }
-            ]
-          },
-          {
-            role: ROLE_PAGETAB,
-            children: [
-              {
-                role: ROLE_PUSHBUTTON
-              }
-            ]
-          },
-          {
-            role: ROLE_PUSHBUTTON
-          }
-        ]
-      };
-      testAccessibleTree(getNode("tabbrowser").tabContainer, tabsAccTree);
+      //////////////////////////////////////////////////////////////////////////
+      // 'labelled by'/'label for' relations for xul:tab and xul:tabpanel
 
-      var tabboxAccTree = {
-        role: ROLE_PANE,
-        children: [
-          {
-            role: ROLE_PROPERTYPAGE
-          },
-          {
-            role: ROLE_PROPERTYPAGE
-          }
-        ]
-      };
+      var tabs = getNode("tabbrowser").tabContainer.childNodes;
+      var panels = getNode("tabbrowser").mTabBox.tabpanels.childNodes;
 
-      testAccessibleTree(getNode("tabbrowser").mTabBox.tabpanels,
-                         tabboxAccTree);
+      testRelation(panels[0], RELATION_LABELLED_BY, tabs[0]);
+      testRelation(tabs[0], RELATION_LABEL_FOR, panels[0]);
+      testRelation(panels[1], RELATION_LABELLED_BY, tabs[1]);
+      testRelation(tabs[1], RELATION_LABEL_FOR, panels[1]);
 
       SimpleTest.finish()
     }
@@ -118,11 +84,6 @@
 
   <vbox flex="1" style="overflow: auto;">
     <body xmlns="http://www.w3.org/1999/xhtml">
-      <a target="_blank"
-         href="https://bugzilla.mozilla.org/show_bug.cgi?id=540389"
-         title=" WARNING: Bad accessible tree!: [tabbrowser tab] ">
-        Mozilla Bug 540389
-      </a><br/>
       <a target="_blank"
          href="https://bugzilla.mozilla.org/show_bug.cgi?id=552944"
          title="No relationship between tabs and associated property page in new tabbrowser construct">
