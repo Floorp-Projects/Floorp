@@ -698,6 +698,10 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
                       nsStyleContext *aOldStyleContext,
                       nsRefPtr<nsStyleContext> *aNewStyleContext /* inout */)
 {
+  if (!aContent || !aContent->IsElement()) {
+    return;
+  }
+
   // Notify the transition manager, and if it starts a transition,
   // it will give us back a transition-covering style rule which
   // we'll use to get *another* style context.  We want to ignore
@@ -706,7 +710,7 @@ TryStartingTransition(nsPresContext *aPresContext, nsIContent *aContent,
   // them again for descendants that inherit that value.
   nsCOMPtr<nsIStyleRule> coverRule = 
     aPresContext->TransitionManager()->StyleContextChanged(
-      aContent, aOldStyleContext, *aNewStyleContext);
+      aContent->AsElement(), aOldStyleContext, *aNewStyleContext);
   if (coverRule) {
     nsCOMArray<nsIStyleRule> rules;
     rules.AppendObject(coverRule);
