@@ -8116,66 +8116,70 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIContent* aContent1,
                                             nsIContent* aContent2,
                                             PRInt32 aStateMask) 
 {
-  DoContentStateChanged(aContent1, aStateMask);
-  DoContentStateChanged(aContent2, aStateMask);
+  // XXXbz it would be good if this function only took Elements, but
+  // we'd have to make ESM guarantee that usefully.
+  if (NS_LIKELY(aContent1 && aContent1->IsElement())) {
+    DoContentStateChanged(aContent1->AsElement(), aStateMask);
+  }
+  if (aContent2 && aContent2->IsElement()) {
+    DoContentStateChanged(aContent2->AsElement(), aStateMask);
+  }
   return NS_OK;
 }
 
 void
-nsCSSFrameConstructor::DoContentStateChanged(nsIContent* aContent,
+nsCSSFrameConstructor::DoContentStateChanged(Element* aElement,
                                              PRInt32 aStateMask) 
 {
   nsStyleSet *styleSet = mPresShell->StyleSet();
   nsPresContext *presContext = mPresShell->GetPresContext();
   NS_ASSERTION(styleSet, "couldn't get style set");
 
-  if (aContent) {
-    nsChangeHint hint = NS_STYLE_HINT_NONE;
-    // Any change to a content state that affects which frames we construct
-    // must lead to a frame reconstruct here if we already have a frame.
-    // Note that we never decide through non-CSS means to not create frames
-    // based on content states, so if we already don't have a frame we don't
-    // need to force a reframe -- if it's needed, the HasStateDependentStyle
-    // call will handle things.
-    nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
-    if (primaryFrame) {
-      // If it's generated content, ignore LOADING/etc state changes on it.
-      if (!primaryFrame->IsGeneratedContentFrame() &&
-          (aStateMask & (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
-                         NS_EVENT_STATE_SUPPRESSED | NS_EVENT_STATE_LOADING))) {
-        hint = nsChangeHint_ReconstructFrame;
-      } else {          
-        PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
-        if (app) {
-          nsITheme *theme = presContext->GetTheme();
-          if (theme && theme->ThemeSupportsWidget(presContext,
-                                                  primaryFrame, app)) {
-            PRBool repaint = PR_FALSE;
-            theme->WidgetStateChanged(primaryFrame, app, nsnull, &repaint);
-            if (repaint) {
-              NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
-            }
+  nsChangeHint hint = NS_STYLE_HINT_NONE;
+  // Any change to a content state that affects which frames we construct
+  // must lead to a frame reconstruct here if we already have a frame.
+  // Note that we never decide through non-CSS means to not create frames
+  // based on content states, so if we already don't have a frame we don't
+  // need to force a reframe -- if it's needed, the HasStateDependentStyle
+  // call will handle things.
+  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
+  if (primaryFrame) {
+    // If it's generated content, ignore LOADING/etc state changes on it.
+    if (!primaryFrame->IsGeneratedContentFrame() &&
+        (aStateMask & (NS_EVENT_STATE_BROKEN | NS_EVENT_STATE_USERDISABLED |
+                       NS_EVENT_STATE_SUPPRESSED | NS_EVENT_STATE_LOADING))) {
+      hint = nsChangeHint_ReconstructFrame;
+    } else {
+      PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
+      if (app) {
+        nsITheme *theme = presContext->GetTheme();
+        if (theme && theme->ThemeSupportsWidget(presContext,
+                                                primaryFrame, app)) {
+          PRBool repaint = PR_FALSE;
+          theme->WidgetStateChanged(primaryFrame, app, nsnull, &repaint);
+          if (repaint) {
+            NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
           }
         }
       }
     }
-
-    nsRestyleHint rshint = 
-      styleSet->HasStateDependentStyle(presContext, aContent, aStateMask);
-      
-    if ((aStateMask & NS_EVENT_STATE_HOVER) && rshint != 0) {
-      ++mHoverGeneration;
-    }
-
-    if (aStateMask & NS_EVENT_STATE_VISITED) {
-      // Exposing information to the page about whether the link is
-      // visited or not isn't really something we can worry about here.
-      // FIXME: We could probably do this a bit better.
-      NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
-    }
-
-    PostRestyleEvent(aContent, rshint, hint);
   }
+
+  nsRestyleHint rshint = 
+    styleSet->HasStateDependentStyle(presContext, aElement, aStateMask);
+      
+  if ((aStateMask & NS_EVENT_STATE_HOVER) && rshint != 0) {
+    ++mHoverGeneration;
+  }
+
+  if (aStateMask & NS_EVENT_STATE_VISITED) {
+    // Exposing information to the page about whether the link is
+    // visited or not isn't really something we can worry about here.
+    // FIXME: We could probably do this a bit better.
+    NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+  }
+
+  PostRestyleEvent(aElement, rshint, hint);
 }
 
 void
@@ -8184,13 +8188,14 @@ nsCSSFrameConstructor::AttributeWillChange(nsIContent* aContent,
                                            nsIAtom* aAttribute,
                                            PRInt32 aModType)
 {
+  Element* aElement = aContent->AsElement();
   nsRestyleHint rshint =
     mPresShell->StyleSet()->HasAttributeDependentStyle(mPresShell->GetPresContext(),
-                                                       aContent,
+                                                       aElement,
                                                        aAttribute,
                                                        aModType,
                                                        PR_FALSE);
-  PostRestyleEvent(aContent, rshint, NS_STYLE_HINT_NONE);
+  PostRestyleEvent(aElement, rshint, NS_STYLE_HINT_NONE);
 }
 
 void
@@ -8199,22 +8204,23 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
                                         nsIAtom* aAttribute,
                                         PRInt32 aModType)
 {
+  Element* aElement = aContent->AsElement();
   // Hold onto the PresShell to prevent ourselves from being destroyed.
   // XXXbz how, exactly, would this attribute change cause us to be
   // destroyed from inside this function?
   nsCOMPtr<nsIPresShell> shell = mPresShell;
 
   // Get the frame associated with the content which is the highest in the frame tree
-  nsIFrame* primaryFrame = aContent->GetPrimaryFrame();
+  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
 
 #if 0
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("HTMLStyleSheet::AttributeChanged: content=%p[%s] frame=%p",
-      aContent, ContentTag(aContent, 0), frame));
+      aContent, ContentTag(aElement, 0), frame));
 #endif
 
   // the style tag has its own interpretation based on aHint 
-  nsChangeHint hint = aContent->GetAttributeChangeHint(aAttribute, aModType);
+  nsChangeHint hint = aElement->GetAttributeChangeHint(aAttribute, aModType);
 
   PRBool reframe = (hint & nsChangeHint_ReconstructFrame) != 0;
 
@@ -8225,7 +8231,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   if (!primaryFrame && !reframe) {
     PRInt32 namespaceID;
     nsIAtom* tag =
-      mDocument->BindingManager()->ResolveTag(aContent, &namespaceID);
+      mDocument->BindingManager()->ResolveTag(aElement, &namespaceID);
 
     if (namespaceID == kNameSpaceID_XUL &&
         (tag == nsGkAtoms::listitem ||
@@ -8239,9 +8245,9 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
     nsIRootBox* rootBox = nsIRootBox::GetRootBox(mPresShell);
     if (rootBox) {
       if (aModType == nsIDOMMutationEvent::REMOVAL)
-        rootBox->RemoveTooltipSupport(aContent);
+        rootBox->RemoveTooltipSupport(aElement);
       if (aModType == nsIDOMMutationEvent::ADDITION)
-        rootBox->AddTooltipSupport(aContent);
+        rootBox->AddTooltipSupport(aElement);
     }
   }
 
@@ -8273,12 +8279,12 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   // the frame's AttributeChanged() in case it does something that affects the style
   nsRestyleHint rshint =
     mPresShell->StyleSet()->HasAttributeDependentStyle(mPresShell->GetPresContext(),
-                                                       aContent,
+                                                       aElement,
                                                        aAttribute,
                                                        aModType,
                                                        PR_TRUE);
 
-  PostRestyleEvent(aContent, rshint, hint);
+  PostRestyleEvent(aElement, rshint, hint);
 }
 
 void

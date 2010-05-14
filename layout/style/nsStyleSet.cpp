@@ -1212,18 +1212,12 @@ static PRBool SheetHasStatefulStyle(nsIStyleRuleProcessor* aProcessor,
 // Test if style is dependent on content state
 nsRestyleHint
 nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
-                                   nsIContent*     aContent,
-                                   PRInt32         aStateMask)
+                                   Element*       aElement,
+                                   PRInt32        aStateMask)
 {
-  nsRestyleHint result = nsRestyleHint(0);
-
-  if (aContent->IsElement()) {
-    StatefulData data(aPresContext, aContent->AsElement(), aStateMask);
-    WalkRuleProcessors(SheetHasStatefulStyle, &data, PR_FALSE);
-    result = data.mHint;
-  }
-
-  return result;
+  StatefulData data(aPresContext, aElement, aStateMask);
+  WalkRuleProcessors(SheetHasStatefulStyle, &data, PR_FALSE);
+  return data.mHint;
 }
 
 struct AttributeData : public AttributeRuleProcessorData {
@@ -1249,21 +1243,15 @@ SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 // Test if style is dependent on content state
 nsRestyleHint
 nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
-                                       nsIContent*    aContent,
+                                       Element*       aElement,
                                        nsIAtom*       aAttribute,
                                        PRInt32        aModType,
                                        PRBool         aAttrHasChanged)
 {
-  nsRestyleHint result = nsRestyleHint(0);
-
-  if (aContent->IsElement()) {
-    AttributeData data(aPresContext, aContent->AsElement(), aAttribute,
-                       aModType, aAttrHasChanged);
-    WalkRuleProcessors(SheetHasAttributeStyle, &data, PR_FALSE);
-    result = data.mHint;
-  }
-
-  return result;
+  AttributeData data(aPresContext, aElement, aAttribute,
+                     aModType, aAttrHasChanged);
+  WalkRuleProcessors(SheetHasAttributeStyle, &data, PR_FALSE);
+  return data.mHint;
 }
 
 PRBool

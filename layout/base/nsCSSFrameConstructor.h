@@ -446,8 +446,8 @@ private:
                               nsIFrame*&     aPageFrame,
                               nsIFrame*&     aCanvasFrame);
 
-  void DoContentStateChanged(nsIContent*     aContent,
-                             PRInt32         aStateMask);
+  void DoContentStateChanged(mozilla::dom::Element* aElement,
+                             PRInt32 aStateMask);
 
   /* aMinHint is the minimal change that should be made to the element */
   // XXXbz do we really need the aPrimaryFrame argument here?
