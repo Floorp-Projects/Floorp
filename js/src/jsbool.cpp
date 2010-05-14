@@ -75,17 +75,14 @@ Class js_BooleanClass = {
 static JSBool
 bool_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    Value v;
-    char buf[32];
-    JSString *str;
-
-    if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &v))
+    const Value *primp;
+    if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &primp))
         return JS_FALSE;
-    JS_ASSERT(v.isBoolean());
+    char buf[32];
     JS_snprintf(buf, sizeof buf, "(new %s(%s))",
                 js_BooleanClass.name,
-                JS_BOOLEAN_STR(v.asBoolean()));
-    str = JS_NewStringCopyZ(cx, buf);
+                JS_BOOLEAN_STR(vp->asBoolean()));
+    JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
     vp->setString(str);
@@ -96,15 +93,11 @@ bool_toSource(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 bool_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    Value v;
-    JSAtom *atom;
-    JSString *str;
-
-    if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &v))
+    const Value *primp;
+    if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &primp))
         return JS_FALSE;
-    JS_ASSERT(v.isBoolean());
-    atom = cx->runtime->atomState.booleanAtoms[v.asBoolean() ? 1 : 0];
-    str = ATOM_TO_STRING(atom);
+    JSAtom *atom = cx->runtime->atomState.booleanAtoms[primp->asBoolean() ? 1 : 0];
+    JSString *str = ATOM_TO_STRING(atom);
     if (!str)
         return JS_FALSE;
     vp->setString(str);
@@ -114,7 +107,11 @@ bool_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 bool_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
-    return js_GetPrimitiveThis(cx, vp, &js_BooleanClass, vp);
+    const Value *primp;
+    if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &primp))
+        return JS_FALSE;
+    vp->copy(*primp);
+    return JS_TRUE;
 }
 
 static JSFunctionSpec boolean_methods[] = {

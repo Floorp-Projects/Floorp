@@ -115,7 +115,7 @@ typedef union JSLocalNames {
 #define FUN_SCRIPT(fun)      (FUN_INTERPRETED(fun) ? (fun)->u.i.script : NULL)
 #define FUN_NATIVE(fun)      (FUN_SLOW_NATIVE(fun) ? (fun)->u.n.native : NULL)
 #define FUN_FAST_NATIVE(fun) (((fun)->flags & JSFUN_FAST_NATIVE)              \
-                              ? (JSFastNative) (fun)->u.n.native              \
+                              ? (js::FastNative) (fun)->u.n.native            \
                               : NULL)
 #define FUN_MINARGS(fun)     (((fun)->flags & JSFUN_FAST_NATIVE)              \
                               ? 0                                             \
@@ -207,7 +207,7 @@ struct JSFunction : public JSObject
 
 /*
  * Trace-annotated native. This expands to a JSFunctionSpec initializer (like
- * JS_FN in jsapi.h). fastcall is a JSFastNative; trcinfo is a
+ * JS_FN in jsapi.h). fastcall is a FastNative; trcinfo is a
  * JSNativeTraceInfo*.
  */
 #ifdef JS_TRACER
