@@ -15,11 +15,12 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Corporation.
+# Portions created by the Initial Developer are Copyright (C) 2010
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
+#   Alexander Surkov <surkov.alexander@gmail.com> (original author)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,38 +36,21 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = accessible/relations
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE		= dom
-XPIDL_MODULE	= dom_xul
-GRE_MODULE	= 1
-
-XPIDLSRCS =					\
-	nsIDOMXULButtonElement.idl              \
-	nsIDOMXULCheckboxElement.idl          \
-	nsIDOMXULCommandDispatcher.idl		\
-	nsIDOMXULCommandEvent.idl \
-	nsIDOMXULControlElement.idl          \
-	nsIDOMXULDescriptionElement.idl         \
-	nsIDOMXULDocument.idl			\
-	nsIDOMXULElement.idl			\
-	nsIDOMXULContainerElement.idl \
-	nsIDOMXULImageElement.idl               \
-	nsIDOMXULLabelElement.idl               \
-	nsIDOMXULLabeledControlEl.idl          \
-	nsIDOMXULMenuListElement.idl     \
-	nsIDOMXULPopupElement.idl          \
-	nsIDOMXULRelatedElement.idl \
-	nsIDOMXULSelectCntrlEl.idl       \
-	nsIDOMXULSelectCntrlItemEl.idl   \
-	nsIDOMXULMultSelectCntrlEl.idl \
-	nsIDOMXULTextboxElement.idl \
-	nsIDOMXULTreeElement.idl \
-	$(NULL)
-
 include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES =\
+		test_general.html \
+		test_general.xul \
+		test_tabbrowser.xul \
+		test_tree.xul \
+		$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/a11y/$(relativesrcdir)
