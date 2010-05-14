@@ -172,6 +172,8 @@ struct nsShortcutCandidate {
 
 class nsContentUtils
 {
+  typedef mozilla::dom::Element Element;
+
 public:
   static nsresult Init();
 
@@ -314,14 +316,12 @@ public:
    * an element with the given id.  aId must be nonempty, otherwise
    * this method may return nodes even if they have no id!
    */
-  static nsIContent* MatchElementId(nsIContent *aContent,
-                                    const nsAString& aId);
+  static Element* MatchElementId(nsIContent *aContent, const nsAString& aId);
 
   /**
    * Similar to above, but to be used if one already has an atom for the ID
    */
-  static nsIContent* MatchElementId(nsIContent *aContent,
-                                    nsIAtom* aId);
+  static Element* MatchElementId(nsIContent *aContent, nsIAtom* aId);
 
   /**
    * Given a URI containing an element reference (#whatever),
@@ -1349,7 +1349,7 @@ public:
    * If aContent is an HTML element with a DOM level 0 'name', then
    * return the name. Otherwise return null.
    */
-  static nsIAtom* IsNamedItem(mozilla::dom::Element* aElement);
+  static nsIAtom* IsNamedItem(Element* aElement);
 
   /**
    * Get the application manifest URI for this document.  The manifest URI
