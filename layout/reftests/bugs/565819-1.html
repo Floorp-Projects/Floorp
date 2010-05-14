@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      div { color: green; }
+      div:empty { color: red; }
+    </style>
+    <script>
+      window.onload = function () {
+        document.getElementById("x").appendChild(document.createTextNode("This should be green"));
+      }
+    </script>
+  </head>
+  <body>
+    <div id="x"></div>
+  </body>
+</html>
