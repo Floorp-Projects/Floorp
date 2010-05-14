@@ -166,8 +166,13 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
     unsigned int res;
 
     __asm__ __volatile__ (
-                  "stbar\n"
+                  "membar #StoreLoad | #LoadLoad\n"
+#if JS_BITS_PER_WORD == 32
                   "cas [%1],%2,%3\n"
+#else
+                  "casx [%1],%2,%3\n"
+#endif
+                  "membar #StoreLoad | #LoadLoad\n"
                   "cmp %2,%3\n"
                   "be,a 1f\n"
                   "mov 1,%0\n"
