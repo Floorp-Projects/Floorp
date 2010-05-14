@@ -303,10 +303,10 @@ num_toSource(JSContext *cx, uintN argc, Value *vp)
     char buf[64];
     JSString *str;
 
-    Value v;
-    if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &v))
+    const Value *primp;
+    if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &primp))
         return JS_FALSE;
-    double d = v.asNumber();
+    double d = primp->asNumber();
     numStr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, numBuf, sizeof numBuf,
                        DTOSTR_STANDARD, 0, d);
     if (!numStr) {
@@ -375,10 +375,10 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base);
 static JSBool
 num_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    Value v;
-    if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &v))
+    const Value *primp;
+    if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &primp))
         return JS_FALSE;
-    double d = v.asNumber();
+    double d = primp->asNumber();
     int32_t base = 10;
     if (argc != 0 && !vp[2].isUndefined()) {
         if (!ValueToECMAInt32(cx, vp[2], &base))
@@ -534,10 +534,10 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
     char buf[DTOSTR_VARIABLE_BUFFER_SIZE(MAX_PRECISION+1)];
     char *numStr;
 
-    Value v;
-    if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &v))
+    const Value *primp;
+    if (!js_GetPrimitiveThis(cx, vp, &js_NumberClass, &primp))
         return JS_FALSE;
-    double d = v.asNumber();
+    double d = primp->asNumber();
 
     double precision;
     if (argc == 0) {

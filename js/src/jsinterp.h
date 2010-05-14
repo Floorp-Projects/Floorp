@@ -240,7 +240,8 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp);
  * alias the same Value.
  */
 extern JSBool
-js_GetPrimitiveThis(JSContext *cx, js::Value *vp, js::Class *clasp, js::Value *thisvp);
+js_GetPrimitiveThis(JSContext *cx, js::Value *vp, js::Class *clasp,
+                    const js::Value **vpp);
 
 namespace js {
 
@@ -262,14 +263,10 @@ ComputeThisObjectFromVp(JSContext *cx, js::Value *vp)
 }
 
 JS_ALWAYS_INLINE bool
-ComputeThisValueFromVp(JSContext *cx, js::Value *vp, js::Value **thisvpp)
+ComputeThisFromVpInPlace(JSContext *cx, js::Value *vp)
 {
     extern bool ComputeThisFromArgv(JSContext *, js::Value *);
-    if (ComputeThisFromArgv(cx, vp + 2)) {
-        *thisvpp = vp + 1;
-        return true;
-    }
-    return false;
+    return ComputeThisFromArgv(cx, vp + 2);
 }
 
 class PrimitiveValue

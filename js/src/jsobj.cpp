@@ -944,11 +944,10 @@ obj_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 obj_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 {
-    Value *thisvp;
-    if (!ComputeThisValueFromVp(cx, vp, &thisvp))
+    if (!ComputeThisFromVpInPlace(cx, vp))
         return JS_FALSE;
 
-    JSString *str = js_ValueToString(cx, *thisvp);
+    JSString *str = js_ValueToString(cx, vp[1]);
     if (!str)
         return JS_FALSE;
 
@@ -959,10 +958,9 @@ obj_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 obj_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
-    Value *thisvp;
-    if (!ComputeThisValueFromVp(cx, vp, &thisvp))
+    if (!ComputeThisFromVpInPlace(cx, vp))
         return JS_FALSE;
-    vp->copy(*thisvp);
+    vp->copy(vp[1]);
     return JS_TRUE;
 }
 

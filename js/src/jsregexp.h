@@ -113,7 +113,7 @@ js_DestroyRegExp(JSContext *cx, JSRegExp *re);
  */
 extern JSBool
 js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
-                 JSBool test, jsval *rval);
+                 JSBool test, js::Value *rval);
 
 extern void
 js_InitRegExpStatics(JSContext *cx);
@@ -125,7 +125,7 @@ extern void
 js_FreeRegExpStatics(JSContext *cx);
 
 #define VALUE_IS_REGEXP(cx, v)                                                \
-    (!JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isRegExp())
+    ((v).isObject() && v.asObject().isRegExp())
 
 extern js::Class js_RegExpClass;
 

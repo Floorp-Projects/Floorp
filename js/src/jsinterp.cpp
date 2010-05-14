@@ -226,16 +226,17 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
 }
 
 JSBool
-js_GetPrimitiveThis(JSContext *cx, Value *vp, Class *clasp, Value *thisvp)
+js_GetPrimitiveThis(JSContext *cx, Value *vp, Class *clasp, const Value **vpp)
 {
     const Value *p = &vp[1];
     if (p->isObject()) {
         JSObject *obj = ComputeThisObjectFromVp(cx, vp);
         if (!InstanceOf(cx, obj, clasp, vp + 2))
             return JS_FALSE;
-        p = &obj->getPrimitiveThis();
+        *vpp = &obj->getPrimitiveThis();
+    } else {
+        *vpp = p;
     }
-    thisvp->copy(*p);
     return JS_TRUE;
 }
 

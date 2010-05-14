@@ -89,7 +89,7 @@ using namespace js;
 #define JSSTRDEP_RECURSION_LIMIT        100
 
 JS_STATIC_ASSERT(size_t(JSString::MAX_LENGTH) <= size_t(JSVAL_INT_MAX));
-JS_STATIC_ASSERT(INT_FITS_IN_JSVAL(JSString::MAX_LENGTH));
+JS_STATIC_ASSERT(JSString::MAX_LENGTH <= JSVAL_INT_MAX);
 
 static size_t
 MinimizeDependentStrings(JSString *str, int level, JSString **basep)
@@ -254,35 +254,30 @@ js_MakeStringImmutable(JSContext *cx, JSString *str)
 }
 
 static JSString *
-ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
+ArgToRootedString(JSContext *cx, uintN argc, Value *vp, uintN arg)
 {
     if (arg >= argc)
         return ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     vp += 2 + arg;
 
-    if (!JSVAL_IS_PRIMITIVE(*vp) && !JSVAL_TO_OBJECT(*vp)->defaultValue(cx, JSTYPE_STRING, vp))
+    if (vp->isObject() && !vp->asObject().defaultValue(cx, JSTYPE_STRING, vp))
         return NULL;
 
     JSString *str;
-    if (JSVAL_IS_STRING(*vp)) {
-        str = JSVAL_TO_STRING(*vp);
-    } else if (JSVAL_IS_BOOLEAN(*vp)) {
+    if (vp->isString()) {
+        str = vp->asString();
+    } else if (vp->isBoolean()) {
         str = ATOM_TO_STRING(cx->runtime->atomState.booleanAtoms[
-                                  JSVAL_TO_BOOLEAN(*vp)? 1 : 0]);
-    } else if (JSVAL_IS_NULL(*vp)) {
+                                  (int)vp->asBoolean()]);
+    } else if (vp->isNull()) {
         str = ATOM_TO_STRING(cx->runtime->atomState.nullAtom);
-    } else if (JSVAL_IS_VOID(*vp)) {
+    } else if (vp->isUndefined()) {
         str = ATOM_TO_STRING(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     }
     else {
-        if (JSVAL_IS_INT(*vp)) {
-            str = js_NumberToString(cx, JSVAL_TO_INT(*vp));
-        } else {
-            JS_ASSERT(JSVAL_IS_DOUBLE(*vp));
-            str = js_NumberToString(cx, *JSVAL_TO_DOUBLE(*vp));
-        }
+        str = js_NumberToString(cx, vp->asNumber());
         if (str)
-            *vp = STRING_TO_JSVAL(str);
+            vp->setString(str);
     }
     return str;
 }
@@ -291,16 +286,16 @@ ArgToRootedString(JSContext *cx, uintN argc, jsval *vp, uintN arg)
  * Forward declarations for URI encode/decode and helper routines
  */
 static JSBool
-str_decodeURI(JSContext *cx, uintN argc, jsval *vp);
+str_decodeURI(JSContext *cx, uintN argc, Value *vp);
 
 static JSBool
-str_decodeURI_Component(JSContext *cx, uintN argc, jsval *vp);
+str_decodeURI_Component(JSContext *cx, uintN argc, Value *vp);
 
 static JSBool
-str_encodeURI(JSContext *cx, uintN argc, jsval *vp);
+str_encodeURI(JSContext *cx, uintN argc, Value *vp);
 
 static JSBool
-str_encodeURI_Component(JSContext *cx, uintN argc, jsval *vp);
+str_encodeURI_Component(JSContext *cx, uintN argc, Value *vp);
 
 static const uint32 OVERLONG_UTF8 = UINT32_MAX;
 
@@ -348,7 +343,7 @@ static const uint8 urlCharType[256] =
 
 /* See ECMA-262 Edition 3 B.2.1 */
 JSBool
-js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+js_str_escape(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
     JSString *str;
     size_t i, ni, length, newlength;
@@ -441,23 +436,21 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
         cx->free(newchars);
         return JS_FALSE;
     }
-    *rval = STRING_TO_JSVAL(str);
+    rval->setString(str);
     return JS_TRUE;
 }
 #undef IS_OK
 
 static JSBool
-str_escape(JSContext *cx, uintN argc, jsval *vp)
+str_escape(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj;
-
-    obj = JS_THIS_OBJECT(cx, vp);
+    JSObject *obj = ComputeThisObjectFromVp(cx, vp);
     return obj && js_str_escape(cx, obj, argc, vp + 2, vp);
 }
 
 /* See ECMA-262 Edition 3 B.2.2 */
 static JSBool
-str_unescape(JSContext *cx, uintN argc, jsval *vp)
+str_unescape(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
     size_t i, ni, length;
@@ -504,20 +497,20 @@ str_unescape(JSContext *cx, uintN argc, jsval *vp)
         cx->free(newchars);
         return JS_FALSE;
     }
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
 #if JS_HAS_UNEVAL
 static JSBool
-str_uneval(JSContext *cx, uintN argc, jsval *vp)
+str_uneval(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
-    str = js_ValueToSource(cx, argc != 0 ? vp[2] : JSVAL_VOID);
+    str = js_ValueToSource(cx, argc != 0 ? vp[2] : sUndefinedValue);
     if (!str)
         return JS_FALSE;
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 #endif
@@ -550,25 +543,22 @@ jschar      js_empty_ucstr[]  = {0};
 JSSubString js_EmptySubString = {0, js_empty_ucstr};
 
 static JSBool
-str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+str_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
-    jsval v;
     JSString *str;
 
     if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
         if (obj->getClass() == &js_StringClass) {
             /* Follow ECMA-262 by fetching intrinsic length of our string. */
-            v = obj->getPrimitiveThis();
-            JS_ASSERT(JSVAL_IS_STRING(v));
-            str = JSVAL_TO_STRING(v);
+            str = obj->getPrimitiveThis().asString();
         } else {
             /* Preserve compatibility: convert obj to a string primitive. */
-            str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
+            str = js_ValueToString(cx, ObjectTag(*obj));
             if (!str)
                 return JS_FALSE;
         }
 
-        *vp = INT_TO_JSVAL((jsint) str->length());
+        vp->setInt32(str->length());
     }
 
     return JS_TRUE;
@@ -579,20 +569,17 @@ str_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 static JSBool
 str_enumerate(JSContext *cx, JSObject *obj)
 {
-    jsval v;
     JSString *str, *str1;
     size_t i, length;
 
-    v = obj->getPrimitiveThis();
-    JS_ASSERT(JSVAL_IS_STRING(v));
-    str = JSVAL_TO_STRING(v);
+    str = obj->getPrimitiveThis().asString();
 
     length = str->length();
     for (i = 0; i < length; i++) {
         str1 = js_NewDependentString(cx, str, i, 1);
         if (!str1)
             return JS_FALSE;
-        if (!obj->defineProperty(cx, INT_TO_JSID(i), STRING_TO_JSVAL(str1), NULL, NULL,
+        if (!obj->defineProperty(cx, INT_TO_JSID(i), str1, NULL, NULL,
                                  STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
@@ -601,26 +588,20 @@ str_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
-    jsval v;
-    JSString *str, *str1;
-    jsint slot;
-
-    if (!JSVAL_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
+    if (!JSID_IS_INT(id) || (flags & JSRESOLVE_ASSIGNING))
         return JS_TRUE;
 
-    v = obj->getPrimitiveThis();
-    JS_ASSERT(JSVAL_IS_STRING(v));
-    str = JSVAL_TO_STRING(v);
+    JSString *str = obj->getPrimitiveThis().asString();
 
-    slot = JSVAL_TO_INT(id);
+    jsint slot = JSID_TO_INT(id);
     if ((size_t)slot < str->length()) {
-        str1 = JSString::getUnitString(cx, str, size_t(slot));
+        JSString *str1 = JSString::getUnitString(cx, str, size_t(slot));
         if (!str1)
             return JS_FALSE;
-        if (!obj->defineProperty(cx, INT_TO_JSID(slot), STRING_TO_JSVAL(str1), NULL, NULL,
+        if (!obj->defineProperty(cx, INT_TO_JSID(slot), str1, NULL, NULL,
                                  STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
@@ -629,19 +610,19 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return JS_TRUE;
 }
 
-JSClass js_StringClass = {
+Class js_StringClass = {
     js_String_str,
     JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_NEW_RESOLVE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_String),
-    JS_PropertyStub,   JS_PropertyStub,   str_getProperty,   JS_PropertyStub,
-    str_enumerate, (JSResolveOp)str_resolve, JS_ConvertStub, NULL,
+    PropertyStub,    PropertyStub,     str_getProperty,     PropertyStub,
+    str_enumerate,   (JSResolveOp)str_resolve, ConvertStub, NULL,
     JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 #define NORMALIZE_THIS(cx,vp,str)                                             \
     JS_BEGIN_MACRO                                                            \
-        if (JSVAL_IS_STRING(vp[1])) {                                         \
-            str = JSVAL_TO_STRING(vp[1]);                                     \
+        if (vp[1].isString()) {                                               \
+            str = vp[1].asString();                                           \
         } else {                                                              \
             str = NormalizeThis(cx, vp);                                      \
             if (!str)                                                         \
@@ -650,11 +631,9 @@ JSClass js_StringClass = {
     JS_END_MACRO
 
 static JSString *
-NormalizeThis(JSContext *cx, jsval *vp)
+NormalizeThis(JSContext *cx, Value *vp)
 {
-    JSString *str;
-
-    if (JSVAL_IS_NULL(vp[1]) && JSVAL_IS_NULL(JS_THIS(cx, vp)))
+    if (vp[1].isNull() || !ComputeThisFromVpInPlace(cx, vp) || vp[1].isNull())
         return NULL;
 
     /*
@@ -663,18 +642,18 @@ NormalizeThis(JSContext *cx, jsval *vp)
      * vp[1] is a String object) here.  Note that vp[1] can still be a
      * primitive value at this point.
      */
-    if (!JSVAL_IS_PRIMITIVE(vp[1])) {
-        JSObject *obj = JSVAL_TO_OBJECT(vp[1]);
+    if (vp[1].isObject()) {
+        JSObject *obj = &vp[1].asObject();
         if (obj->getClass() == &js_StringClass) {
-            vp[1] = obj->getPrimitiveThis();
-            return JSVAL_TO_STRING(vp[1]);
+            vp[1].copy(obj->getPrimitiveThis());
+            return vp[1].asString();
         }
     }
 
-    str = js_ValueToString(cx, vp[1]);
+    JSString *str = js_ValueToString(cx, vp[1]);
     if (!str)
         return NULL;
-    vp[1] = STRING_TO_JSVAL(str);
+    vp[1].setString(str);
     return str;
 }
 
@@ -685,7 +664,7 @@ NormalizeThis(JSContext *cx, jsval *vp)
  * toSource, toString, and valueOf.
  */
 static JSBool
-str_quote(JSContext *cx, uintN argc, jsval *vp)
+str_quote(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
@@ -693,24 +672,23 @@ str_quote(JSContext *cx, uintN argc, jsval *vp)
     str = js_QuoteString(cx, str, '"');
     if (!str)
         return JS_FALSE;
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
 static JSBool
-str_toSource(JSContext *cx, uintN argc, jsval *vp)
+str_toSource(JSContext *cx, uintN argc, Value *vp)
 {
-    jsval v;
     JSString *str;
     size_t i, j, k, n;
     char buf[16];
     const jschar *s;
     jschar *t;
 
-    if (!js_GetPrimitiveThis(cx, vp, &js_StringClass, &v))
+    const Value *primp;
+    if (!js_GetPrimitiveThis(cx, vp, &js_StringClass, &primp))
         return JS_FALSE;
-    JS_ASSERT(JSVAL_IS_STRING(v));
-    str = js_QuoteString(cx, JSVAL_TO_STRING(v), '"');
+    str = js_QuoteString(cx, primp->asString(), '"');
     if (!str)
         return JS_FALSE;
     j = JS_snprintf(buf, sizeof buf, "(new %s(", js_StringClass.name);
@@ -731,16 +709,19 @@ str_toSource(JSContext *cx, uintN argc, jsval *vp)
         cx->free(t);
         return JS_FALSE;
     }
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
 #endif /* JS_HAS_TOSOURCE */
 
 JSBool
-js_str_toString(JSContext *cx, uintN argc, jsval *vp)
+js_str_toString(JSContext *cx, uintN argc, Value *vp)
 {
-    return js_GetPrimitiveThis(cx, vp, &js_StringClass, vp);
+    const Value *primp;
+    if (!js_GetPrimitiveThis(cx, vp, &js_StringClass, &primp))
+        return false;
+    vp->copy(*primp);
 }
 
 /*
@@ -770,7 +751,7 @@ SubstringTail(JSContext *cx, JSString *str, jsdouble length, jsdouble begin, jsd
 }
 
 static JSBool
-str_substring(JSContext *cx, uintN argc, jsval *vp)
+str_substring(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
     jsdouble d;
@@ -794,7 +775,7 @@ str_substring(JSContext *cx, uintN argc, jsval *vp)
         if (!str)
             return JS_FALSE;
     }
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
@@ -804,7 +785,7 @@ String_p_toString(JSContext* cx, JSObject* obj)
 {
     if (!InstanceOf(cx, obj, &js_StringClass, NULL))
         return NULL;
-    jsval v = obj->getPrimitiveThis();
+    Value v = obj->getPrimitiveThis();
     JS_ASSERT(JSVAL_IS_STRING(v));
     return JSVAL_TO_STRING(v);
 }
@@ -833,7 +814,7 @@ js_toLowerCase(JSContext *cx, JSString *str)
 }
 
 static JSBool
-str_toLowerCase(JSContext *cx, uintN argc, jsval *vp)
+str_toLowerCase(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
@@ -841,12 +822,12 @@ str_toLowerCase(JSContext *cx, uintN argc, jsval *vp)
     str = js_toLowerCase(cx, str);
     if (!str)
         return JS_FALSE;
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
 static JSBool
-str_toLocaleLowerCase(JSContext *cx, uintN argc, jsval *vp)
+str_toLocaleLowerCase(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
@@ -856,7 +837,7 @@ str_toLocaleLowerCase(JSContext *cx, uintN argc, jsval *vp)
      */
     if (cx->localeCallbacks && cx->localeCallbacks->localeToLowerCase) {
         NORMALIZE_THIS(cx, vp, str);
-        return cx->localeCallbacks->localeToLowerCase(cx, str, vp);
+        return cx->localeCallbacks->localeToLowerCase(cx, str, Jsvalify(vp));
     }
     return str_toLowerCase(cx, 0, vp);
 }
@@ -884,7 +865,7 @@ js_toUpperCase(JSContext *cx, JSString *str)
 }
 
 static JSBool
-str_toUpperCase(JSContext *cx, uintN argc, jsval *vp)
+str_toUpperCase(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
@@ -892,12 +873,12 @@ str_toUpperCase(JSContext *cx, uintN argc, jsval *vp)
     str = js_toUpperCase(cx, str);
     if (!str)
         return JS_FALSE;
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
 static JSBool
-str_toLocaleUpperCase(JSContext *cx, uintN argc, jsval *vp)
+str_toLocaleUpperCase(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
@@ -907,44 +888,42 @@ str_toLocaleUpperCase(JSContext *cx, uintN argc, jsval *vp)
      */
     if (cx->localeCallbacks && cx->localeCallbacks->localeToUpperCase) {
         NORMALIZE_THIS(cx, vp, str);
-        return cx->localeCallbacks->localeToUpperCase(cx, str, vp);
+        return cx->localeCallbacks->localeToUpperCase(cx, str, Jsvalify(vp));
     }
     return str_toUpperCase(cx, 0, vp);
 }
 
 static JSBool
-str_localeCompare(JSContext *cx, uintN argc, jsval *vp)
+str_localeCompare(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str, *thatStr;
 
     NORMALIZE_THIS(cx, vp, str);
     if (argc == 0) {
-        *vp = JSVAL_ZERO;
+        vp->setInt32(0);
     } else {
         thatStr = js_ValueToString(cx, vp[2]);
         if (!thatStr)
             return JS_FALSE;
         if (cx->localeCallbacks && cx->localeCallbacks->localeCompare) {
-            vp[2] = STRING_TO_JSVAL(thatStr);
-            return cx->localeCallbacks->localeCompare(cx, str, thatStr, vp);
+            vp[2].setString(thatStr);
+            return cx->localeCallbacks->localeCompare(cx, str, thatStr, Jsvalify(vp));
         }
-        *vp = INT_TO_JSVAL(js_CompareStrings(str, thatStr));
+        vp->setInt32(js_CompareStrings(str, thatStr));
     }
     return JS_TRUE;
 }
 
 static JSBool
-str_charAt(JSContext *cx, uintN argc, jsval *vp)
+str_charAt(JSContext *cx, uintN argc, Value *vp)
 {
-    jsval t;
     JSString *str;
     jsint i;
     jsdouble d;
 
-    t = vp[1];
-    if (JSVAL_IS_STRING(t) && argc != 0 && JSVAL_IS_INT(vp[2])) {
-        str = JSVAL_TO_STRING(t);
-        i = JSVAL_TO_INT(vp[2]);
+    if (vp[1].isString() && argc != 0 && vp[2].isInt32()) {
+        str = vp[1].asString();
+        i = vp[2].asInt32();
         if ((size_t)i >= str->length())
             goto out_of_range;
     } else {
@@ -966,26 +945,25 @@ str_charAt(JSContext *cx, uintN argc, jsval *vp)
     str = JSString::getUnitString(cx, str, size_t(i));
     if (!str)
         return JS_FALSE;
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 
 out_of_range:
-    *vp = JS_GetEmptyStringValue(cx);
+    vp->setString(cx->runtime->emptyString);
     return JS_TRUE;
 }
 
 static JSBool
-str_charCodeAt(JSContext *cx, uintN argc, jsval *vp)
+str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
 {
-    jsval t;
+    Value t;
     JSString *str;
     jsint i;
     jsdouble d;
 
-    t = vp[1];
-    if (JSVAL_IS_STRING(t) && argc != 0 && JSVAL_IS_INT(vp[2])) {
-        str = JSVAL_TO_STRING(t);
-        i = JSVAL_TO_INT(vp[2]);
+    if (vp[1].isString() && argc != 0 && vp[2].isInt32()) {
+        str = vp[1].asString();
+        i = vp[2].asInt32();
         if ((size_t)i >= str->length())
             goto out_of_range;
     } else {
@@ -1004,11 +982,11 @@ str_charCodeAt(JSContext *cx, uintN argc, jsval *vp)
         i = (jsint) d;
     }
 
-    *vp = INT_TO_JSVAL(str->chars()[i]);
+    vp->setInt32(str->chars()[i]);
     return JS_TRUE;
 
 out_of_range:
-    *vp = JS_GetNaNValue(cx);
+    vp->setDouble(js_NaN);
     return JS_TRUE;
 }
 
@@ -1228,7 +1206,7 @@ StringMatch(const jschar *text, jsuint textlen,
 }
 
 static JSBool
-str_indexOf(JSContext *cx, uintN argc, jsval *vp)
+str_indexOf(JSContext *cx, uintN argc, Value *vp)
 {
 
     JSString *str;
@@ -1245,9 +1223,8 @@ str_indexOf(JSContext *cx, uintN argc, jsval *vp)
 
     jsuint start;
     if (argc > 1) {
-        jsval indexVal = vp[3];
-        if (JSVAL_IS_INT(indexVal)) {
-            jsint i = JSVAL_TO_INT(indexVal);
+        if (vp[3].isInt32()) {
+            jsint i = vp[3].asInt32();
             if (i <= 0) {
                 start = 0;
             } else if (jsuint(i) > textlen) {
@@ -1279,12 +1256,12 @@ str_indexOf(JSContext *cx, uintN argc, jsval *vp)
     }
 
     jsint match = StringMatch(text, textlen, pat, patlen);
-    *vp = INT_TO_JSVAL((match == -1) ? -1 : start + match);
+    vp->setInt32((match == -1) ? -1 : start + match);
     return true;
 }
 
 static JSBool
-str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
+str_lastIndexOf(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str, *str2;
     const jschar *text, *pat;
@@ -1295,8 +1272,8 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
     text = str->chars();
     textlen = (jsint) str->length();
 
-    if (argc != 0 && JSVAL_IS_STRING(vp[2])) {
-        str2 = JSVAL_TO_STRING(vp[2]);
+    if (argc != 0 && vp[2].isString()) {
+        str2 = vp[2].asString();
     } else {
         str2 = ArgToRootedString(cx, argc, vp, 0);
         if (!str2)
@@ -1307,13 +1284,13 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
 
     i = textlen - patlen; // Start searching here
     if (i < 0) {
-        *vp = INT_TO_JSVAL(-1);
+        vp->setInt32(-1);
         return JS_TRUE;
     }
 
     if (argc > 1) {
-        if (JSVAL_IS_INT(vp[3])) {
-            j = JSVAL_TO_INT(vp[3]);
+        if (vp[3].isInt32()) {
+            j = vp[3].asInt32();
             if (j <= 0)
                 i = 0;
             else if (j < i)
@@ -1332,7 +1309,7 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
     }
 
     if (patlen == 0) {
-        *vp = INT_TO_JSVAL(i);
+        vp->setInt32(i);
         return JS_TRUE;
     }
 
@@ -1349,18 +1326,18 @@ str_lastIndexOf(JSContext *cx, uintN argc, jsval *vp)
                 if (*t1 != *p1)
                     goto break_continue;
             }
-            *vp = INT_TO_JSVAL(t - text);
+            vp->setInt32(t - text);
             return JS_TRUE;
         }
       break_continue:;
     }
 
-    *vp = INT_TO_JSVAL(-1);
+    vp->setInt32(-1);
     return JS_TRUE;
 }
 
 static JSBool
-js_TrimString(JSContext *cx, jsval *vp, JSBool trimLeft, JSBool trimRight)
+js_TrimString(JSContext *cx, Value *vp, JSBool trimLeft, JSBool trimRight)
 {
     JSString *str;
     const jschar *chars;
@@ -1385,24 +1362,24 @@ js_TrimString(JSContext *cx, jsval *vp, JSBool trimLeft, JSBool trimRight)
     if (!str)
         return JS_FALSE;
 
-    *vp = STRING_TO_JSVAL(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
 static JSBool
-str_trim(JSContext *cx, uintN argc, jsval *vp)
+str_trim(JSContext *cx, uintN argc, Value *vp)
 {
     return js_TrimString(cx, vp, JS_TRUE, JS_TRUE);
 }
 
 static JSBool
-str_trimLeft(JSContext *cx, uintN argc, jsval *vp)
+str_trimLeft(JSContext *cx, uintN argc, Value *vp)
 {
     return js_TrimString(cx, vp, JS_TRUE, JS_FALSE);
 }
 
 static JSBool
-str_trimRight(JSContext *cx, uintN argc, jsval *vp)
+str_trimRight(JSContext *cx, uintN argc, Value *vp)
 {
     return js_TrimString(cx, vp, JS_FALSE, JS_TRUE);
 }
@@ -1443,11 +1420,10 @@ class RegExpGuard
 
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
     bool
-    init(uintN argc, jsval *vp)
+    init(uintN argc, Value *vp)
     {
-        jsval patval = vp[2];
-        if (argc != 0 && VALUE_IS_REGEXP(mCx, patval)) {
-            mReobj = JSVAL_TO_OBJECT(patval);
+        if (argc != 0 && VALUE_IS_REGEXP(mCx, vp[2])) {
+            mReobj = &vp[2].asObject();
             mRe = (JSRegExp *) mReobj->getPrivate();
             HOLD_REGEXP(mCx, mRe);
         } else {
@@ -1494,7 +1470,7 @@ class RegExpGuard
 
     /* If the pattern is not already a regular expression, make it so. */
     bool
-    normalizeRegExp(bool flat, uintN optarg, uintN argc, jsval *vp)
+    normalizeRegExp(bool flat, uintN optarg, uintN argc, Value *vp)
     {
         /* If we don't have a RegExp, build RegExp from pattern string. */
         if (mRe)
@@ -1521,9 +1497,9 @@ class RegExpGuard
 
 /* js_ExecuteRegExp indicates success in two ways, based on the 'test' flag. */
 static JS_ALWAYS_INLINE bool
-Matched(bool test, jsval v)
+Matched(bool test, const Value &v)
 {
-    return test ? (v == JSVAL_TRUE) : !JSVAL_IS_NULL(v);
+    return test ? v.isBoolean(true) : !v.isNull();
 }
 
 typedef bool (*DoMatchCallback)(JSContext *cx, size_t count, void *data);
@@ -1544,7 +1520,7 @@ enum MatchControlFlags {
 
 /* Factor out looping and matching logic. */
 static bool
-DoMatch(JSContext *cx, jsval *vp, JSString *str, const RegExpGuard &g,
+DoMatch(JSContext *cx, Value *vp, JSString *str, const RegExpGuard &g,
         DoMatchCallback callback, void *data, MatchControlFlags flags)
 {
     if (g.re()->flags & JSREG_GLOB) {
@@ -1577,6 +1553,8 @@ DoMatch(JSContext *cx, jsval *vp, JSString *str, const RegExpGuard &g,
     return true;
 }
 
+typedef JSObject **MatchArgType;
+
 /*
  * DoMatch will only callback on global matches, hence this function builds
  * only the "array of matches" returned by match on global regexps.
@@ -1586,13 +1564,11 @@ MatchCallback(JSContext *cx, size_t count, void *p)
 {
     JS_ASSERT(count <= JSVAL_INT_MAX);  /* by max string length */
 
-    jsval &arrayval = *static_cast<jsval *>(p);
-    JSObject *arrayobj = JSVAL_TO_OBJECT(arrayval);
+    JSObject *&arrayobj = *static_cast<MatchArgType>(p);
     if (!arrayobj) {
         arrayobj = js_NewArrayObject(cx, 0, NULL);
         if (!arrayobj)
             return false;
-        arrayval = OBJECT_TO_JSVAL(arrayobj);
     }
 
     JSString *str = cx->regExpStatics.input;
@@ -1603,7 +1579,7 @@ MatchCallback(JSContext *cx, size_t count, void *p)
     if (!matchstr)
         return false;
 
-    jsval v = STRING_TO_JSVAL(matchstr);
+    Value v(matchstr);
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
     return !!arrayobj->setProperty(cx, INT_TO_JSID(count), &v);
@@ -1611,10 +1587,10 @@ MatchCallback(JSContext *cx, size_t count, void *p)
 
 static bool
 BuildFlatMatchArray(JSContext *cx, JSString *textstr, const RegExpGuard &g,
-                    jsval *vp)
+                    Value *vp)
 {
     if (g.match < 0) {
-        *vp = JSVAL_NULL;
+        vp->setNull();
         return true;
     }
 
@@ -1622,17 +1598,17 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const RegExpGuard &g,
     JSObject *obj = js_NewSlowArrayObject(cx);
     if (!obj)
         return false;
-    *vp = OBJECT_TO_JSVAL(obj);
+    vp->setNonFunObj(*obj);
 
-    return obj->defineProperty(cx, INT_TO_JSID(0), STRING_TO_JSVAL(g.patstr)) &&
+    return obj->defineProperty(cx, INT_TO_JSID(0), g.patstr) &&
            obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.indexAtom),
-                               INT_TO_JSVAL(g.match)) &&
+                               Int32Tag(g.match)) &&
            obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.inputAtom),
-                               STRING_TO_JSVAL(textstr));
+                               textstr);
 }
 
 static JSBool
-str_match(JSContext *cx, uintN argc, jsval *vp)
+str_match(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
     NORMALIZE_THIS(cx, vp, str);
@@ -1645,18 +1621,19 @@ str_match(JSContext *cx, uintN argc, jsval *vp)
     if (!g.normalizeRegExp(false, 1, argc, vp))
         return false;
 
-    AutoValueRooter array(cx, JSVAL_NULL);
-    if (!DoMatch(cx, vp, str, g, MatchCallback, array.addr(), MATCH_ARGS))
+    AutoObjectRooter array(cx);
+    MatchArgType arg = array.addr();
+    if (!DoMatch(cx, vp, str, g, MatchCallback, arg, MATCH_ARGS))
         return false;
 
     /* When not global, DoMatch will leave |RegEx.exec()| in *vp. */
     if (g.re()->flags & JSREG_GLOB)
-        *vp = array.value();
+        vp->setNonFunObjOrNull(array.object());
     return true;
 }
 
 static JSBool
-str_search(JSContext *cx, uintN argc, jsval *vp)
+str_search(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
     NORMALIZE_THIS(cx, vp, str);
@@ -1665,7 +1642,7 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
     if (!g.init(argc, vp))
         return false;
     if (g.tryFlatMatch(str, false, 1, argc)) {
-        *vp = INT_TO_JSVAL(g.match);
+        vp->setInt32(g.match);
         return true;
     }
     if (!g.normalizeRegExp(false, 1, argc, vp))
@@ -1675,10 +1652,10 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
     if (!js_ExecuteRegExp(cx, g.re(), str, &i, true, vp))
         return false;
 
-    if (*vp == JSVAL_TRUE)
-        *vp = INT_TO_JSVAL(cx->regExpStatics.leftContext.length);
+    if (vp->isBoolean(true))
+        vp->setInt32(cx->regExpStatics.leftContext.length);
     else
-        *vp = INT_TO_JSVAL(-1);
+        vp->setInt32(-1);
     return true;
 }
 
@@ -1690,6 +1667,8 @@ struct ReplaceData
 
     bool argsPushed() const {
         return args.getvp() != NULL;
+    }
+
     JSString        *str;           /* 'this' parameter object as a string */
     RegExpGuard     g;              /* regexp parameter object and private data */
     JSObject        *lambda;        /* replacement function object or null */
@@ -1763,7 +1742,7 @@ InterpretDollar(JSContext *cx, jschar *dp, jschar *ep, ReplaceData &rdata,
 }
 
 static JS_ALWAYS_INLINE bool
-PushRegExpSubstr(JSContext *cx, const JSSubString &sub, jsval *&sp)
+PushRegExpSubstr(JSContext *cx, const JSSubString &sub, Value *&sp)
 {
     JSString *whole = cx->regExpStatics.input;
     size_t off = sub.chars - whole->chars();
@@ -1818,7 +1797,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         PreserveRegExpStatics save(cx);
 
         /* Push lambda and its 'this' parameter. */
-        jsval *sp = rdata.args.getvp();
+        Value *sp = rdata.args.getvp();
         *sp++ = OBJECT_TO_JSVAL(lambda);
         *sp++ = OBJECT_TO_JSVAL(lambda->getParent());
 
@@ -1935,7 +1914,7 @@ ReplaceCallback(JSContext *cx, size_t count, void *p)
 
 static bool
 BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
-                     const RegExpGuard &g, jsval *vp)
+                     const RegExpGuard &g, Value *vp)
 {
     if (g.match == -1) {
         *vp = STRING_TO_JSVAL(textstr);
@@ -1962,7 +1941,7 @@ BuildFlatReplacement(JSContext *cx, JSString *textstr, JSString *repstr,
 }
 
 static JSBool
-str_replace(JSContext *cx, uintN argc, jsval *vp)
+str_replace(JSContext *cx, uintN argc, Value *vp)
 {
     ReplaceData rdata(cx);
     NORMALIZE_THIS(cx, vp, rdata.str);
@@ -2062,7 +2041,7 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      */
     if (re) {
         size_t index;
-        jsval rval;
+        Value rval;
 
       again:
         /* JS1.2 deviated from Perl by never matching at end of string. */
@@ -2124,13 +2103,13 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
 }
 
 static JSBool
-str_split(JSContext *cx, uintN argc, jsval *vp)
+str_split(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
     NORMALIZE_THIS(cx, vp, str);
 
     if (argc == 0) {
-        jsval v = STRING_TO_JSVAL(str);
+        Value v = STRING_TO_JSVAL(str);
         JSObject *aobj = js_NewArrayObject(cx, 1, &v);
         if (!aobj)
             return false;
@@ -2222,7 +2201,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
 
 #if JS_HAS_PERL_SUBSTR
 static JSBool
-str_substr(JSContext *cx, uintN argc, jsval *vp)
+str_substr(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
     jsdouble d;
@@ -2270,10 +2249,10 @@ str_substr(JSContext *cx, uintN argc, jsval *vp)
  * Python-esque sequence operations.
  */
 static JSBool
-str_concat(JSContext *cx, uintN argc, jsval *vp)
+str_concat(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str, *str2;
-    jsval *argv;
+    Value *argv;
     uintN i;
 
     NORMALIZE_THIS(cx, vp, str);
@@ -2297,9 +2276,9 @@ str_concat(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-str_slice(JSContext *cx, uintN argc, jsval *vp)
+str_slice(JSContext *cx, uintN argc, Value *vp)
 {
-    jsval t, v;
+    Value t, v;
     JSString *str;
 
     t = vp[1];
@@ -2376,7 +2355,7 @@ str_slice(JSContext *cx, uintN argc, jsval *vp)
  */
 static JSBool
 tagify(JSContext *cx, const char *begin, JSString *param, const char *end,
-       jsval *vp)
+       Value *vp)
 {
     JSString *str;
     jschar *tagbuf;
@@ -2439,7 +2418,7 @@ tagify(JSContext *cx, const char *begin, JSString *param, const char *end,
 }
 
 static JSBool
-tagify_value(JSContext *cx, uintN argc, jsval *vp,
+tagify_value(JSContext *cx, uintN argc, Value *vp,
              const char *begin, const char *end)
 {
     JSString *param;
@@ -2451,79 +2430,79 @@ tagify_value(JSContext *cx, uintN argc, jsval *vp,
 }
 
 static JSBool
-str_bold(JSContext *cx, uintN argc, jsval *vp)
+str_bold(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify(cx, "b", NULL, NULL, vp);
 }
 
 static JSBool
-str_italics(JSContext *cx, uintN argc, jsval *vp)
+str_italics(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify(cx, "i", NULL, NULL, vp);
 }
 
 static JSBool
-str_fixed(JSContext *cx, uintN argc, jsval *vp)
+str_fixed(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify(cx, "tt", NULL, NULL, vp);
 }
 
 static JSBool
-str_fontsize(JSContext *cx, uintN argc, jsval *vp)
+str_fontsize(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify_value(cx, argc, vp, "font size", "font");
 }
 
 static JSBool
-str_fontcolor(JSContext *cx, uintN argc, jsval *vp)
+str_fontcolor(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify_value(cx, argc, vp, "font color", "font");
 }
 
 static JSBool
-str_link(JSContext *cx, uintN argc, jsval *vp)
+str_link(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify_value(cx, argc, vp, "a href", "a");
 }
 
 static JSBool
-str_anchor(JSContext *cx, uintN argc, jsval *vp)
+str_anchor(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify_value(cx, argc, vp, "a name", "a");
 }
 
 static JSBool
-str_strike(JSContext *cx, uintN argc, jsval *vp)
+str_strike(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify(cx, "strike", NULL, NULL, vp);
 }
 
 static JSBool
-str_small(JSContext *cx, uintN argc, jsval *vp)
+str_small(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify(cx, "small", NULL, NULL, vp);
 }
 
 static JSBool
-str_big(JSContext *cx, uintN argc, jsval *vp)
+str_big(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify(cx, "big", NULL, NULL, vp);
 }
 
 static JSBool
-str_blink(JSContext *cx, uintN argc, jsval *vp)
+str_blink(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify(cx, "blink", NULL, NULL, vp);
 }
 
 static JSBool
-str_sup(JSContext *cx, uintN argc, jsval *vp)
+str_sup(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify(cx, "sup", NULL, NULL, vp);
 }
 
 static JSBool
-str_sub(JSContext *cx, uintN argc, jsval *vp)
+str_sub(JSContext *cx, uintN argc, Value *vp)
 {
     return tagify(cx, "sub", NULL, NULL, vp);
 }
@@ -2926,7 +2905,7 @@ const char JSString::deflatedUnitStringTable[] = {
 #undef O25
 
 JSBool
-js_String(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+js_String(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
     JSString *str;
 
@@ -2960,9 +2939,9 @@ JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, ST
 #endif /* !JS_TRACER */
 
 static JSBool
-str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
+str_fromCharCode(JSContext *cx, uintN argc, Value *vp)
 {
-    jsval *argv;
+    Value *argv;
     uintN i;
     jschar *chars;
     JSString *str;
@@ -3213,7 +3192,7 @@ js_NewStringCopyZ(JSContext *cx, const jschar *s)
 }
 
 JS_FRIEND_API(const char *)
-js_ValueToPrintable(JSContext *cx, jsval v, JSValueToStringFun v2sfun)
+js_ValueToPrintable(JSContext *cx, Value v, JSValueToStringFun v2sfun)
 {
     JSString *str;
 
@@ -3262,7 +3241,7 @@ AppendAtom(JSAtom *atom, JSCharBuffer &cb)
 
 /* This function implements E-262-3 section 9.8, toString. */
 JSBool
-js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
+js_ValueToCharBuffer(JSContext *cx, Value v, JSCharBuffer &cb)
 {
     if (!JSVAL_IS_PRIMITIVE(v) && !JSVAL_TO_OBJECT(v)->defaultValue(cx, JSTYPE_STRING, &v))
         return JS_FALSE;
@@ -3285,7 +3264,7 @@ js_ValueToCharBuffer(JSContext *cx, jsval v, JSCharBuffer &cb)
 }
 
 JS_FRIEND_API(JSString *)
-js_ValueToSource(JSContext *cx, jsval v)
+js_ValueToSource(JSContext *cx, Value v)
 {
     if (JSVAL_IS_VOID(v))
         return ATOM_TO_STRING(cx->runtime->atomState.void0Atom);
@@ -5256,7 +5235,7 @@ const bool js_alnum[] = {
 #define URI_CHUNK 64U
 
 static inline bool
-TransferBufferToString(JSContext *cx, JSCharBuffer &cb, jsval *rval)
+TransferBufferToString(JSContext *cx, JSCharBuffer &cb, Value *rval)
 {
     JSString *str = js_NewStringFromCharBuffer(cx, cb);
     if (!str)
@@ -5274,7 +5253,7 @@ TransferBufferToString(JSContext *cx, JSCharBuffer &cb, jsval *rval)
  */
 static JSBool
 Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
-       const jschar *unescapedSet2, jsval *rval)
+       const jschar *unescapedSet2, Value *rval)
 {
     size_t length, j, k, L;
     JSCharBuffer cb(cx);
@@ -5337,7 +5316,7 @@ Encode(JSContext *cx, JSString *str, const jschar *unescapedSet,
 }
 
 static JSBool
-Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
+Decode(JSContext *cx, JSString *str, const jschar *reservedSet, Value *rval)
 {
     size_t length, start, k;
     JSCharBuffer cb(cx);
@@ -5424,7 +5403,7 @@ Decode(JSContext *cx, JSString *str, const jschar *reservedSet, jsval *rval)
 }
 
 static JSBool
-str_decodeURI(JSContext *cx, uintN argc, jsval *vp)
+str_decodeURI(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
@@ -5435,7 +5414,7 @@ str_decodeURI(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-str_decodeURI_Component(JSContext *cx, uintN argc, jsval *vp)
+str_decodeURI_Component(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
@@ -5446,7 +5425,7 @@ str_decodeURI_Component(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-str_encodeURI(JSContext *cx, uintN argc, jsval *vp)
+str_encodeURI(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
@@ -5458,7 +5437,7 @@ str_encodeURI(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSBool
-str_encodeURI_Component(JSContext *cx, uintN argc, jsval *vp)
+str_encodeURI_Component(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
