@@ -194,7 +194,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
             bool ok = !!js_GetMutableScope(cx, obj);
             JS_UNLOCK_OBJ(cx, obj);
             if (!ok)
-                return JS_FALSE;
+                return false;
         }
 
         /*
@@ -218,36 +218,13 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
             obj->setProto(pobj);
         else
             obj->setParent(pobj);
-    } else {
-        /*
-         * Use the GC machinery to serialize access to all objects on the
-         * prototype or parent chain.
-         */
-        JSSetSlotRequest ssr;
-        ssr.obj = obj;
-        ssr.pobj = pobj;
-        ssr.slot = (uint16) slot;
-        ssr.cycle = false;
-
-        JSRuntime *rt = cx->runtime;
-        JS_LOCK_GC(rt);
-        ssr.next = rt->setSlotRequests;
-        rt->setSlotRequests = &ssr;
-        for (;;) {
-            js_GC(cx, GC_SET_SLOT_REQUEST);
-            JS_UNLOCK_GC(rt);
-            if (!rt->setSlotRequests)
-                break;
-            JS_LOCK_GC(rt);
-        }
-
-        if (ssr.cycle) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE,
-                                 (slot == JSSLOT_PROTO) ? js_proto_str : "parent");
-            return JS_FALSE;
-        }
+    } else if (!js_SetProtoOrParentCheckingForCycles(cx, obj, slot, pobj)) {
+        const char *name = (slot == JSSLOT_PARENT) ? "parent" : js_proto_str;
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CYCLIC_VALUE,
+                             name);
+        return false;
     }
-    return JS_TRUE;
+    return true;
 }
 
 static JSHashNumber

@@ -1075,15 +1075,6 @@ typedef struct JSPropertyTreeEntry {
     JSScopeProperty     *child;
 } JSPropertyTreeEntry;
 
-typedef struct JSSetSlotRequest JSSetSlotRequest;
-
-struct JSSetSlotRequest {
-    JSObject            *obj;           /* object containing slot to set */
-    JSObject            *pobj;          /* new proto or parent reference */
-    uint16              slot;           /* which to set, proto or parent */
-    JSPackedBool        cycle;          /* true if a cycle was detected */
-    JSSetSlotRequest    *next;          /* next request in GC worklist */
-};
 
 /* Caching Class.prototype lookups for the standard classes. */
 struct JSClassProtoCache {
@@ -1161,7 +1152,6 @@ struct JSRuntime {
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
     uint32              gcEmptyArenaPoolLifespan;
-    uint32              gcLevel;
     uint32              gcNumber;
     JSTracer            *gcMarkingTracer;
     uint32              gcTriggerFactor;
@@ -1218,13 +1208,6 @@ struct JSRuntime {
      */
     JSTraceDataOp       gcExtraRootsTraceOp;
     void                *gcExtraRootsData;
-
-    /*
-     * Used to serialize cycle checks when setting __proto__ by requesting the
-     * GC handle the required cycle detection. If the GC hasn't been poked, it
-     * won't scan for garbage. This member is protected by rt->gcLock.
-     */
-    JSSetSlotRequest    *setSlotRequests;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     jsval               NaNValue;

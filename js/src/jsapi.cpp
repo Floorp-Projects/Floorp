@@ -773,7 +773,7 @@ JS_BeginRequest(JSContext *cx)
 
         /* Wait until the GC is finished. */
         if (rt->gcThread != cx->thread) {
-            while (rt->gcLevel > 0)
+            while (rt->gcThread)
                 JS_AWAIT_GC_DONE(rt);
         }
 
