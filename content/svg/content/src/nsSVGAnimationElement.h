@@ -109,8 +109,8 @@ protected:
     // We need to be notified when target changes, in order to request a
     // sample (which will clear animation effects from old target and apply
     // them to the new target).
-    virtual void ContentChanged(nsIContent* aFrom, nsIContent* aTo) {
-      nsReferencedElement::ContentChanged(aFrom, aTo);
+    virtual void ElementChanged(Element* aFrom, Element* aTo) {
+      nsReferencedElement::ElementChanged(aFrom, aTo);
       mAnimationElement->AnimationNeedsResample();
     }
 
