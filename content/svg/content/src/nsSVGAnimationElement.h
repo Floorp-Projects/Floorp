@@ -91,7 +91,7 @@ public:
   virtual const nsAttrValue* GetAnimAttr(nsIAtom* aName) const;
   virtual PRBool GetAnimAttr(nsIAtom* aAttName, nsAString& aResult) const;
   virtual PRBool HasAnimAttr(nsIAtom* aAttName) const;
-  virtual nsIContent* GetTargetElementContent();
+  virtual mozilla::dom::Element* GetTargetElementContent();
   virtual nsIAtom* GetTargetAttributeName() const;
   virtual nsSMILTargetAttrType GetTargetAttributeType() const;
   virtual nsSMILTimedElement& TimedElement();

@@ -43,10 +43,13 @@
 #include "nsComponentManagerUtils.h"
 #include "nsITimer.h"
 #include "nsIContent.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsISMILAnimationElement.h"
 #include "nsIDOMSVGAnimationElement.h"
 #include "nsSMILTimedElement.h"
+
+using namespace mozilla::dom;
 
 //----------------------------------------------------------------------
 // nsSMILAnimationController implementation
@@ -632,7 +635,7 @@ nsSMILAnimationController::GetTargetIdentifierForAnimation(
     nsISMILAnimationElement* aAnimElem, nsSMILTargetIdentifier& aResult)
 {
   // Look up target (animated) element
-  nsIContent* targetElem = aAnimElem->GetTargetElementContent();
+  Element* targetElem = aAnimElem->GetTargetElementContent();
   if (!targetElem)
     // Animation has no target elem -- skip it.
     return PR_FALSE;
