@@ -144,6 +144,7 @@ imgContainer::imgContainer() :
   mLoopCount(-1),
   mObserver(nsnull),
   mLockCount(0),
+  mStatusTracker(this),
   mDecoder(nsnull),
   mWorker(nsnull),
   mBytesDecoded(0),
@@ -336,6 +337,9 @@ NS_IMETHODIMP imgContainer::ExtractFrame(PRUint32 aWhichFrame,
     return rv;
 
   img->mFrames.AppendElement(subframe.forget());
+
+  img->mStatusTracker.RecordLoaded();
+  img->mStatusTracker.RecordDecoded();
 
   *_retval = img.forget().get();
 
