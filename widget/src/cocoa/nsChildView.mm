@@ -6329,11 +6329,11 @@ ChildViewMouseTracker::WindowForEvent(NSEvent* anEvent)
 }
 
 BOOL
-ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* anEvent)
+ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent)
 {
   // Right mouse down events may get through to all windows, even to a top level
   // window with an open sheet.
-  if (!aWindow || [anEvent type] == NSRightMouseDown)
+  if (!aWindow || [aEvent type] == NSRightMouseDown)
     return YES;
 
   id delegate = [aWindow delegate];
@@ -6347,33 +6347,46 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* anEvent)
   nsWindowType windowType;
   windowWidget->GetWindowType(windowType);
 
+  NSWindow* topLevelWindow = nil;
+
   switch (windowType) {
     case eWindowType_popup:
       // If this is a context menu, it won't have a parent. So we'll always
       // accept mouse move events on context menus even when none of our windows
       // is active, which is the right thing to do.
       // For panels, the parent window is the XUL window that owns the panel.
-      return WindowAcceptsEvent([aWindow parentWindow], anEvent);
+      return WindowAcceptsEvent([aWindow parentWindow], aEvent);
 
     case eWindowType_toplevel:
     case eWindowType_dialog:
-      // Block all mouse events other than RightMouseDown on background windows
-      // and on windows behind sheets.
-      return [aWindow isMainWindow] && ![aWindow attachedSheet];
+      if ([aWindow attachedSheet])
+        return NO;
 
+      topLevelWindow = aWindow;
+      break;
     case eWindowType_sheet: {
       nsIWidget* parentWidget = windowWidget->GetSheetWindowParent();
       if (!parentWidget)
         return YES;
 
-      // Only accept mouse events on a sheet whose containing window is active.
-      NSWindow* parentWindow = (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW);
-      return [parentWindow isMainWindow];
+      topLevelWindow = (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW);
+      break;
     }
 
     default:
       return YES;
   }
+
+  if (!topLevelWindow ||
+      [topLevelWindow isMainWindow] ||
+      [aEvent type] == NSOtherMouseDown ||
+      (([aEvent modifierFlags] & NSCommandKeyMask) != 0 &&
+       [aEvent type] != NSMouseMoved))
+    return YES;
+
+  // If we're here then we're dealing with a left click or mouse move on an
+  // inactive window or something similar. Return NO for now.
+  return NO;
 }
 
 #pragma mark -

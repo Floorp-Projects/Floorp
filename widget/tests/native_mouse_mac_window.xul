@@ -113,6 +113,15 @@
           NSEventTypeBeginGesture = 19,
           NSEventTypeEndGesture   = 20;
 
+    const NSAlphaShiftKeyMask = 1 << 16,
+          NSShiftKeyMask      = 1 << 17,
+          NSControlKeyMask    = 1 << 18,
+          NSAlternateKeyMask  = 1 << 19,
+          NSCommandKeyMask    = 1 << 20,
+          NSNumericPadKeyMask = 1 << 21,
+          NSHelpKeyMask       = 1 << 22,
+          NSFunctionKeyMask   = 1 << 23;
+
     const gDebug = false;
 
     function printDebug(msg) { if (gDebug) dump(msg); }
@@ -120,7 +129,7 @@
     var gExpectedEvents = [];
     var gRightWindow = null, gPopup = null;
 
-    function testMouse(x, y, msg, elem, win, exp, callback) {
+    function testMouse(x, y, msg, elem, win, exp, flags, callback) {
       clearExpectedEvents();
       exp.forEach(function (expEv) {
         expEv.screenX = x;
@@ -131,7 +140,7 @@
       netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                      getInterface(Components.interfaces.nsIDOMWindowUtils);
-      utils.sendNativeMouseEvent(x, y, msg, 0, elem);
+      utils.sendNativeMouseEvent(x, y, msg, flags || 0, elem);
       SimpleTest.executeSoon(function () {
         clearExpectedEvents();
         callback();
@@ -248,6 +257,22 @@
         // so we should only get a mouseout event, no mouseover event.
         [400, 150, NSMouseMoved, null, right, [
           { type: "mouseout", target: leftElem },
+        ]],
+        // Left-clicking while holding Cmd and middle clicking should work even
+        // on inactive windows, but without making them active.
+        [400, 150, NSLeftMouseDown, null, right, [
+          { type: "mousedown", target: rightElem },
+        ], NSCommandKeyMask],
+        [400, 150, NSLeftMouseUp, null, right, [
+          { type: "mouseup", target: rightElem },
+          { type: "click", target: rightElem },
+        ], NSCommandKeyMask],
+        [400, 150, NSOtherMouseDown, null, right, [
+          { type: "mousedown", target: rightElem },
+        ]],
+        [400, 150, NSOtherMouseUp, null, right, [
+          { type: "mouseup", target: rightElem },
+          { type: "click", target: rightElem },
         ]],
         // Clicking an inactive window should make it active and fire a mouseover
         // event.
@@ -482,8 +507,8 @@
         if (typeof test == "function")
           return test(runNextTest);
 
-        var [x, y, msg, elem, win, exp] = test;
-        testMouse(x, y, msg, elem, win, exp, runNextTest);
+        var [x, y, msg, elem, win, exp, flags] = test;
+        testMouse(x, y, msg, elem, win, exp, flags, runNextTest);
       }
       runNextTest();
     }
