@@ -209,17 +209,23 @@ typedef enum JSGCInvocationKind {
     /*
      * Flag bit telling js_GC that the caller has already acquired rt->gcLock.
      */
-    GC_LOCK_HELD        = 0x10,
-
-    /*
-     * Called from js_SetProtoOrParent with a request to set an object's proto
-     * or parent slot inserted on rt->setSlotRequests.
-     */
-    GC_SET_SLOT_REQUEST = GC_LOCK_HELD | 1
+    GC_LOCK_HELD        = 0x10
 } JSGCInvocationKind;
 
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
+
+/*
+ * Set object's prototype or parent slot while checking that doing so would
+ * not create a cycle in the proto or parent chain. The cycle check and slot
+ * change are done only when all other requests are finished or suspended to
+ * ensure exclusive access to the chain. If there is a cycle, return false
+ * without reporting an error. Otherwise, set the proto or parent and return
+ * true.
+ */
+extern bool
+js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
+                                     uint32 slot, JSObject *pobj);
 
 extern void
 js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind);
@@ -444,7 +450,6 @@ struct JSGCStats {
     uint32  maxunmarked;/* maximum number of things with children to mark
                            later */
 #endif
-    uint32  maxlevel;       /* maximum GC nesting (indirect recursion) level */
     uint32  poke;           /* number of potentially useful GC calls */
     uint32  afree;          /* thing arenas freed so far */
     uint32  stackseg;       /* total extraordinary stack segments scanned */
