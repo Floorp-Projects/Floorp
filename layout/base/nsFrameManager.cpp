@@ -1457,29 +1457,6 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
   } while (frame2);
 }
 
-
-nsRestyleHint
-nsFrameManager::HasAttributeDependentStyle(nsIContent *aContent,
-                                           nsIAtom *aAttribute,
-                                           PRInt32 aModType,
-                                           PRBool aAttrHasChanged)
-{
-  nsRestyleHint hint = mStyleSet->HasAttributeDependentStyle(GetPresContext(),
-                                                             aContent,
-                                                             aAttribute,
-                                                             aModType,
-                                                             aAttrHasChanged);
-
-  if (aAttrHasChanged && aAttribute == nsGkAtoms::style) {
-    // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
-    // it doesn't really matter.  Or we could even let
-    // HTMLCSSStyleSheetImpl::HasAttributeDependentStyle handle it.
-    hint = nsRestyleHint(hint | eRestyle_Self);
-  }
-
-  return hint;
-}
-
 // Capture state for a given frame.
 // Accept a content id here, in some cases we may not have content (scroll position)
 void
