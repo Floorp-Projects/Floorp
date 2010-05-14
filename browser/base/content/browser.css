@@ -32,7 +32,11 @@ toolbar[printpreview="true"] {
   -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
 }
 
-#navigator-toolbox > toolbar:not(#TabsToolbar) {
+#toolbar-menubar {
+  -moz-box-ordinal-group: 5;
+}
+
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
   -moz-box-ordinal-group: 50;
 }
 
