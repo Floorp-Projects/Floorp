@@ -145,20 +145,20 @@ nsHTMLCSSStyleSheet::Init(nsIURI* aURL, nsIDocument* aDocument)
 }
 
 // Test if style is dependent on content state
-nsRestyleHint
+/* virtual */ nsRestyleHint
 nsHTMLCSSStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
   return nsRestyleHint(0);
 }
 
-PRBool
+/* virtual */ PRBool
 nsHTMLCSSStyleSheet::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
 {
   return PR_FALSE;
 }
 
 // Test if style is dependent on attribute
-nsRestyleHint
+/* virtual */ nsRestyleHint
 nsHTMLCSSStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
   // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
@@ -189,83 +189,84 @@ nsHTMLCSSStyleSheet::Reset(nsIURI* aURL)
   return NS_OK;
 }
 
-already_AddRefed<nsIURI>
+/* virtual */ already_AddRefed<nsIURI>
 nsHTMLCSSStyleSheet::GetSheetURI() const
 {
   NS_IF_ADDREF(mURL);
   return mURL;
 }
 
-already_AddRefed<nsIURI>
+/* virtual */ already_AddRefed<nsIURI>
 nsHTMLCSSStyleSheet::GetBaseURI() const
 {
   NS_IF_ADDREF(mURL);
   return mURL;
 }
 
-void
+/* virtual */ void
 nsHTMLCSSStyleSheet::GetTitle(nsString& aTitle) const
 {
   aTitle.AssignLiteral("Internal HTML/CSS Style Sheet");
 }
 
-void
+/* virtual */ void
 nsHTMLCSSStyleSheet::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/html");
 }
 
-PRBool
+/* virtual */ PRBool
 nsHTMLCSSStyleSheet::HasRules() const
 {
   // Say we always have rules, since we don't know.
   return PR_TRUE;
 }
 
-PRBool
-nsHTMLCSSStyleSheet::GetApplicable() const
+/* virtual */ PRBool
+nsHTMLCSSStyleSheet::IsApplicable() const
 {
   return PR_TRUE;
 }
 
-void
+/* virtual */ void
 nsHTMLCSSStyleSheet::SetEnabled(PRBool aEnabled)
 { // these can't be disabled
 }
 
-PRBool
-nsHTMLCSSStyleSheet::GetComplete() const
+/* virtual */ PRBool
+nsHTMLCSSStyleSheet::IsComplete() const
 {
   return PR_TRUE;
 }
 
-void
+/* virtual */ void
 nsHTMLCSSStyleSheet::SetComplete()
 {
 }
 
 // style sheet owner info
-already_AddRefed<nsIStyleSheet>
+/* virtual */ already_AddRefed<nsIStyleSheet>
 nsHTMLCSSStyleSheet::GetParentSheet() const
 {
   return nsnull;
 }
 
-already_AddRefed<nsIDocument>
+/* virtual */ already_AddRefed<nsIDocument>
 nsHTMLCSSStyleSheet::GetOwningDocument() const
 {
   NS_IF_ADDREF(mDocument);
   return mDocument;
 }
 
-void
+/* virtual */ void
 nsHTMLCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument;
 }
 
 #ifdef DEBUG
-void nsHTMLCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
+/* virtual */ void
+nsHTMLCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);

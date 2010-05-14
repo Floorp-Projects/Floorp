@@ -1104,13 +1104,11 @@ Loader::CreateSheet(nsIURI* aURI,
     }
     
     if (sheet) {
-#ifdef DEBUG
       // This sheet came from the XUL cache or our per-document hashtable; it
       // better be a complete sheet.
-      PRBool complete = sheet->GetComplete();
-      NS_ASSERTION(complete,
+      NS_ASSERTION(sheet->IsComplete(),
                    "Sheet thinks it's not complete while we think it is");
-#endif
+
       // Make sure it hasn't been modified; if it has, we can't use it
       if (sheet->IsModified()) {
         LOG(("  Not cloning completed sheet %p because it's been modified",
@@ -1164,13 +1162,11 @@ Loader::CreateSheet(nsIURI* aURI,
 
     if (sheet) {
       // The sheet we have now should be either incomplete or unmodified
-#ifdef DEBUG
-      PRBool complete = sheet->GetComplete();
-      NS_ASSERTION(!sheet->IsModified() || !complete,
+      NS_ASSERTION(!sheet->IsModified() || !sheet->IsComplete(),
                    "Unexpected modified complete sheet");
-      NS_ASSERTION(complete || aSheetState != eSheetComplete,
+      NS_ASSERTION(sheet->IsComplete() || aSheetState != eSheetComplete,
                    "Sheet thinks it's not complete while we think it is");
-#endif
+
       *aSheet = sheet->Clone(nsnull, nsnull, nsnull, nsnull).get();
     }
   }
