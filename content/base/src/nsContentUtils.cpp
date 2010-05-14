@@ -2980,7 +2980,7 @@ nsContentUtils::GetWrapperSafeScriptFilename(nsIDocument *aDocument,
 
   if (IsChromeDoc(aDocument)) {
     nsCOMPtr<nsIChromeRegistry> chromeReg =
-      do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+      mozilla::services::GetChromeRegistryService();
 
     if (!chromeReg) {
       // If we're running w/o a chrome registry we won't modify any

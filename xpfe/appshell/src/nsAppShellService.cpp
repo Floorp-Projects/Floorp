@@ -376,7 +376,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   PRBool center = aChromeMask & nsIWebBrowserChrome::CHROME_CENTER_SCREEN;
 
   nsCOMPtr<nsIXULChromeRegistry> reg =
-    do_GetService(NS_CHROMEREGISTRY_CONTRACTID);
+    mozilla::services::GetXULChromeRegistryService();
   if (reg) {
     nsCAutoString package;
     package.AssignLiteral("global");

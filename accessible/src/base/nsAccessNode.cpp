@@ -254,7 +254,7 @@ nsAccessNode::GetApplicationAccessible()
 void nsAccessNode::InitXPAccessibility()
 {
   nsCOMPtr<nsIStringBundleService> stringBundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    mozilla::services::GetStringBundleService();
   if (stringBundleService) {
     // Static variables are released in ShutdownAllXPAccessibility();
     stringBundleService->CreateBundle(ACCESSIBLE_BUNDLE_URL, 
