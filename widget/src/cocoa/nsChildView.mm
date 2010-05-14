@@ -3284,7 +3284,7 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
       cocoaEvent.data.mouse.deltaY = [aEvent deltaY];
       cocoaEvent.data.mouse.deltaZ = [aEvent deltaZ];
       event.pluginEvent = &cocoaEvent;
-    }    
+    }
   }
 
   event.exit = aType;
