@@ -2648,6 +2648,9 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind)
 }
 
 #ifdef MOZ_GCTIMER
+
+const bool JS_WANT_GC_SUITE_PRINT = true;  //false for gnuplot output
+
 struct GCTimer {
     uint64 enter;
     uint64 startMark;
@@ -2673,30 +2676,40 @@ struct GCTimer {
         end = rdtsc();
 
         if (startMark > 0) {
-            static FILE *gcFile;
+            if (JS_WANT_GC_SUITE_PRINT) {
+                fprintf(stderr, "%f %f %f\n",
+                        (double)(end - enter) / 1e6,
+                        (double)(startSweep - startMark) / 1e6,
+                        (double)(sweepDestroyEnd - startSweep) / 1e6);
+            } else {
+                static FILE *gcFile;
 
-            if (!gcFile) {
-                gcFile = fopen("gcTimer.dat", "w");
+                if (!gcFile) {
+                    gcFile = fopen("gcTimer.dat", "w");
         
-                fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj, ");
-                fprintf(gcFile, "FinStr, FinDbl, Destroy,  newChunks, destoyChunks\n");
-            }
-            JS_ASSERT(gcFile);
-            fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %7.1f, ",
-                    (double)(enter - getFirstEnter()) / 1e6,
-                    (double)(end - enter) / 1e6,
-                    (double)(startSweep - startMark) / 1e6,
-                    (double)(sweepDestroyEnd - startSweep) / 1e6,
-                    (double)(sweepObjectEnd - startSweep) / 1e6,
-                    (double)(sweepStringEnd - sweepObjectEnd) / 1e6,
-                    (double)(sweepDoubleEnd - sweepStringEnd) / 1e6,
-                    (double)(sweepDestroyEnd - sweepDoubleEnd) / 1e6);
-            fprintf(gcFile, "%10d, %10d \n", newChunkCount, destroyChunkCount);
-            fflush(gcFile);
+                    fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep,");
+                    fprintf(gcFile, " FinObj, FinStr, FinDbl,");
+                    fprintf(gcFile, " Destroy,  newChunks, destoyChunks\n");
+                }
+                JS_ASSERT(gcFile);
+                fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f,"\
+                                 " %6.1f, %7.1f, ",
+                        (double)(enter - getFirstEnter()) / 1e6,
+                        (double)(end - enter) / 1e6,
+                        (double)(startSweep - startMark) / 1e6,
+                        (double)(sweepDestroyEnd - startSweep) / 1e6,
+                        (double)(sweepObjectEnd - startSweep) / 1e6,
+                        (double)(sweepStringEnd - sweepObjectEnd) / 1e6,
+                        (double)(sweepDoubleEnd - sweepStringEnd) / 1e6,
+                        (double)(sweepDestroyEnd - sweepDoubleEnd) / 1e6);
+                fprintf(gcFile, "%10d, %10d \n", newChunkCount, 
+                        destroyChunkCount);
+                fflush(gcFile);
 
-            if (lastGC) {
-                fclose(gcFile);
-                gcFile = NULL;
+                if (lastGC) {
+                    fclose(gcFile);
+                    gcFile = NULL;
+                }
             }
         }
         newChunkCount = 0;
