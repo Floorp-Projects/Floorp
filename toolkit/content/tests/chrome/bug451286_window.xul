@@ -90,11 +90,7 @@
       }, Ci.nsIThread.DISPATCH_NORMAL);
     }
 
-    function onPageShow(aEvent) {
-      ok(true, "[Bug 562326] pageshow event received for " + aEvent.target.URL);
-      ok(true, "[Bug 562326] Event target gBrowser.contentDocument? " +
-                (aEvent.target == gBrowser.contentDocument))
-              
+    function onPageShow() {
       gBrowser.removeEventListener("pageshow", onPageShow, false);
 
       // First, take a snapshot of the window without highlighting
@@ -109,13 +105,7 @@
         matchCase.doCommand();
 
       // Turn on highlighting
-      try {
-        gFindBar.toggleHighlight(true);
-      } catch (e) {
-        ok(false, "[Bug 562326] Mark this failure as Bug 526326...")
-        ok(false, "[Bug 562326] First toggleHighlight call failed " +
-           e.toString());
-      }
+      gFindBar.toggleHighlight(true);
       gFindBar.close();
     
       // Take snapshot of highlighing
@@ -124,13 +114,7 @@
       // Now, remove the highlighting, and take a snapshot to compare
       // to our original state
       gFindBar.open();
-      try {
-        gFindBar.toggleHighlight(false);
-      } catch (e) {
-        ok(false, "[Bug 562326] Mark this failure as Bug 526326...")
-        ok(false, "[Bug 562326] Second toggleHighlight call failed " +
-           e.toString());
-      }
+      gFindBar.toggleHighlight(false);
       gFindBar.close();
       var unhighlightSnapshot = snapshotWindow(gWin);
 
