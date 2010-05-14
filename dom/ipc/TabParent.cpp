@@ -452,7 +452,7 @@ TabParent::DeallocPContextWrapper(PContextWrapperParent* actor)
 }
 
 PGeolocationRequestParent*
-TabParent::AllocPGeolocationRequest(const URI::URI& uri)
+TabParent::AllocPGeolocationRequest(const IPC::URI& uri)
 {
   return new GeolocationRequestParent(mFrameElement, uri);
 }
