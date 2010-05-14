@@ -4926,7 +4926,7 @@ PresShell::StyleSheetAdded(nsIDocument *aDocument,
   // We only care when enabled sheets are added
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
 
-  if (aStyleSheet->GetApplicable() && aStyleSheet->HasRules()) {
+  if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
     mStylesHaveChanged = PR_TRUE;
   }
 }
@@ -4939,7 +4939,7 @@ PresShell::StyleSheetRemoved(nsIDocument *aDocument,
   // We only care when enabled sheets are removed
   NS_PRECONDITION(aStyleSheet, "Must have a style sheet!");
 
-  if (aStyleSheet->GetApplicable() && aStyleSheet->HasRules()) {
+  if (aStyleSheet->IsApplicable() && aStyleSheet->HasRules()) {
     mStylesHaveChanged = PR_TRUE;
   }
 }

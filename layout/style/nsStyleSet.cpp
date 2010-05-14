@@ -239,7 +239,7 @@ nsresult
 nsStyleSet::AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-  NS_ASSERTION(aSheet->GetApplicable(),
+  NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
   mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].AppendObject(aSheet))
@@ -256,7 +256,7 @@ nsresult
 nsStyleSet::PrependStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-  NS_ASSERTION(aSheet->GetApplicable(),
+  NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
   mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].InsertObjectAt(aSheet, 0))
@@ -273,7 +273,7 @@ nsresult
 nsStyleSet::RemoveStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-  NS_ASSERTION(aSheet->GetComplete(),
+  NS_ASSERTION(aSheet->IsComplete(),
                "Incomplete sheet being removed from style set");
   mSheets[aType].RemoveObject(aSheet);
   if (!mBatching)
@@ -325,7 +325,7 @@ nsresult
 nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
 {
   NS_PRECONDITION(aSheet && aDocument, "null arg");
-  NS_ASSERTION(aSheet->GetApplicable(),
+  NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
 
   nsCOMArray<nsIStyleSheet>& docSheets = mSheets[eDocSheet];
