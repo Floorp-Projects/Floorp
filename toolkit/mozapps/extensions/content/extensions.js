@@ -708,7 +708,22 @@ var gDiscoverView = {
     var url = Cc["@mozilla.org/toolkit/URLFormatterService;1"]
                 .getService(Ci.nsIURLFormatter)
                 .formatURLPref(PREF_DISCOVERURL);
-    this._browser.homePage = url;
+
+    AddonManager.getAllAddons(function(aAddons) {
+      var list = {};
+      aAddons.forEach(function(aAddon) {
+        list[aAddon.id] = {
+          name: aAddon.name,
+          version: aAddon.version,
+          type: aAddon.type,
+          userDisabled: aAddon.userDisabled,
+          isCompatible: aAddon.isCompatible,
+          isBlocklisted: aAddon.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED
+        }
+      });
+
+      gDiscoverView._browser.homePage = url + "#" + JSON.stringify(list);
+    });
   },
 
   show: function() {
