@@ -50,12 +50,13 @@ function onLoad()
 {
   if ("arguments" in window && window.arguments[0]) {
     InitWithToolbox(window.arguments[0]);
-    repositionDialog();
+    repositionDialog(window);
   }
   else if (window.frameElement &&
            "toolbox" in window.frameElement) {
     gToolboxSheet = true;
     InitWithToolbox(window.frameElement.toolbox);
+    repositionDialog(window.frameElement.panel);
   }
 }
 
@@ -114,12 +115,17 @@ function initDialog()
   wrapToolbarItems();
 }
 
-function repositionDialog()
+function repositionDialog(aWindow)
 {
   // Position the dialog touching the bottom of the toolbox and centered with
   // it.
+  if (!aWindow)
+    return;
+
   var width;
-  if (document.documentElement.hasAttribute("width"))
+  if (aWindow != window)
+    width = aWindow.getBoundingClientRect().width;
+  else if (document.documentElement.hasAttribute("width"))
     width = document.documentElement.getAttribute("width");
   else
     width = parseInt(document.documentElement.style.width);
@@ -127,7 +133,7 @@ function repositionDialog()
                 + ((gToolbox.boxObject.width - width) / 2);
   var screenY = gToolbox.boxObject.screenY + gToolbox.boxObject.height;
 
-  window.moveTo(screenX, screenY);
+  aWindow.moveTo(screenX, screenY);
 }
 
 function removeToolboxListeners()
