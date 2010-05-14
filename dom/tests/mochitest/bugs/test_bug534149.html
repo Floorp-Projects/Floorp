@@ -43,6 +43,44 @@ is(i1inner, i1outer + 1, "For frame 1, inner should come right after outer");
 is(i2inner, i2outer + 1, "For frame 2, inner should come right after outer");
 is(i2outer, i1inner + 1, "Frame 2 comes right after frame 1");
 
+var innerWindowDestroyID;
+var outerWindowDestroyID;
+
+function outerObserver(id) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  outerWindowDestroyID =
+    id.QueryInterface(Components.interfaces.nsISupportsPRUint64).data;
+}
+function innerObserver(id) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  innerWindowDestroyID =
+   id.QueryInterface(Components.interfaces.nsISupportsPRUint64).data;
+}
+
+function removeFrame(iframe) {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var obsSvc = Components.classes["@mozilla.org/observer-service;1"]
+                         .getService(Components.interfaces.nsIObserverService);
+  obsSvc.addObserver(outerObserver, "outer-window-destroyed", false);
+  obsSvc.addObserver(innerObserver, "inner-window-destroyed", false);
+
+  iframe.parentNode.removeChild(iframe);
+}
+
+removeFrame(i1);
+SimpleTest.waitForExplicitFinish();
+SimpleTest.executeSoon(function() {
+  is(innerWindowDestroyID, i1inner, "inner window of frame 1 should be destroyed");
+  is(outerWindowDestroyID, i1outer, "outer window of frame 1 should be destroyed");
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var obsSvc = Components.classes["@mozilla.org/observer-service;1"]
+                         .getService(Components.interfaces.nsIObserverService);
+  obsSvc.removeObserver(outerObserver, "outer-window-destroyed");
+  obsSvc.removeObserver(innerObserver, "inner-window-destroyed");
+  SimpleTest.finish();
+});
+  
+
 </script>
 </pre>
 </body>
