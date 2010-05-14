@@ -311,20 +311,21 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var css = {};
     var titlebarCSS = {};
     var contentCSS = {};
+    var force = false;
 
-    if(rect.left != this.bounds.left)
+    if(force || rect.left != this.bounds.left)
       css.left = rect.left;
       
-    if(rect.top != this.bounds.top) 
+    if(force || rect.top != this.bounds.top) 
       css.top = rect.top;
       
-    if(rect.width != this.bounds.width) {
+    if(force || rect.width != this.bounds.width) {
       css.width = rect.width;
       titlebarCSS.width = rect.width;
       contentCSS.width = rect.width;
     }
 
-    if(rect.height != this.bounds.height) {
+    if(force || rect.height != this.bounds.height) {
       css.height = rect.height; 
       contentCSS.height = rect.height - titleHeight; 
     }
@@ -349,6 +350,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
           
     // ___ Update our representation
     if(immediately) {
+      $(this.container).stop(true, true);
+      this.$titlebar.stop(true, true);
+      this.$content.stop(true, true);
+
       $(this.container).css(css);
       this.$titlebar.css(titlebarCSS);
       this.$content.css(contentCSS);
@@ -503,6 +508,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       
       if(typeof(item.setResizable) == 'function')
         item.setResizable(false);
+        
+      if(item.tab == Utils.activeTab)
+        Groups.setActiveGroup(this);
     }
     
     if(!options.dontArrange)

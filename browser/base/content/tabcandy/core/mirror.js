@@ -188,12 +188,10 @@ TabMirror.prototype = {
   init: function(){
     var self = this;
     
-/*
     // When a tab is opened, create the mirror
     Tabs.onOpen(function() {
-      self.update(this);
+/*       self.update(this); */
     });
-*/
 
     // When a tab is updated, update the mirror
     Tabs.onReady( function(evt){
