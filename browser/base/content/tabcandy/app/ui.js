@@ -53,6 +53,8 @@ Navbar = {
 }
 
 // ##########
+// Class: Tabbar
+// Singleton for managing the tabbar of the browser. 
 var Tabbar = {
   // ----------
   // Variable: _hidden
@@ -99,10 +101,10 @@ var Tabbar = {
   // tab bar.
   getVisibleTabs: function(){
     var visibleTabs = [];
-    // UI.tabBar.el.children is not a real array and does contain
+    // this.el.children is not a real array and does contain
     // useful functions like filter or forEach. Convert it into a real array.
-    for( var i=0; i<UI.tabBar.el.children.length; i++ ){
-      var tab = UI.tabBar.el.children[i];
+    for( var i=0; i<this.el.children.length; i++ ){
+      var tab = this.el.children[i];
       if( tab.collapsed == false )
         visibleTabs.push();
     }
@@ -118,11 +120,11 @@ var Tabbar = {
   //  - An array of <Tab> objects.
   showOnlyTheseTabs: function(tabs){
     var visibleTabs = [];
-    // UI.tabBar.el.children is not a real array and does contain
+    // this.el.children is not a real array and does contain
     // useful functions like filter or forEach. Convert it into a real array.
     var tabBarTabs = [];
-    for( var i=0; i<UI.tabBar.el.children.length; i++ ){
-      tabBarTabs.push(UI.tabBar.el.children[i]);
+    for( var i=0; i<this.el.children.length; i++ ){
+      tabBarTabs.push(this.el.children[i]);
     }
     
     for each( var tab in tabs ){
@@ -141,9 +143,10 @@ var Tabbar = {
     // that they appear in the group to the end of the tab strip.
     // This way the tab order is matched up to the group's thumbnail
     // order.
+    var self = this;
     visibleTabs.forEach(function(tab){
       tab.collapsed = false;
-      Utils.activeWindow.gBrowser.moveTabTo(tab, UI.tabBar.el.children.length-1);
+      Utils.activeWindow.gBrowser.moveTabTo(tab, self.el.children.length-1);
     });
   },
 
@@ -151,8 +154,8 @@ var Tabbar = {
   // Function: showAllTabs
   // Shows all of the tabs in the tab bar.
   showAllTabs: function(){
-    for( var i=0; i<UI.tabBar.el.children.length; i++ ){
-      var tab = UI.tabBar.el.children[i];
+    for( var i=0; i<this.el.children.length; i++ ){
+      var tab = this.el.children[i];
       tab.collapsed = false;
     }
   },
@@ -162,6 +165,8 @@ var Tabbar = {
 }
 
 // ##########
+// Class: Page
+// Singleton top-level UI manager. TODO: Integrate with <UIClass>.  
 window.Page = {
   startX: 30, 
   startY: 70,
@@ -257,49 +262,65 @@ window.Page = {
       return false;
     });
     
-    var lastTab = null;
     Tabs.onFocus(function(){
       // If we switched to TabCandy window...
-      if( this.contentWindow == window && lastTab != null && lastTab.mirror != null){
+      if( this.contentWindow == window){
         var activeGroup = Groups.getActiveGroup();
         if( activeGroup ) activeGroup.reorderBasedOnTabOrder();        
 
-        UI.tabBar.hide(false);
-        // If there was a lastTab we want to animate
-        // its mirror for the zoom out.
-        // Zoom out!
-        var $tab = $(lastTab.mirror.el);
-        self.setActiveTab($(lastTab.mirror.el).data().tabItem);
+        if(window.UI)
+          UI.tabBar.hide();
         
-        var rotation = $tab.css("-moz-transform");
-        var [w,h, pos, z] = [$tab.width(), $tab.height(), $tab.position(), $tab.css("zIndex")];
-        var scale = window.innerWidth / w;
-
-        var overflow = $("body").css("overflow");
-        $("body").css("overflow", "hidden");
-        
-        var mirror = lastTab.mirror;
-        TabMirror.pausePainting();
-        $tab.css({
-            top: 0, left: 0,
-            width: window.innerWidth,
-            height: h * (window.innerWidth/w),
-            zIndex: 999999,
-            '-moz-transform': 'rotate(0deg)'
-        }).animate({
-            top: pos.top, left: pos.left,
-            width: w, height: h
-        },350, '', function() {
+        if(UI.currentTab != null && UI.currentTab.mirror != null) {
+          // If there was a previous currentTab we want to animate
+          // its mirror for the zoom out.
+          // Zoom out!
+          
+          var mirror = UI.currentTab.mirror;
+          var $tab = $(mirror.el);
+          var item = $tab.data().tabItem;
+          self.setActiveTab(item);
+          
+          var rotation = $tab.css("-moz-transform");
+          var [w,h, pos, z] = [$tab.width(), $tab.height(), $tab.position(), $tab.css("zIndex")];
+          var scale = window.innerWidth / w;
+  
+          var overflow = $("body").css("overflow");
+          $("body").css("overflow", "hidden");
+          
+          TabMirror.pausePainting();
           $tab.css({
-            zIndex: z,
-            '-moz-transform': rotation
+              top: 0, left: 0,
+              width: window.innerWidth,
+              height: h * (window.innerWidth/w),
+              zIndex: 999999,
+              '-moz-transform': 'rotate(0deg)'
+          }).animate({
+              top: pos.top, left: pos.left,
+              width: w, height: h
+          },350, '', function() {
+            $tab.css({
+              zIndex: z,
+              '-moz-transform': rotation
+            });
+            $("body").css("overflow", overflow);
+            window.Groups.setActiveGroup(null);
+            TabMirror.resumePainting();
+/*
+            if(item && item.parent)
+              item.parent.arrange();
+*/
           });
-          $("body").css("overflow", overflow);
-          window.Groups.setActiveGroup(null);
-          TabMirror.resumePainting();
-        });
+        }
+      } else { // switched to another tab
+        var item = TabItems.getItemByTab(Utils.activeTab);
+        if(item) 
+          Groups.setActiveGroup(item.parent);
+          
+        UI.tabBar.show();        
       }
-      lastTab = this;
+      
+      UI.currentTab = this;
     });
   },
   
@@ -421,10 +442,29 @@ ArrangeClass.prototype = {
 }
 
 // ##########
+// Class: UIClass
+// Singleton top-level UI manager. TODO: Integrate with <Page>.
 function UIClass(){ 
+  // Variable: navBar
+  // A reference to the <Navbar>, for manipulating the browser's nav bar. 
   this.navBar = Navbar;
+  
+  // Variable: tabBar
+  // A reference to the <Tabbar>, for manipulating the browser's tab bar.
   this.tabBar = Tabbar;
+  
+  // Variable: devMode
+  // If true (set by an url parameter), adds extra features to the screen. 
+  // TODO: Integrate with the dev menu
   this.devMode = false;
+  
+  // Variable: currentTab
+  // Keeps track of which <Tabs> tab we are currently on.
+  // Used to facilitate zooming down from a previous tab. 
+  this.currentTab = Utils.activeTab;
+  
+  // Variable: focused
+  // Keeps track of whether Tab Candy is focused. 
   this.focused = (Utils.activeTab == Utils.homeTab);
   
   var self = this;
@@ -455,6 +495,7 @@ function UIClass(){
       if(this.contentWindow.location.host == "tabcandy") {
         self.focused = true;
         self.navBar.hide();
+        self.tabBar.hide();
       } else {
         self.focused = false;
         self.navBar.show();      
