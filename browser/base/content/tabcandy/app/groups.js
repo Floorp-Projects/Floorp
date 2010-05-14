@@ -934,7 +934,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // Function: getChild
   // Returns the nth child tab or null if index is out of range.
   //
-  // Parameters
+  // Parameters:
   //  index - the index of the child tab to return, use negative
   //          numbers to index from the end (-1 is the last child)
   getChild: function(index){
@@ -948,7 +948,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // Sets up a one-time handler that gets called the next time a
   // tab is added to the group.
   //
-  // Parameters
+  // Parameters:
   //  callback - the one-time callback that is fired when the next
   //             time a tab is added to a group; it gets passed the
   //             new tab
@@ -1332,9 +1332,19 @@ window.Groups = {
   //          (which means we have an orphaned tab selected)
   setActiveGroup: function(group) {
     this._activeGroup = group;
-    if(group)
-      UI.tabBar.showOnlyTheseTabs( group._children );
-    else if( group == null)
+    this.updateTabBarForActiveGroup();
+  },
+  
+  // ----------
+  // Function: updateTabBarForActiveGroup
+  // Hides and shows tabs in the tab bar based on the active group.
+  updateTabBarForActiveGroup: function() {
+    if(!window.UI)
+      return; // called too soon
+      
+    if(this._activeGroup)
+      UI.tabBar.showOnlyTheseTabs( this._activeGroup._children );
+    else if( this._activeGroup == null)
       UI.tabBar.showOnlyTheseTabs( this.getOrphanedTabs() );
   },
   

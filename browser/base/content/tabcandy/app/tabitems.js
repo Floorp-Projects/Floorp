@@ -1,6 +1,8 @@
 // Title: tabitems.js (revision-a)
 
 // ##########
+// Class: TabItem
+// An <Item> that represents a tab. 
 window.TabItem = function(container, tab) {
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this.locked = {};
@@ -225,6 +227,8 @@ window.TabItem.prototype = $.extend(new Item(), {
 });
 
 // ##########
+// Class: TabItems
+// Singleton for managing <TabItem>s
 window.TabItems = {
   minTabWidth: 40, 
   tabWidth: 160,
@@ -471,7 +475,12 @@ window.TabItems = {
           if(tab.groupID) {
             var group = Groups.group(tab.groupID);
             group.add(item);
-          }
+            
+            if(item.tab == Utils.activeTab) 
+              Groups.setActiveGroup(item.parent);
+          }  
+          
+          Groups.updateTabBarForActiveGroup();
           
           self.storageData.tabs.splice(index, 1);
           item.reconnected = true;

@@ -373,7 +373,7 @@ window.Page = {
   // Hiting return/esc brings you to the focused tab, and using the
   // arrow keys lets you navigate between open tabs.
   //
-  // Parameters
+  // Parameters:
   //  - Takes a <TabItem>
   //
   setActiveTab: function(tab){
