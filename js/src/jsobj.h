@@ -719,7 +719,7 @@ struct JSObject {
 /*
  * The GC runs only when all threads except the one on which the GC is active
  * are suspended at GC-safe points, so calling obj->getSlot() from the GC's
- * thread is safe when rt->gcRunning is set. See jsgc.c for details.
+ * thread is safe when rt->gcRunning is set. See jsgc.cpp for details.
  */
 #define THREAD_IS_RUNNING_GC(rt, thread)                                      \
     ((rt)->gcRunning && (rt)->gcThread == (thread))

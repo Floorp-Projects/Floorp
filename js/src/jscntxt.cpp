@@ -1198,7 +1198,6 @@ js_CountThreadRequests(JSContext *cx)
 void
 js_WaitForGC(JSRuntime *rt)
 {
-    JS_ASSERT_IF(rt->gcRunning, rt->gcLevel > 0);
     if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
         do {
             JS_AWAIT_GC_DONE(rt);
