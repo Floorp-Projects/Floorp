@@ -678,6 +678,7 @@ protected:
   already_AddRefed<nsPIWindowRoot> GetTopWindowRoot();
 
   static void NotifyDOMWindowDestroyed(nsGlobalWindow* aWindow);
+  void NotifyWindowIDDestroyed(const char* aTopic);
 
   // When adding new member variables, be careful not to create cycles
   // through JavaScript.  If there is any chance that a member variable
@@ -744,6 +745,9 @@ protected:
 
   // Indicates whether this window is getting acceleration change events
   PRPackedBool           mHasAcceleration  : 1;
+
+  // whether we've sent the destroy notification for our window id
+  PRPackedBool           mNotifiedIDDestroyed : 1;
 
   nsCOMPtr<nsIScriptContext>    mContext;
   nsWeakPtr                     mOpener;
