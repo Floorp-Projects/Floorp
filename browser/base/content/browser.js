@@ -4265,6 +4265,17 @@ var XULBrowserWindow = {
     gBrowser.selectedBrowser.engines = null;
 
     var uri = aRequest.QueryInterface(Ci.nsIChannel).URI;
+
+    // Set the URI now if it isn't already set, so that the user can tell which
+    // site is loading. Only do this if the content window has no opener, though
+    // (i.e. the load wasn't triggered by a content-controlled link), to
+    // minimize spoofing risk.
+    if (gURLBar &&
+        gURLBar.value == "" &&
+        !content.opener &&
+        getWebNavigation().currentURI.spec == "about:blank")
+      URLBarSetURI(uri);
+
     try {
       Services.obs.notifyObservers(content, "StartDocumentLoad", uri.spec);
     } catch (e) {
@@ -4452,6 +4463,9 @@ nsBrowserAccess.prototype = {
       return null;
     }
 
+    var loadflags = isExternal ?
+                       Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                       Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW)
       aWhere = gPrefService.getIntPref("browser.link.open_newwindow");
     switch (aWhere) {
@@ -4491,11 +4505,16 @@ nsBrowserAccess.prototype = {
         let loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
         let referrer = aOpener ? makeURI(aOpener.location.href) : null;
 
-        let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : "about:blank", {
+        // If this is an external load, we need to load a blank tab first,
+        // because loadflags can't be passed to loadOneTab.
+        let loadBlankFirst = !aURI || isExternal;
+        let tab = win.gBrowser.loadOneTab(loadBlankFirst ? "about:blank" : aURI.spec, {
                                           referrerURI: referrer,
-                                          fromExternal: isExternal,
                                           inBackground: loadInBackground});
         let browser = win.gBrowser.getBrowserForTab(tab);
+
+        if (loadBlankFirst && aURI)
+          browser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
 
         newWindow = browser.contentWindow;
         if (needToFocusWin || (!loadInBackground && isExternal))
@@ -4505,9 +4524,6 @@ nsBrowserAccess.prototype = {
         newWindow = content;
         if (aURI) {
           let referrer = aOpener ? makeURI(aOpener.location.href) : null;
-          let loadflags = isExternal ?
-                            Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
-                            Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
           gBrowser.loadURIWithFlags(aURI.spec, loadflags, referrer, null, null);
         }
         if (!gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground"))
