@@ -66,9 +66,9 @@ public:
   virtual void GetTitle(nsString& aTitle) const;
   virtual void GetType(nsString& aType) const;
   virtual PRBool HasRules() const;
-  virtual PRBool GetApplicable() const;
+  virtual PRBool IsApplicable() const;
   virtual void SetEnabled(PRBool aEnabled);
-  virtual PRBool GetComplete() const;
+  virtual PRBool IsComplete() const;
   virtual void SetComplete();
   virtual already_AddRefed<nsIStyleSheet> GetParentSheet() const;  // will be null
   virtual already_AddRefed<nsIDocument> GetOwningDocument() const;

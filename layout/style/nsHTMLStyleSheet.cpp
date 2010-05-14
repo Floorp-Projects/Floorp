@@ -291,7 +291,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 }
 
 // Test if style is dependent on content state
-nsRestyleHint
+/* virtual */ nsRestyleHint
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
   if (aData->mIsHTMLContent &&
@@ -306,13 +306,13 @@ nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
   return nsRestyleHint(0);
 }
 
-PRBool
+/* virtual */ PRBool
 nsHTMLStyleSheet::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
 {
   return PR_FALSE;
 }
 
-nsRestyleHint
+/* virtual */ nsRestyleHint
 nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
 {
   // Do nothing on before-change checks
@@ -374,74 +374,74 @@ nsHTMLStyleSheet::RulesMatching(XULTreeRuleProcessorData* aData)
 #endif
 
   // nsIStyleSheet api
-already_AddRefed<nsIURI>
+/* virtual */ already_AddRefed<nsIURI>
 nsHTMLStyleSheet::GetSheetURI() const
 {
   NS_IF_ADDREF(mURL);
   return mURL;
 }
 
-already_AddRefed<nsIURI>
+/* virtual */ already_AddRefed<nsIURI>
 nsHTMLStyleSheet::GetBaseURI() const
 {
   NS_IF_ADDREF(mURL);
   return mURL;
 }
 
-void
+/* virtual */ void
 nsHTMLStyleSheet::GetTitle(nsString& aTitle) const
 {
   aTitle.Truncate();
 }
 
-void
+/* virtual */ void
 nsHTMLStyleSheet::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/html");
 }
 
-PRBool
+/* virtual */ PRBool
 nsHTMLStyleSheet::HasRules() const
 {
   return PR_TRUE; // We have rules at all reasonable times
 }
 
-PRBool
-nsHTMLStyleSheet::GetApplicable() const
+/* virtual */ PRBool
+nsHTMLStyleSheet::IsApplicable() const
 {
   return PR_TRUE;
 }
 
-void
+/* virtual */ void
 nsHTMLStyleSheet::SetEnabled(PRBool aEnabled)
 { // these can't be disabled
 }
 
-PRBool
-nsHTMLStyleSheet::GetComplete() const
+/* virtual */ PRBool
+nsHTMLStyleSheet::IsComplete() const
 {
   return PR_TRUE;
 }
 
-void
+/* virtual */ void
 nsHTMLStyleSheet::SetComplete()
 {
 }
 
-already_AddRefed<nsIStyleSheet>
+/* virtual */ already_AddRefed<nsIStyleSheet>
 nsHTMLStyleSheet::GetParentSheet() const
 {
   return nsnull;
 }
 
-already_AddRefed<nsIDocument>
+/* virtual */ already_AddRefed<nsIDocument>
 nsHTMLStyleSheet::GetOwningDocument() const
 {
   NS_IF_ADDREF(mDocument);
   return mDocument;
 }
 
-void
+/* virtual */ void
 nsHTMLStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 {
   mDocument = aDocument; // not refcounted
@@ -577,7 +577,8 @@ nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped)
 }
 
 #ifdef DEBUG
-void nsHTMLStyleSheet::List(FILE* out, PRInt32 aIndent) const
+/* virtual */ void
+nsHTMLStyleSheet::List(FILE* out, PRInt32 aIndent) const
 {
   // Indent
   for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
