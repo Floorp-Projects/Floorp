@@ -345,31 +345,32 @@ public:
   void RebuildAllStyleData(nsChangeHint aExtraHint);
 
   // See PostRestyleEventCommon below.
-  void PostRestyleEvent(nsIContent* aContent, nsRestyleHint aRestyleHint,
+  void PostRestyleEvent(mozilla::dom::Element* aElement,
+                        nsRestyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint)
   {
     nsPresContext *presContext = mPresShell->GetPresContext();
     if (presContext) {
-      PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint,
+      PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint,
                              presContext->IsProcessingAnimationStyleChange());
     }
   }
 
   // See PostRestyleEventCommon below.
-  void PostAnimationRestyleEvent(nsIContent* aContent,
+  void PostAnimationRestyleEvent(mozilla::dom::Element* aElement,
                                  nsRestyleHint aRestyleHint,
                                  nsChangeHint aMinChangeHint)
   {
-    PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint, PR_TRUE);
+    PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint, PR_TRUE);
   }
 
   // nsARefreshObserver
   virtual void WillRefresh(mozilla::TimeStamp aTime);
 private:
   /**
-   * Notify the frame constructor that a content node needs to have its
+   * Notify the frame constructor that an element needs to have its
    * style recomputed.
-   * @param aContent: The content node to be restyled.
+   * @param aElement: The element to be restyled.
    * @param aRestyleHint: Which nodes need to have selector matching run
    *                      on them.
    * @param aMinChangeHint: A minimum change hint for aContent and its
@@ -381,7 +382,8 @@ private:
    *                       IsProcessingAnimationStyleChange() value
    *                       (which is the default value).
    */
-  void PostRestyleEventCommon(nsIContent* aContent, nsRestyleHint aRestyleHint,
+  void PostRestyleEventCommon(mozilla::dom::Element* aElement,
+                              nsRestyleHint aRestyleHint,
                               nsChangeHint aMinChangeHint,
                               PRBool aForAnimation);
   void PostRestyleEventInternal(PRBool aForLazyConstruction);
