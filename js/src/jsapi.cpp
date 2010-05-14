@@ -1641,10 +1641,9 @@ JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp)
 {
-    Value *thisvp;
-    if (!ComputeThisValueFromVp(cx, Valueify(vp), &thisvp))
+    if (!ComputeThisFromVpInPlace(cx, Valueify(vp)))
         return JSVAL_NULL;
-    return Jsvalify(*thisvp);
+    return vp[1];
 }
 
 JS_PUBLIC_API(void *)

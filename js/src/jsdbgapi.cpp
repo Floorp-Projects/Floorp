@@ -1074,7 +1074,7 @@ JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
 JS_PUBLIC_API(JSFastNative)
 JS_GetFunctionFastNative(JSContext *cx, JSFunction *fun)
 {
-    return FUN_FAST_NATIVE(fun);
+    return Jsvalify(FUN_FAST_NATIVE(fun));
 }
 
 JS_PUBLIC_API(JSPrincipals *)

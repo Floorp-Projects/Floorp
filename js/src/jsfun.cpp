@@ -1840,12 +1840,11 @@ JS_FRIEND_DATA(Class) js_FunctionClass = {
 static JSBool
 fun_toStringHelper(JSContext *cx, uint32_t indent, uintN argc, Value *vp)
 {
-    Value *thisvp;
-    if (!ComputeThisValueFromVp(cx, vp, &thisvp))
+    if (!ComputeThisFromVpInPlace(cx, vp))
         return JS_FALSE;
 
     Value fval;
-    fval.copy(*thisvp);
+    fval.copy(vp[1]);
 
     if (!fval.isFunObj()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
