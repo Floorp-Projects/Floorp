@@ -79,6 +79,7 @@
 #include "nsIMenuRollup.h"
 #include "nsWidgetsCID.h"
 #include "nsQtKeyUtils.h"
+#include "mozilla/Services.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -1651,8 +1652,8 @@ nsWindow::OnDragEnter(QGraphicsSceneDragDropEvent *aDragEvent)
 static void
 GetBrandName(nsXPIDLString& brandName)
 {
-    nsCOMPtr<nsIStringBundleService> bundleService = 
-        do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        mozilla::services::GetStringBundleService();
 
     nsCOMPtr<nsIStringBundle> bundle;
     if (bundleService)

@@ -999,13 +999,14 @@ CreateFilenameFromTextW(nsString & aText, const wchar_t * aExtension,
 static PRBool
 GetLocalizedString(const PRUnichar * aName, nsXPIDLString & aString)
 {
-  nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) 
+  nsCOMPtr<nsIStringBundleService> stringService =
+    mozilla::services::GetStringBundleService();
+  if (!stringService)
     return PR_FALSE;
 
   nsCOMPtr<nsIStringBundle> stringBundle;
-  rv = stringService->CreateBundle(PAGEINFO_PROPERTIES, getter_AddRefs(stringBundle));
+  nsresult rv = stringService->CreateBundle(PAGEINFO_PROPERTIES,
+                                            getter_AddRefs(stringBundle));
   if (NS_FAILED(rv))
     return PR_FALSE;
 
