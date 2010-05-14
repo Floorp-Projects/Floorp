@@ -1039,6 +1039,7 @@ DOMCI_DATA(GeoPositionCoords, void)
 DOMCI_DATA(GeoPosition, void)
 #endif
 
+#ifdef MOZ_IPC
 nsGeolocationRequestProxy::nsGeolocationRequestProxy()
 {
   MOZ_COUNT_CTOR(nsGeolocationRequestProxy);
@@ -1139,3 +1140,4 @@ GeolocationRequestParent::Recvprompt()
 
 } // namespace dom
 } // namespace mozilla
+#endif
