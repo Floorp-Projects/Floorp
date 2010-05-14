@@ -82,6 +82,7 @@
 #include "nsISound.h"
 #include "nsEventStateManager.h"
 #include "nsIDOMXULMenuListElement.h"
+#include "mozilla/Services.h"
 
 #define NS_MENU_POPUP_LIST_INDEX 0
 
@@ -271,13 +272,13 @@ nsMenuFrame::Init(nsIContent*      aContent,
 
   //load the display strings for the keyboard accelerators, but only once
   if (gRefCnt++ == 0) {
-    
-    nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+    nsCOMPtr<nsIStringBundleService> bundleService =
+      mozilla::services::GetStringBundleService();
     nsCOMPtr<nsIStringBundle> bundle;
-    if (NS_SUCCEEDED(rv) && bundleService) {
+    if (bundleService) {
       rv = bundleService->CreateBundle( "chrome://global-platform/locale/platformKeys.properties",
                                         getter_AddRefs(bundle));
-    }    
+    }
     
     NS_ASSERTION(NS_SUCCEEDED(rv) && bundle, "chrome://global/locale/platformKeys.properties could not be loaded");
     nsXPIDLString shiftModifier;
@@ -1055,8 +1056,9 @@ nsMenuFrame::BuildAcceleratorText()
       ToUpperCase(keyCode);
 
       nsresult rv;
-      nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
-      if (NS_SUCCEEDED(rv) && bundleService) {
+      nsCOMPtr<nsIStringBundleService> bundleService =
+        mozilla::services::GetStringBundleService();
+      if (bundleService) {
         nsCOMPtr<nsIStringBundle> bundle;
         rv = bundleService->CreateBundle("chrome://global/locale/keys.properties",
                                          getter_AddRefs(bundle));

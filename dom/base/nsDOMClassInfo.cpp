@@ -1541,8 +1541,8 @@ FindObjectClass(JSObject* aGlobalObject)
 static void
 PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
 {
-  nsCOMPtr<nsIStringBundleService>
-    stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  nsCOMPtr<nsIStringBundleService> stringService =
+    mozilla::services::GetStringBundleService();
   if (!stringService) {
     return;
   }
