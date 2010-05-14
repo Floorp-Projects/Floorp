@@ -347,8 +347,19 @@ XRE_InitChildProcess(int aArgc,
     return NS_ERROR_FAILURE;
   }
 
+  MessageLoop::Type uiLoopType;
+  switch (aProcess) {
+  case GeckoProcessType_Content:
+      // Content processes need the XPCOM/chromium frankenventloop
+      uiLoopType = MessageLoop::TYPE_MOZILLA_CHILD;
+      break;
+  default:
+      uiLoopType = MessageLoop::TYPE_UI;
+      break;
+  }
+
   // Associate this thread with a UI MessageLoop
-  MessageLoopForUI uiMessageLoop;
+  MessageLoop uiMessageLoop(uiLoopType);
   {
     nsAutoPtr<ProcessChild> process;
 

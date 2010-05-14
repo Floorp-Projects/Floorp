@@ -198,7 +198,7 @@ nsChromeRegistryChrome::Init()
     }
   }
 
-  nsCOMPtr<nsIObserverService> obsService (do_GetService("@mozilla.org/observer-service;1"));
+  nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
   if (obsService) {
     obsService->AddObserver(this, "command-line-startup", PR_TRUE);
     obsService->AddObserver(this, "profile-initial-state", PR_TRUE);
