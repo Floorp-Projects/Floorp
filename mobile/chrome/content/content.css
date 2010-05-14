@@ -91,7 +91,7 @@ html input:not([type="image"]) {
   border-style: solid;
   border-color: #7d7d7d;
   color: #414141;
-  background: -moz-linear-gradient(top, rgb(185,185,185) 0, rgb(235,235,235) 3px, rgb(255,255,255) 16px);
+  background: -moz-linear-gradient(top, rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 3px, rgba(255,255,255,0.2) 16px);
 }
 
 html select:not([size]):not([multiple]),
@@ -104,15 +104,15 @@ html button {
   border-style: solid;
   border-color: #7d7d7d;
   color: #414141;
-  background: -moz-linear-gradient(top, rgb(255,255,255) 0, rgb(235,235,235) 18px, rgb(185,185,185) 100%);
+  background: -moz-linear-gradient(top, rgba(255,255,255,0.2) 0, rgba(215,215,215,0.5) 18px, rgba(115,115,115,0.5) 100%);
 }
 
 html input[type="checkbox"] {
-  background: -moz-linear-gradient(top, rgb(185,185,185) 0, rgb(235,235,235) 2px, rgb(255,255,255) 6px);
+  background: -moz-linear-gradient(top, rgba(115,115,115,0.5) 0, rgba(215,215,215,0.5) 2px, rgba(255,255,255,0.2) 6px);
 }
 
 html input[type="radio"] {
-  background: -moz-radial-gradient(6px 6px, cover, rgb(255,255,255) 3px, rgb(225,225,225) 5px, rgb(185,185,185) 100%);
+  background: -moz-radial-gradient(6px 6px, cover, rgba(255,255,255,0.2) 3px, rgba(195,195,195,0.5) 5px, rgba(115,115,115,0.5) 100%);
 }
 
 html select {
@@ -174,7 +174,7 @@ html input:not([type="image"]):focus {
   outline: 0px !important;
   border-style: solid;
   border-color: rgb(94,128,153);
-  background: -moz-linear-gradient(top, rgb(141,184,216) 0, rgba(198,225,246,0.2) 3px, rgb(255,255,255) 16px);
+  background: -moz-linear-gradient(top, rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 3px, rgba(255,255,255,0.2) 16px);
 }
 
 html select:not([size]):not([multiple]):focus,
@@ -187,7 +187,7 @@ html button:focus {
   outline: 0px !important;
   border-style: solid;
   border-color: rgb(94,128,153);
-  background: -moz-linear-gradient(top, rgb(255,255,255) 0, rgba(198,2225,256,0.2) 18px, rgb(141,184,216) 100%);
+  background: -moz-linear-gradient(top, rgba(255,255,255,0.2) 0, rgba(198,225,256,0.2) 18px, rgba(27,113,177,0.5) 100%);
 }
 
 html input[type="checkbox"]:focus,
@@ -196,11 +196,11 @@ html input[type="radio"]:focus {
 }
 
 html input[type="checkbox"]:focus {
-  background: -moz-linear-gradient(top, rgb(141,184,216) 0, rgba(198,225,246,0.2) 2px, rgb(255,255,255) 6px);
+  background: -moz-linear-gradient(top, rgba(27,113,177,0.5) 0, rgba(198,225,246,0.2) 2px, rgba(255,255,255,0.2) 6px);
 }
 
 html input[type="radio"]:focus {
-  background: -moz-radial-gradient(6px 6px, cover, rgb(255,255,255) 3px, rgba(198,225,246,0.2) 5px, rgb(141,184,216) 100%);
+  background: -moz-radial-gradient(6px 6px, cover, rgba(255,255,255,0.2) 3px, rgba(198,225,246,0.2) 5px, rgba(27,113,177,0.5) 100%);
 }
 
 html textarea[disabled],
