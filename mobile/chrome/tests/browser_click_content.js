@@ -32,7 +32,7 @@ function testClickAndPosition() {
   is(uri, testURL_click, "URL Matches newly created Tab");
 
   // Check click
-  element = newTab.browser.contentDocument.querySelector("iframe");
+  element = newTab.browser.contentDocument.getElementById("iframe-1");
   element.addEventListener("click", clickFired, true);
 
   EventUtils.synthesizeMouseForContent(element, 1, 1, {}, window);
@@ -58,6 +58,21 @@ function checkPosition() {
   let rect = Browser.getBoundingContentRect(element);
   is(clickPosition.x, 1, "X position is correct");
   is(clickPosition.y, rect.height + 10, "Y position is correct");
+
+  checkThickBorder();
+}
+
+function checkThickBorder() {
+  let frame = newTab.browser.contentDocument.getElementById("iframe-2");
+  let element = frame.contentDocument.getElementsByTagName("input")[0];
+
+  let frameRect = Browser.getBoundingContentRect(frame);
+  let frameLeftBorder = window.getComputedStyle(frame, "").borderLeftWidth;
+  let frameTopBorder = window.getComputedStyle(frame, "").borderTopWidth;
+
+  let elementRect = Browser.getBoundingContentRect(element);
+  ok((frameRect.left + parseInt(frameLeftBorder)) < elementRect.left, "X position of nested element ok");
+  ok((frameRect.top + parseInt(frameTopBorder)) < elementRect.top, "Y position of nested element ok");
 
   close();
 }

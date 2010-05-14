@@ -1204,7 +1204,9 @@ var Browser = {
     for (let frame = contentElem.ownerDocument.defaultView; frame != cw; frame = frame.parent) {
       // adjust client coordinates' origin to be top left of iframe viewport
       rect = frame.frameElement.getBoundingClientRect();
-      offset.add(rect.left, rect.top);
+      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
+      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+      offset.add(rect.left + parseInt(left), rect.top + parseInt(top));
     }
 
     let result = [];
@@ -1234,7 +1236,9 @@ var Browser = {
     for (let frame = contentElem.ownerDocument.defaultView; frame != browser.contentWindow; frame = frame.parent) {
       // adjust client coordinates' origin to be top left of iframe viewport
       let rect = frame.frameElement.getBoundingClientRect();
-      offset.add(rect.left, rect.top);
+      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
+      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+      offset.add(rect.left + parseInt(left), rect.top + parseInt(top));
     }
 
     return new Rect(r.left + offset.x, r.top + offset.y, r.width, r.height);
@@ -1302,9 +1306,14 @@ var Browser = {
     // step through layers of IFRAMEs and FRAMES to find innermost element
     while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
       // adjust client coordinates' origin to be top left of iframe viewport
+      let win = elem.ownerDocument.defaultView;
+      let left = win.getComputedStyle(elem, "").borderLeftWidth;
+      let top = win.getComputedStyle(elem, "").borderTopWidth;
+
       let rect = elem.getBoundingClientRect();
-      x = x - rect.left;
-      y = y - rect.top;
+      x = Math.max(0, x - (rect.left + parseInt(left)));
+      y = Math.max(0, y - (rect.top + parseInt(top)));
+
       let windowUtils = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       elem = ElementTouchHelper.getClosest(windowUtils, x, y);
     }
@@ -2006,7 +2015,7 @@ const ElementTouchHelper = {
     let isClickable = this._hasMouseListener(aElement);
 
     // If possible looks in the parents node to find a target
-    if (!isClickable && aElementsInRect) {
+    if (aElement && !isClickable && aElementsInRect) {
       let parentNode = aElement.parentNode;
       let count = aElementsInRect.length;
       for (let i = 0; i < count && parentNode; i++) {
