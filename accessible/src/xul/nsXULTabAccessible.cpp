@@ -47,6 +47,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIDOMXULRelatedElement.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTabAccessible
@@ -149,56 +150,20 @@ nsXULTabAccessible::GetRelationByType(PRUint32 aRelationType,
     return NS_OK;
 
   // Expose 'LABEL_FOR' relation on tab accessible for tabpanel accessible.
-  // XXX: It makes sense to require the interface from xul:tab to get linked
-  // tabpanel element.
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-
-  // Check whether tab and tabpanel are related by 'linkedPanel' attribute on
-  // xul:tab element.
-  rv = nsRelUtils::AddTargetFromIDRefAttr(aRelationType, aRelation, content,
-                                          nsAccessibilityAtoms::linkedPanel,
-                                          PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (rv != NS_OK_NO_RELATION_TARGET)
+  nsCOMPtr<nsIDOMXULRelatedElement> tabsElm =
+    do_QueryInterface(content->GetParent());
+  if (!tabsElm)
     return NS_OK;
 
-  // If there is no 'linkedPanel' attribute on xul:tab element then we
-  // assume tab and tabpanels are related 1 to 1. We follow algorithm from
-  // the setter 'selectedIndex' of tabbox.xml#tabs binding.
+  nsCOMPtr<nsIDOMNode> tabpanelNode;
+  tabsElm->GetRelatedElement(mDOMNode, getter_AddRefs(tabpanelNode));
+  if (!tabpanelNode)
+    return NS_OK;
 
-  nsAccessible* tabsAcc = GetParent();
-  NS_ENSURE_TRUE(nsAccUtils::Role(tabsAcc) == nsIAccessibleRole::ROLE_PAGETABLIST,
-                 NS_ERROR_FAILURE);
-
-  PRInt32 tabIndex = -1;
-
-  PRInt32 childCount = tabsAcc->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible* childAcc = tabsAcc->GetChildAt(childIdx);
-    if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PAGETAB)
-      tabIndex++;
-
-    if (childAcc == this)
-      break;
-  }
-
-  nsAccessible* tabBoxAcc = tabsAcc->GetParent();
-  NS_ENSURE_TRUE(nsAccUtils::Role(tabBoxAcc) == nsIAccessibleRole::ROLE_PANE,
-                 NS_ERROR_FAILURE);
-
-  childCount = tabBoxAcc->GetChildCount();
-  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
-    nsAccessible* childAcc = tabBoxAcc->GetChildAt(childIdx);
-    if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PROPERTYPAGE) {
-      if (tabIndex == 0)
-        return nsRelUtils::AddTarget(aRelationType, aRelation, childAcc);
-
-      tabIndex--;
-    }
-  }
-
-  return NS_OK;
+  nsCOMPtr<nsIContent> tabpanelContent(do_QueryInterface(tabpanelNode));
+  return nsRelUtils::AddTargetFromContent(aRelationType, aRelation,
+                                          tabpanelContent);
 }
 
 void
@@ -211,40 +176,15 @@ nsXULTabAccessible::GetPositionAndSizeInternal(PRInt32 *aPosInSet,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULTabBoxAccessible
+// nsXULTabsAccessible
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
-  * XUL TabBox
-  *  to facilitate naming of the tabPanels object we will give this the name
-  *   of the selected tab in the tabs object.
-  */
-
-/** Constructor */
-nsXULTabBoxAccessible::nsXULTabBoxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell)
-{ 
-}
-
-/** We are a window*/
-nsresult
-nsXULTabBoxAccessible::GetRoleInternal(PRUint32 *aRole)
+nsXULTabsAccessible::
+  nsXULTabsAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell) :
+  nsXULSelectableAccessible(aNode, aShell)
 {
-  *aRole = nsIAccessibleRole::ROLE_PANE;
-  return NS_OK;
 }
 
-/**
-  * XUL Tabs - the s really stands for strip. this is a collection of tab objects
-  */
-
-/** Constructor */
-nsXULTabsAccessible::nsXULTabsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsXULSelectableAccessible(aNode, aShell)
-{ 
-}
-
-/** We are a Page Tab List */
 nsresult
 nsXULTabsAccessible::GetRoleInternal(PRUint32 *aRole)
 {
@@ -252,10 +192,12 @@ nsXULTabsAccessible::GetRoleInternal(PRUint32 *aRole)
   return NS_OK;
 }
 
-/** no actions */
-NS_IMETHODIMP nsXULTabsAccessible::GetNumActions(PRUint8 *_retval)
+NS_IMETHODIMP
+nsXULTabsAccessible::GetNumActions(PRUint8 *aCount)
 {
-  *_retval = 0;
+  NS_ENSURE_ARG_POINTER(aCount);
+  *aCount = 0;
+
   return NS_OK;
 }
 
@@ -272,8 +214,28 @@ nsXULTabsAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// nsXULTabpanelsAccessible
+////////////////////////////////////////////////////////////////////////////////
+
+nsXULTabpanelsAccessible::
+  nsXULTabpanelsAccessible(nsIDOMNode *aNode, nsIWeakReference *aShell) :
+  nsAccessibleWrap(aNode, aShell)
+{
+}
+
+nsresult
+nsXULTabpanelsAccessible::GetRoleInternal(PRUint32 *aRole)
+{
+  *aRole = nsIAccessibleRole::ROLE_PANE;
+  return NS_OK;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTabpanelAccessible
+////////////////////////////////////////////////////////////////////////////////
 
 nsXULTabpanelAccessible::
   nsXULTabpanelAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
@@ -299,71 +261,18 @@ nsXULTabpanelAccessible::GetRelationByType(PRUint32 aRelationType,
     return NS_OK;
 
   // Expose 'LABELLED_BY' relation on tabpanel accessible for tab accessible.
-  nsCOMPtr<nsIAccessible> tabBoxAcc;
-  GetParent(getter_AddRefs(tabBoxAcc));
-  NS_ENSURE_TRUE(nsAccUtils::Role(tabBoxAcc) == nsIAccessibleRole::ROLE_PANE,
-                 NS_ERROR_FAILURE);
-
-  PRInt32 tabpanelIndex = -1;
-  nsCOMPtr<nsIAccessible> tabsAcc;
-
-  PRBool isTabpanelFound = PR_FALSE;
-  nsCOMPtr<nsIAccessible> childAcc;
-  tabBoxAcc->GetFirstChild(getter_AddRefs(childAcc));
-  while (childAcc && (!tabsAcc || !isTabpanelFound)) {
-    if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PAGETABLIST)
-      tabsAcc = childAcc;
-
-    if (!isTabpanelFound &&
-        nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PROPERTYPAGE)
-      tabpanelIndex++;
-
-    if (childAcc == this)
-      isTabpanelFound = PR_TRUE;
-
-    nsCOMPtr<nsIAccessible> acc;
-    childAcc->GetNextSibling(getter_AddRefs(acc));
-    childAcc.swap(acc);
-  }
-
-  if (!tabsAcc || tabpanelIndex == -1)
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIDOMXULRelatedElement> tabpanelsElm =
+    do_QueryInterface(content->GetParent());
+  if (!tabpanelsElm)
     return NS_OK;
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsIAtom *atomID = content->GetID();
+  nsCOMPtr<nsIDOMNode> tabNode;
+  tabpanelsElm->GetRelatedElement(mDOMNode, getter_AddRefs(tabNode));
+  if (!tabNode)
+    return NS_OK;
 
-  nsCOMPtr<nsIAccessible> foundTabAcc;
-  tabsAcc->GetFirstChild(getter_AddRefs(childAcc));
-  while (childAcc) {
-    if (nsAccUtils::Role(childAcc) == nsIAccessibleRole::ROLE_PAGETAB) {
-      if (atomID) {
-        nsCOMPtr<nsIAccessNode> tabAccNode(do_QueryInterface(childAcc));
-        nsCOMPtr<nsIDOMNode> tabNode;
-        tabAccNode->GetDOMNode(getter_AddRefs(tabNode));
-        nsCOMPtr<nsIContent> tabContent(do_QueryInterface(tabNode));
-        NS_ENSURE_TRUE(tabContent, NS_ERROR_FAILURE);
-
-        if (tabContent->AttrValueIs(kNameSpaceID_None,
-                                    nsAccessibilityAtoms::linkedPanel, atomID,
-                                    eCaseMatters)) {
-          return nsRelUtils::AddTarget(aRelationType, aRelation, childAcc);
-        }
-      }
-
-      if (tabpanelIndex == 0) {
-        foundTabAcc = childAcc;
-        if (!atomID)
-          break;
-      }
-
-      tabpanelIndex--;
-    }
-
-    nsCOMPtr<nsIAccessible> acc;
-    childAcc->GetNextSibling(getter_AddRefs(acc));
-    childAcc.swap(acc);
-  }
-
-  return nsRelUtils::AddTarget(aRelationType, aRelation, foundTabAcc);
+  nsCOMPtr<nsIContent> tabContent(do_QueryInterface(tabNode));
+  return nsRelUtils::AddTargetFromContent(aRelationType, aRelation,
+                                          tabContent);
 }
-
