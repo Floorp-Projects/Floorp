@@ -2,18 +2,20 @@
 
 // ##########
 // Class: Item
-// Superclass for all visible objects (<TabItems> and <Group>s).
-// If you subclass, in addition to the things Item provides, you need to also
-// provide these methods: 
-//   reloadBounds: function() 
-//   setBounds: function(rect, immediately)
-//   setZ: function(value)
-//   close: function() 
-//   addOnClose: function(referenceObject, callback)
-//   removeOnClose: function(referenceObject)
+// Superclass for all visible objects (<TabItem>s and <Group>s).
+//
+// If you subclass, in addition to the things Item provides, you need to also provide these methods: 
+//   reloadBounds - function() 
+//   setBounds - function(rect, immediately)
+//   setZ - function(value)
+//   close - function() 
+//   addOnClose - function(referenceObject, callback)
+//   removeOnClose - function(referenceObject)
+//
 // ... and this property: 
-//   defaultSize, a Point
-//   <locked>, an object 
+//   defaultSize - a Point
+//   locked - an object (see below)
+//
 // Make sure to call _init() from your subclass's constructor. 
 window.Item = function() {
   // Variable: isAnItem
@@ -39,10 +41,11 @@ window.Item = function() {
   
   // Variable: locked
   // Affects whether an item can be pushed, closed, renamed, etc
+  //
   // The object may have properties to specify what can't be changed: 
-  //   .bounds is true if it can't be pushed, dragged, resized, etc
-  //   .close is true if it can't be closed
-  //   .title is true if it can't be renamed
+  //   .bounds - true if it can't be pushed, dragged, resized, etc
+  //   .close - true if it can't be closed
+  //   .title - true if it can't be renamed
   this.locked = null;
   
   // Variable: parent
@@ -406,14 +409,17 @@ window.Items = {
   // Parameters: 
   //   items - an array of <Item>s. Can be null if the pretend and count options are set.
   //   bounds - a <Rect> defining the space to arrange within
-  //   options - an object with options: 
-  //     animate - whether to animate; default: true.
-  //     z - the z index to set all the items; default: don't change z.
-  //     pretend - whether to collect and return the rectangle rather than moving the items; default: false
-  //     count - overrides the item count for layout purposes; default: the actual item count
-  //     padding - pixels between each item
+  //   options - an object with various properites (see below)
+  //
+  // Possible "options" properties: 
+  //   animate - whether to animate; default: true.
+  //   z - the z index to set all the items; default: don't change z.
+  //   pretend - whether to collect and return the rectangle rather than moving the items; default: false
+  //   count - overrides the item count for layout purposes; default: the actual item count
+  //   padding - pixels between each item
   //     
-  // Returns: the list of rectangles if the pretend option is set; otherwise null
+  // Returns: 
+  //   the list of rectangles if the pretend option is set; otherwise null
   arrange: function(items, bounds, options) {
     var animate;
     if(!options || typeof(options.animate) == 'undefined') 
