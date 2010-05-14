@@ -1794,6 +1794,9 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
 
     mNeedsResize = PR_FALSE;
 
+    if (mIsTopLevel) {
+      GetViewWidget()->resize( aWidth, aHeight);
+    }
     mWidget->resize( aWidth, aHeight);
 
     if (aRepaint)
@@ -1811,6 +1814,9 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     mNeedsResize = PR_FALSE;
     mNeedsMove = PR_FALSE;
 
+    if (mIsTopLevel) {
+      GetViewWidget()->setGeometry(aX, aY, aWidth, aHeight);
+    }
     mWidget->setGeometry(aX, aY, aWidth, aHeight);
 
     if (aRepaint)
