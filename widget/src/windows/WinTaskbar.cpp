@@ -52,6 +52,7 @@
 #include <nsIObserverService.h>
 #include <nsServiceManagerUtils.h>
 #include <nsAutoPtr.h>
+#include "nsIXULAppInfo.h"
 #include "nsIJumpListBuilder.h"
 #include "nsUXThemeData.h"
 #include "nsWindow.h"
@@ -66,6 +67,7 @@ const PRUnichar kShellLibraryName[] =  L"shell32.dll";
 static NS_DEFINE_CID(kJumpListBuilderCID, NS_WIN_JUMPLISTBUILDER_CID);
 
 namespace {
+
 HWND
 GetHWNDFromDocShell(nsIDocShell *aShell) {
   nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(reinterpret_cast<nsISupports*>(aShell)));
@@ -79,7 +81,9 @@ GetHWNDFromDocShell(nsIDocShell *aShell) {
   return widget ? (HWND)widget->GetNativeData(NS_NATIVE_WINDOW) : NULL;
 }
 
-// Default controller for TaskbarWindowPreviews
+///////////////////////////////////////////////////////////////////////////////
+// default nsITaskbarPreviewController
+
 class DefaultController : public nsITaskbarPreviewController
 {
   HWND mWnd;
@@ -159,29 +163,15 @@ NS_IMPL_ISUPPORTS1(DefaultController, nsITaskbarPreviewController);
 namespace mozilla {
 namespace widget {
 
-// Unique identifier for a particular application. Windows uses this to group
-// windows from the same process and to tie jump lists to processes. The ID
-// should be unique per application version. If developers plan on using jump
-// list links (nsIJumpListLink) this ID should also be associated with the
-// prog id of the protocol handler of the links. To override the default below,
-// define MOZ_TASKBAR_ID.
-#ifndef MOZ_TASKBAR_ID
-#define MOZ_COMPANY Mozilla
-#define MOZTBID1(x) L#x
-#define MOZTBID2(a,b,c) MOZTBID1(a##.##b##.##c)
-#define MOZTBID(a,b,c) MOZTBID2(a,b,c)
-#define MOZ_TASKBAR_ID MOZTBID(MOZ_COMPANY, MOZ_BUILD_APP, MOZILLA_VERSION_U)
-#endif
-const wchar_t *gMozillaJumpListIDGeneric = MOZ_TASKBAR_ID;
+///////////////////////////////////////////////////////////////////////////////
+// nsIWinTaskbar
 
-NS_IMPL_ISUPPORTS1(WinTaskbar, nsIWinTaskbar)
+NS_IMPL_THREADSAFE_ISUPPORTS1(WinTaskbar, nsIWinTaskbar)
 
-WinTaskbar::WinTaskbar() 
-  : mTaskbar(nsnull) {
-  // Perf regression fix: slow registry lookups for non-existent com interfaces
-  // on freshly rebooted, memory starved machines (like talos). (bug 520837)
-  if (nsWindow::GetWindowsVersion() < WIN7_VERSION)
-    return;
+PRBool
+WinTaskbar::Initialize() {
+  if (mTaskbar)
+    return PR_TRUE;
 
   ::CoInitialize(NULL);
   HRESULT hr = ::CoCreateInstance(CLSID_TaskbarList,
@@ -190,31 +180,74 @@ WinTaskbar::WinTaskbar()
                                   IID_ITaskbarList4,
                                   (void**)&mTaskbar);
   if (FAILED(hr))
-    return;
+    return PR_FALSE;
 
   hr = mTaskbar->HrInit();
   if (FAILED(hr)) {
     NS_WARNING("Unable to initialize taskbar");
     NS_RELEASE(mTaskbar);
+    return PR_FALSE;
   }
+  return PR_TRUE;
+}
+
+WinTaskbar::WinTaskbar() 
+  : mTaskbar(nsnull) {
 }
 
 WinTaskbar::~WinTaskbar() {
-  NS_IF_RELEASE(mTaskbar);
-  ::CoUninitialize();
+  if (mTaskbar) { // match successful Initialize() call
+    NS_RELEASE(mTaskbar);
+    ::CoUninitialize();
+  }
+}
+
+// static
+PRBool
+WinTaskbar::GetAppUserModelID(nsAString & aDefaultGroupId) {
+  nsCOMPtr<nsIXULAppInfo> appInfo =
+    do_GetService("@mozilla.org/xre/app-info;1");
+  if (!appInfo)
+    return PR_FALSE;
+
+  // The default, pulled from application.ini:
+  // 'vendor.application.version'
+  nsCString val;
+  if (NS_SUCCEEDED(appInfo->GetVendor(val))) {
+    AppendASCIItoUTF16(val, aDefaultGroupId);
+    aDefaultGroupId.Append(PRUnichar('.'));
+  }
+  if (NS_SUCCEEDED(appInfo->GetName(val))) {
+    AppendASCIItoUTF16(val, aDefaultGroupId);
+    aDefaultGroupId.Append(PRUnichar('.'));
+  }
+  if (NS_SUCCEEDED(appInfo->GetVersion(val))) {
+    AppendASCIItoUTF16(val, aDefaultGroupId);
+  }
+
+  return aDefaultGroupId.IsEmpty() ? PR_FALSE : PR_TRUE;
+}
+
+/* readonly attribute AString defaultGroupId; */
+NS_IMETHODIMP
+WinTaskbar::GetDefaultGroupId(nsAString & aDefaultGroupId) {
+  if (!GetAppUserModelID(aDefaultGroupId))
+    return NS_ERROR_UNEXPECTED;
+
+  return NS_OK;
 }
 
 // (static) Called from AppShell
-PRBool WinTaskbar::SetAppUserModelID()
-{
+PRBool
+WinTaskbar::RegisterAppUserModelID() {
   if (nsWindow::GetWindowsVersion() < WIN7_VERSION)
     return PR_FALSE;
 
   SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nsnull;
   PRBool retVal = PR_FALSE;
 
-  // #define MOZ_TASKBAR_ID L""
-  if (*gMozillaJumpListIDGeneric == nsnull)
+  nsAutoString uid;
+  if (!GetAppUserModelID(uid))
     return PR_FALSE;
 
   HMODULE hDLL = ::LoadLibraryW(kShellLibraryName);
@@ -222,7 +255,12 @@ PRBool WinTaskbar::SetAppUserModelID()
   funcAppUserModelID = (SetCurrentProcessExplicitAppUserModelIDPtr)
                         GetProcAddress(hDLL, "SetCurrentProcessExplicitAppUserModelID");
 
-  if (funcAppUserModelID && SUCCEEDED(funcAppUserModelID(gMozillaJumpListIDGeneric)))
+  if (!funcAppUserModelID) {
+    ::FreeLibrary(hDLL);
+    return PR_FALSE;
+  }
+
+  if (SUCCEEDED(funcAppUserModelID(uid.get())))
     retVal = PR_TRUE;
 
   if (hDLL)
@@ -233,14 +271,17 @@ PRBool WinTaskbar::SetAppUserModelID()
 
 NS_IMETHODIMP
 WinTaskbar::GetAvailable(PRBool *aAvailable) {
-  *aAvailable = mTaskbar != nsnull;
+  *aAvailable = 
+    nsWindow::GetWindowsVersion() < WIN7_VERSION ?
+    PR_FALSE : PR_TRUE;
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 WinTaskbar::CreateTaskbarTabPreview(nsIDocShell *shell, nsITaskbarPreviewController *controller, nsITaskbarTabPreview **_retval) {
-  if (!mTaskbar)
-    return NS_ERROR_NOT_INITIALIZED;
+  if (!Initialize())
+    return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG_POINTER(shell);
   NS_ENSURE_ARG_POINTER(controller);
@@ -261,8 +302,8 @@ WinTaskbar::CreateTaskbarTabPreview(nsIDocShell *shell, nsITaskbarPreviewControl
 
 NS_IMETHODIMP
 WinTaskbar::GetTaskbarWindowPreview(nsIDocShell *shell, nsITaskbarWindowPreview **_retval) {
-  if (!mTaskbar)
-    return NS_ERROR_NOT_INITIALIZED;
+  if (!Initialize())
+    return NS_ERROR_NOT_AVAILABLE;
 
   NS_ENSURE_ARG_POINTER(shell);
 

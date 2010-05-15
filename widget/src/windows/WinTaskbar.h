@@ -45,7 +45,7 @@
 
 #include <windows.h>
 #include <shobjidl.h>
-#include <nsIWinTaskbar.h>
+#include "nsIWinTaskbar.h"
 
 namespace mozilla {
 namespace widget {
@@ -54,16 +54,19 @@ class WinTaskbar : public nsIWinTaskbar
 {
 public: 
   WinTaskbar();
-  virtual ~WinTaskbar();
+  ~WinTaskbar();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINTASKBAR
 
-  // Registers the global app user model id for the instance. See comments in WinTaskbar.cpp
-  // for more information.
-  static PRBool SetAppUserModelID();
+  // Registers the global app user model id for the instance.
+  // See comments in WinTaskbar.cpp for more information.
+  static PRBool RegisterAppUserModelID();
+  static PRBool GetAppUserModelID(nsAString & aDefaultGroupId);
 
 private:
+  PRBool Initialize();
+
   typedef HRESULT (WINAPI * SetCurrentProcessExplicitAppUserModelIDPtr)(PCWSTR AppID);
   ITaskbarList4 *mTaskbar;
 };
