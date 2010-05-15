@@ -132,7 +132,7 @@ nsAppShell::Init()
 
   // Global app registration id for Win7 and up. See
   // WinTaskbar.cpp for details.
-  mozilla::widget::WinTaskbar::SetAppUserModelID();
+  mozilla::widget::WinTaskbar::RegisterAppUserModelID();
 #endif
 
   WNDCLASSW wc;
