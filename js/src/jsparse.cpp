@@ -8071,16 +8071,11 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             return NULL;
         if (PN_TYPE(pn->pn_kid) == TOK_USESHARP ||
             PN_TYPE(pn->pn_kid) == TOK_DEFSHARP ||
-#if JS_HAS_XML_SUPPORT
-            PN_TYPE(pn->pn_kid) == TOK_XMLCOMMENT ||
-            PN_TYPE(pn->pn_kid) == TOK_XMLCDATA ||
-            PN_TYPE(pn->pn_kid) == TOK_XMLPTAGC ||
-            PN_TYPE(pn->pn_kid) == TOK_XMLELEM ||
-#endif
             PN_TYPE(pn->pn_kid) == TOK_STRING ||
             PN_TYPE(pn->pn_kid) == TOK_NUMBER ||
             PN_TYPE(pn->pn_kid) == TOK_PRIMARY) {
-            reportErrorNumber(pn->pn_kid, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
+            ReportCompileErrorNumber(context, &tokenStream, pn->pn_kid, JSREPORT_ERROR,
+                                     JSMSG_BAD_SHARP_VAR_DEF);
             return NULL;
         }
         if (!tc->ensureSharpSlots())
