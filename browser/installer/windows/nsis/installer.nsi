@@ -119,6 +119,7 @@ VIAddVersionKey "OriginalFilename" "setup.exe"
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
 !insertmacro SetBrandNameVars
+!insertmacro UpdateShortcutAppModelIDs
 !insertmacro UnloadUAC
 !insertmacro WriteRegStr2
 !insertmacro WriteRegDWORD2
@@ -485,6 +486,9 @@ Section "-InstallEndCleanup"
   ${EndUnless}
 
   ${LogHeader} "Updating Uninstall Log With Previous Uninstall Log"
+
+  ; Win7 taskbar and start menu link maintenance
+  ${UpdateShortcutAppModelIDs} "$INSTDIR\${FileMainEXE}" "${AppUserModelID}"
 
   ; Refresh desktop icons
   System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"

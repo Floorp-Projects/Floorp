@@ -4675,7 +4675,15 @@
 
       StrCmp "$R0" "" continue +1
 
+      ; Update this user's shortcuts with the latest app user model id.
+      ClearErrors
+      ${GetOptions} "$R0" "/UpdateShortcutAppUserModelIds" $R2
+      IfErrors hideshortcuts +1
+      ${UpdateShortcutAppModelIDs}  "$INSTDIR\${FileMainEXE}" "${AppUserModelID}"
+      GoTo finish
+
       ; Require elevation if the user can elevate
+      hideshortcuts:
       ClearErrors
       ${GetOptions} "$R0" "/HideShortcuts" $R2
       IfErrors showshortcuts +1
@@ -5780,3 +5788,105 @@
   ${DeleteFile} "$INSTDIR\uninstall\${SHORTCUTS_LOG}"
 !macroend
 !define DeleteShortcutsLogFile "!insertmacro DeleteShortcutsLogFile"
+
+################################################################################
+# Macros for managing Win7 install features
+
+/**
+ * Update Start Menu and Taskbar lnk files that point to the current install
+ * with the current application user model ID. Requires ApplicationID.
+ *
+ * @param   _INSTALL_PATH
+ *          The install path of the app
+ * @param   _APP_ID
+ *          The application user model ID for the current install
+ */
+!macro UpdateShortcutAppModelIDs
+
+  !ifndef UpdateShortcutAppModelIDs
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define UpdateShortcutAppModelIDs "!insertmacro UpdateShortcutAppModelIDsCall"
+
+    Function UpdateShortcutAppModelIDs
+      ClearErrors
+
+      ; stack: path, appid
+      Exch $R9 ; stack: $R9, appid | $R9 = path 
+      Exch 1   ; stack: appid, $R9
+      Exch $R8 ; stack: $R8, $R9   | $R8 = appid 
+      Push $R7 ; stack: $R7, $R8, $R9
+      Push $R6
+      Push $R5
+      Push $R4 ; stack: $R4, $R5, $R6, $R7, $R8, $R9
+
+      StrCpy $R7 "$QUICKLAUNCH\User Pinned"
+
+      ClearErrors
+
+      ; $R9 = install path
+      ; $R8 = appid
+      ; $R7 = user pinned path
+      ; $R6 = find handle
+      ; $R5 = found filename
+      ; $R4 = GetShortCutTarget result
+
+      ; Taskbar links
+      FindFirst $R6 $R5 "$R7\TaskBar\*.lnk"
+      LoopTaskBar:
+      ${If} ${FileExists} "$R7\TaskBar\$R5"
+        ShellLink::GetShortCutTarget "$R7\TaskBar\$R5"
+        Pop $R4
+        ${If} "$R4" == "$R9" ; link path == install path
+          ApplicationID::Set "$R7\TaskBar\$R5" "$R8"
+          Pop $R4 ; pop Set result off the stack
+        ${EndIf}
+      ${EndIf}
+      ClearErrors
+      FindNext $R6 $R5
+      ${Unless} ${Errors}
+        Goto LoopTaskBar
+      ${EndUnless}
+      FindClose $R6
+
+      ClearErrors
+
+      ; Start menu links
+      FindFirst $R6 $R5 "$R7\StartMenu\*.lnk"
+      LoopStartMenu:
+      ${If} ${FileExists} "$R7\StartMenu\$R5"
+        ShellLink::GetShortCutTarget "$R7\StartMenu\$R5"
+        Pop $R4
+        ${If} "$R4" == "$R9" ; link path == install path
+          ApplicationID::Set "$R7\StartMenu\$R5" "$R8"
+          Pop $R4 ; pop Set result off the stack
+        ${EndIf}
+      ${EndIf}
+      ClearErrors
+      FindNext $R6 $R5
+      ${Unless} ${Errors}
+        Goto LoopStartMenu
+      ${EndUnless}
+      FindClose $R6
+
+      Pop $R4  ; stack: $R5, $R6, $R7, $R8, $R9
+      Pop $R5  ; stack: $R6, $R7, $R8, $R9
+      Pop $R6  ; stack: $R7, $R8, $R9
+      Pop $R7  ; stack: $R8, $R9
+      Exch $R8 ; stack: appid, $R9 | $R8 = old $R8
+      Exch 1   ; stack: $R9, appid
+      Exch $R9 ; stack: path, appid | $R9 = old $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro UpdateShortcutAppModelIDsCall _INSTALL_PATH _APP_ID
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_APP_ID}"
+  Push "${_INSTALL_PATH}"
+  Call UpdateShortcutAppModelIDs
+  !verbose pop
+!macroend
