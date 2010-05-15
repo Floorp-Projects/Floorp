@@ -2022,7 +2022,7 @@ IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, Value *rval)
     } else {
         if (!js_IteratorMore(cx, iterobj, rval))
             return false;
-        *cond = rval->isBoolean(true);
+        *cond = rval->isTrue();
     }
     return true;
 }

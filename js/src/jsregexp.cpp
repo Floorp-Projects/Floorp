@@ -5716,7 +5716,7 @@ regexp_test(JSContext *cx, uintN argc, Value *vp)
     if (!regexp_exec_sub(cx, ComputeThisObjectFromVp(cx, vp),
                          argc, vp + 2, JS_TRUE, vp))
         return JS_FALSE;
-    if (!vp->isBoolean(true))
+    if (!vp->isTrue())
         vp->setBoolean(false);
     return JS_TRUE;
 }
