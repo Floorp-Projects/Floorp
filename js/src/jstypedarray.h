@@ -55,17 +55,17 @@ namespace js {
  * TypedArray with a size.
  */
 struct JS_FRIEND_API(ArrayBuffer) {
-    static js::Class jsclass;
+    static Class jsclass;
     static JSPropertySpec jsprops[];
 
-    static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+    static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
     static void class_finalize(JSContext *cx, JSObject *obj);
 
-    static JSBool class_constructor(JSContext *cx, JSObject *obj,
-                                    uintN argc, jsval *argv, jsval *rval);
+    static JSBool class_constructor(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
+                                    Value *rval);
 
     static bool create(JSContext *cx, JSObject *obj, uintN argc,
-                       jsval *argv, jsval *rval);
+                       Value *argv, Value *rval);
 
     static ArrayBuffer *fromJSObject(JSObject *obj);
 
@@ -116,20 +116,20 @@ struct JS_FRIEND_API(TypedArray) {
     };
 
     // and MUST NOT be used to construct new objects.
-    static js::Class fastClasses[TYPE_MAX];
+    static Class fastClasses[TYPE_MAX];
 
     // These are the slow/original classes, used
     // fo constructing new objects
-    static js::Class slowClasses[TYPE_MAX];
+    static Class slowClasses[TYPE_MAX];
 
     static JSPropertySpec jsprops[];
 
     static TypedArray *fromJSObject(JSObject *obj);
 
-    static JSBool prop_getBuffer(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
-    static JSBool prop_getByteOffset(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
-    static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
-    static JSBool prop_getLength(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+    static JSBool prop_getBuffer(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool prop_getByteOffset(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool prop_getByteLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
+    static JSBool prop_getLength(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 
     static JSBool obj_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
                                      JSObject **objp, JSProperty **propp);
