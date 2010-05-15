@@ -314,6 +314,8 @@ private:
   void ProcessPendingRestyleTable(
            nsDataHashtable<nsISupportsHashKey, RestyleData>& aRestyles);
 
+  void RestyleForEmptyChange(Element* aContainer);
+
 public:
   // Restyling for a ContentInserted (notification after insertion) or
   // for a CharacterDataChanged.  |aContainer| must be non-null; when

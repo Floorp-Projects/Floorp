@@ -1654,6 +1654,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           PRInt32 index = -1;
 
           if (aTreeMatchContext.mForStyling)
+            // FIXME:  This isn't sufficient to handle:
+            //   :-moz-empty-except-children-with-localname() + E
+            //   :-moz-empty-except-children-with-localname() ~ E
+            // because we don't know to restyle the grandparent of the
+            // inserted/removed element (as in bug 534804 for :empty).
             element->SetFlags(NODE_HAS_SLOW_SELECTOR);
           do {
             child = element->GetChildAt(++index);

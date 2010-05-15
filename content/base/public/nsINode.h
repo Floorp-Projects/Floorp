@@ -140,7 +140,10 @@ enum {
 
   // A child of the node has a selector such that any insertion or
   // removal of children requires restyling the parent (but append is
-  // OK).
+  // OK).  Additionally (in this manner it is stronger than
+  // NODE_HAS_SLOW_SELECTOR), if a child's style changes in any way
+  // (e.g., the child changes to or from matching :empty due to a
+  // grandchild changes), the node must also be restyled.
   NODE_HAS_SLOW_SELECTOR_NOAPPEND
                                = 0x00010000U,
 

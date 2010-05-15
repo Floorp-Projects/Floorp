@@ -130,6 +130,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_bug499655.xhtml \
 		test_bug517224.html \
 		test_bug524175.html \
+		test_bug534804.html \
 		test_cascade.html \
 		test_compute_data_with_start_struct.html \
 		test_computed_style_no_pseudo.html \

@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>dynamic sibling selector testcase</title>
+  <script>
+    window.onload = function() {
+      document.getElementById("adjacent").appendChild(document.createTextNode("PASS: You should see this"));
+      document.getElementById("general").appendChild(document.createTextNode("PASS: You should also see this"));
+    };
+  </script>
+  <style>
+  .test {
+    background: #fcc;
+  }
+  #adjacent:not(:empty), #general:not(:empty) {
+    background: #cfc;
+  }
+  #adjacent:not(:empty) + .test {
+    display: none;
+  }
+  #general:not(:empty) ~ .test {
+    display: none;
+  }
+  </style>
+</head>
+<body>
+  <div>
+    <div id="adjacent"></div>
+    <div class="test">
+      FAIL: You should NOT see me.
+    </div>
+  </div>
+
+  <div>
+    <div id="general"></div>
+    <div class="test">
+      FAIL: You should NOT see me either.
+    </div>
+    <div class="test">
+      FAIL: You should NOT even see me.
+    </div>
+  </div>
+</body>
+</html>
