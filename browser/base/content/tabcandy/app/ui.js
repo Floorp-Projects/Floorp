@@ -210,7 +210,7 @@ window.Page = {
           break;
       }
       
-      if( norm != null ){
+      if( norm != null && $(":focus").length == 0 ){
         var nextTab = getClosestTabBy(norm);
         if( nextTab ){
           if( nextTab.inStack() && !nextTab.parent.expanded){
@@ -221,9 +221,9 @@ window.Page = {
         e.preventDefault();               
       }
       
-      Utils.log('hizzzzz', $(":focus").length );
       if((e.which == 27 || e.which == 13) && $(":focus").length == 0 )
         if( self.getActiveTab() ) self.getActiveTab().zoom();
+      
       
        
     });
