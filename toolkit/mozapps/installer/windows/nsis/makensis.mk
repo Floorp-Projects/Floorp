@@ -58,6 +58,7 @@ TOOLKIT_NSIS_FILES = \
 	nsProcess.dll \
 	ShellLink.dll \
 	UAC.dll \
+	ApplicationID.dll \
 	$(NULL)
 
 $(CONFIG_DIR)/setup.exe::
