@@ -9,7 +9,7 @@
 var gTestfile = 'regress-335051.js';
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 335051;
-var summary = 'E4X literals should be acceptable values for sharp variables';
+var summary = '';
 var actual = '';
 var expect = '';
 
@@ -47,12 +47,12 @@ function test()
   testSyntax("#1=function() { }", true);
   testSyntax("#1=(new Date())", true);
 
-  testSyntax("#1=<a/>", false);
-  testSyntax("#1=<!-- -->", false);
-  testSyntax("#1=<a>b</a>", false);
-  testSyntax("[#1=<a>b</a>, #1#]", false);
-  testSyntax("#1=(<a/>)", false);
-  testSyntax("#1=(<![CDATA[foo]]>)", false);
+  testSyntax("#1=<a/>", true);
+  testSyntax("#1=<!-- -->", true);
+  testSyntax("#1=<a>b</a>", true);
+  testSyntax("[#1=<a>b</a>, #1#]", true);
+  testSyntax("#1=(<a/>)", true);
+  testSyntax("#1=(<![CDATA[foo]]>)", true);
 
   testSyntax("#1=123", false);
   testSyntax("#1='foo'", false);
