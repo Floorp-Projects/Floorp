@@ -86,10 +86,18 @@ interface nsIJumpListBuilder;
 interface nsIWinTaskbar : nsISupports
 {
   /**
-   * Returns true if the taskbar service is available. This value does not
-   * change during runtime.
+   * Returns true if the operating system supports Win7+ taskbar features.
+   * This property acts as a replacement for in-place os version checking.
    */
   readonly attribute boolean available;
+
+  /**
+   * Returns the default application user model identity the application
+   * registers with the system. This id is used by the taskbar in grouping
+   * windows and in associating pinned shortcuts with running instances and
+   * jump lists.
+   */
+  readonly attribute AString defaultGroupId;
 
   /**
    * Taskbar window and tab preview management
