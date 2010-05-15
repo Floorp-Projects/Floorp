@@ -75,7 +75,7 @@ window.Group = function(listOfEls, options) {
     .data('isDragging', false)
     .appendTo("body")
     .dequeue();
-    
+        
   // ___ New Tab Button   
   this.$ntb = $("<div class='newTabButton'/>").appendTo($container);
   this.$ntb.click(function(){
@@ -819,7 +819,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     $(container).droppable({
       tolerance: "intersect",
       over: function(){
-        drag.info.$el.addClass("willGroup");
+        $(this).addClass("acceptsDrop");
       },
       out: function(){
         var group = drag.info.item.parent;
@@ -827,10 +827,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
           group.remove(drag.info.$el);
         }
           
-        drag.info.$el.removeClass("willGroup");
+        $(this).removeClass("acceptsDrop");
       },
       drop: function(event){
-        drag.info.$el.removeClass("willGroup");
+        $(this).removeClass("acceptsDrop");
         self.add( drag.info.$el, {left:event.pageX, top:event.pageY} );
       },
       accept: ".tab", //".tab, .group",
@@ -1048,7 +1048,7 @@ DragInfo.prototype = {
     if(this.parent && this.parent.expanded)
       this.parent.arrange();
       
-    if(this.item && !this.$el.hasClass('willGroup') && !this.item.parent) {
+    if(this.item && !this.$el.hasClass('acceptsDrop') && !this.item.parent) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
       
@@ -1094,7 +1094,7 @@ window.Groups = {
     greedy: true,
     drop: function(e){
       $target = $(e.target);  
-      drag.info.$el.removeClass("willGroup")   
+      $(this).removeClass("acceptsDrop");
       var phantom = $target.data("phantomGroup")
       
       var group = drag.info.item.parent;
