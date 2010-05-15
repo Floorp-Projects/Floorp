@@ -323,16 +323,19 @@ WebGLContext::BindFramebuffer(GLenum target, nsIWebGLFramebuffer *fbobj)
 {
     GLuint framebuffername;
     PRBool isNull;
-    if (!GetGLName<WebGLFramebuffer>(fbobj, &framebuffername, &isNull))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    WebGLFramebuffer *wfb;
 
-    if (target != LOCAL_GL_FRAMEBUFFER) {
+    if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorMessage("glBindFramebuffer: target must be GL_FRAMEBUFFER");
-    }
+
+    if (!GetConcreteObjectAndGLName(fbobj, &wfb, &framebuffername, &isNull))
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     MakeContextCurrent();
 
     gl->fBindFramebuffer(target, framebuffername);
+
+    mBoundFramebuffer = wfb;
 
     return NS_OK;
 }
@@ -342,7 +345,9 @@ WebGLContext::BindRenderbuffer(GLenum target, nsIWebGLRenderbuffer *rbobj)
 {
     GLuint renderbuffername;
     PRBool isNull;
-    if (!GetGLName<WebGLRenderbuffer>(rbobj, &renderbuffername, &isNull))
+    WebGLRenderbuffer *wrb;
+
+    if (!GetConcreteObjectAndGLName(rbobj, &wrb, &renderbuffername, &isNull))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (target != LOCAL_GL_RENDERBUFFER)
@@ -351,6 +356,8 @@ WebGLContext::BindRenderbuffer(GLenum target, nsIWebGLRenderbuffer *rbobj)
     MakeContextCurrent();
 
     gl->fBindRenderbuffer(target, renderbuffername);
+
+    mBoundRenderbuffer = wrb;
 
     return NS_OK;
 }
@@ -1002,19 +1009,28 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum r
 {
     GLuint renderbuffername;
     PRBool isNull;
-    if (!GetGLName<WebGLRenderbuffer>(rbobj, &renderbuffername, &isNull))
+    WebGLRenderbuffer *wrb;
+
+    if (!GetConcreteObjectAndGLName(rbobj, &wrb, &renderbuffername, &isNull))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorMessage("glFramebufferRenderbuffer: target must be GL_FRAMEBUFFER");
 
-    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
+    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
+         attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
         attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
         attachment != LOCAL_GL_STENCIL_ATTACHMENT)
+    {
         return ErrorMessage("glFramebufferRenderbuffer: invalid attachment");
+    }
 
     if (rbtarget != LOCAL_GL_RENDERBUFFER)
         return ErrorMessage("glFramebufferRenderbuffer: rbtarget must be GL_RENDERBUFFER");
+
+    // dimensions are kept for readPixels primarily, function only uses COLOR_ATTACHMENT0
+    if (mBoundFramebuffer && attachment == LOCAL_GL_COLOR_ATTACHMENT0)
+        mBoundFramebuffer->setDimensions(wrb);
 
     MakeContextCurrent();
 
@@ -1032,13 +1048,16 @@ WebGLContext::FramebufferTexture2D(GLenum target,
 {
     GLuint texturename;
     PRBool isNull;
-    if (!GetGLName<WebGLTexture>(tobj, &texturename, &isNull))
+    WebGLTexture *wtex;
+
+    if (!GetConcreteObjectAndGLName(tobj, &wtex, &texturename, &isNull))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (target != LOCAL_GL_FRAMEBUFFER)
         return ErrorMessage("glFramebufferTexture2D: target must be GL_FRAMEBUFFER");
 
-    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 || attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
+    if ((attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
+         attachment >= LOCAL_GL_COLOR_ATTACHMENT0 + mFramebufferColorAttachments.Length()) &&
         attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
         attachment != LOCAL_GL_STENCIL_ATTACHMENT)
         return ErrorMessage("glFramebufferTexture2D: invalid attachment");
@@ -1050,6 +1069,10 @@ WebGLContext::FramebufferTexture2D(GLenum target,
 
     if (level != 0)
         return ErrorMessage("glFramebufferTexture2D: level must be 0");
+
+    // dimensions are kept for readPixels primarily, function only uses COLOR_ATTACHMENT0
+    if (mBoundFramebuffer && attachment == LOCAL_GL_COLOR_ATTACHMENT0)
+        mBoundFramebuffer->setDimensions(wtex);
 
     // XXXXX we need to store/reference this attachment!
 
@@ -1966,10 +1989,10 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    MakeContextCurrent();
-
-    if (!CanvasUtils::CheckSaneSubrectSize(x,y,width,height, mWidth, mHeight))
-        return ErrorMessage("readPixels: rectangle outside canvas");
+    GLsizei boundWidth = mBoundFramebuffer ? mBoundFramebuffer->width() : mWidth;
+    GLsizei boundHeight = mBoundFramebuffer ? mBoundFramebuffer->height() : mHeight;
+    if (!CanvasUtils::CheckSaneSubrectSize(x, y, width, height, boundWidth, boundHeight))
+        return ErrorMessage("readPixels: rectangle outside framebuffer");
 
     PRUint32 size = 0;
     switch (format) {
@@ -1995,30 +2018,32 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
         return ErrorMessage("readPixels: unsupported pixel type");
     }
 
-    PRUint32 len = width*height*size;
+    MakeContextCurrent();
 
-    nsAutoArrayPtr<PRUint8> data(new PRUint8[len]);
-    gl->fReadPixels((GLint)x, (GLint)y, width, height, format, type, (GLvoid *)data.get());
+    PRUint32 len = width * height * size;
+    JSObject *abufObject = js_CreateArrayBuffer(js.ctx, len);
+    if (!abufObject)
+        return NS_ERROR_FAILURE;
+    js::ArrayBuffer *abuf = js::ArrayBuffer::fromJSObject(abufObject);
 
-    nsAutoArrayPtr<jsval> jsvector(new jsval[len]);
-    for (PRUint32 i = 0; i < len; i++)
-        jsvector[i] = INT_TO_JSVAL(data[i]);
+    gl->fReadPixels((GLint) x, (GLint) y, width, height, format, type, (GLvoid *) abuf->data);
 
-    JSObject *dataArray = JS_NewArrayObject(js.ctx, len, jsvector);
-    if (!dataArray)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    JSObjectHelper retobj(&js);
-    retobj.DefineProperty("width", width);
-    retobj.DefineProperty("height", height);
-    retobj.DefineProperty("data", dataArray);
-
-    js.SetRetVal(retobj);
-
+    JSObject *retval = js_CreateTypedArrayWithBuffer(js.ctx, js::TypedArray::TYPE_UINT8, abufObject, 0, len);
+    js.SetRetVal(retval);
     return NS_OK;
 }
 
-GL_SAME_METHOD_4(RenderbufferStorage, RenderbufferStorage, GLenum, GLenum, GLsizei, GLsizei)
+NS_IMETHODIMP
+WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
+{
+    if (mBoundRenderbuffer)
+        mBoundRenderbuffer->setDimensions(width, height);
+
+    MakeContextCurrent();
+    gl->fRenderbufferStorage(target, internalformat, width, height);
+
+    return NS_OK;
+}
 
 GL_SAME_METHOD_2(SampleCoverage, SampleCoverage, float, GLboolean)
 
@@ -2640,6 +2665,9 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
     } else {
         gl->fTexImage2D(target, level, internalformat, width, height, border, format, type, NULL);
     }
+
+    if (mBound2DTextures[mActiveTexture])
+        mBound2DTextures[mActiveTexture]->setDimensions(width, height);
 
     return NS_OK;
 }
