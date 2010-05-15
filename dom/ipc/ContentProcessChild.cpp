@@ -61,7 +61,6 @@ namespace dom {
 ContentProcessChild* ContentProcessChild::sSingleton;
 
 ContentProcessChild::ContentProcessChild()
-    : mQuit(PR_FALSE)
 {
 }
 
@@ -86,37 +85,27 @@ PIFrameEmbeddingChild*
 ContentProcessChild::AllocPIFrameEmbedding()
 {
   nsRefPtr<TabChild> iframe = new TabChild();
-  NS_ENSURE_TRUE(iframe && NS_SUCCEEDED(iframe->Init()) &&
-                 mIFrames.AppendElement(iframe),
-                 nsnull);
-  return iframe.forget().get();
+  return NS_SUCCEEDED(iframe->Init()) ? iframe.forget().get() : NULL;
 }
 
 bool
 ContentProcessChild::DeallocPIFrameEmbedding(PIFrameEmbeddingChild* iframe)
 {
-    if (mIFrames.RemoveElement(iframe)) {
-      TabChild* child = static_cast<TabChild*>(iframe);
-      NS_RELEASE(child);
-    }
+    TabChild* child = static_cast<TabChild*>(iframe);
+    NS_RELEASE(child);
     return true;
 }
 
 PTestShellChild*
 ContentProcessChild::AllocPTestShell()
 {
-    PTestShellChild* testshell = new TestShellChild();
-    if (testshell && mTestShells.AppendElement(testshell)) {
-        return testshell;
-    }
-    delete testshell;
-    return nsnull;
+    return new TestShellChild();
 }
 
 bool
 ContentProcessChild::DeallocPTestShell(PTestShellChild* shell)
 {
-    mTestShells.RemoveElement(shell);
+    delete shell;
     return true;
 }
 
@@ -164,21 +153,10 @@ ContentProcessChild::RecvSetOffline(const PRBool& offline)
 }
 
 void
-ContentProcessChild::Quit()
-{
-    NS_ASSERTION(mQuit, "Exiting uncleanly!");
-    mIFrames.Clear();
-    mTestShells.Clear();
-}
-
-void
 ContentProcessChild::ActorDestroy(ActorDestroyReason why)
 {
     if (AbnormalShutdown == why)
         NS_WARNING("shutting down because of crash!");
-
-    mQuit = PR_TRUE;
-    Quit();
 
     XRE_ShutdownChildProcess();
 }
