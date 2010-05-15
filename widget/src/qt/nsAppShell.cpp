@@ -85,6 +85,8 @@ nsAppShell::Init()
     sPokeEvent = QEvent::User+5000;
 #endif
 
+    nsQAppInstance::AddRef();
+
     return nsBaseAppShell::Init();
 }
 
