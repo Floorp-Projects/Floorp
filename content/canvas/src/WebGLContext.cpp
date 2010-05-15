@@ -75,7 +75,9 @@ WebGLContext::WebGLContext()
     : mCanvasElement(nsnull),
       gl(nsnull),
       mWidth(0), mHeight(0),
-      mInvalidated(PR_FALSE), mActiveTexture(0)
+      mInvalidated(PR_FALSE),
+      mActiveTexture(0),
+      mSynthesizedGLError(LOCAL_GL_NO_ERROR)
 {
     mMapBuffers.Init();
     mMapTextures.Init();

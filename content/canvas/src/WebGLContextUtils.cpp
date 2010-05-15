@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <stdarg.h>
+
 #include "WebGLContext.h"
 
 #include "prprf.h"
@@ -202,23 +204,15 @@ WebGLContext::LogMessage(const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
-  char buf[256];
 
-  nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  if (console) {
-    PR_vsnprintf(buf, 256, fmt, ap);
-    console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
-    fprintf(stderr, "%s\n", buf);
-  }
+  LogMessage(fmt, ap);
 
   va_end(ap);
 }
 
-nsresult
-WebGLContext::ErrorMessage(const char *fmt, ...)
+void
+WebGLContext::LogMessage(const char *fmt, va_list ap)
 {
-  va_list ap;
-  va_start(ap, fmt);
   char buf[256];
 
   nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
@@ -227,8 +221,68 @@ WebGLContext::ErrorMessage(const char *fmt, ...)
     console->LogStringMessage(NS_ConvertUTF8toUTF16(nsDependentCString(buf)).get());
     fprintf(stderr, "%s\n", buf);
   }
+}
 
-  va_end(ap);
+nsresult
+WebGLContext::SynthesizeGLError(GLenum err)
+{
+    // If there is already a pending error, don't overwrite it;
+    // but if there isn't, then we need to check for a gl error
+    // that may have occurred before this one and use that code
+    // instead.
 
-  return NS_ERROR_FAILURE;
+    if (mSynthesizedGLError == LOCAL_GL_NO_ERROR) {
+        MakeContextCurrent();
+
+        mSynthesizedGLError = gl->fGetError();
+
+        if (mSynthesizedGLError == LOCAL_GL_NO_ERROR)
+            mSynthesizedGLError = err;
+    }
+
+    return NS_OK;
+}
+
+nsresult
+WebGLContext::SynthesizeGLError(GLenum err, const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    LogMessage(fmt, va);
+    va_end(va);
+
+    return SynthesizeGLError(err);
+}
+
+nsresult
+WebGLContext::ErrorInvalidEnum(const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    LogMessage(fmt, va);
+    va_end(va);
+
+    return SynthesizeGLError(LOCAL_GL_INVALID_ENUM);
+}
+
+nsresult
+WebGLContext::ErrorInvalidOperation(const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    LogMessage(fmt, va);
+    va_end(va);
+
+    return SynthesizeGLError(LOCAL_GL_INVALID_OPERATION);
+}
+
+nsresult
+WebGLContext::ErrorInvalidValue(const char *fmt, ...)
+{
+    va_list va;
+    va_start(va, fmt);
+    LogMessage(fmt, va);
+    va_end(va);
+
+    return SynthesizeGLError(LOCAL_GL_INVALID_VALUE);
 }
