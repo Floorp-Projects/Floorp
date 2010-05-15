@@ -8074,8 +8074,7 @@ Parser::primaryExpr(TokenKind tt, JSBool afterDot)
             PN_TYPE(pn->pn_kid) == TOK_STRING ||
             PN_TYPE(pn->pn_kid) == TOK_NUMBER ||
             PN_TYPE(pn->pn_kid) == TOK_PRIMARY) {
-            ReportCompileErrorNumber(context, &tokenStream, pn->pn_kid, JSREPORT_ERROR,
-                                     JSMSG_BAD_SHARP_VAR_DEF);
+            reportErrorNumber(pn->pn_kid, JSREPORT_ERROR, JSMSG_BAD_SHARP_VAR_DEF);
             return NULL;
         }
         if (!tc->ensureSharpSlots())
