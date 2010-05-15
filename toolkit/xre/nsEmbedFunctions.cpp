@@ -111,6 +111,10 @@ using mozilla::startup::sChildProcessType;
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
+#ifdef XP_WIN
+static const PRUnichar kShellLibraryName[] =  L"shell32.dll";
+#endif
+
 void
 XRE_GetStaticComponents(nsStaticModuleInfo const **aStaticComponents,
                         PRUint32 *aComponentCount)
@@ -274,6 +278,33 @@ XRE_SetRemoteExceptionHandler(const char* aPipe/*= 0*/)
 #endif // !XP_MACOSX
 #endif // if defined(MOZ_CRASHREPORTER)
 
+#if defined(XP_WIN)
+void
+SetTaskbarGroupId(const nsString& aId)
+{
+    typedef HRESULT (WINAPI * SetCurrentProcessExplicitAppUserModelIDPtr)(PCWSTR AppID);
+
+    SetCurrentProcessExplicitAppUserModelIDPtr funcAppUserModelID = nsnull;
+
+    HMODULE hDLL = ::LoadLibraryW(kShellLibraryName);
+
+    funcAppUserModelID = (SetCurrentProcessExplicitAppUserModelIDPtr)
+                          GetProcAddress(hDLL, "SetCurrentProcessExplicitAppUserModelID");
+
+    if (!funcAppUserModelID) {
+        ::FreeLibrary(hDLL);
+        return;
+    }
+
+    if (FAILED(funcAppUserModelID(aId.get()))) {
+        NS_WARNING("SetCurrentProcessExplicitAppUserModelID failed for child process.");
+    }
+
+    if (hDLL)
+        ::FreeLibrary(hDLL);
+}
+#endif
+
 nsresult
 XRE_InitChildProcess(int aArgc,
                      char* aArgv[],
@@ -317,6 +348,25 @@ XRE_InitChildProcess(int aArgc,
   base::ProcessHandle parentHandle;
   bool ok = base::OpenProcessHandle(parentPID, &parentHandle);
   NS_ABORT_IF_FALSE(ok, "can't open handle to parent");
+
+#if defined(XP_WIN)
+  // On Win7+, register the application user model id passed in by
+  // parent. This insures windows created by the container properly
+  // group with the parent app on the Win7 taskbar.
+  const char* const appModelUserId = aArgv[aArgc-1];
+  --aArgc;
+  if (appModelUserId) {
+    // '-' implies no support
+    if (*appModelUserId != '-') {
+      nsString appId;
+      appId.AssignWithConversion(nsDependentCString(appModelUserId));
+      // The version string is encased in quotes
+      appId.Trim(NS_LITERAL_CSTRING("\"").get());
+      // Set the id
+      SetTaskbarGroupId(appId);
+    }
+  }
+#endif
 
   base::AtExitManager exitManager;
   NotificationService notificationService;
