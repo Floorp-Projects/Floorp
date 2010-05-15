@@ -349,6 +349,39 @@ protected:
     nsTArray<WebGLObjectBaseRefPtr *> mRefOwners;
 };
 
+class WebGLRectangleObject
+{
+protected:
+    WebGLRectangleObject()
+        : mWidth(0), mHeight(0) { }
+
+public:
+    GLsizei width() { return mWidth; }
+    void width(GLsizei value) { mWidth = value; }
+
+    GLsizei height() { return mHeight; }
+    void height(GLsizei value) { mHeight = value; }
+
+    void setDimensions(GLsizei width, GLsizei height) {
+        mWidth = width;
+        mHeight = height;
+    }
+
+    void setDimensions(WebGLRectangleObject *rect) {
+        if (rect) {
+            mWidth = rect->width();
+            mHeight = rect->height();
+        } else {
+            mWidth = 0;
+            mHeight = 0;
+        }
+    }
+
+protected:
+    GLsizei mWidth;
+    GLsizei mHeight;
+};
+
 #define WEBGLBUFFER_PRIVATE_IID \
     {0xd69f22e9, 0x6f98, 0x48bd, {0xb6, 0x94, 0x34, 0x17, 0xed, 0x06, 0x11, 0xab}}
 class WebGLBuffer :
@@ -393,7 +426,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLBuffer, WEBGLBUFFER_PRIVATE_IID)
     {0x4c19f189, 0x1f86, 0x4e61, {0x96, 0x21, 0x0a, 0x11, 0xda, 0x28, 0x10, 0xdd}}
 class WebGLTexture :
     public nsIWebGLTexture,
-    public WebGLZeroingObject
+    public WebGLZeroingObject,
+    public WebGLRectangleObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLTEXTURE_PRIVATE_IID)
@@ -484,7 +518,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLShader, WEBGLSHADER_PRIVATE_IID)
     {0x0052a16f, 0x4bc9, 0x4a55, {0x9d, 0xa3, 0x54, 0x95, 0xaa, 0x4e, 0x80, 0xb9}}
 class WebGLFramebuffer :
     public nsIWebGLFramebuffer,
-    public WebGLZeroingObject
+    public WebGLZeroingObject,
+    public WebGLRectangleObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLFRAMEBUFFER_PRIVATE_IID)
@@ -514,7 +549,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(WebGLFramebuffer, WEBGLFRAMEBUFFER_PRIVATE_IID)
     {0x3cbc2067, 0x5831, 0x4e3f, {0xac, 0x52, 0x7e, 0xf4, 0x5c, 0x04, 0xff, 0xae}}
 class WebGLRenderbuffer :
     public nsIWebGLRenderbuffer,
-    public WebGLZeroingObject
+    public WebGLZeroingObject,
+    public WebGLRectangleObject
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLRENDERBUFFER_PRIVATE_IID)
