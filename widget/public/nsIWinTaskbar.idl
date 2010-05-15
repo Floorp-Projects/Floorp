@@ -49,6 +49,7 @@ interface nsITaskbarWindowPreview;
 interface nsITaskbarPreviewController;
 interface nsITaskbarProgress;
 interface nsIJumpListBuilder;
+interface nsIDOMWindow;
 
 /*
  * nsIWinTaskbar
@@ -82,7 +83,7 @@ interface nsIJumpListBuilder;
  * See nsIJumpListBuilder for more information.
  */
 
-[scriptable, uuid(4BC6D594-8FF0-4975-8642-3A5BC1928E81)]
+[scriptable, uuid(a25ad3ed-1ded-4473-bb6e-bf8b89d88949)]
 interface nsIWinTaskbar : nsISupports
 {
   /**
@@ -145,4 +146,30 @@ interface nsIWinTaskbar : nsISupports
    * currently building a list.
    */
   nsIJumpListBuilder createJumpListBuilder();
+
+  /**
+   * Application window taskbar group settings
+   */
+
+  /**
+   * Set the grouping id for a window.
+   *
+   * The runtime sets a default, global grouping id for all windows on startup.
+   * setGroupIdForWindow allows individual windows to be grouped independently
+   * on the taskbar. Ids should be unique to the app and window to insure
+   * conflicts with other pinned applications do no arise.
+   *
+   * The default group id is based on application.ini vendor, application, and
+   * version values, with a format of 'vendor.app.version'. The default can be
+   * retrieved via defaultGroupId.
+   *
+   * Note, when a window changes taskbar window stacks, it is placed at the
+   * bottom of the new stack.
+   *
+   * @thow NS_ERROR_INVALID_ARG if the window is not a valid top level window
+   * associated with a widget.
+   * @thow NS_ERROR_FAILURE if the property on the window could not be set.
+   * @thow NS_ERROR_UNEXPECTED for general failures.
+   */
+  void setGroupIdForWindow(in nsIDOMWindow aParent, in AString aIdentifier);
 };
