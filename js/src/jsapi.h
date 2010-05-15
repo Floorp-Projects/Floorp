@@ -3365,6 +3365,16 @@ class Value
 
     inline void setNumber(double d);
 
+    void setNumber(uint32 ui) {
+        if (ui > JSVAL_INT_MAX) {
+            mask = DoubleMask;
+            data.dbl = ui;
+        } else {
+            mask = Int32Mask;
+            data.i32 = ui;
+        }
+    }
+
     double &asDoubleRef() {
         JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
         JS_ASSERT(isDouble());
@@ -3557,8 +3567,12 @@ class Value
         return mask == BooleanMask;
     }
 
-    bool isBoolean(bool b) const {
-        return (mask == BooleanMask) & (data.boo == b);
+    bool isTrue() const {
+        return (mask == BooleanMask) & data.boo;
+    }
+
+    bool isFalse() const {
+        return (mask == BooleanMask) & !data.boo;
     }
 
     bool asBoolean() const {
