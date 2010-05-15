@@ -563,8 +563,17 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     if(typeof(item.setResizable) == 'function')
       item.setResizable(true);
 
-    if(this._children.length == 0 && !this.locked.close && !this.getTitle()){  
-      this.close();
+    if(this._children.length == 0 && !this.locked.close && !this.getTitle()){
+      // Only remove the group if, after the last child is dropped, it wasn't
+      // dropped back into the group. We need the setTimeout because otherwise
+      // at the time of the mouseup the child isn't yet a child of the group.
+      var self = this;
+      a.one('mouseup', function(){
+        setTimeout(function(){
+          if( self._children.length == 0 ) self.close();
+        }, 50);
+      });
+
     } else if(!options.dontArrange) {
       this.arrange();
     }
