@@ -244,6 +244,13 @@ public:
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool b) { return NS_OK; };
 
+    nsresult SynthesizeGLError(GLenum err);
+    nsresult SynthesizeGLError(GLenum err, const char *fmt, ...);
+
+    nsresult ErrorInvalidEnum(const char *fmt, ...);
+    nsresult ErrorInvalidOperation(const char *fmt, ...);
+    nsresult ErrorInvalidValue(const char *fmt, ...);
+
     already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
     void MarkContextClean() { }
 
@@ -255,6 +262,9 @@ protected:
     PRInt32 mWidth, mHeight;
 
     PRBool mInvalidated;
+
+    GLuint mActiveTexture;
+    GLenum mSynthesizedGLError;
 
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool ValidateGL();
@@ -278,8 +288,6 @@ protected:
     nsresult DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
                                       gfxImageSurface **imageOut,
                                       PRBool flipY, PRBool premultiplyAlpha);
-
-    GLuint mActiveTexture;
 
     // the buffers bound to the current program's attribs
     nsTArray<WebGLVertexAttribData> mAttribBuffers;
@@ -314,7 +322,7 @@ protected:
 public:
     // console logging helpers
     static void LogMessage (const char *fmt, ...);
-    static nsresult ErrorMessage (const char *fmt, ...);
+    static void LogMessage(const char *fmt, va_list ap);
 };
 
 // this class is a mixin for the named type wrappers, and is used
