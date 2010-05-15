@@ -1444,7 +1444,7 @@ nthChildGenericMatches(RuleProcessorData& data,
     if (isFromEnd)
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
     else
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
   const PRInt32 index = data.GetNthIndex(isOfType, isFromEnd, PR_FALSE);
@@ -1481,7 +1481,7 @@ edgeOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
     if (checkLast)
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
     else
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
   return (!checkFirst ||
@@ -2124,7 +2124,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
         nsIContent* parent = prevdata->mParentContent;
         if (parent) {
           if (aTreeMatchContext.mForStyling)
-            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
 
           PRInt32 index = parent->IndexOf(prevdata->mElement);
           while (0 <= --index) {
