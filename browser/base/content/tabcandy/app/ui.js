@@ -262,15 +262,11 @@ window.Page = {
       return false;
     });
     
-    Tabs.onFocus(function(){
-      // If we switched to TabCandy window...
-      if( this.contentWindow == window){
-        var activeGroup = Groups.getActiveGroup();
-        if( activeGroup ) activeGroup.reorderBasedOnTabOrder();        
+    Tabs.onFocus(function() {
+      var focusTab = this;
 
-        if(window.UI)
-          UI.tabBar.hide();
-        
+      // If we switched to TabCandy window...
+      if( focusTab.contentWindow == window){
         if(UI.currentTab != null && UI.currentTab.mirror != null) {
           // If there was a previous currentTab we want to animate
           // its mirror for the zoom out.
@@ -298,29 +294,33 @@ window.Page = {
           }).animate({
               top: pos.top, left: pos.left,
               width: w, height: h
-          },350, '', function() {
+          },350, '', function() { // note that this will happen on the DOM thread
             $tab.css({
               zIndex: z,
               '-moz-transform': rotation
             });
             $("body").css("overflow", overflow);
+            var activeGroup = Groups.getActiveGroup();
+            if( activeGroup ) activeGroup.reorderBasedOnTabOrder();        
+    
+            if(window.UI)
+              UI.tabBar.hide(false);
+            
             window.Groups.setActiveGroup(null);
             TabMirror.resumePainting();
-/*
-            if(item && item.parent)
-              item.parent.arrange();
-*/
           });
         }
       } else { // switched to another tab
-        var item = TabItems.getItemByTab(Utils.activeTab);
-        if(item) 
-          Groups.setActiveGroup(item.parent);
-          
-        UI.tabBar.show();        
+        setTimeout(function() { // Marshalling back to the DOM thread
+          var item = TabItems.getItemByTab(Utils.activeTab);
+          if(item) 
+            Groups.setActiveGroup(item.parent);
+            
+          UI.tabBar.show();        
+        }, 1);
       }
       
-      UI.currentTab = this;
+      UI.currentTab = focusTab;
     });
   },
   
