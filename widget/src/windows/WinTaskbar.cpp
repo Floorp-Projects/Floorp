@@ -60,7 +60,11 @@
 #include "TaskbarWindowPreview.h"
 #include "JumpListBuilder.h"
 #include "nsWidgetsCID.h"
+#include "nsPIDOMWindow.h"
 #include <io.h>
+#include <propvarutil.h>
+#include <propkey.h>
+#include <shellapi.h>
 
 const PRUnichar kShellLibraryName[] =  L"shell32.dll";
 
@@ -79,6 +83,70 @@ GetHWNDFromDocShell(nsIDocShell *aShell) {
   baseWindow->GetMainWidget(getter_AddRefs(widget));
 
   return widget ? (HWND)widget->GetNativeData(NS_NATIVE_WINDOW) : NULL;
+}
+
+HWND
+GetHWNDFromDOMWindow(nsIDOMWindow *dw) {
+  nsCOMPtr<nsIWidget> widget;
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(dw);
+  if (!window) 
+    return NULL;
+
+  return GetHWNDFromDocShell(window->GetDocShell());
+}
+
+nsresult
+SetWindowAppUserModelProp(nsIDOMWindow *aParent,
+                          const nsString & aIdentifier) {
+  NS_ENSURE_ARG_POINTER(aParent);
+
+  if (aIdentifier.IsEmpty())
+    return NS_ERROR_INVALID_ARG;
+
+  HWND toplevelHWND = ::GetAncestor(GetHWNDFromDOMWindow(aParent), GA_ROOT);
+
+  if (!toplevelHWND)
+    return NS_ERROR_INVALID_ARG;
+
+  typedef HRESULT (WINAPI * SHGetPropertyStoreForWindowPtr)
+                    (HWND hwnd, REFIID riid, void** ppv);
+  SHGetPropertyStoreForWindowPtr funcGetProStore = nsnull;
+
+  HMODULE hDLL = ::LoadLibraryW(kShellLibraryName);
+  funcGetProStore = (SHGetPropertyStoreForWindowPtr)
+    GetProcAddress(hDLL, "SHGetPropertyStoreForWindow");
+
+  if (!funcGetProStore) {
+    FreeLibrary(hDLL);
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  IPropertyStore* pPropStore;
+  if (FAILED(funcGetProStore(toplevelHWND,
+                             IID_PPV_ARGS(&pPropStore)))) {
+    FreeLibrary(hDLL);
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  PROPVARIANT pv;
+  if (FAILED(InitPropVariantFromString(aIdentifier.get(), &pv))) {
+    pPropStore->Release();
+    FreeLibrary(hDLL);
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsresult rv = NS_OK;
+  if (FAILED(pPropStore->SetValue(PKEY_AppUserModel_ID, pv)) ||
+      FAILED(pPropStore->Commit())) {
+    rv = NS_ERROR_FAILURE;
+  }
+
+  PropVariantClear(&pv);
+  pPropStore->Release();
+  FreeLibrary(hDLL);
+
+  return rv;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -341,8 +409,8 @@ WinTaskbar::GetTaskbarProgress(nsIDocShell *shell, nsITaskbarProgress **_retval)
 }
 
 /* nsIJumpListBuilder createJumpListBuilder(); */
-NS_IMETHODIMP WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder * *aJumpListBuilder)
-{
+NS_IMETHODIMP
+WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder * *aJumpListBuilder) {
   nsresult rv;
 
   if (JumpListBuilder::sBuildingList)
@@ -356,6 +424,13 @@ NS_IMETHODIMP WinTaskbar::CreateJumpListBuilder(nsIJumpListBuilder * *aJumpListB
   NS_IF_ADDREF(*aJumpListBuilder = builder);
 
   return NS_OK;
+}
+
+/* void setGroupIdForWindow (in nsIDOMWindow aParent, in AString aIdentifier); */
+NS_IMETHODIMP
+WinTaskbar::SetGroupIdForWindow(nsIDOMWindow *aParent,
+                                const nsAString & aIdentifier) {
+  return SetWindowAppUserModelProp(aParent, nsString(aIdentifier));
 }
 
 } // namespace widget
