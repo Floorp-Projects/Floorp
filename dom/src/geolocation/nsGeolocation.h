@@ -36,6 +36,8 @@
 
 #ifdef MOZ_IPC
 #include "mozilla/dom/PGeolocationRequestChild.h"
+// Microsoft's API Name hackery sucks
+#undef CreateEvent
 #endif
 
 #include "nsCOMPtr.h"
