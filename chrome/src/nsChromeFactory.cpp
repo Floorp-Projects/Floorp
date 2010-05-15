@@ -75,7 +75,7 @@ static nsChromeRegistry* GetSingleton()
     return chromeRegistry;
 }
 
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsChromeRegistry, GetSingleton);
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsChromeRegistry, GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChromeProtocolHandler)
 
 // The list of components we register
