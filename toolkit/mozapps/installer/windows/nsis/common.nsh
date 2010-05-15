@@ -3280,13 +3280,15 @@
       IntOp $R4 $R4 + 1 ; Increment the counter
       ClearErrors
       ReadINIStr $R8 "$R9" "STARTMENU" "Shortcut$R4"
-      IfErrors +7 +1
+      IfErrors +9 +1
       IfFileExists "$STARTMENU\$R8" +1 -4
       ShellLink::GetShortCutTarget "$STARTMENU\$R8"
       Pop $R5
       StrCmp "$INSTDIR\${FileMainEXE}" "$R5" +1 -7
+      ApplicationID::UninstallPinnedItem "$STARTMENU\$R8"
+      Pop $R5
       Delete "$STARTMENU\$R8"
-      GoTo -9
+      GoTo -11
 
       ; Delete Quick Launch shortcuts for this application
       StrCpy $R4 -1
@@ -3294,13 +3296,15 @@
       IntOp $R4 $R4 + 1 ; Increment the counter
       ClearErrors
       ReadINIStr $R8 "$R9" "QUICKLAUNCH" "Shortcut$R4"
-      IfErrors +7 +1
+      IfErrors +9 +1
       IfFileExists "$QUICKLAUNCH\$R8" +1 -4
       ShellLink::GetShortCutTarget "$QUICKLAUNCH\$R8"
       Pop $R5
       StrCmp "$INSTDIR\${FileMainEXE}" "$R5" +1 -7
+      ApplicationID::UninstallPinnedItem "$QUICKLAUNCH\$R8"
+      Pop $R5
       Delete "$QUICKLAUNCH\$R8"
-      GoTo -9
+      GoTo -11
 
       ; Delete Desktop shortcuts for this application
       StrCpy $R4 -1
@@ -3308,13 +3312,15 @@
       IntOp $R4 $R4 + 1 ; Increment the counter
       ClearErrors
       ReadINIStr $R8 "$R9" "DESKTOP" "Shortcut$R4"
-      IfErrors +7 +1
+      IfErrors +9 +1
       IfFileExists "$DESKTOP\$R8" +1 -4
       ShellLink::GetShortCutTarget "$DESKTOP\$R8"
       Pop $R5
       StrCmp "$INSTDIR\${FileMainEXE}" "$R5" +1 -7
+      ApplicationID::UninstallPinnedItem "$DESKTOP\$R8"
+      Pop $R5
       Delete "$DESKTOP\$R8"
-      GoTo -9
+      GoTo -11
 
       ${${_MOZFUNC_UN}GetLongPath} "$SMPROGRAMS" $R6
 
@@ -3328,13 +3334,15 @@
       IntOp $R4 $R4 + 1 ; Increment the counter
       ClearErrors
       ReadINIStr $R8 "$R9" "SMPROGRAMS" "Shortcut$R4"
-      IfErrors +7 +1
+      IfErrors +9 +1
       IfFileExists "$R7\$R8" +1 -4
       ShellLink::GetShortCutTarget "$R7\$R8"
       Pop $R5
       StrCmp "$INSTDIR\${FileMainEXE}" "$R5" +1 -7
+      ApplicationID::UninstallPinnedItem "$R7\$R8"
+      Pop $R5
       Delete "$R7\$R8"
-      GoTo -9
+      GoTo -11
 
       ; Delete Start Menu Programs directories for this application
       start_RemoveSMProgramsDir:
