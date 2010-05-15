@@ -102,12 +102,16 @@
 // imported in nsWidgetFactory.cpp
 PRBool gDisableNativeTheme = PR_FALSE;
 
-// Buffered Pixmap stuff
+// Buffered QPixmap surface
+// http://doc.qt.nokia.com/4.6/qpaintengine.html#Type-enum
+// used in QPaintEngine::X11/OpenGL2 backend
 static QPixmap *gBufferPixmap = nsnull;
-static int gBufferPixmapUsageCount = 0;
-
-// Buffered image + pixmap
+// Buffered image surface
+// best option for QPaintEngine::Raster
+// Also compatible with all other engine types
 static gfxImageSurface *gBufferImage = nsnull;
+
+static int gBufferPixmapUsageCount = 0;
 static gfxIntSize gBufferMaxSize(0, 0);
 
 /* For PrepareNativeWidget */
@@ -252,7 +256,7 @@ UpdateOffScreenBuffers(QPaintEngine::Type aType, int aDepth, QSize aSize)
     gBufferMaxSize.width = PR_MAX(gBufferMaxSize.width, size.width);
     gBufferMaxSize.height = PR_MAX(gBufferMaxSize.height, size.height);
     // For Qt X11 engine better to use QPixmap as offscreen buffer
-    if (aType == QPaintEngine::X11) {
+    if (aType == QPaintEngine::X11 || aType == QPaintEngine::OpenGL2) {
         gBufferPixmap = new QPixmap(gBufferMaxSize.width, gBufferMaxSize.height);
         return true;
     }
@@ -1013,10 +1017,10 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
         if (!UpdateOffScreenBuffers(paintEngineType, depth, QSize(r.width(), r.height())))
             return nsEventStatus_eIgnore;
 
-        if (paintEngineType == QPaintEngine::X11) {
+        if (gBufferPixmap) {
             targetSurface = GetSurfaceForQPixmap(gBufferPixmap);
         }
-        else if (paintEngineType == QPaintEngine::Raster) {
+        else if (gBufferImage) {
             NS_ADDREF(targetSurface = gBufferImage);
         }
 
@@ -1058,12 +1062,12 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 
     // Handle buffered painting mode
     if (renderMode == gfxQtPlatform::RENDER_BUFFERED) {
-        if (paintEngineType == QPaintEngine::X11) {
+        if (gBufferPixmap) {
             // Paint offscreen pixmap to QPainter
             aPainter->drawPixmap(QPoint(rect.x, rect.y), *gBufferPixmap,
                                  QRect(0, 0, rect.width, rect.height));
 
-        } else if (paintEngineType == QPaintEngine::Raster) {
+        } else if (gBufferImage) {
             // in raster mode we can just wrap gBufferImage as QImage and paint directly
             QImage img(gBufferImage->Data(),
                        gBufferImage->Width(),
