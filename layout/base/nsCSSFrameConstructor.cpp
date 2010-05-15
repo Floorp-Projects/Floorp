@@ -11320,16 +11320,16 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIFrame* aFrame)
 void
 nsCSSFrameConstructor::RestyleForEmptyChange(Element* aContainer)
 {
-  Element* toRestyle = aContainer;
   // In some cases (:empty + E, :empty ~ E), a change if the content of
   // an element requires restyling its grandparent, because it changes
   // its parent's :empty state.
+  nsRestyleHint hint = eRestyle_Self;
   nsIContent* grandparent = aContainer->GetParent();
   if (grandparent &&
-      (grandparent->GetFlags() & NODE_HAS_SLOW_SELECTOR_NOAPPEND)) {
-    toRestyle = grandparent->AsElement();
+      (grandparent->GetFlags() & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS)) {
+    hint = nsRestyleHint(hint | eRestyle_LaterSiblings);
   }
-  PostRestyleEvent(toRestyle, eRestyle_Self, NS_STYLE_HINT_NONE);
+  PostRestyleEvent(aContainer, hint, NS_STYLE_HINT_NONE);
 }
 
 void
@@ -11347,7 +11347,7 @@ nsCSSFrameConstructor::RestyleForAppend(Element* aContainer,
 #endif
   PRUint32 selectorFlags =
     aContainer->GetFlags() & (NODE_ALL_SELECTOR_FLAGS &
-                              ~NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+                              ~NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   if (selectorFlags == 0)
     return;
 
@@ -11387,6 +11387,25 @@ nsCSSFrameConstructor::RestyleForAppend(Element* aContainer,
         PostRestyleEvent(cur->AsElement(), eRestyle_Self, NS_STYLE_HINT_NONE);
         break;
       }
+    }
+  }
+}
+
+// Needed since we can't use PostRestyleEvent on non-elements (with
+// eRestyle_LaterSiblings or nsRestyleHint(eRestyle_Self |
+// eRestyle_LaterSiblings) as appropriate).
+static void
+RestyleSiblingsStartingWith(nsCSSFrameConstructor *aFrameConstructor,
+                            nsIContent *aStartingSibling /* may be null */)
+{
+  for (nsIContent *sibling = aStartingSibling; sibling;
+       sibling = sibling->GetNextSibling()) {
+    if (sibling->IsElement()) {
+      aFrameConstructor->
+        PostRestyleEvent(sibling->AsElement(),
+                         nsRestyleHint(eRestyle_Self | eRestyle_LaterSiblings),
+                         NS_STYLE_HINT_NONE);
+      break;
     }
   }
 }
@@ -11431,11 +11450,15 @@ nsCSSFrameConstructor::RestyleForInsertOrChange(Element* aContainer,
     }
   }
 
-  if (selectorFlags & (NODE_HAS_SLOW_SELECTOR |
-                       NODE_HAS_SLOW_SELECTOR_NOAPPEND)) {
+  if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
     PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
+  }
+
+  if (selectorFlags & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
+    // Restyle all later siblings.
+    RestyleSiblingsStartingWith(this, aChild->GetNextSibling());
   }
 
   if (selectorFlags & NODE_HAS_EDGE_CHILD_SELECTOR) {
@@ -11509,11 +11532,15 @@ nsCSSFrameConstructor::RestyleForRemove(Element* aContainer,
     }
   }
 
-  if (selectorFlags & (NODE_HAS_SLOW_SELECTOR |
-                       NODE_HAS_SLOW_SELECTOR_NOAPPEND)) {
+  if (selectorFlags & NODE_HAS_SLOW_SELECTOR) {
     PostRestyleEvent(aContainer, eRestyle_Self, NS_STYLE_HINT_NONE);
     // Restyling the container is the most we can do here, so we're done.
     return;
+  }
+
+  if (selectorFlags & NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS) {
+    // Restyle all later siblings.
+    RestyleSiblingsStartingWith(this, aFollowingSibling);
   }
 
   if (selectorFlags & NODE_HAS_EDGE_CHILD_SELECTOR) {
