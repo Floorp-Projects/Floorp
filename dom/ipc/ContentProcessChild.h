@@ -89,14 +89,7 @@ private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
 
-    void Quit();
-
     static ContentProcessChild* sSingleton;
-
-    nsTArray<PIFrameEmbeddingChild* > mIFrames;
-    nsTArray<nsAutoPtr<PTestShellChild> > mTestShells;
-
-    PRBool mQuit;
 
     DISALLOW_EVIL_CONSTRUCTORS(ContentProcessChild);
 };
