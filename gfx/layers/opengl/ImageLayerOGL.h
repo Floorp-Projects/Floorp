@@ -95,6 +95,8 @@ private:
 class RecycleBin {
   THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(RecycleBin)
 
+  typedef mozilla::gl::GLContext GLContext;
+
 public:
   RecycleBin();
 
@@ -102,10 +104,21 @@ public:
   // Returns a recycled buffer of the right size, or allocates a new buffer.
   PRUint8* TakeBuffer(PRUint32 aSize);
 
+  enum TextureType {
+    TEXTURE_Y,
+    TEXTURE_C
+  };
+
+  void RecycleTexture(GLTexture *aTexture, TextureType aType,
+                      const gfxIntSize& aSize);
+  void TakeTexture(TextureType aType, const gfxIntSize& aSize,
+                   GLContext *aContext, GLTexture *aOutTexture);
+
 private:
   typedef mozilla::Mutex Mutex;
 
-  // This protects mRecycledBuffers and mRecycledBufferSize
+  // This protects mRecycledBuffers, mRecycledBufferSize, mRecycledTextures
+  // and mRecycledTextureSizes
   Mutex mLock;
 
   // We should probably do something to prune this list on a timer so we don't
@@ -113,6 +126,9 @@ private:
   nsTArray<nsAutoArrayPtr<PRUint8> > mRecycledBuffers;
   // This is only valid if mRecycledBuffers is non-empty
   PRUint32 mRecycledBufferSize;
+
+  nsTArray<GLTexture> mRecycledTextures[2];
+  gfxIntSize mRecycledTextureSizes[2];
 };
 
 class THEBES_API ImageContainerOGL : public ImageContainer
