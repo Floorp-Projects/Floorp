@@ -45,6 +45,46 @@
 namespace mozilla {
 namespace layers {
 
+/**
+ * This class wraps a GL texture. It includes a GLContext reference
+ * so we can use to free the texture when destroyed. The implementation
+ * makes sure to always free the texture on the main thread, even if the
+ * destructor runs on another thread.
+ *
+ * We ensure that the GLContext reference is only addrefed and released
+ * on the main thread, although it uses threadsafe recounting so we don't
+ * really have to.
+ *
+ * Initially the texture is not allocated --- it's in a "null" state.
+ */
+class GLTexture {
+  typedef mozilla::gl::GLContext GLContext;
+
+public:
+  GLTexture() : mTexture(0) {}
+  ~GLTexture() { Release(); }
+
+  /**
+   * Allocate the texture. This can only be called on the main thread.
+   */
+  void Allocate(GLContext *aContext);
+  /**
+   * Move the state of aOther to this GLTexture. If this GLTexture currently
+   * has a texture, it is released. This can be called on any thread.
+   */
+  void TakeFrom(GLTexture *aOther);
+
+  PRBool IsAllocated() { return mTexture != 0; }
+  GLuint GetTextureID() { return mTexture; }
+  GLContext *GetGLContext() { return mContext; }
+
+private:
+  void Release();
+
+  nsRefPtr<GLContext> mContext;
+  GLuint mTexture;
+};
+
 class THEBES_API ImageContainerOGL : public ImageContainer
 {
 public:
@@ -91,8 +131,10 @@ public:
 
 class THEBES_API PlanarYCbCrImageOGL : public PlanarYCbCrImage
 {
+  typedef mozilla::gl::GLContext GLContext;
+
 public:
-  PlanarYCbCrImageOGL(LayerManagerOGL *aManager);
+  PlanarYCbCrImageOGL();
 
   virtual void SetData(const Data &aData);
 
@@ -100,40 +142,33 @@ public:
    * Upload the data from out mData into our textures. For now we use this to
    * make sure the textures are created and filled on the main thread.
    */
-  void AllocateTextures();
-  /**
-   * XXX
-   * Free the textures, we call this from the main thread when we're done
-   * drawing this frame. We cannot free this from the constructor since it may
-   * be destroyed off the main-thread and might not be able to properly clean
-   * up its textures
-   */
-  void FreeTextures();
+  void AllocateTextures(LayerManagerOGL *aManager);
   PRBool HasData() { return mHasData; }
+  PRBool HasTextures()
+  {
+    return mTextures[0].IsAllocated() && mTextures[1].IsAllocated() &&
+           mTextures[2].IsAllocated();
+  }
 
   nsAutoArrayPtr<PRUint8> mBuffer;
-  LayerManagerOGL *mManager;
+  GLTexture mTextures[3];
   Data mData;
   gfxIntSize mSize;
-  GLuint mTextures[3];
   PRPackedBool mHasData;
 };
 
 
 class THEBES_API CairoImageOGL : public CairoImage
 {
+  typedef mozilla::gl::GLContext GLContext;
+
 public:
-  CairoImageOGL(LayerManagerOGL *aManager)
-    : CairoImage(NULL)
-    , mManager(aManager)
-  { }
-  ~CairoImageOGL();
+  CairoImageOGL(LayerManagerOGL *aManager);
 
-  virtual void SetData(const Data &aData);
+  void SetData(const Data &aData);
 
-  GLuint mTexture;
+  GLTexture mTexture;
   gfxIntSize mSize;
-  LayerManagerOGL *mManager;
 };
 
 } /* layers */
