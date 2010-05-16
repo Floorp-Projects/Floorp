@@ -145,7 +145,7 @@ LayerManagerOGL::Initialize()
                               LOCAL_GL_TEXTURE_RECTANGLE_EXT };
   mFBOTextureTarget = 0;
 
-  for (int i = 0; i < NS_ARRAY_LENGTH(textureTargets); i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(textureTargets); i++) {
     mGLContext->fGenTextures(1, &mBackBuffer);
     mGLContext->fBindTexture(textureTargets[i], mBackBuffer);
     mGLContext->fTexParameteri(textureTargets[i],
