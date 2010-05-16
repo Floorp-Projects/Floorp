@@ -85,6 +85,36 @@ private:
   GLuint mTexture;
 };
 
+/**
+ * A RecycleBin is owned by an ImageContainerOGL. We store buffers
+ * and textures in it that we want to recycle from one image to the next.
+ * It's a separate object from ImageContainerOGL because images need to store
+ * a strong ref to their RecycleBin and we must avoid creating a
+ * reference loop between an ImageContainerOGL and its active image.
+ */
+class RecycleBin {
+  THEBES_INLINE_DECL_THREADSAFE_REFCOUNTING(RecycleBin)
+
+public:
+  RecycleBin();
+
+  void RecycleBuffer(PRUint8* aBuffer, PRUint32 aSize);
+  // Returns a recycled buffer of the right size, or allocates a new buffer.
+  PRUint8* TakeBuffer(PRUint32 aSize);
+
+private:
+  typedef mozilla::Mutex Mutex;
+
+  // This protects mRecycledBuffers and mRecycledBufferSize
+  Mutex mLock;
+
+  // We should probably do something to prune this list on a timer so we don't
+  // eat excess memory while video is paused...
+  nsTArray<nsAutoArrayPtr<PRUint8> > mRecycledBuffers;
+  // This is only valid if mRecycledBuffers is non-empty
+  PRUint32 mRecycledBufferSize;
+};
+
 class THEBES_API ImageContainerOGL : public ImageContainer
 {
 public:
@@ -105,9 +135,12 @@ public:
 private:
   typedef mozilla::Mutex Mutex;
 
-  nsRefPtr<Image> mActiveImage;
+  nsRefPtr<RecycleBin> mRecycleBin;
 
+  // This protects mActiveImage
   Mutex mActiveImageLock;
+
+  nsRefPtr<Image> mActiveImage;
 };
 
 class THEBES_API ImageLayerOGL : public ImageLayer,
@@ -134,7 +167,8 @@ class THEBES_API PlanarYCbCrImageOGL : public PlanarYCbCrImage
   typedef mozilla::gl::GLContext GLContext;
 
 public:
-  PlanarYCbCrImageOGL();
+  PlanarYCbCrImageOGL(RecycleBin *aRecycleBin);
+  ~PlanarYCbCrImageOGL();
 
   virtual void SetData(const Data &aData);
 
@@ -151,6 +185,8 @@ public:
   }
 
   nsAutoArrayPtr<PRUint8> mBuffer;
+  PRUint32 mBufferSize;
+  nsRefPtr<RecycleBin> mRecycleBin;
   GLTexture mTextures[3];
   Data mData;
   gfxIntSize mSize;
