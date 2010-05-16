@@ -275,9 +275,6 @@ struct JSGCArenaInfo {
 
     JSGCThing       *freeList;
 
-    /* The arena has marked doubles. */
-    bool        hasMarkedDoubles;
-
     static inline JSGCArenaInfo *fromGCThing(void* thing);
 };
 
@@ -316,8 +313,6 @@ struct JSGCArena {
     inline JSGCMarkingDelay *getMarkingDelay();
 
     inline jsbitmap *getMarkBitmap();
-
-    inline void clearMarkBitmap();
 };
 
 struct JSGCChunkInfo {
@@ -330,6 +325,8 @@ struct JSGCChunkInfo {
     inline jsbitmap *getFreeArenaBitmap();
 
     inline jsuword getChunk();
+
+    inline void clearMarkBitmap();
 
     static inline JSGCChunkInfo *fromChunk(jsuword chunk);
 };
@@ -385,6 +382,13 @@ JSGCChunkInfo::getChunk() {
     JS_ASSERT((addr & GC_CHUNK_MASK) == GC_CHUNK_INFO_OFFSET);
     jsuword chunk = addr & ~GC_CHUNK_MASK;
     return chunk;
+}
+
+inline void
+JSGCChunkInfo::clearMarkBitmap()
+{
+    PodZero(reinterpret_cast<jsbitmap *>(getChunk() + GC_MARK_BITMAP_ARRAY_OFFSET),
+            GC_MARK_BITMAP_WORDS * GC_ARENAS_PER_CHUNK);
 }
 
 /* static */
@@ -486,12 +490,6 @@ JSGCArena::getMarkBitmap()
     jsuword index = getIndex();
     jsuword offset = GC_MARK_BITMAP_ARRAY_OFFSET + index * GC_MARK_BITMAP_SIZE;
     return reinterpret_cast<jsbitmap *>(chunk | offset);
-}
-
-inline void
-JSGCArena::clearMarkBitmap()
-{
-    PodZero(getMarkBitmap(), GC_MARK_BITMAP_WORDS);
 }
 
 /*
@@ -883,16 +881,6 @@ js_IsAboutToBeFinalized(void *thing)
     if (JSString::isStatic(thing))
         return false;
 
-    JSGCArenaInfo *ainfo = JSGCArenaInfo::fromGCThing(thing);
-    if (!ainfo->list) {
-        /*
-         * Check if arena has no marked doubles. In that case the bitmap with
-         * the mark flags contains all garbage as it is initialized only when
-         * marking the first double in the arena.
-         */
-        if (!ainfo->hasMarkedDoubles)
-            return true;
-    }
     return !IsMarkedGCThing(thing);
 }
 
@@ -1485,7 +1473,6 @@ RefillFinalizableFreeList(JSContext *cx, unsigned thingKind)
         arenaList->head = a;
     }
 
-    a->clearMarkBitmap();
     JSGCMarkingDelay *markingDelay = a->getMarkingDelay();
     markingDelay->link = NULL;
     markingDelay->unmarkedChildren = 0;
@@ -1699,7 +1686,6 @@ RefillDoubleFreeList(JSContext *cx)
     rt->gcDoubleArenaList.head = a;
     JS_UNLOCK_GC(rt);
 
-    ainfo->hasMarkedDoubles = false;
     return MakeNewArenaFreeList(a, sizeof(jsdouble));
 }
 
@@ -2054,10 +2040,6 @@ js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind)
       case JSTRACE_DOUBLE: {
         JSGCArenaInfo *ainfo = JSGCArenaInfo::fromGCThing(thing);
         JS_ASSERT(!ainfo->list);
-        if (!ainfo->hasMarkedDoubles) {
-            ainfo->hasMarkedDoubles = true;
-            JSGCArena::fromGCThing(thing)->clearMarkBitmap();
-        }
         MarkIfUnmarkedGCThing(thing);
         goto out;
       }
@@ -2632,7 +2614,6 @@ FinalizeArenaList(JSContext *cx, unsigned thingKind)
             METER(nkilledarenas++);
         } else {
             JS_ASSERT(nfree < ThingsPerArena(sizeof(T)));
-            a->clearMarkBitmap();
             *tailp = NULL;
             ainfo->freeList = freeList;
             ap = &ainfo->prev;
@@ -2730,16 +2711,25 @@ struct GCTimer {
 # define GCTIMER_END(last)  ((void) 0)
 #endif
 
+static bool
+HasMarkedDoubles(JSGCArena *a)
+{
+    jsbitmap *mb = a->getMarkBitmap();
+    JS_STATIC_ASSERT(GC_MARK_BITMAP_WORDS == 8);
+    return !!(mb[0] | mb[1] | mb[2] | mb[3] | mb[4] | mb[5] | mb[6] | mb[7]);
+}
+
 static void
 SweepDoubles(JSRuntime *rt)
 {
+    uint64 t = rdtsc();
 #ifdef JS_GCMETER
     uint32 nlivearenas = 0, nkilledarenas = 0, nthings = 0;
 #endif
     JSGCArena **ap = &rt->gcDoubleArenaList.head;
     while (JSGCArena *a = *ap) {
         JSGCArenaInfo *ainfo = a->getInfo();
-        if (!ainfo->hasMarkedDoubles) {
+        if (!HasMarkedDoubles(a)) {
             /* No marked double values in the arena. */
             *ap = ainfo->prev;
             ReleaseGCArena(rt, a);
@@ -2754,13 +2744,14 @@ SweepDoubles(JSRuntime *rt)
             }
             METER(nlivearenas++);
 #endif
-            ainfo->hasMarkedDoubles = false;
             ap = &ainfo->prev;
         }
     }
     METER(UpdateArenaStats(&rt->gcStats.doubleArenaStats,
                            nlivearenas, nkilledarenas, nthings));
     rt->gcDoubleArenaList.cursor = rt->gcDoubleArenaList.head;
+    t = rdtsc() - t;
+    fprintf(stdout, "t=%llu\n", t);
 }
 
 #ifdef JS_THREADSAFE
@@ -2877,11 +2868,8 @@ GC(JSContext *cx  GCTIMER_PARAM)
     rt->gcMarkingTracer = &trc;
     JS_ASSERT(IS_GC_MARKING_TRACER(&trc));
 
-    for (JSGCArena *a = rt->gcDoubleArenaList.head; a;) {
-        JSGCArenaInfo *ainfo = a->getInfo();
-        JS_ASSERT(!ainfo->hasMarkedDoubles);
-        a = ainfo->prev;
-    }
+    for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i)
+        (*i)->clearMarkBitmap();
 
     js_TraceRuntime(&trc);
     js_MarkScriptFilenames(rt);
