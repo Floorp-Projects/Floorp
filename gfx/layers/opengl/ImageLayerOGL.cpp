@@ -147,6 +147,37 @@ RecycleBin::TakeBuffer(PRUint32 aSize)
   return result;
 }
 
+void
+RecycleBin::RecycleTexture(GLTexture *aTexture, TextureType aType,
+                           const gfxIntSize& aSize)
+{
+  if (!aTexture->IsAllocated())
+    return;
+
+  MutexAutoLock lock(mLock);
+
+  if (!mRecycledTextures[aType].IsEmpty() && aSize != mRecycledTextureSizes[aType]) {
+    mRecycledTextures[aType].Clear();
+  }
+  mRecycledTextureSizes[aType] = aSize;
+  mRecycledTextures[aType].AppendElement()->TakeFrom(aTexture);
+}
+
+void
+RecycleBin::TakeTexture(TextureType aType, const gfxIntSize& aSize,
+                        GLContext *aContext, GLTexture *aOutTexture)
+{
+  MutexAutoLock lock(mLock);
+
+  if (mRecycledTextures[aType].IsEmpty() || mRecycledTextureSizes[aType] != aSize) {
+    aOutTexture->Allocate(aContext);
+    return;
+  }
+  PRUint32 last = mRecycledTextures[aType].Length() - 1;
+  aOutTexture->TakeFrom(&mRecycledTextures[aType].ElementAt(last));
+  mRecycledTextures[aType].RemoveElementAt(last);
+}
+
 ImageContainerOGL::ImageContainerOGL(LayerManagerOGL *aManager)
   : ImageContainer(aManager)
   , mRecycleBin(new RecycleBin())
@@ -328,6 +359,10 @@ PlanarYCbCrImageOGL::~PlanarYCbCrImageOGL()
   if (mBuffer) {
     mRecycleBin->RecycleBuffer(mBuffer.forget(), mBufferSize);
   }
+
+  mRecycleBin->RecycleTexture(&mTextures[0], RecycleBin::TEXTURE_Y, mData.mYSize);
+  mRecycleBin->RecycleTexture(&mTextures[1], RecycleBin::TEXTURE_C, mData.mCbCrSize);
+  mRecycleBin->RecycleTexture(&mTextures[2], RecycleBin::TEXTURE_C, mData.mCbCrSize);
 }
 
 void
@@ -396,6 +431,36 @@ PlanarYCbCrImageOGL::SetData(const PlanarYCbCrImage::Data &aData)
   mHasData = PR_TRUE;
 }
 
+static void
+SetupPlaneTexture(GLContext* aGL, const gfxIntSize& aSize, PRUint8* aData, PRBool aIsNew)
+{
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+  aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+
+  if (aIsNew) {
+    aGL->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                     0,
+                     LOCAL_GL_LUMINANCE,
+                     aSize.width,
+                     aSize.height,
+                     0,
+                     LOCAL_GL_LUMINANCE,
+                     LOCAL_GL_UNSIGNED_BYTE,
+                     aData);
+  } else {
+    aGL->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                        0,
+                        0, 0,
+                        aSize.width,
+                        aSize.height,
+                        LOCAL_GL_LUMINANCE,
+                        LOCAL_GL_UNSIGNED_BYTE,
+                        aData);
+  }
+}
+
 void
 PlanarYCbCrImageOGL::AllocateTextures(LayerManagerOGL *aManager)
 {
@@ -403,9 +468,14 @@ PlanarYCbCrImageOGL::AllocateTextures(LayerManagerOGL *aManager)
 
   mozilla::gl::GLContext *gl = aManager->gl();
 
-  mTextures[0].Allocate(gl);
-  mTextures[1].Allocate(gl);
-  mTextures[2].Allocate(gl);
+  PRPackedBool isNewTexture[3];
+  for (PRUint32 i = 0; i < 3; ++i) {
+    isNewTexture[i] = !mTextures[i].IsAllocated();
+  }
+
+  mRecycleBin->TakeTexture(RecycleBin::TEXTURE_Y, mData.mYSize, gl, &mTextures[0]);
+  mRecycleBin->TakeTexture(RecycleBin::TEXTURE_C, mData.mCbCrSize, gl, &mTextures[1]);
+  mRecycleBin->TakeTexture(RecycleBin::TEXTURE_C, mData.mCbCrSize, gl, &mTextures[2]);
   if (!HasTextures())
     return;
 
@@ -426,20 +496,7 @@ PlanarYCbCrImageOGL::AllocateTextures(LayerManagerOGL *aManager)
 
   gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextures[0].GetTextureID());
 
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-  gl->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                  0,
-                  LOCAL_GL_LUMINANCE,
-                  mSize.width,
-                  mSize.height,
-                  0,
-                  LOCAL_GL_LUMINANCE,
-                  LOCAL_GL_UNSIGNED_BYTE,
-                  mData.mYChannel);
+  SetupPlaneTexture(gl, mData.mYSize, mData.mYChannel, isNewTexture[0]);
 
   if (!((ptrdiff_t)mData.mCbCrStride & 0x7) && 
       !((ptrdiff_t)mData.mCbChannel & 0x7) &&
@@ -458,37 +515,11 @@ PlanarYCbCrImageOGL::AllocateTextures(LayerManagerOGL *aManager)
 
   gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextures[1].GetTextureID());
 
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-  gl->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                  0,
-                  LOCAL_GL_LUMINANCE,
-                  mData.mCbCrSize.width,
-                  mData.mCbCrSize.height,
-                  0,
-                  LOCAL_GL_LUMINANCE,
-                  LOCAL_GL_UNSIGNED_BYTE,
-                  mData.mCbChannel);
+  SetupPlaneTexture(gl, mData.mCbCrSize, mData.mCbChannel, isNewTexture[1]);
 
   gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTextures[2].GetTextureID());
 
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
-  gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
-
-  gl->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                  0,
-                  LOCAL_GL_LUMINANCE,
-                  mData.mCbCrSize.width,
-                  mData.mCbCrSize.height,
-                  0,
-                  LOCAL_GL_LUMINANCE,
-                  LOCAL_GL_UNSIGNED_BYTE,
-                  mData.mCrChannel);
+  SetupPlaneTexture(gl, mData.mCbCrSize, mData.mCrChannel, isNewTexture[2]);
 
   // Reset alignment to default
   gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
