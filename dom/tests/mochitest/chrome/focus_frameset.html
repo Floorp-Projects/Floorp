@@ -1,7 +1,16 @@
 <html id="outer">
 
-<frameset rows="30%, 70%" onload="window.loaded = true; if (window.loaded === window.focused) opener.framesetWindowLoaded(window)"
-                          onfocus="window.focused = true; if (window.loaded === window.focused) opener.framesetWindowLoaded(window)">
+<script type="application/javascript"
+        src="chrome://mochikit/content/MochiKit/packed.js"></script>
+<script type="application/javascript"
+        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+dump("frameset script parsed\n");
+SimpleTest.waitForFocus(function () dump("focus on frameset occured\n"));
+</script>
+
+<frameset rows="30%, 70%" onload="dump('frameset load ' + event.target.location + ' ' + window.location + '\n'); window.loaded = true; if (window.loaded === window.focused) opener.framesetWindowLoaded(window)"
+                          onfocus="dump('frameset focus: ' + event.target.location + ' ' + window.location + '\n'); window.focused = true; if (window.loaded === window.focused) opener.framesetWindowLoaded(window)">
   <frame src="data:text/html,&lt;html id='f1' &gt;&lt;body id='framebody1'&gt;&lt;input id='f2'&gt;&lt;body&gt;&lt;/html&gt;">
   <frameset cols="30%, 33%, 34%">
     <frame src="data:text/html,&lt;html id='f3'&gt;&lt;body id='framebody2'&gt;&lt;input id='f4'&gt;&lt;body&gt;&lt;/html&gt;">
