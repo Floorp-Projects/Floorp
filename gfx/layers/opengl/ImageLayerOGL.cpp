@@ -116,8 +116,40 @@ GLTexture::Release()
   mTexture = 0;
 }
 
+RecycleBin::RecycleBin()
+  : mLock("mozilla.layers.RecycleBin.mLock")
+{
+}
+
+void
+RecycleBin::RecycleBuffer(PRUint8* aBuffer, PRUint32 aSize)
+{
+  MutexAutoLock lock(mLock);
+
+  if (!mRecycledBuffers.IsEmpty() && aSize != mRecycledBufferSize) {
+    mRecycledBuffers.Clear();
+  }
+  mRecycledBufferSize = aSize;
+  mRecycledBuffers.AppendElement(aBuffer);
+}
+
+PRUint8*
+RecycleBin::TakeBuffer(PRUint32 aSize)
+{
+  MutexAutoLock lock(mLock);
+
+  if (mRecycledBuffers.IsEmpty() || mRecycledBufferSize != aSize)
+    return new PRUint8[aSize];
+
+  PRUint32 last = mRecycledBuffers.Length() - 1;
+  PRUint8* result = mRecycledBuffers[last].forget();
+  mRecycledBuffers.RemoveElementAt(last);
+  return result;
+}
+
 ImageContainerOGL::ImageContainerOGL(LayerManagerOGL *aManager)
   : ImageContainer(aManager)
+  , mRecycleBin(new RecycleBin())
   , mActiveImageLock("mozilla.layers.ImageContainerOGL.mActiveImageLock")
 {
 }
@@ -131,7 +163,7 @@ ImageContainerOGL::CreateImage(const Image::Format *aFormats,
   }
   nsRefPtr<Image> img;
   if (aFormats[0] == Image::PLANAR_YCBCR) {
-    img = new PlanarYCbCrImageOGL();
+    img = new PlanarYCbCrImageOGL(mRecycleBin);
   } else if (aFormats[0] == Image::CAIRO_SURFACE) {
     img = new CairoImageOGL(static_cast<LayerManagerOGL*>(mManager));
   }
@@ -141,9 +173,17 @@ ImageContainerOGL::CreateImage(const Image::Format *aFormats,
 void
 ImageContainerOGL::SetCurrentImage(Image *aImage)
 {
-  MutexAutoLock lock(mActiveImageLock);
+  nsRefPtr<Image> oldImage;
 
-  mActiveImage = aImage;
+  {
+    MutexAutoLock lock(mActiveImageLock);
+
+    oldImage = mActiveImage.forget();
+    mActiveImage = aImage;
+  }
+
+  // Make sure oldImage is released outside the lock, so it can take our
+  // lock in RecycleBuffer
 }
 
 already_AddRefed<Image>
@@ -278,9 +318,16 @@ ImageLayerOGL::RenderLayer(int)
   }
 }
 
-PlanarYCbCrImageOGL::PlanarYCbCrImageOGL()
-  : PlanarYCbCrImage(nsnull), mHasData(PR_FALSE)
+PlanarYCbCrImageOGL::PlanarYCbCrImageOGL(RecycleBin *aRecycleBin)
+  : PlanarYCbCrImage(nsnull), mRecycleBin(aRecycleBin), mHasData(PR_FALSE)
 {
+}
+
+PlanarYCbCrImageOGL::~PlanarYCbCrImageOGL()
+{
+  if (mBuffer) {
+    mRecycleBin->RecycleBuffer(mBuffer.forget(), mBufferSize);
+  }
 }
 
 void
@@ -313,8 +360,13 @@ PlanarYCbCrImageOGL::SetData(const PlanarYCbCrImage::Data &aData)
   mData.mCbCrSize.height = aData.mPicSize.height >> height_shift;
   mData.mYSize = aData.mPicSize;
   mData.mYStride = mData.mYSize.width;
-  mBuffer = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height * 2 +
-                        mData.mYStride * mData.mYSize.height];
+
+  mBufferSize = mData.mCbCrStride * mData.mCbCrSize.height * 2 +
+                mData.mYStride * mData.mYSize.height;
+  mBuffer = mRecycleBin->TakeBuffer(mBufferSize);
+  if (!mBuffer)
+    return;
+
   mData.mYChannel = mBuffer;
   mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
   mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
@@ -441,8 +493,10 @@ PlanarYCbCrImageOGL::AllocateTextures(LayerManagerOGL *aManager)
   // Reset alignment to default
   gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 
-  // Free main-memory buffer now that we've got the data in our textures
-  mBuffer = nsnull;
+  // Recycle main-memory buffer now that we've got the data in our textures
+  if (mBuffer) {
+    mRecycleBin->RecycleBuffer(mBuffer.forget(), mBufferSize);
+  }
 }
 
 CairoImageOGL::CairoImageOGL(LayerManagerOGL *aManager) : CairoImage(nsnull)
