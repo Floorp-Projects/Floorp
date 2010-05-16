@@ -3861,11 +3861,13 @@ DeflatedStringCache::getBytes(JSContext *cx, JSString *str)
      * deal with other threads adding the entries to the map.
      */
     char *bytesToFree = NULL;
-    JSBool ok;
 #ifdef JS_THREADSAFE
     JS_ACQUIRE_LOCK(lock);
-    ok = map.relookupOrAdd(p, str, bytes);
-    if (ok && p->value != bytes) {
+    bool ok = map.relookupOrAdd(p, str, bytes);
+    if (!ok) {
+        bytesToFree = bytes;
+        bytes = NULL;
+    } else if (p->value != bytes) {
         /* Some other thread has asked for str bytes .*/
         JS_ASSERT(!strcmp(p->value, bytes));
         bytesToFree = bytes;
@@ -3873,14 +3875,11 @@ DeflatedStringCache::getBytes(JSContext *cx, JSString *str)
     }
     JS_RELEASE_LOCK(lock);
 #else  /* !JS_THREADSAFE */
-    ok = map.add(p, str, bytes);
-#endif
-    if (!ok) {
+    if (!map.add(p, str, bytes)) {
         bytesToFree = bytes;
         bytes = NULL;
-        if (cx)
-            js_ReportOutOfMemory(cx);
     }
+#endif
 
     if (bytesToFree) {
         if (cx)
