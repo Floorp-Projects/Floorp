@@ -1006,14 +1006,60 @@ var DragInfo = function(element, event) {
 DragInfo.prototype = {
   // ----------  
   snap: function(event, ui){
-    //window.console.log( event, ui);
-    // Step 1: Find the closest group by edge
+    var me = this.item;
+    function closeTo(a,b){ return Math.abs(a-b) <= 12 }
+        
+    // Snap inline to the tops of other groups.
+    var closestTop = null;
+    var minDist = Infinity;
+    for each(var group in Groups.groups){
+      // Exlcude the current group
+      if( group == me ) continue;      
+      var dist = Math.abs(group.bounds.top - me.bounds.top);
+      if( dist < minDist ){
+        minDist = dist;
+        closestTop = group.bounds.top;
+      }
+    }
     
-    // Step 2: Match to the to
+    if( closeTo(ui.position.top, closestTop) ){
+      ui.position.top = closestTop;
+    }
+      
+    // Snap to the right of other groups by topish left corner
+    var topLeft = new Point( me.bounds.left, ui.position.top + 25 );
+    var other = Groups.findGroupClosestToPoint(topLeft, {exclude:me});     
+    var closestRight = other.bounds.right + 20;
+    if( closeTo(ui.position.left, closestRight) ){
+      ui.position.left = closestRight;
+    }
+
+    // Snap to the bottom of other groups by top leftish corner
+    var topLeft = new Point( me.bounds.left+25, ui.position.top);
+    var other = Groups.findGroupClosestToPoint(topLeft, {exclude:me});     
+    var closestBottom = other.bounds.bottom + 20;
+    if( closeTo(ui.position.top, closestBottom) ){
+      ui.position.top = closestBottom;
+    }
     
-    // Step 3: Profit!
+    // Snap inline to the right of other groups by top right corner
+    var topRight = new Point( me.bounds.right, ui.position.top);
+    var other = Groups.findGroupClosestToPoint(topRight, {exclude:me});     
+    var closestRight = other.bounds.right;
+    if( closeTo(ui.position.left + me.bounds.width, closestRight) ){
+      ui.position.left = closestRight - me.bounds.width;
+    }      
+        
+    // Snap inline to the left of other groups by top left corner
+    var topLeft = new Point( me.bounds.left, ui.position.top);
+    var other = Groups.findGroupClosestToPoint(topLeft, {exclude:me});     
+    var closestLeft = other.bounds.left;
+    if( closeTo(ui.position.left, closestLeft) ){
+      ui.position.left = closestLeft;
+    }  
     
-    // TODO: Refactor these comments. Also, does this routine belong in DragInfo?
+    // Step 4: Profit?
+    return ui;
     
   },
   
@@ -1022,6 +1068,7 @@ DragInfo.prototype = {
   // Called in response to a jQuery-UI draggable "drag" event.
   drag: function(event, ui) {
     if(this.item.isAGroup) {
+      ui = this.snap(event,ui);      
       var bb = this.item.getBounds();
       bb.left = ui.position.left;
       bb.top = ui.position.top;
@@ -1374,6 +1421,55 @@ window.Groups = {
       return tab.parent == null;
     })
     return tabs
+  },
+  
+  // ---------
+  // Function: findGroupClosestToPoint
+  // Given a <Point> returns an object which contains
+  // the group and it's closest side: {group:<Group>, side:"top|left|right|bottom"}
+  //
+  // Paramters
+  //  - <Point>
+  //  - options
+  //   + exclude: <Group> will exclude a group for being matched against
+  findGroupClosestToPoint: function(point, options){
+    minDist = Infinity;
+    closestGroup = null;
+    var onSide = null;
+    for each(var group in this.groups){
+      // Step 0: Exlcude any exluded groups
+      if( options && options.exclude && options.exclude == group ) continue; 
+      
+      // Step 1: Find the closest side
+      var sideDists = [];
+      sideDists.push( [Math.abs(group.bounds.top    - point.y), "top"] );
+      sideDists.push( [Math.abs(group.bounds.bottom - point.y), "bottom"] );      
+      sideDists.push( [Math.abs(group.bounds.left   - point.x), "left"] );
+      sideDists.push( [Math.abs(group.bounds.right  - point.x), "right"] );
+      sideDists.sort(function(a,b){return a[0]-b[0]});
+      var closestSide = sideDists[0][1];
+      
+      // Step 2: Find where one that side is closest to the point.
+      if( closestSide == "top" || closestSide == "bottom" ){
+        var closestPoint = new Point(0, group.bounds[closestSide]);
+        closestPoint.x = Math.max(Math.min(point.x, group.bounds.right), group.bounds.left);
+      } else {
+        var closestPoint = new Point(group.bounds[closestSide], 0);
+        closestPoint.y = Math.max(Math.min(point.y, group.bounds.bottom), group.bounds.top);        
+      }
+      
+      // Step 3: Calculate the distance from the closest point on the rect
+      // to the given point      
+      var dist = closestPoint.distance(point);
+      if( dist < minDist ){
+        closestGroup = group;
+        onSide = closestSide;
+        minDist = dist;
+      }
+      
+    }
+    
+    return closestGroup;
   }
   
 };
