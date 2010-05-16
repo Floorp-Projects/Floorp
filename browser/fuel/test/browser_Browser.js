@@ -70,8 +70,7 @@ function test() {
     // check event
     is(gTabMoveCount, 1, "Checking event handler for tab move");
 
-    let browser = gBrowser.getBrowserAtIndex(gPageB.index);
-    browser.addProgressListener({
+    gBrowser.addProgressListener({
       onStateChange: function (webProgress, request, stateFlags, status) {
         info("onStateChange: " + stateFlags);
 
@@ -79,7 +78,7 @@ function test() {
                          Ci.nsIWebProgressListener.STATE_IS_NETWORK +
                          Ci.nsIWebProgressListener.STATE_STOP;
         if ((stateFlags & complete) == complete) {
-          browser.removeProgressListener(this);
+          gBrowser.removeProgressListener(this);
           onPageBLoadComplete();
         }
       },
