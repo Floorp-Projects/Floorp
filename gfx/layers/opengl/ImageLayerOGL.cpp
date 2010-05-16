@@ -207,25 +207,16 @@ ImageLayerOGL::RenderLayer(int)
 
 PlanarYCbCrImageOGL::PlanarYCbCrImageOGL(mozilla::layers::LayerManagerOGL* aManager)
   : PlanarYCbCrImage(NULL)
-  , mLoaded(PR_FALSE)
-  , mHasData(PR_FALSE)
   , mManager(aManager)
+  , mHasData(PR_FALSE)
 { 
   memset(mTextures, 0, sizeof(GLuint) * 3);
-}
-
-PlanarYCbCrImageOGL::~PlanarYCbCrImageOGL()
-{
-  if (mHasData) {
-    delete [] mData.mYChannel;
-    delete [] mData.mCbChannel;
-    delete [] mData.mCrChannel;
-  }
 }
 
 void
 PlanarYCbCrImageOGL::SetData(const PlanarYCbCrImage::Data &aData)
 {
+  // For now, we copy the data
   int width_shift = 0;
   int height_shift = 0;
   if (aData.mYSize.width == aData.mCbCrSize.width &&
@@ -252,26 +243,32 @@ PlanarYCbCrImageOGL::SetData(const PlanarYCbCrImage::Data &aData)
   mData.mCbCrSize.height = aData.mPicSize.height >> height_shift;
   mData.mYSize = aData.mPicSize;
   mData.mYStride = mData.mYSize.width;
-  mData.mCbChannel = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height];
-  mData.mCrChannel = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height];
-  mData.mYChannel = new PRUint8[mData.mYStride * mData.mYSize.height];
+  mBuffer = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height * 2 +
+                        mData.mYStride * mData.mYSize.height];
+  mData.mYChannel = mBuffer;
+  mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
+  mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
   int cbcr_x = aData.mPicX >> width_shift;
   int cbcr_y = aData.mPicY >> height_shift;
 
-  for (int i = 0; i < mData.mCbCrSize.height; i++) {
-    memcpy(mData.mCbChannel + i * mData.mCbCrStride,
-           aData.mCbChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x, 
-           mData.mCbCrStride);
-    memcpy(mData.mCrChannel + i * mData.mCbCrStride,
-           aData.mCrChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
-           mData.mCbCrStride);
-  }
   for (int i = 0; i < mData.mYSize.height; i++) {
     memcpy(mData.mYChannel + i * mData.mYStride, 
            aData.mYChannel + ((aData.mPicY + i) * aData.mYStride) + aData.mPicX, 
            mData.mYStride);
   }
- 
+  for (int i = 0; i < mData.mCbCrSize.height; i++) {
+    memcpy(mData.mCbChannel + i * mData.mCbCrStride,
+           aData.mCbChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x, 
+           mData.mCbCrStride);
+  }
+  for (int i = 0; i < mData.mCbCrSize.height; i++) {
+    memcpy(mData.mCrChannel + i * mData.mCbCrStride,
+           aData.mCrChannel + ((cbcr_y + i) * aData.mCbCrStride) + cbcr_x,
+           mData.mCbCrStride);
+  }
+
+  // Fix picture rect to be correct
+  mData.mPicX = mData.mPicY = 0;
   mSize = aData.mPicSize;
 
   mHasData = PR_TRUE;

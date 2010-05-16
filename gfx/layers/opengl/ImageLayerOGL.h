@@ -93,7 +93,6 @@ class THEBES_API PlanarYCbCrImageOGL : public PlanarYCbCrImage
 {
 public:
   PlanarYCbCrImageOGL(LayerManagerOGL *aManager);
-  virtual ~PlanarYCbCrImageOGL();
 
   virtual void SetData(const Data &aData);
 
@@ -101,7 +100,7 @@ public:
    * Upload the data from out mData into our textures. For now we use this to
    * make sure the textures are created and filled on the main thread.
    */
-  virtual void AllocateTextures();
+  void AllocateTextures();
   /**
    * XXX
    * Free the textures, we call this from the main thread when we're done
@@ -109,15 +108,15 @@ public:
    * be destroyed off the main-thread and might not be able to properly clean
    * up its textures
    */
-  virtual void FreeTextures();
-  virtual PRBool HasData() { return mHasData; }
+  void FreeTextures();
+  PRBool HasData() { return mHasData; }
 
-  Data mData;
-  PRBool mLoaded;
-  PRBool mHasData;
-  GLuint mTextures[3];
-  gfxIntSize mSize;
+  nsAutoArrayPtr<PRUint8> mBuffer;
   LayerManagerOGL *mManager;
+  Data mData;
+  gfxIntSize mSize;
+  GLuint mTextures[3];
+  PRPackedBool mHasData;
 };
 
 
