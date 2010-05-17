@@ -162,6 +162,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
   { "image", NS_FORM_INPUT_IMAGE },
   { "password", NS_FORM_INPUT_PASSWORD },
   { "radio", NS_FORM_INPUT_RADIO },
+  { "search", NS_FORM_INPUT_SEARCH },
   { "submit", NS_FORM_INPUT_SUBMIT },
   { "tel", NS_FORM_INPUT_TEL },
   { "text", NS_FORM_INPUT_TEXT },
@@ -169,7 +170,7 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 };
 
 // Default type is 'text'.
-static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[10];
+static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[11];
 
 #define NS_INPUT_ELEMENT_STATE_IID                 \
 { /* dc3b3d14-23e2-4479-b513-7b369343e3a0 */       \
@@ -561,6 +562,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   NS_ENSURE_SUCCESS(rv, rv);
 
   switch (mType) {
+    case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEL:
@@ -662,6 +664,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     if (aName == nsGkAtoms::value &&
         !GET_BOOLBIT(mBitField, BF_VALUE_CHANGED) &&
         (mType == NS_FORM_INPUT_TEXT ||
+         mType == NS_FORM_INPUT_SEARCH ||
          mType == NS_FORM_INPUT_PASSWORD ||
          mType == NS_FORM_INPUT_TEL ||
          mType == NS_FORM_INPUT_FILE)) {
@@ -703,6 +706,7 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       // to other input types we need save the mValue into value attribute
       if (mValue &&
           mType != NS_FORM_INPUT_TEXT &&
+          mType != NS_FORM_INPUT_SEARCH &&
           mType != NS_FORM_INPUT_PASSWORD &&
           mType != NS_FORM_INPUT_TEL &&
           mType != NS_FORM_INPUT_FILE) {
@@ -2063,6 +2067,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
               (mType == NS_FORM_INPUT_TEXT ||
+               mType == NS_FORM_INPUT_SEARCH ||
                mType == NS_FORM_INPUT_PASSWORD ||
                mType == NS_FORM_INPUT_TEL ||
                mType == NS_FORM_INPUT_FILE)) {
@@ -2573,6 +2578,7 @@ nsHTMLInputElement::Reset()
       SetCheckedChanged(PR_FALSE);
       break;
     }
+    case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_PASSWORD:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_TEL:
@@ -2757,6 +2763,7 @@ nsHTMLInputElement::SaveState()
     // Never save passwords in session history
     case NS_FORM_INPUT_PASSWORD:
       break;
+    case NS_FORM_INPUT_SEARCH:
     case NS_FORM_INPUT_TEXT:
     case NS_FORM_INPUT_TEL:
     case NS_FORM_INPUT_HIDDEN:
@@ -2891,6 +2898,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
           break;
         }
 
+      case NS_FORM_INPUT_SEARCH:
       case NS_FORM_INPUT_TEXT:
       case NS_FORM_INPUT_TEL:
       case NS_FORM_INPUT_HIDDEN:

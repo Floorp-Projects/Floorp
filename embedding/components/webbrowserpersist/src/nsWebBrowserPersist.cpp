@@ -3304,6 +3304,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpAttributes(
             nsCOMPtr<nsIDOMHTMLInputElement> outElt = do_QueryInterface(*aNodeOut);
             nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(*aNodeOut);
             switch (formControl->GetType()) {
+                case NS_FORM_INPUT_SEARCH:
                 case NS_FORM_INPUT_TEXT:
                 case NS_FORM_INPUT_TEL:
                     nodeAsInput->GetValue(valueStr);
