@@ -705,10 +705,9 @@ nsAccessNode::GetDocAccessibleFor(nsIDocShellTreeItem *aContainer,
 nsDocAccessible*
 nsAccessNode::GetDocAccessibleFor(nsIDOMNode *aNode)
 {
-  nsCOMPtr<nsIPresShell> eventShell = nsCoreUtils::GetPresShellFor(aNode);
-  if (eventShell) {
-    return GetDocAccessibleFor(eventShell->GetDocument());
-  }
+  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
+  if (presShell)
+    return GetDocAccessibleFor(presShell->GetDocument());
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
   if (doc) {
@@ -720,7 +719,7 @@ nsAccessNode::GetDocAccessibleFor(nsIDOMNode *aNode)
 
 already_AddRefed<nsIDOMNode> nsAccessNode::GetCurrentFocus()
 {
-  nsCOMPtr<nsIPresShell> shell = nsCoreUtils::GetPresShellFor(mDOMNode);
+  nsIPresShell *shell = nsCoreUtils::GetPresShellFor(mDOMNode);
   NS_ENSURE_TRUE(shell, nsnull);
   nsCOMPtr<nsIDocument> doc = shell->GetDocument();
   NS_ENSURE_TRUE(doc, nsnull);

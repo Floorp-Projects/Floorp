@@ -507,8 +507,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   nsCOMPtr<nsIContent> focusContent = do_QueryInterface(finalFocusNode);
   nsIFrame *focusFrame = nsnull;
   if (focusContent) {
-    nsCOMPtr<nsIPresShell> shell =
-      nsCoreUtils::GetPresShellFor(finalFocusNode);
+    nsIPresShell *shell = nsCoreUtils::GetPresShellFor(finalFocusNode);
 
     NS_ASSERTION(shell, "No pres shell for final focus node!");
     if (!shell)
@@ -635,7 +634,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresShell> eventShell = nsCoreUtils::GetPresShellFor(aTargetNode);
+  nsIPresShell *eventShell = nsCoreUtils::GetPresShellFor(aTargetNode);
   if (!eventShell) {
     return NS_OK;
   }
