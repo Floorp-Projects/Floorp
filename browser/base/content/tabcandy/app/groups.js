@@ -568,7 +568,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       // dropped back into the group. We need the setTimeout because otherwise
       // at the time of the mouseup the child isn't yet a child of the group.
       var self = this;
-      a.one('mouseup', function(){
+      $el.one('mouseup', function(){
         setTimeout(function(){
           if( self._children.length == 0 ) self.close();
         }, 50);
@@ -1104,7 +1104,7 @@ DragInfo.prototype = {
     if(this.parent && this.parent.expanded)
       this.parent.arrange();
       
-    if(this.item && !this.$el.hasClass('acceptsDrop') && !this.item.parent) {
+    if(this.item && !this.item.parent) {
       this.item.setZ(drag.zIndex);
       drag.zIndex++;
       
