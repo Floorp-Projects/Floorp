@@ -51,6 +51,9 @@ const kDoubleClickThreshold = 200;
 // threshold in pixels for sensing a tap as opposed to a pan
 const kTapRadius = 25;
 
+// maximum drag distance in pixels while axis locking can still be reverted
+const kAxisLockRevertThreshold = 200;
+
 // Same as NS_EVENT_STATE_ACTIVE from nsIEventStateManager.h
 const kStateActive = 0x00000001;
 
@@ -811,6 +814,7 @@ DragData.prototype = {
     this.sX = null;
     this.sY = null;
     this.locked = false;
+    this.stayLocked = false;
     this.lockedX = null;
     this.lockedY = null;
     this._originX = null;
@@ -852,11 +856,16 @@ DragData.prototype = {
       let absX = Math.abs(this._originX - sX);
       let absY = Math.abs(this._originY - sY);
 
+      if (absX > kAxisLockRevertThreshold || absY > kAxisLockRevertThreshold)
+        this.stayLocked = true;
+
       // After the first lock, see if locking decision should be reverted.
-      if (this.lockedX && absX > 3 * absY)
-        this.lockedX = null;
-      else if (this.lockedY && absY > 3 * absX)
-        this.lockedY = null;
+      if (!this.stayLocked) {
+        if (this.lockedX && absX > 3 * absY)
+          this.lockedX = null;
+        else if (this.lockedY && absY > 3 * absX)
+          this.lockedY = null;
+      }
 
       if (!this.locked) {
         // look at difference from origin coord to lock movement, but only
@@ -892,6 +901,7 @@ DragData.prototype = {
     this.sY = this._originY = screenY;
     this.dragging = true;
     this.locked = false;
+    this.stayLocked = false;
   },
 
   endDrag: function endDrag() {
