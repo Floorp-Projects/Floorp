@@ -166,14 +166,6 @@ public:
     NS_OVERRIDE
     virtual void OnChannelError();
 
-    /**
-     * If there is a pending RPC message, process all pending messages.
-     *
-     * @note This method is used on Windows when we detect that an outbound
-     * OLE RPC call is being made to unblock the parent.
-     */
-    void FlushPendingRPCQueue();
-
 #ifdef OS_WIN
     void ProcessNativeEventsInRPCCall();
 
@@ -196,15 +188,10 @@ protected:
 
     bool EventOccurred() const;
 
-    bool MaybeProcessDeferredIncall();
+    void MaybeProcessDeferredIncall();
     void EnqueuePendingMessages();
 
-    /**
-     * Process one deferred or pending message.
-     * @return true if a message was processed
-     */
-    bool OnMaybeDequeueOne();
-
+    void OnMaybeDequeueOne();
     void Incall(const Message& call, size_t stackDepth);
     void DispatchIncall(const Message& call);
 
