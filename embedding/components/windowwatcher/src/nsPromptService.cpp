@@ -53,6 +53,11 @@
 #include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 #include "nsISound.h"
+#include "nsIDialogCreator.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsWindowWatcher.h"
+#include "nsCRT.h"
 
 static const char kPromptURL[] = "chrome://global/content/commonDialog.xul";
 static const char kSelectPromptURL[] = "chrome://global/content/selectDialog.xul";
@@ -741,14 +746,17 @@ nsPromptService::Select(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
 
 nsresult
 nsPromptService::DoDialog(nsIDOMWindow *aParent,
-                   nsIDialogParamBlock *aParamBlock, const char *aChromeURL)
+                          nsIDialogParamBlock *aParamBlock, const char *aChromeURL)
 {
   NS_ENSURE_ARG(aParamBlock);
   NS_ENSURE_ARG(aChromeURL);
   if (!mWatcher)
     return NS_ERROR_FAILURE;
 
-  nsresult rv = NS_OK;
+  const char* features = "centerscreen,chrome,modal,titlebar";
+  const char* name = "_blank";
+
+  nsresult rv = NS_ERROR_FAILURE;
 
   // get a parent, if at all possible
   // (though we'd rather this didn't fail, it's OK if it does. so there's
@@ -759,12 +767,30 @@ nsPromptService::DoDialog(nsIDOMWindow *aParent,
     aParent = activeParent;
   }
 
-  nsCOMPtr<nsISupports> arguments(do_QueryInterface(aParamBlock));
-  nsCOMPtr<nsIDOMWindow> dialog;
-  rv = mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
-                            "centerscreen,chrome,modal,titlebar", arguments,
-                            getter_AddRefs(dialog));
+  nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+  nsWindowWatcher::GetWindowTreeOwner(aParent, getter_AddRefs(parentTreeOwner));
+  nsCOMPtr<nsIDialogCreator> dialogCreator = do_GetInterface(parentTreeOwner);
+  if (dialogCreator) {
+    PRUint32 type = nsIDialogCreator::UNKNOWN_DIALOG;
+    if (nsCRT::strcmp(aChromeURL, kPromptURL) == 0) {
+      type = nsIDialogCreator::GENERIC_DIALOG;
+    } else if (nsCRT::strcmp(aChromeURL, kSelectPromptURL) == 0) {
+      type = nsIDialogCreator::SELECT_DIALOG;
+    }
 
+    rv = dialogCreator->OpenDialog(type,
+                                   nsDependentCString(name),
+                                   nsDependentCString(features),
+                                   aParamBlock,
+                                   nsnull);
+  }
+  if (NS_FAILED(rv)) {
+    nsCOMPtr<nsISupports> arguments(do_QueryInterface(aParamBlock));
+    nsCOMPtr<nsIDOMWindow> dialog;
+    rv = mWatcher->OpenWindow(aParent, aChromeURL, name,
+                              features, arguments,
+                              getter_AddRefs(dialog));
+  }
   return rv;
 }
 

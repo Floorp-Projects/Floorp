@@ -50,6 +50,10 @@
 #include "nsIDOMElement.h"
 #include "nsEventDispatcher.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "TabChild.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIWebProgressListener2.h"
@@ -59,6 +63,8 @@
 #include "nsContentUtils.h"
 #include "nsGeolocationOOP.h"
 #include "nsIDOMNSHTMLFrameElement.h"
+#include "nsIDialogCreator.h"
+#include "nsThreadUtils.h"
 
 using mozilla::ipc::DocumentRendererParent;
 using mozilla::ipc::DocumentRendererShmemParent;
@@ -629,6 +635,91 @@ NS_IMETHODIMP
 TabParent::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+PContentDialogParent*
+TabParent::AllocPContentDialog(const PRUint32& aType,
+                               const nsCString& aName,
+                               const nsCString& aFeatures,
+                               const nsTArray<int>& aIntParams,
+                               const nsTArray<nsString>& aStringParams)
+{
+  ContentDialogParent* parent = new ContentDialogParent();
+  nsCOMPtr<nsIDialogParamBlock> params =
+    do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
+  TabChild::ArraysToParams(aIntParams, aStringParams, params);
+  mDelayedDialogs.AppendElement(new DelayedDialogData(parent, aType, aName,
+                                                      aFeatures, params));
+  nsRefPtr<nsIRunnable> ev =
+    NS_NewRunnableMethod(this, &TabParent::HandleDelayedDialogs);
+  NS_DispatchToCurrentThread(ev);
+  return parent;
+}
+
+void
+TabParent::HandleDelayedDialogs()
+{
+  nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+  nsCOMPtr<nsIDOMWindow> window;
+  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
+  if (frame) {
+    window = do_QueryInterface(frame->GetOwnerDoc()->GetWindow());
+  }
+  nsCOMPtr<nsIDialogCreator> dialogCreator = do_QueryInterface(mBrowserDOMWindow);
+  while (!ShouldDelayDialogs() && mDelayedDialogs.Length()) {
+    PRUint32 index = mDelayedDialogs.Length() - 1;
+    DelayedDialogData* data = mDelayedDialogs[index];
+    mDelayedDialogs.RemoveElementAt(index);
+    nsCOMPtr<nsIDialogParamBlock> params;
+    params.swap(data->mParams);
+    PContentDialogParent* dialog = data->mDialog;
+    if (dialogCreator) {
+      dialogCreator->OpenDialog(data->mType,
+                                data->mName, data->mFeatures,
+                                params, mFrameElement);
+    } else if (ww) {
+      nsCAutoString url;
+      if (data->mType) {
+        if (data->mType == nsIDialogCreator::SELECT_DIALOG) {
+          url.Assign("chrome://global/content/selectDialog.xul");
+        } else if (data->mType == nsIDialogCreator::GENERIC_DIALOG) {
+          url.Assign("chrome://global/content/commonDialog.xul");
+        }
+
+        nsCOMPtr<nsISupports> arguments(do_QueryInterface(params));
+        nsCOMPtr<nsIDOMWindow> dialog;
+        ww->OpenWindow(window, url.get(), data->mName.get(),
+                       data->mFeatures.get(), arguments, getter_AddRefs(dialog));
+      } else {
+        NS_WARNING("unknown dialog types aren't automatically supported in E10s yet!");
+      }
+    }
+
+    delete data;
+    if (dialog) {
+      nsTArray<PRInt32> intParams;
+      nsTArray<nsString> stringParams;
+      TabChild::ParamsToArrays(params, intParams, stringParams);
+      PContentDialogParent::Send__delete__(dialog, intParams, stringParams);
+    }
+  }
+  if (ShouldDelayDialogs() && mDelayedDialogs.Length()) {
+    nsContentUtils::DispatchTrustedEvent(frame->GetOwnerDoc(), frame,
+                                         NS_LITERAL_STRING("MozDelayedModalDialog"),
+                                         PR_TRUE, PR_TRUE);
+  }
+}
+
+PRBool
+TabParent::ShouldDelayDialogs()
+{
+  nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner = do_QueryInterface(mFrameElement);
+  NS_ENSURE_TRUE(frameLoaderOwner, PR_TRUE);
+  nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
+  NS_ENSURE_TRUE(frameLoader, PR_TRUE);
+  PRBool delay = PR_FALSE;
+  frameLoader->GetDelayRemoteDialogs(&delay);
+  return delay;
 }
 
 } // namespace tabs

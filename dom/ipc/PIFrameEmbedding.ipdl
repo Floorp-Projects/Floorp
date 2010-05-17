@@ -43,6 +43,7 @@ include protocol PDocumentRendererShmem;
 include protocol PObjectWrapper;
 include protocol PContextWrapper;
 include protocol PGeolocationRequest;
+include protocol PContentDialog;
 
 include "mozilla/TabTypes.h";
 include "TabMessageUtils.h";
@@ -64,6 +65,7 @@ rpc protocol PIFrameEmbedding
     manages PDocumentRendererShmem;
     manages PContextWrapper;
     manages PGeolocationRequest;
+    manages PContentDialog;
 
 child:
     __delete__();
@@ -105,6 +107,9 @@ parent:
     sendAsyncMessageToParent(nsString aMessage, nsString aJSON);
 
     PGeolocationRequest(URI uri);
+
+    PContentDialog(PRUint32 aType, nsCString aName, nsCString aFeatures,
+                   PRInt32[] aIntParams, nsString[] aStringParams);
 
 child:
     createWidget(MagicWindowHandle parentWidget);

@@ -1639,6 +1639,28 @@ nsFrameLoader::SendCrossProcessKeyEvent(const nsAString& aType,
 }
 
 NS_IMETHODIMP
+nsFrameLoader::GetDelayRemoteDialogs(PRBool* aRetVal)
+{
+  *aRetVal = mDelayRemoteDialogs;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrameLoader::SetDelayRemoteDialogs(PRBool aDelay)
+{
+#ifdef MOZ_IPC
+  if (mChildProcess && mDelayRemoteDialogs && !aDelay) {
+    nsRefPtr<nsIRunnable> ev =
+      NS_NewRunnableMethod(mChildProcess,
+                           &mozilla::dom::TabParent::HandleDelayedDialogs);
+    NS_DispatchToCurrentThread(ev);
+  }
+#endif
+  mDelayRemoteDialogs = aDelay;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFrameLoader::GetCrossProcessObjectWrapper(nsIVariant** cpow)
 {
 #ifdef MOZ_IPC
