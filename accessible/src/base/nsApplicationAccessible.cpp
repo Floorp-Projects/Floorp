@@ -50,6 +50,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIWindowMediator.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Services.h"
 
 nsApplicationAccessible::nsApplicationAccessible() :
   nsAccessibleWrap(nsnull, nsnull)
@@ -83,7 +84,7 @@ nsApplicationAccessible::GetName(nsAString& aName)
   aName.Truncate();
 
   nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    mozilla::services::GetStringBundleService();
 
   NS_ASSERTION(bundleService, "String bundle service must be present!");
   NS_ENSURE_STATE(bundleService);

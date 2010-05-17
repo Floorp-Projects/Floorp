@@ -151,7 +151,8 @@ CheckFontExistence(nsPresContext* aPresContext, const nsString& aFontName)
 static void
 AlertMissingFonts(nsString& aMissingFonts)
 {
-  nsCOMPtr<nsIStringBundleService> sbs(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  nsCOMPtr<nsIStringBundleService> sbs =
+    mozilla::services::GetStringBundleService();
   if (!sbs)
     return;
 

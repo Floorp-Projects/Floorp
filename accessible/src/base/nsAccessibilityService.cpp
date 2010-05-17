@@ -1220,25 +1220,17 @@ nsAccessibilityService::GetAttachedAccessibleFor(nsIDOMNode *aNode,
   return GetAccessibleFor(aNode, aAccessible);
 }
 
-NS_IMETHODIMP
+nsAccessible*
 nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode, 
-                                             nsIPresShell *aPresShell,
-                                             nsIAccessible **aAccessible) 
+                                             nsIPresShell *aPresShell) 
 {
-  NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nsnull;
-
-  NS_ENSURE_ARG(aNode);
-  NS_ENSURE_ARG(aPresShell);
+  if (!aNode || !aPresShell)
+    return nsnull;
 
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
   nsRefPtr<nsAccessible> accessible =
     GetAccessible(aNode, aPresShell, weakShell);
-
-  if (accessible)
-    CallQueryInterface(accessible.get(), aAccessible);
-  
-  return NS_OK;
+  return accessible;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1924,11 +1916,11 @@ nsAccessibilityService::CreateAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULTab:
       accessible = new nsXULTabAccessible(aNode, aWeakShell);
       break;
-    case nsIAccessibleProvider::XULTabBox:
-      accessible = new nsXULTabBoxAccessible(aNode, aWeakShell);
-      break;
     case nsIAccessibleProvider::XULTabs:
       accessible = new nsXULTabsAccessible(aNode, aWeakShell);
+      break;
+    case nsIAccessibleProvider::XULTabpanels:
+      accessible = new nsXULTabpanelsAccessible(aNode, aWeakShell);
       break;
     case nsIAccessibleProvider::XULText:
       accessible = new nsXULTextAccessible(aNode, aWeakShell);

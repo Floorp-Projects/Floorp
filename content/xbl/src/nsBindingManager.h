@@ -135,6 +135,11 @@ public:
   nsresult GetAnonymousNodesFor(nsIContent* aContent, nsIDOMNodeList** aResult);
 
   /**
+   * Same as above, but without the XPCOM goop
+   */
+  nsINodeList* GetAnonymousNodesFor(nsIContent* aContent);
+
+  /**
    * Set the anonymous child content for the specified element.
    * The binding manager assumes ownership of aList.
    */

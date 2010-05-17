@@ -141,7 +141,7 @@ nsTextEquivUtils::AppendTextEquivFromContent(nsIAccessible *aInitiatorAcc,
   gInitiatorAcc = aInitiatorAcc;
 
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(aContent));
-  nsCOMPtr<nsIPresShell> shell = nsCoreUtils::GetPresShellFor(DOMNode);
+  nsIPresShell *shell = nsCoreUtils::GetPresShellFor(DOMNode);
   if (!shell) {
     NS_ASSERTION(PR_TRUE, "There is no presshell!");
     gInitiatorAcc = nsnull;
@@ -158,9 +158,8 @@ nsTextEquivUtils::AppendTextEquivFromContent(nsIAccessible *aInitiatorAcc,
   PRBool goThroughDOMSubtree = PR_TRUE;
 
   if (isVisible) {
-    nsCOMPtr<nsIAccessible> accessible;
-    GetAccService()->GetAccessibleInShell(DOMNode, shell,
-                                               getter_AddRefs(accessible));
+    nsAccessible *accessible =
+      GetAccService()->GetAccessibleInShell(DOMNode, shell);
     if (accessible) {
       rv = AppendFromAccessible(accessible, aString);
       goThroughDOMSubtree = PR_FALSE;

@@ -1130,7 +1130,7 @@ nsCSSStyleSheet::Principal() const
   return mInner->mPrincipal;
 }
 
-already_AddRefed<nsIURI>
+/* virtual */ already_AddRefed<nsIURI>
 nsCSSStyleSheet::GetSheetURI() const
 {
   nsIURI* sheetURI = mInner->mSheetURI;
@@ -1138,7 +1138,7 @@ nsCSSStyleSheet::GetSheetURI() const
   return sheetURI;
 }
 
-already_AddRefed<nsIURI>
+/* virtual */ already_AddRefed<nsIURI>
 nsCSSStyleSheet::GetBaseURI() const
 {
   nsIURI* baseURI = mInner->mBaseURI;
@@ -1146,7 +1146,7 @@ nsCSSStyleSheet::GetBaseURI() const
   return baseURI;
 }
 
-void
+/* virtual */ void
 nsCSSStyleSheet::GetType(nsString& aType) const
 {
   aType.AssignLiteral("text/css");
@@ -1169,19 +1169,19 @@ nsCSSStyleSheet::SetMedia(nsMediaList* aMedia)
   mMedia = aMedia;
 }
 
-PRBool
+/* virtual */ PRBool
 nsCSSStyleSheet::HasRules() const
 {
   return StyleRuleCount() != 0;
 }
 
-PRBool
-nsCSSStyleSheet::GetApplicable() const
+/* virtual */ PRBool
+nsCSSStyleSheet::IsApplicable() const
 {
   return !mDisabled && mInner->mComplete;
 }
 
-void
+/* virtual */ void
 nsCSSStyleSheet::SetEnabled(PRBool aEnabled)
 {
   // Internal method, so callers must handle BeginUpdate/EndUpdate
@@ -1197,13 +1197,13 @@ nsCSSStyleSheet::SetEnabled(PRBool aEnabled)
   }
 }
 
-PRBool
-nsCSSStyleSheet::GetComplete() const
+/* virtual */ PRBool
+nsCSSStyleSheet::IsComplete() const
 {
   return mInner->mComplete;
 }
 
-void
+/* virtual */ void
 nsCSSStyleSheet::SetComplete()
 {
   NS_ASSERTION(!mDirty, "Can't set a dirty sheet complete!");
@@ -1216,21 +1216,21 @@ nsCSSStyleSheet::SetComplete()
   }
 }
 
-already_AddRefed<nsIStyleSheet>
+/* virtual */ already_AddRefed<nsIStyleSheet>
 nsCSSStyleSheet::GetParentSheet() const
 {
   NS_IF_ADDREF(mParent);
   return mParent;
 }
 
-already_AddRefed<nsIDocument>
+/* virtual */ already_AddRefed<nsIDocument>
 nsCSSStyleSheet::GetOwningDocument() const
 {
   NS_IF_ADDREF(mDocument);
   return mDocument;
 }
 
-void
+/* virtual */ void
 nsCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 { // not ref counted
   mDocument = aDocument;
@@ -1246,7 +1246,7 @@ nsCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
 }
 
 already_AddRefed<nsICSSImportRule>
-nsCSSStyleSheet::GetOwnerRule()
+nsCSSStyleSheet::GetOwnerRule() const
 {
   NS_IF_ADDREF(mOwnerRule);
   return mOwnerRule;
@@ -1258,18 +1258,16 @@ nsCSSStyleSheet::AppendStyleSheet(nsCSSStyleSheet* aSheet)
   NS_PRECONDITION(nsnull != aSheet, "null arg");
 
   if (NS_SUCCEEDED(WillDirty())) {
-    nsCSSStyleSheet* sheet = (nsCSSStyleSheet*)aSheet;
-
     nsRefPtr<nsCSSStyleSheet>* tail = &mInner->mFirstChild;
     while (*tail) {
       tail = &(*tail)->mNext;
     }
-    *tail = sheet;
+    *tail = aSheet;
   
     // This is not reference counted. Our parent tells us when
     // it's going away.
-    sheet->mParent = this;
-    sheet->mDocument = mDocument;
+    aSheet->mParent = this;
+    aSheet->mDocument = mDocument;
     DidDirty();
   }
 }
@@ -1280,20 +1278,18 @@ nsCSSStyleSheet::InsertStyleSheetAt(nsCSSStyleSheet* aSheet, PRInt32 aIndex)
   NS_PRECONDITION(nsnull != aSheet, "null arg");
 
   if (NS_SUCCEEDED(WillDirty())) {
-    nsCSSStyleSheet* sheet = (nsCSSStyleSheet*)aSheet;
-
     nsRefPtr<nsCSSStyleSheet>* tail = &mInner->mFirstChild;
     while (*tail && aIndex) {
       --aIndex;
       tail = &(*tail)->mNext;
     }
-    sheet->mNext = *tail;
-    *tail = sheet;
+    aSheet->mNext = *tail;
+    *tail = aSheet;
 
     // This is not reference counted. Our parent tells us when
     // it's going away.
-    sheet->mParent = this;
-    sheet->mDocument = mDocument;
+    aSheet->mParent = this;
+    aSheet->mDocument = mDocument;
     DidDirty();
   }
 }
@@ -1490,7 +1486,8 @@ struct ListEnumData {
   PRInt32 mIndent;
 };
 
-void nsCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
+/* virtual */ void
+nsCSSStyleSheet::List(FILE* out, PRInt32 aIndent) const
 {
 
   PRInt32 index;
@@ -1639,16 +1636,9 @@ nsCSSStyleSheet::GetParentStyleSheet(nsIDOMStyleSheet** aParentStyleSheet)
 {
   NS_ENSURE_ARG_POINTER(aParentStyleSheet);
 
-  nsresult rv = NS_OK;
+  NS_IF_ADDREF(*aParentStyleSheet = mParent);
 
-  if (mParent) {
-    rv =  mParent->QueryInterface(NS_GET_IID(nsIDOMStyleSheet),
-                                  (void **)aParentStyleSheet);
-  } else {
-    *aParentStyleSheet = nsnull;
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1711,7 +1701,7 @@ NS_IMETHODIMP
 nsCSSStyleSheet::GetCssRules(nsIDOMCSSRuleList** aCssRules)
 {
   // No doing this on incomplete sheets!
-  if (!GetComplete()) {
+  if (!mInner->mComplete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
   
@@ -1754,7 +1744,7 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
                                     PRUint32* aReturn)
 {
   // No doing this if the sheet is not complete!
-  if (!GetComplete()) {
+  if (!mInner->mComplete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 
@@ -1901,7 +1891,7 @@ nsCSSStyleSheet::DeleteRule(PRUint32 aIndex)
 {
   nsresult result = NS_ERROR_DOM_INDEX_SIZE_ERR;
   // No doing this if the sheet is not complete!
-  if (!GetComplete()) {
+  if (!mInner->mComplete) {
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
   }
 

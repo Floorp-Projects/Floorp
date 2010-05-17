@@ -235,7 +235,7 @@ NS_SMILEnabled()
 }
 #endif // MOZ_SMIL
 
-nsIContent*
+Element*
 nsSVGUtils::GetParentElement(nsIContent *aContent)
 {
   // XXXbz I _think_ this is right.  We want to be using the binding manager
@@ -250,12 +250,13 @@ nsSVGUtils::GetParentElement(nsIContent *aContent)
     // if we have a binding manager -- do we have an anonymous parent?
     nsIContent *result = bindingManager->GetInsertionParent(aContent);
     if (result) {
-      return result;
+      return result->AsElement();
     }
   }
 
   // otherewise use the explicit one, whether it's null or not...
-  return aContent->GetParent();
+  nsIContent* parent = aContent->GetParent();
+  return parent ? parent->AsElement() : nsnull;
 }
 
 float

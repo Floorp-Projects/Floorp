@@ -752,9 +752,10 @@ nsXULPrototypeCache::StartFastLoad(nsIURI* aURI)
         return NS_ERROR_OUT_OF_MEMORY;
     fastLoadService->SetFileIO(io);
 
-    nsCOMPtr<nsIXULChromeRegistry> chromeReg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv));
-    if (NS_FAILED(rv))
-        return rv;
+    nsCOMPtr<nsIXULChromeRegistry> chromeReg =
+        mozilla::services::GetXULChromeRegistryService();
+    if (!chromeReg)
+        return NS_ERROR_FAILURE;
 
     // XXXbe we assume the first package's locale is the same as the locale of
     // all subsequent packages of FastLoaded chrome URIs....
