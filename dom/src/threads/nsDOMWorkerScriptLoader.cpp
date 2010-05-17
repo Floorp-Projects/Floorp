@@ -434,7 +434,7 @@ nsDOMWorkerScriptLoader::RunInternal()
       principal = parentDoc->NodePrincipal();
       NS_ENSURE_STATE(principal);
 
-      baseURI = parentDoc->GetBaseURI();
+      baseURI = parentDoc->GetDocBaseURI();
     }
   }
   else {

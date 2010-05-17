@@ -664,7 +664,7 @@ PRIVATE PRBool uCheckAndScanJohabHangul(
                                         )
 {
 /* since we don't have code to convert Johab to Unicode right now     *
-  * make this part of code #if 0 to save space untill we fully test it */
+  * make this part of code #if 0 to save space until we fully test it */
   if(inbuflen < 2)
     return PR_FALSE;
   else {

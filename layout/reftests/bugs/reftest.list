@@ -156,6 +156,7 @@ random == 99850-1b.html 99850-1-ref.html # bug 471629
 == 203727.html 203727-ref.html
 == 206516-1.html 206516-1-ref.html
 == 206631-1.html 206631-1-ref.html
+== 206802.html 206802-ref.html
 == 210094-1a.html 210094-1-ref.html
 == 210094-1b.html 210094-1-ref.html
 != 210094-1c.html 210094-1-ref.html
@@ -264,7 +265,7 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") != 240536-resizer-ltr.xul 240536-resizer-rt
 == 283686-2.html 283686-2-ref.html
 == 283686-3.html about:blank
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") HTTP == 289480.html#top 289480-ref.html # basically-verbatim acid2 test, HTTP for a 404 page -- bug 409329 for the non-Mac failures
-== 290129-1.html 290129-1-ref.html
+asserts(1) == 290129-1.html 290129-1-ref.html # bug 315549/460637
 == 291078-1.html 291078-1-ref.html
 == 291078-2.html 291078-2-ref.html
 == 291262-1.html 291262-1-ref.html
@@ -479,7 +480,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 350506-1.html 350506-1-ref.html
 == 352980-3f.html 352980-3-ref.html
 == 355548-1.xml 355548-1-ref.xml
 == 355548-2.xml 355548-2-ref.xml
-== 355548-3.xml 355548-3-ref.xml
+asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",1) == 355548-3.xml 355548-3-ref.xml # bug 456899
 == 355548-4.xml 355548-4-ref.xml
 == 355548-5.xml 355548-5-ref.xml
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 356774-1.html 356774-1-ref.html # probably bug 379317
@@ -563,7 +564,7 @@ fails == 368020-3.html 368020-3-ref.html # bug 368085
 fails == 368020-4.html 368020-4-ref.html # bug 368085
 random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 368020-5.html 368020-5-ref.html # bug 388591
 == 368155-1.xhtml 368155-1-ref.xhtml
-== 368155-negative-margins-1.html 368155-negative-margins-1-ref.html
+asserts(4) == 368155-negative-margins-1.html 368155-negative-margins-1-ref.html # bug 387205 / bug 457397
 # we can't test this because there's antialiasing involved, and our comparison
 # is too exact
 # == 368247-1.html 368247-1-ref.html
@@ -938,8 +939,8 @@ skip-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 413292-1.html 413292-1-ref.html # disabl
 == 417178-1.html 417178-1-ref.html
 == 417246-1.html 417246-1-ref.html
 == 417676.html 417676-ref.html
-== 418574-1.html 418574-1-ref.html
-== 418574-2.html 418574-2-ref.html
+asserts(1) == 418574-1.html 418574-1-ref.html # bug 478135
+asserts(1) == 418574-2.html 418574-2-ref.html # bug 478135
 == 418766-1a.html 418766-1-ref.html
 == 418766-1b.html 418766-1-ref.html
 == 419285-1.html 419285-1-ref.html
@@ -999,7 +1000,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="gtk2") == 424074-1-ref2.xul 424074-1-ref3.xul
 == 425972-2.html 425972-2-ref.html
 != 425972-1.html 425972-2.html
 == 426629-1.html 426629-1-ref.html
-!= 427017-1.xhtml about:blank    # crash test (needs reftest-print)
+asserts(3) != 427017-1.xhtml about:blank    # crash test (needs reftest-print)
 == 427129-scrollframe.html 427129-ref.html
 == 427129-table.html 427129-ref.html
 == 427129-image.html 427129-ref.html
@@ -1331,7 +1332,7 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs
 == 495385-4.html 495385-4-ref.html
 == 495385-5.html 495385-5-ref.html
 == 498228-1.xul 498228-1-ref.xul
-== 496032-1.html 496032-1-ref.html
+asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 496840-1.html 496840-1-ref.html
 == 501257-1a.html 501257-1-ref.html
 == 501257-1b.html 501257-1-ref.html
@@ -1344,7 +1345,7 @@ fails-if(MOZ_WIDGET_TOOLKIT!="cocoa") == 488692-1.html 488692-1-ref.html # needs
 == 503364-1a.html 503364-1-ref.html
 == 503364-1b.html 503364-1-ref.html
 == 503399.html 503399-ref.html
-== 503531-1.html 503531-1-ref.html
+asserts(2) == 503531-1.html 503531-1-ref.html # bug 336104
 == 504032-1.html 504032-1-ref.html
 == 505743-1.html about:blank
 == 506481-1.html 506481-1-ref.html
@@ -1392,13 +1393,14 @@ fails HTTP(..) == 518172-2b.html 518172-b-ref.html # bug 518172
 == 528038-1d.html 528038-1-ref.html
 == 528038-1e.html 528038-1-ref.html
 == 528038-1f.html 528038-1-ref.html
-== 528038-2.html 528038-2-ref.html
+asserts(5) == 528038-2.html 528038-2-ref.html
 == 528096-1.html 528096-1-ref.html
 == 530686-1.html 530686-1-ref.html
 == 531098-1.html 531098-1-ref.html
 == 531371-1.html 531371-1-ref.html
 == 534526-1a.html 534526-1-ref.html
 == 534526-1b.html 534526-1-ref.html
+== 534804-1.html 534804-1-ref.html
 == 534808-1.html 534808-1-ref.html
 == 534808-2.html 534808-2-ref.html
 == 534919-1.html 534919-1-ref.html
@@ -1423,6 +1425,12 @@ random-if(!haveTestPlugin) == 546071-1.html 546071-1-ref.html
 == 551463-1.html 551463-1-ref.html
 == 551699-1.html 551699-1-ref.html
 == 552334-1.html 552334-1-ref.html
+== 555388-1.html 555388-1-ref.html
 == 556661-1.html 556661-1-ref.html
 == 557736-1.html 557736-1-ref.html
 == 559284-1.html 559284-1-ref.html
+== 562835-1.html 562835-ref.html
+== 562835-2.html 562835-ref.html
+== 564054-1.html 564054-1-ref.html
+== 565819-1.html 565819-ref.html
+== 565819-2.html 565819-ref.html

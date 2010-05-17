@@ -660,14 +660,21 @@ nsHttpHandler::BuildUserAgent()
         mUserAgent += mExtraUA;
 }
 
+#ifdef XP_WIN
+typedef BOOL (WINAPI *IsWow64ProcessP) (HANDLE, PBOOL);
+
+#define WNT_BASE "Windows NT %ld.%ld"
+#define W64_PREFIX "; Win64"
+#endif
+
 void
 nsHttpHandler::InitUserAgentComponents()
 {
 
       // Gather platform.
     mPlatform.AssignLiteral(
-#if defined(MOZ_WIDGET_PHOTON)
-    "Photon"
+#if defined(ANDROID)
+    "Android"
 #elif defined(XP_OS2)
     "OS/2"
 #elif defined(XP_WIN)
@@ -700,12 +707,26 @@ nsHttpHandler::InitUserAgentComponents()
 #elif defined(WINCE) || defined(XP_WIN)
     OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
     if (GetVersionEx(&info)) {
-        char *buf = PR_smprintf(
-#if defined(WINCE)
-                                "WindowsCE %ld.%ld",
+        const char *format;
+#ifdef WINCE
+        format = "WindowsCE %ld.%ld";
+#elif defined _M_IA64
+        format = WNT_BASE W64_PREFIX "; IA64";
+#elif defined _M_X64 || defined _M_AMD64
+        format = WNT_BASE W64_PREFIX "; x64";
 #else
-                                "Windows NT %ld.%ld",
+        BOOL isWow64 = FALSE;
+        IsWow64ProcessP fnIsWow64Process = (IsWow64ProcessP)
+          GetProcAddress(GetModuleHandleW(L"kernel32"), "IsWow64Process");
+        if (fnIsWow64Process &&
+            !fnIsWow64Process(GetCurrentProcess(), &isWow64)) {
+            isWow64 = FALSE;
+        }
+        format = isWow64
+          ? WNT_BASE "; WOW64"
+          : WNT_BASE;
 #endif
+        char *buf = PR_smprintf(format,
                                 info.dwMajorVersion,
                                 info.dwMinorVersion);
         if (buf) {

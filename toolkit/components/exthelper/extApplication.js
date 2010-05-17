@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 //=================================================
 // Shutdown - used to store cleanup functions which will
@@ -395,7 +396,7 @@ SessionStorage.prototype = {
 function Extension(aItem) {
   this._item = aItem;
   this._firstRun = false;
-  this._prefs = new PreferenceBranch("extensions." + this._item.id + ".");
+  this._prefs = new PreferenceBranch("extensions." + this.id + ".");
   this._storage = new SessionStorage();
   this._events = new Events();
 
@@ -405,22 +406,8 @@ function Extension(aItem) {
     this._firstRun = true;
   }
 
-  this._enabled = false;
-  const PREFIX_ITEM_URI = "urn:mozilla:item:";
-  const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
-  var rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
-  var itemResource = rdf.GetResource(PREFIX_ITEM_URI + this._item.id);
-  if (itemResource) {
-    var extmgr = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
-    var ds = extmgr.datasource;
-    var target = ds.GetTarget(itemResource, rdf.GetResource(PREFIX_NS_EM + "isDisabled"), true);
-    if (target && target instanceof Ci.nsIRDFLiteral)
-      this._enabled = (target.Value != "true");
-  }
-
-  var os = Components.classes["@mozilla.org/observer-service;1"]
-                     .getService(Ci.nsIObserverService);
-  os.addObserver(this, "em-action-requested", false);
+  AddonManager.addAddonListener(this);
+  AddonManager.addInstallListener(this);
 
   var self = this;
   gShutdown.push(function(){ self._shutdown(); });
@@ -431,31 +418,38 @@ function Extension(aItem) {
 Extension.prototype = {
   // cleanup observer so we don't leak
   _shutdown: function ext_shutdown() {
-    var os = Components.classes["@mozilla.org/observer-service;1"]
-                       .getService(Ci.nsIObserverService);
-    os.removeObserver(this, "em-action-requested");
+    AddonManager.removeAddonListener(this);
+    AddonManager.removeInstallListener(this);
 
     this._prefs = null;
     this._storage = null;
     this._events = null;
   },
 
-  // for nsIObserver
-  observe: function ext_observe(aSubject, aTopic, aData)
-  {
-    if ((aSubject instanceof Ci.nsIUpdateItem) && (aSubject.id == this._item.id))
-    {
-      if (aData == "item-uninstalled")
-        this._events.dispatch("uninstall", this._item.id);
-      else if (aData == "item-disabled")
-        this._events.dispatch("disable", this._item.id);
-      else if (aData == "item-enabled")
-        this._events.dispatch("enable", this._item.id);
-      else if (aData == "item-cancel-action")
-        this._events.dispatch("cancel", this._item.id);
-      else if (aData == "item-upgraded")
-        this._events.dispatch("upgrade", this._item.id);
-    }
+  // for AddonListener
+  onDisabling: function(addon, needsRestart) {
+    if (addon.id == this.id)
+      this._events.dispatch("disable", this.id);
+  },
+
+  onEnabling: function(addon, needsRestart) {
+    if (addon.id == this.id)
+      this._events.dispatch("enable", this.id);
+  },
+
+  onUninstalling: function(addon, needsRestart) {
+    if (addon.id == this.id)
+      this._events.dispatch("uninstall", this.id);
+  },
+
+  onOperationCancelled: function(addon) {
+    if (addon.id == this.id)
+      this._events.dispatch("cancel", this.id);
+  },
+
+  onInstallEnded: function(install, addon) {
+    if (addon.id == this.id)
+      this._events.dispatch("upgrade", this.id);
   },
 
   get id() {
@@ -467,7 +461,7 @@ Extension.prototype = {
   },
 
   get enabled() {
-    return this._enabled;
+    return this._item.isActive;
   },
 
   get version() {
@@ -496,12 +490,12 @@ Extension.prototype = {
 
 //=================================================
 // Extensions constructor
-function Extensions() {
-  XPCOMUtils.defineLazyServiceGetter(this, "_extmgr",
-                                     "@mozilla.org/extensions/manager;1",
-                                     "nsIExtensionManager");
-
+function Extensions(addons) {
   this._cache = {};
+
+  addons.forEach(function(addon) {
+    this._cache[addon.id] = new Extension(addon);
+  }, this);
 
   var self = this;
   gShutdown.push(function() { self._shutdown(); });
@@ -511,20 +505,7 @@ function Extensions() {
 // Extensions implementation
 Extensions.prototype = {
   _shutdown : function exts_shutdown() {
-    this._extmgr = null;
     this._cache = null;
-  },
-
-  /*
-   * Helper method to check cache before creating a new extension
-   */
-  _get : function exts_get(aId) {
-    if (this._cache.hasOwnProperty(aId))
-      return this._cache[aId];
-
-    var newExt = new Extension(this._extmgr.getItemForID(aId));
-    this._cache[aId] = newExt;
-    return newExt;
   },
 
   get all() {
@@ -538,22 +519,15 @@ Extensions.prototype = {
   // minVersion: "1.0"
   // maxVersion: "2.0"
   find : function exts_find(aOptions) {
-    var retVal = [];
-    var items = this._extmgr.getItemList(Ci.nsIUpdateItem.TYPE_EXTENSION);
-
-    for (var i = 0; i < items.length; i++) {
-      retVal.push(this._get(items[i].id));
-    }
-
-    return retVal;
+    return [e for each (e in this._cache)];
   },
 
   has : function exts_has(aId) {
-    return this._extmgr.getItemForID(aId) != null;
+    return aId in this._cache;
   },
 
   get : function exts_get(aId) {
-    return this.has(aId) ? this._get(aId) : null;
+    return this.has(aId) ? this._cache[aId] : null;
   },
 
   QueryInterface : XPCOMUtils.generateQI([Ci.extIExtensions])
@@ -663,10 +637,10 @@ extApplication.prototype = {
     return this.prefs;
   },
 
-  get extensions() {
-    let extensions = new Extensions();
-    this.__defineGetter__("extensions", function() extensions);
-    return this.extensions;
+  getExtensions: function(callback) {
+    AddonManager.getAddonsByTypes(["extension"], function(addons) {
+      callback.callback(new Extensions(addons));
+    });
   },
 
   get events() {

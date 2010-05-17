@@ -570,6 +570,18 @@ xpc_qsSameResult(nsISupports *result1, nsISupports *result2)
     return SameCOMIdentity(result1, result2);
 }
 
+inline PRBool
+xpc_qsSameResult(const nsString &result1, const nsString &result2)
+{
+    return result1.Equals(result2);
+}
+
+inline PRBool
+xpc_qsSameResult(PRInt32 result1, PRInt32 result2)
+{
+    return result1 == result2;
+}
+
 #define XPC_QS_ASSERT_CONTEXT_OK(cx) xpc_qsAssertContextOK(cx)
 #else
 #define XPC_QS_ASSERT_CONTEXT_OK(cx) ((void) 0)

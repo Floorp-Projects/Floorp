@@ -73,7 +73,7 @@ interface nsIFeedProgressListener : nsIFeedResultListener {
    * @param errorText
    *        A short description of the error.
    * @param lineNumber
-   *        The line on which the error occured.
+   *        The line on which the error occurred.
    */
    void reportError(in AString errorText, in long lineNumber, 
                     in boolean bozo);

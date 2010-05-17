@@ -1470,7 +1470,7 @@ def _relicensing_error(err, path, cache=None, quiet=0):
     """Handle an error during relicensing.
     
         "err" may be an error string or an exception instance.
-        "path" is the path of the file on which this error occured.
+        "path" is the path of the file on which this error occurred.
         "cache" is a mapping of path to errors on which errors may be
             stored for later reporting.
         "quiet" optionally allows one to silence the stdout output when

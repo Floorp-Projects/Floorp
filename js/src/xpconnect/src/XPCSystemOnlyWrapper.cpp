@@ -281,7 +281,7 @@ GetWrappedJSObject(JSContext *cx, JSObject *obj)
   return xclasp->wrappedObject(cx, obj);
 }
 
-// Get the (possibly non-existant) SOW off of an object
+// Get the (possibly nonexistent) SOW off of an object
 static inline
 JSObject *
 GetWrapper(JSObject *obj)

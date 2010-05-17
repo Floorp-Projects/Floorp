@@ -53,8 +53,8 @@
 
 
 #if defined(MOZALLOC_EXPORT)
-// do nothing: it's been defined to __declspec(dllexport) by
-// mozalloc*.cpp on platforms where that's required
+/* do nothing: it's been defined to __declspec(dllexport) by
+ * mozalloc*.cpp on platforms where that's required. */
 #elif defined(XP_WIN) || (defined(XP_OS2) && defined(__declspec))
 #  define MOZALLOC_EXPORT __declspec(dllimport)
 #elif defined(HAVE_VISIBILITY_ATTRIBUTE)

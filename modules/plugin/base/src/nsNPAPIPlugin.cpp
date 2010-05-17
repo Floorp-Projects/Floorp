@@ -1805,7 +1805,7 @@ _releasevariantvalue(NPVariant* variant)
           }
         }
 #else
-        PR_Free((void *)s->UTF8Characters);
+        NS_Free((void *)s->UTF8Characters);
 #endif
       }
       break;
@@ -2403,20 +2403,13 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
         return NPERR_GENERIC_ERROR;
       }
 
-      nsXPIDLCString cookieStr;
-      nsresult cookieReturn = cookieService->GetCookieString(uri, nsnull,
-                                                             getter_Copies(cookieStr));
-      if (NS_FAILED(cookieReturn) || !cookieStr) {
+      if (NS_FAILED(cookieService->GetCookieString(uri, nsnull, value)) ||
+          !*value) {
         return NPERR_GENERIC_ERROR;
       }
 
-      *value = PL_strndup(cookieStr, cookieStr.Length());
-
-      if (*value) {
-        *len = cookieStr.Length();
-
-        return NPERR_NO_ERROR;
-      }
+      *len = PL_strlen(*value);
+      return NPERR_NO_ERROR;
     }
 
     break;

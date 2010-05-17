@@ -46,7 +46,7 @@ interface nsIRequestObserver;
 /**
  * nsIURIChecker
  *
- * The URI checker is a component that can be used to verify the existance
+ * The URI checker is a component that can be used to verify the existence
  * of a resource at the location specified by a given URI.  It will use
  * protocol specific methods to verify the URI (e.g., use of HEAD request
  * for HTTP URIs).

@@ -47,7 +47,7 @@
 
 class nsICSSRule;
 class nsICSSStyleRule;
-class nsICSSStyleSheet;
+class nsCSSStyleSheet;
 class nsIPrincipal;
 class nsIURI;
 class nsIUnicharInputStream;
@@ -66,7 +66,7 @@ namespace css {
 class NS_STACK_CLASS nsCSSParser {
 public:
   nsCSSParser(mozilla::css::Loader* aLoader = nsnull,
-              nsICSSStyleSheet* aSheet = nsnull);
+              nsCSSStyleSheet* aSheet = nsnull);
   ~nsCSSParser();
 
   static void Shutdown();
@@ -83,9 +83,9 @@ public:
   { return !!mImpl; }
 
   // Set a style sheet for the parser to fill in. The style sheet must
-  // implement the nsICSSStyleSheet interface.  Null can be passed in to clear
+  // implement the nsCSSStyleSheet interface.  Null can be passed in to clear
   // out an existing stylesheet reference.
-  nsresult SetStyleSheet(nsICSSStyleSheet* aSheet);
+  nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
 
   // Set whether or not to emulate Nav quirks
   nsresult SetQuirkMode(PRBool aQuirkMode);

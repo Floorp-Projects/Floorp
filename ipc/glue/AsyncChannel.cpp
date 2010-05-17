@@ -413,12 +413,14 @@ AsyncChannel::ReportConnectionError(const char* channelName) const
         break;
     case ChannelTimeout:
         errorMsg = "Channel timeout: cannot send/recv";
+    case ChannelClosing:
+        errorMsg = "Channel closing: too late to send/recv, messages will be lost";
     case ChannelError:
         errorMsg = "Channel error: cannot send/recv";
         break;
 
     default:
-        NOTREACHED();
+        NS_RUNTIMEABORT("unreached");
     }
 
     PrintErrorMessage(channelName, errorMsg);

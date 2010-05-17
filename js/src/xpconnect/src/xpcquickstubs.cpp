@@ -325,10 +325,6 @@ SharedLookupSetter(JSContext *cx, uintN argc, jsval *vp)
     return LookupGetterOrSetter(cx, PR_FALSE, argc, vp);
 }
 
-// XXX Hack! :-/
-JS_FRIEND_API(JSBool) js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp);
-JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp);
-
 static JSBool
 DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
 {

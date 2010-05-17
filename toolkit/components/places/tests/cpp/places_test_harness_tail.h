@@ -114,8 +114,8 @@ main(int aArgc,
     passed(TEST_FILE);
   }
 
-  (void)fprintf(stderr, TEST_INFO_STR  "%d of %d tests passed\n",
-                TEST_FILE, gPassedTests, gTotalTests);
+  (void)fprintf(stderr, TEST_INFO_STR  "%u of %u tests passed\n",
+                TEST_FILE, unsigned(gPassedTests), unsigned(gTotalTests));
 
   return gPassedTests == gTotalTests ? 0 : -1;
 }

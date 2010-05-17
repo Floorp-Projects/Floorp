@@ -438,7 +438,7 @@ static PRBool test_ptrarray() {
 
 //----
 
-// This test relies too heavily on the existance of DebugGetHeader to be
+// This test relies too heavily on the existence of DebugGetHeader to be
 // useful in non-debug builds.
 #ifdef DEBUG
 static PRBool test_autoarray() {
@@ -523,6 +523,45 @@ static PRBool test_indexof() {
 
 //----
 
+template <class Array>
+static PRBool is_heap(const Array& ary, PRUint32 len) {
+  PRUint32 index = 1;
+  while (index < len) {
+    if (ary[index] > ary[(index - 1) >> 1])
+      return PR_FALSE;
+    index++;
+  }
+  return PR_TRUE;
+} 
+
+static PRBool test_heap() {
+  const int data[] = {4,6,8,2,4,1,5,7,3};
+  nsTArray<int> ary;
+  ary.AppendElements(data, NS_ARRAY_LENGTH(data));
+  // make a heap and make sure it's a heap
+  ary.MakeHeap();
+  if (!is_heap(ary, NS_ARRAY_LENGTH(data)))
+    return PR_FALSE;
+  // pop the root and make sure it's still a heap
+  int root = ary[0];
+  ary.PopHeap();
+  if (!is_heap(ary, NS_ARRAY_LENGTH(data) - 1))
+    return PR_FALSE;
+  // push the previously poped value back on and make sure it's still a heap
+  ary.PushHeap(root);
+  if (!is_heap(ary, NS_ARRAY_LENGTH(data)))
+    return PR_FALSE;
+  // make sure the heap looks like what we expect
+  const int expected_data[] = {8,7,5,6,4,1,4,2,3};
+  PRUint32 index;
+  for (index = 0; index < NS_ARRAY_LENGTH(data); index++)
+    if (ary[index] != expected_data[index])
+      return PR_FALSE;
+  return PR_TRUE;
+}
+
+//----
+
 typedef PRBool (*TestFunc)();
 #define DECL_TEST(name) { #name, name }
 
@@ -543,6 +582,7 @@ static const struct Test {
   DECL_TEST(test_autoarray),
 #endif
   DECL_TEST(test_indexof),
+  DECL_TEST(test_heap),
   { nsnull, nsnull }
 };
 

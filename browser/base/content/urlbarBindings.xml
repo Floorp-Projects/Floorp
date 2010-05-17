@@ -325,11 +325,13 @@
 
       <method name="_getSelectedValueForClipboard">
         <body><![CDATA[
-          var val = this.value.substring(this.selectionStart, this.selectionEnd);
+          // Grab the actual input field's value, not our value, which could include moz-action:
+          var inputVal = this.inputField.value;
+          var val = inputVal.substring(this.selectionStart, this.selectionEnd);
 
           // If the entire value is selected and it's a valid non-javascript,
           // non-data URI, encode it.
-          if (val == this.value &&
+          if (val == inputVal &&
               this.getAttribute("pageproxystate") == "valid") {
             let uri;
             try {
@@ -360,7 +362,9 @@
             if (aCommand == "cmd_cut" && this.isCommandEnabled(aCommand)) {
               let start = urlbar.selectionStart;
               let end = urlbar.selectionEnd;
-              urlbar.value = urlbar.value.substring(0, start) + urlbar.value.substring(end);
+              // This should reset any "moz-action:" prefix.
+              urlbar.value = urlbar.inputField.value.substring(0, start) +
+                             urlbar.inputField.value.substring(end);
               urlbar.selectionStart = urlbar.selectionEnd = start;
               SetPageProxyState("invalid");
             }

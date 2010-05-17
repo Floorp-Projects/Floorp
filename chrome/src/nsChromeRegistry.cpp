@@ -75,7 +75,7 @@
 
 #include "nsIAtom.h"
 #include "nsICommandLine.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIConsoleService.h"
 #include "nsIDirectoryService.h"
 #include "nsIDocument.h"
@@ -959,13 +959,11 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
     for (PRInt32 l = 0; l < agentSheets.Count(); ++l) {
       nsIStyleSheet *sheet = agentSheets[l];
 
-      nsCOMPtr<nsIURI> uri;
-      rv = sheet->GetSheetURI(getter_AddRefs(uri));
-      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIURI> uri = sheet->GetSheetURI();
 
       if (IsChromeURI(uri)) {
         // Reload the sheet.
-        nsCOMPtr<nsICSSStyleSheet> newSheet;
+        nsRefPtr<nsCSSStyleSheet> newSheet;
         rv = document->LoadChromeSheetSync(uri, PR_TRUE,
                                            getter_AddRefs(newSheet));
         if (NS_FAILED(rv)) return rv;
@@ -1004,12 +1002,12 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
   // Iterate over our old sheets and kick off a sync load of the new
   // sheet if and only if it's a chrome URL.
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsICSSStyleSheet> sheet = do_QueryInterface(oldSheets[i]);
+    nsRefPtr<nsCSSStyleSheet> sheet = do_QueryObject(oldSheets[i]);
     nsIURI* uri = sheet ? sheet->GetOriginalURI() : nsnull;
 
     if (uri && IsChromeURI(uri)) {
       // Reload the sheet.
-      nsCOMPtr<nsICSSStyleSheet> newSheet;
+      nsRefPtr<nsCSSStyleSheet> newSheet;
       // XXX what about chrome sheets that have a title or are disabled?  This
       // only works by sheer dumb luck.
       document->LoadChromeSheetSync(uri, PR_FALSE, getter_AddRefs(newSheet));

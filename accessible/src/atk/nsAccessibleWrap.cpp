@@ -894,10 +894,6 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
       return nsnull;
     }
 
-    // XXX Fix this so it is not O(n^2) to walk through the children!
-    // Either we can cache the last accessed child so that we can just GetNextSibling()
-    // or we should cache an array of children in each nsAccessible
-    // (instead of mNextSibling on the children)
     nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
     if (!accWrap || nsAccUtils::MustPrune(accWrap)) {
         return nsnull;
@@ -907,7 +903,9 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
     nsCOMPtr<nsIAccessibleHyperText> hyperText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
     if (hyperText) {
-        // If HyperText, then number of links matches number of children
+        // If HyperText, then number of links matches number of children.
+        // XXX Fix this so it is not O(n^2) to walk through the children
+        // (bug 566328).
         nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
         hyperText->GetLink(aChildIndex, getter_AddRefs(hyperLink));
         accChild = do_QueryInterface(hyperLink);

@@ -843,7 +843,7 @@ XPC_SJOW_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
   }
 
-  return WrapJSValue(cx, obj, *rval, rval);
+  return WrapJSValue(cx, safeObj, *rval, rval);
 }
 
 static JSBool

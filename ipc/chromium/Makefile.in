@@ -232,7 +232,6 @@ CMMSRCS += \
   $(NULL)
 
 CPPSRCS += \
-  data_pack.cc \
   debug_util_mac.cc \
   hmac_mac.cc \
   idle_timer.cc \
@@ -317,6 +316,15 @@ endif # }
 endif # }
 
 endif # }
+
+ifneq (86,$(findstring 86,$(OS_TEST))) # {
+ifneq (arm,$(findstring arm,$(OS_TEST))) # {
+# Use mutex-backed atomics
+CPPSRCS += atomicops_internals_mutex.cc
+endif # }
+endif # }
+
+OS_CXXFLAGS += $(TK_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 

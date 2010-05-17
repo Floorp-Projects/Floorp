@@ -38,16 +38,16 @@ var gWindowUtils;
 
 function startPopupTests(tests)
 {
-  document.addEventListener("popupshowing", eventOccured, false);
-  document.addEventListener("popupshown", eventOccured, false);
-  document.addEventListener("popuphiding", eventOccured, false);
-  document.addEventListener("popuphidden", eventOccured, false);
-  document.addEventListener("command", eventOccured, false);
-  document.addEventListener("DOMMenuItemActive", eventOccured, false);
-  document.addEventListener("DOMMenuItemInactive", eventOccured, false);
-  document.addEventListener("DOMMenuInactive", eventOccured, false);
-  document.addEventListener("DOMMenuBarActive", eventOccured, false);
-  document.addEventListener("DOMMenuBarInactive", eventOccured, false);
+  document.addEventListener("popupshowing", eventOccurred, false);
+  document.addEventListener("popupshown", eventOccurred, false);
+  document.addEventListener("popuphiding", eventOccurred, false);
+  document.addEventListener("popuphidden", eventOccurred, false);
+  document.addEventListener("command", eventOccurred, false);
+  document.addEventListener("DOMMenuItemActive", eventOccurred, false);
+  document.addEventListener("DOMMenuItemInactive", eventOccurred, false);
+  document.addEventListener("DOMMenuInactive", eventOccurred, false);
+  document.addEventListener("DOMMenuBarActive", eventOccurred, false);
+  document.addEventListener("DOMMenuBarInactive", eventOccurred, false);
 
   gPopupTests = tests;
   gWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -87,7 +87,7 @@ function disableNonTestMouse(aDisable) {
   gWindowUtils.disableNonTestMouseEvents(aDisable);
 }
 
-function eventOccured(event)
+function eventOccurred(event)
 {
    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 

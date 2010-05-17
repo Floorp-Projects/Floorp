@@ -173,6 +173,14 @@ private:
   PRBool GrowBy(PRUint32 aGrowSize);
   PRBool AddAttrSlot();
 
+  /**
+   * Set *aPos to aChild and update sibling pointers as needed.  aIndex is the
+   * index at which aChild is actually being inserted.  aChildCount is the
+   * number of kids we had before the insertion.
+   */
+  inline void SetChildAtPos(void** aPos, nsIContent* aChild, PRUint32 aIndex,
+                            PRUint32 aChildCount);
+
   struct InternalAttr
   {
     nsAttrName mName;

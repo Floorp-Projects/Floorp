@@ -363,7 +363,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
         // pop all the elements off the stack and release them.
         PRInt32 i = mContextStack->Length();
         while (0 < i--) {
-            nsIRDFResource* resource;
+            nsIRDFResource* resource = nsnull;
             RDFContentSinkState state;
             RDFContentSinkParseMode parseMode;
             PopContext(resource, state, parseMode);

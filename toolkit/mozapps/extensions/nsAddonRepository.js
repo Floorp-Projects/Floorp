@@ -42,6 +42,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 const PREF_GETADDONS_BROWSEADDONS        = "extensions.getAddons.browseAddons";
 const PREF_GETADDONS_BROWSERECOMMENDED   = "extensions.getAddons.recommended.browseURL";
@@ -202,9 +203,7 @@ AddonRepository.prototype = {
   },
 
   // Parses an add-on entry from an <addon> element
-  _parseAddon: function(element) {
-    var em = Cc["@mozilla.org/extensions/manager;1"].
-             getService(Ci.nsIExtensionManager);
+  _parseAddon: function(element, known_ids) {
     var app = Cc["@mozilla.org/xre/app-info;1"].
               getService(Ci.nsIXULAppInfo).
               QueryInterface(Ci.nsIXULRuntime);
@@ -219,7 +218,7 @@ AddonRepository.prototype = {
         return;
 
     // Ignore installed add-ons
-    if (em.getItemForID(guid[0].textContent) != null)
+    if (known_ids.indexOf(guid[0].textContent) != -1)
       return;
 
     // Ignore sandboxed add-ons
@@ -304,9 +303,9 @@ AddonRepository.prototype = {
             // The type element has an id attribute that is the id from AMO's
             // database. This doesn't match our type values to perform a mapping
             if (node.getAttribute("id") == 2)
-              addon.type = Ci.nsIUpdateItem.TYPE_THEME;
+              addon.type = Ci.nsIAddonSearchResult.TYPE_THEME;
             else
-              addon.type = Ci.nsIUpdateItem.TYPE_EXTENSION;
+              addon.type = Ci.nsIAddonSearchResult.TYPE_EXTENSION;
             break;
           case "install":
             // No os attribute means the xpi is compatible with any os
@@ -341,22 +340,28 @@ AddonRepository.prototype = {
       this._reportFailure();
       return;
     }
-    var elements = responseXML.documentElement.getElementsByTagName("addon");
-    for (var i = 0; i < elements.length; i++) {
-      this._parseAddon(elements[i]);
 
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefBranch);
-      if (this._addons.length == this._maxResults) {
-        this._reportSuccess(elements.length);
-        return;
+    var self = this;
+    AddonManager.getAllAddons(function(addons) {
+      var known_ids = [a.id for each(a in addons)];
+
+      var elements = responseXML.documentElement.getElementsByTagName("addon");
+      for (var i = 0; i < elements.length; i++) {
+        self._parseAddon(elements[i], known_ids);
+  
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch);
+        if (self._addons.length == self._maxResults) {
+          self._reportSuccess(elements.length);
+          return;
+        }
       }
-    }
 
-    if (responseXML.documentElement.hasAttribute("total_results"))
-      this._reportSuccess(responseXML.documentElement.getAttribute("total_results"));
-    else
-      this._reportSuccess(elements.length);
+      if (responseXML.documentElement.hasAttribute("total_results"))
+        self._reportSuccess(responseXML.documentElement.getAttribute("total_results"));
+      else
+        self._reportSuccess(elements.length);
+    });
   },
 
   // Performs a new request for results
