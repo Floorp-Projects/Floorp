@@ -1444,7 +1444,7 @@ nthChildGenericMatches(RuleProcessorData& data,
     if (isFromEnd)
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
     else
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
   const PRInt32 index = data.GetNthIndex(isOfType, isFromEnd, PR_FALSE);
@@ -1481,7 +1481,7 @@ edgeOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
     if (checkLast)
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
     else
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
   return (!checkFirst ||
@@ -1654,6 +1654,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           PRInt32 index = -1;
 
           if (aTreeMatchContext.mForStyling)
+            // FIXME:  This isn't sufficient to handle:
+            //   :-moz-empty-except-children-with-localname() + E
+            //   :-moz-empty-except-children-with-localname() ~ E
+            // because we don't know to restyle the grandparent of the
+            // inserted/removed element (as in bug 534804 for :empty).
             element->SetFlags(NODE_HAS_SLOW_SELECTOR);
           do {
             child = element->GetChildAt(++index);
@@ -2119,7 +2124,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
         nsIContent* parent = prevdata->mParentContent;
         if (parent) {
           if (aTreeMatchContext.mForStyling)
-            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
 
           PRInt32 index = parent->IndexOf(prevdata->mElement);
           while (0 <= --index) {
@@ -2823,7 +2828,7 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
 /* static */ PRBool
 nsCSSRuleProcessor::CascadeSheet(nsCSSStyleSheet* aSheet, CascadeEnumData* aData)
 {
-  if (aSheet->GetApplicable() &&
+  if (aSheet->IsApplicable() &&
       aSheet->UseForPresentation(aData->mPresContext, aData->mCacheKey) &&
       aSheet->mInner) {
     nsCSSStyleSheet* child = aSheet->mInner->mFirstChild;

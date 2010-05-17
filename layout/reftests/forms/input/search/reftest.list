@@ -1,0 +1,3 @@
+== input-search-1.html input-search-ref.html
+== input-search-2.html input-search-ref.html
+!= input-search-3.html input-search-ref.html

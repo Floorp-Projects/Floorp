@@ -152,20 +152,15 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI, PRBool aWatch
 
   // Get the element
   if (isXBL) {
-    nsCOMPtr<nsIDOMNodeList> anonymousChildren;
-    doc->BindingManager()->
-      GetAnonymousNodesFor(bindingParent, getter_AddRefs(anonymousChildren));
+    nsINodeList* anonymousChildren =
+      doc->BindingManager()-> GetAnonymousNodesFor(bindingParent);
 
     if (anonymousChildren) {
       PRUint32 length;
       anonymousChildren->GetLength(&length);
-      for (PRUint32 i = 0; i < length && !mContent; ++i) {
-        nsCOMPtr<nsIDOMNode> node;
-        anonymousChildren->Item(i, getter_AddRefs(node));
-        nsCOMPtr<nsIContent> c = do_QueryInterface(node);
-        if (c) {
-          mContent = nsContentUtils::MatchElementId(c, ref);
-        }
+      for (PRUint32 i = 0; i < length && !mElement; ++i) {
+        mElement =
+          nsContentUtils::MatchElementId(anonymousChildren->GetNodeAt(i), ref);
       }
     }
 
@@ -210,7 +205,7 @@ nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
   if (aWatch) {
     mWatchDocument = aDocument;
     if (mWatchDocument) {
-      mContent = mWatchDocument->AddIDTargetObserver(mWatchID, Observe, this);
+      mElement = mWatchDocument->AddIDTargetObserver(mWatchID, Observe, this);
     }
     return;
   }
@@ -221,10 +216,12 @@ nsReferencedElement::HaveNewDocument(nsIDocument* aDocument, PRBool aWatch,
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
   NS_ASSERTION(domDoc, "Content doesn't reference a dom Document");
 
+  // XXXbz we should really have a sane GetElementById on nsIDocument.
   nsCOMPtr<nsIDOMElement> element;
   domDoc->GetElementById(aRef, getter_AddRefs(element));
   if (element) {
-    mContent = do_QueryInterface(element);
+    nsCOMPtr<nsIContent> content = do_QueryInterface(element);
+    mElement = content->AsElement();
   }
 }
 
@@ -234,7 +231,7 @@ nsReferencedElement::Traverse(nsCycleCollectionTraversalCallback* aCB)
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCB, "mWatchDocument");
   aCB->NoteXPCOMChild(mWatchDocument);
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCB, "mContent");
-  aCB->NoteXPCOMChild(mContent);
+  aCB->NoteXPCOMChild(mElement);
 }
 
 void
@@ -249,20 +246,20 @@ nsReferencedElement::Unlink()
   }
   mWatchDocument = nsnull;
   mWatchID = nsnull;
-  mContent = nsnull;
+  mElement = nsnull;
 }
 
 PRBool
-nsReferencedElement::Observe(nsIContent* aOldContent,
-                             nsIContent* aNewContent, void* aData)
+nsReferencedElement::Observe(Element* aOldElement,
+                             Element* aNewElement, void* aData)
 {
   nsReferencedElement* p = static_cast<nsReferencedElement*>(aData);
   if (p->mPendingNotification) {
-    p->mPendingNotification->SetTo(aNewContent);
+    p->mPendingNotification->SetTo(aNewElement);
   } else {
-    NS_ASSERTION(aOldContent == p->mContent, "Failed to track content!");
+    NS_ASSERTION(aOldElement == p->mElement, "Failed to track content!");
     ChangeNotification* watcher =
-      new ChangeNotification(p, aOldContent, aNewContent);
+      new ChangeNotification(p, aOldElement, aNewElement);
     p->mPendingNotification = watcher;
     nsContentUtils::AddScriptRunner(watcher);
   }
@@ -290,11 +287,11 @@ nsReferencedElement::DocumentLoadNotification::Observe(nsISupports* aSubject,
   if (mTarget) {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aSubject);
     mTarget->mPendingNotification = nsnull;
-    NS_ASSERTION(!mTarget->mContent, "Why do we have content here?");
+    NS_ASSERTION(!mTarget->mElement, "Why do we have content here?");
     // If we got here, that means we had Reset() called with aWatch ==
     // PR_TRUE.  So keep watching if IsPersistent().
     mTarget->HaveNewDocument(doc, mTarget->IsPersistent(), mRef);
-    mTarget->ContentChanged(nsnull, mTarget->mContent);
+    mTarget->ElementChanged(nsnull, mTarget->mElement);
   }
   return NS_OK;
 }

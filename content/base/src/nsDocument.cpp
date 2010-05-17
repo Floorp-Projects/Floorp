@@ -177,6 +177,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "nsIPropertyBag2.h"
 #include "nsIDOMPageTransitionEvent.h"
 #include "nsFrameLoader.h"
+#include "nsEscape.h"
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif // MOZ_MEDIA
@@ -1983,7 +1984,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     nsIStyleSheet* sheet = mStyleSheets[indx];
     sheet->SetOwningDocument(nsnull);
 
-    if (sheet->GetApplicable()) {
+    if (sheet->IsApplicable()) {
       RemoveStyleSheetFromStyleSets(sheet);
     }
 
@@ -1995,7 +1996,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     nsIStyleSheet* sheet = mCatalogSheets[indx];
     sheet->SetOwningDocument(nsnull);
 
-    if (sheet->GetApplicable()) {
+    if (sheet->IsApplicable()) {
       nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
       if (shell) {
         shell->StyleSet()->RemoveStyleSheet(nsStyleSet::eAgentSheet, sheet);
@@ -2088,14 +2089,14 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
   PRInt32 i;
   for (i = mStyleSheets.Count() - 1; i >= 0; --i) {
     nsIStyleSheet* sheet = mStyleSheets[i];
-    if (sheet->GetApplicable()) {
+    if (sheet->IsApplicable()) {
       aStyleSet->AddDocStyleSheet(sheet, this);
     }
   }
 
   for (i = mCatalogSheets.Count() - 1; i >= 0; --i) {
     nsIStyleSheet* sheet = mCatalogSheets[i];
-    if (sheet->GetApplicable()) {
+    if (sheet->IsApplicable()) {
       aStyleSet->AppendStyleSheet(nsStyleSet::eAgentSheet, sheet);
     }
   }
@@ -3366,7 +3367,7 @@ nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
   mStyleSheets.AppendObject(aSheet);
   aSheet->SetOwningDocument(this);
 
-  if (aSheet->GetApplicable()) {
+  if (aSheet->IsApplicable()) {
     AddStyleSheetToStyleSets(aSheet);
   }
 
@@ -3394,7 +3395,7 @@ nsDocument::RemoveStyleSheet(nsIStyleSheet* aSheet)
   }
 
   if (!mIsGoingAway) {
-    if (aSheet->GetApplicable()) {
+    if (aSheet->IsApplicable()) {
       RemoveStyleSheetFromStyleSets(aSheet);
     }
 
@@ -3430,7 +3431,7 @@ nsDocument::UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
     if (newSheet) {
       mStyleSheets.InsertObjectAt(newSheet, oldIndex);
       newSheet->SetOwningDocument(this);
-      if (newSheet->GetApplicable()) {
+      if (newSheet->IsApplicable()) {
         AddStyleSheetToStyleSets(newSheet);
       }
 
@@ -3449,7 +3450,7 @@ nsDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 
   aSheet->SetOwningDocument(this);
 
-  if (aSheet->GetApplicable()) {
+  if (aSheet->IsApplicable()) {
     AddStyleSheetToStyleSets(aSheet);
   }
 
@@ -3502,7 +3503,7 @@ nsDocument::AddCatalogStyleSheet(nsIStyleSheet* aSheet)
   mCatalogSheets.AppendObject(aSheet);
   aSheet->SetOwningDocument(this);
 
-  if (aSheet->GetApplicable()) {
+  if (aSheet->IsApplicable()) {
     // This is like |AddStyleSheetToStyleSets|, but for an agent sheet.
     nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
     if (shell) {
@@ -3914,7 +3915,7 @@ nsDocument::GetElementById(const nsAString& aElementId,
   return CallQueryInterface(e, aReturn);
 }
 
-nsIContent*
+Element*
 nsDocument::AddIDTargetObserver(nsIAtom* aID, IDTargetObserver aObserver,
                                 void* aData)
 {
@@ -7661,6 +7662,100 @@ nsDocument::RegisterFileDataUri(nsACString& aUri)
 }
 
 void
+nsDocument::SetScrollToRef(nsIURI *aDocumentURI)
+{
+  if (!aDocumentURI) {
+    return;
+  }
+
+  nsCAutoString ref;
+
+  // Since all URI's that pass through here aren't URL's we can't
+  // rely on the nsIURI implementation for providing a way for
+  // finding the 'ref' part of the URI, we'll haveto revert to
+  // string routines for finding the data past '#'
+
+  aDocumentURI->GetSpec(ref);
+
+  nsReadingIterator<char> start, end;
+
+  ref.BeginReading(start);
+  ref.EndReading(end);
+
+  if (FindCharInReadable('#', start, end)) {
+    ++start; // Skip over the '#'
+
+    mScrollToRef = Substring(start, end);
+  }
+}
+
+void
+nsDocument::ScrollToRef()
+{
+  if (mScrolledToRefAlready) {
+    return;
+  }
+
+  if (mScrollToRef.IsEmpty()) {
+    return;
+  }
+
+  char* tmpstr = ToNewCString(mScrollToRef);
+  if (!tmpstr) {
+    return;
+  }
+
+  nsUnescape(tmpstr);
+  nsCAutoString unescapedRef;
+  unescapedRef.Assign(tmpstr);
+  nsMemory::Free(tmpstr);
+
+  nsresult rv = NS_ERROR_FAILURE;
+  // We assume that the bytes are in UTF-8, as it says in the spec:
+  // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
+  NS_ConvertUTF8toUTF16 ref(unescapedRef);
+
+  nsCOMPtr<nsIPresShell> shell = GetPrimaryShell();
+  if (shell) {
+    // Check an empty string which might be caused by the UTF-8 conversion
+    if (!ref.IsEmpty()) {
+      // Note that GoToAnchor will handle flushing layout as needed.
+      rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
+
+    // If UTF-8 URI failed then try to assume the string as a
+    // document's charset.
+
+    if (NS_FAILED(rv)) {
+      const nsACString &docCharset = GetDocumentCharacterSet();
+
+      rv = nsContentUtils::ConvertStringFromCharset(docCharset, unescapedRef, ref);
+
+      if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
+        rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
+      }
+    }
+    if (NS_SUCCEEDED(rv)) {
+      mScrolledToRefAlready = PR_TRUE;
+    }
+  }
+}
+
+void
+nsDocument::ResetScrolledToRefAlready()
+{
+  mScrolledToRefAlready = PR_FALSE;
+}
+
+void
+nsDocument::SetChangeScrollPosWhenScrollingToRef(PRBool aValue)
+{
+  mChangeScrollPosWhenScrollingToRef = aValue;
+}
+
+void
 nsIDocument::RegisterFreezableElement(nsIContent* aContent)
 {
   if (!mFreezableElements) {
@@ -7730,7 +7825,7 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
       for (PRInt32 i = 0; i < sheetsCount; ++i) {
         nsRefPtr<nsCSSStyleSheet> sheet = do_QueryObject(GetStyleSheetAt(i));
         if (sheet) {
-          if (sheet->GetApplicable()) {
+          if (sheet->IsApplicable()) {
             nsRefPtr<nsCSSStyleSheet> clonedSheet =
               sheet->Clone(nsnull, nsnull, clonedDoc, nsnull);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");
@@ -7746,7 +7841,7 @@ nsIDocument::CreateStaticClone(nsISupports* aCloneContainer)
         nsRefPtr<nsCSSStyleSheet> sheet =
           do_QueryObject(GetCatalogStyleSheetAt(i));
         if (sheet) {
-          if (sheet->GetApplicable()) {
+          if (sheet->IsApplicable()) {
             nsRefPtr<nsCSSStyleSheet> clonedSheet =
               sheet->Clone(nsnull, nsnull, clonedDoc, nsnull);
             NS_WARN_IF_FALSE(clonedSheet, "Cloning a stylesheet didn't work!");

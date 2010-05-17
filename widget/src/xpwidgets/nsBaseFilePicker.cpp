@@ -54,6 +54,7 @@
 #include "nsCOMArray.h"
 #include "nsILocalFile.h"
 #include "nsEnumeratorUtils.h"
+#include "mozilla/Services.h"
 
 #include "nsBaseFilePicker.h"
 
@@ -124,13 +125,15 @@ NS_IMETHODIMP nsBaseFilePicker::Init(nsIDOMWindow *aParent,
 NS_IMETHODIMP
 nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
 {
-  nsresult rv;
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundleService> stringService =
+    mozilla::services::GetStringBundleService();
+  if (!stringService)
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIStringBundle> titleBundle, filterBundle;
 
-  rv = stringService->CreateBundle(FILEPICKER_TITLES, getter_AddRefs(titleBundle));
+  nsresult rv = stringService->CreateBundle(FILEPICKER_TITLES,
+                                            getter_AddRefs(titleBundle));
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 

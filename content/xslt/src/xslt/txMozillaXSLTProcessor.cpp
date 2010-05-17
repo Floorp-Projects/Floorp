@@ -1080,7 +1080,7 @@ txMozillaXSLTProcessor::reportError(nsresult aResult,
     }
     else {
         nsCOMPtr<nsIStringBundleService> sbs =
-            do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+            mozilla::services::GetStringBundleService();
         if (sbs) {
             nsXPIDLString errorText;
             sbs->FormatStatusMessage(aResult, EmptyString().get(),

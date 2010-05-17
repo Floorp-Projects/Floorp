@@ -228,17 +228,17 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 *
   iconURI->GetContentType(aContentType);
   iconURI->GetFileExtension(aFileExtension);
 
-  nsCOMPtr<nsIURI> fileURI;
-  rv = iconURI->GetIconFile(getter_AddRefs(fileURI));
-  if (NS_FAILED(rv) || !fileURI) return NS_OK;
+  nsCOMPtr<nsIURL> url;
+  rv = iconURI->GetIconURL(getter_AddRefs(url));
+  if (NS_FAILED(rv) || !url) return NS_OK;
 
-  nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(fileURI, &rv);
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(url, &rv);
   if (NS_FAILED(rv) || !fileURL) return NS_OK;
 
   nsCOMPtr<nsIFile> file;
   rv = fileURL->GetFile(getter_AddRefs(file));
   if (NS_FAILED(rv) || !file) return NS_OK;
-  
+
   *aLocalFile = file;
   NS_IF_ADDREF(*aLocalFile);
   return NS_OK;

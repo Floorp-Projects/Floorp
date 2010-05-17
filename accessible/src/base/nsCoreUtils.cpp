@@ -526,25 +526,6 @@ nsCoreUtils::IsCorrectFrameType(nsIFrame *aFrame, nsIAtom *aAtom)
   return aFrame->GetType() == aAtom;
 }
 
-already_AddRefed<nsIPresShell>
-nsCoreUtils::GetPresShellFor(nsIDOMNode *aNode)
-{
-  nsCOMPtr<nsIDOMDocument> domDocument;
-  aNode->GetOwnerDocument(getter_AddRefs(domDocument));
-
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDocument));
-  if (!doc) // This is necessary when the node is the document node
-    doc = do_QueryInterface(aNode);
-
-  nsIPresShell *presShell = nsnull;
-  if (doc) {
-    presShell = doc->GetPrimaryShell();
-    NS_IF_ADDREF(presShell);
-  }
-
-  return presShell;
-}
-
 already_AddRefed<nsIDOMNode>
 nsCoreUtils::GetDOMNodeForContainer(nsIDocShellTreeItem *aContainer)
 {

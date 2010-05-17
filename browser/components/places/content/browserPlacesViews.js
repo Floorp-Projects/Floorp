@@ -792,7 +792,7 @@ PlacesToolbar.prototype = {
   _cbEvents: ["dragstart", "dragover", "dragleave", "dragend", "drop",
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
-              "mousedown",
+              "mousedown", "mouseup",
 #endif
 #endif
               "mousemove", "mouseover", "mouseout"],
@@ -979,15 +979,24 @@ PlacesToolbar.prototype = {
       case "mouseout":
         this._onMouseOut(aEvent);
         break;
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+      case "mouseup":
+        this._onMouseUp(aEvent);
+        break;
       case "mousedown":
         this._onMouseDown(aEvent);
         break;
+#endif
+#endif
       case "popupshowing":
         this._onPopupShowing(aEvent);
         break;
       case "popuphidden":
         this._onPopupHidden(aEvent);
         break;
+      default:
+        throw "Trying to handle unexpected event.";
     }
   },
 
@@ -1374,10 +1383,14 @@ PlacesToolbar.prototype = {
         draggedElt.getAttribute("type") == "menu") {
       // If the drag gesture on a container is toward down we open instead
       // of dragging.
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
       if (this._mouseDownTimer) {
         this._mouseDownTimer.cancel();
         this._mouseDownTimer = null;
       }
+#endif
+#endif
       let translateY = this._cachedMouseMoveEvent.clientY - aEvent.clientY;
       let translateX = this._cachedMouseMoveEvent.clientX - aEvent.clientX;
       if ((translateY) >= Math.abs(translateX/2)) {
@@ -1547,9 +1560,9 @@ PlacesToolbar.prototype = {
     }
   },
 
-  _onMouseDown: function PT__onMouseDown(aEvent) {
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
+  _onMouseDown: function PT__onMouseDown(aEvent) {
     let target = aEvent.target;
     if (aEvent.button == 0 &&
         target.localName == "toolbarbutton" &&
@@ -1572,8 +1585,6 @@ PlacesToolbar.prototype = {
       this._mouseDownTimer.initWithCallback(callback, 300,
                                             Ci.nsITimer.TYPE_ONE_SHOT);
     }
-#endif
-#endif
   },
 
   _onMouseUp: function PT__onMouseUp(aEvent) {
@@ -1587,6 +1598,8 @@ PlacesToolbar.prototype = {
       aEvent.target.open = true;
     }
   },
+#endif
+#endif
 
   _onMouseMove: function PT__onMouseMove(aEvent) {
     // Used in dragStart to prevent dragging folders when dragging down.

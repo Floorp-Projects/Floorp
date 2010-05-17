@@ -735,7 +735,7 @@ nsHttpHandler::InitUserAgentComponents()
 #else
         BOOL isWow64 = FALSE;
         IsWow64ProcessP fnIsWow64Process = (IsWow64ProcessP)
-          GetProcAddress(GetModuleHandleA("kernel32"), "IsWow64Process");
+          GetProcAddress(GetModuleHandleW(L"kernel32"), "IsWow64Process");
         if (fnIsWow64Process &&
             !fnIsWow64Process(GetCurrentProcess(), &isWow64)) {
             isWow64 = FALSE;

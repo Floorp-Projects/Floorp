@@ -321,7 +321,7 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   lastAccessNode->GetDOMNode(getter_AddRefs(lastNodeWithCaret));
   NS_ENSURE_TRUE(lastNodeWithCaret, caretRect);
 
-  nsCOMPtr<nsIPresShell> presShell =
+  nsIPresShell *presShell =
     nsCoreUtils::GetPresShellFor(lastNodeWithCaret);
   NS_ENSURE_TRUE(presShell, caretRect);
 
@@ -371,7 +371,7 @@ nsCaretAccessible::GetSelectionControllerForNode(nsIDOMNode *aNode)
   if (!aNode)
     return nsnull;
 
-  nsCOMPtr<nsIPresShell> presShell = nsCoreUtils::GetPresShellFor(aNode);
+  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
   if (!presShell)
     return nsnull;
 

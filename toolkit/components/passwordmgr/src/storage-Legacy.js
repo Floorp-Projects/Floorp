@@ -124,7 +124,7 @@ LoginManagerStorage_legacy.prototype = {
      * EG: _logins["http://site.com"][0].password
      * EG: _disabledHosts["never.site.com"]
      */
-    _logins        : null, 
+    _logins        : null,
     _disabledHosts : null,
 
 
@@ -472,7 +472,7 @@ LoginManagerStorage_legacy.prototype = {
         return logins;
     },
 
-    
+
     /*
      * countLogins
      *
@@ -484,7 +484,7 @@ LoginManagerStorage_legacy.prototype = {
         if (aHostname) {
             logins = this._searchLogins(aHostname, aFormSubmitURL, aHttpRealm);
             return logins.length
-        } 
+        }
 
         // For consistency with how aFormSubmitURL and aHttpRealm work
         if (aHostname == null)
@@ -733,14 +733,14 @@ LoginManagerStorage_legacy.prototype = {
                                 aLogin.username, aLogin.password, "", "");
                 // We don't have decrypted values, unless we're importing from IE,
                 // so clone the encrypted bits into the new entry.
-                extraLogin.wrappedJSObject.encryptedPassword = 
+                extraLogin.wrappedJSObject.encryptedPassword =
                     aLogin.wrappedJSObject.encryptedPassword;
-                extraLogin.wrappedJSObject.encryptedUsername = 
+                extraLogin.wrappedJSObject.encryptedUsername =
                     aLogin.wrappedJSObject.encryptedUsername;
 
                 if (extraLogin.httpRealm == "")
                     extraLogin.httpRealm = extraLogin.hostname;
-                
+
                 upgradedLogins.push(extraLogin);
             }
 
@@ -795,7 +795,7 @@ LoginManagerStorage_legacy.prototype = {
                         newURL += ":" + port;
                 }
 
-                // Could be a channel login with a username. 
+                // Could be a channel login with a username.
                 if (scheme != "http" && scheme != "https" && uri.username)
                     username = uri.username;
 
@@ -830,7 +830,15 @@ LoginManagerStorage_legacy.prototype = {
         // (Don't do this if it's a form login, though.)
         if (username && !isFormLogin) {
             if (isMailNews.test(aLogin.hostname))
-                username = decodeURIComponent(username);
+                try {
+                    username = decodeURIComponent(username);
+                } catch (ex) {
+                    // It has been seen that some usernames cannot be decoded
+                    // on upgrade, so if hit the case, log it and re-throw so
+                    // that we can handle it in the caller.
+                    this.log("Error decoding \"" + username + "\": " + ex);
+                    throw(ex);
+                }
 
             var [encUsername, userCanceled] = this._encrypt(username);
             if (!userCanceled)
@@ -1074,9 +1082,17 @@ LoginManagerStorage_legacy.prototype = {
                 // Upgrading an entry to 2E can sometimes result in the need
                 // to create an extra login.
                 var entries = [entry];
-                if (formatVersion < 0x2e)
-                    entries = this._upgrade_entry_to_2E(entry);
-
+                if (formatVersion < 0x2e) {
+                    try {
+                      entries = this._upgrade_entry_to_2E(entry);
+                    }
+                    catch (ex) {
+                      // For some reason we couldn't decode this entry,
+                      // therefore, drop it and carry on so that we can
+                      // hopefully translate the other entries.
+                      entries = [];
+                    }
+                }
 
                 for each (var e in entries) {
                     if (!this._logins[e.hostname])
@@ -1321,7 +1337,7 @@ LoginManagerStorage_legacy.prototype = {
      *  userCanceled -- if the encryption failed, this is true if the
      *                  user selected Cancel when prompted to enter their
      *                  Master Password. The caller should bail out, and not
-     *                  not request that more things be encrypted (which 
+     *                  not request that more things be encrypted (which
      *                  results in prompting the user for a Master Password
      *                  over and over.)
      */
@@ -1354,7 +1370,7 @@ LoginManagerStorage_legacy.prototype = {
      *  userCanceled -- if the decryption failed, this is true if the
      *                  user selected Cancel when prompted to enter their
      *                  Master Password. The caller should bail out, and not
-     *                  not request that more things be decrypted (which 
+     *                  not request that more things be decrypted (which
      *                  results in prompting the user for a Master Password
      *                  over and over.)
      */
@@ -1366,7 +1382,7 @@ LoginManagerStorage_legacy.prototype = {
             if (cipherText.charAt(0) == '~') {
                 // The older file format obscured entries by
                 // base64-encoding them. These entries are signaled by a
-                // leading '~' character. 
+                // leading '~' character.
                 plainOctet = atob(cipherText.substring(1));
             } else {
                 plainOctet = this._decoderRing.decryptString(cipherText);
