@@ -246,18 +246,20 @@ window.Page = {
     this.setupKeyHandlers();
         
     Tabs.onClose(function(){
-      // Only go back to the TabCandy tab when there you close the last
-      // tab of a group.
-      var group = Groups.getActiveGroup();
-      if( group && group._children.length == 0 )
-        Page.show();
-
-      // Take care of the case where you've closed the last tab in
-      // an un-named group, which means that the group is gone (null) and
-      // there are no visible tabs.
-      if( group == null && Tabbar.getVisibleTabs().length == 0){
-        Page.show();
-      }
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+        // Only go back to the TabCandy tab when there you close the last
+        // tab of a group.
+        var group = Groups.getActiveGroup();
+        if( group && group._children.length == 0 )
+          Page.show();
+  
+        // Take care of the case where you've closed the last tab in
+        // an un-named group, which means that the group is gone (null) and
+        // there are no visible tabs.
+        if( group == null && Tabbar.getVisibleTabs().length == 0){
+          Page.show();
+        }
+      }, 1);
 
       return false;
     });
@@ -311,7 +313,7 @@ window.Page = {
           });
         }
       } else { // switched to another tab
-        setTimeout(function() { // Marshalling back to the DOM thread
+        setTimeout(function() { // Marshal event from chrome thread to DOM thread
           var item = TabItems.getItemByTab(Utils.activeTab);
           if(item) 
             Groups.setActiveGroup(item.parent);
@@ -491,22 +493,26 @@ function UIClass(){
   }
   
   Tabs.onFocus(function() {
-    try{
-      if(this.contentWindow.location.host == "tabcandy") {
-        self.focused = true;
-        self.navBar.hide();
-        self.tabBar.hide();
-      } else {
-        self.focused = false;
-        self.navBar.show();      
+    setTimeout(function() { // Marshal event from chrome thread to DOM thread
+      try{
+        if(this.contentWindow.location.host == "tabcandy") {
+          self.focused = true;
+          self.navBar.hide();
+          self.tabBar.hide();
+        } else {
+          self.focused = false;
+          self.navBar.show();      
+        }
+      }catch(e){
+        Utils.log()
       }
-    }catch(e){
-      Utils.log()
-    }
+    }, 1);
   });
 
   Tabs.onOpen(function(a, b) {
-    self.navBar.show();
+    setTimeout(function() { // Marshal event from chrome thread to DOM thread
+      self.navBar.show();
+    }, 1);
   });
 
   // ___ Page
@@ -531,7 +537,8 @@ function UIClass(){
     if(self.initialized) 
       self.save();
       
-    self.tabBar.show();    
+    self.navBar.show();
+    self.tabBar.show(false);    
     self.tabBar.showAllTabs();
   });
   
