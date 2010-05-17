@@ -2624,6 +2624,7 @@ nsGenericHTMLFormElement::IsSingleLineTextControl(PRBool aExcludePassword) const
 {
   PRInt32 type = GetType();
   return type == NS_FORM_INPUT_TEXT ||
+         type == NS_FORM_INPUT_SEARCH ||
          type == NS_FORM_INPUT_TEL ||
          (!aExcludePassword && type == NS_FORM_INPUT_PASSWORD);
 }
