@@ -134,7 +134,6 @@ typedef void (* OnLeaveNodeFunPtr)(nsIDOMNode* aNode, void* aClosure);
 // Find the next node in the DOM tree in preorder. This isn't fast because
 // one call to GetNextSibling can be O(N) in the number of siblings...
 // Calls OnLeaveNodeFunPtr when the traversal leaves a node
-// XXXbz if this used nsINode, this would be trivial
 static nsIDOMNode*
 FindNextNode(nsIDOMNode* aNode, nsIDOMNode* aRoot,
              OnLeaveNodeFunPtr aOnLeaveNode = nsnull, void* aClosure = nsnull)
@@ -189,8 +188,7 @@ FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
   } else {
     // aOffset was beyond the end of the child list. 
     // goto next node in a preorder DOM traversal.
-    // XXXbz this is generally reimplementing GetNextNode.
-    nsINode* next = node->GetNextSibling();
+    nsINode* next = node->GetSibling(1);
     if (!next) {
       nsCOMPtr<nsINode> root = do_QueryInterface(aRoot);
       while (!next) {
@@ -200,7 +198,7 @@ FindNextTextNode(nsIDOMNode* aNode, PRInt32 aOffset, nsIDOMNode* aRoot)
           return nsnull;
         }
         node = next;
-        next = node->GetNextSibling();
+        next = node->GetSibling(1);
       }
     }
     checkNode = do_QueryInterface(next);
