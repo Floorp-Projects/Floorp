@@ -57,6 +57,7 @@
 #include "nsIContentIterator.h"
 #include "nsEditorUtils.h"
 #include "EditTxn.h"
+#include "nsEditProperty.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsUnicharUtils.h"
@@ -1347,8 +1348,8 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
     if (!mBogusNode) return NS_ERROR_NULL_POINTER;
 
     // give it a special attribute
-    brElement->SetAttribute( kMOZEditorBogusNodeAttr,
-                             kMOZEditorBogusNodeValue );
+    newContent->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
+                        kMOZEditorBogusNodeValue, PR_FALSE);
     
     // put the node in the document
     res = mEditor->InsertNode(mBogusNode, body, 0);

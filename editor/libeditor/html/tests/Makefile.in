@@ -54,11 +54,12 @@ _TEST_FILES = \
 		test_bug487524.html \
 		test_bug525389.html \
 		test_bug537046.html \
+		test_contenteditable_focus.html \
 		test_select_all_without_body.html \
 		file_select_all_without_body.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - browserscope) | (cd $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir) && tar -xf -)
+	(cd $(srcdir) && tar $(TAR_CREATE_FLAGS) - browserscope 2> /dev/null) | (cd $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir) && tar -xf -)
 

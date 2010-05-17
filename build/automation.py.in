@@ -312,6 +312,7 @@ user_pref("security.default_personal_cert", "Select Automatically"); // Need to 
 user_pref("network.http.prompt-temp-redirect", false);
 user_pref("media.cache_size", 100);
 user_pref("security.warn_viewing_mixed", false);
+user_pref("extensions.enabledScopes", 3);
 
 user_pref("geo.wifi.uri", "http://%(server)s/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("geo.wifi.testing", true);

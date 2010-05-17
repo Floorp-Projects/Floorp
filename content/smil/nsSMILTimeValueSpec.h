@@ -105,8 +105,8 @@ protected:
     TimebaseElement(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
 
   protected:
-    virtual void ContentChanged(nsIContent* aFrom, nsIContent* aTo) {
-      nsReferencedElement::ContentChanged(aFrom, aTo);
+    virtual void ElementChanged(Element* aFrom, Element* aTo) {
+      nsReferencedElement::ElementChanged(aFrom, aTo);
       mSpec->UpdateTimebase(aFrom, aTo);
     }
     virtual PRBool IsPersistent() { return PR_TRUE; }

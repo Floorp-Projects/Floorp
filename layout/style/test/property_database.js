@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *	 L. David Baron <dbaron@dbaron.org>, Mozilla Corporation (original author)
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -346,7 +346,18 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		prerequisites: { "color": "blue" },
-		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px 2px 2px", "blue 3px 2px", "2px 2px 1px 5px green", "2px 2px red", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px, 1px 2px 3px 2px orange", "3px 0 0 0", "inset 2px 2px 3px 4px black", "2px -2px green inset, 4px 4px 3px blue, inset 2px 2px" ],
+		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px 2px 2px", "blue 3px 2px", "2px 2px 1px 5px green", "2px 2px red", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px, 1px 2px 3px 2px orange", "3px 0 0 0", "inset 2px 2px 3px 4px black", "2px -2px green inset, 4px 4px 3px blue, inset 2px 2px",
+			/* calc() values */
+			"2px 2px -moz-calc(-5px)", /* clamped */
+			"-moz-calc(3em - 2px) 2px green",
+			"green -moz-calc(3em - 2px) 2px",
+			"2px -moz-min(2px,0.2em)",
+			"blue 2px -moz-min(2px,0.2em)",
+			"2px -moz-min(2px,0.2em) blue",
+			"-moz-calc(2px) -moz-calc(2px)",
+			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px)",
+			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px) -moz-calc(2px)"
+		],
 		invalid_values: [ "3% 3%", "1px 1px 1px 1px 1px", "2px 2px, none", "red 2px 2px blue", "inherit, 2px 2px", "2px 2px, inherit", "2px 2px -5px", "inset 4px 4px black inset", "inset inherit", "inset none" ]
 	},
 	"-moz-box-sizing": {
@@ -374,22 +385,157 @@ var gCSSProperties = {
 		other_values: [ "2px", "4em" ],
 		invalid_values: [ "3%", "-1px" ]
 	},
-	"-moz-column-width": {
-		domProp: "MozColumnWidth",
+	"-moz-column-rule": {
+		domProp: "MozColumnRule",
 		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "auto" ],
-		other_values: [ "15px" ],
-		invalid_values: [ "20", "-1px", "50%" ]
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		prerequisites: { "color": "green" },
+		subproperties: [ "-moz-column-rule-width", "-moz-column-rule-style", "-moz-column-rule-color" ],
+		initial_values: [ "medium none currentColor" ],
+		other_values: [ "2px blue solid", "red dotted 1px", "ridge 4px orange" ],
+		invalid_values: [ "2px 3px 4px red", "dotted dashed", "5px dashed green 3px" ]
 	},
 	"-moz-column-rule-width": {
 		domProp: "MozColumnRuleWidth",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "-moz-column-rule-style": "solid" },
-		initial_values: [ "medium" ],
-		other_values: [ "thin", "15px" ],
-		invalid_values: [ "20", "-1px", "red", "50%" ]
+		initial_values: [
+			"medium",
+			"3px",
+			"-moz-calc(3px)",
+			"-moz-calc(5em + 3px - 5em)"
+		],
+		other_values: [ "thin", "15px",
+			/* valid calc() values */
+			"-moz-calc(-2px)",
+			"-moz-calc(2px)",
+			"-moz-calc(3em)",
+			"-moz-calc(3em + 2px)",
+			"-moz-calc( 3em + 2px)",
+			"-moz-calc(3em + 2px )",
+			"-moz-calc( 3em + 2px )",
+			"-moz-calc(3*25px)",
+			"-moz-calc(3 *25px)",
+			"-moz-calc(3 * 25px)",
+			"-moz-calc(3* 25px)",
+			"-moz-calc(25px*3)",
+			"-moz-calc(25px *3)",
+			"-moz-calc(25px* 3)",
+			"-moz-calc(25px * 3)",
+			"-moz-calc(25px * 3 / 4)",
+			"-moz-calc((25px * 3) / 4)",
+			"-moz-calc(25px * (3 / 4))",
+			"-moz-calc(3 * 25px / 4)",
+			"-moz-calc((3 * 25px) / 4)",
+			"-moz-calc(3 * (25px / 4))",
+			"-moz-calc(3em + 25px * 3 / 4)",
+			"-moz-calc(3em + (25px * 3) / 4)",
+			"-moz-calc(3em + 25px * (3 / 4))",
+			"-moz-calc(25px * 3 / 4 + 3em)",
+			"-moz-calc((25px * 3) / 4 + 3em)",
+			"-moz-calc(25px * (3 / 4) + 3em)",
+			"-moz-calc(3em + (25px * 3 / 4))",
+			"-moz-calc(3em + ((25px * 3) / 4))",
+			"-moz-calc(3em + (25px * (3 / 4)))",
+			"-moz-calc((25px * 3 / 4) + 3em)",
+			"-moz-calc(((25px * 3) / 4) + 3em)",
+			"-moz-calc((25px * (3 / 4)) + 3em)",
+			"-moz-calc(3*25px + 1in)",
+			"-moz-calc(1in - 3em + 2px)",
+			"-moz-calc(1in - (3em + 2px))",
+			"-moz-calc((1in - 3em) + 2px)",
+			"-moz-min(1in, 30em)",
+			"-moz-calc(min(1in, 30em))",
+			"-moz-max(30em, 2px + 1in)",
+			"-moz-calc(max(30em, 2px + 1in))",
+			"-moz-min(2in, 30em,200px, min(500px ,40em))",
+			"-moz-calc(min(2in, 30em,200px, min(500px ,40em)))",
+			"-moz-min(2in)",
+			"-moz-max(20px)",
+			"-moz-calc(min(2em))",
+			"-moz-calc(max(1in))",
+			"-moz-calc(50px/2)",
+			"-moz-calc(50px/(2 - 1))",
+			"-moz-calc(-3px)",
+			/* numeric reduction cases */
+			"-moz-calc(5 * 3 * 2em)",
+			"-moz-calc(2em * 5 * 3)",
+			"-moz-calc((5 * 3) * 2em)",
+			"-moz-calc(2em * (5 * 3))",
+			"-moz-calc((5 + 3) * 2em)",
+			"-moz-calc(2em * (5 + 3))",
+			"-moz-calc(2em / (5 + 3))",
+			"-moz-calc(2em * (5*2 + 3))",
+			"-moz-calc(2em * ((5*2) + 3))",
+			"-moz-calc(2em * (5*(2 + 3)))",
+
+			"-moz-calc(min(5,7) * 3em)",
+			"-moz-calc((5 + 7) * 3em)",
+			"-moz-calc((5em + 3em) - 2em)",
+			"-moz-calc((5em - 3em) + 2em)",
+			"-moz-calc(2em - (5em - 3em))",
+			"-moz-calc(2em + (5em - 3em))",
+			"-moz-calc(2em - (5em + 3em))",
+			"-moz-calc(2em + (5em + 3em))",
+			"-moz-calc(2em + 5em - 3em)",
+			"-moz-calc(2em - 5em - 3em)",
+			"-moz-calc(2em + 5em + 3em)",
+			"-moz-calc(2em - 5em + 3em)",
+
+			"-moz-calc(2em / 4 * 3)",
+			"-moz-calc(2em * 4 / 3)",
+			"-moz-calc(2em * 4 * 3)",
+			"-moz-calc(2em / 4 / 3)",
+			"-moz-calc(4 * 2em / 3)",
+			"-moz-calc(4 / 3 * 2em)",
+
+			"-moz-calc((2em / 4) * 3)",
+			"-moz-calc((2em * 4) / 3)",
+			"-moz-calc((2em * 4) * 3)",
+			"-moz-calc((2em / 4) / 3)",
+			"-moz-calc((4 * 2em) / 3)",
+			"-moz-calc((4 / 3) * 2em)",
+
+			"-moz-calc(2em / (4 * 3))",
+			"-moz-calc(2em * (4 / 3))",
+			"-moz-calc(2em * (4 * 3))",
+			"-moz-calc(2em / (4 / 3))",
+			"-moz-calc(4 * (2em / 3))",
+
+		],
+		invalid_values: [ "20", "-1px", "red", "50%",
+			/* invalid calc() values */
+			"-moz-calc(2em+ 2px)",
+			"-moz-calc(2em +2px)",
+			"-moz-calc(2em+2px)",
+			"-moz-calc(2em- 2px)",
+			"-moz-calc(2em -2px)",
+			"-moz-calc(2em-2px)",
+			"-moz-min()",
+			"-moz-calc(min())",
+			"-moz-max()",
+			"-moz-calc(max())",
+			"-moz-calc(50px/(2 - 2))",
+			"-moz-calc(5 + 5)",
+			"-moz-calc(5 * 5)",
+			"-moz-calc(5em * 5em)",
+			"-moz-calc(5em / 5em * 5em)",
+
+			"-moz-calc(4 * 3 / 2em)",
+			"-moz-calc((4 * 3) / 2em)",
+			"-moz-calc(4 * (3 / 2em))",
+			"-moz-calc(4 / (3 * 2em))",
+
+			"-moz-min(3em, 5)",
+			"-moz-calc(min(3em, 5))",
+			"-moz-min(5, 3em)",
+			"-moz-calc(min(5, 3em))",
+			"-moz-max(3em, 5)",
+			"-moz-calc(max(3em, 5))",
+			"-moz-max(5, 3em)",
+			"-moz-calc(max(5, 3em))"
+		]
 	},
 	"-moz-column-rule-style": {
 		domProp: "MozColumnRuleStyle",
@@ -408,15 +554,20 @@ var gCSSProperties = {
 		other_values: [ "red", "blue", "#ffff00" ],
 		invalid_values: [ ]
 	},
-	"-moz-column-rule": {
-		domProp: "MozColumnRule",
+	"-moz-column-width": {
+		domProp: "MozColumnWidth",
 		inherited: false,
-		type: CSS_TYPE_TRUE_SHORTHAND,
-		prerequisites: { "color": "green" },
-		subproperties: [ "-moz-column-rule-width", "-moz-column-rule-style", "-moz-column-rule-color" ],
-		initial_values: [ "medium none currentColor" ],
-		other_values: [ "2px blue solid", "red dotted 1px", "ridge 4px orange" ],
-		invalid_values: [ "2px 3px 4px red", "dotted dashed", "5px dashed green 3px" ]
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "auto" ],
+		other_values: [
+			"15px",
+			"-moz-calc(15px)",
+			"-moz-calc(30px - 3em)",
+			"-moz-calc(-15px)",
+			"0px",
+			"-moz-calc(0px)"
+		],
+		invalid_values: [ "20", "-1px", "50%" ]
 	},
 	"-moz-float-edge": {
 		domProp: "MozFloatEdge",
@@ -544,6 +695,14 @@ var gCSSProperties = {
 		other_values: [ "both", "horizontal", "vertical" ],
 		invalid_values: []
 	},
+	"-moz-stack-sizing": {
+		domProp: "MozStackSizing",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "stretch-to-fit" ],
+		other_values: [ "ignore" ],
+		invalid_values: []
+	},
 	"-moz-tab-size": {
 		domProp: "MozTabSize",
 		inherited: true,
@@ -576,14 +735,6 @@ var gCSSProperties = {
 		invalid_values: ["red", "auto", "none", "0.5 0.5", "40px #0000ff",
 						 "border", "center red", "right diagonal",
 						 "#00ffff bottom"]
-	},
-	"-moz-stack-sizing": {
-		domProp: "MozStackSizing",
-		inherited: false,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "stretch-to-fit" ],
-		other_values: [ "ignore" ],
-		invalid_values: []
 	},
 	"-moz-user-focus": {
 		domProp: "MozUserFocus",
@@ -1100,9 +1251,9 @@ var gCSSProperties = {
 		domProp: "borderSpacing",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "0", "0 0", "0px", "0 0px" ],
-		other_values: [ "3px", "4em 2px", "4em 0", "0px 2px" ],
-		invalid_values: [ "0%", "0 0%" ]
+		initial_values: [ "0", "0 0", "0px", "0 0px", "-moz-calc(0px)", "-moz-calc(0px) -moz-calc(0em)", "-moz-calc(2em - 2em) -moz-calc(3px + 7px - 10px)", "-moz-calc(-5px)", "-moz-calc(-5px) -moz-calc(-5px)" ],
+		other_values: [ "3px", "4em 2px", "4em 0", "0px 2px", "-moz-calc(7px)", "0 -moz-calc(7px)", "-moz-calc(7px) 0", "-moz-calc(0px) -moz-calc(7px)", "-moz-calc(7px) -moz-calc(0px)", "7px -moz-calc(0px)", "-moz-calc(0px) 7px", "7px -moz-calc(0px)", "3px -moz-calc(2em)" ],
+		invalid_values: [ "0%", "0 0%", "-5px", "-5px -5px", "0 -5px", "-5px 0" ]
 	},
 	"border-style": {
 		domProp: "borderStyle",
@@ -1329,9 +1480,23 @@ var gCSSProperties = {
 		domProp: "fontSize",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "medium" ],
-		other_values: [ "large", "2em", "50%", "xx-small", "36pt", "8px" ],
-		invalid_values: []
+		initial_values: [ "medium",
+			"1rem",
+			"-moz-calc(1rem)",
+			"-moz-calc(0.75rem + 200% - 125% + 0.25rem - 75%)"
+		],
+		other_values: [ "large", "2em", "50%", "xx-small", "36pt", "8px",
+			"0px",
+			"0%",
+			"-moz-calc(2em)",
+			"-moz-min(36pt, 2em)",
+			"-moz-max(50%, 8px)",
+			"-moz-min(36pt + 75%, 30% + 2em + 2px)",
+			"-moz-calc(-2em)",
+			"-moz-calc(-50%)",
+			"-moz-calc(-1px)"
+		],
+		invalid_values: [ "-2em", "-50%", "-1px" ]
 	},
 	"font-size-adjust": {
 		domProp: "fontSizeAdjust",
@@ -1405,7 +1570,10 @@ var gCSSProperties = {
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "normal" ],
-		other_values: [ "0", "0px", "1em", "2px", "-3px" ],
+		other_values: [ "0", "0px", "1em", "2px", "-3px",
+			"-moz-calc(0px)", "-moz-calc(1em)", "-moz-calc(1em + 3px)",
+			"-moz-calc(15px / 2)", "-moz-calc(15px/2)", "-moz-calc(-3px)"
+		],
 		invalid_values: []
 	},
 	"line-height": {
@@ -1531,7 +1699,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "auto" ],
-		other_values: [ "6em", "-1px" ],
+		other_values: [ "6em", "-1px", "-moz-calc(0px)", "-moz-calc(3em + 2px - 4px)", "-moz-calc(-2em)" ],
 		invalid_values: []
 	},
 	"marks": {
@@ -1621,8 +1789,8 @@ var gCSSProperties = {
 		domProp: "outlineOffset",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "0" ],
-		other_values: [ "-3px", "1em" ],
+		initial_values: [ "0", "0px", "-0", "-moz-calc(0px)", "-moz-calc(3em + 2px - 2px - 3em)", "-moz-calc(-0em)" ],
+		other_values: [ "-3px", "1em", "-moz-calc(3em)", "-moz-calc(7pt + 3 * 2em)", "-moz-calc(-3px)" ],
 		invalid_values: [ "5%" ]
 	},
 	"outline-style": {
@@ -1947,8 +2115,20 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		prerequisites: { "color": "blue" },
-		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px" ],
-		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none", "none, 2px 2px", "inherit, 2px 2px", "2px 2px, inherit" ]
+		other_values: [ "2px 2px", "2px 2px 1px", "2px 2px green", "2px 2px 1px green", "green 2px 2px", "green 2px 2px 1px", "green 2px 2px, blue 1px 3px 4px", "currentColor 3px 3px", "blue 2px 2px, currentColor 1px 2px",
+			/* calc() values */
+			"2px 2px -moz-calc(-5px)", /* clamped */
+			"-moz-calc(3em - 2px) 2px green",
+			"green -moz-calc(3em - 2px) 2px",
+			"2px -moz-min(2px,0.2em)",
+			"blue 2px -moz-min(2px,0.2em)",
+			"2px -moz-min(2px,0.2em) blue",
+			"-moz-calc(2px) -moz-calc(2px)",
+			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px)",
+		],
+		invalid_values: [ "3% 3%", "2px 2px 2px 2px", "2px 2px, none", "none, 2px 2px", "inherit, 2px 2px", "2px 2px, inherit",
+			"-moz-calc(2px) -moz-calc(2px) -moz-calc(2px) -moz-calc(2px)"
+		]
 	},
 	"text-transform": {
 		domProp: "textTransform",
@@ -2082,8 +2262,14 @@ var gCSSProperties = {
 		domProp: "wordSpacing",
 		inherited: true,
 		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "normal", "0", "0px", "-0em" ],
-		other_values: [ "1em", "2px", "-3px" ],
+		initial_values: [ "normal", "0", "0px", "-0em",
+			"-moz-calc(-0px)", "-moz-calc(0em)"
+		],
+		other_values: [ "1em", "2px", "-3px",
+			"-moz-calc(1em)", "-moz-calc(1em + 3px)",
+			"-moz-calc(15px / 2)", "-moz-calc(15px/2)",
+			"-moz-calc(-2em)"
+		],
 		invalid_values: []
 	},
 	"word-wrap": {

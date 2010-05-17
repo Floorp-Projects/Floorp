@@ -42,10 +42,11 @@
 #include "BrowserStreamChild.h"
 #include "PluginStreamChild.h"
 #include "StreamNotifyChild.h"
-#include "PluginThreadChild.h"
+#include "PluginProcessChild.h"
 
 #include "mozilla/ipc/SyncChannel.h"
 
+using mozilla::ipc::ProcessChild;
 using namespace mozilla::plugins;
 
 #ifdef MOZ_WIDGET_GTK2
@@ -84,9 +85,6 @@ const int kFlashWMUSERMessageThrottleDelayMs = 5;
 
 #define NS_OOPP_DOUBLEPASS_MSGID TEXT("MozDoublePassMsg")
 
-#ifndef WM_MOUSEHWHEEL
-#define WM_MOUSEHWHEEL                    0x020E
-#endif
 #elif defined(XP_MACOSX)
 #include <ApplicationServices/ApplicationServices.h>
 #endif // defined(XP_MACOSX)
@@ -104,6 +102,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface,
     , mCachedWinlessPluginHWND(0)
     , mWinlessPopupSurrogateHWND(0)
     , mWinlessThrottleOldWndProc(0)
+    , mWinlessHiddenMsgHWND(0)
 #endif // OS_WIN
     , mAsyncCallMutex("PluginInstanceChild::mAsyncCallMutex")
 #if defined(OS_MACOSX)  
@@ -1059,21 +1058,6 @@ PluginInstanceChild::PluginWindowProc(HWND hWnd,
     if (message == WM_MOUSEACTIVATE)
         self->CallPluginGotFocus();
 
-    // Prevent lockups due to plugins making rpc calls when the parent
-    // is making a synchronous SendMessage call to the child window. Add
-    // more messages as needed.
-    if ((InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
-        switch(message) {
-            case WM_KILLFOCUS:
-            case WM_MOUSEHWHEEL:
-            case WM_MOUSEWHEEL:
-            case WM_HSCROLL:
-            case WM_VSCROLL:
-            ReplyMessage(0);
-            break;
-        }
-    }
-
     if (message == WM_USER+1 &&
         (self->mQuirks & PluginInstanceChild::QUIRK_FLASH_THROTTLE_WMUSER_EVENTS)) {
         self->FlashThrottleMessage(hWnd, message, wParam, lParam, true);
@@ -1475,6 +1459,30 @@ PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
 // windowing events they use for timing. We throttle these by dropping the
 // delivery priority below any other event, including pending ipc io
 // notifications. We do this for both windowed and windowless controls.
+// Note flash's windowless msg window can last longer than our instance,
+// so we try to unhook when the window is destroyed and in NPP_Destroy.
+
+void
+PluginInstanceChild::UnhookWinlessFlashThrottle()
+{
+  // We may have already unhooked
+  if (!mWinlessThrottleOldWndProc)
+      return;
+
+  WNDPROC tmpProc = mWinlessThrottleOldWndProc;
+  mWinlessThrottleOldWndProc = nsnull;
+
+  NS_ASSERTION(mWinlessHiddenMsgHWND,
+               "Missing mWinlessHiddenMsgHWND w/subclass set??");
+
+  // reset the subclass
+  SetWindowLongPtr(mWinlessHiddenMsgHWND, GWLP_WNDPROC,
+                   reinterpret_cast<LONG>(tmpProc));
+
+  // Remove our instance prop
+  RemoveProp(mWinlessHiddenMsgHWND, kPluginInstanceChildProperty);
+  mWinlessHiddenMsgHWND = nsnull;
+}
 
 // static
 LRESULT CALLBACK
@@ -1500,13 +1508,10 @@ PluginInstanceChild::WinlessHiddenFlashWndProc(HWND hWnd,
      }
 
     // Unhook
-    if (message == WM_NCDESTROY) {
+    if (message == WM_CLOSE || message == WM_NCDESTROY) {
         WNDPROC tmpProc = self->mWinlessThrottleOldWndProc;
-        self->mWinlessThrottleOldWndProc = nsnull;
-        SetWindowLongPtr(hWnd, GWLP_WNDPROC,
-                         reinterpret_cast<LONG>(tmpProc));
+        self->UnhookWinlessFlashThrottle();
         LRESULT res = CallWindowProc(tmpProc, hWnd, message, wParam, lParam);
-        RemoveProp(hWnd, kPluginInstanceChildProperty);
         return res;
     }
 
@@ -1541,6 +1546,7 @@ PluginInstanceChild::EnumThreadWindowsCallback(HWND hWnd,
                 return FALSE;
             }
             // Subsclass and store self as a property
+            self->mWinlessHiddenMsgHWND = hWnd;
             self->mWinlessThrottleOldWndProc =
                 reinterpret_cast<WNDPROC>(SetWindowLongPtr(hWnd, GWLP_WNDPROC,
                 reinterpret_cast<LONG>(WinlessHiddenFlashWndProc)));
@@ -1925,7 +1931,7 @@ PluginInstanceChild::AsyncCall(PluginThreadCallback aFunc, void* aUserData)
         MutexAutoLock lock(mAsyncCallMutex);
         mPendingAsyncCalls.AppendElement(task);
     }
-    PluginThreadChild::current()->message_loop()->PostTask(FROM_HERE, task);
+    ProcessChild::message_loop()->PostTask(FROM_HERE, task);
 }
 
 static PLDHashOperator
@@ -2007,6 +2013,7 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 #if defined(OS_WIN)
     SharedSurfaceRelease();
     DestroyWinlessPopupSurrogate();
+    UnhookWinlessFlashThrottle();
 #endif
 
     return true;

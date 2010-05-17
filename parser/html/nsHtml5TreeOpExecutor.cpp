@@ -829,7 +829,7 @@ nsHtml5TreeOpExecutor::InitializeDocWriteParserState(nsAHtml5TreeBuilderState* a
 already_AddRefed<nsIURI>
 nsHtml5TreeOpExecutor::ConvertIfNotPreloadedYet(const nsAString& aURL)
 {
-  nsIURI* base = mDocument->GetBaseURI();
+  nsIURI* base = mDocument->GetDocBaseURI();
   const nsCString& charset = mDocument->GetDocumentCharacterSet();
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, charset.get(), base);

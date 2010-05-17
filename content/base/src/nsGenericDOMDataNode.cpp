@@ -202,56 +202,6 @@ nsGenericDOMDataNode::IsSupported(const nsAString& aFeature,
                                                aFeature, aVersion, aReturn);
 }
 
-nsresult
-nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
-{
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-  nsCAutoString spec;
-
-  if (baseURI) {
-    baseURI->GetSpec(spec);
-  }
-
-  CopyUTF8toUTF16(spec, aURI);
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::LookupPrefix(const nsAString& aNamespaceURI,
-                                   nsAString& aPrefix)
-{
-  aPrefix.Truncate();
-
-  nsIContent *parent_weak = GetParent();
-
-  // DOM Data Node passes the query on to its parent
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(parent_weak));
-  if (node) {
-    return node->LookupPrefix(aNamespaceURI, aPrefix);
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                                         nsAString& aNamespaceURI)
-{
-  aNamespaceURI.Truncate();
-
-  nsIContent *parent_weak = GetParent();
-
-  // DOM Data Node passes the query on to its parent
-  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(parent_weak));
-
-  if (node) {
-    return node->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
-  }
-
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------
 
 // Implementation of nsIDOMCharacterData
@@ -830,16 +780,9 @@ nsGenericDOMDataNode::GetBaseURI() const
     return parent->GetBaseURI();
   }
 
-  nsIURI *uri;
   nsIDocument *doc = GetOwnerDoc();
-  if (doc) {
-    NS_IF_ADDREF(uri = doc->GetBaseURI());
-  }
-  else {
-    uri = nsnull;
-  }
 
-  return uri;
+  return doc ? doc->GetBaseURI() : nsnull;
 }
 
 PRBool
@@ -945,7 +888,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsText3Tearoff)
 NS_IMETHODIMP
 nsText3Tearoff::GetIsElementContentWhitespace(PRBool *aReturn)
 {
-  *aReturn = mNode->TextIsOnlyWhitespace();
+  *aReturn = mNode->IsElementContentWhitespace();
   return NS_OK;
 }
 
@@ -959,7 +902,10 @@ NS_IMETHODIMP
 nsText3Tearoff::ReplaceWholeText(const nsAString& aContent,
                                  nsIDOMText **aReturn)
 {
-  return mNode->ReplaceWholeText(PromiseFlatString(aContent), aReturn);
+  nsresult rv;
+  nsIContent* result = mNode->ReplaceWholeText(PromiseFlatString(aContent),
+                                               &rv);
+  return result ? CallQueryInterface(result, aReturn) : rv;
 }
 
 // Implementation of the nsIDOM3Text interface
@@ -990,7 +936,7 @@ nsGenericDOMDataNode::LastLogicallyAdjacentTextNode(nsIContent* aParent,
 }
 
 nsresult
-nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
+nsGenericTextNode::GetWholeText(nsAString& aWholeText)
 {
   nsIContent* parent = GetParent();
 
@@ -1021,10 +967,12 @@ nsGenericDOMDataNode::GetWholeText(nsAString& aWholeText)
   return NS_OK;
 }
 
-nsresult
-nsGenericDOMDataNode::ReplaceWholeText(const nsAFlatString& aContent,
-                                       nsIDOMText **aReturn)
+nsIContent*
+nsGenericTextNode::ReplaceWholeText(const nsAFlatString& aContent,
+                                    nsresult* aResult)
 {
+  *aResult = NS_OK;
+
   // Batch possible DOMSubtreeModified events.
   mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
   mozAutoDocUpdate updateBatch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, PR_TRUE);
@@ -1034,19 +982,20 @@ nsGenericDOMDataNode::ReplaceWholeText(const nsAFlatString& aContent,
   // Handle parent-less nodes
   if (!parent) {
     if (aContent.IsEmpty()) {
-      *aReturn = nsnull;
-      return NS_OK;
+      return nsnull;
     }
 
     SetText(aContent.get(), aContent.Length(), PR_TRUE);
-    return CallQueryInterface(this, aReturn);
+    return this;
   }
 
   PRInt32 index = parent->IndexOf(this);
-  NS_WARN_IF_FALSE(index >= 0,
-                   "Trying to use .replaceWholeText with an anonymous"
-                   "text node child of a binding parent?");
-  NS_ENSURE_TRUE(index >= 0, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  if (index < 0) {
+    NS_WARNING("Trying to use .replaceWholeText with an anonymous text node "
+               "child of a binding parent?");
+    *aResult = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    return nsnull;
+  }
 
   // We don't support entity references or read-only nodes, so remove the
   // logically adjacent text nodes (which therefore must all be siblings of
@@ -1065,12 +1014,11 @@ nsGenericDOMDataNode::ReplaceWholeText(const nsAFlatString& aContent,
 
   // Empty string means we removed this node too.
   if (aContent.IsEmpty()) {
-    *aReturn = nsnull;
-    return NS_OK;
+    return nsnull;
   }
 
   SetText(aContent.get(), aContent.Length(), PR_TRUE);
-  return CallQueryInterface(this, aReturn);
+  return this;
 }
 
 //----------------------------------------------------------------------

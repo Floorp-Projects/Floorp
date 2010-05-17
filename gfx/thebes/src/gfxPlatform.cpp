@@ -49,6 +49,8 @@
 #include "gfxBeOSPlatform.h"
 #elif defined(XP_OS2)
 #include "gfxOS2Platform.h"
+#elif defined(ANDROID)
+#include "gfxAndroidPlatform.h"
 #endif
 
 #include "gfxAtoms.h"
@@ -193,6 +195,8 @@ gfxPlatform::Init()
     gPlatform = new gfxBeOSPlatform;
 #elif defined(XP_OS2)
     gPlatform = new gfxOS2Platform;
+#elif defined(ANDROID)
+    gPlatform = new gfxAndroidPlatform;
 #endif
     if (!gPlatform)
         return NS_ERROR_OUT_OF_MEMORY;

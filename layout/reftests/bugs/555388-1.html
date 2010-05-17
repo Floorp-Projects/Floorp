@@ -1,0 +1,33 @@
+﻿<html>
+ <head>
+  <script type="application/javascript">
+function draw() {
+  var canvas = document.getElementById("canvas");
+  var ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "red";
+  ctx.fillRect(0, 0, 500, 500);
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(30, 30);
+  ctx.lineTo(149, 30);
+  ctx.lineTo(150, 150);
+  ctx.lineTo(30, 150);
+  ctx.lineTo(30, 30);
+  ctx.clip();
+  ctx.clearRect(0, 0, 500, 500);
+  /**
+   * Work around a strange left edge offset problem in D2D.
+   */
+  ctx.restore();
+  ctx.fillStyle = "red";
+  ctx.fillRect(0, 0, 1, 500);
+  ctx.fillStyle = "white";
+  ctx.fillRect(30, 30, 1, 120);
+}
+  </script>
+ </head>
+<body onload="draw()">
+ <canvas id="canvas" width="300" height="300"></canvas>
+</body>
+</html>

@@ -96,6 +96,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLBodyElement.h"
+#include "nsIDOMHTMLHeadElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsGenericHTMLElement.h"
 #include "nsCSSLoader.h"
@@ -143,7 +144,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsHtml5Module.h"
 #include "prprf.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
 
@@ -1203,17 +1204,18 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName)
     PRBool match;
     nsresult rv;
 
-    if (!IsHTML()) {
-      rv = map->GetId(name);
+    rv = map->GetId(name);
+    NS_ENSURE_SUCCESS(rv, nsnull);
 
-      match = name.Equals(aMapName);
-    } else {
+    match = name.Equals(aMapName);
+    if (!match) {
       rv = map->GetName(name);
+      NS_ENSURE_SUCCESS(rv, nsnull);
 
       match = name.Equals(aMapName, nsCaseInsensitiveStringComparator());
     }
 
-    if (match && NS_SUCCEEDED(rv)) {
+    if (match) {
       // Quirk: if the first matching map is empty, remember it, but keep
       // searching for a non-empty one, only use it if none was found (bug 264624).
       if (mCompatMode == eCompatibility_NavQuirks) {
@@ -1393,26 +1395,6 @@ nsHTMLDocument::GetElementsByTagName(const nsAString& aTagname,
     ToLowerCase(tmp); // HTML elements are lower case internally.
   }
   return nsDocument::GetElementsByTagName(tmp, aReturn);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetBaseURI(nsAString &aURI)
-{
-  aURI.Truncate();
-  nsIURI *uri = mDocumentBaseURI; // WEAK
-
-  if (!uri) {
-    uri = mDocumentURI;
-  }
-
-  if (uri) {
-    nsCAutoString spec;
-    uri->GetSpec(spec);
-
-    CopyUTF8toUTF16(spec, aURI);
-  }
-
-  return NS_OK;
 }
 
 // nsIDOM3Document interface implementation
@@ -1659,6 +1641,16 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
   }
 
   return rootElem->AppendChild(aBody, getter_AddRefs(tmp));
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetHead(nsIDOMHTMLHeadElement** aHead)
+{
+  *aHead = nsnull;
+
+  Element* head = GetHeadElement();
+
+  return head ? CallQueryInterface(head, aHead) : NS_OK;
 }
 
 NS_IMETHODIMP

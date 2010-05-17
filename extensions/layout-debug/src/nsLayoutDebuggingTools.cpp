@@ -64,9 +64,9 @@
 static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 
 #include "nsISelectionController.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
-using namespace mozilla::dom;
+using namespace mozilla;
 
 static already_AddRefed<nsIContentViewer>
 doc_viewer(nsIDocShell *aDocShell)
@@ -396,7 +396,7 @@ DumpContentRecur(nsIDocShell* aDocShell, FILE* out)
         fprintf(out, "docshell=%p \n", static_cast<void*>(aDocShell));
         nsCOMPtr<nsIDocument> doc(document(aDocShell));
         if (doc) {
-            Element *root = doc->GetRootElement();
+            dom::Element *root = doc->GetRootElement();
             if (root) {
                 root->List(out);
             }

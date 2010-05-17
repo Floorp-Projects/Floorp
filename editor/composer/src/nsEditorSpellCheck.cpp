@@ -58,6 +58,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsITextServicesFilter.h"
+#include "mozilla/Services.h"
 
 NS_IMPL_ISUPPORTS1(nsEditorSpellCheck,
                    nsIEditorSpellCheck)
@@ -197,9 +198,9 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
     // locale and use that as the default dictionary name!
 
     nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
-      do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
+      mozilla::services::GetXULChromeRegistryService();
 
-    if (NS_SUCCEEDED(rv) && packageRegistry) {
+    if (packageRegistry) {
       nsCAutoString utf8DictName;
       rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("global"),
                                               utf8DictName);

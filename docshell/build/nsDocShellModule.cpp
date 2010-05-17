@@ -214,6 +214,11 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "memory",
       nsAboutRedirector::Create
     },
+    { "about:addons",
+      NS_ABOUT_REDIRECTOR_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "addons",
+      nsAboutRedirector::Create
+    },
     { "about:support",
       NS_ABOUT_REDIRECTOR_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "support",

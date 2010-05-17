@@ -66,7 +66,7 @@ public:
    *                   interested in animating.
    * @param  aElement  The element whose attribute is being animated.
    */
-  nsSMILMappedAttribute(nsCSSProperty aPropID, nsIContent* aElement) :
+  nsSMILMappedAttribute(nsCSSProperty aPropID, mozilla::dom::Element* aElement) :
     nsSMILCSSProperty(aPropID, aElement) {}
 
   // nsISMILAttr methods

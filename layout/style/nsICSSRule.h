@@ -43,14 +43,14 @@
 #include "nsIStyleRule.h"
 #include "nsIDOMCSSRule.h"
 
-class nsICSSStyleSheet;
+class nsCSSStyleSheet;
 class nsICSSGroupRule;
 class nsAString;
 
-// IID for the nsICSSRule interface {98d426f7-2ef9-44f5-8d06-e064f486a18c}
+// IID for the nsICSSRule interface {72250d73-dbb2-4409-90fe-e8e0283a2510}
 #define NS_ICSS_RULE_IID     \
-{ 0x98d426f7, 0x2ef9, 0x44f5, \
- { 0x8d, 0x06, 0xe0, 0x64, 0xf4, 0x86, 0xa1, 0x8c } }
+{ 0x72250d73, 0xdbb2, 0x4409, \
+ { 0x90, 0xfe, 0xe8, 0xe0, 0x28, 0x3a, 0x25, 0x10 } }
 
 // inheriting from nsIStyleRule is only for style rules, not other rule types
 class nsICSSRule : public nsIStyleRule {
@@ -76,7 +76,7 @@ public:
   NS_IMETHOD GetType(PRInt32& aType) const = 0;
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const = 0;
-  NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
+  NS_IMETHOD SetStyleSheet(nsCSSStyleSheet* aSheet) = 0;
   NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule) = 0;
 
   NS_IMETHOD Clone(nsICSSRule*& aClone) const = 0;

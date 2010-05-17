@@ -63,7 +63,7 @@
 #include "nsInt64.h"
 #include "nsNodeUtils.h"
 #include "nsIContent.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 #include "nsGenericHTMLElement.h"
 

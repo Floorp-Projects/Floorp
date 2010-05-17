@@ -123,7 +123,7 @@ nsAccUtils::GetDefaultLevel(nsAccessible *aAcc)
 PRInt32
 nsAccUtils::GetARIAOrDefaultLevel(nsIAccessible *aAcc)
 {
-  nsRefPtr<nsAccessible> acc = nsAccUtils::QueryObject<nsAccessible>(aAcc);
+  nsRefPtr<nsAccessible> acc = do_QueryObject(aAcc);
   NS_ENSURE_TRUE(acc, 0);
 
   nsCOMPtr<nsIDOMNode> node;
@@ -352,7 +352,7 @@ nsAccUtils::HasAccessibleChildren(nsIDOMNode *aNode)
   if (!content)
     return PR_FALSE;
 
-  nsCOMPtr<nsIPresShell> presShell = nsCoreUtils::GetPresShellFor(aNode);
+  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
   if (!presShell)
     return PR_FALSE;
 

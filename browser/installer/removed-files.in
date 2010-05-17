@@ -38,9 +38,6 @@ components/aboutPrivateBrowsing.js
 components/aboutRights.js
 components/aboutRobots.js
 components/aboutSessionRestore.js
-components/addonManager.js
-components/amContentHandler.js
-components/amInstallWebListener.js
 components/autocomplete.xpt
 components/airbag.xpt
 components/bookmarks.xpt
@@ -53,6 +50,7 @@ components/nsBackgroundUpdateService.js
 components/nsBookmarkTransactionManager.js
 components/nsCloseAllWindows.js
 components/nsDictionary.js
+components/nsExtensionManager.js
 components/nsInterfaceInfoToIDL.js
 components/nsScriptableIO.js
 components/nsUrlClassifierTable.js
@@ -84,11 +82,6 @@ extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/
 extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/install.rdf
 install.rdf
 modules/JSON.jsm
-modules/AddonLogging.jsm
-modules/AddonManager.jsm
-modules/AddonUpdateChecker.jsm
-modules/PluginProvider.jsm
-modules/XPIProvider.jsm
 mozilla-runtime@BIN_SUFFIX@
 old-homepage-default.properties
 res/broken-image.gif
@@ -715,6 +708,14 @@ xpicleanup@BIN_SUFFIX@
   plugins/Default Plugin.plugin/Contents/PkgInfo
   plugins/Default Plugin.plugin/Contents/Resources/Default Plugin.rsrc
   plugins/Default Plugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+  plugins/DefaultPlugin.plugin/
+  plugins/DefaultPlugin.plugin/Contents/Info.plist
+  plugins/DefaultPlugin.plugin/Contents/MacOS/
+  plugins/DefaultPlugin.plugin/Contents/MacOS/DefaultPlugin
+  plugins/DefaultPlugin.plugin/Contents/Resources/
+  plugins/DefaultPlugin.plugin/Contents/Resources/English.lproj/
+  plugins/DefaultPlugin.plugin/Contents/Resources/English.lproj/InfoPlist.strings
+  plugins/DefaultPlugin.plugin/Contents/Resources/plugin.png
   redo-prebinding.sh
   res/bloatcycle.html
   res/cursors/CVS/Entries
@@ -733,6 +734,7 @@ xpicleanup@BIN_SUFFIX@
     icons/mozicon16.xpm
     icons/mozicon50.xpm
     libjemalloc.so
+    plugins/libnullplugin.so
     readme.txt
   #endif
 #endif
@@ -744,6 +746,7 @@ xpicleanup@BIN_SUFFIX@
   components/jsd3250.dll
   components/nsPostUpdateWin.js
   js3250.dll
+  plugins/npnul32.dll
   #ifdef MOZ_MEMORY
     Microsoft.VC80.CRT.manifest
     msvcm80.dll

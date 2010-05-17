@@ -79,6 +79,7 @@
 #include "nsIMenuRollup.h"
 #include "nsWidgetsCID.h"
 #include "nsQtKeyUtils.h"
+#include "mozilla/Services.h"
 
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -94,20 +95,23 @@
 #include "gfxXlibSurface.h"
 #include "gfxQPainterSurface.h"
 #include "gfxContext.h"
-#include "gfxSharedImageSurface.h"
+#include "gfxImageSurface.h"
 
 #include "nsIDOMSimpleGestureEvent.h" //Gesture support
 
 // imported in nsWidgetFactory.cpp
 PRBool gDisableNativeTheme = PR_FALSE;
 
-// Buffered Pixmap stuff
+// Buffered QPixmap surface
+// http://doc.qt.nokia.com/4.6/qpaintengine.html#Type-enum
+// used in QPaintEngine::X11/OpenGL2 backend
 static QPixmap *gBufferPixmap = nsnull;
-static int gBufferPixmapUsageCount = 0;
+// Buffered image surface
+// best option for QPaintEngine::Raster
+// Also compatible with all other engine types
+static gfxImageSurface *gBufferImage = nsnull;
 
-// Buffered shared image + pixmap
-static gfxSharedImageSurface *gBufferImage = nsnull;
-static gfxSharedImageSurface *gBufferImageTemp = nsnull;
+static int gBufferPixmapUsageCount = 0;
 static gfxIntSize gBufferMaxSize(0, 0);
 
 /* For PrepareNativeWidget */
@@ -217,15 +221,12 @@ _depth_to_gfximage_format(PRInt32 aDepth)
 }
 
 static inline QImage::Format
-_depth_to_qformat(PRInt32 aDepth)
+_gfximage_to_qformat(gfxASurface::gfxImageFormat aFormat)
 {
-    switch (aDepth) {
-    case 32:
+    switch (aFormat) {
+    case gfxASurface::ImageFormatARGB32:
+    case gfxASurface::ImageFormatRGB24:
         return QImage::Format_ARGB32;
-    case 24:
-        return QImage::Format_RGB32;
-    case 16:
-        return QImage::Format_RGB16;
     default:
         return QImage::Format_Invalid;
     }
@@ -235,10 +236,8 @@ static void
 FreeOffScreenBuffers(void)
 {
     delete gBufferImage;
-    delete gBufferImageTemp;
     delete gBufferPixmap;
     gBufferImage = nsnull;
-    gBufferImageTemp = nsnull;
     gBufferPixmap = nsnull;
 }
 
@@ -256,50 +255,22 @@ UpdateOffScreenBuffers(QPaintEngine::Type aType, int aDepth, QSize aSize)
 
     gBufferMaxSize.width = PR_MAX(gBufferMaxSize.width, size.width);
     gBufferMaxSize.height = PR_MAX(gBufferMaxSize.height, size.height);
-    if (aType == QPaintEngine::X11) {
+    // For Qt X11 engine better to use QPixmap as offscreen buffer
+    if (aType == QPaintEngine::X11 || aType == QPaintEngine::OpenGL2) {
         gBufferPixmap = new QPixmap(gBufferMaxSize.width, gBufferMaxSize.height);
-        if (!gBufferPixmap)
-            return false;
+        return true;
     }
 
     // Check if system depth has related gfxImage format
     gfxASurface::gfxImageFormat format =
         _depth_to_gfximage_format(aDepth);
-    PRBool depthFormatInCompatible = (format == gfxASurface::ImageFormatUnknown);
 
-    // In raster backend we don't care about incompatible mode, and will paint in
-    // default RGB24 format... Raster engine will convert it to target color depth
-    if (depthFormatInCompatible && aType == QPaintEngine::Raster) {
-        depthFormatInCompatible = PR_FALSE;
+    // Use fallback RGB24 format, Qt will do conversion for us
+    if (format == gfxASurface::ImageFormatUnknown)
         format = gfxASurface::ImageFormatRGB24;
-    }
 
-    gBufferImage = new gfxSharedImageSurface();
-    if (!gBufferImage) {
-        FreeOffScreenBuffers();
-        return false;
-    }
-
-    if (!gBufferImage->Init(gBufferMaxSize, format, aDepth)) {
-        FreeOffScreenBuffers();
-        return false;
-    }
-
-    // gfxImageSurface does not support system color depth format
-    // we have to paint it with temp surface and color conversion
-    if (!depthFormatInCompatible)
-        return true;
-
-    gBufferImageTemp = new gfxSharedImageSurface();
-    if (!gBufferImageTemp) {
-        FreeOffScreenBuffers();
-        return false;
-    }
-
-    if (!gBufferImageTemp->Init(gBufferMaxSize, gfxASurface::ImageFormatRGB24)) {
-        FreeOffScreenBuffers();
-        return false;
-    }
+    // For non-X11 qt paint engine we use image surface as offscreen buffer
+    gBufferImage = new gfxImageSurface(gBufferMaxSize, format);
     return true;
 }
 
@@ -998,6 +969,20 @@ nsWindow::GetAttention(PRInt32 aCycleCount)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifdef MOZ_X11
+static already_AddRefed<gfxASurface>
+GetSurfaceForQPixmap(QPixmap* aDrawable)
+{
+    gfxASurface* result =
+        new gfxXlibSurface(aDrawable->x11Info().display(),
+                           aDrawable->handle(),
+                           (Visual*)aDrawable->x11Info().visual(),
+                           gfxIntSize(aDrawable->size().width(), aDrawable->size().height()));
+    NS_IF_ADDREF(result);
+    return result;
+}
+#endif
+
 nsEventStatus
 nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 {
@@ -1025,15 +1010,20 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     gfxQtPlatform::RenderMode renderMode = gfxQtPlatform::GetPlatform()->GetRenderMode();
     QPaintEngine::Type paintEngineType = aPainter->paintEngine()->type();
     int depth = aPainter->device()->depth();
-    // Prepare offscreen buffers if RenderMode Xlib or Image
-    if (renderMode == gfxQtPlatform::RENDER_SHARED_IMAGE)
+
+    nsRefPtr<gfxASurface> targetSurface = nsnull;
+    if (renderMode == gfxQtPlatform::RENDER_BUFFERED) {
+        // Prepare offscreen buffers iamge or xlib, depends from paintEngineType
         if (!UpdateOffScreenBuffers(paintEngineType, depth, QSize(r.width(), r.height())))
             return nsEventStatus_eIgnore;
 
-    nsRefPtr<gfxASurface> targetSurface = nsnull;
-    if (renderMode == gfxQtPlatform::RENDER_SHARED_IMAGE) {
-        targetSurface = gBufferImageTemp ? gBufferImageTemp->getASurface()
-                                         : gBufferImage->getASurface();
+        if (gBufferPixmap) {
+            targetSurface = GetSurfaceForQPixmap(gBufferPixmap);
+        }
+        else if (gBufferImage) {
+            NS_ADDREF(targetSurface = gBufferImage);
+        }
+
     } else if (renderMode == gfxQtPlatform::RENDER_QPAINTER) {
         targetSurface = new gfxQPainterSurface(aPainter);
     }
@@ -1044,7 +1034,7 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
     nsRefPtr<gfxContext> ctx = new gfxContext(targetSurface);
 
     // We will paint to 0, 0 position in offscrenn buffer
-    if (renderMode == gfxQtPlatform::RENDER_SHARED_IMAGE)
+    if (renderMode == gfxQtPlatform::RENDER_BUFFERED)
         ctx->Translate(gfxPoint(-r.x(), -r.y()));
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
@@ -1070,47 +1060,20 @@ nsWindow::DoPaint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption)
 
     LOGDRAW(("[%p] draw done\n", this));
 
-    // Handle not direct painting mode
-    if (renderMode == gfxQtPlatform::RENDER_SHARED_IMAGE) {
-        if (paintEngineType == QPaintEngine::X11) {
-            // When Qt is working in X11 mode, then we should put our shared image to X
-            if (gBufferImageTemp && gBufferImage) {
-                // If gBufferImageTemp no null, then we have incompatible QPaintDevice color format
-                // Need to convert first
-                QImage src_img(gBufferImageTemp->Data(),
-                               gBufferImageTemp->Width(),
-                               gBufferImageTemp->Height(),
-                               gBufferImageTemp->Stride(),
-                               _depth_to_qformat(gBufferImageTemp->Depth()));
-                QImage dst_img(gBufferImage->Data(),
-                               gBufferImage->Width(),
-                               gBufferImage->Height(),
-                               gBufferImage->Stride(),
-                               _depth_to_qformat(gBufferImage->Depth()));
-                QPainter p(&dst_img);
-                p.drawImage(QPoint(0, 0), src_img, QRect(0, 0, rect.width, rect.height));
-            }
-
-            Display *disp = gBufferPixmap->x11Info().display();
-            XGCValues gcv;
-            gcv.graphics_exposures = False;
-            GC gc = XCreateGC(disp, gBufferPixmap->handle(), GCGraphicsExposures, &gcv);
-            XShmPutImage(disp, gBufferPixmap->handle(), gc, gBufferImage->image(),
-                         0, 0, 0, 0, rect.width, rect.height,
-                         False);
-            XSync(disp, False);
-            XFreeGC(disp, gc);
+    // Handle buffered painting mode
+    if (renderMode == gfxQtPlatform::RENDER_BUFFERED) {
+        if (gBufferPixmap) {
             // Paint offscreen pixmap to QPainter
             aPainter->drawPixmap(QPoint(rect.x, rect.y), *gBufferPixmap,
                                  QRect(0, 0, rect.width, rect.height));
 
-        } else if (paintEngineType == QPaintEngine::Raster) {
+        } else if (gBufferImage) {
             // in raster mode we can just wrap gBufferImage as QImage and paint directly
             QImage img(gBufferImage->Data(),
                        gBufferImage->Width(),
                        gBufferImage->Height(),
                        gBufferImage->Stride(),
-                       _depth_to_qformat(gBufferImage->Depth()));
+                       _gfximage_to_qformat(gBufferImage->Format()));
             aPainter->drawImage(QPoint(rect.x, rect.y), img,
                                 QRect(0, 0, rect.width, rect.height));
         }
@@ -1693,8 +1656,8 @@ nsWindow::OnDragEnter(QGraphicsSceneDragDropEvent *aDragEvent)
 static void
 GetBrandName(nsXPIDLString& brandName)
 {
-    nsCOMPtr<nsIStringBundleService> bundleService = 
-        do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        mozilla::services::GetStringBundleService();
 
     nsCOMPtr<nsIStringBundle> bundle;
     if (bundleService)
@@ -1834,6 +1797,9 @@ nsWindow::NativeResize(PRInt32 aWidth, PRInt32 aHeight, PRBool  aRepaint)
 
     mNeedsResize = PR_FALSE;
 
+    if (mIsTopLevel) {
+      GetViewWidget()->resize( aWidth, aHeight);
+    }
     mWidget->resize( aWidth, aHeight);
 
     if (aRepaint)
@@ -1851,6 +1817,9 @@ nsWindow::NativeResize(PRInt32 aX, PRInt32 aY,
     mNeedsResize = PR_FALSE;
     mNeedsMove = PR_FALSE;
 
+    if (mIsTopLevel) {
+      GetViewWidget()->setGeometry(aX, aY, aWidth, aHeight);
+    }
     mWidget->setGeometry(aX, aY, aWidth, aHeight);
 
     if (aRepaint)

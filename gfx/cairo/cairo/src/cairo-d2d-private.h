@@ -226,9 +226,6 @@ private:
 RefPtr<ID2D1Brush>
 _cairo_d2d_create_brush_for_pattern(cairo_d2d_surface_t *d2dsurf, 
 			            const cairo_pattern_t *pattern,
-				    unsigned int lastrun,
-				    unsigned int *runs_remaining,
-				    bool *pushed_clip,
 				    bool unique = false);
 void
 _cairo_d2d_begin_draw_state(cairo_d2d_surface_t *d2dsurf);

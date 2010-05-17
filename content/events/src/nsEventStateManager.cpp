@@ -188,8 +188,7 @@ GetScrollableLineHeight(nsIFrame* aTargetFrame);
 static inline PRBool
 IsMouseEventReal(nsEvent* aEvent)
 {
-  NS_ABORT_IF_FALSE(aEvent->eventStructType == NS_MOUSE_EVENT,
-                    "Not a mouse event");
+  NS_ABORT_IF_FALSE(NS_IS_MOUSE_EVENT_STRUCT(aEvent), "Not a mouse event");
   // Return true if not synthesized.
   return static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal;
 }
@@ -1738,6 +1737,8 @@ nsEventStateManager::FireContextClick()
         PRInt32 type = formCtrl->GetType();
 
         allowedToDispatch = (type == NS_FORM_INPUT_TEXT ||
+                             type == NS_FORM_INPUT_SEARCH ||
+                             type == NS_FORM_INPUT_TEL ||
                              type == NS_FORM_INPUT_PASSWORD ||
                              type == NS_FORM_INPUT_FILE ||
                              type == NS_FORM_TEXTAREA);
@@ -2047,7 +2048,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
     if (NS_SUCCEEDED(dsti->GetItemType(&type)) &&
         type != nsIDocShellTreeItem::typeChrome) {
       // mGestureDownContent is the node where the mousedown event for the drag
-      // occured, and aSelectionTarget is the node to use when a selection is used
+      // occurred, and aSelectionTarget is the node to use when a selection is used
       nsresult rv =
         nsContentAreaDragDrop::GetDragData(window, mGestureDownContent,
                                            aSelectionTarget, mGestureDownAlt,

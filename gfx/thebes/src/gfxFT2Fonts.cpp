@@ -48,7 +48,11 @@
 #include "gfxWindowsPlatform.h"
 #define gfxToolkitPlatform gfxWindowsPlatform
 #include "gfxFT2FontList.h"
+#elif defined(ANDROID)
+#include "gfxAndroidPlatform.h"
+#define gfxToolkitPlatform gfxAndroidPlatform
 #endif
+
 #include "gfxTypes.h"
 #include "gfxFT2Fonts.h"
 #include "gfxFT2FontBase.h"
@@ -361,6 +365,8 @@ gfxFT2FontGroup::gfxFT2FontGroup(const nsAString& families,
         LOGFONTW logFont;
         if (hGDI && ::GetObjectW(hGDI, sizeof(logFont), &logFont))
             familyArray.AppendElement(nsDependentString(logFont.lfFaceName));
+#elif defined(ANDROID)
+        familyArray.AppendElement(NS_LITERAL_STRING("Droid Sans"));
 #else
 #error "Platform not supported"
 #endif

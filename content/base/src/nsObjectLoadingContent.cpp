@@ -1718,14 +1718,6 @@ nsObjectLoadingContent::GetTypeOfContent(const nsCString& aMIMEType)
     return eType_Plugin;
   }
 
-  nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "must be a content");
-
-  if (ShouldShowDefaultPlugin(thisContent, aMIMEType)) {
-    return eType_Plugin;
-  }
-
   return eType_Null;
 }
 
@@ -1946,17 +1938,6 @@ nsObjectLoadingContent::CheckClassifier(nsIChannel *aChannel)
   mClassifier = classifier;
 
   return NS_OK;
-}
-
-/* static */ PRBool
-nsObjectLoadingContent::ShouldShowDefaultPlugin(nsIContent* aContent,
-                                                const nsCString& aContentType)
-{
-  if (nsContentUtils::GetBoolPref("plugin.default_plugin_disabled", PR_FALSE)) {
-    return PR_FALSE;
-  }
-
-  return GetPluginSupportState(aContent, aContentType) == ePluginUnsupported;
 }
 
 /* static */ PluginSupportState

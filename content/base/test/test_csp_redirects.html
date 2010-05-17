@@ -100,7 +100,7 @@ var testExpectedResults = { "font-src": true,
                           };
 
 // takes the name of the test, the URL that was tested, and whether the
-// load occured
+// load occurred
 var testResult = function(testName, url, result) {
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   log("  testName: "+testName+", result: "+result+", expected: "+testExpectedResults[testName]+"\n");
