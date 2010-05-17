@@ -39,6 +39,7 @@
 #include "TabChild.h"
 #include "mozilla/dom/PContentProcessChild.h"
 #include "mozilla/jsipc/ContextWrapperChild.h"
+#include "mozilla/dom/PContentDialogChild.h"
 
 #include "nsIWebBrowser.h"
 #include "nsEmbedCID.h"
@@ -70,6 +71,7 @@
 #include "nsScriptLoader.h"
 #include "nsPIWindowRoot.h"
 #include "nsIScriptContext.h"
+#include "nsInterfaceHashtable.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
@@ -100,6 +102,14 @@ ContentListener::HandleEvent(nsIDOMEvent* aEvent)
   mTabChild->SendsendEvent(remoteEvent);
   return NS_OK;
 }
+
+class ContentDialogChild : public PContentDialogChild
+{
+public:
+  virtual bool Recv__delete__(const nsTArray<int>& aIntParams,
+                              const nsTArray<nsString>& aStringParams);
+};
+
 
 TabChild::TabChild()
 : mCx(nsnull), mContextWrapper(nsnull), mTabChildGlobal(nsnull)
@@ -133,12 +143,24 @@ TabChild::Init()
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS11(TabChild, nsIWebBrowserChrome, nsIWebBrowserChrome2,
-                    nsIEmbeddingSiteWindow, nsIEmbeddingSiteWindow2,
-                    nsIWebBrowserChromeFocus, nsIInterfaceRequestor,
-                    nsIWindowProvider, nsIWebProgressListener,
-                    nsIWebProgressListener2, nsSupportsWeakReference,
-                    nsITabChild)
+NS_INTERFACE_MAP_BEGIN(TabChild)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebProgressListener2)
+  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome2)
+  NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow2)
+  NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener2)
+  NS_INTERFACE_MAP_ENTRY(nsSupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsITabChild)
+  NS_INTERFACE_MAP_ENTRY(nsIDialogCreator)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(TabChild)
+NS_IMPL_RELEASE(TabChild)
 
 NS_IMETHODIMP
 TabChild::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
@@ -306,6 +328,81 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, PRUint32 aChromeFlags,
         do_GetInterface(static_cast<TabChild*>(newChild)->mWebNav);
     win.forget(aReturn);
     return NS_OK;
+}
+
+static nsInterfaceHashtable<nsVoidPtrHashKey, nsIDialogParamBlock> gActiveDialogs;
+
+NS_IMETHODIMP
+TabChild::OpenDialog(PRUint32 aType, const nsACString& aName,
+                     const nsACString& aFeatures,
+                     nsIDialogParamBlock* aArguments,
+                     nsIDOMElement* aFrameElement)
+{
+  if (!gActiveDialogs.IsInitialized()) {
+    NS_ENSURE_STATE(gActiveDialogs.Init());
+  }
+  nsTArray<PRInt32> intParams;
+  nsTArray<nsString> stringParams;
+  ParamsToArrays(aArguments, intParams, stringParams);
+  PContentDialogChild* dialog =
+    SendPContentDialogConstructor(aType, nsCString(aName),
+                                  nsCString(aFeatures), intParams, stringParams);
+  NS_ENSURE_STATE(gActiveDialogs.Put(dialog, aArguments));
+  nsIThread *thread = NS_GetCurrentThread();
+  while (gActiveDialogs.GetWeak(dialog)) {
+    if (!NS_ProcessNextEvent(thread)) {
+      break;
+    }
+  }
+  return NS_OK;
+}
+
+bool
+ContentDialogChild::Recv__delete__(const nsTArray<int>& aIntParams,
+                                   const nsTArray<nsString>& aStringParams)
+{
+  nsCOMPtr<nsIDialogParamBlock> params;
+  if (gActiveDialogs.Get(this, getter_AddRefs(params))) {
+    TabChild::ArraysToParams(aIntParams, aStringParams, params);
+    gActiveDialogs.Remove(this);
+  }
+  return true;
+}
+
+void
+TabChild::ParamsToArrays(nsIDialogParamBlock* aParams,
+                         nsTArray<int>& aIntParams,
+                         nsTArray<nsString>& aStringParams)
+{
+  if (aParams) {
+    for (PRInt32 i = 0; i < 8; ++i) {
+      PRInt32 val = 0;
+      aParams->GetInt(i, &val);
+      aIntParams.AppendElement(val);
+    }
+    PRInt32 j = 0;
+    PRUnichar* str = nsnull;
+    while (NS_SUCCEEDED(aParams->GetString(j, &str))) {
+      nsAdoptingString strVal(str);
+      aStringParams.AppendElement(strVal);
+      ++j;
+    }
+  }
+}
+
+void
+TabChild::ArraysToParams(const nsTArray<int>& aIntParams,
+                         const nsTArray<nsString>& aStringParams,
+                         nsIDialogParamBlock* aParams)
+{
+  if (aParams) {
+    for (PRInt32 i = 0; PRUint32(i) < aIntParams.Length(); ++i) {
+      aParams->SetInt(i, aIntParams[i]);
+    }
+    for (PRInt32 j = 0; PRUint32(j) < aStringParams.Length(); ++j) {
+      aParams->SetString(j, aStringParams[j].get());
+    }
+  }
 }
 
 bool
@@ -665,6 +762,23 @@ TabChild::RecvPDocumentRendererShmemConstructor(
     return PDocumentRendererShmemChild::Send__delete__(__a, dirtyArea.X(), dirtyArea.Y(), 
                                                        dirtyArea.Width(), dirtyArea.Height(),
                                                        aBuf);
+}
+
+PContentDialogChild*
+TabChild::AllocPContentDialog(const PRUint32&,
+                              const nsCString&,
+                              const nsCString&,
+                              const nsTArray<int>&,
+                              const nsTArray<nsString>&)
+{
+  return new ContentDialogChild();
+}
+
+bool
+TabChild::DeallocPContentDialog(PContentDialogChild* aDialog)
+{
+  delete aDialog;
+  return true;
 }
 
 /* The PGeolocationRequestChild actor is implemented by a refcounted

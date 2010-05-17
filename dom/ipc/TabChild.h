@@ -64,6 +64,8 @@
 #include "nsFrameMessageManager.h"
 #include "nsIScriptContext.h"
 #include "nsDOMEventTargetHelper.h"
+#include "nsIDialogCreator.h"
+#include "nsIDialogParamBlock.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
@@ -82,6 +84,7 @@ class ContextWrapperChild;
 namespace dom {
 
 class TabChild;
+class PContentDialogChild;
 
 class TabChildGlobal : public nsDOMEventTargetHelper,
                        public nsIContentFrameMessageManager,
@@ -150,6 +153,7 @@ class TabChild : public PIFrameEmbeddingChild,
                  public nsIInterfaceRequestor,
                  public nsIWindowProvider,
                  public nsSupportsWeakReference,
+                 public nsIDialogCreator,
                  public nsITabChild
 {
 public:
@@ -168,6 +172,7 @@ public:
     NS_DECL_NSIWEBBROWSERCHROMEFOCUS
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIWINDOWPROVIDER
+    NS_DECL_NSIDIALOGCREATOR
 
     virtual bool RecvcreateWidget(const MagicWindowHandle& parentWidget);
     virtual bool RecvloadURL(const nsCString& uri);
@@ -210,6 +215,18 @@ public:
             const nsString& bgcolor,
             const PRUint32& flags,
             const bool& flush);
+    virtual PContentDialogChild* AllocPContentDialog(const PRUint32&,
+                                                     const nsCString&,
+                                                     const nsCString&,
+                                                     const nsTArray<int>&,
+                                                     const nsTArray<nsString>&);
+    virtual bool DeallocPContentDialog(PContentDialogChild* aDialog);
+    static void ParamsToArrays(nsIDialogParamBlock* aParams,
+                               nsTArray<int>& aIntParams,
+                               nsTArray<nsString>& aStringParams);
+    static void ArraysToParams(const nsTArray<int>& aIntParams,
+                               const nsTArray<nsString>& aStringParams,
+                               nsIDialogParamBlock* aParams);
 
     virtual PDocumentRendererShmemChild* AllocPDocumentRendererShmem(
             const PRInt32& x,

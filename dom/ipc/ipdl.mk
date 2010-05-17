@@ -39,4 +39,5 @@ IPDLSRCS = \
   PIFrameEmbedding.ipdl \
   PDocumentRenderer.ipdl \
   PDocumentRendererShmem.ipdl \
+  PContentDialog.ipdl \
   $(NULL)
