@@ -256,7 +256,7 @@ nsAccEvent::CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput)
   if (!targetNode)
     return;
 
-  nsCOMPtr<nsIPresShell> presShell = nsCoreUtils::GetPresShellFor(targetNode);
+  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(targetNode);
   if (!presShell) {
     NS_NOTREACHED("Threre should always be an pres shell for an event");
     return;

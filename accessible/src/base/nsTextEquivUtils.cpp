@@ -141,7 +141,7 @@ nsTextEquivUtils::AppendTextEquivFromContent(nsIAccessible *aInitiatorAcc,
   gInitiatorAcc = aInitiatorAcc;
 
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(aContent));
-  nsCOMPtr<nsIPresShell> shell = nsCoreUtils::GetPresShellFor(DOMNode);
+  nsIPresShell *shell = nsCoreUtils::GetPresShellFor(DOMNode);
   if (!shell) {
     NS_ASSERTION(PR_TRUE, "There is no presshell!");
     gInitiatorAcc = nsnull;
