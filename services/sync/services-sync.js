@@ -2,8 +2,8 @@ pref("extensions.weave.serverURL", "@server_url@");
 pref("extensions.weave.storageAPI", "1.0");
 pref("extensions.weave.userURL", "user/");
 pref("extensions.weave.miscURL", "misc/");
-pref("extensions.weave.termsURL", "http://mozillalabs.com/weave/tos/");
-pref("extensions.weave.privacyURL", "http://mozillalabs.com/weave/weave-privacy-policy/");
+pref("extensions.weave.termsURL", "https://services.mozilla.com/tos/");
+pref("extensions.weave.privacyURL", "https://services.mozilla.com/privacy-policy/");
 
 pref("extensions.weave.lastversion", "firstrun");
 pref("extensions.weave.autoconnect", true);
