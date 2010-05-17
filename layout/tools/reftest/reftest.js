@@ -777,12 +777,6 @@ function OnDocumentLoad(event)
        ps.footerStrCenter = "";
        ps.footerStrRight = "";
        gBrowser.docShell.contentViewer.setPageMode(true, ps);
-
-       // WORKAROUND FOR AN ASSERTION ON MAC!
-       var xr = CC[NS_XREAPPINFO_CONTRACTID].getService(CI.nsIXULRuntime);
-       var count = (xr.widgetToolkit == "cocoa") ? 1 : 0;
-       gURLs[0].minAsserts += count;
-       gURLs[0].maxAsserts += count;
     }
 
     setupZoom(contentRootElement);
