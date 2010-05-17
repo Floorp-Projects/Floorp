@@ -93,7 +93,7 @@ EntityNode gEntities[] = {
   {"macr",175}
 };
 
-#define ENTITY_COUNT (sizeof(gEntities)/sizeof(EntityNode))
+#define ENTITY_COUNT (unsigned(sizeof(gEntities)/sizeof(EntityNode)))
 
 class EntityToUnicodeEntry : public PLDHashEntryHdr
 {
@@ -460,7 +460,7 @@ main(void) {
   }
   printf("OK\n");
 
-  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
   PRUint32 i;
   for (i = 0; i < ENTITY_COUNT; ++i) {
@@ -527,7 +527,7 @@ main(void) {
   }
   printf("OK\n");
 
-  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
@@ -592,7 +592,7 @@ main(void) {
   }
   printf("OK\n");
 
-  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
@@ -661,7 +661,7 @@ main(void) {
   }
   printf("OK\n");
 
-  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
@@ -729,7 +729,7 @@ main(void) {
   }
   printf("OK\n");
 
-  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
   nsCOMArray<IFoo> fooArray;
 
@@ -805,7 +805,7 @@ main(void) {
   }
   printf("OK\n");
 
-  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
@@ -879,7 +879,7 @@ main(void) {
   }
   printf("OK\n");
 
-  printf("Filling hash with %d entries.\n", ENTITY_COUNT);
+  printf("Filling hash with %u entries.\n", ENTITY_COUNT);
 
   for (i = 0; i < ENTITY_COUNT; ++i) {
     printf("  Putting entry %u...", gEntities[i].mUnicode);
