@@ -1445,7 +1445,7 @@ var FormHelper = {
       let suggestions = this._getSuggestions();
       this._setSuggestions(suggestions);
     } else {
-      this._autofillContainer.hidden = true;
+      this._autofillContainer.collapsed = true;
     }
 
     let height = Math.floor(this._container.getBoundingClientRect().height);
@@ -1600,7 +1600,7 @@ var FormHelper = {
       fragment.appendChild(button);
     }
     autofill.appendChild(fragment);
-    autofill.hidden = !aSuggestions.length;
+    autofill.collapsed = !aSuggestions.length;
   },
 
   doAutoFill: function formHelperDoAutoFill(aElement) {
