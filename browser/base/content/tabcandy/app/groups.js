@@ -563,17 +563,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     if(typeof(item.setResizable) == 'function')
       item.setResizable(true);
 
-    if(this._children.length == 0 && !this.locked.close && !this.getTitle()){
-      // Only remove the group if, after the last child is dropped, it wasn't
-      // dropped back into the group. We need the setTimeout because otherwise
-      // at the time of the mouseup the child isn't yet a child of the group.
-      var self = this;
-      $el.one('mouseup', function(){
-        setTimeout(function(){
-          if( self._children.length == 0 ) self.close();
-        }, 50);
-      });
-
+    if(this._children.length == 0 && !this.locked.close && !this.getTitle() && !options.dontClose){
+      this.close();
     } else if(!options.dontArrange) {
       this.arrange();
     }
@@ -833,7 +824,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       out: function(){
         var group = drag.info.item.parent;
         if(group) {
-          group.remove(drag.info.$el);
+          group.remove(drag.info.$el, {dontClose: true});
         }
           
         $(this).removeClass("acceptsDrop");
@@ -1100,6 +1091,11 @@ DragInfo.prototype = {
         && this.parent._children.length == 1 && !this.parent.getTitle()) {
       this.parent.remove(this.parent._children[0]);
     }*/
+
+    if(this.parent && !this.parent.locked.close && this.parent != this.item.parent 
+        && this.parent._children.length == 0 && !this.parent.getTitle()) {
+      this.parent.close();
+    }
      
     if(this.parent && this.parent.expanded)
       this.parent.arrange();
