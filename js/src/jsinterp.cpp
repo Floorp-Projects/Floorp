@@ -1146,31 +1146,31 @@ BoxedWordToValue(jsboxedword w)
 }
 
 bool
-ValueToBoxedWord(JSContext *cx, const Value *vp, jsboxedword *wp)
+ValueToBoxedWord(JSContext *cx, const Value &v, jsboxedword *wp)
 {
     int32_t i;
-    if (vp->isInt32() &&
-        INT32_FITS_IN_JSID((i = vp->asInt32()))) {
+    if (v.isInt32() &&
+        INT32_FITS_IN_JSID((i = v.asInt32()))) {
         *wp = INT_TO_JSBOXEDWORD(i);
         return true;
     }
-    if (vp->isString()) {
-        *wp = STRING_TO_JSBOXEDWORD(vp->asString());
+    if (v.isString()) {
+        *wp = STRING_TO_JSBOXEDWORD(v.asString());
         return true;
     }
-    if (vp->isObjectOrNull()) {
-        *wp = OBJECT_TO_JSBOXEDWORD(vp->asObjectOrNull());
+    if (v.isObjectOrNull()) {
+        *wp = OBJECT_TO_JSBOXEDWORD(v.asObjectOrNull());
         return true;
     }
-    if (vp->isBoolean()) {
-        *wp = BOOLEAN_TO_JSBOXEDWORD(vp->asBoolean());
+    if (v.isBoolean()) {
+        *wp = BOOLEAN_TO_JSBOXEDWORD(v.asBoolean());
         return true;
     }
-    if (vp->isUndefined()) {
+    if (v.isUndefined()) {
         *wp = JSBOXEDWORD_VOID;
         return true;
     }
-    double *dp = js_NewWeaklyRootedDoubleAtom(cx, vp->asDouble());
+    double *dp = js_NewWeaklyRootedDoubleAtom(cx, v.asDouble());
     if (!dp)
         return false;
     *wp = DOUBLE_TO_JSBOXEDWORD(dp);
