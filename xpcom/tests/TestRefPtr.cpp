@@ -368,7 +368,7 @@ main()
   {
     printf(">>main()\n");
 
-		printf("sizeof(nsRefPtr<Foo>) --> %d\n", sizeof(nsRefPtr<Foo>));
+		printf("sizeof(nsRefPtr<Foo>) --> %u\n", unsigned(sizeof(nsRefPtr<Foo>)));
 
 		TestBloat_Raw_Unsafe();
 		TestBloat_Smart();

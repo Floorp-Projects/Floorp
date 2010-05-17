@@ -236,7 +236,8 @@ main(int argc, char **argv)
         if (flen > 0) {
             size_t rv = fread(whole, 1, flen, in);
             if (rv < flen) {
-                fprintf(stderr, "short read (%d vs %d)! ouch!\n", rv, flen);
+                fprintf(stderr, "short read (%u vs %u)! ouch!\n",
+                        (unsigned int)rv, (unsigned int)flen);
                 return 1;
             }
             if (ferror(in) != 0 || fclose(in) != 0) {

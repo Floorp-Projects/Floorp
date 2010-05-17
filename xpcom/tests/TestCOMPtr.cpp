@@ -368,7 +368,7 @@ main()
   {
     printf(">>main()\n");
 
-		printf("sizeof(nsCOMPtr<IFoo>) --> %d\n", sizeof(nsCOMPtr<IFoo>));
+		printf("sizeof(nsCOMPtr<IFoo>) --> %u\n", unsigned(sizeof(nsCOMPtr<IFoo>)));
 
 		TestBloat_Raw_Unsafe();
 		TestBloat_Smart();
