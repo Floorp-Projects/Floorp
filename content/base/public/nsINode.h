@@ -922,15 +922,6 @@ public:
   nsIContent* GetSelectionRootContent(nsIPresShell* aPresShell);
 
   virtual nsINodeList* GetChildNodesList();
-  nsIContent* GetSibling(PRInt32 aOffset)
-  {
-    nsINode *parent = GetNodeParent();
-    if (!parent) {
-      return nsnull;
-    }
-
-    return parent->GetChildAt(parent->IndexOf(this) + aOffset);
-  }
   nsIContent* GetFirstChild() const { return mFirstChild; }
   nsIContent* GetLastChild() const
   {
