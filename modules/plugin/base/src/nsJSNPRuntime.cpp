@@ -1345,6 +1345,11 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (NPObjectIsOutOfProcessProxy(npobj)) {
     PluginScriptableObjectParent* actor =
       static_cast<ParentNPObject*>(npobj)->parent;
+
+    // actor may be null if the plugin crashed.
+    if (!actor)
+      return JS_FALSE;
+
     JSBool success = actor->GetPropertyHelper((NPIdentifier)id, &hasProperty,
                                               &hasMethod, &npv);
     if (!ReportExceptionIfPending(cx)) {
