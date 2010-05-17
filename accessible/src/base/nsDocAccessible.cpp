@@ -1460,18 +1460,14 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
   if (NS_FAILED(rv) || !accessible)
     return;
 
-  nsRefPtr<nsHyperTextAccessible> textAccessible;
-  rv = accessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
-                                  getter_AddRefs(textAccessible));
-  if (NS_FAILED(rv) || !textAccessible)
+  nsRefPtr<nsHyperTextAccessible> textAccessible(do_QueryObject(accessible));
+  if (!textAccessible)
     return;
 
   PRInt32 start = aInfo->mChangeStart;
 
   PRInt32 offset = 0;
-  rv = textAccessible->DOMPointToHypertextOffset(node, start, &offset);
-  if (NS_FAILED(rv))
-    return;
+  textAccessible->DOMPointToHypertextOffset(node, start, &offset);
 
   PRInt32 length = aIsInserted ?
     aInfo->mReplaceLength: // text has been added
@@ -1511,19 +1507,16 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
                                               PRBool aIsAsynch,
                                               EIsFromUserInput aIsFromUserInput)
 {
-  nsRefPtr<nsHyperTextAccessible> textAccessible;
-  aContainerAccessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
-                                       getter_AddRefs(textAccessible));
+  nsRefPtr<nsHyperTextAccessible> textAccessible =
+    do_QueryObject(aContainerAccessible);
   if (!textAccessible) {
     return nsnull;
   }
 
   PRInt32 offset;
   PRInt32 length = 0;
-  nsCOMPtr<nsIAccessible> changeAccessible;
-  nsresult rv = textAccessible->DOMPointToHypertextOffset(aChangeNode, -1, &offset,
-                                                          getter_AddRefs(changeAccessible));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  nsCOMPtr<nsIAccessible> changeAccessible =
+    textAccessible->DOMPointToHypertextOffset(aChangeNode, -1, &offset);
 
   if (!aAccessibleForChangeNode) {
     // A span-level object or something else without an accessible is being removed, where
