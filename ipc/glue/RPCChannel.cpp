@@ -315,14 +315,14 @@ RPCChannel::Call(Message* msg, Message* reply)
     return true;
 }
 
-void
+bool
 RPCChannel::MaybeProcessDeferredIncall()
 {
     AssertWorkerThread();
     mMutex.AssertCurrentThreadOwns();
 
     if (mDeferred.empty())
-        return;
+        return false;
 
     size_t stackDepth = StackDepth();
 
@@ -331,7 +331,7 @@ RPCChannel::MaybeProcessDeferredIncall()
                "fatal logic error");
 
     if (mDeferred.top().rpc_remote_stack_depth_guess() < stackDepth)
-        return;
+        return false;
 
     // time to process this message
     Message call = mDeferred.top();
@@ -348,6 +348,7 @@ RPCChannel::MaybeProcessDeferredIncall()
 
     CxxStackFrame f(*this, IN_MESSAGE, &call);
     Incall(call, stackDepth);
+    return true;
 }
 
 void
@@ -371,6 +372,28 @@ RPCChannel::EnqueuePendingMessages()
 }
 
 void
+RPCChannel::FlushPendingRPCQueue()
+{
+    AssertWorkerThread();
+    mMutex.AssertNotCurrentThreadOwns();
+
+    {
+        MutexAutoLock lock(mMutex);
+
+        if (mDeferred.empty()) {
+            if (mPending.empty())
+                return;
+
+            const Message& last = mPending.back();
+            if (!last.is_rpc() || last.is_reply())
+                return;
+        }
+    }
+
+    while (OnMaybeDequeueOne());
+}
+
+bool
 RPCChannel::OnMaybeDequeueOne()
 {
     // XXX performance tuning knob: could process all or k pending
@@ -385,14 +408,14 @@ RPCChannel::OnMaybeDequeueOne()
 
         if (!Connected()) {
             ReportConnectionError("RPCChannel");
-            return;
+            return false;
         }
 
         if (!mDeferred.empty())
             return MaybeProcessDeferredIncall();
 
         if (mPending.empty())
-            return;
+            return false;
 
         recvd = mPending.front();
         mPending.pop();
@@ -402,17 +425,19 @@ RPCChannel::OnMaybeDequeueOne()
         // We probably just received a reply in a nested loop for an
         // RPC call sent before entering that loop.
         mOutOfTurnReplies[recvd.seqno()] = recvd;
-        return;
+        return false;
     }
 
     CxxStackFrame f(*this, IN_MESSAGE, &recvd);
 
     if (recvd.is_rpc())
-        return Incall(recvd, 0);
+        Incall(recvd, 0);
     else if (recvd.is_sync())
-        return SyncChannel::OnDispatchMessage(recvd);
+        SyncChannel::OnDispatchMessage(recvd);
     else
-        return AsyncChannel::OnDispatchMessage(recvd);
+        AsyncChannel::OnDispatchMessage(recvd);
+
+    return true;
 }
 
 void
