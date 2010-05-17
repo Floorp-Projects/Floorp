@@ -175,9 +175,10 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }                       
 
   if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperLink))) {
+    // Every embedded accessible within hypertext accessible implements
+    // hyperlink interface.
     nsCOMPtr<nsIAccessibleHyperText> hyperTextParent = do_QueryObject(GetParent());
-
-    if (hyperTextParent) {
+    if (hyperTextParent && nsAccUtils::IsEmbeddedObject(this)) {
       *aInstancePtr = static_cast<nsIAccessibleHyperLink*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
@@ -2641,6 +2642,10 @@ nsAccessible::GetStartIndex(PRInt32 *aStartIndex)
 {
   NS_ENSURE_ARG_POINTER(aStartIndex);
   *aStartIndex = 0;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   PRInt32 endIndex;
   return GetLinkOffset(aStartIndex, &endIndex);
 }
@@ -2651,6 +2656,10 @@ nsAccessible::GetEndIndex(PRInt32 *aEndIndex)
 {
   NS_ENSURE_ARG_POINTER(aEndIndex);
   *aEndIndex = 0;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   PRInt32 startIndex;
   return GetLinkOffset(&startIndex, aEndIndex);
 }
@@ -2719,32 +2728,28 @@ nsAccessible::GetSelected(PRBool *aSelected)
   return NS_OK;
 }
 
-nsresult nsAccessible::GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset)
+nsresult
+nsAccessible::GetLinkOffset(PRInt32 *aStartOffset, PRInt32 *aEndOffset)
 {
-  *aStartOffset = *aEndOffset = 0;
-  nsAccessible* parent = GetParent();
-  if (!parent) {
-    return NS_ERROR_FAILURE;
-  }
+  nsAccessible *parent = GetParent();
+  NS_ENSURE_STATE(parent);
 
-  nsCOMPtr<nsIAccessible> accessible, nextSibling;
   PRInt32 characterCount = 0;
-  parent->GetFirstChild(getter_AddRefs(accessible));
 
-  while (accessible) {
-    if (nsAccUtils::IsText(accessible))
-      characterCount += nsAccUtils::TextLength(accessible);
+  PRInt32 childCount = parent->GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible *sibling = parent->GetChildAt(childIdx);
 
-    else if (accessible == this) {
+    if (sibling == this) {
       *aStartOffset = characterCount;
       *aEndOffset = characterCount + 1;
       return NS_OK;
     }
-    else {
+
+    if (nsAccUtils::IsText(sibling))
+      characterCount += nsAccUtils::TextLength(sibling);
+    else
       ++ characterCount;
-    }
-    accessible->GetNextSibling(getter_AddRefs(nextSibling));
-    accessible.swap(nextSibling);
   }
 
   return NS_ERROR_FAILURE;
