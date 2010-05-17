@@ -46,7 +46,7 @@ interface nsIFrame;
 interface nsIChromeFrameMessageManager;
 interface nsIVariant;
 
-[scriptable, uuid(e511f61f-97db-448a-8b29-a10c470df3fa)]
+[scriptable, uuid(85a7f80b-4a3f-4606-8513-a1c4cced874f)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -123,6 +123,8 @@ interface nsIFrameLoader : nsISupports
                                 in long aCharCode,
                                 in long aModifiers,
                                 [optional] in boolean aPreventDefault);
+
+  attribute boolean delayRemoteDialogs;
 
 };
 

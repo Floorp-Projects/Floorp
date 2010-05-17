@@ -40,7 +40,7 @@
 #define mozilla_tabs_TabParent_h
 
 #include "mozilla/dom/PIFrameEmbeddingParent.h"
-
+#include "mozilla/dom/PContentDialogParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "jsapi.h"
@@ -49,6 +49,7 @@
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
+#include "nsIDialogParamBlock.h"
 
 class nsIURI;
 class nsIDOMElement;
@@ -88,6 +89,8 @@ bool operator==(const TabParentListenerInfo& lhs, const TabParentListenerInfo& r
   return &lhs == &rhs;
 }
 
+class ContentDialogParent : public PContentDialogParent {};
+
 class TabParent : public PIFrameEmbeddingParent, public nsIWebProgress
 {
 public:
@@ -122,6 +125,16 @@ public:
                                                nsTArray<nsString>* aJSONRetVal);
     virtual bool RecvsendAsyncMessageToParent(const nsString& aMessage,
                                               const nsString& aJSON);
+    virtual PContentDialogParent* AllocPContentDialog(const PRUint32& aType,
+                                                      const nsCString& aName,
+                                                      const nsCString& aFeatures,
+                                                      const nsTArray<int>& aIntParams,
+                                                      const nsTArray<nsString>& aStringParams);
+    virtual bool DeallocPContentDialog(PContentDialogParent* aDialog)
+    {
+      delete aDialog;
+      return true;
+    }
 
     void LoadURL(nsIURI* aURI);
     void Move(PRUint32 x, PRUint32 y, PRUint32 width, PRUint32 height);
@@ -168,6 +181,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBPROGRESS
 
+    void HandleDelayedDialogs();
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         PRBool aSync,
@@ -183,6 +197,25 @@ protected:
     nsCOMPtr<nsIBrowserDOMWindow> mBrowserDOMWindow;
 
     nsTArray<TabParentListenerInfo> mListenerInfoList;
+
+    struct DelayedDialogData
+    {
+      DelayedDialogData(PContentDialogParent* aDialog, PRUint32 aType,
+                        const nsCString& aName,
+                        const nsCString& aFeatures,
+                        nsIDialogParamBlock* aParams)
+      : mDialog(aDialog), mType(aType), mName(aName), mFeatures(aFeatures),
+        mParams(aParams) {}
+
+      PContentDialogParent* mDialog;
+      PRUint32 mType;
+      nsCString mName;
+      nsCString mFeatures;
+      nsCOMPtr<nsIDialogParamBlock> mParams;
+    };
+    nsTArray<DelayedDialogData*> mDelayedDialogs;
+
+    PRBool ShouldDelayDialogs();
 };
 
 } // namespace dom
