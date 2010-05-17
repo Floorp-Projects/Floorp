@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *  Ben Goodger <ben@mozilla.org> (Original Author)
+ *  Jim Mathies <jmathies@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
 
 #include "nsIShellService.idl"
 
-[scriptable, uuid(3ee25e62-ad0f-464e-8225-c3b774137387)]
+[scriptable, uuid(16e7e8da-8bef-4f41-be5f-045b2e9918e1)]
 interface nsIWindowsShellService : nsIShellService
 {
     /** 
@@ -46,5 +47,11 @@ interface nsIWindowsShellService : nsIShellService
      * @return The number of unread (new) mail messages for the current user.
      */
     readonly attribute unsigned long unreadMailCount;
+
+    /**
+     * Provides the shell service an opportunity to do some Win7+ shortcut
+     * maintenance needed on initial startup of the browser.
+     */
+    void shortcutMaintenance();
 };
 

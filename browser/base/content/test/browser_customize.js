@@ -29,15 +29,29 @@ function testCustomizeFrameLoaded()
   }
 
   var framedoc = document.getElementById("customizeToolbarSheetIFrame").contentDocument;
-  var b = framedoc.getElementById("donebutton");
 
-  b.focus();
-  framedoc.getElementById("donebutton").doCommand();
+  var panelX = panel.boxObject.screenX;
+  var iconModeList = framedoc.getElementById("modelist");
+  iconModeList.addEventListener("popupshown", function (e) {
+    iconModeList.removeEventListener("popupshown", arguments.callee, false);
+    SimpleTest.executeSoon(function () {
+      is(panel.boxObject.screenX, panelX, "toolbar customization panel shouldn't move when the iconmode menulist is opened");
+      iconModeList.open = false;
+    
+      var b = framedoc.getElementById("donebutton");
+      b.focus();
+      b.doCommand();
+    });
+  }, false);
+  iconModeList.open = true;
 }
   
-function testCustomizePopupHidden()
+function testCustomizePopupHidden(e)
 {
   var panel = document.getElementById("customizeToolbarSheetPopup");
+  if (e.target != panel)
+    return;
+
   panel.removeEventListener("popuphidden", testCustomizePopupHidden, false);
   is(document.activeElement, document.documentElement, "focus after customize done");
 

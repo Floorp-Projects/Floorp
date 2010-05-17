@@ -352,7 +352,7 @@ nsAccUtils::HasAccessibleChildren(nsIDOMNode *aNode)
   if (!content)
     return PR_FALSE;
 
-  nsCOMPtr<nsIPresShell> presShell = nsCoreUtils::GetPresShellFor(aNode);
+  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
   if (!presShell)
     return PR_FALSE;
 

@@ -52,10 +52,10 @@ class nsIDocument;
 template<class T> struct already_AddRefed;
 
 // IID for the nsIStyleSheet interface
-// 0304a68a-3ab2-413e-9979-a256b3416caa
+// 5de8de51-1f82-4e3d-9544-9a5bb07b4400
 #define NS_ISTYLE_SHEET_IID     \
-{ 0x0304a68a, 0x3ab2, 0x413e,   \
- { 0x99, 0x79, 0xa2, 0x56, 0xb3, 0x41, 0x6c, 0xaa } }
+{ 0x5de8de51, 0x1f82, 0x4e3d,   \
+ { 0x95, 0x44, 0x9a, 0x5b, 0xb0, 0x7b, 0x44, 0x00 } }
 
 /**
  * A style sheet is a thing associated with a document that has style
@@ -83,7 +83,7 @@ public:
    * being incomplete.
    *
    */
-  virtual PRBool GetApplicable() const = 0;
+  virtual PRBool IsApplicable() const = 0;
 
   /**
    * Set the stylesheet to be enabled.  This may or may not make it
@@ -99,7 +99,7 @@ public:
   /**
    * Whether the sheet is complete.
    */
-  virtual PRBool GetComplete() const = 0;
+  virtual PRBool IsComplete() const = 0;
   virtual void SetComplete() = 0;
 
   // style sheet owner info

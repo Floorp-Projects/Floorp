@@ -41,22 +41,35 @@
 #ifndef _nsIAccessibilityService_h_
 #define _nsIAccessibilityService_h_
 
-#include "nsISupports.h"
 #include "nsIAccessibleRetrieval.h"
+#include "nsIAccessibleEvent.h"
 
+class nsAccessible;
+class nsIContent;
 class nsIDocument;
 class nsIFrame;
+class nsIPresShell;
 class nsObjectFrame;
-class nsIContent;
 
+// 9f43b315-53c6-4d46-9818-9c8593e91984
 #define NS_IACCESSIBILITYSERVICE_IID \
-{0x33fa2a8d, 0x72e5, 0x4b8b,         \
-  {0xbb, 0x17, 0x6b, 0x22, 0x79, 0x05, 0x5c, 0x6c} }
+{0x9f43b315, 0x53c6, 0x4d46,         \
+  {0x98, 0x18, 0x9c, 0x85, 0x93, 0xe9, 0x19, 0x84} }
 
 class nsIAccessibilityService : public nsIAccessibleRetrieval
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IACCESSIBILITYSERVICE_IID)
+
+  /**
+   * Return an accessible object for a DOM node in the given pres shell.
+   *
+   * @param  aNode      [in] the DOM node to get an accessible for
+   * @param  aPresShell [in] the presentation shell which contains layout info
+   *                         for the DOM node
+   */
+  virtual nsAccessible* GetAccessibleInShell(nsIDOMNode *aNode,
+                                             nsIPresShell *aPresShell) = 0;
 
   /**
    * Creates accessible for the given DOM node or frame.

@@ -125,9 +125,9 @@ struct ChildSheetListBuilder;
  { 0x9e, 0xea, 0x09, 0x5c, 0x7f, 0xa3, 0x5c, 0xf4 } }
 
 
-class nsCSSStyleSheet : public nsIStyleSheet,
-                        public nsIDOMCSSStyleSheet,
-                        public nsICSSLoaderObserver
+class NS_FINAL_CLASS nsCSSStyleSheet : public nsIStyleSheet,
+                                       public nsIDOMCSSStyleSheet,
+                                       public nsICSSLoaderObserver
 {
 public:
   nsCSSStyleSheet();
@@ -142,9 +142,9 @@ public:
   virtual void GetTitle(nsString& aTitle) const;
   virtual void GetType(nsString& aType) const;
   virtual PRBool HasRules() const;
-  virtual PRBool GetApplicable() const;
+  virtual PRBool IsApplicable() const;
   virtual void SetEnabled(PRBool aEnabled);
-  virtual PRBool GetComplete() const;
+  virtual PRBool IsComplete() const;
   virtual void SetComplete();
   virtual already_AddRefed<nsIStyleSheet> GetParentSheet() const;  // may be null
   virtual already_AddRefed<nsIDocument> GetOwningDocument() const;  // may be null
@@ -193,7 +193,7 @@ public:
   void SetOwningNode(nsIDOMNode* aOwningNode) { mOwningNode = aOwningNode; /* Not ref counted */ }
 
   void SetOwnerRule(nsICSSImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
-  already_AddRefed<nsICSSImportRule> GetOwnerRule();
+  already_AddRefed<nsICSSImportRule> GetOwnerRule() const;
 
   nsXMLNameSpaceMap* GetNameSpaceMap() const;
 

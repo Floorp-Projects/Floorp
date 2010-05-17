@@ -97,6 +97,12 @@ class nsDisplayListBuilder;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
+namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
+} // namespace mozilla
+
 // Flags to pass to SetCapturingContent
 //
 // when assigning capture, ignore whether capture is allowed or not
@@ -424,8 +430,8 @@ public:
    */
   virtual NS_HIDDEN_(nsresult) RecreateFramesFor(nsIContent* aContent) = 0;
 
-  void PostRecreateFramesFor(nsIContent* aContent);
-  void RestyleForAnimation(nsIContent* aContent);
+  void PostRecreateFramesFor(mozilla::dom::Element* aElement);
+  void RestyleForAnimation(mozilla::dom::Element* aElement);
 
   /**
    * Determine if it is safe to flush all pending notifications

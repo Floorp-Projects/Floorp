@@ -90,11 +90,11 @@ protected:
   public:
     SourceReference(nsSVGRenderingObserver* aContainer) : mContainer(aContainer) {}
   protected:
-    virtual void ContentChanged(nsIContent* aFrom, nsIContent* aTo) {
+    virtual void ElementChanged(Element* aFrom, Element* aTo) {
       if (aFrom) {
         aFrom->RemoveMutationObserver(mContainer);
       }
-      nsReferencedElement::ContentChanged(aFrom, aTo);
+      nsReferencedElement::ElementChanged(aFrom, aTo);
       if (aTo) {
         aTo->AddMutationObserver(mContainer);
       }

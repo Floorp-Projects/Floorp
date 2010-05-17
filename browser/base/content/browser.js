@@ -3310,8 +3310,10 @@ function BrowserCustomizeToolbar()
 
   if (gCustomizeSheet) {
     var sheetFrame = document.getElementById("customizeToolbarSheetIFrame");
+    var panel = document.getElementById("customizeToolbarSheetPopup");
     sheetFrame.hidden = false;
     sheetFrame.toolbox = gNavToolbox;
+    sheetFrame.panel = panel;
 
     // The document might not have been loaded yet, if this is the first time.
     // If it is already loaded, reload it so that the onload initialization code
@@ -3321,9 +3323,14 @@ function BrowserCustomizeToolbar()
     else
       sheetFrame.setAttribute("src", customizeURL);
 
-    document.getElementById("customizeToolbarSheetPopup")
-            .openPopup(gNavToolbox, "after_start", 0, 0);
-
+    // Open the panel, but make it invisible until the iframe has loaded so
+    // that the user doesn't see a white flash.
+    panel.style.visibility = "hidden";
+    gNavToolbox.addEventListener("beforecustomization", function () {
+      gNavToolbox.removeEventListener("beforecustomization", arguments.callee, false);
+      panel.style.removeProperty("visibility");
+    }, false);
+    panel.openPopup(gNavToolbox, "after_start", 0, 0);
     return sheetFrame.contentWindow;
   } else {
     return window.openDialog(customizeURL,
@@ -4259,8 +4266,13 @@ var XULBrowserWindow = {
 
     var uri = aRequest.QueryInterface(Ci.nsIChannel).URI;
 
+    // Set the URI now if it isn't already set, so that the user can tell which
+    // site is loading. Only do this if the content window has no opener, though
+    // (i.e. the load wasn't triggered by a content-controlled link), to
+    // minimize spoofing risk.
     if (gURLBar &&
         gURLBar.value == "" &&
+        !content.opener &&
         getWebNavigation().currentURI.spec == "about:blank")
       URLBarSetURI(uri);
 

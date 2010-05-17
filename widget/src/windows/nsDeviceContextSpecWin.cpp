@@ -62,6 +62,7 @@
 #include "nsIFileStreams.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
+#include "mozilla/Services.h"
 
 // For NS_CopyNativeToUnicode
 #include "nsNativeCharsetUtils.h"
@@ -289,8 +290,10 @@ GetFileNameForPrintSettings(nsIPrintSettings* aPS)
   nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    mozilla::services::GetStringBundleService();
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
   nsCOMPtr<nsIStringBundle> bundle;
   rv = bundleService->CreateBundle(NS_ERROR_GFX_PRINTER_BUNDLE_URL, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv, rv);

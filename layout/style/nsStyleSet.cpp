@@ -239,7 +239,7 @@ nsresult
 nsStyleSet::AppendStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-  NS_ASSERTION(aSheet->GetApplicable(),
+  NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
   mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].AppendObject(aSheet))
@@ -256,7 +256,7 @@ nsresult
 nsStyleSet::PrependStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-  NS_ASSERTION(aSheet->GetApplicable(),
+  NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
   mSheets[aType].RemoveObject(aSheet);
   if (!mSheets[aType].InsertObjectAt(aSheet, 0))
@@ -273,7 +273,7 @@ nsresult
 nsStyleSet::RemoveStyleSheet(sheetType aType, nsIStyleSheet *aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
-  NS_ASSERTION(aSheet->GetComplete(),
+  NS_ASSERTION(aSheet->IsComplete(),
                "Incomplete sheet being removed from style set");
   mSheets[aType].RemoveObject(aSheet);
   if (!mBatching)
@@ -325,7 +325,7 @@ nsresult
 nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
 {
   NS_PRECONDITION(aSheet && aDocument, "null arg");
-  NS_ASSERTION(aSheet->GetApplicable(),
+  NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
 
   nsCOMArray<nsIStyleSheet>& docSheets = mSheets[eDocSheet];
@@ -1212,18 +1212,12 @@ static PRBool SheetHasStatefulStyle(nsIStyleRuleProcessor* aProcessor,
 // Test if style is dependent on content state
 nsRestyleHint
 nsStyleSet::HasStateDependentStyle(nsPresContext* aPresContext,
-                                   nsIContent*     aContent,
-                                   PRInt32         aStateMask)
+                                   Element*       aElement,
+                                   PRInt32        aStateMask)
 {
-  nsRestyleHint result = nsRestyleHint(0);
-
-  if (aContent->IsElement()) {
-    StatefulData data(aPresContext, aContent->AsElement(), aStateMask);
-    WalkRuleProcessors(SheetHasStatefulStyle, &data, PR_FALSE);
-    result = data.mHint;
-  }
-
-  return result;
+  StatefulData data(aPresContext, aElement, aStateMask);
+  WalkRuleProcessors(SheetHasStatefulStyle, &data, PR_FALSE);
+  return data.mHint;
 }
 
 struct AttributeData : public AttributeRuleProcessorData {
@@ -1249,21 +1243,15 @@ SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 // Test if style is dependent on content state
 nsRestyleHint
 nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
-                                       nsIContent*    aContent,
+                                       Element*       aElement,
                                        nsIAtom*       aAttribute,
                                        PRInt32        aModType,
                                        PRBool         aAttrHasChanged)
 {
-  nsRestyleHint result = nsRestyleHint(0);
-
-  if (aContent->IsElement()) {
-    AttributeData data(aPresContext, aContent->AsElement(), aAttribute,
-                       aModType, aAttrHasChanged);
-    WalkRuleProcessors(SheetHasAttributeStyle, &data, PR_FALSE);
-    result = data.mHint;
-  }
-
-  return result;
+  AttributeData data(aPresContext, aElement, aAttribute,
+                     aModType, aAttrHasChanged);
+  WalkRuleProcessors(SheetHasAttributeStyle, &data, PR_FALSE);
+  return data.mHint;
 }
 
 PRBool

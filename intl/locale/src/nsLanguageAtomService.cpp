@@ -43,6 +43,7 @@
 #include "nsUnicharUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIAtom.h"
+#include "mozilla/Services.h"
 
 NS_IMPL_ISUPPORTS1(nsLanguageAtomService, nsILanguageAtomService)
 
@@ -54,16 +55,16 @@ nsLanguageAtomService::nsLanguageAtomService()
 nsresult
 nsLanguageAtomService::InitLangGroupTable()
 {
-  if (mLangGroups) return NS_OK;
-  nsresult rv;
-  
-  nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  if (mLangGroups)
+    return NS_OK;
 
-  rv = bundleService->CreateBundle("resource://gre/res/langGroups.properties",
-                                   getter_AddRefs(mLangGroups));
-  return rv;
+  nsCOMPtr<nsIStringBundleService> bundleService =
+    mozilla::services::GetStringBundleService();
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
+
+  return bundleService->CreateBundle("resource://gre/res/langGroups.properties",
+                                     getter_AddRefs(mLangGroups));
 }
 
 nsIAtom*

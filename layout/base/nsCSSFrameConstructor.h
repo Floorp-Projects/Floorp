@@ -82,6 +82,8 @@ class nsFrameConstructorSaveState;
 class nsCSSFrameConstructor : public nsARefreshObserver
 {
 public:
+  typedef mozilla::dom::Element Element;
+
   nsCSSFrameConstructor(nsIDocument *aDocument, nsIPresShell* aPresShell);
   ~nsCSSFrameConstructor(void) {
     NS_ASSERTION(mUpdateCount == 0, "Dying in the middle of our own update?");
@@ -305,28 +307,32 @@ private:
   // This function does not call ProcessAttachedQueue() on the binding manager.
   // If the caller wants that to happen synchronously, it needs to handle that
   // itself.
-  void ProcessOneRestyle(nsIContent* aContent, nsRestyleHint aRestyleHint,
+  void ProcessOneRestyle(Element* aElement,
+                         nsRestyleHint aRestyleHint,
                          nsChangeHint aChangeHint);
 
   void ProcessPendingRestyleTable(
            nsDataHashtable<nsISupportsHashKey, RestyleData>& aRestyles);
 
+  void RestyleForEmptyChange(Element* aContainer);
+
 public:
   // Restyling for a ContentInserted (notification after insertion) or
   // for a CharacterDataChanged.  |aContainer| must be non-null; when
   // the container is null, no work is needed.
-  void RestyleForInsertOrChange(nsIContent* aContainer,
-                                nsIContent* aChild);
+  void RestyleForInsertOrChange(Element* aContainer, nsIContent* aChild);
+
   // This would be the same as RestyleForInsertOrChange if we got the
   // notification before the removal.  However, we get it after, so we
   // have to use the index.  |aContainer| must be non-null; when the
-  // container is null, no work is needed.
-  void RestyleForRemove(nsIContent* aContainer, nsIContent* aOldChild,
-                        PRInt32 aIndexInContainer);
+  // container is null, no work is needed.  aFollowingSibling is the
+  // sibling that used to come after aOldChild before the removal.
+  void RestyleForRemove(Element* aContainer,
+                        nsIContent* aOldChild,
+                        nsIContent* aFollowingSibling);
   // Same for a ContentAppended.  |aContainer| must be non-null; when
   // the container is null, no work is needed.
-  void RestyleForAppend(nsIContent* aContainer,
-                        PRInt32 aNewIndexInContainer);
+  void RestyleForAppend(Element* aContainer, nsIContent* aFirstNewContent);
 
   // Process any pending restyles. This should be called after
   // CreateNeededFrames.
@@ -343,31 +349,32 @@ public:
   void RebuildAllStyleData(nsChangeHint aExtraHint);
 
   // See PostRestyleEventCommon below.
-  void PostRestyleEvent(nsIContent* aContent, nsRestyleHint aRestyleHint,
+  void PostRestyleEvent(Element* aElement,
+                        nsRestyleHint aRestyleHint,
                         nsChangeHint aMinChangeHint)
   {
     nsPresContext *presContext = mPresShell->GetPresContext();
     if (presContext) {
-      PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint,
+      PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint,
                              presContext->IsProcessingAnimationStyleChange());
     }
   }
 
   // See PostRestyleEventCommon below.
-  void PostAnimationRestyleEvent(nsIContent* aContent,
+  void PostAnimationRestyleEvent(Element* aElement,
                                  nsRestyleHint aRestyleHint,
                                  nsChangeHint aMinChangeHint)
   {
-    PostRestyleEventCommon(aContent, aRestyleHint, aMinChangeHint, PR_TRUE);
+    PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint, PR_TRUE);
   }
 
   // nsARefreshObserver
   virtual void WillRefresh(mozilla::TimeStamp aTime);
 private:
   /**
-   * Notify the frame constructor that a content node needs to have its
+   * Notify the frame constructor that an element needs to have its
    * style recomputed.
-   * @param aContent: The content node to be restyled.
+   * @param aElement: The element to be restyled.
    * @param aRestyleHint: Which nodes need to have selector matching run
    *                      on them.
    * @param aMinChangeHint: A minimum change hint for aContent and its
@@ -379,7 +386,8 @@ private:
    *                       IsProcessingAnimationStyleChange() value
    *                       (which is the default value).
    */
-  void PostRestyleEventCommon(nsIContent* aContent, nsRestyleHint aRestyleHint,
+  void PostRestyleEventCommon(Element* aElement,
+                              nsRestyleHint aRestyleHint,
                               nsChangeHint aMinChangeHint,
                               PRBool aForAnimation);
   void PostRestyleEventInternal(PRBool aForLazyConstruction);
@@ -446,16 +454,16 @@ private:
                               nsIFrame*&     aPageFrame,
                               nsIFrame*&     aCanvasFrame);
 
-  void DoContentStateChanged(nsIContent*     aContent,
-                             PRInt32         aStateMask);
+  void DoContentStateChanged(Element* aElement,
+                             PRInt32 aStateMask);
 
   /* aMinHint is the minimal change that should be made to the element */
   // XXXbz do we really need the aPrimaryFrame argument here?
-  void RestyleElement(nsIContent*     aContent,
+  void RestyleElement(Element* aElement,
                       nsIFrame*       aPrimaryFrame,
                       nsChangeHint    aMinHint);
 
-  void RestyleLaterSiblings(nsIContent*     aContent);
+  void RestyleLaterSiblings(Element* aElement);
 
   nsresult InitAndRestoreFrame (const nsFrameConstructorState& aState,
                                 nsIContent*                    aContent,
@@ -495,7 +503,7 @@ private:
   // Construct the frames for the document element.  This must always return a
   // singe new frame (which may, of course, have a bunch of kids).
   // XXXbz no need to return a frame here, imo.
-  nsresult ConstructDocElementFrame(mozilla::dom::Element*   aDocElement,
+  nsresult ConstructDocElementFrame(Element*                 aDocElement,
                                     nsILayoutHistoryState*   aFrameState,
                                     nsIFrame**               aNewFrame);
 
@@ -1495,7 +1503,7 @@ private:
                         PendingBinding*          aPendingBinding,
                         nsFrameItems&            aFrameItems);
 
-  nsresult MaybeRecreateFramesForContent(nsIContent* aContent);
+  nsresult MaybeRecreateFramesForElement(Element* aElement);
 
   // If aAsyncInsert is true then a restyle event will be posted to handle the
   // required ContentInserted call instead of doing it immediately.
@@ -1835,7 +1843,7 @@ public:
   };
 
   struct RestyleEnumerateData : public RestyleData {
-    nsCOMPtr<nsIContent> mContent;
+    nsCOMPtr<Element> mElement;
   };
 
   friend class nsFrameConstructorState;
