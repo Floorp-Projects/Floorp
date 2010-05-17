@@ -189,18 +189,27 @@ TabMirror.prototype = {
     var self = this;
     
     // When a tab is opened, create the mirror
-    Tabs.onOpen(function() {
-/*       self.update(this); */
+    Tabs.onOpen(function() { 
+      var tab = this;
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+        self.update(tab);
+      }, 1);
     });
 
     // When a tab is updated, update the mirror
     Tabs.onReady( function(evt){
-      self.update(evt.tab);
+      var tab = evt.tab;
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+        self.update(tab);
+      }, 1);
     });
     
     // When a tab is closed, unlink.    
     Tabs.onClose( function(){
-      self.unlink(this);
+      var tab = this;
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+        self.unlink(tab);
+      }, 1);
     });
     
     // For each tab, create the link.
