@@ -8,6 +8,8 @@ const nsIAccessibleStateChangeEvent =
   Components.interfaces.nsIAccessibleStateChangeEvent;
 const nsIAccessibleCaretMoveEvent =
   Components.interfaces.nsIAccessibleCaretMoveEvent;
+const nsIAccessibleTextChangeEvent =
+  Components.interfaces.nsIAccessibleTextChangeEvent;
 
 const nsIAccessibleStates = Components.interfaces.nsIAccessibleStates;
 const nsIAccessibleRole = Components.interfaces.nsIAccessibleRole;
