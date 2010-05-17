@@ -733,7 +733,7 @@ nsWSRunObject::GetWSNodes()
       for (pos=mOffset-1; pos>=0; pos--)
       {
         // sanity bounds check the char position.  bug 136165
-        if (pos >= textFrag->GetLength())
+        if (PRUint32(pos) >= textFrag->GetLength())
         {
           NS_NOTREACHED("looking beyond end of text fragment");
           continue;
@@ -801,7 +801,7 @@ nsWSRunObject::GetWSNodes()
           for (pos=len-1; pos>=0; pos--)
           {
             // sanity bounds check the char position.  bug 136165
-            if (pos >= textFrag->GetLength())
+            if (PRUint32(pos) >= textFrag->GetLength())
             {
               NS_NOTREACHED("looking beyond end of text fragment");
               continue;
@@ -860,13 +860,13 @@ nsWSRunObject::GetWSNodes()
     const nsTextFragment *textFrag = textNode->GetText();
 
     PRUint32 len = textNode->TextLength();
-    if (mOffset<len)
+    if (PRUint16(mOffset)<len)
     {
       PRInt32 pos;
-      for (pos=mOffset; pos<len; pos++)
+      for (pos=mOffset; PRUint32(pos)<len; pos++)
       {
         // sanity bounds check the char position.  bug 136165
-        if ((pos<0) || (pos>=textFrag->GetLength()))
+        if ((pos<0) || (PRUint32(pos)>=textFrag->GetLength()))
         {
           NS_NOTREACHED("looking beyond end of text fragment");
           continue;
@@ -932,10 +932,10 @@ nsWSRunObject::GetWSNodes()
         else
         {
           PRInt32 pos;
-          for (pos=0; pos<len; pos++)
+          for (pos=0; PRUint32(pos)<len; pos++)
           {
             // sanity bounds check the char position.  bug 136165
-            if (pos >= textFrag->GetLength())
+            if (PRUint32(pos) >= textFrag->GetLength())
             {
               NS_NOTREACHED("looking beyond end of text fragment");
               continue;
@@ -1587,7 +1587,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
       textnode = do_QueryInterface(node);
       PRUint32 len;
       textnode->GetLength(&len);
-      if (aStartOffset<len)
+      if (PRUint32(aStartOffset)<len)
       {
         res = mHTMLEditor->DeleteText(textnode, (PRUint32)aStartOffset, len-aStartOffset);
         NS_ENSURE_SUCCESS(res, res);
@@ -1695,7 +1695,7 @@ nsWSRunObject::GetCharAfter(WSPoint &aPoint, WSPoint *outPoint)
   if (idx == -1) return NS_OK;  // can't find point, but it's not an error
   PRInt32 numNodes = mNodeArray.Count();
   
-  if (aPoint.mOffset < aPoint.mTextNode->TextLength())
+  if (PRUint16(aPoint.mOffset) < aPoint.mTextNode->TextLength())
   {
     *outPoint = aPoint;
     outPoint->mChar = GetCharAt(aPoint.mTextNode, aPoint.mOffset);
@@ -1941,7 +1941,7 @@ nsWSRunObject::GetCharAt(nsIContent *aTextNode, PRInt32 aOffset)
     return 0;
 
   PRUint32 len = aTextNode->TextLength();
-  if (aOffset < 0 || aOffset >= len) 
+  if (aOffset < 0 || aOffset >= PRUint32(len)) 
     return 0;
     
   return aTextNode->GetText()->CharAt(aOffset);
