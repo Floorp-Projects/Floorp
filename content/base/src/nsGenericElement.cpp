@@ -514,7 +514,7 @@ nsINode::GetPreviousSibling(nsIDOMNode** aPrevSibling)
 {
   *aPrevSibling = nsnull;
 
-  nsIContent *sibling = GetPreviousSibling();
+  nsIContent *sibling = GetSibling(-1);
 
   return sibling ? CallQueryInterface(sibling, aPrevSibling) : NS_OK;
 }
@@ -524,7 +524,7 @@ nsINode::GetNextSibling(nsIDOMNode** aNextSibling)
 {
   *aNextSibling = nsnull;
 
-  nsIContent *sibling = GetNextSibling();
+  nsIContent *sibling = GetSibling(1);
 
   return sibling ? CallQueryInterface(sibling, aNextSibling) : NS_OK;
 }
