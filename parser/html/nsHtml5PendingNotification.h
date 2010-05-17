@@ -57,7 +57,8 @@ class nsHtml5PendingNotification {
     }
 
     inline void Fire() {
-      nsNodeUtils::ContentAppended(mParent, mChildCount);
+      nsNodeUtils::ContentAppended(mParent, mParent->GetChildAt(mChildCount),
+                                   mChildCount);
     }
 
     inline PRBool Contains(nsIContent* aNode) {

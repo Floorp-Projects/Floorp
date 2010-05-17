@@ -53,7 +53,7 @@ interface nsIDOMEvent;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 
-[scriptable, uuid(352ff0af-bb38-496a-a067-b54771168d6d)]
+[scriptable, uuid(0da97f1f-ad20-43e5-9793-61df63cc9c9a)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -663,4 +663,15 @@ interface nsIDOMWindowUtils : nsISupports {
    * @return the parent.
    */
   void getParent(/* obj */);
+
+  /**
+   * Get the id of the outer window of this window.  This will never throw.
+   */
+  readonly attribute unsigned long long outerWindowID;
+
+  /**
+   * Get the id of the current inner window of this window.  If there
+   * is no current inner window, throws NS_ERROR_NOT_AVAILABLE.
+   */
+  readonly attribute unsigned long long currentInnerWindowID;
 };

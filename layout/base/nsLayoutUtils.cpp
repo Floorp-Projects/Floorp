@@ -93,7 +93,7 @@
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
 #include "ImageLayers.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 #ifdef MOZ_SVG
 #include "nsSVGUtils.h"
@@ -1178,6 +1178,9 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
   if (aFlags & PAINT_SYNC_DECODE_IMAGES) {
     builder.SetSyncDecodeImages(PR_TRUE);
   }
+  if (aFlags & PAINT_WIDGET_LAYERS) {
+    builder.SetPaintingToWindow(PR_TRUE);
+  }
   nsresult rv;
 
   builder.EnterPresShell(aFrame, dirtyRect);
@@ -1256,7 +1259,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
     widget->UpdatePossiblyTransparentRegion(dirtyWindowRegion, visibleWindowRegion);
   }
-  list.Paint(&builder, aRenderingContext, flags);
+  list.PaintRoot(&builder, aRenderingContext, flags);
   // Flush the list so we don't trigger the IsEmpty-on-destruction assertion
   list.DeleteAll();
   return NS_OK;
@@ -3596,6 +3599,15 @@ nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
     mValue(aValue)
 {
   NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
+}
+
+nsSetAttrRunnable::nsSetAttrRunnable(nsIContent* aContent, nsIAtom* aAttrName,
+                                     PRInt32 aValue)
+  : mContent(aContent),
+    mAttrName(aAttrName)
+{
+  NS_ASSERTION(aContent && aAttrName, "Missing stuff, prepare to crash");
+  mValue.AppendInt(aValue);
 }
 
 NS_IMETHODIMP

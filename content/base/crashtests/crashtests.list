@@ -19,13 +19,13 @@ load 338391-1.xhtml
 load 340733-1.html
 load 343730-1.xhtml
 load 343850-1.xhtml
-load 343889-1.html
+asserts(3) load 343889-1.html # bug 563536
 load 344434-1.xhtml
 load 348049-1.xhtml
 load 344882-1.html
 load 345837-1.xhtml
 load 349355-1.html
-load 354645-1.xul
+asserts(1) load 354645-1.xul # bug 512815
 load 360599-1.html
 load 366200-1.xhtml
 load 369216-1.html
@@ -41,12 +41,12 @@ skip load 399712-1.html # sporadically times out (bug 473680)
 load 398088-1.xul
 load 400763-1.html
 load 401993-1.html
-load 407818.html
+asserts(1) load 407818.html # bug 336104
 load 410860-1.xml
 load 416734-1.html
 load 418928-1.html
 load 420620-1.html
-load 424276-1.html
+asserts(2) load 424276-1.html # bug 462897
 load 426987-1.html
 load 443538-1.svg
 load 450383-1.html
@@ -60,6 +60,9 @@ load 493281-2.html
 load 490760-1.xhtml
 load 494810-1.html
 load 529670.html
-load 554230-1.xhtml
+asserts(1) load 554230-1.xhtml # bug 336104
 load 552651.html
 load 558973.html
+load 564079-1.html 
+load 564114.html
+load 565125-1.html

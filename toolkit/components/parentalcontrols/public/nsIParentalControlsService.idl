@@ -96,7 +96,7 @@ interface nsIParentalControlsService : nsISupports
    *                         was blocked.
    * @param aSource          The URI source of the subject content.
    * @param aTarget          The location the content was saved to if
-   *                         no blocking occured.
+   *                         no blocking occurred.
    */
   void log(in short aEntryType, in boolean aFlag, in nsIURI aSource, [optional] in nsIFile aTarget);
 };

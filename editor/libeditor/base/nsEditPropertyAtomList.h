@@ -170,6 +170,7 @@ EDITOR_ATOM(cssZIndex, "z-index")
 EDITOR_ATOM(cssMozUserModify, "-moz-user-modify")
 EDITOR_ATOM(cssMozUserSelect, "-moz-user-select")
 EDITOR_ATOM(mozdirty, "_moz_dirty")
+EDITOR_ATOM(mozEditorBogusNode, "_moz_editor_bogus_node")
 
 EDITOR_ATOM(cssPxUnit, "px")
 EDITOR_ATOM(cssEmUnit, "em")

@@ -2037,6 +2037,10 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
     nsIContent* baseContent = GetBaseElement();
     if (baseContent && baseContent->HasAttr(kNameSpaceID_None, nsGkAtoms::editing))
       mScratchArray->AppendElement(nsGkAtoms::editing);
+
+    // multiple columns
+    if (mColumns->GetColumnAt(1))
+      mScratchArray->AppendElement(nsGkAtoms::multicol);
   }
 
   if (aCol) {

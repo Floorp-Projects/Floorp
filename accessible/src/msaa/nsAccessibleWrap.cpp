@@ -302,8 +302,7 @@ STDMETHODIMP nsAccessibleWrap::get_accName(
 {
 __try {
   *pszName = NULL;
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_FAIL;
   nsAutoString name;
@@ -339,8 +338,7 @@ STDMETHODIMP nsAccessibleWrap::get_accValue(
 {
 __try {
   *pszValue = NULL;
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (xpAccessible) {
     nsAutoString value;
     if (NS_FAILED(xpAccessible->GetValue(value)))
@@ -367,8 +365,7 @@ nsAccessibleWrap::get_accDescription(VARIANT varChild,
 __try {
   *pszDescription = NULL;
 
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_FAIL;
 
@@ -454,9 +451,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
 __try {
   VariantInit(pvarRole);
 
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
-
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_FAIL;
 
@@ -491,13 +486,7 @@ __try {
   // -- Try BSTR role
   // Could not map to known enumerated MSAA role like ROLE_BUTTON
   // Use BSTR role to expose role attribute or tag name + namespace
-  nsCOMPtr<nsIDOMNode> domNode;
-  nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(xpAccessible));
-  if (!accessNode)
-    return E_FAIL;
-
-  accessNode->GetDOMNode(getter_AddRefs(domNode));
-  nsIContent *content = nsCoreUtils::GetRoleContent(domNode);
+  nsIContent *content = nsCoreUtils::GetRoleContent(xpAccessible->GetDOMNode());
   if (!content)
     return E_FAIL;
 
@@ -539,8 +528,7 @@ __try {
   pvarState->vt = VT_I4;
   pvarState->lVal = 0;
 
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible)
     return E_FAIL;
 
@@ -588,8 +576,7 @@ STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
 {
 __try {
   *pszKeyboardShortcut = NULL;
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (xpAccessible) {
     nsAutoString shortcut;
     nsresult rv = xpAccessible->GetKeyboardShortcut(shortcut);
@@ -820,8 +807,7 @@ STDMETHODIMP nsAccessibleWrap::get_accDefaultAction(
 {
 __try {
   *pszDefaultAction = NULL;
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (xpAccessible) {
     nsAutoString defaultAction;
     if (NS_FAILED(xpAccessible->GetActionName(0, defaultAction)))
@@ -842,8 +828,7 @@ STDMETHODIMP nsAccessibleWrap::accSelect(
 {
 __try {
   // currently only handle focus and selection
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   NS_ENSURE_TRUE(xpAccessible, E_FAIL);
 
   if (flagsSelect & (SELFLAG_TAKEFOCUS|SELFLAG_TAKESELECTION|SELFLAG_REMOVESELECTION))
@@ -878,8 +863,7 @@ STDMETHODIMP nsAccessibleWrap::accLocation(
       /* [optional][in] */ VARIANT varChild)
 {
 __try {
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
 
   if (xpAccessible) {
     PRInt32 x, y, width, height;
@@ -903,12 +887,13 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
       /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt)
 {
 __try {
-  nsCOMPtr<nsIAccessible> xpAccessibleStart, xpAccessibleResult;
-  GetXPAccessibleFor(varStart, getter_AddRefs(xpAccessibleStart));
+  nsAccessible *xpAccessibleStart = GetXPAccessibleFor(varStart);
   if (!xpAccessibleStart)
     return E_FAIL;
 
   VariantInit(pvarEndUpAt);
+
+  nsCOMPtr<nsIAccessible> xpAccessibleResult;
   PRUint32 xpRelation = 0;
 
   switch(navDir) {
@@ -1058,9 +1043,7 @@ STDMETHODIMP nsAccessibleWrap::accDoDefaultAction(
       /* [optional][in] */ VARIANT varChild)
 {
 __try {
-  nsCOMPtr<nsIAccessible> xpAccessible;
-  GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
-
+  nsAccessible *xpAccessible = GetXPAccessibleFor(varChild);
   if (!xpAccessible || FAILED(xpAccessible->DoAction(0))) {
     return E_FAIL;
   }
@@ -1738,7 +1721,7 @@ PRInt32 nsAccessibleWrap::GetChildIDFor(nsIAccessible* aAccessible)
 {
   // A child ID of the window is required, when we use NotifyWinEvent,
   // so that the 3rd party application can call back and get the IAccessible
-  // the event occured on.
+  // the event occurred on.
 
   void *uniqueID = nsnull;
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aAccessible));
@@ -1892,38 +1875,20 @@ nsAccessibleWrap::UnattachIEnumVariant()
     mEnumVARIANTPosition = kIEnumVariantDisconnected;
 }
 
-void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessible **aXPAccessible)
+nsAccessible*
+nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 {
-  *aXPAccessible = nsnull;
-  if (!mWeakShell)
-    return; // Fail, we don't want to do anything after we've shut down
+  if (IsDefunct())
+    return nsnull;
 
   // if its us real easy - this seems to always be the case
-  if (aVarChild.lVal == CHILDID_SELF) {
-    *aXPAccessible = static_cast<nsIAccessible*>(this);
-  }
-  else if (nsAccUtils::MustPrune(this)) {
-    return;
-  }
-  else {
-    // XXX It is rare to use a VARIANT with a child num
-    // so optimizing this is not a priority
-    // We can come back it do it later, if there are perf problems
-    // with a specific assistive technology
-    nsCOMPtr<nsIAccessible> xpAccessible, nextAccessible;
-    GetFirstChild(getter_AddRefs(xpAccessible));
-    for (PRInt32 index = 0; xpAccessible; index ++) {
-      if (!xpAccessible)
-        break; // Failed
-      if (aVarChild.lVal == index) {
-        *aXPAccessible = xpAccessible;
-        break;
-      }
-      nextAccessible = xpAccessible;
-      nextAccessible->GetNextSibling(getter_AddRefs(xpAccessible));
-    }
-  }
-  NS_IF_ADDREF(*aXPAccessible);
+  if (aVarChild.lVal == CHILDID_SELF)
+    return this;
+
+  if (nsAccUtils::MustPrune(this))
+    return nsnull;
+
+  return GetChildAt(aVarChild.lVal);
 }
 
 void nsAccessibleWrap::UpdateSystemCaret()

@@ -1109,8 +1109,8 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
 , mReason(aReason)
 , mContentLength(-1)
 , mProgress(0)
-, mRequest(nsnull)
 , mDataBuffer(nsnull)
+, mRequest(nsnull)
 {
 
   // make sure the extention includes the '.'
@@ -1130,7 +1130,7 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
     PRUnichar(0x202d), // Left-to-Right Override
     PRUnichar(0x202e)  // Right-to-Left Override
   };
-  for (int i = 0; i < NS_ARRAY_LENGTH(unsafeBidiCharacters); ++i) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(unsafeBidiCharacters); ++i) {
     mSuggestedFileName.ReplaceChar(unsafeBidiCharacters[i], '_');
     mTempFileExtension.ReplaceChar(unsafeBidiCharacters[i], '_');
   }
@@ -1738,11 +1738,12 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         ("       path='%s'\n", NS_ConvertUTF16toUTF8(path).get()));
 
     // Get properties file bundle and extract status string.
-    nsCOMPtr<nsIStringBundleService> s = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    if (s)
+    nsCOMPtr<nsIStringBundleService> stringService =
+        mozilla::services::GetStringBundleService();
+    if (stringService)
     {
         nsCOMPtr<nsIStringBundle> bundle;
-        if (NS_SUCCEEDED(s->CreateBundle("chrome://global/locale/nsWebBrowserPersist.properties", getter_AddRefs(bundle))))
+        if (NS_SUCCEEDED(stringService->CreateBundle("chrome://global/locale/nsWebBrowserPersist.properties", getter_AddRefs(bundle))))
         {
             nsXPIDLString msgText;
             const PRUnichar *strings[] = { path.get() };

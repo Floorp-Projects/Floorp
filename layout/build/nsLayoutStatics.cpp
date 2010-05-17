@@ -53,7 +53,6 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSRendering.h"
 #include "nsCSSScanner.h"
-#include "nsICSSStyleSheet.h"
 #include "nsDOMAttribute.h"
 #include "nsDOMClassInfo.h"
 #include "nsEventListenerManager.h"
@@ -126,7 +125,6 @@ PRBool NS_SVGEnabled();
 #endif
 
 #include "nsError.h"
-#include "nsTraceRefcnt.h"
 
 #include "nsCycleCollector.h"
 #include "nsJSEnvironment.h"
@@ -134,7 +132,7 @@ PRBool NS_SVGEnabled();
 
 extern void NS_ShutdownChainItemPool();
 
-static nsrefcnt sLayoutStaticRefcnt;
+nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
 
 nsresult
 nsLayoutStatics::Initialize()
@@ -391,32 +389,4 @@ nsLayoutStatics::Shutdown()
   nsFrameList::Shutdown();
 
   nsFileControlFrame::DestroyUploadLastDir();
-}
-
-void
-nsLayoutStatics::AddRef()
-{
-  NS_ASSERTION(NS_IsMainThread(),
-               "nsLayoutStatics reference counting must be on main thread");
-
-  NS_ASSERTION(sLayoutStaticRefcnt,
-               "nsLayoutStatics already dropped to zero!");
-
-  ++sLayoutStaticRefcnt;
-  NS_LOG_ADDREF(&sLayoutStaticRefcnt, sLayoutStaticRefcnt,
-                "nsLayoutStatics", 1);
-}
-
-void
-nsLayoutStatics::Release()
-{
-  NS_ASSERTION(NS_IsMainThread(),
-               "nsLayoutStatics reference counting must be on main thread");
-
-  --sLayoutStaticRefcnt;
-  NS_LOG_RELEASE(&sLayoutStaticRefcnt, sLayoutStaticRefcnt,
-                 "nsLayoutStatics");
-
-  if (!sLayoutStaticRefcnt)
-    Shutdown();
 }

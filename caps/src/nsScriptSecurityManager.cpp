@@ -40,6 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#include "xpcprivate.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -3367,11 +3368,12 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
 
 nsresult nsScriptSecurityManager::Init()
 {
-    nsresult rv = CallGetService(nsIXPConnect::GetCID(), &sXPConnect);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsXPConnect* xpconnect = nsXPConnect::GetXPConnect();
+     if (!xpconnect)
+        return NS_ERROR_FAILURE;
 
-    rv = CallGetService("@mozilla.org/js/xpc/ContextStack;1", &sJSContextStack);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ADDREF(sXPConnect = xpconnect);
+    NS_ADDREF(sJSContextStack = xpconnect);
 
     JSContext* cx = GetSafeJSContext();
     if (!cx) return NS_ERROR_FAILURE;   // this can happen of xpt loading fails
@@ -3383,11 +3385,13 @@ nsresult nsScriptSecurityManager::Init()
 
     InitPrefs();
 
-    rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
+    nsresult rv = CallGetService(NS_IOSERVICE_CONTRACTID, &sIOService);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        mozilla::services::GetStringBundleService();
+    if (!bundleService)
+        return NS_ERROR_FAILURE;
 
     rv = bundleService->CreateBundle("chrome://global/locale/security/caps.properties", &sStrBundle);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3404,7 +3408,7 @@ nsresult nsScriptSecurityManager::Init()
     //-- Register security check callback in the JS engine
     //   Currently this is used to control access to function.caller
     nsCOMPtr<nsIJSRuntimeService> runtimeService =
-        do_GetService("@mozilla.org/js/xpc/RuntimeService;1", &rv);
+        do_QueryInterface(sXPConnect, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = runtimeService->GetRuntime(&sRuntime);

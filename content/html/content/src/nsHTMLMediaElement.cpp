@@ -71,7 +71,7 @@
 #include "nsIDOMProgressEvent.h"
 #include "nsHTMLMediaError.h"
 #include "nsICategoryManager.h"
-#include "nsCommaSeparatedTokenizer.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsMediaStream.h"
 
 #include "nsIDOMHTMLVideoElement.h"
@@ -739,7 +739,7 @@ nsresult nsHTMLMediaElement::LoadResource(nsIURI* aURI)
   }
 
   // Else the channel must be open and starting to download. If it encounters
-  // a non-catestrophic failure, it will set a new task to continue loading
+  // a non-catastrophic failure, it will set a new task to continue loading
   // another candidate.
   return NS_OK;
 }
@@ -1320,7 +1320,7 @@ static CanPlayStatus GetCanPlay(const nsAString& aType)
   CanPlayStatus result = CANPLAY_YES;
   // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
   // of the 'codecs' parameter
-  nsCommaSeparatedTokenizer tokenizer(codecs);
+  nsCharSeparatedTokenizer tokenizer(codecs, ',');
   PRBool expectMoreTokens = PR_FALSE;
   while (tokenizer.hasMoreTokens()) {
     const nsSubstring& token = tokenizer.nextToken();
@@ -1329,7 +1329,7 @@ static CanPlayStatus GetCanPlay(const nsAString& aType)
       // Totally unsupported codec
       return CANPLAY_NO;
     }
-    expectMoreTokens = tokenizer.lastTokenEndedWithComma();
+    expectMoreTokens = tokenizer.lastTokenEndedWithSeparator();
   }
   if (expectMoreTokens) {
     // Last codec name was empty

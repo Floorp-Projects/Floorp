@@ -56,7 +56,7 @@
 #include "nsCSSRules.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "nsCSSDeclaration.h"
 #include "nsStyleConsts.h"
 #include "nsIURL.h"
@@ -87,6 +87,8 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "prlog.h"
+#include "CSSCalc.h"
+#include "nsMediaFeatures.h"
 
 // Flags for ParseVariant method
 #define VARIANT_KEYWORD         0x000001  // K
@@ -114,6 +116,7 @@
 #define VARIANT_IMAGE_RECT    0x01000000  // eCSSUnit_Function
 // This is an extra bit that says that a VARIANT_ANGLE allows unitless zero:
 #define VARIANT_ZERO_ANGLE    0x02000000  // unitless zero for angles
+#define VARIANT_CALC          0x04000000  // eCSSUnit_Calc
 
 // Common combinations of variants
 #define VARIANT_AL   (VARIANT_AUTO | VARIANT_LENGTH)
@@ -168,7 +171,7 @@ public:
   CSSParserImpl();
   ~CSSParserImpl();
 
-  nsresult SetStyleSheet(nsICSSStyleSheet* aSheet);
+  nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
 
   nsresult SetQuirkMode(PRBool aQuirkMode);
 
@@ -479,6 +482,18 @@ protected:
                                     PRInt32 aSourceType);
   PRBool ParseBorderStyle();
   PRBool ParseBorderWidth();
+
+  PRBool ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask);
+  PRBool ParseCalcAdditiveExpression(nsCSSValue& aValue,
+                                     PRInt32& aVariantMask);
+  PRBool ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
+                                           PRInt32& aVariantMask,
+                                           PRBool *aHadFinalWS);
+  PRBool ParseCalcTerm(nsCSSValue& aValue, PRInt32& aVariantMask);
+  PRBool ParseCalcMinMax(nsCSSValue& aValue, nsCSSUnit aUnit,
+                         PRInt32& aVariantMask);
+  PRBool RequireWhitespace();
+
   // for 'clip' and '-moz-image-region'
   PRBool ParseRect(nsCSSRect& aRect,
                    nsCSSProperty aPropID);
@@ -614,7 +629,7 @@ protected:
   nsCOMPtr<nsIPrincipal> mSheetPrincipal;
 
   // The sheet we're parsing into
-  nsCOMPtr<nsICSSStyleSheet> mSheet;
+  nsRefPtr<nsCSSStyleSheet> mSheet;
 
   // Used for @import rules
   mozilla::css::Loader* mChildLoader; // not ref counted, it owns us
@@ -755,7 +770,7 @@ CSSParserImpl::~CSSParserImpl()
 }
 
 nsresult
-CSSParserImpl::SetStyleSheet(nsICSSStyleSheet* aSheet)
+CSSParserImpl::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   if (aSheet != mSheet) {
     // Switch to using the new sheet, if any
@@ -877,8 +892,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   NS_ENSURE_STATE(mSheet);
 
 #ifdef DEBUG
-  nsCOMPtr<nsIURI> uri;
-  mSheet->GetSheetURI(getter_AddRefs(uri));
+  nsCOMPtr<nsIURI> uri = mSheet->GetSheetURI();
   PRBool equal;
   NS_ASSERTION(NS_SUCCEEDED(aSheetURI->Equals(uri, &equal)) && equal,
                "Sheet URI does not match passed URI");
@@ -890,8 +904,7 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 
   InitScanner(aInput, aSheetURI, aLineNumber, aBaseURI, aSheetPrincipal);
 
-  PRInt32 ruleCount = 0;
-  mSheet->StyleRuleCount(ruleCount);
+  PRInt32 ruleCount = mSheet->StyleRuleCount();
   if (0 < ruleCount) {
     nsICSSRule* lastRule = nsnull;
     mSheet->GetStyleRuleAt(ruleCount - 1, lastRule);
@@ -4388,6 +4401,10 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
   return PR_FALSE;
 }
 
+// Note that this does include VARIANT_CALC, which is numeric.  This is
+// because calc() parsing, as proposed, drops range restrictions inside
+// the calc() expression and clamps the result of the calculation to the
+// range.
 #define VARIANT_ALL_NONNUMERIC \
   VARIANT_KEYWORD | \
   VARIANT_COLOR | \
@@ -4403,8 +4420,13 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
   VARIANT_SYSFONT | \
   VARIANT_GRADIENT | \
   VARIANT_CUBIC_BEZIER | \
-  VARIANT_ALL
+  VARIANT_ALL | \
+  VARIANT_CALC
 
+// Note that callers passing VARIANT_CALC in aVariantMask will get
+// full-range parsing inside the calc() expression, and the code that
+// computes the calc will be required to clamp the resulting value to an
+// appropriate range.
 PRBool
 CSSParserImpl::ParseNonNegativeVariant(nsCSSValue& aValue,
                                        PRInt32 aVariantMask,
@@ -4443,6 +4465,10 @@ CSSParserImpl::ParseNonNegativeVariant(nsCSSValue& aValue,
   return PR_FALSE;
 }
 
+// Note that callers passing VARIANT_CALC in aVariantMask will get
+// full-range parsing inside the calc() expression, and the code that
+// computes the calc will be required to clamp the resulting value to an
+// appropriate range.
 PRBool
 CSSParserImpl::ParsePositiveNonZeroVariant(nsCSSValue& aValue,
                                            PRInt32 aVariantMask,
@@ -4662,6 +4688,14 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
      if (tk->mIdent.LowerCaseEqualsLiteral("cubic-bezier")) {
       return ParseTransitionTimingFunctionValues(aValue);
     }
+  }
+  if ((aVariantMask & VARIANT_CALC) &&
+      (eCSSToken_Function == tk->mType) &&
+      (tk->mIdent.LowerCaseEqualsLiteral("-moz-calc") ||
+       tk->mIdent.LowerCaseEqualsLiteral("-moz-min") ||
+       tk->mIdent.LowerCaseEqualsLiteral("-moz-max"))) {
+    // calc() currently allows only lengths and percents inside it.
+    return ParseCalc(aValue, aVariantMask & VARIANT_LP);
   }
 
   UngetToken();
@@ -5795,14 +5829,14 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_border_start_width_value: // for internal use
   case eCSSProperty_border_top_width:
   case eCSSProperty__moz_column_rule_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_HKL,
+    return ParseNonNegativeVariant(aValue, VARIANT_HKL | VARIANT_CALC,
                                    nsCSSProps::kBorderWidthKTable);
   case eCSSProperty__moz_column_count:
     // Need to reject 0 in addition to negatives.  If we accept 0, we
     // need to change NS_STYLE_COLUMN_COUNT_AUTO to something else.
     return ParsePositiveNonZeroVariant(aValue, VARIANT_AHI, nsnull);
   case eCSSProperty__moz_column_width:
-    return ParseNonNegativeVariant(aValue, VARIANT_AHL, nsnull);
+    return ParseNonNegativeVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
   case eCSSProperty__moz_column_gap:
     return ParseNonNegativeVariant(aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
   case eCSSProperty_bottom:
@@ -5950,7 +5984,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseFamily(aValue);
   case eCSSProperty_font_size:
     return ParseNonNegativeVariant(aValue,
-                                   VARIANT_HKLP | VARIANT_SYSFONT,
+                                   VARIANT_HKLP | VARIANT_SYSFONT |
+                                     VARIANT_CALC,
                                    nsCSSProps::kFontSizeKTable);
   case eCSSProperty_font_size_adjust:
     return ParseVariant(aValue, VARIANT_HON | VARIANT_SYSFONT,
@@ -5973,7 +6008,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseNonNegativeVariant(aValue, VARIANT_HI, nsnull);
   case eCSSProperty_letter_spacing:
   case eCSSProperty_word_spacing:
-    return ParseVariant(aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
+    return ParseVariant(aValue, VARIANT_HL | VARIANT_NORMAL | VARIANT_CALC,
+                        nsnull);
   case eCSSProperty_line_height:
     return ParseNonNegativeVariant(aValue, VARIANT_HLPN | VARIANT_KEYWORD | VARIANT_NORMAL | VARIANT_SYSFONT, nsCSSProps::kLineHeightKTable);
   case eCSSProperty_list_style_image:
@@ -5990,7 +6026,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
   case eCSSProperty_margin_top:
     return ParseVariant(aValue, VARIANT_AHLP, nsnull);
   case eCSSProperty_marker_offset:
-    return ParseVariant(aValue, VARIANT_AHL, nsnull);
+    return ParseVariant(aValue, VARIANT_AHL | VARIANT_CALC, nsnull);
   case eCSSProperty_marks:
     return ParseMarks(aValue);
   case eCSSProperty_max_height:
@@ -6018,7 +6054,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     return ParseNonNegativeVariant(aValue, VARIANT_HKL,
                                    nsCSSProps::kBorderWidthKTable);
   case eCSSProperty_outline_offset:
-    return ParseVariant(aValue, VARIANT_HL, nsnull);
+    return ParseVariant(aValue, VARIANT_HL | VARIANT_CALC, nsnull);
   case eCSSProperty_overflow_x:
   case eCSSProperty_overflow_y:
     return ParseVariant(aValue, VARIANT_HK,
@@ -6934,11 +6970,12 @@ PRBool
 CSSParserImpl::ParseBorderSpacing()
 {
   nsCSSValue  xValue;
-  if (ParseNonNegativeVariant(xValue, VARIANT_HL, nsnull)) {
-    if (xValue.IsLengthUnit()) {
+  if (ParseNonNegativeVariant(xValue, VARIANT_HL | VARIANT_CALC, nsnull)) {
+    if (xValue.IsLengthUnit() || xValue.IsCalcUnit()) {
       // We have one length. Get the optional second length.
       nsCSSValue yValue;
-      if (ParseNonNegativeVariant(yValue, VARIANT_LENGTH, nsnull)) {
+      if (ParseNonNegativeVariant(yValue, VARIANT_LENGTH | VARIANT_CALC,
+                                  nsnull)) {
         // We have two numbers
         if (ExpectEndProperty()) {
           mTempData.mTable.mBorderSpacing.mXValue = xValue;
@@ -7150,6 +7187,355 @@ CSSParserImpl::ParseBorderColors(nsCSSValueList** aResult,
   // Have failure case at the end so we can |break| to get to it.
   delete list;
   return PR_FALSE;
+}
+
+// Parse the top level of a calc() expression, which can be calc(),
+// min(), or max().
+PRBool
+CSSParserImpl::ParseCalc(nsCSSValue &aValue, PRInt32 aVariantMask)
+{
+  // Parsing calc expressions requires, in a number of cases, looking
+  // for a token that is *either* a value of the property or a number.
+  // This can be done without lookahead when we assume that the property
+  // values cannot themselves be numbers.
+  NS_ASSERTION(!(aVariantMask & VARIANT_NUMBER), "unexpected variant mask");
+  NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
+
+  nsCSSUnit unit;
+  if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-min")) {
+    unit = eCSSUnit_Calc_Minimum;
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-max")) {
+    unit = eCSSUnit_Calc_Maximum;
+  } else {
+    NS_ASSERTION(mToken.mIdent.LowerCaseEqualsLiteral("-moz-calc"),
+                 "unexpected function");
+    unit = eCSSUnit_Calc;
+  }
+
+  if (unit != eCSSUnit_Calc) {
+    return ParseCalcMinMax(aValue, unit, aVariantMask);
+  }
+
+  // One-iteration loop so we can break to the error-handling case.
+  do {
+    // The toplevel of a calc() is always an nsCSSValue::Array of length 1.
+    nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
+    if (!arr) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      break;
+    }
+
+    if (!ParseCalcAdditiveExpression(arr->Item(0), aVariantMask))
+      break;
+
+    if (!ExpectSymbol(')', PR_TRUE))
+      break;
+
+    aValue.SetArrayValue(arr, eCSSUnit_Calc);
+    return PR_TRUE;
+  } while (PR_FALSE);
+
+  SkipUntil(')');
+  return PR_FALSE;
+}
+
+// We optimize away the <value-expression> production given that
+// ParseVariant consumes initial whitespace and we call
+// ExpectSymbol(')') with PR_TRUE for aSkipWS.
+//  * If aVariantMask is VARIANT_NUMBER, this function parses the
+//    <number-additive-expression> production.
+//  * If aVariantMask does not contain VARIANT_NUMBER, this function
+//    parses the <value-additive-expression> production.
+//  * Otherwise (VARIANT_NUMBER and other bits) this function parses
+//    whichever one of the productions matches ***and modifies
+//    aVariantMask*** to reflect which one it has parsed by either
+//    removing VARIANT_NUMBER or removing all other bits.
+// It does so iteratively, but builds the correct recursive
+// data structure.
+PRBool
+CSSParserImpl::ParseCalcAdditiveExpression(nsCSSValue& aValue,
+                                           PRInt32& aVariantMask)
+{
+  NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
+  nsCSSValue *storage = &aValue;
+  for (;;) {
+    PRBool haveWS;
+    if (!ParseCalcMultiplicativeExpression(*storage, aVariantMask, &haveWS))
+      return PR_FALSE;
+
+    if (!haveWS || !GetToken(PR_FALSE))
+      return PR_TRUE;
+    nsCSSUnit unit;
+    if (mToken.IsSymbol('+')) {
+      unit = eCSSUnit_Calc_Plus;
+    } else if (mToken.IsSymbol('-')) {
+      unit = eCSSUnit_Calc_Minus;
+    } else {
+      UngetToken();
+      return PR_TRUE;
+    }
+    if (!RequireWhitespace())
+      return PR_FALSE;
+
+    nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(2);
+    if (!arr) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      return PR_FALSE;
+    }
+    arr->Item(0) = aValue;
+    storage = &arr->Item(1);
+    aValue.SetArrayValue(arr, unit);
+  }
+}
+
+struct ReduceNumberCalcOps : public mozilla::css::BasicFloatCalcOps
+{
+  result_type ComputeLeafValue(const nsCSSValue& aValue)
+  {
+    NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Number, "unexpected unit");
+    return aValue.GetFloatValue();
+  }
+
+  float ComputeNumber(const nsCSSValue& aValue)
+  {
+    return mozilla::css::ComputeCalc(aValue, *this);
+  }
+};
+
+//  * If aVariantMask is VARIANT_NUMBER, this function parses the
+//    <number-multiplicative-expression> production.
+//  * If aVariantMask does not contain VARIANT_NUMBER, this function
+//    parses the <value-multiplicative-expression> production.
+//  * Otherwise (VARIANT_NUMBER and other bits) this function parses
+//    whichever one of the productions matches ***and modifies
+//    aVariantMask*** to reflect which one it has parsed by either
+//    removing VARIANT_NUMBER or removing all other bits.
+// It does so iteratively, but builds the correct recursive data
+// structure.
+// This function always consumes *trailing* whitespace when it returns
+// true; whether there was any such whitespace is returned in the
+// aHadFinalWS parameter.
+PRBool
+CSSParserImpl::ParseCalcMultiplicativeExpression(nsCSSValue& aValue,
+                                                 PRInt32& aVariantMask,
+                                                 PRBool *aHadFinalWS)
+{
+  NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
+  PRBool gotValue = PR_FALSE; // already got the part with the unit
+  PRBool afterDivision = PR_FALSE;
+
+  nsCSSValue *storage = &aValue;
+  for (;;) {
+    PRInt32 variantMask;
+    if (afterDivision || gotValue) {
+      variantMask = VARIANT_NUMBER;
+    } else {
+      variantMask = aVariantMask | VARIANT_NUMBER;
+    }
+    if (!ParseCalcTerm(*storage, variantMask))
+      return PR_FALSE;
+    NS_ABORT_IF_FALSE(variantMask != 0,
+                      "ParseCalcTerm did not set variantMask appropriately");
+    NS_ABORT_IF_FALSE(!(variantMask & VARIANT_NUMBER) ||
+                      !(variantMask & ~PRInt32(VARIANT_NUMBER)),
+                      "ParseCalcTerm did not set variantMask appropriately");
+
+    if (variantMask & VARIANT_NUMBER) {
+      // Simplify the value immediately so we can check for division by
+      // zero.
+      ReduceNumberCalcOps ops;
+      float number = mozilla::css::ComputeCalc(*storage, ops);
+      if (number == 0.0 && afterDivision)
+        return PR_FALSE;
+      storage->SetFloatValue(number, eCSSUnit_Number);
+    } else {
+      gotValue = PR_TRUE;
+
+      if (storage != &aValue) {
+        // Simplify any numbers in the Times_L position (which are
+        // not simplified by the check above).
+        NS_ABORT_IF_FALSE(storage == &aValue.GetArrayValue()->Item(1),
+                          "unexpected relationship to current storage");
+        nsCSSValue &leftValue = aValue.GetArrayValue()->Item(0);
+        ReduceNumberCalcOps ops;
+        float number = mozilla::css::ComputeCalc(leftValue, ops);
+        leftValue.SetFloatValue(number, eCSSUnit_Number);
+      }
+    }
+
+    PRBool hadWS = RequireWhitespace();
+    if (!GetToken(PR_FALSE)) {
+      *aHadFinalWS = hadWS;
+      break;
+    }
+    nsCSSUnit unit;
+    if (mToken.IsSymbol('*')) {
+      unit = gotValue ? eCSSUnit_Calc_Times_R : eCSSUnit_Calc_Times_L;
+      afterDivision = PR_FALSE;
+    } else if (mToken.IsSymbol('/')) {
+      unit = eCSSUnit_Calc_Divided;
+      afterDivision = PR_TRUE;
+    } else {
+      UngetToken();
+      *aHadFinalWS = hadWS;
+      break;
+    }
+
+    nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(2);
+    if (!arr) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      return PR_FALSE;
+    }
+    arr->Item(0) = aValue;
+    storage = &arr->Item(1);
+    aValue.SetArrayValue(arr, unit);
+  }
+
+  // Adjust aVariantMask (see comments above function) to reflect which
+  // option we took.
+  if (aVariantMask & VARIANT_NUMBER) {
+    if (gotValue) {
+      aVariantMask &= ~PRInt32(VARIANT_NUMBER);
+    } else {
+      aVariantMask = VARIANT_NUMBER;
+    }
+  } else {
+    if (!gotValue) {
+      // We had to find a value, but we didn't.
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
+}
+
+//  * If aVariantMask is VARIANT_NUMBER, this function parses the
+//    <number-term> production.
+//  * If aVariantMask does not contain VARIANT_NUMBER, this function
+//    parses the <value-term> production.
+//  * Otherwise (VARIANT_NUMBER and other bits) this function parses
+//    whichever one of the productions matches ***and modifies
+//    aVariantMask*** to reflect which one it has parsed by either
+//    removing VARIANT_NUMBER or removing all other bits.
+PRBool
+CSSParserImpl::ParseCalcTerm(nsCSSValue& aValue, PRInt32& aVariantMask)
+{
+  NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
+  if (!GetToken(PR_TRUE))
+    return PR_FALSE;
+  // Either an additive expression in parentheses...
+  if (mToken.IsSymbol('(')) {
+    if (!ParseCalcAdditiveExpression(aValue, aVariantMask) ||
+        !ExpectSymbol(')', PR_TRUE)) {
+      SkipUntil(')');
+      return PR_FALSE;
+    }
+    return PR_TRUE;
+  }
+  // ... or a min() or max() expression
+  if (mToken.mType == eCSSToken_Function &&
+      (mToken.mIdent.LowerCaseEqualsLiteral("min") ||
+       mToken.mIdent.LowerCaseEqualsLiteral("max"))) {
+    nsCSSUnit unit = mToken.mIdent.LowerCaseEqualsLiteral("min")
+                       ? eCSSUnit_Calc_Minimum : eCSSUnit_Calc_Maximum;
+    return ParseCalcMinMax(aValue, unit, aVariantMask);
+  }
+  // ... or just a value
+  UngetToken();
+  if (!ParseVariant(aValue, aVariantMask, nsnull)) {
+    return PR_FALSE;
+  }
+  // If we did the value parsing, we need to adjust aVariantMask to
+  // reflect which option we took (see above).
+  if (aVariantMask & VARIANT_NUMBER) {
+    if (aValue.GetUnit() == eCSSUnit_Number) {
+      aVariantMask = VARIANT_NUMBER;
+    } else {
+      aVariantMask &= ~PRInt32(VARIANT_NUMBER);
+    }
+  }
+  return PR_TRUE;
+}
+
+// This function handles and modifies aVariantMask exactly as
+// described for ParcCalcTerm above.
+PRBool
+CSSParserImpl::ParseCalcMinMax(nsCSSValue& aValue, nsCSSUnit aUnit,
+                               PRInt32& aVariantMask)
+{
+  NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
+  NS_ASSERTION(aUnit == eCSSUnit_Calc_Minimum ||
+               aUnit == eCSSUnit_Calc_Maximum,
+               "unexpected unit");
+  NS_ASSERTION(mToken.mType == eCSSToken_Function, "unexpected current token");
+  NS_ASSERTION(aUnit != eCSSUnit_Calc_Minimum ||
+               mToken.mIdent.LowerCaseEqualsLiteral("min") ||
+               mToken.mIdent.LowerCaseEqualsLiteral("-moz-min"),
+               "unexpected current token");
+  NS_ASSERTION(aUnit != eCSSUnit_Calc_Maximum ||
+               mToken.mIdent.LowerCaseEqualsLiteral("max") ||
+               mToken.mIdent.LowerCaseEqualsLiteral("-moz-max"),
+               "unexpected current token");
+
+  nsAutoTArray<nsCSSValue, 4> values;
+  for (;;) {
+    nsCSSValue *v = values.AppendElement();
+    if (!v) {
+      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+      return PR_FALSE;
+    }
+
+    if (!ParseCalcAdditiveExpression(*v, aVariantMask))
+      return PR_FALSE;
+
+    NS_ABORT_IF_FALSE(!(aVariantMask & VARIANT_NUMBER) ||
+                      !(aVariantMask & ~PRInt32(VARIANT_NUMBER)),
+                      "parsing additive expr did not adjust variant mask");
+    NS_ABORT_IF_FALSE(aVariantMask != 0, "unexpected variant mask");
+
+    if (ExpectSymbol(',', PR_TRUE))
+      continue;
+
+    if (ExpectSymbol(')', PR_TRUE))
+      break;
+
+    SkipUntil(')');
+    return PR_FALSE;
+  }
+
+  // We allow min() and max() to take 1 or more arguments; the code
+  // above already ensures that.
+  NS_ABORT_IF_FALSE(values.Length() > 0, "unexpected length");
+
+  nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(values.Length());
+  if (!arr) {
+    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
+    return PR_FALSE;
+  }
+  for (PRUint32 i = 0, i_end = values.Length(); i < i_end; ++i) {
+    arr->Item(i) = values[i];
+  }
+
+  aValue.SetArrayValue(arr, aUnit);
+  return PR_TRUE;
+}
+
+// This function consumes all consecutive whitespace and returns whether
+// there was any.
+PRBool
+CSSParserImpl::RequireWhitespace()
+{
+  if (!GetToken(PR_FALSE))
+    return PR_FALSE;
+  if (mToken.mType != eCSSToken_WhiteSpace) {
+    UngetToken();
+    return PR_FALSE;
+  }
+  // Skip any additional whitespace tokens.
+  if (GetToken(PR_TRUE)) {
+    UngetToken();
+  }
+  return PR_TRUE;
 }
 
 PRBool
@@ -8918,8 +9304,8 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
 
     PRBool isFirstToken = (cur == list && isInset.GetUnit() == eCSSUnit_Null);
     if (!ParseVariant(cur->mValue,
-                      isFirstToken ? VARIANT_HC | VARIANT_LENGTH | VARIANT_NONE
-                                   : VARIANT_COLOR | VARIANT_LENGTH,
+                      ( isFirstToken ? VARIANT_INHERIT | VARIANT_NONE : 0) |
+                      VARIANT_COLOR | VARIANT_LENGTH | VARIANT_CALC,
                       nsnull)) {
       break;
     }
@@ -8933,7 +9319,7 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
         break;
       }
       PRBool haveColor = PR_FALSE;
-      if (cur->mValue.IsLengthUnit()) {
+      if (cur->mValue.IsLengthUnit() || cur->mValue.IsCalcUnit()) {
         val->Item(IndexX) = cur->mValue;
       } else {
         // Must be a color (as string or color value)
@@ -8945,7 +9331,7 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
         val->Item(IndexColor) = cur->mValue;
 
         // Parse the X coordinate
-        if (!ParseVariant(val->Item(IndexX), VARIANT_LENGTH,
+        if (!ParseVariant(val->Item(IndexX), VARIANT_LENGTH | VARIANT_CALC,
                           nsnull)) {
           break;
         }
@@ -8953,7 +9339,8 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
       cur->mValue.SetArrayValue(val, eCSSUnit_Array);
 
       // Y coordinate; this one is not optional
-      if (!ParseVariant(val->Item(IndexY), VARIANT_LENGTH, nsnull)) {
+      if (!ParseVariant(val->Item(IndexY), VARIANT_LENGTH | VARIANT_CALC,
+                        nsnull)) {
         break;
       }
 
@@ -8961,14 +9348,16 @@ CSSParserImpl::ParseCSSShadowList(PRBool aIsBoxShadow)
       // value which we must reject. If we use ParseNonNegativeVariant we can't
       // tell the difference between an unspecified radius and a negative
       // radius, so that's why we don't use it.
-      if (ParseVariant(val->Item(IndexRadius), VARIANT_LENGTH, nsnull) &&
+      if (ParseVariant(val->Item(IndexRadius), VARIANT_LENGTH | VARIANT_CALC,
+                       nsnull) &&
+          val->Item(IndexRadius).IsLengthUnit() &&
           val->Item(IndexRadius).GetFloatValue() < 0) {
         break;
       }
 
       if (aIsBoxShadow) {
         // Optional spread (ignore errors)
-        ParseVariant(val->Item(IndexSpread), VARIANT_LENGTH,
+        ParseVariant(val->Item(IndexSpread), VARIANT_LENGTH | VARIANT_CALC,
                      nsnull);
       }
 
@@ -9163,7 +9552,7 @@ CSSParserImpl::ParseMarker()
 static CSSParserImpl* gFreeList = nsnull;
 
 nsCSSParser::nsCSSParser(mozilla::css::Loader* aLoader,
-                         nsICSSStyleSheet* aSheet)
+                         nsCSSStyleSheet* aSheet)
 {
   CSSParserImpl *impl = gFreeList;
   if (impl) {
@@ -9209,7 +9598,7 @@ nsCSSParser::Shutdown()
 // Wrapper methods
 
 nsresult
-nsCSSParser::SetStyleSheet(nsICSSStyleSheet* aSheet)
+nsCSSParser::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     SetStyleSheet(aSheet);

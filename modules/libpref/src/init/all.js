@@ -738,6 +738,7 @@ pref("network.IDN.whitelist.jp", true);
 pref("network.IDN.whitelist.kr", true);
 pref("network.IDN.whitelist.li", true);
 pref("network.IDN.whitelist.lt", true);
+pref("network.IDN.whitelist.lu", true);
 pref("network.IDN.whitelist.no", true);
 pref("network.IDN.whitelist.nu", true);
 pref("network.IDN.whitelist.nz", true);
@@ -750,7 +751,15 @@ pref("network.IDN.whitelist.tm", true);
 pref("network.IDN.whitelist.tw", true);
 pref("network.IDN.whitelist.vn", true);
 
-// non-ccTLDs
+// IDN ccTLDs
+// sa, Saudi Arabia, .<al-Saudiah>
+pref("network.IDN.whitelist.xn--mgberp4a5d4ar", true); 
+// ru, Russian Federation, .<RF>
+pref("network.IDN.whitelist.xn--p1ai", true);
+// jo, Jordan, .<Al-Ordon>
+pref("network.IDN.whitelist.xn--mgbayh7gpa", true);
+
+// gTLDs
 pref("network.IDN.whitelist.biz", true);
 pref("network.IDN.whitelist.cat", true);
 pref("network.IDN.whitelist.info", true);
@@ -2688,74 +2697,6 @@ pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 #endif
 #endif
 
-#if MOZ_WIDGET_TOOLKIT==photon
-
-// font names
-pref("font.name.serif.x-western", "serif");
-pref("font.name.sans-serif.x-western", "sans-serif");
-pref("font.name.monospace.x-western", "monospace");
-pref("font.name.cursive.x-western", "cursive");
-pref("font.name.fantasy.x-western", "fantasy");
-
-pref("font.name.serif.el", "serif");
-pref("font.name.sans-serif.el", "sans-serif");
-pref("font.name.monospace.el", "monospace");
-
-pref("font.name.serif.he", "serif");
-pref("font.name.sans-serif.he", "sans-serif");
-pref("font.name.monospace.he", "monospace");
-
-pref("font.name.serif.ja", "serif");
-pref("font.name.sans-serif.ja", "sans-serif");
-pref("font.name.monospace.ja", "monospace");
-
-pref("font.name.serif.ko", "serif");
-pref("font.name.sans-serif.ko", "sans-serif");
-pref("font.name.monospace.ko", "monospace");
-
-pref("font.name.serif.tr", "serif");
-pref("font.name.sans-serif.tr", "sans-serif");
-pref("font.name.monospace.tr", "monospace");
-
-pref("font.name.serif.x-baltic", "serif");
-pref("font.name.sans-serif.x-baltic", "sans-serif");
-pref("font.name.monospace.x-baltic", "monospace");
-
-pref("font.name.serif.x-central-euro", "serif");
-pref("font.name.sans-serif.x-central-euro", "sans-serif");
-pref("font.name.monospace.x-central-euro", "monospace");
-
-pref("font.name.serif.x-cyrillic", "serif");
-pref("font.name.sans-serif.x-cyrillic", "sans-serif");
-pref("font.name.monospace.x-cyrillic", "monospace");
-
-pref("font.name.serif.x-unicode", "serif");
-pref("font.name.sans-serif.x-unicode", "sans-serif");
-pref("font.name.monospace.x-unicode", "monospace");
-
-pref("font.name.serif.x-user-def", "serif");
-pref("font.name.sans-serif.x-user-def", "sans-serif");
-pref("font.name.monospace.x-user-def", "monospace");
-
-pref("font.name.serif.zh-CN", "serif");
-pref("font.name.sans-serif.zh-CN", "sans-serif");
-pref("font.name.monospace.zh-CN", "monospace");
-
-pref("font.size.variable.x-western", 14);
-pref("font.size.fixed.x-western", 12);
-
-pref("applications.telnet", "pterm telnet %h %p");
-pref("applications.tn3270", "pterm tn3270 %h");
-pref("applications.rlogin", "pterm rlogin %h");
-pref("applications.rlogin_with_user", "pterm rlogin %h -l %u");
-
-// print_extra_margin enables platforms to specify an extra gap or margin
-// around the content of the page for Print Preview only
-pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)
-
-# photon
-#endif
-
 #if OS_ARCH==OpenVMS
 
 pref("mail.use_builtin_movemail", false);
@@ -2772,7 +2713,7 @@ pref("applications.rlogin_with_user", "create /term /detach \"rlogin %h -l %u\""
 
 /* PostScript module specific (see unix.js for additional configuration details) */
 pref("print.postscript.print_command", "print /delete");
-/* Print module independant */
+/* Print module independent */
 pref("print.print_command", "print /delete");
 pref("print.print_color", false);
 
@@ -2867,6 +2808,9 @@ pref("gfx.color_management.mode", 0);
 // Initialize default render-mode.
 pref("mozilla.widget.render-mode", -1);
 
+// Initialize default accelerated layers
+pref("mozilla.widget.accelerated-layers", true);
+
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 
@@ -2874,13 +2818,13 @@ pref("geo.enabled", true);
 pref("accelerometer.enabled", true);
 
 // Enable/Disable HTML5 parser
-pref("html5.enable", false);
+pref("html5.enable", true);
 // Toggle which thread the HTML5 parser uses for stream parsing
 pref("html5.offmainthread", true);
 // Time in milliseconds between the time a network buffer is seen and the 
 // timer firing when the timer hasn't fired previously in this parse in the 
 // off-the-main-thread HTML5 parser.
-pref("html5.flushtimer.initialdelay", 200);
+pref("html5.flushtimer.initialdelay", 120);
 // Time in milliseconds between the time a network buffer is seen and the 
 // timer firing when the timer has already fired previously in this parse.
 pref("html5.flushtimer.subsequentdelay", 120);
@@ -2890,6 +2834,9 @@ pref("browser.history.allowPushState", true);
 pref("browser.history.allowReplaceState", true);
 pref("browser.history.allowPopState", true);
 pref("browser.history.maxStateObjectSize", 655360);
+
+// XPInstall prefs
+pref("xpinstall.whitelist.required", true);
 
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  4096);

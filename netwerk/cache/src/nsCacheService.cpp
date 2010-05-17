@@ -579,7 +579,7 @@ nsCacheProfilePrefObserver::MemoryCacheCapacity()
         return capacity;
     }
 
-    PRUint64 bytes = PR_GetPhysicalMemorySize();
+    static PRUint64 bytes = PR_GetPhysicalMemorySize();
     CACHE_LOG_DEBUG(("Physical Memory size is %llu\n", bytes));
 
     // If getting the physical memory failed, arbitrarily assume

@@ -44,7 +44,7 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 
-[scriptable, uuid(c2f4433a-8b4c-4676-ab30-3bffd26fb29e)]
+[scriptable, uuid(52d034f1-f1a6-4be7-adc9-b39fa7df51de)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -126,9 +126,7 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
 
   // prompt() should return a null string if cancel is pressed
   DOMString                 prompt([optional] in DOMString aMessage,
-                                   [optional] in DOMString aInitial,
-                                   [optional] in DOMString aTitle,
-                                   [optional] in unsigned long aSavePassword);
+                                   [optional] in DOMString aInitial);
 
   void                      focus();
   void                      blur();
@@ -218,4 +216,10 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    */
   [binaryname(PostMessageMoz)] void postMessage(in DOMString message,
                                                 in DOMString targetOrigin);
+
+  /**
+   * Returns the number of times this document for this window has
+   * been painted to the screen.
+   */
+  readonly attribute unsigned long long mozPaintCount;
 };

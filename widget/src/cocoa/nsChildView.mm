@@ -2115,28 +2115,26 @@ nsChildView::EndSecureKeyboardInput()
 }
 
 #ifdef ACCESSIBILITY
-void
-nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
+already_AddRefed<nsAccessible>
+nsChildView::GetDocumentAccessible()
 {
-  *aAccessible = nsnull;
-  
-  nsCOMPtr<nsIAccessible> accessible = do_QueryReferent(mAccessible);
-  if (!mAccessible) {
-    // need to fetch the accessible anew, because it has gone away.
-    nsEventStatus status;
-    nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
-    DispatchEvent(&event, status);
-  
-    // cache the accessible in our weak ptr
-    mAccessible = do_GetWeakReference(event.accessible);
-    
-    // now try again
-    accessible = do_QueryReferent(mAccessible);
+  nsAccessible *docAccessible = nsnull;
+  if (mAccessible) {
+    CallQueryReferent(mAccessible.get(), &docAccessible);
+    return docAccessible;
   }
-  
-  NS_IF_ADDREF(*aAccessible = accessible.get());
 
-  return;
+  // need to fetch the accessible anew, because it has gone away.
+  nsEventStatus status;
+  nsAccessibleEvent event(PR_TRUE, NS_GETACCESSIBLE, this);
+  DispatchEvent(&event, status);
+
+  // cache the accessible in our weak ptr
+  mAccessible =
+    do_GetWeakReference(static_cast<nsIAccessible*>(event.mAccessible));
+
+  NS_IF_ADDREF(event.mAccessible);
+  return event.mAccessible;
 }
 #endif
 
@@ -2831,8 +2829,8 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
           nsIWidget* widget = widgetChain[i];
           NSWindow* currWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
           if (nsCocoaUtils::IsEventOverWindow(theEvent, currWindow)) {
-            // don't roll up if the mouse event occured within a menu of the
-            // same type. If the mouse event occured in a menu higher than
+            // don't roll up if the mouse event occurred within a menu of the
+            // same type. If the mouse event occurred in a menu higher than
             // that, roll up, but pass the number of popups to Rollup so
             // that only those of the same type close up.
             if (i < sameTypeCount) {
@@ -3286,7 +3284,7 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
       cocoaEvent.data.mouse.deltaY = [aEvent deltaY];
       cocoaEvent.data.mouse.deltaZ = [aEvent deltaZ];
       event.pluginEvent = &cocoaEvent;
-    }    
+    }
   }
 
   event.exit = aType;
@@ -6075,8 +6073,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   nsCOMPtr<nsIWidget> kungFuDeathGrip2(mGeckoChild);
-  nsCOMPtr<nsIAccessible> accessible;
-  mGeckoChild->GetDocumentAccessible(getter_AddRefs(accessible));
+  nsRefPtr<nsAccessible> accessible = mGeckoChild->GetDocumentAccessible();
   if (!mGeckoChild)
     return nil;
 
@@ -6332,11 +6329,11 @@ ChildViewMouseTracker::WindowForEvent(NSEvent* anEvent)
 }
 
 BOOL
-ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* anEvent)
+ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent)
 {
   // Right mouse down events may get through to all windows, even to a top level
   // window with an open sheet.
-  if (!aWindow || [anEvent type] == NSRightMouseDown)
+  if (!aWindow || [aEvent type] == NSRightMouseDown)
     return YES;
 
   id delegate = [aWindow delegate];
@@ -6350,33 +6347,46 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* anEvent)
   nsWindowType windowType;
   windowWidget->GetWindowType(windowType);
 
+  NSWindow* topLevelWindow = nil;
+
   switch (windowType) {
     case eWindowType_popup:
       // If this is a context menu, it won't have a parent. So we'll always
       // accept mouse move events on context menus even when none of our windows
       // is active, which is the right thing to do.
       // For panels, the parent window is the XUL window that owns the panel.
-      return WindowAcceptsEvent([aWindow parentWindow], anEvent);
+      return WindowAcceptsEvent([aWindow parentWindow], aEvent);
 
     case eWindowType_toplevel:
     case eWindowType_dialog:
-      // Block all mouse events other than RightMouseDown on background windows
-      // and on windows behind sheets.
-      return [aWindow isMainWindow] && ![aWindow attachedSheet];
+      if ([aWindow attachedSheet])
+        return NO;
 
+      topLevelWindow = aWindow;
+      break;
     case eWindowType_sheet: {
       nsIWidget* parentWidget = windowWidget->GetSheetWindowParent();
       if (!parentWidget)
         return YES;
 
-      // Only accept mouse events on a sheet whose containing window is active.
-      NSWindow* parentWindow = (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW);
-      return [parentWindow isMainWindow];
+      topLevelWindow = (NSWindow*)parentWidget->GetNativeData(NS_NATIVE_WINDOW);
+      break;
     }
 
     default:
       return YES;
   }
+
+  if (!topLevelWindow ||
+      [topLevelWindow isMainWindow] ||
+      [aEvent type] == NSOtherMouseDown ||
+      (([aEvent modifierFlags] & NSCommandKeyMask) != 0 &&
+       [aEvent type] != NSMouseMoved))
+    return YES;
+
+  // If we're here then we're dealing with a left click or mouse move on an
+  // inactive window or something similar. Return NO for now.
+  return NO;
 }
 
 #pragma mark -

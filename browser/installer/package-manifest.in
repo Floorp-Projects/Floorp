@@ -79,17 +79,6 @@
 #endif
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
-#ifdef XP_MACOSX
-@BINPATH@/plugins/DefaultPlugin.plugin/
-#elifdef XP_UNIX
-@BINPATH@/plugins/libnullplugin@DLL_SUFFIX@
-#elifdef XP_WIN32
-#ifndef WINCE
-@BINPATH@/plugins/npnul32.dll
-#endif
-#elifdef XP_OS2
-@BINPATH@/plugins/npnulos2.dll
-#endif
 #ifndef XP_OS2
 @BINPATH@/@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
 #else
@@ -257,7 +246,6 @@
 @BINPATH@/components/xpcom_threads.xpt
 @BINPATH@/components/xpcom_xpti.xpt
 @BINPATH@/components/xpconnect.xpt
-@BINPATH@/components/xpinstall.xpt
 @BINPATH@/components/xulapp.xpt
 @BINPATH@/components/xuldoc.xpt
 @BINPATH@/components/xultmpl.xpt
@@ -295,7 +283,9 @@
 @BINPATH@/components/NetworkGeolocationProvider.js
 @BINPATH@/components/GPSDGeolocationProvider.js
 @BINPATH@/components/nsSidebar.js
-@BINPATH@/components/nsExtensionManager.js
+@BINPATH@/components/addonManager.js
+@BINPATH@/components/amContentHandler.js
+@BINPATH@/components/amWebInstallListener.js
 @BINPATH@/components/nsBlocklistService.js
 #ifdef MOZ_UPDATER
 @BINPATH@/components/nsUpdateService.js

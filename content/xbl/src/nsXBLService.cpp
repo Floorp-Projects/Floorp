@@ -439,6 +439,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
     bindingManager->RemoveLoadingDocListener(documentURI);
 
     if (!bindingDocument->GetRootElement()) {
+      // FIXME: How about an error console warning?
       NS_WARNING("*** XBL doc with no root element! Something went horribly wrong! ***");
       return NS_ERROR_FAILURE;
     }
@@ -449,7 +450,15 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
       xblDocBindingManager->GetXBLDocumentInfo(documentURI);
     xblDocBindingManager->RemoveXBLDocumentInfo(info); // Break the self-imposed cycle.
     if (!info) {
-      NS_ERROR("An XBL file is malformed.  Did you forget the XBL namespace on the bindings tag?");
+      if (IsChromeOrResourceURI(documentURI)) {
+        NS_WARNING("An XBL file is malformed. Did you forget the XBL namespace on the bindings tag?");
+      }
+      nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+                                      "MalformedXBL",
+                                      nsnull, 0, documentURI,
+                                      EmptyString(), 0, 0,
+                                      nsIScriptError::warningFlag,
+                                      "XBL");
       return NS_ERROR_FAILURE;
     }
 
@@ -992,7 +1001,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
         nsCOMPtr<nsIURI> bindingURI;
         rv = NS_NewURI(getter_AddRefs(bindingURI), value,
                        doc->GetDocumentCharacterSet().get(),
-                       doc->GetBaseURI());
+                       doc->GetDocBaseURI());
         NS_ENSURE_SUCCESS(rv, rv);
         
         PRUint32 count = aDontExtendURIs.Length();

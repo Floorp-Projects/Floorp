@@ -530,15 +530,6 @@ private:
     int mNumItems;
 };
 
-gfxUniscribeShaper::gfxUniscribeShaper(gfxGDIFont *aFont)
-    : gfxFontShaper(aFont)
-    , mScriptCache(NULL)
-{
-}
-
-gfxUniscribeShaper::~gfxUniscribeShaper()
-{
-}
 
 PRBool
 gfxUniscribeShaper::InitTextRun(gfxContext *aContext,

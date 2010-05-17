@@ -68,6 +68,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPrefBranch2.h"
 #include "mozilla/AutoRestore.h"
+#include "nsINode.h"
 
 #include "jsapi.h"
 
@@ -75,7 +76,6 @@ struct nsNativeKeyEvent; // Don't include nsINativeKeyBindings.h here: it will f
 
 class nsIDOMScriptObjectFactory;
 class nsIXPConnect;
-class nsINode;
 class nsIContent;
 class nsIDOMNode;
 class nsIDOMKeyEvent;
@@ -172,6 +172,8 @@ struct nsShortcutCandidate {
 
 class nsContentUtils
 {
+  typedef mozilla::dom::Element Element;
+
 public:
   static nsresult Init();
 
@@ -223,8 +225,8 @@ public:
    *         aPossibleAncestor (or is aPossibleAncestor).  PR_FALSE
    *         otherwise.
    */
-  static PRBool ContentIsDescendantOf(nsINode* aPossibleDescendant,
-                                      nsINode* aPossibleAncestor);
+  static PRBool ContentIsDescendantOf(const nsINode* aPossibleDescendant,
+                                      const nsINode* aPossibleAncestor);
 
   /**
    * Similar to ContentIsDescendantOf except it crosses document boundaries.
@@ -270,30 +272,13 @@ public:
                                     nsINode* aNode2);
 
   /**
-   * Compares the document position of nodes.
-   *
-   * @param aNode1 The node whose position is being compared to the reference
-   *               node
-   * @param aNode2 The reference node
-   *
-   * @return  The document position flags of the nodes. aNode1 is compared to
-   *          aNode2, i.e. if aNode1 is before aNode2 then
-   *          DOCUMENT_POSITION_PRECEDING will be set.
-   *
-   * @see nsIDOMNode
-   * @see nsIDOM3Node
-   */
-  static PRUint16 ComparePosition(nsINode* aNode1,
-                                  nsINode* aNode2);
-
-  /**
    * Returns true if aNode1 is before aNode2 in the same connected
    * tree.
    */
   static PRBool PositionIsBefore(nsINode* aNode1,
                                  nsINode* aNode2)
   {
-    return (ComparePosition(aNode1, aNode2) &
+    return (aNode2->CompareDocumentPosition(aNode1) &
       (nsIDOM3Node::DOCUMENT_POSITION_PRECEDING |
        nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED)) ==
       nsIDOM3Node::DOCUMENT_POSITION_PRECEDING;
@@ -331,14 +316,12 @@ public:
    * an element with the given id.  aId must be nonempty, otherwise
    * this method may return nodes even if they have no id!
    */
-  static nsIContent* MatchElementId(nsIContent *aContent,
-                                    const nsAString& aId);
+  static Element* MatchElementId(nsIContent *aContent, const nsAString& aId);
 
   /**
    * Similar to above, but to be used if one already has an atom for the ID
    */
-  static nsIContent* MatchElementId(nsIContent *aContent,
-                                    nsIAtom* aId);
+  static Element* MatchElementId(nsIContent *aContent, nsIAtom* aId);
 
   /**
    * Given a URI containing an element reference (#whatever),
@@ -1366,7 +1349,7 @@ public:
    * If aContent is an HTML element with a DOM level 0 'name', then
    * return the name. Otherwise return null.
    */
-  static nsIAtom* IsNamedItem(mozilla::dom::Element* aElement);
+  static nsIAtom* IsNamedItem(Element* aElement);
 
   /**
    * Get the application manifest URI for this document.  The manifest URI
@@ -1611,6 +1594,15 @@ public:
   {
     sIsHandlingKeyBoardEvent = aHandling;
   }
+
+  /**
+   * Utility method for getElementsByClassName.  aRootNode is the node (either
+   * document or element), which getElementsByClassName was called on.
+   */
+  static nsresult GetElementsByClassName(nsINode* aRootNode,
+                                         const nsAString& aClasses,
+                                         nsIDOMNodeList** aReturn);
+
 private:
 
   static PRBool InitializeEventTable();

@@ -50,7 +50,7 @@ IS_COMPONENT = 1
 MODULE_NAME = nsToolkitCompsModule
 LIBXUL_LIBRARY = 1
 
-ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),windows gtk2))
+ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),windows gtk2 android))
 ALERTS_SERVICE=1
 DEFINES += -DALERTS_SERVICE
 endif

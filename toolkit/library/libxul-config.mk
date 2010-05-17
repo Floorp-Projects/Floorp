@@ -123,23 +123,19 @@ STATIC_LIBS += chromium_s
 endif
 
 ifndef WINCE
-ifdef MOZ_XPINSTALL
 STATIC_LIBS += \
 	mozreg_s \
 	$(NULL)
 endif
-endif
 
 # component libraries
 COMPONENT_LIBS += \
-	xpconnect \
 	necko \
 	uconv \
 	i18n \
 	chardet \
 	jar$(VERSION_NUMBER) \
 	pref \
-	caps \
 	htmlpars \
 	imglib2 \
 	gklayout \
@@ -150,6 +146,7 @@ COMPONENT_LIBS += \
 	txmgr \
 	chrome \
 	commandlines \
+	extensions \
 	toolkitcomps \
 	pipboot \
 	pipnss \
@@ -197,13 +194,6 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifdef MOZ_XPINSTALL
-DEFINES += -DMOZ_XPINSTALL
-COMPONENT_LIBS += \
-	xpinstall \
-	$(NULL)
-endif
-
 ifdef MOZ_JSDEBUGGER
 DEFINES += -DMOZ_JSDEBUGGER
 COMPONENT_LIBS += \
@@ -246,7 +236,7 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifeq (,$(filter qt beos os2 photon cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter qt beos os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef MOZ_XUL
 COMPONENT_LIBS += fileview
 DEFINES += -DMOZ_FILEVIEW
@@ -322,10 +312,6 @@ COMPONENT_LIBS += widget_mac
 endif
 ifeq (qt,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += widget_qt
-endif
-
-ifdef MOZ_ENABLE_PHOTON
-COMPONENT_LIBS += widget_photon
 endif
 
 ifdef ACCESSIBILITY

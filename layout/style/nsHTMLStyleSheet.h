@@ -61,18 +61,18 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStyleSheet api
-  NS_IMETHOD GetSheetURI(nsIURI** aSheetURL) const;
-  NS_IMETHOD GetBaseURI(nsIURI** aBaseURL) const;
-  NS_IMETHOD GetTitle(nsString& aTitle) const;
-  NS_IMETHOD GetType(nsString& aType) const;
-  NS_IMETHOD_(PRBool) HasRules() const;
-  NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
-  NS_IMETHOD SetEnabled(PRBool aEnabled);
-  NS_IMETHOD GetComplete(PRBool& aComplete) const;
-  NS_IMETHOD SetComplete();
-  NS_IMETHOD GetParentSheet(nsIStyleSheet*& aParent) const;  // will be null
-  NS_IMETHOD GetOwningDocument(nsIDocument*& aDocument) const;
-  NS_IMETHOD SetOwningDocument(nsIDocument* aDocumemt);
+  virtual already_AddRefed<nsIURI> GetSheetURI() const;
+  virtual already_AddRefed<nsIURI> GetBaseURI() const;
+  virtual void GetTitle(nsString& aTitle) const;
+  virtual void GetType(nsString& aType) const;
+  virtual PRBool HasRules() const;
+  virtual PRBool IsApplicable() const;
+  virtual void SetEnabled(PRBool aEnabled);
+  virtual PRBool IsComplete() const;
+  virtual void SetComplete();
+  virtual already_AddRefed<nsIStyleSheet> GetParentSheet() const;  // will be null
+  virtual already_AddRefed<nsIDocument> GetOwningDocument() const;
+  virtual void SetOwningDocument(nsIDocument* aDocumemt);
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif

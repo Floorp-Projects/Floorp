@@ -107,7 +107,7 @@ public:
   NS_IMETHOD OnTransformDone(nsresult aResult, nsIDocument *aResultDocument);
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
                               nsresult aStatus);
   static PRBool ParsePIData(const nsString &aData, nsString &aHref,
                           nsString &aTitle, nsString &aMedia,
@@ -133,6 +133,7 @@ protected:
   virtual PRBool SetDocElement(PRInt32 aNameSpaceID, 
                                nsIAtom *aTagName,
                                nsIContent *aContent);
+  virtual PRBool NotifyForDocElement() { return PR_TRUE; }
   virtual nsresult CreateElement(const PRUnichar** aAtts, PRUint32 aAttsCount,
                                  nsINodeInfo* aNodeInfo, PRUint32 aLineNumber,
                                  nsIContent** aResult, PRBool* aAppendContent,

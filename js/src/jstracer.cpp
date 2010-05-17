@@ -5256,8 +5256,11 @@ CheckGlobalObjectShape(JSContext* cx, TraceMonitor* tm, JSObject* globalObj,
      * that it isn't the global at run time.
      */
     if (!globalObj->scope()->hasOwnShape()) {
+        JS_LOCK_OBJ(cx, globalObj);
         JSScope *scope = js_GetMutableScope(cx, globalObj);
-        if (!scope || !scope->globalObjectOwnShapeChange(cx)) {
+        bool ok = scope && scope->globalObjectOwnShapeChange(cx);
+        JS_UNLOCK_OBJ(cx, globalObj);
+        if (!ok) {
             debug_only_print0(LC_TMTracer,
                               "Can't record: failed to give globalObj a unique shape.\n");
             return false;

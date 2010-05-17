@@ -492,6 +492,29 @@ endif # MOZ_OPTIMIZE == 1
 endif # MOZ_OPTIMIZE
 endif # CROSS_COMPILE
 
+# Check for FAIL_ON_WARNINGS & FAIL_ON_WARNINGS_DEBUG (Shorthand for Makefiles
+# to request that we use the 'warnings as errors' compile flags)
+
+# NOTE: First, we clear FAIL_ON_WARNINGS[_DEBUG] if we're doing a Windows PGO
+# build, since WARNINGS_AS_ERRORS has been suspected of causing isuses in that
+# situation. (See bug 437002.)
+ifeq (WINNT_1,$(OS_ARCH)_$(MOZ_PROFILE_GENERATE)$(MOZ_PROFILE_USE))
+FAIL_ON_WARNINGS_DEBUG=
+FAIL_ON_WARNINGS=
+endif # WINNT && (MOS_PROFILE_GENERATE ^ MOZ_PROFILE_USE)
+
+# Now, check for debug version of flag; it turns on normal flag in debug builds.
+ifdef FAIL_ON_WARNINGS_DEBUG
+ifdef MOZ_DEBUG
+FAIL_ON_WARNINGS = 1
+endif # MOZ_DEBUG
+endif # FAIL_ON_WARNINGS_DEBUG
+
+# Check for normal version of flag, and add WARNINGS_AS_ERRORS if it's set to 1.
+ifdef FAIL_ON_WARNINGS
+CXXFLAGS += $(WARNINGS_AS_ERRORS)
+CFLAGS   += $(WARNINGS_AS_ERRORS)
+endif # FAIL_ON_WARNINGS
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 #// Currently, unless USE_STATIC_LIBS is defined, the multithreaded

@@ -52,6 +52,7 @@
 #include "nsTArray.h"
 #include "nsStringEnumerator.h"
 #include "nsThreadUtils.h"
+#include "mozilla/Services.h"
 
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -111,12 +112,10 @@ nsresult nsCharsetConverterManager::LoadExtensibleBundle(
                                     const char* aCategory, 
                                     nsIStringBundle ** aResult)
 {
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIStringBundleService> sbServ = 
-           do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsIStringBundleService> sbServ =
+    mozilla::services::GetStringBundleService();
+  if (!sbServ)
+    return NS_ERROR_FAILURE;
 
   return sbServ->CreateExtensibleBundle(aCategory, aResult);
 }

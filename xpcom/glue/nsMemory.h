@@ -157,6 +157,22 @@ public:
   (sizeof(array_)/sizeof(array_[0]))
 
 /**
+ * A macro, NS_ALIGNMENT_OF(t_) that determines the alignment
+ * requirements of a type.
+ */
+namespace mozilla {
+  template <class T>
+  struct AlignmentTestStruct
+  {
+    char c;
+    T t;
+  };
+}
+
+#define NS_ALIGNMENT_OF(t_) \
+  (sizeof(mozilla::AlignmentTestStruct<t_>) - sizeof(t_))
+
+/**
  * An enumeration type used to represent a method of assignment.
  */
 enum nsAssignmentType {

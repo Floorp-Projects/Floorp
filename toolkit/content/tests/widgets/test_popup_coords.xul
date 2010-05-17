@@ -17,20 +17,20 @@
 </deck>
 
 <panel id="outerpopup"
-           onpopupshowing="popupShowingEventOccured(event);"
-           onpopupshown="eventOccured(event); openThePopup('inner')"
-           onpopuphiding="eventOccured(event);"
-           onpopuphidden="eventOccured(event); SimpleTest.finish();">
+           onpopupshowing="popupShowingEventOccurred(event);"
+           onpopupshown="eventOccurred(event); openThePopup('inner')"
+           onpopuphiding="eventOccurred(event);"
+           onpopuphidden="eventOccurred(event); SimpleTest.finish();">
   <button id="item1" label="First"/>
   <label id="inner" value="Second" popup="innerpopup"/>
   <button id="item2" label="Third"/>
 </panel>
 
 <menupopup id="innerpopup"
-           onpopupshowing="popupShowingEventOccured(event);"
-           onpopupshown="eventOccured(event); event.target.hidePopup();"
-           onpopuphiding="eventOccured(event);"
-           onpopuphidden="eventOccured(event); document.getElementById('outerpopup').hidePopup();">
+           onpopupshowing="popupShowingEventOccurred(event);"
+           onpopupshown="eventOccurred(event); event.target.hidePopup();"
+           onpopuphiding="eventOccurred(event);"
+           onpopuphidden="eventOccurred(event); document.getElementById('outerpopup').hidePopup();">
   <menuitem id="inner1" label="Inner First"/>
   <menuitem id="inner2" label="Inner Second"/>
 </menupopup>
@@ -47,7 +47,7 @@ function openThePopup(id)
   synthesizeMouse(trigger, 4, 5, { });
 }
 
-function eventOccured(event)
+function eventOccurred(event)
 {
   var testname = event.type + " on " + event.target.id + " ";
   ok(event instanceof MouseEvent, testname + "is a mouse event");
@@ -57,7 +57,7 @@ function eventOccured(event)
   is(event.rangeOffset, 0, testname + "rangeOffset");
 }
 
-function popupShowingEventOccured(event)
+function popupShowingEventOccurred(event)
 {
   // the popupshowing event should have the event coordinates and
   // range position filled in.

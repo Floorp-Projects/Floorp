@@ -469,7 +469,7 @@
 #include "nsIDOMNSMouseEvent.h"
 
 #include "nsIEventListenerService.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
 
@@ -1541,8 +1541,8 @@ FindObjectClass(JSObject* aGlobalObject)
 static void
 PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
 {
-  nsCOMPtr<nsIStringBundleService>
-    stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  nsCOMPtr<nsIStringBundleService> stringService =
+    mozilla::services::GetStringBundleService();
   if (!stringService) {
     return;
   }
@@ -1770,7 +1770,7 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
   // XXX This probably wants to be localized, but that can fail in ways that
   // are hard to report correctly.
   JSString *str =
-    JS_NewStringCopyZ(cx, "An error occured throwing an exception");
+    JS_NewStringCopyZ(cx, "An error occurred throwing an exception");
   if (!str) {
     // JS_NewStringCopyZ reported the error for us.
     return NS_OK; 
@@ -6356,7 +6356,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // child frame. Define a property for this index.
 
         *_retval = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID,
-                                      nsnull, nsnull, 0);
+                                      nsnull, nsnull, JSPROP_SHARED);
 
         if (*_retval) {
           *objp = obj;

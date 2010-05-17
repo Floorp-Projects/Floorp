@@ -52,7 +52,6 @@ MAKEFILES_dom="
   ipc/chromium/Makefile
   ipc/glue/Makefile
   ipc/ipdl/Makefile
-  ipc/app/fake/Makefile
   dom/Makefile
   dom/public/coreEvents/Makefile
   dom/interfaces/base/Makefile
@@ -493,7 +492,6 @@ MAKEFILES_widget="
   widget/src/build/Makefile
   widget/src/gtk2/Makefile
   widget/src/gtkxtbin/Makefile
-  widget/src/photon/Makefile
   widget/src/cocoa/Makefile
   widget/src/os2/Makefile
   widget/src/windows/Makefile
@@ -552,12 +550,6 @@ MAKEFILES_xpcom_tests="
   xpcom/tests/services/Makefile
   xpcom/tests/windows/Makefile
   xpcom/tests/static-checker/Makefile
-"
-
-MAKEFILES_xpinstall="
-  xpinstall/Makefile
-  xpinstall/public/Makefile
-  xpinstall/src/Makefile
 "
 
 MAKEFILES_xpfe="
@@ -841,7 +833,6 @@ add_makefiles "
   $MAKEFILES_widget
   $MAKEFILES_xpcom
   $MAKEFILES_xpcom_tests
-  $MAKEFILES_xpinstall
   $MAKEFILES_xpfe
   $MAKEFILES_embedding
   $MAKEFILES_xulapp
@@ -1004,7 +995,6 @@ if [ "$ENABLE_TESTS" ]; then
     widget/tests/Makefile
     xpcom/sample/program/Makefile
     xpcom/tests/external/Makefile
-    xpinstall/tests/Makefile
   "
 fi
 

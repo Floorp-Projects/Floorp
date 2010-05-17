@@ -106,7 +106,7 @@ PRBool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
   return PR_FALSE;
 }
 
-void nsStyleCoord::Reset(void)
+void nsStyleCoord::Reset()
 {
   mUnit = eStyleUnit_Null;
   mValue.mInt = 0;
@@ -157,19 +157,19 @@ void nsStyleCoord::SetAngleValue(float aValue, nsStyleUnit aUnit)
   }
 }
 
-void nsStyleCoord::SetNormalValue(void)
+void nsStyleCoord::SetNormalValue()
 {
   mUnit = eStyleUnit_Normal;
   mValue.mInt = 0;
 }
 
-void nsStyleCoord::SetAutoValue(void)
+void nsStyleCoord::SetAutoValue()
 {
   mUnit = eStyleUnit_Auto;
   mValue.mInt = 0;
 }
 
-void nsStyleCoord::SetNoneValue(void)
+void nsStyleCoord::SetNoneValue()
 {
   mUnit = eStyleUnit_None;
   mValue.mInt = 0;
@@ -210,7 +210,7 @@ nsStyleCoord::GetAngleValueInRadians() const
   PR_END_MACRO
 
 
-nsStyleSides::nsStyleSides(void)
+nsStyleSides::nsStyleSides()
 {
   memset(this, 0x00, sizeof(nsStyleSides));
 }
@@ -223,7 +223,7 @@ PRBool nsStyleSides::operator==(const nsStyleSides& aOther) const
   return PR_TRUE;
 }
 
-void nsStyleSides::Reset(void)
+void nsStyleSides::Reset()
 {
   memset(this, 0x00, sizeof(nsStyleSides));
 }
@@ -242,7 +242,7 @@ nsStyleCorners::operator==(const nsStyleCorners& aOther) const
   return PR_TRUE;
 }
 
-void nsStyleCorners::Reset(void)
+void nsStyleCorners::Reset()
 {
   memset(this, 0x00, sizeof(nsStyleCorners));
 }

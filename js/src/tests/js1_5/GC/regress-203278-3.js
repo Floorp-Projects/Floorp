@@ -46,7 +46,7 @@ var expect = 'PASS';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-// Prepare  array a to cause O(a.length^2) bahaviour in the current
+// Prepare  array a to cause O(a.length^2) behaviour in the current
 // DeutschSchorrWaite implementation
 
 var a = new Array(1000 * 100);

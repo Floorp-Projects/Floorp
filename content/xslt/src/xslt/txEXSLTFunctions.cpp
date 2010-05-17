@@ -94,6 +94,9 @@ convertRtfToNode(txIEvalContext *aContext, txResultTreeFragment *aRtf)
                  "This handler shouldn't have been replaced!");
     NS_ENSURE_SUCCESS(rv, rv);
 
+    rv = mozHandler.closePrevious(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // The txResultTreeFragment will own this.
     const txXPathNode* node = txXPathNativeNode::createXPathNode(domFragment,
                                                                  PR_TRUE);
@@ -125,6 +128,9 @@ createTextNode(txIEvalContext *aContext, nsString& aValue,
     nsIDocument *doc = txXPathNativeNode::getDocument(document);
     nsCOMPtr<nsIContent> text;
     nsresult rv = NS_NewTextNode(getter_AddRefs(text), doc->NodeInfoManager());
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = text->SetText(aValue, PR_FALSE);
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aResult = txXPathNativeNode::createXPathNode(text, PR_TRUE);

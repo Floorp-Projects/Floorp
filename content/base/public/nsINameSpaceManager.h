@@ -68,7 +68,7 @@ static const PRInt32 kNameSpaceID_None = 0;
     { 0xac, 0x95, 0x9e, 0x10, 0x24, 0x30, 0x88, 0xd6 } }
 
 /**
- * The Name Space Manager tracks the associtation between a NameSpace
+ * The Name Space Manager tracks the association between a NameSpace
  * URI and the PRInt32 runtime id. Mappings between NameSpaces and 
  * NameSpace prefixes are managed by nsINameSpaces.
  *
