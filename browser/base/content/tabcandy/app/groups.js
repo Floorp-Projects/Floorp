@@ -1068,7 +1068,7 @@ DragInfo.prototype = {
   // Called in response to a jQuery-UI draggable "drag" event.
   drag: function(event, ui) {
     if(this.item.isAGroup) {
-      ui = this.snap(event,ui);      
+      //ui = this.snap(event,ui);      
       var bb = this.item.getBounds();
       bb.left = ui.position.left;
       bb.top = ui.position.top;
