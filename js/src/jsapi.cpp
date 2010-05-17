@@ -1808,7 +1808,8 @@ JS_PUBLIC_API(void)
 JS_LeaveLocalRootScopeWithResult(JSContext *cx, jsval rval)
 {
     CHECK_REQUEST(cx);
-    js_LeaveLocalRootScopeWithResult(cx, Valueify(rval));
+    if (JSVAL_IS_GCTHING(rval))
+        js_LeaveLocalRootScopeWithResult(cx, JSVAL_TO_GCTHING(rval));
 }
 
 JS_PUBLIC_API(void)

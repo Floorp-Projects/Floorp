@@ -1499,7 +1499,7 @@ js_EnterLocalRootScope(JSContext *cx)
 }
 
 void
-js_LeaveLocalRootScopeWithResult(JSContext *cx, const Value &rval)
+js_LeaveLocalRootScopeWithResult(JSContext *cx, void *thing)
 {
     JSLocalRootStack *lrs;
     uint32 mark, m, n;
@@ -1528,25 +1528,23 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, const Value &rval)
     }
 
     /*
-     * Pop the scope, restoring lrs->scopeMark.  If rval is a GC-thing, push
-     * it on the caller's scope, or store it in lastInternalResult if we are
-     * leaving the outermost scope.  We don't need to allocate a new lrc
-     * because we can overwrite the old mark's slot with rval.
+     * Pop the scope, restoring lrs->scopeMark. We don't need to allocate a new lrc
+     * because we can overwrite the old mark's slot with thing.
      */
     lrc = lrs->topChunk;
     m = mark & JSLRS_CHUNK_MASK;
     lrs->scopeMark = (uint32) lrc->roots[m];
-    if (rval.isGCThing()) {
+    if (thing) {
         if (mark == 0) {
-            cx->weakRoots.lastInternalResult = rval.asGCThing();
+            cx->weakRoots.lastInternalResult = thing;
         } else {
             /*
              * Increment m to avoid the "else if (m == 0)" case below.  If
-             * rval is not a GC-thing, that case would take care of freeing
-             * any chunk that contained only the old mark.  Since rval *is*
-             * a GC-thing here, we want to reuse that old mark's slot.
+             * 'thing' is non-null, that case would take care of freeing
+             * any chunk that contained only the old mark.  Since 'thing' *is*
+             * non-null here, we want to reuse that old mark's slot.
              */
-            lrc->roots[m++] = rval.asGCThing();
+            lrc->roots[m++] = thing;
             ++mark;
         }
     }

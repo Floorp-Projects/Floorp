@@ -49,7 +49,7 @@
 #define ARRAY_CAPACITY_MIN      7
 
 extern JSBool
-js_IdIsIndex(jsid id, jsuint *indexp);
+js_IdIsIndex(jsboxedword idw, jsuint *indexp);
 
 extern js::Class js_ArrayClass, js_SlowArrayClass;
 

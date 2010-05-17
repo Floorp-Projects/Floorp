@@ -767,8 +767,11 @@ typedef uint32
 
 /* JSExtendedClass function pointer typedefs. */
 
+/*
+ *
+ */
 typedef JSBool
-(* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *v, JSBool *bp);
+(* JSEqualityOp)(JSContext *cx, JSObject *obj, const jsval *vp, JSBool *bp);
 
 /*
  * A generic type for functions mapping an object to another object, or null
