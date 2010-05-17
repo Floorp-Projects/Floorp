@@ -290,7 +290,7 @@ window.TabItems = {
             tab.mirror.addSubscriber(item, 'urlChanged', function(who, info) {
               Utils.assert('changing away from blank', info.oldURL == 'about:blank' || !info.oldURL);
               TabItems.reconnect(item);
-              tab.mirror.removeSubscriber(item);
+              who.removeSubscriber(item);
             });
           }
         }
