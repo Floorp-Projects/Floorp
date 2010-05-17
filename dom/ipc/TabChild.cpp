@@ -744,6 +744,7 @@ TabChild::RecvloadRemoteScript(const nsString& aURL)
                                                   (jschar*)dataString.get(),
                                                   dataString.Length(),
                                                   url.get(), 1, &retval);
+    JSPRINCIPALS_DROP(mCx, jsprin);
     JSContext *unused;
     nsContentUtils::ThreadJSContextStack()->Pop(&unused);
     NS_ENSURE_TRUE(ret, true); // This gives us a useful warning!
