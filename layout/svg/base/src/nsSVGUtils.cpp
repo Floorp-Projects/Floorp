@@ -256,7 +256,7 @@ nsSVGUtils::GetParentElement(nsIContent *aContent)
 
   // otherewise use the explicit one, whether it's null or not...
   nsIContent* parent = aContent->GetParent();
-  return parent ? parent->AsElement() : nsnull;
+  return parent && parent->IsElement() ? parent->AsElement() : nsnull;
 }
 
 float
