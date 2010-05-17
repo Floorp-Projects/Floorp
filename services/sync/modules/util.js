@@ -854,6 +854,10 @@ let FakeSvc = {
       });
       return JSON.stringify(state);
     }
+  },
+  // A fake service only used for testing
+  "@labs.mozilla.com/Fake/Thing;1": {
+    isFake: true
   }
 };
 
