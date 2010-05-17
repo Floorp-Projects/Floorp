@@ -104,7 +104,7 @@ ContentListener::HandleEvent(nsIDOMEvent* aEvent)
 TabChild::TabChild()
 : mCx(nsnull), mContextWrapper(nsnull), mTabChildGlobal(nsnull)
 {
-    printf("Creating TabChild %d!\n", NS_IsMainThread());
+    printf("creating %d!\n", NS_IsMainThread());
 }
 
 nsresult
