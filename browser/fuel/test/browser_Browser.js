@@ -82,14 +82,10 @@ function test() {
           onPageBLoadComplete();
         }
       },
-
       onLocationChange: function () 0,
       onProgressChange: function () 0,
       onStatusChange: function () 0,
-      onSecurityChange: function () 0,
-      QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
-                                             Ci.nsIWebProgressListener,
-                                             Ci.nsISupports])
+      onSecurityChange: function () 0
     });
 
     // test loading new content with a frame into a tab
