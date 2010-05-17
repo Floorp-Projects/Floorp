@@ -57,7 +57,7 @@ typedef JSBool
 struct JSXMLArray {
     uint32              length;
     uint32              capacity;
-    js::Value           *vector;
+    void                **vector;
     JSXMLArrayCursor    *cursors;
 };
 
@@ -67,12 +67,11 @@ struct JSXMLArrayCursor
     uint32           index;
     JSXMLArrayCursor *next;
     JSXMLArrayCursor **prevp;
-    js::Value        root;
-    js::Value        null;
+    void             *root;
 
     JSXMLArrayCursor(JSXMLArray *array)
       : array(array), index(0), next(array->cursors), prevp(&array->cursors),
-        root(), null()
+        root(NULL)
     {
         if (next)
             next->prevp = &next;
@@ -90,18 +89,16 @@ struct JSXMLArrayCursor
         array = NULL;
     }
 
-    const js::Value &getNext() {
+    void *getNext() {
         if (!array || index >= array->length)
-            return null;
-        root.copy(array->vector[index++]);
-        return root;
+            return NULL;
+        return root = array->vector[index++];
     }
 
-    const js::Value &getCurrent() {
+    void *getCurrent() {
         if (!array || index >= array->length)
-            return null;
-        root.copy(array->vector[index]);
-        return root;
+            return NULL;
+        return root = array->vector[index];
     }
 
     void trace(JSTracer *trc) {
@@ -110,7 +107,7 @@ struct JSXMLArrayCursor
 #endif
         for (JSXMLArrayCursor *cursor = this; cursor; cursor = cursor->next) {
             JS_SET_TRACING_INDEX(trc, "cursor_root", index++);
-            CallGCMarkerIfGCThing(trc, cursor->root);
+            js::CallGCMarkerForGCThing(trc, cursor->root);
         }
     }
 };
@@ -231,8 +228,14 @@ JSObject::isXML() const
 }
 
 #define OBJECT_IS_XML(cx,obj)   (obj)->isXML()
-#define VALUE_IS_XML(cx,v)      ((v).isObject() &&                            \
-                                 (v).asObject().isXML())
+#define VALUE_IS_XML(cx,v)      (!JSVAL_IS_PRIMITIVE(v) &&                    \
+                                 JSVAL_TO_OBJECT(v)->isXML())
+
+static inline bool
+IsXML(const js::Value &v)
+{
+    return v.isNonFunObj() && v.asNonFunObj().isXML();
+}
 
 extern JSObject *
 js_InitNamespaceClass(JSContext *cx, JSObject *obj);
@@ -297,7 +300,7 @@ js_ConstructXMLQNameObject(JSContext *cx, const js::Value & nsval,
                            const js::Value & lnval);
 
 extern JSBool
-js_GetAnyName(JSContext *cx, js::Value *vp);
+js_GetAnyName(JSContext *cx, jsid *idp);
 
 /*
  * Note: nameval must be either QName, AttributeName, or AnyName.
@@ -306,10 +309,10 @@ extern JSBool
 js_FindXMLProperty(JSContext *cx, const js::Value &nameval, JSObject **objp, jsid *idp);
 
 extern JSBool
-js_GetXMLMethod(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+js_GetXMLMethod(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
 extern JSBool
-js_GetXMLDescendants(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
+js_GetXMLDescendants(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
 extern JSBool
 js_DeleteXMLListElements(JSContext *cx, JSObject *listobj);
@@ -339,6 +342,7 @@ js_MakeXMLCommentString(JSContext *cx, JSString *str);
 extern JSString *
 js_MakeXMLPIString(JSContext *cx, JSString *name, JSString *str);
 
+/* The caller must ensure that either v1 or v2 is an object. */
 extern JSBool
 js_TestXMLEquality(JSContext *cx, const js::Value &v1, const js::Value &v2,
                    JSBool *bp);

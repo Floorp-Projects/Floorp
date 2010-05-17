@@ -155,24 +155,27 @@ INDEX_TOO_BIG(jsuint index)
  * valid range. This function checks the string representation itself; note
  * that calling a standard conversion routine might allow strings such as
  * "08" or "4.0" as array indices, which they are not.
+ *
+ * 'id' is passed as a jsboxedword since the given id need not necessarily hold
+ * an atomized string.
  */
 JSBool
-js_IdIsIndex(jsid id, jsuint *indexp)
+js_IdIsIndex(jsboxedword idw, jsuint *indexp)
 {
-    if (JSID_IS_INT(id)) {
+    if (JSBOXEDWORD_IS_INT(idw)) {
         jsint i;
-        i = JSID_TO_INT(id);
+        i = JSBOXEDWORD_TO_INT(idw);
         if (i < 0)
             return JS_FALSE;
         *indexp = (jsuint)i;
         return JS_TRUE;
     }
 
-    /* NB: id should be a string, but jsxml.c may call us with an object id. */
-    if (!JSID_IS_ATOM(id))
+    /* NB: idw should be a string, but jsxml.c may call us with an object idw. */
+    if (!JSBOXEDWORD_IS_STRING(idw))
         return JS_FALSE;
 
-    JSString *str = ATOM_TO_STRING(JSID_TO_ATOM(id));
+    JSString *str = JSBOXEDWORD_TO_STRING(idw);
     jschar *cp = str->chars();
     if (JS7_ISDEC(*cp) && str->length() < sizeof(MAXSTR)) {
         jsuint index = JS7_UNDEC(*cp++);

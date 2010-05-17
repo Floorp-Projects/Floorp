@@ -4022,10 +4022,10 @@ END_CASE(JSOP_DEFXMLNS)
 
 BEGIN_CASE(JSOP_ANYNAME)
 {
-    Value rval;
-    if (!js_GetAnyName(cx, &rval))
+    jsid id;
+    if (!js_GetAnyName(cx, &id))
         goto error;
-    PUSH_COPY(rval);
+    PUSH_COPY(IdToValue(id));
 }
 END_CASE(JSOP_ANYNAME)
 
@@ -4153,22 +4153,19 @@ BEGIN_CASE(JSOP_DELDESC)
 {
     JSObject *obj;
     FETCH_OBJECT(cx, -2, obj);
-    jsid id;
-    if (!ValueToId(cx, regs.sp[-1], &id))
-        goto error;
-    Value rval;
-    if (!js_GetXMLDescendants(cx, obj, id, &rval))
+    jsval rval = Jsvalify(regs.sp[-1]);
+    if (!js_GetXMLDescendants(cx, obj, rval, &rval))
         goto error;
 
     if (op == JSOP_DELDESC) {
-        regs.sp[-1].copy(rval);      /* set local root */
-        if (!js_DeleteXMLListElements(cx, &rval.asObject()))
+        regs.sp[-1].copy(Valueify(rval));   /* set local root */
+        if (!js_DeleteXMLListElements(cx, JSVAL_TO_OBJECT(rval)))
             goto error;
-        rval.setBoolean(true);  /* always succeed */
+        rval = JSVAL_TRUE;                  /* always succeed */
     }
 
     regs.sp--;
-    regs.sp[-1].copy(rval);
+    regs.sp[-1].copy(Valueify(rval));
 }
 END_CASE(JSOP_DESCENDANTS)
 
@@ -4199,7 +4196,7 @@ BEGIN_CASE(JSOP_ENDFILTER)
          * Decrease sp after EnterWith returns as we use sp[-1] there to root
          * temporaries.
          */
-        JS_ASSERT(VALUE_IS_XML(cx, regs.sp[-1]));
+        JS_ASSERT(IsXML(regs.sp[-1]));
         if (!js_EnterWith(cx, -2))
             goto error;
         regs.sp--;
@@ -4249,7 +4246,7 @@ BEGIN_CASE(JSOP_XMLELTEXPR)
     Value rval;
     rval.copy(regs.sp[-1]);
     JSString *str;
-    if (VALUE_IS_XML(cx, rval)) {
+    if (IsXML(rval)) {
         str = js_ValueToXMLString(cx, rval);
     } else {
         str = js_ValueToString(cx, rval);

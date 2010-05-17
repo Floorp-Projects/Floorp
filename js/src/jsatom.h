@@ -62,6 +62,7 @@
 #define ATOM_TO_DOUBLE(atom)      JSBOXEDWORD_TO_DOUBLE(ATOM_KEY(atom))
 #define ATOM_IS_STRING(atom)      JSBOXEDWORD_IS_STRING(ATOM_KEY(atom))
 #define ATOM_TO_STRING(atom)      JSBOXEDWORD_TO_STRING(ATOM_KEY(atom))
+#define ATOM_TO_JSVAL(atom)       STRING_TO_JSVAL(ATOM_TO_STRING(atom))
 #define STRING_TO_ATOM(str)       (JS_ASSERT(str->isAtomized()),              \
                                    (JSAtom *)STRING_TO_JSBOXEDWORD(str))
 

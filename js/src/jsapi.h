@@ -128,6 +128,12 @@ JSVAL_TO_INT(jsval v)
     return v.data.i32;
 }
 
+static JS_ALWAYS_INLINE JSBool
+JSVAL_IS_ZERO(jsval v)
+{
+    return JSVAL_IS_INT(v) && JSVAL_TO_INT(v) == 0;
+}
+
 #define JSVAL_INT_BITS          32
 #define JSVAL_INT_MIN           ((jsint)0x80000000)
 #define JSVAL_INT_MAX           ((jsint)0x7fffffff)
@@ -1650,7 +1656,7 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
  * Global object classes in embeddings that enable JS_HAS_XML_SUPPORT (E4X)
  * should handle this id specially before converting id via JSVAL_TO_INT.
  */
-#define JS_DEFAULT_XML_NAMESPACE_ID ((jsid) JSVAL_VOID)
+#define JS_DEFAULT_XML_NAMESPACE_ID ((jsid) JSBOXEDWORD_VOID)
 
 /*
  * JSNewResolveOp flag bits.
@@ -3477,6 +3483,10 @@ class Value
         return data.i32;
     }
 
+    bool isInt32(int32 i32) const {
+        return isInt32() && data.i32 == i32;
+    }
+
     bool isDouble() const {
         return mask == DoubleMask;
     }
@@ -3653,8 +3663,8 @@ struct AssertLayoutCompatible
 struct CopyableValue : Value {};
 JS_STATIC_ASSERT(sizeof(CopyableValue) == sizeof(Value));
 
-CopyableValue &copyable_cast(Value &v) { return static_cast<CopyableValue &>(v); }
-const CopyableValue &copyable_cast(const Value &v) { return static_cast<const CopyableValue &>(v); }
+inline CopyableValue &copyable_cast(Value &v) { return static_cast<CopyableValue &>(v); }
+inline const CopyableValue &copyable_cast(const Value &v) { return static_cast<const CopyableValue &>(v); }
 
 JS_ALWAYS_INLINE
 Value::Value(const CopyableValue &v) {

@@ -2719,11 +2719,21 @@ js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
 extern JSBool
 js_EnterLocalRootScope(JSContext *cx);
 
-#define js_LeaveLocalRootScope(cx) \
-    js_LeaveLocalRootScopeWithResult(cx, sNullValue)
-
 extern void
-js_LeaveLocalRootScopeWithResult(JSContext *cx, const js::Value &rval);
+js_LeaveLocalRootScopeWithResult(JSContext *cx, void *thing);
+
+static inline void
+js_LeaveLocalRootScope(JSContext *cx)
+{
+    js_LeaveLocalRootScopeWithResult(cx, NULL);
+}
+
+static inline void
+js_LeaveLocalRootScopeWithResult(JSContext *cx, const js::Value &v)
+{
+    js_LeaveLocalRootScopeWithResult(cx, v.isGCThing() ? v.asGCThing() : NULL);
+}
+
 
 extern void
 js_ForgetLocalRoot(JSContext *cx, void *thing);
