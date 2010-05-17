@@ -565,12 +565,12 @@ CUSTOM_QS_TN = {
 customMethodCalls = {
     'nsIDOMNode_GetNextSibling': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetNextSibling();',
+        'code': '    nsINode *result = self->GetSibling(1);',
         'canFail': False
         },
     'nsIDOMNode_GetFirstChild': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetFirstChild();',
+        'code': '    nsINode *result = self->GetChildAt(0);',
         'canFail': False
         },
     'nsIDOMNode_GetChildNodes': {
@@ -579,7 +579,7 @@ customMethodCalls = {
         },
     'nsIDOMNode_GetPreviousSibling': {
         'thisType': 'nsINode',
-        'code': '    nsINode *result = self->GetPreviousSibling();',
+        'code': '    nsINode *result = self->GetSibling(-1);',
         'canFail': False
         },
     'nsIDOMNode_GetLastChild': {
