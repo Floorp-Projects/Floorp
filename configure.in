@@ -4555,12 +4555,12 @@ fi
 if test -n "$MOZ_NATIVE_NSPR"; then
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
-    AC_TRY_COMPILE([#include "prlog.h"],
+    AC_TRY_COMPILE([#include "prtypes.h"],
                 [#ifndef PR_STATIC_ASSERT
-                 #error PR_STATIC_ASSERT not defined
+                 #error PR_STATIC_ASSERT not defined or requires including prlog.h
                  #endif],
                 [MOZ_NATIVE_NSPR=1],
-                AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT]))
+                AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
 else
     if test "$OS_ARCH" = "WINCE"; then
