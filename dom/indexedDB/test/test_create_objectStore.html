@@ -48,7 +48,7 @@
 
           is(objectStore.name, objectStoreName, "Bad name");
           is(objectStore.mode, nsIIDBObjectStore.READ_WRITE, "Bad mode");
-          is(objectStore.keyPath, null, "Bad keyPath");
+          is(objectStore.keyPath, "", "Bad keyPath");
           if(objectStore.indexNames.length, 0, "Bad indexNames");
           is(db.objectStores.length, 1, "Bad objectStores list");
           SimpleTest.finish();

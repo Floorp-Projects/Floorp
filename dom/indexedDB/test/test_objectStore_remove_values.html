@@ -28,15 +28,12 @@ function testSteps()
   var db = event.result;
 
   var data = [
-
-    /* // Disabled until we can work out the way this should function.
     { name: "inline key; key generator",
       autoIncrement: true,
       storedObject: {name: "Lincoln"},
       keyName: "id",
       keyValue: undefined,
-    }, */
-
+    },
     { name: "inline key; no key generator",
       autoIncrement: false,
       storedObject: {id: 1, name: "Lincoln"},
