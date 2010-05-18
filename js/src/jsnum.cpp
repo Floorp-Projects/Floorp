@@ -198,7 +198,7 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (vp[2].isInt32() && (radix == 0 || radix == 10)) {
-        vp->copy(vp[2]);
+        *vp = vp[2];
         return JS_TRUE;
     }
 
@@ -289,7 +289,7 @@ Number(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         argv[0].setInt32(0);
     }
     if (!JS_IsConstructing(cx))
-        rval->copy(argv[0]);
+        *rval = argv[0];
     else
         obj->setPrimitiveThis(argv[0]);
     return true;
@@ -512,13 +512,13 @@ static JSBool
 num_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
     if (vp[1].isNumber()) {
-        vp->copy(vp[1]);
+        *vp = vp[1];
         return JS_TRUE;
     }
     JSObject *obj = ComputeThisObjectFromVp(cx, vp);
     if (!InstanceOf(cx, obj, &js_NumberClass, vp + 2))
         return JS_FALSE;
-    vp->copy(obj->getPrimitiveThis());
+    *vp = obj->getPrimitiveThis();
     return JS_TRUE;
 }
 
@@ -567,7 +567,7 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
     JSString *str = JS_NewStringCopyZ(cx, numStr);
     if (!str)
         return JS_FALSE;
-    vp->copy(str);
+    vp->setString(str);
     return JS_TRUE;
 }
 
@@ -950,7 +950,7 @@ ValueToECMAInt32Slow(JSContext *cx, const Value &v, int32_t *out)
     if (v.isDouble()) {
         d = v.asDouble();
     } else {
-        if (!ValueToNumberSlow(cx, copyable_cast(v), &d))
+        if (!ValueToNumberSlow(cx, v, &d))
             return false;
     }
     *out = js_DoubleToECMAInt32(d);
@@ -965,7 +965,7 @@ ValueToECMAUint32Slow(JSContext *cx, const Value &v, uint32_t *out)
     if (v.isDouble()) {
         d = v.asDouble();
     } else {
-        if (!ValueToNumberSlow(cx, copyable_cast(v), &d))
+        if (!ValueToNumberSlow(cx, v, &d))
             return false;
     }
     *out = js_DoubleToECMAUint32(d);
@@ -1012,7 +1012,7 @@ ValueToInt32Slow(JSContext *cx, const Value &v, int32_t *out)
     jsdouble d;
     if (v.isDouble()) {
         d = v.asDouble();
-    } else if (!ValueToNumberSlow(cx, copyable_cast(v), &d)) {
+    } else if (!ValueToNumberSlow(cx, v, &d)) {
         return false;
     }
 
@@ -1032,7 +1032,7 @@ ValueToUint16Slow(JSContext *cx, const Value &v, uint16_t *out)
     jsdouble d;
     if (v.isDouble()) {
         d = v.asDouble();
-    } else if (!ValueToNumberSlow(cx, copyable_cast(v), &d)) {
+    } else if (!ValueToNumberSlow(cx, v, &d)) {
         return false;
     }
 

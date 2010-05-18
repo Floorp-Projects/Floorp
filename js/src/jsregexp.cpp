@@ -5110,7 +5110,7 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
     slot = JSID_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX) {
-        vp->copy(obj->getRegExpLastIndex());
+        *vp = obj->getRegExpLastIndex();
         return JS_TRUE;
     }
 
@@ -5744,7 +5744,7 @@ RegExp(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
          */
         if ((argc < 2 || argv[1].isUndefined()) && argv[0].isObject() &&
             argv[0].asObject().getClass() == &js_RegExpClass) {
-            rval->copy(argv[0]);
+            *rval = argv[0];
             return JS_TRUE;
         }
 

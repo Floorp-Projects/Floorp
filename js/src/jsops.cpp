@@ -62,12 +62,12 @@
               case JSTRAP_CONTINUE:
                 break;
               case JSTRAP_RETURN:
-                fp->rval.copy(rval);
+                fp->rval = rval;
                 interpReturnOK = JS_TRUE;
                 goto forced_return;
               case JSTRAP_THROW:
                 cx->throwing = JS_TRUE;
-                cx->exception.copy(rval);
+                cx->exception = rval;
                 goto error;
               default:;
             }
@@ -221,7 +221,7 @@ BEGIN_CASE(JSOP_STOP)
 
     JS_ASSERT(regs.sp == fp->base());
     if ((fp->flags & JSFRAME_CONSTRUCTING) && fp->rval.isPrimitive())
-        fp->rval.copy(fp->thisv);
+        fp->rval = fp->thisv;
 
     JSBool ok;
     ok = JS_TRUE;
@@ -271,7 +271,7 @@ BEGIN_CASE(JSOP_STOP)
          */
         if (fp->flags & JSFRAME_CONSTRUCTING) {
             if (fp->rval.isPrimitive())
-                fp->rval.copy(fp->thisv);
+                fp->rval = fp->thisv;
             JS_RUNTIME_METER(cx->runtime, constructs);
         }
 
@@ -282,7 +282,7 @@ BEGIN_CASE(JSOP_STOP)
         cx->stack().popInlineFrame(cx, fp, down);
 
         /* Propagate return value before fp is lost. */
-        regs.sp[-1].copy(fp->rval);
+        regs.sp[-1] = fp->rval;
 
         /* Sync interpreter registers. */
         fp = cx->fp;
@@ -643,9 +643,9 @@ BEGIN_CASE(JSOP_PICK)
     jsint i = regs.pc[1];
     JS_ASSERT(regs.sp - (i+1) >= fp->base());
     Value lval;
-    lval.copy(regs.sp[-(i+1)]);
+    lval = regs.sp[-(i+1)];
     memmove(regs.sp - (i+1), regs.sp - i, sizeof(Value)*i);
-    regs.sp[-1].copy(lval);
+    regs.sp[-1] = lval;
 }
 END_CASE(JSOP_PICK)
 
@@ -656,7 +656,7 @@ END_CASE(JSOP_PICK)
             JS_ASSERT((sprop)->slot != SPROP_INVALID_SLOT ||                  \
                       !sprop->hasDefaultSetter());                            \
             if (((sprop)->slot != SPROP_INVALID_SLOT))                        \
-                (vp)->copy((pobj)->lockedGetSlot((sprop)->slot));             \
+                *(vp) = (pobj)->lockedGetSlot((sprop)->slot);                 \
             else                                                              \
                 (vp)->setUndefined();                                         \
         } else {                                                              \
@@ -706,7 +706,7 @@ END_CASE(JSOP_PICK)
             SKIP_POP_AFTER_SET(OP##_LENGTH, spdec);                           \
             {                                                                 \
                 Value *newsp = regs.sp - ((spdec) - 1);                       \
-                newsp[-1].copy(regs.sp[-1]);                                  \
+                newsp[-1] = regs.sp[-1];                                      \
                 regs.sp = newsp;                                              \
             }                                                                 \
           END_CASE(OP)
@@ -1088,7 +1088,7 @@ BEGIN_CASE(JSOP_ADD)
         if (!js_ConcatenateXML(cx, &lref.asObject(), &rref.asObject(), &rval))
             goto error;
         regs.sp--;
-        regs.sp[-1].copy(rval);
+        regs.sp[-1] = rval;
     } else
 #endif
     {
@@ -1206,7 +1206,7 @@ BEGIN_CASE(JSOP_DIV)
             vp = &rt->negativeInfinityValue;
         else
             vp = &rt->positiveInfinityValue;
-        regs.sp[-1].copy(*vp);
+        regs.sp[-1] = *vp;
     } else {
         d1 /= d2;
         STORE_NUMBER(cx, -1, d1);
@@ -1320,7 +1320,7 @@ BEGIN_CASE(JSOP_DELPROP)
     if (!obj->deleteProperty(cx, id, &rval))
         goto error;
 
-    regs.sp[-1].copy(rval);
+    regs.sp[-1] = rval;
 }
 END_CASE(JSOP_DELPROP)
 
@@ -1344,7 +1344,7 @@ BEGIN_CASE(JSOP_DELELEM)
     Value rval;
     ELEMENT_OP(-1, obj->deleteProperty(cx, id, &rval));
     regs.sp--;
-    regs.sp[-1].copy(rval);
+    regs.sp[-1] = rval;
 }
 END_CASE(JSOP_DELELEM)
 
@@ -1411,7 +1411,7 @@ BEGIN_CASE(JSOP_NAMEDEC)
             uint32 slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj->scope()->freeslot);
             Value rval;
-            rval.copy(obj->lockedGetSlot(slot));
+            rval = obj->lockedGetSlot(slot);
             if (JS_LIKELY(CanIncDecWithoutOverflow(rval))) {
                 int32_t tmp = rval.asInt32();
                 int32_t inc = tmp + (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
@@ -1488,7 +1488,7 @@ do_incop:
     if (cs->nuses == 0) {
         /* regs.sp[-1] already contains the result of name increment. */
     } else {
-        regs.sp[-1 - cs->nuses].copy(regs.sp[-1]);
+        regs.sp[-1 - cs->nuses] = regs.sp[-1];
         regs.sp -= cs->nuses;
     }
     jsint len = cs->length;
@@ -1591,7 +1591,7 @@ BEGIN_CASE(JSOP_GVARINC)
     slot = (uint32)lref.asInt32();
     JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
     Value rval;
-    rval.copy(cx->activeCallStack()->getInitialVarObj()->getSlotMT(cx, slot));
+    rval = cx->activeCallStack()->getInitialVarObj()->getSlotMT(cx, slot);
     if (JS_LIKELY(CanIncDecWithoutOverflow(rval))) {
         int32_t tmp = rval.asInt32();
         PUSH_INT32(tmp + incr2);
@@ -1601,7 +1601,7 @@ BEGIN_CASE(JSOP_GVARINC)
         PUSH_NULL();  /* Extra root */
         if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-2], &regs.sp[-1]))
             goto error;
-        rval.copy(regs.sp[-1]);
+        rval = regs.sp[-1];
         --regs.sp;
     }
     fp->varobj(cx)->setSlotMT(cx, slot, rval);
@@ -1611,12 +1611,9 @@ BEGIN_CASE(JSOP_GVARINC)
 }
 
 BEGIN_CASE(JSOP_THIS)
-{
-    ObjPtr obj = fp->getThisObject(cx);
-    if (!obj)
+    if (!fp->getThisObject(cx))
         goto error;
-    PUSH_COPY(obj);
-}
+    PUSH_COPY(fp->thisv);
 END_CASE(JSOP_THIS)
 
 BEGIN_CASE(JSOP_UNBRANDTHIS)
@@ -1691,7 +1688,7 @@ BEGIN_CASE(JSOP_GETXPROP)
             } else if (entry->vword.isSlot()) {
                 uint32 slot = entry->vword.toSlot();
                 JS_ASSERT(slot < obj2->scope()->freeslot);
-                rval.copy(obj2->lockedGetSlot(slot));
+                rval = obj2->lockedGetSlot(slot);
             } else {
                 JS_ASSERT(entry->vword.isSprop());
                 JSScopeProperty *sprop = entry->vword.toSprop();
@@ -1714,7 +1711,7 @@ BEGIN_CASE(JSOP_GETXPROP)
         }
     } while (0);
 
-    regs.sp[-1].copy(rval);
+    regs.sp[-1] = rval;
     JS_ASSERT(JSOP_GETPROP_LENGTH + i == js_CodeSpec[op].length);
     jsint len = JSOP_GETPROP_LENGTH + i;
 END_VARLEN_CASE
@@ -1747,11 +1744,11 @@ END_CASE(JSOP_LENGTH)
 BEGIN_CASE(JSOP_CALLPROP)
 {
     Value lval;
-    lval.copy(regs.sp[-1]);
+    lval = regs.sp[-1];
 
-    ObjPtr obj;
+    Value objv;
     if (lval.isObject()) {
-        obj = lval.asObjPtr();
+        objv = lval;
     } else {
         JSProtoKey protoKey;
         if (lval.isString()) {
@@ -1768,10 +1765,10 @@ BEGIN_CASE(JSOP_CALLPROP)
         JSObject *pobj;
         if (!js_GetClassPrototype(cx, NULL, protoKey, &pobj))
             goto error;
-        obj.setNonFunObj(*pobj);
+        objv.setNonFunObj(*pobj);
     }
 
-    JSObject *aobj = js_GetProtoIfDenseArray(obj);
+    JSObject *aobj = js_GetProtoIfDenseArray(&objv.asObject());
     Value rval;
 
     PropertyCacheEntry *entry;
@@ -1787,13 +1784,13 @@ BEGIN_CASE(JSOP_CALLPROP)
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
-            rval.copy(obj2->lockedGetSlot(slot));
+            rval = obj2->lockedGetSlot(slot);
         } else {
             JS_ASSERT(entry->vword.isSprop());
             JSScopeProperty *sprop = entry->vword.toSprop();
-            NATIVE_GET(cx, obj, obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval);
+            NATIVE_GET(cx, &objv.asObject(), obj2, sprop, JSGET_NO_METHOD_BARRIER, &rval);
         }
-        regs.sp[-1].copy(rval);
+        regs.sp[-1] = rval;
         PUSH_COPY(lval);
         goto end_callprop;
     }
@@ -1807,24 +1804,24 @@ BEGIN_CASE(JSOP_CALLPROP)
 
     PUSH_NULL();
     if (lval.isObject()) {
-        if (!js_GetMethod(cx, obj, id,
+        if (!js_GetMethod(cx, &objv.asObject(), id,
                           JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
                           ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
                           : JSGET_NO_METHOD_BARRIER,
                           &rval)) {
             goto error;
         }
-        regs.sp[-1].copy(obj);
-        regs.sp[-2].copy(rval);
+        regs.sp[-1] = objv;
+        regs.sp[-2] = rval;
     } else {
-        JS_ASSERT(obj->map->ops->getProperty == js_GetProperty);
-        if (!js_GetPropertyHelper(cx, obj, id,
+        JS_ASSERT(objv.asObject().map->ops->getProperty == js_GetProperty);
+        if (!js_GetPropertyHelper(cx, &objv.asObject(), id,
                                   JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER,
                                   &rval)) {
             goto error;
         }
-        regs.sp[-1].copy(lval);
-        regs.sp[-2].copy(rval);
+        regs.sp[-1] = lval;
+        regs.sp[-2] = rval;
     }
 
   end_callprop:
@@ -2138,7 +2135,7 @@ BEGIN_CASE(JSOP_GETELEM)
 
   end_getelem:
     regs.sp--;
-    regs.sp[-1].copy(*copyFrom);
+    regs.sp[-1] = *copyFrom;
 }
 END_CASE(JSOP_GETELEM)
 
@@ -2148,14 +2145,14 @@ BEGIN_CASE(JSOP_CALLELEM)
     ELEMENT_OP(-1, js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &rval));
 #if JS_HAS_NO_SUCH_METHOD
     if (JS_UNLIKELY(rval.isUndefined())) {
-        regs.sp[-2].copy(regs.sp[-1]);
+        regs.sp[-2] = regs.sp[-1];
         JS_ASSERT(regs.sp[-1].isObject());  /* set by ELEMENT_OP */
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             goto error;
     } else
 #endif
     {
-        regs.sp[-2].copy(rval);
+        regs.sp[-2] = rval;
         JS_ASSERT(regs.sp[-1].isObject());  /* set by ELEMENT_OP */
     }
 }
@@ -2268,7 +2265,7 @@ BEGIN_CASE(JSOP_APPLY)
     argc = GET_ARGC(regs.pc);
     vp = regs.sp - (argc + 2);
 
-    lval.copy(*vp);
+    lval = *vp;
     if (lval.isFunObj()) {
         obj = &lval.asFunObj();
         fun = GET_FUNCTION_PRIVATE(cx, obj);
@@ -2329,7 +2326,7 @@ BEGIN_CASE(JSOP_APPLY)
                 *disp = newfp;
             }
             JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
-            newfp->thisv.copy(vp[1]);
+            newfp->thisv = vp[1];
             newfp->imacpc = NULL;
 
             /* Push void to initialize local variables. */
@@ -2706,7 +2703,7 @@ BEGIN_CASE(JSOP_LOOKUPSWITCH)
     jsbytecode *pc2 = regs.pc;
 
     Value lval;
-    lval.copy(regs.sp[-1]);
+    lval = regs.sp[-1];
     regs.sp--;
 
     if (!lval.isPrimitive())
@@ -2778,12 +2775,12 @@ BEGIN_CASE(JSOP_TRAP)
       case JSTRAP_ERROR:
         goto error;
       case JSTRAP_RETURN:
-        fp->rval.copy(rval);
+        fp->rval = rval;
         interpReturnOK = JS_TRUE;
         goto forced_return;
       case JSTRAP_THROW:
         cx->throwing = JS_TRUE;
-        cx->exception.copy(rval);
+        cx->exception = rval;
         goto error;
       default:
         break;
@@ -2842,7 +2839,7 @@ BEGIN_CASE(JSOP_SETARG)
     uint32 slot = GET_ARGNO(regs.pc);
     JS_ASSERT(slot < fp->fun->nargs);
     METER_SLOT_OP(op, slot);
-    fp->argv[slot].copy(regs.sp[-1]);
+    fp->argv[slot] = regs.sp[-1];
 }
 END_SET_CASE(JSOP_SETARG)
 
@@ -2867,7 +2864,7 @@ BEGIN_CASE(JSOP_SETLOCAL)
 {
     uint32 slot = GET_SLOTNO(regs.pc);
     JS_ASSERT(slot < script->nslots);
-    fp->slots()[slot].copy(regs.sp[-1]);
+    fp->slots()[slot] = regs.sp[-1];
 }
 END_SET_CASE(JSOP_SETLOCAL)
 
@@ -2995,7 +2992,7 @@ BEGIN_CASE(JSOP_SETGVAR)
         LOAD_ATOM(0, atom);
         jsid id = ATOM_TO_JSID(atom);
         Value rval;
-        rval.copy(rref);
+        rval = rref;
         if (!obj->setProperty(cx, id, &rval))
             goto error;
     } else {
@@ -3478,12 +3475,12 @@ BEGIN_CASE(JSOP_SETTER)
         JSAtom *atom;
         LOAD_ATOM(0, atom);
         id = ATOM_TO_JSID(atom);
-        rval.copy(regs.sp[-1]);
+        rval = regs.sp[-1];
         i = -1;
         goto gs_pop_lval;
       }
       case JSOP_SETELEM:
-        rval.copy(regs.sp[-1]);
+        rval = regs.sp[-1];
         id = 0;
         i = -2;
       gs_pop_lval:
@@ -3493,7 +3490,7 @@ BEGIN_CASE(JSOP_SETTER)
       case JSOP_INITPROP:
       {
         JS_ASSERT(regs.sp - fp->base() >= 2);
-        rval.copy(regs.sp[-1]);
+        rval = regs.sp[-1];
         i = -1;
         JSAtom *atom;
         LOAD_ATOM(0, atom);
@@ -3504,7 +3501,7 @@ BEGIN_CASE(JSOP_SETTER)
         JS_ASSERT(op2 == JSOP_INITELEM);
 
         JS_ASSERT(regs.sp - fp->base() >= 3);
-        rval.copy(regs.sp[-1]);
+        rval = regs.sp[-1];
         id = 0;
         i = -2;
       gs_get_lval:
@@ -3560,7 +3557,7 @@ BEGIN_CASE(JSOP_SETTER)
     regs.sp += i;
     if (js_CodeSpec[op2].ndefs > js_CodeSpec[op2].nuses) {
         JS_ASSERT(js_CodeSpec[op2].ndefs == js_CodeSpec[op2].nuses + 1);
-        regs.sp[-1].copy(rval);
+        regs.sp[-1] = rval;
     }
     jsint len = js_CodeSpec[op2].length;
     DO_NEXT_OP(len);
@@ -3635,7 +3632,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
     /* Load the property's initial value into rval. */
     JS_ASSERT(regs.sp - fp->base() >= 2);
     Value rval;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
     JSObject *obj = &regs.sp[-2].asObject();
@@ -3833,7 +3830,7 @@ BEGIN_CASE(JSOP_SHARPINIT)
     JS_ASSERT(slot + 1 < fp->script->nfixed);
     Value *vp = &fp->slots()[slot];
     Value rval;
-    rval.copy(vp[1]);
+    rval = vp[1];
 
     /*
      * We peek ahead safely here because empty initialisers get zero
@@ -3849,7 +3846,7 @@ BEGIN_CASE(JSOP_SHARPINIT)
         if (rval.asInt32() == 0)
             vp[0].setUndefined();
     }
-    vp[1].copy(rval);
+    vp[1] = rval;
 }
 END_CASE(JSOP_SHARPINIT)
 
@@ -3888,7 +3885,7 @@ BEGIN_CASE(JSOP_RETSUB)
          * 350509, due to Igor Bukanov.
          */
         cx->throwing = JS_TRUE;
-        cx->exception.copy(rval);
+        cx->exception = rval;
         goto error;
     }
     JS_ASSERT(rval.isInt32());
@@ -3995,12 +3992,12 @@ BEGIN_CASE(JSOP_DEBUGGER)
         case JSTRAP_CONTINUE:
             break;
         case JSTRAP_RETURN:
-            fp->rval.copy(rval);
+            fp->rval = rval;
             interpReturnOK = JS_TRUE;
             goto forced_return;
         case JSTRAP_THROW:
             cx->throwing = JS_TRUE;
-            cx->exception.copy(rval);
+            cx->exception = rval;
             goto error;
         default:;
         }
@@ -4043,7 +4040,7 @@ BEGIN_CASE(JSOP_QNAMECONST)
     LOAD_ATOM(0, atom);
     Value rval(ATOM_TO_STRING(ATOM_KEY(atom)));
     Value lval;
-    lval.copy(regs.sp[-1]);
+    lval = regs.sp[-1];
     JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
     if (!obj)
         goto error;
@@ -4054,8 +4051,8 @@ END_CASE(JSOP_QNAMECONST)
 BEGIN_CASE(JSOP_QNAME)
 {
     Value rval, lval;
-    rval.copy(regs.sp[-1]);
-    lval.copy(regs.sp[-2]);
+    rval = regs.sp[-1];
+    lval = regs.sp[-2];
     JSObject *obj = js_ConstructXMLQNameObject(cx, lval, rval);
     if (!obj)
         goto error;
@@ -4067,17 +4064,17 @@ END_CASE(JSOP_QNAME)
 BEGIN_CASE(JSOP_TOATTRNAME)
 {
     Value rval;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
     if (!js_ToAttributeName(cx, &rval))
         goto error;
-    regs.sp[-1].copy(rval);
+    regs.sp[-1] = rval;
 }
 END_CASE(JSOP_TOATTRNAME)
 
 BEGIN_CASE(JSOP_TOATTRVAL)
 {
     Value rval;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
     JS_ASSERT(rval.isString());
     JSString *str = js_EscapeAttributeValue(cx, rval.asString(), JS_FALSE);
     if (!str)
@@ -4090,8 +4087,8 @@ BEGIN_CASE(JSOP_ADDATTRNAME)
 BEGIN_CASE(JSOP_ADDATTRVAL)
 {
     Value rval, lval;
-    rval.copy(regs.sp[-1]);
-    lval.copy(regs.sp[-2]);
+    rval = regs.sp[-1];
+    lval = regs.sp[-2];
     JSString *str = lval.asString();
     JSString *str2 = rval.asString();
     str = js_AddAttributePart(cx, op == JSOP_ADDATTRNAME, str, str2);
@@ -4105,7 +4102,7 @@ END_CASE(JSOP_ADDATTRNAME)
 BEGIN_CASE(JSOP_BINDXMLNAME)
 {
     Value lval;
-    lval.copy(regs.sp[-1]);
+    lval = regs.sp[-1];
     JSObject *obj;
     jsid id;
     if (!js_FindXMLProperty(cx, lval, &obj, &id))
@@ -4119,14 +4116,14 @@ BEGIN_CASE(JSOP_SETXMLNAME)
 {
     JSObject *obj = &regs.sp[-3].asObject();
     Value rval;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     if (!obj->setProperty(cx, id, &rval))
         goto error;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
     regs.sp -= 2;
-    regs.sp[-1].copy(rval);
+    regs.sp[-1] = rval;
 }
 END_CASE(JSOP_SETXMLNAME)
 
@@ -4134,7 +4131,7 @@ BEGIN_CASE(JSOP_CALLXMLNAME)
 BEGIN_CASE(JSOP_XMLNAME)
 {
     Value lval;
-    lval.copy(regs.sp[-1]);
+    lval = regs.sp[-1];
     JSObject *obj;
     jsid id;
     if (!js_FindXMLProperty(cx, lval, &obj, &id))
@@ -4142,7 +4139,7 @@ BEGIN_CASE(JSOP_XMLNAME)
     Value rval;
     if (!obj->getProperty(cx, id, &rval))
         goto error;
-    regs.sp[-1].copy(rval);
+    regs.sp[-1] = rval;
     if (op == JSOP_CALLXMLNAME)
         PUSH_OBJECT(*obj);
 }
@@ -4158,14 +4155,14 @@ BEGIN_CASE(JSOP_DELDESC)
         goto error;
 
     if (op == JSOP_DELDESC) {
-        regs.sp[-1].copy(Valueify(rval));   /* set local root */
+        regs.sp[-1] = Valueify(rval);   /* set local root */
         if (!js_DeleteXMLListElements(cx, JSVAL_TO_OBJECT(rval)))
             goto error;
         rval = JSVAL_TRUE;                  /* always succeed */
     }
 
     regs.sp--;
-    regs.sp[-1].copy(Valueify(rval));
+    regs.sp[-1] = Valueify(rval);
 }
 END_CASE(JSOP_DESCENDANTS)
 
@@ -4211,7 +4208,7 @@ END_CASE(JSOP_ENDFILTER);
 BEGIN_CASE(JSOP_TOXML)
 {
     Value rval;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
     JSObject *obj = js_ValueToXMLObject(cx, rval);
     if (!obj)
         goto error;
@@ -4222,7 +4219,7 @@ END_CASE(JSOP_TOXML)
 BEGIN_CASE(JSOP_TOXMLLIST)
 {
     Value rval;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
     JSObject *obj = js_ValueToXMLListObject(cx, rval);
     if (!obj)
         goto error;
@@ -4233,7 +4230,7 @@ END_CASE(JSOP_TOXMLLIST)
 BEGIN_CASE(JSOP_XMLTAGEXPR)
 {
     Value rval;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
     JSString *str = js_ValueToString(cx, rval);
     if (!str)
         goto error;
@@ -4244,7 +4241,7 @@ END_CASE(JSOP_XMLTAGEXPR)
 BEGIN_CASE(JSOP_XMLELTEXPR)
 {
     Value rval;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
     JSString *str;
     if (IsXML(rval)) {
         str = js_ValueToXMLString(cx, rval);
@@ -4300,7 +4297,7 @@ BEGIN_CASE(JSOP_XMLPI)
     LOAD_ATOM(0, atom);
     JSString *str = ATOM_TO_STRING(atom);
     Value rval;
-    rval.copy(regs.sp[-1]);
+    rval = regs.sp[-1];
     JSString *str2 = rval.asString();
     JSObject *obj = js_NewXMLSpecialObject(cx, JSXML_CLASS_PROCESSING_INSTRUCTION, str, str2);
     if (!obj)
@@ -4390,7 +4387,7 @@ BEGIN_CASE(JSOP_LEAVEBLOCK)
     regs.sp -= GET_UINT16(regs.pc);
     if (op == JSOP_LEAVEBLOCKEXPR) {
         JS_ASSERT(fp->base() + blockDepth == regs.sp - 1);
-        regs.sp[-1].copy(*vp);
+        regs.sp[-1] = *vp;
     } else {
         JS_ASSERT(fp->base() + blockDepth == regs.sp);
     }
@@ -4420,7 +4417,7 @@ BEGIN_CASE(JSOP_YIELD)
                             JSDVG_SEARCH_STACK, fp->argv[-2], NULL);
         goto error;
     }
-    fp->rval.copy(regs.sp[-1]);
+    fp->rval = regs.sp[-1];
     fp->flags |= JSFRAME_YIELDING;
     regs.pc += JSOP_YIELD_LENGTH;
     interpReturnOK = JS_TRUE;

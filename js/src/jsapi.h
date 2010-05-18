@@ -3031,154 +3031,6 @@ struct PrivateVoidPtrTag {
 };
 
 /*
- * An ObjPtr is a restriction of a Value (below) to the three types: null,
- * non-function object and function object. ObjPtr is useful when code
- * conceptually is working with a JSObject*, but wants to avoid unnecessarily
- * querying obj->isFunction() by passing around the type tag as well. Also,
- * ObjPtr provides syntactic sugar so that it behaves more like a JSObject*.
- *
- * N.B. ObjPtr is not layout compatible with Value: on 32-bit systems, it does
- * not need the extra 2 words needed by Value.
- */
-class ObjPtr
-{
-  protected:
-    typedef JSValueMaskType MaskType;
-
-    MaskType mask;
-    JSObject *obj;
-
-  private:
-    friend class Value;
-    explicit ObjPtr(MaskType m, JSObject *o) : mask(m), obj(o) {}
-
-  public:
-    /* Constructors */
-    
-    ObjPtr() {
-        /* N.B. mask and obj are undefined */
-    }
-
-    ObjPtr(NullTag) {
-        mask = JSVAL_NULL_MASK;
-        obj = NULL;
-    }
-
-    ObjPtr(FunObjTag arg) {
-        JS_ASSERT(JS_ObjectIsFunction(NULL, &arg.obj));
-        mask = JSVAL_FUNOBJ_MASK;
-        obj = &arg.obj;
-    }
-
-    ObjPtr(FunObjOrNull arg) {
-        JS_ASSERT_IF(arg.obj, JS_ObjectIsFunction(NULL, arg.obj));
-        mask = arg.obj ? JSVAL_FUNOBJ_MASK : JSVAL_NULL_MASK;
-        obj = arg.obj;
-    }
-
-    ObjPtr(NonFunObjTag arg) {
-        JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg.obj));
-        mask = JSVAL_NONFUNOBJ_MASK;
-        obj = &arg.obj;
-    }
-
-    ObjPtr(NonFunObjOrNull arg) {
-        JS_ASSERT_IF(arg.obj, !JS_ObjectIsFunction(NULL, arg.obj));
-        mask = arg.obj ? JSVAL_NONFUNOBJ_MASK : JSVAL_NULL_MASK;
-        obj = arg.obj;
-    }
-
-    inline ObjPtr(ObjectTag arg);
-    inline ObjPtr(ObjectOrNullTag arg);
-
-    /* Accessors */
-
-    bool isNull() const {
-        return mask == JSVAL_NULL_MASK;
-    }
-
-    bool isFunObj() const {
-        return mask == JSVAL_FUNOBJ_MASK;
-    }
-
-    JSObject &asFunObj() const {
-        JS_ASSERT(isFunObj());
-        return *obj;
-    }
-
-    bool isNonFunObj() const {
-        return mask == JSVAL_NONFUNOBJ_MASK;
-    }
-
-    JSObject &asNonFunObj() const {
-        JS_ASSERT(isNonFunObj());
-        return *obj;
-    }
-
-    bool isObject() const {
-        JS_ASSERT((mask != JSVAL_NULL_MASK) == bool(mask & JSVAL_OBJECT_MASK));
-        return mask != JSVAL_NULL_MASK;
-    }
-
-    operator JSObject *() const {
-        return obj;
-    }
-
-    JSObject *operator->() const {
-        JS_ASSERT(isObject());
-        return obj;
-    }
-
-    JSObject &operator*() const {
-        JS_ASSERT(isObject());
-        return *obj;
-    }
-
-    /* Assignment */
-
-    void setNull() {
-        mask = JSVAL_NULL_MASK;
-        obj = NULL;
-    }
-
-    void setFunObj(JSObject &arg) {
-        JS_ASSERT(JS_ObjectIsFunction(NULL, &arg));
-        mask = JSVAL_FUNOBJ_MASK;
-        obj = &arg;
-    }
-
-    void setFunObjOrNull(JSObject *arg) {
-        JS_ASSERT_IF(arg, JS_ObjectIsFunction(NULL, arg));
-        mask = arg ? JSVAL_FUNOBJ_MASK : JSVAL_NULL_MASK;
-        obj = arg;
-    }
-
-    void setNonFunObj(JSObject &arg) {
-        JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg));
-        mask = JSVAL_NONFUNOBJ_MASK;
-        obj = &arg;
-    }
-
-    void setNonFunObjOrNull(JSObject *arg) {
-        JS_ASSERT_IF(arg, !JS_ObjectIsFunction(NULL, arg));
-        mask = arg ? JSVAL_NONFUNOBJ_MASK : JSVAL_NULL_MASK;
-        obj = arg;
-    }
-
-    inline void setObject(JSObject &arg);
-    inline void setObjectOrNull(JSObject *arg);
-};
-
-inline bool operator==(ObjPtr lhs, ObjPtr rhs) { return lhs == rhs; }
-inline bool operator==(ObjPtr lhs, JSObject *rhs) { return lhs == rhs; } 
-inline bool operator==(JSObject *lhs, ObjPtr rhs) { return lhs == rhs; }
-inline bool operator!=(ObjPtr lhs, ObjPtr rhs) { return !(lhs == rhs); }
-inline bool operator!=(ObjPtr lhs, JSObject *rhs) { return !(lhs == rhs); }
-inline bool operator!=(JSObject *lhs, ObjPtr rhs) { return !(lhs == rhs); }
-
-class CopyableValue;
-
-/*
  * While there is a single representation for values, there are two declared
  * types for dealing with these values: jsval and js::Value. jsval allows a
  * high-degree of source compatibility with the old word-sized boxed value
@@ -3226,14 +3078,6 @@ class Value
     Data data;
 
     friend class AssertLayoutCompatible;
-
-    /*
-     * To copy, use explicit copy().
-     *
-     * XXX This may be made public later, right now its just being used to
-     * identify unnecessary copying.
-     */
-    Value &operator=(const Value &);
 
   public:
     /* Constructors */
@@ -3314,14 +3158,18 @@ class Value
 #endif
     }
 
-    /* XXX: 'explicit' can be removed when copying is public/implicit */
+    /* Copy */
 
-    explicit Value(const Value &v)
-     : mask(v.mask), data(v.data)
-    {}
+    Value(const Value &v) {
+        mask = v.mask;
+        data = v.data;
+    }
 
-    /* XXX: can be removed when copy is implicit */
-    Value(const CopyableValue &);
+    Value &operator=(const Value &v) {
+        mask = v.mask;
+        data = v.data;
+        return *this;
+    }
 
     /* Mutators */
 
@@ -3419,29 +3267,6 @@ class Value
 #endif
     }
 
-    /* Mutators */
-
-    /* XXX: to be removed when copying is implicit/public */
-    void copy(ObjPtr ptr) {
-        data.obj = ptr.obj;
-        mask = ptr.mask;
-    }
-
-    /* XXX: to be removed when copying is implicit/public */
-    void copy(const Value &v) {
-        data = v.data;
-        mask = v.mask;
-    }
-
-    void swap(Value &rhs) {
-        MaskType m = mask;
-        mask = rhs.mask;
-        rhs.mask = m;
-        Data d = data;
-        data = rhs.data;
-        rhs.data = d;
-    }
-
     /* Accessors */
 
     bool isUndefined() const {
@@ -3536,11 +3361,6 @@ class Value
         return data.obj;
     }
 
-    ObjPtr asObjPtr() const {
-        JS_ASSERT(isObjectOrNull());
-        return ObjPtr(mask, data.obj);
-    }
-
     bool isGCThing() const {
         return bool(mask & JSVAL_GCTHING_MASK);
     }
@@ -3548,11 +3368,6 @@ class Value
     void *asGCThing() const {
         JS_ASSERT(isGCThing());
         return data.ptr;
-    }
-
-    int32 traceKind() const {
-        JS_ASSERT(isGCThing());
-        return mask == JSVAL_STRING_MASK;
     }
 
     bool isBoolean() const {
@@ -3584,6 +3399,22 @@ class Value
     JSWhyMagic whyMagic() const {
         JS_ASSERT(mask == JSVAL_MAGIC_MASK);
         return data.why;
+    }
+
+    /* Other */
+
+    int32 traceKind() const {
+        JS_ASSERT(isGCThing());
+        return mask == JSVAL_STRING_MASK;
+    }
+
+    void swap(Value &rhs) {
+        MaskType m = mask;
+        mask = rhs.mask;
+        rhs.mask = m;
+        Data d = data;
+        data = rhs.data;
+        rhs.data = d;
     }
 
     /*
@@ -3641,19 +3472,6 @@ struct AssertLayoutCompatible
     JS_STATIC_ASSERT(offsetof(Value, mask) == offsetof(jsval, mask));
 };
 
-/* XXX: this is a temporary hack until copying is implicit. */
-struct CopyableValue : Value {};
-JS_STATIC_ASSERT(sizeof(CopyableValue) == sizeof(Value));
-
-inline CopyableValue &copyable_cast(Value &v) { return static_cast<CopyableValue &>(v); }
-inline const CopyableValue &copyable_cast(const Value &v) { return static_cast<const CopyableValue &>(v); }
-
-inline
-Value::Value(const CopyableValue &v) {
-    mask = v.mask;
-    data = v.data;
-}
-
 /*
  * As asserted above, js::Value and jsval are layout equivalent. To provide
  * widespread casting, the following safe casts are provided.
@@ -3674,8 +3492,8 @@ equalTypeAndPayload(const Value &l, const Value &r)
 }
 
 /* Convenience inlines. */
-static inline CopyableValue undefinedValue() { return copyable_cast(Value(UndefinedTag())); }
-static inline CopyableValue nullValue()      { return copyable_cast(Value(NullTag())); }
+static inline Value undefinedValue() { return UndefinedTag(); }
+static inline Value nullValue()      { return NullTag(); }
 
 /*
  * js::Class is layout compatible and thus 

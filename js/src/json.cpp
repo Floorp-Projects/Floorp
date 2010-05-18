@@ -491,7 +491,7 @@ InitializeGap(JSContext *cx, jsval space, JSCharBuffer &cb)
         JSObject *obj = JSVAL_TO_OBJECT(space);
         Class *clasp = obj->getClass();
         if (clasp == &js_NumberClass || clasp == &js_StringClass)
-            gap.addr()->copy(obj->getPrimitiveThis());
+            *gap.addr() = obj->getPrimitiveThis();
     }
 
     if (gap.value().isString()) {

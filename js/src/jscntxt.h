@@ -2250,9 +2250,8 @@ class AutoValueRooter : private AutoGCRooter
 
     AutoValueRooter(JSContext *cx, const Value &v
                              JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, JSVAL)
+      : AutoGCRooter(cx, JSVAL), val(v)
     {
-        val.copy(v);
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 

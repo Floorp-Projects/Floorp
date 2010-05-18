@@ -355,10 +355,10 @@ struct JSObject {
 
     void setSlot(uintN slot, const js::Value &value) {
         if (slot < JS_INITIAL_NSLOTS) {
-            fslots[slot].copy(value);
+            fslots[slot] = value;
         } else {
             JS_ASSERT(slot < dslots[-1].asPrivateUint32());
-            dslots[slot - JS_INITIAL_NSLOTS].copy(value);
+            dslots[slot - JS_INITIAL_NSLOTS] = value;
         }
     }
 
@@ -386,9 +386,9 @@ struct JSObject {
         fslots[JSSLOT_PROTO].setNull();
     }
 
-    void setProto(js::ObjPtr newProto) {
-        setDelegateNullSafe(newProto);
-        fslots[JSSLOT_PROTO].copy(newProto);
+    void setProto(const js::Value &newProto) {
+        setDelegateNullSafe(newProto.asObjectOrNull());
+        fslots[JSSLOT_PROTO] = newProto;
     }
 
     JSObject *getParent() const {
@@ -433,10 +433,10 @@ struct JSObject {
         fslots[JSSLOT_PRIVATE].setPrivateVoidPtr(data);
     }
 
-    static js::CopyableValue defaultPrivate(js::Class *clasp) {
+    static js::Value defaultPrivate(js::Class *clasp) {
         if (clasp->flags & JSCLASS_HAS_PRIVATE)
-            return copyable_cast(js::Value(js::NullTag()));
-        return copyable_cast(js::Value(js::UndefinedTag()));
+            return js::NullTag();
+        return js::UndefinedTag();
     }
 
     /*
@@ -581,7 +581,7 @@ struct JSObject {
     bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
-    void init(js::Class *c, js::ObjPtr proto, JSObject *parent,
+    void init(js::Class *c, const js::Value &proto, JSObject *parent,
               const js::Value &privateSlotValue) {
         JS_ASSERT(((jsuword) clasp & 3) == 0);
         JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
@@ -594,7 +594,7 @@ struct JSObject {
 
         setProto(proto);
         setParent(parent);
-        fslots[JSSLOT_PRIVATE].copy(privateSlotValue);
+        fslots[JSSLOT_PRIVATE] = privateSlotValue;
         fslots[JSSLOT_PRIVATE + 1].setUndefined();
         fslots[JSSLOT_PRIVATE + 2].setUndefined();
         dslots = NULL;
@@ -605,7 +605,7 @@ struct JSObject {
      * of a call to js_InitClass(...clasp, ...).
      */
     inline void initSharingEmptyScope(js::Class *clasp,
-                                      js::ObjPtr proto, JSObject *parent,
+                                      const js::Value &proto, JSObject *parent,
                                       const js::Value &privateSlotValue);
 
     inline bool hasSlotsArray() const { return !!dslots; }
@@ -666,7 +666,7 @@ struct JSObject {
     }
 
     inline JSObject *thisObject(JSContext *cx);
-    static inline js::ObjPtr thisObject(JSContext *cx, js::ObjPtr obj);
+    static bool thisObject(JSContext *cx, const js::Value &v, js::Value *vp);
 
     void dropProperty(JSContext *cx, JSProperty *prop) {
         if (map->ops->dropProperty)

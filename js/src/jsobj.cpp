@@ -960,7 +960,7 @@ obj_valueOf(JSContext *cx, uintN argc, Value *vp)
 {
     if (!ComputeThisFromVpInPlace(cx, vp))
         return JS_FALSE;
-    vp->copy(vp[1]);
+    *vp = vp[1];
     return JS_TRUE;
 }
 
@@ -1152,7 +1152,7 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
     }
 
     if (!argv[0].isString()) {
-        vp->copy(argv[0]);
+        *vp = argv[0];
         return JS_TRUE;
     }
 
@@ -1430,9 +1430,9 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, const Value *old,
         return JS_TRUE;
     generation = cx->resolvingTable->generation;
 
-    argv[0].copy(IdToValue(id));
-    argv[1].copy(*old);
-    argv[2].copy(*nvp);
+    argv[0] = IdToValue(id);
+    argv[1] = *old;
+    argv[2] = *nvp;
     ok = InternalCall(cx, obj, ObjectOrNullTag(callable), 3, argv, nvp);
     js_StopResolving(cx, &key, JSRESFLAG_WATCH, entry, generation);
     return ok;
@@ -1951,8 +1951,7 @@ PropertyDescriptor::PropertyDescriptor()
 bool
 PropertyDescriptor::initialize(JSContext* cx, jsid id, const Value &origval)
 {
-    Value v;
-    v.copy(origval);
+    Value v = origval;
     this->id = id;
 
     /* 8.10.5 step 1 */
@@ -1994,7 +1993,7 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, const Value &origval)
         return false;
     if (hasProperty) {
         hasValue = true;
-        value.copy(v);
+        value = v;
     }
 
     /* 8.10.6 step 6 */
@@ -2016,7 +2015,7 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, const Value &origval)
             return false;
         }
         hasGet = true;
-        get.copy(v);
+        get = v;
         attrs |= JSPROP_GETTER | JSPROP_SHARED;
     }
 
@@ -2030,7 +2029,7 @@ PropertyDescriptor::initialize(JSContext* cx, jsid id, const Value &origval)
             return false;
         }
         hasSet = true;
-        set.copy(v);
+        set = v;
         attrs |= JSPROP_SETTER | JSPROP_SHARED;
     }
 
@@ -2293,7 +2292,7 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &d
             unchanged |= JSPROP_READONLY;
 
         if (desc.hasValue)
-            v.copy(desc.value);
+            v = desc.value;
         attrs = (desc.attrs & ~unchanged) | (sprop->attributes() & unchanged);
         getter = setter = PropertyStub;
     } else {
@@ -2434,7 +2433,7 @@ obj_defineProperty(JSContext* cx, uintN argc, Value* vp)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return JS_FALSE;
     }
-    vp->copy(vp[2]);
+    *vp = vp[2];
     JSObject* obj = &vp->asObject();
 
     /* 15.2.3.6 step 2. */
@@ -2461,7 +2460,7 @@ obj_defineProperties(JSContext* cx, uintN argc, Value* vp)
         return JS_FALSE;
     }
 
-    vp->copy(vp[2]);
+    *vp = vp[2];
     if (!vp->isObject()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return JS_FALSE;
@@ -3026,7 +3025,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     Value priv;
     priv.setPrivateVoidPtr(js_FloatingFrameIfGenerator(cx, fp));
     clone->init(&js_BlockClass, NonFunObjTag(*proto), NULL, priv);
-    clone->fslots[JSSLOT_BLOCK_DEPTH].copy(proto->fslots[JSSLOT_BLOCK_DEPTH]);
+    clone->fslots[JSSLOT_BLOCK_DEPTH] = proto->fslots[JSSLOT_BLOCK_DEPTH];
 
     JS_ASSERT(cx->runtime->emptyBlockScope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
     clone->map = cx->runtime->emptyBlockScope;
@@ -3068,7 +3067,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     JS_ASSERT(count >= 1);
 
     depth += fp->script->nfixed;
-    obj->fslots[JSSLOT_BLOCK_DEPTH + 1].copy(fp->slots()[depth]);
+    obj->fslots[JSSLOT_BLOCK_DEPTH + 1] = fp->slots()[depth];
     if (normalUnwind && count > 1) {
         --count;
         JS_LOCK_OBJ(cx, obj);
@@ -3103,7 +3102,7 @@ block_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         fp = js_LiveFrameIfGenerator(fp);
         index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
         JS_ASSERT(index < fp->script->nslots);
-        vp->copy(fp->slots()[index]);
+        *vp = fp->slots()[index];
         return true;
     }
 
@@ -3111,7 +3110,7 @@ block_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     uint32 slot = JSSLOT_BLOCK_DEPTH + 1 + index;
     JS_LOCK_OBJ(cx, obj);
     JS_ASSERT(slot < obj->numSlots());
-    vp->copy(obj->getSlot(slot));
+    *vp = obj->getSlot(slot);
     JS_UNLOCK_OBJ(cx, obj);
     return true;
 }
@@ -3129,7 +3128,7 @@ block_setProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         fp = js_LiveFrameIfGenerator(fp);
         index += fp->script->nfixed + OBJ_BLOCK_DEPTH(cx, obj);
         JS_ASSERT(index < fp->script->nslots);
-        fp->slots()[index].copy(*vp);
+        fp->slots()[index] = *vp;
         return true;
     }
 
@@ -3728,14 +3727,14 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         if (pobj->isNative()) {
             sprop = (JSScopeProperty *) prop;
             if (SPROP_HAS_VALID_SLOT(sprop, pobj->scope())) {
-                v.copy(pobj->lockedGetSlot(sprop->slot));
+                v = pobj->lockedGetSlot(sprop->slot);
                 if (v.isPrimitive())
                     v.setUndefined();
             }
         }
         pobj->dropProperty(cx, prop);
     }
-    vp->copy(v);
+    *vp = v;
     return JS_TRUE;
 }
 
@@ -4029,8 +4028,7 @@ AddPropertyHelper(JSContext *cx, Class *clasp, JSObject *obj, JSScope *scope,
                   JSScopeProperty *sprop, Value *vp)
 {
     if (clasp->addProperty != PropertyStub) {
-        Value nominal;
-        nominal.copy(*vp);
+        Value nominal = *vp;
 
         if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), vp))
             return false;
@@ -4173,7 +4171,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
         obj->lockedSetSlot(sprop->slot, value);
 
     /* XXXbe called with lock held */
-    valueCopy.copy(value);
+    valueCopy = value;
     if (!AddPropertyHelper(cx, clasp, obj, scope, sprop, &valueCopy)) {
         scope->removeProperty(cx, id);
         goto error;
@@ -4578,7 +4576,7 @@ js_NativeGet(JSContext *cx, JSObject *obj, JSObject *pobj,
 
     slot = sprop->slot;
     if (slot != SPROP_INVALID_SLOT)
-        vp->copy(pobj->lockedGetSlot(slot));
+        *vp = pobj->lockedGetSlot(slot);
     else
         vp->setUndefined();
     if (sprop->hasDefaultGetter())
@@ -5238,7 +5236,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
 
                     if (FUN_FAST_NATIVE(fun) == js_str_toString) {
                         JS_UNLOCK_SCOPE(cx, scope);
-                        vp->copy(obj->getPrimitiveThis());
+                        *vp = obj->getPrimitiveThis();
                         return JS_TRUE;
                     }
                 }
@@ -5286,7 +5284,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
                              : JS_TYPE_STR(hint));
         return JS_FALSE;
     }
-    vp->copy(v);
+    *vp = v;
     return JS_TRUE;
 }
 
@@ -5323,14 +5321,14 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
       case JSACC_PROTO:
         pobj = obj;
         if (!writing)
-            vp->copy(obj->getProtoValue());
+            *vp = obj->getProtoValue();
         *attrsp = JSPROP_PERMANENT;
         break;
 
       case JSACC_PARENT:
         JS_ASSERT(!writing);
         pobj = obj;
-        vp->copy(obj->getParentValue());
+        *vp = obj->getParentValue();
         *attrsp = JSPROP_READONLY | JSPROP_PERMANENT;
         break;
 
@@ -5363,7 +5361,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
         *attrsp = sprop->attributes();
         if (!writing) {
             if (SPROP_HAS_VALID_SLOT(sprop, pobj->scope()))
-                vp->copy(pobj->lockedGetSlot(sprop->slot));
+                *vp = pobj->lockedGetSlot(sprop->slot);
             else
                 vp->setUndefined();
         }
@@ -5694,8 +5692,7 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs
 JSBool
 js_PrimitiveToObject(JSContext *cx, Value *vp)
 {
-    Value v;
-    v.copy(*vp);
+    Value v = *vp;
     JS_ASSERT(v.isPrimitive());
 
     Class *clasp;
@@ -5719,14 +5716,14 @@ JSBool
 js_ValueToObjectOrNull(JSContext *cx, const Value &v, Value *vp)
 {
     if (v.isObjectOrNull()) {
-        vp->copy(v);
+        *vp = v;
         return JS_TRUE;
     }
     if (v.isUndefined()) {
         vp->setNull();
         return JS_TRUE;
     }
-    vp->copy(v);
+    *vp = v;
     return js_PrimitiveToObject(cx, vp);
 }
 
@@ -6065,7 +6062,7 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, Value *vp)
 
     uint32 slot = JSSLOT_START(clasp) + index;
     if (slot < obj->numSlots())
-        vp->copy(obj->getSlot(slot));
+        *vp = obj->getSlot(slot);
     else
         vp->setUndefined();
     JS_UNLOCK_OBJ(cx, obj);
