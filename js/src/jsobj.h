@@ -739,9 +739,21 @@ Innerize(JSContext *cx, JSObject **ppobj)
     }
 }
 
-extern js::Class  js_ObjectClass;
-extern js::Class  js_WithClass;
-extern js::Class  js_BlockClass;
+inline void
+Outerize(JSContext *cx, JSObject **ppobj)
+{
+    JSObject *pobj = *ppobj;
+    js::Class *clasp = pobj->getClass();
+    if (clasp->flags & JSCLASS_IS_EXTENDED) {
+        JSExtendedClass *xclasp = (JSExtendedClass *) clasp;
+        if (xclasp->outerObject)
+            *ppobj = xclasp->outerObject(cx, pobj);
+    }
+}
+
+extern js::Class js_ObjectClass;
+extern js::Class js_WithClass;
+extern js::Class js_BlockClass;
 
 /*
  * Block scope object macros.  The slots reserved by js_BlockClass are:
