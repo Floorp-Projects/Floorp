@@ -55,14 +55,20 @@ function test() {
   const kBaseUrl =
         "http://mochi.test:8888/browser/toolkit/content/tests/browser/data/";
 
+  function pageShown(event)
+  {
+    if (event.target.location != "about:blank")
+      testRunner.continueTest();
+  }
+
   function FramePostData_TestGenerator() {
     // Display the outer page, and wait for it to be loaded. Loading the URI
     // doesn't generally raise any exception, but if an error page is
     // displayed, an exception will occur later during the test.
-    gBrowser.addEventListener("pageshow", testRunner.continueTest, false);
+    gBrowser.addEventListener("pageshow", pageShown, false);
     gBrowser.loadURI(kBaseUrl + "post_form_outer.sjs");
     yield;
-    gBrowser.removeEventListener("pageshow", testRunner.continueTest, false);
+    gBrowser.removeEventListener("pageshow", pageShown, false);
 
     try {
       // Submit the form in the outer page, then wait for both the outer
