@@ -324,7 +324,7 @@ public:
    * Detect whether the given accessible object implements nsIAccessibleText,
    * when it is text or has text child node.
    */
-  static PRBool IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible);
+  static PRBool IsTextInterfaceSupportCorrect(nsAccessible *aAccessible);
 #endif
 
   /**
