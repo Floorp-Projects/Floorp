@@ -123,10 +123,11 @@ XPCJSContextStack::Pop(JSContext * *_retval)
 static nsIPrincipal*
 GetPrincipalFromCx(JSContext *cx)
 {
-    nsIScriptContextPrincipal* scp = GetScriptContextPrincipalFromJSContext(cx);
-    if(scp)
+    nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
+    if(scriptContext)
     {
-        nsIScriptObjectPrincipal* globalData = scp->GetObjectPrincipal();
+        nsCOMPtr<nsIScriptObjectPrincipal> globalData =
+            do_QueryInterface(scriptContext->GetGlobalObject());
         if(globalData)
             return globalData->GetPrincipal();
     }
