@@ -48,10 +48,12 @@
 #include "nsStringFwd.h"
 #include "nsIFrameLoader.h"
 #include "nsIURI.h"
+#include "nsFrameMessageManager.h"
 
 class nsIContent;
 class nsIURI;
 class nsIFrameFrame;
+class nsIInProcessContentFrameMessageManager;
 
 class nsFrameLoader : public nsIFrameLoader
 {
@@ -80,7 +82,7 @@ public:
   nsresult ReallyStartLoading();
   void Finalize();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
-
+  nsPIDOMEventTarget* GetTabChildGlobalAsEventTarget();
   nsresult CreateStaticClone(nsIFrameLoader* aDest);
 
   /**
@@ -109,6 +111,7 @@ public:
 private:
 
   NS_HIDDEN_(nsresult) EnsureDocShell();
+  nsresult EnsureMessageManager();
   NS_HIDDEN_(void) GetURL(nsString& aURL);
   nsresult CheckURILoad(nsIURI* aURI);
   void FireErrorEvent();
@@ -117,6 +120,11 @@ private:
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsIContent *mOwnerContent; // WEAK
+public:
+  // public because a callback needs these.
+  nsRefPtr<nsFrameMessageManager> mMessageManager;
+  nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
+private:
   PRPackedBool mDepthTooGreat : 1;
   PRPackedBool mIsTopLevelContent : 1;
   PRPackedBool mDestroyCalled : 1;
