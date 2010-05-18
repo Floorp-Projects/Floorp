@@ -1311,7 +1311,7 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
     }
 
     if (js_ValueToStringId(cx, idval, idp)) {
-        vp->setString(ATOM_TO_STRING(JSID_TO_ATOM(*idp)));
+        vp->setString(JSID_TO_STRING(*idp));
         return true;
     }
     return false;

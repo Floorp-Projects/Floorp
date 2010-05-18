@@ -623,7 +623,7 @@ JSScopeProperty::dump(JSContext *cx, FILE *fp)
     } else {
         JSString *str;
         if (JSID_IS_ATOM(id)) {
-            str = ATOM_TO_STRING(JSID_TO_ATOM(id));
+            str = JSID_TO_STRING(id);
         } else {
             JS_ASSERT(JSID_IS_OBJECT(id));
             str = js_ValueToString(cx, IdToValue(id));

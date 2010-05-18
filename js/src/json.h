@@ -45,8 +45,6 @@
 #define JSON_MAX_DEPTH  2048
 #define JSON_PARSER_BUFSIZE 1024
 
-JS_BEGIN_EXTERN_C
-
 extern js::Class js_JSONClass;
 
 extern JSObject *
@@ -91,7 +89,5 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 
 extern bool
 js_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
-
-JS_END_EXTERN_C
 
 #endif /* json_h___ */

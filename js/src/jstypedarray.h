@@ -168,8 +168,6 @@ struct JS_FRIEND_API(TypedArray) {
 
 /* Friend API methods */
 
-JS_BEGIN_EXTERN_C
-
 JS_FRIEND_API(JSObject *)
 js_InitTypedArrayClasses(JSContext *cx, JSObject *obj);
 
@@ -216,7 +214,5 @@ js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
  */
 JS_FRIEND_API(JSBool)
 js_ReparentTypedArrayToScope(JSContext *cx, JSObject *obj, JSObject *scope);
-
-JS_END_EXTERN_C
 
 #endif /* jstypedarray_h */

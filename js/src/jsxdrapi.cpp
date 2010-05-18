@@ -804,14 +804,14 @@ JS_XDRFindClassIdByName(JSXDRState *xdr, const char *name)
     return 0;
 }
 
-JS_PUBLIC_API(Class *)
+JS_PUBLIC_API(JSClass *)
 JS_XDRFindClassById(JSXDRState *xdr, uint32 id)
 {
     uintN i = CLASS_ID_TO_INDEX(id);
 
     if (i >= xdr->numclasses)
         return NULL;
-    return Valueify(xdr->registry[i]);
+    return xdr->registry[i];
 }
 
 #endif /* JS_HAS_XDR */

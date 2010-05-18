@@ -830,7 +830,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         sprop = js_FindWatchPoint(rt, obj->scope(), propid);
         if (!sprop) {
             /* Make a new property in obj so we can watch for the first set. */
-            if (!js_DefineNativeProperty(cx, obj, propid, sUndefinedValue, NULL, NULL,
+            if (!js_DefineNativeProperty(cx, obj, propid, Value(UndefinedTag()), NULL, NULL,
                                          JSPROP_ENUMERATE, 0, 0, &prop)) {
                 return JS_FALSE;
             }
@@ -844,9 +844,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         intN shortid;
 
         if (pobj->isNative()) {
-            value.copy(SPROP_HAS_VALID_SLOT(sprop, pobj->scope())
-                        ? pobj->lockedGetSlot(sprop->slot)
-                        : sUndefinedValue);
+            if (SPROP_HAS_VALID_SLOT(sprop, pobj->scope()))
+                value.copy(pobj->lockedGetSlot(sprop->slot));
+            else
+                value.setUndefined();
             getter = sprop->getter();
             setter = sprop->setter();
             attrs = sprop->attributes();

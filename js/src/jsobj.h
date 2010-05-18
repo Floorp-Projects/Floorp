@@ -433,10 +433,10 @@ struct JSObject {
         fslots[JSSLOT_PRIVATE].setPrivateVoidPtr(data);
     }
 
-    static const js::Value &defaultPrivate(js::Class *clasp) {
-        return (clasp->flags & JSCLASS_HAS_PRIVATE)
-               ? js::sNullValue
-               : js::sUndefinedValue;
+    static js::CopyableValue defaultPrivate(js::Class *clasp) {
+        if (clasp->flags & JSCLASS_HAS_PRIVATE)
+            return copyable_cast(js::Value(js::NullTag()));
+        return copyable_cast(js::Value(js::UndefinedTag()));
     }
 
     /*

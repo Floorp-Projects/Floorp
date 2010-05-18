@@ -1510,7 +1510,7 @@ js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, uintN argc,
                         Value *vp)
 {
     jsid id;
-    if (!ValueToId(cx, argc != 0 ? vp[2] : sUndefinedValue, &id))
+    if (!ValueToId(cx, argc != 0 ? vp[2] : Value(UndefinedTag()), &id))
         return JS_FALSE;
 
     JSObject *obj = ComputeThisObjectFromVp(cx, vp);
@@ -1586,7 +1586,7 @@ obj_isPrototypeOf(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisObjectFromVp(cx, vp);
     if (!obj)
         return JS_FALSE;
-    const Value &v = argc != 0 ? vp[2] : sUndefinedValue;
+    const Value &v = argc != 0 ? vp[2] : Value(UndefinedTag());
     vp->setBoolean(js_IsDelegate(cx, obj, v));
     return JS_TRUE;
 }
@@ -1596,7 +1596,7 @@ static JSBool
 obj_propertyIsEnumerable(JSContext *cx, uintN argc, Value *vp)
 {
     jsid id;
-    if (!ValueToId(cx, argc != 0 ? vp[2] : sUndefinedValue, &id))
+    if (!ValueToId(cx, argc != 0 ? vp[2] : Value(UndefinedTag()), &id))
         return JS_FALSE;
 
     JSObject *obj = ComputeThisObjectFromVp(cx, vp);
@@ -1678,7 +1678,7 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     if (!obj->checkAccess(cx, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
     vp->setUndefined();
-    return obj->defineProperty(cx, id, sUndefinedValue, getter, PropertyStub,
+    return obj->defineProperty(cx, id, Value(UndefinedTag()), getter, PropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
 }
 
@@ -1708,7 +1708,7 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     if (!obj->checkAccess(cx, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
     vp->setUndefined();
-    return obj->defineProperty(cx, id, sUndefinedValue, PropertyStub, setter,
+    return obj->defineProperty(cx, id, Value(UndefinedTag()), PropertyStub, setter,
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
 }
 
@@ -1716,7 +1716,7 @@ static JSBool
 obj_lookupGetter(JSContext *cx, uintN argc, Value *vp)
 {
     jsid id;
-    if (!ValueToId(cx, argc != 0 ? vp[2] : sUndefinedValue, &id))
+    if (!ValueToId(cx, argc != 0 ? vp[2] : Value(UndefinedTag()), &id))
         return JS_FALSE;
     JSObject *obj = ComputeThisObjectFromVp(cx, vp);
     JSObject *pobj;
@@ -1739,7 +1739,7 @@ static JSBool
 obj_lookupSetter(JSContext *cx, uintN argc, Value *vp)
 {
     jsid id;
-    if (!ValueToId(cx, argc != 0 ? vp[2] : sUndefinedValue, &id))
+    if (!ValueToId(cx, argc != 0 ? vp[2] : Value(UndefinedTag()), &id))
         return JS_FALSE;
     JSObject *obj = ComputeThisObjectFromVp(cx, vp);
     JSObject *pobj;
@@ -1864,7 +1864,7 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
     }
     JSObject *obj = &vp[2].asObject();
     AutoIdRooter nameidr(cx);
-    if (!ValueToId(cx, argc >= 2 ? vp[3] : sUndefinedValue, nameidr.addr()))
+    if (!ValueToId(cx, argc >= 2 ? vp[3] : Value(UndefinedTag()), nameidr.addr()))
         return JS_FALSE;
     return js_GetOwnPropertyDescriptor(cx, obj, nameidr.id(), vp);
 }
@@ -1872,7 +1872,7 @@ obj_getOwnPropertyDescriptor(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 obj_keys(JSContext *cx, uintN argc, Value *vp)
 {
-    const Value &v = argc == 0 ? sUndefinedValue : vp[2];
+    const Value &v = argc == 0 ? Value(UndefinedTag()) : vp[2];
     if (!v.isObject()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return JS_FALSE;
@@ -1902,7 +1902,7 @@ obj_keys(JSContext *cx, uintN argc, Value *vp)
             jsid id;
             if (!js_ValueToStringId(cx, idval, &id))
                 return JS_FALSE;
-            aobj->setDenseArrayElement(i, Value(ATOM_TO_STRING(JSID_TO_ATOM(id))));
+            aobj->setDenseArrayElement(i, JSID_TO_STRING(id));
         } else {
             /*
              * Object-valued ids are a possibility admitted by SpiderMonkey for
@@ -2051,7 +2051,7 @@ Reject(JSContext *cx, uintN errorNumber, bool throwError, jsid id, bool *rval)
         if (!js_ValueToStringId(cx, IdToValue(id), &idstr))
            return JS_FALSE;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, errorNumber,
-                             JS_GetStringBytes(ATOM_TO_STRING(JSID_TO_ATOM(idstr))));
+                             JS_GetStringBytes(JSID_TO_STRING(idstr)));
         return JS_FALSE;
     }
 
@@ -2118,7 +2118,8 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &d
         if (!js_CheckAccess(cx, obj, desc.id, JSACC_WATCH, &dummy, &dummyAttrs))
             return JS_FALSE;
 
-        return js_DefineProperty(cx, obj, desc.id, &sUndefinedValue,
+        Value undef = undefinedValue();
+        return js_DefineProperty(cx, obj, desc.id, &undef,
                                  desc.getter(), desc.setter(), desc.attrs);
     }
 
@@ -2428,7 +2429,7 @@ static JSBool
 obj_defineProperty(JSContext* cx, uintN argc, Value* vp)
 {
     /* 15.2.3.6 steps 1 and 5. */
-    const Value &v = (argc == 0) ? sUndefinedValue : vp[2];
+    const Value &v = (argc == 0) ? Value(UndefinedTag()) : vp[2];
     if (v.isPrimitive()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
         return JS_FALSE;
@@ -2438,11 +2439,11 @@ obj_defineProperty(JSContext* cx, uintN argc, Value* vp)
 
     /* 15.2.3.6 step 2. */
     AutoIdRooter nameidr(cx);
-    if (!ValueToId(cx, argc >= 2 ? vp[3] : sUndefinedValue, nameidr.addr()))
+    if (!ValueToId(cx, argc >= 2 ? vp[3] : Value(UndefinedTag()), nameidr.addr()))
         return JS_FALSE;
 
     /* 15.2.3.6 step 3. */
-    const Value &descval = argc >= 3 ? vp[4] : sUndefinedValue;
+    const Value &descval = argc >= 3 ? vp[4] : Value(UndefinedTag());
 
     /* 15.2.3.6 step 4 */
     JSBool junk;
@@ -3148,7 +3149,7 @@ js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index)
     JS_ASSERT(!OBJ_IS_CLONED_BLOCK(obj));
 
     /* Use JSPROP_ENUMERATE to aid the disassembler. */
-    return js_DefineNativeProperty(cx, obj, id, sUndefinedValue,
+    return js_DefineNativeProperty(cx, obj, id, Value(UndefinedTag()),
                                    block_getProperty,
                                    block_setProperty,
                                    JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED,
@@ -3836,7 +3837,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 {
     JSScope *scope = obj->scope();
     JS_ASSERT(scope->object == obj);
-    obj->lockedSetSlot(slot, sUndefinedValue);
+    obj->lockedSetSlot(slot, Value(UndefinedTag()));
     if (scope->freeslot == slot + 1)
         scope->freeslot = slot;
 }
@@ -4877,7 +4878,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 
         if (!obj->getParent() &&
             (defineHow & JSDNP_UNQUALIFIED) &&
-            !js_CheckUndeclaredVarAssignment(cx, ATOM_TO_STRING(JSID_TO_ATOM(id)))) {
+            !js_CheckUndeclaredVarAssignment(cx, JSID_TO_STRING(id))) {
             return JS_FALSE;
         }
     }
@@ -5044,7 +5045,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
          * in js_DefineNativeProperty.
          */
         if (SPROP_HAS_VALID_SLOT(sprop, scope))
-            obj->lockedSetSlot(sprop->slot, sUndefinedValue);
+            obj->lockedSetSlot(sprop->slot, Value(UndefinedTag()));
 
         /* XXXbe called with obj locked */
         if (!AddPropertyHelper(cx, clasp, obj, scope, sprop, vp)) {
@@ -5794,7 +5795,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
         classId = JS_XDRFindClassIdByName(xdr, clasp->name);
         classDef = !classId;
         if (classDef) {
-            if (!JS_XDRRegisterClass(xdr, clasp, &classId))
+            if (!JS_XDRRegisterClass(xdr, Jsvalify(clasp), &classId))
                 return JS_FALSE;
             protoKey = JSCLASS_CACHED_PROTO_KEY(clasp);
             if (protoKey != JSProto_Null) {
@@ -5833,10 +5834,10 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
             if (!js_GetClassPrototype(cx, NULL, protoKey, &proto, clasp))
                 return JS_FALSE;
             clasp = proto->getClass();
-            if (!JS_XDRRegisterClass(xdr, clasp, &classId))
+            if (!JS_XDRRegisterClass(xdr, Jsvalify(clasp), &classId))
                 return JS_FALSE;
         } else {
-            clasp = JS_XDRFindClassById(xdr, classId);
+            clasp = Valueify(JS_XDRFindClassById(xdr, classId));
             if (!clasp) {
                 char numBuf[12];
                 JS_snprintf(numBuf, sizeof numBuf, "%ld", (long)classId);
@@ -5932,7 +5933,7 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
         if (JSID_IS_INT(id)) {
             JS_snprintf(buf, bufsize, "%ld", (long)JSID_TO_INT(id));
         } else if (JSID_IS_ATOM(id)) {
-            js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(JSID_TO_ATOM(id)), 0);
+            js_PutEscapedString(buf, bufsize, JSID_TO_STRING(id), 0);
         } else {
             JS_snprintf(buf, bufsize, "**FINALIZED ATOM KEY**");
         }
@@ -6022,7 +6023,7 @@ js_Clear(JSContext *cx, JSObject *obj)
         i = obj->numSlots();
         n = JSSLOT_FREE(obj->getClass());
         while (--i >= n)
-            obj->setSlot(i, sUndefinedValue);
+            obj->setSlot(i, Value(UndefinedTag()));
         scope->freeslot = n;
     }
     JS_UNLOCK_OBJ(cx, obj);
@@ -6324,7 +6325,7 @@ dumpScopeProp(JSScopeProperty *sprop)
     if (attrs & JSPROP_SHARED) fprintf(stderr, "shared ");
     if (sprop->isAlias()) fprintf(stderr, "alias ");
     if (JSID_IS_ATOM(id))
-        dumpString(ATOM_TO_STRING(JSID_TO_ATOM(id)));
+        dumpString(JSID_TO_STRING(id));
     else if (JSID_IS_INT(id))
         fprintf(stderr, "%d", (int) JSID_TO_INT(id));
     else

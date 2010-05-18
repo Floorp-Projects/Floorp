@@ -312,7 +312,7 @@ ToDisassemblySource(JSContext *cx, jsval v)
 
         if (clasp == &js_RegExpClass) {
             AutoValueRooter tvr(cx);
-            if (!js_regexp_toString(cx, obj, Jsvalify(tvr.addr())))
+            if (!js_regexp_toString(cx, obj, tvr.addr()))
                 return NULL;
             return js_GetStringBytes(cx, JSVAL_TO_STRING(Jsvalify(tvr.value())));
         }
@@ -372,7 +372,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         index = js_GetIndexFromBytecode(cx, script, pc, 0);
         if (type == JOF_ATOM) {
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
-            v = STRING_TO_JSVAL(ATOM_TO_STRING(atom));
+            v = ATOM_TO_JSVAL(atom);
         } else {
             if (type == JOF_OBJECT)
                 obj = script->getObject(index);
@@ -440,7 +440,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             off = GetJumpOffset(pc, pc2);
             pc2 += jmplen;
 
-            bytes = ToDisassemblySource(cx, STRING_TO_JSVAL(ATOM_TO_STRING(atom)));
+            bytes = ToDisassemblySource(cx, ATOM_TO_JSVAL(atom));
             if (!bytes)
                 return 0;
             fprintf(fp, "\n\t%s: %d", bytes, (intN) off);
@@ -464,7 +464,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         index = js_GetIndexFromBytecode(cx, script, pc, SLOTNO_LEN);
         if (type == JOF_SLOTATOM) {
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
-            v = STRING_TO_JSVAL(ATOM_TO_STRING((atom)));
+            v = ATOM_TO_JSVAL(atom);
         } else {
             obj = script->getObject(index);
             v = OBJECT_TO_JSVAL(obj);
@@ -4018,7 +4018,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_DOUBLE:
                 GET_DOUBLE_FROM_BYTECODE(jp->script, pc, 0, atom);
-                val = STRING_TO_JSVAL(ATOM_TO_STRING(atom));
+                val = ATOM_TO_JSVAL(atom);
                 LOCAL_ASSERT(JSVAL_IS_DOUBLE(val));
                 todo = SprintDoubleValue(&ss->sprinter, val, &saveop);
                 break;
@@ -4195,7 +4195,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_REGEXP:
                 GET_REGEXP_FROM_BYTECODE(jp->script, pc, 0, obj);
               do_regexp:
-                if (!js_regexp_toString(cx, obj, &val))
+                if (!js_regexp_toString(cx, obj, Valueify(&val)))
                     return NULL;
                 str = JSVAL_TO_STRING(val);
                 goto sprint_string;
@@ -4304,7 +4304,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     pc2 += INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
-                    table[k].key = STRING_TO_JSVAL(ATOM_TO_STRING(atom));
+                    table[k].key = ATOM_TO_JSVAL(atom);
                     table[k].offset = off2;
                 }
 
