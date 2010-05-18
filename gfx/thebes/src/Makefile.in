@@ -36,6 +36,12 @@ CPPSRCS	= \
 	GLContext.cpp \
 	$(NULL)
 
+ifdef MOZ_IPC
+CPPSRCS += \
+	gfxSharedImageSurface.cpp \
+	$(NULL)
+endif
+
 SHARED_LIBRARY_LIBS += \
 	../../layers/$(LIB_PREFIX)layers.$(LIB_SUFFIX) \
 	$(NULL)
@@ -160,7 +166,7 @@ CPPSRCS += gfxDirectFBSurface.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp gfxSharedImageSurface.cpp
+CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
 ifdef MOZ_PANGO
 CPPSRCS += gfxPangoFonts.cpp
