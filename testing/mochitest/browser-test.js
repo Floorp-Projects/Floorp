@@ -312,8 +312,8 @@ function testScope(aTester, aTest) {
     self.__done = false;
   };
 
-  this.waitForFocus = function test_waitForFocus(callback, targetWindow) {
-    self.SimpleTest.waitForFocus(callback, targetWindow);
+  this.waitForFocus = function test_waitForFocus(callback, targetWindow, expectBlankPage) {
+    self.SimpleTest.waitForFocus(callback, targetWindow, expectBlankPage);
   };
 
   this.registerCleanupFunction = function test_registerCleanupFunction(aFunction) {
