@@ -80,7 +80,7 @@ html select,
 html button,
 html textarea,
 html input:not([type="image"]) {
-  -moz-border-radius: 0.25em;
+  -moz-border-radius: 3px;
 }
 
 html select[size],
