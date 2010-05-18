@@ -1336,7 +1336,7 @@ static JSStdName object_prototype_names[] = {
 };
 
 JS_PUBLIC_API(JSBool)
-JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
+JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id,
                         JSBool *resolved)
 {
     JSString *idstr;
@@ -1350,10 +1350,10 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
 
     rt = cx->runtime;
     JS_ASSERT(rt->state != JSRTS_DOWN);
-    if (rt->state == JSRTS_LANDING || !JSVAL_IS_STRING(id))
+    if (rt->state == JSRTS_LANDING || !JSID_IS_ATOM(id))
         return JS_TRUE;
 
-    idstr = JSVAL_TO_STRING(id);
+    idstr = JSID_TO_STRING(id);
 
     /* Check whether we're resolving 'undefined', and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
@@ -1696,10 +1696,10 @@ JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 #undef JS_AddRoot
 
 JS_PUBLIC_API(JSBool)
-JS_AddValueRoot(JSContext *cx, js::Value *vp)
+JS_AddValueRoot(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
-    return js_AddRoot(cx, vp, NULL);
+    return js_AddRoot(cx, Valueify(vp), NULL);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1717,10 +1717,10 @@ JS_AddObjectRoot(JSContext *cx, JSObject **rp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_AddNamedValueRoot(JSContext *cx, js::Value *vp, const char *name)
+JS_AddNamedValueRoot(JSContext *cx, jsval *vp, const char *name)
 {
     CHECK_REQUEST(cx);
-    return js_AddRoot(cx, vp, name);
+    return js_AddRoot(cx, Valueify(vp), name);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1738,9 +1738,9 @@ JS_AddNamedObjectRoot(JSContext *cx, JSObject **rp, const char *name)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_AddNamedValueRootRT(JSRuntime *rt, js::Value *vp, const char *name)
+JS_AddNamedValueRootRT(JSRuntime *rt, jsval *vp, const char *name)
 {
-    return js_AddRootRT(rt, vp, name);
+    return js_AddRootRT(rt, Valueify(vp), name);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1756,7 +1756,7 @@ JS_AddNamedObjectRootRT(JSRuntime *rt, JSObject **rp, const char *name)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_RemoveValueRoot(JSContext *cx, js::Value *vp)
+JS_RemoveValueRoot(JSContext *cx, jsval *vp)
 {
     CHECK_REQUEST(cx);
     return js_RemoveRoot(cx->runtime, (void *)vp);
@@ -1777,7 +1777,7 @@ JS_RemoveObjectRoot(JSContext *cx, JSObject **rp)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_RemoveValueRootRT(JSRuntime *rt, js::Value *vp)
+JS_RemoveValueRootRT(JSRuntime *rt, jsval *vp)
 {
     return js_RemoveRoot(rt, (void *)vp);
 }
@@ -2552,12 +2552,11 @@ JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
     return ValueToId(cx, Valueify(v), idp);
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(void)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
 {
     CHECK_REQUEST(cx);
     *vp = Jsvalify(IdToValue(id));
-    return JS_TRUE;
 }
 
 namespace js {
