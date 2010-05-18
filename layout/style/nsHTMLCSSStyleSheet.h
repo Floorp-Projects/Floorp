@@ -53,11 +53,11 @@ public:
   NS_DECL_ISUPPORTS
 
   nsresult Init(nsIURI* aURL, nsIDocument* aDocument);
-  nsresult Reset(nsIURI* aURL);
+  void Reset(nsIURI* aURL);
 
   // nsIStyleSheet
-  virtual already_AddRefed<nsIURI> GetSheetURI() const;
-  virtual already_AddRefed<nsIURI> GetBaseURI() const;
+  virtual nsIURI* GetSheetURI() const;
+  virtual nsIURI* GetBaseURI() const;
   virtual void GetTitle(nsString& aTitle) const;
   virtual void GetType(nsString& aType) const;
   virtual PRBool HasRules() const;
@@ -65,8 +65,8 @@ public:
   virtual void SetEnabled(PRBool aEnabled);
   virtual PRBool IsComplete() const;
   virtual void SetComplete();
-  virtual already_AddRefed<nsIStyleSheet> GetParentSheet() const;  // will be null
-  virtual already_AddRefed<nsIDocument> GetOwningDocument() const;
+  virtual nsIStyleSheet* GetParentSheet() const;  // will be null
+  virtual nsIDocument* GetOwningDocument() const;
   virtual void SetOwningDocument(nsIDocument* aDocument);
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -92,11 +92,8 @@ private:
   nsHTMLCSSStyleSheet& operator=(const nsHTMLCSSStyleSheet& aCopy); 
 
 protected:
-  virtual ~nsHTMLCSSStyleSheet();
-
-protected:
-  nsIURI*         mURL;
-  nsIDocument*    mDocument;
+  nsCOMPtr<nsIURI> mURL;
+  nsIDocument*     mDocument;
 };
 
 #endif /* !defined(nsHTMLCSSStyleSheet_h_) */
