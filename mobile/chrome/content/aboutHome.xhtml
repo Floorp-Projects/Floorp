@@ -140,9 +140,8 @@
 
     function openTabs(aURLs) {
       let BrowserUI = getChromeWin().BrowserUI;
-      let urls = aURLs.split("|");
-      for (let i=0; i< urls.length; i++) {
-        BrowserUI.newTab(urls[i]);
+      for (let i=0; i< aURLs.length; i++) {
+        BrowserUI.newTab(aURLs[i]);
       }
     }
 
@@ -178,7 +177,7 @@
 
         let pageURL = url;
         outer.addEventListener("click", function() {
-          openTabs(pageURL);
+          openTabs([pageURL]);
         }, false);
 
         allPageURLs.push(pageURL);
@@ -210,7 +209,7 @@
           outer.setAttribute("role", "button");
   
           outer.addEventListener("click", function() {
-            openTabs(allPageURLs.join("|"));
+            openTabs(allPageURLs);
           }, false);
   
           list.appendChild(outer);
