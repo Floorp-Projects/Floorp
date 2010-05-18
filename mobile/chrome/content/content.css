@@ -123,10 +123,14 @@ html select {
 html select:not([size]):not([multiple]),
 html select[size="0"],
 html select[size="1"] {
-  padding: 2px 1px 2px 1px;
+  padding: 0 1px 0 1px;
 }
 
-html input:not([type="image"]),
+html input:not([type="image"]) {
+  border-width: 1px;
+  padding: 1px;
+}
+
 html textarea {
   border-width: 1px;
   padding: 2px 1px 2px 1px;
@@ -137,7 +141,7 @@ html input[type="submit"],
 html input[type="reset"],
 html button {
   border-width: 1px;
-  padding: 1px 7px 1px 7px;
+  padding: 0 7px 0 7px;
 }
 
 html input[type="radio"],
@@ -218,7 +222,7 @@ html input[type="button"][disabled],
 html input[type="submit"][disabled],
 html input[type="reset"][disabled],
 html button[disabled="true"] {
-  padding: 1px 7px 1px 7px;
+  padding: 0 7px 0 7px;
   background: transparent -moz-linear-gradient(top, rgba(255,255,255,0.4) 0, rgba(235,235,235,0.4) 3px, rgba(185,185,185,0.4) 100%);
 }
 
