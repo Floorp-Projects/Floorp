@@ -182,7 +182,6 @@ private:
 already_AddRefed<IDBDatabaseRequest>
 IDBDatabaseRequest::Create(const nsAString& aName,
                            const nsAString& aDescription,
-                           PRBool aReadOnly,
                            nsTArray<nsString>& aObjectStoreNames,
                            nsTArray<nsString>& aIndexNames,
                            const nsAString& aVersion,
@@ -196,7 +195,6 @@ IDBDatabaseRequest::Create(const nsAString& aName,
 
   db->mName.Assign(aName);
   db->mDescription.Assign(aDescription);
-  db->mReadOnly = aReadOnly;
   db->mObjectStoreNames.SwapElements(aObjectStoreNames);
   db->mIndexNames.SwapElements(aIndexNames);
   db->mVersion.Assign(aVersion);
@@ -211,9 +209,8 @@ IDBDatabaseRequest::Create(const nsAString& aName,
 }
 
 IDBDatabaseRequest::IDBDatabaseRequest()
-: mReadOnly(PR_FALSE)
 {
-  
+
 }
 
 IDBDatabaseRequest::~IDBDatabaseRequest()

@@ -50,9 +50,7 @@ interface nsIIDBRequest;
 [scriptable, uuid(043161e0-93b8-43b4-94d8-f34046d679b4)]
 interface nsIIndexedDatabaseRequest : nsISupports
 {
-  [optional_argc]
   nsIIDBRequest
   open(in AString name,
-       in AString description,
-       [optional /* true */] in boolean modifyDatabase);
+       in AString description);
 };

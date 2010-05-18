@@ -71,7 +71,6 @@ public:
   static already_AddRefed<IDBDatabaseRequest>
   Create(const nsAString& aName,
          const nsAString& aDescription,
-         PRBool aReadOnly,
          nsTArray<nsString>& aObjectStoreNames,
          nsTArray<nsString>& aIndexNames,
          const nsAString& aVersion,
@@ -142,7 +141,6 @@ protected:
 private:
   nsString mName;
   nsString mDescription;
-  PRBool mReadOnly;
   nsString mVersion;
   nsString mDatabaseFilePath;
 
