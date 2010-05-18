@@ -528,6 +528,11 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
     return NS_ERROR_INVALID_ARG;
   }
 
+  nsString keyPath(aKeyPath);
+  if (keyPath.IsVoid()) {
+    keyPath.Truncate();
+  }
+
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
@@ -550,7 +555,7 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
   }
   else {
     nsRefPtr<CreateObjectStoreHelper> helper =
-      new CreateObjectStoreHelper(this, request, aName, aKeyPath,
+      new CreateObjectStoreHelper(this, request, aName, keyPath,
                                   !!aAutoIncrement);
     rv = helper->Dispatch(mConnectionThread);
   }
@@ -788,11 +793,7 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  if (mKeyPath.IsVoid()) {
-    rv = stmt->BindNullByName(NS_LITERAL_CSTRING("key_path"));
-  } else {
-    rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"), mKeyPath);
-  }
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("key_path"), mKeyPath);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("auto_increment"),
