@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -228,6 +228,8 @@ public:
 
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
 
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
+
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
   virtual LayersBackend GetBackendType() { return LAYERS_OPENGL; }
@@ -316,7 +318,13 @@ class LayerOGL
 public:
   LayerOGL(LayerManagerOGL *aManager);
 
-  enum LayerType { TYPE_THEBES, TYPE_CONTAINER, TYPE_IMAGE, TYPE_COLOR };
+  enum LayerType {
+    TYPE_THEBES,
+    TYPE_CONTAINER,
+    TYPE_IMAGE,
+    TYPE_COLOR,
+    TYPE_CANVAS
+  };
   
   virtual LayerType GetType() = 0;
 

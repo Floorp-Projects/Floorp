@@ -60,7 +60,7 @@
 #include "nsPresContext.h"
 #include "nsIDOMDataTransfer.h"
 #include "nsIEventStateManager.h"
-#include "nsICanvasElement.h"
+#include "nsICanvasElementExternal.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
@@ -505,7 +505,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
   // using the source rather than the displayed image. But if mImage isn't
   // an image, fall through to RenderNode below.
   if (mImage) {
-    nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(dragNode);
+    nsCOMPtr<nsICanvasElementExternal> canvas = do_QueryInterface(dragNode);
     if (canvas) {
       return DrawDragForImage(*aPresContext, nsnull, canvas, aScreenX,
                               aScreenY, aScreenDragRect, aSurface);
@@ -544,7 +544,7 @@ nsBaseDragService::DrawDrag(nsIDOMNode* aDOMNode,
 nsresult
 nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                                     nsIImageLoadingContent* aImageLoader,
-                                    nsICanvasElement* aCanvas,
+                                    nsICanvasElementExternal* aCanvas,
                                     PRInt32 aScreenX, PRInt32 aScreenY,
                                     nsIntRect* aScreenDragRect,
                                     gfxASurface** aSurface)
@@ -569,10 +569,9 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   }
   else {
     NS_ASSERTION(aCanvas, "both image and canvas are null");
-    PRUint32 width, height;
-    aCanvas->GetSize(&width, &height);
-    aScreenDragRect->width = width;
-    aScreenDragRect->height = height;
+    nsIntSize sz = aCanvas->GetSizeExternal();
+    aScreenDragRect->width = sz.width;
+    aScreenDragRect->height = sz.height;
   }
 
   nsIntSize srcSize = aScreenDragRect->Size();
@@ -626,7 +625,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
                        imgIContainer::FLAG_SYNC_DECODE);
     return NS_OK;
   } else {
-    return aCanvas->RenderContexts(ctx, gfxPattern::FILTER_GOOD);
+    return aCanvas->RenderContextsExternal(ctx, gfxPattern::FILTER_GOOD);
   }
 }
 

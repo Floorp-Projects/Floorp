@@ -138,9 +138,14 @@ typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
 namespace mozilla {
   class IHistory;
 
+namespace layers {
+  class LayerManager;
+} // namespace layers
+
 namespace dom {
 class Element;
 } // namespace dom
+
 } // namespace mozilla
 
 extern const char kLoadAsData[];
@@ -1602,6 +1607,19 @@ public:
   static nsresult GetElementsByClassName(nsINode* aRootNode,
                                          const nsAString& aClasses,
                                          nsIDOMNodeList** aReturn);
+
+  /**
+   * Returns a layer manager to use for the given document. Basically we
+   * look up the document hierarchy for the first document which has
+   * a presentation with an associated widget, and use that widget's
+   * layer manager.
+   *
+   * If one can't be found, a BasicLayerManager is created and returned.
+   *
+   * @param aDoc the document for which to return a layer manager.
+   */
+  static already_AddRefed<mozilla::layers::LayerManager>
+  LayerManagerForDocument(nsIDocument *aDoc);
 
 private:
 

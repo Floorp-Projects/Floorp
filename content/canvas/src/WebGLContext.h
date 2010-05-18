@@ -51,13 +51,13 @@
 
 #include "nsICanvasRenderingContextWebGL.h"
 #include "nsICanvasRenderingContextInternal.h"
+#include "nsHTMLCanvasElement.h"
 #include "nsWeakReference.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIJSNativeInitializer.h"
 
-#include "nsGLPbuffer.h"
-
-#include "localgl.h"
+#include "GLContext.h"
+#include "Layers.h"
 
 class nsIDocShell;
 
@@ -233,7 +233,7 @@ public:
     NS_DECL_NSICANVASRENDERINGCONTEXTWEBGL
 
     // nsICanvasRenderingContextInternal
-    NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
+    NS_IMETHOD SetCanvasElement(nsHTMLCanvasElement* aParentCanvas);
     NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
     NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, PRInt32 width, PRInt32 height)
         { return NS_ERROR_NOT_IMPLEMENTED; }
@@ -244,23 +244,25 @@ public:
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool b) { return NS_OK; };
 
+    already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
+    void MarkContextClean() { }
+
 protected:
-    GLES20Wrap *gl;
+    nsHTMLCanvasElement* mCanvasElement;
 
-    nsICanvasElement* mCanvasElement;
+    nsRefPtr<gl::GLContext> gl;
 
-    nsGLPbuffer *mGLPbuffer;
     PRInt32 mWidth, mHeight;
 
     PRBool mInvalidated;
 
-    PRBool SafeToCreateCanvas3DContext(nsICanvasElement *canvasElement);
+    PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool ValidateGL();
     PRBool ValidateBuffers(PRUint32 count);
 
     void Invalidate();
 
-    void MakeContextCurrent() { mGLPbuffer->MakeContextCurrent(); }
+    void MakeContextCurrent() { gl->MakeCurrent(); }
 
     // helpers
     nsresult TexImage2D_base(GLenum target, GLint level, GLenum internalformat,

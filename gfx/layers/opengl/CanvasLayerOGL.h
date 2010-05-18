@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,12 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
+ * The Original Code is Mozilla Corporation code.
+ *
  * The Initial Developer of the Original Code is Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bas Schouten <bschouten@mozilla.com>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,24 +35,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "GLContextProvider.h"
+#ifndef GFX_CANVASLAYEROGL_H
+#define GFX_CANVASLAYEROGL_H
+
+#include "LayerManagerOGL.h"
+#include "gfxASurface.h"
 
 namespace mozilla {
-namespace gl {
+namespace layers {
 
-GLContextProvider sGLContextProvider;
-
-already_AddRefed<GLContext>
-GLContextProvider::CreateForWindow(nsIWidget*)
+class THEBES_API CanvasLayerOGL :
+  public CanvasLayer,
+  public LayerOGL
 {
-    return nsnull;
-}
+public:
+  CanvasLayerOGL(LayerManagerOGL *aManager)
+    : CanvasLayer(aManager, NULL),
+      LayerOGL(aManager),
+      mTexture(0)
+  { 
+      mImplData = static_cast<LayerOGL*>(this);
+  }
 
-already_AddRefed<GLContext>
-GLContextProvider::CreatePBuffer(const gfxIntSize &, const ContextFormat &)
-{
-    return nsnull;
-}
+  ~CanvasLayerOGL();
 
-} /* namespace gl */
-} /* namespace mozilla */
+  // CanvasLayer implementation
+  virtual void Initialize(const Data& aData);
+  virtual void Updated(const nsIntRect& aRect);
+
+  // LayerOGL implementation
+  virtual LayerType GetType() { return TYPE_CANVAS; }
+  virtual Layer* GetLayer() { return this; }
+  virtual void RenderLayer(int aPreviousDestination);
+
+protected:
+  nsRefPtr<gfxASurface> mSurface;
+  nsRefPtr<GLContext> mGLContext;
+
+  unsigned int mTexture;
+
+  nsIntRect mBounds;
+  nsIntRect mUpdatedRect;
+
+  PRPackedBool mGLBufferIsPremultiplied;
+};
+
+} /* layers */
+} /* mozilla */
+#endif /* GFX_IMAGELAYEROGL_H */
