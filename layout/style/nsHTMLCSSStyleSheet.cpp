@@ -60,15 +60,8 @@
 using namespace mozilla::dom;
 
 nsHTMLCSSStyleSheet::nsHTMLCSSStyleSheet()
-  : mRefCnt(0),
-    mURL(nsnull),
-    mDocument(nsnull)
+  : mDocument(nsnull)
 {
-}
-
-nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
-{
-  NS_RELEASE(mURL);
 }
 
 NS_IMPL_ISUPPORTS2(nsHTMLCSSStyleSheet,
@@ -140,7 +133,6 @@ nsHTMLCSSStyleSheet::Init(nsIURI* aURL, nsIDocument* aDocument)
 
   mDocument = aDocument; // not refcounted!
   mURL = aURL;
-  NS_ADDREF(mURL);
   return NS_OK;
 }
 
@@ -179,27 +171,21 @@ nsHTMLCSSStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext,
 }
 
 
-nsresult
+void
 nsHTMLCSSStyleSheet::Reset(nsIURI* aURL)
 {
-  NS_IF_RELEASE(mURL);
   mURL = aURL;
-  NS_ADDREF(mURL);
-
-  return NS_OK;
 }
 
-/* virtual */ already_AddRefed<nsIURI>
+/* virtual */ nsIURI*
 nsHTMLCSSStyleSheet::GetSheetURI() const
 {
-  NS_IF_ADDREF(mURL);
   return mURL;
 }
 
-/* virtual */ already_AddRefed<nsIURI>
+/* virtual */ nsIURI*
 nsHTMLCSSStyleSheet::GetBaseURI() const
 {
-  NS_IF_ADDREF(mURL);
   return mURL;
 }
 
@@ -245,16 +231,15 @@ nsHTMLCSSStyleSheet::SetComplete()
 }
 
 // style sheet owner info
-/* virtual */ already_AddRefed<nsIStyleSheet>
+/* virtual */ nsIStyleSheet*
 nsHTMLCSSStyleSheet::GetParentSheet() const
 {
   return nsnull;
 }
 
-/* virtual */ already_AddRefed<nsIDocument>
+/* virtual */ nsIDocument*
 nsHTMLCSSStyleSheet::GetOwningDocument() const
 {
-  NS_IF_ADDREF(mDocument);
   return mDocument;
 }
 

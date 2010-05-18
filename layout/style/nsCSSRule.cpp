@@ -42,15 +42,13 @@
 #include "nsCSSStyleSheet.h"
 
 nsCSSRule::nsCSSRule(void)
-  : mRefCnt(0),
-    mSheet(nsnull),
+  : mSheet(nsnull),
     mParentRule(nsnull)
 {
 }
 
 nsCSSRule::nsCSSRule(const nsCSSRule& aCopy)
-  : mRefCnt(0),
-    mSheet(aCopy.mSheet),
+  : mSheet(aCopy.mSheet),
     mParentRule(aCopy.mParentRule)
 {
 }
