@@ -423,7 +423,6 @@ struct JSObject {
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
         void *priv = fslots[JSSLOT_PRIVATE].asPrivateVoidPtr();
-        JS_ASSERT((size_t(priv) & 1) == 0);
         return priv;
     }
 
@@ -435,7 +434,7 @@ struct JSObject {
 
     static js::Value defaultPrivate(js::Class *clasp) {
         if (clasp->flags & JSCLASS_HAS_PRIVATE)
-            return js::NullTag();
+            return js::PrivateVoidPtrTag(NULL);
         return js::UndefinedTag();
     }
 
@@ -581,14 +580,12 @@ struct JSObject {
     bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
-    void init(js::Class *c, const js::Value &proto, JSObject *parent,
+    void init(js::Class *clasp, const js::Value &proto, JSObject *parent,
               const js::Value &privateSlotValue) {
         JS_ASSERT(((jsuword) clasp & 3) == 0);
         JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
-        JS_ASSERT_IF(clasp->flags & JSCLASS_HAS_PRIVATE,
-                     (size_t(privateSlotValue.asPrivateVoidPtr()) & 1) == 0);
 
-        clasp = c;
+        this->clasp = clasp;
         JS_ASSERT(!isDelegate());
         JS_ASSERT(!isSystem());
 
