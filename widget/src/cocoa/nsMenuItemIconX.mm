@@ -214,8 +214,8 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
     if (!domElement) return NS_ERROR_FAILURE;
 
-    nsAutoString empty;
-    rv = domViewCSS->GetComputedStyle(domElement, empty,
+
+    rv = domViewCSS->GetComputedStyle(domElement, EmptyString(),
                                       getter_AddRefs(cssStyleDecl));
     if (NS_FAILED(rv)) return rv;
 
