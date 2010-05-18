@@ -4408,10 +4408,17 @@ js_FindPropertyHelper(JSContext *cx, jsid id, JSBool cacheResult,
                     JS_ASSERT(!obj->getProto());
                     JS_ASSERT(protoIndex == 0);
                 }
+            } else {
+                JS_ASSERT(obj->isNative());
             }
 #endif
-            if (cacheResult) {
-                entry = JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, protoIndex, pobj,
+            /*
+             * We must check if pobj is native as a global object can have
+             * non-native prototype.
+             */
+            if (cacheResult && pobj->isNative()) {
+                entry = JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex,
+                                                   protoIndex, pobj,
                                                    (JSScopeProperty *) prop);
             }
             SCOPE_DEPTH_ACCUM(&cx->runtime->scopeSearchDepthStats, scopeIndex);
@@ -4493,9 +4500,12 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
         if (protoIndex < 0)
             return NULL;
         if (prop) {
-            JS_ASSERT(pobj->isNative());
-            JS_ASSERT(!obj->getParent() ||
-                      pobj->getClass() == obj->getClass());
+            if (!pobj->isNative()) {
+                JS_ASSERT(!obj->getParent());
+                pobj->dropProperty(cx, prop);
+                return obj;
+            }
+            JS_ASSERT_IF(obj->getParent(), pobj->getClass() == obj->getClass());
 #ifdef DEBUG
             PropertyCacheEntry *entry =
 #endif
