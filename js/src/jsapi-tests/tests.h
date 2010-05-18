@@ -50,13 +50,13 @@ public:
     explicit jsvalRoot(JSContext *context, jsval value = JSVAL_NULL)
         : cx(context), v(value)
     {
-        if (!JS_AddRoot(cx, &v)) {
+        if (!JS_AddValueRoot(cx, &v)) {
             fprintf(stderr, "Out of memory in jsvalRoot constructor, aborting\n");
             abort();
         }
     }
 
-    ~jsvalRoot() { JS_RemoveRoot(cx, &v); }
+    ~jsvalRoot() { JS_RemoveValueRoot(cx, &v); }
 
     operator jsval() const { return value(); }
 

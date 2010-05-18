@@ -957,7 +957,7 @@ JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
  * before freeing structPtr's memory.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_AddValueRoot(JSContext *cx, js::Value *vp);
+JS_AddValueRoot(JSContext *cx, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AddStringRoot(JSContext *cx, JSString **rp);
@@ -974,7 +974,7 @@ JS_AddObjectRoot(JSContext *cx, JSObject **rp);
 #endif
 
 extern JS_PUBLIC_API(JSBool)
-JS_AddNamedValueRoot(JSContext *cx, js::Value *vp, const char *name);
+JS_AddNamedValueRoot(JSContext *cx, jsval *vp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AddNamedStringRoot(JSContext *cx, JSString **rp, const char *name);
@@ -983,7 +983,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_AddNamedObjectRoot(JSContext *cx, JSObject **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
-JS_AddNamedValueRootRT(JSRuntime *rt, js::Value *vp, const char *name);
+JS_AddNamedValueRootRT(JSRuntime *rt, jsval *vp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AddNamedStringRootRT(JSRuntime *rt, JSString **rp, const char *name);
@@ -992,7 +992,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_AddNamedObjectRootRT(JSRuntime *rt, JSObject **rp, const char *name);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RemoveValueRoot(JSContext *cx, js::Value *vp);
+JS_RemoveValueRoot(JSContext *cx, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_RemoveStringRoot(JSContext *cx, JSString **rp);
@@ -1001,7 +1001,7 @@ extern JS_PUBLIC_API(JSBool)
 JS_RemoveObjectRoot(JSContext *cx, JSObject **rp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_RemoveValueRootRT(JSRuntime *rt, js::Value *vp);
+JS_RemoveValueRootRT(JSRuntime *rt, jsval *vp);
 
 extern JS_PUBLIC_API(JSBool)
 JS_RemoveStringRootRT(JSRuntime *rt, JSString **rp);
@@ -1651,7 +1651,7 @@ JS_DestroyIdArray(JSContext *cx, JSIdArray *ida);
 extern JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp);
 
-extern JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(void)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 
 /*

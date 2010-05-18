@@ -83,7 +83,7 @@ static JSBool
 exn_enumerate(JSContext *cx, JSObject *obj);
 
 static JSBool
-exn_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp);
 
 Class js_ErrorClass = {
@@ -449,7 +449,7 @@ exn_enumerate(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-exn_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
     JSExnPrivate *priv;
@@ -461,8 +461,8 @@ exn_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
     *objp = NULL;
     priv = GetExnPrivate(cx, obj);
-    if (priv && JSVAL_IS_STRING(id)) {
-        str = JSVAL_TO_STRING(id);
+    if (priv && JSID_IS_ATOM(id)) {
+        str = JSID_TO_STRING(id);
 
         atom = cx->runtime->atomState.messageAtom;
         if (str == ATOM_TO_STRING(atom)) {
