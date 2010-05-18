@@ -943,36 +943,26 @@ getIndexInParentCB(AtkObject *aAtkObj)
         return -1;
     }
 
-    nsCOMPtr<nsIAccessible> parent;
-    accWrap->GetParent(getter_AddRefs(parent));
+    nsAccessible *parent = accWrap->GetParent();
     if (!parent) {
         return -1; // No parent
     }
 
-    nsCOMPtr<nsIAccessible> sibling;
-    parent->GetFirstChild(getter_AddRefs(sibling));
-    if (!sibling) {
-        return -1;  // Error, parent has no children
-    }
-
     PRInt32 currentIndex = 0;
 
-    while (sibling != static_cast<nsIAccessible*>(accWrap)) {
-      NS_ASSERTION(sibling, "Never ran into the same child that we started from");
-
-      if (!sibling) {
-          return -1;
+    PRInt32 childCount = parent->GetChildCount();
+    for (PRInt32 idx = 0; idx < childCount; idx++) {
+      nsAccessible *sibling = parent->GetChildAt(idx);
+      if (sibling == accWrap) {
+          return currentIndex;
       }
+
       if (nsAccUtils::IsEmbeddedObject(sibling)) {
-        ++ currentIndex;
+          ++ currentIndex;
       }
-
-      nsCOMPtr<nsIAccessible> tempAccessible;
-      sibling->GetNextSibling(getter_AddRefs(tempAccessible));
-      sibling.swap(tempAccessible);
     }
 
-    return currentIndex;
+    return -1;
 }
 
 static void TranslateStates(PRUint32 aState, const AtkStateMap *aStateMap,

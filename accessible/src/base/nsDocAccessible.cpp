@@ -1803,9 +1803,8 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
     // created.
     if (accessible->GetCachedFirstChild()) {
       nsCOMPtr<nsIArray> children;
-      // use GetChildren() to fetch children at one time, instead of using
-      // GetNextSibling(), because after we shutdown the first child,
-      // mNextSibling will be set null.
+      // use GetChildren() to fetch all children at once, because after shutdown
+      // the child references are cleared.
       accessible->GetChildren(getter_AddRefs(children));
       PRUint32 childCount =0;
       if (children)

@@ -1130,15 +1130,14 @@ nsARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttrib
 
   // Expose "table-cell-index" attribute.
 
-  nsCOMPtr<nsIAccessible> thisRow;
-  GetParent(getter_AddRefs(thisRow));
+  nsAccessible *thisRow = GetParent();
   if (nsAccUtils::Role(thisRow) != nsIAccessibleRole::ROLE_ROW)
     return NS_OK;
 
   PRInt32 colIdx = 0, colCount = 0;
-  nsCOMPtr<nsIAccessible> child, nextChild;
-  thisRow->GetFirstChild(getter_AddRefs(child));
-  while (child) {
+  PRInt32 childCount = thisRow->GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible *child = thisRow->GetChildAt(childIdx);
     if (child == this)
       colIdx = colCount;
 
@@ -1147,25 +1146,22 @@ nsARIAGridCellAccessible::GetAttributesInternal(nsIPersistentProperties *aAttrib
         role == nsIAccessibleRole::ROLE_ROWHEADER ||
         role == nsIAccessibleRole::ROLE_COLUMNHEADER)
       colCount++;
-
-    child->GetNextSibling(getter_AddRefs(nextChild));
-    child.swap(nextChild);
   }
 
-  nsCOMPtr<nsIAccessible> table;
-  thisRow->GetParent(getter_AddRefs(table));
+  nsAccessible *table = thisRow->GetParent();
   if (nsAccUtils::Role(table) != nsIAccessibleRole::ROLE_TABLE &&
       nsAccUtils::Role(table) != nsIAccessibleRole::ROLE_TREE_TABLE)
     return NS_OK;
 
   PRInt32 rowIdx = 0;
-  table->GetFirstChild(getter_AddRefs(child));
-  while (child && child != thisRow) {
+  childCount = table->GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible *child = table->GetChildAt(childIdx);
+    if (child == thisRow)
+      break;
+
     if (nsAccUtils::Role(child) == nsIAccessibleRole::ROLE_ROW)
       rowIdx++;
-
-    child->GetNextSibling(getter_AddRefs(nextChild));
-    child.swap(nextChild);
   }
 
   PRInt32 idx = rowIdx * colCount + colIdx;
