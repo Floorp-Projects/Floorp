@@ -2345,7 +2345,7 @@ ProcessSetSlotRequest(JSContext *cx, JSSetSlotRequest *ssr)
         obj->setProto(ObjectOrNullTag(pobj));
     } else {
         JS_ASSERT(slot == JSSLOT_PARENT);
-        obj->setParent(pobj);
+        obj->setParent(ObjectOrNullTag(pobj));
     }
 }
 

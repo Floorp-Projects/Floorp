@@ -205,10 +205,10 @@ js_GetScopeChain(JSContext *cx, JSStackFrame *fp)
         if (!clone)
             return NULL;
 
-        newChild->setParent(clone);
+        newChild->setParent(NonFunObjTag(*clone));
         newChild = clone;
     }
-    newChild->setParent(fp->scopeChain);
+    newChild->setParent(NonFunObjTag(*fp->scopeChain));
 
 
     /*

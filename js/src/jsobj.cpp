@@ -241,7 +241,7 @@ js_SetProtoOrParent(JSContext *cx, JSObject *obj, uint32 slot, JSObject *pobj,
         if (slot == JSSLOT_PROTO)
             obj->setProto(ObjectOrNullTag(pobj));
         else
-            obj->setParent(pobj);
+            obj->setParent(ObjectOrNullTag(pobj));
     } else {
         /*
          * Use the GC machinery to serialize access to all objects on the
@@ -3228,7 +3228,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             parent = NULL;
         else
             parent = xdr->script->getObject(parentId);
-        obj->setParent(parent);
+        obj->setParent(NonFunObjOrNullTag(parent));
     }
 
     AutoObjectRooter tvr(cx, obj);

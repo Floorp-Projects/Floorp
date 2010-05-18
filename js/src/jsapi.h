@@ -3005,8 +3005,8 @@ struct NonFunObjTag {
     JSObject &obj;
 };
 
-struct NonFunObjOrNull {
-    explicit NonFunObjOrNull(JSObject *obj) : obj(obj) {}
+struct NonFunObjOrNullTag {
+    explicit NonFunObjOrNullTag(JSObject *obj) : obj(obj) {}
     JSObject *obj;
 };
 
@@ -3132,12 +3132,12 @@ class Value
     }
 
     Value(NonFunObjTag arg) {
-        JS_ASSERT(JS_ObjectIsFunction(NULL, &arg.obj));
+        JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg.obj));
         mask = JSVAL_NONFUNOBJ_MASK;
         data.obj = &arg.obj;
     }
 
-    Value(NonFunObjOrNull arg) {
+    Value(NonFunObjOrNullTag arg) {
         JS_ASSERT_IF(arg.obj, !JS_ObjectIsFunction(NULL, arg.obj));
         mask = arg.obj ? JSVAL_NONFUNOBJ_MASK : JSVAL_NULL_MASK;
         data.obj = arg.obj;
