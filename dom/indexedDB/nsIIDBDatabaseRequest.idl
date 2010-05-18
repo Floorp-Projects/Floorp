@@ -63,12 +63,6 @@ interface nsIIDBDatabaseRequest : nsIIDBDatabase
                   [optional /* READ_WRITE */] in unsigned short mode);
 
   nsIIDBRequest
-  createIndex(in AString name,
-              in AString storeName,
-              in AString keyPath,
-              [optional /* false */] in boolean unique);
-
-  nsIIDBRequest
   removeObjectStore(in AString name);
 
   nsIIDBRequest
