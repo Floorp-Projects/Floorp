@@ -96,6 +96,7 @@ XPIDLSRCS = \
   nsIIDBRequest.idl \
   nsIIDBSuccessEvent.idl \
   nsIIDBTransaction.idl \
+  nsIIDBTransactionEvent.idl \
   nsIIDBTransactionRequest.idl \
   nsIIndexedDatabaseRequest.idl \
   $(NULL)

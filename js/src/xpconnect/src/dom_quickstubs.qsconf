@@ -496,6 +496,7 @@ members = [
 # Remove once nsIVariant can handle jsvals
 #    'nsIIDBSuccessEvent.*',
     'nsIIDBTransaction.*',
+    'nsIIDBTransactionEvent.*',
     'nsIIDBTransactionRequest.*',
     'nsIIndexedDatabaseRequest.*'
     ]
