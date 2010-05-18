@@ -40,8 +40,6 @@ pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
 pref("general.useragent.extra.mobile", "@APP_UA_NAME_EXTRA@/@APP_VERSION_EXTRA@ Fennec/@APP_VERSION@");
 pref("browser.chromeURL", "chrome://browser/content/");
 
-pref("browser.startup.homepage", "about:firstrun");
-
 pref("browser.tabs.warnOnClose", true);
 
 pref("toolkit.screen.lock", false);
