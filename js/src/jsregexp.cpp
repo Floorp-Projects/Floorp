@@ -5028,7 +5028,8 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             if (test)
                 continue;
             if (parsub->index == -1) {
-                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1), &sUndefinedValue,
+                Value undef = undefinedValue();
+                ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1), &undef,
                                        NULL, NULL, JSPROP_ENUMERATE);
             } else {
                 parstr = js_NewDependentString(cx, str,

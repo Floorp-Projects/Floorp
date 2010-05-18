@@ -1014,7 +1014,7 @@ CloseGenerator(JSContext *cx, JSObject *obj)
     if (gen->state == JSGEN_CLOSED)
         return JS_TRUE;
 
-    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, sUndefinedValue);
+    return SendToGenerator(cx, JSGENOP_CLOSE, obj, gen, Value(UndefinedTag()));
 }
 
 /*
@@ -1062,7 +1062,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
           case JSGENOP_SEND:
             return js_ThrowStopIteration(cx);
           case JSGENOP_THROW:
-            SetPendingException(cx, argc >= 1 ? vp[2] : sUndefinedValue);
+            SetPendingException(cx, argc >= 1 ? vp[2] : Value(UndefinedTag()));
             return JS_FALSE;
           default:
             JS_ASSERT(op == JSGENOP_CLOSE);
@@ -1071,7 +1071,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
     }
 
     bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0);
-    if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : sUndefinedValue))
+    if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : Value(UndefinedTag())))
         return JS_FALSE;
     vp->copy(gen->getFloatingFrame()->rval);
     return JS_TRUE;

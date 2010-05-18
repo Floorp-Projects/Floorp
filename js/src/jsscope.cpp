@@ -1253,7 +1253,7 @@ PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
 
     if (JSID_IS_ATOM(id)) {
         n = js_PutEscapedString(buf, bufsize - 1,
-                                ATOM_TO_STRING(JSID_TO_ATOM(id)), 0);
+                                JSID_TO_STRING(id), 0);
         if (n < bufsize - 1)
             JS_snprintf(buf + n, bufsize - n, " %s", name);
     } else if (JSID_IS_INT(sprop->id)) {
@@ -1276,7 +1276,7 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
     JS_ASSERT(!JSID_IS_NULL(id));
 
     JS_ASSERT(JSID_IS_ATOM(id));
-    n = js_PutEscapedString(buf, bufsize - 1, ATOM_TO_STRING(JSID_TO_ATOM(id)), 0);
+    n = js_PutEscapedString(buf, bufsize - 1, JSID_TO_STRING(id), 0);
     if (n < bufsize - 1)
         JS_snprintf(buf + n, bufsize - n, " method");
 }

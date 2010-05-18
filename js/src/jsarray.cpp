@@ -1162,7 +1162,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
         jsid id;
         JSScopeProperty *sprop;
 
-        if (!JS_ValueToId(cx, INT_TO_JSVAL(i), &id))
+        if (!ValueToId(cx, Int32Tag(i), &id))
             goto out_bad;
 
         if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
@@ -2108,7 +2108,7 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
     while (undefs != 0) {
         --undefs;
         if (!JS_CHECK_OPERATION_LIMIT(cx) ||
-            !SetArrayElement(cx, obj, newlen++, sUndefinedValue)) {
+            !SetArrayElement(cx, obj, newlen++, Value(UndefinedTag()))) {
             return false;
         }
     }
@@ -2696,7 +2696,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
 
     if (argc <= 1) {
         i = isLast ? length - 1 : 0;
-        tosearch.copy((argc != 0) ? vp[2] : sUndefinedValue);
+        tosearch.copy((argc != 0) ? vp[2] : Value(UndefinedTag()));
     } else {
         jsdouble start;
 

@@ -653,56 +653,69 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto,
 JS_ALWAYS_INLINE
 ObjPtr::ObjPtr(ObjectTag arg)
 {
-    mask = arg.obj.isFunction() ? FunObjMask : NonFunObjMask;
+    mask = arg.obj.isFunction() ? JSVAL_FUNOBJ_MASK : JSVAL_NONFUNOBJ_MASK;
     obj = &arg.obj;
 }
 
 JS_ALWAYS_INLINE
 ObjPtr::ObjPtr(ObjectOrNullTag arg)
 {
-    mask = arg.obj ? arg.obj->isFunction() ? FunObjMask : NonFunObjMask : NullMask;
+    if (arg.obj) {
+        if (arg.obj->isFunction())
+            mask = JSVAL_FUNOBJ_MASK;
+        else
+            mask = JSVAL_NONFUNOBJ_MASK;
+    } else {
+        mask = JSVAL_NULL_MASK;
+    }
     obj = arg.obj;
 }
 
 JS_ALWAYS_INLINE void
 ObjPtr::setObject(JSObject &arg)
 {
-    mask = arg.isFunction() ? FunObjMask : NonFunObjMask;
+    mask = arg.isFunction() ? JSVAL_FUNOBJ_MASK : JSVAL_NONFUNOBJ_MASK;
     obj = &arg;
 }
 
 JS_ALWAYS_INLINE void
 ObjPtr::setObjectOrNull(JSObject *arg)
 {
-    mask = arg ? arg->isFunction() ? FunObjMask : NonFunObjMask : NullMask;
+    mask = arg ? arg->isFunction() ? JSVAL_FUNOBJ_MASK
+                                   : JSVAL_NONFUNOBJ_MASK
+               : JSVAL_NULL_MASK;
     obj = arg;
 }
 
 JS_ALWAYS_INLINE
 Value::Value(ObjectTag arg)
 {
-    mask = arg.obj.isFunction() ? FunObjMask : NonFunObjMask;
+    mask = arg.obj.isFunction() ? JSVAL_FUNOBJ_MASK : JSVAL_NONFUNOBJ_MASK;
     data.obj = &arg.obj;
 }
 
 JS_ALWAYS_INLINE
 Value::Value(ObjectOrNullTag arg)
 {
-    mask = arg.obj ? arg.obj->isFunction() ? FunObjMask : NonFunObjMask : NullMask;
+    mask = arg.obj ? arg.obj->isFunction() ? JSVAL_FUNOBJ_MASK
+                                           : JSVAL_NONFUNOBJ_MASK
+                   : JSVAL_NULL_MASK;
     data.obj = arg.obj;
 }
 
 JS_ALWAYS_INLINE void
 Value::setObject(JSObject &arg)
 {
-    mask = arg.isFunction() ? FunObjMask : NonFunObjMask;
+    mask = arg.isFunction() ? JSVAL_FUNOBJ_MASK : JSVAL_NONFUNOBJ_MASK;
     data.obj = &arg;
 }
 
 JS_ALWAYS_INLINE void
 Value::setObjectOrNull(JSObject *arg)
 {
-    mask = arg ? arg->isFunction() ? FunObjMask : NonFunObjMask : NullMask;
+    mask = arg ? arg->isFunction() ? JSVAL_FUNOBJ_MASK
+                                   : JSVAL_NONFUNOBJ_MASK
+               : JSVAL_NULL_MASK;
     data.obj = arg;
 }
 

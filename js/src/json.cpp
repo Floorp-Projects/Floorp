@@ -1188,7 +1188,7 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 static JSBool
 json_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
-    *vp = STRING_TO_JSVAL(ATOM_TO_STRING(CLASS_ATOM(cx, JSON)));
+    *vp = ATOM_TO_JSVAL(CLASS_ATOM(cx, JSON));
     return JS_TRUE;
 }
 #endif

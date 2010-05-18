@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#define __STDC_LIMIT_MACROS
+
 /*
  * JS shell.
  */
@@ -223,10 +225,10 @@ public:
             if (!JS_ReportPendingException(cx))
                 JS_ClearPendingException(cx);
         }
-        JS_AddNamedRoot(cx, &mStr, "Value ToString helper");
+        JS_AddNamedStringRoot(cx, &mStr, "Value ToString helper");
     }
     ~ToString() {
-        JS_RemoveRoot(cx, &mStr);
+        JS_RemoveStringRoot(cx, &mStr);
     }
     JSBool threw() { return !mStr; }
     jsval getJSVal() { return STRING_TO_JSVAL(mStr); }
@@ -1328,7 +1330,7 @@ CountHeap(JSContext *cx, uintN argc, jsval *vp)
         if (JSVAL_IS_TRACEABLE(v)) {
             startThing = JSVAL_TO_TRACEABLE(v);
             startTraceKind = JSVAL_TRACE_KIND(v);
-        } else if (v != JSVAL_NULL) {
+        } else if (!JSVAL_IS_NULL(v)) {
             JS_ReportError(cx,
                            "the first argument is not null or a heap-allocated "
                            "thing");

@@ -397,13 +397,13 @@ namespace js {
 
 const Value::MaskType PrimitiveValue::Masks[PrimitiveValue::THISP_ARRAY_SIZE] = {
     0,                                                          /* 000 */
-    Value::StringMask,                                          /* 001 */
-    Value::NumberMask,                                          /* 010 */
-    Value::NumberMask | Value::StringMask,                      /* 011 */
-    Value::BooleanMask,                                         /* 100 */
-    Value::BooleanMask | Value::StringMask,                     /* 101 */
-    Value::BooleanMask | Value::NumberMask,                     /* 110 */
-    Value::BooleanMask | Value::NumberMask | Value::StringMask  /* 111 */
+    JSVAL_STRING_MASK,                                          /* 001 */
+    JSVAL_NUMBER_MASK,                                          /* 010 */
+    JSVAL_NUMBER_MASK | JSVAL_STRING_MASK,                      /* 011 */
+    JSVAL_BOOLEAN_MASK,                                         /* 100 */
+    JSVAL_BOOLEAN_MASK | JSVAL_STRING_MASK,                     /* 101 */
+    JSVAL_BOOLEAN_MASK | JSVAL_NUMBER_MASK,                     /* 110 */
+    JSVAL_BOOLEAN_MASK | JSVAL_NUMBER_MASK | JSVAL_STRING_MASK  /* 111 */
 };
 
 /*
@@ -486,7 +486,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
             vp[1].setObjectOrNull(parent);
         } else if (vp[1].isPrimitive()) {
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
-            if (PrimitiveThisTest(fun, vp[1]))
+            if (PrimitiveValue::test(fun, vp[1]))
                 goto start_call;
         }
     }
@@ -960,7 +960,7 @@ EqualObjects(JSContext *cx, JSObject *lobj, JSObject *robj)
 bool
 StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval)
 {
-    JS_STATIC_ASSERT(Value::NullMask == 0);
+    JS_STATIC_ASSERT(JSVAL_NULL_MASK == 0);
 
     Value::MaskType lmask = lval.mask, rmask = rval.mask;
     Value::MaskType maskor = lmask | rmask;
@@ -968,27 +968,27 @@ StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval)
     if (lmask == rmask) {
         if (Value::isSingleton(lmask))
             return true;
-        if (lmask == Value::Int32Mask)
+        if (lmask == JSVAL_INT32_MASK)
             return lval.data.i32 == rval.data.i32;
-        if (lmask == Value::DoubleMask)
+        if (lmask == JSVAL_DOUBLE_MASK)
             return JSDOUBLE_COMPARE(lval.data.dbl, ==, rval.data.dbl, JS_FALSE);
-        if (lmask == Value::StringMask)
+        if (lmask == JSVAL_STRING_MASK)
             return js_EqualStrings(lval.data.str, rval.data.str);
-        if (lmask & Value::ObjectMask)
+        if (lmask & JSVAL_OBJECT_MASK)
             return EqualObjects(cx, lval.data.obj, rval.data.obj);
-        JS_ASSERT(lmask == Value::BooleanMask);
+        JS_ASSERT(lmask == JSVAL_BOOLEAN_MASK);
         return lval.data.boo == rval.data.boo;
     }
 
     /* Watch out for null */
 
-    if (maskor == Value::NumberMask) {
-        double ld = lmask == Value::DoubleMask ? lval.data.dbl : lval.data.i32;
-        double rd = rmask == Value::DoubleMask ? rval.data.dbl : rval.data.i32;
+    if (maskor == JSVAL_NUMBER_MASK) {
+        double ld = lmask == JSVAL_DOUBLE_MASK ? lval.data.dbl : lval.data.i32;
+        double rd = rmask == JSVAL_DOUBLE_MASK ? rval.data.dbl : rval.data.i32;
         return JSDOUBLE_COMPARE(ld, ==, rd, JS_FALSE);
     }
 
-    if (maskor == Value::ObjectMask)
+    if (maskor == JSVAL_OBJECT_MASK)
         return EqualObjects(cx, lval.data.obj, rval.data.obj);
 
     return false;
@@ -1184,27 +1184,27 @@ IdToValue(jsid id)
 }
 
 bool
-ValueToId(JSContext *cx, const Value *vp, jsid *idp)
+ValueToId(JSContext *cx, const Value &v, jsid *idp)
 {
     int32_t i;
-    if (ValueFitsInInt32(*vp, &i) && INT32_FITS_IN_JSID(i)) {
+    if (ValueFitsInInt32(v, &i) && INT32_FITS_IN_JSID(i)) {
         *idp = INT_TO_JSID(i);
         return true;
     }
 
 #if JS_HAS_XML_SUPPORT
-    if (vp->isObject()) {
-        Class *clasp = vp->asObject().getClass();
+    if (v.isObject()) {
+        Class *clasp = v.asObject().getClass();
         if (JS_UNLIKELY(clasp == &js_QNameClass.base ||
                         clasp == &js_AttributeNameClass ||
                         clasp == &js_AnyNameClass)) {
-            *idp = OBJECT_TO_JSID(&vp->asObject());
+            *idp = OBJECT_TO_JSID(&v.asObject());
             return true;
         }
     }
 #endif
 
-    return js_ValueToStringId(cx, *vp, idp);
+    return js_ValueToStringId(cx, v, idp);
 }
 
 } /* namespace js */
@@ -2592,7 +2592,7 @@ Interpret(JSContext *cx)
                 if (!ok)
                     goto error;
                 cx->throwing = true;
-                cx->exception = tvr.value();
+                cx->exception.copy(tvr.value());
               }
            }
         } while (++tn != tnlimit);

@@ -116,6 +116,13 @@ JS_STATIC_ASSERT(sizeof(JSBool) == sizeof(int32));
 #define CHECK_REQUEST(cx)       ((void)0)
 #endif
 
+JS_PUBLIC_DATA(jsval) JSVAL_NULL  = { JSVAL_NULL_MASK,      JS_PADDING_INIT_VALUE() { NULL } };
+JS_PUBLIC_DATA(jsval) JSVAL_ZERO  = { JSVAL_INT32_MASK,     JS_PADDING_INIT_VALUE() { 0 } };
+JS_PUBLIC_DATA(jsval) JSVAL_ONE   = { JSVAL_INT32_MASK,     JS_PADDING_INIT_VALUE() { 1 } };
+JS_PUBLIC_DATA(jsval) JSVAL_FALSE = { JSVAL_BOOLEAN_MASK,   JS_PADDING_INIT_VALUE() { false } };
+JS_PUBLIC_DATA(jsval) JSVAL_TRUE  = { JSVAL_BOOLEAN_MASK,   JS_PADDING_INIT_VALUE() { true } };
+JS_PUBLIC_DATA(jsval) JSVAL_VOID  = { JSVAL_UNDEFINED_MASK, JS_PADDING_INIT_VALUE() };
+
 JS_PUBLIC_API(int64)
 JS_Now()
 {
@@ -1033,8 +1040,6 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 #endif
 }
 
-JS_BEGIN_EXTERN_C
-
 JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
@@ -1138,8 +1143,6 @@ out:
     return fun_proto;
 }
 
-JS_END_EXTERN_C
-
 JS_PUBLIC_API(JSBool)
 JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 {
@@ -1149,7 +1152,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 
     /* Define a top-level property 'undefined' with the undefined value. */
     atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), sUndefinedValue,
+    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), undefinedValue(),
                              PropertyStub, PropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
         return JS_FALSE;
@@ -1356,7 +1359,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (idstr == ATOM_TO_STRING(atom)) {
         *resolved = JS_TRUE;
-        return obj->defineProperty(cx, ATOM_TO_JSID(atom), sUndefinedValue,
+        return obj->defineProperty(cx, ATOM_TO_JSID(atom), undefinedValue(),
                                    PropertyStub, PropertyStub,
                                    JSPROP_PERMANENT | JSPROP_READONLY);
     }
@@ -1447,7 +1450,7 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     /* Check whether we need to bind 'undefined' and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!AlreadyHasOwnProperty(cx, obj, atom) &&
-        !obj->defineProperty(cx, ATOM_TO_JSID(atom), sUndefinedValue,
+        !obj->defineProperty(cx, ATOM_TO_JSID(atom), undefinedValue(),
                              PropertyStub, PropertyStub,
                              JSPROP_PERMANENT | JSPROP_READONLY)) {
         return JS_FALSE;
@@ -1681,6 +1684,13 @@ JS_strdup(JSContext *cx, const char *s)
     if (!p)
         return NULL;
     return (char *)memcpy(p, s, n);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
+{
+    Valueify(rval)->setNumber(d);
+    return JS_TRUE;
 }
 
 #undef JS_AddRoot
@@ -2536,10 +2546,10 @@ JSID_TO_JSVAL(jsid id)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_ValueToId(JSContext *cx, const jsval *vp, jsid *idp)
+JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
 {
     CHECK_REQUEST(cx);
-    return ValueToId(cx, Valueify(*vp), idp);
+    return ValueToId(cx, Valueify(v), idp);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2927,7 +2937,7 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
 
     CHECK_REQUEST(cx);
     for (ok = JS_TRUE; ps->name; ps++) {
-        ok = DefineProperty(cx, obj, ps->name, sUndefinedValue,
+        ok = DefineProperty(cx, obj, ps->name, undefinedValue(),
                             Valueify(ps->getter), Valueify(ps->setter), ps->flags,
                             JSScopeProperty::HAS_SHORTID, ps->tinyid);
         if (!ok)

@@ -154,7 +154,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj);
  * Export js_regexp_toString to the decompiler.
  */
 extern JSBool
-js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp);
+js_regexp_toString(JSContext *cx, JSObject *obj, js::Value *vp);
 
 /*
  * Create, serialize/deserialize, or clone a RegExp object.
