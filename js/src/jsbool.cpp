@@ -110,7 +110,7 @@ bool_valueOf(JSContext *cx, uintN argc, Value *vp)
     const Value *primp;
     if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &primp))
         return JS_FALSE;
-    vp->copy(*primp);
+    *vp = *primp;
     return JS_TRUE;
 }
 
@@ -134,7 +134,7 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     else
         bval.setBoolean(false);
     if (!JS_IsConstructing(cx))
-        rval->copy(bval);
+        *rval = bval;
     else
         obj->setPrimitiveThis(bval);
     return true;

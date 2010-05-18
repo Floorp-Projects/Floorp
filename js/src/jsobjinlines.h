@@ -104,7 +104,7 @@ inline void
 JSObject::setPrimitiveThis(const js::Value &pthis)
 {
     JS_ASSERT(isPrimitive());
-    fslots[JSSLOT_PRIMITIVE_THIS].copy(pthis);
+    fslots[JSSLOT_PRIMITIVE_THIS] = pthis;
 }
 
 inline void
@@ -237,7 +237,7 @@ JSObject::setDenseArrayElement(uint32 i, const js::Value &v)
 {
     JS_ASSERT(isDenseArray());
     JS_ASSERT(i < getDenseArrayCapacity());
-    dslots[i].copy(v);
+    dslots[i] = v;
 }
 
 inline js::Value *
@@ -311,7 +311,7 @@ inline void
 JSObject::setArgsCallee(const js::Value &callee)
 {
     JS_ASSERT(isArguments());
-    fslots[JSSLOT_ARGS_CALLEE].copy(callee);
+    fslots[JSSLOT_ARGS_CALLEE] = callee;
 }
 
 inline const js::Value &
@@ -335,7 +335,7 @@ JSObject::setArgsElement(uint32 i, const js::Value &v)
 {
     JS_ASSERT(isArguments());
     JS_ASSERT(i < numSlots() - JS_INITIAL_NSLOTS);
-    dslots[i].copy(v);
+    dslots[i] = v;
 }
 
 inline const js::Value &
@@ -349,7 +349,7 @@ inline void
 JSObject::setDateLocalTime(const js::Value &time)
 {
     JS_ASSERT(isDate());
-    fslots[JSSLOT_DATE_LOCAL_TIME].copy(time);
+    fslots[JSSLOT_DATE_LOCAL_TIME] = time;
 }
 
 inline const js::Value &
@@ -363,7 +363,7 @@ inline void
 JSObject::setDateUTCTime(const js::Value &time)
 {
     JS_ASSERT(isDate());
-    fslots[JSSLOT_DATE_UTC_TIME].copy(time);
+    fslots[JSSLOT_DATE_UTC_TIME] = time;
 }
 
 inline const js::Value &
@@ -377,7 +377,7 @@ inline void
 JSObject::setRegExpLastIndex(const js::Value &v)
 {
     JS_ASSERT(isRegExp());
-    fslots[JSSLOT_REGEXP_LAST_INDEX].copy(v);
+    fslots[JSSLOT_REGEXP_LAST_INDEX] = v;
 }
 
 inline void 
@@ -400,12 +400,12 @@ JSObject::setNativeIterator(NativeIterator *ni)
 }
 
 inline void
-JSObject::initSharingEmptyScope(js::Class *clasp, js::ObjPtr proto, JSObject *parent,
+JSObject::initSharingEmptyScope(js::Class *clasp, const js::Value &proto, JSObject *parent,
                                 const js::Value &privateSlotValue)
 {
     init(clasp, proto, parent, privateSlotValue);
 
-    JSEmptyScope *emptyScope = proto->scope()->emptyScope;
+    JSEmptyScope *emptyScope = proto.asObject().scope()->emptyScope;
     JS_ASSERT(emptyScope->clasp == clasp);
     emptyScope->hold();
     map = emptyScope;
@@ -466,16 +466,17 @@ JSObject::thisObject(JSContext *cx)
     return this;
 }
 
-inline js::ObjPtr
-JSObject::thisObject(JSContext *cx, js::ObjPtr obj)
+inline bool
+JSObject::thisObject(JSContext *cx, const js::Value &v, js::Value *vp)
 {
-    if (JSObjectOp thisOp = obj->map->ops->thisObject) {
-        JSObject *pobj = thisOp(cx, obj);
+    if (JSObjectOp thisOp = v.asObject().map->ops->thisObject) {
+        JSObject *pobj = thisOp(cx, &v.asObject());
         if (!pobj)
-            return js::NullTag();
-        obj.setObject(*pobj);
+            return false;
+        vp->setObject(*pobj);
     }
-    return obj;
+    *vp = v;
+    return true;
 }
 
 namespace js {
@@ -648,43 +649,6 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto,
     }
 
     return NewObjectWithGivenProto(cx, clasp, proto, parent, objectSize);
-}
-
-JS_ALWAYS_INLINE
-ObjPtr::ObjPtr(ObjectTag arg)
-{
-    mask = arg.obj.isFunction() ? JSVAL_FUNOBJ_MASK : JSVAL_NONFUNOBJ_MASK;
-    obj = &arg.obj;
-}
-
-JS_ALWAYS_INLINE
-ObjPtr::ObjPtr(ObjectOrNullTag arg)
-{
-    if (arg.obj) {
-        if (arg.obj->isFunction())
-            mask = JSVAL_FUNOBJ_MASK;
-        else
-            mask = JSVAL_NONFUNOBJ_MASK;
-    } else {
-        mask = JSVAL_NULL_MASK;
-    }
-    obj = arg.obj;
-}
-
-JS_ALWAYS_INLINE void
-ObjPtr::setObject(JSObject &arg)
-{
-    mask = arg.isFunction() ? JSVAL_FUNOBJ_MASK : JSVAL_NONFUNOBJ_MASK;
-    obj = &arg;
-}
-
-JS_ALWAYS_INLINE void
-ObjPtr::setObjectOrNull(JSObject *arg)
-{
-    mask = arg ? arg->isFunction() ? JSVAL_FUNOBJ_MASK
-                                   : JSVAL_NONFUNOBJ_MASK
-               : JSVAL_NULL_MASK;
-    obj = arg;
 }
 
 JS_ALWAYS_INLINE

@@ -3079,7 +3079,7 @@ LookupResult(JSContext *cx, JSObject *obj, JSObject *obj2, JSProperty *prop,
 
         /* Peek at the native property's slot value, without doing a Get. */
         if (SPROP_HAS_VALID_SLOT(sprop, obj2->scope()))
-            vp->copy(obj->lockedGetSlot(sprop->slot));
+            *vp = obj->lockedGetSlot(sprop->slot);
         else
             vp->setBoolean(true);
     } else if (obj2->isDenseArray()) {
@@ -3124,7 +3124,7 @@ GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             desc->getter = Jsvalify(sprop->getter());
             desc->setter = Jsvalify(sprop->setter());
             if (SPROP_HAS_VALID_SLOT(sprop, obj2->scope()))
-                Valueify(desc->value).copy(obj2->lockedGetSlot(sprop->slot));
+                Valueify(desc->value) = obj2->lockedGetSlot(sprop->slot);
             else
                 Valueify(desc->value).setUndefined();
         } else {
@@ -4288,7 +4288,7 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
      */
     if (!ComputeThisFromArgv(cx, argv))
         return JS_FALSE;
-    js_GetTopStackFrame(cx)->thisv.copy(argv[-1]);
+    js_GetTopStackFrame(cx)->thisv = argv[-1];
     JS_ASSERT(cx->fp->argv == argv);
 
     /* Clear the last parameter in case too few arguments were passed. */
@@ -5508,7 +5508,7 @@ JS_GetPendingException(JSContext *cx, jsval *vp)
     CHECK_REQUEST(cx);
     if (!cx->throwing)
         return JS_FALSE;
-    Valueify(vp)->copy(cx->exception);
+    Valueify(*vp) = cx->exception;
     return JS_TRUE;
 }
 

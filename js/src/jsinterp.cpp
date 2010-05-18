@@ -240,17 +240,6 @@ js_GetPrimitiveThis(JSContext *cx, Value *vp, Class *clasp, const Value **vpp)
     return JS_TRUE;
 }
 
-/* Some objects (e.g., With) delegate 'this' to another object. */
-static inline bool
-CallThisObjectHook(JSContext *cx, ObjPtr obj, Value *argv)
-{
-    obj = JSObject::thisObject(cx, obj);
-    if (!obj)
-        return false;
-    argv[-1].copy(obj);
-    return true;
-}
-
 /*
  * ECMA requires "the global object", but in embeddings such as the browser,
  * which have multiple top-level objects (windows, frames, etc. in the DOM),
@@ -274,7 +263,7 @@ ComputeGlobalThis(JSContext *cx, Value *argv)
         thisp = cx->globalObject;
     else
         thisp = argv[-2].asObject().getGlobal();
-    return CallThisObjectHook(cx, NonFunObjTag(*thisp), argv);
+    return JSObject::thisObject(cx, NonFunObjTag(*thisp), &argv[-1]);
 }
 
 static bool
@@ -284,11 +273,12 @@ ComputeThis(JSContext *cx, Value *argv)
     if (!argv[-1].isObject())
         return js_PrimitiveToObject(cx, &argv[-1]);
 
-    ObjPtr thisp = argv[-1].asObjPtr();
+    Value thisv = argv[-1];
+    JSObject *thisp = &thisv.asObject();
     if (thisp->getClass() == &js_CallClass || thisp->getClass() == &js_BlockClass)
         return ComputeGlobalThis(cx, argv);
 
-    return CallThisObjectHook(cx, thisp, argv);
+    return JSObject::thisObject(cx, thisv, &argv[-1]);
 }
 
 namespace js {
@@ -342,7 +332,7 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
     if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, tvr.addr()))
         return false;
     if (tvr.value().isPrimitive()) {
-        vp[0].copy(tvr.value());
+        vp[0] = tvr.value();
     } else {
 #if JS_HAS_XML_SUPPORT
         /* Extract the function name from function::name qname. */
@@ -351,14 +341,14 @@ js_OnUnknownMethod(JSContext *cx, Value *vp)
             if (!js_IsFunctionQName(cx, obj, &id))
                 return false;
             if (id != 0)
-                vp[0].copy(IdToValue(id));
+                vp[0] = IdToValue(id);
         }
 #endif
         obj = NewObjectWithGivenProto(cx, &js_NoSuchMethodClass, NULL, NULL);
         if (!obj)
             return false;
-        obj->fslots[JSSLOT_FOUND_FUNCTION].copy(tvr.value());
-        obj->fslots[JSSLOT_SAVED_ID].copy(vp[0]);
+        obj->fslots[JSSLOT_FOUND_FUNCTION] = tvr.value();
+        obj->fslots[JSSLOT_SAVED_ID] = vp[0];
         vp[0].setNonFunObj(*obj);
     }
     return true;
@@ -377,9 +367,9 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     JS_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
     Value *invokevp = args.getvp();
-    invokevp[0].copy(obj->fslots[JSSLOT_FOUND_FUNCTION]);
-    invokevp[1].copy(vp[1]);
-    invokevp[2].copy(obj->fslots[JSSLOT_SAVED_ID]);
+    invokevp[0] = obj->fslots[JSSLOT_FOUND_FUNCTION];
+    invokevp[1] = vp[1];
+    invokevp[2] = obj->fslots[JSSLOT_SAVED_ID];
     JSObject *argsobj = js_NewArrayObject(cx, argc, vp + 2);
     if (!argsobj)
         return JS_FALSE;
@@ -387,7 +377,7 @@ NoSuchMethod(JSContext *cx, uintN argc, Value *vp, uint32 flags)
     JSBool ok = (flags & JSINVOKE_CONSTRUCT)
                 ? InvokeConstructor(cx, args, JS_TRUE)
                 : Invoke(cx, args, flags);
-    vp[0].copy(invokevp[0]);
+    vp[0] = invokevp[0];
     return ok;
 }
 
@@ -470,7 +460,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
             if (script->isEmpty()) {
                 if (flags & JSINVOKE_CONSTRUCT) {
                     JS_ASSERT(vp[1].isObject());
-                    vp->copy(vp[1]);
+                    *vp = vp[1];
                 } else {
                     vp->setUndefined();
                 }
@@ -564,7 +554,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         v->setUndefined();
 
     /* Initialize frame. */
-    fp->thisv.copy(vp[1]);
+    fp->thisv = vp[1];
     fp->callobj = NULL;
     fp->argsobj = NULL;
     fp->script = script;
@@ -572,7 +562,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
     fp->argc = argc;
     fp->argv = vp + 2;
     if (flags & JSINVOKE_CONSTRUCT)
-        fp->rval.copy(fp->thisv);
+        fp->rval = fp->thisv;
     else
         fp->rval.setUndefined();
     fp->annotation = NULL;
@@ -647,7 +637,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
     }
 
     fp->putActivationObjects(cx);
-    vp->copy(fp->rval);
+    *vp = fp->rval;
     return ok;
 }
 
@@ -667,7 +657,7 @@ InternalInvoke(JSContext *cx, JSObject *obj, const Value &fval, uintN flags,
     if (!cx->stack().pushInvokeArgs(cx, argc, args))
         return JS_FALSE;
 
-    args.getvp()[0].copy(fval);
+    args.getvp()[0] = fval;
     args.getvp()[1].setObjectOrNull(obj);
     memcpy(args.getvp() + 2, argv, argc * sizeof(*argv));
 
@@ -681,7 +671,7 @@ InternalInvoke(JSContext *cx, JSObject *obj, const Value &fval, uintN flags,
      * example) callers do not need to manage roots for local, temporary
      * references to such results.
      */
-    rval->copy(*args.getvp());
+    *rval = *args.getvp();
     if (rval->isGCThing()) {
         JSLocalRootStack *lrs = JS_THREAD_DATA(cx)->localRootStack;
         if (lrs) {
@@ -750,8 +740,8 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
                        : down->script->nfixed - SHARP_NSLOTS;
             if (base < 0)
                 return false;
-            sharps[0].copy(down->slots()[base]);
-            sharps[1].copy(down->slots()[base + 1]);
+            sharps[0] = down->slots()[base];
+            sharps[1] = down->slots()[base + 1];
         } else {
             sharps[0].setUndefined();
             sharps[1].setUndefined();
@@ -766,7 +756,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         fp->callobj = down->callobj;
         fp->argsobj = down->argsobj;
         fp->fun = (script->staticLevel > 0) ? down->fun : NULL;
-        fp->thisv.copy(down->thisv);
+        fp->thisv = down->thisv;
         fp->flags = flags | (down->flags & JSFRAME_COMPUTED_THIS);
         fp->argc = down->argc;
         fp->argv = down->argv;
@@ -823,7 +813,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
 
     JSBool ok = Interpret(cx);
     if (result)
-        result->copy(fp->rval);
+        *result = fp->rval;
 
     if (hookData) {
         if (JSInterpreterHook hook = cx->debugHooks->executeHook)
@@ -1021,8 +1011,7 @@ SameValue(JSContext *cx, const Value &v1, const Value &v2)
 JSType
 TypeOfValue(JSContext *cx, const Value &vref)
 {
-    Value v;
-    v.copy(vref);
+    Value v = vref;
     if (v.isNumber())
         return JSTYPE_NUMBER;
     if (v.isString())
@@ -1129,20 +1118,17 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn
 Value
 BoxedWordToValue(jsboxedword w)
 {
-    Value v;
     if (JSBOXEDWORD_IS_STRING(w))
-        v.setString(JSBOXEDWORD_TO_STRING(w));
-    else if (JSBOXEDWORD_IS_INT(w))
-        v.setInt32(JSBOXEDWORD_TO_INT(w));
-    else if (JSBOXEDWORD_IS_DOUBLE(w))
-        v.setDouble(*JSBOXEDWORD_TO_DOUBLE(w));
-    else if (JSBOXEDWORD_IS_OBJECT(w))
-        v.setObjectOrNull(JSBOXEDWORD_TO_OBJECT(w));
-    else if (JSBOXEDWORD_IS_VOID(w))
-        v.setUndefined();
-    else
-        v.setBoolean(JSBOXEDWORD_TO_BOOLEAN(w));
-    return copyable_cast(v);
+        return JSBOXEDWORD_TO_STRING(w);
+    if (JSBOXEDWORD_IS_INT(w))
+        return Int32Tag(JSBOXEDWORD_TO_INT(w));
+    if (JSBOXEDWORD_IS_DOUBLE(w))
+        return DoubleTag(*JSBOXEDWORD_TO_DOUBLE(w));
+    if (JSBOXEDWORD_IS_OBJECT(w))
+        return ObjectOrNullTag(JSBOXEDWORD_TO_OBJECT(w));
+    if (JSBOXEDWORD_IS_VOID(w))
+        return UndefinedTag();
+    return BooleanTag(JSBOXEDWORD_TO_BOOLEAN(w));
 }
 
 bool
@@ -1180,7 +1166,7 @@ ValueToBoxedWord(JSContext *cx, const Value &v, jsboxedword *wp)
 Value
 IdToValue(jsid id)
 {
-    return copyable_cast(BoxedWordToValue(id));
+    return BoxedWordToValue(id);
 }
 
 bool
@@ -1754,7 +1740,7 @@ namespace reprmeter {
 }
 #endif /* JS_REPRMETER */
 
-#define PUSH_COPY(v)             regs.sp++->copy(v)
+#define PUSH_COPY(v)             *regs.sp++ = v
 #define PUSH_NULL()              regs.sp++->setNull()
 #define PUSH_UNDEFINED()         regs.sp++->setUndefined()
 #define PUSH_BOOLEAN(b)          regs.sp++->setBoolean(b)
@@ -1765,7 +1751,7 @@ namespace reprmeter {
 #define PUSH_OBJECT(obj)         regs.sp++->setObject(obj)
 #define PUSH_OBJECT_OR_NULL(obj) regs.sp++->setObject(obj)
 #define PUSH_HOLE()              regs.sp++->setMagic(JS_ARRAY_HOLE)
-#define POP_COPY_TO(v)           v.copy(*--regs.sp)
+#define POP_COPY_TO(v)           v = *--regs.sp
 
 /*
  * Push the jsdouble d using sp from the lexical environment. Try to convert d
@@ -1945,7 +1931,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
         JS_ASSERT(pobj->scope()->brandedOrHasMethodBarrier());
         JS_ASSERT(sprop->hasDefaultGetterOrIsMethod());
         JS_ASSERT(SPROP_HAS_VALID_SLOT(sprop, pobj->scope()));
-        v.copy(pobj->lockedGetSlot(sprop->slot));
+        v = pobj->lockedGetSlot(sprop->slot);
         JS_ASSERT(&entry->vword.toFunObj() == &v.asFunObj());
 
         if (sprop->isMethod()) {
@@ -2033,7 +2019,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        rval->copy(BoxedWordToValue(*ni->props_cursor));
+        *rval = BoxedWordToValue(*ni->props_cursor);
         if (rval->isString() || (ni->flags & JSITER_FOREACH)) {
             ni->props_cursor++;
             return true;
@@ -2486,11 +2472,11 @@ Interpret(JSContext *cx)
                 goto error;
               case JSTRAP_RETURN:
                 cx->throwing = JS_FALSE;
-                fp->rval.copy(rval);
+                fp->rval = rval;
                 interpReturnOK = JS_TRUE;
                 goto forced_return;
               case JSTRAP_THROW:
-                cx->exception.copy(rval);
+                cx->exception = rval;
               case JSTRAP_CONTINUE:
               default:;
             }
@@ -2592,7 +2578,7 @@ Interpret(JSContext *cx)
                 if (!ok)
                     goto error;
                 cx->throwing = true;
-                cx->exception.copy(tvr.value());
+                cx->exception = tvr.value();
               }
            }
         } while (++tn != tnlimit);

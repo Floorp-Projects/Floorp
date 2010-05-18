@@ -1306,7 +1306,7 @@ js_InternNonIntElementIdSlow(JSContext *cx, JSObject *obj, const Value &idval,
     if (!js_IsFunctionQName(cx, &idval.asObject(), idp))
         return JS_FALSE;
     if (*idp != 0) {
-        vp->copy(IdToValue(*idp));
+        *vp = IdToValue(*idp);
         return true;
     }
 
