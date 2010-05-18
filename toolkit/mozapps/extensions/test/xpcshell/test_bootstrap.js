@@ -487,5 +487,40 @@ function check_test_11() {
   do_check_eq(getActiveVersion(), 0);
   do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
 
-  do_test_finished();
+  run_test_12();
+}
+
+// Tests that bootstrapped extensions are correctly loaded even if an EM restart
+// is necessary.
+function run_test_12() {
+  shutdownManager();
+
+  let dir = profileDir.clone();
+  dir.append("bootstrap1@tests.mozilla.org");
+  dir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  let zip = AM_Cc["@mozilla.org/libjar/zip-reader;1"].
+            createInstance(AM_Ci.nsIZipReader);
+  zip.open(do_get_addon("test_bootstrap1_1"));
+  dir.append("install.rdf");
+  zip.extract("install.rdf", dir);
+  dir = dir.parent;
+  dir.append("bootstrap.js");
+  zip.extract("bootstrap.js", dir);
+  zip.close();
+
+  startupManager(1, true);
+
+  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    do_check_neq(b1, null);
+    do_check_eq(b1.version, "1.0");
+    do_check_false(b1.appDisabled);
+    do_check_false(b1.userDisabled);
+    do_check_true(b1.isActive);
+    do_check_eq(getInstalledVersion(), 1);
+    do_check_eq(getActiveVersion(), 1);
+    do_check_eq(getStartupReason(), APP_STARTUP);
+    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+
+    do_test_finished();
+  });
 }
