@@ -400,7 +400,9 @@ JSObject::setNativeIterator(NativeIterator *ni)
 }
 
 inline void
-JSObject::initSharingEmptyScope(js::Class *clasp, const js::Value &proto, JSObject *parent,
+JSObject::initSharingEmptyScope(js::Class *clasp,
+                                const js::Value &proto,
+                                const js::Value &parent,
                                 const js::Value &privateSlotValue)
 {
     init(clasp, proto, parent, privateSlotValue);
@@ -592,7 +594,8 @@ NewObjectWithGivenProto(JSContext *cx, js::Class *clasp, JSObject *proto,
      */
     obj->init(clasp,
               js::ObjectOrNullTag(proto),
-              (!parent && proto) ? proto->getParent() : parent,
+              (!parent && proto) ? proto->getParentValue()
+                                 : ObjectOrNullTag(parent),
               JSObject::defaultPrivate(clasp));
 
     if (ops->isNative()) {
@@ -634,8 +637,8 @@ GetClassProtoKey(js::Class *clasp)
 }
 
 static inline JSObject *
-NewObject(JSContext *cx, js::Class *clasp, JSObject *proto,
-          JSObject *parent, size_t objectSize = 0)
+NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
+          size_t objectSize = 0)
 {
     /* Bootstrap the ur-object, and make it the default prototype object. */
     if (!proto) {

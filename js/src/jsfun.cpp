@@ -176,7 +176,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
         return NULL;
 
     /* Init immediately to avoid GC seeing a half-init'ed object. */
-    argsobj->init(&js_ArgumentsClass, NonFunObjTag(*proto), parent, NullTag());
+    argsobj->init(&js_ArgumentsClass, NonFunObjTag(*proto), NonFunObjTag(*parent), NullTag());
     argsobj->setArgsCallee(ObjectOrNullTag(callee));
     argsobj->setArgsLength(argc);
 
@@ -2365,7 +2365,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, Native native, uintN nargs,
 
     if (funobj) {
         JS_ASSERT(funobj->isFunction());
-        funobj->setParent(parent);
+        funobj->setParent(ObjectOrNullTag(parent));
     } else {
         funobj = NewObject(cx, &js_FunctionClass, NULL, parent);
         if (!funobj)
