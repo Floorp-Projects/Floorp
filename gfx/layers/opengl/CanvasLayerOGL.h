@@ -78,6 +78,7 @@ protected:
   nsIntRect mUpdatedRect;
 
   PRPackedBool mGLBufferIsPremultiplied;
+  PRPackedBool mNeedsYFlip;
 };
 
 } /* layers */

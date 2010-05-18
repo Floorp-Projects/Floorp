@@ -407,6 +407,7 @@ protected:
   nsIntRect mUpdatedRect;
 
   PRPackedBool mGLBufferIsPremultiplied;
+  PRPackedBool mNeedsYFlip;
 };
 
 void
@@ -420,9 +421,11 @@ BasicCanvasLayer::Initialize(const Data& aData)
     mSurface = aData.mSurface;
     NS_ASSERTION(aData.mGLContext == nsnull,
                  "CanvasLayer can't have both surface and GLContext");
+    mNeedsYFlip = PR_FALSE;
   } else if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
+    mNeedsYFlip = PR_TRUE;
   } else {
     NS_ERROR("CanvasLayer created without mSurface or mGLContext?");
   }
@@ -458,7 +461,7 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
     mGLContext->fFlush();
 
     // For simplicity, we read the entire framebuffer for now -- in
-    // the future we should use mUpdatedRect, thoug hwith WebGL we don't
+    // the future we should use mUpdatedRect, though with WebGL we don't
     // have an easy way to generate one.
     mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
                             LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
@@ -485,10 +488,21 @@ BasicCanvasLayer::Paint(gfxContext* aContext)
 {
   nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 
+  gfxRect r(0, 0, mBounds.width, mBounds.height);
+  gfxMatrix m;
+  if (mNeedsYFlip) {
+    m = aContext->CurrentMatrix();
+    aContext->Translate(gfxPoint(0.0, mBounds.height));
+    aContext->Scale(1.0, -1.0);
+  }
+
   aContext->NewPath();
-  aContext->PixelSnappedRectangleAndSetPattern
-    (gfxRect(0, 0, mBounds.width, mBounds.height), pat);
+  aContext->PixelSnappedRectangleAndSetPattern(r, pat);
   aContext->Fill();
+
+  if (mNeedsYFlip) {
+    aContext->SetMatrix(m);
+  }
 
   mUpdatedRect.Empty();
 }

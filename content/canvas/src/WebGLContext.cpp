@@ -56,6 +56,7 @@
 #include "GLContextProvider.h"
 
 using namespace mozilla;
+using namespace mozilla::gl;
 
 nsresult NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult);
 
@@ -130,7 +131,11 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     LogMessage("Canvas 3D: creating PBuffer...");
 
-    gl = gl::sGLContextProvider.CreatePBuffer(gfxIntSize(width, height));
+    GLContextProvider::ContextFormat format(GLContextProvider::ContextFormat::BasicRGBA32);
+    format.depth = 16;
+    format.minDepth = 1;
+
+    gl = gl::sGLContextProvider.CreatePBuffer(gfxIntSize(width, height), format);
 
     if (!ValidateGL()) {
         LogMessage("Canvas 3D: Couldn't validate OpenGL implementation; is everything needed present?");
