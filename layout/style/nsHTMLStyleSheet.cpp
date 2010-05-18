@@ -176,12 +176,7 @@ static PLDHashTableOps MappedAttrTable_Ops = {
 // -----------------------------------------------------------
 
 nsHTMLStyleSheet::nsHTMLStyleSheet(void)
-  : mURL(nsnull),
-    mDocument(nsnull),
-    mLinkRule(nsnull),
-    mVisitedRule(nsnull),
-    mActiveRule(nsnull),
-    mDocumentColorRule(nsnull)
+  : mDocument(nsnull)
 {
   mMappedAttrTable.ops = nsnull;
 }
@@ -192,20 +187,11 @@ nsHTMLStyleSheet::Init()
   mTableTHRule = new TableTHRule();
   if (!mTableTHRule)
     return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(mTableTHRule);
   return NS_OK;
 }
 
 nsHTMLStyleSheet::~nsHTMLStyleSheet()
 {
-  NS_IF_RELEASE(mURL);
-
-  NS_IF_RELEASE(mLinkRule);
-  NS_IF_RELEASE(mVisitedRule);
-  NS_IF_RELEASE(mActiveRule);
-  NS_IF_RELEASE(mDocumentColorRule);
-  NS_IF_RELEASE(mTableTHRule);
-
   if (mMappedAttrTable.ops)
     PL_DHashTableFinish(&mMappedAttrTable);
 }
@@ -271,10 +257,8 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
                        &bodyColor);
         if (NS_SUCCEEDED(rv) &&
             (!mDocumentColorRule || bodyColor != mDocumentColorRule->mColor)) {
-          NS_IF_RELEASE(mDocumentColorRule);
           mDocumentColorRule = new HTMLColorRule();
           if (mDocumentColorRule) {
-            NS_ADDREF(mDocumentColorRule);
             mDocumentColorRule->mColor = bodyColor;
           }
         }
@@ -374,17 +358,15 @@ nsHTMLStyleSheet::RulesMatching(XULTreeRuleProcessorData* aData)
 #endif
 
   // nsIStyleSheet api
-/* virtual */ already_AddRefed<nsIURI>
+/* virtual */ nsIURI*
 nsHTMLStyleSheet::GetSheetURI() const
 {
-  NS_IF_ADDREF(mURL);
   return mURL;
 }
 
-/* virtual */ already_AddRefed<nsIURI>
+/* virtual */ nsIURI*
 nsHTMLStyleSheet::GetBaseURI() const
 {
-  NS_IF_ADDREF(mURL);
   return mURL;
 }
 
@@ -428,16 +410,15 @@ nsHTMLStyleSheet::SetComplete()
 {
 }
 
-/* virtual */ already_AddRefed<nsIStyleSheet>
+/* virtual */ nsIStyleSheet*
 nsHTMLStyleSheet::GetParentSheet() const
 {
   return nsnull;
 }
 
-/* virtual */ already_AddRefed<nsIDocument>
+/* virtual */ nsIDocument*
 nsHTMLStyleSheet::GetOwningDocument() const
 {
-  NS_IF_ADDREF(mDocument);
   return mDocument;
 }
 
@@ -459,28 +440,23 @@ nsHTMLStyleSheet::Init(nsIURI* aURL, nsIDocument* aDocument)
 
   mDocument = aDocument; // not refcounted!
   mURL = aURL;
-  NS_ADDREF(mURL);
   return NS_OK;
 }
 
-nsresult
+void
 nsHTMLStyleSheet::Reset(nsIURI* aURL)
 {
-  NS_IF_RELEASE(mURL);
   mURL = aURL;
-  NS_ADDREF(mURL);
 
-  NS_IF_RELEASE(mLinkRule);
-  NS_IF_RELEASE(mVisitedRule);
-  NS_IF_RELEASE(mActiveRule);
-  NS_IF_RELEASE(mDocumentColorRule);
+  mLinkRule          = nsnull;
+  mVisitedRule       = nsnull;
+  mActiveRule        = nsnull;
+  mDocumentColorRule = nsnull;
 
   if (mMappedAttrTable.ops) {
     PL_DHashTableFinish(&mMappedAttrTable);
     mMappedAttrTable.ops = nsnull;
   }
-
-  return NS_OK;
 }
 
 nsresult
@@ -489,13 +465,11 @@ nsHTMLStyleSheet::SetLinkColor(nscolor aColor)
   if (mLinkRule) {
     if (mLinkRule->mColor == aColor)
       return NS_OK;
-    NS_RELEASE(mLinkRule);
   }
 
   mLinkRule = new HTMLColorRule();
   if (!mLinkRule)
     return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(mLinkRule);
 
   mLinkRule->mColor = aColor;
   return NS_OK;
@@ -508,13 +482,11 @@ nsHTMLStyleSheet::SetActiveLinkColor(nscolor aColor)
   if (mActiveRule) {
     if (mActiveRule->mColor == aColor)
       return NS_OK;
-    NS_RELEASE(mActiveRule);
   }
 
   mActiveRule = new HTMLColorRule();
   if (!mActiveRule)
     return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(mActiveRule);
 
   mActiveRule->mColor = aColor;
   return NS_OK;
@@ -526,13 +498,11 @@ nsHTMLStyleSheet::SetVisitedLinkColor(nscolor aColor)
   if (mVisitedRule) {
     if (mVisitedRule->mColor == aColor)
       return NS_OK;
-    NS_RELEASE(mVisitedRule);
   }
 
   mVisitedRule = new HTMLColorRule();
   if (!mVisitedRule)
     return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(mVisitedRule);
 
   mVisitedRule->mColor = aColor;
   return NS_OK;
