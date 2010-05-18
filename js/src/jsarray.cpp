@@ -455,7 +455,7 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole,
     if (obj->isDenseArray() && index < obj->getDenseArrayCapacity()) {
         const Value &v = obj->getDenseArrayElement(jsuint(index));
         if (v.isMagic(JS_ARRAY_HOLE)) {
-            vp->copy(v);
+            *vp = v;
             *hole = JS_FALSE;
             return JS_TRUE;
         }
@@ -522,8 +522,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
         return JS_FALSE;
     JS_ASSERT(!JSID_IS_VOID(idr.id()));
 
-    Value tmp;
-    tmp.copy(v);
+    Value tmp = v;
     return obj->setProperty(cx, idr.id(), &tmp);
 }
 
@@ -765,7 +764,7 @@ js_GetDenseArrayElementValue(JSContext *cx, JSObject *obj, JSProperty *prop,
         IndexToValue(cx, obj->getArrayLength(), vp);
         return JS_TRUE;
     }
-    vp->copy(obj->getDenseArrayElement(i));
+    *vp = obj->getDenseArrayElement(i);
     return JS_TRUE;
 }
 
@@ -780,7 +779,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 
     if (id == ATOM_TO_JSID(cx->runtime->atomState.protoAtom)) {
-        vp->copy(obj->getProtoValue());
+        *vp = obj->getProtoValue();
         return JS_TRUE;
     }
 
@@ -815,7 +814,7 @@ array_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         return JS_TRUE;
     }
 
-    vp->copy(obj->getDenseArrayElement(i));
+    *vp = obj->getDenseArrayElement(i);
     return JS_TRUE;
 }
 
@@ -1014,8 +1013,7 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
         return js_DefineProperty(cx, obj, id, value, getter, setter, attrs);
     }
 
-    Value tmp;
-    tmp.copy(*value);
+    Value tmp = *value;
     return array_setProperty(cx, obj, id, &tmp);
 }
 
@@ -1533,7 +1531,7 @@ InitArrayElements(JSContext *cx, JSObject *obj, jsuint start, jsuint count, Valu
     AutoIdRooter idr(cx);
     Value idval(DoubleTag(MAXINDEX));
     do {
-        tvr.addr()->copy(*vector++);
+        *tvr.addr() = *vector++;
         if (!js_ValueToStringId(cx, idval, idr.addr()) ||
             !obj->setProperty(cx, idr.id(), tvr.addr())) {
             return JS_FALSE;
@@ -1625,8 +1623,7 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
 
         uint32 lo = 0, hi = len - 1;
         for (; lo < hi; lo++, hi--) {
-            Value tmp;
-            tmp.copy(obj->getDenseArrayElement(lo));
+            Value tmp = obj->getDenseArrayElement(lo);
             obj->setDenseArrayElement(lo, obj->getDenseArrayElement(hi));
             obj->setDenseArrayElement(hi, tmp);
         }
@@ -1691,7 +1688,7 @@ MergeArrays(MSortArgs *msa, void *src, void *dest, size_t run1, size_t run2)
     }
 
 #define COPY_ONE(p,q,n) \
-    (isValue ? (((Value*)p)->copy(*((Value*)q))) : (void)memcpy(p, q, n))
+    (isValue ? (void)(*(Value*)p = *(Value*)q) : (void)memcpy(p, q, n))
 
     a = src;
     c = dest;
@@ -1737,7 +1734,7 @@ js_MergeSort(void *src, size_t nel, size_t elsize,
 
     /* Avoid memcpy overhead for word-sized and word-aligned elements. */
 #define COPY_ONE(p,q,n) \
-    (isValue ? (((Value*)p)->copy(*(Value*)q)) : (void)memcpy(p, q, n))
+    (isValue ? (void)(*(Value*)p = *(Value*)q) : (void)memcpy(p, q, n))
 #define CALL_CMP(a, b) \
     if (!cmp(arg, (a), (b), &cmp_result)) return JS_FALSE;
 #define INS_SORT_INT 4
@@ -1833,10 +1830,10 @@ sort_compare(void *arg, const void *a, const void *b, int *result)
 
     Value *invokevp = ca->args.getvp();
     Value *sp = invokevp;
-    sp++->copy(ca->fval);
+    *sp++ = ca->fval;
     sp++->setNull();
-    sp++->copy(*av);
-    sp++->copy(*bv);
+    *sp++ = *av;
+    *sp++ = *bv;
 
     if (!Invoke(cx, ca->args, 0))
         return JS_FALSE;
@@ -1896,7 +1893,7 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_SORT_ARG);
             return false;
         }
-        fval.copy(argv[0]);     /* non-default compare function */
+        fval = argv[0];     /* non-default compare function */
     } else {
         fval.setNull();
     }
@@ -2046,7 +2043,7 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
                     if (!str)
                         return false;
                     vec[2 * i].setString(str);
-                    vec[2 * i + 1].copy(v);
+                    vec[2 * i + 1] = v;
                 } while (i != 0);
 
                 JS_ASSERT(tvr.array == vec);
@@ -2074,7 +2071,7 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
                  */
                 i = 0;
                 do {
-                    vec[i].copy(vec[2 * i + 1]);
+                    vec[i] = vec[2 * i + 1];
                 } while (++i != newlen);
             }
         } else {
@@ -2150,8 +2147,7 @@ array_push1_dense(JSContext* cx, JSObject* obj, const Value &v, Value *rval)
     if (INDEX_TOO_SPARSE(obj, length)) {
         if (!js_MakeArraySlow(cx, obj))
             return JS_FALSE;
-        Value tmp;
-        tmp.copy(v);
+        Value tmp = v;
         return array_push_slowly(cx, obj, 1, &tmp, rval);
     }
 
@@ -2274,7 +2270,7 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
 
         if (obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj) &&
             length < obj->getDenseArrayCapacity()) {
-            vp->copy(obj->getDenseArrayElement(0));
+            *vp = obj->getDenseArrayElement(0);
             if (vp->isMagic(JS_ARRAY_HOLE))
                 vp->setUndefined();
             else
@@ -2696,11 +2692,11 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
 
     if (argc <= 1) {
         i = isLast ? length - 1 : 0;
-        tosearch.copy((argc != 0) ? vp[2] : Value(UndefinedTag()));
+        tosearch = (argc != 0) ? vp[2] : Value(UndefinedTag());
     } else {
         jsdouble start;
 
-        tosearch.copy(vp[2]);
+        tosearch = vp[2];
         if (!ValueToNumber(cx, vp[3], &start))
             return JS_FALSE;
         start = js_DoubleToInteger(start);
@@ -2818,7 +2814,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             return JS_FALSE;
         }
         if (argc >= 2) {
-            vp->copy(argv[1]);
+            *vp = argv[1];
         } else {
             JSBool hole;
             do {
@@ -2902,13 +2898,13 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
          * rooting.
          */
         Value *sp = invokevp;
-        sp++->copy(calleev);
-        sp++->copy(thisv);
+        *sp++ = calleev;
+        *sp++ = thisv;
         if (REDUCE_MODE(mode))
-            sp++->copy(*vp);
-        sp++->copy(tvr.value());
+            *sp++ = *vp;
+        *sp++ = tvr.value();
         sp++->setInt32(i);
-        sp++->copy(objv);
+        *sp++ = objv;
 
         /* Do the call. */
         ok = Invoke(cx, args, 0);
@@ -2927,7 +2923,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             break;
           case REDUCE:
           case REDUCE_RIGHT:
-            vp->copy(*invokevp);
+            *vp = *invokevp;
             break;
           case MAP:
             ok = SetArrayElement(cx, newarr, i, *invokevp);

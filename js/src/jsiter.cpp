@@ -136,8 +136,8 @@ static inline bool
 NewKeyValuePair(JSContext *cx, const Value &key, const Value &val, jsboxedword *wp)
 {
     Value vec[2]; 
-    vec[0].copy(key);
-    vec[1].copy(val);
+    vec[0] = key;
+    vec[1] = val;
     AutoArrayRooter tvr(cx, JS_ARRAY_LENGTH(vec), vec);
 
     JSObject *aobj = js_NewArrayObject(cx, 2, vec);
@@ -467,7 +467,7 @@ Iterator(JSContext *cx, JSObject *iterobj, uintN argc, Value *argv, Value *rval)
 
     keyonly = js_ValueToBoolean(argv[1]);
     flags = keyonly ? 0 : (JSITER_FOREACH | JSITER_KEYVALUE);
-    rval->copy(argv[0]);
+    *rval = argv[0];
     return js_ValueToIterator(cx, flags, rval);
 }
 
@@ -528,7 +528,7 @@ js_ValueToIterator(JSContext *cx, uintN flags, Value *vp)
 
     if (vp->isObject()) {
         /* Common case. */
-        tvr.addr()->copy(*vp);
+        *tvr.addr() = *vp;
     } else {
         /*
          * Enumerating over null and undefined gives an empty enumerator.
@@ -641,7 +641,7 @@ js_IteratorMore(JSContext *cx, JSObject *iterobj, Value *rval)
 
     /* Cache the value returned by iterobj.next() so js_IteratorNext() can find it. */
     JS_ASSERT(!rval->isMagic(JS_NO_ITER_VALUE));
-    cx->iterValue.copy(*rval);
+    cx->iterValue = *rval;
     rval->setBoolean(true);
     return true;
 }
@@ -657,7 +657,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
          */
         NativeIterator *ni = iterobj->getNativeIterator();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        rval->copy(BoxedWordToValue(*ni->props_cursor++));
+        *rval = BoxedWordToValue(*ni->props_cursor++);
 
         if (rval->isString() || (ni->flags & JSITER_FOREACH))
             return true;
@@ -677,7 +677,7 @@ js_IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     }
 
     JS_ASSERT(!cx->iterValue.isMagic(JS_NO_ITER_VALUE));
-    rval->copy(cx->iterValue);
+    *rval = cx->iterValue;
     cx->iterValue.setMagic(JS_NO_ITER_VALUE);
 
     return true;
@@ -819,10 +819,10 @@ js_NewGenerator(JSContext *cx)
     }
     newfp->script = fp->script;
     newfp->fun = fp->fun;
-    newfp->thisv.copy(fp->thisv);
+    newfp->thisv = fp->thisv;
     newfp->argc = fp->argc;
     newfp->argv = vp + 2;
-    newfp->rval.copy(fp->rval);
+    newfp->rval = fp->rval;
     newfp->annotation = NULL;
     newfp->scopeChain = fp->scopeChain;
     JS_ASSERT(!fp->blockChain);
@@ -881,7 +881,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
              * Store the argument to send as the result of the yield
              * expression.
              */
-            gen->savedRegs.sp[-1].copy(arg);
+            gen->savedRegs.sp[-1] = arg;
         }
         gen->state = JSGEN_RUNNING;
         break;
@@ -1073,7 +1073,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
     bool undef = ((op == JSGENOP_SEND || op == JSGENOP_THROW) && argc != 0);
     if (!SendToGenerator(cx, op, obj, gen, undef ? vp[2] : Value(UndefinedTag())))
         return JS_FALSE;
-    vp->copy(gen->getFloatingFrame()->rval);
+    *vp = gen->getFloatingFrame()->rval;
     return JS_TRUE;
 }
 

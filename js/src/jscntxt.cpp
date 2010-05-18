@@ -2543,7 +2543,7 @@ void
 SetPendingException(JSContext *cx, const Value &v)
 {
     cx->throwing = JS_TRUE;
-    cx->exception.copy(v);
+    cx->exception = v;
 }
 
 } /* namespace js */

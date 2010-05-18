@@ -230,7 +230,7 @@ ValueToNumber(JSContext *cx, const js::Value &v, double *out)
         return true;
     }
     extern bool ValueToNumberSlow(JSContext *, js::Value, double *);
-    return ValueToNumberSlow(cx, copyable_cast(v), out);
+    return ValueToNumberSlow(cx, v, out);
 }
 
 /* Convert a value to a number, replacing 'vp' with the converted value. */
@@ -241,7 +241,7 @@ ValueToNumber(JSContext *cx, js::Value *vp)
         return true;
     double d;
     extern bool ValueToNumberSlow(JSContext *, js::Value, double *);
-    if (!ValueToNumberSlow(cx, copyable_cast(*vp), &d))
+    if (!ValueToNumberSlow(cx, *vp, &d))
         return false;
     vp->setNumber(d);
     return true;

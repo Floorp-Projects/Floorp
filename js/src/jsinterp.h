@@ -197,7 +197,7 @@ struct JSStackFrame
     /* Short for: varobj(cx->activeCallStack()). */
     JSObject *varobj(JSContext *cx) const;
 
-    inline js::ObjPtr getThisObject(JSContext *cx);
+    inline JSObject *getThisObject(JSContext *cx);
 
     bool isGenerator() const { return flags & JSFRAME_GENERATOR; }
     bool isFloatingGenerator() const {
@@ -479,16 +479,16 @@ js_MeterSlotOpcode(JSOp op, uint32 slot);
 
 #endif /* JS_LONE_INTERPRET */
 
-inline js::ObjPtr
+inline JSObject *
 JSStackFrame::getThisObject(JSContext *cx)
 {
     if (flags & JSFRAME_COMPUTED_THIS)
-        return thisv.asObjPtr();  /* JSVAL_COMPUTED_THIS invariant */
+        return &thisv.asObject();
     if (!js::ComputeThisFromArgv(cx, argv))
-        return js::NullTag();
-    thisv.copy(argv[-1]);
+        return NULL;
+    thisv = argv[-1];
     flags |= JSFRAME_COMPUTED_THIS;
-    return thisv.asObjPtr();
+    return &thisv.asObject();
 }
 
 #endif /* jsinterp_h___ */

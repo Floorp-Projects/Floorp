@@ -543,9 +543,9 @@ js_ConstructXMLQNameObject(JSContext *cx, const Value &nsval, const Value &lnval
         nsval.asObject().getClass() == &js_AnyNameClass) {
         argv[0].setNull();
     } else {
-        argv[0].copy(nsval);
+        argv[0] = nsval;
     }
-    argv[1].copy(lnval);
+    argv[1] = lnval;
     return js_ConstructObject(cx, &js_QNameClass.base, NULL, NULL, 2, argv);
 }
 
@@ -646,11 +646,11 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
 
     if (argc == 1 || argc == -1) {
         if (isNamespace) {
-            obj->fslots[JSSLOT_URI].copy(uriobj->fslots[JSSLOT_URI]);
-            obj->fslots[JSSLOT_PREFIX].copy(uriobj->fslots[JSSLOT_PREFIX]);
+            obj->fslots[JSSLOT_URI] = uriobj->fslots[JSSLOT_URI];
+            obj->fslots[JSSLOT_PREFIX] = uriobj->fslots[JSSLOT_PREFIX];
         } else if (isQName && (uri = GetURI(uriobj))) {
             obj->fslots[JSSLOT_URI].setString(uri);
-            obj->fslots[JSSLOT_PREFIX].copy(uriobj->fslots[JSSLOT_PREFIX]);
+            obj->fslots[JSSLOT_PREFIX] = uriobj->fslots[JSSLOT_PREFIX];
         } else {
             uri = js_ValueToString(cx, Valueify(urival));
             if (!uri)
@@ -5086,7 +5086,7 @@ js_GetXMLMethod(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      */
     AutoValueRooter tvr(cx);
     JSBool ok = GetXMLFunction(cx, obj, id, Jsvalify(tvr.addr()));
-    vp->copy(tvr.value());
+    *vp = tvr.value();
     return ok;
 }
 
@@ -6525,7 +6525,7 @@ xml_setLocalName(JSContext *cx, uintN argc, jsval *vp)
     if (!xml)
         return JS_FALSE;
     jsval tmp = namestr ? STRING_TO_JSVAL(namestr) : JSVAL_VOID;
-    xml->name->fslots[JSSLOT_LOCAL_NAME].copy(Valueify(tmp));
+    xml->name->fslots[JSSLOT_LOCAL_NAME] = Valueify(tmp);
     return JS_TRUE;
 }
 
@@ -6621,7 +6621,7 @@ xml_setName(JSContext *cx, uintN argc, jsval *vp)
         for (i = 0, n = nsarray->length; i < n; i++) {
             ns = XMLARRAY_MEMBER(nsarray, i, JSObject);
             if (ns && js_EqualStrings(GetURI(ns), GetURI(nameqn))) {
-                nameqn->fslots[JSSLOT_PREFIX].copy(ns->fslots[JSSLOT_PREFIX]);
+                nameqn->fslots[JSSLOT_PREFIX] = ns->fslots[JSSLOT_PREFIX];
                 return JS_TRUE;
             }
         }
@@ -7412,7 +7412,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
     JSStackFrame *fp;
 
     argv[0].setString(cx->runtime->emptyString);
-    argv[1].copy(v);
+    argv[1] = v;
     ns = js_ConstructObject(cx, &js_NamespaceClass.base, NULL, NULL, 2, argv);
     if (!ns)
         return JS_FALSE;

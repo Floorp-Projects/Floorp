@@ -734,7 +734,7 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, Value *argv,
     funobj = &argv[-2].asObject();
     wrapper = GET_FUNCTION_PRIVATE(cx, funobj);
     userid = ATOM_TO_JSID(wrapper->atom);
-    rval->copy(argv[0]);
+    *rval = argv[0];
     return js_watch_set(cx, obj, userid, rval);
 }
 
@@ -845,7 +845,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
 
         if (pobj->isNative()) {
             if (SPROP_HAS_VALID_SLOT(sprop, pobj->scope()))
-                value.copy(pobj->lockedGetSlot(sprop->slot));
+                value = pobj->lockedGetSlot(sprop->slot);
             else
                 value.setUndefined();
             getter = sprop->getter();
@@ -1284,7 +1284,7 @@ JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(void)
 JS_SetFrameReturnValue(JSContext *cx, JSStackFrame *fp, jsval rval)
 {
-    fp->rval.copy(Valueify(rval));
+    fp->rval = Valueify(rval);
 }
 
 /************************************************************************/
@@ -1471,7 +1471,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 
     cx->throwing = wasThrowing;
     if (wasThrowing)
-        cx->exception.copy(lastException.value());
+        cx->exception = lastException.value();
 
     pd->flags |= (sprop->enumerable() ? JSPD_ENUMERATE : 0)
               |  (!sprop->writable()  ? JSPD_READONLY  : 0)

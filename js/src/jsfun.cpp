@@ -138,7 +138,7 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
                 if (argsobj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
                     return argsobj->getProperty(cx, id, vp);
             }
-            vp->copy(fp->argv[arg]);
+            *vp = fp->argv[arg];
         } else {
             /*
              * Per ECMA-262 Ed. 3, 10.1.8, last bulleted item, do not share
@@ -502,11 +502,11 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
-                vp->copy(fp->argv[arg]);
+                *vp = fp->argv[arg];
             } else {
                 const Value &v = obj->getArgsElement(arg);
                 if (!v.isMagic(JS_ARGS_HOLE))
-                    vp->copy(v);
+                    *vp = v;
             }
         }
     } else if (id == ATOM_KEY(cx->runtime->atomState.lengthAtom)) {
@@ -529,7 +529,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                                      JSMSG_OPTIMIZED_CLOSURE_LEAK);
                 return false;
             }
-            vp->copy(v);
+            *vp = v;
         }
     }
     return true;
@@ -557,7 +557,7 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         if (arg < obj->getArgsLength()) {
             JSStackFrame *fp = (JSStackFrame *) obj->getPrivate();
             if (fp) {
-                fp->argv[arg].copy(*vp);
+                fp->argv[arg] = *vp;
                 return true;
             }
         }
@@ -1034,7 +1034,7 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, Value *vp,
                         return false;
                     vp->setNonFunObj(*argsobj);
                 } else {
-                    vp->copy(obj->getSlot(JSSLOT_CALL_ARGUMENTS));
+                    *vp = obj->getSlot(JSSLOT_CALL_ARGUMENTS);
                 }
             }
             return true;
@@ -1061,9 +1061,9 @@ CallPropertyOp(JSContext *cx, JSObject *obj, jsid id, Value *vp,
 
     if (setter) {
         GC_POKE(cx, array[i]);
-        array[i].copy(*vp);
+        array[i] = *vp;
     } else {
-        vp->copy(array[i]);
+        *vp = array[i];
     }
     return true;
 }
@@ -1374,7 +1374,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             }
 
             JS_ASSERT(fp->down->argv);
-            vp->copy(fp->down->calleeValue());
+            *vp = fp->down->calleeValue();
         } else {
             vp->setNull();
         }
@@ -1391,7 +1391,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
       default:
         /* XXX fun[0] and fun.arguments[0] are equivalent. */
         if (fp && fp->fun && (uintN)slot < fp->fun->nargs)
-            vp->copy(fp->argv[slot]);
+            *vp = fp->argv[slot];
         break;
     }
 
@@ -1843,9 +1843,7 @@ fun_toStringHelper(JSContext *cx, uint32_t indent, uintN argc, Value *vp)
 {
     if (!ComputeThisFromVpInPlace(cx, vp))
         return JS_FALSE;
-
-    Value fval;
-    fval.copy(vp[1]);
+    Value fval = vp[1];
 
     if (!fval.isFunObj()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -1894,8 +1892,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ComputeThisObjectFromVp(cx, vp);
     if (!obj)
         return JS_FALSE;
-    Value fval;
-    fval.copy(vp[1]);
+    Value fval = vp[1];
 
     if (!js_IsCallable(fval)) {
         JSString *str = js_ValueToString(cx, fval);
@@ -1920,7 +1917,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     } else {
         /* Otherwise convert the first arg to 'this' and skip over it. */
         if (argv[0].isObject())
-            objv.copy(argv[0]);
+            objv = argv[0];
         else if (!js_ValueToObjectOrNull(cx, argv[0], &objv))
             return JS_FALSE;
         argc--;
@@ -1933,12 +1930,12 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     /* Push fval, obj, and the args. */
-    args.getvp()[0].copy(fval);
-    args.getvp()[1].copy(objv);
+    args.getvp()[0] = fval;
+    args.getvp()[1] = objv;
     memcpy(args.getvp() + 2, argv, argc * sizeof *argv);
 
     bool ok = Invoke(cx, args, 0);
-    vp->copy(*args.getvp());
+    *vp = *args.getvp();
     return ok;
 }
 
@@ -1956,7 +1953,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return JS_FALSE;
     Value fval;
-    fval.copy(vp[1]);
+    fval = vp[1];
 
     if (!js_IsCallable(fval)) {
         JSString *str = js_ValueToString(cx, fval);
@@ -2000,7 +1997,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     /* Convert the first arg to 'this' and skip over it. */
     Value objv;
     if (vp[2].isObject())
-        objv.copy(vp[2]);
+        objv = vp[2];
     else if (!js_ValueToObjectOrNull(cx, vp[2], &objv))
         return JS_FALSE;
 
@@ -2013,8 +2010,8 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
 
     /* Push fval, obj, and aobj's elements as args. */
     Value *sp = args.getvp();
-    sp++->copy(fval);
-    sp++->copy(objv);
+    *sp++ = fval;
+    *sp++ = objv;
     if (aobj && aobj->isArguments() && !aobj->isArgsLengthOverridden()) {
         /*
          * Two cases, two loops: note how in the case of an active stack frame
@@ -2031,7 +2028,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
             }
         } else {
             for (uintN i = 0; i < argc; i++) {
-                sp[i].copy(aobj->getArgsElement(i));
+                sp[i] = aobj->getArgsElement(i);
                 if (sp[i].isMagic(JS_ARGS_HOLE))
                     sp[i].setUndefined();
             }
@@ -2045,7 +2042,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     }
 
     bool ok = Invoke(cx, args, 0);
-    vp->copy(*args.getvp());
+    *vp = *args.getvp();
     return ok;
 }
 
@@ -2490,7 +2487,7 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun)
 
     uintN level = fun->u.i.script->staticLevel;
     for (uint32 i = 0, n = uva->length; i < n; i++)
-        closure->dslots[i].copy(js_GetUpvar(cx, level, uva->vector[i]));
+        closure->dslots[i] = js_GetUpvar(cx, level, uva->vector[i]);
 
     return closure;
 }

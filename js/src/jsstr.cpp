@@ -645,7 +645,7 @@ NormalizeThis(JSContext *cx, Value *vp)
     if (vp[1].isObject()) {
         JSObject *obj = &vp[1].asObject();
         if (obj->getClass() == &js_StringClass) {
-            vp[1].copy(obj->getPrimitiveThis());
+            vp[1] = obj->getPrimitiveThis();
             return vp[1].asString();
         }
     }
@@ -721,7 +721,7 @@ js_str_toString(JSContext *cx, uintN argc, Value *vp)
     const Value *primp;
     if (!js_GetPrimitiveThis(cx, vp, &js_StringClass, &primp))
         return false;
-    vp->copy(*primp);
+    *vp = *primp;
     return true;
 }
 
@@ -3205,8 +3205,7 @@ js_ValueToPrintable(JSContext *cx, const Value &v, JSValueToStringFun v2sfun)
 JSString *
 js_ValueToString(JSContext *cx, const Value &arg)
 {
-    Value v;
-    v.copy(arg);
+    Value v = arg;
     if (v.isObject() && !v.asObject().defaultValue(cx, JSTYPE_STRING, &v))
         return NULL;
 
@@ -3241,8 +3240,7 @@ AppendAtom(JSAtom *atom, JSCharBuffer &cb)
 JSBool
 js_ValueToCharBuffer(JSContext *cx, const Value &arg, JSCharBuffer &cb)
 {
-    Value v;
-    v.copy(arg);
+    Value v = arg;
     if (v.isObject() && !v.asObject().defaultValue(cx, JSTYPE_STRING, &v))
         return JS_FALSE;
 

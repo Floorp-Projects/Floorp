@@ -620,8 +620,7 @@ class TypedArrayTemplate
         if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
             return true;
 
-        Value v;
-        v.copy(*vp);
+        Value v = *vp;
         return obj_setProperty(cx, obj, id, &v);
     }
 
