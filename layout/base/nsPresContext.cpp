@@ -96,7 +96,6 @@
 #include "nsObjectFrame.h"
 #include "nsTransitionManager.h"
 #include "mozilla/dom/Element.h"
-#include "nsIFrameMessageManager.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -2053,22 +2052,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (!chromeEventHandler)
     return PR_FALSE;
 
-  nsIEventListenerManager* manager = nsnull;
-  nsCOMPtr<nsINode> node;
-  nsCOMPtr<nsIInProcessContentFrameMessageManager> mm =
-    do_QueryInterface(chromeEventHandler);
-  if (mm) {
-    nsCOMPtr<nsPIDOMEventTarget> target = do_QueryInterface(mm);
-    if (target && (manager = target->GetListenerManager(PR_FALSE)) &&
-        manager->MayHavePaintEventListener()) {
-      return PR_TRUE;
-    }
-    node = mm->GetOwnerContent();
-  }
-
-  if (!node) {
-    node = do_QueryInterface(chromeEventHandler);
-  }
+  nsCOMPtr<nsINode> node = do_QueryInterface(chromeEventHandler);
   if (node)
     return MayHavePaintEventListener(node->GetOwnerDoc()->GetInnerWindow());
 
@@ -2076,7 +2060,7 @@ MayHavePaintEventListener(nsPIDOMWindow* aInnerWindow)
   if (window)
     return MayHavePaintEventListener(window);
 
-  manager =
+  nsIEventListenerManager* manager =
     chromeEventHandler->GetListenerManager(PR_FALSE);
   if (manager && manager->MayHavePaintEventListener())
     return PR_TRUE;

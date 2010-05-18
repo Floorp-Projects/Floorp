@@ -55,8 +55,6 @@ _CHROME_FILES = \
     test_bug467123.xul \
     test_title.xul \
     title_window.xul \
-    test_bug549682.xul \
-    file_bug549682.xul \
     $(NULL)
 
 libs:: $(_TEST_FILES)

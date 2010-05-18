@@ -204,7 +204,6 @@
 
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"
-#include "nsFrameLoader.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
 
@@ -294,17 +293,6 @@ static PRBool               gDOMWindowDumpEnabled      = PR_FALSE;
       return err_rval;                                                        \
     }                                                                         \
     return ((nsGlobalChromeWindow *)outer)->method args;                      \
-  }                                                                           \
-  PR_END_MACRO
-
-#define FORWARD_TO_INNER_CHROME(method, args, err_rval)                       \
-  PR_BEGIN_MACRO                                                              \
-  if (IsOuterWindow()) {                                                      \
-    if (!mInnerWindow) {                                                      \
-      NS_WARNING("No inner window available!");                               \
-      return err_rval;                                                        \
-    }                                                                         \
-    return ((nsGlobalChromeWindow *)mInnerWindow)->method args;               \
   }                                                                           \
   PR_END_MACRO
 
@@ -2385,16 +2373,7 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  nsPIDOMEventTarget* chromeTarget = mChromeEventHandler;
-  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mChromeEventHandler);
-  if (flo) {
-    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
-    if (fl) {
-      nsPIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
-      chromeTarget = t ? t : chromeTarget;
-    }
-  }
-  aVisitor.mParentTarget = chromeTarget;
+  aVisitor.mParentTarget = mChromeEventHandler;
   return NS_OK;
 }
 
@@ -9397,7 +9376,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
                                                   nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mBrowserDOMWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mMessageManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(ChromeWindow, nsGlobalChromeWindow)
@@ -9628,28 +9606,6 @@ nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
-}
-
-NS_IMETHODIMP
-nsGlobalChromeWindow::GetMessageManager(nsIChromeFrameMessageManager** aManager)
-{
-  FORWARD_TO_INNER_CHROME(GetMessageManager, (aManager), NS_ERROR_FAILURE);
-  if (!mMessageManager) {
-    nsIScriptContext* scx = GetContextInternal();
-    NS_ENSURE_STATE(scx);
-    JSContext* cx = (JSContext *)scx->GetNativeContext();
-    NS_ENSURE_STATE(cx);
-    mMessageManager = new nsFrameMessageManager(PR_TRUE,
-                                                nsnull,
-                                                nsnull,
-                                                nsnull,
-                                                nsnull,
-                                                nsnull,
-                                                cx);
-    NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
-  }
-  NS_ADDREF(*aManager = mMessageManager);
-  return NS_OK;
 }
 
 // nsGlobalModalWindow implementation
