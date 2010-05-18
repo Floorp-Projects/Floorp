@@ -47,6 +47,7 @@
 #include "nsAutoPtr.h"
 #include "gfx3DMatrix.h"
 #include "gfxColor.h"
+#include "gfxPattern.h"
 
 class gfxContext;
 class nsPaintEvent;
@@ -496,9 +497,18 @@ public:
    */
   virtual void Updated(const nsIntRect& aRect) = 0;
 
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the filter used to resample this image (if necessary).
+   */
+  void SetFilter(gfxPattern::GraphicsFilter aFilter) { mFilter = aFilter; }
+  gfxPattern::GraphicsFilter GetFilter() const { return mFilter; }
+
 protected:
   CanvasLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData) {}
+    : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}
+
+  gfxPattern::GraphicsFilter mFilter;
 };
 
 }

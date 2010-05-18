@@ -488,6 +488,8 @@ BasicCanvasLayer::Paint(gfxContext* aContext)
 {
   nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 
+  pat->SetFilter(mFilter);
+
   gfxRect r(0, 0, mBounds.width, mBounds.height);
   gfxMatrix m;
   if (mNeedsYFlip) {
