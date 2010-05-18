@@ -5194,6 +5194,7 @@ dnl ========================================================
 if test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
 elif test "$OS_ARCH" = "Darwin"; then
+  AC_DEFINE(XP_MACOSX)
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
 elif test "$OS_ARCH" = "OpenVMS"; then

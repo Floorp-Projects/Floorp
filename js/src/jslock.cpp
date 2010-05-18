@@ -113,7 +113,9 @@ static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     /* Details on these functions available in the manpage for atomic */
-    return OSAtomicCompareAndSwapPtrBarrier(ov, nv, w);
+    return OSAtomicCompareAndSwapPtrBarrier(reinterpret_cast<void *>(ov),
+                                            reinterpret_cast<void *>(nv),
+                                            reinterpret_cast<void **>(w));
 }
 
 #elif defined(__i386) && (defined(__GNUC__) || defined(__SUNPRO_CC))
