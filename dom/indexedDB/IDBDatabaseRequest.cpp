@@ -578,22 +578,6 @@ IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::CreateIndex(const nsAString& aName,
-                                const nsAString& aStoreName,
-                                const nsAString& aKeyPath,
-                                PRBool aUnique,
-                                nsIIDBRequest** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-
-  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
-  request.forget(_retval);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
                                       nsIIDBRequest** _retval)
 {
