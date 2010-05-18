@@ -507,7 +507,7 @@ str_uneval(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *str;
 
-    str = js_ValueToSource(cx, argc != 0 ? vp[2] : sUndefinedValue);
+    str = js_ValueToSource(cx, argc != 0 ? vp[2] : undefinedValue());
     if (!str)
         return JS_FALSE;
     vp->setString(str);
@@ -3015,7 +3015,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
         return NULL;
     proto->setPrimitiveThis(cx->runtime->emptyString);
     if (!js_DefineNativeProperty(cx, proto, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
-                                 sUndefinedValue, NULL, NULL,
+                                 undefinedValue(), NULL, NULL,
                                  JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,
                                  NULL)) {
         return JS_FALSE;

@@ -52,12 +52,12 @@
 JS_BEGIN_EXTERN_C
 
 /* Well-known JS values, initialized on startup. */
-extern jsval JSVAL_NULL;
-extern jsval JSVAL_ZERO;
-extern jsval JSVAL_ONE;
-extern jsval JSVAL_FALSE;
-extern jsval JSVAL_TRUE;
-extern jsval JSVAL_VOID;
+extern JS_PUBLIC_DATA(jsval) JSVAL_NULL;
+extern JS_PUBLIC_DATA(jsval) JSVAL_ZERO;
+extern JS_PUBLIC_DATA(jsval) JSVAL_ONE;
+extern JS_PUBLIC_DATA(jsval) JSVAL_FALSE;
+extern JS_PUBLIC_DATA(jsval) JSVAL_TRUE;
+extern JS_PUBLIC_DATA(jsval) JSVAL_VOID;
 
 /*
  * Exact value equality, corresponding to == on old word-sized jsvals.
@@ -928,6 +928,9 @@ JS_updateMallocCounter(JSContext *cx, size_t nbytes);
 
 extern JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s);
+
+extern JS_PUBLIC_API(JSBool)
+JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval);
 
 /*
  * A GC root is a pointer to a jsval, JSObject *, or JSString * that itself
@@ -3042,12 +3045,6 @@ class ObjPtr
   protected:
     typedef JSValueMaskType MaskType;
 
-    static const MaskType NullMask         = JSVAL_NULL_MASK;
-    static const MaskType NonFunObjMask    = JSVAL_NONFUNOBJ_MASK;
-    static const MaskType FunObjMask       = JSVAL_FUNOBJ_MASK;
-
-    static const MaskType ObjectMask       = NonFunObjMask | FunObjMask;
-
     MaskType mask;
     JSObject *obj;
 
@@ -3063,31 +3060,31 @@ class ObjPtr
     }
 
     ObjPtr(NullTag) {
-        mask = NullMask;
+        mask = JSVAL_NULL_MASK;
         obj = NULL;
     }
 
     ObjPtr(FunObjTag arg) {
         JS_ASSERT(JS_ObjectIsFunction(NULL, &arg.obj));
-        mask = FunObjMask;
+        mask = JSVAL_FUNOBJ_MASK;
         obj = &arg.obj;
     }
 
     ObjPtr(FunObjOrNull arg) {
         JS_ASSERT_IF(arg.obj, JS_ObjectIsFunction(NULL, arg.obj));
-        mask = arg.obj ? FunObjMask : NullMask;
+        mask = arg.obj ? JSVAL_FUNOBJ_MASK : JSVAL_NULL_MASK;
         obj = arg.obj;
     }
 
     ObjPtr(NonFunObjTag arg) {
         JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg.obj));
-        mask = NonFunObjMask;
+        mask = JSVAL_NONFUNOBJ_MASK;
         obj = &arg.obj;
     }
 
     ObjPtr(NonFunObjOrNull arg) {
         JS_ASSERT_IF(arg.obj, !JS_ObjectIsFunction(NULL, arg.obj));
-        mask = arg.obj ? NonFunObjMask : NullMask;
+        mask = arg.obj ? JSVAL_NONFUNOBJ_MASK : JSVAL_NULL_MASK;
         obj = arg.obj;
     }
 
@@ -3097,11 +3094,11 @@ class ObjPtr
     /* Accessors */
 
     bool isNull() const {
-        return mask == NullMask;
+        return mask == JSVAL_NULL_MASK;
     }
 
     bool isFunObj() const {
-        return mask == FunObjMask;
+        return mask == JSVAL_FUNOBJ_MASK;
     }
 
     JSObject &asFunObj() const {
@@ -3110,7 +3107,7 @@ class ObjPtr
     }
 
     bool isNonFunObj() const {
-        return mask == NonFunObjMask;
+        return mask == JSVAL_NONFUNOBJ_MASK;
     }
 
     JSObject &asNonFunObj() const {
@@ -3119,8 +3116,8 @@ class ObjPtr
     }
 
     bool isObject() const {
-        JS_ASSERT((mask != NullMask) == bool(mask & ObjectMask));
-        return mask != NullMask;
+        JS_ASSERT((mask != JSVAL_NULL_MASK) == bool(mask & JSVAL_OBJECT_MASK));
+        return mask != JSVAL_NULL_MASK;
     }
 
     operator JSObject *() const {
@@ -3140,31 +3137,31 @@ class ObjPtr
     /* Assignment */
 
     void setNull() {
-        mask = NullMask;
+        mask = JSVAL_NULL_MASK;
         obj = NULL;
     }
 
     void setFunObj(JSObject &arg) {
         JS_ASSERT(JS_ObjectIsFunction(NULL, &arg));
-        mask = FunObjMask;
+        mask = JSVAL_FUNOBJ_MASK;
         obj = &arg;
     }
 
     void setFunObjOrNull(JSObject *arg) {
         JS_ASSERT_IF(arg, JS_ObjectIsFunction(NULL, arg));
-        mask = arg ? FunObjMask : NullMask;
+        mask = arg ? JSVAL_FUNOBJ_MASK : JSVAL_NULL_MASK;
         obj = arg;
     }
 
     void setNonFunObj(JSObject &arg) {
         JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg));
-        mask = NonFunObjMask;
+        mask = JSVAL_NONFUNOBJ_MASK;
         obj = &arg;
     }
 
     void setNonFunObjOrNull(JSObject *arg) {
         JS_ASSERT_IF(arg, !JS_ObjectIsFunction(NULL, arg));
-        mask = arg ? NonFunObjMask : NullMask;
+        mask = arg ? JSVAL_NONFUNOBJ_MASK : JSVAL_NULL_MASK;
         obj = arg;
     }
 
@@ -3200,29 +3197,14 @@ class Value
      */
     friend bool StrictlyEqual(JSContext *, const Value &, const Value &);
     friend bool Interpret(JSContext *);  /* grep "value representation" */
-    friend bool PrimitiveThisTest(JSFunction *, const Value &);
     friend class PrimitiveValue;
 
   protected:
     /* Type masks */
     typedef JSValueMaskType MaskType;
-    static const MaskType NullMask      = JSVAL_NULL_MASK;
-    static const MaskType UndefinedMask = JSVAL_UNDEFINED_MASK;
-    static const MaskType Int32Mask     = JSVAL_INT32_MASK;
-    static const MaskType DoubleMask    = JSVAL_DOUBLE_MASK;
-    static const MaskType StringMask    = JSVAL_STRING_MASK;
-    static const MaskType NonFunObjMask = JSVAL_NONFUNOBJ_MASK;
-    static const MaskType FunObjMask    = JSVAL_FUNOBJ_MASK;
-    static const MaskType BooleanMask   = JSVAL_BOOLEAN_MASK;
-    static const MaskType MagicMask     = JSVAL_MAGIC_MASK;
 
-    /* Standard collections of types. */
-    static const MaskType NumberMask    = Int32Mask | DoubleMask;
-    static const MaskType ObjectMask    = NonFunObjMask | FunObjMask;
-    static const MaskType GCThingMask   = ObjectMask | StringMask;
-
-    static bool isSingleton(MaskType m) { return !(m & ~UndefinedMask); }
-    static bool isObjectOrNull(MaskType m) { return !(m & ~ObjectMask); }
+    static bool isSingleton(MaskType m) { return !(m & ~JSVAL_UNDEFINED_MASK); }
+    static bool isObjectOrNull(MaskType m) { return !(m & ~JSVAL_OBJECT_MASK); }
 
     union Data
     {
@@ -3261,59 +3243,59 @@ class Value
     }
 
     Value(NullTag) {
-        mask = NullMask;
+        mask = JSVAL_NULL_MASK;
         data.obj = NULL;
     }
 
     Value(UndefinedTag) {
-        mask = UndefinedMask;
+        mask = JSVAL_UNDEFINED_MASK;
         /* N.B. data is undefined */
     }
 
     Value(Int32Tag arg) {
-        mask = Int32Mask;
+        mask = JSVAL_INT32_MASK;
         data.i32 = arg.i32;
     }
 
     Value(DoubleTag arg) {
-        mask = DoubleMask;
+        mask = JSVAL_DOUBLE_MASK;
         data.dbl = arg.dbl;
     }
 
     inline Value(NumberTag arg);
 
     Value(JSString *arg) {
-        mask = StringMask;
+        mask = JSVAL_STRING_MASK;
         data.str = arg;
     }
 
     Value(FunObjTag arg) {
         JS_ASSERT(JS_ObjectIsFunction(NULL, &arg.obj));
-        mask = FunObjMask;
+        mask = JSVAL_FUNOBJ_MASK;
         data.obj = &arg.obj;
     }
 
     Value(FunObjOrNull arg) {
         JS_ASSERT_IF(arg.obj, JS_ObjectIsFunction(NULL, arg.obj));
-        mask = arg.obj ? FunObjMask : NullMask;
+        mask = arg.obj ? JSVAL_FUNOBJ_MASK : JSVAL_NULL_MASK;
         data.obj = arg.obj;
     }
 
     Value(FunObjOrUndefinedTag arg) {
         JS_ASSERT_IF(arg.obj, JS_ObjectIsFunction(NULL, arg.obj));
-        mask = arg.obj ? FunObjMask : UndefinedMask;
+        mask = arg.obj ? JSVAL_FUNOBJ_MASK : JSVAL_UNDEFINED_MASK;
         data.obj = arg.obj;
     }
 
     Value(NonFunObjTag arg) {
         JS_ASSERT(JS_ObjectIsFunction(NULL, &arg.obj));
-        mask = NonFunObjMask;
+        mask = JSVAL_NONFUNOBJ_MASK;
         data.obj = &arg.obj;
     }
 
     Value(NonFunObjOrNull arg) {
         JS_ASSERT_IF(arg.obj, !JS_ObjectIsFunction(NULL, arg.obj));
-        mask = arg.obj ? NonFunObjMask : NullMask;
+        mask = arg.obj ? JSVAL_NONFUNOBJ_MASK : JSVAL_NULL_MASK;
         data.obj = arg.obj;
     }
 
@@ -3321,12 +3303,12 @@ class Value
     inline Value(ObjectOrNullTag arg);
 
     Value(BooleanTag arg) {
-        mask = BooleanMask;
+        mask = JSVAL_BOOLEAN_MASK;
         data.boo = arg.boo;
     }
 
     Value(JSWhyMagic arg) {
-        mask = MagicMask;
+        mask = JSVAL_MAGIC_MASK;
 #ifdef DEBUG
         data.why = arg;
 #endif
@@ -3344,17 +3326,17 @@ class Value
     /* Mutators */
 
     void setNull() {
-        mask = NullMask;
+        mask = JSVAL_NULL_MASK;
         data.obj = NULL;
     }
 
     void setUndefined() {
         /* N.B. data is undefined. */
-        mask = UndefinedMask;
+        mask = JSVAL_UNDEFINED_MASK;
     }
 
     void setInt32(int32 i) {
-        mask = Int32Mask;
+        mask = JSVAL_INT32_MASK;
         data.i32 = i;
     }
 
@@ -3365,7 +3347,7 @@ class Value
 
     void setDouble(double d) {
         JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
-        mask = DoubleMask;
+        mask = JSVAL_DOUBLE_MASK;
         data.dbl = d;
     }
 
@@ -3373,10 +3355,10 @@ class Value
 
     void setNumber(uint32 ui) {
         if (ui > JSVAL_INT_MAX) {
-            mask = DoubleMask;
+            mask = JSVAL_DOUBLE_MASK;
             data.dbl = ui;
         } else {
-            mask = Int32Mask;
+            mask = JSVAL_INT32_MASK;
             data.i32 = ui;
         }
     }
@@ -3388,37 +3370,37 @@ class Value
     }
 
     void setString(JSString *str) {
-        mask = StringMask;
+        mask = JSVAL_STRING_MASK;
         data.str = str;
     }
 
     void setFunObj(JSObject &arg) {
         JS_ASSERT(JS_ObjectIsFunction(NULL, &arg));
-        mask = FunObjMask;
+        mask = JSVAL_FUNOBJ_MASK;
         data.obj = &arg;
     }
 
     void setFunObjOrNull(JSObject *arg) {
         JS_ASSERT_IF(arg, JS_ObjectIsFunction(NULL, arg));
-        mask = arg ? FunObjMask : NullMask;
+        mask = arg ? JSVAL_FUNOBJ_MASK : JSVAL_NULL_MASK;
         data.obj = arg;
     }
 
     void setFunObjOrUndefined(JSObject *arg) {
         JS_ASSERT_IF(arg, JS_ObjectIsFunction(NULL, arg));
-        mask = arg ? FunObjMask : UndefinedMask;
+        mask = arg ? JSVAL_FUNOBJ_MASK : JSVAL_UNDEFINED_MASK;
         data.obj = arg;
     }
 
     void setNonFunObj(JSObject &arg) {
         JS_ASSERT(!JS_ObjectIsFunction(NULL, &arg));
-        mask = NonFunObjMask;
+        mask = JSVAL_NONFUNOBJ_MASK;
         data.obj = &arg;
     }
 
     void setNonFunObjOrNull(JSObject *arg) {
         JS_ASSERT_IF(arg, !JS_ObjectIsFunction(NULL, arg));
-        mask = arg ? NonFunObjMask : NullMask;
+        mask = arg ? JSVAL_NONFUNOBJ_MASK : JSVAL_NULL_MASK;
         data.obj = arg;
     }
 
@@ -3426,12 +3408,12 @@ class Value
     inline void setObjectOrNull(JSObject *arg);
 
     void setBoolean(bool b) {
-        mask = BooleanMask;
+        mask = JSVAL_BOOLEAN_MASK;
         data.boo = b;
     }
 
     void setMagic(JSWhyMagic why) {
-        mask = MagicMask;
+        mask = JSVAL_MAGIC_MASK;
 #ifdef DEBUG
         data.why = why;
 #endif
@@ -3463,11 +3445,11 @@ class Value
     /* Accessors */
 
     bool isUndefined() const {
-        return mask == UndefinedMask;
+        return mask == JSVAL_UNDEFINED_MASK;
     }
 
     bool isNull() const {
-        return mask == NullMask;
+        return mask == JSVAL_NULL_MASK;
     }
 
     bool isNullOrUndefined() const {
@@ -3475,7 +3457,7 @@ class Value
     }
 
     bool isInt32() const {
-        return mask == Int32Mask;
+        return mask == JSVAL_INT32_MASK;
     }
 
     int32 asInt32() const {
@@ -3488,7 +3470,7 @@ class Value
     }
 
     bool isDouble() const {
-        return mask == DoubleMask;
+        return mask == JSVAL_DOUBLE_MASK;
     }
 
     double asDouble() const {
@@ -3497,7 +3479,7 @@ class Value
     }
 
     bool isNumber() const {
-        return bool(mask & NumberMask);
+        return bool(mask & JSVAL_NUMBER_MASK);
     }
 
     double asNumber() const {
@@ -3506,7 +3488,7 @@ class Value
     }
 
     bool isString() const {
-        return mask == StringMask;
+        return mask == JSVAL_STRING_MASK;
     }
 
     JSString *asString() const {
@@ -3515,7 +3497,7 @@ class Value
     }
 
     bool isNonFunObj() const {
-        return mask == NonFunObjMask;
+        return mask == JSVAL_NONFUNOBJ_MASK;
     }
 
     JSObject &asNonFunObj() const {
@@ -3524,7 +3506,7 @@ class Value
     }
 
     bool isFunObj() const {
-        return mask == FunObjMask;
+        return mask == JSVAL_FUNOBJ_MASK;
     }
 
     JSObject &asFunObj() const {
@@ -3533,7 +3515,7 @@ class Value
     }
 
     bool isObject() const {
-        return bool(mask & ObjectMask);
+        return bool(mask & JSVAL_OBJECT_MASK);
     }
 
     bool isPrimitive() const {
@@ -3560,7 +3542,7 @@ class Value
     }
 
     bool isGCThing() const {
-        return bool(mask & GCThingMask);
+        return bool(mask & JSVAL_GCTHING_MASK);
     }
 
     void *asGCThing() const {
@@ -3570,19 +3552,19 @@ class Value
 
     int32 traceKind() const {
         JS_ASSERT(isGCThing());
-        return mask == StringMask;
+        return mask == JSVAL_STRING_MASK;
     }
 
     bool isBoolean() const {
-        return mask == BooleanMask;
+        return mask == JSVAL_BOOLEAN_MASK;
     }
 
     bool isTrue() const {
-        return (mask == BooleanMask) & data.boo;
+        return (mask == JSVAL_BOOLEAN_MASK) & data.boo;
     }
 
     bool isFalse() const {
-        return (mask == BooleanMask) & !data.boo;
+        return (mask == JSVAL_BOOLEAN_MASK) & !data.boo;
     }
 
     bool asBoolean() const {
@@ -3591,16 +3573,16 @@ class Value
     }
 
     bool isMagic() const {
-        return mask == MagicMask;
+        return mask == JSVAL_MAGIC_MASK;
     }
 
     bool isMagic(JSWhyMagic why) const {
-        JS_ASSERT_IF(mask == MagicMask, data.why == why);
+        JS_ASSERT_IF(mask == JSVAL_MAGIC_MASK, data.why == why);
         return isMagic();
     }
 
     JSWhyMagic whyMagic() const {
-        JS_ASSERT(mask == MagicMask);
+        JS_ASSERT(mask == JSVAL_MAGIC_MASK);
         return data.why;
     }
 
@@ -3614,32 +3596,32 @@ class Value
      */
 
     Value(PrivateVoidPtrTag arg) {
-        mask = Int32Mask;
+        mask = JSVAL_INT32_MASK;
         data.ptr = arg.ptr;
     }
 
     void setPrivateVoidPtr(void *ptr) {
-        mask = Int32Mask;
+        mask = JSVAL_INT32_MASK;
         data.ptr = ptr;
     }
 
     void *asPrivateVoidPtr() const {
-        JS_ASSERT(mask == Int32Mask);
+        JS_ASSERT(mask == JSVAL_INT32_MASK);
         return data.ptr;
     }
 
     void setPrivateUint32(uint32 u) {
-        mask = Int32Mask;
+        mask = JSVAL_INT32_MASK;
         data.u32 = u;
     }
 
     uint32 asPrivateUint32() const {
-        JS_ASSERT(mask == Int32Mask);
+        JS_ASSERT(mask == JSVAL_INT32_MASK);
         return data.u32;
     }
 
     uint32 &asPrivateUint32Ref() {
-        JS_ASSERT(mask == Int32Mask);
+        JS_ASSERT(mask == JSVAL_INT32_MASK);
         return data.u32;
     }
 };
@@ -3666,7 +3648,7 @@ JS_STATIC_ASSERT(sizeof(CopyableValue) == sizeof(Value));
 inline CopyableValue &copyable_cast(Value &v) { return static_cast<CopyableValue &>(v); }
 inline const CopyableValue &copyable_cast(const Value &v) { return static_cast<const CopyableValue &>(v); }
 
-JS_ALWAYS_INLINE
+inline
 Value::Value(const CopyableValue &v) {
     mask = v.mask;
     data = v.data;
@@ -3676,28 +3658,24 @@ Value::Value(const CopyableValue &v) {
  * As asserted above, js::Value and jsval are layout equivalent. To provide
  * widespread casting, the following safe casts are provided.
  */
-static JS_ALWAYS_INLINE jsval *       Jsvalify(Value *v)       { return (jsval *)v; }
-static JS_ALWAYS_INLINE const jsval * Jsvalify(const Value *v) { return (const jsval *)v; }
-static JS_ALWAYS_INLINE jsval &       Jsvalify(Value &v)       { return (jsval &)v; }
-static JS_ALWAYS_INLINE const jsval & Jsvalify(const Value &v) { return (const jsval &)v; }
-static JS_ALWAYS_INLINE Value *       Valueify(jsval *v)       { return (Value *)v; }
-static JS_ALWAYS_INLINE const Value * Valueify(const jsval *v) { return (const Value *)v; }
-static JS_ALWAYS_INLINE Value &       Valueify(jsval &v)       { return (Value &)v; }
-static JS_ALWAYS_INLINE const Value & Valueify(const jsval &v) { return (const Value &)v; }
+static inline jsval *       Jsvalify(Value *v)       { return (jsval *)v; }
+static inline const jsval * Jsvalify(const Value *v) { return (const jsval *)v; }
+static inline jsval &       Jsvalify(Value &v)       { return (jsval &)v; }
+static inline const jsval & Jsvalify(const Value &v) { return (const jsval &)v; }
+static inline Value *       Valueify(jsval *v)       { return (Value *)v; }
+static inline const Value * Valueify(const jsval *v) { return (const Value *)v; }
+static inline Value &       Valueify(jsval &v)       { return (Value &)v; }
+static inline const Value & Valueify(const jsval &v) { return (const Value &)v; }
 
-JS_ALWAYS_INLINE bool
+inline bool
 equalTypeAndPayload(const Value &l, const Value &r)
 {
     return EQUAL_TYPE_AND_PAYLOAD(Jsvalify(&l), Jsvalify(&r));
 }
 
-/*
- * N.B. It is more efficient to use setNull/isNull/setUndefined/isUndefined
- * than to copy/compare these global values.
- */
-extern const Value sNullValue;
-extern const Value sUndefinedValue;
-extern const ObjPtr sNullObjPtr;
+/* Convenience inlines. */
+static inline CopyableValue undefinedValue() { return copyable_cast(Value(UndefinedTag())); }
+static inline CopyableValue nullValue()      { return copyable_cast(Value(NullTag())); }
 
 /*
  * js::Class is layout compatible and thus 

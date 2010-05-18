@@ -602,7 +602,8 @@ args_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
          * XXX ECMA specs DontEnum even for indexed properties, contrary to
          * other array-like objects.
          */
-        if (!js_DefineProperty(cx, obj, id, &sUndefinedValue, ArgGetter, ArgSetter, JSPROP_SHARED))
+        Value undef = undefinedValue();
+        if (!js_DefineProperty(cx, obj, id, &undef, ArgGetter, ArgSetter, JSPROP_SHARED))
             return JS_FALSE;
         *objp = obj;
     }
@@ -1218,7 +1219,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                 getter = js_GetCallVarChecked;
             }
         }
-        if (!js_DefineNativeProperty(cx, obj, id, sUndefinedValue, getter, setter,
+        if (!js_DefineNativeProperty(cx, obj, id, Value(UndefinedTag()), getter, setter,
                                      attrs, JSScopeProperty::HAS_SHORTID, (int16) slot,
                                      NULL, JSDNP_DONT_PURGE)) {
             return JS_FALSE;
@@ -1232,7 +1233,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
      * arguments object reference in a Call prototype's |arguments| slot.
      */
     if (id == ATOM_TO_JSID(cx->runtime->atomState.argumentsAtom)) {
-        if (!js_DefineNativeProperty(cx, obj, id, sUndefinedValue,
+        if (!js_DefineNativeProperty(cx, obj, id, Value(UndefinedTag()),
                                      GetCallArguments, SetCallArguments,
                                      JSPROP_PERMANENT | JSPROP_SHARED,
                                      0, 0, NULL, JSDNP_DONT_PURGE)) {
@@ -1499,7 +1500,7 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
             JS_ASSERT(!IsInternalFunctionObject(obj));
 
             if (!js_DefineNativeProperty(cx, obj,
-                                         ATOM_TO_JSID(atom), sUndefinedValue,
+                                         ATOM_TO_JSID(atom), Value(UndefinedTag()),
                                          fun_getProperty, PropertyStub,
                                          lfp->attrs, JSScopeProperty::HAS_SHORTID,
                                          lfp->tinyid, NULL)) {

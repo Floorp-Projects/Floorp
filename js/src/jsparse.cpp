@@ -3922,7 +3922,7 @@ CheckDestructuring(JSContext *cx, BindData *data,
         ok = !!js_DefineNativeProperty(cx, tc->blockChain,
                                        ATOM_TO_JSID(cx->runtime->
                                                     atomState.emptyAtom),
-                                       sUndefinedValue, NULL, NULL,
+                                       Value(UndefinedTag()), NULL, NULL,
                                        JSPROP_ENUMERATE |
                                        JSPROP_PERMANENT |
                                        JSPROP_SHARED,

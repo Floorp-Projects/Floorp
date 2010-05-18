@@ -183,10 +183,12 @@ typedef struct JSONParser        JSONParser;
 typedef uint32 JSValueMaskType;
 # define JSVAL_TYPE_BITS 32
 # define JS_INSERT_VALUE_PADDING() uint32 padding;
+# define JS_PADDING_INIT_VALUE() 0,
 #elif JS_BITS_PER_WORD == 64
 typedef JSUint64 JSValueMaskType;
 # define JSVAL_TYPE_BITS 32
 # define JS_INSERT_VALUE_PADDING()
+# define JS_PADDING_INIT_VALUE()
 #else
 # error "Unsupported word size"
 #endif
@@ -200,6 +202,10 @@ typedef JSUint64 JSValueMaskType;
 #define JSVAL_FUNOBJ_MASK      ((JSValueMaskType)0x20)
 #define JSVAL_BOOLEAN_MASK     ((JSValueMaskType)0x40)
 #define JSVAL_MAGIC_MASK       ((JSValueMaskType)0x80)
+
+#define JSVAL_OBJECT_MASK      (JSVAL_NONFUNOBJ_MASK | JSVAL_FUNOBJ_MASK)
+#define JSVAL_NUMBER_MASK      (JSVAL_INT32_MASK | JSVAL_DOUBLE_MASK)
+#define JSVAL_GCTHING_MASK     (JSVAL_OBJECT_MASK | JSVAL_STRING_MASK)
 
 /*
  * Magic value enumeration (private engine detail)
@@ -481,6 +487,7 @@ typedef jsboxedword jsid;
 #define JSID_IS_VOID(id)              JSBOXEDWORD_IS_VOID((jsboxedword)(id))
 #define JSID_IS_ATOM(id)              JSBOXEDWORD_IS_STRING((jsboxedword)(id))
 #define JSID_TO_ATOM(id)              ((JSAtom *)(id))
+#define JSID_TO_STRING(id)            ATOM_TO_STRING(JSID_TO_ATOM(id))
 #define ATOM_TO_JSID(atom)            (JS_ASSERT(ATOM_IS_STRING(atom)),        \
                                        (jsid)(atom))
 

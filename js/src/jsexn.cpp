@@ -1041,8 +1041,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         }
 
         /* Add the name property to the prototype. */
-        if (!JS_DefineProperty(cx, proto, js_name_str,
-                               STRING_TO_JSVAL(ATOM_TO_STRING(atom)),
+        if (!JS_DefineProperty(cx, proto, js_name_str, ATOM_TO_JSVAL(atom),
                                NULL, NULL, JSPROP_ENUMERATE)) {
             return NULL;
         }

@@ -173,12 +173,12 @@ extern JS_PUBLIC_API(JSBool)
 JS_XDRScript(JSXDRState *xdr, JSScript **scriptp);
 
 extern JS_PUBLIC_API(JSBool)
-JS_XDRRegisterClass(JSXDRState *xdr, js::Class *clasp, uint32 *lp);
+JS_XDRRegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *lp);
 
 extern JS_PUBLIC_API(uint32)
 JS_XDRFindClassIdByName(JSXDRState *xdr, const char *name);
 
-extern JS_PUBLIC_API(js::Class *)
+extern JS_PUBLIC_API(JSClass *)
 JS_XDRFindClassById(JSXDRState *xdr, uint32 id);
 
 /*
