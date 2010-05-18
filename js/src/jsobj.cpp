@@ -3021,10 +3021,10 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     if (!clone)
         return NULL;
 
+    Value privateValue = PrivateVoidPtrTag(js_FloatingFrameIfGenerator(cx, fp));
+
     /* The caller sets parent on its own. */
-    Value priv;
-    priv.setPrivateVoidPtr(js_FloatingFrameIfGenerator(cx, fp));
-    clone->init(&js_BlockClass, NonFunObjTag(*proto), NULL, priv);
+    clone->init(&js_BlockClass, NonFunObjTag(*proto), NULL, privateValue);
     clone->fslots[JSSLOT_BLOCK_DEPTH] = proto->fslots[JSSLOT_BLOCK_DEPTH];
 
     JS_ASSERT(cx->runtime->emptyBlockScope->freeslot == JSSLOT_BLOCK_DEPTH + 1);
@@ -3696,7 +3696,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
     }
 
     Innerize(cx, &obj);
-    if (obj)
+    if (!obj)
         return JS_FALSE;
 
     if (protoKey != JSProto_Null) {
