@@ -49,7 +49,15 @@ interface nsIIDBDatabase;
 [scriptable, uuid(00c3f651-f4bf-416b-9dc4-759135a35fa9)]
 interface nsIIDBTransaction : nsISupports
 {
-  attribute boolean static;
+  readonly attribute nsIIDBDatabase db;
 
-  attribute nsIIDBDatabase db;
+  const unsigned short INITIAL = 0;
+  const unsigned short LOADING = 1;
+  const unsigned short DONE = 2;
+  readonly attribute unsigned short readyState;
+
+  const unsigned short READ_WRITE = 0;
+  const unsigned short READ_ONLY = 1;
+  const unsigned short SNAPSHOT_READ = 2;
+  readonly attribute unsigned short mode;
 };

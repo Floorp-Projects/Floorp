@@ -45,6 +45,8 @@
 #include "nsIIDBEvent.h"
 #include "nsIIDBErrorEvent.h"
 #include "nsIIDBSuccessEvent.h"
+#include "nsIIDBTransactionEvent.h"
+#include "nsIIDBTransactionRequest.h"
 #include "nsIRunnable.h"
 #include "nsIVariant.h"
 
@@ -52,7 +54,6 @@
 
 #define SUCCESS_EVT_STR "success"
 #define ERROR_EVT_STR "error"
-
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -117,6 +118,32 @@ protected:
   IDBSuccessEvent() { }
 
   nsCOMPtr<nsIVariant> mResult;
+};
+
+class IDBTransactionEvent : public IDBSuccessEvent,
+                            public nsIIDBTransactionEvent
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIIDBTRANSACTIONEVENT
+  NS_FORWARD_NSIDOMEVENT(IDBSuccessEvent::)
+  NS_FORWARD_NSIIDBEVENT(IDBSuccessEvent::)
+  NS_FORWARD_NSIIDBSUCCESSEVENT(IDBSuccessEvent::)
+
+  static already_AddRefed<nsIDOMEvent>
+  Create(IDBRequest* aRequest,
+         nsIVariant* aResult,
+         nsIIDBTransactionRequest* aTransaction);
+
+  static already_AddRefed<nsIRunnable>
+  CreateRunnable(IDBRequest* aRequest,
+                 nsIVariant* aResult,
+                 nsIIDBTransactionRequest* aTransaction);
+
+protected:
+  IDBTransactionEvent() { }
+
+  nsCOMPtr<nsIIDBTransactionRequest> mTransaction;
 };
 
 END_INDEXEDDB_NAMESPACE
