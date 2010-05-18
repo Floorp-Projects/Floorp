@@ -3676,11 +3676,13 @@ Parent(JSContext *cx, uintN argc, jsval *vp)
     *vp = OBJECT_TO_JSVAL(parent);
 
     /* Outerize if necessary.  Embrace the ugliness! */
-    JSClass *clasp = JS_GET_CLASS(cx, parent);
-    if (clasp->flags & JSCLASS_IS_EXTENDED) {
-        JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
-        if (JSObjectOp outerize = xclasp->outerObject)
-            *vp = OBJECT_TO_JSVAL(outerize(cx, parent));
+    if (parent) {
+        JSClass *clasp = JS_GET_CLASS(cx, parent);
+        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+            JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
+            if (JSObjectOp outerize = xclasp->outerObject)
+                *vp = OBJECT_TO_JSVAL(outerize(cx, parent));
+        }
     }
 
     return JS_TRUE;
