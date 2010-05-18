@@ -1641,9 +1641,8 @@ Loader::ParseSheet(nsIUnicharInputStream* aStream,
 
   // Push our load data on the stack so any kids can pick it up
   mParsingDatas.AppendElement(aLoadData);
-  nsCOMPtr<nsIURI> sheetURI, baseURI;
-  sheetURI = aLoadData->mSheet->GetSheetURI();
-  baseURI = aLoadData->mSheet->GetBaseURI();
+  nsIURI* sheetURI = aLoadData->mSheet->GetSheetURI();
+  nsIURI* baseURI = aLoadData->mSheet->GetBaseURI();
   nsresult rv = parser.Parse(aStream, sheetURI, baseURI,
                              aLoadData->mSheet->Principal(),
                              aLoadData->mLineNumber,
@@ -1997,8 +1996,7 @@ Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
 
   // check for an owning document: if none, don't bother walking up the parent
   // sheets
-  nsCOMPtr<nsIDocument> owningDoc = aParentSheet->GetOwningDocument();
-  if (owningDoc) {
+  if (aParentSheet->GetOwningDocument()) {
     nsCOMPtr<nsIDOMStyleSheet> nextParentSheet(aParentSheet);
     NS_ENSURE_TRUE(nextParentSheet, NS_ERROR_FAILURE); //Not a stylesheet!?
 
