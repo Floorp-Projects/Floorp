@@ -49,11 +49,12 @@ class nsIEventListenerManager;
 class nsIDOMEventListener;
 class nsIDOMEventGroup;
 class nsIScriptContext;
+struct JSContext;
 
-// e6579895-a23c-4afc-872a-d53da71def5d
+// 89292f3a-535d-4ba0-882a-10cff9e21bcc
 #define NS_PIDOMEVENTTARGET_IID \
-  { 0xe6579895, 0xa23c, 0x4afc, \
-    { 0x87, 0x2a, 0xd5, 0x3d, 0xa7, 0x1d, 0xef, 0x5d } }
+  { 0x89292f3a, 0x535d, 0x4ba0, \
+    { 0x88, 0x2a, 0x10, 0xcf, 0xf9, 0xe2, 0x1b, 0xcc } }
 
 class nsPIDOMEventTarget : public nsISupports
 {
@@ -164,6 +165,12 @@ public:
    * @note Caller *must* check the value of aRv.
    */
   virtual nsIScriptContext* GetContextForEventHandlers(nsresult* aRv) = 0;
+
+  /**
+   * If the method above returns null, but a success code, this method
+   * is called.
+   */
+   virtual JSContext* GetJSContextForEventHandlers() { return nsnull; }
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMEventTarget, NS_PIDOMEVENTTARGET_IID)
