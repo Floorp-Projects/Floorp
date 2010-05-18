@@ -38,9 +38,11 @@
 #ifndef GFX_UTILS_H
 #define GFX_UTILS_H
 
+#include "gfxTypes.h"
+
 class gfxImageSurface;
 
-class gfxUtils {
+class THEBES_API gfxUtils {
 public:
     static PRBool FuzzyEqual(gfxFloat aV1, gfxFloat aV2) {
         return fabs(aV2 - aV1) < 1e-6;
