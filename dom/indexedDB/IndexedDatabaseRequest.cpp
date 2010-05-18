@@ -121,7 +121,7 @@ CreateTables(mozIStorageConnection* aDBConn)
     "CREATE TABLE object_store ("
       "id INTEGER, "
       "name TEXT NOT NULL, "
-      "key_path TEXT DEFAULT NULL, "
+      "key_path TEXT NOT NULL, "
       "auto_increment INTEGER NOT NULL DEFAULT 0, "
       "readers INTEGER NOT NULL DEFAULT 0, "
       "is_writing INTEGER NOT NULL DEFAULT 0, "
