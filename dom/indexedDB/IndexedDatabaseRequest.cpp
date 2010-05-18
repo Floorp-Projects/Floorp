@@ -71,12 +71,10 @@ public:
   OpenDatabaseHelper(IDBRequest* aRequest,
                      const nsAString& aName,
                      const nsAString& aDescription,
-                     PRBool aReadOnly,
                      const nsACString& aASCIIOrigin,
                      LazyIdleThread* aThread)
   : AsyncConnectionHelper(nsnull, aRequest), mName(aName),
-    mDescription(aDescription), mReadOnly(aReadOnly),
-    mASCIIOrigin(aASCIIOrigin), mThread(aThread)
+    mDescription(aDescription), mASCIIOrigin(aASCIIOrigin), mThread(aThread)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -86,7 +84,6 @@ private:
   // In-params.
   nsString mName;
   nsString mDescription;
-  PRBool mReadOnly;
   nsCString mASCIIOrigin;
   nsRefPtr<LazyIdleThread> mThread;
 
@@ -484,17 +481,10 @@ DOMCI_DATA(IndexedDatabaseRequest, IndexedDatabaseRequest)
 NS_IMETHODIMP
 IndexedDatabaseRequest::Open(const nsAString& aName,
                              const nsAString& aDescription,
-                             PRBool aModifyDatabase,
-                             PRUint8 aOptionalArgCount,
                              nsIIDBRequest** _retval)
 {
   if (aName.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
-  }
-
-  if (!aOptionalArgCount) {
-    // aModifyDatabase defaults to true.
-    aModifyDatabase = PR_TRUE;
   }
 
   nsCOMPtr<nsIPrincipal> principal;
@@ -516,8 +506,7 @@ IndexedDatabaseRequest::Open(const nsAString& aName,
                                                      nsnull));
 
   nsRefPtr<OpenDatabaseHelper> runnable =
-    new OpenDatabaseHelper(request, aName, aDescription, !aModifyDatabase,
-                           origin, thread);
+    new OpenDatabaseHelper(request, aName, aDescription, origin, thread);
 
   rv = runnable->Dispatch(thread);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -595,9 +584,9 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ASSERTION(mConnection, "Should have a connection!");
 
   nsRefPtr<IDBDatabaseRequest> db =
-    IDBDatabaseRequest::Create(mName, mDescription, mReadOnly,
-                               mObjectStoreNames, mIndexNames, mVersion,
-                               mThread, mDatabaseFilePath, mConnection);
+    IDBDatabaseRequest::Create(mName, mDescription, mObjectStoreNames,
+                               mIndexNames, mVersion, mThread,
+                               mDatabaseFilePath, mConnection);
   NS_ASSERTION(db, "This can't fail!");
 
   NS_ASSERTION(!mConnection, "Should have swapped out!");
