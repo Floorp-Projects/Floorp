@@ -207,10 +207,16 @@ html input[type="radio"]:focus {
   background: -moz-radial-gradient(6px 6px, cover, rgba(255,255,255,0.2) 3px, rgba(198,225,246,0.2) 5px, rgba(27,113,177,0.5) 100%);
 }
 
+/* we need to be specific for selects because the above rules are specific too */
 html textarea[disabled],
-html select[disabled],
+html select[size][disabled],
+html select[multiple][disabled],
+html select[size][multiple][disabled],
+html select:not([size]):not([multiple])[disabled],
+html select[size="0"][disabled],
+html select[size="1"][disabled],
 html button[disabled],
-html input:not([type="image"])[disabled="true"] {
+html input:not([type="image"])[disabled] {
   color: rgba(0,0,0,0.3);
   border-color: rgba(125,125,125,0.4);
   border-style: solid;
