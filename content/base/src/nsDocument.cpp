@@ -3524,9 +3524,8 @@ nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
       nsIStyleSheet* sheet = GetCatalogStyleSheetAt(i);
       NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
       if (sheet) {
-        nsCOMPtr<nsIURI> uri = sheet->GetSheetURI();
         nsCAutoString uriStr;
-        uri->GetSpec(uriStr);
+        sheet->GetSheetURI()->GetSpec(uriStr);
         if (uriStr.Equals(aStyleSheetURI))
           return;
       }

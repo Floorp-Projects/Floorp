@@ -245,10 +245,10 @@ nsXULPrototypeCache::PutPrototype(nsXULPrototypeDocument* aDocument)
 nsresult
 nsXULPrototypeCache::PutStyleSheet(nsCSSStyleSheet* aStyleSheet)
 {
-    nsCOMPtr<nsIURI> uri = aStyleSheet->GetSheetURI();
+    nsIURI* uri = aStyleSheet->GetSheetURI();
 
-   NS_ENSURE_TRUE(mStyleSheetTable.Put(uri, aStyleSheet),
-                  NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(mStyleSheetTable.Put(uri, aStyleSheet),
+                   NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;
 }
@@ -344,9 +344,8 @@ FlushSkinXBL(nsIURI* aKey, nsCOMPtr<nsIXBLDocumentInfo>& aDocInfo, void* aClosur
 static PLDHashOperator
 FlushSkinSheets(nsIURI* aKey, nsRefPtr<nsCSSStyleSheet>& aSheet, void* aClosure)
 {
-  nsCOMPtr<nsIURI> uri = aSheet->GetSheetURI();
   nsCAutoString str;
-  uri->GetPath(str);
+  aSheet->GetSheetURI()->GetPath(str);
 
   PLDHashOperator ret = PL_DHASH_NEXT;
 
