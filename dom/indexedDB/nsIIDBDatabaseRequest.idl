@@ -39,10 +39,10 @@
 
 #include "nsIIDBDatabase.idl"
 
-interface nsIDOMDOMStringList;
-interface nsIIDBIndexRequest;
+interface nsIVariant;
 interface nsIIDBObjectStoreRequest;
 interface nsIIDBRequest;
+interface nsIIDBTransactionRequest;
 
 /**
  * IDBDatabaseRequest interface.  See
@@ -57,11 +57,6 @@ interface nsIIDBDatabaseRequest : nsIIDBDatabase
                     in AString keyPath,
                     [optional /* false */] in boolean autoIncrement);
 
-  [optional_argc]
-  nsIIDBRequest
-  openObjectStore(in AString name,
-                  [optional /* READ_WRITE */] in unsigned short mode);
-
   nsIIDBRequest
   removeObjectStore(in AString name);
 
@@ -69,7 +64,13 @@ interface nsIIDBDatabaseRequest : nsIIDBDatabase
   setVersion(in AString version);
 
   [optional_argc]
-  nsIIDBRequest
-  openTransaction([optional /* null */]in nsIDOMDOMStringList storeNames,
-                  [optional /* 5000ms */] in unsigned long timeout);
+  nsIIDBTransactionRequest
+  transaction(in nsIVariant storeNames, // js array of strings
+              [optional /* READ_ONLY */] in unsigned short mode,
+              [optional /* 5000ms */] in unsigned long timeout);
+
+  [optional_argc]
+  nsIIDBObjectStoreRequest
+  objectStore(in AString name,
+              [optional /* READ_ONLY */] in unsigned short mode);
 };

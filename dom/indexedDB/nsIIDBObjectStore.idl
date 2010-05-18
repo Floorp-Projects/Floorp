@@ -49,11 +49,6 @@ interface nsIDOMDOMStringList;
 [scriptable, uuid(783a49b0-c5f0-4d97-9349-532f4ec1f7ce)]
 interface nsIIDBObjectStore : nsISupports
 {
-  const unsigned short READ_WRITE = 0;
-  const unsigned short READ_ONLY = 1;
-  const unsigned short SNAPSHOT_READ = 2;
-  readonly attribute unsigned short mode;
-
   readonly attribute DOMString name;
 
   readonly attribute DOMString keyPath;

@@ -37,24 +37,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#ifndef mozilla_dom_indexeddb_idbtransactionrequest_h__
+#define mozilla_dom_indexeddb_idbtransactionrequest_h__
 
-interface nsIDOMDOMStringList;
-interface nsIIDBTransaction;
+#include "mozilla/dom/indexedDB/IDBRequest.h"
+#include "mozilla/dom/indexedDB/IDBDatabaseRequest.h"
 
-/**
- * IDBDatabase interface.  See
- * http://dev.w3.org/2006/webapi/WebSimpleDB/#idl-def-IDBDatabase for more
- * information.
- */
-[scriptable, uuid(828a5080-6912-4e4d-afe0-57846788eb2e)]
-interface nsIIDBDatabase : nsISupports
+#include "nsIIDBTransactionRequest.h"
+
+#include "nsDOMEventTargetHelper.h"
+#include "nsCycleCollectionParticipant.h"
+
+BEGIN_INDEXEDDB_NAMESPACE
+
+class IDBTransactionRequest : public nsDOMEventTargetHelper,
+                              public IDBRequest::Generator,
+                              public nsIIDBTransactionRequest
 {
-  readonly attribute DOMString name;
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIIDBTRANSACTION
+  NS_DECL_NSIIDBTRANSACTIONREQUEST
 
-  readonly attribute DOMString description;
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBTransactionRequest,
+                                           nsDOMEventTargetHelper)
 
-  readonly attribute DOMString version;
+  already_AddRefed<IDBTransactionRequest>
+  Create();
 
-  readonly attribute nsIDOMDOMStringList objectStoreNames;
+private:
+  nsRefPtr<IDBDatabaseRequest> mDatabase;
+
+  nsRefPtr<nsDOMEventListenerWrapper> mOnCompleteListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnTimeoutListener;
 };
+
+END_INDEXEDDB_NAMESPACE
+
+#endif // mozilla_dom_indexeddb_idbtransactionrequest_h__

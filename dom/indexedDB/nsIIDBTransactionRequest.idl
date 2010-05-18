@@ -39,6 +39,8 @@
 
 #include "nsIIDBTransaction.idl"
 
+interface nsIDOMEventListener;
+interface nsIIDBObjectStoreRequest;
 interface nsIIDBRequest;
 
 /**
@@ -49,9 +51,23 @@ interface nsIIDBRequest;
 [scriptable, uuid(073f5f2e-fecc-4f96-bba2-d8a90532c926)]
 interface nsIIDBTransactionRequest : nsIIDBTransaction
 {
-  nsIIDBRequest
-  abort();
+  nsIIDBObjectStoreRequest
+  objectStore(in AString name);
 
-  nsIIDBRequest
-  commit();
+  // Don't commit the transaction.
+  void abort();
+
+  // Event listener that fires when the transaction is completed
+  // successfully. Receives an Event.
+  attribute nsIDOMEventListener oncomplete;
+
+  // Event listener that fires when the transaction is aborted.
+  // Receives an Event.
+  attribute nsIDOMEventListener onabort;
+
+  // Event listener that fires when the transaction times out while
+  // attempting to grab the relevant locks, as specified by the
+  // timeoutSeconds parameter
+  // Receives an Event.
+  attribute nsIDOMEventListener ontimeout;
 };
