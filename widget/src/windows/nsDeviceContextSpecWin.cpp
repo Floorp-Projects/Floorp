@@ -1023,7 +1023,7 @@ GlobalPrinters::GetDefaultPrinterName(nsString& aDefaultPrinterName)
     }
     aDefaultPrinterName = szDefaultPrinterName;
   } else {
-    aDefaultPrinterName = NS_LITERAL_STRING("");
+    aDefaultPrinterName = EmptyString();
   }
 
   PR_PL(("DEFAULT PRINTER [%s]\n", aDefaultPrinterName.get()));
