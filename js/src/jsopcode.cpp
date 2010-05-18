@@ -5114,7 +5114,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     while (!i.done() && !i.fp()->script)
         ++i;
 
-    if (i.done() || !i.pc())
+    if (i.done() || !i.pc() || i.fp()->script->nslots == 0)
         goto do_fallback;
 
     fp = i.fp();
