@@ -69,13 +69,7 @@ interface nsIIDBDatabaseRequest : nsIIDBDatabase
               [optional /* false */] in boolean unique);
 
   nsIIDBRequest
-  openIndex(in AString name);
-
-  nsIIDBRequest
   removeObjectStore(in AString name);
-
-  nsIIDBRequest
-  removeIndex(in AString indexName);
 
   nsIIDBRequest
   setVersion(in AString version);

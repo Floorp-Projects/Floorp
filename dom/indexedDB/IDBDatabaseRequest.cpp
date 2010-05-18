@@ -183,7 +183,6 @@ already_AddRefed<IDBDatabaseRequest>
 IDBDatabaseRequest::Create(const nsAString& aName,
                            const nsAString& aDescription,
                            nsTArray<nsString>& aObjectStoreNames,
-                           nsTArray<nsString>& aIndexNames,
                            const nsAString& aVersion,
                            LazyIdleThread* aThread,
                            const nsAString& aDatabaseFilePath,
@@ -196,7 +195,6 @@ IDBDatabaseRequest::Create(const nsAString& aName,
   db->mName.Assign(aName);
   db->mDescription.Assign(aDescription);
   db->mObjectStoreNames.SwapElements(aObjectStoreNames);
-  db->mIndexNames.SwapElements(aIndexNames);
   db->mVersion.Assign(aVersion);
   db->mDatabaseFilePath.Assign(aDatabaseFilePath);
 
@@ -408,16 +406,6 @@ IDBDatabaseRequest::OnObjectStoreCreated(const nsAString& aName)
 }
 
 void
-IDBDatabaseRequest::OnIndexCreated(const nsAString& aName)
-{
-  NS_ASSERTION(!mIndexNames.Contains(aName),
-               "Already got this index in the list!");
-  if (!mIndexNames.AppendElement(aName)) {
-    NS_ERROR("Failed to add index name! OOM?");
-  }
-}
-
-void
 IDBDatabaseRequest::OnObjectStoreRemoved(const nsAString& aName)
 {
   NS_ASSERTION(mObjectStoreNames.Contains(aName),
@@ -484,32 +472,6 @@ IDBDatabaseRequest::GetObjectStores(nsIDOMDOMStringList** aObjectStores)
   }
 
   list.forget(aObjectStores);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBDatabaseRequest::GetIndexes(nsIDOMDOMStringList** aIndexes)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
-  PRUint32 count = mIndexNames.Length();
-  for (PRUint32 index = 0; index < count; index++) {
-    NS_ENSURE_TRUE(list->Add(mIndexNames[index]), NS_ERROR_OUT_OF_MEMORY);
-  }
-
-
-  list.forget(aIndexes);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBDatabaseRequest::GetCurrentTransaction(nsIIDBTransaction** aTransaction)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsCOMPtr<nsIIDBTransaction> transaction(mCurrentTransaction);
-  transaction.forget(aTransaction);
   return NS_OK;
 }
 
@@ -632,19 +594,6 @@ IDBDatabaseRequest::CreateIndex(const nsAString& aName,
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::OpenIndex(const nsAString& aName,
-                              nsIIDBRequest** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-
-  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
-  request.forget(_retval);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
                                       nsIIDBRequest** _retval)
 {
@@ -681,19 +630,6 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBDatabaseRequest::RemoveIndex(const nsAString& aIndexName,
-                                nsIIDBRequest** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-
-  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
-  request.forget(_retval);
-
   return NS_OK;
 }
 
