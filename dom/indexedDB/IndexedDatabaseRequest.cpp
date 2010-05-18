@@ -89,7 +89,6 @@ private:
 
   // Out-params.
   nsTArray<nsString> mObjectStoreNames;
-  nsTArray<nsString> mIndexNames;
   nsString mVersion;
 
   nsCOMPtr<mozIStorageConnection> mConnection;
@@ -551,10 +550,6 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     }
   }
 
-  { // Load index names.
-    NS_WARNING("Need to load index names here!");
-  }
-
   { // Load version information.
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
@@ -585,8 +580,8 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 
   nsRefPtr<IDBDatabaseRequest> db =
     IDBDatabaseRequest::Create(mName, mDescription, mObjectStoreNames,
-                               mIndexNames, mVersion, mThread,
-                               mDatabaseFilePath, mConnection);
+                               mVersion, mThread, mDatabaseFilePath,
+                               mConnection);
   NS_ASSERTION(db, "This can't fail!");
 
   NS_ASSERTION(!mConnection, "Should have swapped out!");

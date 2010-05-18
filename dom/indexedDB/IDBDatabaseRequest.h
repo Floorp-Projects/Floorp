@@ -45,7 +45,6 @@
 
 #include "mozIStorageConnection.h"
 #include "nsIIDBDatabaseRequest.h"
-#include "nsIIDBTransaction.h"
 #include "nsIObserver.h"
 
 #include "nsDOMLists.h"
@@ -72,7 +71,6 @@ public:
   Create(const nsAString& aName,
          const nsAString& aDescription,
          nsTArray<nsString>& aObjectStoreNames,
-         nsTArray<nsString>& aIndexNames,
          const nsAString& aVersion,
          LazyIdleThread* aThread,
          const nsAString& aDatabaseFilePath,
@@ -145,9 +143,6 @@ private:
   nsString mDatabaseFilePath;
 
   nsTArray<nsString> mObjectStoreNames;
-  nsTArray<nsString> mIndexNames;
-
-  nsCOMPtr<nsIIDBTransaction> mCurrentTransaction;
 
   nsRefPtr<LazyIdleThread> mConnectionThread;
 
