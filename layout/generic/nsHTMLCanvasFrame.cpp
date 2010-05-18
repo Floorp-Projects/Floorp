@@ -261,6 +261,7 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   transform.Translate(r.pos);
   transform.Scale(r.Width()/canvasSize.width, r.Height()/canvasSize.height);
   layer->SetTransform(gfx3DMatrix::From2D(transform));
+  layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
 
   nsRefPtr<Layer> result = layer.forget();
   return result.forget();
