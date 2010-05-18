@@ -40,6 +40,8 @@
 #include "ContainerLayerOGL.h"
 #include "ImageLayerOGL.h"
 #include "ColorLayerOGL.h"
+#include "CanvasLayerOGL.h"
+
 #include "LayerManagerOGLShaders.h"
 
 #include "gfxContext.h"
@@ -329,6 +331,13 @@ already_AddRefed<ColorLayer>
 LayerManagerOGL::CreateColorLayer()
 {
   nsRefPtr<ColorLayer> layer = new ColorLayerOGL(this);
+  return layer.forget();
+}
+
+already_AddRefed<CanvasLayer>
+LayerManagerOGL::CreateCanvasLayer()
+{
+  nsRefPtr<CanvasLayer> layer = new CanvasLayerOGL(this);
   return layer.forget();
 }
 

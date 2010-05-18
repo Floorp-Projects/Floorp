@@ -1780,56 +1780,6 @@ void nsHTMLMediaElement::NotifyAutoplayDataReady()
   }
 }
 
-/**
- * Returns a layer manager to use for the given document. Basically we
- * look up the document hierarchy for the first document which has
- * a presentation with an associated widget, and use that widget's
- * layer manager.
- */
-static already_AddRefed<LayerManager> GetLayerManagerForDoc(nsIDocument* aDoc)
-{
-  nsIDocument* doc = aDoc;
-  nsIDocument* displayDoc = doc->GetDisplayDocument();
-  if (displayDoc) {
-    doc = displayDoc;
-  }
-
-  nsIPresShell* shell = doc->GetPrimaryShell();
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
-  while (!shell && docShellTreeItem) {
-    // We may be in a display:none subdocument, or we may not have a presshell
-    // created yet.
-    // Walk the docshell tree to find the nearest container that has a presshell,
-    // and find the root widget from that.
-    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
-    nsCOMPtr<nsIPresShell> presShell;
-    docShell->GetPresShell(getter_AddRefs(presShell));
-    if (presShell) {
-      shell = presShell;
-    } else {
-      nsCOMPtr<nsIDocShellTreeItem> parent;
-      docShellTreeItem->GetParent(getter_AddRefs(parent));
-      docShellTreeItem = parent;
-    }
-  }
-
-  if (shell) {
-    nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
-    if (rootFrame) {
-      nsIWidget* widget =
-        nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetWindow();
-      if (widget) {
-        nsRefPtr<LayerManager> manager = widget->GetLayerManager();
-        return manager.forget();
-      }
-    }
-  }
-
-  nsRefPtr<LayerManager> manager = new BasicLayerManager(nsnull);
-  return manager.forget();
-}
-
 ImageContainer* nsHTMLMediaElement::GetImageContainer()
 {
   if (mImageContainer)
@@ -1846,7 +1796,7 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
   if (!video)
     return nsnull;
 
-  nsRefPtr<LayerManager> manager = GetLayerManagerForDoc(GetOwnerDoc());
+  nsRefPtr<LayerManager> manager = nsContentUtils::LayerManagerForDocument(GetOwnerDoc());
   if (!manager)
     return nsnull;
 

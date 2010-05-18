@@ -32,6 +32,7 @@ CPPSRCS	= \
 	gfxTextRunCache.cpp \
 	gfxTextRunWordCache.cpp \
 	gfxUserFontSet.cpp \
+	gfxUtils.cpp \
 	GLContext.cpp \
 	$(NULL)
 

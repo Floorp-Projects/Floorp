@@ -62,7 +62,6 @@
 #include "nsIViewManager.h"
 
 #include "nsIDOMHTMLCanvasElement.h"
-#include "nsICanvasElement.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "nsLayoutUtils.h"

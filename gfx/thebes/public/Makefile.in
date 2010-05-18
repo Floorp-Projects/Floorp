@@ -45,6 +45,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXPORTS	+=	gfxWindowsPlatform.h \
 		gfxWindowsSurface.h \
 		gfxWindowsNativeDrawing.h \
+		WGLLibrary.h \
 		$(NULL)
 EXPORTS +=	gfxPDFSurface.h
 
