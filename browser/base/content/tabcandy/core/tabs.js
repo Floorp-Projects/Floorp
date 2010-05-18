@@ -454,7 +454,7 @@ function Tabs() {
 
     EVENTS_TO_WATCH.forEach(
       function(eventType) {
-        tabbrowser.addEventListener(eventType, onEvent, true);
+        tabbrowser.tabContainer.addEventListener(eventType, onEvent, true);
       });
 
     this.addTab = function addTab(url) {
@@ -473,7 +473,7 @@ function Tabs() {
       function() {
         EVENTS_TO_WATCH.forEach(
           function(eventType) {
-            tabbrowser.removeEventListener(eventType, onEvent, true);
+            tabbrowser.tabContainer.removeEventListener(eventType, onEvent, true);
           });
         for (var i = 0; i < tabbrowser.tabContainer.itemCount; i++)
           unloadBrowserTab(tabbrowser.tabContainer.getItemAtIndex(i));
