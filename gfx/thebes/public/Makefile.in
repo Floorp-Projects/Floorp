@@ -35,9 +35,11 @@ EXPORTS		= 	gfx3DMatrix.h \
 			GLContextProvider.h \
 			$(NULL)
 
+ifdef MOZ_IPC
 EXPORTS		+= \
 			gfxSharedImageSurface.h \
 			$(NULL)
+endif
 
 EXPORTS += gfxFontTest.h
 
