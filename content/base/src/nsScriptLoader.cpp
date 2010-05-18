@@ -930,7 +930,7 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const PRUint8* aData,
     DetectByteOrderMark(aData, aLength, characterSet);
   }
 
-  if (characterSet.IsEmpty() && aDocument) {
+  if (characterSet.IsEmpty()) {
     // charset from document default
     characterSet = aDocument->GetDocumentCharacterSet();
   }

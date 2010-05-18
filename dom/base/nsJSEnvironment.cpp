@@ -1480,7 +1480,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
   NS_INTERFACE_MAP_ENTRY(nsIScriptContext)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptContextPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptNotify)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptContext)
 NS_INTERFACE_MAP_END
@@ -1667,13 +1666,6 @@ JSValueToAString(JSContext *cx, jsval val, nsAString *result,
   }
 
   return NS_OK;
-}
-
-nsIScriptObjectPrincipal*
-nsJSContext::GetObjectPrincipal()
-{
-  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(GetGlobalObject());
-  return prin;
 }
 
 nsresult

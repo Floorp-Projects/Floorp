@@ -53,24 +53,8 @@ class nsIVariant;
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 class nsScriptObjectHolder;
-class nsIScriptObjectPrincipal;
 
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
-
-#define NS_ISCRIPTCONTEXTPRINCIPAL_IID \
-  { 0xd012cdb3, 0x8f1e, 0x4440, \
-    { 0x8c, 0xbd, 0x32, 0x7f, 0x98, 0x1d, 0x37, 0xb4 } }
-
-class nsIScriptContextPrincipal : public nsISupports
-{
-public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXTPRINCIPAL_IID)
-
-  virtual nsIScriptObjectPrincipal* GetObjectPrincipal() = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
-                              NS_ISCRIPTCONTEXTPRINCIPAL_IID)
 
 // A4FE2B52-62B5-40C3-BF9C-5E0A27B10F90
 #define NS_ISCRIPTCONTEXT_IID \
@@ -88,7 +72,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptContextPrincipal,
  * should be removed in a short time. Ideally this interface will be
  * language neutral</I>
  */
-class nsIScriptContext : public nsIScriptContextPrincipal
+class nsIScriptContext : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTCONTEXT_IID)
