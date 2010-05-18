@@ -939,7 +939,7 @@ mozStorageFunctionGetUnreversedHost::OnFunctionCall(
     ReverseString(src, dest);
     result->SetAsAString(dest);
   } else {
-    result->SetAsAString(NS_LITERAL_STRING(""));
+    result->SetAsAString(EmptyString());
   }
   NS_ADDREF(*_retval = result);
   return NS_OK;
