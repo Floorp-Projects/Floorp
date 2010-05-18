@@ -40,6 +40,7 @@
 #include "IDBDatabaseRequest.h"
 
 #include "nsIIDBDatabaseException.h"
+#include "nsIIDBTransactionRequest.h"
 
 #include "mozilla/Storage.h"
 #include "nsDOMClassInfo.h"
@@ -420,6 +421,16 @@ IDBDatabaseRequest::OnObjectStoreRemoved(const nsAString& aName)
   NS_NOTREACHED("Shouldn't get here!");
 }
 
+nsresult
+IDBDatabaseRequest::TransactionInternal(const nsTArray<nsString>& aStoreNames,
+                                        PRUint16 aMode,
+                                        PRUint32 aTimeout,
+                                        nsIIDBTransactionRequest** _retval)
+{
+  NS_NOTYETIMPLEMENTED("Implement me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMPL_ADDREF(IDBDatabaseRequest)
 NS_IMPL_RELEASE(IDBDatabaseRequest)
 
@@ -461,7 +472,7 @@ IDBDatabaseRequest::GetVersion(nsAString& aVersion)
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::GetObjectStores(nsIDOMDOMStringList** aObjectStores)
+IDBDatabaseRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -487,6 +498,7 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
     return NS_ERROR_INVALID_ARG;
   }
 
+  // XPConnect makes "null" into a void string, we need an empty string.
   nsString keyPath(aKeyPath);
   if (keyPath.IsVoid()) {
     keyPath.Truncate();
@@ -516,59 +528,6 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
     nsRefPtr<CreateObjectStoreHelper> helper =
       new CreateObjectStoreHelper(this, request, aName, keyPath,
                                   !!aAutoIncrement);
-    rv = helper->Dispatch(mConnectionThread);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  request.forget(_retval);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-IDBDatabaseRequest::OpenObjectStore(const nsAString& aName,
-                                    PRUint16 aMode,
-                                    PRUint8 aOptionalArgCount,
-                                    nsIIDBRequest** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  if (aName.IsEmpty()) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (aOptionalArgCount) {
-    if (aMode != nsIIDBObjectStore::READ_WRITE &&
-        aMode != nsIIDBObjectStore::READ_ONLY &&
-        aMode != nsIIDBObjectStore::SNAPSHOT_READ) {
-      return NS_ERROR_INVALID_ARG;
-    }
-  }
-  else {
-    aMode = nsIIDBObjectStore::READ_WRITE;
-  }
-
-  nsRefPtr<IDBRequest> request = GenerateRequest();
-
-  bool exists = false;
-  PRUint32 count = mObjectStoreNames.Length();
-  for (PRUint32 index = 0; index < count; index++) {
-    if (mObjectStoreNames[index].Equals(aName)) {
-      exists = true;
-      break;
-    }
-  }
-
-  nsresult rv;
-  if (NS_UNLIKELY(!exists)) {
-    nsCOMPtr<nsIRunnable> runnable =
-      IDBErrorEvent::CreateRunnable(request,
-                                    nsIIDBDatabaseException::CONSTRAINT_ERR);
-    NS_ENSURE_TRUE(runnable, NS_ERROR_UNEXPECTED);
-    rv = NS_DispatchToCurrentThread(runnable);
-  }
-  else {
-    nsRefPtr<OpenObjectStoreHelper> helper =
-      new OpenObjectStoreHelper(this, request, aName, aMode);
     rv = helper->Dispatch(mConnectionThread);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -635,20 +594,68 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
 }
 
 NS_IMETHODIMP
-IDBDatabaseRequest::OpenTransaction(nsIDOMDOMStringList* aStoreNames,
-                                    PRUint32 aTimeout,
-                                    PRUint8 aOptionalArgCount,
-                                    nsIIDBRequest** _retval)
+IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
+                                PRUint16 aMode,
+                                PRUint32 aTimeout,
+                                PRUint8 aOptionalArgCount,
+                                nsIIDBTransactionRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
 
-  if (!aOptionalArgCount) {
+  if (aOptionalArgCount) {
+    if (aMode != nsIIDBTransaction::READ_WRITE &&
+        aMode != nsIIDBTransaction::READ_ONLY &&
+        aMode != nsIIDBTransaction::SNAPSHOT_READ) {
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  else {
+    aMode = nsIIDBTransaction::READ_ONLY;
+  }
+
+  if (aOptionalArgCount <= 1) {
     aTimeout = kDefaultDatabaseTimeoutMS;
   }
 
-  nsCOMPtr<nsIIDBRequest> request(GenerateRequest());
-  request.forget(_retval);
+  nsAutoTArray<nsString, 5> storeNames;
+  NS_NOTYETIMPLEMENTED("Implement me!");
+  return TransactionInternal(storeNames, aMode, aTimeout, _retval);
+}
+
+NS_IMETHODIMP
+IDBDatabaseRequest::ObjectStore(const nsAString& aName,
+                                PRUint16 aMode,
+                                PRUint8 aOptionalArgCount,
+                                nsIIDBObjectStoreRequest** _retval)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  if (aName.IsEmpty()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  if (aOptionalArgCount) {
+    if (aMode != nsIIDBTransaction::READ_WRITE &&
+        aMode != nsIIDBTransaction::READ_ONLY &&
+        aMode != nsIIDBTransaction::SNAPSHOT_READ) {
+      return NS_ERROR_INVALID_ARG;
+    }
+  }
+  else {
+    aMode = nsIIDBTransaction::READ_ONLY;
+  }
+
+  nsAutoTArray<nsString, 1> storeNames;
+  storeNames.AppendElement(aName);
+
+  nsCOMPtr<nsIIDBTransactionRequest> transaction;
+  nsresult rv =  TransactionInternal(storeNames, aMode,
+                                     kDefaultDatabaseTimeoutMS,
+                                     getter_AddRefs(transaction));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction->ObjectStore(aName, _retval);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -732,7 +739,7 @@ CreateObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   mObjectStore =
     IDBObjectStoreRequest::Create(mDatabase, mName, mKeyPath, mAutoIncrement,
-                                  nsIIDBObjectStore::READ_WRITE, mId);
+                                  nsIIDBTransaction::READ_WRITE, mId);
   NS_ENSURE_TRUE(mObjectStore, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   mDatabase->OnObjectStoreCreated(mName);

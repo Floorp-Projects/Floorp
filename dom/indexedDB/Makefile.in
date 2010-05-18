@@ -57,6 +57,7 @@ CPPSRCS = \
   IDBEvents.cpp \
   IDBObjectStoreRequest.cpp \
   IDBRequest.cpp \
+  IDBTransactionRequest.cpp \
   IndexedDatabaseRequest.cpp \
   LazyIdleThread.cpp \
   $(NULL)
@@ -66,6 +67,7 @@ EXPORTS_mozilla/dom/indexedDB = \
   IDBEvents.h \
   IDBObjectStoreRequest.h \
   IDBRequest.h \
+  IDBTransactionRequest.h \
   IndexedDatabase.h \
   IndexedDatabaseRequest.h \
   LazyIdleThread.h \
