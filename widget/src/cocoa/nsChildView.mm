@@ -2645,7 +2645,7 @@ static BOOL DrawingAtWindowTop(CGContextRef aContext)
     LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mGeckoChild->GetLayerManager());
     manager->SetClippingRegion(paintEvent.region); 
     if (!mContext) {
-        mContext = (NSOpenGLContext *)manager->gl()->GetNativeContext();
+      mContext = (NSOpenGLContext *)manager->gl()->GetNativeData(mozilla::gl::GLContext::NativeGLContext);
     }
     [mContext makeCurrentContext];
     mGeckoChild->DispatchWindowEvent(paintEvent);

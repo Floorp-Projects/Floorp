@@ -1,4 +1,42 @@
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ *   Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
+ *   Mark Steele <mwsteele@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
 #include "WebGLContext.h"
 
 #include "nsIConsoleService.h"
@@ -12,10 +50,10 @@
 #include "gfxContext.h"
 #include "gfxPattern.h"
 
-#include "localgl.h"
-
 #include "CanvasUtils.h"
 #include "NativeJSContext.h"
+
+#include "GLContextProvider.h"
 
 using namespace mozilla;
 
@@ -33,7 +71,9 @@ NS_NewCanvasRenderingContextWebGL(nsICanvasRenderingContextWebGL** aResult)
 }
 
 WebGLContext::WebGLContext()
-    : gl(nsnull), mCanvasElement(nsnull), mGLPbuffer(nsnull), mWidth(0), mHeight(0),
+    : mCanvasElement(nsnull),
+      gl(nsnull),
+      mWidth(0), mHeight(0),
       mInvalidated(PR_FALSE), mActiveTexture(0)
 {
     mMapBuffers.Init();
@@ -66,10 +106,8 @@ WebGLContext::Invalidate()
 //
 
 NS_IMETHODIMP
-WebGLContext::SetCanvasElement(nsICanvasElement* aParentCanvas)
+WebGLContext::SetCanvasElement(nsHTMLCanvasElement* aParentCanvas)
 {
-    nsresult rv;
-
     if (aParentCanvas == nsnull) {
         // we get this on shutdown; we should do some more cleanup here,
         // but instead we just let our destructor do it.
@@ -79,62 +117,8 @@ WebGLContext::SetCanvasElement(nsICanvasElement* aParentCanvas)
     if (!SafeToCreateCanvas3DContext(aParentCanvas))
         return NS_ERROR_FAILURE;
 
-    //
-    // Let's find our prefs
-    //
-    nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool forceSoftware = PR_FALSE;
-
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    rv = prefService->GetBranch("webgl.", getter_AddRefs(prefBranch));
-    if (NS_SUCCEEDED(rv)) {
-        PRBool val;
-
-        rv = prefBranch->GetBoolPref("software_render", &val);
-        if (NS_SUCCEEDED(rv))
-            forceSoftware = val;
-    }
-
-    LogMessage("Canvas 3D: creating PBuffer...");
-
-    if (!forceSoftware) {
-#if defined(USE_EGL)
-        mGLPbuffer = new nsGLPbufferEGL();
-#elif defined(USE_WGL)
-        mGLPbuffer = new nsGLPbufferWGL();
-#elif defined(USE_GLX)
-        mGLPbuffer = new nsGLPbufferGLX();
-#elif defined(USE_CGL)
-        mGLPbuffer = new nsGLPbufferCGL();
-#else
-        mGLPbuffer = nsnull;
-#endif
-
-        if (mGLPbuffer && !mGLPbuffer->Init(this))
-            mGLPbuffer = nsnull;
-    }
-
-    if (!mGLPbuffer) {
-        mGLPbuffer = new nsGLPbufferOSMESA();
-        if (!mGLPbuffer->Init(this))
-            mGLPbuffer = nsnull;
-    }
-
-    if (!mGLPbuffer)
-        return NS_ERROR_FAILURE;
-
-    gl = mGLPbuffer->GL();
-
-    if (!ValidateGL()) {
-        // XXX over here we need to destroy mGLPbuffer and create a mesa buffer
-
-        LogMessage("Canvas 3D: Couldn't validate OpenGL implementation; is everything needed present?");
-        return NS_ERROR_FAILURE;
-    }
-
     mCanvasElement = aParentCanvas;
+
     return NS_OK;
 }
 
@@ -144,8 +128,12 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
     if (mWidth == width && mHeight == height)
         return NS_OK;
 
-    if (!mGLPbuffer->Resize(width, height)) {
-        LogMessage("mGLPbuffer->Resize failed");
+    LogMessage("Canvas 3D: creating PBuffer...");
+
+    gl = gl::sGLContextProvider.CreatePBuffer(gfxIntSize(width, height));
+
+    if (!ValidateGL()) {
+        LogMessage("Canvas 3D: Couldn't validate OpenGL implementation; is everything needed present?");
         return NS_ERROR_FAILURE;
     }
 
@@ -181,101 +169,30 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 NS_IMETHODIMP
 WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f)
 {
-    nsresult rv = NS_OK;
-
-    if (mInvalidated) {
-        mGLPbuffer->SwapBuffers();
-        mInvalidated = PR_FALSE;
-    }
-
-    if (!mGLPbuffer)
+    if (!gl)
         return NS_OK;
 
-    // use GL Drawing if we can get a target GL context; otherwise
-    // go through the fallback path.
-#ifdef HAVE_GL_DRAWING
-    if (mCanvasElement->GLWidgetBeginDrawing()) {
-        glClearColor(0.0, 0.0, 0.0, 0.0);
-        glClear(GL_COLOR_BUFFER_BIT);
+    nsRefPtr<gfxImageSurface> surf = new gfxImageSurface(gfxIntSize(mWidth, mHeight),
+                                                         gfxASurface::ImageFormatARGB32);
+    if (surf->CairoStatus() != 0)
+        return NS_ERROR_FAILURE;
 
-        int bwidth = mGLPbuffer->Width();
-        int bheight = mGLPbuffer->Height();
+    MakeContextCurrent();
+    gl->fReadPixels(0, 0, mWidth, mHeight,
+                    LOCAL_GL_BGRA,
+                    LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
+                    surf->Data());
 
-        GLuint tex = 0;
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_RECTANGLE_EXT, tex);
+    gfxUtils::PremultiplyImageSurface(surf);
 
-        CGLError err =
-            CGLTexImagePBuffer(CGLGetCurrentContext(),
-                               ((nsGLPbufferCGL*)mGLPbuffer)->GetCGLPbuffer(),
-                               GL_BACK);
-        if (err) {
-            fprintf (stderr, "CGLTexImagePBuffer failed: %d\n", err);
-            glDeleteTextures(1, &tex);
-            return NS_OK;
-        }
+    nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
+    pat->SetFilter(f);
 
-        glEnable(GL_TEXTURE_RECTANGLE_EXT);
+    ctx->NewPath();
+    ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
+    ctx->Fill();
 
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        //glFrustum(-halfWidth, halfWidth, halfHeight, -halfHeight, 1.0, 100000.0);
-        glOrtho(0, bwidth, bheight, 0, -0.5, 10.0);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        glBegin(GL_QUADS);
-
-        /* Note that the texture needs a y-flip */
-        glTexCoord2f(0.0, bheight);
-        glVertex3f(0.0, 0.0, 0.0);
-
-        glTexCoord2f(bwidth, bheight);
-        glVertex3f(bwidth, 0.0, 0.0);
-
-        glTexCoord2f(bwidth, 0);
-        glVertex3f(bwidth, bheight, 0.0);
-
-        glTexCoord2f(0.0, 0);
-        glVertex3f(0.0, bheight, 0.0);
-
-        glEnd();
-
-        glDisable(GL_TEXTURE_RECTANGLE_EXT);
-        glDeleteTextures(1, &tex);
-
-        mCanvasElement->GLWidgetSwapBuffers();
-        mCanvasElement->GLWidgetEndDrawing();
-    } else
-#endif
-    {
-        nsRefPtr<gfxASurface> surf = mGLPbuffer->ThebesSurface();
-        if (!surf)
-            return NS_OK;
-        // XXX we can optimize this on win32 at least, by creating an upside-down
-        // DIB.
-        nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
-
-#if defined(USE_EGL) && defined(MOZ_X11)
-        if (getenv("IMAGE")) {
-#endif
-        gfxMatrix m;
-        m.Translate(gfxPoint(0.0, mGLPbuffer->Height()));
-        m.Scale(1.0, -1.0);
-        pat->SetMatrix(m);
-#if defined(USE_EGL) && defined(MOZ_X11)
-        }
-#endif
-
-        // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
-        // pixel alignment for this stuff!
-        ctx->NewPath();
-        ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
-        ctx->Fill();
-    }
-
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -349,14 +266,32 @@ WebGLContext::GetInputStream(const char* aMimeType,
 NS_IMETHODIMP
 WebGLContext::GetThebesSurface(gfxASurface **surface)
 {
-    if (!mGLPbuffer) {
-        *surface = nsnull;
-        return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_NOT_AVAILABLE;
+}
+
+already_AddRefed<layers::CanvasLayer>
+WebGLContext::GetCanvasLayer(LayerManager *manager)
+{
+    nsRefPtr<CanvasLayer> canvasLayer = manager->CreateCanvasLayer();
+    if (!canvasLayer) {
+        NS_WARNING("CreateCanvasLayer returned null!");
+        return nsnull;
     }
 
-    *surface = mGLPbuffer->ThebesSurface();
-    NS_IF_ADDREF(*surface);
-    return NS_OK;
+    CanvasLayer::Data data;
+
+    data.mGLContext = gl.get();
+    data.mSize = nsIntSize(mWidth, mHeight);
+    data.mGLBufferIsPremultiplied = PR_FALSE;
+
+    canvasLayer->Initialize(data);
+    // once we support GL context attributes, we'll set the right thing here
+    canvasLayer->SetIsOpaqueContent(PR_FALSE);
+    canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+
+    mInvalidated = PR_FALSE;
+
+    return canvasLayer.forget().get();
 }
 
 

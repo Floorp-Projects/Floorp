@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 40; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is
  *   Vladimir Vukicevic <vladimir@pobox.com>
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -35,48 +35,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _CANVASUTILS_H_
-#define _CANVASUTILS_H_
+#ifndef nsICanvasElementExternal_h___
+#define nsICanvasElementExternal_h___
 
-#include "prtypes.h"
+#include "nsISupports.h"
+#include "gfxPattern.h"
 
-class nsHTMLCanvasElement;
-class nsIPrincipal;
+class gfxContext;
+class nsIFrame;
+struct gfxRect;
 
-namespace mozilla {
+#define NS_ICANVASELEMENTEXTERNAL_IID \
+  { 0x51870f54, 0x6c4c, 0x469a, {0xad, 0x46, 0xf0, 0xa9, 0x8e, 0x32, 0xa7, 0xe2 } }
 
-class CanvasUtils {
+class nsIRenderingContext;
+class nsICanvasRenderingContextInternal;
+
+struct _cairo_surface;
+
+/*
+ * This interface contains methods that are needed outside of the content/layout
+ * modules, specifically widget.  It should eventually go away when we support
+ * libxul builds, and nsHTMLCanvasElement be used directly.
+ *
+ * Code internal to content/layout should /never/ use this interface; if the
+ * same functionality is needed in both places, two separate methods should be
+ * used.
+ */
+
+class nsICanvasElementExternal : public nsISupports {
 public:
-    // Check that the rectangle [x,y,w,h] is a subrectangle of [0,0,realWidth,realHeight]
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASELEMENTEXTERNAL_IID)
 
-    static PRBool CheckSaneSubrectSize(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h,
-                                       PRInt32 realWidth, PRInt32 realHeight)
-    {
-        if (w <= 0 || h <= 0 || x < 0 || y < 0)
-            return PR_FALSE;
+  /**
+   * Get the size in pixels of this canvas element
+   */
+  NS_IMETHOD_(nsIntSize) GetSizeExternal() = 0;
 
-        if (x >= realWidth  || w > (realWidth - x) ||
-            y >= realHeight || h > (realHeight - y))
-            return PR_FALSE;
-
-        return PR_TRUE;
-    }
-
-    // Flag aCanvasElement as write-only if drawing an image with aPrincipal
-    // onto it would make it such.
-
-    static void DoDrawImageSecurityCheck(nsHTMLCanvasElement *aCanvasElement,
-                                         nsIPrincipal *aPrincipal,
-                                         PRBool forceWriteOnly);
-
-    static void LogMessage (const nsCString& errorString);
-    static void LogMessagef (const char *fmt, ...);
-
-private:
-    // this can't be instantiated
-    CanvasUtils() { }
+  /*
+   * Ask the canvas element to tell the contexts to render themselves
+   * to the given gfxContext at the origin of its coordinate space.
+   */
+  NS_IMETHOD RenderContextsExternal(gfxContext *ctx,
+                                    gfxPattern::GraphicsFilter aFilter) = 0;
 };
 
-}
+NS_DEFINE_STATIC_IID_ACCESSOR(nsICanvasElementExternal, NS_ICANVASELEMENTEXTERNAL_IID)
 
-#endif /* _CANVASUTILS_H_ */
+#endif /* nsICanvasElementExternal_h___ */

@@ -66,7 +66,7 @@
 using namespace mozilla;
 
 PRBool
-WebGLContext::SafeToCreateCanvas3DContext(nsICanvasElement *canvasElement)
+WebGLContext::SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement)
 {
     nsresult rv;
 

@@ -55,12 +55,11 @@
 #include "nsIDocument.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
+#include "nsHTMLCanvasElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIVariant.h"
 
-#include "nsIDOMHTMLCanvasElement.h"
-#include "nsICanvasElement.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
 #include "nsDOMError.h"
@@ -105,9 +104,12 @@
 
 #include "nsBidiPresUtils.h"
 
+#include "Layers.h"
+
 #include "CanvasUtils.h"
 
 using namespace mozilla;
+using namespace mozilla::layers;
 
 #ifndef M_PI
 #define M_PI		3.14159265358979323846
@@ -333,7 +335,7 @@ public:
     nsresult Redraw(const gfxRect& r);
 
     // nsICanvasRenderingContextInternal
-    NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
+    NS_IMETHOD SetCanvasElement(nsHTMLCanvasElement* aParentCanvas);
     NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
     NS_IMETHOD InitializeWithSurface(nsIDocShell *shell, gfxASurface *surface, PRInt32 width, PRInt32 height);
     NS_IMETHOD Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter);
@@ -342,6 +344,8 @@ public:
                               nsIInputStream **aStream);
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool isOpaque);
+    already_AddRefed<CanvasLayer> GetCanvasLayer(LayerManager *manager);
+    void MarkContextClean();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -408,12 +412,12 @@ protected:
 
     // the canvas element informs us when it's going away,
     // so these are not nsCOMPtrs
-    nsICanvasElement* mCanvasElement;
+    nsHTMLCanvasElement* mCanvasElement;
 
     // If mCanvasElement is not provided, then a docshell is
     nsCOMPtr<nsIDocShell> mDocShell;
 
-    // yay thebes
+    // our drawing surfaces, contexts, and layers
     nsRefPtr<gfxContext> mThebes;
     nsRefPtr<gfxASurface> mSurface;
 
@@ -508,7 +512,8 @@ protected:
      * Gets the pres shell from either the canvas element or the doc shell
      */
     nsIPresShell *GetPresShell() {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
+      nsCOMPtr<nsIContent> content =
+        do_QueryInterface(static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
       if (content) {
         nsIDocument* ownerDoc = content->GetOwnerDoc();
         return ownerDoc ? ownerDoc->GetPrimaryShell() : nsnull;
@@ -890,7 +895,10 @@ nsCanvasRenderingContext2D::Redraw()
         return NS_OK;
 
     mIsEntireFrameInvalid = PR_TRUE;
-    return mCanvasElement->InvalidateFrame();
+
+    mCanvasElement->InvalidateFrame();
+
+    return NS_OK;
 }
 
 nsresult
@@ -905,7 +913,9 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
     if (++mInvalidateCount > kCanvasMaxInvalidateCount)
         return Redraw();
 
-    return mCanvasElement->InvalidateFrameSubrect(r);
+    mCanvasElement->InvalidateFrame(&r);
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1099,7 +1109,7 @@ nsCanvasRenderingContext2D::GetInputStream(const char *aMimeType,
 //
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::SetCanvasElement(nsICanvasElement* aCanvasElement)
+nsCanvasRenderingContext2D::SetCanvasElement(nsHTMLCanvasElement* aCanvasElement)
 {
     // don't hold a ref to this!
     mCanvasElement = aCanvasElement;
@@ -1115,7 +1125,8 @@ nsCanvasRenderingContext2D::GetCanvas(nsIDOMHTMLCanvasElement **canvas)
         return NS_OK;
     }
 
-    return CallQueryInterface(mCanvasElement, canvas);
+    NS_ADDREF(*canvas = static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
+    return NS_OK;
 }
 
 //
@@ -1995,7 +2006,8 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
      * string is equal to the old one.
      */
 
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
+    nsCOMPtr<nsIContent> content =
+        do_QueryInterface(static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
     if (!content && !mDocShell) {
         NS_WARNING("Canvas element must be an nsIContent and non-null or a docshell must be provided");
         return NS_ERROR_FAILURE;
@@ -2348,7 +2360,8 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     if (aMaxWidth < 0)
         return NS_ERROR_INVALID_ARG;
 
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mCanvasElement);
+    nsCOMPtr<nsIContent> content =
+        do_QueryInterface(static_cast<nsIDOMHTMLCanvasElement*>(mCanvasElement));
     if (!content && !mDocShell) {
         NS_WARNING("Canvas element must be an nsIContent and non-null or a docshell must be provided");
         return NS_ERROR_FAILURE;
@@ -3646,3 +3659,34 @@ nsCanvasRenderingContext2D::SetMozImageSmoothingEnabled(PRBool val)
 
     return NS_OK;
 }
+
+already_AddRefed<CanvasLayer>
+nsCanvasRenderingContext2D::GetCanvasLayer(LayerManager *manager)
+{
+    if (!mValid)
+        return nsnull;
+
+    nsRefPtr<CanvasLayer> canvasLayer = manager->CreateCanvasLayer();
+    if (!canvasLayer) {
+        NS_WARNING("CreateCanvasLayer returned null!");
+        return nsnull;
+    }
+
+    CanvasLayer::Data data;
+
+    data.mSurface = mSurface.get();
+    data.mSize = nsIntSize(mWidth, mHeight);
+
+    canvasLayer->Initialize(data);
+    canvasLayer->SetIsOpaqueContent(mOpaque);
+    canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+
+    return canvasLayer.forget().get();
+}
+
+void
+nsCanvasRenderingContext2D::MarkContextClean()
+{
+    mIsEntireFrameInvalid = PR_FALSE;
+}
+
