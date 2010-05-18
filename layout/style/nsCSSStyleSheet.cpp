@@ -1374,21 +1374,6 @@ nsCSSStyleSheet::StyleSheetCount() const
   return count;
 }
 
-nsCSSStyleSheet*
-nsCSSStyleSheet::GetStyleSheetAt(PRInt32 aIndex) const
-{
-  // XXX Ughh...an O(n^2) method for doing iteration. Again, we hope
-  // that this isn't done too often. If it is, we need to change the
-  // underlying storage mechanism
-  nsCSSStyleSheet* child = mInner->mFirstChild;
-  while (child && (0 != aIndex)) {
-    --aIndex;
-    child = child->mNext;
-  }
-
-  return child;
-}
-
 nsCSSStyleSheet::EnsureUniqueInnerResult
 nsCSSStyleSheet::EnsureUniqueInner()
 {
@@ -2038,11 +2023,9 @@ nsCSSStyleSheet::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                   PRBool aWasAlternate,
                                   nsresult aStatus)
 {
-#ifdef DEBUG
-  nsCOMPtr<nsIStyleSheet> parentSheet = aSheet->GetParentSheet();
-  NS_ASSERTION(this == parentSheet, "We are being notified of a sheet load for a sheet that is not our child!\n");
-#endif
-  
+  NS_ASSERTION(this == aSheet->GetParentSheet(),
+               "We are being notified of a sheet load for a sheet that is not our child!");
+
   if (mDocument && NS_SUCCEEDED(aStatus)) {
     nsCOMPtr<nsICSSImportRule> ownerRule = aSheet->GetOwnerRule();
     

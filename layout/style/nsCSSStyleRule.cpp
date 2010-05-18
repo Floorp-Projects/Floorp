@@ -1090,7 +1090,7 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
         NS_ADDREF(*aSheetPrincipal = cssSheet->Principal());
       }
 
-      nsCOMPtr<nsIDocument> document = sheet->GetOwningDocument();
+      nsIDocument* document = sheet->GetOwningDocument();
       if (document) {
         NS_ADDREF(*aCSSLoader = document->CSSLoader());
       }
