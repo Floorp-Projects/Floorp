@@ -112,15 +112,10 @@ nsIntSize
 nsHTMLCanvasFrame::GetCanvasSize()
 {
   nsIntSize size(0,0);
-  nsresult rv;
   nsHTMLCanvasElement *canvas = CanvasElementFromContent(GetContent());
   if (canvas) {
     size = canvas->GetSize();
   } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-
-  if (NS_FAILED(rv)) {
     NS_NOTREACHED("couldn't get canvas size");
   }
 
