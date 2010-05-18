@@ -403,9 +403,9 @@ struct JSObject {
         fslots[JSSLOT_PARENT].setNull();
     }
 
-    void setParent(JSObject *newParent) {
-        setDelegateNullSafe(newParent);
-        fslots[JSSLOT_PARENT].setNonFunObjOrNull(newParent);
+    void setParent(const js::Value &newParent) {
+        setDelegateNullSafe(newParent.asObjectOrNull());
+        fslots[JSSLOT_PARENT] = newParent;
     }
 
     void traceProtoAndParent(JSTracer *trc) const {
@@ -580,7 +580,7 @@ struct JSObject {
     bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
-    void init(js::Class *clasp, const js::Value &proto, JSObject *parent,
+    void init(js::Class *clasp, const js::Value &proto, const js::Value &parent,
               const js::Value &privateSlotValue) {
         JS_ASSERT(((jsuword) clasp & 3) == 0);
         JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
@@ -602,7 +602,8 @@ struct JSObject {
      * of a call to js_InitClass(...clasp, ...).
      */
     inline void initSharingEmptyScope(js::Class *clasp,
-                                      const js::Value &proto, JSObject *parent,
+                                      const js::Value &proto,
+                                      const js::Value &parent,
                                       const js::Value &privateSlotValue);
 
     inline bool hasSlotsArray() const { return !!dslots; }

@@ -1538,14 +1538,14 @@ js_ReparentTypedArrayToScope(JSContext *cx, JSObject *obj, JSObject *scope)
         return JS_FALSE;
 
     obj->setProto(NonFunObjTag(*proto));
-    obj->setParent(scope);
+    obj->setParent(NonFunObjTag(*scope));
 
     key = JSCLASS_CACHED_PROTO_KEY(&ArrayBuffer::jsclass);
     if (!js_GetClassPrototype(cx, scope, key, &proto))
         return JS_FALSE;
 
     buffer->setProto(NonFunObjTag(*proto));
-    buffer->setParent(scope);
+    buffer->setParent(NonFunObjTag(*scope));
 
     return JS_TRUE;
 }
