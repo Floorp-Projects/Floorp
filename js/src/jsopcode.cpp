@@ -243,25 +243,44 @@ js_GetEnterBlockStackDefs(JSContext *cx, JSScript *script, jsbytecode *pc)
 
 #ifdef DEBUG
 
+/* If pc != NULL, includes a prefix indicating whether the PC is at the current line. */
 JS_FRIEND_API(JSBool)
-js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
+js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, FILE *fp, jsbytecode *pc)
 {
-    jsbytecode *pc, *end;
+    jsbytecode *next, *end;
     uintN len;
 
-    pc = script->code;
-    end = pc + script->length;
-    while (pc < end) {
-        if (pc == script->main)
+    next = script->code;
+    end = next + script->length;
+    while (next < end) {
+        if (next == script->main)
             fputs("main:\n", fp);
-        len = js_Disassemble1(cx, script, pc,
-                              pc - script->code,
+        if (pc != NULL) {
+            if (pc == next)
+                fputs("--> ", fp);
+            else
+                fputs("    ", fp);
+        }
+        len = js_Disassemble1(cx, script, next,
+                              next - script->code,
                               lines, fp);
         if (!len)
             return JS_FALSE;
-        pc += len;
+        next += len;
     }
     return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
+{
+    return js_DisassembleAtPC(cx, script, lines, fp, NULL);
+}
+
+JS_FRIEND_API(JSBool)
+js_DumpPC(JSContext *cx)
+{
+    return js_DisassembleAtPC(cx, cx->fp->script, true, stdout, cx->regs->pc);
 }
 
 JSBool
