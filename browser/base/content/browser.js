@@ -91,7 +91,8 @@ var gEditUIVisible = true;
   ["gBrowser",            "content"],
   ["gNavToolbox",         "navigator-toolbox"],
   ["gURLBar",             "urlbar"],
-  ["gNavigatorBundle",    "bundle_browser"]
+  ["gNavigatorBundle",    "bundle_browser"],
+  ["gFindBar",            "FindToolbar"]
 ].forEach(function (elementGlobal) {
   var [name, id] = elementGlobal;
   window.__defineGetter__(name, function () {
@@ -105,24 +106,6 @@ var gEditUIVisible = true;
     delete window[name];
     return window[name] = val;
   });
-});
-
-// Smart getter for the findbar.  If you don't wish to force the creation of
-// the findbar, check gFindBarInitialized first.
-var gFindBarInitialized = false;
-XPCOMUtils.defineLazyGetter(window, "gFindBar", function() {
-  let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-  let findbar = document.createElementNS(XULNS, "findbar");
-  findbar.setAttribute("browserid", "content");
-  findbar.id = "FindToolbar";
-
-  let browserBottomBox = document.getElementById("browser-bottombox");
-  browserBottomBox.insertBefore(findbar, browserBottomBox.firstChild);
-
-  // Force a style flush to ensure that our binding is attached.
-  findbar.clientTop;
-  window.gFindBarInitialized = true;
-  return findbar;
 });
 
 __defineGetter__("gPrefService", function() {
@@ -988,13 +971,10 @@ function BrowserStartup() {
   }
 
   if (window.opener && !window.opener.closed) {
-    let openerFindBar = window.opener.gFindBarInitialized ?
-                        window.opener.gFindBar : null;
-    if (openerFindBar &&
-        !openerFindBar.hidden &&
-        openerFindBar.findMode == openerFindBar.FIND_NORMAL) {
+    let openerFindBar = window.opener.gFindBar;
+    if (openerFindBar && !openerFindBar.hidden &&
+        openerFindBar.findMode == gFindBar.FIND_NORMAL)
       gFindBar.open();
-    }
 
     let openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     // If the opener had a sidebar, open the same sidebar in our window.
@@ -2618,9 +2598,8 @@ var PrintPreviewListener = {
     this._chromeState.statusbarOpen = !statusbar.hidden;
     statusbar.hidden = true;
 
-    this._chromeState.findOpen = gFindBarInitialized && !gFindBar.hidden;
-    if (gFindBarInitialized)
-      gFindBar.close();
+    this._chromeState.findOpen = !gFindBar.hidden;
+    gFindBar.close();
   },
   _showChrome: function () {
     if (this._chromeState.notificationsOpen)
@@ -4133,18 +4112,16 @@ var XULBrowserWindow = {
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);
 
-    if (gFindBarInitialized) {
-      if (gFindBar.findMode != gFindBar.FIND_NORMAL) {
-        // Close the Find toolbar if we're in old-style TAF mode
-        gFindBar.close();
-      }
-
-      // XXXmano new-findbar, do something useful once it lands.
-      // Of course, this is especially wrong with bfcache on...
-
-      // fix bug 253793 - turn off highlight when page changes
-      gFindBar.getElement("highlight").checked = false;      
+    if (gFindBar.findMode != gFindBar.FIND_NORMAL) {
+      // Close the Find toolbar if we're in old-style TAF mode
+      gFindBar.close();
     }
+
+    // XXXmano new-findbar, do something useful once it lands.
+    // Of course, this is especially wrong with bfcache on...
+
+    // fix bug 253793 - turn off highlight when page changes
+    gFindBar.getElement("highlight").checked = false;
 
     // See bug 358202, when tabs are switched during a drag operation,
     // timers don't fire on windows (bug 203573)
@@ -7278,7 +7255,7 @@ let gPrivateBrowsingUI = {
     if (BrowserSearch.searchBar)
       this._searchBarValue = BrowserSearch.searchBar.textbox.value;
 
-    if (gFindBarInitialized)
+    if (gFindBar)
       this._findBarValue = gFindBar.getElement("findbar-textbox").value;
 
     this._setPBMenuTitle("stop");
@@ -7336,7 +7313,7 @@ let gPrivateBrowsingUI = {
     // temporary fix until bug 463607 is fixed
     document.getElementById("Tools:Sanitize").removeAttribute("disabled");
 
-    if (gFindBarInitialized) {
+    if (gFindBar) {
       let findbox = gFindBar.getElement("findbar-textbox");
       findbox.reset();
       if (this._findBarValue) {
@@ -7633,4 +7610,4 @@ var TabContextMenu = {
       getService(Ci.nsISessionStore).
       getClosedTabCount(window) == 0;
   }
-};
+}
