@@ -279,7 +279,7 @@ js_IndexToId(JSContext *cx, jsuint index, jsid *idp)
     str = js_NumberToString(cx, index);
     if (!str)
         return JS_FALSE;
-    return js_ValueToStringId(cx, str, idp);
+    return js_ValueToStringId(cx, StringTag(str), idp);
 }
 
 static JSBool

@@ -4988,7 +4988,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
         rval->setNonFunObj(*obj);
 
 #define DEFVAL(valinit, id) {                                                 \
-    Value tmp(valinit);                                                       \
+    Value tmp = valinit;                                                      \
     ok = js_DefineProperty(cx, obj, id, &tmp,                                 \
                            PropertyStub, PropertyStub,                        \
                            JSPROP_ENUMERATE);                                 \
@@ -5003,7 +5003,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
             goto out;
         }
         
-        DEFVAL(matchstr, INT_TO_JSID(0));
+        DEFVAL(StringTag(matchstr), INT_TO_JSID(0));
     }
 
     res = &cx->regExpStatics;
@@ -5040,7 +5040,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                     ok = JS_FALSE;
                     goto out;
                 }
-                Value tmp(parstr);
+                Value tmp = StringTag(parstr);
                 ok = js_DefineProperty(cx, obj, INT_TO_JSID(num + 1), &tmp,
                                        NULL, NULL, JSPROP_ENUMERATE);
             }
@@ -5062,7 +5062,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
          */
         DEFVAL(Int32Tag(start + gData.skipped),
                ATOM_TO_JSID(cx->runtime->atomState.indexAtom));
-        DEFVAL(str,
+        DEFVAL(StringTag(str),
                ATOM_TO_JSID(cx->runtime->atomState.inputAtom));
     }
 
@@ -5801,7 +5801,7 @@ js_NewRegExpObject(JSContext *cx, TokenStream *ts,
     str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return NULL;
-    AutoValueRooter tvr(cx, str);
+    AutoStringRooter tvr(cx, str);
     re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
     if (!re)
         return NULL;
