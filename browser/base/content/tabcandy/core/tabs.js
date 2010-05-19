@@ -586,6 +586,7 @@ window.TabsManager = $.extend(new Subscribable(), {
       };
     }
   
+/*
     var browserWatcher = new BrowserWatcher(
       {onLoad: function(chromeWindow) {
          var trackedWindow = trackedWindows.get(chromeWindow);
@@ -599,6 +600,7 @@ window.TabsManager = $.extend(new Subscribable(), {
          browserWindow.unload();
        }
       });
+*/
   
     this.__defineGetter__("tabs", function() { return tabs; });
   
@@ -606,7 +608,7 @@ window.TabsManager = $.extend(new Subscribable(), {
       this,
       function() {
         tabsMixIns.unload();
-        browserWatcher.unload();
+/*         browserWatcher.unload(); */
       });
       
     window.Tabs = tabs;
