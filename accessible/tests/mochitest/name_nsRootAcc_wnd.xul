@@ -31,8 +31,6 @@
       setOverLink: function (link, b) {
       }
     };
-
-    delete window["gFindBar"];
     var gFindBar = {
       hidden: true
     };
