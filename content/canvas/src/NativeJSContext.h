@@ -39,10 +39,12 @@ public:
     }
 
     ~NativeJSContext() {
-        JS_EndRequest(ctx);
+        if (NS_SUCCEEDED(error))
+            JS_EndRequest(ctx);
     }
 
     PRBool CheckArray (JSObject *obj, jsuint *sz) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         if (obj &&
             ::JS_IsArrayObject(ctx, obj) &&
             ::JS_GetArrayLength(ctx, obj, sz))
@@ -51,6 +53,7 @@ public:
     }
 
     PRBool CheckArray (jsval val, jsuint *sz) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         if (!JSVAL_IS_NULL(val) &&
             JSVAL_IS_OBJECT(val) &&
             ::JS_IsArrayObject(ctx, JSVAL_TO_OBJECT(val)) &&
@@ -63,6 +66,7 @@ public:
     void ReleaseGCRoot (void *aPtr);
 
     void SetRetVal (PRInt32 val) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         if (INT_FITS_IN_JSVAL(val))
             SetRetValAsJSVal(INT_TO_JSVAL(val));
         else
@@ -70,6 +74,7 @@ public:
     }
 
     void SetRetVal (PRUint32 val) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         if (INT_FITS_IN_JSVAL(val))
             SetRetValAsJSVal(INT_TO_JSVAL((int) val));
         else
@@ -77,12 +82,14 @@ public:
     }
 
     void SetRetVal (double val) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         jsval *vp;
         ncc->GetRetValPtr(&vp);
         JS_NewDoubleValue(ctx, val, vp);
     }
 
     void SetBoolRetVal (PRBool val) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         if (val)
             SetRetValAsJSVal(JSVAL_TRUE);
         else
@@ -90,6 +97,7 @@ public:
     }
 
     void SetRetVal (PRInt32 *vp, PRUint32 len) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         nsAutoArrayPtr<jsval> jsvector(new jsval[len]);
 
         if (!JS_EnterLocalRootScope(ctx))
@@ -110,6 +118,7 @@ public:
     }
 
     void SetRetVal (PRUint32 *vp, PRUint32 len) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         nsAutoArrayPtr<jsval> jsvector(new jsval[len]);
 
         if (!JS_EnterLocalRootScope(ctx))
@@ -126,6 +135,7 @@ public:
     }
 
     void SetRetVal (double *dp, PRUint32 len) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         nsAutoArrayPtr<jsval> jsvector(new jsval[len]);
 
         if (!JS_EnterLocalRootScope(ctx))
@@ -141,6 +151,7 @@ public:
     }
 
     void SetRetVal (float *fp, PRUint32 len) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         nsAutoArrayPtr<jsval> jsvector(new jsval[len]);
 
         if (!JS_EnterLocalRootScope(ctx))
@@ -155,6 +166,7 @@ public:
     }
 
     void SetRetValAsJSVal (jsval val) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         jsval *vp;
         ncc->GetRetValPtr(&vp);
         *vp = val;
@@ -162,6 +174,7 @@ public:
     }
 
     void SetRetVal (JSObject *obj) {
+        NS_ASSERTION(NS_SUCCEEDED(error), "class failed to initialize and caller used class without checking!");
         SetRetValAsJSVal(OBJECT_TO_JSVAL(obj));
     }
 
