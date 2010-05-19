@@ -7367,7 +7367,7 @@ dnl =========================================================
 dnl = Chrome format
 dnl =========================================================
 MOZ_ARG_ENABLE_STRING([chrome-format],
-[  --enable-chrome-format=jar|flat|both|symlink
+[  --enable-chrome-format=jar|flat|both|symlink|omni
                           Select FORMAT of chrome files (default=jar)],
     MOZ_CHROME_FILE_FORMAT=`echo $enableval | tr A-Z a-z`)
 
@@ -7378,13 +7378,30 @@ fi
 if test "$MOZ_CHROME_FILE_FORMAT" != "jar" && 
     test "$MOZ_CHROME_FILE_FORMAT" != "flat" &&
     test "$MOZ_CHROME_FILE_FORMAT" != "symlink" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "both"; then
-    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, both, or symlink])
+    test "$MOZ_CHROME_FILE_FORMAT" != "both" &&
+    test "$MOZ_CHROME_FILE_FORMAT" != "omni"; then
+    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, both, symlink, or omni])
 fi
 
-if test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
-   AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
+dnl =========================================================
+dnl Omnijar packaging (bug 552121)
+dnl =========================================================
+dnl Omnijar packaging is compatible with flat packaging.
+dnl In unpackaged builds, omnijar looks for files as if
+dnl things were flat packaged. After packaging, all files
+dnl are loaded from a single jar. MOZ_CHROME_FILE_FORMAT
+dnl is set to flat since putting files into jars is only
+dnl done during packaging with omnijar.
+if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
+    MOZ_OMNIJAR=1
+    AC_DEFINE(MOZ_OMNIJAR)
+    MOZ_CHROME_FILE_FORMAT=flat
+elif test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
+    AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
 fi
+
+AC_SUBST(MOZ_OMNIJAR)
+
 dnl ========================================================
 dnl = Define default location for MOZILLA_FIVE_HOME
 dnl ========================================================
