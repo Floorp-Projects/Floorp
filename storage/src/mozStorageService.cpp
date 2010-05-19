@@ -58,6 +58,8 @@
 #include "nsIPromptService.h"
 #include "nsIMemoryReporter.h"
 
+#include "mozilla/FunctionTimer.h"
+
 namespace mozilla {
 namespace storage {
 
@@ -160,6 +162,8 @@ Service::shutdown()
 nsresult
 Service::initialize()
 {
+  NS_TIME_FUNCTION;
+
   int rc;
 
   // Explicitly initialize sqlite3.  Although this is implicitly called by
@@ -300,6 +304,12 @@ NS_IMETHODIMP
 Service::OpenDatabase(nsIFile *aDatabaseFile,
                       mozIStorageConnection **_connection)
 {
+#ifdef NS_FUNCTION_TIMER
+  nsCString leafname;
+  (void)aDatabaseFile->GetNativeLeafName(leafname);
+  NS_TIME_FUNCTION_FMT("mozIStorageService::OpenDatabase(%s)", leafname.get());
+#endif
+
   nsRefPtr<Connection> msc = new Connection(this);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
@@ -317,6 +327,13 @@ NS_IMETHODIMP
 Service::OpenUnsharedDatabase(nsIFile *aDatabaseFile,
                               mozIStorageConnection **_connection)
 {
+#ifdef NS_FUNCTION_TIMER
+  nsCString leafname;
+  (void)aDatabaseFile->GetNativeLeafName(leafname);
+  NS_TIME_FUNCTION_FMT("mozIStorageService::OpenUnsharedDatabase(%s)",
+                       leafname.get());
+#endif
+
   nsRefPtr<Connection> msc = new Connection(this);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 

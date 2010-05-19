@@ -111,6 +111,8 @@
 
 #include "nsITransferable.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
 
@@ -1273,6 +1275,8 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(PRBool autoCreate,
 
 NS_IMETHODIMP nsEditor::SyncRealTimeSpell()
 {
+  NS_TIME_FUNCTION;
+
   PRBool enable = GetDesiredSpellCheckState();
 
   nsCOMPtr<nsIInlineSpellChecker> spellChecker;

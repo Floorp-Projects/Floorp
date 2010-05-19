@@ -76,6 +76,8 @@
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gCspPRLog;
 #endif
@@ -655,6 +657,8 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   NS_ENSURE_ARG(aRequest);
   nsAFlatString* script;
   nsAutoString textData;
+
+  NS_TIME_FUNCTION;
 
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {

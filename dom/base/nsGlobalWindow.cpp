@@ -208,6 +208,8 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
 #define FORCE_PR_LOG 1
@@ -8385,6 +8387,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     return;
   }
 
+  NS_TIME_FUNCTION;
+
   NS_ASSERTION(IsInnerWindow(), "Timeout running on outer window!");
   NS_ASSERTION(!IsFrozen(), "Timeout running on a window in the bfcache!");
 
@@ -8538,6 +8542,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       const char *filename = nsnull;
       PRUint32 lineNo = 0;
       handler->GetLocation(&filename, &lineNo);
+
+      NS_TIME_FUNCTION_MARK("(file: %s, line: %d)", filename, lineNo);
 
       PRBool is_undefined;
       scx->EvaluateString(nsDependentString(script), 

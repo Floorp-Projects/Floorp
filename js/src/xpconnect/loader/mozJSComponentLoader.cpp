@@ -87,6 +87,8 @@
 #include "jsdbgapi.h"
 #endif
 
+#include "mozilla/FunctionTimer.h"
+
 static const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
 static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect;1";
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
@@ -579,6 +581,8 @@ NS_IMPL_ISUPPORTS3(mozJSComponentLoader,
 nsresult
 mozJSComponentLoader::ReallyInit()
 {
+    NS_TIME_FUNCTION;
+
     nsresult rv;
 
     /*
@@ -675,6 +679,13 @@ mozJSComponentLoader::LoadModule(nsILocalFile* aComponentFile,
                                  nsIModule* *aResult)
 {
     nsresult rv;
+
+#ifdef NS_FUNCTION_TIMER
+    nsAutoString path__(NS_LITERAL_STRING("N/A"));
+    aComponentFile->GetPath(path__);
+    NS_TIME_FUNCTION_FMT("%s (line %d) (file: %s)", MOZ_FUNCTION_NAME,
+                         __LINE__, nsPromiseFlatCString(NS_LossyConvertUTF16toASCII(path__)).BeginReading());
+#endif
 
     nsCAutoString leafName;
     aComponentFile->GetNativeLeafName(leafName);
@@ -1428,6 +1439,9 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
 {
     // This function should only be called from JS.
     nsresult rv;
+
+    NS_TIME_FUNCTION_FMT("%s (line %d) (file: %s)", MOZ_FUNCTION_NAME,
+                         __LINE__, registryLocation.BeginReading());
 
     nsCOMPtr<nsIXPConnect> xpc =
         do_GetService(kXPConnectServiceContractID, &rv);

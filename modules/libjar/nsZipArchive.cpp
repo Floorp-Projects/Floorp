@@ -60,6 +60,8 @@
 #include "nsWildCard.h"
 #include "nsZipArchive.h"
 
+#include "mozilla/FunctionTimer.h"
+
 /**
  * Global allocator used with zlib. Destroyed in module shutdown.
  */
@@ -521,6 +523,8 @@ nsZipItem* nsZipArchive::CreateZipItem()
 //---------------------------------------------
 nsresult nsZipArchive::BuildFileList()
 {
+  NS_TIME_FUNCTION;
+
   // Get archive size using end pos
   PRUint8* buf;
   PRUint8* startp = mFd->mFileData;
