@@ -455,6 +455,7 @@ ArrayToJSIDArray(JSContext *cx, jsval array, JSIdArray **idap)
             return false;
         if (!JS_ValueToId(cx, tvr.value(), &vector[n]))
             return false;
+        vector[n] = js_CheckForStringIndex(vector[n]);
     }
     *idap = ida.steal();
     return true;
