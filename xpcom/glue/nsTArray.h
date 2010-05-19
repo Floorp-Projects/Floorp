@@ -902,7 +902,6 @@ class nsTArray : public nsTArray_base {
       if (!Length()) {
         return;
       }
-      elem_type *elem = Elements();
       index_type index = (Length() - 1) / 2;
       do {
         SiftDown(index, comp);
