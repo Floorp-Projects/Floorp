@@ -275,8 +275,10 @@ class PrimitiveValue
     static const unsigned THISP_ARRAY_SIZE = 8;
     static const unsigned THISP_SHIFT      = 8;
 
-    JS_STATIC_ASSERT(JSFUN_THISP_PRIMITIVE >> THISP_SHIFT == THISP_MASK);
-    JS_STATIC_ASSERT(THISP_MASK == THISP_ARRAY_SIZE - 1);
+    void staticAssert() {
+        JS_STATIC_ASSERT(JSFUN_THISP_PRIMITIVE >> THISP_SHIFT == THISP_MASK);
+        JS_STATIC_ASSERT(THISP_MASK == THISP_ARRAY_SIZE - 1);
+    }
 
     static const Value::MaskType Masks[THISP_ARRAY_SIZE];
 

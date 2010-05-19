@@ -69,21 +69,6 @@ CastAsObject(PropertyOp op)
     return JS_FUNC_TO_DATA_PTR(JSObject *, op);
 }
 
-extern JSBool
-PropertyStub(JSContext *cx, JSObject *obj, jsid id, Value *vp);
-
-extern JSBool
-EnumerateStub(JSContext *cx, JSObject *obj);
-
-extern JSBool
-ResolveStub(JSContext *cx, JSObject *obj, jsid id);
-
-extern JSBool
-ConvertStub(JSContext *cx, JSObject *obj, JSType type, Value *vp);
-
-extern void
-FinalizeStub(JSContext *cx, JSObject *obj);
-
 } /* namespace js */
 
 /*
