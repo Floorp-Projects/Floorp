@@ -579,7 +579,7 @@ str_enumerate(JSContext *cx, JSObject *obj)
         str1 = js_NewDependentString(cx, str, i, 1);
         if (!str1)
             return JS_FALSE;
-        if (!obj->defineProperty(cx, INT_TO_JSID(i), str1, NULL, NULL,
+        if (!obj->defineProperty(cx, INT_TO_JSID(i), StringTag(str1), NULL, NULL,
                                  STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
@@ -601,7 +601,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         JSString *str1 = JSString::getUnitString(cx, str, size_t(slot));
         if (!str1)
             return JS_FALSE;
-        if (!obj->defineProperty(cx, INT_TO_JSID(slot), str1, NULL, NULL,
+        if (!obj->defineProperty(cx, INT_TO_JSID(slot), StringTag(str1), NULL, NULL,
                                  STRING_ELEMENT_ATTRS)) {
             return JS_FALSE;
         }
@@ -1580,7 +1580,7 @@ MatchCallback(JSContext *cx, size_t count, void *p)
     if (!matchstr)
         return false;
 
-    Value v(matchstr);
+    Value v = StringTag(matchstr);
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
     return !!arrayobj->setProperty(cx, INT_TO_JSID(count), &v);
@@ -1601,11 +1601,11 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const RegExpGuard &g,
         return false;
     vp->setNonFunObj(*obj);
 
-    return obj->defineProperty(cx, INT_TO_JSID(0), g.patstr) &&
+    return obj->defineProperty(cx, INT_TO_JSID(0), StringTag(g.patstr)) &&
            obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.indexAtom),
                                Int32Tag(g.match)) &&
            obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.inputAtom),
-                               textstr);
+                               StringTag(textstr));
 }
 
 static JSBool
@@ -2110,7 +2110,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     NORMALIZE_THIS(cx, vp, str);
 
     if (argc == 0) {
-        Value v(str);
+        Value v = StringTag(str);
         JSObject *aobj = js_NewArrayObject(cx, 1, &v);
         if (!aobj)
             return false;
@@ -2165,7 +2165,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
             break;
 
         JSString *sub = js_NewDependentString(cx, str, i, size_t(j - i));
-        if (!sub || !splits.append(sub))
+        if (!sub || !splits.append(StringTag(sub)))
             return false;
         len++;
 
@@ -2181,7 +2181,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
                     break;
                 JSSubString *parsub = &res->parens[num];
                 sub = js_NewStringCopyN(cx, parsub->chars, parsub->length);
-                if (!sub || !splits.append(sub))
+                if (!sub || !splits.append(StringTag(sub)))
                     return false;
                 len++;
             }
@@ -2918,7 +2918,7 @@ js_String(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
         rval->setString(str);
         return JS_TRUE;
     }
-    obj->setPrimitiveThis(str);
+    obj->setPrimitiveThis(StringTag(str));
     return JS_TRUE;
 }
 
@@ -3013,7 +3013,7 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
                          NULL, string_static_methods);
     if (!proto)
         return NULL;
-    proto->setPrimitiveThis(cx->runtime->emptyString);
+    proto->setPrimitiveThis(StringTag(cx->runtime->emptyString));
     if (!js_DefineNativeProperty(cx, proto, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
                                  undefinedValue(), NULL, NULL,
                                  JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,

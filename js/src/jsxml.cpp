@@ -674,9 +674,10 @@ NamespaceHelper(JSContext *cx, JSObject *obj, intN argc, jsval *argv,
                 if (!prefix)
                     return JS_FALSE;
                 if (!prefix->empty()) {
+                    Value v = StringTag(prefix);
                     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                          JSMSG_BAD_XML_NAMESPACE,
-                                         js_ValueToPrintableString(cx, prefix));
+                                         js_ValueToPrintableString(cx, v));
                     return JS_FALSE;
                 }
             }
@@ -1271,9 +1272,10 @@ ParseNodeToQName(Parser *parser, JSParseNode *pn,
         }
 
         if (!uri) {
+            Value v = StringTag(prefix);
             ReportCompileErrorNumber(parser->context, &parser->tokenStream, pn,
                                      JSREPORT_ERROR, JSMSG_BAD_XML_NAMESPACE,
-                                     js_ValueToPrintableString(parser->context, prefix));
+                                     js_ValueToPrintableString(parser->context, v));
             return NULL;
         }
 
@@ -1490,10 +1492,10 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
             /* Enforce "Well-formedness constraint: Unique Att Spec". */
             for (pn3 = head; pn3 != pn2; pn3 = pn3->pn_next->pn_next) {
                 if (pn3->pn_atom == pn2->pn_atom) {
+                    Value v = StringTag(ATOM_TO_STRING(pn2->pn_atom));
                     ReportCompileErrorNumber(cx, &parser->tokenStream, pn2,
                                              JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
-                                             js_ValueToPrintableString(cx,
-                                                                       ATOM_TO_STRING(pn2->pn_atom)));
+                                             js_ValueToPrintableString(cx, v));
                     goto fail;
                 }
             }
@@ -1600,10 +1602,10 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
                 attrjqn = attrj->name;
                 if (js_EqualStrings(GetURI(attrjqn), GetURI(qn)) &&
                     js_EqualStrings(GetLocalName(attrjqn), GetLocalName(qn))) {
+                    Value v = StringTag(ATOM_TO_STRING(pn2->pn_atom));
                     ReportCompileErrorNumber(cx, &parser->tokenStream, pn2,
                                              JSREPORT_ERROR, JSMSG_DUPLICATE_XML_ATTR,
-                                             js_ValueToPrintableString(cx,
-                                                                       ATOM_TO_STRING(pn2->pn_atom)));
+                                             js_ValueToPrintableString(cx, v));
                     goto fail;
                 }
             }
@@ -1640,9 +1642,10 @@ ParseNodeToXML(Parser *parser, JSParseNode *pn,
             xml_class = JSXML_CLASS_COMMENT;
         } else if (pn->pn_type == TOK_XMLPI) {
             if (IS_XML(str)) {
+                Value v = StringTag(str);
                 ReportCompileErrorNumber(cx, &parser->tokenStream, pn,
                                          JSREPORT_ERROR, JSMSG_RESERVED_ID,
-                                         js_ValueToPrintableString(cx, str));
+                                         js_ValueToPrintableString(cx, v));
                 goto fail;
             }
 
@@ -2248,10 +2251,11 @@ GetNamespace(JSContext *cx, JSObject *qn, const JSXMLArray *inScopeNSes)
     prefix = GetPrefix(qn);
     JS_ASSERT(uri);
     if (!uri) {
+        Value v = StringTag(prefix);
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_XML_NAMESPACE,
                              prefix
-                             ? js_ValueToPrintableString(cx, prefix)
+                             ? js_ValueToPrintableString(cx, v)
                              : js_undefined_str);
         return NULL;
     }
@@ -2991,7 +2995,7 @@ out:
 bad:
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                          JSMSG_BAD_XML_NAME,
-                         js_ValueToPrintableString(cx, name));
+                         js_ValueToPrintableString(cx, StringTag(name)));
     return NULL;
 }
 

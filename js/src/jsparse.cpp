@@ -8495,7 +8495,7 @@ FoldType(JSContext *cx, JSParseNode *pn, TokenKind type)
           case TOK_NUMBER:
             if (pn->pn_type == TOK_STRING) {
                 jsdouble d;
-                if (!ValueToNumber(cx, ATOM_TO_STRING(pn->pn_atom), &d))
+                if (!ValueToNumber(cx, StringTag(ATOM_TO_STRING(pn->pn_atom)), &d))
                     return JS_FALSE;
                 pn->pn_dval = d;
                 pn->pn_type = TOK_NUMBER;
@@ -8706,7 +8706,7 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
         if (accum) {
             {
-                AutoValueRooter tvr(cx, accum);
+                AutoStringRooter tvr(cx, accum);
                 str = ((tt == TOK_XMLSTAGO || tt == TOK_XMLPTAGC) && i != 0)
                       ? js_AddAttributePart(cx, i & 1, accum, str)
                       : js_ConcatStrings(cx, accum, str);
@@ -9256,7 +9256,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
         if (pn1->pn_type == TOK_XMLNAME) {
             JSObjectBox *xmlbox;
 
-            Value v(ATOM_TO_STRING(pn1->pn_atom));
+            Value v = StringTag(ATOM_TO_STRING(pn1->pn_atom));
             if (!js_ToAttributeName(cx, &v))
                 return JS_FALSE;
             JS_ASSERT(v.isObject());

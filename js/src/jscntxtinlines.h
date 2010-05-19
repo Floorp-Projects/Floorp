@@ -247,7 +247,12 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case OBJECT:
         if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj)
-            MarkObject(trc, obj, "js::AutoObjectRooter.obj");
+            Mark(trc, obj, JSTRACE_OBJECT, "js::AutoObjectRooter.obj");
+        return;
+
+      case STRING:
+        if (JSString *str = static_cast<AutoStringRooter *>(this)->str)
+            Mark(trc, str, JSTRACE_STRING, "js::AutoStringRooter.str");
         return;
 
       case ID:

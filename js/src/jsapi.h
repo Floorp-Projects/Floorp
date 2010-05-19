@@ -2985,6 +2985,11 @@ struct NumberTag {
     double dbl;
 };
 
+struct StringTag {
+    explicit StringTag(JSString *str) : str(str) {}
+    JSString *str;
+};
+
 struct FunObjTag {
     explicit FunObjTag(JSObject &obj) : obj(obj) {}
     JSObject &obj;
@@ -3129,9 +3134,9 @@ class Value
 
     inline Value(NumberTag arg);
 
-    Value(JSString *arg) {
+    Value(StringTag arg) {
         mask = JSVAL_STRING_MASK;
-        data.str = arg;
+        data.str = arg.str;
     }
 
     Value(FunObjTag arg) {

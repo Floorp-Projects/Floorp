@@ -1119,7 +1119,7 @@ Value
 BoxedWordToValue(jsboxedword w)
 {
     if (JSBOXEDWORD_IS_STRING(w))
-        return JSBOXEDWORD_TO_STRING(w);
+        return StringTag(JSBOXEDWORD_TO_STRING(w));
     if (JSBOXEDWORD_IS_INT(w))
         return Int32Tag(JSBOXEDWORD_TO_INT(w));
     if (JSBOXEDWORD_IS_DOUBLE(w))
