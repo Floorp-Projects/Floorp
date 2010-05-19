@@ -64,8 +64,6 @@ quartz-first-stop.patch: return the first stop for negative positions on the gra
 
 quartz-glyph-extents.patch: bug 534260; work around incorrect glyph extents returned by quartz for anomalous empty glyphs
 
-quartz-state.patch: bug 522859; refactor cairo-quartz-surface so that state local to a drawing operation is stored in a cairo_quartz_drawing_state_t instead of the surface
-
 premultiply-alpha-solid-gradients.patch: bug 539165; multiply the solid color by the alpha component before using it for a solid surface
 
 xlib-initialize-members.path: bug 548793; initialize XRender version if the server doesn't have the extension
