@@ -152,8 +152,14 @@ WebGLContext::ActiveTexture(PRUint32 texture)
 }
 
 NS_IMETHODIMP
-WebGLContext::AttachShader(nsIWebGLProgram *prog, nsIWebGLShader *sh)
+WebGLContext::AttachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    nsCOMPtr<WebGLShader> sh = do_QueryInterface(shobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -172,8 +178,13 @@ WebGLContext::AttachShader(nsIWebGLProgram *prog, nsIWebGLShader *sh)
 
 
 NS_IMETHODIMP
-WebGLContext::BindAttribLocation(nsIWebGLProgram *prog, GLuint location, const nsAString& name)
+WebGLContext::BindAttribLocation(nsIWebGLProgram *pobj, GLuint location, const nsAString& name)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -192,7 +203,10 @@ WebGLContext::BindAttribLocation(nsIWebGLProgram *prog, GLuint location, const n
 NS_IMETHODIMP
 WebGLContext::BindBuffer(GLenum target, nsIWebGLBuffer *buffer)
 {
-    WebGLBuffer *wbuf = static_cast<WebGLBuffer*>(buffer);
+    nsresult rv;
+    nsCOMPtr<WebGLBuffer> wbuf = do_QueryInterface(buffer, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (wbuf && wbuf->Deleted())
         return ErrorMessage("glBindBuffer: buffer has already been deleted!");
@@ -219,7 +233,10 @@ WebGLContext::BindBuffer(GLenum target, nsIWebGLBuffer *buffer)
 NS_IMETHODIMP
 WebGLContext::BindFramebuffer(GLenum target, nsIWebGLFramebuffer *fb)
 {
-    WebGLFramebuffer *wfb = static_cast<WebGLFramebuffer*>(fb);
+    nsresult rv;
+    nsCOMPtr<WebGLFramebuffer> wfb = do_QueryInterface(fb, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (wfb && wfb->Deleted())
         return ErrorMessage("glBindFramebuffer: framebuffer has already been deleted!");
@@ -238,7 +255,10 @@ WebGLContext::BindFramebuffer(GLenum target, nsIWebGLFramebuffer *fb)
 NS_IMETHODIMP
 WebGLContext::BindRenderbuffer(GLenum target, nsIWebGLRenderbuffer *rb)
 {
-    WebGLRenderbuffer *wrb = static_cast<WebGLRenderbuffer*>(rb);
+    nsresult rv;
+    nsCOMPtr<WebGLRenderbuffer> wrb = do_QueryInterface(rb, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (wrb && wrb->Deleted())
         return ErrorMessage("glBindRenderbuffer: renderbuffer has already been deleted!");
@@ -256,7 +276,10 @@ WebGLContext::BindRenderbuffer(GLenum target, nsIWebGLRenderbuffer *rb)
 NS_IMETHODIMP
 WebGLContext::BindTexture(GLenum target, nsIWebGLTexture *tex)
 {
-    WebGLTexture *wtex = static_cast<WebGLTexture*>(tex);
+    nsresult rv;
+    nsCOMPtr<WebGLTexture> wtex = do_QueryInterface(tex, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (wtex && wtex->Deleted())
         return ErrorMessage("glBindTexture: texture has already been deleted!");
@@ -584,7 +607,11 @@ GL_SAME_METHOD_1(CullFace, CullFace, GLenum)
 NS_IMETHODIMP
 WebGLContext::DeleteBuffer(nsIWebGLBuffer *globj)
 {
-    WebGLBuffer *obj = static_cast<WebGLBuffer*>(globj);
+    nsresult rv;
+    nsCOMPtr<WebGLBuffer> obj = do_QueryInterface(globj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!obj || obj->Deleted()) {
         return NS_OK;
     }
@@ -602,7 +629,11 @@ WebGLContext::DeleteBuffer(nsIWebGLBuffer *globj)
 NS_IMETHODIMP
 WebGLContext::DeleteFramebuffer(nsIWebGLFramebuffer *globj)
 {
-    WebGLFramebuffer *obj = static_cast<WebGLFramebuffer*>(globj);
+    nsresult rv;
+    nsCOMPtr<WebGLFramebuffer> obj = do_QueryInterface(globj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!obj || obj->Deleted()) {
         return NS_OK;
     }
@@ -620,7 +651,11 @@ WebGLContext::DeleteFramebuffer(nsIWebGLFramebuffer *globj)
 NS_IMETHODIMP
 WebGLContext::DeleteRenderbuffer(nsIWebGLRenderbuffer *globj)
 {
-    WebGLRenderbuffer *obj = static_cast<WebGLRenderbuffer*>(globj);
+    nsresult rv;
+    nsCOMPtr<WebGLRenderbuffer> obj = do_QueryInterface(globj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!obj || obj->Deleted()) {
         return NS_OK;
     }
@@ -650,7 +685,11 @@ WebGLContext::DeleteRenderbuffer(nsIWebGLRenderbuffer *globj)
 NS_IMETHODIMP
 WebGLContext::DeleteTexture(nsIWebGLTexture *globj)
 {
-    WebGLTexture *obj = static_cast<WebGLTexture*>(globj);
+    nsresult rv;
+    nsCOMPtr<WebGLTexture> obj = do_QueryInterface(globj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!obj || obj->Deleted()) {
         return NS_OK;
     }
@@ -668,7 +707,11 @@ WebGLContext::DeleteTexture(nsIWebGLTexture *globj)
 NS_IMETHODIMP
 WebGLContext::DeleteProgram(nsIWebGLProgram *globj)
 {
-    WebGLProgram *obj = static_cast<WebGLProgram*>(globj);
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> obj = do_QueryInterface(globj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!obj || obj->Deleted()) {
         return NS_OK;
     }
@@ -686,7 +729,11 @@ WebGLContext::DeleteProgram(nsIWebGLProgram *globj)
 NS_IMETHODIMP
 WebGLContext::DeleteShader(nsIWebGLShader *globj)
 {
-    WebGLShader *obj = static_cast<WebGLShader*>(globj);
+    nsresult rv;
+    nsCOMPtr<WebGLShader> obj = do_QueryInterface(globj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!obj || obj->Deleted()) {
         return NS_OK;
     }
@@ -702,8 +749,14 @@ WebGLContext::DeleteShader(nsIWebGLShader *globj)
 }
 
 NS_IMETHODIMP
-WebGLContext::DetachShader(nsIWebGLProgram *prog, nsIWebGLShader *sh)
+WebGLContext::DetachShader(nsIWebGLProgram *pobj, nsIWebGLShader *shobj)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    nsCOMPtr<WebGLShader> sh = do_QueryInterface(shobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -875,7 +928,10 @@ WebGLContext::EnableVertexAttribArray(GLuint index)
 NS_IMETHODIMP
 WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum rbtarget, nsIWebGLRenderbuffer *wrb)
 {
-    WebGLRenderbuffer *rb = static_cast<WebGLRenderbuffer*>(wrb);
+    nsresult rv;
+    nsCOMPtr<WebGLRenderbuffer> rb = do_QueryInterface(wrb, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (rb && rb->Deleted())
         return ErrorMessage("glFramebufferRenderbuffer: renderbuffer has already been deleted!");
@@ -907,7 +963,10 @@ WebGLContext::FramebufferTexture2D(GLenum target,
                                    nsIWebGLTexture *wtex,
                                    GLint level)
 {
-    WebGLTexture *tex = static_cast<WebGLTexture*>(wtex);
+    nsresult rv;
+    nsCOMPtr<WebGLTexture> tex = do_QueryInterface(wtex, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
 
     if (tex && tex->Deleted())
         return ErrorMessage("glFramebufferTexture2D: texture has already been deleted!");
@@ -947,8 +1006,13 @@ GL_SAME_METHOD_1(GenerateMipmap, GenerateMipmap, GLenum)
 
 // returns an object: { size: ..., type: ..., name: ... }
 NS_IMETHODIMP
-WebGLContext::GetActiveAttrib(nsIWebGLProgram *prog, PRUint32 index, nsIWebGLActiveInfo **retval)
+WebGLContext::GetActiveAttrib(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLActiveInfo **retval)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -984,8 +1048,13 @@ WebGLContext::GetActiveAttrib(nsIWebGLProgram *prog, PRUint32 index, nsIWebGLAct
 }
 
 NS_IMETHODIMP
-WebGLContext::GetActiveUniform(nsIWebGLProgram *prog, PRUint32 index, nsIWebGLActiveInfo **retval)
+WebGLContext::GetActiveUniform(nsIWebGLProgram *pobj, PRUint32 index, nsIWebGLActiveInfo **retval)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -1023,8 +1092,13 @@ WebGLContext::GetActiveUniform(nsIWebGLProgram *prog, PRUint32 index, nsIWebGLAc
 // XXX fixme to return a IntArray
 #if 0
 NS_IMETHODIMP
-WebGLContext::GetAttachedShaders(nsIWebGLProgram *prog)
+WebGLContext::GetAttachedShaders(nsIWebGLProgram *pobj)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -1059,10 +1133,15 @@ WebGLContext::GetAttachedShaders(nsIWebGLProgram *prog)
 #endif
 
 NS_IMETHODIMP
-WebGLContext::GetAttribLocation(nsIWebGLProgram *prog,
+WebGLContext::GetAttribLocation(nsIWebGLProgram *pobj,
                                 const nsAString& name,
                                 PRInt32 *retval)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -1386,8 +1465,13 @@ WebGLContext::GetError(GLenum *_retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetProgramParameter(nsIWebGLProgram *prog, PRUint32 pname)
+WebGLContext::GetProgramParameter(nsIWebGLProgram *pobj, PRUint32 pname)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -1425,8 +1509,13 @@ WebGLContext::GetProgramParameter(nsIWebGLProgram *prog, PRUint32 pname)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetProgramInfoLog(nsIWebGLProgram *prog, nsAString& retval)
+WebGLContext::GetProgramInfoLog(nsIWebGLProgram *pobj, nsAString& retval)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!");
 
@@ -1622,8 +1711,13 @@ WebGLContext::GetTexParameter(GLenum target, GLenum pname)
 /* XXX fix */
 /* any getUniform(in WebGLProgram program, in WebGLUniformLocation location) raises(DOMException); */
 NS_IMETHODIMP
-WebGLContext::GetUniform(nsIWebGLProgram *prog, GLint location)
+WebGLContext::GetUniform(nsIWebGLProgram *pobj, GLint location)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -1670,8 +1764,13 @@ WebGLContext::GetUniform(nsIWebGLProgram *prog, GLint location)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetUniformLocation(nsIWebGLProgram *prog, const nsAString& name, GLint *retval)
+WebGLContext::GetUniformLocation(nsIWebGLProgram *pobj, const nsAString& name, GLint *retval)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -1740,10 +1839,17 @@ WebGLContext::Hint(GLenum target, GLenum mode)
 NS_IMETHODIMP
 WebGLContext::IsBuffer(nsIWebGLBuffer *iobj, GLboolean *retval)
 {
-    if (!iobj)
+    nsresult rv;
+    nsCOMPtr<WebGLBuffer> obj = do_QueryInterface(iobj, &rv);
+    if (NS_FAILED(rv)) {
+        *retval = false;
+        return NS_OK;
+    }
+
+    if (!obj)
         return NS_ERROR_FAILURE;
 
-    *retval = ! static_cast<WebGLBuffer*>(iobj)->Deleted();
+    *retval = ! static_cast<WebGLBuffer*>(obj)->Deleted();
 
     return NS_OK;
 }
@@ -1751,10 +1857,17 @@ WebGLContext::IsBuffer(nsIWebGLBuffer *iobj, GLboolean *retval)
 NS_IMETHODIMP
 WebGLContext::IsFramebuffer(nsIWebGLFramebuffer *iobj, GLboolean *retval)
 {
-    if (!iobj)
+    nsresult rv;
+    nsCOMPtr<WebGLFramebuffer> obj = do_QueryInterface(iobj, &rv);
+    if (NS_FAILED(rv)) {
+        *retval = false;
+        return NS_OK;
+    }
+
+    if (!obj)
         return NS_ERROR_FAILURE;
 
-    *retval = ! static_cast<WebGLFramebuffer*>(iobj)->Deleted();
+    *retval = ! static_cast<WebGLFramebuffer*>(obj)->Deleted();
 
     return NS_OK;
 }
@@ -1762,10 +1875,17 @@ WebGLContext::IsFramebuffer(nsIWebGLFramebuffer *iobj, GLboolean *retval)
 NS_IMETHODIMP
 WebGLContext::IsProgram(nsIWebGLProgram *iobj, GLboolean *retval)
 {
-    if (!iobj)
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> obj = do_QueryInterface(iobj, &rv);
+    if (NS_FAILED(rv)) {
+        *retval = false;
+        return NS_OK;
+    }
+
+    if (!obj)
         return NS_ERROR_FAILURE;
 
-    *retval = ! static_cast<WebGLProgram*>(iobj)->Deleted();
+    *retval = ! static_cast<WebGLProgram*>(obj)->Deleted();
 
     return NS_OK;
 }
@@ -1773,10 +1893,17 @@ WebGLContext::IsProgram(nsIWebGLProgram *iobj, GLboolean *retval)
 NS_IMETHODIMP
 WebGLContext::IsRenderbuffer(nsIWebGLRenderbuffer *iobj, GLboolean *retval)
 {
-    if (!iobj)
+    nsresult rv;
+    nsCOMPtr<WebGLRenderbuffer> obj = do_QueryInterface(iobj, &rv);
+    if (NS_FAILED(rv)) {
+        *retval = false;
+        return NS_OK;
+    }
+
+    if (!obj)
         return NS_ERROR_FAILURE;
 
-    *retval = ! static_cast<WebGLRenderbuffer*>(iobj)->Deleted();
+    *retval = ! static_cast<WebGLRenderbuffer*>(obj)->Deleted();
 
     return NS_OK;
 }
@@ -1784,10 +1911,17 @@ WebGLContext::IsRenderbuffer(nsIWebGLRenderbuffer *iobj, GLboolean *retval)
 NS_IMETHODIMP
 WebGLContext::IsShader(nsIWebGLShader *iobj, GLboolean *retval)
 {
-    if (!iobj)
+    nsresult rv;
+    nsCOMPtr<WebGLShader> obj = do_QueryInterface(iobj, &rv);
+    if (NS_FAILED(rv)) {
+        *retval = false;
+        return NS_OK;
+    }
+
+    if (!obj)
         return NS_ERROR_FAILURE;
 
-    *retval = ! static_cast<WebGLShader*>(iobj)->Deleted();
+    *retval = ! static_cast<WebGLShader*>(obj)->Deleted();
 
     return NS_OK;
 }
@@ -1795,10 +1929,17 @@ WebGLContext::IsShader(nsIWebGLShader *iobj, GLboolean *retval)
 NS_IMETHODIMP
 WebGLContext::IsTexture(nsIWebGLTexture *iobj, GLboolean *retval)
 {
-    if (!iobj)
+    nsresult rv;
+    nsCOMPtr<WebGLTexture> obj = do_QueryInterface(iobj, &rv);
+    if (NS_FAILED(rv)) {
+        *retval = false;
+        return NS_OK;
+    }
+
+    if (!obj)
         return NS_ERROR_FAILURE;
 
-    *retval = ! static_cast<WebGLTexture*>(iobj)->Deleted();
+    *retval = ! static_cast<WebGLTexture*>(obj)->Deleted();
 
     return NS_OK;
 }
@@ -1815,8 +1956,13 @@ WebGLContext::IsEnabled(GLenum k, GLboolean *retval)
 GL_SAME_METHOD_1(LineWidth, LineWidth, float)
 
 NS_IMETHODIMP
-WebGLContext::LinkProgram(nsIWebGLProgram *prog)
+WebGLContext::LinkProgram(nsIWebGLProgram *pobj)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("%s: program is null or deleted!", __FUNCTION__);
 
@@ -2141,8 +2287,13 @@ GL_SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib3fv, 3, TYPE_FLOAT32, GLfloat)
 GL_SIMPLE_ARRAY_METHOD_NO_COUNT(VertexAttrib4fv, 4, TYPE_FLOAT32, GLfloat)
 
 NS_IMETHODIMP
-WebGLContext::UseProgram(nsIWebGLProgram *prog)
+WebGLContext::UseProgram(nsIWebGLProgram *pobj)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (prog && static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("glUseProgram: program has already been deleted!");
 
@@ -2158,8 +2309,13 @@ WebGLContext::UseProgram(nsIWebGLProgram *prog)
 }
 
 NS_IMETHODIMP
-WebGLContext::ValidateProgram(nsIWebGLProgram *prog)
+WebGLContext::ValidateProgram(nsIWebGLProgram *pobj)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLProgram> prog = do_QueryInterface(pobj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!prog || static_cast<WebGLProgram*>(prog)->Deleted())
         return ErrorMessage("glValidateProgram: program is null or has already been deleted!");
 
@@ -2213,8 +2369,13 @@ WebGLContext::CreateRenderbuffer(nsIWebGLRenderbuffer **retval)
 GL_SAME_METHOD_4(Viewport, Viewport, PRInt32, PRInt32, PRInt32, PRInt32)
 
 NS_IMETHODIMP
-WebGLContext::CompileShader(nsIWebGLShader *shobj)
+WebGLContext::CompileShader(nsIWebGLShader *obj)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLShader> shobj = do_QueryInterface(obj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!shobj || static_cast<WebGLShader*>(shobj)->Deleted())
         return ErrorMessage("%s: shader is null or deleted!", __FUNCTION__);
 
@@ -2229,8 +2390,13 @@ WebGLContext::CompileShader(nsIWebGLShader *shobj)
 
 
 NS_IMETHODIMP
-WebGLContext::GetShaderParameter(nsIWebGLShader *shobj, GLenum pname)
+WebGLContext::GetShaderParameter(nsIWebGLShader *obj, GLenum pname)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLShader> shobj = do_QueryInterface(obj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!shobj || static_cast<WebGLShader*>(shobj)->Deleted())
         return ErrorMessage("%s: shader is null or deleted!", __FUNCTION__);
 
@@ -2263,8 +2429,13 @@ WebGLContext::GetShaderParameter(nsIWebGLShader *shobj, GLenum pname)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetShaderInfoLog(nsIWebGLShader *shobj, nsAString& retval)
+WebGLContext::GetShaderInfoLog(nsIWebGLShader *obj, nsAString& retval)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLShader> shobj = do_QueryInterface(obj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!shobj || static_cast<WebGLShader*>(shobj)->Deleted())
         return ErrorMessage("%s: shader is null or deleted!", __FUNCTION__);
 
@@ -2295,8 +2466,13 @@ WebGLContext::GetShaderInfoLog(nsIWebGLShader *shobj, nsAString& retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::GetShaderSource(nsIWebGLShader *shobj, nsAString& retval)
+WebGLContext::GetShaderSource(nsIWebGLShader *obj, nsAString& retval)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLShader> shobj = do_QueryInterface(obj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!shobj || static_cast<WebGLShader*>(shobj)->Deleted())
         return ErrorMessage("%s: shader is null or deleted!", __FUNCTION__);
 
@@ -2327,8 +2503,13 @@ WebGLContext::GetShaderSource(nsIWebGLShader *shobj, nsAString& retval)
 }
 
 NS_IMETHODIMP
-WebGLContext::ShaderSource(nsIWebGLShader *shobj, const nsAString& source)
+WebGLContext::ShaderSource(nsIWebGLShader *obj, const nsAString& source)
 {
+    nsresult rv;
+    nsCOMPtr<WebGLShader> shobj = do_QueryInterface(obj, &rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_DOM_SYNTAX_ERR;
+
     if (!shobj || static_cast<WebGLShader*>(shobj)->Deleted())
         return ErrorMessage("%s: shader is null or deleted!", __FUNCTION__);
 
