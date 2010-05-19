@@ -121,6 +121,33 @@ public:
     already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
 };
 
+/** Same as GLContextProvider but for off-screen Mesa rendering */
+class THEBES_API GLContextProviderOSMesa
+{
+public:
+    typedef GLContextProvider::ContextFormat ContextFormat;
+
+    /**
+     * Creates a PBuffer.
+     *
+     * @param aSize Size of the pbuffer to create
+     * @param aFormat A ContextFormat describing the desired context attributes.  Defaults to a basic RGBA32 context.
+     *
+     * @return Context to use for this Pbuffer
+     */
+    static already_AddRefed<GLContext> CreatePBuffer(const gfxIntSize &aSize,
+                                              const ContextFormat& aFormat = ContextFormat::BasicRGBA32Format);
+
+    /**
+     * Create a context that renders to the surface of the widget that is
+     * passed in.
+     *
+     * @param Widget whose surface to create a context for
+     * @return Context to use for this window
+     */
+    static already_AddRefed<GLContext> CreateForWindow(nsIWidget *aWidget);
+};
+
 extern GLContextProvider THEBES_API sGLContextProvider;
 
 }

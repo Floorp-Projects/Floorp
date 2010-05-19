@@ -137,6 +137,15 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 
     gl = gl::sGLContextProvider.CreatePBuffer(gfxIntSize(width, height), format);
 
+    if (!gl) {
+        LogMessage("Canvas 3D: can't get a native PBuffer, trying OSMesa...");
+        gl = gl::GLContextProviderOSMesa::CreatePBuffer(gfxIntSize(width, height), format);
+        if (!gl) {
+            LogMessage("Canvas 3D: can't create a OSMesa pseudo-PBuffer.");
+            return NS_ERROR_FAILURE;
+        }
+    }
+
     if (!ValidateGL()) {
         LogMessage("Canvas 3D: Couldn't validate OpenGL implementation; is everything needed present?");
         return NS_ERROR_FAILURE;
@@ -285,7 +294,24 @@ WebGLContext::GetCanvasLayer(LayerManager *manager)
 
     CanvasLayer::Data data;
 
-    data.mGLContext = gl.get();
+    // the gl context may either provide a native PBuffer, in which case we want to initialize
+    // data with the gl context directly, or may provide a surface to which it renders (this is the case
+    // of OSMesa contexts), in which case we want to initialize data with that surface.
+
+    void* native_pbuffer = gl->GetNativeData(gl::GLContext::NativePBuffer);
+    void* native_surface = gl->GetNativeData(gl::GLContext::NativeImageSurface);
+
+    if (native_pbuffer) {
+        data.mGLContext = gl.get();
+    }
+    else if (native_surface) {
+        data.mSurface = static_cast<gfxASurface*>(native_surface);
+    }
+    else {
+        NS_WARNING("The GLContext has neither a native PBuffer nor a native surface!");
+        return nsnull;
+    }
+
     data.mSize = nsIntSize(mWidth, mHeight);
     data.mGLBufferIsPremultiplied = PR_FALSE;
 
