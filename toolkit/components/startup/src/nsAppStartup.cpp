@@ -70,6 +70,8 @@
 #include "nsAppShellCID.h"
 #include "mozilla/Services.h"
 
+#include "mozilla/FunctionTimer.h"
+
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 class nsAppExitEvent : public nsRunnable {
@@ -107,16 +109,21 @@ nsAppStartup::nsAppStartup() :
 nsresult
 nsAppStartup::Init()
 {
+  NS_TIME_FUNCTION;
   nsresult rv;
 
   // Create widget application shell
   mAppShell = do_GetService(kAppShellCID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  NS_TIME_FUNCTION_MARK("Got AppShell service");
+
   nsCOMPtr<nsIObserverService> os =
     mozilla::services::GetObserverService();
   if (!os)
     return NS_ERROR_FAILURE;
+
+  NS_TIME_FUNCTION_MARK("Got Observer service");
 
   os->AddObserver(this, "quit-application-forced", PR_TRUE);
   os->AddObserver(this, "profile-change-teardown", PR_TRUE);

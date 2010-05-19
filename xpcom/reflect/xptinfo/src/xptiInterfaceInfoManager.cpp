@@ -43,6 +43,7 @@
 #include "nsDependentString.h"
 #include "nsString.h"
 #include "nsArrayEnumerator.h"
+#include "mozilla/FunctionTimer.h"
 
 #define NS_ZIPLOADER_CONTRACTID NS_XPTLOADER_CONTRACTID_PREFIX "zip"
 
@@ -61,6 +62,9 @@ xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef()
 {
     if(!gInterfaceInfoManager)
     {
+        NS_TIME_FUNCTION;
+
+        NS_TIME_FUNCTION_MARK("Next: build file search path");
         nsCOMPtr<nsISupportsArray> searchPath;
         BuildFileSearchPath(getter_AddRefs(searchPath));
         if(!searchPath)
@@ -84,6 +88,7 @@ xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef()
         }
         else
         {
+            NS_TIME_FUNCTION_MARK("Next: read xpti manifest");
             PRBool mustAutoReg = 
                     !xptiManifest::Read(gInterfaceInfoManager, 
                                         &gInterfaceInfoManager->mWorkingSet);
@@ -97,8 +102,10 @@ xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef()
             mustAutoReg = PR_TRUE;
             }
 #endif // DEBUG
-            if(mustAutoReg)
+            if(mustAutoReg) {
+                NS_TIME_FUNCTION_MARK("Next: auto register interfaces");
                 gInterfaceInfoManager->AutoRegisterInterfaces();
+            }
         }
     }
     return gInterfaceInfoManager;
@@ -1884,6 +1891,8 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(c
 /* void autoRegisterInterfaces (); */
 NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
 {
+    NS_TIME_FUNCTION;
+
     nsCOMPtr<nsISupportsArray> fileList;
     AutoRegMode mode;
     PRBool ok;
@@ -1902,17 +1911,20 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
     // We re-read the manifest rather than muck with the 'live' one.
     // It is OK if this fails.
     // XXX But we should track failure as a warning.
+    NS_TIME_FUNCTION_MARK("Next: read the manifest");
     ok = xptiManifest::Read(this, &workingSet);
 
     LOG_AUTOREG(("read of manifest %s\n", ok ? "successful" : "FAILED"));
 
     // Grovel for all the typelibs we can find (in .xpt or .zip, .jar,...).
+    NS_TIME_FUNCTION_MARK("Next: build file list");
     if(!BuildFileList(mSearchPath, getter_AddRefs(fileList)) || !fileList)
         return NS_ERROR_UNEXPECTED;
     
     // DEBUG_DumpFileList(fileList);
 
     // Check to see how much work we need to do.
+    NS_TIME_FUNCTION_MARK("Next: determining registration strategy");
     mode = DetermineAutoRegStrategy(mSearchPath, fileList, &workingSet);
 
     switch(mode)
@@ -1923,6 +1935,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
         return NS_OK;
     case FILES_ADDED_ONLY:
         LOG_AUTOREG(("autoreg strategy: files added only\n"));
+        NS_TIME_FUNCTION_MARK("Next: adding only new files");
         if(!AddOnlyNewFilesFromFileList(mSearchPath, fileList, &workingSet))
         {
             LOG_AUTOREG(("FAILED to add new files\n"));
@@ -1931,6 +1944,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
         break;
     case FULL_VALIDATION_REQUIRED:
         LOG_AUTOREG(("autoreg strategy: doing full validation merge\n"));
+        NS_TIME_FUNCTION_MARK("Next: full validation merge");
         if(!DoFullValidationMergeFromFileList(mSearchPath, fileList, &workingSet))
         {
             LOG_AUTOREG(("FAILED to do full validation\n"));
@@ -1947,12 +1961,14 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
     // xpt files. This will make that startup slower. If this ever becomes a 
     // chronic problem for anyone, then we'll want to figure out why!
     
+    NS_TIME_FUNCTION_MARK("Next: writing manifest");
     if(!xptiManifest::Write(this, &workingSet))
     {
         LOG_AUTOREG(("FAILED to write manifest\n"));
         NS_ERROR("Failed to write xpti manifest!");
     }
     
+    NS_TIME_FUNCTION_MARK("Next: merging working sets");
     if(!MergeWorkingSets(&mWorkingSet, &workingSet))
     {
         LOG_AUTOREG(("FAILED to merge into live workingset\n"));

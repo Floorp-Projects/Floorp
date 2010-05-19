@@ -75,6 +75,8 @@
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"  
 
+#include "mozilla/FunctionTimer.h"
+
 #if defined(DEBUG_pavlov) || defined(DEBUG_timeless)
 #include "nsISimpleEnumerator.h"
 #include "nsXPCOM.h"
@@ -666,6 +668,8 @@ imgCacheQueue & imgLoader::GetCacheQueue(nsIURI *aURI)
 
 nsresult imgLoader::InitCache()
 {
+  NS_TIME_FUNCTION;
+
   nsresult rv;
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (!os)

@@ -210,6 +210,8 @@
 #include "base/command_line.h"
 #endif
 
+#include "mozilla/FunctionTimer.h"
+
 #ifdef WINCE
 class WindowsMutex {
 public:
@@ -1228,6 +1230,7 @@ nsSingletonFactory::LockFactory(PRBool)
 nsresult
 ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
 {
+  NS_TIME_FUNCTION;
   nsresult rv;
 
   nsCOMPtr<nsIComponentRegistrar> registrar
@@ -1243,18 +1246,28 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
                                   nativeFactory);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  NS_TIME_FUNCTION_MARK("RegisterFactory done");
+
   // Inform the chrome registry about OS accessibility
   nsCOMPtr<nsIToolkitChromeRegistry> cr =
     mozilla::services::GetToolkitChromeRegistryService();
+  NS_TIME_FUNCTION_MARK("Got ToolkitChromeRegistry service");
+
   if (cr)
     cr->CheckForOSAccessibility();
+
+  NS_TIME_FUNCTION_MARK("OS Accessibility check");
 
   nsCOMPtr<nsIWindowCreator> creator (do_GetService(NS_APPSTARTUP_CONTRACTID));
   if (!creator) return NS_ERROR_UNEXPECTED;
 
+  NS_TIME_FUNCTION_MARK("Got AppStartup service");
+
   nsCOMPtr<nsIWindowWatcher> wwatch
     (do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
+  
+  NS_TIME_FUNCTION_MARK("Got WindowWatcher service");
 
   return wwatch->SetWindowCreator(creator);
 }
@@ -3332,6 +3345,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     NS_TIME_FUNCTION_MARK("Next: ScopedXPCOMStartup");
 
+    NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup");
+
     // Allows the user to forcefully bypass the restart process at their
     // own risk. Useful for debugging or for tinderboxes where child 
     // processes can be problematic.
@@ -3339,11 +3354,45 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // Start the real application
       ScopedXPCOMStartup xpcom;
       rv = xpcom.Initialize();
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: Initialize");
       NS_ENSURE_SUCCESS(rv, 1); 
       rv = xpcom.DoAutoreg();
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: DoAutoreg");
+
+
+#ifdef NS_FUNCTION_TIMER
+      // initialize some common services, so we don't pay the cost for these at odd times later on;
+      // SetWindowCreator -> ChromeRegistry -> IOService -> SocketTransportService -> (nspr wspm init), Prefs
+      {
+        nsCOMPtr<nsISupports> comp;
+
+        comp = do_GetService("@mozilla.org/preferences-service;1");
+        NS_TIME_FUNCTION_MARK("Pref Service");
+
+        comp = do_GetService("@mozilla.org/network/socket-transport-service;1");
+        NS_TIME_FUNCTION_MARK("Socket Transport Service");
+
+        comp = do_GetService("@mozilla.org/network/dns-service;1");
+        NS_TIME_FUNCTION_MARK("DNS Service");
+
+        comp = do_GetService("@mozilla.org/network/io-service;1");
+        NS_TIME_FUNCTION_MARK("IO Service");
+
+        comp = do_GetService("@mozilla.org/chrome/chrome-registry;1");
+        NS_TIME_FUNCTION_MARK("Chrome Registry Service");
+
+        comp = do_GetService("@mozilla.org/focus-event-suppressor-service;1");
+        NS_TIME_FUNCTION_MARK("Focus Event Suppressor Service");
+      }
+#endif
+
       rv |= xpcom.RegisterProfileService();
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: RegisterProfileService");
       rv |= xpcom.SetWindowCreator(nativeApp);
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: SetWindowCreator");
       NS_ENSURE_SUCCESS(rv, 1);
+
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: Done");
 
 #ifdef MOZ_CRASHREPORTER
       // tell the crash reporter to also send the release channel
@@ -3383,9 +3432,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           NS_TIMELINE_LEAVE("startupNotifier");
         }
 
+        NS_TIME_FUNCTION_MARK("Finished startupNotifier");
+
         nsCOMPtr<nsIAppStartup2> appStartup
           (do_GetService(NS_APPSTARTUP_CONTRACTID));
         NS_ENSURE_TRUE(appStartup, 1);
+
+        NS_TIME_FUNCTION_MARK("Created AppStartup");
 
         if (gDoMigration) {
           nsCOMPtr<nsIFile> file;
@@ -3413,7 +3466,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           if (pm)
             pm->Migrate(&dirProvider);
         }
+
+        NS_TIME_FUNCTION_MARK("Profile migration");
+
         dirProvider.DoStartup();
+
+        NS_TIME_FUNCTION_MARK("dirProvider.DoStartup() (profile-after-change)");
 
         PRBool shuttingDown = PR_FALSE;
         appStartup->GetShuttingDown(&shuttingDown);
@@ -3439,6 +3497,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           if (obsService) {
             obsService->NotifyObservers(cmdLine, "command-line-startup", nsnull);
           }
+
+          NS_TIME_FUNCTION_MARK("Early command line init");
 
           NS_TIME_FUNCTION_MARK("Next: prepare for Run");
 
@@ -3469,6 +3529,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           SaveToEnv("NO_EM_RESTART=");
           SaveToEnv("XUL_APP_FILE=");
           SaveToEnv("XRE_BINARY_PATH=");
+    
+          NS_TIME_FUNCTION_MARK("env munging");
 
           if (!shuttingDown) {
             NS_TIME_FUNCTION_MARK("Next: CreateHiddenWindow");
@@ -3511,6 +3573,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             if (obsService)
               obsService->NotifyObservers(nsnull, "final-ui-startup", nsnull);
 
+            NS_TIME_FUNCTION_MARK("final-ui-startup done");
+
             appStartup->GetShuttingDown(&shuttingDown);
           }
 
@@ -3540,6 +3604,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
           NS_TIME_FUNCTION_MARK("Next: Run");
 
+          NS_TIME_FUNCTION_MARK("appStartup->Run");
+
           MOZ_SPLASHSCREEN_UPDATE(90);
           {
             NS_TIMELINE_ENTER("appStartup->Run");
@@ -3552,6 +3618,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           }
 
           NS_TIME_FUNCTION_MARK("Next: Finish");
+
+          NS_TIME_FUNCTION_MARK("appStartup->Run done");
 
           // Check for an application initiated restart.  This is one that
           // corresponds to nsIAppStartup.quit(eRestart)
