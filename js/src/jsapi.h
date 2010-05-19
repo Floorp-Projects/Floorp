@@ -3417,10 +3417,12 @@ class Value
         return isMagic();
     }
 
+#ifdef DEBUG
     JSWhyMagic whyMagic() const {
         JS_ASSERT(mask == JSVAL_MAGIC_MASK);
         return data.why;
     }
+#endif
 
     /* Other */
 
