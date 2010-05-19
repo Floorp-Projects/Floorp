@@ -204,7 +204,6 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   // NS_FORM_LABEL
   // NS_FORM_OPTION
   // NS_FORM_OPTGROUP
-  // NS_FORM_LEGEND
 
   return PR_FALSE;
 }
