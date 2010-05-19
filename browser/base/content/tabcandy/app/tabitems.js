@@ -286,9 +286,10 @@ window.TabItems = {
       var reconnected = false;
       $div.each(function() {
         var tab = Tabs.tab(this);
-        if(tab == Utils.homeTab) 
+        if(tab == Utils.homeTab) { 
           $(this).hide();
-        else {
+          reconnected = true;
+        } else {
           var item = new TabItem(this, tab);
           $(this).data('tabItem', item);    
           

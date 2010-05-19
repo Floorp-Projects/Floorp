@@ -64,10 +64,14 @@ var Tabbar = {
   _hidden: false, 
   
   // ----------
-  get el(){ return window.Tabs[0].raw.parentNode; },
+  get el() {
+    return window.Tabs[0].raw.parentNode; 
+  },
 
   // ----------
-  height: window.Tabs[0].raw.parentNode.getBoundingClientRect().height,
+  get height() {
+    return window.Tabs[0].raw.parentNode.getBoundingClientRect().height;
+  },
 
   // ----------
   hide: function(animate) {
@@ -448,121 +452,133 @@ ArrangeClass.prototype = {
 // Class: UIClass
 // Singleton top-level UI manager. TODO: Integrate with <Page>.
 function UIClass(){ 
-  // Variable: navBar
-  // A reference to the <Navbar>, for manipulating the browser's nav bar. 
-  this.navBar = Navbar;
-  
-  // Variable: tabBar
-  // A reference to the <Tabbar>, for manipulating the browser's tab bar.
-  this.tabBar = Tabbar;
-  
-  // Variable: devMode
-  // If true (set by an url parameter), adds extra features to the screen. 
-  // TODO: Integrate with the dev menu
-  this.devMode = false;
-  
-  // Variable: currentTab
-  // Keeps track of which <Tabs> tab we are currently on.
-  // Used to facilitate zooming down from a previous tab. 
-  this.currentTab = Utils.activeTab;
-  
-  // Variable: focused
-  // Keeps track of whether Tab Candy is focused. 
-  this.focused = (Utils.activeTab == Utils.homeTab);
-  
-  var self = this;
-  
-  // ___ URL Params
-  var params = document.location.search.replace('?', '').split('&');
-  $.each(params, function(index, param) {
-    var parts = param.split('=');
-    if(parts[0] == 'dev' && parts[1] == '1') 
-      self.devMode = true;
-  });
-  
-  // ___ Dev Mode
-  if(this.devMode) {
-    Switch.insert('body', '');
-    $('<br><br>').appendTo("#actions");
-    this._addArrangements();
+  if(window.Tabs) 
+    this.init();
+  else { 
+    var self = this;
+    TabsManager.addSubscriber(this, 'load', function() {
+      self.init();
+    });
   }
-  
-  // ___ Navbar
-  if(this.focused) {
-    this.tabBar.hide();
-    this.navBar.hide();
-  }
-  
-  Tabs.onFocus(function() {
-    setTimeout(function() { // Marshal event from chrome thread to DOM thread
-      try{
-        if(this.contentWindow.location.host == "tabcandy") {
-          self.focused = true;
-          self.navBar.hide();
-          self.tabBar.hide();
-        } else {
-          self.focused = false;
-          self.navBar.show();      
-        }
-      }catch(e){
-        Utils.log()
-      }
-    }, 1);
-  });
-
-  Tabs.onOpen(function(a, b) {
-    setTimeout(function() { // Marshal event from chrome thread to DOM thread
-      self.navBar.show();
-    }, 1);
-  });
-
-  // ___ Page
-  Page.init();
-  
-  // ___ Storage
-  var data = Storage.read();
-  var sane = this.storageSanity(data);
-  if(!sane || data.dataVersion < 2) {
-    data.groups = null;
-    data.tabs = null;
-    data.pageBounds = null;
-    
-    if(!sane)
-      alert('storage data is bad; starting fresh');
-  }
-   
-  Groups.reconstitute(data.groups);
-  TabItems.reconstitute(data.tabs);
-  
-  $(window).bind('beforeunload', function() {
-    if(self.initialized) 
-      self.save();
-      
-    self.navBar.show();
-    self.tabBar.show(false);    
-    self.tabBar.showAllTabs();
-  });
-  
-  // ___ resizing
-  if(data.pageBounds) {
-    this.pageBounds = data.pageBounds;
-    this.resize();
-  } else 
-    this.pageBounds = Items.getPageBounds();    
-  
-  $(window).resize(function() {
-    self.resize();
-  });
-  
-  // ___ Dev Menu
-  this.addDevMenu();
-  
-  // ___ Done
-  this.initialized = true;
 };
 
 // ----------
 UIClass.prototype = {
+  // ----------
+  init: function() {
+    // Variable: navBar
+    // A reference to the <Navbar>, for manipulating the browser's nav bar. 
+    this.navBar = Navbar;
+    
+    // Variable: tabBar
+    // A reference to the <Tabbar>, for manipulating the browser's tab bar.
+    this.tabBar = Tabbar;
+    
+    // Variable: devMode
+    // If true (set by an url parameter), adds extra features to the screen. 
+    // TODO: Integrate with the dev menu
+    this.devMode = false;
+    
+    // Variable: currentTab
+    // Keeps track of which <Tabs> tab we are currently on.
+    // Used to facilitate zooming down from a previous tab. 
+    this.currentTab = Utils.activeTab;
+    
+    // Variable: focused
+    // Keeps track of whether Tab Candy is focused. 
+    this.focused = (Utils.activeTab == Utils.homeTab);
+    
+    var self = this;
+    
+    // ___ URL Params
+    var params = document.location.search.replace('?', '').split('&');
+    $.each(params, function(index, param) {
+      var parts = param.split('=');
+      if(parts[0] == 'dev' && parts[1] == '1') 
+        self.devMode = true;
+    });
+    
+    // ___ Dev Mode
+    if(this.devMode) {
+      Switch.insert('body', '');
+      $('<br><br>').appendTo("#actions");
+      this._addArrangements();
+    }
+    
+    // ___ Navbar
+    if(this.focused) {
+      this.tabBar.hide();
+      this.navBar.hide();
+    }
+    
+    Tabs.onFocus(function() {
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+        try{
+          if(this.contentWindow.location.host == "tabcandy") {
+            self.focused = true;
+            self.navBar.hide();
+            self.tabBar.hide();
+          } else {
+            self.focused = false;
+            self.navBar.show();      
+          }
+        }catch(e){
+          Utils.log()
+        }
+      }, 1);
+    });
+  
+    Tabs.onOpen(function(a, b) {
+      setTimeout(function() { // Marshal event from chrome thread to DOM thread
+        self.navBar.show();
+      }, 1);
+    });
+  
+    // ___ Page
+    Page.init();
+    
+    // ___ Storage
+    var data = Storage.read();
+    var sane = this.storageSanity(data);
+    if(!sane || data.dataVersion < 2) {
+      data.groups = null;
+      data.tabs = null;
+      data.pageBounds = null;
+      
+      if(!sane)
+        alert('storage data is bad; starting fresh');
+    }
+     
+    Groups.reconstitute(data.groups);
+    TabItems.reconstitute(data.tabs);
+    
+    $(window).bind('beforeunload', function() {
+      if(self.initialized) 
+        self.save();
+        
+      self.navBar.show();
+      self.tabBar.show(false);    
+      self.tabBar.showAllTabs();
+    });
+    
+    // ___ resizing
+    if(data.pageBounds) {
+      this.pageBounds = data.pageBounds;
+      this.resize();
+    } else 
+      this.pageBounds = Items.getPageBounds();    
+    
+    $(window).resize(function() {
+      self.resize();
+    });
+    
+    // ___ Dev Menu
+    this.addDevMenu();
+    
+    // ___ Done
+    this.initialized = true;
+  }, 
+  
   // ----------
   resize: function() {
 /*     Groups.repositionNewTabGroup(); */
