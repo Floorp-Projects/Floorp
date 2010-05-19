@@ -2558,44 +2558,34 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
     *vp = Jsvalify(IdToValue(id));
 }
 
-namespace js {
-
-JSBool
-PropertyStub(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+JS_PUBLIC_API(JSBool)
+JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     return JS_TRUE;
 }
 
-JSBool
-EnumerateStub(JSContext *cx, JSObject *obj)
+JS_PUBLIC_API(JSBool)
+JS_EnumerateStub(JSContext *cx, JSObject *obj)
 {
     return JS_TRUE;
 }
 
-JSBool
-ResolveStub(JSContext *cx, JSObject *obj, jsid id)
+JS_PUBLIC_API(JSBool)
+JS_ResolveStub(JSContext *cx, JSObject *obj, jsid id)
 {
     return JS_TRUE;
 }
 
-JSBool
-ConvertStub(JSContext *cx, JSObject *obj, JSType type, Value *vp)
+JS_PUBLIC_API(JSBool)
+JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     JS_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
-    return js_TryValueOf(cx, obj, type, vp);
+    return js_TryValueOf(cx, obj, type, Valueify(vp));
 }
 
-void
-FinalizeStub(JSContext *cx, JSObject *obj)
+JS_PUBLIC_API(void)
+JS_FinalizeStub(JSContext *cx, JSObject *obj)
 {}
-
-} /* namespace js */
-
-JS_PUBLIC_DATA(JSPropertyOp)  JS_PropertyStub  = Jsvalify(PropertyStub);
-JS_PUBLIC_DATA(JSEnumerateOp) JS_EnumerateStub = EnumerateStub;
-JS_PUBLIC_DATA(JSResolveOp)   JS_ResolveStub   = ResolveStub;
-JS_PUBLIC_DATA(JSConvertOp)   JS_ConvertStub   = Jsvalify(ConvertStub);
-JS_PUBLIC_DATA(JSFinalizeOp)  JS_FinalizeStub  = FinalizeStub;
 
 JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
