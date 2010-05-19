@@ -193,16 +193,21 @@ typedef JSUint64 JSValueMaskType;
 # error "Unsupported word size"
 #endif
 
-#define JSVAL_NULL_MASK        ((JSValueMaskType)0x00)
-#define JSVAL_UNDEFINED_MASK   ((JSValueMaskType)0x01)
-#define JSVAL_INT32_MASK       ((JSValueMaskType)0x02)
-#define JSVAL_DOUBLE_MASK      ((JSValueMaskType)0x04)
-#define JSVAL_STRING_MASK      ((JSValueMaskType)0x08)
-#define JSVAL_NONFUNOBJ_MASK   ((JSValueMaskType)0x10)
-#define JSVAL_FUNOBJ_MASK      ((JSValueMaskType)0x20)
-#define JSVAL_BOOLEAN_MASK     ((JSValueMaskType)0x40)
-#define JSVAL_MAGIC_MASK       ((JSValueMaskType)0x80)
+#ifdef __GNUC__
+# define VALUE_ALIGNMENT __attribute__((aligned (8)))
+#else
+# error "TODO: do something for MSVC"
+#endif
 
+#define JSVAL_NULL_MASK        0x00
+#define JSVAL_UNDEFINED_MASK   0x01
+#define JSVAL_INT32_MASK       0x02
+#define JSVAL_DOUBLE_MASK      0x04
+#define JSVAL_STRING_MASK      0x08
+#define JSVAL_NONFUNOBJ_MASK   0x10
+#define JSVAL_FUNOBJ_MASK      0x20
+#define JSVAL_BOOLEAN_MASK     0x40
+#define JSVAL_MAGIC_MASK       0x80
 #define JSVAL_OBJECT_MASK      (JSVAL_NONFUNOBJ_MASK | JSVAL_FUNOBJ_MASK)
 #define JSVAL_NUMBER_MASK      (JSVAL_INT32_MASK | JSVAL_DOUBLE_MASK)
 #define JSVAL_GCTHING_MASK     (JSVAL_OBJECT_MASK | JSVAL_STRING_MASK)
@@ -246,7 +251,7 @@ typedef struct jsval
     JSValueMaskType mask;
     JS_INSERT_VALUE_PADDING()
     jsval_data data;
-} jsval;
+} VALUE_ALIGNMENT jsval;
 
 /*
  * Boxed word macros (private engine detail)
@@ -406,7 +411,11 @@ JSBOXEDWORD_TO_GCTHING(jsboxedword w)
 static JS_ALWAYS_INLINE uint32
 JSBOXEDWORD_TRACE_KIND(jsboxedword w)
 {
-    JS_ASSERT(w == 0x0 || w == 0x2 || w == 0x4);
+#ifdef DEBUG
+    unsigned tag = JSBOXEDWORD_TAG(w);
+    JS_ASSERT(tag == 0x0 || tag == 0x2 || tag == 0x4);
+#endif
+
     /*
      * We need to map:
      *  XXXXXXXXXXXXXXXXXXXXXXXXXXXXX000 -> 00 (object)
@@ -499,6 +508,8 @@ typedef jsboxedword jsid;
 #define JSID_IS_OBJECT(id)            JSBOXEDWORD_IS_OBJECT((jsboxedword)(id))
 #define JSID_TO_OBJECT(id)            JSBOXEDWORD_TO_OBJECT((jsboxedword)(id))
 #define OBJECT_TO_JSID(obj)           ((jsid)OBJECT_TO_JSBOXEDWORD((obj)))
+
+/* TODO: get JSID/JSBOXEDWORD story together. */
 
 /* Objects and strings (no doubles in jsids). */
 #define JSID_IS_GCTHING(id)           JSBOXEDWORD_IS_GCTHING(id)

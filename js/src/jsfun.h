@@ -312,7 +312,7 @@ js_TraceFunction(JSTracer *trc, JSFunction *fun);
 extern void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun);
 
-extern JSObject *
+extern JSObject * JS_FASTCALL
 js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
                        JSObject *proto);
 

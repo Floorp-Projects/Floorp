@@ -4749,7 +4749,7 @@ xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
         xml = vec[i];
         if (xml) {
             JS_SET_TRACING_INDEX(trc, "xml_vector", i);
-            CallGCMarker(trc, xml, JSTRACE_XML);
+            MarkRaw(trc, xml, JSTRACE_XML);
         }
     }
 }
@@ -7112,9 +7112,9 @@ js_TraceXML(JSTracer *trc, JSXML *xml)
         if (xml->xml_targetprop)
             JS_CALL_OBJECT_TRACER(trc, xml->xml_targetprop, "targetprop");
     } else {
-        js::TraceObjectVector(trc,
-                              (JSObject **) xml->xml_namespaces.vector,
-                              xml->xml_namespaces.length);
+        MarkObjectVector(trc, xml->xml_namespaces.length,
+                         (JSObject **) xml->xml_namespaces.vector,
+                         "xml_namespaces");
         XMLArrayCursorTrace(trc, xml->xml_namespaces.cursors);
         if (IS_GC_MARKING_TRACER(trc))
             XMLArrayTrim(&xml->xml_namespaces);

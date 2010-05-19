@@ -297,7 +297,7 @@ js_MarkTraps(JSTracer *trc)
     for (JSTrap *trap = (JSTrap *) rt->trapList.next;
          &trap->links != &rt->trapList;
          trap = (JSTrap *) trap->links.next) {
-        CallGCMarkerIfGCThing(trc, Valueify(trap->closure), "trap->closure");
+        MarkValue(trc, Valueify(trap->closure), "trap->closure");
     }
 }
 

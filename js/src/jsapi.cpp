@@ -1897,7 +1897,7 @@ JS_TraceRuntime(JSTracer *trc)
 JS_PUBLIC_API(void)
 JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 {
-    CallGCMarker(trc, thing, kind);
+    MarkRaw(trc, thing, kind);
 }
 
 #ifdef DEBUG
@@ -2289,8 +2289,7 @@ JS_MarkGCThing(JSContext *cx, jsval v, const char *name, void *arg)
 #ifdef JS_THREADSAFE
     JS_ASSERT(cx->runtime->gcThread == trc->context->thread);
 #endif
-    JS_SET_TRACING_NAME(trc, name ? name : "unknown");
-    CallGCMarkerIfGCThing(trc, Valueify(v));
+    MarkValue(trc, Valueify(v), name ? name : "unknown");
 }
 
 extern JS_PUBLIC_API(JSBool)
@@ -3880,8 +3879,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;
-        for (jsint i = 0, n = ida->length; i < n; i++)
-            js_TraceId(trc, ida->vector[i]);
+        MarkBoxedWordRange(trc, ida->length, ida->vector, "prop iter");
     }
 }
 

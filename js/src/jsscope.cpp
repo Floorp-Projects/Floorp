@@ -1230,12 +1230,6 @@ JSScope::globalObjectOwnShapeChange(JSContext *cx)
     return !js_IsPropertyCacheDisabled(cx);
 }
 
-void
-js_TraceId(JSTracer *trc, jsid id)
-{
-    CallGCMarker(trc, JSBOXEDWORD_TO_GCTHING(id), JSBOXEDWORD_TRACE_KIND(id));
-}
-
 #ifdef DEBUG
 static void
 PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
@@ -1287,21 +1281,21 @@ JSScopeProperty::trace(JSTracer *trc)
 {
     if (IS_GC_MARKING_TRACER(trc))
         mark();
-    js_TraceId(trc, id);
+    MarkBoxedWord(trc, id, "id");
 
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         if ((attrs & JSPROP_GETTER) && rawGetter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
-            CallGCMarker(trc, getterObject(), JSTRACE_OBJECT);
+            MarkRaw(trc, getterObject(), JSTRACE_OBJECT);
         }
         if ((attrs & JSPROP_SETTER) && rawSetter) {
             JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 1);
-            CallGCMarker(trc, setterObject(), JSTRACE_OBJECT);
+            MarkRaw(trc, setterObject(), JSTRACE_OBJECT);
         }
     }
 
     if (isMethod()) {
         JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
-        CallGCMarker(trc, &methodFunObj(), JSTRACE_OBJECT);
+        MarkRaw(trc, &methodFunObj(), JSTRACE_OBJECT);
     }
 }

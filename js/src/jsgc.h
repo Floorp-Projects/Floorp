@@ -464,90 +464,100 @@ js_MarkTraps(JSTracer *trc);
 
 namespace js {
 
+/* N.B. Assumes JS_SET_TRACING_NAME/INDEX has already been called. */
 void
-CallGCMarker(JSTracer *trc, void *thing, uint32 kind);
+MarkRaw(JSTracer *trc, void *thing, uint32 kind);
 
 static inline void
-CallGCMarkerForGCThing(JSTracer *trc, const js::Value &v)
-{
-    CallGCMarker(trc, v.asGCThing(), v.traceKind());
-}
-
-void
-CallGCMarkerForGCThing(JSTracer *trc, void *thing);
-
-static inline void
-CallGCMarkerForGCThing(JSTracer *trc, void *thing, const char *name)
+MarkObject(JSTracer *trc, JSObject *obj, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    CallGCMarkerForGCThing(trc, thing);
+    return MarkRaw(trc, obj, JSTRACE_OBJECT);
 }
 
 static inline void
-CallGCMarkerIfGCThing(JSTracer *trc, const js::Value &v)
+MarkObjectVector(JSTracer *trc, uint32 len, JSObject **vec, const char *name)
 {
-    if (v.isGCThing())
-        CallGCMarkerForGCThing(trc, v);
-}
-
-static inline void
-CallGCMarkerIfGCThing(JSTracer *trc, const js::Value &v, const char *name)
-{
-    JS_SET_TRACING_NAME(trc, name);
-    if (v.isGCThing())
-        CallGCMarkerForGCThing(trc, v);
-}
-
-static inline void
-CallGCMarkerIfGCThing(JSTracer *trc, jsid id)
-{
-    if (JSID_IS_GCTHING(id))
-        CallGCMarker(trc, JSID_TO_GCTHING(id), JSID_TRACE_KIND(id));
-}
-
-static inline void
-CallGCMarkerIfGCThing(JSTracer *trc, jsid id, const char *name)
-{
-    JS_SET_TRACING_NAME(trc, name);
-    if (JSID_IS_GCTHING(id))
-        CallGCMarker(trc, JSID_TO_GCTHING(id), JSID_TRACE_KIND(id));
-}
-
-void
-TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len);
-
-JS_ALWAYS_INLINE void
-TraceValues(JSTracer *trc, Value *beg, Value *end, const char *name)
-{
-    for (Value *vp = beg; vp < end; ++vp) {
-        if (vp->isGCThing()) {
-            JS_SET_TRACING_INDEX(trc, name, vp - beg);
-            CallGCMarker(trc, vp->asGCThing(), vp->traceKind());
+    for (uint32 i = 0; i < len; i++) {
+        if (JSObject *obj = vec[i]) {
+            JS_SET_TRACING_INDEX(trc, name, i);
+            MarkRaw(trc, obj, JSTRACE_OBJECT);
         }
     }
 }
 
-JS_ALWAYS_INLINE void
-TraceValues(JSTracer *trc, size_t len, Value *vec, const char *name)
+/* N.B. Assumes JS_SET_TRACING_NAME/INDEX has already been called. */
+static inline void
+MarkValueRaw(JSTracer *trc, const js::Value &v)
 {
-    TraceValues(trc, vec, vec + len, name);
+    if (v.isGCThing())
+        return MarkRaw(trc, v.asGCThing(), v.traceKind());
 }
 
-JS_ALWAYS_INLINE void
-TraceBoxedWords(JSTracer *trc, jsboxedword *beg, jsboxedword *end, const char *name)
+static inline void
+MarkValue(JSTracer *trc, const js::Value &v, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    MarkValueRaw(trc, v);
+}
+
+static inline void
+MarkValueRange(JSTracer *trc, Value *beg, Value *end, const char *name)
+{
+    for (Value *vp = beg; vp < end; ++vp) {
+        JS_SET_TRACING_INDEX(trc, name, vp - beg);
+        MarkValueRaw(trc, *vp);
+    }
+}
+
+static inline void
+MarkValueRange(JSTracer *trc, size_t len, Value *vec, const char *name)
+{
+    MarkValueRange(trc, vec, vec + len, name);
+}
+
+static inline void
+MarkBoxedWord(JSTracer *trc, jsboxedword w, const char *name)
+{
+    if (JSBOXEDWORD_IS_GCTHING(w)) {
+        JS_SET_TRACING_NAME(trc, name);
+        MarkRaw(trc, JSBOXEDWORD_TO_GCTHING(w), JSBOXEDWORD_TRACE_KIND(w));
+    }
+}
+
+static inline void
+MarkBoxedWordRange(JSTracer *trc, jsboxedword *beg, jsboxedword *end, const char *name)
 {
     for (jsboxedword *wp = beg; wp < end; ++wp) {
         if (JSBOXEDWORD_IS_GCTHING(*wp)) {
             JS_SET_TRACING_INDEX(trc, name, wp - beg);
-            CallGCMarker(trc, JSBOXEDWORD_TO_GCTHING(*wp), JSBOXEDWORD_TRACE_KIND(*wp));
+            MarkRaw(trc, JSBOXEDWORD_TO_GCTHING(*wp), JSBOXEDWORD_TRACE_KIND(*wp));
         }
     }
 }
 
 inline void
-TraceBoxedWords(JSTracer *trc, size_t len, jsboxedword *vec, const char *name)
+MarkBoxedWordRange(JSTracer *trc, size_t len, jsboxedword *vec, const char *name)
 {
-    TraceBoxedWords(trc, vec, vec + len, name);
+    MarkBoxedWordRange(trc, vec, vec + len, name);
+}
+
+/* N.B. Assumes JS_SET_TRACING_NAME/INDEX has already been called. */
+void
+MarkGCThingRaw(JSTracer *trc, void *thing);
+
+static inline void
+MarkGCThing(JSTracer *trc, void *thing, const char *name)
+{
+    JS_SET_TRACING_NAME(trc, name);
+    MarkGCThingRaw(trc, thing);
+}
+
+static inline void
+MarkGCThing(JSTracer *trc, void *thing, const char *name, size_t index)
+{
+    JS_SET_TRACING_INDEX(trc, name, index);
+    MarkGCThingRaw(trc, thing);
 }
 
 } /* namespace js */

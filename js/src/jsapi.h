@@ -3001,7 +3001,7 @@ struct FunObjOrUndefinedTag {
 };
 
 struct NonFunObjTag {
-    explicit NonFunObjTag(JSObject &o) : obj(obj) {}
+    explicit NonFunObjTag(JSObject &obj) : obj(obj) {}
     JSObject &obj;
 };
 
@@ -3072,8 +3072,29 @@ class Value
 #endif
         struct { int32 first; int32 second; } bits;
     };
+    JS_STATIC_ASSERT(sizeof(Data) == sizeof(double));
 
-    MaskType mask;
+    enum TypeNames {
+      NullMask      = JSVAL_NULL_MASK,
+      UndefinedMask = JSVAL_UNDEFINED_MASK,
+      Int32Mask     = JSVAL_INT32_MASK,
+      DoubleMask    = JSVAL_DOUBLE_MASK,
+      StringMask    = JSVAL_STRING_MASK,
+      NonFunObjMask = JSVAL_NONFUNOBJ_MASK,
+      FunObjMask    = JSVAL_FUNOBJ_MASK,
+      BooleanMask   = JSVAL_BOOLEAN_MASK,
+      MagicMask     = JSVAL_MAGIC_MASK,
+
+      ObjectMask    = JSVAL_OBJECT_MASK,
+      NumberMask    = JSVAL_NUMBER_MASK,
+      GCThingMask   = JSVAL_GCTHING_MASK
+    };
+    JS_STATIC_ASSERT(sizeof(TypeNames) <= sizeof(MaskType));
+
+    union {
+        MaskType mask;
+        TypeNames typeName;
+    };
     JS_INSERT_VALUE_PADDING()
     Data data;
 
@@ -3455,7 +3476,7 @@ class Value
         JS_ASSERT(mask == JSVAL_INT32_MASK);
         return data.u32;
     }
-};
+} VALUE_ALIGNMENT;
 
 struct AssertLayoutCompatible 
 {
