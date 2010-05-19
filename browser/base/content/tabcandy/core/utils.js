@@ -577,8 +577,12 @@ var Utils = {
   // Returns a copy of the argument. Note that this is a shallow copy; if the argument
   // has properties that are themselves objects, those properties will be copied by reference.
   copy: function(value) {
-    if(value && typeof(value) == 'object') 
+    if(value && typeof(value) == 'object') {
+      if($.isArray(value))
+        return $.extend([], value);
+        
       return $.extend({}, value);
+    }
       
     return value;
   }

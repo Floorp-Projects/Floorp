@@ -4,6 +4,10 @@
 // Class: TabItem
 // An <Item> that represents a tab. 
 window.TabItem = function(container, tab) {
+  Utils.assert('container', container);
+  Utils.assert('tab', tab);
+  Utils.assert('tab.mirror', tab.mirror);
+  
   this.defaultSize = new Point(TabItems.tabWidth, TabItems.tabHeight);
   this.locked = {};
 
@@ -12,6 +16,12 @@ window.TabItem = function(container, tab) {
   this._hasBeenDrawn = false;
   this.tab = tab;
   this.setResizable(true);
+
+  TabItems.register(this);
+  var self = this;
+  this.tab.mirror.addOnClose(this, function(who, info) {
+    TabItems.unregister(self);
+  });      
 };
 
 window.TabItem.prototype = $.extend(new Item(), {
@@ -237,6 +247,8 @@ window.TabItems = {
 
   // ----------
   init: function() {
+    this.items = [];
+    
     var self = this;
         
     function mod($div){
@@ -319,7 +331,20 @@ window.TabItems = {
     
     window.TabMirror.customize(mod);
   },
+
+  // ----------  
+  register: function(item) {
+    Utils.assert('only register once per item', $.inArray(item, this.items) == -1);
+    this.items.push(item);
+  },
   
+  // ----------  
+  unregister: function(item) {
+    var index = $.inArray(item, this.items);
+    if(index != -1)
+      this.items.splice(index, 1);  
+  },
+    
   // ----------
   // Function: zoomTo(container)
   // Given the containing element of a tab, allows you to
@@ -392,12 +417,7 @@ window.TabItems = {
 
   // ----------
   getItems: function() {
-    var items = [];
-    $('.tab:visible').each(function() {
-      items.push($(this).data('tabItem'));
-    });
-    
-    return items;
+    return Utils.copy(this.items);
   },
     
   // ----------
