@@ -1056,7 +1056,7 @@ namespace nanojit
             union {
                 double d;
                 struct {
-                    int32_t hi, lo;
+                    int32_t hi, lo; // Always assuming big-endian in NativePPC.cpp
                 } w;
             };
             d = ins->immD();
@@ -1098,7 +1098,7 @@ namespace nanojit
             union {
                 double d;
                 struct {
-                    int32_t hi, lo;
+                    int32_t hi, lo; // Always assuming big-endian in NativePPC.cpp
                 } w;
             };
             d = ins->immD();
@@ -1235,7 +1235,7 @@ namespace nanojit
         verbose_only(if (_logc->lcbits & LC_Native) outputf("%p:",after);)
         MR(rr,rf);
 
-        NanoAssert(isS14(after - (_nIns-1)));
+        NanoAssert(isS24(after - (_nIns-1)));
         asm_branch_near(false, condval, after);
 
         if (rr != rt)
