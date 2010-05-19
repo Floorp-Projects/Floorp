@@ -580,12 +580,12 @@ struct JSObject {
     bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
-    void init(js::Class *clasp, const js::Value &proto, const js::Value &parent,
+    void init(js::Class *aclasp, const js::Value &proto, const js::Value &parent,
               const js::Value &privateSlotValue) {
-        JS_ASSERT(((jsuword) clasp & 3) == 0);
         JS_STATIC_ASSERT(JSSLOT_PRIVATE + 3 == JS_INITIAL_NSLOTS);
 
-        this->clasp = clasp;
+        clasp = aclasp;
+        flags = 0;
         JS_ASSERT(!isDelegate());
         JS_ASSERT(!isSystem());
 

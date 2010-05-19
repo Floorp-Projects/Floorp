@@ -1983,7 +1983,7 @@ MarkDelayedChildren(JSTracer *trc)
 namespace js {
 
 void
-CallGCMarker(JSTracer *trc, void *thing, uint32 kind)
+MarkRaw(JSTracer *trc, void *thing, uint32 kind)
 {
     JSContext *cx;
     JSRuntime *rt;
@@ -2083,7 +2083,7 @@ CallGCMarker(JSTracer *trc, void *thing, uint32 kind)
 }
 
 void
-CallGCMarkerForGCThing(JSTracer *trc, void *thing)
+MarkGCThingRaw(JSTracer *trc, void *thing)
 {
 #ifdef DEBUG
     /*
@@ -2098,7 +2098,7 @@ CallGCMarkerForGCThing(JSTracer *trc, void *thing)
         return;
 
     uint32 kind = js_GetGCThingTraceKind(thing);
-    CallGCMarker(trc, thing, kind);
+    MarkRaw(trc, thing, kind);
 }
 
 } /* namespace js */
@@ -2158,9 +2158,9 @@ gc_root_traversal(JSTracer *trc, const RootEntry &entry)
 
     JS_SET_TRACING_NAME(trc, entry.value.name ? entry.value.name : "root");
     if (entry.value.type == JS_GC_ROOT_GCTHING_PTR)
-        CallGCMarkerForGCThing(trc, entry.key);
+        MarkGCThingRaw(trc, entry.key);
     else
-        CallGCMarkerIfGCThing(trc, *static_cast<Value *>(entry.key));
+        MarkValueRaw(trc, *static_cast<Value *>(entry.key));
 }
 
 static JSDHashOperator
@@ -2178,21 +2178,6 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
     return JS_DHASH_NEXT;
 }
 
-namespace js {
-
-void
-TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len)
-{
-    for (uint32 i = 0; i < len; i++) {
-        if (JSObject *obj = vec[i]) {
-            JS_SET_TRACING_INDEX(trc, "vector", i);
-            CallGCMarker(trc, obj, JSTRACE_OBJECT);
-        }
-    }
-}
-
-}
-
 void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
@@ -2205,8 +2190,8 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         js_TraceScript(trc, fp->script);
 
     /* Allow for primitive this parameter due to JSFUN_THISP_* flags. */
-    CallGCMarkerIfGCThing(trc, fp->thisv, "this");
-    CallGCMarkerIfGCThing(trc, fp->rval, "rval");
+    MarkValue(trc, fp->thisv, "this");
+    MarkValue(trc, fp->rval, "rval");
     if (fp->scopeChain)
         JS_CALL_OBJECT_TRACER(trc, fp->scopeChain, "scope chain");
 }
@@ -2241,8 +2226,9 @@ JSWeakRoots::mark(JSTracer *trc)
     }
     if (newbornDouble)
         JS_CALL_DOUBLE_TRACER(trc, newbornDouble, "newborn_double");
-    CallGCMarkerIfGCThing(trc, ATOM_TO_JSID(lastAtom), "lastAtom");
-    CallGCMarkerForGCThing(trc, lastInternalResult, "lastInternalResult");
+    if (lastAtom)
+        MarkBoxedWord(trc, ATOM_TO_JSID(lastAtom), "lastAtom");
+    MarkGCThing(trc, lastInternalResult, "lastInternalResult");
 }
 
 void
@@ -2255,7 +2241,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
         JS_CALL_OBJECT_TRACER(trc, acx->globalObject, "global object");
     acx->weakRoots.mark(trc);
     if (acx->throwing) {
-        CallGCMarkerIfGCThing(trc, acx->exception, "exception");
+        MarkValue(trc, acx->exception, "exception");
     } else {
         /* Avoid keeping GC-ed junk stored in JSContext.exception. */
         acx->exception.setNull();
@@ -2269,7 +2255,7 @@ js_TraceContext(JSTracer *trc, JSContext *acx)
 
     js_TraceRegExpStatics(trc, acx);
 
-    CallGCMarkerIfGCThing(trc, acx->iterValue, "iterValue");
+    MarkValue(trc, acx->iterValue, "iterValue");
 
 #ifdef JS_TRACER
     TracerState* state = acx->tracerState;

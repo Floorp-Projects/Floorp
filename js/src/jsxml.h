@@ -105,10 +105,8 @@ struct JSXMLArrayCursor
 #ifdef DEBUG
         size_t index = 0;
 #endif
-        for (JSXMLArrayCursor *cursor = this; cursor; cursor = cursor->next) {
-            JS_SET_TRACING_INDEX(trc, "cursor_root", index++);
-            js::CallGCMarkerForGCThing(trc, cursor->root);
-        }
+        for (JSXMLArrayCursor *cursor = this; cursor; cursor = cursor->next)
+            js::MarkGCThing(trc, cursor->root, "cursor_root", index++);
     }
 };
 

@@ -170,7 +170,7 @@ StackSpace::popInlineFrame(JSContext *cx, JSStackFrame *up, JSStackFrame *down)
 void
 AutoIdArray::trace(JSTracer *trc) {
     JS_ASSERT(tag == IDARRAY);
-    TraceBoxedWords(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
+    MarkBoxedWordRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
 }
 
 class AutoNamespaces : protected AutoGCRooter {
@@ -189,8 +189,7 @@ AutoGCRooter::trace(JSTracer *trc)
 {
     switch (tag) {
       case JSVAL:
-        JS_SET_TRACING_NAME(trc, "js::AutoValueRooter.val");
-        CallGCMarkerIfGCThing(trc, static_cast<AutoValueRooter *>(this)->val);
+        MarkValue(trc, static_cast<AutoValueRooter *>(this)->val, "js::AutoValueRooter.val");
         return;
 
       case SPROP:
@@ -216,7 +215,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IDARRAY: {
         JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        TraceBoxedWords(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
+        MarkBoxedWordRange(trc, ida->length, ida->vector, "js::AutoIdArray.idArray");
         return;
       }
 
@@ -226,17 +225,18 @@ AutoGCRooter::trace(JSTracer *trc)
         for (size_t i = 0, len = descriptors.length(); i < len; i++) {
             PropertyDescriptor &desc = descriptors[i];
 
-            CallGCMarkerIfGCThing(trc, desc.value, "PropertyDescriptor::value");
-            CallGCMarkerIfGCThing(trc, desc.get, "PropertyDescriptor::get");
-            CallGCMarkerIfGCThing(trc, desc.set, "PropertyDescriptor::set");
-            js_TraceId(trc, desc.id);
+            MarkValue(trc, desc.value, "PropertyDescriptor::value");
+            MarkValue(trc, desc.get, "PropertyDescriptor::get");
+            MarkValue(trc, desc.set, "PropertyDescriptor::set");
+            MarkBoxedWord(trc, desc.id, "desc.id");
         }
         return;
       }
 
       case NAMESPACES: {
         JSXMLArray &array = static_cast<AutoNamespaces *>(this)->array;
-        TraceObjectVector(trc, reinterpret_cast<JSObject **>(array.vector), array.length);
+        MarkObjectVector(trc, array.length, reinterpret_cast<JSObject **>(array.vector),
+                         "JSXMLArray");
         array.cursors->trace(trc);
         return;
       }
@@ -246,32 +246,29 @@ AutoGCRooter::trace(JSTracer *trc)
         return;
 
       case OBJECT:
-        if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj) {
-            JS_SET_TRACING_NAME(trc, "js::AutoObjectRooter.obj");
-            CallGCMarker(trc, obj, JSTRACE_OBJECT);
-        }
+        if (JSObject *obj = static_cast<AutoObjectRooter *>(this)->obj)
+            MarkObject(trc, obj, "js::AutoObjectRooter.obj");
         return;
 
       case ID:
-        JS_SET_TRACING_NAME(trc, "js::AutoIdRooter.val");
-        CallGCMarkerIfGCThing(trc, static_cast<AutoIdRooter *>(this)->idval);
+        MarkBoxedWord(trc, static_cast<AutoIdRooter *>(this)->idval, "js::AutoIdRooter.val");
         return;
 
       case VALVECTOR: {
         Vector<Value, 8> &vector = static_cast<AutoValueVector *>(this)->vector;
-        TraceValues(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
+        MarkValueRange(trc, vector.length(), vector.begin(), "js::AutoValueVector.vector");
         return;
       }
 
       case BOXEDVECTOR: {
         Vector<jsboxedword, 8> &vector = static_cast<AutoBoxedWordVector *>(this)->vector;
-        TraceBoxedWords(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
+        MarkBoxedWordRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
         return;
       }
     }
 
     JS_ASSERT(tag >= 0);
-    TraceValues(trc, tag, static_cast<AutoArrayRooter *>(this)->array, "js::AutoArrayRooter.array");
+    MarkValueRange(trc, tag, static_cast<AutoArrayRooter *>(this)->array, "js::AutoArrayRooter.array");
 }
 
 }  /* namespace js */
