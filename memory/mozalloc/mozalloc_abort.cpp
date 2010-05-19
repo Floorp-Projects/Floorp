@@ -41,8 +41,8 @@
 #include <stdio.h>
 #include <stdlib.h>             // for abort()
 
-#if defined(_WIN32)
-#  include <signal.h>           // for raise
+#if defined(XP_WIN)
+#  include <intrin.h>           // for __debugbreak()
 #elif defined(XP_UNIX)
 #  include <unistd.h>           // for _exit
 #endif
@@ -69,13 +69,13 @@ mozalloc_abort(const char* const msg)
     fputs(msg, stderr);
     fputs("\n", stderr);
 
-    // FIXME/bug 558928: improve implementation for windows/wince
-
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
     abort();
+#elif defined(XP_WIN)
+    __debugbreak();
 #endif
-    // abort() doesn't trigger breakpad on Mac and Windows, "fall
-    // through" to the fail-safe code
+    // abort() doesn't trigger breakpad on Mac, "fall through" to the
+    // fail-safe code
 
     // Still haven't aborted?  Try dereferencing null.
     TouchBadMemory();
