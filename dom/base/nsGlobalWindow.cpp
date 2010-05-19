@@ -4631,17 +4631,13 @@ nsGlobalWindow::Print()
       if (printSettingsAreGlobal) {
         printSettingsService->GetGlobalPrintSettings(getter_AddRefs(printSettings));
 
-        if (printSettings) {
-          // Call any code that requires a run of the event loop.
-          EnterModalState();
-          printSettings->SetupSilentPrinting();
-          LeaveModalState();
-        }
-
         nsXPIDLString printerName;
-        printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
-        if (printerName)
-          printSettingsService->InitPrintSettingsFromPrinter(printerName, printSettings);
+        printSettings->GetPrinterName(getter_Copies(printerName));
+        if (printerName.IsEmpty()) {
+          printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
+          printSettings->SetPrinterName(printerName);
+        }
+        printSettingsService->InitPrintSettingsFromPrinter(printerName, printSettings);
         printSettingsService->InitPrintSettingsFromPrefs(printSettings, 
                                                          PR_TRUE, 
                                                          nsIPrintSettings::kInitSaveAll);
