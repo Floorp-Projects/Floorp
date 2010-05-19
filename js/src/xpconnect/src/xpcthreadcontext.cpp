@@ -328,27 +328,6 @@ XPCPerThreadData* XPCPerThreadData::gThreads        = nsnull;
 XPCPerThreadData *XPCPerThreadData::sMainThreadData = nsnull;
 void *            XPCPerThreadData::sMainJSThread   = nsnull;
 
-static jsuword
-GetThreadStackLimit()
-{
-    int stackDummy;
-    jsuword stackLimit, currentStackAddr = (jsuword)&stackDummy;
-
-    const jsuword kStackSize = 0x80000;   // 512k
-
-#if JS_STACK_GROWTH_DIRECTION < 0
-    stackLimit = (currentStackAddr > kStackSize)
-                 ? currentStackAddr - kStackSize
-                 : 0;
-#else
-    stackLimit = (currentStackAddr + kStackSize > currentStackAddr)
-                 ? currentStackAddr + kStackSize
-                 : (jsuword) -1;
-#endif
-
-  return stackLimit;
-}
-
 XPCPerThreadData::XPCPerThreadData()
     :   mJSContextStack(new XPCJSContextStack()),
         mNextThread(nsnull),
@@ -358,8 +337,7 @@ XPCPerThreadData::XPCPerThreadData()
         mExceptionManager(nsnull),
         mException(nsnull),
         mExceptionManagerNotAvailable(JS_FALSE),
-        mAutoRoots(nsnull),
-        mStackLimit(GetThreadStackLimit())
+        mAutoRoots(nsnull)
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
       , mWrappedNativeThreadsafetyReportDepth(0)
 #endif

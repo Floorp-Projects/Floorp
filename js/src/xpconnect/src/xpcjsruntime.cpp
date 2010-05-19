@@ -1168,8 +1168,8 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
     if (!xpc)
         return JS_FALSE;
 
-    JS_SetThreadStackLimit(cx, tls->GetStackLimit());
-    JS_SetScriptStackQuota(cx, 100*1024*1024);
+    JS_SetNativeStackQuota(cx, 512 * 1024);
+    JS_SetScriptStackQuota(cx, 100 * 1024 * 1024);
     return JS_TRUE;
 }
 

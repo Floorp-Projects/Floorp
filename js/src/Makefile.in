@@ -147,6 +147,7 @@ CPPSRCS		= \
 		jslock.cpp \
 		jslog2.cpp \
 		jsmath.cpp \
+		jsnativestack.cpp \
 		jsnum.cpp \
 		jsobj.cpp \
 		json.cpp \

@@ -71,6 +71,7 @@
 #include "jsstaticcheck.h"
 #include "jsstr.h"
 #include "jstracer.h"
+#include "jsnativestack.h"
 
 #include "jscntxtinlines.h"
 
@@ -509,6 +510,7 @@ JSThreadData::init()
         finish();
         return false;
     }
+    nativeStackBase = GetNativeStackBase();
     return true;
 }
 

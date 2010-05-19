@@ -1397,12 +1397,18 @@ extern JS_PUBLIC_API(intN)
 JS_GetExternalStringGCType(JSRuntime *rt, JSString *str);
 
 /*
- * Sets maximum (if stack grows upward) or minimum (downward) legal stack byte
- * address in limitAddr for the thread or process stack used by cx.  To disable
- * stack size checking, pass 0 for limitAddr.
+ * Deprecated. Use JS_SetNativeStackQuoata instead.
  */
 extern JS_PUBLIC_API(void)
 JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr);
+
+/*
+ * Set the size of the native stack that should not be exceed. To disable
+ * stack size checking pass 0.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
+
 
 /*
  * Set the quota on the number of bytes that stack-like data structures can
