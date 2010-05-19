@@ -2962,12 +2962,6 @@ nsGlobalWindow::GetScrollbars(nsIDOMBarProp** aScrollbars)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetDirectories(nsIDOMBarProp** aDirectories)
-{
-  return GetPersonalbar(aDirectories);
-}
-
-NS_IMETHODIMP
 nsGlobalWindow::GetClosed(PRBool* aClosed)
 {
   FORWARD_TO_OUTER(GetClosed, (aClosed), NS_ERROR_NOT_INITIALIZED);

@@ -1449,7 +1449,6 @@ jsval nsDOMClassInfo::sLocationbar_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sPersonalbar_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sStatusbar_id       = JSVAL_VOID;
 jsval nsDOMClassInfo::sDialogArguments_id = JSVAL_VOID;
-jsval nsDOMClassInfo::sDirectories_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sControllers_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sLength_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sInnerHeight_id     = JSVAL_VOID;
@@ -1651,7 +1650,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sPersonalbar_id,     cx, "personalbar");
   SET_JSVAL_TO_STRING(sStatusbar_id,       cx, "statusbar");
   SET_JSVAL_TO_STRING(sDialogArguments_id, cx, "dialogArguments");
-  SET_JSVAL_TO_STRING(sDirectories_id,     cx, "directories");
   SET_JSVAL_TO_STRING(sControllers_id,     cx, "controllers");
   SET_JSVAL_TO_STRING(sLength_id,          cx, "length");
   SET_JSVAL_TO_STRING(sInnerHeight_id,     cx, "innerHeight");
@@ -4546,7 +4544,6 @@ nsDOMClassInfo::ShutDown()
   sPersonalbar_id     = JSVAL_VOID;
   sStatusbar_id       = JSVAL_VOID;
   sDialogArguments_id = JSVAL_VOID;
-  sDirectories_id     = JSVAL_VOID;
   sControllers_id     = JSVAL_VOID;
   sLength_id          = JSVAL_VOID;
   sInnerHeight_id     = JSVAL_VOID;
