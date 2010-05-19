@@ -103,7 +103,7 @@ ExtendedClass js_IteratorClass = {
 void
 NativeIterator::mark(JSTracer *trc)
 {
-    TraceBoxedWords(trc, props_array, props_end, "props");
+    MarkBoxedWordRange(trc, props_array, props_end, "props");
 }
 
 /*
@@ -738,9 +738,9 @@ generator_trace(JSTracer *trc, JSObject *obj)
 
     JSStackFrame *fp = gen->getFloatingFrame();
     JS_ASSERT(gen->getLiveFrame() == fp);
-    TraceValues(trc, gen->floatingStack, fp->argEnd(), "generator slots");
+    MarkValueRange(trc, gen->floatingStack, fp->argEnd(), "generator slots");
     js_TraceStackFrame(trc, fp);
-    TraceValues(trc, fp->slots(), gen->savedRegs.sp, "generator slots");
+    MarkValueRange(trc, fp->slots(), gen->savedRegs.sp, "generator slots");
 }
 
 ExtendedClass js_GeneratorClass = {

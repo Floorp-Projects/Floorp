@@ -259,7 +259,7 @@ JS_ALWAYS_INLINE JSObject *
 ComputeThisObjectFromVp(JSContext *cx, js::Value *vp)
 {
     extern bool ComputeThisFromArgv(JSContext *, js::Value *);
-    return ComputeThisFromArgv(cx, vp + 2) ? &vp->asObject() : NULL;
+    return ComputeThisFromArgv(cx, vp + 2) ? &vp[1].asObject() : NULL;
 }
 
 JS_ALWAYS_INLINE bool

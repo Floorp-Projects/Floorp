@@ -217,22 +217,22 @@ StackSpace::mark(JSTracer *trc)
 
             /* Mark slots/args trailing off of the last stack frame. */
             JSStackFrame *fp = cs->getCurrentFrame();
-            TraceValues(trc, fp->slots(), end, "stack");
+            MarkValueRange(trc, fp->slots(), end, "stack");
 
             /* Mark stack frames and slots/args between stack frames. */
             JSStackFrame *initialFrame = cs->getInitialFrame();
             for (JSStackFrame *f = fp; f != initialFrame; f = f->down) {
                 js_TraceStackFrame(trc, f);
-                TraceValues(trc, f->down->slots(), f->argEnd(), "stack");
+                MarkValueRange(trc, f->down->slots(), f->argEnd(), "stack");
             }
 
             /* Mark initialFrame stack frame and leading args. */
             js_TraceStackFrame(trc, initialFrame);
-            TraceValues(trc, cs->getInitialArgBegin(), initialFrame->argEnd(), "stack");
+            MarkValueRange(trc, cs->getInitialArgBegin(), initialFrame->argEnd(), "stack");
         } else {
             /* Mark slots/args trailing off callstack. */
             JS_ASSERT(end == cs->getInitialArgEnd());
-            TraceValues(trc, cs->getInitialArgBegin(), cs->getInitialArgEnd(), "stack");
+            MarkValueRange(trc, cs->getInitialArgBegin(), cs->getInitialArgEnd(), "stack");
         }
         end = cs->previousCallStackEnd();
     }
@@ -1678,8 +1678,7 @@ MarkLocalRoots(JSTracer *trc, JSLocalRootStack *lrs)
             m = n & JSLRS_CHUNK_MASK;
             void *thing = lrc->roots[m];
             JS_ASSERT(thing != NULL);
-            JS_SET_TRACING_INDEX(trc, "local_root", n);
-            CallGCMarkerForGCThing(trc, thing);
+            MarkGCThing(trc, thing, "local_root", n);
             if (m == 0)
                 lrc = lrc->down;
         }

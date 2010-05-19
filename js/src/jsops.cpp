@@ -316,6 +316,7 @@ BEGIN_CASE(JSOP_STOP)
         }
         goto error;
     }
+    interpReturnOK = true;
     goto exit;
 }
 
@@ -2541,9 +2542,14 @@ BEGIN_CASE(JSOP_RESETBASE)
 END_CASE(JSOP_RESETBASE)
 
 BEGIN_CASE(JSOP_DOUBLE)
+{
     JS_ASSERT(!fp->imacpc);
     JS_ASSERT(size_t(atoms - script->atomMap.vector) < script->atomMap.length);
-    /* FALL THROUGH */
+    JSAtom *atom;
+    LOAD_ATOM(0, atom);
+    PUSH_DOUBLE(*ATOM_TO_DOUBLE(atom));
+}
+END_CASE(JSOP_DOUBLE)
 
 BEGIN_CASE(JSOP_STRING)
 {
@@ -2551,7 +2557,7 @@ BEGIN_CASE(JSOP_STRING)
     LOAD_ATOM(0, atom);
     PUSH_STRING(ATOM_TO_STRING(atom));
 }
-END_CASE(JSOP_DOUBLE)
+END_CASE(JSOP_STRING)
 
 BEGIN_CASE(JSOP_OBJECT)
 {

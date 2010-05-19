@@ -1072,7 +1072,7 @@ array_trace(JSTracer *trc, JSObject *obj)
 
     uint32 capacity = obj->getDenseArrayCapacity();
     for (uint32 i = 0; i < capacity; i++)
-        CallGCMarkerIfGCThing(trc, obj->getDenseArrayElement(i), "dense_array_elems");
+        MarkValue(trc, obj->getDenseArrayElement(i), "dense_array_elems");
 }
 
 extern JSObjectOps js_ArrayObjectOps;

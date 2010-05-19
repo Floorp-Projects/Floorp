@@ -1744,6 +1744,7 @@ namespace reprmeter {
 #define PUSH_NULL()              regs.sp++->setNull()
 #define PUSH_UNDEFINED()         regs.sp++->setUndefined()
 #define PUSH_BOOLEAN(b)          regs.sp++->setBoolean(b)
+#define PUSH_DOUBLE(d)           regs.sp++->setDouble(d)
 #define PUSH_INT32(i)            regs.sp++->setInt32(i)
 #define PUSH_STRING(s)           regs.sp++->setString(s)
 #define PUSH_NONFUNOBJ(obj)      regs.sp++->setNonFunObj(obj)

@@ -5992,10 +5992,8 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
 
     for (uint32 i = JSSLOT_START(clasp); i != nslots; ++i) {
         const Value &v = obj->getSlot(i);
-        if (v.isGCThing()) {
-            JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
-            CallGCMarkerForGCThing(trc, v);
-        }
+        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
+        MarkValueRaw(trc, v);
     }
 }
 
@@ -6291,10 +6289,6 @@ dumpValue(const Value &v)
 JS_FRIEND_API(void)
 DumpValue(const Value &val)
 {
-    JS_STATIC_ASSERT(sizeof(Value) >= 12);
-    JS_STATIC_ASSERT(sizeof(uint32_t) == sizeof(long));
-    const uint32_t *p = reinterpret_cast<const uint32_t *>(&val);
-    fprintf(stderr, "Value payload (%x %x) type mask (%x) = ", p[0], p[1], p[2]);
     dumpValue(val);
     fputc('\n', stderr);
 }

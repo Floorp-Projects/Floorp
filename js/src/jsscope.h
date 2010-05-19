@@ -1006,9 +1006,6 @@ JSScopeProperty::isSharedPermanent() const
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);
 
-extern void
-js_TraceId(JSTracer *trc, jsid id);
-
 #ifdef _MSC_VER
 #pragma warning(pop)
 #pragma warning(pop)
