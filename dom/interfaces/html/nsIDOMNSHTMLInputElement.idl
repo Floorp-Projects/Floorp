@@ -42,9 +42,10 @@
 interface nsIControllers;
 interface nsIDOMFileList;
 
-[scriptable, uuid(bc4acab7-1ad4-40ce-8b5f-c95bdd7bf8ff)]
+[scriptable, uuid(aa764da9-9046-4565-9e34-abd3c4da158e)]
 interface nsIDOMNSHTMLInputElement : nsISupports
 {
+           attribute boolean          autofocus;
 	readonly attribute nsIControllers   controllers;
 	
 	readonly attribute long             textLength;

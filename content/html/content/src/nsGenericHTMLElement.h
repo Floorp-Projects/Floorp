@@ -812,6 +812,14 @@ protected:
                                 const nsAString* aValue, PRBool aNotify);
 
   /**
+   * Returns if the element should react on autofocus attribute.
+   */
+  virtual PRBool AcceptAutofocus() const
+  {
+    return PR_FALSE;
+  }
+
+  /**
    * Returns true if the control can be disabled
    */
   PRBool CanBeDisabled() const;

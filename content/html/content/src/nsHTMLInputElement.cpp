@@ -395,6 +395,11 @@ protected:
                        nsGkAtoms::image, eIgnoreCase);
   }
 
+  virtual PRBool AcceptAutofocus() const
+  {
+    return PR_TRUE;
+  }
+
   /**
    * Fire the onChange event
    */
@@ -787,6 +792,7 @@ NS_IMPL_STRING_ATTR(nsHTMLInputElement, Accept, accept)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Align, align)
 NS_IMPL_STRING_ATTR(nsHTMLInputElement, Alt, alt)
+NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Autofocus, autofocus)
 //NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Checked, checked)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Disabled, disabled)
 NS_IMPL_BOOL_ATTR(nsHTMLInputElement, Multiple, multiple)
