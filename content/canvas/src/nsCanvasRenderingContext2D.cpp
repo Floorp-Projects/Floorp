@@ -1030,6 +1030,7 @@ nsCanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter a
     nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 
     pat->SetFilter(aFilter);
+    pat->SetExtend(gfxPattern::EXTEND_PAD);
 
     gfxContext::GraphicsOperator op = ctx->CurrentOperator();
     if (mOpaque)
