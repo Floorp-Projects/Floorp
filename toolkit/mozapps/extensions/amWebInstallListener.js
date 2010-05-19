@@ -111,6 +111,16 @@ Installer.prototype = {
     if (this.installs.length == 0)
       return;
 
+    if ("@mozilla.org/addons/web-install-prompt;1" in Cc) {
+      try {
+        let prompt = Cc["@mozilla.org/addons/web-install-prompt;1"].
+                     getService(Ci.amIWebInstallPrompt);
+        prompt.confirm(this.window, this.url, this.installs, this.installs.length);
+        return;
+      }
+      catch (e) {}
+    }
+
     let args = {};
     args.url = this.url;
     args.installs = this.installs;
