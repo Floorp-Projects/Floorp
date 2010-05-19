@@ -228,8 +228,6 @@ EmbedContextMenuInfo::SetFormControlType(nsIDOMEventTarget *originalTarget)
         break;
       case NS_FORM_OPTGROUP:
         break;
-      case NS_FORM_LEGEND:
-        break;
       case NS_FORM_SELECT:
         break;
       case NS_FORM_TEXTAREA:
