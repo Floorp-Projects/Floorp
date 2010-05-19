@@ -123,6 +123,7 @@ GK_ATOM(autobuffer, "autobuffer")
 #endif
 GK_ATOM(autocheck, "autocheck")
 GK_ATOM(autocomplete, "autocomplete")
+GK_ATOM(autofocus, "autofocus")
 #ifdef MOZ_MEDIA
 GK_ATOM(autoplay, "autoplay")
 #endif
