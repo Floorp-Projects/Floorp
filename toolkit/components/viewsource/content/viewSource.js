@@ -394,8 +394,10 @@ var PrintPreviewListener = {
       browser = document.createElement("browser");
       browser.setAttribute("id", "ppBrowser");
       browser.setAttribute("flex", "1");
-      document.getElementById("appcontent").
-        insertBefore(browser, document.getElementById("FindToolbar"));
+
+      // XXX: Bug 566849.
+      let browserBottomBox = document.getElementById("browser-bottombox");
+      browserBottomBox.insertBefore(browser, browserBottomBox.firstChild);
     }
     return browser;
   },
