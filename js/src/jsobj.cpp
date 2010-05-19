@@ -1134,6 +1134,8 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
         argv[1] = OBJECT_TO_JSVAL(scopeobj);
         JSObject *obj = scopeobj;
         while (obj) {
+            if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
+                return false;
             JSObject *parent = obj->getParent();
             if (!obj->isNative() ||
                 (!parent && !(obj->getClass()->flags & JSCLASS_IS_GLOBAL))) {
