@@ -808,6 +808,8 @@ js_Execute(JSContext *cx, JSObject *const chain, JSScript *script,
                         ? chain->getGlobal()
                         : chain;
     }
+    JS_ASSERT(initialVarObj->map->ops->defineProperty == js_DefineProperty);
+
     fp->script = script;
     fp->imacpc = NULL;
     fp->rval = JSVAL_VOID;

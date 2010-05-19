@@ -72,6 +72,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstracer.h"
+#include "jsxml.h"
 
 #include "prmjtime.h"
 
@@ -2992,6 +2993,13 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             ok = JS_FALSE;
             goto out;
         }
+        if (sobj->isArray() || sobj->isXML() || !sobj->isNative()) {
+            JS_TransferRequest(scx, cx);
+            JS_ReportError(cx, "Invalid scope argument to evalcx");
+            DestroyContext(scx, false);
+            return JS_FALSE;
+        }
+
         ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
                                  fp->script->filename,
                                  JS_PCToLineNumber(cx, fp->script,
