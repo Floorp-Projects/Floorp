@@ -445,6 +445,7 @@ FrameRegsIter::FrameRegsIter(JSContext *cx)
         curfp = curcs->getSuspendedFrame();
         cursp = curcs->getSuspendedRegs()->sp;
         curpc = curcs->getSuspendedRegs()->pc;
+        return;
     }
     JS_ASSERT(cx->fp);
     curfp = cx->fp;
