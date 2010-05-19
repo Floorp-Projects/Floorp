@@ -704,19 +704,12 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 
     obj->traceProtoAndParent(trc);
 
-    if (!JSVAL_IS_PRIMITIVE(obj->fslots[JSSLOT_PROXY_HANDLER])) {
-        JSObject *handler = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROXY_HANDLER]);
-        JS_CALL_OBJECT_TRACER(trc, handler, "__handler__");
-    }
+    JS_CALL_VALUE_TRACER(trc, obj->fslots[JSSLOT_PROXY_HANDLER], "handler");
     if (obj->isFunctionProxy()) {
-        JSObject *call = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROXY_CALL]);
-        if (call)
-            JS_CALL_OBJECT_TRACER(trc, call, "__call__");
-        JSObject *construct = JSVAL_TO_OBJECT(obj->fslots[JSSLOT_PROXY_CONSTRUCT]);
-        if (construct)
-            JS_CALL_OBJECT_TRACER(trc, construct, "__construct__");
+        JS_CALL_VALUE_TRACER(trc, obj->fslots[JSSLOT_PROXY_CALL], "call");
+        JS_CALL_VALUE_TRACER(trc, obj->fslots[JSSLOT_PROXY_CONSTRUCT], "construct");
     } else {
-        JS_CALL_VALUE_TRACER(trc, obj->fslots[JSSLOT_PROXY_PRIVATE], "__private__");
+        JS_CALL_VALUE_TRACER(trc, obj->fslots[JSSLOT_PROXY_PRIVATE], "private");
     }
 }
 
