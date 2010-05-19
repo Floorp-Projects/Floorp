@@ -60,6 +60,7 @@ window.Group = function(listOfEls, options) {
   this._stackAngles = [0];
   this.expanded = null;
   this.locked = (options.locked ? Utils.copy(options.locked) : {});
+  this.topChild = null;
   
   if(isPoint(options.userSize))  
     this.userSize = new Point(options.userSize);
@@ -403,10 +404,16 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
 
     var count = this._children.length;
     if(count) {
-      var zIndex = value + count + 1;
+      var topZIndex = value + count + 1;
+      var zIndex = topZIndex;
+      var self = this;
       $.each(this._children, function(index, child) {
-        child.setZ(zIndex);
-        zIndex--;
+        if(child == self.topChild)
+          child.setZ(topZIndex + 1);
+        else {
+          child.setZ(zIndex);
+          zIndex--;
+        }
       });
     }
   },
@@ -615,6 +622,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------  
   arrange: function(options) {
     if(this.expanded) {
+      this.topChild = null;
       var box = new Rect(this.expanded.bounds);
       box.inset(8, 8);
       Items.arrange(this._children, box, $.extend({}, options, {padding: 8, z: 99999}));
@@ -629,6 +637,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
             child.removeClass("stacked")
         });
   
+        this.topChild = null;
         Items.arrange(this._children, bb, options);
         this._isStacked = false;
       } else
@@ -671,7 +680,15 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var box = new Rect(bb.left + x, bb.top + y, w, h);
     
     var self = this;
+    var children = [];
     $.each(this._children, function(index, child) {
+      if(child == self.topChild)
+        children.unshift(child);
+      else
+        children.push(child);
+    });
+    
+    $.each(children, function(index, child) {
       if(!child.locked.bounds) {
         child.setZ(zIndex);
         zIndex--;
@@ -941,7 +958,12 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // shown in the tab bar. It doesn't it by sorting the children
   // of the group by the positions of their respective tabs in the
   // tab bar.
-  reorderBasedOnTabOrder: function(){    
+  // 
+  // Parameters: 
+  //   topChild - the <Item> that should be displayed on top of a stack
+  reorderBasedOnTabOrder: function(topChild){    
+    this.topChild = topChild;
+    
     var groupTabs = [];
     for( var i=0; i<UI.tabBar.el.children.length; i++ ){
       var tab = UI.tabBar.el.children[i];
@@ -1426,7 +1448,7 @@ window.Groups = {
     if(this._activeGroup)
       UI.tabBar.showOnlyTheseTabs( this._activeGroup._children );
     else if( this._activeGroup == null)
-      UI.tabBar.showOnlyTheseTabs( this.getOrphanedTabs() );
+      UI.tabBar.showOnlyTheseTabs( this.getOrphanedTabs());
   },
   
   // ----------
@@ -1436,8 +1458,8 @@ window.Groups = {
     var tabs = TabItems.getItems();
     tabs = tabs.filter(function(tab){
       return tab.parent == null;
-    })
-    return tabs
+    });
+    return tabs;
   },
   
   // ---------

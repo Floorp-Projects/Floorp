@@ -269,12 +269,13 @@ window.Page = {
 
       // If we switched to TabCandy window...
       if( focusTab.contentWindow == window){
-        if(UI.currentTab != null && UI.currentTab.mirror != null) {
+        var currentTab = UI.currentTab;
+        if(currentTab != null && currentTab.mirror != null) {
           // If there was a previous currentTab we want to animate
           // its mirror for the zoom out.
           // Zoom out!
           
-          var mirror = UI.currentTab.mirror;
+          var mirror = currentTab.mirror;
           var $tab = $(mirror.el);
           var item = $tab.data().tabItem;
           self.setActiveTab(item);
@@ -303,7 +304,7 @@ window.Page = {
             });
             $("body").css("overflow", overflow);
             var activeGroup = Groups.getActiveGroup();
-            if( activeGroup ) activeGroup.reorderBasedOnTabOrder();        
+            if( activeGroup ) activeGroup.reorderBasedOnTabOrder(item);        
     
             if(window.UI)
               UI.tabBar.hide(false);
