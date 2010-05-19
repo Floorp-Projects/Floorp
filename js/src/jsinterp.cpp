@@ -1628,7 +1628,7 @@ namespace reprmeter {
     // Record an OpInput for the current op. This should be called just
     // before executing the op.
     static void
-    MeterRepr(JSStackFrame *fp)
+    MeterRepr(JSContext *cx)
     {
         // Note that we simply ignore the possibility of errors (OOMs)
         // using the hash map, since this is only metering code.
@@ -1638,13 +1638,13 @@ namespace reprmeter {
             opinputsInitialized = true;
         }
 
-        JSOp op = JSOp(*fp->regs->pc);
-        unsigned nuses = js_GetStackUses(&js_CodeSpec[op], op, fp->regs->pc);
+        JSOp op = JSOp(*cx->regs->pc);
+        int nuses = js_GetStackUses(&js_CodeSpec[op], op, cx->regs->pc);
 
         // Build the OpInput.
         OpInput opinput(op);
-        for (unsigned i = 0; i < nuses; ++i) {
-            jsval v = fp->regs->sp[-nuses+i];
+        for (int i = 0; i < nuses; ++i) {
+            jsval v = cx->regs->sp[-nuses+i];
             opinput.uses[i] = GetRepr(v);
         }
 
@@ -1831,9 +1831,9 @@ JS_STATIC_ASSERT(!CAN_DO_FAST_INC_DEC(INT_TO_JSVAL_CONSTEXPR(JSVAL_INT_MAX)));
 #endif
 
 #ifdef JS_REPRMETER
-# define METER_REPR(fp)         (reprmeter::MeterRepr(fp))
+# define METER_REPR(cx)         (reprmeter::MeterRepr(cx))
 #else
-# define METER_REPR(fp)         ((void) 0)
+# define METER_REPR(cx)         ((void) 0)
 #endif /* JS_REPRMETER */
 
 /*
@@ -2111,7 +2111,7 @@ js_Interpret(JSContext *cx)
 # define DO_NEXT_OP(n)      JS_BEGIN_MACRO                                    \
                                 METER_OP_PAIR(op, JSOp(regs.pc[n]));          \
                                 op = (JSOp) *(regs.pc += (n));                \
-                                METER_REPR(fp);                               \
+                                METER_REPR(cx);                               \
                                 DO_OP();                                      \
                             JS_END_MACRO
 
