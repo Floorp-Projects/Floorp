@@ -90,11 +90,13 @@ JSProxyHandler::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
         *vp = desc.value;
         return true;
     }
-    if (desc.attrs & JSPROP_GETTER)
-        return js_InternalGetOrSet(cx, proxy, id, CastAsObjectJSVal(desc.getter), JSACC_READ, 0, 0, vp);
-    return desc.getter(cx, proxy, (desc.attrs & JSPROP_SHORTID)
-                                  ? INT_TO_JSID(desc.shortid)
-                                  : id, vp);
+    if (desc.attrs & JSPROP_GETTER) {
+        return js_InternalGetOrSet(cx, proxy, id, CastAsObjectJSVal(desc.getter),
+                                   JSACC_READ, 0, 0, vp);
+    }
+    if (desc.attrs & JSPROP_SHORTID)
+        id = INT_TO_JSID(desc.shortid);
+    return desc.getter(cx, proxy, id, vp);
 }
 
 bool
@@ -103,34 +105,37 @@ JSProxyHandler::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id,
     AutoDescriptor desc(cx);
     if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
         return false;
+    /* The control-flow here differs from ::get() because of the fall-through case below. */
     if (desc.obj) {
         if (desc.setter) {
-            if (desc.attrs & JSPROP_GETTER)
-                return js_InternalGetOrSet(cx, proxy, id, CastAsObjectJSVal(desc.setter), JSACC_READ, 0, 0, vp);
-            return desc.setter(cx, proxy, (desc.attrs & JSPROP_SHORTID)
-                                          ? INT_TO_JSID(desc.shortid)
-                                          : id, vp);
-        } else {
-            if (desc.attrs & JSPROP_READONLY)
-                return true;
-            desc.value = *vp;
-            return defineProperty(cx, proxy, id, &desc);
+            if (desc.attrs & JSPROP_SETTER) {
+                return js_InternalGetOrSet(cx, proxy, id, CastAsObjectJSVal(desc.setter),
+                                           JSACC_READ, 0, 0, vp);
+            }
+            if (desc.attrs & JSPROP_SHORTID)
+                id = INT_TO_JSID(desc.shortid);
+            return desc.setter(cx, proxy, id, vp);
         }
+        if (desc.attrs & JSPROP_READONLY)
+            return true;
+        desc.value = *vp;
+        return defineProperty(cx, proxy, id, &desc);
     }
     if (!getPropertyDescriptor(cx, proxy, id, &desc))
         return false;
     if (desc.obj) {
         if (desc.setter) {
-            if (desc.attrs & JSPROP_GETTER)
-                return js_InternalGetOrSet(cx, proxy, id, CastAsObjectJSVal(desc.setter), JSACC_READ, 0, 0, vp);
-            return desc.setter(cx, proxy, (desc.attrs & JSPROP_SHORTID)
-                                          ? INT_TO_JSID(desc.shortid)
-                                          : id, vp);
-        } else {
-            if (desc.attrs & JSPROP_READONLY)
-                return true;
-            /* fall through */
+            if (desc.attrs & JSPROP_SETTER) {
+                return js_InternalGetOrSet(cx, proxy, id, CastAsObjectJSVal(desc.setter),
+                                           JSACC_READ, 0, 0, vp);
+            }
+            if (desc.attrs & JSPROP_SHORTID)
+                id = INT_TO_JSID(desc.shortid);
+            return desc.setter(cx, proxy, id, vp);
         }
+        if (desc.attrs & JSPROP_READONLY)
+            return true;
+        /* fall through */
     }
     desc.obj = proxy;
     desc.value = *vp;
@@ -340,10 +345,10 @@ MakePropertyDescriptorObject(JSContext *cx, jsid id, JSPropertyDescriptor *desc,
         *vp = JSVAL_VOID;
         return true;
     }
-    return js_NewPropertyDescriptorObject(cx, id, desc->attrs,
-                                          CastAsObjectJSVal(desc->getter),
-                                          CastAsObjectJSVal(desc->setter),
-                                          desc->value, vp);
+    uintN attrs = desc->attrs;
+    jsval getter = (attrs & JSPROP_GETTER) ? CastAsObjectJSVal(desc->getter) : JSVAL_VOID;
+    jsval setter = (attrs & JSPROP_SETTER) ? CastAsObjectJSVal(desc->setter) : JSVAL_VOID;
+    return js_NewPropertyDescriptorObject(cx, id, attrs, getter, setter, desc->value, vp);
 }
 
 bool
