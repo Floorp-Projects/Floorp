@@ -1412,15 +1412,13 @@ BEGIN_CASE(JSOP_NAMEDEC)
         if (obj == obj2 && entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj->scope()->freeslot);
-            Value rval;
-            rval = obj->lockedGetSlot(slot);
-            if (JS_LIKELY(CanIncDecWithoutOverflow(rval))) {
-                int32_t tmp = rval.asInt32();
+            Value &rref = obj->getSlotRef(slot);
+            int32_t tmp;
+            if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.asInt32()))) {
                 int32_t inc = tmp + (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
                 if (!(js_CodeSpec[op].format & JOF_POST))
-                    tmp = tmp;
-                rval.setInt32(inc);
-                obj->lockedSetSlot(slot, rval);
+                    tmp = inc;
+                rref.asInt32Ref() = inc;
                 PUSH_INT32(tmp);
                 jsint len = JSOP_INCNAME_LENGTH;
                 DO_NEXT_OP(len);
@@ -1454,17 +1452,15 @@ do_incop:
     JS_ASSERT(cs->ndefs == 1);
     JS_ASSERT((cs->format & JOF_TMPSLOT_MASK) == JOF_TMPSLOT2);
     Value &ref = regs.sp[-1];
-    if (JS_LIKELY(CanIncDecWithoutOverflow(ref))) {
-        int32_t tmp = ref.asInt32();
+    int32_t tmp;
+    if (JS_LIKELY(ref.isInt32() && CanIncDecWithoutOverflow(tmp = ref.asInt32()))) {
         int incr = (cs->format & JOF_INC) ? 1 : -1;
-        if (cs->format & JOF_POST) {
-            ref.setInt32(tmp + incr);
-        } else {
-            tmp += incr;
-            ref.setInt32(tmp);
-        }
+        if (cs->format & JOF_POST)
+            ref.asInt32Ref() = tmp + incr;
+        else
+            ref.asInt32Ref() = tmp += incr;
         fp->flags |= JSFRAME_ASSIGNING;
-        JSBool ok = obj->setProperty(cx, id, &regs.sp[-1]);
+        JSBool ok = obj->setProperty(cx, id, &ref);
         fp->flags &= ~JSFRAME_ASSIGNING;
         if (!ok)
             goto error;
@@ -1473,7 +1469,7 @@ do_incop:
          * We must set regs.sp[-1] to tmp for both post and pre increments
          * as the setter overwrites regs.sp[-1].
          */
-        regs.sp[-1].setInt32(tmp);
+        ref.setInt32(tmp);
     } else {
         /* We need an extra root for the result. */
         PUSH_NULL();
@@ -1541,9 +1537,9 @@ BEGIN_CASE(JSOP_LOCALINC)
     vp = fp->slots() + slot;
 
   do_int_fast_incop:
-    if (JS_LIKELY(CanIncDecWithoutOverflow(*vp))) {
-        int32_t tmp = vp->asInt32();
-        vp->setInt32(tmp + incr);
+    int32_t tmp;
+    if (JS_LIKELY(vp->isInt32() && CanIncDecWithoutOverflow(tmp = vp->asInt32()))) {
+        vp->asInt32Ref() = tmp + incr;
         JS_ASSERT(JSOP_INCARG_LENGTH == js_CodeSpec[op].length);
         SKIP_POP_AFTER_SET(JSOP_INCARG_LENGTH, 0);
         PUSH_INT32(tmp + incr2);
@@ -1592,21 +1588,22 @@ BEGIN_CASE(JSOP_GVARINC)
     }
     slot = (uint32)lref.asInt32();
     JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    Value rval;
-    rval = cx->activeCallStack()->getInitialVarObj()->getSlotMT(cx, slot);
-    if (JS_LIKELY(CanIncDecWithoutOverflow(rval))) {
-        int32_t tmp = rval.asInt32();
+    JSObject *varobj = cx->activeCallStack()->getInitialVarObj();
+
+    /* XXX all this code assumes that varobj is either a callobj or global and
+     * that it cannot be accessed in a MT way. This is either true now or
+     * coming soon. */
+
+    Value &rref = varobj->getSlotRef(slot);
+    int32_t tmp;
+    if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.asInt32()))) {
         PUSH_INT32(tmp + incr2);
-        rval.setInt32(tmp + incr);
+        rref.asInt32Ref() = tmp + incr;
     } else {
-        PUSH_COPY(rval);
-        PUSH_NULL();  /* Extra root */
-        if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-2], &regs.sp[-1]))
+        PUSH_COPY(rref);
+        if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], &rref))
             goto error;
-        rval = regs.sp[-1];
-        --regs.sp;
     }
-    fp->varobj(cx)->setSlotMT(cx, slot, rval);
     jsint len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
     JS_ASSERT(len == js_CodeSpec[op].length);
     DO_NEXT_OP(len);
@@ -2967,10 +2964,15 @@ BEGIN_CASE(JSOP_CALLGVAR)
         DO_OP();
     }
     JS_ASSERT(fp->varobj(cx) == cx->activeCallStack()->getInitialVarObj());
-    JSObject *obj = cx->activeCallStack()->getInitialVarObj();
+    JSObject *varobj = cx->activeCallStack()->getInitialVarObj();
+
+    /* XXX all this code assumes that varobj is either a callobj or global and
+     * that it cannot be accessed in a MT way. This is either true now or
+     * coming soon. */
+
     slot = (uint32)lval.asInt32();
-    const Value &rval = obj->getSlotMT(cx, slot);
-    PUSH_COPY(rval);
+    const Value &rref = varobj->lockedGetSlot(slot);
+    PUSH_COPY(rref);
     if (op == JSOP_CALLGVAR)
         PUSH_NULL();
 }
