@@ -3546,8 +3546,6 @@ public:
     void TraceJS(JSTracer* trc);
     void MarkAutoRootsAfterJSFinalize();
 
-    jsuword GetStackLimit() const { return mStackLimit; }
-
     static void InitStatics()
         { gLock = nsnull; gThreads = nsnull; gTLSIndex = BAD_TLS_INDEX; }
 
@@ -3579,8 +3577,6 @@ private:
     nsIException*        mException;
     JSBool               mExceptionManagerNotAvailable;
     AutoMarkingPtr*      mAutoRoots;
-
-    jsuword              mStackLimit;
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     JSUint32             mWrappedNativeThreadsafetyReportDepth;

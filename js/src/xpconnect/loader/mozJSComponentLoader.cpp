@@ -608,21 +608,7 @@ mozJSComponentLoader::ReallyInit()
     JS_SetVersion(mContext, JSVERSION_LATEST);
 
     // Limit C stack consumption to a reasonable 512K
-    int stackDummy;
-    const jsuword kStackSize = 0x80000;
-    jsuword stackLimit, currentStackAddr = (jsuword)&stackDummy;
-
-#if JS_STACK_GROWTH_DIRECTION < 0
-    stackLimit = (currentStackAddr > kStackSize)
-                 ? currentStackAddr - kStackSize
-                 : 0;
-#else
-    stackLimit = (currentStackAddr + kStackSize > currentStackAddr)
-                 ? currentStackAddr + kStackSize
-                 : (jsuword) -1;
-#endif
-    
-    JS_SetThreadStackLimit(mContext, stackLimit);
+    JS_SetNativeStackQuota(mContext, 512 * 1024);
 
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIScriptSecurityManager> secman = 
