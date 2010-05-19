@@ -2204,9 +2204,10 @@ class AutoGCRooter {
         NAMESPACES =   -9, /* js::AutoNamespaceArray */
         XML =         -10, /* js::AutoXMLRooter */
         OBJECT =      -11, /* js::AutoObjectRooter */
-        ID =          -12, /* js::AutoIdRooter */
-        VALVECTOR =   -13, /* js::AutoValueVector */
-        BOXEDVECTOR = -14  /* js::AutoBoxedWordVector */
+        STRING =      -12, /* js::AutoStringRooter */
+        ID =          -13, /* js::AutoIdRooter */
+        VALVECTOR =   -14, /* js::AutoValueVector */
+        BOXEDVECTOR = -15  /* js::AutoBoxedWordVector */
     };
 
     private:
@@ -2310,7 +2311,7 @@ class AutoStringRooter : private AutoGCRooter {
   public:
     AutoStringRooter(JSContext *cx, JSString *str = NULL
                      JS_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, OBJECT), str(str)
+      : AutoGCRooter(cx, STRING), str(str)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -3003,7 +3004,6 @@ class AutoValueVector : private AutoGCRooter
     size_t length() const { return vector.length(); }
 
     bool append(const Value &v) { return vector.append(v); }
-    bool append(JSString *str) { return append(str); }
 
     void popBack() { vector.popBack(); }
 

@@ -469,10 +469,10 @@ void
 MarkRaw(JSTracer *trc, void *thing, uint32 kind);
 
 static inline void
-MarkObject(JSTracer *trc, JSObject *obj, const char *name)
+Mark(JSTracer *trc, void *thing, uint32 kind, const char *name)
 {
     JS_SET_TRACING_NAME(trc, name);
-    return MarkRaw(trc, obj, JSTRACE_OBJECT);
+    MarkRaw(trc, thing, kind);
 }
 
 static inline void
