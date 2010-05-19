@@ -348,11 +348,15 @@ protected:
     nsTArray<WebGLObjectBaseRefPtr *> mRefOwners;
 };
 
+#define WEBGLBUFFER_PRIVATE_IID \
+    {0xd69f22e9, 0x6f98, 0x48bd, {0xb6, 0x94, 0x34, 0x17, 0xed, 0x06, 0x11, 0xab}}
 class WebGLBuffer :
     public nsIWebGLBuffer,
     public WebGLZeroingObject
 {
 public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLBUFFER_PRIVATE_IID)
+
     WebGLBuffer(GLuint name)
         : mName(name), mDeleted(PR_FALSE), mByteLength(0)
     { }
@@ -382,11 +386,17 @@ protected:
     PRUint32 mByteLength;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLBuffer, WEBGLBUFFER_PRIVATE_IID)
+
+#define WEBGLTEXTURE_PRIVATE_IID \
+    {0x4c19f189, 0x1f86, 0x4e61, {0x96, 0x21, 0x0a, 0x11, 0xda, 0x28, 0x10, 0xdd}}
 class WebGLTexture :
     public nsIWebGLTexture,
     public WebGLZeroingObject
 {
 public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLTEXTURE_PRIVATE_IID)
+
     WebGLTexture(GLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
@@ -407,11 +417,17 @@ protected:
     PRBool mDeleted;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLTexture, WEBGLTEXTURE_PRIVATE_IID)
+
+#define WEBGLPROGRAM_PRIVATE_IID \
+    {0xb3084a5b, 0xa5b4, 0x4ee0, {0xa0, 0xf0, 0xfb, 0xdd, 0x64, 0xaf, 0x8e, 0x82}}
 class WebGLProgram :
     public nsIWebGLProgram,
     public WebGLZeroingObject
 {
 public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLPROGRAM_PRIVATE_IID)
+
     WebGLProgram(GLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
@@ -431,11 +447,17 @@ protected:
     PRBool mDeleted;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLProgram, WEBGLPROGRAM_PRIVATE_IID)
+
+#define WEBGLSHADER_PRIVATE_IID \
+    {0x48cce975, 0xd459, 0x4689, {0x83, 0x82, 0x37, 0x82, 0x6e, 0xac, 0xe0, 0xa7}}
 class WebGLShader :
     public nsIWebGLShader,
     public WebGLZeroingObject
 {
 public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLSHADER_PRIVATE_IID)
+
     WebGLShader(GLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
@@ -455,11 +477,17 @@ protected:
     PRBool mDeleted;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLShader, WEBGLSHADER_PRIVATE_IID)
+
+#define WEBGLFRAMEBUFFER_PRIVATE_IID \
+    {0x0052a16f, 0x4bc9, 0x4a55, {0x9d, 0xa3, 0x54, 0x95, 0xaa, 0x4e, 0x80, 0xb9}}
 class WebGLFramebuffer :
     public nsIWebGLFramebuffer,
     public WebGLZeroingObject
 {
 public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLFRAMEBUFFER_PRIVATE_IID)
+
     WebGLFramebuffer(GLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
@@ -479,11 +507,17 @@ protected:
     PRBool mDeleted;
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLFramebuffer, WEBGLFRAMEBUFFER_PRIVATE_IID)
+
+#define WEBGLRENDERBUFFER_PRIVATE_IID \
+    {0x3cbc2067, 0x5831, 0x4e3f, {0xac, 0x52, 0x7e, 0xf4, 0x5c, 0x04, 0xff, 0xae}}
 class WebGLRenderbuffer :
     public nsIWebGLRenderbuffer,
     public WebGLZeroingObject
 {
 public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLRENDERBUFFER_PRIVATE_IID)
+
     WebGLRenderbuffer(GLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
@@ -502,6 +536,8 @@ protected:
     GLuint mName;
     PRBool mDeleted;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(WebGLRenderbuffer, WEBGLRENDERBUFFER_PRIVATE_IID)
 
 }
 
