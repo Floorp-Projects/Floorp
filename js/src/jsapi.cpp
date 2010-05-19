@@ -2513,9 +2513,37 @@ JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr)
 {
 #if JS_STACK_GROWTH_DIRECTION > 0
     if (limitAddr == 0)
-        limitAddr = (jsuword)-1;
+        limitAddr = jsuword(-1);
 #endif
     cx->stackLimit = limitAddr;
+}
+
+JS_PUBLIC_API(void)
+JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
+{
+#ifdef JS_THREADSAFE
+    JS_ASSERT(cx->thread);
+#endif
+
+#if JS_STACK_GROWTH_DIRECTION > 0
+    if (stackSize == 0) {
+        cx->stackLimit = jsuword(-1);
+    } else {
+        jsuword stackBase = reinterpret_cast<jsuword>(JS_THREAD_DATA(cx)->
+                                                      nativeStackBase);
+        JS_ASSERT(stackBase <= size_t(-1) - stackSize);
+        cx->stackLimit = stackBase + stackSize - 1;
+    }
+#else
+    if (stackSize == 0) {
+        cx->stackLimit = 0;
+    } else {
+        jsuword stackBase = reinterpret_cast<jsuword>(JS_THREAD_DATA(cx)->
+                                                      nativeStackBase);
+        JS_ASSERT(stackBase >= stackSize);
+        cx->stackLimit = stackBase - (stackSize - 1);
+    }
+#endif
 }
 
 JS_PUBLIC_API(void)

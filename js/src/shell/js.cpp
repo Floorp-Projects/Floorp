@@ -118,9 +118,9 @@ size_t gStackChunkSize = 8192;
 #if defined(DEBUG) && defined(__SUNPRO_CC)
 /* Sun compiler uses larger stack space for js_Interpret() with debug
    Use a bigger gMaxStackSize to make "make check" happy. */
-static size_t gMaxStackSize = 5000000;
+size_t gMaxStackSize = 5000000;
 #else
-static size_t gMaxStackSize = 500000;
+size_t gMaxStackSize = 500000;
 #endif
 
 
@@ -351,40 +351,9 @@ ShellOperationCallback(JSContext *cx)
 }
 
 static void
-SetThreadStackLimit(JSContext *cx)
-{
-    jsuword stackLimit;
-
-    if (gMaxStackSize == 0) {
-        /*
-         * Disable checking for stack overflow if limit is zero.
-         */
-        stackLimit = 0;
-    } else {
-        jsuword stackBase;
-#ifdef JS_THREADSAFE
-        stackBase = (jsuword) PR_GetThreadPrivate(gStackBaseThreadIndex);
-#else
-        stackBase = gStackBase;
-#endif
-        if (stackBase) {
-#if JS_STACK_GROWTH_DIRECTION > 0
-            stackLimit = stackBase + gMaxStackSize;
-#else
-            stackLimit = stackBase - gMaxStackSize;
-#endif
-        } else {
-            stackLimit = 0;
-        }
-    }
-    JS_SetThreadStackLimit(cx, stackLimit);
-
-}
-
-static void
 SetContextOptions(JSContext *cx)
 {
-    SetThreadStackLimit(cx);
+    JS_SetNativeStackQuota(cx, gMaxStackSize);
     JS_SetScriptStackQuota(cx, gScriptStackQuota);
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
@@ -3230,7 +3199,7 @@ RunScatterThread(void *arg)
 
     /* We are good to go. */
     JS_SetContextThread(cx);
-    SetThreadStackLimit(cx);
+    JS_SetNativeStackQuota(cx, gMaxStackSize);
     JS_BeginRequest(cx);
     DoScatteredWork(cx, td);
     JS_EndRequest(cx);
