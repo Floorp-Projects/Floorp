@@ -1071,7 +1071,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 
-  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus) ||
+  NS_ASSERTION(NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
                aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE,
                "Column set should be complete if the available height is unconstrained");
 
