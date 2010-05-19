@@ -2474,8 +2474,8 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
             return ErrorMessage("texImage2D: internal format not supported");
     }
 
-    if (width <= 0 || height <= 0)
-        return ErrorMessage("texImage2D: width and height must be > 0!");
+    if (width < 0 || height < 0)
+        return ErrorMessage("texImage2D: width and height must be >= 0!");
 
     if (border != 0)
         return ErrorMessage("texImage2D: border must be 0");
