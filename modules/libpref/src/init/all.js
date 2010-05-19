@@ -117,6 +117,9 @@ pref("browser.blink_allowed",               true);
 pref("browser.enable_automatic_image_resizing", false);
 pref("browser.enable_click_image_resizing", true);
 
+// See http://dev.w3.org/html5/spec/forms.html#attr-fe-autofocus
+pref("browser.autofocus", true);
+
 // See http://whatwg.org/specs/web-apps/current-work/#ping
 pref("browser.send_pings", false);
 pref("browser.send_pings.max_per_link", 1);           // limit the number of pings that are sent per link click
