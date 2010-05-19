@@ -5520,7 +5520,7 @@ CloneSimpleValues(JSContext* cx,
     return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
   }
 
-  NS_ASSERTION(JSVAL_IS_OBJECT(val), "Not an object!");
+  NS_ASSERTION(!JSVAL_IS_PRIMITIVE(val), "Not an object!");
   JSObject* obj = JSVAL_TO_OBJECT(val);
 
   // Dense arrays of primitives can be cloned quickly.
