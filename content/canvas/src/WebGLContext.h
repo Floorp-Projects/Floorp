@@ -311,9 +311,10 @@ protected:
     nsRefPtrHashtable<nsUint32HashKey, WebGLFramebuffer> mMapFramebuffers;
     nsRefPtrHashtable<nsUint32HashKey, WebGLRenderbuffer> mMapRenderbuffers;
 
+public:
     // console logging helpers
-    void LogMessage (const char *fmt, ...);
-    nsresult ErrorMessage (const char *fmt, ...);
+    static void LogMessage (const char *fmt, ...);
+    static nsresult ErrorMessage (const char *fmt, ...);
 };
 
 // this class is a mixin for the named type wrappers, and is used
