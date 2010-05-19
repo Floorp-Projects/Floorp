@@ -65,6 +65,10 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 // is about 4300 bytes, so we read the file in chunks larger than that.
 static const int PAGE_STEP = 8192;
 
+// The frame rate to use if there is no video data in the resource to
+// be played.
+#define AUDIO_FRAME_RATE 25.0
+
 nsOggReader::nsOggReader(nsBuiltinDecoder* aDecoder)
   : nsBuiltinDecoderReader(aDecoder),
     mTheoraState(nsnull),
@@ -135,7 +139,7 @@ static PRBool DoneReadingHeaders(nsTArray<nsOggCodecState*>& aBitstreams) {
 }
 
 
-nsresult nsOggReader::ReadMetadata(nsVideoInfo& aInfo)
+nsresult nsOggReader::ReadMetadata()
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on play state machine thread.");
   MonitorAutoEnter mon(mMonitor);
@@ -247,6 +251,8 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo& aInfo)
   // Theora spec these can be considered the 'primary' bitstreams for playback.
   // Extract the metadata needed from these streams.
   float aspectRatio = 0;
+  // Set a default callback period for if we have no video data
+  mCallbackPeriod = 1000 / AUDIO_FRAME_RATE;
   if (mTheoraState) {
     if (mTheoraState->Init()) {
       mCallbackPeriod = mTheoraState->mFrameDuration;
@@ -262,24 +268,24 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo& aInfo)
     mVorbisState->Init();
   }
 
-  aInfo.mHasAudio = HasAudio();
-  aInfo.mHasVideo = HasVideo();
-  aInfo.mCallbackPeriod = mCallbackPeriod;
+  mInfo.mHasAudio = HasAudio();
+  mInfo.mHasVideo = HasVideo();
+  mInfo.mCallbackPeriod = mCallbackPeriod;
   if (HasAudio()) {
-    aInfo.mAudioRate = mVorbisState->mInfo.rate;
-    aInfo.mAudioChannels = mVorbisState->mInfo.channels;
+    mInfo.mAudioRate = mVorbisState->mInfo.rate;
+    mInfo.mAudioChannels = mVorbisState->mInfo.channels;
   }
   if (HasVideo()) {
-    aInfo.mFramerate = mTheoraState->mFrameRate;
-    aInfo.mAspectRatio = mTheoraState->mAspectRatio;
-    aInfo.mPicture.width = mTheoraState->mInfo.pic_width;
-    aInfo.mPicture.height = mTheoraState->mInfo.pic_height;
-    aInfo.mPicture.x = mTheoraState->mInfo.pic_x;
-    aInfo.mPicture.y = mTheoraState->mInfo.pic_y;
-    aInfo.mFrame.width = mTheoraState->mInfo.frame_width;
-    aInfo.mFrame.height = mTheoraState->mInfo.frame_height;
+    mInfo.mFramerate = mTheoraState->mFrameRate;
+    mInfo.mAspectRatio = mTheoraState->mAspectRatio;
+    mInfo.mPicture.width = mTheoraState->mInfo.pic_width;
+    mInfo.mPicture.height = mTheoraState->mInfo.pic_height;
+    mInfo.mPicture.x = mTheoraState->mInfo.pic_x;
+    mInfo.mPicture.y = mTheoraState->mInfo.pic_y;
+    mInfo.mFrame.width = mTheoraState->mInfo.frame_width;
+    mInfo.mFrame.height = mTheoraState->mInfo.frame_height;
   }
-  aInfo.mDataOffset = mDataOffset;
+  mInfo.mDataOffset = mDataOffset;
 
   LOG(PR_LOG_DEBUG, ("Done loading headers, data offset %lld", mDataOffset));
 
@@ -491,12 +497,16 @@ nsresult nsOggReader::DecodeTheora(nsTArray<VideoData*>& aFrames,
       b.mPlanes[i].mWidth = buffer[i].width;
       b.mPlanes[i].mStride = buffer[i].stride;
     }
-    VideoData *v = VideoData::Create(mPageOffset,
+    VideoData *v = VideoData::Create(mInfo,
+                                     mDecoder->GetImageContainer(),
+                                     mPageOffset,
                                      time,
                                      b,
                                      isKeyframe,
                                      aPacket->granulepos);
     if (!v) {
+      // There may be other reasons for this error, but for
+      // simplicity just assume the worst case: out of memory.
       NS_WARNING("Failed to allocate memory for video frame");
       Clear(aFrames);
       return NS_ERROR_OUT_OF_MEMORY;
