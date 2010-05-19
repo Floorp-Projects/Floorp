@@ -1132,6 +1132,17 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
         if (!js_ValueToObject(cx, argv[1], &scopeobj))
             return JS_FALSE;
         argv[1] = OBJECT_TO_JSVAL(scopeobj);
+        JSObject *obj = scopeobj;
+        while (obj) {
+            JSObject *parent = obj->getParent();
+            if (!obj->isNative() ||
+                (!parent && !(obj->getClass()->flags & JSCLASS_IS_GLOBAL))) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_INVALID_EVAL_SCOPE_ARG);
+                return false;
+            }
+            obj = parent;
+        }
     }
 
     /* Guard for conditionally-created with object below. */
