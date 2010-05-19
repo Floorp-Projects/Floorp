@@ -2752,7 +2752,7 @@ nsComponentManagerImpl::LoaderForType(LoaderType aType)
     if (aType == NS_LOADER_TYPE_NATIVE)
         return &mNativeModuleLoader;
 
-    NS_ASSERTION(aType >= 0 && aType < mLoaderData.Length(),
+    NS_ASSERTION(aType >= 0 && PRUint32(aType) < mLoaderData.Length(),
                  "LoaderType out of range");
 
     if (!mLoaderData[aType].loader) {
@@ -3259,7 +3259,7 @@ nsComponentManagerImpl::LoadDeferredModules(nsTArray<DeferredModule> &aDeferred)
 
         lastCount = aDeferred.Length();
 
-        for (PRInt32 i = 0; i < aDeferred.Length(); ) {
+        for (PRUint32 i = 0; i < aDeferred.Length(); ) {
             DeferredModule &d = aDeferred[i];
             nsresult rv = d.module->RegisterSelf(this,
                                                  d.file,
@@ -3303,7 +3303,7 @@ nsComponentManagerImpl::AutoUnregisterComponent(PRInt32 /* unused */,
     nsCOMPtr<nsIModule> module;
     rv = mNativeModuleLoader.LoadModule(lf, getter_AddRefs(module));
     if (NS_FAILED(rv)) {
-        for (LoaderType i = 0; i < mLoaderData.Length(); ++i) {
+        for (LoaderType i = 0; PRUint32(i) < mLoaderData.Length(); ++i) {
             nsIModuleLoader* loader = LoaderForType(i);
             if (!loader)
                 continue;
