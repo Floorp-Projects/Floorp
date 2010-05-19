@@ -675,13 +675,7 @@ struct JSScopeProperty {
     };
 
     JSScopeProperty(jsid id, JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
-                    uintN attrs, uintN flags, intN shortid)
-        : id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
-          flags(uint8(flags)), shortid(int16(shortid))
-    {
-        JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER), getterObj->isCallable());
-        JS_ASSERT_IF(setter && (attrs & JSPROP_SETTER), setterObj->isCallable());
-    }
+                    uintN attrs, uintN flags, intN shortid);
 
     bool marked() const { return (flags & MARK) != 0; }
     void mark() { flags |= MARK; }

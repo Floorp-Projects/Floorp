@@ -46,6 +46,8 @@
 #include "jsobj.h"
 #include "jsscope.h"
 
+#include "jsobjinlines.h"
+
 inline JSEmptyScope *
 JSScope::createEmptyScope(JSContext *cx, JSClass *clasp)
 {
@@ -207,6 +209,16 @@ JSScope::trace(JSTracer *trc)
             sprop->trace(trc);
         } while ((sprop = sprop->parent) != NULL);
     }
+}
+
+inline
+JSScopeProperty::JSScopeProperty(jsid id, JSPropertyOp getter, JSPropertyOp setter,
+                                 uint32 slot, uintN attrs, uintN flags, intN shortid)
+  : id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
+    flags(uint8(flags)), shortid(int16(shortid))
+{
+    JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER), getterObj->isCallable());
+    JS_ASSERT_IF(setter && (attrs & JSPROP_SETTER), setterObj->isCallable());
 }
 
 inline JSDHashNumber

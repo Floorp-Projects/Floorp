@@ -182,6 +182,20 @@ const char *const js_common_atom_names[] = {
     js_ExecutionContext_str,    /* ExecutionContextAtom         */
     js_current_str,             /* currentAtom                  */
 #endif
+
+    "Proxy",                    /* ProxyAtom                    */
+
+    "getOwnPropertyDescriptor", /* getOwnPropertyDescriptorAtom */
+    "getPropertyDescriptor",    /* getPropertyDescriptorAtom    */
+    "defineProperty",           /* definePropertyAtom           */
+    "delete",                   /* deleteAtom                   */
+    "getOwnPropertyNames",      /* getOwnPropertyNames          */
+    "enumerate",                /* enumerateAtom                */
+    "fix",
+
+    "has",                      /* hasAtom                      */
+    "hasOwn",                   /* hasOwnAtom                   */
+    "enumerateOwn"              /* enumerateOwnAtom             */
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==

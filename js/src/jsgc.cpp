@@ -73,6 +73,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsparse.h"
+#include "jsproxy.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstaticcheck.h"
@@ -2384,6 +2385,12 @@ FinalizeObject(JSContext *cx, JSObject *obj, unsigned thingKind)
             static_cast<JSEmptyScope *>(scope)->dropFromGC(cx);
         else
             scope->destroy(cx);
+    } else {
+        if (obj->isProxy()) {
+            jsval handler = obj->getProxyHandler();
+            if (JSVAL_IS_PRIMITIVE(handler))
+                ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->finalize(cx, obj);
+        }
     }
     if (obj->hasSlotsArray())
         obj->freeSlotsArray(cx);

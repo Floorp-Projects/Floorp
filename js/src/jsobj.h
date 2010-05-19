@@ -62,10 +62,9 @@ namespace js { class AutoDescriptorArray; }
 struct PropertyDescriptor {
   friend class js::AutoDescriptorArray;
 
-  private:
     PropertyDescriptor();
-
   public:
+
     /* 8.10.5 ToPropertyDescriptor(Obj) */
     bool initialize(JSContext* cx, jsid id, jsval v);
 
@@ -120,6 +119,7 @@ struct PropertyDescriptor {
     static void traceDescriptorArray(JSTracer* trc, JSObject* obj);
     static void finalizeDescriptorArray(JSContext* cx, JSObject* obj);
 
+    jsval pd;
     jsid id;
     jsval value, get, set;
 
@@ -579,10 +579,18 @@ struct JSObject {
     inline void setQNameLocalName(jsval decl);
 
     /*
+     * Proxy-specific getters and setters.
+     */
+
+    inline jsval getProxyHandler() const;
+    inline jsval getProxyPrivate() const;
+    inline void setProxyPrivate(jsval priv);
+
+    /*
      * Back to generic stuff.
      */
 
-    bool isCallable();
+    inline bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
     void init(JSClass *clasp, JSObject *proto, JSObject *parent,
@@ -678,6 +686,8 @@ struct JSObject {
             map->ops->dropProperty(cx, this, prop);
     }
 
+    void swap(JSObject *obj);
+
     inline bool isArguments() const;
     inline bool isArray() const;
     inline bool isDenseArray() const;
@@ -692,6 +702,10 @@ struct JSObject {
     inline bool isXML() const;
     inline bool isNamespace() const;
     inline bool isQName() const;
+
+    inline bool isProxy() const;
+    inline bool isObjectProxy() const;
+    inline bool isFunctionProxy() const;
 
     inline bool unbrand(JSContext *cx);
 };
@@ -868,6 +882,9 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
                   JSObject **objp, JSProperty **propp);
 
 extern JSBool
+js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs, jsval getter, jsval setter, jsval value, jsval *vp);
+
+extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 #ifdef OLD_GETTER_SETTER_METHODS
@@ -918,6 +935,9 @@ extern const char js_lookupSetter_str[];
 extern JSObject*
 js_NewObjectWithClassProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                            jsval privateSlotValue);
+
+extern JSBool
+js_PopulateObject(JSContext *cx, JSObject *newborn, JSObject *props);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
@@ -1280,11 +1300,6 @@ js_GetWrappedObject(JSContext *cx, JSObject *obj);
 extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
-
-static inline bool
-js_IsCallable(jsval v) {
-    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable();
-}
 
 extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
