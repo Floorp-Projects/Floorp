@@ -1364,7 +1364,7 @@ js_InitTitle(JSContext *cx, JSTitle *title)
 {
 #ifdef JS_THREADSAFE
     title->ownercx = cx;
-    PodZero(&title->lock);
+    js_InitLock(&title->lock);
 
     /*
      * Set u.link = NULL, not u.count = 0, in case the target architecture's
