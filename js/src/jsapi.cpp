@@ -74,6 +74,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsparse.h"
+#include "jsproxy.h"
 #include "jsregexp.h"
 #include "jsscan.h"
 #include "jsscope.h"
@@ -1213,7 +1214,8 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #if JS_HAS_GENERATORS
            js_InitIteratorClasses(cx, obj) &&
 #endif
-           js_InitDateClass(cx, obj);
+           js_InitDateClass(cx, obj) &&
+           js_InitProxyClass(cx, obj);
 }
 
 #define CLASP(name)                 (&js_##name##Class)
@@ -1339,6 +1341,8 @@ static JSStdName standard_class_names[] = {
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), NULL},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), NULL},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray), NULL},
+
+    {js_InitProxyClass,         EAGER_ATOM(Proxy), NULL},
 
     {NULL,                      0, NULL, NULL}
 };
@@ -1502,18 +1506,22 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
-static JSIdArray *
+namespace js {
+
+JSIdArray *
 NewIdArray(JSContext *cx, jsint length)
 {
     JSIdArray *ida;
 
     ida = (JSIdArray *)
-        cx->malloc(offsetof(JSIdArray, vector) + length * sizeof(jsval));
+        cx->calloc(offsetof(JSIdArray, vector) + length * sizeof(jsval));
     if (ida) {
         ida->self = ida;
         ida->length = length;
     }
     return ida;
+}
+
 }
 
 /*
@@ -1524,13 +1532,13 @@ SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
 {
     JSIdArray *rida;
 
+    JS_ASSERT(ida->self == ida);
     rida = (JSIdArray *)
            JS_realloc(cx, ida,
                       offsetof(JSIdArray, vector) + length * sizeof(jsval));
     if (!rida) {
         JS_DestroyIdArray(cx, ida);
     } else {
-        rida->self = rida;
         rida->length = length;
     }
     return rida;
@@ -3120,6 +3128,12 @@ GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                           ? obj2->lockedGetSlot(sprop->slot)
                           : JSVAL_VOID;
         } else {
+            if (obj->isProxy()) {
+                JSAutoResolveFlags rf(cx, flags);
+                return own
+                       ? JSProxy::getOwnPropertyDescriptor(cx, obj, id, desc)
+                       : JSProxy::getPropertyDescriptor(cx, obj, id, desc);
+            }
             desc->getter = NULL;
             desc->setter = NULL;
             desc->value = JSVAL_VOID;

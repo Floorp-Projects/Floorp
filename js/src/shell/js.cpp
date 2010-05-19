@@ -53,6 +53,7 @@
 #include "jsarena.h"
 #include "jsutil.h"
 #include "jsprf.h"
+#include "jsproxy.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -85,6 +86,8 @@
 #endif /* JSDEBUGGER */
 
 #include "jsworkers.h"
+
+#include "jsobjinlines.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -3858,6 +3861,23 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+JSBool
+Wrap(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        JS_SET_RVAL(cx, vp, v);
+        return true;
+    }
+
+    JSObject *wrapped = JSNoopProxyHandler::wrap<JSNoopProxyHandler>(cx, JSVAL_TO_OBJECT(v), NULL, NULL, NULL);
+    if (!wrapped)
+        return false;
+
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(wrapped));
+    return true;
+}
+
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
@@ -3942,6 +3962,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("timeout",        Timeout,        1,0),
     JS_FN("elapsed",        Elapsed,        0,0),
     JS_FN("parent",         Parent,         1,0),
+    JS_FN("wrap",           Wrap,           1,0),
     JS_FS_END
 };
 
@@ -4051,6 +4072,7 @@ static const char *const shell_help_messages[] = {
 "  A negative value (default) means that the execution time is unlimited.",
 "elapsed()                Execution time elapsed for the current context.",
 "parent(obj)              Returns the parent of obj.\n",
+"wrap(obj)                Wrap an object into a noop wrapper.\n"
 };
 
 /* Help messages must match shell functions. */

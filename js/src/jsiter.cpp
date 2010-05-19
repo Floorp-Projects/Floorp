@@ -63,6 +63,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsproxy.h"
 #include "jsscan.h"
 #include "jsscope.h"
 #include "jsscript.h"
@@ -163,7 +164,7 @@ Enumerate(JSContext *cx, JSObject *obj, JSObject *pobj, jsid id,
         if (pobj->getProto() && !ht.add(p, id))
             return false;
     }
-    if (enumerable) {
+    if (enumerable || (flags & JSITER_HIDDEN)) {
         if (!vec.append(ID_TO_VALUE(id))) {
             JS_ReportOutOfMemory(cx);
             return false;
@@ -233,6 +234,32 @@ EnumerateDenseArrayProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uint
 }
 
 static bool
+MakeNativeIterator(JSContext *cx, uintN flags, uint32 *sarray, uint32 slength, uint32 key,
+                   jsval *parray, uint32 plength, NativeIterator **nip)
+{
+    NativeIterator *ni = (NativeIterator *)
+        cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsval) + slength * sizeof(uint32));
+    if (!ni) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+    ni->props_array = ni->props_cursor = (jsval *) (ni + 1);
+    ni->props_end = ni->props_array + plength;
+    if (plength)
+        memcpy(ni->props_array, parray, plength * sizeof(jsval));
+    ni->shapes_array = (uint32 *) ni->props_end;
+    ni->shapes_length = slength;
+    ni->shapes_key = key;
+    ni->flags = flags;
+    if (slength)
+        memcpy(ni->shapes_array, sarray, slength * sizeof(uint32));
+
+    *nip = ni;
+
+    return true;
+}
+
+static bool
 InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, uint32 slength,
                    uint32 key, NativeIterator **nip)
 {
@@ -256,6 +283,23 @@ InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, ui
             if (!EnumerateDenseArrayProperties(cx, obj, pobj, flags, ht, props))
                 return false;
         } else {
+            if (pobj->isProxy()) {
+                JSIdArray *ida;
+                if (flags & JSITER_OWNONLY) {
+                    if (!JSProxy::enumerateOwn(cx, pobj, &ida))
+                        return false;
+                } else {
+                    if (!JSProxy::enumerate(cx, pobj, &ida))
+                        return false;
+                }
+                AutoIdArray idar(cx, ida);
+                for (size_t n = 0; n < size_t(ida->length); ++n) {
+                    if (!Enumerate(cx, obj, pobj, ida->vector[n], true, flags, ht, props))
+                        return false;
+                }
+                /* Proxy objects enumerate the prototype on their own, so we are done here. */
+                break;
+            }
             jsval state;
             if (!pobj->enumerate(cx, JSENUMERATE_INIT, &state, NULL))
                 return false;
@@ -281,37 +325,12 @@ InitNativeIterator(JSContext *cx, JSObject *obj, uintN flags, uint32 *sarray, ui
         pobj = pobj->getProto();
     }
 
-    size_t plength = props.length();
-
-    NativeIterator *ni = (NativeIterator *)
-        cx->malloc(sizeof(NativeIterator) + plength * sizeof(jsval) + slength * sizeof(uint32));
-    if (!ni) {
-        JS_ReportOutOfMemory(cx);
-        return false;
-    }
-    ni->props_array = ni->props_cursor = (jsval *) (ni + 1);
-    ni->props_end = ni->props_array + plength;
-    if (plength)
-        memcpy(ni->props_array, props.begin(), plength * sizeof(jsval));
-    ni->shapes_array = (uint32 *) ni->props_end;
-    ni->shapes_length = slength;
-    ni->shapes_key = key;
-    ni->flags = flags;
-    if (slength)
-        memcpy(ni->shapes_array, sarray, slength * sizeof(uint32));
-
-    *nip = ni;
-
-    return true;
+    return MakeNativeIterator(cx, flags, sarray, slength, key, props.begin(), props.length(), nip);
 }
 
 bool
-EnumerateOwnProperties(JSContext *cx, JSObject *obj, JSIdArray **idap)
+NativeIteratorToJSIdArray(JSContext *cx, NativeIterator *ni, JSIdArray **idap)
 {
-    NativeIterator *ni;
-    if (!InitNativeIterator(cx, obj, JSITER_OWNONLY, NULL, 0, true, &ni))
-        return false;
-
     /* Morph the NativeIterator into a JSIdArray. The caller will deallocate it. */
     JS_ASSERT(sizeof(NativeIterator) > sizeof(JSIdArray));
     JS_ASSERT(ni->props_array == (jsid *) (ni + 1));
@@ -322,6 +341,33 @@ EnumerateOwnProperties(JSContext *cx, JSObject *obj, JSIdArray **idap)
     JS_ASSERT(&ida->vector[0] == &ni->props_array[0]);
     *idap = ida;
     return true;
+}
+
+bool
+EnumerateOwnProperties(JSContext *cx, JSObject *obj, JSIdArray **idap)
+{
+    NativeIterator *ni;
+    if (!InitNativeIterator(cx, obj, JSITER_OWNONLY, NULL, 0, true, &ni))
+        return false;
+    return NativeIteratorToJSIdArray(cx, ni, idap);
+}
+
+bool
+EnumerateAllProperties(JSContext *cx, JSObject *obj, JSIdArray **idap)
+{
+    NativeIterator *ni;
+    if (!InitNativeIterator(cx, obj, 0, NULL, 0, true, &ni))
+        return false;
+    return NativeIteratorToJSIdArray(cx, ni, idap);
+}
+
+bool
+GetOwnProperties(JSContext *cx, JSObject *obj, JSIdArray **idap)
+{
+    NativeIterator *ni;
+    if (!InitNativeIterator(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, NULL, 0, true, &ni))
+        return false;
+    return NativeIteratorToJSIdArray(cx, ni, idap);
 }
 
 static inline bool
@@ -418,10 +464,12 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
         }
 
       miss:
-        if (!GetCustomIterator(cx, obj, flags, vp))
-            return false;
-        if (*vp != JSVAL_VOID)
-            return true;
+        if (!obj->isProxy()) {
+            if (!GetCustomIterator(cx, obj, flags, vp))
+                return false;
+            if (*vp != JSVAL_VOID)
+                return true;
+        }
     }
 
     JSObject *iterobj = escaping
