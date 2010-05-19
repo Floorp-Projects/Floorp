@@ -88,7 +88,7 @@ nsICanvasRenderingContextWebGL_BufferData(JSContext *cx, uintN argc, jsval *vp)
     if (!JS_ValueToECMAInt32(cx, argv[2], &usage))
         return JS_FALSE;
 
-    if (JSVAL_IS_OBJECT(argv[1])) {
+    if (!JSVAL_IS_PRIMITIVE(argv[1])) {
         JSObject *arg2 = JSVAL_TO_OBJECT(argv[1]);
         if (js_IsArrayBuffer(arg2)) {
             wb = js::ArrayBuffer::fromJSObject(arg2);
@@ -153,7 +153,7 @@ nsICanvasRenderingContextWebGL_BufferSubData(JSContext *cx, uintN argc, jsval *v
     if (!JS_ValueToECMAInt32(cx, argv[1], &offset))
         return JS_FALSE;
 
-    if (!JSVAL_IS_OBJECT(argv[2])) {
+    if (JSVAL_IS_PRIMITIVE(argv[2])) {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 2);
         return JS_FALSE;
     }
@@ -255,7 +255,11 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
 
     // then try to grab either a js::ArrayBuffer, js::TypedArray, or null
     arg9 = JSVAL_TO_OBJECT(argv[8]);
-    if (js_IsArrayBuffer(arg9)) {
+    if (arg9 == nsnull) {
+        rv = self->TexImage2D_buf(intargs[0], intargs[1], intargs[2], intargs[3],
+                                  intargs[4], intargs[5], intargs[6], intargs[7],
+                                  nsnull);
+    } else if (js_IsArrayBuffer(arg9)) {
         rv = self->TexImage2D_buf(intargs[0], intargs[1], intargs[2], intargs[3],
                                     intargs[4], intargs[5], intargs[6], intargs[7],
                                     js::ArrayBuffer::fromJSObject(arg9));
@@ -263,10 +267,6 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
         rv = self->TexImage2D_array(intargs[0], intargs[1], intargs[2], intargs[3],
                                   intargs[4], intargs[5], intargs[6], intargs[7],
                                   js::TypedArray::fromJSObject(arg9));
-    } else if (arg9 == nsnull) {
-        rv = self->TexImage2D_buf(intargs[0], intargs[1], intargs[2], intargs[3],
-                                  intargs[4], intargs[5], intargs[6], intargs[7],
-                                  nsnull);
     } else {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
         return JS_FALSE;
@@ -347,7 +347,7 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
             return JS_FALSE;
     }
 
-    if (!JSVAL_IS_OBJECT(argv[8])) {
+    if (JSVAL_IS_PRIMITIVE(argv[8])) {
         xpc_qsThrowBadArg(cx, NS_ERROR_FAILURE, vp, 8);
         return JS_FALSE;
     }
