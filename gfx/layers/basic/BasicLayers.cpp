@@ -489,6 +489,7 @@ BasicCanvasLayer::Paint(gfxContext* aContext)
   nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 
   pat->SetFilter(mFilter);
+  pat->SetExtend(gfxPattern::EXTEND_PAD);
 
   gfxRect r(0, 0, mBounds.width, mBounds.height);
   gfxMatrix m;
