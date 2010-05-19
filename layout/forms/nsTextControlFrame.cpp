@@ -121,6 +121,8 @@
 #include "nsFocusManager.h"
 #include "nsTextEditRules.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #define DEFAULT_COLUMN_WIDTH 20
 
 #include "nsContentCID.h"
@@ -1372,6 +1374,8 @@ nsTextControlFrame::EnsureEditorInitializedInternal()
   // If so, just return early.
   if (mUseEditor)
     return NS_OK;
+
+  NS_TIME_FUNCTION;
 
   nsIDocument* doc = mContent->GetCurrentDoc();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);

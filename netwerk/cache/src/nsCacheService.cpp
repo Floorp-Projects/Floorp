@@ -73,6 +73,7 @@
 #include <math.h>  // for log()
 #include "mozilla/Services.h"
 
+#include "mozilla/FunctionTimer.h"
 
 /******************************************************************************
  * nsCacheProfilePrefObserver
@@ -669,6 +670,8 @@ nsCacheService::~nsCacheService()
 nsresult
 nsCacheService::Init()
 {
+    NS_TIME_FUNCTION;
+
     NS_ASSERTION(!mInitialized, "nsCacheService already initialized.");
     if (mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
