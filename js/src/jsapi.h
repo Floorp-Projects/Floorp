@@ -284,6 +284,8 @@ BOOLEAN_TO_JSVAL(JSBool b)
                                            object that delegates to a prototype
                                            containing this property */
 #define JSPROP_INDEX            0x80    /* name is actually (jsint) index */
+#define JSPROP_SHORTID          0x100   /* set in JSPropertyDescriptor.attrs
+                                           if getters/setters use a shortid */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
@@ -1821,6 +1823,7 @@ struct JSPropertyDescriptor {
     uintN        attrs;
     JSPropertyOp getter;
     JSPropertyOp setter;
+    uintN        shortid;
     jsval        value;
 };
 

@@ -2174,7 +2174,8 @@ class AutoGCRooter {
         XML =         -10, /* js::AutoXMLRooter */
         OBJECT =      -11, /* js::AutoObjectRooter */
         ID =          -12, /* js::AutoIdRooter */
-        VECTOR =      -13  /* js::AutoValueVector */
+        VECTOR =      -13, /* js::AutoValueVector */
+        DESCRIPTOR =  -14  /* js::AutoDescriptor */
     };
 
     private:
@@ -2404,11 +2405,17 @@ class AutoIdArray : private AutoGCRooter {
 
     friend void AutoGCRooter::trace(JSTracer *trc);
 
+    JSIdArray *steal() {
+        JSIdArray *copy = idArray;
+        idArray = NULL;
+        return copy;
+    }
+
   protected:
     inline void trace(JSTracer *trc);
 
   private:
-    JSIdArray * const idArray;
+    JSIdArray * idArray;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 
     /* No copy or assignment semantics. */
@@ -3022,6 +3029,9 @@ class AutoValueVector : private AutoGCRooter
     Vector<jsval, 8> vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
+
+JSIdArray *
+NewIdArray(JSContext *cx, jsint length);
 
 }
 

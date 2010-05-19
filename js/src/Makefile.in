@@ -152,6 +152,7 @@ CPPSRCS		= \
 		json.cpp \
 		jsopcode.cpp \
 		jsparse.cpp \
+		jsproxy.cpp \
 		jsprf.cpp \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
@@ -208,6 +209,7 @@ INSTALLED_HEADERS = \
 		jsopcode.h \
 		jsotypes.h \
 		jsparse.h \
+		jsproxy.h \
 		jsprf.h \
 		jspropertycache.h \
 		jspropertycacheinlines.h \

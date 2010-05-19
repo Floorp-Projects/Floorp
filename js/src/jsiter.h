@@ -58,6 +58,7 @@ JS_BEGIN_EXTERN_C
 #define JSITER_FOREACH    0x2   /* return [key, value] pair rather than key */
 #define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
+#define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
 
 struct NativeIterator {
     jsval     *props_array;
@@ -81,6 +82,12 @@ static const jsval JSVAL_NATIVE_ENUMERATE_COOKIE = SPECIAL_TO_JSVAL(0x220576);
 
 bool
 EnumerateOwnProperties(JSContext *cx, JSObject *obj, JSIdArray **idap);
+
+bool
+EnumerateAllProperties(JSContext *cx, JSObject *obj, JSIdArray **idap);
+
+bool
+GetOwnProperties(JSContext *cx, JSObject *obj, JSIdArray **idap);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should

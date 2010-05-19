@@ -500,6 +500,21 @@ JSObject::unbrand(JSContext *cx)
     return true;
 }
 
+inline bool
+JSObject::isCallable()
+{
+    if (isNative())
+        return isFunction() || getClass()->call;
+
+    return !!map->ops->call;
+}
+
+static inline bool
+js_IsCallable(jsval v)
+{
+    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable();
+}
+
 namespace js {
 
 typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
@@ -526,6 +541,19 @@ class AutoDescriptorArray : private AutoGCRooter
 
   private:
     PropertyDescriptorArray descriptors;
+};
+
+class AutoDescriptor : private AutoGCRooter, public JSPropertyDescriptor
+{
+  public:
+    AutoDescriptor(JSContext *cx) : AutoGCRooter(cx, DESCRIPTOR) {
+        obj = NULL;
+        attrs = 0;
+        getter = setter = (JSPropertyOp) NULL;
+        value = JSVAL_VOID;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
 };
 
 static inline bool
