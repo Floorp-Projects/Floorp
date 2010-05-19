@@ -243,6 +243,10 @@ public:
     gfxIntSize mPicSize;
   };
 
+  enum {
+    MAX_DIMENSION = 16384
+  };
+
   /**
    * This makes a copy of the data buffers.
    * XXX Eventually we will change this to not make a copy of the data,
