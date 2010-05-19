@@ -14,4 +14,3 @@ include js1_7/jstests.list
 include js1_8/jstests.list
 include js1_8_1/jstests.list
 include js1_8_5/jstests.list
-include proxies/jstests.list
