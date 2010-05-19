@@ -34,6 +34,7 @@ CPPSRCS	= \
 	gfxUserFontSet.cpp \
 	gfxUtils.cpp \
 	GLContext.cpp \
+	GLContextProviderOSMesa.cpp \
 	$(NULL)
 
 ifdef MOZ_IPC

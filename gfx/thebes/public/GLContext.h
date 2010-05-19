@@ -121,6 +121,7 @@ public:
       NativeGLContext,
       NativeCGLContext,
       NativePBuffer,
+      NativeImageSurface,
       NativeDataTypeMax
     };
 
