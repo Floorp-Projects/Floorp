@@ -243,7 +243,6 @@ protected:
             id == sLocationbar_id  ||
             id == sPersonalbar_id  ||
             id == sStatusbar_id    ||
-            id == sDirectories_id  ||
             id == sControllers_id  ||
             id == sScrollX_id      ||
             id == sScrollY_id      ||
@@ -290,7 +289,6 @@ protected:
   static jsval sPersonalbar_id;
   static jsval sStatusbar_id;
   static jsval sDialogArguments_id;
-  static jsval sDirectories_id;
   static jsval sControllers_id;
   static jsval sLength_id;
   static jsval sInnerHeight_id;
