@@ -308,6 +308,8 @@ TryHandlerTrap(JSContext *cx, JSObject *proxy, bool ok = true)
 static bool
 Trap(JSContext *cx, JSObject *handler, JSAtom *atom, uintN argc, jsval* argv, jsval *rval)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     jsval fval;
     if (!GetTrap(cx, handler, atom, &fval))
         return false;
