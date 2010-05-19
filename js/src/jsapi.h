@@ -92,7 +92,7 @@ EQUAL_TYPE_AND_PAYLOAD(const jsval *lval, const jsval *rval)
                                      JSVAL_FUNOBJ_MASK)) != 0);
 #elif JS_BITS_PER_WORD == 64
     JSBool noSecondWord = (lmask & JSVAL_INT32_MASK |
-                                   JSVAL_BOOLEAN_MASK)
+                                   JSVAL_BOOLEAN_MASK);
 #else
 # error "Unsupported word size"
 #endif
@@ -1671,11 +1671,20 @@ JS_IdToValue(JSContext *cx, jsid id, jsval *vp);
 #define JSRESOLVE_CLASSNAME     0x10    /* class name used when constructing */
 #define JSRESOLVE_WITH          0x20    /* resolve inside a with statement */
 
-extern JS_PUBLIC_DATA(JSPropertyOp)  JS_PropertyStub;
-extern JS_PUBLIC_DATA(JSEnumerateOp) JS_EnumerateStub;
-extern JS_PUBLIC_DATA(JSResolveOp)   JS_ResolveStub;
-extern JS_PUBLIC_DATA(JSConvertOp)   JS_ConvertStub;
-extern JS_PUBLIC_DATA(JSFinalizeOp)  JS_FinalizeStub;
+extern JS_PUBLIC_API(JSBool)
+JS_PropertyStub(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
+
+extern JS_PUBLIC_API(JSBool)
+JS_EnumerateStub(JSContext *cx, JSObject *obj);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ResolveStub(JSContext *cx, JSObject *obj, jsid id);
+
+extern JS_PUBLIC_API(JSBool)
+JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
+
+extern JS_PUBLIC_API(void)
+JS_FinalizeStub(JSContext *cx, JSObject *obj);
 
 struct JSConstDoubleSpec {
     jsdouble        dval;
@@ -3077,7 +3086,6 @@ class Value
 #endif
         struct { int32 first; int32 second; } bits;
     };
-    JS_STATIC_ASSERT(sizeof(Data) == sizeof(double));
 
     enum TypeNames {
       NullMask      = JSVAL_NULL_MASK,
@@ -3094,7 +3102,21 @@ class Value
       NumberMask    = JSVAL_NUMBER_MASK,
       GCThingMask   = JSVAL_GCTHING_MASK
     };
-    JS_STATIC_ASSERT(sizeof(TypeNames) <= sizeof(MaskType));
+
+    void staticAssertLayoutCompatibility() {
+        JS_STATIC_ASSERT(sizeof(jsval) == 16);
+        JS_STATIC_ASSERT(sizeof(MaskType) == sizeof(void *));
+        JS_STATIC_ASSERT(sizeof(TypeNames) <= sizeof(MaskType));
+        JS_STATIC_ASSERT(sizeof(Data) == 8);
+        JS_STATIC_ASSERT(offsetof(jsval, mask) == 0);
+        JS_STATIC_ASSERT(offsetof(jsval, mask) == offsetof(Value, mask));
+        JS_STATIC_ASSERT(sizeof(Value) == sizeof(jsval));
+        JS_STATIC_ASSERT(sizeof(Data) == sizeof(((jsval *)0)->data));
+        JS_STATIC_ASSERT(offsetof(Value, data) == offsetof(jsval, data));
+        JS_STATIC_ASSERT(sizeof(MaskType) == sizeof(JSValueMaskType));
+        JS_STATIC_ASSERT(sizeof(MaskType) == sizeof(((jsval *)0)->mask));
+        JS_STATIC_ASSERT(offsetof(Value, mask) == offsetof(jsval, mask));
+    }
 
     union {
         MaskType mask;
@@ -3485,21 +3507,6 @@ class Value
     }
 } VALUE_ALIGNMENT;
 
-struct AssertLayoutCompatible 
-{
-    JS_STATIC_ASSERT(sizeof(jsval) == 16);
-    JS_STATIC_ASSERT(sizeof(Value::MaskType) == 4);
-    JS_STATIC_ASSERT(sizeof(Value::Data) == 8);
-    JS_STATIC_ASSERT(offsetof(jsval, mask) == 0);
-    JS_STATIC_ASSERT(offsetof(jsval, mask) == offsetof(Value, mask));
-    JS_STATIC_ASSERT(sizeof(Value) == sizeof(jsval));
-    JS_STATIC_ASSERT(sizeof(Value::Data) == sizeof(((jsval *)0)->data));
-    JS_STATIC_ASSERT(offsetof(Value, data) == offsetof(jsval, data));
-    JS_STATIC_ASSERT(sizeof(Value::MaskType) == sizeof(JSValueMaskType));
-    JS_STATIC_ASSERT(sizeof(Value::MaskType) == sizeof(((jsval *)0)->mask));
-    JS_STATIC_ASSERT(offsetof(Value, mask) == offsetof(jsval, mask));
-};
-
 /*
  * As asserted above, js::Value and jsval are layout equivalent. To provide
  * widespread casting, the following safe casts are provided.
@@ -3573,6 +3580,12 @@ static JS_ALWAYS_INLINE JSClass *         Jsvalify(Class *c)           { return 
 static JS_ALWAYS_INLINE Class *           Valueify(JSClass *c)         { return (Class *)c; }
 static JS_ALWAYS_INLINE JSExtendedClass * Jsvalify(ExtendedClass *c)   { return (JSExtendedClass *)c; }
 static JS_ALWAYS_INLINE ExtendedClass *   Valueify(JSExtendedClass *c) { return (ExtendedClass *)c; }
+
+static const PropertyOp PropertyStub     = (PropertyOp)JS_PropertyStub;
+static const JSEnumerateOp EnumerateStub = JS_EnumerateStub;
+static const JSResolveOp ResolveStub     = JS_ResolveStub;
+static const ConvertOp ConvertStub       = (ConvertOp)JS_ConvertStub;
+static const JSFinalizeOp FinalizeStub   = JS_FinalizeStub;
 
 } /* namespace js */
 #endif  /* __cplusplus */

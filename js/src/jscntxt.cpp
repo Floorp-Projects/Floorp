@@ -1533,7 +1533,7 @@ js_LeaveLocalRootScopeWithResult(JSContext *cx, void *thing)
      */
     lrc = lrs->topChunk;
     m = mark & JSLRS_CHUNK_MASK;
-    lrs->scopeMark = (uint32) lrc->roots[m];
+    lrs->scopeMark = (uint32)(size_t)lrc->roots[m];
     if (thing) {
         if (mark == 0) {
             cx->weakRoots.lastInternalResult = thing;
@@ -1683,7 +1683,7 @@ MarkLocalRoots(JSTracer *trc, JSLocalRootStack *lrs)
                 lrc = lrc->down;
         }
         m = n & JSLRS_CHUNK_MASK;
-        mark = (uint32)lrc->roots[m];
+        mark = (uint32)(size_t)lrc->roots[m];
         if (m == 0)
             lrc = lrc->down;
     } while (n != 0);
