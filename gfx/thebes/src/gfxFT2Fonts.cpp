@@ -110,10 +110,12 @@ FontEntry::~FontEntry()
     // Do nothing for mFTFace here since FTFontDestroyFunc is called by cairo.
     mFTFace = nsnull;
 
+#ifndef ANDROID
     if (mFontFace) {
         cairo_font_face_destroy(mFontFace);
         mFontFace = nsnull;
     }
+#endif
 }
 
 /* static */
