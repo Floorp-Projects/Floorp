@@ -1800,10 +1800,9 @@ namespace reprmeter {
 
 /* Test whether v is an int in the range [-2^31 + 1, 2^31 - 2] */
 static JS_ALWAYS_INLINE bool
-CanIncDecWithoutOverflow(const Value &v)
+CanIncDecWithoutOverflow(int32_t i)
 {
-    return v.isInt32() &&
-           ((uint32_t(v.asInt32()) + 1) - uint32_t(JSVAL_INT_MIN)) > 1;
+    return ((uint32_t(i) + 1) - uint32_t(JSVAL_INT_MIN)) > 1;
 }
 
 /*
