@@ -180,14 +180,24 @@ Mirror.prototype = $.extend(new Subscribable(), {
 // ##########
 // Class: TabMirror
 // A singleton that manages all of the <Mirror>s in the system.
-var TabMirror = function( ){ this.init() }
+var TabMirror = function() {
+  if(window.Tabs) 
+    this.init();
+  else { 
+    var self = this;
+    TabsManager.addSubscriber(this, 'load', function() {
+      self.init();
+    });
+  }
+}
+
 TabMirror.prototype = {
   // ----------
   // Function: init
   // Set up the necessary tracking to maintain the <Mirror>s.
   init: function(){
     var self = this;
-    
+        
     // When a tab is opened, create the mirror
     Tabs.onOpen(function() { 
       var tab = this;
