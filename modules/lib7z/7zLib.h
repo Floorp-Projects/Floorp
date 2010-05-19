@@ -35,7 +35,10 @@ int SzExtract(const WCHAR *archiveName,
               SzExtractProgressCallback *progressCallback);
 
 int SzExtractSfx(const WCHAR *archiveName, DWORD sfxStubSize,
-              const WCHAR *fileToExtract, const WCHAR *outputDir,
-              SzExtractProgressCallback *progressCallback);
+                 const WCHAR *fileToExtract, const WCHAR *outputDir,
+                 SzExtractProgressCallback *progressCallback);
+
+int SzGetSfxArchiveInfo(const WCHAR *archiveName, const DWORD sfxStubSize,
+                        ULONGLONG *pUncompressedSize, DWORD *pNumberOfFiles = NULL, DWORD *pNumberOfDirs = NULL);
 
 #endif // __7ZLIB_H
