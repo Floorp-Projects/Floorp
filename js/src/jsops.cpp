@@ -866,19 +866,25 @@ END_CASE(JSOP_BITAND)
                 cond = lref.asBoolean() OP rref.asBoolean();                  \
             }                                                                 \
         } else {                                                              \
-            if (maskxor == JSVAL_UNDEFINED_MASK) {                            \
-                cond = true OP true;                                          \
+            JS_ASSERT(maskxor == (lmask | rmask));                            \
+            Value::MaskType maskor = maskxor;                                 \
+            if (lmask == Value::NullMask || rmask == Value::NullMask) {       \
+                cond = maskxor OP JSVAL_UNDEFINED_MASK;                       \
+            } else if (maskor & JSVAL_UNDEFINED_MASK) {                       \
+                cond = true OP false;                                         \
+            } else if (maskor == JSVAL_OBJECT_MASK) {                         \
+                cond = true OP false;                                         \
             } else {                                                          \
-                JS_ASSERT(maskxor == (lmask | rmask));                        \
-                Value::MaskType maskor = maskxor;                             \
                 if (maskor & JSVAL_OBJECT_MASK) {                             \
                     if (lmask & JSVAL_OBJECT_MASK) {                          \
-                        if (!lref.asObject().defaultValue(cx, JSTYPE_VOID, &lref)) \
+                        JSObject &obj = lref.asObject();                      \
+                        if (!obj.defaultValue(cx, JSTYPE_VOID, &lref))        \
                             goto error;                                       \
                         lmask = lref.mask;                                    \
                     }                                                         \
                     if (rmask & JSVAL_OBJECT_MASK) {                          \
-                        if (!rref.asObject().defaultValue(cx, JSTYPE_VOID, &rref)) \
+                        JSObject &obj = rref.asObject();                      \
+                        if (!obj.defaultValue(cx, JSTYPE_VOID, &rref))        \
                             goto error;                                       \
                         rmask = rref.mask;                                    \
                     }                                                         \
@@ -977,13 +983,20 @@ END_CASE(JSOP_CASEX)
         if (maskand == JSVAL_INT32_MASK) {                                    \
             cond = lref.asInt32() OP rref.asInt32();                          \
         } else {                                                              \
-            if (lmask & JSVAL_OBJECT_MASK) {                                  \
-                if (!lref.asObject().defaultValue(cx, JSTYPE_NUMBER, &lref))  \
-                    goto error;                                               \
-            }                                                                 \
-            if (rmask & JSVAL_OBJECT_MASK) {                                  \
-                if (!rref.asObject().defaultValue(cx, JSTYPE_NUMBER, &rref))  \
-                    goto error;                                               \
+            if ((lmask | rmask) & JSVAL_OBJECT_MASK) {                        \
+                if (lmask & JSVAL_OBJECT_MASK) {                              \
+                    JSObject &obj = lref.asObject();                          \
+                    if (!obj.defaultValue(cx, JSTYPE_NUMBER, &lref))          \
+                        goto error;                                           \
+                    lmask = lref.mask;                                        \
+                }                                                             \
+                if (rmask & JSVAL_OBJECT_MASK) {                              \
+                    JSObject &obj = rref.asObject();                          \
+                    if (!obj.defaultValue(cx, JSTYPE_NUMBER, &rref))          \
+                        goto error;                                           \
+                    rmask = rref.mask;                                        \
+                }                                                             \
+                maskand = lmask & rmask;                                      \
             }                                                                 \
             if (maskand == JSVAL_STRING_MASK) {                               \
                 JSString *l = lref.asString(), *r = rref.asString();          \
@@ -1320,27 +1333,21 @@ BEGIN_CASE(JSOP_DELPROP)
 }
 END_CASE(JSOP_DELPROP)
 
-#define ELEMENT_OP(n, call)                                                   \
-    JS_BEGIN_MACRO                                                            \
-        /* Fetch the left part and resolve it to a non-null object. */        \
-        JSObject *obj;                                                        \
-        FETCH_OBJECT(cx, n - 1, obj);                                         \
-                                                                              \
-        /* Fetch index and convert it to id suitable for use with obj. */     \
-        jsid id;                                                              \
-        FETCH_ELEMENT_ID(obj, n, id);                                         \
-                                                                              \
-        /* Get or set the element. */                                         \
-        if (!call)                                                            \
-            goto error;                                                       \
-    JS_END_MACRO
-
 BEGIN_CASE(JSOP_DELELEM)
 {
-    Value rval;
-    ELEMENT_OP(-1, obj->deleteProperty(cx, id, &rval));
+    /* Fetch the left part and resolve it to a non-null object. */
+    JSObject *obj;
+    FETCH_OBJECT(cx, -2, obj);
+
+    /* Fetch index and convert it to id suitable for use with obj. */
+    jsid id;
+    FETCH_ELEMENT_ID(obj, -1, id);
+
+    /* Get or set the element. */
+    if (!obj->deleteProperty(cx, id, &regs.sp[-2]))
+        goto error;
+
     regs.sp--;
-    regs.sp[-1] = rval;
 }
 END_CASE(JSOP_DELELEM)
 
@@ -2056,7 +2063,6 @@ END_SET_CASE_STORE_RVAL(JSOP_SETPROP, 2);
 
 BEGIN_CASE(JSOP_GETELEM)
 {
-    /* Open-coded ELEMENT_OP optimized for strings and dense arrays. */
     Value &lref = regs.sp[-2];
     Value &rref = regs.sp[-1];
     if (lref.isString() && rref.isInt32()) {
@@ -2134,24 +2140,37 @@ END_CASE(JSOP_GETELEM)
 
 BEGIN_CASE(JSOP_CALLELEM)
 {
-    Value rval;
-    ELEMENT_OP(-1, js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &rval));
+    /* Depends on the value representation. */
+
+    /* Fetch the left part and resolve it to a non-null object. */
+    JSObject *obj;
+    FETCH_OBJECT(cx, -2, obj);
+
+    /* Save the mask so that we don't need to query it later. */
+    Value::MaskType objmask = regs.sp[-2].mask;
+
+    /* Fetch index and convert it to id suitable for use with obj. */
+    jsid id;
+    FETCH_ELEMENT_ID(obj, -1, id);
+
+    /* Get or set the element. */
+    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &regs.sp[-2]))
+        goto error;
+
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(rval.isUndefined())) {
+    if (JS_UNLIKELY(regs.sp[-2].isUndefined())) {
         regs.sp[-2] = regs.sp[-1];
-        JS_ASSERT(regs.sp[-1].isObject());  /* set by ELEMENT_OP */
+        regs.sp[-1].setObject(*obj);
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             goto error;
     } else
 #endif
     {
-        regs.sp[-2] = rval;
-        JS_ASSERT(regs.sp[-1].isObject());  /* set by ELEMENT_OP */
+        regs.sp[-1].mask = objmask;
+        regs.sp[-1].data.obj = obj;
     }
 }
 END_CASE(JSOP_CALLELEM)
-
-#undef ELEMENT_OP
 
 BEGIN_CASE(JSOP_SETELEM)
 {
@@ -2164,7 +2183,7 @@ BEGIN_CASE(JSOP_SETELEM)
             jsuint length = obj->getDenseArrayCapacity();
             jsint i = JSID_TO_INT(id);
             if ((jsuint)i < length) {
-                if (obj->getDenseArrayElement(i).isMagic(JS_ARGS_HOLE)) {
+                if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
                     if ((jsuint)i >= obj->getArrayLength())
