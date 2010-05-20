@@ -47,10 +47,11 @@ class nsCSSStyleSheet;
 class nsICSSGroupRule;
 class nsAString;
 
-// IID for the nsICSSRule interface {72250d73-dbb2-4409-90fe-e8e0283a2510}
+// IID for the nsICSSRule interface {2a1fef35-eee9-4a5d-bc87-e2228acc926b}
 #define NS_ICSS_RULE_IID     \
-{ 0x72250d73, 0xdbb2, 0x4409, \
- { 0x90, 0xfe, 0xe8, 0xe0, 0x28, 0x3a, 0x25, 0x10 } }
+{ 0x2a1fef35, 0xeee9, 0x4a5d, \
+ { 0xbc, 0x87, 0xe2, 0x22, 0x8a, 0xcc, 0x92, 0x6b } }
+
 
 // inheriting from nsIStyleRule is only for style rules, not other rule types
 class nsICSSRule : public nsIStyleRule {
