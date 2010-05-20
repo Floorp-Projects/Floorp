@@ -452,13 +452,10 @@ GetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole,
                 Value *vp)
 {
     JS_ASSERT(index >= 0);
-    if (obj->isDenseArray() && index < obj->getDenseArrayCapacity()) {
-        const Value &v = obj->getDenseArrayElement(jsuint(index));
-        if (v.isMagic(JS_ARRAY_HOLE)) {
-            *vp = v;
-            *hole = JS_FALSE;
-            return JS_TRUE;
-        }
+    if (obj->isDenseArray() && index < obj->getDenseArrayCapacity() &&
+        !(*vp = obj->getDenseArrayElement(index)).isMagic(JS_ARRAY_HOLE)) {
+        *hole = JS_FALSE;
+        return JS_TRUE;
     }
 
     AutoIdRooter idr(cx);
