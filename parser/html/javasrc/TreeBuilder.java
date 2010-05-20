@@ -59,8 +59,6 @@ import org.xml.sax.SAXParseException;
 
 public abstract class TreeBuilder<T> implements TokenHandler,
         TreeBuilderState<T> {
-
-    public static final int STACK_MAX_DEPTH = 200;
     
     // Start dispatch groups
 
@@ -4217,10 +4215,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     @SuppressWarnings("unchecked") private void push(StackNode<T> node) throws SAXException {
-        if (currentPtr == TreeBuilder.STACK_MAX_DEPTH) {
-            warn("Maximum depth for tree builder stack reached. Modifying document.");
-            pop();
-        }
         currentPtr++;
         if (currentPtr == stack.length) {
             StackNode<T>[] newStack = new StackNode[stack.length + 64];
@@ -4233,10 +4227,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     }
 
     @SuppressWarnings("unchecked") private void silentPush(StackNode<T> node) throws SAXException {
-        if (currentPtr == TreeBuilder.STACK_MAX_DEPTH) {
-            warn("Maximum depth for tree builder stack reached. Modifying document.");
-            pop();
-        }
         currentPtr++;
         if (currentPtr == stack.length) {
             StackNode<T>[] newStack = new StackNode[stack.length + 64];

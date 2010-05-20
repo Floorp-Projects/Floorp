@@ -46,6 +46,7 @@
     PRInt32                                mHandlesUsed;
     nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;
     nsHtml5TreeOpStage*                    mSpeculativeLoadStage;
+    nsIContent**                           mDeepTreeSurrogateParent;
     PRBool                                 mCurrentHtmlScriptIsAsyncOrDefer;
 #ifdef DEBUG
     PRBool                                 mActive;
