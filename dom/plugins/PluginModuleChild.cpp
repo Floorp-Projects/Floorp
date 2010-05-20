@@ -1480,8 +1480,8 @@ _convertpoint(NPP instance,
     double rDestY = 0;
     bool ignoreDestY = !destY;
     bool result = false;
-    InstCast(instance)->CallNPN_ConvertPoint(sourceX, sourceY, sourceSpace, destSpace,
-                                             &rDestX, &ignoreDestX, &rDestY, &ignoreDestY, &result);
+    InstCast(instance)->CallNPN_ConvertPoint(sourceX, ignoreDestX, sourceY, ignoreDestY, sourceSpace, destSpace,
+                                             &rDestX,  &rDestY, &result);
     if (result) {
         if (destX)
             *destX = rDestX;
