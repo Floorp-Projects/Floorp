@@ -111,6 +111,10 @@ DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) \
            -DMOZ_UPDATER=$(MOZ_UPDATER) \
            $(NULL)
 
+ifdef MOZILLA_OFFICIAL
+DEFINES += -DMOZILLA_OFFICIAL
+endif
+
 SOURCE_STAMP := $(shell cd $(srcdir)/.. && hg identify 2>/dev/null | cut -f1 -d' ')
 ifdef SOURCE_STAMP
 DEFINES += -DMOZ_SOURCE_STAMP="$(SOURCE_STAMP)"
