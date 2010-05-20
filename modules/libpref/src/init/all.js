@@ -2841,4 +2841,4 @@ pref("browser.history.maxStateObjectSize", 655360);
 pref("xpinstall.whitelist.required", true);
 
 pref("network.buffer.cache.count", 24);
-pref("network.buffer.cache.size",  4096);
+pref("network.buffer.cache.size",  32768);
