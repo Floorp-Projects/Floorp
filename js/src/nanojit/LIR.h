@@ -360,7 +360,7 @@ namespace nanojit
         return isCses[op] == 1;
     }
     inline bool isLiveOpcode(LOpcode op) {
-        return 
+        return
 #if defined NANOJIT_64BIT
                op == LIR_liveq ||
 #endif
@@ -592,7 +592,7 @@ namespace nanojit
             Register reg:7;
             uint32_t inAr:1;            // if 1, 'arIndex' is active
             uint32_t isResultLive:1;    // if 1, the instruction's result is live
-                                    
+
             uint32_t arIndex:14;        // index into stack frame;  displ is -4*arIndex
 
             LOpcode  opcode:8;          // instruction's opcode
@@ -652,7 +652,7 @@ namespace nanojit
         // Generally, void instructions (statements) are always live and
         // non-void instructions (expressions) are live if used by another
         // live instruction.  But there are some trickier cases.
-        bool isLive() const { 
+        bool isLive() const {
             return isV() ||
                    sharedFields.isResultLive ||
                    (isCall() && !callInfo()->_isPure) ||    // impure calls are always live
