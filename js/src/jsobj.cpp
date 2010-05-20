@@ -1387,8 +1387,8 @@ obj_eval(JSContext *cx, uintN argc, Value *vp)
 #if JS_HAS_OBJ_WATCHPOINT
 
 static JSBool
-obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, const Value *old,
-                  Value *nvp, void *closure)
+obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, jsval old,
+                  jsval *nvp, void *closure)
 {
     JSObject *callable;
     JSSecurityCallbacks *callbacks;
@@ -1431,9 +1431,9 @@ obj_watch_handler(JSContext *cx, JSObject *obj, jsid id, const Value *old,
     generation = cx->resolvingTable->generation;
 
     argv[0] = IdToValue(id);
-    argv[1] = *old;
-    argv[2] = *nvp;
-    ok = InternalCall(cx, obj, ObjectOrNullTag(callable), 3, argv, nvp);
+    argv[1] = Valueify(old);
+    argv[2] = Valueify(*nvp);
+    ok = InternalCall(cx, obj, ObjectOrNullTag(callable), 3, argv, Valueify(nvp));
     js_StopResolving(cx, &key, JSRESFLAG_WATCH, entry, generation);
     return ok;
 }
@@ -1471,7 +1471,7 @@ obj_watch(JSContext *cx, uintN argc, Value *vp)
         return JS_TRUE;
     if (obj->isDenseArray() && !js_MakeArraySlow(cx, obj))
         return JS_FALSE;
-    return JS_SetWatchPoint(cx, obj, propid, Jsvalify(obj_watch_handler), callable);
+    return JS_SetWatchPoint(cx, obj, propid, obj_watch_handler, callable);
 }
 
 static JSBool

@@ -1086,13 +1086,15 @@ BEGIN_CASE(JSOP_ADD)
     } else
 #endif
     {
-        if (lref.isObject()) {
+        if (lmask & JSVAL_OBJECT_MASK) {
             if (!lref.asObject().defaultValue(cx, JSTYPE_VOID, &lref))
                 goto error;
+            lmask = lref.mask;
         }
-        if (rref.isObject()) {
+        if (rmask & JSVAL_OBJECT_MASK) {
             if (!rref.asObject().defaultValue(cx, JSTYPE_VOID, &rref))
                 goto error;
+            rmask = rref.mask;
         }
         if ((lmask | rmask) & JSVAL_STRING_MASK) {
             JSString *str1, *str2;
@@ -1407,7 +1409,7 @@ BEGIN_CASE(JSOP_NAMEDEC)
             Value &rref = obj->getSlotRef(slot);
             int32_t tmp;
             if (JS_LIKELY(rref.isInt32() && CanIncDecWithoutOverflow(tmp = rref.asInt32()))) {
-                int32_t inc = tmp + (js_CodeSpec[op].format & JOF_INC) ? 1 : -1;
+                int32_t inc = tmp + ((js_CodeSpec[op].format & JOF_INC) ? 1 : -1);
                 if (!(js_CodeSpec[op].format & JOF_POST))
                     tmp = inc;
                 rref.asInt32Ref() = inc;
