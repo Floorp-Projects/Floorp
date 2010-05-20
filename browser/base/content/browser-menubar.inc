@@ -603,7 +603,7 @@
                         type="checkbox"
                         label="&inspectMenu.label;"
                         accesskey="&inspectMenu.accesskey;"
-                        key="&inspectMenu.commandkey;"
+                        key="key_inspect"
                         command="Tools:Inspect"/>
               <menuitem id="javascriptConsole"
                         label="&errorConsoleCmd.label;"
