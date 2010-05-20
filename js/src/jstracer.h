@@ -1328,12 +1328,14 @@ class TraceRecorder
 
     JS_REQUIRES_STACK nanojit::LIns* box_jsval(jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
-    JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
+    JS_REQUIRES_STACK void guardClassHelper(bool cond, nanojit::LIns* obj_ins, JSClass* clasp,
+                                            VMSideExit* exit, nanojit::AccSet accSet);
+    JS_REQUIRES_STACK void guardClass(nanojit::LIns* obj_ins, JSClass* clasp,
                                       VMSideExit* exit, nanojit::AccSet accSet);
-    JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
-                                           ExitType exitType);
-    JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
-                                           VMSideExit* exit);
+    JS_REQUIRES_STACK void guardNotClass(nanojit::LIns* obj_ins, JSClass* clasp,
+                                         VMSideExit* exit, nanojit::AccSet accSet);
+    JS_REQUIRES_STACK void guardDenseArray(nanojit::LIns* obj_ins, ExitType exitType);
+    JS_REQUIRES_STACK void guardDenseArray(nanojit::LIns* obj_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardHasPrototype(JSObject* obj, nanojit::LIns* obj_ins,
                                              JSObject** pobj, nanojit::LIns** pobj_ins,
                                              VMSideExit* exit);
