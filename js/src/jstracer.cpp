@@ -8525,7 +8525,7 @@ TraceRecorder::incElem(jsint incr, bool pre)
     LIns* addr_ins;
 
     if (!JSVAL_IS_PRIMITIVE(l) && JSVAL_TO_OBJECT(l)->isDenseArray() && JSVAL_IS_INT(r)) {
-        JS_ALWAYS_TRUE(guardDenseArray(JSVAL_TO_OBJECT(l), get(&l), MISMATCH_EXIT));
+        guardDenseArray(get(&l), MISMATCH_EXIT);
         CHECK_STATUS(denseArrayElement(l, r, vp, v_ins, addr_ins));
         if (!addr_ins) // if we read a hole, abort
             return RECORD_STOP;
@@ -9125,7 +9125,7 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
     // typically to find Array.prototype methods.
     JSObject* aobj = obj;
     if (obj->isDenseArray()) {
-        guardDenseArray(obj, obj_ins, BRANCH_EXIT);
+        guardDenseArray(obj_ins, BRANCH_EXIT);
         aobj = obj->getProto();
         obj_ins = stobj_get_proto(obj_ins);
     }
@@ -9401,14 +9401,10 @@ TraceRecorder::unbox_jsval(jsval v, LIns* v_ins, VMSideExit* exit)
                             INS_CONSTWORD(JSVAL_OBJECT)),
                   exit);
 
-            guard(JSVAL_TO_OBJECT(v)->isFunction(),
-                  lir->ins2(LIR_eqp,
-                            lir->ins2(LIR_andp,
-                                      lir->insLoad(LIR_ldp, v_ins, offsetof(JSObject, classword),
-                                                   ACC_OTHER),
-                                      INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS)),
-                            INS_CONSTPTR(&js_FunctionClass)),
-                  exit);
+            if (JSVAL_TO_OBJECT(v)->isFunction())
+                guardClass(v_ins, &js_FunctionClass, exit, ACC_OTHER);
+            else
+                guardNotClass(v_ins, &js_FunctionClass, exit, ACC_OTHER);
         }
         return v_ins;
 
@@ -9433,10 +9429,11 @@ TraceRecorder::getThis(LIns*& this_ins)
     jsval original = JSVAL_NULL;
     if (cx->fp->argv) {
         original = cx->fp->argv[-1];
-        if (!JSVAL_IS_PRIMITIVE(original) &&
-            guardClass(JSVAL_TO_OBJECT(original), get(&cx->fp->argv[-1]), &js_WithClass,
-                       snapshot(MISMATCH_EXIT), ACC_OTHER)) {
-            RETURN_STOP("can't trace getThis on With object");
+        if (!JSVAL_IS_PRIMITIVE(original)) {
+            if (JSVAL_TO_OBJECT(original)->hasClass(&js_WithClass))
+                RETURN_STOP("can't trace getThis on With object");
+            guardNotClass(get(&cx->fp->argv[-1]), &js_WithClass, snapshot(MISMATCH_EXIT),
+                          ACC_OTHER);
         }
     }
 
@@ -9467,13 +9464,12 @@ TraceRecorder::getThis(LIns*& this_ins)
      * JSStackFrame::getThisObject, since it updates the interpreter's copy of
      * argv[-1].
      */
-    JSClass* clasp = NULL;;
+    JSClass* clasp = NULL;
     if (JSVAL_IS_NULL(original) ||
         (((clasp = JSVAL_TO_OBJECT(original)->getClass()) == &js_CallClass) ||
          (clasp == &js_BlockClass))) {
         if (clasp)
-            guardClass(JSVAL_TO_OBJECT(original), get(&thisv), clasp, snapshot(BRANCH_EXIT),
-                       ACC_OTHER);
+            guardClass(get(&thisv), clasp, snapshot(BRANCH_EXIT), ACC_OTHER);
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(thisv));
         if (thisObj != globalObj)
             RETURN_STOP("global object was wrapped while recording");
@@ -9499,12 +9495,10 @@ TraceRecorder::getThis(LIns*& this_ins)
 }
 
 
-JS_REQUIRES_STACK bool
-TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideExit* exit,
-                          AccSet accSet)
+JS_REQUIRES_STACK void
+TraceRecorder::guardClassHelper(bool cond, LIns* obj_ins, JSClass* clasp, VMSideExit* exit,
+                                AccSet accSet)
 {
-    bool cond = obj->getClass() == clasp;
-
     LIns* class_ins = lir->insLoad(LIR_ldp, obj_ins, offsetof(JSObject, classword), accSet);
     class_ins = lir->ins2(LIR_andp, class_ins, INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS));
 
@@ -9515,19 +9509,30 @@ TraceRecorder::guardClass(JSObject* obj, LIns* obj_ins, JSClass* clasp, VMSideEx
     static const char namebuf[] = "";
 #endif
     guard(cond, addName(lir->ins2(LIR_eqp, class_ins, INS_CONSTPTR(clasp)), namebuf), exit);
-    return cond;
 }
 
-JS_REQUIRES_STACK bool
-TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins, ExitType exitType)
+JS_REQUIRES_STACK void
+TraceRecorder::guardClass(LIns* obj_ins, JSClass* clasp, VMSideExit* exit, AccSet accSet)
 {
-    return guardClass(obj, obj_ins, &js_ArrayClass, snapshot(exitType), ACC_OTHER);
+    guardClassHelper(true, obj_ins, clasp, exit, accSet);
 }
 
-JS_REQUIRES_STACK bool
-TraceRecorder::guardDenseArray(JSObject* obj, LIns* obj_ins, VMSideExit* exit)
+JS_REQUIRES_STACK void
+TraceRecorder::guardNotClass(LIns* obj_ins, JSClass* clasp, VMSideExit* exit, AccSet accSet)
 {
-    return guardClass(obj, obj_ins, &js_ArrayClass, exit, ACC_OTHER);
+    guardClassHelper(false, obj_ins, clasp, exit, accSet);
+}
+
+JS_REQUIRES_STACK void
+TraceRecorder::guardDenseArray(LIns* obj_ins, ExitType exitType)
+{
+    guardClass(obj_ins, &js_ArrayClass, snapshot(exitType), ACC_OTHER);
+}
+
+JS_REQUIRES_STACK void
+TraceRecorder::guardDenseArray(LIns* obj_ins, VMSideExit* exit)
+{
+    guardClass(obj_ins, &js_ArrayClass, exit, ACC_OTHER);
 }
 
 JS_REQUIRES_STACK bool
@@ -10851,9 +10856,9 @@ TraceRecorder::callNative(uintN argc, JSOp mode)
             } else if (!JSVAL_IS_OBJECT(vp[1])) {
                 RETURN_STOP("slow native(primitive, args)");
             } else {
-                if (guardClass(JSVAL_TO_OBJECT(vp[1]), this_ins, &js_WithClass,
-                               snapshot(MISMATCH_EXIT), ACC_READONLY))
+                if (JSVAL_TO_OBJECT(vp[1])->hasClass(&js_WithClass))
                     RETURN_STOP("can't trace slow native invocation on With object");
+                guardNotClass(this_ins, &js_WithClass, snapshot(MISMATCH_EXIT), ACC_READONLY);
 
                 this_ins = lir->insChoose(lir->insEqP_0(stobj_get_parent(this_ins)),
                                            INS_CONSTOBJ(globalObj),
@@ -11934,7 +11939,7 @@ TraceRecorder::record_JSOP_GETELEM()
         jsval* vp;
         LIns* addr_ins;
 
-        guardDenseArray(obj, obj_ins, BRANCH_EXIT);
+        guardDenseArray(obj_ins, BRANCH_EXIT);
         CHECK_STATUS_A(denseArrayElement(lval, idx, vp, v_ins, addr_ins));
         set(&lval, v_ins);
         if (call)
@@ -11947,7 +11952,7 @@ TraceRecorder::record_JSOP_GETELEM()
         jsval* vp;
         LIns* addr_ins;
 
-        guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), ACC_READONLY);
+        guardClass(obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), ACC_READONLY);
         CHECK_STATUS_A(typedArrayElement(lval, idx, vp, v_ins, addr_ins));
         set(&lval, v_ins);
         if (call)
@@ -12106,7 +12111,7 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         // Fast path: assigning to element of typed array.
 
         // Ensure array is a typed array and is the same type as what was written
-        guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), ACC_READONLY);
+        guardClass(obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), ACC_READONLY);
 
         js::TypedArray* tarray = js::TypedArray::fromJSObject(obj);
 
@@ -12221,8 +12226,9 @@ TraceRecorder::setElem(int lval_spindex, int idx_spindex, int v_spindex)
         // Fast path: assigning to element of dense array.
 
         // Make sure the array is actually dense.
-        if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT))
+        if (!obj->isDenseArray()) 
             return ARECORD_STOP;
+        guardDenseArray(obj_ins, BRANCH_EXIT);
 
         // The index was on the stack and is therefore a LIR float. Force it to
         // be an integer.
@@ -12524,7 +12530,7 @@ TraceRecorder::guardArguments(JSObject *obj, LIns* obj_ins, unsigned *depthp)
         return NULL;
 
     VMSideExit *exit = snapshot(MISMATCH_EXIT);
-    guardClass(obj, obj_ins, &js_ArgumentsClass, exit, ACC_READONLY);
+    guardClass(obj_ins, &js_ArgumentsClass, exit, ACC_READONLY);
 
     LIns* args_ins = get(&afp->argsobj);
     LIns* cmp = lir->ins2(LIR_eqp, args_ins, obj_ins);
@@ -12685,7 +12691,7 @@ TraceRecorder::record_JSOP_APPLY()
          * for apply uses imacros to handle a specific number of arguments.
          */
         if (aobj->isDenseArray()) {
-            guardDenseArray(aobj, aobj_ins, MISMATCH_EXIT);
+            guardDenseArray(aobj_ins, MISMATCH_EXIT);
             length = aobj->getArrayLength();
             guard(true,
                   lir->ins2ImmI(LIR_eqi,
@@ -12899,7 +12905,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
             RETURN_STOP_A("can't trace through access to undefined property if "
                           "JSClass.getProperty hook isn't stubbed");
         }
-        guardClass(obj, obj_ins, obj->getClass(), snapshot(MISMATCH_EXIT), ACC_OTHER);
+        guardClass(obj_ins, obj->getClass(), snapshot(MISMATCH_EXIT), ACC_OTHER);
 
         /*
          * This trace will be valid as long as neither the object nor any object
@@ -12912,7 +12918,9 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
         do {
             if (obj->isNative()) {
                 CHECK_STATUS_A(guardShape(obj_ins, obj, obj->shape(), "guard(shape)", exit));
-            } else if (!guardDenseArray(obj, obj_ins, exit)) {
+            } else if (obj->isDenseArray()) {
+                guardDenseArray(obj_ins, exit);
+            } else {
                 RETURN_STOP_A("non-native object involved in undefined property access");
             }
         } while (guardHasPrototype(obj, obj_ins, &obj, &obj_ins, exit));
@@ -13572,7 +13580,8 @@ TraceRecorder::record_JSOP_MOREITER()
     LIns* cond_ins;
 
     /* JSOP_FOR* already guards on this, but in certain rare cases we might record misformed loop traces. */
-    if (guardClass(iterobj, iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), ACC_OTHER)) {
+    if (iterobj->hasClass(&js_IteratorClass.base)) {
+        guardClass(iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), ACC_OTHER);
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         jsval *cursor = ni->props_cursor;
         jsval *end = ni->props_end;
@@ -13585,6 +13594,8 @@ TraceRecorder::record_JSOP_MOREITER()
         cond = cursor < end;
         cond_ins = lir->ins2(LIR_ltp, cursor_ins, end_ins);
     } else {
+        guardNotClass(iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), ACC_OTHER);
+
         enterDeepBailCall();
 
         LIns* vp_ins = lir->insAlloc(sizeof(jsval));
@@ -13667,7 +13678,8 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
     JSObject *iterobj = JSVAL_TO_OBJECT(iterobj_val);
     LIns* iterobj_ins = get(&iterobj_val);
 
-    if (guardClass(iterobj, iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), ACC_OTHER)) {
+    if (iterobj->hasClass(&js_IteratorClass.base)) {
+        guardClass(iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), ACC_OTHER);
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         jsval *cursor = ni->props_cursor;
 
@@ -13705,6 +13717,8 @@ TraceRecorder::unboxNextValue(LIns* &v_ins)
         cursor_ins = lir->ins2(LIR_addp, cursor_ins, INS_CONSTWORD(sizeof(jsval)));
         lir->insStore(LIR_stp, cursor_ins, ni_ins, offsetof(NativeIterator, props_cursor), ACC_OTHER);
     } else {
+        guardNotClass(iterobj_ins, &js_IteratorClass.base, snapshot(BRANCH_EXIT), ACC_OTHER);
+
         jsval v = cx->iterValue;
         v_ins = addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, iterValue), ACC_OTHER), "next");
 
@@ -15140,18 +15154,15 @@ TraceRecorder::record_JSOP_LENGTH()
     LIns* v_ins;
     if (obj->isArray()) {
         if (obj->isDenseArray()) {
-            if (!guardDenseArray(obj, obj_ins, BRANCH_EXIT)) {
-                JS_NOT_REACHED("obj->isDenseArray() but not?!?");
-                return ARECORD_STOP;
-            }
+            guardDenseArray(obj_ins, BRANCH_EXIT);
         } else {
-            if (!guardClass(obj, obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT), ACC_OTHER))
-                RETURN_STOP_A("can't trace length property access on non-array");
+            JS_ASSERT(obj->isSlowArray());
+            guardClass(obj_ins, &js_SlowArrayClass, snapshot(BRANCH_EXIT), ACC_OTHER);
         }
         v_ins = lir->ins1(LIR_i2d, p2i(stobj_get_fslot(obj_ins, JSObject::JSSLOT_ARRAY_LENGTH)));
     } else if (OkToTraceTypedArrays && js_IsTypedArray(obj)) {
         // Ensure array is a typed array and is the same type as what was written
-        guardClass(obj, obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), ACC_OTHER);
+        guardClass(obj_ins, obj->getClass(), snapshot(BRANCH_EXIT), ACC_OTHER);
         v_ins = lir->ins1(LIR_i2d, lir->insLoad(LIR_ldi,
                                                 stobj_get_const_fslot(obj_ins, JSSLOT_PRIVATE),
                                                 js::TypedArray::lengthOffset(), ACC_READONLY));
