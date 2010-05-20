@@ -97,7 +97,7 @@ public:
   virtual PRUint32 GetDesiredIMEState();
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD_(PRInt32) GetType() const
+  NS_IMETHOD_(PRUint32) GetType() const
   {
     return NS_FORM_OBJECT;
   }
