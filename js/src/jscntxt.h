@@ -1165,6 +1165,22 @@ namespace js {
 
 typedef Vector<JSGCChunkInfo *, 32, SystemAllocPolicy> GCChunks;
 
+struct GCPtrHasher
+{
+    typedef void *Lookup;
+    
+    static HashNumber hash(void *key) {
+        return HashNumber(uintptr_t(key) >> JSVAL_TAGBITS);
+    }
+    
+    static bool match(void *l, void *k) {
+        return l == k;
+    }
+};
+
+typedef HashMap<void *, const char *, GCPtrHasher, SystemAllocPolicy> GCRoots;
+typedef HashMap<void *, uint32, GCPtrHasher, SystemAllocPolicy> GCLocks;
+                
 } /* namespace js */
 
 struct JSRuntime {
@@ -1196,8 +1212,8 @@ struct JSRuntime {
 #endif
     JSGCArenaList       gcArenaList[FINALIZE_LIMIT];
     JSGCDoubleArenaList gcDoubleArenaList;
-    JSDHashTable        gcRootsHash;
-    JSDHashTable        gcLocksHash;
+    js::GCRoots         gcRootsHash;
+    js::GCLocks         gcLocksHash;
     jsrefcount          gcKeepAtoms;
     size_t              gcBytes;
     size_t              gcLastBytes;
