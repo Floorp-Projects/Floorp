@@ -143,12 +143,8 @@ void
 nsSMILMappedAttribute::ClearAnimValue()
 {
   nsRefPtr<nsIAtom> attrName = GetAttrNameAtom();
-  nsresult rv = mElement->DeleteProperty(SMIL_MAPPED_ATTR_ANIMVAL, attrName);
-  if (NS_SUCCEEDED(rv)) {
-    FlushChangesToTargetAttr();
-  }
-  // Else, there's no animated value to be cleared -- no need to flush
-  // changes, because we didn't change anything.
+  mElement->DeleteProperty(SMIL_MAPPED_ATTR_ANIMVAL, attrName);
+  FlushChangesToTargetAttr();
 }
 
 void
