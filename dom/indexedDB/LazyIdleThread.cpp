@@ -72,7 +72,8 @@ LazyIdleThread::LazyIdleThread(PRUint32 aIdleTimeoutMS,
   mPendingEventCount(0),
   mIdleNotificationCount(0),
   mShutdown(PR_FALSE),
-  mThreadIsShuttingDown(PR_FALSE)
+  mThreadIsShuttingDown(PR_FALSE),
+  mIdleTimeoutEnabled(PR_TRUE)
 {
   NS_ASSERTION(mOwningThread, "This should never fail!");
 }
@@ -96,6 +97,50 @@ LazyIdleThread::SetWeakIdleObserver(nsIObserver* aObserver)
   }
 
   mIdleObserver = aObserver;
+}
+
+void
+LazyIdleThread::DisableIdleTimeout()
+{
+  ASSERT_OWNING_THREAD();
+  if (!mIdleTimeoutEnabled) {
+    return;
+  }
+  mIdleTimeoutEnabled = PR_FALSE;
+
+  if (mIdleTimer && NS_FAILED(mIdleTimer->Cancel())) {
+    NS_WARNING("Failed to cancel timer!");
+  }
+
+  MutexAutoLock lock(mMutex);
+
+  // Pretend we have a pending event to keep the idle timer from firing.
+  NS_ASSERTION(mPendingEventCount < PR_UINT32_MAX, "Way too many!");
+  mPendingEventCount++;
+}
+
+void
+LazyIdleThread::EnableIdleTimeout()
+{
+  ASSERT_OWNING_THREAD();
+  if (mIdleTimeoutEnabled) {
+    return;
+  }
+  mIdleTimeoutEnabled = PR_TRUE;
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    NS_ASSERTION(mPendingEventCount, "Mismatched calls to observer methods!");
+    --mPendingEventCount;
+  }
+
+  if (mThread) {
+    nsCOMPtr<nsIRunnable> runnable(new nsRunnable());
+    if (NS_FAILED(Dispatch(runnable, NS_DISPATCH_NORMAL))) {
+      NS_WARNING("Failed to dispatch!");
+    }
+  }
 }
 
 void
