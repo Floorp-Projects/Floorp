@@ -58,6 +58,11 @@ const kDefaultBrowserWidth = 800;
 // how many milliseconds before the mousedown and the overlay of an element
 const kTapOverlayTimeout = 200;
 
+// Override sizeToContent in the main window. It breaks things (bug 565887)
+window.sizeToContent = function() {
+  Components.utils.reportError("window.sizeToContent is not allowed in this window");
+}
+
 const endl = '\n';
 
 function debug() {
