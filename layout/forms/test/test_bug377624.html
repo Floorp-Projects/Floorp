@@ -34,6 +34,9 @@ const FILE_PICKER_CID = "@mozilla.org/filepicker;1";
 const FILE_PICKER_ID = Components.ID(Cc[FILE_PICKER_CID].number);
 const FILE_PICKER_DESCRIPTION = "File Picker Test Service";
 
+const kDefaultFilePicker = Cm.getClassObject(Cc[FILE_PICKER_CID],
+                                             Ci.nsIFactory);
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function FilePickerService()
@@ -147,6 +150,11 @@ function runTests()
             obs.removeObserver(observer, "TEST_FILEPICKER_APPENDFILTERS", false);
             obs.removeObserver(observer, "TEST_FILEPICKER_SHOW", false);
             Cm.unregisterFactory(FILE_PICKER_ID, factory);
+
+            Cm.registerFactory(FILE_PICKER_ID,
+                               "File Picker Service",
+                               FILE_PICKER_CID,
+                               kDefaultFilePicker);
 
             SimpleTest.finish();
           } );
