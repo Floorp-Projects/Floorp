@@ -36,12 +36,19 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#if !defined(nsOggDecoderStateMachine_h_)
+#define nsOggDecoderStateMachine_h_
 
-#include "nsOggDecoderStateMachine.h"
-#include "nsOggReader.h"
-#include "nsOggDecoder.h"
+#include "nsBuiltinDecoderStateMachine.h"
 
-nsDecoderStateMachine* nsOggDecoder::CreateStateMachine()
+class nsOggDecoderStateMachine : public nsBuiltinDecoderStateMachine
 {
-  return new nsOggDecoderStateMachine(this);
-}
+public:
+  nsOggDecoderStateMachine(nsBuiltinDecoder* aDecoder);
+
+  // Overload LoadMetadata to seek to the end of the file and get the
+  // duration.
+  virtual void LoadMetadata();
+};
+
+#endif
