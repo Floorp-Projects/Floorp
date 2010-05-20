@@ -72,7 +72,7 @@ public:
   NS_DECL_NSIDOMHTMLLEGENDELEMENT
 
   // nsIFormControl
-  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_LEGEND; }
+  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_LEGEND; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);

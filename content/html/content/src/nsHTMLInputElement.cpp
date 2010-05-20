@@ -274,7 +274,7 @@ public:
   NS_IMETHOD SetUserInput(const nsAString& aInput);
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD_(PRInt32) GetType() const { return mType; }
+  NS_IMETHOD_(PRUint32) GetType() const { return mType; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -461,7 +461,7 @@ protected:
    * The type of this input (<input type=...>) as an integer.
    * @see nsIFormControl.h (specifically NS_FORM_INPUT_*)
    */
-  PRInt8                   mType;
+  PRUint8                  mType;
   /**
    * A bitfield containing our booleans
    * @see GET_BOOLBIT / SET_BOOLBIT macros and BF_* field identifiers

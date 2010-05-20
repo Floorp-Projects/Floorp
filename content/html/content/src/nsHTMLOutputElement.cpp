@@ -66,7 +66,7 @@ public:
   NS_DECL_NSIDOMHTMLOUTPUTELEMENT
 
   // nsIFormControl
-  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_OUTPUT; }
+  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_OUTPUT; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);

@@ -118,7 +118,7 @@ public:
   NS_IMETHOD SetUserInput(const nsAString& aInput);
 
   // nsIFormControl
-  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_TEXTAREA; }
+  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_TEXTAREA; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
