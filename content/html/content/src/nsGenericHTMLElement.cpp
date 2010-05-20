@@ -2686,6 +2686,20 @@ nsGenericHTMLFormElement::IsSingleLineTextControl(PRBool aExcludePassword) const
          (!aExcludePassword && type == NS_FORM_INPUT_PASSWORD);
 }
 
+PRBool
+nsGenericHTMLFormElement::IsLabelableControl() const
+{
+  // Check for non-labelable form controls as they are not numerous.
+  // TODO: datalist should be added to this list.
+  PRInt32 type = GetType();
+  return type != NS_FORM_FIELDSET &&
+         type != NS_FORM_LABEL &&
+         type != NS_FORM_OPTION &&
+         type != NS_FORM_OPTGROUP &&
+         type != NS_FORM_OBJECT &&
+         type != NS_FORM_LEGEND;
+}
+
 PRInt32
 nsGenericHTMLFormElement::IntrinsicState() const
 {
