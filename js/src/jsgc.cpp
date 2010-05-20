@@ -88,6 +88,7 @@
 #include "jsdtracef.h"
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
+#include "jshashtable.h"
 
 /*
  * Include the headers for mmap.
@@ -885,39 +886,16 @@ js_IsAboutToBeFinalized(void *thing)
     return !IsMarkedGCThing(thing);
 }
 
-/* This is compatible with JSDHashEntryStub. */
-typedef struct JSGCRootHashEntry {
-    JSDHashEntryHdr hdr;
-    void            *root;
-    const char      *name;
-} JSGCRootHashEntry;
-
-/*
- * Initial size of the gcRootsHash and gcLocksHash tables (SWAG, small enough
- * to amortize).
- */
-const uint32 GC_ROOTS_SIZE = 256;
-
-struct JSGCLockHashEntry : public JSDHashEntryHdr
-{
-    const void      *thing;
-    uint32          count;
-};
-
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
     InitGCArenaLists(rt);
-    if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
-                           sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
-        rt->gcRootsHash.ops = NULL;
+    
+    if (!rt->gcRootsHash.init(256))
         return false;
-    }
-    if (!JS_DHashTableInit(&rt->gcLocksHash, JS_DHashGetStubOps(), NULL,
-                           sizeof(JSGCLockHashEntry), GC_ROOTS_SIZE)) {
-        rt->gcLocksHash.ops = NULL;
+    
+    if (!rt->gcLocksHash.init(256))
         return false;
-    }
 
 #ifdef JS_THREADSAFE
     if (!rt->gcHelperThread.init())
@@ -1141,17 +1119,12 @@ js_FinishGC(JSRuntime *rt)
 #endif
     FinishGCArenaLists(rt);
 
-    if (rt->gcRootsHash.ops) {
-#ifdef DEBUG
+#ifdef DEBUG 
+    if (!rt->gcRootsHash.empty())
         CheckLeakedRoots(rt);
 #endif
-        JS_DHashTableFinish(&rt->gcRootsHash);
-        rt->gcRootsHash.ops = NULL;
-    }
-    if (rt->gcLocksHash.ops) {
-        JS_DHashTableFinish(&rt->gcLocksHash);
-        rt->gcLocksHash.ops = NULL;
-    }
+    rt->gcRootsHash.clear();
+    rt->gcLocksHash.clear();
 }
 
 JSBool
@@ -1166,8 +1139,7 @@ js_AddRoot(JSContext *cx, void *rp, const char *name)
 JSBool
 js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
 {
-    JSBool ok;
-    JSGCRootHashEntry *rhe;
+    js::GCRoots *roots = &rt->gcRootsHash;
 
     /*
      * Due to the long-standing, but now removed, use of rt->gcLock across the
@@ -1178,16 +1150,7 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
      */
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
-    rhe = (JSGCRootHashEntry *)
-          JS_DHashTableOperate(&rt->gcRootsHash, rp, JS_DHASH_ADD);
-    if (rhe) {
-        rhe->root = rp;
-        rhe->name = name;
-        ok = JS_TRUE;
-    } else {
-        ok = JS_FALSE;
-    }
-    return ok;
+    return !!roots->put(rp, name);
 }
 
 JSBool
@@ -1199,26 +1162,12 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
      */
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
-    (void) JS_DHashTableOperate(&rt->gcRootsHash, rp, JS_DHASH_REMOVE);
+    rt->gcRootsHash.remove(rp);
     rt->gcPoke = JS_TRUE;
     return JS_TRUE;
 }
 
 #ifdef DEBUG
-
-static JSDHashOperator
-js_root_printer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 i, void *arg)
-{
-    uint32 *leakedroots = (uint32 *)arg;
-    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
-
-    (*leakedroots)++;
-    fprintf(stderr,
-            "JS engine warning: leaking GC root \'%s\' at %p\n",
-            rhe->name ? (char *)rhe->name : "", rhe->root);
-
-    return JS_DHASH_NEXT;
-}
 
 static void
 CheckLeakedRoots(JSRuntime *rt)
@@ -1226,8 +1175,12 @@ CheckLeakedRoots(JSRuntime *rt)
     uint32 leakedroots = 0;
 
     /* Warn (but don't assert) debug builds of any remaining roots. */
-    JS_DHashTableEnumerate(&rt->gcRootsHash, js_root_printer,
-                           &leakedroots);
+    for (GCRoots::Range r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
+        leakedroots++;
+        fprintf(stderr,
+                "JS engine warning: leaking GC root \'%s\' at %p\n",
+                r.front().value ? r.front().value : "", r.front().key);
+    }
     if (leakedroots > 0) {
         if (leakedroots == 1) {
             fprintf(stderr,
@@ -1245,74 +1198,35 @@ CheckLeakedRoots(JSRuntime *rt)
     }
 }
 
-typedef struct NamedRootDumpArgs {
-    void (*dump)(const char *name, void *rp, void *data);
-    void *data;
-} NamedRootDumpArgs;
-
-static JSDHashOperator
-js_named_root_dumper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
-                     void *arg)
-{
-    NamedRootDumpArgs *args = (NamedRootDumpArgs *) arg;
-    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
-
-    if (rhe->name)
-        args->dump(rhe->name, rhe->root, args->data);
-    return JS_DHASH_NEXT;
-}
-
 void
 js_DumpNamedRoots(JSRuntime *rt,
                   void (*dump)(const char *name, void *rp, void *data),
                   void *data)
 {
-    NamedRootDumpArgs args;
-
-    args.dump = dump;
-    args.data = data;
-    JS_DHashTableEnumerate(&rt->gcRootsHash, js_named_root_dumper, &args);
+    for (GCRoots::Range r = rt->gcRootsHash.all(); !r.empty(); r.popFront()) {
+        if (r.front().value)
+            dump(r.front().value, r.front().key, data);
+    }
 }
 
 #endif /* DEBUG */
 
-typedef struct GCRootMapArgs {
-    JSGCRootMapFun map;
-    void *data;
-} GCRootMapArgs;
-
-static JSDHashOperator
-js_gcroot_mapper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
-                 void *arg)
-{
-    GCRootMapArgs *args = (GCRootMapArgs *) arg;
-    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
-    intN mapflags;
-    int op;
-
-    mapflags = args->map(rhe->root, rhe->name, args->data);
-
-#if JS_MAP_GCROOT_NEXT == JS_DHASH_NEXT &&                                     \
-    JS_MAP_GCROOT_STOP == JS_DHASH_STOP &&                                     \
-    JS_MAP_GCROOT_REMOVE == JS_DHASH_REMOVE
-    op = (JSDHashOperator)mapflags;
-#else
-    op = JS_DHASH_NEXT;
-    if (mapflags & JS_MAP_GCROOT_STOP)
-        op |= JS_DHASH_STOP;
-    if (mapflags & JS_MAP_GCROOT_REMOVE)
-        op |= JS_DHASH_REMOVE;
-#endif
-
-    return (JSDHashOperator) op;
-}
-
 uint32
 js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
 {
-    GCRootMapArgs args = {map, data};
     AutoLockGC lock(rt);
-    return JS_DHashTableEnumerate(&rt->gcRootsHash, js_gcroot_mapper, &args);
+    intN mapflags;
+    uint32 i = 0;
+
+    for (GCRoots::Enum e(rt->gcRootsHash); !e.empty(); e.popFront()) {
+        mapflags = map(e.front().key, e.front().value, data);
+        i++;
+        if (mapflags & JS_MAP_GCROOT_REMOVE)
+            e.removeFront();
+        if (mapflags & JS_MAP_GCROOT_STOP)
+            break;
+    }
+    return i;
 }
 
 void
@@ -1758,25 +1672,24 @@ js_NewWeaklyRootedDouble(JSContext *cx, jsdouble d)
 JSBool
 js_LockGCThingRT(JSRuntime *rt, void *thing)
 {
+    GCLocks *locks;
+    
     if (!thing)
         return true;
-
+    locks = &rt->gcLocksHash;
     AutoLockGC lock(rt);
-    JSGCLockHashEntry *lhe = (JSGCLockHashEntry *)
-                             JS_DHashTableOperate(&rt->gcLocksHash, thing,
-                                                  JS_DHASH_ADD);
-    bool ok = !!lhe;
-    if (ok) {
-        if (!lhe->thing) {
-            lhe->thing = thing;
-            lhe->count = 1;
-        } else {
-            JS_ASSERT(lhe->count >= 1);
-            lhe->count++;
-        }
-        METER(rt->gcStats.lock++);
+    GCLocks::AddPtr p = locks->lookupForAdd(thing);
+
+    if (!p) {
+        if (!locks->add(p, thing, 1))
+            return false;
+    } else {
+        JS_ASSERT(p->value >= 1);
+        p->value++;
     }
-    return ok;
+
+    METER(rt->gcStats.lock++);
+    return true;
 }
 
 void
@@ -1786,13 +1699,13 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
         return;
 
     AutoLockGC lock(rt);
-    JSGCLockHashEntry *lhe = (JSGCLockHashEntry *)
-                             JS_DHashTableOperate(&rt->gcLocksHash, thing,
-                                                  JS_DHASH_LOOKUP);
-    if (JS_DHASH_ENTRY_IS_BUSY(lhe)) {
+    GCLocks::Ptr p = rt->gcLocksHash.lookup(thing);
+
+    if (p) {
         rt->gcPoke = true;
-        if (--lhe->count == 0)
-            JS_DHashTableOperate(&rt->gcLocksHash, thing, JS_DHASH_REMOVE);
+        if (--p->value == 0)
+            rt->gcLocksHash.remove(p);
+
         METER(rt->gcStats.unlock++);
     }
 }
@@ -2127,13 +2040,10 @@ js_CallValueTracerIfGCThing(JSTracer *trc, jsval v)
     js_CallGCMarker(trc, thing, kind);
 }
 
-static JSDHashOperator
-gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
-                  void *arg)
+static void
+gc_root_traversal(const GCRoots::Entry &entry, JSTracer *trc)
 {
-    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
-    JSTracer *trc = (JSTracer *)arg;
-    jsval *rp = (jsval *)rhe->root;
+    jsval *rp = (jsval *)entry.key;
     jsval v = *rp;
 
     /* Ignore null reference, scalar values, and static strings. */
@@ -2167,36 +2077,29 @@ gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
                     }
                 }
             }
-            if (!root_points_to_gcArenaList && rhe->name) {
+            if (!root_points_to_gcArenaList && entry.value) {
                 fprintf(stderr,
 "JS API usage error: the address passed to JS_AddNamedRoot currently holds an\n"
 "invalid jsval.  This is usually caused by a missing call to JS_RemoveRoot.\n"
 "The root's name is \"%s\".\n",
-                        rhe->name);
+                        entry.value);
             }
             JS_ASSERT(root_points_to_gcArenaList);
         }
 #endif
-        JS_SET_TRACING_NAME(trc, rhe->name ? rhe->name : "root");
+        JS_SET_TRACING_NAME(trc, entry.value ? entry.value : "root");
         js_CallValueTracerIfGCThing(trc, v);
     }
-
-    return JS_DHASH_NEXT;
 }
 
-static JSDHashOperator
-gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
-                  void *arg)
+static void
+gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
 {
-    JSGCLockHashEntry *lhe = (JSGCLockHashEntry *)hdr;
-    void *thing = (void *)lhe->thing;
-    JSTracer *trc = (JSTracer *)arg;
     uint32 traceKind;
 
-    JS_ASSERT(lhe->count >= 1);
-    traceKind = js_GetGCThingTraceKind(thing);
-    JS_CALL_TRACER(trc, thing, traceKind, "locked object");
-    return JS_DHASH_NEXT;
+    JS_ASSERT(entry.value >= 1);
+    traceKind = js_GetGCThingTraceKind(entry.key);
+    JS_CALL_TRACER(trc, entry.key, traceKind, "locked object");
 }
 
 namespace js {
@@ -2310,8 +2213,12 @@ js_TraceRuntime(JSTracer *trc)
     JSRuntime *rt = trc->context->runtime;
     JSContext *iter, *acx;
 
-    JS_DHashTableEnumerate(&rt->gcRootsHash, gc_root_traversal, trc);
-    JS_DHashTableEnumerate(&rt->gcLocksHash, gc_lock_traversal, trc);
+    for (GCRoots::Range r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
+        gc_root_traversal(r.front(), trc);
+
+    for (GCLocks::Range r = rt->gcLocksHash.all(); !r.empty(); r.popFront())
+        gc_lock_traversal(r.front(), trc);
+
     js_TraceAtomState(trc);
     js_TraceRuntimeNumberState(trc);
     js_MarkTraps(trc);
