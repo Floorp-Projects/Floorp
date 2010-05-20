@@ -1076,13 +1076,13 @@ PluginInstanceParent::AnswerNPN_GetAuthenticationInfo(const nsCString& protocol,
 
 bool
 PluginInstanceParent::AnswerNPN_ConvertPoint(const double& sourceX,
+                                             const bool&   ignoreDestX,
                                              const double& sourceY,
+                                             const bool&   ignoreDestY,
                                              const NPCoordinateSpace& sourceSpace,
                                              const NPCoordinateSpace& destSpace,
                                              double *destX,
-                                             bool *ignoreDestX,
                                              double *destY,
-                                             bool *ignoreDestY,
                                              bool *result)
 {
     *result = mNPNIface->convertpoint(mNPP, sourceX, sourceY, sourceSpace,
