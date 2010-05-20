@@ -451,6 +451,7 @@ var BrowserUI = {
     ConsoleView.uninit();
   },
 
+  _shouldUnlockToolbar: false, // See bug 564285
   update : function(aState) {
     let icons = document.getElementById("urlbar-icons");
     let browser = Browser.selectedBrowser;
@@ -461,7 +462,10 @@ var BrowserUI = {
           this._updateToolbar();
 
         this._updateIcon(browser.mIconURL);
-        this.unlockToolbar();
+        if (this._shouldUnlockToolbar) {
+          this._shouldUnlockToolbar = false;
+          this.unlockToolbar();
+        }
         break;
 
       case TOOLBARSTATE_LOADING:
@@ -470,7 +474,11 @@ var BrowserUI = {
 
         browser.mIconURL = "";
         this._updateIcon();
-        this.lockToolbar();
+
+        if (!Browser.hasNotificationsForTab(Browser.selectedTab)) {
+          this._shouldUnlockToolbar = true;
+          this.lockToolbar();
+        }
         break;
     }
   },
