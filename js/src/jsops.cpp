@@ -2391,7 +2391,7 @@ BEGIN_CASE(JSOP_APPLY)
             DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, &lval);
 
             JS_ASSERT(fun->u.n.extra == 0);
-            JS_ASSERT(vp[1].isObject() || PrimitiveValue::test(fun, vp[1]));
+            JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveValue::test(fun, vp[1]));
             JSBool ok = ((FastNative) fun->u.n.native)(cx, argc, vp);
             DTrace::exitJSFun(cx, NULL, fun, *vp, &lval);
             regs.sp = vp + 1;

@@ -1728,7 +1728,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
         return JS_FALSE;
     }
 
-    *bp = js_IsDelegate(cx, &pval.asObject(), pval);
+    *bp = js_IsDelegate(cx, &pval.asObject(), *v);
     return JS_TRUE;
 }
 
