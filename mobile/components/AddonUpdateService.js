@@ -43,9 +43,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gObs",
                                    "@mozilla.org/observer-service;1",
                                    "nsIObserverService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gExtMgr",
-                                   "@mozilla.org/extensions/manager;1",
-                                   "nsIExtensionManager");
+XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
+  Components.utils.import("resource://gre/modules/AddonManager.jsm");
+  return AddonManager;
+});
 
 XPCOMUtils.defineLazyServiceGetter(this, "gIO",
                                    "@mozilla.org/network/io-service;1",
@@ -96,10 +97,18 @@ AddonUpdateService.prototype = {
 
     gIO.offline = false;
 
-    // Extension Manager will check for empty list and auto-check all add-ons
-    let items = [];
-    let listener = new UpdateCheckListener();
-    gExtMgr.update(items, items.length, Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION, listener);
+    AddonManager.getAddonsByTypes(null, function(aAddonList) {
+      aAddonList.forEach(function(aAddon) {
+        if (aAddon.permissions & AddonManager.PERM_CAN_UPGRADE) {
+          let data = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+          data.data = JSON.stringify({ id: aAddon.id, name: aAddon.name });
+          gObs.notifyObservers(data, "addon-update-started", null);
+
+          let listener = new UpdateCheckListener();
+          aAddon.findUpdates(listener, AddonManager.UPDATE_WHEN_USER_REQUESTED);
+        }
+      });
+    });
   }
 };
 
@@ -109,48 +118,37 @@ AddonUpdateService.prototype = {
 // -----------------------------------------------------------------------
 
 function UpdateCheckListener() {
-  this._addons = [];
+  this._status = null;
+  this._version = null;
 }
 
 UpdateCheckListener.prototype = {
-  /////////////////////////////////////////////////////////////////////////////
-  // nsIAddonUpdateCheckListener
-  onUpdateStarted: function ucl_onUpdateStarted() {
+  onCompatibilityUpdateAvailable: function(aAddon) {
+    this._status = "compatibility";
   },
 
-  onUpdateEnded: function ucl_onUpdateEnded() {
-    if (!this._addons.length)
-      return;
-
-    // If we have some updateable add-ons, let's download them
-    let items = [];
-    for (let i = 0; i < this._addons.length; i++)
-      items.push(gExtMgr.getItemForID(this._addons[i]));
-
-    // Start the actual downloads
-    gExtMgr.addDownloads(items, items.length, null);
-
-    // Remember that we downloaded new updates so we don't check again
-    gNeedsRestart = true;
+  onUpdateAvailable: function(aAddon, aInstall) {
+    this._status = "update";
+    this._version = aInstall.version;
+    aInstall.install();
   },
 
-  onAddonUpdateStarted: function ucl_onAddonUpdateStarted(aAddon) {
-    gObs.notifyObservers(aAddon, "addon-update-started", null);
+  onNoUpdateAvailable: function(aAddon) {
+    if (!this._status)
+      this._status = "no-update";
   },
 
-  onAddonUpdateEnded: function ucl_onAddonUpdateEnded(aAddon, aStatus) {
-    gObs.notifyObservers(aAddon, "addon-update-ended", aStatus);
-    
-    // Save the add-on id if we can download an update
-    if (aStatus == Ci.nsIAddonUpdateCheckListener.STATUS_UPDATE)
-      this._addons.push(aAddon.id);
-  },
+  onUpdateFinished: function(aAddon, aError) {
+    let data = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+    if (this._version)
+      data.data = JSON.stringify({ id: aAddon.id, name: aAddon.name, version: this._version });
+    else
+      data.data = JSON.stringify({ id: aAddon.id, name: aAddon.name });
 
-  QueryInterface: function ucl_QueryInterface(aIID) {
-    if (!aIID.equals(Ci.nsIAddonUpdateCheckListener) &&
-        !aIID.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
+    if (aError)
+      this._status = "error";
+
+    gObs.notifyObservers(data, "addon-update-ended", this._status);
   }
 };
 
