@@ -500,6 +500,12 @@ struct JSScope : public JSObjectMap
 
     static bool initRuntimeState(JSContext *cx);
     static void finishRuntimeState(JSContext *cx);
+
+    enum {
+        EMPTY_ARGUMENTS_SHAPE = 1,
+        EMPTY_BLOCK_SHAPE     = 2,
+        LAST_RESERVED_SHAPE   = 2
+    };
 };
 
 struct JSEmptyScope : public JSScope

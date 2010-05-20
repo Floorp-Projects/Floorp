@@ -2834,7 +2834,7 @@ PreGCCleanup(JSContext *cx, JSGCInvocationKind gckind)
         ) {
         rt->gcRegenShapes = true;
         rt->gcRegenShapesScopeFlag ^= JSScope::SHAPE_REGEN;
-        rt->shapeGen = 0;
+        rt->shapeGen = JSScope::LAST_RESERVED_SHAPE;
         rt->protoHazardShape = 0;
     }
 
