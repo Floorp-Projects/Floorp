@@ -49,6 +49,7 @@
 #include "AsyncConnectionHelper.h"
 #include "IDBEvents.h"
 #include "IDBObjectStoreRequest.h"
+#include "IDBTransactionRequest.h"
 #include "IndexedDatabaseRequest.h"
 #include "LazyIdleThread.h"
 
@@ -56,7 +57,7 @@ USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-const PRUint32 kDefaultDatabaseTimeoutMS = 5000;
+const PRUint32 kDefaultDatabaseTimeoutSeconds = 30;
 
 inline
 nsISupports*
@@ -125,7 +126,6 @@ public:
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
-  PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
 
 protected:
   // In-params.
@@ -133,13 +133,11 @@ protected:
   nsString mKeyPath;
   bool mAutoIncrement;
 
-  // Created during Init.
-  nsRefPtr<IDBObjectStoreRequest> mObjectStore;
-
   // Out-params.
   PRInt64 mId;
 };
 
+#if 0
 class OpenObjectStoreHelper : public CreateObjectStoreHelper
 {
 public:
@@ -159,14 +157,15 @@ protected:
   // In-params.
   PRUint16 mMode;
 };
+#endif
 
 class RemoveObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
   RemoveObjectStoreHelper(IDBDatabaseRequest* aDatabase,
                           IDBRequest* aRequest,
-                          const nsAString& aName)
-  : AsyncConnectionHelper(aDatabase, aRequest), mName(aName)
+                          const ObjectStoreInfo& aStore)
+  : AsyncConnectionHelper(aDatabase, aRequest), mStore(aStore)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -174,7 +173,7 @@ public:
 
 private:
   // In-params.
-  nsString mName;
+  ObjectStoreInfo mStore;
 };
 
 } // anonymous namespace
@@ -183,7 +182,7 @@ private:
 already_AddRefed<IDBDatabaseRequest>
 IDBDatabaseRequest::Create(const nsAString& aName,
                            const nsAString& aDescription,
-                           nsTArray<nsString>& aObjectStoreNames,
+                           nsTArray<ObjectStoreInfo>& aObjectStores,
                            const nsAString& aVersion,
                            LazyIdleThread* aThread,
                            const nsAString& aDatabaseFilePath,
@@ -195,7 +194,7 @@ IDBDatabaseRequest::Create(const nsAString& aName,
 
   db->mName.Assign(aName);
   db->mDescription.Assign(aDescription);
-  db->mObjectStoreNames.SwapElements(aObjectStoreNames);
+  db->mObjectStores.SwapElements(aObjectStores);
   db->mVersion.Assign(aVersion);
   db->mDatabaseFilePath.Assign(aDatabaseFilePath);
 
@@ -239,61 +238,92 @@ IDBDatabaseRequest::EnsureConnection()
 }
 
 already_AddRefed<mozIStorageStatement>
-IDBDatabaseRequest::PutStatement(bool aOverwrite,
+IDBDatabaseRequest::AddStatement(bool aCreate,
+                                 bool aOverwrite,
                                  bool aAutoIncrement)
 {
+#ifdef DEBUG
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  if (!aCreate) {
+    NS_ASSERTION(aOverwrite, "Bad param combo!");
+  }
+#endif
+
   nsresult rv = EnsureConnection();
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsCOMPtr<mozIStorageStatement> result;
+  nsCOMPtr<mozIStorageStatement>& cachedStatement =
+    aAutoIncrement ?
+      aCreate ?
+        aOverwrite ?
+          mAddOrModifyAutoIncrementStmt :
+          mAddAutoIncrementStmt :
+        mModifyAutoIncrementStmt :
+      aCreate ?
+        aOverwrite ?
+          mAddOrModifyStmt :
+          mAddStmt :
+        mModifyStmt;
 
-  if (aOverwrite) {
+  nsCOMPtr<mozIStorageStatement> result(cachedStatement);
+
+  if (!result) {
+    nsCString query;
     if (aAutoIncrement) {
-      if (!mPutOverwriteAutoIncrementStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
-          "VALUES (:osid, :key_value, :data)"
-        ), getter_AddRefs(mPutOverwriteAutoIncrementStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
+      if (aCreate) {
+        if (aOverwrite) {
+          query.AssignLiteral(
+            "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
+            "VALUES (:osid, :key_value, :data)"
+          );
+        }
+        else {
+          query.AssignLiteral(
+            "INSERT INTO ai_object_data (object_store_id, data) "
+            "VALUES (:osid, :data)"
+          );
+        }
       }
-      result = mPutOverwriteAutoIncrementStmt;
+      else {
+        query.AssignLiteral(
+          "UPDATE ai_object_data "
+          "SET data = :data "
+          "WHERE object_store_id = :osid "
+          "AND id = :key_value"
+        );
+      }
     }
     else {
-      if (!mPutOverwriteStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "INSERT OR REPLACE INTO object_data (object_store_id, key_value, "
-                                              "data) "
-          "VALUES (:osid, :key_value, :data)"
-        ), getter_AddRefs(mPutOverwriteStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
+      if (aCreate) {
+        if (aOverwrite) {
+          query.AssignLiteral(
+            "INSERT OR REPLACE INTO object_data (object_store_id, key_value, "
+                                                "data) "
+            "VALUES (:osid, :key_value, :data)"
+          );
+        }
+        else {
+          query.AssignLiteral(
+            "INSERT INTO object_data (object_store_id, key_value, data) "
+            "VALUES (:osid, :key_value, :data)"
+          );
+        }
       }
-      result = mPutOverwriteStmt;
-    }
-  }
-  else {
-    if (aAutoIncrement) {
-      if (!mPutAutoIncrementStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "INSERT INTO ai_object_data (object_store_id, data) "
-          "VALUES (:osid, :data)"
-        ), getter_AddRefs(mPutAutoIncrementStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
+      else {
+        query.AssignLiteral(
+          "UPDATE object_data "
+          "SET data = :data "
+          "WHERE object_store_id = :osid "
+          "AND key_value = :key_value"
+        );
       }
-      result = mPutAutoIncrementStmt;
     }
-    else {
-      if (!mPutStmt) {
-        rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-          "INSERT INTO object_data (object_store_id, key_value, data) "
-          "VALUES (:osid, :key_value, :data)"
-        ), getter_AddRefs(mPutStmt));
-        NS_ENSURE_SUCCESS(rv, nsnull);
-      }
-      result = mPutStmt;
-    }
-  }
 
+    rv = mConnection->CreateStatement(query, getter_AddRefs(cachedStatement));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    result = cachedStatement;
+  }
   return result.forget();
 }
 
@@ -375,10 +405,12 @@ IDBDatabaseRequest::FireCloseConnectionRunnable()
   nsTArray<nsCOMPtr<nsISupports> > doomedObjects;
 
   doomedObjects.AppendElement(do_QIAndNull(mConnection));
-  doomedObjects.AppendElement(do_QIAndNull(mPutStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mPutAutoIncrementStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mPutOverwriteStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mPutOverwriteAutoIncrementStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mAddStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mAddAutoIncrementStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mModifyStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mModifyAutoIncrementStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mAddOrModifyStmt));
+  doomedObjects.AppendElement(do_QIAndNull(mAddOrModifyAutoIncrementStmt));
   doomedObjects.AppendElement(do_QIAndNull(mRemoveStmt));
   doomedObjects.AppendElement(do_QIAndNull(mRemoveAutoIncrementStmt));
   doomedObjects.AppendElement(do_QIAndNull(mGetStmt));
@@ -397,38 +429,26 @@ IDBDatabaseRequest::OnVersionSet(const nsString& aVersion)
 }
 
 void
-IDBDatabaseRequest::OnObjectStoreCreated(const nsAString& aName)
+IDBDatabaseRequest::OnObjectStoreCreated(const ObjectStoreInfo& aInfo)
 {
-  NS_ASSERTION(!mObjectStoreNames.Contains(aName),
-               "Already got this object store in the list!");
-  if (!mObjectStoreNames.AppendElement(aName)) {
+  NS_ASSERTION(!mObjectStores.Contains(aInfo), "Already know about this one!");
+  if (!mObjectStores.AppendElement(aInfo)) {
     NS_ERROR("Failed to add object store name! OOM?");
   }
 }
 
 void
-IDBDatabaseRequest::OnObjectStoreRemoved(const nsAString& aName)
+IDBDatabaseRequest::OnObjectStoreRemoved(const ObjectStoreInfo& aInfo)
 {
-  NS_ASSERTION(mObjectStoreNames.Contains(aName),
-               "Didn't know about this object store before!");
-  PRUint32 count = mObjectStoreNames.Length();
-  for (PRUint32 index = 0; index < count; index++) {
-    if (mObjectStoreNames[index].Equals(aName)) {
-      mObjectStoreNames.RemoveElementAt(index);
-      return;
-    }
-  }
-  NS_NOTREACHED("Shouldn't get here!");
+  NS_ASSERTION(mObjectStores.Contains(aInfo), "Didn't know about this one!");
+  mObjectStores.RemoveElement(aInfo);
 }
 
 nsresult
-IDBDatabaseRequest::TransactionInternal(const nsTArray<nsString>& aStoreNames,
-                                        PRUint16 aMode,
-                                        PRUint32 aTimeout,
-                                        nsIIDBTransactionRequest** _retval)
+IDBDatabaseRequest::QueueDatabaseWork(nsIRunnable* aRunnable)
 {
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return mPendingDatabaseWork.AppendElement(aRunnable) ? NS_OK :
+                                                         NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMPL_ADDREF(IDBDatabaseRequest)
@@ -477,9 +497,10 @@ IDBDatabaseRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
-  PRUint32 count = mObjectStoreNames.Length();
+  PRUint32 count = mObjectStores.Length();
   for (PRUint32 index = 0; index < count; index++) {
-    NS_ENSURE_TRUE(list->Add(mObjectStoreNames[index]), NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(list->Add(mObjectStores[index].name),
+                   NS_ERROR_OUT_OF_MEMORY);
   }
 
   list.forget(aObjectStores);
@@ -508,9 +529,9 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   bool exists = false;
-  PRUint32 count = mObjectStoreNames.Length();
+  PRUint32 count = mObjectStores.Length();
   for (PRUint32 index = 0; index < count; index++) {
-    if (mObjectStoreNames[index].Equals(aName)) {
+    if (mObjectStores[index].name.Equals(aName)) {
       exists = true;
       break;
     }
@@ -548,14 +569,8 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
 
-  bool exists = false;
-  PRUint32 count = mObjectStoreNames.Length();
-  for (PRUint32 index = 0; index < count; index++) {
-    if (mObjectStoreNames[index].Equals(aName)) {
-      exists = true;
-      break;
-    }
-  }
+  PRInt64 id;
+  bool exists = IdForObjectStoreName(aName, &id);
 
   nsresult rv;
   if (NS_UNLIKELY(!exists)) {
@@ -566,8 +581,9 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
     rv = NS_DispatchToCurrentThread(runnable);
   }
   else {
+    ObjectStoreInfo info(aName, id);
     nsRefPtr<RemoveObjectStoreHelper> helper =
-      new RemoveObjectStoreHelper(this, request, aName);
+      new RemoveObjectStoreHelper(this, request, info);
     rv = helper->Dispatch(mConnectionThread);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -614,12 +630,76 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
   }
 
   if (aOptionalArgCount <= 1) {
-    aTimeout = kDefaultDatabaseTimeoutMS;
+    aTimeout = kDefaultDatabaseTimeoutSeconds;
   }
 
-  nsAutoTArray<nsString, 5> storeNames;
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return TransactionInternal(storeNames, aMode, aTimeout, _retval);
+  PRUint16 type;
+  nsresult rv = aStoreNames->GetDataType(&type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 objectStoreCount = mObjectStores.Length();
+  nsTArray<ObjectStoreInfo> objectStoresToOpen;
+  bool found = false;
+
+  switch (type) {
+    case nsIDataType::VTYPE_VOID:
+    case nsIDataType::VTYPE_EMPTY:
+    case nsIDataType::VTYPE_EMPTY_ARRAY: {
+      // Empty, request all object stores
+      rv = objectStoresToOpen.AppendElements(mObjectStores) ?
+           NS_OK :
+           NS_ERROR_OUT_OF_MEMORY;
+      found = true;
+    } break;
+
+    case nsIDataType::VTYPE_WSTRING_SIZE_IS: {
+      // Single name
+      nsString name;
+      rv = aStoreNames->GetAsAString(name);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      for (PRUint32 index = 0; index < objectStoreCount; index++) {
+        ObjectStoreInfo& info = mObjectStores[index];
+        if (info.name == name) {
+          rv = objectStoresToOpen.AppendElement(info) ?
+               NS_OK :
+               NS_ERROR_OUT_OF_MEMORY;
+          found = true;
+          break;
+        }
+      }
+    } break;
+
+    case nsIDataType::VTYPE_ARRAY: {
+      // Array of strings, hopefully.
+      NS_NOTYETIMPLEMENTED("Implement me!");
+      return NS_ERROR_NOT_IMPLEMENTED;
+
+      /*
+      PRUint16 valueType;
+      nsIID iid;
+      PRUint32 count;
+      void* array;
+      nsresult rv = value->GetAsArray(&type, &iid, &count, &array);
+      */
+    } break;
+
+    default:
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!found) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsRefPtr<IDBTransactionRequest> transaction =
+    IDBTransactionRequest::Create(this, objectStoresToOpen, aMode,
+                                  kDefaultDatabaseTimeoutSeconds);
+  NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
+
+  transaction.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -645,16 +725,24 @@ IDBDatabaseRequest::ObjectStore(const nsAString& aName,
     aMode = nsIIDBTransaction::READ_ONLY;
   }
 
-  nsAutoTArray<nsString, 1> storeNames;
-  storeNames.AppendElement(aName);
+  PRInt64 id;
+  if (!IdForObjectStoreName(aName, &id)) {
+    NS_NOTYETIMPLEMENTED("Need right return code");
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  nsCOMPtr<nsIIDBTransactionRequest> transaction;
-  nsresult rv =  TransactionInternal(storeNames, aMode,
-                                     kDefaultDatabaseTimeoutMS,
-                                     getter_AddRefs(transaction));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsTArray<ObjectStoreInfo> objectStores;
+  if (!objectStores.AppendElement(ObjectStoreInfo(aName, id))) {
+    NS_ERROR("Out of memory");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-  rv = transaction->ObjectStore(aName, _retval);
+  nsRefPtr<IDBTransactionRequest> transaction =
+    IDBTransactionRequest::Create(this, objectStores, aMode,
+                                  kDefaultDatabaseTimeoutSeconds);
+  NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
+
+  nsresult rv = transaction->ObjectStore(aName, _retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -737,27 +825,61 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 PRUint16
 CreateObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
-  mObjectStore =
-    IDBObjectStoreRequest::Create(mDatabase, mName, mKeyPath, mAutoIncrement,
-                                  nsIIDBTransaction::READ_WRITE, mId);
-  NS_ENSURE_TRUE(mObjectStore, nsIIDBDatabaseException::UNKNOWN_ERR);
+  nsTArray<ObjectStoreInfo> objectStores;
+  ObjectStoreInfo* info = objectStores.AppendElement();
+  if (!info) {
+    NS_ERROR("Out of memory?!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
 
-  mDatabase->OnObjectStoreCreated(mName);
+  info->name = mName;
+  info->id = mId;
+  info->keyPath = mKeyPath;
+  info->autoIncrement = mAutoIncrement;
 
-  return AsyncConnectionHelper::OnSuccess(aTarget);
-}
+  mDatabase->OnObjectStoreCreated(*info);
 
-PRUint16
-CreateObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
-{
-  nsCOMPtr<nsISupports> result =
-    do_QueryInterface(static_cast<nsIIDBObjectStoreRequest*>(mObjectStore));
-  NS_ASSERTION(result, "Failed to QI!");
+  nsRefPtr<IDBTransactionRequest> transaction =
+    IDBTransactionRequest::Create(mDatabase, objectStores,
+                                  nsIIDBTransaction::READ_WRITE,
+                                  kDefaultDatabaseTimeoutSeconds);
+  NS_ASSERTION(objectStores.IsEmpty(), "Should have swapped!");
 
-  aResult->SetAsISupports(result);
+  nsCOMPtr<nsIIDBObjectStoreRequest> result;
+  nsresult rv = transaction->ObjectStore(mName, getter_AddRefs(result));
+  NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsIWritableVariant> variant =
+    do_CreateInstance(NS_VARIANT_CONTRACTID);
+  if (!variant) {
+    NS_ERROR("Couldn't create variant!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  variant->SetAsISupports(result);
+
+  if (NS_FAILED(variant->SetWritable(PR_FALSE))) {
+    NS_ERROR("Failed to make variant readonly!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  nsCOMPtr<nsIDOMEvent> event =
+    IDBSuccessEvent::Create(mRequest, variant, transaction);
+  if (!event) {
+    NS_ERROR("Failed to create event!");
+    return nsIIDBDatabaseException::UNKNOWN_ERR;
+  }
+
+  AutoTransactionRequestNotifier notifier(transaction);
+
+  PRBool dummy;
+  aTarget->DispatchEvent(event, &dummy);
   return OK;
 }
 
+#if 0
 PRUint16
 OpenObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
@@ -789,11 +911,11 @@ OpenObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 PRUint16
 OpenObjectStoreHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
+  ObjectStoreInfo info(mName, mId);
   mObjectStore =
-    IDBObjectStoreRequest::Create(mDatabase, mName, mKeyPath, mAutoIncrement,
-                                  mMode, mId);
+    IDBObjectStoreRequest::Create(mDatabase, info, mKeyPath, mAutoIncrement,
+                                  mMode);
   NS_ENSURE_TRUE(mObjectStore, nsIIDBDatabaseException::UNKNOWN_ERR);
-
   return AsyncConnectionHelper::OnSuccess(aTarget);
 }
 
@@ -807,6 +929,7 @@ OpenObjectStoreHelper::GetSuccessResult(nsIWritableVariant* aResult)
   aResult->SetAsISupports(result);
   return OK;
 }
+#endif
 
 PRUint16
 RemoveObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
@@ -818,7 +941,7 @@ RemoveObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   ), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mName);
+  rv = stmt->BindStringByName(NS_LITERAL_CSTRING("name"), mStore.name);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   if (NS_FAILED(stmt->Execute())) {
@@ -831,6 +954,6 @@ RemoveObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 PRUint16
 RemoveObjectStoreHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
 {
-  mDatabase->OnObjectStoreRemoved(mName);
+  mDatabase->OnObjectStoreRemoved(mStore);
   return OK;
 }

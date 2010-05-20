@@ -42,7 +42,62 @@
 #include "nsDOMClassInfo.h"
 #include "nsThreadUtils.h"
 
+#include "IDBEvents.h"
+#include "IDBObjectStoreRequest.h"
+
 USING_INDEXEDDB_NAMESPACE
+
+// static
+already_AddRefed<IDBTransactionRequest>
+IDBTransactionRequest::Create(IDBDatabaseRequest* aDatabase,
+                              nsTArray<ObjectStoreInfo>& aObjectStores,
+                              PRUint16 aMode,
+                              PRUint32 aTimeout)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsRefPtr<IDBTransactionRequest> transaction = new IDBTransactionRequest();
+
+  transaction->mDatabase = aDatabase;
+  transaction->mObjectStores.SwapElements(aObjectStores);
+  transaction->mMode = aMode;
+  transaction->mTimeout = aTimeout;
+
+  return transaction.forget();
+}
+
+IDBTransactionRequest::IDBTransactionRequest()
+: mReadyState(nsIIDBTransaction::INITIAL),
+  mMode(nsIIDBTransaction::READ_ONLY),
+  mTimeout(0),
+  mPendingRequests(0)
+{
+
+}
+
+IDBTransactionRequest::~IDBTransactionRequest()
+{
+  NS_ASSERTION(!mPendingRequests, "Should have no pending requests here!");
+}
+
+void
+IDBTransactionRequest::OnNewRequest()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  ++mPendingRequests;
+}
+
+void
+IDBTransactionRequest::OnRequestFinished()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mPendingRequests, "Mismatched calls!");
+  --mPendingRequests;
+  if (!mPendingRequests) {
+    // Commit!
+    NS_NOTYETIMPLEMENTED("Implement me!");
+  }
+}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransactionRequest)
 
@@ -72,27 +127,27 @@ NS_IMPL_RELEASE_INHERITED(IDBTransactionRequest, nsDOMEventTargetHelper)
 DOMCI_DATA(IDBTransactionRequest, IDBTransactionRequest)
 
 NS_IMETHODIMP
-IDBTransactionRequest::GetDb(nsIIDBDatabase** aDb)
+IDBTransactionRequest::GetDb(nsIIDBDatabase** aDB)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ADDREF(*aDB = mDatabase);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBTransactionRequest::GetReadyState(PRUint16* aReadyState)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aReadyState = mReadyState;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 IDBTransactionRequest::GetMode(PRUint16* aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aMode = mMode;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -100,8 +155,28 @@ IDBTransactionRequest::ObjectStore(const nsAString& aName,
                                    nsIIDBObjectStoreRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  ObjectStoreInfo* objectStoreInfo = nsnull;
+
+  PRUint32 count = mObjectStores.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    ObjectStoreInfo& info = mObjectStores[index];
+    if (info.name == aName) {
+      objectStoreInfo = &info;
+      break;
+    }
+  }
+
+  if (!objectStoreInfo) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsRefPtr<IDBObjectStoreRequest> objectStore =
+    IDBObjectStoreRequest::Create(mDatabase, this, *objectStoreInfo, mMode);
+  NS_ENSURE_TRUE(objectStore, NS_ERROR_FAILURE);
+
+  objectStore.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -116,46 +191,43 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetOncomplete(nsIDOMEventListener** aOncomplete)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return GetInnerEventListener(mOnCompleteListener, aOncomplete);
 }
 
 NS_IMETHODIMP
 IDBTransactionRequest::SetOncomplete(nsIDOMEventListener* aOncomplete)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return RemoveAddEventListener(NS_LITERAL_STRING(COMPLETE_EVT_STR),
+                                mOnCompleteListener, aOncomplete);
 }
 
 NS_IMETHODIMP
 IDBTransactionRequest::GetOnabort(nsIDOMEventListener** aOnabort)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return GetInnerEventListener(mOnAbortListener, aOnabort);
 }
 
 NS_IMETHODIMP
 IDBTransactionRequest::SetOnabort(nsIDOMEventListener* aOnabort)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_EVT_STR),
+                                mOnAbortListener, aOnabort);
 }
 
 NS_IMETHODIMP
 IDBTransactionRequest::GetOntimeout(nsIDOMEventListener** aOntimeout)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return GetInnerEventListener(mOnTimeoutListener, aOntimeout);
 }
 
 NS_IMETHODIMP
 IDBTransactionRequest::SetOntimeout(nsIDOMEventListener* aOntimeout)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return RemoveAddEventListener(NS_LITERAL_STRING(TIMEOUT_EVT_STR),
+                                mOnTimeoutListener, aOntimeout);
 }

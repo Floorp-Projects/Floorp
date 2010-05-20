@@ -49,19 +49,59 @@
 
 #include "nsDOMLists.h"
 
-class nsIIDBTransactionRequest;
-
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
-class IDBObjectStoreRequest;
+class IDBTransactionRequest;
+
+class ObjectStoreInfo
+{
+public:
+  nsString name;
+  PRInt64 id;
+  nsString keyPath;
+  bool autoIncrement;
+
+  ObjectStoreInfo()
+  : id(0), autoIncrement(false)
+  { }
+
+  ObjectStoreInfo(const nsAString& aName,
+                  PRInt64 aId)
+  : name(aName),
+    id(aId),
+    autoIncrement(false)
+  { }
+
+  ObjectStoreInfo(const nsAString& aName,
+                  PRInt64 aId,
+                  const nsAString& aKeyPath,
+                  bool aAutoIncrement)
+  : name(aName),
+    id(aId),
+    keyPath(aKeyPath),
+    autoIncrement(false)
+  { }
+
+  bool operator==(const ObjectStoreInfo& aOther) const {
+    if (id == aOther.id) {
+      NS_ASSERTION(name == aOther.name, "Huh?!");
+      return true;
+    }
+    return false;
+  }
+
+  bool operator<(const ObjectStoreInfo& aOther) const {
+    return id < aOther.id;
+  }
+
+};
 
 class IDBDatabaseRequest : public IDBRequest::Generator,
                            public nsIIDBDatabaseRequest,
                            public nsIObserver
 {
   friend class AsyncConnectionHelper;
-  friend class IDBObjectStoreRequest;
 
 public:
   NS_DECL_ISUPPORTS
@@ -72,14 +112,14 @@ public:
   static already_AddRefed<IDBDatabaseRequest>
   Create(const nsAString& aName,
          const nsAString& aDescription,
-         nsTArray<nsString>& aObjectStoreNames,
+         nsTArray<ObjectStoreInfo>& aObjectStores,
          const nsAString& aVersion,
          LazyIdleThread* aThread,
          const nsAString& aDatabaseFilePath,
          nsCOMPtr<mozIStorageConnection>& aConnection);
 
   /**
-   * Obtains a cached statement for the put operation on object stores.
+   * Obtains a cached statement for the add operation on object stores.
    *
    * @pre Called from mStorageThread.
    *
@@ -90,7 +130,8 @@ public:
    *        Indicating if the operation should use our key generator or not.
    * @returns a mozIStorageStatement to use for the put operation.
    */
-  already_AddRefed<mozIStorageStatement> PutStatement(bool aOverwrite,
+  already_AddRefed<mozIStorageStatement> AddStatement(bool aCreate,
+                                                      bool aOverwrite,
                                                       bool aAutoIncrement);
 
   /**
@@ -124,8 +165,8 @@ public:
   void FireCloseConnectionRunnable();
 
   void OnVersionSet(const nsString& aVersion);
-  void OnObjectStoreCreated(const nsAString& aName);
-  void OnObjectStoreRemoved(const nsAString& aName);
+  void OnObjectStoreCreated(const ObjectStoreInfo& aInfo);
+  void OnObjectStoreRemoved(const ObjectStoreInfo& aInfo);
 
 protected:
   IDBDatabaseRequest();
@@ -137,10 +178,21 @@ protected:
   // Only meant to be called on mStorageThread!
   nsresult EnsureConnection();
 
-  nsresult TransactionInternal(const nsTArray<nsString>& aStoreNames,
-                               PRUint16 aMode,
-                               PRUint32 aTimeout,
-                               nsIIDBTransactionRequest** _retval);
+  nsresult QueueDatabaseWork(nsIRunnable* aRunnable);
+
+  bool IdForObjectStoreName(const nsAString& aName,
+                            PRInt64* aIndex) {
+    NS_ASSERTION(aIndex, "Null pointer!");
+    PRUint32 count = mObjectStores.Length();
+    for (PRUint32 index = 0; index < count; index++) {
+      ObjectStoreInfo& store = mObjectStores[index];
+      if (store.name == aName) {
+        *aIndex = PRInt64(index);
+        return true;
+      }
+    }
+    return false;
+  }
 
 private:
   nsString mName;
@@ -148,21 +200,26 @@ private:
   nsString mVersion;
   nsString mDatabaseFilePath;
 
-  nsTArray<nsString> mObjectStoreNames;
+  nsTArray<ObjectStoreInfo> mObjectStores;
 
   nsRefPtr<LazyIdleThread> mConnectionThread;
 
   // Only touched on mStorageThread! These must be destroyed in the
   // FireCloseConnectionRunnable method.
   nsCOMPtr<mozIStorageConnection> mConnection;
-  nsCOMPtr<mozIStorageStatement> mPutStmt;
-  nsCOMPtr<mozIStorageStatement> mPutAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mPutOverwriteStmt;
-  nsCOMPtr<mozIStorageStatement> mPutOverwriteAutoIncrementStmt;
+  nsCOMPtr<mozIStorageStatement> mAddStmt;
+  nsCOMPtr<mozIStorageStatement> mAddAutoIncrementStmt;
+  nsCOMPtr<mozIStorageStatement> mModifyStmt;
+  nsCOMPtr<mozIStorageStatement> mModifyAutoIncrementStmt;
+  nsCOMPtr<mozIStorageStatement> mAddOrModifyStmt;
+  nsCOMPtr<mozIStorageStatement> mAddOrModifyAutoIncrementStmt;
   nsCOMPtr<mozIStorageStatement> mRemoveStmt;
   nsCOMPtr<mozIStorageStatement> mRemoveAutoIncrementStmt;
   nsCOMPtr<mozIStorageStatement> mGetStmt;
   nsCOMPtr<mozIStorageStatement> mGetAutoIncrementStmt;
+
+  nsTArray<nsCOMPtr<nsIRunnable> > mPendingDatabaseWork;
+  nsTArray<nsRefPtr<IDBTransactionRequest> > mTransactions;
 };
 
 END_INDEXEDDB_NAMESPACE
