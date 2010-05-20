@@ -198,7 +198,7 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, uintN flags, Value *tmpR
     /* Collect all unique properties from this object's scope. */
     JSScope *scope = obj->scope();
     for (JSScopeProperty *sprop = scope->lastProperty(); sprop; sprop = sprop->parent) {
-        if (!sprop->id != JSBOXEDWORD_VOID &&
+        if (sprop->id != JSBOXEDWORD_VOID &&
             !sprop->isAlias() &&
             !Enumerate(cx, obj, sprop->id, sprop->enumerable(), flags, tmpRoot, ht, sprops)) {
             return false;
