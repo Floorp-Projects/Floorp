@@ -115,6 +115,9 @@ PluginInstanceParent::~PluginInstanceParent()
         "Subclass was not reset correctly before the dtor was reached!");
 #endif
 #if defined(OS_MACOSX)
+    if (mShWidth != 0 && mShHeight != 0) {
+        DeallocShmem(mShSurface);
+    }
     if (mShColorSpace)
         ::CGColorSpaceRelease(mShColorSpace);
     if (mIOSurface)
@@ -508,10 +511,12 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
             }
             mIOSurface = nsIOSurface::CreateIOSurface(window.width, window.height);
         } else if (mShWidth * mShHeight != window.width * window.height) {
-            // Uncomment me when DeallocShmem lands.
-            //if (mShWidth != 0 && mShHeight != 0) {
-            //    DeallocShmem(&mShSurface);
-            //}
+            if (mShWidth != 0 && mShHeight != 0) {
+                DeallocShmem(mShSurface);
+                mShWidth = 0;
+                mShHeight = 0;
+            }
+
             if (window.width != 0 && window.height != 0) {
                 if (!AllocShmem(window.width * window.height*4, 
                                 SharedMemory::TYPE_BASIC, &mShSurface)) {
