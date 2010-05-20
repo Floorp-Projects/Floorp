@@ -356,7 +356,7 @@ struct JSObject {
      * one thread can access obj, or when accessing read-only slots within
      * JS_INITIAL_NSLOTS.
      */
-    inline const js::Value &getSlotMT(JSContext *cx, uintN slot);
+    inline js::Value getSlotMT(JSContext *cx, uintN slot);
     inline void setSlotMT(JSContext *cx, uintN slot, const js::Value &value);
 
     JSObject *getProto() const {

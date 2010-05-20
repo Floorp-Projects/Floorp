@@ -379,9 +379,6 @@ typedef JSBool
 (* CheckAccessIdOp)(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                     Value *vp, uintN *attrsp);
 typedef JSBool
-(* WatchPointHandler)(JSContext *cx, JSObject *obj, jsid id,
-                      const Value *old, Value *newp, void *closure);
-typedef JSBool
 (* PropertyIdOp)(JSContext *cx, JSObject *obj, jsid id, Value *vp);
 
 /*
@@ -396,8 +393,6 @@ static inline DefinePropOp        Valueify(JSDefinePropOp f)      { return (Defi
 static inline JSDefinePropOp      Jsvalify(DefinePropOp f)        { return (JSDefinePropOp)f; }
 static inline CheckAccessIdOp     Valueify(JSCheckAccessIdOp f)   { return (CheckAccessIdOp)f; }
 static inline JSCheckAccessIdOp   Jsvalify(CheckAccessIdOp f)     { return (JSCheckAccessIdOp)f; }
-static inline WatchPointHandler   Valueify(JSWatchPointHandler f) { return (WatchPointHandler)f; }
-static inline JSWatchPointHandler Jsvalify(WatchPointHandler f)   { return (JSWatchPointHandler)f; }
 static inline PropertyIdOp        Valueify(JSPropertyIdOp f);     /* Same type as JSPropertyOp */
 static inline JSPropertyIdOp      Jsvalify(PropertyIdOp f);       /* Same type as PropertyOp */
 
