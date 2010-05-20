@@ -174,6 +174,12 @@ public:
    * @return Whether this is a single line text control.
    */
   virtual PRBool IsSingleLineTextControl(PRBool aExcludePassword) const = 0;
+
+  /**
+   * Returns true if this is a labelable form control.
+   * @return Whether this is a labelable form control.
+   */
+  virtual PRBool IsLabelableControl() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)
