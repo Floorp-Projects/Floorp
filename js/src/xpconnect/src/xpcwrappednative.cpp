@@ -1748,16 +1748,6 @@ return_tearoff:
         ((JSExtendedClass*)clazz)->outerObject)
     {
         JSObject *outer = ((JSExtendedClass*)clazz)->outerObject(cx, obj);
-
-        // Protect against infinite recursion through XOWs.
-        JSObject *unsafeObj;
-        clazz = outer->getClass();
-        if(clazz == &XPCCrossOriginWrapper::XOWClass.base &&
-           (unsafeObj = XPCWrapper::UnwrapXOW(cx, outer)))
-        {
-            outer = unsafeObj;
-        }
-
         if(outer && outer != obj)
             return GetWrappedNativeOfJSObject(cx, outer, funobj, pobj2,
                                               pTearOff);

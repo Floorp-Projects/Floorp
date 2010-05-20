@@ -878,7 +878,7 @@ static JSObject *
 XPC_WN_OuterObject(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+        static_cast<XPCWrappedNative *>(obj->getPrivate());
     if(!wrapper)
     {
         Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
@@ -917,7 +917,7 @@ static JSObject *
 XPC_WN_InnerObject(JSContext *cx, JSObject *obj)
 {
     XPCWrappedNative *wrapper =
-        XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj);
+        static_cast<XPCWrappedNative *>(obj->getPrivate());
     if(!wrapper)
     {
         Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
