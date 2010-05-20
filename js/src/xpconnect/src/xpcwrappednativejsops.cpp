@@ -1507,6 +1507,27 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     AutoPopJSContext popper(threadData->GetJSContextStack());
     popper.PushIfNotTop(cx);
 
+    JSObject* outerscope = scope;
+    OBJ_TO_OUTER_OBJECT(cx, outerscope);
+    if(!outerscope)
+        return nsnull;
+
+    if(obj == outerscope)
+    {
+        // Fast-path for the common case: a window being wrapped in its own
+        // scope. Check to see if the object actually needs a XOW, and then
+        // give it one in its own scope.
+
+        if(!XPCCrossOriginWrapper::ClassNeedsXOW(obj->getClass()->name))
+            return obj;
+
+        js::AutoValueRooter tvr(cx, OBJECT_TO_JSVAL(obj));
+        if(!XPCCrossOriginWrapper::WrapObject(cx, scope, tvr.addr()))
+            return nsnull;
+
+        return JSVAL_TO_OBJECT(tvr.value());
+    }
+
     nsIScriptSecurityManager* secMan = XPCWrapper::GetSecurityManager();
     if(!secMan)
     {
