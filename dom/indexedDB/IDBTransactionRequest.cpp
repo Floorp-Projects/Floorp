@@ -84,6 +84,9 @@ void
 IDBTransactionRequest::OnNewRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  if (!mPendingRequests) {
+    mDatabase->DisableConnectionThreadTimeout();
+  }
   ++mPendingRequests;
 }
 
@@ -94,6 +97,7 @@ IDBTransactionRequest::OnRequestFinished()
   NS_ASSERTION(mPendingRequests, "Mismatched calls!");
   --mPendingRequests;
   if (!mPendingRequests) {
+    mDatabase->EnableConnectionThreadTimeout();
     // Commit!
     NS_NOTYETIMPLEMENTED("Implement me!");
   }
