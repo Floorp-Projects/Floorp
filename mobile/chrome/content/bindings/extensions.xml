@@ -38,7 +38,7 @@
                     oncommand="ExtensionsView.enable(document.getBindingParent(this));"/>
         <xul:button class="show-on-enable hide-on-disable hide-on-uninstall addon-disable" label="&addonDisable.label;"
                     oncommand="ExtensionsView.disable(document.getBindingParent(this));"/>
-        <xul:button class="hide-on-uninstall addon-uninstall" label="&addonUninstall.label;"
+        <xul:button anonid="uninstall-button" class="hide-on-uninstall addon-uninstall" label="&addonUninstall.label;"
                     oncommand="ExtensionsView.uninstall(document.getBindingParent(this));"/>
         <xul:button class="show-on-uninstall addon-cancel" label="&addonCancel.label;"
                     oncommand="ExtensionsView.cancelUninstall(document.getBindingParent(this));"/>
@@ -58,6 +58,10 @@
           let appDisabled = this.getAttribute("appDisabled");
           if (appDisabled == "true")
             document.getAnonymousElementByAttribute(this, "anonid", "enable-button").setAttribute("disabled", "true");
+
+          let isReadOnly = this.getAttribute("isReadonly");
+          if (isReadOnly == "true")
+            document.getAnonymousElementByAttribute(this, "anonid", "uninstall-button").setAttribute("disabled", "true");
         ]]>
       </constructor>
 
