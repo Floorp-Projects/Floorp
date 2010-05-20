@@ -90,6 +90,17 @@ public:
    */
   void SetWeakIdleObserver(nsIObserver* aObserver);
 
+  /**
+   * Disable the idle timeout for this thread. No effect if the timeout is
+   * already disabled.
+   */
+  void DisableIdleTimeout();
+
+  /**
+   * Enable the idle timeout. No effect if the timeout is already enabled.
+   */
+  void EnableIdleTimeout();
+
 private:
   /**
    * Calls Shutdown().
@@ -191,6 +202,11 @@ private:
    * further idle notifications during the shutdown process.
    */
   PRPackedBool mThreadIsShuttingDown;
+
+  /**
+   * Whether or not the idle timeout is enabled.
+   */
+  PRPackedBool mIdleTimeoutEnabled;
 };
 
 END_INDEXEDDB_NAMESPACE

@@ -168,6 +168,14 @@ public:
   void OnObjectStoreCreated(const ObjectStoreInfo& aInfo);
   void OnObjectStoreRemoved(const ObjectStoreInfo& aInfo);
 
+  void DisableConnectionThreadTimeout() {
+    mConnectionThread->DisableIdleTimeout();
+  }
+
+  void EnableConnectionThreadTimeout() {
+    mConnectionThread->EnableIdleTimeout();
+  }
+
 protected:
   IDBDatabaseRequest();
   ~IDBDatabaseRequest();
