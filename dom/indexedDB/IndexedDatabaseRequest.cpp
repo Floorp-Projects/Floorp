@@ -63,7 +63,7 @@ USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-const PRUint32 kDefaultThreadTimeoutMS = 5000;
+const PRUint32 kDefaultThreadTimeoutMS = 30000;
 
 class OpenDatabaseHelper : public AsyncConnectionHelper
 {
