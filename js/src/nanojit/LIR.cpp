@@ -1529,7 +1529,7 @@ namespace nanojit
 
     char* LInsPrinter::formatRef(RefBuf* buf, LIns *ref, bool showImmValue)
     {
-        // Give 'ref' a name if it doesn't have one.  
+        // Give 'ref' a name if it doesn't have one.
         const char* name = lirNameMap->lookupName(ref);
         if (!name) {
             name = lirNameMap->createName(ref);
