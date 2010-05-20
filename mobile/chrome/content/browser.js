@@ -882,6 +882,17 @@ var Browser = {
     }
   },
 
+  hasNotificationsForTab: function hasNotificationsForTab(aTab) {
+    let notifications = this.getNotificationBox().allNotifications;
+    for (let n = notifications.length - 1; n >= 0; n--) {
+      let notification = notifications[n];
+      if (notification._chromeTab == aTab.chromeTab)
+        return true;
+    }
+
+    return false;
+  },
+
   /** Returns true iff a tab's browser has been destroyed to free up memory. */
   sacrificeTab: function sacrificeTab() {
     let tabToClear = this._tabs.reduce(function(prevTab, currentTab) {
