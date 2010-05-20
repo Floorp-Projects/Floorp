@@ -227,10 +227,8 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
         mDecoder->GetCurrentStream()->GetCachedDataEnd(mDecoder->mDecoderPosition);
     }
 
-    // Don't decode any audio if the audio decode is way ahead, or if we're
-    // skipping to the next video keyframe and the audio is marginally ahead.
-    if (audioDecoded > AMPLE_AUDIO_MS ||
-        (skipToNextKeyframe && audioDecoded > audioPumpThresholdMs)) {
+    // Don't decode any audio if the audio decode is way ahead.
+    if (audioDecoded > AMPLE_AUDIO_MS) {
       audioWait = PR_TRUE;
     }
     if (audioPump && audioDecoded > audioPumpThresholdMs) {
