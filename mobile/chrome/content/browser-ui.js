@@ -1504,6 +1504,9 @@ var FormHelper = {
 
   _isElementVisible: function(aElement) {
     let style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, null);
+    if (!style)
+      return false;
+
     let isVisible = (style.getPropertyValue("visibility") != "hidden");
     let isOpaque = (style.getPropertyValue("opacity") != 0);
 
