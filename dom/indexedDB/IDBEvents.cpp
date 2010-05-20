@@ -47,6 +47,16 @@
 
 #include "IDBRequest.h"
 
+#define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(_class, _condition)  \
+  if ((_condition) && (aIID.Equals(NS_GET_IID(nsIClassInfo)) ||               \
+                       aIID.Equals(NS_GET_IID(nsXPCClassInfo)))) {            \
+    foundInterface = NS_GetDOMClassInfoInstance(eDOMClassInfo_##_class##_id); \
+    if (!foundInterface) {                                                    \
+      *aInstancePtr = nsnull;                                                 \
+      return NS_ERROR_OUT_OF_MEMORY;                                          \
+    }                                                                         \
+  } else
+
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
@@ -160,6 +170,22 @@ GetMessageForErrorCode(PRUint16 aCode,
 
 } // anonymous namespace
 
+// static
+already_AddRefed<nsIDOMEvent>
+IDBEvent::CreateGenericEvent(const nsAString& aType)
+{
+  nsRefPtr<nsDOMEvent> event(new nsDOMEvent(nsnull, nsnull));
+  nsresult rv = event->InitEvent(aType, PR_FALSE, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  rv = event->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsDOMEvent* result;
+  event.forget(&result);
+  return result;
+}
+
 NS_IMPL_ADDREF_INHERITED(IDBEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(IDBEvent, nsDOMEvent)
 
@@ -193,8 +219,9 @@ IDBErrorEvent::Create(IDBRequest* aRequest,
   rv = event->SetTrusted(PR_TRUE);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsCOMPtr<nsIDOMEvent> result(idomevent_cast(event));
-  return result.forget();
+  IDBErrorEvent* result;
+  event.forget(&result);
+  return idomevent_cast(result);
 }
 
 // static
@@ -250,61 +277,10 @@ IDBErrorEvent::SetMessage(const nsAString& aMessage)
 // static
 already_AddRefed<nsIDOMEvent>
 IDBSuccessEvent::Create(IDBRequest* aRequest,
-                        nsIVariant* aResult)
+                        nsIVariant* aResult,
+                        nsIIDBTransactionRequest* aTransaction)
 {
   nsRefPtr<IDBSuccessEvent> event(new IDBSuccessEvent());
-
-  event->mSource = aRequest->GetGenerator();
-  event->mResult = aResult;
-
-  nsresult rv = event->InitEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR), PR_FALSE,
-                                 PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  rv = event->SetTrusted(PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  nsCOMPtr<nsIDOMEvent> result(idomevent_cast(event));
-  return result.forget();
-}
-
-// static
-already_AddRefed<nsIRunnable>
-IDBSuccessEvent::CreateRunnable(IDBRequest* aRequest,
-                                nsIVariant* aResult)
-{
-  nsCOMPtr<nsIDOMEvent> event(IDBSuccessEvent::Create(aRequest, aResult));
-  NS_ENSURE_TRUE(event, nsnull);
-
-  nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aRequest, event));
-  return runnable.forget();
-}
-
-NS_IMPL_ADDREF_INHERITED(IDBSuccessEvent, IDBEvent)
-NS_IMPL_RELEASE_INHERITED(IDBSuccessEvent, IDBEvent)
-
-NS_INTERFACE_MAP_BEGIN(IDBSuccessEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIIDBSuccessEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBSuccessEvent)
-NS_INTERFACE_MAP_END_INHERITING(IDBEvent)
-
-DOMCI_DATA(IDBSuccessEvent, IDBSuccessEvent)
-
-NS_IMETHODIMP
-IDBSuccessEvent::GetResult(nsIVariant** aResult)
-{
-  nsCOMPtr<nsIVariant> result(mResult);
-  result.forget(aResult);
-  return NS_OK;
-}
-
-// static
-already_AddRefed<nsIDOMEvent>
-IDBTransactionEvent::Create(IDBRequest* aRequest,
-                            nsIVariant* aResult,
-                            nsIIDBTransactionRequest* aTransaction)
-{
-  nsRefPtr<IDBTransactionEvent> event(new IDBTransactionEvent());
 
   event->mSource = aRequest->GetGenerator();
   event->mResult = aResult;
@@ -317,36 +293,49 @@ IDBTransactionEvent::Create(IDBRequest* aRequest,
   rv = event->SetTrusted(PR_TRUE);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsCOMPtr<nsIDOMEvent> result(idomevent_cast(event));
-  return result.forget();
+  IDBSuccessEvent* result;
+  event.forget(&result);
+  return idomevent_cast(result);
 }
 
 // static
 already_AddRefed<nsIRunnable>
-IDBTransactionEvent::CreateRunnable(IDBRequest* aRequest,
-                                    nsIVariant* aResult,
-                                    nsIIDBTransactionRequest* aTransaction)
+IDBSuccessEvent::CreateRunnable(IDBRequest* aRequest,
+                                nsIVariant* aResult,
+                                nsIIDBTransactionRequest* aTransaction)
 {
   nsCOMPtr<nsIDOMEvent> event =
-    IDBTransactionEvent::Create(aRequest, aResult, aTransaction);
+    IDBSuccessEvent::Create(aRequest, aResult, aTransaction);
   NS_ENSURE_TRUE(event, nsnull);
 
   nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aRequest, event));
   return runnable.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(IDBTransactionEvent, IDBSuccessEvent)
-NS_IMPL_RELEASE_INHERITED(IDBTransactionEvent, IDBSuccessEvent)
+NS_IMPL_ADDREF_INHERITED(IDBSuccessEvent, IDBEvent)
+NS_IMPL_RELEASE_INHERITED(IDBSuccessEvent, IDBEvent)
 
-NS_INTERFACE_MAP_BEGIN(IDBTransactionEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIIDBTransactionEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBTransactionEvent)
-NS_INTERFACE_MAP_END_INHERITING(IDBSuccessEvent)
+NS_INTERFACE_MAP_BEGIN(IDBSuccessEvent)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIDBTransactionEvent, mTransaction)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(IDBTransactionEvent,
+                                                   mTransaction)
+  NS_INTERFACE_MAP_ENTRY(nsIIDBSuccessEvent)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(IDBSuccessEvent)
+NS_INTERFACE_MAP_END_INHERITING(IDBEvent)
 
-DOMCI_DATA(IDBTransactionEvent, IDBTransactionEvent)
+DOMCI_DATA(IDBSuccessEvent, IDBSuccessEvent)
+DOMCI_DATA(IDBTransactionEvent, IDBSuccessEvent)
 
 NS_IMETHODIMP
-IDBTransactionEvent::GetTransaction(nsIIDBTransactionRequest** aTransaction)
+IDBSuccessEvent::GetResult(nsIVariant** aResult)
+{
+  nsCOMPtr<nsIVariant> result(mResult);
+  result.forget(aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBSuccessEvent::GetTransaction(nsIIDBTransactionRequest** aTransaction)
 {
   nsCOMPtr<nsIIDBTransactionRequest> transaction(mTransaction);
   transaction.forget(aTransaction);
