@@ -429,8 +429,8 @@ public:
 
   // Stores the presentation time of the first sample in the stream in
   // aOutStartTime, and returns the first video sample, if we have video.
-  VideoData* FindStartTime(PRInt64 aOffset,
-                           PRInt64& aOutStartTime);
+  virtual VideoData* FindStartTime(PRInt64 aOffset,
+                                   PRInt64& aOutStartTime);
 
   // Returns the end time of the last page which occurs before aEndOffset.
   // This will not read past aEndOffset. Returns -1 on failure.
