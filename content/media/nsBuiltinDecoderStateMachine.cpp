@@ -1213,12 +1213,6 @@ void nsBuiltinDecoderStateMachine::FindEndTime()
     mEndTime = endTime;
   }
 
-  NS_ASSERTION(mReader->GetInfo().mDataOffset > 0,
-               "Should have offset of first non-header page");
-  {
-    MonitorAutoExit exitMon(mDecoder->GetMonitor());
-    stream->Seek(nsISeekableStream::NS_SEEK_SET, mReader->GetInfo().mDataOffset);
-  }
   LOG(PR_LOG_DEBUG, ("%p Media end time is %lldms", mDecoder, mEndTime));   
 }
 

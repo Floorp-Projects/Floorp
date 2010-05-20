@@ -800,6 +800,16 @@ GetChecksum(ogg_page* page)
   return c;
 }
 
+VideoData* nsOggReader::FindStartTime(PRInt64 aOffset,
+                                      PRInt64& aOutStartTime)
+{
+  NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
+
+  nsMediaStream* stream = mDecoder->GetCurrentStream();
+  stream->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
+  return nsBuiltinDecoderReader::FindStartTime(aOffset, aOutStartTime);
+}
+
 PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
 {
   MonitorAutoEnter mon(mMonitor);
@@ -913,6 +923,10 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
   }
 
   ogg_sync_reset(&mOggState);
+
+  NS_ASSERTION(mDataOffset > 0,
+               "Should have offset of first non-header page");
+  stream->Seek(nsISeekableStream::NS_SEEK_SET, mDataOffset);
 
   return endTime;
 }
