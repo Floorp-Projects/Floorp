@@ -3045,7 +3045,8 @@ GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   if (JSVAL_IS_INT(id)) {
     uint32 optbit = (uint32) JSVAL_TO_INT(id);
-    if ((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR)
+    if (((optbit & (optbit - 1)) == 0 && optbit <= JSOPTION_WERROR) ||
+          optbit == JSOPTION_RELIMIT)
       *vp = (JS_GetOptions(cx) & optbit) ? JSVAL_TRUE : JSVAL_FALSE;
   }
   return JS_TRUE;
