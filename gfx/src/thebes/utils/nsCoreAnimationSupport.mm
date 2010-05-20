@@ -433,6 +433,9 @@ void nsCARenderer::Destroy() {
 }
 
 nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
+  if (aWidth == 0 || aHeight == 0)
+    return NS_ERROR_FAILURE;
+
   CALayer* layer = (CALayer*)aCALayer;
   CARenderer* caRenderer = nsnull;
 
@@ -477,11 +480,6 @@ nsresult nsCARenderer::SetupRenderer(void *aCALayer, int aWidth, int aHeight) {
   [layer setPosition:CGPointMake(aWidth/2.0, aHeight/2.0)];
   caRenderer.layer = layer;
   caRenderer.bounds = CGRectMake(0, 0, aWidth, aHeight);
-
-  if (aWidth == 0 || aHeight == 0) {
-    // No need to allocate if size is 0
-    return NS_OK;
-  }
 
   // We either target rendering to a CGImage or IOSurface.
   if (!mIOSurface) {
@@ -597,9 +595,8 @@ void nsCARenderer::AttachIOSurface(nsIOSurface *aSurface) {
 
 nsresult nsCARenderer::Render(int aWidth, int aHeight, 
                               CGImageRef *aOutCGImage) {
-  if (aOutCGImage && mIOSurface) {
-    NS_WARNING("CGImageRef should not be passed if we are "
-               "drawing to an IOSurface");
+  if (!aOutCGImage && !mIOSurface) {
+    NS_ERROR("No target destination for rendering");
   } else if (aOutCGImage) {
     // We are expected to return a CGImageRef, we will set
     // it to NULL in case we fail before the image is ready.
