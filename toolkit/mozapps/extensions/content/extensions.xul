@@ -173,7 +173,7 @@
                   ascending="true"/>
           </hbox>
           <richlistbox id="search-list" class="list" flex="1">
-            <vbox flex="1">
+            <vbox>
               <hbox class="search-filter">
                 <label value="&search.filter.label;"/>
                 <checkbox id="search-filter-local" checked="true" disabled="true"
