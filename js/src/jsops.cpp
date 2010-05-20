@@ -223,12 +223,10 @@ BEGIN_CASE(JSOP_STOP)
     if ((fp->flags & JSFRAME_CONSTRUCTING) && fp->rval.isPrimitive())
         fp->rval = fp->thisv;
 
-    JSBool ok;
+    interpReturnOK = true;
     if (inlineCallCount)
   inline_return:
     {
-        ok = JS_TRUE;  /* move after inline_return to quiet GCC warning */
-
         JS_ASSERT(!fp->blockChain);
         JS_ASSERT(!js_IsActiveWithOrBlock(cx, fp->scopeChain, 0));
 
@@ -238,13 +236,7 @@ BEGIN_CASE(JSOP_STOP)
         void *hookData = fp->hookData;
         if (JS_UNLIKELY(hookData != NULL)) {
             if (JSInterpreterHook hook = cx->debugHooks->callHook) {
-                /*
-                 * Do not pass &ok directly as exposing the address inhibits
-                 * optimizations and uninitialised warnings.
-                 */
-                JSBool status = ok;
-                hook(cx, fp, JS_FALSE, &status, hookData);
-                ok = status;
+                hook(cx, fp, JS_FALSE, &interpReturnOK, hookData);
                 CHECK_INTERRUPT_HANDLER();
             }
         }
@@ -292,7 +284,7 @@ BEGIN_CASE(JSOP_STOP)
 
         /* Resume execution in the calling frame. */
         inlineCallCount--;
-        if (JS_LIKELY(ok)) {
+        if (JS_LIKELY(interpReturnOK)) {
             JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, script, regs.pc)].length
                       == JSOP_CALL_LENGTH);
             TRACE_0(LeaveFrame);
@@ -1516,13 +1508,13 @@ BEGIN_CASE(JSOP_ARGINC)
     goto do_int_fast_incop;
 
 BEGIN_CASE(JSOP_DECLOCAL)
-    incr = -2; incr2 = -2; goto do_local_incop;
+    incr = -1; incr2 = -1; goto do_local_incop;
 BEGIN_CASE(JSOP_LOCALDEC)
-    incr = -2; incr2 =  0; goto do_local_incop;
+    incr = -1; incr2 =  0; goto do_local_incop;
 BEGIN_CASE(JSOP_INCLOCAL)
-    incr =  2; incr2 =  2; goto do_local_incop;
+    incr =  1; incr2 =  1; goto do_local_incop;
 BEGIN_CASE(JSOP_LOCALINC)
-    incr =  2; incr2 =  0;
+    incr =  1; incr2 =  0;
 
   /*
    * do_local_incop comes right before do_int_fast_incop as we want to
@@ -2661,7 +2653,7 @@ BEGIN_CASE(JSOP_TABLESWITCHX)
      */
     const Value &rref = *--regs.sp;
     int32_t i;
-    if (rref.asInt32()) {
+    if (rref.isInt32()) {
         i = rref.asInt32();
     } else if (rref.isDouble() && rref.asDouble() == 0) {
         /* Treat -0 (double) as 0. */
@@ -4413,7 +4405,7 @@ BEGIN_CASE(JSOP_GENERATOR)
         goto error;
     JS_ASSERT(!fp->callobj && !fp->argsobj);
     fp->rval.setNonFunObj(*obj);
-    interpReturnOK = JS_TRUE;
+    interpReturnOK = true;
     if (inlineCallCount != 0)
         goto inline_return;
     goto exit;

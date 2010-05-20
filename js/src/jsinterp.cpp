@@ -2019,13 +2019,20 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     if (iterobj->getClass() == &js_IteratorClass.base) {
         NativeIterator *ni = (NativeIterator *) iterobj->getPrivate();
         JS_ASSERT(ni->props_cursor < ni->props_end);
-        *rval = BoxedWordToValue(*ni->props_cursor);
-        if (rval->isString() || (ni->flags & JSITER_FOREACH)) {
-            ni->props_cursor++;
-            return true;
-        }
-        /* Take the slow path if we have to stringify a numeric property name. */
+        jsboxedword w = *ni->props_cursor;
+        if (JSBOXEDWORD_IS_STRING(w))
+            rval->setString(JSBOXEDWORD_TO_STRING(w));
+        else if (ni->flags & JSITER_FOREACH)
+            /* XXX: this begs for a for-each-specialized iterator: we are
+             * boxing going both directions! */
+            *rval = BoxedWordToValue(*ni->props_cursor);
+        else
+            goto slow_path;
+
+        ni->props_cursor++;
+        return true;
     }
+  slow_path:
     return js_IteratorNext(cx, iterobj, rval);
 }
 
