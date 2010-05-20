@@ -40,23 +40,27 @@ const Ci = Components.interfaces;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // -----------------------------------------------------------------------
-// XPInstall Dialog Service
+// Web Install Prompt service
 // -----------------------------------------------------------------------
 
-function XPInstallDialogService() { }
+function WebInstallPrompt() { }
 
-XPInstallDialogService.prototype = {
+WebInstallPrompt.prototype = {
   classDescription: "XPInstall Dialog Service",
-  contractID: "@mozilla.org/embedui/xpinstall-dialog-service;1",
+  contractID: "@mozilla.org/addons/web-install-confirm;1",
   classID: Components.ID("{c1242012-27d8-477e-a0f1-0b098ffc329b}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXPIDialogService, Ci.nsIXPIProgressDialog]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.amIWebInstallPrompt]),
 
-  confirmInstall: function(aParent, aPackages, aCount) {
+  confirm: function(aWindow, aURL, aInstalls) {
     // first check if the extensions panel is open : fast path to return true
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
     let browser = wm.getMostRecentWindow("navigator:browser");
-    if (browser.ExtensionsView.visible)
-      return true;
+    if (browser.ExtensionsView.visible) {
+      aInstalls.forEach(function(install) {
+        install.install();
+      });
+      return;
+    }
     
     let bundleService = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
     let bundle = bundleService.createBundle("chrome://browser/locale/browser.properties");
@@ -66,41 +70,16 @@ XPInstallDialogService.prototype = {
     let title = bundle.GetStringFromName("addonsConfirmInstall.title");
     let button = bundle.GetStringFromName("addonsConfirmInstall.install");
 
-    return prompt.confirmEx(null, title, aPackages[0], flags, button, null, null, null, {value: false}) == 0;
-  },
-
-  openProgressDialog: function(aPackages, aCount, aManager) {
-    // Create a param block with the packages
-    let dpb = Cc["@mozilla.org/embedcomp/dialogparam;1"].createInstance(Ci.nsIDialogParamBlock);
-    dpb.SetInt(0, 2);                       // OK and Cancel buttons
-    dpb.SetInt(1, aPackages.length);        // Number of strings
-    dpb.SetNumberStrings(aPackages.length); // Add strings
-    for (let i = 0; i < aPackages.length; ++i)
-      dpb.SetString(i, aPackages[i]);
-
-    let dpbWrap = Cc["@mozilla.org/supports-interface-pointer;1"].createInstance(Ci.nsISupportsInterfacePointer);
-    dpbWrap.data = dpb;
-    dpbWrap.dataIID = Ci.nsIDialogParamBlock;
-
-    let obsWrap = Cc["@mozilla.org/supports-interface-pointer;1"].createInstance(Ci.nsISupportsInterfacePointer);
-    obsWrap.data = aManager;
-    obsWrap.dataIID = Ci.nsIObserver;
-
-    let params = Cc["@mozilla.org/supports-array;1"].createInstance(Ci.nsISupportsArray);
-    params.AppendElement(dpbWrap);
-    params.AppendElement(obsWrap);
-
-    let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    os.notifyObservers(params, "xpinstall-download-started", null);
-
-    // Give the nsXPInstallManager a progress dialog
-    aManager.observe(this, "xpinstall-progress", "open");
-  },
-
-  onStateChange: function(aIndex, aState, aError) { },
-  onProgress: function(aIndex, aValue, aMax) { }
+    aInstalls.forEach(function(install) {
+      let result = (prompt.confirmEx(aWindow, title, install.name, flags, button, null, null, null, {value: false}) == 0);
+      if (result)
+        install.install();
+      else
+        install.cancel();
+    });
+  }
 };
 
 function NSGetModule(aCompMgr, aFileSpec) {
-  return XPCOMUtils.generateModule([XPInstallDialogService]);
+  return XPCOMUtils.generateModule([WebInstallPrompt]);
 }

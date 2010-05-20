@@ -474,7 +474,7 @@ var Browser = {
     window.controllers.appendController(BrowserUI);
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    os.addObserver(gXPInstallObserver, "xpinstall-install-blocked", false);
+    os.addObserver(gXPInstallObserver, "addon-install-blocked", false);
     os.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
 
     // clear out tabs the user hasn't touched lately on memory crunch
@@ -623,7 +623,7 @@ var Browser = {
     this._pluginObserver.stop();
 
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    os.removeObserver(gXPInstallObserver, "xpinstall-install-blocked");
+    os.removeObserver(gXPInstallObserver, "addon-install-blocked");
     os.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
     os.removeObserver(MemoryObserver, "memory-pressure");
     os.removeObserver(BrowserSearch, "browser-search-engine-modified");
@@ -2485,13 +2485,18 @@ const gXPInstallObserver = {
   {
     var brandBundle = document.getElementById("bundle_brand");
     switch (aTopic) {
-      case "xpinstall-install-blocked":
-        var installInfo = aSubject.QueryInterface(Ci.nsIXPIInstallInfo);
+      case "addon-install-blocked":
+        var installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
         var host = installInfo.originatingURI.host;
         var brandShortName = brandBundle.getString("brandShortName");
         var notificationName, messageString, buttons;
         var strings = Elements.browserBundle;
-        if (!gPrefService.getBoolPref("xpinstall.enabled")) {
+        var enabled = true;
+        try {
+          enabled = gPrefService.getBoolPref("xpinstall.enabled");
+        }
+        catch (e) {}
+        if (!enabled) {
           notificationName = "xpinstall-disabled";
           if (gPrefService.prefIsLocked("xpinstall.enabled")) {
             messageString = strings.getString("xpinstallDisabledMessageLocked");
@@ -2521,9 +2526,8 @@ const gXPInstallObserver = {
             accessKey: null,
             popup: null,
             callback: function() {
-              // Kick off the xpinstall
-              var mgr = Cc["@mozilla.org/xpinstall/install-manager;1"].createInstance(Ci.nsIXPInstallManager);
-              mgr.initManagerWithInstallInfo(installInfo);
+              // Kick off the install
+              installInfo.install();
               return false;
             }
           }];

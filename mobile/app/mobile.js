@@ -148,11 +148,6 @@ pref("layout.css.devPixelsPerPx", "1");
 pref("layout.spellcheckDefault", 1);
 
 /* extension manager and xpinstall */
-pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
-pref("xpinstall.dialog.progress.skin", "chrome://browser/content/browser.xul");
-pref("xpinstall.dialog.progress.chrome", "chrome://browser/content/browser.xul");
-pref("xpinstall.dialog.progress.type.skin", "navigator:browser");
-pref("xpinstall.dialog.progress.type.chrome", "navigator:browser");
 pref("xpinstall.whitelist.add", "addons.mozilla.org");
 
 pref("extensions.autoupdate.enabled", true);

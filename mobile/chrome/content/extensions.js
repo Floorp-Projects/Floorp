@@ -43,10 +43,13 @@ const PREF_GETADDONS_MAXRESULTS = "extensions.getAddons.maxResults";
 
 const URI_GENERIC_ICON_XPINSTALL = "chrome://browser/skin/images/alert-addons-30.png";
 
+XPCOMUtils.defineLazyGetter(this, "AddonManager", function() {
+  Cu.import("resource://gre/modules/AddonManager.jsm");
+  return AddonManager;
+});
+
 var ExtensionsView = {
-  _extmgr: null,
   _pref: null,
-  _rdf: null,
   _ios: null,
   _strings: {},
   _repo: null,
@@ -59,38 +62,16 @@ var ExtensionsView = {
   _restartCount: 0,
   _observerIndex: -1,
 
-  _isXPInstallEnabled: function ev__isXPInstallEnabled() {
-    let enabled = false;
-    let locked = false;
-    try {
-      enabled = this._pref.getBoolPref("xpinstall.enabled");
-      if (enabled)
-        return true;
-      locked = this._pref.prefIsLocked("xpinstall.enabled");
-    }
-    catch (e) { }
-
-    return false;
+  _getOpTypeForOperations: function ev__getOpTypeForOperations(aOperations) {
+    if (aOperations & AddonManager.PENDING_UNINSTALL)
+      return "needs-uninstall";
+    if (aOperations & AddonManager.PENDING_ENABLE)
+      return "needs-enable";
+    if (aOperations & AddonManager.PENDING_DISABLE)
+      return "needs-disable";
+    return "";
   },
-
-  _getIDFromURI: function ev__getIDFromURI(aURI) {
-    if (aURI.substring(0, PREFIX_ITEM_URI.length) == PREFIX_ITEM_URI)
-      return aURI.substring(PREFIX_ITEM_URI.length);
-    return aURI;
-  },
-
-  _getRDFProperty: function ev__getRDFProperty(aID, aName) {
-    let resource = this._rdf.GetResource(PREFIX_ITEM_URI + aID);
-    if (resource) {
-      let ds = this._extmgr.datasource;
-
-      let target = ds.GetTarget(resource, this._rdf.GetResource(PREFIX_NS_EM + aName), true);
-      if (target && target instanceof Ci.nsIRDFLiteral)
-        return target.Value;
-    }
-    return null;
-  },
-
+  
   _createItem: function ev__createItem(aAddon, aTypeName) {
     let item = document.createElement("richlistitem");
     item.setAttribute("id", PREFIX_ITEM_URI + aAddon.id);
@@ -135,10 +116,10 @@ var ExtensionsView = {
     }
   },
 
-  getElementForAddon: function ev_getElementForAddon(aID) {
-    let element = document.getElementById(PREFIX_ITEM_URI + aID);
+  getElementForAddon: function ev_getElementForAddon(aKey) {
+    let element = document.getElementById(PREFIX_ITEM_URI + aKey);
     if (!element && this._list)
-      element = this._list.getElementsByAttribute("xpiURL", aID)[0];
+      element = this._list.getElementsByAttribute("xpiURL", aKey)[0];
     return element;
   },
 
@@ -223,19 +204,15 @@ var ExtensionsView = {
   },
 
   init: function ev_init() {
-    if (this._extmgr)
+    if (this._ios)
       return;
 
-    this._extmgr = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
     this._ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-    this._dloadmgr = new XPInstallDownloadManager();
-    this._observerIndex = this._extmgr.addInstallListener(this._dloadmgr);
-
-    // Now look and see if we're being opened by XPInstall
-    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    os.addObserver(this._dloadmgr, "xpinstall-download-started", false);
+    this._dloadmgr = new AddonInstallListener();
+    AddonManager.addInstallListener(this._dloadmgr);
 
     // Watch for add-on update notifications
+    let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.addObserver(this, "addon-update-started", false);
     os.addObserver(this, "addon-update-ended", false);
 
@@ -257,7 +234,6 @@ var ExtensionsView = {
       return;
 
     this._pref = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch2);
-    this._rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
     this._search = Cc["@mozilla.org/browser/search-service;1"].getService(Ci.nsIBrowserSearchService);
 
     let repository = "@mozilla.org/extensions/addon-repository;1";
@@ -282,10 +258,10 @@ var ExtensionsView = {
     }
 
     let strings = Elements.browserBundle;
-    this._strings["addonType.2"] = strings.getString("addonType.2");
-    this._strings["addonType.4"] = strings.getString("addonType.4");
-    this._strings["addonType.8"] = strings.getString("addonType.8");
-    this._strings["addonType.1024"] = strings.getString("addonType.1024");
+    this._strings["addonType.extension"] = strings.getString("addonType.2");
+    this._strings["addonType.theme"] = strings.getString("addonType.4");
+    this._strings["addonType.locale"] = strings.getString("addonType.8");
+    this._strings["addonType.search"] = strings.getString("addonType.1024");
 
     let self = this;
     setTimeout(function() {
@@ -295,12 +271,11 @@ var ExtensionsView = {
   },
 
   uninit: function ev_uninit() {
-    var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    os.removeObserver(this._dloadmgr, "xpinstall-download-started");
+    let os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     os.removeObserver(this, "addon-update-started");
     os.removeObserver(this, "addon-update-ended");
 
-    this._extmgr.removeInstallListenerAt(this._observerIndex);
+    AddonManager.removeInstallListener(this._dloadmgr);
   },
 
   hideOnSelect: function ev_handleEvent(aEvent) {
@@ -312,76 +287,71 @@ var ExtensionsView = {
   getAddonsFromLocal: function ev_getAddonsFromLocal() {
     this.clearSection("local");
 
-    let items = this._extmgr.getItemList(Ci.nsIUpdateItem.TYPE_ANY, {});
+    let self = this;
+    AddonManager.getAddonsByTypes(["extension", "theme", "locale"], function(items) {
+      for (let i = 0; i < items.length; i++) {
+        let addon = items[i];
+        let appManaged = (addon.scope == AddonManager.SCOPE_APPLICATION);
+        let opType = self._getOpTypeForOperations(addon.pendingOperations);
+        let updateable = (addon.permissions & AddonManager.PERM_CAN_UPDATE) > 0;
 
-    for (let i = 0; i < items.length; i++) {
-      let addon = items[i];
+        let listitem = self._createItem(addon, "local");
+        listitem.setAttribute("isDisabled", !addon.isActive);
+        listitem.setAttribute("appDisabled", addon.appDisabled);
+        listitem.setAttribute("appManaged", appManaged);
+        listitem.setAttribute("description", addon.description);
+        listitem.setAttribute("optionsURL", addon.optionsURL);
+        listitem.setAttribute("opType", opType);
+        listitem.setAttribute("updateable", updateable);
+        listitem.addon = addon;
+        self._list.insertBefore(listitem, self._repoItem);
+      }
 
-      // Some information is not directly accessible from the extmgr
-      let isDisabled = this._getRDFProperty(addon.id, "isDisabled") == "true";
-      let appDisabled = this._getRDFProperty(addon.id, "appDisabled");
-      let appManaged = this._getRDFProperty(addon.id, "appManaged");
-      let desc = this._getRDFProperty(addon.id, "description");
-      let optionsURL = this._getRDFProperty(addon.id, "optionsURL");
-      let opType = this._getRDFProperty(addon.id, "opType");
-      let updateable = this._getRDFProperty(addon.id, "updateable");
+      // Load the search engines
+      let defaults = self._search.getDefaultEngines({ }).map(function (e) e.name);
+      function isDefault(aEngine)
+        defaults.indexOf(aEngine.name) != -1
 
-      let listitem = this._createItem(addon, "local");
-      listitem.setAttribute("isDisabled", isDisabled);
-      listitem.setAttribute("appDisabled", appDisabled);
-      listitem.setAttribute("appManaged", appManaged);
-      listitem.setAttribute("description", desc);
-      listitem.setAttribute("optionsURL", optionsURL);
-      listitem.setAttribute("opType", opType);
-      listitem.setAttribute("updateable", updateable);
-      this._list.insertBefore(listitem, this._repoItem);
-    }
+      let strings = Elements.browserBundle;
+      let defaultDescription = strings.getString("addonsSearchEngine.description");
 
-    // Load the search engines
-    let defaults = this._search.getDefaultEngines({ }).map(function (e) e.name);
-    function isDefault(aEngine)
-      defaults.indexOf(aEngine.name) != -1
+      let engines = self._search.getEngines({ });
+      for (let e = 0; e < engines.length; e++) {
+        let engine = engines[e];
+        let addon = {};
+        addon.id = engine.name;
+        addon.type = "search";
+        addon.name = engine.name;
+        addon.version = "";
+        addon.iconURL = engine.iconURI ? engine.iconURI.spec : "";
 
-    let strings = Elements.browserBundle;
-    let defaultDescription = strings.getString("addonsSearchEngine.description");
+        let listitem = self._createItem(addon, "searchplugin");
+        listitem._engine = engine;
+        listitem.setAttribute("isDisabled", engine.hidden ? "true" : "false");
+        listitem.setAttribute("appDisabled", "false");
+        listitem.setAttribute("appManaged", isDefault(engine));
+        listitem.setAttribute("description", engine.description || defaultDescription);
+        listitem.setAttribute("optionsURL", "");
+        listitem.setAttribute("opType", engine.hidden ? "needs-disable" : "");
+        listitem.setAttribute("updateable", "false");
+        self._list.insertBefore(listitem, self._repoItem);
+      }
 
-    let engines = this._search.getEngines({ });
-    for (let e = 0; e < engines.length; e++) {
-      let engine = engines[e];
-      let addon = {};
-      addon.id = engine.name;
-      addon.type = 1024;
-      addon.name = engine.name;
-      addon.version = "";
-      addon.iconURL = engine.iconURI ? engine.iconURI.spec : "";
-
-      let listitem = this._createItem(addon, "searchplugin");
-      listitem._engine = engine;
-      listitem.setAttribute("isDisabled", engine.hidden ? "true" : "false");
-      listitem.setAttribute("appDisabled", "false");
-      listitem.setAttribute("appManaged", isDefault(engine));
-      listitem.setAttribute("description", engine.description || defaultDescription);
-      listitem.setAttribute("optionsURL", "");
-      listitem.setAttribute("opType", engine.hidden ? "needs-disable" : "");
-      listitem.setAttribute("updateable", "false");
-      this._list.insertBefore(listitem, this._repoItem);
-    }
-
-    if (engines.length + items.length == 0) {
-      this.displaySectionMessage("local", strings.getString("addonsLocalNone.label"), null, true);
-      document.getElementById("addons-update-all").disabled = true;
-    }
+      if (engines.length + items.length == 0) {
+        self.displaySectionMessage("local", strings.getString("addonsLocalNone.label"), null, true);
+        document.getElementById("addons-update-all").disabled = true;
+      }
+    });
   },
 
   enable: function ev_enable(aItem) {
     let opType;
-    if (aItem.getAttribute("type") == "1024") {
+    if (aItem.getAttribute("type") == "search") {
       aItem._engine.hidden = false;
       opType = "needs-enable";
     } else {
-      let id = this._getIDFromURI(aItem.id);
-      this._extmgr.enableItem(id);
-      opType = this._getRDFProperty(id, "opType");
+      aItem.addon.userDisabled = false;
+      opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
 
       if (opType == "needs-enable")
         this.showRestart();
@@ -394,13 +364,12 @@ var ExtensionsView = {
 
   disable: function ev_disable(aItem) {
     let opType;
-    if (aItem.getAttribute("type") == "1024") {
+    if (aItem.getAttribute("type") == "search") {
       aItem._engine.hidden = true;
       opType = "needs-disable";
     } else {
-      let id = this._getIDFromURI(aItem.id);
-      this._extmgr.disableItem(id);
-      opType = this._getRDFProperty(id, "opType");
+      aItem.addon.userDisabled = true;
+      opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
 
       if (opType == "needs-disable")
         this.showRestart();
@@ -413,7 +382,7 @@ var ExtensionsView = {
 
   uninstall: function ev_uninstall(aItem) {
     let opType;
-    if (aItem.getAttribute("type") == "1024") {
+    if (aItem.getAttribute("type") == "search") {
       // Make sure the engine isn't hidden before removing it, to make sure it's
       // visible if the user later re-adds it (works around bug 341833)
       aItem._engine.hidden = false;
@@ -421,9 +390,8 @@ var ExtensionsView = {
       // the search-engine-modified observer in browser.js will take care of
       // updating the list
     } else {
-      let id = this._getIDFromURI(aItem.id);
-      this._extmgr.uninstallItem(id);
-      opType = this._getRDFProperty(id, "opType");
+      aItem.addon.uninstall();
+      opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
 
       if (opType == "needs-uninstall")
         this.showRestart();
@@ -432,78 +400,24 @@ var ExtensionsView = {
   },
 
   cancelUninstall: function ev_cancelUninstall(aItem) {
-    let id = this._getIDFromURI(aItem.id);
-    this._extmgr.cancelUninstallItem(id);
+    aItem.addon.cancelUninstall();
 
     this.hideRestart();
 
-    let opType = this._getRDFProperty(id, "opType");
+    let opType = this._getOpTypeForOperations(aItem.addon.pendingOperations);
     aItem.setAttribute("opType", opType);
   },
 
-  _installCallback: function ev__installCallback(aItem, aStatus) {
-    if (aStatus == -210) {
-      // User cancelled
-      aItem.removeAttribute("opType");
-    }
-    else if (aStatus < 0) {
-      // Some other error
-      aItem.removeAttribute("opType");
-      let bundles = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
-      let strings = bundles.createBundle("chrome://global/locale/xpinstall/xpinstall.properties");
-
-      try {
-        var msg = strings.GetStringFromName("error" + aStatus);
-      } catch (ex) {
-        msg = strings.formatStringFromName("unknown.error", [aStatus]);
-      }
-      aItem.setAttribute("error", msg);
-    }
-    else {
-      // Success
-      aItem.setAttribute("opType", "needs-restart");
-    }
-  },
-
   installFromRepo: function ev_installFromRepo(aItem) {
-    if (!this._isXPInstallEnabled())
-      return;
-
-    if (aItem.hasAttribute("eula")) {
-      var eula = {
-        name: aSelectedItem.getAttribute("name"),
-        text: aSelectedItem.getAttribute("eula"),
-        accepted: false
-      };
-
-      // TODO: eula
-      //window.openDialog("chrome://mozapps/content/extensions/eula.xul", "_blank",
-      //                  "chrome,dialog,modal,centerscreen,resizable=no", eula);
-      //if (!eula.accepted)
-      //  return;
-    }
-
-    var details = {
-      URL: aItem.getAttribute("xpiURL"),
-      Hash: aItem.getAttribute("xpiHash"),
-      IconURL: aItem.getAttribute("iconURL"),
-      toString: function () { return this.URL; }
-    };
-
-    var params = [];
-    params[aItem.getAttribute("name")] = details;
-
-    let self = this;
-    InstallTrigger.install(params, function(aURL, aStatus) { self._installCallback(aItem, aStatus); });
+    AddonManager.getInstallForURL(aItem.getAttribute("xpiURL"),
+                                  function(aInstall) { aInstall.install(); },
+                                  "application/x-xpinstall",
+                                  aItem.getAttribute("xpiHash"));
 
     // display the progress bar early
     let opType = aItem.getAttribute("opType");
     if (!opType)
       aItem.setAttribute("opType", "needs-install");
-  },
-
-  installFromXPI: function ev_installAddons(aItems, aManager) {
-    this._extmgr.addDownloads(aItems, aItems.length, aManager);
   },
 
   _isSafeURI: function ev_isSafeURI(aURL) {
@@ -594,6 +508,10 @@ var ExtensionsView = {
       if (urlproperties.some(function (p) !this._isSafeURI(addon[p]), this))
         continue;
 
+      // Convert the numeric type to a string
+      let types = {"2":"extension", "4":"theme", "8":"locale"};
+      addon.type = types[addon.type];
+
       let listitem = this._createItem(addon, "search");
       listitem.setAttribute("description", addon.summary);
       listitem.setAttribute("homepageURL", addon.homepageURL);
@@ -668,9 +586,6 @@ var ExtensionsView = {
   },
 
   updateAll: function ev_updateAll() {
-    if (!this._isXPInstallEnabled())
-      return;
- 
     let aus = Cc["@mozilla.org/browser/addon-update-service;1"].getService(Ci.nsITimerCallback);
     aus.notify(null);
  
@@ -682,9 +597,11 @@ var ExtensionsView = {
     if (!document)
       return;
 
-    let addon = aSubject.QueryInterface(Ci.nsIUpdateItem);
+    let json = aSubject.QueryInterface(Ci.nsISupportsString).data;
+    let addon = JSON.parse(json);
+
     let strings = Elements.browserBundle;
-    let element = document.getElementById(PREFIX_ITEM_URI + addon.id);
+    let element = this.getElementForAddon(addon.id);
     if (!element)
       return;
 
@@ -693,34 +610,22 @@ var ExtensionsView = {
         element.setAttribute("updateStatus", strings.getString("addonUpdate.checking"));
         break;
       case "addon-update-ended":
-        let status = parseInt(aData);
         let updateable = false;
         let statusMsg = null;
-        const nsIAUCL = Ci.nsIAddonUpdateCheckListener;
-        switch (status) {
-          case nsIAUCL.STATUS_UPDATE:
+        switch (aData) {
+          case "update":
             statusMsg = strings.getFormattedString("addonUpdate.updating", [addon.version]);
             updateable = true;
             break;
-          case nsIAUCL.STATUS_VERSIONINFO:
+          case "compatibility":
             statusMsg = strings.getString("addonUpdate.compatibility");
             break;
-          case nsIAUCL.STATUS_FAILURE:
+          case "error":
             statusMsg = strings.getString("addonUpdate.error");
             break;
-          case nsIAUCL.STATUS_DISABLED:
-            statusMsg = strings.getString("addonUpdate.disabled");
-            break;
-          case nsIAUCL.STATUS_APP_MANAGED:
-          case nsIAUCL.STATUS_NO_UPDATE:
+          case "no-update":
             // Ignore if no updated was found. Just let the message go blank.
             //statusMsg = strings.getString("addonUpdate.noupdate");
-            break;
-          case nsIAUCL.STATUS_NOT_MANAGED:
-            statusMsg = strings.getString("addonUpdate.notsupported");
-            break;
-          case nsIAUCL.STATUS_READ_ONLY:
-            statusMsg = strings.getString("addonUpdate.notsupported");
             break;
           default:
             // Ignore if no updated was found. Just let the message go blank.
@@ -732,7 +637,7 @@ var ExtensionsView = {
         else
           element.removeAttribute("updateStatus");
 
-        // Tag the add-on so the XPInstallDownloadManager knows it's an update
+        // Tag the add-on so the AddonInstallListener knows it's an update
         if (updateable)
           element.setAttribute("updating", "true");
         break;
@@ -782,87 +687,27 @@ var AddonSearchResults = {
 
 ///////////////////////////////////////////////////////////////////////////////
 // XPInstall download helper
-function XPInstallDownloadManager() {
+function AddonInstallListener() {
 }
 
-XPInstallDownloadManager.prototype = {
-  observe: function (aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "xpinstall-download-started":
-        var params = aSubject.QueryInterface(Components.interfaces.nsISupportsArray);
-        var paramBlock = params.GetElementAt(0).QueryInterface(Components.interfaces.nsISupportsInterfacePointer);
-        paramBlock = paramBlock.data.QueryInterface(Components.interfaces.nsIDialogParamBlock);
-        var manager = params.GetElementAt(1).QueryInterface(Components.interfaces.nsISupportsInterfacePointer);
-        manager = manager.data.QueryInterface(Components.interfaces.nsIObserver);
-        this.addDownloads(paramBlock, manager);
-        break;
-    }
-  },
-
-  addDownloads: function (aParams, aManager) {
-    let count = aParams.GetInt(1);
-    let items = [];
-    for (var i = 0; i < count;) {
-      let displayName = aParams.GetString(i++);
-      let url = aParams.GetString(i++);
-      let iconURL = aParams.GetString(i++);
-      let uri = ExtensionsView._ios.newURI(url, null, null);
-      let isTheme = uri.QueryInterface(Ci.nsIURL).fileExtension.toLowerCase() == "jar";
-      let type = isTheme ? Ci.nsIUpdateItem.TYPE_THEME : Ci.nsIUpdateItem.TYPE_EXTENSION;
-      if (!iconURL) {
-        iconURL = isTheme ? "chrome://mozapps/skin/extensions/themeGeneric.png" :
-                            "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
-      }
-
-      let item = Cc["@mozilla.org/updates/item;1"].createInstance(Ci.nsIUpdateItem);
-      item.init(url, " ", "app-profile", "", "", displayName, url, "", iconURL, "", "", type, "");
-      items.push(item);
-
-      // Advance the enumerator
-      let certName = aParams.GetString(i++);
-    }
-
-    this._failed = [];
-    this._succeeded = [];
-    this._updating = false;
-
-    ExtensionsView.installFromXPI(items, aManager);
-
-    if (ExtensionsView.visible)
-      return;
-
-    let strings = Elements.browserBundle;
-    let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
-    alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
-                                 strings.getString("alertAddonsInstalling"), false, "", null);
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // nsIAddonInstallListener
-  onDownloadStarted: function(aAddon) { },
-  onDownloadEnded: function(aAddon) { },
-  onInstallStarted: function(aAddon) { },
-  onCompatibilityCheckStarted: function(aAddon) { },
-  onCompatibilityCheckEnded: function(aAddon, aStatus) { },
-
-  _failed: [],
-  _succeeded: [],
+AddonInstallListener.prototype = {
   _updating: false,
-  onInstallEnded: function(aAddon, aStatus) {
-    // Track success/failure for each addon
-    if (Components.isSuccessCode(aStatus))
-      this._succeeded.push(aAddon.id);
-    else
-      this._failed.push(aAddon.id);
+  onInstallEnded: function(aInstall, aAddon) {
+    // XXX fix updating stuff
+    if (aAddon.pendingOperations & AddonManager.PENDING_INSTALL)
+      ExtensionsView.showRestart(this._updating ? "update" : "normal");
+
+    this._showAlert(true);
 
     if (!ExtensionsView.visible)
       return;
 
-    var element = ExtensionsView.getElementForAddon(aAddon.id);
+    let element = ExtensionsView.getElementForAddon(aInstall.sourceURL);
     if (!element)
       return;
 
-    element.setAttribute("status", (Components.isSuccessCode(aStatus) ? "success" : "fail"));
+    element.setAttribute("opType", "needs-restart");
+    element.setAttribute("status", "success");
 
     // If we are updating an add-on, change the status
     if (element.hasAttribute("updating")) {
@@ -875,19 +720,64 @@ XPInstallDownloadManager.prototype = {
     }
   },
 
-  onInstallsCompleted: function() {
-    let strings = Elements.browserBundle;
+  onInstallFailed: function(aInstall, aError) {
+    this._showAlert(false);
 
-    // If even one add-on succeeded, display the restart notif
-    if (this._succeeded.length > 0)
-      ExtensionsView.showRestart(this._updating ? "update" : "normal");
+    if (ExtensionsView.visible) {
+      let element = ExtensionsView.getElementForAddon(aInstall.sourceURL);
+      if (!element)
+        return;
+  
+      element.removeAttribute("opType");
+      let bundles = Cc["@mozilla.org/intl/stringbundle;1"].getService(Ci.nsIStringBundleService);
+      let strings = bundles.createBundle("chrome://global/locale/xpinstall/xpinstall.properties");
 
+      let error = null;
+      switch (aError) {
+      case AddonManager.ERROR_NETWORK_FAILURE:
+        error = "error-228";
+        break;
+      case AddonManager.ERROR_INCORRECT_HASH:
+        error = "error-261";
+        break;
+      case AddonManager.ERROR_CORRUPT_FILE:
+        error = "error-207";
+        break;
+      }
+
+      try {
+        var msg = strings.GetStringFromName(error);
+      } catch (ex) {
+        msg = strings.formatStringFromName("unknown.error", [aError]);
+      }
+      element.setAttribute("error", msg);
+    }
+  },
+
+  onDownloadProgress: function xpidm_onDownloadProgress(aInstall) {
+    var element = ExtensionsView.getElementForAddon(aInstall.sourceURL);
+    if (!element)
+      return;
+
+    let opType = element.getAttribute("opType");
+    if (!opType)
+      element.setAttribute("opType", "needs-install");
+
+    let progress = Math.round((aInstall.progress / aInstall.maxProgress) * 100);
+    element.setAttribute("progress", progress);
+  },
+
+  onDownloadFailed: function(aInstall, aError) {
+    this.onInstallFailed(aInstall, aError);
+  },
+
+  _showAlert: function xpidm_showAlert(aSucceeded) {
     if (ExtensionsView.visible)
       return;
 
-    let message = strings.getString("alertAddonsInstalled");
-    if (this._succeeded.length == 0 && this._failed.length > 0)
-      message = strings.getString("alertAddonsFail");
+    let strings = Elements.browserBundle;
+    let message = aSucceeded ? strings.getString("alertAddonsInstalled") :
+                               strings.getString("alertAddonsFail");
 
     let observer = {
       observe: function (aSubject, aTopic, aData) {
@@ -899,27 +789,5 @@ XPInstallDownloadManager.prototype = {
     let alerts = Cc["@mozilla.org/alerts-service;1"].getService(Ci.nsIAlertsService);
     alerts.showAlertNotification(URI_GENERIC_ICON_XPINSTALL, strings.getString("alertAddons"),
                                  message, true, "", observer);
-  },
-
-  onDownloadProgress: function xpidm_onDownloadProgress(aAddon, aValue, aMaxValue) {
-    var element = ExtensionsView.getElementForAddon(aAddon.id);
-    if (!element)
-      return;
-
-    let opType = element.getAttribute("opType");
-    if (!opType) {
-      element.setAttribute("opType", "needs-install");
-    }
-    var progress = Math.round((aValue / aMaxValue) * 100);
-    element.setAttribute("progress", progress);
-  },
-
-  /////////////////////////////////////////////////////////////////////////////
-  // nsISupports
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsIAddonInstallListener) &&
-        !aIID.equals(Ci.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
   }
 };

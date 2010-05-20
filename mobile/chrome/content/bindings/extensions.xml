@@ -15,7 +15,7 @@
   <binding id="extension-local" extends="chrome://browser/content/bindings.xml#richlistitem">
     <content orient="vertical">
       <xul:hbox align="start">
-        <xul:image xbl:inherits="src=iconURL"/>
+        <xul:image class="addon-image" xbl:inherits="src=iconURL"/>
         <xul:vbox flex="1">
           <xul:hbox align="center">
             <xul:label class="title" xbl:inherits="value=name" crop="end" flex="1"/>

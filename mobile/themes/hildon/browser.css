@@ -391,6 +391,10 @@ toolbarbutton.page-button {
   }
 }
 
+.addon-image {
+  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");  
+}
+
 .addon-rating[rating] {
   width: 78px;
   height: 18px;
