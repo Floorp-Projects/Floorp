@@ -44,8 +44,13 @@
 #include <phone.h>
 #endif
 
-#ifdef MOZ_PLATFORM_MAEMO
+#if (MOZ_PLATFORM_MAEMO == 5)
 #include <dbus/dbus.h>
+#endif
+
+#ifdef MOZ_WIDGET_QT
+#include <QtGui/QApplication>
+#include <QtGui/QWidget>
 #endif
 
 #include "nsStringAPI.h"
@@ -98,7 +103,7 @@ nsPhoneSupport::MakeCall(const PRUnichar *telephoneNumber, const PRUnichar *tele
 NS_IMETHODIMP
 nsPhoneSupport::SwitchTask()
 {
-#ifdef MOZ_PLATFORM_MAEMO // 5 only?
+#if (MOZ_PLATFORM_MAEMO == 5)
   DBusError error;
   dbus_error_init(&error);
 
@@ -113,6 +118,11 @@ nsPhoneSupport::SwitchTask()
       dbus_message_unref(msg);
       dbus_connection_flush(conn);
   }
+  return NS_OK;
+#elif MOZ_WIDGET_QT
+  QWidget * window = QApplication::activeWindow();
+  if (window)
+      window->showMinimized();
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
