@@ -74,6 +74,8 @@
 // so we can associate the document URI with the load group.
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"  
+#include "nsIContentSecurityPolicy.h"
+#include "nsIChannelPolicy.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -293,7 +295,8 @@ static nsresult NewImageChannel(nsIChannel **aResult,
                                 nsIURI *aReferringURI,
                                 nsILoadGroup *aLoadGroup,
                                 const nsCString& aAcceptHeader,
-                                nsLoadFlags aLoadFlags)
+                                nsLoadFlags aLoadFlags,
+                                nsIChannelPolicy *aPolicy)
 {
   nsresult rv;
   nsCOMPtr<nsIChannel> newChannel;
@@ -323,7 +326,8 @@ static nsresult NewImageChannel(nsIChannel **aResult,
                      nsnull,      // Cached IOService
                      nsnull,      // LoadGroup
                      callbacks,   // Notification Callbacks
-                     aLoadFlags);
+                     aLoadFlags,
+                     aPolicy);
   if (NS_FAILED(rv))
     return rv;
 
@@ -984,7 +988,8 @@ PRBool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                                                 nsISupports *aCX,
                                                 nsLoadFlags aLoadFlags,
                                                 imgIRequest *aExistingRequest,
-                                                imgIRequest **aProxyRequest)
+                                                imgIRequest **aProxyRequest,
+                                                nsIChannelPolicy *aPolicy)
 {
   // now we need to insert a new channel request object inbetween the real
   // request and the proxy that basically delays loading the image until it
@@ -1012,7 +1017,8 @@ PRBool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                          aReferrerURI,
                          aLoadGroup,
                          mAcceptHeader,
-                         aLoadFlags);
+                         aLoadFlags,
+                         aPolicy);
     if (NS_FAILED(rv)) {
       return PR_FALSE;
     }
@@ -1072,7 +1078,8 @@ PRBool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
                                 nsLoadFlags aLoadFlags,
                                 PRBool aCanMakeNewChannel,
                                 imgIRequest *aExistingRequest,
-                                imgIRequest **aProxyRequest)
+                                imgIRequest **aProxyRequest,
+                                nsIChannelPolicy *aPolicy = nsnull)
 {
   LOG_SCOPE(gImgLog, "imgLoader::ValidateEntry");
 
@@ -1186,7 +1193,7 @@ PRBool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
     return ValidateRequestWithNewChannel(request, aURI, aInitialDocumentURI,
                                          aReferrerURI, aLoadGroup, aObserver,
                                          aCX, aLoadFlags, aExistingRequest,
-                                         aProxyRequest);
+                                         aProxyRequest, aPolicy);
   } 
 
   return !validateRequest;
@@ -1327,6 +1334,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
                                    nsLoadFlags aLoadFlags,
                                    nsISupports *aCacheKey,
                                    imgIRequest *aRequest,
+                                   nsIChannelPolicy *aPolicy,
                                    imgIRequest **_retval)
 {
   VerifyCacheSizes();
@@ -1382,8 +1390,9 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
   imgCacheTable &cache = GetCache(aURI);
 
   if (cache.Get(spec, getter_AddRefs(entry)) && entry) {
-    if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI, aLoadGroup, aObserver, aCX,
-                      requestFlags, PR_TRUE, aRequest, _retval)) {
+    if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI,
+                      aLoadGroup, aObserver, aCX, requestFlags, PR_TRUE,
+                      aRequest, _retval, aPolicy)) {
       request = getter_AddRefs(entry->GetRequest());
 
       // If this entry has no proxies, its request has no reference to the entry.
@@ -1422,7 +1431,8 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
                          aReferrerURI,
                          aLoadGroup,
                          mAcceptHeader,
-                         requestFlags);
+                         requestFlags,
+                         aPolicy);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 

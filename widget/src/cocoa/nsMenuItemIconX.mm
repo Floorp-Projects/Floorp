@@ -337,8 +337,10 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
       [mNativeMenuItem setImage:sPlaceholderIconImage];
   }
 
+  // Passing in null for channelPolicy here since nsMenuItemIconX::LoadIcon is
+  // not exposed to web content
   rv = loader->LoadImage(aIconURI, nsnull, nsnull, loadGroup, this,
-                         nsnull, nsIRequest::LOAD_NORMAL, nsnull,
+                         nsnull, nsIRequest::LOAD_NORMAL, nsnull, nsnull,
                          nsnull, getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 
