@@ -650,7 +650,9 @@ PluginInstanceChild::AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
     if (!mPluginIface->event) {
         *handled = false;
     } else {
+        ::CGContextSaveGState(evcopy.data.draw.context);
         *handled = mPluginIface->event(&mData, reinterpret_cast<void*>(&evcopy));
+        ::CGContextRestoreGState(evcopy.data.draw.context);
     }
 
     *rtnmem = mem;
