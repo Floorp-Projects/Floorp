@@ -266,9 +266,6 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64 aOffset,
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
 
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
-
-  stream->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
   if (NS_FAILED(ResetDecode())) {
     return nsnull;
   }

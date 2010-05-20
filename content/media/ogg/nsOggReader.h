@@ -62,6 +62,8 @@ public:
   // read have valid time info.  
   virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold);
+  virtual VideoData* FindStartTime(PRInt64 aOffset,
+                                   PRInt64& aOutStartTime);
   virtual PRInt64 FindEndTime(PRInt64 aEndOffset);
 
   virtual PRBool HasAudio()
