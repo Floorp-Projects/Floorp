@@ -558,7 +558,7 @@ pref("javascript.options.strict",           false);
 #ifdef DEBUG
 pref("javascript.options.strict.debug",     true);
 #endif
-pref("javascript.options.relimit",          false);
+pref("javascript.options.relimit",          true);
 pref("javascript.options.jit.content",      true);
 pref("javascript.options.jit.chrome",       true);
 // This preference limits the memory usage of javascript.
