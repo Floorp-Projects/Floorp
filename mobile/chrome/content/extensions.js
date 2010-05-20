@@ -294,6 +294,7 @@ var ExtensionsView = {
         let appManaged = (addon.scope == AddonManager.SCOPE_APPLICATION);
         let opType = self._getOpTypeForOperations(addon.pendingOperations);
         let updateable = (addon.permissions & AddonManager.PERM_CAN_UPDATE) > 0;
+        let uninstallable = (addon.permissions & AddonManager.PERM_CAN_UNINSTALL) > 0;
 
         let listitem = self._createItem(addon, "local");
         listitem.setAttribute("isDisabled", !addon.isActive);
@@ -303,6 +304,7 @@ var ExtensionsView = {
         listitem.setAttribute("optionsURL", addon.optionsURL);
         listitem.setAttribute("opType", opType);
         listitem.setAttribute("updateable", updateable);
+        listitem.setAttribute("isReadonly", !uninstallable);
         listitem.addon = addon;
         self._list.insertBefore(listitem, self._repoItem);
       }
