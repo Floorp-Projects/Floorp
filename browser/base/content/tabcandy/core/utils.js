@@ -358,7 +358,31 @@ var Utils = {
     
     return null;
   },
+
+  // ----------
+  // Function: getCurrentWindow
+  // Returns the nsIDOMWindowInternal for the currently active window, 
+  // i.e. the window belonging to the active page's DOM "window" object.
+  getCurrentWindow: function() {
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+             .getService(Ci.nsIWindowMediator);
+    var browserEnumerator = wm.getEnumerator("navigator:browser");
+    while (browserEnumerator.hasMoreElements()) {
+      var browserWin = browserEnumerator.getNext();
+      var tabbrowser = browserWin.gBrowser;
+  
+      // Check each tab of this browser instance
+      var numTabs = tabbrowser.browsers.length;
+      for (var index = 0; index < numTabs; index++) {
+        var currentBrowser = tabbrowser.getBrowserAtIndex(index);
+        if(currentBrowser.contentWindow == window)
+          return browserWin;
+      }
+    }
     
+    return null;
+  },
+
   // ___ Files
   getInstallDirectory: function(id, callback) { 
     if (Cc["@mozilla.org/extensions/manager;1"]) {
@@ -443,6 +467,7 @@ var Utils = {
   
   log: function() { // pass as many arguments as you want, it'll print them all
     var text = this.expandArgumentsForLog(arguments);
+/*     $('body').prepend(text + '<br>'); */
     consoleService.logStringMessage(text);
   }, 
   

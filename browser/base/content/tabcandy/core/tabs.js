@@ -328,16 +328,8 @@ window.TabsManager = $.extend(new Subscribable(), {
   // Sets up the TabsManager and window.Tabs
   init: function() {
     var self = this;
-/*
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-             .getService(Ci.nsIWindowMediator);
-    var chromeWindow = wm.getMostRecentWindow("navigator:browser");
-*/
-    var chromeWindow = Utils.activeWindow;
-    if(!chromeWindow.getBrowser || !chromeWindow.getBrowser())
-      chromeWindow = null;
-    
-    if(!chromeWindow) {
+    var chromeWindow = Utils.getCurrentWindow();
+    if(!chromeWindow || !chromeWindow.getBrowser || !chromeWindow.getBrowser()) {
       setTimeout(function() {
         self.init();
       }, 100);
