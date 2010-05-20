@@ -406,8 +406,12 @@ WrapObject(JSContext *cx, JSObject *parent, jsval *vp, XPCWrappedNative* wn)
 
   XPCWrappedNative *parentwn =
     XPCWrappedNative::GetWrappedNativeOfJSObject(cx, parent);
-  NS_ASSERTION(parentwn, "parent must be a wrapped native");
-  XPCWrappedNativeScope *parentScope = parentwn->GetScope();
+  XPCWrappedNativeScope *parentScope;
+  if (NS_LIKELY(parentwn)) {
+    parentScope = parentwn->GetScope();
+  } else {
+    parentScope = XPCWrappedNativeScope::FindInJSObjectScope(cx, parent);
+  }
 
 #ifdef DEBUG_mrbkap_off
   printf("Wrapping object at %p (%s) [%p]\n",
