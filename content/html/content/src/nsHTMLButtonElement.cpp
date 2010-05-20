@@ -146,7 +146,7 @@ protected:
     return PR_TRUE;
   }
 
-  PRUInt8 mType;
+  PRUint8 mType;
   PRPackedBool mHandlingClick;
   PRPackedBool mDisabledChanged;
   PRPackedBool mInInternalActivate;
