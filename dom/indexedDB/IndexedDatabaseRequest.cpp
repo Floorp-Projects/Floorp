@@ -73,8 +73,9 @@ public:
                      const nsAString& aDescription,
                      const nsACString& aASCIIOrigin,
                      LazyIdleThread* aThread)
-  : AsyncConnectionHelper(nsnull, aRequest), mName(aName),
-    mDescription(aDescription), mASCIIOrigin(aASCIIOrigin), mThread(aThread)
+  : AsyncConnectionHelper(static_cast<IDBDatabaseRequest*>(nsnull), aRequest),
+    mName(aName), mDescription(aDescription), mASCIIOrigin(aASCIIOrigin),
+    mThread(aThread)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -88,7 +89,7 @@ private:
   nsRefPtr<LazyIdleThread> mThread;
 
   // Out-params.
-  nsTArray<nsString> mObjectStoreNames;
+  nsTArray<ObjectStoreInfo> mObjectStores;
   nsString mVersion;
 
   nsCOMPtr<mozIStorageConnection> mConnection;
@@ -120,7 +121,7 @@ CreateTables(mozIStorageConnection* aDBConn)
       "key_path TEXT NOT NULL, "
       "auto_increment INTEGER NOT NULL DEFAULT 0, "
       "readers INTEGER NOT NULL DEFAULT 0, "
-      "is_writing INTEGER NOT NULL DEFAULT 0, "
+      "is_writing INTEGER NOT NULL DEFAULT 1, "
       "PRIMARY KEY (id), "
       "UNIQUE (name)"
     ");"
@@ -418,6 +419,7 @@ CreateDatabaseConnection(const nsACString& aASCIIOrigin,
 already_AddRefed<nsIIndexedDatabaseRequest>
 IndexedDatabaseRequest::Create()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   nsCOMPtr<nsIIndexedDatabaseRequest> request(new IndexedDatabaseRequest());
   return request.forget();
 }
@@ -482,6 +484,8 @@ IndexedDatabaseRequest::Open(const nsAString& aName,
                              const nsAString& aDescription,
                              nsIIDBRequest** _retval)
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
   if (aName.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -532,21 +536,23 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                                          getter_AddRefs(mConnection));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-  { // Load object store names.
+  { // Load object store names and ids.
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT name "
+      "SELECT name, id, key_path, auto_increment "
       "FROM object_store"
     ), getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
     PRBool hasResult;
     while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-      nsString* name = mObjectStoreNames.AppendElement();
-      NS_ENSURE_TRUE(name, nsIIDBDatabaseException::UNKNOWN_ERR);
+      ObjectStoreInfo* info = mObjectStores.AppendElement();
+      NS_ENSURE_TRUE(info, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-      rv = stmt->GetString(0, *name);
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+      stmt->GetString(0, info->name);
+      info->id = stmt->AsInt64(1);
+      rv = stmt->GetString(2, info->keyPath);
+      info->autoIncrement = !!stmt->AsInt32(3);
     }
   }
 
@@ -579,9 +585,8 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
   NS_ASSERTION(mConnection, "Should have a connection!");
 
   nsRefPtr<IDBDatabaseRequest> db =
-    IDBDatabaseRequest::Create(mName, mDescription, mObjectStoreNames,
-                               mVersion, mThread, mDatabaseFilePath,
-                               mConnection);
+    IDBDatabaseRequest::Create(mName, mDescription, mObjectStores, mVersion,
+                               mThread, mDatabaseFilePath, mConnection);
   NS_ASSERTION(db, "This can't fail!");
 
   NS_ASSERTION(!mConnection, "Should have swapped out!");

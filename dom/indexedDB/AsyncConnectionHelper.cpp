@@ -47,6 +47,7 @@
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
+#include "IDBTransactionRequest.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
@@ -63,6 +64,19 @@ const PRUint32 kDefaultTimeoutMS = 30000;
 AsyncConnectionHelper::AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
                                              IDBRequest* aRequest)
 : mDatabase(aDatabase),
+  mRequest(aRequest),
+  mTimeoutDuration(TimeDuration::FromMilliseconds(kDefaultTimeoutMS)),
+  mErrorCode(0),
+  mError(PR_FALSE)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mRequest, "Null request!");
+}
+
+AsyncConnectionHelper::AsyncConnectionHelper(IDBTransactionRequest* aTransaction,
+                                             IDBRequest* aRequest)
+: mDatabase(aTransaction->mDatabase),
+  mTransaction(aTransaction),
   mRequest(aRequest),
   mTimeoutDuration(TimeDuration::FromMilliseconds(kDefaultTimeoutMS)),
   mErrorCode(0),
@@ -113,7 +127,12 @@ AsyncConnectionHelper::Run()
       OnError(mRequest, mErrorCode);
     }
 
+    if (mTransaction) {
+      mTransaction->OnRequestFinished();
+    }
+
     mDatabase = nsnull;
+    mTransaction = nsnull;
     mRequest = nsnull;
     return NS_OK;
   }
@@ -215,7 +234,14 @@ AsyncConnectionHelper::Dispatch(nsIThread* aDatabaseThread)
     return rv;
   }
 
-  return aDatabaseThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  rv = aDatabaseThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mTransaction) {
+    mTransaction->OnNewRequest();
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -246,7 +272,8 @@ AsyncConnectionHelper::OnSuccess(nsIDOMEventTarget* aTarget)
     return nsIIDBDatabaseException::UNKNOWN_ERR;
   }
 
-  nsCOMPtr<nsIDOMEvent> event(IDBSuccessEvent::Create(mRequest, variant));
+  nsCOMPtr<nsIDOMEvent> event =
+    IDBSuccessEvent::Create(mRequest, variant, mTransaction);
   if (!event) {
     NS_ERROR("Failed to create event!");
     return nsIIDBDatabaseException::UNKNOWN_ERR;

@@ -54,6 +54,9 @@
 
 #define SUCCESS_EVT_STR "success"
 #define ERROR_EVT_STR "error"
+#define COMPLETE_EVT_STR "complete"
+#define ABORT_EVT_STR "abort"
+#define TIMEOUT_EVT_STR "timeout"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
@@ -66,6 +69,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBEVENT
   NS_FORWARD_TO_NSDOMEVENT
+
+  static already_AddRefed<nsIDOMEvent>
+  CreateGenericEvent(const nsAString& aType);
 
 protected:
   IDBEvent() : nsDOMEvent(nsnull, nsnull) { }
@@ -98,37 +104,14 @@ protected:
 };
 
 class IDBSuccessEvent : public IDBEvent,
-                        public nsIIDBSuccessEvent
+                        public nsIIDBTransactionEvent
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBSUCCESSEVENT
+  NS_DECL_NSIIDBTRANSACTIONEVENT
   NS_FORWARD_NSIDOMEVENT(IDBEvent::)
   NS_FORWARD_NSIIDBEVENT(IDBEvent::)
-
-  static already_AddRefed<nsIDOMEvent>
-  Create(IDBRequest* aRequest,
-         nsIVariant* aResult);
-
-  static already_AddRefed<nsIRunnable>
-  CreateRunnable(IDBRequest* aRequest,
-                 nsIVariant* aResult);
-
-protected:
-  IDBSuccessEvent() { }
-
-  nsCOMPtr<nsIVariant> mResult;
-};
-
-class IDBTransactionEvent : public IDBSuccessEvent,
-                            public nsIIDBTransactionEvent
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIIDBTRANSACTIONEVENT
-  NS_FORWARD_NSIDOMEVENT(IDBSuccessEvent::)
-  NS_FORWARD_NSIIDBEVENT(IDBSuccessEvent::)
-  NS_FORWARD_NSIIDBSUCCESSEVENT(IDBSuccessEvent::)
 
   static already_AddRefed<nsIDOMEvent>
   Create(IDBRequest* aRequest,
@@ -141,8 +124,9 @@ public:
                  nsIIDBTransactionRequest* aTransaction);
 
 protected:
-  IDBTransactionEvent() { }
+  IDBSuccessEvent() { }
 
+  nsCOMPtr<nsIVariant> mResult;
   nsCOMPtr<nsIIDBTransactionRequest> mTransaction;
 };
 

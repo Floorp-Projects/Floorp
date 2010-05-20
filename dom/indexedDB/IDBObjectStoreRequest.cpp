@@ -47,7 +47,6 @@
 #include "IDBObjectStoreRequest.h"
 
 #include "nsIIDBDatabaseException.h"
-#include "nsIIDBTransactionRequest.h"
 #include "nsIJSContextStack.h"
 
 #include "nsDOMClassInfo.h"
@@ -55,34 +54,28 @@
 #include "mozilla/Storage.h"
 
 #include "AsyncConnectionHelper.h"
+#include "IDBTransactionRequest.h"
 
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-class PutHelper : public AsyncConnectionHelper
+class AddHelper : public AsyncConnectionHelper
 {
 public:
-  PutHelper(IDBDatabaseRequest* aDatabase,
+  AddHelper(IDBTransactionRequest* aTransaction,
             IDBRequest* aRequest,
             PRInt64 aObjectStoreID,
             const nsAString& aKeyPath,
             const nsAString& aValue,
-            const nsAString& aKeyString,
-            PRInt64 aKeyInt,
+            const Key& aKey,
             bool aAutoIncrement,
+            bool aCreate,
             bool aOverwrite)
-  : AsyncConnectionHelper(aDatabase, aRequest), mOSID(aObjectStoreID),
-    mKeyPath(aKeyPath), mValue(aValue), mKeyInt(aKeyInt),
-    mAutoIncrement(aAutoIncrement), mOverwrite(aOverwrite)
-  {
-    if (aKeyString.IsVoid()) {
-      mKeyString.SetIsVoid(PR_TRUE);
-    }
-    else {
-      mKeyString.Assign(aKeyString);
-    }
-  }
+  : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
+    mKeyPath(aKeyPath), mValue(aValue), mKey(aKey),
+    mAutoIncrement(aAutoIncrement), mCreate(aCreate), mOverwrite(aOverwrite)
+  { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 GetSuccessResult(nsIWritableVariant* aResult);
@@ -92,33 +85,26 @@ public:
 private:
   // In-params.
   const PRInt64 mOSID;
-  nsString mKeyPath;
+  const nsString mKeyPath;
+  // These may change in the autoincrement case.
   nsString mValue;
-  nsString mKeyString;
-  PRInt64 mKeyInt;
+  Key mKey;
   const bool mAutoIncrement;
+  const bool mCreate;
   const bool mOverwrite;
 };
 
 class GetHelper : public AsyncConnectionHelper
 {
 public:
-  GetHelper(IDBDatabaseRequest* aDatabase,
+  GetHelper(IDBTransactionRequest* aTransaction,
             IDBRequest* aRequest,
             PRInt64 aObjectStoreID,
-            const nsAString& aKeyString,
-            PRInt64 aKeyInt,
+            const Key& aKey,
             bool aAutoIncrement)
-  : AsyncConnectionHelper(aDatabase, aRequest), mOSID(aObjectStoreID),
-    mKeyInt(aKeyInt), mAutoIncrement(aAutoIncrement)
-  {
-    if (aKeyString.IsVoid()) {
-      mKeyString.SetIsVoid(PR_TRUE);
-    }
-    else {
-      mKeyString.Assign(aKeyString);
-    }
-  }
+  : AsyncConnectionHelper(aTransaction, aRequest), mOSID(aObjectStoreID),
+    mKey(aKey), mAutoIncrement(aAutoIncrement)
+  { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
   PRUint16 OnSuccess(nsIDOMEventTarget* aTarget);
@@ -129,8 +115,7 @@ public:
 protected:
   // In-params.
   const PRInt64 mOSID;
-  nsString mKeyString;
-  const PRInt64 mKeyInt;
+  const Key mKey;
   const bool mAutoIncrement;
 
 private:
@@ -141,16 +126,13 @@ private:
 class RemoveHelper : public GetHelper
 {
 public:
-  RemoveHelper(IDBDatabaseRequest* aDatabase,
+  RemoveHelper(IDBTransactionRequest* aTransaction,
                IDBRequest* aRequest,
                PRInt64 aObjectStoreID,
-               const nsAString& aKeyString,
-               PRInt64 aKeyInt,
+               const Key& aKey,
                bool aAutoIncrement)
-  : GetHelper(aDatabase, aRequest, aObjectStoreID, aKeyString, aKeyInt,
-              aAutoIncrement)
-  {
-  }
+  : GetHelper(aTransaction, aRequest, aObjectStoreID, aKey, aAutoIncrement)
+  { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
 };
@@ -184,51 +166,34 @@ private:
 
 inline
 nsresult
-GetKeyFromVariant(nsIVariant* aKey,
-                  PRBool aAutoIncrement,
-                  PRBool aGetting,
-                  nsAString& aKeyString,
-                  PRInt64* aKeyInt)
+GetKeyFromVariant(nsIVariant* aKeyVariant,
+                  Key& aKey)
 {
-  NS_ASSERTION(aKey && aKeyInt, "Null pointers!");
+  NS_ASSERTION(aKeyVariant, "Null pointer!");
 
   PRUint16 type;
-  nsresult rv = aKey->GetDataType(&type);
+  nsresult rv = aKeyVariant->GetDataType(&type);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // See xpcvariant.cpp, these are the only types we should expect.
   switch (type) {
-    case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_EMPTY:
-      if (!aAutoIncrement || aGetting) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      if (aAutoIncrement && !aGetting) {
-        aKeyString.Truncate();
-      }
-      else {
-        aKeyString.SetIsVoid(PR_TRUE);
-      }
-      *aKeyInt = 0;
+      aKey = Key::UNSETKEY;
+      break;
+
+    case nsIDataType::VTYPE_VOID:
+      aKey = Key::NULLKEY;
       break;
 
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      if (aAutoIncrement) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      rv = aKey->GetAsAString(aKeyString);
+      rv = aKeyVariant->GetAsAString(aKey.ToString());
       NS_ENSURE_SUCCESS(rv, rv);
-      *aKeyInt = 0;
       break;
 
     case nsIDataType::VTYPE_INT32:
     case nsIDataType::VTYPE_DOUBLE:
-      if (aAutoIncrement && !aGetting) {
-        return NS_ERROR_INVALID_ARG;
-      }
-      rv = aKey->GetAsInt64(aKeyInt);
+      rv = aKeyVariant->GetAsInt64(aKey.ToIntPtr());
       NS_ENSURE_SUCCESS(rv, rv);
-      aKeyString.SetIsVoid(PR_TRUE);
       break;
 
     default:
@@ -243,11 +208,9 @@ nsresult
 GetKeyFromObject(JSContext* aCx,
                  JSObject* aObj,
                  const nsString& aKeyPath,
-                 PRBool aAutoIncrement,
-                 nsAString& aKeyString,
-                 PRInt64* aKeyInt)
+                 Key& aKey)
 {
-  NS_PRECONDITION(aCx && aObj && aKeyInt, "Null pointers!");
+  NS_PRECONDITION(aCx && aObj, "Null pointers!");
   NS_ASSERTION(!aKeyPath.IsVoid(), "This will explode!");
 
   const jschar* keyPathChars = reinterpret_cast<const jschar*>(aKeyPath.get());
@@ -258,31 +221,22 @@ GetKeyFromObject(JSContext* aCx,
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
   if (JSVAL_IS_VOID(key)) {
-    // undefined values for a keyPath property are only ok on autoIncrement'ing
-    // objectStores.
-    if (!aAutoIncrement) {
-      return NS_ERROR_INVALID_ARG;
-    }
+    aKey = Key::UNSETKEY;
+    return NS_OK;
+  }
 
-    key = JS_GetEmptyStringValue(aCx);
-    ok = JS_DefineUCProperty(aCx, aObj, keyPathChars, keyPathLen, key, nsnull,
-                             nsnull, JSPROP_ENUMERATE);
-    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
-
-    aKeyString.Truncate();
-    *aKeyInt = 0;
+  if (JSVAL_IS_NULL(key)) {
+    aKey = Key::NULLKEY;
     return NS_OK;
   }
 
   if (JSVAL_IS_INT(key)) {
-    *aKeyInt = JSVAL_TO_INT(key);
-    aKeyString.SetIsVoid(PR_TRUE);
+    aKey = JSVAL_TO_INT(key);
     return NS_OK;
   }
 
   if (JSVAL_IS_DOUBLE(key)) {
-    *aKeyInt = *JSVAL_TO_DOUBLE(key);
-    aKeyString.SetIsVoid(PR_TRUE);
+    aKey = *JSVAL_TO_DOUBLE(key);
     return NS_OK;
   }
 
@@ -294,12 +248,11 @@ GetKeyFromObject(JSContext* aCx,
     }
     const PRUnichar* chars =
       reinterpret_cast<const PRUnichar*>(JS_GetStringChars(str));
-    aKeyString.Assign(chars, len);
-    *aKeyInt = 0;
+    aKey = nsDependentString(chars, len);
     return NS_OK;
   }
 
-  // We only support 
+  // We only support those types.
   return NS_ERROR_INVALID_ARG;
 }
 
@@ -308,30 +261,29 @@ GetKeyFromObject(JSContext* aCx,
 // static
 already_AddRefed<IDBObjectStoreRequest>
 IDBObjectStoreRequest::Create(IDBDatabaseRequest* aDatabase,
-                              const nsAString& aName,
-                              const nsAString& aKeyPath,
-                              PRBool aAutoIncrement,
-                              PRUint16 aMode,
-                              PRInt64 aId)
+                              IDBTransactionRequest* aTransaction,
+                              const ObjectStoreInfo& aStoreInfo,
+                              PRUint16 aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<IDBObjectStoreRequest> objectStore = new IDBObjectStoreRequest();
 
   objectStore->mDatabase = aDatabase;
-  objectStore->mName.Assign(aName);
-  objectStore->mKeyPath.Assign(aKeyPath);
-  objectStore->mAutoIncrement = aAutoIncrement;
+  objectStore->mTransaction = aTransaction;
+  objectStore->mName = aStoreInfo.name;
+  objectStore->mId = aStoreInfo.id;
+  objectStore->mKeyPath = aStoreInfo.keyPath;
+  objectStore->mAutoIncrement = aStoreInfo.autoIncrement;
   objectStore->mMode = aMode;
-  objectStore->mId = aId;
 
   return objectStore.forget();
 }
 
 IDBObjectStoreRequest::IDBObjectStoreRequest()
-: mAutoIncrement(PR_FALSE),
-  mMode(nsIIDBTransaction::READ_WRITE),
-  mId(LL_MININT)
+: mId(LL_MININT),
+  mAutoIncrement(PR_FALSE),
+  mMode(nsIIDBTransaction::READ_WRITE)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -339,6 +291,70 @@ IDBObjectStoreRequest::IDBObjectStoreRequest()
 IDBObjectStoreRequest::~IDBObjectStoreRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+}
+
+nsresult
+IDBObjectStoreRequest::GetJSONAndKeyForAdd(/* jsval aValue, */
+                                           nsIVariant* aKeyVariant,
+                                           nsString& aJSON,
+                                           Key& aKey)
+{
+  // This is the slow path, need to do this better once XPIDL can have raw
+  // jsvals as arguments.
+  NS_WARNING("Using a slow path for Add! Fix this now!");
+
+  nsIXPConnect* xpc = nsContentUtils::XPConnect();
+  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
+
+  nsAXPCNativeCallContext* cc;
+  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
+
+  PRUint32 argc;
+  rv = cc->GetArgc(&argc);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (argc < 1) {
+    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
+  }
+
+  jsval* argv;
+  rv = cc->GetArgvPtr(&argv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSContext* cx;
+  rv = cc->GetJSContext(&cx);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  JSAutoRequest ar(cx);
+
+  js::AutoValueRooter clone(cx);
+  rv = nsContentUtils::CreateStructuredClone(cx, argv[0], clone.addr());
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (mKeyPath.IsEmpty()) {
+    // Key was passed in.
+    rv = GetKeyFromVariant(aKeyVariant, aKey);
+  }
+  else {
+    // Inline keys live on the object.
+    rv = GetKeyFromObject(cx, JSVAL_TO_OBJECT(clone.value()), mKeyPath, aKey);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aKey.IsUnset() && !mAutoIncrement) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsCOMPtr<nsIJSON> json(new nsJSON());
+
+  rv = json->EncodeFromJSVal(clone.addr(), cx, aJSON);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 NS_IMPL_ADDREF(IDBObjectStoreRequest)
@@ -386,102 +402,25 @@ IDBObjectStoreRequest::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
   return NS_OK;
 }
 
-#if 0
-NS_IMETHODIMP
-IDBObjectStoreRequest::Put(nsIVariant* /* aValue */,
-                           nsIVariant* aKey,
-                           PRBool aOverwrite,
-                           nsIIDBRequest** _retval)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsString keyString;
-  PRInt64 keyInt;
-
-  // This is the slow path, need to do this better once nsIVariants can have
-  // raw jsvals inside them.
-  NS_WARNING("Using a slow path for Put! Fix this now!");
-
-  nsIXPConnect* xpc = nsContentUtils::XPConnect();
-  NS_ENSURE_TRUE(xpc, NS_ERROR_UNEXPECTED);
-
-  nsAXPCNativeCallContext* cc;
-  nsresult rv = xpc->GetCurrentNativeCallContext(&cc);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(cc, NS_ERROR_UNEXPECTED);
-
-  PRUint32 argc;
-  rv = cc->GetArgc(&argc);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (argc < 1) {
-    return NS_ERROR_XPC_NOT_ENOUGH_ARGS;
-  }
-
-  jsval* argv;
-  rv = cc->GetArgvPtr(&argv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSContext* cx;
-  rv = cc->GetJSContext(&cx);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSAutoRequest ar(cx);
-
-  js::AutoValueRooter clone(cx);
-  rv = nsContentUtils::CreateStructuredClone(cx, argv[0], clone.addr());
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // Inline keys should check the object first.
-  if (mKeyPath.IsEmpty()) {
-    rv = GetKeyFromVariant(aKey, mAutoIncrement, PR_FALSE, keyString, &keyInt);
-  }
-  else {
-    rv = GetKeyFromObject(cx, JSVAL_TO_OBJECT(clone.value()), mKeyPath,
-                          mAutoIncrement, keyString, &keyInt);
-  }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIJSON> json(new nsJSON());
-
-  nsString jsonString;
-  rv = json->EncodeFromJSVal(clone.addr(), cx, jsonString);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<IDBRequest> request = GenerateRequest();
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
-
-  nsRefPtr<PutHelper> helper =
-    new PutHelper(mDatabase, request, mId, mKeyPath, jsonString, keyString,
-                  keyInt, !!mAutoIncrement, !!aOverwrite);
-  rv = helper->Dispatch(mDatabase->ConnectionThread());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  request.forget(_retval);
-  return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP
 IDBObjectStoreRequest::Get(nsIVariant* aKey,
                            nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsString keyString;
-  PRInt64 keyInt;
-
-  nsresult rv = GetKeyFromVariant(aKey, mAutoIncrement, PR_TRUE,
-                                  keyString, &keyInt);
+  Key key;
+  nsresult rv = GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (key.IsUnset()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<GetHelper> helper =
-    new GetHelper(mDatabase, request, mId, keyString, keyInt, !!mAutoIncrement);
+    new GetHelper(mTransaction, request, mId, key, !!mAutoIncrement);
   rv = helper->Dispatch(mDatabase->ConnectionThread());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -501,33 +440,81 @@ IDBObjectStoreRequest::GetAll(nsIIDBKeyRange* aKeyRange,
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::Add(nsIVariant* aValue,
+IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
                            nsIVariant* aKey,
                            nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsString jsonValue;
+  Key key;
+
+  nsresult rv = GetJSONAndKeyForAdd(aKey, jsonValue, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<AddHelper> helper =
+    new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
+                  !!mAutoIncrement, true, false);
+  rv = helper->Dispatch(mDatabase->ConnectionThread());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::Modify(nsIVariant* aValue,
+IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
                               nsIVariant* aKey,
                               nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsString jsonValue;
+  Key key;
+
+  nsresult rv = GetJSONAndKeyForAdd(aKey, jsonValue, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<AddHelper> helper =
+    new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
+                  !!mAutoIncrement, false, true);
+  rv = helper->Dispatch(mDatabase->ConnectionThread());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
-IDBObjectStoreRequest::AddOrModify(nsIVariant* aValue,
+IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
                                    nsIVariant* aKey,
                                    nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsString jsonValue;
+  Key key;
+
+  nsresult rv = GetJSONAndKeyForAdd(aKey, jsonValue, key);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+
+  nsRefPtr<AddHelper> helper =
+    new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
+                  !!mAutoIncrement, true, true);
+  rv = helper->Dispatch(mDatabase->ConnectionThread());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  request.forget(_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -536,19 +523,15 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsString keyString;
-  PRInt64 keyInt;
-
-  nsresult rv = GetKeyFromVariant(aKey, mAutoIncrement, PR_TRUE,
-                                  keyString, &keyInt);
+  Key key;
+  nsresult rv = GetKeyFromVariant(aKey, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<RemoveHelper> helper =
-    new RemoveHelper(mDatabase, request, mId, keyString, keyInt,
-                     !!mAutoIncrement);
+    new RemoveHelper(mTransaction, request, mId, key, !!mAutoIncrement);
   rv = helper->Dispatch(mDatabase->ConnectionThread());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -597,40 +580,23 @@ IDBObjectStoreRequest::RemoveIndex(const nsAString& aName,
 }
 
 PRUint16
-PutHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
+AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
   nsresult rv;
 
-  bool haveKey = mKeyString.IsVoid() || mKeyString.Length();
+  bool mayOverwrite = mOverwrite;
 
-#ifdef DEBUG
-  if (mKeyPath.Length()) {
-    if (mAutoIncrement) {
-      if (!haveKey) {
-        NS_ASSERTION(mKeyString.IsEmpty(), "Bad");
-        NS_ASSERTION(!mOverwrite, "Bad");
-      }
-      else {
-        NS_ASSERTION(mOverwrite, "Bad");
-      }
-    }
-    else {
-      NS_ASSERTION(haveKey, "Huh?");
-    }
+  if (mKey.IsUnset()) {
+    NS_ASSERTION(mAutoIncrement, "Must have a key for non-autoIncrement!");
+
+    // Will need to add first and then set the key later.
+    mayOverwrite = false;
   }
-  else {
-    if (mAutoIncrement) {
-      if (mOverwrite) {
-        NS_ASSERTION(mKeyInt != 0, "Bad");
-      }
-    }
-  }
-#endif
 
   nsCOMPtr<mozIStorageStatement> stmt =
-    mDatabase->PutStatement(haveKey, mAutoIncrement);
+    mDatabase->AddStatement(mCreate, mayOverwrite, mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
@@ -639,15 +605,19 @@ PutHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
 
-  if (haveKey) {
-    rv = mKeyString.IsVoid() ?
-         stmt->BindInt64ByName(keyValue, mKeyInt) :
-         stmt->BindStringByName(keyValue, mKeyString);
-    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-  }
-
   rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+  if (!mAutoIncrement || mayOverwrite) {
+    NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
+
+    rv = mKey.IsNull() ?
+         stmt->BindNullByName(keyValue) :
+         mKey.IsInt() ?
+            stmt->BindInt64ByName(keyValue, mKey.IntValue()) :
+            stmt->BindStringByName(keyValue, mKey.StringValue());
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+  }
 
   rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
@@ -657,38 +627,42 @@ PutHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   if (mAutoIncrement) {
+    bool unsetKey = mKey.IsUnset();
+
 #ifdef DEBUG
-    PRInt64 oldKey = mKeyInt;
+    PRInt64 oldKey = unsetKey ? 0 : mKey.IntValue();
 #endif
-    rv = aConnection->GetLastInsertRowID(&mKeyInt);
+
+    rv = aConnection->GetLastInsertRowID(mKey.ToIntPtr());
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
 #ifdef DEBUG
-    if (haveKey) {
-      NS_ASSERTION(mKeyInt == oldKey, "Something went haywire!");
+    NS_ASSERTION(mKey.IsInt(), "Bad key value!");
+    if (!unsetKey) {
+      NS_ASSERTION(mKey.IntValue() == oldKey, "Something went haywire!");
     }
 #endif
 
-    if (!mKeyPath.IsEmpty() && !haveKey) {
+    if (!mKeyPath.IsEmpty() && unsetKey) {
       // Special case where someone put an object into an autoIncrement'ing
       // objectStore with no key in its keyPath set. We needed to figure out
       // which row id we would get above before we could set that properly.
+      rv = ModifyValueForNewKey();
+      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
       scoper.Abandon();
       rv = stmt->Reset();
       NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-      rv = ModifyValueForNewKey();
-      NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
-
-      stmt = mDatabase->PutStatement(true, true);
+      stmt = mDatabase->AddStatement(false, true, true);
       NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
       mozStorageStatementScoper scoper2(stmt);
 
-      rv = stmt->BindInt64ByName(keyValue, mKeyInt);
+      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
       NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-      rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
+      rv = stmt->BindInt64ByName(keyValue, mKey.IntValue());
       NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
       rv = stmt->BindStringByName(NS_LITERAL_CSTRING("data"), mValue);
@@ -706,21 +680,26 @@ PutHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 }
 
 PRUint16
-PutHelper::GetSuccessResult(nsIWritableVariant* aResult)
+AddHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
-  if (mAutoIncrement || mKeyString.IsVoid()) {
-    aResult->SetAsInt64(mKeyInt);
+  NS_ASSERTION(!mKey.IsUnset(), "Badness!");
+
+  if (mKey.IsNull()) {
+    aResult->SetAsVoid();
+  }
+  else if (mKey.IsString()) {
+    aResult->SetAsAString(mKey.StringValue());
   }
   else {
-    aResult->SetAsAString(mKeyString);
+    aResult->SetAsInt64(mKey.IntValue());
   }
   return OK;
 }
 
 nsresult
-PutHelper::ModifyValueForNewKey()
+AddHelper::ModifyValueForNewKey()
 {
-  NS_ASSERTION(mAutoIncrement && mKeyString.IsEmpty() && !mKeyString.IsVoid(),
+  NS_ASSERTION(mAutoIncrement && !mKeyPath.IsEmpty() && mKey.IsInt(),
                "Don't call me!");
 
   JSContext* cx;
@@ -744,17 +723,10 @@ PutHelper::ModifyValueForNewKey()
 
 #ifdef DEBUG
   ok = JS_GetUCProperty(cx, obj, keyPathChars, keyPathLen, key.addr());
-  if (ok) {
-    NS_ASSERTION(JSVAL_IS_STRING(key.value()), "Not a string!");
-    NS_ASSERTION(!JS_GetStringLength(JSVAL_TO_STRING(key.value())),
-                 "Should have been an empty string!");
-  }
-  else {
-    NS_ERROR("JS_GetUCProperty failed!");
-  }
+  NS_ASSERTION(ok && JSVAL_IS_VOID(key.value()), "Already has a key prop!");
 #endif
 
-  ok = JS_NewNumberValue(cx, mKeyInt, key.addr());
+  ok = JS_NewNumberValue(cx, mKey.IntValue(), key.addr());
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 
   ok = JS_DefineUCProperty(cx, obj, keyPathChars, keyPathLen, key.value(),
@@ -779,14 +751,15 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), mOSID);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
+  NS_ASSERTION(!mKey.IsUnset(), "Must have a key here!");
+
   NS_NAMED_LITERAL_CSTRING(id, "id");
 
-  if (mKeyString.IsVoid()) {
-    rv = stmt->BindInt64ByName(id, mKeyInt);
-  }
-  else {
-    rv = stmt->BindStringByName(id, mKeyString);
-  }
+  rv = mKey.IsNull() ?
+       stmt->BindNullByName(id) :
+       mKey.IsInt() ?
+          stmt->BindInt64ByName(id, mKey.IntValue()) :
+          stmt->BindStringByName(id, mKey.StringValue());
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   // Search for it!
@@ -828,12 +801,11 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   NS_NAMED_LITERAL_CSTRING(key_value, "key_value");
 
-  if (mKeyString.IsVoid()) {
-    rv = stmt->BindInt64ByName(key_value, mKeyInt);
-  }
-  else {
-    rv = stmt->BindStringByName(key_value, mKeyString);
-  }
+  rv = mKey.IsNull() ?
+       stmt->BindNullByName(key_value) :
+       mKey.IsInt() ?
+          stmt->BindInt64ByName(key_value, mKey.IntValue()) :
+          stmt->BindStringByName(key_value, mKey.StringValue());
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   // Search for it!
