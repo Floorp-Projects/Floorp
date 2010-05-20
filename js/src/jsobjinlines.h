@@ -50,7 +50,7 @@
 
 #include "jsscopeinlines.h"
 
-inline const js::Value &
+inline js::Value
 JSObject::getSlotMT(JSContext *cx, uintN slot)
 {
 #ifdef JS_THREADSAFE
