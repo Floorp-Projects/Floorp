@@ -861,7 +861,7 @@ js_NumberValueToCharBuffer(JSContext *cx, const Value &v, JSCharBuffer &cb)
     static const size_t arrSize = DTOSTR_STANDARD_BUFFER_SIZE;
     char arr[arrSize];
     const char *cstr;
-    if (v.asInt32()) {
+    if (v.isInt32()) {
         cstr = IntToCString(v.asInt32(), 10, arr, arrSize);
     } else {
         cstr = js_dtostr(JS_THREAD_DATA(cx)->dtoaState, arr, arrSize,
@@ -939,7 +939,7 @@ ValueToNumberSlow(JSContext *cx, Value v, double *out)
     }
 
     *out = js_NaN;
-    return false;
+    return true;
 }
 
 bool
