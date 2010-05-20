@@ -41,7 +41,31 @@
 #include "nsOggReader.h"
 #include "nsOggDecoder.h"
 
-nsDecoderStateMachine* nsOggDecoder::CreateStateMachine()
+nsOggDecoderStateMachine::nsOggDecoderStateMachine(nsBuiltinDecoder* aDecoder) :
+  nsBuiltinDecoderStateMachine(aDecoder, new nsOggReader(aDecoder))
 {
-  return new nsOggDecoderStateMachine(this);
+}
+
+void nsOggDecoderStateMachine::LoadMetadata()
+{
+  nsBuiltinDecoderStateMachine::LoadMetadata();
+
+  // TODO: Get the duration from Skeleton index, if available.
+
+  // Get the duration from the media file. We only do this if the
+  // content length of the resource is known as we need to seek
+  // to the end of the file to get the last time field. We also
+  // only do this if the resource is seekable and if we haven't
+  // already obtained the duration via an HTTP header.
+  mGotDurationFromHeader = (GetDuration() != -1);
+  if (mState != DECODER_STATE_SHUTDOWN &&
+      mDecoder->GetCurrentStream()->GetLength() >= 0 &&
+      mSeekable &&
+      mEndTime == -1)
+  {
+    mDecoder->StopProgressUpdates();
+    FindEndTime();
+    mDecoder->StartProgressUpdates();
+    mDecoder->UpdatePlaybackRate();
+  }
 }
