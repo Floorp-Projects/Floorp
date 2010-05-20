@@ -163,7 +163,10 @@ GetNativeStackBaseImpl()
 
     void *stackBase = 0;
     size_t stackSize = 0;
-    int rc = pthread_attr_getstack(&sattr, &stackBase, &stackSize);
+#  ifdef DEBUG
+    int rc = 
+#  endif
+        pthread_attr_getstack(&sattr, &stackBase, &stackSize);
     JS_ASSERT(!rc);
     JS_ASSERT(stackBase);
     pthread_attr_destroy(&sattr);
