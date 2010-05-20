@@ -75,6 +75,7 @@ const STATE_SELECTED = nsIAccessibleStates.STATE_SELECTED;
 const STATE_TRAVERSED = nsIAccessibleStates.STATE_TRAVERSED;
 const STATE_UNAVAILABLE = nsIAccessibleStates.STATE_UNAVAILABLE;
 
+const EXT_STATE_ACTIVE = nsIAccessibleStates.EXT_STATE_ACTIVE;
 const EXT_STATE_EDITABLE = nsIAccessibleStates.EXT_STATE_EDITABLE;
 const EXT_STATE_EXPANDABLE = nsIAccessibleStates.EXT_STATE_EXPANDABLE;
 const EXT_STATE_HORIZONTAL = nsIAccessibleStates.EXT_STATE_HORIZONTAL;
@@ -263,7 +264,8 @@ function isAccessible(aAccOrElmOrID, aInterfaces)
  */
 function getRootAccessible(aAccOrElmOrID)
 {
-  var acc = getAccessible(aAccOrElmOrID ? aAccOrElmOrID : document);
+  var acc = getAccessible(aAccOrElmOrID ? aAccOrElmOrID : document,
+                          [nsIAccessNode]);
   return acc ? acc.rootDocument.QueryInterface(nsIAccessible) : null;
 }
 
