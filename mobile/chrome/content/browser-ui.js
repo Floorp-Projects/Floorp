@@ -1451,8 +1451,8 @@ var FormHelper = {
     let height = Math.floor(this._container.getBoundingClientRect().height);
     this._container.top = window.innerHeight - height;
 
-    document.getElementById("form-helper-previous").disabled = this._getPrevious() ? false : true;
-    document.getElementById("form-helper-next").disabled = this._getNext() ? false : true;
+    document.getElementById("form-helper-previous").disabled = !this._getPrevious();
+    document.getElementById("form-helper-next").disabled = !this._getNext();
   },
 
   _updateSelect: function(aPreviousElement, aNewElement) {
@@ -1567,12 +1567,18 @@ var FormHelper = {
 
   _getPrevious: function() {
     let index = this._nodes.indexOf(this._currentElement);
-    return (index != -1 ? this._nodes[--index] : null);
+    let node = (index != -1 ? this._nodes[--index] : null);
+    while (node && !this._isElementVisible(node))
+      node = this._nodes[--index];
+    return node;
   },
 
   _getNext: function() {
     let index = this._nodes.indexOf(this._currentElement);
-    return (index != -1 ? this._nodes[++index] : null);
+    let node = (index != -1 ? this._nodes[++index] : null);
+    while (node && !this._isElementVisible(node))
+      node = this._nodes[++index];
+    return node;
   },
 
   _fac: Cc["@mozilla.org/satchel/form-autocomplete;1"].getService(Ci.nsIFormAutoComplete),
@@ -1819,7 +1825,7 @@ var FormHelper = {
 
     let elRect = this._getRectForElement(aElement);
     let zoomRect = Browser._getZoomRectForPoint(elRect.center().x, elRect.y, zoomLevel);
-    
+
     let caretRect = this._getRectForCaret();
     if (caretRect) {
       caretRect = Browser._browserView.browserToViewportRect(caretRect);
@@ -2097,7 +2103,6 @@ var SelectHelper = {
     if (!isIdentical)
       this._control.fireOnChange();
   },
-
 
   _isValidElement: function(aElement) {
     if (!aElement || aElement.disabled)
