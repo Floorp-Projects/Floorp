@@ -68,6 +68,7 @@ _TEST_FILES =\
  		nsIAccessible_selects.js \
 		relations.js \
 		role.js \
+		selectable.js \
 		states.js \
 		table.js \
 		value.js \
