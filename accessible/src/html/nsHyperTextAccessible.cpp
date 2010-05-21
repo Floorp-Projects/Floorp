@@ -1102,6 +1102,9 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
   nsresult rv = GetCharacterCount(aEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   if (aAttributes) {
     *aAttributes = nsnull;
 
@@ -1112,12 +1115,46 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
     NS_ADDREF(*aAttributes = attributes);
   }
 
-  if (!mDOMNode)
-    return NS_ERROR_FAILURE;
+  // Offset 0 is correct offset when accessible has empty text. Include
+  // default attributes if they were requested, otherwise return empty set.
+  if (aOffset == 0) {
+    // XXX: bug 567321. We handle here the cases when there are no children
+    // or when existing children have zero length.
+    PRBool isEmpty = PR_TRUE;
+    PRInt32 childCount = GetChildCount();
+    for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+      nsAccessible *child = mChildren[childIdx];
+      if (!nsAccUtils::IsText(child) || nsAccUtils::TextLength(child) > 0) {
+        isEmpty = PR_FALSE;
+        break;
+      }
+    }
+
+    if (isEmpty) {
+      if (aIncludeDefAttrs) {
+        nsTextAttrsMgr textAttrsMgr(this, mDOMNode, PR_TRUE, nsnull);
+        return textAttrsMgr.GetAttributes(*aAttributes);
+      }
+
+      return NS_OK;
+    }
+  }
+
+  // Get the frame and accessible at the given offset.
+  PRInt32 startOffset = aOffset, endOffset = aOffset;
+  nsCOMPtr<nsIAccessible> startAcc;
+  nsIFrame *startFrame = GetPosAndText(startOffset, endOffset,
+                                       nsnull, nsnull, nsnull,
+                                       getter_AddRefs(startAcc), nsnull);
+
+  // No start frame or accessible means wrong given offset.
+  if (!startFrame || !startAcc)
+    return NS_ERROR_INVALID_ARG;
 
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 nodeOffset = 0;
-  rv = HypertextOffsetToDOMPoint(aOffset, getter_AddRefs(node), &nodeOffset);
+  rv = GetDOMPointByFrameOffset(startFrame, startOffset, startAcc,
+                                getter_AddRefs(node), &nodeOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set 'misspelled' text attribute.

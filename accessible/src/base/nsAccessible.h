@@ -246,6 +246,11 @@ public:
   PRInt32 GetIndexInParent();
 
   /**
+   * Return true if accessible has children;
+   */
+  PRBool HasChildren() { return !!GetChildAt(0); }
+
+  /**
    * Return parent accessible only if cached.
    */
   nsAccessible* GetCachedParent();
