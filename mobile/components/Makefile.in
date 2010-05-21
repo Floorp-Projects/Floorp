@@ -50,6 +50,7 @@ EXTRA_PP_COMPONENTS = \
         AboutRedirector.js \
         DirectoryProvider.js\
         Sidebar.js \
+        SessionStore.js \
         $(NULL)
 
 EXTRA_COMPONENTS = \
@@ -64,7 +65,6 @@ EXTRA_COMPONENTS = \
         ContentDispatchChooser.js \
         AutoCompleteCache.js \
         AddonUpdateService.js \
-        SessionStore.js \
 	$(NULL)
 
 DIRS = protocols \

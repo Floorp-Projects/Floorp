@@ -63,6 +63,11 @@ window.sizeToContent = function() {
   Components.utils.reportError("window.sizeToContent is not allowed in this window");
 }
 
+#ifdef MOZ_CRASH_REPORTER
+XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
+  "@mozilla.org/xre/app-info;1", "nsICrashReporter");
+#endif
+
 const endl = '\n';
 
 function debug() {
@@ -2755,8 +2760,15 @@ ProgressController.prototype = {
       else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
         this._networkStop();
     }
-    else if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
-      if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+#ifdef MOZ_CRASH_REPORTER
+        if (aRequest instanceof Ci.nsIChannel && CrashReporter.enabled)
+          CrashReporter.annotateCrashReport("URL", aRequest.URI.spec);
+#endif
+      }
+      else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         this._documentStop();
       }
     }
