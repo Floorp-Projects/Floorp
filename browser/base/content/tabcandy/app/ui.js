@@ -512,9 +512,10 @@ UIClass.prototype = {
     }
     
     Tabs.onFocus(function() {
+      var me = this;
       setTimeout(function() { // Marshal event from chrome thread to DOM thread
         try{
-          if(this.contentWindow.location.host == "tabcandy") {
+          if(me.contentWindow.location.host == "tabcandy") {
             self.focused = true;
             self.navBar.hide();
             self.tabBar.hide();
@@ -523,7 +524,7 @@ UIClass.prototype = {
             self.navBar.show();      
           }
         }catch(e){
-          Utils.log()
+          Utils.log(e)
         }
       }, 1);
     });
