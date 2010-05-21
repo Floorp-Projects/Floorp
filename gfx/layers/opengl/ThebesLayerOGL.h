@@ -59,15 +59,13 @@ public:
   /** ThebesLayer implementation */
   void InvalidateRegion(const nsIntRegion& aRegion);
 
-  gfxContext *BeginDrawing(nsIntRegion* aRegionToDraw);
-
-  void EndDrawing();
-
   /** LayerOGL implementation */
   LayerType GetType();
   Layer* GetLayer();
   virtual PRBool IsEmpty();
-  virtual void RenderLayer(int aPreviousFrameBuffer);
+  virtual void RenderLayer(int aPreviousFrameBuffer,
+                           DrawThebesLayerCallback aCallback,
+                           void* aCallbackData);
 
   /** ThebesLayerOGL */
   const nsIntRect &GetVisibleRect();
@@ -83,16 +81,6 @@ private:
    * Currently invalidated rectangular area.
    */
   nsIntRect mInvalidatedRect;
-  /**
-   * Destination surface used for this layer's drawing operation. This is 
-   * created on BeginDrawing() and should be removed on EndDrawing().
-   */
-  nsRefPtr<gfxASurface> mDestinationSurface;
-
-  /**
-   * We hold the reference to the context.
-   */
-  nsRefPtr<gfxContext> mContext;
 
   /**
    * OpenGL Texture

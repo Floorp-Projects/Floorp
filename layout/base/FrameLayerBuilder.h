@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,11 +15,11 @@
  * The Original Code is Mozilla Corporation code.
  *
  * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bas Schouten <bschouten@mozilla.org>
+ *   Robert O'Callahan <robert@ocallahan.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,50 +35,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_CONTAINERLAYEROGL_H
-#define GFX_CONTAINERLAYEROGL_H
+#ifndef FRAMELAYERBUILDER_H_
+#define FRAMELAYERBUILDER_H_
 
 #include "Layers.h"
-#include "LayerManagerOGL.h"
+
+class nsDisplayListBuilder;
+class nsDisplayList;
+class nsDisplayItem;
 
 namespace mozilla {
-namespace layers {
 
-class ContainerLayerOGL : public ContainerLayer, 
-                          public LayerOGL
-{
+class FrameLayerBuilder {
 public:
-  ContainerLayerOGL(LayerManagerOGL *aManager);
-  ~ContainerLayerOGL();
+  typedef mozilla::layers::Layer Layer;
+  typedef mozilla::layers::ThebesLayer ThebesLayer;
+  typedef mozilla::layers::LayerManager LayerManager;
 
-  const nsIntRect &GetVisibleRect();
+  /**
+   * Create a container layer for a display item that contains a child
+   * list, either reusing an existing one or creating a new one.
+   * aContainer may be null, in which case we construct a root layer.
+   */
+  already_AddRefed<Layer> MakeContainerLayerFor(nsDisplayListBuilder* aBuilder,
+                                                LayerManager* aManager,
+                                                nsDisplayItem* aContainer,
+                                                const nsDisplayList& aChildren);
 
-  /** ContainerLayer implementation */
-  void SetVisibleRegion(const nsIntRegion& aRegion);
-
-  void InsertAfter(Layer* aChild, Layer* aAfter);
-
-  void RemoveChild(Layer* aChild);
-
-  /** LayerOGL implementation */
-  LayerType GetType();
-
-  Layer* GetLayer();
-
-  LayerOGL* GetFirstChildOGL();
-
-  PRBool IsEmpty();
-
-  void RenderLayer(int aPreviousFrameBuffer,
-                   DrawThebesLayerCallback aCallback,
-                   void* aCallbackData);
-private:
-  nsIntRect mVisibleRect;
-
-  GLuint mTexture;
+  /**
+   * This callback must be provided to EndTransaction. The callback data
+   * must be the nsDisplayListBuilder containing this FrameLayerBuilder.
+   */
+  static void DrawThebesLayer(ThebesLayer* aLayer,
+                              gfxContext* aContext,
+                              const nsIntRegion& aRegionToDraw,
+                              void* aCallbackData);
 };
 
-} /* layers */
-} /* mozilla */
+}
 
-#endif /* GFX_CONTAINERLAYEROGL_H */
+#endif /* FRAMELAYERBUILDER_H_ */
