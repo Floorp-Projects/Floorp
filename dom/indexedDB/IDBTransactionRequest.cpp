@@ -91,6 +91,10 @@ IDBTransactionRequest::OnNewRequest()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (!mPendingRequests) {
     mDatabase->DisableConnectionThreadTimeout();
+
+    NS_ASSERTION(mReadyState == nsIIDBTransaction::INITIAL,
+                 "Reusing a transaction!");
+    mReadyState = nsIIDBTransaction::LOADING;
   }
   ++mPendingRequests;
 }
@@ -102,7 +106,11 @@ IDBTransactionRequest::OnRequestFinished()
   NS_ASSERTION(mPendingRequests, "Mismatched calls!");
   --mPendingRequests;
   if (!mPendingRequests) {
+    NS_ASSERTION(mReadyState == nsIIDBTransaction::LOADING, "Bad readyState!");
+    mReadyState = nsIIDBTransaction::DONE;
+
     Commit();
+
     mDatabase->EnableConnectionThreadTimeout();
   }
 }
@@ -111,6 +119,7 @@ nsresult
 IDBTransactionRequest::Commit()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mReadyState == nsIIDBTransaction::DONE, "Bad readyState!");
 
   NS_WARNING("Commit doesn't actually do anything yet! Fix me now!");
 
@@ -173,6 +182,22 @@ IDBTransactionRequest::GetMode(PRUint16* aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   *aMode = mMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+IDBTransactionRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
+  PRUint32 count = mObjectStores.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    NS_ENSURE_TRUE(list->Add(mObjectStores[index].name),
+                   NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  list.forget(aObjectStores);
   return NS_OK;
 }
 

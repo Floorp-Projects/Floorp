@@ -40,6 +40,7 @@
 #include "nsISupports.idl"
 
 interface nsIIDBDatabase;
+interface nsIDOMDOMStringList;
 
 /**
  * IDBDTransaction interface.  See
@@ -60,4 +61,6 @@ interface nsIIDBTransaction : nsISupports
   const unsigned short READ_ONLY = 1;
   const unsigned short SNAPSHOT_READ = 2;
   readonly attribute unsigned short mode;
+
+  readonly attribute nsIDOMDOMStringList objectStoreNames;
 };
