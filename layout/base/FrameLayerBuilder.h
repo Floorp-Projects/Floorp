@@ -19,7 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Robert O'Callahan <robert@ocallahan.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,54 +35,43 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef GFX_CANVASLAYEROGL_H
-#define GFX_CANVASLAYEROGL_H
+#ifndef FRAMELAYERBUILDER_H_
+#define FRAMELAYERBUILDER_H_
 
-#include "LayerManagerOGL.h"
-#include "gfxASurface.h"
+#include "Layers.h"
+
+class nsDisplayListBuilder;
+class nsDisplayList;
+class nsDisplayItem;
 
 namespace mozilla {
-namespace layers {
 
-class THEBES_API CanvasLayerOGL :
-  public CanvasLayer,
-  public LayerOGL
-{
+class FrameLayerBuilder {
 public:
-  CanvasLayerOGL(LayerManagerOGL *aManager)
-    : CanvasLayer(aManager, NULL),
-      LayerOGL(aManager),
-      mTexture(0)
-  { 
-      mImplData = static_cast<LayerOGL*>(this);
-  }
+  typedef mozilla::layers::Layer Layer;
+  typedef mozilla::layers::ThebesLayer ThebesLayer;
+  typedef mozilla::layers::LayerManager LayerManager;
 
-  ~CanvasLayerOGL();
+  /**
+   * Create a container layer for a display item that contains a child
+   * list, either reusing an existing one or creating a new one.
+   * aContainer may be null, in which case we construct a root layer.
+   */
+  already_AddRefed<Layer> MakeContainerLayerFor(nsDisplayListBuilder* aBuilder,
+                                                LayerManager* aManager,
+                                                nsDisplayItem* aContainer,
+                                                const nsDisplayList& aChildren);
 
-  // CanvasLayer implementation
-  virtual void Initialize(const Data& aData);
-  virtual void Updated(const nsIntRect& aRect);
-
-  // LayerOGL implementation
-  virtual LayerType GetType() { return TYPE_CANVAS; }
-  virtual Layer* GetLayer() { return this; }
-  virtual void RenderLayer(int aPreviousDestination,
-                           DrawThebesLayerCallback aCallback,
-                           void* aCallbackData);
-
-protected:
-  nsRefPtr<gfxASurface> mSurface;
-  nsRefPtr<GLContext> mGLContext;
-
-  unsigned int mTexture;
-
-  nsIntRect mBounds;
-  nsIntRect mUpdatedRect;
-
-  PRPackedBool mGLBufferIsPremultiplied;
-  PRPackedBool mNeedsYFlip;
+  /**
+   * This callback must be provided to EndTransaction. The callback data
+   * must be the nsDisplayListBuilder containing this FrameLayerBuilder.
+   */
+  static void DrawThebesLayer(ThebesLayer* aLayer,
+                              gfxContext* aContext,
+                              const nsIntRegion& aRegionToDraw,
+                              void* aCallbackData);
 };
 
-} /* layers */
-} /* mozilla */
-#endif /* GFX_IMAGELAYEROGL_H */
+}
+
+#endif /* FRAMELAYERBUILDER_H_ */
