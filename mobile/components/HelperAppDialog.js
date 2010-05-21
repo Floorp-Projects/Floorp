@@ -217,52 +217,6 @@ HelperAppLauncherDialog.prototype = {
   }
 };
 
-// The toolkit helper service uses a delayed registration, so we can't use XPCOMUtils
-// since it doesn't support delayed registration yet.
-
-//function NSGetModule(aCompMgr, aFileSpec) {
-//  return XPCOMUtils.generateModule([HelperAppLauncherDialog]);
-//}
-
-var module = {
-  firstTime: true,
-
-  registerSelf: function(compMgr, fileSpec, location, type) {
-    if (this.firstTime) {
-      this.firstTime = false;
-      throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
-    }
-    compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    compMgr.registerFactoryLocation(this.classID, this.classDescription, this.contractID, fileSpec, location, type);
-  },
-
-  getClassObject: function(compMgr, cid, iid) {
-    if (!cid.equals(this.classID))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-
-    if (!iid.equals(Ci.nsIFactory))
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-    return this.factory;
-  },
-
-  classDescription: "HelperApp Launcher Dialog",
-  contractID: "@mozilla.org/helperapplauncherdialog;1",
-  classID: Components.ID("{e9d277a0-268a-4ec2-bb8c-10fdf3e44611}"),
-
-  factory: {
-    createInstance: function(outer, iid) {
-      if (outer != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-      return (new HelperAppLauncherDialog()).QueryInterface(iid);
-    }
-  },
-
-  canUnload: function(compMgr) {
-    return true;
-  }
-};
-
-function NSGetModule(compMgr, fileSpec) {
-  return module;
+function NSGetModule(aCompMgr, aFileSpec) {
+  return XPCOMUtils.generateModule([HelperAppLauncherDialog]);
 }
