@@ -72,12 +72,17 @@ IDBTransactionRequest::IDBTransactionRequest()
   mTimeout(0),
   mPendingRequests(0)
 {
-
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 
 IDBTransactionRequest::~IDBTransactionRequest()
 {
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mPendingRequests, "Should have no pending requests here!");
+
+  if (mListenerManager) {
+    mListenerManager->Disconnect();
+  }
 }
 
 void
@@ -97,10 +102,27 @@ IDBTransactionRequest::OnRequestFinished()
   NS_ASSERTION(mPendingRequests, "Mismatched calls!");
   --mPendingRequests;
   if (!mPendingRequests) {
+    Commit();
     mDatabase->EnableConnectionThreadTimeout();
-    // Commit!
-    NS_NOTYETIMPLEMENTED("Implement me!");
   }
+}
+
+nsresult
+IDBTransactionRequest::Commit()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_WARNING("Commit doesn't actually do anything yet! Fix me now!");
+
+  nsCOMPtr<nsIRunnable> runnable =
+    IDBEvent::CreateGenericEventRunnable(NS_LITERAL_STRING(COMPLETE_EVT_STR),
+                                         this);
+  NS_ENSURE_TRUE(runnable, NS_ERROR_FAILURE);
+
+  nsresult rv = NS_DispatchToCurrentThread(runnable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransactionRequest)
@@ -187,8 +209,17 @@ NS_IMETHODIMP
 IDBTransactionRequest::Abort()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_NOTYETIMPLEMENTED("Implement me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_WARNING("Abort doesn't actually do anything yet! Fix me now!");
+
+  nsCOMPtr<nsIRunnable> runnable =
+    IDBEvent::CreateGenericEventRunnable(NS_LITERAL_STRING(ABORT_EVT_STR),
+                                         this);
+  NS_ENSURE_TRUE(runnable, NS_ERROR_FAILURE);
+
+  nsresult rv = NS_DispatchToCurrentThread(runnable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
