@@ -95,10 +95,8 @@ public:
   // E_FAIL.
   STDMETHODIMP Drop(LPDATAOBJECT pSource, DWORD grfKeyState,
                     POINTL point, DWORD* pEffect);
-  /**
-   * Cancel the current drag session, if any.
-   */
-  void DragCancel();
+
+  PRBool           mDragCancelled;
 
 protected:
 
