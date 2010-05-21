@@ -246,7 +246,8 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case DESCRIPTOR : {
         AutoDescriptor &desc = *static_cast<AutoDescriptor *>(this);
-        JS_CALL_OBJECT_TRACER(trc, desc.obj, "Descriptor::obj");
+        if (desc.obj)
+            JS_CALL_OBJECT_TRACER(trc, desc.obj, "Descriptor::obj");
         JS_CALL_VALUE_TRACER(trc, desc.value, "Descriptor::value");
         if (desc.attrs & JSPROP_GETTER)
             JS_CALL_VALUE_TRACER(trc, jsval(desc.getter), "Descriptor::get");
