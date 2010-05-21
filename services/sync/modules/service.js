@@ -1388,7 +1388,11 @@ WeaveSvc.prototype = {
       for each (let name in collections) {
         try {
           new Resource(this.storageURL + name).delete();
-          new Resource(this.storageURL + "crypto/" + name).delete();
+
+          // Remove the crypto record from the server and local cache
+          let crypto = this.storageURL + "crypto/" + name;
+          new Resource(crypto).delete();
+          CryptoMetas.del(crypto);
         }
         catch(ex) {
           this._log.debug("Exception on wipe of '" + name + "': " + Utils.exceptionStr(ex));

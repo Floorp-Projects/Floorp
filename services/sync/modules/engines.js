@@ -357,8 +357,22 @@ SyncEngine.prototype = {
   _syncStartup: function SyncEngine__syncStartup() {
     this._log.trace("Ensuring server crypto records are there");
 
+    // Try getting/unwrapping the crypto record
+    let meta = CryptoMetas.get(this.cryptoMetaURL);
+    if (meta) {
+      try {
+        let pubkey = PubKeys.getDefaultKey();
+        let privkey = PrivKeys.get(pubkey.privateKeyUri);
+        meta.getKey(privkey, ID.get("WeaveCryptoID"));
+      }
+      catch(ex) {
+        // Indicate that we don't have a cryptometa to delete and reupload
+        this._log.debug("Purging bad data after failed unwrap crypto: " + ex);
+        meta = null;
+      }
+    }
+
     // Determine if we need to wipe on outdated versions
-    let wipeServerData = false;
     let metaGlobal = Records.get(this.metaURL);
     let engines = metaGlobal.payload.engines || {};
     let engineData = engines[this.name] || {};
@@ -368,7 +382,7 @@ SyncEngine.prototype = {
       this._log.debug("Old engine data: " + [engineData.version, this.version]);
 
       // Prepare to clear the server and upload everything
-      wipeServerData = true;
+      meta = null;
       this.syncID = "";
 
       // Set the newer version and newly generated syncID
@@ -393,31 +407,12 @@ SyncEngine.prototype = {
       this._resetClient();
     };
 
-    // Try getting/unwrapping the crypto record
-    let meta = CryptoMetas.get(this.cryptoMetaURL);
-    if (meta) {
-      try {
-        let pubkey = PubKeys.getDefaultKey();
-        let privkey = PrivKeys.get(pubkey.privateKeyUri);
-        meta.getKey(privkey, ID.get("WeaveCryptoID"));
-      }
-      catch(ex) {
-        // Remove traces of this bad cryptometa and tainted data
-        this._log.debug("Purging bad data after failed unwrap crypto: " + ex);
-        CryptoMetas.del(this.cryptoMetaURL);
-        meta = null;
-        wipeServerData = true;
-      }
-    }
-
-    // Delete all server data and reupload on bad version or meta
-    if (wipeServerData) {
+    // Delete any existing data and reupload on bad version or missing meta
+    if (meta == null) {
       new Resource(this.engineURL).delete();
       this._resetClient();
-    }
 
-    // Generate a new crypto record
-    if (!meta) {
+      // Generate a new crypto record
       let symkey = Svc.Crypto.generateRandomKey();
       let pubkey = PubKeys.getDefaultKey();
       meta = new CryptoMeta(this.cryptoMetaURL);
@@ -486,6 +481,10 @@ SyncEngine.prototype = {
       }
       catch(ex) {
         this._log.warn("Error processing record: " + Utils.exceptionStr(ex));
+
+        // Upload a new record to replace the bad one if we have it
+        if (this._store.itemExists(item.id))
+          this._tracker.addChangedID(item.id, 0);
       }
       this._tracker.ignoreAll = false;
       Sync.sleep(0);
