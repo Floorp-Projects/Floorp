@@ -119,6 +119,8 @@ private:
   nsRefPtr<nsSMILInstanceTime> mEnd;
 
   typedef nsTArray<nsRefPtr<nsSMILInstanceTime> > InstanceTimeList;
+
+  // nsSMILInstanceTimes to notify when this interval is changed or deleted.
   InstanceTimeList mDependentTimes;
 
   // When change notifications are passed around the timing model we try to
