@@ -75,6 +75,8 @@ public:
   void OnNewRequest();
   void OnRequestFinished();
 
+  nsresult Commit();
+
 private:
   IDBTransactionRequest();
   ~IDBTransactionRequest();

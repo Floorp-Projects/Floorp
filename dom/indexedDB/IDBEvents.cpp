@@ -186,6 +186,18 @@ IDBEvent::CreateGenericEvent(const nsAString& aType)
   return result;
 }
 
+// static
+already_AddRefed<nsIRunnable>
+IDBEvent::CreateGenericEventRunnable(const nsAString& aType,
+                                     nsIDOMEventTarget* aTarget)
+{
+  nsCOMPtr<nsIDOMEvent> event(IDBEvent::CreateGenericEvent(aType));
+  NS_ENSURE_TRUE(event, nsnull);
+
+  nsCOMPtr<nsIRunnable> runnable(new EventFiringRunnable(aTarget, event));
+  return runnable.forget();
+}
+
 NS_IMPL_ADDREF_INHERITED(IDBEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(IDBEvent, nsDOMEvent)
 
