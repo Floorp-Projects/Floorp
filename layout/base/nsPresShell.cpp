@@ -5678,47 +5678,6 @@ nscolor PresShell::ComputeBackstopColor(nsIView* aDisplayRoot)
   return GetPresContext()->DefaultBackgroundColor();
 }
 
-struct PaintParams {
-  nsIFrame* mFrame;
-  nsPoint mOffsetToRoot;
-  nsPoint mOffsetToWidget;
-  const nsRegion* mDirtyRegion;
-  nscolor mBackgroundColor;
-};
-
-static void DrawThebesLayer(ThebesLayer* aLayer,
-                            gfxContext* aContext,
-                            const nsIntRegion& aRegionToDraw,
-                            void* aCallbackData)
-{
-  PaintParams* params = static_cast<PaintParams*>(aCallbackData);
-  nsIFrame* frame = params->mFrame;
-  if (frame) {
-    // We're drawing into a child window. Don't pass
-    // nsLayoutUtils::PAINT_WIDGET_LAYERS, since that will draw into
-    // the widget for the display root.
-    nsIDeviceContext* devCtx = frame->PresContext()->DeviceContext();
-    nsCOMPtr<nsIRenderingContext> rc;
-    nsresult rv = devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
-    if (NS_SUCCEEDED(rv)) {
-      rc->Init(devCtx, aContext);
-      nsRegion dirtyRegion = *params->mDirtyRegion;
-      dirtyRegion.MoveBy(params->mOffsetToRoot);
-      nsIRenderingContext::AutoPushTranslation
-        push(rc, -params->mOffsetToWidget.x, -params->mOffsetToWidget.y);
-      nsLayoutUtils::PaintFrame(rc, frame, dirtyRegion,
-                                params->mBackgroundColor);
-    }
-  } else {
-    aContext->NewPath();
-    aContext->SetColor(gfxRGBA(params->mBackgroundColor));
-    nsIntRect dirtyRect = aRegionToDraw.GetBounds();
-    aContext->Rectangle(
-      gfxRect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
-    aContext->Fill();
-  }
-}
-
 NS_IMETHODIMP
 PresShell::Paint(nsIView*        aDisplayRoot,
                  nsIView*        aViewToPaint,
@@ -5771,17 +5730,42 @@ PresShell::Paint(nsIView*        aDisplayRoot,
     root->SetVisibleRegion(dirtyRect);
     layerManager->SetRoot(root);
   }
-  if (!frame) {
-    bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
+  layerManager->EndConstruction();
+  if (root) {
+    nsIntRegion toDraw;
+    gfxContext* ctx = root->BeginDrawing(&toDraw);
+    if (ctx) {
+      if (frame) {
+        // We're drawing into a child window. Don't pass
+        // nsLayoutUtils::PAINT_WIDGET_LAYERS, since that will draw into
+        // the widget for the display root.
+        nsIDeviceContext* devCtx = GetPresContext()->DeviceContext();
+        nsCOMPtr<nsIRenderingContext> rc;
+        nsresult rv = devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
+        if (NS_SUCCEEDED(rv)) {
+          rc->Init(devCtx, ctx);
+          // Offset to add to aView coordinates to get aWidget coordinates
+          nsPoint offsetToRoot = aViewToPaint->GetOffsetTo(aDisplayRoot);
+          nsRegion dirtyRegion = aDirtyRegion;
+          dirtyRegion.MoveBy(offsetToRoot);
+
+          nsPoint translate = -offsetToRoot + aViewToPaint->ViewToWidgetOffset();
+          nsIRenderingContext::AutoPushTranslation
+            push(rc, translate.x, translate.y);
+
+          nsLayoutUtils::PaintFrame(rc, frame, dirtyRegion, bgcolor);
+        }
+      } else {
+        bgcolor = NS_ComposeColors(bgcolor, mCanvasBackgroundColor);
+        ctx->NewPath();
+        ctx->SetColor(gfxRGBA(bgcolor));
+        ctx->Rectangle(gfxRect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
+        ctx->Fill();
+      }
+    }
+    root->EndDrawing();
   }
-  nsPoint offsetToRoot = aViewToPaint->GetOffsetTo(aDisplayRoot);
-  PaintParams params =
-    { frame,
-      offsetToRoot,
-      offsetToRoot - aViewToPaint->ViewToWidgetOffset(),
-      &aDirtyRegion,
-      bgcolor };
-  layerManager->EndTransaction(DrawThebesLayer, &params);
+  layerManager->EndTransaction();
 
   return NS_OK;
 }
