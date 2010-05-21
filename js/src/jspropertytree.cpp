@@ -234,8 +234,8 @@ PropertyTree::insertChild(JSContext *cx, JSScopeProperty *parent,
 {
     JS_ASSERT(parent);
     JS_ASSERT(!child->parent);
-    JS_ASSERT(!JSID_IS_NULL(parent->id));
-    JS_ASSERT(!JSID_IS_NULL(child->id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(parent->id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(child->id));
 
     JSScopeProperty **childp = &parent->kids;
     if (JSScopeProperty *kids = *childp) {
@@ -331,7 +331,7 @@ PropertyTree::removeChild(JSContext *cx, JSScopeProperty *child)
 
     JSScopeProperty *parent = child->parent;
     JS_ASSERT(parent);
-    JS_ASSERT(!JSID_IS_NULL(parent->id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(parent->id));
 
     JSScopeProperty *kids = parent->kids;
     if (!KIDS_IS_CHUNKY(kids)) {
@@ -468,7 +468,7 @@ PropertyTree::getChild(JSContext *cx, JSScopeProperty *parent, uint32 shape,
         if (sprop)
             goto out;
     } else {
-        JS_ASSERT(!JSID_IS_NULL(parent->id));
+        JS_ASSERT(!JSBOXEDWORD_IS_NULL(parent->id));
 
         /*
          * Because chunks are appended at the end and never deleted except by
@@ -616,7 +616,7 @@ js_MeterPropertyTree(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
 void
 JSScopeProperty::dump(JSContext *cx, FILE *fp)
 {
-    JS_ASSERT(!JSID_IS_NULL(id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(id));
 
     if (JSID_IS_INT(id)) {
         fprintf(fp, "[%ld]", (long) JSID_TO_INT(id));
@@ -724,7 +724,7 @@ OrphanNodeKids(JSContext *cx, JSScopeProperty *sprop)
                 if (!kid)
                     break;
 
-                if (!JSID_IS_NULL(kid->id)) {
+                if (!JSBOXEDWORD_IS_NULL(kid->id)) {
                     JS_ASSERT(kid->parent == sprop);
                     kid->parent = NULL;
                 }
@@ -733,7 +733,7 @@ OrphanNodeKids(JSContext *cx, JSScopeProperty *sprop)
     } else {
         JSScopeProperty *kid = kids;
 
-        if (!JSID_IS_NULL(kid->id)) {
+        if (!JSBOXEDWORD_IS_NULL(kid->id)) {
             JS_ASSERT(kid->parent == sprop);
             kid->parent = NULL;
         }
@@ -856,7 +856,7 @@ js::SweepScopeProperties(JSContext *cx)
 
         for (JSScopeProperty *sprop = (JSScopeProperty *) a->base; sprop < limit; sprop++) {
             /* If the id is null, sprop is already on the freelist. */
-            if (JSID_IS_NULL(sprop->id))
+            if (JSBOXEDWORD_IS_NULL(sprop->id))
                 continue;
 
             /*

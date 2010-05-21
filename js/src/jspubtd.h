@@ -489,28 +489,78 @@ INT_TO_JSBOXEDWORD(jsint i)
  */
 
 typedef jsboxedword jsid;
+struct JSAtom;
 
-#define JSID_NULL                     ((jsid)JSBOXEDWORD_NULL)
-#define JSID_VOID                     ((jsid)JSBOXEDWORD_VOID)
-#define JSID_IS_NULL(id)              JSBOXEDWORD_IS_NULL((jsboxedword)(id))
-#define JSID_IS_VOID(id)              JSBOXEDWORD_IS_VOID((jsboxedword)(id))
-#define JSID_IS_ATOM(id)              JSBOXEDWORD_IS_STRING((jsboxedword)(id))
-#define JSID_TO_ATOM(id)              ((JSAtom *)(id))
-#define JSID_TO_STRING(id)            ATOM_TO_STRING(JSID_TO_ATOM(id))
-#define ATOM_TO_JSID(atom)            (JS_ASSERT(ATOM_IS_STRING(atom)),        \
-                                       (jsid)(atom))
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_ATOM(jsid id)
+{
+    return JSBOXEDWORD_IS_STRING((jsboxedword)id);
+}
 
-#define INT32_FITS_IN_JSID(id)        INT32_FITS_IN_JSBOXEDWORD(id)
-#define JSID_IS_INT(id)               JSBOXEDWORD_IS_INT((jsboxedword)(id))
-#define JSID_TO_INT(id)               JSBOXEDWORD_TO_INT((jsboxedword)(id))
-#define INT_TO_JSID(i)                ((jsid)INT_TO_JSBOXEDWORD((i)))
+static JS_ALWAYS_INLINE JSAtom *
+JSID_TO_ATOM(jsid id)
+{
+    JS_ASSERT(JSID_IS_ATOM(id));
+    return (JSAtom *)id;
+}
 
-#define JSID_IS_OBJECT(id)            JSBOXEDWORD_IS_OBJECT((jsboxedword)(id))
-#define JSID_TO_OBJECT(id)            JSBOXEDWORD_TO_OBJECT((jsboxedword)(id))
-#define OBJECT_TO_JSID(obj)           ((jsid)OBJECT_TO_JSBOXEDWORD((obj)))
+static JS_ALWAYS_INLINE JSString *
+JSID_TO_STRING(jsid id)
+{
+    JS_ASSERT(JSID_IS_ATOM(id));
+    return JSBOXEDWORD_TO_STRING(id);
+}
+
+static JS_ALWAYS_INLINE jsid
+ATOM_TO_JSID(JSAtom *atom)
+{
+    JS_ASSERT(JSBOXEDWORD_IS_STRING((jsboxedword)atom));
+    return (jsid)atom;
+}
+
+static JS_ALWAYS_INLINE JSBool
+INT32_FITS_IN_JSID(int32 i)
+{
+    return INT32_FITS_IN_JSBOXEDWORD(i);
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_INT(jsid id)
+{
+    return JSBOXEDWORD_IS_INT((jsboxedword)id);
+}
+
+static JS_ALWAYS_INLINE int32
+JSID_TO_INT(jsid id)
+{
+    return JSBOXEDWORD_TO_INT((jsboxedword)id);
+}
+
+static JS_ALWAYS_INLINE jsid
+INT_TO_JSID(int32 i)
+{
+    return (jsid)INT_TO_JSBOXEDWORD(i);
+}
+
+static JS_ALWAYS_INLINE JSBool
+JSID_IS_OBJECT(jsid id)
+{
+    return JSBOXEDWORD_IS_OBJECT((jsboxedword)id);
+}
+
+static JS_ALWAYS_INLINE JSObject *
+JSID_TO_OBJECT(jsid id)
+{
+    return JSBOXEDWORD_TO_OBJECT((jsboxedword)id);
+}
+
+static JS_ALWAYS_INLINE jsid
+OBJECT_TO_JSID(JSObject *obj)
+{
+    return (jsid)OBJECT_TO_JSBOXEDWORD(obj);
+}
 
 /* TODO: get JSID/JSBOXEDWORD story together. */
-
 /* Objects and strings (no doubles in jsids). */
 #define JSID_IS_GCTHING(id)           JSBOXEDWORD_IS_GCTHING(id)
 #define JSID_TO_GCTHING(id)           (JS_ASSERT(JSID_IS_GCTHING((id))),       \

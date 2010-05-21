@@ -2683,7 +2683,7 @@ split_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (!JSID_IS_VOID(*idp))
+        if (!JSBOXEDWORD_IS_VOID(*idp))
             break;
         /* Fall through. */
 
@@ -4399,7 +4399,7 @@ its_enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (!JS_NextProperty(cx, iterator, idp))
             return JS_FALSE;
 
-        if (!JSID_IS_VOID(*idp))
+        if (!JSBOXEDWORD_IS_VOID(*idp))
             break;
         /* Fall through. */
 
