@@ -218,6 +218,8 @@ var BrowserUI = {
   showToolbar : function showToolbar(aEdit) {
     this.hidePanel();
     this._editURI(aEdit);
+    if (aEdit)
+      this.showAutoComplete();
   },
 
   _toolbarLocked: 0,
@@ -567,6 +569,7 @@ var BrowserUI = {
 
     BrowserSearch.updateSearchButtons();
 
+    this._hidePopup();
     this._edit.showHistoryPopup();
   },
 
@@ -619,7 +622,6 @@ var BrowserUI = {
     if (aURI == "about:blank") {
       // Display awesomebar UI
       this.showToolbar(true);
-      this.showAutoComplete();
     }
     else {
       // Give the new page lots of room
@@ -851,7 +853,6 @@ var BrowserUI = {
         break;
       case "cmd_openLocation":
         this.showToolbar(true);
-        this.showAutoComplete();
         break;
       case "cmd_star":
       {

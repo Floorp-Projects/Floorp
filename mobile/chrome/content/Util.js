@@ -266,6 +266,7 @@ let Elements = {};
   ["stack",              "stack"],
   ["panelUI",            "panel-container"],
   ["viewBuffer",         "view-buffer"],
+  ["toolbarContainer",   "toolbar-container"],
 ].forEach(function (elementGlobal) {
   let [name, id] = elementGlobal;
   Elements.__defineGetter__(name, function () {

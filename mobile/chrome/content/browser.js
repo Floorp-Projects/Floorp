@@ -2341,7 +2341,7 @@ IdentityHandler.prototype = {
     // Update the popup strings
     this.setPopupMessages(this._identityBox.getAttribute("mode") || this.IDENTITY_MODE_UNKNOWN);
 
-    BrowserUI.pushPopup(this, [this._identityPopup, this._identityBox]);
+    BrowserUI.pushPopup(this, [this._identityPopup, this._identityBox, Elements.toolbarContainer]);
     BrowserUI.lockToolbar();
   },
 
@@ -3515,8 +3515,7 @@ PluginObserver.prototype = {
     crit = Browser.browserViewToClientRect(crit);
 
     if (BrowserUI.isToolbarLocked()) {
-      let urlbar = document.getElementById("toolbar-container");
-      let urlbarRect = urlbar.getBoundingClientRect();
+      let urlbarRect = Elements.toolbarContainer.getBoundingClientRect();
       // Subtract urlbar area from critical rect area.  In general subtracting a rect from another
       // results in a region that can be described by a union of rects.  Luckily in this case,
       // we can cheat because the resulting area is still just one rect.
