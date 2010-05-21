@@ -669,10 +669,6 @@ function StartCurrentURI(aState)
 
 function DoneTests()
 {
-    // TEMPORARILY DISABLE REPORTING OF ASSERTION FAILURES.
-    gTestResults.AssertionUnexpected = 0;
-    gTestResults.AssertionUnexpectedFixed = 0;
-
     dump("REFTEST FINISHED: Slowest test took " + gSlowestTestTime +
          "ms (" + gSlowestTestURL + ")\n");
 
@@ -1194,16 +1190,12 @@ function DoAssertionCheck()
 
         if (numAsserts < minAsserts) {
             ++gTestResults.AssertionUnexpectedFixed;
-            // TEMPORARILY DISABLING REPORTING ON TINDERBOX BY REVERSING
-            // THE WORD "UNEXPECTED".
-            dump("REFTEST TEST-DETCEPXENU-PASS | " + gURLs[0].prettyPath +
+            dump("REFTEST TEST-UNEXPECTED-PASS | " + gURLs[0].prettyPath +
                  " | assertion count " + numAsserts + " is less than " +
                  expectedAssertions + "\n");
         } else if (numAsserts > maxAsserts) {
             ++gTestResults.AssertionUnexpected;
-            // TEMPORARILY DISABLING REPORTING ON TINDERBOX BY REVERSING
-            // THE WORD "UNEXPECTED".
-            dump("REFTEST TEST-DETCEPXENU-FAIL | " + gURLs[0].prettyPath +
+            dump("REFTEST TEST-UNEXPECTED-FAIL | " + gURLs[0].prettyPath +
                  " | assertion count " + numAsserts + " is more than " +
                  expectedAssertions + "\n");
         } else if (numAsserts != 0) {
