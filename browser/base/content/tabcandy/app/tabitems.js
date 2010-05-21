@@ -34,6 +34,20 @@ window.TabItem.prototype = $.extend(new Item(), {
       groupID: (this.parent ? this.parent.id : 0)
     };
   },
+
+  // ----------
+  save: function() {
+/*     Utils.log((this.tab ? this.tab.url : ''), this.reconnected); */
+    try{
+      if (!("tab" in this) || !("raw" in this.tab) || !this.reconnected) // too soon to save
+        return;
+      var data = this.getStorageData();
+/*       Utils.log("data to save", data); */
+      Storage.saveTab(this.tab.raw, data);
+    }catch(e){
+      Utils.log("Error in saving tab value: "+e);
+    }
+  },
   
   // ----------  
   getURL: function() {
@@ -73,6 +87,8 @@ window.TabItem.prototype = $.extend(new Item(), {
       this.bounds = newBounds;
       this._updateDebugBounds();
 /*     } */
+
+    this.save();
   },
   
   // ----------  
@@ -154,6 +170,8 @@ window.TabItem.prototype = $.extend(new Item(), {
     
     if(!isRect(this.bounds))
       Utils.trace('TabItem.setBounds: this.bounds is not a real rectangle!', this.bounds);
+
+    this.save();
   },
 
   // ----------
@@ -169,6 +187,9 @@ window.TabItem.prototype = $.extend(new Item(), {
   // ----------
   close: function() {
     this.tab.close();
+
+    // No need to explicitly delete the tab data, becasue sessionstore data
+    // associated with the tab will automatically go away
   },
   
   // ----------
@@ -308,7 +329,8 @@ window.TabItems = {
           }
         }
       });
-      
+/*       Utils.log("reconnected: "+reconnected); */
+       
       if(!reconnected && $div.length == 1 && Groups){
           Groups.newTab($div.data('tabItem'));          
       }
@@ -427,32 +449,13 @@ window.TabItems = {
   },
   
   // ----------
-  getStorageData: function() {
-    var data = {tabs: []};
+  reconstitute: function() {
     var items = this.getItems();
+    var self = this;
     $.each(items, function(index, item) {
-      data.tabs.push(item.getStorageData());
+      if(!self.reconnect(item))
+        Groups.newTab(item);
     });
-    
-    return data;
-  },
-  
-  // ----------
-  reconstitute: function(data) {
-    this.storageData = data;
-    var items = this.getItems();
-    if(data && data.tabs) {
-      var self = this;
-      $.each(items, function(index, item) {
-        if(!self.reconnect(item))
-          Groups.newTab(item);
-      });
-    } else {
-        var box = Items.getPageBounds();
-        box.inset(20, 20);
-        
-        Items.arrange(items, box, {padding: 10, animate:false});
-    }
   },
   
   // ----------
@@ -474,45 +477,48 @@ window.TabItems = {
 
   // ----------
   reconnect: function(item) {
-    if(item.reconnected)
-      return true;
-      
-    var found = false;
-    if(this.storageData && this.storageData.tabs) {
-      var self = this;
-      $.each(this.storageData.tabs, function(index, tab) {
-        if(tab.url == 'about:blank')
-          return;
+    try{
+/*       Utils.log("trying to reconnect"); */
+      if(item.reconnected) {
+/*         Utils.log("already done"); */
+        return true;
+      }
+        
+      var found = false;
+  
+      var tab = Storage.getTabData(item.tab.raw);
+/*       Utils.log("this is our tab", tab, item.tab.url); */
+      if (tab) {
+        if(item.parent)
+          item.parent.remove(item);
           
-        if(item.getURL() == tab.url) {
-          if(item.parent)
-            item.parent.remove(item);
-            
-          item.setBounds(tab.bounds, true);
+        item.setBounds(tab.bounds, true);
+        
+        if(isPoint(tab.userSize))
+          item.userSize = new Point(tab.userSize);
           
-          if(isPoint(tab.userSize))
-            item.userSize = new Point(tab.userSize);
-            
-          if(tab.groupID) {
-            var group = Groups.group(tab.groupID);
-            group.add(item);
-            
-            if(item.tab == Utils.activeTab) 
-              Groups.setActiveGroup(item.parent);
-          }  
+        if(tab.groupID) {
+          var group = Groups.group(tab.groupID);
+/*           Utils.log("group found: " + group); */
+          group.add(item);
           
-          Groups.updateTabBarForActiveGroup();
-          
-          self.storageData.tabs.splice(index, 1);
-          item.reconnected = true;
-          found = true;
-          return false;
-        }      
-      });
-    }   
+          if(item.tab == Utils.activeTab) 
+            Groups.setActiveGroup(item.parent);
+        }  
+        
+        Groups.updateTabBarForActiveGroup();
+        
+        item.reconnected = true;
+        found = true;
+      } else
+        item.reconnected = (item.tab.url != 'about:blank');
     
+      item.save();
+    }catch(e){
+      Utils.log("Error in TabItems.reconnect: "+e + " at " + e.fileName + "(" + e.lineNumber + ")");
+    }
+        
     return found; 
   }
 };
 
-TabItems.init();
