@@ -462,7 +462,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
  	fh = _cairo_fixed_from_double (srcRect.size.height);
  
  	if ((fw & CAIRO_FIXED_FRAC_MASK) <= CAIRO_FIXED_EPSILON &&
-@@ -1657,111 +1724,114 @@ _cairo_quartz_setup_source (cairo_quartz
+@@ -1657,111 +1724,109 @@ _cairo_quartz_setup_source (cairo_quartz
  
  	    srcRect.size.width = round(srcRect.size.width);
  	    srcRect.size.height = round(srcRect.size.height);
@@ -493,6 +493,17 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
 -	    return DO_NOTHING;
 -	if (status)
 -	    return DO_UNSUPPORTED;
+-
+-	// Save before we change the pattern, colorspace, etc. so that
+-	// we can restore and make sure that quartz releases our
+-	// pattern (which may be stack allocated)
+-	CGContextSaveGState(surface->cgContext);
+-
+-	patternSpace = CGColorSpaceCreatePattern(NULL);
+-	CGContextSetFillColorSpace (surface->cgContext, patternSpace);
+-	CGContextSetFillPattern (surface->cgContext, pattern, &patternAlpha);
+-	CGContextSetStrokeColorSpace (surface->cgContext, patternSpace);
+-	CGContextSetStrokePattern (surface->cgContext, pattern, &patternAlpha);
 +	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
 +	    state.action = DO_NOTHING;
 +	    return state;
@@ -501,18 +512,6 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
 +	    state.action = DO_UNSUPPORTED;
 +	    return state;
 +	}
- 
- 	// Save before we change the pattern, colorspace, etc. so that
- 	// we can restore and make sure that quartz releases our
- 	// pattern (which may be stack allocated)
--	CGContextSaveGState(surface->cgContext);
--
--	patternSpace = CGColorSpaceCreatePattern(NULL);
--	CGContextSetFillColorSpace (surface->cgContext, patternSpace);
--	CGContextSetFillPattern (surface->cgContext, pattern, &patternAlpha);
--	CGContextSetStrokeColorSpace (surface->cgContext, patternSpace);
--	CGContextSetStrokePattern (surface->cgContext, pattern, &patternAlpha);
-+	CGContextSaveGState (surface->cgContext);
 +
 +	patternSpace = CGColorSpaceCreatePattern (NULL);
 +	CGContextSetFillColorSpace (context, patternSpace);
@@ -632,7 +631,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
   */
  
  /* Read the image from the surface's front buffer */
-@@ -2098,52 +2168,44 @@ _cairo_quartz_surface_get_extents (void 
+@@ -2098,52 +2163,44 @@ _cairo_quartz_surface_get_extents (void 
  static cairo_int_status_t
  _cairo_quartz_surface_paint (void *abstract_surface,
  			     cairo_operator_t op,
@@ -700,7 +699,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
  static cairo_bool_t
  _cairo_quartz_source_needs_extents (const cairo_pattern_t *source)
  {
-@@ -2170,91 +2232,83 @@ _cairo_quartz_surface_fill (void *abstra
+@@ -2170,91 +2227,83 @@ _cairo_quartz_surface_fill (void *abstra
  			     cairo_path_fixed_t *path,
  			     cairo_fill_rule_t fill_rule,
  			     double tolerance,
@@ -818,7 +817,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
  	ub.u.stroke_fill.fill_rule = fill_rule;
  
  	_cairo_quartz_fixup_unbounded_operation (surface, &ub, antialias);
-@@ -2274,44 +2328,49 @@ _cairo_quartz_surface_stroke (void *abst
+@@ -2274,44 +2323,49 @@ _cairo_quartz_surface_stroke (void *abst
  			      cairo_matrix_t *ctm,
  			      cairo_matrix_t *ctm_inverse,
  			      double tolerance,
@@ -879,7 +878,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
  	double offset = style->dash_offset;
  	unsigned int max_dashes = style->num_dashes;
  	unsigned int k;
-@@ -2330,90 +2389,75 @@ _cairo_quartz_surface_stroke (void *abst
+@@ -2330,90 +2384,75 @@ _cairo_quartz_surface_stroke (void *abst
  	    if (max_dashes > STATIC_DASH)
  		fdash = _cairo_malloc_ab (max_dashes, sizeof (CGFloat));
  	    if (fdash == NULL)
@@ -1014,7 +1013,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
  #if CAIRO_HAS_QUARTZ_FONT
  static cairo_int_status_t
  _cairo_quartz_surface_show_glyphs (void *abstract_surface,
-@@ -2429,17 +2473,17 @@ _cairo_quartz_surface_show_glyphs (void 
+@@ -2429,17 +2468,17 @@ _cairo_quartz_surface_show_glyphs (void 
  #define STATIC_BUF_SIZE 64
      CGGlyph glyphs_static[STATIC_BUF_SIZE];
      CGSize cg_advances_static[STATIC_BUF_SIZE];
@@ -1033,7 +1032,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
      cairo_bool_t didForceFontSmoothing = FALSE;
  
      if (IS_EMPTY(surface))
-@@ -2450,65 +2494,59 @@ _cairo_quartz_surface_show_glyphs (void 
+@@ -2450,65 +2489,59 @@ _cairo_quartz_surface_show_glyphs (void 
  
      if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_QUARTZ)
  	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1115,7 +1114,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
  
      if (num_glyphs > STATIC_BUF_SIZE) {
  	cg_glyphs = (CGGlyph*) _cairo_malloc_ab (num_glyphs, sizeof(CGGlyph));
-@@ -2532,17 +2570,17 @@ _cairo_quartz_surface_show_glyphs (void 
+@@ -2532,17 +2565,17 @@ _cairo_quartz_surface_show_glyphs (void 
      textTransform = CGAffineTransformScale (textTransform, 1.0, -1.0);
      textTransform = CGAffineTransformConcat (CGAffineTransformMake(scaled_font->ctm.xx,
  								   -scaled_font->ctm.yx,
@@ -1134,7 +1133,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-quartz-surface.c b/gfx/cairo/cairo/src/ca
  
      cg_glyphs[0] = glyphs[0].index;
  
-@@ -2569,40 +2607,38 @@ _cairo_quartz_surface_show_glyphs (void 
+@@ -2569,40 +2602,38 @@ _cairo_quartz_surface_show_glyphs (void 
  
  #if 0
      for (i = 0; i < num_glyphs; i++) {
