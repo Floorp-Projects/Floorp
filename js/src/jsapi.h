@@ -825,6 +825,9 @@ JS_GetScopeChain(JSContext *cx);
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
 
+extern JS_PUBLIC_API(JSObject *)
+JS_GetGlobalForScopeChain(JSContext *cx);
+
 #ifdef JS_HAS_CTYPES
 /*
  * Initialize the 'ctypes' object on a global variable 'obj'. The 'ctypes'
