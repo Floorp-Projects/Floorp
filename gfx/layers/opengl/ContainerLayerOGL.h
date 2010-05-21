@@ -68,7 +68,9 @@ public:
 
   PRBool IsEmpty();
 
-  void RenderLayer(int aPreviousFrameBuffer);
+  void RenderLayer(int aPreviousFrameBuffer,
+                   DrawThebesLayerCallback aCallback,
+                   void* aCallbackData);
 private:
   nsIntRect mVisibleRect;
 
