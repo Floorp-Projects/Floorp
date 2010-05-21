@@ -8,7 +8,6 @@
 
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="helpers.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
@@ -20,45 +19,37 @@ function testSteps()
 
   var request = indexedDB.open(name, description);
   request.onerror = errorHandler;
-  request.onsuccess = continueTest;
+  request.onsuccess = grabEventAndContinueHandler;
   var event = yield;
 
   var db = event.result;
 
   // Check default state.
-  SimpleTest.is(db.version, "", "Correct default version for a new database.");
+  is(db.version, "", "Correct default version for a new database.");
 
   const versions = [
-    "",
     "1.0",
+    "",
   ];
 
   for (let i = 0; i < versions.length; i++) {
     let version = versions[i];
     let request = db.setVersion(version);
     request.onerror = errorHandler;
-    request.onsuccess = continueTest;
+    request.onsuccess = grabEventAndContinueHandler;
     event = yield;
 
-    SimpleTest.is(db.version, version,
-                  "Database version number updated correctly");
+    is(db.version, version, "Database version number updated correctly");
   }
 
-  SimpleTest.executeSoon(finishTest);
+  finishTest();
   yield;
 }
-
-var gGen = testSteps();
-function run_test()
-{
-  SimpleTest.waitForExplicitFinish();
-  continueTest();
-}
-
   </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
 
 </head>
 
-<body onload="run_test();">
-</body>
+<body onload="runTest();"></body>
+
 </html>

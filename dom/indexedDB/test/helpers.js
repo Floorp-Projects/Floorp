@@ -3,14 +3,29 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-function continueTest(aEvent)
+var testGenerator = testSteps();
+function runTest()
 {
-  gGen.send(aEvent);
+  SimpleTest.waitForExplicitFinish();
+  testGenerator.next();
 }
 
-function errorHandler(aEvent)
+function finishTest()
 {
-  ok(false, "indexedDB error (" + aEvent.code + "): " + aEvent.message);
+  SimpleTest.executeSoon(function() {
+    testGenerator.close();
+    SimpleTest.finish();
+  });
+}
+
+function grabEventAndContinueHandler(event)
+{
+  testGenerator.send(event);
+}
+
+function errorHandler(event)
+{
+  ok(false, "indexedDB error (" + event.code + "): " + event.message);
   finishTest();
 }
 
@@ -20,20 +35,14 @@ function unexpectedSuccessHandler()
   finishTest();
 }
 
-function ExpectError(aCode)
+function ExpectError(code)
 {
-  this._code = aCode;
+  this._code = code;
 }
 ExpectError.prototype = {
-  handleEvent: function(aEvent)
+  handleEvent: function(event)
   {
-    is(this._code, aEvent.code, "Expected error was thrown.");
-    continueTest(aEvent);
-  },
+    is(this._code, event.code, "Expected error was thrown.");
+    grabEventAndContinueHandler(event);
+  }
 };
-
-function finishTest()
-{
-  gGen.close();
-  SimpleTest.finish();
-}

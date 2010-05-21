@@ -10,58 +10,49 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript">
-    function run_test()
+  <script type="text/javascript;version=1.7">
+    function testSteps()
     {
       const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
+
       const name = window.location.pathname;
       const description = "My Test Database";
       const objectStoreName = "Objects";
 
-      function errorHandler(event) {
-        ok(false, "indexedDB error (" + event.code + "): " + event.message);
-        SimpleTest.finish();
-      }
-
-      var db;
-      var request = indexedDB.open(name, description);
+      let request = indexedDB.open(name, description);
       request.onerror = errorHandler;
-      request.onsuccess = function(event) {
-        db = event.result;
-        var count = db.objectStores.length;
-        is(count, 0, "Bad objectStores list");
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
 
-        request = db.createObjectStore(objectStoreName, "foo");
-        request.onerror = errorHandler;
-        request.onsuccess = function(event) {
-          is(db.objectStores.length, 1, "Bad objectStores list");
-          request = db.openObjectStore(objectStoreName,
-                                       nsIIDBObjectStore.READ_ONLY);
-          request.onerror = errorHandler;
-          request.onsuccess = function(event) {
-            var objectStore = event.result;
-            is(objectStore.name, objectStoreName, "Bad name");
-            is(objectStore.mode, nsIIDBObjectStore.READ_ONLY, "Bad mode");
-            is(objectStore.keyPath, "foo", "Bad keyPath");
-            if(objectStore.indexNames.length, 0, "Bad indexNames");
-            is(db.objectStores.length, 1, "Bad objectStores list");
-            request = db.removeObjectStore(objectStoreName);
-            request.onerror = errorHandler;
-            request.onsuccess = function(event) {
-              is(event.result, undefined, "Bad result");
-              is(db.objectStores.length, 0, "Bad objectStores list");
-              SimpleTest.finish();
-            };
-          };
-        };
-      };
+      let db = event.result;
+      is(db.objectStoreNames.length, 0, "Correct objectStoreNames list");
+
+      request = db.createObjectStore(objectStoreName, "foo");
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(db.objectStoreNames.length, 1, "Correct objectStoreNames list");
+      is(db.objectStoreNames.item(0), objectStoreName, "Correct name");
+
+      let objectStore = event.result;
+
+      request = db.removeObjectStore(objectStore.name);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, undefined, "Correct result");
+      is(db.objectStoreNames.length, 0, "Correct objectStores list");
+
+      finishTest();
+      yield;
     }
-
-    SimpleTest.waitForExplicitFinish();
   </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
 
 </head>
 
-<body onload="run_test();">
-</body>
+<body onload="runTest();"></body>
+
 </html>
