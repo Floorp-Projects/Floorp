@@ -17,41 +17,108 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=166235
 <div id="content" style="display: none">
   
 </div>
+<textarea id="input"></textarea>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 166235 **/
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-const de = Components.interfaces.nsIDocumentEncoder;
-var encoder = Components.classes["@mozilla.org/layout/htmlCopyEncoder;1"].createInstance(Components.interfaces.nsIDocumentEncoder);
-var selection = window.getSelection();
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-// expected results for selection.toString()
+  var webnav = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                     .getInterface(Components.interfaces.nsIWebNavigation)
+
+  var docShell = webnav.QueryInterface(Components.interfaces.nsIDocShell);
+
+  var documentViewer = docShell.contentViewer
+                               .QueryInterface(Components.interfaces.nsIContentViewerEdit);
+
+  var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
+                            .getService(Components.interfaces.nsIClipboard);
+
+  var textarea = document.getElementById('input');
+
+  function copyChildrenToClipboard(id) {
+    textarea.blur();
+    clipboard.emptyClipboard(1);
+    window.getSelection().selectAllChildren(document.getElementById(id));
+    documentViewer.copySelection();
+
+    is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
+    is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
+  }
+  function getClipboardData(mime) {
+    var transferable = Components.classes['@mozilla.org/widget/transferable;1']
+                                 .createInstance(Components.interfaces.nsITransferable);
+    transferable.addDataFlavor(mime);
+    clipboard.getData(transferable, 1);
+    var data = {};
+    transferable.getTransferData(mime, data, {}) ;
+    return data;
+  }
+  function testClipboardValue(mime, expected, test) {
+    var data = getClipboardData(mime);
+    is (data.value == null ? data.value :
+        data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+      expected,
+      mime + " value in the clipboard");
+    return data.value;
+  }
+  function testPasteText(expected, test) {
+    textarea.value="";
+    textarea.focus();
+    textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
+            .editor.paste(1);
+    is(textarea.value, expected, test + ": textarea paste");
+  }
+  function testInnerHTML(id, expected) {
+    var value = document.getElementById(id).innerHTML;
+    is(value, expected, id + ".innerHTML");
+  }
+
+// expected results for Selection.toString()
 var originalStrings = [
   'This text should be copied.',
-  'This text should NOT be copied.',
-  'This text should NOT be copied.',
+  'This text should be copied.',
+  'This text should be copied.',
 ];
 
-// expected results when selection is copied and HTML tags removed
-var copiedStrings = [
+// expected results for clipboard text/html
+var clipboardHTML = [
+  '<p id=\"test0\">This text should be copied.</p>',
+  '<p id=\"test1\">This text should be copied.</p>',
+  '<p id=\"test2\">This<span style=\"-moz-user-select: text;\"> text should</span> be copied.</p>'
+];
+
+// expected results for clipboard text/unicode
+var clipboardUnicode = [
+  'This text should be copied.',
+  'This text should be copied.',
+  'This text should be copied.'
+];
+
+// expected results for .innerHTML
+var innerHTMLStrings = [
+  'This text should be copied.',
+  'This text should<span style=\"-moz-user-select: none;\"> NOT</span> be copied.',
+  'This<span style=\"-moz-user-select: -moz-none;\"><span style=\"-moz-user-select: text;\"> text should</span> NOT</span> be copied.'
+];
+
+// expected results for pasting into a TEXTAREA
+var textareaStrings = [
   'This text should be copied.',
   'This text should be copied.',
   'This text should be copied.'
 ];
 
 for (var i = 0; i < 3; i++) {
-  var test = document.getElementById('test' + i);
-  selection.removeAllRanges();
-  selection.selectAllChildren(test);
-  is(selection.toString(), originalStrings [i], 'test ' + i + 'a');
-
-  selection.removeAllRanges();
-  selection.selectAllChildren(test);
-  encoder.init(document, "text/html", null);
-  encoder.setSelection(selection);
-  is(encoder.encodeToString().replace(/<[^>]*>/g, '').replace (/[\r\n]/g, ''), copiedStrings [i], 'test ' + i + 'b');
+  var id = 'test' + i;
+  copyChildrenToClipboard(id);
+  is(window.getSelection().toString(), originalStrings[i], id + ' Selection.toString()');
+  testClipboardValue("text/html", clipboardHTML[i], id);
+  testClipboardValue("text/unicode", clipboardUnicode[i], id);
+  testInnerHTML(id, innerHTMLStrings[i]);
+  testPasteText(textareaStrings[i], id + '.innerHTML');
 }
 
 </script>
