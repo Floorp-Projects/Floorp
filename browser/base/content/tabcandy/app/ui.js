@@ -476,118 +476,136 @@ function UIClass(){
 UIClass.prototype = {
   // ----------
   init: function() {
-    // Variable: navBar
-    // A reference to the <Navbar>, for manipulating the browser's nav bar. 
-    this.navBar = Navbar;
-    
-    // Variable: tabBar
-    // A reference to the <Tabbar>, for manipulating the browser's tab bar.
-    this.tabBar = Tabbar;
-    
-    // Variable: devMode
-    // If true (set by an url parameter), adds extra features to the screen. 
-    // TODO: Integrate with the dev menu
-    this.devMode = false;
-    
-    // Variable: currentTab
-    // Keeps track of which <Tabs> tab we are currently on.
-    // Used to facilitate zooming down from a previous tab. 
-    this.currentTab = Utils.activeTab;
-    
-    // Variable: focused
-    // Keeps track of whether Tab Candy is focused. 
-    this.focused = (Utils.activeTab == Utils.homeTab);
-    
-    var self = this;
-    
-    // ___ URL Params
-    var params = document.location.search.replace('?', '').split('&');
-    $.each(params, function(index, param) {
-      var parts = param.split('=');
-      if(parts[0] == 'dev' && parts[1] == '1') 
-        self.devMode = true;
-    });
-    
-    // ___ Dev Mode
-    if(this.devMode) {
-      Switch.insert('body', '');
-      $('<br><br>').appendTo("#actions");
-      this._addArrangements();
-    }
-    
-    // ___ Navbar
-    if(this.focused) {
-      this.tabBar.hide();
-      this.navBar.hide();
-    }
-    
-    Tabs.onFocus(function() {
-      var me = this;
-      setTimeout(function() { // Marshal event from chrome thread to DOM thread
-        try{
-          if(me.contentWindow.location.host == "tabcandy") {
-            self.focused = true;
-            self.navBar.hide();
-            self.tabBar.hide();
-          } else {
-            self.focused = false;
-            self.navBar.show();  
-          }
-        }catch(e){
-          Utils.log(e)
-        }
-      }, 1);
-    });
-  
-    Tabs.onOpen(function(a, b) {
-      setTimeout(function() { // Marshal event from chrome thread to DOM thread
-        self.navBar.show();
-      }, 1);
-    });
-  
-    // ___ Page
-    Page.init();
-    
-    // ___ Storage
-    var data = Storage.read();
-    var sane = this.storageSanity(data);
-    if(!sane || data.dataVersion < 2) {
-      data.groups = null;
-      data.tabs = null;
-      data.pageBounds = null;
+    try {
+      // Variable: navBar
+      // A reference to the <Navbar>, for manipulating the browser's nav bar. 
+      this.navBar = Navbar;
       
-      if(!sane)
-        alert('storage data is bad; starting fresh');
-    }
-     
-    Groups.reconstitute(data.groups);
-    TabItems.reconstitute(data.tabs);
+      // Variable: tabBar
+      // A reference to the <Tabbar>, for manipulating the browser's tab bar.
+      this.tabBar = Tabbar;
+      
+      // Variable: devMode
+      // If true (set by an url parameter), adds extra features to the screen. 
+      // TODO: Integrate with the dev menu
+      this.devMode = false;
+      
+      // Variable: currentTab
+      // Keeps track of which <Tabs> tab we are currently on.
+      // Used to facilitate zooming down from a previous tab. 
+      this.currentTab = Utils.activeTab;
+      
+      // Variable: focused
+      // Keeps track of whether Tab Candy is focused. 
+      this.focused = (Utils.activeTab == Utils.homeTab);
+      
+      var self = this;
+      
+      // ___ URL Params
+      var params = document.location.search.replace('?', '').split('&');
+      $.each(params, function(index, param) {
+        var parts = param.split('=');
+        if(parts[0] == 'dev' && parts[1] == '1') 
+          self.devMode = true;
+      });
+      
+      // ___ Dev Mode
+      if(this.devMode) {
+        Switch.insert('body', '');
+        $('<br><br>').appendTo("#actions");
+        this._addArrangements();
+      }
+      
+      // ___ Navbar
+      if(this.focused) {
+        this.tabBar.hide();
+        this.navBar.hide();
+      }
+      
+      Tabs.onFocus(function() {
+        var me = this;
+        setTimeout(function() { // Marshal event from chrome thread to DOM thread
+          try{
+            if(me.contentWindow.location.host == "tabcandy") {
+              self.focused = true;
+              self.navBar.hide();
+              self.tabBar.hide();
+            } else {
+              self.focused = false;
+              self.navBar.show();  
+            }
+          }catch(e){
+            Utils.log(e)
+          }
+        }, 1);
+      });
     
-    $(window).bind('beforeunload', function() {
-      if(self.initialized) 
-        self.save();
+      Tabs.onOpen(function(a, b) {
+        setTimeout(function() { // Marshal event from chrome thread to DOM thread
+          self.navBar.show();
+        }, 1);
+      });
+    
+      // ___ Page
+      Page.init();
+      
+      // ___ Storage
+      var data = Storage.read();
+      var sane = this.storageSanity(data);
+      if(!sane || data.dataVersion < 2) {
+        data.groups = null;
+        data.tabs = null;
+        data.pageBounds = null;
         
-      self.navBar.show();
-      self.tabBar.show(false);    
-      self.tabBar.showAllTabs();
-    });
-    
-    // ___ resizing
-    if(data.pageBounds) {
-      this.pageBounds = data.pageBounds;
-      this.resize();
-    } else 
-      this.pageBounds = Items.getPageBounds();    
-    
-    $(window).resize(function() {
-      self.resize();
-    });
-    
-    // ___ Dev Menu
-    this.addDevMenu();
-    
-    // ___ Done
-    this.initialized = true;
+        if(!sane)
+          alert('storage data is bad; starting fresh');
+      }
+       
+      var groupsData = Storage.readGroupsData(Utils.activeWindow);
+      var groupData = Storage.readGroupData(Utils.activeWindow);
+        
+/*
+      Utils.log("in UI init");
+      Utils.log(data.toSource());
+      Utils.log(groupsData.toSource());
+      Utils.log(groupData.toSource());
+*/
+      Groups.reconstitute(groupsData, groupData);
+      TabItems.init();
+      TabItems.reconstitute();
+      
+      $(window).bind('beforeunload', function() {
+        if(self.initialized) 
+          self.save();
+          
+        self.navBar.show();
+        self.tabBar.show(false);    
+        self.tabBar.showAllTabs();
+      });
+      
+      // ___ resizing
+      data.pageBounds = null;
+      if(data.pageBounds) {
+        this.pageBounds = data.pageBounds;
+        this.resize();
+      } else 
+        this.pageBounds = Items.getPageBounds();    
+      
+      $(window).resize(function() {
+        self.resize();
+      });
+      
+      // ___ Dev Menu
+      this.addDevMenu();
+      
+      // ___ Done
+      this.initialized = true;
+    }catch(e) {
+      Utils.log("Error in UIClass(): " + e);
+      Utils.log(e.fileName);
+      Utils.log(e.lineNumber);
+      Utils.log(e.stack);
+    }
   }, 
   
   // ----------
@@ -609,6 +627,10 @@ UIClass.prototype = {
     var oldPageBounds = new Rect(this.pageBounds);
     
     var newPageBounds = Items.getPageBounds();
+    if(newPageBounds.equals(oldPageBounds))
+      return;
+      
+/*     Utils.log2('resize', newPageBounds, oldPageBounds); */
     if(newPageBounds.width < this.pageBounds.width && newPageBounds.width > itemBounds.width)
       newPageBounds.width = this.pageBounds.width;
 
@@ -702,6 +724,7 @@ UIClass.prototype = {
 
   // ----------
   save: function() {  
+    return;
     var data = {
       dataVersion: 2,
       groups: Groups.getStorageData(),
@@ -709,6 +732,7 @@ UIClass.prototype = {
       pageBounds: Items.getPageBounds()
     };
     
+/*     Utils.error(this.pageBounds, data.pageBounds); */
     if(this.storageSanity(data))
       Storage.write(data);
     else

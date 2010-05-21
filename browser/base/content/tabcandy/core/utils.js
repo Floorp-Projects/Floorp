@@ -471,6 +471,16 @@ var Utils = {
     consoleService.logStringMessage(text);
   }, 
   
+  log2: function() { // pass as many arguments as you want, it'll print them all
+    var text = this.expandArgumentsForLog(arguments);
+    var html = 
+      '<div style="position: relative; z-index: -9999">'
+      + text
+      + '</div>';
+      
+    $(html).prependTo('body');
+  }, 
+  
   error: function() { // pass as many arguments as you want, it'll print them all
     var text = this.expandArgumentsForLog(arguments);
     Cu.reportError('tabcandy error: ' + text);
