@@ -73,6 +73,10 @@ public:
   static already_AddRefed<nsIDOMEvent>
   CreateGenericEvent(const nsAString& aType);
 
+  static already_AddRefed<nsIRunnable>
+  CreateGenericEventRunnable(const nsAString& aType,
+                             nsIDOMEventTarget* aTarget);
+
 protected:
   IDBEvent() : nsDOMEvent(nsnull, nsnull) { }
 
