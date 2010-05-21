@@ -9,22 +9,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=546995
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<!-- When the page is loaded, we wait 2 seconds before launching the tests
-     because the focus events may not be finished when the page is loaded so
-     we have to wait or launch the tests when a focus events is thrown.
-     However, if autofocus is ignored, there will be no focus event so we can't
-     rely on that. -->
-<body onload="setTimeout(runTests, 2000);">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=546995">Mozilla Bug 546995</a>
 <p id="display"></p>
-<iframe id="iframe"></iframe>
-<script type="application/javascript">
-  var iframe = document.getElementById('iframe');
-  iframe.focus();
-  is(document.activeElement, iframe, "The iframe should have the focus");
-</script>
+<iframe id="iframe" onload='onFrameLoad();'></iframe>
 <div id='content'>
-  <input id='i' autofocus>
 </div>
 <pre id="test">
 <script type="application/javascript;version=1.8">
@@ -33,11 +22,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=546995
 
 SimpleTest.waitForExplicitFinish();
 
+function onFrameLoad()
+{
+  document.getElementById('iframe').focus();
+
+  var input = document.createElement('input');
+  input.id = 'i';
+  input.autofocus = true;
+  document.getElementById('content').appendChild(input);
+
+  // When |runTests| will be executed, the focus event from autofocus should
+  // have been processed.
+  SimpleTest.executeSoon(runTests);
+}
+
 function runTests()
 {
   isnot(document.activeElement, document.getElementById('i'),
-        "The focus should be able to leave a sub-document");
-  is(document.activeElement, iframe, "The iframe should have the focus");
+        "The focus should not be able to leave a sub-document");
+  is(document.activeElement, document.getElementById('iframe'),
+     "The iframe should have the focus");
 
   SimpleTest.finish();
 }
