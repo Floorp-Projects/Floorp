@@ -160,7 +160,7 @@ public:
                           PRBool aIsBegin);
 
   /**
-   * Removes an instance time object this element's list of instance times.
+   * Removes an instance time object from this element's list of instance times.
    *
    * This method is typically called by a child nsSMILTimeValueSpec.
    *
@@ -484,8 +484,9 @@ protected:
   nsSMILMilestone                 mPrevRegisteredMilestone;
   static const nsSMILMilestone    sMaxMilestone;
 
-  // Set of dependent time value specs to be notified when creating, updating,
-  // or deleting the current interval.
+  // Set of dependent time value specs to be notified when establishing a new
+  // current interval. Change notifications and delete notifications are handled
+  // by the interval.
   //
   // [weak] The nsSMILTimeValueSpec objects register themselves and unregister
   // on destruction. Likewise, we notify them when we are destroyed.
