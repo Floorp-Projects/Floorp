@@ -9130,6 +9130,9 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
         obj_ins = stobj_get_proto(obj_ins);
     }
 
+    if (!obj->isNative())
+        RETURN_STOP_A("non-native object");
+
     JSAtom* atom;
     PropertyCacheEntry* entry;
     JS_PROPERTY_CACHE(cx).test(cx, pc, aobj, obj2, entry, atom);
