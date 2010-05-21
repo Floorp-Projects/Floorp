@@ -10,57 +10,101 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript">
-    function run_test()
+  <script type="text/javascript;version=1.7">
+    function testSteps()
     {
       const nsIIDBObjectStore = Components.interfaces.nsIIDBObjectStore;
+      const nsIIDBTransaction = Components.interfaces.nsIIDBTransaction;
+
       const name = window.location.pathname;
       const description = "My Test Database";
-      const objectStoreName = "Objects";
+      const objectStoreInfo = [
+        { name: "1", keyPath: "" },
+        { name: "2", keyPath: "", autoIncrement: true },
+        { name: "3", keyPath: "", autoIncrement: false },
+        { name: "4", keyPath: "" },
+        { name: "5", keyPath: null },
+        { name: "6", keyPath: "foo" }
+      ];
 
-      function errorHandler(event) {
-        ok(false, "indexedDB error (" + event.code + "): " + event.message);
-        SimpleTest.finish();
-      }
-
-      var request = indexedDB.open(name, description);
+      let request = indexedDB.open(name, description);
       request.onerror = errorHandler;
-      request.onsuccess = function(event) {
-        ok(event.source === indexedDB, "correct event.source");
-        var db = event.result;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
 
-        var count = db.objectStores.length;
-        is(count, 0, "correct objectStores list");
+      ok(event.source === indexedDB, "event.source is correct");
+      let db = event.result;
 
-        try {
-          request = db.createObjectStore(null, null);
-          ok(false, "createObjectStore with null name should throw");
-        }
-        catch(e) {
-          ok(true, "createObjectStore with null name should throw");
-        }
+      let count = db.objectStoreNames.length;
+      is(count, 0, "correct objectStoreNames length");
 
-        request = db.createObjectStore(objectStoreName, null);
-        request.onerror = errorHandler;
-        request.onsuccess = function(event) {
-          ok(event.source === db, "correct event.source");
-          var objectStore = event.result;
-
-          is(objectStore.name, objectStoreName, "Bad name");
-          is(objectStore.mode, nsIIDBObjectStore.READ_WRITE, "Bad mode");
-          is(objectStore.keyPath, "", "Bad keyPath");
-          if(objectStore.indexNames.length, 0, "Bad indexNames");
-          is(db.objectStores.length, 1, "Bad objectStores list");
-          SimpleTest.finish();
-        }
+      try {
+        request = db.createObjectStore(null, null);
+        ok(false, "createObjectStore with null name should throw");
       }
+      catch(e) {
+        ok(true, "createObjectStore with null name should throw");
+      }
+
+      try {
+        request = db.createObjectStore("", "");
+        ok(false, "createObjectStore with empty name should throw");
+      }
+      catch(e) {
+        ok(true, "createObjectStore with empty name should throw");
+      }
+
+      try {
+        request = db.createObjectStore("Hi");
+        ok(false, "createObjectStore with no keyPath should throw");
+      }
+      catch(e) {
+        ok(true, "createObjectStore with no keyPath should throw");
+      }
+
+      for (let index in objectStoreInfo) {
+        index = parseInt(index);
+        let info = objectStoreInfo[index];
+        request = info.hasOwnProperty("autoIncrement") ?
+                  db.createObjectStore(info.name, info.keyPath,
+                                       info.autoIncrement) :
+                  db.createObjectStore(info.name, info.keyPath);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield;
+
+        ok(event.source === db, "event.source is correct");
+
+        is(db.objectStoreNames.length, index + 1,
+           "updated objectStoreNames list");
+        is(db.objectStoreNames.item(index), info.name,
+           "updated objectStoreNames list");
+
+        let objectStore = event.result;
+        is(objectStore.name, info.name, "Bad name");
+        is(objectStore.keyPath, info.keyPath ? info.keyPath : "",
+           "Bad keyPath");
+        if(objectStore.indexNames.length, 0, "Bad indexNames");
+
+        ok(event.transaction, "event has a transaction");
+        ok(event.transaction.db === db, "transaction has the right db");
+        is(event.transaction.readyState, nsIIDBTransaction.LOADING,
+           "transaction has the correct readyState");
+        is(event.transaction.mode, nsIIDBTransaction.READ_WRITE,
+           "transaction has the correct mode");
+        is(event.transaction.objectStoreNames.length, 1,
+           "transaction has correct objectStoreNames list");
+        is(event.transaction.objectStoreNames.item(0), info.name,
+           "transaction has correct objectStoreNames list");
+      }
+
+      finishTest();
+      yield;
     }
-
-    SimpleTest.waitForExplicitFinish();
   </script>
-
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
 </head>
 
-<body onload="run_test();">
-</body>
+<body onload="runTest();"></body>
+
 </html>
