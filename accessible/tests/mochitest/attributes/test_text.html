@@ -23,16 +23,6 @@
 
     var gComputedStyle = null;
 
-    function equalsToNormal(aWeight)
-    {
-      return aWeight <= 400;
-    }
-
-    function equalsToBold(aWeight)
-    {
-      return aWeight > 400;
-    }
-
     var gTextAttrChangedEventHandler = {
       handleEvent: function gTextAttrChangedEventHandler_handleEvent(aEvent)
       {
@@ -59,17 +49,7 @@
 
       window.setTimeout(function()
         {
-          gComputedStyle = document.defaultView.getComputedStyle(node, "");
-          var defAttrs = {
-            "font-style": gComputedStyle.fontStyle,
-            // The pt font size of the input element can vary by Linux distro.
-            "font-size": (WIN ? "10pt" : (MAC ? "8pt" : function() { return true; })),
-            "background-color": gComputedStyle.backgroundColor,
-            "font-weight": equalsToNormal,
-            "color": gComputedStyle.color,
-            "font-family": gComputedStyle.fontFamily,
-            "text-position": gComputedStyle.verticalAlign
-          };
+          var defAttrs = buildDefaultTextAttrs(node, kInputFontSize);
           testDefaultTextAttrs(ID, defAttrs);
 
           var attrs = { };
@@ -97,26 +77,13 @@
       //////////////////////////////////////////////////////////////////////////
       // area1
       var ID = "area1";
-      var tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      var defAttrs = {
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "10pt",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": equalsToNormal,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      var defAttrs = buildDefaultTextAttrs(ID, "10pt");
       testDefaultTextAttrs(ID, defAttrs);
 
       var attrs = {};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 7);
 
-      tempElem = tempElem.firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = { "font-weight": equalsToBold };
+      attrs = { "font-weight": kBoldFontWeight };
       testTextAttrs(ID, 7, attrs, defAttrs, 7, 11);
 
       attrs = {};
@@ -125,37 +92,22 @@
       //////////////////////////////////////////////////////////////////////////
       // area2
       ID = "area2";
-      tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      defAttrs = {
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "14pt",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": equalsToNormal,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      defAttrs = buildDefaultTextAttrs(ID, "14pt");
       testDefaultTextAttrs(ID, defAttrs);
 
       attrs = {};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 7);
 
-      tempElem = tempElem.firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = { "font-weight": equalsToBold };
+      attrs = { "font-weight": kBoldFontWeight };
       testTextAttrs(ID, 7, attrs, defAttrs, 7, 12);
 
-      tempElem = tempElem.firstChild.nextSibling;
+      var tempElem = getNode(ID).firstChild.nextSibling.firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"font-style": gComputedStyle.fontStyle,
-               "font-weight": equalsToBold };
+               "font-weight": kBoldFontWeight };
       testTextAttrs(ID, 13, attrs, defAttrs, 12, 19);
 
-      tempElem = tempElem.parentNode;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = { "font-weight": equalsToBold };
+      attrs = { "font-weight": kBoldFontWeight };
       testTextAttrs(ID, 20, attrs, defAttrs, 19, 23);
 
       attrs = {};
@@ -164,21 +116,10 @@
       //////////////////////////////////////////////////////////////////////////
       // area3
       ID = "area3";
-      tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      defAttrs = {
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "12pt",
-        "background-color": gComputedStyle.backgroundColor,
-        "font-weight": equalsToNormal,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
       testDefaultTextAttrs(ID, defAttrs);
 
-      tempElem = tempElem.firstChild.nextSibling;
+      tempElem = getNode(ID).firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 6);
@@ -202,21 +143,10 @@
       //////////////////////////////////////////////////////////////////////////
       // area4
       ID = "area4";
-      tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      defAttrs = {
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "12pt",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": equalsToNormal,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
       testDefaultTextAttrs(ID, defAttrs);
 
-      tempElem = tempElem.firstChild.nextSibling;
+      tempElem = getNode(ID).firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 16);
@@ -234,21 +164,10 @@
       //////////////////////////////////////////////////////////////////////////
       // area5
       ID = "area5";
-      tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      defAttrs = {
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "12pt",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": equalsToNormal,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
       testDefaultTextAttrs(ID, defAttrs);
 
-      tempElem = tempElem.firstChild.nextSibling;
+      tempElem = getNode(ID).firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 5);
@@ -267,24 +186,13 @@
       //////////////////////////////////////////////////////////////////////////
       // area6 (CSS vertical-align property, bug 445938)
       ID = "area6";
-      tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      defAttrs = {
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "12pt",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": equalsToNormal,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
       testDefaultTextAttrs(ID, defAttrs);
 
       attrs = {};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 5);
 
-      tempElem = tempElem.firstChild.nextSibling;
+      tempElem = getNode(ID).firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"text-position": gComputedStyle.verticalAlign,
                "font-size": "10pt"};
@@ -318,19 +226,8 @@
       //////////////////////////////////////////////////////////////////////////
       // area7
       ID = "area7";
-      tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      defAttrs = {
-        "language": "en",
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "12pt",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": equalsToNormal,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      defAttrs["language"] = "en";
       testDefaultTextAttrs(ID, defAttrs);
 
       attrs = {"language": "ru"};
@@ -339,7 +236,7 @@
       attrs = {};
       testTextAttrs(ID, 12, attrs, defAttrs, 12, 13);
 
-      tempElem = tempElem.firstChild.nextSibling.nextSibling.nextSibling;
+      tempElem = getNode(ID).firstChild.nextSibling.nextSibling.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = { "background-color": gComputedStyle.backgroundColor};
       testTextAttrs(ID, 13, attrs, defAttrs, 13, 26);
@@ -363,7 +260,7 @@
 
       tempElem = tempElem.firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      attrs = {"font-weight": equalsToBold,
+      attrs = {"font-weight": kBoldFontWeight,
                "color": gComputedStyle.color};
       testTextAttrs(ID, 57, attrs, defAttrs, 57, 61);
 
@@ -375,18 +272,7 @@
       //////////////////////////////////////////////////////////////////////////
       // area9, different single style spans in styled paragraph
       ID = "area9";
-      tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      defAttrs = {
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "10pt",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": equalsToNormal,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      defAttrs = buildDefaultTextAttrs(ID, "10pt");
       testDefaultTextAttrs(ID, defAttrs);
 
       attrs = {};
@@ -399,7 +285,7 @@
       testTextAttrs(ID, 13, attrs, defAttrs, 12, 21);
 
       // Walk to the span with the different background color
-      tempElem = tempElem.firstChild.nextSibling.nextSibling.nextSibling;
+      tempElem = getNode(ID).firstChild.nextSibling.nextSibling.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = { "background-color": gComputedStyle.backgroundColor };
       testTextAttrs(ID, 22, attrs, defAttrs, 21, 36);
@@ -439,18 +325,7 @@
 
       // area10, different single style spans in non-styled paragraph
       ID = "area10";
-      tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-      defAttrs = {
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "12pt",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": equalsToNormal,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
       testDefaultTextAttrs(ID, defAttrs);
 
       attrs = {};
@@ -463,7 +338,7 @@
       testTextAttrs(ID, 13, attrs, defAttrs, 13, 22);
 
       // Walk to the span with the different background color
-      tempElem = tempElem.firstChild.nextSibling.nextSibling.nextSibling;
+      tempElem = getNode(ID).firstChild.nextSibling.nextSibling.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = { "background-color": gComputedStyle.backgroundColor };
       testTextAttrs(ID, 23, attrs, defAttrs, 22, 37);
@@ -503,41 +378,46 @@
 
       // area11, "font-weight" tests
       ID = "area11";
-      tempElem = document.getElementById(ID);
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
-
-      defAttrs = {
-        "font-style": gComputedStyle.fontStyle,
-        "font-size": "12pt",
-        "background-color": "rgb(255, 255, 255)",
-        "font-weight": equalsToBold,
-        "color": gComputedStyle.color,
-        "font-family": gComputedStyle.fontFamily,
-        "text-position": gComputedStyle.verticalAlign
-      };
-
+      defAttrs = buildDefaultTextAttrs(ID, "12pt", kBoldFontWeight);
       testDefaultTextAttrs(ID, defAttrs);
 
       attrs = { };
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 13);
 
-      attrs = { "font-weight": equalsToNormal };
+      attrs = { "font-weight": kNormalFontWeight };
       testTextAttrs(ID, 13, attrs, defAttrs, 13, 20);
 
       attrs = { };
       testTextAttrs(ID, 20, attrs, defAttrs, 20, 27);
 
-      attrs = { "font-weight": equalsToNormal };
+      attrs = { "font-weight": kNormalFontWeight };
       testTextAttrs(ID, 27, attrs, defAttrs, 27, 33);
 
       attrs = { };
       testTextAttrs(ID, 33, attrs, defAttrs, 33, 51);
 
-      attrs = { "font-weight": equalsToNormal };
+      attrs = { "font-weight": kNormalFontWeight };
       testTextAttrs(ID, 51, attrs, defAttrs, 51, 57);
 
       attrs = { };
       testTextAttrs(ID, 57, attrs, defAttrs, 57, 97);
+
+      //////////////////////////////////////////////////////////////////////////
+      // test out of range offset
+      testTextAttrsWrongOffset("area12", -1);
+      testTextAttrsWrongOffset("area12", 500);
+
+      //////////////////////////////////////////////////////////////////////////
+      // test zero offset on empty hypertext accessibles
+      ID = "area13";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+      attrs = { };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
+
+      ID = "area14";
+      defAttrs = buildDefaultTextAttrs(ID, kInputFontSize);
+      attrs = { };
+      testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
 
       //////////////////////////////////////////////////////////////////////////
       // test spelling text attributes
@@ -631,5 +511,9 @@
     <span style="font-weight: bold;">bold</span>bolder
     <span style="font-weight: 900;">bold</span>bolder
   </p>
+
+  <p id="area12">hello</p>
+  <p id="area13"></p>
+  <input id="area14">
 </body>
 </html>
