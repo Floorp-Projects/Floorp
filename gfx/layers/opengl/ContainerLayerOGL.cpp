@@ -47,6 +47,15 @@ ContainerLayerOGL::ContainerLayerOGL(LayerManagerOGL *aManager)
   mImplData = static_cast<LayerOGL*>(this);
 }
 
+ContainerLayerOGL::~ContainerLayerOGL()
+{
+  LayerOGL *nextChild;
+  for (LayerOGL *child = GetFirstChildOGL(); child; child = nextChild) {
+    nextChild = child->GetNextSibling();
+    child->GetLayer()->Release();
+  }
+}
+
 const nsIntRect&
 ContainerLayerOGL::GetVisibleRect()
 {
@@ -64,6 +73,7 @@ ContainerLayerOGL::InsertAfter(Layer* aChild, Layer* aAfter)
 {
   LayerOGL *newChild = static_cast<LayerOGL*>(aChild->ImplData());
   aChild->SetParent(this);
+  NS_ADDREF(aChild);
   if (!aAfter) {
     LayerOGL *oldFirstChild = GetFirstChildOGL();
     mFirstChild = newChild->GetLayer();
@@ -87,6 +97,7 @@ ContainerLayerOGL::RemoveChild(Layer *aChild)
 {
   if (GetFirstChild() == aChild) {
     mFirstChild = GetFirstChildOGL()->GetNextSibling()->GetLayer();
+    NS_RELEASE(aChild);
     return;
   }
   LayerOGL *lastChild = NULL;
@@ -97,6 +108,7 @@ ContainerLayerOGL::RemoveChild(Layer *aChild)
       lastChild->SetNextSibling(child->GetNextSibling());
       child->SetNextSibling(NULL);
       child->GetLayer()->SetParent(NULL);
+      NS_RELEASE(aChild);
       return;
     }
     lastChild = child;
@@ -125,7 +137,9 @@ ContainerLayerOGL::GetFirstChildOGL()
 }
 
 void
-ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
+ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
+                               DrawThebesLayerCallback aCallback,
+                               void* aCallbackData)
 {
   /**
    * Setup our temporary texture for rendering the contents of this container.
@@ -202,7 +216,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
       gl()->fScissor(0, 0, GetVisibleRect().width, GetVisibleRect().height);
     }
 
-    layerToRender->RenderLayer(frameBuffer);
+    layerToRender->RenderLayer(frameBuffer, aCallback, aCallbackData);
     layerToRender = layerToRender->GetNextSibling();
   }
 
