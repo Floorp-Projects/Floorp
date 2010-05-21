@@ -1301,9 +1301,7 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
 NS_IMETHODIMP
 nsTypedSelection::ToString(PRUnichar **aReturn)
 {
-  return ToStringWithFormat("text/plain",
-                            nsIDocumentEncoder::SkipInvisibleContent,
-                            0, aReturn);
+  return ToStringWithFormat("text/plain", 0, 0, aReturn);
 }
 
 
