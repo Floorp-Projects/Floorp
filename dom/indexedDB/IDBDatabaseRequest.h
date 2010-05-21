@@ -188,16 +188,21 @@ protected:
 
   nsresult QueueDatabaseWork(nsIRunnable* aRunnable);
 
-  bool IdForObjectStoreName(const nsAString& aName,
-                            PRInt64* aIndex) {
-    NS_ASSERTION(aIndex, "Null pointer!");
+  bool ObjectStoreInfoForName(const nsAString& aName,
+                              ObjectStoreInfo** aInfo) {
+    NS_ASSERTION(aInfo, "Null pointer!");
     PRUint32 count = mObjectStores.Length();
     for (PRUint32 index = 0; index < count; index++) {
       ObjectStoreInfo& store = mObjectStores[index];
       if (store.name == aName) {
-        *aIndex = PRInt64(index);
+        if (aInfo) {
+          *aInfo = &store;
+        }
         return true;
       }
+    }
+    if (aInfo) {
+      *aInfo = nsnull;
     }
     return false;
   }
