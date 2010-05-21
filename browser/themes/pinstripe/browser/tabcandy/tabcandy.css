@@ -13,13 +13,6 @@ body {
 	margin: 0 auto;	
 }
 
-#top-border {
-	border-top: 1px solid black;
-  width: 100%;
-  position: absolute;
-  z-index: 999999;
-}
-
 /* Tab Styling
 ----------------------------------*/
 
