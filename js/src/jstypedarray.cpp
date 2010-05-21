@@ -875,13 +875,8 @@ class TypedArrayTemplate
     makeFastWithPrivate(JSContext *cx, JSObject *obj, ThisTypeArray *tarray)
     {
         JS_ASSERT(obj->getClass() == slowClass());
-
         obj->setPrivate(tarray);
-
-        // now munge the classword and make this into a fast typed
-        // array class, since it's an instance
-        obj->changeClassToFastArray();
-
+        obj->clasp = fastClass();
         obj->map = &fastObjectMap;
     }
 

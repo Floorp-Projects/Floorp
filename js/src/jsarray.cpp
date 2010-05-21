@@ -272,7 +272,7 @@ js_IndexToId(JSContext *cx, jsuint index, jsid *idp)
 {
     JSString *str;
 
-    if (index <= JSVAL_INT_MAX) {
+    if (index <= JSBOXEDWORD_INT_MAX) {
         *idp = INT_TO_JSID(index);
         return JS_TRUE;
     }
@@ -291,7 +291,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
     JSAtom *atom;
     JS_STATIC_ASSERT((jsuint)-1 == 4294967295U);
 
-    JS_ASSERT(index > JSVAL_INT_MAX);
+    JS_ASSERT(index > JSBOXEDWORD_INT_MAX);
 
     start = JS_ARRAY_END(buf);
     do {
@@ -425,7 +425,7 @@ static bool
 IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
           JSBool createAtom = JS_FALSE)
 {
-    if (index <= JSVAL_INT_MAX) {
+    if (index <= JSBOXEDWORD_INT_MAX) {
         *idp = INT_TO_JSID(int(index));
         return JS_TRUE;
     }
@@ -1179,7 +1179,7 @@ js_MakeArraySlow(JSContext *cx, JSObject *obj)
      */
     JS_ASSERT(js_SlowArrayClass.flags & JSCLASS_HAS_PRIVATE);
     obj->voidDenseOnlyArraySlots();
-    obj->changeClassToSlowArray();
+    obj->clasp = &js_SlowArrayClass;
     obj->map = scope;
     return JS_TRUE;
 
