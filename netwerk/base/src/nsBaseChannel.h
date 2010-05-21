@@ -247,6 +247,9 @@ private:
   // returned success from AsyncOpen while posting a redirect runnable.
   void HandleAsyncRedirect(nsIChannel* newChannel);
 
+  // start URI classifier if requested
+  void ClassifyURI();
+
   class RedirectRunnable : public nsRunnable
   {
   public:
