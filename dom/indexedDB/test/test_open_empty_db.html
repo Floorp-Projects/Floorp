@@ -10,18 +10,13 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript">
-    function run_test()
+  <script type="text/javascript;version=1.7">
+    function testSteps()
     {
       const name = window.location.pathname;
       const description = "My Test Database";
 
-      function errorHandler(event) {
-        ok(false, "indexedDB error (" + event.code + "): " + event.message);
-        SimpleTest.finish();
-      }
-
-      var request;
+      let request;
 
       try {
         request = indexedDB.open("", "");
@@ -41,30 +36,23 @@
 
       request = indexedDB.open(name, description);
       request.onerror = errorHandler;
-      request.onsuccess = function(event) {
-        ok(event.source == indexedDB, "event.source is correct");
-        var db = event.result;
-        is(db.name, name, "Bad name");
-        is(db.description, description, "Bad description");
-        is(db.version, "", "Bad version");
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
 
-        var count = db.objectStores.length;
-        is(count, 0, "Bad objectStores list");
+      let db = event.result;
+      is(db.name, name, "Bad name");
+      is(db.description, description, "Bad description");
+      is(db.version, "", "Bad version");
+      is(db.objectStoreNames.length, 0, "Bad objectStores list");
 
-        count = db.indexes.length;
-        is(count, 0, "Bad indexes list");
-
-        is(db.currentTransaction, null, "Bad transaction");
-
-        SimpleTest.finish();
-      };
+      finishTest();
+      yield;
     }
-
-    SimpleTest.waitForExplicitFinish();
   </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
 
 </head>
 
-<body onload="run_test();">
-</body>
+<body onload="runTest();"></body>
+
 </html>

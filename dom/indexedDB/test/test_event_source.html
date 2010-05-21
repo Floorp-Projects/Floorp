@@ -10,46 +10,43 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
-  <script type="text/javascript">
-    function run_test()
+  <script type="text/javascript;version=1.7">
+    function testSteps()
     {
       const name = window.location.pathname;
       const description = "My Test Database";
       const objectStoreName = "Objects";
 
-      function errorHandler(event) {
-        ok(false, "indexedDB error (" + event.code + "): " + event.message);
-        SimpleTest.finish();
-      }
-
-      var db;
-      var objectStore;
-
       var request = indexedDB.open(name, description);
       request.onerror = errorHandler;
-      request.onsuccess = function(event) {
-        ok(event.source === indexedDB, "correct event.source");
-        db = event.result;
-        request = db.createObjectStore(objectStoreName, null, true);
-        request.onerror = errorHandler;
-        request.onsuccess = function(event) {
-          ok(event.source === db, "correct event.source");
-          objectStore = event.result;
-          request = objectStore.put({});
-          request.onerror = errorHandler;
-          request.onsuccess = function(event) {
-            ok(event.source === objectStore, "correct event.source");
-            SimpleTest.finish();
-          };
-        };
-      };
+      request.onsuccess = grabEventAndContinueHandler;
+      var event = yield;
+
+      ok(event.source === indexedDB, "correct event.source");
+
+      var db = event.result;
+      request = db.createObjectStore(objectStoreName, null, true);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(event.source === db, "correct event.source");
+
+      var objectStore = event.result;
+      request = objectStore.add({});
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(event.source === objectStore, "correct event.source");
+
+      finishTest();
+      yield;
     }
-
-    SimpleTest.waitForExplicitFinish();
   </script>
-
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
 </head>
 
-<body onload="run_test();">
-</body>
+<body onload="runTest();"></body>
+
 </html>

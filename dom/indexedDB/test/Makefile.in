@@ -46,16 +46,15 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
   helpers.js \
-  test_property_on_window.html \
-  test_open_empty_db.html \
   test_create_objectStore.html \
-  test_open_objectStore.html \
-  test_remove_objectStore.html \
-  test_put_get_values.html \
-  test_put_get_values_autoIncrement.html \
-  test_objectStore_remove_values.html \
   test_event_source.html \
   test_objectStore_inline_autoincrement_key_added_on_put.html \
+  test_objectStore_remove_values.html \
+  test_open_empty_db.html \
+  test_open_objectStore.html \
+  test_put_get_values.html \
+  test_put_get_values_autoIncrement.html \
+  test_remove_objectStore.html \
   test_setVersion.html \
   $(NULL)
 
