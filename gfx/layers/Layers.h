@@ -293,6 +293,10 @@ public:
   virtual Layer* GetFirstChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
 
+  // This setter and getter can be used anytime.
+  void SetUserData(void* aData) { mUserData = aData; }
+  void* GetUserData() { return mUserData; }
+
   /**
    * Only the implementation should call this. This is per-implementation
    * private data. Normally, all layers with a given layer manager
@@ -314,6 +318,7 @@ protected:
     mNextSibling(nsnull),
     mPrevSibling(nsnull),
     mImplData(aImplData),
+    mUserData(nsnull),
     mOpacity(1.0),
     mUseClipRect(PR_FALSE),
     mIsOpaqueContent(PR_FALSE)
@@ -324,6 +329,7 @@ protected:
   Layer* mNextSibling;
   Layer* mPrevSibling;
   void* mImplData;
+  void* mUserData;
   gfx3DMatrix mTransform;
   float mOpacity;
   nsIntRect mClipRect;
