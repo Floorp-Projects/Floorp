@@ -268,6 +268,12 @@ if test "$target" = "arm-android-eabi" ; then
         HOST_LDFLAGS=" "
     fi
 
+    # save these for libffi's subconfigure,
+    # which doesn't know how to figure this stuff out on its own
+    ANDROID_CFLAGS="$CFLAGS"
+    ANDROID_CPPFLAGS="$CPPFLAGS"
+    ANDROID_LDFLAGS="$LDFLAGS"
+
     AC_DEFINE(ANDROID)
     AC_DEFINE(FORCE_LITTLE_ENDIAN)
 fi
@@ -5355,6 +5361,15 @@ if test "$JS_HAS_CTYPES"; then
     case "$target" in
     *-mingw*)
       ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+      ;;
+    *-android*)
+      CFLAGS="$ANDROID_CFLAGS"
+      CPPFLAGS="$ANDROID_CPPFLAGS"
+      LDFLAGS="$ANDROID_LDFLAGS"
+
+      export CC CPP LD CPPFLAGS CFLAGS LDFLAGS
+
+      ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\""
       ;;
     *)
       ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
