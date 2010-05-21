@@ -1345,7 +1345,7 @@ asserts(1) == 496032-1.html 496032-1-ref.html # bug 399262
 == 503364-1a.html 503364-1-ref.html
 == 503364-1b.html 503364-1-ref.html
 == 503399.html 503399-ref.html
-asserts(2) == 503531-1.html 503531-1-ref.html # bug 336104
+== 503531-1.html 503531-1-ref.html
 == 504032-1.html 504032-1-ref.html
 == 505743-1.html about:blank
 == 506481-1.html 506481-1-ref.html

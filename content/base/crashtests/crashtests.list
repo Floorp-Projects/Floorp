@@ -41,7 +41,7 @@ skip load 399712-1.html # sporadically times out (bug 473680)
 load 398088-1.xul
 load 400763-1.html
 load 401993-1.html
-asserts(1) load 407818.html # bug 336104
+load 407818.html
 load 410860-1.xml
 load 416734-1.html
 load 418928-1.html
@@ -60,7 +60,7 @@ load 493281-2.html
 load 490760-1.xhtml
 load 494810-1.html
 load 529670.html
-asserts(1) load 554230-1.xhtml # bug 336104
+load 554230-1.xhtml
 load 552651.html
 load 558973.html
 load 564079-1.html 
