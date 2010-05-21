@@ -2605,23 +2605,26 @@ static JSFunctionSpec object_static_methods[] = {
 JSBool
 js_Object(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
 {
-    if (argc == 0) {
-        /* Trigger logic below to construct a blank object. */
-        rval->setNull();
-    } else {
+    if (argc > 0) {
         /* If argv[0] is null or undefined, objval comes back null. */
-        if (!js_ValueToObjectOrNull(cx, argv[0], rval))
+        Value objv;
+        if (!js_ValueToObjectOrNull(cx, argv[0], &objv))
             return JS_FALSE;
-    }
-    if (rval->isNull()) {
-        JS_ASSERT(!argc || argv[0].isNull() || argv[0].isUndefined());
-        if (JS_IsConstructing(cx))
+        if (!objv.isNull()) {
+            *rval = objv;
             return JS_TRUE;
-        JSObject *nullobj = NewObject(cx, &js_ObjectClass, NULL, NULL);
-        if (!nullobj)
-            return JS_FALSE;
-        rval->setNonFunObj(*nullobj);
+        }
     }
+
+    JS_ASSERT(!argc || argv[0].isNull() || argv[0].isUndefined());
+    if (cx->isConstructing())
+        return JS_TRUE;
+
+    JSObject *nullobj = NewObject(cx, &js_ObjectClass, NULL, NULL);
+    if (!nullobj)
+        return JS_FALSE;
+
+    rval->setNonFunObj(*nullobj);
     return JS_TRUE;
 }
 
@@ -3842,8 +3845,8 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 }
 
 
-/* JSVAL_INT_MAX as a string */
-#define JSVAL_INT_MAX_STRING "1073741823"
+/* JSBOXEDWORD_INT_MAX as a string */
+#define JSBOXEDWORD_INT_MAX_STRING "1073741823"
 
 /*
  * Convert string indexes that convert to int jsvals as ints to save memory.
@@ -3870,7 +3873,7 @@ js_CheckForStringIndex(jsid id)
         return id;
 
     size_t n = str->flatLength() - negative;
-    if (n > sizeof(JSVAL_INT_MAX_STRING) - 1)
+    if (n > sizeof(JSBOXEDWORD_INT_MAX_STRING) - 1)
         return id;
 
     const jschar *cp = s;
@@ -3891,13 +3894,13 @@ js_CheckForStringIndex(jsid id)
 
     /*
      * Non-integer indexes can't be represented as integers.  Also, distinguish
-     * index "-0" from "0", because JSVAL_INT cannot.
+     * index "-0" from "0", because JSBOXEDWORD_INT cannot.
      */
     if (cp != end || (negative && index == 0))
         return id;
 
-    if (oldIndex < JSVAL_INT_MAX / 10 ||
-        (oldIndex == JSVAL_INT_MAX / 10 && c <= (JSVAL_INT_MAX % 10))) {
+    if (oldIndex < JSBOXEDWORD_INT_MAX / 10 ||
+        (oldIndex == JSBOXEDWORD_INT_MAX / 10 && c <= (JSBOXEDWORD_INT_MAX % 10))) {
         if (negative)
             index = 0 - index;
         id = INT_TO_JSID((jsint)index);

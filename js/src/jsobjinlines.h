@@ -123,7 +123,6 @@ JSObject::isDenseArrayMinLenCapOk(bool strictAboutLength) const
     // zero).  If 'strictAboutLength' is false we allow this.
     if (!strictAboutLength &&
         fslots[JSSLOT_ARRAY_LENGTH].isUndefined() &&
-        fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].isUndefined() &&
         uncheckedGetDenseArrayCapacity() == 0) {
         return true;
     }
@@ -256,7 +255,7 @@ JSObject::freeDenseArrayElements(JSContext *cx)
         dslots = NULL;
     }
     fslots[JSSLOT_DENSE_ARRAY_MINLENCAP].setPrivateUint32(0);
-    JS_ASSERT(isDenseArrayMinLenCapOk());
+    JS_ASSERT(isDenseArrayMinLenCapOk(/* strictAboutLength = */false));
 }
 
 inline void 
@@ -443,20 +442,6 @@ JSObject::unbrand(JSContext *cx)
 inline void
 JSObject::initArrayClass()
 {
-    clasp = &js_ArrayClass;
-}
-
-inline void
-JSObject::changeClassToSlowArray()
-{
-    JS_ASSERT(clasp == &js_ArrayClass);
-    clasp = &js_SlowArrayClass;
-}
-
-inline void
-JSObject::changeClassToFastArray()
-{
-    JS_ASSERT(clasp == &js_SlowArrayClass);
     clasp = &js_ArrayClass;
 }
 
