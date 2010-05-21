@@ -41,16 +41,18 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gObserverService",
-                                   "@mozilla.org/observer-service;1",
-                                   "nsIObserverService");
+  "@mozilla.org/observer-service;1", "nsIObserverService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gWindowMediator",
-                                   "@mozilla.org/appshell/window-mediator;1",
-                                   "nsIWindowMediator");
+  "@mozilla.org/appshell/window-mediator;1", "nsIWindowMediator");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gPrefService",
-                                   "@mozilla.org/preferences-service;1",
-                                   "nsIPrefBranch2");
+  "@mozilla.org/preferences-service;1", "nsIPrefBranch2");
+
+#ifdef MOZ_CRASH_REPORTER
+XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
+  "@mozilla.org/xre/app-info;1", "nsICrashReporter");
+#endif
 
 XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -263,6 +265,8 @@ SessionStore.prototype = {
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
     }
+
+    this._updateCrashReportURL(aWindow);
   },
 
   onTabRemove: function ss_onTabRemove(aWindow, aBrowser, aNoNotification) {
@@ -290,9 +294,12 @@ SessionStore.prototype = {
     this._collectTabData(aBrowser);
 
     this.saveStateDelayed(aWindow);
+
+    this._updateCrashReportURL(aWindow);
   },
 
   onTabSelect: function ss_onTabSelect(aWindow) {
+    this._updateCrashReportURL(aWindow);
   },
 
   saveStateDelayed: function ss_saveStateDelayed() {
@@ -381,6 +388,26 @@ SessionStore.prototype = {
         gObserverService.notifyObservers(null, "sessionstore-state-write-complete", "");
       }
     });
+  },
+
+  _updateCrashReportURL: function ss_updateCrashReportURL(aWindow) {
+#ifdef MOZ_CRASH_REPORTER
+    try {
+      let currentURI = aWindow.Browser.selectedBrowser.currentURI.clone();
+      // if the current URI contains a username/password, remove it
+      try {
+        currentURI.userPass = "";
+      }
+      catch (ex) { } // ignore failures on about: URIs
+
+      CrashReporter.annotateCrashReport("URL", currentURI.spec);
+    }
+    catch (ex) {
+      // don't make noise when crashreporter is built but not enabled
+      if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED)
+        Components.utils.reportError("SessionStore:" + ex);
+    }
+#endif
   }
 };
 
