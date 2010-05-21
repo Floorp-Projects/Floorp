@@ -1488,14 +1488,12 @@ XPC_WN_JSOp_ThisObject(JSContext *cx, JSObject *obj)
     if(!obj)
         return nsnull;
 
-    JSObject *scope = JS_GetScopeChain(cx);
+    JSObject *scope = JS_GetGlobalForScopeChain(cx);
     if(!scope)
     {
         XPCThrower::Throw(NS_ERROR_FAILURE, cx);
         return nsnull;
     }
-
-    scope = JS_GetGlobalForObject(cx, scope);
 
     XPCPerThreadData *threadData = XPCPerThreadData::GetData(cx);
     if(!threadData)
