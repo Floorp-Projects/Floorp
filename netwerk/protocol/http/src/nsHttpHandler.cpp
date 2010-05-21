@@ -1563,7 +1563,6 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
 
 #ifdef MOZ_IPC
     if (IsNeckoChild()) {
-        LOG(("NECKO_E10S_HTTP set: using experimental interprocess HTTP\n"));
         httpChannel = new HttpChannelChild();
     } else
 #endif
