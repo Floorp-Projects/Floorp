@@ -314,7 +314,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
          clasp == &js_ObjectClass)) {
         atom = js_GetExistingStringAtom(cx, start, JS_ARRAY_END(buf) - start);
         if (!atom) {
-            *idp = JSID_VOID;
+            *idp = JSBOXEDWORD_VOID;
             return JS_TRUE;
         }
     } else {
@@ -433,7 +433,7 @@ IndexToId(JSContext* cx, JSObject* obj, jsdouble index, JSBool* hole, jsid* idp,
     if (index <= jsuint(-1)) {
         if (!BigIndexToId(cx, obj, jsuint(index), createAtom, idp))
             return JS_FALSE;
-        if (hole && JSID_IS_VOID(*idp))
+        if (hole && JSBOXEDWORD_IS_VOID(*idp))
             *hole = JS_TRUE;
         return JS_TRUE;
     }
@@ -517,7 +517,7 @@ SetArrayElement(JSContext *cx, JSObject *obj, jsdouble index, const Value &v)
 
     if (!IndexToId(cx, obj, index, NULL, idr.addr(), JS_TRUE))
         return JS_FALSE;
-    JS_ASSERT(!JSID_IS_VOID(idr.id()));
+    JS_ASSERT(!JSBOXEDWORD_IS_VOID(idr.id()));
 
     Value tmp = v;
     return obj->setProperty(cx, idr.id(), &tmp);
@@ -544,7 +544,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index)
 
     if (!IndexToId(cx, obj, index, NULL, idr.addr()))
         return JS_FALSE;
-    if (JSID_IS_VOID(idr.id()))
+    if (JSBOXEDWORD_IS_VOID(idr.id()))
         return JS_TRUE;
 
     Value junk;
@@ -690,7 +690,7 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         for (;;) {
             if (!JS_CHECK_OPERATION_LIMIT(cx) || !JS_NextProperty(cx, iter, &id))
                 return false;
-            if (JSID_IS_VOID(id))
+            if (JSBOXEDWORD_IS_VOID(id))
                 break;
             if (js_IdIsIndex(id, &index) && index - newlen < gap &&
                 !obj->deleteProperty(cx, id, &junk)) {
