@@ -61,7 +61,7 @@ interface nsIDocumentEncoderNodeFixup : nsISupports
   nsIDOMNode fixupNode(in nsIDOMNode aNode, out boolean aSerializeCloneKids);
 };
 
-[scriptable, uuid(196a3aee-006e-4f8f-a420-e1c1b0958a26)]
+[scriptable, uuid(f85c5a20-258d-11db-a98b-0800200c9a66)]
 interface nsIDocumentEncoder : nsISupports
 {
   // Output methods flag bits. There are a frightening number of these,
@@ -214,13 +214,6 @@ interface nsIDocumentEncoder : nsISupports
    * This flag suppresses that behavior.
    */
   const unsigned long OutputDontRewriteEncodingDeclaration = (1 << 18);
-  
-  /**
-   * When using the HTML or XHTML serializer, skip elements that are not
-   * visible when this flag is set.  Elements are not visible when they
-   * have CSS style display:none or visibility:collapse, for example.
-   */
-  const unsigned long SkipInvisibleContent = (1 << 19);
   
   /**
    * Initialize with a pointer to the document and the mime type.

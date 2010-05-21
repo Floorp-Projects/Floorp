@@ -22,7 +22,6 @@
  * Contributor(s):
  *   Kathleen Brade <brade@netscape.com>
  *   David Gardiner <david.gardiner@unisa.edu.au>
- *   Mats Palmgren <matpal@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -135,9 +134,7 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
   // we want preformatted for the case where the selection is inside input/textarea
   // and we don't want pretty printing for others cases, to not have additionnal
   // line breaks which are then converted into spaces by the htmlConverter (see bug #524975)
-  PRUint32 flags = nsIDocumentEncoder::OutputPreformatted
-                   | nsIDocumentEncoder::OutputRaw
-                   | nsIDocumentEncoder::SkipInvisibleContent;
+  PRUint32 flags = nsIDocumentEncoder::OutputPreformatted | nsIDocumentEncoder::OutputRaw;
 
   nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDoc);
   NS_ASSERTION(domDoc, "Need a document");
@@ -178,7 +175,7 @@ SelectionCopyHelper(nsISelection *aSel, nsIDocument *aDoc,
 
     mimeType.AssignLiteral(kHTMLMime);
 
-    flags = nsIDocumentEncoder::SkipInvisibleContent;
+    flags = 0;
 
     rv = docEncoder->Init(domDoc, mimeType, flags);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -423,7 +420,7 @@ nsCopySupport::GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISele
   docEncoder = do_CreateInstance(encoderContractID.get());
   NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
 
-  PRUint32 flags = aFlags | nsIDocumentEncoder::SkipInvisibleContent;
+  PRUint32 flags = aFlags;
   
   if (aMimeType.Equals("text/plain"))
     flags |= nsIDocumentEncoder::OutputPreformatted;
