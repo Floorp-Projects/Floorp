@@ -48,6 +48,9 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 
+#include "nsAutoPtr.h"
+#include "mozilla/Storage.h"
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
@@ -77,16 +80,25 @@ public:
 
   nsresult Commit();
 
+  PRInt64 GetUniqueNumberForName() { return ++mLastUniqueNumber; }
+  bool StartSavepoint(const nsCString& aName);
+  void RevertToSavepoint(const nsCString& aName);
+
 private:
   IDBTransactionRequest();
   ~IDBTransactionRequest();
 
   nsRefPtr<IDBDatabaseRequest> mDatabase;
+  nsCOMPtr<mozIStorageConnection> mConnection;
   nsTArray<ObjectStoreInfo> mObjectStores;
   PRUint16 mReadyState;
   PRUint16 mMode;
   PRUint32 mTimeout;
   PRUint32 mPendingRequests;
+
+  PRInt64 mLastUniqueNumber;
+
+  nsAutoPtr<mozStorageTransaction> mDBTransaction;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnCompleteListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;

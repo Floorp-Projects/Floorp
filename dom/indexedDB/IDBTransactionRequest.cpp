@@ -70,7 +70,8 @@ IDBTransactionRequest::IDBTransactionRequest()
 : mReadyState(nsIIDBTransaction::INITIAL),
   mMode(nsIIDBTransaction::READ_ONLY),
   mTimeout(0),
-  mPendingRequests(0)
+  mPendingRequests(0),
+  mLastUniqueNumber(0)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -95,6 +96,8 @@ IDBTransactionRequest::OnNewRequest()
     NS_ASSERTION(mReadyState == nsIIDBTransaction::INITIAL,
                  "Reusing a transaction!");
     mReadyState = nsIIDBTransaction::LOADING;
+
+    mDBTransaction = new mozStorageTransaction(mConnection, PR_FALSE);
   }
   ++mPendingRequests;
 }
@@ -121,17 +124,47 @@ IDBTransactionRequest::Commit()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mReadyState == nsIIDBTransaction::DONE, "Bad readyState!");
 
-  NS_WARNING("Commit doesn't actually do anything yet! Fix me now!");
+  // XXX I think this is actually running on the wrong thread (we want it to
+  // happen on the db thread I think)
+  nsresult rv = mDBTransaction->Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIRunnable> runnable =
     IDBEvent::CreateGenericEventRunnable(NS_LITERAL_STRING(COMPLETE_EVT_STR),
                                          this);
   NS_ENSURE_TRUE(runnable, NS_ERROR_FAILURE);
 
-  nsresult rv = NS_DispatchToCurrentThread(runnable);
+  rv = NS_DispatchToCurrentThread(runnable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+bool
+IDBTransactionRequest::StartSavepoint(const nsCString& aName)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+
+  // TODO try to cache this statement
+  nsCAutoString sql;
+  sql.AppendLiteral("SAVEPOINT ");
+  sql.Append(aName);
+  nsresult rv = mConnection->ExecuteSimpleSQL(sql);
+  NS_ENSURE_SUCCESS(rv, false);
+  return true;
+}
+
+void
+IDBTransactionRequest::RevertToSavepoint(const nsCString& aName)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+
+  // TODO try to cache this statement
+  nsCAutoString sql;
+  sql.AppendLiteral("SAVEPOINT ");
+  sql.Append(aName);
+  nsresult rv = mConnection->ExecuteSimpleSQL(sql);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Rollback failed");
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransactionRequest)
