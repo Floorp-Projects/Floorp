@@ -140,6 +140,7 @@
 #include "nsToolkitCompsCID.h"
 
 #include "nsINIParser.h"
+#include "mozilla/Omnijar.h"
 
 #include <stdlib.h>
 
@@ -1071,6 +1072,10 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
 
     NS_ShutdownXPCOM(mServiceManager);
     mServiceManager = nsnull;
+
+#ifdef MOZ_OMNIJAR
+    mozilla::SetOmnijar(nsnull);
+#endif
   }
 }
 
@@ -1124,6 +1129,13 @@ ScopedXPCOMStartup::Initialize()
   NS_ASSERTION(gDirServiceProvider, "Should not get here!");
 
   nsresult rv;
+#ifdef MOZ_OMNIJAR
+  nsCOMPtr<nsILocalFile> lf;
+  rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+  if (NS_SUCCEEDED(rv))
+    mozilla::SetOmnijar(lf);
+#endif
+
   rv = NS_InitXPCOM3(&mServiceManager, gDirServiceProvider->GetAppDir(),
                      gDirServiceProvider,
                      kPStaticModules, kStaticModuleCount);
@@ -1289,11 +1301,6 @@ static void DumpArbitraryHelp()
   ScopedLogging log;
 
   {
-    nsXREDirProvider dirProvider;
-    rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
-    if (NS_FAILED(rv))
-      return;
-
     ScopedXPCOMStartup xpcom;
     xpcom.Initialize();
     xpcom.DoAutoreg();
@@ -2911,6 +2918,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
   }
 
+  nsXREDirProvider dirProvider;
+  rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
+  if (NS_FAILED(rv))
+    return 1;
+
 #ifdef MOZ_CRASHREPORTER
   const char* crashreporterEnv = PR_GetEnv("MOZ_CRASHREPORTER");
   if (crashreporterEnv && *crashreporterEnv) {
@@ -2939,11 +2951,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     CrashReporter::SetRestartArgs(argc, argv);
 
     // annotate other data (user id etc)
-    nsXREDirProvider dirProvider;
     nsCOMPtr<nsILocalFile> userAppDataDir;
-    rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
-    if (NS_SUCCEEDED(rv) &&
-        NS_SUCCEEDED(dirProvider.GetUserAppDataDirectory(
+    if (NS_SUCCEEDED(dirProvider.GetUserAppDataDirectory(
                                                          getter_AddRefs(userAppDataDir)))) {
       CrashReporter::SetupExtraData(userAppDataDir,
                                     nsDependentCString(appData.buildID));
@@ -3074,11 +3083,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   NS_ENSURE_SUCCESS(rv, 1);
 
   {
-    nsXREDirProvider dirProvider;
-    rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
-    if (NS_FAILED(rv))
-      return 1;
-
     // Check for -register, which registers chrome and then exits immediately.
     ar = CheckArg("register", PR_TRUE);
     if (ar == ARG_BAD) {

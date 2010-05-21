@@ -77,6 +77,10 @@ CPPSRCS += dlldeps.cpp
 endif
 endif
 
+ifdef MOZ_OMNIJAR
+CPPSRCS += Omnijar.cpp
+endif
+
 SHARED_LIBRARY_LIBS = \
 		../ds/$(LIB_PREFIX)xpcomds_s.$(LIB_SUFFIX) \
 		../io/$(LIB_PREFIX)xpcomio_s.$(LIB_SUFFIX) \
@@ -128,6 +132,7 @@ EXPORTS_mozilla = \
   XPCOM.h \
   Services.h \
   ServiceList.h \
+  Omnijar.h \
   $(NULL)
 
 # Force use of PIC
