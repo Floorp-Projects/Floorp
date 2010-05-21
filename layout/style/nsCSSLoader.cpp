@@ -85,7 +85,6 @@
 #include "nsThreadUtils.h"
 #include "nsGkAtoms.h"
 #include "nsDocShellCID.h"
-#include "nsIChannelClassifier.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -1537,8 +1536,9 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
-                     aLoadData->mURI, nsnull, loadGroup,
-                     nsnull, nsIChannel::LOAD_NORMAL, channelPolicy);
+                     aLoadData->mURI, nsnull, loadGroup, nsnull,
+                     nsIChannel::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI,
+                     channelPolicy);
   
   if (NS_FAILED(rv)) {
 #ifdef DEBUG
@@ -1594,20 +1594,6 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     LOG_ERROR(("  Failed to create stream loader"));
     SheetComplete(aLoadData, rv);
     return rv;
-  }
-
-  // Check the load against the URI classifier
-  nsCOMPtr<nsIChannelClassifier> classifier =
-    do_CreateInstance(NS_CHANNELCLASSIFIER_CONTRACTID);
-  if (classifier) {
-    rv = classifier->Start(channel, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_ERROR(("  Failed to classify URI"));
-      aLoadData->mIsCancelled = PR_TRUE;
-      channel->Cancel(rv);
-      SheetComplete(aLoadData, rv);
-      return rv;
-    }
   }
 
   if (!mLoadingDatas.Put(&key, aLoadData)) {
