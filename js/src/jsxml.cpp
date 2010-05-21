@@ -376,12 +376,11 @@ qname_identity(JSObject *qna, JSObject *qnb)
 }
 
 static JSBool
-qname_equality(JSContext *cx, JSObject *qn, const jsval *v, JSBool *bp)
+qname_equality(JSContext *cx, JSObject *qn, const Value *v, JSBool *bp)
 {
     JSObject *obj2;
 
-    JS_ASSERT(JSID_IS_OBJECT(v));
-    obj2 = JSID_TO_OBJECT(v);
+    obj2 = v->asObjectOrNull();
     *bp = (!obj2 || obj2->getClass() != &js_QNameClass.base)
           ? JS_FALSE
           : qname_identity(qn, obj2);
@@ -397,7 +396,7 @@ JS_FRIEND_DATA(ExtendedClass) js_QNameClass = {
     EnumerateStub,     ResolveStub,       ConvertStub,       NULL,
     NULL,              NULL,              NULL,              NULL,
     NULL,              NULL,              NULL,              NULL },
-    Valueify(qname_equality),NULL,        NULL,              NULL,
+    qname_equality,    NULL,              NULL,              NULL,
     NULL,              NULL,              NULL,              NULL
 };
 
@@ -4437,7 +4436,7 @@ PutProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
 
         /* 10-11. */
-        id = JSID_VOID;
+        id = JSBOXEDWORD_VOID;
         primitiveAssign = !vxml && !IS_STAR(GetLocalName(nameqn));
 
         /* 12. */

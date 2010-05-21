@@ -602,7 +602,7 @@ struct JSScopeProperty {
     };
 
     void insertFree(JSScopeProperty *&list) {
-        id = JSID_NULL;
+        id = JSBOXEDWORD_NULL;
         next = list;
         prevp = &list;
         if (list)
@@ -611,7 +611,7 @@ struct JSScopeProperty {
     }
 
     void removeFree() {
-        JS_ASSERT(JSID_IS_NULL(id));
+        JS_ASSERT(JSBOXEDWORD_IS_NULL(id));
         *prevp = next;
         if (next)
             next->prevp = prevp;
@@ -798,7 +798,7 @@ JSScope::hasProperty(JSScopeProperty *sprop)
 inline JSScopeProperty *
 JSScope::lastProperty() const
 {
-    JS_ASSERT_IF(lastProp, !JSID_IS_NULL(lastProp->id));
+    JS_ASSERT_IF(lastProp, !JSBOXEDWORD_IS_NULL(lastProp->id));
     return lastProp;
 }
 
@@ -809,8 +809,8 @@ JSScope::lastProperty() const
 inline void
 JSScope::setLastProperty(JSScopeProperty *sprop)
 {
-    JS_ASSERT(!JSID_IS_NULL(sprop->id));
-    JS_ASSERT_IF(lastProp, !JSID_IS_NULL(lastProp->id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(sprop->id));
+    JS_ASSERT_IF(lastProp, !JSBOXEDWORD_IS_NULL(lastProp->id));
 
     lastProp = sprop;
 }
@@ -819,7 +819,7 @@ inline void
 JSScope::removeLastProperty()
 {
     JS_ASSERT(!inDictionaryMode());
-    JS_ASSERT_IF(lastProp->parent, !JSID_IS_NULL(lastProp->parent->id));
+    JS_ASSERT_IF(lastProp->parent, !JSBOXEDWORD_IS_NULL(lastProp->parent->id));
 
     lastProp = lastProp->parent;
     --entryCount;
@@ -831,12 +831,12 @@ JSScope::removeDictionaryProperty(JSScopeProperty *sprop)
     JS_ASSERT(inDictionaryMode());
     JS_ASSERT(sprop->inDictionary());
     JS_ASSERT(sprop->childp);
-    JS_ASSERT(!JSID_IS_NULL(sprop->id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(sprop->id));
 
     JS_ASSERT(lastProp->inDictionary());
     JS_ASSERT(lastProp->childp == &lastProp);
-    JS_ASSERT_IF(lastProp != sprop, !JSID_IS_NULL(lastProp->id));
-    JS_ASSERT_IF(lastProp->parent, !JSID_IS_NULL(lastProp->parent->id));
+    JS_ASSERT_IF(lastProp != sprop, !JSBOXEDWORD_IS_NULL(lastProp->id));
+    JS_ASSERT_IF(lastProp->parent, !JSBOXEDWORD_IS_NULL(lastProp->parent->id));
 
     if (sprop->parent)
         sprop->parent->childp = sprop->childp;
@@ -854,12 +854,12 @@ JSScope::insertDictionaryProperty(JSScopeProperty *sprop, JSScopeProperty **chil
      */
     JS_ASSERT(sprop->inDictionary());
     JS_ASSERT(!sprop->childp);
-    JS_ASSERT(!JSID_IS_NULL(sprop->id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(sprop->id));
 
     JS_ASSERT_IF(*childp, (*childp)->inDictionary());
     JS_ASSERT_IF(lastProp, lastProp->inDictionary());
     JS_ASSERT_IF(lastProp, lastProp->childp == &lastProp);
-    JS_ASSERT_IF(lastProp, !JSID_IS_NULL(lastProp->id));
+    JS_ASSERT_IF(lastProp, !JSBOXEDWORD_IS_NULL(lastProp->id));
 
     sprop->parent = *childp;
     *childp = sprop;
@@ -958,7 +958,7 @@ JSScope::canProvideEmptyScope(JSObjectOps *ops, js::Class *clasp)
 inline bool
 JSScopeProperty::get(JSContext* cx, JSObject *obj, JSObject *pobj, js::Value* vp)
 {
-    JS_ASSERT(!JSID_IS_NULL(this->id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(this->id));
     JS_ASSERT(!hasDefaultGetter());
 
     if (hasGetterValue()) {

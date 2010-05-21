@@ -237,8 +237,8 @@ JSScopeProperty::hash() const
 inline bool
 JSScopeProperty::matches(const JSScopeProperty *p) const
 {
-    JS_ASSERT(!JSID_IS_NULL(id));
-    JS_ASSERT(!JSID_IS_NULL(p->id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(p->id));
     return id == p->id &&
            matchesParamsAfterId(p->rawGetter, p->rawSetter, p->slot, p->attrs, p->flags,
                                 p->shortid);
@@ -248,7 +248,7 @@ inline bool
 JSScopeProperty::matchesParamsAfterId(js::PropertyOp agetter, js::PropertyOp asetter, uint32 aslot,
                                       uintN aattrs, uintN aflags, intN ashortid) const
 {
-    JS_ASSERT(!JSID_IS_NULL(id));
+    JS_ASSERT(!JSBOXEDWORD_IS_NULL(id));
     return rawGetter == agetter &&
            rawSetter == asetter &&
            slot == aslot &&

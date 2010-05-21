@@ -2709,7 +2709,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
 JS_PUBLIC_API(JSBool)
 JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
 {
-    JS_ASSERT(JSID_IS_OBJECT(obj));
+    JS_ASSERT(JSID_IS_OBJECT((jsid)obj));
     *idp = OBJECT_TO_JSID(obj);
     return JS_TRUE;
 }
@@ -3951,7 +3951,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             sprop = sprop->parent;
 
         if (!sprop) {
-            *idp = JSID_VOID;
+            *idp = JSBOXEDWORD_VOID;
         } else {
             iterobj->setPrivate(sprop->parent);
             *idp = sprop->id;
@@ -3961,7 +3961,7 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
         ida = (JSIdArray *) iterobj->getPrivate();
         JS_ASSERT(i <= ida->length);
         if (i == 0) {
-            *idp = JSID_VOID;
+            *idp = JSBOXEDWORD_VOID;
         } else {
             *idp = ida->vector[--i];
             iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Tag(i));
