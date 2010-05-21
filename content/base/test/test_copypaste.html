@@ -30,155 +30,89 @@ function testCopyPaste () {
   var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
                             .getService(Components.interfaces.nsIClipboard);
 
+  var transferable, node;
+  var data = {};
   var textarea = document.getElementById('input');
 
-  function copySelectionToClipboard() {
-    documentViewer.copySelection();
-    is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
-    is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
-  }
-  function copyToClipboard(node) {
-    textarea.blur();
-    clipboard.emptyClipboard(1);
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    var r = document.createRange();
-    r.selectNode(node);
-    window.getSelection().addRange(r);
-    copySelectionToClipboard();
-  }
-  function copyRangeToClipboard(startNode,startIndex,endNode,endIndex) {
-    textarea.blur();
-    clipboard.emptyClipboard(1);
-    var sel = window.getSelection();
-    sel.removeAllRanges();
-    var r = document.createRange();
-    r.setStart(startNode,startIndex)
-    r.setEnd(endNode,endIndex)
-    window.getSelection().addRange(r);
-    copySelectionToClipboard();
-  }
-  function copyChildrenToClipboard(id) {
-    textarea.blur();
-    clipboard.emptyClipboard(1);
-    window.getSelection().selectAllChildren(document.getElementById(id));
-    copySelectionToClipboard();
-  }
-  function getClipboardData(mime) {
-    var transferable = Components.classes['@mozilla.org/widget/transferable;1']
-                                 .createInstance(Components.interfaces.nsITransferable);
-    transferable.addDataFlavor(mime);
-    clipboard.getData(transferable, 1);
-    var data = {};
-    transferable.getTransferData(mime, data, {}) ;
-    return data;
-  }
-  function testClipboardValue(mime, expected) {
-    var data = getClipboardData(mime);
-    is (data.value == null ? data.value :
-        data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
-      expected,
-      mime + " value in the clipboard");
-    return data.value;
-  }
-  function testPasteText(expected) {
-    textarea.value="";
-    textarea.focus();
-    textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
-            .editor.paste(1);
-    is(textarea.value, expected, "value of the textarea after the paste");
-  }
-  function testSelectionToString(expected) {
-    is(window.getSelection().toString().replace(/\r\n/g,"\n"), expected, "Selection.toString");
-  }
-  function testInnerHTML(id, expected) {
-    var value = document.getElementById(id).innerHTML;
-    is(value, expected, id + ".innerHTML");
-  }
-  function testEmptyChildren(id) {
-    copyChildrenToClipboard(id);
-    testSelectionToString("");
-    testClipboardValue("text/unicode", null);
-    testClipboardValue("text/html", null);
-    testPasteText("");
-  }
+  // ============  copy paste test from a simple text content to a textarea
 
-  copyChildrenToClipboard("draggable");
-  testSelectionToString("This is a draggable bit of text.");
-  testClipboardValue("text/unicode",
-                     "This is a draggable bit of text.");
-  testClipboardValue("text/html",
-                     "<div id=\"draggable\" title=\"title to have a long HTML line\">This is a <em>draggable</em> bit of text.</div>");
-  testPasteText("This is a draggable bit of text.");
+  // selection of the node
+  node = document.getElementById('draggable');
+  window.getSelection().selectAllChildren(node);
 
-  copyChildrenToClipboard("alist");
-  testSelectionToString("bla\n\n    * foo\n    * bar\n\n");
-  testClipboardValue("text/unicode", " bla\n\n    * foo\n    * bar\n\n");
-  testClipboardValue("text/html", "<div id=\"alist\">\n    bla\n    <ul>\n      <li>foo</li>\n      \n      <li>bar</li>\n    </ul>\n  </div>");
-  testPasteText(" bla\n\n    * foo\n    * bar\n\n");
+  // let's copy the selection
+  documentViewer.copySelection();
 
-  copyChildrenToClipboard("div4");
-  testSelectionToString("Tt t t ");
-  testClipboardValue("text/unicode", " Tt t t ");
-  testClipboardValue("text/html", "<div id=\"div4\">\n  T<textarea>t t t</textarea>\n</div>");
-  testInnerHTML("div4", "\n  T<textarea>t t t</textarea>\n");
-  testPasteText(" Tt t t ");
+  is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
+  is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
 
-  copyChildrenToClipboard("div5");
-  testSelectionToString("T ");
-  testClipboardValue("text/unicode", " T ");
-  testClipboardValue("text/html", "<div id=\"div5\">\n  T<textarea>     </textarea>\n</div>");
-  testInnerHTML("div5", "\n  T<textarea>     </textarea>\n");
-  testPasteText(" T ");
+  // is the clipboard contain a text/unicode data ?
+  transferable = Components.classes['@mozilla.org/widget/transferable;1']
+                           .createInstance(Components.interfaces.nsITransferable);
+  transferable.addDataFlavor("text/unicode");
+  clipboard.getData(transferable, 1);
 
-  copyRangeToClipboard($("div6").childNodes[0],0, $("div6").childNodes[1],1);
-  testSelectionToString("");
-// START Disabled due to bug 564688
-if (false) {
-  testClipboardValue("text/unicode", "");
-  testClipboardValue("text/html", "");
-}
-// END Disabled due to bug 564688
-  testInnerHTML("div6", "div6");
+  transferable.getTransferData ("text/unicode", data, {} ) ;
+  is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+      "This is a draggable bit of text.",
+      "text/unicode value in the clipboard");
+  
+  // is the clipboard contain a text/html data ?
+  transferable = Components.classes['@mozilla.org/widget/transferable;1']
+                           .createInstance(Components.interfaces.nsITransferable);
+  transferable.addDataFlavor("text/html");
+  clipboard.getData(transferable, 1);
 
-  copyRangeToClipboard($("div7").childNodes[0],0, $("div7").childNodes[0],4);
-  testSelectionToString("");
-// START Disabled due to bug 564688
-if (false) {
-  testClipboardValue("text/unicode", "");
-  testClipboardValue("text/html", "");
-}
-// END Disabled due to bug 564688
-  testInnerHTML("div7", "div7");
+  transferable.getTransferData ("text/html", data, {} ) ;
+  is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+      "<div id=\"draggable\" title=\"title to have a long HTML line\">This is a <em>draggable</em> bit of text.</div>",
+      "text/html value in the clipboard");
+  
+  // let's paste now in the textarea and verify its content
+  textarea.focus();
+  textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
+          .editor.paste(1);
+  is(textarea.value, "This is a draggable bit of text.", "value of the textarea after the paste");
 
-  copyRangeToClipboard($("div8").childNodes[0],0, $("div8").childNodes[0],4);
-  testSelectionToString("");
-// START Disabled due to bug 564688
-if (false) {
-  testClipboardValue("text/unicode", "");
-  testClipboardValue("text/html", "");
-}
-// END Disabled due to bug 564688
-  testInnerHTML("div8", "div8");
 
-  copyRangeToClipboard($("div9").childNodes[0],0, $("div9").childNodes[0],4);
-  testSelectionToString("div9");
-  testClipboardValue("text/unicode", "div9");
-  testClipboardValue("text/html", "div9");
-  testInnerHTML("div9", "div9");
+  // ============ copy paste test from a piece of HTML to a textarea
+  textarea.blur();
+  node = document.getElementById('alist');
+  window.getSelection().selectAllChildren(node);
+  documentViewer.copySelection();
 
-  copyToClipboard($("div10"));
-  testSelectionToString("");
-  testInnerHTML("div10", "div10");
+  is(clipboard.hasDataMatchingFlavors(["text/unicode"], 1,1), true);
+  is(clipboard.hasDataMatchingFlavors(["text/html"], 1,1), true);
 
-  copyToClipboard($("div10").firstChild);
-  testSelectionToString("");
+  // let's verify the clipboard content for the text/unicode flavor
+  transferable = Components.classes['@mozilla.org/widget/transferable;1']
+                           .createInstance(Components.interfaces.nsITransferable);
+  transferable.addDataFlavor("text/unicode");
+  clipboard.getData(transferable, 1);
+  data = {};
+  transferable.getTransferData ("text/unicode", data, {} ) ;
+  is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+      " bla\n\n    * foo\n    * bar\n\n",
+      "text/unicode value in the clipboard (html piece)");
 
-  copyRangeToClipboard($("div10").childNodes[0],0, $("div10").childNodes[0],1);
-  testSelectionToString("");
-
-  copyRangeToClipboard($("div10").childNodes[1],0, $("div10").childNodes[1],1);
-  testSelectionToString("");
+  // let's verify the clipboard content for the text/html flavor
+  transferable = Components.classes['@mozilla.org/widget/transferable;1']
+                           .createInstance(Components.interfaces.nsITransferable);
+  transferable.addDataFlavor("text/html");
+  clipboard.getData(transferable, 1);
+  data = {};
+  transferable.getTransferData ("text/html", data, {} ) ;
+  is (data.value.QueryInterface(Components.interfaces.nsISupportsString).data,
+      "<div id=\"alist\">\n    bla\n    <ul>\n      <li>foo</li>\n      <li>bar</li>\n    </ul>\n  </div>",
+      "text/html value in the clipboard (html piece)");
+  
+  // let's paste now in the textarea and verify its content
+  textarea.value="";
+  textarea.focus();
+  textarea.QueryInterface(Components.interfaces.nsIDOMNSEditableElement)
+          .editor.paste(1);
+  is(textarea.value, " bla\n\n    * foo\n    * bar\n\n", "value of the textarea after the paste (html piece)");
+  
 
   // ============ copy/paste test from/to a textarea
 
@@ -211,36 +145,9 @@ addLoadEvent(testCopyPaste);
     bla
     <ul>
       <li>foo</li>
-      <li style="display: none;">baz</li>
       <li>bar</li>
     </ul>
   </div>
-
-<div id="div4">
-  T<textarea>t t t</textarea>
-</div>
-
-<div id="div5">
-  T<textarea>     </textarea>
-</div>
-
-<div id="div6" style="display:none"></div>
-<script>
-var x = $("div6")
-x.appendChild(document.createTextNode('di'))
-x.appendChild(document.createTextNode('v6'))
-</script>
-
-<div id="div7" style="display:none">div7</div>
-<div id="div8" style="visibility:hidden">div8</div>
-<div style="visibility:hidden"><div id="div9" style="visibility:visible">div9</div></div>
-<div style="visibility:hidden"><div><div><div id="div10"></div></div></div></div>
-<script>
-var x = $("div10")
-x.appendChild(document.createTextNode('div'))
-x.appendChild(document.createTextNode('10'))
-</script>
-
 
 </div>
 </body>
