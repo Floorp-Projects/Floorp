@@ -47,7 +47,8 @@ WEAVE_ID:                              "@weave_id@",
 STORAGE_VERSION:                       @storage_version@,
 
 DEFAULT_SERVER:                        "@server_url@",
-UPDATED_URL:                           "https://services.mozilla.com/sync/updated/?version=@weave_version@&channel=@xpi_type@",
+UPDATED_DEV_URL:                       "https://services.mozilla.com/sync/updated/?version=@weave_version@&channel=@xpi_type@",
+UPDATED_REL_URL:                       "http://www.mozilla.com/firefox/sync/updated.html",
 
 PREFS_BRANCH:                          "extensions.weave.",
 
