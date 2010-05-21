@@ -94,7 +94,9 @@ public:
    * set up to account for all the properties of the layer (transform,
    * opacity, etc).
    */
-  virtual void Paint(gfxContext* aContext) {}
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData) {}
 
 protected:
   nsIntRegion mVisibleRegion;
@@ -240,8 +242,9 @@ public:
                  "Can only set properties in construction phase");
   }
 
-  virtual gfxContext* BeginDrawing(nsIntRegion* aRegionToDraw);
-  virtual void EndDrawing();
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -250,30 +253,17 @@ protected:
   }
 };
 
-gfxContext*
-BasicThebesLayer::BeginDrawing(nsIntRegion* aRegionToDraw)
+void
+BasicThebesLayer::Paint(gfxContext* aContext,
+                        LayerManager::DrawThebesLayerCallback aCallback,
+                        void* aCallbackData)
 {
-  NS_ASSERTION(BasicManager()->IsBeforeInTree(BasicManager()->GetLastPainted(), this),
-               "Painting layers out of order");
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
   gfxContext* target = BasicManager()->GetTarget();
-  if (!target)
-    return nsnull;
+  NS_ASSERTION(target, "We shouldn't be called if there's no target");
 
-  BasicManager()->AdvancePaintingTo(this);
-
-  *aRegionToDraw = mVisibleRegion;
-  return target;
-}
-
-void
-BasicThebesLayer::EndDrawing()
-{
-  NS_ASSERTION(BasicManager()->InDrawing(),
-               "Can only draw in drawing phase");
-  NS_ASSERTION(BasicManager()->GetLastPainted() == this,
-               "Not currently drawing this layer");
+  aCallback(this, target, mVisibleRegion, aCallbackData);
 }
 
 class BasicImageLayer : public ImageLayer, BasicImplData {
@@ -295,7 +285,9 @@ public:
     mVisibleRegion = aRegion;
   }
 
-  virtual void Paint(gfxContext* aContext);
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -305,7 +297,9 @@ protected:
 };
 
 void
-BasicImageLayer::Paint(gfxContext* aContext)
+BasicImageLayer::Paint(gfxContext* aContext,
+                       LayerManager::DrawThebesLayerCallback aCallback,
+                       void* aCallbackData)
 {
   if (!mContainer)
     return;
@@ -365,7 +359,9 @@ public:
     mVisibleRegion = aRegion;
   }
 
-  virtual void Paint(gfxContext* aContext);
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -375,7 +371,9 @@ protected:
 };
 
 void
-BasicColorLayer::Paint(gfxContext* aContext)
+BasicColorLayer::Paint(gfxContext* aContext,
+                       LayerManager::DrawThebesLayerCallback aCallback,
+                       void* aCallbackData)
 {
   aContext->SetColor(mColor);
   aContext->Paint();
@@ -397,7 +395,9 @@ public:
 
   virtual void Initialize(const Data& aData);
   virtual void Updated(const nsIntRect& aRect);
-  virtual void Paint(gfxContext* aContext);
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData);
 
 protected:
   nsRefPtr<gfxASurface> mSurface;
@@ -484,7 +484,9 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
 }
 
 void
-BasicCanvasLayer::Paint(gfxContext* aContext)
+BasicCanvasLayer::Paint(gfxContext* aContext,
+                        LayerManager::DrawThebesLayerCallback aCallback,
+                        void* aCallbackData)
 {
   nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
 
@@ -511,7 +513,7 @@ BasicCanvasLayer::Paint(gfxContext* aContext)
 }
 
 BasicLayerManager::BasicLayerManager(gfxContext* aContext) :
-  mDefaultTarget(aContext), mLastPainted(nsnull)
+  mDefaultTarget(aContext)
 #ifdef DEBUG
   , mPhase(PHASE_NONE)
 #endif
@@ -554,24 +556,23 @@ BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 }
 
 void
-BasicLayerManager::EndConstruction()
+BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
+                                  void* aCallbackData)
 {
   NS_ASSERTION(mRoot, "Root not set");
   NS_ASSERTION(mPhase == PHASE_CONSTRUCTION, "Should be in construction phase");
 #ifdef DEBUG
   mPhase = PHASE_DRAWING;
 #endif
-}
 
-void
-BasicLayerManager::EndTransaction()
-{
-  NS_ASSERTION(mPhase == PHASE_DRAWING, "Should be in drawing phase");
+  if (mTarget) {
+    PaintLayer(mRoot, aCallback, aCallbackData);
+    mTarget = nsnull;
+  }
+
 #ifdef DEBUG
   mPhase = PHASE_NONE;
 #endif
-  AdvancePaintingTo(nsnull);
-  mTarget = nsnull;
   // No retained layers supported for now
   mRoot = nsnull;
 }
@@ -625,10 +626,14 @@ UseOpaqueSurface(Layer* aLayer)
 }
 
 void
-BasicLayerManager::BeginPaintingLayer(Layer* aLayer)
+BasicLayerManager::PaintLayer(Layer* aLayer,
+                              DrawThebesLayerCallback aCallback,
+                              void* aCallbackData)
 {
   PRBool needsGroup = NeedsGroup(aLayer);
-  if ((needsGroup || NeedsState(aLayer)) && mTarget) {
+  PRBool needsSaveRestore = needsGroup || NeedsState(aLayer);
+
+ if (needsSaveRestore) {
     mTarget->Save();
 
     if (aLayer->GetClipRect()) {
@@ -667,64 +672,20 @@ BasicLayerManager::BeginPaintingLayer(Layer* aLayer)
     }
   }
 
-  mLastPainted = aLayer;
+  ToData(aLayer)->Paint(mTarget, aCallback, aCallbackData);
+  for (Layer* child = aLayer->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    PaintLayer(child, aCallback, aCallbackData);
+  }
 
-  // For layers that paint themselves (e.g., BasicImageLayer), paint
-  // them now.
-  ToData(aLayer)->Paint(mTarget);
-}
-
-void
-BasicLayerManager::EndPaintingLayer()
-{
-  PRBool needsGroup = NeedsGroup(mLastPainted);
-  if ((needsGroup || NeedsState(mLastPainted)) && mTarget) {
+  if (needsSaveRestore) {
     if (needsGroup) {
       mTarget->PopGroupToSource();
-      mTarget->Paint(mLastPainted->GetOpacity());
+      mTarget->Paint(aLayer->GetOpacity());
     }
 
     mTarget->Restore();
   }
-}
-
-void
-BasicLayerManager::AdvancePaintingTo(BasicThebesLayer* aLayer)
-{
-  NS_ASSERTION(!aLayer || IsBeforeInTree(mLastPainted, aLayer),
-               "Painting layers out of order");
-
-  // Traverse the layer tree from mLastPainted to aLayer, calling
-  // BeginPaintingLayer and EndPaintingLayer as we enter or exit layers.
-  do {
-    Layer* firstChild;
-    Layer* nextSibling;
-    // Advance mLastPainted one step through the tree in preorder
-    if (!mLastPainted) {
-      // This is the first AdvancePaintingTo call. Start at the root.
-      BeginPaintingLayer(mRoot);
-    } else if ((firstChild = mLastPainted->GetFirstChild()) != nsnull) {
-      // Descend into our first child, if there is one.
-      BeginPaintingLayer(firstChild);
-    } else if ((nextSibling = mLastPainted->GetNextSibling()) != nsnull) {
-      // There are no children to descend into. Leave this layer and
-      // advance to our next sibling, if there is one.
-      EndPaintingLayer();
-      BeginPaintingLayer(nextSibling);
-    } else {
-      // There are no children to descend into and we have no next sibling.
-      // Exit layers until we find a layer which has a next sibling
-      // (or we exit the root).
-      do {
-        EndPaintingLayer();
-        mLastPainted = mLastPainted->GetParent();
-      } while (mLastPainted && !mLastPainted->GetNextSibling());
-      if (mLastPainted) {
-        EndPaintingLayer();
-        BeginPaintingLayer(mLastPainted->GetNextSibling());
-      }
-    }
-  } while (mLastPainted != aLayer);
 }
 
 already_AddRefed<ThebesLayer>
@@ -766,55 +727,6 @@ BasicLayerManager::CreateCanvasLayer()
   nsRefPtr<CanvasLayer> layer = new BasicCanvasLayer(this);
   return layer.forget();
 }
-
-#ifdef DEBUG
-static void
-AppendAncestors(Layer* aLayer, nsTArray<Layer*>* aAncestors)
-{
-  while (aLayer) {
-    aAncestors->AppendElement(aLayer);
-    aLayer = aLayer->GetParent();
-  }
-}
-
-PRBool
-BasicLayerManager::IsBeforeInTree(Layer* aBefore, Layer* aLayer)
-{
-  if (!aBefore) {
-    return PR_TRUE;
-  }
-  nsAutoTArray<Layer*,8> beforeAncestors, afterAncestors;
-  AppendAncestors(aBefore, &beforeAncestors);
-  AppendAncestors(aLayer, &afterAncestors);
-  PRInt32 beforeIndex = beforeAncestors.Length() - 1;
-  PRInt32 afterIndex = afterAncestors.Length() - 1;
-  NS_ASSERTION(beforeAncestors[beforeIndex] == mRoot, "aBefore not in tree?");
-  NS_ASSERTION(afterAncestors[afterIndex] == mRoot, "aLayer not in tree?");
-  --beforeIndex;
-  --afterIndex;
-  while (beforeIndex >= 0 && afterIndex >= 0) {
-    if (beforeAncestors[beforeIndex] != afterAncestors[afterIndex]) {
-      BasicContainerLayer* parent =
-        static_cast<BasicContainerLayer*>(beforeAncestors[beforeIndex + 1]);
-      for (Layer* child = parent->GetFirstChild();
-           child != afterAncestors[afterIndex];
-           child = child->GetNextSibling()) {
-        if (child == beforeAncestors[beforeIndex]) {
-          return PR_TRUE;
-        }
-      }
-      return PR_FALSE;
-    }
-    --beforeIndex;
-    --afterIndex;
-  }
-  if (afterIndex > 0) {
-    // aBefore is an ancestor of aLayer, so it's before aLayer in preorder
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-#endif
 
 }
 }

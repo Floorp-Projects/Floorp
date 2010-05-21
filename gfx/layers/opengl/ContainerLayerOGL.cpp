@@ -125,7 +125,9 @@ ContainerLayerOGL::GetFirstChildOGL()
 }
 
 void
-ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
+ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
+                               DrawThebesLayerCallback aCallback,
+                               void* aCallbackData)
 {
   /**
    * Setup our temporary texture for rendering the contents of this container.
@@ -202,7 +204,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
       gl()->fScissor(0, 0, GetVisibleRect().width, GetVisibleRect().height);
     }
 
-    layerToRender->RenderLayer(frameBuffer);
+    layerToRender->RenderLayer(frameBuffer, aCallback, aCallbackData);
     layerToRender = layerToRender->GetNextSibling();
   }
 
