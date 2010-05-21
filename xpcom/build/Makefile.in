@@ -188,6 +188,9 @@ OS_LIBS += $(call EXPAND_LIBNAME,shell32 ole32 uuid version)
 ifneq (,$(MOZ_DEBUG)$(NS_TRACE_MALLOC))
 OS_LIBS += $(call EXPAND_LIBNAME,imagehlp)
 endif
+ifndef MOZ_ENABLE_LIBXUL
+OS_LIBS += $(call EXPAND_LIBNAME,psapi)
+endif
 endif # WINNT
 
 ifeq ($(OS_ARCH),WINCE)
