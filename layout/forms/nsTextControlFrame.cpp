@@ -2847,6 +2847,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
         } else {
           plaintextEditor->InsertText(insertValue);
         }
+        NS_ENSURE_STATE(weakFrame.IsAlive());
 
         if (!IsSingleLineTextControl()) {
           mCachedValue = newValue;
@@ -2858,6 +2859,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
           selPriv->EndBatchChanges();
       }
 
+      // This second check _shouldn't_ be necessary, but let's be safe.
       NS_ENSURE_STATE(weakFrame.IsAlive());
       if (outerTransaction)
         mNotifyOnInput = PR_TRUE;

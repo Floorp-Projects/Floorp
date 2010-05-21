@@ -1,9 +1,9 @@
 load 285166-1.html
 load 294235-1.html
 load 378993-1.xhtml
-asserts(1) load 388183-1.html # bug 336104
+load 388183-1.html
 load 395340-1.html
-asserts(1) load 399694-1.html # bug 336104
+load 399694-1.html
 load 407053.html
 load 448564.html
 load 468562-1.html
