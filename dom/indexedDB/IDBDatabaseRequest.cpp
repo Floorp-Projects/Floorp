@@ -862,7 +862,7 @@ IDBDatabaseRequest::ObjectStore(const nsAString& aName,
   }
 
   nsTArray<ObjectStoreInfo> objectStores;
-  if (!objectStores.AppendElement(ObjectStoreInfo(aName, id))) {
+  if (!objectStores.AppendElement(mObjectStores[id])) {
     NS_ERROR("Out of memory");
     return NS_ERROR_OUT_OF_MEMORY;
   }
