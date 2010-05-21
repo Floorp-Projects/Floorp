@@ -64,15 +64,15 @@ namespace net {
 inline bool 
 IsNeckoChild() 
 {
-  // TODO: remove env var check eventually.
-  // - For now: if unset, necko works with full stack in each process,
-  //   i.e. no IPC.
   static bool didCheck = false;
   static bool amChild = false;
 
   if (!didCheck) {
-    const char * e = PR_GetEnv("NECKO_E10S_HTTP");
-    if (e && *e)
+    // This allows independent necko-stacks (instead of single stack in chrome)
+    // to still be run.  
+    // TODO: Remove eventually.
+    const char * e = PR_GetEnv("NECKO_SEPARATE_STACKS");
+    if (!e) 
       amChild = (XRE_GetProcessType() == GeckoProcessType_Content);
     didCheck = true;
   }
