@@ -147,8 +147,10 @@ public:
 
   NS_IMETHOD GetResult(nsIVariant** aResult);
 
-  nsresult Init(IDBRequest* aRequest) {
+  nsresult Init(IDBRequest* aRequest,
+                IDBTransactionRequest* aTransaction) {
     mSource = aRequest->GetGenerator();
+    mTransaction = aTransaction;
 
     nsresult rv = InitEvent(NS_LITERAL_STRING(SUCCESS_EVT_STR), PR_FALSE,
                             PR_FALSE);
@@ -778,7 +780,7 @@ PRUint16
 GetHelper::OnSuccess(nsIDOMEventTarget* aTarget)
 {
   nsRefPtr<GetSuccessEvent> event(new GetSuccessEvent(mValue));
-  nsresult rv = event->Init(mRequest);
+  nsresult rv = event->Init(mRequest, mTransaction);
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   PRBool dummy;
