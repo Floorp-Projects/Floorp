@@ -176,6 +176,84 @@ private:
   ObjectStoreInfo mStore;
 };
 
+class AutoFree
+{
+public:
+  AutoFree(void* aPtr) : mPtr(aPtr) { }
+  ~AutoFree() { NS_Free(mPtr); }
+private:
+  void* mPtr;
+};
+
+inline
+nsresult
+ConvertVariantToStringArray(nsIVariant* aVariant,
+                            nsTArray<nsString>& aStringArray)
+{
+#ifdef DEBUG
+  PRUint16 type;
+  NS_ASSERTION(NS_SUCCEEDED(aVariant->GetDataType(&type)) &&
+               type == nsIDataType::VTYPE_ARRAY, "Bad arg!");
+#endif
+
+  PRUint16 valueType;
+  nsIID iid;
+  PRUint32 valueCount;
+  void* rawArray;
+
+  nsresult rv = aVariant->GetAsArray(&valueType, &iid, &valueCount, &rawArray);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AutoFree af(rawArray);
+
+  // Just delete anything that we don't expect and return.
+  if (valueType != nsIDataType::VTYPE_WCHAR_STR) {
+    switch (valueType) {
+      case nsIDataType::VTYPE_ID:
+      case nsIDataType::VTYPE_CHAR_STR: {
+        char** charArray = reinterpret_cast<char**>(rawArray);
+        for (PRUint32 index = 0; index < valueCount; index++) {
+          if (charArray[index]) {
+            NS_Free(charArray[index]);
+          }
+        }
+      } break;
+
+      case nsIDataType::VTYPE_INTERFACE:
+      case nsIDataType::VTYPE_INTERFACE_IS: {
+        nsISupports** supportsArray = reinterpret_cast<nsISupports**>(rawArray);
+        for (PRUint32 index = 0; index < valueCount; index++) {
+          NS_IF_RELEASE(supportsArray[index]);
+        }
+      } break;
+
+      default: {
+        // The other types are primitives that do not need to be freed.
+      }
+    }
+
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  PRUnichar** strings = reinterpret_cast<PRUnichar**>(rawArray);
+
+  for (PRUint32 index = 0; index < valueCount; index++) {
+    nsString* newString = aStringArray.AppendElement();
+
+    if (!newString) {
+      NS_ERROR("Out of memory?");
+      for (; index < valueCount; index++) {
+        NS_Free(strings[index]);
+      }
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    newString->Adopt(strings[index], -1);
+  }
+
+  return NS_OK;
+}
+
 } // anonymous namespace
 
 // static
@@ -637,19 +715,18 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
   nsresult rv = aStoreNames->GetDataType(&type);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUint32 objectStoreCount = mObjectStores.Length();
-  nsTArray<ObjectStoreInfo> objectStoresToOpen;
-  bool found = false;
+  PRUint32 storeCount = mObjectStores.Length();
+  nsTArray<ObjectStoreInfo> storesToOpen;
 
   switch (type) {
     case nsIDataType::VTYPE_VOID:
     case nsIDataType::VTYPE_EMPTY:
     case nsIDataType::VTYPE_EMPTY_ARRAY: {
       // Empty, request all object stores
-      rv = objectStoresToOpen.AppendElements(mObjectStores) ?
-           NS_OK :
-           NS_ERROR_OUT_OF_MEMORY;
-      found = true;
+      if (!storesToOpen.AppendElements(mObjectStores)) {
+        NS_ERROR("Out of memory?");
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
     } break;
 
     case nsIDataType::VTYPE_WSTRING_SIZE_IS: {
@@ -658,43 +735,96 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
       rv = aStoreNames->GetAsAString(name);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      for (PRUint32 index = 0; index < objectStoreCount; index++) {
+      for (PRUint32 index = 0; index < storeCount; index++) {
         ObjectStoreInfo& info = mObjectStores[index];
         if (info.name == name) {
-          rv = objectStoresToOpen.AppendElement(info) ?
-               NS_OK :
-               NS_ERROR_OUT_OF_MEMORY;
-          found = true;
+          if (!storesToOpen.AppendElement(info)) {
+            NS_ERROR("Out of memory?");
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
           break;
         }
+      }
+      if (storesToOpen.IsEmpty()) {
+        return NS_ERROR_NOT_AVAILABLE;
       }
     } break;
 
     case nsIDataType::VTYPE_ARRAY: {
-      // Array of strings, hopefully.
-      NS_NOTYETIMPLEMENTED("Implement me!");
-      return NS_ERROR_NOT_IMPLEMENTED;
+      nsTArray<nsString> names;
+      rv = ConvertVariantToStringArray(aStoreNames, names);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-      /*
-      PRUint16 valueType;
-      nsIID iid;
-      PRUint32 count;
-      void* array;
-      nsresult rv = value->GetAsArray(&type, &iid, &count, &array);
-      */
+      PRUint32 nameCount = names.Length();
+      for (PRUint32 nameIndex = 0; nameIndex < nameCount; nameIndex++) {
+        nsString& name = names[nameIndex];
+        bool found = false;
+        for (PRUint32 storeIndex = 0; storeIndex < storeCount; storeIndex++) {
+          ObjectStoreInfo& info = mObjectStores[storeIndex];
+          if (info.name == name) {
+            if (!storesToOpen.AppendElement(info)) {
+              NS_ERROR("Out of memory?");
+              return NS_ERROR_OUT_OF_MEMORY;
+            }
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          return NS_ERROR_ILLEGAL_VALUE;
+        }
+      }
+      NS_ASSERTION(nameCount == storesToOpen.Length(), "Should have bailed!");
+    } break;
+
+    case nsIDataType::VTYPE_INTERFACE:
+    case nsIDataType::VTYPE_INTERFACE_IS: {
+      nsCOMPtr<nsISupports> supports;
+      nsID *iid;
+      rv = aStoreNames->GetAsInterface(&iid, getter_AddRefs(supports));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      NS_Free(iid);
+
+      nsCOMPtr<nsIDOMDOMStringList> stringList(do_QueryInterface(supports));
+      if (!stringList) {
+        // We don't support anything other than nsIDOMDOMStringList.
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+
+      PRUint32 stringCount;
+      rv = stringList->GetLength(&stringCount);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      for (PRUint32 stringIndex = 0; stringIndex < stringCount; stringIndex++) {
+        nsString string;
+        rv = stringList->Item(stringIndex, string);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        bool found = false;
+        for (PRUint32 storeIndex = 0; storeIndex < storeCount; storeIndex++) {
+          ObjectStoreInfo& info = mObjectStores[storeIndex];
+          if (info.name == string) {
+            if (!storesToOpen.AppendElement(info)) {
+              NS_ERROR("Out of memory?");
+              return NS_ERROR_OUT_OF_MEMORY;
+            }
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          return NS_ERROR_ILLEGAL_VALUE;
+        }
+      }
     } break;
 
     default:
       return NS_ERROR_ILLEGAL_VALUE;
   }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!found) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
 
   nsRefPtr<IDBTransactionRequest> transaction =
-    IDBTransactionRequest::Create(this, objectStoresToOpen, aMode,
+    IDBTransactionRequest::Create(this, storesToOpen, aMode,
                                   kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
