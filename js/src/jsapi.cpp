@@ -405,8 +405,9 @@ JS_ValueToObject(JSContext *cx, jsval v, JSObject **objp)
 {
     CHECK_REQUEST(cx);
     Value objv;
-    return js_ValueToObjectOrNull(cx, Valueify(v), &objv);
+    bool ok = js_ValueToObjectOrNull(cx, Valueify(v), &objv);
     *objp = objv.asObjectOrNull();
+    return ok;
 }
 
 JS_PUBLIC_API(JSFunction *)

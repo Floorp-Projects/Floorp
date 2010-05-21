@@ -263,10 +263,8 @@ struct JSObject {
     friend class js::TraceRecorder;
 
     JSObjectMap *map;                       /* property map, see jsscope.h */
-  private:
     js::Class   *clasp;                     /* class pointer */
     jsuword     flags;                      /* see above */
-  public:
     js::Value   *dslots;                    /* dynamically allocated slots */
     js::Value   fslots[JS_INITIAL_NSLOTS];  /* small number of fixed slots */
 
@@ -672,8 +670,6 @@ struct JSObject {
     inline bool unbrand(JSContext *cx);
 
     inline void initArrayClass();
-    inline void changeClassToSlowArray();
-    inline void changeClassToFastArray();
 };
 
 #define JSSLOT_START(clasp) (((clasp)->flags & JSCLASS_HAS_PRIVATE)           \

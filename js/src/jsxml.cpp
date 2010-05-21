@@ -3588,7 +3588,7 @@ IndexToBoxedWord(JSContext *cx, uint32 index, jsboxedword *wp)
 {
     JSString *str;
 
-    if (index <= JSVAL_INT_MAX) {
+    if (index <= JSBOXEDWORD_INT_MAX) {
         *wp = INT_TO_JSBOXEDWORD(index);
     } else {
         str = js_NumberToString(cx, (jsdouble) index);

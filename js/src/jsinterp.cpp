@@ -1802,7 +1802,7 @@ namespace reprmeter {
 static JS_ALWAYS_INLINE bool
 CanIncDecWithoutOverflow(int32_t i)
 {
-    return (i > JSVAL_INT_MIN) & (i < JSVAL_INT_MAX);
+    return (i > JSVAL_INT_MIN) && (i < JSVAL_INT_MAX);
 }
 
 /*
