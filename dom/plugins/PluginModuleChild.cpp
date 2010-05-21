@@ -73,6 +73,12 @@ namespace {
 PluginModuleChild* gInstance = nsnull;
 }
 
+#ifdef MOZ_WIDGET_QT
+typedef void (*_gtk_init_fn)(int argc, char **argv);
+static _gtk_init_fn s_gtk_init = nsnull;
+static PRLibrary *sGtkLib = nsnull;
+#endif
+
 #ifdef XP_WIN
 // Used with fix for flash fullscreen window loosing focus.
 static bool gDelayFlashFocusReplyUntilEval = false;
@@ -106,6 +112,11 @@ PluginModuleChild::~PluginModuleChild()
     }
 #ifdef MOZ_WIDGET_QT
     nsQAppInstance::Release();
+    if (sGtkLib) {
+        PR_UnloadLibrary(sGtkLib);
+        sGtkLib = nsnull;
+        s_gtk_init = nsnull;
+    }
 #endif
     gInstance = nsnull;
 }
@@ -471,6 +482,20 @@ PluginModuleChild::InitGraphics()
 
 #elif defined(MOZ_WIDGET_QT)
     nsQAppInstance::AddRef();
+    // Work around plugins that don't interact well without gtk initialized
+    // see bug 566845
+#if defined(MOZ_X11)
+    if (!sGtkLib)
+         sGtkLib = PR_LoadLibrary("libgtk-x11-2.0.so.0");
+#elif defined(MOZ_DFB)
+    if (!sGtkLib)
+         sGtkLib = PR_LoadLibrary("libgtk-directfb-2.0.so.0");
+#endif
+    if (sGtkLib) {
+         s_gtk_init = (_gtk_init_fn)PR_FindFunctionSymbol(sGtkLib, "gtk_init");
+         if (s_gtk_init)
+             s_gtk_init(0, 0);
+    }
 #else
     // may not be necessary on all platforms
 #endif
@@ -857,7 +882,7 @@ _getvalue(NPP aNPP,
     switch (aVariable) {
         // Copied from nsNPAPIPlugin.cpp
         case NPNVToolkit:
-#ifdef MOZ_WIDGET_GTK2
+#if defined(MOZ_WIDGET_GTK2) || defined(MOZ_WIDGET_QT)
             *static_cast<NPNToolkitType*>(aValue) = NPNVGtk2;
             return NPERR_NO_ERROR;
 #endif
