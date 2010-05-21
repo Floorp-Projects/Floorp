@@ -500,9 +500,6 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
     return NS_BINDING_ABORTED;
   }
 
-  // We're done with the classifier
-  mClassifier = nsnull;
-
   AutoNotifier notifier(this, PR_TRUE);
 
   if (!IsSuccessfulRequest(aRequest)) {
@@ -1033,10 +1030,6 @@ nsObjectLoadingContent::OnChannelRedirect(nsIChannel *aOldChannel,
     return NS_BINDING_ABORTED;
   }
 
-  if (mClassifier) {
-    mClassifier->OnRedirect(aOldChannel, aNewChannel);
-  }
-
   mChannel = aNewChannel;
   return NS_OK;
 }
@@ -1203,11 +1196,6 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   // possibly-loading channel should be aborted.
   if (mChannel) {
     LOG(("OBJLC [%p]: Cancelling existing load\n", this));
-
-    if (mClassifier) {
-      mClassifier->Cancel();
-      mClassifier = nsnull;
-    }
 
     // These three statements are carefully ordered:
     // - onStopRequest should get a channel whose status is the same as the
@@ -1436,7 +1424,8 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     channelPolicy->SetLoadType(nsIContentPolicy::TYPE_OBJECT);
   }
   rv = NS_NewChannel(getter_AddRefs(chan), aURI, nsnull, group, this,
-                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS, 
+                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
+                     nsIChannel::LOAD_CLASSIFY_URI,
                      channelPolicy);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1476,12 +1465,6 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   rv = chan->AsyncOpen(this, nsnull);
   if (NS_SUCCEEDED(rv)) {
     LOG(("OBJLC [%p]: Channel opened.\n", this));
-
-    rv = CheckClassifier(chan);
-    if (NS_FAILED(rv)) {
-      chan->Cancel(rv);
-      return rv;
-    }
 
     mChannel = chan;
     mType = eType_Loading;
@@ -1922,22 +1905,6 @@ nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
   }
 
   return rv;
-}
-
-nsresult
-nsObjectLoadingContent::CheckClassifier(nsIChannel *aChannel)
-{
-  nsresult rv;
-  nsCOMPtr<nsIChannelClassifier> classifier =
-    do_CreateInstance(NS_CHANNELCLASSIFIER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = classifier->Start(aChannel, PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mClassifier = classifier;
-
-  return NS_OK;
 }
 
 /* static */ PluginSupportState

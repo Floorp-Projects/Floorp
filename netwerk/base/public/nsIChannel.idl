@@ -213,7 +213,7 @@ interface nsIChannel : nsIRequest
     /**************************************************************************
      * Channel specific load flags:
      *
-     * Bits 22-31 are reserved for future use by this interface or one of its
+     * Bits 23-31 are reserved for future use by this interface or one of its
      * derivatives (e.g., see nsICachingChannel).
      */
 
@@ -268,4 +268,10 @@ interface nsIChannel : nsIRequest
      * should only do so with good reason.
      */
     const unsigned long LOAD_CALL_CONTENT_SNIFFERS = 1 << 21;
+
+    /**
+     * This flag tells the channel to use URI classifier service to check
+     * the URI when opening the channel.
+     */
+    const unsigned long LOAD_CLASSIFY_URI = 1 << 22;
 };
