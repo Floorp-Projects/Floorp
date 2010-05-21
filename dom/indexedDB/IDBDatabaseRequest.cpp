@@ -647,8 +647,8 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
 
-  PRInt64 id;
-  bool exists = IdForObjectStoreName(aName, &id);
+  ObjectStoreInfo* info;
+  bool exists = ObjectStoreInfoForName(aName, &info);
 
   nsresult rv;
   if (NS_UNLIKELY(!exists)) {
@@ -659,9 +659,8 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
     rv = NS_DispatchToCurrentThread(runnable);
   }
   else {
-    ObjectStoreInfo info(aName, id);
     nsRefPtr<RemoveObjectStoreHelper> helper =
-      new RemoveObjectStoreHelper(this, request, info);
+      new RemoveObjectStoreHelper(this, request, *info);
     rv = helper->Dispatch(mConnectionThread);
   }
   NS_ENSURE_SUCCESS(rv, rv);
@@ -855,14 +854,14 @@ IDBDatabaseRequest::ObjectStore(const nsAString& aName,
     aMode = nsIIDBTransaction::READ_ONLY;
   }
 
-  PRInt64 id;
-  if (!IdForObjectStoreName(aName, &id)) {
+  ObjectStoreInfo* info;
+  if (!ObjectStoreInfoForName(aName, &info)) {
     NS_NOTYETIMPLEMENTED("Need right return code");
     return NS_ERROR_INVALID_ARG;
   }
 
   nsTArray<ObjectStoreInfo> objectStores;
-  if (!objectStores.AppendElement(mObjectStores[id])) {
+  if (!objectStores.AppendElement(*info)) {
     NS_ERROR("Out of memory");
     return NS_ERROR_OUT_OF_MEMORY;
   }
