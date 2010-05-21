@@ -3591,7 +3591,7 @@ END_CASE(JSOP_HOLE)
 
 BEGIN_CASE(JSOP_NEWARRAY)
 {
-    uint32 len = GET_UINT16(regs.pc);
+    jsint len = GET_UINT16(regs.pc);
     cx->assertValidStackDepth(len);
     JSObject *obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
     if (!obj)
@@ -3911,7 +3911,7 @@ BEGIN_CASE(JSOP_RETSUB)
         goto error;
     }
     JS_ASSERT(rval.isInt32());
-    uint32 len = rval.asInt32();
+    jsint len = rval.asInt32();
     regs.pc = script->main;
 END_VARLEN_CASE
 }
@@ -4196,7 +4196,7 @@ BEGIN_CASE(JSOP_FILTER)
      * state.
      */
     PUSH_HOLE();
-    uint32 len = GET_JUMP_OFFSET(regs.pc);
+    jsint len = GET_JUMP_OFFSET(regs.pc);
     JS_ASSERT(len > 0);
 END_VARLEN_CASE
 }
@@ -4219,7 +4219,7 @@ BEGIN_CASE(JSOP_ENDFILTER)
         if (!js_EnterWith(cx, -2))
             goto error;
         regs.sp--;
-        uint32 len = GET_JUMP_OFFSET(regs.pc);
+        jsint len = GET_JUMP_OFFSET(regs.pc);
         JS_ASSERT(len < 0);
         BRANCH(len);
     }
