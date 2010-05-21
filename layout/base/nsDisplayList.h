@@ -53,13 +53,12 @@
 #include "nsCaret.h"
 #include "plarena.h"
 #include "Layers.h"
-#include "nsRegion.h"
-#include "FrameLayerBuilder.h"
 
 #include <stdlib.h>
 
 class nsIPresShell;
 class nsIContent;
+class nsRegion;
 class nsIRenderingContext;
 class nsIDeviceContext;
 class nsDisplayTableItem;
@@ -121,7 +120,6 @@ class nsDisplayItem;
 class NS_STACK_CLASS nsDisplayListBuilder {
 public:
   typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
-  typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
 
   /**
    * @param aReferenceFrame the frame at the root of the subtree; its origin
@@ -341,11 +339,6 @@ public:
   void MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
                                 const nsFrameList& aFrames,
                                 const nsRect& aDirtyRect);
-
-  /**
-   * Return the FrameLayerBuilder.
-   */
-  FrameLayerBuilder* LayerBuilder() { return &mLayerBuilder; }
   
   /**
    * Allocate memory in our arena. It will only be freed when this display list
@@ -414,8 +407,7 @@ private:
                  "Someone forgot to enter a presshell");
     return &mPresShellStates[mPresShellStates.Length() - 1];
   }
-
-  FrameLayerBuilder              mLayerBuilder;
+  
   nsIFrame*                      mReferenceFrame;
   nsIFrame*                      mMovingFrame;
   nsRegion*                      mSaveVisibleRegionOfMovingContent;
@@ -586,6 +578,13 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager)
   { return nsnull; }
+  /**
+   * If BuildLayer returned non-null, then this method is called to
+   * paint any ThebesLayers which are descendants of the returned layer.
+   */
+  virtual void PaintThebesLayers(nsDisplayListBuilder* aBuilder)
+  {
+  }
 
   /**
    * On entry, aVisibleRegion contains the region (relative to ReferenceFrame())
@@ -631,10 +630,6 @@ public:
    */
   virtual nsDisplayList* GetList() { return nsnull; }
 
-  /**
-   * Returns the visible rect. Should only be called after ComputeVisibility
-   * has happened.
-   */
   const nsRect& GetVisibleRect() { return mVisibleRect; }
   
 #ifdef NS_DEBUG
@@ -896,6 +891,81 @@ public:
   void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                nsDisplayItem::HitTestState* aState,
                nsTArray<nsIFrame*> *aOutFrames) const;
+
+  /**
+   * This class represents a sublist of consecutive items in an nsDisplayList.
+   * The first item in the sublist is mStartItem and the last item
+   * is the item before mEndItem.
+   * 
+   * These sublists are themselves organized into a linked list of all
+   * the ItemGroups associated with a given layer, via mNextItemsForLayer.
+   * This list will have more than one element if the display items in a layer
+   * come from different nsDisplayLists, or if they come from the same
+   * nsDisplayList but they aren't consecutive in that list.
+   * 
+   * These objects are allocated from the nsDisplayListBuilder arena.
+   */
+  struct ItemGroup {
+    // If null, then the item group is empty.
+    nsDisplayItem* mStartItem;
+    nsDisplayItem* mEndItem;
+    ItemGroup* mNextItemsForLayer;
+    // The clipping (if any) that needs to be applied to all these items.
+    gfxRect mClipRect;
+    PRPackedBool mHasClipRect;
+
+    ItemGroup() : mStartItem(nsnull), mEndItem(nsnull),
+      mNextItemsForLayer(nsnull), mHasClipRect(PR_FALSE) {}
+
+    void* operator new(size_t aSize,
+                       nsDisplayListBuilder* aBuilder) CPP_THROW_NEW {
+      return aBuilder->Allocate(aSize);
+    }
+  };
+  /**
+   * This class represents a layer and the display item(s) it
+   * will render. The items are stored in a linked list of ItemGroups.
+   */
+  struct LayerItems {
+    nsRefPtr<Layer> mLayer;
+    // equal to mLayer, or null if mLayer is not a ThebesLayer
+    ThebesLayer* mThebesLayer;
+    ItemGroup* mItems;
+    // The bounds of the visible region for this layer, in device pixels
+    nsIntRect mVisibleRect;
+
+    LayerItems(ItemGroup* aItems) :
+      mThebesLayer(nsnull), mItems(aItems)
+    {
+    }
+  };
+  /**
+   * Compute a list of layers needed to render this display list. The layers
+   * are added to aLayers, which must be empty on entry. This
+   * must be called while aManager is in the construction phase, because
+   * we construct layers belonging to aManager. The layers used to
+   * construct the layer tree (along with the display items associated
+   * with each layer) are returned in aLayers.
+   */
+  void BuildLayers(nsDisplayListBuilder* aBuilder,
+                   LayerManager* aManager,
+                   nsTArray<LayerItems>* aLayers) const;
+  /**
+   * Return a single layer which renders this display list. This
+   * must be called while aManager is in the construction phase, because
+   * we construct layers belonging to aManager. The layers used to
+   * construct the layer tree (along with the display items associated
+   * with each layer) are returned in aLayers.
+   * The caller is responsible for setting the visible region on the layer.
+   */
+  already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                     LayerManager* aManager,
+                                     nsTArray<LayerItems>* aLayers) const;
+  /**
+   * Paint the ThebesLayers in the list of layers.
+   */
+  void PaintThebesLayers(nsDisplayListBuilder* aBuilder,
+                         const nsTArray<LayerItems>& aLayers) const;
 
 private:
   // This class is only used on stack, so we don't have to worry about leaking
@@ -1478,11 +1548,15 @@ public:
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager);
+  virtual void PaintThebesLayers(nsDisplayListBuilder* aBuilder);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    nsRegion* aVisibleRegionBeforeMove);  
   virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem);
   NS_DISPLAY_DECL_NAME("Opacity")
+
+private:
+  nsTArray<nsDisplayList::LayerItems> mChildLayers;
 };
 
 /**

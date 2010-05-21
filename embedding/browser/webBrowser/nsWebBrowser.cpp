@@ -1666,19 +1666,6 @@ NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
    return NS_OK;
 }
 
-static void DrawThebesLayer(ThebesLayer* aLayer,
-                            gfxContext* aContext,
-                            const nsIntRegion& aRegionToDraw,
-                            void* aCallbackData)
-{
-  nscolor* color = static_cast<nscolor*>(aCallbackData);
-  aContext->NewPath();
-  aContext->SetColor(gfxRGBA(*color));
-  nsIntRect dirtyRect = aRegionToDraw.GetBounds();
-  aContext->Rectangle(gfxRect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
-  aContext->Fill();  
-}
-
 /* static */
 nsEventStatus nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
 {
@@ -1709,7 +1696,19 @@ nsEventStatus nsWebBrowser::HandleEvent(nsGUIEvent *aEvent)
           root->SetVisibleRegion(dirtyRect);
           layerManager->SetRoot(root);
       }
-      layerManager->EndTransaction(DrawThebesLayer, &browser->mBackgroundColor);
+      layerManager->EndConstruction();
+      if (root) {
+          nsIntRegion toDraw;
+          gfxContext* ctx = root->BeginDrawing(&toDraw);
+          if (ctx) {
+              ctx->NewPath();
+              ctx->SetColor(gfxRGBA(browser->mBackgroundColor));
+              ctx->Rectangle(gfxRect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
+              ctx->Fill();
+          }
+      }
+      root->EndDrawing();
+      layerManager->EndTransaction();
       return nsEventStatus_eConsumeDoDefault;
     }
 

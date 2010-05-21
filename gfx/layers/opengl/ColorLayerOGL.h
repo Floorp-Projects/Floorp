@@ -61,9 +61,7 @@ public:
 
   virtual Layer* GetLayer();
 
-  virtual void RenderLayer(int aPreviousDestination,
-                           DrawThebesLayerCallback aCallback,
-                           void* aCallbackData);
+  virtual void RenderLayer(int aPreviousDestination);
 
 protected:
   nsIntRegion mVisibleRegion;
