@@ -110,7 +110,6 @@
 #include "nsIParserService.h"
 
 #include "nsITransferable.h"
-#include "nsComputedDOMStyle.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -3972,15 +3971,11 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
+  
+  nsIFrame *frame = content->GetPrimaryFrame();
 
-  nsRefPtr<nsStyleContext> elementStyle;
-  if (content->IsElement()) {
-    elementStyle = nsComputedDOMStyle::GetStyleContextForElement(content->AsElement(),
-                                                                 nsnull,
-                                                                 ps);
-  }
-
-  if (!elementStyle)
+  NS_ASSERTION(frame, "no frame, see bug #188946");
+  if (!frame)
   {
     // Consider nodes without a style context to be NOT preformatted:
     // For instance, this is true of JS tags inside the body (which show
@@ -3989,7 +3984,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
     return NS_OK;
   }
 
-  const nsStyleText* styleText = elementStyle->GetStyleText();
+  const nsStyleText* styleText = frame->GetStyleText();
 
   *aResult = styleText->WhiteSpaceIsSignificant();
   return NS_OK;
