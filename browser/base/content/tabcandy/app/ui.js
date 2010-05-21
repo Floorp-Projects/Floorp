@@ -27,6 +27,11 @@ Navbar = {
 
   // ----------
   show: function() {
+    // Mac Only Hack
+    Utils.activeWindow.document.getElementById("main-window").removeAttribute("activetitlebarcolor");
+    
+    window.statusbar.visible = true;
+    
     var el = this.el;
     if(el)
       el.collapsed = false; 
@@ -40,6 +45,11 @@ Navbar = {
 
   // ----------
   hide: function() {
+    // Mac Only Hack
+    Utils.activeWindow.document.getElementById("main-window").setAttribute("activetitlebarcolor", "#C4C4C4");   
+     
+    window.statusbar.visible = false;    
+    
     var el = this.el;
     if(el)
       el.collapsed = true; 
@@ -239,7 +249,7 @@ window.Page = {
     var self = this;
     Utils.homeTab.raw.maxWidth = 60;
     Utils.homeTab.raw.minWidth = 60;
-
+        
     // When you click on the background/empty part of TabCandy
     // we create a new group.
     $(Utils.homeTab.contentDocument).mousedown(function(e){
@@ -521,7 +531,7 @@ UIClass.prototype = {
             self.tabBar.hide();
           } else {
             self.focused = false;
-            self.navBar.show();      
+            self.navBar.show();  
           }
         }catch(e){
           Utils.log(e)
@@ -583,7 +593,7 @@ UIClass.prototype = {
   // ----------
   resize: function() {
 /*     Groups.repositionNewTabGroup(); */
-    
+        
     var items = Items.getTopLevelItems();
     var itemBounds = new Rect(this.pageBounds);
     itemBounds.width = 1;
