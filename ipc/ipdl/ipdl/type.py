@@ -89,6 +89,13 @@ class TypeVisitor:
         a.protocol.accept(self, *args)
         a.state.accept(self, *args)
 
+    def visitStructType(self, s, *args):
+        for field in s.fields:
+            field.accept(self, *args)
+
+    def visitFieldType(self, f, *args):
+        f.type.accept(self, *args)
+
     def visitUnionType(self, u, *args):
         for component in u.components:
             component.accept(self, *args)
@@ -195,6 +202,7 @@ class IPDLType(Type):
     def isMessage(self): return False
     def isProtocol(self): return False
     def isActor(self): return False
+    def isStruct(self): return False
     def isUnion(self): return False
     def isArray(self): return False
     def isShmem(self): return False
@@ -332,6 +340,15 @@ class ActorType(IPDLType):
     def fullname(self):
         return self.protocol.fullname()
 
+class StructType(IPDLType):
+    def __init__(self, qname, fields):
+        self.qname = qname
+        self.fields = fields            # [ Type ]
+
+    def isStruct(self): return True
+    def name(self): return self.qname.baseid
+    def fullname(self): return str(self.qname)
+
 class UnionType(IPDLType):
     def __init__(self, qname, components):
         self.qname = qname
@@ -369,6 +386,10 @@ def iteractortypes(type):
     elif type.isArray():
         for actor in iteractortypes(type.basetype):
             yield actor
+    elif type.isStruct():
+        for f in type.fields:
+            for actor in iteractortypes(f):
+                yield actor
     elif type.isUnion():
         for c in type.components:
             for actor in iteractortypes(c):
@@ -592,9 +613,8 @@ class GatherDecls(TcheckVisitor):
         for using in tu.using:
             using.accept(self)
 
-        # declare unions
-        for union in tu.unions:
-            union.accept(self)
+        for su in tu.structsAndUnions:
+            su.accept(self)
 
         # grab symbols in the protocol itself
         p.accept(self)
@@ -612,6 +632,38 @@ class GatherDecls(TcheckVisitor):
             return
         pi.tu.accept(self)
         self.symtab.declare(pi.tu.protocol.decl)
+
+    def visitStructDecl(self, sd):
+        qname = sd.qname()
+        if 0 == len(qname.quals):
+            fullname = None
+        else:
+            fullname = str(qname)
+
+        sd.decl = self.declare(
+            loc=sd.loc,
+            type=StructType(qname, [ ]),
+            shortname=sd.name,
+            fullname=fullname)
+        stype = sd.decl.type
+
+        self.symtab.enterScope(sd)
+
+        for f in sd.fields:
+            ftypedecl = self.symtab.lookup(str(f.type))
+            if ftypedecl is None:
+                self.error(f.loc, "field `%s' of struct `%s' has unknown type `%s'",
+                           f.name, sd.name, str(f.type))
+                continue
+
+            f.decl = self.declare(
+                loc=f.loc,
+                type=self._canonicalType(ftypedecl.type, f.type),
+                shortname=f.name,
+                fullname=None)
+            stype.fields.append(f.decl.type)
+
+        self.symtab.exitScope(sd)
 
     def visitUnionDecl(self, ud):
         qname = ud.qname()
