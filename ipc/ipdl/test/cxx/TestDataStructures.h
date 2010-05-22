@@ -1,13 +1,13 @@
-#ifndef mozilla__ipdltest_TestArrays_h
-#define mozilla__ipdltest_TestArrays_h 1
+#ifndef mozilla__ipdltest_TestDataStructures_h
+#define mozilla__ipdltest_TestDataStructures_h 1
 
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
 
-#include "mozilla/_ipdltest/PTestArraysParent.h"
-#include "mozilla/_ipdltest/PTestArraysChild.h"
+#include "mozilla/_ipdltest/PTestDataStructuresParent.h"
+#include "mozilla/_ipdltest/PTestDataStructuresChild.h"
 
-#include "mozilla/_ipdltest/PTestArraysSubParent.h"
-#include "mozilla/_ipdltest/PTestArraysSubChild.h"
+#include "mozilla/_ipdltest/PTestDataStructuresSubParent.h"
+#include "mozilla/_ipdltest/PTestDataStructuresSubChild.h"
 
 namespace mozilla {
 namespace _ipdltest {
@@ -15,14 +15,14 @@ namespace _ipdltest {
 //-----------------------------------------------------------------------------
 // Subprotocol actors
 
-class TestArraysSub :
-        public PTestArraysSubParent,
-        public PTestArraysSubChild
+class TestDataStructuresSub :
+        public PTestDataStructuresSubParent,
+        public PTestDataStructuresSubChild
 {
 public:
-    TestArraysSub(uint32 i) : mI(i)
+    TestDataStructuresSub(uint32 i) : mI(i)
     { }
-    virtual ~TestArraysSub()
+    virtual ~TestDataStructuresSub()
     { }
     uint32 mI;
 };
@@ -30,26 +30,26 @@ public:
 //-----------------------------------------------------------------------------
 // Main actors
 
-class TestArraysParent :
-    public PTestArraysParent
+class TestDataStructuresParent :
+    public PTestDataStructuresParent
 {
 public:
-    TestArraysParent();
-    virtual ~TestArraysParent();
+    TestDataStructuresParent();
+    virtual ~TestDataStructuresParent();
 
     void Main();
 
 protected:
     NS_OVERRIDE
-    virtual PTestArraysSubParent* AllocPTestArraysSub(const int& i)
+    virtual PTestDataStructuresSubParent* AllocPTestDataStructuresSub(const int& i)
     {
-        PTestArraysSubParent* actor = new TestArraysSub(i);
+        PTestDataStructuresSubParent* actor = new TestDataStructuresSub(i);
         mKids.AppendElement(actor);
         return actor;
     }
 
     NS_OVERRIDE
-    virtual bool DeallocPTestArraysSub(PTestArraysSubParent* actor);
+    virtual bool DeallocPTestDataStructuresSub(PTestDataStructuresSubParent* actor);
 
     NS_OVERRIDE
     virtual bool RecvTest1(
@@ -58,8 +58,8 @@ protected:
 
     NS_OVERRIDE
     virtual bool RecvTest2(
-            const nsTArray<PTestArraysSubParent*>& i1,
-            nsTArray<PTestArraysSubParent*>* o1);
+            const nsTArray<PTestDataStructuresSubParent*>& i1,
+            nsTArray<PTestDataStructuresSubParent*>* o1);
 
     NS_OVERRIDE
     virtual bool RecvTest3(
@@ -118,6 +118,44 @@ protected:
             nsTArray<Unions>* o1);
 
     NS_OVERRIDE
+    virtual bool RecvTest11(
+            const SIntDouble& i,
+            SIntDouble* o);
+
+    NS_OVERRIDE
+    virtual bool RecvTest12(
+            const SIntDoubleArrays& i,
+            SIntDoubleArrays* o);
+
+    NS_OVERRIDE
+    virtual bool RecvTest13(
+            const SActors& i,
+            SActors* o);
+
+    NS_OVERRIDE
+    virtual bool RecvTest14(
+            const Structs& i,
+            Structs* o);
+
+    NS_OVERRIDE
+    virtual bool RecvTest15(
+            const WithStructs& i1,
+            const WithStructs& i2,
+            const WithStructs& i3,
+            const WithStructs& i4,
+            const WithStructs& i5,
+            WithStructs* o1,
+            WithStructs* o2,
+            WithStructs* o3,
+            WithStructs* o4,
+            WithStructs* o5);
+
+    NS_OVERRIDE
+    virtual bool RecvTest16(
+            const WithUnions& i,
+            WithUnions* o);
+
+    NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why)
     {
         if (NormalShutdown != why)
@@ -127,28 +165,28 @@ protected:
     }
 
 private:
-    nsTArray<PTestArraysSubParent*> mKids;
+    nsTArray<PTestDataStructuresSubParent*> mKids;
 };
 
 
-class TestArraysChild :
-    public PTestArraysChild
+class TestDataStructuresChild :
+    public PTestDataStructuresChild
 {
 public:
-    TestArraysChild();
-    virtual ~TestArraysChild();
+    TestDataStructuresChild();
+    virtual ~TestDataStructuresChild();
 
 protected:
     NS_OVERRIDE
-    virtual PTestArraysSubChild* AllocPTestArraysSub(const int& i)
+    virtual PTestDataStructuresSubChild* AllocPTestDataStructuresSub(const int& i)
     {
-        PTestArraysSubChild* actor = new TestArraysSub(i);
+        PTestDataStructuresSubChild* actor = new TestDataStructuresSub(i);
         mKids.AppendElement(actor);
         return actor;
     }
 
     NS_OVERRIDE
-    virtual bool DeallocPTestArraysSub(PTestArraysSubChild* actor)
+    virtual bool DeallocPTestDataStructuresSub(PTestDataStructuresSubChild* actor)
     {
         delete actor;
         return true;
@@ -176,8 +214,14 @@ private:
     void Test8();
     void Test9();
     void Test10();
+    void Test11();
+    void Test12();
+    void Test13();
+    void Test14();
+    void Test15();
+    void Test16();
 
-    nsTArray<PTestArraysSubChild*> mKids;
+    nsTArray<PTestDataStructuresSubChild*> mKids;
 };
 
 
@@ -185,4 +229,4 @@ private:
 } // namespace mozilla
 
 
-#endif // ifndef mozilla__ipdltest_TestArrays_h
+#endif // ifndef mozilla__ipdltest_TestDataStructures_h

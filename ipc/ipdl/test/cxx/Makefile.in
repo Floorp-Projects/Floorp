@@ -58,9 +58,9 @@ FORCE_STATIC_LIB = 1
 EXPORT_LIBRARY = 1
 
 IPDLTESTS = \
-  TestArrays \
   TestBlockChild \
   TestCrashCleanup \
+  TestDataStructures \
   TestDesc \
   TestHangs \
   TestLatency \
