@@ -936,6 +936,14 @@ uint8 js_opcode2extra[JSOP_LIMIT] = {
     0,  /* JSOP_UNBRANDTHIS */
     0,  /* JSOP_SHARPINIT */
     3,  /* JSOP_OBJTOSTR */
+    0,  /* JSOP_GETGLOBAL */
+    0,  /* JSOP_SETGLOBAL */
+    0,  /* JSOP_INCGLOBAL */
+    0,  /* JSOP_DECGLOBAL */
+    0,  /* JSOP_GLOBALINC */
+    0,  /* JSOP_GLOBALDEC */
+    0,  /* JSOP_CALLGLOBAL */
+    0,  /* JSOP_FORGLOBAL */
 };
 #define JSOP_IS_IMACOP(x) (0 \
  || x == JSOP_BITOR \

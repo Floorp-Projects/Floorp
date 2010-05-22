@@ -75,7 +75,7 @@ static const jsbytecode emptyScriptCode[] = {JSOP_STOP, SRC_NULL};
 
 /* static */ const JSScript JSScript::emptyScriptConst = {
     const_cast<jsbytecode*>(emptyScriptCode),
-    1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, true, false, false, false,
+    1, JSVERSION_DEFAULT, 0, 0, 0, 0, 0, 0, true, false, false, false,
     const_cast<jsbytecode*>(emptyScriptCode),
     {0, NULL}, NULL, 0, 0, 0, NULL
 };
@@ -104,6 +104,9 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
     nsrcnotes = ntrynotes = natoms = nobjects = nupvars = nregexps = 0;
     filenameWasSaved = JS_FALSE;
     notes = NULL;
+
+    /* Should not XDR scripts optimized for a single global object. */
+    JS_ASSERT_IF(script, !script->globalsOffset);
 
     if (xdr->mode == JSXDR_ENCODE)
         magic = JSXDR_MAGIC_SCRIPT_CURRENT;
@@ -146,7 +149,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
              * the shorthand (0 length word) for us. Make a new mutable empty
              * script here and return it immediately.
              */
-            script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0);
+            script = js_NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0);
             if (!script)
                 return JS_FALSE;
 
@@ -214,7 +217,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, bool needMutableScript,
 
     if (xdr->mode == JSXDR_DECODE) {
         script = js_NewScript(cx, length, nsrcnotes, natoms, nobjects, nupvars,
-                              nregexps, ntrynotes);
+                              nregexps, ntrynotes, 0);
         if (!script)
             return JS_FALSE;
 
@@ -806,7 +809,7 @@ JS_STATIC_ASSERT(sizeof(JSScript) + 2 * sizeof(JSObjectArray) +
 JSScript *
 js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
              uint32 nobjects, uint32 nupvars, uint32 nregexps,
-             uint32 ntrynotes)
+             uint32 ntrynotes, uint32 nglobals)
 {
     size_t size, vectorSize;
     JSScript *script;
@@ -824,6 +827,8 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
         size += sizeof(JSObjectArray) + nregexps * sizeof(JSObject *);
     if (ntrynotes != 0)
         size += sizeof(JSTryNoteArray) + ntrynotes * sizeof(JSTryNote);
+    if (nglobals != 0)
+        size += sizeof(GlobalSlotArray) + nglobals * sizeof(GlobalSlotArray::Entry);
 
     script = (JSScript *) cx->malloc(size);
     if (!script)
@@ -848,6 +853,11 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
     if (ntrynotes != 0) {
         script->trynotesOffset = (uint8)(cursor - (uint8 *)script);
         cursor += sizeof(JSTryNoteArray);
+    }
+    if (nglobals != 0) {
+        JS_ASSERT((cursor - (uint8*)script) <= 0xFF);
+        script->globalsOffset = (uint8)(cursor - (uint8 *)script);
+        cursor += sizeof(GlobalSlotArray);
     }
 
     if (natoms != 0) {
@@ -886,6 +896,13 @@ js_NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
 #ifdef DEBUG
         memset(cursor, 0, vectorSize);
 #endif
+        cursor += vectorSize;
+    }
+
+    if (nglobals != 0) {
+        script->globals()->length = nglobals;
+        script->globals()->vector = (GlobalSlotArray::Entry *)cursor;
+        vectorSize = nglobals * sizeof(script->globals()->vector[0]);
         cursor += vectorSize;
     }
 
@@ -988,7 +1005,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     script = js_NewScript(cx, prologLength + mainLength, nsrcnotes,
                           cg->atomList.count, cg->objectList.length,
                           cg->upvarList.count, cg->regexpList.length,
-                          cg->ntrynotes);
+                          cg->ntrynotes, cg->globalUses.length());
     if (!script)
         return NULL;
 
@@ -1042,6 +1059,11 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         cg->upvarList.clear();
         cx->free(cg->upvarMap.vector);
         cg->upvarMap.vector = NULL;
+    }
+
+    if (cg->globalUses.length()) {
+        memcpy(script->globals()->vector, &cg->globalUses[0],
+               cg->globalUses.length() * sizeof(GlobalSlotArray::Entry));
     }
 
     /*
