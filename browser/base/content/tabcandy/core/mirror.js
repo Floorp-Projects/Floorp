@@ -378,6 +378,13 @@ window.TabMirror = {
   // three times before the TabMirror will start updating thumbnails again. 
   resumePainting: function() {
     this._private.paintingPaused--;
+  },
+
+  // Function: isPaintingPaused
+  // Returns a boolean indicating whether painting
+  // is paused or not.   
+  isPaintingPaused: function() {
+    return this._private.paintingPause > 0;
   }
 };
 

@@ -26,12 +26,7 @@ Navbar = {
   },
 
   // ----------
-  show: function() {
-    // Mac Only Hack
-    Utils.activeWindow.document.getElementById("main-window").removeAttribute("activetitlebarcolor");
-    
-    window.statusbar.visible = true;
-    
+  show: function() {    
     var el = this.el;
     if(el)
       el.collapsed = false; 
@@ -44,12 +39,7 @@ Navbar = {
   },
 
   // ----------
-  hide: function() {
-    // Mac Only Hack
-    Utils.activeWindow.document.getElementById("main-window").setAttribute("activetitlebarcolor", "#C4C4C4");   
-     
-    window.statusbar.visible = false;    
-    
+  hide: function() {    
     var el = this.el;
     if(el)
       el.collapsed = true; 
@@ -84,29 +74,14 @@ var Tabbar = {
   },
 
   // ----------
-  hide: function(animate) {
+  hide: function() {
     var self = this;
-    this._hidden = true;
-    
-    if( animate == false ) speed = 0;
-    else speed = 150;
-    
-    $(self.el).animate({"marginTop":-self.height}, speed, function(){
-      self.el.collapsed = true;
-    });
+    self.el.collapsed = true;    
   },
 
   // ----------
-  show: function(animate) {
-    this._hidden = false;
+  show: function() {
     this.el.collapsed = false;
-    
-    if(animate == false) {
-      $(this.el).css({"marginTop":0});
-    } else {
-      var speed = 150;
-      $(this.el).animate({"marginTop":0}, speed);
-    }
   },
   
   // ----------
@@ -175,7 +150,7 @@ var Tabbar = {
   },
 
   // ----------
-  get isHidden(){ return this._hidden; }
+  get isHidden(){ return this.el.collapsed; }
 }
 
 // ##########
@@ -187,7 +162,29 @@ window.Page = {
   
   show: function(){
     Utils.homeTab.focus();
-    UI.tabBar.hide(false);
+    this.hideChrome();
+  },
+  
+  isTabCandyFocused: function(){
+    return Utils.homeTab.contentDocument == UI.currentTab.contentDocument;    
+  },
+  
+  hideChrome: function(){
+    Tabbar.hide();
+    Navbar.hide();
+    window.statusbar.visible = false;  
+        
+    // Mac Only
+    Utils.activeWindow.document.getElementById("main-window").setAttribute("activetitlebarcolor", "#C4C4C4");
+  },
+  
+  showChrome: function(){
+    Tabbar.show();  
+    Navbar.show();    
+    window.statusbar.visible = true;
+    
+    // Mac Only
+    Utils.activeWindow.document.getElementById("main-window").removeAttribute("activetitlebarcolor");     
   },
   
   setupKeyHandlers: function(){
@@ -282,12 +279,14 @@ window.Page = {
       var focusTab = this;
 
       // If we switched to TabCandy window...
-      if( focusTab.contentWindow == window){
+      if( focusTab.contentWindow == window ){
         var currentTab = UI.currentTab;
         if(currentTab != null && currentTab.mirror != null) {
           // If there was a previous currentTab we want to animate
           // its mirror for the zoom out.
           // Zoom out!
+          UI.resize(true);
+          
           
           var mirror = currentTab.mirror;
           var $tab = $(mirror.el);
@@ -320,11 +319,9 @@ window.Page = {
             var activeGroup = Groups.getActiveGroup();
             if( activeGroup ) activeGroup.reorderBasedOnTabOrder(item);        
     
-            if(window.UI)
-              UI.tabBar.hide(false);
             
             window.Groups.setActiveGroup(null);
-            TabMirror.resumePainting();
+            TabMirror.resumePainting();            
           });
         }
       } else { // switched to another tab
@@ -519,8 +516,7 @@ UIClass.prototype = {
       
       // ___ Navbar
       if(this.focused) {
-        this.tabBar.hide();
-        this.navBar.hide();
+        Page.hideChrome();
       }
       
       Tabs.onFocus(function() {
@@ -529,11 +525,10 @@ UIClass.prototype = {
           try{
             if(me.contentWindow.location.host == "tabcandy") {
               self.focused = true;
-              self.navBar.hide();
-              self.tabBar.hide();
+              Page.hideChrome();
             } else {
               self.focused = false;
-              self.navBar.show();  
+              Page.showChrome();
             }
           }catch(e){
             Utils.log(e)
@@ -579,8 +574,7 @@ UIClass.prototype = {
         if(self.initialized) 
           self.save();
           
-        self.navBar.show();
-        self.tabBar.show(false);    
+        self.showChrome();  
         self.tabBar.showAllTabs();
       });
       
@@ -610,8 +604,15 @@ UIClass.prototype = {
   }, 
   
   // ----------
-  resize: function() {
+  resize: function(force) {
 /*     Groups.repositionNewTabGroup(); */
+    if( typeof(force) == "undefined" ) force = false;
+
+    // If we are currently doing an animation or if TabCandy isn't focused
+    // don't perform a resize. This resize really slows things down.
+    var isAnimating = $(":animated").length > 0;
+    if( force == false){
+      if( isAnimating || !Page.isTabCandyFocused() ) return;   }   
         
     var items = Items.getTopLevelItems();
     var itemBounds = new Rect(this.pageBounds);
