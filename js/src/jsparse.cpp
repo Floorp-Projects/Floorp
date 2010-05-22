@@ -2116,11 +2116,10 @@ FlagHeavyweights(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
         tcflags |= TCF_FUN_HEAVYWEIGHT;
 }
 
-static void
-DeoptimizeUsesWithin(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
+static bool
+DeoptimizeUsesWithin(JSDefinition *dn, const TokenPos &pos)
 {
     uintN ndeoptimized = 0;
-    const TokenPos &pos = funbox->node->pn_body->pn_pos;
 
     for (JSParseNode *pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
         JS_ASSERT(pnu->pn_used);
@@ -2131,8 +2130,7 @@ DeoptimizeUsesWithin(JSDefinition *dn, JSFunctionBox *funbox, uint32& tcflags)
         }
     }
 
-    if (ndeoptimized != 0)
-        FlagHeavyweights(dn, funbox, tcflags);
+    return ndeoptimized != 0;
 }
 
 void
@@ -2294,7 +2292,8 @@ Parser::setFunctionKinds(JSFunctionBox *funbox, uint32& tcflags)
                             ++nflattened;
                             continue;
                         }
-                        DeoptimizeUsesWithin(lexdep, funbox, tcflags);
+                        if (DeoptimizeUsesWithin(lexdep, funbox->node->pn_body->pn_pos))
+                            FlagHeavyweights(lexdep, funbox, tcflags);
                     }
                 }
 
@@ -2468,6 +2467,17 @@ LeaveFunction(JSParseNode *fn, JSTreeContext *funtc, JSAtom *funAtom = NULL,
             }
 
             JSAtomListElement *outer_ale = tc->decls.lookup(atom);
+
+            /*
+             * Make sure to deoptimize lexical dependencies that are polluted
+             * by eval or with, to safely statically bind globals (see bug 561923).
+             */
+            if ((funtc->flags & TCF_FUN_USES_EVAL) ||
+                (outer_ale && tc->innermostWith &&
+                 ALE_DEFN(outer_ale)->pn_pos < tc->innermostWith->pn_pos)) {
+                DeoptimizeUsesWithin(dn, fn->pn_pos);
+            }
+
             if (!outer_ale)
                 outer_ale = tc->lexdeps.lookup(atom);
             if (outer_ale) {
@@ -5324,6 +5334,7 @@ Parser::statement()
         break;
 
       case TOK_WITH:
+      {
         /*
          * In most cases, we want the constructs forbidden in strict mode
          * code to be a subset of those that JSOPTION_STRICT warns about, and
@@ -5348,6 +5359,9 @@ Parser::statement()
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_WITH);
         pn->pn_left = pn2;
 
+        JSParseNode *oldWith = tc->innermostWith;
+        tc->innermostWith = pn;
+
         js_PushStatement(tc, &stmtInfo, STMT_WITH, -1);
         pn2 = statement();
         if (!pn2)
@@ -5357,7 +5371,20 @@ Parser::statement()
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_right = pn2;
         tc->flags |= TCF_FUN_HEAVYWEIGHT;
+        tc->innermostWith = oldWith;
+
+        /*
+         * Make sure to deoptimize lexical dependencies inside the |with|
+         * to safely optimize binding globals (see bug 561923).
+         */
+        JSAtomListIterator iter(&tc->lexdeps);
+        while (JSAtomListElement *ale = iter()) {
+            JSDefinition *lexdep = ALE_DEFN(ale)->resolve();
+            DeoptimizeUsesWithin(lexdep, pn->pn_pos);
+        }
+
         return pn;
+      }
 
       case TOK_VAR:
         pn = variables(false);
@@ -7089,7 +7116,7 @@ Parser::memberExpr(JSBool allowCallSyntax)
                 if (pn->pn_atom == context->runtime->atomState.evalAtom) {
                     /* Select JSOP_EVAL and flag tc as heavyweight. */
                     pn2->pn_op = JSOP_EVAL;
-                    tc->flags |= TCF_FUN_HEAVYWEIGHT;
+                    tc->flags |= TCF_FUN_HEAVYWEIGHT | TCF_FUN_USES_EVAL;
                 }
             } else if (pn->pn_op == JSOP_GETPROP) {
                 if (pn->pn_atom == context->runtime->atomState.applyAtom ||
