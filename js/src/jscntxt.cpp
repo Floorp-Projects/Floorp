@@ -2406,30 +2406,37 @@ JSContext::checkMallocGCPressure(void *p)
     }
 
 #ifdef JS_THREADSAFE
+    JS_ASSERT(thread);
     JS_ASSERT(thread->gcThreadMallocBytes <= 0);
     ptrdiff_t n = JS_GC_THREAD_MALLOC_LIMIT - thread->gcThreadMallocBytes;
     thread->gcThreadMallocBytes = JS_GC_THREAD_MALLOC_LIMIT;
 
     AutoLockGC lock(runtime);
     runtime->gcMallocBytes -= n;
-    if (runtime->isGCMallocLimitReached())
+
+    /*
+     * Trigger the GC on memory pressure but only if we are inside a request
+     * and not inside a GC.
+     */
+    if (runtime->isGCMallocLimitReached() && requestDepth != 0)
 #endif
     {
-        JS_ASSERT(runtime->isGCMallocLimitReached());
-        runtime->gcMallocBytes = -1;
+        if (!runtime->gcRunning) {
+            JS_ASSERT(runtime->isGCMallocLimitReached());
+            runtime->gcMallocBytes = -1;
 
-        /*
-         * Empty the GC free lists to trigger a last-ditch GC when allocating
-         * any GC thing later on this thread. This minimizes the amount of
-         * checks on the fast path of the GC allocator. Note that we cannot
-         * touch the free lists on other threads as their manipulation is not
-         * thread-safe.
-         */
-        JS_THREAD_DATA(this)->purgeGCFreeLists();
-        js_TriggerGC(this, true);
+            /*
+             * Empty the GC free lists to trigger a last-ditch GC when any GC
+             * thing is allocated later on this thread. This makes unnecessary
+             * to check for the memory pressure on the fast path of the GC
+             * allocator. We cannot touch the free lists on other threads as
+             * their manipulation is not thread-safe.
+             */
+            JS_THREAD_DATA(this)->purgeGCFreeLists();
+            js_TriggerGC(this, true);
+        }
     }
 }
-
 
 bool
 JSContext::isConstructing()
