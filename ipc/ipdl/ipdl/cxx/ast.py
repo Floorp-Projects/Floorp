@@ -459,7 +459,8 @@ class FriendClassDecl(Node):
 
 class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
-                 virtual=0, const=0, pure=0, static=0, warn_unused=0, inline=0,
+                 virtual=0, const=0, pure=0, static=0, warn_unused=0,
+                 inline=0, force_inline=0,
                  typeop=None,
                  T=None):
         assert not (virtual and static)
@@ -468,6 +469,8 @@ class MethodDecl(Node):
         assert not (name and typeop)
         assert name is None or isinstance(name, str)
         assert not isinstance(ret, list)
+        for decl in params:  assert not isinstance(decl, str)
+        assert not isinstance(T, int)
 
         if typeop is not None:
             ret = None
@@ -481,19 +484,25 @@ class MethodDecl(Node):
         self.pure = pure                # bool
         self.static = static            # bool
         self.warn_unused = warn_unused  # bool
-        self.inline = (inline or T)     # bool
+        self.force_inline = (force_inline or T) # bool
+        self.inline = inline            # bool
         self.typeop = typeop            # Type or None
         self.T = T                      # Type or None
 
     def __deepcopy__(self, memo):
         return MethodDecl(
             self.name,
-            copy.deepcopy(self.params, memo),
-            copy.deepcopy(self.ret, memo),
-            self.virtual, self.const, self.pure, self.static, self.warn_unused,
-            copy.deepcopy(self.typeop, memo),
-            copy.deepcopy(self.T, memo),
-            self.inline)
+            params=copy.deepcopy(self.params, memo),
+            ret=copy.deepcopy(self.ret, memo),
+            virtual=self.virtual,
+            const=self.const,
+            pure=self.pure,
+            static=self.static,
+            warn_unused=self.warn_unused,
+            inline=self.inline,
+            force_inline=self.force_inline,
+            typeop=copy.deepcopy(self.typeop, memo),
+            T=copy.deepcopy(self.T, memo))
 
 class MethodDefn(Block):
     def __init__(self, decl):
@@ -501,8 +510,9 @@ class MethodDefn(Block):
         self.decl = decl
 
 class ConstructorDecl(MethodDecl):
-    def __init__(self, name, params=[ ], explicit=0):
-        MethodDecl.__init__(self, name, params=params, ret=None)
+    def __init__(self, name, params=[ ], explicit=0, force_inline=0):
+        MethodDecl.__init__(self, name, params=params, ret=None,
+                            force_inline=force_inline)
         self.explicit = explicit
 
     def __deepcopy__(self, memo):
@@ -516,12 +526,16 @@ class ConstructorDefn(MethodDefn):
         self.memberinits = memberinits
 
 class DestructorDecl(MethodDecl):
-    def __init__(self, name, virtual=0):
+    def __init__(self, name, virtual=0, force_inline=0, inline=0):
         MethodDecl.__init__(self, name, params=[ ], ret=None,
-                            virtual=virtual)
+                            virtual=virtual,
+                            force_inline=force_inline, inline=inline)
 
     def __deepcopy__(self, memo):
-        return DestructorDecl(self.name, self.virtual)
+        return DestructorDecl(self.name,
+                              virtual=self.virtual,
+                              force_inline=self.force_inline,
+                              inline=self.inline)
 
         
 class DestructorDefn(MethodDefn):
@@ -752,6 +766,8 @@ class StmtBreak(Node):
 
 class StmtExpr(Node):
     def __init__(self, expr):
+        assert expr is not None
+        
         Node.__init__(self)
         self.expr = expr
 
