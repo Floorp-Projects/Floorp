@@ -1,0 +1,7 @@
+struct X { Y y; };
+union Y { Z; };
+struct Z { X x; };
+
+protocol undefMutualRecStructUnion {
+child: __delete__(X x);
+};

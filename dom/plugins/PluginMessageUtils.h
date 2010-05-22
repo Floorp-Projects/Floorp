@@ -58,12 +58,6 @@
 #endif
 
 namespace mozilla {
-
-// XXX might want to move these to nscore.h or something, they can be
-// generally useful
-struct void_t { };
-struct null_t { };
-
 namespace plugins {
 
 enum ScriptableObjectType
@@ -650,32 +644,6 @@ struct ParamTraits<NPVariant>
     }
 
     NS_ERROR("Unsupported type!");
-  }
-};
-
-template<>
-struct ParamTraits<mozilla::void_t>
-{
-  typedef mozilla::void_t paramType;
-  static void Write(Message* aMsg, const paramType& aParam) { }
-  static bool
-  Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    *aResult = paramType();
-    return true;
-  }
-};
-
-template<>
-struct ParamTraits<mozilla::null_t>
-{
-  typedef mozilla::null_t paramType;
-  static void Write(Message* aMsg, const paramType& aParam) { }
-  static bool
-  Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    *aResult = paramType();
-    return true;
   }
 };
 
