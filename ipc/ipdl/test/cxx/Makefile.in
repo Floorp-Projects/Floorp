@@ -63,6 +63,7 @@ IPDLTESTS = \
   TestDataStructures \
   TestDesc \
   TestHangs \
+  TestJSON \
   TestLatency \
   TestManyChildAllocs  \
   TestMultiMgrs  \

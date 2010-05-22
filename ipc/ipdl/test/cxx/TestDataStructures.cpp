@@ -283,8 +283,8 @@ bool TestDataStructuresParent::RecvTest11(
             const SIntDouble& i,
             SIntDouble* o)
 {
-    test_assert(1 == i.i, "wrong value");
-    test_assert(2.0 == i.d, "wrong value");
+    test_assert(1 == i.i(), "wrong value");
+    test_assert(2.0 == i.d(), "wrong value");
     *o = i;
     return true;
 }
@@ -303,9 +303,9 @@ bool TestDataStructuresParent::RecvTest12(
     ad.AppendElement(1.0);
     ad.AppendElement(2.0);
 
-    test_assert(42 == i.i, "wrong value");
-    assert_arrays_equal(ai, i.ai);
-    assert_arrays_equal(ad, i.ad);
+    test_assert(42 == i.i(), "wrong value");
+    assert_arrays_equal(ai, i.ai());
+    assert_arrays_equal(ad, i.ad());
 
     *o = i;
 
@@ -319,9 +319,9 @@ bool TestDataStructuresParent::RecvTest13(
     nsTArray<int> ai;
     ai.AppendElement(1);  ai.AppendElement(2);  ai.AppendElement(3);
 
-    test_assert(42 == i.i, "wrong value");
-    assert_arrays_equal(ai, i.ai);
-    assert_arrays_equal(mKids, i.apParent);
+    test_assert(42 == i.i(), "wrong value");
+    assert_arrays_equal(ai, i.ai());
+    assert_arrays_equal(mKids, i.apParent());
 
     *o = i;
 
@@ -335,14 +335,14 @@ bool TestDataStructuresParent::RecvTest14(
     nsTArray<int> ai;
     ai.AppendElement(1);  ai.AppendElement(2);  ai.AppendElement(3);
 
-    test_assert(42 == i.i, "wrong value");
-    assert_arrays_equal(ai, i.ai);
-    assert_arrays_equal(mKids, i.apParent);
+    test_assert(42 == i.i(), "wrong value");
+    assert_arrays_equal(ai, i.ai());
+    assert_arrays_equal(mKids, i.apParent());
 
-    const SActors& ia = i.aa[0];
-    test_assert(42 == ia.i, "wrong value");
-    assert_arrays_equal(ai, ia.ai);
-    assert_arrays_equal(mKids, ia.apParent);
+    const SActors& ia = i.aa()[0];
+    test_assert(42 == ia.i(), "wrong value");
+    assert_arrays_equal(ai, ia.ai());
+    assert_arrays_equal(mKids, ia.apParent());
 
     *o = i;
 
@@ -369,19 +369,19 @@ bool TestDataStructuresParent::RecvTest15(
     assert_arrays_equal(i3.get_ArrayOfPTestDataStructuresSubParent(), mKids);
 
     const SActors& ia = i4.get_ArrayOfSActors()[0];
-    test_assert(42 == ia.i, "wrong value");
-    assert_arrays_equal(ai, ia.ai);
-    assert_arrays_equal(mKids, ia.apParent);
+    test_assert(42 == ia.i(), "wrong value");
+    assert_arrays_equal(ai, ia.ai());
+    assert_arrays_equal(mKids, ia.apParent());
 
     const Structs& is = i5.get_ArrayOfStructs()[0];
-    test_assert(42 == is.i, "wrong value");
-    assert_arrays_equal(ai, is.ai);
-    assert_arrays_equal(mKids, is.apParent);   
+    test_assert(42 == is.i(), "wrong value");
+    assert_arrays_equal(ai, is.ai());
+    assert_arrays_equal(mKids, is.apParent());   
 
-    const SActors& isa = is.aa[0];
-    test_assert(42 == isa.i, "wrong value");
-    assert_arrays_equal(ai, isa.ai);
-    assert_arrays_equal(mKids, isa.apParent);   
+    const SActors& isa = is.aa()[0];
+    test_assert(42 == isa.i(), "wrong value");
+    assert_arrays_equal(ai, isa.ai());
+    assert_arrays_equal(mKids, isa.apParent());
 
     *o1 = i1;
     *o2 = i2;
@@ -396,17 +396,17 @@ bool TestDataStructuresParent::RecvTest16(
             const WithUnions& i,
             WithUnions* o)
 {
-    test_assert(i.i == 42, "wrong value");
+    test_assert(i.i() == 42, "wrong value");
 
     nsTArray<int> ai;
     ai.AppendElement(1);  ai.AppendElement(2);  ai.AppendElement(3);
-    assert_arrays_equal(ai, i.ai);
+    assert_arrays_equal(ai, i.ai());
 
-    assert_arrays_equal(i.apParent, mKids);
+    assert_arrays_equal(i.apParent(), mKids);
 
-    assert_arrays_equal(mKids, i.aa[0].get_ArrayOfPTestDataStructuresSubParent());
+    assert_arrays_equal(mKids, i.aa()[0].get_ArrayOfPTestDataStructuresSubParent());
 
-    const nsTArray<Unions>& iau = i.au;
+    const nsTArray<Unions>& iau = i.au();
     test_assert(iau[0] == 42, "wrong value");
     assert_arrays_equal(ai, iau[1].get_ArrayOfint());
     assert_arrays_equal(mKids, iau[2].get_ArrayOfPTestDataStructuresSubParent());
@@ -695,7 +695,7 @@ TestDataStructuresChild::Test11()
     if (!SendTest11(i, &o))
         fail("sending Test11");
 
-    test_assert(i.i == o.i && i.d == o.d, "wrong values");
+    test_assert(1 == o.i() && 2.0 == o.d(), "wrong values");
 
     printf("  passed %s\n", __FUNCTION__);
 }
@@ -715,9 +715,9 @@ TestDataStructuresChild::Test12()
     if (!SendTest12(i, &o))
         fail("sending Test12");
 
-    test_assert(i.i == o.i, "wrong value");
-    assert_arrays_equal(ai, o.ai);
-    assert_arrays_equal(ad, o.ad);
+    test_assert(42 == o.i(), "wrong value");
+    assert_arrays_equal(ai, o.ai());
+    assert_arrays_equal(ad, o.ad());
 
     printf("  passed %s\n", __FUNCTION__);
 }
@@ -729,17 +729,17 @@ TestDataStructuresChild::Test13()
     ai.AppendElement(1);  ai.AppendElement(2);  ai.AppendElement(3);
 
     SActors i;
-    i.i = 42;
-    i.ai = ai;
-    i.apChild = mKids;
+    i.i() = 42;
+    i.ai() = ai;
+    i.apChild() = mKids;
 
     SActors o;
     if (!SendTest13(i, &o))
         fail("can't send Test13");
 
-    test_assert(42 == o.i, "wrong value");
-    assert_arrays_equal(ai, o.ai);
-    assert_arrays_equal(mKids, o.apChild);
+    test_assert(42 == o.i(), "wrong value");
+    assert_arrays_equal(ai, o.ai());
+    assert_arrays_equal(mKids, o.apChild());
 
     printf("  passed %s\n", __FUNCTION__);
 }
@@ -751,29 +751,29 @@ TestDataStructuresChild::Test14()
     ai.AppendElement(1);  ai.AppendElement(2);  ai.AppendElement(3);
 
     SActors ia;
-    ia.i = 42;
-    ia.ai = ai;
-    ia.apChild = mKids;
+    ia.i() = 42;
+    ia.ai() = ai;
+    ia.apChild() = mKids;
     nsTArray<SActors> aa;  aa.AppendElement(ia);
 
     Structs i;
-    i.i = 42;
-    i.ai = ai;
-    i.apChild = mKids;
-    i.aa = aa;
+    i.i() = 42;
+    i.ai() = ai;
+    i.apChild() = mKids;
+    i.aa() = aa;
 
     Structs o;
     if (!SendTest14(i, &o))
         fail("can't send Test14");
 
-    test_assert(42 == o.i, "wrong value");
-    assert_arrays_equal(ai, o.ai);
-    assert_arrays_equal(mKids, o.apChild);
+    test_assert(42 == o.i(), "wrong value");
+    assert_arrays_equal(ai, o.ai());
+    assert_arrays_equal(mKids, o.apChild());
 
-    const SActors& os = o.aa[0];
-    test_assert(42 == os.i, "wrong value");
-    assert_arrays_equal(ai, os.ai);
-    assert_arrays_equal(mKids, os.apChild);
+    const SActors& os = o.aa()[0];
+    test_assert(42 == os.i(), "wrong value");
+    assert_arrays_equal(ai, os.ai());
+    assert_arrays_equal(mKids, os.apChild());
 
     printf("  passed %s\n", __FUNCTION__);
 }
@@ -785,16 +785,16 @@ TestDataStructuresChild::Test15()
     ai.AppendElement(1);  ai.AppendElement(2);  ai.AppendElement(3);
 
     SActors ia;
-    ia.i = 42;
-    ia.ai = ai;
-    ia.apChild = mKids;
+    ia.i() = 42;
+    ia.ai() = ai;
+    ia.apChild() = mKids;
     nsTArray<SActors> iaa;  iaa.AppendElement(ia);
 
     Structs is;
-    is.i = 42;
-    is.ai = ai;
-    is.apChild = mKids;
-    is.aa = iaa;
+    is.i() = 42;
+    is.ai() = ai;
+    is.apChild() = mKids;
+    is.aa() = iaa;
     nsTArray<Structs> isa;  isa.AppendElement(is);
 
     WithStructs o1, o2, o3, o4, o5;
@@ -811,19 +811,19 @@ TestDataStructuresChild::Test15()
     assert_arrays_equal(o3.get_ArrayOfPTestDataStructuresSubChild(), mKids);
 
     const SActors& oa = o4.get_ArrayOfSActors()[0];
-    test_assert(42 == oa.i, "wrong value");
-    assert_arrays_equal(ai, oa.ai);
-    assert_arrays_equal(mKids, oa.apChild);
+    test_assert(42 == oa.i(), "wrong value");
+    assert_arrays_equal(ai, oa.ai());
+    assert_arrays_equal(mKids, oa.apChild());
 
     const Structs& os = o5.get_ArrayOfStructs()[0];
-    test_assert(42 == os.i, "wrong value");
-    assert_arrays_equal(ai, os.ai);
-    assert_arrays_equal(mKids, os.apChild);   
+    test_assert(42 == os.i(), "wrong value");
+    assert_arrays_equal(ai, os.ai());
+    assert_arrays_equal(mKids, os.apChild());   
 
-    const SActors& osa = os.aa[0];
-    test_assert(42 == osa.i, "wrong value");
-    assert_arrays_equal(ai, osa.ai);
-    assert_arrays_equal(mKids, osa.apChild);
+    const SActors& osa = os.aa()[0];
+    test_assert(42 == osa.i(), "wrong value");
+    assert_arrays_equal(ai, osa.ai());
+    assert_arrays_equal(mKids, osa.apChild());
 
     printf("  passed %s\n", __FUNCTION__);
 }
@@ -833,37 +833,37 @@ TestDataStructuresChild::Test16()
 {
     WithUnions i;
 
-    i.i = 42;
+    i.i() = 42;
 
     nsTArray<int> ai;
     ai.AppendElement(1);  ai.AppendElement(2);  ai.AppendElement(3);
-    i.ai = ai;
+    i.ai() = ai;
 
-    i.apChild = mKids;
+    i.apChild() = mKids;
 
     nsTArray<Actors> iaa;
     iaa.AppendElement(mKids);
-    i.aa = iaa;
+    i.aa() = iaa;
 
     nsTArray<Unions> iau;
     iau.AppendElement(int(42));
     iau.AppendElement(ai);
     iau.AppendElement(mKids);
     iau.AppendElement(iaa);
-    i.au = iau;
+    i.au() = iau;
 
     WithUnions o;
     if (!SendTest16(i, &o))
         fail("sending Test16");
 
-    test_assert(42 == o.i, "wrong value");
-    assert_arrays_equal(o.ai, ai);
-    assert_arrays_equal(o.apChild, mKids);
+    test_assert(42 == o.i(), "wrong value");
+    assert_arrays_equal(o.ai(), ai);
+    assert_arrays_equal(o.apChild(), mKids);
 
-    const Actors& oaa = o.aa[0];
+    const Actors& oaa = o.aa()[0];
     assert_arrays_equal(oaa.get_ArrayOfPTestDataStructuresSubChild(), mKids);
 
-    const nsTArray<Unions>& oau = o.au;
+    const nsTArray<Unions>& oau = o.au();
     test_assert(oau[0] == 42, "wrong value");
     assert_arrays_equal(oau[1].get_ArrayOfint(), ai);
     assert_arrays_equal(oau[2].get_ArrayOfPTestDataStructuresSubChild(),
