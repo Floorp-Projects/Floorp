@@ -1,0 +1,20 @@
+union X {
+    int;
+    Y[];
+};
+
+union Y {
+    X;
+    Z;
+};
+
+union Z {
+    double;
+    X;
+};
+
+protocol mutualRecUnion {
+child:
+    Test(X x, Y y, Z z);
+    __delete__();
+};
