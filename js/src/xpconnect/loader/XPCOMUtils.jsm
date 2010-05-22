@@ -252,10 +252,15 @@ var XPCOMUtils = {
   },
 
   get _appID() {
-    delete this._appID;
-    let appInfo = Cc["@mozilla.org/xre/app-info;1"].
-                  getService(Ci.nsIXULAppInfo);
-    return this._appID = appInfo.ID;
+    try {
+      let appInfo = Cc["@mozilla.org/xre/app-info;1"].
+                    getService(Ci.nsIXULAppInfo);
+      delete this._appID;
+      return this._appID = appInfo.ID;
+    }
+    catch(ex) {
+      return undefined;
+    }
   },
 
   /**
