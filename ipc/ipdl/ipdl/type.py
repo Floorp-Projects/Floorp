@@ -37,6 +37,24 @@ import ipdl.builtin as builtin
 
 _DELETE_MSG = '__delete__'
 
+
+def _otherside(side):
+    if side == 'parent':  return 'child'
+    elif side == 'child': return 'parent'
+    else:  assert 0 and 'unknown side "%s"'% (side)
+
+def unique_pairs(s):
+    n = len(s)
+    for i, e1 in enumerate(s):
+        for j in xrange(i+1, n):
+            yield (e1, s[j])
+
+def cartesian_product(s1, s2):
+    for e1 in s1:
+        for e2 in s2:
+            yield (e1, e2)
+
+
 class TypeVisitor:
     def defaultVisit(self, node, *args):
         raise Exception, "INTERNAL ERROR: no visitor for node type `%s'"% (
@@ -233,10 +251,25 @@ class MessageType(IPDLType):
     def hasImplicitActorParam(self):
         return self.isCtor() or self.isDtor()
 
+class Bridge:
+    def __init__(self, parentPtype, childPtype):
+        assert parentPtype.isToplevel() and childPtype.isToplevel()
+        self.parent = parentPtype
+        self.child = childPtype
+
+    def __cmp__(self, o):
+        return cmp(self.parent, o.parent) or cmp(self.child, o.child)
+    def __eq__(self, o):
+        return self.parent == o.parent and self.child == o.child
+    def __hash__(self):
+        return hash(self.parent) + hash(self.child)
+
 class ProtocolType(IPDLType):
     def __init__(self, qname, sendSemantics, stateless=False):
         self.qname = qname
         self.sendSemantics = sendSemantics
+        self.spawns = set()             # ProtocolType
+        self.bridges = set()            # [ Bridge ]
         self.managers = set()           # ProtocolType
         self.manages = [ ]
         self.stateless = stateless
@@ -250,6 +283,13 @@ class ProtocolType(IPDLType):
     def addManager(self, mgrtype):
         assert mgrtype.isIPDL() and mgrtype.isProtocol()
         self.managers.add(mgrtype)
+
+    def addSpawn(self, ptype):
+        assert self.isToplevel() and  ptype.isToplevel()
+        self.spawns.add(ptype)
+
+    def addBridge(self, parentPType, childPType):
+        self.bridges.add(Bridge(parentPType, childPType))
 
     def managedBy(self, mgr):
         self.managers = mgr
@@ -462,6 +502,10 @@ With this information, it finally type checks the AST.'''
         if not runpass(CheckTypes(self.errors)):
             return False
 
+        if not (runpass(BuildProcessGraph(self.errors))
+                and runpass(CheckProcessGraph(self.errors))):
+            return False
+
         if (len(tu.protocol.startStates)
             and not runpass(CheckStateMachine(self.errors))):
             return False
@@ -609,6 +653,12 @@ class GatherDecls(TcheckVisitor):
         # protocol scope
         self.symtab.enterScope(p)
 
+        for spawns in p.spawnsStmts:
+            spawns.accept(self)
+
+        for bridges in p.bridgesStmts:
+            bridges.accept(self)
+
         seenmgrs = set()
         for mgr in p.managers:
             if mgr.name in seenmgrs:
@@ -740,6 +790,25 @@ class GatherDecls(TcheckVisitor):
         # are allowed to obfuscate the error
 
         self.symtab.exitScope(p)
+
+
+    def visitSpawnsStmt(self, spawns):
+        pname = spawns.proto
+        spawns.proto = self.symtab.lookup(pname)
+        if spawns.proto is None:
+            self.error(spawns.loc,
+                       "spawned protocol `%s' has not been declared",
+                       pname)
+
+    def visitBridgesStmt(self, bridges):
+        def lookup(p):
+            decl = self.symtab.lookup(p)
+            if decl is None:
+                self.error(bridges.loc,
+                           "bridged protocol `%s' has not been declared", p)
+            return decl
+        bridges.parentSide = lookup(bridges.parentSide)
+        bridges.childSide = lookup(bridges.childSide)
 
 
     def visitManager(self, mgr):
@@ -980,6 +1049,7 @@ class CheckTypes(TcheckVisitor):
         # don't need the symbol table, we just want the error reporting
         TcheckVisitor.__init__(self, None, errors)
         self.visited = set()
+        self.ptype = None
 
     def visitProtocolInclude(self, inc):
         if inc.tu.filename in self.visited:
@@ -989,8 +1059,21 @@ class CheckTypes(TcheckVisitor):
 
 
     def visitProtocol(self, p):
+        self.ptype = p.decl.type
+        
         # check that we require no more "power" than our manager protocols
         ptype, pname = p.decl.type, p.decl.shortname
+
+        if len(p.spawnsStmts) and not ptype.isToplevel():
+            self.error(p.decl.loc,
+                       "protocol `%s' is not top-level and so cannot declare |spawns|",
+                       pname)
+
+        if len(p.bridgesStmts) and not ptype.isToplevel():
+            self.error(p.decl.loc,
+                       "protocol `%s' is not top-level and so cannot declare |bridges|",
+                       pname)
+
         for mgrtype in ptype.managers:
             if mgrtype is not None and ptype.needsMoreJuiceThan(mgrtype):
                 self.error(
@@ -1023,7 +1106,43 @@ class CheckTypes(TcheckVisitor):
                 p.name)
 
         return Visitor.visitProtocol(self, p)
-        
+
+
+    def visitSpawnsStmt(self, spawns):
+        if not self.ptype.isToplevel():
+            self.error(spawns.loc,
+                       "only top-level protocols can have |spawns| statements; `%s' cannot",
+                       self.ptype.name())
+            return
+
+        spawnedType = spawns.proto.type
+        if not (spawnedType.isIPDL() and spawnedType.isProtocol()
+                and spawnedType.isToplevel()):
+            self.error(spawns.loc,
+                       "cannot spawn non-top-level-protocol `%s'",
+                       spawnedType.name())
+        else:
+            self.ptype.addSpawn(spawnedType)
+
+
+    def visitBridgesStmt(self, bridges):
+        if not self.ptype.isToplevel():
+            self.error(bridges.loc,
+                       "only top-level protocols can have |bridges| statements; `%s' cannot",
+                       self.ptype.name())
+            return
+
+        parentType = bridges.parentSide.type
+        childType = bridges.childSide.type
+        if not (parentType.isIPDL() and parentType.isProtocol()
+                and childType.isIPDL() and childType.isProtocol()
+                and parentType.isToplevel() and childType.isToplevel()):
+            self.error(bridges.loc,
+                       "cannot bridge non-top-level-protocol(s) `%s' and `%s'",
+                       parentType.name(), childType.name())
+        else:
+            self.ptype.addBridge(parentType, childType)
+
 
     def visitManagesStmt(self, mgs):
         pdecl = mgs.manager.decl
@@ -1121,17 +1240,235 @@ class CheckTypes(TcheckVisitor):
 
 ##-----------------------------------------------------------------------------
 
-def unique_pairs(s):
-    n = len(s)
-    for i, e1 in enumerate(s):
-        for j in xrange(i+1, n):
-            yield (e1, s[j])
+class Process:
+    def __init__(self):
+        self.actors = set()         # set(Actor)
+        self.edges = { }            # Actor -> [ SpawnsEdge ]
+        self.spawn = set()          # set(Actor)
 
-def cartesian_product(s1, s2):
-    for e1 in s1:
-        for e2 in s2:
-            yield (e1, e2)
+    def edge(self, spawner, spawn):
+        if spawner not in self.edges:  self.edges[spawner] = [ ]
+        self.edges[spawner].append(SpawnsEdge(spawner, spawn))
+        self.spawn.add(spawn)
 
+    def iteredges(self):
+        for edgelist in self.edges.itervalues():
+            for edge in edgelist:
+                yield edge
+
+    def merge(self, o):
+        'Merge the Process |o| into this Process'
+        if self == o:
+            return
+        for actor in o.actors:
+            ProcessGraph.actorToProcess[actor] = self
+        self.actors.update(o.actors)
+        self.edges.update(o.edges)
+        self.spawn.update(o.spawn)
+        ProcessGraph.processes.remove(o)
+
+    def spawns(self, actor):
+        return actor in self.spawn
+
+    def __cmp__(self, o):  return cmp(self.actors, o.actors)
+    def __eq__(self, o):   return self.actors == o.actors
+    def __hash__(self):    return hash(id(self))
+    def __repr__(self):
+        return reduce(lambda a, x: str(a) + str(x) +'|', self.actors, '|')
+    def __str__(self):     return repr(self)
+
+class Actor:
+    def __init__(self, ptype, side):
+        self.ptype = ptype
+        self.side = side
+
+    def other(self):
+        return Actor(self.ptype, _otherside(self.side))
+
+    def __cmp__(self, o):
+        return cmp(self.ptype, o.ptype) or cmp(self.side, o.side)
+    def __eq__(self, o):
+        return self.ptype == o.ptype and self.side == o.side
+    def __hash__(self):  return hash(repr(self))
+    def __repr__(self):  return '%s%s'% (self.ptype.name(), self.side.title())
+    def __str__(self):   return repr(self)
+
+class SpawnsEdge:
+    def __init__(self, spawner, spawn):
+        self.spawner = spawner      # Actor
+        self.spawn = spawn          # Actor
+    def __repr__(self):
+        return '(%r)--spawns-->(%r)'% (self.spawner, self.spawn)
+    def __str__(self):  return repr(self)
+
+class BridgeEdge:
+    def __init__(self, bridgeProto, parent, child):
+        self.bridgeProto = bridgeProto # ProtocolType
+        self.parent = parent           # Actor
+        self.child = child             # Actor
+    def __repr__(self):
+        return '(%r)--%s bridge-->(%r)'% (
+            self.parent, self.bridgeProto.name(), self.child)
+    def __str__(self):  return repr(self)
+
+# "singleton" class with state that persists across type checking of
+# all protocols
+class ProcessGraph:
+    processes = set()                   # set(Process)
+    bridges = { }                       # ProtocolType -> BridgeEdge
+    actorToProcess = { }                # Actor -> Process
+    visitedSpawns = set()               # set(ActorType)
+    visitedBridges = set()              # set(ActorType)
+
+    @classmethod
+    def findProcess(cls, actor):
+        return cls.actorToProcess.get(actor, None)
+
+    @classmethod
+    def getProcess(cls, actor):
+        if actor not in cls.actorToProcess:
+            p = Process()
+            p.actors.add(actor)
+            cls.processes.add(p)
+            cls.actorToProcess[actor] = p
+        return cls.actorToProcess[actor]
+
+    @classmethod
+    def spawn(cls, spawner, remoteSpawn):
+        localSpawn = remoteSpawn.other()
+        spawnerProcess = ProcessGraph.getProcess(spawner)
+        spawnerProcess.merge(ProcessGraph.getProcess(localSpawn))
+        spawnerProcess.edge(spawner, remoteSpawn)
+
+    @classmethod
+    def bridge(cls, parent, child, bridgeP):
+        cls.bridges[bridgeP] = BridgeEdge(bridgeP, parent, child)
+
+
+class BuildProcessGraph(TcheckVisitor):
+    class findSpawns(TcheckVisitor):
+        def __init__(self, errors):
+            TcheckVisitor.__init__(self, None, errors)
+
+        def visitTranslationUnit(self, tu):
+            TcheckVisitor.visitTranslationUnit(self, tu)
+
+        def visitProtocolInclude(self, pi):
+            pi.tu.protocol.accept(self)
+
+        def visitProtocol(self, p):
+            ptype = p.decl.type
+            # non-top-level protocols don't add any information
+            if not ptype.isToplevel() or ptype in ProcessGraph.visitedSpawns:
+                return
+
+            ProcessGraph.visitedSpawns.add(ptype)
+            self.visiting = ptype
+            ProcessGraph.getProcess(Actor(ptype, 'parent'))
+            ProcessGraph.getProcess(Actor(ptype, 'child'))
+            return TcheckVisitor.visitProtocol(self, p)
+
+        def visitSpawnsStmt(self, spawns):
+            # The picture here is:
+            #  [ spawner | localSpawn | ??? ]  (process 1)
+            #                  |
+            #                  |
+            #            [ remoteSpawn | ???]  (process 2)
+            #
+            # A spawns stmt tells us that |spawner| and |localSpawn|
+            # are in the same process.
+            spawner = Actor(self.visiting, spawns.side)
+            remoteSpawn = Actor(spawns.proto.type, spawns.spawnedAs)
+            ProcessGraph.spawn(spawner, remoteSpawn)
+
+    def __init__(self, errors):
+        TcheckVisitor.__init__(self, None, errors)
+        self.visiting = None            # ActorType
+        self.visited = set()            # set(ActorType)
+
+    def visitTranslationUnit(self, tu):
+        tu.accept(self.findSpawns(self.errors))
+        TcheckVisitor.visitTranslationUnit(self, tu)
+
+    def visitProtocolInclude(self, pi):
+        pi.tu.protocol.accept(self)
+
+    def visitProtocol(self, p):
+        ptype = p.decl.type
+        # non-top-level protocols don't add any information
+        if not ptype.isToplevel() or ptype in ProcessGraph.visitedBridges:
+            return
+
+        ProcessGraph.visitedBridges.add(ptype)
+        self.visiting = ptype
+        return TcheckVisitor.visitProtocol(self, p)
+
+    def visitBridgesStmt(self, bridges):
+        bridgeProto = self.visiting
+        parentSideProto = bridges.parentSide.type
+        childSideProto = bridges.childSide.type
+
+        # the picture here is:
+        #                                                   (process 1|
+        #  [ parentSide(Parent|Child) | childSide(Parent|Child) | ... ]
+        #         |                                       |
+        #         |                        (process 2|    |
+        #  [ parentSide(Child|Parent) | bridgeParent ]    |
+        #                                   |             |
+        #                                   |             |       (process 3|
+        #                           [ bridgeChild | childSide(Child|Parent) ]
+        #
+        # First we have to figure out which parentSide/childSide
+        # actors live in the same process.  The possibilities are {
+        # parent, child } x { parent, child }.  (Multiple matches
+        # aren't allowed yet.)  Then we make ProcessGraph aware of the
+        # new bridge.
+        parentSideActor, childSideActor = None, None
+        pc = ( 'parent', 'child' )
+        for parentSide, childSide in cartesian_product(pc, pc):
+            pactor = Actor(parentSideProto, parentSide)
+            pproc = ProcessGraph.findProcess(pactor)
+            cactor = Actor(childSideProto, childSide)
+            cproc = ProcessGraph.findProcess(cactor)
+            assert pproc and cproc
+
+            if pproc == cproc:
+                if parentSideActor is not None:
+                    self.error(bridges.loc,
+                               "ambiguous bridge `%s' between `%s' and `%s'",
+                               bridgeProto.type.name(),
+                               parentSideProto.name(),
+                               childSideProto.name())
+                else:
+                    parentSideActor, childSideActor = pactor.other(), cactor.other()
+
+        if parentSideActor is None:
+            self.error(bridges.loc,
+                       "`%s' and `%s' cannot be bridged by `%s' ",
+                       parentSideProto.name(), childSideProto.name(),
+                       bridgeProto.name())
+
+        ProcessGraph.bridge(parentSideActor, childSideActor, bridgeProto)
+
+
+class CheckProcessGraph(TcheckVisitor):
+    def __init__(self, errors):
+        TcheckVisitor.__init__(self, None, errors)
+
+    # TODO: verify spawns-per-process assumption and check that graph
+    # is a dag
+    def visitTranslationUnit(self, tu):
+        if 0:
+            print 'Processes'
+            for process in ProcessGraph.processes:
+                print '  ', process
+                for edge in process.iteredges():
+                    print '    ', edge
+            print 'Bridges'
+            for bridge in ProcessGraph.bridges.itervalues():
+                print '  ', bridge
+
+##-----------------------------------------------------------------------------
 
 class CheckStateMachine(TcheckVisitor):
     def __init__(self, errors):
