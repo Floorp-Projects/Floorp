@@ -279,6 +279,50 @@ ASFILES += jswince.asm
 endif
 
 endif # ENABLE_TRACEJIT
+ifdef ENABLE_METHODJIT
+
+###############################################
+# BEGIN include sources for the Nitro assembler
+#
+VPATH += 	$(srcdir)/assembler \
+		$(srcdir)/assembler/wtf \
+		$(srcdir)/assembler/jit \
+		$(srcdir)/assembler/assembler \
+		$(srcdir)/methodjit
+
+CPPSRCS += 	Assertions.cpp \
+		ExecutableAllocatorPosix.cpp \
+		ExecutableAllocatorWin.cpp \
+		ExecutableAllocator.cpp \
+		ARMAssembler.cpp \
+		MacroAssemblerARM.cpp \
+		$(NULL)
+#		Compiler.cpp \
+		CodeGenerator.cpp \
+		PICStubCompiler.cpp \
+		MethodJIT.cpp \
+		Stubs.cpp \
+		BytecodeAnalyzer.cpp \
+		Logging.cpp
+
+ifeq (86, $(findstring 86,$(TARGET_CPU)))
+ifeq (x86_64, $(TARGET_CPU))
+ifeq ($(OS_ARCH),WINNT)
+ASFILES +=	TrampolineMasmX64.asm
+endif
+#CPPSRCS		+= only_on_x86_64.cpp
+else
+#CPPSRCS		+= only_on_x86.cpp
+endif
+endif
+ifeq (arm, $(TARGET_CPU))
+#CPPSRCS		+= only_on_arm.cpp
+endif
+#
+# END enclude sources for the Nitro assembler
+#############################################
+
+endif
 
 ifdef JS_HAS_CTYPES
 VPATH += $(srcdir)/ctypes
@@ -752,3 +796,36 @@ endif
 endif
 endif
 endif
+
+###############################################
+# BEGIN kludges for the Nitro assembler
+#
+## FIXME figure out where INCLUDES is being reset, and move this
+## backwards to that point.  Ideally, merge with the rest of the
+## Nitro assembler stuff, far above.
+ifdef ENABLE_METHODJIT
+INCLUDES +=	-I$(srcdir)/assembler
+#
+# Needed to "configure" it correctly.  Unfortunately these
+# flags wind up being applied to all code in js/src, not just
+# the code in js/src/assembler.
+CXXFLAGS += -DENABLE_ASSEMBLER=1 -DUSE_SYSTEM_MALLOC=1 -DENABLE_JIT=1
+
+# Build a standalone test program that exercises the assembler
+# sources a bit.
+TESTMAIN_OBJS = \
+		Assertions.$(OBJ_SUFFIX) \
+		ExecutableAllocatorPosix.$(OBJ_SUFFIX) \
+		ExecutableAllocatorWin.$(OBJ_SUFFIX) \
+		ExecutableAllocator.$(OBJ_SUFFIX) \
+		ARMAssembler.$(OBJ_SUFFIX) \
+		MacroAssemblerARM.$(OBJ_SUFFIX) \
+		TestMain.$(OBJ_SUFFIX) \
+		jsutil.$(OBJ_SUFFIX) \
+		jslog2.$(OBJ_SUFFIX)
+TestMain$(HOST_BIN_SUFFIX): $(TESTMAIN_OBJS)
+	$(CXX) -o TestMain$(HOST_BIN_SUFFIX) $(TESTMAIN_OBJS)
+endif
+#
+# END kludges for the Nitro assembler
+###############################################

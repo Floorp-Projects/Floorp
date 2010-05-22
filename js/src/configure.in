@@ -2578,24 +2578,52 @@ case "$target" in
 i?86-*)
     ENABLE_TRACEJIT=1
     NANOJIT_ARCH=i386
+    ENABLE_METHODJIT=1
+    AC_DEFINE(JS_CPU_X86)
     ;;
 x86_64*-*)
     ENABLE_TRACEJIT=1
     NANOJIT_ARCH=X64
+    ENABLE_METHODJIT=1
+    AC_DEFINE(JS_CPU_X64)
     ;;
 arm*-*)
     ENABLE_TRACEJIT=1
     NANOJIT_ARCH=ARM
+    ENABLE_METHODJIT=1
+    AC_DEFINE(JS_CPU_ARM)
     ;;
 sparc*-*)
     ENABLE_TRACEJIT=1
     NANOJIT_ARCH=Sparc
+    AC_DEFINE(JS_CPU_SPARC)
     ;;
 esac
+
+MOZ_ARG_DISABLE_BOOL(methodjit,
+[  --disable-methodjit           Disable method JIT support],
+  ENABLE_METHODJIT= )
 
 MOZ_ARG_DISABLE_BOOL(tracejit,
 [  --disable-tracejit           Disable tracing JIT support],
   ENABLE_TRACEJIT=)
+
+MOZ_ARG_ENABLE_BOOL(methodjit-spew,
+[  --enable-methodjit-spew      Enable method JIT spew support],
+  ENABLE_METHODJIT_SPEW=1,
+  ENABLE_METHODJIT_SPEW= )
+
+AC_SUBST(ENABLE_METHODJIT)
+
+if test "$ENABLE_METHODJIT"; then
+    AC_DEFINE(JS_METHODJIT)
+else
+    ENABLE_TRACEJIT= 
+fi
+
+if test "$ENABLE_METHODJIT_SPEW"; then
+    AC_DEFINE(JS_METHODJIT_SPEW)
+fi
 
 if test "$ENABLE_TRACEJIT"; then
 
