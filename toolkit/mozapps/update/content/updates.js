@@ -798,8 +798,8 @@ var gIncompatibleCheckPage = {
     // with the new version of the application.
     for (var i = 0; i < gUpdates.addons.length; ++i) {
       if (gUpdates.addons[i].id == addon.id) {
-        LOG("gIncompatibleCheckPage", "onAddonUpdateEnded - found update " +
-            "for add-on ID: " + addon.id);
+        LOG("gIncompatibleCheckPage", "onCompatibilityUpdateAvailable - " +
+            "found update for add-on ID: " + addon.id);
         gUpdates.addons.splice(i, 1);
         break;
       }
@@ -810,8 +810,8 @@ var gIncompatibleCheckPage = {
     // If the new version of this add-on is blocklisted for the new application
     // then it isn't a valid update and the user should still be warned that
     // the add-on will become incompatible.
-    let bs = Cc["@mozilla.org/extensions/blocklist;1"].
-             getService(Ci.nsIBlocklistService);
+    let bs = CoC["@mozilla.org/extensions/blocklist;1"].
+             getService(CoI.nsIBlocklistService);
     if (bs.isAddonBlocklisted(addon.id, install.version,
                               gUpdates.update.appVersion,
                               gUpdates.update.platformVersion))
@@ -829,11 +829,11 @@ var gIncompatibleCheckPage = {
       return;
 
     if (gUpdates.addons.length == 0) {
-      LOG("gIncompatibleCheckPage", "onUpdateEnded - updates were found " +
+      LOG("gIncompatibleCheckPage", "onUpdateFinished - updates were found " +
           "for all incompatible add-ons");
     }
     else {
-      LOG("gIncompatibleCheckPage", "onUpdateEnded - there are still " +
+      LOG("gIncompatibleCheckPage", "onUpdateFinished - there are still " +
           "incompatible add-ons");
       if (gUpdates.update.licenseURL) {
         document.getElementById("license").setAttribute("next", "incompatibleList");
