@@ -208,6 +208,8 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.println('>')
             self.printdent()
 
+        if md.inline:
+            self.write('inline ')
         if md.static:
             self.write('static ')
         if md.virtual:
@@ -276,6 +278,8 @@ class CxxCodeGen(CodePrinter, Visitor):
 
 
     def visitDestructorDecl(self, dd):
+        if dd.inline:
+            self.write('inline ')
         if dd.virtual:
             self.write('virtual ')
 

@@ -197,22 +197,29 @@ def _shmemRevokeRights(shmemexpr):
 def _lookupShmem(idexpr):
     return ExprCall(ExprVar('LookupSharedMemory'), args=[ idexpr ])
 
-def _makeForwardDecl(ptype, side):
-    clsname = _actorName(ptype.qname.baseid, side)
 
+def _makeForwardDeclForQClass(clsname, quals):
     fd = ForwardDecl(clsname, cls=1)
-    if 0 == len(ptype.qname.quals):
+    if 0 == len(quals):
         return fd
 
-    outerns = Namespace(ptype.qname.quals[0])
+    outerns = Namespace(quals[0])
     innerns = outerns
-    for ns in ptype.qname.quals[1:]:
+    for ns in quals[1:]:
         tmpns = Namespace(ns)
         innerns.addstmt(tmpns)
         innerns = tmpns
 
     innerns.addstmt(fd)
     return outerns
+
+def _makeForwardDeclForActor(ptype, side):
+    return _makeForwardDeclForQClass(_actorName(ptype.qname.baseid, side),
+                                     ptype.qname.quals)
+
+def _makeForwardDecl(type):
+    return _makeForwardDeclForQClass(type.name(), type.qname.quals)
+
 
 def _putInNamespaces(cxxthing, namespaces):
     """|namespaces| is in order [ outer, ..., inner ]"""
@@ -532,30 +539,18 @@ class HasFQName:
     def fqClassName(self):
         return self.decl.type.fullname()
 
-
-class StructDecl(ipdl.ast.StructDecl, HasFQName):
-    @staticmethod
-    def upgrade(structDecl):
-        assert isinstance(structDecl, ipdl.ast.StructDecl)
-        structDecl.__class__ = StructDecl
-        return structDecl
-
-class _StructField(_HybridDecl):
-    def __init__(self, ipdltype, name, sd, side=None, other=None):
-        special = _hasVisibleActor(ipdltype)
-        fname = name
-        if special:
-            fname += side.title()
-
-        _HybridDecl.__init__(self, ipdltype, fname)
+class _CompoundTypeComponent(_HybridDecl):
+    def __init__(self, ipdltype, name, side, ct):
+        _HybridDecl.__init__(self, ipdltype, name)
         self.side = side
-        self.special = special
-        if special:
-            if other is not None:
-                self.other = other
-            else:
-                self.other = _StructField(ipdltype, name, sd, _otherSide(side), self)
-        self.sd = sd
+        self.special = _hasVisibleActor(ipdltype)
+        self.recursive = ct.decl.type.mutuallyRecursiveWith(ipdltype)
+
+    def internalType(self):
+        if self.recursive:
+            return self.ptrToType()
+        else:
+            return self.bareType()
 
     # @override the following methods to pass |self.side| instead of
     # forcing the caller to remember which side we're declared to
@@ -574,6 +569,62 @@ class _StructField(_HybridDecl):
         return _HybridDecl.inType(self, self.side)
 
 
+class StructDecl(ipdl.ast.StructDecl, HasFQName):
+    @staticmethod
+    def upgrade(structDecl):
+        assert isinstance(structDecl, ipdl.ast.StructDecl)
+        structDecl.__class__ = StructDecl
+        return structDecl
+
+class _StructField(_CompoundTypeComponent):
+    def __init__(self, ipdltype, name, sd, side=None):
+        fname = name
+        special = _hasVisibleActor(ipdltype)
+        if special:
+            fname += side.title()
+
+        _CompoundTypeComponent.__init__(self, ipdltype, fname, side, sd)
+
+    def getMethod(self, thisexpr=None, sel='.'):
+        meth = self.var()
+        if thisexpr is not None:
+            return ExprSelect(thisexpr, sel, meth.name)
+        return meth
+
+    def initExpr(self, thisexpr):
+        expr = ExprCall(self.getMethod(thisexpr=thisexpr))
+        if self.ipdltype.isIPDL() and self.ipdltype.isActor():
+            expr = ExprCast(expr, self.bareType(), const=1)
+        return expr
+
+    def refExpr(self, thisexpr=None):
+        ref = self.memberVar()
+        if thisexpr is not None:
+            ref = ExprSelect(thisexpr, '.', ref.name)
+        if self.recursive:
+            ref = ExprDeref(ref)
+        return ref
+
+    def argVar(self):
+        return ExprVar('_'+ self.name)
+
+    def memberVar(self):
+        return ExprVar(self.name + '_')
+
+    def initStmts(self):
+        if self.recursive:
+            return [ StmtExpr(ExprAssn(self.memberVar(),
+                                       ExprNew(self.bareType()))) ]
+        else:
+            return []
+
+    def destructStmts(self):
+        if self.recursive:
+            return [ StmtExpr(ExprDelete(self.memberVar())) ]
+        else:
+            return []
+
+
 class UnionDecl(ipdl.ast.UnionDecl, HasFQName):
     def callType(self, var=None):
         func = ExprVar('type')
@@ -588,7 +639,7 @@ class UnionDecl(ipdl.ast.UnionDecl, HasFQName):
         return unionDecl
 
 
-class _UnionMember(_HybridDecl):
+class _UnionMember(_CompoundTypeComponent):
     """Not in the AFL sense, but rather a member (e.g. |int;|) of an
 IPDL union type."""
     def __init__(self, ipdltype, ud, side=None, other=None):
@@ -597,16 +648,13 @@ IPDL union type."""
         if special:
             flatname += side.title()
 
-        _HybridDecl.__init__(self, ipdltype, 'V'+ flatname)
+        _CompoundTypeComponent.__init__(self, ipdltype, 'V'+ flatname, side, ud)
         self.flattypename = flatname
-        self.side = side
-        self.special = special
         if special:
             if other is not None:
                 self.other = other
             else:
                 self.other = _UnionMember(ipdltype, ud, _otherSide(side), self)
-        self.ud = ud
 
     def enum(self):
         return 'T' + self.flattypename
@@ -619,7 +667,10 @@ IPDL union type."""
 
     def unionType(self):
         """Type used for storage in generated C union decl."""
-        return TypeArray(Type('char'), ExprSizeof(self.bareType()))
+        if self.recursive:
+            return self.ptrToType()
+        else:
+            return TypeArray(Type('char'), ExprSizeof(self.internalType()))
 
     def unionValue(self):
         # NB: knows that Union's storage C union is named |mValue|
@@ -641,7 +692,7 @@ IPDL union type."""
             rhs = ExprCast(rhs, self.bareType(), const=1)
         return ExprAssn(ExprDeref(self.callGetPtr()), rhs)
 
-    def callPlacementCtor(self, expr=None):
+    def callCtor(self, expr=None):
         assert not isinstance(expr, list)
         
         if expr is None:
@@ -651,13 +702,21 @@ IPDL union type."""
         else:
             args = [ expr ]
 
-        return ExprNew(self.bareType(self.side),
-                     args=args,
-                     newargs=[ self.callGetPtr() ])
+        if self.recursive:
+            return ExprAssn(self.callGetPtr(),
+                            ExprNew(self.bareType(self.side),
+                                    args=args))
+        else:
+            return ExprNew(self.bareType(self.side),
+                           args=args,
+                           newargs=[ self.callGetPtr() ])
 
-    def callPlacementDtor(self):
-        return ExprCall(
-            ExprSelect(self.callGetPtr(), '->', '~'+ self.typedef()))
+    def callDtor(self):
+        if self.recursive:
+            return ExprDelete(self.callGetPtr())
+        else:
+            return ExprCall(
+                ExprSelect(self.callGetPtr(), '->', '~'+ self.typedef()))
 
     def getTypeName(self): return 'get_'+ self.flattypename
     def getConstTypeName(self): return 'get_'+ self.flattypename
@@ -669,37 +728,30 @@ IPDL union type."""
 
     def ptrToSelfExpr(self):
         """|*ptrToSelfExpr()| has type |self.bareType()|"""
-        return ExprCast(ExprAddrOf(self.unionValue()),
-                        self.ptrToType(),
-                        reinterpret=1)
+        v = self.unionValue()
+        if self.recursive:
+            return v
+        else:
+            return ExprCast(ExprAddrOf(v), self.ptrToType(), reinterpret=1)
 
     def constptrToSelfExpr(self):
         """|*constptrToSelfExpr()| has type |self.constType()|"""
-        return ExprCast(ExprAddrOf(self.unionValue()),
-                        self.constPtrToType(),
-                        reinterpret=1)
+        v = self.unionValue()
+        if self.recursive:
+            return v
+        return ExprCast(ExprAddrOf(v), self.constPtrToType(), reinterpret=1)
+
+    def ptrToInternalType(self):
+        t = self.ptrToType()
+        if self.recursive:
+            t.ref = 1
+        return t
 
     def defaultValue(self):
         if self.ipdltype.isIPDL() and self.ipdltype.isActor():
             return ExprCast(ExprLiteral.NULL, self.bareType(), static=1)
         # XXX sneaky here, maybe need ExprCtor()?
         return ExprCall(self.bareType())
-
-    # @override the following methods to pass |self.side| instead of
-    # forcing the caller to remember which side we're declared to
-    # represent.
-    def bareType(self, side=None):
-        return _HybridDecl.bareType(self, self.side)
-    def refType(self, side=None):
-        return _HybridDecl.refType(self, self.side)
-    def constRefType(self, side=None):
-        return _HybridDecl.constRefType(self, self.side)
-    def ptrToType(self, side=None):
-        return _HybridDecl.ptrToType(self, self.side)
-    def constPtrToType(self, side=None):
-        return _HybridDecl.constPtrToType(self, self.side)
-    def inType(self, side=None):
-        return _HybridDecl.inType(self, self.side)
 
 ##--------------------------------------------------
 
@@ -1192,6 +1244,7 @@ child actors.'''
     def __init__(self):
         self.protocol = None     # protocol we're generating a class for
         self.file = None         # File stuff is stuck in
+        self.structUnionDefns = []
 
     def lower(self, tu, outcxxfile):
         self.protocol = tu.protocol
@@ -1212,6 +1265,8 @@ child actors.'''
 
         ipdl.ast.Visitor.visitTranslationUnit(self, tu)
 
+        f.addthings(self.structUnionDefns)
+
         f.addthing(Whitespace.NL)
         f.addthings(_includeGuardEnd(f))
 
@@ -1219,12 +1274,36 @@ child actors.'''
     def visitCxxInclude(self, inc):
         self.file.addthing(CppDirective('include', '"'+ inc.file +'"'))
 
+    def processStructOrUnionClass(self, su, which, forwarddecls, cls):
+        clsdecl, methoddefns = _splitClassDeclDefn(cls, inlinedefns=1)
+        
+        self.file.addthings(
+            [  Whitespace.NL ]
+            + forwarddecls
+            + [ Whitespace("""
+//-----------------------------------------------------------------------------
+// Declaration of the IPDL type |%s %s|
+//
+"""% (which, su.name)),
+                _putInNamespaces(clsdecl, su.namespaces),
+            ])
+
+        self.structUnionDefns.extend([
+            Whitespace("""
+//-----------------------------------------------------------------------------
+// Method definitions for the IPDL type |%s %s|
+//
+"""% (which, su.name)),
+            _putInNamespaces(methoddefns, su.namespaces),
+        ])
+
     def visitStructDecl(self, sd):
-        self.file.addthings(_generateCxxStruct(sd))
+        return self.processStructOrUnionClass(sd, 'struct',
+                                              *_generateCxxStruct(sd))
 
     def visitUnionDecl(self, ud):
-        self.file.addthings(_generateCxxUnionStuff(ud))
-
+        return self.processStructOrUnionClass(ud, 'union',
+                                              *_generateCxxUnion(ud))
 
     def visitProtocol(self, p):
         self.file.addthing(Whitespace("""
@@ -1354,29 +1433,30 @@ class _ComputeTypeDeps(TypeVisitor):
 types that need forward declaration; (ii) types that need a |using|
 stmt.  Some types generate both kinds.'''
 
-    def __init__(self):
+    def __init__(self, fortype):
+        ipdl.type.TypeVisitor.__init__(self)
         self.usingTypedefs = [ ]
         self.forwardDeclStmts = [ ]
-        self.seen = set()
+        self.fortype = fortype
 
     def maybeTypedef(self, fqname, name):
         if fqname != name:
             self.usingTypedefs.append(Typedef(Type(fqname), name))
         
     def visitBuiltinCxxType(self, t):
-        if t in self.seen: return
-        self.seen.add(t)
+        if t in self.visited: return
+        self.visited.add(t)
         self.maybeTypedef(t.fullname(), t.name())
 
     def visitImportedCxxType(self, t):
-        if t in self.seen: return
-        self.seen.add(t)
+        if t in self.visited: return
+        self.visited.add(t)
         self.maybeTypedef(t.fullname(), t.name())
 
     def visitActorType(self, t):
-        if t in self.seen: return
-        self.seen.add(t)
-            
+        if t in self.visited: return
+        self.visited.add(t)
+
         fqname, name = t.fullname(), t.name()
 
         self.maybeTypedef(_actorName(fqname, 'Parent'),
@@ -1385,14 +1465,17 @@ stmt.  Some types generate both kinds.'''
                           _actorName(name, 'Child'))
 
         self.forwardDeclStmts.extend([
-            _makeForwardDecl(t.protocol, 'parent'), Whitespace.NL,
-            _makeForwardDecl(t.protocol, 'child'), Whitespace.NL
+            _makeForwardDeclForActor(t.protocol, 'parent'), Whitespace.NL,
+            _makeForwardDeclForActor(t.protocol, 'child'), Whitespace.NL
         ])
 
     def visitStructOrUnionType(self, su, defaultVisit):
-        if su in self.seen: return
-        self.seen.add(su)
+        if su in self.visited or su == self.fortype: return
+        self.visited.add(su)
         self.maybeTypedef(su.fullname(), su.name())
+
+        if su.mutuallyRecursiveWith(self.fortype):
+            self.forwardDeclStmts.append(_makeForwardDecl(su))
 
         return defaultVisit(self, su)
 
@@ -1414,51 +1497,112 @@ stmt.  Some types generate both kinds.'''
 def _generateCxxStruct(sd):
     ''' '''
     # compute all the typedefs and forward decls we need to make
-    gettypedeps = _ComputeTypeDeps()
+    gettypedeps = _ComputeTypeDeps(sd.decl.type)
     for f in sd.fields:
         f.ipdltype.accept(gettypedeps)
 
     usingTypedefs = gettypedeps.usingTypedefs
     forwarddeclstmts = gettypedeps.forwardDeclStmts
 
-    struct = Class(sd.name, struct=1)
-    struct.addstmts(
-        [ Label.PRIVATE ]
-        + usingTypedefs
-        + [ Whitespace.NL,
-            Label.PUBLIC,
-            ConstructorDefn(ConstructorDecl(sd.name)),
-            Whitespace.NL,
-            ConstructorDefn(
-                ConstructorDecl(
-                    sd.name,
-                    params=[ Decl(f.constRefType(), '_'+ f.name)
-                             for f in sd.fields ]),
-                memberinits=[ ExprCall(f.var(),
-                                       args=[ ExprVar('_'+ f.name) ])
-                              for f in sd.fields ]),
-            Whitespace.NL,
-            Whitespace('// Default copy ctor, op=, and dtor are OK\n\n',
-                       indent=1)
-        ]
-        + [ StmtDecl(Decl(f.bareType(), f.name)) for f in sd.fields ])
+    struct = Class(sd.name, struct=1, final=1)
+    struct.addstmts([ Label.PRIVATE ]
+                    + usingTypedefs
+                    + [ Whitespace.NL, Label.PUBLIC ])
 
+    constreftype = Type(sd.name, const=1, ref=1)
+    initvar = ExprVar('Init')
+    callinit = ExprCall(initvar)
+    assignvar = ExprVar('Assign')
 
-    return (
-        [
-            Whitespace("""
-//-----------------------------------------------------------------------------
-// Definition of the IPDL type |struct %s|
-//
-"""% (sd.name))
-        ]
-        + forwarddeclstmts
-        + [ _putInNamespaces(struct, sd.namespaces) ])
+    def fieldsAsParamList():
+        return [ Decl(f.inType(), f.argVar().name) for f in sd.fields ]
 
+    def assignFromOther(oexpr):
+        return ExprCall(assignvar,
+                        args=[ f.initExpr(oexpr) for f in sd.fields ])
+
+    # Struct()
+    defctor = ConstructorDefn(ConstructorDecl(sd.name))
+    defctor.addstmt(StmtExpr(callinit))
+    struct.addstmts([ defctor, Whitespace.NL ])
+
+    # Struct(const field1& _f1, ...)
+    valctor = ConstructorDefn(ConstructorDecl(sd.name,
+                                              params=fieldsAsParamList(),
+                                              force_inline=1))
+    valctor.addstmts([
+        StmtExpr(callinit),
+        StmtExpr(ExprCall(assignvar,
+                          args=[ f.argVar() for f in sd.fields ]))
+    ])
+    struct.addstmts([ valctor, Whitespace.NL ])
+
+    # Struct(const Struct& _o)
+    ovar = ExprVar('_o')
+    copyctor = ConstructorDefn(ConstructorDecl(
+        sd.name,
+        params=[ Decl(constreftype, ovar.name) ],
+        force_inline=1))
+    copyctor.addstmts([
+        StmtExpr(callinit),
+        StmtExpr(assignFromOther(ovar))
+    ])
+    struct.addstmts([ copyctor, Whitespace.NL ])
+
+    # ~Struct()
+    dtor = DestructorDefn(DestructorDecl(sd.name))
+    for f in sd.fields:
+        dtor.addstmts(f.destructStmts())
+    struct.addstmts([ dtor, Whitespace.NL ])
+
+    # Struct& operator=(const Struct& _o)
+    opeq = MethodDefn(MethodDecl(
+        'operator=',
+        params=[ Decl(constreftype, ovar.name) ],
+        force_inline=1))
+    opeq.addstmt(StmtExpr(assignFromOther(ovar)))
+    struct.addstmts([ opeq, Whitespace.NL ])
+
+    # field1& f1()
+    # const field1& f1() const
+    for f in sd.fields:
+        get = MethodDefn(MethodDecl(f.getMethod().name,
+                                    params=[ ],
+                                    ret=f.refType(),
+                                    force_inline=1))
+        get.addstmt(StmtReturn(f.refExpr()))
+
+        getconst = deepcopy(get)
+        getconst.decl.ret = f.constRefType()
+        getconst.decl.const = 1
+
+        struct.addstmts([ get, getconst, Whitespace.NL ])
+
+    # private:
+    struct.addstmt(Label.PRIVATE)
+
+    # Init()
+    init = MethodDefn(MethodDecl(initvar.name))
+    for f in sd.fields:
+        init.addstmts(f.initStmts())
+    struct.addstmts([ init, Whitespace.NL ])
+
+    # Assign(const field1& _f1, ...)
+    assign = MethodDefn(MethodDecl(assignvar.name,
+                                   params=fieldsAsParamList()))
+    assign.addstmts([ StmtExpr(ExprAssn(f.refExpr(), f.argVar()))
+                      for f in sd.fields ])
+    struct.addstmts([ assign, Whitespace.NL ])
+
+    # members
+    struct.addstmts([ StmtDecl(Decl(f.internalType(), f.memberVar().name))
+                      for f in sd.fields ])
+
+    return forwarddeclstmts, struct
 
 ##--------------------------------------------------
 
-def _generateCxxUnionStuff(ud):
+def _generateCxxUnion(ud):
     # This Union class basically consists of a type (enum) and a
     # union for storage.  The union can contain POD and non-POD
     # types.  Each type needs a copy ctor, assignment operator,
@@ -1522,11 +1666,11 @@ def _generateCxxUnionStuff(ud):
 
     def maybeReconstruct(memb, newTypeVar):
         ifdied = StmtIf(callMaybeDestroy(newTypeVar))
-        ifdied.addifstmt(StmtExpr(memb.callPlacementCtor()))
+        ifdied.addifstmt(StmtExpr(memb.callCtor()))
         return ifdied
 
     # compute all the typedefs and forward decls we need to make
-    gettypedeps = _ComputeTypeDeps()
+    gettypedeps = _ComputeTypeDeps(ud.decl.type)
     for c in ud.components:
         c.ipdltype.accept(gettypedeps)
 
@@ -1549,8 +1693,8 @@ def _generateCxxUnionStuff(ud):
     cls.addstmt(Label.PRIVATE)
     cls.addstmts(
         usingTypedefs
-                # hacky typedef's that allow placement dtors of builtins
-        + [ Typedef(c.bareType(), c.typedef()) for c in ud.components ])
+        # hacky typedef's that allow placement dtors of builtins
+        + [ Typedef(c.internalType(), c.typedef()) for c in ud.components ])
     cls.addstmt(Whitespace.NL)
 
     # the C++ union the discunion use for storage
@@ -1565,11 +1709,13 @@ def _generateCxxUnionStuff(ud):
     # and |const T*|
     for c in ud.components:
         getptr = MethodDefn(MethodDecl(
-            c.getPtrName(), params=[ ], ret=c.ptrToType()))
+            c.getPtrName(), params=[ ], ret=c.ptrToInternalType(),
+            force_inline=1))
         getptr.addstmt(StmtReturn(c.ptrToSelfExpr()))
 
         getptrconst = MethodDefn(MethodDecl(
-            c.getConstPtrName(), params=[ ], ret=c.constPtrToType(), const=1))
+            c.getConstPtrName(), params=[ ], ret=c.constPtrToType(),
+            const=1, force_inline=1))
         getptrconst.addstmt(StmtReturn(c.constptrToSelfExpr()))
 
         cls.addstmts([ getptr, getptrconst ])
@@ -1595,7 +1741,7 @@ def _generateCxxUnionStuff(ud):
     for c in ud.components:
         dtorswitch.addcase(
             CaseLabel(c.enum()),
-            StmtBlock([ StmtExpr(c.callPlacementDtor()),
+            StmtBlock([ StmtExpr(c.callDtor()),
                         StmtBreak() ]))
     dtorswitch.addcase(
         DefaultLabel(),
@@ -1611,7 +1757,7 @@ def _generateCxxUnionStuff(ud):
     # add helper methods that ensure the discunion has a
     # valid type
     sanity = MethodDefn(MethodDecl(
-        assertsanityvar.name, ret=Type.VOID, const=1))
+        assertsanityvar.name, ret=Type.VOID, const=1, force_inline=1))
     sanity.addstmts([
         _abortIfFalse(ExprBinary(tfirstvar, '<=', mtypevar),
                       'invalid type tag'),
@@ -1624,7 +1770,7 @@ def _generateCxxUnionStuff(ud):
         MethodDecl(assertsanityvar.name,
                        params=[ Decl(typetype, atypevar.name) ],
                        ret=Type.VOID,
-                       const=1))
+                       const=1, force_inline=1))
     sanity2.addstmts([
         StmtExpr(ExprCall(assertsanityvar)),
         _abortIfFalse(ExprBinary(mtypevar, '==', atypevar),
@@ -1637,7 +1783,7 @@ def _generateCxxUnionStuff(ud):
     cls.addstmts([
         Label.PUBLIC,
         ConstructorDefn(
-            ConstructorDecl(ud.name),
+            ConstructorDecl(ud.name, force_inline=1),
             memberinits=[ ExprMemberInit(mtypevar, [ tnonevar ]) ]),
         Whitespace.NL
     ])
@@ -1648,7 +1794,7 @@ def _generateCxxUnionStuff(ud):
         copyctor = ConstructorDefn(ConstructorDecl(
             ud.name, params=[ Decl(c.inType(), othervar.name) ]))
         copyctor.addstmts([
-            StmtExpr(c.callPlacementCtor(othervar)),
+            StmtExpr(c.callCtor(othervar)),
             StmtExpr(ExprAssn(mtypevar, c.enumvar())) ])
         cls.addstmts([ copyctor, Whitespace.NL ])
 
@@ -1661,7 +1807,7 @@ def _generateCxxUnionStuff(ud):
         copyswitch.addcase(
             CaseLabel(c.enum()),
             StmtBlock([
-                StmtExpr(c.callPlacementCtor(
+                StmtExpr(c.callCtor(
                     ExprCall(ExprSelect(othervar,
                                         '.', c.getConstTypeName())))),
                 StmtBreak()
@@ -1682,7 +1828,8 @@ def _generateCxxUnionStuff(ud):
     cls.addstmts([ dtor, Whitespace.NL ])
 
     # type()
-    typemeth = MethodDefn(MethodDecl('type', ret=typetype, const=1))
+    typemeth = MethodDefn(MethodDecl('type', ret=typetype,
+                                     const=1, force_inline=1))
     typemeth.addstmt(StmtReturn(mtypevar))
     cls.addstmts([ typemeth, Whitespace.NL ])
 
@@ -1736,23 +1883,26 @@ def _generateCxxUnionStuff(ud):
         getValueVar = ExprVar(c.getTypeName())
         getConstValueVar = ExprVar(c.getConstTypeName())
 
-        getvalue = MethodDefn(MethodDecl(getValueVar.name, ret=c.refType()))
+        getvalue = MethodDefn(MethodDecl(getValueVar.name,
+                                         ret=c.refType(),
+                                         force_inline=1))
         getvalue.addstmts([
             StmtExpr(callAssertSanity(expectTypeVar=c.enumvar())),
             StmtReturn(ExprDeref(c.callGetPtr()))
         ])
 
         getconstvalue = MethodDefn(MethodDecl(
-            getConstValueVar.name, ret=c.constRefType(), const=1))
+            getConstValueVar.name, ret=c.constRefType(),
+            const=1, force_inline=1))
         getconstvalue.addstmts([
             StmtExpr(callAssertSanity(expectTypeVar=c.enumvar())),
             StmtReturn(ExprDeref(c.callGetConstPtr()))
         ])
 
-        optype = MethodDefn(MethodDecl('', typeop=c.refType()))
+        optype = MethodDefn(MethodDecl('', typeop=c.refType(), force_inline=1))
         optype.addstmt(StmtReturn(ExprCall(getValueVar)))
         opconsttype = MethodDefn(MethodDecl(
-            '', const=1, typeop=c.constRefType()))
+            '', const=1, typeop=c.constRefType(), force_inline=1))
         opconsttype.addstmt(StmtReturn(ExprCall(getConstValueVar)))
 
         cls.addstmts([ getvalue, getconstvalue,
@@ -1766,17 +1916,7 @@ def _generateCxxUnionStuff(ud):
         StmtDecl(Decl(typetype, mtypevar.name))
     ])
 
-    return (
-        [
-            Whitespace("""
-//-----------------------------------------------------------------------------
-// Definition of the IPDL type |union %s|
-//
-"""% (ud.name))
-        ]
-        + forwarddeclstmts
-        + [  _putInNamespaces(cls, ud.namespaces) ])
-
+    return forwarddeclstmts, cls
 
 ##-----------------------------------------------------------------------------
 
@@ -1880,7 +2020,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # this generates the actor's full impl in self.cls
         tu.protocol.accept(self)
 
-        clsdecl, clsdefn = _ClassDeclDefn().split(self.cls)
+        clsdecl, clsdefn = _splitClassDeclDefn(self.cls)
 
         # XXX damn C++ ... return types in the method defn aren't in
         # class scope
@@ -1957,7 +2097,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ip = pi.tu.protocol
 
         self.hdrfile.addthings([
-            _makeForwardDecl(ip.decl.type, self.side),
+            _makeForwardDeclForActor(ip.decl.type, self.side),
             Whitespace.NL
         ])
         self.protocolCxxIncludes.append(
@@ -2011,7 +2151,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         for friend in friends:
             self.hdrfile.addthings([
                 Whitespace.NL,
-                _makeForwardDecl(friend, self.prettyside),
+                _makeForwardDeclForActor(friend, self.prettyside),
                 Whitespace.NL
             ])
             self.cls.addstmts([
@@ -3323,7 +3463,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         outtype = _cxxPtrToType(arraytype, self.side)
 
         write = MethodDefn(self.writeMethodDecl(intype, var))
-        # FIXME hacky init of |i|
         forwrite = StmtFor(init=ExprAssn(Decl(Type.UINT32, ivar.name),
                                          ExprLiteral.ZERO),
                            cond=ExprBinary(ivar, '<', lenvar),
@@ -3340,7 +3479,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         read = MethodDefn(self.readMethodDecl(outtype, var))
         avar = ExprVar('a')
-        # FIXME hacky init of |i|
         forread = StmtFor(init=ExprAssn(Decl(Type.UINT32, ivar.name),
                                         ExprLiteral.ZERO),
                           cond=ExprBinary(ivar, '<', lenvar),
@@ -3420,7 +3558,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         read = MethodDefn(self.readMethodDecl(outtype, var))        
 
         def get(sel, f):
-            return ExprSelect(var, sel, f.name)
+            return ExprCall(f.getMethod(thisexpr=var, sel=sel))
 
         for f in sd.fields:
             writefield = StmtExpr(self.write(f.ipdltype, get('.', f), msgvar))
@@ -4162,32 +4300,34 @@ class _GenerateProtocolChildCode(_GenerateProtocolActorCode):
 ## Utility passes
 ##
 
-class _ClassDeclDefn:
-    def split(self, cls):
-        """Warning: destructively splits |cls|!"""
-        defns = Block()
+def _splitClassDeclDefn(cls, inlinedefns=0):
+    """Destructively split |cls| methods into declarations and
+definitions (if |not methodDecl.force_inline|).  Return classDecl,
+methodDefns."""
+    defns = Block()
 
-        for i, stmt in enumerate(cls.stmts):
-            if isinstance(stmt, MethodDefn) and not stmt.decl.inline:
-                decl, defn = self.splitMethodDefn(stmt, cls.name)
-                cls.stmts[i] = StmtDecl(decl)
-                defns.addstmts([ defn, Whitespace.NL ])
+    for i, stmt in enumerate(cls.stmts):
+        if isinstance(stmt, MethodDefn) and not stmt.decl.force_inline:
+            decl, defn = _splitMethodDefn(stmt, cls.name, inlinedefns)
+            cls.stmts[i] = StmtDecl(decl)
+            defns.addstmts([ defn, Whitespace.NL ])
 
-        return cls, defns
+    return cls, defns
 
-    def splitMethodDefn(self, md, clsname):
-        saveddecl = deepcopy(md.decl)
-        md.decl.name = (clsname +'::'+ md.decl.name)
-        md.decl.virtual = 0
-        md.decl.static = 0
-        md.decl.warn_unused = 0
-        for param in md.decl.params:
-            if isinstance(param, Param):
-                param.default = None
-        return saveddecl, md
+def _splitMethodDefn(md, clsname, inlinedefn):
+    saveddecl = deepcopy(md.decl)
+    md.decl.name = (clsname +'::'+ md.decl.name)
+    md.decl.virtual = 0
+    md.decl.static = 0
+    md.decl.warn_unused = 0
+    md.decl.inline = inlinedefn
+    for param in md.decl.params:
+        if isinstance(param, Param):
+            param.default = None
+    return saveddecl, md
 
 
-# XXX this is tantalizingly similar to _SplitDeclDefn, but just
+# XXX this is tantalizingly similar to _splitClassDeclDefn, but just
 # different enough that I don't see the need to define
 # _GenerateSkeleton in terms of that
 class _GenerateSkeletonImpl(Visitor):
