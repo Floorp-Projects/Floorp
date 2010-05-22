@@ -160,7 +160,8 @@ body {
 		inset rgba(255, 255, 255, 0.6) 0 2px 0px,
 		inset rgba(255, 255, 255, 0.6) 0 -2px 0px,
 		inset rgba(255, 255, 255, 0.6) 2px 0px 0px,
-		inset rgba(255, 255, 255, 0.6) -2px 0px 0px;
+		inset rgba(255, 255, 255, 0.6) -2px 0px 0px,
+		rgba(0,0,0, .2) 1px 1px 4px;
 }
 
 .phantom {
