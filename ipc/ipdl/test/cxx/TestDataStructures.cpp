@@ -14,9 +14,7 @@ template<typename T>
 static void
 assert_arrays_equal(nsTArray<T> a, nsTArray<T> b)
 {
-    test_assert(a.Length() == b.Length(), "Length()s different");
-    for (uint32 i = 0; i < a.Length(); ++i)
-        test_assert(a[i] == b[i], "values different");
+    test_assert(a == b, "arrays equal");
 }
 
 inline static TestDataStructuresSub&

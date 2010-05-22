@@ -377,7 +377,7 @@ def errfnSendCtor(msg):  return errfnSend(msg, errcode=ExprLiteral.NULL)
 def errfnSendDtor(msg):
     return [
         _printErrorMessage(msg),
-        StmtReturn(ExprLiteral.FALSE)
+        StmtReturn.FALSE
     ]
 
 # used in |OnMessage*()| handlers that hand in-messages off to Recv*()
@@ -390,7 +390,7 @@ def errfnRecv(msg, errcode=_Result.ValuError):
 
 # used in Read() methods
 def errfnRead(msg):
-    return [ StmtReturn(ExprLiteral.FALSE) ]
+    return [ StmtReturn.FALSE ]
 
 def _destroyMethod():
     return ExprVar('ActorDestroy')
@@ -1563,6 +1563,21 @@ def _generateCxxStruct(sd):
     opeq.addstmt(StmtExpr(assignFromOther(ovar)))
     struct.addstmts([ opeq, Whitespace.NL ])
 
+    # bool operator==(const Struct& _o)
+    opeqeq = MethodDefn(MethodDecl(
+        'operator==',
+        params=[ Decl(constreftype, ovar.name) ],
+        ret=Type.BOOL,
+        const=1))
+    for f in sd.fields:
+        ifneq = StmtIf(ExprNot(
+            ExprBinary(ExprCall(f.getMethod()), '==',
+                       ExprCall(f.getMethod(ovar)))))
+        ifneq.addifstmt(StmtReturn.FALSE)
+        opeqeq.addstmt(ifneq)
+    opeqeq.addstmt(StmtReturn.TRUE)
+    struct.addstmts([ opeqeq, Whitespace.NL ])
+
     # field1& f1()
     # const field1& f1() const
     for f in sd.fields:
@@ -1732,10 +1747,10 @@ def _generateCxxUnion(ud):
         ret=Type.BOOL))
     # wasn't /actually/ dtor'd, but it needs to be re-constructed
     ifnone = StmtIf(ExprBinary(mtypevar, '==', tnonevar))
-    ifnone.addifstmt(StmtReturn(ExprLiteral.TRUE))
+    ifnone.addifstmt(StmtReturn.TRUE)
     # same type, nothing to see here
     ifnochange = StmtIf(ExprBinary(mtypevar, '==', newtypevar))
-    ifnochange.addifstmt(StmtReturn(ExprLiteral.FALSE))
+    ifnochange.addifstmt(StmtReturn.FALSE)
     # need to destroy.  switch on underlying type
     dtorswitch = StmtSwitch(mtypevar)
     for c in ud.components:
@@ -1750,7 +1765,7 @@ def _generateCxxUnion(ud):
         ifnone,
         ifnochange,
         dtorswitch,
-        StmtReturn(ExprLiteral.TRUE)
+        StmtReturn.TRUE
     ])
     cls.addstmts([ maybedtor, Whitespace.NL ])
 
@@ -1876,6 +1891,43 @@ def _generateCxxUnion(ud):
         StmtReturn(ExprDeref(ExprVar.THIS))
     ])
     cls.addstmts([ opeq, Whitespace.NL ])
+
+    # bool operator==(const T&)
+    for c in ud.components:
+        opeqeq = MethodDefn(MethodDecl(
+            'operator==',
+            params=[ Decl(c.inType(), rhsvar.name) ],
+            ret=Type.BOOL,
+            const=1))
+        opeqeq.addstmt(StmtReturn(ExprBinary(
+            ExprCall(ExprVar(c.getTypeName())), '==', rhsvar)))
+        cls.addstmts([ opeqeq, Whitespace.NL ])
+
+    # bool operator==(const Union&)
+    opeqeq = MethodDefn(MethodDecl(
+        'operator==',
+        params=[ Decl(inClsType, rhsvar.name) ],
+        ret=Type.BOOL,
+        const=1))
+    iftypesmismatch = StmtIf(ExprBinary(ud.callType(), '!=',
+                                        ud.callType(rhsvar)))
+    iftypesmismatch.addifstmt(StmtReturn.FALSE)
+    opeqeq.addstmts([ iftypesmismatch, Whitespace.NL ])
+
+    opeqeqswitch = StmtSwitch(ud.callType())
+    for c in ud.components:
+        case = StmtBlock()
+        case.addstmt(StmtReturn(ExprBinary(
+            ExprCall(ExprVar(c.getTypeName())), '==',
+            ExprCall(ExprSelect(rhsvar, '.', c.getTypeName())))))
+        opeqeqswitch.addcase(CaseLabel(c.enum()), case)
+    opeqeqswitch.addcase(
+        DefaultLabel(),
+        StmtBlock([ _runtimeAbort('unreached'),
+                    StmtReturn.FALSE ]))
+    opeqeq.addstmt(opeqeqswitch)
+
+    cls.addstmts([ opeqeq, Whitespace.NL ])
 
     # accessors for each type: operator T&, operator const T&,
     # T& get(), const T& get()
@@ -2181,7 +2233,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                 if isctor or isdtor:
                     defaultRecv = MethodDefn(recvDecl)
-                    defaultRecv.addstmt(StmtReturn(ExprLiteral.TRUE))
+                    defaultRecv.addstmt(StmtReturn.TRUE)
                     self.cls.addstmt(defaultRecv)
                 else:
                     recvDecl.pure = 1
@@ -2222,7 +2274,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             shouldcontinue = MethodDefn(
                 MethodDecl(p.shouldContinueFromTimeoutVar().name,
                            ret=Type.BOOL, virtual=1))
-            shouldcontinue.addstmt(StmtReturn(ExprLiteral.TRUE))
+            shouldcontinue.addstmt(StmtReturn.TRUE)
 
             # void Entered*()/Exited*(); default to no-op
             entered = MethodDefn(
@@ -2465,7 +2517,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             else:
                 ontimeout.addstmts([
                     _runtimeAbort("`OnReplyTimeout' called on non-toplevel actor"),
-                    StmtReturn(ExprLiteral.FALSE)
+                    StmtReturn.FALSE
                 ])
 
             self.cls.addstmts([ ontimeout, Whitespace.NL ])
@@ -2585,7 +2637,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     ExprVar('XRE_TakeMinidumpForChild'),
                     args=[ ExprCall(otherpidvar), dumpvar ])),
                 CppDirective('else'),
-                StmtReturn(ExprLiteral.FALSE),
+                StmtReturn.FALSE,
                 CppDirective('endif')
             ])
             self.cls.addstmts([ otherpid, Whitespace.NL,
@@ -2906,7 +2958,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                             p.routingId()))
             ])
             failif = StmtIf(ExprNot(descriptorvar))
-            failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
+            failif.addifstmt(StmtReturn.FALSE)
             createshmem.addstmt(failif)
 
             failif = StmtIf(ExprNot(ExprCall(
@@ -2947,7 +2999,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                             p.routingId()))
             ])
             failif = StmtIf(ExprNot(descriptorvar))
-            failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
+            failif.addifstmt(StmtReturn.FALSE)
             adoptshmem.addstmt(failif)
 
             failif = StmtIf(ExprNot(ExprCall(
@@ -2961,7 +3013,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
                     args=[ rawvar, ExprDeref(idvar) ])),
                 StmtExpr(ExprCall(ExprSelect(rawvar, '->', 'AddRef'))),
-                StmtReturn(ExprLiteral.TRUE)
+                StmtReturn.TRUE
             ])
 
             # SharedMemory* Lookup(id)
@@ -2991,7 +3043,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ])
 
             failif = StmtIf(ExprNot(rawvar))
-            failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
+            failif.addifstmt(StmtReturn.FALSE)
             destroyshmem.addstmts([
                 failif,
                 StmtDecl(Decl(Type('Message', ptr=1), descriptorvar.name),
@@ -3142,7 +3194,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ret=Type.BOOL))
 
         ifallocfails = StmtIf(ExprNot(rawvar))
-        ifallocfails.addifstmt(StmtReturn(ExprLiteral.FALSE))
+        ifallocfails.addifstmt(StmtReturn.FALSE)
 
         allocShmem.addstmts([
             StmtDecl(Decl(_shmemIdType(), idvar.name)),
@@ -3155,7 +3207,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL,
             StmtExpr(ExprAssn(
                 ExprDeref(memvar), _shmemCtor(_autoptrForget(rawvar), idvar))),
-            StmtReturn(ExprLiteral.TRUE)
+            StmtReturn.TRUE
         ])
 
         # bool AdoptShmem(const Shmem& mem, Shmem* outmem):
@@ -3183,7 +3235,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         ifadoptfails = StmtIf(ExprNot(ExprCall(
             p.adoptSharedMemory(), args=[ rawvar, ExprAddrOf(idvar) ])))
-        ifadoptfails.addifstmt(StmtReturn(ExprLiteral.FALSE))
+        ifadoptfails.addifstmt(StmtReturn.FALSE)
 
         adoptShmem.addstmts([
             Whitespace.NL,
@@ -3192,7 +3244,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL,
             StmtExpr(ExprAssn(ExprDeref(outmemvar),
                               _shmemCtor(rawvar, idvar))),
-            StmtReturn(ExprLiteral.TRUE)
+            StmtReturn.TRUE
         ])
 
         # bool DeallocShmem(Shmem& mem):
@@ -3423,7 +3475,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ExprBinary(ExprBinary(_NULL_ACTOR_ID, '==', idvar),
                        '&&',
                        ExprNot(nullablevar))))
-        ifbadid.addifstmt(StmtReturn(ExprLiteral.FALSE))
+        ifbadid.addifstmt(StmtReturn.FALSE)
         read.addstmts([ ifbadid, Whitespace.NL ])
         
         # if (NULL_ID == id)
@@ -3441,12 +3493,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             ExprCast(_lookupListener(idvar), cxxtype, static=1))))
 
         ifnotfound = StmtIf(ExprNot(outactor))
-        ifnotfound.addifstmt(StmtReturn(ExprLiteral.FALSE))
+        ifnotfound.addifstmt(StmtReturn.FALSE)
         ifnull.addelsestmt(ifnotfound)
 
         read.addstmts([
             ifnull,
-            StmtReturn(ExprLiteral.TRUE)
+            StmtReturn.TRUE
         ])
 
         self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])
@@ -3495,7 +3547,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL,
             StmtExpr(_callCxxArraySetLength(var, lenvar, '->')),
             forread,
-            StmtReturn(ExprLiteral.TRUE)
+            StmtReturn.TRUE
         ])
 
         self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])
@@ -3524,12 +3576,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         ifread = StmtIf(ExprNot(ExprCall(ExprVar('IPC::ReadParam'),
                                          args=[ msgvar, itervar,
                                                 ExprAddrOf(tmpvar) ])))
-        ifread.addifstmt(StmtReturn(ExprLiteral.FALSE))
+        ifread.addifstmt(StmtReturn.FALSE)
 
         iffound = StmtIf(rawvar)
         iffound.addifstmt(StmtExpr(ExprAssn(
             ExprDeref(var), _shmemCtor(rawvar, idvar))))
-        iffound.addifstmt(StmtReturn(ExprLiteral.TRUE))
+        iffound.addifstmt(StmtReturn.TRUE)
 
         read.addstmts([
             StmtDecl(Decl(_shmemType(), tmpvar.name)),
@@ -3540,7 +3592,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtDecl(Decl(_rawShmemType(ptr=1), rawvar.name),
                      init=_lookupShmem(idvar)),
             iffound,
-            StmtReturn(ExprLiteral.FALSE)
+            StmtReturn.FALSE
         ])
 
         self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])
@@ -3574,7 +3626,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             write.addstmt(writefield)
             read.addstmt(readfield)
 
-        read.addstmt(StmtReturn(ExprLiteral.TRUE))
+        read.addstmt(StmtReturn.TRUE)
 
         self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])
 
@@ -3615,7 +3667,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 # will be on this side; i.e. child->parent messages
                 # have type PFooChild when received on the parent side
                 # XXX: better error message
-                readcase.addstmt(StmtReturn(ExprLiteral.FALSE))
+                readcase.addstmt(StmtReturn.FALSE)
             else:
                 if c.special:
                     c = c.other       # see above
@@ -3938,7 +3990,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
         failif = StmtIf(ExprNot(sendok))
-        failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
+        failif.addifstmt(StmtReturn.FALSE)
 
         desstmts = self.deserializeReply(
             md, ExprAddrOf(replyvar), self.side, errfnSend)
@@ -3951,7 +4003,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [ failif ]
             + desstmts
             + [ Whitespace.NL,
-                StmtReturn(ExprLiteral.TRUE) ])
+                StmtReturn.TRUE ])
 
         return method
 
