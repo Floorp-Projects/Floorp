@@ -42,8 +42,8 @@ class Visitor:
             cxxInc.accept(self)
         for protoInc in tu.protocolIncludes:
             protoInc.accept(self)
-        for union in tu.unions:
-            union.accept(self)
+        for su in tu.structsAndUnions:
+            su.accept(self)
         for using in tu.using:
             using.accept(self)
         tu.protocol.accept(self)
@@ -55,6 +55,13 @@ class Visitor:
         # Note: we don't visit the child AST here, because that needs delicate
         # and pass-specific handling
         pass
+
+    def visitStructDecl(self, struct):
+        for f in struct.fields:
+            f.accept(self)
+
+    def visitStructField(self, field):
+        field.type.accept(self)
 
     def visitUnionDecl(self, union):
         for t in union.components:
@@ -171,12 +178,13 @@ class TranslationUnit(Node):
         self.cxxIncludes = [ ]
         self.protocolIncludes = [ ]
         self.using = [ ]
-        self.unions = [ ]
+        self.structsAndUnions = [ ]
         self.protocol = None
 
     def addCxxInclude(self, cxxInclude): self.cxxIncludes.append(cxxInclude)
     def addProtocolInclude(self, pInc): self.protocolIncludes.append(pInc)
-    def addUnionDecl(self, union): self.unions.append(union)
+    def addStructDecl(self, struct): self.structsAndUnions.append(struct)
+    def addUnionDecl(self, union): self.structsAndUnions.append(union)
     def addUsingStmt(self, using): self.using.append(using)
 
     def setProtocol(self, protocol): self.protocol = protocol
@@ -266,6 +274,17 @@ class Protocol(NamespacedNode):
         self.messageDecls = [ ]
         self.transitionStmts = [ ]
         self.startStates = [ ]
+
+class StructField(Node):
+    def __init__(self, loc, type, name):
+        Node.__init__(self, loc)
+        self.type = type
+        self.name = name
+
+class StructDecl(NamespacedNode):
+    def __init__(self, loc, name, fields):
+        NamespacedNode.__init__(self, loc, name)
+        self.fields = fields
 
 class UnionDecl(NamespacedNode):
     def __init__(self, loc, name, components):

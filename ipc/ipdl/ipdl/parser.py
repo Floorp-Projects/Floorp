@@ -165,6 +165,7 @@ reserved = set((
         'spawns',
         'start',
         'state',
+        'struct',
         'sync',
         'union',
         'using'))
@@ -219,7 +220,9 @@ def p_TranslationUnit(p):
             assert 0
 
     for thing in p[2]:
-        if isinstance(thing, UnionDecl):
+        if isinstance(thing, StructDecl):
+            tu.addStructDecl(thing)
+        elif isinstance(thing, UnionDecl):
             tu.addUnionDecl(thing)
         elif isinstance(thing, Protocol):
             if tu.protocol is not None:
@@ -287,6 +290,7 @@ def p_NamespacedStuff(p):
 
 def p_NamespaceThing(p):
     """NamespaceThing : NAMESPACE ID '{' NamespacedStuff '}'
+                      | StructDecl
                       | UnionDecl
                       | ProtocolDefn"""
     if 2 == len(p):
@@ -295,7 +299,24 @@ def p_NamespaceThing(p):
         for thing in p[4]:
             thing.addOuterNamespace(Namespace(locFromTok(p, 1), p[2]))
         p[0] = p[4]
-    
+
+def p_StructDecl(p):
+    """StructDecl : STRUCT ID '{' StructFields  '}' ';'"""
+    p[0] = StructDecl(locFromTok(p, 1), p[2], p[4])
+
+def p_StructFields(p):
+    """StructFields : StructFields StructField ';'
+                    | StructField ';'"""
+    if 3 == len(p):
+        p[0] = [ p[1] ]
+    else:
+        p[1].append(p[2])
+        p[0] = p[1]
+
+def p_StructField(p):
+    """StructField : Type ID"""
+    p[0] = StructField(locFromTok(p, 1), p[1], p[2])
+
 def p_UnionDecl(p):
     """UnionDecl : UNION ID '{' ComponentTypes  '}' ';'"""
     p[0] = UnionDecl(locFromTok(p, 1), p[2], p[4])
