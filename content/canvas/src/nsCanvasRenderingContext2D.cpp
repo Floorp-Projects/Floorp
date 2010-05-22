@@ -108,6 +108,8 @@
 
 #include "CanvasUtils.h"
 
+#include "nsIMemoryReporter.h"
+
 using namespace mozilla;
 using namespace mozilla::layers;
 
@@ -167,6 +169,20 @@ static PRBool FloatValidate (double f1, double f2, double f3, double f4, double 
 }
 
 #undef VALIDATE
+
+/* Memory reporter stuff */
+static nsIMemoryReporter *gCanvasMemoryReporter = nsnull;
+static PRInt64 gCanvasMemoryUsed = 0;
+
+static PRInt64 GetCanvasMemoryUsed(void *) {
+    return gCanvasMemoryUsed;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(CanvasMemory,
+                             "content/canvas/2d_pixel_bytes",
+                             "Total memory used by 2D canvas (width * height * 4)",
+                             GetCanvasMemoryUsed,
+                             NULL)
 
 /**
  ** nsCanvasGradient
@@ -728,6 +744,9 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 void
 nsCanvasRenderingContext2D::Destroy()
 {
+    if (mValid)
+        gCanvasMemoryUsed -= mWidth * mHeight * 4;
+
     mSurface = nsnull;
     mThebes = nsnull;
     mValid = PR_FALSE;
@@ -938,6 +957,16 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
           surface = NULL;
         }
     }
+
+    if (surface) {
+        if (gCanvasMemoryReporter == nsnull) {
+            gCanvasMemoryReporter = new NS_MEMORY_REPORTER_NAME(CanvasMemory);
+            NS_RegisterMemoryReporter(gCanvasMemoryReporter);
+        }
+
+        gCanvasMemoryUsed += width * height * 4;
+    }
+
     return InitializeWithSurface(NULL, surface, width, height);
 }
 
