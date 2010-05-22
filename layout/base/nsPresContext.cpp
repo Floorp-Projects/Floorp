@@ -1335,7 +1335,7 @@ void
 nsPresContext::SetContainer(nsISupports* aHandler)
 {
   mContainer = do_GetWeakReference(aHandler);
-  mIsChromeIsCached = PR_FALSE;
+  InvalidateIsChromeCache();
   if (mContainer) {
     GetDocumentColorPreferences();
   }
@@ -1626,7 +1626,7 @@ nsPresContext::CountReflows(const char * aName, nsIFrame * aFrame)
 #endif
 
 PRBool
-nsPresContext::IsChromeSlow()
+nsPresContext::IsChromeSlow() const
 {
   PRBool isChrome = PR_FALSE;
   nsCOMPtr<nsISupports> container = GetContainer();
@@ -1647,19 +1647,13 @@ nsPresContext::IsChromeSlow()
 }
 
 void
-nsPresContext::InvalidateIsChromeCacheInternal()
-{
-  mIsChromeIsCached = PR_FALSE;
-}
-
-void
 nsPresContext::InvalidateIsChromeCacheExternal()
 {
   InvalidateIsChromeCacheInternal();
 }
 
 /* virtual */ PRBool
-nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask)
+nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) const
 {
   return
     nsRuleNode::HasAuthorSpecifiedRules(aFrame->GetStyleContext(),
