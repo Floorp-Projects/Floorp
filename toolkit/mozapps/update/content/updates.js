@@ -531,8 +531,12 @@ var gUpdates = {
         // restart. If that is the case and the add-on is not installed by the
         // application and is not compatible with the new application version
         // then the user should be warned that the add-on will become
-        // incompatible.
-        if (!addon.appDisabled && !addon.userDisabled &&
+        // incompatible. If an addon's type equals plugin it is skipped since
+        // checking plugins compatibility information isn't supported and
+        // getting the scope property of a plugin breaks in some environments
+        // (see bug 566787).
+        if (addon.type != "plugin" &&
+            !addon.appDisabled && !addon.userDisabled &&
             addon.scope != AddonManager.SCOPE_APPLICATION &&
             !addon.isCompatibleWith(self.update.appVersion,
                                     self.update.platformVersion))
