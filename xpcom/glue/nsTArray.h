@@ -298,6 +298,21 @@ class nsTArray : public nsTArray_base {
       return *this;
     }
 
+    // Return true if this array has the same length and the same
+    // elements as |other|.
+    bool operator==(const self_type& other) const {
+      size_type len = Length();
+      if (len != other.Length())
+        return false;
+
+      // XXX std::equal would be as fast or faster here
+      for (index_type i = 0; i < len; ++i)
+        if (!(operator[](i) == other[i]))
+          return false;
+
+      return true;
+    }
+
     //
     // Accessor methods
     //
