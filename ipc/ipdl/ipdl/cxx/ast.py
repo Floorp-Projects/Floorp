@@ -101,6 +101,10 @@ class Visitor:
             param.accept(self)
         if meth.ret is not None:
             meth.ret.accept(self)
+        if meth.typeop is not None:
+            meth.typeop.accept(self)
+        if meth.T is not None:
+            meth.T.accept(self)
 
     def visitMethodDefn(self, meth):
         meth.decl.accept(self)
@@ -455,8 +459,9 @@ class FriendClassDecl(Node):
 
 class MethodDecl(Node):
     def __init__(self, name, params=[ ], ret=Type('void'),
-                 virtual=0, const=0, pure=0, static=0, warn_unused=0,
-                 typeop=None):
+                 virtual=0, const=0, pure=0, static=0, warn_unused=0, inline=0,
+                 typeop=None,
+                 T=None):
         assert not (virtual and static)
         assert not pure or virtual      # pure => virtual
         assert not (static and typeop)
@@ -476,7 +481,9 @@ class MethodDecl(Node):
         self.pure = pure                # bool
         self.static = static            # bool
         self.warn_unused = warn_unused  # bool
+        self.inline = (inline or T)     # bool
         self.typeop = typeop            # Type or None
+        self.T = T                      # Type or None
 
     def __deepcopy__(self, memo):
         return MethodDecl(
@@ -484,7 +491,9 @@ class MethodDecl(Node):
             copy.deepcopy(self.params, memo),
             copy.deepcopy(self.ret, memo),
             self.virtual, self.const, self.pure, self.static, self.warn_unused,
-            copy.deepcopy(self.typeop, memo))
+            copy.deepcopy(self.typeop, memo),
+            copy.deepcopy(self.T, memo),
+            self.inline)
 
 class MethodDefn(Block):
     def __init__(self, decl):
@@ -626,7 +635,7 @@ class ExprCall(Node):
     def __init__(self, func, args=[ ]):
         assert hasattr(func, 'accept')
         assert isinstance(args, list)
-        for arg in args:  assert not isinstance(arg, str)
+        for arg in args:  assert arg and not isinstance(arg, str)
 
         Node.__init__(self)
         self.func = func
