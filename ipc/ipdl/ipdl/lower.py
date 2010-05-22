@@ -202,7 +202,7 @@ def _lookupActorHandle(handle, outactor, actortype, cxxactortype, errfn):
 def _lookupListener(idexpr):
     return ExprCall(ExprVar('Lookup'), args=[ idexpr ])
 
-def _shmemType(ptr=0, ref=0):
+def _shmemType(ptr=0, const=1, ref=0):
     return Type('Shmem', ptr=ptr, ref=ref)
 
 def _rawShmemType(ptr=0):
@@ -224,6 +224,10 @@ def _shmemCtor(rawmem, idexpr):
 
 def _shmemId(shmemexpr):
     return ExprCall(ExprSelect(shmemexpr, '.', 'Id'),
+                    args=[ _shmemBackstagePass() ])
+
+def _shmemSegment(shmemexpr):
+    return ExprCall(ExprSelect(shmemexpr, '.', 'Segment'),
                     args=[ _shmemBackstagePass() ])
 
 def _shmemAlloc(size, type):
@@ -1387,9 +1391,15 @@ class Protocol(ipdl.ast.Protocol):
 
     def createSharedMemory(self):
         return ExprVar('CreateSharedMemory')
+
+    def adoptSharedMemory(self):
+        return ExprVar('AdoptSharedMemory')
  
     def lookupSharedMemory(self):
         return ExprVar('LookupSharedMemory')
+
+    def isTrackingSharedMemory(self):
+        return ExprVar('IsTrackingSharedMemory')
 
     def destroySharedMemory(self):
         return ExprVar('DestroySharedMemory')
@@ -3275,6 +3285,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         routedvar = ExprVar('aRouted')
         idvar = ExprVar('aId')
         shmemvar = ExprVar('aShmem')
+        rawvar = ExprVar('segment')
         sizevar = ExprVar('aSize')
         typevar = ExprVar('type')
         listenertype = Type('ChannelListener', ptr=1)
@@ -3305,6 +3316,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                      Decl(_shmemTypeType(), typevar.name),
                      Decl(_shmemIdType(ptr=1), idvar.name) ],
             virtual=1))
+        adoptshmem = MethodDefn(MethodDecl(
+            p.adoptSharedMemory().name,
+            ret=Type.BOOL,
+            params=[ Decl(_rawShmemType(ptr=1), rawvar.name),
+                     Decl(_shmemIdType(ptr=1), idvar.name) ],
+            virtual=1))
         lookupshmem = MethodDefn(MethodDecl(
             p.lookupSharedMemory().name,
             ret=_rawShmemType(ptr=1),
@@ -3314,6 +3331,11 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             p.destroySharedMemory().name,
             ret=Type.BOOL,
             params=[ Decl(_shmemType(ref=1), shmemvar.name) ],
+            virtual=1))
+        istracking = MethodDefn(MethodDecl(
+            p.isTrackingSharedMemory().name,
+            ret=Type.BOOL,
+            params=[ Decl(_rawShmemType(ptr=1), rawvar.name) ],
             virtual=1))
 
         otherprocess = MethodDefn(MethodDecl(
@@ -3354,16 +3376,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             #   Message descriptor;
             #   if (!s->ShareTo(subprocess, mId, descriptor) ||
             #       !Send(descriptor))
-            #     return false;
+            #     return null;
             #   mShmemMap.Add(seg, id);
             #   return shmem.forget();
-            rawvar = ExprVar('segment')
-
             createshmem.addstmt(StmtDecl(
                 Decl(_autoptr(_rawShmemType()), rawvar.name),
                 initargs=[ _shmemAlloc(sizevar, typevar) ]))
             failif = StmtIf(ExprNot(rawvar))
-            failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
+            failif.addifstmt(StmtReturn(ExprLiteral.NULL))
             createshmem.addstmt(failif)
 
             descriptorvar = ExprVar('descriptor')
@@ -3395,10 +3415,57 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 StmtReturn(_autoptrForget(rawvar))
             ])
 
+            # SharedMemory* AdoptSharedMemory(SharedMemory*, id_t*):
+            #   Shmem s(seg, [nextshmemid]);
+            #   Message descriptor;
+            #   if (!s->ShareTo(subprocess, mId, descriptor) ||
+            #       !Send(descriptor))
+            #     return false;
+            #   mShmemMap.Add(seg, id);
+            #   seg->AddRef();
+            #   return true;
+
+            # XXX this is close to the same code as above, could be
+            # refactored
+            descriptorvar = ExprVar('descriptor')
+            adoptshmem.addstmts([
+                StmtDecl(
+                    Decl(_shmemType(), shmemvar.name),
+                    initargs=[ _shmemBackstagePass(),
+                               rawvar,
+                               p.nextShmemIdExpr(self.side) ]),
+                StmtDecl(Decl(Type('Message', ptr=1), descriptorvar.name),
+                         init=_shmemShareTo(shmemvar,
+                                            ExprCall(p.otherProcessMethod()),
+                                            p.routingId()))
+            ])
+            failif = StmtIf(ExprNot(descriptorvar))
+            failif.addifstmt(StmtReturn(ExprLiteral.FALSE))
+            adoptshmem.addstmt(failif)
+
+            failif = StmtIf(ExprNot(ExprCall(
+                ExprSelect(p.channelVar(), p.channelSel(), 'Send'),
+                args=[ descriptorvar ])))
+            adoptshmem.addstmt(failif)
+
+            adoptshmem.addstmts([
+                StmtExpr(ExprAssn(ExprDeref(idvar), _shmemId(shmemvar))),
+                StmtExpr(ExprCall(
+                    ExprSelect(p.shmemMapVar(), '.', 'AddWithID'),
+                    args=[ rawvar, ExprDeref(idvar) ])),
+                StmtExpr(ExprCall(ExprSelect(rawvar, '->', 'AddRef'))),
+                StmtReturn(ExprLiteral.TRUE)
+            ])
+
             # SharedMemory* Lookup(id)
             lookupshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.shmemMapVar(), '.', 'Lookup'),
                 args=[ idvar ])))
+
+            # bool IsTrackingSharedMemory(mem)
+            istracking.addstmt(StmtReturn(ExprCall(
+                ExprSelect(p.shmemMapVar(), '.', 'HasData'),
+                args=[ rawvar ])))
 
             # bool DestroySharedMemory(shmem):
             #   id = shmem.Id()
@@ -3475,9 +3542,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             createshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->', p.createSharedMemory().name),
                 [ sizevar, typevar, idvar ])))
+            adoptshmem.addstmt(StmtReturn(ExprCall(
+                ExprSelect(p.managerVar(), '->', p.adoptSharedMemory().name),
+                [ rawvar, idvar ])))
             lookupshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->', p.lookupSharedMemory().name),
                 [ idvar ])))
+            istracking.addstmt(StmtReturn(ExprCall(
+                ExprSelect(p.managerVar(), '->',
+                           p.isTrackingSharedMemory().name),
+                [ rawvar ])))
             destroyshmem.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.managerVar(), '->', p.destroySharedMemory().name),
                 [ shmemvar ])))
@@ -3530,7 +3604,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                  unregister,
                  removemanagee,
                  createshmem,
+                 adoptshmem,
                  lookupshmem,
+                 istracking,
                  destroyshmem,
                  otherprocess,
                  Whitespace.NL ]
@@ -3541,6 +3617,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         sizevar = ExprVar('aSize')
         typevar = ExprVar('aType')
         memvar = ExprVar('aMem')
+        outmemvar = ExprVar('aOutMem')
         rawvar = ExprVar('rawmem')
 
         # bool AllocShmem(size_t size, Shmem* outmem):
@@ -3548,7 +3625,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         #   nsAutoPtr<SharedMemory> mem(CreateSharedMemory(&id));
         #   if (!mem)
         #     return false;
-        #   *outmem = Shmem(shmem, id)
+        #   *outmem = Shmem(mem, id)
         #   return true;
         allocShmem = MethodDefn(MethodDecl(
             'AllocShmem',
@@ -3574,6 +3651,43 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             StmtReturn(ExprLiteral.TRUE)
         ])
 
+        # bool AdoptShmem(const Shmem& mem, Shmem* outmem):
+        #   SharedMemory* raw = mem.mSegment;
+        #   if (!raw || IsTrackingSharedMemory(raw))
+        #     RUNTIMEABORT()
+        #   id_t id
+        #   if (!AdoptSharedMemory(raw, &id))
+        #     return false
+        #   *outmem = Shmem(raw, id);
+        #   return true;
+        adoptShmem = MethodDefn(MethodDecl(
+            'AdoptShmem',
+            params=[ Decl(_shmemType(const=1, ref=1), memvar.name),
+                     Decl(_shmemType(ptr=1), outmemvar.name) ],
+            ret=Type.BOOL))
+
+        adoptShmem.addstmt(StmtDecl(Decl(_rawShmemType(ptr=1), rawvar.name),
+                                    init=_shmemSegment(memvar)))
+        ifbad = StmtIf(ExprBinary(
+            ExprNot(rawvar), '||',
+            ExprCall(ExprVar('IsTrackingSharedMemory'), args=[ rawvar ])))
+        ifbad.addifstmt(_runtimeAbort('bad Shmem'))
+        adoptShmem.addstmt(ifbad)
+
+        ifadoptfails = StmtIf(ExprNot(ExprCall(
+            p.adoptSharedMemory(), args=[ rawvar, ExprAddrOf(idvar) ])))
+        ifadoptfails.addifstmt(StmtReturn(ExprLiteral.FALSE))
+
+        adoptShmem.addstmts([
+            Whitespace.NL,
+            StmtDecl(Decl(_shmemIdType(), idvar.name)),
+            ifadoptfails,
+            Whitespace.NL,
+            StmtExpr(ExprAssn(ExprDeref(outmemvar),
+                              _shmemCtor(rawvar, idvar))),
+            StmtReturn(ExprLiteral.TRUE)
+        ])
+
         # bool DeallocShmem(Shmem& mem):
         #   bool ok = DestroySharedMemory(mem);
         #   mem.forget();
@@ -3594,6 +3708,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         return [ Whitespace('// Methods for managing shmem\n', indent=1),
                  allocShmem,
+                 Whitespace.NL,
+                 adoptShmem,
                  Whitespace.NL,
                  deallocShmem,
                  Whitespace.NL ]
