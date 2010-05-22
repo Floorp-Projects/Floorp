@@ -253,7 +253,7 @@ window.Page = {
     // When you click on the background/empty part of TabCandy
     // we create a new group.
     $(Utils.homeTab.contentDocument).mousedown(function(e){
-      if( e.originalTarget.nodeName == "HTML" )
+      if( e.originalTarget.id == "bg" )
         Page.createGroupOnDrag(e)
     })
 
@@ -379,7 +379,7 @@ window.Page = {
     }
     
     function finalize(e){
-      $("html").unbind("mousemove");
+      $("#bg").unbind("mousemove");
       if( phantom.css("opacity") != 1 ) collapse();
       else{
         var bounds = new Rect(startPos.x, startPos.y, phantom.width(), phantom.height())
@@ -399,8 +399,9 @@ window.Page = {
       }
     }
     
-    $("html").mousemove(updateSize)
-    $("html").one('mouseup',finalize);
+    $("#bg").mousemove(updateSize)
+    $(window).one('mouseup', finalize);
+    e.preventDefault();  
     return false;
   },
   
