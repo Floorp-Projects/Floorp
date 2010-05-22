@@ -1,10 +1,10 @@
-include protocol PTestArrays;
+include protocol PTestDataStructures;
 
 namespace mozilla {
 namespace _ipdltest {
 
-sync protocol PTestArraysSub {
-    manager PTestArrays;
+sync protocol PTestDataStructuresSub {
+    manager PTestDataStructures;
 
 parent:
     sync __delete__();
