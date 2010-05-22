@@ -3318,6 +3318,55 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
                         object_props, object_methods, NULL, object_static_methods);
 }
 
+static bool
+DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
+                   const Value &v, uint32 attrs, bool &named)
+{
+    jsid id = ATOM_TO_JSID(atom);
+
+    if (key != JSProto_Null) {
+        /*
+         * Initializing an actual standard class on a global object. If the
+         * property is not yet present, force it into a new one bound to a
+         * reserved slot. Otherwise, go through the normal property path.
+         */
+        JS_ASSERT(obj->getClass()->flags & JSCLASS_IS_GLOBAL);
+        JS_ASSERT(obj->isNative());
+
+        JS_LOCK_OBJ(cx, obj);
+
+        JSScope *scope = js_GetMutableScope(cx, obj);
+        if (!scope) {
+            JS_UNLOCK_OBJ(cx, obj);
+            return false;
+        }
+
+        JSScopeProperty *sprop = scope->lookup(id);
+        if (!sprop) {
+            uint32 index = JSProto_LIMIT + key;
+            if (!js_SetReservedSlot(cx, obj, index, v)) {
+                JS_UNLOCK_SCOPE(cx, scope);
+                return false;
+            }
+
+            uint32 slot = JSSLOT_START(obj->getClass()) + index;
+            sprop = scope->addProperty(cx, id, PropertyStub, PropertyStub,
+                                       slot, attrs, 0, 0);
+
+            JS_UNLOCK_SCOPE(cx, scope);
+            if (!sprop)
+                return false;
+
+            named = true;
+            return true;
+        }
+        JS_UNLOCK_SCOPE(cx, scope);
+    }
+
+    named = obj->defineProperty(cx, id, v, PropertyStub, PropertyStub, attrs);
+    return named;
+}
+
 JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              Class *clasp, Native constructor, uintN nargs,
@@ -3326,8 +3375,8 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 {
     JSAtom *atom;
     JSProtoKey key;
-    JSBool named;
     JSFunction *fun;
+    bool named = false;
 
     atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
     if (!atom)
@@ -3360,7 +3409,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
         return NULL;
 
     /* After this point, control must exit via label bad or out. */
-    AutoObjectRooter tvr(cx, proto);
+    AutoValueRooter tvr(cx, ObjectOrNullTag(proto));
 
     JSObject *ctor;
     if (!constructor) {
@@ -3370,27 +3419,25 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
          * of obj (the global object) is has a reserved slot indexed by key;
          * and (c) key is not the null key.
          */
-        if ((clasp->flags & JSCLASS_IS_ANONYMOUS) &&
-            (obj->getClass()->flags & JSCLASS_IS_GLOBAL) &&
-            key != JSProto_Null) {
-            named = JS_FALSE;
-        } else {
-            named = obj->defineProperty(cx, ATOM_TO_JSID(atom), ObjectOrNullTag(proto),
-                                        PropertyStub, PropertyStub,
-                                        (clasp->flags & JSCLASS_IS_ANONYMOUS)
-                                        ? JSPROP_READONLY | JSPROP_PERMANENT
-                                        : 0);
-            if (!named)
+        if (!(clasp->flags & JSCLASS_IS_ANONYMOUS) ||
+            !(obj->getClass()->flags & JSCLASS_IS_GLOBAL) ||
+            key == JSProto_Null)
+        {
+            uint32 attrs = (clasp->flags & JSCLASS_IS_ANONYMOUS)
+                           ? JSPROP_READONLY | JSPROP_PERMANENT
+                           : 0;
+            if (!DefineStandardSlot(cx, obj, key, atom, tvr.value(), attrs, named))
                 goto bad;
         }
 
         ctor = proto;
     } else {
-        /* Define the constructor function in obj's scope. */
-        fun = js_DefineFunction(cx, obj, atom, constructor, nargs,
-                                JSFUN_STUB_GSOPS);
-        named = (fun != NULL);
+        fun = js_NewFunction(cx, NULL, constructor, nargs, 0, obj, atom);
         if (!fun)
+            goto bad;
+
+        AutoValueRooter tvr2(cx, FunObjTag(*fun));
+        if (!DefineStandardSlot(cx, obj, key, atom, tvr2.value(), 0, named))
             goto bad;
 
         /*
