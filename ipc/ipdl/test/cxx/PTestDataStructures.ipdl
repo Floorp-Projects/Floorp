@@ -1,0 +1,185 @@
+include protocol PTestDataStructuresSub;
+
+namespace mozilla {
+namespace _foo {
+
+union IntDouble {
+    int;
+    double;
+};
+
+struct SIntDouble {
+    int i;
+    double d;
+};
+
+union IntDoubleArrays {
+    int;
+    int[];
+    double[];
+};
+
+struct SIntDoubleArrays {
+    int i;
+    int[] ai;
+    double[] ad;
+};
+
+union Actors {
+    int;
+    int[];
+    PTestDataStructuresSub[];
+};
+
+struct SActors {
+    int i;
+    int[] ai;
+    PTestDataStructuresSub[] ap;
+};
+
+union Unions {
+    int;
+    int[];
+    PTestDataStructuresSub[];
+    Actors[];
+};
+
+struct Structs {
+    int i;
+    int[] ai;
+    PTestDataStructuresSub[] ap;
+    SActors[] aa;
+};
+
+union WithStructs {
+    int;
+    int[];
+    PTestDataStructuresSub[];
+    SActors[];
+    Structs[];
+};
+
+struct WithUnions {
+    int i;
+    int[] ai;
+    PTestDataStructuresSub[] ap;
+    Actors[] aa;
+    Unions[] au;
+};
+
+} // namespace _foo
+} // namespace mozilla
+
+namespace mozilla {
+namespace _ipdltest {
+
+sync protocol PTestDataStructures {
+    manages PTestDataStructuresSub;
+
+child:
+    PTestDataStructuresSub(int i);
+
+    Start();
+
+parent:
+    __delete__();
+
+    sync Test1(int[] i1)
+        returns (int[] o1);
+
+    sync Test2(PTestDataStructuresSub[] i1)
+        returns (PTestDataStructuresSub[] o1);
+
+    sync Test3(IntDouble i1,
+               IntDouble i2)
+        returns (IntDouble o1,
+                 IntDouble o2);
+
+    sync Test4(IntDouble[] i1)
+        returns (IntDouble[] o1);
+
+    sync Test5(IntDoubleArrays i1,
+               IntDoubleArrays i2,
+               IntDoubleArrays i3)
+        returns (IntDoubleArrays o1,
+                 IntDoubleArrays o2,
+                 IntDoubleArrays o3);
+
+    sync Test6(IntDoubleArrays[] i1)
+        returns (IntDoubleArrays[] o1);
+
+    sync Test7(Actors i1,
+               Actors i2,
+               Actors i3)
+        returns (Actors o1,
+                 Actors o2,
+                 Actors o3);
+
+    sync Test8(Actors[] i1)
+        returns (Actors[] o1);
+
+    sync Test9(Unions i1,
+               Unions i2,
+               Unions i3,
+               Unions i4)
+        returns (Unions o1,
+                 Unions o2,
+                 Unions o3,
+                 Unions o4);
+
+    sync Test10(Unions[] i1)
+        returns (Unions[] o1);
+
+    sync Test11(SIntDouble i)
+        returns (SIntDouble o);
+
+    sync Test12(SIntDoubleArrays i)
+        returns (SIntDoubleArrays o);
+
+    sync Test13(SActors i)
+        returns (SActors o);
+
+    sync Test14(Structs i)
+        returns (Structs o);
+
+    sync Test15(WithStructs i1,
+                WithStructs i2,
+                WithStructs i3,
+                WithStructs i4,
+                WithStructs i5)
+        returns (WithStructs o1,
+                 WithStructs o2,
+                 WithStructs o3,
+                 WithStructs o4,
+                 WithStructs o5);
+
+    sync Test16(WithUnions i)
+        returns (WithUnions o);
+
+state START:
+    send Start goto TEST1;
+
+state TEST1:   recv Test1 goto TEST2;
+state TEST2:   recv Test2 goto TEST3;
+state TEST3:   recv Test3 goto TEST4;
+state TEST4:   recv Test4 goto TEST5;
+state TEST5:   recv Test5 goto TEST6;
+state TEST6:   recv Test6 goto TEST7;
+state TEST7:   recv Test7 goto TEST8;
+state TEST8:   recv Test8 goto TEST9;
+state TEST9:   recv Test9 goto TEST10;
+state TEST10:  recv Test10 goto TEST11;
+state TEST11:  recv Test11 goto TEST12;
+state TEST12:  recv Test11 goto TEST13;
+state TEST13:  recv Test11 goto TEST14;
+state TEST14:  recv Test11 goto TEST15;
+state TEST15:  recv Test11 goto TEST16;
+state TEST16:  recv Test11 goto DEAD;
+
+state DEAD:
+    recv __delete__;
+};
+
+} // namespace _ipdltest
+} // namespace mozilla
+
