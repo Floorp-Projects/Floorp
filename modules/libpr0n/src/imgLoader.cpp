@@ -39,6 +39,13 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "imgLoader.h"
+#include "imgContainer.h"
+
+/* We end up pulling in windows.h because we eventually hit
+ * gfxWindowsSurface; it defines some crazy things, like LoadImage.
+ * We undefine it here so as to avoid problems later on.
+ */
+#undef LoadImage
 
 #include "nsCOMPtr.h"
 
@@ -69,6 +76,8 @@
 
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
+
+#include "nsIMemoryReporter.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -115,6 +124,133 @@ static void PrintImageDecoders()
   }
 }
 #endif
+
+
+class imgMemoryReporter :
+  public nsIMemoryReporter
+{
+public:
+  enum ReporterType {
+    CHROME_BIT = PR_BIT(0),
+    USED_BIT   = PR_BIT(1),
+    RAW_BIT    = PR_BIT(2),
+
+    ChromeUsedRaw             = CHROME_BIT | USED_BIT | RAW_BIT,
+    ChromeUsedUncompressed    = CHROME_BIT | USED_BIT,
+    ChromeUnusedRaw           = CHROME_BIT | RAW_BIT,
+    ChromeUnusedUncompressed  = CHROME_BIT,
+    ContentUsedRaw            = USED_BIT | RAW_BIT,
+    ContentUsedUncompressed   = USED_BIT,
+    ContentUnusedRaw          = RAW_BIT,
+    ContentUnusedUncompressed = 0
+  };
+
+  imgMemoryReporter(ReporterType aType)
+    : mType(aType)
+  { }
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD GetPath(char **memoryPath)
+  {
+    if (mType == ChromeUsedRaw) {
+      *memoryPath = strdup("images/chrome/used/raw");
+    } else if (mType == ChromeUsedUncompressed) {
+      *memoryPath = strdup("images/chrome/used/uncompressed");
+    } else if (mType == ChromeUnusedRaw) {
+      *memoryPath = strdup("images/chrome/unused/raw");
+    } else if (mType == ChromeUnusedUncompressed) {
+      *memoryPath = strdup("images/chrome/unused/uncompressed");
+    } else if (mType == ContentUsedRaw) {
+      *memoryPath = strdup("images/content/used/raw");
+    } else if (mType == ContentUsedUncompressed) {
+      *memoryPath = strdup("images/content/used/uncompressed");
+    } else if (mType == ContentUnusedRaw) {
+      *memoryPath = strdup("images/content/unused/raw");
+    } else if (mType == ContentUnusedUncompressed) {
+      *memoryPath = strdup("images/content/unused/uncompressed");
+    }
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetDescription(char **desc)
+  {
+    if (mType == ChromeUsedRaw) {
+      *desc = strdup("Memory used by in-use chrome images, compressed data");
+    } else if (mType == ChromeUsedUncompressed) {
+      *desc = strdup("Memory used by in-use chrome images, uncompressed data");
+    } else if (mType == ChromeUnusedRaw) {
+      *desc = strdup("Memory used by not in-use chrome images, compressed data");
+    } else if (mType == ChromeUnusedUncompressed) {
+      *desc = strdup("Memory used by not in-use chrome images, uncompressed data");
+    } else if (mType == ContentUsedRaw) {
+      *desc = strdup("Memory used by in-use content images, compressed data");
+    } else if (mType == ContentUsedUncompressed) {
+      *desc = strdup("Memory used by in-use content images, uncompressed data");
+    } else if (mType == ContentUnusedRaw) {
+      *desc = strdup("Memory used by not in-use content images, compressed data");
+    } else if (mType == ContentUnusedUncompressed) {
+      *desc = strdup("Memory used by not in-use content images, uncompressed data");
+    }
+    return NS_OK;
+  }
+
+  struct EnumArg {
+    EnumArg(ReporterType aType)
+      : rtype(aType), value(0)
+    { }
+
+    ReporterType rtype;
+    PRInt32 value;
+  };
+
+  static PLDHashOperator EnumEntries(const nsACString&,
+                                     imgCacheEntry *entry,
+                                     void *userArg)
+  {
+    EnumArg *arg = static_cast<EnumArg*>(userArg);
+    ReporterType rtype = arg->rtype;
+
+    if (rtype & USED_BIT) {
+      if (entry->HasNoProxies())
+        return PL_DHASH_NEXT;
+    } else {
+      if (!entry->HasNoProxies())
+        return PL_DHASH_NEXT;
+    }
+
+    nsRefPtr<imgRequest> req = entry->GetRequest();
+    imgContainer *container = (imgContainer*) req->mImage.get();
+    if (!container)
+      return PL_DHASH_NEXT;
+
+    if (rtype & RAW_BIT) {
+      arg->value += container->GetSourceDataSize();
+    } else {
+      arg->value += container->GetDecodedDataSize();
+    }
+
+    return PL_DHASH_NEXT;
+  }
+
+  NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed)
+  {
+    EnumArg arg(mType);
+    if (mType & CHROME_BIT) {
+      imgLoader::sChromeCache.EnumerateRead(EnumEntries, &arg);
+    } else {
+      imgLoader::sCache.EnumerateRead(EnumEntries, &arg);
+    }
+
+    *memoryUsed = arg.value;
+    return NS_OK;
+  }
+
+  ReporterType mType;
+};
+
+NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryReporter)
+
 
 /**
  * A class that implements nsIProgressEventSink and forwards all calls to it to
@@ -715,6 +851,15 @@ nsresult imgLoader::InitCache()
   else
     sCacheMaxSize = 5 * 1024 * 1024;
 
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUsedRaw));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUsedUncompressed));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUnusedRaw));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ChromeUnusedUncompressed));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUsedRaw));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUsedUncompressed));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUnusedRaw));
+  NS_RegisterMemoryReporter(new imgMemoryReporter(imgMemoryReporter::ContentUnusedUncompressed));
+  
   return NS_OK;
 }
 

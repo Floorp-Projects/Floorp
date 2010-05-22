@@ -219,6 +219,8 @@ private:
   PRUint32 mSize;
 };
 
+class imgMemoryReporter;
+
 class imgLoader : public imgILoader,
                   public nsIContentSniffer,
                   public imgICache,
@@ -333,6 +335,7 @@ private: // methods
 
 private: // data
   friend class imgCacheEntry;
+  friend class imgMemoryReporter;
 
   static imgCacheTable sCache;
   static imgCacheQueue sCacheQueue;
