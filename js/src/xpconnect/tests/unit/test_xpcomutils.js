@@ -123,6 +123,8 @@ function test_defineLazyServiceGetter()
 function test_categoryRegistration()
 {
   const CATEGORY_NAME = "test-cat";
+  const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
+  const XULAPPINFO_CID = Components.ID("{95d89e3e-a169-41a3-8e56-719978e15b12}");
 
   // Create a fake app entry for our category registration apps filter.
   let XULAppInfo = {
@@ -151,9 +153,9 @@ function test_categoryRegistration()
   };
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.registerFactory(
-    Components.ID("{6372ef9b-0827-4d18-954f-c0974f1a1573}"),
+    XULAPPINFO_CID,
     "XULAppInfo",
-    "@mozilla.org/xre/app-info;1",
+    XULAPPINFO_CONTRACTID,
     XULAppInfoFactory
   );
 
@@ -171,7 +173,7 @@ function test_categoryRegistration()
   while (entries.hasMoreElements()) {
     foundEntriesCount++;
     let entry = entries.getNext().QueryInterface(Ci.nsISupportsCString).data;
-    print("Check the found category entry (" + entry + ")is expected.");  
+    print("Check the found category entry (" + entry + ") is expected.");  
     do_check_true(EXPECTED_ENTRIES.indexOf(entry) != -1);
   }
   print("Check there are no more or less than expected entries.");
