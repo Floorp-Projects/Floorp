@@ -32,7 +32,7 @@
 
 import os, sys
 
-from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, State, TransitionStmt, TypeSpec, UsingStmt, Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
+from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, State, StructDecl, TransitionStmt, TypeSpec, UnionDecl, UsingStmt, Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
 import ipdl.builtin as builtin
 
 _DELETE_MSG = '__delete__'
@@ -56,6 +56,9 @@ def cartesian_product(s1, s2):
 
 
 class TypeVisitor:
+    def __init__(self):
+        self.visited = set()
+
     def defaultVisit(self, node, *args):
         raise Exception, "INTERNAL ERROR: no visitor for node type `%s'"% (
             node.__class__.__name__)
@@ -90,13 +93,18 @@ class TypeVisitor:
         a.state.accept(self, *args)
 
     def visitStructType(self, s, *args):
+        if s in self.visited:
+            return
+
+        self.visited.add(s)
         for field in s.fields:
             field.accept(self, *args)
 
-    def visitFieldType(self, f, *args):
-        f.type.accept(self, *args)
-
     def visitUnionType(self, u, *args):
+        if u in self.visited:
+            return
+
+        self.visited.add(u)
         for component in u.components:
             component.accept(self, *args)
 
@@ -108,6 +116,7 @@ class TypeVisitor:
 
     def visitShmemChmodType(self, c, *args):
         c.shmem.accept(self)
+
 
 class Type:
     def __cmp__(self, o):
@@ -123,6 +132,9 @@ class Type:
         return False
     # Is this an IPDL type?
     def isIPDL(self):
+        return False
+    # Is this type neither compound nor an array?
+    def isAtom(self):
         return False
     # Can this type appear in IPDL programs?
     def isVisible(self):
@@ -142,13 +154,14 @@ class Type:
         return visit(self, *args)
 
 class VoidType(Type):
-    # the following are not type-o's (hah): void is both a Cxx and IPDL type
-    def isCxx():
+    def isCxx(self):
         return True
-    def isIPDL():
+    def isIPDL(self):
+        return False
+    def isAtom(self):
         return True
     def isVisible(self):
-        return True
+        return False
     def isVoid(self):
         return True
 
@@ -160,6 +173,8 @@ VOID = VoidType()
 ##--------------------
 class CxxType(Type):
     def isCxx(self):
+        return True
+    def isAtom(self):
         return True
     def isBuiltin(self):
         return False
@@ -205,6 +220,8 @@ class IPDLType(Type):
     def isStruct(self): return False
     def isUnion(self): return False
     def isArray(self): return False
+    def isAtom(self):  return True
+    def isCompound(self): return False
     def isShmem(self): return False
     def isChmod(self): return False
 
@@ -340,29 +357,78 @@ class ActorType(IPDLType):
     def fullname(self):
         return self.protocol.fullname()
 
-class StructType(IPDLType):
+class _CompoundType(IPDLType):
+    def __init__(self):
+        self.defined = False            # bool
+        self.mutualRec = set()          # set(_CompoundType | ArrayType)
+    def isAtom(self):
+        return False
+    def isCompound(self):
+        return True
+    def itercomponents(self):
+        raise '"pure virtual" method'
+
+    def mutuallyRecursiveWith(self, t, exploring=None):
+        '''|self| is mutually recursive with |t| iff |self| and |t|
+are in a cycle in the type graph rooted at |self|.  This function
+looks for such a cycle and returns True if found.'''
+        if exploring is None:
+            exploring = set()
+
+        if t.isAtom():
+            return False
+        elif t is self or t in self.mutualRec:
+            return True
+        elif t.isArray():
+            isrec = self.mutuallyRecursiveWith(t.basetype, exploring)
+            if isrec:  self.mutualRec.add(t)
+            return isrec
+        elif t in exploring:
+            return False
+
+        exploring.add(t)
+        for c in t.itercomponents():
+            if self.mutuallyRecursiveWith(c, exploring):
+                self.mutualRec.add(c)
+                return True
+        exploring.remove(t)
+
+        return False
+
+class StructType(_CompoundType):
     def __init__(self, qname, fields):
+        _CompoundType.__init__(self)
         self.qname = qname
         self.fields = fields            # [ Type ]
 
-    def isStruct(self): return True
+    def isStruct(self):   return True
+    def itercomponents(self):
+        for f in self.fields:
+            yield f
+    
     def name(self): return self.qname.baseid
     def fullname(self): return str(self.qname)
 
-class UnionType(IPDLType):
+class UnionType(_CompoundType):
     def __init__(self, qname, components):
+        _CompoundType.__init__(self)
         self.qname = qname
-        self.components = components
+        self.components = components    # [ Type ]
 
-    def isUnion(self): return True
+    def isUnion(self):    return True
+    def itercomponents(self):
+        for c in self.components:
+            yield c
+
     def name(self): return self.qname.baseid
     def fullname(self): return str(self.qname)
 
 class ArrayType(IPDLType):
     def __init__(self, basetype):
         self.basetype = basetype
-
+    def isAtom(self):  return False
     def isArray(self): return True
+
     def name(self): return self.basetype.name() +'[]'
     def fullname(self): return self.basetype.fullname() +'[]'
 
@@ -376,25 +442,24 @@ class ShmemType(IPDLType):
     def fullname(self):
         return str(self.qname)
 
-def iteractortypes(type):
+def iteractortypes(t, visited=None):
     """Iterate over any actor(s) buried in |type|."""
-    # XXX |yield| semantics makes it hard to use TypeVisitor
-    if not type or not type.isIPDL():
-        return
-    elif type.isActor():
-        yield type
-    elif type.isArray():
-        for actor in iteractortypes(type.basetype):
-            yield actor
-    elif type.isStruct():
-        for f in type.fields:
-            for actor in iteractortypes(f):
-                yield actor
-    elif type.isUnion():
-        for c in type.components:
-            for actor in iteractortypes(c):
-                yield actor
+    if visited is None:
+        visited = set()
 
+    # XXX |yield| semantics makes it hard to use TypeVisitor
+    if not t.isIPDL():
+        return
+    elif t.isActor():
+        yield t
+    elif t.isArray():
+        for actor in iteractortypes(t.basetype, visited):
+            yield actor
+    elif t.isCompound() and t not in visited:
+        visited.add(t)
+        for c in t.itercomponents():
+            for actor in iteractortypes(c, visited):
+                yield actor
 
 def hasactor(type):
     """Return true iff |type| is an actor or has one buried within."""
@@ -613,6 +678,28 @@ class GatherDecls(TcheckVisitor):
         for using in tu.using:
             using.accept(self)
 
+        # first pass to "forward-declare" all structs and unions in
+        # order to support recursive definitions
+        for su in tu.structsAndUnions:
+            qname = su.qname()
+            if 0 == len(qname.quals):
+                fullname = None
+            else:
+                fullname = str(qname)
+
+            if isinstance(su, StructDecl):
+                sutype = StructType(qname, [ ])
+            elif isinstance(su, UnionDecl):
+                sutype = UnionType(qname, [ ])
+            else: assert 0 and 'unknown type'
+
+            su.decl = self.declare(
+                loc=su.loc,
+                type=sutype,
+                shortname=su.name,
+                fullname=fullname)
+
+        # second pass to check each definition
         for su in tu.structsAndUnions:
             su.accept(self)
 
@@ -634,17 +721,6 @@ class GatherDecls(TcheckVisitor):
         self.symtab.declare(pi.tu.protocol.decl)
 
     def visitStructDecl(self, sd):
-        qname = sd.qname()
-        if 0 == len(qname.quals):
-            fullname = None
-        else:
-            fullname = str(qname)
-
-        sd.decl = self.declare(
-            loc=sd.loc,
-            type=StructType(qname, [ ]),
-            shortname=sd.name,
-            fullname=fullname)
         stype = sd.decl.type
 
         self.symtab.enterScope(sd)
@@ -666,26 +742,15 @@ class GatherDecls(TcheckVisitor):
         self.symtab.exitScope(sd)
 
     def visitUnionDecl(self, ud):
-        qname = ud.qname()
-        if 0 == len(qname.quals):
-            fullname = None
-        else:
-            fullname = str(qname)
-        components = [ ]
-
+        utype = ud.decl.type
+        
         for c in ud.components:
             cdecl = self.symtab.lookup(str(c))
             if cdecl is None:
                 self.error(c.loc, "unknown component type `%s' of union `%s'",
                            str(c), ud.name)
                 continue
-            components.append(self._canonicalType(cdecl.type, c))
-
-        ud.decl = self.declare(
-            loc=ud.loc,
-            type=UnionType(qname, components),
-            shortname=ud.name,
-            fullname=fullname)
+            utype.components.append(self._canonicalType(cdecl.type, c))
 
     def visitUsingStmt(self, using):
         fullname = str(using.type)
@@ -944,35 +1009,27 @@ class GatherDecls(TcheckVisitor):
             ploc = param.typespec.loc
 
             ptdecl = self.symtab.lookup(ptname)
-
             if ptdecl is None:
                 self.error(
                     ploc,
                     "argument typename `%s' of message `%s' has not been declared",
                     ptname, msgname)
-                return None
+                ptype = VOID
             else:
                 ptype = self._canonicalType(ptdecl.type, param.typespec,
                                             chmodallowed=1)
-                return self.declare(
-                    loc=ploc,
-                    type=ptype,
-                    progname=param.name)
+            return self.declare(loc=ploc,
+                                type=ptype,
+                                progname=param.name)
 
         for i, inparam in enumerate(md.inParams):
             pdecl = paramToDecl(inparam)
-            if pdecl is not None:
-                msgtype.params.append(pdecl.type)
-                md.inParams[i] = pdecl
-            else:
-                md.inParams[i].type = None
+            msgtype.params.append(pdecl.type)
+            md.inParams[i] = pdecl
         for i, outparam in enumerate(md.outParams):
             pdecl = paramToDecl(outparam)
-            if pdecl is not None:
-                msgtype.returns.append(pdecl.type)
-                md.outParams[i] = pdecl
-            else:
-                md.outParams[i].type = None
+            msgtype.returns.append(pdecl.type)
+            md.outParams[i] = pdecl
 
         self.symtab.exitScope(md)
 
@@ -1096,6 +1153,45 @@ def formatcycles(cycles):
         r.append("`%s'" % s)
     return ", ".join(r)
 
+
+def fullyDefined(t, exploring=None):
+    '''The rules for "full definition" of a type are
+  defined(atom)             := true
+  defined(array basetype)   := defined(basetype)
+  defined(struct f1 f2...)  := defined(f1) and defined(f2) and ...
+  defined(union c1 c2 ...)  := defined(c1) or defined(c2) or ...
+'''
+    if exploring is None:
+        exploring = set()
+
+    if t.isAtom():
+        return True
+    elif t.isArray():
+        return fullyDefined(t.basetype, exploring)
+    elif t.defined:
+        return True
+    assert t.isCompound()
+
+    if t in exploring:
+        return False
+
+    exploring.add(t)
+    for c in t.itercomponents():
+        cdefined = fullyDefined(c, exploring)
+        if t.isStruct() and not cdefined:
+            t.defined = False
+            break
+        elif t.isUnion() and cdefined:
+            t.defined = True
+            break
+    else:
+        if t.isStruct():   t.defined = True
+        elif t.isUnion():  t.defined = False
+    exploring.remove(t)
+
+    return t.defined
+
+
 class CheckTypes(TcheckVisitor):
     def __init__(self, errors):
         # don't need the symbol table, we just want the error reporting
@@ -1108,6 +1204,17 @@ class CheckTypes(TcheckVisitor):
             return
         self.visited.add(inc.tu.filename)
         inc.tu.protocol.accept(self)
+
+
+    def visitStructDecl(self, sd):
+        if not fullyDefined(sd.decl.type):
+            self.error(sd.decl.loc,
+                       "struct `%s' is only partially defined", sd.name)
+
+    def visitUnionDecl(self, ud):
+        if not fullyDefined(ud.decl.type):
+            self.error(ud.decl.loc,
+                       "union `%s' is only partially defined", ud.name)
 
 
     def visitProtocol(self, p):
