@@ -932,8 +932,16 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------
   newTab: function() {
     Groups.setActiveGroup(this);          
-    var newTab = Tabs.open("about:blank");
-     UI.navBar.hide();
+    var newTab = Tabs.open("about:blank", true);
+    
+    // Because opening a new tab happens in a different thread(?)
+    // calling Page.hideChrome() inline won't do anything. Instead
+    // we have to marshal it. A value of 0 wait time doesn't seem
+    // to work. Instead, we use a value of 1 which seems to be the
+    // minimum amount of time required.
+    setTimeout(function(){
+      Page.hideChrome()
+    }, 1);
     
     var self = this;
     var doNextTab = function(tab){
@@ -960,8 +968,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       }, 270, function(){
         $(tab.container).css({opacity: 1});
         newTab.focus();
-        UI.tabBar.show(false);
-        UI.navBar.show();
+        Page.showChrome()
         UI.navBar.urlBar.focus();
         anim.remove();
         // We need a timeout here so that there is a chance for the
