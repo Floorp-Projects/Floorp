@@ -775,3 +775,6 @@ class StmtReturn(Node):
     def __init__(self, expr=None):
         Node.__init__(self)
         self.expr = expr
+
+StmtReturn.TRUE = StmtReturn(ExprLiteral.TRUE)
+StmtReturn.FALSE = StmtReturn(ExprLiteral.FALSE)

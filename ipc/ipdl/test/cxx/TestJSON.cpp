@@ -1,5 +1,3 @@
-#include <algorithm>            // std::equal
-
 #include "TestJSON.h"
 
 #include "IPDLUnitTests.h"      // fail etc.
@@ -9,65 +7,6 @@
 
 namespace mozilla {
 namespace _ipdltest {
-
-// XXX move me into nsTArray
-template<typename T>
-bool
-operator==(const nsTArray<T>& a, const nsTArray<T>& b)
-{
-    return (a.Length() == b.Length() && 
-            std::equal(a.Elements(), a.Elements() + a.Length(),
-                       b.Elements()));
-}
-
-bool
-operator==(const Key& a, const Key& b)
-{
-    return a.get_nsString() == b.get_nsString();
-}
-
-bool operator==(const JSONVariant& a, const JSONVariant& b);
-
-bool
-operator==(const KeyValue& a, const KeyValue& b)
-{
-    return a.key() == b.key() && a.value() == b.value();
-}
-
-// XXX start generating me in IPDL code
-bool
-operator==(const JSONVariant& a, const JSONVariant& b)
-{
-    typedef JSONVariant t;
-
-    if (a.type() != b.type())
-        return false;
-
-    switch(a.type()) {
-    case t::Tvoid_t:
-    case t::Tnull_t:
-        return true;
-    case t::Tbool:
-        return a.get_bool() == b.get_bool();
-    case t::Tint:
-        return a.get_int() == b.get_int();
-    case t::Tdouble:
-        return a.get_double() == b.get_double();
-    case t::TnsString:
-        return a.get_nsString() == b.get_nsString();
-    case t::TPTestHandleParent:
-        return a.get_PTestHandleParent() == b.get_PTestHandleParent();
-    case t::TPTestHandleChild:
-        return a.get_PTestHandleChild() == b.get_PTestHandleChild();
-    case t::TArrayOfKeyValue:
-        return a.get_ArrayOfKeyValue() == b.get_ArrayOfKeyValue();
-    case t::TArrayOfJSONVariant:
-        return a.get_ArrayOfJSONVariant() == b.get_ArrayOfJSONVariant();
-    default:
-        NS_RUNTIMEABORT("unreached");
-        return false;
-    }
-}
 
 static nsString
 String(const char* const str)
