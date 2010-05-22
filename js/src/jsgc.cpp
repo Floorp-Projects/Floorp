@@ -2945,7 +2945,7 @@ GC(JSContext *cx  GCTIMER_PARAM)
  * on the current thread and wait until the GC is done.
  */
 static void
-LetOtherGCToFinish(JSContext *cx)
+LetOtherGCFinish(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
     JS_ASSERT(rt->gcThread);
@@ -2971,30 +2971,37 @@ LetOtherGCToFinish(JSContext *cx)
         rt->requestCount -= requestDebit;
         if (rt->requestCount == 0)
             JS_NOTIFY_REQUEST_DONE(rt);
-
-        /* See comments before another call to js_ShareWaitingTitles below. */
-        cx->thread->gcWaiting = true;
-        js_ShareWaitingTitles(cx);
-
-        /*
-         * Check that we did not release the GC lock above and let the GC to
-         * finish before we wait.
-         */
-        JS_ASSERT(rt->gcThread);
-        do {
-            JS_AWAIT_GC_DONE(rt);
-        } while (rt->gcThread);
-
-        cx->thread->gcWaiting = false;
-        rt->requestCount += requestDebit;
     }
+
+    /* See comments before another call to js_ShareWaitingTitles below. */
+    cx->thread->gcWaiting = true;
+    js_ShareWaitingTitles(cx);
+
+    /*
+     * Check that we did not release the GC lock above and let the GC to
+     * finish before we wait.
+     */
+    JS_ASSERT(rt->gcThread);
+
+    /*
+     * Wait for GC to finish on the other thread, even if requestDebit is 0
+     * and even if GC has not started yet because the gcThread is waiting in
+     * BeginGCSession. This ensures that js_GC never returns without a full GC
+     * cycle happening.
+     */
+    do {
+        JS_AWAIT_GC_DONE(rt);
+    } while (rt->gcThread);
+
+    cx->thread->gcWaiting = false;
+    rt->requestCount += requestDebit;
 }
 
 #endif
 
 /*
  * Start a new GC session assuming no GC is running on this or other threads.
- * Together with LetOtherGCToFinish this function contains the rendezvous
+ * Together with LetOtherGCFinish this function contains the rendezvous
  * algorithm by which we stop the world for GC.
  *
  * This thread becomes the GC thread. Wait for all other threads to quiesce.
@@ -3097,7 +3104,7 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
             JS_ASSERT(rt->gcRunning);
             return;
         }
-        LetOtherGCToFinish(cx);
+        LetOtherGCFinish(cx);
 
         /*
          * Check if the GC on another thread have collected the garbage and
@@ -3217,7 +3224,7 @@ js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
 #ifdef JS_THREADSAFE
     if (rt->gcThread) {
         JS_ASSERT(cx->thread != rt->gcThread);
-        LetOtherGCToFinish(cx);
+        LetOtherGCFinish(cx);
     }
 #endif
 
