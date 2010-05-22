@@ -410,6 +410,7 @@ class _Result:
     NotKnown = ExprVar('MsgNotKnown')
     NotAllowed = ExprVar('MsgNotAllowed')
     PayloadError = ExprVar('MsgPayloadError')
+    ProcessingError = ExprVar('MsgProcessingError')
     RouteError = ExprVar('MsgRouteError')
     ValuError = ExprVar('MsgValueError') # [sic]
 
@@ -4238,7 +4239,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                      args=md.makeCxxArgs(params=1,
                                          retsems='in', retcallsems='out',
                                          implicit=implicit))))
-        failif.addifstmt(StmtReturn(_Result.ValuError))
+        failif.addifstmt(StmtReturn(_Result.ProcessingError))
         return [ failif ]
 
     def makeDtorMethodDecl(self, md):
