@@ -128,6 +128,96 @@ ThebesLayerOGL::InvalidateRegion(const nsIntRegion &aRegion)
   mInvalidatedRect = invalidatedRegion.GetBounds();
 }
 
+gfxContext *
+ThebesLayerOGL::BeginDrawing(nsIntRegion *aRegion)
+{
+  if (mInvalidatedRect.IsEmpty()) {
+    aRegion->SetEmpty();
+    return NULL;
+  }
+  if (!mTexture) {
+    aRegion->SetEmpty();
+    return NULL;
+  }
+  *aRegion = mInvalidatedRect;
+
+  gfxASurface::gfxImageFormat imageFormat;
+
+  if (UseOpaqueSurface(this)) {
+    imageFormat = gfxASurface::ImageFormatRGB24;
+  } else {
+    imageFormat = gfxASurface::ImageFormatARGB32;
+  }
+
+  mDestinationSurface =
+    gfxPlatform::GetPlatform()->
+      CreateOffscreenSurface(gfxIntSize(mInvalidatedRect.width,
+                                        mInvalidatedRect.height),
+                             imageFormat);
+
+  mContext = new gfxContext(mDestinationSurface);
+  mContext->Translate(gfxPoint(-mInvalidatedRect.x, -mInvalidatedRect.y));
+  return mContext.get();
+}
+
+void
+ThebesLayerOGL::EndDrawing()
+{
+  static_cast<LayerManagerOGL*>(mManager)->MakeCurrent();
+
+  nsRefPtr<gfxImageSurface> imageSurface;
+
+  gfxASurface::gfxImageFormat imageFormat;
+
+  if (UseOpaqueSurface(this)) {
+    imageFormat = gfxASurface::ImageFormatRGB24;
+  } else {
+    imageFormat = gfxASurface::ImageFormatARGB32;
+  }
+
+  switch (mDestinationSurface->GetType()) {
+    case gfxASurface::SurfaceTypeImage:
+      imageSurface = static_cast<gfxImageSurface*>(mDestinationSurface.get());
+      break;
+#ifdef XP_WIN
+    case gfxASurface::SurfaceTypeWin32:
+      imageSurface =
+        static_cast<gfxWindowsSurface*>(mDestinationSurface.get())->
+          GetImageSurface();
+      break;
+#endif
+    default:
+      /** 
+       * XXX - This is very undesirable. Implement this for other platforms in
+       * a more efficient way as well!
+       */
+      {
+        imageSurface = new gfxImageSurface(gfxIntSize(mInvalidatedRect.width,
+                                                      mInvalidatedRect.height),
+                                           imageFormat);
+        nsRefPtr<gfxContext> tmpContext = new gfxContext(imageSurface);
+        tmpContext->SetSource(mDestinationSurface);
+        tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+        tmpContext->Paint();
+      }
+      break;
+  }
+
+  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
+  gl()->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
+                       0,
+                       mInvalidatedRect.x - mVisibleRect.x,
+                       mInvalidatedRect.y - mVisibleRect.y,
+                       mInvalidatedRect.width,
+                       mInvalidatedRect.height,
+                       LOCAL_GL_BGRA,
+                       LOCAL_GL_UNSIGNED_BYTE,
+                       imageSurface->Data());
+
+  mDestinationSurface = NULL;
+  mContext = NULL;
+}
+
 LayerOGL::LayerType
 ThebesLayerOGL::GetType()
 {
@@ -141,75 +231,10 @@ ThebesLayerOGL::GetVisibleRect()
 }
 
 void
-ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                            DrawThebesLayerCallback aCallback,
-                            void* aCallbackData)
+ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer)
 {
   if (!mTexture) {
     return;
-  }
-
-  if (!mInvalidatedRect.IsEmpty()) {
-    gfxASurface::gfxImageFormat imageFormat;
-
-    if (UseOpaqueSurface(this)) {
-      imageFormat = gfxASurface::ImageFormatRGB24;
-    } else {
-      imageFormat = gfxASurface::ImageFormatARGB32;
-    }
-
-    nsRefPtr<gfxASurface> surface =
-      gfxPlatform::GetPlatform()->
-        CreateOffscreenSurface(gfxIntSize(mInvalidatedRect.width,
-                                          mInvalidatedRect.height),
-                               imageFormat);
-
-    nsRefPtr<gfxContext> ctx = new gfxContext(surface);
-    ctx->Translate(gfxPoint(-mInvalidatedRect.x, -mInvalidatedRect.y));
-    aCallback(this, ctx, mInvalidatedRect, aCallbackData);
-
-    static_cast<LayerManagerOGL*>(mManager)->MakeCurrent();
-
-    nsRefPtr<gfxImageSurface> imageSurface;
-
-    switch (surface->GetType()) {
-      case gfxASurface::SurfaceTypeImage:
-        imageSurface = static_cast<gfxImageSurface*>(surface.get());
-        break;
-#ifdef XP_WIN
-      case gfxASurface::SurfaceTypeWin32:
-        imageSurface =
-          static_cast<gfxWindowsSurface*>(surface.get())->
-            GetImageSurface();
-        break;
-#endif
-      default:
-        /** 
-         * XXX - This is very undesirable. Implement this for other platforms in
-         * a more efficient way as well!
-         */
-        {
-          imageSurface = new gfxImageSurface(gfxIntSize(mInvalidatedRect.width,
-                                                        mInvalidatedRect.height),
-                                             imageFormat);
-          nsRefPtr<gfxContext> tmpContext = new gfxContext(imageSurface);
-          tmpContext->SetSource(surface);
-          tmpContext->SetOperator(gfxContext::OPERATOR_SOURCE);
-          tmpContext->Paint();
-        }
-        break;
-    }
-
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-    gl()->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
-                         0,
-                         mInvalidatedRect.x - mVisibleRect.x,
-                         mInvalidatedRect.y - mVisibleRect.y,
-                         mInvalidatedRect.width,
-                         mInvalidatedRect.height,
-                         LOCAL_GL_BGRA,
-                         LOCAL_GL_UNSIGNED_BYTE,
-                         imageSurface->Data());
   }
 
   float quadTransform[4][4];
