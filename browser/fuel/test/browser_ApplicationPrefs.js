@@ -8,11 +8,11 @@ var testdata = {
 };
 
 function test() {
-  // test getting non-existing values
+  // test getting nonexistent values
   var itemValue = Application.prefs.getValue(testdata.missing, "default");
-  is(itemValue, "default", "Check 'Application.prefs.getValue' for non-existing item");
+  is(itemValue, "default", "Check 'Application.prefs.getValue' for nonexistent item");
 
-  is(Application.prefs.get(testdata.missing), null, "Check 'Application.prefs.get' for non-existing item");
+  is(Application.prefs.get(testdata.missing), null, "Check 'Application.prefs.get' for nonexistent item");
 
   // test setting and getting a value
   Application.prefs.setValue(testdata.dummy, "dummy");
