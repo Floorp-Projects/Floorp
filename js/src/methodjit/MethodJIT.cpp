@@ -616,3 +616,37 @@ mjit::JaegerShot(JSContext *cx)
     return ok;
 }
 
+void
+mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
+{
+    if (script->execPool) {
+        script->execPool->release();
+        script->execPool = NULL;
+        // Releasing the execPool takes care of releasing the code.
+        script->ncode = NULL;
+#ifdef DEBUG
+        script->jitLength = 0;
+#endif
+        script->npics = 0;
+        
+#if defined(ENABLE_PIC) && ENABLE_PIC
+        if (script->pics) {
+            delete[] script->pics;
+            script->pics = NULL;
+            JS_METHODJIT_DATA(cx).removeScript(script);
+        }
+#endif
+    }
+
+    if (script->nmap) {
+        cx->free(script->nmap);
+        script->nmap = NULL;
+    }
+# ifdef JS_TRACER
+    if (script->trees) {
+        cx->free(script->trees);
+        script->trees = NULL;
+    }
+# endif
+}
+

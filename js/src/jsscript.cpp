@@ -66,6 +66,7 @@
 #if JS_HAS_XDR
 #include "jsxdrapi.h"
 #endif
+#include "methodjit/MethodJIT.h"
 
 #include "jsscriptinlines.h"
 
@@ -1185,6 +1186,10 @@ js_DestroyScript(JSContext *cx, JSScript *script)
 
 #ifdef JS_TRACER
     PurgeScriptFragments(cx, script);
+#endif
+
+#if defined(JS_METHODJIT)
+    mjit::ReleaseScriptCode(cx, script);
 #endif
 
     cx->free(script);
