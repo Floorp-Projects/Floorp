@@ -142,7 +142,7 @@ function run_test() {
       // test the value of the preference root
       do_check_eq(extensions.all[0].prefs.root, "extensions.addon1@tests.mozilla.org.");
 
-      // test getting non-existing values
+      // test getting nonexistent values
       var itemValue = inspector.prefs.getValue(testdata.missing, "default");
       do_check_eq(itemValue, "default");
 
