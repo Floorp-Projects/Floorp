@@ -91,29 +91,27 @@ namespace js
 
       public:
 
-        inline const OpcodeStatus & operator [](uint32 offs) const
-        {
+        inline const OpcodeStatus & operator [](uint32 offs) const {
             JS_ASSERT(offs < script->length);
             return ops[offs];
         }
 
-        inline OpcodeStatus & operator [](uint32 offs)
-        {
+        inline OpcodeStatus & operator [](uint32 offs) {
             JS_ASSERT(offs < script->length);
             return ops[offs];
         }
 
-        inline const OpcodeStatus & operator [](jsbytecode *pc) const
-        {
+        inline const OpcodeStatus & operator [](jsbytecode *pc) const {
             JS_ASSERT(pc < script->code + script->length);
             return ops[pc - script->code];
         }
 
-        inline OpcodeStatus & operator [](jsbytecode *pc)
-        {
+        inline OpcodeStatus & operator [](jsbytecode *pc) {
             JS_ASSERT(pc < script->code + script->length);
             return ops[pc - script->code];
         }
+
+        inline bool OOM() { return !ops; }
 
         bool analyze();
     };
