@@ -361,6 +361,9 @@ InvokeConstructor(JSContext *cx, const InvokeArgsGuard &args, JSBool clampReturn
 extern JS_REQUIRES_STACK bool
 Interpret(JSContext *cx);
 
+extern JS_REQUIRES_STACK bool
+RunScript(JSContext *cx, JSScript *script, JSObject *scopeChain);
+
 #define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
 
 extern bool
