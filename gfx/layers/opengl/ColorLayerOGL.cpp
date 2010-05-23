@@ -53,7 +53,7 @@ ColorLayerOGL::GetLayer()
 }
 
 void
-ColorLayerOGL::RenderLayer(int, DrawThebesLayerCallback, void*)
+ColorLayerOGL::RenderLayer(int)
 {
   static_cast<LayerManagerOGL*>(mManager)->MakeCurrent();
 
