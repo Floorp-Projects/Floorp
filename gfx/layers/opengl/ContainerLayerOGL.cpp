@@ -154,7 +154,8 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   YCbCrLayerProgram *yCbCrProgram =
     static_cast<LayerManagerOGL*>(mManager)->GetYCbCrLayerProgram();
 
-  if (GetOpacity() != 1.0) {
+  float opacity = GetOpacity();
+  if (opacity != 1.0) {
     gl()->fGenTextures(1, &containerSurface);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
     gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
@@ -221,7 +222,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     layerToRender = layerToRender->GetNextSibling();
   }
 
-  if (GetOpacity() != 1.0) {
+  if (opacity != 1.0) {
     // Unbind the current framebuffer and rebind the previous one.
     gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     gl()->fDeleteFramebuffers(1, &frameBuffer);
@@ -256,7 +257,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
 
-    rgbProgram->SetLayerOpacity(GetOpacity());
+    rgbProgram->SetLayerOpacity(opacity);
     rgbProgram->SetLayerTransform(&mTransform._11);
     rgbProgram->Apply();
 
