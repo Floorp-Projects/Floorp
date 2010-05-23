@@ -103,7 +103,7 @@ struct Compiler;
 /* Struct typedefs. */
 typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
 typedef struct JSCodeGenerator      JSCodeGenerator;
-typedef struct JSGCThing            JSGCThing;
+typedef union JSGCThing             JSGCThing;
 typedef struct JSGenerator          JSGenerator;
 typedef struct JSNativeEnumerator   JSNativeEnumerator;
 typedef struct JSFunctionBox        JSFunctionBox;
