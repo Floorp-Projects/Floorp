@@ -567,8 +567,9 @@ GCArenaIndexToThing(JSGCArena *a, JSGCArenaInfo *ainfo, size_t index)
 /*
  * The private JSGCThing struct, which describes a JSRuntime.gcFreeList element.
  */
-struct JSGCThing {
+union JSGCThing {
     JSGCThing   *link;
+    double      asDouble;
 };
 
 static inline JSGCThing *
@@ -1618,7 +1619,7 @@ js_NewDoubleInRootedValue(JSContext *cx, jsdouble d, jsval *vp)
         CheckGCFreeListLink(thing);
         *freeListp = thing->link;
 
-        jsdouble *dp = reinterpret_cast<jsdouble *>(thing);
+        jsdouble *dp = &thing->asDouble;
         *dp = d;
         *vp = DOUBLE_TO_JSVAL(dp);
         return true;
