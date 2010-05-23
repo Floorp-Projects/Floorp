@@ -269,8 +269,7 @@ ImageLayerOGL::GetLayer()
 }
 
 void
-ImageLayerOGL::RenderLayer(int, DrawThebesLayerCallback aCallback,
-                           void* aCallbackData)
+ImageLayerOGL::RenderLayer(int)
 {
   if (!GetContainer()) {
     return;
