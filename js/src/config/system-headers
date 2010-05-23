@@ -212,6 +212,7 @@ dbus/dbus-glib.h
 dbus/dbus-glib-lowlevel.h
 ddeml.h
 Debug.h
+deque
 dem.h
 descrip.h
 Devices.h
@@ -274,6 +275,7 @@ freetype/tttables.h
 freetype/t1tables.h
 fribidi/fribidi.h
 FSp_fopen.h
+fstream
 fstream.h
 ft2build.h
 fts.h
@@ -329,6 +331,7 @@ IOKit/pwr_mgt/IOPMLib.h
 iomanip
 iostream
 iostream.h
+iterator
 jar.h
 JavaControl.h
 JavaEmbedding/JavaControl.h
@@ -607,6 +610,7 @@ pthread.h
 pwd.h
 Python.h
 QDOffscreen.h
+queue
 Quickdraw.h
 QuickDraw.h
 QuickTimeComponents.h
@@ -641,6 +645,7 @@ security.h
 secutil.h
 semaphore.h
 servprov.h
+set
 setjmp.h
 SFNTLayoutTypes.h
 SFNTTypes.h
@@ -834,6 +839,7 @@ UReanimator.h
 URegions.h
 URegistrar.h
 UResourceMgr.h
+utility
 urlhist.h
 urlmon.h
 UScrap.h
