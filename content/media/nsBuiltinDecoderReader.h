@@ -56,7 +56,7 @@ class nsVideoInfo {
 public:
   nsVideoInfo()
     : mFramerate(0.0),
-      mAspectRatio(1.0),
+      mPixelAspectRatio(1.0),
       mCallbackPeriod(1),
       mAudioRate(0),
       mAudioChannels(0),
@@ -68,8 +68,8 @@ public:
   // Frames per second.
   float mFramerate;
 
-  // Aspect ratio, as stored in the metadata.
-  float mAspectRatio;
+  // Pixel aspect ratio, as stored in the metadata.
+  float mPixelAspectRatio;
 
   // Length of a video frame in milliseconds, or the callback period if
   // there's no audio.
