@@ -207,6 +207,9 @@ enum CompileStatus
 CompileStatus
 TryCompile(JSContext *cx, JSScript *script, JSObject *scopeChain);
 
+void
+ReleaseScriptCode(JSContext *cx, JSScript *script);
+
 static inline CompileStatus
 CanMethodJIT(JSContext *cx, JSScript *script, JSObject *scopeChain)
 {
