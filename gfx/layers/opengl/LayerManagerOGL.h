@@ -216,8 +216,7 @@ public:
 
   void EndConstruction();
 
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
-                              void* aCallbackData);
+  void EndTransaction();
 
   void SetRoot(Layer* aLayer);
   
@@ -294,8 +293,7 @@ private:
   /**
    * Render the current layer tree to the active target.
    */
-  void Render(DrawThebesLayerCallback aCallback,
-              void* aCallbackData);
+  void Render();
   /**
    * Setup the pipeline.
    */
@@ -318,8 +316,6 @@ private:
 class LayerOGL
 {
 public:
-  typedef LayerManager::DrawThebesLayerCallback DrawThebesLayerCallback;
-
   LayerOGL(LayerManagerOGL *aManager);
 
   enum LayerType {
@@ -340,8 +336,7 @@ public:
 
   virtual Layer* GetLayer() = 0;
 
-  virtual void RenderLayer(int aPreviousFrameBuffer, DrawThebesLayerCallback aCallback,
-                           void* aCallbackData) = 0;
+  virtual void RenderLayer(int aPreviousFrameBuffer) = 0;
 
   typedef mozilla::gl::GLContext GLContext;
 

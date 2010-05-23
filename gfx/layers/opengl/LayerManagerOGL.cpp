@@ -282,10 +282,14 @@ LayerManagerOGL::BeginTransactionWithTarget(gfxContext *aTarget)
 }
 
 void
-LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
-                                void* aCallbackData)
+LayerManagerOGL::EndConstruction()
 {
-  Render(aCallback, aCallbackData);
+}
+
+void
+LayerManagerOGL::EndTransaction()
+{
+  Render();
   mTarget = NULL;
 }
 
@@ -354,8 +358,7 @@ LayerManagerOGL::MakeCurrent()
 }
 
 void
-LayerManagerOGL::Render(DrawThebesLayerCallback aCallback,
-                        void* aCallbackData)
+LayerManagerOGL::Render()
 {
   nsIntRect rect;
   mWidget->GetBounds(rect);
@@ -381,7 +384,7 @@ LayerManagerOGL::Render(DrawThebesLayerCallback aCallback,
       mGLContext->fScissor(0, 0, width, height);
     }
 
-    mRootLayer->RenderLayer(mFrameBuffer, aCallback, aCallbackData);
+    mRootLayer->RenderLayer(mFrameBuffer);
   }
 
   if (mTarget) {
