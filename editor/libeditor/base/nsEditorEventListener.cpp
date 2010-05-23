@@ -318,6 +318,24 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   NS_ENSURE_TRUE(mEditor, NS_ERROR_NOT_AVAILABLE);
 
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent)
+  {
+    //non-key event passed to keypress.  bad things.
+    return NS_OK;
+  }
+
+  // Don't handle events which do not belong to us (by making sure that the
+  // target of the event is actually editable).
+  nsCOMPtr<nsIDOMEventTarget> target;
+  nsresult rv = keyEvent->GetTarget(getter_AddRefs(target));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(target);
+  if (!mEditor->IsModifiableNode(targetNode))
+  {
+    return NS_OK;
+  }
+
   // DOM event handling happens in two passes, the client pass and the system
   // pass.  We do all of our processing in the system pass, to allow client
   // handlers the opportunity to cancel events and prevent typing in the editor.
@@ -331,13 +349,6 @@ nsEditorEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
     nsUIEvent->GetPreventDefault(&defaultPrevented);
     if(defaultPrevented)
       return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMKeyEvent>keyEvent = do_QueryInterface(aKeyEvent);
-  if (!keyEvent) 
-  {
-    //non-key event passed to keypress.  bad things.
-    return NS_OK;
   }
 
   PRUint32 keyCode;
