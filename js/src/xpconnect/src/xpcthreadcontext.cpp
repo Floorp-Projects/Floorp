@@ -283,7 +283,7 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
                 }
 
             }
-            if(!glob && mSafeJSContext)
+            if(mSafeJSContext && !glob)
             {
                 // Destroy the context outside the scope of JSAutoRequest that
                 // uses the context in its destructor.
