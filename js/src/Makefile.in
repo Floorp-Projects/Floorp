@@ -296,14 +296,14 @@ CPPSRCS += 	Assertions.cpp \
 		ExecutableAllocator.cpp \
 		ARMAssembler.cpp \
 		MacroAssemblerARM.cpp \
-		$(NULL)
-#		Compiler.cpp \
-		CodeGenerator.cpp \
-		PICStubCompiler.cpp \
 		MethodJIT.cpp \
-		Stubs.cpp \
 		BytecodeAnalyzer.cpp \
-		Logging.cpp
+		Logging.cpp \
+		Stubs.cpp \
+		Compiler.cpp \
+		$(NULL)
+#		CodeGenerator.cpp \
+#		PICStubCompiler.cpp \
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
