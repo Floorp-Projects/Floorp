@@ -802,6 +802,8 @@ JS_StringToVersion(const char *string);
                                                    leaving that up to the
                                                    embedding. */
 
+#define JSOPTION_METHODJIT      JS_BIT(14)      /* Whole-method JIT. */
+
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
 

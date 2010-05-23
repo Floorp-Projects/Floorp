@@ -1,5 +1,5 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: set ts=8 sw=4 et tw=79 ft=cpp:
+ * vim: set ts=4 sw=4 et tw=79 ft=cpp:
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -113,6 +113,17 @@ struct GlobalSlotArray {
 # define CHECK_SCRIPT_OWNER 1
 #endif
 
+#ifdef JS_METHODJIT
+namespace JSC {
+    class ExecutablePool;
+}
+namespace js {
+    namespace mjit {
+        struct PICInfo;
+    }
+}
+#endif
+
 struct JSScript {
     jsbytecode      *code;      /* bytecodes and their immediate operands */
     uint32          length;     /* length of code vector */
@@ -150,6 +161,28 @@ struct JSScript {
 #ifdef CHECK_SCRIPT_OWNER
     JSThread        *owner;     /* for thread-safe life-cycle assertions */
 #endif
+#ifdef JS_METHODJIT
+    // Note: the other pointers in this group may be non-NULL only if 
+    // |execPool| is non-NULL.
+    void            *ncode;     /* native code compiled by the method JIT */
+    void            **nmap;     /* maps PCs to native code */
+    JSC::ExecutablePool *execPool;  /* pool that contains |ncode|; script owns the pool */
+    unsigned        npics;      /* Number of PICs in the array |pics| */
+    js::mjit::PICInfo *pics;      /* PICs in this script */
+# ifdef DEBUG
+    size_t          jitLength;  /* length of JIT'd code */
+
+    inline bool isValidJitCode(void *jcode) {
+        return (char*)jcode >= (char*)ncode &&
+               (char*)jcode < (char*)ncode + jitLength;
+    }
+# endif
+#endif
+#ifdef JS_TRACER
+    js::TraceTreeCache  *trees; /* trace tree info. */
+    uint32          tmGen;      /* generation number from the TraceMonitor */
+#endif
+    uint32          tracePoints; /* number of trace points in the script */
 
     /* Script notes are allocated right after the code. */
     jssrcnote *notes() { return (jssrcnote *)(code + length); }
@@ -222,6 +255,17 @@ struct JSScript {
     static JSScript *emptyScript() {
         return const_cast<JSScript *>(&emptyScriptConst);
     }
+
+#ifdef JS_METHODJIT
+    /*
+     * Map the given PC to the corresponding native code address.
+     */
+    void *pcToNative(jsbytecode *pc) {
+        JS_ASSERT(nmap);
+        JS_ASSERT(nmap[pc - code]);
+        return nmap[pc - code];
+    }
+#endif
 
   private:
     /*

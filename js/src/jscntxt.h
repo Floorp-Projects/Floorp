@@ -113,6 +113,10 @@ template<typename T> class Seq;
 
 }  /* namespace nanojit */
 
+namespace JSC {
+    class ExecutableAllocator;
+}
+
 namespace js {
 
 /* Tracer constants. */
@@ -208,6 +212,23 @@ struct TracerState
                 uintN &inlineCallCountp, VMSideExit** innermostNestedGuardp);
     ~TracerState();
 };
+
+namespace mjit {
+    struct ThreadData
+    {
+        JSC::ExecutableAllocator *execPool;
+
+        // Scripts that have had PICs patched or PIC stubs generated.
+        typedef js::HashSet<JSScript*, DefaultHasher<JSScript*>, js::SystemAllocPolicy> ScriptSet;
+        ScriptSet picScripts;
+
+        bool Initialize();
+        void Finish();
+
+        bool addScript(JSScript *script);
+        void removeScript(JSScript *script);
+    };
+}
 
 /*
  * Storage for the execution state and store during trace execution. Generated
@@ -1006,6 +1027,10 @@ struct JSThreadData {
     js::TraceMonitor    traceMonitor;
 #endif
 
+#ifdef JS_METHODJIT
+    js::mjit::ThreadData jmData;
+#endif
+
     /* Lock-free hashed lists of scripts created by eval to garbage-collect. */
     JSScript            *scriptsToGC[JS_EVAL_CACHE_SIZE];
 
@@ -1562,6 +1587,7 @@ struct JSRuntime {
 #define JS_GSN_CACHE(cx)        (JS_THREAD_DATA(cx)->gsnCache)
 #define JS_PROPERTY_CACHE(cx)   (JS_THREAD_DATA(cx)->propertyCache)
 #define JS_TRACE_MONITOR(cx)    (JS_THREAD_DATA(cx)->traceMonitor)
+#define JS_METHODJIT_DATA(cx)   (JS_THREAD_DATA(cx)->jmData)
 #define JS_SCRIPTS_TO_GC(cx)    (JS_THREAD_DATA(cx)->scriptsToGC)
 
 #ifdef JS_EVAL_CACHE_METERING
@@ -1722,7 +1748,7 @@ struct JSContext
     JS_REQUIRES_STACK
     JSFrameRegs         *regs;
 
-  private:
+  public:
     friend class js::StackSpace;
     friend bool js::Interpret(JSContext *);
 
@@ -1735,7 +1761,6 @@ struct JSContext
         this->regs = regs;
     }
 
-  public:
     /* Temporary arena pool used while compiling and decompiling. */
     JSArenaPool         tempPool;
 
