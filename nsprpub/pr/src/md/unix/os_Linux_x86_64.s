@@ -43,7 +43,6 @@
 /
     .text
     .globl _PR_x86_64_AtomicIncrement
-    .type _PR_x86_64_AtomicIncrement, @function
     .align 4
 _PR_x86_64_AtomicIncrement:
     movl $1, %eax
@@ -51,7 +50,6 @@ _PR_x86_64_AtomicIncrement:
     xaddl %eax, (%rdi)
     incl %eax
     ret
-    .size _PR_x86_64_AtomicIncrement, .-_PR_x86_64_AtomicIncrement
 
 / PRInt32 _PR_x86_64_AtomicDecrement(PRInt32 *val)
 /
@@ -60,7 +58,6 @@ _PR_x86_64_AtomicIncrement:
 /
     .text
     .globl _PR_x86_64_AtomicDecrement
-    .type _PR_x86_64_AtomicDecrement, @function
     .align 4
 _PR_x86_64_AtomicDecrement:
     movl $-1, %eax
@@ -68,7 +65,6 @@ _PR_x86_64_AtomicDecrement:
     xaddl %eax, (%rdi)
     decl %eax
     ret
-    .size _PR_x86_64_AtomicDecrement, .-_PR_x86_64_AtomicDecrement
 
 / PRInt32 _PR_x86_64_AtomicSet(PRInt32 *val, PRInt32 newval)
 /
@@ -77,13 +73,11 @@ _PR_x86_64_AtomicDecrement:
 /
     .text
     .globl _PR_x86_64_AtomicSet
-    .type _PR_x86_64_AtomicSet, @function
     .align 4
 _PR_x86_64_AtomicSet:
     movl %esi, %eax
     xchgl %eax, (%rdi)
     ret
-    .size _PR_x86_64_AtomicSet, .-_PR_x86_64_AtomicSet
 
 / PRInt32 _PR_x86_64_AtomicAdd(PRInt32 *ptr, PRInt32 val)
 /
@@ -92,7 +86,6 @@ _PR_x86_64_AtomicSet:
 /
     .text
     .globl _PR_x86_64_AtomicAdd
-    .type _PR_x86_64_AtomicAdd, @function
     .align 4
 _PR_x86_64_AtomicAdd:
     movl %esi, %eax
@@ -100,7 +93,6 @@ _PR_x86_64_AtomicAdd:
     xaddl %eax, (%rdi)
     addl %esi, %eax
     ret
-    .size _PR_x86_64_AtomicAdd, .-_PR_x86_64_AtomicAdd
 
 / Magic indicating no need for an executable stack
 .section .note.GNU-stack, "", @progbits ; .previous
