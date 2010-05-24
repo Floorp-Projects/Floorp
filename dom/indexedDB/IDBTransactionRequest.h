@@ -54,6 +54,7 @@
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
+class ObjectStoreInfo;
 
 class IDBTransactionRequest : public nsDOMEventTargetHelper,
                               public IDBRequest::Generator,
@@ -71,7 +72,7 @@ public:
 
   static already_AddRefed<IDBTransactionRequest>
   Create(IDBDatabaseRequest* aDatabase,
-         nsTArray<ObjectStoreInfo>& aObjectStores,
+         nsTArray<nsString>& aObjectStoreNames,
          PRUint16 aMode,
          PRUint32 aTimeout);
 
@@ -90,7 +91,7 @@ private:
 
   nsRefPtr<IDBDatabaseRequest> mDatabase;
   nsCOMPtr<mozIStorageConnection> mConnection;
-  nsTArray<ObjectStoreInfo> mObjectStores;
+  nsTArray<nsString> mObjectStoreNames;
   PRUint16 mReadyState;
   PRUint16 mMode;
   PRUint32 mTimeout;

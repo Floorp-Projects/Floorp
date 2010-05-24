@@ -44,13 +44,14 @@
 
 #include "IDBEvents.h"
 #include "IDBObjectStoreRequest.h"
+#include "DatabaseInfo.h"
 
 USING_INDEXEDDB_NAMESPACE
 
 // static
 already_AddRefed<IDBTransactionRequest>
 IDBTransactionRequest::Create(IDBDatabaseRequest* aDatabase,
-                              nsTArray<ObjectStoreInfo>& aObjectStores,
+                              nsTArray<nsString>& aObjectStoreNames,
                               PRUint16 aMode,
                               PRUint32 aTimeout)
 {
@@ -59,9 +60,13 @@ IDBTransactionRequest::Create(IDBDatabaseRequest* aDatabase,
   nsRefPtr<IDBTransactionRequest> transaction = new IDBTransactionRequest();
 
   transaction->mDatabase = aDatabase;
-  transaction->mObjectStores.SwapElements(aObjectStores);
   transaction->mMode = aMode;
   transaction->mTimeout = aTimeout;
+
+  if (!transaction->mObjectStoreNames.AppendElements(aObjectStoreNames)) {
+    NS_ERROR("Out of memory!");
+    return nsnull;
+  }
 
   return transaction.forget();
 }
@@ -146,8 +151,7 @@ IDBTransactionRequest::StartSavepoint(const nsCString& aName)
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
 
   // TODO try to cache this statement
-  nsCAutoString sql;
-  sql.AppendLiteral("SAVEPOINT ");
+  nsCAutoString sql("SAVEPOINT ");
   sql.Append(aName);
   nsresult rv = mConnection->ExecuteSimpleSQL(sql);
   NS_ENSURE_SUCCESS(rv, false);
@@ -160,8 +164,7 @@ IDBTransactionRequest::RevertToSavepoint(const nsCString& aName)
   NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
 
   // TODO try to cache this statement
-  nsCAutoString sql;
-  sql.AppendLiteral("SAVEPOINT ");
+  nsCAutoString sql("SAVEPOINT ");
   sql.Append(aName);
   nsresult rv = mConnection->ExecuteSimpleSQL(sql);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Rollback failed");
@@ -224,12 +227,10 @@ IDBTransactionRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
-  PRUint32 count = mObjectStores.Length();
+  PRUint32 count = mObjectStoreNames.Length();
   for (PRUint32 index = 0; index < count; index++) {
-    NS_ENSURE_TRUE(list->Add(mObjectStores[index].name),
-                   NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(list->Add(mObjectStoreNames[index]), NS_ERROR_OUT_OF_MEMORY);
   }
-
   list.forget(aObjectStores);
   return NS_OK;
 }
@@ -240,23 +241,25 @@ IDBTransactionRequest::ObjectStore(const nsAString& aName,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  ObjectStoreInfo* objectStoreInfo = nsnull;
+  ObjectStoreInfo* info = nsnull;
 
-  PRUint32 count = mObjectStores.Length();
+  PRUint32 count = mObjectStoreNames.Length();
   for (PRUint32 index = 0; index < count; index++) {
-    ObjectStoreInfo& info = mObjectStores[index];
-    if (info.name == aName) {
-      objectStoreInfo = &info;
+    nsString& name = mObjectStoreNames[index];
+    if (name == aName) {
+      if (!ObjectStoreInfo::Get(mDatabase->Id(), aName, &info)) {
+        NS_ERROR("Don't know about this one?!");
+      }
       break;
     }
   }
 
-  if (!objectStoreInfo) {
+  if (!info) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsRefPtr<IDBObjectStoreRequest> objectStore =
-    IDBObjectStoreRequest::Create(mDatabase, this, *objectStoreInfo, mMode);
+    IDBObjectStoreRequest::Create(mDatabase, this, info, mMode);
   NS_ENSURE_TRUE(objectStore, NS_ERROR_FAILURE);
 
   objectStore.forget(_retval);

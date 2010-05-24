@@ -52,50 +52,7 @@
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
-class IDBTransactionRequest;
-
-class ObjectStoreInfo
-{
-public:
-  nsString name;
-  PRInt64 id;
-  nsString keyPath;
-  bool autoIncrement;
-
-  ObjectStoreInfo()
-  : id(0), autoIncrement(false)
-  { }
-
-  ObjectStoreInfo(const nsAString& aName,
-                  PRInt64 aId)
-  : name(aName),
-    id(aId),
-    autoIncrement(false)
-  { }
-
-  ObjectStoreInfo(const nsAString& aName,
-                  PRInt64 aId,
-                  const nsAString& aKeyPath,
-                  bool aAutoIncrement)
-  : name(aName),
-    id(aId),
-    keyPath(aKeyPath),
-    autoIncrement(false)
-  { }
-
-  bool operator==(const ObjectStoreInfo& aOther) const {
-    if (id == aOther.id) {
-      NS_ASSERTION(name == aOther.name, "Huh?!");
-      return true;
-    }
-    return false;
-  }
-
-  bool operator<(const ObjectStoreInfo& aOther) const {
-    return id < aOther.id;
-  }
-
-};
+class DatabaseInfo;
 
 class IDBDatabaseRequest : public IDBRequest::Generator,
                            public nsIIDBDatabaseRequest,
@@ -110,12 +67,8 @@ public:
   NS_DECL_NSIOBSERVER
 
   static already_AddRefed<IDBDatabaseRequest>
-  Create(const nsAString& aName,
-         const nsAString& aDescription,
-         nsTArray<ObjectStoreInfo>& aObjectStores,
-         const nsAString& aVersion,
+  Create(DatabaseInfo* aDatabaseInfo,
          LazyIdleThread* aThread,
-         const nsAString& aDatabaseFilePath,
          nsCOMPtr<mozIStorageConnection>& aConnection);
 
   /**
@@ -164,10 +117,6 @@ public:
 
   void FireCloseConnectionRunnable();
 
-  void OnVersionSet(const nsString& aVersion);
-  void OnObjectStoreCreated(const ObjectStoreInfo& aInfo);
-  void OnObjectStoreRemoved(const ObjectStoreInfo& aInfo);
-
   void DisableConnectionThreadTimeout() {
     mConnectionThread->DisableIdleTimeout();
   }
@@ -175,6 +124,8 @@ public:
   void EnableConnectionThreadTimeout() {
     mConnectionThread->EnableIdleTimeout();
   }
+
+  PRUint32 Id();
 
 protected:
   IDBDatabaseRequest();
@@ -186,34 +137,8 @@ protected:
   // Only meant to be called on mStorageThread!
   nsresult EnsureConnection();
 
-  nsresult QueueDatabaseWork(nsIRunnable* aRunnable);
-
-  bool ObjectStoreInfoForName(const nsAString& aName,
-                              ObjectStoreInfo** aInfo) {
-    NS_ASSERTION(aInfo, "Null pointer!");
-    PRUint32 count = mObjectStores.Length();
-    for (PRUint32 index = 0; index < count; index++) {
-      ObjectStoreInfo& store = mObjectStores[index];
-      if (store.name == aName) {
-        if (aInfo) {
-          *aInfo = &store;
-        }
-        return true;
-      }
-    }
-    if (aInfo) {
-      *aInfo = nsnull;
-    }
-    return false;
-  }
-
 private:
-  nsString mName;
-  nsString mDescription;
-  nsString mVersion;
-  nsString mDatabaseFilePath;
-
-  nsTArray<ObjectStoreInfo> mObjectStores;
+  DatabaseInfo* mDatabaseInfo;
 
   nsRefPtr<LazyIdleThread> mConnectionThread;
 
@@ -230,9 +155,6 @@ private:
   nsCOMPtr<mozIStorageStatement> mRemoveAutoIncrementStmt;
   nsCOMPtr<mozIStorageStatement> mGetStmt;
   nsCOMPtr<mozIStorageStatement> mGetAutoIncrementStmt;
-
-  nsTArray<nsCOMPtr<nsIRunnable> > mPendingDatabaseWork;
-  nsTArray<nsRefPtr<IDBTransactionRequest> > mTransactions;
 };
 
 END_INDEXEDDB_NAMESPACE
