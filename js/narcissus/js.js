@@ -68,6 +68,7 @@ function my_load(filename) {
 }
 
 my_load('jsdefs.js');
+my_load('jslex.js');
 my_load('jsparse.js');
 my_load('jsexec.js');
 
