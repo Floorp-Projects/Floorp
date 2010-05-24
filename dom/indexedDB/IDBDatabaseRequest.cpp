@@ -249,7 +249,10 @@ IDBDatabaseRequest::Create(DatabaseInfo* aDatabaseInfo,
 
   nsRefPtr<IDBDatabaseRequest> db(new IDBDatabaseRequest());
 
-  db->mDatabaseInfo = aDatabaseInfo;
+  db->mDatabaseId = aDatabaseInfo->id;
+  db->mName = aDatabaseInfo->name;
+  db->mDescription = aDatabaseInfo->description;
+  db->mFilePath = aDatabaseInfo->filePath;
 
   aThread->SetWeakIdleObserver(db);
   db->mConnectionThread = aThread;
@@ -260,7 +263,7 @@ IDBDatabaseRequest::Create(DatabaseInfo* aDatabaseInfo,
 }
 
 IDBDatabaseRequest::IDBDatabaseRequest()
-: mDatabaseInfo(nsnull)
+: mDatabaseId(0)
 {
 
 }
@@ -270,9 +273,15 @@ IDBDatabaseRequest::~IDBDatabaseRequest()
   mConnectionThread->SetWeakIdleObserver(nsnull);
   FireCloseConnectionRunnable();
 
-  if (mDatabaseInfo &&
-      --mDatabaseInfo->referenceCount == 0) {
-    DatabaseInfo::Remove(mDatabaseInfo->id);
+  if (mDatabaseId) {
+    DatabaseInfo* info;
+    if (!DatabaseInfo::Get(mDatabaseId, &info)) {
+      NS_ERROR("This should never fail!");
+    }
+
+    if (--info->referenceCount == 0) {
+      DatabaseInfo::Remove(mDatabaseId);
+    }
   }
 }
 
@@ -290,7 +299,7 @@ IDBDatabaseRequest::EnsureConnection()
 
   if (!mConnection) {
     mConnection =
-      IndexedDatabaseRequest::GetConnection(mDatabaseInfo->filePath);
+      IndexedDatabaseRequest::GetConnection(mFilePath);
     NS_ENSURE_TRUE(mConnection, NS_ERROR_FAILURE);
   }
 
@@ -482,12 +491,6 @@ IDBDatabaseRequest::FireCloseConnectionRunnable()
   NS_ASSERTION(doomedObjects.Length() == 0, "Should have swapped!");
 }
 
-PRUint32
-IDBDatabaseRequest::Id()
-{
-  return mDatabaseInfo->id;
-}
-
 NS_IMPL_ADDREF(IDBDatabaseRequest)
 NS_IMPL_RELEASE(IDBDatabaseRequest)
 
@@ -505,7 +508,7 @@ NS_IMETHODIMP
 IDBDatabaseRequest::GetName(nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  aName.Assign(mDatabaseInfo->name);
+  aName.Assign(mName);
   return NS_OK;
 }
 
@@ -514,7 +517,7 @@ IDBDatabaseRequest::GetDescription(nsAString& aDescription)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  aDescription.Assign(mDatabaseInfo->description);
+  aDescription.Assign(mDescription);
   return NS_OK;
 }
 
@@ -522,7 +525,12 @@ NS_IMETHODIMP
 IDBDatabaseRequest::GetVersion(nsAString& aVersion)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  aVersion.Assign(mDatabaseInfo->version);
+  DatabaseInfo* info;
+  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
+    NS_ERROR("This should never fail!");
+    return NS_ERROR_UNEXPECTED;
+  }
+  aVersion.Assign(info->version);
   return NS_OK;
 }
 
@@ -531,8 +539,14 @@ IDBDatabaseRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  DatabaseInfo* info;
+  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
+    NS_ERROR("This should never fail!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsAutoTArray<nsString, 10> objectStoreNames;
-  if (!mDatabaseInfo->GetObjectStoreNames(objectStoreNames)) {
+  if (!info->GetObjectStoreNames(objectStoreNames)) {
     NS_WARNING("Couldn't get names!");
     return NS_ERROR_UNEXPECTED;
   }
@@ -565,7 +579,13 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
     keyPath.Truncate();
   }
 
-  if (mDatabaseInfo->ContainsStoreName(aName)) {
+  DatabaseInfo* info;
+  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
+    NS_ERROR("This should never fail!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (info->ContainsStoreName(aName)) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
 
@@ -592,7 +612,13 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!mDatabaseInfo->ContainsStoreName(aName)) {
+  DatabaseInfo* info;
+  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
+    NS_ERROR("This should never fail!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!info->ContainsStoreName(aName)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -652,6 +678,12 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
   nsresult rv = aStoreNames->GetDataType(&type);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  DatabaseInfo* info;
+  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
+    NS_ERROR("This should never fail!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
   nsTArray<nsString> storesToOpen;
 
   switch (type) {
@@ -659,7 +691,7 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
     case nsIDataType::VTYPE_EMPTY:
     case nsIDataType::VTYPE_EMPTY_ARRAY: {
       // Empty, request all object stores
-      if (!mDatabaseInfo->GetObjectStoreNames(storesToOpen)) {
+      if (!info->GetObjectStoreNames(storesToOpen)) {
         NS_ERROR("Out of memory?");
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -671,7 +703,7 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
       rv = aStoreNames->GetAsAString(name);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      if (!mDatabaseInfo->ContainsStoreName(name)) {
+      if (!info->ContainsStoreName(name)) {
         return NS_ERROR_NOT_AVAILABLE;
       }
 
@@ -690,7 +722,7 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
       for (PRUint32 nameIndex = 0; nameIndex < nameCount; nameIndex++) {
         nsString& name = names[nameIndex];
 
-        if (!mDatabaseInfo->ContainsStoreName(name)) {
+        if (!info->ContainsStoreName(name)) {
           return NS_ERROR_NOT_AVAILABLE;
         }
 
@@ -726,7 +758,7 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
         rv = stringList->Item(stringIndex, name);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        if (!mDatabaseInfo->ContainsStoreName(name)) {
+        if (!info->ContainsStoreName(name)) {
           return NS_ERROR_NOT_AVAILABLE;
         }
 
@@ -773,7 +805,13 @@ IDBDatabaseRequest::ObjectStore(const nsAString& aName,
     aMode = nsIIDBTransaction::READ_ONLY;
   }
 
-  if (!mDatabaseInfo->ContainsStoreName(aName)) {
+  DatabaseInfo* info;
+  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
+    NS_ERROR("This should never fail!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!info->ContainsStoreName(aName)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
