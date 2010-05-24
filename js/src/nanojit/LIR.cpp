@@ -537,6 +537,14 @@ namespace nanojit
             if (oprnd->isImmQ())
                 return insImmI(oprnd->immQlo());
             break;
+        case LIR_i2q:
+            if (oprnd->isImmI())
+                return insImmQ(int64_t(int32_t(oprnd->immI())));
+            break;
+        case LIR_ui2uq:
+            if (oprnd->isImmI())
+                return insImmQ(uint64_t(uint32_t(oprnd->immI())));
+            break;
 #endif
 #if NJ_SOFTFLOAT_SUPPORTED
         case LIR_dlo2i:
