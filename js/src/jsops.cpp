@@ -296,7 +296,6 @@ BEGIN_CASE(JSOP_STOP)
                     DO_OP();
                 }
             }
-            jsint len;
             if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE ||
                 *(regs.pc + JSOP_CALL_LENGTH) == JSOP_NOP) {
                 JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
@@ -318,7 +317,7 @@ BEGIN_CASE(JSOP_DEFAULT)
     /* FALL THROUGH */
 BEGIN_CASE(JSOP_GOTO)
 {
-    jsint len = GET_JUMP_OFFSET(regs.pc);
+    len = GET_JUMP_OFFSET(regs.pc);
     BRANCH(len);
 }
 END_CASE(JSOP_GOTO)
@@ -329,7 +328,7 @@ BEGIN_CASE(JSOP_IFEQ)
     Value *_;
     POP_BOOLEAN(cx, _, cond);
     if (cond == false) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -341,7 +340,7 @@ BEGIN_CASE(JSOP_IFNE)
     Value *_;
     POP_BOOLEAN(cx, _, cond);
     if (cond != false) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -353,7 +352,7 @@ BEGIN_CASE(JSOP_OR)
     Value *vp;
     POP_BOOLEAN(cx, vp, cond);
     if (cond == true) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
@@ -366,7 +365,7 @@ BEGIN_CASE(JSOP_AND)
     Value *vp;
     POP_BOOLEAN(cx, vp, cond);
     if (cond == false) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
@@ -378,7 +377,7 @@ BEGIN_CASE(JSOP_DEFAULTX)
     /* FALL THROUGH */
 BEGIN_CASE(JSOP_GOTOX)
 {
-    jsint len = GET_JUMPX_OFFSET(regs.pc);
+    len = GET_JUMPX_OFFSET(regs.pc);
     BRANCH(len);
 }
 END_CASE(JSOP_GOTOX);
@@ -389,7 +388,7 @@ BEGIN_CASE(JSOP_IFEQX)
     Value *_;
     POP_BOOLEAN(cx, _, cond);
     if (cond == false) {
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -401,7 +400,7 @@ BEGIN_CASE(JSOP_IFNEX)
     Value *_;
     POP_BOOLEAN(cx, _, cond);
     if (cond != false) {
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -413,7 +412,7 @@ BEGIN_CASE(JSOP_ORX)
     Value *vp;
     POP_BOOLEAN(cx, vp, cond);
     if (cond == true) {
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
@@ -426,7 +425,7 @@ BEGIN_CASE(JSOP_ANDX)
     Value *vp;
     POP_BOOLEAN(cx, vp, cond);
     if (cond == JS_FALSE) {
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
@@ -459,10 +458,10 @@ END_CASE(JSOP_ANDX)
             regs.sp -= spdec;                                                 \
             if (cond == (diff_ != 0)) {                                       \
                 ++regs.pc;                                                    \
-                jsint len = GET_JUMP_OFFSET(regs.pc);                         \
+                len = GET_JUMP_OFFSET(regs.pc);                         \
                 BRANCH(len);                                                  \
             }                                                                 \
-            jsint len = 1 + JSOP_IFEQ_LENGTH;                                 \
+            len = 1 + JSOP_IFEQ_LENGTH;                                 \
             DO_NEXT_OP(len);                                                  \
         }                                                                     \
     JS_END_MACRO
@@ -950,7 +949,7 @@ BEGIN_CASE(JSOP_CASE)
     STRICT_EQUALITY_OP(==, cond);
     if (cond) {
         regs.sp--;
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -962,7 +961,7 @@ BEGIN_CASE(JSOP_CASEX)
     STRICT_EQUALITY_OP(==, cond);
     if (cond) {
         regs.sp--;
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -1421,7 +1420,7 @@ BEGIN_CASE(JSOP_NAMEDEC)
                     tmp = inc;
                 rref.asInt32Ref() = inc;
                 PUSH_INT32(tmp);
-                jsint len = JSOP_INCNAME_LENGTH;
+                len = JSOP_INCNAME_LENGTH;
                 DO_NEXT_OP(len);
             }
         }
@@ -1490,7 +1489,7 @@ do_incop:
         regs.sp[-1 - cs->nuses] = regs.sp[-1];
         regs.sp -= cs->nuses;
     }
-    jsint len = cs->length;
+    len = cs->length;
     DO_NEXT_OP(len);
 }
 }
@@ -1551,7 +1550,7 @@ BEGIN_CASE(JSOP_LOCALINC)
         if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
             goto error;
     }
-    jsint len = JSOP_INCARG_LENGTH;
+    len = JSOP_INCARG_LENGTH;
     JS_ASSERT(len == js_CodeSpec[op].length);
     DO_NEXT_OP(len);
 }
@@ -1607,7 +1606,7 @@ BEGIN_CASE(JSOP_GVARINC)
         if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], &rref))
             goto error;
     }
-    jsint len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
+    len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
     JS_ASSERT(len == js_CodeSpec[op].length);
     DO_NEXT_OP(len);
 }
@@ -2494,7 +2493,7 @@ BEGIN_CASE(JSOP_CALLNAME)
         JSOp op2 = js_GetOpcode(cx, script, regs.pc + JSOP_NAME_LENGTH);
         if (op2 == JSOP_TYPEOF) {
             PUSH_UNDEFINED();
-            jsint len = JSOP_NAME_LENGTH;
+            len = JSOP_NAME_LENGTH;
             DO_NEXT_OP(len);
         }
         atomNotDefined = atom;
@@ -2627,7 +2626,6 @@ BEGIN_CASE(JSOP_TRUE)
 END_CASE(JSOP_TRUE)
 
 {
-    jsint len;
 BEGIN_CASE(JSOP_TABLESWITCH)
 {
     jsbytecode *pc2 = regs.pc;
@@ -2666,7 +2664,6 @@ END_VARLEN_CASE
 }
 
 {
-    jsint len;
 BEGIN_CASE(JSOP_TABLESWITCHX)
 {
     jsbytecode *pc2 = regs.pc;
@@ -2705,7 +2702,6 @@ END_VARLEN_CASE
 }
 
 {
-    jsint len;
 BEGIN_CASE(JSOP_LOOKUPSWITCHX)
 {
     jsint off;
@@ -3586,7 +3582,7 @@ BEGIN_CASE(JSOP_SETTER)
         JS_ASSERT(js_CodeSpec[op2].ndefs == js_CodeSpec[op2].nuses + 1);
         regs.sp[-1] = rval;
     }
-    jsint len = js_CodeSpec[op2].length;
+    len = js_CodeSpec[op2].length;
     DO_NEXT_OP(len);
 }
 
@@ -3596,7 +3592,7 @@ END_CASE(JSOP_HOLE)
 
 BEGIN_CASE(JSOP_NEWARRAY)
 {
-    jsint len = GET_UINT16(regs.pc);
+    len = GET_UINT16(regs.pc);
     cx->assertValidStackDepth(len);
     JSObject *obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
     if (!obj)
@@ -3884,7 +3880,7 @@ BEGIN_CASE(JSOP_GOSUB)
     PUSH_BOOLEAN(false);
     jsint i = (regs.pc - script->main) + JSOP_GOSUB_LENGTH;
     PUSH_INT32(i);
-    jsint len = GET_JUMP_OFFSET(regs.pc);
+    len = GET_JUMP_OFFSET(regs.pc);
 END_VARLEN_CASE
 }
 
@@ -3892,7 +3888,7 @@ END_VARLEN_CASE
 BEGIN_CASE(JSOP_GOSUBX)
     PUSH_BOOLEAN(false);
     jsint i = (regs.pc - script->main) + JSOP_GOSUBX_LENGTH;
-    jsint len = GET_JUMPX_OFFSET(regs.pc);
+    len = GET_JUMPX_OFFSET(regs.pc);
     PUSH_INT32(i);
 END_VARLEN_CASE
 }
@@ -3916,7 +3912,7 @@ BEGIN_CASE(JSOP_RETSUB)
         goto error;
     }
     JS_ASSERT(rval.isInt32());
-    jsint len = rval.asInt32();
+    len = rval.asInt32();
     regs.pc = script->main;
 END_VARLEN_CASE
 }
@@ -3966,7 +3962,7 @@ BEGIN_CASE(JSOP_IFPRIMTOP)
      */
     JS_ASSERT(regs.sp > fp->base());
     if (regs.sp[-1].isPrimitive()) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
 END_CASE(JSOP_IFPRIMTOP)
@@ -4201,7 +4197,7 @@ BEGIN_CASE(JSOP_FILTER)
      * state.
      */
     PUSH_HOLE();
-    jsint len = GET_JUMP_OFFSET(regs.pc);
+    len = GET_JUMP_OFFSET(regs.pc);
     JS_ASSERT(len > 0);
 END_VARLEN_CASE
 }
@@ -4224,7 +4220,7 @@ BEGIN_CASE(JSOP_ENDFILTER)
         if (!js_EnterWith(cx, -2))
             goto error;
         regs.sp--;
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         JS_ASSERT(len < 0);
         BRANCH(len);
     }
