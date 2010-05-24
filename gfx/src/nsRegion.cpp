@@ -1470,7 +1470,7 @@ nsRect nsRegion::GetLargestRectangle () const {
   PRInt32 matrixSize = matrixHeight * matrixWidth;
   nsTArray<PRInt64> areas(matrixSize);
   areas.SetLength(matrixSize);
-  memset(areas.Elements(), 0, matrixSize * sizeof PRInt64);
+  memset(areas.Elements(), 0, matrixSize * sizeof(PRInt64));
 
   iter.Reset();
   while ((currentRect = iter.Next())) {
