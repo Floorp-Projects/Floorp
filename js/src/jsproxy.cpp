@@ -173,6 +173,11 @@ JSProxyHandler::finalize(JSContext *cx, JSObject *proxy)
 {
 }
 
+void
+JSProxyHandler::trace(JSTracer *trc, JSObject *proxy)
+{
+}
+
 JSNoopProxyHandler::JSNoopProxyHandler(JSObject *obj) : mWrappedObject(obj)
 {
 }
@@ -274,6 +279,13 @@ JSNoopProxyHandler::finalize(JSContext *cx, JSObject *proxy)
 {
     if (mWrappedObject)
         delete this;
+}
+
+void
+JSNoopProxyHandler::trace(JSTracer *trc, JSObject *proxy)
+{
+    if (mWrappedObject)
+        JS_CALL_OBJECT_TRACER(trc, mWrappedObject, "wrappedObject");
 }
 
 void *
@@ -712,7 +724,11 @@ proxy_TraceObject(JSTracer *trc, JSObject *obj)
 
     obj->traceProtoAndParent(trc);
 
-    JS_CALL_VALUE_TRACER(trc, obj->fslots[JSSLOT_PROXY_HANDLER], "handler");
+    jsval handler = obj->fslots[JSSLOT_PROXY_HANDLER];
+    if (!JSVAL_IS_PRIMITIVE(handler))
+        JS_CALL_OBJECT_TRACER(trc, JSVAL_TO_OBJECT(handler), "handler");
+    else
+        ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->trace(trc, obj);
     if (obj->isFunctionProxy()) {
         JS_CALL_VALUE_TRACER(trc, obj->fslots[JSSLOT_PROXY_CALL], "call");
         JS_CALL_VALUE_TRACER(trc, obj->fslots[JSSLOT_PROXY_CONSTRUCT], "construct");
