@@ -519,7 +519,7 @@ END_CASE(JSOP_MOREITER)
 BEGIN_CASE(JSOP_ENDITER)
 {
     JS_ASSERT(regs.sp - 1 >= fp->base());
-    bool ok = js_CloseIterator(cx, regs.sp[-1]);
+    bool ok = !!js_CloseIterator(cx, regs.sp[-1]);
     regs.sp--;
     if (!ok)
         goto error;
@@ -821,7 +821,7 @@ END_CASE(JSOP_BITAND)
         (rmask == JSVAL_NONFUNOBJ_MASK && rref.asObject().isXML())) {         \
         if (!js_TestXMLEquality(cx, lref, rref, &cond))                       \
             goto error;                                                       \
-        cond = cond OP true;                                                  \
+        cond = cond OP JS_TRUE;                                               \
     } else
 
 #define EXTENDED_EQUALITY_OP(OP)                                              \
@@ -829,7 +829,7 @@ END_CASE(JSOP_BITAND)
         ((ExtendedClass *)clasp)->equality) {                                 \
         if (!((ExtendedClass *)clasp)->equality(cx, l, &rref, &cond))         \
             goto error;                                                       \
-        cond = cond OP true;                                                  \
+        cond = cond OP JS_TRUE;                                               \
     } else
 #else
 #define XML_EQUALITY_OP(OP)             /* nothing */
@@ -861,7 +861,7 @@ END_CASE(JSOP_BITAND)
                 cond = l OP r;                                                \
             } else if (lmask == JSVAL_STRING_MASK) {                          \
                 JSString *l = lref.asString(), *r = rref.asString();          \
-                cond = js_EqualStrings(l, r) OP true;                         \
+                cond = js_EqualStrings(l, r) OP JS_TRUE;                      \
             } else {                                                          \
                 cond = lref.asBoolean() OP rref.asBoolean();                  \
             }                                                                 \
@@ -892,7 +892,7 @@ END_CASE(JSOP_BITAND)
                 }                                                             \
                 if (maskor == JSVAL_STRING_MASK) {                            \
                     JSString *l = lref.asString(), *r = rref.asString();      \
-                    cond = js_EqualStrings(l, r) OP true;                     \
+                    cond = js_EqualStrings(l, r) OP JS_TRUE;                  \
                 } else {                                                      \
                     double l, r;                                              \
                     if (!ValueToNumber(cx, lref, &l) ||                       \
