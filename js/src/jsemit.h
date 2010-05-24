@@ -241,6 +241,11 @@ struct JSStmtInfo {
 #define TCF_FUN_ENTRAINS_SCOPES 0x400000
 
 /*
+ * Function uses eval.
+ */
+#define TCF_FUN_USES_EVAL       0x800000
+
+/*
  * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
@@ -254,6 +259,7 @@ struct JSStmtInfo {
                                  TCF_FUN_HEAVYWEIGHT     |                    \
                                  TCF_FUN_IS_GENERATOR    |                    \
                                  TCF_FUN_USES_OWN_NAME   |                    \
+                                 TCF_FUN_USES_EVAL       |                    \
                                  TCF_HAS_SHARPS          |                    \
                                  TCF_STRICT_MODE_CODE)
 
@@ -287,6 +293,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
                                        Compiler::compileFunctionBody */
     JSFunctionBox   *functionList;
 
+    JSParseNode     *innermostWith; /* innermost WITH parse node */
+
 #ifdef JS_SCOPE_DEPTH_METER
     uint16          scopeDepth;     /* current lexical scope chain depth */
     uint16          maxScopeDepth;  /* maximum lexical scope chain depth */
@@ -296,7 +304,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
       : flags(0), ngvars(0), bodyid(0), blockidGen(0),
         topStmt(NULL), topScopeStmt(NULL), blockChain(NULL), blockNode(NULL),
         parser(prs), scopeChain(NULL), parent(prs->tc), staticLevel(0),
-        funbox(NULL), functionList(NULL), sharpSlotBase(-1)
+        funbox(NULL), functionList(NULL), innermostWith(NULL), sharpSlotBase(-1)
     {
         prs->tc = this;
         JS_SCOPE_DEPTH_METERING(scopeDepth = maxScopeDepth = 0);
