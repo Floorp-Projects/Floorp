@@ -897,15 +897,14 @@ nsDownloadManager::Init()
   // These observers will be cleaned up automatically at app shutdown.  We do
   // not bother explicitly breaking the observers because we are a singleton
   // that lives for the duration of the app.
-  (void)mObserverService->AddObserver(this, "quit-application", PR_FALSE);
-  (void)mObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
-  (void)mObserverService->AddObserver(this, "offline-requested", PR_FALSE);
-  (void)mObserverService->AddObserver(this, "sleep_notification", PR_FALSE);
-  (void)mObserverService->AddObserver(this, "wake_notification", PR_FALSE);
-  (void)mObserverService->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, PR_FALSE);
-  (void)mObserverService->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, PR_FALSE);
-  (void)mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_REQUEST_TOPIC, PR_FALSE);
-  (void)mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
+  mObserverService->AddObserver(this, "quit-application", PR_FALSE);
+  mObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
+  mObserverService->AddObserver(this, "offline-requested", PR_FALSE);
+  mObserverService->AddObserver(this, "sleep_notification", PR_FALSE);
+  mObserverService->AddObserver(this, "wake_notification", PR_FALSE);
+  mObserverService->AddObserver(this, NS_IOSERVICE_GOING_OFFLINE_TOPIC, PR_FALSE);
+  mObserverService->AddObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC, PR_FALSE);
+  mObserverService->AddObserver(this, NS_PRIVATE_BROWSING_SWITCH_TOPIC, PR_FALSE);
 
   if (history)
     (void)history->AddObserver(this, PR_FALSE);
@@ -1987,9 +1986,9 @@ nsDownloadManager::Observe(nsISupports *aSubject,
         this, resumeOnWakeDelay, nsITimer::TYPE_ONE_SHOT);
     }
   }
-  else if (strcmp(aTopic, NS_PRIVATE_BROWSING_REQUEST_TOPIC) == 0) {
-    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData) &&
-        currDownloadCount) {
+  else if (strcmp(aTopic, NS_PRIVATE_BROWSING_REQUEST_TOPIC) == 0 &&
+           currDownloadCount) {
+    if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
       nsCOMPtr<nsISupportsPRBool> cancelDownloads =
         do_QueryInterface(aSubject, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1999,12 +1998,11 @@ nsDownloadManager::Observe(nsISupports *aSubject,
                              NS_LITERAL_STRING("enterPrivateBrowsingCancelDownloadsAlertMsg").get(),
                              NS_LITERAL_STRING("dontEnterPrivateBrowsingButton").get());
     }
-    else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData) &&
-             mCurrentDownloads.Count()) {
+    else if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_LEAVE).Equals(aData)) {
       nsCOMPtr<nsISupportsPRBool> cancelDownloads =
         do_QueryInterface(aSubject, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
-      ConfirmCancelDownloads(mCurrentDownloads.Count(), cancelDownloads,
+      ConfirmCancelDownloads(currDownloadCount, cancelDownloads,
                              NS_LITERAL_STRING("leavePrivateBrowsingCancelDownloadsAlertTitle").get(),
                              NS_LITERAL_STRING("leavePrivateBrowsingCancelDownloadsAlertMsgMultiple").get(),
                              NS_LITERAL_STRING("leavePrivateBrowsingCancelDownloadsAlertMsg").get(),
