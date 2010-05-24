@@ -38,6 +38,7 @@
 
 #include "nsQAppInstance.h"
 #include <QApplication>
+#include "prenv.h"
 
 // declared in nsAppRunner.cpp
 extern int    gArgc;
@@ -53,8 +54,12 @@ nsQAppInstance::nsQAppInstance(int gArgc, char** gArgv)
 
 void nsQAppInstance::AddRef(void) {
   if (qApp) return;
-  if (!sQAppInstance)
+  if (!sQAppInstance) {
+    const char *graphicsSystem = PR_GetEnv("MOZ_QT_GRAPHICSSYSTEM");
+    if (graphicsSystem)
+      QApplication::setGraphicsSystem(QString(graphicsSystem));
     sQAppInstance = new nsQAppInstance(gArgc, gArgv);
+  }
   sQAppRefCount++;
 }
 

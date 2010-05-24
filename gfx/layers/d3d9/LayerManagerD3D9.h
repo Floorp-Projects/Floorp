@@ -1,0 +1,239 @@
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Corporation code.
+ *
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Bas Schouten <bschouten@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#ifndef GFX_LAYERMANAGERD3D9_H
+#define GFX_LAYERMANAGERD3D9_H
+
+#include "Layers.h"
+
+#include <windows.h>
+#include <d3d9.h>
+
+#include "gfxContext.h"
+#include "nsIWidget.h"
+
+namespace mozilla {
+namespace layers {
+
+class LayerD3D9;
+class ThebesLayerD3D9;
+
+/*
+ * This is the LayerManager used for Direct3D 9. For now this will render on
+ * the main thread.
+ */
+class THEBES_API LayerManagerD3D9 : public LayerManager {
+public:
+  LayerManagerD3D9(nsIWidget *aWidget);
+  virtual ~LayerManagerD3D9();
+
+  /*
+   * Initializes the layer manager, this is when the layer manager will
+   * actually access the device and attempt to create the swap chain used
+   * to draw to the window. If this method fails the device cannot be used.
+   * This function is not threadsafe.
+   *
+   * \return True is initialization was succesful, false when it was not.
+   */
+  PRBool Initialize();
+
+  /*
+   * Sets the clipping region for this layer manager. This is important on 
+   * windows because using OGL we no longer have GDI's native clipping. Therefor
+   * widget must tell us what part of the screen is being invalidated,
+   * and we should clip to this.
+   *
+   * \param aClippingRegion Region to clip to. Setting an empty region
+   * will disable clipping.
+   */
+  void SetClippingRegion(const nsIntRegion& aClippingRegion);
+
+  /*
+   * LayerManager implementation.
+   */
+  void BeginTransaction();
+
+  void BeginTransactionWithTarget(gfxContext* aTarget);
+
+  void EndConstruction();
+
+  struct CallbackInfo {
+    DrawThebesLayerCallback Callback;
+    void *CallbackData;
+  };
+
+  void EndTransaction(DrawThebesLayerCallback aCallback,
+                      void* aCallbackData);
+
+  const CallbackInfo &GetCallbackInfo() { return mCurrentCallbackInfo; }
+
+  void SetRoot(Layer* aLayer);
+  
+  virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
+
+  virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
+
+  virtual already_AddRefed<ImageLayer> CreateImageLayer();
+
+  virtual already_AddRefed<ColorLayer> CreateColorLayer();
+
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
+
+  virtual already_AddRefed<ImageContainer> CreateImageContainer();
+
+  virtual LayersBackend GetBackendType() { return LAYERS_D3D9; }
+
+  /*
+   * Helper methods.
+   */
+  void SetClippingEnabled(PRBool aEnabled);
+
+  IDirect3DDevice9 *device() const { return mDevice; }
+
+  enum ShaderMode {
+    RGBLAYER,
+    YCBCRLAYER,
+    SOLIDCOLORLAYER
+  };
+
+  void SetShaderMode(ShaderMode aMode);
+
+  nsTArray<ThebesLayerD3D9*> mThebesLayers;
+
+private:
+  /* Direct3D9 instance */
+  static IDirect3D9 *mD3D9;
+
+  /* Widget associated with this layer manager */
+  nsIWidget *mWidget;
+  /* 
+   * Context target, NULL when drawing directly to our swap chain.
+   */
+  nsRefPtr<gfxContext> mTarget;
+
+  nsRefPtr<IDirect3DDevice9> mDevice;
+
+  /* Vertex shader used for layer quads */
+  nsRefPtr<IDirect3DVertexShader9> mLayerVS;
+
+  /* Pixel shader used for RGB textures */
+  nsRefPtr<IDirect3DPixelShader9> mRGBPS;
+
+  /* Pixel shader used for RGB textures */
+  nsRefPtr<IDirect3DPixelShader9> mYCbCrPS;
+
+  /* Pixel shader used for solid colors */
+  nsRefPtr<IDirect3DPixelShader9> mSolidColorPS;
+
+  /* Vertex buffer containing our basic vertex structure */
+  nsRefPtr<IDirect3DVertexBuffer9> mVB;
+
+  /* Our vertex declaration */
+  nsRefPtr<IDirect3DVertexDeclaration9> mVD;
+
+  /* Current root layer. */
+  LayerD3D9 *mRootLayer;
+
+  /* Callback info for current transaction */
+  CallbackInfo mCurrentCallbackInfo;
+  
+  /*
+   * Region we're clipping our current drawing to.
+   */
+  nsIntRegion mClippingRegion;
+  /*
+   * Render the current layer tree to the active target.
+   */
+  void Render();
+  /*
+   * Setup the pipeline.
+   */
+  void SetupPipeline();
+  /*
+   * Setup the backbuffer.
+   *
+   * \return PR_TRUE if setup was succesful
+   */
+  PRBool SetupBackBuffer();
+  /*
+   * Setup the render state for the surface.
+   */
+  void SetupRenderState();
+  /*
+   * Copies the content of our backbuffer to the set transaction target.
+   */
+  void PaintToTarget();
+  /*
+   * Verifies all required device capabilities are present.
+   */
+  PRBool VerifyCaps();
+
+};
+
+/*
+ * General information and tree management for OGL layers.
+ */
+class LayerD3D9
+{
+public:
+  LayerD3D9(LayerManagerD3D9 *aManager);
+
+  enum LayerType { TYPE_THEBES, TYPE_CONTAINER, TYPE_IMAGE, TYPE_COLOR,
+                   TYPE_CANVAS };
+  
+  virtual LayerType GetType() = 0;
+
+  LayerD3D9 *GetNextSibling();
+  virtual LayerD3D9 *GetFirstChildD3D9() { return nsnull; }
+
+  void SetNextSibling(LayerD3D9 *aParent);
+  void SetFirstChild(LayerD3D9 *aParent);
+
+  virtual Layer* GetLayer() = 0;
+
+  virtual void RenderLayer() = 0;
+
+  IDirect3DDevice9 *device() const { return mD3DManager->device(); }
+protected:
+  LayerManagerD3D9 *mD3DManager;
+  LayerD3D9 *mNextSibling;
+};
+
+} /* layers */
+} /* mozilla */
+
+#endif /* GFX_LAYERMANAGERD3D9_H */

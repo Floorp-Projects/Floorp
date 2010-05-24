@@ -70,7 +70,7 @@ nsMediaDecoder::nsMediaDecoder() :
   mProgressTime(),
   mDataTime(),
   mVideoUpdateLock(nsnull),
-  mAspectRatio(1.0),
+  mPixelAspectRatio(1.0),
   mSizeChanged(PR_FALSE),
   mShuttingDown(PR_FALSE)
 {
@@ -126,14 +126,14 @@ void nsMediaDecoder::Invalidate()
       nsIntSize scaledSize(mRGBWidth, mRGBHeight);
       // Apply the aspect ratio to produce the intrinsic size we report
       // to the element.
-      if (mAspectRatio > 1.0) {
+      if (mPixelAspectRatio > 1.0) {
         // Increase the intrinsic width
         scaledSize.width =
-          ConditionDimension(mAspectRatio*scaledSize.width, scaledSize.width);
+          ConditionDimension(mPixelAspectRatio*scaledSize.width, scaledSize.width);
       } else {
         // Increase the intrinsic height
         scaledSize.height =
-          ConditionDimension(scaledSize.height/mAspectRatio, scaledSize.height);
+          ConditionDimension(scaledSize.height/mPixelAspectRatio, scaledSize.height);
       }
       mElement->UpdateMediaSize(scaledSize);
 
@@ -213,16 +213,16 @@ nsresult nsMediaDecoder::StopProgress()
 }
 
 void nsMediaDecoder::SetVideoData(const gfxIntSize& aSize,
-                                  float aAspectRatio,
+                                  float aPixelAspectRatio,
                                   Image* aImage)
 {
   nsAutoLock lock(mVideoUpdateLock);
 
   if (mRGBWidth != aSize.width || mRGBHeight != aSize.height ||
-      mAspectRatio != aAspectRatio) {
+      mPixelAspectRatio != aPixelAspectRatio) {
     mRGBWidth = aSize.width;
     mRGBHeight = aSize.height;
-    mAspectRatio = aAspectRatio;
+    mPixelAspectRatio = aPixelAspectRatio;
     mSizeChanged = PR_TRUE;
   }
   if (mImageContainer && aImage) {

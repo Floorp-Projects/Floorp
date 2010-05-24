@@ -20,7 +20,7 @@ test006: Simple <?xml-stylesheet ?> instruction in the prolog has an effect and 
 
 test007: Same as #006 for xul-overlay PI.
 
-test008: Handle stylesheet PIs pointing to non-existing resources gracefully.
+test008: Handle stylesheet PIs pointing to nonexistent resources gracefully.
 
 test009: Same as #008 for xul-overlay PIs
 

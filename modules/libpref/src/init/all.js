@@ -2813,6 +2813,12 @@ pref("mozilla.widget.render-mode", -1);
 // Initialize default accelerated layers
 pref("mozilla.widget.accelerated-layers", true);
 
+#ifdef XP_WIN
+#ifndef WINCE
+pref("mozilla.layers.prefer-opengl", false);
+#endif
+#endif
+
 // Enable/Disable the geolocation API for content
 pref("geo.enabled", true);
 

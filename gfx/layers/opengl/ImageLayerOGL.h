@@ -175,7 +175,9 @@ public:
 
   virtual Layer* GetLayer();
 
-  virtual void RenderLayer(int aPreviousDestination);
+  virtual void RenderLayer(int aPreviousDestination,
+                           DrawThebesLayerCallback aCallback,
+                           void* aCallbackData);
 };
 
 class THEBES_API PlanarYCbCrImageOGL : public PlanarYCbCrImage

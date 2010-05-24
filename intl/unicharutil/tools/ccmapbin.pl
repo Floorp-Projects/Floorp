@@ -228,7 +228,7 @@ sub read_input
     my ($u, $comment) = split /\s+/, $1, 2;
     $u =~ s/,//g;
     $u =~ tr/A-Z/a-z/;
-    next if /^0x.*[^0-9a-f]+.*/;
+    next if $u =~ /^0x.*[^0-9a-f]+.*/;
 
     my $usv = oct $u;
     if ( 0xd800 <= $usv && $usv <= 0xdfff || # surrogate code points

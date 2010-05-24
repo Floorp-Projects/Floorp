@@ -168,13 +168,19 @@ const COPYCOL_IMAGE = COL_IMAGE_ADDRESS;
 var gMetaView = new pageInfoTreeView(COPYCOL_META_CONTENT);
 var gImageView = new pageInfoTreeView(COPYCOL_IMAGE);
 
-gImageView.getCellProperties = function(row, col, props) {
-  var aserv = Components.classes[ATOM_CONTRACTID]
-                        .getService(Components.interfaces.nsIAtomService);
 
+var atomSvc = Components.classes["@mozilla.org/atom-service;1"]
+                        .getService(Components.interfaces.nsIAtomService);
+gImageView._ltrAtom = atomSvc.getAtom("ltr");
+gImageView._brokenAtom = atomSvc.getAtom("broken");
+
+gImageView.getCellProperties = function(row, col, props) {
   if (gImageView.data[row][COL_IMAGE_SIZE] == gStrings.unknown &&
       !/^https:/.test(gImageView.data[row][COL_IMAGE_ADDRESS]))
-    props.AppendElement(aserv.getAtom("broken"));
+    props.AppendElement(this._brokenAtom);
+
+  if (col.element.id == "image-address")
+    props.AppendElement(this._ltrAtom);
 };
 
 var gImageHash = { };
