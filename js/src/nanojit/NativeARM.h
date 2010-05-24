@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Adobe AS3 Team
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Jacob Bramley <Jacob.Bramley@arm.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -65,12 +66,7 @@ namespace nanojit
 // only d0-d6 are actually used; we'll use d7 as s14-s15 for i2d/u2f/etc.
 #define NJ_VFP_MAX_REGISTERS            8
 #define NJ_MAX_REGISTERS                (11 + NJ_VFP_MAX_REGISTERS)
-
-// fixme: bug 556175: this cant be over 1024, because
-// the ARM backend cannot support more than 12-bit displacements
-// in a single load/store instruction, for spilling.  see asm_spill().
-#define NJ_MAX_STACK_ENTRY              1024
-
+#define NJ_MAX_STACK_ENTRY              4096
 #define NJ_MAX_PARAMETERS               16
 #define NJ_ALIGN_STACK                  8
 
@@ -229,6 +225,7 @@ verbose_only( extern const char* shiftNames[]; )
     void        asm_stkarg(LInsp p, int stkd);                                  \
     void        asm_cmpi(Register, int32_t imm);                                \
     void        asm_ldr_chk(Register d, Register b, int32_t off, bool chk);     \
+    int32_t     asm_str(Register rt, Register rr, int32_t off);                 \
     void        asm_cmp(LIns *cond);                                            \
     void        asm_cmpd(LIns *cond);                                           \
     void        asm_ld_imm(Register d, int32_t imm, bool chk = true);           \
