@@ -45,7 +45,7 @@
 #include "nsString.h"
 
 // Interfaces needed to be included
-#include "nsIVariant.h"
+#include "nsCopySupport.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMUIEvent.h"
 #include "nsISelection.h"
@@ -59,9 +59,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMRange.h"
-#include "nsIDocumentEncoder.h"
 #include "nsIFormControl.h"
-#include "nsISelectionPrivate.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsITransferable.h"
@@ -75,14 +73,12 @@
 #include "nsIDocShell.h"
 #include "nsIContent.h"
 #include "nsIImageLoadingContent.h"
-#include "nsINameSpaceManager.h"
 #include "nsUnicharUtils.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIFrame.h"
 #include "nsRange.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsEscape.h"
@@ -90,18 +86,50 @@
 #include "nsIMIMEService.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "nsContentCID.h"
 #include "nsDOMDataTransfer.h"
-#include "nsISelectionController.h"
-#include "nsFrameSelection.h"
-#include "nsWidgetsCID.h"
-
-static NS_DEFINE_CID(kHTMLConverterCID,        NS_HTMLFORMATCONVERTER_CID);
 
 // private clipboard data flavors for html copy, used by editor when pasting
 #define kHTMLContext   "text/_moz_htmlcontext"
 #define kHTMLInfo      "text/_moz_htmlinfo"
 
+nsresult NS_NewDomSelection(nsISelection **aDomSelection);
+
+// if inNode is null, use the selection from the window
+static nsresult
+GetTransferableForNodeOrSelection(nsIDOMWindow*     aWindow,
+                                  nsIContent*       aNode,
+                                  nsITransferable** aTransferable)
+{
+  NS_ENSURE_ARG_POINTER(aWindow);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aWindow->GetDocument(getter_AddRefs(domDoc));
+  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+
+  nsresult rv;
+  nsCOMPtr<nsISelection> selection;
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode);
+  if (node) {
+    // Make a temporary selection with this node in a single range.
+    rv = NS_NewDomSelection(getter_AddRefs(selection));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIDOMRange> range;
+    rv = NS_NewRange(getter_AddRefs(range));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = range->SelectNode(node);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = selection->AddRange(range);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    aWindow->GetSelection(getter_AddRefs(selection));
+  }
+
+  rv = nsCopySupport::GetTransferableForSelection(selection, doc,
+                                                  aTransferable);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
+}
 
 class NS_STACK_CLASS DragDataProducer
 {
@@ -133,13 +161,6 @@ private:
                               nsAString& outLinkText);
   static void GetSelectedLink(nsISelection* inSelection,
                               nsIContent **outLinkNode);
-
-  // if inNode is null, use the selection from the window
-  static nsresult SerializeNodeOrSelection(nsIDOMWindow* inWindow,
-                                           nsIContent* inNode,
-                                           nsAString& outResultString,
-                                           nsAString& outHTMLContext,
-                                           nsAString& outHTMLInfo);
 
   nsCOMPtr<nsIDOMWindow> mWindow;
   nsCOMPtr<nsIContent> mTarget;
@@ -417,6 +438,7 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
 
   *aDragNode = nsnull;
 
+  nsresult rv;
   nsIContent* dragNode = nsnull;
 
   // find the selection to see what we could be dragging and if
@@ -663,24 +685,31 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
       nodeToSerialize = nsnull;
     }
 
-    SerializeNodeOrSelection(mWindow, nodeToSerialize,
-                             mHtmlString, mContextString, mInfoString);
-
-    nsCOMPtr<nsIFormatConverter> htmlConverter =
-      do_CreateInstance(kHTMLConverterCID);
-    NS_ENSURE_TRUE(htmlConverter, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsISupportsString> html =
-      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
-    NS_ENSURE_TRUE(html, NS_ERROR_FAILURE);
-    html->SetData(mHtmlString);
-
-    nsCOMPtr<nsISupportsString> text;
-    PRUint32 textLen;
-    htmlConverter->Convert(kHTMLMime, html, mHtmlString.Length() * 2,
-                           kUnicodeMime, getter_AddRefs(text), &textLen);
-    NS_ENSURE_TRUE(text, NS_ERROR_FAILURE);
-    text->GetData(mTitleString);
+    mHtmlString.Truncate();
+    mContextString.Truncate();
+    mInfoString.Truncate();
+    mTitleString.Truncate();
+    nsCOMPtr<nsITransferable> transferable;
+    rv = ::GetTransferableForNodeOrSelection(mWindow, nodeToSerialize,
+                                             getter_AddRefs(transferable));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsISupportsString> data;
+    PRUint32 dataSize;
+    rv = transferable->GetTransferData(kHTMLMime, getter_AddRefs(data), &dataSize);
+    if (NS_SUCCEEDED(rv)) {
+      data->GetData(mHtmlString);
+    }
+    rv = transferable->GetTransferData(kHTMLContext, getter_AddRefs(data), &dataSize);
+    if (NS_SUCCEEDED(rv)) {
+      data->GetData(mContextString);
+    }
+    rv = transferable->GetTransferData(kHTMLInfo, getter_AddRefs(data), &dataSize);
+    if (NS_SUCCEEDED(rv)) {
+      data->GetData(mInfoString);
+    }
+    rv = transferable->GetTransferData(kUnicodeMime, getter_AddRefs(data), &dataSize);
+    NS_ENSURE_SUCCESS(rv, rv); // require plain text at a minimum
+    data->GetData(mTitleString);
   }
 
   // default text value is the URL
@@ -694,8 +723,8 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
 
   // if there is no drag node, which will be the case for a selection, just
   // use the selection target node.
-  nsresult rv = AddStringsToDataTransfer(
-           dragNode ? dragNode : mSelectionTargetNode.get(), aDataTransfer);
+  rv = AddStringsToDataTransfer(
+         dragNode ? dragNode : mSelectionTargetNode.get(), aDataTransfer);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_IF_ADDREF(*aDragNode = dragNode);
@@ -981,53 +1010,4 @@ DragDataProducer::GetSelectedLink(nsISelection* inSelection,
   }
 
   return;
-}
-
-// static
-nsresult
-DragDataProducer::SerializeNodeOrSelection(nsIDOMWindow* inWindow,
-                                           nsIContent* inNode,
-                                           nsAString& outResultString,
-                                           nsAString& outContext,
-                                           nsAString& outInfo)
-{
-  NS_ENSURE_ARG_POINTER(inWindow);
-
-  nsresult rv;
-  nsCOMPtr<nsIDocumentEncoder> encoder =
-    do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
-  NS_ENSURE_TRUE(encoder, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  inWindow->GetDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
-
-  PRUint32 flags = nsIDocumentEncoder::OutputAbsoluteLinks |
-                   nsIDocumentEncoder::OutputEncodeHTMLEntities |
-                   nsIDocumentEncoder::OutputRaw;
-  nsCOMPtr<nsIDOMRange> range;
-  nsCOMPtr<nsISelection> selection;
-  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(inNode);
-  if (node) {
-    // make a range around this node
-    rv = NS_NewRange(getter_AddRefs(range));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = range->SelectNode(node);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    inWindow->GetSelection(getter_AddRefs(selection));
-    flags |= nsIDocumentEncoder::OutputSelectionOnly;
-  }
-
-  rv = encoder->Init(domDoc, NS_LITERAL_STRING(kHTMLMime), flags);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (range) {
-    encoder->SetRange(range);
-  } else if (selection) {
-    encoder->SetSelection(selection);
-  }
-
-  return encoder->EncodeToStringWithContext(outContext, outInfo,
-                                            outResultString);
 }
