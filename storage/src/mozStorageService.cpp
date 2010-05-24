@@ -56,6 +56,9 @@
 #include "sqlite3.h"
 
 #include "nsIPromptService.h"
+#include "nsIMemoryReporter.h"
+
+#include "mozilla/FunctionTimer.h"
 
 namespace mozilla {
 namespace storage {
@@ -70,6 +73,16 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(
 )
 
 Service *Service::gService = nsnull;
+
+static PRInt64 GetStorageSQLiteMemoryUsed(void *) {
+  return sqlite3_memory_used();
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLiteMemoryUsed,
+                             "storage/sqlite",
+                             "Memory in use by SQLite",
+                             GetStorageSQLiteMemoryUsed,
+                             nsnull)
 
 Service *
 Service::getSingleton()
@@ -101,6 +114,8 @@ Service::getSingleton()
     if (NS_FAILED(gService->initialize()))
       NS_RELEASE(gService);
   }
+
+  NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLiteMemoryUsed));
 
   return gService;
 }
@@ -147,12 +162,9 @@ Service::shutdown()
 nsresult
 Service::initialize()
 {
-  // Disable memory allocation statistic collection, improving performance.
-  // This must be done prior to a call to sqlite3_initialize to have any
-  // effect.
-  int rc = ::sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
-  if (rc != SQLITE_OK)
-    return convertResultCode(rc);
+  NS_TIME_FUNCTION;
+
+  int rc;
 
   // Explicitly initialize sqlite3.  Although this is implicitly called by
   // various sqlite3 functions (and the sqlite3_open calls in our case),
@@ -292,6 +304,12 @@ NS_IMETHODIMP
 Service::OpenDatabase(nsIFile *aDatabaseFile,
                       mozIStorageConnection **_connection)
 {
+#ifdef NS_FUNCTION_TIMER
+  nsCString leafname;
+  (void)aDatabaseFile->GetNativeLeafName(leafname);
+  NS_TIME_FUNCTION_FMT("mozIStorageService::OpenDatabase(%s)", leafname.get());
+#endif
+
   nsRefPtr<Connection> msc = new Connection(this);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 
@@ -309,6 +327,13 @@ NS_IMETHODIMP
 Service::OpenUnsharedDatabase(nsIFile *aDatabaseFile,
                               mozIStorageConnection **_connection)
 {
+#ifdef NS_FUNCTION_TIMER
+  nsCString leafname;
+  (void)aDatabaseFile->GetNativeLeafName(leafname);
+  NS_TIME_FUNCTION_FMT("mozIStorageService::OpenUnsharedDatabase(%s)",
+                       leafname.get());
+#endif
+
   nsRefPtr<Connection> msc = new Connection(this);
   NS_ENSURE_TRUE(msc, NS_ERROR_OUT_OF_MEMORY);
 

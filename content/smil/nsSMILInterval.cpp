@@ -88,7 +88,7 @@ nsSMILInstanceTime*
 nsSMILInterval::Begin()
 {
   NS_ABORT_IF_FALSE(mBegin && mEnd,
-      "Requesting Begin() on un-initialized instance time.");
+      "Requesting Begin() on un-initialized interval.");
   return mBegin;
 }
 
@@ -96,7 +96,7 @@ nsSMILInstanceTime*
 nsSMILInterval::End()
 {
   NS_ABORT_IF_FALSE(mBegin && mEnd,
-      "Requesting End() on un-initialized instance time.");
+      "Requesting End() on un-initialized interval.");
   return mEnd;
 }
 

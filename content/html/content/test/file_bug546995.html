@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<body onload="load();">
+<div id="content">
+  <script>
+    var c = document.getElementById('content');
+    var element = parent.gElement;
+
+    var e = document.createElement(element);
+    e.autofocus = false;
+    c.appendChild(e)
+
+    e = document.createElement(element);
+    e.autofocus = true;
+    e.id = 'a';
+    c.appendChild(e)
+
+    e = document.createElement(element);
+    e.autofocus = true;
+    c.appendChild(e)
+  </script>
+</div>
+
+<script>
+function load() {
+  // Our parent should have a look at us in 1 sec so focus events can be thrown.
+  setTimeout("parent.gGen.next()", 1000);
+}
+</script>
+
+</body>
+</html>

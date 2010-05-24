@@ -1149,25 +1149,23 @@ nsXULListCellAccessible::GetColumnHeaderCells(nsIArray **aHeaderCells)
   NS_ENSURE_STATE(table); // we expect to be in a listbox (table)
 
   // Get column header cell from XUL listhead.
-  nsCOMPtr<nsIAccessible> tableAcc(do_QueryInterface(table));
+  nsAccessible *list = nsnull;
 
-  nsCOMPtr<nsIAccessible> list, nextChild;
-  tableAcc->GetFirstChild(getter_AddRefs(list));
-  while (list) {
-    if (nsAccUtils::Role(list) == nsIAccessibleRole::ROLE_LIST)
+  nsRefPtr<nsAccessible> tableAcc(do_QueryObject(table));
+  PRInt32 tableChildCount = tableAcc->GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < tableChildCount; childIdx++) {
+    nsAccessible *child = tableAcc->GetChildAt(childIdx);
+    if (nsAccUtils::Role(child) == nsIAccessibleRole::ROLE_LIST) {
+      list = child;
       break;
-
-    list->GetNextSibling(getter_AddRefs(nextChild));
-    nextChild.swap(list);
+    }
   }
 
   if (list) {
     PRInt32 colIdx = -1;
     GetColumnIndex(&colIdx);
 
-    nsCOMPtr<nsIAccessible> headerCell;
-    list->GetChildAt(colIdx, getter_AddRefs(headerCell));
-
+    nsIAccessible *headerCell = list->GetChildAt(colIdx);
     if (headerCell) {
       nsresult rv = NS_OK;
       nsCOMPtr<nsIMutableArray> headerCells =

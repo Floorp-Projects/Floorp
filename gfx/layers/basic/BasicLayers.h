@@ -78,14 +78,15 @@ public:
 
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
-  virtual void EndConstruction();
-  virtual void EndTransaction();
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData);
 
   virtual void SetRoot(Layer* aLayer);
 
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
   virtual already_AddRefed<ImageLayer> CreateImageLayer();
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
   virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }
@@ -93,36 +94,20 @@ public:
 #ifdef DEBUG
   PRBool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
   PRBool InDrawing() { return mPhase == PHASE_DRAWING; }
-  PRBool IsBeforeInTree(Layer* aBefore, Layer* aLayer);
 #endif
-  // Prepares mTarget for painting into aLayer. Layers are painted
-  // in tree order, so this method essentially traverses the layer tree
-  // in preorder from mLastPainted to aLayer, doing whatever's needed
-  // as we exit container layers and enter new container layers, and
-  // drawing any non-ThebesLayers we encounter.
-  void AdvancePaintingTo(BasicThebesLayer* aLayer);
-  Layer* GetLastPainted() { return mLastPainted; }
   gfxContext* GetTarget() { return mTarget; }
 
 private:
-  // This gets called when we start painting aLayer. It can change
-  // the state of mTarget by saving state, setting clipping and/or
-  // pushing a group.
-  void BeginPaintingLayer(Layer* aLayer);
-  // This gets called when we finish painting aLayer. It can change
-  // the state of mTarget by popping a group and/or restoring the state.
-  void EndPaintingLayer();
+  // Paints aLayer to mTarget.
+  void PaintLayer(Layer* aLayer,
+                  DrawThebesLayerCallback aCallback,
+                  void* aCallbackData);
 
   nsRefPtr<Layer> mRoot;
   // The default context for BeginTransaction.
   nsRefPtr<gfxContext> mDefaultTarget;
-  // The context to draw into. This is always the context that
-  // our ThebesLayers will return.
+  // The context to draw into.
   nsRefPtr<gfxContext> mTarget;
-  // The most recently painted layer during the drawing phase of
-  // a transaction, or null if no layer has been painted in this
-  // transaction.
-  Layer* mLastPainted;
 
 #ifdef DEBUG
   enum TransactionPhase { PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING };

@@ -48,6 +48,7 @@
 #include "prtypes.h"
 #include "imgRequest.h"
 #include "nsIObserverService.h"
+#include "nsIChannelPolicy.h"
 
 #ifdef LOADER_THREADSAFE
 #include "prlock.h"
@@ -218,6 +219,8 @@ private:
   PRUint32 mSize;
 };
 
+class imgMemoryReporter;
+
 class imgLoader : public imgILoader,
                   public nsIContentSniffer,
                   public imgICache,
@@ -300,7 +303,8 @@ private: // methods
                        imgIDecoderObserver *aObserver, nsISupports *aCX,
                        nsLoadFlags aLoadFlags, PRBool aCanMakeNewChannel,
                        imgIRequest *aExistingRequest,
-                       imgIRequest **aProxyRequest);
+                       imgIRequest **aProxyRequest,
+                       nsIChannelPolicy *aPolicy);
   PRBool ValidateRequestWithNewChannel(imgRequest *request, nsIURI *aURI,
                                        nsIURI *aInitialDocumentURI,
                                        nsIURI *aReferrerURI,
@@ -308,7 +312,8 @@ private: // methods
                                        imgIDecoderObserver *aObserver,
                                        nsISupports *aCX, nsLoadFlags aLoadFlags,
                                        imgIRequest *aExistingRequest,
-                                       imgIRequest **aProxyRequest);
+                                       imgIRequest **aProxyRequest,
+                                       nsIChannelPolicy *aPolicy);
 
   nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
                                     imgIDecoderObserver *aObserver,
@@ -330,6 +335,7 @@ private: // methods
 
 private: // data
   friend class imgCacheEntry;
+  friend class imgMemoryReporter;
 
   static imgCacheTable sCache;
   static imgCacheQueue sCacheQueue;

@@ -1,0 +1,11 @@
+union R {
+    int;
+    double;
+    R;
+};
+
+protocol selfRecUnion {
+child:
+    Test(R r);
+    __delete__();
+};

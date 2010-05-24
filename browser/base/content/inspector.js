@@ -508,13 +508,10 @@ var InspectorUI = {
    */
   toggleInspectorUI: function InspectorUI_toggleInspectorUI()
   {
-    let toolsInspectCmd = document.getElementById("Tools:Inspect");
     if (this.isPanelOpen) {
       this.closeInspectorUI();
-      toolsInspectCmd.setAttribute("checked", "false");
     } else {
       this.openInspectorUI();
-      toolsInspectCmd.setAttribute("checked", "true");
     }
   },
 
@@ -583,6 +580,7 @@ var InspectorUI = {
     this.startInspecting();
     this.win.document.addEventListener("scroll", this, false);
     gBrowser.tabContainer.addEventListener("TabSelect", this, false);
+    this.inspectCmd.setAttribute("checked", true);
   },
 
   /**
@@ -611,6 +609,7 @@ var InspectorUI = {
       this.treePanel.hidePopup();
       this.treeView.destroy();
     }
+    this.inspectCmd.setAttribute("checked", false);
     this.browser = this.win = null; // null out references to browser and window
   },
 
@@ -755,4 +754,8 @@ var InspectorUI = {
     Services.console.logStringMessage(msg);
   },
 }
+
+XPCOMUtils.defineLazyGetter(InspectorUI, "inspectCmd", function () {
+  return document.getElementById("Tools:Inspect");
+});
 

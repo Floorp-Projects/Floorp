@@ -753,8 +753,6 @@
   </hbox>
 
   <vbox id="browser-bottombox">
-    <findbar browserid="content" id="FindToolbar"/>
-  
     <statusbar class="chromeclass-status" id="status-bar"
 #ifdef WINCE
                hidden="true"

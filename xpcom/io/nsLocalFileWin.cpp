@@ -1470,10 +1470,23 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
         copyOK = ::CopyFileW(filePath.get(), destPath.get(), PR_TRUE);
     else {
 #ifndef WINCE
-        copyOK = ::MoveFileExW(filePath.get(), destPath.get(),
-                               MOVEFILE_REPLACE_EXISTING |
-                               MOVEFILE_COPY_ALLOWED |
-                               MOVEFILE_WRITE_THROUGH);
+        DWORD status;
+        if (FileEncryptionStatusW(filePath.get(), &status)
+            && status == FILE_IS_ENCRYPTED)
+        {
+            copyOK = CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL,
+                                 COPY_FILE_ALLOW_DECRYPTED_DESTINATION);
+
+            if (copyOK)
+                DeleteFileW(filePath.get());
+        }
+        else
+        {
+            copyOK = ::MoveFileExW(filePath.get(), destPath.get(),
+                                   MOVEFILE_REPLACE_EXISTING |
+                                   MOVEFILE_COPY_ALLOWED |
+                                   MOVEFILE_WRITE_THROUGH);
+        }
 #else
         DeleteFile(destPath.get());
         copyOK = :: MoveFileW(filePath.get(), destPath.get());

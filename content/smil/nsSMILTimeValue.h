@@ -53,17 +53,16 @@
  * nsSMILTime          -- a timestamp in milliseconds.
  * nsSMILTimeValue     -- (this class) a timestamp that can take the additional
  *                        states 'indefinite' and 'unresolved'
- * nsSMILInterval      -- a pair of nsSMILTimeValues that defines a begin and an
- *                        end point.
  * nsSMILInstanceTime  -- an nsSMILTimeValue used for constructing intervals. It
- *                        contains additional fields to govern reset behavior.
- *                        It also forms an anchor for establishing syncbase
- *                        relationships.
+ *                        contains additional fields to govern reset behavior
+ *                        and track timing dependencies (e.g. syncbase timing).
+ * nsSMILInterval      -- a pair of nsSMILInstanceTimes that defines a begin and
+ *                        an end time for animation.
  * nsSMILTimeValueSpec -- a component of a begin or end attribute, such as the
- *                        '5s' or 'a.end+2m' in begin="5s; a.end+2m". These
- *                        objects produce nsSMILInstanceTimes and are also used
- *                        in managing dependent relationships between
- *                        animations.
+ *                        '5s' or 'a.end+2m' in begin="5s; a.end+2m". Acts as
+ *                        a broker between an nsSMILTimedElement and its
+ *                        nsSMILInstanceTimes by generating new instance times
+ *                        and handling changes to existing times.
  *
  * Objects of this class may be in one of three states:
  *

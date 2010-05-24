@@ -860,7 +860,7 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     /*
      * Both objp and propp must be either null or given. When given, *propp
      * must be null. This way we avoid an extra "if (propp) *propp = NULL" for
-     * the common case of a non-existing property.
+     * the common case of a nonexistent property.
      */
     JS_ASSERT(!objp == !propp);
     JS_ASSERT_IF(propp, !*propp);

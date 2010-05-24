@@ -82,6 +82,9 @@ interface nsICacheService : nsISupports
 
     /**
      * Evicts all entries in all devices implied by the storage policy.
+     *
+     * @note This function may evict some items but will throw if it fails to evict
+     *       everything.
      */
     void evictEntries(in nsCacheStoragePolicy  storagePolicy);
 };

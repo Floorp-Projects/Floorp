@@ -69,7 +69,7 @@ function checkModification(e, funcName, argument, expectedRes, before, after) {
        " " + contextMsg);
 
   var expectedAfter = after;
-  // XUL returns an empty string when getting a non-existing class attribute.
+  // XUL returns an empty string when getting a nonexistent class attribute.
   if (e.namespaceURI == XUL_NS && expectedAfter === null)
     expectedAfter = "";
 

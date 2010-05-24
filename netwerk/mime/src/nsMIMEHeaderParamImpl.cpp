@@ -395,6 +395,8 @@ nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal,
 
   if (aEatContinuations) {
     nsCAutoString temp(aResult);
+    temp.ReplaceSubstring("\n\t", " ");
+    temp.ReplaceSubstring("\r\t", " ");
     temp.StripChars("\r\n");
     aResult = temp;
   }

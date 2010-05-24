@@ -154,6 +154,9 @@ public:
                                     PRUint32 toOffset, PRUint32 count,
                                     PRUint32 *writeCount);
 
+  PRUint32 GetDecodedDataSize();
+  PRUint32 GetSourceDataSize();
+
 private:
   struct Anim
   {

@@ -39,9 +39,10 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(a6cf9105-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(3212788d-fa20-44c4-b945-bd70bdc23ddf)]
 interface nsIDOMNSHTMLSelectElement : nsISupports
 {
+  attribute boolean         autofocus;
   nsIDOMNode                item(in unsigned long index);
   nsIDOMNode                namedItem(in DOMString name);
 };

@@ -79,7 +79,7 @@ function runTests()
   // and make sure the previous label is removed
   list.value = "this does not exist";
   is(list.value, "this does not exist", "Check the list value after setting it to something not associated witn an existing menuitem");
-  is(list.getAttribute("label"), "", "Check that the list label is empty after selecting a non-existent item");
+  is(list.getAttribute("label"), "", "Check that the list label is empty after selecting a nonexistent item");
 
   SimpleTest.finish();
 }

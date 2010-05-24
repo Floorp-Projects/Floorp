@@ -44,13 +44,23 @@
 #include "nsGkAtoms.h"
 
 #include "nsHTMLCanvasFrame.h"
-#include "nsICanvasElement.h"
+#include "nsHTMLCanvasElement.h"
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 
 #include "nsTransform2D.h"
 
 #include "gfxContext.h"
+
+using namespace mozilla;
+using namespace mozilla::layers;
+
+static nsHTMLCanvasElement *
+CanvasElementFromContent(nsIContent *content)
+{
+  nsCOMPtr<nsIDOMHTMLCanvasElement> domCanvas(do_QueryInterface(content));
+  return domCanvas ? static_cast<nsHTMLCanvasElement*>(domCanvas.get()) : nsnull;
+}
 
 class nsDisplayItemCanvas : public nsDisplayItem {
 public:
@@ -66,22 +76,22 @@ public:
 #endif
 
   NS_DISPLAY_DECL_NAME("nsDisplayItemCanvas")
-  
-  virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx) {
-    nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(GetUnderlyingFrame());
-    f->PaintCanvas(*aCtx, mVisibleRect, aBuilder->ToReferenceFrame(f));
-  }
 
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) {
     nsIFrame* f = GetUnderlyingFrame();
-    nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(f->GetContent()));
+    nsHTMLCanvasElement *canvas = CanvasElementFromContent(f->GetContent());
     return canvas->GetIsOpaque();
   }
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) {
     nsHTMLCanvasFrame* f = static_cast<nsHTMLCanvasFrame*>(GetUnderlyingFrame());
     return f->GetInnerArea() + aBuilder->ToReferenceFrame(f);
+  }
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager)
+  {
+    return static_cast<nsHTMLCanvasFrame*>(mFrame)->BuildLayer(aBuilder, aManager);
   }
 };
 
@@ -101,21 +111,15 @@ nsHTMLCanvasFrame::~nsHTMLCanvasFrame()
 nsIntSize
 nsHTMLCanvasFrame::GetCanvasSize()
 {
-  PRUint32 w, h;
-  nsresult rv;
-  nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
+  nsIntSize size(0,0);
+  nsHTMLCanvasElement *canvas = CanvasElementFromContent(GetContent());
   if (canvas) {
-    rv = canvas->GetSize(&w, &h);
+    size = canvas->GetSize();
   } else {
-    rv = NS_ERROR_NULL_POINTER;
-  }
-
-  if (NS_FAILED(rv)) {
     NS_NOTREACHED("couldn't get canvas size");
-    h = w = 1;
   }
 
-  return nsIntSize(w, h);
+  return size;
 }
 
 /* virtual */ nscoord
@@ -224,37 +228,38 @@ nsHTMLCanvasFrame::GetInnerArea() const
   return r;
 }
 
-void
-nsHTMLCanvasFrame::PaintCanvas(nsIRenderingContext& aRenderingContext,
-                               const nsRect& aDirtyRect, nsPoint aPt) 
+already_AddRefed<Layer>
+nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
+                              LayerManager* aManager)
 {
-  nsPresContext *presContext = PresContext();
-  nsRect inner = GetInnerArea() + aPt;
+  nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
+  nsHTMLCanvasElement* element = static_cast<nsHTMLCanvasElement*>(GetContent());
+  nsIntSize canvasSize = GetCanvasSize();
 
-  nsCOMPtr<nsICanvasElement> canvas(do_QueryInterface(GetContent()));
-  if (!canvas)
-    return;
+  if (canvasSize.width <= 0 || canvasSize.height <= 0 || area.IsEmpty())
+    return nsnull;
 
-  // anything to do?
-  if (inner.width == 0 || inner.height == 0)
-    return;
+  nsRefPtr<CanvasLayer> layer = element->GetCanvasLayer(aManager);
+  if (!layer)
+    return nsnull;
 
-  gfxRect devInner(presContext->AppUnitsToGfxUnits(inner));
+  element->MarkContextClean();
 
-  nsIntSize sizeCSSPixels = GetCanvasSize();
-  gfxFloat sx = devInner.size.width / (gfxFloat) sizeCSSPixels.width;
-  gfxFloat sy = devInner.size.height / (gfxFloat) sizeCSSPixels.height;
+  nsPresContext* presContext = PresContext();
+  gfxRect r = gfxRect(presContext->AppUnitsToGfxUnits(area.x),
+                      presContext->AppUnitsToGfxUnits(area.y),
+                      presContext->AppUnitsToGfxUnits(area.width),
+                      presContext->AppUnitsToGfxUnits(area.height));
 
-  gfxContext *ctx = aRenderingContext.ThebesContext();
+  // Transform the canvas into the right place
+  gfxMatrix transform;
+  transform.Translate(r.pos);
+  transform.Scale(r.Width()/canvasSize.width, r.Height()/canvasSize.height);
+  layer->SetTransform(gfx3DMatrix::From2D(transform));
+  layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
 
-  ctx->Save();
-
-  ctx->Translate(devInner.pos);
-  ctx->Scale(sx, sy);
-
-  canvas->RenderContexts(ctx, nsLayoutUtils::GetGraphicsFilterForFrame(this));
-
-  ctx->Restore();
+  nsRefPtr<Layer> result = layer.forget();
+  return result.forget();
 }
 
 NS_IMETHODIMP

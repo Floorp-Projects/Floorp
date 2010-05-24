@@ -417,7 +417,7 @@ JSGCChunkInfo::init(JSRuntime *rt)
 
     /*
      * For simplicity we set all bits to 1 including the high bits in the
-     * last word that corresponds to non-existing arenas. This is fine since
+     * last word that corresponds to nonexistent arenas. This is fine since
      * the arena scans the bitmap words from lowest to highest bits and the
      * allocation checks numFreeArenas before doing the search.
      */
