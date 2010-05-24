@@ -61,6 +61,7 @@ _TEST_FILES =\
 		test_focusdoc.html \
 		test_mutation.html \
 		test_scroll.xul \
+		test_text.html \
 		test_tree.xul \
 		test_valuechange.html \
 		$(NULL)

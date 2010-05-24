@@ -129,8 +129,10 @@ nsFrameMessageManager::LoadFrameScript(const nsAString& aURL,
 
   PRInt32 len = mChildManagers.Count();
   for (PRInt32 i = 0; i < len; ++i) {
-    static_cast<nsFrameMessageManager*>(mChildManagers[i])->LoadFrameScript(aURL,
-                                                                            PR_FALSE);
+    nsCOMPtr<nsIContentFrameMessageManager> mm = mChildManagers[i];
+    if (mm) {
+      static_cast<nsFrameMessageManager*>(mm.get())->LoadFrameScript(aURL, PR_FALSE);
+    }
   }
   return NS_OK;
 }
@@ -322,6 +324,20 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                    JS_GetGlobalObject(mContext),
                                    aTarget, &targetv);
 
+        // To keep compatibility with e10s message manager,
+        // define empty objects array.
+        if (!aObjectsArray) {
+          jsval* dest = nsnull;
+          // Because we want JS messages to have always the same properties,
+          // create array even if len == 0.
+          aObjectsArray = js_NewArrayObjectWithCapacity(mContext, 0, &dest);
+          if (!aObjectsArray) {
+            return false;
+          }
+        }
+        nsAutoGCRoot arrayGCRoot(&aObjectsArray, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         jsval json = JSVAL_NULL;
         nsAutoGCRoot root(&json, &rv);
         if (NS_SUCCEEDED(rv) && !aJSON.IsEmpty()) {
@@ -404,25 +420,30 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 }
 
 void
-nsFrameMessageManager::AddChildManager(nsFrameMessageManager* aManager)
+nsFrameMessageManager::AddChildManager(nsFrameMessageManager* aManager,
+                                       PRBool aLoadScripts)
 {
   mChildManagers.AppendObject(aManager);
-  for (PRUint32 i = 0; i < mPendingScripts.Length(); ++i) {
-    aManager->LoadFrameScript(mPendingScripts[i], PR_FALSE);
+  if (aLoadScripts) {
+    for (PRUint32 i = 0; i < mPendingScripts.Length(); ++i) {
+      aManager->LoadFrameScript(mPendingScripts[i], PR_FALSE);
+    }
   }
 }
 
 void
-nsFrameMessageManager::SetCallbackData(void* aData)
+nsFrameMessageManager::SetCallbackData(void* aData, PRBool aLoadScripts)
 {
   if (aData && mCallbackData != aData) {
     mCallbackData = aData;
     // First load global scripts by adding this to parent manager.
     if (mParentManager) {
-      mParentManager->AddChildManager(this);
+      mParentManager->AddChildManager(this, aLoadScripts);
     }
-    for (PRUint32 i = 0; i < mPendingScripts.Length(); ++i) {
-      LoadFrameScript(mPendingScripts[i], PR_FALSE);
+    if (aLoadScripts) {
+      for (PRUint32 i = 0; i < mPendingScripts.Length(); ++i) {
+        LoadFrameScript(mPendingScripts[i], PR_FALSE);
+      }
     }
   }
 }

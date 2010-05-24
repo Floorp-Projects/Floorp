@@ -1,5 +1,5 @@
 load 351236-1.html
-asserts(2) load 407062-1.html # bug 336104
-asserts(1-2) skip-if(MOZ_WIDGET_TOOLKIT=="windows") load 428844-1.html # bug 471185; assertion bug 336104
-asserts(1) load 461049-1.html # bug 336104
-asserts(2) asserts-if(MOZ_WIDGET_TOOLKIT=="windows",0-2) load removing-editable-xslt.html # bug 336104, bug 500847
+load 407062-1.html
+skip-if(MOZ_WIDGET_TOOLKIT=="windows") load 428844-1.html # bug 471185
+load 461049-1.html
+asserts(1) asserts-if(MOZ_WIDGET_TOOLKIT=="windows",0-2) load removing-editable-xslt.html # bug 500847

@@ -113,7 +113,10 @@ gfxImageSurface::gfxImageSurface(const gfxIntSize& size, gfxImageFormat format) 
                                             mSize.width,
                                             mSize.height,
                                             mStride);
+
     Init(surface);
+
+    RecordMemoryUsed(mSize.height * ComputeStride() + sizeof(gfxImageSurface));
 }
 
 gfxImageSurface::gfxImageSurface(cairo_surface_t *csurf)

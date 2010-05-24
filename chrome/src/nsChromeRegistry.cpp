@@ -484,7 +484,7 @@ nsresult nsChromeRegistry::RefreshWindow(nsIDOMWindowInternal* aWindow)
     for (PRInt32 l = 0; l < agentSheets.Count(); ++l) {
       nsIStyleSheet *sheet = agentSheets[l];
 
-      nsCOMPtr<nsIURI> uri = sheet->GetSheetURI();
+      nsIURI* uri = sheet->GetSheetURI();
 
       if (IsChromeURI(uri)) {
         // Reload the sheet.

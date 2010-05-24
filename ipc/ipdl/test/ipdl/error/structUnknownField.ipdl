@@ -1,0 +1,7 @@
+struct S {
+    Foobers i;
+};
+
+protocol structUnknownField {
+child: __delete__(S s);
+};

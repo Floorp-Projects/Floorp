@@ -59,6 +59,11 @@
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
+#include "nsIDocument.h"
+#include "nsIPrincipal.h"
+#include "nsIChannelPolicy.h"
+#include "nsIContentSecurityPolicy.h"
+#include "nsIContentPolicy.h"
 
 //*****************************************************************************
 // class nsContextMenuInfo
@@ -299,6 +304,22 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIR
   nsCOMPtr<nsIDOMCSSPrimitiveValue> primitiveValue;
   nsAutoString bgStringValue;
 
+  // get Content Security Policy to pass to LoadImage
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
+  nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  if (doc) {
+    principal = doc->NodePrincipal();
+    nsresult rv = principal->GetCsp(getter_AddRefs(csp));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (csp) {
+      channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+      channelPolicy->SetContentSecurityPolicy(csp);
+      channelPolicy->SetLoadType(nsIContentPolicy::TYPE_IMAGE);
+    }
+  }
+  
   while (PR_TRUE) {
     nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(domNode));
     // bail for the parent node of the root element or null argument
@@ -326,7 +347,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIR
 
           return il->LoadImage(bgUri, nsnull, nsnull, nsnull, nsnull, nsnull,
                                nsIRequest::LOAD_NORMAL, nsnull, nsnull,
-                               aRequest);
+                               channelPolicy, aRequest);
         }
       }
 

@@ -151,6 +151,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/xbl/src \
 		-I$(srcdir)/../../view/src \
 		-I$(srcdir)/../../dom/base \
+		-I$(srcdir)/../../content/html/content/src \
 		-I$(srcdir)/../../content/svg/content/src \
 		$(NULL)
 
@@ -162,11 +163,6 @@ endif
 ifdef MOZ_SVG
 LOCAL_INCLUDES += \
         -I$(srcdir)/../svg/base/src
-endif
-
-ifdef MOZ_MEDIA
-LOCAL_INCLUDES += \
-        -I$(srcdir)/../../content/html/content/src
 endif
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

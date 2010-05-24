@@ -1082,15 +1082,15 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   if (mRule) {
     mRule->GetStyleSheet(*getter_AddRefs(sheet));
     if (sheet) {
-      *aSheetURI = sheet->GetSheetURI().get();
-      *aBaseURI = sheet->GetBaseURI().get();
+      NS_IF_ADDREF(*aSheetURI = sheet->GetSheetURI());
+      NS_IF_ADDREF(*aBaseURI = sheet->GetBaseURI());
 
       nsRefPtr<nsCSSStyleSheet> cssSheet(do_QueryObject(sheet));
       if (cssSheet) {
         NS_ADDREF(*aSheetPrincipal = cssSheet->Principal());
       }
 
-      nsCOMPtr<nsIDocument> document = sheet->GetOwningDocument();
+      nsIDocument* document = sheet->GetOwningDocument();
       if (document) {
         NS_ADDREF(*aCSSLoader = document->CSSLoader());
       }

@@ -109,7 +109,7 @@ nsStyleSheetService::FindSheetByURI(const nsCOMArray<nsIStyleSheet> &sheets,
 {
   for (PRInt32 i = sheets.Count() - 1; i >= 0; i-- ) {
     PRBool bEqual;
-    nsCOMPtr<nsIURI> uri = sheets[i]->GetSheetURI();
+    nsIURI* uri = sheets[i]->GetSheetURI();
     if (uri
         && NS_SUCCEEDED(uri->Equals(sheetURI, &bEqual))
         && bEqual) {

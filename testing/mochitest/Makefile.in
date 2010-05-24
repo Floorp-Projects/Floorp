@@ -62,6 +62,7 @@ _SERV_FILES = 	\
 		runtests.py \
 		automation.py \
 		runtestsremote.py \
+		runtestsvmware.py \
 		$(topsrcdir)/build/mobile/devicemanager.py \
 		$(topsrcdir)/build/automationutils.py \
 		$(topsrcdir)/build/poster.zip \

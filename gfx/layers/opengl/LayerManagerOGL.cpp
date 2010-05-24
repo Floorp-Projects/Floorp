@@ -40,6 +40,8 @@
 #include "ContainerLayerOGL.h"
 #include "ImageLayerOGL.h"
 #include "ColorLayerOGL.h"
+#include "CanvasLayerOGL.h"
+
 #include "LayerManagerOGLShaders.h"
 
 #include "gfxContext.h"
@@ -143,7 +145,7 @@ LayerManagerOGL::Initialize()
                               LOCAL_GL_TEXTURE_RECTANGLE_EXT };
   mFBOTextureTarget = 0;
 
-  for (int i = 0; i < NS_ARRAY_LENGTH(textureTargets); i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(textureTargets); i++) {
     mGLContext->fGenTextures(1, &mBackBuffer);
     mGLContext->fBindTexture(textureTargets[i], mBackBuffer);
     mGLContext->fTexParameteri(textureTargets[i],
@@ -329,6 +331,13 @@ already_AddRefed<ColorLayer>
 LayerManagerOGL::CreateColorLayer()
 {
   nsRefPtr<ColorLayer> layer = new ColorLayerOGL(this);
+  return layer.forget();
+}
+
+already_AddRefed<CanvasLayer>
+LayerManagerOGL::CreateCanvasLayer()
+{
+  nsRefPtr<CanvasLayer> layer = new CanvasLayerOGL(this);
   return layer.forget();
 }
 

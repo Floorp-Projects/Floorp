@@ -61,21 +61,6 @@
     "@mozilla.org/webnavigation-info;1"
 
 /**
- * Contract ID for a service implementing nsIURIClassifier that identifies
- * phishing and malware sites.
- */
-#define NS_URICLASSIFIERSERVICE_CONTRACTID "@mozilla.org/uriclassifierservice"
-
-/**
- * Class and contract ID for an nsIChannelClassifier implementation for
- * checking a channel load against the URI classifier service.
- */
-#define NS_CHANNELCLASSIFIER_CID \
- { 0xce02d538, 0x0217, 0x47a3,{0xa5, 0x89, 0xb5, 0x17, 0x90, 0xfd, 0xd8, 0xce}}
-
-#define NS_CHANNELCLASSIFIER_CONTRACTID "@mozilla.org/channelclassifier"
-
-/**
  * Class and contract ID for the docshell.  This is the container for a web
  * navigation context.  It implements too many interfaces to count, and the
  * exact ones keep changing; if they stabilize somewhat that will get

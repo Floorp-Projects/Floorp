@@ -150,9 +150,9 @@ parent:
                                 nsCString realm)
     returns (nsCString username, nsCString password, NPError result);
 
-  rpc NPN_ConvertPoint(double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
+  rpc NPN_ConvertPoint(double sourceX, bool ignoreDestX, double sourceY, bool ignoreDestY, NPCoordinateSpace sourceSpace,
                        NPCoordinateSpace destSpace)
-    returns (double destX, bool ignoreDestX, double destY, bool ignoreDestY, bool result);
+    returns (double destX, double destY, bool result);
 
 both:
   async PPluginScriptableObject();

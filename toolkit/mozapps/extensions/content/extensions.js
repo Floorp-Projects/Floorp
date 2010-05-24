@@ -596,6 +596,20 @@ var gCategories = {
       self.maybeHideSearch();
       gViewController.loadView(self.node.selectedItem.value);
     }, false);
+
+    this.node.addEventListener("click", function(aEvent) {
+      var selectedItem = self.node.selectedItem;
+      if (aEvent.target.localName == "richlistitem" &&
+          aEvent.target == selectedItem) {
+        var viewId = selectedItem.value;
+
+        if (gViewController.parseViewId(viewId).type == "search") {
+          viewId += encodeURIComponent(gHeader.searchQuery);
+        }
+
+        gViewController.loadView(viewId);
+      }
+    }, false);
   },
 
   select: function(aId) {

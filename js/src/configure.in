@@ -268,6 +268,12 @@ if test "$target" = "arm-android-eabi" ; then
         HOST_LDFLAGS=" "
     fi
 
+    # save these for libffi's subconfigure,
+    # which doesn't know how to figure this stuff out on its own
+    ANDROID_CFLAGS="$CFLAGS"
+    ANDROID_CPPFLAGS="$CPPFLAGS"
+    ANDROID_LDFLAGS="$LDFLAGS"
+
     AC_DEFINE(ANDROID)
     AC_DEFINE(FORCE_LITTLE_ENDIAN)
 fi
@@ -1329,12 +1335,8 @@ if test "$GNU_CC"; then
     _PEDANTIC=1
 
     if test -z "$INTEL_CC"; then
-      _IGNORE_LONG_LONG_WARNINGS=1
       _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -W"
-    else
-      _IGNORE_LONG_LONG_WARNINGS=
     fi
-
 
     _DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1703,7 +1705,6 @@ case "$target" in
 *-bsdi*)
     dnl -pedantic doesn't play well with BSDI's _very_ modified gcc (shlicc2)
     _PEDANTIC=
-    _IGNORE_LONG_LONG_WARNINGS=
     case $OS_RELEASE in
 	4.*|5.*)
             STRIP="$STRIP -d"
@@ -4602,28 +4603,6 @@ else
 fi
 
 dnl ========================================================
-dnl Pass -Wno-long-long to the compiler
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(long-long-warning,
-[  --disable-long-long-warning
-                          Do not warn about use of non-ANSI long long type (if supported)],
-    _IGNORE_LONG_LONG_WARNINGS=1,
-    _IGNORE_LONG_LONG_WARNINGS=)
-
-if test -n "$_IGNORE_LONG_LONG_WARNINGS"; then
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
-    AC_MSG_CHECKING([whether compiler supports -Wno-long-long])
-    AC_TRY_COMPILE([], [return(0);],
-      [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-        result="yes" ],
-      result="no")
-    AC_MSG_RESULT([$result])
-    CFLAGS="$_SAVE_CFLAGS"
-fi
-
-dnl ========================================================
 dnl Profile guided optimization
 dnl ========================================================
 dnl Test for profiling options
@@ -4699,7 +4678,7 @@ MOZ_ARG_DISABLE_BOOL(pedantic,
 _PEDANTIC= )
 if test "$_PEDANTIC"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
     AC_MSG_CHECKING([whether C++ compiler has -pedantic long long bug])
     AC_TRY_COMPILE([$configure_static_assert_macros],
                    [CONFIGURE_STATIC_ASSERT(sizeof(long long) == 8)],
@@ -4709,8 +4688,8 @@ if test "$_PEDANTIC"; then
 
     case "$result" in
     no)
-        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic"
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
         ;;
     yes)
         AC_MSG_ERROR([Your compiler appears to have a known bug where long long is miscompiled when using -pedantic.  Reconfigure using --disable-pedantic. ])
@@ -5382,6 +5361,15 @@ if test "$JS_HAS_CTYPES"; then
     case "$target" in
     *-mingw*)
       ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\" CC=\"$CC\""
+      ;;
+    *-android*)
+      CFLAGS="$ANDROID_CFLAGS"
+      CPPFLAGS="$ANDROID_CPPFLAGS"
+      LDFLAGS="$ANDROID_LDFLAGS"
+
+      export CC CPP LD CPPFLAGS CFLAGS LDFLAGS
+
+      ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\""
       ;;
     *)
       ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""

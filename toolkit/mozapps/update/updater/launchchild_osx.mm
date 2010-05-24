@@ -44,6 +44,8 @@
 #include <mach/machine.h>
 #endif /* __ppc__ */
 
+#include "readstrings.h"
+
 void LaunchChild(int argc, char **argv)
 {
   int i;
@@ -84,3 +86,64 @@ void LaunchChild(int argc, char **argv)
   [child launch];
   [pool release];
 }
+
+void
+LaunchMacPostProcess(const char* aAppExe)
+{
+  // Launch helper to perform post processing for the update; this is the Mac
+  // analogue of LaunchWinPostProcess (PostUpdateWin).
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+  // Find the app bundle containing the executable path given
+  NSString *path = [NSString stringWithUTF8String:aAppExe];
+  NSBundle *bundle;
+  do {
+    path = [path stringByDeletingLastPathComponent];
+    bundle = [NSBundle bundleWithPath:path];
+  } while ((!bundle || ![bundle bundleIdentifier]) && [path length] > 1);
+  if (!bundle) {
+    // No bundle found for the app being launched
+    [pool release];
+    return;
+  }
+
+  NSString *iniPath = [bundle pathForResource:@"updater" ofType:@"ini"];
+  if (!iniPath) {
+    // the file does not exist; there is nothing to run
+    [pool release];
+    return;
+  }
+
+  int readResult;
+  char values[2][MAX_TEXT_LEN];
+  readResult = ReadStrings([iniPath UTF8String],
+                           "ExeArg\0ExeRelPath\0",
+                           2,
+                           values,
+                           "PostUpdateMac");
+  if (readResult) {
+    [pool release];
+    return;
+  }
+
+  NSString *exeArg = [NSString stringWithUTF8String:values[0]];
+  NSString *exeRelPath = [NSString stringWithUTF8String:values[1]];
+  if (!exeArg || !exeRelPath) {
+    [pool release];
+    return;
+  }
+  
+  NSString *resourcePath = [bundle resourcePath];
+  NSString *exeFullPath = [resourcePath stringByAppendingPathComponent:exeRelPath];
+
+  NSTask *task = [[NSTask alloc] init];
+  [task setLaunchPath:exeFullPath];
+  [task setArguments:[NSArray arrayWithObject:exeArg]];
+  [task launch];
+  [task waitUntilExit];
+  // ignore the return value of the task, there's nothing we can do with it
+  [task release];
+
+  [pool release];  
+}
+

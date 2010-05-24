@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,6 +39,7 @@
 #define GFX_LAYERS_H
 
 #include "gfxTypes.h"
+#include "gfxASurface.h"
 #include "nsRegion.h"
 #include "nsPoint.h"
 #include "nsRect.h"
@@ -46,11 +47,16 @@
 #include "nsAutoPtr.h"
 #include "gfx3DMatrix.h"
 #include "gfxColor.h"
+#include "gfxPattern.h"
 
 class gfxContext;
 class nsPaintEvent;
 
 namespace mozilla {
+namespace gl {
+class GLContext;
+}
+
 namespace layers {
 
 class Layer;
@@ -59,6 +65,7 @@ class ContainerLayer;
 class ImageLayer;
 class ColorLayer;
 class ImageContainer;
+class CanvasLayer;
 
 /*
  * Motivation: For truly smooth animation and video playback, we need to
@@ -171,6 +178,11 @@ public:
    * Create a ColorLayer for this manager's layer tree.
    */
   virtual already_AddRefed<ColorLayer> CreateColorLayer() = 0;
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Create a CanvasLayer for this manager's layer tree.
+   */
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() = 0;
 
   /**
    * Can be called anytime
@@ -281,6 +293,10 @@ public:
   virtual Layer* GetFirstChild() { return nsnull; }
   const gfx3DMatrix& GetTransform() { return mTransform; }
 
+  // This setter and getter can be used anytime.
+  void SetUserData(void* aData) { mUserData = aData; }
+  void* GetUserData() { return mUserData; }
+
   /**
    * Only the implementation should call this. This is per-implementation
    * private data. Normally, all layers with a given layer manager
@@ -302,6 +318,7 @@ protected:
     mNextSibling(nsnull),
     mPrevSibling(nsnull),
     mImplData(aImplData),
+    mUserData(nsnull),
     mOpacity(1.0),
     mUseClipRect(PR_FALSE),
     mIsOpaqueContent(PR_FALSE)
@@ -312,6 +329,7 @@ protected:
   Layer* mNextSibling;
   Layer* mPrevSibling;
   void* mImplData;
+  void* mUserData;
   gfx3DMatrix mTransform;
   float mOpacity;
   nsIntRect mClipRect;
@@ -410,7 +428,9 @@ protected:
 };
 
 /**
- * A Layer which just renders a solid color in its visible region.
+ * A Layer which just renders a solid color in its visible region. It actually
+ * can fill any area that contains the visible region, so if you need to
+ * restrict the area filled, set a clip region on this layer.
  */
 class THEBES_API ColorLayer : public Layer {
 public:
@@ -433,6 +453,70 @@ protected:
   {}
 
   gfxRGBA mColor;
+};
+
+/**
+ * A Layer for HTML Canvas elements.  It's backed by either a
+ * gfxASurface or a GLContext (for WebGL layers), and has some control
+ * for intelligent updating from the source if necessary (for example,
+ * if hardware compositing is not available, for reading from the GL
+ * buffer into an image surface that we can layer composite.)
+ *
+ * After Initialize is called, the underlying canvas Surface/GLContext
+ * must not be modified during a layer transaction.
+ */
+class THEBES_API CanvasLayer : public Layer {
+public:
+  struct Data {
+    Data()
+      : mSurface(nsnull), mGLContext(nsnull),
+        mGLBufferIsPremultiplied(PR_FALSE)
+    { }
+
+    /* One of these two must be specified, but never both */
+    gfxASurface* mSurface;  // a gfx Surface for the canvas contents
+    mozilla::gl::GLContext* mGLContext; // a GL PBuffer Context
+
+    /* The size of the canvas content */
+    nsIntSize mSize;
+
+    /* Whether the GLContext contains premultiplied alpha
+     * values in the framebuffer or not.  Defaults to FALSE.
+     */
+    PRPackedBool mGLBufferIsPremultiplied;
+  };
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Initialize this CanvasLayer with the given data.  The data must
+   * have either mSurface or mGLContext initialized (but not both), as
+   * well as mSize.
+   *
+   * This must only be called once.
+   */
+  virtual void Initialize(const Data& aData) = 0;
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Notify this CanvasLayer that the rectangle given by aRect
+   * has been updated, and any work that needs to be done
+   * to bring the contents from the Surface/GLContext to the
+   * Layer in preparation for compositing should be performed.
+   */
+  virtual void Updated(const nsIntRect& aRect) = 0;
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * Set the filter used to resample this image (if necessary).
+   */
+  void SetFilter(gfxPattern::GraphicsFilter aFilter) { mFilter = aFilter; }
+  gfxPattern::GraphicsFilter GetFilter() const { return mFilter; }
+
+protected:
+  CanvasLayer(LayerManager* aManager, void* aImplData)
+    : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}
+
+  gfxPattern::GraphicsFilter mFilter;
 };
 
 }

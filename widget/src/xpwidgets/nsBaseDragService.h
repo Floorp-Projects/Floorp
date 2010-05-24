@@ -56,7 +56,7 @@ class nsIDOMNode;
 class nsIFrame;
 class nsPresContext;
 class nsIImageLoadingContent;
-class nsICanvasElement;
+class nsICanvasElementExternal;
 
 /**
  * XP DragService wrapper base class
@@ -117,7 +117,7 @@ protected:
    */
   nsresult DrawDragForImage(nsPresContext* aPresContext,
                             nsIImageLoadingContent* aImageLoader,
-                            nsICanvasElement* aCanvas,
+                            nsICanvasElementExternal* aCanvas,
                             PRInt32 aScreenX, PRInt32 aScreenY,
                             nsIntRect* aScreenDragRect,
                             gfxASurface** aSurface);

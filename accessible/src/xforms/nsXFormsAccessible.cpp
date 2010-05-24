@@ -553,39 +553,32 @@ already_AddRefed<nsIDOMNode>
 nsXFormsSelectableAccessible::GetItemByIndex(PRInt32 *aIndex,
                                              nsIAccessible *aAccessible)
 {
-  nsCOMPtr<nsIAccessible> accessible(aAccessible ? aAccessible : this);
+  nsRefPtr<nsAccessible> accessible(do_QueryObject(aAccessible));
+  if (!accessible)
+    accessible = this;
 
-  nsCOMPtr<nsIAccessible> curAccChild;
-  accessible->GetFirstChild(getter_AddRefs(curAccChild));
+  PRInt32 childCount = accessible->GetChildCount();
+  for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible *child = accessible->GetChildAt(childIdx);
 
-  while (curAccChild) {
-    nsCOMPtr<nsIAccessNode> curAccNodeChild(do_QueryInterface(curAccChild));
-    if (curAccNodeChild) {
-      nsCOMPtr<nsIDOMNode> curChildNode;
-      curAccNodeChild->GetDOMNode(getter_AddRefs(curChildNode));
-      nsCOMPtr<nsIContent> curChildContent(do_QueryInterface(curChildNode));
-      if (curChildContent) {
-        nsCOMPtr<nsINodeInfo> nodeInfo = curChildContent->NodeInfo();
-        if (nodeInfo->NamespaceEquals(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS))) {
-          if (nodeInfo->Equals(nsAccessibilityAtoms::item)) {
-            if (!*aIndex) {
-              nsIDOMNode *itemNode = nsnull;
-              curChildNode.swap(itemNode);
-              return itemNode;
-            }
-            --*aIndex;
-          } else if (nodeInfo->Equals(nsAccessibilityAtoms::choices)) {
-            nsIDOMNode *itemNode = GetItemByIndex(aIndex, curAccChild).get();
-            if (itemNode)
-              return itemNode;
-          }
-        }
+    nsCOMPtr<nsIDOMNode> childNode(child->GetDOMNode());
+    nsCOMPtr<nsIContent> childContent(do_QueryInterface(childNode));
+    if (!childContent)
+      continue;
+
+    nsINodeInfo *nodeInfo = childContent->NodeInfo();
+    if (nodeInfo->NamespaceEquals(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS))) {
+      if (nodeInfo->Equals(nsAccessibilityAtoms::item)) {
+        if (!*aIndex)
+          return childNode.forget();
+
+        --*aIndex;
+      } else if (nodeInfo->Equals(nsAccessibilityAtoms::choices)) {
+        nsIDOMNode *itemNode = GetItemByIndex(aIndex, child).get();
+        if (itemNode)
+          return itemNode;
       }
     }
-
-    nsCOMPtr<nsIAccessible> nextAccChild;
-    curAccChild->GetNextSibling(getter_AddRefs(nextAccChild));
-    curAccChild.swap(nextAccChild);
   }
 
   return nsnull;

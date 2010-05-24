@@ -76,6 +76,8 @@
 #include "nsIUploadChannel2.h"
 #include "nsXULAppAPI.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #if defined(XP_WIN) || defined(MOZ_ENABLE_LIBCONIC)
 #include "nsNativeConnectionHelper.h"
 #endif
@@ -186,6 +188,8 @@ nsIOService::nsIOService()
 nsresult
 nsIOService::Init()
 {
+    NS_TIME_FUNCTION;
+
     nsresult rv;
     
     // We need to get references to these services so that we can shut them
@@ -200,11 +204,15 @@ nsIOService::Init()
         return rv;
     }
 
+    NS_TIME_FUNCTION_MARK("got SocketTransportService");
+
     mDNSService = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to get DNS service");
         return rv;
     }
+
+    NS_TIME_FUNCTION_MARK("got DNS Service");
 
     // XXX hack until xpidl supports error info directly (bug 13423)
     nsCOMPtr<nsIErrorService> errorService = do_GetService(NS_ERRORSERVICE_CONTRACTID);
@@ -214,6 +222,8 @@ nsIOService::Init()
     else
         NS_WARNING("failed to get error service");
     
+    NS_TIME_FUNCTION_MARK("got Error Service");
+
     // setup our bad port list stuff
     for(int i=0; gBadPortList[i]; i++)
         mRestrictedPortList.AppendElement(gBadPortList[i]);
@@ -240,6 +250,8 @@ nsIOService::Init()
     else
         NS_WARNING("failed to get observer service");
         
+    NS_TIME_FUNCTION_MARK("Registered observers");
+
     // Get the allocator ready
     if (!gBufferCache) {
         nsresult rv = NS_OK;
@@ -256,6 +268,8 @@ nsIOService::Init()
         CallQueryInterface(recyclingAllocator, &gBufferCache);
     }
 
+    NS_TIME_FUNCTION_MARK("Set up the recycling allocator");
+
     gIOService = this;
     
     // go into managed mode if we can
@@ -265,6 +279,8 @@ nsIOService::Init()
 
     if (mManageOfflineStatus)
         TrackNetworkLinkStatusForOffline();
+    
+    NS_TIME_FUNCTION_MARK("Set up network link service");
 
     return NS_OK;
 }

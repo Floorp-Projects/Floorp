@@ -1005,6 +1005,7 @@ TabChild::GetObjectsForMessage(nsTArray<mozilla::jsipc::PObjectWrapperChild*>& a
   return NS_OK;
 }
 
+static
 bool SendSyncMessageToParent(void* aCallbackData,
                              const nsAString& aMessage,
                              const nsAString& aJSON,
@@ -1017,6 +1018,7 @@ bool SendSyncMessageToParent(void* aCallbackData,
                                 aJSONRetVal);
 }
 
+static
 bool SendAsyncMessageToParent(void* aCallbackData,
                               const nsAString& aMessage,
                               const nsAString& aJSON)

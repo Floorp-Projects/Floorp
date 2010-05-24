@@ -42,7 +42,7 @@ include protocol PContextWrapper;
 
 include "mozilla/jsipc/CPOWTypes.h";
 
-using mozilla::jsipc::void_t;
+using mozilla::void_t;
 using JSType;
 using JSBool;
 
