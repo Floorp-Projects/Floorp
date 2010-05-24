@@ -344,7 +344,7 @@ JSVAL_TO_PRIVATE(jsval v)
 #define JSFUN_GETTER_TEST(f)       ((f) & JSFUN_GETTER)
 #define JSFUN_SETTER_TEST(f)       ((f) & JSFUN_SETTER)
 #define JSFUN_BOUND_METHOD_TEST(f) ((f) & JSFUN_BOUND_METHOD)
-#define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
+#define JSFUN_HEAVYWEIGHT_TEST(f)  (!!((f) & JSFUN_HEAVYWEIGHT))
 
 #define JSFUN_GSFLAG2ATTR(f)       JSFUN_GSFLAGS(f)
 
@@ -3353,7 +3353,7 @@ class Value
     }
 
     bool isNumber() const {
-        return bool(mask & JSVAL_NUMBER_MASK);
+        return !!(mask & JSVAL_NUMBER_MASK);
     }
 
     double asNumber() const {
@@ -3389,7 +3389,7 @@ class Value
     }
 
     bool isObject() const {
-        return bool(mask & JSVAL_OBJECT_MASK);
+        return !!(mask & JSVAL_OBJECT_MASK);
     }
 
     bool isPrimitive() const {
@@ -3411,7 +3411,7 @@ class Value
     }
 
     bool isGCThing() const {
-        return bool(mask & JSVAL_GCTHING_MASK);
+        return !!(mask & JSVAL_GCTHING_MASK);
     }
 
     void *asGCThing() const {
@@ -3433,7 +3433,7 @@ class Value
 
     bool asBoolean() const {
         JS_ASSERT(isBoolean());
-        return data.boo;
+        return !!data.boo;
     }
 
     bool isMagic() const {
@@ -3524,7 +3524,7 @@ static inline const Value & Valueify(const jsval &v) { return (const Value &)v; 
 inline bool
 equalTypeAndPayload(const Value &l, const Value &r)
 {
-    return EQUAL_TYPE_AND_PAYLOAD(Jsvalify(&l), Jsvalify(&r));
+    return !!EQUAL_TYPE_AND_PAYLOAD(Jsvalify(&l), Jsvalify(&r));
 }
 
 /* Convenience inlines. */

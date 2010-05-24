@@ -162,7 +162,7 @@ struct JSFunction : public JSObject
     bool optimizedClosure() const { return FUN_KIND(this) > JSFUN_INTERPRETED; }
     bool needsWrapper()     const { return FUN_NULL_CLOSURE(this) && u.i.skipmin != 0; }
     bool isInterpreted()    const { return FUN_INTERPRETED(this); }
-    bool isFastNative()     const { return flags & JSFUN_FAST_NATIVE; }
+    bool isFastNative()     const { return !!(flags & JSFUN_FAST_NATIVE); }
     bool isHeavyweight()    const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
     unsigned minArgs()      const { return FUN_MINARGS(this); }
 
