@@ -639,18 +639,30 @@ NS_IMETHODIMP imgContainer::GetDataSize(PRUint32 *_retval)
   *_retval = 0;
 
   // Account for any compressed source data
-  *_retval += mSourceData.Length();
+  *_retval += GetSourceDataSize();
   NS_ABORT_IF_FALSE(StoringSourceData() || (*_retval == 0),
                     "Non-zero source data size when we aren't storing it?");
 
   // Account for any uncompressed frames
+  *_retval += GetDecodedDataSize();
+  return NS_OK;
+}
+
+PRUint32 imgContainer::GetDecodedDataSize()
+{
+  PRUint32 val = 0;
   for (PRUint32 i = 0; i < mFrames.Length(); ++i) {
     imgFrame *frame = mFrames.SafeElementAt(i, nsnull);
     NS_ABORT_IF_FALSE(frame, "Null frame in frame array!");
-    *_retval += frame->GetImageDataLength();
+    val += frame->EstimateMemoryUsed();
   }
 
-  return NS_OK;
+  return val;
+}
+
+PRUint32 imgContainer::GetSourceDataSize()
+{
+  return mSourceData.Length();
 }
 
 void imgContainer::DeleteImgFrame(PRUint32 framenum)

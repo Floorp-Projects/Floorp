@@ -39,6 +39,7 @@
 
 interface nsIDOMWindow;
 interface nsIDocShell;
+interface nsIContent;
 
 [scriptable, function, uuid(938fcb95-3d63-46be-aa72-94d08fd3b418)]
 interface nsIFrameMessageListener : nsISupports
@@ -95,6 +96,12 @@ interface nsIContentFrameMessageManager : nsIFrameMessageManager
    * Print a string to stdout.
    */
   void dump(in DOMString aStr);
+};
+
+[uuid(9c48d557-92fe-4edb-95fc-bfe97e77bdc3)]
+interface nsIInProcessContentFrameMessageManager : nsIContentFrameMessageManager
+{
+  [notxpcom] nsIContent getOwnerContent();
 };
 
 [scriptable, uuid(ed6522fd-ffb6-4920-b50d-cf629309616b)]

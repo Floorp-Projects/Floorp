@@ -56,6 +56,7 @@ class nsIContent;
 class nsIURI;
 class nsIFrameFrame;
 class nsIView;
+class nsIInProcessContentFrameMessageManager;
 
 #ifdef MOZ_IPC
 namespace mozilla {
@@ -112,7 +113,7 @@ public:
   nsresult ReallyStartLoading();
   void Finalize();
   nsIDocShell* GetExistingDocShell() { return mDocShell; }
-
+  nsPIDOMEventTarget* GetTabChildGlobalAsEventTarget();
   nsresult CreateStaticClone(nsIFrameLoader* aDest);
 
   /**
@@ -160,7 +161,8 @@ private:
    * initialize mDocShell.
    */
   nsresult MaybeCreateDocShell();
-  void GetURL(nsString& aURL);
+  nsresult EnsureMessageManager();
+  NS_HIDDEN_(void) GetURL(nsString& aURL);
 
   // Properly retrieves documentSize of any subdocument type.
   NS_HIDDEN_(nsIntSize) GetSubDocumentSize(const nsIFrame *aIFrame);
@@ -184,6 +186,11 @@ private:
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsIContent *mOwnerContent; // WEAK
+public:
+  // public because a callback needs these.
+  nsRefPtr<nsFrameMessageManager> mMessageManager;
+  nsCOMPtr<nsIInProcessContentFrameMessageManager> mChildMessageManager;
+private:
   PRPackedBool mDepthTooGreat : 1;
   PRPackedBool mIsTopLevelContent : 1;
   PRPackedBool mDestroyCalled : 1;
@@ -204,7 +211,6 @@ private:
   QX11EmbedContainer* mRemoteSocket;
 #endif
 #endif
-  nsRefPtr<nsFrameMessageManager> mMessageManager;
 };
 
 #endif

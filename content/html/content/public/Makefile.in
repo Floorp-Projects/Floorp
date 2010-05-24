@@ -65,6 +65,7 @@ EXPORTS		= \
 		nsIFormSubmission.h \
 		nsIFrameSetElement.h \
 		nsHTMLAudioElement.h \
+		nsHTMLCanvasElement.h \
 		nsHTMLMediaElement.h \
 		nsHTMLVideoElement.h \
 		nsIHTMLCollection.h \

@@ -79,11 +79,23 @@ class GLContextCGL : public GLContext
 {
 public:
     GLContextCGL(NSOpenGLContext *aContext)
-        : mContext(aContext) {}
+        : mContext(aContext), mCGLContext(nsnull), mPBuffer(nsnull)
+    { }
+
+    GLContextCGL(CGLContextObj aContext, CGLPBufferObj aPBuffer)
+        : mContext(nsnull), mCGLContext(aContext), mPBuffer(aPBuffer)
+    { }
 
     ~GLContextCGL()
     {
-        [mContext release];
+        if (mContext)
+            [mContext release];
+
+        if (mCGLContext)
+            CGLDestroyContext(mCGLContext);
+
+        if (mPBuffer)
+            CGLDestroyPBuffer(mPBuffer);
     }
 
     PRBool Init()
@@ -92,14 +104,30 @@ public:
         return InitWithPrefix("gl", PR_TRUE);
     }
 
-    void *GetNativeContext() 
+    void *GetNativeData(NativeDataType aType)
     { 
-        return mContext; 
+        switch (aType) {
+        case NativeGLContext:
+            return mContext;
+
+        case NativeCGLContext:
+            return mCGLContext ? mCGLContext : [mContext CGLContextObj];
+
+        case NativePBuffer:
+            return mPBuffer;
+
+        default:
+            return nsnull;
+        }
     }
 
     PRBool MakeCurrent()
     {
-        [mContext makeCurrentContext];
+        if (mContext) {
+            [mContext makeCurrentContext];
+        } else if (mCGLContext) {
+            CGLSetCurrentContext(mCGLContext);
+        }
         return PR_TRUE;
     }
 
@@ -110,6 +138,8 @@ public:
 
 private:
     NSOpenGLContext *mContext;
+    CGLContextObj mCGLContext;
+    CGLPBufferObj mPBuffer;
 };
 
 already_AddRefed<GLContext>
@@ -148,9 +178,76 @@ GLContextProvider::CreateForWindow(nsIWidget *aWidget)
 }
 
 already_AddRefed<GLContext>
-GLContextProvider::CreatePbuffer(const gfxSize &)
+GLContextProvider::CreatePBuffer(const gfxIntSize &aSize,
+                                 const ContextFormat &aFormat)
 {
-    return nsnull;
+    if (!sCGLLibrary.EnsureInitialized()) {
+        return nsnull;
+    }
+
+    nsTArray<CGLPixelFormatAttribute> attribs;
+
+#define A1_(_x) do {                                                    \
+        attribs.AppendElement((CGLPixelFormatAttribute) _x);            \
+    } while(0)
+#define A2_(_x,_y) do {                                                 \
+        attribs.AppendElement((CGLPixelFormatAttribute) _x);            \
+        attribs.AppendElement((CGLPixelFormatAttribute) _y);            \
+    } while(0)
+
+    A1_(kCGLPFAAccelerated);
+    A1_(kCGLPFAMinimumPolicy);
+    A1_(kCGLPFAPBuffer);
+
+    A2_(kCGLPFAColorSize, aFormat.colorBits());
+    A2_(kCGLPFAAlphaSize, aFormat.alpha);
+    A2_(kCGLPFADepthSize, aFormat.depth);
+
+    A1_(0);
+
+    CGLError err;
+
+    GLint nFormats;
+    CGLPixelFormatObj pixelFormat;
+    CGLContextObj context;
+    CGLPBufferObj pbuffer;
+    GLint screen;
+
+    err = CGLChoosePixelFormat(attribs.Elements(), &pixelFormat, &nFormats);
+    if (err) {
+        return nsnull;
+    }
+
+    err = CGLCreateContext(pixelFormat, NULL, &context);
+    if (err) {
+        return nsnull;
+    }
+
+    err = CGLCreatePBuffer(aSize.width, aSize.height, LOCAL_GL_TEXTURE_2D,
+                           LOCAL_GL_RGBA,
+                           0, &pbuffer);
+    if (err) {
+        return nsnull;
+    }
+
+    err = CGLGetVirtualScreen(context, &screen);
+    if (err) {
+        return nsnull;
+    }
+
+    err = CGLSetPBuffer(context, pbuffer, 0, 0, screen);
+    if (err) {
+        return nsnull;
+    }
+
+    CGLDestroyPixelFormat(pixelFormat);
+
+    nsRefPtr<GLContextCGL> glContext = new GLContextCGL(context, pbuffer);
+    if (!glContext->Init()) {
+        return nsnull;
+    }
+
+    return glContext.forget().get();
 }
 
 } /* namespace gl */

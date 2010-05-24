@@ -208,8 +208,11 @@
 
 #include "nsIDragService.h"
 #include "mozilla/dom/Element.h"
+#include "nsFrameLoader.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPCOMCID.h"
+
+#include "mozilla/FunctionTimer.h"
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -2388,7 +2391,16 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
     }
   }
 
-  aVisitor.mParentTarget = mChromeEventHandler;
+  nsPIDOMEventTarget* chromeTarget = mChromeEventHandler;
+  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(mChromeEventHandler);
+  if (flo) {
+    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
+    if (fl) {
+      nsPIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
+      chromeTarget = t ? t : chromeTarget;
+    }
+  }
+  aVisitor.mParentTarget = chromeTarget;
   return NS_OK;
 }
 
@@ -2953,12 +2965,6 @@ nsGlobalWindow::GetScrollbars(nsIDOMBarProp** aScrollbars)
   NS_ADDREF(*aScrollbars = mScrollbars);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGlobalWindow::GetDirectories(nsIDOMBarProp** aDirectories)
-{
-  return GetPersonalbar(aDirectories);
 }
 
 NS_IMETHODIMP
@@ -4625,17 +4631,13 @@ nsGlobalWindow::Print()
       if (printSettingsAreGlobal) {
         printSettingsService->GetGlobalPrintSettings(getter_AddRefs(printSettings));
 
-        if (printSettings) {
-          // Call any code that requires a run of the event loop.
-          EnterModalState();
-          printSettings->SetupSilentPrinting();
-          LeaveModalState();
-        }
-
         nsXPIDLString printerName;
-        printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
-        if (printerName)
-          printSettingsService->InitPrintSettingsFromPrinter(printerName, printSettings);
+        printSettings->GetPrinterName(getter_Copies(printerName));
+        if (printerName.IsEmpty()) {
+          printSettingsService->GetDefaultPrinterName(getter_Copies(printerName));
+          printSettings->SetPrinterName(printerName);
+        }
+        printSettingsService->InitPrintSettingsFromPrinter(printerName, printSettings);
         printSettingsService->InitPrintSettingsFromPrefs(printSettings, 
                                                          PR_TRUE, 
                                                          nsIPrintSettings::kInitSaveAll);
@@ -8389,6 +8391,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
     return;
   }
 
+  NS_TIME_FUNCTION;
+
   NS_ASSERTION(IsInnerWindow(), "Timeout running on outer window!");
   NS_ASSERTION(!IsFrozen(), "Timeout running on a window in the bfcache!");
 
@@ -8542,6 +8546,8 @@ nsGlobalWindow::RunTimeout(nsTimeout *aTimeout)
       const char *filename = nsnull;
       PRUint32 lineNo = 0;
       handler->GetLocation(&filename, &lineNo);
+
+      NS_TIME_FUNCTION_MARK("(file: %s, line: %d)", filename, lineNo);
 
       PRBool is_undefined;
       scx->EvaluateString(nsDependentString(script), 
@@ -9627,7 +9633,6 @@ nsGlobalChromeWindow::NotifyDefaultButtonLoaded(nsIDOMElement* aDefaultButton)
 NS_IMETHODIMP
 nsGlobalChromeWindow::GetMessageManager(nsIChromeFrameMessageManager** aManager)
 {
-#ifdef MOZ_IPC
   FORWARD_TO_INNER_CHROME(GetMessageManager, (aManager), NS_ERROR_FAILURE);
   if (!mMessageManager) {
     nsIScriptContext* scx = GetContextInternal();
@@ -9644,9 +9649,6 @@ nsGlobalChromeWindow::GetMessageManager(nsIChromeFrameMessageManager** aManager)
     NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
   }
   NS_ADDREF(*aManager = mMessageManager);
-#else
-  *aManager = nsnull;
-#endif
   return NS_OK;
 }
 

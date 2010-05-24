@@ -46,7 +46,6 @@
 #include "nsIRequest.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIStreamLoader.h"
-#include "nsIChannelClassifier.h"
 
 // Other includes
 #include "nsAutoLock.h"
@@ -526,7 +525,8 @@ nsDOMWorkerScriptLoader::RunInternal()
                        ios,
                        loadGroup,
                        nsnull,                            // callbacks
-                       nsIRequest::LOAD_NORMAL,           // loadFlags
+                       nsIRequest::LOAD_NORMAL |
+                       nsIChannel::LOAD_CLASSIFY_URI,     // loadFlags
                        channelPolicy);                    // CSP info
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -535,18 +535,6 @@ nsDOMWorkerScriptLoader::RunInternal()
       // Null this out so we don't try to cancel it later.
       loadInfo.channel = nsnull;
       return rv;
-    }
-
-    // Check the load against the URI classifier
-    nsCOMPtr<nsIChannelClassifier> classifier =
-        do_CreateInstance(NS_CHANNELCLASSIFIER_CONTRACTID);
-    if (classifier) {
-        rv = classifier->Start(loadInfo.channel, PR_TRUE);
-        if (NS_FAILED(rv)) {
-            loadInfo.channel->Cancel(rv);
-            loadInfo.channel = nsnull;
-            return rv;
-        }
     }
   }
 

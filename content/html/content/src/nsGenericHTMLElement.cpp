@@ -111,6 +111,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsHtml5Module.h"
 
+#include "nsThreadUtils.h"
+
 class nsINodeInfo;
 class nsIDOMNodeList;
 class nsRuleWalker;
@@ -169,6 +171,47 @@ nsGenericHTMLElement::Init(nsINodeInfo *aNodeInfo)
 
 #endif
 
+/**
+ * nsAutoFocusEvent is used to dispatch a focus event when a
+ * nsGenericHTMLFormElement is binded to the tree with the autofocus attribute
+ * enabled.
+ */
+class nsAutoFocusEvent : public nsRunnable
+{
+public:
+  nsAutoFocusEvent(nsGenericHTMLFormElement* aElement) : mElement(aElement) {}
+
+  NS_IMETHOD Run() {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm) {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    nsIDocument* document = mElement->GetOwnerDoc();
+    if (!document) {
+      return NS_OK;
+    }
+
+    // Do not autofocus if an sub-window is focused.
+    nsPIDOMWindow* window = document->GetWindow();
+    if (window && window->GetFocusedNode()) {
+      return NS_OK;
+    }
+
+    // If something is focused in the same document, ignore autofocus.
+    if (!fm->GetFocusedContent() ||
+        fm->GetFocusedContent()->GetOwnerDoc() != document) {
+      return mElement->Focus();
+    }
+
+    return NS_OK;
+  }
+private:
+  // NOTE: nsGenericHTMLFormElement is saved as a nsGenericHTMLElement
+  // because AddRef/Release are ambiguous with nsGenericHTMLFormElement
+  // and Focus() is declared (and defined) in nsGenericHTMLElement class.
+  nsRefPtr<nsGenericHTMLElement> mElement;
+};
 
 class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
                                     public nsIDOMElementCSSInlineStyle
@@ -2400,6 +2443,20 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // An autofocus event has to be launched if the autofocus attribute is
+  // specified and the element accept the autofocus attribute. In addition,
+  // the document should not be already loaded and the "browser.autofocus"
+  // preference should be 'true'.
+  if (AcceptAutofocus() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
+      aDocument &&
+      aDocument->GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE &&
+      nsContentUtils::GetBoolPref("browser.autofocus", PR_TRUE)) {
+    nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
+    rv = NS_DispatchToCurrentThread(event);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   if (!aParent) {
     return NS_OK;
   }
@@ -2627,6 +2684,20 @@ nsGenericHTMLFormElement::IsSingleLineTextControl(PRBool aExcludePassword) const
          type == NS_FORM_INPUT_SEARCH ||
          type == NS_FORM_INPUT_TEL ||
          (!aExcludePassword && type == NS_FORM_INPUT_PASSWORD);
+}
+
+PRBool
+nsGenericHTMLFormElement::IsLabelableControl() const
+{
+  // Check for non-labelable form controls as they are not numerous.
+  // TODO: datalist should be added to this list.
+  PRInt32 type = GetType();
+  return type != NS_FORM_FIELDSET &&
+         type != NS_FORM_LABEL &&
+         type != NS_FORM_OPTION &&
+         type != NS_FORM_OPTGROUP &&
+         type != NS_FORM_OBJECT &&
+         type != NS_FORM_LEGEND;
 }
 
 PRInt32

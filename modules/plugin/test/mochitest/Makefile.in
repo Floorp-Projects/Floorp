@@ -85,7 +85,7 @@ _MOCHITEST_FILES = \
   neverending.sjs \
   test_newstreamondestroy.html \
   test_crashing.html \
-  test_crashing2.html \
+  $(warning test_crashing2.html disabled due to random orange; see bug 566049) \
   test_hanging.html \
   crashing_subpage.html \
   test_GCrace.html \

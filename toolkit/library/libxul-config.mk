@@ -335,8 +335,10 @@ DEFINES += -DMOZ_ZIPWRITER
 COMPONENT_LIBS += zipwriter
 endif
 
-ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
+ifdef MOZ_DEBUG
+ifdef ENABLE_TESTS
 COMPONENT_LIBS += gkdebug
+endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)

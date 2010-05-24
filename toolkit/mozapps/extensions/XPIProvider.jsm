@@ -946,6 +946,12 @@ var XPIProvider = {
     Services.prefs.removeObserver(this.checkCompatibilityPref, this);
     Services.prefs.removeObserver(PREF_EM_CHECK_UPDATE_SECURITY, this);
 
+    Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
+                               JSON.stringify(XPIProvider.bootstrappedAddons));
+    this.bootstrappedAddons = {};
+    this.bootstrapScopes = {};
+    this.enabledAddons = null;
+
     if (Prefs.getBoolPref(PREF_PENDING_OPERATIONS, false)) {
       XPIDatabase.updateActiveAddons();
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
@@ -1610,8 +1616,6 @@ var XPIProvider = {
     // of XPCOM
     Services.obs.addObserver({
       observe: function(aSubject, aTopic, aData) {
-        Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
-                                   JSON.stringify(XPIProvider.bootstrappedAddons));
         for (let id in XPIProvider.bootstrappedAddons) {
           let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
           dir.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;

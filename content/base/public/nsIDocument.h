@@ -1358,6 +1358,15 @@ public:
   virtual void ResetScrolledToRefAlready() = 0;
   virtual void SetChangeScrollPosWhenScrollingToRef(PRBool aValue) = 0;
 
+  /**
+   * This method is similar to GetElementById() from nsIDOMDocument but it
+   * returns a mozilla::dom::Element instead of a nsIDOMElement.
+   * It prevents converting nsIDOMElement to mozill:dom::Element which is
+   * already converted from mozilla::dom::Element.
+   */
+  virtual mozilla::dom::Element* GetElementById(const nsAString& aElementId,
+                                                nsresult* aResult) = 0;
+
 protected:
   ~nsIDocument()
   {

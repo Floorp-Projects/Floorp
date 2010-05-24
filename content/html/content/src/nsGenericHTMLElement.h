@@ -793,6 +793,8 @@ public:
 
           PRBool IsSingleLineTextControl(PRBool aExcludePassword) const;
 
+          PRBool IsLabelableControl() const;
+
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -810,6 +812,14 @@ protected:
 
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                 const nsAString* aValue, PRBool aNotify);
+
+  /**
+   * Returns if the element should react on autofocus attribute.
+   */
+  virtual PRBool AcceptAutofocus() const
+  {
+    return PR_FALSE;
+  }
 
   /**
    * Returns true if the control can be disabled

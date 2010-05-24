@@ -45,30 +45,55 @@ class nsString;
 class nsIFormProcessor;
 class nsFormSubmission;
 
-#define NS_FORM_BUTTON_BUTTON   1
-#define NS_FORM_BUTTON_RESET    2
-#define NS_FORM_BUTTON_SUBMIT   3
-#define NS_FORM_FIELDSET        4
-#define NS_FORM_INPUT_BUTTON    5
-#define NS_FORM_INPUT_CHECKBOX  6
-#define NS_FORM_INPUT_FILE      7
-#define NS_FORM_INPUT_HIDDEN    8
-#define NS_FORM_INPUT_RESET     9
-#define NS_FORM_INPUT_IMAGE    10
-#define NS_FORM_INPUT_PASSWORD 11
-#define NS_FORM_INPUT_RADIO    12
-#define NS_FORM_INPUT_SEARCH   13
-#define NS_FORM_INPUT_SUBMIT   14
-#define NS_FORM_INPUT_TEL      15
-#define NS_FORM_INPUT_TEXT     16
-#define NS_FORM_LABEL          17
-#define NS_FORM_OPTION         18
-#define NS_FORM_OPTGROUP       19
-#define NS_FORM_OUTPUT         20
-#define NS_FORM_LEGEND         21
-#define NS_FORM_SELECT         22
-#define NS_FORM_TEXTAREA       23
-#define NS_FORM_OBJECT         24
+enum FormControlsTypes {
+  NS_FORM_FIELDSET = 1,
+  NS_FORM_LABEL,
+  NS_FORM_OPTION,
+  NS_FORM_OPTGROUP,
+  NS_FORM_OUTPUT,
+  NS_FORM_LEGEND,
+  NS_FORM_SELECT,
+  NS_FORM_TEXTAREA,
+  NS_FORM_OBJECT,
+  eFormControlsWithoutSubTypesMax,
+  // After this, all types will have sub-types which introduce new enum lists.
+  // eFormControlsWithoutSubTypesMax let us know if the previous types values
+  // are not overlapping with sub-types/masks.
+
+  // Elements with different types, the value is used as a mask.
+  // Adding '_ELEMENT' because NS_FORM_INPUT is used for 'oninput' event.
+  // When changing the order, adding or removing elements, be sure to update
+  // the PR_STATIC_ASSERT checks accordingly.
+  NS_FORM_BUTTON_ELEMENT = 0x40, // 0b01000000
+  NS_FORM_INPUT_ELEMENT  = 0x80  // 0b10000000
+};
+
+enum ButtonElementTypes {
+  NS_FORM_BUTTON_BUTTON = NS_FORM_BUTTON_ELEMENT + 1,
+  NS_FORM_BUTTON_RESET,
+  NS_FORM_BUTTON_SUBMIT,
+  eButtonElementTypesMax
+};
+
+enum InputElementTypes {
+  NS_FORM_INPUT_BUTTON = NS_FORM_INPUT_ELEMENT + 1,
+  NS_FORM_INPUT_CHECKBOX,
+  NS_FORM_INPUT_FILE,
+  NS_FORM_INPUT_HIDDEN,
+  NS_FORM_INPUT_RESET,
+  NS_FORM_INPUT_IMAGE,
+  NS_FORM_INPUT_PASSWORD,
+  NS_FORM_INPUT_RADIO,
+  NS_FORM_INPUT_SEARCH,
+  NS_FORM_INPUT_SUBMIT,
+  NS_FORM_INPUT_TEL,
+  NS_FORM_INPUT_TEXT,
+  eInputElementTypesMax
+};
+
+PR_STATIC_ASSERT((PRUint32)eFormControlsWithoutSubTypesMax < (PRUint32)NS_FORM_BUTTON_ELEMENT);
+PR_STATIC_ASSERT((PRUint32)eButtonElementTypesMax < (PRUint32)NS_FORM_INPUT_ELEMENT);
+PR_STATIC_ASSERT((PRUint32)eInputElementTypesMax  < 1<<8);
 
 #define NS_IFORMCONTROL_IID   \
 { 0x52dc1f0d, 0x1683, 0x4dd7, \
@@ -115,7 +140,7 @@ public:
    * Get the type of this control as an int (see NS_FORM_* above)
    * @return the type of this control
    */
-  NS_IMETHOD_(PRInt32) GetType() const = 0 ;
+  NS_IMETHOD_(PRUint32) GetType() const = 0 ;
 
   /**
    * Reset this form control (as it should be when the user clicks the Reset
@@ -174,6 +199,12 @@ public:
    * @return Whether this is a single line text control.
    */
   virtual PRBool IsSingleLineTextControl(PRBool aExcludePassword) const = 0;
+
+  /**
+   * Returns true if this is a labelable form control.
+   * @return Whether this is a labelable form control.
+   */
+  virtual PRBool IsLabelableControl() const = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIFormControl, NS_IFORMCONTROL_IID)

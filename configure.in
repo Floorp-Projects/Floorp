@@ -240,6 +240,108 @@ if test -z "$PERL" || test "$PERL" = ":"; then
 fi
 
 dnl ========================================================
+dnl = Android uses a very custom (hacky) toolchain; we need to do this
+dnl = here, so that the compiler checks can succeed
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(android-ndk,
+[  --with-android-ndk=DIR
+                           location where the Android NDK can be found],
+    android_ndk=$withval)
+
+MOZ_ARG_WITH_STRING(android-toolchain,
+[  --with-android-toolchain=DIR
+                           location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
+    android_toolchain=$withval)
+
+MOZ_ARG_WITH_STRING(android-platform,
+[  --with-android-platform=DIR
+                           location of NDK platform dir, default NDK/build/platforms/android-5/arch-arm],
+    android_platform=$withval)
+
+MOZ_ARG_WITH_STRING(android-sdk,
+[  --with-android-sdk=DIR
+                           location where the Android SDK can be found (base directory, e.g. .../android/platforms/android-6)],
+    android_sdk=$withval)
+
+MOZ_ARG_WITH_STRING(android-tools,
+[  --with-android-tools=DIR
+                           location where the Android Tools can be found (base directory, e.g. .../android/tools)],
+    android_tools=$withval)
+
+if test "$target" = "arm-android-eabi" ; then
+    if test -z "$android_ndk" ; then
+        AC_MSG_ERROR([You must specify --with-android-ndk=/path/to/ndk when targeting Android.])
+    fi
+
+    if test -z "$android_sdk" ; then
+        AC_MSG_ERROR([You must specify --with-android-sdk=/path/to/sdk when targeting Android.])
+    fi
+
+    if test -z "$android_tools" ; then
+        AC_MSG_ERROR([You must specify --with-android-tools=/path/to/sdk/tools when targeting Android.])
+    fi
+
+    if test -z "$android_toolchain" ; then
+        android_toolchain="$android_ndk"/build/prebuilt/`uname -s | tr "[[:upper:]]" "[[:lower:]]"`-x86/arm-eabi-4.4.0
+    fi
+
+    if test -z "$android_platform" ; then
+       android_platform="$android_ndk"/build/platforms/android-5/arch-arm
+    fi
+
+    dnl set up compilers
+    AS="$android_toolchain"/bin/arm-eabi-as
+    CC="$android_toolchain"/bin/arm-eabi-gcc
+    CXX="$android_toolchain"/bin/arm-eabi-g++
+    CPP="$android_toolchain"/bin/arm-eabi-cpp
+    LD="$android_toolchain"/bin/arm-eabi-ld
+    AR="$android_toolchain"/bin/arm-eabi-ar
+    RANLIB="$android_toolchain"/bin/arm-eabi-ranlib
+    STRIP="$android_toolchain"/bin/arm-eabi-strip
+
+    CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
+    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CXXFLAGS"
+
+    dnl Add -llog by default, since we use it all over the place.
+    dnl Add --allow-shlib-undefined, because libGLESv2 links to an
+    dnl undefined symbol (present on the hardware, just not in the
+    dnl NDK.)
+    LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
+
+    dnl prevent cross compile section from using these flags as host flags
+    if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
+    ANDROID_NDK="${android_ndk}"
+    ANDROID_TOOLCHAIN="{android_toolchain}"
+    ANDROID_PLATFORM="{android_platform}"
+    ANDROID_SDK="${android_sdk}"
+    ANDROID_TOOLS="${android_tools}"
+
+    AC_DEFINE(ANDROID)
+    CROSS_COMPILE=1
+    MOZ_CHROME_FILE_FORMAT=omni
+fi
+
+AC_SUBST(ANDROID_NDK)
+AC_SUBST(ANDROID_TOOLCHAIN)
+AC_SUBST(ANDROID_PLATFORM)
+AC_SUBST(ANDROID_SDK)
+AC_SUBST(ANDROID_TOOLS)
+
+dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
 dnl Set CROSS_COMPILE in the environment when running configure
@@ -1149,6 +1251,9 @@ if test -n "$CROSS_COMPILE"; then
         winmo*)       OS_ARCH=WINCE ;;
         darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
     esac
+    case "${target}" in
+        arm-android-eabi) OS_ARCH=Linux OS_TARGET=Android ;;
+    esac
 else
     OS_TARGET=`uname -s`
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -1460,6 +1565,9 @@ if test "$GNU_CC"; then
     if test "$GCC_USE_GNU_LD"; then
         # Don't allow undefined symbols in libraries
         DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
+        LDFLAGS="$LDFLAGS -Wl,--gc-sections"
+        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
+        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
     fi
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
@@ -1494,12 +1602,8 @@ if test "$GNU_CC"; then
     _PEDANTIC=1
 
     if test -z "$INTEL_CC"; then
-      _IGNORE_LONG_LONG_WARNINGS=1
       _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -W"
-    else
-      _IGNORE_LONG_LONG_WARNINGS=
     fi
-
 
     _DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1914,7 +2018,6 @@ case "$target" in
 *-bsdi*)
     dnl -pedantic doesn't play well with BSDI's _very_ modified gcc (shlicc2)
     _PEDANTIC=
-    _IGNORE_LONG_LONG_WARNINGS=
     case $OS_RELEASE in
 	4.*|5.*)
             STRIP="$STRIP -d"
@@ -2791,6 +2894,18 @@ alpha*-*-osf*)
 
 *-os2*)
     HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
+    ;;
+
+*-android*)
+    AC_DEFINE(NO_PW_GECOS)
+    no_x=yes
+    _PLATFORM_DEFAULT_TOOLKIT=cairo-android
+    TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+
+    MOZ_GFX_OPTIMIZE_MOBILE=1
+    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer"
+
+    dnl MOZ_MEMORY=1
     ;;
 
 esac
@@ -4371,8 +4486,11 @@ LDFLAGS=$_SAVE_LDFLAGS
 if test "$ac_cv_thread_keyword" = yes; then
   # mips builds fail with TLS variables because of a binutils bug.
   # See bug 528687
-  case "${target_cpu}" in
-    mips*)
+  case "${target}" in
+    mips*-*)
+      :
+      ;;
+    *-android*)
       :
       ;;
     *)
@@ -4555,12 +4673,12 @@ fi
 if test -n "$MOZ_NATIVE_NSPR"; then
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
-    AC_TRY_COMPILE([#include "prlog.h"],
+    AC_TRY_COMPILE([#include "prtypes.h"],
                 [#ifndef PR_STATIC_ASSERT
-                 #error PR_STATIC_ASSERT not defined
+                 #error PR_STATIC_ASSERT not defined or requires including prlog.h
                  #endif],
                 [MOZ_NATIVE_NSPR=1],
-                AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT]))
+                AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
 else
     if test "$OS_ARCH" = "WINCE"; then
@@ -5063,7 +5181,8 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa"
+        -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-android"
     then
         dnl nglayout only supports building with one toolkit,
         dnl so ignore everything after the first comma (",").
@@ -5171,6 +5290,13 @@ cairo-cocoa)
     MOZ_FS_LAYOUT=bundle
     MOZ_WEBGL=1
     ;;
+
+cairo-android)
+    AC_DEFINE(MOZ_WIDGET_ANDROID)
+    MOZ_WIDGET_TOOLKIT=android
+    MOZ_WEBGL=
+    ;;
+
 esac
 
 if test "$MOZ_ENABLE_XREMOTE"; then
@@ -5629,7 +5755,7 @@ dnl ========================================================
 dnl = Disable IPC support for tabs and plugins
 dnl ========================================================
 case "${target}" in
-*-wince*)
+*-wince*|*-android*)
     MOZ_IPC=
     ;;
 esac
@@ -6811,19 +6937,7 @@ MOZ_ARG_ENABLE_STRING(debug,
   fi ],
   MOZ_DEBUG=)
 
-MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
- case "${target_os}" in
-    beos*)
-        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
-        ;;
-    msvc*|mks*|cygwin*|mingw*|os2*|wince*|winmo*)
-        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
-        ;;
-    *) 
-        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`$WHOAMI`"
-        ;;
-  esac
-MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DTRACING"
+MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
 
 MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
 
@@ -7372,7 +7486,7 @@ dnl =========================================================
 dnl = Chrome format
 dnl =========================================================
 MOZ_ARG_ENABLE_STRING([chrome-format],
-[  --enable-chrome-format=jar|flat|both|symlink
+[  --enable-chrome-format=jar|flat|both|symlink|omni
                           Select FORMAT of chrome files (default=jar)],
     MOZ_CHROME_FILE_FORMAT=`echo $enableval | tr A-Z a-z`)
 
@@ -7383,13 +7497,30 @@ fi
 if test "$MOZ_CHROME_FILE_FORMAT" != "jar" && 
     test "$MOZ_CHROME_FILE_FORMAT" != "flat" &&
     test "$MOZ_CHROME_FILE_FORMAT" != "symlink" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "both"; then
-    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, both, or symlink])
+    test "$MOZ_CHROME_FILE_FORMAT" != "both" &&
+    test "$MOZ_CHROME_FILE_FORMAT" != "omni"; then
+    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, both, symlink, or omni])
 fi
 
-if test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
-   AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
+dnl =========================================================
+dnl Omnijar packaging (bug 552121)
+dnl =========================================================
+dnl Omnijar packaging is compatible with flat packaging.
+dnl In unpackaged builds, omnijar looks for files as if
+dnl things were flat packaged. After packaging, all files
+dnl are loaded from a single jar. MOZ_CHROME_FILE_FORMAT
+dnl is set to flat since putting files into jars is only
+dnl done during packaging with omnijar.
+if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
+    MOZ_OMNIJAR=1
+    AC_DEFINE(MOZ_OMNIJAR)
+    MOZ_CHROME_FILE_FORMAT=flat
+elif test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
+    AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
 fi
+
+AC_SUBST(MOZ_OMNIJAR)
+
 dnl ========================================================
 dnl = Define default location for MOZILLA_FIVE_HOME
 dnl ========================================================
@@ -7484,28 +7615,6 @@ else
 fi
 
 dnl ========================================================
-dnl Pass -Wno-long-long to the compiler
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(long-long-warning,
-[  --disable-long-long-warning
-                          Do not warn about use of non-ANSI long long type (if supported)],
-    _IGNORE_LONG_LONG_WARNINGS=1,
-    _IGNORE_LONG_LONG_WARNINGS=)
-
-if test -n "$_IGNORE_LONG_LONG_WARNINGS"; then
-    _SAVE_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
-    AC_MSG_CHECKING([whether compiler supports -Wno-long-long])
-    AC_TRY_COMPILE([], [return(0);],
-      [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-        result="yes" ],
-      result="no")
-    AC_MSG_RESULT([$result])
-    CFLAGS="$_SAVE_CFLAGS"
-fi
-
-dnl ========================================================
 dnl Profile guided optimization
 dnl ========================================================
 dnl Test for profiling options
@@ -7581,7 +7690,7 @@ MOZ_ARG_DISABLE_BOOL(pedantic,
 _PEDANTIC= )
 if test "$_PEDANTIC"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
     AC_MSG_CHECKING([whether C++ compiler has -pedantic long long bug])
     AC_TRY_COMPILE([$configure_static_assert_macros],
                    [CONFIGURE_STATIC_ASSERT(sizeof(long long) == 8)],
@@ -7591,8 +7700,8 @@ if test "$_PEDANTIC"; then
 
     case "$result" in
     no)
-        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic"
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
         ;;
     yes)
         AC_MSG_ERROR([Your compiler appears to have a known bug where long long is miscompiled when using -pedantic.  Reconfigure using --disable-pedantic. ])

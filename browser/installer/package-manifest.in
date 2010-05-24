@@ -26,7 +26,6 @@
 @BINPATH@/searchplugins/*
 @BINPATH@/defaults/profile/bookmarks.html
 @BINPATH@/defaults/profile/localstore.rdf
-@BINPATH@/defaults/profile/prefs.js
 @BINPATH@/defaults/profile/mimeTypes.rdf
 @BINPATH@/defaults/profile/chrome/*
 @BINPATH@/update.locale
@@ -373,6 +372,7 @@
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/platform.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
+@BINPATH@/defaults/profile/prefs.js
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine. 

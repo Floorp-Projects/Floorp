@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,8 +42,11 @@
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "gfxContext.h"
-#include "gfxASurface.h"
+#include "gfxImageSurface.h"
 #include "gfxPattern.h"
+#include "gfxUtils.h"
+
+#include "GLContext.h"
 
 namespace mozilla {
 namespace layers {
@@ -378,6 +381,135 @@ BasicColorLayer::Paint(gfxContext* aContext)
   aContext->Paint();
 }
 
+class BasicCanvasLayer : public CanvasLayer,
+                         BasicImplData
+{
+public:
+  BasicCanvasLayer(BasicLayerManager* aLayerManager) :
+    CanvasLayer(aLayerManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicCanvasLayer);
+  }
+  virtual ~BasicCanvasLayer()
+  {
+    MOZ_COUNT_DTOR(BasicCanvasLayer);
+  }
+
+  virtual void Initialize(const Data& aData);
+  virtual void Updated(const nsIntRect& aRect);
+  virtual void Paint(gfxContext* aContext);
+
+protected:
+  nsRefPtr<gfxASurface> mSurface;
+  nsRefPtr<mozilla::gl::GLContext> mGLContext;
+
+  nsIntRect mBounds;
+  nsIntRect mUpdatedRect;
+
+  PRPackedBool mGLBufferIsPremultiplied;
+  PRPackedBool mNeedsYFlip;
+};
+
+void
+BasicCanvasLayer::Initialize(const Data& aData)
+{
+  NS_ASSERTION(mSurface == nsnull, "BasicCanvasLayer::Initialize called twice!");
+
+  mUpdatedRect.Empty();
+
+  if (aData.mSurface) {
+    mSurface = aData.mSurface;
+    NS_ASSERTION(aData.mGLContext == nsnull,
+                 "CanvasLayer can't have both surface and GLContext");
+    mNeedsYFlip = PR_FALSE;
+  } else if (aData.mGLContext) {
+    mGLContext = aData.mGLContext;
+    mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
+    mNeedsYFlip = PR_TRUE;
+  } else {
+    NS_ERROR("CanvasLayer created without mSurface or mGLContext?");
+  }
+
+  mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+}
+
+void
+BasicCanvasLayer::Updated(const nsIntRect& aRect)
+{
+  NS_ASSERTION(mUpdatedRect.IsEmpty(),
+               "CanvasLayer::Updated called more than once in a transaction!");
+
+  mUpdatedRect.UnionRect(mUpdatedRect, aRect);
+
+  if (mGLContext) {
+    nsRefPtr<gfxImageSurface> isurf =
+      new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
+                          IsOpaqueContent()
+                            ? gfxASurface::ImageFormatRGB24
+                            : gfxASurface::ImageFormatARGB32);
+    if (!isurf || isurf->CairoStatus() != 0) {
+      return;
+    }
+
+    NS_ASSERTION(isurf->Stride() == mBounds.width * 4, "gfxImageSurface stride isn't what we expect!");
+
+    // We need to read from the GLContext
+    mGLContext->MakeCurrent();
+
+    // We have to flush to ensure that any buffered GL operations are
+    // in the framebuffer before we read.
+    mGLContext->fFlush();
+
+    // For simplicity, we read the entire framebuffer for now -- in
+    // the future we should use mUpdatedRect, though with WebGL we don't
+    // have an easy way to generate one.
+    mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
+                            LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
+                            isurf->Data());
+
+    // If the underlying GLContext doesn't have a framebuffer into which
+    // premultiplied values were written, we have to do this ourselves here.
+    // Note that this is a WebGL attribute; GL itself has no knowledge of
+    // premultiplied or unpremultiplied alpha.
+    if (!mGLBufferIsPremultiplied)
+      gfxUtils::PremultiplyImageSurface(isurf);
+
+    // stick our surface into mSurface, so that the Paint() path is the same
+    mSurface = isurf;
+  }
+
+  // sanity
+  NS_ASSERTION(mUpdatedRect.IsEmpty() || mBounds.Contains(mUpdatedRect),
+               "CanvasLayer: Updated rect bigger than bounds!");
+}
+
+void
+BasicCanvasLayer::Paint(gfxContext* aContext)
+{
+  nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
+
+  pat->SetFilter(mFilter);
+  pat->SetExtend(gfxPattern::EXTEND_PAD);
+
+  gfxRect r(0, 0, mBounds.width, mBounds.height);
+  gfxMatrix m;
+  if (mNeedsYFlip) {
+    m = aContext->CurrentMatrix();
+    aContext->Translate(gfxPoint(0.0, mBounds.height));
+    aContext->Scale(1.0, -1.0);
+  }
+
+  aContext->NewPath();
+  aContext->PixelSnappedRectangleAndSetPattern(r, pat);
+  aContext->Fill();
+
+  if (mNeedsYFlip) {
+    aContext->SetMatrix(m);
+  }
+
+  mUpdatedRect.Empty();
+}
+
 BasicLayerManager::BasicLayerManager(gfxContext* aContext) :
   mDefaultTarget(aContext), mLastPainted(nsnull)
 #ifdef DEBUG
@@ -502,7 +634,7 @@ BasicLayerManager::BeginPaintingLayer(Layer* aLayer)
     if (aLayer->GetClipRect()) {
       const nsIntRect& r = *aLayer->GetClipRect();
       mTarget->NewPath();
-      mTarget->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
+      mTarget->Rectangle(gfxRect(r.x, r.y, r.width, r.height), PR_TRUE);
       mTarget->Clip();
     }
 
@@ -624,6 +756,14 @@ BasicLayerManager::CreateColorLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
   nsRefPtr<ColorLayer> layer = new BasicColorLayer(this);
+  return layer.forget();
+}
+
+already_AddRefed<CanvasLayer>
+BasicLayerManager::CreateCanvasLayer()
+{
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<CanvasLayer> layer = new BasicCanvasLayer(this);
   return layer.forget();
 }
 

@@ -104,6 +104,8 @@ using namespace mozilla::net;
 #include "mozilla/net/HttpChannelChild.h"
 #endif 
 
+#include "mozilla/FunctionTimer.h"
+
 #ifdef DEBUG
 // defined by the socket transport service while active
 extern PRThread *gSocketThread;
@@ -224,6 +226,8 @@ nsHttpHandler::~nsHttpHandler()
 nsresult
 nsHttpHandler::Init()
 {
+    NS_TIME_FUNCTION;
+
     nsresult rv;
 
     LOG(("nsHttpHandler::Init\n"));
@@ -325,6 +329,8 @@ nsHttpHandler::Init()
 nsresult
 nsHttpHandler::InitConnectionMgr()
 {
+    NS_TIME_FUNCTION;
+
     nsresult rv;
 
     if (!mConnMgr) {

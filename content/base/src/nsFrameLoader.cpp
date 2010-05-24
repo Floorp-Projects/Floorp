@@ -108,6 +108,7 @@
 #include "nsIView.h"
 
 #include "nsIDOMChromeWindow.h"
+#include "nsInProcessTabChildGlobal.h"
 
 #ifdef MOZ_WIDGET_GTK2
 #include "mozcontainer.h"
@@ -162,7 +163,20 @@ public:
 // we'd need to re-institute a fixed version of bug 98158.
 #define MAX_DEPTH_CONTENT_FRAMES 10
 
-NS_IMPL_CYCLE_COLLECTION_1(nsFrameLoader, mDocShell)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameLoader)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameLoader)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocShell)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mMessageManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChildMessageManager)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameLoader)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocShell)
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "nsFrameLoader::mMessageManager");
+  cb.NoteXPCOMChild(static_cast<nsIContentFrameMessageManager*>(tmp->mMessageManager.get()));
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChildMessageManager)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
@@ -1037,6 +1051,38 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   mOwnerContent = otherContent;
   aOther->mOwnerContent = ourContent;
 
+  nsRefPtr<nsFrameMessageManager> ourMessageManager = mMessageManager;
+  nsRefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
+  // Swap pointers in child message managers.
+  if (mChildMessageManager) {
+    nsInProcessTabChildGlobal* tabChild =
+      static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get());
+    tabChild->SetOwner(otherContent);
+    tabChild->SetChromeMessageManager(otherMessageManager);
+  }
+  if (aOther->mChildMessageManager) {
+    nsInProcessTabChildGlobal* otherTabChild =
+      static_cast<nsInProcessTabChildGlobal*>(aOther->mChildMessageManager.get());
+    otherTabChild->SetOwner(ourContent);
+    otherTabChild->SetChromeMessageManager(ourMessageManager);
+  }
+  // Swap and setup things in parent message managers.
+  nsFrameMessageManager* ourParentManager = mMessageManager ?
+    mMessageManager->GetParentManager() : nsnull;
+  nsFrameMessageManager* otherParentManager = aOther->mMessageManager ?
+    aOther->mMessageManager->GetParentManager() : nsnull;
+  if (mMessageManager) {
+    mMessageManager->Disconnect();
+    mMessageManager->SetParentManager(otherParentManager);
+    mMessageManager->SetCallbackData(aOther, PR_FALSE);
+  }
+  if (aOther->mMessageManager) {
+    aOther->mMessageManager->Disconnect();
+    aOther->mMessageManager->SetParentManager(ourParentManager);
+    aOther->mMessageManager->SetCallbackData(this, PR_FALSE);
+  }
+  mMessageManager.swap(aOther->mMessageManager);
+
   aFirstToSwap.swap(aSecondToSwap);
 
   // Drop any cached content viewers in the two session histories.
@@ -1087,6 +1133,13 @@ nsFrameLoader::Destroy()
   }
   mDestroyCalled = PR_TRUE;
 
+  if (mMessageManager) {
+    mMessageManager->Disconnect();
+  }
+  if (mChildMessageManager) {
+    static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get())->Disconnect();
+  }
+
   nsCOMPtr<nsIDocument> doc;
   if (mOwnerContent) {
     doc = mOwnerContent->GetOwnerDoc();
@@ -1111,7 +1164,7 @@ nsFrameLoader::Destroy()
       }
     }
   }
-
+  
   // Let our window know that we are gone
   nsCOMPtr<nsPIDOMWindow> win_private(do_GetInterface(mDocShell));
   if (win_private) {
@@ -1224,7 +1277,6 @@ nsFrameLoader::MaybeCreateDocShell()
   // Get the frame name and tell the docshell about it.
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
-
   nsAutoString frameName;
 
   PRInt32 namespaceID = mOwnerContent->GetNameSpaceID();
@@ -1288,6 +1340,8 @@ nsFrameLoader::MaybeCreateDocShell()
 
     mDocShell->SetChromeEventHandler(chromeEventHandler);
   }
+
+  EnsureMessageManager();
 
   // This is nasty, this code (the do_GetInterface(mDocShell) below)
   // *must* come *after* the above call to
@@ -1708,50 +1762,104 @@ nsFrameLoader::CreateStaticClone(nsIFrameLoader* aDest)
   return NS_OK;
 }
 
-#ifdef MOZ_IPC
 bool LoadScript(void* aCallbackData, const nsAString& aURL)
 {
+#ifdef MOZ_IPC
   mozilla::dom::PIFrameEmbeddingParent* tabParent =
     static_cast<nsFrameLoader*>(aCallbackData)->GetChildProcess();
   if (tabParent) {
     return tabParent->SendloadRemoteScript(nsString(aURL));
   }
-  return false;
+#endif
+  nsFrameLoader* fl = static_cast<nsFrameLoader*>(aCallbackData);
+  nsRefPtr<nsInProcessTabChildGlobal> tabChild =
+    static_cast<nsInProcessTabChildGlobal*>(fl->GetTabChildGlobalAsEventTarget());
+  if (tabChild) {
+    tabChild->LoadFrameScript(aURL);
+  }
+  return true;
 }
+
+class nsAsyncMessageToChild : public nsRunnable
+{
+public:
+  nsAsyncMessageToChild(nsFrameLoader* aFrameLoader,
+                        const nsAString& aMessage, const nsAString& aJSON)
+    : mFrameLoader(aFrameLoader), mMessage(aMessage), mJSON(aJSON) {}
+
+  NS_IMETHOD Run()
+  {
+    nsInProcessTabChildGlobal* tabChild =
+      static_cast<nsInProcessTabChildGlobal*>(mFrameLoader->mChildMessageManager.get());
+    if (tabChild && tabChild->GetInnerManager()) {
+      tabChild->GetInnerManager()->
+        ReceiveMessage(static_cast<nsPIDOMEventTarget*>(tabChild), mMessage,
+                       PR_FALSE, mJSON, nsnull, nsnull);
+    }
+    return NS_OK;
+  }
+  nsRefPtr<nsFrameLoader> mFrameLoader;
+  nsString mMessage;
+  nsString mJSON;
+};
 
 bool SendAsyncMessageToChild(void* aCallbackData,
                              const nsAString& aMessage,
                              const nsAString& aJSON)
 {
+#ifdef MOZ_IPC
   mozilla::dom::PIFrameEmbeddingParent* tabParent =
     static_cast<nsFrameLoader*>(aCallbackData)->GetChildProcess();
   if (tabParent) {
     return tabParent->SendsendAsyncMessageToChild(nsString(aMessage),
                                                   nsString(aJSON));
   }
-  return false;
-}
 #endif
+  nsRefPtr<nsIRunnable> ev =
+    new nsAsyncMessageToChild(static_cast<nsFrameLoader*>(aCallbackData),
+                              aMessage, aJSON);
+  NS_DispatchToCurrentThread(ev);
+  return true;
+}
 
 NS_IMETHODIMP
 nsFrameLoader::GetMessageManager(nsIChromeFrameMessageManager** aManager)
 {
-#ifdef MOZ_IPC
+  EnsureMessageManager();
+  NS_IF_ADDREF(*aManager = mMessageManager);
+  return NS_OK;
+}
+
+nsresult
+nsFrameLoader::EnsureMessageManager()
+{
   NS_ENSURE_STATE(mOwnerContent);
-  if (!mMessageManager) {
-    nsresult rv;
-    nsIScriptContext* sctx = mOwnerContent->GetContextForEventHandlers(&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_STATE(sctx);
-    JSContext* cx = static_cast<JSContext*>(sctx->GetNativeContext());
-    NS_ENSURE_STATE(cx);
 
-    nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
-      do_QueryInterface(mOwnerContent->GetOwnerDoc()->GetWindow());
-    NS_ENSURE_STATE(chromeWindow);
-    nsCOMPtr<nsIChromeFrameMessageManager> parentManager;
-    chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
+  nsresult rv = MaybeCreateDocShell();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (mMessageManager) {
+    if (ShouldUseRemoteProcess()) {
+      mMessageManager->SetCallbackData(mRemoteWidgetCreated ? this : nsnull);
+    }
+    return NS_OK;
+  }
 
+  nsIScriptContext* sctx = mOwnerContent->GetContextForEventHandlers(&rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_STATE(sctx);
+  JSContext* cx = static_cast<JSContext*>(sctx->GetNativeContext());
+  NS_ENSURE_STATE(cx);
+
+  nsCOMPtr<nsIDOMChromeWindow> chromeWindow =
+    do_QueryInterface(mOwnerContent->GetOwnerDoc()->GetWindow());
+  NS_ENSURE_STATE(chromeWindow);
+  nsCOMPtr<nsIChromeFrameMessageManager> parentManager;
+  chromeWindow->GetMessageManager(getter_AddRefs(parentManager));
+
+#ifdef MOZ_IPC
+  if (ShouldUseRemoteProcess()) {
     mMessageManager = new nsFrameMessageManager(PR_TRUE,
                                                 nsnull,
                                                 SendAsyncMessageToChild,
@@ -1760,12 +1868,26 @@ nsFrameLoader::GetMessageManager(nsIChromeFrameMessageManager** aManager)
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
                                                 cx);
     NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
-  } else {
-    mMessageManager->SetCallbackData(mRemoteWidgetCreated ? this : nsnull);
-  }
-  return CallQueryInterface(mMessageManager.get(), aManager);
-#else
-  *aManager = nsnull;
-  return NS_OK;
+  } else
 #endif
+  {
+
+    mMessageManager = new nsFrameMessageManager(PR_TRUE,
+                                                nsnull,
+                                                SendAsyncMessageToChild,
+                                                LoadScript,
+                                                this,
+                                                static_cast<nsFrameMessageManager*>(parentManager.get()),
+                                                cx);
+    NS_ENSURE_TRUE(mMessageManager, NS_ERROR_OUT_OF_MEMORY);
+    mChildMessageManager =
+      new nsInProcessTabChildGlobal(mDocShell, mOwnerContent, mMessageManager);
+  }
+  return NS_OK;
+}
+
+nsPIDOMEventTarget*
+nsFrameLoader::GetTabChildGlobalAsEventTarget()
+{
+  return static_cast<nsInProcessTabChildGlobal*>(mChildMessageManager.get());
 }

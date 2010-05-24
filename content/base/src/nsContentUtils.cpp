@@ -175,6 +175,9 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsHtml5Module.h"
 #include "nsPresContext.h"
 #include "nsLayoutStatics.h"
+#include "nsLayoutUtils.h"
+#include "nsFrameManager.h"
+#include "BasicLayers.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -195,6 +198,9 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "jstypedarray.h"
 #include "xpcprivate.h"
 #include "nsScriptSecurityManager.h"
+#include "nsIChannelPolicy.h"
+#include "nsChannelPolicy.h"
+#include "nsIContentSecurityPolicy.h"
 
 using namespace mozilla::dom;
 
@@ -2324,11 +2330,22 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
 
   nsIURI *documentURI = aLoadingDocument->GetDocumentURI();
 
+  // check for a Content Security Policy to pass down to the channel that
+  // will get created to load the image
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  if (aLoadingPrincipal) {
+    nsresult rv = aLoadingPrincipal->GetCsp(getter_AddRefs(csp));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (csp) {
+      channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+      channelPolicy->SetContentSecurityPolicy(csp);
+      channelPolicy->SetLoadType(nsIContentPolicy::TYPE_IMAGE);
+    }
+  }
+    
   // Make the URI immutable so people won't change it under us
   NS_TryToSetImmutable(aURI);
-
-  // We don't use aLoadingPrincipal for anything here yet... but we
-  // will.  See bug 377092.
 
   // XXXbz using "documentURI" for the initialDocumentURI is not quite
   // right, but the best we can do here...
@@ -2341,6 +2358,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                                aLoadFlags,           /* load flags */
                                nsnull,               /* cache key */
                                nsnull,               /* existing request*/
+                               channelPolicy,        /* CSP info */
                                aRequest);
 }
 
@@ -3191,14 +3209,22 @@ nsContentUtils::DispatchChromeEvent(nsIDocument *aDoc,
   NS_ASSERTION(aDoc, "GetEventAndTarget lied?");
   if (!aDoc->GetWindow())
     return NS_ERROR_INVALID_ARG;
-  if (!aDoc->GetWindow()->GetChromeEventHandler())
+
+  nsPIDOMEventTarget* piTarget = aDoc->GetWindow()->GetChromeEventHandler();
+  if (!piTarget)
     return NS_ERROR_INVALID_ARG;
 
+  nsCOMPtr<nsIFrameLoaderOwner> flo = do_QueryInterface(piTarget);
+  if (flo) {
+    nsRefPtr<nsFrameLoader> fl = flo->GetFrameLoader();
+    if (fl) {
+      nsPIDOMEventTarget* t = fl->GetTabChildGlobalAsEventTarget();
+      piTarget = t ? t : piTarget;
+    }
+  }
+
   nsEventStatus status = nsEventStatus_eIgnore;
-  rv = aDoc->GetWindow()->GetChromeEventHandler()->DispatchDOMEvent(nsnull,
-                                                                    event,
-                                                                    nsnull,
-                                                                    &status);
+  rv = piTarget->DispatchDOMEvent(nsnull, event, nsnull, &status);
   if (aDefaultAction) {
     *aDefaultAction = (status != nsEventStatus_eConsumeNoDefault);
   }
@@ -5494,7 +5520,7 @@ CloneSimpleValues(JSContext* cx,
     return SetPropertyOnValueOrObject(cx, val, rval, robj, rid);
   }
 
-  NS_ASSERTION(JSVAL_IS_OBJECT(val), "Not an object!");
+  NS_ASSERTION(!JSVAL_IS_PRIMITIVE(val), "Not an object!");
   JSObject* obj = JSVAL_TO_OBJECT(val);
 
   // Dense arrays of primitives can be cloned quickly.
@@ -5963,7 +5989,8 @@ void nsContentUtils::RemoveNewlines(nsString &aString)
   aString.StripChars(badChars);
 }
 
-void nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
+void
+nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
 {
   if (aString.FindChar(PRUnichar('\r')) != -1) {
     // Windows linebreaks: Map CRLF to LF:
@@ -5976,6 +6003,53 @@ void nsContentUtils::PlatformToDOMLineBreaks(nsString &aString)
   }
 }
 
+already_AddRefed<mozilla::layers::LayerManager>
+nsContentUtils::LayerManagerForDocument(nsIDocument *aDoc)
+{
+  nsIDocument* doc = aDoc;
+  nsIDocument* displayDoc = doc->GetDisplayDocument();
+  if (displayDoc) {
+    doc = displayDoc;
+  }
+
+  nsIPresShell* shell = doc->GetPrimaryShell();
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = do_QueryInterface(container);
+  while (!shell && docShellTreeItem) {
+    // We may be in a display:none subdocument, or we may not have a presshell
+    // created yet.
+    // Walk the docshell tree to find the nearest container that has a presshell,
+    // and find the root widget from that.
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
+    nsCOMPtr<nsIPresShell> presShell;
+    docShell->GetPresShell(getter_AddRefs(presShell));
+    if (presShell) {
+      shell = presShell;
+    } else {
+      nsCOMPtr<nsIDocShellTreeItem> parent;
+      docShellTreeItem->GetParent(getter_AddRefs(parent));
+      docShellTreeItem = parent;
+    }
+  }
+
+  if (shell) {
+    nsIFrame* rootFrame = shell->FrameManager()->GetRootFrame();
+    if (rootFrame) {
+      nsIWidget* widget =
+        nsLayoutUtils::GetDisplayRootFrame(rootFrame)->GetWindow();
+      if (widget) {
+        nsRefPtr<mozilla::layers::LayerManager> manager = widget->GetLayerManager();
+        return manager.forget();
+      }
+    }
+  }
+
+  nsRefPtr<mozilla::layers::LayerManager> manager =
+    new mozilla::layers::BasicLayerManager(nsnull);
+  return manager.forget();
+}
+
+
 NS_IMPL_ISUPPORTS1(nsIContentUtils, nsIContentUtils)
 
 PRBool
@@ -5983,3 +6057,4 @@ nsIContentUtils::IsSafeToRunScript()
 {
   return nsContentUtils::IsSafeToRunScript();
 }
+

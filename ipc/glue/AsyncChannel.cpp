@@ -385,6 +385,8 @@ AsyncChannel::MaybeHandleError(Result code, const char* channelName)
     case MsgPayloadError:
         errorMsg = "Payload error: message could not be deserialized";
         break;
+    case MsgProcessingError:
+        errorMsg = "Processing error: message was deserialized, but the handler returned false (indicating failure)";
     case MsgRouteError:
         errorMsg = "Route error: message sent to unknown actor ID";
         break;

@@ -185,7 +185,7 @@ nsHTMLImageAccessible::DoAction(PRUint8 aIndex)
     nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(piWindow));
     NS_ENSURE_TRUE(win, NS_ERROR_FAILURE);
     nsCOMPtr<nsIDOMWindow> tmp;
-    return win->Open(longDesc, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
+    return win->Open(longDesc, EmptyString(), EmptyString(),
                      getter_AddRefs(tmp));
   }
   return nsLinkableAccessible::DoAction(aIndex);

@@ -79,6 +79,8 @@
 #include "Helpers.h"
 #include "History.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #ifdef MOZ_XUL
 #include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompletePopup.h"
@@ -418,6 +420,8 @@ nsNavHistory::~nsNavHistory()
 nsresult
 nsNavHistory::Init()
 {
+  NS_TIME_FUNCTION;
+
   nsCOMPtr<nsIPrefService> prefService =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   nsCOMPtr<nsIPrefBranch> placesBranch;
@@ -939,7 +943,7 @@ mozStorageFunctionGetUnreversedHost::OnFunctionCall(
     ReverseString(src, dest);
     result->SetAsAString(dest);
   } else {
-    result->SetAsAString(NS_LITERAL_STRING(""));
+    result->SetAsAString(EmptyString());
   }
   NS_ADDREF(*_retval = result);
   return NS_OK;

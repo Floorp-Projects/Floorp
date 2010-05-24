@@ -970,9 +970,7 @@ nsCSSStyleSheetInner::CreateNamespaceMap()
 //
 
 nsCSSStyleSheet::nsCSSStyleSheet()
-  : mRefCnt(0),
-    mTitle(), 
-    mMedia(nsnull),
+  : mTitle(), 
     mParent(nsnull),
     mOwnerRule(nsnull),
     mRuleCollection(nsnull),
@@ -991,9 +989,7 @@ nsCSSStyleSheet::nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
                                  nsICSSImportRule* aOwnerRuleToUse,
                                  nsIDocument* aDocumentToUse,
                                  nsIDOMNode* aOwningNodeToUse)
-  : mRefCnt(0),
-    mTitle(aCopy.mTitle), 
-    mMedia(nsnull),
+  : mTitle(aCopy.mTitle),
     mParent(aParentToUse),
     mOwnerRule(aOwnerRuleToUse),
     mRuleCollection(nsnull), // re-created lazily
@@ -1124,26 +1120,16 @@ nsCSSStyleSheet::SetPrincipal(nsIPrincipal* aPrincipal)
   }
 }
 
-nsIPrincipal*
-nsCSSStyleSheet::Principal() const
-{
-  return mInner->mPrincipal;
-}
-
-/* virtual */ already_AddRefed<nsIURI>
+/* virtual */ nsIURI*
 nsCSSStyleSheet::GetSheetURI() const
 {
-  nsIURI* sheetURI = mInner->mSheetURI;
-  NS_IF_ADDREF(sheetURI);
-  return sheetURI;
+  return mInner->mSheetURI;
 }
 
-/* virtual */ already_AddRefed<nsIURI>
+/* virtual */ nsIURI*
 nsCSSStyleSheet::GetBaseURI() const
 {
-  nsIURI* baseURI = mInner->mBaseURI;
-  NS_IF_ADDREF(baseURI);
-  return baseURI;
+  return mInner->mBaseURI;
 }
 
 /* virtual */ void
@@ -1216,17 +1202,15 @@ nsCSSStyleSheet::SetComplete()
   }
 }
 
-/* virtual */ already_AddRefed<nsIStyleSheet>
+/* virtual */ nsIStyleSheet*
 nsCSSStyleSheet::GetParentSheet() const
 {
-  NS_IF_ADDREF(mParent);
   return mParent;
 }
 
-/* virtual */ already_AddRefed<nsIDocument>
+/* virtual */ nsIDocument*
 nsCSSStyleSheet::GetOwningDocument() const
 {
-  NS_IF_ADDREF(mDocument);
   return mDocument;
 }
 
@@ -1243,13 +1227,6 @@ nsCSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
       child->SetOwningDocument(aDocument);
     }
   }
-}
-
-already_AddRefed<nsICSSImportRule>
-nsCSSStyleSheet::GetOwnerRule() const
-{
-  NS_IF_ADDREF(mOwnerRule);
-  return mOwnerRule;
 }
 
 void
@@ -1380,12 +1357,6 @@ nsCSSStyleSheet::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
   return NS_ERROR_ILLEGAL_VALUE;
 }
 
-nsXMLNameSpaceMap*
-nsCSSStyleSheet::GetNameSpaceMap() const
-{
-  return mInner->mNameSpaceMap;
-}
-
 PRInt32
 nsCSSStyleSheet::StyleSheetCount() const
 {
@@ -1401,22 +1372,6 @@ nsCSSStyleSheet::StyleSheetCount() const
   }
 
   return count;
-}
-
-already_AddRefed<nsCSSStyleSheet>
-nsCSSStyleSheet::GetStyleSheetAt(PRInt32 aIndex) const
-{
-  // XXX Ughh...an O(n^2) method for doing iteration. Again, we hope
-  // that this isn't done too often. If it is, we need to change the
-  // underlying storage mechanism
-  nsCSSStyleSheet* child = mInner->mFirstChild;
-  while (child && (0 != aIndex)) {
-    --aIndex;
-    child = child->mNext;
-  }
-
-  NS_IF_ADDREF(child);
-  return child;
 }
 
 nsCSSStyleSheet::EnsureUniqueInnerResult
@@ -1655,7 +1610,7 @@ nsCSSStyleSheet::GetHref(nsAString& aHref)
   return NS_OK;
 }
 
-void
+/* virtual */ void
 nsCSSStyleSheet::GetTitle(nsString& aTitle) const
 {
   aTitle = mTitle;
@@ -2068,11 +2023,9 @@ nsCSSStyleSheet::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                   PRBool aWasAlternate,
                                   nsresult aStatus)
 {
-#ifdef DEBUG
-  nsCOMPtr<nsIStyleSheet> parentSheet = aSheet->GetParentSheet();
-  NS_ASSERTION(this == parentSheet, "We are being notified of a sheet load for a sheet that is not our child!\n");
-#endif
-  
+  NS_ASSERTION(this == aSheet->GetParentSheet(),
+               "We are being notified of a sheet load for a sheet that is not our child!");
+
   if (mDocument && NS_SUCCEEDED(aStatus)) {
     nsCOMPtr<nsICSSImportRule> ownerRule = aSheet->GetOwnerRule();
     

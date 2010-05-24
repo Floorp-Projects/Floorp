@@ -37,11 +37,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsBuiltinDecoderStateMachine.h"
+#include "nsOggDecoderStateMachine.h"
 #include "nsOggReader.h"
 #include "nsOggDecoder.h"
 
 nsDecoderStateMachine* nsOggDecoder::CreateStateMachine()
 {
-  return new nsBuiltinDecoderStateMachine(this, new nsOggReader(this));
+  return new nsOggDecoderStateMachine(this);
 }

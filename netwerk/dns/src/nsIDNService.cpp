@@ -48,6 +48,8 @@
 #include "nsISupportsPrimitives.h"
 #include "punycode.h"
 
+#include "mozilla/FunctionTimer.h"
+
 //-----------------------------------------------------------------------------
 // RFC 1034 - 3.1. Name space specifications and terminology
 static const PRUint32 kMaxDNSNodeLen = 63;
@@ -79,6 +81,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsIDNService,
 
 nsresult nsIDNService::Init()
 {
+  NS_TIME_FUNCTION;
+
   nsCOMPtr<nsIPrefService> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs)
     prefs->GetBranch(NS_NET_PREF_IDNWHITELIST, getter_AddRefs(mIDNWhitelistPrefBranch));
