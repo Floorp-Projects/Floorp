@@ -531,7 +531,11 @@ IDBDatabaseRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsTArray<nsString>& objectStoreNames = mDatabaseInfo->objectStoreNames;
+  nsAutoTArray<nsString, 10> objectStoreNames;
+  if (!mDatabaseInfo->GetObjectStoreNames(objectStoreNames)) {
+    NS_WARNING("Couldn't get names!");
+    return NS_ERROR_UNEXPECTED;
+  }
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
   PRUint32 count = objectStoreNames.Length();
@@ -561,23 +565,12 @@ IDBDatabaseRequest::CreateObjectStore(const nsAString& aName,
     keyPath.Truncate();
   }
 
-  nsRefPtr<IDBRequest> request = GenerateRequest();
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
-
-  nsTArray<nsString>& objectStoreNames = mDatabaseInfo->objectStoreNames;
-
-  bool exists = false;
-  PRUint32 count = objectStoreNames.Length();
-  for (PRUint32 index = 0; index < count; index++) {
-    if (objectStoreNames[index] == aName) {
-      exists = true;
-      break;
-    }
-  }
-
-  if (exists) {
+  if (mDatabaseInfo->ContainsStoreName(aName)) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
+
+  nsRefPtr<IDBRequest> request = GenerateRequest();
+  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
 
   nsRefPtr<CreateObjectStoreHelper> helper =
     new CreateObjectStoreHelper(this, request, aName, keyPath,
@@ -599,18 +592,7 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsTArray<nsString>& objectStoreNames = mDatabaseInfo->objectStoreNames;
-
-  bool exists = false;
-  PRUint32 count = objectStoreNames.Length();
-  for (PRUint32 index = 0; index < count; index++) {
-    if (objectStoreNames[index] == aName) {
-      exists = true;
-      break;
-    }
-  }
-
-  if (!exists) {
+  if (!mDatabaseInfo->ContainsStoreName(aName)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -670,9 +652,6 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
   nsresult rv = aStoreNames->GetDataType(&type);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<nsString>& objectStoreNames = mDatabaseInfo->objectStoreNames;
-  PRUint32 storeCount = objectStoreNames.Length();
-
   nsTArray<nsString> storesToOpen;
 
   switch (type) {
@@ -680,7 +659,7 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
     case nsIDataType::VTYPE_EMPTY:
     case nsIDataType::VTYPE_EMPTY_ARRAY: {
       // Empty, request all object stores
-      if (!storesToOpen.AppendElements(objectStoreNames)) {
+      if (!mDatabaseInfo->GetObjectStoreNames(storesToOpen)) {
         NS_ERROR("Out of memory?");
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -692,17 +671,13 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
       rv = aStoreNames->GetAsAString(name);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      for (PRUint32 index = 0; index < storeCount; index++) {
-        if (objectStoreNames[index] == name) {
-          if (!storesToOpen.AppendElement(name)) {
-            NS_ERROR("Out of memory?");
-            return NS_ERROR_OUT_OF_MEMORY;
-          }
-          break;
-        }
-      }
-      if (storesToOpen.IsEmpty()) {
+      if (!mDatabaseInfo->ContainsStoreName(name)) {
         return NS_ERROR_NOT_AVAILABLE;
+      }
+
+      if (!storesToOpen.AppendElement(name)) {
+        NS_ERROR("Out of memory?");
+        return NS_ERROR_OUT_OF_MEMORY;
       }
     } break;
 
@@ -714,19 +689,14 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
       PRUint32 nameCount = names.Length();
       for (PRUint32 nameIndex = 0; nameIndex < nameCount; nameIndex++) {
         nsString& name = names[nameIndex];
-        bool found = false;
-        for (PRUint32 storeIndex = 0; storeIndex < storeCount; storeIndex++) {
-          if (objectStoreNames[storeIndex] == name) {
-            if (!storesToOpen.AppendElement(name)) {
-              NS_ERROR("Out of memory?");
-              return NS_ERROR_OUT_OF_MEMORY;
-            }
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
+
+        if (!mDatabaseInfo->ContainsStoreName(name)) {
           return NS_ERROR_NOT_AVAILABLE;
+        }
+
+        if (!storesToOpen.AppendElement(name)) {
+          NS_ERROR("Out of memory?");
+          return NS_ERROR_OUT_OF_MEMORY;
         }
       }
       NS_ASSERTION(nameCount == storesToOpen.Length(), "Should have bailed!");
@@ -752,23 +722,17 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
       NS_ENSURE_SUCCESS(rv, rv);
 
       for (PRUint32 stringIndex = 0; stringIndex < stringCount; stringIndex++) {
-        nsString string;
-        rv = stringList->Item(stringIndex, string);
+        nsString name;
+        rv = stringList->Item(stringIndex, name);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        bool found = false;
-        for (PRUint32 storeIndex = 0; storeIndex < storeCount; storeIndex++) {
-          if (objectStoreNames[storeIndex] == string) {
-            if (!storesToOpen.AppendElement(string)) {
-              NS_ERROR("Out of memory?");
-              return NS_ERROR_OUT_OF_MEMORY;
-            }
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
+        if (!mDatabaseInfo->ContainsStoreName(name)) {
           return NS_ERROR_NOT_AVAILABLE;
+        }
+
+        if (!storesToOpen.AppendElement(name)) {
+          NS_ERROR("Out of memory?");
+          return NS_ERROR_OUT_OF_MEMORY;
         }
       }
     } break;
@@ -809,29 +773,18 @@ IDBDatabaseRequest::ObjectStore(const nsAString& aName,
     aMode = nsIIDBTransaction::READ_ONLY;
   }
 
-  nsTArray<nsString>& objectStoreNames = mDatabaseInfo->objectStoreNames;
-  PRUint32 count = objectStoreNames.Length();
-
-  PRUint32 foundIndex = PR_UINT32_MAX;
-  for (PRUint32 index = 0; index < count; index++) {
-    if (objectStoreNames[index] == aName) {
-      foundIndex = index;
-      break;
-    }
-  }
-
-  if (foundIndex == PR_UINT32_MAX) {
+  if (!mDatabaseInfo->ContainsStoreName(aName)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsTArray<nsString> name;
-  if (!name.AppendElement(objectStoreNames[foundIndex])) {
-    NS_ERROR("Out of memory");
+  nsTArray<nsString> storesToOpen;
+  if (!storesToOpen.AppendElement(aName)) {
+    NS_ERROR("Out of memory?");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   nsRefPtr<IDBTransactionRequest> transaction =
-    IDBTransactionRequest::Create(this, name, aMode,
+    IDBTransactionRequest::Create(this, storesToOpen, aMode,
                                   kDefaultDatabaseTimeoutSeconds);
   NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
 
