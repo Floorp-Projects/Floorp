@@ -246,11 +246,6 @@ struct JSStmtInfo {
 #define TCF_FUN_USES_EVAL       0x800000
 
 /*
- * Compiling an eval() script.
- */
-#define TCF_COMPILE_FOR_EVAL   0x1000000
-
-/*
  * Flags to check for return; vs. return expr; in a function.
  */
 #define TCF_RETURN_FLAGS        (TCF_RETURN_EXPR | TCF_RETURN_VOID)
@@ -345,8 +340,6 @@ struct JSTreeContext {              /* tree context for semantic checks */
      */
     int sharpSlotBase;
     bool ensureSharpSlots();
-
-    js::Compiler *compiler() { return (js::Compiler *)parser; }
 
     // Return true there is a generator function within |skip| lexical scopes
     // (going upward) from this context's lexical scope. Always return true if
@@ -494,11 +487,6 @@ struct JSCodeGenerator : public JSTreeContext
     JSAtomList      upvarList;      /* map of atoms to upvar indexes */
     JSUpvarArray    upvarMap;       /* indexed upvar pairs (JS_realloc'ed) */
 
-    typedef js::Vector<js::GlobalSlotArray::Entry, 16, js::ContextAllocPolicy> GlobalUseVector;
-
-    GlobalUseVector globalUses;     /* per-script global uses */
-    JSAtomList      globalMap;      /* per-script map of global name to globalUses vector */
-
     /*
      * Initialize cg to allocate bytecode space from codePool, source note
      * space from notePool, and all other arena-allocated temporaries from
@@ -519,8 +507,6 @@ struct JSCodeGenerator : public JSTreeContext
      */
     ~JSCodeGenerator();
 
-    bool addGlobalUse(JSAtom *atom, uint32 slot, uint32 *indexp);
-
     bool hasSharps() {
         bool rv = !!(flags & TCF_HAS_SHARPS);
         JS_ASSERT((sharpSlotBase >= 0) == rv);
@@ -530,8 +516,6 @@ struct JSCodeGenerator : public JSTreeContext
     uintN sharpSlots() {
         return hasSharps() ? SHARP_NSLOTS : 0;
     }
-
-    bool compilingForEval() { return !!(flags & TCF_COMPILE_FOR_EVAL); }
 };
 
 #define CG_TS(cg)               TS((cg)->parser)
