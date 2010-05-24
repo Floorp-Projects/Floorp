@@ -52,7 +52,7 @@ struct DatabaseInfo
   nsString version;
   PRUint32 id;
   nsString filePath;
-  nsTArray<nsString> objectStoreNames;
+
   nsAutoRefCnt referenceCount;
 
   DatabaseInfo()
@@ -64,6 +64,9 @@ struct DatabaseInfo
   static bool Put(DatabaseInfo* aInfo);
 
   static void Remove(PRUint32 aId);
+
+  bool GetObjectStoreNames(nsTArray<nsString>& aNames);
+  bool ContainsStoreName(const nsAString& aName);
 };
 
 struct ObjectStoreInfo
@@ -85,8 +88,6 @@ struct ObjectStoreInfo
 
   static void Remove(PRUint32 aDatabaseId,
                      const nsAString& aName);
-
-  static void RemoveAllForDatabase(PRUint32 aDatabaseId);
 };
 
 END_INDEXEDDB_NAMESPACE

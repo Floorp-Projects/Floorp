@@ -67,6 +67,19 @@ typedef nsClassHashtable<nsUint32HashKey, DatabaseInfoHash>
 DatabaseHash* gDatabaseHash = nsnull;
 bool gShutdown = false;
 
+PLDHashOperator
+EnumerateObjectStoreNames(const nsAString& aKey,
+                          ObjectStoreInfo* aData,
+                          void* aUserArg)
+{
+  nsTArray<nsString>* array = static_cast<nsTArray<nsString>*>(aUserArg);
+  if (!array->AppendElement(aData->name)) {
+    NS_ERROR("Out of memory?");
+    return PL_DHASH_STOP;
+  }
+  return PL_DHASH_NEXT;
+}
+
 }
 
 // static
@@ -133,6 +146,48 @@ DatabaseInfo::Remove(PRUint32 aId)
   }
 }
 
+bool
+DatabaseInfo::GetObjectStoreNames(nsTArray<nsString>& aNames)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(Get(id, nsnull), "Don't know anything about this one!");
+
+  if (!gDatabaseHash) {
+    return false;
+  }
+
+  DatabaseInfoHash* info;
+  if (!gDatabaseHash->Get(id, &info)) {
+    return false;
+  }
+
+  aNames.Clear();
+  if (info->objectStoreHash) {
+    info->objectStoreHash->EnumerateRead(EnumerateObjectStoreNames, &aNames);
+  }
+  return true;
+}
+
+// static
+bool
+DatabaseInfo::ContainsStoreName(const nsAString& aName)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(Get(id, nsnull), "Don't know anything about this one!");
+
+  if (!gDatabaseHash) {
+    return false;
+  }
+
+  DatabaseInfoHash* info;
+  if (!gDatabaseHash->Get(id, &info)) {
+    return false;
+  }
+
+  return info && info->objectStoreHash &&
+         info->objectStoreHash->Get(aName, nsnull);
+}
+
 // static
 bool
 ObjectStoreInfo::Get(PRUint32 aDatabaseId,
@@ -187,11 +242,7 @@ ObjectStoreInfo::Put(ObjectStoreInfo* aInfo)
     return false;
   }
 
-  bool ok = !!hash->objectStoreHash->Put(aInfo->name, aInfo);
-  if (ok && !hash->info->objectStoreNames.AppendElement(aInfo->name)) {
-    NS_ERROR("Out of memory!");
-  }
-  return ok;
+  return !!hash->objectStoreHash->Put(aInfo->name, aInfo);
 }
 
 // static
@@ -204,22 +255,10 @@ ObjectStoreInfo::Remove(PRUint32 aDatabaseId,
 
   if (gDatabaseHash) {
     DatabaseInfoHash* hash;
-    if (gDatabaseHash->Get(aDatabaseId, &hash)) {
-      if (hash->objectStoreHash) {
-        hash->objectStoreHash->Remove(aName);
-      }
-      hash->info->objectStoreNames.RemoveElement(aName);
+    if (gDatabaseHash->Get(aDatabaseId, &hash) && hash->objectStoreHash) {
+      hash->objectStoreHash->Remove(aName);
     }
   }
-}
-
-// static
-void
-ObjectStoreInfo::RemoveAllForDatabase(PRUint32 aDatabaseId)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  DatabaseInfo::Remove(aDatabaseId);
 }
 
 void
