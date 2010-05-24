@@ -48,6 +48,7 @@
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBTransactionRequest;
+class ObjectStoreInfo;
 
 class Key
 {
@@ -143,7 +144,7 @@ public:
   static already_AddRefed<IDBObjectStoreRequest>
   Create(IDBDatabaseRequest* aDatabase,
          IDBTransactionRequest* aTransaction,
-         const ObjectStoreInfo& aStoreInfo,
+         const ObjectStoreInfo* aInfo,
          PRUint16 aMode);
 
 protected:
@@ -159,13 +160,11 @@ private:
   nsRefPtr<IDBDatabaseRequest> mDatabase;
   nsRefPtr<IDBTransactionRequest> mTransaction;
 
-  nsString mName;
   PRInt64 mId;
+  nsString mName;
   nsString mKeyPath;
   PRBool mAutoIncrement;
   PRUint16 mMode;
-
-  nsTArray<nsString> mIndexes;
 };
 
 END_INDEXEDDB_NAMESPACE

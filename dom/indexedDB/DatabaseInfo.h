@@ -21,7 +21,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Shawn Wilsher <me@shawnwilsher.com>
  *   Ben Turner <bent.mozilla@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -38,31 +37,59 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_indexeddatabase_h__
-#define mozilla_dom_indexeddb_indexeddatabase_h__
+#ifndef mozilla_dom_indexeddb_databaseinfo_h__
+#define mozilla_dom_indexeddb_databaseinfo_h__
 
-#include "nsIProgrammingLanguage.h"
-
-#include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsDebug.h"
-#include "nsStringGlue.h"
-#include "nsTArray.h"
-
-#define BEGIN_INDEXEDDB_NAMESPACE \
-  namespace mozilla { namespace dom { namespace indexedDB {
-
-#define END_INDEXEDDB_NAMESPACE \
-  } /* namespace indexedDB */ } /* namepsace dom */ } /* namespace mozilla */
-
-#define USING_INDEXEDDB_NAMESPACE \
-  using namespace mozilla::dom::indexedDB;
+// Only meant to be included in IndexedDB source files, not exported.
+#include "IndexedDatabase.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-// Defined in DatabaseInfo.cpp
-extern void Shutdown();
+struct DatabaseInfo
+{
+  nsString name;
+  nsString description;
+  nsString version;
+  PRUint32 id;
+  nsString filePath;
+  nsTArray<nsString> objectStoreNames;
+  nsAutoRefCnt referenceCount;
+
+  DatabaseInfo()
+  : id(0) { }
+
+  static bool Get(PRUint32 aId,
+                  DatabaseInfo** aInfo);
+
+  static bool Put(DatabaseInfo* aInfo);
+
+  static void Remove(PRUint32 aId);
+};
+
+struct ObjectStoreInfo
+{
+  nsString name;
+  PRInt64 id;
+  nsString keyPath;
+  bool autoIncrement;
+  PRUint32 databaseId;
+
+  ObjectStoreInfo()
+  : id(0), autoIncrement(false), databaseId(0) { }
+
+  static bool Get(PRUint32 aDatabaseId,
+                  const nsAString& aName,
+                  ObjectStoreInfo** aInfo);
+
+  static bool Put(ObjectStoreInfo* aInfo);
+
+  static void Remove(PRUint32 aDatabaseId,
+                     const nsAString& aName);
+
+  static void RemoveAllForDatabase(PRUint32 aDatabaseId);
+};
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_indexeddatabase_h__
+#endif // mozilla_dom_indexeddb_databaseinfo_h__
+

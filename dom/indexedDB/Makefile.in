@@ -53,6 +53,7 @@ EXPORTS_NAMESPACES = mozilla/dom/indexedDB
 
 CPPSRCS = \
   AsyncConnectionHelper.cpp \
+  DatabaseInfo.cpp \
   IDBDatabaseRequest.cpp \
   IDBEvents.cpp \
   IDBObjectStoreRequest.cpp \

@@ -54,6 +54,7 @@
 #include "nsXPCOMCID.h"
 
 #include "AsyncConnectionHelper.h"
+#include "DatabaseInfo.h"
 #include "IDBDatabaseRequest.h"
 #include "LazyIdleThread.h"
 
@@ -75,7 +76,7 @@ public:
                      LazyIdleThread* aThread)
   : AsyncConnectionHelper(static_cast<IDBDatabaseRequest*>(nsnull), aRequest),
     mName(aName), mDescription(aDescription), mASCIIOrigin(aASCIIOrigin),
-    mThread(aThread)
+    mThread(aThread), mDatabaseId(0)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -89,11 +90,12 @@ private:
   nsRefPtr<LazyIdleThread> mThread;
 
   // Out-params.
-  nsTArray<ObjectStoreInfo> mObjectStores;
+  nsTArray<nsAutoPtr<ObjectStoreInfo> > mObjectStores;
   nsString mVersion;
 
   nsCOMPtr<mozIStorageConnection> mConnection;
   nsString mDatabaseFilePath;
+  PRUint32 mDatabaseId;
 };
 
 nsresult
@@ -536,6 +538,9 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
                                          getter_AddRefs(mConnection));
   NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
+  mDatabaseId = HashString(mDatabaseFilePath);
+  NS_ASSERTION(mDatabaseId, "HashString gave us 0?!");
+
   { // Load object store names and ids.
     nsCOMPtr<mozIStorageStatement> stmt;
     rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
@@ -546,13 +551,17 @@ OpenDatabaseHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
     PRBool hasResult;
     while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResult)) && hasResult) {
-      ObjectStoreInfo* info = mObjectStores.AppendElement();
-      NS_ENSURE_TRUE(info, nsIIDBDatabaseException::UNKNOWN_ERR);
+      nsAutoPtr<ObjectStoreInfo>* element =
+        mObjectStores.AppendElement(new ObjectStoreInfo());
+      NS_ENSURE_TRUE(element, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+      ObjectStoreInfo* const info = element->get();
 
       stmt->GetString(0, info->name);
       info->id = stmt->AsInt64(1);
       rv = stmt->GetString(2, info->keyPath);
       info->autoIncrement = !!stmt->AsInt32(3);
+      info->databaseId = mDatabaseId;
     }
   }
 
@@ -584,9 +593,72 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
   NS_ASSERTION(mConnection, "Should have a connection!");
 
+  DatabaseInfo* dbInfo;
+  if (DatabaseInfo::Get(mDatabaseId, &dbInfo)) {
+    ++dbInfo->referenceCount;
+#ifdef DEBUG
+    {
+      NS_ASSERTION(dbInfo->name == mName &&
+                   dbInfo->description == mDescription &&
+                   dbInfo->version == mVersion &&
+                   dbInfo->id == mDatabaseId &&
+                   dbInfo->filePath == mDatabaseFilePath,
+                   "Metadata mismatch!");
+
+      PRUint32 objectStoreCount = mObjectStores.Length();
+      for (PRUint32 index = 0; index < objectStoreCount; index++) {
+        nsAutoPtr<ObjectStoreInfo>& info = mObjectStores[index];
+        NS_ASSERTION(info->databaseId == mDatabaseId, "Huh?!");
+
+        ObjectStoreInfo* otherInfo;
+        NS_ASSERTION(ObjectStoreInfo::Get(mDatabaseId, info->name, &otherInfo),
+                     "ObjectStore not known!");
+
+        NS_ASSERTION(info->name == otherInfo->name &&
+                     info->id == otherInfo->id &&
+                     info->keyPath == otherInfo->keyPath &&
+                     info->autoIncrement == otherInfo->autoIncrement &&
+                     info->databaseId == otherInfo->databaseId,
+                     "Metadata mismatch!");
+        NS_ASSERTION(dbInfo->objectStoreNames.Contains(info->name),
+                     "Object store names out of date!");
+      }
+    }
+#endif
+  }
+  else {
+    nsAutoPtr<DatabaseInfo> newInfo(new DatabaseInfo());
+
+    newInfo->name = mName;
+    newInfo->description = mDescription;
+    newInfo->version = mVersion;
+    newInfo->id = mDatabaseId;
+    newInfo->filePath = mDatabaseFilePath;
+    newInfo->referenceCount = 1;
+
+    if (!DatabaseInfo::Put(newInfo)) {
+      NS_ERROR("Failed to add to hash!");
+      return nsIIDBDatabaseException::UNKNOWN_ERR;
+    }
+
+    dbInfo = newInfo.forget();
+
+    PRUint32 objectStoreCount = mObjectStores.Length();
+    for (PRUint32 index = 0; index < objectStoreCount; index++) {
+      nsAutoPtr<ObjectStoreInfo>& info = mObjectStores[index];
+      NS_ASSERTION(info->databaseId == mDatabaseId, "Huh?!");
+  
+      if (!ObjectStoreInfo::Put(info)) {
+        NS_ERROR("Failed to add to hash!");
+        return nsIIDBDatabaseException::UNKNOWN_ERR;
+      }
+  
+      info.forget();
+    }
+  }
+
   nsRefPtr<IDBDatabaseRequest> db =
-    IDBDatabaseRequest::Create(mName, mDescription, mObjectStores, mVersion,
-                               mThread, mDatabaseFilePath, mConnection);
+    IDBDatabaseRequest::Create(dbInfo, mThread, mConnection);
   NS_ASSERTION(db, "This can't fail!");
 
   NS_ASSERTION(!mConnection, "Should have swapped out!");
