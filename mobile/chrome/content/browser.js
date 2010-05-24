@@ -1628,17 +1628,15 @@ nsBrowserAccess.prototype = {
     throw Components.results.NS_NOINTERFACE;
   },
 
-  openURI: function(aURI, aOpener, aWhere, aContext) {
-    var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
-    if (isExternal && aURI && aURI.schemeIs("chrome")) {
-      //dump("use -chrome command-line option to load external chrome urls\n");
+  _getBrowser: function _getBrowser(aURI, aOpener, aWhere, aContext) {
+    let isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
+    if (isExternal && aURI && aURI.schemeIs("chrome"))
       return null;
-    }
 
-    var loadflags = isExternal ?
-                       Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
-                       Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    var location;
+    let loadflags = isExternal ?
+                      Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
+                      Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+    let location;
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_DEFAULTWINDOW) {
       switch (aContext) {
         case Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL :
@@ -1649,33 +1647,42 @@ nsBrowserAccess.prototype = {
       }
     }
 
-    var newWindow;
+    let browser;
     if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWWINDOW) {
-      var url = aURI ? aURI.spec : "about:blank";
-      newWindow = openDialog("chrome://browser/content/browser.xul", "_blank",
-                             "all,dialog=no", url, null, null, null);
+      let url = aURI ? aURI.spec : "about:blank";
+      let newWindow = openDialog("chrome://browser/content/browser.xul", "_blank",
+                                 "all,dialog=no", url, null, null, null);
+      browser = newWindow.Browser.selectedBrowser;
     } else {
       if (aWhere == Ci.nsIBrowserDOMWindow.OPEN_NEWTAB)
-        newWindow = Browser.addTab("about:blank", true).browser.contentWindow;
-      else
-        newWindow = aOpener ? aOpener.top : browser.contentWindow;
+        browser = Browser.addTab("about:blank", true).browser;
+      else // OPEN_CURRENTWINDOW and illegal values
+        browser = Browser.selectedBrowser;
     }
-
+    
     try {
-      var referrer;
+      let referrer;
       if (aURI) {
         if (aOpener) {
           location = aOpener.location;
           referrer = gIOService.newURI(location, null, null);
         }
-        newWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                 .getInterface(Ci.nsIWebNavigation)
-                 .loadURI(aURI.spec, loadflags, referrer, null, null);
+        browser.loadURI(aURI.spec, loadflags, referrer, null, null);
       }
-      newWindow.focus();
+      browser.focus();
     } catch(e) { }
 
-    return newWindow;
+    return browser;
+  },
+
+  openURI: function(aURI, aOpener, aWhere, aContext) {
+    let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
+    return browser ? browser.contentWindow : null;
+  },
+
+  openURIInFrame: function(aURI, aOpener, aWhere, aContext) {
+    let browser = this._getBrowser(aURI, aOpener, aWhere, aContext);
+    return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
   },
 
   isTabContentWindow: function(aWindow) {
