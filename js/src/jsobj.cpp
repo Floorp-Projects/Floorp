@@ -2302,8 +2302,13 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &d
             changed |= JSPROP_ENUMERATE;
 
         attrs = (sprop->attributes() & ~changed) | (desc.attrs & changed);
-        getter = sprop->getter();
-        setter = sprop->setter();
+        if (sprop->isMethod()) {
+            JS_ASSERT(!(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
+            getter = setter = JS_PropertyStub;
+        } else {
+            getter = sprop->getter();
+            setter = sprop->setter();
+        }
     } else if (desc.isDataDescriptor()) {
         uintN unchanged = 0;
         if (!desc.hasConfigurable)
@@ -2343,10 +2348,11 @@ DefinePropertyOnObject(JSContext *cx, JSObject *obj, const PropertyDescriptor &d
             changed |= JSPROP_SETTER | JSPROP_SHARED;
 
         attrs = (desc.attrs & changed) | (sprop->attributes() & ~changed);
+        JS_ASSERT_IF(sprop->isMethod(), !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
         if (desc.hasGet) {
             getter = desc.getter();
         } else {
-            getter = (sprop->hasDefaultGetter() && !sprop->hasGetterValue())
+            getter = (sprop->isMethod() || (sprop->hasDefaultGetter() && !sprop->hasGetterValue()))
                      ? JS_PropertyStub
                      : sprop->getter();
         }
