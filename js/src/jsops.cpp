@@ -2077,7 +2077,8 @@ BEGIN_CASE(JSOP_GETELEM)
                 goto error;
             regs.sp--;
             regs.sp[-1].setString(str);
-            DO_NEXT_OP(JSOP_GETELEM_LENGTH);
+            len = JSOP_GETELEM_LENGTH;
+            DO_NEXT_OP(len);
         }
     }
 
