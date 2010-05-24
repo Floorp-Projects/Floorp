@@ -610,14 +610,3 @@ OPDEF(JSOP_SHARPINIT,     239,"sharpinit",     NULL,  3,  0,  0,  0,  JOF_UINT16
  * If the argument is an object, perform toString conversion (E-262-3 section 9.8).
  */
 OPDEF(JSOP_OBJTOSTR,      240,"objtostr",      NULL,  1,  1,  1,  0,  JOF_BYTE)
-
-/* Static binding for globals. */
-OPDEF(JSOP_GETGLOBAL,     241,"getglobal",     NULL,  3,  0,  1, 19,  JOF_GLOBAL|JOF_NAME)
-OPDEF(JSOP_SETGLOBAL,     242,"setglobal",     NULL,  3,  1,  1,  3,  JOF_GLOBAL|JOF_NAME|JOF_SET|JOF_DETECTING)
-OPDEF(JSOP_INCGLOBAL,     243,"incglobal",     NULL,  3,  0,  1, 15,  JOF_GLOBAL|JOF_NAME|JOF_INC|JOF_TMPSLOT2)
-OPDEF(JSOP_DECGLOBAL,     244,"decglobal",     NULL,  3,  0,  1, 15,  JOF_GLOBAL|JOF_NAME|JOF_DEC|JOF_TMPSLOT2)
-OPDEF(JSOP_GLOBALINC,     245,"globalinc",     NULL,  3,  0,  1, 15,  JOF_GLOBAL|JOF_NAME|JOF_INC|JOF_POST|JOF_TMPSLOT2)
-OPDEF(JSOP_GLOBALDEC,     246,"globaldec",     NULL,  3,  0,  1, 15,  JOF_GLOBAL|JOF_NAME|JOF_DEC|JOF_POST|JOF_TMPSLOT2)
-OPDEF(JSOP_CALLGLOBAL,    247,"callglobal",    NULL,  3,  0,  2, 19,  JOF_GLOBAL|JOF_NAME|JOF_CALLOP)
-OPDEF(JSOP_FORGLOBAL,     248,"forglobal",     NULL,  3,  1,  1, 19,  JOF_GLOBAL|JOF_NAME|JOF_FOR|JOF_TMPSLOT)
-

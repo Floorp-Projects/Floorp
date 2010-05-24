@@ -1292,23 +1292,6 @@ do_incop:
 {
     jsval incr, incr2;
 
-BEGIN_CASE(JSOP_INCGLOBAL)
-    incr =  2; incr2 =  2; goto do_bound_global_incop;
-BEGIN_CASE(JSOP_DECGLOBAL)
-    incr = -2; incr2 = -2; goto do_bound_global_incop;
-BEGIN_CASE(JSOP_GLOBALINC)
-    incr =  2; incr2 =  0; goto do_bound_global_incop;
-BEGIN_CASE(JSOP_GLOBALDEC)
-    incr = -2; incr2 =  0; goto do_bound_global_incop;
-
-  do_bound_global_incop:
-    slot = GET_SLOTNO(regs.pc);
-    slot = script->getGlobalSlot(slot);
-    obj = fp->scopeChain->getGlobal();
-    vp = &obj->getSlotRef(slot);
-    goto do_int_fast_incop;
-END_CASE(JSOP_INCGLOBAL)
-
     /* Position cases so the most frequent i++ does not need a jump. */
 BEGIN_CASE(JSOP_DECARG)
     incr = -2; incr2 = -2; goto do_arg_incop;
@@ -2637,58 +2620,6 @@ BEGIN_CASE(JSOP_CALLDSLOT)
     if (op == JSOP_CALLDSLOT)
         PUSH_OPND(JSVAL_NULL);
 END_CASE(JSOP_GETDSLOT)
-
-BEGIN_CASE(JSOP_GETGLOBAL)
-BEGIN_CASE(JSOP_CALLGLOBAL)
-    slot = GET_SLOTNO(regs.pc);
-    slot = script->getGlobalSlot(slot);
-    obj = fp->scopeChain->getGlobal();
-    JS_ASSERT(slot < obj->scope()->freeslot);
-    PUSH_OPND(obj->getSlot(slot));
-    if (op == JSOP_CALLGLOBAL)
-        PUSH_OPND(JSVAL_NULL);
-END_CASE(JSOP_GETGLOBAL)
-
-BEGIN_CASE(JSOP_FORGLOBAL)
-    JS_ASSERT(regs.sp - 1 >= StackBase(fp));
-    JS_ASSERT(!JSVAL_IS_PRIMITIVE(regs.sp[-1]));
-    if (!IteratorNext(cx, JSVAL_TO_OBJECT(regs.sp[-1]), &rval))
-        goto error;
-    PUSH_OPND(rval);
-    slot = GET_SLOTNO(regs.pc);
-    slot = script->getGlobalSlot(slot);
-    obj = fp->scopeChain->getGlobal();
-    JS_ASSERT(slot < obj->scope()->freeslot);
-    JS_LOCK_OBJ(cx, obj);
-    {
-        JSScope *scope = obj->scope();
-        if (!scope->methodWriteBarrier(cx, slot, rval)) {
-            JS_UNLOCK_SCOPE(cx, scope);
-            goto error;
-        }
-        obj->lockedSetSlot(slot, rval);
-        JS_UNLOCK_SCOPE(cx, scope);
-    }
-    POP_OPND();
-END_CASE(JSOP_FORGLOBAL)
-
-BEGIN_CASE(JSOP_SETGLOBAL)
-    slot = GET_SLOTNO(regs.pc);
-    slot = script->getGlobalSlot(slot);
-    obj = fp->scopeChain->getGlobal();
-    rval = FETCH_OPND(-1);
-    JS_ASSERT(slot < obj->scope()->freeslot);
-    {
-        JS_LOCK_OBJ(cx, obj);
-        JSScope *scope = obj->scope();
-        if (!scope->methodWriteBarrier(cx, slot, rval)) {
-            JS_UNLOCK_SCOPE(cx, scope);
-            goto error;
-        }
-        obj->lockedSetSlot(slot, rval);
-        JS_UNLOCK_SCOPE(cx, scope);
-    }
-END_SET_CASE(JSOP_SETGLOBAL)
 
 BEGIN_CASE(JSOP_GETGVAR)
 BEGIN_CASE(JSOP_CALLGVAR)
