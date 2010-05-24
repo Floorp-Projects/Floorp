@@ -14014,7 +14014,7 @@ TraceRecorder::record_JSOP_IN()
     if (!localtm.recorder) {
         if (prop)
             obj2->dropProperty(localcx, prop);
-        return ARECORD_STOP;
+        return ARECORD_ABORTED;
     }
 
     if (!ok)
