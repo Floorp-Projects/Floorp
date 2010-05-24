@@ -873,7 +873,7 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     if (!obj)
         return JS_FALSE;
     if (obj->isProxy()) {
-        if (!JS_GetProxyObjectClass(cx, obj, &clazz))
+        if (!GetProxyObjectClass(cx, obj, &clazz))
             return false;
     } else {
         obj = js_GetWrappedObject(cx, obj);
@@ -3199,6 +3199,14 @@ js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index)
                                    JSScopeProperty::HAS_SHORTID, index, NULL);
 }
 
+static size_t
+GetObjectSize(JSObject *obj)
+{
+    return (obj->isFunction() && !obj->getPrivate())
+           ? sizeof(JSFunction)
+           : sizeof(JSObject);
+}
+
 /*
  * Use this method with extreme caution. It trades the guts of two objects and updates
  * scope ownership. This operation is not thread-safe, just as fast array to slow array
@@ -3212,11 +3220,17 @@ JSObject::swap(JSObject *other)
     bool thisOwns = this->isNative() && scope()->object == this;
     bool otherOwns = other->isNative() && other->scope()->object == other;
 
+    size_t size = GetObjectSize(this);
+    JS_ASSERT(size == GetObjectSize(other));
+
     /* Trade the guts of the objects. */
-    JSObject tmp;
-    memcpy(&tmp, this, sizeof(JSObject));
-    memcpy(this, other, sizeof(JSObject));
-    memcpy(other, &tmp, sizeof(JSObject));
+    union {
+        JSFunction fun;
+        JSObject obj;
+    } tmp;
+    memcpy(&tmp, this, size);
+    memcpy(this, other, size);
+    memcpy(other, &tmp, size);
 
     /* Fixup scope ownerships. */
     if (otherOwns)
