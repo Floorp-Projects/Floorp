@@ -2,6 +2,8 @@
 
 (function(){
 
+window.Keys = {meta: false};
+
 // ##########
 Navbar = {
   // ----------
@@ -189,7 +191,13 @@ window.Page = {
   
   setupKeyHandlers: function(){
     var self = this;
+    $(window).keyup(function(e){
+      if( e.metaKey == false ) window.Keys.meta = false;
+    });
+    
     $(window).keydown(function(e){
+      if( e.metaKey == true ) window.Keys.meta = true;
+      
       if( !self.getActiveTab() ) return;
       
       var centers = [[item.bounds.center(), item] for each(item in TabItems.getItems())];
@@ -344,7 +352,7 @@ window.Page = {
     const minSize = 60;
     
     var startPos = {x:e.clientX, y:e.clientY}
-    var phantom = $("<div class='group'>").css({
+    var phantom = $("<div class='group phantom'>").css({
       position: "absolute",
       top: startPos.y,
       left: startPos.x,
@@ -376,7 +384,7 @@ window.Page = {
     }
     
     function finalize(e){
-      $("#bg").unbind("mousemove");
+      $("#bg, .phantom").unbind("mousemove");
       if( phantom.css("opacity") != 1 ) collapse();
       else{
         var bounds = new Rect(startPos.x, startPos.y, phantom.width(), phantom.height())
@@ -396,7 +404,7 @@ window.Page = {
       }
     }
     
-    $("#bg").mousemove(updateSize)
+    $("#bg, .phantom").mousemove(updateSize)
     $(window).one('mouseup', finalize);
     e.preventDefault();  
     return false;
