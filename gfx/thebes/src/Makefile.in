@@ -32,8 +32,16 @@ CPPSRCS	= \
 	gfxTextRunCache.cpp \
 	gfxTextRunWordCache.cpp \
 	gfxUserFontSet.cpp \
+	gfxUtils.cpp \
 	GLContext.cpp \
+	GLContextProviderOSMesa.cpp \
 	$(NULL)
+
+ifdef MOZ_IPC
+CPPSRCS += \
+	gfxSharedImageSurface.cpp \
+	$(NULL)
+endif
 
 SHARED_LIBRARY_LIBS += \
 	../../layers/$(LIB_PREFIX)layers.$(LIB_SUFFIX) \
@@ -159,7 +167,7 @@ CPPSRCS += gfxDirectFBSurface.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
-CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp gfxSharedImageSurface.cpp
+CPPSRCS += gfxQtPlatform.cpp gfxQPainterSurface.cpp
 CPPSRCS += gfxXlibSurface.cpp gfxQtNativeRenderer.cpp
 ifdef MOZ_PANGO
 CPPSRCS += gfxPangoFonts.cpp

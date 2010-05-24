@@ -1,0 +1,5 @@
+struct X { X x; };
+
+protocol undefSelfRecStruct {
+child: __delete__(X x);
+};

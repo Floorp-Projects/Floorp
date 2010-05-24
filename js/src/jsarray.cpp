@@ -2615,7 +2615,7 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
                     }
 
                     /*
-                     * Per ECMA 262, 15.4.4.4, step 9, ignore non-existent
+                     * Per ECMA 262, 15.4.4.4, step 9, ignore nonexistent
                      * properties.
                      */
                     if (!hole &&

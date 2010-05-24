@@ -209,6 +209,8 @@
 #include "nsGfxCIID.h"
 #endif
 
+#include "mozilla/FunctionTimer.h"
+
 /**************************************************************
  **************************************************************
  **
@@ -1092,7 +1094,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
        mWindowType == eWindowType_popup))
   {
     firstShow = false;
-    mozilla::FunctionTimer::LogMessage("First toplevel/dialog/popup showing");
+    mozilla::FunctionTimer::LogMessage("@ First toplevel/dialog/popup showing");
   }
 #endif
 
@@ -2064,6 +2066,8 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
   nsIntRegion opaqueRegion;
   opaqueRegion.Sub(clientBounds, mPossiblyTransparentRegion);
   opaqueRegion.Or(opaqueRegion, childWindowRegion);
+  // Sometimes child windows overlap our bounds
+  opaqueRegion.And(opaqueRegion, clientBounds);
   MARGINS margins = { 0, 0, 0, 0 };
   DWORD_PTR dwStyle = ::GetWindowLongPtrW(hWnd, GWL_STYLE);
   // If there is no opaque region or hidechrome=true then full glass
@@ -2071,17 +2075,7 @@ void nsWindow::UpdatePossiblyTransparentRegion(const nsIntRegion &aDirtyRegion,
     margins.cxLeftWidth = -1;
   } else {
     // Find the largest rectangle and use that to calculate the inset
-    nsIntRegionRectIterator rgnIter(opaqueRegion);
-    const nsIntRect *currentRect = rgnIter.Next();
-    nsIntRect largest = *currentRect;
-    nscoord largestArea = largest.width * largest.height;
-    while (currentRect = rgnIter.Next()) {
-      nscoord area = currentRect->width * currentRect->height;
-      if (area > largestArea) {
-        largest = *currentRect;
-        largestArea = area;
-      }
-    }
+    nsIntRect largest = opaqueRegion.GetLargestRectangle();
     margins.cxLeftWidth = largest.x;
     margins.cxRightWidth = clientBounds.width - largest.XMost();
     margins.cyTopHeight = largest.y;
@@ -3845,6 +3839,8 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
     // Windowed plugins that fire context menu selection events to parent
     // windows.
     case WM_CONTEXTMENU:
+    // IME events fired as a result of synchronous focus changes
+    case WM_IME_SETCONTEXT:
       handled = PR_TRUE;
     break;
   }
@@ -3880,6 +3876,10 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 // The WndProc procedure for all nsWindows in this toolkit
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  NS_TIME_FUNCTION_MIN_FMT(5.0, "%s (line %d) (hWnd: %p, msg: %p, wParam: %p, lParam: %p",
+                           MOZ_FUNCTION_NAME, __LINE__, hWnd, msg,
+                           wParam, lParam);
+
   // Get the window which caused the event and ask it to process the message
   nsWindow *someWindow = GetNSWindowPtr(hWnd);
 

@@ -904,7 +904,8 @@
               this._tabAttrModified(this.mCurrentTab);
 
               // Change focus to the new browser unless the findbar is focused.
-              if (gFindBar.hidden ||
+              if (!gFindBarInitialized ||
+                  gFindBar.hidden ||
                   gFindBar.getElement("findbar-textbox").getAttribute("focused") != "true") {
 
                 var fm = Components.classes["@mozilla.org/focus-manager;1"].

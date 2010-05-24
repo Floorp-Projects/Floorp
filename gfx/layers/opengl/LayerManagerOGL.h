@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -216,7 +216,8 @@ public:
 
   void EndConstruction();
 
-  void EndTransaction();
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData);
 
   void SetRoot(Layer* aLayer);
   
@@ -227,6 +228,8 @@ public:
   virtual already_AddRefed<ImageLayer> CreateImageLayer();
 
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
+
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
 
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
 
@@ -291,7 +294,8 @@ private:
   /**
    * Render the current layer tree to the active target.
    */
-  void Render();
+  void Render(DrawThebesLayerCallback aCallback,
+              void* aCallbackData);
   /**
    * Setup the pipeline.
    */
@@ -314,9 +318,17 @@ private:
 class LayerOGL
 {
 public:
+  typedef LayerManager::DrawThebesLayerCallback DrawThebesLayerCallback;
+
   LayerOGL(LayerManagerOGL *aManager);
 
-  enum LayerType { TYPE_THEBES, TYPE_CONTAINER, TYPE_IMAGE, TYPE_COLOR };
+  enum LayerType {
+    TYPE_THEBES,
+    TYPE_CONTAINER,
+    TYPE_IMAGE,
+    TYPE_COLOR,
+    TYPE_CANVAS
+  };
   
   virtual LayerType GetType() = 0;
 
@@ -328,7 +340,8 @@ public:
 
   virtual Layer* GetLayer() = 0;
 
-  virtual void RenderLayer(int aPreviousFrameBuffer) = 0;
+  virtual void RenderLayer(int aPreviousFrameBuffer, DrawThebesLayerCallback aCallback,
+                           void* aCallbackData) = 0;
 
   typedef mozilla::gl::GLContext GLContext;
 

@@ -169,6 +169,15 @@ _TEST_FILES = 	test_bug589.html \
 		test_bug557620.html \
 		test_bug565538.html \
 		test_bug456229.html \
+		test_bug546995-1.html \
+		test_bug546995-2.html \
+		test_bug546995-3.html \
+		test_bug546995-4.html \
+		test_bug546995-5.html \
+		file_bug546995.html \
+		test_bug377624.html \
+		test_bug562932.html \
+		test_bug551846.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

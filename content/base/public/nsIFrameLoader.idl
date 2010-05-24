@@ -41,8 +41,9 @@
 
 interface nsIDocShell;
 interface nsIURI;
+interface nsIChromeFrameMessageManager;
 
-[scriptable, uuid(d675c531-6bdc-417c-b176-635060105f07)]
+[scriptable, uuid(3b256c12-20e1-4fd3-8edb-b9c793919f15)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -74,6 +75,9 @@ interface nsIFrameLoader : nsISupports
    * or may not be allowed on the loader's docshell.
    */
   readonly attribute boolean depthTooGreat;
+
+  // Note, when frameloaders are swapped, also messageManagers are swapped.
+  readonly attribute nsIChromeFrameMessageManager messageManager;
 };
 
 native alreadyAddRefed_nsFrameLoader(already_AddRefed<nsFrameLoader>);

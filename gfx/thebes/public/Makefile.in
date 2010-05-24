@@ -35,9 +35,11 @@ EXPORTS		= 	gfx3DMatrix.h \
 			GLContextProvider.h \
 			$(NULL)
 
+ifdef MOZ_IPC
 EXPORTS		+= \
 			gfxSharedImageSurface.h \
 			$(NULL)
+endif
 
 EXPORTS += gfxFontTest.h
 
@@ -45,6 +47,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 EXPORTS	+=	gfxWindowsPlatform.h \
 		gfxWindowsSurface.h \
 		gfxWindowsNativeDrawing.h \
+		WGLLibrary.h \
 		$(NULL)
 EXPORTS +=	gfxPDFSurface.h
 

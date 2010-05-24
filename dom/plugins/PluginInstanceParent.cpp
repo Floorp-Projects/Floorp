@@ -54,6 +54,7 @@
 extern const PRUnichar* kOOPPPluginFocusEventId;
 UINT gOOPPPluginFocusEvent =
     RegisterWindowMessage(kOOPPPluginFocusEventId);
+extern const PRUnichar* kFlashFullscreenClass;
 UINT gOOPPSpinNativeLoopEvent =
     RegisterWindowMessage(L"SyncChannel Spin Inner Loop Message");
 UINT gOOPPStopNativeLoopEvent =
@@ -114,6 +115,9 @@ PluginInstanceParent::~PluginInstanceParent()
         "Subclass was not reset correctly before the dtor was reached!");
 #endif
 #if defined(OS_MACOSX)
+    if (mShWidth != 0 && mShHeight != 0) {
+        DeallocShmem(mShSurface);
+    }
     if (mShColorSpace)
         ::CGColorSpaceRelease(mShColorSpace);
     if (mIOSurface)
@@ -507,10 +511,12 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
             }
             mIOSurface = nsIOSurface::CreateIOSurface(window.width, window.height);
         } else if (mShWidth * mShHeight != window.width * window.height) {
-            // Uncomment me when DeallocShmem lands.
-            //if (mShWidth != 0 && mShHeight != 0) {
-            //    DeallocShmem(&mShSurface);
-            //}
+            if (mShWidth != 0 && mShHeight != 0) {
+                DeallocShmem(mShSurface);
+                mShWidth = 0;
+                mShHeight = 0;
+            }
+
             if (window.width != 0 && window.height != 0) {
                 if (!AllocShmem(window.width * window.height*4, 
                                 SharedMemory::TYPE_BASIC, &mShSurface)) {
@@ -660,7 +666,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
               if (hwnd && hwnd != mPluginHWND &&
                   GetClassNameW(hwnd, szClass,
                                 sizeof(szClass)/sizeof(PRUnichar)) &&
-                  !wcscmp(szClass, L"ShockwaveFlashFullScreen")) {
+                  !wcscmp(szClass, kFlashFullscreenClass)) {
                   return 0;
               }
             }
@@ -1070,13 +1076,13 @@ PluginInstanceParent::AnswerNPN_GetAuthenticationInfo(const nsCString& protocol,
 
 bool
 PluginInstanceParent::AnswerNPN_ConvertPoint(const double& sourceX,
+                                             const bool&   ignoreDestX,
                                              const double& sourceY,
+                                             const bool&   ignoreDestY,
                                              const NPCoordinateSpace& sourceSpace,
                                              const NPCoordinateSpace& destSpace,
                                              double *destX,
-                                             bool *ignoreDestX,
                                              double *destY,
-                                             bool *ignoreDestY,
                                              bool *result)
 {
     *result = mNPNIface->convertpoint(mNPP, sourceX, sourceY, sourceSpace,

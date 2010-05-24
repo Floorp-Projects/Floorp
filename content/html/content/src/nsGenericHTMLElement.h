@@ -793,6 +793,8 @@ public:
 
           PRBool IsSingleLineTextControl(PRBool aExcludePassword) const;
 
+          PRBool IsLabelableControl() const;
+
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
@@ -810,6 +812,14 @@ protected:
 
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                 const nsAString* aValue, PRBool aNotify);
+
+  /**
+   * Returns if the element should react on autofocus attribute.
+   */
+  virtual PRBool AcceptAutofocus() const
+  {
+    return PR_FALSE;
+  }
 
   /**
    * Returns true if the control can be disabled
@@ -1094,6 +1104,31 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
   _class::Set##_method(const nsAString& aValue)                           \
   {                                                                       \
     return SetAttrHelper(nsGkAtoms::_atom, aValue);                       \
+  }
+
+/**
+ * A macro to implement the getter and setter for a given content
+ * property that needs to set a positive integer. The method uses
+ * the generic GetAttr and SetAttr methods. This macro is much like
+ * the NS_IMPL_NON_NEGATIVE_INT_ATTR macro except the exception is
+ * thrown also when the value is equal to 0.
+ */
+#define NS_IMPL_POSITIVE_INT_ATTR(_class, _method, _atom)                 \
+  NS_IMPL_POSITIVE_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, 1)
+
+#define NS_IMPL_POSITIVE_INT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
+  NS_IMETHODIMP                                                           \
+  _class::Get##_method(PRInt32* aValue)                                   \
+  {                                                                       \
+    return GetIntAttr(nsGkAtoms::_atom, _default, aValue);                \
+  }                                                                       \
+  NS_IMETHODIMP                                                           \
+  _class::Set##_method(PRInt32 aValue)                                    \
+  {                                                                       \
+    if (aValue <= 0) {                                                    \
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;                                 \
+    }                                                                     \
+    return SetIntAttr(nsGkAtoms::_atom, aValue);                          \
   }
 
 /**

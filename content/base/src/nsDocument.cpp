@@ -2014,7 +2014,7 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   // is probably the right thing to do.
 
   // Now reset our inline style and attribute sheets.
-  nsresult rv;
+  nsresult rv = NS_OK;
   nsStyleSet::sheetType attrSheetType = GetAttrSheetType();
   if (mAttrStyleSheet) {
     // Remove this sheet from all style sets
@@ -2022,11 +2022,11 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
     if (shell) {
       shell->StyleSet()->RemoveStyleSheet(attrSheetType, mAttrStyleSheet);
     }
-    rv = mAttrStyleSheet->Reset(aURI);
+    mAttrStyleSheet->Reset(aURI);
   } else {
     rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aURI, this);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Don't use AddStyleSheet, since it'll put the sheet into style
   // sets in the document level, which is not desirable here.
@@ -2039,13 +2039,13 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
       shell->StyleSet()->
         RemoveStyleSheet(nsStyleSet::eStyleAttrSheet, mStyleAttrStyleSheet);
     }
-    rv = mStyleAttrStyleSheet->Reset(aURI);
+    mStyleAttrStyleSheet->Reset(aURI);
   } else {
     mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
     NS_ENSURE_TRUE(mStyleAttrStyleSheet, NS_ERROR_OUT_OF_MEMORY);
     rv = mStyleAttrStyleSheet->Init(aURI, this);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // The loop over style sets below will handle putting this sheet
   // into style sets as needed.
@@ -3524,9 +3524,8 @@ nsDocument::EnsureCatalogStyleSheet(const char *aStyleSheetURI)
       nsIStyleSheet* sheet = GetCatalogStyleSheetAt(i);
       NS_ASSERTION(sheet, "unexpected null stylesheet in the document");
       if (sheet) {
-        nsCOMPtr<nsIURI> uri = sheet->GetSheetURI();
         nsCAutoString uriStr;
-        uri->GetSpec(uriStr);
+        sheet->GetSheetURI()->GetSpec(uriStr);
         if (uriStr.Equals(aStyleSheetURI))
           return;
       }
@@ -3893,26 +3892,47 @@ nsDocument::GetElementByIdInternal(nsIAtom* aID)
   return entry;
 }
 
-NS_IMETHODIMP
-nsDocument::GetElementById(const nsAString& aElementId,
-                           nsIDOMElement** aReturn)
+Element*
+nsDocument::GetElementById(const nsAString& aElementId, nsresult *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aReturn);
-  *aReturn = nsnull;
-
   nsCOMPtr<nsIAtom> idAtom(do_GetAtom(aElementId));
-  NS_ENSURE_TRUE(idAtom, NS_ERROR_OUT_OF_MEMORY);
-  if (!CheckGetElementByIdArg(idAtom))
-    return NS_OK;
+  if (!idAtom) {
+    *aResult = NS_ERROR_OUT_OF_MEMORY;
+
+    return nsnull;
+  }
+
+  if (!CheckGetElementByIdArg(idAtom)) {
+    *aResult = NS_OK;
+
+    return nsnull;
+  }
 
   nsIdentifierMapEntry *entry = GetElementByIdInternal(idAtom);
-  NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+  if (!entry) {
+    *aResult = NS_ERROR_OUT_OF_MEMORY;
 
-  Element *e = entry->GetIdElement();
-  if (!e)
-    return NS_OK;
+    return nsnull;
+  }
 
-  return CallQueryInterface(e, aReturn);
+  *aResult = NS_OK;
+
+  return entry->GetIdElement();
+}
+
+NS_IMETHODIMP
+nsDocument::GetElementById(const nsAString& aId, nsIDOMElement** aReturn)
+{
+  nsresult rv;
+  Element *content = GetElementById(aId, &rv);
+  if (content) {
+    rv = CallQueryInterface(content, aReturn);
+  }
+  else {
+    *aReturn = nsnull;
+  }
+
+  return rv;
 }
 
 Element*
@@ -4364,25 +4384,38 @@ nsDocument::CreateEntityReference(const nsAString& aName,
   return NS_OK;
 }
 
+already_AddRefed<nsContentList>
+nsDocument::GetElementsByTagName(const nsAString& aTagname)
+{
+  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
+  if (IsHTML()) {
+    nsAutoString tmp(aTagname);
+    ToLowerCase(tmp); // HTML elements are lower case internally.
+    nameAtom = do_GetAtom(tmp);
+  }
+  else {
+    nameAtom = do_GetAtom(aTagname);
+  }
+  NS_ENSURE_TRUE(nameAtom, nsnull);
+
+  return NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown);
+}
+
 NS_IMETHODIMP
 nsDocument::GetElementsByTagName(const nsAString& aTagname,
                                  nsIDOMNodeList** aReturn)
 {
-  nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aTagname);
-  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
-
-  nsContentList *list = NS_GetContentList(this, nameAtom, kNameSpaceID_Unknown).get();
+  nsRefPtr<nsContentList> list = GetElementsByTagName(aTagname);
   NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
   // transfer ref to aReturn
-  *aReturn = list;
+  *aReturn = list.forget().get();
   return NS_OK;
 }
 
-NS_IMETHODIMP
+already_AddRefed<nsContentList>
 nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
-                                   const nsAString& aLocalName,
-                                   nsIDOMNodeList** aReturn)
+                                   const nsAString& aLocalName)
 {
   PRInt32 nameSpaceId = kNameSpaceID_Wildcard;
 
@@ -4390,17 +4423,26 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
     nsresult rv =
       nsContentUtils::NameSpaceManager()->RegisterNameSpace(aNamespaceURI,
                                                             nameSpaceId);
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_SUCCESS(rv, nsnull);
   }
 
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
-  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(nameAtom, nsnull);
 
-  nsContentList *list = NS_GetContentList(this, nameAtom, nameSpaceId).get();
+  return NS_GetContentList(this, nameAtom, nameSpaceId);
+}
+
+NS_IMETHODIMP
+nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                                   const nsAString& aLocalName,
+                                   nsIDOMNodeList** aReturn)
+{
+  nsRefPtr<nsContentList> list = GetElementsByTagNameNS(aNamespaceURI,
+                                                        aLocalName);
   NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
   // transfer ref to aReturn
-  *aReturn = list;
+  *aReturn = list.forget().get();
   return NS_OK;
 }
 

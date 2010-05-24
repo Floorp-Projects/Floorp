@@ -49,10 +49,6 @@
 using namespace mozilla;
 using namespace mozilla::layers;
 
-// Adds two 32bit unsigned numbers, retuns PR_TRUE if addition succeeded,
-// or PR_FALSE the if addition would result in an overflow.
-static PRBool AddOverflow(PRUint32 a, PRUint32 b, PRUint32& aResult);
-
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define LOG(type, msg) PR_LOG(gBuiltinDecoderLog, type, msg)
@@ -95,10 +91,6 @@ const unsigned AMPLE_AUDIO_MS = 2000;
 // less than LOW_AUDIO_MS of audio, or if we've got video and have queued
 // less than LOW_VIDEO_FRAMES frames.
 static const PRUint32 LOW_VIDEO_FRAMES = 1;
-
-// The frame rate to use if there is no video data in the resource to
-// be played.
-#define AUDIO_FRAME_RATE 25.0
 
 nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder,
                                                            nsBuiltinDecoderReader* aReader) :
@@ -235,10 +227,8 @@ void nsBuiltinDecoderStateMachine::DecodeLoop()
         mDecoder->GetCurrentStream()->GetCachedDataEnd(mDecoder->mDecoderPosition);
     }
 
-    // Don't decode any audio if the audio decode is way ahead, or if we're
-    // skipping to the next video keyframe and the audio is marginally ahead.
-    if (audioDecoded > AMPLE_AUDIO_MS ||
-        (skipToNextKeyframe && audioDecoded > audioPumpThresholdMs)) {
+    // Don't decode any audio if the audio decode is way ahead.
+    if (audioDecoded > AMPLE_AUDIO_MS) {
       audioWait = PR_TRUE;
     }
     if (audioPump && audioDecoded > audioPumpThresholdMs) {
@@ -500,9 +490,10 @@ void nsBuiltinDecoderStateMachine::StartPlayback()
       mAudioStream->Resume();
     } else {
       // No audiostream, create one.
+      const nsVideoInfo& info = mReader->GetInfo();
       mAudioStream = new nsAudioStream();
-      mAudioStream->Init(mInfo.mAudioChannels,
-                         mInfo.mAudioRate,
+      mAudioStream->Init(info.mAudioChannels,
+                         info.mAudioRate,
                          nsAudioStream::FORMAT_FLOAT32);
       mAudioStream->SetVolume(mVolume);
     }
@@ -897,7 +888,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
                 RenderVideoFrame(video);
                 if (!audio) {
                   NS_ASSERTION(video->mTime <= seekTime &&
-                               seekTime <= video->mTime + mInfo.mCallbackPeriod,
+                               seekTime <= video->mTime + mReader->GetInfo().mCallbackPeriod,
                                "Seek target should lie inside the first frame after seek");
                   mPlayDuration = TimeDuration::FromMilliseconds(seekTime);
                 }
@@ -1006,7 +997,7 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         StopDecodeThreads();
 
         if (mDecoder->GetState() == nsBuiltinDecoder::PLAY_STATE_PLAYING) {
-          PRInt64 videoTime = HasVideo() ? (mVideoFrameTime + mInfo.mCallbackPeriod) : 0;
+          PRInt64 videoTime = HasVideo() ? (mVideoFrameTime + mReader->GetInfo().mCallbackPeriod) : 0;
           PRInt64 clockTime = NS_MAX(mEndTime, NS_MAX(videoTime, GetAudioClock()));
           UpdatePlaybackPosition(clockTime);
           {
@@ -1036,77 +1027,10 @@ void nsBuiltinDecoderStateMachine::RenderVideoFrame(VideoData* aData)
     return;
   }
 
-  NS_ASSERTION(mInfo.mPicture.width != 0 && mInfo.mPicture.height != 0,
-               "We can only render non-zero-sized video");
-  NS_ASSERTION(aData->mBuffer.mPlanes[0].mStride >= 0 && aData->mBuffer.mPlanes[0].mHeight >= 0 &&
-               aData->mBuffer.mPlanes[1].mStride >= 0 && aData->mBuffer.mPlanes[1].mHeight >= 0 &&
-               aData->mBuffer.mPlanes[2].mStride >= 0 && aData->mBuffer.mPlanes[2].mHeight >= 0,
-               "YCbCr stride and height must be non-negative");
-
-  // Ensure the picture size specified in the headers can be extracted out of
-  // the frame we've been supplied without indexing out of bounds.
-  PRUint32 picXLimit;
-  PRUint32 picYLimit;
-  if (!AddOverflow(mInfo.mPicture.x, mInfo.mPicture.width, picXLimit) ||
-      picXLimit > PRUint32(PR_ABS(aData->mBuffer.mPlanes[0].mStride)) ||
-      !AddOverflow(mInfo.mPicture.y, mInfo.mPicture.height, picYLimit) ||
-      picYLimit > PRUint32(PR_ABS(aData->mBuffer.mPlanes[0].mHeight)))
-  {
-    // The specified picture dimensions can't be contained inside the video
-    // frame, we'll stomp memory if we try to copy it. Fail.
-    return;
-  }
-
-  unsigned ySize = aData->mBuffer.mPlanes[0].mStride * aData->mBuffer.mPlanes[0].mHeight;
-  unsigned cbSize = aData->mBuffer.mPlanes[1].mStride * aData->mBuffer.mPlanes[1].mHeight;
-  unsigned crSize = aData->mBuffer.mPlanes[2].mStride * aData->mBuffer.mPlanes[2].mHeight;
-  unsigned cbCrSize = ySize + cbSize + crSize;
-
-  if (cbCrSize != mCbCrSize) {
-    mCbCrSize = cbCrSize;
-    mCbCrBuffer = static_cast<unsigned char*>(moz_xmalloc(cbCrSize));
-    if (!mCbCrBuffer) {
-      // Malloc failed...
-      NS_WARNING("Malloc failure allocating YCbCr->RGB buffer");
-      return;
-    }
-  }
-
-  unsigned char* data = mCbCrBuffer.get();
-
-  unsigned char* y = data;
-  unsigned char* cb = y + ySize;
-  unsigned char* cr = cb + cbSize;
-  
-  memcpy(y, aData->mBuffer.mPlanes[0].mData, ySize);
-  memcpy(cb, aData->mBuffer.mPlanes[1].mData, cbSize);
-  memcpy(cr, aData->mBuffer.mPlanes[2].mData, crSize);
- 
-  ImageContainer* container = mDecoder->GetImageContainer();
-  // Currently our decoder only knows how to output to PLANAR_YCBCR
-  // format.
-  Image::Format format = Image::PLANAR_YCBCR;
-  nsRefPtr<Image> image;
-  if (container) {
-    image = container->CreateImage(&format, 1);
-  }
+  nsRefPtr<Image> image = aData->mImage;
   if (image) {
-    NS_ASSERTION(image->GetFormat() == Image::PLANAR_YCBCR,
-                 "Wrong format?");
-    PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(image.get());
-    PlanarYCbCrImage::Data data;
-    data.mYChannel = y;
-    data.mYSize = gfxIntSize(mInfo.mFrame.width, mInfo.mFrame.height);
-    data.mYStride = aData->mBuffer.mPlanes[0].mStride;
-    data.mCbChannel = cb;
-    data.mCrChannel = cr;
-    data.mCbCrSize = gfxIntSize(aData->mBuffer.mPlanes[1].mWidth, aData->mBuffer.mPlanes[1].mHeight);
-    data.mCbCrStride = aData->mBuffer.mPlanes[1].mStride;
-    data.mPicX = mInfo.mPicture.x;
-    data.mPicY = mInfo.mPicture.y;
-    data.mPicSize = gfxIntSize(mInfo.mPicture.width, mInfo.mPicture.height);
-    videoImage->SetData(data);
-    mDecoder->SetVideoData(data.mPicSize, mInfo.mAspectRatio, image);
+    const nsVideoInfo& info = mReader->GetInfo();
+    mDecoder->SetVideoData(gfxIntSize(info.mPicture.width, info.mPicture.height), info.mPixelAspectRatio, image);
   }
 }
 
@@ -1137,7 +1061,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
       // not played a sample on the audio thread, so we can't get a time
       // from the audio clock. Just wait and then return, to give the audio
       // clock time to tick.
-      Wait(mInfo.mCallbackPeriod);
+      Wait(mReader->GetInfo().mCallbackPeriod);
       return;
     }
 
@@ -1209,7 +1133,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
     // ready state. Post an update to do so.
     UpdateReadyState();
 
-    Wait(mInfo.mCallbackPeriod);
+    Wait(mReader->GetInfo().mCallbackPeriod);
   } else {
     if (IsPlaying()) {
       StopPlayback(AUDIO_PAUSE);
@@ -1251,7 +1175,7 @@ VideoData* nsBuiltinDecoderStateMachine::FindStartTime()
   VideoData* v = nsnull;
   {
     MonitorAutoExit exitMon(mDecoder->GetMonitor());
-    v = mReader->FindStartTime(mInfo.mDataOffset, startTime);
+    v = mReader->FindStartTime(mReader->GetInfo().mDataOffset, startTime);
   }
   if (startTime != 0) {
     mStartTime = startTime;
@@ -1289,12 +1213,6 @@ void nsBuiltinDecoderStateMachine::FindEndTime()
     mEndTime = endTime;
   }
 
-  NS_ASSERTION(mInfo.mDataOffset > 0,
-               "Should have offset of first non-header page");
-  {
-    MonitorAutoExit exitMon(mDecoder->GetMonitor());
-    stream->Seek(nsISeekableStream::NS_SEEK_SET, mInfo.mDataOffset);
-  }
   LOG(PR_LOG_DEBUG, ("%p Media end time is %lldms", mDecoder, mEndTime));   
 }
 
@@ -1319,16 +1237,6 @@ void nsBuiltinDecoderStateMachine::UpdateReadyState() {
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
-
-static PRBool AddOverflow(PRUint32 a, PRUint32 b, PRUint32& aResult) {
-  PRUint64 rl = static_cast<PRUint64>(a) + static_cast<PRUint64>(b);
-  if (rl > PR_UINT32_MAX) {
-    return PR_FALSE;
-  }
-  aResult = static_cast<PRUint32>(rl);
-  return true;
-}
-
 void nsBuiltinDecoderStateMachine::LoadMetadata()
 {
   NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
@@ -1339,15 +1247,14 @@ void nsBuiltinDecoderStateMachine::LoadMetadata()
 
   nsMediaStream* stream = mDecoder->mStream;
 
-  nsVideoInfo info;
   {
     MonitorAutoExit exitMon(mDecoder->GetMonitor());
-    mReader->ReadMetadata(info);
+    mReader->ReadMetadata();
   }
-  mInfo = info;
   mDecoder->StartProgressUpdates();
+  const nsVideoInfo& info = mReader->GetInfo();
 
-  if (!mInfo.mHasVideo && !mInfo.mHasAudio) {
+  if (!info.mHasVideo && !info.mHasAudio) {
     mState = DECODER_STATE_SHUTDOWN;      
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &nsBuiltinDecoder::DecodeError);
@@ -1355,27 +1262,5 @@ void nsBuiltinDecoderStateMachine::LoadMetadata()
     return;
   }
 
-  if (!mInfo.mHasVideo) {
-    mInfo.mCallbackPeriod = 1000 / AUDIO_FRAME_RATE;
-  }
-  LOG(PR_LOG_DEBUG, ("%p Callback Period: %u", mDecoder, mInfo.mCallbackPeriod));
-
-  // TODO: Get the duration from Skeleton index, if available.
-
-  // Get the duration from the media file. We only do this if the
-  // content length of the resource is known as we need to seek
-  // to the end of the file to get the last time field. We also
-  // only do this if the resource is seekable and if we haven't
-  // already obtained the duration via an HTTP header.
-  mGotDurationFromHeader = (GetDuration() != -1);
-  if (mState != DECODER_STATE_SHUTDOWN &&
-      stream->GetLength() >= 0 &&
-      mSeekable &&
-      mEndTime == -1)
-  {
-    mDecoder->StopProgressUpdates();
-    FindEndTime();
-    mDecoder->StartProgressUpdates();
-    mDecoder->UpdatePlaybackRate();
-  }
+  LOG(PR_LOG_DEBUG, ("%p Callback Period: %u", mDecoder, info.mCallbackPeriod));
 }

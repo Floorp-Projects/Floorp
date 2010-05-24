@@ -97,30 +97,6 @@ nsXPConnect::nsXPConnect()
     mJSRoots.ops = nsnull;
 #endif
 
-#ifdef XPC_TOOLS_SUPPORT
-  {
-    char* filename = PR_GetEnv("MOZILLA_JS_PROFILER_OUTPUT");
-    if(filename && *filename)
-    {
-        mProfilerOutputFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-        if(mProfilerOutputFile &&
-           NS_SUCCEEDED(mProfilerOutputFile->InitWithNativePath(nsDependentCString(filename))))
-        {
-            mProfiler = do_GetService(XPCTOOLS_PROFILER_CONTRACTID);
-            if(mProfiler)
-            {
-                if(NS_SUCCEEDED(mProfiler->Start()))
-                {
-#ifdef DEBUG
-                    printf("***** profiling JavaScript. Output to: %s\n",
-                           filename);
-#endif
-                }
-            }
-        }
-    }
-  }
-#endif
     char* reportableEnv = PR_GetEnv("MOZ_REPORT_ALL_JS_EXCEPTIONS");
     if(reportableEnv && *reportableEnv)
         gReportAllJSExceptions = 1;
@@ -219,14 +195,6 @@ nsXPConnect::ReleaseXPConnectSingleton()
     if(xpc)
     {
         NS_SetGlobalThreadObserver(nsnull);
-
-#ifdef XPC_TOOLS_SUPPORT
-        if(xpc->mProfiler)
-        {
-            xpc->mProfiler->Stop();
-            xpc->mProfiler->WriteResults(xpc->mProfilerOutputFile);
-        }
-#endif
 
 #ifdef DEBUG
         // force a dump of the JavaScript gc heap if JS is still alive

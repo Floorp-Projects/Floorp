@@ -140,6 +140,7 @@
 #include "nsToolkitCompsCID.h"
 
 #include "nsINIParser.h"
+#include "mozilla/Omnijar.h"
 
 #include <stdlib.h>
 
@@ -209,6 +210,8 @@
 #ifdef MOZ_IPC
 #include "base/command_line.h"
 #endif
+
+#include "mozilla/FunctionTimer.h"
 
 #ifdef WINCE
 class WindowsMutex {
@@ -1069,6 +1072,10 @@ ScopedXPCOMStartup::~ScopedXPCOMStartup()
 
     NS_ShutdownXPCOM(mServiceManager);
     mServiceManager = nsnull;
+
+#ifdef MOZ_OMNIJAR
+    mozilla::SetOmnijar(nsnull);
+#endif
   }
 }
 
@@ -1122,6 +1129,13 @@ ScopedXPCOMStartup::Initialize()
   NS_ASSERTION(gDirServiceProvider, "Should not get here!");
 
   nsresult rv;
+#ifdef MOZ_OMNIJAR
+  nsCOMPtr<nsILocalFile> lf;
+  rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+  if (NS_SUCCEEDED(rv))
+    mozilla::SetOmnijar(lf);
+#endif
+
   rv = NS_InitXPCOM3(&mServiceManager, gDirServiceProvider->GetAppDir(),
                      gDirServiceProvider,
                      kPStaticModules, kStaticModuleCount);
@@ -1228,6 +1242,7 @@ nsSingletonFactory::LockFactory(PRBool)
 nsresult
 ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
 {
+  NS_TIME_FUNCTION;
   nsresult rv;
 
   nsCOMPtr<nsIComponentRegistrar> registrar
@@ -1243,18 +1258,28 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
                                   nativeFactory);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  NS_TIME_FUNCTION_MARK("RegisterFactory done");
+
   // Inform the chrome registry about OS accessibility
   nsCOMPtr<nsIToolkitChromeRegistry> cr =
     mozilla::services::GetToolkitChromeRegistryService();
+  NS_TIME_FUNCTION_MARK("Got ToolkitChromeRegistry service");
+
   if (cr)
     cr->CheckForOSAccessibility();
+
+  NS_TIME_FUNCTION_MARK("OS Accessibility check");
 
   nsCOMPtr<nsIWindowCreator> creator (do_GetService(NS_APPSTARTUP_CONTRACTID));
   if (!creator) return NS_ERROR_UNEXPECTED;
 
+  NS_TIME_FUNCTION_MARK("Got AppStartup service");
+
   nsCOMPtr<nsIWindowWatcher> wwatch
     (do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
+  
+  NS_TIME_FUNCTION_MARK("Got WindowWatcher service");
 
   return wwatch->SetWindowCreator(creator);
 }
@@ -1276,11 +1301,6 @@ static void DumpArbitraryHelp()
   ScopedLogging log;
 
   {
-    nsXREDirProvider dirProvider;
-    rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
-    if (NS_FAILED(rv))
-      return;
-
     ScopedXPCOMStartup xpcom;
     xpcom.Initialize();
     xpcom.DoAutoreg();
@@ -2898,6 +2918,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
   }
 
+  nsXREDirProvider dirProvider;
+  rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
+  if (NS_FAILED(rv))
+    return 1;
+
 #ifdef MOZ_CRASHREPORTER
   const char* crashreporterEnv = PR_GetEnv("MOZ_CRASHREPORTER");
   if (crashreporterEnv && *crashreporterEnv) {
@@ -2926,11 +2951,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     CrashReporter::SetRestartArgs(argc, argv);
 
     // annotate other data (user id etc)
-    nsXREDirProvider dirProvider;
     nsCOMPtr<nsILocalFile> userAppDataDir;
-    rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
-    if (NS_SUCCEEDED(rv) &&
-        NS_SUCCEEDED(dirProvider.GetUserAppDataDirectory(
+    if (NS_SUCCEEDED(dirProvider.GetUserAppDataDirectory(
                                                          getter_AddRefs(userAppDataDir)))) {
       CrashReporter::SetupExtraData(userAppDataDir,
                                     nsDependentCString(appData.buildID));
@@ -3061,11 +3083,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   NS_ENSURE_SUCCESS(rv, 1);
 
   {
-    nsXREDirProvider dirProvider;
-    rv = dirProvider.Initialize(gAppData->directory, gAppData->xreDirectory);
-    if (NS_FAILED(rv))
-      return 1;
-
     // Check for -register, which registers chrome and then exits immediately.
     ar = CheckArg("register", PR_TRUE);
     if (ar == ARG_BAD) {
@@ -3097,6 +3114,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #if defined(MOZ_WIDGET_QT)
+    const char* qgraphicssystemARG = NULL;
+    ar = CheckArg("graphicssystem", PR_TRUE, &qgraphicssystemARG);
+    if (ar == ARG_FOUND)
+      PR_SetEnv(PR_smprintf("MOZ_QT_GRAPHICSSYSTEM=%s", qgraphicssystemARG));
     QApplication app(gArgc, gArgv);
 #endif
 #if defined(MOZ_WIDGET_GTK2)
@@ -3332,6 +3353,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     NS_TIME_FUNCTION_MARK("Next: ScopedXPCOMStartup");
 
+    NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup");
+
     // Allows the user to forcefully bypass the restart process at their
     // own risk. Useful for debugging or for tinderboxes where child 
     // processes can be problematic.
@@ -3339,11 +3362,45 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       // Start the real application
       ScopedXPCOMStartup xpcom;
       rv = xpcom.Initialize();
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: Initialize");
       NS_ENSURE_SUCCESS(rv, 1); 
       rv = xpcom.DoAutoreg();
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: DoAutoreg");
+
+
+#ifdef NS_FUNCTION_TIMER
+      // initialize some common services, so we don't pay the cost for these at odd times later on;
+      // SetWindowCreator -> ChromeRegistry -> IOService -> SocketTransportService -> (nspr wspm init), Prefs
+      {
+        nsCOMPtr<nsISupports> comp;
+
+        comp = do_GetService("@mozilla.org/preferences-service;1");
+        NS_TIME_FUNCTION_MARK("Pref Service");
+
+        comp = do_GetService("@mozilla.org/network/socket-transport-service;1");
+        NS_TIME_FUNCTION_MARK("Socket Transport Service");
+
+        comp = do_GetService("@mozilla.org/network/dns-service;1");
+        NS_TIME_FUNCTION_MARK("DNS Service");
+
+        comp = do_GetService("@mozilla.org/network/io-service;1");
+        NS_TIME_FUNCTION_MARK("IO Service");
+
+        comp = do_GetService("@mozilla.org/chrome/chrome-registry;1");
+        NS_TIME_FUNCTION_MARK("Chrome Registry Service");
+
+        comp = do_GetService("@mozilla.org/focus-event-suppressor-service;1");
+        NS_TIME_FUNCTION_MARK("Focus Event Suppressor Service");
+      }
+#endif
+
       rv |= xpcom.RegisterProfileService();
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: RegisterProfileService");
       rv |= xpcom.SetWindowCreator(nativeApp);
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: SetWindowCreator");
       NS_ENSURE_SUCCESS(rv, 1);
+
+      NS_TIME_FUNCTION_MARK("ScopedXPCOMStartup: Done");
 
 #ifdef MOZ_CRASHREPORTER
       // tell the crash reporter to also send the release channel
@@ -3383,9 +3440,13 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           NS_TIMELINE_LEAVE("startupNotifier");
         }
 
+        NS_TIME_FUNCTION_MARK("Finished startupNotifier");
+
         nsCOMPtr<nsIAppStartup2> appStartup
           (do_GetService(NS_APPSTARTUP_CONTRACTID));
         NS_ENSURE_TRUE(appStartup, 1);
+
+        NS_TIME_FUNCTION_MARK("Created AppStartup");
 
         if (gDoMigration) {
           nsCOMPtr<nsIFile> file;
@@ -3413,7 +3474,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           if (pm)
             pm->Migrate(&dirProvider);
         }
+
+        NS_TIME_FUNCTION_MARK("Profile migration");
+
         dirProvider.DoStartup();
+
+        NS_TIME_FUNCTION_MARK("dirProvider.DoStartup() (profile-after-change)");
 
         PRBool shuttingDown = PR_FALSE;
         appStartup->GetShuttingDown(&shuttingDown);
@@ -3439,6 +3505,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           if (obsService) {
             obsService->NotifyObservers(cmdLine, "command-line-startup", nsnull);
           }
+
+          NS_TIME_FUNCTION_MARK("Early command line init");
 
           NS_TIME_FUNCTION_MARK("Next: prepare for Run");
 
@@ -3469,6 +3537,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           SaveToEnv("NO_EM_RESTART=");
           SaveToEnv("XUL_APP_FILE=");
           SaveToEnv("XRE_BINARY_PATH=");
+    
+          NS_TIME_FUNCTION_MARK("env munging");
 
           if (!shuttingDown) {
             NS_TIME_FUNCTION_MARK("Next: CreateHiddenWindow");
@@ -3511,6 +3581,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
             if (obsService)
               obsService->NotifyObservers(nsnull, "final-ui-startup", nsnull);
 
+            NS_TIME_FUNCTION_MARK("final-ui-startup done");
+
             appStartup->GetShuttingDown(&shuttingDown);
           }
 
@@ -3540,6 +3612,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
           NS_TIME_FUNCTION_MARK("Next: Run");
 
+          NS_TIME_FUNCTION_MARK("appStartup->Run");
+
           MOZ_SPLASHSCREEN_UPDATE(90);
           {
             NS_TIMELINE_ENTER("appStartup->Run");
@@ -3552,6 +3626,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           }
 
           NS_TIME_FUNCTION_MARK("Next: Finish");
+
+          NS_TIME_FUNCTION_MARK("appStartup->Run done");
 
           // Check for an application initiated restart.  This is one that
           // corresponds to nsIAppStartup.quit(eRestart)

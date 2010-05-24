@@ -32,7 +32,7 @@ public:
 
 protected:
     NS_OVERRIDE
-    virtual PTestDescSubParent* AllocPTestDescSub();
+    virtual PTestDescSubParent* AllocPTestDescSub(PTestDescSubsubParent*);
     NS_OVERRIDE
     virtual bool DeallocPTestDescSub(PTestDescSubParent* actor);
 
@@ -56,7 +56,7 @@ public:
 
 protected:
     NS_OVERRIDE
-    virtual PTestDescSubChild* AllocPTestDescSub();
+    virtual PTestDescSubChild* AllocPTestDescSub(PTestDescSubsubChild*);
 
     NS_OVERRIDE
     virtual bool DeallocPTestDescSub(PTestDescSubChild* actor);

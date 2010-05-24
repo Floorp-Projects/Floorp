@@ -231,7 +231,7 @@ public:
   // Set the video width, height, pixel aspect ratio, and current image.
   // Ownership of the image is transferred to the decoder.
   void SetVideoData(const gfxIntSize& aSize,
-                    float aAspectRatio,
+                    float aPixelAspectRatio,
                     Image* aImage);
 
 protected:
@@ -283,7 +283,7 @@ protected:
   float mFramerate;
 
   // Pixel aspect ratio (ratio of the pixel width to pixel height)
-  float mAspectRatio;
+  float mPixelAspectRatio;
 
   // Has our size changed since the last repaint?
   PRPackedBool mSizeChanged;

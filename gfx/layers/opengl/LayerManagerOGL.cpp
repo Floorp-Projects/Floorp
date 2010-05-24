@@ -40,6 +40,8 @@
 #include "ContainerLayerOGL.h"
 #include "ImageLayerOGL.h"
 #include "ColorLayerOGL.h"
+#include "CanvasLayerOGL.h"
+
 #include "LayerManagerOGLShaders.h"
 
 #include "gfxContext.h"
@@ -143,7 +145,7 @@ LayerManagerOGL::Initialize()
                               LOCAL_GL_TEXTURE_RECTANGLE_EXT };
   mFBOTextureTarget = 0;
 
-  for (int i = 0; i < NS_ARRAY_LENGTH(textureTargets); i++) {
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(textureTargets); i++) {
     mGLContext->fGenTextures(1, &mBackBuffer);
     mGLContext->fBindTexture(textureTargets[i], mBackBuffer);
     mGLContext->fTexParameteri(textureTargets[i],
@@ -280,14 +282,10 @@ LayerManagerOGL::BeginTransactionWithTarget(gfxContext *aTarget)
 }
 
 void
-LayerManagerOGL::EndConstruction()
+LayerManagerOGL::EndTransaction(DrawThebesLayerCallback aCallback,
+                                void* aCallbackData)
 {
-}
-
-void
-LayerManagerOGL::EndTransaction()
-{
-  Render();
+  Render(aCallback, aCallbackData);
   mTarget = NULL;
 }
 
@@ -332,6 +330,13 @@ LayerManagerOGL::CreateColorLayer()
   return layer.forget();
 }
 
+already_AddRefed<CanvasLayer>
+LayerManagerOGL::CreateCanvasLayer()
+{
+  nsRefPtr<CanvasLayer> layer = new CanvasLayerOGL(this);
+  return layer.forget();
+}
+
 void
 LayerManagerOGL::SetClippingEnabled(PRBool aEnabled)
 {
@@ -349,7 +354,8 @@ LayerManagerOGL::MakeCurrent()
 }
 
 void
-LayerManagerOGL::Render()
+LayerManagerOGL::Render(DrawThebesLayerCallback aCallback,
+                        void* aCallbackData)
 {
   nsIntRect rect;
   mWidget->GetBounds(rect);
@@ -375,7 +381,7 @@ LayerManagerOGL::Render()
       mGLContext->fScissor(0, 0, width, height);
     }
 
-    mRootLayer->RenderLayer(mFrameBuffer);
+    mRootLayer->RenderLayer(mFrameBuffer, aCallback, aCallbackData);
   }
 
   if (mTarget) {

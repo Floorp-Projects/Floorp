@@ -110,6 +110,9 @@
 #include "nsIParserService.h"
 
 #include "nsITransferable.h"
+#include "nsComputedDOMStyle.h"
+
+#include "mozilla/FunctionTimer.h"
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
@@ -1273,6 +1276,8 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(PRBool autoCreate,
 
 NS_IMETHODIMP nsEditor::SyncRealTimeSpell()
 {
+  NS_TIME_FUNCTION;
+
   PRBool enable = GetDesiredSpellCheckState();
 
   nsCOMPtr<nsIInlineSpellChecker> spellChecker;
@@ -2834,6 +2839,10 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
           }        
         }
         // handle selection
+        nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+        if (ps)
+          ps->FlushPendingNotifications(Flush_Frames);
+
         if (GetShouldTxnSetSelection())
         {
           // editor wants us to set selection at split point
@@ -3963,11 +3972,15 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  
-  nsIFrame *frame = content->GetPrimaryFrame();
 
-  NS_ASSERTION(frame, "no frame, see bug #188946");
-  if (!frame)
+  nsRefPtr<nsStyleContext> elementStyle;
+  if (content->IsElement()) {
+    elementStyle = nsComputedDOMStyle::GetStyleContextForElement(content->AsElement(),
+                                                                 nsnull,
+                                                                 ps);
+  }
+
+  if (!elementStyle)
   {
     // Consider nodes without a style context to be NOT preformatted:
     // For instance, this is true of JS tags inside the body (which show
@@ -3976,7 +3989,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
     return NS_OK;
   }
 
-  const nsStyleText* styleText = frame->GetStyleText();
+  const nsStyleText* styleText = elementStyle->GetStyleText();
 
   *aResult = styleText->WhiteSpaceIsSignificant();
   return NS_OK;

@@ -160,7 +160,7 @@
 <!ENTITY errorConsoleCmd.commandkey   "j">
 
 <!ENTITY inspectMenu.label            "Inspect">
-<!ENTITY inspectMenu.accesskey        "I">
+<!ENTITY inspectMenu.accesskey        "T">
 <!ENTITY inspectMenu.commandkey       "I">
 
 <!ENTITY fileMenu.label         "File"> 

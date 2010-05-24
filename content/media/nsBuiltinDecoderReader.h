@@ -40,6 +40,8 @@
 #define nsBuiltinDecoderReader_h_
 
 #include <nsDeque.h>
+#include "Layers.h"
+#include "ImageLayers.h"
 #include "nsAutoLock.h"
 #include "nsClassHashtable.h"
 #include "mozilla/TimeStamp.h"
@@ -48,6 +50,53 @@
 #include "mozilla/Monitor.h"
 
 class nsBuiltinDecoderStateMachine;
+
+// Stores info relevant to presenting media samples.
+class nsVideoInfo {
+public:
+  nsVideoInfo()
+    : mFramerate(0.0),
+      mPixelAspectRatio(1.0),
+      mCallbackPeriod(1),
+      mAudioRate(0),
+      mAudioChannels(0),
+      mFrame(0,0),
+      mHasAudio(PR_FALSE),
+      mHasVideo(PR_FALSE)
+  {}
+
+  // Frames per second.
+  float mFramerate;
+
+  // Pixel aspect ratio, as stored in the metadata.
+  float mPixelAspectRatio;
+
+  // Length of a video frame in milliseconds, or the callback period if
+  // there's no audio.
+  PRUint32 mCallbackPeriod;
+
+  // Samples per second.
+  PRUint32 mAudioRate;
+
+  // Number of audio channels.
+  PRUint32 mAudioChannels;
+
+  // Dimensions of the video frame.
+  nsIntSize mFrame;
+
+  // The picture region inside the video frame to be displayed.
+  nsIntRect mPicture;
+
+  // The offset of the first non-header page in the file, in bytes.
+  // Used to seek to the start of the media.
+  PRInt64 mDataOffset;
+
+  // PR_TRUE if we have an active audio bitstream.
+  PRPackedBool mHasAudio;
+
+  // PR_TRUE if we have an active video bitstream.
+  PRPackedBool mHasVideo;
+};
 
 // Holds chunk a decoded sound samples.
 class SoundData {
@@ -106,6 +155,9 @@ public:
 // Holds a decoded video frame, in YCbCr format. These are queued in the reader.
 class VideoData {
 public:
+  typedef mozilla::layers::ImageContainer ImageContainer;
+  typedef mozilla::layers::Image Image;
+
   // YCbCr data obtained from decoding the video. The index's are:
   //   0 = Y
   //   1 = Cb
@@ -122,10 +174,14 @@ public:
   };
 
   // Constructs a VideoData object. Makes a copy of YCbCr data in aBuffer.
-  // This may return nsnull if we run out of memory when allocating buffers
-  // to store the frame. aTimecode is a codec specific number representing
-  // the timestamp of the frame of video data.
-  static VideoData* Create(PRInt64 aOffset,
+  // aTimecode is a codec specific number representing the timestamp of
+  // the frame of video data. Returns nsnull if an error occurs. This may
+  // indicate that memory couldn't be allocated to create the VideoData
+  // object, or it may indicate some problem with the input data (e.g.
+  // negative stride).
+  static VideoData* Create(nsVideoInfo& aInfo,
+                           ImageContainer* aContainer,
+                           PRInt64 aOffset,
                            PRInt64 aTime,
                            const YCbCrBuffer &aBuffer,
                            PRBool aKeyframe,
@@ -144,9 +200,6 @@ public:
   ~VideoData()
   {
     MOZ_COUNT_DTOR(VideoData);
-    for (PRUint32 i = 0; i < 3; ++i) {
-      moz_free(mBuffer.mPlanes[i].mData);
-    }
   }
 
   // Approximate byte offset of the end of the frame in the media.
@@ -159,7 +212,8 @@ public:
   // granulepos.
   PRInt64 mTimecode;
 
-  YCbCrBuffer mBuffer;
+  // This frame's image.
+  nsRefPtr<Image> mImage;
 
   // When PR_TRUE, denotes that this frame is identical to the frame that
   // came before; it's a duplicate. mBuffer will be empty.
@@ -175,7 +229,6 @@ public:
       mKeyframe(PR_FALSE)
   {
     MOZ_COUNT_CTOR(VideoData);
-    memset(&mBuffer, 0, sizeof(YCbCrBuffer));
   }
 
   VideoData(PRInt64 aOffset,
@@ -333,53 +386,6 @@ public:
   PRInt64 mTimeStart, mTimeEnd; // in ms.
 };
 
-// Stores info relevant to presenting media samples.
-class nsVideoInfo {
-public:
-  nsVideoInfo()
-    : mFramerate(0.0),
-      mAspectRatio(1.0),
-      mCallbackPeriod(1),
-      mAudioRate(0),
-      mAudioChannels(0),
-      mFrame(0,0),
-      mHasAudio(PR_FALSE),
-      mHasVideo(PR_FALSE)
-  {}
-
-  // Frames per second.
-  float mFramerate;
-
-  // Aspect ratio, as stored in the metadata.
-  float mAspectRatio;
-
-  // Length of a video frame in milliseconds, or the callback period if
-  // there's no audio.
-  PRUint32 mCallbackPeriod;
-
-  // Samples per second.
-  PRUint32 mAudioRate;
-
-  // Number of audio channels.
-  PRUint32 mAudioChannels;
-
-  // Dimensions of the video frame.
-  nsIntSize mFrame;
-
-  // The picture region inside the video frame to be displayed.
-  nsIntRect mPicture;
-
-  // The offset of the first non-header page in the file, in bytes.
-  // Used to seek to the start of the media.
-  PRInt64 mDataOffset;
-
-  // PR_TRUE if we have an active audio bitstream.
-  PRPackedBool mHasAudio;
-
-  // PR_TRUE if we have an active video bitstream.
-  PRPackedBool mHasVideo;
-};
-
 // Encapsulates the decoding and reading of media data. Reading can be done
 // on either the state machine thread (when loading and seeking) or on
 // the reader thread (when it's reading and decoding). The reader encapsulates
@@ -415,16 +421,16 @@ public:
   virtual PRBool HasAudio() = 0;
   virtual PRBool HasVideo() = 0;
 
-  // Read header data for all bitstreams in the file. Fills aInfo with
+  // Read header data for all bitstreams in the file. Fills mInfo with
   // the data required to present the media. Returns NS_OK on success,
   // or NS_ERROR_FAILURE on failure.
-  virtual nsresult ReadMetadata(nsVideoInfo& aInfo) = 0;
+  virtual nsresult ReadMetadata() = 0;
 
 
   // Stores the presentation time of the first sample in the stream in
   // aOutStartTime, and returns the first video sample, if we have video.
-  VideoData* FindStartTime(PRInt64 aOffset,
-                           PRInt64& aOutStartTime);
+  virtual VideoData* FindStartTime(PRInt64 aOffset,
+                                   PRInt64& aOutStartTime);
 
   // Returns the end time of the last page which occurs before aEndOffset.
   // This will not read past aEndOffset. Returns -1 on failure.
@@ -433,6 +439,11 @@ public:
   // Moves the decode head to aTime milliseconds. aStartTime and aEndTime
   // denote the start and end times of the media.
   virtual nsresult Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime) = 0;
+
+  // Gets presentation info required for playback.
+  const nsVideoInfo& GetInfo() {
+    return mInfo;
+  }
 
   // Queue of audio samples. This queue is threadsafe.
   MediaQueue<SoundData> mAudioQueue;
@@ -490,6 +501,9 @@ protected:
   // The offset of the start of the first non-header page in the file.
   // Used to seek to media start time.
   PRInt64 mDataOffset;
+
+  // Stores presentation info required for playback.
+  nsVideoInfo mInfo;
 };
 
 #endif

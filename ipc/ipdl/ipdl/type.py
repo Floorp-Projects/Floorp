@@ -32,12 +32,33 @@
 
 import os, sys
 
-from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, State, TransitionStmt, TypeSpec, UsingStmt, Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
+from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, State, StructDecl, TransitionStmt, TypeSpec, UnionDecl, UsingStmt, Visitor, ASYNC, SYNC, RPC, IN, OUT, INOUT, ANSWER, CALL, RECV, SEND
 import ipdl.builtin as builtin
 
 _DELETE_MSG = '__delete__'
 
+
+def _otherside(side):
+    if side == 'parent':  return 'child'
+    elif side == 'child': return 'parent'
+    else:  assert 0 and 'unknown side "%s"'% (side)
+
+def unique_pairs(s):
+    n = len(s)
+    for i, e1 in enumerate(s):
+        for j in xrange(i+1, n):
+            yield (e1, s[j])
+
+def cartesian_product(s1, s2):
+    for e1 in s1:
+        for e2 in s2:
+            yield (e1, e2)
+
+
 class TypeVisitor:
+    def __init__(self):
+        self.visited = set()
+
     def defaultVisit(self, node, *args):
         raise Exception, "INTERNAL ERROR: no visitor for node type `%s'"% (
             node.__class__.__name__)
@@ -71,7 +92,19 @@ class TypeVisitor:
         a.protocol.accept(self, *args)
         a.state.accept(self, *args)
 
+    def visitStructType(self, s, *args):
+        if s in self.visited:
+            return
+
+        self.visited.add(s)
+        for field in s.fields:
+            field.accept(self, *args)
+
     def visitUnionType(self, u, *args):
+        if u in self.visited:
+            return
+
+        self.visited.add(u)
         for component in u.components:
             component.accept(self, *args)
 
@@ -83,6 +116,7 @@ class TypeVisitor:
 
     def visitShmemChmodType(self, c, *args):
         c.shmem.accept(self)
+
 
 class Type:
     def __cmp__(self, o):
@@ -98,6 +132,9 @@ class Type:
         return False
     # Is this an IPDL type?
     def isIPDL(self):
+        return False
+    # Is this type neither compound nor an array?
+    def isAtom(self):
         return False
     # Can this type appear in IPDL programs?
     def isVisible(self):
@@ -117,13 +154,14 @@ class Type:
         return visit(self, *args)
 
 class VoidType(Type):
-    # the following are not type-o's (hah): void is both a Cxx and IPDL type
-    def isCxx():
+    def isCxx(self):
         return True
-    def isIPDL():
+    def isIPDL(self):
+        return False
+    def isAtom(self):
         return True
     def isVisible(self):
-        return True
+        return False
     def isVoid(self):
         return True
 
@@ -135,6 +173,8 @@ VOID = VoidType()
 ##--------------------
 class CxxType(Type):
     def isCxx(self):
+        return True
+    def isAtom(self):
         return True
     def isBuiltin(self):
         return False
@@ -177,8 +217,11 @@ class IPDLType(Type):
     def isMessage(self): return False
     def isProtocol(self): return False
     def isActor(self): return False
+    def isStruct(self): return False
     def isUnion(self): return False
     def isArray(self): return False
+    def isAtom(self):  return True
+    def isCompound(self): return False
     def isShmem(self): return False
     def isChmod(self): return False
 
@@ -233,10 +276,25 @@ class MessageType(IPDLType):
     def hasImplicitActorParam(self):
         return self.isCtor() or self.isDtor()
 
+class Bridge:
+    def __init__(self, parentPtype, childPtype):
+        assert parentPtype.isToplevel() and childPtype.isToplevel()
+        self.parent = parentPtype
+        self.child = childPtype
+
+    def __cmp__(self, o):
+        return cmp(self.parent, o.parent) or cmp(self.child, o.child)
+    def __eq__(self, o):
+        return self.parent == o.parent and self.child == o.child
+    def __hash__(self):
+        return hash(self.parent) + hash(self.child)
+
 class ProtocolType(IPDLType):
     def __init__(self, qname, sendSemantics, stateless=False):
         self.qname = qname
         self.sendSemantics = sendSemantics
+        self.spawns = set()             # ProtocolType
+        self.bridges = set()            # [ Bridge ]
         self.managers = set()           # ProtocolType
         self.manages = [ ]
         self.stateless = stateless
@@ -250,6 +308,13 @@ class ProtocolType(IPDLType):
     def addManager(self, mgrtype):
         assert mgrtype.isIPDL() and mgrtype.isProtocol()
         self.managers.add(mgrtype)
+
+    def addSpawn(self, ptype):
+        assert self.isToplevel() and  ptype.isToplevel()
+        self.spawns.add(ptype)
+
+    def addBridge(self, parentPType, childPType):
+        self.bridges.add(Bridge(parentPType, childPType))
 
     def managedBy(self, mgr):
         self.managers = mgr
@@ -292,20 +357,78 @@ class ActorType(IPDLType):
     def fullname(self):
         return self.protocol.fullname()
 
-class UnionType(IPDLType):
-    def __init__(self, qname, components):
-        self.qname = qname
-        self.components = components
+class _CompoundType(IPDLType):
+    def __init__(self):
+        self.defined = False            # bool
+        self.mutualRec = set()          # set(_CompoundType | ArrayType)
+    def isAtom(self):
+        return False
+    def isCompound(self):
+        return True
+    def itercomponents(self):
+        raise '"pure virtual" method'
 
-    def isUnion(self): return True
+    def mutuallyRecursiveWith(self, t, exploring=None):
+        '''|self| is mutually recursive with |t| iff |self| and |t|
+are in a cycle in the type graph rooted at |self|.  This function
+looks for such a cycle and returns True if found.'''
+        if exploring is None:
+            exploring = set()
+
+        if t.isAtom():
+            return False
+        elif t is self or t in self.mutualRec:
+            return True
+        elif t.isArray():
+            isrec = self.mutuallyRecursiveWith(t.basetype, exploring)
+            if isrec:  self.mutualRec.add(t)
+            return isrec
+        elif t in exploring:
+            return False
+
+        exploring.add(t)
+        for c in t.itercomponents():
+            if self.mutuallyRecursiveWith(c, exploring):
+                self.mutualRec.add(c)
+                return True
+        exploring.remove(t)
+
+        return False
+
+class StructType(_CompoundType):
+    def __init__(self, qname, fields):
+        _CompoundType.__init__(self)
+        self.qname = qname
+        self.fields = fields            # [ Type ]
+
+    def isStruct(self):   return True
+    def itercomponents(self):
+        for f in self.fields:
+            yield f
+    
+    def name(self): return self.qname.baseid
+    def fullname(self): return str(self.qname)
+
+class UnionType(_CompoundType):
+    def __init__(self, qname, components):
+        _CompoundType.__init__(self)
+        self.qname = qname
+        self.components = components    # [ Type ]
+
+    def isUnion(self):    return True
+    def itercomponents(self):
+        for c in self.components:
+            yield c
+
     def name(self): return self.qname.baseid
     def fullname(self): return str(self.qname)
 
 class ArrayType(IPDLType):
     def __init__(self, basetype):
         self.basetype = basetype
-
+    def isAtom(self):  return False
     def isArray(self): return True
+
     def name(self): return self.basetype.name() +'[]'
     def fullname(self): return self.basetype.fullname() +'[]'
 
@@ -319,21 +442,24 @@ class ShmemType(IPDLType):
     def fullname(self):
         return str(self.qname)
 
-def iteractortypes(type):
+def iteractortypes(t, visited=None):
     """Iterate over any actor(s) buried in |type|."""
-    # XXX |yield| semantics makes it hard to use TypeVisitor
-    if not type or not type.isIPDL():
-        return
-    elif type.isActor():
-        yield type
-    elif type.isArray():
-        for actor in iteractortypes(type.basetype):
-            yield actor
-    elif type.isUnion():
-        for c in type.components:
-            for actor in iteractortypes(c):
-                yield actor
+    if visited is None:
+        visited = set()
 
+    # XXX |yield| semantics makes it hard to use TypeVisitor
+    if not t.isIPDL():
+        return
+    elif t.isActor():
+        yield t
+    elif t.isArray():
+        for actor in iteractortypes(t.basetype, visited):
+            yield actor
+    elif t.isCompound() and t not in visited:
+        visited.add(t)
+        for c in t.itercomponents():
+            for actor in iteractortypes(c, visited):
+                yield actor
 
 def hasactor(type):
     """Return true iff |type| is an actor or has one buried within."""
@@ -462,6 +588,10 @@ With this information, it finally type checks the AST.'''
         if not runpass(CheckTypes(self.errors)):
             return False
 
+        if not (runpass(BuildProcessGraph(self.errors))
+                and runpass(CheckProcessGraph(self.errors))):
+            return False
+
         if (len(tu.protocol.startStates)
             and not runpass(CheckStateMachine(self.errors))):
             return False
@@ -548,9 +678,30 @@ class GatherDecls(TcheckVisitor):
         for using in tu.using:
             using.accept(self)
 
-        # declare unions
-        for union in tu.unions:
-            union.accept(self)
+        # first pass to "forward-declare" all structs and unions in
+        # order to support recursive definitions
+        for su in tu.structsAndUnions:
+            qname = su.qname()
+            if 0 == len(qname.quals):
+                fullname = None
+            else:
+                fullname = str(qname)
+
+            if isinstance(su, StructDecl):
+                sutype = StructType(qname, [ ])
+            elif isinstance(su, UnionDecl):
+                sutype = UnionType(qname, [ ])
+            else: assert 0 and 'unknown type'
+
+            su.decl = self.declare(
+                loc=su.loc,
+                type=sutype,
+                shortname=su.name,
+                fullname=fullname)
+
+        # second pass to check each definition
+        for su in tu.structsAndUnions:
+            su.accept(self)
 
         # grab symbols in the protocol itself
         p.accept(self)
@@ -569,27 +720,37 @@ class GatherDecls(TcheckVisitor):
         pi.tu.accept(self)
         self.symtab.declare(pi.tu.protocol.decl)
 
-    def visitUnionDecl(self, ud):
-        qname = ud.qname()
-        if 0 == len(qname.quals):
-            fullname = None
-        else:
-            fullname = str(qname)
-        components = [ ]
+    def visitStructDecl(self, sd):
+        stype = sd.decl.type
 
+        self.symtab.enterScope(sd)
+
+        for f in sd.fields:
+            ftypedecl = self.symtab.lookup(str(f.type))
+            if ftypedecl is None:
+                self.error(f.loc, "field `%s' of struct `%s' has unknown type `%s'",
+                           f.name, sd.name, str(f.type))
+                continue
+
+            f.decl = self.declare(
+                loc=f.loc,
+                type=self._canonicalType(ftypedecl.type, f.type),
+                shortname=f.name,
+                fullname=None)
+            stype.fields.append(f.decl.type)
+
+        self.symtab.exitScope(sd)
+
+    def visitUnionDecl(self, ud):
+        utype = ud.decl.type
+        
         for c in ud.components:
             cdecl = self.symtab.lookup(str(c))
             if cdecl is None:
                 self.error(c.loc, "unknown component type `%s' of union `%s'",
                            str(c), ud.name)
                 continue
-            components.append(self._canonicalType(cdecl.type, c))
-
-        ud.decl = self.declare(
-            loc=ud.loc,
-            type=UnionType(qname, components),
-            shortname=ud.name,
-            fullname=fullname)
+            utype.components.append(self._canonicalType(cdecl.type, c))
 
     def visitUsingStmt(self, using):
         fullname = str(using.type)
@@ -608,6 +769,12 @@ class GatherDecls(TcheckVisitor):
     def visitProtocol(self, p):
         # protocol scope
         self.symtab.enterScope(p)
+
+        for spawns in p.spawnsStmts:
+            spawns.accept(self)
+
+        for bridges in p.bridgesStmts:
+            bridges.accept(self)
 
         seenmgrs = set()
         for mgr in p.managers:
@@ -742,6 +909,25 @@ class GatherDecls(TcheckVisitor):
         self.symtab.exitScope(p)
 
 
+    def visitSpawnsStmt(self, spawns):
+        pname = spawns.proto
+        spawns.proto = self.symtab.lookup(pname)
+        if spawns.proto is None:
+            self.error(spawns.loc,
+                       "spawned protocol `%s' has not been declared",
+                       pname)
+
+    def visitBridgesStmt(self, bridges):
+        def lookup(p):
+            decl = self.symtab.lookup(p)
+            if decl is None:
+                self.error(bridges.loc,
+                           "bridged protocol `%s' has not been declared", p)
+            return decl
+        bridges.parentSide = lookup(bridges.parentSide)
+        bridges.childSide = lookup(bridges.childSide)
+
+
     def visitManager(self, mgr):
         mgrdecl = self.symtab.lookup(mgr.name)
         pdecl = mgr.of.decl
@@ -823,35 +1009,27 @@ class GatherDecls(TcheckVisitor):
             ploc = param.typespec.loc
 
             ptdecl = self.symtab.lookup(ptname)
-
             if ptdecl is None:
                 self.error(
                     ploc,
                     "argument typename `%s' of message `%s' has not been declared",
                     ptname, msgname)
-                return None
+                ptype = VOID
             else:
                 ptype = self._canonicalType(ptdecl.type, param.typespec,
                                             chmodallowed=1)
-                return self.declare(
-                    loc=ploc,
-                    type=ptype,
-                    progname=param.name)
+            return self.declare(loc=ploc,
+                                type=ptype,
+                                progname=param.name)
 
         for i, inparam in enumerate(md.inParams):
             pdecl = paramToDecl(inparam)
-            if pdecl is not None:
-                msgtype.params.append(pdecl.type)
-                md.inParams[i] = pdecl
-            else:
-                md.inParams[i].type = None
+            msgtype.params.append(pdecl.type)
+            md.inParams[i] = pdecl
         for i, outparam in enumerate(md.outParams):
             pdecl = paramToDecl(outparam)
-            if pdecl is not None:
-                msgtype.returns.append(pdecl.type)
-                md.outParams[i] = pdecl
-            else:
-                md.outParams[i].type = None
+            msgtype.returns.append(pdecl.type)
+            md.outParams[i] = pdecl
 
         self.symtab.exitScope(md)
 
@@ -975,11 +1153,51 @@ def formatcycles(cycles):
         r.append("`%s'" % s)
     return ", ".join(r)
 
+
+def fullyDefined(t, exploring=None):
+    '''The rules for "full definition" of a type are
+  defined(atom)             := true
+  defined(array basetype)   := defined(basetype)
+  defined(struct f1 f2...)  := defined(f1) and defined(f2) and ...
+  defined(union c1 c2 ...)  := defined(c1) or defined(c2) or ...
+'''
+    if exploring is None:
+        exploring = set()
+
+    if t.isAtom():
+        return True
+    elif t.isArray():
+        return fullyDefined(t.basetype, exploring)
+    elif t.defined:
+        return True
+    assert t.isCompound()
+
+    if t in exploring:
+        return False
+
+    exploring.add(t)
+    for c in t.itercomponents():
+        cdefined = fullyDefined(c, exploring)
+        if t.isStruct() and not cdefined:
+            t.defined = False
+            break
+        elif t.isUnion() and cdefined:
+            t.defined = True
+            break
+    else:
+        if t.isStruct():   t.defined = True
+        elif t.isUnion():  t.defined = False
+    exploring.remove(t)
+
+    return t.defined
+
+
 class CheckTypes(TcheckVisitor):
     def __init__(self, errors):
         # don't need the symbol table, we just want the error reporting
         TcheckVisitor.__init__(self, None, errors)
         self.visited = set()
+        self.ptype = None
 
     def visitProtocolInclude(self, inc):
         if inc.tu.filename in self.visited:
@@ -988,9 +1206,33 @@ class CheckTypes(TcheckVisitor):
         inc.tu.protocol.accept(self)
 
 
+    def visitStructDecl(self, sd):
+        if not fullyDefined(sd.decl.type):
+            self.error(sd.decl.loc,
+                       "struct `%s' is only partially defined", sd.name)
+
+    def visitUnionDecl(self, ud):
+        if not fullyDefined(ud.decl.type):
+            self.error(ud.decl.loc,
+                       "union `%s' is only partially defined", ud.name)
+
+
     def visitProtocol(self, p):
+        self.ptype = p.decl.type
+        
         # check that we require no more "power" than our manager protocols
         ptype, pname = p.decl.type, p.decl.shortname
+
+        if len(p.spawnsStmts) and not ptype.isToplevel():
+            self.error(p.decl.loc,
+                       "protocol `%s' is not top-level and so cannot declare |spawns|",
+                       pname)
+
+        if len(p.bridgesStmts) and not ptype.isToplevel():
+            self.error(p.decl.loc,
+                       "protocol `%s' is not top-level and so cannot declare |bridges|",
+                       pname)
+
         for mgrtype in ptype.managers:
             if mgrtype is not None and ptype.needsMoreJuiceThan(mgrtype):
                 self.error(
@@ -1023,7 +1265,43 @@ class CheckTypes(TcheckVisitor):
                 p.name)
 
         return Visitor.visitProtocol(self, p)
-        
+
+
+    def visitSpawnsStmt(self, spawns):
+        if not self.ptype.isToplevel():
+            self.error(spawns.loc,
+                       "only top-level protocols can have |spawns| statements; `%s' cannot",
+                       self.ptype.name())
+            return
+
+        spawnedType = spawns.proto.type
+        if not (spawnedType.isIPDL() and spawnedType.isProtocol()
+                and spawnedType.isToplevel()):
+            self.error(spawns.loc,
+                       "cannot spawn non-top-level-protocol `%s'",
+                       spawnedType.name())
+        else:
+            self.ptype.addSpawn(spawnedType)
+
+
+    def visitBridgesStmt(self, bridges):
+        if not self.ptype.isToplevel():
+            self.error(bridges.loc,
+                       "only top-level protocols can have |bridges| statements; `%s' cannot",
+                       self.ptype.name())
+            return
+
+        parentType = bridges.parentSide.type
+        childType = bridges.childSide.type
+        if not (parentType.isIPDL() and parentType.isProtocol()
+                and childType.isIPDL() and childType.isProtocol()
+                and parentType.isToplevel() and childType.isToplevel()):
+            self.error(bridges.loc,
+                       "cannot bridge non-top-level-protocol(s) `%s' and `%s'",
+                       parentType.name(), childType.name())
+        else:
+            self.ptype.addBridge(parentType, childType)
+
 
     def visitManagesStmt(self, mgs):
         pdecl = mgs.manager.decl
@@ -1121,17 +1399,235 @@ class CheckTypes(TcheckVisitor):
 
 ##-----------------------------------------------------------------------------
 
-def unique_pairs(s):
-    n = len(s)
-    for i, e1 in enumerate(s):
-        for j in xrange(i+1, n):
-            yield (e1, s[j])
+class Process:
+    def __init__(self):
+        self.actors = set()         # set(Actor)
+        self.edges = { }            # Actor -> [ SpawnsEdge ]
+        self.spawn = set()          # set(Actor)
 
-def cartesian_product(s1, s2):
-    for e1 in s1:
-        for e2 in s2:
-            yield (e1, e2)
+    def edge(self, spawner, spawn):
+        if spawner not in self.edges:  self.edges[spawner] = [ ]
+        self.edges[spawner].append(SpawnsEdge(spawner, spawn))
+        self.spawn.add(spawn)
 
+    def iteredges(self):
+        for edgelist in self.edges.itervalues():
+            for edge in edgelist:
+                yield edge
+
+    def merge(self, o):
+        'Merge the Process |o| into this Process'
+        if self == o:
+            return
+        for actor in o.actors:
+            ProcessGraph.actorToProcess[actor] = self
+        self.actors.update(o.actors)
+        self.edges.update(o.edges)
+        self.spawn.update(o.spawn)
+        ProcessGraph.processes.remove(o)
+
+    def spawns(self, actor):
+        return actor in self.spawn
+
+    def __cmp__(self, o):  return cmp(self.actors, o.actors)
+    def __eq__(self, o):   return self.actors == o.actors
+    def __hash__(self):    return hash(id(self))
+    def __repr__(self):
+        return reduce(lambda a, x: str(a) + str(x) +'|', self.actors, '|')
+    def __str__(self):     return repr(self)
+
+class Actor:
+    def __init__(self, ptype, side):
+        self.ptype = ptype
+        self.side = side
+
+    def other(self):
+        return Actor(self.ptype, _otherside(self.side))
+
+    def __cmp__(self, o):
+        return cmp(self.ptype, o.ptype) or cmp(self.side, o.side)
+    def __eq__(self, o):
+        return self.ptype == o.ptype and self.side == o.side
+    def __hash__(self):  return hash(repr(self))
+    def __repr__(self):  return '%s%s'% (self.ptype.name(), self.side.title())
+    def __str__(self):   return repr(self)
+
+class SpawnsEdge:
+    def __init__(self, spawner, spawn):
+        self.spawner = spawner      # Actor
+        self.spawn = spawn          # Actor
+    def __repr__(self):
+        return '(%r)--spawns-->(%r)'% (self.spawner, self.spawn)
+    def __str__(self):  return repr(self)
+
+class BridgeEdge:
+    def __init__(self, bridgeProto, parent, child):
+        self.bridgeProto = bridgeProto # ProtocolType
+        self.parent = parent           # Actor
+        self.child = child             # Actor
+    def __repr__(self):
+        return '(%r)--%s bridge-->(%r)'% (
+            self.parent, self.bridgeProto.name(), self.child)
+    def __str__(self):  return repr(self)
+
+# "singleton" class with state that persists across type checking of
+# all protocols
+class ProcessGraph:
+    processes = set()                   # set(Process)
+    bridges = { }                       # ProtocolType -> BridgeEdge
+    actorToProcess = { }                # Actor -> Process
+    visitedSpawns = set()               # set(ActorType)
+    visitedBridges = set()              # set(ActorType)
+
+    @classmethod
+    def findProcess(cls, actor):
+        return cls.actorToProcess.get(actor, None)
+
+    @classmethod
+    def getProcess(cls, actor):
+        if actor not in cls.actorToProcess:
+            p = Process()
+            p.actors.add(actor)
+            cls.processes.add(p)
+            cls.actorToProcess[actor] = p
+        return cls.actorToProcess[actor]
+
+    @classmethod
+    def spawn(cls, spawner, remoteSpawn):
+        localSpawn = remoteSpawn.other()
+        spawnerProcess = ProcessGraph.getProcess(spawner)
+        spawnerProcess.merge(ProcessGraph.getProcess(localSpawn))
+        spawnerProcess.edge(spawner, remoteSpawn)
+
+    @classmethod
+    def bridge(cls, parent, child, bridgeP):
+        cls.bridges[bridgeP] = BridgeEdge(bridgeP, parent, child)
+
+
+class BuildProcessGraph(TcheckVisitor):
+    class findSpawns(TcheckVisitor):
+        def __init__(self, errors):
+            TcheckVisitor.__init__(self, None, errors)
+
+        def visitTranslationUnit(self, tu):
+            TcheckVisitor.visitTranslationUnit(self, tu)
+
+        def visitProtocolInclude(self, pi):
+            pi.tu.protocol.accept(self)
+
+        def visitProtocol(self, p):
+            ptype = p.decl.type
+            # non-top-level protocols don't add any information
+            if not ptype.isToplevel() or ptype in ProcessGraph.visitedSpawns:
+                return
+
+            ProcessGraph.visitedSpawns.add(ptype)
+            self.visiting = ptype
+            ProcessGraph.getProcess(Actor(ptype, 'parent'))
+            ProcessGraph.getProcess(Actor(ptype, 'child'))
+            return TcheckVisitor.visitProtocol(self, p)
+
+        def visitSpawnsStmt(self, spawns):
+            # The picture here is:
+            #  [ spawner | localSpawn | ??? ]  (process 1)
+            #                  |
+            #                  |
+            #            [ remoteSpawn | ???]  (process 2)
+            #
+            # A spawns stmt tells us that |spawner| and |localSpawn|
+            # are in the same process.
+            spawner = Actor(self.visiting, spawns.side)
+            remoteSpawn = Actor(spawns.proto.type, spawns.spawnedAs)
+            ProcessGraph.spawn(spawner, remoteSpawn)
+
+    def __init__(self, errors):
+        TcheckVisitor.__init__(self, None, errors)
+        self.visiting = None            # ActorType
+        self.visited = set()            # set(ActorType)
+
+    def visitTranslationUnit(self, tu):
+        tu.accept(self.findSpawns(self.errors))
+        TcheckVisitor.visitTranslationUnit(self, tu)
+
+    def visitProtocolInclude(self, pi):
+        pi.tu.protocol.accept(self)
+
+    def visitProtocol(self, p):
+        ptype = p.decl.type
+        # non-top-level protocols don't add any information
+        if not ptype.isToplevel() or ptype in ProcessGraph.visitedBridges:
+            return
+
+        ProcessGraph.visitedBridges.add(ptype)
+        self.visiting = ptype
+        return TcheckVisitor.visitProtocol(self, p)
+
+    def visitBridgesStmt(self, bridges):
+        bridgeProto = self.visiting
+        parentSideProto = bridges.parentSide.type
+        childSideProto = bridges.childSide.type
+
+        # the picture here is:
+        #                                                   (process 1|
+        #  [ parentSide(Parent|Child) | childSide(Parent|Child) | ... ]
+        #         |                                       |
+        #         |                        (process 2|    |
+        #  [ parentSide(Child|Parent) | bridgeParent ]    |
+        #                                   |             |
+        #                                   |             |       (process 3|
+        #                           [ bridgeChild | childSide(Child|Parent) ]
+        #
+        # First we have to figure out which parentSide/childSide
+        # actors live in the same process.  The possibilities are {
+        # parent, child } x { parent, child }.  (Multiple matches
+        # aren't allowed yet.)  Then we make ProcessGraph aware of the
+        # new bridge.
+        parentSideActor, childSideActor = None, None
+        pc = ( 'parent', 'child' )
+        for parentSide, childSide in cartesian_product(pc, pc):
+            pactor = Actor(parentSideProto, parentSide)
+            pproc = ProcessGraph.findProcess(pactor)
+            cactor = Actor(childSideProto, childSide)
+            cproc = ProcessGraph.findProcess(cactor)
+            assert pproc and cproc
+
+            if pproc == cproc:
+                if parentSideActor is not None:
+                    self.error(bridges.loc,
+                               "ambiguous bridge `%s' between `%s' and `%s'",
+                               bridgeProto.type.name(),
+                               parentSideProto.name(),
+                               childSideProto.name())
+                else:
+                    parentSideActor, childSideActor = pactor.other(), cactor.other()
+
+        if parentSideActor is None:
+            self.error(bridges.loc,
+                       "`%s' and `%s' cannot be bridged by `%s' ",
+                       parentSideProto.name(), childSideProto.name(),
+                       bridgeProto.name())
+
+        ProcessGraph.bridge(parentSideActor, childSideActor, bridgeProto)
+
+
+class CheckProcessGraph(TcheckVisitor):
+    def __init__(self, errors):
+        TcheckVisitor.__init__(self, None, errors)
+
+    # TODO: verify spawns-per-process assumption and check that graph
+    # is a dag
+    def visitTranslationUnit(self, tu):
+        if 0:
+            print 'Processes'
+            for process in ProcessGraph.processes:
+                print '  ', process
+                for edge in process.iteredges():
+                    print '    ', edge
+            print 'Bridges'
+            for bridge in ProcessGraph.bridges.itervalues():
+                print '  ', bridge
+
+##-----------------------------------------------------------------------------
 
 class CheckStateMachine(TcheckVisitor):
     def __init__(self, errors):

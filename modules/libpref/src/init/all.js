@@ -117,6 +117,9 @@ pref("browser.blink_allowed",               true);
 pref("browser.enable_automatic_image_resizing", false);
 pref("browser.enable_click_image_resizing", true);
 
+// See http://dev.w3.org/html5/spec/forms.html#attr-fe-autofocus
+pref("browser.autofocus", true);
+
 // See http://whatwg.org/specs/web-apps/current-work/#ping
 pref("browser.send_pings", false);
 pref("browser.send_pings.max_per_link", 1);           // limit the number of pings that are sent per link click
@@ -520,7 +523,6 @@ pref("dom.disable_window_open_feature.titlebar",    false);
 pref("dom.disable_window_open_feature.close",       false);
 pref("dom.disable_window_open_feature.toolbar",     false);
 pref("dom.disable_window_open_feature.location",    false);
-pref("dom.disable_window_open_feature.directories", false);
 pref("dom.disable_window_open_feature.personalbar", false);
 pref("dom.disable_window_open_feature.menubar",     false);
 pref("dom.disable_window_open_feature.scrollbars",  false);
@@ -2839,4 +2841,4 @@ pref("browser.history.maxStateObjectSize", 655360);
 pref("xpinstall.whitelist.required", true);
 
 pref("network.buffer.cache.count", 24);
-pref("network.buffer.cache.size",  4096);
+pref("network.buffer.cache.size",  32768);
