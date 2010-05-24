@@ -40,56 +40,58 @@
 #include "nsSVGNumberList.h"
 
 nsresult
-nsSVGTextPositioningElement::Initialise(nsSVGElement *aSVGElement)
+nsSVGTextPositioningElement::Init()
 {
-  nsresult rv;
+  nsresult rv = nsSVGTextPositioningElementBase::Init();
+  NS_ENSURE_SUCCESS(rv,rv);
+
   // Create mapped properties:
 
   // DOM property: nsIDOMSVGTextPositioningElement::x, #IMPLIED attrib: x
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), aSVGElement, nsSVGUtils::X);
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::X);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mX),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = aSVGElement->AddMappedSVGValue(nsGkAtoms::x, mX);
+    rv = AddMappedSVGValue(nsGkAtoms::x, mX);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
   // DOM property: nsIDOMSVGTextPositioningElement::y, #IMPLIED attrib: y
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), aSVGElement, nsSVGUtils::Y);
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::Y);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mY),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = aSVGElement->AddMappedSVGValue(nsGkAtoms::y, mY);
+    rv = AddMappedSVGValue(nsGkAtoms::y, mY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
   // DOM property: nsIDOMSVGTextPositioningElement::dx, #IMPLIED attrib: dx
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), aSVGElement, nsSVGUtils::X);
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::X);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdX),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = aSVGElement->AddMappedSVGValue(nsGkAtoms::dx, mdX);
+    rv = AddMappedSVGValue(nsGkAtoms::dx, mdX);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   
   // DOM property: nsIDOMSVGTextPositioningElement::dy, #IMPLIED attrib: dy
   {
     nsCOMPtr<nsIDOMSVGLengthList> lengthList;
-    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), aSVGElement, nsSVGUtils::Y);
+    rv = NS_NewSVGLengthList(getter_AddRefs(lengthList), this, nsSVGUtils::Y);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLengthList(getter_AddRefs(mdY),
                                      lengthList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = aSVGElement->AddMappedSVGValue(nsGkAtoms::dy, mdY);
+    rv = AddMappedSVGValue(nsGkAtoms::dy, mdY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -101,7 +103,7 @@ nsSVGTextPositioningElement::Initialise(nsSVGElement *aSVGElement)
     rv = NS_NewSVGAnimatedNumberList(getter_AddRefs(mRotate),
                                      numberList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = aSVGElement->AddMappedSVGValue(nsGkAtoms::rotate, mRotate);
+    rv = AddMappedSVGValue(nsGkAtoms::rotate, mRotate);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
