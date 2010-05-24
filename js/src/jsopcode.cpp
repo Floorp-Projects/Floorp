@@ -243,25 +243,44 @@ js_GetEnterBlockStackDefs(JSContext *cx, JSScript *script, jsbytecode *pc)
 
 #ifdef DEBUG
 
+/* If pc != NULL, includes a prefix indicating whether the PC is at the current line. */
 JS_FRIEND_API(JSBool)
-js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
+js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, FILE *fp, jsbytecode *pc)
 {
-    jsbytecode *pc, *end;
+    jsbytecode *next, *end;
     uintN len;
 
-    pc = script->code;
-    end = pc + script->length;
-    while (pc < end) {
-        if (pc == script->main)
+    next = script->code;
+    end = next + script->length;
+    while (next < end) {
+        if (next == script->main)
             fputs("main:\n", fp);
-        len = js_Disassemble1(cx, script, pc,
-                              pc - script->code,
+        if (pc != NULL) {
+            if (pc == next)
+                fputs("--> ", fp);
+            else
+                fputs("    ", fp);
+        }
+        len = js_Disassemble1(cx, script, next,
+                              next - script->code,
                               lines, fp);
         if (!len)
             return JS_FALSE;
-        pc += len;
+        next += len;
     }
     return JS_TRUE;
+}
+
+JS_FRIEND_API(JSBool)
+js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
+{
+    return js_DisassembleAtPC(cx, script, lines, fp, NULL);
+}
+
+JS_FRIEND_API(JSBool)
+js_DumpPC(JSContext *cx)
+{
+    return js_DisassembleAtPC(cx, cx->fp->script, true, stdout, cx->regs->pc);
 }
 
 JSBool
@@ -1812,7 +1831,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
     static const char exception_cookie[] = "/*EXCEPTION*/";
     static const char retsub_pc_cookie[] = "/*RETSUB_PC*/";
-    static const char iter_cookie[]      = "/*ITER*/";
     static const char forelem_cookie[]   = "/*FORELEM*/";
     static const char with_cookie[]      = "/*WITH*/";
     static const char dot_format[]       = "%s.%s";
@@ -1994,7 +2012,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
              */
             fp = js_GetScriptedCaller(cx, NULL);
             format = cs->format;
-            if (((fp && fp->regs && pc == fp->regs->pc) ||
+            if (((fp && pc == fp->pc(cx)) ||
                  (pc == startpc && nuses != 0)) &&
                 format & (JOF_SET|JOF_DEL|JOF_INCDEC|JOF_FOR|JOF_VARPROP)) {
                 mode = JOF_MODE(format);
@@ -3018,7 +3036,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                  * in the single string of accumulated |for| heads and optional
                  * final |if (condition)|.
                  */
-                forpos = pos + 2;
+                forpos = pos + 1;
                 LOCAL_ASSERT(forpos < ss->top);
 
                 /*
@@ -3093,11 +3111,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_ITER:
                 foreach = (pc[1] & (JSITER_FOREACH | JSITER_KEYVALUE)) ==
                           JSITER_FOREACH;
-                todo = SprintCString(&ss->sprinter, iter_cookie);
+                todo = -2;
                 break;
 
-              case JSOP_NEXTITER:
-                JS_NOT_REACHED("JSOP_NEXTITER");
+              case JSOP_MOREITER:
+                JS_NOT_REACHED("JSOP_MOREITER");
                 break;
 
               case JSOP_ENDITER:
@@ -3105,7 +3123,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 todo = -2;
                 if (sn && SN_TYPE(sn) == SRC_HIDDEN)
                     break;
-                (void) PopOff(ss, op);
                 (void) PopOff(ss, op);
                 break;
 
@@ -3124,16 +3141,15 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     cond = GetJumpOffset(pc, pc);
                     next = js_GetSrcNoteOffset(sn, 0);
                     tail = js_GetSrcNoteOffset(sn, 1);
-                    JS_ASSERT(pc[cond] == JSOP_NEXTITER);
+                    JS_ASSERT(pc[cond] == JSOP_MOREITER);
                     DECOMPILE_CODE(pc + oplen, next - oplen);
                     lval = POP_STR();
-                    LOCAL_ASSERT(ss->top >= 2);
+                    LOCAL_ASSERT(ss->top >= 1);
 
                     if (ss->inArrayInit || ss->inGenExp) {
-                        (void) PopOff(ss, JSOP_NOP);
-                        rval = TOP_STR();
-                        if (ss->top >= 2 && ss->opcodes[ss->top - 2] == JSOP_FORLOCAL) {
-                            ss->sprinter.offset = ss->offsets[ss->top - 1] - PAREN_SLOP;
+                        rval = POP_STR();
+                        if (ss->top >= 1 && ss->opcodes[ss->top - 1] == JSOP_FORLOCAL) {
+                            ss->sprinter.offset = ss->offsets[ss->top] - PAREN_SLOP;
                             if (Sprint(&ss->sprinter, " %s (%s in %s)",
                                        foreach ? js_for_each_str : js_for_str,
                                        lval, rval) < 0) {
@@ -3160,7 +3176,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                          * As above, rval or an extension of it must remain
                          * stacked during loop body decompilation.
                          */
-                        rval = GetStr(ss, ss->top - 2);
+                        rval = GetStr(ss, ss->top - 1);
                         js_printf(jp, "\t%s (%s in %s) {\n",
                                   foreach ? js_for_each_str : js_for_str,
                                   lval, rval);
@@ -5105,26 +5121,25 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     JSStackFrame *fp;
     jsbytecode *pc;
     JSScript *script;
-    JSFrameRegs *regs;
-    intN pcdepth;
-    jsval *sp, *stackBase;
-    char *name;
 
     JS_ASSERT(spindex < 0 ||
               spindex == JSDVG_IGNORE_STACK ||
               spindex == JSDVG_SEARCH_STACK);
 
-    fp = js_GetScriptedCaller(cx, NULL);
-    if (!fp || !fp->regs || !fp->regs->sp)
+    LeaveTrace(cx);
+    
+    /* Get scripted caller */
+    FrameRegsIter i(cx);
+    while (!i.done() && !i.fp()->script)
+        ++i;
+
+    if (i.done() || !i.pc() || i.fp()->script->nslots == 0)
         goto do_fallback;
 
+    fp = i.fp();
     script = fp->script;
-    regs = fp->regs;
-    pc = fp->imacpc ? fp->imacpc : regs->pc;
-    if (pc < script->main || script->code + script->length <= pc) {
-        JS_NOT_REACHED("bug");
-        goto do_fallback;
-    }
+    pc = fp->imacpc ? fp->imacpc : i.pc();
+    JS_ASSERT(pc >= script->main && pc < script->code + script->length);
 
     if (spindex != JSDVG_IGNORE_STACK) {
         jsbytecode **pcstack;
@@ -5137,7 +5152,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
                   cx->malloc(StackDepth(script) * sizeof *pcstack);
         if (!pcstack)
             return NULL;
-        pcdepth = ReconstructPCStack(cx, script, pc, pcstack);
+        intN pcdepth = ReconstructPCStack(cx, script, pc, pcstack);
         if (pcdepth < 0)
             goto release_pcstack;
 
@@ -5153,8 +5168,8 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
              * calculated value matching v under assumption that it is
              * it that caused exception, see bug 328664.
              */
-            stackBase = StackBase(fp);
-            sp = regs->sp;
+            jsval *stackBase = StackBase(fp);
+            jsval *sp = i.sp();
             do {
                 if (sp == stackBase) {
                     pcdepth = -1;
@@ -5181,10 +5196,13 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
     }
 
     {
-        jsbytecode* savepc = regs->pc;
+        jsbytecode* savepc = i.pc();
         jsbytecode* imacpc = fp->imacpc;
         if (imacpc) {
-            regs->pc = imacpc;
+            if (fp == cx->fp)
+                cx->regs->pc = imacpc;
+            else
+                fp->savedPC = imacpc;
             fp->imacpc = NULL;
         }
 
@@ -5192,18 +5210,23 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v,
          * FIXME: bug 489843. Stack reconstruction may have returned a pc
          * value *inside* an imacro; this would confuse the decompiler.
          */
+        char *name;
         if (imacpc && size_t(pc - script->code) >= script->length)
             name = FAILED_EXPRESSION_DECOMPILER;
         else
             name = DecompileExpression(cx, script, fp->fun, pc);
 
         if (imacpc) {
-            regs->pc = savepc;
+            if (fp == cx->fp)
+                cx->regs->pc = imacpc;
+            else
+                fp->savedPC = savepc;
             fp->imacpc = imacpc;
         }
+
+        if (name != FAILED_EXPRESSION_DECOMPILER)
+            return name;
     }
-    if (name != FAILED_EXPRESSION_DECOMPILER)
-        return name;
 
   do_fallback:
     if (!fallback) {

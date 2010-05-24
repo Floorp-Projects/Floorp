@@ -1019,23 +1019,7 @@ nsDOMThreadService::CreateJSContext()
     SetSecurityManagerForJSContext(cx, gWorkerSecurityManager, 0);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  PRUint32 stackDummy;
-  jsuword stackLimit, currentStackAddr = (jsuword)&stackDummy;
-
-  // 256k stack space.
-  const jsuword kStackSize = 0x40000;
-
-#if JS_STACK_GROWTH_DIRECTION < 0
-  stackLimit = (currentStackAddr > kStackSize) ?
-               currentStackAddr - kStackSize :
-               0;
-#else
-  stackLimit = (currentStackAddr + kStackSize > currentStackAddr) ?
-               currentStackAddr + kStackSize :
-               (jsuword) -1;
-#endif
-
-  JS_SetThreadStackLimit(cx, stackLimit);
+  JS_SetNativeStackQuota(cx, 256*1024);
   JS_SetScriptStackQuota(cx, 100*1024*1024);
 
   JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_JIT | JSOPTION_ANONFUNFIX);

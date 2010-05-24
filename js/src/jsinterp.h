@@ -56,6 +56,23 @@ typedef struct JSFrameRegs {
     jsval           *sp;            /* stack pointer */
 } JSFrameRegs;
 
+/* JS stack frame flags. */
+enum JSFrameFlags {
+    JSFRAME_CONSTRUCTING       =  0x01, /* frame is for a constructor invocation */
+    JSFRAME_COMPUTED_THIS      =  0x02, /* frame.thisv was computed already and
+                                           JSVAL_IS_OBJECT(thisv) */
+    JSFRAME_ASSIGNING          =  0x04, /* a complex (not simplex JOF_ASSIGNING) op
+                                           is currently assigning to a property */
+    JSFRAME_DEBUGGER           =  0x08, /* frame for JS_EvaluateInStackFrame */
+    JSFRAME_EVAL               =  0x10, /* frame for obj_eval */
+    JSFRAME_FLOATING_GENERATOR =  0x20, /* frame copy stored in a generator obj */
+    JSFRAME_YIELDING           =  0x40, /* js_Interpret dispatched JSOP_YIELD */
+    JSFRAME_ITERATOR           =  0x80, /* trying to get an iterator for for-in */
+    JSFRAME_GENERATOR          = 0x200, /* frame belongs to generator-iterator */
+    JSFRAME_OVERRIDE_ARGS      = 0x400, /* overridden arguments local variable */
+
+    JSFRAME_SPECIAL            = JSFRAME_DEBUGGER | JSFRAME_EVAL
+};
 
 /*
  * JS stack frame, may be allocated on the C stack by native callers.  Always
@@ -63,25 +80,29 @@ typedef struct JSFrameRegs {
  * function.
  *
  * NB: This struct is manually initialized in jsinterp.c and jsiter.c.  If you
- * add new members, update both files.  But first, try to remove members.  The
- * sharp* and xml* members should be moved onto the stack as local variables
- * with well-known slots, if possible.
+ * add new members, update both files.
  */
-struct JSStackFrame {
-    JSFrameRegs     *regs;
-    jsbytecode      *imacpc;        /* null or interpreter macro call pc */
-    jsval           *slots;         /* variables, locals and operand stack */
-    JSObject        *callobj;       /* lazily created Call object */
-    jsval           argsobj;        /* lazily created arguments object, must be
-                                       JSVAL_OBJECT */
-    JSScript        *script;        /* script being interpreted */
-    JSFunction      *fun;           /* function being called or null */
-    jsval           thisv;          /* "this" pointer if in method */
-    uintN           argc;           /* actual argument count */
-    jsval           *argv;          /* base of argument stack slots */
-    jsval           rval;           /* function return value */
-    JSStackFrame    *down;          /* previous frame */
-    void            *annotation;    /* used by Java security */
+struct JSStackFrame
+{
+    jsbytecode          *imacpc;        /* null or interpreter macro call pc */
+    JSObject            *callobj;       /* lazily created Call object */
+    jsval               argsobj;        /* lazily created arguments object, must be
+                                           JSVAL_OBJECT */
+    JSScript            *script;        /* script being interpreted */
+    JSFunction          *fun;           /* function being called or null */
+    jsval               thisv;          /* "this" pointer if in method */
+    uintN               argc;           /* actual argument count */
+    jsval               *argv;          /* base of argument stack slots */
+    jsval               rval;           /* function return value */
+    void                *annotation;    /* used by Java security */
+
+    /* Maintained by StackSpace operations */
+    JSStackFrame        *down;          /* previous frame, part of
+                                           stack layout invariant */
+    jsbytecode          *savedPC;       /* only valid if cx->fp != this */
+#ifdef DEBUG
+    static jsbytecode *const sInvalidPC;
+#endif
 
     /*
      * We can't determine in advance which local variables can live on
@@ -129,7 +150,9 @@ struct JSStackFrame {
     JSStackFrame    *displaySave;   /* previous value of display entry for
                                        script->staticLevel */
 
-    inline void assertValidStackDepth(uintN depth);
+    /* Members only needed for inline calls. */
+    void            *hookData;      /* debugger call hook data */
+    JSVersion       callerVersion;  /* dynamic version of calling script */
 
     void putActivationObjects(JSContext *cx) {
         /*
@@ -142,6 +165,17 @@ struct JSStackFrame {
         } else if (argsobj) {
             js_PutArgsObject(cx, this);
         }
+    }
+
+    /* Get the frame's current bytecode, assuming |this| is in |cx|. */
+    jsbytecode *pc(JSContext *cx) const;
+
+    jsval *argEnd() const {
+        return (jsval *)this;
+    }
+
+    jsval *slots() const {
+        return (jsval *)(this + 1);
     }
 
     jsval calleeValue() {
@@ -163,39 +197,35 @@ struct JSStackFrame {
      * VariableEnvironment (ES5 10.3). The given CallStack must contain this
      * stack frame.
      */
-    JSObject *varobj(js::CallStack *cs);
+    JSObject *varobj(js::CallStack *cs) const;
 
     /* Short for: varobj(cx->activeCallStack()). */
-    JSObject *varobj(JSContext *cx);
+    JSObject *varobj(JSContext *cx) const;
 
     inline JSObject *getThisObject(JSContext *cx);
+
+    bool isGenerator() const { return flags & JSFRAME_GENERATOR; }
+    bool isFloatingGenerator() const {
+        if (flags & JSFRAME_FLOATING_GENERATOR) {
+            JS_ASSERT(isGenerator());
+            return true;
+        }
+        return false;
+    }
 };
 
-#ifdef __cplusplus
-static JS_INLINE uintN
-FramePCOffset(JSStackFrame* fp)
-{
-    return uintN((fp->imacpc ? fp->imacpc : fp->regs->pc) - fp->script->code);
+namespace js {
+
+static const size_t VALUES_PER_STACK_FRAME = sizeof(JSStackFrame) / sizeof(jsval);
+JS_STATIC_ASSERT(sizeof(JSStackFrame) % sizeof(jsval) == 0);
+
 }
-#endif
 
 static JS_INLINE jsval *
 StackBase(JSStackFrame *fp)
 {
-    return fp->slots + fp->script->nfixed;
+    return fp->slots() + fp->script->nfixed;
 }
-
-#ifdef DEBUG
-void
-JSStackFrame::assertValidStackDepth(uintN depth)
-{
-    JS_ASSERT(0 <= regs->sp - StackBase(this));
-    JS_ASSERT(depth <= uintptr_t(regs->sp - StackBase(this)));
-}
-#else
-void
-JSStackFrame::assertValidStackDepth(uintN /*depth*/){}
-#endif
 
 static JS_INLINE uintN
 GlobalVarCount(JSStackFrame *fp)
@@ -203,39 +233,6 @@ GlobalVarCount(JSStackFrame *fp)
     JS_ASSERT(!fp->fun);
     return fp->script->nfixed;
 }
-
-typedef struct JSInlineFrame {
-    JSStackFrame    frame;          /* base struct */
-    JSFrameRegs     callerRegs;     /* parent's frame registers */
-    void            *mark;          /* mark before inline frame */
-    void            *hookData;      /* debugger call hook data */
-    JSVersion       callerVersion;  /* dynamic version of calling script */
-} JSInlineFrame;
-
-/* JS stack frame flags. */
-#define JSFRAME_CONSTRUCTING   0x01 /* frame is for a constructor invocation */
-#define JSFRAME_COMPUTED_THIS  0x02 /* frame.thisv was computed already and
-                                       JSVAL_IS_OBJECT(thisv) */
-#define JSFRAME_ASSIGNING      0x04 /* a complex (not simplex JOF_ASSIGNING) op
-                                       is currently assigning to a property */
-#define JSFRAME_DEBUGGER       0x08 /* frame for JS_EvaluateInStackFrame */
-#define JSFRAME_EVAL           0x10 /* frame for obj_eval */
-#define JSFRAME_ROOTED_ARGV    0x20 /* frame.argv is rooted by the caller */
-#define JSFRAME_YIELDING       0x40 /* js_Interpret dispatched JSOP_YIELD */
-#define JSFRAME_ITERATOR       0x80 /* trying to get an iterator for for-in */
-#define JSFRAME_GENERATOR     0x200 /* frame belongs to generator-iterator */
-#define JSFRAME_OVERRIDE_ARGS 0x400 /* overridden arguments local variable */
-
-#define JSFRAME_SPECIAL       (JSFRAME_DEBUGGER | JSFRAME_EVAL)
-
-/*
- * Interpreter stack arena-pool alloc and free functions.
- */
-extern JS_REQUIRES_STACK JS_FRIEND_API(jsval *)
-js_AllocStack(JSContext *cx, uintN nslots, void **markp);
-
-extern JS_REQUIRES_STACK JS_FRIEND_API(void)
-js_FreeStack(JSContext *cx, void *mark);
 
 /*
  * Refresh and return fp->scopeChain.  It may be stale if block scopes are
@@ -277,16 +274,15 @@ extern const uint16 js_PrimitiveTestFlags[];
                       js_PrimitiveTestFlags[JSVAL_TAG(thisv) - 1]))
 
 /*
- * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
- * is non-null), and that vp points to the callee, |this| parameter, and
- * actual arguments of the call. [vp .. vp + 2 + argc) must belong to the last
- * JS stack segment that js_AllocStack allocated. The function may use the
- * space available after vp + 2 + argc in the stack segment for temporaries,
- * so the caller should not use that space for values that must be preserved
- * across the call.
+ * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
+ * immediately-enclosing successful call to js::StackSpace::pushInvokeArgs,
+ * i.e., there must have been no un-popped pushes to cx->stack(). Furthermore,
+ * |args.getvp()[0]| should be the callee, |args.getvp()[1]| should be |this|,
+ * and the range [args.getvp() + 2, args.getvp() + 2 + args.getArgc()) should
+ * be initialized actual arguments.
  */
 extern JS_REQUIRES_STACK JS_FRIEND_API(JSBool)
-js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags);
+js_Invoke(JSContext *cx, const js::InvokeArgsGuard &args, uintN flags);
 
 /*
  * Consolidated js_Invoke flags simply rename certain JSFRAME_* flags, so that
@@ -332,7 +328,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN flags, jsval *result);
 
 extern JS_REQUIRES_STACK JSBool
-js_InvokeConstructor(JSContext *cx, uintN argc, JSBool clampReturn, jsval *vp);
+js_InvokeConstructor(JSContext *cx, const js::InvokeArgsGuard &args, JSBool clampReturn);
 
 extern JS_REQUIRES_STACK JSBool
 js_Interpret(JSContext *cx);
@@ -386,12 +382,6 @@ js_GetUpvar(JSContext *cx, uintN level, uintN cookie);
 #else
 # define JS_STATIC_INTERPRET
 
-extern JS_REQUIRES_STACK jsval *
-js_AllocRawStack(JSContext *cx, uintN nslots, void **markp);
-
-extern JS_REQUIRES_STACK void
-js_FreeRawStack(JSContext *cx, void *mark);
-
 /*
  * ECMA requires "the global object", but in embeddings such as the browser,
  * which have multiple top-level objects (windows, frames, etc. in the DOM),
@@ -424,8 +414,7 @@ js_IsActiveWithOrBlock(JSContext *cx, JSObject *obj, int stackDepth);
  * fp->sp on return to stackDepth.
  */
 extern JS_REQUIRES_STACK JSBool
-js_UnwindScope(JSContext *cx, JSStackFrame *fp, jsint stackDepth,
-               JSBool normalUnwind);
+js_UnwindScope(JSContext *cx, jsint stackDepth, JSBool normalUnwind);
 
 extern JSBool
 js_OnUnknownMethod(JSContext *cx, jsval *vp);

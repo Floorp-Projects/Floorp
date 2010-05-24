@@ -63,6 +63,7 @@
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
+#include "jscntxtinlines.h"
 
 using namespace avmplus;
 using namespace nanojit;
@@ -194,8 +195,9 @@ js_StringToInt32(JSContext* cx, JSString* str)
 }
 JS_DEFINE_CALLINFO_2(extern, INT32, js_StringToInt32, CONTEXT, STRING, 1, ACC_NONE)
 
-JSBool FASTCALL
-js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
+/* Nb: it's always safe to set isDefinitelyAtom to false if you're unsure or don't know. */
+static inline JSBool
+AddPropertyHelper(JSContext* cx, JSObject* obj, JSScopeProperty* sprop, bool isDefinitelyAtom)
 {
     JS_LOCK_OBJ(cx, obj);
 
@@ -227,7 +229,7 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
             }
         }
 
-        scope->extend(cx, sprop);
+        scope->extend(cx, sprop, isDefinitelyAtom);
     } else {
         JSScopeProperty *sprop2 =
             scope->addProperty(cx, sprop->id, sprop->getter(), sprop->setter(),
@@ -247,7 +249,20 @@ js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_FALSE;
 }
+
+JSBool FASTCALL
+js_AddProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
+{
+    return AddPropertyHelper(cx, obj, sprop, /* isDefinitelyAtom = */false);
+}
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_AddProperty, CONTEXT, OBJECT, SCOPEPROP, 0, ACC_STORE_ANY)
+
+JSBool FASTCALL
+js_AddAtomProperty(JSContext* cx, JSObject* obj, JSScopeProperty* sprop)
+{
+    return AddPropertyHelper(cx, obj, sprop, /* isDefinitelyAtom = */true);
+}
+JS_DEFINE_CALLINFO_3(extern, BOOL, js_AddAtomProperty, CONTEXT, OBJECT, SCOPEPROP, 0, ACC_STORE_ANY)
 
 static JSBool
 HasProperty(JSContext* cx, JSObject* obj, jsid id)
@@ -346,36 +361,32 @@ JS_REQUIRES_STACK JSBool FASTCALL
 js_PopInterpFrame(JSContext* cx, TracerState* state)
 {
     JS_ASSERT(cx->fp && cx->fp->down);
-    JSInlineFrame* ifp = (JSInlineFrame*)cx->fp;
+    JSStackFrame* const fp = cx->fp;
 
     /*
      * Mirror frame popping code from inline_return in js_Interpret. There are
      * some things we just don't want to handle. In those cases, the trace will
      * MISMATCH_EXIT.
      */
-    if (ifp->hookData)
+    if (fp->hookData)
         return JS_FALSE;
-    if (cx->version != ifp->callerVersion)
+    if (cx->version != fp->callerVersion)
         return JS_FALSE;
-    if (cx->fp->flags & JSFRAME_CONSTRUCTING)
+    if (fp->flags & JSFRAME_CONSTRUCTING)
         return JS_FALSE;
-    if (cx->fp->imacpc)
+    if (fp->imacpc)
         return JS_FALSE;
-    if (cx->fp->blockChain)
+    if (fp->blockChain)
         return JS_FALSE;
 
-    cx->fp->putActivationObjects(cx);
+    fp->putActivationObjects(cx);
     
     /* Update display table. */
-    if (cx->fp->script->staticLevel < JS_DISPLAY_SIZE)
-        cx->display[cx->fp->script->staticLevel] = cx->fp->displaySave;
+    if (fp->script->staticLevel < JS_DISPLAY_SIZE)
+        cx->display[fp->script->staticLevel] = fp->displaySave;
 
     /* Pop the frame and its memory. */
-    cx->fp = cx->fp->down;
-    JS_ASSERT(cx->fp->regs == &ifp->callerRegs);
-    cx->fp->regs = ifp->frame.regs;
-
-    JS_ARENA_RELEASE(&cx->stackPool, ifp->mark);
+    cx->stack().popInlineFrame(cx, fp, fp->down);
 
     /* Update the inline call count. */
     *state->inlineCallCountp = *state->inlineCallCountp - 1;

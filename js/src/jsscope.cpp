@@ -286,6 +286,7 @@ JSScope::initRuntimeState(JSContext *cx)
     rt->emptyArgumentsScope = cx->create<JSEmptyScope>(cx, &js_ObjectOps, &js_ArgumentsClass);
     if (!rt->emptyArgumentsScope)
         return false;
+    JS_ASSERT(rt->emptyArgumentsScope->shape == JSScope::EMPTY_ARGUMENTS_SHAPE);
     JS_ASSERT(rt->emptyArgumentsScope->nrefs == 2);
     rt->emptyArgumentsScope->nrefs = 1;
 
@@ -315,6 +316,7 @@ JSScope::initRuntimeState(JSContext *cx)
         rt->emptyArgumentsScope = NULL;
         return false;
     }
+    JS_ASSERT(rt->emptyBlockScope->shape == JSScope::EMPTY_BLOCK_SHAPE);
     JS_ASSERT(rt->emptyBlockScope->nrefs == 2);
     rt->emptyBlockScope->nrefs = 1;
     return true;

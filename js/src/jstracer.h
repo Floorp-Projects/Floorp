@@ -672,6 +672,7 @@ struct LinkableFragment : public VMFragment
     uint32                  branchCount;
     TypeMap                 typeMap;
     unsigned                nStackTypes;
+    unsigned                spOffsetAtEntry;
     SlotList*               globalSlots;
 };
 
@@ -1286,6 +1287,8 @@ class TraceRecorder
     JS_REQUIRES_STACK AbortableRecordingStatus getProp(jsval& v);
     JS_REQUIRES_STACK RecordingStatus getThis(nanojit::LIns*& this_ins);
 
+    JS_REQUIRES_STACK AbortableRecordingStatus unboxNextValue(nanojit::LIns* &v_ins);
+
     JS_REQUIRES_STACK VMSideExit* enterDeepBailCall();
     JS_REQUIRES_STACK void leaveDeepBailCall();
 
@@ -1309,7 +1312,8 @@ class TraceRecorder
                                                   jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK RecordingStatus setProp(jsval &l, PropertyCacheEntry* entry,
                                                 JSScopeProperty* sprop,
-                                                jsval &v, nanojit::LIns*& v_ins);
+                                                jsval &v, nanojit::LIns*& v_ins,
+                                                bool isDefinitelyAtom);
     JS_REQUIRES_STACK RecordingStatus setCallProp(JSObject *callobj, nanojit::LIns *callobj_ins,
                                                     JSScopeProperty *sprop, nanojit::LIns *v_ins,
                                                     jsval v);
@@ -1324,12 +1328,14 @@ class TraceRecorder
 
     JS_REQUIRES_STACK nanojit::LIns* box_jsval(jsval v, nanojit::LIns* v_ins);
     JS_REQUIRES_STACK nanojit::LIns* unbox_jsval(jsval v, nanojit::LIns* v_ins, VMSideExit* exit);
-    JS_REQUIRES_STACK bool guardClass(JSObject* obj, nanojit::LIns* obj_ins, JSClass* clasp,
+    JS_REQUIRES_STACK void guardClassHelper(bool cond, nanojit::LIns* obj_ins, JSClass* clasp,
+                                            VMSideExit* exit, nanojit::AccSet accSet);
+    JS_REQUIRES_STACK void guardClass(nanojit::LIns* obj_ins, JSClass* clasp,
                                       VMSideExit* exit, nanojit::AccSet accSet);
-    JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
-                                           ExitType exitType);
-    JS_REQUIRES_STACK bool guardDenseArray(JSObject* obj, nanojit::LIns* obj_ins,
-                                           VMSideExit* exit);
+    JS_REQUIRES_STACK void guardNotClass(nanojit::LIns* obj_ins, JSClass* clasp,
+                                         VMSideExit* exit, nanojit::AccSet accSet);
+    JS_REQUIRES_STACK void guardDenseArray(nanojit::LIns* obj_ins, ExitType exitType);
+    JS_REQUIRES_STACK void guardDenseArray(nanojit::LIns* obj_ins, VMSideExit* exit);
     JS_REQUIRES_STACK bool guardHasPrototype(JSObject* obj, nanojit::LIns* obj_ins,
                                              JSObject** pobj, nanojit::LIns** pobj_ins,
                                              VMSideExit* exit);
@@ -1547,9 +1553,6 @@ SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes);
 
 extern bool
 NativeToValue(JSContext* cx, jsval& v, TraceType type, double* slot);
-
-extern bool
-InCustomIterNextTryRegion(jsbytecode *pc);
 
 #ifdef MOZ_TRACEVIS
 
