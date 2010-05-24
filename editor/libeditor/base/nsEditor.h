@@ -657,7 +657,6 @@ protected:
   
   nsWeakPtr       mPresShellWeak;   // weak reference to the nsIPresShell
   nsWeakPtr       mSelConWeak;   // weak reference to the nsISelectionController
-  nsCOMPtr<nsIViewManager> mViewManager;
   PRInt32         mUpdateCount;
   nsIViewManager::UpdateViewBatch mBatch;
 
