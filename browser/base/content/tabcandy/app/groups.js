@@ -162,6 +162,8 @@ window.Group = function(listOfEls, options) {
         });
     } else 
       self.adjustTitleSize();
+      
+    self.save();
   }
   
   this.$title
@@ -276,9 +278,10 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   save: function() {
     if (!this._inited) // too soon to save now
       return;
+
     var data = this.getStorageData();
-/*     Utils.log("data to save: " + data.toSource()); */
-    Storage.saveGroup(Utils.getCurrentWindow(), data);
+    if(Groups.groupStorageSanity(data))
+      Storage.saveGroup(Utils.getCurrentWindow(), data);
   },
   
   // ----------
@@ -300,7 +303,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var css = {width: w};
     this.$title.css(css);
     this.$titleShield.css(css);
-    this.save();
   },
   
   // ----------  
@@ -554,15 +556,13 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         self.remove($el);
       });
       
-      item.parent = this;
+      item.setParent(this);
       
       if(typeof(item.setResizable) == 'function')
         item.setResizable(false);
         
       if(item.tab == Utils.activeTab)
         Groups.setActiveGroup(this);
-
-      item.save();
     }
     
     if(!options.dontArrange)
@@ -601,7 +601,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     if(index != -1)
       this._children.splice(index, 1); 
     
-    item.parent = null;
+    item.setParent(null);
     item.removeClass("tabInGroup");
     item.removeClass("stacked");
     item.removeClass("stack-trayed");
@@ -627,7 +627,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var toRemove = $.merge([], this._children);
     $.each(toRemove, function(index, child) {
       self.remove(child, {dontArrange: true});
-      child.save();
     });
   },
     
@@ -861,8 +860,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
                   
       this.arrange({z: z + 2});
     }
-
-    this.save();
   },
   
   // ----------  
@@ -931,8 +928,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       this.$resizer.fadeOut();
       $(this.container).resizable('disable');
     }
-
-    this.save();
   },
   
   // ----------
@@ -994,8 +989,6 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     // actions is necessary for a good user experience.
     
     self.onNextNewTab(doNextTab); 
-
-    this.save();
   },
 
   // ----------
@@ -1283,13 +1276,14 @@ window.Groups = {
   init: function() {
     this.groups = [];
     this.nextID = 1;
+    this._inited = false;
   },
   
   // ----------
   getNextID: function() {
     var result = this.nextID;
     this.nextID++;
-    Storage.saveGroupsData(Utils.getCurrentWindow(), {nextID:this.nextID});
+    this.save();
     return result;
   },
 
@@ -1304,72 +1298,76 @@ window.Groups = {
   },
   
   // ----------
+  saveAll: function() {
+    this.save();
+    $.each(this.groups, function(index, group) {
+      group.save();
+    });
+  },
+  
+  // ----------
+  save: function() {
+    if (!this._inited) // too soon to save now
+      return;
+
+    Storage.saveGroupsData(Utils.getCurrentWindow(), {nextID:this.nextID});
+  },
+
+  // ----------
   reconstitute: function(groupsData, groupData) {
     try {
-/*       Utils.log("in reconst"); */
-    if(groupsData && groupsData.nextID)
-      this.nextID = groupsData.nextID;
-    else {
-      // Decrement and increment.  Increment will trigger a save, and that is
-      // actually what we want here.
-      --this.nextID;
-      this.getNextID();
-    }
+      if(groupsData && groupsData.nextID)
+        this.nextID = groupsData.nextID;
+        
+      if(groupData) {
+        for (var id in groupData) {
+          var group = groupData[id];
+          if(this.groupStorageSanity(group)) {
+            var isNewTabsGroup = (group.title == 'New Tabs');
+            var options = {
+              locked: {
+                close: isNewTabsGroup, 
+                title: isNewTabsGroup
+              },
+              dontPush: true
+            };
+            
+            new Group([], $.extend({}, group, options)); 
+          }
+        }
+      }
       
-    if(groupData) {
-      for (var id in groupData) {
-/*
-        Utils.log("id: " + id);
-        Utils.log("groupData[id]: "+ groupData[id].toSource());
-*/
-        var group = groupData[id];
-/*         Utils.log("src: " +group.toSource()); */
-        var isNewTabsGroup = (group.title == 'New Tabs');
+      var group = this.getNewTabGroup();
+      if(!group) {
+        var box = this.getBoundsForNewTabGroup();
         var options = {
           locked: {
-            close: isNewTabsGroup, 
-            title: isNewTabsGroup
+            close: true, 
+            title: true
           },
-          dontPush: true
+          dontPush: true, 
+          bounds: box,
+          title: 'New Tabs'
         };
-        
-        new Group([], $.extend({}, group, options)); 
-      }
-    }
-    
-    var group = this.getNewTabGroup();
-    if(!group) {
-      var box = this.getBoundsForNewTabGroup();
-      var options = {
-        locked: {
-          close: true, 
-          title: true
-        },
-        dontPush: true, 
-        bounds: box,
-        title: 'New Tabs'
-      };
-
-      new Group([], options); 
-    } 
+  
+        new Group([], options); 
+      } 
+      
+      this._inited = true;
+      this.save(); // for nextID
     }catch(e){
       Utils.log("error in recons: "+e);
     }
   },
   
   // ----------
-  storageSanity: function(data) {
+  groupStorageSanity: function(groupData) {
     // TODO: check everything 
-    if(!data.groups)
-      return false;
-      
     var sane = true;
-    $.each(data.groups, function(index, group) {
-      if(!isRect(group.bounds)) {
-        Utils.log('Groups.storageSanity: bad bounds', group.bounds);
-        sane = false;
-      }
-    });
+    if(!isRect(groupData.bounds)) {
+      Utils.log('Groups.groupStorageSanity: bad bounds', groupData.bounds);
+      sane = false;
+    }
     
     return sane;
   },

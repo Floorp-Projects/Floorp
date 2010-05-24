@@ -5,6 +5,7 @@ Storage = {
   GROUP_DATA_IDENTIFIER:  "tabcandy-group",
   GROUPS_DATA_IDENTIFIER: "tabcandy-groups",
   TAB_DATA_IDENTIFIER:    "tabcandy-tab",
+  UI_DATA_IDENTIFIER:    "tabcandy-ui",
 
   // ----------
   init: function() {
@@ -13,8 +14,30 @@ Storage = {
   },
 
   // ----------
+  wipe: function() {
+    try {
+      var win = Utils.getCurrentWindow();
+      var self = this;
+      
+      // ___ Tabs
+      Tabs.forEach(function(tab) {
+        self.saveTab(tab.raw, null);
+      });
+      
+      // ___ Other
+      this.saveGroupsData(win, {});
+      this.saveUIData(win, {});
+      
+      this._sessionStore.setWindowValue(win, this.GROUP_DATA_IDENTIFIER,
+        JSON.stringify({}));
+    } catch (e) {
+      Utils.log("Error in wipe: "+e);
+    }
+  },
+  
+  // ----------
   saveTab: function(tab, data) {
-/*     Utils.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA saving tab data, tab: " + tab.toSource() + ", data: "+data.toSource()); */
+/*     Utils.log("AAAAAAAAAAAAAAAAAAAAAAAAAAA saving tab data"); */
     this._sessionStore.setTabValue(tab, this.TAB_DATA_IDENTIFIER,
       JSON.stringify(data));
   },
@@ -32,6 +55,8 @@ Storage = {
       // getWindowValue will fail if the property doesn't exist
       Utils.log("Error in readTabData: "+e);
     }
+    
+/*     Utils.log('tab', existingData); */
     return existingData;
   },
 
@@ -69,71 +94,48 @@ Storage = {
 
   // ----------
   saveGroupsData: function(win, data) {
-/*     Utils.log("GGGGGGGGGGGGGGGGGGGGGGGGGGGGGG " + data.toSource()); */
-    this._sessionStore.setWindowValue(win, this.GROUPS_DATA_IDENTIFIER,
-      JSON.stringify(data));
+    this.saveData(win, this.GROUPS_DATA_IDENTIFIER, data);
   },
 
   // ----------
   readGroupsData: function(win) {
+    return this.readData(win, this.GROUPS_DATA_IDENTIFIER);
+  },
+  
+  // ----------
+  saveUIData: function(win, data) {
+    this.saveData(win, this.UI_DATA_IDENTIFIER, data);
+  },
+
+  // ----------
+  readUIData: function(win) {
+    return this.readData(win, this.UI_DATA_IDENTIFIER);
+  },
+  
+  // ----------
+  saveData: function(win, id, data) {
+    try {
+      this._sessionStore.setWindowValue(win, id, JSON.stringify(data));
+    } catch (e) {
+      Utils.log("Error in saveData: "+e);
+    }
+    
+/*     Utils.log('save data', id, data); */
+  },
+
+  // ----------
+  readData: function(win, id) {
     var existingData = {};
     try {
-/*         Utils.log("readGroupsData:   "+this._sessionStore.getWindowValue(win, this.GROUPS_DATA_IDENTIFIER)); */
-      existingData = JSON.parse(
-        this._sessionStore.getWindowValue(win, this.GROUPS_DATA_IDENTIFIER)
-      );
+      var data = this._sessionStore.getWindowValue(win, id);
+      if(data)
+        existingData = JSON.parse(data);
     } catch (e) {
-      // getWindowValue will fail if the property doesn't exist
+      Utils.log("Error in readData: "+e);
     }
+    
+/*     Utils.log('read data', id, existingData); */
     return existingData;
-  },
-  
-  // ----------
-  read: function() {
-    var data = {};
-    var file = this.getFile();
-    if(file.exists()) {
-      var fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].  
-                              createInstance(Components.interfaces.nsIFileInputStream);  
-      var cstream = Components.classes["@mozilla.org/intl/converter-input-stream;1"].  
-                              createInstance(Components.interfaces.nsIConverterInputStream);  
-      fstream.init(file, -1, 0, 0);  
-      cstream.init(fstream, "UTF-8", 0, 0); // you can use another encoding here if you wish  
-      
-      let (str = {}) {  
-        cstream.readString(-1, str); // read the whole file and put it in str.value  
-        if(str.value)
-          data = JSON.parse(str.value);  
-      }  
-      cstream.close(); // this closes fstream  
-    }
-   
-    return data;
-  },
-  
-  // ----------
-  write: function(data) {
-    var file = this.getFile();
-    var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].  
-                             createInstance(Components.interfaces.nsIFileOutputStream);  
-    foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);   
-    var str = JSON.stringify(data);
-    foStream.write(str, str.length);
-    foStream.close();
-  },
-  
-  // ----------  
-  getFile: function() {
-    var file = Components.classes["@mozilla.org/file/directory_service;1"].  
-      getService(Components.interfaces.nsIProperties).  
-      get("ProfD", Components.interfaces.nsIFile);  
-      
-    file.append('tabcandy');
-    if(!file.exists())
-      file.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0777);        
-      
-    file.append(Switch.name + '.json');
-    return file;
   }
 };
 
