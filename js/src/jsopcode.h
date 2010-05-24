@@ -256,7 +256,9 @@ struct JSCodeSpec {
     uint8               prec;           /* operator precedence */
     uint32              format;         /* immediate operand format */
 
+#ifdef __cplusplus
     uint32 type() const { return JOF_TYPE(format); }
+#endif
 };
 
 extern const JSCodeSpec js_CodeSpec[];
