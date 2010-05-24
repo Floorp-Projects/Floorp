@@ -42,8 +42,6 @@
  * separately to take advantage of the simple switch-case constant propagation
  * done by SpiderMonkey.
  */
-const GLOBAL = this;
-
 var tokens = [
     // End of source.
     "END",
@@ -95,9 +93,9 @@ var tokens = [
 ];
 
 // Operator and punctuator mapping from token to tree node type name.
-// NB: superstring tokens (e.g., ++) must come before their substring token
-// counterparts (+ in the example), so that the opRegExp regular expression
-// synthesized from this list makes the longest possible match.
+// NB: because the lexer doesn't backtrack, all token prefixes must themselves
+// be valid tokens (e.g. !== is acceptable because its prefixes are the valid
+// tokens != and !).
 var opTypeNames = {
     '\n':   "NEWLINE",
     ';':    "SEMICOLON",
@@ -144,18 +142,21 @@ var opTypeNames = {
 var keywords = {__proto__: null};
 
 // Define const END, etc., based on the token names.  Also map name to index.
+var tokenIds = {};
 var consts = "const ";
 for (var i = 0, j = tokens.length; i < j; i++) {
     if (i > 0)
         consts += ", ";
     var t = tokens[i];
+    var name;
     if (/^[a-z]/.test(t)) {
-        consts += t.toUpperCase();
+        name = t.toUpperCase();
         keywords[t] = i;
     } else {
-        consts += (/^\W/.test(t) ? opTypeNames[t] : t);
+        name = (/^\W/.test(t) ? opTypeNames[t] : t);
     }
-    consts += " = " + i;
+    consts += name + " = " + i;
+    tokenIds[name] = i;
     tokens[t] = i;
 }
 eval(consts + ";");
