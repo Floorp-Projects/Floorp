@@ -71,6 +71,9 @@ using mozilla::plugins::PluginInstanceParent;
 #include "prmem.h"
 
 #include "LayerManagerOGL.h"
+#ifndef WINCE
+#include "LayerManagerD3D9.h"
+#endif
 
 #ifndef WINCE
 #include "nsUXThemeData.h"
@@ -677,6 +680,13 @@ DDRAW_FAILED:
           SetClippingRegion(event.region);
         result = DispatchWindowEvent(&event, eventStatus);
         break;
+#ifndef WINCE
+      case LayerManager::LAYERS_D3D9:
+        static_cast<mozilla::layers::LayerManagerD3D9*>(GetLayerManager())->
+          SetClippingRegion(event.region);
+        result = DispatchWindowEvent(&event, eventStatus);
+        break;
+#endif
       default:
         NS_ERROR("Unknown layers backend used!");
         break;
