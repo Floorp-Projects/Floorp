@@ -65,7 +65,6 @@
 #include "nsITransactionManager.h"
 #include "nsIAbsorbingTransaction.h"
 #include "nsIPresShell.h"
-#include "nsIViewManager.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
@@ -241,14 +240,6 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
 
   nsCOMPtr<nsINode> document = do_QueryInterface(aDoc);
   document->AddMutationObserver(this);
-
-  // Set up the DTD
-  // XXX - in the long run we want to get this from the document, but there
-  // is no way to do that right now.  So we leave it null here and set
-  // up a nav html dtd in nsHTMLEditor::Init
-
-  mViewManager = ps->GetViewManager();
-  if (!mViewManager) {return NS_ERROR_NULL_POINTER;}
 
   mUpdateCount=0;
 
@@ -4178,7 +4169,14 @@ nsresult nsEditor::BeginUpdateViewBatch()
     }
 
     // Turn off view updating.
-    mBatch.BeginUpdateViewBatch(mViewManager);
+    nsCOMPtr<nsIPresShell> ps;
+    GetPresShell(getter_AddRefs(ps));
+    if (ps) {
+      nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
+      if (viewManager) {
+        mBatch.BeginUpdateViewBatch(viewManager);
+      }
+    }
   }
 
   mUpdateCount++;
@@ -4220,7 +4218,10 @@ nsresult nsEditor::EndUpdateViewBatch()
     GetFlags(&flags);
 
     // Turn view updating back on.
-    if (mViewManager)
+    nsCOMPtr<nsIViewManager> viewManager;
+    if (presShell)
+      viewManager = presShell->GetViewManager();
+    if (viewManager)
     {
       PRUint32 updateFlag = NS_VMREFRESH_IMMEDIATE;
 
