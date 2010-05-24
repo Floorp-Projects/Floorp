@@ -125,6 +125,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsITheme.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
 #include "nsIObserverService.h"
 #include "nsIScreenManager.h"
@@ -167,6 +168,10 @@
 #include "nsWindowGfx.h"
 #include "gfxWindowsPlatform.h"
 #include "Layers.h"
+#ifndef WINCE
+#include "LayerManagerD3D9.h"
+#include "LayerManagerOGL.h"
+#endif
 
 #if !defined(WINCE)
 #include "nsUXThemeConstants.h"
@@ -2917,6 +2922,41 @@ nsWindow::GetLayerManager()
     mLayerManager = NULL;
     mUseAcceleratedRendering = topWindow->GetAcceleratedRendering();
   }
+
+#ifndef WINCE
+  if (!mLayerManager) {
+    if (mUseAcceleratedRendering) {
+      nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+      PRBool allowAcceleration = PR_TRUE;
+      PRBool preferOpenGL = PR_FALSE;
+      if (prefs) {
+        prefs->GetBoolPref("mozilla.widget.accelerated-layers",
+                           &allowAcceleration);
+        prefs->GetBoolPref("mozilla.layers.prefer-opengl",
+                           &preferOpenGL);
+      }
+      
+      if (allowAcceleration) {
+        if (preferOpenGL) {
+          nsRefPtr<mozilla::layers::LayerManagerOGL> layerManager =
+            new mozilla::layers::LayerManagerOGL(this);
+          if (layerManager->Initialize()) {
+            mLayerManager = layerManager;
+          }
+        }
+        if (!mLayerManager) {
+          nsRefPtr<mozilla::layers::LayerManagerD3D9> layerManager =
+            new mozilla::layers::LayerManagerD3D9(this);
+          if (layerManager->Initialize()) {
+            mLayerManager = layerManager;
+          }
+        }
+      }
+    }
+  }
+#endif
+
   return nsBaseWidget::GetLayerManager();
 }
 
