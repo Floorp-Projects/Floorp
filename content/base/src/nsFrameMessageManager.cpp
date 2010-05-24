@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "jscntxt.h"
+
 #include "nsFrameMessageManager.h"
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
@@ -394,14 +396,12 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         nsAutoGCRoot resultGCRoot4(&rval, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        void* mark = nsnull;
-        jsval* argv = js_AllocStack(mContext, 1, &mark);
-        NS_ENSURE_TRUE(argv, NS_ERROR_OUT_OF_MEMORY);
+        js::AutoValueRooter argv(mContext);
+        argv.setObject(param);
 
-        argv[0] = OBJECT_TO_JSVAL(param);
         JSObject* thisObject = JSVAL_TO_OBJECT(thisValue);
         JS_CallFunctionValue(mContext, thisObject,
-                             funval, 1, argv, &rval);
+                             funval, 1, argv.addr(), &rval);
         if (aJSONRetVal) {
           nsString json;
           if (JS_TryJSON(mContext, &rval) &&
@@ -410,7 +410,6 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
             aJSONRetVal->AppendElement(json);
           }
         }
-        js_FreeStack(mContext, mark);
       }
     }
   }
