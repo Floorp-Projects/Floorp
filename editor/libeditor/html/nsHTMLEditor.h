@@ -907,7 +907,7 @@ protected:
   nsresult CreateGrabber(nsIDOMNode * aParentNode, nsIDOMElement ** aReturn);
   nsresult StartMoving(nsIDOMElement * aHandle);
   nsresult SetFinalPosition(PRInt32 aX, PRInt32 aY);
-  void     AddPositioningOffet(PRInt32 & aX, PRInt32 & aY);
+  void     AddPositioningOffset(PRInt32 & aX, PRInt32 & aY);
   void     SnapToGrid(PRInt32 & newX, PRInt32 & newY);
   nsresult GrabberClicked();
   nsresult EndMoving();
