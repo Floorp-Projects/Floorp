@@ -122,7 +122,8 @@ class THEBES_API LayerManager {
 public:
   enum LayersBackend {
     LAYERS_BASIC = 0,
-    LAYERS_OPENGL
+    LAYERS_OPENGL,
+    LAYERS_D3D9
   };
 
   virtual ~LayerManager() {}
