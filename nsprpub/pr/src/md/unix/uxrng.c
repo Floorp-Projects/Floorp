@@ -75,7 +75,11 @@ GetHighResClock(void *buf, size_t maxbytes)
 {
     PRUint64 t;
 
+#ifdef __GNUC__
+    __asm__ __volatile__("mov %0 = ar.itc" : "=r" (t));
+#else
     t = _Asm_mov_from_ar(_AREG44);
+#endif
     return _pr_CopyLowBits(buf, maxbytes, &t, sizeof(t));
 }
 #else
