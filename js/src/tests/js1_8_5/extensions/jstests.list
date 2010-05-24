@@ -8,3 +8,4 @@ skip-if(!xulRuntime.shell) script worker-init.js
 skip-if(!xulRuntime.shell) script worker-simple.js
 skip-if(!xulRuntime.shell) script worker-terminate.js
 skip-if(!xulRuntime.shell) script worker-timeout.js
+script scripted-proxies.js

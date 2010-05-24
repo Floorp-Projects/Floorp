@@ -147,11 +147,13 @@ CPPSRCS		= \
 		jslock.cpp \
 		jslog2.cpp \
 		jsmath.cpp \
+		jsnativestack.cpp \
 		jsnum.cpp \
 		jsobj.cpp \
 		json.cpp \
 		jsopcode.cpp \
 		jsparse.cpp \
+		jsproxy.cpp \
 		jsprf.cpp \
 		jspropertycache.cpp \
 		jspropertytree.cpp \
@@ -208,6 +210,7 @@ INSTALLED_HEADERS = \
 		jsopcode.h \
 		jsotypes.h \
 		jsparse.h \
+		jsproxy.h \
 		jsprf.h \
 		jspropertycache.h \
 		jspropertycacheinlines.h \
@@ -290,6 +293,7 @@ CPPSRCS += \
 
 LOCAL_INCLUDES = \
     -Ictypes/libffi/include \
+    -I. \
     $(NULL)
 
 ifeq ($(OS_ARCH),OS2)
@@ -693,29 +697,13 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/javascript-trace.d
 $(addsuffix .$(OBJ_SUFFIX),jsdtracef jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
-ifdef GNU_CC
-ifndef CROSS_COMPILE
-ifndef QEMU_CANT_RUN_JS_SHELL
-# If we don't have run-mozilla.sh *and* we're linking against NSPR, we don't
-# know how to run the JS binary. Oh well
-
-imacro_asm.js: imacro_asm.js.in jsopcode.tbl
-	$(CC) -c -x c -E -P -I$(srcdir) $< > $@
-
-GARBAGE += imacros.c.tmp imacro_asm.js
-
-ifneq (,$(wildcard $(RUN_TEST_PROGRAM))$(if $(NSPR_LIBS),,1))
-libs:: imacro_asm.js $(srcdir)/imacros.jsasm
-	$(wildcard $(RUN_TEST_PROGRAM)) $(DIST)/bin/js$(BIN_SUFFIX) $< $(srcdir)/imacros.jsasm > imacros.c.tmp
-	@cmp -s imacros.c.tmp $(srcdir)/imacros.c.out || \
-	  (echo "imacros.c.out is out of date. Run 'make update-imacros' to copy it to your source tree."; diff -U 4 $(srcdir)/imacros.c.out imacros.c.out; exit 1)
-	@echo "imacros.c.out is up to date"
-
-update-imacros: imacros.c.tmp
-	cp $< $(srcdir)/imacros.c.out
+ifdef ENABLE_TRACEJIT
+# Imacro compilation.
+$(CURDIR)/imacros.c.out: $(srcdir)/imacro_asm.py $(srcdir)/imacros.jsasm
+	$(PYTHON) $< $(srcdir)/imacros.jsasm $(CURDIR)/imacros.c.out
+$(addsuffix .$(OBJ_SUFFIX),jstracer): $(CURDIR)/imacros.c.out
 
 # Code for importing the nanojit subtree from its repository.
-
 NANOJIT_CENTRAL_REV=$(shell cat $(srcdir)/nanojit-import-rev)
 NANOJIT_CENTRAL_REPO=http://hg.mozilla.org/projects/nanojit-central
 NANOJIT_CENTRAL_LOCAL=$(CURDIR)/nanojit-central
@@ -741,8 +729,5 @@ update-nanojit:
 	(cd $(NANOJIT_CENTRAL_LOCAL) && hg log -r tip --template "{node}\n") >$(srcdir)/nanojit-import-rev
 	(cd $(srcdir) && hg commit --message="Update nanojit-import-rev stamp." nanojit-import-rev)
 
-.PHONY: update-imacros update-nanojit
-endif
-endif
-endif
+.PHONY: update-nanojit
 endif
