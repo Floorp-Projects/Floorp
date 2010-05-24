@@ -55,6 +55,7 @@
 
 #include "AsyncConnectionHelper.h"
 #include "IDBTransactionRequest.h"
+#include "DatabaseInfo.h"
 
 USING_INDEXEDDB_NAMESPACE
 
@@ -264,7 +265,7 @@ GetKeyFromObject(JSContext* aCx,
 already_AddRefed<IDBObjectStoreRequest>
 IDBObjectStoreRequest::Create(IDBDatabaseRequest* aDatabase,
                               IDBTransactionRequest* aTransaction,
-                              const ObjectStoreInfo& aStoreInfo,
+                              const ObjectStoreInfo* aStoreInfo,
                               PRUint16 aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -273,10 +274,10 @@ IDBObjectStoreRequest::Create(IDBDatabaseRequest* aDatabase,
 
   objectStore->mDatabase = aDatabase;
   objectStore->mTransaction = aTransaction;
-  objectStore->mName = aStoreInfo.name;
-  objectStore->mId = aStoreInfo.id;
-  objectStore->mKeyPath = aStoreInfo.keyPath;
-  objectStore->mAutoIncrement = aStoreInfo.autoIncrement;
+  objectStore->mName = aStoreInfo->name;
+  objectStore->mId = aStoreInfo->id;
+  objectStore->mKeyPath = aStoreInfo->keyPath;
+  objectStore->mAutoIncrement = aStoreInfo->autoIncrement;
   objectStore->mMode = aMode;
 
   return objectStore.forget();
@@ -402,11 +403,12 @@ IDBObjectStoreRequest::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
+#if 0
   PRUint32 count = mIndexes.Length();
   for (PRUint32 index = 0; index < count; index++) {
     NS_ENSURE_TRUE(list->Add(mIndexes[index]), NS_ERROR_OUT_OF_MEMORY);
   }
-
+#endif
   list.forget(aIndexNames);
   return NS_OK;
 }
