@@ -1019,7 +1019,7 @@ JS_END_EXTERN_C
 namespace js {
 
 class Value;
-class Class;
+struct Class;
 
 typedef JSBool
 (* Native)(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval);

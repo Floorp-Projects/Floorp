@@ -405,7 +405,7 @@ JS_ValueToObject(JSContext *cx, jsval v, JSObject **objp)
 {
     CHECK_REQUEST(cx);
     Value objv;
-    bool ok = js_ValueToObjectOrNull(cx, Valueify(v), &objv);
+    bool ok = !!js_ValueToObjectOrNull(cx, Valueify(v), &objv);
     *objp = objv.asObjectOrNull();
     return ok;
 }

@@ -271,7 +271,7 @@ ComputeThis(JSContext *cx, Value *argv)
 {
     JS_ASSERT(!argv[-1].isNull());
     if (!argv[-1].isObject())
-        return js_PrimitiveToObject(cx, &argv[-1]);
+        return !!js_PrimitiveToObject(cx, &argv[-1]);
 
     Value thisv = argv[-1];
     JSObject *thisp = &thisv.asObject();
@@ -426,7 +426,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
     if (clasp != &js_FunctionClass) {
 #if JS_HAS_NO_SUCH_METHOD
         if (clasp == &js_NoSuchMethodClass)
-            return NoSuchMethod(cx, argc, vp, flags);
+            return !!NoSuchMethod(cx, argc, vp, flags);
 #endif
 
         /* Function is inlined, all other classes use object ops. */
@@ -512,7 +512,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
         if (ok && !alreadyThrowing)
             ASSERT_NOT_THROWING(cx);
 #endif
-        return ok;
+        return !!ok;
     }
 
     /* Calculate slot usage. */
@@ -638,7 +638,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 
     fp->putActivationObjects(cx);
     *vp = fp->rval;
-    return ok;
+    return !!ok;
 }
 
 JS_REQUIRES_STACK JS_FRIEND_API(bool)
@@ -820,7 +820,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
             hook(cx, fp, JS_FALSE, &ok, hookData);
     }
 
-    return ok;
+    return !!ok;
 }
 
 bool
@@ -934,10 +934,10 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     name = js_ValueToPrintableString(cx, IdToValue(id));
     if (!name)
         return JS_FALSE;
-    return JS_ReportErrorFlagsAndNumber(cx, report,
-                                        js_GetErrorMessage, NULL,
-                                        JSMSG_REDECLARED_VAR,
-                                        type, name);
+    return !!JS_ReportErrorFlagsAndNumber(cx, report,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_REDECLARED_VAR,
+                                          type, name);
 }
 
 static JS_ALWAYS_INLINE bool
@@ -963,7 +963,7 @@ StrictlyEqual(JSContext *cx, const Value &lval, const Value &rval)
         if (lmask == JSVAL_DOUBLE_MASK)
             return JSDOUBLE_COMPARE(lval.data.dbl, ==, rval.data.dbl, JS_FALSE);
         if (lmask == JSVAL_STRING_MASK)
-            return js_EqualStrings(lval.data.str, rval.data.str);
+            return !!js_EqualStrings(lval.data.str, rval.data.str);
         if (lmask & JSVAL_OBJECT_MASK)
             return EqualObjects(cx, lval.data.obj, rval.data.obj);
         JS_ASSERT(lmask == JSVAL_BOOLEAN_MASK);
@@ -1128,7 +1128,7 @@ BoxedWordToValue(jsboxedword w)
         return ObjectOrNullTag(JSBOXEDWORD_TO_OBJECT(w));
     if (JSBOXEDWORD_IS_VOID(w))
         return UndefinedTag();
-    return BooleanTag(JSBOXEDWORD_TO_BOOLEAN(w));
+    return BooleanTag(!!JSBOXEDWORD_TO_BOOLEAN(w));
 }
 
 bool
@@ -1776,7 +1776,7 @@ namespace reprmeter {
         } else if (vp->isBoolean()) {                                         \
             b = vp->asBoolean();                                              \
         } else {                                                              \
-            b = js_ValueToBoolean(*vp);                                       \
+            b = !!js_ValueToBoolean(*vp);                                     \
         }                                                                     \
         regs.sp--;                                                            \
     JS_END_MACRO
@@ -2033,7 +2033,7 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
         return true;
     }
   slow_path:
-    return js_IteratorNext(cx, iterobj, rval);
+    return !!js_IteratorNext(cx, iterobj, rval);
 }
 
 
