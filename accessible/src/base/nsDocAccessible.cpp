@@ -1460,18 +1460,14 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
   if (NS_FAILED(rv) || !accessible)
     return;
 
-  nsRefPtr<nsHyperTextAccessible> textAccessible;
-  rv = accessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
-                                  getter_AddRefs(textAccessible));
-  if (NS_FAILED(rv) || !textAccessible)
+  nsRefPtr<nsHyperTextAccessible> textAccessible(do_QueryObject(accessible));
+  if (!textAccessible)
     return;
 
   PRInt32 start = aInfo->mChangeStart;
 
   PRInt32 offset = 0;
-  rv = textAccessible->DOMPointToHypertextOffset(node, start, &offset);
-  if (NS_FAILED(rv))
-    return;
+  textAccessible->DOMPointToHypertextOffset(node, start, &offset);
 
   PRInt32 length = aIsInserted ?
     aInfo->mReplaceLength: // text has been added
@@ -1511,19 +1507,16 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
                                               PRBool aIsAsynch,
                                               EIsFromUserInput aIsFromUserInput)
 {
-  nsRefPtr<nsHyperTextAccessible> textAccessible;
-  aContainerAccessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
-                                       getter_AddRefs(textAccessible));
+  nsRefPtr<nsHyperTextAccessible> textAccessible =
+    do_QueryObject(aContainerAccessible);
   if (!textAccessible) {
     return nsnull;
   }
 
   PRInt32 offset;
   PRInt32 length = 0;
-  nsCOMPtr<nsIAccessible> changeAccessible;
-  nsresult rv = textAccessible->DOMPointToHypertextOffset(aChangeNode, -1, &offset,
-                                                          getter_AddRefs(changeAccessible));
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  nsAccessible *changeAcc =
+    textAccessible->DOMPointToHypertextOffset(aChangeNode, -1, &offset);
 
   if (!aAccessibleForChangeNode) {
     // A span-level object or something else without an accessible is being removed, where
@@ -1531,33 +1524,29 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
     // into the parent hypertext.
     // In this case, accessibleToBeRemoved may just be the first
     // accessible that is removed, which affects the text in the hypertext container
-    if (!changeAccessible) {
+    if (!changeAcc)
       return nsnull; // No descendant content that represents any text in the hypertext parent
-    }
 
     nsCOMPtr<nsINode> changeNode(do_QueryInterface(aChangeNode));
-    nsCOMPtr<nsIAccessible> child = changeAccessible;
-    while (PR_TRUE) {
-      nsCOMPtr<nsIAccessNode> childAccessNode =
-        do_QueryInterface(changeAccessible);
 
-      nsCOMPtr<nsIDOMNode> childDOMNode;
-      childAccessNode->GetDOMNode(getter_AddRefs(childDOMNode));
+    nsAccessible *parent = changeAcc->GetParent();
+    PRInt32 childCount = parent->GetChildCount();
+    PRInt32 changeAccIdx = parent->GetIndexOf(changeAcc);
 
-      nsCOMPtr<nsINode> childNode(do_QueryInterface(childDOMNode));
+    for (PRInt32 idx = changeAccIdx; idx < childCount; idx++) {
+      nsAccessible *child = parent->GetChildAt(idx);
+      nsCOMPtr<nsINode> childNode(do_QueryInterface(child->GetDOMNode()));
+
       if (!nsCoreUtils::IsAncestorOf(changeNode, childNode)) {
-        break;  // We only want accessibles with DOM nodes as children of this node
-      }
-      length += nsAccUtils::TextLength(child);
-      child->GetNextSibling(getter_AddRefs(changeAccessible));
-      if (!changeAccessible) {
+        // We only want accessibles with DOM nodes as children of this node
         break;
       }
-      child.swap(changeAccessible);
+
+      length += nsAccUtils::TextLength(child);
     }
   }
   else {
-    NS_ASSERTION(!changeAccessible || changeAccessible == aAccessibleForChangeNode,
+    NS_ASSERTION(!changeAcc || changeAcc == aAccessibleForChangeNode,
                  "Hypertext is reporting a different accessible for this node");
 
     length = nsAccUtils::TextLength(aAccessibleForChangeNode);
@@ -1814,9 +1803,8 @@ void nsDocAccessible::RefreshNodes(nsIDOMNode *aStartNode)
     // created.
     if (accessible->GetCachedFirstChild()) {
       nsCOMPtr<nsIArray> children;
-      // use GetChildren() to fetch children at one time, instead of using
-      // GetNextSibling(), because after we shutdown the first child,
-      // mNextSibling will be set null.
+      // use GetChildren() to fetch all children at once, because after shutdown
+      // the child references are cleared.
       accessible->GetChildren(getter_AddRefs(children));
       PRUint32 childCount =0;
       if (children)

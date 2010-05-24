@@ -108,7 +108,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIScriptChannel.h"
-#include "nsIURIClassifier.h"
 #include "nsIOfflineCacheUpdate.h"
 #include "nsCPrefetchService.h"
 #include "nsJSON.h"
@@ -4043,11 +4042,6 @@ nsDocShell::Stop(PRUint32 aStopFlags)
             mRefreshURIList = nsnull;
         }
 
-        if (mClassifier) {
-            mClassifier->Cancel();
-            mClassifier = nsnull;
-        }
-
         // XXXbz We could also pass |this| to nsIURILoader::Stop.  That will
         // just call Stop() on us as an nsIDocumentLoader... We need fewer
         // redundant apis!
@@ -5667,12 +5661,6 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     if (!(aStateFlags & STATE_IS_DOCUMENT))
         return; // not a toplevel document
 
-    // If this load is being checked by the URI classifier, we need to
-    // query the classifier again for the new URI.
-    if (mClassifier) {
-        mClassifier->OnRedirect(aOldChannel, aNewChannel);
-    }
-
     nsCOMPtr<nsIGlobalHistory3> history3(do_QueryInterface(mGlobalHistory));
     nsresult result = NS_ERROR_NOT_IMPLEMENTED;
     if (history3) {
@@ -5755,9 +5743,6 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     // during this load handler.
     //
     nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
-
-    // We're done with the URI classifier for this channel
-    mClassifier = nsnull;
 
     // Notify the ContentViewer that the Document has finished loading.  This
     // will cause any OnLoad(...) and PopState(...) handlers to fire.
@@ -8681,34 +8666,16 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
         break;
     }
 
+    if (!aBypassClassifier) {
+        loadFlags |= nsIChannel::LOAD_CLASSIFY_URI;
+    }
+
     (void) aChannel->SetLoadFlags(loadFlags);
 
     rv = aURILoader->OpenURI(aChannel,
                              (mLoadType == LOAD_LINK),
                              this);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!aBypassClassifier) {
-        rv = CheckClassifier(aChannel);
-        if (NS_FAILED(rv)) {
-            aChannel->Cancel(rv);
-            return rv;
-        }
-    }
-
-    return NS_OK;
-}
-
-nsresult
-nsDocShell::CheckClassifier(nsIChannel *aChannel)
-{
-    nsRefPtr<nsClassifierCallback> classifier = new nsClassifierCallback();
-    if (!classifier) return NS_ERROR_OUT_OF_MEMORY;
-
-    nsresult rv = classifier->Start(aChannel, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mClassifier = classifier;
 
     return NS_OK;
 }
@@ -10745,279 +10712,6 @@ nsDocShell::IsOKToLoadURI(nsIURI* aURI)
     return
         secMan &&
         NS_SUCCEEDED(secMan->CheckSameOriginURI(aURI, mLoadingURI, PR_FALSE));
-}
-
-//*****************************************************************************
-// nsClassifierCallback
-//*****************************************************************************
-
-NS_IMPL_ISUPPORTS5(nsClassifierCallback,
-                   nsIChannelClassifier,
-                   nsIURIClassifierCallback,
-                   nsIRunnable,
-                   nsIChannelEventSink,
-                   nsIInterfaceRequestor)
-
-NS_IMETHODIMP
-nsClassifierCallback::Run()
-{
-    if (!mChannel) {
-        return NS_OK;
-    }
-
-    NS_ASSERTION(!mSuspendedChannel,
-                 "nsClassifierCallback::Run() called while a "
-                 "channel is still suspended.");
-
-    nsCOMPtr<nsIChannel> channel;
-    channel.swap(mChannel);
-
-    // Don't bother to run the classifier on a load that has already failed.
-    // (this might happen after a redirect)
-    PRUint32 status;
-    channel->GetStatus(&status);
-    if (NS_FAILED(status))
-        return NS_OK;
-
-    // Don't bother to run the classifier on a cached load that was
-    // previously classified.
-    if (HasBeenClassified(channel)) {
-        return NS_OK;
-    }
-
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = channel->GetURI(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Don't bother checking certain types of URIs.
-    PRBool hasFlags;
-    rv = NS_URIChainHasFlags(uri,
-                             nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
-                             &hasFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
-
-    rv = NS_URIChainHasFlags(uri,
-                             nsIProtocolHandler::URI_IS_LOCAL_FILE,
-                             &hasFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
-
-    rv = NS_URIChainHasFlags(uri,
-                             nsIProtocolHandler::URI_IS_UI_RESOURCE,
-                             &hasFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
-
-    rv = NS_URIChainHasFlags(uri,
-                             nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-                             &hasFlags);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasFlags) return NS_OK;
-
-    nsCOMPtr<nsIURIClassifier> uriClassifier =
-        do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
-    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED ||
-        rv == NS_ERROR_NOT_AVAILABLE) {
-        // no URI classifier, ignore this failure.
-        return NS_OK;
-    }
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool expectCallback;
-    rv = uriClassifier->Classify(uri, this, &expectCallback);
-    if (NS_FAILED(rv)) return rv;
-
-    if (expectCallback) {
-        // Suspend the channel, it will be resumed when we get the classifier
-        // callback.
-        rv = channel->Suspend();
-        if (NS_FAILED(rv)) {
-            // Some channels (including nsJSChannel) fail on Suspend.  This
-            // shouldn't be fatal, but will prevent malware from being
-            // blocked on these channels.
-            return NS_OK;
-        }
-
-        mSuspendedChannel = channel;
-#ifdef DEBUG
-        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-               ("nsClassifierCallback[%p]: suspended channel %p",
-                this, mSuspendedChannel.get()));
-#endif
-    }
-
-    return NS_OK;
-}
-
-// Note in the cache entry that this URL was classified, so that future
-// cached loads don't need to be checked.
-void
-nsClassifierCallback::MarkEntryClassified(nsresult status)
-{
-    nsCOMPtr<nsICachingChannel> cachingChannel =
-        do_QueryInterface(mSuspendedChannel);
-    if (!cachingChannel) {
-        return;
-    }
-
-    nsCOMPtr<nsISupports> cacheToken;
-    cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
-    if (!cacheToken) {
-        return;
-    }
-
-    nsCOMPtr<nsICacheEntryDescriptor> cacheEntry =
-        do_QueryInterface(cacheToken);
-    if (!cacheEntry) {
-        return;
-    }
-
-    cacheEntry->SetMetaDataElement("docshell:classified",
-                                   NS_SUCCEEDED(status) ? "1" : nsnull);
-}
-
-PRBool
-nsClassifierCallback::HasBeenClassified(nsIChannel *aChannel)
-{
-    nsCOMPtr<nsICachingChannel> cachingChannel =
-        do_QueryInterface(aChannel);
-    if (!cachingChannel) {
-        return PR_FALSE;
-    }
-
-    // Only check the tag if we are loading from the cache without
-    // validation.
-    PRBool fromCache;
-    if (NS_FAILED(cachingChannel->IsFromCache(&fromCache)) || !fromCache) {
-        return PR_FALSE;
-    }
-
-    nsCOMPtr<nsISupports> cacheToken;
-    cachingChannel->GetCacheToken(getter_AddRefs(cacheToken));
-    if (!cacheToken) {
-        return PR_FALSE;
-    }
-
-    nsCOMPtr<nsICacheEntryDescriptor> cacheEntry =
-        do_QueryInterface(cacheToken);
-    if (!cacheEntry) {
-        return PR_FALSE;
-    }
-
-    nsXPIDLCString tag;
-    cacheEntry->GetMetaDataElement("docshell:classified", getter_Copies(tag));
-    return tag.EqualsLiteral("1");
-}
-
-NS_IMETHODIMP
-nsClassifierCallback::OnClassifyComplete(nsresult aErrorCode)
-{
-    if (mSuspendedChannel) {
-        MarkEntryClassified(aErrorCode);
-
-        if (NS_FAILED(aErrorCode)) {
-#ifdef DEBUG
-            PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-                   ("nsClassifierCallback[%p]: cancelling channel %p with error code: %d",
-                    this, mSuspendedChannel.get(), aErrorCode));
-#endif
-            mSuspendedChannel->Cancel(aErrorCode);
-        }
-#ifdef DEBUG
-        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-               ("nsClassifierCallback[%p]: resuming channel %p from OnClassifyComplete",
-                this, mSuspendedChannel.get()));
-#endif
-        mSuspendedChannel->Resume();
-        mSuspendedChannel = nsnull;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClassifierCallback::Start(nsIChannel *aChannel, PRBool aInstallListener)
-{
-    mChannel = aChannel;
-
-    if (aInstallListener) {
-        nsresult rv = aChannel->GetNotificationCallbacks
-            (getter_AddRefs(mNotificationCallbacks));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        rv = aChannel->SetNotificationCallbacks
-            (static_cast<nsIInterfaceRequestor*>(this));
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-
-    return Run();
-}
-
-NS_IMETHODIMP
-nsClassifierCallback::OnRedirect(nsIChannel *aOldChannel,
-                                 nsIChannel *aNewChannel)
-{
-    mChannel = aNewChannel;
-
-    // we call the Run() from the main loop to give the channel a
-    // chance to AsyncOpen() before we suspend it.
-    NS_DispatchToCurrentThread(this);
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClassifierCallback::Cancel()
-{
-    if (mSuspendedChannel) {
-#ifdef DEBUG
-        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
-               ("nsClassifierCallback[%p]: resuming channel %p from Cancel()",
-                this, mSuspendedChannel.get()));
-#endif
-        mSuspendedChannel->Resume();
-        mSuspendedChannel = nsnull;
-    }
-
-    if (mChannel) {
-        mChannel = nsnull;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClassifierCallback::OnChannelRedirect(nsIChannel *aOldChannel,
-                                        nsIChannel *aNewChannel,
-                                        PRUint32 aFlags)
-{
-    nsresult rv = OnRedirect(aOldChannel, aNewChannel);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (mNotificationCallbacks) {
-        nsCOMPtr<nsIChannelEventSink> sink =
-            do_GetInterface(mNotificationCallbacks);
-        if (sink) {
-            return sink->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
-        }
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsClassifierCallback::GetInterface(const nsIID &aIID, void **aResult)
-{
-    if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
-        NS_ADDREF_THIS();
-        *aResult = static_cast<nsIChannelEventSink *>(this);
-        return NS_OK;
-    } else if (mNotificationCallbacks) {
-        return mNotificationCallbacks->GetInterface(aIID, aResult);
-    } else {
-        return NS_ERROR_NO_INTERFACE;
-    }
 }
 
 //

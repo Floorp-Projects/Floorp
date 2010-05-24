@@ -149,12 +149,6 @@ nsSMILTimeValueSpec::HandleNewInterval(nsSMILInterval& aInterval,
   if (!newInstance)
     return;
 
-  // If we are a begin spec but the time we've got is not resolved, we won't add
-  // it to the owner just yet. When the time later becomes resolved we'll add it
-  // at that point.
-  if (mIsBegin && !newTime.IsResolved())
-    return;
-
   mOwner->AddInstanceTime(newInstance, mIsBegin);
 }
 
@@ -179,34 +173,6 @@ nsSMILTimeValueSpec::HandleChangedInstanceTime(
                           mParams.mOffset.GetMillis());
   }
 
-  // Since we never add unresolved begin times to the owner we must detect if
-  // this change requires adding a newly-resolved time, removing
-  // a previously-resolved time, or doing nothing
-  if (mIsBegin) {
-    // Add newly-resolved time
-    if (!aInstanceTimeToUpdate.Time().IsResolved() &&
-        updatedTime.IsResolved()) {
-      aInstanceTimeToUpdate.DependentUpdate(updatedTime);
-      mOwner->AddInstanceTime(&aInstanceTimeToUpdate, mIsBegin);
-      return;
-    }
-    // Remove previously-resolved time
-    if (aInstanceTimeToUpdate.Time().IsResolved() &&
-        !updatedTime.IsResolved()) {
-      aInstanceTimeToUpdate.DependentUpdate(updatedTime);
-      mOwner->RemoveInstanceTime(&aInstanceTimeToUpdate, mIsBegin);
-      return;
-    }
-    // Do nothing (but update in case we're updating an 'unresolved' time to an
-    // 'indefinite' time or vice versa, both of which return PR_FALSE for
-    // IsResolved() and neither of which should be added to the owner).
-    if (!aInstanceTimeToUpdate.Time().IsResolved() &&
-        !updatedTime.IsResolved()) {
-      aInstanceTimeToUpdate.DependentUpdate(updatedTime);
-      return;
-    }
-  }
-
   // The timed element that owns the instance time does the updating so it can
   // re-sort its array of instance times more efficiently
   if (aInstanceTimeToUpdate.Time() != updatedTime || aObjectChanged) {
@@ -218,10 +184,6 @@ void
 nsSMILTimeValueSpec::HandleDeletedInstanceTime(
     nsSMILInstanceTime &aInstanceTime)
 {
-  // If it's an unresolved begin time then we won't have added it
-  if (mIsBegin && !aInstanceTime.Time().IsResolved())
-    return;
-
   mOwner->RemoveInstanceTime(&aInstanceTime, mIsBegin);
 }
 

@@ -182,14 +182,14 @@ public:
   // The decoder monitor must be obtained before calling this.
   PRBool HasAudio() const {
     mDecoder->GetMonitor().AssertCurrentThreadIn();
-    return mInfo.mHasAudio;
+    return mReader->GetInfo().mHasAudio;
   }
 
   // This is called on the state machine thread and audio thread.
   // The decoder monitor must be obtained before calling this.
   PRBool HasVideo() const {
     mDecoder->GetMonitor().AssertCurrentThreadIn();
-    return mInfo.mHasVideo;
+    return mReader->GetInfo().mHasVideo;
   }
 
   // Should be called by main thread.
@@ -374,9 +374,6 @@ protected:
   // threads. You must hold the mAudioMonitor, and must NOT hold the decoder
   // monitor when using the audio stream!
   nsAutoPtr<nsAudioStream> mAudioStream;
-
-  // Stores presentation info about required for playback of the media.
-  nsVideoInfo mInfo;
 
   // The reader, don't call its methods with the decoder monitor held.
   // This is created in the play state machine's constructor, and destroyed

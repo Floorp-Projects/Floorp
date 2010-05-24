@@ -47,6 +47,8 @@
 #include "VideoUtils.h"
 
 using namespace mozilla;
+using mozilla::layers::ImageContainer;
+using mozilla::layers::PlanarYCbCrImage;
 
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
@@ -64,47 +66,100 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 #define SEEK_LOG(type, msg)
 #endif
 
-// 32 bit integer multiplication with overflow checking. Returns PR_TRUE
-// if the multiplication was successful, or PR_FALSE if the operation resulted
-// in an integer overflow.
-PRBool MulOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult) {
-  PRUint64 a64 = a;
-  PRUint64 b64 = b;
-  PRUint64 r64 = a64 * b64;
-  if (r64 > PR_UINT32_MAX)
+// Adds two 32bit unsigned numbers, retuns PR_TRUE if addition succeeded,
+// or PR_FALSE the if addition would result in an overflow.
+static PRBool AddOverflow32(PRUint32 a, PRUint32 b, PRUint32& aResult) {
+  PRUint64 rl = static_cast<PRUint64>(a) + static_cast<PRUint64>(b);
+  if (rl > PR_UINT32_MAX) {
     return PR_FALSE;
-  aResult = static_cast<PRUint32>(r64);
-  return PR_TRUE;
+  }
+  aResult = static_cast<PRUint32>(rl);
+  return true;
 }
 
-VideoData* VideoData::Create(PRInt64 aOffset,
+static PRBool
+ValidatePlane(const VideoData::YCbCrBuffer::Plane& aPlane)
+{
+  return aPlane.mWidth <= PlanarYCbCrImage::MAX_DIMENSION &&
+         aPlane.mHeight <= PlanarYCbCrImage::MAX_DIMENSION &&
+         aPlane.mStride > 0;
+}
+
+VideoData* VideoData::Create(nsVideoInfo& aInfo,
+                             ImageContainer* aContainer,
+                             PRInt64 aOffset,
                              PRInt64 aTime,
-                             const YCbCrBuffer &aBuffer,
+                             const YCbCrBuffer& aBuffer,
                              PRBool aKeyframe,
                              PRInt64 aTimecode)
 {
-  nsAutoPtr<VideoData> v(new VideoData(aOffset, aTime, aKeyframe, aTimecode));
-  for (PRUint32 i=0; i < 3; ++i) {
-    PRUint32 size = 0;
-    if (!MulOverflow32(PR_ABS(aBuffer.mPlanes[i].mHeight),
-                       PR_ABS(aBuffer.mPlanes[i].mStride),
-                       size))
-    {
-      // Invalid frame size. Skip this plane. The plane will have 0
-      // dimensions, thanks to our constructor.
-      continue;
-    }
-    unsigned char* p = static_cast<unsigned char*>(moz_xmalloc(size));
-    if (!p) {
-      NS_WARNING("Failed to allocate memory for video frame");
-      return nsnull;
-    }
-    v->mBuffer.mPlanes[i].mData = p;
-    v->mBuffer.mPlanes[i].mWidth = aBuffer.mPlanes[i].mWidth;
-    v->mBuffer.mPlanes[i].mHeight = aBuffer.mPlanes[i].mHeight;
-    v->mBuffer.mPlanes[i].mStride = aBuffer.mPlanes[i].mStride;
-    memcpy(v->mBuffer.mPlanes[i].mData, aBuffer.mPlanes[i].mData, size);
+  if (!aContainer) {
+    return nsnull;
   }
+
+  // The following situation should never happen unless there is a bug
+  // in the decoder
+  if (aBuffer.mPlanes[1].mWidth != aBuffer.mPlanes[2].mWidth ||
+      aBuffer.mPlanes[1].mHeight != aBuffer.mPlanes[2].mHeight) {
+    NS_ERROR("C planes with different sizes");
+    return nsnull;
+  }
+
+  // The following situations could be triggered by invalid input
+  if (aInfo.mPicture.width <= 0 || aInfo.mPicture.height <= 0) {
+    NS_WARNING("Empty picture rect");
+    return nsnull;
+  }
+  if (aBuffer.mPlanes[0].mWidth != PRUint32(aInfo.mFrame.width) ||
+      aBuffer.mPlanes[0].mHeight != PRUint32(aInfo.mFrame.height)) {
+    NS_WARNING("Unexpected frame size");
+    return nsnull;
+  }
+  if (!ValidatePlane(aBuffer.mPlanes[0]) || !ValidatePlane(aBuffer.mPlanes[1]) ||
+      !ValidatePlane(aBuffer.mPlanes[2])) {
+    NS_WARNING("Invalid plane size");
+    return nsnull;
+  }
+  // Ensure the picture size specified in the headers can be extracted out of
+  // the frame we've been supplied without indexing out of bounds.
+  PRUint32 picXLimit;
+  PRUint32 picYLimit;
+  if (!AddOverflow32(aInfo.mPicture.x, aInfo.mPicture.width, picXLimit) ||
+      picXLimit > PRUint32(aBuffer.mPlanes[0].mStride) ||
+      !AddOverflow32(aInfo.mPicture.y, aInfo.mPicture.height, picYLimit) ||
+      picYLimit > PRUint32(aBuffer.mPlanes[0].mHeight))
+  {
+    // The specified picture dimensions can't be contained inside the video
+    // frame, we'll stomp memory if we try to copy it. Fail.
+    NS_WARNING("Overflowing picture rect");
+    return nsnull;
+  }
+
+  nsAutoPtr<VideoData> v(new VideoData(aOffset, aTime, aKeyframe, aTimecode));
+  // Currently our decoder only knows how to output to PLANAR_YCBCR
+  // format.
+  Image::Format format = Image::PLANAR_YCBCR;
+  v->mImage = aContainer->CreateImage(&format, 1);
+  if (!v->mImage) {
+    return nsnull;
+  }
+  NS_ASSERTION(v->mImage->GetFormat() == Image::PLANAR_YCBCR,
+               "Wrong format?");
+  PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
+
+  PlanarYCbCrImage::Data data;
+  data.mYChannel = aBuffer.mPlanes[0].mData;
+  data.mYSize = gfxIntSize(aBuffer.mPlanes[0].mWidth, aBuffer.mPlanes[0].mHeight);
+  data.mYStride = aBuffer.mPlanes[0].mStride;
+  data.mCbChannel = aBuffer.mPlanes[1].mData;
+  data.mCrChannel = aBuffer.mPlanes[2].mData;
+  data.mCbCrSize = gfxIntSize(aBuffer.mPlanes[1].mWidth, aBuffer.mPlanes[1].mHeight);
+  data.mCbCrStride = aBuffer.mPlanes[1].mStride;
+  data.mPicX = aInfo.mPicture.x;
+  data.mPicY = aInfo.mPicture.y;
+  data.mPicSize = gfxIntSize(aInfo.mPicture.width, aInfo.mPicture.height);
+
+  videoImage->SetData(data); // Copies buffer
   return v.forget();
 }
 
@@ -211,9 +266,6 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64 aOffset,
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
 
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
-
-  stream->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
   if (NS_FAILED(ResetDecode())) {
     return nsnull;
   }

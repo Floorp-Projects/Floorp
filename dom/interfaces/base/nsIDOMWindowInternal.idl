@@ -44,7 +44,7 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 
-[scriptable, uuid(52d034f1-f1a6-4be7-adc9-b39fa7df51de)]
+[scriptable, uuid(de12997f-9f66-4241-b092-d0ed365ad72e)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -77,8 +77,6 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
   /* [replaceable] statusbar */
   readonly attribute nsIDOMBarProp               statusbar;
 
-  /* [replaceable] directories */
-  readonly attribute nsIDOMBarProp               directories;
   readonly attribute boolean                     closed;
   readonly attribute nsIDOMCrypto                crypto;
   readonly attribute nsIDOMPkcs11                pkcs11;

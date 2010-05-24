@@ -61,8 +61,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIStyleSheet api
-  virtual already_AddRefed<nsIURI> GetSheetURI() const;
-  virtual already_AddRefed<nsIURI> GetBaseURI() const;
+  virtual nsIURI* GetSheetURI() const;
+  virtual nsIURI* GetBaseURI() const;
   virtual void GetTitle(nsString& aTitle) const;
   virtual void GetType(nsString& aType) const;
   virtual PRBool HasRules() const;
@@ -70,8 +70,8 @@ public:
   virtual void SetEnabled(PRBool aEnabled);
   virtual PRBool IsComplete() const;
   virtual void SetComplete();
-  virtual already_AddRefed<nsIStyleSheet> GetParentSheet() const;  // will be null
-  virtual already_AddRefed<nsIDocument> GetOwningDocument() const;
+  virtual nsIStyleSheet* GetParentSheet() const;  // will be null
+  virtual nsIDocument* GetOwningDocument() const;
   virtual void SetOwningDocument(nsIDocument* aDocumemt);
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
@@ -92,7 +92,7 @@ public:
                                    PRBool* aRulesChanged);
 
   nsresult Init(nsIURI* aURL, nsIDocument* aDocument);
-  nsresult Reset(nsIURI* aURL);
+  void Reset(nsIURI* aURL);
   nsresult SetLinkColor(nscolor aColor);
   nsresult SetActiveLinkColor(nscolor aColor);
   nsresult SetVisitedLinkColor(nscolor aColor);
@@ -153,15 +153,15 @@ private:
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
   };
 
-  nsIURI*              mURL;
-  nsIDocument*         mDocument;
-  HTMLColorRule*       mLinkRule;
-  HTMLColorRule*       mVisitedRule;
-  HTMLColorRule*       mActiveRule;
-  HTMLColorRule*       mDocumentColorRule;
-  TableTHRule*         mTableTHRule;
+  nsCOMPtr<nsIURI>        mURL;
+  nsIDocument*            mDocument;
+  nsRefPtr<HTMLColorRule> mLinkRule;
+  nsRefPtr<HTMLColorRule> mVisitedRule;
+  nsRefPtr<HTMLColorRule> mActiveRule;
+  nsRefPtr<HTMLColorRule> mDocumentColorRule;
+  nsRefPtr<TableTHRule>   mTableTHRule;
 
-  PLDHashTable         mMappedAttrTable;
+  PLDHashTable            mMappedAttrTable;
 };
 
 // XXX convenience method. Calls Initialize() automatically.

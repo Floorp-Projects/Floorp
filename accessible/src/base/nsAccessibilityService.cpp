@@ -110,6 +110,8 @@
 #include "nsXFormsWidgetsAccessible.h"
 #endif
 
+#include "mozilla/FunctionTimer.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +121,8 @@ PRBool nsAccessibilityService::gIsShutdown = PR_TRUE;
 
 nsAccessibilityService::nsAccessibilityService()
 {
+  NS_TIME_FUNCTION;
+
   // Add observers.
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();

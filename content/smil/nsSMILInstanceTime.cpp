@@ -183,7 +183,7 @@ void
 nsSMILInstanceTime::SetBaseInterval(nsSMILInterval* aBaseInterval)
 {
   NS_ABORT_IF_FALSE(!mBaseInterval,
-      "Attepting to reassociate an instance time with a different interval.");
+      "Attempting to reassociate an instance time with a different interval.");
 
   // Make sure we don't end up creating a cycle between the dependent time
   // pointers.

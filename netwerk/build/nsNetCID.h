@@ -469,6 +469,13 @@
 #define NS_DEFAULTAUTHPROMPT_CONTRACTID \
     "@mozilla.org/network/default-auth-prompt;1"
 
+/**
+ * Contract ID for a service implementing nsIURIClassifier that identifies
+ * phishing and malware sites.
+ */
+#define NS_URICLASSIFIERSERVICE_CONTRACTID \
+    "@mozilla.org/uriclassifierservice"
+
 /******************************************************************************
  * netwerk/cache/ classes
  */

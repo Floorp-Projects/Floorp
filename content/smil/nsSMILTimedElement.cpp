@@ -270,8 +270,6 @@ nsSMILTimedElement::AddInstanceTime(nsSMILInstanceTime* aInstanceTime,
                                     PRBool aIsBegin)
 {
   NS_ABORT_IF_FALSE(aInstanceTime, "Attempting to add null instance time");
-  NS_ABORT_IF_FALSE(!aIsBegin || aInstanceTime->Time().IsResolved(),
-      "Attempting to add unresolved or indefinite begin instance time");
 
   aInstanceTime->SetSerial(++mInstanceSerialIndex);
   InstanceTimeList& instanceList = aIsBegin ? mBeginInstances : mEndInstances;
@@ -1122,13 +1120,11 @@ nsSMILTimedElement::GetNextInterval(const nsSMILInterval* aPrevInterval,
     } else {
       PRInt32 beginPos = 0;
       tempBegin = GetNextGreaterOrEqual(mBeginInstances, beginAfter, beginPos);
-      if (!tempBegin)
+      if (!tempBegin || !tempBegin->Time().IsResolved())
         return NS_ERROR_FAILURE;
-      // Indefinite and unresolved are only permitted in the end instances list
-      NS_ABORT_IF_FALSE(tempBegin->Time().IsResolved(),
-          "Indefinite or unresolved interval in begin instances list");
     }
-    NS_ABORT_IF_FALSE(tempBegin && tempBegin->Time() >= beginAfter,
+    NS_ABORT_IF_FALSE(tempBegin && tempBegin->Time().IsResolved() && 
+        tempBegin->Time() >= beginAfter,
         "Got a bad begin time while fetching next interval");
 
     // Calculate end time
@@ -1241,22 +1237,18 @@ nsSMILTimedElement::CalcActiveEnd(const nsSMILTimeValue& aBegin,
 {
   nsSMILTimeValue result;
 
-  NS_ASSERTION(mSimpleDur.IsResolved() || mSimpleDur.IsIndefinite(),
+  NS_ABORT_IF_FALSE(mSimpleDur.IsResolved() || mSimpleDur.IsIndefinite(),
     "Unresolved simple duration in CalcActiveEnd");
+  NS_ABORT_IF_FALSE(aBegin.IsResolved(),
+    "Unresolved begin time in CalcActiveEnd");
 
-  if (!aBegin.IsResolved() && !aBegin.IsIndefinite()) {
-    NS_ERROR("Unresolved begin time passed to CalcActiveEnd");
-    result.SetIndefinite();
-    return result;
-  }
-
-  if (mRepeatDur.IsIndefinite() || aBegin.IsIndefinite()) {
+  if (mRepeatDur.IsIndefinite()) {
     result.SetIndefinite();
   } else {
     result = GetRepeatDuration();
   }
 
-  if (aEnd.IsResolved() && aBegin.IsResolved()) {
+  if (aEnd.IsResolved()) {
     nsSMILTime activeDur = aEnd.GetMillis() - aBegin.GetMillis();
 
     if (result.IsResolved()) {

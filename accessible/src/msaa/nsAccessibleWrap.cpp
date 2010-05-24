@@ -390,26 +390,21 @@ __try {
 
       PRUint32 currentRole = nsAccUtils::Role(xpAccessible);
       if (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
-        nsCOMPtr<nsIAccessible> child;
-        xpAccessible->GetFirstChild(getter_AddRefs(child));
-        while (child) {
+        PRInt32 childCount = xpAccessible->GetChildCount();
+        for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
+          nsAccessible *child = xpAccessible->GetChildAt(childIdx);
           currentRole = nsAccUtils::Role(child);
           if (currentRole == nsIAccessibleRole::ROLE_GROUPING) {
-            nsCOMPtr<nsIAccessible> groupChild;
-            child->GetFirstChild(getter_AddRefs(groupChild));
-            while (groupChild) {
+            PRInt32 groupChildCount = child->GetChildCount();
+            for (PRInt32 groupChildIdx = 0; groupChildIdx < groupChildCount;
+                 groupChildIdx++) {
+              nsAccessible *groupChild = child->GetChildAt(groupChildIdx);
               currentRole = nsAccUtils::Role(groupChild);
               numChildren +=
                 (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM);
-              nsCOMPtr<nsIAccessible> nextGroupChild;
-              groupChild->GetNextSibling(getter_AddRefs(nextGroupChild));
-              groupChild.swap(nextGroupChild);
             }
             break;
           }
-          nsCOMPtr<nsIAccessible> nextChild;
-          child->GetNextSibling(getter_AddRefs(nextChild));
-          child.swap(nextChild);
         }
       }
 

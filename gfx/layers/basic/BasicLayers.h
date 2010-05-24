@@ -86,6 +86,7 @@ public:
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
   virtual already_AddRefed<ImageLayer> CreateImageLayer();
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
   virtual already_AddRefed<ImageContainer> CreateImageContainer();
   virtual already_AddRefed<ColorLayer> CreateColorLayer();
   virtual LayersBackend GetBackendType() { return LAYERS_BASIC; }

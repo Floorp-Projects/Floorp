@@ -58,6 +58,8 @@ _CHROME_FILES = \
     bug514705_helper.xul \
     test_title.xul \
     title_window.xul \
+    test_bug549682.xul \
+    file_bug549682.xul \
     $(NULL)
 
 libs:: $(_TEST_FILES)

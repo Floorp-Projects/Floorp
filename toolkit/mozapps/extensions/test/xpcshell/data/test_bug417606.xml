@@ -81,8 +81,12 @@
     <guid>test5@tests.mozilla.org</guid>
     <version>1.0</version>
     <status id='4'>Public</status>
-    <summary>This should work fine</summary>
-    <description>Test description</description>
+    <summary>
+      This should work fine
+    </summary>
+    <description>
+      Test description
+    </description>
     <compatible_applications>
       <application>
         <name>XPCShell</name>
@@ -92,8 +96,12 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <learnmore>https://addons.mozilla.org/addon/5992</learnmore>
-    <install os="ALL" hash="sha1:c26f0b0d62e5dcddcda95074d3f3fedb9bbc26e3">http://localhost:4444/test.xpi</install>
+    <learnmore>
+      https://addons.mozilla.org/addon/5992
+    </learnmore>
+    <install os="ALL" hash="sha1:c26f0b0d62e5dcddcda95074d3f3fedb9bbc26e3">
+      http://localhost:4444/test.xpi
+    </install>
   </addon>
   <addon>
     <name>FAIL</name>
@@ -141,8 +149,12 @@
     <rating>4</rating>
     <summary>Specific OS should work fine</summary>
     <eula>EULA should be confirmed</eula>
-    <thumbnail>http://localhost:4444/test_bug404024/thumbnail.png</thumbnail>
-    <icon>http://localhost:4444/test_bug404024/icon.png</icon>
+    <thumbnail>
+      http://localhost:4444/test_bug404024/thumbnail.png
+    </thumbnail>
+    <icon>
+      http://localhost:4444/test_bug404024/icon.png
+    </icon>
     <compatible_applications>
       <application>
         <name>XPCShell</name>
@@ -152,9 +164,15 @@
         <max_version>1</max_version>
       </application>
     </compatible_applications>
-    <install os="Windows">http://localhost:4444/test.xpi</install>
-    <install os="XPCShell">http://localhost:4444/XPCShell.xpi</install>
-    <install os="Darwin">http://localhost:4444/test.xpi</install>
+    <install os="Windows">
+      http://localhost:4444/test.xpi
+    </install>
+    <install os="XPCShell">
+      http://localhost:4444/XPCShell.xpi
+    </install>
+    <install os="Darwin">
+      http://localhost:4444/test.xpi
+    </install>
   </addon>
 </searchresults>
 

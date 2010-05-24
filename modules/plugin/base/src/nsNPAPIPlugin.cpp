@@ -1980,6 +1980,11 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   case NPNVSupportsXEmbedBool: {
 #ifdef MOZ_WIDGET_GTK2
     *(NPBool*)result = PR_TRUE;
+#elif defined(MOZ_WIDGET_QT)
+    // Desktop Flash fail to initialize if browser does not support NPNVSupportsXEmbedBool
+    // even when wmode!=windowed, lets return fake support
+    fprintf(stderr, "Fake support for XEmbed plugins in Qt port\n");
+    *(NPBool*)result = PR_TRUE;
 #else
     *(NPBool*)result = PR_FALSE;
 #endif

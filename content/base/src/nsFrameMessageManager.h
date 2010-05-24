@@ -82,6 +82,7 @@ public:
     mContext(aContext)
   {
     NS_ASSERTION(mContext, "Should have mContext!");
+    NS_ASSERTION(aChrome || !aParentManager, "Should not set parent manager!");
     if (mParentManager && mCallbackData) {
       mParentManager->AddChildManager(this);
     }
@@ -106,18 +107,26 @@ public:
                           PRBool aSync, const nsAString& aJSON,
                           JSObject* aObjectsArray,
                           nsTArray<nsString>* aJSONRetVal);
-  void AddChildManager(nsFrameMessageManager* aManager);
+  void AddChildManager(nsFrameMessageManager* aManager,
+                       PRBool aLoadScripts = PR_TRUE);
   void RemoveChildManager(nsFrameMessageManager* aManager)
   {
     mChildManagers.RemoveObject(aManager);
   }
 
   void Disconnect(PRBool aRemoveFromParent = PR_TRUE);
-  void SetCallbackData(void* aData);
+  void SetCallbackData(void* aData, PRBool aLoadScripts = PR_TRUE);
   nsresult GetParamsForMessage(nsAString& aMessageName, nsAString& aJSON);
   nsresult SendAsyncMessageInternal(const nsAString& aMessage,
                                     const nsAString& aJSON);
   JSContext* GetJSContext() { return mContext; }
+  nsFrameMessageManager* GetParentManager() { return mParentManager; }
+  void SetParentManager(nsFrameMessageManager* aParent)
+  {
+    NS_ASSERTION(!mParentManager, "We have parent manager already!");
+    NS_ASSERTION(mChrome, "Should not set parent manager!");
+    mParentManager = aParent;
+  }
 protected:
   nsTArray<nsMessageListenerInfo> mListeners;
   nsCOMArray<nsIContentFrameMessageManager> mChildManagers;

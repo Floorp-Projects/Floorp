@@ -68,6 +68,9 @@ static PRBool test_basic_array(ElementType *data,
   if (ary.Length() != dataLen) {
     return PR_FALSE;
   }
+  if (!(ary == ary)) {
+    return PR_FALSE;
+  }
   PRUint32 i;
   for (i = 0; i < ary.Length(); ++i) {
     if (ary[i] != data[i])
@@ -98,6 +101,9 @@ static PRBool test_basic_array(ElementType *data,
     if (ary[i] == ary[i - 1])
       ary.RemoveElementAt(i);
   }
+  if (!(ary == ary)) {
+    return PR_FALSE;
+  }
   for (i = 0; i < ary.Length(); ++i) {
     if (ary.BinaryIndexOf(ary[i]) != i)
       return PR_FALSE;
@@ -108,9 +114,13 @@ static PRBool test_basic_array(ElementType *data,
   ary.RemoveElement(data[dataLen / 2]);
   if (ary.Length() != (oldLen - 1))
     return PR_FALSE;
+  if (!(ary == ary))
+    return PR_FALSE;
 
   PRUint32 index = ary.Length() / 2;
   if (!ary.InsertElementAt(index, extra))
+    return PR_FALSE;
+  if (!(ary == ary))
     return PR_FALSE;
   if (ary[index] != extra)
     return PR_FALSE;
@@ -125,6 +135,8 @@ static PRBool test_basic_array(ElementType *data,
     return PR_FALSE;
 
   nsTArray<ElementType> copy(ary);
+  if (!(ary == copy))
+    return PR_FALSE;
   for (i = 0; i < copy.Length(); ++i) {
     if (ary[i] != copy[i])
       return PR_FALSE;
@@ -140,17 +152,25 @@ static PRBool test_basic_array(ElementType *data,
   ary.Clear();
   if (!ary.IsEmpty() || ary.Elements() == nsnull)
     return PR_FALSE;
+  if (!(ary == nsTArray<ElementType>()))
+    return PR_FALSE;
+  if (ary == copy)
+    return PR_FALSE;
   if (ary.SafeElementAt(0, extra) != extra ||
       ary.SafeElementAt(10, extra) != extra)
     return PR_FALSE;
 
   ary = copy;
+  if (!(ary == copy))
+    return PR_FALSE;
   for (i = 0; i < copy.Length(); ++i) {
     if (ary[i] != copy[i])
       return PR_FALSE;
   }
 
   if (!ary.InsertElementsAt(0, copy))
+    return PR_FALSE;
+  if (ary == copy)
     return PR_FALSE;
   ary.RemoveElementsAt(0, copy.Length());
   for (i = 0; i < copy.Length(); ++i) {

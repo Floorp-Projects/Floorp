@@ -69,12 +69,13 @@
 #include "nsContentErrors.h"
 #include "nsIParser.h"
 #include "nsThreadUtils.h"
-#include "nsIChannelClassifier.h"
 #include "nsDocShellCID.h"
 #include "nsIContentSecurityPolicy.h"
 #include "prlog.h"
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
+
+#include "mozilla/FunctionTimer.h"
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gCspPRLog;
@@ -303,8 +304,8 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
-                     aRequest->mURI, nsnull, loadGroup,
-                     prompter, nsIRequest::LOAD_NORMAL,
+                     aRequest->mURI, nsnull, loadGroup, prompter,
+                     nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI,
                      channelPolicy);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -322,17 +323,6 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType)
 
   rv = channel->AsyncOpen(loader, aRequest);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // Check the load against the URI classifier
-  nsCOMPtr<nsIChannelClassifier> classifier =
-    do_CreateInstance(NS_CHANNELCLASSIFIER_CONTRACTID);
-  if (classifier) {
-    rv = classifier->Start(channel, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      channel->Cancel(rv);
-      return rv;
-    }
-  }
 
   return NS_OK;
 }
@@ -655,6 +645,8 @@ nsScriptLoader::ProcessRequest(nsScriptLoadRequest* aRequest)
   NS_ENSURE_ARG(aRequest);
   nsAFlatString* script;
   nsAutoString textData;
+
+  NS_TIME_FUNCTION;
 
   // If there's no script text, we try to get it from the element
   if (aRequest->mIsInline) {

@@ -60,6 +60,8 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 
+#include "mozilla/FunctionTimer.h"
+
 /* load() error msgs, XXX localize? */
 #define LOAD_ERROR_NOSERVICE "Error creating IO Service."
 #define LOAD_ERROR_NOURI "Error creating URI (invalid URL scheme?)"
@@ -88,7 +90,7 @@ mozJSSubScriptLoader::~mozJSSubScriptLoader()
 NS_IMPL_THREADSAFE_ISUPPORTS1(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 
 NS_IMETHODIMP /* args and return value are delt with using XPConnect and JSAPI */
-mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
+mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
                                      /* [, JSObject *target_obj] */)
 {
     /*
@@ -106,6 +108,13 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
      * defined the rest up here to be consistent */
     nsresult  rv;
     JSBool    ok;
+
+#ifdef NS_FUNCTION_TIMER
+    NS_TIME_FUNCTION_FMT("%s (line %d) (url: %s)", MOZ_FUNCTION_NAME,
+                         __LINE__, NS_LossyConvertUTF16toASCII(aURL).get());
+#else
+    aURL; // prevent compiler warning
+#endif
 
     /* get JS things from the CallContext */
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(nsIXPConnect::GetCID());

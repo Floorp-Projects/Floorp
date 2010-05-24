@@ -46,7 +46,7 @@ interface nsIFrame;
 interface nsIChromeFrameMessageManager;
 interface nsIVariant;
 
-[scriptable, uuid(85a7f80b-4a3f-4606-8513-a1c4cced874f)]
+[scriptable, uuid(bd69ff3d-d2cb-4dee-94e4-c6948df7603a)]
 interface nsIFrameLoader : nsISupports
 {
   /**
@@ -113,6 +113,7 @@ interface nsIFrameLoader : nsISupports
    */
   void activateFrameEvent(in AString aType, in boolean capture);
 
+  // Note, when frameloaders are swapped, also messageManagers are swapped.
   readonly attribute nsIChromeFrameMessageManager messageManager;
 
   /**

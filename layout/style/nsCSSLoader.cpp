@@ -85,7 +85,6 @@
 #include "nsThreadUtils.h"
 #include "nsGkAtoms.h"
 #include "nsDocShellCID.h"
-#include "nsIChannelClassifier.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -99,6 +98,8 @@
 
 #include "nsIChannelPolicy.h"
 #include "nsIContentSecurityPolicy.h"
+
+#include "mozilla/FunctionTimer.h"
 
 /**
  * OVERALL ARCHITECTURE
@@ -1382,6 +1383,13 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
                   "Shouldn't use system principal for async loads");
   NS_ASSERTION(mLoadingDatas.IsInitialized(), "mLoadingDatas should be initialized by now.");
 
+#ifdef NS_FUNCTION_TIMER
+  nsCAutoString spec__("N/A");
+  if (aLoadData->mURI) aLoadData->mURI->GetSpec(spec__);
+  NS_TIME_FUNCTION_FMT("Loading stylesheet (url: %s, %ssync)",
+                       spec__.get(), aLoadData->mSyncLoad ? "" : "a");
+#endif
+
   LOG_URI("  Load from: '%s'", aLoadData->mURI);
   
   nsresult rv = NS_OK;  
@@ -1528,8 +1536,9 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
   
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
-                     aLoadData->mURI, nsnull, loadGroup,
-                     nsnull, nsIChannel::LOAD_NORMAL, channelPolicy);
+                     aLoadData->mURI, nsnull, loadGroup, nsnull,
+                     nsIChannel::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI,
+                     channelPolicy);
   
   if (NS_FAILED(rv)) {
 #ifdef DEBUG
@@ -1587,20 +1596,6 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     return rv;
   }
 
-  // Check the load against the URI classifier
-  nsCOMPtr<nsIChannelClassifier> classifier =
-    do_CreateInstance(NS_CHANNELCLASSIFIER_CONTRACTID);
-  if (classifier) {
-    rv = classifier->Start(channel, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      LOG_ERROR(("  Failed to classify URI"));
-      aLoadData->mIsCancelled = PR_TRUE;
-      channel->Cancel(rv);
-      SheetComplete(aLoadData, rv);
-      return rv;
-    }
-  }
-
   if (!mLoadingDatas.Put(&key, aLoadData)) {
     LOG_ERROR(("  Failed to put data in loading table"));
     aLoadData->mIsCancelled = PR_TRUE;
@@ -1630,6 +1625,12 @@ Loader::ParseSheet(nsIUnicharInputStream* aStream,
   NS_PRECONDITION(aLoadData, "Must have load data");
   NS_PRECONDITION(aLoadData->mSheet, "Must have sheet to parse into");
 
+#ifdef NS_FUNCTION_TIMER
+  nsCAutoString spec__("N/A");
+  if (aLoadData->mURI) aLoadData->mURI->GetSpec(spec__);
+  NS_TIME_FUNCTION_FMT("Parsing stylesheet (url: %s)", spec__.get());
+#endif
+
   aCompleted = PR_FALSE;
 
   nsCSSParser parser(this, aLoadData->mSheet);
@@ -1641,9 +1642,8 @@ Loader::ParseSheet(nsIUnicharInputStream* aStream,
 
   // Push our load data on the stack so any kids can pick it up
   mParsingDatas.AppendElement(aLoadData);
-  nsCOMPtr<nsIURI> sheetURI, baseURI;
-  sheetURI = aLoadData->mSheet->GetSheetURI();
-  baseURI = aLoadData->mSheet->GetBaseURI();
+  nsIURI* sheetURI = aLoadData->mSheet->GetSheetURI();
+  nsIURI* baseURI = aLoadData->mSheet->GetBaseURI();
   nsresult rv = parser.Parse(aStream, sheetURI, baseURI,
                              aLoadData->mSheet->Principal(),
                              aLoadData->mLineNumber,
@@ -1997,8 +1997,7 @@ Loader::LoadChildSheet(nsCSSStyleSheet* aParentSheet,
 
   // check for an owning document: if none, don't bother walking up the parent
   // sheets
-  nsCOMPtr<nsIDocument> owningDoc = aParentSheet->GetOwningDocument();
-  if (owningDoc) {
+  if (aParentSheet->GetOwningDocument()) {
     nsCOMPtr<nsIDOMStyleSheet> nextParentSheet(aParentSheet);
     NS_ENSURE_TRUE(nextParentSheet, NS_ERROR_FAILURE); //Not a stylesheet!?
 

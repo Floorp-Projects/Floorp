@@ -41,8 +41,8 @@
 #include <stdio.h>
 #include <stdlib.h>             // for abort()
 
-#if defined(_WIN32)
-#  include <signal.h>           // for raise
+#if defined(XP_WIN)
+#  include <intrin.h>           // for __debugbreak()
 #elif defined(XP_UNIX)
 #  include <unistd.h>           // for _exit
 #endif
@@ -55,37 +55,31 @@
 
 static int gDummyCounter;
 
+static void
+TouchBadMemory()
+{
+    // XXX this should use the frame poisoning code
+    gDummyCounter += *((int *) 0);   // TODO annotation saying we know 
+                                     // this is crazy
+}
+
 void
 mozalloc_abort(const char* const msg)
 {
     fputs(msg, stderr);
     fputs("\n", stderr);
 
-    // XXX/cjones: most of this function was copied from
-    // xpcom/base/nsDebugImpl.cpp:Abort(), except that we assume on
-    // UNIX-like platforms can directly abort() rather than need to go
-    // through PR_Abort(). we don't want this code to rely on NSPR.
-
-    // FIXME/bug 558928: improve implementation for windows/wince
-
-#if defined(_WIN32)
-#  if !defined(WINCE)
-    //This should exit us
-    raise(SIGABRT);
-#  endif
-    //If we are ignored exit this way..
-    _exit(3);
-#elif defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
     abort();
-#else
-#  warning not attempting to abort() on this platform
+#elif defined(XP_WIN)
+    __debugbreak();
 #endif
+    // abort() doesn't trigger breakpad on Mac, "fall through" to the
+    // fail-safe code
 
     // Still haven't aborted?  Try dereferencing null.
-    // (Written this way to lessen the likelihood of it being optimized away.)
-    gDummyCounter += *((int*) 0); // TODO annotation saying we know 
-    // this is crazy
-    
+    TouchBadMemory();
+
     // Still haven't aborted?  Try _exit().
     _exit(127);
 }

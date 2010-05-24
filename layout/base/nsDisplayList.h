@@ -544,10 +544,11 @@ public:
    */
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder) { return PR_FALSE; }
   /**
+   * If this returns true, then aColor is set to the uniform color
    * @return PR_TRUE if the item is guaranteed to paint every pixel in its
    * bounds with the same (possibly translucent) color
    */
-  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder) { return PR_FALSE; }
+  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) { return PR_FALSE; }
   /**
    * @return PR_FALSE if the painting performed by the item is invariant
    * when frame aFrame is moved relative to aBuilder->GetRootMovingFrame().
@@ -628,6 +629,8 @@ public:
    * list.
    */
   virtual nsDisplayList* GetList() { return nsnull; }
+
+  const nsRect& GetVisibleRect() { return mVisibleRect; }
   
 #ifdef NS_DEBUG
   /**
@@ -1303,7 +1306,11 @@ public:
     return (NS_GET_A(mColor) == 255);
   }
 
-  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder) { return PR_TRUE; }
+  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
+  {
+    *aColor = mColor;
+    return PR_TRUE;
+  }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
 
@@ -1335,7 +1342,7 @@ public:
   }
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder);
-  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder);
+  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Background")
@@ -1468,7 +1475,7 @@ public:
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual PRBool IsOpaque(nsDisplayListBuilder* aBuilder);
-  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder);
+  virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -1672,7 +1679,7 @@ public:
                        HitTestState *aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual nsRect GetBounds(nsDisplayListBuilder *aBuilder);
   virtual PRBool IsOpaque(nsDisplayListBuilder *aBuilder);
-  virtual PRBool IsUniform(nsDisplayListBuilder *aBuilder);
+  virtual PRBool IsUniform(nsDisplayListBuilder *aBuilder, nscolor* aColor);
   virtual void   Paint(nsDisplayListBuilder *aBuilder,
                        nsIRenderingContext *aCtx);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder *aBuilder,
