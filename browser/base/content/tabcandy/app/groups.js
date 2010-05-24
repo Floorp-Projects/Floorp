@@ -757,8 +757,14 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         }
       };
     }
+
+    // ___ we're stacked, but command isn't held down
+    if( Keys.meta == false ){
+      Groups.setActiveGroup(self);
+      return { shouldZoom: true };      
+    }
       
-    // ___ we're stacked, so expand
+    // ___ we're stacked, and command is held down so expand
     Groups.setActiveGroup(self);
     var startBounds = child.getBounds();
     var $tray = $("<div />").css({
