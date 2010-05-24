@@ -73,8 +73,8 @@ ContainerLayerOGL::InsertAfter(Layer* aChild, Layer* aAfter)
 {
   LayerOGL *newChild = static_cast<LayerOGL*>(aChild->ImplData());
   aChild->SetParent(this);
-  NS_ADDREF(aChild);
   if (!aAfter) {
+    NS_ADDREF(aChild);
     LayerOGL *oldFirstChild = GetFirstChildOGL();
     mFirstChild = newChild->GetLayer();
     newChild->SetNextSibling(oldFirstChild);
@@ -83,6 +83,7 @@ ContainerLayerOGL::InsertAfter(Layer* aChild, Layer* aAfter)
   for (LayerOGL *child = GetFirstChildOGL(); 
     child; child = child->GetNextSibling()) {
     if (aAfter == child->GetLayer()) {
+      NS_ADDREF(aChild);
       LayerOGL *oldNextSibling = child->GetNextSibling();
       child->SetNextSibling(newChild);
       child->GetNextSibling()->SetNextSibling(oldNextSibling);
