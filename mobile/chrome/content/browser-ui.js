@@ -405,7 +405,7 @@ var BrowserUI = {
     this._favicon.addEventListener("error", this, false);
 
     let urlbarEditArea = document.getElementById("urlbar-editarea");
-    urlbarEditArea.addEventListener("mouseup", this, false);
+    urlbarEditArea.addEventListener("click", this, false);
     urlbarEditArea.addEventListener("mousedown", this, false);
 
     document.getElementById("toolbar-main").ignoreDrag = true;
@@ -763,10 +763,8 @@ var BrowserUI = {
         }
         break;
       // URL textbox events
-      case "mouseup":
-        if (aEvent.detail < 2 && aEvent.button == 0 && gFocusManager.focusedElement == this._edit.inputField) {
-          this.doCommand("cmd_openLocation");
-        }
+      case "click":
+        this.doCommand("cmd_openLocation");
         break;
       case "mousedown":
         if (!this._isEventInsidePopup(aEvent))
