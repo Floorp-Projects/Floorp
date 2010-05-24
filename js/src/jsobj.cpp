@@ -1118,14 +1118,6 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 
-    /*
-     * If the caller is a lightweight function and doesn't have a variables
-     * object, then we need to provide one for the compiler to stick any
-     * declared (var) variables into.
-     */
-    if (caller->fun && !caller->callobj && !js_GetCallObject(cx, caller))
-        return JS_FALSE;
-
     /* Accept an optional trailing argument that overrides the scope object. */
     JSObject *scopeobj = NULL;
     if (argc >= 2) {
@@ -1196,6 +1188,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
              * NB: This means that native callers (who reach this point through
              * the C API) must use the two parameter form.
              */
+            JS_ASSERT_IF(caller->argv, caller->callobj);
             scopeobj = callerScopeChain;
         }
 #endif
