@@ -284,6 +284,8 @@ BOOLEAN_TO_JSVAL(JSBool b)
                                            object that delegates to a prototype
                                            containing this property */
 #define JSPROP_INDEX            0x80    /* name is actually (jsint) index */
+#define JSPROP_SHORTID          0x100   /* set in JSPropertyDescriptor.attrs
+                                           if getters/setters use a shortid */
 
 /* Function flags, set in JSFunctionSpec and passed to JS_NewFunction etc. */
 #define JSFUN_LAMBDA            0x08    /* expressed, not declared, function */
@@ -822,6 +824,9 @@ JS_GetScopeChain(JSContext *cx);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_GetGlobalForScopeChain(JSContext *cx);
 
 #ifdef JS_HAS_CTYPES
 /*
@@ -1395,12 +1400,18 @@ extern JS_PUBLIC_API(intN)
 JS_GetExternalStringGCType(JSRuntime *rt, JSString *str);
 
 /*
- * Sets maximum (if stack grows upward) or minimum (downward) legal stack byte
- * address in limitAddr for the thread or process stack used by cx.  To disable
- * stack size checking, pass 0 for limitAddr.
+ * Deprecated. Use JS_SetNativeStackQuoata instead.
  */
 extern JS_PUBLIC_API(void)
 JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr);
+
+/*
+ * Set the size of the native stack that should not be exceed. To disable
+ * stack size checking pass 0.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetNativeStackQuota(JSContext *cx, size_t stackSize);
+
 
 /*
  * Set the quota on the number of bytes that stack-like data structures can
@@ -1509,13 +1520,11 @@ struct JSExtendedClass {
  * deleteable, for the most part.
  *
  * Implementing this efficiently requires that global objects have classes
- * with the following flags.  Failure to use JSCLASS_GLOBAL_FLAGS won't break
- * anything except the ECMA-262 "original prototype value" behavior, which was
- * broken for years in SpiderMonkey.  In other words, without these flags you
- * get backward compatibility.
+ * with the following flags. Failure to use JSCLASS_GLOBAL_FLAGS was
+ * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
 #define JSCLASS_GLOBAL_FLAGS \
-    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT))
+    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSProto_LIMIT * 2))
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
@@ -1532,6 +1541,7 @@ struct JSExtendedClass {
 #define JSCLASS_NO_RESERVED_MEMBERS     0,0,0
 
 struct JSIdArray {
+    void *self;
     jsint length;
     jsid  vector[1];    /* actually, length jsid words */
 };
@@ -1820,6 +1830,7 @@ struct JSPropertyDescriptor {
     uintN        attrs;
     JSPropertyOp getter;
     JSPropertyOp setter;
+    uintN        shortid;
     jsval        value;
 };
 

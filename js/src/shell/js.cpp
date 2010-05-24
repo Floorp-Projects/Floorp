@@ -53,6 +53,7 @@
 #include "jsarena.h"
 #include "jsutil.h"
 #include "jsprf.h"
+#include "jsproxy.h"
 #include "jsapi.h"
 #include "jsarray.h"
 #include "jsatom.h"
@@ -71,6 +72,7 @@
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jstracer.h"
+#include "jsxml.h"
 
 #include "prmjtime.h"
 
@@ -85,6 +87,8 @@
 #endif /* JSDEBUGGER */
 
 #include "jsworkers.h"
+
+#include "jsobjinlines.h"
 
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -115,9 +119,9 @@ size_t gStackChunkSize = 8192;
 #if defined(DEBUG) && defined(__SUNPRO_CC)
 /* Sun compiler uses larger stack space for js_Interpret() with debug
    Use a bigger gMaxStackSize to make "make check" happy. */
-static size_t gMaxStackSize = 5000000;
+size_t gMaxStackSize = 5000000;
 #else
-static size_t gMaxStackSize = 500000;
+size_t gMaxStackSize = 500000;
 #endif
 
 
@@ -348,40 +352,9 @@ ShellOperationCallback(JSContext *cx)
 }
 
 static void
-SetThreadStackLimit(JSContext *cx)
-{
-    jsuword stackLimit;
-
-    if (gMaxStackSize == 0) {
-        /*
-         * Disable checking for stack overflow if limit is zero.
-         */
-        stackLimit = 0;
-    } else {
-        jsuword stackBase;
-#ifdef JS_THREADSAFE
-        stackBase = (jsuword) PR_GetThreadPrivate(gStackBaseThreadIndex);
-#else
-        stackBase = gStackBase;
-#endif
-        if (stackBase) {
-#if JS_STACK_GROWTH_DIRECTION > 0
-            stackLimit = stackBase + gMaxStackSize;
-#else
-            stackLimit = stackBase - gMaxStackSize;
-#endif
-        } else {
-            stackLimit = 0;
-        }
-    }
-    JS_SetThreadStackLimit(cx, stackLimit);
-
-}
-
-static void
 SetContextOptions(JSContext *cx)
 {
-    SetThreadStackLimit(cx);
+    JS_SetNativeStackQuota(cx, gMaxStackSize);
     JS_SetScriptStackQuota(cx, gScriptStackQuota);
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
@@ -1404,9 +1377,9 @@ ValueToScript(JSContext *cx, jsval v)
 
         if (clasp == &js_ScriptClass) {
             script = (JSScript *) JS_GetPrivate(cx, obj);
-        } else if (clasp == &js_GeneratorClass) {
+        } else if (clasp == &js_GeneratorClass.base) {
             JSGenerator *gen = (JSGenerator *) JS_GetPrivate(cx, obj);
-            fun = gen->frame.fun;
+            fun = gen->getFloatingFrame()->fun;
             script = FUN_SCRIPT(fun);
         }
     }
@@ -3020,10 +2993,17 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             ok = JS_FALSE;
             goto out;
         }
+        if (sobj->isArray() || sobj->isXML() || !sobj->isNative()) {
+            JS_TransferRequest(scx, cx);
+            JS_ReportError(cx, "Invalid scope argument to evalcx");
+            DestroyContext(scx, false);
+            return JS_FALSE;
+        }
+
         ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
                                  fp->script->filename,
                                  JS_PCToLineNumber(cx, fp->script,
-                                                   fp->regs->pc),
+                                                   fp->pc(cx)),
                                  rval);
     }
 
@@ -3061,13 +3041,13 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
 
     JS_ASSERT(cx->fp);
 
-    JSStackFrame *fp = cx->fp;
-    for (uint32 i = 0; i < upCount; ++i) {
-        if (!fp->down)
+    FrameRegsIter fi(cx);
+    for (uint32 i = 0; i < upCount; ++i, ++fi) {
+        if (!fi.fp()->down)
             break;
-        fp = fp->down;
     }
 
+    JSStackFrame *const fp = fi.fp();
     if (!fp->script) {
         JS_ReportError(cx, "cannot eval in non-script frame");
         return JS_FALSE;
@@ -3080,7 +3060,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     JSBool ok = JS_EvaluateUCInStackFrame(cx, fp, str->chars(), str->length(),
                                           fp->script->filename,
                                           JS_PCToLineNumber(cx, fp->script,
-                                                            fp->regs->pc),
+                                                            fi.pc()),
                                           vp);
 
     if (saveCurrent)
@@ -3227,7 +3207,7 @@ RunScatterThread(void *arg)
 
     /* We are good to go. */
     JS_SetContextThread(cx);
-    SetThreadStackLimit(cx);
+    JS_SetNativeStackQuota(cx, gMaxStackSize);
     JS_BeginRequest(cx);
     DoScatteredWork(cx, td);
     JS_EndRequest(cx);
@@ -3677,11 +3657,13 @@ Parent(JSContext *cx, uintN argc, jsval *vp)
     *vp = OBJECT_TO_JSVAL(parent);
 
     /* Outerize if necessary.  Embrace the ugliness! */
-    JSClass *clasp = JS_GET_CLASS(cx, parent);
-    if (clasp->flags & JSCLASS_IS_EXTENDED) {
-        JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
-        if (JSObjectOp outerize = xclasp->outerObject)
-            *vp = OBJECT_TO_JSVAL(outerize(cx, parent));
+    if (parent) {
+        JSClass *clasp = JS_GET_CLASS(cx, parent);
+        if (clasp->flags & JSCLASS_IS_EXTENDED) {
+            JSExtendedClass *xclasp = reinterpret_cast<JSExtendedClass *>(clasp);
+            if (JSObjectOp outerize = xclasp->outerObject)
+                *vp = OBJECT_TO_JSVAL(outerize(cx, parent));
+        }
     }
 
     return JS_TRUE;
@@ -3857,6 +3839,23 @@ Snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+JSBool
+Wrap(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval v = argc > 0 ? JS_ARGV(cx, vp)[0] : JSVAL_VOID;
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        JS_SET_RVAL(cx, vp, v);
+        return true;
+    }
+
+    JSObject *wrapped = JSNoopProxyHandler::wrap<JSNoopProxyHandler>(cx, JSVAL_TO_OBJECT(v), NULL, NULL, NULL);
+    if (!wrapped)
+        return false;
+
+    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(wrapped));
+    return true;
+}
+
 /* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
     JS_FS("version",        Version,        0,0,0),
@@ -3941,6 +3940,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("timeout",        Timeout,        1,0),
     JS_FN("elapsed",        Elapsed,        0,0),
     JS_FN("parent",         Parent,         1,0),
+    JS_FN("wrap",           Wrap,           1,0),
     JS_FS_END
 };
 
@@ -4050,6 +4050,7 @@ static const char *const shell_help_messages[] = {
 "  A negative value (default) means that the execution time is unlimited.",
 "elapsed()                Execution time elapsed for the current context.",
 "parent(obj)              Returns the parent of obj.\n",
+"wrap(obj)                Wrap an object into a noop wrapper.\n"
 };
 
 /* Help messages must match shell functions. */

@@ -854,6 +854,16 @@ NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize
     return numStr;
 }
 
+JSString * JS_FASTCALL
+js_IntToString(JSContext *cx, jsint i)
+{
+    if (jsuint(i) < INT_STRING_LIMIT)
+        return JSString::intString(i);
+
+    char buf[12];
+    return JS_NewStringCopyZ(cx, IntToCString(i, 10, buf, sizeof buf));
+}
+
 static JSString * JS_FASTCALL
 js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
 {

@@ -65,8 +65,9 @@
 #include "jsregexp.h"
 #include "jsscan.h"
 #include "jsscope.h"
+#include "jsscopeinlines.h"
 #include "jsscript.h"
-#include "jsautooplen.h"
+#include "jsautooplen.h"        // generated headers last
 #include "jsstaticcheck.h"
 
 /* Allocation chunk counts, must be powers of two in general. */
@@ -1612,14 +1613,6 @@ js_LexicalLookup(JSTreeContext *tc, JSAtom *atom, jsint *slotp, JSStmtInfo *stmt
 }
 
 /*
- * Check if the attributes describe a property holding a compile-time constant
- * or a permanent, read-only property without a getter.
- */
-#define IS_CONSTANT_PROPERTY(attrs)                                           \
-    (((attrs) & (JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_GETTER)) ==      \
-     (JSPROP_READONLY | JSPROP_PERMANENT))
-
-/*
  * The function sets vp to JSVAL_HOLE when the atom does not corresponds to a
  * name defining a constant.
  */
@@ -1627,11 +1620,8 @@ static JSBool
 LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
                           jsval *vp)
 {
-    JSBool ok;
     JSStmtInfo *stmt;
-    JSObject *obj, *objbox;
-    JSProperty *prop;
-    uintN attrs;
+    JSObject *obj;
 
     /*
      * Chase down the cg stack, but only until we reach the outermost cg.
@@ -1640,7 +1630,7 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
      */
     *vp = JSVAL_HOLE;
     do {
-        if (cg->inFunction() && cg->compileAndGo()) {
+        if (cg->inFunction() || cg->compileAndGo()) {
             /* XXX this will need revising if 'const' becomes block-scoped. */
             stmt = js_LexicalLookup(cg, atom, NULL);
             if (stmt)
@@ -1665,27 +1655,25 @@ LookupCompileTimeConstant(JSContext *cx, JSCodeGenerator *cg, JSAtom *atom,
             } else {
                 JS_ASSERT(cg->compileAndGo());
                 obj = cg->scopeChain;
-                ok = obj->lookupProperty(cx, ATOM_TO_JSID(atom), &objbox, &prop);
-                if (!ok)
-                    return JS_FALSE;
-                if (objbox == obj) {
+
+                JS_LOCK_OBJ(cx, obj);
+                JSScope *scope = obj->scope();
+                JSScopeProperty *sprop = scope->lookup(ATOM_TO_JSID(atom));
+                if (sprop) {
                     /*
                      * We're compiling code that will be executed immediately,
                      * not re-executed against a different scope chain and/or
                      * variable object.  Therefore we can get constant values
                      * from our variable object here.
                      */
-                    ok = obj->getAttributes(cx, ATOM_TO_JSID(atom), prop, &attrs);
-                    if (ok && IS_CONSTANT_PROPERTY(attrs)) {
-                        ok = obj->getProperty(cx, ATOM_TO_JSID(atom), vp);
-                        JS_ASSERT_IF(ok, *vp != JSVAL_HOLE);
+                    if (!sprop->writable() && !sprop->configurable() &&
+                        sprop->hasDefaultGetter() && SPROP_HAS_VALID_SLOT(sprop, scope)) {
+                        *vp = obj->lockedGetSlot(sprop->slot);
                     }
                 }
-                if (prop)
-                    objbox->dropProperty(cx, prop);
-                if (!ok)
-                    return JS_FALSE;
-                if (prop)
+                JS_UNLOCK_SCOPE(cx, scope);
+
+                if (sprop)
                     break;
             }
         }
@@ -4836,7 +4824,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
               default:
                 if (js_Emit1(cx, cg, JSOP_FORELEM) < 0)
                     return JS_FALSE;
-                JS_ASSERT(cg->stackDepth >= 3);
+                JS_ASSERT(cg->stackDepth >= 2);
 
 #if JS_HAS_DESTRUCTURING
                 if (pn3->pn_type == TOK_RB || pn3->pn_type == TOK_RC) {
@@ -4885,10 +4873,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             } while ((stmt = stmt->down) != NULL && stmt->type == STMT_LABEL);
 
             /*
-             * Fixup the goto that starts the loop to jump down to JSOP_NEXTITER.
+             * Fixup the goto that starts the loop to jump down to JSOP_MOREITER.
              */
             CHECK_AND_SET_JUMP_OFFSET_AT(cx, cg, jmp);
-            if (js_Emit1(cx, cg, JSOP_NEXTITER) < 0)
+            if (js_Emit1(cx, cg, JSOP_MOREITER) < 0)
                 return JS_FALSE;
             beq = EmitJump(cx, cg, JSOP_IFNE, top - CG_OFFSET(cg));
             if (beq < 0)
@@ -5034,13 +5022,6 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         if (pn2->pn_type == TOK_IN) {
-            /*
-             * JSOP_ENDITER must have a slot to save an exception thrown from
-             * the body of for-in loop when closing the iterator object, and
-             * fortunately it does: the slot that was set by JSOP_NEXTITER to
-             * the return value of iterator.next().
-             */
-            JS_ASSERT(js_CodeSpec[JSOP_ENDITER].nuses == 2);
             if (!NewTryNote(cx, cg, JSTRY_ITER, cg->stackDepth, top, CG_OFFSET(cg)) ||
                 js_Emit1(cx, cg, JSOP_ENDITER) < 0) {
                 return JS_FALSE;

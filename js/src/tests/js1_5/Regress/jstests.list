@@ -84,7 +84,7 @@ script regress-256798.js
 skip-if(xulRuntime.shell) script regress-259935.js # browser only
 script regress-260541.js
 script regress-261886.js
-script regress-261887.js
+skip script regress-261887.js # we violate the spec here with our new iterators
 skip script regress-271716-n.js # never terminates
 script regress-274035.js
 script regress-274888.js

@@ -113,7 +113,9 @@ static JS_ALWAYS_INLINE int
 NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
 {
     /* Details on these functions available in the manpage for atomic */
-    return OSAtomicCompareAndSwapPtrBarrier(ov, nv, w);
+    return OSAtomicCompareAndSwapPtrBarrier(reinterpret_cast<void *>(ov),
+                                            reinterpret_cast<void *>(nv),
+                                            reinterpret_cast<void **>(w));
 }
 
 #elif defined(__i386) && (defined(__GNUC__) || defined(__SUNPRO_CC))
@@ -166,8 +168,13 @@ NativeCompareAndSwap(jsword *w, jsword ov, jsword nv)
     unsigned int res;
 
     __asm__ __volatile__ (
-                  "stbar\n"
+                  "membar #StoreLoad | #LoadLoad\n"
+#if JS_BITS_PER_WORD == 32
                   "cas [%1],%2,%3\n"
+#else
+                  "casx [%1],%2,%3\n"
+#endif
+                  "membar #StoreLoad | #LoadLoad\n"
                   "cmp %2,%3\n"
                   "be,a 1f\n"
                   "mov 1,%0\n"
@@ -1199,7 +1206,7 @@ void
 js_UnlockRuntime(JSRuntime *rt)
 {
 #ifdef DEBUG
-    rt->rtLockOwner = 0;
+    rt->rtLockOwner = NULL;
 #endif
     PR_Unlock(rt->rtLock);
 }
@@ -1357,7 +1364,7 @@ js_InitTitle(JSContext *cx, JSTitle *title)
 {
 #ifdef JS_THREADSAFE
     title->ownercx = cx;
-    PodZero(&title->lock);
+    js_InitLock(&title->lock);
 
     /*
      * Set u.link = NULL, not u.count = 0, in case the target architecture's

@@ -74,6 +74,7 @@
 #include "jsobj.h"
 #include "jsopcode.h"
 #include "jsparse.h"
+#include "jsproxy.h"
 #include "jsregexp.h"
 #include "jsscan.h"
 #include "jsscope.h"
@@ -88,6 +89,7 @@
 #include "jstypedarray.h"
 
 #include "jsatominlines.h"
+#include "jscntxtinlines.h"
 #include "jsscopeinlines.h"
 #include "jsobjinlines.h"
 
@@ -772,7 +774,7 @@ JS_BeginRequest(JSContext *cx)
 
         /* Wait until the GC is finished. */
         if (rt->gcThread != cx->thread) {
-            while (rt->gcLevel > 0)
+            while (rt->gcThread)
                 JS_AWAIT_GC_DONE(rt);
         }
 
@@ -1212,7 +1214,8 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 #if JS_HAS_GENERATORS
            js_InitIteratorClasses(cx, obj) &&
 #endif
-           js_InitDateClass(cx, obj);
+           js_InitDateClass(cx, obj) &&
+           js_InitProxyClass(cx, obj);
 }
 
 #define CLASP(name)                 (&js_##name##Class)
@@ -1323,8 +1326,8 @@ static JSStdName standard_class_names[] = {
 #endif
 
 #if JS_HAS_GENERATORS
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Iterator)},
-    {js_InitIteratorClasses,    EAGER_ATOM_AND_CLASP(Generator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Iterator)},
+    {js_InitIteratorClasses,    EAGER_ATOM_AND_XCLASP(Generator)},
 #endif
 
     /* Typed Arrays */
@@ -1338,6 +1341,8 @@ static JSStdName standard_class_names[] = {
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float32Array), NULL},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Float64Array), NULL},
     {js_InitTypedArrayClasses,  EAGER_CLASS_ATOM(Uint8ClampedArray), NULL},
+
+    {js_InitProxyClass,         EAGER_ATOM(Proxy), NULL},
 
     {NULL,                      0, NULL, NULL}
 };
@@ -1501,16 +1506,22 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     return JS_TRUE;
 }
 
-static JSIdArray *
+namespace js {
+
+JSIdArray *
 NewIdArray(JSContext *cx, jsint length)
 {
     JSIdArray *ida;
 
     ida = (JSIdArray *)
-        cx->malloc(offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (ida)
+        cx->calloc(offsetof(JSIdArray, vector) + length * sizeof(jsval));
+    if (ida) {
+        ida->self = ida;
         ida->length = length;
+    }
     return ida;
+}
+
 }
 
 /*
@@ -1521,13 +1532,15 @@ SetIdArrayLength(JSContext *cx, JSIdArray *ida, jsint length)
 {
     JSIdArray *rida;
 
+    JS_ASSERT(ida->self == ida);
     rida = (JSIdArray *)
            JS_realloc(cx, ida,
                       offsetof(JSIdArray, vector) + length * sizeof(jsval));
-    if (!rida)
+    if (!rida) {
         JS_DestroyIdArray(cx, ida);
-    else
+    } else {
         rida->length = length;
+    }
     return rida;
 }
 
@@ -1668,6 +1681,31 @@ JS_PUBLIC_API(JSObject *)
 JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
 {
     return obj->getGlobal();
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetGlobalForScopeChain(JSContext *cx)
+{
+    /*
+     * This is essentially JS_GetScopeChain(cx)->getGlobal(), but without
+     * falling off trace.
+     *
+     * This use of cx->fp, possibly on trace, is deliberate:
+     * cx->fp->scopeChain->getGlobal() returns the same object whether we're on
+     * trace or not, since we do not trace calls across global objects.
+     */
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+
+    if (cx->fp)
+        return cx->fp->scopeChain->getGlobal();
+
+    JSObject *scope = cx->globalObject;
+    if (!scope) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+        return NULL;
+    }
+    OBJ_TO_INNER_OBJECT(cx, scope);
+    return scope;
 }
 
 JS_PUBLIC_API(jsval)
@@ -2286,8 +2324,6 @@ JS_GC(JSContext *cx)
     LeaveTrace(cx);
 
     /* Don't nuke active arenas if executing or compiling. */
-    if (cx->stackPool.current == &cx->stackPool.first)
-        JS_FinishArenaPool(&cx->stackPool);
     if (cx->tempPool.current == &cx->tempPool.first)
         JS_FinishArenaPool(&cx->tempPool);
     js_GC(cx, GC_NORMAL);
@@ -2502,9 +2538,37 @@ JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr)
 {
 #if JS_STACK_GROWTH_DIRECTION > 0
     if (limitAddr == 0)
-        limitAddr = (jsuword)-1;
+        limitAddr = jsuword(-1);
 #endif
     cx->stackLimit = limitAddr;
+}
+
+JS_PUBLIC_API(void)
+JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
+{
+#ifdef JS_THREADSAFE
+    JS_ASSERT(cx->thread);
+#endif
+
+#if JS_STACK_GROWTH_DIRECTION > 0
+    if (stackSize == 0) {
+        cx->stackLimit = jsuword(-1);
+    } else {
+        jsuword stackBase = reinterpret_cast<jsuword>(JS_THREAD_DATA(cx)->
+                                                      nativeStackBase);
+        JS_ASSERT(stackBase <= size_t(-1) - stackSize);
+        cx->stackLimit = stackBase + stackSize - 1;
+    }
+#else
+    if (stackSize == 0) {
+        cx->stackLimit = 0;
+    } else {
+        jsuword stackBase = reinterpret_cast<jsuword>(JS_THREAD_DATA(cx)->
+                                                      nativeStackBase);
+        JS_ASSERT(stackBase >= stackSize);
+        cx->stackLimit = stackBase - (stackSize - 1);
+    }
+#endif
 }
 
 JS_PUBLIC_API(void)
@@ -2518,7 +2582,7 @@ JS_SetScriptStackQuota(JSContext *cx, size_t quota)
 JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 {
-    cx->free(ida);
+    cx->free(ida->self);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3111,12 +3175,23 @@ GetPropertyAttributesById(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (obj2->isNative()) {
             JSScopeProperty *sprop = (JSScopeProperty *) prop;
 
-            desc->getter = sprop->getter();
-            desc->setter = sprop->setter();
-            desc->value = SPROP_HAS_VALID_SLOT(sprop, obj2->scope())
-                          ? obj2->lockedGetSlot(sprop->slot)
-                          : JSVAL_VOID;
+            if (sprop->isMethod()) {
+                desc->getter = desc->setter = JS_PropertyStub;
+                desc->value = sprop->methodValue();
+            } else {
+                desc->getter = sprop->getter();
+                desc->setter = sprop->setter();
+                desc->value = SPROP_HAS_VALID_SLOT(sprop, obj2->scope())
+                              ? obj2->lockedGetSlot(sprop->slot)
+                              : JSVAL_VOID;
+            }
         } else {
+            if (obj->isProxy()) {
+                JSAutoResolveFlags rf(cx, flags);
+                return own
+                       ? JSProxy::getOwnPropertyDescriptor(cx, obj, id, desc)
+                       : JSProxy::getPropertyDescriptor(cx, obj, id, desc);
+            }
             desc->getter = NULL;
             desc->setter = NULL;
             desc->value = JSVAL_VOID;
@@ -3819,59 +3894,14 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj)
 {
-    jsint i, n;
-    jsid id;
-    JSIdArray *ida;
-    jsval *vector;
-
     CHECK_REQUEST(cx);
 
-    ida = NULL;
-    AutoEnumStateRooter iterState(cx, obj);
-
-    /* Get the number of properties to enumerate. */
-    jsval num_properties;
-    if (!obj->enumerate(cx, JSENUMERATE_INIT, iterState.addr(), &num_properties))
-        goto error;
-    if (!JSVAL_IS_INT(num_properties)) {
-        JS_ASSERT(0);
-        goto error;
-    }
-
-    /* Grow as needed if we don't know the exact amount ahead of time. */
-    n = JSVAL_TO_INT(num_properties);
-    if (n <= 0)
-        n = 8;
-
-    /* Create an array of jsids large enough to hold all the properties */
-    ida = NewIdArray(cx, n);
-    if (!ida)
-        goto error;
-
-    i = 0;
-    vector = &ida->vector[0];
-    for (;;) {
-        if (!obj->enumerate(cx, JSENUMERATE_NEXT, iterState.addr(), &id))
-            goto error;
-
-        /* No more jsid's to enumerate ? */
-        if (iterState.state() == JSVAL_NULL)
-            break;
-
-        if (i == ida->length) {
-            ida = SetIdArrayLength(cx, ida, ida->length * 2);
-            if (!ida)
-                goto error;
-            vector = &ida->vector[0];
-        }
-        vector[i++] = id;
-    }
-    return SetIdArrayLength(cx, ida, i);
-
-error:
-    if (ida)
-        JS_DestroyIdArray(cx, ida);
-    return NULL;
+    JSIdArray *ida;
+    if (!EnumerateOwnProperties(cx, obj, &ida))
+        return false;
+    for (size_t n = 0; n < size_t(ida->length); ++n)
+        JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
+    return ida;
 }
 
 /*
@@ -4933,18 +4963,18 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     // is not a simple variation of JSOP_CALL. We have to determine what class
     // of object to create, create it, and clamp the return value to an object,
     // among other details. js_InvokeConstructor does the hard work.
-    void *mark;
-    jsval *vp = js_AllocStack(cx, 2 + argc, &mark);
-    if (!vp)
+    InvokeArgsGuard args;
+    if (!cx->stack().pushInvokeArgs(cx, argc, args))
         return NULL;
+
+    jsval *vp = args.getvp();
     vp[0] = OBJECT_TO_JSVAL(ctor);
     vp[1] = JSVAL_NULL;
     memcpy(vp + 2, argv, argc * sizeof(jsval));
 
-    JSBool ok = js_InvokeConstructor(cx, argc, JS_TRUE, vp);
+    JSBool ok = js_InvokeConstructor(cx, args, JS_TRUE);
     JSObject *obj = ok ? JSVAL_TO_OBJECT(vp[0]) : NULL;
 
-    js_FreeStack(cx, mark);
     LAST_FRAME_CHECKS(cx, ok);
     return obj;
 }
@@ -5653,7 +5683,7 @@ JS_PUBLIC_API(jsword)
 JS_GetContextThread(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    return JS_THREAD_ID(cx);
+    return reinterpret_cast<jsword>(JS_THREAD_ID(cx));
 #else
     return 0;
 #endif
@@ -5670,7 +5700,7 @@ JS_SetContextThread(JSContext *cx)
     JS_ASSERT(cx->requestDepth == 0);
     if (cx->thread) {
         JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-        return cx->thread->id;
+        return reinterpret_cast<jsword>(cx->thread->id);
     }
 
     if (!js_InitContextThread(cx)) {
@@ -5697,7 +5727,7 @@ JS_ClearContextThread(JSContext *cx)
     if (!cx->thread)
         return 0;
     JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-    jsword old = cx->thread->id;
+    void *old = cx->thread->id;
 
     /*
      * We must not race with a GC that accesses cx->thread for all threads,
@@ -5707,7 +5737,7 @@ JS_ClearContextThread(JSContext *cx)
     AutoLockGC lock(rt);
     js_WaitForGC(rt);
     js_ClearContextThread(cx);
-    return old;
+    return reinterpret_cast<jsword>(old);
 #else
     return 0;
 #endif
