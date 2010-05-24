@@ -43,12 +43,11 @@
 #include "nsSVGString.h"
 #include "nsSVGTextContentElement.h"
 
-typedef nsSVGStylableElement nsSVGTextPathElementBase;
+typedef nsSVGTextContentElement nsSVGTextPathElementBase;
 
-class nsSVGTextPathElement : public nsSVGTextPathElementBase,
+class nsSVGTextPathElement : public nsSVGTextPathElementBase, // = nsIDOMSVGTextContentElement
                              public nsIDOMSVGTextPathElement,
-                             public nsIDOMSVGURIReference,
-                             public nsSVGTextContentElement // = nsIDOMSVGTextContentElement
+                             public nsIDOMSVGURIReference
 {
 friend class nsSVGTextPathFrame;
 
@@ -69,7 +68,7 @@ public:
   NS_FORWARD_NSIDOMNODE(nsSVGTextPathElementBase::)
   NS_FORWARD_NSIDOMELEMENT(nsSVGTextPathElementBase::)
   NS_FORWARD_NSIDOMSVGELEMENT(nsSVGTextPathElementBase::)
-  NS_FORWARD_NSIDOMSVGTEXTCONTENTELEMENT(nsSVGTextContentElement::)
+  NS_FORWARD_NSIDOMSVGTEXTCONTENTELEMENT(nsSVGTextPathElementBase::)
 
   // nsIContent interface
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
@@ -77,10 +76,6 @@ public:
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 
 protected:
-
-  virtual nsSVGTextContainerFrame* GetTextContainerFrame() {
-    return do_QueryFrame(GetPrimaryFrame(Flush_Layout));
-  }
 
   virtual LengthAttributesInfo GetLengthInfo();
   virtual EnumAttributesInfo GetEnumInfo();

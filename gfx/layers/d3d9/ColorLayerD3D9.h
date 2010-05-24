@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -13,20 +12,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is Mozilla Corporation code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   John Bandhauer <jband@netscape.com>
+ *   Robert O'Callahan <robert@ocallahan.org>
+ *   Bas Schouten <bschouten@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -38,23 +36,39 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* Interface for JS code testing tool which does compile-time checking. */
+#ifndef GFX_COLORLAYERD3D9_H
+#define GFX_COLORLAYERD3D9_H
 
-#include "nsISupports.idl"
-#include "nsILocalFile.idl"
+#include "LayerManagerD3D9.h"
 
-[scriptable, uuid(71151570-e56f-11d3-8f65-0010a4e73d9a)]
-interface nsIXPCToolsCompiler : nsISupports
+namespace mozilla {
+namespace layers {
+
+class THEBES_API ColorLayerD3D9 : public ColorLayer,
+                                 public LayerD3D9
 {
-    /** 
-    * XXX temporary hack because there does not seem to be another scriptable
-    * way to get this info.
-    */
-    readonly attribute nsILocalFile binDir;
+public:
+  ColorLayerD3D9(LayerManagerD3D9 *aManager)
+    : ColorLayer(aManager, NULL)
+    , LayerD3D9(aManager)
+  { 
+    mImplData = static_cast<LayerD3D9*>(this);
+  }
 
-    void  CompileFile(in nsILocalFile aFile, in PRBool strict);
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) { mVisibleRegion = aRegion; }
+
+  // LayerD3D9 Implementation
+  virtual LayerType GetType();
+
+  virtual Layer* GetLayer();
+
+  virtual void RenderLayer();
+
+protected:
+  nsIntRegion mVisibleRegion;
 };
 
-%{ C++
-#define XPCTOOLS_COMPILER_CONTRACTID "xpctools.compiler.1"
-%}
+} /* layers */
+} /* mozilla */
+
+#endif /* GFX_COLORLAYERD3D9_H */

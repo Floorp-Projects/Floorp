@@ -168,7 +168,7 @@ G_Preferences.prototype.getPref = function(key, opt_default) {
 G_Preferences.prototype.clearPref = function(which) {
   try {
     // This throws if the pref doesn't exist, which is fine because a 
-    // non-existent pref is cleared
+    // nonexistent pref is cleared
     this.prefs_.clearUserPref(which);
   } catch(e) {}
 }

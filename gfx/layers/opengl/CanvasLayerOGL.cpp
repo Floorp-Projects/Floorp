@@ -198,7 +198,9 @@ CanvasLayerOGL::Updated(const nsIntRect& aRect)
 }
 
 void
-CanvasLayerOGL::RenderLayer(int aPreviousDestination)
+CanvasLayerOGL::RenderLayer(int aPreviousDestination,
+                            DrawThebesLayerCallback aCallback,
+                            void* aCallbackData)
 {
   LayerManagerOGL *glManager = static_cast<LayerManagerOGL*>(mManager);
   GLContext *gl = glManager->gl();

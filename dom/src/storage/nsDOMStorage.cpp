@@ -1299,7 +1299,7 @@ nsDOMStorage::SetSecure(const nsAString& aKey, PRBool aSecure)
 #endif
 
   nsSessionStorageEntry *entry = mItems.GetEntry(aKey);
-  NS_ASSERTION(entry, "Don't use SetSecure() with non-existing keys!");
+  NS_ASSERTION(entry, "Don't use SetSecure() with nonexistent keys!");
 
   if (entry) {
     entry->mItem->SetSecureInternal(aSecure);

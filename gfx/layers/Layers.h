@@ -122,7 +122,8 @@ class THEBES_API LayerManager {
 public:
   enum LayersBackend {
     LAYERS_BASIC = 0,
-    LAYERS_OPENGL
+    LAYERS_OPENGL,
+    LAYERS_D3D9
   };
 
   virtual ~LayerManager() {}
@@ -143,14 +144,29 @@ public:
    */
   virtual void BeginTransactionWithTarget(gfxContext* aTarget) = 0;
   /**
-   * Finish the construction phase of the transaction and enter the
-   * drawing phase.
+   * Function called to draw the contents of each ThebesLayer.
+   * aRegionToDraw contains the region that needs to be drawn.
+   * This would normally be a subregion of the visible region. Drawing is
+   * not necessarily clipped to aRegionToDraw.
+   * The callee must draw all of aRegionToDraw.
+   * 
+   * aContext must not be used after the call has returned.
+   * We guarantee that buffered contents in the visible
+   * region are valid once drawing is complete.
    */
-  virtual void EndConstruction() = 0;
+  typedef void (* DrawThebesLayerCallback)(ThebesLayer* aLayer,
+                                           gfxContext* aContext,
+                                           const nsIntRegion& aRegionToDraw,
+                                           void* aCallbackData);
   /**
-   * Complete the transaction.
+   * Finish the construction phase of the transaction, perform the
+   * drawing phase, and end the transaction.
+   * During the drawing phase, all ThebesLayers in the tree are
+   * drawn in tree order, exactly once each, except for those layers
+   * where it is known that the visible region is empty.
    */
-  virtual void EndTransaction() = 0;
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -196,6 +212,8 @@ public:
    */
   virtual LayersBackend GetBackendType() = 0;
 };
+
+class ThebesLayer;
 
 /**
  * A Layer represents anything that can be rendered onto a destination
@@ -298,6 +316,12 @@ public:
   void* GetUserData() { return mUserData; }
 
   /**
+   * Dynamic downcast to a Thebes layer. Returns null if this is not
+   * a ThebesLayer.
+   */
+  virtual ThebesLayer* AsThebesLayer() { return nsnull; }
+  
+  /**
    * Only the implementation should call this. This is per-implementation
    * private data. Normally, all layers with a given layer manager
    * use the same type of ImplData.
@@ -358,36 +382,7 @@ public:
    */
   virtual void InvalidateRegion(const nsIntRegion& aRegion) = 0;
 
-  /**
-   * DRAWING PHASE ONLY
-   * Start drawing into the layer. On return, aRegionToDraw contains the
-   * region that needs to be drawn in by the caller. This would normally
-   * be a subregion of the visible region. Drawing is not necessarily
-   * clipped to aRegionToDraw.
-   * 
-   * No other layer operations are allowed until we call EndDrawing on this
-   * layer. During the drawing phase, all ThebesLayers in the tree must be
-   * drawn in tree order, exactly once each, except for those layers
-   * where it is known that the visible region is empty. (Calling
-   * BeginDrawing on non-visible layers is allowed, but aRegionToDraw
-   * will return empty.)
-   * 
-   * When an empty region is returned in aRegionToDraw, BeginDrawing
-   * may return a null context.
-   * 
-   * The layer system will hold a reference to the returned gfxContext*
-   * until EndDrawing is called. The returned gfxContext must not be used
-   * after EndDrawing is called.
-   */
-  virtual gfxContext* BeginDrawing(nsIntRegion* aRegionToDraw) = 0;
-  /**
-   * DRAWING PHASE ONLY
-   * We've finished drawing into this layer. At this point the caller
-   * must have drawn all of aRegionToDraw that was returned by
-   * BeginDrawing, and we guarantee that buffered contents in the visible
-   * region are now valid.
-   */
-  virtual void EndDrawing() = 0;
+  virtual ThebesLayer* AsThebesLayer() { return this; }
 
 protected:
   ThebesLayer(LayerManager* aManager, void* aImplData)

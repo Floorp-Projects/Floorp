@@ -12986,7 +12986,7 @@ TraceRecorder::prop(JSObject* obj, LIns* obj_ins, uint32 *slotp, LIns** v_insp, 
     PCVal pcval;
     CHECK_STATUS_A(test_property_cache(obj, obj_ins, obj2, pcval));
 
-    /* Check for non-existent property reference, which results in undefined. */
+    /* Check for nonexistent property reference, which results in undefined. */
     if (pcval.isNull()) {
         if (slotp)
             RETURN_STOP_A("property not found");

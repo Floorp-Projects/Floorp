@@ -1764,7 +1764,7 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
   }
 
   if (!mCurrentContext) {
-    NS_ERROR("Non-existing context");
+    NS_ERROR("Nonexistent context");
 
     return NS_ERROR_FAILURE;
   }
@@ -1804,7 +1804,7 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
 NS_IMETHODIMP
 HTMLContentSink::EndContext(PRInt32 aPosition)
 {
-  NS_PRECONDITION(mCurrentContext && aPosition > -1, "non-existing context");
+  NS_PRECONDITION(mCurrentContext && aPosition > -1, "nonexistent context");
 
   PRUint32 n = mContextStack.Length() - 1;
   SinkContext* sc = mContextStack.ElementAt(n);
