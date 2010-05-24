@@ -42,6 +42,7 @@ VPATH       = \
   $(srcdir) \
   $(srcdir)/basic \
   $(srcdir)/opengl \
+  $(srcdir)/d3d9 \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -52,6 +53,9 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
 DEFINES += -DIMPL_THEBES
+ifdef MOZ_DEBUG
+DEFINES += -DD3D_DEBUG_INFO
+endif
 
 EXPORTS = \
         BasicLayers.h \
@@ -70,6 +74,21 @@ CPPSRCS = \
         ImageLayerOGL.cpp \
 	CanvasLayerOGL.cpp \
         $(NULL)
+ 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+ifndef WINCE
+EXPORTS += LayerManagerD3D9.h
+
+CPPSRCS += \
+        LayerManagerD3D9.cpp \
+        ThebesLayerD3D9.cpp \
+        ContainerLayerD3D9.cpp \
+        ImageLayerD3D9.cpp \
+        ColorLayerD3D9.cpp \
+        CanvasLayerD3D9.cpp \
+        $(NULL)
+endif
+endif
 
 include $(topsrcdir)/config/rules.mk
 
