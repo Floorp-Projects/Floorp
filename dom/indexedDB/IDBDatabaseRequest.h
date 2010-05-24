@@ -125,7 +125,9 @@ public:
     mConnectionThread->EnableIdleTimeout();
   }
 
-  PRUint32 Id();
+  PRUint32 Id() {
+    return mDatabaseId;
+  }
 
 protected:
   IDBDatabaseRequest();
@@ -138,7 +140,10 @@ protected:
   nsresult EnsureConnection();
 
 private:
-  DatabaseInfo* mDatabaseInfo;
+  PRUint32 mDatabaseId;
+  nsString mName;
+  nsString mDescription;
+  nsString mFilePath;
 
   nsRefPtr<LazyIdleThread> mConnectionThread;
 
