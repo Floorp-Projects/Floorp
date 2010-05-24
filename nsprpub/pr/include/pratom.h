@@ -125,12 +125,10 @@ long __cdecl _InterlockedExchange(long volatile *Target, long Value);
 long __cdecl _InterlockedExchangeAdd(long volatile *Addend, long Value);
 #pragma intrinsic(_InterlockedExchangeAdd)
 
-#define PR_ATOMIC_INCREMENT(val)   _InterlockedIncrement((long volatile *)val)
-#define PR_ATOMIC_DECREMENT(val)   _InterlockedDecrement((long volatile *)val)
-#define PR_ATOMIC_SET(val, newval) \
-        _InterlockedExchange((long volatile *)val, (long)newval)
-#define PR_ATOMIC_ADD(ptr, val)    \
-        (_InterlockedExchangeAdd((long volatile *)ptr, (long)val) + (val))
+#define PR_ATOMIC_INCREMENT(val) _InterlockedIncrement(val)
+#define PR_ATOMIC_DECREMENT(val) _InterlockedDecrement(val)
+#define PR_ATOMIC_SET(val, newval) _InterlockedExchange(val, newval)
+#define PR_ATOMIC_ADD(ptr, val) (_InterlockedExchangeAdd(ptr, val) + (val))
 
 #elif ((__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)) && \
       ((defined(DARWIN) && \
