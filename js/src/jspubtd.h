@@ -194,11 +194,15 @@ typedef JSUint64 JSValueMaskType;
 #endif
 
 #ifdef __GNUC__
-# define VALUE_ALIGNMENT_BEFORE __attribute__((aligned (8)))
-# define VALUE_ALIGNMENT_AFTER
-#elif defined(_MSC_VER)
 # define VALUE_ALIGNMENT_BEFORE
-# define VALUE_ALIGNMENT_AFTER  __declspec(align(8))
+# define VALUE_ALIGNMENT_AFTER  __attribute__((aligned (8)))
+# define ASSERT_DOUBLE_ALIGN()  JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0)
+#elif defined(_MSC_VER)
+  // Structs can be aligned with MSVC, but not if they are used as parameters,
+  // so we just don't try to align.
+# define VALUE_ALIGNMENT_BEFORE
+# define VALUE_ALIGNMENT_AFTER
+# define ASSERT_DOUBLE_ALIGN()
 #else
 # error "TODO: do something for compiler"
 #endif
