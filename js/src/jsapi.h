@@ -3243,7 +3243,7 @@ class Value
     }
 
     void setDouble(double d) {
-        JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         mask = JSVAL_DOUBLE_MASK;
         data.dbl = d;
     }
@@ -3261,7 +3261,7 @@ class Value
     }
 
     double &asDoubleRef() {
-        JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         JS_ASSERT(isDouble());
         return data.dbl;
     }
@@ -3348,7 +3348,7 @@ class Value
     }
 
     double asDouble() const {
-        JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         return data.dbl;
     }
 
