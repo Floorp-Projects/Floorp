@@ -22,7 +22,6 @@
 @BINPATH@/chrome/@AB_CD@.jar
 @BINPATH@/chrome/@AB_CD@.manifest
 @BINPATH@/@PREF_DIR@/firefox-l10n.js
-@BINPATH@/browserconfig.properties
 @BINPATH@/searchplugins/*
 @BINPATH@/defaults/profile/bookmarks.html
 @BINPATH@/defaults/profile/localstore.rdf
