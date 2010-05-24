@@ -6531,15 +6531,6 @@ MOZ_ARG_ENABLE_BOOL(leaky,
 
 
 dnl ========================================================
-dnl xpctools
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(xpctools,
-[  --enable-xpctools       Build JS profiling tool],
-    MOZ_XPCTOOLS=1,
-    MOZ_XPCTOOLS= )
-
-
-dnl ========================================================
 dnl build the tests by default
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(tests,
@@ -8491,7 +8482,6 @@ AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
-AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)
 AC_SUBST(MOZ_QUANTIFY)
