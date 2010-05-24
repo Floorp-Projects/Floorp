@@ -620,7 +620,7 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
                      info->autoIncrement == otherInfo->autoIncrement &&
                      info->databaseId == otherInfo->databaseId,
                      "Metadata mismatch!");
-        NS_ASSERTION(dbInfo->objectStoreNames.Contains(info->name),
+        NS_ASSERTION(dbInfo->ContainsStoreName(info->name),
                      "Object store names out of date!");
       }
     }

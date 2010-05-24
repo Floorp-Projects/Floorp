@@ -77,8 +77,15 @@
 
         is(db.objectStoreNames.length, index + 1,
            "updated objectStoreNames list");
-        is(db.objectStoreNames.item(index), info.name,
-           "updated objectStoreNames list");
+
+        let found = false;
+        for (let i = 0; i <= index; i++) {
+          if (db.objectStoreNames.item(i) == info.name) {
+            found = true;
+            break;
+          }
+        }
+        is(found, true, "objectStoreNames contains name");
 
         let objectStore = event.result;
         is(objectStore.name, info.name, "Bad name");
