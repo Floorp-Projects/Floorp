@@ -56,7 +56,7 @@ file.append(filename);
 if(file.exists())
     file.remove(false);
 
-testdesc = "Initialize with a non-existent data file";
+testdesc = "Initialize with a nonexistent data file";
 
 storage = LoginTest.reloadStorage(OUTDIR, filename);
 
@@ -225,7 +225,7 @@ testdesc = "Initialize with signons-06.txt (1 disabled, 1 login); test modifyLog
 storage = LoginTest.initStorage(INDIR, "signons-06.txt", OUTDIR, "signons-06-3.sqlite");
 LoginTest.checkStorageData(storage, ["https://www.site.net"], [testuser1]);
 
-// Try modifying a non-existent login
+// Try modifying a nonexistent login
 var err = null;
 try {
     storage.modifyLogin(testuser2, testuser1);

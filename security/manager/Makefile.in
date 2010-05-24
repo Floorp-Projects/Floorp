@@ -285,6 +285,17 @@ DEFAULT_GMAKE_FLAGS += \
 	$(NULL)
 endif
 
+# Android has pthreads integrated into -lc, so OS_LIBS is set to nothing
+ifeq ($(OS_TARGET), Android)
+DEFAULT_GMAKE_FLAGS += \
+	OS_RELEASE="2.6" \
+	OS_LIBS= \
+	STANDARDS_CFLAGS="-std=gnu89" \
+	DSO_CFLAGS="$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -include $(topsrcdir)/security/manager/android_stub.h" \
+	DSO_LDOPTS="-shared $(LDFLAGS)" \
+	$(NULL)
+endif
+
 SKIP_CHK=1
 endif
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile

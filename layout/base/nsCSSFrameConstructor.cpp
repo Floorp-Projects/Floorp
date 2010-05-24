@@ -3912,9 +3912,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
 
     nsIFrame* newFrame = creator->CreateFrameFor(content);
     if (newFrame) {
-// See bug 565569
-//      NS_ASSERTION(content->GetPrimaryFrame(),
-//                   "Content must have a primary frame now");
+      NS_ASSERTION(content->GetPrimaryFrame(),
+                   "Content must have a primary frame now");
       aChildItems.AddChild(newFrame);
     }
     else {
@@ -6239,34 +6238,46 @@ nsCSSFrameConstructor::MaybeConstructLazily(Operation aOperation,
   // due to bug 135040. We detect if we find a bogus primary frame (I'm looking
   // at you, areas), and relax our assertions for the remaining ancestors.
   PRBool bogusPrimaryFrame = PR_FALSE;
+
+  // If we hit a node with no primary frame, or the NODE_NEEDS_FRAME bit set
+  // we want to assert, but leaf frames that process their own children and may
+  // ignore anonymous children (eg framesets) make this complicated. So we set
+  // these two booleans if we encounter these situations and unset them if we
+  // hit a node with a leaf frame.
+  PRBool noPrimaryFrame = PR_FALSE;
+  PRBool needsFrameBitSet = PR_FALSE;
 #endif
   while (content &&
          !content->HasFlag(NODE_DESCENDANTS_NEED_FRAMES)) {
-    NS_ASSERTION(content->GetPrimaryFrame() || bogusPrimaryFrame ||
-      (content->GetFlattenedTreeParent() &&
-       content->GetFlattenedTreeParent()->GetPrimaryFrame() &&
-       content->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf()),
-      // The clumsy leaf frame check is for leaf frames that process their own
-      // children and may ignore anonymous children (eg framesets).
-      "Ancestors of nodes with frames to be constructed lazily should have "
-      "frames");
-    NS_ASSERTION(!content->HasFlag(NODE_NEEDS_FRAME) || bogusPrimaryFrame ||
-                 (content->GetPrimaryFrame() &&
-                  content->GetPrimaryFrame()->GetContent() != content),
-                 //XXX the content->GetPrimaryFrame()->GetContent() != content
-                 // check is needed due to bug 135040. Remove it once that's
-                 // fixed.
-                 "Ancestors of nodes with frames to be constructed lazily "
-                 "should not have NEEDS_FRAME bit set");
 #ifdef DEBUG
+    if (content->GetPrimaryFrame() && content->GetPrimaryFrame()->IsLeaf()) {
+      noPrimaryFrame = needsFrameBitSet = PR_FALSE;
+    }
     if (!bogusPrimaryFrame && content->GetPrimaryFrame() &&
         content->GetPrimaryFrame()->GetContent() != content) {
       bogusPrimaryFrame = PR_TRUE;
+    }
+    if (!noPrimaryFrame && !content->GetPrimaryFrame() && !bogusPrimaryFrame) {
+      noPrimaryFrame = PR_TRUE;
+    }
+    if (!needsFrameBitSet && content->HasFlag(NODE_NEEDS_FRAME) &&
+        !bogusPrimaryFrame) {
+      needsFrameBitSet = PR_TRUE;
     }
 #endif
     content->SetFlags(NODE_DESCENDANTS_NEED_FRAMES);
     content = content->GetFlattenedTreeParent();
   }
+#ifdef DEBUG
+  if (content && content->GetPrimaryFrame() &&
+      content->GetPrimaryFrame()->IsLeaf()) {
+    noPrimaryFrame = needsFrameBitSet = PR_FALSE;
+  }
+  NS_ASSERTION(!noPrimaryFrame, "Ancestors of nodes with frames to be "
+    "constructed lazily should have frames");
+  NS_ASSERTION(!needsFrameBitSet, "Ancestors of nodes with frames to be "
+    "constructed lazily should not have NEEDS_FRAME bit set");
+#endif
 
   // Set NODE_NEEDS_FRAME on the new nodes.
   if (aOperation == CONTENTINSERT) {

@@ -274,7 +274,7 @@ public:
   virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify, PRBool aMutationEvent = PR_TRUE);
 
   // Overriden nsIFormControl methods
-  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_SELECT; }
+  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_SELECT; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -467,6 +467,19 @@ protected:
 #ifdef DEBUG
   void VerifyOptionsArray();
 #endif
+
+  virtual PRBool AcceptAutofocus() const
+  {
+    return PR_TRUE;
+  }
+
+  /**
+   * Helper method to get the default size.
+   */
+  PRInt32 GetDefaultSize() const
+  {
+    return HasAttr(kNameSpaceID_None, nsGkAtoms::multiple) ? 4 : 1;
+  }
 
   /** The options[] array */
   nsRefPtr<nsHTMLOptionCollection> mOptions;

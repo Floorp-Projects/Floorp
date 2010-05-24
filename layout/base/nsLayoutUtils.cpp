@@ -80,7 +80,7 @@
 #include "gfxTypes.h"
 #include "gfxUserFontSet.h"
 #include "nsTArray.h"
-#include "nsICanvasElement.h"
+#include "nsHTMLCanvasElement.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "gfxPlatform.h"
 #include "nsClientRect.h"
@@ -1388,7 +1388,8 @@ AddItemsToRegion(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
           }
         } else {
           // not moving.
-          if (item->IsUniform(aBuilder)) {
+          nscolor color;
+          if (item->IsUniform(aBuilder, &color)) {
             // If it's uniform, we don't need to invalidate where one part
             // of the item was copied to another part.
             exclude.IntersectRect(r, r + aDelta);
@@ -3384,12 +3385,11 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
   PRBool wantImageSurface = (aSurfaceFlags & SFE_WANT_IMAGE_SURFACE) != 0;
 
   // If it's a <canvas>, we may be able to just grab its internal surface
-  nsCOMPtr<nsICanvasElement> canvas = do_QueryInterface(aElement);
-  if (node && canvas) {
-    PRUint32 w, h;
-    rv = canvas->GetSize(&w, &h);
-    if (NS_FAILED(rv))
-      return result;
+  nsCOMPtr<nsIDOMHTMLCanvasElement> domCanvas = do_QueryInterface(aElement);
+  if (node && domCanvas) {
+    nsHTMLCanvasElement *canvas = static_cast<nsHTMLCanvasElement*>(domCanvas.get());
+    nsIntSize nssize = canvas->GetSize();
+    gfxIntSize size(nssize.width, nssize.height);
 
     nsRefPtr<gfxASurface> surf;
 
@@ -3406,13 +3406,14 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
 
     if (!surf) {
       if (wantImageSurface) {
-        surf = new gfxImageSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+        surf = new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
       } else {
-        surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+        surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::ImageFormatARGB32);
       }
 
       nsRefPtr<gfxContext> ctx = new gfxContext(surf);
-      rv = canvas->RenderContexts(ctx, gfxPattern::FILTER_NEAREST);
+      // XXX shouldn't use the external interface, but maybe we can layerify this
+      rv = (static_cast<nsICanvasElementExternal*>(canvas))->RenderContextsExternal(ctx, gfxPattern::FILTER_NEAREST);
       if (NS_FAILED(rv))
         return result;
     }
@@ -3420,7 +3421,7 @@ nsLayoutUtils::SurfaceFromElement(nsIDOMElement *aElement,
     nsCOMPtr<nsIPrincipal> principal = node->NodePrincipal();
 
     result.mSurface = surf;
-    result.mSize = gfxIntSize(w, h);
+    result.mSize = size;
     result.mPrincipal = node->NodePrincipal();
     result.mIsWriteOnly = canvas->IsWriteOnly();
 

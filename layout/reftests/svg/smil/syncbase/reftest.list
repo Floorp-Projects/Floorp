@@ -43,6 +43,7 @@
 == changed-interval-change-spec-1.svg green-box-ref.svg
 == changed-interval-change-spec-2.svg green-box-ref.svg
 == changed-interval-change-spec-3.svg green-box-ref.svg
+== changed-interval-change-spec-4.svg green-box-ref.svg
 
 # Deleted intervals
 == deleted-interval-simple-1.svg green-box-ref.svg

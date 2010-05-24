@@ -1,5 +1,6 @@
-asserts(2) load 382527-1.html # bug 336104
+load 336104.html
+load 382527-1.html
 load 402172-1.html
-asserts(1) load 407256-1.html # bug 336104
+load 407256-1.html
 load 430624-1.html
 load 459613.html

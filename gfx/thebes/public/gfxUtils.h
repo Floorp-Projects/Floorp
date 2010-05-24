@@ -38,11 +38,30 @@
 #ifndef GFX_UTILS_H
 #define GFX_UTILS_H
 
-class gfxUtils {
+#include "gfxTypes.h"
+
+class gfxImageSurface;
+
+class THEBES_API gfxUtils {
 public:
     static PRBool FuzzyEqual(gfxFloat aV1, gfxFloat aV2) {
         return fabs(aV2 - aV1) < 1e-6;
     }
+
+    /*
+     * Premultiply or Unpremultiply aSourceSurface, writing the result
+     * to aDestSurface or back into aSourceSurface if aDestSurface is null.
+     *
+     * If aDestSurface is given, it must have identical format, dimensions, and
+     * stride as the source.
+     *
+     * If the source is not ImageFormatARGB32, no operation is performed.  If
+     * aDestSurface is given, the data is copied over.
+     */
+    static void PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
+                                        gfxImageSurface *aDestSurface = nsnull);
+    static void UnpremultiplyImageSurface(gfxImageSurface *aSurface,
+                                          gfxImageSurface *aDestSurface = nsnull);
 };
 
 #endif

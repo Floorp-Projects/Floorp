@@ -144,7 +144,7 @@ function TEST_G_Protocol4Parser() {
     G_Assert(z, p.parse(t)["foo"] === "bar", "First in multiline");
     G_Assert(z, p.parse(t)["bar"] === "baz", "Second in multiline");
     G_Assert(z, p.parse(t)["bom"] === "yaz", "Third in multiline");
-    G_Assert(z, p.parse(t)[""] === undefined, "Non-existent in multiline");
+    G_Assert(z, p.parse(t)[""] === undefined, "Nonexistent in multiline");
     
     // Test serialization
 

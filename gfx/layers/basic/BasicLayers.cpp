@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -42,8 +42,11 @@
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "gfxContext.h"
-#include "gfxASurface.h"
+#include "gfxImageSurface.h"
 #include "gfxPattern.h"
+#include "gfxUtils.h"
+
+#include "GLContext.h"
 
 namespace mozilla {
 namespace layers {
@@ -91,7 +94,9 @@ public:
    * set up to account for all the properties of the layer (transform,
    * opacity, etc).
    */
-  virtual void Paint(gfxContext* aContext) {}
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData) {}
 
 protected:
   nsIntRegion mVisibleRegion;
@@ -237,8 +242,9 @@ public:
                  "Can only set properties in construction phase");
   }
 
-  virtual gfxContext* BeginDrawing(nsIntRegion* aRegionToDraw);
-  virtual void EndDrawing();
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -247,30 +253,17 @@ protected:
   }
 };
 
-gfxContext*
-BasicThebesLayer::BeginDrawing(nsIntRegion* aRegionToDraw)
+void
+BasicThebesLayer::Paint(gfxContext* aContext,
+                        LayerManager::DrawThebesLayerCallback aCallback,
+                        void* aCallbackData)
 {
-  NS_ASSERTION(BasicManager()->IsBeforeInTree(BasicManager()->GetLastPainted(), this),
-               "Painting layers out of order");
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
   gfxContext* target = BasicManager()->GetTarget();
-  if (!target)
-    return nsnull;
+  NS_ASSERTION(target, "We shouldn't be called if there's no target");
 
-  BasicManager()->AdvancePaintingTo(this);
-
-  *aRegionToDraw = mVisibleRegion;
-  return target;
-}
-
-void
-BasicThebesLayer::EndDrawing()
-{
-  NS_ASSERTION(BasicManager()->InDrawing(),
-               "Can only draw in drawing phase");
-  NS_ASSERTION(BasicManager()->GetLastPainted() == this,
-               "Not currently drawing this layer");
+  aCallback(this, target, mVisibleRegion, aCallbackData);
 }
 
 class BasicImageLayer : public ImageLayer, BasicImplData {
@@ -292,7 +285,9 @@ public:
     mVisibleRegion = aRegion;
   }
 
-  virtual void Paint(gfxContext* aContext);
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -302,7 +297,9 @@ protected:
 };
 
 void
-BasicImageLayer::Paint(gfxContext* aContext)
+BasicImageLayer::Paint(gfxContext* aContext,
+                       LayerManager::DrawThebesLayerCallback aCallback,
+                       void* aCallbackData)
 {
   if (!mContainer)
     return;
@@ -362,7 +359,9 @@ public:
     mVisibleRegion = aRegion;
   }
 
-  virtual void Paint(gfxContext* aContext);
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData);
 
 protected:
   BasicLayerManager* BasicManager()
@@ -372,14 +371,149 @@ protected:
 };
 
 void
-BasicColorLayer::Paint(gfxContext* aContext)
+BasicColorLayer::Paint(gfxContext* aContext,
+                       LayerManager::DrawThebesLayerCallback aCallback,
+                       void* aCallbackData)
 {
   aContext->SetColor(mColor);
   aContext->Paint();
 }
 
+class BasicCanvasLayer : public CanvasLayer,
+                         BasicImplData
+{
+public:
+  BasicCanvasLayer(BasicLayerManager* aLayerManager) :
+    CanvasLayer(aLayerManager, static_cast<BasicImplData*>(this))
+  {
+    MOZ_COUNT_CTOR(BasicCanvasLayer);
+  }
+  virtual ~BasicCanvasLayer()
+  {
+    MOZ_COUNT_DTOR(BasicCanvasLayer);
+  }
+
+  virtual void Initialize(const Data& aData);
+  virtual void Updated(const nsIntRect& aRect);
+  virtual void Paint(gfxContext* aContext,
+                     LayerManager::DrawThebesLayerCallback aCallback,
+                     void* aCallbackData);
+
+protected:
+  nsRefPtr<gfxASurface> mSurface;
+  nsRefPtr<mozilla::gl::GLContext> mGLContext;
+
+  nsIntRect mBounds;
+  nsIntRect mUpdatedRect;
+
+  PRPackedBool mGLBufferIsPremultiplied;
+  PRPackedBool mNeedsYFlip;
+};
+
+void
+BasicCanvasLayer::Initialize(const Data& aData)
+{
+  NS_ASSERTION(mSurface == nsnull, "BasicCanvasLayer::Initialize called twice!");
+
+  mUpdatedRect.Empty();
+
+  if (aData.mSurface) {
+    mSurface = aData.mSurface;
+    NS_ASSERTION(aData.mGLContext == nsnull,
+                 "CanvasLayer can't have both surface and GLContext");
+    mNeedsYFlip = PR_FALSE;
+  } else if (aData.mGLContext) {
+    mGLContext = aData.mGLContext;
+    mGLBufferIsPremultiplied = aData.mGLBufferIsPremultiplied;
+    mNeedsYFlip = PR_TRUE;
+  } else {
+    NS_ERROR("CanvasLayer created without mSurface or mGLContext?");
+  }
+
+  mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+}
+
+void
+BasicCanvasLayer::Updated(const nsIntRect& aRect)
+{
+  NS_ASSERTION(mUpdatedRect.IsEmpty(),
+               "CanvasLayer::Updated called more than once in a transaction!");
+
+  mUpdatedRect.UnionRect(mUpdatedRect, aRect);
+
+  if (mGLContext) {
+    nsRefPtr<gfxImageSurface> isurf =
+      new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
+                          IsOpaqueContent()
+                            ? gfxASurface::ImageFormatRGB24
+                            : gfxASurface::ImageFormatARGB32);
+    if (!isurf || isurf->CairoStatus() != 0) {
+      return;
+    }
+
+    NS_ASSERTION(isurf->Stride() == mBounds.width * 4, "gfxImageSurface stride isn't what we expect!");
+
+    // We need to read from the GLContext
+    mGLContext->MakeCurrent();
+
+    // We have to flush to ensure that any buffered GL operations are
+    // in the framebuffer before we read.
+    mGLContext->fFlush();
+
+    // For simplicity, we read the entire framebuffer for now -- in
+    // the future we should use mUpdatedRect, though with WebGL we don't
+    // have an easy way to generate one.
+    mGLContext->fReadPixels(0, 0, mBounds.width, mBounds.height,
+                            LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
+                            isurf->Data());
+
+    // If the underlying GLContext doesn't have a framebuffer into which
+    // premultiplied values were written, we have to do this ourselves here.
+    // Note that this is a WebGL attribute; GL itself has no knowledge of
+    // premultiplied or unpremultiplied alpha.
+    if (!mGLBufferIsPremultiplied)
+      gfxUtils::PremultiplyImageSurface(isurf);
+
+    // stick our surface into mSurface, so that the Paint() path is the same
+    mSurface = isurf;
+  }
+
+  // sanity
+  NS_ASSERTION(mUpdatedRect.IsEmpty() || mBounds.Contains(mUpdatedRect),
+               "CanvasLayer: Updated rect bigger than bounds!");
+}
+
+void
+BasicCanvasLayer::Paint(gfxContext* aContext,
+                        LayerManager::DrawThebesLayerCallback aCallback,
+                        void* aCallbackData)
+{
+  nsRefPtr<gfxPattern> pat = new gfxPattern(mSurface);
+
+  pat->SetFilter(mFilter);
+  pat->SetExtend(gfxPattern::EXTEND_PAD);
+
+  gfxRect r(0, 0, mBounds.width, mBounds.height);
+  gfxMatrix m;
+  if (mNeedsYFlip) {
+    m = aContext->CurrentMatrix();
+    aContext->Translate(gfxPoint(0.0, mBounds.height));
+    aContext->Scale(1.0, -1.0);
+  }
+
+  aContext->NewPath();
+  aContext->PixelSnappedRectangleAndSetPattern(r, pat);
+  aContext->Fill();
+
+  if (mNeedsYFlip) {
+    aContext->SetMatrix(m);
+  }
+
+  mUpdatedRect.Empty();
+}
+
 BasicLayerManager::BasicLayerManager(gfxContext* aContext) :
-  mDefaultTarget(aContext), mLastPainted(nsnull)
+  mDefaultTarget(aContext)
 #ifdef DEBUG
   , mPhase(PHASE_NONE)
 #endif
@@ -422,24 +556,23 @@ BasicLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
 }
 
 void
-BasicLayerManager::EndConstruction()
+BasicLayerManager::EndTransaction(DrawThebesLayerCallback aCallback,
+                                  void* aCallbackData)
 {
   NS_ASSERTION(mRoot, "Root not set");
   NS_ASSERTION(mPhase == PHASE_CONSTRUCTION, "Should be in construction phase");
 #ifdef DEBUG
   mPhase = PHASE_DRAWING;
 #endif
-}
 
-void
-BasicLayerManager::EndTransaction()
-{
-  NS_ASSERTION(mPhase == PHASE_DRAWING, "Should be in drawing phase");
+  if (mTarget) {
+    PaintLayer(mRoot, aCallback, aCallbackData);
+    mTarget = nsnull;
+  }
+
 #ifdef DEBUG
   mPhase = PHASE_NONE;
 #endif
-  AdvancePaintingTo(nsnull);
-  mTarget = nsnull;
   // No retained layers supported for now
   mRoot = nsnull;
 }
@@ -493,16 +626,20 @@ UseOpaqueSurface(Layer* aLayer)
 }
 
 void
-BasicLayerManager::BeginPaintingLayer(Layer* aLayer)
+BasicLayerManager::PaintLayer(Layer* aLayer,
+                              DrawThebesLayerCallback aCallback,
+                              void* aCallbackData)
 {
   PRBool needsGroup = NeedsGroup(aLayer);
-  if ((needsGroup || NeedsState(aLayer)) && mTarget) {
+  PRBool needsSaveRestore = needsGroup || NeedsState(aLayer);
+
+ if (needsSaveRestore) {
     mTarget->Save();
 
     if (aLayer->GetClipRect()) {
       const nsIntRect& r = *aLayer->GetClipRect();
       mTarget->NewPath();
-      mTarget->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
+      mTarget->Rectangle(gfxRect(r.x, r.y, r.width, r.height), PR_TRUE);
       mTarget->Clip();
     }
 
@@ -535,64 +672,20 @@ BasicLayerManager::BeginPaintingLayer(Layer* aLayer)
     }
   }
 
-  mLastPainted = aLayer;
+  ToData(aLayer)->Paint(mTarget, aCallback, aCallbackData);
+  for (Layer* child = aLayer->GetFirstChild(); child;
+       child = child->GetNextSibling()) {
+    PaintLayer(child, aCallback, aCallbackData);
+  }
 
-  // For layers that paint themselves (e.g., BasicImageLayer), paint
-  // them now.
-  ToData(aLayer)->Paint(mTarget);
-}
-
-void
-BasicLayerManager::EndPaintingLayer()
-{
-  PRBool needsGroup = NeedsGroup(mLastPainted);
-  if ((needsGroup || NeedsState(mLastPainted)) && mTarget) {
+  if (needsSaveRestore) {
     if (needsGroup) {
       mTarget->PopGroupToSource();
-      mTarget->Paint(mLastPainted->GetOpacity());
+      mTarget->Paint(aLayer->GetOpacity());
     }
 
     mTarget->Restore();
   }
-}
-
-void
-BasicLayerManager::AdvancePaintingTo(BasicThebesLayer* aLayer)
-{
-  NS_ASSERTION(!aLayer || IsBeforeInTree(mLastPainted, aLayer),
-               "Painting layers out of order");
-
-  // Traverse the layer tree from mLastPainted to aLayer, calling
-  // BeginPaintingLayer and EndPaintingLayer as we enter or exit layers.
-  do {
-    Layer* firstChild;
-    Layer* nextSibling;
-    // Advance mLastPainted one step through the tree in preorder
-    if (!mLastPainted) {
-      // This is the first AdvancePaintingTo call. Start at the root.
-      BeginPaintingLayer(mRoot);
-    } else if ((firstChild = mLastPainted->GetFirstChild()) != nsnull) {
-      // Descend into our first child, if there is one.
-      BeginPaintingLayer(firstChild);
-    } else if ((nextSibling = mLastPainted->GetNextSibling()) != nsnull) {
-      // There are no children to descend into. Leave this layer and
-      // advance to our next sibling, if there is one.
-      EndPaintingLayer();
-      BeginPaintingLayer(nextSibling);
-    } else {
-      // There are no children to descend into and we have no next sibling.
-      // Exit layers until we find a layer which has a next sibling
-      // (or we exit the root).
-      do {
-        EndPaintingLayer();
-        mLastPainted = mLastPainted->GetParent();
-      } while (mLastPainted && !mLastPainted->GetNextSibling());
-      if (mLastPainted) {
-        EndPaintingLayer();
-        BeginPaintingLayer(mLastPainted->GetNextSibling());
-      }
-    }
-  } while (mLastPainted != aLayer);
 }
 
 already_AddRefed<ThebesLayer>
@@ -627,54 +720,13 @@ BasicLayerManager::CreateColorLayer()
   return layer.forget();
 }
 
-#ifdef DEBUG
-static void
-AppendAncestors(Layer* aLayer, nsTArray<Layer*>* aAncestors)
+already_AddRefed<CanvasLayer>
+BasicLayerManager::CreateCanvasLayer()
 {
-  while (aLayer) {
-    aAncestors->AppendElement(aLayer);
-    aLayer = aLayer->GetParent();
-  }
+  NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
+  nsRefPtr<CanvasLayer> layer = new BasicCanvasLayer(this);
+  return layer.forget();
 }
-
-PRBool
-BasicLayerManager::IsBeforeInTree(Layer* aBefore, Layer* aLayer)
-{
-  if (!aBefore) {
-    return PR_TRUE;
-  }
-  nsAutoTArray<Layer*,8> beforeAncestors, afterAncestors;
-  AppendAncestors(aBefore, &beforeAncestors);
-  AppendAncestors(aLayer, &afterAncestors);
-  PRInt32 beforeIndex = beforeAncestors.Length() - 1;
-  PRInt32 afterIndex = afterAncestors.Length() - 1;
-  NS_ASSERTION(beforeAncestors[beforeIndex] == mRoot, "aBefore not in tree?");
-  NS_ASSERTION(afterAncestors[afterIndex] == mRoot, "aLayer not in tree?");
-  --beforeIndex;
-  --afterIndex;
-  while (beforeIndex >= 0 && afterIndex >= 0) {
-    if (beforeAncestors[beforeIndex] != afterAncestors[afterIndex]) {
-      BasicContainerLayer* parent =
-        static_cast<BasicContainerLayer*>(beforeAncestors[beforeIndex + 1]);
-      for (Layer* child = parent->GetFirstChild();
-           child != afterAncestors[afterIndex];
-           child = child->GetNextSibling()) {
-        if (child == beforeAncestors[beforeIndex]) {
-          return PR_TRUE;
-        }
-      }
-      return PR_FALSE;
-    }
-    --beforeIndex;
-    --afterIndex;
-  }
-  if (afterIndex > 0) {
-    // aBefore is an ancestor of aLayer, so it's before aLayer in preorder
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-#endif
 
 }
 }

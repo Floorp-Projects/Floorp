@@ -789,31 +789,29 @@ nsAccUtils::GetLiveAttrValue(PRUint32 aRule, nsAString& aValue)
 #ifdef DEBUG_A11Y
 
 PRBool
-nsAccUtils::IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible)
+nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible *aAccessible)
 {
   PRBool foundText = PR_FALSE;
   
-  nsCOMPtr<nsIAccessibleDocument> accDoc = do_QueryInterface(aAccessible);
+  nsCOMPtr<nsIAccessibleDocument> accDoc = do_QueryObject(aAccessible);
   if (accDoc) {
     // Don't test for accessible docs, it makes us create accessibles too
     // early and fire mutation events before we need to
     return PR_TRUE;
   }
 
-  nsCOMPtr<nsIAccessible> child, nextSibling;
-  aAccessible->GetFirstChild(getter_AddRefs(child));
-  while (child) {
+  PRInt32 childCount = aAccessible->GetChildCount();
+  for (PRint32 childIdx = 0; childIdx < childCount; childIdx++) {
+    nsAccessible *child = GetChildAt(childIdx);
     if (IsText(child)) {
       foundText = PR_TRUE;
       break;
     }
-    child->GetNextSibling(getter_AddRefs(nextSibling));
-    child.swap(nextSibling);
   }
 
   if (foundText) {
     // found text child node
-    nsCOMPtr<nsIAccessibleText> text = do_QueryInterface(aAccessible);
+    nsCOMPtr<nsIAccessibleText> text = do_QueryObject(aAccessible);
     if (!text)
       return PR_FALSE;
   }

@@ -82,7 +82,7 @@ function run_test() {
   do_check_eq(ltm.usedThemes[7].id, "x1");
   do_check_eq(ltm.getUsedTheme("x0"), null);
 
-  ltm.forgetUsedTheme("nonexisting");
+  ltm.forgetUsedTheme("nonexistent");
   do_check_eq(ltm.usedThemes.length, 8);
   do_check_neq(ltm.currentTheme, null);
 

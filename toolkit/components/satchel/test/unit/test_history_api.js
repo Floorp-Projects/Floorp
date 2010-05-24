@@ -74,7 +74,7 @@ function run_test()
   // time-A/B/C/D checked below.
 
   // ===== 2 =====
-  // Test looking for non-existent / bogus data.
+  // Test looking for nonexistent / bogus data.
   testnum++;
   do_check_false(fh.nameExists("blah"));
   do_check_false(fh.nameExists(""));

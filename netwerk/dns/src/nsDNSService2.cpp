@@ -58,6 +58,8 @@
 #include "prio.h"
 #include "plstr.h"
 
+#include "mozilla/FunctionTimer.h"
+
 static const char kPrefDnsCacheEntries[]    = "network.dnsCacheEntries";
 static const char kPrefDnsCacheExpiration[] = "network.dnsCacheExpiration";
 static const char kPrefEnableIDN[]          = "network.enableIDN";
@@ -319,6 +321,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsDNSService, nsIDNSService, nsPIDNSService,
 NS_IMETHODIMP
 nsDNSService::Init()
 {
+    NS_TIME_FUNCTION;
+
     NS_ENSURE_TRUE(!mResolver, NS_ERROR_ALREADY_INITIALIZED);
 
     PRBool firstTime = (mLock == nsnull);
