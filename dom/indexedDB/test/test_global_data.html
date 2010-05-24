@@ -49,6 +49,20 @@
       is(db2.objectStoreNames.length, 1, "1 objectStore in db2");
       is(db2.objectStoreNames.item(0), objectStore.name, "Correct name");
 
+      let objectStore1 = event.result;
+      is(objectStore1.name, objectStore.name, "Same name");
+      is(objectStore1.keyPath, objectStore.keyPath, "Same keyPath");
+      is(objectStore1.autoIncrement, objectStore.autoIncrement,
+         "Same value for autoIncrement");
+
+      let objectStore2 = db1.objectStore(objectStore.name);
+
+      ok(objectStore1 !== objectStore2, "Different objectStores");
+      is(objectStore1.name, objectStore2.name, "Same name");
+      is(objectStore1.keyPath, objectStore2.keyPath, "Same keyPath");
+      is(objectStore1.autoIncrement, objectStore2.autoIncrement,
+         "Same value for autoIncrement");
+
       finishTest();
       yield;
     }
