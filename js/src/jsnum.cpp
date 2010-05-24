@@ -772,7 +772,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
 static char *
 NumberToCString(JSContext *cx, jsdouble d, jsint base, char *buf, size_t bufSize)
 {
-    jsint i;
+    int32_t i;
     char *numStr;
 
     JS_ASSERT(bufSize >= DTOSTR_STANDARD_BUFFER_SIZE);
@@ -823,7 +823,7 @@ js_NumberToStringWithBase(JSContext *cx, jsdouble d, jsint base)
     if (base < 2 || base > 36)
         return NULL;
 
-    jsint i;
+    int32_t i;
     if (JSDOUBLE_IS_INT32(d, i)) {
         if (base == 10 && jsuint(i) < INT_STRING_LIMIT)
             return JSString::intString(i);

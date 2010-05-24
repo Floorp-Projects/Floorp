@@ -3053,6 +3053,7 @@ struct PrivateVoidPtrTag {
  * layout-compatible, pointers to jsval and js::Value are interchangeable and
  * may be cast safely and canonically using js::Jsvalify and js::asValue.
  */
+VALUE_ALIGNMENT_BEFORE
 class Value
 {
     /*
@@ -3236,7 +3237,7 @@ class Value
         data.i32 = i;
     }
 
-    int32_t &asInt32Ref() {
+    int32 &asInt32Ref() {
         JS_ASSERT(isInt32());
         return data.i32;
     }
@@ -3505,7 +3506,7 @@ class Value
         JS_ASSERT(mask == JSVAL_INT32_MASK);
         return data.u32;
     }
-} VALUE_ALIGNMENT;
+} VALUE_ALIGNMENT_AFTER;
 
 /*
  * As asserted above, js::Value and jsval are layout equivalent. To provide
