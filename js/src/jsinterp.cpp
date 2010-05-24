@@ -2379,13 +2379,14 @@ Interpret(JSContext *cx)
      * "op" correctly in all other cases.
      */
     JSOp op;
-#ifdef JS_THREADED_INTERP
+#if JS_THREADED_INTERP
     {
         jsint len = 0;
         DO_NEXT_OP(len);
     }
 #else
     /* 'len' needs to be live for the non-threaded interpreter loop. */
+    // If we initialize in the declaration, MSVC complains that the labels skip init.
     jsint len = 0;
     DO_NEXT_OP(len);
 #endif
