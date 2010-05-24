@@ -47,6 +47,15 @@ ContainerLayerOGL::ContainerLayerOGL(LayerManagerOGL *aManager)
   mImplData = static_cast<LayerOGL*>(this);
 }
 
+ContainerLayerOGL::~ContainerLayerOGL()
+{
+  LayerOGL *nextChild;
+  for (LayerOGL *child = GetFirstChildOGL(); child; child = nextChild) {
+    nextChild = child->GetNextSibling();
+    child->GetLayer()->Release();
+  }
+}
+
 const nsIntRect&
 ContainerLayerOGL::GetVisibleRect()
 {
@@ -65,6 +74,7 @@ ContainerLayerOGL::InsertAfter(Layer* aChild, Layer* aAfter)
   LayerOGL *newChild = static_cast<LayerOGL*>(aChild->ImplData());
   aChild->SetParent(this);
   if (!aAfter) {
+    NS_ADDREF(aChild);
     LayerOGL *oldFirstChild = GetFirstChildOGL();
     mFirstChild = newChild->GetLayer();
     newChild->SetNextSibling(oldFirstChild);
@@ -73,6 +83,7 @@ ContainerLayerOGL::InsertAfter(Layer* aChild, Layer* aAfter)
   for (LayerOGL *child = GetFirstChildOGL(); 
     child; child = child->GetNextSibling()) {
     if (aAfter == child->GetLayer()) {
+      NS_ADDREF(aChild);
       LayerOGL *oldNextSibling = child->GetNextSibling();
       child->SetNextSibling(newChild);
       child->GetNextSibling()->SetNextSibling(oldNextSibling);
@@ -87,6 +98,7 @@ ContainerLayerOGL::RemoveChild(Layer *aChild)
 {
   if (GetFirstChild() == aChild) {
     mFirstChild = GetFirstChildOGL()->GetNextSibling()->GetLayer();
+    NS_RELEASE(aChild);
     return;
   }
   LayerOGL *lastChild = NULL;
@@ -97,6 +109,7 @@ ContainerLayerOGL::RemoveChild(Layer *aChild)
       lastChild->SetNextSibling(child->GetNextSibling());
       child->SetNextSibling(NULL);
       child->GetLayer()->SetParent(NULL);
+      NS_RELEASE(aChild);
       return;
     }
     lastChild = child;
@@ -125,7 +138,9 @@ ContainerLayerOGL::GetFirstChildOGL()
 }
 
 void
-ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
+ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
+                               DrawThebesLayerCallback aCallback,
+                               void* aCallbackData)
 {
   /**
    * Setup our temporary texture for rendering the contents of this container.
@@ -139,7 +154,8 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
   YCbCrLayerProgram *yCbCrProgram =
     static_cast<LayerManagerOGL*>(mManager)->GetYCbCrLayerProgram();
 
-  if (GetOpacity() != 1.0) {
+  float opacity = GetOpacity();
+  if (opacity != 1.0) {
     gl()->fGenTextures(1, &containerSurface);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
     gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
@@ -202,11 +218,11 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
       gl()->fScissor(0, 0, GetVisibleRect().width, GetVisibleRect().height);
     }
 
-    layerToRender->RenderLayer(frameBuffer);
+    layerToRender->RenderLayer(frameBuffer, aCallback, aCallbackData);
     layerToRender = layerToRender->GetNextSibling();
   }
 
-  if (GetOpacity() != 1.0) {
+  if (opacity != 1.0) {
     // Unbind the current framebuffer and rebind the previous one.
     gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     gl()->fDeleteFramebuffers(1, &frameBuffer);
@@ -241,7 +257,7 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer)
 
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
 
-    rgbProgram->SetLayerOpacity(GetOpacity());
+    rgbProgram->SetLayerOpacity(opacity);
     rgbProgram->SetLayerTransform(&mTransform._11);
     rgbProgram->Apply();
 

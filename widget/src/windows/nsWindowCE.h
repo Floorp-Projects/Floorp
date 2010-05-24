@@ -75,7 +75,7 @@
 #define SHBrowseForFolderW(a)   SHBrowseForFolder(a)
 #endif
 
-// No-ops for non-existent ce global apis.
+// No-ops for nonexistent ce global apis.
 inline void FlashWindow(HWND window, BOOL ignore){}
 inline BOOL IsIconic(HWND inWnd){return false;}
 

@@ -49,6 +49,7 @@ class ContainerLayerOGL : public ContainerLayer,
 {
 public:
   ContainerLayerOGL(LayerManagerOGL *aManager);
+  ~ContainerLayerOGL();
 
   const nsIntRect &GetVisibleRect();
 
@@ -68,7 +69,9 @@ public:
 
   PRBool IsEmpty();
 
-  void RenderLayer(int aPreviousFrameBuffer);
+  void RenderLayer(int aPreviousFrameBuffer,
+                   DrawThebesLayerCallback aCallback,
+                   void* aCallbackData);
 private:
   nsIntRect mVisibleRect;
 

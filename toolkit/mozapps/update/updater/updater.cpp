@@ -400,8 +400,8 @@ static void LogPrintf(const char *fmt, ... )
 
 //-----------------------------------------------------------------------------
 
-static inline PRUint32
-mmin(PRUint32 a, PRUint32 b)
+static inline size_t
+mmin(size_t a, size_t b)
 {
   return (a > b) ? b : a;
 }

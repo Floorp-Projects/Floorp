@@ -169,7 +169,7 @@ testTHashtable(nsTHashtable<EntityToUnicodeEntry>& hash, PRUint32 numEntries) {
     printf("Found %u\n", entry->mNode->mUnicode);
   }
 
-  printf("Testing non-existent entries...");
+  printf("Testing nonexistent entries...");
 
   EntityToUnicodeEntry* entry =
     hash.GetEntry("xxxy");
@@ -485,7 +485,7 @@ main(void) {
     printf("Found %s\n", str);
   }
 
-  printf("Testing non-existent entries...");
+  printf("Testing nonexistent entries...");
   if (UniToEntity.Get(99446, &str)) {
     printf("FOUND! BAD!\n");
     exit (13);
@@ -550,7 +550,7 @@ main(void) {
     printf("Found %s\n", str);
   }
 
-  printf("Testing non-existent entries...");
+  printf("Testing nonexistent entries...");
   if (UniToEntityL.Get(99446, &str)) {
     printf("FOUND! BAD!\n");
     exit (13);
@@ -619,7 +619,7 @@ main(void) {
     printf("Found %c\n", myChar->GetChar());
   }
 
-  printf("Testing non-existent entries...");
+  printf("Testing nonexistent entries...");
   if (EntToUniClass.Get(NS_LITERAL_CSTRING("xxxx"), &myChar)) {
     printf("FOUND! BAD!\n");
     exit (19);
@@ -687,7 +687,7 @@ main(void) {
     printf("Found %c\n", myChar->GetChar());
   }
 
-  printf("Testing non-existent entries...");
+  printf("Testing nonexistent entries...");
   if (EntToUniClassL.Get(NS_LITERAL_CSTRING("xxxx"), &myChar)) {
     printf("FOUND! BAD!\n");
     exit (19);
@@ -763,7 +763,7 @@ main(void) {
     printf("Found %c\n", myChar2);
   }
 
-  printf("Testing non-existent entries...");
+  printf("Testing nonexistent entries...");
   if (EntToUniClass2.Get((nsISupports*) 0x55443316, &myChar2)) {
     printf("FOUND! BAD!\n");
     exit (25);
@@ -836,7 +836,7 @@ main(void) {
     printf("Found %s\n", str.get());
   }
 
-  printf("Testing non-existent entries...");
+  printf("Testing nonexistent entries...");
   nsCOMPtr<IFoo> myEnt;
   if (UniToEntClass2.Get(9462, getter_AddRefs(myEnt))) {
     printf("FOUND! BAD!\n");
@@ -910,7 +910,7 @@ main(void) {
     printf("Found %s\n", str.get());
   }
 
-  printf("Testing non-existent entries...");
+  printf("Testing nonexistent entries...");
   if (UniToEntClass2L.Get(9462, getter_AddRefs(myEnt))) {
     printf("FOUND! BAD!\n");
     exit (31);

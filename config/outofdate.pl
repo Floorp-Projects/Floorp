@@ -41,7 +41,7 @@
 #Compares with: foo1.class foo2.class (if -d specified, checks in 'dir', 
 #  otherwise assumes .class files in same directory as .java files)
 #Returns: list of input arguments which are newer than corresponding class
-#files (non-existent class files are considered to be real old :-)
+#files (nonexistent class files are considered to be real old :-)
 #
 
 $found = 1;
