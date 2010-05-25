@@ -679,8 +679,8 @@ js_InitRuntimeNumberState(JSContext *cx)
     FIX_FPU();
 
     jsdpun u;
-    u.s.hi = JSDOUBLE_HI32_EXPMASK | JSDOUBLE_HI32_MANTMASK;
-    u.s.lo = 0xffffffff;
+    u.s.hi = 0x7ff80000;
+    u.s.lo = 0x00000000;
     number_constants[NC_NaN].dval = js_NaN = u.d;
     rt->NaNValue.setDouble(u.d);
 
