@@ -194,14 +194,12 @@ typedef JSUint64 JSValueMaskType;
 #endif
 
 #ifdef __GNUC__
-# define VALUE_ALIGNMENT_BEFORE
-# define VALUE_ALIGNMENT_AFTER  __attribute__((aligned (8)))
+# define VALUE_ALIGNMENT        __attribute__((aligned (8)))
 # define ASSERT_DOUBLE_ALIGN()  JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0)
 #elif defined(_MSC_VER)
-  // Structs can be aligned with MSVC, but not if they are used as parameters,
-  // so we just don't try to align.
-# define VALUE_ALIGNMENT_BEFORE
-# define VALUE_ALIGNMENT_AFTER
+// Structs can be aligned with MSVC, but not if they are used as parameters,
+// so we just don't try to align.
+# define VALUE_ALIGNMENT
 # define ASSERT_DOUBLE_ALIGN()
 #else
 # error "TODO: do something for compiler"
@@ -254,12 +252,12 @@ typedef union jsval_data
 } jsval_data;
 
 /* See js::Value. */
-typedef VALUE_ALIGNMENT_BEFORE struct jsval
+typedef struct jsval
 {
     JSValueMaskType mask;
     JS_INSERT_VALUE_PADDING()
     jsval_data data;
-} VALUE_ALIGNMENT_AFTER jsval;
+} VALUE_ALIGNMENT jsval;
 
 /*
  * Boxed word macros (private engine detail)
