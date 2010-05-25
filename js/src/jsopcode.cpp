@@ -4304,7 +4304,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     pc2 += INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
-                    table[k].key = ATOM_TO_JSVAL(atom);
+                    table[k].key = ATOM_IS_DOUBLE(atom) 
+                                 ? DOUBLE_TO_JSVAL(*ATOM_TO_DOUBLE(atom))
+                                 : ATOM_TO_JSVAL(atom);
                     table[k].offset = off2;
                 }
 
