@@ -3076,9 +3076,21 @@ class AutoBoxedWordVector : private AutoGCRooter
 };
 
 static JS_ALWAYS_INLINE void
-SetValueRangeToUndefined(Value *vec, Value *end)
+MakeValueRangeGCSafe(Value *vec, uintN len)
 {
-    for (Value *v = vec; v != end; ++v)
+    PodZero(vec, len);
+}
+
+static JS_ALWAYS_INLINE void
+MakeValueRangeGCSafe(Value *beg, Value *end)
+{
+    PodZero(beg, end - beg);
+}
+
+static JS_ALWAYS_INLINE void
+SetValueRangeToUndefined(Value *beg, Value *end)
+{
+    for (Value *v = beg; v != end; ++v)
         v->setUndefined();
 }
 
@@ -3086,6 +3098,19 @@ static JS_ALWAYS_INLINE void
 SetValueRangeToUndefined(Value *vec, uintN len)
 {
     return SetValueRangeToUndefined(vec, vec + len);
+}
+
+static JS_ALWAYS_INLINE void
+SetValueRangeToNull(Value *beg, Value *end)
+{
+    for (Value *v = beg; v != end; ++v)
+        v->setNull();
+}
+
+static JS_ALWAYS_INLINE void
+SetValueRangeToNull(Value *vec, uintN len)
+{
+    return SetValueRangeToNull(vec, vec + len);
 }
 
 } /* namespace js */

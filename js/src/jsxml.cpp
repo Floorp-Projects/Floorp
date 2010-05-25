@@ -196,8 +196,8 @@ IsDeclared(const JSObject *obj)
 
     JS_ASSERT(obj->getClass() == &js_NamespaceClass.base);
     v = Jsvalify(obj->fslots[JSSLOT_DECLARED]);
-    JS_ASSERT(JSVAL_IS_VOID(v) || JSVAL_IS_TRUE(v));
-    return JSVAL_IS_TRUE(v);
+    JS_ASSERT(JSVAL_IS_VOID(v) || v == JSVAL_TRUE);
+    return v == JSVAL_TRUE;
 }
 
 static JSBool
