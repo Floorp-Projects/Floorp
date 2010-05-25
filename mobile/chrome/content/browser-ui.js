@@ -557,10 +557,13 @@ var BrowserUI = {
 
     this._edit.value = aURI;
 
-    var flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
-    getBrowser().loadURIWithFlags(aURI, flags, null, null);
+    let fixupFlags = Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+    let uri = gURIFixup.createFixupURI(aURI, fixupFlags);
 
-    gHistSvc.markPageAsTyped(gURIFixup.createFixupURI(aURI, 0));
+    let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+    getBrowser().loadURIWithFlags(uri.spec, loadFlags, null, null);
+
+    gHistSvc.markPageAsTyped(uri);
   },
 
   showAutoComplete : function showAutoComplete() {
