@@ -39,6 +39,9 @@
  * ***** END LICENSE BLOCK ***** */
 #include "MethodJIT.h"
 #include "Compiler.h"
+#include "assembler/assembler/LinkBuffer.h"
+
+#include "jsautooplen.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -51,9 +54,16 @@ static const char *OpcodeNames[] = {
 };
 #endif
 
-mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSObject *scopeChain)
-  : cx(cx), script(script), scopeChain(scopeChain), globalObj(scopeChain->getGlobal()),
-    analysis(cx, script), jumpMap(NULL)
+// This probably does not belong here; adding here for now as a quick build fix.
+#if ENABLE_ASSEMBLER && WTF_CPU_X86 && !WTF_PLATFORM_MAC
+JSC::MacroAssemblerX86Common::SSE2CheckState JSC::MacroAssemblerX86Common::s_sse2CheckState =
+NotCheckedSSE2; 
+#endif 
+
+mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
+  : CompilerBase(cx), cx(cx), script(script), scopeChain(scopeChain),
+    globalObj(scopeChain->getGlobal()), fun(fun), analysis(cx, script), jumpMap(NULL),
+    frame(cx, script, masm), cg(masm, frame)
 {
 }
 
@@ -79,6 +89,10 @@ mjit::Compiler::Compile()
         JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
         return Compile_Abort;
     }
+
+    uint32 nargs = fun ? fun->nargs : 0;
+    if (!frame.init(nargs))
+        return Compile_Abort;
 
     jumpMap = (Label *)cx->malloc(sizeof(Label) * script->length);
     if (!jumpMap)
@@ -113,7 +127,7 @@ mjit::Compiler::Compile()
     JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%ld\")\n",
                (void*)script->ncode, 0); //cr.m_size);
 
-    return Compile_Abort;
+    return Compile_Okay;
 }
 
 #undef CHECK_STATUS
@@ -142,6 +156,13 @@ mjit::Compiler::generatePrologue()
 
     return Compile_Okay;
 }
+
+#define BEGIN_CASE(name)        case name:
+#define END_CASE(name)                      \
+    JS_BEGIN_MACRO                          \
+        PC += name##_LENGTH;                \
+    JS_END_MACRO;                           \
+    break;
 
 CompileStatus
 mjit::Compiler::generateMethod()
@@ -174,7 +195,47 @@ mjit::Compiler::generateMethod()
         }
 #endif
 
+    /**********************
+     * BEGIN COMPILER OPS *
+     **********************/ 
+
         switch (op) {
+          BEGIN_CASE(JSOP_TRACE)
+          END_CASE(JSOP_TRACE)
+
+          BEGIN_CASE(JSOP_POP)
+            frame.pop();
+          END_CASE(JSOP_POP)
+
+          BEGIN_CASE(JSOP_ZERO)
+            frame.push(JSVAL_ZERO);
+          END_CASE(JSOP_ZERO)
+
+          BEGIN_CASE(JSOP_ONE)
+            frame.push(JSVAL_ONE);
+          END_CASE(JSOP_ONE)
+
+          BEGIN_CASE(JSOP_BINDNAME)
+            jsop_bindname(fullAtomIndex(PC));
+          END_CASE(JSOP_BINDNAME)
+
+          BEGIN_CASE(JSOP_STOP)
+            /* Safe point! */
+            cg.storeJsval(Value(UndefinedTag()),
+                          Address(FrameState::FpReg,
+                                  offsetof(JSStackFrame, rval)));
+            emitReturn();
+            goto done;
+          END_CASE(JSOP_STOP)
+
+          BEGIN_CASE(JSOP_GETGLOBAL)
+            jsop_getglobal(GET_SLOTNO(PC));
+          END_CASE(JSOP_GETGLOBAL)
+
+          BEGIN_CASE(JSOP_SETGLOBAL)
+            jsop_setglobal(GET_SLOTNO(PC));
+          END_CASE(JSOP_SETGLOBAL)
+
           default:
            /* Sorry, this opcode isn't implemented yet. */
 #ifdef JS_METHODJIT_SPEW
@@ -182,9 +243,28 @@ mjit::Compiler::generateMethod()
 #endif
             return Compile_Abort;
         }
+
+    /**********************
+     *  END COMPILER OPS  *
+     **********************/ 
     }
 
+  done:
     return Compile_Okay;
+}
+
+#undef END_CASE
+#undef BEGIN_CASE
+
+uint32
+mjit::Compiler::fullAtomIndex(jsbytecode *pc)
+{
+    return GET_SLOTNO(pc);
+
+    /* If we ever enable INDEXBASE garbage, use this below. */
+#if 0
+    return GET_SLOTNO(pc) + (atoms - script->atomMap.vector);
+#endif
 }
 
 CompileStatus
@@ -196,16 +276,84 @@ mjit::Compiler::generateEpilogue()
 CompileStatus
 mjit::Compiler::finishThisUp()
 {
+    JSC::ExecutablePool *execPool = getExecPool(masm.size());
+    if (!execPool)
+        return Compile_Abort;
+
+    JSC::LinkBuffer patchBuffer(&masm, execPool);
+    JSC::MacroAssemblerCodeRef cr = patchBuffer.finalizeCode();
+
+    script->ncode = cr.m_code.executableAddress();
+#ifdef DEBUG
+    script->jitLength = masm.size();
+#endif
+    script->execPool = cr.m_executablePool;
+    cr.m_executablePool = NULL;
+
     return Compile_Okay;
 }
 
 CompileStatus
-mjit::TryCompile(JSContext *cx, JSScript *script, JSObject *scopeChain)
+mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
 {
-    Compiler cc(cx, script, scopeChain);
+    Compiler cc(cx, script, fun, scopeChain);
 
     JS_ASSERT(!script->ncode);
 
-    return cc.Compile();
+    CompileStatus status = cc.Compile();
+    if (status != Compile_Okay)
+        script->ncode = JS_UNJITTABLE_METHOD;
+
+    return status;
+}
+
+void
+mjit::Compiler::jsop_setglobal(uint32 index)
+{
+    JS_ASSERT(globalObj);
+    uint32 slot = script->getGlobalSlot(index);
+
+    FrameEntry *fe = frame.peek(-1);
+    bool popped = PC[JSOP_SETGLOBAL_LENGTH] == JSOP_POP;
+
+    RegisterID reg = frame.allocReg();
+    if (slot < JS_INITIAL_NSLOTS) {
+        void *vp = &globalObj->getSlotRef(slot);
+        masm.move(ImmPtr(vp), reg);
+        cg.storeValue(fe, Address(reg, 0), popped);
+    } else {
+        masm.move(ImmPtr(&globalObj->dslots), reg);
+        masm.loadPtr(reg, reg);
+        cg.storeValue(fe, Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value)), popped);
+    }
+    frame.freeReg(reg);
+}
+
+void
+mjit::Compiler::jsop_getglobal(uint32 index)
+{
+    JS_ASSERT(globalObj);
+    uint32 slot = script->getGlobalSlot(index);
+
+    RegisterID reg = frame.allocReg();
+    if (slot < JS_INITIAL_NSLOTS) {
+        void *vp = &globalObj->getSlotRef(slot);
+        masm.move(ImmPtr(vp), reg);
+        cg.pushValueOntoFrame(Address(reg, 0));
+    } else {
+        masm.move(ImmPtr(&globalObj->dslots), reg);
+        masm.loadPtr(reg, reg);
+        cg.pushValueOntoFrame(Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value)));
+    }
+    frame.freeReg(reg);
+}
+
+void
+mjit::Compiler::emitReturn()
+{
+#if defined(JS_CPU_ARM)
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), ARMRegisters::lr);
+#endif
+    masm.ret();
 }
 

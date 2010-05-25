@@ -49,6 +49,14 @@
 # error "Oh no, you should define a platform so this compiles."
 #endif
 
+#if defined JS_CPU_X64
+# define JS_64BIT
+#elif defined(JS_CPU_ARM) || defined(JS_CPU_X86)
+# define JS_32BIT
+#else
+# error "This processor is UNKNOWN."
+#endif
+
 namespace js {
 
 struct VMFrame
@@ -205,18 +213,18 @@ enum CompileStatus
 };
 
 CompileStatus
-TryCompile(JSContext *cx, JSScript *script, JSObject *scopeChain);
+TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
 
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script);
 
 static inline CompileStatus
-CanMethodJIT(JSContext *cx, JSScript *script, JSObject *scopeChain)
+CanMethodJIT(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
 {
     if (!(cx->options & JSOPTION_METHODJIT) || script->ncode == JS_UNJITTABLE_METHOD)
         return Compile_Abort;
     if (script->ncode == NULL)
-        return TryCompile(cx, script, scopeChain);
+        return TryCompile(cx, script, fun, scopeChain);
     return Compile_Okay;
 }
 
