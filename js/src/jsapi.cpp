@@ -2671,7 +2671,7 @@ JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
     CHECK_REQUEST(cx);
-    JS_ASSERT(!parent->isFunction() &&
+    JS_ASSERT((!parent || !parent->isFunction()) &&
               "Functions may not be set as the parents of objects.");
     return js_SetProtoOrParent(cx, obj, JSSLOT_PARENT, parent, JS_FALSE);
 }
