@@ -219,8 +219,8 @@ protected:
                           nsAString *aText = nsnull,
                           nsIFrame **aEndFrame = nsnull,
                           nsIntRect *aBoundsRect = nsnull,
-                          nsIAccessible **aStartAcc = nsnull,
-                          nsIAccessible **aEndAcc = nsnull);
+                          nsAccessible **aStartAcc = nsnull,
+                          nsAccessible **aEndAcc = nsnull);
 
   nsIntRect GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset, PRUint32 aEndRenderedOffset);
 
