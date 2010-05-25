@@ -22,7 +22,6 @@
  *
  * Contributor(s):
  *   David Anderson <danderson@mozilla.com>
- *   David Mandelin <dmandelin@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,67 +36,100 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined jsjaeger_compiler_h__ && defined JS_METHODJIT
-#define jsjaeger_compiler_h__
 
-#include "jscntxt.h"
-#include "jstl.h"
-#include "BytecodeAnalyzer.h"
-#include "MethodJIT.h"
+#if !defined jsjaeger_valueinfo_h__ && defined JS_METHODJIT
+#define jsjaeger_valueinfo_h__
+
+#include "jsapi.h"
+#include "MachineRegs.h"
 #include "assembler/assembler/MacroAssembler.h"
-#include "FrameState.h"
-#include "CodeGenerator.h"
-#include "CompilerBase.h"
 
 namespace js {
 namespace mjit {
 
-class Compiler : public CompilerBase
-{
-    typedef JSC::MacroAssembler::Label Label;
-    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
+struct RematInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
-    typedef JSC::MacroAssembler::Address Address;
-    typedef JSC::MacroAssembler MacroAssembler;
 
-    JSContext *cx;
-    JSScript *script;
-    JSObject *scopeChain;
-    JSObject *globalObj;
-    JSFunction *fun;
-    BytecodeAnalyzer analysis;
-    Label *jumpMap;
-    jsbytecode *PC;
-    MacroAssembler masm;
-    FrameState frame;
-    CodeGenerator cg;
-  public:
-    // Special atom index used to indicate that the atom is 'length'. This
-    // follows interpreter usage in JSOP_LENGTH.
-    enum { LengthAtomIndex = uint32(-2) };
+    /* Physical location. */
+    enum PhysLoc {
+        /* Backed by another entry in the stack. */
+        PhysLoc_Copy,
 
-    Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
-    ~Compiler();
+        /* Backing bits are known at compile time. */
+        PhysLoc_Constant,
 
-    CompileStatus Compile();
+        /* Backing bits are in a register. */
+        PhysLoc_Register,
 
-  private:
-    CompileStatus generatePrologue();
-    CompileStatus generateMethod();
-    CompileStatus generateEpilogue();
-    CompileStatus finishThisUp();
+        /* Backing bits are in memory. */
+        PhysLoc_Memory
+    };
 
-    /* Non-emitting helpers. */
-    uint32 fullAtomIndex(jsbytecode *pc);
+    void setRegister(RegisterID reg, bool synced) {
+        reg_ = reg;
+        location_ = PhysLoc_Register;
+        synced_ = synced;
+    }
 
-    /* Opcode handlers. */
-    void jsop_bindname(uint32 index);
-    void jsop_setglobal(uint32 index);
-    void jsop_getglobal(uint32 index);
-    void emitReturn();
+    bool isCopy() { return location_ == PhysLoc_Copy; }
+    void setMemory() { synced_ = true; }
+    void setConstant() { location_ = PhysLoc_Constant; }
+    void unsync() { synced_ = false; }
+    bool isConstant() { return location_ == PhysLoc_Constant; }
+    bool inRegister() { return location_ == PhysLoc_Register; }
+    RegisterID reg() { return reg_; }
+
+    RegisterID reg_;
+    PhysLoc    location_;
+    bool       synced_;
 };
 
-} /* namespace js */
-} /* namespace mjit */
+class FrameEntry
+{
+    friend class FrameState;
 
-#endif
+  public:
+    bool isConstant() {
+        return data.isConstant();
+    }
+
+    const jsval &getConstant() {
+        JS_ASSERT(isConstant());
+        return v_;
+    }
+
+    bool isTypeConstant() {
+        return type.isConstant();
+    }
+
+    uint32 getTypeTag() {
+        return v_.mask;
+    }
+
+    uint32 copyOf() {
+        JS_ASSERT(type.isCopy() || data.isCopy());
+        return index_;
+    }
+
+  private:
+    void setConstant(const jsval &v) {
+        type.setConstant();
+        type.unsync();
+        data.setConstant();
+        data.unsync();
+        v_ = v;
+    }
+
+  private:
+    RematInfo  type;
+    RematInfo  data;
+    jsval      v_;
+    uint32     index_;
+    uint32     copies;
+};
+
+} /* namespace mjit */
+} /* namespace js */
+
+#endif /* jsjaeger_valueinfo_h__ */
+

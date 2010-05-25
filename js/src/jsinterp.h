@@ -362,7 +362,7 @@ extern JS_REQUIRES_STACK bool
 Interpret(JSContext *cx);
 
 extern JS_REQUIRES_STACK bool
-RunScript(JSContext *cx, JSScript *script, JSObject *scopeChain);
+RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
 
 #define JSPROP_INITIALIZER 0x100   /* NB: Not a valid property attribute. */
 

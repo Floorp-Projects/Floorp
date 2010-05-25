@@ -423,7 +423,7 @@ struct AutoInterpPreparer
 };
 
 JS_REQUIRES_STACK bool
-RunScript(JSContext *cx, JSScript *script, JSObject *scopeChain)
+RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
 {
     JS_ASSERT(script);
 
@@ -432,7 +432,7 @@ RunScript(JSContext *cx, JSScript *script, JSObject *scopeChain)
     AutoInterpPreparer prepareInterp(cx, script);
 
 #ifdef JS_METHODJIT
-    mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, scopeChain);
+    mjit::CompileStatus status = mjit::CanMethodJIT(cx, script, fun, scopeChain);
     if (status == mjit::Compile_Error)
         return JS_FALSE;
 
@@ -672,7 +672,7 @@ Invoke(JSContext *cx, const InvokeArgsGuard &args, uintN flags)
 #endif
     } else {
         JS_ASSERT(script);
-        ok = RunScript(cx, script, fp->scopeChain);
+        ok = RunScript(cx, script, fun, fp->scopeChain);
     }
 
     DTrace::exitJSFun(cx, fp, fun, fp->rval);
@@ -858,7 +858,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     if (JSInterpreterHook hook = cx->debugHooks->executeHook)
         hookData = hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData);
 
-    JSBool ok = RunScript(cx, script, fp->scopeChain);
+    JSBool ok = RunScript(cx, script, fp->fun, fp->scopeChain);
     if (result)
         *result = fp->rval;
 
