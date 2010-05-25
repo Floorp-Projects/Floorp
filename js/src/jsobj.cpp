@@ -248,8 +248,6 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     jsid id;
     JSObject *obj2;
     JSProperty *prop;
-    uintN attrs;
-    jsval val;
 
     JS_CHECK_RECURSION(cx, return NULL);
 
@@ -279,32 +277,37 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                 break;
             if (!prop)
                 continue;
-            ok = obj2->getAttributes(cx, id, prop, &attrs);
-            if (ok) {
-                if (obj2->isNative() &&
-                    (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-                    JSScopeProperty *sprop = (JSScopeProperty *) prop;
-                    val = JSVAL_VOID;
-                    if (attrs & JSPROP_GETTER)
-                        val = sprop->getterValue();
-                    if (attrs & JSPROP_SETTER) {
-                        if (val != JSVAL_VOID) {
-                            /* Mark the getter, then set val to setter. */
-                            ok = (MarkSharpObjects(cx, JSVAL_TO_OBJECT(val),
-                                                   NULL)
-                                  != NULL);
-                        }
-                        val = sprop->setterValue();
-                    }
-                } else {
-                    ok = obj->getProperty(cx, id, &val);
-                }
+            bool hasGetter, hasSetter;
+            AutoValueRooter v(cx, JSVAL_VOID);
+            AutoValueRooter setter(cx, JSVAL_VOID);
+            if (obj->isNative()) {
+                JSScopeProperty *sprop = (JSScopeProperty *) prop;
+                hasGetter = sprop->hasGetterValue();
+                hasSetter = sprop->hasSetterValue();
+                if (hasGetter)
+                    v.set(sprop->getterValue());
+                if (hasSetter)
+                    setter.set(sprop->setterValue());
+                JS_UNLOCK_OBJ(cx, obj2);
+            } else {
+                obj->dropProperty(cx, prop);
+                hasGetter = hasSetter = false;
             }
-            obj2->dropProperty(cx, prop);
-            if (!ok)
-                break;
-            if (!JSVAL_IS_PRIMITIVE(val) &&
-                !MarkSharpObjects(cx, JSVAL_TO_OBJECT(val), NULL)) {
+            if (hasSetter) {
+                /* Mark the getter, then set val to setter. */
+                if (hasGetter && !JSVAL_IS_PRIMITIVE(v.value())) {
+                    ok = !!MarkSharpObjects(cx, JSVAL_TO_OBJECT(v.value()), NULL);
+                    if (!ok)
+                        break;
+                }
+                v.set(setter.value());
+            } else if (!hasGetter) {
+                ok = obj->getProperty(cx, id, v.addr());
+                if (!ok)
+                    break;
+            }
+            if (!JSVAL_IS_PRIMITIVE(v.value()) &&
+                !MarkSharpObjects(cx, JSVAL_TO_OBJECT(v.value()), NULL)) {
                 ok = JS_FALSE;
                 break;
             }
