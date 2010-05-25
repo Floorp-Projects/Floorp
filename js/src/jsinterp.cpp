@@ -427,7 +427,9 @@ RunScript(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain
 {
     JS_ASSERT(script);
 
+#ifdef JS_METHODJIT_SPEW
     JMCheckLogging();
+#endif
 
     AutoInterpPreparer prepareInterp(cx, script);
 
