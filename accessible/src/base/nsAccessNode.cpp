@@ -158,7 +158,7 @@ nsAccessNode::Init()
     if (presShell) {
       nsCOMPtr<nsIDOMNode> docNode(do_QueryInterface(presShell->GetDocument()));
       if (docNode) {
-        nsRefPtr<nsAccessible> accessible =
+        nsAccessible *accessible =
           GetAccService()->GetAccessibleInWeakShell(docNode, mWeakShell);
         docAcc = do_QueryObject(accessible);
       }
@@ -508,12 +508,8 @@ nsAccessNode::MakeAccessNode(nsIDOMNode *aNode, nsIAccessNode **aAccessNode)
   nsCOMPtr<nsIAccessNode> accessNode =
     GetAccService()->GetCachedAccessNode(aNode, mWeakShell);
 
-  if (!accessNode) {
-    nsRefPtr<nsAccessible> accessible =
-      GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
-
-    accessNode = accessible;
-  }
+  if (!accessNode)
+    accessNode = GetAccService()->GetAccessibleInWeakShell(aNode, mWeakShell);
 
   if (accessNode) {
     NS_ADDREF(*aAccessNode = accessNode);
