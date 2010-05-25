@@ -135,6 +135,10 @@ CSRCS   = jemalloc.c
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 
+ifdef WRAP_MALLOC_CFLAGS
+DEFINES += -DWRAP_MALLOC
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 ifeq (Darwin,$(OS_TARGET))
