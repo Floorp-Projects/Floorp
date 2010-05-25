@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -139,70 +139,29 @@ ContainerLayerOGL::GetFirstChildOGL()
 
 void
 ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
-                               DrawThebesLayerCallback aCallback,
-                               void* aCallbackData)
+                               const nsIntPoint& aOffset)
 {
   /**
    * Setup our temporary texture for rendering the contents of this container.
    */
   GLuint containerSurface;
   GLuint frameBuffer;
-  RGBLayerProgram *rgbProgram =
-    static_cast<LayerManagerOGL*>(mManager)->GetRGBLayerProgram();
-  ColorLayerProgram *colorProgram =
-    static_cast<LayerManagerOGL*>(mManager)->GetColorLayerProgram();
-  YCbCrLayerProgram *yCbCrProgram =
-    static_cast<LayerManagerOGL*>(mManager)->GetYCbCrLayerProgram();
+
+  nsIntPoint childOffset(aOffset);
+  bool needsFramebuffer = false;
 
   float opacity = GetOpacity();
   if (opacity != 1.0) {
-    gl()->fGenTextures(1, &containerSurface);
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
-    gl()->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-			    0,
-			    LOCAL_GL_RGBA,
-			    mVisibleRect.width,
-			    mVisibleRect.height,
-			    0,
-			    LOCAL_GL_BGRA,
-			    LOCAL_GL_UNSIGNED_BYTE,
-			    NULL);
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
-    gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_LINEAR);
-
-    /**
-     * Create the framebuffer and bind it to make our content render into our
-     * framebuffer.
-     */
-    gl()->fGenFramebuffers(1, &frameBuffer);
-    gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, frameBuffer);
-    gl()->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                              LOCAL_GL_COLOR_ATTACHMENT0,
-                              LOCAL_GL_TEXTURE_2D,
-                              containerSurface,
-                              0);
-
-    NS_ASSERTION(
-	  gl()->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) ==
-	    LOCAL_GL_FRAMEBUFFER_COMPLETE, "Error setting up framebuffer.");
-
-    /**
-     * Store old shader program variables and set the ones used for rendering
-     * this container's content.
-     */
-    
-    rgbProgram->Activate();
-    rgbProgram->PushRenderTargetOffset((GLfloat)GetVisibleRect().x, (GLfloat)GetVisibleRect().y);
-
-    colorProgram->Activate();
-    colorProgram->PushRenderTargetOffset((GLfloat)GetVisibleRect().x, (GLfloat)GetVisibleRect().y);
-
-    yCbCrProgram->Activate();
-    yCbCrProgram->PushRenderTargetOffset((GLfloat)GetVisibleRect().x, (GLfloat)GetVisibleRect().y);
+    mOGLManager->CreateFBOWithTexture(mVisibleRect.width,
+                                      mVisibleRect.height,
+                                      &frameBuffer,
+                                      &containerSurface);
+    childOffset.x = mVisibleRect.x;
+    childOffset.y = mVisibleRect.y;
   } else {
     frameBuffer = aPreviousFrameBuffer;
   }
-  
+
   /**
    * Render this container's contents.
    */
@@ -210,15 +169,16 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   while (layerToRender) {
     const nsIntRect *clipRect = layerToRender->GetLayer()->GetClipRect();
     if (clipRect) {
-      gl()->fScissor(clipRect->x - GetVisibleRect().x,
-                   clipRect->y - GetVisibleRect().y,
-                   clipRect->width,
-                   clipRect->height);
+      gl()->fScissor(clipRect->x - mVisibleRect.x,
+                     clipRect->y - mVisibleRect.y,
+                     clipRect->width,
+                     clipRect->height);
     } else {
-      gl()->fScissor(0, 0, GetVisibleRect().width, GetVisibleRect().height);
+      gl()->fScissor(0, 0, mVisibleRect.width, mVisibleRect.height);
     }
 
-    layerToRender->RenderLayer(frameBuffer, aCallback, aCallbackData);
+    layerToRender->RenderLayer(frameBuffer, childOffset);
+
     layerToRender = layerToRender->GetNextSibling();
   }
 
@@ -227,44 +187,36 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
     gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
     gl()->fDeleteFramebuffers(1, &frameBuffer);
 
-    // Restore old shader program variables.
-    yCbCrProgram->Activate();
-    yCbCrProgram->PopRenderTargetOffset();
+    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
-    colorProgram->Activate();
-    colorProgram->PopRenderTargetOffset();
+    gl()->fBindTexture(mOGLManager->FBOTextureTarget(), containerSurface);
 
-    rgbProgram->Activate();
-    rgbProgram->PopRenderTargetOffset();
+    ColorTextureLayerProgram *rgb = mOGLManager->GetFBOLayerProgram();
 
-    /**
-     * Render the contents of this container to our destination.
-     */
-    float quadTransform[4][4];
-    /*
-     * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
-     * and size.
-     */
-    memset(&quadTransform, 0, sizeof(quadTransform));
-    quadTransform[0][0] = (float)GetVisibleRect().width;
-    quadTransform[1][1] = (float)GetVisibleRect().height;
-    quadTransform[2][2] = 1.0f;
-    quadTransform[3][0] = (float)GetVisibleRect().x;
-    quadTransform[3][1] = (float)GetVisibleRect().y;
-    quadTransform[3][3] = 1.0f;
+    rgb->Activate();
+    rgb->SetLayerQuadRect(mVisibleRect);
+    rgb->SetLayerTransform(mTransform);
+    rgb->SetLayerOpacity(opacity);
+    rgb->SetRenderOffset(aOffset);
+    rgb->SetTextureUnit(0);
 
-    rgbProgram->SetLayerQuadTransform(&quadTransform[0][0]);
+    if (rgb->GetTexCoordMultiplierUniformLocation() != -1) {
+      // 2DRect case, get the multiplier right for a sampler2DRect
+      float f[] = { float(mVisibleRect.width), float(mVisibleRect.height) };
+      rgb->SetUniform(rgb->GetTexCoordMultiplierUniformLocation(),
+                      2, f);
+    }
 
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, containerSurface);
+    DEBUG_GL_ERROR_CHECK(gl());
 
-    rgbProgram->SetLayerOpacity(opacity);
-    rgbProgram->SetLayerTransform(&mTransform._11);
-    rgbProgram->Apply();
+    mOGLManager->BindAndDrawQuad(rgb);
 
-    gl()->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+    DEBUG_GL_ERROR_CHECK(gl());
 
-    // Clean up resources.
+    // Clean up resources.  This also unbinds the texture.
     gl()->fDeleteTextures(1, &containerSurface);
+
+    DEBUG_GL_ERROR_CHECK(gl());
   }
 }
 

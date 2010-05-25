@@ -62,6 +62,7 @@ EXPORTS = \
         ImageLayers.h \
         Layers.h \
         LayerManagerOGL.h \
+        LayerManagerOGLProgram.h \
         $(NULL)
 
 CPPSRCS = \
@@ -90,6 +91,21 @@ CPPSRCS += \
 endif
 endif
 
+# Enable GLES2.0 under maemo
+ifdef MOZ_X11
+ifdef MOZ_PLATFORM_MAEMO
+DEFINES += -DUSE_GLES2
+endif
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
+
+LayerManagerOGLShaders.h: LayerManagerOGLShaders.txt genshaders.py
+	$(PYTHON) $(srcdir)/opengl/genshaders.py $< $@
+
+LayerManagerOGL.$(OBJ_SUFFIX): LayerManagerOGLShaders.h
+
+GARBAGE += LayerManagerOGLShaders.h
+
