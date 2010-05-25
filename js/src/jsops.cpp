@@ -1783,7 +1783,7 @@ BEGIN_CASE(JSOP_CALLPROP)
         if (entry->vword.isFunObj()) {
             regs.sp[-1].setFunObj(entry->vword.toFunObj());
             PUSH_COPY(lval);
-            goto end_callprop_with_funobj;
+            goto end_callprop;
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
@@ -1846,7 +1846,6 @@ BEGIN_CASE(JSOP_CALLPROP)
             goto error;
     }
 #endif
-  end_callprop_with_funobj:;
 }
 END_CASE(JSOP_CALLPROP)
 
