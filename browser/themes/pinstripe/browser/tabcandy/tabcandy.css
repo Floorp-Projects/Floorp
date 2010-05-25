@@ -205,6 +205,13 @@ body {
   opacity: 1;
 }
 
+.newTabButtonAlt{
+  position: absolute;
+  cursor: pointer;
+  z-index:99999;
+  border: 1px solid black;
+}
+
 .newTabAnimatee{
   position: absolute;
   background-color: white;

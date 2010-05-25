@@ -100,10 +100,14 @@ window.Group = function(listOfEls, options) {
     .dequeue();
         
   // ___ New Tab Button   
-  this.$ntb = $("<div class='newTabButton'/>").appendTo($container);
-  this.$ntb.click(function(){
-    self.newTab();
-  });  
+  this.$ntb = $("<div />")
+    .appendTo($container);
+    
+  this.$ntb    
+    .addClass(this.isNewTabsGroup() ? 'newTabButtonAlt' : 'newTabButton')
+    .click(function(){
+      self.newTab();
+    });  
     
   // ___ Resizer
   this.$resizer = $("<div class='resizer'/>")
@@ -218,8 +222,8 @@ window.Group = function(listOfEls, options) {
   if(this.locked.bounds)
     $container.css({cursor: 'default'});    
     
-//  if(this.locked.close)
-//    $close.hide();
+  if(this.locked.close)
+    $close.hide();
     
   // ___ Superclass initialization
   this._init($container.get(0));
@@ -285,6 +289,12 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   },
   
   // ----------
+  isNewTabsGroup: function() {
+    // TODO: more robust
+    return (this.locked.bounds && this.locked.title && this.locked.close);
+  },
+  
+  // ----------
   getTitle: function() {
     var value = (this.$title ? this.$title.val() : '');
     return (value == this.defaultName ? '' : value);
@@ -326,7 +336,12 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     box.top += titleHeight;
     box.height -= titleHeight;
     box.inset(6, 6);
-    box.height -= 33; // For new tab button
+    
+    if(this.isNewTabsGroup())
+      box.height -= 12; // Hack for tab titles
+    else
+      box.height -= 33; // For new tab button
+      
     return box;
   },
   
@@ -379,15 +394,13 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     this.bounds = new Rect(rect);
 
     // ___ Deal with children
-    if(this._children.length) {
-      if(css.width || css.height) {
-        this.arrange({animate: !immediately}); //(immediately ? 'sometimes' : true)});
-      } else if(css.left || css.top) {
-        $.each(this._children, function(index, child) {
-          var box = child.getBounds();
-          child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
-        });
-      }
+    if(css.width || css.height) {
+      this.arrange({animate: !immediately}); //(immediately ? 'sometimes' : true)});
+    } else if(css.left || css.top) {
+      $.each(this._children, function(index, child) {
+        var box = child.getBounds();
+        child.setPosition(box.left + offset.x, box.top + offset.y, immediately);
+      });
     }
           
     // ___ Update our representation
@@ -477,100 +490,106 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   //   dropPos - An object with left and top properties referring to the location dropped at.  Optional.
   //   options - An object with optional settings for this call. Currently the only one is dontArrange. 
   add: function(a, dropPos, options) {
-    var item;
-    var $el;
-    if(a.isAnItem) {
-      item = a;
-      $el = $(a.container);
-    } else {
-      $el = $(a);
-      item = Items.item($el);
-    }    
-    
-    Utils.assert('shouldn\'t already be in another group', !item.parent || item.parent == this);
-
-    if(!dropPos) 
-      dropPos = {top:window.innerWidth, left:window.innerHeight};
+    try {
+      var item;
+      var $el;
+      if(a.isAnItem) {
+        item = a;
+        $el = $(a.container);
+      } else {
+        $el = $(a);
+        item = Items.item($el);
+      }    
       
-    if(typeof(options) == 'undefined')
-      options = {};
+      Utils.assert('shouldn\'t already be in another group', !item.parent || item.parent == this);
+  
+      if(!dropPos) 
+        dropPos = {top:window.innerWidth, left:window.innerHeight};
+        
+      if(typeof(options) == 'undefined')
+        options = {};
+        
+      var self = this;
       
-    var self = this;
-    
-    var wasAlreadyInThisGroup = false;
-    var oldIndex = $.inArray(item, this._children);
-    if(oldIndex != -1) {
-      this._children.splice(oldIndex, 1); 
-      wasAlreadyInThisGroup = true;
-    }
-
-    // TODO: You should be allowed to drop in the white space at the bottom and have it go to the end
-    // (right now it can match the thumbnail above it and go there)
-    function findInsertionPoint(dropPos){
-      if(self.shouldStack(self._children.length + 1))
-        return 0;
-        
-      var best = {dist: Infinity, item: null};
-      var index = 0;
-      var box;
-      $.each(self._children, function(index, child) {        
-        box = child.getBounds();
-        if(box.bottom < dropPos.top || box.top > dropPos.top)
-          return;
-        
-        var dist = Math.sqrt( Math.pow((box.top+box.height/2)-dropPos.top,2) + Math.pow((box.left+box.width/2)-dropPos.left,2) );
-        if( dist <= best.dist ){
-          best.item = child;
-          best.dist = dist;
-          best.index = index;
+      var wasAlreadyInThisGroup = false;
+      var oldIndex = $.inArray(item, this._children);
+      if(oldIndex != -1) {
+        this._children.splice(oldIndex, 1); 
+        wasAlreadyInThisGroup = true;
+      }
+  
+      // TODO: You should be allowed to drop in the white space at the bottom and have it go to the end
+      // (right now it can match the thumbnail above it and go there)
+      function findInsertionPoint(dropPos){
+        if(self.shouldStack(self._children.length + 1))
+          return 0;
+          
+        var best = {dist: Infinity, item: null};
+        var index = 0;
+        var box;
+        $.each(self._children, function(index, child) {        
+          box = child.getBounds();
+          if(box.bottom < dropPos.top || box.top > dropPos.top)
+            return;
+          
+          var dist = Math.sqrt( Math.pow((box.top+box.height/2)-dropPos.top,2) 
+              + Math.pow((box.left+box.width/2)-dropPos.left,2) );
+              
+          if( dist <= best.dist ){
+            best.item = child;
+            best.dist = dist;
+            best.index = index;
+          }
+        });
+  
+        if( self._children.length > 0 ){
+          if(best.item) {
+            box = best.item.getBounds();
+            var insertLeft = dropPos.left <= box.left + box.width/2;
+            if( !insertLeft ) 
+              return best.index+1;
+            else 
+              return best.index;
+          } else 
+            return self._children.length;
         }
-      });
-
-      if( self._children.length > 0 ){
-        if(best.item) {
-          box = best.item.getBounds();
-          var insertLeft = dropPos.left <= box.left + box.width/2;
-          if( !insertLeft ) 
-            return best.index+1;
-          else 
-            return best.index;
-        } else 
-          return self._children.length;
+        
+        return 0;      
       }
       
-      return 0;      
-    }
-    
-    // Insert the tab into the right position.
-    var index = findInsertionPoint(dropPos);
-    this._children.splice( index, 0, item );
-
-    item.setZ(this.getZ() + 1);
-    $el.addClass("tabInGroup");
-    
-    if(!wasAlreadyInThisGroup) {
-      $el.droppable("disable");
-      item.groupData = {};
+      // Insert the tab into the right position.
+      var index = findInsertionPoint(dropPos);
+      this._children.splice( index, 0, item );
   
-      item.addOnClose(this, function() {
-        self.remove($el);
-      });
+      item.setZ(this.getZ() + 1);
+      $el.addClass("tabInGroup");
       
-      item.setParent(this);
-      
-      if(typeof(item.setResizable) == 'function')
-        item.setResizable(false);
+      if(!wasAlreadyInThisGroup) {
+        $el.droppable("disable");
+        item.groupData = {};
+    
+        item.addOnClose(this, function() {
+          self.remove($el);
+        });
         
-      if(item.tab == Utils.activeTab)
-        Groups.setActiveGroup(this);
-    }
-    
-    if(!options.dontArrange)
-      this.arrange();
-    
-    if( this._nextNewTabCallback ){
-      this._nextNewTabCallback.apply(this, [item])
-      this._nextNewTabCallback = null;
+        item.setParent(this);
+        
+        if(typeof(item.setResizable) == 'function')
+          item.setResizable(false);
+          
+        if(item.tab == Utils.activeTab)
+          Groups.setActiveGroup(this);
+      }
+      
+      if(!options.dontArrange)
+        this.arrange();
+      
+      if( this._nextNewTabCallback ){
+        this._nextNewTabCallback.apply(this, [item])
+        this._nextNewTabCallback = null;
+      }
+    } catch(e) {
+      Utils.log('Group.add error', e);
     }
   },
   
@@ -638,7 +657,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var bb = this.getContentBounds();
     var options = {
       pretend: true,
-      count: count
+      count: (this.isNewTabsGroup() ? count + 1 : count)
     };
     
     var rects = Items.arrange(null, bb, options);
@@ -653,18 +672,65 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       box.inset(8, 8);
       Items.arrange(this._children, box, $.extend({}, options, {padding: 8, z: 99999}));
     } else {
-      var count = this._children.length;
-      if(!count)
-        return;
-  
       var bb = this.getContentBounds();
+      var count = this._children.length;
       if(!this.shouldStack(count)) {
+        var animate;
+        if(!options || typeof(options.animate) == 'undefined') 
+          animate = true;
+        else 
+          animate = options.animate;
+    
+        if(typeof(options) == 'undefined')
+          options = {};
+          
         this._children.forEach(function(child){
             child.removeClass("stacked")
         });
   
         this.topChild = null;
-        Items.arrange(this._children, bb, options);
+        
+        var arrangeOptions = Utils.copy(options);
+        $.extend(arrangeOptions, {
+          pretend: true,
+          count: count
+        });
+
+        if(this.isNewTabsGroup()) {
+          arrangeOptions.count++;
+        } else if(!count)
+          return;
+    
+        var rects = Items.arrange(this._children, bb, arrangeOptions);
+        
+        $.each(this._children, function(index, child) {
+          if(!child.locked.bounds) {
+            child.setBounds(rects[index], !animate);
+            child.setRotation(0);
+            if(options.z)
+              child.setZ(options.z);
+          }
+        });
+        
+        if(this.isNewTabsGroup()) {
+          var box = rects[rects.length - 1];
+          box.left -= this.bounds.left;
+          box.top -= this.bounds.top;
+          var css = {
+            left: box.left,
+            top: box.top,
+            width: box.width,
+            height: box.height
+          };
+          
+          this.$ntb.stop(true, true);    
+          if(animate)
+            this.$ntb.animate(css);
+          else {
+            this.$ntb.css(css);
+          }
+        }
+        
         this._isStacked = false;
       } else
         this._stackArrange(bb, options);
@@ -689,6 +755,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     var zIndex = this.getZ() + count + 1;
     
     var scale = 0.8;
+    var newTabsPad = 10;
     var w;
     var h; 
     var itemAspect = TabItems.tabHeight / TabItems.tabWidth;
@@ -702,6 +769,9 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     }
     
     var x = (bb.width - w) / 2;
+    if(this.isNewTabsGroup())
+      x -= (w + newTabsPad) / 2;
+      
     var y = Math.min(x, (bb.height - h) / 2);
     var box = new Rect(bb.left + x, bb.top + y, w, h);
     
@@ -725,6 +795,25 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       }
     });
     
+    if(this.isNewTabsGroup()) {
+      box.left += box.width + newTabsPad;
+      box.left -= this.bounds.left;
+      box.top -= this.bounds.top;
+      var css = {
+        left: box.left,
+        top: box.top,
+        width: box.width,
+        height: box.height
+      };
+      
+      this.$ntb.stop(true, true);    
+      if(animate)
+        this.$ntb.animate(css);
+      else {
+        this.$ntb.css(css);
+      }
+    }
+
     self._isStacked = true;
   },
 
@@ -1327,7 +1416,8 @@ window.Groups = {
             var options = {
               locked: {
                 close: isNewTabsGroup, 
-                title: isNewTabsGroup
+                title: isNewTabsGroup,
+                bounds: isNewTabsGroup
               },
               dontPush: true
             };
@@ -1343,7 +1433,8 @@ window.Groups = {
         var options = {
           locked: {
             close: true, 
-            title: true
+            title: true,
+            bounds: true
           },
           dontPush: true, 
           bounds: box,
@@ -1352,6 +1443,8 @@ window.Groups = {
   
         new Group([], options); 
       } 
+      
+      this.repositionNewTabGroup();
       
       this._inited = true;
       this.save(); // for nextID
@@ -1387,12 +1480,11 @@ window.Groups = {
 
   // ----------
   getBoundsForNewTabGroup: function() {
-    var pad = 20;
+    var pad = 0;
     var sw = window.innerWidth;
     var sh = window.innerHeight;
-    //var w = sw - (pad * 2);
-    var w = TabItems.tabWidth*2 + pad*2;
-    var h = TabItems.tabHeight*1.2 + pad*2;
+    var w = sw - (pad * 2);
+    var h = TabItems.tabHeight * 1.0 + pad*2;
     return new Rect(pad, sh - (h + pad), w, h);
   },
 

@@ -296,10 +296,8 @@ window.Page = {
         if(currentTab != null && currentTab.mirror != null) {
           // If there was a previous currentTab we want to animate
           // its mirror for the zoom out.
+          
           // Zoom out!
-          UI.resize(true);
-          
-          
           var mirror = currentTab.mirror;
           var $tab = $(mirror.el);
           var item = $tab.data().tabItem;
@@ -331,9 +329,9 @@ window.Page = {
             var activeGroup = Groups.getActiveGroup();
             if( activeGroup ) activeGroup.reorderBasedOnTabOrder(item);        
     
-            
             window.Groups.setActiveGroup(null);
-            TabMirror.resumePainting();            
+            TabMirror.resumePainting();        
+            UI.resize(true);
           });
         }
       } else { // switched to another tab
@@ -526,6 +524,9 @@ UIClass.prototype = {
         this._addArrangements();
       }
       
+      // ___ Dev Menu
+      this.addDevMenu();
+
       // ___ Navbar
       if(this.focused) {
         Page.hideChrome();
@@ -584,10 +585,7 @@ UIClass.prototype = {
       $(window).resize(function() {
         self.resize();
       });
-      
-      // ___ Dev Menu
-      this.addDevMenu();
-      
+            
       // ___ Done
       this.initialized = true;
       this.save(); // for this.pageBounds
@@ -601,7 +599,6 @@ UIClass.prototype = {
   
   // ----------
   resize: function(force) {
-/*     Groups.repositionNewTabGroup(); */
     if( typeof(force) == "undefined" ) force = false;
 
     // If we are currently doing an animation or if TabCandy isn't focused
@@ -628,7 +625,8 @@ UIClass.prototype = {
     if(newPageBounds.equals(oldPageBounds))
       return;
       
-/*     Utils.log2('resize', newPageBounds, oldPageBounds); */
+    Groups.repositionNewTabGroup(); // TODO: 
+
     if(newPageBounds.width < this.pageBounds.width && newPageBounds.width > itemBounds.width)
       newPageBounds.width = this.pageBounds.width;
 
