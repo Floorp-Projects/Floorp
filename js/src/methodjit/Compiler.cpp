@@ -263,6 +263,8 @@ mjit::Compiler::generateMethod()
     /**********************
      *  END COMPILER OPS  *
      **********************/ 
+
+        frame.assertValidRegisterState();
     }
 
   done:

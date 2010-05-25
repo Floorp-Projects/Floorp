@@ -127,35 +127,35 @@ struct Registers {
     {
     }
 
-    inline void reset() {
+    void reset() {
         freeMask = AvailRegs;
     }
 
-    inline bool anyRegsFree() {
+    bool anyRegsFree() {
         return !!freeMask;
     }
 
-    inline bool anyRegsFree(uint32 mask) {
+    bool anyRegsFree(uint32 mask) {
         return !!(freeMask & mask);
     }
 
-    inline RegisterID allocReg() {
+    RegisterID allocReg() {
         JS_ASSERT(anyRegsFree());
         RegisterID reg = (RegisterID)(31 - js_bitscan_clz32(freeMask));
         allocSpecific(reg);
         return reg;
     }
 
-    inline bool isRegFree(RegisterID reg) {
+    bool isRegFree(RegisterID reg) {
         return !!(freeMask & (1 << reg));
     }
 
-    inline void freeReg(RegisterID reg) {
+    void freeReg(RegisterID reg) {
         JS_ASSERT(!isRegFree(reg));
         freeMask |= (1 << reg);
     }
 
-    inline RegisterID allocFromMask(uint32 mask) {
+    RegisterID allocFromMask(uint32 mask) {
         mask &= freeMask;
         JS_ASSERT(mask);
         RegisterID reg = (RegisterID)(31 - js_bitscan_clz32(freeMask));
@@ -174,10 +174,13 @@ struct Registers {
         }
     }
 
-
-    inline void allocSpecific(RegisterID reg) {
+    void allocSpecific(RegisterID reg) {
         JS_ASSERT(isRegFree(reg));
         freeMask &= ~(1 << reg);
+    }
+
+    bool operator ==(const Registers &other) {
+        return freeMask == other.freeMask;
     }
 
     uint32 freeMask;

@@ -89,7 +89,7 @@ CodeGenerator::storeValue(FrameEntry *fe, Address address, bool popped)
 
     Address feAddr = frame.addressOf(fe);
 
-    /* Copy the payload. */
+    /* Copy the payload - :TODO: something better */
 #ifdef JS_32BIT
     RegisterID tempReg = frame.allocReg();
     masm.loadPtr(Address(feAddr.base, feAddr.offset + offsetof(jsval, data)), tempReg);
