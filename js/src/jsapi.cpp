@@ -395,7 +395,7 @@ JS_ValueToObject(JSContext *cx, jsval v, JSObject **objp)
 {
     CHECK_REQUEST(cx);
     Value objv;
-    bool ok = js_ValueToObjectOrNull(cx, Valueify(v), &objv);
+    bool ok = !!js_ValueToObjectOrNull(cx, Valueify(v), &objv);
     *objp = objv.asObjectOrNull();
     return ok;
 }
@@ -440,7 +440,7 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 JS_PUBLIC_API(JSBool)
 JS_DoubleIsInt32(jsdouble d, jsint *ip)
 {
-    return JSDOUBLE_IS_INT32(d, *ip);
+    return JSDOUBLE_IS_INT32(d, *(int32_t *)ip);
 }
 
 JS_PUBLIC_API(JSBool)

@@ -298,7 +298,7 @@ JSVAL_TO_PRIVATE(jsval v)
 #define JSFUN_GETTER_TEST(f)       ((f) & JSFUN_GETTER)
 #define JSFUN_SETTER_TEST(f)       ((f) & JSFUN_SETTER)
 #define JSFUN_BOUND_METHOD_TEST(f) ((f) & JSFUN_BOUND_METHOD)
-#define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
+#define JSFUN_HEAVYWEIGHT_TEST(f)  (!!((f) & JSFUN_HEAVYWEIGHT))
 
 #define JSFUN_GSFLAG2ATTR(f)       JSFUN_GSFLAGS(f)
 
@@ -3089,19 +3089,19 @@ class Value
         data.s.payload.i32 = i;
     }
 
-    int32_t &asInt32Ref() {
+    int32 &asInt32Ref() {
         JS_ASSERT(isInt32());
         return data.s.payload.i32;
     }
 
     void setDouble(double d) {
-        JS_ASSERT(size_t(this) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         data.asDouble = d;
         JS_ASSERT(data.s.tag.nanBits != JSVAL_NANBOX_PATTERN);
     }
 
     double &asDoubleRef() {
-        JS_ASSERT(size_t(this) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         JS_ASSERT(isDouble());
         return data.asDouble;
     }
