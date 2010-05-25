@@ -3233,12 +3233,12 @@ class Value
 
     bool isTrue() const {
         return data.s.mask32 == JSVAL_MASK32_BOOLEAN &&
-               data.s.payload.boo == JSBool(true);
+               data.s.payload.boo == JS_TRUE;
     }
 
     bool isFalse() const {
         return data.s.mask32 == JSVAL_MASK32_BOOLEAN &&
-               data.s.payload.boo == false;
+               data.s.payload.boo == JS_FALSE;
     }
 
     bool isMagic() const {
