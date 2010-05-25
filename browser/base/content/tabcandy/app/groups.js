@@ -91,6 +91,8 @@ window.Group = function(listOfEls, options) {
     $container = $('<div class="group" />')
       .css({position: 'absolute'})
       .css(rectToBe);
+    
+    if( this.isNewTabsGroup() ) $container.addClass("newTabGroup");
   }
   
   $container
@@ -107,7 +109,9 @@ window.Group = function(listOfEls, options) {
     .addClass(this.isNewTabsGroup() ? 'newTabButtonAlt' : 'newTabButton')
     .click(function(){
       self.newTab();
-    });  
+    });
+  
+  if( this.isNewTabsGroup() ) this.$ntb.html("<span>+</span>");
     
   // ___ Resizer
   this.$resizer = $("<div class='resizer'/>")
@@ -563,6 +567,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   
       item.setZ(this.getZ() + 1);
       $el.addClass("tabInGroup");
+      if( this.isNewTabsGroup() ) $el.addClass("inNewTabGroup")
       
       if(!wasAlreadyInThisGroup) {
         $el.droppable("disable");
@@ -622,6 +627,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     
     item.setParent(null);
     item.removeClass("tabInGroup");
+    item.removeClass("inNewTabGroup")    
     item.removeClass("stacked");
     item.removeClass("stack-trayed");
     item.setRotation(0);
@@ -725,7 +731,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
           
           this.$ntb.stop(true, true);    
           if(animate)
-            this.$ntb.animate(css);
+            this.$ntb.animate(css, 320, "tabcandyBounce");
           else {
             this.$ntb.css(css);
           }
@@ -975,7 +981,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     $(container).droppable({
       tolerance: "intersect",
       over: function(){
-        $(this).addClass("acceptsDrop");
+        if( !self.isNewTabsGroup() )
+          $(this).addClass("acceptsDrop");
       },
       out: function(){
         var group = drag.info.item.parent;
@@ -1484,7 +1491,7 @@ window.Groups = {
     var sw = window.innerWidth;
     var sh = window.innerHeight;
     var w = sw - (pad * 2);
-    var h = TabItems.tabHeight * 1.0 + pad*2;
+    var h = TabItems.tabHeight * 0.9 + pad*2;
     return new Rect(pad, sh - (h + pad), w, h);
   },
 
