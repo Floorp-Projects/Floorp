@@ -3366,7 +3366,7 @@ class Value
         JS_ASSERT(data.s.mask32 == JSVAL_MASK32_INT32);
         return data.s.payload.u32;
     }
-} __attribute__((aligned (8)));
+} VALUE_ALIGNMENT;
 
 /*
  * As asserted above, js::Value and jsval are layout equivalent. To provide
