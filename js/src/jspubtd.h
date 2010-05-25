@@ -158,73 +158,74 @@ typedef struct JSONParser        JSONParser;
  */
 
 /*
+ * TODO: wrong, fix, explain more
+ * Engine-internal value details:
+ *
  * A jsval has an abstract type which is represented by a mask which assigns a
  * bit to each type. This allows fast set-membership queries. However, we give
  * one type (null) a mask of 0 for two reasons:
+ *
  *  1. memset'ing values to 0 produces a valid value. This was true of the old,
  *     boxed jsvals (and now jsboxedwords) and eases the transition.
+ *
  *  2. Testing for null can often be compiled to slightly shorter/faster code.
  *
  * The down-side is that set-membership queries need to be done more carefully.
  * E.g., to test whether a value v is undefined or null, the correct test is:
+ *
  *   (v.mask & ~UndefinedMask) == 0
+ *
  * instead of the intuitive (but incorrect) test:
+ *
  *   (v.mask & (NullMask | UndefinedMask)) != 0
+ *
  * Since the value representation is kept a private detail of js::Value and
  * only exposed to a few functions through friendship, this type of error
  * should be hidden behind simple inline methods like v.isNullOrUndefined().
  */
 
-/*
- * Types are unsigned machine-words. On 32-bit systems, values are padded with
- * an extra word so that double payloads are aligned properly.
- */
-#if JS_BITS_PER_WORD == 32
-typedef uint32 JSValueMaskType;
-# define JSVAL_TYPE_BITS 32
-# define JS_INSERT_VALUE_PADDING() uint32 padding;
-# define JS_PADDING_INIT_VALUE() 0,
-#elif JS_BITS_PER_WORD == 64
-typedef JSUint64 JSValueMaskType;
-# define JSVAL_TYPE_BITS 32
-# define JS_INSERT_VALUE_PADDING()
-# define JS_PADDING_INIT_VALUE()
-#else
-# error "Unsupported word size"
+typedef enum JSValueMask16 
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+: unsigned short
 #endif
+{
+    JSVAL_MASK16_NULL      = (uint16)0x0001,
+    JSVAL_MASK16_UNDEFINED = (uint16)0x0002,
+    JSVAL_MASK16_INT32     = (uint16)0x0004,
+    JSVAL_MASK16_STRING    = (uint16)0x0008,
+    JSVAL_MASK16_NONFUNOBJ = (uint16)0x0010,
+    JSVAL_MASK16_FUNOBJ    = (uint16)0x0020,
+    JSVAL_MASK16_BOOLEAN   = (uint16)0x0040,
+    JSVAL_MASK16_MAGIC     = (uint16)0x0080,
 
-#ifdef __GNUC__
-# define VALUE_ALIGNMENT        __attribute__((aligned (8)))
-# define ASSERT_DOUBLE_ALIGN()  JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0)
-#elif defined(_MSC_VER)
-// Structs can be aligned with MSVC, but not if they are used as parameters,
-// so we just don't try to align.
-# define VALUE_ALIGNMENT
-# define ASSERT_DOUBLE_ALIGN()
-#else
-# error "TODO: do something for compiler"
+    JSVAL_MASK16_SINGLETON = JSVAL_MASK16_NULL | JSVAL_MASK16_UNDEFINED,
+    JSVAL_MASK16_OBJECT    = JSVAL_MASK16_NONFUNOBJ | JSVAL_MASK16_FUNOBJ,
+    JSVAL_MASK16_OBJORNULL = JSVAL_MASK16_OBJECT | JSVAL_MASK16_NULL,
+    JSVAL_MASK16_GCTHING   = JSVAL_MASK16_OBJECT | JSVAL_MASK16_STRING,
+
+    JSVAL_NANBOX_PATTERN   = ((uint16)0xFFFF)
+}
+#if defined(__GNUC__)
+__attribute__((packed))
 #endif
+JSValueMask16;
 
-#define JSVAL_NULL_MASK        0x00
-#define JSVAL_UNDEFINED_MASK   0x01
-#define JSVAL_INT32_MASK       0x02
-#define JSVAL_DOUBLE_MASK      0x04
-#define JSVAL_STRING_MASK      0x08
-#define JSVAL_NONFUNOBJ_MASK   0x10
-#define JSVAL_FUNOBJ_MASK      0x20
-#define JSVAL_BOOLEAN_MASK     0x40
-#define JSVAL_MAGIC_MASK       0x80
-#define JSVAL_OBJECT_MASK      (JSVAL_NONFUNOBJ_MASK | JSVAL_FUNOBJ_MASK)
-#define JSVAL_NUMBER_MASK      (JSVAL_INT32_MASK | JSVAL_DOUBLE_MASK)
-#define JSVAL_GCTHING_MASK     (JSVAL_OBJECT_MASK | JSVAL_STRING_MASK)
+#define JSVAL_MASK32_CLEAR       ((uint32)0xFFFF0000)
 
-/*
- * Magic value enumeration (private engine detail)
- *
- * This enumeration provides a debug-only code describing the source of an
- * invalid value. These codes can be used to assert that the different sources
- * of invalid never mix.
- */
+#define JSVAL_MASK32_NULL        ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_NULL))
+#define JSVAL_MASK32_UNDEFINED   ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_UNDEFINED))
+#define JSVAL_MASK32_INT32       ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_INT32))
+#define JSVAL_MASK32_STRING      ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_STRING))
+#define JSVAL_MASK32_NONFUNOBJ   ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_NONFUNOBJ))
+#define JSVAL_MASK32_FUNOBJ      ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_FUNOBJ))
+#define JSVAL_MASK32_BOOLEAN     ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_BOOLEAN))
+#define JSVAL_MASK32_MAGIC       ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_MAGIC))
+
+#define JSVAL_MASK32_SINGLETON   ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_SINGLETON))
+#define JSVAL_MASK32_OBJECT      ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_OBJECT))
+#define JSVAL_MASK32_OBJORNULL   ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_OBJORNULL))
+#define JSVAL_MASK32_GCTHING     ((uint32)(JSVAL_MASK32_CLEAR | JSVAL_MASK16_GCTHING))
+
 typedef enum JSWhyMagic
 {
     JS_ARRAY_HOLE,               /* a hole in a dense array */
@@ -236,28 +237,59 @@ typedef enum JSWhyMagic
     JS_GENERATOR_CLOSING         /* exception value thrown when closing a generator */
 } JSWhyMagic;
 
-typedef union jsval_data
+typedef union jsval_payload
 {
     int32          i32;
     uint32         u32;
-    double         dbl;
-    JSString *     str;
-    JSObject *     obj;
-    void *         ptr;
     JSBool         boo;
-#ifdef DEBUG
-    JSWhyMagic     why;
+#if JS_BITS_PER_WORD == 32
+    JSString       *str;
+    JSObject       *obj;
+    void           *ptr;
 #endif
-    struct { int32 first; int32 second; } bits;
+    JSWhyMagic     why;
 } jsval_data;
 
-/* See js::Value. */
-typedef struct jsval
+#ifdef __GNUC__
+# define VALUE_ALIGNMENT        __attribute__((aligned (8)))
+# define ASSERT_DOUBLE_ALIGN()  JS_ASSERT(size_t(this) % sizeof(double) == 0)
+#elif defined(_MSC_VER)
+  /*
+   * Structs can be aligned with MSVC, but not if they are used as parameters,
+   * so we just don't try to align.
+   */
+# define VALUE_ALIGNMENT
+# define ASSERT_DOUBLE_ALIGN()
+#else
+# error "TODO: do something for compiler"
+#endif
+
+#if !defined(IS_LITTLE_ENDIAN)
+# error "Need to fix up jsval_layout"
+#endif
+
+// TODO: explain
+typedef union jsval_layout
 {
-    JSValueMaskType mask;
-    JS_INSERT_VALUE_PADDING()
-    jsval_data data;
-} VALUE_ALIGNMENT jsval;
+    uint64 asBits;
+    struct {
+        jsval_payload payload;
+        union {
+            struct {
+                JSValueMask16 mask16;
+                uint16 nanBits;
+            } tag;
+            uint32 mask32;
+        };
+    } s;
+    double asDouble;
+} jsval_layout;
+
+typedef uint64 jsval;
+
+/* These are engine-internal details, not part of the public API */
+#define DOUBLE_AS_JSVAL(d)              (*(jsval *)&(d))
+#define JSVAL_CONSTANT(mask32, payload) ((jsval)((((uint64)(mask32)) << 32) | (payload)))
 
 /*
  * Boxed word macros (private engine detail)

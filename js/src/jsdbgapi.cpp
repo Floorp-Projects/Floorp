@@ -678,11 +678,11 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 
                 /* Initialize slots/frame. */
                 Value *vp = frame.getvp();
-                PodZero(vp, vplen);
+                MakeValueRangeGCSafe(vp, vplen);
                 vp[0].setObject(*closure);
                 JSStackFrame *fp = frame.getFrame();
-                PodZero(fp->slots(), nfixed);
                 PodZero(fp);
+                MakeValueRangeGCSafe(fp->slots(), nfixed);
                 fp->script = script;
                 fp->fun = fun;
                 fp->argv = vp + 2;
