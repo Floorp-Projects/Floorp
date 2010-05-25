@@ -2223,6 +2223,7 @@ END_CASE(JSOP_ENUMELEM)
     JSObject *obj;
     uintN flags;
     uintN argc;
+    Value lval;
     Value *vp;
 
 BEGIN_CASE(JSOP_NEW)
@@ -2278,7 +2279,6 @@ BEGIN_CASE(JSOP_CALL)
 BEGIN_CASE(JSOP_EVAL)
 BEGIN_CASE(JSOP_APPLY)
 {
-    Value lval;
     argc = GET_ARGC(regs.pc);
     vp = regs.sp - (argc + 2);
 
