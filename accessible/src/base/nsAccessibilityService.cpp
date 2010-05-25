@@ -1176,32 +1176,8 @@ nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
                                          nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nsnull;
 
-  NS_ENSURE_ARG(aNode);
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  nsCOMPtr<nsIDocument> doc;
-  if (content) {
-    doc = content->GetDocument();
-  }
-  else {// Could be document node
-    doc = do_QueryInterface(aNode);
-  }
-  if (!doc)
-    return NS_ERROR_FAILURE;
-
-  // We use presentation shell #0 because we assume that is presentation of
-  // given node window.
-  nsIPresShell *presShell = doc->GetPrimaryShell();
-
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-  nsRefPtr<nsAccessible> accessible =
-    GetAccessible(aNode, presShell, weakShell);
-
-  if (accessible)
-    CallQueryInterface(accessible.get(), aAccessible);
-  
+  NS_IF_ADDREF(*aAccessible = GetAccessible(aNode));
   return NS_OK;
 }
 
@@ -1240,7 +1216,23 @@ nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode,
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService public
 
-already_AddRefed<nsAccessible>
+nsAccessible *
+nsAccessibilityService::GetAccessible(nsIDOMNode *aNode)
+{
+  if (!aNode)
+    return nsnull;
+
+  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
+  if (!presShell)
+    return nsnull;
+
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+  nsRefPtr<nsAccessible> accessible = GetAccessible(aNode, presShell,
+                                                    weakShell);
+  return accessible;
+}
+
+nsAccessible *
 nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode, 
                                                  nsIWeakReference *aWeakShell) 
 {
@@ -1248,7 +1240,9 @@ nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode,
     return nsnull;
 
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(aWeakShell));
-  return GetAccessible(aNode, presShell, aWeakShell);
+  nsRefPtr<nsAccessible> accessible = GetAccessible(aNode, presShell,
+                                                    aWeakShell);
+  return accessible;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1492,7 +1486,7 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
         if (tableFrame->GetType() == nsAccessibilityAtoms::tableOuterFrame) {
           nsCOMPtr<nsIDOMNode> tableNode(do_QueryInterface(tableContent));
-          nsRefPtr<nsAccessible> tableAccessible =
+          nsAccessible *tableAccessible =
             GetAccessibleInWeakShell(tableNode, aWeakShell);
 
           if (tableAccessible) {

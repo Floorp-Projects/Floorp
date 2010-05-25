@@ -3002,17 +3002,17 @@ nsAccessible::GetSiblingAtOffset(PRInt32 aOffset, nsresult* aError)
   return child;
 }
 
-already_AddRefed<nsAccessible>
-nsAccessible::GetFirstAvailableAccessible(nsIDOMNode *aStartNode)
+nsAccessible *
+nsAccessible::GetFirstAvailableAccessible(nsIDOMNode *aStartNode) const
 {
   nsCOMPtr<nsIDOMTreeWalker> walker; 
   nsCOMPtr<nsIDOMNode> currentNode(aStartNode);
 
   while (currentNode) {
-    nsRefPtr<nsAccessible> accessible =
+    nsAccessible *accessible =
       GetAccService()->GetAccessibleInWeakShell(currentNode, mWeakShell);
     if (accessible)
-      return accessible.forget();
+      return accessible;
 
     if (!walker) {
       // Instantiate walker lazily since we won't need it in 90% of the cases
