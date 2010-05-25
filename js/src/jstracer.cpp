@@ -8509,7 +8509,7 @@ TraceRecorder::stringify(const Value& v)
     if (v.isNumber()) {
         ci = &js_NumberToString_ci;
     } else if (v.isUndefined()) {
-        return w.immpAtomGC(cx->runtime->atomState.booleanAtoms[2]);
+        return w.immpAtomGC(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]);
     } else if (v.isBoolean()) {
         ci = &js_BooleanIntToString_ci;
     } else {
