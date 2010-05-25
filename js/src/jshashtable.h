@@ -159,7 +159,7 @@ class HashTable : AllocPolicy
             return cur == end;
         }
 
-        const T &front() const {
+        T &front() const {
             JS_ASSERT(!empty());
             return cur->t;
         }
