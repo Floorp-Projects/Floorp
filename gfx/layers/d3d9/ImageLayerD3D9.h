@@ -100,6 +100,7 @@ class THEBES_API PlanarYCbCrImageD3D9 : public PlanarYCbCrImage,
 {
 public:
   PlanarYCbCrImageD3D9(LayerManagerD3D9 *aManager);
+  ~PlanarYCbCrImageD3D9() {}
 
   virtual void SetData(const Data &aData);
 
