@@ -338,9 +338,9 @@ public:
   }
 
   /**
-   * Return text length of the given accessible, return -1 on failure.
+   * Return text length of the given accessible, return 0 on failure.
    */
-  static PRInt32 TextLength(nsIAccessible *aAccessible);
+  static PRUint32 TextLength(nsAccessible *aAccessible);
 
   /**
    * Return true if the given accessible is embedded object.

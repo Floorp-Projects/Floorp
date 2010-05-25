@@ -78,6 +78,7 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
+#include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
@@ -1682,30 +1683,25 @@ str_search(JSContext *cx, uintN argc, jsval *vp)
 struct ReplaceData
 {
     ReplaceData(JSContext *cx)
-     : g(cx), invokevp(NULL), cb(cx)
+     : g(cx), cb(cx)
     {}
 
-    ~ReplaceData() {
-        if (invokevp) {
-            /* If we set invokevp, we already left trace. */
-            VOUCH_HAVE_STACK();
-            js_FreeStack(g.cx(), invokevpMark);
-        }
+    bool argsPushed() const {
+        return args.getvp() != NULL;
     }
 
-    JSString      *str;           /* 'this' parameter object as a string */
-    RegExpGuard   g;              /* regexp parameter object and private data */
-    JSObject      *lambda;        /* replacement function object or null */
-    JSString      *repstr;        /* replacement string */
-    jschar        *dollar;        /* null or pointer to first $ in repstr */
-    jschar        *dollarEnd;     /* limit pointer for js_strchr_limit */
-    jsint         index;          /* index in result of next replacement */
-    jsint         leftIndex;      /* left context index in str->chars */
-    JSSubString   dollarStr;      /* for "$$" InterpretDollar result */
-    bool          calledBack;     /* record whether callback has been called */
-    jsval         *invokevp;      /* reusable allocation from js_AllocStack */
-    void          *invokevpMark;  /* the mark to return */
-    JSCharBuffer  cb;             /* buffer built during DoMatch */
+    JSString        *str;           /* 'this' parameter object as a string */
+    RegExpGuard     g;              /* regexp parameter object and private data */
+    JSObject        *lambda;        /* replacement function object or null */
+    JSString        *repstr;        /* replacement string */
+    jschar          *dollar;        /* null or pointer to first $ in repstr */
+    jschar          *dollarEnd;     /* limit pointer for js_strchr_limit */
+    jsint           index;          /* index in result of next replacement */
+    jsint           leftIndex;      /* left context index in str->chars */
+    JSSubString     dollarStr;      /* for "$$" InterpretDollar result */
+    bool            calledBack;     /* record whether callback has been called */
+    InvokeArgsGuard args;           /* arguments for lambda's js_Invoke call */
+    JSCharBuffer    cb;             /* buffer built during DoMatch */
 };
 
 static JSSubString *
@@ -1816,17 +1812,13 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         uintN p = rdata.g.re()->parenCount;
         uintN argc = 1 + p + 2;
 
-        if (!rdata.invokevp) {
-            rdata.invokevp = js_AllocStack(cx, 2 + argc, &rdata.invokevpMark);
-            if (!rdata.invokevp)
-                return false;
-        }
-        jsval* invokevp = rdata.invokevp;
+        if (!rdata.argsPushed() && !cx->stack().pushInvokeArgs(cx, argc, rdata.args))
+            return false;
 
         PreserveRegExpStatics save(cx);
 
         /* Push lambda and its 'this' parameter. */
-        jsval *sp = invokevp;
+        jsval *sp = rdata.args.getvp();
         *sp++ = OBJECT_TO_JSVAL(lambda);
         *sp++ = OBJECT_TO_JSVAL(lambda->getParent());
 
@@ -1848,7 +1840,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
         *sp++ = INT_TO_JSVAL((jsint)cx->regExpStatics.leftContext.length);
         *sp++ = STRING_TO_JSVAL(rdata.str);
 
-        if (!js_Invoke(cx, argc, invokevp, 0))
+        if (!js_Invoke(cx, rdata.args, 0))
             return false;
 
         /*
@@ -1856,7 +1848,7 @@ FindReplaceLength(JSContext *cx, ReplaceData &rdata, size_t *sizep)
          * created by this js_ValueToString that would otherwise be GC-
          * able, until we use rdata.repstr in DoReplace.
          */
-        repstr = js_ValueToString(cx, *invokevp);
+        repstr = js_ValueToString(cx, *rdata.args.getvp());
         if (!repstr)
             return false;
 
@@ -2193,7 +2185,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
             break;
 
         JSString *sub = js_NewDependentString(cx, str, i, size_t(j - i));
-        if (!sub || !splits.push(sub))
+        if (!sub || !splits.append(sub))
             return false;
         len++;
 
@@ -2209,7 +2201,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
                     break;
                 JSSubString *parsub = &res->parens[num];
                 sub = js_NewStringCopyN(cx, parsub->chars, parsub->length);
-                if (!sub || !splits.push(sub))
+                if (!sub || !splits.append(sub))
                     return false;
                 len++;
             }
@@ -2221,7 +2213,7 @@ str_split(JSContext *cx, uintN argc, jsval *vp)
     if (j == -2)
         return false;
 
-    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.buffer());
+    JSObject *aobj = js_NewArrayObject(cx, splits.length(), splits.begin());
     if (!aobj)
         return false;
     *vp = OBJECT_TO_JSVAL(aobj);
@@ -3713,8 +3705,6 @@ js_InflateUTF8StringToBuffer(JSContext *cx, const char *src, size_t srclen,
                     }
                     return JS_FALSE;
                 }
-                if (dstlen < 2)
-                    goto bufferTooSmall;
                 if (dst) {
                     *dst++ = (jschar)((v >> 10) + 0xD800);
                     v = (jschar)((v & 0x3FF) + 0xDC00);
@@ -3851,55 +3841,51 @@ char *
 DeflatedStringCache::getBytes(JSContext *cx, JSString *str)
 {
     JS_ACQUIRE_LOCK(lock);
-
-    char *bytes;
-    do {
-        Map::AddPtr p = map.lookupForAdd(str);
-        if (p) {
-            bytes = p->value;
-            break;
-        }
-#ifdef JS_THREADSAFE
-        unsigned generation = map.generation();
-        JS_RELEASE_LOCK(lock);
-#endif
-        bytes = js_DeflateString(cx, str->chars(), str->length());
-        if (!bytes)
-            return NULL;
-#ifdef JS_THREADSAFE
-        JS_ACQUIRE_LOCK(lock);
-        if (generation != map.generation()) {
-            p = map.lookupForAdd(str);
-            if (p) {
-                /* Some other thread has asked for str bytes .*/
-                if (cx)
-                    cx->free(bytes);
-                else
-                    js_free(bytes);
-                bytes = p->value;
-                break;
-            }
-        }
-#endif
-        if (!map.add(p, str, bytes)) {
-            JS_RELEASE_LOCK(lock);
-            if (cx) {
-                cx->free(bytes);
-                js_ReportOutOfMemory(cx);
-            } else {
-                js_free(bytes);
-            }
-            return NULL;
-        }
-    } while (false);
-
-    JS_ASSERT(bytes);
-
-    /* Try to catch failure to JS_ShutDown between runtime epochs. */
-    JS_ASSERT_IF(!js_CStringsAreUTF8 && *bytes != (char) str->chars()[0],
-                 *bytes == '\0' && str->empty());
-
+    Map::AddPtr p = map.lookupForAdd(str);
+    char *bytes = p ? p->value : NULL;
     JS_RELEASE_LOCK(lock);
+
+    if (bytes)
+        return bytes;
+
+    bytes = js_DeflateString(cx, str->chars(), str->length());
+    if (!bytes)
+        return NULL;
+
+    /*
+     * In the single-threaded case we use the add method as js_DeflateString
+     * cannot mutate the map. In particular, it cannot run the GC that may
+     * delete entries from the map. But the JS_THREADSAFE version requires to
+     * deal with other threads adding the entries to the map.
+     */
+    char *bytesToFree = NULL;
+    JSBool ok;
+#ifdef JS_THREADSAFE
+    JS_ACQUIRE_LOCK(lock);
+    ok = map.relookupOrAdd(p, str, bytes);
+    if (ok && p->value != bytes) {
+        /* Some other thread has asked for str bytes .*/
+        JS_ASSERT(!strcmp(p->value, bytes));
+        bytesToFree = bytes;
+        bytes = p->value;
+    }
+    JS_RELEASE_LOCK(lock);
+#else  /* !JS_THREADSAFE */
+    ok = map.add(p, str, bytes);
+#endif
+    if (!ok) {
+        bytesToFree = bytes;
+        bytes = NULL;
+        if (cx)
+            js_ReportOutOfMemory(cx);
+    }
+
+    if (bytesToFree) {
+        if (cx)
+            cx->free(bytesToFree);
+        else
+            js_free(bytesToFree);
+    }
     return bytes;
 }
 

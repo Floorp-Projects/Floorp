@@ -149,7 +149,7 @@ nsTheoraState::nsTheoraState(ogg_page* aBosPage) :
   mCtx(0),
   mFrameDuration(0),
   mFrameRate(0),
-  mAspectRatio(0)
+  mPixelAspectRatio(0)
 {
   MOZ_COUNT_CTOR(nsTheoraState);
   th_info_init(&mInfo);
@@ -191,7 +191,7 @@ PRBool nsTheoraState::Init() {
   n = mInfo.aspect_numerator;
 
   d = mInfo.aspect_denominator;
-  mAspectRatio = (n == 0 || d == 0) ?
+  mPixelAspectRatio = (n == 0 || d == 0) ?
     1.0f : static_cast<float>(n) / static_cast<float>(d);
 
   // Ensure the frame isn't larger than our prescribed maximum.

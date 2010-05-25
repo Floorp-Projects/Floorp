@@ -269,7 +269,7 @@ struct JSScope : public JSObjectMap
 
     /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
     inline void updateShape(JSContext *cx);
-    inline void updateFlags(const JSScopeProperty *sprop);
+    inline void updateFlags(const JSScopeProperty *sprop, bool isDefinitelyAtom = false);
 
   protected:
     void initMinimal(JSContext *cx, uint32 newShape);
@@ -351,7 +351,7 @@ struct JSScope : public JSObjectMap
     void clear(JSContext *cx);
 
     /* Extend this scope to have sprop as its last-added property. */
-    void extend(JSContext *cx, JSScopeProperty *sprop);
+    void extend(JSContext *cx, JSScopeProperty *sprop, bool isDefinitelyAtom = false);
 
     /*
      * Read barrier to clone a joined function object stored as a method.
@@ -500,6 +500,12 @@ struct JSScope : public JSObjectMap
 
     static bool initRuntimeState(JSContext *cx);
     static void finishRuntimeState(JSContext *cx);
+
+    enum {
+        EMPTY_ARGUMENTS_SHAPE = 1,
+        EMPTY_BLOCK_SHAPE     = 2,
+        LAST_RESERVED_SHAPE   = 2
+    };
 };
 
 struct JSEmptyScope : public JSScope
@@ -675,13 +681,7 @@ struct JSScopeProperty {
     };
 
     JSScopeProperty(jsid id, JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
-                    uintN attrs, uintN flags, intN shortid)
-        : id(id), rawGetter(getter), rawSetter(setter), slot(slot), attrs(uint8(attrs)),
-          flags(uint8(flags)), shortid(int16(shortid))
-    {
-        JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER), getterObj->isCallable());
-        JS_ASSERT_IF(setter && (attrs & JSPROP_SETTER), setterObj->isCallable());
-    }
+                    uintN attrs, uintN flags, intN shortid);
 
     bool marked() const { return (flags & MARK) != 0; }
     void mark() { flags |= MARK; }
@@ -986,13 +986,11 @@ JSScopeProperty::get(JSContext* cx, JSObject* obj, JSObject *pobj, jsval* vp)
     }
 
     /*
-     * JSObjectOps is private, so we know there are only two implementations
-     * of the thisObject hook: with objects and XPConnect wrapped native
-     * objects.  XPConnect objects don't expect the hook to be called here,
-     * but with objects do.
+     * |with (it) color;| ends up here, as do XML filter-expressions.
+     * Avoid exposing the With object to native getters.
      */
     if (obj->getClass() == &js_WithClass)
-        obj = obj->map->ops->thisObject(cx, obj);
+        obj = js_UnwrapWithObject(cx, obj);
     return getterOp()(cx, obj, SPROP_USERID(this), vp);
 }
 
@@ -1009,9 +1007,9 @@ JSScopeProperty::set(JSContext* cx, JSObject* obj, jsval* vp)
     if (attrs & JSPROP_GETTER)
         return !!js_ReportGetterOnlyAssignment(cx);
 
-    /* See the comment in JSScopeProperty::get as to why we can check for With. */
+    /* See the comment in JSScopeProperty::get as to why we check for With. */
     if (obj->getClass() == &js_WithClass)
-        obj = obj->map->ops->thisObject(cx, obj);
+        obj = js_UnwrapWithObject(cx, obj);
     return setterOp()(cx, obj, SPROP_USERID(this), vp);
 }
 

@@ -184,6 +184,8 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
                              nsIURI **result)
 {
     nsCAutoString spec(aSpec);
+    spec.Trim(" \t\n\r"); // Match NS_IsAsciiWhitespace instead of HTML5
+
     char *fwdPtr = spec.BeginWriting();
 
     // now unescape it... %xx reduced inline to resulting character

@@ -195,6 +195,10 @@ public:
 
         if (!MakeCurrent()) return PR_FALSE;
         if (!SetupLookupFunction()) return PR_FALSE;
+
+        // OSMesa's different from the other GL providers, it renders to an image surface, not to a pbuffer
+        sOSMesaLibrary.fPixelStore(OSMESA_Y_UP, 0);
+
         return InitWithPrefix("gl", PR_TRUE);
     }
 

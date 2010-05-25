@@ -500,7 +500,7 @@ nsHTMLEditor::SetFinalPosition(PRInt32 aX, PRInt32 aY)
 }
 
 void
-nsHTMLEditor::AddPositioningOffet(PRInt32 & aX, PRInt32 & aY)
+nsHTMLEditor::AddPositioningOffset(PRInt32 & aX, PRInt32 & aY)
 {
   // Get the positioning offset
   nsresult res;
@@ -544,7 +544,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement * aElement,
                                   NS_LITERAL_STRING("absolute"),
                                   PR_FALSE);
 
-    AddPositioningOffet(x, y);
+    AddPositioningOffset(x, y);
     SnapToGrid(x, y);
     SetElementPosition(aElement, x, y);
 

@@ -1748,16 +1748,6 @@ return_tearoff:
         ((JSExtendedClass*)clazz)->outerObject)
     {
         JSObject *outer = ((JSExtendedClass*)clazz)->outerObject(cx, obj);
-
-        // Protect against infinite recursion through XOWs.
-        JSObject *unsafeObj;
-        clazz = outer->getClass();
-        if(clazz == &XPCCrossOriginWrapper::XOWClass.base &&
-           (unsafeObj = XPCWrapper::UnwrapXOW(cx, outer)))
-        {
-            outer = unsafeObj;
-        }
-
         if(outer && outer != obj)
             return GetWrappedNativeOfJSObject(cx, outer, funobj, pobj2,
                                               pTearOff);
@@ -3052,7 +3042,7 @@ NS_IMETHODIMP XPCWrappedNative::GetXPConnect(nsIXPConnect * *aXPConnect)
     return NS_OK;
 }
 
-/* XPCNativeInterface FindInterfaceWithMember (in JSVal name); */
+/* XPCNativeInterface FindInterfaceWithMember (in jsval name); */
 NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface;
@@ -3069,7 +3059,7 @@ NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithMember(jsval name, nsIInterface
     return NS_OK;
 }
 
-/* XPCNativeInterface FindInterfaceWithName (in JSVal name); */
+/* XPCNativeInterface FindInterfaceWithName (in jsval name); */
 NS_IMETHODIMP XPCWrappedNative::FindInterfaceWithName(jsval name, nsIInterfaceInfo * *_retval)
 {
     XPCNativeInterface* iface = GetSet()->FindNamedInterface(name);

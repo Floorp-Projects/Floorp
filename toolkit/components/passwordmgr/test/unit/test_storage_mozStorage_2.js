@@ -41,7 +41,7 @@ dummyuser3.init("http://dummyhost2.mozilla.org", "http://cgi.site.com", null,
 testnum++;
 
 testdesc = "[ensuring file doesn't exist]";
-var filename="non-existent-file-pwmgr.sqlite";
+var filename="nonexistent-file-pwmgr.sqlite";
 var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
 file.initWithPath(OUTDIR);
 file.append(filename);

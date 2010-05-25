@@ -62,10 +62,9 @@ namespace js { class AutoDescriptorArray; }
 struct PropertyDescriptor {
   friend class js::AutoDescriptorArray;
 
-  private:
     PropertyDescriptor();
-
   public:
+
     /* 8.10.5 ToPropertyDescriptor(Obj) */
     bool initialize(JSContext* cx, jsid id, jsval v);
 
@@ -120,6 +119,7 @@ struct PropertyDescriptor {
     static void traceDescriptorArray(JSTracer* trc, JSObject* obj);
     static void finalizeDescriptorArray(JSContext* cx, JSObject* obj);
 
+    jsval pd;
     jsid id;
     jsval value, get, set;
 
@@ -197,6 +197,8 @@ private:
     JSObjectMap(JSObjectMap &);
     void operator=(JSObjectMap &);
 };
+
+struct NativeIterator;
 
 const uint32 JS_INITIAL_NSLOTS = 5;
 
@@ -535,10 +537,60 @@ struct JSObject {
     inline void zeroRegExpLastIndex();
 
     /*
+     * Iterator-specific getters and setters.
+     */
+
+    inline NativeIterator *getNativeIterator() const;
+    inline void setNativeIterator(NativeIterator *);
+
+    /*
+     * XML-related getters and setters.
+     */
+
+    /*
+     * Slots for XML-related classes are as follows:
+     * - js_NamespaceClass.base reserves the *_NAME_* and *_NAMESPACE_* slots.
+     * - js_QNameClass.base, js_AttributeNameClass, js_AnyNameClass reserve
+     *   the *_NAME_* and *_QNAME_* slots.
+     * - Others (js_XMLClass, js_XMLFilterClass) don't reserve any slots.
+     */
+  private:
+    static const uint32 JSSLOT_NAME_PREFIX          = JSSLOT_PRIVATE;       // shared
+    static const uint32 JSSLOT_NAME_URI             = JSSLOT_PRIVATE + 1;   // shared
+
+    static const uint32 JSSLOT_NAMESPACE_DECLARED   = JSSLOT_PRIVATE + 2;
+
+    static const uint32 JSSLOT_QNAME_LOCAL_NAME     = JSSLOT_PRIVATE + 2;
+
+  public:
+    static const uint32 NAMESPACE_FIXED_RESERVED_SLOTS = 3;
+    static const uint32 QNAME_FIXED_RESERVED_SLOTS     = 3;
+
+    inline jsval getNamePrefix() const;
+    inline void setNamePrefix(jsval prefix);
+
+    inline jsval getNameURI() const;
+    inline void setNameURI(jsval uri);
+
+    inline jsval getNamespaceDeclared() const;
+    inline void setNamespaceDeclared(jsval decl);
+
+    inline jsval getQNameLocalName() const;
+    inline void setQNameLocalName(jsval decl);
+
+    /*
+     * Proxy-specific getters and setters.
+     */
+
+    inline jsval getProxyHandler() const;
+    inline jsval getProxyPrivate() const;
+    inline void setProxyPrivate(jsval priv);
+
+    /*
      * Back to generic stuff.
      */
 
-    bool isCallable();
+    inline bool isCallable();
 
     /* The map field is not initialized here and should be set separately. */
     void init(JSClass *clasp, JSObject *proto, JSObject *parent,
@@ -634,6 +686,8 @@ struct JSObject {
             map->ops->dropProperty(cx, this, prop);
     }
 
+    void swap(JSObject *obj);
+
     inline bool isArguments() const;
     inline bool isArray() const;
     inline bool isDenseArray() const;
@@ -646,6 +700,12 @@ struct JSObject {
     inline bool isFunction() const;
     inline bool isRegExp() const;
     inline bool isXML() const;
+    inline bool isNamespace() const;
+    inline bool isQName() const;
+
+    inline bool isProxy() const;
+    inline bool isObjectProxy() const;
+    inline bool isFunctionProxy() const;
 
     inline bool unbrand(JSContext *cx);
 };
@@ -673,7 +733,7 @@ struct JSObject {
 /*
  * The GC runs only when all threads except the one on which the GC is active
  * are suspended at GC-safe points, so calling obj->getSlot() from the GC's
- * thread is safe when rt->gcRunning is set. See jsgc.c for details.
+ * thread is safe when rt->gcRunning is set. See jsgc.cpp for details.
  */
 #define THREAD_IS_RUNNING_GC(rt, thread)                                      \
     ((rt)->gcRunning && (rt)->gcThread == (thread))
@@ -759,6 +819,13 @@ js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index);
 extern JS_REQUIRES_STACK JSObject *
 js_NewWithObject(JSContext *cx, JSObject *proto, JSObject *parent, jsint depth);
 
+inline JSObject *
+js_UnwrapWithObject(JSContext *cx, JSObject *withobj)
+{
+    JS_ASSERT(withobj->getClass() == &js_WithClass);
+    return withobj->getProto();
+}
+
 /*
  * Create a new block scope object not linked to any proto or parent object.
  * Blocks are created by the compiler to reify let blocks and comprehensions.
@@ -815,6 +882,9 @@ js_HasOwnProperty(JSContext *cx, JSLookupPropOp lookup, JSObject *obj, jsid id,
                   JSObject **objp, JSProperty **propp);
 
 extern JSBool
+js_NewPropertyDescriptorObject(JSContext *cx, jsid id, uintN attrs, jsval getter, jsval setter, jsval value, jsval *vp);
+
+extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, jsval *vp);
 
 #ifdef OLD_GETTER_SETTER_METHODS
@@ -865,6 +935,9 @@ extern const char js_lookupSetter_str[];
 extern JSObject*
 js_NewObjectWithClassProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                            jsval privateSlotValue);
+
+extern JSBool
+js_PopulateObject(JSContext *cx, JSObject *newborn, JSObject *props);
 
 /*
  * Fast access to immutable standard objects (constructors and prototypes).
@@ -1118,12 +1191,6 @@ extern JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp);
 
-extern void
-js_MarkEnumeratorState(JSTracer *trc, JSObject *obj, jsval state);
-
-extern void
-js_PurgeCachedNativeEnumerators(JSContext *cx, JSThreadData *data);
-
 extern JSBool
 js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp);
@@ -1234,11 +1301,6 @@ extern const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop);
 
-static inline bool
-js_IsCallable(jsval v) {
-    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable();
-}
-
 extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
 
@@ -1252,7 +1314,7 @@ JS_FRIEND_API(void) js_DumpAtom(JSAtom *atom);
 JS_FRIEND_API(void) js_DumpValue(jsval val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
 JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
-JS_FRIEND_API(void) js_DumpStackFrame(JSStackFrame *fp);
+JS_FRIEND_API(void) js_DumpStackFrameChain(JSContext *cx, JSStackFrame *start = NULL);
 #endif
 
 extern uintN

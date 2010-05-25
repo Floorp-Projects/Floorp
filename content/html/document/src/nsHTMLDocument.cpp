@@ -2154,7 +2154,7 @@ nsHTMLDocument::Close()
     // document.open() and document.close() have completed, then this
     // method should cause the firing of an onload event.
     NS_ASSERTION(mWyciwygChannel, "nsHTMLDocument::Close(): Trying to remove "
-                 "non-existent wyciwyg channel!");
+                 "nonexistent wyciwyg channel!");
     RemoveWyciwygChannel();
     NS_ASSERTION(!mWyciwygChannel, "nsHTMLDocument::Close(): "
                  "nsIWyciwygChannel could not be removed!");
