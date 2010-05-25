@@ -817,8 +817,8 @@ END_CASE(JSOP_BITAND)
  */
 #if JS_HAS_XML_SUPPORT
 #define XML_EQUALITY_OP(OP)                                                   \
-    if ((lmask == JSVAL_NONFUNOBJ_MASK && lref.asObject().isXML()) ||         \
-        (rmask == JSVAL_NONFUNOBJ_MASK && rref.asObject().isXML())) {         \
+    if ((lmask == JSVAL_MASK32_NONFUNOBJ && lref.asObject().isXML()) ||       \
+        (rmask == JSVAL_MASK32_NONFUNOBJ && rref.asObject().isXML())) {       \
         if (!js_TestXMLEquality(cx, lref, rref, &cond))                       \
             goto error;                                                       \
         cond = cond OP true;                                                  \
@@ -843,54 +843,46 @@ END_CASE(JSOP_BITAND)
         JSBool cond;                                                          \
         Value &rref = regs.sp[-1];                                            \
         Value &lref = regs.sp[-2];                                            \
-        Value::MaskType rmask = rref.mask;                                    \
-        Value::MaskType lmask = lref.mask;                                    \
-        Value::MaskType maskxor;                                              \
+        uint32 rmask = rref.data.s.mask32;                                    \
+        uint32 lmask = lref.data.s.mask32;                                    \
         XML_EQUALITY_OP(OP)                                                   \
-        if ((maskxor = lmask ^ rmask) == 0) {                                 \
-            if (Value::isSingleton(lmask)) {                                  \
-                cond = true OP true;                                          \
-            } else if (lmask == JSVAL_INT32_MASK) {                           \
-                cond = lref.asInt32() OP rref.asInt32();                      \
-            } else if (lmask == JSVAL_DOUBLE_MASK) {                          \
-                double l = lref.asDouble(), r = rref.asDouble();              \
-                cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                     \
-            } else if (lmask & JSVAL_OBJECT_MASK) {                           \
+        if (lmask == rmask ||                                                 \
+            (Value::isObjectMask(lmask) && Value::isObjectMask(rmask))) {     \
+            if (lmask == JSVAL_MASK32_STRING) {                               \
+                JSString *l = lref.asString(), *r = rref.asString();          \
+                cond = js_EqualStrings(l, r) OP true;                         \
+            } else if (Value::isObjectMask(lmask)) {                          \
                 JSObject *l = &lref.asObject(), *r = &rref.asObject();        \
                 EXTENDED_EQUALITY_OP(OP)                                      \
                 cond = l OP r;                                                \
-            } else if (lmask == JSVAL_STRING_MASK) {                          \
-                JSString *l = lref.asString(), *r = rref.asString();          \
-                cond = js_EqualStrings(l, r) OP true;                         \
+            } else if (JS_UNLIKELY(Value::isDoubleMask(lmask))) {             \
+                double l = lref.asDouble(), r = rref.asDouble();              \
+                cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                     \
             } else {                                                          \
-                cond = lref.asBoolean() OP rref.asBoolean();                  \
+                cond = lref.data.s.payload.u32 OP rref.data.s.payload.u32;    \
             }                                                                 \
+        } else if (Value::isDoubleMask(lmask) && Value::isDoubleMask(rmask)) { \
+            double l = lref.asDouble(), r = rref.asDouble();                  \
+            cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                         \
         } else {                                                              \
-            JS_ASSERT(maskxor == (lmask | rmask));                            \
-            Value::MaskType maskor = maskxor;                                 \
-            if (lmask == Value::NullMask || rmask == Value::NullMask) {       \
-                cond = maskxor OP JSVAL_UNDEFINED_MASK;                       \
-            } else if (maskor & JSVAL_UNDEFINED_MASK) {                       \
-                cond = true OP false;                                         \
-            } else if (maskor == JSVAL_OBJECT_MASK) {                         \
+            if (Value::isNullOrUndefinedMask(lmask)) {                        \
+                cond = Value::isNullOrUndefinedMask(rmask) OP true;           \
+            } else if (Value::isNullOrUndefinedMask(rmask)) {                 \
                 cond = true OP false;                                         \
             } else {                                                          \
-                if (maskor & JSVAL_OBJECT_MASK) {                             \
-                    if (lmask & JSVAL_OBJECT_MASK) {                          \
-                        JSObject &obj = lref.asObject();                      \
-                        if (!obj.defaultValue(cx, JSTYPE_VOID, &lref))        \
-                            goto error;                                       \
-                        lmask = lref.mask;                                    \
-                    }                                                         \
-                    if (rmask & JSVAL_OBJECT_MASK) {                          \
-                        JSObject &obj = rref.asObject();                      \
-                        if (!obj.defaultValue(cx, JSTYPE_VOID, &rref))        \
-                            goto error;                                       \
-                        rmask = rref.mask;                                    \
-                    }                                                         \
-                    maskor = lmask | rmask;                                   \
+                if (Value::isObjectMask(lmask)) {                             \
+                    JSObject &obj = lref.asObject();                          \
+                    if (!obj.defaultValue(cx, JSTYPE_VOID, &lref))            \
+                        goto error;                                           \
+                    lmask = lref.data.s.mask32;                               \
                 }                                                             \
-                if (maskor == JSVAL_STRING_MASK) {                            \
+                if (Value::isObjectMask(rmask)) {                             \
+                    JSObject &obj = rref.asObject();                          \
+                    if (!obj.defaultValue(cx, JSTYPE_VOID, &rref))            \
+                        goto error;                                           \
+                    rmask = rref.data.s.mask32;                               \
+                }                                                             \
+                if (lmask == JSVAL_MASK32_STRING && rmask == JSVAL_MASK32_STRING) { \
                     JSString *l = lref.asString(), *r = rref.asString();      \
                     cond = js_EqualStrings(l, r) OP true;                     \
                 } else {                                                      \
@@ -975,30 +967,30 @@ END_CASE(JSOP_CASEX)
         /* Depends on the value representation */                             \
         Value &rref = regs.sp[-1];                                            \
         Value &lref = regs.sp[-2];                                            \
-        JSValueMaskType rmask = rref.mask;                                    \
-        JSValueMaskType lmask = lref.mask;                                    \
-        JSValueMaskType maskand = lmask & rmask;                              \
+        uint32 rmask = rref.data.s.mask32;                                    \
+        uint32 lmask = lref.data.s.mask32;                                    \
+        uint32 maskand = lmask & rmask;                                       \
         bool cond;                                                            \
         /* Optimize for two int-tagged operands (typical loop control). */    \
-        if (maskand == JSVAL_INT32_MASK) {                                    \
+        if (maskand == JSVAL_MASK32_INT32) {                                  \
             cond = lref.asInt32() OP rref.asInt32();                          \
         } else {                                                              \
-            if ((lmask | rmask) & JSVAL_OBJECT_MASK) {                        \
-                if (lmask & JSVAL_OBJECT_MASK) {                              \
+            if (Value::isObjectMask(lmask | rmask)) {                         \
+                if (Value::isObjectMask(lmask)) {                             \
                     JSObject &obj = lref.asObject();                          \
                     if (!obj.defaultValue(cx, JSTYPE_NUMBER, &lref))          \
                         goto error;                                           \
-                    lmask = lref.mask;                                        \
+                    lmask = lref.data.s.mask32;                               \
                 }                                                             \
-                if (rmask & JSVAL_OBJECT_MASK) {                              \
+                if (Value::isObjectMask(rmask)) {                             \
                     JSObject &obj = rref.asObject();                          \
                     if (!obj.defaultValue(cx, JSTYPE_NUMBER, &rref))          \
                         goto error;                                           \
-                    rmask = rref.mask;                                        \
+                    rmask = rref.data.s.mask32;                               \
                 }                                                             \
                 maskand = lmask & rmask;                                      \
             }                                                                 \
-            if (maskand == JSVAL_STRING_MASK) {                               \
+            if (maskand == JSVAL_MASK32_STRING) {                             \
                 JSString *l = lref.asString(), *r = rref.asString();          \
                 cond = js_CompareStrings(l, r) OP 0;                          \
             } else {                                                          \
@@ -1076,10 +1068,10 @@ BEGIN_CASE(JSOP_ADD)
     /* Depends on the value representation */
     Value &rref = regs.sp[-1];
     Value &lref = regs.sp[-2];
-    Value::MaskType rmask = rref.mask;
-    Value::MaskType lmask = lref.mask;
+    uint32 rmask = rref.data.s.mask32;
+    uint32 lmask = lref.data.s.mask32;
 
-    if ((lmask & rmask) == JSVAL_INT32_MASK) {
+    if ((lmask & rmask) == JSVAL_MASK32_INT32) {
         int32_t l = lref.asInt32(), r = rref.asInt32();
         int32_t sum = l + r;
         regs.sp--;
@@ -1089,8 +1081,8 @@ BEGIN_CASE(JSOP_ADD)
             regs.sp[-1].setInt32(sum);
     } else
 #if JS_HAS_XML_SUPPORT
-    if (lmask == JSVAL_NONFUNOBJ_MASK && lref.asObject().isXML() &&
-        rmask == JSVAL_NONFUNOBJ_MASK && rref.asObject().isXML()) {
+    if (lmask == JSVAL_MASK32_NONFUNOBJ && lref.asObject().isXML() &&
+        rmask == JSVAL_MASK32_NONFUNOBJ && rref.asObject().isXML()) {
         Value rval;
         if (!js_ConcatenateXML(cx, &lref.asObject(), &rref.asObject(), &rval))
             goto error;
@@ -1099,22 +1091,22 @@ BEGIN_CASE(JSOP_ADD)
     } else
 #endif
     {
-        if (lmask & JSVAL_OBJECT_MASK) {
+        if (Value::isObjectMask(lmask)) {
             if (!lref.asObject().defaultValue(cx, JSTYPE_VOID, &lref))
                 goto error;
-            lmask = lref.mask;
+            lmask = lref.data.s.mask32;
         }
-        if (rmask & JSVAL_OBJECT_MASK) {
+        if (Value::isObjectMask(rmask)) {
             if (!rref.asObject().defaultValue(cx, JSTYPE_VOID, &rref))
                 goto error;
-            rmask = rref.mask;
+            rmask = rref.data.s.mask32;
         }
-        if ((lmask | rmask) & JSVAL_STRING_MASK) {
+        if (lmask == JSVAL_MASK32_STRING || rmask == JSVAL_MASK32_STRING) {
             JSString *str1, *str2;
             if (lmask == rmask) {
                 str1 = lref.asString();
                 str2 = rref.asString();
-            } else if (lmask == JSVAL_STRING_MASK) {
+            } else if (lmask == JSVAL_MASK32_STRING) {
                 str1 = lref.asString();
                 str2 = js_ValueToString(cx, rref);
                 if (!str2)
@@ -1136,7 +1128,7 @@ BEGIN_CASE(JSOP_ADD)
                 goto error;
             l += r;
             regs.sp--;
-            STORE_NUMBER(cx, -1, l);
+            regs.sp[-1].setNumber(l);
         }
     }
 }
@@ -1180,7 +1172,7 @@ END_CASE(JSOP_CONCATN)
         }                                                                     \
         double d = d1 OP d2;                                                  \
         regs.sp--;                                                            \
-        STORE_NUMBER(cx, -1, d);                                              \
+        regs.sp[-1].setNumber(d);                                             \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_SUB)
@@ -1218,7 +1210,7 @@ BEGIN_CASE(JSOP_DIV)
         regs.sp[-1] = *vp;
     } else {
         d1 /= d2;
-        STORE_NUMBER(cx, -1, d1);
+        regs.sp[-1].setNumber(d1);
     }
 }
 END_CASE(JSOP_DIV)
@@ -2147,7 +2139,7 @@ BEGIN_CASE(JSOP_CALLELEM)
     FETCH_OBJECT(cx, -2, obj);
 
     /* Save the mask so that we don't need to query it later. */
-    Value::MaskType objmask = regs.sp[-2].mask;
+    uint32 objmask = regs.sp[-2].data.s.mask32;
 
     /* Fetch index and convert it to id suitable for use with obj. */
     jsid id;
@@ -2166,8 +2158,8 @@ BEGIN_CASE(JSOP_CALLELEM)
     } else
 #endif
     {
-        regs.sp[-1].mask = objmask;
-        regs.sp[-1].data.obj = obj;
+        regs.sp[-1].data.s.mask32 = objmask;
+        regs.sp[-1].data.s.payload.obj = obj;
     }
 }
 END_CASE(JSOP_CALLELEM)

@@ -2228,7 +2228,7 @@ JSWeakRoots::mark(JSTracer *trc)
         }
     }
     if (newbornDouble)
-        JS_CALL_DOUBLE_TRACER(trc, newbornDouble, "newborn_double");
+        MarkGCThing(trc, newbornDouble, "newborn_double");
     if (lastAtom)
         MarkBoxedWord(trc, ATOM_TO_JSID(lastAtom), "lastAtom");
     MarkGCThing(trc, lastInternalResult, "lastInternalResult");
