@@ -130,7 +130,7 @@ Boolean(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval)
     Value bval;
 
     if (argc != 0)
-        bval.setBoolean(js_ValueToBoolean(argv[0]));
+        bval.setBoolean(!!js_ValueToBoolean(argv[0]));
     else
         bval.setBoolean(false);
     if (!JS_IsConstructing(cx))

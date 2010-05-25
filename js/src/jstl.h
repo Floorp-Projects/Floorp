@@ -382,7 +382,7 @@ class AlignedPtrAndFlag
   public:
     AlignedPtrAndFlag(T *t, bool flag) {
         JS_ASSERT((uintptr_t(t) & 1) == 0);
-        bits = uintptr_t(t) | flag;
+        bits = uintptr_t(t) | uintptr_t(flag);
     }
 
     T *ptr() const {
@@ -395,7 +395,7 @@ class AlignedPtrAndFlag
 
     void setPtr(T *t) {
         JS_ASSERT((uintptr_t(t) & 1) == 0);
-        bits = uintptr_t(t) | flag();
+        bits = uintptr_t(t) | uintptr_t(flag());
     }
 
     void setFlag() {
