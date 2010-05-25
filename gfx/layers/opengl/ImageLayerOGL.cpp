@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Bas Schouten <bschouten@mozilla.org>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -269,15 +270,13 @@ ImageLayerOGL::GetLayer()
 }
 
 void
-ImageLayerOGL::RenderLayer(int, DrawThebesLayerCallback aCallback,
-                           void* aCallbackData)
+ImageLayerOGL::RenderLayer(int,
+                           const nsIntPoint& aOffset)
 {
-  if (!GetContainer()) {
+  if (!GetContainer())
     return;
-  }
 
-  LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(mManager);
-  manager->MakeCurrent();
+  mOGLManager->MakeCurrent();
 
   nsRefPtr<Image> image = GetContainer()->GetCurrentImage();
 
@@ -285,28 +284,12 @@ ImageLayerOGL::RenderLayer(int, DrawThebesLayerCallback aCallback,
     PlanarYCbCrImageOGL *yuvImage =
       static_cast<PlanarYCbCrImageOGL*>(image.get());
 
-    if (!yuvImage->HasData()) {
+    if (!yuvImage->HasData())
       return;
-    }
 
-    if (!yuvImage->HasTextures()) {
-      yuvImage->AllocateTextures(manager);
-    }
+    if (!yuvImage->HasTextures())
+      yuvImage->AllocateTextures(mOGLManager);
 
-    float quadTransform[4][4];
-    // Transform the quad to the size of the video.
-    memset(&quadTransform, 0, sizeof(quadTransform));
-    quadTransform[0][0] = (float)yuvImage->mSize.width;
-    quadTransform[1][1] = (float)yuvImage->mSize.height;
-    quadTransform[2][2] = 1.0f;
-    quadTransform[3][3] = 1.0f;
-
-    YCbCrLayerProgram *program = manager->GetYCbCrLayerProgram();
-
-    program->Activate();
-
-    program->SetLayerQuadTransform(&quadTransform[0][0]);
-  
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, yuvImage->mTextures[0].GetTextureID());
     gl()->fActiveTexture(LOCAL_GL_TEXTURE1);
@@ -314,40 +297,46 @@ ImageLayerOGL::RenderLayer(int, DrawThebesLayerCallback aCallback,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE2);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, yuvImage->mTextures[2].GetTextureID());
 
+    YCbCrTextureLayerProgram *program = mOGLManager->GetYCbCrLayerProgram();
+
+    program->Activate();
+    program->SetLayerQuadRect(nsIntRect(0, 0,
+                                        yuvImage->mSize.width,
+                                        yuvImage->mSize.height));
+    program->SetLayerTransform(mTransform);
     program->SetLayerOpacity(GetOpacity());
-    program->SetLayerTransform(&mTransform._11);
-    program->Apply();
+    program->SetRenderOffset(aOffset);
+    program->SetYCbCrTextureUnits(0, 1, 2);
 
-    gl()->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+    DEBUG_GL_ERROR_CHECK(gl());
 
+    mOGLManager->BindAndDrawQuad(program);
+
+    // We shouldn't need to do this, but do it anyway just in case
+    // someone else forgets.
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-
   } else if (image->GetFormat() == Image::CAIRO_SURFACE) {
     CairoImageOGL *cairoImage =
       static_cast<CairoImageOGL*>(image.get());
 
-    float quadTransform[4][4];
-    // Transform the quad to the size of the video.
-    memset(&quadTransform, 0, sizeof(quadTransform));
-    quadTransform[0][0] = (float)cairoImage->mSize.width;
-    quadTransform[1][1] = (float)cairoImage->mSize.height;
-    quadTransform[2][2] = 1.0f;
-    quadTransform[3][3] = 1.0f;
-  
-    RGBLayerProgram *program = manager->GetRGBLayerProgram();
-
-    program->Activate();
-
-    program->SetLayerQuadTransform(&quadTransform[0][0]);
-
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, cairoImage->mTexture.GetTextureID());
-    program->SetLayerOpacity(GetOpacity());
-    program->SetLayerTransform(&mTransform._11);
-    program->Apply();
+  
+    ColorTextureLayerProgram *program = mOGLManager->GetBGRALayerProgram();
 
-    gl()->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+    program->Activate();
+    program->SetLayerQuadRect(nsIntRect(0, 0,
+                                        cairoImage->mSize.width,
+                                        cairoImage->mSize.height));
+    program->SetLayerTransform(mTransform);
+    program->SetLayerOpacity(GetOpacity());
+    program->SetRenderOffset(aOffset);
+    program->SetTextureUnit(0);
+
+    mOGLManager->BindAndDrawQuad(program);
   }
+
+  DEBUG_GL_ERROR_CHECK(gl());
 }
 
 PlanarYCbCrImageOGL::PlanarYCbCrImageOGL(RecycleBin *aRecycleBin)
@@ -552,6 +541,8 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
 
   // XXX This could be a lot more efficient if we already have an image-compatible
   // surface
+  // XXX if we ever create an ImageFormatRGB24 surface, make sure that we use
+  // a BGRX program in that case (instead of BGRA)
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(aData.mSize, gfxASurface::ImageFormatARGB32);
   nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
@@ -559,6 +550,7 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
   context->SetSource(aData.mSurface);
   context->Paint();
 
+  gl->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture.GetTextureID());
 
   gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_LINEAR);
@@ -572,7 +564,7 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
                   mSize.width,
                   mSize.height,
                   0,
-                  LOCAL_GL_BGRA,
+                  LOCAL_GL_RGBA,
                   LOCAL_GL_UNSIGNED_BYTE,
                   imageSurface->Data());
 }
