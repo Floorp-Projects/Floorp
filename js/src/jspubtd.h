@@ -242,8 +242,19 @@ typedef union jsval_payload
     JSWhyMagic     why;
 } jsval_data;
 
-// TODO: re-fix for MSVC
-#define ASSERT_DOUBLE_ALIGN() JS_ASSERT(size_t(this) % sizeof(double) == 0)
+#ifdef __GNUC__
+# define VALUE_ALIGNMENT        __attribute__((aligned (8)))
+# define ASSERT_DOUBLE_ALIGN()  JS_ASSERT(size_t(this) % sizeof(double) == 0)
+#elif defined(_MSC_VER)
+  /*
+   * Structs can be aligned with MSVC, but not if they are used as parameters,
+   * so we just don't try to align.
+   */
+# define VALUE_ALIGNMENT
+# define ASSERT_DOUBLE_ALIGN()
+#else
+# error "TODO: do something for compiler"
+#endif
 
 #if !defined(IS_LITTLE_ENDIAN)
 # error "Need to fix up jsval_layout"
