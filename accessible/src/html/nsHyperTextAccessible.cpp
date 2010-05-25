@@ -581,7 +581,7 @@ nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode *aNode,
 
   // Get accessible for this findNode, or if that node isn't accessible, use the
   // accessible for the next DOM node which has one (based on forward depth first search)
-  nsRefPtr<nsAccessible> descendantAcc;
+  nsAccessible *descendantAcc = nsnull;
   if (findNode) {
     nsCOMPtr<nsIContent> findContent = do_QueryInterface(findNode);
     if (findContent->IsHTML() && 
@@ -598,9 +598,9 @@ nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode *aNode,
   }
 
   // From the descendant, go up and get the immediate child of this hypertext
-  nsRefPtr<nsAccessible> childAccAtOffset;
+  nsAccessible *childAccAtOffset = nsnull;
   while (descendantAcc) {
-    nsRefPtr<nsAccessible> parentAcc = descendantAcc->GetParent();
+    nsAccessible *parentAcc = descendantAcc->GetParent();
     if (parentAcc == this) {
       childAccAtOffset = descendantAcc;
       break;
@@ -626,7 +626,7 @@ nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode *aNode,
         (nsAccUtils::TextLength(descendantAcc) == static_cast<PRInt32>(addTextOffset)) ? 1 : 0;
     }
 
-    descendantAcc.swap(parentAcc);
+    descendantAcc = parentAcc;
   }
 
   // Loop through, adding offsets until we reach childAccessible

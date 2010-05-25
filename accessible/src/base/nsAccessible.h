@@ -338,9 +338,8 @@ protected:
    *
    * @param  aStartNode  [in] the DOM node to start from
    * @return              the resulting accessible
-   */   
-  already_AddRefed<nsAccessible>
-    GetFirstAvailableAccessible(nsIDOMNode *aStartNode);
+   */
+  nsAccessible *GetFirstAvailableAccessible(nsIDOMNode *aStartNode) const;
 
   // Hyperlink helpers
   virtual nsresult GetLinkOffset(PRInt32* aStartOffset, PRInt32* aEndOffset);
