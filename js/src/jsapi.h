@@ -3277,7 +3277,7 @@ class Value
 
     double asDouble() const {
         JS_ASSERT(isDouble());
-        JS_ASSERT(size_t(this) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         return data.asDouble;
     }
 
