@@ -558,20 +558,7 @@ LayerManagerD3D9::VerifyCaps()
 
 LayerD3D9::LayerD3D9(LayerManagerD3D9 *aManager)
   : mD3DManager(aManager)
-  , mNextSibling(NULL)
 {
-}
-
-LayerD3D9*
-LayerD3D9::GetNextSibling()
-{
-  return mNextSibling;
-}
-
-void
-LayerD3D9::SetNextSibling(LayerD3D9 *aNextSibling)
-{
-  mNextSibling = aNextSibling;
 }
 
 } /* namespace layers */

@@ -217,10 +217,8 @@ public:
   
   virtual LayerType GetType() = 0;
 
-  LayerD3D9 *GetNextSibling();
   virtual LayerD3D9 *GetFirstChildD3D9() { return nsnull; }
 
-  void SetNextSibling(LayerD3D9 *aParent);
   void SetFirstChild(LayerD3D9 *aParent);
 
   virtual Layer* GetLayer() = 0;
@@ -230,7 +228,6 @@ public:
   IDirect3DDevice9 *device() const { return mD3DManager->device(); }
 protected:
   LayerManagerD3D9 *mD3DManager;
-  LayerD3D9 *mNextSibling;
 };
 
 } /* layers */
