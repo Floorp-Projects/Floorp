@@ -108,10 +108,15 @@ class FrameState
         sp++;
     }
 
+    void push(const Value &v) {
+        push(Jsvalify(v));
+    }
+
     void push(const jsval &v) {
         sp[0].setConstant(v);
         sp[0].copies = 0;
         sp++;
+        JS_ASSERT(sp - locals <= script->nslots);
     }
 
     FrameEntry *peek(int32 depth) {
