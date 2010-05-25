@@ -120,6 +120,7 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
     JS_INIT_CLIST(&jsdthreadstate->stack);
     jsdthreadstate->stackDepth = 0;
 
+    JS_BeginRequest(jsdthreadstate->context);
     while( NULL != (fp = JS_FrameIterator(cx, &iter)) )
     {
         JSScript* script = JS_GetFrameScript(cx, fp);
@@ -148,10 +149,12 @@ jsd_NewThreadState(JSDContext* jsdc, JSContext *cx )
                  */
                 JS_INIT_CLIST(&jsdthreadstate->links);
                 jsd_DestroyThreadState(jsdc, jsdthreadstate);
+                JS_EndRequest(jsdthreadstate->context);
                 return NULL;
             }
         }
     }
+    JS_EndRequest(jsdthreadstate->context);
 
     if (jsdthreadstate->stackDepth == 0)
     {
@@ -339,7 +342,9 @@ jsd_GetThisForStackFrame(JSDContext* jsdc,
 
     if( jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe) )
     {
+        JS_BeginRequest(jsdthreadstate->context);
         obj = JS_GetFrameThis(jsdthreadstate->context, jsdframe->fp);
+        JS_EndRequest(jsdthreadstate->context);
         if(obj)
             jsdval = JSD_NewValue(jsdc, OBJECT_TO_JSVAL(obj));
     }
