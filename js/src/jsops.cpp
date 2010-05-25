@@ -296,7 +296,6 @@ BEGIN_CASE(JSOP_STOP)
                     DO_OP();
                 }
             }
-            jsint len;
             if (*(regs.pc + JSOP_CALL_LENGTH) == JSOP_TRACE ||
                 *(regs.pc + JSOP_CALL_LENGTH) == JSOP_NOP) {
                 JS_STATIC_ASSERT(JSOP_TRACE_LENGTH == JSOP_NOP_LENGTH);
@@ -318,7 +317,7 @@ BEGIN_CASE(JSOP_DEFAULT)
     /* FALL THROUGH */
 BEGIN_CASE(JSOP_GOTO)
 {
-    jsint len = GET_JUMP_OFFSET(regs.pc);
+    len = GET_JUMP_OFFSET(regs.pc);
     BRANCH(len);
 }
 END_CASE(JSOP_GOTO)
@@ -329,7 +328,7 @@ BEGIN_CASE(JSOP_IFEQ)
     Value *_;
     POP_BOOLEAN(cx, _, cond);
     if (cond == false) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -341,7 +340,7 @@ BEGIN_CASE(JSOP_IFNE)
     Value *_;
     POP_BOOLEAN(cx, _, cond);
     if (cond != false) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -353,7 +352,7 @@ BEGIN_CASE(JSOP_OR)
     Value *vp;
     POP_BOOLEAN(cx, vp, cond);
     if (cond == true) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
@@ -366,7 +365,7 @@ BEGIN_CASE(JSOP_AND)
     Value *vp;
     POP_BOOLEAN(cx, vp, cond);
     if (cond == false) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
@@ -378,7 +377,7 @@ BEGIN_CASE(JSOP_DEFAULTX)
     /* FALL THROUGH */
 BEGIN_CASE(JSOP_GOTOX)
 {
-    jsint len = GET_JUMPX_OFFSET(regs.pc);
+    len = GET_JUMPX_OFFSET(regs.pc);
     BRANCH(len);
 }
 END_CASE(JSOP_GOTOX);
@@ -389,7 +388,7 @@ BEGIN_CASE(JSOP_IFEQX)
     Value *_;
     POP_BOOLEAN(cx, _, cond);
     if (cond == false) {
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -401,7 +400,7 @@ BEGIN_CASE(JSOP_IFNEX)
     Value *_;
     POP_BOOLEAN(cx, _, cond);
     if (cond != false) {
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -413,7 +412,7 @@ BEGIN_CASE(JSOP_ORX)
     Value *vp;
     POP_BOOLEAN(cx, vp, cond);
     if (cond == true) {
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
@@ -426,7 +425,7 @@ BEGIN_CASE(JSOP_ANDX)
     Value *vp;
     POP_BOOLEAN(cx, vp, cond);
     if (cond == JS_FALSE) {
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         PUSH_COPY(*vp);
         DO_NEXT_OP(len);
     }
@@ -459,10 +458,10 @@ END_CASE(JSOP_ANDX)
             regs.sp -= spdec;                                                 \
             if (cond == (diff_ != 0)) {                                       \
                 ++regs.pc;                                                    \
-                jsint len = GET_JUMP_OFFSET(regs.pc);                         \
+                len = GET_JUMP_OFFSET(regs.pc);                         \
                 BRANCH(len);                                                  \
             }                                                                 \
-            jsint len = 1 + JSOP_IFEQ_LENGTH;                                 \
+            len = 1 + JSOP_IFEQ_LENGTH;                                 \
             DO_NEXT_OP(len);                                                  \
         }                                                                     \
     JS_END_MACRO
@@ -519,7 +518,7 @@ END_CASE(JSOP_MOREITER)
 BEGIN_CASE(JSOP_ENDITER)
 {
     JS_ASSERT(regs.sp - 1 >= fp->base());
-    bool ok = js_CloseIterator(cx, regs.sp[-1]);
+    bool ok = !!js_CloseIterator(cx, regs.sp[-1]);
     regs.sp--;
     if (!ok)
         goto error;
@@ -821,7 +820,7 @@ END_CASE(JSOP_BITAND)
         (rmask == JSVAL_NONFUNOBJ_MASK && rref.asObject().isXML())) {         \
         if (!js_TestXMLEquality(cx, lref, rref, &cond))                       \
             goto error;                                                       \
-        cond = cond OP true;                                                  \
+        cond = cond OP JS_TRUE;                                               \
     } else
 
 #define EXTENDED_EQUALITY_OP(OP)                                              \
@@ -829,7 +828,7 @@ END_CASE(JSOP_BITAND)
         ((ExtendedClass *)clasp)->equality) {                                 \
         if (!((ExtendedClass *)clasp)->equality(cx, l, &rref, &cond))         \
             goto error;                                                       \
-        cond = cond OP true;                                                  \
+        cond = cond OP JS_TRUE;                                               \
     } else
 #else
 #define XML_EQUALITY_OP(OP)             /* nothing */
@@ -861,7 +860,7 @@ END_CASE(JSOP_BITAND)
                 cond = l OP r;                                                \
             } else if (lmask == JSVAL_STRING_MASK) {                          \
                 JSString *l = lref.asString(), *r = rref.asString();          \
-                cond = js_EqualStrings(l, r) OP true;                         \
+                cond = js_EqualStrings(l, r) OP JS_TRUE;                      \
             } else {                                                          \
                 cond = lref.asBoolean() OP rref.asBoolean();                  \
             }                                                                 \
@@ -892,7 +891,7 @@ END_CASE(JSOP_BITAND)
                 }                                                             \
                 if (maskor == JSVAL_STRING_MASK) {                            \
                     JSString *l = lref.asString(), *r = rref.asString();      \
-                    cond = js_EqualStrings(l, r) OP true;                     \
+                    cond = js_EqualStrings(l, r) OP JS_TRUE;                  \
                 } else {                                                      \
                     double l, r;                                              \
                     if (!ValueToNumber(cx, lref, &l) ||                       \
@@ -950,7 +949,7 @@ BEGIN_CASE(JSOP_CASE)
     STRICT_EQUALITY_OP(==, cond);
     if (cond) {
         regs.sp--;
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -962,7 +961,7 @@ BEGIN_CASE(JSOP_CASEX)
     STRICT_EQUALITY_OP(==, cond);
     if (cond) {
         regs.sp--;
-        jsint len = GET_JUMPX_OFFSET(regs.pc);
+        len = GET_JUMPX_OFFSET(regs.pc);
         BRANCH(len);
     }
 }
@@ -1421,7 +1420,7 @@ BEGIN_CASE(JSOP_NAMEDEC)
                     tmp = inc;
                 rref.asInt32Ref() = inc;
                 PUSH_INT32(tmp);
-                jsint len = JSOP_INCNAME_LENGTH;
+                len = JSOP_INCNAME_LENGTH;
                 DO_NEXT_OP(len);
             }
         }
@@ -1490,7 +1489,7 @@ do_incop:
         regs.sp[-1 - cs->nuses] = regs.sp[-1];
         regs.sp -= cs->nuses;
     }
-    jsint len = cs->length;
+    len = cs->length;
     DO_NEXT_OP(len);
 }
 }
@@ -1566,7 +1565,7 @@ BEGIN_CASE(JSOP_LOCALINC)
         if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], vp))
             goto error;
     }
-    jsint len = JSOP_INCARG_LENGTH;
+    len = JSOP_INCARG_LENGTH;
     JS_ASSERT(len == js_CodeSpec[op].length);
     DO_NEXT_OP(len);
 }
@@ -1622,7 +1621,7 @@ BEGIN_CASE(JSOP_GVARINC)
         if (!js_DoIncDec(cx, &js_CodeSpec[op], &regs.sp[-1], &rref))
             goto error;
     }
-    jsint len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
+    len = JSOP_INCGVAR_LENGTH;  /* all gvar incops are same length */
     JS_ASSERT(len == js_CodeSpec[op].length);
     DO_NEXT_OP(len);
 }
@@ -1685,52 +1684,54 @@ BEGIN_CASE(JSOP_GETXPROP)
     VALUE_TO_OBJECT(cx, vp, obj);
 
   do_getprop_with_obj:
-    Value rval;
-    do {
-        /*
-         * We do not impose the method read barrier if in an imacro,
-         * assuming any property gets it does (e.g., for 'toString'
-         * from JSOP_NEW) will not be leaked to the calling script.
-         */
-        JSObject *aobj = js_GetProtoIfDenseArray(obj);
+    {
+        Value rval;
+        do {
+            /*
+             * We do not impose the method read barrier if in an imacro,
+             * assuming any property gets it does (e.g., for 'toString'
+             * from JSOP_NEW) will not be leaked to the calling script.
+             */
+            JSObject *aobj = js_GetProtoIfDenseArray(obj);
 
-        PropertyCacheEntry *entry;
-        JSObject *obj2;
-        JSAtom *atom;
-        JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
-        if (!atom) {
-            ASSERT_VALID_PROPERTY_CACHE_HIT(i, aobj, obj2, entry);
-            if (entry->vword.isFunObj()) {
-                rval.setFunObj(entry->vword.toFunObj());
-            } else if (entry->vword.isSlot()) {
-                uint32 slot = entry->vword.toSlot();
-                JS_ASSERT(slot < obj2->scope()->freeslot);
-                rval = obj2->lockedGetSlot(slot);
-            } else {
-                JS_ASSERT(entry->vword.isSprop());
-                JSScopeProperty *sprop = entry->vword.toSprop();
-                NATIVE_GET(cx, obj, obj2, sprop,
-                           fp->imacpc ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
-                           &rval);
+            PropertyCacheEntry *entry;
+            JSObject *obj2;
+            JSAtom *atom;
+            JS_PROPERTY_CACHE(cx).test(cx, regs.pc, aobj, obj2, entry, atom);
+            if (!atom) {
+                ASSERT_VALID_PROPERTY_CACHE_HIT(i, aobj, obj2, entry);
+                if (entry->vword.isFunObj()) {
+                    rval.setFunObj(entry->vword.toFunObj());
+                } else if (entry->vword.isSlot()) {
+                    uint32 slot = entry->vword.toSlot();
+                    JS_ASSERT(slot < obj2->scope()->freeslot);
+                    rval = obj2->lockedGetSlot(slot);
+                } else {
+                    JS_ASSERT(entry->vword.isSprop());
+                    JSScopeProperty *sprop = entry->vword.toSprop();
+                    NATIVE_GET(cx, obj, obj2, sprop,
+                               fp->imacpc ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
+                               &rval);
+                }
+                break;
             }
-            break;
-        }
 
-        jsid id = ATOM_TO_JSID(atom);
-        if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
-            ? !js_GetPropertyHelper(cx, obj, id,
-                                    fp->imacpc
-                                    ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
-                                    : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
-                                    &rval)
-            : !obj->getProperty(cx, id, &rval)) {
-            goto error;
-        }
-    } while (0);
+            jsid id = ATOM_TO_JSID(atom);
+            if (JS_LIKELY(aobj->map->ops->getProperty == js_GetProperty)
+                ? !js_GetPropertyHelper(cx, obj, id,
+                                        fp->imacpc
+                                        ? JSGET_CACHE_RESULT | JSGET_NO_METHOD_BARRIER
+                                        : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
+                                        &rval)
+                : !obj->getProperty(cx, id, &rval)) {
+                goto error;
+            }
+        } while (0);
 
-    regs.sp[-1] = rval;
-    JS_ASSERT(JSOP_GETPROP_LENGTH + i == js_CodeSpec[op].length);
-    jsint len = JSOP_GETPROP_LENGTH + i;
+        regs.sp[-1] = rval;
+        JS_ASSERT(JSOP_GETPROP_LENGTH + i == js_CodeSpec[op].length);
+        len = JSOP_GETPROP_LENGTH + i;
+    }
 END_VARLEN_CASE
 
 BEGIN_CASE(JSOP_LENGTH)
@@ -2091,7 +2092,8 @@ BEGIN_CASE(JSOP_GETELEM)
                 goto error;
             regs.sp--;
             regs.sp[-1].setString(str);
-            DO_NEXT_OP(JSOP_GETELEM_LENGTH);
+            len = JSOP_GETELEM_LENGTH;
+            DO_NEXT_OP(len);
         }
     }
 
@@ -2236,7 +2238,6 @@ END_CASE(JSOP_ENUMELEM)
     JSObject *obj;
     uintN flags;
     uintN argc;
-    Value lval;
     Value *vp;
 
 BEGIN_CASE(JSOP_NEW)
@@ -2294,9 +2295,8 @@ BEGIN_CASE(JSOP_APPLY)
     argc = GET_ARGC(regs.pc);
     vp = regs.sp - (argc + 2);
 
-    lval = *vp;
-    if (lval.isFunObj()) {
-        obj = &lval.asFunObj();
+    if (vp->isFunObj()) {
+        obj = &vp->asFunObj();
         fun = GET_FUNCTION_PRIVATE(cx, obj);
 
         /* Clear frame flags since this is not a constructor call. */
@@ -2426,12 +2426,12 @@ BEGIN_CASE(JSOP_APPLY)
         }
 
         if (fun->flags & JSFUN_FAST_NATIVE) {
-            DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, &lval);
+            DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, vp);
 
             JS_ASSERT(fun->u.n.extra == 0);
             JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveValue::test(fun, vp[1]));
             JSBool ok = ((FastNative) fun->u.n.native)(cx, argc, vp);
-            DTrace::exitJSFun(cx, NULL, fun, *vp, &lval);
+            DTrace::exitJSFun(cx, NULL, fun, *vp, vp);
             regs.sp = vp + 1;
             if (!ok)
                 goto error;
@@ -2506,7 +2506,7 @@ BEGIN_CASE(JSOP_CALLNAME)
         JSOp op2 = js_GetOpcode(cx, script, regs.pc + JSOP_NAME_LENGTH);
         if (op2 == JSOP_TYPEOF) {
             PUSH_UNDEFINED();
-            jsint len = JSOP_NAME_LENGTH;
+            len = JSOP_NAME_LENGTH;
             DO_NEXT_OP(len);
         }
         atomNotDefined = atom;
@@ -2639,7 +2639,6 @@ BEGIN_CASE(JSOP_TRUE)
 END_CASE(JSOP_TRUE)
 
 {
-    jsint len;
 BEGIN_CASE(JSOP_TABLESWITCH)
 {
     jsbytecode *pc2 = regs.pc;
@@ -2678,7 +2677,6 @@ END_VARLEN_CASE
 }
 
 {
-    jsint len;
 BEGIN_CASE(JSOP_TABLESWITCHX)
 {
     jsbytecode *pc2 = regs.pc;
@@ -2717,7 +2715,6 @@ END_VARLEN_CASE
 }
 
 {
-    jsint len;
 BEGIN_CASE(JSOP_LOOKUPSWITCHX)
 {
     jsint off;
@@ -3654,7 +3651,7 @@ BEGIN_CASE(JSOP_SETTER)
         JS_ASSERT(js_CodeSpec[op2].ndefs == js_CodeSpec[op2].nuses + 1);
         regs.sp[-1] = rval;
     }
-    jsint len = js_CodeSpec[op2].length;
+    len = js_CodeSpec[op2].length;
     DO_NEXT_OP(len);
 }
 
@@ -3664,7 +3661,7 @@ END_CASE(JSOP_HOLE)
 
 BEGIN_CASE(JSOP_NEWARRAY)
 {
-    jsint len = GET_UINT16(regs.pc);
+    len = GET_UINT16(regs.pc);
     cx->assertValidStackDepth(len);
     JSObject *obj = js_NewArrayObject(cx, len, regs.sp - len, JS_TRUE);
     if (!obj)
@@ -3952,7 +3949,7 @@ BEGIN_CASE(JSOP_GOSUB)
     PUSH_BOOLEAN(false);
     jsint i = (regs.pc - script->main) + JSOP_GOSUB_LENGTH;
     PUSH_INT32(i);
-    jsint len = GET_JUMP_OFFSET(regs.pc);
+    len = GET_JUMP_OFFSET(regs.pc);
 END_VARLEN_CASE
 }
 
@@ -3960,7 +3957,7 @@ END_VARLEN_CASE
 BEGIN_CASE(JSOP_GOSUBX)
     PUSH_BOOLEAN(false);
     jsint i = (regs.pc - script->main) + JSOP_GOSUBX_LENGTH;
-    jsint len = GET_JUMPX_OFFSET(regs.pc);
+    len = GET_JUMPX_OFFSET(regs.pc);
     PUSH_INT32(i);
 END_VARLEN_CASE
 }
@@ -3984,7 +3981,7 @@ BEGIN_CASE(JSOP_RETSUB)
         goto error;
     }
     JS_ASSERT(rval.isInt32());
-    jsint len = rval.asInt32();
+    len = rval.asInt32();
     regs.pc = script->main;
 END_VARLEN_CASE
 }
@@ -4034,7 +4031,7 @@ BEGIN_CASE(JSOP_IFPRIMTOP)
      */
     JS_ASSERT(regs.sp > fp->base());
     if (regs.sp[-1].isPrimitive()) {
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         BRANCH(len);
     }
 END_CASE(JSOP_IFPRIMTOP)
@@ -4269,7 +4266,7 @@ BEGIN_CASE(JSOP_FILTER)
      * state.
      */
     PUSH_HOLE();
-    jsint len = GET_JUMP_OFFSET(regs.pc);
+    len = GET_JUMP_OFFSET(regs.pc);
     JS_ASSERT(len > 0);
 END_VARLEN_CASE
 }
@@ -4292,7 +4289,7 @@ BEGIN_CASE(JSOP_ENDFILTER)
         if (!js_EnterWith(cx, -2))
             goto error;
         regs.sp--;
-        jsint len = GET_JUMP_OFFSET(regs.pc);
+        len = GET_JUMP_OFFSET(regs.pc);
         JS_ASSERT(len < 0);
         BRANCH(len);
     }
