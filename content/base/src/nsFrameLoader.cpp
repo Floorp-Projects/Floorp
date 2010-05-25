@@ -1840,9 +1840,11 @@ nsFrameLoader::EnsureMessageManager()
     return rv;
   }
   if (mMessageManager) {
+#ifdef MOZ_IPC
     if (ShouldUseRemoteProcess()) {
       mMessageManager->SetCallbackData(mRemoteWidgetCreated ? this : nsnull);
     }
+#endif
     return NS_OK;
   }
 
