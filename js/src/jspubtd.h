@@ -184,7 +184,11 @@ typedef struct JSONParser        JSONParser;
  * should be hidden behind simple inline methods like v.isNullOrUndefined().
  */
 
-typedef enum JSValueMask16 {
+typedef enum JSValueMask16 
+#if defined(_MSC_VER) && _MSC_VER >= 1400
+: unsigned short
+#endif
+{
     JSVAL_MASK16_NULL      = (uint16)0x0001,
     JSVAL_MASK16_UNDEFINED = (uint16)0x0002,
     JSVAL_MASK16_INT32     = (uint16)0x0004,
@@ -200,7 +204,11 @@ typedef enum JSValueMask16 {
     JSVAL_MASK16_GCTHING   = JSVAL_MASK16_OBJECT | JSVAL_MASK16_STRING,
 
     JSVAL_NANBOX_PATTERN   = ((uint16)0xFFFF)
-} __attribute__((packed)) JSValueMask16;
+}
+#if defined(__GNUC__)
+__attribute__((packed))
+#endif
+JSValueMask16;
 
 #define JSVAL_MASK32_CLEAR       ((uint32)0xFFFF0000)
 
