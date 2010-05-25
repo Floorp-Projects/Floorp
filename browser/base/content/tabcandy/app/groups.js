@@ -656,6 +656,22 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   },
     
   // ----------  
+  setNewTabButtonBounds: function(box, immediately) {
+    var css = {
+      left: box.left,
+      top: box.top,
+      width: box.width,
+      height: box.height
+    };
+    
+    this.$ntb.stop(true, true);    
+    if(!immediately)
+      this.$ntb.animate(css, 320, "tabcandyBounce");
+    else
+      this.$ntb.css(css);
+  },
+  
+  // ----------  
   shouldStack: function(count) {
     if(count <= 1)
       return false;
@@ -722,19 +738,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
           var box = rects[rects.length - 1];
           box.left -= this.bounds.left;
           box.top -= this.bounds.top;
-          var css = {
-            left: box.left,
-            top: box.top,
-            width: box.width,
-            height: box.height
-          };
-          
-          this.$ntb.stop(true, true);    
-          if(animate)
-            this.$ntb.animate(css, 320, "tabcandyBounce");
-          else {
-            this.$ntb.css(css);
-          }
+          this.setNewTabButtonBounds(box, !animate);
         }
         
         this._isStacked = false;
@@ -805,19 +809,7 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       box.left += box.width + newTabsPad;
       box.left -= this.bounds.left;
       box.top -= this.bounds.top;
-      var css = {
-        left: box.left,
-        top: box.top,
-        width: box.width,
-        height: box.height
-      };
-      
-      this.$ntb.stop(true, true);    
-      if(animate)
-        this.$ntb.animate(css);
-      else {
-        this.$ntb.css(css);
-      }
+      this.setNewTabButtonBounds(box, !animate);
     }
 
     self._isStacked = true;
