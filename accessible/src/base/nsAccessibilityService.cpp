@@ -268,8 +268,7 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent *aTarget)
 
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aTarget));
 
-  nsCOMPtr<nsIAccessible> targetAcc;
-  GetAccessibleFor(targetNode, getter_AddRefs(targetAcc));
+  nsAccessible *targetAcc = GetAccessible(targetNode);
 
   // Getting the targetAcc above will have ensured accessible doc creation.
   // XXX Bug 561683
@@ -281,10 +280,8 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent *aTarget)
   // If the jump target is not accessible then fire an event for nearest
   // accessible in parent chain.
   if (!targetAcc) {
-        accessibleDoc->GetAccessibleInParentChain(targetNode, PR_TRUE,
-                                                  getter_AddRefs(targetAcc));
-        nsCOMPtr<nsIAccessNode> accNode = do_QueryInterface(targetAcc);
-        accNode->GetDOMNode(getter_AddRefs(targetNode));
+    targetAcc = GetContainerAccessible(targetNode, PR_TRUE);
+    targetNode = targetAcc->GetDOMNode();
   }
 
   NS_ASSERTION(targetNode,
@@ -1242,6 +1239,52 @@ nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode,
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(aWeakShell));
   nsRefPtr<nsAccessible> accessible = GetAccessible(aNode, presShell,
                                                     aWeakShell);
+  return accessible;
+}
+
+nsAccessible *
+nsAccessibilityService::GetContainerAccessible(nsIDOMNode *aNode,
+                                               PRBool aCanCreate)
+{
+  if (!aNode)
+    return nsnull;
+
+  nsCOMPtr<nsINode> currNode(do_QueryInterface(aNode));
+  nsIDocument *document = currNode->GetCurrentDoc();
+  if (!document)
+    return nsnull;
+
+  nsIPresShell *presShell = document->GetPrimaryShell();
+  if (!presShell)
+    return nsnull;
+
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+
+  nsAccessible *accessible = nsnull;
+  while (!accessible && (currNode = currNode->GetNodeParent())) {
+    nsCOMPtr<nsIDOMNode> currDOMNode(do_QueryInterface(currNode));
+
+    nsCOMPtr<nsIDOMNode> relevantDOMNode;
+    GetAccService()->GetRelevantContentNodeFor(currDOMNode,
+                                               getter_AddRefs(relevantDOMNode));
+    if (relevantDOMNode) {
+      currNode = do_QueryInterface(relevantDOMNode);
+      currDOMNode.swap(relevantDOMNode);
+    }
+
+    if (aCanCreate) {
+      accessible =
+        GetAccService()->GetAccessibleInWeakShell(currDOMNode, weakShell);
+
+    } else {
+      // Only return cached accessible, don't create anything.
+      nsRefPtr<nsAccessible> cachedAcc =
+        do_QueryObject(GetCachedAccessNode(currDOMNode, weakShell));
+
+      accessible = cachedAcc;
+    }
+  }
+
   return accessible;
 }
 
