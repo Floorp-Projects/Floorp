@@ -1156,7 +1156,7 @@ ValueToBoxedWord(JSContext *cx, const Value &v, jsboxedword *wp)
         *wp = JSBOXEDWORD_VOID;
         return true;
     }
-    double *dp = js_NewWeaklyRootedDoubleAtom(cx, v.asDouble());
+    double *dp = js_NewWeaklyRootedDoubleAtom(cx, v.asNumber());
     if (!dp)
         return false;
     *wp = DOUBLE_TO_JSBOXEDWORD(dp);
