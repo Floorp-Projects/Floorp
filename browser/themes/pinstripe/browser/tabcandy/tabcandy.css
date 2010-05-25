@@ -255,8 +255,6 @@ body {
 	display: none;
 }
 
-
-
 .newTabAnimatee{
   position: absolute;
   background-color: white;
@@ -350,4 +348,29 @@ input.defaultName:hover{
   z-index: 999999 !important;
   -moz-border-radius: 0 !important;
 	-moz-box-shadow: none !important;
+}
+
+/* Feedback
+----------------------------------*/
+
+#feedback{
+  position: absolute;
+  bottom: 0px;
+  right: 150px;
+  width: 100px;
+  height: 20px;
+  line-height: 20px;
+  z-index: 99 !important;
+  background-color: blue;
+  text-align: center;
+  color: white;
+  background-color: #9E9E9E;
+  -moz-box-shadow: 0px 0px 4px rgba(0,0,0,.3), inset 0px 1px 0px rgba(255,255,255,.4);  
+}
+
+#feedback:hover{
+  cursor: pointer;
+  background-color: #A5A5A5;  
+  -moz-box-shadow: 0px 0px 5px rgba(0,0,0,.6), inset 0px 1px 0px rgba(255,255,255,.4);
+  
 }
