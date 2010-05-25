@@ -125,10 +125,10 @@ class ResultsSink:
     #      key   is (result, expect, random)
     #      value is (tinderbox label, dev test category)
     LABELS = {
-        (TestResult.CRASH, False, False): ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
-        (TestResult.CRASH, False, True):  ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
-        (TestResult.CRASH, True,  False): ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
-        (TestResult.CRASH, True,  True):  ('TEST-UNEXPECTED-FAIL',               'REGRESSIONS'),
+        (TestResult.CRASH, False, False): ('TEST-UNEXPECTED-CRASH',               'REGRESSIONS'),
+        (TestResult.CRASH, False, True):  ('TEST-UNEXPECTED-CRASH',               'REGRESSIONS'),
+        (TestResult.CRASH, True,  False): ('TEST-UNEXPECTED-CRASH',               'REGRESSIONS'),
+        (TestResult.CRASH, True,  True):  ('TEST-UNEXPECTED-CRASH',               'REGRESSIONS'),
 
         (TestResult.FAIL,  False, False): ('TEST-KNOWN-FAIL',                    ''),
         (TestResult.FAIL,  False, True):  ('TEST-KNOWN-FAIL (EXPECTED RANDOM)',  ''),

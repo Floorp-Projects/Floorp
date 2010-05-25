@@ -194,9 +194,15 @@ typedef JSUint64 JSValueMaskType;
 #endif
 
 #ifdef __GNUC__
-# define VALUE_ALIGNMENT __attribute__((aligned (8)))
+# define VALUE_ALIGNMENT        __attribute__((aligned (8)))
+# define ASSERT_DOUBLE_ALIGN()  JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0)
+#elif defined(_MSC_VER)
+// Structs can be aligned with MSVC, but not if they are used as parameters,
+// so we just don't try to align.
+# define VALUE_ALIGNMENT
+# define ASSERT_DOUBLE_ALIGN()
 #else
-# error "TODO: do something for MSVC"
+# error "TODO: do something for compiler"
 #endif
 
 #define JSVAL_NULL_MASK        0x00
@@ -1015,7 +1021,7 @@ JS_END_EXTERN_C
 namespace js {
 
 class Value;
-class Class;
+struct Class;
 
 typedef JSBool
 (* Native)(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval);
