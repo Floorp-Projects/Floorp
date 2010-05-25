@@ -3233,7 +3233,7 @@ class Value
 
     bool isTrue() const {
         return data.s.mask32 == JSVAL_MASK32_BOOLEAN &&
-               data.s.payload.boo == JSVAL_TRUE;
+               data.s.payload.boo == JSBool(true);
     }
 
     bool isFalse() const {
