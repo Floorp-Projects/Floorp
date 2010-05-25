@@ -2711,7 +2711,7 @@ nsAccessible::GetLinkOffset(PRInt32 *aStartOffset, PRInt32 *aEndOffset)
   nsAccessible *parent = GetParent();
   NS_ENSURE_STATE(parent);
 
-  PRInt32 characterCount = 0;
+  PRUint32 characterCount = 0;
 
   PRInt32 childCount = parent->GetChildCount();
   for (PRInt32 childIdx = 0; childIdx < childCount; childIdx++) {
@@ -2723,10 +2723,7 @@ nsAccessible::GetLinkOffset(PRInt32 *aStartOffset, PRInt32 *aEndOffset)
       return NS_OK;
     }
 
-    if (nsAccUtils::IsText(sibling))
-      characterCount += nsAccUtils::TextLength(sibling);
-    else
-      ++ characterCount;
+    characterCount += nsAccUtils::TextLength(sibling);
   }
 
   return NS_ERROR_FAILURE;

@@ -1500,9 +1500,9 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
 }
 
 already_AddRefed<nsAccEvent>
-nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessible,
+nsDocAccessible::CreateTextChangeEventForNode(nsAccessible *aContainerAccessible,
                                               nsIDOMNode *aChangeNode,
-                                              nsIAccessible *aAccessibleForChangeNode,
+                                              nsAccessible *aAccessibleForChangeNode,
                                               PRBool aIsInserting,
                                               PRBool aIsAsynch,
                                               EIsFromUserInput aIsFromUserInput)
@@ -1929,8 +1929,8 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
 
   // Update last change state information
-  nsCOMPtr<nsIAccessNode> childAccessNode = GetCachedAccessNode(childNode);
-  nsCOMPtr<nsIAccessible> childAccessible = do_QueryInterface(childAccessNode);
+  nsRefPtr<nsAccessible> childAccessible =
+    do_QueryObject(GetCachedAccessNode(childNode));
 
 #ifdef DEBUG_A11Y
   nsAutoString localName;
