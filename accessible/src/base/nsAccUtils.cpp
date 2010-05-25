@@ -820,15 +820,13 @@ nsAccUtils::IsTextInterfaceSupportCorrect(nsAccessible *aAccessible)
 }
 #endif
 
-PRInt32
-nsAccUtils::TextLength(nsIAccessible *aAccessible)
+PRUint32
+nsAccUtils::TextLength(nsAccessible *aAccessible)
 {
   if (!IsText(aAccessible))
     return 1;
-  
-  nsRefPtr<nsAccessNode> accNode = do_QueryObject(aAccessible);
-  
-  nsIFrame *frame = accNode->GetFrame();
+
+  nsIFrame *frame = aAccessible->GetFrame();
   if (frame && frame->GetType() == nsAccessibilityAtoms::textFrame) {
     // Ensure that correct text length is calculated (with non-rendered
     // whitespace chars not counted).
@@ -837,18 +835,21 @@ nsAccUtils::TextLength(nsIAccessible *aAccessible)
       PRUint32 length;
       nsresult rv = nsHyperTextAccessible::
         ContentToRenderedOffset(frame, content->TextLength(), &length);
-      return NS_SUCCEEDED(rv) ? static_cast<PRInt32>(length) : -1;
+      if (NS_FAILED(rv)) {
+        NS_NOTREACHED("Failed to get rendered offset!");
+        return 0;
+      }
+
+      return length;
     }
   }
-  
+
   // For list bullets (or anything other accessible which would compute its own
   // text. They don't have their own frame.
   // XXX In the future, list bullets may have frame and anon content, so 
   // we should be able to remove this at that point
-  nsRefPtr<nsAccessible> acc(do_QueryObject(aAccessible));
-
   nsAutoString text;
-  acc->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text
+  aAccessible->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text
   return text.Length();
 }
 

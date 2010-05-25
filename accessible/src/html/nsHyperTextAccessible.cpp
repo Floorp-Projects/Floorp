@@ -623,7 +623,7 @@ nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode *aNode,
       // Make sure the offset lands on the embedded object character in order to indicate
       // the true inner offset is inside the subtree for that link
       addTextOffset =
-        (nsAccUtils::TextLength(descendantAcc) == static_cast<PRInt32>(addTextOffset)) ? 1 : 0;
+        (nsAccUtils::TextLength(descendantAcc) == addTextOffset) ? 1 : 0;
     }
 
     descendantAcc = parentAcc;
@@ -642,9 +642,7 @@ nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode *aNode,
     if (childAcc == childAccAtOffset)
       break;
 
-    PRInt32 textLength = nsAccUtils::TextLength(childAcc);
-    NS_ENSURE_TRUE(textLength >= 0, nsnull);
-    *aHyperTextOffset += textLength;
+    *aHyperTextOffset += nsAccUtils::TextLength(childAcc);
   }
 
   if (childIdx < childCount) {
@@ -653,7 +651,7 @@ nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode *aNode,
                  "These should be equal whenever we exit loop and childAcc != nsnull");
 
     if (childIdx < childCount - 1 ||
-        static_cast<PRInt32>(addTextOffset) < nsAccUtils::TextLength(childAccAtOffset)) {
+        addTextOffset < nsAccUtils::TextLength(childAccAtOffset)) {
       // If not at end of last text node, we will return the accessible we were in
       return childAccAtOffset;
     }
@@ -1334,9 +1332,8 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
       }
       frame = frame->GetNextContinuation();
     }
-    PRInt32 textLength = nsAccUtils::TextLength(childAcc);
-    NS_ENSURE_TRUE(textLength >= 0, NS_ERROR_FAILURE);
-    offset += textLength;
+
+    offset += nsAccUtils::TextLength(childAcc);
   }
 
   return NS_OK; // Not found, will return -1
@@ -1402,9 +1399,7 @@ nsHyperTextAccessible::GetLinkIndex(PRInt32 aCharIndex, PRInt32 *aLinkIndex)
     PRUint32 role = nsAccUtils::Role(childAcc);
     if (role == nsIAccessibleRole::ROLE_TEXT_LEAF ||
         role == nsIAccessibleRole::ROLE_STATICTEXT) {
-      PRInt32 textLength = nsAccUtils::TextLength(childAcc);
-      NS_ENSURE_TRUE(textLength >= 0, NS_ERROR_FAILURE);
-      characterCount += textLength;
+      characterCount += nsAccUtils::TextLength(childAcc);
     }
     else {
       if (characterCount ++ == aCharIndex) {
