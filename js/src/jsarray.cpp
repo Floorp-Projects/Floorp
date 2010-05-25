@@ -1644,7 +1644,7 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
             return false;
         }
     }
-    JS_ASSERT(obj == &vp->asObject());
+    vp->setObject(*obj);
     return true;
 }
 
