@@ -277,8 +277,8 @@ nsIFrame*
 nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
                                      nsAString *aText, nsIFrame **aEndFrame,
                                      nsIntRect *aBoundsRect,
-                                     nsIAccessible **aStartAcc,
-                                     nsIAccessible **aEndAcc)
+                                     nsAccessible **aStartAcc,
+                                     nsAccessible **aEndAcc)
 {
   if (aStartOffset == nsIAccessibleText::TEXT_OFFSET_END_OF_TEXT) {
     GetCharacterCount(&aStartOffset);
@@ -718,7 +718,7 @@ nsHyperTextAccessible::HypertextOffsetsToDOMRange(PRInt32 aStartHTOffset,
     }
   }
 
-  nsCOMPtr<nsIAccessible> startAcc, endAcc;
+  nsRefPtr<nsAccessible> startAcc, endAcc;
   PRInt32 startOffset = aStartHTOffset, endOffset = aEndHTOffset;
   nsIFrame *startFrame = nsnull, *endFrame = nsnull;
 
@@ -958,7 +958,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   PRInt32 endOffset = startOffset;
 
   // Convert offsets to frame-relative
-  nsCOMPtr<nsIAccessible> startAcc;
+  nsRefPtr<nsAccessible> startAcc;
   nsIFrame *startFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
                                        nsnull, getter_AddRefs(startAcc));
 
@@ -1004,7 +1004,7 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
     // Careful, startOffset and endOffset are passed by reference to GetPosAndText() and changed
     // For BOUNDARY_LINE_END, make sure we start of this line
     startOffset = endOffset = finalStartOffset + (aBoundaryType == BOUNDARY_LINE_END);
-    nsCOMPtr<nsIAccessible> endAcc;
+    nsRefPtr<nsAccessible> endAcc;
     nsIFrame *endFrame = GetPosAndText(startOffset, endOffset, nsnull, nsnull,
                                        nsnull, getter_AddRefs(endAcc));
     if (nsAccUtils::Role(endAcc) == nsIAccessibleRole::ROLE_STATICTEXT) {
@@ -1142,7 +1142,7 @@ nsHyperTextAccessible::GetTextAttributes(PRBool aIncludeDefAttrs,
 
   // Get the frame and accessible at the given offset.
   PRInt32 startOffset = aOffset, endOffset = aOffset;
-  nsCOMPtr<nsIAccessible> startAcc;
+  nsRefPtr<nsAccessible> startAcc;
   nsIFrame *startFrame = GetPosAndText(startOffset, endOffset,
                                        nsnull, nsnull, nsnull,
                                        getter_AddRefs(startAcc), nsnull);
