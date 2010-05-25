@@ -44,12 +44,12 @@
 #include "jsapi.h"
 #include "jspubtd.h"
 
+using mozilla::void_t;
+
 namespace mozilla {
 namespace jsipc {
 
 using namespace IPC;
-
-struct void_t {};
 
 template <typename P>
 struct CPOWSingleton
@@ -78,7 +78,6 @@ namespace IPC {
 
 using namespace mozilla::jsipc;
 
-template <> struct ParamTraits<void_t> : public CPOWSingleton<void_t> {};
 template <> struct ParamTraits<JSType> : public CPOWConvertible<JSType, int> {};
 
 }
