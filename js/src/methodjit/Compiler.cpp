@@ -203,10 +203,6 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRACE)
           END_CASE(JSOP_TRACE)
 
-          BEGIN_CASE(JSOP_POP)
-            frame.pop();
-          END_CASE(JSOP_POP)
-
           BEGIN_CASE(JSOP_ZERO)
             frame.push(JSVAL_ZERO);
           END_CASE(JSOP_ZERO)
@@ -215,9 +211,21 @@ mjit::Compiler::generateMethod()
             frame.push(JSVAL_ONE);
           END_CASE(JSOP_ONE)
 
+          BEGIN_CASE(JSOP_POP)
+            frame.pop();
+          END_CASE(JSOP_POP)
+
+          BEGIN_CASE(JSOP_UINT16)
+            frame.push(Value(Int32Tag((int32_t) GET_UINT16(PC))));
+          END_CASE(JSOP_UINT16)
+
           BEGIN_CASE(JSOP_BINDNAME)
             jsop_bindname(fullAtomIndex(PC));
           END_CASE(JSOP_BINDNAME)
+
+          BEGIN_CASE(JSOP_UINT24)
+            frame.push(Value(Int32Tag((int32_t) GET_UINT24(PC))));
+          END_CASE(JSOP_UINT24)
 
           BEGIN_CASE(JSOP_STOP)
             /* Safe point! */
@@ -227,6 +235,14 @@ mjit::Compiler::generateMethod()
             emitReturn();
             goto done;
           END_CASE(JSOP_STOP)
+
+          BEGIN_CASE(JSOP_INT8)
+            frame.push(Value(Int32Tag(GET_INT8(PC))));
+          END_CASE(JSOP_INT8)
+
+          BEGIN_CASE(JSOP_INT32)
+            frame.push(Value(Int32Tag(GET_INT32(PC))));
+          END_CASE(JSOP_INT32)
 
           BEGIN_CASE(JSOP_GETGLOBAL)
             jsop_getglobal(GET_SLOTNO(PC));
