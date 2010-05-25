@@ -344,7 +344,7 @@ JSVAL_TO_PRIVATE(jsval v)
 #define JSFUN_GETTER_TEST(f)       ((f) & JSFUN_GETTER)
 #define JSFUN_SETTER_TEST(f)       ((f) & JSFUN_SETTER)
 #define JSFUN_BOUND_METHOD_TEST(f) ((f) & JSFUN_BOUND_METHOD)
-#define JSFUN_HEAVYWEIGHT_TEST(f)  ((f) & JSFUN_HEAVYWEIGHT)
+#define JSFUN_HEAVYWEIGHT_TEST(f)  (!!((f) & JSFUN_HEAVYWEIGHT))
 
 #define JSFUN_GSFLAG2ATTR(f)       JSFUN_GSFLAGS(f)
 
@@ -3236,13 +3236,13 @@ class Value
         data.i32 = i;
     }
 
-    int32_t &asInt32Ref() {
+    int32 &asInt32Ref() {
         JS_ASSERT(isInt32());
         return data.i32;
     }
 
     void setDouble(double d) {
-        JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         mask = JSVAL_DOUBLE_MASK;
         data.dbl = d;
     }
@@ -3260,7 +3260,7 @@ class Value
     }
 
     double &asDoubleRef() {
-        JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         JS_ASSERT(isDouble());
         return data.dbl;
     }
@@ -3347,12 +3347,12 @@ class Value
     }
 
     double asDouble() const {
-        JS_ASSERT(size_t(&data.dbl) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         return data.dbl;
     }
 
     bool isNumber() const {
-        return bool(mask & JSVAL_NUMBER_MASK);
+        return !!(mask & JSVAL_NUMBER_MASK);
     }
 
     double asNumber() const {
@@ -3388,7 +3388,7 @@ class Value
     }
 
     bool isObject() const {
-        return bool(mask & JSVAL_OBJECT_MASK);
+        return !!(mask & JSVAL_OBJECT_MASK);
     }
 
     bool isPrimitive() const {
@@ -3410,7 +3410,7 @@ class Value
     }
 
     bool isGCThing() const {
-        return bool(mask & JSVAL_GCTHING_MASK);
+        return !!(mask & JSVAL_GCTHING_MASK);
     }
 
     void *asGCThing() const {
@@ -3432,7 +3432,7 @@ class Value
 
     bool asBoolean() const {
         JS_ASSERT(isBoolean());
-        return data.boo;
+        return !!data.boo;
     }
 
     bool isMagic() const {
@@ -3523,7 +3523,7 @@ static inline const Value & Valueify(const jsval &v) { return (const Value &)v; 
 inline bool
 equalTypeAndPayload(const Value &l, const Value &r)
 {
-    return EQUAL_TYPE_AND_PAYLOAD(Jsvalify(&l), Jsvalify(&r));
+    return !!EQUAL_TYPE_AND_PAYLOAD(Jsvalify(&l), Jsvalify(&r));
 }
 
 /* Convenience inlines. */

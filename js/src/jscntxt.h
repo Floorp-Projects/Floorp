@@ -359,7 +359,7 @@ class CallStack
     bool inContext() const {
         JS_ASSERT(!!cx == !!initialFrame);
         JS_ASSERT_IF(!initialFrame, !suspendedFrame && !suspendedRegsAndSaved.flag());
-        return cx;
+        return !!cx;
     }
 
     bool isActive() const {
@@ -370,7 +370,7 @@ class CallStack
     bool isSuspended() const {
         JS_ASSERT_IF(!suspendedFrame, !suspendedRegsAndSaved.flag());
         JS_ASSERT_IF(suspendedFrame, inContext());
-        return suspendedFrame;
+        return !!suspendedFrame;
     }
 
     /* Substate of suspended, queryable in any state. */
@@ -1820,7 +1820,7 @@ struct JSContext
     /* Return whether this context has an active callstack. */
     bool hasActiveCallStack() const {
         assertCallStacksInSync();
-        return fp;
+        return !!fp;
     }
 
     /* Assuming there is an active callstack, return it. */
