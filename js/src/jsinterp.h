@@ -199,10 +199,10 @@ struct JSStackFrame
 
     inline JSObject *getThisObject(JSContext *cx);
 
-    bool isGenerator() const { return flags & JSFRAME_GENERATOR; }
+    bool isGenerator() const { return !!(flags & JSFRAME_GENERATOR); }
     bool isFloatingGenerator() const {
         JS_ASSERT_IF(flags & JSFRAME_FLOATING_GENERATOR, isGenerator());
-        return flags & JSFRAME_FLOATING_GENERATOR;
+        return !!(flags & JSFRAME_FLOATING_GENERATOR);
     }
 };
 
