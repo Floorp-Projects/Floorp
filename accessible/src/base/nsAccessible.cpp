@@ -859,13 +859,11 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY, PRBool aDeepestChild,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAccessible> accessible;
-  GetAccService()->GetAccessibleFor(relevantNode, getter_AddRefs(accessible));
+  nsAccessible *accessible = GetAccService()->GetAccessible(relevantNode);
   if (!accessible) {
     // No accessible for the node with the point, so find the first
     // accessible in the DOM parent chain
-    accDocument->GetAccessibleInParentChain(relevantNode, PR_TRUE,
-                                            getter_AddRefs(accessible));
+    accessible = GetAccService()->GetContainerAccessible(relevantNode, PR_TRUE);
     if (!accessible) {
       NS_IF_ADDREF(*aChild = fallbackAnswer);
       return NS_OK;
@@ -2825,27 +2823,26 @@ nsAccessible::GetParent()
   if (mParent)
     return mParent;
 
+#ifdef DEBUG
   nsDocAccessible *docAccessible = GetDocAccessible();
   NS_ASSERTION(docAccessible, "No document accessible for valid accessible!");
+#endif
 
-  if (!docAccessible)
+  nsAccessible *parent = GetAccService()->GetContainerAccessible(mDOMNode,
+                                                                 PR_TRUE);
+  NS_ASSERTION(parent, "No accessible parent for valid accessible!");
+  if (!parent)
     return nsnull;
 
-  nsCOMPtr<nsIAccessible> parent;
-  docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE,
-                                            getter_AddRefs(parent));
-
-  nsRefPtr<nsAccessible> parentAcc = do_QueryObject(parent);
-
 #ifdef DEBUG
-  NS_ASSERTION(!parentAcc->IsDefunct(), "Defunct parent!");
+  NS_ASSERTION(!parent->IsDefunct(), "Defunct parent!");
 
-  parentAcc->EnsureChildren();
+  parent->EnsureChildren();
   if (parent != mParent)
     NS_WARNING("Bad accessible tree!");
 #endif
 
-  return parentAcc;
+  return parent;
 }
 
 nsAccessible*

@@ -1455,9 +1455,9 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
   if (!node)
     return;
 
-  nsCOMPtr<nsIAccessible> accessible;
-  nsresult rv = GetAccessibleInParentChain(node, PR_TRUE, getter_AddRefs(accessible));
-  if (NS_FAILED(rv) || !accessible)
+  nsAccessible *accessible = GetAccService()->GetContainerAccessible(node,
+                                                                     PR_TRUE);
+  if (!accessible)
     return;
 
   nsRefPtr<nsHyperTextAccessible> textAccessible(do_QueryObject(accessible));
@@ -1479,8 +1479,8 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
     if (!frame)
       return;
 
-    rv = textAccessible->ContentToRenderedOffset(frame, start,
-                                                 &renderedStartOffset);
+    nsresult rv = textAccessible->ContentToRenderedOffset(frame, start,
+                                                          &renderedStartOffset);
     if (NS_FAILED(rv))
       return;
 
@@ -1606,8 +1606,9 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsAccEvent *aEvent)
 void
 nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
 {  
-  nsCOMPtr<nsIAccessible> accessible;
-  aEvent->GetAccessible(getter_AddRefs(accessible));
+  nsCOMPtr<nsIAccessible> acc;
+  aEvent->GetAccessible(getter_AddRefs(acc));
+  nsRefPtr<nsAccessible> accessible(do_QueryObject(acc));
 
   nsCOMPtr<nsIDOMNode> domNode;
   aEvent->GetDOMNode(getter_AddRefs(domNode));
@@ -1645,22 +1646,20 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
 
   if (eventType == nsIAccessibleEvent::EVENT_SHOW) {
 
-    nsCOMPtr<nsIAccessible> containerAccessible;
+    nsAccessible *containerAccessible = nsnull;
     if (accessible)
-      accessible->GetParent(getter_AddRefs(containerAccessible));
+      containerAccessible = accessible->GetParent();
 
     if (!containerAccessible) {
-      GetAccessibleInParentChain(domNode, PR_TRUE,
-                                 getter_AddRefs(containerAccessible));
+      containerAccessible = GetAccService()->GetContainerAccessible(domNode,
+                                                                    PR_TRUE);
       if (!containerAccessible)
         containerAccessible = this;
     }
 
     if (isAsync) {
       // For asynch show, delayed invalidatation of parent's children
-      nsRefPtr<nsAccessible> containerAcc = do_QueryObject(containerAccessible);
-      if (containerAcc)
-        containerAcc->InvalidateChildren();
+      containerAccessible->InvalidateChildren();
 
       // Some show events in the subtree may have been removed to 
       // avoid firing redundant events. But, we still need to make sure any
@@ -1700,7 +1699,7 @@ nsDocAccessible::ProcessPendingEvent(nsAccEvent *aEvent)
         docAcc->FireDocLoadEvents(nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE);
     }
     else if (eventType == nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED) {
-      nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryInterface(accessible);
+      nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryObject(accessible);
       PRInt32 caretOffset;
       if (accessibleText && NS_SUCCEEDED(accessibleText->GetCaretOffset(&caretOffset))) {
 #ifdef DEBUG_A11Y
@@ -1915,14 +1914,13 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       // Changes during page load, but not caused by user input
       // Just invalidate accessible hierarchy and return,
       // otherwise the page load time slows down way too much
-      nsCOMPtr<nsIAccessible> containerAccessible;
-      GetAccessibleInParentChain(childNode, PR_FALSE, getter_AddRefs(containerAccessible));
+      nsAccessible *containerAccessible =
+        GetAccService()->GetContainerAccessible(childNode, PR_FALSE);
       if (!containerAccessible) {
         containerAccessible = this;
       }
 
-      nsRefPtr<nsAccessible> containerAcc = do_QueryObject(containerAccessible);
-      containerAcc->InvalidateChildren();
+      containerAccessible->InvalidateChildren();
       return;
     }     
     // else: user input, so we must fall through and for full handling,
@@ -1952,8 +1950,8 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     printf("[Type change %s %s]\n", NS_ConvertUTF16toUTF8(localName).get(), hasAccessible);
 #endif
 
-  nsCOMPtr<nsIAccessible> containerAccessible;
-  GetAccessibleInParentChain(childNode, PR_TRUE, getter_AddRefs(containerAccessible));
+  nsAccessible *containerAccessible =
+    GetAccService()->GetContainerAccessible(childNode, PR_TRUE);
   if (!containerAccessible) {
     containerAccessible = this;
   }
@@ -2013,10 +2011,7 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     if (!isAsynch) {
       // DOM already updated with new objects -- invalidate parent's children now
       // For asynch we must wait until layout updates before we invalidate the children
-      nsRefPtr<nsAccessible> containerAcc = do_QueryObject(containerAccessible);
-      if (containerAcc)
-        containerAcc->InvalidateChildren();
-
+      containerAccessible->InvalidateChildren();
     }
 
     // Fire EVENT_SHOW, EVENT_MENUPOPUP_START for newly visible content.
@@ -2081,45 +2076,6 @@ nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   NS_ENSURE_TRUE(reorderEvent,);
 
   FireDelayedAccessibleEvent(reorderEvent);
-}
-
-// nsIAccessibleDocument method
-NS_IMETHODIMP
-nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
-                                            PRBool aCanCreate,
-                                            nsIAccessible **aAccessible)
-{
-  // Find accessible in parent chain of DOM nodes, or return null
-  *aAccessible = nsnull;
-  nsCOMPtr<nsIDOMNode> currentNode(aNode), parentNode;
-  nsCOMPtr<nsIAccessNode> accessNode;
-
-  do {
-    currentNode->GetParentNode(getter_AddRefs(parentNode));
-    currentNode = parentNode;
-    if (!currentNode) {
-      NS_ADDREF_THIS();
-      *aAccessible = this;
-      break;
-    }
-
-    nsCOMPtr<nsIDOMNode> relevantNode;
-    if (NS_SUCCEEDED(GetAccService()->GetRelevantContentNodeFor(currentNode, getter_AddRefs(relevantNode))) && relevantNode) {
-      currentNode = relevantNode;
-    }
-    if (aCanCreate) {
-      nsAccessible *accessible =
-        GetAccService()->GetAccessibleInWeakShell(currentNode, mWeakShell);
-      NS_IF_ADDREF(*aAccessible = accessible);
-    }
-    else { // Only return cached accessibles, don't create anything
-      nsAccessNode* accessNode = GetCachedAccessNode(currentNode);
-      if (accessNode)
-        CallQueryInterface(accessNode, aAccessible);
-    }
-  } while (!*aAccessible);
-
-  return NS_OK;
 }
 
 nsresult
