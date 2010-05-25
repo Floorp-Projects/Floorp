@@ -105,6 +105,9 @@ class FrameState
         sp[0].type.setRegister(reg, false);
         sp[0].data.setMemory();
         sp[0].copies = 0;
+        regstate[reg].tracked = true;
+        regstate[reg].index = uint32(sp - base);
+        regstate[reg].part = RegState::Part_Type;
         sp++;
     }
 
@@ -160,6 +163,8 @@ class FrameState
         }
         return Address(FpReg, 0);
     }
+
+    void assertValidRegisterState();
 
   private:
     void evictSomething();
