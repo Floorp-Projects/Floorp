@@ -4018,7 +4018,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 
               case JSOP_DOUBLE:
                 GET_DOUBLE_FROM_BYTECODE(jp->script, pc, 0, atom);
-                val = ATOM_TO_JSVAL(atom);
+                val = DOUBLE_TO_JSVAL(*ATOM_TO_DOUBLE(atom));
                 LOCAL_ASSERT(JSVAL_IS_DOUBLE(val));
                 todo = SprintDoubleValue(&ss->sprinter, val, &saveop);
                 break;
@@ -4304,7 +4304,9 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     pc2 += INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
-                    table[k].key = ATOM_TO_JSVAL(atom);
+                    table[k].key = ATOM_IS_DOUBLE(atom) 
+                                 ? DOUBLE_TO_JSVAL(*ATOM_TO_DOUBLE(atom))
+                                 : ATOM_TO_JSVAL(atom);
                     table[k].offset = off2;
                 }
 
