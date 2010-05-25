@@ -4293,29 +4293,33 @@ if test "$MOZ_MEMORY"; then
   dnl The generic feature tests that determine how to compute ncpus are long and
   dnl complicated.  Therefore, simply define special cpp variables for the
   dnl platforms we have special knowledge of.
-  case "${target_os}" in
-  darwin*)
+  case "${target}" in
+  *-darwin*)
     AC_DEFINE(MOZ_MEMORY_DARWIN)
     ;;
-  *freebsd*)
+  *-*freebsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  *linux*)
+  *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
     ;;
-  netbsd*)
+  *-netbsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  solaris*)
+  *-solaris*)
     AC_DEFINE(MOZ_MEMORY_SOLARIS)
     ;;
-  msvc*|mks*|cygwin*|mingw*)
+  *-msvc*|*-mks*|*-cygwin*|*-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     # the interesting bits will get passed down in MOZ_MEMORY_LDFLAGS
     ;;
-  *wince|*winmo)
+  *-*wince|*-*winmo)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
+    ;;
+  *-android*)
+    AC_DEFINE(MOZ_MEMORY_LINUX)
+    AC_DEFINE(MOZ_MEMORY_ANDROID)
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -4335,8 +4339,8 @@ MOZ_ARG_ENABLE_BOOL(wrap-malloc,
 
 if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
-    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
-    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) -o $@'
+    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup"
+    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) -o $@'
     fi
 fi
 

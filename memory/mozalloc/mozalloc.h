@@ -203,10 +203,18 @@ MOZALLOC_EXPORT void* moz_valloc(size_t size)
 #  define MOZALLOC_EXPORT_NEW
 #endif
 
+#ifdef ANDROID
+// Android doesn't fully support exceptions, so its <new> header
+// has operators that don't specify throw() at all.
+#define MOZALLOC_THROW_IF_HAS_EXCEPTIONS /**/
+#else
+#define MOZALLOC_THROW_IF_HAS_EXCEPTIONS throw()
+#endif
+
 #ifdef MOZ_CPP_EXCEPTIONS
 #define MOZALLOC_THROW_BAD_ALLOC throw(std::bad_alloc)
 #else
-#define MOZALLOC_THROW_BAD_ALLOC throw()
+#define MOZALLOC_THROW_BAD_ALLOC MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 #endif
 
 MOZALLOC_EXPORT_NEW MOZALLOC_INLINE
@@ -216,7 +224,7 @@ void* operator new(size_t size) MOZALLOC_THROW_BAD_ALLOC
 }
 
 MOZALLOC_EXPORT_NEW MOZALLOC_INLINE
-void* operator new(size_t size, const std::nothrow_t&) throw()
+void* operator new(size_t size, const std::nothrow_t&) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     return moz_malloc(size);
 }
@@ -228,31 +236,31 @@ void* operator new[](size_t size) MOZALLOC_THROW_BAD_ALLOC
 }
 
 MOZALLOC_EXPORT_NEW MOZALLOC_INLINE
-void* operator new[](size_t size, const std::nothrow_t&) throw()
+void* operator new[](size_t size, const std::nothrow_t&) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     return moz_malloc(size);
 }
 
 MOZALLOC_EXPORT_NEW MOZALLOC_INLINE
-void operator delete(void* ptr) throw()
+void operator delete(void* ptr) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     return moz_free(ptr);
 }
 
 MOZALLOC_EXPORT_NEW MOZALLOC_INLINE
-void operator delete(void* ptr, const std::nothrow_t&) throw()
+void operator delete(void* ptr, const std::nothrow_t&) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     return moz_free(ptr);
 }
 
 MOZALLOC_EXPORT_NEW MOZALLOC_INLINE
-void operator delete[](void* ptr) throw()
+void operator delete[](void* ptr) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     return moz_free(ptr);
 }
 
 MOZALLOC_EXPORT_NEW MOZALLOC_INLINE
-void operator delete[](void* ptr, const std::nothrow_t&) throw()
+void operator delete[](void* ptr, const std::nothrow_t&) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     return moz_free(ptr);
 }
@@ -284,25 +292,25 @@ struct MOZALLOC_EXPORT fallible_t { };
 } /* namespace mozilla */
 
 MOZALLOC_INLINE
-void* operator new(size_t size, const mozilla::fallible_t&) throw()
+void* operator new(size_t size, const mozilla::fallible_t&) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     return moz_malloc(size);
 }
 
 MOZALLOC_INLINE
-void* operator new[](size_t size, const mozilla::fallible_t&) throw()
+void* operator new[](size_t size, const mozilla::fallible_t&) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     return moz_malloc(size);
 }
 
 MOZALLOC_INLINE
-void operator delete(void* ptr, const mozilla::fallible_t&) throw()
+void operator delete(void* ptr, const mozilla::fallible_t&) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     moz_free(ptr);
 }
 
 MOZALLOC_INLINE
-void operator delete[](void* ptr, const mozilla::fallible_t&) throw()
+void operator delete[](void* ptr, const mozilla::fallible_t&) MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 {
     moz_free(ptr);
 }
