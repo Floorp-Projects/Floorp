@@ -904,10 +904,11 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
       // This page is from a bitstream which we haven't encountered yet.
       // It's probably from a new "link" in a "chained" ogg. Don't
       // bother even trying to find a duration...
+      endTime = -1;
       break;
     }
 
-    PRInt64 t = codecState ? codecState->Time(granulepos) : -1;
+    PRInt64 t = codecState->Time(granulepos);
     if (t != -1) {
       endTime = t;
     }
