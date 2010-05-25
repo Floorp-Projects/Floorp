@@ -849,7 +849,7 @@ END_CASE(JSOP_BITAND)
             (Value::isObjectMask(lmask) && Value::isObjectMask(rmask))) {     \
             if (lmask == JSVAL_MASK32_STRING) {                               \
                 JSString *l = lref.asString(), *r = rref.asString();          \
-                cond = js_EqualStrings(l, r) OP true;                         \
+                cond = js_EqualStrings(l, r) OP JSVAL_TRUE;                   \
             } else if (Value::isObjectMask(lmask)) {                          \
                 JSObject *l = &lref.asObject(), *r = &rref.asObject();        \
                 EXTENDED_EQUALITY_OP(OP)                                      \
