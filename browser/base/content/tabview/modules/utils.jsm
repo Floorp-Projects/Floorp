@@ -76,7 +76,8 @@ window.Rect = function(a, top, width, height) {
 
 // ----------
 window.isRect = function(r) {
-  return (Utils.isNumber(r.left)
+  return (r 
+      && Utils.isNumber(r.left)
       && Utils.isNumber(r.top)
       && Utils.isNumber(r.width)
       && Utils.isNumber(r.height));
