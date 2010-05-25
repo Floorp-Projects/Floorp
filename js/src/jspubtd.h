@@ -242,6 +242,9 @@ typedef union jsval_payload
     JSWhyMagic     why;
 } jsval_data;
 
+// TODO: re-fix for MSVC
+#define ASSERT_DOUBLE_ALIGN() JS_ASSERT(size_t(this) % sizeof(double) == 0)
+
 #if !defined(IS_LITTLE_ENDIAN)
 # error "Need to fix up jsval_layout"
 #endif
@@ -1031,7 +1034,7 @@ JS_END_EXTERN_C
 namespace js {
 
 class Value;
-class Class;
+struct Class;
 
 typedef JSBool
 (* Native)(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *rval);
