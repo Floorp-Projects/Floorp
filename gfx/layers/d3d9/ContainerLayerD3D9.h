@@ -45,10 +45,11 @@ namespace mozilla {
 namespace layers {
 
 class ContainerLayerD3D9 : public ContainerLayer, 
-                          public LayerD3D9
+                           public LayerD3D9
 {
 public:
   ContainerLayerD3D9(LayerManagerD3D9 *aManager);
+  ~ContainerLayerD3D9();
 
   const nsIntRect &GetVisibleRect();
 

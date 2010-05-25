@@ -47,6 +47,18 @@ ContainerLayerD3D9::ContainerLayerD3D9(LayerManagerD3D9 *aManager)
   mImplData = static_cast<LayerD3D9*>(this);
 }
 
+ContainerLayerD3D9::~ContainerLayerD3D9()
+{
+  while (mFirstChild) {
+    Layer* next = mFirstChild->GetNextSibling();
+    mFirstChild->SetNextSibling(nsnull);
+    mFirstChild->SetPrevSibling(nsnull);
+    mFirstChild->SetParent(nsnull);
+    NS_RELEASE(mFirstChild);
+    mFirstChild = next;
+  }
+}
+
 const nsIntRect&
 ContainerLayerD3D9::GetVisibleRect()
 {
@@ -62,21 +74,28 @@ ContainerLayerD3D9::SetVisibleRegion(const nsIntRegion &aRegion)
 void
 ContainerLayerD3D9::InsertAfter(Layer* aChild, Layer* aAfter)
 {
-  LayerD3D9 *newChild = static_cast<LayerD3D9*>(aChild->ImplData());
   aChild->SetParent(this);
   if (!aAfter) {
-    LayerD3D9 *oldFirstChild = GetFirstChildD3D9();
-    mFirstChild = newChild->GetLayer();
-    newChild->SetNextSibling(oldFirstChild);
+    Layer *oldFirstChild = GetFirstChild();
+    mFirstChild = aChild;
+    aChild->SetNextSibling(oldFirstChild);
+    aChild->SetPrevSibling(nsnull);
+    if (oldFirstChild) {
+      oldFirstChild->SetPrevSibling(aChild);
+    }
     NS_ADDREF(aChild);
     return;
   }
-  for (LayerD3D9 *child = GetFirstChildD3D9(); 
-    child; child = child->GetNextSibling()) {
-    if (aAfter == child->GetLayer()) {
-      LayerD3D9 *oldNextSibling = child->GetNextSibling();
-      child->SetNextSibling(newChild);
-      child->GetNextSibling()->SetNextSibling(oldNextSibling);
+  for (Layer *child = GetFirstChild(); 
+       child; child = child->GetNextSibling()) {
+    if (aAfter == child) {
+      Layer *oldNextSibling = child->GetNextSibling();
+      child->SetNextSibling(aChild);
+      aChild->SetNextSibling(oldNextSibling);
+      if (oldNextSibling) {
+        oldNextSibling->SetPrevSibling(aChild);
+      }
+      aChild->SetPrevSibling(child);
       NS_ADDREF(aChild);
       return;
     }
@@ -88,19 +107,26 @@ void
 ContainerLayerD3D9::RemoveChild(Layer *aChild)
 {
   if (GetFirstChild() == aChild) {
-    mFirstChild = GetFirstChildD3D9()->GetNextSibling() ?
-      GetFirstChildD3D9()->GetNextSibling()->GetLayer() : nsnull;
+    mFirstChild = GetFirstChild()->GetNextSibling() ?
+      GetFirstChild()->GetNextSibling() : nsnull;
+    if (mFirstChild) {
+      mFirstChild->SetPrevSibling(nsnull);
+    }
     NS_RELEASE(aChild);
     return;
   }
-  LayerD3D9 *lastChild = NULL;
-  for (LayerD3D9 *child = GetFirstChildD3D9(); child; 
-    child = child->GetNextSibling()) {
-    if (child->GetLayer() == aChild) {
+  Layer *lastChild = nsnull;
+  for (Layer *child = GetFirstChild(); child; 
+       child = child->GetNextSibling()) {
+    if (child == aChild) {
       // We're sure this is not our first child. So lastChild != NULL.
       lastChild->SetNextSibling(child->GetNextSibling());
-      child->SetNextSibling(NULL);
-      child->GetLayer()->SetParent(NULL);
+      if (child->GetNextSibling()) {
+        child->GetNextSibling()->SetPrevSibling(lastChild);
+      }
+      child->SetNextSibling(nsnull);
+      child->SetPrevSibling(nsnull);
+      child->SetParent(nsnull);
       NS_RELEASE(aChild);
       return;
     }
@@ -210,7 +236,10 @@ ContainerLayerD3D9::RenderLayer()
     device()->SetScissorRect(&r);
 
     layerToRender->RenderLayer();
-    layerToRender = layerToRender->GetNextSibling();
+    Layer *nextSibling = layerToRender->GetLayer()->GetNextSibling();
+    layerToRender = nextSibling ? static_cast<LayerD3D9*>(nextSibling->
+                                                          ImplData())
+                                : nsnull;
   }
 
   if (useIntermediate) {
