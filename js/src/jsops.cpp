@@ -2223,12 +2223,10 @@ END_CASE(JSOP_ENUMELEM)
     JSObject *obj;
     uintN flags;
     uintN argc;
-    Value lval;
     Value *vp;
 
 BEGIN_CASE(JSOP_NEW)
 {
-    Value lval;
     /* Get immediate argc and find the constructor function. */
     argc = GET_ARGC(regs.pc);
     vp = regs.sp - (2 + argc);
@@ -2282,9 +2280,8 @@ BEGIN_CASE(JSOP_APPLY)
     argc = GET_ARGC(regs.pc);
     vp = regs.sp - (argc + 2);
 
-    lval = *vp;
-    if (lval.isFunObj()) {
-        obj = &lval.asFunObj();
+    if (vp->isFunObj()) {
+        obj = &vp->asFunObj();
         fun = GET_FUNCTION_PRIVATE(cx, obj);
 
         /* Clear frame flags since this is not a constructor call. */
@@ -2414,12 +2411,12 @@ BEGIN_CASE(JSOP_APPLY)
         }
 
         if (fun->flags & JSFUN_FAST_NATIVE) {
-            DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, &lval);
+            DTrace::enterJSFun(cx, NULL, fun, fp, argc, vp + 2, vp);
 
             JS_ASSERT(fun->u.n.extra == 0);
             JS_ASSERT(vp[1].isObjectOrNull() || PrimitiveValue::test(fun, vp[1]));
             JSBool ok = ((FastNative) fun->u.n.native)(cx, argc, vp);
-            DTrace::exitJSFun(cx, NULL, fun, *vp, &lval);
+            DTrace::exitJSFun(cx, NULL, fun, *vp, vp);
             regs.sp = vp + 1;
             if (!ok)
                 goto error;
