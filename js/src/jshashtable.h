@@ -320,7 +320,7 @@ class HashTable : AllocPolicy
         return true;
     }
 
-    bool initialized() const { return table; }
+    bool initialized() const { return !!table; }
 
     ~HashTable()
     {
