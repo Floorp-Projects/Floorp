@@ -187,6 +187,15 @@ public:
                                          nsIWeakReference *aPresShell);
 
   /**
+   * Return the first accessible parent of a DOM node.
+   *
+   * @param aDOMNode    [in] the DOM node to get an accessible for
+   * @param aCanCreate  [in] specifies if accessible can be created if it didn't
+   *                     exist
+   */
+  nsAccessible *GetContainerAccessible(nsIDOMNode *aNode, PRBool aCanCreate);
+
+  /**
    * Return an access node for the DOM node in the given presentation shell if
    * the access node already exists, otherwise null.
    *
