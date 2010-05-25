@@ -565,15 +565,30 @@ UIClass.prototype = {
       
       // ___ Storage
       var currentWindow = Utils.getCurrentWindow();
+      
       var data = Storage.readUIData(currentWindow);
       this.storageSanity(data);
        
       var groupsData = Storage.readGroupsData(currentWindow);
+      var firstTime = !groupsData || $.isEmptyObject(groupsData);
       var groupData = Storage.readGroupData(currentWindow);
       Groups.reconstitute(groupsData, groupData);
       
       TabItems.init();
-      TabItems.reconstitute();
+      
+      if(firstTime) {
+        var items = TabItems.getItems();
+        $.each(items, function(index, item) {
+          if(item.parent)
+            item.parent.remove(item);
+        });
+            
+        var box = Items.getPageBounds();
+        box.inset(10, 10);
+        var options = {padding: 10};
+        Items.arrange(items, box, options);
+      } else
+        TabItems.reconstitute();
       
       // ___ resizing
       if(data.pageBounds) {
