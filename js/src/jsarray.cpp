@@ -1727,6 +1727,7 @@ js_MergeSort(void *src, size_t nel, size_t elsize,
     size_t i, j, lo, hi, run;
     int cmp_result;
 
+    JS_ASSERT_IF(JS_SORTING_VALUES, elsize == sizeof(Value));
     bool isValue = elemType == JS_SORTING_VALUES;
 
     /* Avoid memcpy overhead for word-sized and word-aligned elements. */
@@ -2056,7 +2057,7 @@ array_sort(JSContext *cx, uintN argc, Value *vp)
             }
             if (!js_MergeSort(vec, size_t(newlen), elemsize,
                               sort_compare_strings, cx, mergesort_tmp,
-                              JS_SORTING_VALUES)) {
+                              JS_SORTING_GENERIC)) {
                 return false;
             }
             if (!allStrings) {
