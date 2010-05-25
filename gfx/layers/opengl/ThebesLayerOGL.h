@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-/
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -59,15 +59,12 @@ public:
   /** ThebesLayer implementation */
   void InvalidateRegion(const nsIntRegion& aRegion);
 
-  gfxContext *BeginDrawing(nsIntRegion* aRegionToDraw);
-
-  void EndDrawing();
-
   /** LayerOGL implementation */
   LayerType GetType();
   Layer* GetLayer();
   virtual PRBool IsEmpty();
-  virtual void RenderLayer(int aPreviousFrameBuffer);
+  virtual void RenderLayer(int aPreviousFrameBuffer,
+                           const nsIntPoint& aOffset);
 
   /** ThebesLayerOGL */
   const nsIntRect &GetVisibleRect();
@@ -83,22 +80,11 @@ private:
    * Currently invalidated rectangular area.
    */
   nsIntRect mInvalidatedRect;
-  /**
-   * Destination surface used for this layer's drawing operation. This is 
-   * created on BeginDrawing() and should be removed on EndDrawing().
-   */
-  nsRefPtr<gfxASurface> mDestinationSurface;
-
-  /**
-   * We hold the reference to the context.
-   */
-  nsRefPtr<gfxContext> mContext;
 
   /**
    * OpenGL Texture
    */
   GLuint mTexture;
-
 };
 
 } /* layers */

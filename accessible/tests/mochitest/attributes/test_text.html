@@ -162,24 +162,36 @@
       testTextAttrs(ID, 34, attrs, defAttrs, 33, 46);
 
       //////////////////////////////////////////////////////////////////////////
-      // area5
+      // area5: "Green!*!RedNormal"
       ID = "area5";
       defAttrs = buildDefaultTextAttrs(ID, "12pt");
       testDefaultTextAttrs(ID, defAttrs);
 
+      // Green
       tempElem = getNode(ID).firstChild.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 5);
 
+      // br
       attrs = {};
-      testTextAttrs(ID, 7, attrs, defAttrs, 5, 8);
+      testTextAttrs(ID, 5, attrs, defAttrs, 5, 6);
 
+      // img, embedded accessible, no attributes
+      attrs = {};
+      testTextAttrs(ID, 6, attrs, {}, 6, 7);
+
+      // br
+      attrs = {};
+      testTextAttrs(ID, 7, attrs, defAttrs, 7, 8);
+
+      // Red
       tempElem = tempElem.nextSibling.nextSibling.nextSibling.nextSibling;
       gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 9, attrs, defAttrs, 8, 11);
 
+      // Normal
       attrs = {};
       testTextAttrs(ID, 11, attrs, defAttrs, 11, 18);
 
@@ -420,6 +432,32 @@
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 0);
 
       //////////////////////////////////////////////////////////////////////////
+      // area15, embed char tests, "*plain*plain**bold*bold*"
+      ID = "area15";
+      defAttrs = buildDefaultTextAttrs(ID, "12pt");
+
+      // p
+      testTextAttrs(ID, 0, { }, { }, 0, 1);
+      // plain
+      testTextAttrs(ID, 1, { }, defAttrs, 1, 6);
+      // p
+      testTextAttrs(ID, 6, { }, { }, 6, 7);
+      // plain
+      testTextAttrs(ID, 7, { }, defAttrs, 7, 12);
+      // p and img
+      testTextAttrs(ID, 12, { }, { }, 12, 14);
+      // bold
+      attrs = { "font-weight": kBoldFontWeight };
+      testTextAttrs(ID, 14, attrs, defAttrs, 14, 18);
+      // p
+      testTextAttrs(ID, 18, { }, { }, 18, 19);
+      // bold
+      attrs = { "font-weight": kBoldFontWeight };
+      testTextAttrs(ID, 19, attrs, defAttrs, 19, 23);
+      // p
+      testTextAttrs(ID, 23, { }, { }, 23, 24);
+
+      //////////////////////////////////////////////////////////////////////////
       // test spelling text attributes
       testSpellTextAttrs(); // Will call SimpleTest.finish();
     }
@@ -459,9 +497,10 @@
       Green again
     </span>
   </p>
+  <!-- Green!*!RedNormal-->
   <p id="area5">
     <span style="color: green">Green</span>
-    <img src="moz.png" alt="image"/>
+    <img src="../moz.png" alt="image"/>
     <span style="color: red">Red</span>Normal
   </p>
   <p id="area6">
@@ -515,5 +554,8 @@
   <p id="area12">hello</p>
   <p id="area13"></p>
   <input id="area14">
+
+  <!-- *plain*plain**bold*bold*-->
+  <div id="area15"><p>embed</p>plain<p>embed</p>plain<p>embed</p><img src="../moz.png" alt="image"/><b>bold</b><p>embed</p><b>bold</b><p>embed</p></div>
 </body>
 </html>

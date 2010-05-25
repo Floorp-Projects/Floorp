@@ -20,6 +20,8 @@
  *
  * Contributor(s):
  *   Bas Schouten <bschouten@mozilla.org>
+ *   Frederic Plourde <frederic.plourde@collabora.co.uk>
+ *   Vladimir Vukicevic <vladimir@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,125 +59,16 @@ typedef int GLsizei;
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 #include "gfxContext.h"
+#include "gfx3DMatrix.h"
 #include "nsIWidget.h"
 #include "GLContext.h"
+
+#include "LayerManagerOGLProgram.h"
 
 namespace mozilla {
 namespace layers {
 
 class LayerOGL;
-
-struct GLvec2
-{
-  GLfloat mX;
-  GLfloat mY;
-};
-
-/**
- * Helper class for Layer Programs.
- */
-class LayerProgram
-{
-public:
-  LayerProgram();
-  virtual ~LayerProgram();
-
-  PRBool Initialize(GLuint aVertexShader,
-                    GLuint aFragmentShader,
-                    mozilla::gl::GLContext *aContext);
-
-  virtual void UpdateLocations();
-
-  void Activate();
-
-  void SetMatrixUniform(GLint aLocation, const GLfloat *aValue);
-  void SetInt(GLint aLocation, GLint aValue);
-  void SetColor(GLint aLocation, const gfxRGBA& aColor);
-
-  void SetMatrixProj(GLfloat *aValue)
-  {
-    SetMatrixUniform(mMatrixProjLocation, aValue);
-  }
-
-  void SetLayerQuadTransform(GLfloat *aValue)
-  {
-    SetMatrixUniform(mLayerQuadTransformLocation, aValue);
-  }
-
-  void SetLayerTransform(const GLfloat *aValue)
-  {
-    SetMatrixUniform(mLayerTransformLocation, aValue);
-  }
-
-  void SetLayerOpacity(GLfloat aValue);
-
-  void PushRenderTargetOffset(GLfloat aValueX, GLfloat aValueY);
-  void PopRenderTargetOffset();
-
-  void Apply();
-
-protected:
-  mozilla::gl::GLContext *mGLContext;
-
-  GLuint mProgram;
-  GLint mMatrixProjLocation;
-  GLint mLayerQuadTransformLocation;
-  GLint mLayerTransformLocation;
-  GLint mRenderTargetOffsetLocation;
-  GLint mLayerOpacityLocation;
-
-  nsTArray<GLvec2> mRenderTargetOffsetStack;
-};
-
-class RGBLayerProgram : public LayerProgram
-{
-public:
-  void UpdateLocations();
-
-  void SetLayerTexture(GLint aValue)
-  {
-    SetInt(mLayerTextureLocation, aValue);
-  }
-protected:
-  GLint mLayerTextureLocation;
-};
-
-class ColorLayerProgram : public LayerProgram
-{
-public:
-  void UpdateLocations();
-
-  void SetLayerColor(const gfxRGBA& aColor)
-  {
-    SetColor(mRenderColorLocation, aColor);
-  }
-
-protected:
-  GLint mRenderColorLocation;
-};
-
-class YCbCrLayerProgram : public LayerProgram
-{
-public:
-  void UpdateLocations();
-
-  void SetYTexture(GLint aValue)
-  {
-    SetInt(mYTextureLocation, aValue);
-  }
-  void SetCbTexture(GLint aValue)
-  {
-    SetInt(mCbTextureLocation, aValue);
-  }
-  void SetCrTexture(GLint aValue)
-  {
-    SetInt(mCrTextureLocation, aValue);
-  }
-protected:
-  GLint mYTextureLocation;
-  GLint mCbTextureLocation;
-  GLint mCrTextureLocation;
-};
 
 /**
  * This is the LayerManager used for OpenGL 2.1. For now this will render on
@@ -185,7 +78,7 @@ class THEBES_API LayerManagerOGL : public LayerManager {
 public:
   LayerManagerOGL(nsIWidget *aWidget);
   virtual ~LayerManagerOGL();
-
+  
   /**
    * Initializes the layer manager, this is when the layer manager will
    * actually access the device and attempt to create the swap chain used
@@ -216,7 +109,8 @@ public:
 
   void EndConstruction();
 
-  void EndTransaction();
+  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+                              void* aCallbackData);
 
   void SetRoot(Layer* aLayer);
   
@@ -237,17 +131,133 @@ public:
   /**
    * Helper methods.
    */
-  void SetClippingEnabled(PRBool aEnabled);
-
   void MakeCurrent();
 
-  RGBLayerProgram *GetRGBLayerProgram() { return mRGBLayerProgram; }
-  ColorLayerProgram *GetColorLayerProgram() { return mColorLayerProgram; }
-  YCbCrLayerProgram *GetYCbCrLayerProgram() { return mYCbCrLayerProgram; }
+  ColorTextureLayerProgram *GetRGBALayerProgram() {
+    return static_cast<ColorTextureLayerProgram*>(mPrograms[RGBALayerProgramType]);
+  }
+  ColorTextureLayerProgram *GetBGRALayerProgram() {
+    return static_cast<ColorTextureLayerProgram*>(mPrograms[BGRALayerProgramType]);
+  }
+  ColorTextureLayerProgram *GetRGBXLayerProgram() {
+    return static_cast<ColorTextureLayerProgram*>(mPrograms[RGBXLayerProgramType]);
+  }
+  ColorTextureLayerProgram *GetBGRXLayerProgram() {
+    return static_cast<ColorTextureLayerProgram*>(mPrograms[BGRXLayerProgramType]);
+  }
+  ColorTextureLayerProgram *GetRGBARectLayerProgram() {
+    return static_cast<ColorTextureLayerProgram*>(mPrograms[RGBARectLayerProgramType]);
+  }
+  SolidColorLayerProgram *GetColorLayerProgram() {
+    return static_cast<SolidColorLayerProgram*>(mPrograms[ColorLayerProgramType]);
+  }
+  YCbCrTextureLayerProgram *GetYCbCrLayerProgram() {
+    return static_cast<YCbCrTextureLayerProgram*>(mPrograms[YCbCrLayerProgramType]);
+  }
+  CopyProgram *GetCopy2DProgram() {
+    return static_cast<CopyProgram*>(mPrograms[Copy2DProgramType]);
+  }
+  CopyProgram *GetCopy2DRectProgram() {
+    return static_cast<CopyProgram*>(mPrograms[Copy2DRectProgramType]);
+  }
+
+  ColorTextureLayerProgram *GetFBOLayerProgram() {
+    if (mFBOTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB)
+      return static_cast<ColorTextureLayerProgram*>(mPrograms[RGBARectLayerProgramType]);
+    return static_cast<ColorTextureLayerProgram*>(mPrograms[RGBALayerProgramType]);
+  }
 
   typedef mozilla::gl::GLContext GLContext;
 
   GLContext *gl() const { return mGLContext; }
+
+  /*
+   * Helper functions for our layers
+   */
+  void CallThebesLayerDrawCallback(ThebesLayer* aLayer,
+                                   gfxContext* aContext,
+                                   const nsIntRegion& aRegionToDraw)
+  {
+    NS_ASSERTION(mThebesLayerCallback,
+                 "CallThebesLayerDrawCallback without callback!");
+    mThebesLayerCallback(aLayer, aContext,
+                         aRegionToDraw, mThebesLayerCallbackData);
+  }
+
+  GLenum FBOTextureTarget() { return mFBOTextureTarget; }
+
+  /* Create a FBO backed by a texture; will leave the FBO
+   * bound.  Note that the texture target type will be
+   * of the type returned by FBOTextureTarget; different
+   * shaders are required to sample from the different
+   * texture types.
+   */
+  void CreateFBOWithTexture(int aWidth, int aHeight,
+                            GLuint *aFBO, GLuint *aTexture);
+
+  GLuint QuadVBO() { return mQuadVBO; }
+  GLintptr QuadVBOVertexOffset() { return 0; }
+  GLintptr QuadVBOTexCoordOffset() { return sizeof(float)*4*2; }
+  GLintptr QuadVBOFlippedTexCoordOffset() { return sizeof(float)*8*2; }
+
+  void BindQuadVBO() {
+    mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mQuadVBO);
+  }
+
+  void QuadVBOVerticesAttrib(GLuint aAttribIndex) {
+    mGLContext->fVertexAttribPointer(aAttribIndex, 2,
+                                     LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                     (GLvoid*) QuadVBOVertexOffset());
+  }
+
+  void QuadVBOTexCoordsAttrib(GLuint aAttribIndex) {
+    mGLContext->fVertexAttribPointer(aAttribIndex, 2,
+                                     LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                     (GLvoid*) QuadVBOTexCoordOffset());
+  }
+
+  void QuadVBOFlippedTexCoordsAttrib(GLuint aAttribIndex) {
+    mGLContext->fVertexAttribPointer(aAttribIndex, 2,
+                                     LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0,
+                                     (GLvoid*) QuadVBOFlippedTexCoordOffset());
+  }
+
+  // Super common
+
+  void BindAndDrawQuad(GLuint aVertAttribIndex,
+                       GLuint aTexCoordAttribIndex,
+                       bool aFlipped = false)
+  {
+    BindQuadVBO();
+    QuadVBOVerticesAttrib(aVertAttribIndex);
+
+    if (aTexCoordAttribIndex != -1) {
+      if (aFlipped)
+        QuadVBOFlippedTexCoordsAttrib(aTexCoordAttribIndex);
+      else
+        QuadVBOTexCoordsAttrib(aTexCoordAttribIndex);
+
+      mGLContext->fEnableVertexAttribArray(aTexCoordAttribIndex);
+    }
+
+    mGLContext->fEnableVertexAttribArray(aVertAttribIndex);
+
+    mGLContext->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
+
+    mGLContext->fDisableVertexAttribArray(aVertAttribIndex);
+
+    if (aTexCoordAttribIndex != -1) {
+      mGLContext->fDisableVertexAttribArray(aTexCoordAttribIndex);
+    }
+  }
+
+  void BindAndDrawQuad(LayerProgram *aProg,
+                       bool aFlipped = false)
+  {
+    BindAndDrawQuad(aProg->AttribLocation(LayerProgram::VertexAttrib),
+                    aProg->AttribLocation(LayerProgram::TexCoordAttrib),
+                    aFlipped);
+  }
 
 private:
   /** Widget associated with this layer manager */
@@ -259,55 +269,80 @@ private:
 
   nsRefPtr<GLContext> mGLContext;
 
-  /** Backbuffer */
-  GLuint mBackBuffer;
-  /** Backbuffer size */
-  nsIntSize mBackBufferSize;
-  /** Framebuffer */
-  GLuint mFrameBuffer;
-  /** RGB Layer Program */
-  RGBLayerProgram *mRGBLayerProgram;
-  /** Color Layer Program */
-  ColorLayerProgram *mColorLayerProgram;
-  /** YUV Layer Program */
-  YCbCrLayerProgram *mYCbCrLayerProgram;
-  /** Vertex Shader */
-  GLuint mVertexShader;
-  /** RGB fragment shader */
-  GLuint mRGBShader;
-  /** Solid color shader */
-  GLuint mColorShader;
-  /** YUV fragment shader */
-  GLuint mYUVShader;
+  enum ProgramType {
+    RGBALayerProgramType,
+    BGRALayerProgramType,
+    RGBXLayerProgramType,
+    BGRXLayerProgramType,
+    RGBARectLayerProgramType,
+    ColorLayerProgramType,
+    YCbCrLayerProgramType,
+    Copy2DProgramType,
+    Copy2DRectProgramType,
+    NumProgramTypes
+  };
+
+  static ProgramType sLayerProgramTypes[];
+
   /** Current root layer. */
   LayerOGL *mRootLayer;
-  /** Vertex buffer */
-  GLuint mVBO;
+
+  /** Backbuffer */
+  GLuint mBackBufferFBO;
+  GLuint mBackBufferTexture;
+  nsIntSize mBackBufferSize;
+
+  /** Shader Programs */
+  nsTArray<LayerManagerOGLProgram*> mPrograms;
+
   /** Texture target to use for FBOs */
   GLenum mFBOTextureTarget;
 
-  /**
-   * Region we're clipping our current drawing to.
-   */
+  /** VBO that has some basics in it for a textured quad,
+   *  including vertex coords and texcoords for both
+   *  flipped and unflipped textures */
+  GLuint mQuadVBO;
+
+  /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
+
+  /** Misc */
+  PRPackedBool mHasBGRA;
+
   /**
    * Render the current layer tree to the active target.
    */
   void Render();
   /**
-   * Setup the pipeline.
+   * Setup the viewport and projection matrix for rendering
+   * to a window of the given dimensions.
    */
-  void SetupPipeline();
+  void SetupPipeline(int aWidth, int aHeight);
   /**
-   * Setup the backbuffer.
-   *
-   * \return PR_TRUE if setup was succesful
+   * Setup a backbuffer of the given dimensions.
    */
-  PRBool SetupBackBuffer();
+  void SetupBackBuffer(int aWidth, int aHeight);
   /**
    * Copies the content of our backbuffer to the set transaction target.
    */
   void CopyToTarget();
+
+  /**
+   * Updates all layer programs with a new projection matrix.
+   *
+   * XXX we need a way to be able to delay setting this until
+   * the program is actually used.  Maybe a DelayedSetUniform
+   * on Program, that will delay the set until the next Activate?
+   *
+   * XXX this is only called once per frame, so it's not awful.
+   * If we have any more similar updates, then we should delay.
+   */
+  void SetLayerProgramProjectionMatrix(const gfx3DMatrix& aMatrix);
+
+  /* Thebes layer callbacks; valid at the end of a transaciton,
+   * while rendering */
+  DrawThebesLayerCallback mThebesLayerCallback;
+  void *mThebesLayerCallbackData;
 };
 
 /**
@@ -316,7 +351,9 @@ private:
 class LayerOGL
 {
 public:
-  LayerOGL(LayerManagerOGL *aManager);
+  LayerOGL(LayerManagerOGL *aManager)
+    : mOGLManager(aManager), mNextSibling(nsnull)
+  { }
 
   enum LayerType {
     TYPE_THEBES,
@@ -328,15 +365,22 @@ public:
   
   virtual LayerType GetType() = 0;
 
-  LayerOGL *GetNextSibling();
-  virtual LayerOGL *GetFirstChildOGL() { return nsnull; }
+  LayerOGL *GetNextSibling() {
+    return mNextSibling;
+  }
 
-  void SetNextSibling(LayerOGL *aParent);
-  void SetFirstChild(LayerOGL *aParent);
+  void SetNextSibling(LayerOGL *aSibling) {
+    mNextSibling = aSibling;
+  }
+
+  virtual LayerOGL *GetFirstChildOGL() {
+    return nsnull;
+  }
 
   virtual Layer* GetLayer() = 0;
 
-  virtual void RenderLayer(int aPreviousFrameBuffer) = 0;
+  virtual void RenderLayer(int aPreviousFrameBuffer,
+                           const nsIntPoint& aOffset) = 0;
 
   typedef mozilla::gl::GLContext GLContext;
 
@@ -345,6 +389,16 @@ protected:
   LayerManagerOGL *mOGLManager;
   LayerOGL *mNextSibling;
 };
+
+#ifdef DEBUG
+#define DEBUG_GL_ERROR_CHECK(cx) do {           \
+    /*fprintf (stderr, "trace %s %d\n", __FILE__, __LINE__);*/          \
+    GLenum err = (cx)->fGetError();             \
+    if (err) { fprintf (stderr, "GL ERROR: 0x%04x at %s:%d\n", err, __FILE__, __LINE__); } \
+  } while (0)
+#else
+#define DEBUG_GL_ERROR_CHECK(cx) do { } while (0)
+#endif
 
 } /* layers */
 } /* mozilla */

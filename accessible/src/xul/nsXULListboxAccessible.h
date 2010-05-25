@@ -137,7 +137,7 @@ protected:
   /**
    * Return listbox accessible for the listitem.
    */
-  already_AddRefed<nsAccessible> GetListAccessible();
+  nsAccessible *GetListAccessible();
 
 private:
   PRBool mIsCheckbox;

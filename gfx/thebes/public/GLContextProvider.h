@@ -62,7 +62,7 @@ public:
         };
 
         ContextFormat(const StandardContextFormat cf) {
-            memset(this, sizeof(ContextFormat), 0);
+            memset(this, 0, sizeof(ContextFormat));
 
             switch (cf) {
             case BasicRGBA32:

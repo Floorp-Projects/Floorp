@@ -2962,18 +2962,21 @@ nsCookieService::AddCookieToList(const nsCString               &aBaseDomain,
 
   // if it's a non-session cookie and hasn't just been read from the db, write it out.
   if (aWriteToDB && !aCookie->IsSession() && mDBState->dbConn) {
-    nsCOMPtr<mozIStorageBindingParamsArray> array(aParamsArray);
-    if (!array) {
-      mDBState->stmtInsert->NewBindingParamsArray(getter_AddRefs(array));
+    mozIStorageStatement *stmt = mDBState->stmtInsert;
+    nsCOMPtr<mozIStorageBindingParamsArray> paramsArray(aParamsArray);
+    if (!paramsArray) {
+      stmt->NewBindingParamsArray(getter_AddRefs(paramsArray));
     }
-    bindCookieParameters(array, aCookie);
+    bindCookieParameters(paramsArray, aCookie);
 
     // If we were supplied an array to store parameters, we shouldn't call
     // executeAsync - someone up the stack will do this for us.
     if (!aParamsArray) {
+      nsresult rv = stmt->BindParameters(paramsArray);
+      NS_ASSERT_SUCCESS(rv);
       nsCOMPtr<mozIStoragePendingStatement> handle;
-      nsresult rv = mDBState->stmtInsert->ExecuteAsync(&sInsertCookieDBListener,
-                                                       getter_AddRefs(handle));
+      rv = stmt->ExecuteAsync(&sInsertCookieDBListener,
+                              getter_AddRefs(handle));
       NS_ASSERT_SUCCESS(rv);
     }
   }

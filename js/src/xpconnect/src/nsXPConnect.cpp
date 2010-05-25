@@ -97,30 +97,6 @@ nsXPConnect::nsXPConnect()
     mJSRoots.ops = nsnull;
 #endif
 
-#ifdef XPC_TOOLS_SUPPORT
-  {
-    char* filename = PR_GetEnv("MOZILLA_JS_PROFILER_OUTPUT");
-    if(filename && *filename)
-    {
-        mProfilerOutputFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-        if(mProfilerOutputFile &&
-           NS_SUCCEEDED(mProfilerOutputFile->InitWithNativePath(nsDependentCString(filename))))
-        {
-            mProfiler = do_GetService(XPCTOOLS_PROFILER_CONTRACTID);
-            if(mProfiler)
-            {
-                if(NS_SUCCEEDED(mProfiler->Start()))
-                {
-#ifdef DEBUG
-                    printf("***** profiling JavaScript. Output to: %s\n",
-                           filename);
-#endif
-                }
-            }
-        }
-    }
-  }
-#endif
     char* reportableEnv = PR_GetEnv("MOZ_REPORT_ALL_JS_EXCEPTIONS");
     if(reportableEnv && *reportableEnv)
         gReportAllJSExceptions = 1;
@@ -219,14 +195,6 @@ nsXPConnect::ReleaseXPConnectSingleton()
     if(xpc)
     {
         NS_SetGlobalThreadObserver(nsnull);
-
-#ifdef XPC_TOOLS_SUPPORT
-        if(xpc->mProfiler)
-        {
-            xpc->mProfiler->Stop();
-            xpc->mProfiler->WriteResults(xpc->mProfilerOutputFile);
-        }
-#endif
 
 #ifdef DEBUG
         // force a dump of the JavaScript gc heap if JS is still alive
@@ -1326,7 +1294,7 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
                                     aHolder);
 }
 
-/* void wrapNativeToJSVal (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDPtr aIID, out JSVal aVal, out nsIXPConnectJSObjectHolder aHolder); */
+/* void wrapNativeToJSVal (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDPtr aIID, out jsval aVal, out nsIXPConnectJSObjectHolder aHolder); */
 NS_IMETHODIMP
 nsXPConnect::WrapNativeToJSVal(JSContext * aJSContext,
                                JSObject * aScope,
@@ -2124,7 +2092,7 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     return NS_OK;
 }
 
-/* [noscript] JSVal GetCrossOriginWrapperForValue(in JSContextPtr aJSContext, in JSVal aCurrentVal); */
+/* [noscript] jsval GetCrossOriginWrapperForValue(in JSContextPtr aJSContext, in jsval aCurrentVal); */
 NS_IMETHODIMP
 nsXPConnect::GetXOWForObject(JSContext * aJSContext,
                              JSObject * aParent,
@@ -2353,7 +2321,7 @@ nsXPConnect::DebugDumpEvalInJSStackFrame(PRUint32 aFrameNumber, const char *aSou
     return NS_OK;
 }
 
-/* JSVal variantToJS (in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value); */
+/* jsval variantToJS (in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value); */
 NS_IMETHODIMP 
 nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scope, nsIVariant* value, jsval* _retval)
 {
@@ -2379,7 +2347,7 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scope, nsIVariant* value, jsv
     return NS_OK;
 }
 
-/* nsIVariant JSToVariant (in JSContextPtr ctx, in JSVal value); */
+/* nsIVariant JSToVariant (in JSContextPtr ctx, in jsval value); */
 NS_IMETHODIMP 
 nsXPConnect::JSToVariant(JSContext* ctx, jsval value, nsIVariant** _retval)
 {

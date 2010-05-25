@@ -10,6 +10,7 @@
 @DLL_PREFIX@xpistub@DLL_SUFFIX@
 @DLL_PREFIX@zlib@DLL_SUFFIX@
 LICENSE
+browserconfig.properties
 chrome.manifest
 chrome/US.jar
 chrome/app-chrome.manifest

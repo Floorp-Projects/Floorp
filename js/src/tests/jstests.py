@@ -1,6 +1,6 @@
 # Test harness for JSTests, controlled by manifest files.
 
-import datetime, os, sys
+import datetime, os, sys, subprocess
 from subprocess import *
 
 from tests import TestResult, NullTestOutput
@@ -85,7 +85,7 @@ class ResultsSink:
             self.n += 1
         else:
             if OPTIONS.show_cmd:
-                print >> self.output_file, output.cmd
+                print >> self.output_file, subprocess.list2cmdline(output.cmd)
 
             if OPTIONS.show_output:
                 print >> self.output_file, '    rc = %d, run time = %f' % (output.rc, output.dt)
@@ -310,7 +310,7 @@ if __name__ == '__main__':
 
         cmd = test_list[0].get_command(TestTask.js_cmd_prefix)
         if OPTIONS.show_cmd:
-            print ' '.join(cmd)
+            print subprocess.list2cmdline(cmd)
         call(cmd)
         sys.exit()
 

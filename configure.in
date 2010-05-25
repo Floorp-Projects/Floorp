@@ -1565,9 +1565,6 @@ if test "$GNU_CC"; then
     if test "$GCC_USE_GNU_LD"; then
         # Don't allow undefined symbols in libraries
         DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
-        LDFLAGS="$LDFLAGS -Wl,--gc-sections"
-        CFLAGS="$CFLAGS -ffunction-sections -fdata-sections"
-        CXXFLAGS="$CXXFLAGS -ffunction-sections -fdata-sections"
     fi
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
@@ -6276,7 +6273,7 @@ dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
 
 dnl Ensure every extension exists, to avoid mostly-inscrutable error messages
-dnl when trying to build a non-existent extension.
+dnl when trying to build a nonexistent extension.
 for extension in $MOZ_EXTENSIONS; do
     if test ! -d "${srcdir}/extensions/${extension}"; then
         AC_MSG_ERROR([Unrecognized extension provided to --enable-extensions: ${extension}.])
@@ -6528,15 +6525,6 @@ MOZ_ARG_ENABLE_BOOL(leaky,
 [  --enable-leaky          Build leaky memory tool],
     MOZ_LEAKY=1,
     MOZ_LEAKY=)
-
-
-dnl ========================================================
-dnl xpctools
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(xpctools,
-[  --enable-xpctools       Build JS profiling tool],
-    MOZ_XPCTOOLS=1,
-    MOZ_XPCTOOLS= )
 
 
 dnl ========================================================
@@ -6937,7 +6925,19 @@ MOZ_ARG_ENABLE_STRING(debug,
   fi ],
   MOZ_DEBUG=)
 
-MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG -DTRACING"
+MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
+ case "${target_os}" in
+    beos*)
+        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
+        ;;
+    msvc*|mks*|cygwin*|mingw*|os2*|wince*|winmo*)
+        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
+        ;;
+    *) 
+        MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_`$WHOAMI`"
+        ;;
+  esac
+MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DTRACING"
 
 MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
 
@@ -8479,7 +8479,6 @@ AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
-AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)
 AC_SUBST(MOZ_QUANTIFY)

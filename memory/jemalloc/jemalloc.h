@@ -45,7 +45,7 @@ extern "C" {
 
 typedef unsigned char jemalloc_bool;
 
-extern const char	*_malloc_options;
+extern const char *_malloc_options;
 
 /*
  * jemalloc_stats() is not a stable interface.  When using jemalloc_stats_t, be

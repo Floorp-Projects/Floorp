@@ -70,7 +70,7 @@ void JSD_ASSERT_VALID_CONTEXT(JSDContext* jsdc)
 #endif
 
 static JSClass global_class = {
-    "JSDGlobal", 0,
+    "JSDGlobal", JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS

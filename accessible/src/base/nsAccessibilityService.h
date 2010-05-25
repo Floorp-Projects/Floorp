@@ -173,13 +173,27 @@ public:
                   nsIWeakReference *aWeakShell, PRBool *aIsHidden = nsnull);
 
   /**
+   * Return an accessible for the given DOM node.
+   */
+  nsAccessible *GetAccessible(nsIDOMNode *aNode);
+
+  /**
    * Return an accessible for a DOM node in the given pres shell.
    * 
    * @param aNode       [in] the given node.
    * @param aPresShell  [in] the presentation shell of the given node.
    */
-  already_AddRefed<nsAccessible>
-    GetAccessibleInWeakShell(nsIDOMNode *aNode, nsIWeakReference *aPresShell);
+  nsAccessible *GetAccessibleInWeakShell(nsIDOMNode *aNode,
+                                         nsIWeakReference *aPresShell);
+
+  /**
+   * Return the first accessible parent of a DOM node.
+   *
+   * @param aDOMNode    [in] the DOM node to get an accessible for
+   * @param aCanCreate  [in] specifies if accessible can be created if it didn't
+   *                     exist
+   */
+  nsAccessible *GetContainerAccessible(nsIDOMNode *aNode, PRBool aCanCreate);
 
   /**
    * Return an access node for the DOM node in the given presentation shell if

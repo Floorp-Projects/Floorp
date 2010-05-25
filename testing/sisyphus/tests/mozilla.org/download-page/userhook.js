@@ -8,7 +8,7 @@ function userOnStart()
 
   loadBundle('chrome://browser-region/locale/region.properties');
   loadBundle('chrome://branding/content/searchconfig.properties');
-  loadBundle('resource:/browserconfig.properties');
+  loadBundle('chrome://branding/locale/browserconfig.properties');
 
 }
 
