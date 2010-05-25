@@ -1014,7 +1014,7 @@ class TypedArrayTemplate
         if (v.isDouble())
             return NativeType(v.asDouble());
 
-        if (v.isPrimitive()) {
+        if (v.isPrimitive() && !v.isMagic()) {
             jsdouble dval;
             ValueToNumber(cx, v, &dval);
             return NativeType(dval);

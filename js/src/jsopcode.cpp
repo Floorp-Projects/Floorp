@@ -5198,7 +5198,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, const Value &v,
                     pcdepth = -1;
                     goto release_pcstack;
                 }
-            } while (!equalTypeAndPayload(*--sp, v));
+            } while (*--sp != v);
 
             /*
              * The value may have come from beyond stackBase + pcdepth,

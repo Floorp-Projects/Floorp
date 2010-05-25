@@ -4082,7 +4082,7 @@ AddPropertyHelper(JSContext *cx, Class *clasp, JSObject *obj, JSScope *scope,
 
         if (!clasp->addProperty(cx, obj, SPROP_USERID(sprop), vp))
             return false;
-        if (!equalTypeAndPayload(*vp, nominal)) {
+        if (*vp != nominal) {
             if (SPROP_HAS_VALID_SLOT(sprop, scope))
                 obj->lockedSetSlot(sprop->slot, *vp);
         }

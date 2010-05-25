@@ -81,7 +81,7 @@ bool_toSource(JSContext *cx, uintN argc, Value *vp)
     char buf[32];
     JS_snprintf(buf, sizeof buf, "(new %s(%s))",
                 js_BooleanClass.name,
-                JS_BOOLEAN_STR(vp->asBoolean()));
+                JS_BOOLEAN_STR(primp->asBoolean()));
     JSString *str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
