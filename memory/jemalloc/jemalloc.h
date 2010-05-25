@@ -89,6 +89,17 @@ void	free(void *ptr);
 int	posix_memalign(void **memptr, size_t alignment, size_t size);
 #endif /* MOZ_MEMORY_DARWIN, MOZ_MEMORY_LINUX */
 
+#if defined(MOZ_MEMORY_ANDROID) || defined(WRAP_MALLOC)
+void	*je_malloc(size_t size);
+void	*je_valloc(size_t size);
+void	*je_calloc(size_t num, size_t size);
+void	*je_realloc(void *ptr, size_t size);
+void	je_free(void *ptr);
+int	je_posix_memalign(void **memptr, size_t alignment, size_t size);
+char    *je_strndup(const char *src, size_t len);
+char    *je_strdup(const char *src);
+#endif
+
 /* Linux has memalign and malloc_usable_size */
 #if !defined(MOZ_MEMORY_LINUX)
 void	*memalign(size_t alignment, size_t size);

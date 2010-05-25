@@ -5014,6 +5014,7 @@ MOZ_SPELLCHECK=1
 MOZ_SPLASHSCREEN=
 MOZ_STORAGE=1
 MOZ_SVG=1
+MOZ_THUMB2=
 MOZ_TIMELINE=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -6845,6 +6846,10 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    fi
 
+   if test "$MOZ_PLATFORM_MAEMO" -gt 5; then
+     MOZ_THUMB2=1
+   fi
+
    PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
    MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBLOCATION_LIBS"
    MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBLOCATION_CFLAGS"
@@ -6858,6 +6863,31 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    AC_SUBST(MOZ_PLATFORM_MAEMO_LIBS)
    AC_SUBST(MOZ_PLATFORM_MAEMO_CFLAGS)
+fi
+
+dnl ========================================================
+dnl = Enable building the Thumb2 instruction set
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(thumb2,
+ [  --enable-thumb2              Enable Thumb2 instruction set],
+    MOZ_THUMB2=1,
+    MOZ_THUMB2=)
+
+if test -n "$MOZ_THUMB2"; then
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+        CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
+      else
+        AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
+      fi
+    ;;
+    *)
+      AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
+    ;;
+  esac
 fi
 
 dnl ========================================================
@@ -7141,23 +7171,23 @@ if test "$MOZ_MEMORY"; then
   dnl The generic feature tests that determine how to compute ncpus are long and
   dnl complicated.  Therefore, simply define special cpp variables for the
   dnl platforms we have special knowledge of.
-  case "${target_os}" in
-  darwin*)
+  case "${target}" in
+  *-darwin*)
     AC_DEFINE(MOZ_MEMORY_DARWIN)
     ;;
-  *freebsd*)
+  *-*freebsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  *linux*)
+  *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
     ;;
-  netbsd*)
+  *-netbsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  solaris*)
+  *-solaris*)
     AC_DEFINE(MOZ_MEMORY_SOLARIS)
     ;;
-  msvc*|mks*|cygwin*|mingw*)
+  *-msvc*|*-mks*|*-cygwin*|*-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     dnl This is sort of awful. Will revisit if we add support for more versions
     if test "$CC_VERSION" != "14.00.50727.762" -a "$CC_VERSION" != "15.00.30729.01"; then
@@ -7191,16 +7221,20 @@ if test "$MOZ_MEMORY"; then
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
     ;;
-  *wince)
+  *-*wince)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     if test -z "$WINCE_WINDOWS_MOBILE"; then
       AC_DEFINE(MOZ_MEMORY_WINCE6)
     fi
     ;;
-  *winmo)
+  *-*winmo)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
+    ;;
+  *-android*)
+    AC_DEFINE(MOZ_MEMORY_LINUX)
+    AC_DEFINE(MOZ_MEMORY_ANDROID)
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -7230,8 +7264,8 @@ MOZ_ARG_ENABLE_BOOL(wrap-malloc,
 
 if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
-    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
-    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) -o $@'
+    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup"
+    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) -o $@'
     fi
 fi
 
@@ -8966,6 +9000,9 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     fi
     if test -n "$USE_ARM_KUSER"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
+    fi
+    if test -n "$MOZ_THUMB2"; then
+        ac_configure_args="$ac_configure_args --enable-thumb2"
     fi
     AC_OUTPUT_SUBDIRS(nsprpub)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"

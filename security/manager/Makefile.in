@@ -292,12 +292,18 @@ DEFAULT_GMAKE_FLAGS += \
 	OS_LIBS= \
 	STANDARDS_CFLAGS="-std=gnu89" \
 	DSO_CFLAGS="$(CFLAGS) -DCHECK_FORK_GETPID -DRTLD_NOLOAD=0 -include $(topsrcdir)/security/manager/android_stub.h" \
-	DSO_LDOPTS="-shared $(LDFLAGS)" \
+	DSO_LDOPTS="-shared $(LDFLAGS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) " \
 	$(NULL)
 endif
 
 SKIP_CHK=1
 endif
+ifdef WRAP_MALLOC_CFLAGS
+DEFAULT_GMAKE_FLAGS += \
+	LDFLAGS="$(LDFLAGS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) " \
+	$(NULL)
+endif
+
 SUBMAKEFILES = boot/Makefile ssl/Makefile pki/Makefile locales/Makefile
 
 include $(topsrcdir)/config/rules.mk
