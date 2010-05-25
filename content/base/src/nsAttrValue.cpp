@@ -1099,6 +1099,23 @@ nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
   return PR_TRUE;
 }
 
+PRBool
+nsAttrValue::ParsePositiveIntValue(const nsAString& aString)
+{
+  ResetIfSet();
+
+  PRInt32 ec;
+  PRBool strict;
+  PRInt32 originalVal = StringToInteger(aString, &strict, &ec);
+  if (NS_FAILED(ec) || originalVal <= 0) {
+    return PR_FALSE;
+  }
+
+  SetIntValueAndType(originalVal, eInteger, nsnull);
+
+  return PR_TRUE;
+}
+
 void
 nsAttrValue::SetColorValue(nscolor aColor, const nsAString& aString)
 {

@@ -119,20 +119,20 @@ OP___(skip,      2, Sk,   V,    0)  // links code chunks
 OP_32(parami,    3, P,    I,    0)  // load an int parameter (register or stack location)
 OP_64(paramq,    4, P,    Q,    0)  // load a quad parameter (register or stack location)
 
-OP_32(alloci,    5, I,    I,    0)  // allocate stack space (result is an int address)
-OP_64(allocq,    6, I,    Q,    0)  // allocate stack space (result is a quad address)
+OP___(allocp,    5, I,    P,    0)  // allocate stack space (result is an address)
 
-OP___(reti,      7, Op1,  V,    0)  // return an int
-OP_64(retq,      8, Op1,  V,    0)  // return a quad
-OP___(retd,      9, Op1,  V,    0)  // return a double
+OP___(reti,      6, Op1,  V,    0)  // return an int
+OP_64(retq,      7, Op1,  V,    0)  // return a quad
+OP___(retd,      8, Op1,  V,    0)  // return a double
 
-OP___(livei,    10, Op1,  V,    0)  // extend live range of an int
-OP_64(liveq,    11, Op1,  V,    0)  // extend live range of a quad
-OP___(lived,    12, Op1,  V,    0)  // extend live range of a double
+OP___(livei,     9, Op1,  V,    0)  // extend live range of an int
+OP_64(liveq,    10, Op1,  V,    0)  // extend live range of a quad
+OP___(lived,    11, Op1,  V,    0)  // extend live range of a double
 
-OP___(file,     13, Op1,  V,    0)  // source filename for debug symbols
-OP___(line,     14, Op1,  V,    0)  // source line number for debug symbols
+OP___(file,     12, Op1,  V,    0)  // source filename for debug symbols
+OP___(line,     13, Op1,  V,    0)  // source line number for debug symbols
 
+OP_UN(14)
 OP_UN(15)
 OP_UN(16)
 
@@ -148,12 +148,12 @@ OP_64(ldq,      22, Ld,   Q,   -1)  // load quad
 OP___(ldd,      23, Ld,   D,   -1)  // load double
 OP___(ldf2d,    24, Ld,   D,   -1)  // load float and extend to a double
 
-OP___(sti2c,    25, Sti,  V,    0)  // store int truncated to char
-OP___(sti2s,    26, Sti,  V,    0)  // store int truncated to short
-OP___(sti,      27, Sti,  V,    0)  // store int
-OP_64(stq,      28, Sti,  V,    0)  // store quad
-OP___(std,      29, Sti,  V,    0)  // store double
-OP___(std2f,    30, Sti,  V,    0)  // store double as a float (losing precision)
+OP___(sti2c,    25, St,   V,    0)  // store int truncated to char
+OP___(sti2s,    26, St,   V,    0)  // store int truncated to short
+OP___(sti,      27, St,   V,    0)  // store int
+OP_64(stq,      28, St,   V,    0)  // store quad
+OP___(std,      29, St,   V,    0)  // store double
+OP___(std2f,    30, St,   V,    0)  // store double as a float (losing precision)
 
 OP_UN(31)
 OP_UN(32)

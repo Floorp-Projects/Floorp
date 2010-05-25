@@ -51,8 +51,6 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
-JS_BEGIN_EXTERN_C
-
 #define JSTRACE_XML         3
 
 /*
@@ -211,17 +209,23 @@ typedef enum JSGCInvocationKind {
     /*
      * Flag bit telling js_GC that the caller has already acquired rt->gcLock.
      */
-    GC_LOCK_HELD        = 0x10,
-
-    /*
-     * Called from js_SetProtoOrParent with a request to set an object's proto
-     * or parent slot inserted on rt->setSlotRequests.
-     */
-    GC_SET_SLOT_REQUEST = GC_LOCK_HELD | 1
+    GC_LOCK_HELD        = 0x10
 } JSGCInvocationKind;
 
 extern void
 js_GC(JSContext *cx, JSGCInvocationKind gckind);
+
+/*
+ * Set object's prototype or parent slot while checking that doing so would
+ * not create a cycle in the proto or parent chain. The cycle check and slot
+ * change are done only when all other requests are finished or suspended to
+ * ensure exclusive access to the chain. If there is a cycle, return false
+ * without reporting an error. Otherwise, set the proto or parent and return
+ * true.
+ */
+extern bool
+js_SetProtoOrParentCheckingForCycles(JSContext *cx, JSObject *obj,
+                                     uint32 slot, JSObject *pobj);
 
 extern void
 js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind);
@@ -232,7 +236,6 @@ js_CallGCMarker(JSTracer *trc, void *thing, uint32 kind);
  */
 enum JSFinalizeGCThingKind {
     FINALIZE_OBJECT,
-    FINALIZE_ITER,
     FINALIZE_FUNCTION,
 #if JS_HAS_XML_SUPPORT
     FINALIZE_XML,
@@ -270,12 +273,6 @@ static inline JSObject *
 js_NewGCObject(JSContext *cx)
 {
     return (JSObject *) js_NewFinalizableGCThing(cx, FINALIZE_OBJECT);
-}
-
-static inline JSObject *
-js_NewGCIter(JSContext *cx)
-{
-    return (JSObject *) js_NewFinalizableGCThing(cx, FINALIZE_ITER);
 }
 
 static inline JSString *
@@ -453,7 +450,6 @@ struct JSGCStats {
     uint32  maxunmarked;/* maximum number of things with children to mark
                            later */
 #endif
-    uint32  maxlevel;       /* maximum GC nesting (indirect recursion) level */
     uint32  poke;           /* number of potentially useful GC calls */
     uint32  afree;          /* thing arenas freed so far */
     uint32  stackseg;       /* total extraordinary stack segments scanned */
@@ -483,29 +479,29 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp);
 extern void
 js_MarkTraps(JSTracer *trc);
 
-JS_END_EXTERN_C
-
 namespace js {
 
 void
 TraceObjectVector(JSTracer *trc, JSObject **vec, uint32 len);
 
 inline void
-#ifdef DEBUG
-TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
-#else
-TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *) /* last arg unused in release. kill unreferenced formal param warnings */
-#endif
+TraceValues(JSTracer *trc, jsval *beg, jsval *end, const char *name)
 {
-    for (jsval *vp = vec, *end = vp + len; vp < end; vp++) {
+    for (jsval *vp = beg; vp < end; ++vp) {
         jsval v = *vp;
         if (JSVAL_IS_TRACEABLE(v)) {
-            JS_SET_TRACING_INDEX(trc, name, vp - vec);
+            JS_SET_TRACING_INDEX(trc, name, vp - beg);
             js_CallGCMarker(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
         }
     }
 }
 
+inline void
+TraceValues(JSTracer *trc, size_t len, jsval *vec, const char *name)
+{
+    TraceValues(trc, vec, vec + len, name);
 }
+
+} /* namespace js */
 
 #endif /* jsgc_h___ */

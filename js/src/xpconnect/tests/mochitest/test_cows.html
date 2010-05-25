@@ -79,9 +79,9 @@ function COWTests() {
 
     try {
         if (strictCOW.foo)
-            ok(false, "non-existent property shouldn't be truthy.");
+            ok(false, "nonexistent property shouldn't be truthy.");
         else
-            ok(true, "'duck-typing' detection on non-existent prop " +
+            ok(true, "'duck-typing' detection on nonexistent prop " +
                      "should work.");
     } catch (e) {
         todo(false,

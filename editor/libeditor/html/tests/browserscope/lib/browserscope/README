@@ -18,7 +18,7 @@ http://localhost:8080/
 
 Note: the first time you hit the homepage it may take a little
 while - that's because it's trying to read out median times for all
-of the tests from a non-existent datastore and write to memcache.
+of the tests from a nonexistent datastore and write to memcache.
 Just be a lil patient.
 
 You can run the unit tests at:

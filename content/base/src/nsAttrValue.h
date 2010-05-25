@@ -259,6 +259,21 @@ public:
   PRBool ParseNonNegativeIntValue(const nsAString& aString);
 
   /**
+   * Parse a string value into a positive integer.
+   * This method follows the rules for parsing non-negative integer from:
+   * http://dev.w3.org/html5/spec/infrastructure.html#rules-for-parsing-non-negative-integers
+   * In addition of these rules, the value has to be greater than zero.
+   *
+   * This is generally used for parsing content attributes which reflecting IDL
+   * attributes are limited to only non-negative numbers greater than zero, see:
+   * http://dev.w3.org/html5/spec/common-dom-interfaces.html#limited-to-only-non-negative-numbers-greater-than-zero
+   *
+   * @param aString       the string to parse
+   * @return              whether the value was valid
+   */
+  PRBool ParsePositiveIntValue(const nsAString& aString);
+
+  /**
    * Parse a string into a color.
    *
    * @param aString the string to parse

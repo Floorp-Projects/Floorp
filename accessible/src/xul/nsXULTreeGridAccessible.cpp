@@ -1042,11 +1042,11 @@ nsXULTreeGridCellAccessible::GetColumnHeaderCells(nsIArray **aHeaderCells)
   nsCOMPtr<nsIDOMElement> columnElm;
   mColumn->GetElement(getter_AddRefs(columnElm));
 
-  nsRefPtr<nsAccessible> headerCell =
+  nsAccessible *headerCell =
     GetAccService()->GetAccessibleInWeakShell(columnElm, mWeakShell);
 
   if (headerCell)
-    headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell.get()),
+    headerCells->AppendElement(static_cast<nsIAccessible*>(headerCell),
                                PR_FALSE);
 
   NS_ADDREF(*aHeaderCells = headerCells);

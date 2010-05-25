@@ -79,7 +79,6 @@ namespace nanojit
     #endif
         , _config(config)
     {
-        VMPI_memset(lookahead, 0, N_LOOKAHEAD * sizeof(LInsp));
         nInit(core);
         (void)logc;
         verbose_only( _logc = logc; )
@@ -644,7 +643,7 @@ namespace nanojit
         Register r = ins->getReg();
         if (ins->isInAr()) {
             verbose_only( RefBuf b;
-                          if (_logc->lcbits & LC_Assembly) {
+                          if (_logc->lcbits & LC_Native) {
                              setOutputForEOL("  <= spill %s",
                              _thisfrag->lirbuf->printer->formatRef(&b, ins)); } )
             asm_spill(r, d, pop, ins->isQorD());
@@ -707,7 +706,7 @@ namespace nanojit
         NanoAssert(vic == _allocator.getActive(r));
 
         verbose_only( RefBuf b;
-                      if (_logc->lcbits & LC_Assembly) {
+                      if (_logc->lcbits & LC_Native) {
                         setOutputForEOL("  <= restore %s",
                         _thisfrag->lirbuf->printer->formatRef(&b, vic)); } )
         asm_restore(vic, r);
@@ -823,7 +822,6 @@ namespace nanojit
     {
         verbose_only(
         bool anyVerb = (_logc->lcbits & 0xFFFF & ~LC_FragProfile) > 0;
-        bool asmVerb = (_logc->lcbits & 0xFFFF & LC_Assembly) > 0;
         bool liveVerb = (_logc->lcbits & 0xFFFF & LC_Liveness) > 0;
         )
 
@@ -922,10 +920,6 @@ namespace nanojit
             _logc->printf("=== -- Compile trunk %s: end\n", printer->formatAddr(&b, frag));
         })
 
-        verbose_only(
-            if (asmVerb)
-                outputf("## compiling trunk %s", printer->formatAddr(&b, frag));
-        )
         endAssembly(frag);
 
         // Reverse output so that assembly is displayed low-to-high.
@@ -1321,41 +1315,33 @@ namespace nanojit
         // registers as late (at run-time) as possible;  this might be better
         // for reducing register pressure.
 
-        // Another thing to note: we provide N_LOOKAHEAD instruction's worth
-        // of lookahead because it's useful for backends.  This is nice and
-        // easy because once read() gets to the LIR_start at the beginning of
-        // the buffer it'll just keep regetting it.
-
         // The trace must end with one of these opcodes.  Mark it as live.
         NanoAssert(reader->finalIns()->isop(LIR_x)    ||
                    reader->finalIns()->isop(LIR_xtbl) ||
                    reader->finalIns()->isRet()        ||
                    isLiveOpcode(reader->finalIns()->opcode()));
 
-        for (int32_t i = 0; i < N_LOOKAHEAD; i++)
-            lookahead[i] = reader->read();
-
-        while (!lookahead[0]->isop(LIR_start))
+        for (currIns = reader->read(); !currIns->isop(LIR_start); currIns = reader->read())
         {
-            LInsp ins = lookahead[0];   // give it a shorter name for local use
-            LOpcode op = ins->opcode();
+            LInsp ins = currIns;        // give it a shorter name for local use
 
             if (!ins->isLive()) {
                 NanoAssert(!ins->isExtant());
-                goto ins_is_dead;
+                continue;
             }
 
 #ifdef NJ_VERBOSE
             // Output the post-regstate (registers and/or activation).
             // Because asm output comes in reverse order, doing it now means
-            // it is printed after the LIR and asm, exactly when the
+            // it is printed after the LIR and native code, exactly when the
             // post-regstate should be shown.
-            if ((_logc->lcbits & LC_Assembly) && (_logc->lcbits & LC_Activation))
+            if ((_logc->lcbits & LC_Native) && (_logc->lcbits & LC_Activation))
                 printActivationState();
-            if ((_logc->lcbits & LC_Assembly) && (_logc->lcbits & LC_RegAlloc))
+            if ((_logc->lcbits & LC_Native) && (_logc->lcbits & LC_RegAlloc))
                 printRegState();
 #endif
 
+            LOpcode op = ins->opcode();
             switch (op)
             {
                 default:
@@ -1428,7 +1414,7 @@ namespace nanojit
                 case LIR_immd:
                     countlir_imm();
                     if (ins->isExtant()) {
-                        asm_immf(ins);
+                        asm_immd(ins);
                     }
                     break;
 
@@ -1588,7 +1574,7 @@ namespace nanojit
                     countlir_fpu();
                     ins->oprnd1()->setResultLive();
                     if (ins->isExtant()) {
-                        asm_i2f(ins);
+                        asm_i2d(ins);
                     }
                     break;
 
@@ -1596,7 +1582,7 @@ namespace nanojit
                     countlir_fpu();
                     ins->oprnd1()->setResultLive();
                     if (ins->isExtant()) {
-                        asm_u2f(ins);
+                        asm_ui2d(ins);
                     }
                     break;
 
@@ -1604,7 +1590,7 @@ namespace nanojit
                     countlir_fpu();
                     ins->oprnd1()->setResultLive();
                     if (ins->isExtant()) {
-                        asm_f2i(ins);
+                        asm_d2i(ins);
                     }
                     break;
 
@@ -1749,7 +1735,7 @@ namespace nanojit
                     }
                     verbose_only(
                         RefBuf b;
-                        if (_logc->lcbits & LC_Assembly) {
+                        if (_logc->lcbits & LC_Native) {
                             asm_output("[%s]", _thisfrag->lirbuf->printer->formatRef(&b, ins));
                     })
                     break;
@@ -1804,7 +1790,7 @@ namespace nanojit
                     ins->oprnd1()->setResultLive();
                     ins->oprnd2()->setResultLive();
                     if (ins->isExtant()) {
-                        asm_fcond(ins);
+                        asm_condd(ins);
                     }
                     break;
 
@@ -1875,10 +1861,10 @@ namespace nanojit
             // We do final LIR printing inside this loop to avoid printing
             // dead LIR instructions.  We print the LIns after generating the
             // code.  This ensures that the LIns will appear in debug output
-            // *before* the generated code, because Assembler::outputf()
+            // *before* the native code, because Assembler::outputf()
             // prints everything in reverse.
             //
-            if (_logc->lcbits & LC_Assembly) {
+            if (_logc->lcbits & LC_AfterDCE) {
                 InsBuf b;
                 LInsPrinter* printer = _thisfrag->lirbuf->printer;
                 outputf("    %s", printer->formatIns(&b, ins));
@@ -1895,11 +1881,6 @@ namespace nanojit
             // check that all is well (don't check in exit paths since its more complicated)
             debug_only( pageValidate(); )
             debug_only( resourceConsistencyCheck();  )
-
-          ins_is_dead:
-            for (int32_t i = 1; i < N_LOOKAHEAD; i++)
-                lookahead[i-1] = lookahead[i];
-            lookahead[N_LOOKAHEAD-1] = reader->read();
         }
     }
 

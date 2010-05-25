@@ -46,6 +46,8 @@
 #include "jsiter.h"
 #include "jsobj.h"
 #include "jsscope.h"
+#include "jsxml.h"
+
 #include "jsdtracef.h"
 
 #include "jsscopeinlines.h"
@@ -391,6 +393,74 @@ JSObject::zeroRegExpLastIndex()
     fslots[JSSLOT_REGEXP_LAST_INDEX] = JSVAL_ZERO;
 }
 
+inline NativeIterator *
+JSObject::getNativeIterator() const
+{
+    return (NativeIterator *) getPrivate();
+}
+
+inline void
+JSObject::setNativeIterator(NativeIterator *ni)
+{
+    setPrivate(ni);
+}
+
+inline jsval
+JSObject::getNamePrefix() const
+{
+    JS_ASSERT(isNamespace() || isQName());
+    return fslots[JSSLOT_NAME_PREFIX];
+}
+
+inline void
+JSObject::setNamePrefix(jsval prefix)
+{
+    JS_ASSERT(isNamespace() || isQName());
+    fslots[JSSLOT_NAME_PREFIX] = prefix;
+}
+
+inline jsval
+JSObject::getNameURI() const
+{
+    JS_ASSERT(isNamespace() || isQName());
+    return fslots[JSSLOT_NAME_URI];
+}
+
+inline void
+JSObject::setNameURI(jsval uri)
+{
+    JS_ASSERT(isNamespace() || isQName());
+    fslots[JSSLOT_NAME_URI] = uri;
+}
+
+inline jsval
+JSObject::getNamespaceDeclared() const
+{
+    JS_ASSERT(isNamespace());
+    return fslots[JSSLOT_NAMESPACE_DECLARED];
+}
+
+inline void
+JSObject::setNamespaceDeclared(jsval decl)
+{
+    JS_ASSERT(isNamespace());
+    fslots[JSSLOT_NAMESPACE_DECLARED] = decl;
+}
+
+inline jsval
+JSObject::getQNameLocalName() const
+{
+    JS_ASSERT(isQName());
+    return fslots[JSSLOT_QNAME_LOCAL_NAME];
+}
+
+inline void
+JSObject::setQNameLocalName(jsval name)
+{
+    JS_ASSERT(isQName());
+    fslots[JSSLOT_QNAME_LOCAL_NAME] = name;
+}
+
 inline void
 JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
                                 jsval privateSlotValue)
@@ -430,6 +500,21 @@ JSObject::unbrand(JSContext *cx)
     return true;
 }
 
+inline bool
+JSObject::isCallable()
+{
+    if (isNative())
+        return isFunction() || getClass()->call;
+
+    return !!map->ops->call;
+}
+
+static inline bool
+js_IsCallable(jsval v)
+{
+    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable();
+}
+
 namespace js {
 
 typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
@@ -456,6 +541,19 @@ class AutoDescriptorArray : private AutoGCRooter
 
   private:
     PropertyDescriptorArray descriptors;
+};
+
+class AutoDescriptor : private AutoGCRooter, public JSPropertyDescriptor
+{
+  public:
+    AutoDescriptor(JSContext *cx) : AutoGCRooter(cx, DESCRIPTOR) {
+        obj = NULL;
+        attrs = 0;
+        getter = setter = (JSPropertyOp) NULL;
+        value = JSVAL_VOID;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
 };
 
 static inline bool
@@ -511,10 +609,6 @@ NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
 {
     DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
 
-    /* Assert that the class is a proper class. */
-    JS_ASSERT_IF(clasp->flags & JSCLASS_IS_EXTENDED,
-                 ((JSExtendedClass *)clasp)->equality);
-
     /* Always call the class's getObjectOps hook if it has one. */
     JSObjectOps *ops = clasp->getObjectOps
                        ? clasp->getObjectOps(cx, clasp)
@@ -536,9 +630,7 @@ NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
 #endif
     } else {
         JS_ASSERT(!objectSize || objectSize == sizeof(JSObject));
-        obj = (clasp == &js_IteratorClass)
-            ? js_NewGCIter(cx)
-            : js_NewGCObject(cx);
+        obj = js_NewGCObject(cx);
     }
     if (!obj)
         goto out;
