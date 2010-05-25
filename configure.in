@@ -4563,7 +4563,9 @@ AC_CACHE_CHECK(for LC_MESSAGES,
 				ac_cv_i18n_lc_messages=no)])
 if test "$ac_cv_i18n_lc_messages" = yes; then
    AC_DEFINE(HAVE_I18N_LC_MESSAGES)
-fi 	
+fi
+
+AC_HAVE_FUNCS(localeconv)
 
 fi # SKIP_COMPILER_CHECKS
 
@@ -4610,6 +4612,7 @@ if test -n "$SKIP_COMPILER_CHECKS"; then
    dnl Windows has malloc.h
    AC_DEFINE(MALLOC_H, [<malloc.h>])
    AC_DEFINE(HAVE_FORCEINLINE)
+   AC_DEFINE(HAVE_LOCALECONV)
 fi # SKIP_COMPILER_CHECKS
 
 dnl ========================================================
