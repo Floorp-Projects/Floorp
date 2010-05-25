@@ -277,7 +277,6 @@ PlanarYCbCrImageD3D9::SetData(const PlanarYCbCrImage::Data &aData)
   mData.mCbChannel = mData.mYChannel + mData.mYStride * mData.mYSize.height;
   mData.mCrChannel = mData.mCbChannel + mData.mCbCrStride * mData.mCbCrSize.height;
 
-  mData.mCrChannel = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height];
   int cbcr_x = aData.mPicX >> width_shift;
   int cbcr_y = aData.mPicY >> height_shift;
 
