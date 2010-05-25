@@ -977,34 +977,10 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
     serverTime = PR_Now() / PR_USEC_PER_SEC;
   }
 
-  // We may be adding a bunch of cookies to the DB, so we use async batching
-  // with storage to make this super fast.
-  nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
-  if (mDBState->dbConn) {
-    mDBState->stmtInsert->NewBindingParamsArray(getter_AddRefs(paramsArray));
-  }
-
   // switch to a nice string type now, and process each cookie in the header
   nsDependentCString cookieHeader(aCookieHeader);
   while (SetCookieInternal(aHostURI, aChannel, baseDomain, requireHostMatch,
-                           cookieHeader, serverTime, aFromHttp, paramsArray));
-
-  // If we had a params array, go ahead and write it out to disk now.
-  if (paramsArray) {
-    // ...but only if we have sufficient length!
-    PRUint32 length;
-    paramsArray->GetLength(&length);
-    if (length == 0)
-      return NS_OK;
-
-    rv = mDBState->stmtInsert->BindParameters(paramsArray);
-    NS_ASSERT_SUCCESS(rv);
-    nsCOMPtr<mozIStoragePendingStatement> handle;
-    rv = mDBState->stmtInsert->ExecuteAsync(&sInsertCookieDBListener,
-                                            getter_AddRefs(handle));
-    NS_ASSERT_SUCCESS(rv);
-  }
-
+                           cookieHeader, serverTime, aFromHttp));
   return NS_OK;
 }
 
@@ -1352,7 +1328,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
   // We will likely be adding a bunch of cookies to the DB, so we use async
   // batching with storage to make this super fast.
   nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
-  if (mDBState->dbConn) {
+  if (originalCookieCount == 0 && mDBState->dbConn) {
     mDBState->stmtInsert->NewBindingParamsArray(getter_AddRefs(paramsArray));
   }
 
@@ -1430,8 +1406,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
       AddCookieToList(baseDomain, newCookie, paramsArray);
     }
     else {
-      AddInternal(baseDomain, newCookie, currentTimeInUsec, NULL, NULL, PR_TRUE,
-                  paramsArray);
+      AddInternal(baseDomain, newCookie, currentTimeInUsec, NULL, NULL, PR_TRUE);
     }
   }
 
@@ -1613,7 +1588,8 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   // update lastAccessed timestamps. we only do this if the timestamp is stale
   // by a certain amount, to avoid thrashing the db during pageload.
   if (stale) {
-    // Create an array of parameters to bind to our update statement.
+    // Create an array of parameters to bind to our update statement. Batching
+    // is OK here since we're updating cookies with no interleaved operations.
     nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
     mozIStorageStatement* stmt = mDBState->stmtUpdate;
     if (mDBState->dbConn) {
@@ -1685,8 +1661,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
                                    PRBool                         aRequireHostMatch,
                                    nsDependentCString            &aCookieHeader,
                                    PRInt64                        aServerTime,
-                                   PRBool                         aFromHttp,
-                                   mozIStorageBindingParamsArray *aParamsArray)
+                                   PRBool                         aFromHttp)
 {
   // create a stack-based nsCookieAttributes, to store all the
   // attributes parsed from the cookie
@@ -1771,7 +1746,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
   // add the cookie to the list. AddInternal() takes care of logging.
   // we get the current time again here, since it may have changed during prompting
   AddInternal(aBaseDomain, cookie, PR_Now(), aHostURI, savedCookieHeader.get(),
-              aFromHttp, aParamsArray);
+              aFromHttp);
   return newCookie;
 }
 
@@ -1786,8 +1761,7 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
                              PRInt64                        aCurrentTimeInUsec,
                              nsIURI                        *aHostURI,
                              const char                    *aCookieHeader,
-                             PRBool                         aFromHttp,
-                             mozIStorageBindingParamsArray *aParamsArray)
+                             PRBool                         aFromHttp)
 {
   PRInt64 currentTime = aCurrentTimeInUsec / PR_USEC_PER_SEC;
 
@@ -1856,8 +1830,9 @@ nsCookieService::AddInternal(const nsCString               &aBaseDomain,
     }
   }
 
-  // add the cookie to head of list
-  AddCookieToList(aBaseDomain, aCookie, aParamsArray);
+  // Add the cookie to the db. We do not supply a params array for batching
+  // because this might result in removals and additions being out of order.
+  AddCookieToList(aBaseDomain, aCookie, NULL);
   NotifyChanged(aCookie, foundCookie ? NS_LITERAL_STRING("changed").get()
                                      : NS_LITERAL_STRING("added").get());
 
@@ -2583,6 +2558,8 @@ nsCookieService::PurgeCookies(PRInt64 aCurrentTimeInUsec)
   if (!removedList)
     return;
 
+  // Create a params array to batch the removals. This is OK here because
+  // all the removals are in order, and there are no interleaved additions.
   mozIStorageStatement *stmt = mDBState->stmtDelete;
   nsCOMPtr<mozIStorageBindingParamsArray> paramsArray;
   if (mDBState->dbConn) {
