@@ -22,7 +22,6 @@
  *
  * Contributor(s):
  *   David Anderson <danderson@mozilla.com>
- *   David Mandelin <dmandelin@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,67 +36,36 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined jsjaeger_compiler_h__ && defined JS_METHODJIT
-#define jsjaeger_compiler_h__
-
 #include "jscntxt.h"
-#include "jstl.h"
-#include "BytecodeAnalyzer.h"
-#include "MethodJIT.h"
-#include "assembler/assembler/MacroAssembler.h"
 #include "FrameState.h"
-#include "CodeGenerator.h"
-#include "CompilerBase.h"
 
-namespace js {
-namespace mjit {
+using namespace js;
+using namespace js::mjit;
 
-class Compiler : public CompilerBase
+bool
+FrameState::init(uint32 nargs)
 {
-    typedef JSC::MacroAssembler::Label Label;
-    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
-    typedef JSC::MacroAssembler::Address Address;
-    typedef JSC::MacroAssembler MacroAssembler;
+    base = (FrameEntry *)cx->malloc(sizeof(FrameEntry) * (script->nslots + nargs));
+    if (!base)
+        return false;
 
-    JSContext *cx;
-    JSScript *script;
-    JSObject *scopeChain;
-    JSObject *globalObj;
-    JSFunction *fun;
-    BytecodeAnalyzer analysis;
-    Label *jumpMap;
-    jsbytecode *PC;
-    MacroAssembler masm;
-    FrameState frame;
-    CodeGenerator cg;
-  public:
-    // Special atom index used to indicate that the atom is 'length'. This
-    // follows interpreter usage in JSOP_LENGTH.
-    enum { LengthAtomIndex = uint32(-2) };
+    memset(base, 0, sizeof(FrameEntry) * (script->nslots + nargs));
+    memset(regstate, 0, sizeof(regstate));
 
-    Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
-    ~Compiler();
+    args = base;
+    locals = args + nargs;
+    sp = locals + script->nfixed;
 
-    CompileStatus Compile();
+    return true;
+}
 
-  private:
-    CompileStatus generatePrologue();
-    CompileStatus generateMethod();
-    CompileStatus generateEpilogue();
-    CompileStatus finishThisUp();
+void
+FrameState::evictSomething()
+{
+}
 
-    /* Non-emitting helpers. */
-    uint32 fullAtomIndex(jsbytecode *pc);
+FrameState::~FrameState()
+{
+    cx->free(base);
+}
 
-    /* Opcode handlers. */
-    void jsop_bindname(uint32 index);
-    void jsop_setglobal(uint32 index);
-    void jsop_getglobal(uint32 index);
-    void emitReturn();
-};
-
-} /* namespace js */
-} /* namespace mjit */
-
-#endif

@@ -301,6 +301,9 @@ CPPSRCS += 	Assertions.cpp \
 		Logging.cpp \
 		Stubs.cpp \
 		Compiler.cpp \
+		CodeGenerator.cpp \
+		FrameState.cpp \
+		FastOps.cpp \
 		$(NULL)
 #		CodeGenerator.cpp \
 #		PICStubCompiler.cpp \
