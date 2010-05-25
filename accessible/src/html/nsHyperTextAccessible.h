@@ -252,6 +252,18 @@ protected:
    */
   PRInt32 GetCaretLineNumber();
 
+  /**
+   * Return an accessible at the given hypertext offset.
+   *
+   * @param  aOffset       [out] the given hypertext offset
+   * @param  aAccIdx       [out] child index of returned accessible
+   * @param  aStartOffset  [out] start hypertext offset of returned accessible
+   * @param  aEndOffset    [out] end hypertext offset of returned accessible
+   */
+  nsAccessible *GetAccessibleAtOffset(PRInt32 aOffset, PRInt32 *aAccIdx,
+                                      PRInt32 *aStartOffset,
+                                      PRInt32 *aEndOffset);
+
   // Helpers
   nsresult GetDOMPointByFrameOffset(nsIFrame *aFrame, PRInt32 aOffset,
                                     nsIAccessible *aAccessible,
