@@ -149,6 +149,7 @@ body {
 		inset rgba(255, 255, 255, 0) -2px 0px 0px !important;
 }
 
+
 .group {
 	position: absolute;
 /* 	float: left;  */
@@ -209,8 +210,45 @@ body {
   position: absolute;
   cursor: pointer;
   z-index:99999;
-  border: 1px solid black;
+  border: none;
+	-moz-border-radius: 4px;
+	font-size: 50px;
+	line-height: 50px;
+	height: 57px !important;
+	width: 70px !important;
+	margin-top: 4px !important;
+	text-align: center;
+	background-color: #888888;
+	-moz-box-shadow: inset 0px 0px 5px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.3);
 }
+
+.newTabButtonAlt>span{
+  color: #909090;
+  text-shadow: 0px 0px 7px rgba(0,0,0,.4), 0 -1px 0 rgba(255,255,255,.6);
+  font-weight: bold;
+}
+
+.newTabGroup{
+  background-color: #8F8F8F;
+  border: none;
+  border-top: 1px solid rgba(127,127,127,.5);
+	-moz-border-radius: 0.1em;
+	-moz-box-shadow: inset 0px 5px 10px rgba(0,0,0,.1);
+}
+
+.inNewTabGroup{
+  background-color: transparent;
+}
+
+.inNewTabGroup .favicon{
+	background-color: #8F8F8F;
+	-moz-box-shadow: none;
+}
+
+.newTabGroup .name{
+	color: #414141 !important;	
+}
+
 
 .newTabAnimatee{
   position: absolute;
