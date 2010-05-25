@@ -234,9 +234,9 @@ NS_IMETHODIMP imgContainer::Init(imgIDecoderObserver *aObserver,
   // Store initialization data
   mObserver = do_GetWeakReference(aObserver);
   mSourceDataMimeType.Assign(aMimeType);
-  mDiscardable = aFlags & INIT_FLAG_DISCARDABLE;
-  mDecodeOnDraw = aFlags & INIT_FLAG_DECODE_ON_DRAW;;
-  mMultipart = aFlags & INIT_FLAG_MULTIPART;
+  mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
+  mDecodeOnDraw = !!(aFlags & INIT_FLAG_DECODE_ON_DRAW);
+  mMultipart = !!(aFlags & INIT_FLAG_MULTIPART);
 
   // Statistics
   if (mDiscardable) {
