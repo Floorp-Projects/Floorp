@@ -69,7 +69,7 @@ CodeGenerator::storeJsval(const Value &v, Address address)
     jv.asBits = Jsvalify(v);
 
     masm.store32(Imm32(jv.s.mask32), Address(address.base, address.offset + TAG_OFFSET));
-    if (!v.isNullOrUndefined())
+    if (!v.isUndefined())
         masm.store32(Imm32(jv.s.payload.u32), Address(address.base, address.offset + PAYLOAD_OFFSET));
 }
 
