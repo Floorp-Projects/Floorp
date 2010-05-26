@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *   David Anderson <danderson@mozilla.com>
- *   Julian Seward <jseward@acm.org>
+ *   David Mandelin <dmandelin@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),

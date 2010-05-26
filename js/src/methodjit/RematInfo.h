@@ -37,72 +37,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined jsjaeger_valueinfo_h__ && defined JS_METHODJIT
-#define jsjaeger_valueinfo_h__
+#if !defined jsjaeger_remat_h__ && defined JS_METHODJIT
+#define jsjaeger_remat_h__
 
-#include "jsapi.h"
-#include "methodjit/MachineRegs.h"
-#include "methodjit/RematInfo.h"
 #include "assembler/assembler/MacroAssembler.h"
 
-namespace js {
-namespace mjit {
+/*
+ * Describes how to rematerialize a value during compilation.
+ */
+struct RematInfo {
+    typedef JSC::MacroAssembler::RegisterID RegisterID;
 
-class FrameEntry
-{
-    friend class FrameState;
+    /* Physical location. */
+    enum PhysLoc {
+        /* Backing bits are in memory. */
+        PhysLoc_Memory = 0,
 
-  public:
-    bool isConstant() {
-        return data.isConstant();
+        /* Backed by another entry in the stack. */
+        PhysLoc_Copy,
+
+        /* Backing bits are known at compile time. */
+        PhysLoc_Constant,
+
+        /* Backing bits are in a register. */
+        PhysLoc_Register
+    };
+
+    void setRegister(RegisterID reg) {
+        reg_ = reg;
+        location_ = PhysLoc_Register;
+        synced_ = false;
     }
 
-    const jsval_layout &getConstant() {
-        JS_ASSERT(isConstant());
-        return v_;
+    void setMemory() {
+        synced_ = true;
+        location_ = PhysLoc_Memory;
     }
 
-    const Value &getValue() {
-        JS_ASSERT(isConstant());
-        return Valueify(v_.asBits);
-    }
+    void setConstant() { location_ = PhysLoc_Constant; }
 
-    bool isTypeConstant() {
-        return type.isConstant();
-    }
+    bool isCopy() { return location_ == PhysLoc_Copy; }
+    bool isConstant() { return location_ == PhysLoc_Constant; }
+    bool inRegister() { return location_ == PhysLoc_Register; }
+    RegisterID reg() { return reg_; }
 
-    uint32 getTypeTag() {
-#if 0
-        return v_.mask;
-#else
-        return v_.s.mask32;
-#endif
-    }
+    void unsync() { synced_ = false; }
+    bool synced() { return synced_; }
 
-    uint32 copyOf() {
-        JS_ASSERT(type.isCopy() || data.isCopy());
-        return index_;
-    }
+    /* Set if location is PhysLoc_Register. */
+    RegisterID reg_;
 
-  private:
-    void setConstant(const jsval &v) {
-        type.setConstant();
-        type.unsync();
-        data.setConstant();
-        data.unsync();
-        v_.asBits = v;
-    }
+    /* Remat source. */
+    PhysLoc    location_;
 
-  private:
-    RematInfo  type;
-    RematInfo  data;
-    jsval_layout v_;
-    uint32     index_;
-    uint32     copies;
+    /* Whether or not the value has been synced to memory. */
+    bool       synced_;
 };
 
-} /* namespace mjit */
-} /* namespace js */
-
-#endif /* jsjaeger_valueinfo_h__ */
+#endif
 
