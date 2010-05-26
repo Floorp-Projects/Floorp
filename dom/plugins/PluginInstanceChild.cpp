@@ -547,6 +547,10 @@ PluginInstanceChild::AnswerNPP_HandleEvent(const NPRemoteEvent& event,
 #endif
 
 #ifdef OS_WIN
+    // FIXME/bug 567645: temporarily drop the "dummy event" on the floor
+    if (WM_NULL == evcopy.event)
+        return true;
+
     // Painting for win32. SharedSurfacePaint handles everything.
     if (mWindow.type == NPWindowTypeDrawable) {
        if (evcopy.event == WM_PAINT) {
