@@ -95,6 +95,9 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
     IDBDatabaseRequest* database;
     mDatabase.forget(&database);
 
+    IDBTransactionRequest* transaction;
+    mTransaction.forget(&transaction);
+
     IDBRequest* request;
     mRequest.forget(&request);
 
@@ -105,6 +108,10 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
     if (mainThread) {
       if (database) {
         NS_ProxyRelease(mainThread, static_cast<nsIIDBDatabase*>(database));
+      }
+      if (transaction) {
+        NS_ProxyRelease(mainThread,
+                        static_cast<nsIIDBTransaction*>(transaction));
       }
       if (request) {
         NS_ProxyRelease(mainThread, static_cast<nsIDOMEventTarget*>(request));
@@ -149,20 +156,27 @@ AsyncConnectionHelper::Run()
   nsresult rv = NS_OK;
   nsCOMPtr<mozIStorageConnection> connection;
 
-  if (mDatabase) {
-    rv = mDatabase->EnsureConnection();
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "EnsureConnection failed!");
-
+  if (mTransaction) {
+    rv = mTransaction->GetOrCreateConnection(getter_AddRefs(connection));
     if (NS_SUCCEEDED(rv)) {
-      connection = mDatabase->Connection();
-      NS_ASSERTION(connection, "EnsureConnection succeeded but gave us null!");
+      NS_ASSERTION(connection, "This should never be null!");
+    }
+  }
+  else if (mDatabase) {
+    rv = mDatabase->GetOrCreateConnection(getter_AddRefs(connection));
+    if (NS_SUCCEEDED(rv)) {
+      NS_ASSERTION(connection, "This should never be null!");
+    }
+  }
 
-      rv = connection->SetProgressHandler(kProgressHandlerGranularity, this,
-                                          getter_AddRefs(mOldProgressHandler));
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetProgressHandler failed!");
-      if (NS_SUCCEEDED(rv)) {
-        mStartTime = TimeStamp::Now();
-      }
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "GetOrCreateConnection failed!");
+
+  if (connection) {
+    rv = connection->SetProgressHandler(kProgressHandlerGranularity, this,
+                                        getter_AddRefs(mOldProgressHandler));
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetProgressHandler failed!");
+    if (NS_SUCCEEDED(rv)) {
+      mStartTime = TimeStamp::Now();
     }
   }
 

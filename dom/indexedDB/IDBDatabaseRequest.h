@@ -53,12 +53,14 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
 class DatabaseInfo;
+class IDBTransactionRequest;
 
 class IDBDatabaseRequest : public IDBRequest::Generator,
                            public nsIIDBDatabaseRequest,
                            public nsIObserver
 {
   friend class AsyncConnectionHelper;
+  friend class IDBTransactionRequest;
 
 public:
   NS_DECL_ISUPPORTS
@@ -71,59 +73,11 @@ public:
          LazyIdleThread* aThread,
          nsCOMPtr<mozIStorageConnection>& aConnection);
 
-  /**
-   * Obtains a cached statement for the add operation on object stores.
-   *
-   * @pre Called from mStorageThread.
-   *
-   * @param aOverwrite
-   *        Indicating if the operation should overwrite an existing entry or
-   *        not.
-   * @param aAutoIncrement
-   *        Indicating if the operation should use our key generator or not.
-   * @returns a mozIStorageStatement to use for the put operation.
-   */
-  already_AddRefed<mozIStorageStatement> AddStatement(bool aCreate,
-                                                      bool aOverwrite,
-                                                      bool aAutoIncrement);
-
-  /**
-   * Obtains a cached statement for the remove operation on object stores.
-   *
-   * @pre Called from mStorageThread.
-   *
-   * @param aAutoIncrement
-   *        Indicating if an auto increment table is used for the object store
-   *        or not.
-   * @returns a mozIStorageStatement to use for the remove operation.
-   */
-  already_AddRefed<mozIStorageStatement> RemoveStatement(bool aAutoIncrement);
-
-  /**
-   * Obtains a cached statement for the get operation on object stores.
-   *
-   * @pre Called from mStorageThread.
-   *
-   * @param aAutoIncrement
-   *        Indicating if an auto increment table is used for the object store
-   *        or not.
-   * @returns a mozIStorageStatement to use for the get operation.
-   */
-  already_AddRefed<mozIStorageStatement> GetStatement(bool aAutoIncrement);
-
   nsIThread* ConnectionThread() {
     return mConnectionThread;
   }
 
-  void FireCloseConnectionRunnable();
-
-  void DisableConnectionThreadTimeout() {
-    mConnectionThread->DisableIdleTimeout();
-  }
-
-  void EnableConnectionThreadTimeout() {
-    mConnectionThread->EnableIdleTimeout();
-  }
+  void CloseConnection();
 
   PRUint32 Id() {
     return mDatabaseId;
@@ -133,11 +87,20 @@ protected:
   IDBDatabaseRequest();
   ~IDBDatabaseRequest();
 
-  // Only meant to be called on mStorageThread!
-  nsCOMPtr<mozIStorageConnection>& Connection();
+  void DisableConnectionThreadTimeout() {
+    mConnectionThread->DisableIdleTimeout();
+  }
+
+  void EnableConnectionThreadTimeout() {
+    mConnectionThread->EnableIdleTimeout();
+  }
+
+  const nsString& FilePath() {
+    return mFilePath;
+  }
 
   // Only meant to be called on mStorageThread!
-  nsresult EnsureConnection();
+  nsresult GetOrCreateConnection(mozIStorageConnection** aConnection);
 
 private:
   PRUint32 mDatabaseId;
@@ -147,19 +110,11 @@ private:
 
   nsRefPtr<LazyIdleThread> mConnectionThread;
 
+  nsTArray<IDBTransactionRequest*> mTransactions;
+
   // Only touched on mStorageThread! These must be destroyed in the
   // FireCloseConnectionRunnable method.
   nsCOMPtr<mozIStorageConnection> mConnection;
-  nsCOMPtr<mozIStorageStatement> mAddStmt;
-  nsCOMPtr<mozIStorageStatement> mAddAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mModifyStmt;
-  nsCOMPtr<mozIStorageStatement> mModifyAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mAddOrModifyStmt;
-  nsCOMPtr<mozIStorageStatement> mAddOrModifyAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mRemoveStmt;
-  nsCOMPtr<mozIStorageStatement> mRemoveAutoIncrementStmt;
-  nsCOMPtr<mozIStorageStatement> mGetStmt;
-  nsCOMPtr<mozIStorageStatement> mGetAutoIncrementStmt;
 };
 
 END_INDEXEDDB_NAMESPACE
