@@ -49,11 +49,7 @@
 # error "Oh no, you should define a platform so this compiles."
 #endif
 
-#if defined JS_CPU_X64
-# define JS_64BIT
-#elif defined(JS_CPU_ARM) || defined(JS_CPU_X86)
-# define JS_32BIT
-#else
+#if !defined(JS_32BIT) && !defined(JS_64BIT)
 # error "This processor is UNKNOWN."
 #endif
 

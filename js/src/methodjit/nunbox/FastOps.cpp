@@ -37,40 +37,31 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined jsjaeger_codegen_h__ && defined JS_METHODJIT
-#define jsjaeger_codegen_h__
+#include "methodjit/MethodJIT.h"
+#include "methodjit/Compiler.h"
 
-#include "jscntxt.h"
-#include "jstl.h"
-#include "BytecodeAnalyzer.h"
-#include "MethodJIT.h"
-#include "FrameState.h"
-#include "assembler/assembler/MacroAssembler.h"
-#include "CodeGenerator.h"
+#include "jsautooplen.h"
 
-namespace js {
-namespace mjit {
+using namespace js;
 
-class CodeGenerator
+static const uint32 TAG_OFFSET     = 4;
+static const uint32 PAYLOAD_OFFSET = 0;
+
+void
+mjit::Compiler::jsop_bindname(uint32 index)
 {
-    typedef JSC::MacroAssembler MacroAssembler;
-    typedef JSC::MacroAssembler::Address Address;
-    typedef JSC::MacroAssembler::Imm32 Imm32;
-    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
+    RegisterID reg = frame.allocReg();
+    masm.loadPtr(Address(FrameState::FpReg, offsetof(JSStackFrame, scopeChain)), reg);
 
-    MacroAssembler &masm;
-    FrameState     &frame;
+    Address address(reg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
 
-  public:
-    CodeGenerator(MacroAssembler &masm, FrameState &frame);
-
-    void storeValue(FrameEntry *vi, Address address, bool popped);
-    void storeJsval(const Value &v, Address address);
-    void pushValueOntoFrame(Address address);
-};
-
-} /* namespace js */
-} /* namespace mjit */
-
+    masm.load32(Address(address.base, address.offset + PAYLOAD_OFFSET), reg);
+#ifdef JS_64BIT
+# error "Bleh!"
 #endif
+
+    Jump j = masm.branchTestPtr(MacroAssembler::Zero, reg, reg);
+
+    frame.pushObject(reg);
+}
+

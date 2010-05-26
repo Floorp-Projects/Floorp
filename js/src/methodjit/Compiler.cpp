@@ -61,9 +61,9 @@ NotCheckedSSE2;
 #endif 
 
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
-  : CompilerBase(cx), cx(cx), script(script), scopeChain(scopeChain),
-    globalObj(scopeChain->getGlobal()), fun(fun), analysis(cx, script), jumpMap(NULL),
-    frame(cx, script, masm), cg(masm, frame), branchPatches(ContextAllocPolicy(cx))
+  : cx(cx), script(script), scopeChain(scopeChain), globalObj(scopeChain->getGlobal()), fun(fun),
+    analysis(cx, script), jumpMap(NULL), frame(cx, script, masm), cg(masm, frame),
+    branchPatches(ContextAllocPolicy(cx))
 {
 }
 
@@ -302,6 +302,13 @@ mjit::Compiler::labelOf(jsbytecode *pc)
     uint32 offs = uint32(pc - script->code);
     JS_ASSERT(jumpMap[offs].isValid());
     return jumpMap[offs];
+}
+
+JSC::ExecutablePool *
+mjit::Compiler::getExecPool(size_t size)
+{
+    ThreadData *jaegerData = &JS_METHODJIT_DATA(cx);
+    return jaegerData->execPool->poolForSize(size);
 }
 
 uint32
