@@ -47,6 +47,7 @@
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
 #include "mozilla/Monitor.h"
+#include "nsIPrefService.h"
 
 namespace mozilla {
 
@@ -111,6 +112,26 @@ private:
     virtual PNeckoParent* AllocPNecko();
     virtual bool DeallocPNecko(PNeckoParent* necko);
 
+    virtual bool RecvGetPrefType(const nsCString& prefName,
+            PRInt32* retValue, nsresult* rv);
+
+    virtual bool RecvGetBoolPref(const nsCString& prefName,
+            PRBool* retValue, nsresult* rv);
+
+    virtual bool RecvGetIntPref(const nsCString& prefName,
+            PRInt32* retValue, nsresult* rv);
+
+    virtual bool RecvGetCharPref(const nsCString& prefName,
+            nsCString* retValue, nsresult* rv);
+
+    virtual bool RecvPrefHasUserValue(const nsCString& prefName,
+            PRBool* retValue, nsresult* rv);
+
+    virtual bool RecvPrefIsLocked(const nsCString& prefName,
+            PRBool* retValue, nsresult* rv);
+
+    void EnsurePrefService();
+
     mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
@@ -120,6 +141,7 @@ private:
     nsCOMPtr<nsIThreadObserver> mOldObserver;
 
     bool mIsAlive;
+    nsCOMPtr<nsIPrefBranch> mPrefService; 
 };
 
 } // namespace dom

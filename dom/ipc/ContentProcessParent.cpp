@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Frederic Plourde <frederic.plourde@collabora.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +42,8 @@
 #include "TabParent.h"
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/net/NeckoParent.h"
-
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
 #include "nsIObserverService.h"
 
 #include "nsAutoPtr.h"
@@ -76,6 +78,11 @@ ContentProcessParent::GetSingleton(PRBool aForceNew)
                 if (NS_SUCCEEDED(obs->AddObserver(parent, "xpcom-shutdown",
                                                   PR_FALSE))) {
                     gSingleton = parent;
+                    nsCOMPtr<nsIPrefBranch2> prefs 
+                        (do_GetService(NS_PREFSERVICE_CONTRACTID));
+                    if (prefs) {  
+                        prefs->AddObserver("", parent, PR_FALSE);
+                    }
                 }
                 obs->AddObserver(
                   parent, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, PR_FALSE); 
@@ -160,6 +167,82 @@ ContentProcessParent::IsAlive()
     return mIsAlive;
 }
 
+bool
+ContentProcessParent::RecvGetPrefType(const nsCString& prefName,
+                                      PRInt32* retValue, nsresult* rv)
+{
+    *retValue = 0;
+
+    EnsurePrefService();
+    *rv = mPrefService->GetPrefType(prefName.get(), retValue);
+    return true;
+}
+
+bool
+ContentProcessParent::RecvGetBoolPref(const nsCString& prefName,
+                                      PRBool* retValue, nsresult* rv)
+{
+    *retValue = PR_FALSE;
+
+    EnsurePrefService();
+    *rv = mPrefService->GetBoolPref(prefName.get(), retValue);
+    return true;
+}
+
+bool
+ContentProcessParent::RecvGetIntPref(const nsCString& prefName,
+                                     PRInt32* retValue, nsresult* rv)
+{
+    *retValue = 0;
+
+    EnsurePrefService();
+    *rv = mPrefService->GetIntPref(prefName.get(), retValue);
+    return true;
+}
+
+bool
+ContentProcessParent::RecvGetCharPref(const nsCString& prefName,
+                                      nsCString* retValue, nsresult* rv)
+{
+    EnsurePrefService();
+    *rv = mPrefService->GetCharPref(prefName.get(), getter_Copies(*retValue));
+    return true;
+}
+
+bool
+ContentProcessParent::RecvPrefHasUserValue(const nsCString& prefName,
+                                           PRBool* retValue, nsresult* rv)
+{
+    *retValue = PR_FALSE;
+
+    EnsurePrefService();
+    *rv = mPrefService->PrefHasUserValue(prefName.get(), retValue);
+    return true;
+}
+
+bool
+ContentProcessParent::RecvPrefIsLocked(const nsCString& prefName,
+                                       PRBool* retValue, nsresult* rv)
+{
+    *retValue = PR_FALSE;
+
+    EnsurePrefService();
+    *rv = mPrefService->PrefIsLocked(prefName.get(), retValue);
+        
+    return true;
+}
+
+void
+ContentProcessParent::EnsurePrefService()
+{
+    nsresult rv;
+    if (!mPrefService) {
+        mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), 
+                     "We lost prefService in the Chrome process !");
+    }
+}
+
 NS_IMPL_THREADSAFE_ISUPPORTS2(ContentProcessParent,
                               nsIObserver,
                               nsIThreadObserver)
@@ -178,11 +261,27 @@ ContentProcessParent::Observe(nsISupports* aSubject,
                               const PRUnichar* aData)
 {
     if (!strcmp(aTopic, "xpcom-shutdown") && mSubprocess) {
+        // remove the global remote preferences observers
+        nsCOMPtr<nsIPrefBranch2> prefs 
+            (do_GetService(NS_PREFSERVICE_CONTRACTID));
+        if (prefs) { 
+            if (gSingleton) {
+                prefs->RemoveObserver("", this);
+            }
+        }
+
         Close();
         XRE_GetIOMessageLoop()->PostTask(
             FROM_HERE,
             NewRunnableFunction(DeleteSubprocess, mSubprocess));
         mSubprocess = nsnull;
+    }
+
+    // listening for remotePrefs...
+    if (!strcmp(aTopic, "nsPref:changed")) {
+        // We know prefs are ASCII here.
+        NS_LossyConvertUTF16toASCII strData(aData);
+        SendNotifyRemotePrefObserver(strData);
     }
 
     if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC) && mSubprocess) {
