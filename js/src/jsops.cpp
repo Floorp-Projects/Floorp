@@ -1737,9 +1737,7 @@ BEGIN_CASE(JSOP_CALLPROP)
     if (!atom) {
         ASSERT_VALID_PROPERTY_CACHE_HIT(0, aobj, obj2, entry);
         if (entry->vword.isFunObj()) {
-            regs.sp[-1].setFunObj(entry->vword.toFunObj());
-            PUSH_COPY(lval);
-            goto end_callprop;
+            rval.setFunObj(entry->vword.toFunObj());
         } else if (entry->vword.isSlot()) {
             uint32 slot = entry->vword.toSlot();
             JS_ASSERT(slot < obj2->scope()->freeslot);
