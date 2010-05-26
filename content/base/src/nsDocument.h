@@ -644,8 +644,6 @@ public:
   virtual nsIScriptGlobalObject* GetScriptGlobalObject() const;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject);
 
-  virtual nsIScriptGlobalObject*
-    GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const;
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject);
 
   virtual nsIScriptGlobalObject* GetScopeObject();
@@ -1011,6 +1009,7 @@ protected:
 
   virtual nsPIDOMWindow *GetWindowInternal();
   virtual nsPIDOMWindow *GetInnerWindowInternal();
+  virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const;
 
 #define NS_DOCUMENT_NOTIFY_OBSERVERS(func_, params_)                  \
   NS_OBSERVER_ARRAY_NOTIFY_OBSERVERS(mObservers, nsIDocumentObserver, \
@@ -1050,11 +1049,6 @@ protected:
   // Array of observers
   nsTObserverArray<nsIDocumentObserver*> mObservers;
 
-  // The document's script global object, the object from which the
-  // document can get its script context and scope. This is the
-  // *inner* window object.
-  nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
-
   // If document is created for example using
   // document.implementation.createDocument(...), mScriptObject points to
   // the script global object of the original document.
@@ -1085,8 +1079,6 @@ protected:
   PRPackedBool mIsGoingAway:1;
   // True if the document is being destroyed.
   PRPackedBool mInDestructor:1;
-  // True if document has ever had script handling object.
-  PRPackedBool mHasHadScriptHandlingObject:1;
 
   // True if this document has ever had an HTML or SVG <title> element
   // bound to it
