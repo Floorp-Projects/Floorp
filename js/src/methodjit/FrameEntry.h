@@ -81,6 +81,7 @@ struct RematInfo {
         synced_ = true;
         location_ = PhysLoc_Memory;
     }
+    bool synced() { return synced_; }
 
     RegisterID reg_;
     PhysLoc    location_;
