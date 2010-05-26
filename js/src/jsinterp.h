@@ -283,7 +283,7 @@ class PrimitiveValue
     static const uint32 Masks[THISP_ARRAY_SIZE];
 
   public:
-    static const uint32 DOUBLE_MASK = 0x8000;
+    static const uint32 DOUBLE_MASK = 0xFFFF8000;
 
     static bool test(JSFunction *fun, const Value &v) {
         uint32 mask = Masks[(fun->flags >> THISP_SHIFT) & THISP_MASK];
