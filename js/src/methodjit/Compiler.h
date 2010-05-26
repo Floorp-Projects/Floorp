@@ -45,14 +45,12 @@
 #include "BytecodeAnalyzer.h"
 #include "MethodJIT.h"
 #include "assembler/assembler/MacroAssembler.h"
-#include "FrameState.h"
-#include "CodeGenerator.h"
-#include "CompilerBase.h"
+#include "CodeGenIncludes.h"
 
 namespace js {
 namespace mjit {
 
-class Compiler : public CompilerBase
+class Compiler
 {
     typedef JSC::MacroAssembler::Label Label;
     typedef JSC::MacroAssembler::ImmPtr ImmPtr;
@@ -103,6 +101,7 @@ class Compiler : public CompilerBase
     const Label &labelOf(jsbytecode *pc);
     uint32 fullAtomIndex(jsbytecode *pc);
     void jumpInScript(Jump j, jsbytecode *pc);
+    JSC::ExecutablePool *getExecPool(size_t size);
 
     /* Opcode handlers. */
     void jsop_bindname(uint32 index);

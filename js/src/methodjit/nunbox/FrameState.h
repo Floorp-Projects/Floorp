@@ -41,9 +41,9 @@
 #define jsjaeger_framestate_h__
 
 #include "jsapi.h"
-#include "MachineRegs.h"
+#include "methodjit/MachineRegs.h"
 #include "assembler/assembler/MacroAssembler.h"
-#include "FrameEntry.h"
+#include "methodjit/nunbox/FrameEntry.h"
 
 namespace js {
 namespace mjit {

@@ -41,7 +41,7 @@
 #define jsjaeger_valueinfo_h__
 
 #include "jsapi.h"
-#include "MachineRegs.h"
+#include "methodjit/MachineRegs.h"
 #include "assembler/assembler/MacroAssembler.h"
 
 namespace js {
