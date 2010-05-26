@@ -71,7 +71,7 @@ function cleanUp() {
   // tests to fail.
   gAUS.observe(null, "xpcom-shutdown", "");
 
-  gDirSvc.unregisterProvider(gDirProvider);
+  Services.dirsvc.unregisterProvider(gDirProvider);
 
   if (gXHR) {
     gXHRCallback     = null;
@@ -94,9 +94,9 @@ function cleanUp() {
 function setDefaultPrefs() {
   // Don't display UI for a successful installation. Some apps may not set this
   // pref to false like Firefox does.
-  gPref.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, false);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_SHOW_INSTALLED_UI, false);
   // Enable Update logging
-  gPref.setBoolPref(PREF_APP_UPDATE_LOG, true);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_LOG, true);
 }
 
 /**
@@ -195,9 +195,7 @@ xhr.prototype = {
   _url: null,
   _method: null,
   open: function (method, url) {
-    gXHR.channel.originalURI = AUS_Cc["@mozilla.org/network/io-service;1"].
-                               getService(AUS_Ci.nsIIOService).
-                               newURI(url, null, null);
+    gXHR.channel.originalURI = Services.io.newURI(url, null, null);
     gXHR._method = method; gXHR._url = url;
   },
   responseXML: null,
@@ -372,7 +370,7 @@ var gDirProvider = {
     throw AUS_Cr.NS_ERROR_NO_INTERFACE;
   }
 };
-gDirSvc.QueryInterface(AUS_Ci.nsIDirectoryService).registerProvider(gDirProvider);
+Services.dirsvc.QueryInterface(AUS_Ci.nsIDirectoryService).registerProvider(gDirProvider);
 
 const INSTALL_LOCALE = "@AB_CD@";
 
