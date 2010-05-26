@@ -96,9 +96,14 @@ class FrameEntry
         return data.isConstant();
     }
 
-    const jsval &getConstant() {
+    const jsval_layout &getConstant() {
         JS_ASSERT(isConstant());
         return v_;
+    }
+
+    const Value &getValue() {
+        JS_ASSERT(isConstant());
+        return Valueify(v_.asBits);
     }
 
     bool isTypeConstant() {
@@ -106,7 +111,11 @@ class FrameEntry
     }
 
     uint32 getTypeTag() {
+#if 0
         return v_.mask;
+#else
+        return v_.s.mask32;
+#endif
     }
 
     uint32 copyOf() {
@@ -120,13 +129,13 @@ class FrameEntry
         type.unsync();
         data.setConstant();
         data.unsync();
-        v_ = v;
+        v_.asBits = v;
     }
 
   private:
     RematInfo  type;
     RematInfo  data;
-    jsval      v_;
+    jsval_layout v_;
     uint32     index_;
     uint32     copies;
 };
