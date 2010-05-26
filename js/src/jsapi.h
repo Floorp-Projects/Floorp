@@ -229,7 +229,7 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_IS_PRIMITIVE(jsval v)
 {
     jsval_layout l = { v };
-    return (l.s.mask32 & JSVAL_MASK32_OBJECT) == JSVAL_MASK32_CLEAR;
+    return (l.s.mask32 & JSVAL_MASK32_OBJECT) <= JSVAL_MASK32_CLEAR;
 }
 
 static JS_ALWAYS_INLINE JSBool
