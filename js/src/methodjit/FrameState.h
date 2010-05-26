@@ -102,7 +102,7 @@ class FrameState
      * Push a type register, unsycned, with unknown payload.
      */
     void pushUnknownType(RegisterID reg) {
-        sp[0].type.setRegister(reg, false);
+        sp[0].type.setRegister(reg);
         sp[0].data.setMemory();
         sp[0].copies = 0;
         regstate[reg].tracked = true;
@@ -120,6 +120,17 @@ class FrameState
         sp[0].copies = 0;
         sp++;
         JS_ASSERT(sp - locals <= script->nslots);
+    }
+
+    void pushObject(RegisterID reg) {
+        sp[0].type.setConstant();
+        sp[0].v_.s.mask32 = JSVAL_MASK32_NONFUNOBJ;
+        sp[0].data.setRegister(reg);
+        sp[0].copies = 0;
+        regstate[reg].tracked = true;
+        regstate[reg].part = RegState::Part_Data;
+        regstate[reg].index = uint32(sp - base);
+        sp++;
     }
 
     FrameEntry *peek(int32 depth) {
