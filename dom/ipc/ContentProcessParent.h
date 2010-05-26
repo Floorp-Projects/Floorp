@@ -124,6 +124,9 @@ private:
     virtual bool RecvGetCharPref(const nsCString& prefName,
             nsCString* retValue, nsresult* rv);
 
+    virtual bool RecvGetPrefLocalizedString(const nsCString& prefName,
+            nsString* retValue, nsresult* rv);
+
     virtual bool RecvPrefHasUserValue(const nsCString& prefName,
             PRBool* retValue, nsresult* rv);
 

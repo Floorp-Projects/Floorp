@@ -44,6 +44,7 @@
 #include "mozilla/net/NeckoParent.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIObserverService.h"
 
 #include "nsAutoPtr.h"
@@ -206,6 +207,21 @@ ContentProcessParent::RecvGetCharPref(const nsCString& prefName,
 {
     EnsurePrefService();
     *rv = mPrefService->GetCharPref(prefName.get(), getter_Copies(*retValue));
+    return true;
+}
+
+bool
+ContentProcessParent::RecvGetPrefLocalizedString(const nsCString& prefName,
+                                                 nsString* retValue, nsresult* rv)
+{
+    EnsurePrefService();
+    nsCOMPtr<nsIPrefLocalizedString> string;
+    *rv = mPrefService->GetComplexValue(prefName.get(),
+            NS_GET_IID(nsIPrefLocalizedString), getter_AddRefs(string));
+
+    if (NS_SUCCEEDED(*rv))
+      string->GetData(getter_Copies(*retValue));
+
     return true;
 }
 
