@@ -4,8 +4,9 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function FormNotifier() {
-  let baseForm = Components.classesByID["{a2059c0e-5a58-4c55-ab7c-26f0557546ef}"].
-    getService(Ci.nsIFormHistory2)
+  let formClass = Components.classesByID["{a2059c0e-5a58-4c55-ab7c-26f0557546ef}"] ||
+    Components.classesByID["{0c1bb408-71a2-403f-854a-3a0659829ded}"];
+  let baseForm = formClass.getService(Ci.nsIFormHistory2);
   let obs = Cc["@mozilla.org/observer-service;1"].
     getService(Ci.nsIObserverService);
 
