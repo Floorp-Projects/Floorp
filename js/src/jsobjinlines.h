@@ -461,8 +461,9 @@ JSObject::thisObject(JSContext *cx, const js::Value &v, js::Value *vp)
         if (!pobj)
             return false;
         vp->setObject(*pobj);
+    } else {
+        *vp = v;
     }
-    *vp = v;
     return true;
 }
 
