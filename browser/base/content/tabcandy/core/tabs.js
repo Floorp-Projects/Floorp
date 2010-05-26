@@ -214,7 +214,7 @@ function EventListenerMixIn(options) {
 // ##########
 // Class: TabsManager
 // Singelton for dealing with the actual tabs in the browser. 
-window.TabsManager = $.extend(new Subscribable(), {
+window.TabsManager = iQ.extend(new Subscribable(), {
   // ----------
   // Function: init
   // Sets up the TabsManager and window.Tabs

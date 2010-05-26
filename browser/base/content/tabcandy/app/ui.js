@@ -453,20 +453,6 @@ window.Page = {
 }
 
 // ##########
-function ArrangeClass(name, func){ this.init(name, func); };
-ArrangeClass.prototype = {
-  init: function(name, func){
-    this.$el = this._create(name);
-    this.arrange = func;
-    if(func) this.$el.click(func);
-  },
-  
-  _create: function(name){
-    return $("<a class='action' href='#'/>").text(name).css({margin:5}).appendTo("#actions");
-  }
-}
-
-// ##########
 // Class: UIClass
 // Singleton top-level UI manager. TODO: Integrate with <Page>.
 function UIClass(){ 
@@ -508,21 +494,6 @@ UIClass.prototype = {
       this.focused = (Utils.activeTab == Utils.homeTab);
       
       var self = this;
-      
-      // ___ URL Params
-      var params = document.location.search.replace('?', '').split('&');
-      $.each(params, function(index, param) {
-        var parts = param.split('=');
-        if(parts[0] == 'dev' && parts[1] == '1') 
-          self.devMode = true;
-      });
-      
-      // ___ Dev Mode
-      if(this.devMode) {
-        Switch.insert('body', '');
-        $('<br><br>').appendTo("#actions");
-        this._addArrangements();
-      }
       
       // ___ Dev Menu
       this.addDevMenu();
@@ -701,7 +672,11 @@ UIClass.prototype = {
       .appendTo('body')
       .change(function () {
         var index = $(this).val();
-        commands[index].code();
+        try {
+          commands[index].code();
+        } catch(e) {
+          Utils.log('dev menu error', e);
+        }
         $(this).val(0);
       });
       
@@ -729,6 +704,11 @@ UIClass.prototype = {
       code: function() {
         Storage.wipe();
         location.href = '';
+      }
+    }, {
+      name: 'group sites', 
+      code: function() {
+        self.arrangeBySite();
       }
     }];
       
@@ -780,63 +760,49 @@ UIClass.prototype = {
   },
   
   // ----------
-  _addArrangements: function() {
-    this.grid = new ArrangeClass("Grid", function(value) {
-      if(typeof(Groups) != 'undefined')
-        Groups.removeAll();
+  arrangeBySite: function() {
+    function putInGroup(set, key) {
+      var group = Groups.getGroupWithTitle(key);
+      if(group) {
+        iQ.each(set, function(index, el) {
+          group.add(el);
+        });
+      } else 
+        new Group(set, {dontPush: true, dontArrange: true, title: key});      
+    }
+
+    Groups.removeAll();
     
-      var immediately = false;
-      if(typeof(value) == 'boolean')
-        immediately = value;
-    
-      var box = new Rect(Page.startX, Page.startY, TabItems.tabWidth, TabItems.tabHeight); 
-      $(".tab:visible").each(function(i){
-        var item = Items.item(this);
-        item.setBounds(box, immediately);
-        
-        box.left += box.width + 30;
-        if( box.left > window.innerWidth - (box.width + Page.startX)){ // includes allowance for the box shadow
-          box.left = Page.startX;
-          box.top += box.height + 30;
-        }
-      });
-    });
-        
-    this.site = new ArrangeClass("Site", function() {
-      Groups.removeAll();
-      
-      var groups = [];
-      $(".tab:visible").each(function(i) {
-        $el = $(this);
-        var tab = Tabs.tab(this);
-        
-        var url = tab.url; 
-        var domain = url.split('/')[2]; 
+    var newTabsGroup = Groups.getNewTabGroup();
+    var groups = [];
+    var items = TabItems.getItems();
+    iQ.each(items, function(index, item) {
+      var url = item.getURL(); 
+      var domain = url.split('/')[2]; 
+      if(!domain)
+        newTabsGroup.add(item);
+      else {
         var domainParts = domain.split('.');
         var mainDomain = domainParts[domainParts.length - 2];
         if(groups[mainDomain]) 
-          groups[mainDomain].push($(this));
+          groups[mainDomain].push(item.container);
         else 
-          groups[mainDomain] = [$(this)];
-      });
-      
-      var createOptions = {dontPush: true, dontArrange: true};
-      
-      var leftovers = [];
-      for(key in groups) {
-        var set = groups[key];
-        if(set.length > 1) {
-          group = new Group(set, createOptions);
-        } else
-          leftovers.push(set[0]);
+          groups[mainDomain] = [item.container];
       }
-      
-    /*   if(leftovers.length > 1) { */
-        group = new Group(leftovers, createOptions);
-    /*   } */
-      
-      Groups.arrange();
     });
+    
+    var leftovers = [];
+    for(key in groups) {
+      var set = groups[key];
+      if(set.length > 1) {
+        putInGroup(set, key);
+      } else
+        leftovers.push(set[0]);
+    }
+    
+    putInGroup(leftovers, 'mixed');
+    
+    Groups.arrange();
   },
   
   // ----------
