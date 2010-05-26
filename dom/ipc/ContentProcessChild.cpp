@@ -21,6 +21,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Frederic Plourde <frederic.plourde@collabora.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -158,7 +159,64 @@ ContentProcessChild::ActorDestroy(ActorDestroyReason why)
     if (AbnormalShutdown == why)
         NS_WARNING("shutting down because of crash!");
 
+    ClearPrefObservers();
     XRE_ShutdownChildProcess();
+}
+
+nsresult
+ContentProcessChild::AddRemotePrefObserver(const nsCString &aDomain, 
+                                           const nsCString &aPrefRoot, 
+                                           nsIObserver *aObserver, 
+                                           PRBool aHoldWeak)
+{
+    nsPrefObserverStorage* newObserver = 
+        new nsPrefObserverStorage(aObserver, aDomain, aPrefRoot, aHoldWeak);
+
+    mPrefObserverArray.AppendElement(newObserver);
+    return NS_OK;
+}
+
+nsresult
+ContentProcessChild::RemoveRemotePrefObserver(const nsCString &aDomain, 
+                                              const nsCString &aPrefRoot, 
+                                              nsIObserver *aObserver)
+{
+    if (mPrefObserverArray.IsEmpty())
+        return NS_OK;
+
+    nsPrefObserverStorage *entry;
+    for (PRUint32 i = 0; i < mPrefObserverArray.Length(); ++i) {
+        entry = mPrefObserverArray[i];
+        if (entry && entry->GetObserver() == aObserver &&
+                     entry->GetDomain().Equals(aDomain)) {
+            // Remove this observer from our array
+            mPrefObserverArray.RemoveElementAt(i);
+            return NS_OK;
+        }
+    }
+    NS_WARNING("No preference Observer was matched !");
+    return NS_ERROR_UNEXPECTED;
+}
+
+bool
+ContentProcessChild::RecvNotifyRemotePrefObserver(const nsCString& aDomain)
+{
+    nsPrefObserverStorage *entry;
+    for (PRUint32 i = 0; i < mPrefObserverArray.Length(); ) {
+        entry = mPrefObserverArray[i];
+        nsCAutoString prefName(entry->GetPrefRoot() + entry->GetDomain());
+        // aDomain here is returned from our global pref observer from parent
+        // so it's really a full pref name (i.e. root + domain)
+        if (StringBeginsWith(aDomain, prefName)) {
+            if (!entry->NotifyObserver()) {
+                // remove the observer from the list
+                mPrefObserverArray.RemoveElementAt(i);
+                continue;
+            }
+        }
+        ++i;
+    }
+    return true;
 }
 
 } // namespace dom
