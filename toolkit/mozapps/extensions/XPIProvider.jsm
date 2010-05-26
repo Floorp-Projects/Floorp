@@ -3572,7 +3572,9 @@ AddonInstall.prototype = {
         this.name = this.addon.selectedLocale.name;
         this.type = this.addon.type;
         this.version = this.addon.version;
-        this.iconURL = createWrapper(this.addon).iconURL;
+        let newIcon = createWrapper(this.addon).iconURL;
+        if (newIcon)
+          this.iconURL = newIcon;
       }
       finally {
         bis.close();
