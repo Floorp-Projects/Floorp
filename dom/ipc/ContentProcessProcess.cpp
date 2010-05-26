@@ -49,10 +49,11 @@ namespace dom {
 bool
 ContentProcessProcess::Init()
 {
-    mXREEmbed.Start();
     mContentProcess.Init(IOThreadChild::message_loop(),
                          ParentHandle(),
                          IOThreadChild::channel());
+    mXREEmbed.Start();
+    
     return true;
 }
 

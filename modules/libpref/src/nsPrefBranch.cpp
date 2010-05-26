@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Alec Flett <alecf@netscape.com>
  *   Brian Nesse <bnesse@netscape.com>
+ *   Frederic Plourde <frederic.plourde@collabora.co.uk>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,6 +37,11 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#ifdef MOZ_IPC
+#include "mozilla/dom/ContentProcessChild.h"
+#include "nsXULAppAPI.h"
+#endif
 
 #include "nsPrefBranch.h"
 #include "nsILocalFile.h"
@@ -128,7 +134,7 @@ NS_INTERFACE_MAP_END
  * nsIPrefBranch Implementation
  */
 
-NS_IMETHODIMP nsPrefBranch::GetRoot(char * *aRoot)
+NS_IMETHODIMP nsPrefBranch::GetRoot(char **aRoot)
 {
   NS_ENSURE_ARG_POINTER(aRoot);
 
@@ -142,6 +148,20 @@ NS_IMETHODIMP nsPrefBranch::GetPrefType(const char *aPrefName, PRInt32 *_retval)
   const char *pref;
   nsresult   rv;
 
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+    
+    PRInt32 retval;
+    cpc->SendGetPrefType(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
+    if (NS_SUCCEEDED(rv))
+      *_retval = retval;
+    return rv;
+  }
+#endif
+
   rv = getValidatedPrefName(aPrefName, &pref);
   if (NS_FAILED(rv))
     return rv;
@@ -154,6 +174,20 @@ NS_IMETHODIMP nsPrefBranch::GetBoolPref(const char *aPrefName, PRBool *_retval)
 {
   const char *pref;
   nsresult   rv;
+
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    PRBool retval;
+    cpc->SendGetBoolPref(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
+    if (NS_SUCCEEDED(rv))
+      *_retval = retval;
+    return rv;
+  }
+#endif
 
   rv = getValidatedPrefName(aPrefName, &pref);
   if (NS_SUCCEEDED(rv)) {
@@ -178,6 +212,22 @@ NS_IMETHODIMP nsPrefBranch::GetCharPref(const char *aPrefName, char **_retval)
 {
   const char *pref;
   nsresult   rv;
+
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    nsCAutoString prefValue;
+    cpc->SendGetCharPref(nsDependentCString(getPrefName(aPrefName)), 
+                         &prefValue, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      *_retval = strdup(prefValue.get());
+    }
+    return rv;
+  }
+#endif
 
   rv = getValidatedPrefName(aPrefName, &pref);
   if (NS_SUCCEEDED(rv)) {
@@ -204,6 +254,20 @@ NS_IMETHODIMP nsPrefBranch::GetIntPref(const char *aPrefName, PRInt32 *_retval)
   const char *pref;
   nsresult   rv;
 
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    PRInt32 retval;
+    cpc->SendGetIntPref(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
+    if (NS_SUCCEEDED(rv))
+      *_retval = retval;
+    return rv;
+  }
+#endif
+
   rv = getValidatedPrefName(aPrefName, &pref);
   if (NS_SUCCEEDED(rv)) {
     rv = PREF_GetIntPref(pref, _retval, mIsDefault);
@@ -223,7 +287,7 @@ NS_IMETHODIMP nsPrefBranch::SetIntPref(const char *aPrefName, PRInt32 aValue)
   return rv;
 }
 
-NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID & aType, void * *_retval)
+NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID & aType, void **_retval)
 {
   nsresult       rv;
   nsXPIDLCString utf8String;
@@ -303,10 +367,10 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
 
     // The pref has the format: [fromKey]a/b/c
     if (*keyBegin++ != '[')        
-        return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
     nsACString::const_iterator keyEnd(keyBegin);
     if (!FindCharInReadable(']', keyEnd, strEnd))
-        return NS_ERROR_FAILURE;
+      return NS_ERROR_FAILURE;
     nsCAutoString key(Substring(keyBegin, keyEnd));
     
     nsCOMPtr<nsILocalFile> fromFile;        
@@ -455,6 +519,20 @@ NS_IMETHODIMP nsPrefBranch::PrefHasUserValue(const char *aPrefName, PRBool *_ret
 
   NS_ENSURE_ARG_POINTER(_retval);
 
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    PRBool retval;
+    cpc->SendPrefHasUserValue(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
+    if (NS_SUCCEEDED(rv))
+      *_retval = retval;
+    return rv;
+  }
+#endif
+
   rv = getValidatedPrefName(aPrefName, &pref);
   if (NS_SUCCEEDED(rv)) {
     *_retval = PREF_HasUserPref(pref);
@@ -480,6 +558,20 @@ NS_IMETHODIMP nsPrefBranch::PrefIsLocked(const char *aPrefName, PRBool *_retval)
   nsresult   rv;
 
   NS_ENSURE_ARG_POINTER(_retval);
+
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    PRBool retval;
+    cpc->SendPrefIsLocked(nsDependentCString(getPrefName(aPrefName)), &retval, &rv);
+    if (NS_SUCCEEDED(rv))
+      *_retval = retval;
+    return rv;
+  }
+#endif
 
   rv = getValidatedPrefName(aPrefName, &pref);
   if (NS_SUCCEEDED(rv)) {
@@ -520,8 +612,8 @@ NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)
 
 NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray)
 {
-  char**          outArray;
-  char*           theElement;
+  char            **outArray;
+  char            *theElement;
   PRInt32         numPrefs;
   PRInt32         dwIndex;
   EnumerateData   ed;
@@ -587,6 +679,17 @@ NS_IMETHODIMP nsPrefBranch::AddObserver(const char *aDomain, nsIObserver *aObser
   NS_ENSURE_ARG_POINTER(aDomain);
   NS_ENSURE_ARG_POINTER(aObserver);
 
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    nsresult rv;
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+    rv = cpc->AddRemotePrefObserver(nsDependentCString(aDomain), mPrefRoot, aObserver, aHoldWeak);
+    return rv;
+  }
+#endif
+
   if (!mObservers) {
     mObservers = new nsAutoVoidArray();
     if (nsnull == mObservers)
@@ -631,10 +734,20 @@ NS_IMETHODIMP nsPrefBranch::RemoveObserver(const char *aDomain, nsIObserver *aOb
   PRInt32 count;
   PRInt32 i;
   nsresult rv;
-  nsCAutoString domain;
 
   NS_ENSURE_ARG_POINTER(aDomain);
   NS_ENSURE_ARG_POINTER(aObserver);
+
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    nsresult rv;
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+    rv = cpc->RemoveRemotePrefObserver(nsDependentCString(aDomain), mPrefRoot, aObserver);
+    return rv;
+  }
+#endif
 
   if (!mObservers)
     return NS_OK;
@@ -681,6 +794,16 @@ NS_IMETHODIMP nsPrefBranch::Observe(nsISupports *aSubject, const char *aTopic, c
 
 static nsresult NotifyObserver(const char *newpref, void *data)
 {
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    // We shouldn't ever get here, since we never register NotifyObserver in the 
+    // content process
+    NS_NOTREACHED("Remote prefs observation should be done from the \
+                  chrome process!");
+    return NS_OK;
+  }
+#endif
+
   PrefCallbackData *pData = (PrefCallbackData *)data;
 
   // remove any root this string may contain so as to not confuse the observer
@@ -837,8 +960,24 @@ pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
  * These functions are part of nsISecurityPref, not nsIPref.
  * **PLEASE** do not call these functions from elsewhere
  */
-NS_IMETHODIMP nsPrefBranch::SecurityGetBoolPref(const char *pref, PRBool * return_val)
+NS_IMETHODIMP nsPrefBranch::SecurityGetBoolPref(const char *pref, PRBool *return_val)
 {
+#ifdef MOZ_IPC
+  nsresult rv;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    PRBool retval;
+    cpc->SendGetBoolPref(nsDependentCString(getPrefName(pref)), &retval, &rv);
+    if (NS_SUCCEEDED(rv))
+      *return_val = retval;
+    return rv;
+  }
+#endif
+
   return PREF_GetBoolPref(getPrefName(pref), return_val, PR_FALSE);
 }
 
@@ -847,18 +986,53 @@ NS_IMETHODIMP nsPrefBranch::SecuritySetBoolPref(const char *pref, PRBool value)
   return PREF_SetBoolPref(getPrefName(pref), value);
 }
 
-NS_IMETHODIMP nsPrefBranch::SecurityGetCharPref(const char *pref, char ** return_buf)
+NS_IMETHODIMP nsPrefBranch::SecurityGetCharPref(const char *pref, char **return_buf)
 {
+#ifdef MOZ_IPC
+  nsresult rv;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    nsCString prefValue;
+    cpc->SendGetCharPref(nsDependentCString(getPrefName(pref)), &prefValue, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      char *retval;
+      retval = strdup(prefValue.get());
+      *return_buf = retval;
+    }
+    return rv;
+  }
+#endif
+
   return PREF_CopyCharPref(getPrefName(pref), return_buf, PR_FALSE);
 }
 
-NS_IMETHODIMP nsPrefBranch::SecuritySetCharPref(const char *pref, const char* value)
+NS_IMETHODIMP nsPrefBranch::SecuritySetCharPref(const char *pref, const char *value)
 {
   return PREF_SetCharPref(getPrefName(pref), value);
 }
 
-NS_IMETHODIMP nsPrefBranch::SecurityGetIntPref(const char *pref, PRInt32 * return_val)
+NS_IMETHODIMP nsPrefBranch::SecurityGetIntPref(const char *pref, PRInt32 *return_val)
 {
+#ifdef MOZ_IPC
+  nsresult rv;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    PRInt32 retval;
+    cpc->SendGetIntPref(nsDependentCString(getPrefName(pref)), &retval, &rv);
+    if (NS_SUCCEEDED(rv))
+      *return_val = retval;
+    return rv;
+  }
+#endif
+
   return PREF_GetIntPref(getPrefName(pref), return_val, PR_FALSE);
 }
 
@@ -907,7 +1081,7 @@ nsresult nsPrefLocalizedString::Init()
 }
 
 NS_IMETHODIMP
-nsPrefLocalizedString::GetData(PRUnichar** _retval)
+nsPrefLocalizedString::GetData(PRUnichar **_retval)
 {
   nsAutoString data;
 
@@ -932,7 +1106,7 @@ nsPrefLocalizedString::SetData(const PRUnichar *aData)
 
 NS_IMETHODIMP
 nsPrefLocalizedString::SetDataWithLength(PRUint32 aLength,
-                                         const PRUnichar* aData)
+                                         const PRUnichar *aData)
 {
   if (!aData)
     return SetData(EmptyString());
@@ -953,28 +1127,28 @@ nsRelativeFilePref::~nsRelativeFilePref()
 {
 }
 
-NS_IMETHODIMP nsRelativeFilePref::GetFile(nsILocalFile * *aFile)
+NS_IMETHODIMP nsRelativeFilePref::GetFile(nsILocalFile **aFile)
 {
-    NS_ENSURE_ARG_POINTER(aFile);
-    *aFile = mFile;
-    NS_IF_ADDREF(*aFile);
-    return NS_OK;
+  NS_ENSURE_ARG_POINTER(aFile);
+  *aFile = mFile;
+  NS_IF_ADDREF(*aFile);
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsRelativeFilePref::SetFile(nsILocalFile * aFile)
+NS_IMETHODIMP nsRelativeFilePref::SetFile(nsILocalFile *aFile)
 {
-    mFile = aFile;
-    return NS_OK;
+  mFile = aFile;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRelativeFilePref::GetRelativeToKey(nsACString& aRelativeToKey)
 {
-    aRelativeToKey.Assign(mRelativeToKey);
-    return NS_OK;
+  aRelativeToKey.Assign(mRelativeToKey);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRelativeFilePref::SetRelativeToKey(const nsACString& aRelativeToKey)
 {
-    mRelativeToKey.Assign(aRelativeToKey);
-    return NS_OK;
+  mRelativeToKey.Assign(aRelativeToKey);
+  return NS_OK;
 }
