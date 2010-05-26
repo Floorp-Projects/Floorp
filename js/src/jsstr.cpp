@@ -633,7 +633,7 @@ Class js_StringClass = {
 static JSString *
 NormalizeThis(JSContext *cx, Value *vp)
 {
-    if (vp[1].isNull() || !ComputeThisFromVpInPlace(cx, vp) || vp[1].isNull())
+    if (vp[1].isNull() && (!ComputeThisFromVpInPlace(cx, vp) || vp[1].isNull()))
         return NULL;
 
     /*
