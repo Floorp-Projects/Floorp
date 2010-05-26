@@ -216,7 +216,11 @@ FormStore.prototype = {
 function FormTracker(name) {
   Tracker.call(this, name);
   Svc.Obs.add("form-notifier", this);
-  Svc.Obs.add("earlyformsubmit", this);
+
+  // nsHTMLFormElement doesn't use the normal observer/observe pattern and looks
+  // up nsIFormSubmitObservers to .notify() them so add manually to observers
+  Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService).
+    addObserver(this, "earlyformsubmit", false);
 }
 FormTracker.prototype = {
   __proto__: Tracker.prototype,
