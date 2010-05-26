@@ -3340,14 +3340,15 @@ class Value
  * As asserted above, js::Value and jsval are layout equivalent. To provide
  * widespread casting, the following safe casts are provided.
  */
-static inline jsval *       Jsvalify(Value *v)       { return (jsval *)v; }
-static inline const jsval * Jsvalify(const Value *v) { return (const jsval *)v; }
-static inline jsval &       Jsvalify(Value &v)       { return (jsval &)v; }
-static inline const jsval & Jsvalify(const Value &v) { return (const jsval &)v; }
-static inline Value *       Valueify(jsval *v)       { return (Value *)v; }
-static inline const Value * Valueify(const jsval *v) { return (const Value *)v; }
-static inline Value &       Valueify(jsval &v)       { return (Value &)v; }
-static inline const Value & Valueify(const jsval &v) { return (const Value &)v; }
+static inline jsval *        Jsvalify(Value *v)        { return (jsval *)v; }
+static inline const jsval *  Jsvalify(const Value *v)  { return (const jsval *)v; }
+static inline jsval &        Jsvalify(Value &v)        { return (jsval &)v; }
+static inline const jsval &  Jsvalify(const Value &v)  { return (const jsval &)v; }
+static inline Value *        Valueify(jsval *v)        { return (Value *)v; }
+static inline const Value *  Valueify(const jsval *v)  { return (const Value *)v; }
+static inline Value **       Valueify(jsval **v)       { return (Value **)v; }
+static inline Value &        Valueify(jsval &v)        { return (Value &)v; }
+static inline const Value &  Valueify(const jsval &v)  { return (const Value &)v; }
 
 /* Convenience inlines. */
 static inline Value undefinedValue() { return UndefinedTag(); }
