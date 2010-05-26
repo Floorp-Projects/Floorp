@@ -2424,6 +2424,7 @@
         <children/>
         <xul:toolbarbutton class="tabs-newtab-button"
                            command="cmd_newNavigatorTab"
+                           onclick="checkForMiddleClick(this, event);"
                            tooltiptext="&newTabButton.tooltip;"/>
       </xul:arrowscrollbox>
     </content>
