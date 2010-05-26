@@ -148,9 +148,7 @@ namespace nanojit
 }
 
 #ifdef AVMPLUS_VERBOSE
-    #ifndef NJ_VERBOSE_DISABLED
-        #define NJ_VERBOSE 1
-    #endif
+    #define NJ_VERBOSE 1
 #endif
 
 #ifdef NJ_NO_VARIADIC_MACROS
