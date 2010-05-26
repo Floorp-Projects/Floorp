@@ -13946,6 +13946,8 @@ TraceRecorder::record_JSOP_BINDNAME()
     JSAtom *atom = atoms[GET_INDEX(cx->regs->pc)];
     jsid id = ATOM_TO_JSID(atom);
     JSObject *obj2 = js_FindIdentifierBase(cx, fp->scopeChain, id);
+    if (!obj2)
+        RETURN_ERROR_A("error in js_FindIdentifierBase");
     if (obj2 != globalObj && obj2->getClass() != &js_CallClass)
         RETURN_STOP_A("BINDNAME on non-global, non-call object");
 
@@ -14012,7 +14014,7 @@ TraceRecorder::record_JSOP_IN()
     if (!localtm.recorder) {
         if (prop)
             obj2->dropProperty(localcx, prop);
-        return ARECORD_STOP;
+        return ARECORD_ABORTED;
     }
 
     if (!ok)
