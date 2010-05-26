@@ -412,6 +412,7 @@ namespace nanojit
             void        asm_mmq(Register rd, int dd, Register rs, int ds);
             void        asm_jmp(LInsp ins, InsList& pending_lives);
             void        asm_jcc(LInsp ins, InsList& pending_lives);
+            void        asm_jov(LInsp ins, InsList& pending_lives);
             void        asm_x(LInsp ins);
             void        asm_xcc(LInsp ins);
             NIns*       asm_exit(LInsp guard);
@@ -458,7 +459,7 @@ namespace nanojit
             void        asm_call(LInsp);
             Register    asm_binop_rhs_reg(LInsp ins);
             NIns*       asm_branch(bool branchOnFalse, LInsp cond, NIns* targ);
-            void        asm_branch_xov(LOpcode op, NIns* targ);
+            NIns*       asm_branch_ov(LOpcode op, NIns* targ);
             void        asm_switch(LIns* ins, NIns* target);
             void        asm_jtbl(LIns* ins, NIns** table);
             void        emitJumpTable(SwitchInfo* si, NIns* target);
