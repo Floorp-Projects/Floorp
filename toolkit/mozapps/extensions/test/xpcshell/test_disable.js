@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
+
 // This verifies that add-ons can be disabled and enabled.
 
 var addon1 = {
@@ -21,6 +23,8 @@ var addon1 = {
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
+var gIconURL = null;
+
 // Sets up the profile by installing an add-on.
 function run_test() {
   do_test_pending();
@@ -35,6 +39,10 @@ function run_test() {
     var dest = profileDir.clone();
     dest.append("addon1@tests.mozilla.org");
     writeInstallRDFToDir(addon1, dest);
+    // Add a fake icon to the extension
+    dest.append("icon.png");
+    dest.create(AM_Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
+    gIconURL = NetUtil.newURI(dest);
 
     restartManager(1);
 
@@ -86,7 +94,7 @@ function run_test_1() {
         do_check_true(newa1.userDisabled);
         do_check_eq(newa1.aboutURL, null);
         do_check_eq(newa1.optionsURL, null);
-        do_check_eq(newa1.iconURL, null);
+        do_check_eq(newa1.iconURL, gIconURL.spec);
         do_check_false(isExtensionInAddonsList(profileDir, newa1.id));
         do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
         do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
@@ -110,7 +118,7 @@ function run_test_2() {
     a1.userDisabled = false;
     do_check_eq(a1.aboutURL, null);
     do_check_eq(a1.optionsURL, null);
-    do_check_eq(a1.iconURL, null);
+    do_check_eq(a1.iconURL, gIconURL.spec);
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
 
