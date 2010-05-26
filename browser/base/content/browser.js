@@ -6085,7 +6085,7 @@ var gPluginHandler = {
     let notifications = {
       PluginBlocklisted : {
                             barID   : "blocked-plugins",
-                            iconURL : "chrome://mozapps/skin/plugins/pluginBlocked-16.png",
+                            iconURL : "chrome://mozapps/skin/plugins/notifyPluginBlocked.png",
                             message : gNavigatorBundle.getString("blockedpluginsMessage.title"),
                             buttons : [{
                                          label     : gNavigatorBundle.getString("blockedpluginsMessage.infoButton.label"),
@@ -6102,7 +6102,7 @@ var gPluginHandler = {
                           },
       PluginOutdated    : {
                             barID   : "outdated-plugins",
-                            iconURL : "chrome://mozapps/skin/plugins/pluginOutdated-16.png",
+                            iconURL : "chrome://mozapps/skin/plugins/notifyPluginOutdated.png",
                             message : gNavigatorBundle.getString("outdatedpluginsMessage.title"),
                             buttons : [{
                                          label     : gNavigatorBundle.getString("outdatedpluginsMessage.updateButton.label"),
@@ -6113,7 +6113,7 @@ var gPluginHandler = {
                           },
       PluginNotFound    : {
                             barID   : "missing-plugins",
-                            iconURL : "chrome://mozapps/skin/plugins/pluginGeneric-16.png",
+                            iconURL : "chrome://mozapps/skin/plugins/notifyPluginGeneric.png",
                             message : gNavigatorBundle.getString("missingpluginsMessage.title"),
                             buttons : [{
                                          label     : gNavigatorBundle.getString("missingpluginsMessage.button.label"),
@@ -6314,7 +6314,7 @@ var gPluginHandler = {
 
       // Configure the notification bar
       let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-      let iconURL = "chrome://mozapps/skin/plugins/pluginGeneric-16.png";
+      let iconURL = "chrome://mozapps/skin/plugins/notifyPluginCrashed.png";
       let reloadLabel = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.label");
       let reloadKey   = gNavigatorBundle.getString("crashedpluginsMessage.reloadButton.accesskey");
       let submitLabel = gNavigatorBundle.getString("crashedpluginsMessage.submitButton.label");
