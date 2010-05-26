@@ -313,6 +313,7 @@
 @BINPATH@/components/nsWebHandlerApp.js
 @BINPATH@/components/nsBadCertHandler.js
 @BINPATH@/components/nsFormAutoComplete.js
+@BINPATH@/components/nsFormHistory.js
 @BINPATH@/components/contentSecurityPolicy.js
 @BINPATH@/components/contentAreaDropListener.js
 #ifdef XP_MACOSX
