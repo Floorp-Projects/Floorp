@@ -92,8 +92,8 @@ $(CRT_OBJ_DIR)/jemalloc.c: $(srcdir)/$(CRTDIFF)
 
 $(MOZ_CRT_DLL): \
   $(CRT_OBJ_DIR)/jemalloc.c $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h \
-  $(srcdir)/rb.h
-	cp $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h $(srcdir)/rb.h \
+  $(srcdir)/jemalloc_types.h $(srcdir)/rb.h
+	cp $(srcdir)/jemalloc.c $(srcdir)/jemalloc.h $(srcdir)/jemalloc_types.h $(srcdir)/rb.h \
 	$(CRT_OBJ_DIR)
 # this pretty much sucks, but nmake and make don't play well together
 	$(PYTHON) $(srcdir)/build-crt.py $(CRT_OBJ_DIR)
@@ -105,7 +105,7 @@ $(MOZ_CRT_DLL): \
 	rm -f $(addsuffix .pdb, $(addprefix $(CRT_OBJ_DIR)/build/intel/, $(MOZ_CRT_STATIC_LIBS)))
 
 # but still export jemalloc.h
-EXPORTS = jemalloc.h
+EXPORTS = jemalloc.h jemalloc_types.h
 
 else # Not Windows
 
@@ -127,7 +127,7 @@ DIST_INSTALL = 1
 FORCE_STATIC_LIB= 1
 endif
 
-EXPORTS = jemalloc.h
+EXPORTS = jemalloc.h jemalloc_types.h
 CSRCS   = jemalloc.c
 
 #XXX: PGO on Linux causes problems here
