@@ -3291,10 +3291,10 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         goto fail;
     for (i = 0; i < n; i++) {
         sd.results[i] = JSVAL_VOID;
-        ok = JS_AddRoot(cx, &sd.results[i]);
+        ok = JS_AddValueRoot(cx, &sd.results[i]);
         if (!ok) {
             while (i-- > 0)
-                JS_RemoveRoot(cx, &sd.results[i]);
+                JS_RemoveValueRoot(cx, &sd.results[i]);
             free(sd.results);
             sd.results = NULL;
             goto fail;
@@ -3311,14 +3311,14 @@ Scatter(JSContext *cx, uintN argc, jsval *vp)
         sd.threads[i].cx = NULL;
         sd.threads[i].fn = JSVAL_NULL;
 
-        ok = JS_AddRoot(cx, &sd.threads[i].fn);
+        ok = JS_AddValueRoot(cx, &sd.threads[i].fn);
         if (ok && !JS_GetElement(cx, inArr, (jsint) i, &sd.threads[i].fn)) {
-            JS_RemoveRoot(cx, &sd.threads[i].fn);
+            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             ok = JS_FALSE;
         }
         if (!ok) {
             while (i-- > 0)
-                JS_RemoveRoot(cx, &sd.threads[i].fn);
+                JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             free(sd.threads);
             sd.threads = NULL;
             goto fail;
@@ -3386,7 +3386,7 @@ out:
         JSContext *acx;
 
         for (i = 0; i < n; i++) {
-            JS_RemoveRoot(cx, &sd.threads[i].fn);
+            JS_RemoveValueRoot(cx, &sd.threads[i].fn);
             acx = sd.threads[i].cx;
             if (acx) {
                 JS_SetContextThread(acx);
@@ -3397,7 +3397,7 @@ out:
     }
     if (sd.results) {
         for (i = 0; i < n; i++)
-            JS_RemoveRoot(cx, &sd.results[i]);
+            JS_RemoveValueRoot(cx, &sd.results[i]);
         free(sd.results);
     }
     if (sd.cvar)
@@ -5082,7 +5082,7 @@ main(int argc, char **argv, char **envp)
         JSObject *newGlobalObject(JSContext *cx) { return NewGlobalObject(cx); }
     };
     ShellWorkerHooks hooks;
-    if (!JS_AddNamedRoot(cx, &gWorkers, "Workers") ||
+    if (!JS_AddNamedObjectRoot(cx, &gWorkers, "Workers") ||
         !js::workers::init(cx, &hooks, glob, &gWorkers)) {
         return 1;
     }
@@ -5092,7 +5092,7 @@ main(int argc, char **argv, char **envp)
 
 #ifdef JS_THREADSAFE
     js::workers::finish(cx, gWorkers);
-    JS_RemoveRoot(cx, &gWorkers);
+    JS_RemoveObjectRoot(cx, &gWorkers);
     if (result == 0)
         result = gExitCode;
 #endif
