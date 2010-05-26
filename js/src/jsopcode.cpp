@@ -132,6 +132,16 @@ const char *js_CodeName[] = {
 
 /************************************************************************/
 
+// Convert an atom to a double, also allowing the possibility that the 
+// atom is a double, which the standard ATOM_TO_JSVAL API does not.
+static jsval
+ExtAtomToJsval(const JSAtom *atom)
+{
+    return ATOM_IS_DOUBLE(atom) 
+         ? DOUBLE_TO_JSVAL(*ATOM_TO_DOUBLE(atom))
+         : ATOM_TO_JSVAL(atom);
+}
+
 static ptrdiff_t
 GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
 {
@@ -372,7 +382,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         index = js_GetIndexFromBytecode(cx, script, pc, 0);
         if (type == JOF_ATOM) {
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
-            v = ATOM_TO_JSVAL(atom);
+            v = ExtAtomToJsval(atom);
         } else {
             if (type == JOF_OBJECT)
                 obj = script->getObject(index);
@@ -440,7 +450,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
             off = GetJumpOffset(pc, pc2);
             pc2 += jmplen;
 
-            bytes = ToDisassemblySource(cx, ATOM_TO_JSVAL(atom));
+            bytes = ToDisassemblySource(cx, ExtAtomToJsval(atom));
             if (!bytes)
                 return 0;
             fprintf(fp, "\n\t%s: %d", bytes, (intN) off);
@@ -464,7 +474,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         index = js_GetIndexFromBytecode(cx, script, pc, SLOTNO_LEN);
         if (type == JOF_SLOTATOM) {
             JS_GET_SCRIPT_ATOM(script, pc, index, atom);
-            v = ATOM_TO_JSVAL(atom);
+            v = ExtAtomToJsval(atom);
         } else {
             obj = script->getObject(index);
             v = OBJECT_TO_JSVAL(obj);
@@ -4304,9 +4314,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     pc2 += INDEX_LEN;
                     off2 = GetJumpOffset(pc, pc2);
                     pc2 += jmplen;
-                    table[k].key = ATOM_IS_DOUBLE(atom) 
-                                 ? DOUBLE_TO_JSVAL(*ATOM_TO_DOUBLE(atom))
-                                 : ATOM_TO_JSVAL(atom);
+                    table[k].key = ExtAtomToJsval(atom);
                     table[k].offset = off2;
                 }
 
