@@ -114,7 +114,7 @@ GetNativeStackBase()
 void *
 GetNativeStackBaseImpl()
 {
-# if defined(_WIN32) && defined(_MSC_VER)
+# if defined(_M_IX86) && defined(_MSC_VER)
     /*
      * offset 0x18 from the FS segment register gives a pointer to
      * the thread information block for the current thread
@@ -126,7 +126,7 @@ GetNativeStackBaseImpl()
     }
     return static_cast<void*>(pTib->StackBase);
 
-# elif defined(_WIN64) && defined(_MSC_VER)
+# elif defined(_M_X64) && defined(_MSC_VER)
     PNT_TIB64 pTib = reinterpret_cast<PNT_TIB64>(NtCurrentTeb());
     return reinterpret_cast<void*>(pTib->StackBase);
 
