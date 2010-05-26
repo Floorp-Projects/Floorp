@@ -607,7 +607,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   nsCOMPtr<mozIStorageStatement> stmt =
-    mDatabase->AddStatement(mCreate, mayOverwrite, mAutoIncrement);
+    mTransaction->AddStatement(mCreate, mayOverwrite, mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
   mozStorageStatementScoper scoper(stmt);
@@ -665,7 +665,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
       rv = stmt->Reset();
       NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
 
-      stmt = mDatabase->AddStatement(false, true, true);
+      stmt = mTransaction->AddStatement(false, true, true);
       NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
 
       mozStorageStatementScoper scoper2(stmt);
@@ -755,7 +755,8 @@ GetHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 {
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
-  nsCOMPtr<mozIStorageStatement> stmt = mDatabase->GetStatement(mAutoIncrement);
+  nsCOMPtr<mozIStorageStatement> stmt =
+    mTransaction->GetStatement(mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
   mozStorageStatementScoper scoper(stmt);
 
@@ -803,7 +804,7 @@ RemoveHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
   nsCOMPtr<mozIStorageStatement> stmt =
-    mDatabase->RemoveStatement(mAutoIncrement);
+    mTransaction->RemoveStatement(mAutoIncrement);
   NS_ENSURE_TRUE(stmt, nsIIDBDatabaseException::UNKNOWN_ERR);
   mozStorageStatementScoper scoper(stmt);
 

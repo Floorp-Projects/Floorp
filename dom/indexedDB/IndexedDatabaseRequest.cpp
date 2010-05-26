@@ -652,7 +652,7 @@ OpenDatabaseHelper::GetSuccessResult(nsIWritableVariant* aResult)
         NS_ERROR("Failed to add to hash!");
         return nsIIDBDatabaseException::UNKNOWN_ERR;
       }
-  
+
       info.forget();
     }
   }

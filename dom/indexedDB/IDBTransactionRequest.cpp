@@ -40,13 +40,30 @@
 #include "IDBTransactionRequest.h"
 
 #include "nsDOMClassInfo.h"
+#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 #include "IDBEvents.h"
 #include "IDBObjectStoreRequest.h"
+#include "IndexedDatabaseRequest.h"
 #include "DatabaseInfo.h"
 
 USING_INDEXEDDB_NAMESPACE
+
+namespace {
+
+template <class T>
+inline
+nsresult
+IfProxyRelease(nsIEventTarget* aTarget,
+               nsCOMPtr<T>& aDoomed)
+{
+   T* raw = nsnull;
+   aDoomed.swap(raw);
+   return raw ? NS_ProxyRelease(aTarget, raw, PR_TRUE) : NS_OK;
+}
+
+} // anonymous namespace
 
 // static
 already_AddRefed<IDBTransactionRequest>
@@ -58,6 +75,12 @@ IDBTransactionRequest::Create(IDBDatabaseRequest* aDatabase,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<IDBTransactionRequest> transaction = new IDBTransactionRequest();
+
+  NS_ASSERTION(!aDatabase->mTransactions.Contains(transaction), "Huh?");
+  if (!aDatabase->mTransactions.AppendElement(transaction)) {
+    NS_ERROR("Out of memory!");
+    return nsnull;
+  }
 
   transaction->mDatabase = aDatabase;
   transaction->mMode = aMode;
@@ -85,6 +108,13 @@ IDBTransactionRequest::~IDBTransactionRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mPendingRequests, "Should have no pending requests here!");
+
+  CloseConnection();
+
+  if (mDatabase) {
+    NS_ASSERTION(mDatabase->mTransactions.Contains(this), "Huh?");
+    mDatabase->mTransactions.RemoveElement(this);
+  }
 
   if (mListenerManager) {
     mListenerManager->Disconnect();
@@ -168,6 +198,201 @@ IDBTransactionRequest::RevertToSavepoint(const nsCString& aName)
   sql.Append(aName);
   nsresult rv = mConnection->ExecuteSimpleSQL(sql);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Rollback failed");
+}
+
+nsresult
+IDBTransactionRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+
+  if (!mConnection) {
+    mConnection = IndexedDatabaseRequest::GetConnection(mDatabase->FilePath());
+    NS_ENSURE_TRUE(mConnection, NS_ERROR_FAILURE);
+  }
+
+  nsCOMPtr<mozIStorageConnection> result(mConnection);
+  result.forget(aResult);
+  return NS_OK;
+}
+
+already_AddRefed<mozIStorageStatement>
+IDBTransactionRequest::AddStatement(bool aCreate,
+                                    bool aOverwrite,
+                                    bool aAutoIncrement)
+{
+#ifdef DEBUG
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  if (!aCreate) {
+    NS_ASSERTION(aOverwrite, "Bad param combo!");
+  }
+#endif
+
+  NS_ASSERTION(mConnection, "No connection!");
+
+  nsCOMPtr<mozIStorageStatement>& cachedStatement =
+    aAutoIncrement ?
+      aCreate ?
+        aOverwrite ?
+          mAddOrModifyAutoIncrementStmt :
+          mAddAutoIncrementStmt :
+        mModifyAutoIncrementStmt :
+      aCreate ?
+        aOverwrite ?
+          mAddOrModifyStmt :
+          mAddStmt :
+        mModifyStmt;
+
+  nsCOMPtr<mozIStorageStatement> result(cachedStatement);
+
+  if (!result) {
+    nsCString query;
+    if (aAutoIncrement) {
+      if (aCreate) {
+        if (aOverwrite) {
+          query.AssignLiteral(
+            "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
+            "VALUES (:osid, :key_value, :data)"
+          );
+        }
+        else {
+          query.AssignLiteral(
+            "INSERT INTO ai_object_data (object_store_id, data) "
+            "VALUES (:osid, :data)"
+          );
+        }
+      }
+      else {
+        query.AssignLiteral(
+          "UPDATE ai_object_data "
+          "SET data = :data "
+          "WHERE object_store_id = :osid "
+          "AND id = :key_value"
+        );
+      }
+    }
+    else {
+      if (aCreate) {
+        if (aOverwrite) {
+          query.AssignLiteral(
+            "INSERT OR REPLACE INTO object_data (object_store_id, key_value, "
+                                                "data) "
+            "VALUES (:osid, :key_value, :data)"
+          );
+        }
+        else {
+          query.AssignLiteral(
+            "INSERT INTO object_data (object_store_id, key_value, data) "
+            "VALUES (:osid, :key_value, :data)"
+          );
+        }
+      }
+      else {
+        query.AssignLiteral(
+          "UPDATE object_data "
+          "SET data = :data "
+          "WHERE object_store_id = :osid "
+          "AND key_value = :key_value"
+        );
+      }
+    }
+
+    nsresult rv = mConnection->CreateStatement(query,
+                                               getter_AddRefs(cachedStatement));
+    NS_ENSURE_SUCCESS(rv, nsnull);
+
+    result = cachedStatement;
+  }
+  return result.forget();
+}
+
+already_AddRefed<mozIStorageStatement>
+IDBTransactionRequest::RemoveStatement(bool aAutoIncrement)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mConnection, "No connection!");
+
+  nsCOMPtr<mozIStorageStatement> result;
+
+  nsresult rv;
+  if (aAutoIncrement) {
+    if (!mRemoveAutoIncrementStmt) {
+      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM ai_object_data "
+        "WHERE id = :key_value "
+        "AND object_store_id = :osid"
+      ), getter_AddRefs(mRemoveAutoIncrementStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    result = mRemoveAutoIncrementStmt;
+  }
+  else {
+    if (!mRemoveStmt) {
+      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "DELETE FROM object_data "
+        "WHERE key_value = :key_value "
+        "AND object_store_id = :osid"
+      ), getter_AddRefs(mRemoveStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    result = mRemoveStmt;
+  }
+
+  return result.forget();
+}
+
+already_AddRefed<mozIStorageStatement>
+IDBTransactionRequest::GetStatement(bool aAutoIncrement)
+{
+  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mConnection, "No connection!");
+
+  nsCOMPtr<mozIStorageStatement> result;
+
+  nsresult rv;
+  if (aAutoIncrement) {
+    if (!mGetAutoIncrementStmt) {
+      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT data "
+        "FROM ai_object_data "
+        "WHERE id = :id "
+        "AND object_store_id = :osid"
+      ), getter_AddRefs(mGetAutoIncrementStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    result = mGetAutoIncrementStmt;
+  }
+  else {
+    if (!mGetStmt) {
+      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT data "
+        "FROM object_data "
+        "WHERE key_value = :id "
+        "AND object_store_id = :osid"
+      ), getter_AddRefs(mGetStmt));
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
+    result = mGetStmt;
+  }
+
+  return result.forget();
+}
+
+void
+IDBTransactionRequest::CloseConnection()
+{
+  nsIThread* thread = mDatabase->ConnectionThread();
+
+  IfProxyRelease(thread, mConnection);
+  IfProxyRelease(thread, mAddStmt);
+  IfProxyRelease(thread, mAddAutoIncrementStmt);
+  IfProxyRelease(thread, mModifyStmt);
+  IfProxyRelease(thread, mModifyAutoIncrementStmt);
+  IfProxyRelease(thread, mAddOrModifyStmt);
+  IfProxyRelease(thread, mAddOrModifyAutoIncrementStmt);
+  IfProxyRelease(thread, mRemoveStmt);
+  IfProxyRelease(thread, mRemoveAutoIncrementStmt);
+  IfProxyRelease(thread, mGetStmt);
+  IfProxyRelease(thread, mGetAutoIncrementStmt);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransactionRequest)

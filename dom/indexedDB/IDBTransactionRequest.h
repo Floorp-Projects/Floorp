@@ -51,6 +51,8 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Storage.h"
 
+class nsIThread;
+
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
@@ -85,12 +87,24 @@ public:
   bool StartSavepoint(const nsCString& aName);
   void RevertToSavepoint(const nsCString& aName);
 
+  already_AddRefed<mozIStorageStatement> AddStatement(bool aCreate,
+                                                      bool aOverwrite,
+                                                      bool aAutoIncrement);
+
+  already_AddRefed<mozIStorageStatement> RemoveStatement(bool aAutoIncrement);
+
+  already_AddRefed<mozIStorageStatement> GetStatement(bool aAutoIncrement);
+
+  void CloseConnection();
+
 private:
   IDBTransactionRequest();
   ~IDBTransactionRequest();
 
+  // Only meant to be called on mStorageThread!
+  nsresult GetOrCreateConnection(mozIStorageConnection** aConnection);
+
   nsRefPtr<IDBDatabaseRequest> mDatabase;
-  nsCOMPtr<mozIStorageConnection> mConnection;
   nsTArray<nsString> mObjectStoreNames;
   PRUint16 mReadyState;
   PRUint16 mMode;
@@ -99,11 +113,24 @@ private:
 
   PRInt64 mLastUniqueNumber;
 
-  nsAutoPtr<mozStorageTransaction> mDBTransaction;
-
   nsRefPtr<nsDOMEventListenerWrapper> mOnCompleteListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnTimeoutListener;
+
+  // Only touched on the database thread.
+  nsCOMPtr<mozIStorageConnection> mConnection;
+  nsAutoPtr<mozStorageTransaction> mDBTransaction;
+
+  nsCOMPtr<mozIStorageStatement> mAddStmt;
+  nsCOMPtr<mozIStorageStatement> mAddAutoIncrementStmt;
+  nsCOMPtr<mozIStorageStatement> mModifyStmt;
+  nsCOMPtr<mozIStorageStatement> mModifyAutoIncrementStmt;
+  nsCOMPtr<mozIStorageStatement> mAddOrModifyStmt;
+  nsCOMPtr<mozIStorageStatement> mAddOrModifyAutoIncrementStmt;
+  nsCOMPtr<mozIStorageStatement> mRemoveStmt;
+  nsCOMPtr<mozIStorageStatement> mRemoveAutoIncrementStmt;
+  nsCOMPtr<mozIStorageStatement> mGetStmt;
+  nsCOMPtr<mozIStorageStatement> mGetAutoIncrementStmt;
 };
 
 NS_STACK_CLASS
