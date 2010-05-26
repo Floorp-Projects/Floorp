@@ -248,8 +248,6 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
     jsid id;
     JSObject *obj2;
     JSProperty *prop;
-    uintN attrs;
-    jsval val;
 
     JS_CHECK_RECURSION(cx, return NULL);
 
@@ -279,32 +277,37 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                 break;
             if (!prop)
                 continue;
-            ok = obj2->getAttributes(cx, id, prop, &attrs);
-            if (ok) {
-                if (obj2->isNative() &&
-                    (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
-                    JSScopeProperty *sprop = (JSScopeProperty *) prop;
-                    val = JSVAL_VOID;
-                    if (attrs & JSPROP_GETTER)
-                        val = sprop->getterValue();
-                    if (attrs & JSPROP_SETTER) {
-                        if (val != JSVAL_VOID) {
-                            /* Mark the getter, then set val to setter. */
-                            ok = (MarkSharpObjects(cx, JSVAL_TO_OBJECT(val),
-                                                   NULL)
-                                  != NULL);
-                        }
-                        val = sprop->setterValue();
-                    }
-                } else {
-                    ok = obj->getProperty(cx, id, &val);
-                }
+            bool hasGetter, hasSetter;
+            AutoValueRooter v(cx, JSVAL_VOID);
+            AutoValueRooter setter(cx, JSVAL_VOID);
+            if (obj->isNative()) {
+                JSScopeProperty *sprop = (JSScopeProperty *) prop;
+                hasGetter = sprop->hasGetterValue();
+                hasSetter = sprop->hasSetterValue();
+                if (hasGetter)
+                    v.set(sprop->getterValue());
+                if (hasSetter)
+                    setter.set(sprop->setterValue());
+                JS_UNLOCK_OBJ(cx, obj2);
+            } else {
+                obj->dropProperty(cx, prop);
+                hasGetter = hasSetter = false;
             }
-            obj2->dropProperty(cx, prop);
-            if (!ok)
-                break;
-            if (!JSVAL_IS_PRIMITIVE(val) &&
-                !MarkSharpObjects(cx, JSVAL_TO_OBJECT(val), NULL)) {
+            if (hasSetter) {
+                /* Mark the getter, then set val to setter. */
+                if (hasGetter && !JSVAL_IS_PRIMITIVE(v.value())) {
+                    ok = !!MarkSharpObjects(cx, JSVAL_TO_OBJECT(v.value()), NULL);
+                    if (!ok)
+                        break;
+                }
+                v.set(setter.value());
+            } else if (!hasGetter) {
+                ok = obj->getProperty(cx, id, v.addr());
+                if (!ok)
+                    break;
+            }
+            if (!JSVAL_IS_PRIMITIVE(v.value()) &&
+                !MarkSharpObjects(cx, JSVAL_TO_OBJECT(v.value()), NULL)) {
                 ok = JS_FALSE;
                 break;
             }
@@ -873,7 +876,7 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     if (!obj)
         return JS_FALSE;
     if (obj->isProxy()) {
-        if (!JS_GetProxyObjectClass(cx, obj, &clazz))
+        if (!GetProxyObjectClass(cx, obj, &clazz))
             return false;
     } else {
         obj = js_GetWrappedObject(cx, obj);
@@ -1118,14 +1121,6 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
         return JS_TRUE;
     }
 
-    /*
-     * If the caller is a lightweight function and doesn't have a variables
-     * object, then we need to provide one for the compiler to stick any
-     * declared (var) variables into.
-     */
-    if (caller->fun && !caller->callobj && !js_GetCallObject(cx, caller))
-        return JS_FALSE;
-
     /* Accept an optional trailing argument that overrides the scope object. */
     JSObject *scopeobj = NULL;
     if (argc >= 2) {
@@ -1196,6 +1191,7 @@ obj_eval(JSContext *cx, uintN argc, jsval *vp)
              * NB: This means that native callers (who reach this point through
              * the C API) must use the two parameter form.
              */
+            JS_ASSERT_IF(caller->argv, caller->callobj);
             scopeobj = callerScopeChain;
         }
 #endif
@@ -3199,6 +3195,14 @@ js_DefineBlockVariable(JSContext *cx, JSObject *obj, jsid id, intN index)
                                    JSScopeProperty::HAS_SHORTID, index, NULL);
 }
 
+static size_t
+GetObjectSize(JSObject *obj)
+{
+    return (obj->isFunction() && !obj->getPrivate())
+           ? sizeof(JSFunction)
+           : sizeof(JSObject);
+}
+
 /*
  * Use this method with extreme caution. It trades the guts of two objects and updates
  * scope ownership. This operation is not thread-safe, just as fast array to slow array
@@ -3212,11 +3216,17 @@ JSObject::swap(JSObject *other)
     bool thisOwns = this->isNative() && scope()->object == this;
     bool otherOwns = other->isNative() && other->scope()->object == other;
 
+    size_t size = GetObjectSize(this);
+    JS_ASSERT(size == GetObjectSize(other));
+
     /* Trade the guts of the objects. */
-    JSObject tmp;
-    memcpy(&tmp, this, sizeof(JSObject));
-    memcpy(this, other, sizeof(JSObject));
-    memcpy(other, &tmp, sizeof(JSObject));
+    union {
+        JSFunction fun;
+        JSObject obj;
+    } tmp;
+    memcpy(&tmp, this, size);
+    memcpy(this, other, size);
+    memcpy(other, &tmp, size);
 
     /* Fixup scope ownerships. */
     if (otherOwns)

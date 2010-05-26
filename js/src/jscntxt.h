@@ -2248,6 +2248,11 @@ class AutoValueRooter : private AutoGCRooter
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
+    void set(jsval v) {
+        JS_ASSERT(tag == JSVAL);
+        val = v;
+    }
+
     void setObject(JSObject *obj) {
         JS_ASSERT(tag == JSVAL);
         val = OBJECT_TO_JSVAL(obj);
