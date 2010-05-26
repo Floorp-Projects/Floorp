@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+//This file must not have include guards.
+
 // Features (SVG 1.1 style)
 
 // Static festures
