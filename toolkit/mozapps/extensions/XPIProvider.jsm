@@ -3363,10 +3363,6 @@ function AddonInstall(aCallback, aInstallLocation, aUrl, aHash, aName, aType,
     }
 
     this.loadManifest();
-    this.name = this.addon.selectedLocale.name;
-    this.type = this.addon.type;
-    this.version = this.addon.version;
-    this.iconURL = this.addon.iconURL;
 
     let self = this;
     XPIDatabase.getVisibleAddonForID(this.addon.id, function(aAddon) {
@@ -3572,6 +3568,11 @@ AddonInstall.prototype = {
         this.addon = loadManifestFromRDF(uri, bis);
         this.addon._sourceBundle = this.file;
         this.addon._install = this;
+
+        this.name = this.addon.selectedLocale.name;
+        this.type = this.addon.type;
+        this.version = this.addon.version;
+        this.iconURL = createWrapper(this.addon).iconURL;
       }
       finally {
         bis.close();
@@ -3745,11 +3746,7 @@ AddonInstall.prototype = {
         }
         try {
           this.loadManifest();
-          this.name = this.addon.selectedLocale.name;
-          this.type = this.addon.type;
-          this.version = this.addon.version;
-          // TODO fix this to not allow chrome URLs etc (bug 552744).
-          //this.iconURL = this.addon.iconURL;
+
           if (this.addon.isCompatible) {
             this.downloadCompleted();
           }
@@ -3865,25 +3862,13 @@ AddonInstall.prototype = {
                      createInstance(Ci.nsIFileOutputStream);
         let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
                         createInstance(Ci.nsIConverterOutputStream);
-        let json = Cc["@mozilla.org/dom/json;1"].
-                   createInstance(Ci.nsIJSON);
 
         try {
           stream.init(stagedJSON, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE |
                                   FileUtils.MODE_TRUNCATE, FileUtils.PERMS_FILE,
                                  0);
           converter.init(stream, "UTF-8", 0, 0x0000);
-
-          // A little hacky but we can't cache certain objects.
-          let objs = {
-            sourceBundle: this.addon._sourceBundle,
-            install: this.addon._install
-          };
-          delete this.addon._sourceBundle;
-          delete this.addon._install;
-          converter.writeString(json.encode(this.addon));
-          this.addon._sourceBundle = objs.sourceBundle;
-          this.addon._install = objs.install;
+          converter.writeString(JSON.stringify(this.addon));
         }
         finally {
           converter.close();
@@ -4310,6 +4295,31 @@ AddonInternal.prototype = {
       });
     });
     this.appDisabled = !isUsableAddon(this);
+  },
+
+  toJSON: function(key) {
+    let obj = {};
+    for (let prop in this) {
+      // Ignore private properties
+      if (prop.substring(0, 1) == "_")
+        continue;
+
+      // Ignore getters
+      if (this.__lookupGetter__(prop))
+        continue;
+
+      // Ignore setters
+      if (this.__lookupSetter__(prop))
+        continue;
+
+      // Ignore functions
+      if (typeof this[prop] == "function")
+        continue;
+
+      obj[prop] = this[prop];
+    }
+
+    return obj;
   }
 };
 
@@ -4379,9 +4389,9 @@ DBAddonInternal.prototype.__proto__ = AddonInternal.prototype;
 function createWrapper(aAddon) {
   if (!aAddon)
     return null;
-  if (!aAddon.wrapper)
-    aAddon.wrapper = new AddonWrapper(aAddon);
-  return aAddon.wrapper;
+  if (!aAddon._wrapper)
+    aAddon._wrapper = new AddonWrapper(aAddon);
+  return aAddon._wrapper;
 }
 
 /**
@@ -4406,8 +4416,14 @@ function AddonWrapper(aAddon) {
   }, this);
 
   this.__defineGetter__("iconURL", function() {
-      return aAddon.active ? aAddon.iconURL : null;
-  });
+    if (aAddon.active && aAddon.iconURL)
+      return aAddon.iconURL;
+
+    if (this.hasResource("icon.png"))
+      return this.getResourceURL("icon.png");
+
+    return null;
+  }, this);
 
   PROP_LOCALE_SINGLE.forEach(function(aProp) {
     this.__defineGetter__(aProp, function() {
@@ -4450,7 +4466,12 @@ function AddonWrapper(aAddon) {
   }, this);
 
   this.__defineGetter__("screenshots", function() {
-    return [];
+    let screenshots = [];
+
+    if (aAddon.type == "theme" && this.hasResource("preview.png"))
+      screenshots.push(this.getResourceURL("preview.png"));
+
+    return screenshots;
   });
 
   this.__defineGetter__("applyBackgroundUpdates", function() {
