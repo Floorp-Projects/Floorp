@@ -6292,6 +6292,11 @@ void nsWindow::OnDestroy()
   nsWindowCE::ResetSoftKB(mWnd);
 #endif
 
+#if !defined(WINCE)
+  // Finalize panning feedback to possibly restore window displacement
+  mGesture.PanFeedbackFinalize(mWnd, PR_TRUE);
+#endif
+
   // Clear the main HWND.
   mWnd = NULL;
 }
