@@ -2728,9 +2728,11 @@ function FillInHTMLTooltip(tipElement)
 }
 
 var browserDragAndDrop = {
+  canDropLink: function (aEvent) Services.droppedLinkHandler.canDropLink(aEvent, true),
+
   dragOver: function (aEvent, statusString)
   {
-    if (Services.droppedLinkHandler.canDropLink(aEvent, true)) {
+    if (this.canDropLink(aEvent)) {
       aEvent.preventDefault();
 
       if (statusString) {
@@ -2872,8 +2874,6 @@ var newWindowButtonObserver = {
 }
 
 var DownloadsButtonDNDObserver = {
-  /////////////////////////////////////////////////////////////////////////////
-  // nsDragAndDrop
   onDragOver: function (aEvent)
   {
     var statusTextFld = document.getElementById("statusbar-display");
