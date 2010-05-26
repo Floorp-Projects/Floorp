@@ -295,44 +295,58 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
   // we have to do this one first because it's different than all the rest
   if (aType.Equals(NS_GET_IID(nsIPrefLocalizedString))) {
     nsCOMPtr<nsIPrefLocalizedString> theString(do_CreateInstance(NS_PREFLOCALIZEDSTRING_CONTRACTID, &rv));
+    if (NS_FAILED(rv)) return rv;
+
+#ifdef MOZ_IPC
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      mozilla::dom::ContentProcessChild *cpc = 
+        mozilla::dom::ContentProcessChild::GetSingleton();
+      NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+      nsAutoString prefValue;
+      cpc->SendGetPrefLocalizedString(nsDependentCString(getPrefName(aPrefName)), 
+                                      &prefValue, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+      theString->SetData(prefValue.get());
+      theString.forget(reinterpret_cast<nsIPrefLocalizedString**>(_retval));
+      return rv;
+    }
+#endif
+
+    const char *pref;
+    PRBool  bNeedDefault = PR_FALSE;
+
+    rv = getValidatedPrefName(aPrefName, &pref);
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (mIsDefault) {
+      bNeedDefault = PR_TRUE;
+    } else {
+      // if there is no user (or locked) value
+      if (!PREF_HasUserPref(pref) && !PREF_PrefIsLocked(pref)) {
+        bNeedDefault = PR_TRUE;
+      }
+    }
+
+    // if we need to fetch the default value, do that instead, otherwise use the
+    // value we pulled in at the top of this function
+    if (bNeedDefault) {
+      nsXPIDLString utf16String;
+      rv = GetDefaultFromPropertiesFile(pref, getter_Copies(utf16String));
+      if (NS_SUCCEEDED(rv)) {
+        theString->SetData(utf16String.get());
+      }
+    } else {
+      rv = GetCharPref(aPrefName, getter_Copies(utf8String));
+      if (NS_SUCCEEDED(rv)) {
+        theString->SetData(NS_ConvertUTF8toUTF16(utf8String).get());
+      }
+    }
 
     if (NS_SUCCEEDED(rv)) {
-      const char *pref;
-      PRBool  bNeedDefault = PR_FALSE;
-
-      rv = getValidatedPrefName(aPrefName, &pref);
-      if (NS_FAILED(rv))
-        return rv;
-
-      if (mIsDefault) {
-        bNeedDefault = PR_TRUE;
-      } else {
-        // if there is no user (or locked) value
-        if (!PREF_HasUserPref(pref) && !PREF_PrefIsLocked(pref)) {
-          bNeedDefault = PR_TRUE;
-        }
-      }
-
-      // if we need to fetch the default value, do that instead, otherwise use the
-      // value we pulled in at the top of this function
-      if (bNeedDefault) {
-        nsXPIDLString utf16String;
-        rv = GetDefaultFromPropertiesFile(pref, getter_Copies(utf16String));
-        if (NS_SUCCEEDED(rv)) {
-          rv = theString->SetData(utf16String.get());
-        }
-      } else {
-        rv = GetCharPref(aPrefName, getter_Copies(utf8String));
-        if (NS_SUCCEEDED(rv)) {
-          rv = theString->SetData(NS_ConvertUTF8toUTF16(utf8String).get());
-        }
-      }
-      if (NS_SUCCEEDED(rv)) {
-        nsIPrefLocalizedString *temp = theString;
-
-        NS_ADDREF(temp);
-        *_retval = (void *)temp;
-      }
+      theString.forget(reinterpret_cast<nsIPrefLocalizedString**>(_retval));
     }
 
     return rv;
@@ -345,15 +359,19 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
   }
 
   if (aType.Equals(NS_GET_IID(nsILocalFile))) {
+#ifdef MOZ_IPC
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      NS_ERROR("cannot get nsILocalFile pref from content process");
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+#endif
+
     nsCOMPtr<nsILocalFile> file(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
 
     if (NS_SUCCEEDED(rv)) {
       rv = file->SetPersistentDescriptor(utf8String);
       if (NS_SUCCEEDED(rv)) {
-        nsILocalFile *temp = file;
-
-        NS_ADDREF(temp);
-        *_retval = (void *)temp;
+        file.forget(reinterpret_cast<nsILocalFile**>(_retval));
         return NS_OK;
       }
     }
@@ -361,6 +379,13 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
   }
 
   if (aType.Equals(NS_GET_IID(nsIRelativeFilePref))) {
+#ifdef MOZ_IPC
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      NS_ERROR("cannot get nsIRelativeFilePref from content process");
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+#endif
+
     nsACString::const_iterator keyBegin, strEnd;
     utf8String.BeginReading(keyBegin);
     utf8String.EndReading(strEnd);    
@@ -393,8 +418,7 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     if (NS_FAILED(rv))
       return rv;
 
-    *_retval = relativePref;
-    NS_ADDREF(static_cast<nsIRelativeFilePref*>(*_retval));
+    relativePref.forget(reinterpret_cast<nsIRelativeFilePref**>(_retval));
     return NS_OK;
   }
 
@@ -402,14 +426,8 @@ NS_IMETHODIMP nsPrefBranch::GetComplexValue(const char *aPrefName, const nsIID &
     nsCOMPtr<nsISupportsString> theString(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv));
 
     if (NS_SUCCEEDED(rv)) {
-      rv = theString->SetData(NS_ConvertUTF8toUTF16(utf8String));
-      if (NS_SUCCEEDED(rv)) {
-        nsISupportsString *temp = theString;
-
-        NS_ADDREF(temp);
-        *_retval = (void *)temp;
-        return NS_OK;
-      }
+      theString->SetData(NS_ConvertUTF8toUTF16(utf8String));
+      theString.forget(reinterpret_cast<nsISupportsString**>(_retval));
     }
     return rv;
   }
