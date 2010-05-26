@@ -8,6 +8,8 @@ var addon1 = {
   id: "addon1@tests.mozilla.org",
   version: "1.0",
   name: "Test 1",
+  optionsURL: "chrome://foo/content/options.xul",
+  aboutURL: "chrome://foo/content/about.xul",
   iconURL: "chrome://foo/content/icon.png",
   targetApplications: [{
     id: "xpcshell@tests.mozilla.org",
@@ -40,6 +42,8 @@ function run_test() {
       do_check_neq(newa1, null);
       do_check_true(newa1.isActive);
       do_check_false(newa1.userDisabled);
+      do_check_eq(newa1.aboutURL, "chrome://foo/content/about.xul");
+      do_check_eq(newa1.optionsURL, "chrome://foo/content/options.xul");
       do_check_eq(newa1.iconURL, "chrome://foo/content/icon.png");
       do_check_true(isExtensionInAddonsList(profileDir, newa1.id));
       do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -61,6 +65,9 @@ function run_test_1() {
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     a1.userDisabled = true;
+    do_check_eq(a1.aboutURL, "chrome://foo/content/about.xul");
+    do_check_eq(a1.optionsURL, "chrome://foo/content/options.xul");
+    do_check_eq(a1.iconURL, "chrome://foo/content/icon.png");
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
     do_check_in_crash_annotation(addon1.id, addon1.version);
@@ -77,6 +84,8 @@ function run_test_1() {
         do_check_neq(newa1, null);
         do_check_false(newa1.isActive);
         do_check_true(newa1.userDisabled);
+        do_check_eq(newa1.aboutURL, null);
+        do_check_eq(newa1.optionsURL, null);
         do_check_eq(newa1.iconURL, null);
         do_check_false(isExtensionInAddonsList(profileDir, newa1.id));
         do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
@@ -99,6 +108,9 @@ function run_test_2() {
 
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
     a1.userDisabled = false;
+    do_check_eq(a1.aboutURL, null);
+    do_check_eq(a1.optionsURL, null);
+    do_check_eq(a1.iconURL, null);
     do_check_true(hasFlag(a1.permissions, AddonManager.PERM_CAN_DISABLE));
     do_check_false(hasFlag(a1.permissions, AddonManager.PERM_CAN_ENABLE));
 
@@ -114,6 +126,9 @@ function run_test_2() {
         do_check_neq(newa1, null);
         do_check_true(newa1.isActive);
         do_check_false(newa1.userDisabled);
+        do_check_eq(newa1.aboutURL, "chrome://foo/content/about.xul");
+        do_check_eq(newa1.optionsURL, "chrome://foo/content/options.xul");
+        do_check_eq(newa1.iconURL, "chrome://foo/content/icon.png");
         do_check_true(isExtensionInAddonsList(profileDir, newa1.id));
         do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
         do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));
@@ -153,6 +168,9 @@ function run_test_3() {
       do_check_neq(newa1, null);
       do_check_true(newa1.isActive);
       do_check_false(newa1.userDisabled);
+      do_check_eq(newa1.aboutURL, "chrome://foo/content/about.xul");
+      do_check_eq(newa1.optionsURL, "chrome://foo/content/options.xul");
+      do_check_eq(newa1.iconURL, "chrome://foo/content/icon.png");
       do_check_true(isExtensionInAddonsList(profileDir, newa1.id));
       do_check_true(hasFlag(newa1.permissions, AddonManager.PERM_CAN_DISABLE));
       do_check_false(hasFlag(newa1.permissions, AddonManager.PERM_CAN_ENABLE));

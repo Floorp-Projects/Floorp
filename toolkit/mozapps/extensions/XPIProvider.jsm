@@ -4389,10 +4389,16 @@ function createWrapper(aAddon) {
  * the public API.
  */
 function AddonWrapper(aAddon) {
-  ["id", "version", "type", "optionsURL", "aboutURL", "isCompatible",
+  ["id", "version", "type", "isCompatible",
    "providesUpdatesSecurely", "blocklistState", "appDisabled",
    "userDisabled"].forEach(function(aProp) {
      this.__defineGetter__(aProp, function() aAddon[aProp]);
+  }, this);
+
+  ["optionsURL", "aboutURL"].forEach(function(aProp) {
+    this.__defineGetter__(aProp, function() {
+      return aAddon.active ? aAddon[aProp] : null;
+    });
   }, this);
 
   ["installDate", "updateDate"].forEach(function(aProp) {
