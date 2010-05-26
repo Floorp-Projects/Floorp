@@ -49,10 +49,8 @@ ContainerLayerOGL::ContainerLayerOGL(LayerManagerOGL *aManager)
 
 ContainerLayerOGL::~ContainerLayerOGL()
 {
-  LayerOGL *nextChild;
-  for (LayerOGL *child = GetFirstChildOGL(); child; child = nextChild) {
-    nextChild = child->GetNextSibling();
-    child->GetLayer()->Release();
+  while (mFirstChild) {
+    RemoveChild(mFirstChild);
   }
 }
 
@@ -71,22 +69,29 @@ ContainerLayerOGL::SetVisibleRegion(const nsIntRegion &aRegion)
 void
 ContainerLayerOGL::InsertAfter(Layer* aChild, Layer* aAfter)
 {
-  LayerOGL *newChild = static_cast<LayerOGL*>(aChild->ImplData());
   aChild->SetParent(this);
   if (!aAfter) {
+    Layer *oldFirstChild = GetFirstChild();
+    mFirstChild = aChild;
+    aChild->SetNextSibling(oldFirstChild);
+    aChild->SetPrevSibling(nsnull);
+    if (oldFirstChild) {
+      oldFirstChild->SetPrevSibling(aChild);
+    }
     NS_ADDREF(aChild);
-    LayerOGL *oldFirstChild = GetFirstChildOGL();
-    mFirstChild = newChild->GetLayer();
-    newChild->SetNextSibling(oldFirstChild);
     return;
   }
-  for (LayerOGL *child = GetFirstChildOGL(); 
-    child; child = child->GetNextSibling()) {
-    if (aAfter == child->GetLayer()) {
+  for (Layer *child = GetFirstChild(); 
+       child; child = child->GetNextSibling()) {
+    if (aAfter == child) {
+      Layer *oldNextSibling = child->GetNextSibling();
+      child->SetNextSibling(aChild);
+      aChild->SetNextSibling(oldNextSibling);
+      if (oldNextSibling) {
+        oldNextSibling->SetPrevSibling(aChild);
+      }
+      aChild->SetPrevSibling(child);
       NS_ADDREF(aChild);
-      LayerOGL *oldNextSibling = child->GetNextSibling();
-      child->SetNextSibling(newChild);
-      child->GetNextSibling()->SetNextSibling(oldNextSibling);
       return;
     }
   }
@@ -97,18 +102,28 @@ void
 ContainerLayerOGL::RemoveChild(Layer *aChild)
 {
   if (GetFirstChild() == aChild) {
-    mFirstChild = GetFirstChildOGL()->GetNextSibling()->GetLayer();
+    mFirstChild = GetFirstChild()->GetNextSibling();
+    if (mFirstChild) {
+      mFirstChild->SetPrevSibling(nsnull);
+    }
+    aChild->SetNextSibling(nsnull);
+    aChild->SetPrevSibling(nsnull);
+    aChild->SetParent(nsnull);
     NS_RELEASE(aChild);
     return;
   }
-  LayerOGL *lastChild = NULL;
-  for (LayerOGL *child = GetFirstChildOGL(); child; 
-    child = child->GetNextSibling()) {
-    if (child->GetLayer() == aChild) {
+  Layer *lastChild = nsnull;
+  for (Layer *child = GetFirstChild(); child; 
+       child = child->GetNextSibling()) {
+    if (child == aChild) {
       // We're sure this is not our first child. So lastChild != NULL.
       lastChild->SetNextSibling(child->GetNextSibling());
-      child->SetNextSibling(NULL);
-      child->GetLayer()->SetParent(NULL);
+      if (child->GetNextSibling()) {
+        child->GetNextSibling()->SetPrevSibling(lastChild);
+      }
+      child->SetNextSibling(nsnull);
+      child->SetPrevSibling(nsnull);
+      child->SetParent(nsnull);
       NS_RELEASE(aChild);
       return;
     }
@@ -179,7 +194,10 @@ ContainerLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
     layerToRender->RenderLayer(frameBuffer, childOffset);
 
-    layerToRender = layerToRender->GetNextSibling();
+    Layer *nextSibling = layerToRender->GetLayer()->GetNextSibling();
+    layerToRender = nextSibling ? static_cast<LayerOGL*>(nextSibling->
+                                                         ImplData())
+                                : nsnull;
   }
 
   if (opacity != 1.0) {
