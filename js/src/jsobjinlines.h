@@ -65,8 +65,8 @@ JSObject::getSlotMT(JSContext *cx, uintN slot)
      */
     OBJ_CHECK_SLOT(this, slot);
     return (scope()->title.ownercx == cx)
-           ? this->lockedGetSlot(slot)
-           : js_GetSlotThreadSafe(cx, this, slot);
+         ? this->lockedGetSlot(slot)
+         : js::Valueify(js_GetSlotThreadSafe(cx, this, slot));
 #else
     return this->lockedGetSlot(slot);
 #endif
@@ -81,7 +81,7 @@ JSObject::setSlotMT(JSContext *cx, uintN slot, const js::Value &value)
     if (scope()->title.ownercx == cx)
         this->lockedSetSlot(slot, value);
     else
-        js_SetSlotThreadSafe(cx, this, slot, value);
+        js_SetSlotThreadSafe(cx, this, slot, Jsvalify(value));
 #else
     this->lockedSetSlot(slot, value);
 #endif
