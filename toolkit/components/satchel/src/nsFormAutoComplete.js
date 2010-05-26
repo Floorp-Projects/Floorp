@@ -61,8 +61,8 @@ FormAutoComplete.prototype = {
     },
 
     _prefBranch         : null,
-    _debug              : false, // mirrors browser.formfill.debug
-    _enabled            : true,  // mirrors browser.formfill.enable preference
+    _debug              : true, // mirrors browser.formfill.debug
+    _enabled            : true, // mirrors browser.formfill.enable preference
     _agedWeight         : 2,
     _bucketSize         : 1,
     _maxTimeGroupings   : 25,
@@ -133,6 +133,7 @@ FormAutoComplete.prototype = {
                 }
             } else if (topic == "xpcom-shutdown") {
                 self._dbStmts = null;
+                self.__formHistory = null;
             }
         }
     },
