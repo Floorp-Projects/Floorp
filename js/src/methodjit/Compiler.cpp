@@ -63,7 +63,7 @@ NotCheckedSSE2;
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
   : CompilerBase(cx), cx(cx), script(script), scopeChain(scopeChain),
     globalObj(scopeChain->getGlobal()), fun(fun), analysis(cx, script), jumpMap(NULL),
-    frame(cx, script, masm), cg(masm, frame)
+    frame(cx, script, masm), cg(masm, frame), branchPatches(ContextAllocPolicy(cx))
 {
 }
 
@@ -175,6 +175,9 @@ mjit::Compiler::generateMethod()
         OpcodeStatus &opinfo = analysis[PC];
         if (opinfo.nincoming) {
             opinfo.safePoint = true;
+            frame.flush();
+            frame.forceStackDepth(opinfo.stackDepth);
+            jumpMap[uint32(PC - script->code)] = masm.label();
         }
 
         if (!opinfo.visited) {
@@ -195,11 +198,21 @@ mjit::Compiler::generateMethod()
         }
 #endif
 
+        JS_ASSERT(frame.stackDepth() == opinfo.stackDepth);
+
     /**********************
      * BEGIN COMPILER OPS *
      **********************/ 
 
         switch (op) {
+          BEGIN_CASE(JSOP_GOTO)
+          {
+            frame.flush();
+            Jump j = masm.jump();
+            jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
+          }
+          END_CASE(JSOP_GOTO)
+
           BEGIN_CASE(JSOP_TRACE)
           END_CASE(JSOP_TRACE)
 
@@ -274,6 +287,14 @@ mjit::Compiler::generateMethod()
 #undef END_CASE
 #undef BEGIN_CASE
 
+const JSC::MacroAssembler::Label &
+mjit::Compiler::labelOf(jsbytecode *pc)
+{
+    uint32 offs = uint32(pc - script->code);
+    JS_ASSERT(jumpMap[offs].isValid());
+    return jumpMap[offs];
+}
+
 uint32
 mjit::Compiler::fullAtomIndex(jsbytecode *pc)
 {
@@ -285,6 +306,19 @@ mjit::Compiler::fullAtomIndex(jsbytecode *pc)
 #endif
 }
 
+void
+mjit::Compiler::jumpInScript(Jump j, jsbytecode *pc)
+{
+    JS_ASSERT(pc >= script->code && uint32(pc - script->code) < script->length);
+
+    /* :TODO: OOM failure possible here. */
+
+    if (pc < PC)
+        j.linkTo(jumpMap[uint32(pc - script->code)], &masm);
+    else
+        branchPatches.append(BranchPatch(j, pc));
+}
+
 CompileStatus
 mjit::Compiler::generateEpilogue()
 {
@@ -294,6 +328,11 @@ mjit::Compiler::generateEpilogue()
 CompileStatus
 mjit::Compiler::finishThisUp()
 {
+    for (size_t i = 0; i < branchPatches.length(); i++) {
+        Label label = labelOf(branchPatches[i].pc);
+        branchPatches[i].jump.linkTo(label, &masm);
+    }
+
     JSC::ExecutablePool *execPool = getExecPool(masm.size());
     if (!execPool)
         return Compile_Abort;
