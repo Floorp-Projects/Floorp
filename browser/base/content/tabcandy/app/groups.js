@@ -65,6 +65,7 @@ window.Group = function(listOfEls, options) {
   this.expanded = null;
   this.locked = (options.locked ? Utils.copy(options.locked) : {});
   this.topChild = null;
+  this._activeTab = null;
   
   if(isPoint(options.userSize))  
     this.userSize = new Point(options.userSize);
@@ -265,6 +266,20 @@ window.Group = function(listOfEls, options) {
 window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------
   defaultName: "name this group...",
+
+  // -----------
+  // TODO: This currently accepts only the DOM element of a tab.
+  // It should also take a TabItem... 
+  setActiveTab: function(tab){
+    this._activeTab = tab;
+  },
+
+  // -----------
+  // TODO: This currently returns a DOM element of the selected tab.
+  // It should probably actually be a TabItem...
+  getActiveTab: function(tab){
+    return this._activeTab;
+  },
   
   // ----------  
   getStorageData: function() {
@@ -970,6 +985,13 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
         }
       });
     }
+    
+    $(container).click(function(){
+      var activeTab = self.getActiveTab();
+      if( activeTab ) TabItems.zoomTo(activeTab)
+      // TODO: This should also accept TabItems
+      else TabItems.zoomTo(self.getChild(0).tab.mirror.el);
+    });
     
     $(container).droppable({
       tolerance: "intersect",
