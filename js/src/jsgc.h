@@ -42,6 +42,9 @@
 /*
  * JS Garbage Collector.
  */
+#include <setjmp.h>
+
+#include "jstypes.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jsdhash.h"
@@ -358,9 +361,9 @@ struct JSWeakRoots {
 
 #define JS_CLEAR_WEAK_ROOTS(wr) (memset((wr), 0, sizeof(JSWeakRoots)))
 
-#ifdef JS_THREADSAFE
-
 namespace js {
+
+#ifdef JS_THREADSAFE
 
 /*
  * During the finalization we do not free immediately. Rather we add the
@@ -404,8 +407,30 @@ class BackgroundSweepTask : public JSBackgroundTask {
     virtual void run();
 };
 
-}
-#endif
+#endif /* JS_THREADSAFE */
+
+struct ConservativeGCThreadData {
+
+    /*
+     * The GC scans conservatively between JSThreadData::nativeStackBase and
+     * nativeStackTop unless the latter is NULL.
+     */
+    jsuword             *nativeStackTop;
+
+    union {
+        jmp_buf         jmpbuf;
+        jsuword         words[JS_HOWMANY(sizeof(jmp_buf), sizeof(jsuword))];
+    } registerSnapshot;
+
+    size_t              enableCount;
+
+    JS_NEVER_INLINE void enable();
+    void disable();
+};
+
+} /* namespace js */
+
+#define JS_DUMP_CONSERVATIVE_GC_ROOTS 1
 
 extern void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str);
@@ -415,6 +440,25 @@ const bool JS_WANT_GC_METER_PRINT = true;
 #elif defined DEBUG
 # define JS_GCMETER 1
 const bool JS_WANT_GC_METER_PRINT = false;
+#endif
+
+#if defined JS_GCMETER || defined JS_DUMP_CONSERVATIVE_GC_ROOTS
+
+struct JSConservativeGCStats {
+    uint32  words;      /* number of words on native stacks */
+    uint32  unique;     /* number of unique words */
+    uint32  oddaddress; /* excluded because low bit was set */
+    uint32  outside;    /* not within chunk min/max address range */
+    uint32  notchunk;   /* not within a valid chunk */
+    uint32  notarena;   /* not within non-free arena */
+    uint32  wrongtag;   /* tagged pointer but wrong type */
+    uint32  notlive;    /* gcthing is not allocated */
+    uint32  gcthings;   /* number of live gcthings */
+    uint32  raw;        /* number of raw pointers marked */
+    uint32  unmarked;   /* number of unmarked gc things discovered on the
+                           stack */
+};
+
 #endif
 
 #ifdef JS_GCMETER
@@ -465,6 +509,8 @@ struct JSGCStats {
 
     JSGCArenaStats  arenaStats[FINALIZE_LIMIT];
     JSGCArenaStats  doubleArenaStats;
+
+    JSConservativeGCStats conservative;
 };
 
 extern JS_FRIEND_API(void)
