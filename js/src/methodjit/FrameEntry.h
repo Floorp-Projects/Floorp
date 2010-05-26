@@ -65,10 +65,10 @@ struct RematInfo {
         PhysLoc_Memory
     };
 
-    void setRegister(RegisterID reg, bool synced) {
+    void setRegister(RegisterID reg) {
         reg_ = reg;
         location_ = PhysLoc_Register;
-        synced_ = synced;
+        synced_ = false;
     }
 
     bool isCopy() { return location_ == PhysLoc_Copy; }
