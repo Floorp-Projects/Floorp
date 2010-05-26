@@ -1492,9 +1492,10 @@ namespace nanojit
         return at;
     }
 
-    void Assembler::asm_branch_xov(LOpcode, NIns* target)
+    NIns* Assembler::asm_branch_ov(LOpcode, NIns* target)
     {
         JO(target);
+        return _nIns;
     }
 
     void Assembler::asm_switch(LIns* ins, NIns* exit)
@@ -1713,6 +1714,7 @@ namespace nanojit
             evictIfActive(EDX);
             break;
         case LIR_muli:
+        case LIR_muljovi:
         case LIR_mulxovi:
             isConstRhs = false;
             if (lhs != rhs) {
@@ -1750,10 +1752,13 @@ namespace nanojit
 
             switch (op) {
             case LIR_addi:
+            case LIR_addjovi:
             case LIR_addxovi:    ADD(rr, rb); break;     // XXX: bug 547125: could use LEA for LIR_addi
             case LIR_subi:
+            case LIR_subjovi:
             case LIR_subxovi:    SUB(rr, rb); break;
             case LIR_muli:
+            case LIR_muljovi:
             case LIR_mulxovi:    MUL(rr, rb); break;
             case LIR_andi:       AND(rr, rb); break;
             case LIR_ori:        OR( rr, rb); break;
@@ -1776,8 +1781,10 @@ namespace nanojit
                 LEA(rr, c, ra);
                 ra = rr; // suppress mov
                 break;
+            case LIR_addjovi:
             case LIR_addxovi:    ADDi(rr, c);    break;
             case LIR_subi:
+            case LIR_subjovi:
             case LIR_subxovi:    SUBi(rr, c);    break;
             case LIR_andi:       ANDi(rr, c);    break;
             case LIR_ori:        ORi( rr, c);    break;

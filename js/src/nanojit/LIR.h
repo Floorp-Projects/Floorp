@@ -62,39 +62,41 @@ namespace nanojit
 
         // Pointer-sized synonyms.
 
-        LIR_paramp  = PTR_SIZE(LIR_parami, LIR_paramq),
+        LIR_paramp  = PTR_SIZE(LIR_parami,  LIR_paramq),
 
-        LIR_retp    = PTR_SIZE(LIR_reti,   LIR_retq),
+        LIR_retp    = PTR_SIZE(LIR_reti,    LIR_retq),
 
-        LIR_livep   = PTR_SIZE(LIR_livei,  LIR_liveq),
+        LIR_livep   = PTR_SIZE(LIR_livei,   LIR_liveq),
 
-        LIR_ldp     = PTR_SIZE(LIR_ldi,    LIR_ldq),
+        LIR_ldp     = PTR_SIZE(LIR_ldi,     LIR_ldq),
 
-        LIR_stp     = PTR_SIZE(LIR_sti,    LIR_stq),
+        LIR_stp     = PTR_SIZE(LIR_sti,     LIR_stq),
 
-        LIR_callp   = PTR_SIZE(LIR_calli,  LIR_callq),
+        LIR_callp   = PTR_SIZE(LIR_calli,   LIR_callq),
 
-        LIR_eqp     = PTR_SIZE(LIR_eqi,    LIR_eqq),
-        LIR_ltp     = PTR_SIZE(LIR_lti,    LIR_ltq),
-        LIR_gtp     = PTR_SIZE(LIR_gti,    LIR_gtq),
-        LIR_lep     = PTR_SIZE(LIR_lei,    LIR_leq),
-        LIR_gep     = PTR_SIZE(LIR_gei,    LIR_geq),
-        LIR_ltup    = PTR_SIZE(LIR_ltui,   LIR_ltuq),
-        LIR_gtup    = PTR_SIZE(LIR_gtui,   LIR_gtuq),
-        LIR_leup    = PTR_SIZE(LIR_leui,   LIR_leuq),
-        LIR_geup    = PTR_SIZE(LIR_geui,   LIR_geuq),
+        LIR_eqp     = PTR_SIZE(LIR_eqi,     LIR_eqq),
+        LIR_ltp     = PTR_SIZE(LIR_lti,     LIR_ltq),
+        LIR_gtp     = PTR_SIZE(LIR_gti,     LIR_gtq),
+        LIR_lep     = PTR_SIZE(LIR_lei,     LIR_leq),
+        LIR_gep     = PTR_SIZE(LIR_gei,     LIR_geq),
+        LIR_ltup    = PTR_SIZE(LIR_ltui,    LIR_ltuq),
+        LIR_gtup    = PTR_SIZE(LIR_gtui,    LIR_gtuq),
+        LIR_leup    = PTR_SIZE(LIR_leui,    LIR_leuq),
+        LIR_geup    = PTR_SIZE(LIR_geui,    LIR_geuq),
 
-        LIR_addp    = PTR_SIZE(LIR_addi,   LIR_addq),
+        LIR_addp    = PTR_SIZE(LIR_addi,    LIR_addq),
+        LIR_subp    = PTR_SIZE(LIR_subi,    LIR_subq),
+        LIR_addjovp = PTR_SIZE(LIR_addjovi, LIR_addjovq),
 
-        LIR_andp    = PTR_SIZE(LIR_andi,   LIR_andq),
-        LIR_orp     = PTR_SIZE(LIR_ori,    LIR_orq),
-        LIR_xorp    = PTR_SIZE(LIR_xori,   LIR_xorq),
+        LIR_andp    = PTR_SIZE(LIR_andi,    LIR_andq),
+        LIR_orp     = PTR_SIZE(LIR_ori,     LIR_orq),
+        LIR_xorp    = PTR_SIZE(LIR_xori,    LIR_xorq),
 
-        LIR_lshp    = PTR_SIZE(LIR_lshi,   LIR_lshq),
-        LIR_rshp    = PTR_SIZE(LIR_rshi,   LIR_rshq),
-        LIR_rshup   = PTR_SIZE(LIR_rshui,  LIR_rshuq),
+        LIR_lshp    = PTR_SIZE(LIR_lshi,    LIR_lshq),
+        LIR_rshp    = PTR_SIZE(LIR_rshi,    LIR_rshq),
+        LIR_rshup   = PTR_SIZE(LIR_rshui,   LIR_rshuq),
 
-        LIR_cmovp   = PTR_SIZE(LIR_cmovi,  LIR_cmovq)
+        LIR_cmovp   = PTR_SIZE(LIR_cmovi,   LIR_cmovq)
     };
 
     // 32-bit integer comparisons must be contiguous, as must 64-bit integer
@@ -869,6 +871,13 @@ namespace nanojit
                    isop(LIR_xbarrier) || isop(LIR_xtbl) ||
                    isop(LIR_addxovi) || isop(LIR_subxovi) || isop(LIR_mulxovi);
         }
+        bool isJov() const {
+            return
+#ifdef NANOJIT_64BIT
+                isop(LIR_addjovq) || isop(LIR_subjovq) ||
+#endif
+                isop(LIR_addjovi) || isop(LIR_subjovi) || isop(LIR_muljovi);
+        }
         // True if the instruction is a 32-bit integer immediate.
         bool isImmI() const {
             return isop(LIR_immi);
@@ -911,7 +920,7 @@ namespace nanojit
         }
 
         bool isBranch() const {
-            return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j) || isop(LIR_jtbl);
+            return isop(LIR_jt) || isop(LIR_jf) || isop(LIR_j) || isop(LIR_jtbl) || isJov();
         }
 
         LTy retType() const {
@@ -1004,7 +1013,7 @@ namespace nanojit
         LIns* getLIns() { return &ins; };
     };
 
-    // 3-operand form.  Used for conditional moves and xov guards.
+    // 3-operand form.  Used for conditional moves, jov branches, and xov guards.
     class LInsOp3
     {
     private:
@@ -1268,13 +1277,19 @@ namespace nanojit
 
     LIns* LIns::getTarget() const {
         NanoAssert(isBranch() && !isop(LIR_jtbl));
-        return oprnd2();
+        if (isJov())
+            return oprnd3();
+        else
+            return oprnd2();
     }
 
     void LIns::setTarget(LIns* label) {
         NanoAssert(label && label->isop(LIR_label));
         NanoAssert(isBranch() && !isop(LIR_jtbl));
-        toLInsOp2()->oprnd_2 = label;
+        if (isJov())
+            toLInsOp3()->oprnd_3 = label;
+        else
+            toLInsOp2()->oprnd_2 = label;
     }
 
     LIns* LIns::getTarget(uint32_t index) const {
@@ -1430,8 +1445,11 @@ namespace nanojit
         virtual LInsp insGuardXov(LOpcode v, LIns *a, LIns* b, GuardRecord *gr) {
             return out->insGuardXov(v, a, b, gr);
         }
-        virtual LInsp insBranch(LOpcode v, LInsp condition, LInsp to) {
+        virtual LInsp insBranch(LOpcode v, LIns* condition, LIns* to) {
             return out->insBranch(v, condition, to);
+        }
+        virtual LInsp insBranchJov(LOpcode v, LIns* a, LIns* b, LIns* to) {
+            return out->insBranchJov(v, a, b, to);
         }
         // arg: 0=first, 1=second, ...
         // kind: 0=arg 1=saved-reg
@@ -1699,6 +1717,10 @@ namespace nanojit
             return add_flush(out->insBranch(v, condition, to));
         }
 
+        LIns* insBranchJov(LOpcode v, LInsp a, LInsp b, LInsp to) {
+            return add_flush(out->insBranchJov(v, a, b, to));
+        }
+
         LIns* insJtbl(LIns* index, uint32_t size) {
             return add_flush(out->insJtbl(index, size));
         }
@@ -1756,10 +1778,13 @@ namespace nanojit
         LIns* ins1(LOpcode v, LIns* a);
         LIns* ins2(LOpcode v, LIns* a, LIns* b);
         LIns* ins3(LOpcode v, LIns* a, LIns* b, LIns* c);
-        LIns* insGuard(LOpcode, LIns *cond, GuardRecord *);
+        LIns* insGuard(LOpcode, LIns* cond, GuardRecord *);
         LIns* insGuardXov(LOpcode, LIns* a, LIns* b, GuardRecord *);
-        LIns* insBranch(LOpcode, LIns *cond, LIns *target);
+        LIns* insBranch(LOpcode, LIns* cond, LIns* target);
+        LIns* insBranchJov(LOpcode, LIns* a, LIns* b, LIns* target);
         LIns* insLoad(LOpcode op, LInsp base, int32_t off, AccSet accSet);
+    private:
+        LIns* simplifyOverflowArith(LOpcode op, LInsp *opnd1, LInsp *opnd2);
     };
 
     class CseFilter: public LirWriter
@@ -1954,6 +1979,7 @@ namespace nanojit
             LInsp   insGuard(LOpcode op, LInsp cond, GuardRecord *gr);
             LInsp   insGuardXov(LOpcode op, LInsp a, LInsp b, GuardRecord *gr);
             LInsp   insBranch(LOpcode v, LInsp condition, LInsp to);
+            LInsp   insBranchJov(LOpcode v, LInsp a, LInsp b, LInsp to);
             LInsp   insAlloc(int32_t size);
             LInsp   insJtbl(LIns* index, uint32_t size);
     };
@@ -2101,6 +2127,7 @@ namespace nanojit
         LIns* insGuard(LOpcode v, LIns *c, GuardRecord *gr);
         LIns* insGuardXov(LOpcode v, LIns* a, LIns* b, GuardRecord* gr);
         LIns* insBranch(LOpcode v, LIns* condition, LIns* to);
+        LIns* insBranchJov(LOpcode v, LIns* a, LIns* b, LIns* to);
         LIns* insAlloc(int32_t size);
         LIns* insJtbl(LIns* index, uint32_t size);
     };
