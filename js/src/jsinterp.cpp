@@ -1359,6 +1359,7 @@ js_DoIncDec(JSContext *cx, const JSCodeSpec *cs, Value *vp, Value *vp2)
         vp->setDouble(d);
         (cs->format & JOF_INC) ? ++d : --d;
         vp2->setDouble(d);
+        return JS_TRUE;
     }
 
     double d;
