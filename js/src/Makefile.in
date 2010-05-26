@@ -301,7 +301,7 @@ CPPSRCS += 	Assertions.cpp \
 		Logging.cpp \
 		Stubs.cpp \
 		Compiler.cpp \
-		CodeGenerator.cpp \
+		CodeGen_NaN32.cpp \
 		FrameState.cpp \
 		FastOps.cpp \
 		$(NULL)

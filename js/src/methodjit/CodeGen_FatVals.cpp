@@ -51,8 +51,6 @@ CodeGenerator::CodeGenerator(MacroAssembler &masm, FrameState &frame)
 {
 }
 
-JS_STATIC_ASSERT(sizeof(JSValueMaskType) == 4);
-
 void
 CodeGenerator::storeJsval(const Value &v, Address address)
 {
