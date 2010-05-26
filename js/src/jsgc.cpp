@@ -810,14 +810,6 @@ GetFinalizableArenaTraceKind(JSGCArenaInfo *ainfo)
 }
 
 static inline size_t
-GetArenaTraceKind(JSGCArenaInfo *ainfo)
-{
-    if (!ainfo->list)
-        return JSTRACE_DOUBLE;
-    return GetFinalizableArenaTraceKind(ainfo);
-}
-
-static inline size_t
 GetFinalizableThingTraceKind(void *thing)
 {
     JSGCArenaInfo *ainfo = JSGCArenaInfo::fromGCThing(thing);
@@ -874,7 +866,9 @@ js_GetGCThingTraceKind(void *thing)
         return JSTRACE_STRING;
 
     JSGCArenaInfo *ainfo = JSGCArenaInfo::fromGCThing(thing);
-    return GetArenaTraceKind(ainfo);
+    if (!ainfo->list)
+        return JSTRACE_DOUBLE;
+    return GetFinalizableArenaTraceKind(ainfo);
 }
 
 JSRuntime *
@@ -933,405 +927,6 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
     METER(PodZero(&rt->gcStats));
     return true;
 }
-
-namespace js {
-
-struct GCChunkHasher
-{
-    typedef jsuword Lookup;
-    static HashNumber hash(jsuword chunk) {
-        /*
-         * Strip zeros for better distribution after multiplying by the golden
-         * ratio.
-         */
-        JS_ASSERT(!(chunk & GC_CHUNK_MASK));
-        return HashNumber(chunk >> GC_CHUNK_SHIFT);
-    }
-    static bool match(jsuword k, jsuword l) {
-        JS_ASSERT(!(k & GC_CHUNK_MASK));
-        JS_ASSERT(!(l & GC_CHUNK_MASK));
-        return k == l;
-    }
-};
-
-class ConservativeGCStackMarker {
-  public:
-    ConservativeGCStackMarker(JSTracer *trc);
-
-    ~ConservativeGCStackMarker() {
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-        dumpConservativeRoots();
-#endif
-#ifdef JS_GCMETER
-        JSConservativeGCStats *total = &trc->context->runtime->gcStats.conservative;
-        total->words        += stats.words;
-        total->unique       += stats.unique;
-        total->oddaddress   += stats.oddaddress;
-        total->outside      += stats.outside;
-        total->notchunk     += stats.notchunk;
-        total->notarena     += stats.notarena;
-        total->wrongtag     += stats.wrongtag;
-        total->notlive      += stats.notlive;
-        total->gcthings     += stats.gcthings;
-        total->raw          += stats.raw;
-        total->unmarked     += stats.unmarked;
-#endif
-    }
-
-    void markRoots();
-
-  private:
-    void markRange(jsuword *begin, jsuword *end);
-    void markWord(jsuword w);
-
-    JSTracer *trc;
-    jsuword gcthingAddressStart;
-    jsuword gcthingAddressSpan;
-    HashSet<jsuword, GCChunkHasher, SystemAllocPolicy> chunkSet;
-    HashSet<jsuword, DefaultHasher<jsuword>, SystemAllocPolicy> history;
-
-#if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
-    JSConservativeGCStats stats;
-
-  public:
-    static void dumpStats(FILE *fp, JSConservativeGCStats *stats);
-
-# define CONSERVATIVE_METER(x)  ((void) (x))
-# define CONSERVATIVE_METER_IF(condition, x) ((void) ((condition) && (x)))
-
-#else
-
-# define CONSERVATIVE_METER(x)                  ((void) 0)
-# define CONSERVATIVE_METER_IF(condition, x)    ((void) 0)
-
-#endif
-
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-  private:
-    struct ConservativeRoot { void *thing; uint32 traceKind; };
-    Vector<ConservativeRoot, 0, SystemAllocPolicy> conservativeRoots;
-    const char *dumpFileName;
-
-    void dumpConservativeRoots();
-#endif
-};
-
-ConservativeGCStackMarker::ConservativeGCStackMarker(JSTracer *trc)
-    : trc(trc)
-{
-    /*
-     * If initializing fails because we are out of memory, stack scanning
-     * slows down but is otherwise unaffected.
-     */
-    history.init();
-
-    JSRuntime *rt = trc->context->runtime;
-    jsuword minchunk = 0, maxchunk = 0;
-    bool chunkSetOk = chunkSet.init(rt->gcChunks.length());
-    for (JSGCChunkInfo **i = rt->gcChunks.begin(); i != rt->gcChunks.end(); ++i) {
-        jsuword chunk =(*i)->getChunk();
-        if (chunkSetOk) {
-            JS_ASSERT(!chunkSet.has(chunk));
-            JS_ALWAYS_TRUE(chunkSet.put(chunk));
-        }
-
-        if (minchunk == 0)
-            minchunk = maxchunk = chunk;
-        else if (chunk < minchunk)
-            minchunk = chunk;
-        else if (chunk > maxchunk)
-            maxchunk = chunk;
-    }
-
-    gcthingAddressStart = minchunk;
-    gcthingAddressSpan = (minchunk != 0)
-                         ? maxchunk + GC_MARK_BITMAP_ARRAY_OFFSET
-                         : 0;
-
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-    dumpFileName = getenv("JS_DUMP_CONSERVATIVE_GC_ROOTS");
-    memset(&stats, 0, sizeof(stats));
-#endif
-}
-
-#if defined(JS_DUMP_CONSERVATIVE_GC_ROOTS) || defined(JS_GCMETER)
-/* static */
-void
-ConservativeGCStackMarker::dumpStats(FILE *fp, JSConservativeGCStats *stats)
-{
-#define ULSTAT(x)       ((unsigned long)(stats->x))
-    fprintf(fp, "CONSERVATIVE STACK SCANNING:\n");
-    fprintf(fp, "      number of stack words: %lu\n", ULSTAT(words));
-    fprintf(fp, "     number of unique words: %lu\n", ULSTAT(unique));
-    fprintf(fp, "      excluded, low bit set: %lu\n", ULSTAT(oddaddress));
-    fprintf(fp, "    not withing chunk range: %lu\n", ULSTAT(outside));
-    fprintf(fp, "        not withing a chunk: %lu\n", ULSTAT(notchunk));
-    fprintf(fp, "       not withing an arena: %lu\n", ULSTAT(notarena));
-    fprintf(fp, "        excluded, wrong tag: %lu\n", ULSTAT(wrongtag));
-    fprintf(fp, "         excluded, not live: %lu\n", ULSTAT(notlive));
-    fprintf(fp, "              things marked: %lu\n", ULSTAT(gcthings));
-    fprintf(fp, "        raw pointers marked: %lu\n", ULSTAT(raw));
-    fprintf(fp, "         conservative roots: %lu\n", ULSTAT(unmarked));
-#undef ULSTAT
-}
-#endif
-
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-void
-ConservativeGCStackMarker::dumpConservativeRoots()
-{
-    if (!dumpFileName)
-        return;
-
-    JS_ASSERT(stats.unmarked == conservativeRoots.length());
-
-    FILE *fp = !strcmp(dumpFileName, "stdout") ? stdout
-               : !strcmp(dumpFileName, "stderr") ? stderr
-               : fopen(dumpFileName, "aw");
-    if (!fp) {
-        fprintf(stderr,
-                "Warning: cannot open %s to dump the conservative roots\n",
-                dumpFileName);
-        return;
-    }
-
-    dumpStats(fp, &stats);
-    for (ConservativeRoot *i = conservativeRoots.begin();
-         i != conservativeRoots.end();
-         ++i) {
-        fprintf(fp, "  %p: ", i->thing);
-        switch (i->traceKind) {
-          default:
-            JS_NOT_REACHED("Unknown trace kind");
-
-          case JSTRACE_OBJECT: {
-            JSObject *obj = (JSObject *) i->thing;
-            fprintf(fp, "object %s", obj->getClass()->name);
-            break;
-          }
-          case JSTRACE_STRING: {
-            JSString *str = (JSString *) i->thing;
-            char buf[50];
-            js_PutEscapedString(buf, sizeof buf, str, '"');
-            fprintf(fp, "string %s", buf);
-            break;
-          }
-          case JSTRACE_DOUBLE: {
-            jsdouble *dp = (jsdouble *) i->thing;
-            fprintf(fp, "double %e", *dp);
-            break;
-          }
-# if JS_HAS_XML_SUPPORT
-          case JSTRACE_XML: {
-            JSXML *xml = (JSXML *) i->thing;
-            fprintf(fp, "xml %u", xml->xml_class);
-            break;
-          }
-# endif
-        }
-        fputc('\n', fp);
-    }
-    fputc('\n', fp);
-
-    if (fp != stdout && fp != stderr)
-        fclose(fp);
-}
-#endif /* JS_DUMP_CONSERVATIVE_GC_ROOTS */
-
-void
-ConservativeGCStackMarker::markWord(jsuword w)
-{
-#define RETURN(x) do { CONSERVATIVE_METER(stats.x++); return; } while (0)
-
-    JSRuntime *rt = trc->context->runtime;
-
-    CONSERVATIVE_METER(stats.unique++);
-
-    /* If this is an odd addresses or a tagged integer, skip it. */
-    if (w & 1)
-        RETURN(oddaddress);
-
-    /* Strip off the tag bits. */
-    jsuword tag = w & JSVAL_TAGMASK;
-    jsuword p = w & ~(JSVAL_TAGMASK);
-
-    /* Also ignore tagged special values (they never contain pointers). */
-    if (tag == JSVAL_SPECIAL)
-        RETURN(wrongtag);
-
-    /* The remaining pointer must be within the heap boundaries. */
-    if ((p - gcthingAddressStart) >= gcthingAddressSpan)
-        RETURN(outside);
-
-    if ((p & GC_CHUNK_MASK) >= GC_MARK_BITMAP_ARRAY_OFFSET)
-        RETURN(outside);
-
-    jsuword chunk = p & ~GC_CHUNK_MASK;
-    JSGCChunkInfo *ci;
-    if (JS_LIKELY(chunkSet.initialized())) {
-        if (!chunkSet.has(chunk))
-            RETURN(notchunk);
-        ci = JSGCChunkInfo::fromChunk(chunk);
-    } else {
-        ci = JSGCChunkInfo::fromChunk(chunk);
-        for (JSGCChunkInfo **i = rt->gcChunks.begin(); ; ++i) {
-            if (i == rt->gcChunks.end())
-                RETURN(notchunk);
-            if (*i == ci)
-                break;
-        }
-    }
-
-    size_t arenaIndex = (p & GC_CHUNK_MASK) >> GC_ARENA_SHIFT;
-    if (JS_TEST_BIT(ci->getFreeArenaBitmap(), arenaIndex))
-        RETURN(notarena);
-
-    JSGCArena *a = JSGCArena::fromChunkAndIndex(chunk, arenaIndex);
-    JSGCArenaInfo *ainfo = a->getInfo();
-
-    JSGCThing *thing;
-    if (!ainfo->list) { /* doubles */
-        if (tag && tag != JSVAL_DOUBLE)
-            RETURN(wrongtag);
-        JS_STATIC_ASSERT(JSVAL_TAGMASK == 7 && (sizeof(double) - 1) == 7);
-        thing = (JSGCThing *) p;
-    } else {
-        if (tag == JSVAL_DOUBLE)
-            RETURN(wrongtag);
-        jsuword start = a->toPageStart();
-        jsuword offset = p - start;
-        size_t thingSize = ainfo->list->thingSize;
-        p = (start + offset - (offset % thingSize));
-        thing = (JSGCThing *) p;
-
-        /* Make sure the thing is not on the freelist of the arena. */
-        JSGCThing *cursor = ainfo->freeList;
-        while (cursor) {
-            /* If the cursor moves past the thing, its not in the freelist. */
-            if (thing < cursor)
-                break;
-            /* If we find it on the freelist, its dead. */
-            if (thing == cursor)
-                RETURN(notlive);
-            cursor = cursor->link;
-        }
-    }
-
-    CONSERVATIVE_METER(stats.gcthings++);
-    CONSERVATIVE_METER_IF(!tag, stats.raw++);
-
-    /*
-     * We have now a valid pointer, that is either raw or tagged properly.
-     * Since we do not rely on the conservative scanning yet and assume that
-     * all the roots are precisely reported, any unmarked GC things here mean
-     * a leak.
-     */
-    if (IS_GC_MARKING_TRACER(trc)) {
-        if (!js_IsAboutToBeFinalized(thing))
-            return;
-        CONSERVATIVE_METER(stats.unmarked++);
-    }
-
-    uint32 traceKind = GetArenaTraceKind(ainfo);
-#ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
-    if (IS_GC_MARKING_TRACER(trc) && dumpFileName) {
-        ConservativeRoot root = {thing, traceKind};
-        conservativeRoots.append(root);
-    }
-#endif
-    JS_SET_TRACING_NAME(trc, "machine stack");
-    js_CallGCMarker(trc, thing, traceKind);
-
-#undef RETURN
-}
-
-void
-ConservativeGCStackMarker::markRange(jsuword *begin, jsuword *end)
-{
-    JS_ASSERT(begin <= end);
-    if (history.initialized()) {
-        for (jsuword *i = begin; i != end; ++i) {
-            CONSERVATIVE_METER(stats.words++);
-            jsuword p = *i;
-            if (history.has(p))
-                continue;
-            markWord(p);
-
-            /*
-             * If adding the address to the hash table fails because we are
-             * out of memory, stack scanning slows down but is otherwise
-             * unaffected.
-             */
-            history.put(p);
-        }
-    } else {
-        for (jsuword *i = begin; i != end; ++i)
-            markWord(*i);
-    }
-}
-
-void
-ConservativeGCStackMarker::markRoots()
-{
-    /* Do conservative scanning of the stack. */
-    for (ThreadDataIter i(trc->context->runtime); !i.empty(); i.popFront()) {
-        JSThreadData *td = i.threadData();
-        ConservativeGCThreadData *ctd = &td->conservativeGC;
-        if (ctd->enableCount) {
-#if JS_STACK_GROWTH_DIRECTION > 0
-            JS_ASSERT(td->nativeStackBase <= ctd->nativeStackTop);
-            markRange(td->nativeStackBase, ctd->nativeStackTop);
-#else
-            JS_ASSERT(td->nativeStackBase >= ctd->nativeStackTop + 1);
-            markRange(ctd->nativeStackTop + 1, td->nativeStackBase);
-#endif
-            markRange(ctd->registerSnapshot.words,
-                      JS_ARRAY_END(ctd->registerSnapshot.words));
-        }
-    }
-}
-
-/* static */
-JS_NEVER_INLINE void
-ConservativeGCThreadData::enable()
-{
-    /* Update the native stack pointer if it points to a bigger stack. */
-#if JS_STACK_GROWTH_DIRECTION > 0
-# define CMP >
-#else
-# define CMP <
-#endif
-    jsuword dummy;
-    if (enableCount == 0 || &dummy CMP nativeStackTop)
-        nativeStackTop = &dummy;
-#undef CMP
-
-    /* Update the register snapshot with the latest values. */
-#if defined(_MSC_VER)
-# pragma warning(push)
-# pragma warning(disable: 4611)
-#endif
-    setjmp(registerSnapshot.jmpbuf);
-#if defined(_MSC_VER)
-# pragma warning(pop)
-#endif
-
-    ++enableCount;
-}
-
-JS_NEVER_INLINE void
-ConservativeGCThreadData::disable()
-{
-    JS_ASSERT(enableCount != 0);
-    --enableCount;
-#ifdef DEBUG
-    if (enableCount == 0)
-        nativeStackTop = NULL;
-#endif
-}
-
-} /* namespace js */
-
 
 #ifdef JS_GCMETER
 
@@ -1497,8 +1092,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "    max reachable closeable: %lu\n", ULSTAT(maxnclose));
     fprintf(fp, "      scheduled close hooks: %lu\n", ULSTAT(closelater));
     fprintf(fp, "  max scheduled close hooks: %lu\n", ULSTAT(maxcloselater));
-
-    ConservativeGCStackMarker::dumpStats(fp, &rt->gcStats.conservative);
 
 #undef UL
 #undef ULSTAT
@@ -2619,6 +2212,7 @@ JS_REQUIRES_STACK void
 js_TraceRuntime(JSTracer *trc)
 {
     JSRuntime *rt = trc->context->runtime;
+    JSContext *iter, *acx;
 
     for (GCRoots::Range r = rt->gcRootsHash.all(); !r.empty(); r.popFront())
         gc_root_traversal(r.front(), trc);
@@ -2630,8 +2224,8 @@ js_TraceRuntime(JSTracer *trc)
     js_TraceRuntimeNumberState(trc);
     js_MarkTraps(trc);
 
-    JSContext *iter = NULL;
-    while (JSContext *acx = js_ContextIterator(rt, JS_TRUE, &iter))
+    iter = NULL;
+    while ((acx = js_ContextIterator(rt, JS_TRUE, &iter)) != NULL)
         js_TraceContext(trc, acx);
 
     for (ThreadDataIter i(rt); !i.empty(); i.popFront())
@@ -2639,14 +2233,6 @@ js_TraceRuntime(JSTracer *trc)
 
     if (rt->gcExtraRootsTraceOp)
         rt->gcExtraRootsTraceOp(trc, rt->gcExtraRootsData);
-
-    /*
-     * For now we use the conservative stack scanner only in the check mode
-     * and mark conservatively after marking all other roots to detect
-     * conservative leaks.
-     */
-    if (rt->state != JSRTS_LANDING)
-        ConservativeGCStackMarker(trc).markRoots();
 }
 
 void
@@ -3397,7 +2983,6 @@ LetOtherGCFinish(JSContext *cx)
      * finish before we wait.
      */
     JS_ASSERT(rt->gcThread);
-    JS_THREAD_DATA(cx)->conservativeGC.enable();
 
     /*
      * Wait for GC to finish on the other thread, even if requestDebit is 0
@@ -3409,7 +2994,6 @@ LetOtherGCFinish(JSContext *cx)
         JS_AWAIT_GC_DONE(rt);
     } while (rt->gcThread);
 
-    JS_THREAD_DATA(cx)->conservativeGC.disable();
     cx->thread->gcWaiting = false;
     rt->requestCount += requestDebit;
 }
@@ -3536,10 +3120,6 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
 
     METER(rt->gcStats.poke++);
 
-    /* Do not scan the current thread when on the shutdown. */
-    if (rt->state != JSRTS_LANDING)
-        JS_THREAD_DATA(cx)->conservativeGC.enable();
-
     bool firstRun = true;
     do {
         rt->gcPoke = false;
@@ -3557,9 +3137,6 @@ GCUntilDone(JSContext *cx, JSGCInvocationKind gckind  GCTIMER_PARAM)
         //   - js_GC was called recursively
         //   - a finalizer called js_RemoveRoot or js_UnlockGCThingRT.
     } while (rt->gcPoke);
-
-    if (rt->state != JSRTS_LANDING)
-        JS_THREAD_DATA(cx)->conservativeGC.disable();
 
     rt->gcRegenShapes = false;
     rt->setGCLastBytes(rt->gcBytes);
