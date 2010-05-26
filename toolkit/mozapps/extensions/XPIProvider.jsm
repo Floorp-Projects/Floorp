@@ -4297,7 +4297,20 @@ AddonInternal.prototype = {
     this.appDisabled = !isUsableAddon(this);
   },
 
-  toJSON: function(key) {
+  /**
+   * toJSON is called by JSON.stringify in order to create a filtered version
+   * of this object to be serialized to a JSON file. A new object is returned
+   * with copies of all non-private properties. Functions, getters and setters
+   * are not copied.
+   *
+   * @param  aKey
+   *         The key that this object is being serialized as in the JSON.
+   *         Unused here since this is always the main object serialized
+   *
+   * @return an object containing copies of the properties of this object
+   *         ignoring private properties, functions, getters and setters
+   */
+  toJSON: function(aKey) {
     let obj = {};
     for (let prop in this) {
       // Ignore private properties
