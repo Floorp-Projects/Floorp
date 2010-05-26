@@ -383,9 +383,12 @@ z.bg
 9.bg	 	 	
 
 // bh : http://en.wikipedia.org/wiki/.bh
-// list of other 2nd level tlds ?
 bh
 com.bh
+edu.bh
+net.bh
+org.bh
+gov.bh
 
 // bi : http://en.wikipedia.org/wiki/.bi
 // http://whois.nic.bi/
