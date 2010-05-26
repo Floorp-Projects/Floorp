@@ -527,7 +527,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     const char *comma;
     JSObject *obj2;
     JSProperty *prop;
-    uintN attrs;
     jsval *val;
     JSString *gsop[2];
     JSString *idstr, *valstr, *str;
@@ -625,33 +624,34 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
         jsint valcnt = 0;
         if (prop) {
-            ok = obj2->getAttributes(cx, id, prop, &attrs);
-            if (!ok) {
-                obj2->dropProperty(cx, prop);
-                goto error;
-            }
-            if (obj2->isNative() && (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
+            bool doGet = true;
+            if (obj->isNative()) {
                 JSScopeProperty *sprop = (JSScopeProperty *) prop;
+                unsigned attrs = sprop->attributes();
                 if (attrs & JSPROP_GETTER) {
+                    doGet = false;
                     val[valcnt] = sprop->getterValue();
                     gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.getAtom);
                     valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
+                    doGet = false;
                     val[valcnt] = sprop->setterValue();
                     gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.setAtom);
                     valcnt++;
                 }
+                JS_UNLOCK_OBJ(cx, obj);
             } else {
+                obj2->dropProperty(cx, prop);
+            }
+            if (doGet) {
                 valcnt = 1;
                 gsop[0] = NULL;
                 ok = obj->getProperty(cx, id, &val[0]);
+                if (!ok)
+                    goto error;
             }
-            obj2->dropProperty(cx, prop);
         }
-
-        if (!ok)
-            goto error;
 
         /*
          * If id is a string that's not an identifier, or if it's a negative
