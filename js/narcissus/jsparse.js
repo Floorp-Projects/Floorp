@@ -38,178 +38,8 @@
 /*
  * Narcissus - JS implemented in JS.
  *
- * Lexical scanner and parser.
+ * Parser.
  */
-
-// Build a regexp that recognizes operators and punctuators (except newline).
-var opRegExpSrc = "^";
-for (i in opTypeNames) {
-    if (i == '\n')
-        continue;
-    if (opRegExpSrc != "^")
-        opRegExpSrc += "|^";
-    opRegExpSrc += i.replace(/[?|^&(){}\[\]+\-*\/\.]/g, "\\$&");
-}
-var opRegExp = new RegExp(opRegExpSrc);
-
-// A regexp to match floating point literals (but not integer literals).
-var fpRegExp = /^\d+\.\d*(?:[eE][-+]?\d+)?|^\d+(?:\.\d*)?[eE][-+]?\d+|^\.\d+(?:[eE][-+]?\d+)?/;
-
-// A regexp to match regexp literals.
-var reRegExp = /^\/((?:\\.|\[(?:\\.|[^\]])*\]|[^\/])+)\/([gimy]*)/;
-
-function Tokenizer(s, f, l) {
-    this.cursor = 0;
-    this.source = String(s);
-    this.tokens = [];
-    this.tokenIndex = 0;
-    this.lookahead = 0;
-    this.scanNewlines = false;
-    this.scanOperand = true;
-    this.filename = f || "";
-    this.lineno = l || 1;
-}
-
-Tokenizer.prototype = {
-    get input() {
-        return this.source.substring(this.cursor);
-    },
-
-    get done() {
-        return this.peek() == END;
-    },
-
-    get token() {
-        return this.tokens[this.tokenIndex];
-    },
-
-    match: function (tt) {
-        return this.get() == tt || this.unget();
-    },
-
-    mustMatch: function (tt) {
-        if (!this.match(tt))
-            throw this.newSyntaxError("Missing " + tokens[tt].toLowerCase());
-        return this.token;
-    },
-
-    peek: function () {
-        var tt, next;
-        if (this.lookahead) {
-            next = this.tokens[(this.tokenIndex + this.lookahead) & 3];
-            if (this.scanNewlines && next.lineno != this.lineno)
-                tt = NEWLINE;
-            else
-                tt = next.type;
-        } else {
-            tt = this.get();
-            this.unget();
-        }
-        return tt;
-    },
-
-    peekOnSameLine: function () {
-        this.scanNewlines = true;
-        var tt = this.peek();
-        this.scanNewlines = false;
-        return tt;
-    },
-
-    get: function () {
-        var token;
-        while (this.lookahead) {
-            --this.lookahead;
-            this.tokenIndex = (this.tokenIndex + 1) & 3;
-            token = this.tokens[this.tokenIndex];
-            if (token.type != NEWLINE || this.scanNewlines)
-                return token.type;
-        }
-
-        for (;;) {
-            var input = this.input;
-            var match = (this.scanNewlines ? /^[ \t]+/ : /^\s+/)(input);
-            if (match) {
-                var spaces = match[0];
-                this.cursor += spaces.length;
-                var newlines = spaces.match(/\n/g);
-                if (newlines)
-                    this.lineno += newlines.length;
-                input = this.input;
-            }
-
-            if (!(match = /^\/(?:\*(?:.|\n)*?\*\/|\/.*)/(input)))
-                break;
-            var comment = match[0];
-            this.cursor += comment.length;
-            newlines = comment.match(/\n/g);
-            if (newlines)
-                this.lineno += newlines.length
-        }
-
-        this.tokenIndex = (this.tokenIndex + 1) & 3;
-        token = this.tokens[this.tokenIndex];
-        if (!token)
-            this.tokens[this.tokenIndex] = token = {};
-
-        if (!input)
-            return token.type = END;
-
-        if ((match = fpRegExp(input))) {
-            token.type = NUMBER;
-            token.value = parseFloat(match[0]);
-        } else if ((match = /^0[xX][\da-fA-F]+|^0[0-7]*|^\d+/(input))) {
-            token.type = NUMBER;
-            token.value = parseInt(match[0]);
-        } else if ((match = /^[$_\w]+/(input))) {       // FIXME no ES3 unicode
-            var id = match[0];
-            token.type = keywords[id] || IDENTIFIER;
-            token.value = id;
-        } else if ((match = /^"(?:\\.|[^"])*"|^'(?:\\.|[^'])*'/(input))) { //"){
-            token.type = STRING;
-            token.value = eval(match[0]);
-        } else if (this.scanOperand && (match = reRegExp(input))) {
-            token.type = REGEXP;
-            token.value = new RegExp(match[1], match[2]);
-        } else if ((match = opRegExp(input))) {
-            var op = match[0];
-            if (assignOps[op] && input[op.length] == '=') {
-                token.type = ASSIGN;
-                token.assignOp = GLOBAL[opTypeNames[op]];
-                match[0] += '=';
-            } else {
-                token.type = GLOBAL[opTypeNames[op]];
-                if (this.scanOperand &&
-                    (token.type == PLUS || token.type == MINUS)) {
-                    token.type += UNARY_PLUS - PLUS;
-                }
-                token.assignOp = null;
-            }
-            token.value = op;
-        } else if (this.scanNewlines && (match = /^\n/(input))) {
-            token.type = NEWLINE;
-        } else {
-            throw this.newSyntaxError("Illegal token");
-        }
-
-        token.start = this.cursor;
-        this.cursor += match[0].length;
-        token.end = this.cursor;
-        token.lineno = this.lineno;
-        return token.type;
-    },
-
-    unget: function () {
-        if (++this.lookahead == 4) throw "PANIC: too much lookahead!";
-        this.tokenIndex = (this.tokenIndex - 1) & 3;
-    },
-
-    newSyntaxError: function (m) {
-        var e = new SyntaxError(m, this.filename, this.lineno);
-        e.source = this.source;
-        e.cursor = this.cursor;
-        return e;
-    }
-};
 
 function CompilerContext(inFunction) {
     this.inFunction = inFunction;
@@ -690,7 +520,7 @@ var opPrecedence = {
 
 // Map operator type code to precedence.
 for (i in opPrecedence)
-    opPrecedence[GLOBAL[i]] = opPrecedence[i];
+    opPrecedence[tokenIds[i]] = opPrecedence[i];
 
 var opArity = {
     COMMA: -2,
@@ -715,7 +545,7 @@ var opArity = {
 
 // Map operator type code to arity.
 for (i in opArity)
-    opArity[GLOBAL[i]] = opArity[i];
+    opArity[tokenIds[i]] = opArity[i];
 
 function Expression(t, x, stop) {
     var n, id, tt, operators = [], operands = [];
