@@ -640,6 +640,7 @@
                      class="toolbarbutton-1 chromeclass-toolbar-additional"
                      label="&tabCmd.label;"
                      command="cmd_newNavigatorTab"
+                     onclick="checkForMiddleClick(this, event);"
                      tooltiptext="&newTabButton.tooltip;"
                      ondrop="newTabButtonObserver.onDrop(event)"
                      ondragover="newTabButtonObserver.onDragOver(event)"
