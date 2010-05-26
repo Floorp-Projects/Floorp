@@ -3960,7 +3960,7 @@ BEGIN_CASE(JSOP_RETSUB)
     POP_COPY_TO(rval);
     POP_COPY_TO(lval);
     JS_ASSERT(lval.isBoolean());
-    if (lval.isBoolean()) {
+    if (lval.asBoolean()) {
         /*
          * Exception was pending during finally, throw it *before* we adjust
          * pc, because pc indexes into script->trynotes.  This turns out not to
