@@ -339,9 +339,6 @@ MAKEFILES_plugin="
   modules/plugin/Makefile
   modules/plugin/base/src/Makefile
   modules/plugin/base/public/Makefile
-  modules/plugin/default/mac/Makefile
-  modules/plugin/default/unix/Makefile
-  modules/plugin/default/windows/Makefile
   modules/plugin/sdk/Makefile
   modules/plugin/sdk/samples/Makefile
   modules/plugin/sdk/samples/common/Makefile
