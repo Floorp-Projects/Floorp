@@ -2034,7 +2034,18 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
 
     MakeContextCurrent();
 
-    PRUint32 len = width * height * size;
+    PRUint32 packAlignment;
+    gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, (GLint*) &packAlignment);
+
+    PRUint32 plainRowSize = width*size;
+
+    // alignedRowSize = row size rounded up to next multiple of
+    // packAlignment which is a power of 2
+    PRUint32 alignedRowSize = (plainRowSize + packAlignment-1) &
+        ~PRUint32(packAlignment-1);
+
+    PRUint32 len = (height-1)*alignedRowSize + plainRowSize;
+
     JSObject *abufObject = js_CreateArrayBuffer(js.ctx, len);
     if (!abufObject)
         return SynthesizeGLError(LOCAL_GL_OUT_OF_MEMORY, "readPixels: could not allocate buffer");
