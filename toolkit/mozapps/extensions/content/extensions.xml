@@ -712,13 +712,10 @@
             <xul:spacer flex="1"/>
             <xul:button type="checkbox" anonid="toggle-more" class="toggle-more"
                         label="&showMore.label;"
-                        accesskey="&showMore.accesskey;"
                         tooltiptext="&showMore.tooltip;"
                         showless="&showLess.label;"
-                        showlessaccesskey="&showLess.accesskey;"
                         showlesstooltip="&showLess.tooltip;"
                         showmore="&showMore.label;"
-                        showmoreaccesskey="&showMore.accesskey;"
                         showmoretooltip="&showMore.tooltip;"
                         oncommand="document.getBindingParent(this).toggleDetails();"/>
           </xul:hbox>
@@ -727,17 +724,14 @@
         <xul:hbox anonid="control-container" class="control-container">
           <xul:button anonid="remove-btn" class="addon-control remove"
                       label="&cmd.uninstallAddon.label;"
-                      accesskey="&cmd.uninstallAddon.accesskey;"
                       tooltiptext="&cmd.uninstallAddon.tooltip;"
                       oncommand="document.getBindingParent(this).uninstall();"/>
           <xul:button anonid="enable-btn"  class="addon-control enable"
                       label="&cmd.enableAddon.label;"
-                      accesskey="&cmd.enableAddon.accesskey;"
                       tooltiptext="&cmd.enableAddon.tooltip;"
                       oncommand="document.getBindingParent(this).userDisabled = false;"/>
           <xul:button anonid="disable-btn" class="addon-control disable"
                       label="&cmd.disableAddon.label;"
-                      accesskey="&cmd.disableAddon.accesskey;"
                       tooltiptext="&cmd.disableAddon.tooltip;"
                       oncommand="document.getBindingParent(this).userDisabled = true;"/>
         </xul:hbox>
@@ -883,10 +877,6 @@
               this._toggleMore.getAttribute("showmore")
             );
             this._toggleMore.setAttribute(
-              "accesskey",
-              this._toggleMore.getAttribute("showmoreaccesskey")
-            );
-            this._toggleMore.setAttribute(
               "tooltiptext",
               this._toggleMore.getAttribute("showmoretooltip")
             );
@@ -897,10 +887,6 @@
             this._toggleMore.setAttribute(
               "label",
               this._toggleMore.getAttribute("showless")
-            );
-            this._toggleMore.setAttribute(
-              "accesskey",
-              this._toggleMore.getAttribute("showlessaccesskey")
             );
             this._toggleMore.setAttribute(
               "tooltiptext",
