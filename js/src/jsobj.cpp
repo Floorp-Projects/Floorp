@@ -1484,7 +1484,7 @@ obj_unwatch(JSContext *cx, uintN argc, Value *vp)
     if (argc == 0)
         return JS_TRUE;
     jsid id;
-    if (ValueToId(cx, vp[2], &id))
+    if (!ValueToId(cx, vp[2], &id))
         return JS_FALSE;
     return JS_ClearWatchPoint(cx, obj, id, NULL, NULL);
 }
