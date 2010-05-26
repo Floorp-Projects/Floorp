@@ -173,8 +173,8 @@ window.Rect.prototype = {
   equals: function(a) {
     return (a.left == this.left
         && a.top == this.top
-        && a.right == this.right
-        && a.bottom == this.bottom);
+        && a.width == this.width
+        && a.height == this.height);
   },
   
   // ----------
@@ -217,7 +217,7 @@ window.Subscribable.prototype = {
       this.subscribers[eventName] = [];
       
     var subs = this.subscribers[eventName];
-    var existing = jQuery.grep(subs, function(element) {
+    var existing = iQ.grep(subs, function(element) {
       return element.refObject == refObject;
     });
     
@@ -239,7 +239,7 @@ window.Subscribable.prototype = {
     if(!this.subscribers[eventName])
       return;
       
-    this.subscribers[eventName] = jQuery.grep(this.subscribers[eventName], function(element) {
+    this.subscribers[eventName] = iQ.grep(this.subscribers[eventName], function(element) {
       return element.refObject == refObject;
     }, true);
   },
@@ -252,8 +252,8 @@ window.Subscribable.prototype = {
       return;
       
     var self = this;
-    var subsCopy = $.merge([], this.subscribers[eventName]);
-    $.each(subsCopy, function(index, object) { 
+    var subsCopy = iQ.merge([], this.subscribers[eventName]);
+    iQ.each(subsCopy, function(index, object) { 
       object.callback(self, eventInfo);
     });
   },
@@ -266,7 +266,7 @@ window.Subscribable.prototype = {
     if(!this.onCloseSubscribers)
       this.onCloseSubscribers = [];
       
-    var existing = jQuery.grep(this.onCloseSubscribers, function(element) {
+    var existing = iQ.grep(this.onCloseSubscribers, function(element) {
       return element.referenceElement == referenceElement;
     });
     
@@ -288,7 +288,7 @@ window.Subscribable.prototype = {
     if(!this.onCloseSubscribers)
       return;
       
-    this.onCloseSubscribers = jQuery.grep(this.onCloseSubscribers, function(element) {
+    this.onCloseSubscribers = iQ.grep(this.onCloseSubscribers, function(element) {
       return element.referenceElement == referenceElement;
     }, true);
   },
@@ -300,7 +300,7 @@ window.Subscribable.prototype = {
     if(!this.onCloseSubscribers)
       return;
       
-    jQuery.each(this.onCloseSubscribers, function(index, object) { 
+    iQ.each(this.onCloseSubscribers, function(index, object) { 
       object.callback(this);
     });
   }
@@ -438,48 +438,13 @@ var Utils = {
     
   // ___ Logging
   
-  // Interactive logging!
-  ilog: function(){ // pass as many arguments as you want, it'll print them all
-    // If Firebug lite already exists, print to the console.
-    if( window.firebug ){
-      window.firebug.d.console.cmd.log.apply(null, arguments);
-      return;
-    }
-    
-    // Else, embed it.
-    $('<link rel="stylesheet" href="../../js/firebuglite/firebug-lite.css"/>')
-      .appendTo("head");
-    
-    $('<script src="../../js/firebuglite/firebug-lite.js"></script>')
-      .appendTo("body");
-    
-    var args = arguments;
-    
-    (function(){
-      var fb = window.firebug;
-      if(fb && fb.version){
-        fb.init();
-        fb.win.setHeight(100);
-        fb.d.console.cmd.log.apply(null, args);
-        }
-      else{setTimeout(arguments.callee);}
-    })();
+  ilog: function(){ 
+    Utils.log('!!ilog is no longer supported!!');
   },
   
   log: function() { // pass as many arguments as you want, it'll print them all
     var text = this.expandArgumentsForLog(arguments);
-/*     $('body').prepend(text + '<br>'); */
     consoleService.logStringMessage(text);
-  }, 
-  
-  log2: function() { // pass as many arguments as you want, it'll print them all
-    var text = this.expandArgumentsForLog(arguments);
-    var html = 
-      '<div style="position: relative; z-index: -9999">'
-      + text
-      + '</div>';
-      
-    $(html).prependTo('body');
   }, 
   
   error: function() { // pass as many arguments as you want, it'll print them all
@@ -511,7 +476,7 @@ var Utils = {
         text += '\n' + calls[3];
       }
       
-      Cu.reportError(text);
+      this.log(text);
     }
   },
   
@@ -581,24 +546,17 @@ var Utils = {
   
   // ___ Geometry
   getBounds: function(el) {
-    var $el = $(el);
     return new Rect(
-      parseInt($el.css('left')), 
-      parseInt($el.css('top')),
-      $el.width(),
-      $el.height()
+      parseInt(el.style.left) || el.offsetLeft, 
+      parseInt(el.style.top) || el.offsetTop, 
+      el.clientWidth,
+      el.clientHeight
     );
   },
 
   // ___ Misc
-  isJQuery: function(object) {
-    // TODO: need more robust way 
-    return (object && typeof(object.fadeIn) == 'function' ? true : false);
-  },   
-
   isDOMElement: function(object) {
-    // TODO: need more robust way 
-    return (object && typeof(object.tagName) != 'undefined' ? true : false);
+    return (object && typeof(object.nodeType) != 'undefined' ? true : false);
   },
  
   // ----------
@@ -614,10 +572,10 @@ var Utils = {
   // has properties that are themselves objects, those properties will be copied by reference.
   copy: function(value) {
     if(value && typeof(value) == 'object') {
-      if($.isArray(value))
-        return $.extend([], value);
+      if(iQ.isArray(value))
+        return iQ.extend([], value);
         
-      return $.extend({}, value);
+      return iQ.extend({}, value);
     }
       
     return value;
