@@ -1778,6 +1778,7 @@ namespace reprmeter {
             Value v;                                                          \
             if (!js_ValueToNonNullObject(cx, *(vp), &v))                      \
                 goto error;                                                   \
+            *(vp) = v;                                                        \
             obj = &v.asObject();                                              \
         }                                                                     \
     JS_END_MACRO
