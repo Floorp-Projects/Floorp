@@ -44,6 +44,7 @@
 
 #include "mozilla/Storage.h"
 #include "nsDOMClassInfo.h"
+#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
 #include "AsyncConnectionHelper.h"
@@ -68,41 +69,13 @@ isupports_cast(IDBDatabaseRequest* aClassPtr)
     static_cast<IDBRequest::Generator*>(aClassPtr));
 }
 
-template<class T>
-inline
-already_AddRefed<nsISupports>
-do_QIAndNull(nsCOMPtr<T>& aCOMPtr)
-{
-  nsCOMPtr<nsISupports> temp(do_QueryInterface(aCOMPtr));
-  aCOMPtr = nsnull;
-  return temp.forget();
-}
-
-class CloseConnectionRunnable : public nsRunnable
-{
-public:
-  CloseConnectionRunnable(nsTArray<nsCOMPtr<nsISupports> >& aDoomedObjects)
-  {
-    mDoomedObjects.SwapElements(aDoomedObjects);
-  }
-
-  NS_IMETHOD Run()
-  {
-    mDoomedObjects.Clear();
-    return NS_OK;
-  }
-
-private:
-  nsTArray<nsCOMPtr<nsISupports> > mDoomedObjects;
-};
-
 class SetVersionHelper : public AsyncConnectionHelper
 {
 public:
-  SetVersionHelper(IDBDatabaseRequest* aDatabase,
+  SetVersionHelper(IDBTransactionRequest* aTransaction,
                    IDBRequest* aRequest,
                    const nsAString& aVersion)
-  : AsyncConnectionHelper(aDatabase, aRequest), mVersion(aVersion)
+  : AsyncConnectionHelper(aTransaction, aRequest), mVersion(aVersion)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -270,8 +243,13 @@ IDBDatabaseRequest::IDBDatabaseRequest()
 
 IDBDatabaseRequest::~IDBDatabaseRequest()
 {
-  mConnectionThread->SetWeakIdleObserver(nsnull);
-  FireCloseConnectionRunnable();
+  NS_ASSERTION(mTransactions.IsEmpty(), "This should be empty!");
+
+  if (mConnectionThread) {
+    mConnectionThread->SetWeakIdleObserver(nsnull);
+  }
+
+  CloseConnection();
 
   if (mDatabaseId) {
     DatabaseInfo* info;
@@ -285,210 +263,39 @@ IDBDatabaseRequest::~IDBDatabaseRequest()
   }
 }
 
-nsCOMPtr<mozIStorageConnection>&
-IDBDatabaseRequest::Connection()
-{
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  return mConnection;
-}
-
 nsresult
-IDBDatabaseRequest::EnsureConnection()
+IDBDatabaseRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   if (!mConnection) {
-    mConnection =
-      IndexedDatabaseRequest::GetConnection(mFilePath);
+    mConnection = IndexedDatabaseRequest::GetConnection(mFilePath);
     NS_ENSURE_TRUE(mConnection, NS_ERROR_FAILURE);
   }
 
+  nsCOMPtr<mozIStorageConnection> result(mConnection);
+  result.forget(aResult);
   return NS_OK;
 }
 
-already_AddRefed<mozIStorageStatement>
-IDBDatabaseRequest::AddStatement(bool aCreate,
-                                 bool aOverwrite,
-                                 bool aAutoIncrement)
+void
+IDBDatabaseRequest::CloseConnection()
 {
-#ifdef DEBUG
-  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
-  if (!aCreate) {
-    NS_ASSERTION(aOverwrite, "Bad param combo!");
+  PRUint32 transactionCount = mTransactions.Length();
+  for (PRUint32 index = 0; index < transactionCount; index++) {
+    mTransactions[index]->CloseConnection();
   }
-#endif
 
-  nsresult rv = EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  nsCOMPtr<mozIStorageStatement>& cachedStatement =
-    aAutoIncrement ?
-      aCreate ?
-        aOverwrite ?
-          mAddOrModifyAutoIncrementStmt :
-          mAddAutoIncrementStmt :
-        mModifyAutoIncrementStmt :
-      aCreate ?
-        aOverwrite ?
-          mAddOrModifyStmt :
-          mAddStmt :
-        mModifyStmt;
-
-  nsCOMPtr<mozIStorageStatement> result(cachedStatement);
-
-  if (!result) {
-    nsCString query;
-    if (aAutoIncrement) {
-      if (aCreate) {
-        if (aOverwrite) {
-          query.AssignLiteral(
-            "INSERT OR REPLACE INTO ai_object_data (object_store_id, id, data) "
-            "VALUES (:osid, :key_value, :data)"
-          );
-        }
-        else {
-          query.AssignLiteral(
-            "INSERT INTO ai_object_data (object_store_id, data) "
-            "VALUES (:osid, :data)"
-          );
-        }
-      }
-      else {
-        query.AssignLiteral(
-          "UPDATE ai_object_data "
-          "SET data = :data "
-          "WHERE object_store_id = :osid "
-          "AND id = :key_value"
-        );
-      }
+  if (mConnection) {
+    if (mConnectionThread) {
+      NS_ProxyRelease(mConnectionThread, mConnection, PR_TRUE);
     }
     else {
-      if (aCreate) {
-        if (aOverwrite) {
-          query.AssignLiteral(
-            "INSERT OR REPLACE INTO object_data (object_store_id, key_value, "
-                                                "data) "
-            "VALUES (:osid, :key_value, :data)"
-          );
-        }
-        else {
-          query.AssignLiteral(
-            "INSERT INTO object_data (object_store_id, key_value, data) "
-            "VALUES (:osid, :key_value, :data)"
-          );
-        }
-      }
-      else {
-        query.AssignLiteral(
-          "UPDATE object_data "
-          "SET data = :data "
-          "WHERE object_store_id = :osid "
-          "AND key_value = :key_value"
-        );
-      }
+      NS_ERROR("Leaking connection!");
+      mozIStorageConnection* leak;
+      mConnection.forget(&leak);
     }
-
-    rv = mConnection->CreateStatement(query, getter_AddRefs(cachedStatement));
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    result = cachedStatement;
   }
-  return result.forget();
-}
-
-already_AddRefed<mozIStorageStatement>
-IDBDatabaseRequest::RemoveStatement(bool aAutoIncrement)
-{
-  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
-  nsresult rv = EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  nsCOMPtr<mozIStorageStatement> result;
-
-  if (aAutoIncrement) {
-    if (!mRemoveAutoIncrementStmt) {
-      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM ai_object_data "
-        "WHERE id = :key_value "
-        "AND object_store_id = :osid"
-      ), getter_AddRefs(mRemoveAutoIncrementStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-    }
-    result = mRemoveAutoIncrementStmt;
-  }
-  else {
-    if (!mRemoveStmt) {
-      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM object_data "
-        "WHERE key_value = :key_value "
-        "AND object_store_id = :osid"
-      ), getter_AddRefs(mRemoveStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-    }
-    result = mRemoveStmt;
-  }
-
-  return result.forget();
-}
-
-already_AddRefed<mozIStorageStatement>
-IDBDatabaseRequest::GetStatement(bool aAutoIncrement)
-{
-  NS_PRECONDITION(!NS_IsMainThread(), "Wrong thread!");
-  nsresult rv = EnsureConnection();
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
-  nsCOMPtr<mozIStorageStatement> result;
-
-  if (aAutoIncrement) {
-    if (!mGetAutoIncrementStmt) {
-      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT data "
-        "FROM ai_object_data "
-        "WHERE id = :id "
-        "AND object_store_id = :osid"
-      ), getter_AddRefs(mGetAutoIncrementStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-    }
-    result = mGetAutoIncrementStmt;
-  }
-  else {
-    if (!mGetStmt) {
-      rv = mConnection->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT data "
-        "FROM object_data "
-        "WHERE key_value = :id "
-        "AND object_store_id = :osid"
-      ), getter_AddRefs(mGetStmt));
-      NS_ENSURE_SUCCESS(rv, nsnull);
-    }
-    result = mGetStmt;
-  }
-
-  return result.forget();
-}
-
-void
-IDBDatabaseRequest::FireCloseConnectionRunnable()
-{
-  nsTArray<nsCOMPtr<nsISupports> > doomedObjects;
-
-  doomedObjects.AppendElement(do_QIAndNull(mConnection));
-  doomedObjects.AppendElement(do_QIAndNull(mAddStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mAddAutoIncrementStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mModifyStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mModifyAutoIncrementStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mAddOrModifyStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mAddOrModifyAutoIncrementStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mRemoveStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mRemoveAutoIncrementStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mGetStmt));
-  doomedObjects.AppendElement(do_QIAndNull(mGetAutoIncrementStmt));
-
-  nsCOMPtr<nsIRunnable> runnable(new CloseConnectionRunnable(doomedObjects));
-  mConnectionThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
-
-  NS_ASSERTION(doomedObjects.Length() == 0, "Should have swapped!");
 }
 
 NS_IMPL_ADDREF(IDBDatabaseRequest)
@@ -639,10 +446,29 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  DatabaseInfo* info;
+  if (!DatabaseInfo::Get(mDatabaseId, &info)) {
+    NS_ERROR("This should never fail!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Lock the whole database
+  nsTArray<nsString> storesToOpen;
+  if (!info->GetObjectStoreNames(storesToOpen)) {
+    NS_ERROR("Out of memory?");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   nsRefPtr<IDBRequest> request = GenerateRequest();
 
+  nsRefPtr<IDBTransactionRequest> transaction =
+    IDBTransactionRequest::Create(this, storesToOpen,
+                                  nsIIDBTransaction::READ_WRITE,
+                                  kDefaultDatabaseTimeoutSeconds);
+  NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
+
   nsRefPtr<SetVersionHelper> helper =
-    new SetVersionHelper(this, request, aVersion);
+    new SetVersionHelper(transaction, request, aVersion);
   nsresult rv = helper->Dispatch(mConnectionThread);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -840,7 +666,7 @@ IDBDatabaseRequest::Observe(nsISupports* aSubject,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ENSURE_FALSE(strcmp(aTopic, IDLE_THREAD_TOPIC), NS_ERROR_UNEXPECTED);
 
-  FireCloseConnectionRunnable();
+  CloseConnection();
 
   return NS_OK;
 }
