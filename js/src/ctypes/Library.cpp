@@ -85,7 +85,7 @@ Library::Create(JSContext* cx, jsval aPath)
   JSObject* libraryObj = JS_NewObject(cx, &sLibraryClass, NULL, NULL);
   if (!libraryObj)
     return NULL;
-  js::AutoValueRooter root(cx, libraryObj);
+  js::AutoObjectRooter root(cx, libraryObj);
 
   // initialize the library
   if (!JS_SetReservedSlot(cx, libraryObj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(NULL)))
@@ -241,7 +241,7 @@ Library::Declare(JSContext* cx, uintN argc, jsval* vp)
     return JS_FALSE;
 
   JSObject* typeObj;
-  js::AutoValueRooter root(cx);
+  js::AutoObjectRooter root(cx);
   bool isFunction = argc > 2;
   if (isFunction) {
     // Case 1).
