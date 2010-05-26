@@ -1775,9 +1775,10 @@ namespace reprmeter {
         if ((vp)->isObject()) {                                               \
             obj = &(vp)->asObject();                                          \
         } else {                                                              \
-            if (!js_ValueToNonNullObject(cx, *(vp), (vp)))                    \
+            Value v;                                                          \
+            if (!js_ValueToNonNullObject(cx, *(vp), &v))                      \
                 goto error;                                                   \
-            obj = &(vp)->asObject();                                          \
+            obj = &v.asObject();                                              \
         }                                                                     \
     JS_END_MACRO
 
