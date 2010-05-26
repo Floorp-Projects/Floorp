@@ -3233,12 +3233,12 @@ class Value
 
     bool isTrue() const {
         return data.s.mask32 == JSVAL_MASK32_BOOLEAN &&
-               data.s.payload.boo == JSVAL_TRUE;
+               data.s.payload.boo == JS_TRUE;
     }
 
     bool isFalse() const {
         return data.s.mask32 == JSVAL_MASK32_BOOLEAN &&
-               data.s.payload.boo == false;
+               data.s.payload.boo == JS_FALSE;
     }
 
     bool isMagic() const {
@@ -3277,7 +3277,7 @@ class Value
 
     double asDouble() const {
         JS_ASSERT(isDouble());
-        JS_ASSERT(size_t(this) % sizeof(double) == 0);
+        ASSERT_DOUBLE_ALIGN();
         return data.asDouble;
     }
 
