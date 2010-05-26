@@ -58,7 +58,17 @@ class Compiler : public CompilerBase
     typedef JSC::MacroAssembler::ImmPtr ImmPtr;
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     typedef JSC::MacroAssembler::Address Address;
+    typedef JSC::MacroAssembler::Jump Jump;
     typedef JSC::MacroAssembler MacroAssembler;
+
+    struct BranchPatch {
+        BranchPatch(const Jump &j, jsbytecode *pc)
+          : jump(j), pc(pc)
+        { }
+
+        Jump jump;
+        jsbytecode *pc;
+    };
 
     JSContext *cx;
     JSScript *script;
@@ -71,6 +81,8 @@ class Compiler : public CompilerBase
     MacroAssembler masm;
     FrameState frame;
     CodeGenerator cg;
+    js::Vector<BranchPatch, 64> branchPatches;
+
   public:
     // Special atom index used to indicate that the atom is 'length'. This
     // follows interpreter usage in JSOP_LENGTH.
@@ -88,7 +100,9 @@ class Compiler : public CompilerBase
     CompileStatus finishThisUp();
 
     /* Non-emitting helpers. */
+    const Label &labelOf(jsbytecode *pc);
     uint32 fullAtomIndex(jsbytecode *pc);
+    void jumpInScript(Jump j, jsbytecode *pc);
 
     /* Opcode handlers. */
     void jsop_bindname(uint32 index);

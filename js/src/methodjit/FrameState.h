@@ -164,10 +164,21 @@ class FrameState
         return Address(FpReg, 0);
     }
 
+    void forceStackDepth(uint32 newDepth) {
+        uint32 oldDepth = stackDepth();
+        FrameEntry *spBase = locals + script->nfixed;
+        sp = spBase + newDepth;
+        if (oldDepth <= newDepth)
+            return;
+        memset(spBase, 0, sizeof(FrameEntry) * (newDepth - oldDepth));
+    }
+
+    void flush();
     void assertValidRegisterState();
 
   private:
     void evictSomething();
+    void invalidate(FrameEntry *fe);
     RegisterID getDataReg(FrameEntry *vi, FrameEntry *backing);
 
   private:

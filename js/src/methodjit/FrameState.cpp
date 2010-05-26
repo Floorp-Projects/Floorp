@@ -96,3 +96,24 @@ FrameState::assertValidRegisterState()
     JS_ASSERT(temp == regalloc);
 }
 
+void
+FrameState::invalidate(FrameEntry *fe)
+{
+    if (!fe->type.synced()) {
+        JS_NOT_REACHED("wat");
+    }
+    if (!fe->data.synced()) {
+        JS_NOT_REACHED("wat2");
+    }
+    fe->type.setMemory();
+    fe->data.setMemory();
+    fe->copies = 0;
+}
+
+void
+FrameState::flush()
+{
+    for (FrameEntry *fe = base; fe < sp; fe++)
+        invalidate(fe);
+}
+
