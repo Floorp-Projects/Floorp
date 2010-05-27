@@ -1608,6 +1608,14 @@ pref("font.size.fixed.zh-HK", 16);
 // We have special support for Monotype Symbol on Windows.
 pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Symbol, DejaVu Sans, Cambria Math");
 
+// cleartype settings - false implies default system settings 
+
+// use cleartype rendering for downloadable fonts (win xp only)
+pref("gfx.font_rendering.cleartype.use_for_downloadable_fonts", true);
+
+// use cleartype rendering for all fonts always (win xp only)
+pref("gfx.font_rendering.cleartype.always_use_for_content", true);
+
 pref("ui.key.menuAccessKeyFocuses", true);
 
 // override double-click word selection behavior.
