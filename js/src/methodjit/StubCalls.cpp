@@ -52,7 +52,7 @@
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "jsiter.h"
 #include "jstypes.h"
-#include "methodjit/Stubs.h"
+#include "methodjit/StubCalls.h"
 #include "jstracer.h"
 #include "jspropertycache.h"
 #include "jspropertycacheinlines.h"
@@ -81,6 +81,29 @@ using namespace JSC;
         f.setReturnAddress(ReturnAddressPtr(FunctionPtr(ptr))); \
         return v;       \
     } while (0)
+
+JSObject * JS_FASTCALL
+mjit::stubs::BindName(VMFrame &f)
+{
+    PropertyCacheEntry *entry;
+
+    /* Fast-path should have caught this. See comment in interpreter. */
+    JS_ASSERT(f.fp->scopeChain->getParent());
+
+    JSAtom *atom;
+    JSObject *obj2;
+    JSContext *cx = f.cx;
+    JSObject *obj = f.fp->scopeChain->getParent();
+    JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
+    if (!atom)
+        return obj;
+
+    jsid id = ATOM_TO_JSID(atom);
+    obj = js_FindIdentifierBase(cx, f.fp->scopeChain, id);
+    if (!obj)
+        THROWV(NULL);
+    return obj;
+}
 
 static bool
 InlineReturn(JSContext *cx)

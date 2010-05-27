@@ -71,10 +71,6 @@ struct VMFrame
 #endif
 
     union Arguments {
-        struct BINDNAME {
-            uint32   index;
-            JSObject *obj;
-        } bindname;
         struct DEFVAR {
             jsatomid index;
             uint32   op;

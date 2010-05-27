@@ -300,11 +300,12 @@ CPPSRCS += 	Assertions.cpp \
 		MethodJIT.cpp \
 		BytecodeAnalyzer.cpp \
 		Logging.cpp \
-		Stubs.cpp \
+		StubCalls.cpp \
 		Compiler.cpp \
 		CodeGenerator.cpp \
 		FrameState.cpp \
 		FastOps.cpp \
+		StubCompiler.cpp \
 		$(NULL)
 #		PICStubCompiler.cpp \
 
