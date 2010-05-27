@@ -158,6 +158,22 @@ var BrowserUI = {
     }
   },
 
+  _metaAdded : function(aEvent) {
+    let meta = aEvent.originalTarget;
+    if (!meta)
+      return;
+
+    if (meta.name == "viewport" || meta.name == "HandheldFriendly") {
+      // Must have an owner document and not be in a frame
+      var ownerDoc = meta.ownerDocument;
+      if (!ownerDoc || ownerDoc.defaultView.frameElement)
+        return;
+
+      let tab = Browser.getTabForDocument(ownerDoc);
+      tab.updateViewportMetadata();
+    }
+  },
+
   _linkAdded : function(aEvent) {
     let link = aEvent.originalTarget;
     if (!link || !link.href)
@@ -420,6 +436,7 @@ var BrowserUI = {
     // XXX these really want to listen to only the current browser
     browsers.addEventListener("DOMTitleChanged", this, true);
     browsers.addEventListener("DOMLinkAdded", this, true);
+    browsers.addEventListener("DOMMetaAdded", this, true);
     browsers.addEventListener("DOMWillOpenModalDialog", this, true);
 
     // listening mousedown for automatically dismiss some popups (e.g. larry)
@@ -727,6 +744,9 @@ var BrowserUI = {
         break;
       case "DOMLinkAdded":
         this._linkAdded(aEvent);
+        break;
+      case "DOMMetaAdded":
+        this._metaAdded(aEvent);
         break;
       case "DOMWindowClose":
         this._domWindowClose(aEvent);
