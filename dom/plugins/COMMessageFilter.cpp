@@ -34,6 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "base/basictypes.h"
+
 #include "COMMessageFilter.h"
 #include "base/message_loop.h"
 #include "mozilla/plugins/PluginModuleChild.h"
