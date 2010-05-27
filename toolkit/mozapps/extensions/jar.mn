@@ -1,5 +1,5 @@
 toolkit.jar:
-% content mozapps %content/mozapps/ xpcnativewrappers=yes
+% content mozapps %content/mozapps/
   content/mozapps/extensions/extensions.xul                     (content/extensions.xul)
   content/mozapps/extensions/extensions.css                     (content/extensions.css)
   content/mozapps/extensions/extensions.js                      (content/extensions.js)
