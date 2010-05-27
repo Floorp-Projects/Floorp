@@ -853,17 +853,8 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
 }
 
 JSInt64
-DSTOffsetCache::computeDSTOffset(int64 localTime)
+DSTOffsetCache::computeDSTOffsetMilliseconds(int64 localTimeSeconds)
 {
-    localTime /= MICROSECONDS_PER_SECOND;
-
-    if (localTime > MAX_UNIX_TIMET) {
-        localTime = MAX_UNIX_TIMET;
-    } else if (localTime < 0) {
-        /* Go ahead a day to make localtime work (does not work with 0). */
-        localTime = SECONDS_PER_DAY;
-    }
-
 #if defined(XP_WIN) && !defined(WINCE)
     /* Windows does not follow POSIX. Updates to the
      * TZ environment variable are not reflected
@@ -873,10 +864,10 @@ DSTOffsetCache::computeDSTOffset(int64 localTime)
     _tzset();
 #endif
 
-    time_t local = static_cast<time_t>(localTime);
+    time_t local = static_cast<time_t>(localTimeSeconds);
     PRMJTime prtm;
     struct tm tm;
-    PRMJ_basetime(localTime, &prtm);
+    PRMJ_basetime(localTimeSeconds, &prtm);
 #ifndef HAVE_LOCALTIME_R
     struct tm *ptm = localtime(&local);
     if (!ptm)
@@ -892,11 +883,20 @@ DSTOffsetCache::computeDSTOffset(int64 localTime)
     if (diff < 0)
         diff += SECONDS_PER_DAY;
 
-    return diff * MICROSECONDS_PER_SECOND;
+    return diff * MILLISECONDS_PER_SECOND;
 }
 
 JSInt64
-DSTOffsetCache::getDSTOffset(JSInt64 localTime, JSContext *cx)
+DSTOffsetCache::getDSTOffsetMilliseconds(JSInt64 localTimeMilliseconds, JSContext *cx)
 {
-    return computeDSTOffset(localTime);
+    JSInt64 localTimeSeconds = localTimeMilliseconds / MILLISECONDS_PER_SECOND;
+
+    if (localTimeSeconds > MAX_UNIX_TIMET) {
+        localTimeSeconds = MAX_UNIX_TIMET;
+    } else if (localTimeSeconds < 0) {
+        /* Go ahead a day to make localtime work (does not work with 0). */
+        localTimeSeconds = SECONDS_PER_DAY;
+    }
+
+    return computeDSTOffsetMilliseconds(localTimeSeconds);
 }
