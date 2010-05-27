@@ -1,5 +1,5 @@
 toolkit.jar:
-% content help %content/help/ xpcnativewrappers=yes
+% content help %content/help/
 * content/help/help.xul                 (content/help.xul)
 * content/help/contextHelp.js           (content/contextHelp.js)
 * content/help/help.js                  (content/help.js)
