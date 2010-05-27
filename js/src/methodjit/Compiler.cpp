@@ -63,7 +63,7 @@ NotCheckedSSE2;
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
   : cx(cx), script(script), scopeChain(scopeChain), globalObj(scopeChain->getGlobal()), fun(fun),
     analysis(cx, script), jumpMap(NULL), frame(cx, script, masm), cg(masm, frame),
-    branchPatches(ContextAllocPolicy(cx))
+    branchPatches(ContextAllocPolicy(cx)), stubcc(cx, *this, frame, script)
 {
 }
 

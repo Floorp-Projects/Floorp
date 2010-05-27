@@ -117,3 +117,46 @@ FrameState::flush()
         invalidate(fe);
 }
 
+void
+FrameState::syncRegister(Assembler &masm, RegisterID reg, const RegState &state) const
+{
+    JS_NOT_REACHED("bleh");
+}
+
+void
+FrameState::syncType(FrameEntry *fe, Assembler &masm) const
+{
+}
+
+void
+FrameState::syncData(FrameEntry *fe, Assembler &masm) const
+{
+}
+
+void
+FrameState::sync(Assembler &masm) const
+{
+    for (FrameEntry *fe = base; fe < sp; fe++) {
+        if (fe->type.needsSync())
+            syncType(fe, masm);
+        if (fe->data.needsSync())
+            syncData(fe, masm);
+    }
+}
+
+void
+FrameState::restoreTempRegs(Assembler &masm) const
+{
+#if 0
+    /* Get a mask of all allocated registers that must be synced. */
+    Registers temps = regalloc.freeMask & Registers::TempRegs;
+
+    while (temps.anyRegsFree()) {
+        RegisterID reg = temps.allocReg();
+        if (!regstate[reg].tracked)
+            continue;
+        syncRegister(masm, reg, regstate[reg]);
+    }
+#endif
+}
+

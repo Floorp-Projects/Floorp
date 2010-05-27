@@ -38,21 +38,58 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jslogic_h__
-#define jslogic_h__
+#if !defined(jsstub_compiler_h__) && defined(JS_METHODJIT)
+#define jsstub_compiler_h__
 
+#include "jscntxt.h"
+#include "jstl.h"
 #include "MethodJIT.h"
+#include "methodjit/nunbox/Assembler.h"
+#include "CodeGenIncludes.h"
 
 namespace js {
 namespace mjit {
-namespace stubs {
 
-void * JS_FASTCALL Return(VMFrame &f);
+class Compiler;
 
-}}} /* namespace stubs,mjit,js */
+struct StubCallInfo {
+    uint32 numSpills;
+};
 
-extern "C" void *
-js_InternalThrow(js::VMFrame &f);
+class StubCompiler
+{
+    typedef JSC::MacroAssembler::Jump Jump;
+    typedef JSC::MacroAssembler::Label Label;
 
-#endif /* jslogic_h__ */
+    struct ExitPatch {
+        ExitPatch(Jump from, Label to)
+          : from(from), to(to)
+        { }
+
+        Jump from;
+        Label to;
+    };
+
+    JSContext *cx;
+    Compiler &cc;
+    FrameState &frame;
+    JSScript *script;
+    Assembler masm;
+    Vector<ExitPatch, 64, ContextAllocPolicy> exits;
+
+  public:
+    StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);
+    void linkExit(Jump j);
+    void syncAndSpill();
+    void call(JSObjStub stub) { scall(JS_FUNC_TO_DATA_PTR(void *, stub)); }
+
+  private:
+    void scall(void *ptr);
+    void *getCallTarget(void *fun);
+};
+
+} /* namepsace mjit */
+} /* namespace js */
+
+#endif /* jsstub_compiler_h__ */
 

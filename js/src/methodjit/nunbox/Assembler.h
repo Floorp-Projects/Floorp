@@ -37,79 +37,17 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined jsjaeger_compiler_h__ && defined JS_METHODJIT
-#define jsjaeger_compiler_h__
+#if !defined jsjaeger_assembler_h__ && defined JS_METHODJIT
+#define jsjaeger_assembler_h__
 
-#include "jscntxt.h"
-#include "jstl.h"
-#include "BytecodeAnalyzer.h"
-#include "MethodJIT.h"
-#include "CodeGenIncludes.h"
-#include "StubCompiler.h"
+#include "assembler/assembler/MacroAssembler.h"
 
 namespace js {
 namespace mjit {
 
-class Compiler
+class Assembler : public JSC::MacroAssembler
 {
-    typedef JSC::MacroAssembler::Label Label;
-    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
-    typedef JSC::MacroAssembler::Address Address;
-    typedef JSC::MacroAssembler::Jump Jump;
-
-    struct BranchPatch {
-        BranchPatch(const Jump &j, jsbytecode *pc)
-          : jump(j), pc(pc)
-        { }
-
-        Jump jump;
-        jsbytecode *pc;
-    };
-
-    JSContext *cx;
-    JSScript *script;
-    JSObject *scopeChain;
-    JSObject *globalObj;
-    JSFunction *fun;
-    BytecodeAnalyzer analysis;
-    Label *jumpMap;
-    jsbytecode *PC;
-    Assembler masm;
-    FrameState frame;
-    CodeGenerator cg;
-    js::Vector<BranchPatch, 64> branchPatches;
-    StubCompiler stubcc;
-
   public:
-    // Special atom index used to indicate that the atom is 'length'. This
-    // follows interpreter usage in JSOP_LENGTH.
-    enum { LengthAtomIndex = uint32(-2) };
-
-    Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain);
-    ~Compiler();
-
-    CompileStatus Compile();
-
-    jsbytecode *getPC() { return PC; }
-
-  private:
-    CompileStatus generatePrologue();
-    CompileStatus generateMethod();
-    CompileStatus generateEpilogue();
-    CompileStatus finishThisUp();
-
-    /* Non-emitting helpers. */
-    const Label &labelOf(jsbytecode *pc);
-    uint32 fullAtomIndex(jsbytecode *pc);
-    void jumpInScript(Jump j, jsbytecode *pc);
-    JSC::ExecutablePool *getExecPool(size_t size);
-
-    /* Opcode handlers. */
-    void jsop_bindname(uint32 index);
-    void jsop_setglobal(uint32 index);
-    void jsop_getglobal(uint32 index);
-    void emitReturn();
 };
 
 } /* namespace js */

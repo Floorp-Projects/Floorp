@@ -42,7 +42,7 @@
 
 #include "jsapi.h"
 #include "methodjit/MachineRegs.h"
-#include "assembler/assembler/MacroAssembler.h"
+#include "methodjit/nunbox/Assembler.h"
 #include "methodjit/nunbox/FrameEntry.h"
 
 namespace js {
@@ -50,6 +50,13 @@ namespace mjit {
 
 enum TypeInfo {
     Type_Unknown
+};
+
+struct FrameAddress : JSC::MacroAssembler::Address
+{
+    FrameAddress(int32 offset)
+      : Address(JSC::MacroAssembler::stackPointerRegister, offset)
+    { }
 };
 
 class FrameState
@@ -71,7 +78,7 @@ class FrameState
     };
 
   public:
-    FrameState(JSContext *cx, JSScript *script, MacroAssembler &masm)
+    FrameState(JSContext *cx, JSScript *script, Assembler &masm)
       : cx(cx), script(script), masm(masm), base(NULL)
     { }
     ~FrameState();
@@ -186,8 +193,13 @@ class FrameState
 
     void flush();
     void assertValidRegisterState();
+    void sync(Assembler &masm) const;
+    void restoreTempRegs(Assembler &masm) const;
 
   private:
+    void syncType(FrameEntry *fe, Assembler &masm) const;
+    void syncData(FrameEntry *fe, Assembler &masm) const;
+    void syncRegister(Assembler &masm, RegisterID reg, const RegState &state) const;
     void evictSomething();
     void invalidate(FrameEntry *fe);
     RegisterID getDataReg(FrameEntry *vi, FrameEntry *backing);
@@ -195,7 +207,7 @@ class FrameState
   private:
     JSContext *cx;
     JSScript *script;
-    MacroAssembler &masm;
+    Assembler &masm;
     FrameEntry *base;
     FrameEntry *locals;
     FrameEntry *args;

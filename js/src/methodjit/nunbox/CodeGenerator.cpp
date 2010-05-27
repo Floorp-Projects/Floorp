@@ -57,7 +57,7 @@ class ImmIntPtr : public JSC::MacroAssembler::ImmPtr
     { }
 };
 
-CodeGenerator::CodeGenerator(MacroAssembler &masm, FrameState &frame)
+CodeGenerator::CodeGenerator(Assembler &masm, FrameState &frame)
   : masm(masm), frame(frame)
 {
 }
