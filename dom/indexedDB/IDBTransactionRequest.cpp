@@ -47,21 +47,42 @@
 #include "IDBObjectStoreRequest.h"
 #include "IndexedDatabaseRequest.h"
 #include "DatabaseInfo.h"
+#include "TransactionThreadPool.h"
 
 USING_INDEXEDDB_NAMESPACE
 
 namespace {
 
-template <class T>
-inline
-nsresult
-IfProxyRelease(nsIEventTarget* aTarget,
-               nsCOMPtr<T>& aDoomed)
+class CloseConnectionRunnable : public nsRunnable
 {
-   T* raw = nsnull;
-   aDoomed.swap(raw);
-   return raw ? NS_ProxyRelease(aTarget, raw, PR_TRUE) : NS_OK;
-}
+public:
+  template<class T>
+  bool AddDoomedObject(nsCOMPtr<T>& aCOMPtr)
+  {
+    if (aCOMPtr) {
+      if (!mDoomedObjects.AppendElement(do_QueryInterface(aCOMPtr))) {
+        NS_ERROR("Out of memory!");
+        return false;
+      }
+      aCOMPtr = nsnull;
+    }
+    return true;
+  }
+
+  bool HasWorkToDo()
+  {
+    return !mDoomedObjects.IsEmpty();
+  }
+
+  NS_IMETHOD Run()
+  {
+    mDoomedObjects.Clear();
+    return NS_OK;
+  }
+
+private:
+  nsAutoTArray<nsCOMPtr<nsISupports>, 10> mDoomedObjects;
+};
 
 } // anonymous namespace
 
@@ -75,12 +96,6 @@ IDBTransactionRequest::Create(IDBDatabaseRequest* aDatabase,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<IDBTransactionRequest> transaction = new IDBTransactionRequest();
-
-  NS_ASSERTION(!aDatabase->mTransactions.Contains(transaction), "Huh?");
-  if (!aDatabase->mTransactions.AppendElement(transaction)) {
-    NS_ERROR("Out of memory!");
-    return nsnull;
-  }
 
   transaction->mDatabase = aDatabase;
   transaction->mMode = aMode;
@@ -111,11 +126,6 @@ IDBTransactionRequest::~IDBTransactionRequest()
 
   CloseConnection();
 
-  if (mDatabase) {
-    NS_ASSERTION(mDatabase->mTransactions.Contains(this), "Huh?");
-    mDatabase->mTransactions.RemoveElement(this);
-  }
-
   if (mListenerManager) {
     mListenerManager->Disconnect();
   }
@@ -126,13 +136,9 @@ IDBTransactionRequest::OnNewRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   if (!mPendingRequests) {
-    mDatabase->DisableConnectionThreadTimeout();
-
     NS_ASSERTION(mReadyState == nsIIDBTransaction::INITIAL,
                  "Reusing a transaction!");
     mReadyState = nsIIDBTransaction::LOADING;
-
-    mDBTransaction = new mozStorageTransaction(mConnection, PR_FALSE);
   }
   ++mPendingRequests;
 }
@@ -148,8 +154,6 @@ IDBTransactionRequest::OnRequestFinished()
     mReadyState = nsIIDBTransaction::DONE;
 
     Commit();
-
-    mDatabase->EnableConnectionThreadTimeout();
   }
 }
 
@@ -159,17 +163,16 @@ IDBTransactionRequest::Commit()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(mReadyState == nsIIDBTransaction::DONE, "Bad readyState!");
 
-  // XXX I think this is actually running on the wrong thread (we want it to
-  // happen on the db thread I think)
-  nsresult rv = mDBTransaction->Commit();
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_WARNING("Commit doesn't do anything yet!");
+
+  CloseConnection();
 
   nsCOMPtr<nsIRunnable> runnable =
     IDBEvent::CreateGenericEventRunnable(NS_LITERAL_STRING(COMPLETE_EVT_STR),
                                          this);
   NS_ENSURE_TRUE(runnable, NS_ERROR_FAILURE);
 
-  rv = NS_DispatchToCurrentThread(runnable);
+  nsresult rv = NS_DispatchToCurrentThread(runnable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -380,19 +383,31 @@ IDBTransactionRequest::GetStatement(bool aAutoIncrement)
 void
 IDBTransactionRequest::CloseConnection()
 {
-  nsIThread* thread = mDatabase->ConnectionThread();
+  TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
+  if (!pool) {
+    NS_ASSERTION(!mConnection, "Should have closed already!");
+    return;
+  }
 
-  IfProxyRelease(thread, mConnection);
-  IfProxyRelease(thread, mAddStmt);
-  IfProxyRelease(thread, mAddAutoIncrementStmt);
-  IfProxyRelease(thread, mModifyStmt);
-  IfProxyRelease(thread, mModifyAutoIncrementStmt);
-  IfProxyRelease(thread, mAddOrModifyStmt);
-  IfProxyRelease(thread, mAddOrModifyAutoIncrementStmt);
-  IfProxyRelease(thread, mRemoveStmt);
-  IfProxyRelease(thread, mRemoveAutoIncrementStmt);
-  IfProxyRelease(thread, mGetStmt);
-  IfProxyRelease(thread, mGetAutoIncrementStmt);
+  nsRefPtr<CloseConnectionRunnable> runnable(new CloseConnectionRunnable());
+
+  if (!runnable->AddDoomedObject(mConnection) ||
+      !runnable->AddDoomedObject(mAddStmt) ||
+      !runnable->AddDoomedObject(mAddAutoIncrementStmt) ||
+      !runnable->AddDoomedObject(mModifyStmt) ||
+      !runnable->AddDoomedObject(mModifyAutoIncrementStmt) ||
+      !runnable->AddDoomedObject(mAddOrModifyStmt) ||
+      !runnable->AddDoomedObject(mAddOrModifyAutoIncrementStmt) ||
+      !runnable->AddDoomedObject(mRemoveStmt) ||
+      !runnable->AddDoomedObject(mRemoveAutoIncrementStmt) ||
+      !runnable->AddDoomedObject(mGetStmt) ||
+      !runnable->AddDoomedObject(mGetAutoIncrementStmt)) {
+    NS_ERROR("Out of memory!");
+  }
+
+  if (NS_FAILED(pool->Dispatch(this, runnable, true))) {
+    NS_ERROR("Failed to dispatch close runnable!");
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBTransactionRequest)

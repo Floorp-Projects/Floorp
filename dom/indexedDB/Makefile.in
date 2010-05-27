@@ -61,6 +61,7 @@ CPPSRCS = \
   IDBTransactionRequest.cpp \
   IndexedDatabaseRequest.cpp \
   LazyIdleThread.cpp \
+  TransactionThreadPool.cpp \
   $(NULL)
 
 EXPORTS_mozilla/dom/indexedDB = \
