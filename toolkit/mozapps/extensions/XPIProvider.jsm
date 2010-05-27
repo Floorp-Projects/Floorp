@@ -3480,8 +3480,14 @@ AddonInstall.prototype = {
       XPIProvider.removeActiveInstall(this);
       AddonManagerPrivate.callInstallListeners("onDownloadCancelled",
                                                this.listeners, this.wrapper);
-      if (this.file && !(this.sourceURL instanceof Ci.nsIFileURL))
-        this.file.remove(true);
+      if (this.file && !(this.sourceURL instanceof Ci.nsIFileURL)) {
+        try {
+          this.file.remove(true);
+        }
+        catch (e) {
+          WARN("Failed to remove temporary file " + this.file.path + ": " + e);
+        }
+      }
       break;
     case AddonManager.STATE_INSTALLED:
       LOG("Cancelling install of " + this.addon.id);
@@ -3576,9 +3582,12 @@ AddonInstall.prototype = {
         this.name = this.addon.selectedLocale.name;
         this.type = this.addon.type;
         this.version = this.addon.version;
-        let newIcon = createWrapper(this.addon).iconURL;
-        if (newIcon)
-          this.iconURL = newIcon;
+
+        // Setting the iconURL to something inside the XPI locks the XPI and
+        // makes it impossible to delete on Windows.
+        //let newIcon = createWrapper(this.addon).iconURL;
+        //if (newIcon)
+        //  this.iconURL = newIcon;
       }
       finally {
         bis.close();
@@ -3799,7 +3808,12 @@ AddonInstall.prototype = {
     XPIProvider.removeActiveInstall(this);
     AddonManagerPrivate.callInstallListeners("onDownloadFailed", this.listeners,
                                              this.wrapper, aReason);
-    this.file.remove(true);
+    try {
+      this.file.remove(true);
+    }
+    catch (e) {
+      WARN("Failed to remove temporary file " + this.file.path + ": " + e);
+    }
   },
 
   /**
@@ -3860,6 +3874,9 @@ AddonInstall.prototype = {
       extractFiles(this.file, stagedAddon);
 
       if (requiresRestart) {
+        // Point the add-on to its extracted files as the xpi may get deleted
+        this.addon._sourceBundle = stagedAddon;
+
         // Cache the AddonInternal as it may have updated compatibiltiy info
         stagedJSON.append(this.addon.id + ".json");
         if (stagedJSON.exists())
@@ -3985,8 +4002,14 @@ AddonInstall.prototype = {
     }
     finally {
       // If the file was downloaded then delete it
-      if (!(this.sourceURL instanceof Ci.nsIFileURL))
-        this.file.remove(true);
+      if (!(this.sourceURL instanceof Ci.nsIFileURL)) {
+        try {
+          this.file.remove(true);
+        }
+        catch (e) {
+          WARN("Failed to remove temporary file " + this.file.path + ": " + e);
+        }
+      }
     }
   }
 }
