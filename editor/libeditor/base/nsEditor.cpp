@@ -458,14 +458,16 @@ nsEditor::SetFlags(PRUint32 aFlags)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Might be changing editable state, so, we need to reset current IME state
-  // if we're focused.
+  // if we're focused and the flag change causes IME state change.
   if (HasFocus()) {
     // Use "enable" for the default value because if IME is disabled
     // unexpectedly, it makes serious a11y problem.
     PRUint32 newState = nsIContent::IME_STATUS_ENABLE;
     rv = GetPreferredIMEState(&newState);
     if (NS_SUCCEEDED(rv)) {
-      nsIMEStateManager::ChangeIMEStateTo(newState);
+      // NOTE: When the enabled state isn't going to be modified, this method
+      // is going to do nothing.
+      nsIMEStateManager::UpdateIMEState(newState);
     }
   }
 
