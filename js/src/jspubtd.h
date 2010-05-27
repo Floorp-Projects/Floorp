@@ -384,7 +384,7 @@ JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, JSBool b)
 static JS_ALWAYS_INLINE jsval_layout
 PRIVATE_TO_JSVAL_IMPL(void *ptr)
 {
-    JS_ASSERT(((uint32)ptr | 1) == 0);
+    JS_ASSERT(((uint32)ptr & 1) == 0);
     jsval_layout l;
     l.s.tag.nanBits = 0;
     l.s.payload.ptr = ptr;
@@ -473,12 +473,12 @@ STRING_TO_JSVAL_IMPL(JSString *str)
 {
     JS_ASSERT((size_t)str < (size_t)0xFFFFFFFF);
     jsval_layout l;
-    l.asBits = BUILD_JSVAL(JSVAL_MASK32_STRING, (uint32)str);
+    l.asBits = BUILD_JSVAL(JSVAL_MASK32_STRING, (uint32)(size_t)str);
     return l;
 }
 
 static JS_ALWAYS_INLINE JSString *
-JSVAL_TO_STRING_IMPL(jsval_layout v)
+JSVAL_TO_STRING_IMPL(jsval_layout l)
 {
     return (JSString *)(uint64)l.s.payload.ptr;
 }
@@ -494,7 +494,7 @@ OBJECT_TO_JSVAL_IMPL(JSValueMask32 mask32, JSObject *obj)
 {
     JS_ASSERT((size_t)obj < (size_t)0xFFFFFFFF);
     jsval_layout l;
-    l.asBits = BUILD_JSVAL(mask32, (uint32)obj);
+    l.asBits = BUILD_JSVAL(mask32, (uint32)(size_t)obj);
     return l;
 }
 
@@ -521,16 +521,16 @@ JSVAL_IS_SPECIFIC_BOOLEAN(jsval_layout l, JSBool b)
 static JS_ALWAYS_INLINE jsval_layout
 PRIVATE_TO_JSVAL_IMPL(void *ptr)
 {
-    JS_ASSERT(((uint32)ptr | 1) == 0);
+    JS_ASSERT(((uint32)(size_t)ptr & 1) == 0);
     jsval_layout l;
-    l.asBits = 0x8000000000000000LL | (ptr >> 1);
+    l.asBits = 0x8000000000000000LL | ((size_t)ptr >> 1);
     return l;
 }
 
 static JS_ALWAYS_INLINE void *
 JSVAL_TO_PRIVATE_IMPL(jsval_layout l)
 {
-    return (void *)(l.s.payload.asBits << 1);
+    return (void *)(l.asBits << 1);
 }
 
 static JS_ALWAYS_INLINE jsval_layout

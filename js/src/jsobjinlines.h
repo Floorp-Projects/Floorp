@@ -643,35 +643,35 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
 JS_ALWAYS_INLINE
 Value::Value(ObjectTag arg)
 {
-    data.s.mask32 = arg.obj.isFunction() ? JSVAL_MASK32_FUNOBJ
-                                         : JSVAL_MASK32_NONFUNOBJ;
-    data.s.payload.obj = &arg.obj;
+	JSValueMask32 mask = arg.obj.isFunction() ? JSVAL_MASK32_FUNOBJ
+                                              : JSVAL_MASK32_NONFUNOBJ;
+	data = OBJECT_TO_JSVAL_IMPL(mask, &arg.obj);
 }
 
 JS_ALWAYS_INLINE
 Value::Value(ObjectOrNullTag arg)
 {
-    data.s.mask32 = arg.obj ? arg.obj->isFunction() ? JSVAL_MASK32_FUNOBJ
-                                                    : JSVAL_MASK32_NONFUNOBJ
-                            : JSVAL_MASK32_NULL;
-    data.s.payload.obj = arg.obj;
+    JSValueMask32 mask = arg.obj ? arg.obj->isFunction() ? JSVAL_MASK32_FUNOBJ
+                                                         : JSVAL_MASK32_NONFUNOBJ
+                                 : JSVAL_MASK32_NULL;
+	data = OBJECT_TO_JSVAL_IMPL(mask, arg.obj);
 }
 
 JS_ALWAYS_INLINE void
 Value::setObject(JSObject &arg)
 {
-    data.s.mask32 = arg.isFunction() ? JSVAL_MASK32_FUNOBJ
-                                     : JSVAL_MASK32_NONFUNOBJ;
-    data.s.payload.obj = &arg;
+    JSValueMask32 mask = arg.isFunction() ? JSVAL_MASK32_FUNOBJ
+                                          : JSVAL_MASK32_NONFUNOBJ;
+	data = OBJECT_TO_JSVAL_IMPL(mask, &arg);
 }
 
 JS_ALWAYS_INLINE void
 Value::setObjectOrNull(JSObject *arg)
 {
-    data.s.mask32 = arg ? arg->isFunction() ? JSVAL_MASK32_FUNOBJ
-                                            : JSVAL_MASK32_NONFUNOBJ
-                        : JSVAL_MASK32_NULL;
-    data.s.payload.obj = arg;
+    JSValueMask32 mask = arg ? arg->isFunction() ? JSVAL_MASK32_FUNOBJ
+                                                 : JSVAL_MASK32_NONFUNOBJ
+                      		 : JSVAL_MASK32_NULL;
+	data = OBJECT_TO_JSVAL_IMPL(mask, arg);
 }
 
 } /* namespace js */

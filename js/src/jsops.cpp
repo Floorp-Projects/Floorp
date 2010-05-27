@@ -1028,7 +1028,7 @@ BEGIN_CASE(JSOP_URSH)
     u >>= (j & 31);
 
     regs.sp--;
-    Uint32ToValue(u, &regs.sp[-1]);
+	regs.sp[-1].setNumber(u);
 }
 END_CASE(JSOP_URSH)
 
