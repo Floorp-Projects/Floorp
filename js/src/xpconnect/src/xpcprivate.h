@@ -907,8 +907,8 @@ public:
     { SetIsVoid(PR_TRUE); }
 
     explicit XPCReadableJSStringWrapper(JSString *str) :
-        nsDependentString((const PRUnichar *)::JS_GetStringChars(str),
-                          ::JS_GetStringLength(str))
+        nsDependentString(reinterpret_cast<const PRUnichar *>(::JS_GetStringChars(str)),
+                          str->length())
     { }
 };
 
