@@ -1213,6 +1213,21 @@ WeaveSvc.prototype = {
     for each (let engine in [Clients].concat(Engines.getAll()))
       engine.lastModified = info.obj[engine.name] || 0;
 
+    // If the modified time of crypto records ever changes, clear the cache
+    if (info.obj.crypto != this.cryptoModified) {
+      this._log.debug("Clearing cached crypto records");
+      CryptoMetas.clearCache();
+      this.cryptoModified = info.obj.crypto;
+    }
+
+    // If the modified time of keys records ever changes, clear the cache
+    if (info.obj.keys != this.keysModified) {
+      this._log.debug("Clearing cached keys records");
+      PubKeys.clearCache();
+      PrivKeys.clearCache();
+      this.keysModified = info.obj.keys;
+    }
+
     if (!(this._remoteSetup()))
       throw "aborting sync, remote setup failed";
 
