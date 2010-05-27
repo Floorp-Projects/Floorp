@@ -987,6 +987,8 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
     }
     
     $(container).click(function(){
+      // Don't zoom in to the last tab for the new tab group.
+      if( self.isNewTabsGroup() ) return;
       var activeTab = self.getActiveTab();
       if( activeTab ) TabItems.zoomTo(activeTab)
       // TODO: This should also accept TabItems
