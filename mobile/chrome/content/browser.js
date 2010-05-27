@@ -3081,10 +3081,10 @@ Tab.prototype = {
   /** Update browser size when the metadata or the window size changes. */
   updateViewportSize: function updateViewportSize() {
     let browser = this._browser;
-    let metaData = this._browserViewportState.metaData
-    if (!browser || !metaData)
+    if (!browser)
       return;
 
+    let metaData = this._browserViewportState.metaData || {};
     if (!metaData.autoSize) {
       let screenW = window.innerWidth;
       let screenH = window.innerHeight;
@@ -3144,12 +3144,17 @@ Tab.prototype = {
         Browser.scrollBrowserToContent();
       }
     }
+
+    this._browserViewportState.metaData = null;
+    this.updateViewportSize();
   },
 
   endLoading: function endLoading() {
     if (!this._loading) throw "Not Loading!";
 
-    this.updateViewportMetadata();
+    if (!this._browserViewportState.metaData)
+      this.updateViewportMetadata();
+
     this.setIcon(this._browser.mIconURL);
     this._loading = false;
 
