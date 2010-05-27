@@ -432,7 +432,7 @@ IDBObjectStoreRequest::Get(nsIVariant* aKey,
 
   nsRefPtr<GetHelper> helper =
     new GetHelper(mTransaction, request, mId, key, !!mAutoIncrement);
-  rv = helper->Dispatch(mDatabase->ConnectionThread());
+  rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -469,7 +469,7 @@ IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
                   !!mAutoIncrement, true, false);
-  rv = helper->Dispatch(mDatabase->ConnectionThread());
+  rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -495,7 +495,7 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
                   !!mAutoIncrement, false, true);
-  rv = helper->Dispatch(mDatabase->ConnectionThread());
+  rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -521,7 +521,7 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
   nsRefPtr<AddHelper> helper =
     new AddHelper(mTransaction, request, mId, mKeyPath, jsonValue, key,
                   !!mAutoIncrement, true, true);
-  rv = helper->Dispatch(mDatabase->ConnectionThread());
+  rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -543,7 +543,7 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
 
   nsRefPtr<RemoveHelper> helper =
     new RemoveHelper(mTransaction, request, mId, key, !!mAutoIncrement);
-  rv = helper->Dispatch(mDatabase->ConnectionThread());
+  rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
