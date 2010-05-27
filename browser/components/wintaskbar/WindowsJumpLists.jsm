@@ -52,9 +52,7 @@ const PREF_TASKBAR_ITEMCOUNT = "maxListItemCount";
 const PREF_TASKBAR_FREQUENT  = "frequent.enabled";
 const PREF_TASKBAR_RECENT    = "recent.enabled";
 const PREF_TASKBAR_TASKS     = "tasks.enabled";
-
-// The amount of time between updates for jump lists
-const TIMER_TASKBAR_REFRESH = 1000*60*2; // 2 min.
+const PREF_TASKBAR_REFRESH   = "refreshInSeconds";
 
 /**
  * Exports
@@ -507,7 +505,9 @@ var WinTaskbarJumpList =
 
   _initTimer: function WTBJL__initTimer(aTimer) {
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this._timer.initWithCallback(this, TIMER_TASKBAR_REFRESH, this._timer.TYPE_REPEATING_SLACK);
+    this._timer.initWithCallback(this,
+                                 _prefs.getIntPref(PREF_TASKBAR_REFRESH)*1000,
+                                 this._timer.TYPE_REPEATING_SLACK);
   },
 
   _free: function WTBJL__free() {
