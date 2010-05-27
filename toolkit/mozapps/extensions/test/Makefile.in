@@ -53,6 +53,11 @@ DIRS = \
   xpinstall \
   $(NULL)
 
+ifeq (browser,$(MOZ_BUILD_APP))
+ DIRS += browser
+endif
+
+
 XPCSHELL_TESTS = \
   xpcshell \
   $(NULL)

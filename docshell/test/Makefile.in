@@ -44,9 +44,12 @@ relativesrcdir  = docshell/test
 MODULE = test_docshell
 
 DIRS += chrome \
-	browser \
 	navigation \
 	$(NULL)
+
+ifeq (browser,$(MOZ_BUILD_APP))
+	DIRS += browser
+endif
 
 XPCSHELL_TESTS = unit
 
