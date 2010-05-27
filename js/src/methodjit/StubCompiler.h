@@ -58,6 +58,7 @@ struct StubCallInfo {
 
 class StubCompiler
 {
+    typedef JSC::MacroAssembler::Call Call;
     typedef JSC::MacroAssembler::Jump Jump;
     typedef JSC::MacroAssembler::Label Label;
 
@@ -75,16 +76,18 @@ class StubCompiler
     FrameState &frame;
     JSScript *script;
     Assembler masm;
-    Vector<ExitPatch, 64, ContextAllocPolicy> exits;
+    Vector<ExitPatch, 64, SystemAllocPolicy> exits;
 
   public:
     StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);
     void linkExit(Jump j);
     void syncAndSpill();
-    void call(JSObjStub stub) { scall(JS_FUNC_TO_DATA_PTR(void *, stub)); }
+    Call call(JSObjStub stub) {
+        return scall(JS_FUNC_TO_DATA_PTR(void *, stub));
+    }
 
   private:
-    void scall(void *ptr);
+    Call scall(void *ptr);
     void *getCallTarget(void *fun);
 };
 

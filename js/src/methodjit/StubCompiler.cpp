@@ -45,7 +45,7 @@ using namespace js;
 using namespace mjit;
 
 StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script)
-  : cx(cx), cc(cc), frame(frame), script(script), exits(ContextAllocPolicy(cx))
+  : cx(cx), cc(cc), frame(frame), script(script), exits(SystemAllocPolicy())
 {
 }
 
@@ -109,9 +109,11 @@ static const RegisterID ClobberInCall = JSC::ARMRegisters::r2;
 
 JS_STATIC_ASSERT(ClobberInCall != Registers::ArgReg1);
 
-void
+JSC::MacroAssembler::Call
 StubCompiler::scall(void *ptr)
 {
+    void *pfun = getCallTarget(ptr);
+
     /* PC -> regs->pc :( */
     masm.storePtr(ImmPtr(cc.getPC()),
                   FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
@@ -127,5 +129,7 @@ StubCompiler::scall(void *ptr)
     
     /* VMFrame -> ArgReg0 */
     masm.move(Assembler::stackPointerRegister, Registers::ArgReg0);
+
+    return masm.call(pfun);
 }
 
