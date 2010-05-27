@@ -53,13 +53,13 @@ struct JSContext;
 
 class DSTOffsetCache {
   public:
-    JSInt64 getDSTOffset(int64 localTime, JSContext *cx);
+    JSInt64 getDSTOffsetMilliseconds(int64 localTimeMilliseconds, JSContext *cx);
 
   private:
-    JSInt64 computeDSTOffset(int64 localTime);
+    JSInt64 computeDSTOffsetMilliseconds(int64 localTimeSeconds);
 
     static const JSInt64 MAX_UNIX_TIMET = 2145859200; /* time_t 12/31/2037 */
-    static const JSInt64 MICROSECONDS_PER_SECOND = 1000000;
+    static const JSInt64 MILLISECONDS_PER_SECOND = 1000;
     static const JSInt64 SECONDS_PER_MINUTE = 60;
     static const JSInt64 SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
     static const JSInt64 SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
