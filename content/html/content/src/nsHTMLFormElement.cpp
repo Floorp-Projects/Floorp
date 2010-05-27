@@ -202,8 +202,6 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   //
   // NS_FORM_INPUT_IMAGE
   // NS_FORM_LABEL
-  // NS_FORM_OPTION
-  // NS_FORM_OPTGROUP
 
   return PR_FALSE;
 }
