@@ -45,8 +45,11 @@
 #endif
 #include <string.h>
 #include <time.h>
-#include "jstypes.h"
+
+#define __STDC_LIMIT_MACROS
 #include "jsstdint.h"
+
+#include "jstypes.h"
 #include "jsutil.h"
 
 #include "jsprf.h"
@@ -855,6 +858,9 @@ PRMJ_basetime(JSInt64 tsecs, PRMJTime *prtm)
 JSInt64
 DSTOffsetCache::computeDSTOffsetMilliseconds(int64 localTimeSeconds)
 {
+    JS_ASSERT(localTimeSeconds >= 0);
+    JS_ASSERT(localTimeSeconds <= MAX_UNIX_TIMET);
+
 #if defined(XP_WIN) && !defined(WINCE)
     /* Windows does not follow POSIX. Updates to the
      * TZ environment variable are not reflected
@@ -889,6 +895,9 @@ DSTOffsetCache::computeDSTOffsetMilliseconds(int64 localTimeSeconds)
 JSInt64
 DSTOffsetCache::getDSTOffsetMilliseconds(JSInt64 localTimeMilliseconds, JSContext *cx)
 {
+    sanityCheck();
+    noteOffsetCalculation();
+
     JSInt64 localTimeSeconds = localTimeMilliseconds / MILLISECONDS_PER_SECOND;
 
     if (localTimeSeconds > MAX_UNIX_TIMET) {
@@ -898,5 +907,122 @@ DSTOffsetCache::getDSTOffsetMilliseconds(JSInt64 localTimeMilliseconds, JSContex
         localTimeSeconds = SECONDS_PER_DAY;
     }
 
-    return computeDSTOffsetMilliseconds(localTimeSeconds);
+    /*
+     * NB: Be aware of the initial range values when making changes to this
+     *     code: the first call to this method, with those initial range
+     *     values, must result in a cache miss.
+     */
+
+    if (rangeStartSeconds <= localTimeSeconds) {
+        if (localTimeSeconds <= rangeEndSeconds) {
+            noteCacheHit();
+            return offsetMilliseconds;
+        }
+
+        JSInt64 newEndSeconds = JS_MIN(rangeEndSeconds + RANGE_EXPANSION_AMOUNT, MAX_UNIX_TIMET);
+        if (newEndSeconds >= localTimeSeconds) {
+            JSInt64 endOffsetMilliseconds = computeDSTOffsetMilliseconds(newEndSeconds);
+            if (endOffsetMilliseconds == offsetMilliseconds) {
+                noteCacheMissIncrease();
+                rangeEndSeconds = newEndSeconds;
+                return offsetMilliseconds;
+            }
+
+            offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
+            if (offsetMilliseconds == endOffsetMilliseconds) {
+                noteCacheMissIncreasingOffsetChangeUpper();
+                rangeStartSeconds = localTimeSeconds;
+                rangeEndSeconds = newEndSeconds;
+            } else {
+                noteCacheMissIncreasingOffsetChangeExpand();
+                rangeEndSeconds = localTimeSeconds;
+            }
+            return offsetMilliseconds;
+        }
+
+        noteCacheMissLargeIncrease();
+        offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
+        rangeStartSeconds = rangeEndSeconds = localTimeSeconds;
+        return offsetMilliseconds;
+    }
+
+    JSInt64 newStartSeconds = JS_MAX(rangeStartSeconds - RANGE_EXPANSION_AMOUNT, 0);
+    if (newStartSeconds <= localTimeSeconds) {
+        JSInt64 startOffsetMilliseconds = computeDSTOffsetMilliseconds(newStartSeconds);
+        if (startOffsetMilliseconds == offsetMilliseconds) {
+            noteCacheMissDecrease();
+            rangeStartSeconds = newStartSeconds;
+            return offsetMilliseconds;
+        }
+
+        offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
+        if (offsetMilliseconds == startOffsetMilliseconds) {
+            noteCacheMissDecreasingOffsetChangeLower();
+            rangeStartSeconds = newStartSeconds;
+            rangeEndSeconds = localTimeSeconds;
+        } else {
+            noteCacheMissDecreasingOffsetChangeExpand();
+            rangeStartSeconds = localTimeSeconds;
+        }
+        return offsetMilliseconds;
+    }
+
+    noteCacheMissLargeDecrease();
+    rangeStartSeconds = rangeEndSeconds = localTimeSeconds;
+    offsetMilliseconds = computeDSTOffsetMilliseconds(localTimeSeconds);
+    return offsetMilliseconds;
 }
+
+void
+DSTOffsetCache::sanityCheck()
+{
+    JS_ASSERT(rangeStartSeconds <= rangeEndSeconds);
+    JS_ASSERT_IF(rangeStartSeconds == INT64_MIN, rangeEndSeconds == INT64_MIN);
+    JS_ASSERT_IF(rangeEndSeconds == INT64_MIN, rangeStartSeconds == INT64_MIN);
+    JS_ASSERT_IF(rangeStartSeconds != INT64_MIN,
+                 rangeStartSeconds >= 0 && rangeEndSeconds >= 0);
+    JS_ASSERT_IF(rangeStartSeconds != INT64_MIN,
+                 rangeStartSeconds <= MAX_UNIX_TIMET && rangeEndSeconds <= MAX_UNIX_TIMET);
+
+#ifdef JS_METER_DST_OFFSET_CACHING
+    JS_ASSERT(totalCalculations ==
+              hit +
+              missIncreasing + missDecreasing +
+              missIncreasingOffsetChangeExpand + missIncreasingOffsetChangeUpper +
+              missDecreasingOffsetChangeExpand + missDecreasingOffsetChangeLower +
+              missLargeIncrease + missLargeDecrease);
+#endif
+}
+
+#ifdef JS_METER_DST_OFFSET_CACHING
+void
+DSTOffsetCache::dumpStats()
+{
+    if (!getenv("JS_METER_DST_OFFSET_CACHING"))
+        return;
+    FILE *fp = fopen("/tmp/dst-offset-cache.stats", "a");
+    if (!fp)
+        return;
+    typedef unsigned long UL;
+    fprintf(fp,
+            "hit:\n"
+            "  in range: %lu\n"
+            "misses:\n"
+            "  increase range end:                 %lu\n"
+            "  decrease range start:               %lu\n"
+            "  increase, offset change, expand:    %lu\n"
+            "  increase, offset change, new range: %lu\n"
+            "  decrease, offset change, expand:    %lu\n"
+            "  decrease, offset change, new range: %lu\n"
+            "  large increase:                     %lu\n"
+            "  large decrease:                     %lu\n"
+            "total: %lu\n\n",
+            UL(hit),
+            UL(missIncreasing), UL(missDecreasing),
+            UL(missIncreasingOffsetChangeExpand), UL(missIncreasingOffsetChangeUpper),
+            UL(missDecreasingOffsetChangeExpand), UL(missDecreasingOffsetChangeLower),
+            UL(missLargeIncrease), UL(missLargeDecrease),
+            UL(totalCalculations));
+    fclose(fp);
+}
+#endif
