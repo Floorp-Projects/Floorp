@@ -115,10 +115,10 @@ protected:
 class RemoveObjectStoreHelper : public AsyncConnectionHelper
 {
 public:
-  RemoveObjectStoreHelper(IDBDatabaseRequest* aDatabase,
+  RemoveObjectStoreHelper(IDBTransactionRequest* aTransaction,
                           IDBRequest* aRequest,
                           const nsAString& aName)
-  : AsyncConnectionHelper(aDatabase, aRequest), mName(aName)
+  : AsyncConnectionHelper(aTransaction, aRequest), mName(aName)
   { }
 
   PRUint16 DoDatabaseWork(mozIStorageConnection* aConnection);
@@ -243,8 +243,6 @@ IDBDatabaseRequest::IDBDatabaseRequest()
 
 IDBDatabaseRequest::~IDBDatabaseRequest()
 {
-  NS_ASSERTION(mTransactions.IsEmpty(), "This should be empty!");
-
   if (mConnectionThread) {
     mConnectionThread->SetWeakIdleObserver(nsnull);
   }
@@ -281,11 +279,6 @@ IDBDatabaseRequest::GetOrCreateConnection(mozIStorageConnection** aResult)
 void
 IDBDatabaseRequest::CloseConnection()
 {
-  PRUint32 transactionCount = mTransactions.Length();
-  for (PRUint32 index = 0; index < transactionCount; index++) {
-    mTransactions[index]->CloseConnection();
-  }
-
   if (mConnection) {
     if (mConnectionThread) {
       NS_ProxyRelease(mConnectionThread, mConnection, PR_TRUE);
@@ -429,11 +422,24 @@ IDBDatabaseRequest::RemoveObjectStore(const nsAString& aName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  nsTArray<nsString> storesToOpen;
+  if (!storesToOpen.AppendElement(aName)) {
+    NS_ERROR("Out of memory!");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsRefPtr<IDBTransactionRequest> transaction =
+    IDBTransactionRequest::Create(this, storesToOpen,
+                                  nsIIDBTransaction::READ_WRITE,
+                                  kDefaultDatabaseTimeoutSeconds);
+  NS_ENSURE_TRUE(transaction, NS_ERROR_FAILURE);
+
+
   nsRefPtr<IDBRequest> request = GenerateRequest();
 
   nsRefPtr<RemoveObjectStoreHelper> helper =
-    new RemoveObjectStoreHelper(this, request, aName);
-  nsresult rv = helper->Dispatch(mConnectionThread);
+    new RemoveObjectStoreHelper(transaction, request, aName);
+  nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);
@@ -469,7 +475,7 @@ IDBDatabaseRequest::SetVersion(const nsAString& aVersion,
 
   nsRefPtr<SetVersionHelper> helper =
     new SetVersionHelper(transaction, request, aVersion);
-  nsresult rv = helper->Dispatch(mConnectionThread);
+  nsresult rv = helper->DispatchToTransactionPool();
   NS_ENSURE_SUCCESS(rv, rv);
 
   request.forget(_retval);

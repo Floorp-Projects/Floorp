@@ -37,75 +37,81 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_dom_indexeddb_idbdatabaserequest_h__
-#define mozilla_dom_indexeddb_idbdatabaserequest_h__
+#ifndef mozilla_dom_indexeddb_transactionthreadpool_h__
+#define mozilla_dom_indexeddb_transactionthreadpool_h__
 
-#include "mozilla/dom/indexedDB/IDBRequest.h"
-#include "mozilla/dom/indexedDB/LazyIdleThread.h"
+// Only meant to be included in IndexedDB source files, not exported.
+#include "IndexedDatabase.h"
 
-#include "mozIStorageConnection.h"
-#include "nsIIDBDatabaseRequest.h"
 #include "nsIObserver.h"
 
-#include "nsDOMLists.h"
+#include "mozilla/Mutex.h"
+#include "nsHashKeys.h"
+#include "nsRefPtrHashtable.h"
+
+class nsIRunnable;
+class nsIThreadPool;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class AsyncConnectionHelper;
-class DatabaseInfo;
 class IDBTransactionRequest;
+class TransactionQueue;
 
-class IDBDatabaseRequest : public IDBRequest::Generator,
-                           public nsIIDBDatabaseRequest,
-                           public nsIObserver
+template<class T>
+class RefPtrHashKey : public PLDHashEntryHdr
 {
-  friend class AsyncConnectionHelper;
+ public:
+  typedef T *KeyType;
+  typedef const T *KeyTypePointer;
 
+  RefPtrHashKey(const T *key) : mKey(const_cast<T*>(key)) {}
+  RefPtrHashKey(const RefPtrHashKey<T> &toCopy) : mKey(toCopy.mKey) {}
+  ~RefPtrHashKey() {}
+
+  KeyType GetKey() const { return mKey; }
+
+  PRBool KeyEquals(KeyTypePointer key) const { return key == mKey; }
+
+  static KeyTypePointer KeyToPointer(KeyType key) { return key; }
+  static PLDHashNumber HashKey(KeyTypePointer key)
+  {
+    return NS_PTR_TO_INT32(key) >> 2;
+  }
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+ protected:
+  nsRefPtr<T> mKey;
+};
+
+class TransactionThreadPool : public nsIObserver
+{
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIDBDATABASE
-  NS_DECL_NSIIDBDATABASEREQUEST
   NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<IDBDatabaseRequest>
-  Create(DatabaseInfo* aDatabaseInfo,
-         LazyIdleThread* aThread,
-         nsCOMPtr<mozIStorageConnection>& aConnection);
+  // returns a non-owning ref!
+  static TransactionThreadPool* GetOrCreate();
+  static void Shutdown();
 
-  nsIThread* ConnectionThread() {
-    return mConnectionThread;
-  }
-
-  void CloseConnection();
-
-  PRUint32 Id() {
-    return mDatabaseId;
-  }
-
-  const nsString& FilePath() {
-    return mFilePath;
-  }
+  nsresult Dispatch(IDBTransactionRequest* aTransaction,
+                    nsIRunnable* aRunnable,
+                    bool aFinish = false);
 
 protected:
-  IDBDatabaseRequest();
-  ~IDBDatabaseRequest();
+  TransactionThreadPool();
+  ~TransactionThreadPool();
 
-  // Only meant to be called on mStorageThread!
-  nsresult GetOrCreateConnection(mozIStorageConnection** aConnection);
+  nsresult Init();
+  nsresult Cleanup();
 
-private:
-  PRUint32 mDatabaseId;
-  nsString mName;
-  nsString mDescription;
-  nsString mFilePath;
+  mozilla::Mutex mMutex;
+  nsCOMPtr<nsIThreadPool> mThreadPool;
 
-  nsRefPtr<LazyIdleThread> mConnectionThread;
-
-  // Only touched on mStorageThread! These must be destroyed in the
-  // FireCloseConnectionRunnable method.
-  nsCOMPtr<mozIStorageConnection> mConnection;
+  // Protected by mMutex.
+  nsRefPtrHashtable<RefPtrHashKey<IDBTransactionRequest>, TransactionQueue>
+    mTransactionsInProgress;
 };
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbdatabaserequest_h__
+#endif // mozilla_dom_indexeddb_transactionthreadpool_h__

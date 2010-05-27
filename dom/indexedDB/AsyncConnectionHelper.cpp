@@ -48,6 +48,7 @@
 
 #include "IDBEvents.h"
 #include "IDBTransactionRequest.h"
+#include "TransactionThreadPool.h"
 
 using mozilla::TimeStamp;
 using mozilla::TimeDuration;
@@ -58,6 +59,21 @@ namespace {
 
 const PRUint32 kProgressHandlerGranularity = 1000;
 const PRUint32 kDefaultTimeoutMS = 30000;
+
+NS_STACK_CLASS
+class TransactionPoolEventTarget : public nsIEventTarget
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIEVENTTARGET
+
+  TransactionPoolEventTarget(IDBTransactionRequest* aTransaction)
+  : mTransaction(aTransaction)
+  { }
+
+private:
+  IDBTransactionRequest* mTransaction;
+};
 
 } // anonymous namespace
 
@@ -119,7 +135,6 @@ AsyncConnectionHelper::~AsyncConnectionHelper()
     }
   }
 
-  NS_ASSERTION(!mDatabaseThread, "Should have been released before now!");
   NS_ASSERTION(!mOldProgressHandler, "Should not have anything here!");
 }
 
@@ -143,15 +158,6 @@ AsyncConnectionHelper::Run()
     mRequest = nsnull;
     return NS_OK;
   }
-
-#ifdef DEBUG
-  {
-    PRBool ok;
-    NS_ASSERTION(NS_SUCCEEDED(mDatabaseThread->IsOnCurrentThread(&ok)) && ok,
-                 "Wrong thread!");
-    mDatabaseThread = nsnull;
-  }
-#endif
 
   nsresult rv = NS_OK;
   nsCOMPtr<mozIStorageConnection> connection;
@@ -230,7 +236,7 @@ AsyncConnectionHelper::OnProgress(mozIStorageConnection* aConnection,
 }
 
 nsresult
-AsyncConnectionHelper::Dispatch(nsIThread* aDatabaseThread)
+AsyncConnectionHelper::Dispatch(nsIEventTarget* aDatabaseThread)
 {
 #ifdef DEBUG
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -240,7 +246,6 @@ AsyncConnectionHelper::Dispatch(nsIThread* aDatabaseThread)
     NS_ASSERTION(NS_SUCCEEDED(rv), "IsOnCurrentThread failed!");
     NS_ASSERTION(!sameThread, "Dispatching to main thread not supported!");
   }
-  mDatabaseThread = aDatabaseThread;
 #endif
 
   nsresult rv = Init();
@@ -256,6 +261,14 @@ AsyncConnectionHelper::Dispatch(nsIThread* aDatabaseThread)
   }
 
   return NS_OK;
+}
+
+nsresult
+AsyncConnectionHelper::DispatchToTransactionPool()
+{
+  NS_ASSERTION(mTransaction, "Only ok to call this with a transaction!");
+  TransactionPoolEventTarget target(mTransaction);
+  return Dispatch(&target);
 }
 
 nsresult
@@ -323,4 +336,40 @@ AsyncConnectionHelper::GetSuccessResult(nsIWritableVariant* /* aResult */)
   // Leave the variant remain set to empty.
 
   return OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+TransactionPoolEventTarget::AddRef()
+{
+  NS_NOTREACHED("Don't call me!");
+  return 2;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+TransactionPoolEventTarget::Release()
+{
+  NS_NOTREACHED("Don't call me!");
+  return 1;
+}
+
+NS_IMPL_QUERY_INTERFACE1(TransactionPoolEventTarget, nsIEventTarget)
+
+NS_IMETHODIMP
+TransactionPoolEventTarget::Dispatch(nsIRunnable* aRunnable,
+                                     PRUint32 aFlags)
+{
+  NS_ASSERTION(aRunnable, "Null pointer!");
+  NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL, "Unsupported!");
+
+  TransactionThreadPool* pool = TransactionThreadPool::GetOrCreate();
+  NS_ENSURE_TRUE(pool, NS_ERROR_FAILURE);
+
+  return pool->Dispatch(mTransaction, aRunnable, false);
+}
+
+NS_IMETHODIMP
+TransactionPoolEventTarget::IsOnCurrentThread(PRBool* aResult)
+{
+  *aResult = PR_FALSE;
+  return NS_OK;
 }

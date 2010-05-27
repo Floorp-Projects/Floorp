@@ -91,7 +91,10 @@ public:
    */
   static const PRUint16 NOREPLY = OK - 1;
 
-  nsresult Dispatch(nsIThread* aDatabaseThread);
+  nsresult Dispatch(nsIEventTarget* aDatabaseThread);
+
+  // Only for transactions!
+  nsresult DispatchToTransactionPool();
 
 protected:
   AsyncConnectionHelper(IDBDatabaseRequest* aDatabase,
@@ -157,10 +160,6 @@ protected:
 
 private:
   nsCOMPtr<mozIStorageProgressHandler> mOldProgressHandler;
-
-#ifdef DEBUG
-  nsCOMPtr<nsIThread> mDatabaseThread;
-#endif
 
   mozilla::TimeStamp mStartTime;
   mozilla::TimeDuration mTimeoutDuration;
