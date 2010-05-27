@@ -64,6 +64,7 @@
 #include "jsarray.h"
 #include "jstask.h"
 #include "jsvector.h"
+#include "prmjtime.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -1892,6 +1893,8 @@ struct JSContext
     }
 
     JSClassProtoCache    classProtoCache;
+
+    DSTOffsetCache dstOffsetCache;
 
   private:
     /*
