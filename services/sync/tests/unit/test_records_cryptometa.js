@@ -35,7 +35,7 @@ function run_test() {
   catch(ex) {
     error = ex;
   }
-  do_check_eq(error, "Server attack?! SHA256 HMAC key fail: failme!");
+  do_check_eq(error, "Key SHA256 HMAC mismatch: failme!");
 
   _("Switching back to the correct HMAC and trying again");
   crypto.keyring[pubkey.uri.spec].hmac = goodHMAC;
