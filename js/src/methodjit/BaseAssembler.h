@@ -37,15 +37,15 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined jsjaeger_assembler_h__ && defined JS_METHODJIT
-#define jsjaeger_assembler_h__
+#if !defined jsjaeger_baseassembler_h__ && defined JS_METHODJIT
+#define jsjaeger_baseassembler_h__
 
-#include "methodjit/BaseAssembler.h"
+#include "assembler/assembler/MacroAssembler.h"
 
 namespace js {
 namespace mjit {
 
-class Assembler : public BaseAssembler
+class BaseAssembler : public JSC::MacroAssembler
 {
   public:
 };
