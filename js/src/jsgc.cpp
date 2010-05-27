@@ -2941,6 +2941,27 @@ GC(JSContext *cx  GCTIMER_PARAM)
 }
 
 #ifdef JS_THREADSAFE
+
+/*
+ * If the GC is running and we're called on another thread, wait for this GC
+ * activation to finish. We can safely wait here without fear of deadlock (in
+ * the case where we are called within a request on another thread's context)
+ * because the GC doesn't set rt->gcRunning until after it has waited for all
+ * active requests to end.
+ *
+ * We call here js_CurrentThreadId() after checking for rt->gcState to avoid
+ * an expensive call when the GC is not running.
+ */
+void
+js_WaitForGC(JSRuntime *rt)
+{
+    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
+        do {
+            JS_AWAIT_GC_DONE(rt);
+        } while (rt->gcRunning);
+    }
+}
+
 /*
  * GC is running on another thread. Temporarily suspend all requests running
  * on the current thread and wait until the GC is done.
@@ -2952,7 +2973,7 @@ LetOtherGCFinish(JSContext *cx)
     JS_ASSERT(rt->gcThread);
     JS_ASSERT(cx->thread != rt->gcThread);
 
-    size_t requestDebit = js_CountThreadRequests(cx);
+    size_t requestDebit = cx->thread->contextsInRequests;
     JS_ASSERT(requestDebit <= rt->requestCount);
 #ifdef JS_TRACER
     JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
@@ -3034,7 +3055,7 @@ BeginGCSession(JSContext *cx)
      * JS_NOTIFY_REQUEST_DONE, which will wake us up, is only called on
      * rt->requestCount transitions to 0.
      */
-    size_t requestDebit = js_CountThreadRequests(cx);
+    size_t requestDebit = cx->thread->contextsInRequests;
     JS_ASSERT_IF(cx->requestDepth != 0, requestDebit >= 1);
     JS_ASSERT(requestDebit <= rt->requestCount);
     if (requestDebit != rt->requestCount) {
