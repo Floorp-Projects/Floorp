@@ -1022,27 +1022,6 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
-  PRBool hasStringArgs = PR_FALSE;
-  for (uintN i = 1; i < argc; ++i) {
-    if (!JSVAL_IS_STRING(argv[i])) {
-      hasStringArgs = PR_FALSE;
-
-      break;
-    }
-
-    if (i == 1) {
-#ifdef DEBUG_XPCNativeWrapper
-      printf("Constructing XPCNativeWrapper() with string args\n");
-#endif
-    }
-
-#ifdef DEBUG_XPCNativeWrapper
-    printf("  %s\n", ::JS_GetStringBytes(JSVAL_TO_STRING(argv[i])));
-#endif
-
-    hasStringArgs = PR_TRUE;
-  }
-
   if (argc == 2 && !JSVAL_IS_PRIMITIVE(argv[1])) {
     // An object was passed as the second argument to the
     // constructor. In this case we check that the object we're
@@ -1058,8 +1037,7 @@ XPCNativeWrapperCtor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
   }
 
-  if (!XPCNativeWrapper::CreateExplicitWrapper(cx, wrappedNative,
-                                               !hasStringArgs, rval)) {
+  if (!XPCNativeWrapper::CreateExplicitWrapper(cx, wrappedNative, rval)) {
     return JS_FALSE;
   }
 
@@ -1262,7 +1240,7 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
     nsresult rv = ssm->IsSystemPrincipal(aObjectPrincipal, &isSystem);
     if (NS_SUCCEEDED(rv) && !isSystem) {
       jsval v = OBJECT_TO_JSVAL(wrapper->GetFlatJSObject());
-      if (!CreateExplicitWrapper(cx, wrapper, true, &v)) {
+      if (!CreateExplicitWrapper(cx, wrapper, &v)) {
         return nsnull;
       }
       return JSVAL_TO_OBJECT(v);
@@ -1352,7 +1330,6 @@ XPCNativeWrapper::GetNewOrUsed(JSContext *cx, XPCWrappedNative *wrapper,
 JSBool
 XPCNativeWrapper::CreateExplicitWrapper(JSContext *cx,
                                         XPCWrappedNative *wrappedNative,
-                                        JSBool deep,
                                         jsval *rval)
 {
 #ifdef DEBUG_XPCNativeWrapper
@@ -1370,25 +1347,23 @@ XPCNativeWrapper::CreateExplicitWrapper(JSContext *cx,
     return JS_FALSE;
   }
 
-  jsuint flags = deep ? FLAG_DEEP | FLAG_EXPLICIT : FLAG_EXPLICIT;
-  if (!::JS_SetReservedSlot(cx, wrapperObj, 0, INT_TO_JSVAL(flags))) {
+  if (!::JS_SetReservedSlot(cx, wrapperObj, 0,
+                            INT_TO_JSVAL(FLAG_DEEP | FLAG_EXPLICIT))) {
     return JS_FALSE;
   }
 
   JSObject *parent = nsnull;
 
-  if (deep) {
-    // Make sure wrapperObj doesn't get collected while we're wrapping
-    // parents for it.
-    JS_LockGCThing(cx, wrapperObj);
+  // Make sure wrapperObj doesn't get collected while we're wrapping
+  // parents for it.
+  JS_LockGCThing(cx, wrapperObj);
 
-    // A deep XPCNativeWrapper has a parent chain that mirrors its
-    // XPCWrappedNative's chain.
-    if (!MirrorWrappedNativeParent(cx, wrappedNative, &parent))
-      return JS_FALSE;
+  // A deep XPCNativeWrapper has a parent chain that mirrors its
+  // XPCWrappedNative's chain.
+  if (!MirrorWrappedNativeParent(cx, wrappedNative, &parent))
+    return JS_FALSE;
 
-    JS_UnlockGCThing(cx, wrapperObj);
-  }
+  JS_UnlockGCThing(cx, wrapperObj);
 
   if (!parent) {
     parent = wrappedNative->GetScope()->GetGlobalJSObject();

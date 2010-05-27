@@ -2743,7 +2743,7 @@ MethodWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     }
 
-    return XPCNativeWrapper::CreateExplicitWrapper(cx, wn, JS_TRUE, rval);
+    return XPCNativeWrapper::CreateExplicitWrapper(cx, wn, rval);
 }
 
 /* void lookupMethod (); */
