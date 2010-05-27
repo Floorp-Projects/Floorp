@@ -71,6 +71,7 @@ function run_test() {
 
     cryptoMeta = new CryptoMeta("http://localhost:8080/crypto-meta", auth);
     cryptoMeta.addUnwrappedKey(keys.pubkey, keys.symkey);
+    CryptoMetas.set(cryptoMeta.uri, cryptoMeta);
 
     log.info("Creating and encrypting a record");
 
@@ -107,7 +108,7 @@ function run_test() {
     catch(ex) {
       error = ex;
     }
-    do_check_eq(error, "Server attack?! Id mismatch: crypted-resource,other");
+    do_check_eq(error, "Record id mismatch: crypted-resource,other");
 
     log.info("Make sure wrong hmacs cause failures");
     cryptoWrap.encrypt(passphrase);
@@ -119,7 +120,7 @@ function run_test() {
     catch(ex) {
       error = ex;
     }
-    do_check_eq(error, "Server attack?! SHA256 HMAC mismatch: foo");
+    do_check_eq(error, "Record SHA256 HMAC mismatch: foo");
 
     log.info("Done!");
   }
