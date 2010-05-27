@@ -323,7 +323,7 @@ namespace nanojit
         uintptr_t   _address;
         uint32_t    _typesig:27;     // 9 3-bit fields indicating arg type, by ARGTYPE above (including ret type): a1 a2 a3 a4 a5 ret
         AbiKind     _abi:3;
-        uint8_t     _isPure:1;      // _isPure=1 means no side-effects, result only depends on args
+        uint32_t    _isPure:1;      // _isPure=1 means no side-effects, result only depends on args
         AccSet      _storeAccSet;   // access regions stored by the function
         verbose_only ( const char* _name; )
 
