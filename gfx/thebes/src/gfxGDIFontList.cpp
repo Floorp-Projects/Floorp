@@ -59,6 +59,11 @@
 
 #define ROUND(x) floor((x) + 0.5)
 
+
+#ifndef CLEARTYPE_QUALITY
+#define CLEARTYPE_QUALITY 5
+#endif
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo *gFontInfoLog = PR_NewLogModule("fontInfoLog");
 #endif /* PR_LOGGING */
@@ -193,7 +198,16 @@ GDIFontEntry::GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontT
     if (IsType1())
         mForceGDI = PR_TRUE;
     mIsUserFont = aUserFontData != nsnull;
-    InitLogFont(aFaceName, aFontType);
+
+    PRBool isXP = (gfxWindowsPlatform::WindowsOSVersion() 
+                       < gfxWindowsPlatform::kWindowsVista);
+
+    PRBool useClearType = isXP && 
+        (gfxWindowsPlatform::GetPlatform()->UseClearTypeAlways() ||
+         (mIsUserFont && 
+          gfxWindowsPlatform::GetPlatform()->UseClearTypeForDownloadableFonts()));
+
+    InitLogFont(aFaceName, aFontType, useClearType);
 }
 
 nsresult
@@ -224,7 +238,17 @@ GDIFontEntry::ReadCMAP()
 gfxFont *
 GDIFontEntry::CreateFontInstance(const gfxFontStyle* aFontStyle, PRBool aNeedsBold)
 {
-    return new gfxGDIFont(this, aFontStyle, aNeedsBold);
+    PRBool isXP = (gfxWindowsPlatform::WindowsOSVersion() 
+                       < gfxWindowsPlatform::kWindowsVista);
+
+    PRBool useClearType = isXP && 
+        (gfxWindowsPlatform::GetPlatform()->UseClearTypeAlways() ||
+         (mIsUserFont && 
+          gfxWindowsPlatform::GetPlatform()->UseClearTypeForDownloadableFonts()));
+
+    return new gfxGDIFont(this, aFontStyle, aNeedsBold, 
+                          (useClearType ? gfxFont::kAntialiasSubpixel
+                                        : gfxFont::kAntialiasDefault));
 }
 
 nsresult
@@ -247,7 +271,8 @@ GDIFontEntry::GetFontTable(PRUint32 aTableTag, nsTArray<PRUint8>& aBuffer)
 
 void
 GDIFontEntry::FillLogFont(LOGFONTW *aLogFont, PRBool aItalic,
-                              PRUint16 aWeight, gfxFloat aSize)
+                              PRUint16 aWeight, gfxFloat aSize,
+                              PRBool aUseCleartype)
 {
     memcpy(aLogFont, &mLogFont, sizeof(LOGFONTW));
 
@@ -331,7 +356,8 @@ GDIFontEntry::TestCharacterMap(PRUint32 aCh)
 
 void
 GDIFontEntry::InitLogFont(const nsAString& aName,
-                              gfxWindowsFontType aFontType)
+                              gfxWindowsFontType aFontType,
+                              PRBool aUseCleartype)
 {
 #define CLIP_TURNOFF_FONTASSOCIATION 0x40
     
@@ -346,7 +372,7 @@ GDIFontEntry::InitLogFont(const nsAString& aName,
     mLogFont.lfCharSet        = DEFAULT_CHARSET;
     mLogFont.lfOutPrecision   = FontTypeToOutPrecision(aFontType);
     mLogFont.lfClipPrecision  = CLIP_TURNOFF_FONTASSOCIATION;
-    mLogFont.lfQuality        = DEFAULT_QUALITY;
+    mLogFont.lfQuality        = (aUseCleartype ? CLEARTYPE_QUALITY : DEFAULT_QUALITY);
     mLogFont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
     // always force lfItalic if we want it.  Font selection code will
     // do its best to give us an italic font entry, but if no face exists

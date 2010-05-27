@@ -145,7 +145,7 @@ public:
     nsresult ReadCMAP();
 
     void FillLogFont(LOGFONTW *aLogFont, PRBool aItalic,
-                     PRUint16 aWeight, gfxFloat aSize);
+                     PRUint16 aWeight, gfxFloat aSize, PRBool aUseCleartype);
 
     static gfxWindowsFontType DetermineFontType(const NEWTEXTMETRICW& metrics, 
                                                 DWORD fontType)
@@ -300,7 +300,8 @@ protected:
     GDIFontEntry(const nsAString& aFaceName, gfxWindowsFontType aFontType,
                      PRBool aItalic, PRUint16 aWeight, gfxUserFontData *aUserFontData);
 
-    void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType);
+    void InitLogFont(const nsAString& aName, gfxWindowsFontType aFontType,
+                         PRBool aUseCleartype);
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle, PRBool aNeedsBold);
 
