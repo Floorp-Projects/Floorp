@@ -331,7 +331,7 @@ NativeIteratorToJSIdArray(JSContext *cx, NativeIterator *ni, JSIdArray **idap)
     JS_ASSERT(sizeof(NativeIterator) > sizeof(JSIdArray));
     JS_ASSERT(ni->props_array == (jsid *) (ni + 1));
     size_t length = size_t(ni->props_end - ni->props_array);
-    JSIdArray *ida = (JSIdArray *) uintptr_t(ni->props_array) - (sizeof(JSIdArray) - sizeof(jsid));
+    JSIdArray *ida = (JSIdArray *) (uintptr_t(ni->props_array) - (sizeof(JSIdArray) - sizeof(jsid)));
     ida->self = ni;
     ida->length = length;
     JS_ASSERT(&ida->vector[0] == &ni->props_array[0]);
