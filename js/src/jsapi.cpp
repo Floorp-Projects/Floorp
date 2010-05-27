@@ -3900,7 +3900,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     JSIdArray *ida;
-    if (!EnumerateOwnProperties(cx, obj, &ida))
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &ida))
         return false;
     for (size_t n = 0; n < size_t(ida->length); ++n)
         JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
