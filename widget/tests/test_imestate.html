@@ -5,6 +5,8 @@
           src="chrome://mochikit/content/MochiKit/packed.js"></script>
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css"
           href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
@@ -773,6 +775,86 @@ function runComplexContenteditableTests()
   testOnOutsideOfEditor(null, "nobody", div);
 }
 
+function runEditorFlagChangeTests()
+{
+  if (!kIMEEnabledSupported) {
+    return;
+  }
+
+  var description = "runEditorFlagChangeTests: ";
+
+  var container = document.getElementById("display");
+
+  // the editor has focus directly.
+  container.setAttribute("contenteditable", "true");
+  container.focus();
+
+  is(gFM.focusedElement, container,
+     description + "The editor doesn't get focus");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "IME isn't enabled on HTML editor");
+  const kIMEStateChangeFlags =
+    Components.interfaces.nsIPlaintextEditor.eEditorPasswordMask |
+    Components.interfaces.nsIPlaintextEditor.eEditorReadonlyMask |
+    Components.interfaces.nsIPlaintextEditor.eEditorDisabledMask;
+  var editor =
+    window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+      getInterface(Components.interfaces.nsIWebNavigation).
+      QueryInterface(Components.interfaces.nsIEditorDocShell).editor;
+  var editorIMESupport =
+    editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
+  var flags = editor.flags;
+
+  // start composition
+  synthesizeComposition(true);
+
+  // input characters
+  synthesizeText(
+    { "composition":
+      { "string": "\u3078\u3093\u3057\u3093",
+        "clauses":
+        [
+          { "length": 4, "attr": gUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 4, "length": 0 }
+    });
+
+  editor.flags &= ~kIMEStateChangeFlags;
+  ok(editorIMESupport.composing,
+     description + "#1 IME composition was committed unexpectedly");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "#1 IME isn't enabled on HTML editor");
+
+  editor.flags |= ~kIMEStateChangeFlags;
+  ok(editorIMESupport.composing,
+     description + "#2 IME composition was committed unexpectedly");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "#2 IME isn't enabled on HTML editor");
+
+  editor.flags = flags;
+  ok(editorIMESupport.composing,
+     description + "#3 IME composition was committed unexpectedly");
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
+     description + "#3 IME isn't enabled on HTML editor");
+
+  // cancel the composition
+  synthesizeText(
+    { "composition":
+      { "string": "",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 0, "length": 0 }
+    });
+
+  synthesizeComposition(false);
+
+  container.removeAttribute("contenteditable");
+}
+
 function runEditableSubframeTests()
 {
   window.open("window_imestate_iframes.html", "_blank",
@@ -822,6 +904,9 @@ function runTests()
 
   // complex contenteditable editor's tests
   runComplexContenteditableTests();
+
+  // test whether the IME state and composition are not changed unexpectedly
+  runEditorFlagChangeTests();
 
   runASyncTests();
 }
