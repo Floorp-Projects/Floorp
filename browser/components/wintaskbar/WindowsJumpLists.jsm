@@ -482,12 +482,14 @@ var WinTaskbarJumpList =
   _initObs: function WTBJL__initObs() {
     _observerService.addObserver(this, "private-browsing", false);
     _observerService.addObserver(this, "quit-application-granted", false);
+    _observerService.addObserver(this, "browser:purge-session-history", false);
     _prefs.addObserver("", this, false);
   },
  
   _freeObs: function WTBJL__freeObs() {
     _observerService.removeObserver(this, "private-browsing");
     _observerService.removeObserver(this, "quit-application-granted");
+    _observerService.removeObserver(this, "browser:purge-session-history");
     _prefs.removeObserver("", this);
   },
 
