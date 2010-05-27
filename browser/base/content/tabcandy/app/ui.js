@@ -667,6 +667,11 @@ UIClass.prototype = {
   addDevMenu: function() {
     var self = this;
     
+    $("#reset").click(function(){
+      Storage.wipe();
+      location.href = '';      
+    });
+    
     var html = '<select style="position:absolute; bottom:5px; right:5px; opacity:.2;">'; 
     var $select = $(html)
       .appendTo('body')
