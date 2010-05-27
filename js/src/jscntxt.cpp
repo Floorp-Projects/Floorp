@@ -1247,6 +1247,48 @@ js_NextActiveContext(JSRuntime *rt, JSContext *cx)
 #endif
 }
 
+#ifdef JS_THREADSAFE
+
+uint32
+js_CountThreadRequests(JSContext *cx)
+{
+    JSCList *head, *link;
+    uint32 nrequests;
+
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    head = &cx->thread->contextList;
+    nrequests = 0;
+    for (link = head->next; link != head; link = link->next) {
+        JSContext *acx = CX_FROM_THREAD_LINKS(link);
+        JS_ASSERT(acx->thread == cx->thread);
+        if (acx->requestDepth)
+            nrequests++;
+    }
+    return nrequests;
+}
+
+/*
+ * If the GC is running and we're called on another thread, wait for this GC
+ * activation to finish. We can safely wait here without fear of deadlock (in
+ * the case where we are called within a request on another thread's context)
+ * because the GC doesn't set rt->gcRunning until after it has waited for all
+ * active requests to end.
+ *
+ * We call here js_CurrentThreadId() after checking for rt->gcRunning to avoid
+ * expensive calls when the GC is not running.
+ */
+void
+js_WaitForGC(JSRuntime *rt)
+{
+    if (rt->gcRunning && rt->gcThread->id != js_CurrentThreadId()) {
+        do {
+            JS_AWAIT_GC_DONE(rt);
+        } while (rt->gcRunning);
+    }
+}
+
+#endif
+
 static JSDHashNumber
 resolving_HashKey(JSDHashTable *table, const void *ptr)
 {
