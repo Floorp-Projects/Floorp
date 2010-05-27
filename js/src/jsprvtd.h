@@ -69,6 +69,7 @@
 #define INT_TO_JSID(i)              ((jsid)INT_TO_JSVAL(i))
 #define INT_JSVAL_TO_JSID(v)        ((jsid)(v))
 #define INT_JSID_TO_JSVAL(id)       ((jsval)(id))
+#define INT_FITS_IN_JSID(i)         INT_FITS_IN_JSVAL(i)
 
 #define JSID_IS_OBJECT(id)          JSVAL_IS_OBJECT((jsval)(id))
 #define JSID_TO_OBJECT(id)          JSVAL_TO_OBJECT((jsval)(id))
