@@ -950,8 +950,17 @@ var XPIProvider = {
     this.bootstrapScopes = {};
     this.enabledAddons = null;
 
-    if (Prefs.getBoolPref(PREF_PENDING_OPERATIONS, false)) {
+    // Get the list of IDs of add-ons that are pending update.
+    let updates = [i.addon.id for each (i in this.installs)
+                   if ((i.state == AddonManager.STATE_INSTALLED) &&
+                       i.existingAddon)];
+
+    // If there are pending operations or installs waiting to complete then
+    // we must update the list of active add-ons
+    if (Prefs.getBoolPref(PREF_PENDING_OPERATIONS, false) ||
+        updates.length > 0) {
       XPIDatabase.updateActiveAddons();
+      XPIDatabase.writeAddonsList(updates);
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
     }
     XPIDatabase.shutdown();
@@ -1588,6 +1597,7 @@ var XPIProvider = {
     if (changed || Prefs.getBoolPref(PREF_PENDING_OPERATIONS)) {
       LOG("Restart necessary");
       XPIDatabase.updateActiveAddons();
+      XPIDatabase.writeAddonsList([]);
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
       Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
                                  JSON.stringify(this.bootstrappedAddons));
@@ -1601,7 +1611,7 @@ var XPIProvider = {
                                        true);
     if (!addonsList.exists()) {
       LOG("Add-ons list is missing, recreating");
-      XPIDatabase.writeAddonsList();
+      XPIDatabase.writeAddonsList([]);
       Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
                                  JSON.stringify(this.bootstrappedAddons));
       return true;
@@ -3266,14 +3276,16 @@ var XPIDatabase = {
     LOG("Updating add-on states");
     let stmt = this.getStatement("setActiveAddons");
     stmt.execute();
-
-    this.writeAddonsList();
   },
 
   /**
    * Writes out the XPI add-ons list for the platform to read.
+   *
+   * @param  aPendingUpdateIDs
+   *         An array of IDs of add-ons that are pending update and so shouldn't
+   *         be included in the add-ons list.
    */
-  writeAddonsList: function XPIDB_writeAddonsList() {
+  writeAddonsList: function XPIDB_writeAddonsList(aPendingUpdateIDs) {
     LOG("Writing add-ons list");
     Services.appinfo.invalidateCachesOnRestart();
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
@@ -3286,6 +3298,9 @@ var XPIDatabase = {
     let stmt = this.getStatement("getActiveAddons");
 
     for (let row in resultRows(stmt)) {
+      // Don't include add-ons that are waiting to be updated
+      if (aPendingUpdateIDs.indexOf(row.id) != -1)
+        continue;
       text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
       enabledAddons.push(row.id + ":" + row.version);
     }
@@ -3297,6 +3312,9 @@ var XPIDatabase = {
     stmt.params.internalName = XPIProvider.selectedSkin;
     count = 0;
     for (let row in resultRows(stmt)) {
+      // Don't include add-ons that are waiting to be updated
+      if (aPendingUpdateIDs.indexOf(row.id) != -1)
+        continue;
       text += "Extension" + (count++) + "=" + row.descriptor + "\r\n";
       enabledAddons.push(row.id + ":" + row.version);
     }

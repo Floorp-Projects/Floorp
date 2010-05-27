@@ -199,6 +199,9 @@ function shutdownManager() {
   gInternalManager.observe(null, "xpcom-shutdown", null);
   gInternalManager = null;
 
+  // Load the add-ons list as it was after application shutdown
+  loadAddonsList(false);
+
   // Clear any crash report annotations
   gAppInfo.annotations = {};
 }

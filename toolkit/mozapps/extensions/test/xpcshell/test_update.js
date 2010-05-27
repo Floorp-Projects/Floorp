@@ -144,7 +144,15 @@ function check_test_2() {
   AddonManager.getAddonByID("addon1@tests.mozilla.org", function(olda1) {
     do_check_neq(olda1, null);
     do_check_eq(olda1.version, "1.0");
-    restartManager(1);
+    do_check_true(isExtensionInAddonsList(profileDir, olda1.id));
+
+    shutdownManager();
+
+    do_check_false(isExtensionInAddonsList(profileDir, olda1.id));
+
+    startupManager(1);
+
+    do_check_true(isExtensionInAddonsList(profileDir, olda1.id));
 
     AddonManager.getAddonByID("addon1@tests.mozilla.org", function(a1) {
       do_check_neq(a1, null);
