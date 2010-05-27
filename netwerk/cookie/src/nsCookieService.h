@@ -139,6 +139,19 @@ struct DBState
   nsCOMPtr<mozIStorageStatement>  stmtUpdate;
 };
 
+// these constants represent a decision about a cookie based on user prefs.
+enum CookieStatus
+{
+  STATUS_ACCEPTED,
+  STATUS_ACCEPT_SESSION,
+  STATUS_REJECTED,
+  // STATUS_REJECTED_WITH_ERROR indicates the cookie should be rejected because
+  // of an error (rather than something the user can control). this is used for
+  // notification purposes, since we only want to notify of rejections where
+  // the user can do something about it (e.g. whitelist the site).
+  STATUS_REJECTED_WITH_ERROR
+};
+
 /******************************************************************************
  * nsCookieService:
  * class declaration
@@ -174,7 +187,7 @@ class nsCookieService : public nsICookieService
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     void                          GetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, PRBool aHttpBound, char **aCookie);
     nsresult                      SetCookieStringInternal(nsIURI *aHostURI, nsIPrompt *aPrompt, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, PRBool aFromHttp);
-    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString& aBaseDomain, PRBool aRequireHostMatch, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
+    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString& aBaseDomain, PRBool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, PRInt64 aServerTime, PRBool aFromHttp);
     void                          AddInternal(const nsCString& aBaseDomain, nsCookie *aCookie, PRInt64 aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, PRBool aFromHttp);
     void                          RemoveCookieFromList(const nsListIter &aIter, mozIStorageBindingParamsArray *aParamsArray = NULL);
     PRBool                        AddCookieToList(const nsCString& aBaseDomain, nsCookie *aCookie, mozIStorageBindingParamsArray *aParamsArray, PRBool aWriteToDB = PR_TRUE);
@@ -182,7 +195,7 @@ class nsCookieService : public nsICookieService
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentCSubstring &aTokenString, nsDependentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
     PRBool                        IsForeign(const nsCString &aBaseDomain, PRBool aRequireHostMatch, nsIURI *aFirstURI);
-    PRUint32                      CheckPrefs(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString &aBaseDomain, PRBool aRequireHostMatch, const char *aCookieHeader);
+    CookieStatus                  CheckPrefs(nsIURI *aHostURI, nsIChannel *aChannel, const nsCString &aBaseDomain, PRBool aRequireHostMatch, const char *aCookieHeader);
     PRBool                        CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI, const nsCString &aBaseDomain, PRBool aRequireHostMatch);
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 GetExpiry(nsCookieAttributes &aCookie, PRInt64 aServerTime, PRInt64 aCurrentTime);
@@ -210,7 +223,8 @@ class nsCookieService : public nsICookieService
     DBState                       mPrivateDBState;
 
     // cached prefs
-    PRUint8                       mCookiesPermissions;   // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT}
+    PRUint8                       mCookieBehavior; // BEHAVIOR_{ACCEPT, REJECTFOREIGN, REJECT}
+    PRBool                        mThirdPartySession;
     PRUint16                      mMaxNumberOfCookies;
     PRUint16                      mMaxCookiesPerHost;
     PRInt64                       mCookiePurgeAge;

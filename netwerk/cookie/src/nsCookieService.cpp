@@ -104,25 +104,17 @@ static const PRUint32 kMaxCookiesPerHost  = 50;
 static const PRUint32 kMaxBytesPerCookie  = 4096;
 static const PRUint32 kMaxBytesPerPath    = 1024;
 
-// these constants represent a decision about a cookie based on user prefs.
-static const PRUint32 STATUS_ACCEPTED            = 0;
-static const PRUint32 STATUS_REJECTED            = 1;
-// STATUS_REJECTED_WITH_ERROR indicates the cookie should be rejected because
-// of an error (rather than something the user can control). this is used for
-// notification purposes, since we only want to notify of rejections where
-// the user can do something about it (e.g. whitelist the site).
-static const PRUint32 STATUS_REJECTED_WITH_ERROR = 2;
-
-// behavior pref constants 
+// behavior pref constants
 static const PRUint32 BEHAVIOR_ACCEPT        = 0;
 static const PRUint32 BEHAVIOR_REJECTFOREIGN = 1;
 static const PRUint32 BEHAVIOR_REJECT        = 2;
 
 // pref string constants
-static const char kPrefCookiesPermissions[] = "network.cookie.cookieBehavior";
+static const char kPrefCookieBehavior[]     = "network.cookie.cookieBehavior";
 static const char kPrefMaxNumberOfCookies[] = "network.cookie.maxNumber";
 static const char kPrefMaxCookiesPerHost[]  = "network.cookie.maxPerHost";
 static const char kPrefCookiePurgeAge[]     = "network.cookie.purgeAge";
+static const char kPrefThirdPartySession[]  = "network.cookie.thirdparty.sessionOnly";
 
 // struct for temporarily storing cookie attributes during header parsing
 struct nsCookieAttributes
@@ -509,7 +501,8 @@ NS_IMPL_ISUPPORTS5(nsCookieService,
 
 nsCookieService::nsCookieService()
  : mDBState(&mDefaultDBState)
- , mCookiesPermissions(BEHAVIOR_ACCEPT)
+ , mCookieBehavior(BEHAVIOR_ACCEPT)
+ , mThirdPartySession(PR_TRUE)
  , mMaxNumberOfCookies(kMaxNumberOfCookies)
  , mMaxCookiesPerHost(kMaxCookiesPerHost)
  , mCookiePurgeAge(kCookiePurgeAge)
@@ -535,10 +528,11 @@ nsCookieService::Init()
   // init our pref and observer
   nsCOMPtr<nsIPrefBranch2> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefBranch) {
-    prefBranch->AddObserver(kPrefCookiesPermissions, this, PR_TRUE);
+    prefBranch->AddObserver(kPrefCookieBehavior,     this, PR_TRUE);
     prefBranch->AddObserver(kPrefMaxNumberOfCookies, this, PR_TRUE);
     prefBranch->AddObserver(kPrefMaxCookiesPerHost,  this, PR_TRUE);
     prefBranch->AddObserver(kPrefCookiePurgeAge,     this, PR_TRUE);
+    prefBranch->AddObserver(kPrefThirdPartySession,  this, PR_TRUE);
     PrefChanged(prefBranch);
   }
 
@@ -849,6 +843,7 @@ nsCookieService::Observe(nsISupports     *aSubject,
     nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
     if (prefBranch)
       PrefChanged(prefBranch);
+
   } else if (!strcmp(aTopic, NS_PRIVATE_BROWSING_SWITCH_TOPIC)) {
     if (NS_LITERAL_STRING(NS_PRIVATE_BROWSING_ENTER).Equals(aData)) {
       if (!mPrivateDBState.hostTable.IsInitialized() &&
@@ -953,14 +948,16 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
   }
 
   // check default prefs
-  PRUint32 cookieStatus = CheckPrefs(aHostURI, aChannel, baseDomain,
-                                     requireHostMatch, aCookieHeader);
+  CookieStatus cookieStatus = CheckPrefs(aHostURI, aChannel, baseDomain,
+                                         requireHostMatch, aCookieHeader);
   // fire a notification if cookie was rejected (but not if there was an error)
   switch (cookieStatus) {
   case STATUS_REJECTED:
     NotifyRejected(aHostURI);
   case STATUS_REJECTED_WITH_ERROR:
     return NS_OK;
+  default:
+    break;
   }
 
   // parse server local time. this is not just done here for efficiency
@@ -980,7 +977,7 @@ nsCookieService::SetCookieStringInternal(nsIURI     *aHostURI,
   // switch to a nice string type now, and process each cookie in the header
   nsDependentCString cookieHeader(aCookieHeader);
   while (SetCookieInternal(aHostURI, aChannel, baseDomain, requireHostMatch,
-                           cookieHeader, serverTime, aFromHttp));
+                           cookieStatus, cookieHeader, serverTime, aFromHttp));
   return NS_OK;
 }
 
@@ -1017,8 +1014,8 @@ void
 nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 {
   PRInt32 val;
-  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookiesPermissions, &val)))
-    mCookiesPermissions = (PRUint8) LIMIT(val, 0, 2, 0);
+  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookieBehavior, &val)))
+    mCookieBehavior = (PRUint8) LIMIT(val, 0, 2, 0);
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefMaxNumberOfCookies, &val)))
     mMaxNumberOfCookies = (PRUint16) LIMIT(val, 1, 0xFFFF, kMaxNumberOfCookies);
@@ -1028,6 +1025,10 @@ nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 
   if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kPrefCookiePurgeAge, &val)))
     mCookiePurgeAge = LIMIT(val, 0, PR_INT32_MAX, PR_INT32_MAX) * PR_USEC_PER_SEC;
+
+  PRBool boolval;
+  if (NS_SUCCEEDED(aPrefBranch->GetBoolPref(kPrefThirdPartySession, &boolval)))
+    mThirdPartySession = boolval;
 }
 
 /******************************************************************************
@@ -1202,7 +1203,7 @@ nsCookieService::Read()
       getter_AddRefs(stmtDeleteExpired));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmtDeleteExpired->BindInt64Parameter(0, PR_Now() / PR_USEC_PER_SEC);
+    rv = stmtDeleteExpired->BindInt64ByIndex(0, PR_Now() / PR_USEC_PER_SEC);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool hasResult;
@@ -1498,13 +1499,15 @@ nsCookieService::GetCookieInternal(nsIURI      *aHostURI,
   }
 
   // check default prefs
-  PRUint32 cookieStatus = CheckPrefs(aHostURI, aChannel, baseDomain,
-                                     requireHostMatch, nsnull);
+  CookieStatus cookieStatus = CheckPrefs(aHostURI, aChannel, baseDomain,
+                                         requireHostMatch, nsnull);
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
   case STATUS_REJECTED:
   case STATUS_REJECTED_WITH_ERROR:
     return;
+  default:
+    break;
   }
 
   // check if aHostURI is using an https secure protocol.
@@ -1659,6 +1662,7 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
                                    nsIChannel                    *aChannel,
                                    const nsCString               &aBaseDomain,
                                    PRBool                         aRequireHostMatch,
+                                   CookieStatus                   aStatus,
                                    nsDependentCString            &aCookieHeader,
                                    PRInt64                        aServerTime,
                                    PRBool                         aFromHttp)
@@ -1683,6 +1687,11 @@ nsCookieService::SetCookieInternal(nsIURI                        *aHostURI,
   // calculate expiry time of cookie.
   cookieAttributes.isSession = GetExpiry(cookieAttributes, aServerTime,
                                          currentTimeInUsec / PR_USEC_PER_SEC);
+  if (aStatus == STATUS_ACCEPT_SESSION) {
+    // force lifetime to session. note that the expiration time, if set above,
+    // will still apply.
+    cookieAttributes.isSession = PR_TRUE;
+  }
 
   // reject cookie if it's over the size limit, per RFC2109
   if ((cookieAttributes.name.Length() + cookieAttributes.value.Length()) > kMaxBytesPerCookie) {
@@ -2200,7 +2209,7 @@ nsCookieService::IsForeign(const nsCString &aBaseDomain,
   return !IsSubdomainOf(firstHost, aBaseDomain);
 }
 
-PRUint32
+CookieStatus
 nsCookieService::CheckPrefs(nsIURI          *aHostURI,
                             nsIChannel      *aChannel,
                             const nsCString &aBaseDomain,
@@ -2236,11 +2245,12 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
   }
 
   // check default prefs
-  if (mCookiesPermissions == BEHAVIOR_REJECT) {
+  if (mCookieBehavior == BEHAVIOR_REJECT) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are disabled");
     return STATUS_REJECTED;
+  }
 
-  } else if (mCookiesPermissions == BEHAVIOR_REJECTFOREIGN) {
+  if (mCookieBehavior == BEHAVIOR_REJECTFOREIGN || mThirdPartySession) {
     // check if cookie is foreign
     if (!mPermissionService) {
       NS_WARNING("Foreign cookie blocking enabled, but nsICookiePermission unavailable! Rejecting cookie");
@@ -2252,7 +2262,10 @@ nsCookieService::CheckPrefs(nsIURI          *aHostURI,
     rv = mPermissionService->GetOriginatingURI(aChannel, getter_AddRefs(firstURI));
 
     if (NS_FAILED(rv) || IsForeign(aBaseDomain, aRequireHostMatch, firstURI)) {
-      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "originating server test failed");
+      if (mCookieBehavior == BEHAVIOR_ACCEPT && mThirdPartySession)
+        return STATUS_ACCEPT_SESSION;
+
+      COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "context is third party");
       return STATUS_REJECTED;
     }
   }
