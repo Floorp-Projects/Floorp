@@ -39,10 +39,12 @@
  * ***** END LICENSE BLOCK ***** */
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
+#include "methodjit/StubCalls.h"
 
 #include "jsautooplen.h"
 
 using namespace js;
+using namespace js::mjit;
 
 static const uint32 TAG_OFFSET     = 4;
 static const uint32 PAYLOAD_OFFSET = 0;
@@ -56,11 +58,13 @@ mjit::Compiler::jsop_bindname(uint32 index)
     Address address(reg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
 
     masm.load32(Address(address.base, address.offset + PAYLOAD_OFFSET), reg);
-#ifdef JS_64BIT
-# error "Bleh!"
-#endif
+    Jump j = masm.branchTestPtr(Assembler::Zero, reg, reg);
 
-    Jump j = masm.branchTestPtr(MacroAssembler::Zero, reg, reg);
+    {
+        stubcc.linkExit(j);
+        stubcc.syncAndSpill();
+        stubcc.call(stubs::BindName);
+    }
 
     frame.pushObject(reg);
 }

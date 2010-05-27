@@ -51,6 +51,22 @@ struct Registers {
 
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    static const RegisterID ReturnReg = JSC::X86Registers::eax;
+# if defined(JS_CPU_X86) || defined(_MSC_VER)
+    static const RegisterID ArgReg0 = JSC::X86Registers::ecx;
+    static const RegisterID ArgReg1 = JSC::X86Registers::edx;
+# else
+    static const RegisterID ArgReg0 = JSC::X86Registers::edi;
+    static const RegisterID ArgReg1 = JSC::X86Registers::esi;
+# endif
+#elif JS_CPU_ARM
+    static const RegisterID ReturnReg = JSC::ARMRegisters::r0;
+    static const RegisterID ArgReg0 = JSC::ARMRegisters::r0;
+    static const RegisterID ArgReg1 = JSC::ARMRegisters::r1;
+#endif
+
+
     static inline uint32 maskReg(RegisterID reg) {
         return (1 << reg);
     }
@@ -123,9 +139,13 @@ struct Registers {
 
     static const uint32 AvailRegs = SavedRegs | TempRegs;
 
-    Registers() : freeMask(AvailRegs)
-    {
-    }
+    Registers()
+      : freeMask(AvailRegs)
+    { }
+
+    Registers(uint32 freeMask)
+      : freeMask(freeMask)
+    { }
 
     void reset() {
         freeMask = AvailRegs;

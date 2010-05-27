@@ -37,37 +37,23 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined jsjaeger_codegen_h__ && defined JS_METHODJIT
-#define jsjaeger_codegen_h__
 
-#include "jscntxt.h"
-#include "jstl.h"
-#include "methodjit/MethodJIT.h"
-#include "methodjit/nunbox/FrameState.h"
-#include "methodjit/nunbox/Assembler.h"
+#ifndef jslogic_h__
+#define jslogic_h__
+
+#include "MethodJIT.h"
 
 namespace js {
 namespace mjit {
+namespace stubs {
 
-class CodeGenerator
-{
-    typedef JSC::MacroAssembler::Address Address;
-    typedef JSC::MacroAssembler::Imm32 Imm32;
-    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
+void * JS_FASTCALL Return(VMFrame &f);
+JSObject * JS_FASTCALL BindName(VMFrame &f);
 
-    Assembler      &masm;
-    FrameState     &frame;
+}}} /* namespace stubs,mjit,js */
 
-  public:
-    CodeGenerator(Assembler &masm, FrameState &frame);
+extern "C" void *
+js_InternalThrow(js::VMFrame &f);
 
-    void storeValue(FrameEntry *vi, Address address, bool popped);
-    void storeJsval(const Value &v, Address address);
-    void pushValueOntoFrame(Address address);
-};
+#endif /* jslogic_h__ */
 
-} /* namespace js */
-} /* namespace mjit */
-
-#endif
