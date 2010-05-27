@@ -3311,28 +3311,25 @@ class Value
     }
 
     void setPrivateVoidPtr(void *ptr) {
-        data.s.mask32 = JSVAL_MASK32_INT32;
-        data.s.payload.ptr = ptr;
+		data = PRIVATE_TO_JSVAL_IMPL(ptr);
     }
 
     void *asPrivateVoidPtr() const {
-        JS_ASSERT(data.s.mask32 == JSVAL_MASK32_INT32);
-        return data.s.payload.ptr;
+		JS_ASSERT(isDouble());
+		return JSVAL_TO_PRIVATE_IMPL(data);
     }
 
     void setPrivateUint32(uint32 u) {
-        data.s.mask32 = JSVAL_MASK32_INT32;
-        data.s.payload.u32 = u;
+		setInt32((int32)u);
     }
 
     uint32 asPrivateUint32() const {
-        JS_ASSERT(data.s.mask32 == JSVAL_MASK32_INT32);
-        return data.s.payload.u32;
+		return (uint32)asInt32();
     }
 
     uint32 &asPrivateUint32Ref() {
-        JS_ASSERT(data.s.mask32 == JSVAL_MASK32_INT32);
-        return data.s.payload.u32;
+		JS_ASSERT(isInt32());
+		return data.s.payload.u32;
     }
 } VALUE_ALIGNMENT;
 

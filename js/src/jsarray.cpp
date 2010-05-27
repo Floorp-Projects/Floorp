@@ -2732,7 +2732,7 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
             return JS_FALSE;
         }
         if (!hole && StrictlyEqual(cx, *vp, tosearch)) {
-            Uint32ToValue(i, vp);
+			vp->setNumber(i);
             return JS_TRUE;
         }
         if (i == stop)
