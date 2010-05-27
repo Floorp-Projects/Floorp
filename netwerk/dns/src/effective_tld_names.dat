@@ -3890,6 +3890,7 @@ mil.rw
 gouv.rw
 
 // sa : http://www.nic.net.sa/
+sa
 com.sa
 net.sa
 org.sa
@@ -4419,6 +4420,18 @@ net.ws
 org.ws
 gov.ws
 edu.ws
+
+// xn--mgbaam7a8h (UAE) : http://nic.ae/english/arabicdomain/rules.jsp
+امارات
+
+// xn--mgberp4a5d4ar (Saudi Arabia) : http://www.nic.net.sa/
+السعودية
+
+// xn--p1ai (Russia) : http://www.cctld.ru/en/docs/rulesrf.php
+рф
+
+// xn--wgbh1c (Egypt) : http://www.dotmasr.eg/
+مصر
 
 // ye : http://www.y.net.ye/services/domain_name.htm
 *.ye
