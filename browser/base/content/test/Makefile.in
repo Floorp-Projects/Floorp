@@ -81,6 +81,7 @@ _TEST_FILES = \
 # 480169)
 
 _BROWSER_FILES = \
+                 browser_typeAheadFind.js \
                  browser_NetworkPrioritizer.js \
                  browser_allTabsPanel.js \
                  browser_alltabslistener.js \
