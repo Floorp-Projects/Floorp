@@ -1076,6 +1076,12 @@ struct JSThread {
      */
     bool                gcWaiting;
 
+    /*
+     * Number of JSContext instances that are in requests on this thread. For
+     * such instances JSContext::requestDepth > 0 holds.
+     */
+    uint32              contextsInRequests;
+
     /* Factored out of JSThread for !JS_THREADSAFE embedding in JSRuntime. */
     JSThreadData        data;
 };
@@ -2704,29 +2710,6 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp);
  */
 extern JS_FRIEND_API(JSContext *)
 js_NextActiveContext(JSRuntime *, JSContext *);
-
-#ifdef JS_THREADSAFE
-
-/*
- * Count the number of contexts entered requests on the current thread.
- */
-extern uint32
-js_CountThreadRequests(JSContext *cx);
-
-/*
- * This is a helper for code at can potentially run outside JS request to
- * ensure that the GC is not running when the function returns.
- *
- * This function must be called with the GC lock held.
- */
-extern void
-js_WaitForGC(JSRuntime *rt);
-
-#else /* !JS_THREADSAFE */
-
-# define js_WaitForGC(rt)    ((void) 0)
-
-#endif
 
 /*
  * JSClass.resolve and watchpoint recursion damping machinery.
