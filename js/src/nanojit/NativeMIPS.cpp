@@ -1481,14 +1481,14 @@ namespace nanojit
         return patch;
     }
 
-    void Assembler::asm_branch_xov(LOpcode op, NIns* target)
+    void Assembler::asm_branch_ov(LOpcode op, NIns* target)
     {
         USE(op);
         NanoAssert(target != NULL);
 
         (void) asm_bxx(true, LIR_eqi, AT, ZERO, target);
 
-        TAG("asm_branch_xov(op=%s, target=%p)", lirNames[op], target);
+        TAG("asm_branch_ov(op=%s, target=%p)", lirNames[op], target);
     }
 
     NIns* Assembler::asm_branch(bool branchOnFalse, LIns *cond, NIns * const targ)
