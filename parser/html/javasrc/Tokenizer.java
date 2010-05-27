@@ -5858,10 +5858,9 @@ public class Tokenizer implements Locator {
 
     private void emitReplacementCharacter(@NoLength char[] buf, int pos)
             throws SAXException {
-        silentCarriageReturn();
         flushChars(buf, pos);
         tokenHandler.characters(Tokenizer.REPLACEMENT_CHARACTER, 0, 1);
-        cstart = Integer.MAX_VALUE;
+        cstart = pos + 1;
     }
 
     private void setAdditionalAndRememberAmpersandLocation(char add) {

@@ -3338,10 +3338,9 @@ nsHtml5Tokenizer::emitCarriageReturn(PRUnichar* buf, PRInt32 pos)
 void 
 nsHtml5Tokenizer::emitReplacementCharacter(PRUnichar* buf, PRInt32 pos)
 {
-  silentCarriageReturn();
   flushChars(buf, pos);
   tokenHandler->characters(nsHtml5Tokenizer::REPLACEMENT_CHARACTER, 0, 1);
-  cstart = PR_INT32_MAX;
+  cstart = pos + 1;
 }
 
 void 
