@@ -2289,6 +2289,48 @@ function asyncErrorLogger(aError) {
   ERROR("SQL error " + aError.result + ": " + aError.message);
 }
 
+/**
+ * A mozIStorageStatementCallback that will asynchronously build DBAddonInternal
+ * instances from the results it receives. Once the statement has completed
+ * executing and all of the metadata for all of the add-ons has been retrieved
+ * they will be passed as an array to aCallback.
+ *
+ * @param  aCallback
+ *         A callback function to pass the array of DBAddonInternals to
+ */
+function AsyncAddonListCallback(aCallback) {
+  this.callback = aCallback;
+  this.addons = [];
+}
+
+AsyncAddonListCallback.prototype = {
+  callback: null,
+  complete: false,
+  count: 0,
+  addons: null,
+
+  handleResult: function(aResults) {
+    let row = null;
+    while (row = aResults.getNextRow()) {
+      this.count++;
+      let self = this;
+      XPIDatabase.makeAddonFromRowAsync(row, function(aAddon) {
+        self.addons.push(aAddon);
+        if (self.complete && self.addons.length == self.count)
+          self.callback(self.addons);
+      });
+    }
+  },
+
+  handleError: asyncErrorLogger,
+
+  handleCompletion: function(aReason) {
+    this.complete = true;
+    if (this.addons.length == this.count)
+      this.callback(this.addons);
+  }
+};
+
 var XPIDatabase = {
   // true if the database connection has been opened
   initialized: false,
@@ -2585,9 +2627,9 @@ var XPIDatabase = {
   _readLocaleStrings: function XPIDB__readLocaleStrings(aLocale) {
     let stmt = this.getStatement("_readLocaleStrings");
 
-    stmt.params.id = locale.id;
+    stmt.params.id = aLocale.id;
     for (let row in resultRows(stmt)) {
-      if (!(row.type in locale))
+      if (!(row.type in aLocale))
         aLocale[row.type] = [];
       aLocale[row.type].push(row.value);
     }
@@ -2694,7 +2736,7 @@ var XPIDatabase = {
    * @param  aCallback
    *         The callback to call when the metadata is completely retrieved
    */
-  fetchAddonMetadata: function XPIDB_fetchAddonMetadata(aAddon, aCallback) {
+  fetchAddonMetadata: function XPIDB_fetchAddonMetadata(aAddon) {
     function readLocaleStrings(aLocale, aCallback) {
       let stmt = XPIDatabase.getStatement("_readLocaleStrings");
 
@@ -2726,7 +2768,7 @@ var XPIDatabase = {
       stmt.executeAsync({
         handleResult: function(aResults) {
           aAddon.defaultLocale = copyRowProperties(aResults.getNextRow(),
-                                                  PROP_LOCALE_SINGLE);
+                                                   PROP_LOCALE_SINGLE);
           aAddon.defaultLocale.id = aAddon._defaultLocale;
         },
 
@@ -2795,7 +2837,11 @@ var XPIDatabase = {
         handleError: asyncErrorLogger,
 
         handleCompletion: function(aReason) {
-          aCallback(aAddon);
+          let callbacks = aAddon._pendingCallbacks;
+          delete aAddon._pendingCallbacks;
+          callbacks.forEach(function(aCallback) {
+            aCallback(aAddon);
+          });
         }
       });
     }
@@ -2811,12 +2857,20 @@ var XPIDatabase = {
    *         The mozIStorageRow to make the DBAddonInternal from
    * @return a DBAddonInternal
    */
-  makeAddonFromRowAsync: function XPIDB_makeAddonFromRowAsync(aRow) {
+  makeAddonFromRowAsync: function XPIDB_makeAddonFromRowAsync(aRow, aCallback) {
     let internal_id = aRow.getResultByName("internal_id");
     if (this.addonCache[internal_id]) {
       let addon = this.addonCache[internal_id].get();
-      if (addon)
-        return addon;
+      if (addon) {
+        // If metadata is still pending for this instance add our callback to
+        // the list to be called when complete, otherwise pass the addon to
+        // our callback
+        if ("_pendingCallbacks" in addon)
+          addon._pendingCallbacks.push(aCallback);
+        else
+          aCallback(addon);
+        return;
+      }
     }
 
     let addon = new DBAddonInternal();
@@ -2833,8 +2887,10 @@ var XPIDatabase = {
      "bootstrap"].forEach(function(aProp) {
       addon[aProp] = aRow.getResultByName(aProp) != 0;
     });
+
     this.addonCache[internal_id] = Components.utils.getWeakReference(addon);
-    return addon;
+    addon._pendingCallbacks = [aCallback];
+    this.fetchAddonMetadata(addon);
   },
 
   /**
@@ -2881,22 +2937,17 @@ var XPIDatabase = {
 
     stmt.params.id = aId;
     stmt.params.location = aLocation;
-    stmt.executeAsync({
-      addon: null,
-
-      handleResult: function(aResults) {
-        this.addon = XPIDatabase.makeAddonFromRowAsync(aResults.getNextRow());
-      },
-
-      handleError: asyncErrorLogger,
-
-      handleCompletion: function(aReason) {
-        if (this.addon)
-          XPIDatabase.fetchAddonMetadata(this.addon, aCallback);
-        else
-          aCallback(null);
+    stmt.executeAsync(new AsyncAddonListCallback(function(aAddons) {
+      if (aAddons.length == 0) {
+        aCallback(null);
+        return;
       }
-    });
+      // This should never happen but indicates invalid data in the database if
+      // it does
+      if (aAddons.length > 1)
+        ERROR("Multiple addons with ID " + aId + " found in location " + aLocation);
+      aCallback(aAddons[0]);
+    }));
   },
 
   /**
@@ -2911,22 +2962,17 @@ var XPIDatabase = {
     let stmt = this.getStatement("getVisibleAddonForID");
 
     stmt.params.id = aId;
-    stmt.executeAsync({
-      addon: null,
-
-      handleResult: function(aResults) {
-        this.addon = XPIDatabase.makeAddonFromRowAsync(aResults.getNextRow());
-      },
-
-      handleError: asyncErrorLogger,
-
-      handleCompletion: function(aReason) {
-        if (this.addon)
-          XPIDatabase.fetchAddonMetadata(this.addon, aCallback);
-        else
-          aCallback(null);
+    stmt.executeAsync(new AsyncAddonListCallback(function(aAddons) {
+      if (aAddons.length == 0) {
+        aCallback(null);
+        return;
       }
-    });
+      // This should never happen but indicates invalid data in the database if
+      // it does
+      if (aAddons.length > 1)
+        ERROR("Multiple visible addons with ID " + aId + " found");
+      aCallback(aAddons[0]);
+    }));
   },
 
   /**
@@ -2957,28 +3003,7 @@ var XPIDatabase = {
         stmt.bindStringParameter(i, aTypes[i]);
     }
 
-    let addons = [];
-    stmt.executeAsync({
-      handleResult: function(aResults) {
-        let row = null;
-        while (row = aResults.getNextRow())
-          addons.push(XPIDatabase.makeAddonFromRowAsync(row));
-      },
-
-      handleError: asyncErrorLogger,
-
-      handleCompletion: function(aReason) {
-        let pos = 0;
-        function readNextAddon() {
-          if (pos < addons.length)
-            XPIDatabase.fetchAddonMetadata(addons[pos++], readNextAddon);
-          else
-            aCallback(addons);
-        }
-
-        readNextAddon();
-      }
-    });
+    stmt.executeAsync(new AsyncAddonListCallback(aCallback));
   },
 
   /**
@@ -3027,28 +3052,7 @@ var XPIDatabase = {
         stmt.bindStringParameter(i, aTypes[i]);
     }
 
-    let addons = [];
-    stmt.executeAsync({
-      handleResult: function(aResults) {
-        let row = null;
-        while (row = aResults.getNextRow())
-          addons.push(XPIDatabase.makeAddonFromRowAsync(row));
-      },
-
-      handleError: asyncErrorLogger,
-
-      handleCompletion: function(aReason) {
-        let pos = 0;
-        function readNextAddon() {
-          if (pos < addons.length)
-            XPIDatabase.fetchAddonMetadata(addons[pos++], readNextAddon);
-          else
-            aCallback(addons);
-        }
-
-        readNextAddon();
-      }
-    });
+    stmt.executeAsync(new AsyncAddonListCallback(aCallback));
   },
 
   /**
