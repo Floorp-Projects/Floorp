@@ -250,7 +250,7 @@ CreateWrapperFromType(JSContext *cx, JSObject *scope, XPCWrappedNative *wn,
   }
 
   if (hint & XPCNW_EXPLICIT) {
-    if (!XPCNativeWrapper::CreateExplicitWrapper(cx, wn, JS_TRUE, vp)) {
+    if (!XPCNativeWrapper::CreateExplicitWrapper(cx, wn, vp)) {
       return JS_FALSE;
     }
   } else if (hint & SJOW) {
