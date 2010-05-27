@@ -2595,7 +2595,7 @@
             // of the tabstrip, we need to ensure that we stay
             // completely scrolled to the right side
             var tabStrip = this.mTabstrip;
-            if (tabStrip.scrollPosition + tabStrip.scrollClientSize >=
+            if (tabStrip.scrollPosition + tabStrip.scrollClientSize >
                 tabStrip.scrollSize)
               tabStrip.scrollByPixels(-1);
           } catch (e) {}
