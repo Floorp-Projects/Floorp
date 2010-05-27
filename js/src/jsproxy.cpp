@@ -336,6 +336,27 @@ Trap(JSContext *cx, JSObject *handler, JSAtom *atom, uintN argc, jsval* argv, js
 }
 
 static bool
+Trap1(JSContext *cx, JSObject *handler, JSAtom *atom, jsid id, jsval *rval)
+{
+    JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
+    if (!str)
+        return false;
+    *rval = STRING_TO_JSVAL(str);
+    return Trap(cx, handler, atom, 1, rval, rval);
+}
+
+static bool
+Trap2(JSContext *cx, JSObject *handler, JSAtom *atom, jsid id, jsval v, jsval *rval)
+{
+    JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
+    if (!str)
+        return false;
+    *rval = STRING_TO_JSVAL(str);
+    jsval argv[2] = { *rval, v };
+    return Trap(cx, handler, atom, 2, argv, rval);
+}
+
+static bool
 ParsePropertyDescriptorObject(JSContext *cx, JSObject *obj, jsid id, jsval v, JSPropertyDescriptor *desc)
 {
     AutoDescriptorArray descs(cx);
@@ -371,10 +392,8 @@ JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, JSProper
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
         AutoValueRooter tvr(cx);
-        jsval argv[] = { ID_TO_VALUE(id) };
-        if (!TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(getPropertyDescriptor), 1, argv, tvr.addr())))
-            return false;
-        return ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
+        return TryHandlerTrap(cx, proxy, Trap1(cx, JSVAL_TO_OBJECT(handler), ATOM(getPropertyDescriptor), id, tvr.addr())) &&
+               ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
     }
     return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->getPropertyDescriptor(cx, proxy, id, desc));
 }
@@ -384,13 +403,11 @@ JSProxy::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, jsval *v
 {
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
-        jsval argv[] = { ID_TO_VALUE(id) };
-        return TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(getPropertyDescriptor), 1, argv, vp));
+        return TryHandlerTrap(cx, proxy, Trap1(cx, JSVAL_TO_OBJECT(handler), ATOM(getPropertyDescriptor), id, vp));
     }
     AutoDescriptor desc(cx);
-    if (!TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->getPropertyDescriptor(cx, proxy, id, &desc)))
-        return false;
-    return MakePropertyDescriptorObject(cx, id, &desc, vp);
+    return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->getPropertyDescriptor(cx, proxy, id, &desc)) &&
+           MakePropertyDescriptorObject(cx, id, &desc, vp);
 }
 
 bool
@@ -399,10 +416,8 @@ JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, JSPro
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
         AutoValueRooter tvr(cx);
-        jsval argv[] = { ID_TO_VALUE(id) };
-        if (!TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(getOwnPropertyDescriptor), 1, argv, tvr.addr())))
-            return false;
-        return ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
+        return TryHandlerTrap(cx, proxy, Trap1(cx, JSVAL_TO_OBJECT(handler), ATOM(getOwnPropertyDescriptor), id, tvr.addr())) &&
+               ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
     }
     return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->getOwnPropertyDescriptor(cx, proxy, id, desc));
 }
@@ -411,14 +426,11 @@ bool
 JSProxy::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id, jsval *vp)
 {
     jsval handler = proxy->getProxyHandler();
-    if (JSVAL_IS_OBJECT(handler))  {
-        jsval argv[] = { ID_TO_VALUE(id) };
-        return TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(getOwnPropertyDescriptor), 1, argv, vp));
-    }
+    if (JSVAL_IS_OBJECT(handler))
+        return TryHandlerTrap(cx, proxy, Trap1(cx, JSVAL_TO_OBJECT(handler), ATOM(getOwnPropertyDescriptor), id, vp));
     AutoDescriptor desc(cx);
-    if (!TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->getOwnPropertyDescriptor(cx, proxy, id, &desc)))
-        return false;
-    return MakePropertyDescriptorObject(cx, id, &desc, vp);
+    return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->getOwnPropertyDescriptor(cx, proxy, id, &desc)) &&
+           MakePropertyDescriptorObject(cx, id, &desc, vp);
 }
 
 bool
@@ -427,10 +439,8 @@ JSProxy::defineProperty(JSContext *cx, JSObject *proxy, jsid id, JSPropertyDescr
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
         AutoValueRooter tvr(cx);
-        if (!MakePropertyDescriptorObject(cx, id, desc, tvr.addr()))
-            return false;
-        jsval argv[] = { ID_TO_VALUE(id), tvr.value() };
-        return TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(defineProperty), 2, argv, tvr.addr()));
+        return MakePropertyDescriptorObject(cx, id, desc, tvr.addr()) &&
+               TryHandlerTrap(cx, proxy, Trap2(cx, JSVAL_TO_OBJECT(handler), ATOM(defineProperty), id, tvr.value(), tvr.addr()));
     }
     return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->defineProperty(cx, proxy, id, desc));
 }
@@ -441,13 +451,11 @@ JSProxy::defineProperty(JSContext *cx, JSObject *proxy, jsid id, jsval v)
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
         AutoValueRooter tvr(cx);
-        jsval argv[] = { ID_TO_VALUE(id), v };
-        return TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(defineProperty), 2, argv, tvr.addr()));
+        return TryHandlerTrap(cx, proxy, Trap2(cx, JSVAL_TO_OBJECT(handler), ATOM(defineProperty), id, v, tvr.addr()));
     }
     AutoDescriptor desc(cx);
-    if (!ParsePropertyDescriptorObject(cx, proxy, id, v, &desc))
-        return false;
-    return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->defineProperty(cx, proxy, id, &desc));
+    return ParsePropertyDescriptorObject(cx, proxy, id, v, &desc) &&
+           TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->defineProperty(cx, proxy, id, &desc));
 }
 
 bool
@@ -485,10 +493,11 @@ JSProxy::getOwnPropertyNames(JSContext *cx, JSObject *proxy, JSIdArray **idap)
 {
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
-        AutoValueRooter rval(cx);
-        if (!TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(getOwnPropertyNames), 0, NULL, rval.addr())))
+        AutoValueRooter tvr(cx);
+        if (!TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(getOwnPropertyNames),
+                                            0, NULL, tvr.addr())))
             return false;
-        return ArrayToJSIDArray(cx, rval.value(), idap);
+        return ArrayToJSIDArray(cx, tvr.value(), idap);
     }
     return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->getOwnPropertyNames(cx, proxy, idap));
 }
@@ -498,12 +507,11 @@ JSProxy::delete_(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
-        AutoValueRooter rval(cx);
-        jsval argv[] = { ID_TO_VALUE(id) };
-        if (!TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(delete), 1, argv, rval.addr())))
+        AutoValueRooter tvr(cx);
+        if (!TryHandlerTrap(cx, proxy, Trap1(cx, JSVAL_TO_OBJECT(handler), ATOM(delete), id, tvr.addr())))
             return false;
         JSBool deleted;
-        if (!JS_ValueToBoolean(cx, rval.value(), &deleted))
+        if (!JS_ValueToBoolean(cx, tvr.value(), &deleted))
             return false;
         *bp = !!deleted;
         return true;
@@ -516,10 +524,10 @@ JSProxy::enumerate(JSContext *cx, JSObject *proxy, JSIdArray **idap)
 {
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
-        AutoValueRooter rval(cx);
-        if (!TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(enumerate), 0, NULL, rval.addr())))
+        AutoValueRooter tvr(cx);
+        if (!TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(enumerate), 0, NULL, tvr.addr())))
             return false;
-        return ArrayToJSIDArray(cx, rval.value(), idap);
+        return ArrayToJSIDArray(cx, tvr.value(), idap);
     }
     return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->enumerate(cx, proxy, idap));
 }
@@ -538,12 +546,11 @@ JSProxy::has(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
-        AutoValueRooter rval(cx);
-        jsval argv[] = { ID_TO_VALUE(id) };
-        if (!TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(has), 1, argv, rval.addr())))
+        AutoValueRooter tvr(cx);
+        if (!TryHandlerTrap(cx, proxy, Trap1(cx, JSVAL_TO_OBJECT(handler), ATOM(has), id, tvr.addr())))
             return false;
         JSBool has;
-        if (!JS_ValueToBoolean(cx, rval.value(), &has))
+        if (!JS_ValueToBoolean(cx, tvr.value(), &has))
             return false;
         *bp = !!has;
         return true;
@@ -556,12 +563,11 @@ JSProxy::hasOwn(JSContext *cx, JSObject *proxy, jsid id, bool *bp)
 {
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
-        AutoValueRooter rval(cx);
-        jsval argv[] = { ID_TO_VALUE(id) };
-        if (!TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(hasOwn), 1, argv, rval.addr())))
+        AutoValueRooter tvr(cx);
+        if (!TryHandlerTrap(cx, proxy, Trap1(cx, JSVAL_TO_OBJECT(handler), ATOM(hasOwn), id, tvr.addr())))
             return false;
         JSBool has;
-        if (!JS_ValueToBoolean(cx, rval.value(), &has))
+        if (!JS_ValueToBoolean(cx, tvr.value(), &has))
             return false;
         *bp = !!has;
         return true;
@@ -574,7 +580,11 @@ JSProxy::get(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval 
 {
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
-        jsval argv[] = { OBJECT_TO_JSVAL(receiver), ID_TO_VALUE(id) };
+        JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
+        if (!str)
+            return false;
+        AutoValueRooter tvr(cx, STRING_TO_JSVAL(str));
+        jsval argv[] = { OBJECT_TO_JSVAL(receiver), tvr.value() };
         return TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(get), 2, argv, vp));
     }
     return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->get(cx, proxy, receiver, id, vp));
@@ -585,9 +595,12 @@ JSProxy::set(JSContext *cx, JSObject *proxy, JSObject *receiver, jsid id, jsval 
 {
     jsval handler = proxy->getProxyHandler();
     if (JSVAL_IS_OBJECT(handler)) {
-        AutoValueRooter rval(cx);
-        jsval argv[] = { OBJECT_TO_JSVAL(receiver), ID_TO_VALUE(id), *vp };
-        return TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(set), 3, argv, rval.addr()));
+        JSString *str = js_ValueToString(cx, ID_TO_VALUE(id));
+        if (!str)
+            return false;
+        AutoValueRooter tvr(cx, STRING_TO_JSVAL(str));
+        jsval argv[] = { OBJECT_TO_JSVAL(receiver), tvr.value(), *vp };
+        return TryHandlerTrap(cx, proxy, Trap(cx, JSVAL_TO_OBJECT(handler), ATOM(set), 3, argv, tvr.addr()));
     }
     return TryHandlerTrap(cx, proxy, ((JSProxyHandler *) JSVAL_TO_PRIVATE(handler))->set(cx, proxy, receiver, id, vp));
 }
