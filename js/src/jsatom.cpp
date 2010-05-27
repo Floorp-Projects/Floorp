@@ -191,11 +191,12 @@ const char *const js_common_atom_names[] = {
     "delete",                   /* deleteAtom                   */
     "getOwnPropertyNames",      /* getOwnPropertyNames          */
     "enumerate",                /* enumerateAtom                */
-    "fix",
+    "fix",                      /* fixAtom                      */
 
     "has",                      /* hasAtom                      */
     "hasOwn",                   /* hasOwnAtom                   */
-    "enumerateOwn"              /* enumerateOwnAtom             */
+    "enumerateOwn",             /* enumerateOwnAtom             */
+    "iterate"                   /* iterateAtom                  */
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==
