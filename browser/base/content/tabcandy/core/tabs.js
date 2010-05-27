@@ -277,9 +277,12 @@ window.TabsManager = iQ.extend(new Subscribable(), {
       // ----------
       tab: function tab(value) {
         // assuming value is a DOM element for the time being
-        var result = $(value).data('tab');
-        if(!result)
-          result = $(value).find("canvas").data("link").tab;
+        var result = iQ(value).data('tab');
+        if(!result) {
+          result = iQ(value).find("canvas").data("link").tab;
+          if(result)
+            Utils.log('turns out the secondary strategy in Tabs.tab() is needed');
+        }
         
         return result;
       },

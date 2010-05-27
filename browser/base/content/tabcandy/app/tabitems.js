@@ -277,7 +277,10 @@ window.TabItems = {
     
     var self = this;
         
-    function mod($div){
+    function mod(mirror) {
+      var $div = $(mirror.el);
+      var tab = mirror.tab;
+      
       if(window.Groups) {        
         $div.data('isDragging', false);
         $div.draggable(window.Groups.dragOptions);
@@ -295,65 +298,32 @@ window.TabItems = {
         if(!same)
           return;
         
-        if(e.target.className == "close") {
-          $(this).find("canvas").data("link").tab.close(); }
+        if(e.target.className == "close") 
+          tab.close();
         else {
-          if(!$(this).data('isDragging')) {        
+          if(!$(this).data('isDragging'))
             self.zoomTo(this);
-          } else {
-            $(this).find("canvas").data("link").tab.raw.pos = $(this).position();
-          }
+          else 
+            tab.raw.pos = $(this).position(); // TODO: is this necessary?
         }
       });
       
       $("<div class='close'></div>").appendTo($div);
       $("<div class='expander'></div>").appendTo($div);
   
-      var reconnected = false;
-      $div.each(function() {
-        var tab = Tabs.tab(this);
-        if(tab == Utils.homeTab) { 
-          $(this).hide();
-          reconnected = true;
-        } else {
-          var item = new TabItem(this, tab);
-          $(this).data('tabItem', item);    
-          
-          item.addOnClose(self, function() {
-            Items.unsquish(null, item);
-          });
-
-          if(TabItems.reconnect(item))
-            reconnected = true;
-          else  
-            Groups.newTab(item);          
-        }
-      });
-/*       Utils.log("reconnected: "+reconnected); */
-       
-/*
-      Utils.log(reconnected, $div.length, !!Groups);
-      if(!reconnected && $div.length == 1 && Groups){
-          Utils.log('new tab');
-          Groups.newTab($div.data('tabItem'));          
-      }
-*/
+      if(tab == Utils.homeTab) 
+        $div.hide();
+      else {
+        var item = new TabItem(mirror.el, tab);
+        $div.data('tabItem', item);    
         
-            
-      // TODO: Figure out this really weird bug?
-      // Why is that:
-      //    $div.find("canvas").data("link").tab.url
-      // returns chrome://tabcandy/content/candies/original/index.html for
-      // every $div (which isn't right), but that
-      //   $div.bind("test", function(){
-      //      var url = $(this).find("canvas").data("link").tab.url;
-      //   });
-      //   $div.trigger("test")
-      // returns the right result (i.e., the per-tab URL)?
-      // I'm so confused...
-      // Although I can use the trigger trick, I was thinking about
-      // adding code in here which sorted the tabs into groups.
-      // -- Aza
+        item.addOnClose(self, function() {
+          Items.unsquish(null, item);
+        });
+
+        if(!TabItems.reconnect(item))
+          Groups.newTab(item);          
+      }
     }
     
     window.TabMirror.customize(mod);
@@ -404,7 +374,7 @@ window.TabItems = {
       function onZoomDone(){
         UI.tabBar.show(false);              
         TabMirror.resumePainting();
-        $(tabEl).find("canvas").data("link").tab.focus();
+        tab.focus();
         $(tabEl).css({
           top:   orig.pos.top,
           left:  orig.pos.left,

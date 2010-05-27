@@ -11,19 +11,24 @@ function _isIframe(doc){
   return win.parent != win;
 }
 
-// ----------
+// ##########
+// Class: TabCanvas
+// Takes care of the actual canvas for the tab thumbnail
 var TabCanvas = function(tab, canvas){ this.init(tab, canvas) }
 TabCanvas.prototype = {
+  // ----------
+  // Function: init
   init: function(tab, canvas){
     this.tab = tab;
     this.canvas = canvas;
     this.window = window;
             
-    $(canvas).data("link", this);
+    var $canvas = iQ(canvas).data("link", this);
 
-    var w = $(canvas).width();
-    var h = $(canvas).height();
-    $(canvas).attr({width:w, height:h});
+    var w = $canvas.width();
+    var h = $canvas.height();
+    canvas.width = w;
+    canvas.height = h;
       
     var self = this;
     this.paintIt = function(evt) { 
@@ -33,10 +38,14 @@ TabCanvas.prototype = {
     };
   },
   
+  // ----------
+  // Function: attach
   attach: function() {
     this.tab.contentWindow.addEventListener("MozAfterPaint", this.paintIt, false);
   },
      
+  // ----------
+  // Function: detach
   detach: function() {
     try {
       this.tab.contentWindow.removeEventListener("MozAfterPaint", this.paintIt, false);
@@ -45,18 +54,13 @@ TabCanvas.prototype = {
     }
   },
   
+  // ----------
+  // Function: paint
   paint: function(evt){
-    var $ = this.window.$;
-    if( $ == null ) {
-      Utils.log('null $ in paint');
-      return;
-    }
-    
-    var $canvas = $(this.canvas);
     var ctx = this.canvas.getContext("2d");
   
-    var w = $canvas.attr('width');
-    var h = $canvas.attr('height');
+    var w = this.canvas.width;
+    var h = this.canvas.height;
     if(!w || !h)
       return;
   
@@ -81,30 +85,11 @@ TabCanvas.prototype = {
     ctx.restore();
   },
   
+  // ----------
+  // Function: animate
+  // Deprecated
   animate: function(options, duration){
-    Utils.log('on animate', this.tab.contentWindow.location.href);
-
-    // TODO: This doesn't seem to scale the rest of the interface elements at the same
-    // width, leaving unfortunately long trails.
-
-    var self = this;
-    if( duration == null ) duration = 0;
-        
-    var $canvas = $(this.canvas);
-    var w = $canvas.width();
-    var h = $canvas.height();
-    
-    var newW = (w/h)*options.height;
-    var newH = options.height;
-    
-    $canvas.width(w);
-    $canvas.height(h);    
-    $canvas.animate({width:newW, height:newH}, duration, function(){
-      $canvas.attr("width", newW);
-      $canvas.attr("height", newH);
-      self.paint(null);      
-    } );
-    this.paint(null);
+    Utils.assert('this routine no longer exists', false);
   }
 }
 
@@ -116,23 +101,21 @@ function Mirror(tab, manager) {
   this.tab = tab;
   this.manager = manager;
   
-  var html = "<div class='tab'>" +
-              "<div class='favicon'><img/></div>" +
-              "<div class='thumb'><div class='thumbShadow'></div><canvas/></div>" +
-              "<span class='tab-title'>&nbsp;</span>" +              
-             "</div>";
-             
-  
-  var div = $(html)
+  var $div = iQ('<div>')
     .data("tab", this.tab)
-    .appendTo("body");
-      
+    .addClass('tab')
+    .html("<div class='favicon'><img/></div>" +
+          "<div class='thumb'><div class='thumbShadow'></div><canvas/></div>" +
+          "<span class='tab-title'>&nbsp;</span>"
+    )
+    .appendTo('body');
+    
   this.needsPaint = 0;
   this.canvasSizeForced = false;
-  this.el = div.get(0);
-  this.favEl = $('.favicon>img', div).get(0);
-  this.nameEl = $('.tab-title', div).get(0);
-  this.canvasEl = $('.thumb canvas', div).get(0);
+  this.el = $div.get(0);
+  this.favEl = iQ('.favicon>img', $div).get(0);
+  this.nameEl = iQ('.tab-title', $div).get(0);
+  this.canvasEl = iQ('.thumb canvas', $div).get(0);
       
   var doc = this.tab.contentDocument;
   if( !_isIframe(doc) ) {
@@ -142,10 +125,10 @@ function Mirror(tab, manager) {
   }
   
   this.tab.mirror = this;
-  this.manager._customize(div);
+  this.manager._customize(this);
 }
 
-Mirror.prototype = $.extend(new Subscribable(), {  
+Mirror.prototype = iQ.extend(new Subscribable(), {  
   // ----------
   // Function: triggerPaint
   // Forces the mirror in question to update its thumbnail. 
@@ -160,9 +143,8 @@ Mirror.prototype = $.extend(new Subscribable(), {
   // to stay that resolution until unforceCanvasSize is called. 
   forceCanvasSize: function(w, h) {
     this.canvasSizeForced = true;
-    var $canvas = $(this.canvasEl);
-    $canvas.attr('width', w);
-    $canvas.attr('height', h);
+    this.canvasEl.width = w;
+    this.canvasEl.height = h;
     this.tabCanvas.paint();
   },
   
@@ -246,12 +228,11 @@ TabMirror.prototype = {
         if(mirror) {
           var iconUrl = tab.raw.linkedBrowser.mIconURL;
           var label = tab.raw.label;
-          $fav = $(mirror.favEl);
-          $name = $(mirror.nameEl);
-          $canvas = $(mirror.canvasEl);
+          $name = iQ(mirror.nameEl);
+          $canvas = iQ(mirror.canvasEl);
           
-          if(iconUrl != $fav.attr("src")) { 
-            $fav.attr("src", iconUrl);
+          if(iconUrl != mirror.favEl.src) { 
+            mirror.favEl.src = iconUrl;
             mirror.triggerPaint();
           }
             
@@ -270,9 +251,9 @@ TabMirror.prototype = {
           if(!mirror.canvasSizeForced) {
             var w = $canvas.width();
             var h = $canvas.height();
-            if(w != $canvas.attr('width') || h != $canvas.attr('height')) {
-              $canvas.attr('width', w);
-              $canvas.attr('height', h);
+            if(w != mirror.canvasEl.width || h != mirror.canvasEl.height) {
+              mirror.canvasEl.width = w;
+              mirror.canvasEl.height = h;
               mirror.triggerPaint();
             }
           }
@@ -333,7 +314,7 @@ TabMirror.prototype = {
       if(tabCanvas)
         tabCanvas.detach();
       
-      $(mirror.el).remove();
+      iQ(mirror.el).remove();
       
       tab.mirror = null;
     }
@@ -350,14 +331,13 @@ window.TabMirror = {
   // Parameters: 
   //   func - a callback function that will be called every time a new 
   //     tab or tabs are created. func should take in one parameter, a 
-  //     jQuery object representing the div enclosing the tab in question. 
-  //     This jQuery object may be singular or multiple, depending on 
-  //     the number of tabs being created. 
+  //     <Mirror> representing the tab in question. 
   customize: function(func) {
     // Apply the custom handlers to all existing elements
-    // TODO: Make this modular: so that it only exists in one place.
-    //       No breaking DRY!
-    func($("div.tab"));
+    iQ('div.tab').each(function() {
+      var tab = Tabs.tab(this);
+      func(tab.mirror);
+    });
     
     // Apply it to all future elements.
     TabMirror.prototype._customize = func;

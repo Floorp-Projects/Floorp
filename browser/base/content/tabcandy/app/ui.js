@@ -300,7 +300,7 @@ window.Page = {
           // Zoom out!
           var mirror = currentTab.mirror;
           var $tab = $(mirror.el);
-          var item = $tab.data().tabItem;
+          var item = TabItems.getItemByTab(mirror.el);
           self.setActiveTab(item);
           
           var rotation = $tab.css("-moz-transform");
