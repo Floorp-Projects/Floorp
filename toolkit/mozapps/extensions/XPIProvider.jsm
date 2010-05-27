@@ -688,7 +688,7 @@ function copyRowProperties(aRow, aProperties, aTarget) {
  */
 function resultRows(aStatement) {
   try {
-    while (aStatement.executeStep())
+    while (stepStatement(aStatement))
       yield aStatement.row;
   }
   finally {
@@ -1411,8 +1411,18 @@ var XPIProvider = {
           newAddon.applyCompatibilityUpdate(aMigrateData, true);
       }
 
-      // Update the database.
-      XPIDatabase.addAddonMetadata(newAddon, aAddonState.descriptor);
+      try {
+        // Update the database.
+        XPIDatabase.addAddonMetadata(newAddon, aAddonState.descriptor);
+      }
+      catch (e) {
+        // Failing to write the add-on into the database is non-fatal, the
+        // add-on will just be unavailable until we try again in a subsequent
+        // startup
+        ERROR("Failed to add add-on " + aId + " in " + aInstallLocation.name +
+              " to database");
+        return false;
+      }
 
       // Visible bootstrapped add-ons need to have their install method called
       if (newAddon.visible) {
@@ -1562,7 +1572,11 @@ var XPIProvider = {
       // The schema has changed so migrate data from the old schema
       migrateData = XPIDatabase.migrateData(schema);
     }
-    else {
+
+    XPIDatabase.beginTransaction();
+
+    // Catch any errors during the main startup and rollback the database changes
+    try {
       // If the database exists then the previous file cache can be trusted
       // otherwise create an empty database
       let db = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
@@ -1574,37 +1588,44 @@ var XPIProvider = {
         XPIDatabase.openConnection();
         XPIDatabase.createSchema();
       }
-     }
 
-    // Load the list of bootstrapped add-ons first so processFileChanges can
-    // modify it
-    this.bootstrappedAddons = JSON.parse(Prefs.getCharPref(PREF_BOOTSTRAP_ADDONS,
-                                         "{}"));
-    let state = this.getInstallLocationStates();
-    if (aAppChanged || changed || cache == null ||
-        cache != JSON.stringify(state)) {
-      try {
-        changed = this.processFileChanges(state, manifests, aAppChanged,
-                                          migrateData);
+      // Load the list of bootstrapped add-ons first so processFileChanges can
+      // modify it
+      this.bootstrappedAddons = JSON.parse(Prefs.getCharPref(PREF_BOOTSTRAP_ADDONS,
+                                           "{}"));
+      let state = this.getInstallLocationStates();
+      if (aAppChanged || changed || cache == null ||
+          cache != JSON.stringify(state)) {
+        try {
+          changed = this.processFileChanges(state, manifests, aAppChanged,
+                                            migrateData);
+        }
+        catch (e) {
+          ERROR("Error processing file changes: " + e);
+        }
       }
-      catch (e) {
-        ERROR("Error processing file changes: " + e);
+
+      // If the application crashed before completing any pending operations then
+      // we should perform them now.
+      if (changed || Prefs.getBoolPref(PREF_PENDING_OPERATIONS)) {
+        LOG("Restart necessary");
+        XPIDatabase.updateActiveAddons();
+        XPIDatabase.commitTransaction();
+        XPIDatabase.writeAddonsList([]);
+        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
+        Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
+                                   JSON.stringify(this.bootstrappedAddons));
+        return true;
       }
-    }
 
-    // If the application crashed before completing any pending operations then
-    // we should perform them now.
-    if (changed || Prefs.getBoolPref(PREF_PENDING_OPERATIONS)) {
-      LOG("Restart necessary");
-      XPIDatabase.updateActiveAddons();
-      XPIDatabase.writeAddonsList([]);
-      Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
-      Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
-                                 JSON.stringify(this.bootstrappedAddons));
-      return true;
+      LOG("No changes found");
+      XPIDatabase.commitTransaction();
     }
-
-    LOG("No changes found");
+    catch (e) {
+      ERROR("Error during startup file checks, rolling back any database " +
+            "changes: " + e);
+      XPIDatabase.rollbackTransaction();
+    }
 
     // Check that the add-ons list still exists
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
@@ -2294,9 +2315,62 @@ const FIELDS_ADDON = "internal_id, id, location, version, type, internalName, " 
                      "pendingUninstall, descriptor, installDate, updateDate, " +
                      "applyBackgroundUpdates, bootstrap";
 
-// A helper function to simply log any errors that occur during async statements.
+/**
+ * A helper function to log an SQL error.
+ *
+ * @param  aError
+ *         The storage error code associated with the error
+ * @param  aErrorString
+ *         An error message
+ */
+function logSQLError(aError, aErrorString) {
+  ERROR("SQL error " + aError + ": " + aErrorString);
+}
+
+/**
+ * A helper function to log any errors that occur during async statements.
+ *
+ * @param  aError
+ *         A mozIStorageError to log
+ */
 function asyncErrorLogger(aError) {
-  ERROR("SQL error " + aError.result + ": " + aError.message);
+  logSQLError(aError.result, aError.message);
+}
+
+/**
+ * A helper function to execute a statement synchronously and log any error
+ * that occurs.
+ *
+ * @param  aStatement
+ *         A mozIStorageStatement to execute
+ */
+function executeStatement(aStatement) {
+  try {
+    aStatement.execute();
+  }
+  catch (e) {
+    logSQLError(XPIDatabase.connection.lastError,
+                XPIDatabase.connection.lastErrorString);
+    throw e;
+  }
+}
+
+/**
+ * A helper function to step a statement synchronously and log any error that
+ * occurs.
+ *
+ * @param  aStatement
+ *         A mozIStorageStatement to execute
+ */
+function stepStatement(aStatement) {
+  try {
+    return aStatement.executeStep();
+  }
+  catch (e) {
+    logSQLError(XPIDatabase.connection.lastError,
+                XPIDatabase.connection.lastErrorString);
+    throw e;
+  }
 }
 
 /**
@@ -2349,6 +2423,8 @@ var XPIDatabase = {
   // A cache of weak referenced DBAddonInternals so we can reuse objects where
   // possible
   addonCache: [],
+  // The nested transaction count
+  transactionCount: 0,
 
   // The statements used by the database
   statements: {
@@ -2420,6 +2496,57 @@ var XPIDatabase = {
     updateTargetApplications: "UPDATE targetApplication SET " +
                               "minVersion=:minVersion, maxVersion=:maxVersion " +
                               "WHERE addon_internal_id=:internal_id AND id=:id",
+
+    createSavepoint: "SAVEPOINT 'default'",
+    releaseSavepoint: "RELEASE SAVEPOINT 'default'",
+    rollbackSavepoint: "ROLLBACK TO SAVEPOINT 'default'"
+  },
+
+  /**
+   * Begins a new transaction in the database. Transactions may be nested. Data
+   * written by an inner transaction may be rolled back on its own. Rolling back
+   * an outer transaction will rollback all the changes made by inner
+   * transactions even if they were committed. No data is written to the disk
+   * until the outermost transaction is committed. Transactions can be started
+   * even when the database is not yet open in which case they will be started
+   * when the database is first opened.
+   */
+  beginTransaction: function XPIDB_beginTransaction() {
+    if (this.initialized)
+      this.getStatement("createSavepoint").execute();
+    this.transactionCount++;
+  },
+
+  /**
+   * Commits the most recent transaction. The data may still be rolled back if
+   * an outer transaction is rolled back.
+   */
+  commitTransaction: function XPIDB_commitTransaction() {
+    if (this.transactionCount == 0) {
+      ERROR("Attempt to commit one transaction too many.");
+      return;
+    }
+
+    if (this.initialized)
+      this.getStatement("releaseSavepoint").execute();
+    this.transactionCount--;
+  },
+
+  /**
+   * Rolls back the most recent transaction. The database will return to its
+   * state when the transaction was started.
+   */
+  rollbackTransaction: function XPIDB_rollbackTransaction() {
+    if (this.transactionCount == 0) {
+      ERROR("Attempt to rollback one transaction too many.");
+      return;
+    }
+
+    if (this.initialized) {
+      this.getStatement("rollbackSavepoint").execute();
+      this.getStatement("releaseSavepoint").execute();
+    }
+    this.transactionCount--;
   },
 
   /**
@@ -2431,7 +2558,14 @@ var XPIDatabase = {
     this.initialized = true;
     let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
     delete this.connection;
-    return this.connection = Services.storage.openDatabase(dbfile);
+    this.connection = Services.storage.openUnsharedDatabase(dbfile);
+    this.connection.executeSimpleSQL("PRAGMA synchronous = FULL");
+    this.connection.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
+
+    // Begin any pending transactions
+    for (let i = 0; i < this.transactionCount; i++)
+      this.connection.executeSimpleSQL("SAVEPOINT 'default'");
+    return this.connection;
   },
 
   /**
@@ -2519,14 +2653,13 @@ var XPIDatabase = {
         stmt.finalize();
       }
       this.connection.close();
+      this.initialized = false;
     }
 
-    // Create a clean database to work with
+    // Delete any existing database file
     let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
     if (dbfile.exists())
       dbfile.remove(true);
-    this.openConnection();
-    this.createSchema();
 
     return migrateData;
   },
@@ -2540,6 +2673,13 @@ var XPIDatabase = {
         stmt.finalize();
       this.statementCache = {};
       this.addonCache = [];
+
+      if (this.transactionCount > 0) {
+        ERROR(this.transactionCount + " outstanding transactions, rolling back.");
+        while (this.transactionCount > 0)
+          this.rollbackTransaction();
+      }
+
       this.connection.asyncClose();
       this.initialized = false;
       delete this.connection;
@@ -2583,49 +2723,61 @@ var XPIDatabase = {
    */
   createSchema: function XPIDB_createSchema() {
     LOG("Creating database schema");
-    this.connection.createTable("addon",
-                                "internal_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                "id TEXT, location TEXT, version TEXT, " +
-                                "type TEXT, internalName TEXT, updateURL TEXT, " +
-                                "updateKey TEXT, optionsURL TEXT, aboutURL TEXT, " +
-                                "iconURL TEXT, defaultLocale INTEGER, " +
-                                "visible INTEGER, active INTEGER, " +
-                                "userDisabled INTEGER, appDisabled INTEGER, " +
-                                "pendingUninstall INTEGER, descriptor TEXT, " +
-                                "installDate INTEGER, updateDate INTEGER, " +
-                                "applyBackgroundUpdates INTEGER, " +
-                                "bootstrap INTEGER, UNIQUE (id, location)");
-    this.connection.createTable("targetApplication",
-                                "addon_internal_id INTEGER, " +
-                                "id TEXT, minVersion TEXT, maxVersion TEXT, " +
-                                "UNIQUE (addon_internal_id, id)");
-    this.connection.createTable("addon_locale",
-                                "addon_internal_id INTEGER, "+
-                                "locale TEXT, locale_id INTEGER, " +
-                                "UNIQUE (addon_internal_id, locale)");
-    this.connection.createTable("locale",
-                                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                                "name TEXT, description TEXT, creator TEXT, " +
-                                "homepageURL TEXT");
-    this.connection.createTable("locale_strings",
-                                "locale_id INTEGER, type TEXT, value TEXT");
-    this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon AFTER DELETE " +
-      "ON addon BEGIN " +
-      "DELETE FROM targetApplication WHERE addon_internal_id=old.internal_id; " +
-      "DELETE FROM addon_locale WHERE addon_internal_id=old.internal_id; " +
-      "DELETE FROM locale WHERE id=old.defaultLocale; " +
-      "END");
-    this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon_locale AFTER " +
-      "DELETE ON addon_locale WHEN NOT EXISTS " +
-      "(SELECT * FROM addon_locale WHERE locale_id=old.locale_id) BEGIN " +
-      "DELETE FROM locale WHERE id=old.locale_id; " +
-      "END");
-    this.connection.executeSimpleSQL("CREATE TRIGGER delete_locale AFTER " +
-      "DELETE ON locale BEGIN " +
-      "DELETE FROM locale_strings WHERE locale_id=old.id; " +
-      "END");
-    this.connection.schemaVersion = DB_SCHEMA;
-    Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
+    this.beginTransaction();
+
+    // Any errors in here should rollback the transaction
+    try {
+      this.connection.createTable("addon",
+                                  "internal_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                  "id TEXT, location TEXT, version TEXT, " +
+                                  "type TEXT, internalName TEXT, updateURL TEXT, " +
+                                  "updateKey TEXT, optionsURL TEXT, aboutURL TEXT, " +
+                                  "iconURL TEXT, defaultLocale INTEGER, " +
+                                  "visible INTEGER, active INTEGER, " +
+                                  "userDisabled INTEGER, appDisabled INTEGER, " +
+                                  "pendingUninstall INTEGER, descriptor TEXT, " +
+                                  "installDate INTEGER, updateDate INTEGER, " +
+                                  "applyBackgroundUpdates INTEGER, " +
+                                  "bootstrap INTEGER, UNIQUE (id, location)");
+      this.connection.createTable("targetApplication",
+                                  "addon_internal_id INTEGER, " +
+                                  "id TEXT, minVersion TEXT, maxVersion TEXT, " +
+                                  "UNIQUE (addon_internal_id, id)");
+      this.connection.createTable("addon_locale",
+                                  "addon_internal_id INTEGER, "+
+                                  "locale TEXT, locale_id INTEGER, " +
+                                  "UNIQUE (addon_internal_id, locale)");
+      this.connection.createTable("locale",
+                                  "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                                  "name TEXT, description TEXT, creator TEXT, " +
+                                  "homepageURL TEXT");
+      this.connection.createTable("locale_strings",
+                                  "locale_id INTEGER, type TEXT, value TEXT");
+      this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon AFTER DELETE " +
+        "ON addon BEGIN " +
+        "DELETE FROM targetApplication WHERE addon_internal_id=old.internal_id; " +
+        "DELETE FROM addon_locale WHERE addon_internal_id=old.internal_id; " +
+        "DELETE FROM locale WHERE id=old.defaultLocale; " +
+        "END");
+      this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon_locale AFTER " +
+        "DELETE ON addon_locale WHEN NOT EXISTS " +
+        "(SELECT * FROM addon_locale WHERE locale_id=old.locale_id) BEGIN " +
+        "DELETE FROM locale WHERE id=old.locale_id; " +
+        "END");
+      this.connection.executeSimpleSQL("CREATE TRIGGER delete_locale AFTER " +
+        "DELETE ON locale BEGIN " +
+        "DELETE FROM locale_strings WHERE locale_id=old.id; " +
+        "END");
+      this.connection.schemaVersion = DB_SCHEMA;
+      Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
+      this.commitTransaction();
+    }
+    catch (e) {
+      ERROR("Failed to create database schema");
+      logSQLError(this.connection.lastError, this.connection.lastErrorString);
+      this.rollbackTransaction();
+      throw e;
+    }
   },
 
   /**
@@ -2683,7 +2835,7 @@ var XPIDatabase = {
     let stmt = this.getStatement("_getDefaultLocale");
 
     stmt.params.id = aAddon._defaultLocale;
-    if (!stmt.executeStep())
+    if (!stepStatement(stmt))
       throw new Error("Missing default locale for " + aAddon.id);
     let locale = copyProperties(stmt.row, PROP_LOCALE_SINGLE);
     locale.id = aAddon._defaultLocale;
@@ -3085,70 +3237,80 @@ var XPIDatabase = {
    *         The file descriptor of the add-on's directory
    */
   addAddonMetadata: function XPIDB_addAddonMetadata(aAddon, aDescriptor) {
-    let localestmt = this.getStatement("addAddonMetadata_locale");
-    let stringstmt = this.getStatement("addAddonMetadata_strings");
+    this.beginTransaction();
 
-    function insertLocale(aLocale) {
-      copyProperties(aLocale, PROP_LOCALE_SINGLE, localestmt.params);
-      localestmt.execute();
-      let row = XPIDatabase.connection.lastInsertRowID;
+    // Any errors in here should rollback the transaction
+    try {
+      let localestmt = this.getStatement("addAddonMetadata_locale");
+      let stringstmt = this.getStatement("addAddonMetadata_strings");
 
-      PROP_LOCALE_MULTI.forEach(function(aProp) {
-        aLocale[aProp].forEach(function(aStr) {
-          stringstmt.params.locale = row;
-          stringstmt.params.type = aProp;
-          stringstmt.params.value = aStr;
-          stringstmt.execute();
+      function insertLocale(aLocale) {
+        copyProperties(aLocale, PROP_LOCALE_SINGLE, localestmt.params);
+        executeStatement(localestmt);
+        let row = XPIDatabase.connection.lastInsertRowID;
+
+        PROP_LOCALE_MULTI.forEach(function(aProp) {
+          aLocale[aProp].forEach(function(aStr) {
+            stringstmt.params.locale = row;
+            stringstmt.params.type = aProp;
+            stringstmt.params.value = aStr;
+            executeStatement(stringstmt);
+          });
+        });
+        return row;
+      }
+
+      aAddon.active = (aAddon.visible && !aAddon.userDisabled &&
+                       !aAddon.appDisabled);
+
+      if (aAddon.visible) {
+        let stmt = this.getStatement("clearVisibleAddons");
+        stmt.params.id = aAddon.id;
+        executeStatement(stmt);
+      }
+
+      let stmt = this.getStatement("addAddonMetadata_addon");
+
+      stmt.params.locale = insertLocale(aAddon.defaultLocale);
+      stmt.params.location = aAddon._installLocation.name;
+      stmt.params.descriptor = aDescriptor;
+      stmt.params.installDate = aAddon.installDate;
+      stmt.params.updateDate = aAddon.updateDate;
+      copyProperties(aAddon, PROP_METADATA, stmt.params);
+      ["visible", "userDisabled", "appDisabled", "applyBackgroundUpdates",
+       "bootstrap"].forEach(function(aProp) {
+        stmt.params[aProp] = aAddon[aProp] ? 1 : 0;
+      });
+      stmt.params.active = aAddon.active ? 1 : 0;
+      executeStatement(stmt);
+      let internal_id = this.connection.lastInsertRowID;
+
+      stmt = this.getStatement("addAddonMetadata_addon_locale");
+      aAddon.locales.forEach(function(aLocale) {
+        let id = insertLocale(aLocale);
+        aLocale.locales.forEach(function(aName) {
+          stmt.params.internal_id = internal_id;
+          stmt.params.name = aName;
+          stmt.params.locale = insertLocale(aLocale);
+          executeStatement(stmt);
         });
       });
-      return row;
-    }
 
-    aAddon.active = (aAddon.visible && !aAddon.userDisabled &&
-                     !aAddon.appDisabled);
+      stmt = this.getStatement("addAddonMetadata_targetApplication");
 
-    if (aAddon.visible) {
-      let stmt = this.getStatement("clearVisibleAddons");
-      stmt.params.id = aAddon.id;
-      stmt.execute();
-    }
-
-    let stmt = this.getStatement("addAddonMetadata_addon");
-
-    stmt.params.locale = insertLocale(aAddon.defaultLocale);
-    stmt.params.location = aAddon._installLocation.name;
-    stmt.params.descriptor = aDescriptor;
-    stmt.params.installDate = aAddon.installDate;
-    stmt.params.updateDate = aAddon.updateDate;
-    copyProperties(aAddon, PROP_METADATA, stmt.params);
-    ["visible", "userDisabled", "appDisabled", "applyBackgroundUpdates",
-     "bootstrap"].forEach(function(aProp) {
-      stmt.params[aProp] = aAddon[aProp] ? 1 : 0;
-    });
-    stmt.params.active = aAddon.active ? 1 : 0;
-    stmt.execute();
-    let internal_id = this.connection.lastInsertRowID;
-
-    stmt = this.getStatement("addAddonMetadata_addon_locale");
-    aAddon.locales.forEach(function(aLocale) {
-      let id = insertLocale(aLocale);
-      aLocale.locales.forEach(function(aName) {
+      aAddon.targetApplications.forEach(function(aApp) {
         stmt.params.internal_id = internal_id;
-        stmt.params.name = aName;
-        stmt.params.locale = insertLocale(aLocale);
-        stmt.execute();
+        stmt.params.id = aApp.id;
+        stmt.params.minVersion = aApp.minVersion;
+        stmt.params.maxVersion = aApp.maxVersion;
+        executeStatement(stmt);
       });
-    });
-
-    stmt = this.getStatement("addAddonMetadata_targetApplication");
-
-    aAddon.targetApplications.forEach(function(aApp) {
-      stmt.params.internal_id = internal_id;
-      stmt.params.id = aApp.id;
-      stmt.params.minVersion = aApp.minVersion;
-      stmt.params.maxVersion = aApp.maxVersion;
-      stmt.execute();
-    });
+      this.commitTransaction();
+    }
+    catch (e) {
+      this.rollbackTransaction();
+      throw e;
+    }
   },
 
   /**
@@ -3164,11 +3326,21 @@ var XPIDatabase = {
    */
   updateAddonMetadata: function XPIDB_updateAddonMetadata(aOldAddon, aNewAddon,
                                                           aDescriptor) {
-    this.removeAddonMetadata(aOldAddon);
-    aNewAddon.userDisabled = aOldAddon.userDisabled;
-    aNewAddon.installDate = aOldAddon.installDate;
-    aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
-    this.addAddonMetadata(aNewAddon, aDescriptor);
+    this.beginTransaction();
+
+    // Any errors in here should rollback the transaction
+    try {
+      this.removeAddonMetadata(aOldAddon);
+      aNewAddon.userDisabled = aOldAddon.userDisabled;
+      aNewAddon.installDate = aOldAddon.installDate;
+      aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
+      this.addAddonMetadata(aNewAddon, aDescriptor);
+      this.commitTransaction();
+    }
+    catch (e) {
+      this.rollbackTransaction();
+      throw e;
+    }
   },
 
   /**
@@ -3181,14 +3353,24 @@ var XPIDatabase = {
    */
   updateTargetApplications: function XPIDB_updateTargetApplications(aAddon,
                                                                     aTargets) {
-    let stmt = this.getStatement("updateTargetApplications");
-    aTargets.forEach(function(aTarget) {
-      stmt.params.internal_id = aAddon._internal_id;
-      stmt.params.id = aTarget.id;
-      stmt.params.minVersion = aTarget.minVersion;
-      stmt.params.maxVersion = aTarget.maxVersion;
-      stmt.execute();
-    });
+    this.beginTransaction();
+
+    // Any errors in here should rollback the transaction
+    try {
+      let stmt = this.getStatement("updateTargetApplications");
+      aTargets.forEach(function(aTarget) {
+        stmt.params.internal_id = aAddon._internal_id;
+        stmt.params.id = aTarget.id;
+        stmt.params.minVersion = aTarget.minVersion;
+        stmt.params.maxVersion = aTarget.maxVersion;
+        executeStatement(stmt);
+      });
+      this.commitTransaction();
+    }
+    catch (e) {
+      this.rollbackTransaction();
+      throw e;
+    }
   },
 
   /**
@@ -3200,7 +3382,7 @@ var XPIDatabase = {
   removeAddonMetadata: function XPIDB_removeAddonMetadata(aAddon) {
     let stmt = this.getStatement("removeAddonMetadata");
     stmt.params.internal_id = aAddon._internal_id;
-    stmt.execute();
+    executeStatement(stmt);
   },
 
   /**
@@ -3215,11 +3397,11 @@ var XPIDatabase = {
   makeAddonVisible: function XPIDB_makeAddonVisible(aAddon) {
     let stmt = this.getStatement("clearVisibleAddons");
     stmt.params.id = aAddon.id;
-    stmt.execute();
+    executeStatement(stmt);
 
     stmt = this.getStatement("makeAddonVisible");
     stmt.params.internal_id = aAddon._internal_id;
-    stmt.execute();
+    executeStatement(stmt);
 
     aAddon.visible = true;
   },
@@ -3251,7 +3433,7 @@ var XPIDatabase = {
       }
     });
 
-    stmt.execute();
+    executeStatement(stmt);
   },
 
   /**
@@ -3266,7 +3448,7 @@ var XPIDatabase = {
     stmt = this.getStatement("updateAddonActive");
     stmt.params.internal_id = aAddon._internal_id;
     stmt.params.active = aAddon.active ? 1 : 0;
-    stmt.execute();
+    executeStatement(stmt);
   },
 
   /**
@@ -3275,7 +3457,7 @@ var XPIDatabase = {
   updateActiveAddons: function XPIDB_updateActiveAddons() {
     LOG("Updating add-on states");
     let stmt = this.getStatement("setActiveAddons");
-    stmt.execute();
+    executeStatement(stmt);
   },
 
   /**
@@ -4432,7 +4614,15 @@ DBAddonInternal.prototype = {
         }
       });
     });
-    XPIDatabase.updateTargetApplications(this, changes);
+    try {
+      XPIDatabase.updateTargetApplications(this, changes);
+    }
+    catch (e) {
+      // A failure just means that we discard the compatibility update
+      ERROR("Failed to update target application info in the database for " +
+            "add-on " + this.id);
+      return;
+    }
     XPIProvider.updateAddonDisabledState(this);
   }
 }
