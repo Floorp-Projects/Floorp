@@ -986,7 +986,14 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
       });
     }
     
-    $(container).click(function(){
+    $(container)
+      .mousedown(function(e){
+        self._mouseDownLocation = new Point(e.clientX, e.clientY);
+      })    
+      .mouseup(function(e){
+      var location = new Point(e.clientX, e.clientY);
+      
+      if( location.distance(self._mouseDownLocation) > 1.0 ) return;
       // Don't zoom in to the last tab for the new tab group.
       if( self.isNewTabsGroup() ) return;
       var activeTab = self.getActiveTab();
