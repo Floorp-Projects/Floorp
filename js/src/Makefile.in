@@ -236,6 +236,7 @@ INSTALLED_HEADERS = \
 		jsversion.h \
 		jsxdrapi.h \
 		jsxml.h \
+		prmjtime.h \
 		$(NULL)
 
 ifdef ENABLE_TRACEJIT
