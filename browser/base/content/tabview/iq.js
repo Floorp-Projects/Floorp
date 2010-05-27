@@ -88,14 +88,26 @@ var iQ = function(selector, context) {
 	slice = Array.prototype.slice,
 	indexOf = Array.prototype.indexOf;
 
+var rclass = /[\n\t]/g,
+	rspace = /\s+/,
+	rreturn = /\r/g,
+	rspecialurl = /href|src|style/,
+	rtype = /(button|input)/i,
+	rfocusable = /(button|input|object|select|textarea)/i,
+	rclickable = /^(a|area)$/i,
+	rradiocheck = /radio|checkbox/;
+
 // ##########
 // Class: iQ.fn
 // An individual element or group of elements.
 iQ.fn = iQ.prototype = {
   // ----------
   // Function: init
+  // You don't call this directly; this is what's called by iQ(). 
+  // It works pretty much like jQuery(), with a few exceptions, 
+  // most notably that you can't use strings with complex html, 
+  // just simple tags like '<div>'.
 	init: function( selector, context ) {
-    return null; // TODO: this routine not ready yet
 		var match, elem, ret, doc;
 
 		// Handle $(""), $(null), or $(undefined)
@@ -127,7 +139,7 @@ iQ.fn = iQ.prototype = {
 			// Verify a match, and that no context was specified for #id
 			if ( match && (match[1] || !context) ) {
 
-				// HANDLE: $(html) -> $(array)
+				// HANDLE $(html) -> $(array)
 				if ( match[1] ) {
 					doc = (context ? context.ownerDocument || context : document);
 
@@ -137,6 +149,7 @@ iQ.fn = iQ.prototype = {
 
 					if ( ret ) {
 						if ( iQ.isPlainObject( context ) ) {
+							Utils.assert('does not support HTML creation with context', false);
 							selector = [ document.createElement( ret[1] ) ];
 /* 							iQ.fn.attr.call( selector, context, true ); */
 
@@ -145,6 +158,7 @@ iQ.fn = iQ.prototype = {
 						}
 
 					} else {
+							Utils.assert('does not support complex HTML creation', false);
 /* 					  ret = doc.createDocumentFragment([match */
 						ret = buildFragment( [ match[1] ], [ doc ] );
 						selector = (ret.cacheable ? ret.fragment.cloneNode(true) : ret.fragment).childNodes;
@@ -152,18 +166,11 @@ iQ.fn = iQ.prototype = {
 					
 					return iQ.merge( this, selector );
 					
-				// HANDLE: $("#id")
+				// HANDLE $("#id")
 				} else {
 					elem = document.getElementById( match[2] );
 
 					if ( elem ) {
-						// Handle the case where IE and Opera return items
-						// by name instead of ID
-						if ( elem.id !== match[2] ) {
-							return rootiQ.find( selector );
-						}
-
-						// Otherwise, we inject the element directly into the iQ object
 						this.length = 1;
 						this[0] = elem;
 					}
@@ -173,24 +180,24 @@ iQ.fn = iQ.prototype = {
 					return this;
 				}
 
-			// HANDLE: $("TAG")
+			// HANDLE $("TAG")
 			} else if ( !context && /^\w+$/.test( selector ) ) {
 				this.selector = selector;
 				this.context = document;
 				selector = document.getElementsByTagName( selector );
 				return iQ.merge( this, selector );
 
-			// HANDLE: $(expr, $(...))
+			// HANDLE $(expr, $(...))
 			} else if ( !context || context.iq ) {
 				return (context || rootiQ).find( selector );
 
-			// HANDLE: $(expr, context)
+			// HANDLE $(expr, context)
 			// (which is just equivalent to: $(context).find(expr)
 			} else {
 				return iQ( context ).find( selector );
 			}
 
-		// HANDLE: $(function)
+		// HANDLE $(function)
 		// Shortcut for document ready
 		} else if ( iQ.isFunction( selector ) ) {
 			Utils.log('iQ does not support ready functions');
@@ -212,7 +219,279 @@ iQ.fn = iQ.prototype = {
 	iq: "1.4.2",
 
 	// The default length of a iQ object is 0
-	length: 0
+	length: 0, 
+	
+  // ----------
+  // Function: toArray
+	toArray: function() {
+		return slice.call( this, 0 );
+	},
+
+  // ----------
+  // Function: get
+	// Get the Nth element in the matched element set OR
+	// Get the whole matched element set as a clean array
+	get: function( num ) {
+		return num == null ?
+
+			// Return a 'clean' array
+			this.toArray() :
+
+			// Return just the object
+			( num < 0 ? this.slice(num)[ 0 ] : this[ num ] );
+	},
+
+  // ----------
+  // Function: pushStack
+	// Take an array of elements and push it onto the stack
+	// (returning the new matched element set)
+	pushStack: function( elems, name, selector ) {
+		// Build a new iQ matched element set
+		var ret = iQ();
+
+		if ( iQ.isArray( elems ) ) {
+			push.apply( ret, elems );
+		
+		} else {
+			iQ.merge( ret, elems );
+		}
+
+		// Add the old object onto the stack (as a reference)
+		ret.prevObject = this;
+
+		ret.context = this.context;
+
+		if ( name === "find" ) {
+			ret.selector = this.selector + (this.selector ? " " : "") + selector;
+		} else if ( name ) {
+			ret.selector = this.selector + "." + name + "(" + selector + ")";
+		}
+
+		// Return the newly-formed element set
+		return ret;
+	},
+
+  // ----------
+  // Function: each
+	// Execute a callback for every element in the matched set.
+	// (You can seed the arguments with an array of args, but this is
+	// only used internally.)
+	each: function( callback, args ) {
+		return iQ.each( this, callback, args );
+	},
+	
+  // ----------
+  // Function: slice
+	slice: function() {
+		return this.pushStack( slice.apply( this, arguments ),
+			"slice", slice.call(arguments).join(",") );
+	},
+
+  // ----------
+  // Function: addClass
+	addClass: function( value ) {
+		if ( iQ.isFunction(value) ) {
+		  Utils.assert('does not support function argument', false);
+		  return null;
+		}
+
+		if ( value && typeof value === "string" ) {
+			var classNames = (value || "").split( rspace );
+
+			for ( var i = 0, l = this.length; i < l; i++ ) {
+				var elem = this[i];
+
+				if ( elem.nodeType === 1 ) {
+					if ( !elem.className ) {
+						elem.className = value;
+
+					} else {
+						var className = " " + elem.className + " ", setClass = elem.className;
+						for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
+							if ( className.indexOf( " " + classNames[c] + " " ) < 0 ) {
+								setClass += " " + classNames[c];
+							}
+						}
+						elem.className = iQ.trim( setClass );
+					}
+				}
+			}
+		}
+
+		return this;
+	},
+
+  // ----------
+  // Function: removeClass
+	removeClass: function( value ) {
+		if ( iQ.isFunction(value) ) {
+		  Utils.assert('does not support function argument', false);
+		  return null;
+		}
+
+		if ( (value && typeof value === "string") || value === undefined ) {
+			var classNames = (value || "").split(rspace);
+
+			for ( var i = 0, l = this.length; i < l; i++ ) {
+				var elem = this[i];
+
+				if ( elem.nodeType === 1 && elem.className ) {
+					if ( value ) {
+						var className = (" " + elem.className + " ").replace(rclass, " ");
+						for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
+							className = className.replace(" " + classNames[c] + " ", " ");
+						}
+						elem.className = iQ.trim( className );
+
+					} else {
+						elem.className = "";
+					}
+				}
+			}
+		}
+
+		return this;
+	},
+
+  // ----------
+  // Function: find
+	find: function( selector ) {
+		var ret = [], length = 0;
+
+		for ( var i = 0, l = this.length; i < l; i++ ) {
+			length = ret.length;
+      try {
+        iQ.merge(ret, this[i].querySelectorAll( selector ) );
+      } catch(e) {
+        Utils.log('iQ.find error (bad selector)', e);
+      }
+
+			if ( i > 0 ) {
+				// Make sure that the results are unique
+				for ( var n = length; n < ret.length; n++ ) {
+					for ( var r = 0; r < length; r++ ) {
+						if ( ret[r] === ret[n] ) {
+							ret.splice(n--, 1);
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		return iQ(ret);
+	},
+
+  // ----------
+  // Function: remove
+	remove: function(unused) {
+	  Utils.assert('does not accept a selector', unused === undefined);
+		for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+			if ( elem.parentNode ) {
+				 elem.parentNode.removeChild( elem );
+			}
+		}
+		
+		return this;
+	},
+
+  // ----------
+  // Function: empty
+	empty: function() {
+		for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+			while ( elem.firstChild ) {
+				elem.removeChild( elem.firstChild );
+			}
+		}
+		
+		return this;
+	},
+
+  // ----------
+  // Function: width
+	width: function(unused) {
+    Utils.assert('does not yet support setting', unused === undefined);
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    return this[0].clientWidth;
+  },
+
+  // ----------
+  // Function: height
+	height: function(unused) {
+    Utils.assert('does not yet support setting', unused === undefined);
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    return this[0].clientHeight;
+  },
+
+  // ----------
+  // Function: bounds
+  bounds: function(unused) {
+    Utils.assert('does not yet support setting', unused === undefined);
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    var el = this[0];
+    return new Rect(
+      parseInt(el.style.left) || el.offsetLeft, 
+      parseInt(el.style.top) || el.offsetTop, 
+      el.clientWidth,
+      el.clientHeight
+    );
+  },
+  
+  // ----------
+  // Function: data
+  data: function(key, value) {
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    var data = this[0].iQData;
+    if(value === undefined)
+      return (data ? data[key] : null);
+    
+    if(!data)
+      data = this[0].iQData = {};
+      
+    data[key] = value;
+    return this;    
+  },
+  
+  // ----------
+  // Function: html
+  // TODO: security
+  html: function(value) {
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    if(value === undefined)
+      return this[0].innerHTML;
+      
+    this[0].innerHTML = value;
+    return this;
+  },  
+  
+  // ----------
+  // Function: text
+  text: function(value) {
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    if(value === undefined) {
+      return this[0].textContent;
+    }
+      
+		return this.empty().append( (this[0] && this[0].ownerDocument || document).createTextNode(value));
+  },  
+  
+  // ----------
+  // Function: appendTo
+  appendTo: function(selector) {
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    iQ(selector).append(this);
+    return this;
+  },
+  
+  // ----------
+  // Function: append
+  append: function(selector) {
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    var object = iQ(selector);
+    Utils.assert('does not yet support multi-objects (or null objects)', object.length == 1);
+    this[0].appendChild(object[0]);
+    return this;
+  }
 };
 
 // ----------
@@ -331,43 +610,6 @@ iQ.extend({
 		return true;
 	},
 
-  // ----------
-  // Function: merge
-	merge: function( first, second ) {
-		var i = first.length, j = 0;
-
-		if ( typeof second.length === "number" ) {
-			for ( var l = second.length; j < l; j++ ) {
-				first[ i++ ] = second[ j ];
-			}
-		
-		} else {
-			while ( second[j] !== undefined ) {
-				first[ i++ ] = second[ j++ ];
-			}
-		}
-
-		first.length = i;
-
-		return first;
-	},
-
-  // ----------
-  // Function: grep
-	grep: function( elems, callback, inv ) {
-		var ret = [];
-
-		// Go through the array, only saving the items
-		// that pass the validator function
-		for ( var i = 0, length = elems.length; i < length; i++ ) {
-			if ( !inv !== !callback( elems[ i ], i ) ) {
-				ret.push( elems[ i ] );
-			}
-		}
-
-		return ret;
-	},
-	
 	// ----------
   // Function: each
 	// args is for internal usage only
@@ -406,7 +648,70 @@ iQ.extend({
 		}
 
 		return object;
-	}
+	},
+	
+  // ----------
+  // Function: trim
+	trim: function( text ) {
+		return (text || "").replace( rtrim, "" );
+	},
+
+  // ----------
+  // Function: makeArray
+	// results is for internal usage only
+	makeArray: function( array, results ) {
+		var ret = results || [];
+
+		if ( array != null ) {
+			// The window, strings (and functions) also have 'length'
+			// The extra typeof function check is to prevent crashes
+			// in Safari 2 (See: #3039)
+			if ( array.length == null || typeof array === "string" || iQ.isFunction(array) || (typeof array !== "function" && array.setInterval) ) {
+				push.call( ret, array );
+			} else {
+				iQ.merge( ret, array );
+			}
+		}
+
+		return ret;
+	},
+
+  // ----------
+  // Function: merge
+	merge: function( first, second ) {
+		var i = first.length, j = 0;
+
+		if ( typeof second.length === "number" ) {
+			for ( var l = second.length; j < l; j++ ) {
+				first[ i++ ] = second[ j ];
+			}
+		
+		} else {
+			while ( second[j] !== undefined ) {
+				first[ i++ ] = second[ j++ ];
+			}
+		}
+
+		first.length = i;
+
+		return first;
+	},
+
+  // ----------
+  // Function: grep
+	grep: function( elems, callback, inv ) {
+		var ret = [];
+
+		// Go through the array, only saving the items
+		// that pass the validator function
+		for ( var i = 0, length = elems.length; i < length; i++ ) {
+			if ( !inv !== !callback( elems[ i ], i ) ) {
+				ret.push( elems[ i ] );
+			}
+		}
+
+		return ret;
+	}	
 });
 
 // ----------
