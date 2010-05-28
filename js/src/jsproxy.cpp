@@ -647,6 +647,16 @@ JSScriptedProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray *
 }
 
 bool
+ReportErrorIfPrimitive(JSContext *cx, jsval *vp)
+{
+    if (JSVAL_IS_PRIMITIVE(*vp)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
+        return false;
+    }
+    return true;
+}
+
+bool
 JSScriptedProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp)
 {
     JSObject *handler = JSVAL_TO_OBJECT(proxy->getProxyHandler());
@@ -655,7 +665,8 @@ JSScriptedProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, jsv
         return false;
     if (!js_IsCallable(tvr.value()))
         return JSProxyHandler::iterate(cx, proxy, flags, vp);
-    return TryHandlerTrap(cx, proxy, Trap(cx, handler, tvr.value(), 0, NULL, vp));
+    return TryHandlerTrap(cx, proxy, Trap(cx, handler, tvr.value(), 0, NULL, vp)) &&
+           ReportErrorIfPrimitive(cx, vp);
 }
 
 const void *
