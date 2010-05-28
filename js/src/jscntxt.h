@@ -1033,6 +1033,8 @@ struct JSThreadData {
     /* Base address of the native stack for the current thread. */
     jsuword             *nativeStackBase;
 
+    js::ConservativeGCThreadData conservativeGC;
+
     bool init();
     void finish();
     void mark(JSTracer *trc);
