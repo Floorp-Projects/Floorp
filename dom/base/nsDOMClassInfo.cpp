@@ -5139,6 +5139,10 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JSObject *innerObj;
     if (innerWin && (innerObj = innerWin->GetGlobalJSObject())) {
+      if (sResolving) {
+        return NS_OK;
+      }
+
 #ifdef DEBUG_SH_FORWARDING
       printf(" --- Forwarding add to inner window %p\n", (void *)innerWin);
 #endif
@@ -6265,6 +6269,9 @@ ContentWindowGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return ::JS_GetProperty(cx, obj, "content", rval);
 }
 
+PRBool
+nsWindowSH::sResolving = PR_FALSE;
+
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, jsval id, PRUint32 flags,
@@ -6334,18 +6341,44 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #endif
 
       jsid interned_id;
-      JSObject *pobj = NULL;
-      jsval val;
+      JSPropertyDescriptor desc;
 
-      *_retval = (::JS_ValueToId(cx, id, &interned_id) &&
-                  ::JS_LookupPropertyWithFlagsById(cx, innerObj, interned_id,
-                                                   flags, &pobj, &val));
+      *_retval = (JS_ValueToId(cx, id, &interned_id) &&
+                  JS_GetPropertyDescriptorById(cx, innerObj, interned_id,
+                                               flags, &desc));
 
-      if (*_retval && pobj) {
+      if (*_retval && desc.obj) {
 #ifdef DEBUG_SH_FORWARDING
         printf(" --- Resolve on inner window found property.\n");
 #endif
-        *objp = pobj;
+
+        // The JS engine assumes that the object that we return in objp is on
+        // our prototype chain. As a result, for an assignment, it wants to
+        // shadow the property by defining one on our object (unless the
+        // property has a setter). This confuses our code and, for fast
+        // expandos, we end up overriding the fast expando with a slow one. So
+        // detect when we're about to get a new property from the JS engine
+        // that would shadow a fast expando and define it ourselves, sending
+        // ourselves a signal via sResolving that we are doing this. Note that
+        // we only care about fast expandos on the innerObj itself, things
+        // found further up the prototype chain need to fend for themselves.
+        if ((flags & JSRESOLVE_ASSIGNING) &&
+            !(desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) &&
+            desc.obj == innerObj) {
+          PRBool oldResolving = sResolving;
+          sResolving = PR_TRUE;
+
+          *_retval = JS_DefinePropertyById(cx, obj, interned_id, JSVAL_VOID,
+                                           nsnull, nsnull,
+                                           desc.attrs & JSPROP_ENUMERATE);
+
+          sResolving = oldResolving;
+          if (!*_retval) {
+            return NS_OK;
+          }
+        }
+
+        *objp = desc.obj;
       }
 
       return NS_OK;
