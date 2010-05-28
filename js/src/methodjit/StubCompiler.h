@@ -58,8 +58,8 @@ class StubCompiler
     typedef JSC::MacroAssembler::Jump Jump;
     typedef JSC::MacroAssembler::Label Label;
 
-    struct ExitPatch {
-        ExitPatch(Jump from, Label to)
+    struct CrossPatch {
+        CrossPatch(Jump from, Label to)
           : from(from), to(to)
         { }
 
@@ -72,8 +72,11 @@ class StubCompiler
     FrameState &frame;
     JSScript *script;
     Assembler masm;
-    Vector<ExitPatch, 64, SystemAllocPolicy> exits;
     RegSnapshot snapshot;
+
+    /* :TODO: oom check */
+    Vector<CrossPatch, 64, SystemAllocPolicy> exits;
+    Vector<CrossPatch, 64, SystemAllocPolicy> joins;
 
   public:
     StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);
@@ -112,6 +115,7 @@ class StubCompiler
     void rejoin(uint32 invalidationDepth);
 
     /* Finish all native code patching. */
+    void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
     void finalize(uint8 *ncode);
 
   private:
