@@ -77,7 +77,9 @@ public:
         : m_executablePool(NULL)
         , m_code(ncode)
         , m_size(size)
+#ifndef NDEBUG
         , m_completed(false)
+#endif
     {
     }
 
