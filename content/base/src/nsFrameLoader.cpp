@@ -89,6 +89,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsInProcessTabChildGlobal.h"
+#include "mozilla/AutoRestore.h"
 
 class nsAsyncDocShellDestroyer : public nsRunnable
 {
@@ -514,25 +515,50 @@ AllDescendantsOfType(nsIDocShellTreeItem* aParentItem, PRInt32 aType)
   return PR_TRUE;
 }
 
-bool
+/**
+ * A class that automatically sets mInShow to false when it goes
+ * out of scope.
+ */
+class NS_STACK_CLASS AutoResetInShow {
+  private:
+    nsFrameLoader* mFrameLoader;
+    MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
+  public:
+    AutoResetInShow(nsFrameLoader* aFrameLoader MOZILLA_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mFrameLoader(aFrameLoader)
+    {
+      MOZILLA_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoResetInShow() { mFrameLoader->mInShow = PR_FALSE; }
+};
+
+
+PRBool
 nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
                     PRInt32 scrollbarPrefX, PRInt32 scrollbarPrefY,
                     nsIFrameFrame* frame)
 {
+  if (mInShow) {
+    return PR_FALSE;
+  }
+  // Reset mInShow if we exit early.
+  AutoResetInShow resetInShow(this);
+  mInShow = PR_TRUE;
+
   nsContentType contentType;
 
   nsresult rv = EnsureDocShell();
   if (NS_FAILED(rv)) {
-    return false;
+    return PR_FALSE;
   }
 
   if (!mDocShell)
-    return false;
+    return PR_FALSE;
 
   nsCOMPtr<nsIPresShell> presShell;
   mDocShell->GetPresShell(getter_AddRefs(presShell));
   if (presShell)
-    return true;
+    return PR_TRUE;
 
   mDocShell->SetMarginWidth(marginWidth);
   mDocShell->SetMarginHeight(marginHeight);
@@ -563,7 +589,7 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
 
   nsIView* view = frame->CreateViewAndWidget(contentType);
   if (!view)
-    return false;
+    return PR_FALSE;
 
   nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(mDocShell);
   NS_ASSERTION(baseWindow, "Found a nsIDocShell that isn't a nsIBaseWindow.");
@@ -594,12 +620,26 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
     }
   }
 
-  return true;
+  mInShow = PR_FALSE;
+  if (mHideCalled) {
+    mHideCalled = PR_FALSE;
+    Hide();
+    return PR_FALSE;
+  }
+  return PR_TRUE;
 }
 
 void
 nsFrameLoader::Hide()
 {
+  if (mHideCalled) {
+    return;
+  }
+  if (mInShow) {
+    mHideCalled = PR_TRUE;
+    return;
+  }
+
   if (!mDocShell)
     return;
 
@@ -623,6 +663,7 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   NS_PRECONDITION((aFirstToSwap == this && aSecondToSwap == aOther) ||
                   (aFirstToSwap == aOther && aSecondToSwap == this),
                   "Swapping some sort of random loaders?");
+  NS_ENSURE_STATE(!mInShow && !aOther->mInShow);
 
   nsIContent* ourContent = mOwnerContent;
   nsIContent* otherContent = aOther->mOwnerContent;
