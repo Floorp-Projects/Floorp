@@ -39,6 +39,10 @@
 #ifdef XP_WIN
 # include <windows.h>
 
+#ifdef _M_X64
+# include "jsstr.h"
+#endif
+
 # ifdef _MSC_VER
 #  pragma warning( disable: 4267 4996 4146 )
 # endif
@@ -177,6 +181,27 @@ static void
 UnmapPages(void *addr, size_t size)
 {
     NtFreeVirtualMemory(INVALID_HANDLE_VALUE, &addr, &size, MEM_RELEASE);
+}
+
+bool
+JSString::initStringTables()
+{
+    char *p = (char *) MapPages(NULL, unitStringTableSize + intStringTableSize);
+    if (!p)
+        return false;
+    unitStringTable = (JSString*) memcpy(p, staticUnitStringTable, unitStringTableSize);
+    intStringTable = (JSString*) memcpy(p + unitStringTableSize, 
+                                        staticIntStringTable, intStringTableSize);
+
+    return true;
+}
+
+void
+JSString::freeStringTables()
+{
+    UnmapPages(unitStringTable, unitStringTableSize + intStringTableSize);
+    unitStringTable = NULL;
+    intStringTable = NULL;
 }
 
 #  else /* _M_X64 */
