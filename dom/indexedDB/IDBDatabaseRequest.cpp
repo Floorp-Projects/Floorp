@@ -497,6 +497,10 @@ IDBDatabaseRequest::Transaction(nsIVariant* aStoreNames,
         aMode != nsIIDBTransaction::SNAPSHOT_READ) {
       return NS_ERROR_INVALID_ARG;
     }
+    if (aMode == nsIIDBTransaction::SNAPSHOT_READ) {
+      NS_NOTYETIMPLEMENTED("Implement me!");
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
   }
   else {
     aMode = nsIIDBTransaction::READ_ONLY;
