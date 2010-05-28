@@ -4648,11 +4648,13 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nativeObj));
   NS_ASSERTION(sgo, "nativeObj not a global object!");
 
+  nsGlobalWindow *win = nsGlobalWindow::FromSupports(nativeObj);
+
   if (sgo) {
     *parentObj = sgo->GetGlobalJSObject();
 
     if (*parentObj) {
-      return NS_OK;
+      return win->IsChromeWindow() ? NS_OK : NS_SUCCESS_NEEDS_XOW;
     }
   }
 
@@ -4662,7 +4664,7 @@ nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
 
   *parentObj = globalObj;
 
-  return NS_OK;
+  return win->IsChromeWindow() ? NS_OK : NS_SUCCESS_NEEDS_XOW;
 }
 
 
