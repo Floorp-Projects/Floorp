@@ -55,6 +55,10 @@ class Assembler : public BaseAssembler
         return address;
     }
 
+    Address tagOf(Address address) {
+        return Address(address.base, address.offset + TAG_OFFSET);
+    }
+
     void loadTypeTag(Address address, RegisterID reg) {
         load32(Address(address.base, address.offset + TAG_OFFSET), reg);
     }
@@ -77,6 +81,15 @@ class Assembler : public BaseAssembler
 
     void storeData32(RegisterID reg, Address address) {
         store32(reg, Address(address.base, address.offset + PAYLOAD_OFFSET));
+    }
+
+    void storeValue(const Value &v, Address address) {
+        jsval_layout jv;
+        jv.asBits = Jsvalify(v);
+
+        store32(Imm32(jv.s.mask32), tagOf(address));
+        if (!v.isUndefined())
+            store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
 };
 
