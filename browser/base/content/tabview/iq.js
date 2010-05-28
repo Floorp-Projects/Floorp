@@ -433,6 +433,18 @@ iQ.fn = iQ.prototype = {
   },
 
   // ----------
+  // Function: position
+  position: function(unused) {
+    Utils.assert('does not yet support setting', unused === undefined);
+    Utils.assert('does not yet support multi-objects (or null objects)', this.length == 1);
+    var el = this[0];
+    return {
+      left: (parseInt(el.style.left) || el.offsetLeft), 
+      top: (parseInt(el.style.top) || el.offsetTop)
+    };
+  },
+  
+  // ----------
   // Function: bounds
   bounds: function(unused) {
     Utils.assert('does not yet support setting', unused === undefined);
@@ -506,22 +518,23 @@ iQ.fn = iQ.prototype = {
   // Function: css
   css: function(a, b) {
     var properties = null;
-    if(typeof a === 'string') {
-      if(b === undefined) {
-        Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);      
-        return window.getComputedStyle(this[0], null).getPropertyValue(a);  
-      } else {
-        properties = {};
-        properties[a] = b;
-      }
-    } else
-      properties = a;
-
     var subsitutions = {
       '-moz-transform': 'MozTransform',
       'z-index': 'zIndex'
     };
     
+    if(typeof a === 'string') {
+      var key = (subsitutions[a] || a);
+      if(b === undefined) {
+        Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);      
+        return window.getComputedStyle(this[0], null).getPropertyValue(key);  
+      } else {
+        properties = {};
+        properties[key] = b;
+      }
+    } else
+      properties = a;
+
 		for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       iQ.each(properties, function(key, value) {
         if(key == 'left' || key == 'top' || key == 'width' || key == 'height') {
@@ -531,24 +544,78 @@ iQ.fn = iQ.prototype = {
         
         elem.style[subsitutions[key] || key] = value;
       });
-    } 
+    }
+    
+    return this; 
   },
-  
+
+  // ----------
+  // Function: animate
+  animate: function(css, duration, callback) {
+    try {
+      this.addClass(duration);
+      
+      var self = this;
+      var cleanedUp = false;
+      this.one('transitionend', function() {
+        if(!cleanedUp) {
+          self.removeClass(duration);
+          cleanedUp = true;
+          if(iQ.isFunction(callback))
+            callback();
+        }
+      });
+      
+      this.css(css);
+    } catch(e) {
+      Utils.log('iQ.fn.animate error', e);
+    }
+    
+  },
+    
   // ----------
   // Function: bind
   bind: function(type, func) {
     Utils.assert('does not support eventData argument', iQ.isFunction(func));
+
+    var handler = function(e) {
+      try {
+        return func(e);
+      } catch(e) {
+        Utils.log(e);
+      }
+    };
+
   	for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-      elem.addEventListener(type, func, false);
+      elem.addEventListener(type, handler, false);
     }
+    
+    return this; 
+  },
+  
+  // ----------
+  // Function: one
+  one: function(type, func) {
+    Utils.assert('does not support eventData argument', iQ.isFunction(func));
+    
+    var handler = function(e) {
+      iQ(this).unbind(type, handler);
+      return func(e);
+    };
+      
+    return this.bind(type, handler);
   },
   
   // ----------
   // Function: unbind
   unbind: function(type, func) {
+    Utils.assert('Must provide a function', iQ.isFunction(func));
+    
   	for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
       elem.removeEventListener(type, func, false);
     }
+    
+    return this; 
   }
 };
 
@@ -771,6 +838,25 @@ iQ.extend({
 		return ret;
 	}	
 });
+
+// ----------
+// Create various event aliases
+(function() {
+  var events = [
+    'keyup',
+    'keydown',
+    'mouseup',
+    'mousedown',
+    'mousemove',
+    'click'
+  ];
+  
+  iQ.each(events, function(index, event) {
+    iQ.fn[event] = function(func) {
+      return this.bind(event, func);
+    };
+  });
+})();
 
 // ----------
 // All iQ objects should point back to these
