@@ -4186,7 +4186,7 @@ AddonInstall.prototype = {
                                               dir, "startup", reason);
             }
             else {
-              this.unloadBootstrapScope(self.addon.id);
+              XPIProvider.unloadBootstrapScope(self.addon.id);
             }
           }
           AddonManagerPrivate.callAddonListeners("onInstalled",
