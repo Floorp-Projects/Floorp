@@ -45,46 +45,26 @@
 
 #include "nsIObserver.h"
 
-#include "mozilla/Mutex.h"
+#include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRefPtrHashtable.h"
+
+#include "IDBTransactionRequest.h"
 
 class nsIRunnable;
 class nsIThreadPool;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-class IDBTransactionRequest;
+class FinishTransactionRunnable;
+class TransactionInfo;
 class TransactionQueue;
-
-template<class T>
-class RefPtrHashKey : public PLDHashEntryHdr
-{
- public:
-  typedef T *KeyType;
-  typedef const T *KeyTypePointer;
-
-  RefPtrHashKey(const T *key) : mKey(const_cast<T*>(key)) {}
-  RefPtrHashKey(const RefPtrHashKey<T> &toCopy) : mKey(toCopy.mKey) {}
-  ~RefPtrHashKey() {}
-
-  KeyType GetKey() const { return mKey; }
-
-  PRBool KeyEquals(KeyTypePointer key) const { return key == mKey; }
-
-  static KeyTypePointer KeyToPointer(KeyType key) { return key; }
-  static PLDHashNumber HashKey(KeyTypePointer key)
-  {
-    return NS_PTR_TO_INT32(key) >> 2;
-  }
-  enum { ALLOW_MEMMOVE = PR_TRUE };
-
- protected:
-  nsRefPtr<T> mKey;
-};
+class QueuedDispatchInfo;
 
 class TransactionThreadPool : public nsIObserver
 {
+  friend class FinishTransactionRunnable;
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -104,12 +84,17 @@ protected:
   nsresult Init();
   nsresult Cleanup();
 
-  mozilla::Mutex mMutex;
+  void FinishTransaction(IDBTransactionRequest* aTransaction);
+
+  bool TransactionCanRun(IDBTransactionRequest* aTransaction,
+                         TransactionQueue** aQueue);
+
   nsCOMPtr<nsIThreadPool> mThreadPool;
 
-  // Protected by mMutex.
-  nsRefPtrHashtable<RefPtrHashKey<IDBTransactionRequest>, TransactionQueue>
+  nsClassHashtable<nsUint32HashKey, nsTArray<TransactionInfo> >
     mTransactionsInProgress;
+
+  nsTArray<QueuedDispatchInfo> mDelayedDispatchQueue;
 };
 
 END_INDEXEDDB_NAMESPACE

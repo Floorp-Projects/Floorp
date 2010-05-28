@@ -42,13 +42,12 @@
 #include "nsIObserverService.h"
 #include "nsIThreadPool.h"
 
+#include "mozilla/Mutex.h"
 #include "mozilla/CondVar.h"
 #include "nsComponentManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXPCOMCIDInternal.h"
-
-#include "IDBTransactionRequest.h"
 
 using mozilla::Mutex;
 using mozilla::MutexAutoLock;
@@ -56,29 +55,6 @@ using mozilla::MutexAutoUnlock;
 using mozilla::CondVar;
 
 USING_INDEXEDDB_NAMESPACE
-
-BEGIN_INDEXEDDB_NAMESPACE
-
-class TransactionQueue : public nsIRunnable
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIRUNNABLE
-
-  inline TransactionQueue(nsIRunnable* aRunnable);
-
-  inline void Dispatch(nsIRunnable* aRunnable);
-
-  inline void Finish();
-
-private:
-  Mutex mMutex;
-  CondVar mCondVar;
-  nsAutoTArray<nsCOMPtr<nsIRunnable>, 10> mQueue;
-  bool mShouldFinish;
-};
-
-END_INDEXEDDB_NAMESPACE
 
 namespace {
 
@@ -89,19 +65,77 @@ const PRUint32 kIdleThreadTimeoutMs = 30000;
 TransactionThreadPool* gInstance = nsnull;
 bool gShutdown = false;
 
-PLDHashOperator
-FinishTransactions(IDBTransactionRequest* aKey,
-                   nsRefPtr<TransactionQueue>& aData,
-                   void* aUserArg)
+struct TransactionObjectStoreInfo
 {
-  aData->Finish();
-  return PL_DHASH_REMOVE;
-}
+  TransactionObjectStoreInfo() : writing(false) { }
+
+  nsString objectStoreName;
+  bool writing;
+};
 
 } // anonymous namespace
 
+BEGIN_INDEXEDDB_NAMESPACE
+
+struct TransactionInfo
+{
+  TransactionInfo()
+  : mode(nsIIDBTransaction::READ_ONLY)
+  { }
+
+  nsRefPtr<IDBTransactionRequest> transaction;
+  nsRefPtr<TransactionQueue> queue;
+  nsTArray<TransactionObjectStoreInfo> objectStoreInfo;
+  PRUint16 mode;
+};
+
+struct QueuedDispatchInfo
+{
+  QueuedDispatchInfo()
+  : finish(false)
+  { }
+
+  nsRefPtr<IDBTransactionRequest> transaction;
+  nsCOMPtr<nsIRunnable> runnable;
+  bool finish;
+};
+
+class TransactionQueue : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  inline TransactionQueue(IDBTransactionRequest* aTransaction,
+                          nsIRunnable* aRunnable);
+
+  inline void Dispatch(nsIRunnable* aRunnable);
+
+  inline void Finish();
+
+private:
+  Mutex mMutex;
+  CondVar mCondVar;
+  IDBTransactionRequest* mTransaction;
+  nsAutoTArray<nsCOMPtr<nsIRunnable>, 10> mQueue;
+  bool mShouldFinish;
+};
+
+class FinishTransactionRunnable : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIRUNNABLE
+
+  inline FinishTransactionRunnable(IDBTransactionRequest* aTransaction);
+
+private:
+  IDBTransactionRequest* mTransaction;
+};
+
+END_INDEXEDDB_NAMESPACE
+
 TransactionThreadPool::TransactionThreadPool()
-: mMutex("TransactionThreadPool::mMutex")
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!gInstance, "More than one instance!");
@@ -188,13 +222,150 @@ TransactionThreadPool::Cleanup()
     // This is actually really bad, but if we don't force everything awake then
     // we will deadlock on shutdown...
     NS_ERROR("Transactions still in progress!");
-    mTransactionsInProgress.Enumerate(FinishTransactions, nsnull);
   }
 
   nsresult rv = mThreadPool->Shutdown();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+void
+TransactionThreadPool::FinishTransaction(IDBTransactionRequest* aTransaction)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aTransaction, "Null pointer!");
+
+  // AddRef here because removing from the hash will call Release.
+  nsRefPtr<IDBTransactionRequest> transaction(aTransaction);
+
+  const PRUint32 databaseId = aTransaction->mDatabase->Id();
+
+  nsTArray<TransactionInfo>* transactionsInProgress;
+  if (!mTransactionsInProgress.Get(databaseId, &transactionsInProgress)) {
+    NS_ERROR("We don't know anyting about this database?!");
+    return;
+  }
+
+  PRUint32 count = transactionsInProgress->Length();
+  if (count == 1) {
+#ifdef DEBUG
+    {
+      TransactionInfo& info = transactionsInProgress->ElementAt(0);
+      NS_ASSERTION(info.transaction == aTransaction, "Transaction mismatch!");
+      NS_ASSERTION(info.mode == aTransaction->mMode, "Mode mismatch!");
+    }
+#endif
+    mTransactionsInProgress.Remove(databaseId);
+  }
+  else {
+    for (PRUint32 index = 0; index < count; index++) {
+      TransactionInfo& info = transactionsInProgress->ElementAt(index);
+      if (info.transaction == aTransaction) {
+        transactionsInProgress->RemoveElementAt(index);
+        break;
+      }
+    }
+
+    NS_ASSERTION(transactionsInProgress->Length() == count - 1,
+                 "Didn't find the transaction we were looking for!");
+  }
+
+
+  // Try to dispatch all the queued 
+  nsTArray<QueuedDispatchInfo> queuedDispatch;
+  queuedDispatch.SwapElements(mDelayedDispatchQueue);
+
+  count = queuedDispatch.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    QueuedDispatchInfo& info = queuedDispatch[index];
+    if (NS_FAILED(Dispatch(info.transaction, info.runnable, info.finish))) {
+      NS_WARNING("Dispatch failed!");
+    }
+  }
+}
+
+bool
+TransactionThreadPool::TransactionCanRun(IDBTransactionRequest* aTransaction,
+                                         TransactionQueue** aQueue)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aTransaction, "Null pointer!");
+  NS_ASSERTION(aQueue, "Null pointer!");
+
+  const PRUint32 databaseId = aTransaction->mDatabase->Id();
+  const nsTArray<nsString>& objectStoreNames = aTransaction->mObjectStoreNames;
+  const PRUint16 mode = aTransaction->mMode;
+
+  // See if we can run this transaction now.
+  nsTArray<TransactionInfo>* transactionsInProgress;
+  if (!mTransactionsInProgress.Get(databaseId, &transactionsInProgress)) {
+    // First transaction for this database, fine to run.
+    *aQueue = nsnull;
+    return true;
+  }
+
+  // Another transaction for this database is already running. See if we can
+  // run at the same time.
+  PRUint32 transactionCount = transactionsInProgress->Length();
+  for (PRUint32 transactionIndex = 0;
+       transactionIndex < transactionCount;
+       transactionIndex++) {
+    const TransactionInfo& transactionInfo =
+      transactionsInProgress->ElementAt(transactionIndex);
+
+    if (transactionInfo.transaction == aTransaction) {
+      // Same transaction, already running.
+      *aQueue = transactionInfo.queue;
+      return true;
+    }
+
+    // Not our transaction, see if the objectStores overlap.
+    const nsTArray<TransactionObjectStoreInfo>& objectStoreInfoArray =
+      transactionInfo.objectStoreInfo;
+
+    PRUint32 objectStoreCount = objectStoreInfoArray.Length();
+    for (PRUint32 objectStoreIndex = 0;
+         objectStoreIndex < objectStoreCount;
+         objectStoreIndex++) {
+      const TransactionObjectStoreInfo& objectStoreInfo =
+        objectStoreInfoArray[objectStoreIndex];
+
+      if (objectStoreNames.Contains(objectStoreInfo.objectStoreName)) {
+        // Overlapping name, see if the modes are compatible.
+        switch (mode) {
+          case nsIIDBTransaction::READ_WRITE: {
+            // Someone else is reading or writing to this table, we can't
+            // run now.
+            return false;
+          }
+
+          case nsIIDBTransaction::READ_ONLY: {
+            if (objectStoreInfo.writing) {
+              // Someone else is writing to this table, we can't run now.
+              return false;
+            }
+          } break;
+
+          case nsIIDBTransaction::SNAPSHOT_READ: {
+            NS_NOTYETIMPLEMENTED("Not implemented!");
+          } break;
+
+          default:
+            NS_NOTREACHED("Should never get here!");
+        }
+      }
+
+      // Continue on to the next TransactionObjectStoreInfo.
+    }
+
+    // Continue on to the next TransactionInfo.
+  }
+
+  // If we got here then there are no conflicting transactions and we should
+  // be fine to run.
+  *aQueue = nsnull;
+  return true;
 }
 
 nsresult
@@ -206,38 +377,66 @@ TransactionThreadPool::Dispatch(IDBTransactionRequest* aTransaction,
   NS_ASSERTION(aTransaction, "Null pointer!");
   NS_ASSERTION(aRunnable, "Null pointer!");
 
-  nsRefPtr<TransactionQueue> queue;
-  bool queueIsNew = false;
+  TransactionQueue* existingQueue;
+  if (!TransactionCanRun(aTransaction, &existingQueue)) {
+    QueuedDispatchInfo* info = mDelayedDispatchQueue.AppendElement();
+    NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
 
-  {
-    MutexAutoLock lock(mMutex);
-    if (mTransactionsInProgress.Get(aTransaction, getter_AddRefs(queue))) {
-      if (aFinish) {
-        mTransactionsInProgress.Remove(aTransaction);
-      }
-    }
-    else {
-      queueIsNew = true;
-      queue = new TransactionQueue(aRunnable);
+    info->transaction = aTransaction;
+    info->runnable = aRunnable;
+    info->finish = aFinish;
 
-      if (!aFinish && !mTransactionsInProgress.Put(aTransaction, queue)) {
-        NS_WARNING("Failed to add to the hash!");
-        return NS_ERROR_FAILURE;
-      }
-    }
+    return NS_OK;
   }
 
-  NS_ASSERTION(queue, "Should never be null!");
-
-  if (!queueIsNew) {
-    queue->Dispatch(aRunnable);
+  if (existingQueue) {
+    existingQueue->Dispatch(aRunnable);
+    if (aFinish) {
+      existingQueue->Finish();
+    }
+    return NS_OK;
   }
 
+  const PRUint32 databaseId = aTransaction->mDatabase->Id();
+
+  // Make a new struct for this transaction.
+  nsTArray<TransactionInfo>* transactionInfoArray;
+  nsAutoPtr<nsTArray<TransactionInfo> > autoArray;
+  if (!mTransactionsInProgress.Get(databaseId, &transactionInfoArray)) {
+    autoArray = new nsTArray<TransactionInfo>();
+    transactionInfoArray = autoArray;
+  }
+
+  TransactionInfo* transactionInfo = transactionInfoArray->AppendElement();
+  NS_ENSURE_TRUE(transactionInfo, NS_ERROR_OUT_OF_MEMORY);
+
+  transactionInfo->transaction = aTransaction;
+  transactionInfo->queue = new TransactionQueue(aTransaction, aRunnable);
   if (aFinish) {
-    queue->Finish();
+    transactionInfo->queue->Finish();
+  }
+  transactionInfo->mode = aTransaction->mMode;
+
+  const nsTArray<nsString>& objectStoreNames = aTransaction->mObjectStoreNames;
+  PRUint32 count = objectStoreNames.Length();
+  for (PRUint32 index = 0; index < count; index++) {
+    TransactionObjectStoreInfo* info =
+      transactionInfo->objectStoreInfo.AppendElement();
+    NS_ENSURE_TRUE(info, NS_ERROR_OUT_OF_MEMORY);
+
+    info->objectStoreName = objectStoreNames[index];
+    info->writing = transactionInfo->mode == nsIIDBTransaction::READ_WRITE;
   }
 
-  return queueIsNew ? mThreadPool->Dispatch(queue, NS_DISPATCH_NORMAL) : NS_OK;
+  if (autoArray) {
+    if (!mTransactionsInProgress.Put(databaseId, autoArray)) {
+      NS_ERROR("Failed to put!");
+      return NS_ERROR_FAILURE;
+    }
+    autoArray.forget();
+  }
+
+  return mThreadPool->Dispatch(transactionInfo->queue, NS_DISPATCH_NORMAL);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(TransactionThreadPool, nsIObserver)
@@ -255,11 +454,14 @@ TransactionThreadPool::Observe(nsISupports* /* aSubject */,
   return NS_OK;
 }
 
-TransactionQueue::TransactionQueue(nsIRunnable* aRunnable)
+TransactionQueue::TransactionQueue(IDBTransactionRequest* aTransaction,
+                                   nsIRunnable* aRunnable)
 : mMutex("TransactionQueue::mMutex"),
   mCondVar(mMutex, "TransactionQueue::mCondVar"),
+  mTransaction(aTransaction),
   mShouldFinish(false)
 {
+  NS_ASSERTION(aTransaction, "Null pointer!");
   NS_ASSERTION(aRunnable, "Null pointer!");
   mQueue.AppendElement(aRunnable);
 }
@@ -326,5 +528,34 @@ TransactionQueue::Run()
     }
   }
 
+  nsCOMPtr<nsIRunnable> finishRunnable =
+    new FinishTransactionRunnable(mTransaction);
+  if (NS_FAILED(NS_DispatchToMainThread(finishRunnable, NS_DISPATCH_NORMAL))) {
+    NS_WARNING("Failed to dispatch!");
+  }
+
+  return NS_OK;
+}
+
+FinishTransactionRunnable::FinishTransactionRunnable(
+                                            IDBTransactionRequest* aTransaction)
+: mTransaction(aTransaction)
+{
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aTransaction, "Null pointer!");
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(FinishTransactionRunnable, nsIRunnable)
+
+NS_IMETHODIMP
+FinishTransactionRunnable::Run()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  if (!gInstance) {
+    NS_ERROR("Running after shutdown!");
+    return NS_ERROR_FAILURE;
+  }
+
+  gInstance->FinishTransaction(mTransaction);
   return NS_OK;
 }
