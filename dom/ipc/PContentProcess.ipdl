@@ -79,6 +79,7 @@ parent:
     sync GetPrefLocalizedString(nsCString prefName) returns (nsString retValue, nsresult rv);
     sync PrefHasUserValue(nsCString prefName) returns (PRBool retValue, nsresult rv);
     sync PrefIsLocked(nsCString prefName) returns (PRBool retValue, nsresult rv);
+    sync GetChildList(nsCString domain) returns (nsCString[] list, nsresult rv);
 };
 
 }

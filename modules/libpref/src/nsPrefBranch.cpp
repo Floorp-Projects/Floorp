@@ -67,7 +67,7 @@
 // Definitions
 struct EnumerateData {
   const char  *parent;
-  nsVoidArray *pref_list;
+  nsTArray<nsCString> *pref_list;
 };
 
 struct PrefCallbackData {
@@ -687,32 +687,46 @@ NS_IMETHODIMP nsPrefBranch::DeleteBranch(const char *aStartingAt)
 NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCount, char ***aChildArray)
 {
   char            **outArray;
-  char            *theElement;
   PRInt32         numPrefs;
   PRInt32         dwIndex;
   EnumerateData   ed;
-  nsAutoVoidArray prefArray;
+  nsAutoTArray<nsCString, 32> prefArray;
 
   NS_ENSURE_ARG_POINTER(aStartingAt);
   NS_ENSURE_ARG_POINTER(aCount);
   NS_ENSURE_ARG_POINTER(aChildArray);
 
-  if (!gHashTable.ops) {
-    *aChildArray = nsnull;
-    *aCount = 0;
-    return NS_ERROR_NOT_INITIALIZED;
+  *aChildArray = nsnull;
+  *aCount = 0;
+
+#ifdef MOZ_IPC
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mozilla::dom::ContentProcessChild *cpc = 
+      mozilla::dom::ContentProcessChild::GetSingleton();
+    NS_ASSERTION(cpc, "Content Protocol is NULL!");
+
+    nsresult rv;
+    cpc->SendGetChildList(nsDependentCString(getPrefName(aStartingAt)),
+                          &prefArray, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+  } else
+#endif
+  {
+    if (!gHashTable.ops)
+      return NS_ERROR_NOT_INITIALIZED;
+
+    // this will contain a list of all the pref name strings
+    // allocate on the stack for speed
+
+    ed.parent = getPrefName(aStartingAt);
+    ed.pref_list = &prefArray;
+    PL_DHashTableEnumerate(&gHashTable, pref_enumChild, &ed);
   }
-
-  // this will contain a list of all the pref name strings
-  // allocate on the stack for speed
-
-  ed.parent = getPrefName(aStartingAt);
-  ed.pref_list = &prefArray;
-  PL_DHashTableEnumerate(&gHashTable, pref_enumChild, &ed);
 
   // now that we've built up the list, run the callback on
   // all the matching elements
-  numPrefs = prefArray.Count();
+  numPrefs = prefArray.Length();
 
   if (numPrefs) {
     outArray = (char **)nsMemory::Alloc(numPrefs * sizeof(char *));
@@ -722,9 +736,10 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
     for (dwIndex = 0; dwIndex < numPrefs; ++dwIndex) {
       // we need to lop off mPrefRoot in case the user is planning to pass this
       // back to us because if they do we are going to add mPrefRoot again.
-      theElement = ((char *)prefArray.ElementAt(dwIndex)) + mPrefRootLength;
-      outArray[dwIndex] = (char *)nsMemory::Clone(theElement, strlen(theElement) + 1);
- 
+      const nsCString& element = prefArray[dwIndex];
+      outArray[dwIndex] = (char *)nsMemory::Clone(
+        element.get() + mPrefRootLength, element.Length() - mPrefRootLength + 1);
+
       if (!outArray[dwIndex]) {
         // we ran out of memory... this is annoying
         NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(dwIndex, outArray);
@@ -732,9 +747,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, PRUint32 *aCou
       }
     }
     *aChildArray = outArray;
-  } else {
-    *aChildArray = nsnull;
-  } /* endif */
+  }
   *aCount = numPrefs;
 
   return NS_OK;
@@ -1019,8 +1032,8 @@ pref_enumChild(PLDHashTable *table, PLDHashEntryHdr *heh,
 {
   PrefHashEntry *he = static_cast<PrefHashEntry*>(heh);
   EnumerateData *d = reinterpret_cast<EnumerateData *>(arg);
-  if (PL_strncmp(he->key, d->parent, PL_strlen(d->parent)) == 0) {
-    d->pref_list->AppendElement((void*)he->key);
+  if (strncmp(he->key, d->parent, strlen(d->parent)) == 0) {
+    d->pref_list->AppendElement(he->key);
   }
   return PL_DHASH_NEXT;
 }
