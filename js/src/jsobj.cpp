@@ -280,7 +280,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
             bool hasGetter, hasSetter;
             AutoValueRooter v(cx, JSVAL_VOID);
             AutoValueRooter setter(cx, JSVAL_VOID);
-            if (obj->isNative()) {
+            if (obj2->isNative()) {
                 JSScopeProperty *sprop = (JSScopeProperty *) prop;
                 hasGetter = sprop->hasGetterValue();
                 hasSetter = sprop->hasSetterValue();
@@ -290,7 +290,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                     setter.set(sprop->setterValue());
                 JS_UNLOCK_OBJ(cx, obj2);
             } else {
-                obj->dropProperty(cx, prop);
+                obj2->dropProperty(cx, prop);
                 hasGetter = hasSetter = false;
             }
             if (hasSetter) {
@@ -625,7 +625,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
         jsint valcnt = 0;
         if (prop) {
             bool doGet = true;
-            if (obj->isNative()) {
+            if (obj2->isNative()) {
                 JSScopeProperty *sprop = (JSScopeProperty *) prop;
                 unsigned attrs = sprop->attributes();
                 if (attrs & JSPROP_GETTER) {
@@ -640,7 +640,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                     gsop[valcnt] = ATOM_TO_STRING(cx->runtime->atomState.setAtom);
                     valcnt++;
                 }
-                JS_UNLOCK_OBJ(cx, obj);
+                JS_UNLOCK_OBJ(cx, obj2);
             } else {
                 obj2->dropProperty(cx, prop);
             }
