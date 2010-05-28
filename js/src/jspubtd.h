@@ -713,7 +713,7 @@ static JS_ALWAYS_INLINE jsint
 JSBOXEDWORD_TO_SPECIAL(jsboxedword w)
 {
     JS_ASSERT(JSBOXEDWORD_IS_SPECIAL(w));
-    return w >> JSBOXEDWORD_TAGBITS;
+    return jsint(w >> JSBOXEDWORD_TAGBITS);
 }
 
 static JS_ALWAYS_INLINE jsboxedword
