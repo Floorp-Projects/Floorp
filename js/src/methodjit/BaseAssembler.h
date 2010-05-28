@@ -44,9 +44,20 @@
 #include "jstl.h"
 #include "assembler/assembler/MacroAssemblerCodeRef.h"
 #include "assembler/assembler/MacroAssembler.h"
+#include "assembler/assembler/RepatchBuffer.h"
+#include "assembler/moco/MocoStubs.h"
+#include "methodjit/MethodJIT.h"
+#include "methodjit/MachineRegs.h"
 
 namespace js {
 namespace mjit {
+
+struct FrameAddress : JSC::MacroAssembler::Address
+{
+    FrameAddress(int32 offset)
+      : Address(JSC::MacroAssembler::stackPointerRegister, offset)
+    { }
+};
 
 class BaseAssembler : public JSC::MacroAssembler
 {
@@ -59,6 +70,13 @@ class BaseAssembler : public JSC::MacroAssembler
         JSC::FunctionPtr fun;
     };
 
+    /* Need a temp reg that is not ArgReg1. */
+#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
+    static const RegisterID ClobberInCall = JSC::X86Registers::ecx;
+#elif defined(JS_CPU_ARM)
+    static const RegisterID ClobberInCall = JSC::ARMRegisters::r2;
+#endif
+
     /* :TODO: OOM */
     Label startLabel;
     Vector<CallPatch, 64, SystemAllocPolicy> callPatches;
@@ -68,6 +86,85 @@ class BaseAssembler : public JSC::MacroAssembler
       : callPatches(SystemAllocPolicy())
     {
         startLabel = label();
+    }
+
+    /*
+     * FpReg is used to home the current JSStackFrame*.
+     */
+#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+    static const RegisterID FpReg = JSC::X86Registers::ebx;
+#elif defined(JS_CPU_ARM)
+    static const RegisterID FpReg = JSC::X86Registers::r11;
+#endif
+
+    /*
+     * Prepares for a stub call.
+     */
+    void * getCallTarget(void *fun) {
+#ifdef JS_CPU_ARM
+        /*
+         * Insert a veneer for ARM to allow it to catch exceptions. There is no
+         * reliable way to determine the location of the return address on the
+         * stack, so it cannot be hijacked.
+         *
+         * :TODO: It wouldn't surprise me if GCC always pushes LR first. In that
+         * case, this looks like the x86-style call, and we can hijack the stack
+         * slot accordingly, thus avoiding the cost of a veneer. This should be
+         * investigated.
+         */
+
+        void *pfun = JS_FUNC_TO_DATA_PTR(void *, JaegerStubVeneer);
+
+        /*
+         * We put the real target address into IP, as this won't conflict with
+         * the EABI argument-passing mechanism. Technically, this isn't ABI-
+         * compliant.
+         */
+        move(Imm32(intptr_t(fun)), ARMRegisters::ip);
+#else
+        /*
+         * Architectures that push the return address to an easily-determined
+         * location on the stack can hijack C++'s return mechanism by overwriting
+         * that address, so a veneer is not required.
+         */
+        void *pfun = fun;
+#endif
+        return pfun;
+    }
+
+
+#define STUB_CALL_TYPE(type)                                    \
+    Call stubCall(type stub, jsbytecode *pc, uint32 fd) {       \
+        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub),      \
+                        pc, fd);                                \
+    }
+
+    STUB_CALL_TYPE(JSObjStub);
+
+#undef STUB_CALL_TYPE
+
+    Call stubCall(void *ptr, jsbytecode *pc, uint32 frameDepth) {
+        JS_STATIC_ASSERT(ClobberInCall != Registers::ArgReg1);
+
+        void *pfun = getCallTarget(ptr);
+
+        /* PC -> regs->pc :( */
+        storePtr(ImmPtr(pc),
+                 FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
+
+        /* sp = fp + slots() + stackDepth */
+        addPtr(Imm32(sizeof(JSStackFrame) + frameDepth * sizeof(jsval)),
+               FpReg,
+               ClobberInCall);
+
+        /* regs->sp = sp */
+        storePtr(ClobberInCall,
+                 FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, sp)));
+        
+        /* VMFrame -> ArgReg0 */
+        move(MacroAssembler::stackPointerRegister, Registers::ArgReg0);
+
+        return call(pfun);
     }
 
     Call call(void *fun) {
@@ -86,9 +183,21 @@ class BaseAssembler : public JSC::MacroAssembler
         callPatches.append(CallPatch(differenceBetween(startLabel, cl), fun));
         return cl;
     }
+
+    void finalize(uint8 *ncode) {
+        JSC::JITCode jc(ncode, size());
+        JSC::CodeBlock cb(jc);
+        JSC::RepatchBuffer repatchBuffer(&cb);
+
+        for (size_t i = 0; i < callPatches.length(); i++) {
+            JSC::MacroAssemblerCodePtr cp(ncode + callPatches[i].distance);
+            repatchBuffer.relink(JSC::CodeLocationCall(cp), callPatches[i].fun);
+        }
+    }
 };
 
 } /* namespace js */
 } /* namespace mjit */
 
 #endif
+

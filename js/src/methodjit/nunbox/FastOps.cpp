@@ -46,26 +46,22 @@
 using namespace js;
 using namespace js::mjit;
 
-static const uint32 TAG_OFFSET     = 4;
-static const uint32 PAYLOAD_OFFSET = 0;
-
 void
 mjit::Compiler::jsop_bindname(uint32 index)
 {
     RegisterID reg = frame.allocReg();
-    masm.loadPtr(Address(FrameState::FpReg, offsetof(JSStackFrame, scopeChain)), reg);
+    masm.loadPtr(Address(Assembler::FpReg, offsetof(JSStackFrame, scopeChain)), reg);
 
     Address address(reg, offsetof(JSObject, fslots) + JSSLOT_PARENT * sizeof(jsval));
 
-    masm.load32(Address(address.base, address.offset + PAYLOAD_OFFSET), reg);
-    Jump j = masm.branchTestPtr(Assembler::Zero, reg, reg);
+    Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(address), ImmPtr(0));
 
-    {
-        stubcc.linkExit(j);
-        stubcc.syncAndSpill();
-        stubcc.call(stubs::BindName);
-    }
+    stubcc.linkExit(j);
+    stubcc.leave();
+    stubcc.call(stubs::BindName);
 
     frame.pushObject(reg);
+
+    stubcc.rejoin(1);
 }
 
