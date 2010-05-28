@@ -39,7 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 #include "MethodJIT.h"
 #include "Compiler.h"
-#include "assembler/assembler/LinkBuffer.h"
+#include "StubCalls.h"
+#include "assembler/jit/ExecutableAllocator.h"
 
 #include "jsautooplen.h"
 
@@ -125,7 +126,7 @@ mjit::Compiler::Compile()
 #endif
 
     JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%ld\")\n",
-               (void*)script->ncode, 0); //cr.m_size);
+               (void*)script->ncode, masm.size() + stubcc.size()); //cr.m_size);
 
     return Compile_Okay;
 }
@@ -135,6 +136,20 @@ mjit::Compiler::Compile()
 mjit::Compiler::~Compiler()
 {
     cx->free(jumpMap);
+}
+
+CompileStatus
+mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
+{
+    Compiler cc(cx, script, fun, scopeChain);
+
+    JS_ASSERT(!script->ncode);
+
+    CompileStatus status = cc.Compile();
+    if (status != Compile_Okay)
+        script->ncode = JS_UNJITTABLE_METHOD;
+
+    return status;
 }
 
 CompileStatus
@@ -153,6 +168,45 @@ mjit::Compiler::generatePrologue()
      */
     masm.storePtr(ARMRegisters::lr, FrameAddress(offsetof(VMFrame, scriptedReturn)));
 #endif
+
+    return Compile_Okay;
+}
+
+CompileStatus
+mjit::Compiler::generateEpilogue()
+{
+    return Compile_Okay;
+}
+
+CompileStatus
+mjit::Compiler::finishThisUp()
+{
+    for (size_t i = 0; i < branchPatches.length(); i++) {
+        Label label = labelOf(branchPatches[i].pc);
+        branchPatches[i].jump.linkTo(label, &masm);
+    }
+
+    JSC::ExecutablePool *execPool = getExecPool(masm.size() + stubcc.size());
+    if (!execPool)
+        return Compile_Abort;
+
+    uint8 *result = (uint8 *)execPool->alloc(masm.size() + stubcc.size());
+    JSC::ExecutableAllocator::makeWritable(result, masm.size() + stubcc.size());
+    memcpy(result, masm.buffer(), masm.size());
+    memcpy(result + masm.size(), stubcc.buffer(), stubcc.size());
+
+    /* Patch up stub calls. */
+    masm.finalize(result);
+    stubcc.finalize(result + masm.size());
+
+    JSC::ExecutableAllocator::makeExecutable(result, masm.size() + stubcc.size());
+    JSC::ExecutableAllocator::cacheFlush(result, masm.size() + stubcc.size());
+
+    script->ncode = result;
+#ifdef DEBUG
+    script->jitLength = masm.size() + stubcc.size();
+#endif
+    script->execPool = execPool;
 
     return Compile_Okay;
 }
@@ -245,6 +299,13 @@ mjit::Compiler::generateMethod()
             jsop_bindname(fullAtomIndex(PC));
           END_CASE(JSOP_BINDNAME)
 
+          BEGIN_CASE(JSOP_SETNAME)
+            prepareStubCall();
+            masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
+            stubCall(stubs::SetName, Uses(2), Defs(1));
+            frame.pop();
+          END_CASE(JSOP_SETNAME)
+
           BEGIN_CASE(JSOP_UINT24)
             frame.push(Value(Int32Tag((int32_t) GET_UINT24(PC))));
           END_CASE(JSOP_UINT24)
@@ -252,7 +313,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_STOP)
             /* Safe point! */
             cg.storeJsval(Value(UndefinedTag()),
-                          Address(FrameState::FpReg,
+                          Address(Assembler::FpReg,
                                   offsetof(JSStackFrame, rval)));
             emitReturn();
             goto done;
@@ -335,51 +396,6 @@ mjit::Compiler::jumpInScript(Jump j, jsbytecode *pc)
         branchPatches.append(BranchPatch(j, pc));
 }
 
-CompileStatus
-mjit::Compiler::generateEpilogue()
-{
-    return Compile_Okay;
-}
-
-CompileStatus
-mjit::Compiler::finishThisUp()
-{
-    for (size_t i = 0; i < branchPatches.length(); i++) {
-        Label label = labelOf(branchPatches[i].pc);
-        branchPatches[i].jump.linkTo(label, &masm);
-    }
-
-    JSC::ExecutablePool *execPool = getExecPool(masm.size());
-    if (!execPool)
-        return Compile_Abort;
-
-    JSC::LinkBuffer patchBuffer(&masm, execPool);
-    JSC::MacroAssemblerCodeRef cr = patchBuffer.finalizeCode();
-
-    script->ncode = cr.m_code.executableAddress();
-#ifdef DEBUG
-    script->jitLength = masm.size();
-#endif
-    script->execPool = cr.m_executablePool;
-    cr.m_executablePool = NULL;
-
-    return Compile_Okay;
-}
-
-CompileStatus
-mjit::TryCompile(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
-{
-    Compiler cc(cx, script, fun, scopeChain);
-
-    JS_ASSERT(!script->ncode);
-
-    CompileStatus status = cc.Compile();
-    if (status != Compile_Okay)
-        script->ncode = JS_UNJITTABLE_METHOD;
-
-    return status;
-}
-
 void
 mjit::Compiler::jsop_setglobal(uint32 index)
 {
@@ -428,5 +444,25 @@ mjit::Compiler::emitReturn()
     masm.loadPtr(FrameAddress(offsetof(VMFrame, scriptedReturn)), ARMRegisters::lr);
 #endif
     masm.ret();
+}
+
+void
+mjit::Compiler::prepareStubCall()
+{
+    JaegerSpew(JSpew_Insns, " ---- SLOW CALL, SYNCING FRAME ---- \n");
+    frame.sync();
+    JaegerSpew(JSpew_Insns, " ---- KILLING TEMP REGS ---- \n");
+    frame.killSyncedRegs(Registers::TempRegs);
+    JaegerSpew(JSpew_Insns, " ---- FRAME SYNCING DONE ---- \n");
+}
+
+JSC::MacroAssembler::Call
+mjit::Compiler::stubCall(void *ptr, Uses uses, Defs defs)
+{
+    frame.forget(uses.nuses);
+    JaegerSpew(JSpew_Insns, " ---- CALLING STUB ---- \n");
+    Call cl = masm.stubCall(ptr, PC, frame.stackDepth() + script->nfixed);
+    JaegerSpew(JSpew_Insns, " ---- END SLOW CALL ---- \n");
+    return cl;
 }
 

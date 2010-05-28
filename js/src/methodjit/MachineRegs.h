@@ -147,6 +147,16 @@ struct Registers {
       : freeMask(freeMask)
     { }
 
+    Registers(const Registers &other)
+      : freeMask(other.freeMask)
+    { }
+
+    Registers & operator =(const Registers &other)
+    {
+        freeMask = other.freeMask;
+        return *this;
+    }
+
     void reset() {
         freeMask = AvailRegs;
     }

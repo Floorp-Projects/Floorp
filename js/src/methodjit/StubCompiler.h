@@ -52,10 +52,6 @@ namespace mjit {
 
 class Compiler;
 
-struct StubCallInfo {
-    uint32 numSpills;
-};
-
 class StubCompiler
 {
     typedef JSC::MacroAssembler::Call Call;
@@ -77,18 +73,49 @@ class StubCompiler
     JSScript *script;
     Assembler masm;
     Vector<ExitPatch, 64, SystemAllocPolicy> exits;
+    RegSnapshot snapshot;
 
   public:
     StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);
-    void linkExit(Jump j);
-    void syncAndSpill();
-    Call call(JSObjStub stub) {
-        return scall(JS_FUNC_TO_DATA_PTR(void *, stub));
+
+    size_t size() {
+        return masm.size();
     }
 
+    uint8 *buffer() {
+        return masm.buffer();
+    }
+
+#define STUB_CALL_TYPE(type)                                    \
+    Call call(type stub) {                                      \
+        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub));     \
+    }
+
+    STUB_CALL_TYPE(JSObjStub);
+
+#undef STUB_CALL_TYPE
+
+    /* Patches a jump target into the slow path. */
+    void linkExit(Jump j);
+
+    /*
+     * Emits code into the slow-path stream that sync all outstanding state
+     * to memory.
+     */
+    void leave();
+
+    /*
+     * Rejoins slow-path code back to the fast-path. The invalidation param
+     * specifies how many stack slots below sp must not be reloaded from
+     * registers.
+     */
+    void rejoin(uint32 invalidationDepth);
+
+    /* Finish all native code patching. */
+    void finalize(uint8 *ncode);
+
   private:
-    Call scall(void *ptr);
-    void *getCallTarget(void *fun);
+    Call stubCall(void *ptr);
 };
 
 } /* namepsace mjit */
