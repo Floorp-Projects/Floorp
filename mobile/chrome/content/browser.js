@@ -574,7 +574,12 @@ var Browser = {
     window.dispatchEvent(event);
   },
 
+  _waitingToClose: false,
   closing: function closing() {
+    // If we are already waiting for the close prompt, don't show another
+    if (this._waitingToClose)
+      return false;
+
     // Prompt if we have multiple tabs before closing window
     let numTabs = this._tabs.length;
     if (numTabs > 1) {
@@ -593,7 +598,10 @@ var Browser = {
         let checkText = Elements.browserBundle.getString("tabs.closeWarningPromptMe");
         let buttons = (prompt.BUTTON_TITLE_IS_STRING * prompt.BUTTON_POS_0) +
                       (prompt.BUTTON_TITLE_CANCEL * prompt.BUTTON_POS_1);
+
+        this._waitingToClose = true;
         let pressed = prompt.confirmEx(window, title, message, buttons, closeText, null, null, checkText, warnOnClose);
+        this._waitingToClose = false;
 
         // Don't set the pref unless they press OK and it's false
         let reallyClose = (pressed == 0);
