@@ -1615,7 +1615,7 @@ pref("font.mathfont-family", "STIXNonUnicode, STIXSize1, STIXGeneral, Symbol, De
 pref("gfx.font_rendering.cleartype.use_for_downloadable_fonts", true);
 
 // use cleartype rendering for all fonts always (win xp only)
-pref("gfx.font_rendering.cleartype.always_use_for_content", true);
+pref("gfx.font_rendering.cleartype.always_use_for_content", false);
 
 pref("ui.key.menuAccessKeyFocuses", true);
 
