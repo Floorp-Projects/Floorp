@@ -316,6 +316,22 @@ ValueToObject(JSContext *cx, Value *vp)
     return &vp->asObject();
 }
 
+#define NATIVE_GET(cx,obj,pobj,sprop,getHow,vp)                               \
+    JS_BEGIN_MACRO                                                            \
+        if (sprop->hasDefaultGetter()) {                                      \
+            /* Fast path for Object instance properties. */                   \
+            JS_ASSERT((sprop)->slot != SPROP_INVALID_SLOT ||                  \
+                      !sprop->hasDefaultSetter());                            \
+            if (((sprop)->slot != SPROP_INVALID_SLOT))                        \
+                *(vp) = (pobj)->lockedGetSlot((sprop)->slot);                 \
+            else                                                              \
+                (vp)->setUndefined();                                         \
+        } else {                                                              \
+            if (!js_NativeGet(cx, obj, pobj, sprop, getHow, vp))              \
+                THROW();                                                      \
+        }                                                                     \
+    JS_END_MACRO
+
 void JS_FASTCALL
 mjit::stubs::SetName(VMFrame &f, uint32 index)
 {
@@ -522,5 +538,76 @@ mjit::stubs::SetName(VMFrame &f, uint32 index)
     } while (0);
 
     f.regs.sp[-2] = f.regs.sp[-1];
+}
+
+static void
+ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
+{
+    const char *printable = js_AtomToPrintableString(cx, atom);
+    if (printable)
+        js_ReportIsNotDefined(cx, printable);
+}
+
+void JS_FASTCALL
+stubs::Name(VMFrame &f, uint32 index)
+{
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp;
+    JSObject *obj = fp->scopeChain;
+
+    JSScopeProperty *sprop;
+    Value rval;
+
+    PropertyCacheEntry *entry;
+    JSObject *obj2;
+    JSAtom *atom;
+    JS_PROPERTY_CACHE(cx).test(cx, f.regs.pc, obj, obj2, entry, atom);
+    if (!atom) {
+        if (entry->vword.isFunObj()) {
+            f.regs.sp[-1].setFunObj(entry->vword.toFunObj());
+            return;
+        }
+
+        if (entry->vword.isSlot()) {
+            uintN slot = entry->vword.toSlot();
+            JS_ASSERT(slot < obj2->scope()->freeslot);
+            f.regs.sp[-1] = obj2->lockedGetSlot(slot);
+            return;
+        }
+
+        JS_ASSERT(entry->vword.isSprop());
+        sprop = entry->vword.toSprop();
+        goto do_native_get;
+    }
+
+    jsid id;
+    id = ATOM_TO_JSID(atom);
+    JSProperty *prop;
+    if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
+        THROW();
+    if (!prop) {
+        /* Kludge to allow (typeof foo == "undefined") tests. */
+        JSOp op2 = js_GetOpcode(cx, f.fp->script, f.regs.pc + JSOP_NAME_LENGTH);
+        if (op2 == JSOP_TYPEOF) {
+            f.regs.sp[-1].setUndefined();
+            return;
+        }
+        ReportAtomNotDefined(cx, atom);
+        THROW();
+    }
+
+    /* Take the slow path if prop was not found in a native object. */
+    if (!obj->isNative() || !obj2->isNative()) {
+        obj2->dropProperty(cx, prop);
+        if (!obj->getProperty(cx, id, &rval))
+            THROW();
+    } else {
+        sprop = (JSScopeProperty *)prop;
+  do_native_get:
+        NATIVE_GET(cx, obj, obj2, sprop, JSGET_METHOD_BARRIER, &rval);
+        obj2->dropProperty(cx, (JSProperty *) sprop);
+    }
+
+    f.regs.sp[-1] = rval;
 }
 
