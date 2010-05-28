@@ -1513,7 +1513,7 @@ window.Groups = {
   // ----------
   getNewTabGroup: function() {
     var groupTitle = 'New Tabs';
-    var array = jQuery.grep(this.groups, function(group) {
+    var array = iQ.grep(this.groups, function(group) {
       return group.getTitle() == groupTitle;
     });
     
