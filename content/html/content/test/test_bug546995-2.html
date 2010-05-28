@@ -56,12 +56,13 @@ function runTests()
     document.getElementById('content').appendChild(e);
   }
 
-  // The element should still be focused. Waiting a second to be sure.
-  setTimeout(function() {
-               ok(document.activeElement, document.body,
-                  "After loading, elements can't be autofocused");
-               SimpleTest.finish();
-             }, 1000);
+  // When the function will be executed, the focus event from autofocus should
+  // have been processed.
+  SimpleTest.executeSoon(function() {
+    ok(document.activeElement, document.body,
+       "After loading, elements can't be autofocused");
+    SimpleTest.finish();
+    });
   yield;
 }
 
