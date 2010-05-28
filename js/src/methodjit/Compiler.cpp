@@ -195,7 +195,10 @@ mjit::Compiler::finishThisUp()
     memcpy(result, masm.buffer(), masm.size());
     memcpy(result + masm.size(), stubcc.buffer(), stubcc.size());
 
-    /* Patch up stub calls. */
+    /* Link fast and slow paths together. */
+    stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
+
+    /* Patch all outgoing calls. */
     masm.finalize(result);
     stubcc.finalize(result + masm.size());
 
@@ -449,7 +452,7 @@ mjit::Compiler::emitReturn()
 void
 mjit::Compiler::prepareStubCall()
 {
-    JaegerSpew(JSpew_Insns, " ---- SLOW CALL, SYNCING FRAME ---- \n");
+    JaegerSpew(JSpew_Insns, " ---- STUB CALL, SYNCING FRAME ---- \n");
     frame.sync();
     JaegerSpew(JSpew_Insns, " ---- KILLING TEMP REGS ---- \n");
     frame.killSyncedRegs(Registers::TempRegs);
@@ -462,7 +465,7 @@ mjit::Compiler::stubCall(void *ptr, Uses uses, Defs defs)
     frame.forget(uses.nuses);
     JaegerSpew(JSpew_Insns, " ---- CALLING STUB ---- \n");
     Call cl = masm.stubCall(ptr, PC, frame.stackDepth() + script->nfixed);
-    JaegerSpew(JSpew_Insns, " ---- END SLOW CALL ---- \n");
+    JaegerSpew(JSpew_Insns, " ---- END STUB CALL ---- \n");
     return cl;
 }
 
