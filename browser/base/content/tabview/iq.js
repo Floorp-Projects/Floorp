@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Aza Raskin <aza@mozilla.com>
  *
  * Some portions copied from:
  * jQuery JavaScript Library v1.4.2
@@ -527,7 +528,12 @@ iQ.fn = iQ.prototype = {
           if(typeof(value) != 'string') 
             value += 'px';
         }
-          
+        
+        // -moz-transform is a special case. To set it doing elem.style["-moz-transform"]
+        // doesn't work. You have to use elem.style["MozTransform"]. There are probably
+        // other key values like this.
+        // TODO: Generalize.
+        if( key == "-moz-transform" ) key = "MozTransform";
         elem.style[key] = value;
       });
     } 
