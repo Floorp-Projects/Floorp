@@ -133,6 +133,9 @@ private:
     virtual bool RecvPrefIsLocked(const nsCString& prefName,
             PRBool* retValue, nsresult* rv);
 
+    virtual bool RecvGetChildList(const nsCString& domain,
+            nsTArray<nsCString>* list, nsresult* rv);
+
     void EnsurePrefService();
 
     mozilla::Monitor mMonitor;

@@ -248,6 +248,25 @@ ContentProcessParent::RecvPrefIsLocked(const nsCString& prefName,
     return true;
 }
 
+bool
+ContentProcessParent::RecvGetChildList(const nsCString& domain,
+                                       nsTArray<nsCString>* list, nsresult* rv)
+{
+    EnsurePrefService();
+
+    PRUint32 count;
+    char **childArray;
+    *rv = mPrefService->GetChildList(domain.get(), &count, &childArray);
+
+    if (NS_SUCCEEDED(*rv)) {
+      list->SetCapacity(count);
+      for (PRUint32 i = 0; i < count; ++i)
+        *(list->AppendElement()) = childArray[i];
+    }
+        
+    return true;
+}
+
 void
 ContentProcessParent::EnsurePrefService()
 {
