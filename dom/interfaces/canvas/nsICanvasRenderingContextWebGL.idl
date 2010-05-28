@@ -44,7 +44,7 @@ interface nsIDOMHTMLCanvasElement;
 // XXX should we comment out these typedefs in the C++ header?
 
 typedef unsigned long  GLenum;
-typedef boolean        GLboolean;
+typedef octet  GLboolean;
 typedef unsigned long  GLbitfield;
 typedef short          GLshort;
 typedef long           GLint;
