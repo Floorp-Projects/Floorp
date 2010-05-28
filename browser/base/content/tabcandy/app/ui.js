@@ -137,7 +137,7 @@ var Tabbar = {
     var self = this;
     visibleTabs.forEach(function(tab){
       tab.collapsed = false;
-      Utils.activeWindow.gBrowser.moveTabTo(tab, self.el.children.length-1);
+      Utils.getCurrentWindow().gBrowser.moveTabTo(tab, self.el.children.length-1);
     });
   },
 
@@ -177,7 +177,7 @@ window.Page = {
     window.statusbar.visible = false;  
         
     // Mac Only
-    Utils.activeWindow.document.getElementById("main-window").setAttribute("activetitlebarcolor", "#C4C4C4");
+    Utils.getCurrentWindow().document.getElementById("main-window").setAttribute("activetitlebarcolor", "#C4C4C4");
   },
   
   showChrome: function(){
@@ -186,7 +186,7 @@ window.Page = {
     window.statusbar.visible = true;
     
     // Mac Only
-    Utils.activeWindow.document.getElementById("main-window").removeAttribute("activetitlebarcolor");     
+    Utils.getCurrentWindow().document.getElementById("main-window").removeAttribute("activetitlebarcolor");     
   },
   
   setupKeyHandlers: function(){
