@@ -124,7 +124,7 @@ IDBTransactionRequest::~IDBTransactionRequest()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!mPendingRequests, "Should have no pending requests here!");
 
-  CloseConnection();
+  NS_ASSERTION(!mConnection, "Should have called CloseConnection!");
 
   if (mListenerManager) {
     mListenerManager->Disconnect();

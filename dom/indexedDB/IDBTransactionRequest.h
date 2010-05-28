@@ -57,15 +57,17 @@ BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
 class ObjectStoreInfo;
+class TransactionThreadPool;
 
 class IDBTransactionRequest : public nsDOMEventTargetHelper,
                               public IDBRequest::Generator,
                               public nsIIDBTransactionRequest
 {
   friend class AsyncConnectionHelper;
+  friend class TransactionThreadPool;
 
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIIDBTRANSACTION
   NS_DECL_NSIIDBTRANSACTIONREQUEST
 
@@ -83,7 +85,11 @@ public:
 
   nsresult Commit();
 
-  PRInt64 GetUniqueNumberForName() { return ++mLastUniqueNumber; }
+  PRInt64 GetUniqueNumberForName()
+  {
+    return ++mLastUniqueNumber;
+  }
+
   bool StartSavepoint(const nsCString& aName);
   void RevertToSavepoint(const nsCString& aName);
 
