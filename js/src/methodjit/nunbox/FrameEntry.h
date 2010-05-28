@@ -76,7 +76,7 @@ class FrameEntry
     }
 
     uint32 getPayload32() {
-        JS_ASSERT(!Valueify(v_.asBits).isDouble());
+        JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
         return v_.s.payload.u32;
     }
 
