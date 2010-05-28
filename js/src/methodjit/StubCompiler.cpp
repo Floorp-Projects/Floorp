@@ -57,79 +57,37 @@ StubCompiler::linkExit(Jump j)
 }
 
 void
-StubCompiler::syncAndSpill()
+StubCompiler::leave()
 {
-    frame.sync(masm);
+    JaegerSpew(JSpew_Insns, " ---- BEGIN STUB SPILL CODE ---- \n");
+    frame.sync(masm, snapshot);
+    JaegerSpew(JSpew_Insns, " ---- END STUB SPILL CODE ---- \n");
+    JaegerSpew(JSpew_Insns, " ---- BEGIN STUB CALL CODE ---- \n");
 }
 
-void *
-StubCompiler::getCallTarget(void *fun)
+void
+StubCompiler::rejoin(uint32 invalidationDepth)
 {
-#ifdef JS_CPU_ARM
-    /*
-     * Insert a veneer for ARM to allow it to catch exceptions. There is no
-     * reliable way to determine the location of the return address on the
-     * stack, so it cannot be hijacked.
-     *
-     * :TODO: It wouldn't surprise me if GCC always pushes LR first. In that
-     * case, this looks like the x86-style call, and we can hijack the stack
-     * slot accordingly, thus avoiding the cost of a veneer. This should be
-     * investigated.
-     */
-
-    void *pfun = JS_FUNC_TO_DATA_PTR(void *, JaegerStubVeneer);
-
-    /*
-     * We put the real target address into IP, as this won't conflict with
-     * the EABI argument-passing mechanism. Technically, this isn't ABI-
-     * compliant.
-     */
-    masm.move(Imm32(intptr_t(fun)), ARMRegisters::ip);
-#else
-    /*
-     * Architectures that push the return address to an easily-determined
-     * location on the stack can hijack C++'s return mechanism by overwriting
-     * that address, so a veneer is not required.
-     */
-    void *pfun = fun;
-#endif
-    return pfun;
+    JaegerSpew(JSpew_Insns, " ---- BEGIN STUB RESTORE CODE ---- \n");
+    frame.merge(masm, snapshot, invalidationDepth);
+    JaegerSpew(JSpew_Insns, " ---- END STUB RESTORE CODE ---- \n");
 }
 
 typedef JSC::MacroAssembler::RegisterID RegisterID;
 typedef JSC::MacroAssembler::ImmPtr ImmPtr;
 typedef JSC::MacroAssembler::Imm32 Imm32;
 
-/* Need a temp reg that is not ArgReg1. */
-#if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
-static const RegisterID ClobberInCall = JSC::X86Registers::ecx;
-#elif defined(JS_CPU_ARM)
-static const RegisterID ClobberInCall = JSC::ARMRegisters::r2;
-#endif
-
-JS_STATIC_ASSERT(ClobberInCall != Registers::ArgReg1);
-
 JSC::MacroAssembler::Call
-StubCompiler::scall(void *ptr)
+StubCompiler::stubCall(void *ptr)
 {
-    void *pfun = getCallTarget(ptr);
+    Call cl = masm.stubCall(ptr, cc.getPC(), frame.stackDepth() + script->nfixed);
+    JaegerSpew(JSpew_Insns, " ---- END STUB CALL CODE ---- \n");
+    return cl;
+}
 
-    /* PC -> regs->pc :( */
-    masm.storePtr(ImmPtr(cc.getPC()),
-                  FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
-
-    /* sp = fp + slots() + stackDepth */
-    masm.addPtr(Imm32(sizeof(JSStackFrame) +
-                (frame.stackDepth() + script->nfixed) * sizeof(jsval)),
-                FrameState::FpReg, ClobberInCall);
-
-    /* regs->sp = sp */
-    masm.storePtr(ClobberInCall,
-                  FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, sp)));
-    
-    /* VMFrame -> ArgReg0 */
-    masm.move(Assembler::stackPointerRegister, Registers::ArgReg0);
-
-    return masm.call(pfun);
+void
+StubCompiler::finalize(uint8* ncode)
+{
+    masm.finalize(ncode);
 }
 

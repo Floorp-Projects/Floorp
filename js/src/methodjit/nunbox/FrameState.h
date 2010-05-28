@@ -52,42 +52,43 @@ enum TypeInfo {
     Type_Unknown
 };
 
-struct FrameAddress : JSC::MacroAssembler::Address
-{
-    FrameAddress(int32 offset)
-      : Address(JSC::MacroAssembler::stackPointerRegister, offset)
+struct RegState {
+    enum ValuePart {
+        Part_Type,
+        Part_Data
+    };
+
+    RegState()
+      : tracked(false)
     { }
+
+    RegState(ValuePart part, uint32 index, bool spillable)
+      : index(index), part(part), spillable(spillable), tracked(true)
+    { }
+
+    uint16 index   : 16;
+    ValuePart part : 1;
+    bool spillable : 1;
+    bool tracked   : 1;
+};
+
+struct RegSnapshot {
+    RegState regs[JSC::MacroAssembler::TotalRegisters];
+    Registers alloc;
 };
 
 class FrameState
 {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     typedef JSC::MacroAssembler::Address Address;
+    typedef JSC::MacroAssembler::Imm32 Imm32;
     typedef JSC::MacroAssembler MacroAssembler;
-
-    struct RegState {
-        enum ValuePart {
-            Part_Type,
-            Part_Data
-        };
-
-        uint32     index;
-        ValuePart  part;
-        bool       spillable;
-        bool       tracked;
-    };
 
   public:
     FrameState(JSContext *cx, JSScript *script, Assembler &masm)
       : cx(cx), script(script), masm(masm), base(NULL)
     { }
     ~FrameState();
-
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
-    static const RegisterID FpReg = JSC::X86Registers::ebx;
-#elif defined(JS_CPU_ARM)
-    static const RegisterID FpReg = JSC::X86Registers::r11;
-#endif
 
   public:
     bool init(uint32 nargs);
@@ -105,6 +106,14 @@ class FrameState
         regalloc.freeReg(reg);
     }
 
+    void incSp() {
+        sp++;
+    }
+
+    void decSp() {
+        sp--;
+    }
+
     /*
      * Push a type register, unsycned, with unknown payload.
      */
@@ -112,10 +121,8 @@ class FrameState
         sp[0].type.setRegister(reg);
         sp[0].data.setMemory();
         sp[0].copies = 0;
-        regstate[reg].tracked = true;
-        regstate[reg].index = uint32(sp - base);
-        regstate[reg].part = RegState::Part_Type;
-        sp++;
+        regstate[reg] = RegState(RegState::Part_Type, uint32(sp - base), true);
+        incSp();
     }
 
     void push(const Value &v) {
@@ -125,7 +132,7 @@ class FrameState
     void push(const jsval &v) {
         sp[0].setConstant(v);
         sp[0].copies = 0;
-        sp++;
+        incSp();
         JS_ASSERT(sp - locals <= script->nslots);
     }
 
@@ -134,10 +141,8 @@ class FrameState
         sp[0].v_.s.mask32 = JSVAL_MASK32_NONFUNOBJ;
         sp[0].data.setRegister(reg);
         sp[0].copies = 0;
-        regstate[reg].tracked = true;
-        regstate[reg].part = RegState::Part_Data;
-        regstate[reg].index = uint32(sp - base);
-        sp++;
+        regstate[reg] = RegState(RegState::Part_Data, uint32(sp - base), true);
+        incSp();
     }
 
     FrameEntry *peek(int32 depth) {
@@ -154,12 +159,12 @@ class FrameState
             if (vi->data.inRegister())
                 regalloc.freeReg(vi->data.reg());
         }
-        sp--;
+        decSp();
     }
 
     Address topOfStack() {
-        return Address(FpReg, sizeof(JSStackFrame) +
-                              (script->nfixed + stackDepth()) * sizeof(Value));
+        return Address(Assembler::FpReg, sizeof(JSStackFrame) +
+                       (script->nfixed + stackDepth()) * sizeof(Value));
     }
 
     uint32 stackDepth() {
@@ -173,13 +178,13 @@ class FrameState
         JS_NOT_REACHED("wat");
     }
 
-    Address addressOf(FrameEntry *fe) {
+    Address addressOf(FrameEntry *fe) const {
         JS_ASSERT(fe >= locals);
         if (fe >= locals) {
-            return Address(FpReg, sizeof(JSStackFrame) +
-                                  (fe - locals) * script->nfixed);
+            return Address(Assembler::FpReg, sizeof(JSStackFrame) +
+                           (fe - locals) * sizeof(Value));
         }
-        return Address(FpReg, 0);
+        return Address(Assembler::FpReg, 0);
     }
 
     void forceStackDepth(uint32 newDepth) {
@@ -191,17 +196,36 @@ class FrameState
         memset(spBase, 0, sizeof(FrameEntry) * (newDepth - oldDepth));
     }
 
+    void forget(uint32 depth) {
+        JS_ASSERT(sp - depth  >= locals + script->nfixed);
+    }
+
+    void sync() {
+        for (FrameEntry *fe = base; fe < sp; fe++) {
+            if (fe->type.needsSync()) {
+                syncType(fe, masm);
+                fe->type.setSynced();
+            }
+            if (fe->data.needsSync()) {
+                syncData(fe, masm);
+                fe->type.setSynced();
+            }
+        }
+    }
+
     void flush();
+    void killSyncedRegs(uint32 mask);
     void assertValidRegisterState();
-    void sync(Assembler &masm) const;
+    void sync(Assembler &masm, RegSnapshot &snapshot) const;
+    void merge(Assembler &masm, const RegSnapshot &snapshot, uint32 invalidationDepth) const;
     void restoreTempRegs(Assembler &masm) const;
 
   private:
     void syncType(FrameEntry *fe, Assembler &masm) const;
     void syncData(FrameEntry *fe, Assembler &masm) const;
-    void syncRegister(Assembler &masm, RegisterID reg, const RegState &state) const;
     void evictSomething();
     void invalidate(FrameEntry *fe);
+    void reset(FrameEntry *fe);
     RegisterID getDataReg(FrameEntry *vi, FrameEntry *backing);
 
   private:
@@ -212,6 +236,7 @@ class FrameState
     FrameEntry *locals;
     FrameEntry *args;
     FrameEntry *sp;
+
     Registers regalloc;
     RegState  regstate[MacroAssembler::TotalRegisters];
 };

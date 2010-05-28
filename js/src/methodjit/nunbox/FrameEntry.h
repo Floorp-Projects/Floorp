@@ -72,11 +72,12 @@ class FrameEntry
     }
 
     uint32 getTypeTag() {
-#if 0
-        return v_.mask;
-#else
         return v_.s.mask32;
-#endif
+    }
+
+    uint32 getPayload32() {
+        JS_ASSERT(!Valueify(v_.asBits).isDouble());
+        return v_.s.payload.u32;
     }
 
     uint32 copyOf() {

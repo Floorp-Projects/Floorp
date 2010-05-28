@@ -53,10 +53,12 @@ namespace mjit {
 class Compiler
 {
     typedef JSC::MacroAssembler::Label Label;
+    typedef JSC::MacroAssembler::Imm32 Imm32;
     typedef JSC::MacroAssembler::ImmPtr ImmPtr;
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     typedef JSC::MacroAssembler::Address Address;
     typedef JSC::MacroAssembler::Jump Jump;
+    typedef JSC::MacroAssembler::Call Call;
 
     struct BranchPatch {
         BranchPatch(const Jump &j, jsbytecode *pc)
@@ -65,6 +67,20 @@ class Compiler
 
         Jump jump;
         jsbytecode *pc;
+    };
+
+    struct Uses {
+        Uses(uint32 nuses)
+          : nuses(nuses)
+        { }
+        uint32 nuses;
+    };
+
+    struct Defs {
+        Defs(uint32 ndefs)
+          : ndefs(ndefs)
+        { }
+        uint32 ndefs;
     };
 
     JSContext *cx;
@@ -92,6 +108,7 @@ class Compiler
     CompileStatus Compile();
 
     jsbytecode *getPC() { return PC; }
+    Label getLabel() { return masm.label(); }
 
   private:
     CompileStatus generatePrologue();
@@ -110,9 +127,22 @@ class Compiler
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
     void emitReturn();
+
+#define STUB_CALL_TYPE(type)                                            \
+    Call stubCall(type stub, Uses uses, Defs defs) {                    \
+        return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub), uses, defs); \
+    }
+
+    STUB_CALL_TYPE(JSObjStub);
+    STUB_CALL_TYPE(VoidStubUInt32);
+
+#undef STUB_CALL_TYPE
+    void prepareStubCall();
+    Call stubCall(void *ptr, Uses uses, Defs defs);
 };
 
 } /* namespace js */
 } /* namespace mjit */
 
 #endif
+

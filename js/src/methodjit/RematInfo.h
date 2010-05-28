@@ -74,6 +74,7 @@ struct RematInfo {
         location_ = PhysLoc_Memory;
     }
 
+    void setSynced() { synced_ = true; }
     void setConstant() { location_ = PhysLoc_Constant; }
 
     bool isCopy() { return location_ == PhysLoc_Copy; }
