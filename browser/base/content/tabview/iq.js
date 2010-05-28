@@ -354,6 +354,19 @@ iQ.fn = iQ.prototype = {
 	},
 
   // ----------
+  // Function: hasClass
+	hasClass: function( selector ) {
+		var className = " " + selector + " ";
+		for ( var i = 0, l = this.length; i < l; i++ ) {
+			if ( (" " + this[i].className + " ").replace(rclass, " ").indexOf( className ) > -1 ) {
+				return true;
+			}
+		}
+
+		return false;
+	},
+
+  // ----------
   // Function: find
 	find: function( selector ) {
 		var ret = [], length = 0;
@@ -491,6 +504,50 @@ iQ.fn = iQ.prototype = {
     Utils.assert('does not yet support multi-objects (or null objects)', object.length == 1);
     this[0].appendChild(object[0]);
     return this;
+  },
+  
+  // ----------
+  // Function: css
+  css: function(a, b) {
+    var properties = null;
+    if(typeof a === 'string') {
+      if(b === undefined) {
+        Utils.assert('retrieval does not support multi-objects (or null objects)', this.length == 1);      
+        return window.getComputedStyle(this[0], null).getPropertyValue(a);  
+      } else {
+        properties = {};
+        properties[a] = b;
+      }
+    } else
+      properties = a;
+
+		for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+      iQ.each(properties, function(key, value) {
+        if(key == 'left' || key == 'top' || key == 'width' || key == 'height') {
+          if(typeof(value) != 'string') 
+            value += 'px';
+        }
+          
+        elem.style[key] = value;
+      });
+    } 
+  },
+  
+  // ----------
+  // Function: bind
+  bind: function(type, func) {
+    Utils.assert('does not support eventData argument', iQ.isFunction(func));
+  	for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+      elem.addEventListener(type, func, false);
+    }
+  },
+  
+  // ----------
+  // Function: unbind
+  unbind: function(type, func) {
+  	for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+      elem.removeEventListener(type, func, false);
+    }
   }
 };
 
