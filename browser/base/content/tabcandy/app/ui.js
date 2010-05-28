@@ -498,6 +498,10 @@ UIClass.prototype = {
       // ___ Dev Menu
       this.addDevMenu();
 
+      $("#reset").click(function(){
+        self.reset();
+      });
+      
       // ___ Navbar
       if(this.focused) {
         Page.hideChrome();
@@ -667,11 +671,6 @@ UIClass.prototype = {
   addDevMenu: function() {
     var self = this;
     
-    $("#reset").click(function(){
-      Storage.wipe();
-      location.href = '';      
-    });
-    
     var html = '<select style="position:absolute; bottom:5px; right:5px; opacity:.2;">'; 
     var $select = $(html)
       .appendTo('body')
@@ -705,12 +704,6 @@ UIClass.prototype = {
         self.saveAll();
       }
     }, {
-      name: 'reset', 
-      code: function() {
-        Storage.wipe();
-        location.href = '';
-      }
-    }, {
       name: 'group sites', 
       code: function() {
         self.arrangeBySite();
@@ -730,6 +723,12 @@ UIClass.prototype = {
     }
   },
 
+  // -----------
+  reset: function() {
+    Storage.wipe();
+    location.href = '';      
+  },
+    
   // ----------
   saveAll: function() {  
     this.save();
