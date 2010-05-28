@@ -66,6 +66,7 @@
 #include "mozStorageArgValueArray.h"
 #include "mozStoragePrivateHelpers.h"
 #include "mozStorageStatementData.h"
+#include "SharedCacheUnlockNotify.h"
 #include "StorageBaseStatementInternal.h"
 #include "SQLCollations.h"
 
@@ -413,10 +414,10 @@ Connection::initialize(nsIFile *aDatabaseFile)
   // Execute a dummy statement to force the db open, and to verify if it is
   // valid or not.
   sqlite3_stmt *stmt;
-  srv = ::sqlite3_prepare_v2(mDBConn, "SELECT * FROM sqlite_master", -1, &stmt,
-                             NULL);
+  srv = moz_sqlite3_prepare_v2(mDBConn, "SELECT * FROM sqlite_master", -1,
+                               &stmt, NULL);
   if (srv == SQLITE_OK) {
-    srv = ::sqlite3_step(stmt);
+    srv = moz_sqlite3_step(stmt);
 
     if (srv == SQLITE_DONE || srv == SQLITE_ROW)
         srv = SQLITE_OK;
@@ -476,11 +477,11 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
   query.Append("'");
 
   sqlite3_stmt *stmt;
-  int srv = ::sqlite3_prepare_v2(mDBConn, query.get(), -1, &stmt, NULL);
+  int srv = moz_sqlite3_prepare_v2(mDBConn, query.get(), -1, &stmt, NULL);
   if (srv != SQLITE_OK)
     return convertResultCode(srv);
 
-  srv = ::sqlite3_step(stmt);
+  srv = moz_sqlite3_step(stmt);
   // we just care about the return value from step
   (void)::sqlite3_finalize(stmt);
 
