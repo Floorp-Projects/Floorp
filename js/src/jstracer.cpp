@@ -14035,11 +14035,23 @@ TraceRecorder::record_JSOP_BINDNAME()
     if (!fp->fun) {
         obj = fp->scopeChain;
 
+#ifdef DEBUG
+        JSStackFrame *fp2 = fp;
+#endif
+
         // In global code, fp->scopeChain can only contain blocks whose values
         // are still on the stack.  We never use BINDNAME to refer to these.
         while (obj->getClass() == &js_BlockClass) {
             // The block's values are still on the stack.
-            JS_ASSERT(obj->getPrivate() == js_FloatingFrameIfGenerator(cx, fp));
+#ifdef DEBUG
+            // NB: fp2 can't be a generator frame, because !fp->fun.
+            while (obj->getPrivate() != fp2) {
+                JS_ASSERT(fp2->flags & JSFRAME_SPECIAL);
+                fp2 = fp2->down;
+                if (!fp2)
+                    JS_NOT_REACHED("bad stack frame");
+            }
+#endif
             obj = obj->getParent();
             // Blocks always have parents.
             JS_ASSERT(obj);
