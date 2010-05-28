@@ -6627,7 +6627,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // above, we have to ensure here that our window has a current
     // inner window so that the location object we return will work.
 
-    win->EnsureInnerWindow();
+    if (win->IsOuterWindow()) {
+      win->EnsureInnerWindow();
+    }
 
     nsCOMPtr<nsIDOMLocation> location;
     rv = win->GetLocation(getter_AddRefs(location));
