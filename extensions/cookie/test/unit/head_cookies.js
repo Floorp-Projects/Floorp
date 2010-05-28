@@ -34,12 +34,15 @@ function do_wait_for_db_close(dbfile) {
   while (db) {
     // Poll for write access
     try {
-      db = Services.storage.openUnsharedDatabase(dbfile);
-      db.schemaVersion = 0; // harmless -- the cookieservice will reset it
+      db.schemaVersion = 81;
+      if (db.schemaVersion != 81)
+        throw "Write poll loop schemaVersion not changed";
+      db.schemaVersion = 0;  // harmless -- the cookieservice will reset it
       db.close();
       db = null;
     }
     catch (e) {
+      dump("Write poll loop threw error " + e + "\n");
       if (thr.hasPendingEvents())
         thr.processNextEvent(false);
     }
