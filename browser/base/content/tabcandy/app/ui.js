@@ -191,11 +191,11 @@ window.Page = {
   
   setupKeyHandlers: function(){
     var self = this;
-    $(window).keyup(function(e){
+    iQ(window).keyup(function(e){
       if( e.metaKey == false ) window.Keys.meta = false;
     });
     
-    $(window).keydown(function(e){
+    iQ(window).keydown(function(e){
       if( e.metaKey == true ) window.Keys.meta = true;
       
       if( !self.getActiveTab() ) return;
@@ -233,7 +233,7 @@ window.Page = {
           break;
       }
       
-      if( norm != null && $(":focus").length == 0 ){
+      if( norm != null && iQ(":focus").length == 0 ){
         var nextTab = getClosestTabBy(norm);
         if( nextTab ){
           if( nextTab.inStack() && !nextTab.parent.expanded){
@@ -244,7 +244,7 @@ window.Page = {
         e.preventDefault();               
       }
       
-      if((e.which == 27 || e.which == 13) && $(":focus").length == 0 )
+      if((e.which == 27 || e.which == 13) && iQ(":focus").length == 0 )
         if( self.getActiveTab() ) self.getActiveTab().zoom();
       
       
@@ -261,7 +261,7 @@ window.Page = {
         
     // When you click on the background/empty part of TabCandy
     // we create a new group.
-    $(Utils.homeTab.contentDocument).mousedown(function(e){
+    iQ(Utils.homeTab.contentDocument).mousedown(function(e){
       if( e.originalTarget.id == "bg" )
         Page.createGroupOnDrag(e)
     })
@@ -354,16 +354,19 @@ window.Page = {
     const minSize = 60;
     
     var startPos = {x:e.clientX, y:e.clientY}
-    var phantom = $("<div class='group phantom'>").css({
-      position: "absolute",
-      top: startPos.y,
-      left: startPos.x,
-      width: 0,
-      height: 0,
-      opacity: .7,
-      zIndex: -1,
-      cursor: "default"
-    }).appendTo("body");
+    var phantom = $("<div>")
+      .addClass('group phantom')
+      .css({
+        position: "absolute",
+        top: startPos.y,
+        left: startPos.x,
+        width: 0,
+        height: 0,
+        opacity: .7,
+        zIndex: -1,
+        cursor: "default"
+      })
+      .appendTo("body");
     
     function updateSize(e){
       var css = {width: e.clientX-startPos.x, height:e.clientY-startPos.y}
@@ -382,11 +385,11 @@ window.Page = {
         left: phantom.position().left + phantom.width()/2
       }, 300, function(){
         phantom.remove();
-      })
+      });
     }
     
     function finalize(e){
-      $("#bg, .phantom").unbind("mousemove");
+      $("#bg, .phantom").unbind("mousemove", updateSize);
       if( phantom.css("opacity") != 1 ) collapse();
       else{
         var bounds = new Rect(startPos.x, startPos.y, phantom.width(), phantom.height())

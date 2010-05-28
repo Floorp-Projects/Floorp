@@ -1,0 +1,5 @@
+.animate300 {
+  -moz-transition-property: all;  
+  -moz-transition-duration: 0.3s;  
+  background-color: red;
+}
