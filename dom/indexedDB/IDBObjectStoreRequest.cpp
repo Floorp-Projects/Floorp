@@ -457,11 +457,21 @@ IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (mMode != nsIIDBTransaction::READ_WRITE) {
+    return NS_ERROR_OBJECT_IS_IMMUTABLE;
+  }
+
   nsString jsonValue;
   Key key;
 
   nsresult rv = GetJSONAndKeyForAdd(aKey, jsonValue, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (key.IsUnset() && !mAutoIncrement) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
@@ -483,11 +493,21 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (mMode != nsIIDBTransaction::READ_WRITE) {
+    return NS_ERROR_OBJECT_IS_IMMUTABLE;
+  }
+
   nsString jsonValue;
   Key key;
 
   nsresult rv = GetJSONAndKeyForAdd(aKey, jsonValue, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (key.IsUnset()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
@@ -509,11 +529,21 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (mMode != nsIIDBTransaction::READ_WRITE) {
+    return NS_ERROR_OBJECT_IS_IMMUTABLE;
+  }
+
   nsString jsonValue;
   Key key;
 
   nsresult rv = GetJSONAndKeyForAdd(aKey, jsonValue, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (key.IsUnset()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
@@ -534,9 +564,19 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (mMode != nsIIDBTransaction::READ_WRITE) {
+    return NS_ERROR_OBJECT_IS_IMMUTABLE;
+  }
+
   Key key;
   nsresult rv = GetKeyFromVariant(aKey, key);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (key.IsUnset()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   nsRefPtr<IDBRequest> request = GenerateRequest();
   NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
@@ -637,7 +677,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
     return nsIIDBDatabaseException::CONSTRAINT_ERR;
   }
 
-  if (mAutoIncrement) {
+  if (mAutoIncrement && mCreate && !mOverwrite) {
     bool unsetKey = mKey.IsUnset();
 
 #ifdef DEBUG
