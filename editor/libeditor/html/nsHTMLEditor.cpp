@@ -1893,6 +1893,9 @@ nsHTMLEditor::NormalizeEOLInsertPosition(nsIDOMNode *firstNodeToInsert,
 NS_IMETHODIMP
 nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsresult res = NS_ERROR_NOT_INITIALIZED;
   
   if (!aElement)
@@ -2391,6 +2394,9 @@ nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, PRBool entireList, co
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
@@ -2469,6 +2475,9 @@ nsHTMLEditor::RemoveList(const nsAString& aListType)
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
@@ -2499,6 +2508,9 @@ nsHTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
 
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
 
@@ -2528,6 +2540,9 @@ nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsCOMPtr<nsISelection> selection;
   PRBool cancel, handled;
@@ -2600,6 +2615,9 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
 {
   nsresult res;
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   PRBool cancel, handled;
   PRInt32 theAction = nsTextEditRules::kIndent;
@@ -2685,6 +2703,9 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
 NS_IMETHODIMP
 nsHTMLEditor::Align(const nsAString& aAlignType)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsAutoEditBatch beginBatching(this);
   nsAutoRules beginRulesSniffing(this, kOpAlign, nsIEditor::eNext);
 
@@ -3928,6 +3949,9 @@ nsHTMLEditor::StyleSheetLoaded(nsCSSStyleSheet* aSheet, PRBool aWasAlternate,
 NS_IMETHODIMP
 nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   nsEditor::StartOperation(opID, aDirection);  // will set mAction, mDirection
   if (mRules) return mRules->BeforeEdit(mAction, mDirection);
   return NS_OK;
@@ -3939,6 +3963,9 @@ nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 NS_IMETHODIMP
 nsHTMLEditor::EndOperation()
 {
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   // post processing
   nsresult res = NS_OK;
   if (mRules) res = mRules->AfterEdit(mAction, mDirection);
@@ -3997,6 +4024,9 @@ nsHTMLEditor::SelectEntireDocument(nsISelection *aSelection)
 {
   if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
   
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
+
   // get editor root node
   nsIDOMElement *rootElement = GetRoot();
   
@@ -5115,6 +5145,9 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   ForceCompositionEnd();
+
+  // Protect the edit rules object from dying
+  nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsresult res;
   nsCOMPtr<nsISelection>selection;
