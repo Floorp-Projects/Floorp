@@ -273,6 +273,13 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRACE)
           END_CASE(JSOP_TRACE)
 
+          BEGIN_CASE(JSOP_NAME)
+            prepareStubCall();
+            masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
+            stubCall(stubs::Name, Uses(0), Defs(1));
+            frame.push();
+          END_CASE(JSOP_NAME)
+
           BEGIN_CASE(JSOP_DOUBLE)
           {
             uint32 index = fullAtomIndex(PC);
