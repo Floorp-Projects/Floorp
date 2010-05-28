@@ -114,6 +114,7 @@ WebGLContext::SetCanvasElement(nsHTMLCanvasElement* aParentCanvas)
     if (aParentCanvas == nsnull) {
         // we get this on shutdown; we should do some more cleanup here,
         // but instead we just let our destructor do it.
+        mCanvasElement = nsnull;
         return NS_OK;
     }
 
