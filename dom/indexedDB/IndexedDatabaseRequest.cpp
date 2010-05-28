@@ -450,7 +450,7 @@ IndexedDatabaseRequest::GetConnection(const nsAString& aDatabaseFilePath)
 
   nsCOMPtr<mozIStorageConnection> connection;
   rv = ss->OpenDatabase(dbFile, getter_AddRefs(connection));
-  NS_ENSURE_TRUE(ss, nsnull);
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
 #ifdef DEBUG
   {
