@@ -62,6 +62,9 @@ _TEST_FILES =	parser_datreader.js \
 		test_bug566879.html \
 		test_compatmode.html \
 		invalidchar.xml \
+		test_bug568470.html \
+		file_bug568470.sjs \
+		file_bug568470-script.sjs \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
