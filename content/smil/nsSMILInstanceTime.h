@@ -109,8 +109,7 @@ public:
     mTime = aNewTime;
   }
 
-  PRBool IsDependent(const nsSMILInstanceTime& aOther,
-                     PRUint32 aRecursionDepth = 0) const;
+  PRBool IsDependent(const nsSMILInstanceTime& aOther) const;
 
   PRBool SameTimeAndBase(const nsSMILInstanceTime& aOther) const
   {
@@ -126,7 +125,6 @@ public:
 
 protected:
   void SetBaseInterval(nsSMILInterval* aBaseInterval);
-  void BreakPotentialCycle(const nsSMILInstanceTime* aNewTail) const;
   const nsSMILInstanceTime* GetBaseTime() const;
 
   nsSMILTimeValue mTime;
@@ -155,8 +153,11 @@ protected:
   PRUint32      mSerial; // A serial number used by the containing class to
                          // specify the sort order for instance times with the
                          // same mTime.
-  PRPackedBool  mVisited;
-  PRPackedBool  mChainEnd;
+  PRPackedBool  mVisited; // (mutable) Cycle tracking
+  PRPackedBool  mChainEnd; // Flag to indicate that this instance time is part
+                           // of some cyclic dependency and that in order to
+                           // avoid infinite recursion the cycle should not be
+                           // followed any further than this point.
 
   nsSMILTimeValueSpec* mCreator; // The nsSMILTimeValueSpec object that created
                                  // us. (currently only needed for syncbase
