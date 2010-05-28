@@ -5638,12 +5638,8 @@ nsHTMLEditor::HasFocus()
       IsIndependentSelectionContent(focusedContent)) {
     return PR_FALSE;
   }
-  nsCOMPtr<nsIContent> rootContent = do_QueryInterface(GetRoot());
-  if (!rootContent) {
-    return PR_FALSE;
-  }
-  // If the focused content is a descendant of our editor root, we're focused.
-  return nsContentUtils::ContentIsDescendantOf(focusedContent, rootContent);
+  // If our window is focused, we're focused.
+  return OurWindowHasFocus();
 }
 
 PRBool
