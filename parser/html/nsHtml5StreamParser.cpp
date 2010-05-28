@@ -992,6 +992,13 @@ nsHtml5StreamParser::ContinueAfterScripts(nsHtml5Tokenizer* aTokenizer,
       mSpeculations.RemoveElementAt(0);
       if (mSpeculations.IsEmpty()) {
         // yes, it was still the only speculation. Now stop speculating
+        if (mTreeBuilder->IsDiscretionaryFlushSafe()) {
+          // However, before telling the executor to read from stage, flush
+          // any pending ops straight to the executor, because otherwise
+          // they remain unflushed until we get more data from the network.
+          mTreeBuilder->SetOpSink(mExecutor);
+          mTreeBuilder->Flush();
+        }
         mTreeBuilder->SetOpSink(mExecutor->GetStage());
         mExecutor->StartReadingFromStage();
         mSpeculating = PR_FALSE;
