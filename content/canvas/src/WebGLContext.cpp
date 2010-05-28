@@ -417,62 +417,15 @@ NS_INTERFACE_MAP_BEGIN(WebGLRenderbuffer)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WebGLRenderbuffer)
 NS_INTERFACE_MAP_END
 
-/* [noscript] attribute GLuint name; */
-NS_IMETHODIMP WebGLTexture::GetName(GLuint *aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP WebGLTexture::SetName(GLuint aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+#define NAME_NOT_SUPPORTED(base) \
+NS_IMETHODIMP base::GetName(WebGLuint *aName) \
+{ return NS_ERROR_NOT_IMPLEMENTED; } \
+NS_IMETHODIMP base::SetName(WebGLuint aName) \
+{ return NS_ERROR_NOT_IMPLEMENTED; }
 
-/* [noscript] attribute GLuint name; */
-NS_IMETHODIMP WebGLBuffer::GetName(GLuint *aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP WebGLBuffer::SetName(GLuint aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* [noscript] attribute GLuint name; */
-NS_IMETHODIMP WebGLProgram::GetName(GLuint *aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP WebGLProgram::SetName(GLuint aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* [noscript] attribute GLuint name; */
-NS_IMETHODIMP WebGLShader::GetName(GLuint *aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP WebGLShader::SetName(GLuint aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* [noscript] attribute GLuint name; */
-NS_IMETHODIMP WebGLFramebuffer::GetName(GLuint *aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP WebGLFramebuffer::SetName(GLuint aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* [noscript] attribute GLuint name; */
-NS_IMETHODIMP WebGLRenderbuffer::GetName(GLuint *aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP WebGLRenderbuffer::SetName(GLuint aName)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+NAME_NOT_SUPPORTED(WebGLTexture)
+NAME_NOT_SUPPORTED(WebGLBuffer)
+NAME_NOT_SUPPORTED(WebGLProgram)
+NAME_NOT_SUPPORTED(WebGLShader)
+NAME_NOT_SUPPORTED(WebGLFramebuffer)
+NAME_NOT_SUPPORTED(WebGLRenderbuffer)

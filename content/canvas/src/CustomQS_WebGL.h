@@ -237,7 +237,7 @@ nsICanvasRenderingContextWebGL_TexImage2D(JSContext *cx, uintN argc, jsval *vp)
                     return JS_FALSE;
             }
 
-            rv = self->TexImage2D_dom(intargs[0], intargs[1], elt, (GLboolean) intargs[3], (GLboolean) intargs[4]);
+            rv = self->TexImage2D_dom(intargs[0], intargs[1], elt, (WebGLboolean) intargs[3], (WebGLboolean) intargs[4]);
             goto check_rv_and_return;
         }
     }
@@ -334,7 +334,7 @@ nsICanvasRenderingContextWebGL_TexSubImage2D(JSContext *cx, uintN argc, jsval *v
         if (NS_SUCCEEDED(rv)) {
             rv = self->TexSubImage2D_dom(intargs[0], intargs[1], intargs[2],
                                          intargs[2], intargs[4], intargs[5],
-                                         elt, (GLboolean) intargs[7], (GLboolean) intargs[8]);
+                                         elt, (WebGLboolean) intargs[7], (WebGLboolean) intargs[8]);
             if (NS_FAILED(rv))
                 return xpc_qsThrowMethodFailed(cx, rv, vp);
             return JS_TRUE;
