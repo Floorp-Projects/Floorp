@@ -33,7 +33,7 @@ window.Item = function() {
   this.debug = false;
   
   // Variable: $debug
-  // If <debug> is true, this will be the jQuery object for the visible rectangle. 
+  // If <debug> is true, this will be the iQ object for the visible rectangle. 
   this.$debug = null;
   
   // Variable: container
@@ -81,19 +81,19 @@ window.Item.prototype = {
     this.container = container;
     
     if(this.debug) {
-      this.$debug = $('<div />')
+      this.$debug = iQ('<div>')
         .css({
           border: '2px solid green',
           zIndex: -10,
           position: 'absolute'
         })
-        .appendTo($('body'));
+        .appendTo('body');
     }
     
     this.reloadBounds();        
     Utils.assert('reloadBounds must set up this.bounds', this.bounds);
 
-    $(this.container).data('item', this);
+    iQ(this.container).data('item', this);
   },
   
   // ----------
@@ -145,7 +145,7 @@ window.Item.prototype = {
   // Function: getZ
   // Returns the zIndex of the Item.
   getZ: function() {
-    return parseInt($(this.container).css('zIndex'));
+    return parseInt(iQ(this.container).css('zIndex'));
   },
 
   // ----------
@@ -153,7 +153,7 @@ window.Item.prototype = {
   // Rotates the object to the given number of degrees.
   setRotation: function(degrees) {
     var value = "rotate(%deg)".replace(/%/, degrees);
-    $(this.container).css({"-moz-transform": value});
+    iQ(this.container).css({"-moz-transform": value});
   },
     
   // ----------
@@ -171,7 +171,7 @@ window.Item.prototype = {
     var buffer = 2;
     
     var items = Items.getTopLevelItems();
-    $.each(items, function(index, item) {
+    iQ.each(items, function(index, item) {
       var data = {};
       data.bounds = item.getBounds();
       data.startBounds = new Rect(data.bounds);
@@ -188,7 +188,7 @@ window.Item.prototype = {
       bb.inset(-buffer, -buffer);
       var bbc = bb.center();
     
-      $.each(items, function(index, item) {
+      iQ.each(items, function(index, item) {
         if(item == baseItem || item.locked.bounds)
           return;
           
@@ -230,7 +230,7 @@ window.Item.prototype = {
     // ___ Squish!
     var pageBounds = Items.getPageBounds();
     if(Items.squishMode == 'squish') {
-      $.each(items, function(index, item) {
+      iQ.each(items, function(index, item) {
         var data = item.pushAwayData;
         if(data.generation == 0 || item.locked.bounds)
           return;
@@ -295,7 +295,7 @@ window.Item.prototype = {
       });
     } else if(Items.squishMode == 'all') {
       var newPageBounds = null;
-      $.each(items, function(index, item) {
+      iQ.each(items, function(index, item) {
         if(item.locked.bounds)
           return;
           
@@ -307,7 +307,7 @@ window.Item.prototype = {
       var wScale = pageBounds.width / newPageBounds.width;
       var hScale = pageBounds.height / newPageBounds.height;
       var scale = Math.min(hScale, wScale);
-      $.each(items, function(index, item) {
+      iQ.each(items, function(index, item) {
         if(item.locked.bounds)
           return;
           
@@ -326,7 +326,7 @@ window.Item.prototype = {
 
     // ___ Unsquish
     var pairs = [];
-    $.each(items, function(index, item) {
+    iQ.each(items, function(index, item) {
       var data = item.pushAwayData;
       pairs.push({
         item: item,
@@ -337,7 +337,7 @@ window.Item.prototype = {
     Items.unsquish(pairs);
 
     // ___ Apply changes
-    $.each(items, function(index, item) {
+    iQ.each(items, function(index, item) {
       var data = item.pushAwayData;
       var bounds = data.bounds;
       if(!bounds.equals(data.startBounds)) {
@@ -382,7 +382,7 @@ window.Items = {
   // Function: item
   // Given a DOM element representing an Item, returns the Item. 
   item: function(el) {
-    return $(el).data('item');
+    return iQ(el).data('item');
   },
   
   // ----------  
@@ -391,8 +391,8 @@ window.Items = {
   getTopLevelItems: function() {
     var items = [];
     
-    $('.tab, .group').each(function() {
-      $this = $(this);
+    iQ('.tab, .group').each(function() {
+      var $this = iQ(this);
       var item = $this.data('item');  
       if(item && !item.parent && !$this.hasClass('phantom'))
         items.push(item);
@@ -535,7 +535,7 @@ window.Items = {
     if(!pairsProvided) {
       var items = Items.getTopLevelItems();
       pairs = [];
-      $.each(items, function(index, item) {
+      iQ.each(items, function(index, item) {
         pairs.push({
           item: item,
           bounds: item.getBounds()
@@ -544,7 +544,7 @@ window.Items = {
     }
   
     var pageBounds = Items.getPageBounds();
-    $.each(pairs, function(index, pair) {
+    iQ.each(pairs, function(index, pair) {
       var item = pair.item;
       if(item.locked.bounds || item == ignore)
         return;
@@ -586,7 +586,7 @@ window.Items = {
 
       if(!bounds.equals(newBounds)) {        
         var blocked = false;
-        $.each(pairs, function(index, pair2) {
+        iQ.each(pairs, function(index, pair2) {
           if(pair2 == pair || pair2.item == ignore)
             return;
             
@@ -604,7 +604,7 @@ window.Items = {
     });
 
     if(!pairsProvided) {
-      $.each(pairs, function(index, pair) {
+      iQ.each(pairs, function(index, pair) {
         pair.item.setBounds(pair.bounds);
       });
     }
