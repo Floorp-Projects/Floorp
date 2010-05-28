@@ -6590,6 +6590,12 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // here) since we must define window.location to prevent the
     // getter from being overriden (for security reasons).
 
+    // Note: Because we explicitly don't forward to the inner window
+    // above, we have to ensure here that our window has a current
+    // inner window so that the location object we return will work.
+
+    win->EnsureInnerWindow();
+
     nsCOMPtr<nsIDOMLocation> location;
     rv = win->GetLocation(getter_AddRefs(location));
     NS_ENSURE_SUCCESS(rv, rv);
