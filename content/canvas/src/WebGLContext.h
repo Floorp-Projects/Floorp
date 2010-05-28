@@ -214,9 +214,9 @@ struct WebGLVertexAttribData {
     { }
 
     WebGLObjectRefPtr<WebGLBuffer> buf;
-    GLuint stride;
-    GLuint size;
-    GLuint offset;
+    WebGLuint stride;
+    WebGLuint size;
+    WebGLuint offset;
     PRBool enabled;
 };
 
@@ -244,8 +244,8 @@ public:
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool b) { return NS_OK; };
 
-    nsresult SynthesizeGLError(GLenum err);
-    nsresult SynthesizeGLError(GLenum err, const char *fmt, ...);
+    nsresult SynthesizeGLError(WebGLenum err);
+    nsresult SynthesizeGLError(WebGLenum err, const char *fmt, ...);
 
     nsresult ErrorInvalidEnum(const char *fmt, ...);
     nsresult ErrorInvalidOperation(const char *fmt, ...);
@@ -263,8 +263,8 @@ protected:
 
     PRBool mInvalidated;
 
-    GLuint mActiveTexture;
-    GLenum mSynthesizedGLError;
+    WebGLuint mActiveTexture;
+    WebGLenum mSynthesizedGLError;
 
     PRBool SafeToCreateCanvas3DContext(nsHTMLCanvasElement *canvasElement);
     PRBool ValidateGL();
@@ -275,14 +275,14 @@ protected:
     void MakeContextCurrent() { gl->MakeCurrent(); }
 
     // helpers
-    nsresult TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
-                             GLsizei width, GLsizei height, GLint border,
-                             GLenum format, GLenum type,
+    nsresult TexImage2D_base(WebGLenum target, WebGLint level, WebGLenum internalformat,
+                             WebGLsizei width, WebGLsizei height, WebGLint border,
+                             WebGLenum format, WebGLenum type,
                              void *data, PRUint32 byteLength);
-    nsresult TexSubImage2D_base(GLenum target, GLint level,
-                                GLint xoffset, GLint yoffset,
-                                GLsizei width, GLsizei height,
-                                GLenum format, GLenum type,
+    nsresult TexSubImage2D_base(WebGLenum target, WebGLint level,
+                                WebGLint xoffset, WebGLint yoffset,
+                                WebGLsizei width, WebGLsizei height,
+                                WebGLenum format, WebGLenum type,
                                 void *pixels, PRUint32 byteLength);
 
     nsresult DOMElementToImageSurface(nsIDOMElement *imageOrCanvas,
@@ -364,13 +364,13 @@ protected:
         : mWidth(0), mHeight(0) { }
 
 public:
-    GLsizei width() { return mWidth; }
-    void width(GLsizei value) { mWidth = value; }
+    WebGLsizei width() { return mWidth; }
+    void width(WebGLsizei value) { mWidth = value; }
 
-    GLsizei height() { return mHeight; }
-    void height(GLsizei value) { mHeight = value; }
+    WebGLsizei height() { return mHeight; }
+    void height(WebGLsizei value) { mHeight = value; }
 
-    void setDimensions(GLsizei width, GLsizei height) {
+    void setDimensions(WebGLsizei width, WebGLsizei height) {
         mWidth = width;
         mHeight = height;
     }
@@ -386,8 +386,8 @@ public:
     }
 
 protected:
-    GLsizei mWidth;
-    GLsizei mHeight;
+    WebGLsizei mWidth;
+    WebGLsizei mHeight;
 };
 
 #define WEBGLBUFFER_PRIVATE_IID \
@@ -399,7 +399,7 @@ class WebGLBuffer :
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLBUFFER_PRIVATE_IID)
 
-    WebGLBuffer(GLuint name)
+    WebGLBuffer(WebGLuint name)
         : mName(name), mDeleted(PR_FALSE), mByteLength(0)
     { }
 
@@ -413,17 +413,17 @@ public:
     }
 
     PRBool Deleted() { return mDeleted; }
-    GLuint GLName() { return mName; }
+    WebGLuint GLName() { return mName; }
     PRUint32 ByteLength() { return mByteLength; }
 
-    void SetByteLength(GLuint len) {
+    void SetByteLength(WebGLuint len) {
         mByteLength = len;
     }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLBUFFER
 protected:
-    GLuint mName;
+    WebGLuint mName;
     PRBool mDeleted;
     PRUint32 mByteLength;
 };
@@ -440,7 +440,7 @@ class WebGLTexture :
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLTEXTURE_PRIVATE_IID)
 
-    WebGLTexture(GLuint name) :
+    WebGLTexture(WebGLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
     void Delete() {
@@ -451,12 +451,12 @@ public:
     }
 
     PRBool Deleted() { return mDeleted; }
-    GLuint GLName() { return mName; }
+    WebGLuint GLName() { return mName; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLTEXTURE
 protected:
-    GLuint mName;
+    WebGLuint mName;
     PRBool mDeleted;
 };
 
@@ -471,7 +471,7 @@ class WebGLProgram :
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLPROGRAM_PRIVATE_IID)
 
-    WebGLProgram(GLuint name) :
+    WebGLProgram(WebGLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
     void Delete() {
@@ -481,12 +481,12 @@ public:
         mDeleted = PR_TRUE;
     }
     PRBool Deleted() { return mDeleted; }
-    GLuint GLName() { return mName; }
+    WebGLuint GLName() { return mName; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLPROGRAM
 protected:
-    GLuint mName;
+    WebGLuint mName;
     PRBool mDeleted;
 };
 
@@ -501,7 +501,7 @@ class WebGLShader :
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLSHADER_PRIVATE_IID)
 
-    WebGLShader(GLuint name) :
+    WebGLShader(WebGLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
     void Delete() {
@@ -511,12 +511,12 @@ public:
         mDeleted = PR_TRUE;
     }
     PRBool Deleted() { return mDeleted; }
-    GLuint GLName() { return mName; }
+    WebGLuint GLName() { return mName; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLSHADER
 protected:
-    GLuint mName;
+    WebGLuint mName;
     PRBool mDeleted;
 };
 
@@ -532,7 +532,7 @@ class WebGLFramebuffer :
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLFRAMEBUFFER_PRIVATE_IID)
 
-    WebGLFramebuffer(GLuint name) :
+    WebGLFramebuffer(WebGLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
     void Delete() {
@@ -542,12 +542,12 @@ public:
         mDeleted = PR_TRUE;
     }
     PRBool Deleted() { return mDeleted; }
-    GLuint GLName() { return mName; }
+    WebGLuint GLName() { return mName; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLFRAMEBUFFER
 protected:
-    GLuint mName;
+    WebGLuint mName;
     PRBool mDeleted;
 };
 
@@ -563,7 +563,7 @@ class WebGLRenderbuffer :
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(WEBGLRENDERBUFFER_PRIVATE_IID)
 
-    WebGLRenderbuffer(GLuint name) :
+    WebGLRenderbuffer(WebGLuint name) :
         mName(name), mDeleted(PR_FALSE) { }
 
     void Delete() {
@@ -573,12 +573,12 @@ public:
         mDeleted = PR_TRUE;
     }
     PRBool Deleted() { return mDeleted; }
-    GLuint GLName() { return mName; }
+    WebGLuint GLName() { return mName; }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWEBGLRENDERBUFFER
 protected:
-    GLuint mName;
+    WebGLuint mName;
     PRBool mDeleted;
 };
 
