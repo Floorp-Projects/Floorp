@@ -108,6 +108,7 @@ class FrameState
 
     void incSp() {
         sp++;
+        JS_ASSERT(sp - locals <= script->nslots);
     }
 
     void decSp() {
@@ -133,7 +134,13 @@ class FrameState
         sp[0].setConstant(v);
         sp[0].copies = 0;
         incSp();
-        JS_ASSERT(sp - locals <= script->nslots);
+    }
+
+    void push() {
+        sp[0].type.setMemory();
+        sp[0].data.setMemory();
+        sp[0].copies = 0;
+        incSp();
     }
 
     void pushObject(RegisterID reg) {
