@@ -173,10 +173,16 @@ void
 FrameState::sync(Assembler &masm, RegSnapshot &snapshot) const
 {
     for (FrameEntry *fe = base; fe < sp; fe++) {
-        if (fe->type.needsSync())
-            syncType(fe, masm);
-        if (fe->data.needsSync())
-            syncData(fe, masm);
+        if (fe->isConstant()) {
+            JS_ASSERT(fe->type.synced() == fe->data.synced());
+            if (!fe->data.synced())
+                masm.storeValue(fe->getValue(), addressOf(fe));
+        } else {
+            if (fe->type.needsSync())
+                syncType(fe, masm);
+            if (fe->data.needsSync())
+                syncData(fe, masm);
+        }
     }
 
     JS_STATIC_ASSERT(sizeof(snapshot.regs) == sizeof(regstate));
