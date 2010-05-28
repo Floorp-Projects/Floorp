@@ -140,6 +140,47 @@ UnmapPages(void *p, size_t size)
 
 # else /* WINCE */
 
+#  ifdef _M_X64
+
+typedef long (*ntavm_fun)(HANDLE handle, void **addr, ULONG zbits,
+                          size_t *size, ULONG alloctype, ULONG prot);
+typedef long (*ntfvm_fun)(HANDLE handle, void **addr, size_t *size, 
+                          ULONG freetype);
+
+static ntavm_fun NtAllocateVirtualMemory;
+static ntfvm_fun NtFreeVirtualMemory;
+
+bool 
+js::InitNtAllocAPIs()
+{
+    HMODULE h = GetModuleHandle("ntdll.dll");
+    if (!h)
+        return false;
+    NtAllocateVirtualMemory = ntavm_fun(GetProcAddress(h, "NtAllocateVirtualMemory"));
+    if (!NtAllocateVirtualMemory)
+        return false;
+    NtFreeVirtualMemory = ntfvm_fun(GetProcAddress(h, "NtFreeVirtualMemory"));
+    if (!NtFreeVirtualMemory)
+        return false;
+}
+
+// Allocate pages with 32-bit addresses (i.e., top 16 bits are all 0).
+static void *
+MapPages(void *addr, size_t size)
+{
+    long rc = NtAllocateVirtualMemory(INVALID_HANDLE_VALUE, &addr, 1, &size,
+                                      MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+    return rc ? NULL : addr;
+}
+
+static void
+UnmapPages(void *addr, size_t size)
+{
+    NtFreeVirtualMemory(INVALID_HANDLE_VALUE, &addr, &size, MEM_RELEASE);
+}
+
+#  else /* _M_X64 */
+
 static void *
 MapPages(void *addr, size_t size)
 {
@@ -153,6 +194,8 @@ UnmapPages(void *addr, size_t size)
 {
     JS_ALWAYS_TRUE(VirtualFree(addr, 0, MEM_RELEASE));
 }
+
+#  endif /* _M_X64 */
 
 # endif /* !WINCE */
 
