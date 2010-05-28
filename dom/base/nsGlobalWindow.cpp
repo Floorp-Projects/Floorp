@@ -2025,6 +2025,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   // check xpc here.
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
+  nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   if (aState) {
     // Restoring from session history.
 
@@ -2047,7 +2048,6 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
     // the old inner will again be on the outer window's prototype
     // chain.
 
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
     rv = xpc->GetWrappedNativeOfJSObject(cx, mJSObject,
                                          getter_AddRefs(wrapper));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2136,6 +2136,16 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
       this_ctx->DidInitializeContext();
     }
   }
+
+  if (!wrapper) {
+    rv = xpc->GetWrappedNativeOfJSObject(cx, mJSObject,
+                                         getter_AddRefs(wrapper));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  rv = xpc->UpdateXOWs((JSContext *)GetContextInternal()->GetNativeContext(),
+                       wrapper, nsIXPConnect::XPC_XOW_NAVIGATED);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();

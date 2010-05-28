@@ -2149,6 +2149,15 @@ nsXPConnect::UpdateXOWs(JSContext* aJSContext,
     if(!list)
         return NS_OK; // No wrappers to update.
 
+    if(aWay == nsIXPConnect::XPC_XOW_NAVIGATED)
+    {
+        XPCWrappedNative *wn = static_cast<XPCWrappedNative *>(aObject);
+        NS_ASSERTION(wn->NeedsXOW(), "Window isn't a window");
+
+        XPCCrossOriginWrapper::WindowNavigated(aJSContext, wn);
+        return NS_OK;
+    }
+
     JSAutoRequest req(aJSContext);
 
     Link* cur = list;
