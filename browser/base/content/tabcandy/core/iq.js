@@ -28,11 +28,6 @@
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://jquery.org/license
  *
- * ... which includes Sizzle.js
- * http://sizzlejs.com/
- * Copyright 2010, The Dojo Foundation
- * Released under the MIT, BSD, and GPL Licenses.
- *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
