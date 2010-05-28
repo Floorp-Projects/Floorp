@@ -833,10 +833,13 @@ window.Group.prototype = $.extend(new Item(), new Subscribable(), {
   // ----------
   _randRotate: function(spread, index){
     if( index >= this._stackAngles.length ){
-      var randAngle = parseInt( ((Math.random()+.6)/1.3)*spread-(spread/2) );
+      //var randAngle = parseInt( ((Math.random()+.6)/1.3)*spread-(spread/2) );
+      var randAngle = 5*index + parseInt( (Math.random()-.5)*1 );
       this._stackAngles.push(randAngle);
       return randAngle;          
     }
+    
+    if( index > 5 ) index = 5;
 
     return this._stackAngles[index];
   },
