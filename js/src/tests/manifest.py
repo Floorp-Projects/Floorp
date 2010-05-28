@@ -32,12 +32,12 @@ class XULInfo:
         # Find config/autoconf.mk.
         dir = jsdir
         while True:
-            if os.path.basename(dir) == 'src':
-                path = None
-                break
             path = os.path.join(dir, 'config/autoconf.mk')
             if os.path.isfile(path):
                 break
+            if os.path.dirname(dir) == dir:
+                print "Can't find config/autoconf.mk on a directory containing the JS shell (searched from %s)"%jsdir
+                sys.exit(1)
             dir = os.path.dirname(dir)
 
         # Read the values.
