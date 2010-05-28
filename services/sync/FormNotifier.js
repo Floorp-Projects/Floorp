@@ -24,6 +24,9 @@ function FormNotifier() {
       continue;
     }
 
+    // XXX Bug 568707 Make use of "key" to prevent it from disappearing
+    (function(){})(key);
+
     // Wrap the function with notifications
     this[key] = function() {
       let args = Array.slice(arguments);
