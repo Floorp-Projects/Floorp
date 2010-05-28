@@ -105,8 +105,9 @@ AsyncConnectionHelper::AsyncConnectionHelper(IDBTransactionRequest* aTransaction
 AsyncConnectionHelper::~AsyncConnectionHelper()
 {
   if (!NS_IsMainThread()) {
-    NS_ASSERTION(mErrorCode == NOREPLY,
-                 "This should only happen if NOREPLY was returned!");
+    NS_ASSERTION(mErrorCode == NOREPLY || !mRequest,
+                 "This should only happen if NOREPLY was returned or if the "
+                 "runnable already ran on the main thread!");
 
     IDBDatabaseRequest* database;
     mDatabase.forget(&database);
