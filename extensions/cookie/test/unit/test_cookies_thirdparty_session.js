@@ -7,7 +7,7 @@ const Ci = Components.interfaces;
 
 function run_test() {
   // Set up a profile.
-  do_get_profile();
+  let profile = do_get_profile();
 
   var cs = Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService);
   var cso = cs.QueryInterface(Ci.nsIObserver);
@@ -38,12 +38,12 @@ function run_test() {
   do_set_cookies(uri2, channel1, true, [1, 2, 3, 4]);
 
   // fake a profile change
-  do_reload_profile(cso);
+  do_reload_profile(profile, cso);
   do_check_eq(cs.countCookiesFromHost(uri1.host), 4);
   do_check_eq(cs.countCookiesFromHost(uri2.host), 0);
 
   // cleanse them
-  do_reload_profile(cso, "shutdown-cleanse");
+  do_reload_profile(profile, cso, "shutdown-cleanse");
   do_check_eq(cs.countCookiesFromHost(uri1.host), 0);
   do_check_eq(cs.countCookiesFromHost(uri2.host), 0);
 
@@ -53,7 +53,7 @@ function run_test() {
   do_set_cookies(uri2, channel1, true, [1, 2, 3, 4]);
 
   // fake a profile change
-  do_reload_profile(cso);
+  do_reload_profile(profile, cso);
   do_check_eq(cs.countCookiesFromHost(uri1.host), 0);
   do_check_eq(cs.countCookiesFromHost(uri2.host), 0);
 }

@@ -8,12 +8,7 @@ const _Cc = Components.classes;
 const _Ci = Components.interfaces;
 
 // Ensure 'db' is closed; if not, spin until it is.
-function do_wait_for_db_close(db) {
-  const ProfD = do_get_profile().QueryInterface(_Ci.nsILocalFile);
-
-  let dbfile = ProfD.clone();
-  dbfile.append(db);
-
+function do_wait_for_db_close(dbfile) {
   // If there is no database then it cannot be locked.
   if (!dbfile.exists())
     return;
@@ -22,27 +17,16 @@ function do_wait_for_db_close(db) {
             getService(_Ci.nsIThreadManager).
             mainThread;
 
-  // Wait until we can open a connection to the database
-  let db = null;
-  while (!db) {
-    // Poll for database
-    try {
-      db = Services.storage.openUnsharedDatabase(dbfile);
-    }
-    catch (e) {
-      if (thr.hasPendingEvents())
-        thr.processNextEvent(false);
-    }
-  }
-
   // Wait until we can write to the database
-  while (db) {
+  while (true) {
     // Poll for write access
     try {
-      db.executeSimpleSQL("CREATE TABLE moz_test (id INTEGER PRIMARY KEY)");
-      db.executeSimpleSQL("DROP TABLE moz_test");
+      db = Services.storage.openUnsharedDatabase(dbfile);
+      db.schemaVersion = 0;
+      db.schemaVersion = 2;
       db.close();
       db = null;
+      break;
     }
     catch (e) {
       if (thr.hasPendingEvents())
@@ -52,9 +36,12 @@ function do_wait_for_db_close(db) {
 }
 
 // Reload the profile by calling the 'observe' method on the given service.
-function do_reload_profile(observer, cleanse) {
+function do_reload_profile(profile, observer, cleanse) {
+  let dbfile = profile.QueryInterface(_Ci.nsILocalFile).clone();
+  dbfile.append("cookies.sqlite");
+
   observer.observe(null, "profile-before-change", cleanse ? cleanse : "");
-  do_wait_for_db_close("cookies.sqlite");
+  do_wait_for_db_close(dbfile);
   observer.observe(null, "profile-do-change", "");
 }
 
