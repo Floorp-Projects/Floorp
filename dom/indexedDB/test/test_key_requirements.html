@@ -178,13 +178,10 @@
 
       is(event.result, key1, "addOrModify gave back the same key");
 
-      /*
-      // XXXbent this should work, but doesn't...
       request = objectStore.add({id:10});
       request.onerror = grabEventAndContinueHandler;
-      request.onsuccess = errorHandler;
-      event = yield;
-      */
+      request.onsuccess = unexpectedSuccessHandler;
+      yield;
 
       request = db.createObjectStore("bazing", "id", true);
       request.onerror = errorHandler;
