@@ -51,6 +51,7 @@ _TEST_FILES = \
   test_event_source.html \
   test_global_data.html \
   test_key_requirements.html \
+  test_null_key_uniqueness.html \
   test_objectStore_inline_autoincrement_key_added_on_put.html \
   test_objectStore_remove_values.html \
   test_open_empty_db.html \
