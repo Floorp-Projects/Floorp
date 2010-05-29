@@ -67,7 +67,7 @@ using namespace js;
 
 /* Implement NativeCompareAndSwap. */
 
-#if defined(_WIN32) && defined(_M_IX86)
+#if defined(_MSC_VER) && defined(_M_IX86)
 #pragma warning( disable : 4035 )
 JS_BEGIN_EXTERN_C
 extern long __cdecl
