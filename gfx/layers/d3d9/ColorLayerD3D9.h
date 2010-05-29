@@ -51,7 +51,7 @@ public:
   ColorLayerD3D9(LayerManagerD3D9 *aManager)
     : ColorLayer(aManager, NULL)
     , LayerD3D9(aManager)
-  { 
+  {
     mImplData = static_cast<LayerD3D9*>(this);
   }
 

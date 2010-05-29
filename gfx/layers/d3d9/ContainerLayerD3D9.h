@@ -44,7 +44,7 @@
 namespace mozilla {
 namespace layers {
 
-class ContainerLayerD3D9 : public ContainerLayer, 
+class ContainerLayerD3D9 : public ContainerLayer,
                            public LayerD3D9
 {
 public:
