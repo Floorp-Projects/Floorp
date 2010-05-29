@@ -326,6 +326,16 @@ static const cairo_surface_backend_t cairo_d2d_surface_backend = {
  * Helper functions.
  */
 
+/* This clears a new D2D surface in case the VRAM was reused from an existing surface
+ * and is therefor not empty, this must be called outside of drawing state! */
+static void
+_d2d_clear_surface(cairo_d2d_surface_t *surf)
+{
+    surf->rt->BeginDraw();
+    surf->rt->Clear(D2D1::ColorF(0, 0));
+    surf->rt->EndDraw();
+}
+
 static D2D1_POINT_2F
 _d2d_point_from_cairo_point(const cairo_point_t *point)
 {
@@ -1441,6 +1451,8 @@ _cairo_d2d_create_similar(void			*surface,
 
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
 
+    _d2d_clear_surface(newSurf);
+
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 
 FAIL_CREATESIMILAR:
@@ -2233,6 +2245,8 @@ cairo_d2d_surface_create_for_hwnd(HWND wnd)
     
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
 
+    _d2d_clear_surface(newSurf);
+
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 
 FAIL_HWND:
@@ -2327,6 +2341,8 @@ cairo_d2d_surface_create(cairo_format_t format,
     }
 
     newSurf->rt->CreateSolidColorBrush(D2D1::ColorF(0, 1.0), &newSurf->solidColorBrush);
+
+    _d2d_clear_surface(newSurf);
 
     return reinterpret_cast<cairo_surface_t*>(newSurf);
 
