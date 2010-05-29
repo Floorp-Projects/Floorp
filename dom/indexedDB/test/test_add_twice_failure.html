@@ -36,10 +36,12 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
+      is(event.result, key, "Correct key");
+
       request = objectStore.add({}, key);
       request.onerror = grabEventAndContinueHandler;
       request.onsuccess = unexpectedSuccessHandler;
-      event = yield;
+      yield;
 
       finishTest();
       yield;
