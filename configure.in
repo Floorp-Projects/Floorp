@@ -240,6 +240,108 @@ if test -z "$PERL" || test "$PERL" = ":"; then
 fi
 
 dnl ========================================================
+dnl = Android uses a very custom (hacky) toolchain; we need to do this
+dnl = here, so that the compiler checks can succeed
+dnl ========================================================
+
+MOZ_ARG_WITH_STRING(android-ndk,
+[  --with-android-ndk=DIR
+                           location where the Android NDK can be found],
+    android_ndk=$withval)
+
+MOZ_ARG_WITH_STRING(android-toolchain,
+[  --with-android-toolchain=DIR
+                           location of the android toolchain, default NDK/build/prebuilt/HOST/arm-eabi-4.4.0],
+    android_toolchain=$withval)
+
+MOZ_ARG_WITH_STRING(android-platform,
+[  --with-android-platform=DIR
+                           location of NDK platform dir, default NDK/build/platforms/android-5/arch-arm],
+    android_platform=$withval)
+
+MOZ_ARG_WITH_STRING(android-sdk,
+[  --with-android-sdk=DIR
+                           location where the Android SDK can be found (base directory, e.g. .../android/platforms/android-6)],
+    android_sdk=$withval)
+
+MOZ_ARG_WITH_STRING(android-tools,
+[  --with-android-tools=DIR
+                           location where the Android Tools can be found (base directory, e.g. .../android/tools)],
+    android_tools=$withval)
+
+if test "$target" = "arm-android-eabi" ; then
+    if test -z "$android_ndk" ; then
+        AC_MSG_ERROR([You must specify --with-android-ndk=/path/to/ndk when targeting Android.])
+    fi
+
+    if test -z "$android_sdk" ; then
+        AC_MSG_ERROR([You must specify --with-android-sdk=/path/to/sdk when targeting Android.])
+    fi
+
+    if test -z "$android_tools" ; then
+        AC_MSG_ERROR([You must specify --with-android-tools=/path/to/sdk/tools when targeting Android.])
+    fi
+
+    if test -z "$android_toolchain" ; then
+        android_toolchain="$android_ndk"/build/prebuilt/`uname -s | tr "[[:upper:]]" "[[:lower:]]"`-x86/arm-eabi-4.4.0
+    fi
+
+    if test -z "$android_platform" ; then
+       android_platform="$android_ndk"/build/platforms/android-5/arch-arm
+    fi
+
+    dnl set up compilers
+    AS="$android_toolchain"/bin/arm-eabi-as
+    CC="$android_toolchain"/bin/arm-eabi-gcc
+    CXX="$android_toolchain"/bin/arm-eabi-g++
+    CPP="$android_toolchain"/bin/arm-eabi-cpp
+    LD="$android_toolchain"/bin/arm-eabi-ld
+    AR="$android_toolchain"/bin/arm-eabi-ar
+    RANLIB="$android_toolchain"/bin/arm-eabi-ranlib
+    STRIP="$android_toolchain"/bin/arm-eabi-strip
+
+    CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
+    CXXFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CXXFLAGS"
+
+    dnl Add -llog by default, since we use it all over the place.
+    dnl Add --allow-shlib-undefined, because libGLESv2 links to an
+    dnl undefined symbol (present on the hardware, just not in the
+    dnl NDK.)
+    LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform -llog -Wl,--allow-shlib-undefined $LDFLAGS"
+
+    dnl prevent cross compile section from using these flags as host flags
+    if test -z "$HOST_CPPFLAGS" ; then
+        HOST_CPPFLAGS=" "
+    fi
+    if test -z "$HOST_CFLAGS" ; then
+        HOST_CFLAGS=" "
+    fi
+    if test -z "$HOST_CXXFLAGS" ; then
+        HOST_CXXFLAGS=" "
+    fi
+    if test -z "$HOST_LDFLAGS" ; then
+        HOST_LDFLAGS=" "
+    fi
+
+    ANDROID_NDK="${android_ndk}"
+    ANDROID_TOOLCHAIN="{android_toolchain}"
+    ANDROID_PLATFORM="{android_platform}"
+    ANDROID_SDK="${android_sdk}"
+    ANDROID_TOOLS="${android_tools}"
+
+    AC_DEFINE(ANDROID)
+    CROSS_COMPILE=1
+    MOZ_CHROME_FILE_FORMAT=omni
+fi
+
+AC_SUBST(ANDROID_NDK)
+AC_SUBST(ANDROID_TOOLCHAIN)
+AC_SUBST(ANDROID_PLATFORM)
+AC_SUBST(ANDROID_SDK)
+AC_SUBST(ANDROID_TOOLS)
+
+dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
 dnl Set CROSS_COMPILE in the environment when running configure
@@ -1149,6 +1251,9 @@ if test -n "$CROSS_COMPILE"; then
         winmo*)       OS_ARCH=WINCE ;;
         darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
     esac
+    case "${target}" in
+        arm-android-eabi) OS_ARCH=Linux OS_TARGET=Android ;;
+    esac
 else
     OS_TARGET=`uname -s`
     OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -1494,12 +1599,8 @@ if test "$GNU_CC"; then
     _PEDANTIC=1
 
     if test -z "$INTEL_CC"; then
-      _IGNORE_LONG_LONG_WARNINGS=1
       _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -W"
-    else
-      _IGNORE_LONG_LONG_WARNINGS=
     fi
-
 
     _DEFINES_CFLAGS='-include $(DEPTH)/mozilla-config.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1914,7 +2015,6 @@ case "$target" in
 *-bsdi*)
     dnl -pedantic doesn't play well with BSDI's _very_ modified gcc (shlicc2)
     _PEDANTIC=
-    _IGNORE_LONG_LONG_WARNINGS=
     case $OS_RELEASE in
 	4.*|5.*)
             STRIP="$STRIP -d"
@@ -2100,7 +2200,7 @@ ia64*-hpux*)
             # -Os is broken on gcc 4.1.x and 4.2.x, we need to tweak it to get good results.
             MOZ_OPTIMIZE_SIZE_TWEAK="-finline-limit=50"
         esac
-        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
+        MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
         MOZ_DEBUG_FLAGS="-g"
     fi
 
@@ -2254,6 +2354,7 @@ ia64*-hpux*)
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom -lmozalloc'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
+        GCC_VERSION=`$CC -v 2>&1 | awk '/^gcc version/ { print $3 }'`
     else
         TARGET_COMPILER_ABI=msvc
         HOST_CC='$(CC)'
@@ -2287,6 +2388,7 @@ ia64*-hpux*)
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/dist/include/mozilla-config.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
+        CXXFLAGS="$CXXFLAGS -wd4800" # disable warning "forcing value to bool"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
         MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
@@ -2704,7 +2806,6 @@ alpha*-*-osf*)
     # $ORIGIN/.. is for shared libraries under components/ to locate shared
     # libraries one level up (e.g. libnspr4.so)
     LDFLAGS="$LDFLAGS -z ignore -R '\$\$ORIGIN:\$\$ORIGIN/..'"
-    MOZ_MEMORY=1
     if test "$SOLARIS_SUNPRO_CC"; then
        LIBS="-lCrun -lCstd $LIBS"
        NS_USE_NATIVE=1
@@ -2790,6 +2891,18 @@ alpha*-*-osf*)
 
 *-os2*)
     HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
+    ;;
+
+*-android*)
+    AC_DEFINE(NO_PW_GECOS)
+    no_x=yes
+    _PLATFORM_DEFAULT_TOOLKIT=cairo-android
+    TARGET_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
+
+    MOZ_GFX_OPTIMIZE_MOBILE=1
+    MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-reorder-functions -fomit-frame-pointer"
+
+    dnl MOZ_MEMORY=1
     ;;
 
 esac
@@ -4370,8 +4483,11 @@ LDFLAGS=$_SAVE_LDFLAGS
 if test "$ac_cv_thread_keyword" = yes; then
   # mips builds fail with TLS variables because of a binutils bug.
   # See bug 528687
-  case "${target_cpu}" in
-    mips*)
+  case "${target}" in
+    mips*-*)
+      :
+      ;;
+    *-android*)
       :
       ;;
     *)
@@ -4447,7 +4563,9 @@ AC_CACHE_CHECK(for LC_MESSAGES,
 				ac_cv_i18n_lc_messages=no)])
 if test "$ac_cv_i18n_lc_messages" = yes; then
    AC_DEFINE(HAVE_I18N_LC_MESSAGES)
-fi 	
+fi
+
+AC_HAVE_FUNCS(localeconv)
 
 fi # SKIP_COMPILER_CHECKS
 
@@ -4494,6 +4612,7 @@ if test -n "$SKIP_COMPILER_CHECKS"; then
    dnl Windows has malloc.h
    AC_DEFINE(MALLOC_H, [<malloc.h>])
    AC_DEFINE(HAVE_FORCEINLINE)
+   AC_DEFINE(HAVE_LOCALECONV)
 fi # SKIP_COMPILER_CHECKS
 
 dnl ========================================================
@@ -4554,12 +4673,12 @@ fi
 if test -n "$MOZ_NATIVE_NSPR"; then
     _SAVE_CFLAGS=$CFLAGS
     CFLAGS="$CFLAGS $NSPR_CFLAGS"
-    AC_TRY_COMPILE([#include "prlog.h"],
+    AC_TRY_COMPILE([#include "prtypes.h"],
                 [#ifndef PR_STATIC_ASSERT
-                 #error PR_STATIC_ASSERT not defined
+                 #error PR_STATIC_ASSERT not defined or requires including prlog.h
                  #endif],
                 [MOZ_NATIVE_NSPR=1],
-                AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT]))
+                AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
 else
     if test "$OS_ARCH" = "WINCE"; then
@@ -4898,6 +5017,7 @@ MOZ_SPELLCHECK=1
 MOZ_SPLASHSCREEN=
 MOZ_STORAGE=1
 MOZ_SVG=1
+MOZ_THUMB2=
 MOZ_TIMELINE=
 MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
@@ -4905,7 +5025,6 @@ MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
 MOZ_USE_NATIVE_UCONV=
 MOZ_VIEW_SOURCE=1
-MOZ_XPINSTALL=1
 MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
@@ -5063,7 +5182,8 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-beos" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa"
+        -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-android"
     then
         dnl nglayout only supports building with one toolkit,
         dnl so ignore everything after the first comma (",").
@@ -5171,6 +5291,13 @@ cairo-cocoa)
     MOZ_FS_LAYOUT=bundle
     MOZ_WEBGL=1
     ;;
+
+cairo-android)
+    AC_DEFINE(MOZ_WIDGET_ANDROID)
+    MOZ_WIDGET_TOOLKIT=android
+    MOZ_WEBGL=
+    ;;
+
 esac
 
 if test "$MOZ_ENABLE_XREMOTE"; then
@@ -5629,10 +5756,7 @@ dnl ========================================================
 dnl = Disable IPC support for tabs and plugins
 dnl ========================================================
 case "${target}" in
-powerpc-apple-darwin*)
-    MOZ_IPC=
-    ;;
-*-wince*)
+*-wince*|*-android*)
     MOZ_IPC=
     ;;
 esac
@@ -5718,17 +5842,6 @@ case "$target" in
     fi
     ;;
 esac
-fi
-
-dnl ========================================================
-dnl xpinstall support on by default
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(xpinstall,
-[  --disable-xpinstall     Disable xpinstall support],
-    MOZ_XPINSTALL=,
-    MOZ_XPINSTALL=1 )
-if test "$MOZ_XPINSTALL"; then
-    AC_DEFINE(MOZ_XPINSTALL)
 fi
 
 dnl ========================================================
@@ -6164,7 +6277,7 @@ dnl Remove dupes
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
 
 dnl Ensure every extension exists, to avoid mostly-inscrutable error messages
-dnl when trying to build a non-existent extension.
+dnl when trying to build a nonexistent extension.
 for extension in $MOZ_EXTENSIONS; do
     if test ! -d "${srcdir}/extensions/${extension}"; then
         AC_MSG_ERROR([Unrecognized extension provided to --enable-extensions: ${extension}.])
@@ -6323,10 +6436,6 @@ if test -n "$MOZ_INSTALLER" -a "$OS_ARCH" = "WINNT"; then
     fi
 fi
 
-# Automatically disable installer if xpinstall isn't built
-if test -z "$MOZ_XPINSTALL"; then
-    MOZ_INSTALLER=
-fi
 AC_SUBST(MOZ_INSTALLER)
 
 AC_MSG_CHECKING([for tar archiver])
@@ -6420,15 +6529,6 @@ MOZ_ARG_ENABLE_BOOL(leaky,
 [  --enable-leaky          Build leaky memory tool],
     MOZ_LEAKY=1,
     MOZ_LEAKY=)
-
-
-dnl ========================================================
-dnl xpctools
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(xpctools,
-[  --enable-xpctools       Build JS profiling tool],
-    MOZ_XPCTOOLS=1,
-    MOZ_XPCTOOLS= )
 
 
 dnl ========================================================
@@ -6778,6 +6878,10 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    fi
 
+   if test "$MOZ_PLATFORM_MAEMO" -gt 5; then
+     MOZ_THUMB2=1
+   fi
+
    PKG_CHECK_MODULES(LIBLOCATION,liblocation, _LIB_FOUND=1, _LIB_FOUND=)
    MOZ_PLATFORM_MAEMO_LIBS="$MOZ_PLATFORM_MAEMO_LIBS $LIBLOCATION_LIBS"
    MOZ_PLATFORM_MAEMO_CFLAGS="$MOZ_PLATFORM_MAEMO_CFLAGS $LIBLOCATION_CFLAGS"
@@ -6791,6 +6895,31 @@ if test $MOZ_PLATFORM_MAEMO; then
 
    AC_SUBST(MOZ_PLATFORM_MAEMO_LIBS)
    AC_SUBST(MOZ_PLATFORM_MAEMO_CFLAGS)
+fi
+
+dnl ========================================================
+dnl = Enable building the Thumb2 instruction set
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(thumb2,
+ [  --enable-thumb2              Enable Thumb2 instruction set],
+    MOZ_THUMB2=1,
+    MOZ_THUMB2=)
+
+if test -n "$MOZ_THUMB2"; then
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+        CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
+      else
+        AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
+      fi
+    ;;
+    *)
+      AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
+    ;;
+  esac
 fi
 
 dnl ========================================================
@@ -6859,6 +6988,14 @@ MOZ_ARG_ENABLE_STRING(debug,
   MOZ_DEBUG=)
 
 MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -D_DEBUG"
+MOZ_ARG_WITH_STRING(debug-label,
+[  --with-debug-label=LABELS
+                           Define DEBUG_<value> for each comma-separated
+                           value given.],
+[ for option in `echo $withval | sed 's/,/ /g'`; do
+    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
+done])
+
  case "${target_os}" in
     beos*)
         MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${USER}"
@@ -6978,7 +7115,18 @@ if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
 fi
 
 dnl ========================================================
-dnl Disable runtime logging checks
+dnl = Disable any treating of compile warnings as errors
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
+[  --disable-warnings-as-errors       Disable treating of warnings as errors],
+    MOZ_DISABLE_WARNINGS_AS_ERRORS=1,
+    MOZ_DISABLE_WARNINGS_AS_ERRORS= )
+if test "$MOZ_DISABLE_WARNINGS_AS_ERRORS"; then
+   WARNINGS_AS_ERRORS=''
+fi
+
+dnl ========================================================
+dnl = Disable runtime logging checks
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(logging,
 [  --disable-logging       Disable logging facilities],
@@ -6991,7 +7139,7 @@ else
 fi
 
 dnl ========================================================
-dnl = dnl This will enable logging of addref, release, ctor, dtor.
+dnl = This will enable logging of addref, release, ctor, dtor.
 dnl ========================================================
 _ENABLE_LOGREFCNT=42
 MOZ_ARG_ENABLE_BOOL(logrefcnt,
@@ -7063,23 +7211,23 @@ if test "$MOZ_MEMORY"; then
   dnl The generic feature tests that determine how to compute ncpus are long and
   dnl complicated.  Therefore, simply define special cpp variables for the
   dnl platforms we have special knowledge of.
-  case "${target_os}" in
-  darwin*)
+  case "${target}" in
+  *-darwin*)
     AC_DEFINE(MOZ_MEMORY_DARWIN)
     ;;
-  *freebsd*)
+  *-*freebsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  *linux*)
+  *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
     ;;
-  netbsd*)
+  *-netbsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  solaris*)
+  *-solaris*)
     AC_DEFINE(MOZ_MEMORY_SOLARIS)
     ;;
-  msvc*|mks*|cygwin*|mingw*)
+  *-msvc*|*-mks*|*-cygwin*|*-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     dnl This is sort of awful. Will revisit if we add support for more versions
     if test "$CC_VERSION" != "14.00.50727.762" -a "$CC_VERSION" != "15.00.30729.01"; then
@@ -7113,16 +7261,20 @@ if test "$MOZ_MEMORY"; then
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
     ;;
-  *wince)
+  *-*wince)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     if test -z "$WINCE_WINDOWS_MOBILE"; then
       AC_DEFINE(MOZ_MEMORY_WINCE6)
     fi
     ;;
-  *winmo)
+  *-*winmo)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
+    ;;
+  *-android*)
+    AC_DEFINE(MOZ_MEMORY_LINUX)
+    AC_DEFINE(MOZ_MEMORY_ANDROID)
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -7152,8 +7304,8 @@ MOZ_ARG_ENABLE_BOOL(wrap-malloc,
 
 if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
-    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
-    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) -o $@'
+    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup"
+    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) -o $@'
     fi
 fi
 
@@ -7408,7 +7560,7 @@ dnl =========================================================
 dnl = Chrome format
 dnl =========================================================
 MOZ_ARG_ENABLE_STRING([chrome-format],
-[  --enable-chrome-format=jar|flat|both|symlink
+[  --enable-chrome-format=jar|flat|both|symlink|omni
                           Select FORMAT of chrome files (default=jar)],
     MOZ_CHROME_FILE_FORMAT=`echo $enableval | tr A-Z a-z`)
 
@@ -7419,13 +7571,30 @@ fi
 if test "$MOZ_CHROME_FILE_FORMAT" != "jar" && 
     test "$MOZ_CHROME_FILE_FORMAT" != "flat" &&
     test "$MOZ_CHROME_FILE_FORMAT" != "symlink" &&
-    test "$MOZ_CHROME_FILE_FORMAT" != "both"; then
-    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, both, or symlink])
+    test "$MOZ_CHROME_FILE_FORMAT" != "both" &&
+    test "$MOZ_CHROME_FILE_FORMAT" != "omni"; then
+    AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, both, symlink, or omni])
 fi
 
-if test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
-   AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
+dnl =========================================================
+dnl Omnijar packaging (bug 552121)
+dnl =========================================================
+dnl Omnijar packaging is compatible with flat packaging.
+dnl In unpackaged builds, omnijar looks for files as if
+dnl things were flat packaged. After packaging, all files
+dnl are loaded from a single jar. MOZ_CHROME_FILE_FORMAT
+dnl is set to flat since putting files into jars is only
+dnl done during packaging with omnijar.
+if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
+    MOZ_OMNIJAR=1
+    AC_DEFINE(MOZ_OMNIJAR)
+    MOZ_CHROME_FILE_FORMAT=flat
+elif test "$MOZ_CHROME_FILE_FORMAT" = "jar"; then
+    AC_DEFINE(MOZ_CHROME_FILE_FORMAT_JAR)
 fi
+
+AC_SUBST(MOZ_OMNIJAR)
+
 dnl ========================================================
 dnl = Define default location for MOZILLA_FIVE_HOME
 dnl ========================================================
@@ -7519,25 +7688,6 @@ else
     AC_MSG_RESULT([no])
 fi
 
-dnl pass -Wno-long-long to the compiler
-MOZ_ARG_ENABLE_BOOL(long-long-warning,
-[  --enable-long-long-warning 
-                          Warn about use of non-ANSI long long type],
-    _IGNORE_LONG_LONG_WARNINGS=,
-    _IGNORE_LONG_LONG_WARNINGS=1)
-
-if test "$_IGNORE_LONG_LONG_WARNINGS"; then
-     _SAVE_CFLAGS="$CFLAGS"
-     CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
-     AC_MSG_CHECKING([whether compiler supports -Wno-long-long])
-     AC_TRY_COMPILE([], [return(0);], 
-	[ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  result="yes" ], result="no")
-     AC_MSG_RESULT([$result])
-     CFLAGS="$_SAVE_CFLAGS"
-fi
-
 dnl ========================================================
 dnl Profile guided optimization
 dnl ========================================================
@@ -7555,7 +7705,7 @@ MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
 AC_SUBST(MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE)
 
 _SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fprofile-generate"
+CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
 
 AC_MSG_CHECKING([whether C compiler supports -fprofile-generate])
 AC_TRY_COMPILE([], [return 0;],
@@ -7565,7 +7715,7 @@ AC_MSG_RESULT([$result])
 
 if test $result = "yes"; then
   PROFILE_GEN_LDFLAGS="-fprofile-generate"
-  PROFILE_USE_CFLAGS="-fprofile-use"
+  PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freorder-blocks-and-partition"
   PROFILE_USE_LDFLAGS="-fprofile-use"
 else
   CFLAGS="$_SAVE_CFLAGS -fprofile-arcs"
@@ -7614,7 +7764,7 @@ MOZ_ARG_DISABLE_BOOL(pedantic,
 _PEDANTIC= )
 if test "$_PEDANTIC"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
     AC_MSG_CHECKING([whether C++ compiler has -pedantic long long bug])
     AC_TRY_COMPILE([$configure_static_assert_macros],
                    [CONFIGURE_STATIC_ASSERT(sizeof(long long) == 8)],
@@ -7624,8 +7774,8 @@ if test "$_PEDANTIC"; then
 
     case "$result" in
     no)
-        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic"
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
         ;;
     yes)
         AC_MSG_ERROR([Your compiler appears to have a known bug where long long is miscompiled when using -pedantic.  Reconfigure using --disable-pedantic. ])
@@ -8403,7 +8553,6 @@ AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
-AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_USE_NATIVE_UCONV)
 AC_SUBST(MOZ_QUANTIFY)
@@ -8435,7 +8584,6 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(IBMBIDI)
 AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
-AC_SUBST(MOZ_XPINSTALL)
 AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_USER_DIR)
@@ -8892,6 +9040,9 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     fi
     if test -n "$USE_ARM_KUSER"; then
         ac_configure_args="$ac_configure_args --with-arm-kuser"
+    fi
+    if test -n "$MOZ_THUMB2"; then
+        ac_configure_args="$ac_configure_args --enable-thumb2"
     fi
     AC_OUTPUT_SUBDIRS(nsprpub)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"

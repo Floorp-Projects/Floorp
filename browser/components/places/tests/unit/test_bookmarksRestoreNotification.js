@@ -109,7 +109,7 @@ var tests = [
   },
 
   {
-    desc:       "JSON restore: nonexisting file should fail",
+    desc:       "JSON restore: nonexistent file should fail",
     currTopic:  NSIOBSERVER_TOPIC_BEGIN,
     finalTopic: NSIOBSERVER_TOPIC_FAILED,
     data:       NSIOBSERVER_DATA_JSON,
@@ -163,7 +163,7 @@ var tests = [
   },
 
   {
-    desc:       "HTML restore: nonexisting file should fail",
+    desc:       "HTML restore: nonexistent file should fail",
     currTopic:  NSIOBSERVER_TOPIC_BEGIN,
     finalTopic: NSIOBSERVER_TOPIC_FAILED,
     data:       NSIOBSERVER_DATA_HTML,
@@ -217,7 +217,7 @@ var tests = [
   },
 
   {
-    desc:       "HTML initial restore: nonexisting file should fail",
+    desc:       "HTML initial restore: nonexistent file should fail",
     currTopic:  NSIOBSERVER_TOPIC_BEGIN,
     finalTopic: NSIOBSERVER_TOPIC_FAILED,
     data:       NSIOBSERVER_DATA_HTML_INIT,
@@ -279,7 +279,7 @@ var tests = [
   },
 
   {
-    desc:       "HTML restore into folder: nonexisting file should fail",
+    desc:       "HTML restore into folder: nonexistent file should fail",
     currTopic:  NSIOBSERVER_TOPIC_BEGIN,
     finalTopic: NSIOBSERVER_TOPIC_FAILED,
     data:       NSIOBSERVER_DATA_HTML,

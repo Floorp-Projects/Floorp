@@ -23,7 +23,7 @@
   <rect x="0" width="50" height="100%" fill="red"
         style="clip-path: url(#clip);"/>
 
-  <!-- Test 2: Puprle background covered by clipped lime block.
+  <!-- Test 2: Purple background covered by clipped lime block.
        Initially, the clipping path is to the right of the lime, so the purple
        background shows through.  But after the animation, the clipping path
        exactly matches the dimensions of the lime block, which lets it

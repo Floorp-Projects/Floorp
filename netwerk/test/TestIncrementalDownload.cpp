@@ -73,7 +73,7 @@ FetchObserver::OnProgress(nsIRequest *request, nsISupports *context,
                           PRUint64 progress, PRUint64 progressMax)
 {
   printf("FetchObserver::OnProgress [%lu/%lu]\n",
-      PRUint32(progress), PRUint32(progressMax));
+         (unsigned long)progress, (unsigned long)progressMax);
   return NS_OK;
 }
 

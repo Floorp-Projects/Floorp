@@ -341,7 +341,7 @@ GetWrappedJSObject(JSContext *cx, JSObject *obj)
   return xclasp->wrappedObject(cx, obj);
 }
 
-// Get the (possibly non-existant) COW off of an object
+// Get the (possibly nonexistent) COW off of an object
 // TODO Move to XPCWrapper and share with other wrappers.
 static inline
 JSObject *
@@ -594,9 +594,8 @@ XPC_COW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   }
 
   if (interned_id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTO) ||
-      interned_id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PARENT) ||
       interned_id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_EXPOSEDPROPS)) {
-    // No getting or setting __proto__ or __parent__ on my object.
+    // No getting or setting __proto__ on my object.
     return ThrowException(NS_ERROR_INVALID_ARG, cx); // XXX better error message
   }
 

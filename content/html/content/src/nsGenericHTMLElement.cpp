@@ -111,6 +111,8 @@
 #include "mozAutoDocUpdate.h"
 #include "nsHtml5Module.h"
 
+#include "nsThreadUtils.h"
+
 class nsINodeInfo;
 class nsIDOMNodeList;
 class nsRuleWalker;
@@ -169,6 +171,47 @@ nsGenericHTMLElement::Init(nsINodeInfo *aNodeInfo)
 
 #endif
 
+/**
+ * nsAutoFocusEvent is used to dispatch a focus event when a
+ * nsGenericHTMLFormElement is binded to the tree with the autofocus attribute
+ * enabled.
+ */
+class nsAutoFocusEvent : public nsRunnable
+{
+public:
+  nsAutoFocusEvent(nsGenericHTMLFormElement* aElement) : mElement(aElement) {}
+
+  NS_IMETHOD Run() {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    if (!fm) {
+      return NS_ERROR_NULL_POINTER;
+    }
+
+    nsIDocument* document = mElement->GetOwnerDoc();
+    if (!document) {
+      return NS_OK;
+    }
+
+    // Do not autofocus if an sub-window is focused.
+    nsPIDOMWindow* window = document->GetWindow();
+    if (window && window->GetFocusedNode()) {
+      return NS_OK;
+    }
+
+    // If something is focused in the same document, ignore autofocus.
+    if (!fm->GetFocusedContent() ||
+        fm->GetFocusedContent()->GetOwnerDoc() != document) {
+      return mElement->Focus();
+    }
+
+    return NS_OK;
+  }
+private:
+  // NOTE: nsGenericHTMLFormElement is saved as a nsGenericHTMLElement
+  // because AddRef/Release are ambiguous with nsGenericHTMLFormElement
+  // and Focus() is declared (and defined) in nsGenericHTMLElement class.
+  nsRefPtr<nsGenericHTMLElement> mElement;
+};
 
 class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
                                     public nsIDOMElementCSSInlineStyle
@@ -808,12 +851,13 @@ nsGenericHTMLElement::GetSpellcheck(PRBool* aSpellcheck)
     return NS_OK;
   }
 
-  // Is this anything other than a single-line plaintext input?
+  // Is this anything other than an input text?
+  // Other inputs are not spellchecked.
   if (controlType != NS_FORM_INPUT_TEXT) {
     return NS_OK;                       // Not spellchecked by default
   }
 
-  // Does the user want single-line inputs spellchecked by default?
+  // Does the user want input text spellchecked by default?
   // NOTE: Do not reflect a pref value of 0 back to the DOM getter.
   // The web page should not know if the user has disabled spellchecking.
   // We'll catch this in the editor itself.
@@ -1614,8 +1658,7 @@ nsGenericHTMLFormElement::UpdateEditableFormControlState()
   }
 
   PRInt32 formType = GetType();
-  if (formType != NS_FORM_INPUT_PASSWORD && formType != NS_FORM_INPUT_TEXT &&
-      formType != NS_FORM_TEXTAREA) {
+  if (!IsTextControl(PR_FALSE)) {
     SetEditableFlag(PR_FALSE);
     return;
   }
@@ -1869,7 +1912,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
         nsIDocument* doc = presContext->Document();
         nsCOMPtr<nsIURI> uri;
         nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
-            getter_AddRefs(uri), spec, doc, doc->GetBaseURI());
+            getter_AddRefs(uri), spec, doc, doc->GetDocBaseURI());
         if (NS_SUCCEEDED(rv)) {
           // Note that this should generally succeed here, due to the way
           // |spec| is created.  Maybe we should just add an nsStringBuffer
@@ -2400,6 +2443,20 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // An autofocus event has to be launched if the autofocus attribute is
+  // specified and the element accept the autofocus attribute. In addition,
+  // the document should not be already loaded and the "browser.autofocus"
+  // preference should be 'true'.
+  if (AcceptAutofocus() && HasAttr(kNameSpaceID_None, nsGkAtoms::autofocus) &&
+      aDocument &&
+      aDocument->GetReadyStateEnum() != nsIDocument::READYSTATE_COMPLETE &&
+      nsContentUtils::GetBoolPref("browser.autofocus", PR_TRUE)) {
+    nsCOMPtr<nsIRunnable> event = new nsAutoFocusEvent(this);
+    rv = NS_DispatchToCurrentThread(event);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   if (!aParent) {
     return NS_OK;
   }
@@ -2609,6 +2666,38 @@ nsGenericHTMLFormElement::IsSubmitControl() const
   return type == NS_FORM_INPUT_SUBMIT ||
          type == NS_FORM_BUTTON_SUBMIT ||
          type == NS_FORM_INPUT_IMAGE;
+}
+
+PRBool
+nsGenericHTMLFormElement::IsTextControl(PRBool aExcludePassword) const
+{
+  PRInt32 type = GetType();
+  return nsGenericHTMLFormElement::IsSingleLineTextControl(aExcludePassword) ||
+         type == NS_FORM_TEXTAREA;
+}
+
+PRBool
+nsGenericHTMLFormElement::IsSingleLineTextControl(PRBool aExcludePassword) const
+{
+  PRInt32 type = GetType();
+  return type == NS_FORM_INPUT_TEXT ||
+         type == NS_FORM_INPUT_SEARCH ||
+         type == NS_FORM_INPUT_TEL ||
+         (!aExcludePassword && type == NS_FORM_INPUT_PASSWORD);
+}
+
+PRBool
+nsGenericHTMLFormElement::IsLabelableControl() const
+{
+  // Check for non-labelable form controls as they are not numerous.
+  // TODO: datalist should be added to this list.
+  PRInt32 type = GetType();
+  return type != NS_FORM_FIELDSET &&
+         type != NS_FORM_LABEL &&
+         type != NS_FORM_OPTION &&
+         type != NS_FORM_OPTGROUP &&
+         type != NS_FORM_OBJECT &&
+         type != NS_FORM_LEGEND;
 }
 
 PRInt32

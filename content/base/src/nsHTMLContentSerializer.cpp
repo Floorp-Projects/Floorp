@@ -394,27 +394,27 @@ nsHTMLContentSerializer::AppendElementEnd(nsIContent *aElement,
 }
 
 static const PRUint16 kValNBSP = 160;
-static const char kEntityNBSP[] = "nbsp";
+static const char kEntityNBSP[] = "&nbsp;";
 
 static const PRUint16 kGTVal = 62;
 static const char* kEntities[] = {
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "", "amp", "",
+  "", "", "", "", "", "", "", "", "&amp;", "",
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
-  "lt", "", "gt"
+  "&lt;", "", "&gt;"
 };
 
 static const char* kAttrEntities[] = {
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
-  "", "", "", "", "quot", "", "", "", "amp", "",
+  "", "", "", "", "&quot;", "", "", "", "&amp;", "",
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",
-  "lt", "", "gt"
+  "&lt;", "", "&gt;"
 };
 
 void
@@ -449,6 +449,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
     nsReadingIterator<PRUnichar> iter;
 
     const char **entityTable = mInAttribute ? kAttrEntities : kEntities;
+    nsCAutoString entityReplacement;
 
     for (aStr.BeginReading(iter);
          iter != done_reading;
@@ -460,7 +461,7 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
       const PRUnichar* fragmentStart = c;
       const PRUnichar* fragmentEnd = c + fragmentLength;
       const char* entityText = nsnull;
-      nsCAutoString entityReplacement;
+      const char* fullConstEntityText = nsnull;
       char* fullEntityText = nsnull;
 
       advanceLength = 0;
@@ -469,16 +470,17 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
       for (; c < fragmentEnd; c++, advanceLength++) {
         PRUnichar val = *c;
         if (val == kValNBSP) {
-          entityText = kEntityNBSP;
+          fullConstEntityText = kEntityNBSP;
           break;
         }
         else if ((val <= kGTVal) && (entityTable[val][0] != 0)) {
-          entityText = entityTable[val];
+          fullConstEntityText = entityTable[val];
           break;
         } else if (val > 127 &&
                   ((val < 256 &&
                     mFlags & nsIDocumentEncoder::OutputEncodeLatin1Entities) ||
                     mFlags & nsIDocumentEncoder::OutputEncodeHTMLEntities)) {
+          entityReplacement.Truncate();
           parserService->HTMLConvertUnicodeToEntity(val, entityReplacement);
 
           if (!entityReplacement.IsEmpty()) {
@@ -517,6 +519,10 @@ nsHTMLContentSerializer::AppendAndTranslateEntities(const nsAString& aStr,
         AppendASCIItoUTF16(entityText, aOutputStr);
         aOutputStr.Append(PRUnichar(';'));
         advanceLength++;
+      }
+      else if (fullConstEntityText) {
+        aOutputStr.AppendASCII(fullConstEntityText);
+        ++advanceLength;
       }
       // if it comes from nsIEntityConverter, it already has '&' and ';'
       else if (fullEntityText) {

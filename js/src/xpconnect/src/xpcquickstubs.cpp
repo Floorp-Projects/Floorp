@@ -325,10 +325,6 @@ SharedLookupSetter(JSContext *cx, uintN argc, jsval *vp)
     return LookupGetterOrSetter(cx, PR_FALSE, argc, vp);
 }
 
-// XXX Hack! :-/
-JS_FRIEND_API(JSBool) js_obj_defineGetter(JSContext *cx, uintN argc, jsval *vp);
-JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, jsval *vp);
-
 static JSBool
 DefineGetterOrSetter(JSContext *cx, uintN argc, JSBool wantGetter, jsval *vp)
 {
@@ -727,8 +723,9 @@ xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
         *pval = STRING_TO_JSVAL(s);  // Root the new string.
     }
 
-    len = JS_GetStringLength(s);
-    chars = (len == 0 ? traits::sEmptyBuffer : (const PRUnichar*)JS_GetStringChars(s));
+    len = s->length();
+    chars = (len == 0 ? traits::sEmptyBuffer :
+                        reinterpret_cast<const PRUnichar*>(JS_GetStringChars(s)));
     new(mBuf) implementation_type(chars, len);
     mValid = JS_TRUE;
 }
@@ -761,7 +758,7 @@ xpc_qsACString::xpc_qsACString(JSContext *cx, jsval v, jsval *pval)
     }
 
     const char *bytes = JS_GetStringBytes(s);
-    size_t len = JS_GetStringLength(s);
+    size_t len = s->length();
     new(mBuf) implementation_type(bytes, len);
     mValid = JS_TRUE;
 }
@@ -1045,6 +1042,7 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, PRUnichar **pstr)
         *pval = STRING_TO_JSVAL(str);  // Root the new string.
     }
 
+    // XXXbz this is casting away constness too...  That seems like a bad idea.
     *pstr = (PRUnichar*)JS_GetStringChars(str);
     return JS_TRUE;
 }

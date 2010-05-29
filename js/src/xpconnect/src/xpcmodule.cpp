@@ -40,73 +40,13 @@
 
 /* Module level methods. */
 
-#include "xpcprivate.h"
-#ifdef MOZ_JSLOADER
-#include "mozJSLoaderConstructors.h"
-#endif
-
-/* Module implementation for the xpconnect library. */
-
-NS_DECL_CLASSINFO(XPCVariant)
-
-// {DC524540-487E-4501-9AC7-AAA784B17C1C}
-#define XPCVARIANT_CID \
-    {0xdc524540, 0x487e, 0x4501, \
-      { 0x9a, 0xc7, 0xaa, 0xa7, 0x84, 0xb1, 0x7c, 0x1c } }
-
-#define XPCVARIANT_CONTRACTID "@mozilla.org/xpcvariant;1"
-#define XPC_JSCONTEXT_STACK_ITERATOR_CONTRACTID "@mozilla.org/js/xpc/ContextStackIterator;1"
-
-// {FE4F7592-C1FC-4662-AC83-538841318803}
-#define SCRIPTABLE_INTERFACES_CID \
-    {0xfe4f7592, 0xc1fc, 0x4662, \
-      { 0xac, 0x83, 0x53, 0x88, 0x41, 0x31, 0x88, 0x3 } }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCException)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCJSContextStackIterator)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect, nsXPConnect::GetSingleton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCComponents_Interfaces)
-
-#ifdef XPC_IDISPATCH_SUPPORT
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIDispatchSupport, nsDispatchSupport::GetSingleton)
-#endif
-
-NS_DECL_CLASSINFO(nsXPCException)
-
 #ifdef XPCONNECT_STANDALONE
 #define NO_SUBSCRIPT_LOADER
 #endif
 
-static const nsModuleComponentInfo components[] = {
-  {nsnull, NS_JS_ID_CID,                         XPC_ID_CONTRACTID,            nsJSIDConstructor             },
-  {nsnull, NS_XPCONNECT_CID,                     XPC_XPCONNECT_CONTRACTID,     nsIXPConnectConstructor       },
-  {nsnull, NS_XPC_THREAD_JSCONTEXT_STACK_CID,    XPC_CONTEXT_STACK_CONTRACTID, nsIXPConnectConstructor  },
-  {nsnull, NS_XPCEXCEPTION_CID,                  XPC_EXCEPTION_CONTRACTID,     nsXPCExceptionConstructor, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(nsXPCException), nsnull, &NS_CLASSINFO_NAME(nsXPCException), nsIClassInfo::DOM_OBJECT },
-  {nsnull, NS_JS_RUNTIME_SERVICE_CID,            XPC_RUNTIME_CONTRACTID,       nsIXPConnectConstructor},
-  {NS_SCRIPTERROR_CLASSNAME, NS_SCRIPTERROR_CID, NS_SCRIPTERROR_CONTRACTID,    nsScriptErrorConstructor      },
-  {nsnull, SCRIPTABLE_INTERFACES_CID,            NS_SCRIPTABLE_INTERFACES_CONTRACTID,        nsXPCComponents_InterfacesConstructor, 0, 0, 0, 0, 0, 0, nsIClassInfo::THREADSAFE },
-  {nsnull, XPCVARIANT_CID,                       XPCVARIANT_CONTRACTID,        nsnull, nsnull, nsnull, nsnull, NS_CI_INTERFACE_GETTER_NAME(XPCVariant), nsnull, &NS_CLASSINFO_NAME(XPCVariant)},
-  {nsnull, NS_XPC_JSCONTEXT_STACK_ITERATOR_CID,  XPC_JSCONTEXT_STACK_ITERATOR_CONTRACTID, nsXPCJSContextStackIteratorConstructor }
+#include "xpcmodule.h"
 
-#ifdef MOZ_JSLOADER
-  // jsloader stuff
- ,{ "JS component loader", MOZJSCOMPONENTLOADER_CID,
-    MOZJSCOMPONENTLOADER_CONTRACTID, mozJSComponentLoaderConstructor,
-    RegisterJSLoader, UnregisterJSLoader }
-#ifndef NO_SUBSCRIPT_LOADER
- ,{ "JS subscript loader", MOZ_JSSUBSCRIPTLOADER_CID,
-    mozJSSubScriptLoadContractID, mozJSSubScriptLoaderConstructor }
-#endif
-#endif
-#ifdef XPC_IDISPATCH_SUPPORT
- ,{ nsnull, NS_IDISPATCH_SUPPORT_CID,            NS_IDISPATCH_SUPPORT_CONTRACTID,
-    nsIDispatchSupportConstructor }
-#endif
-};
-
-static nsresult
+nsresult
 xpcModuleCtor(nsIModule* self)
 {
     nsXPConnect::InitStatics();
@@ -121,8 +61,8 @@ xpcModuleCtor(nsIModule* self)
     return NS_OK;
 }
 
-static void
-xpcModuleDtor(nsIModule* self)
+void
+xpcModuleDtor(nsIModule*)
 {
     // Release our singletons
     nsXPConnect::ReleaseXPConnectSingleton();
@@ -133,4 +73,15 @@ xpcModuleDtor(nsIModule* self)
 #endif
 }
 
+#ifdef XPCONNECT_STANDALONE
+
+/* Module implementation for the xpconnect library. */
+
+XPCONNECT_FACTORIES
+
+static const nsModuleComponentInfo components[] = {
+  XPCONNECT_COMPONENTS
+};
+
 NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(xpconnect, components, xpcModuleCtor, xpcModuleDtor)
+#endif

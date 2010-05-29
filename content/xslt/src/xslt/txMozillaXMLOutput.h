@@ -69,7 +69,7 @@ public:
     NS_DECL_NSISCRIPTLOADEROBSERVER
     
     // nsICSSLoaderObserver
-    NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+    NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 PRBool aWasAlternate,
                                 nsresult aStatus);
 

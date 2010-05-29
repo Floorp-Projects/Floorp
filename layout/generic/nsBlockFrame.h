@@ -96,7 +96,7 @@ class nsIntervalSet;
  * frame property that points to an nsFrameList in its
  * nsBlockReflowState. This list contains continuations for
  * floats whose prev-in-flow is in the block's regular float
- * list. The list is always empty/non-existent after the
+ * list. The list is always empty/nonexistent after the
  * block has been reflowed.
  * -- In all these frame lists, if there are two frames for
  * the same content appearing in the list, then the frames

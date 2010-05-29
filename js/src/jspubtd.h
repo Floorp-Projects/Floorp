@@ -381,7 +381,7 @@ extern JSMarkOp js_WrongTypeForClassTracer;
 #endif
 
 /*
- * Tracer callback, called for each traceable thing directly refrenced by a
+ * Tracer callback, called for each traceable thing directly referenced by a
  * particular object or runtime structure. It is the callback responsibility
  * to ensure the traversal of the full object graph via calling eventually
  * JS_TraceChildren on the passed thing. In this case the callback must be

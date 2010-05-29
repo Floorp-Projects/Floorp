@@ -745,7 +745,7 @@ nsJSSh::GetPrincipal()
 #include "xpc_map_end.h" /* This will #undef the above */
 
 /* PRBool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx,
-   in JSObjectPtr obj, in JSVal id, in PRUint32 flags, out JSObjectPtr objp); */
+   in JSObjectPtr obj, in jsval id, in PRUint32 flags, out JSObjectPtr objp); */
 NS_IMETHODIMP
 nsJSSh::NewResolve(nsIXPConnectWrappedNative *wrapper,
                    JSContext * cx, JSObject * obj,

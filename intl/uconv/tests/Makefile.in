@@ -67,6 +67,7 @@ relativesrcdir	= intl/uconv/tests
 
 _TEST_FILES =	\
 		test_bug335816.html \
+		test_singlebyte_overconsumption.html \
 		test_unicode_noncharacterescapes.html \
 		test_unicode_noncharacters_gb18030.html \
 		test_unicode_noncharacters_utf8.html \

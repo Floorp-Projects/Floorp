@@ -48,7 +48,6 @@
 #include "nsCOMPtr.h"
 #include "nsIPromptService2.h"
 #include "nsPIPromptService.h"
-#include "nsINonBlockingAlertService.h"
 #include "nsIWindowWatcher.h"
 #include "nsAutoWindowStateHelper.h"
 
@@ -56,8 +55,7 @@ class nsIDOMWindow;
 class nsIDialogParamBlock;
 
 class nsPromptService: public nsIPromptService2,
-                       public nsPIPromptService,
-                       public nsINonBlockingAlertService {
+                       public nsPIPromptService {
 
 public:
 
@@ -69,7 +67,6 @@ public:
   NS_DECL_NSIPROMPTSERVICE
   NS_DECL_NSIPROMPTSERVICE2
   NS_DECL_NSPIPROMPTSERVICE
-  NS_DECL_NSINONBLOCKINGALERTSERVICE
   NS_DECL_ISUPPORTS
 
 private:

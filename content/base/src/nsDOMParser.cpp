@@ -498,7 +498,7 @@ nsDOMParser::Initialize(nsISupports* aOwner, JSContext* cx, JSObject* obj,
       return NS_ERROR_UNEXPECTED;
     }
 
-    baseURI = doc->GetBaseURI();
+    baseURI = doc->GetDocBaseURI();
     documentURI = doc->GetDocumentURI();
   }
 

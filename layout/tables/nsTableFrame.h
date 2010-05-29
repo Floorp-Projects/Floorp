@@ -177,7 +177,7 @@ public:
 
   static void RePositionViews(nsIFrame* aFrame);
 
-  static PRBool PageBreakAfter(nsIFrame& aSourceFrame,
+  static PRBool PageBreakAfter(nsIFrame* aSourceFrame,
                                nsIFrame* aNextFrame);
 
   nsPoint GetFirstSectionOrigin(const nsHTMLReflowState& aReflowState) const;
@@ -607,6 +607,9 @@ protected:
                   nsHTMLReflowMetrics& aKidDesiredSize,
                   const nsRect&        aOriginalKidRect,
                   const nsRect&        aOriginalKidOverflowRect);
+   void PlaceRepeatedFooter(nsTableReflowState& aReflowState,
+                            nsTableRowGroupFrame *aTfoot,
+                            nscoord aFooterHeight);
 
   nsIFrame* GetFirstBodyRowGroupFrame();
 public:

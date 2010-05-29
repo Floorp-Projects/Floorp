@@ -127,10 +127,6 @@
 #include "nsISecurityCheckedComponent.h"
 #endif
 
-#ifdef XPC_TOOLS_SUPPORT
-#include "nsIXPCToolsProfiler.h"
-#endif
-
 #include "nsIThreadInternal.h"
 
 #ifdef XPC_IDISPATCH_SUPPORT
@@ -554,11 +550,6 @@ private:
 #endif
     PRBool                   mCycleCollecting;
 
-#ifdef XPC_TOOLS_SUPPORT
-    nsCOMPtr<nsIXPCToolsProfiler> mProfiler;
-    nsCOMPtr<nsILocalFile>        mProfilerOutputFile;
-#endif
-
 #ifndef XPCONNECT_STANDALONE
     typedef nsBaseHashtable<nsVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
     ScopeSet mScopes;
@@ -669,7 +660,6 @@ public:
         IDX_ITEM                    ,
         IDX_PROTO                   ,
         IDX_ITERATOR                ,
-        IDX_PARENT                  ,
         IDX_EXPOSEDPROPS            ,
         IDX_TOTAL_COUNT // just a count of the above
     };
@@ -917,8 +907,8 @@ public:
     { SetIsVoid(PR_TRUE); }
 
     explicit XPCReadableJSStringWrapper(JSString *str) :
-        nsDependentString((const PRUnichar *)::JS_GetStringChars(str),
-                          ::JS_GetStringLength(str))
+        nsDependentString(reinterpret_cast<const PRUnichar *>(::JS_GetStringChars(str)),
+                          str->length())
     { }
 };
 
@@ -3013,7 +3003,7 @@ public:
      * @param s the native object we're working with
      * @param type the type of object that s is
      * @param iid the interface of s that we want
-     * @param scope the default scope to put on the new JSObject's __parent__
+     * @param scope the default scope to put on the new JSObject's parent
      *        chain
      * @param pErr [out] relevant error code, if any.
      */    
@@ -3044,8 +3034,7 @@ public:
      * @param Interface the interface of src that we want
      * @param cache the wrapper cache for src (may be null, in which case src
      *              will be QI'ed to get the cache)
-     * @param scope the default scope to put on the new JSObject's __parent__
-     *        chain
+     * @param scope the default scope to put on the new JSObject's parent chain
      * @param allowNativeWrapper if true, this method may wrap the resulting
      *        JSObject in an XPCNativeWrapper and return that, as needed.
      * @param isGlobal
@@ -3100,8 +3089,7 @@ public:
      * @param type the type of objects in the array
      * @param iid the interface of each object in the array that we want
      * @param count the number of items in the array
-     * @param scope the default scope to put on the new JSObjects' __parent__
-     *        chain
+     * @param scope the default scope to put on the new JSObjects' parent chain
      * @param pErr [out] relevant error code, if any.
      */    
     static JSBool NativeArray2JS(XPCLazyCallContext& ccx,
@@ -3549,8 +3537,6 @@ public:
     void TraceJS(JSTracer* trc);
     void MarkAutoRootsAfterJSFinalize();
 
-    jsuword GetStackLimit() const { return mStackLimit; }
-
     static void InitStatics()
         { gLock = nsnull; gThreads = nsnull; gTLSIndex = BAD_TLS_INDEX; }
 
@@ -3582,8 +3568,6 @@ private:
     nsIException*        mException;
     JSBool               mExceptionManagerNotAvailable;
     AutoMarkingPtr*      mAutoRoots;
-
-    jsuword              mStackLimit;
 
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
     JSUint32             mWrappedNativeThreadsafetyReportDepth;
@@ -4275,8 +4259,7 @@ public:
      *
      * @param ccx the context for the whole procedure
      * @param variant the variant to convert
-     * @param scope the default scope to put on the new JSObject's __parent__
-     *        chain
+     * @param scope the default scope to put on the new JSObject's parent chain
      * @param pErr [out] relevant error code, if any.
      * @param pJSVal [out] the resulting jsval.
      */    

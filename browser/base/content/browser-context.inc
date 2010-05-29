@@ -144,9 +144,9 @@
                 label="&saveImageCmd.label;"
                 accesskey="&saveImageCmd.accesskey;"
                 oncommand="gContextMenu.saveMedia();"/>
-      <menuitem id="context-sendimage"  
-                label="&sendImageCmd.label;" 
-                accesskey="&sendImageCmd.accesskey;" 
+      <menuitem id="context-sendimage" 
+                label="&sendImageCmd.label;"
+                accesskey="&sendImageCmd.accesskey;"
                 oncommand="gContextMenu.sendMedia();"/>
       <menuitem id="context-setDesktopBackground"
                 label="&setDesktopBackgroundCmd.label;"
@@ -204,11 +204,11 @@
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey2;"
                 oncommand="gContextMenu.savePageAs();"/>
-      <menuitem id="context-sendpage"  
-                label="&sendPageCmd.label;" 
-                accesskey="&sendPageCmd.accesskey;" 
+      <menuitem id="context-sendpage"
+                label="&sendPageCmd.label;"
+                accesskey="&sendPageCmd.accesskey;"
                 oncommand="gContextMenu.sendPage();"/>
-      <menuseparator id="context-sep-viewbgimage"/>  
+      <menuseparator id="context-sep-viewbgimage"/>
       <menuitem id="context-viewbgimage"
                 label="&viewBGImageCmd.label;"
                 accesskey="&viewBGImageCmd.accesskey;"
@@ -239,7 +239,7 @@
       <menuitem id="context-selectall"
                 label="&selectAllCmd.label;"
                 accesskey="&selectAllCmd.accesskey;"
-                command="cmd_selectAll"/>      
+                command="cmd_selectAll"/>
       <menuseparator id="context-sep-selectall"/>
       <menuitem id="context-keywordfield"
                 label="&keywordfield.label;"

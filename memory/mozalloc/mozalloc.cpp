@@ -74,6 +74,16 @@
 #define UNLIKELY(x)  (x)
 #endif
 
+#if defined(MOZ_MEMORY_ANDROID) || defined(WRAP_MALLOC)
+#include "jemalloc.h"
+#define malloc(a)     je_malloc(a)
+#define valloc(a)     je_valloc(a)
+#define calloc(a, b)  je_calloc(a, b)
+#define realloc(a, b) je_realloc(a, b)
+#define free(a)       je_free(a)
+#define strdup(a)     je_strdup(a)
+#define strndup(a, b) je_strndup(a, b)
+#endif
 
 void
 moz_free(void* ptr)

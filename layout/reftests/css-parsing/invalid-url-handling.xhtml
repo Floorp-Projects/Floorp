@@ -81,6 +81,23 @@
   #foo { background: url(() }
   #fourteen { background-color: red; }
   </style>
+  /* The next three tests test that when things don't match a URI
+     token, brace-matching is done properly.  (The first is a reference.) */
+  <style type="text/css">
+  #fifteen { background-color: red }
+  #foo { background: url(a()); }
+  #fifteen { background-color: green }
+  </style>
+  <style type="text/css">
+  #sixteen { background-color: green }
+  #foo { background: url([()); }
+  #sixteen { background-color: red }
+  </style>
+  <style type="text/css">
+  #seventeen { background-color: green }
+  #foo { background: url([()); }
+  #seventeen { background-color: red }
+  </style>
  </head>
  <body>
   <div id="one">This should have a green background</div>
@@ -97,5 +114,8 @@
   <div id="twelve">This should have a green background</div>
   <div id="thirteen">This should have a green background</div>
   <div id="fourteen">This should have a green background</div>
+  <div id="fifteen">This should have a green background</div>
+  <div id="sixteen">This should have a green background</div>
+  <div id="seventeen">This should have a green background</div>
  </body>
 </html>

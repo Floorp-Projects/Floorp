@@ -167,10 +167,9 @@ nsSVGOuterSVGFrame::Init(nsIContent* aContent,
     if (doc->GetRootElement() == mContent) {
       mIsRootContent = PR_TRUE;
     }
-    // AddMutationObserver checks that the observer is not already added.
     // sSVGMutationObserver has the same lifetime as the document so does
     // not need to be removed
-    doc->AddMutationObserver(&sSVGMutationObserver);
+    doc->AddMutationObserverUnlessExists(&sSVGMutationObserver);
   }
 
   SuspendRedraw();  // UnsuspendRedraw is in DidReflow
@@ -441,16 +440,18 @@ void
 nsDisplaySVG::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
 {
+  nsSVGOuterSVGFrame *outerSVGFrame = static_cast<nsSVGOuterSVGFrame*>(mFrame);
   nsRect rectAtOrigin = aRect - aBuilder->ToReferenceFrame(mFrame);
-  nsRect thisRect(nsPoint(0,0), static_cast<nsSVGOuterSVGFrame*>(mFrame)->GetSize());
+  nsRect thisRect(nsPoint(0,0), outerSVGFrame->GetSize());
   if (!thisRect.Intersects(rectAtOrigin))
     return;
 
   nsPoint rectCenter(rectAtOrigin.x + rectAtOrigin.width / 2,
                      rectAtOrigin.y + rectAtOrigin.height / 2);
 
-  nsIFrame* frame = nsSVGUtils::HitTestChildren(static_cast<nsSVGOuterSVGFrame*>(mFrame),
-                                                rectCenter);
+  nsIFrame* frame = nsSVGUtils::HitTestChildren(
+    outerSVGFrame, rectCenter + outerSVGFrame->GetPosition() -
+                   outerSVGFrame->GetContentRect().TopLeft());
   if (frame) {
     aOutFrames->AppendElement(frame);
   }
@@ -515,7 +516,8 @@ nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint)
     return nsnull;
   }
 
-  return nsSVGUtils::HitTestChildren(this, aPoint);
+  return nsSVGUtils::HitTestChildren(
+    this, aPoint + GetPosition() - GetContentRect().TopLeft());
 }
 
 //----------------------------------------------------------------------
@@ -539,11 +541,8 @@ nsSVGOuterSVGFrame::Paint(nsIRenderingContext& aRenderingContext,
   // initialize Mozilla rendering context
   aRenderingContext.PushState();
 
-  nsMargin bp = GetUsedBorderAndPadding();
-  ApplySkipSides(bp);
-
   nsRect viewportRect = GetContentRect();
-  nsPoint viewportOffset = aPt + nsPoint(bp.left, bp.top);
+  nsPoint viewportOffset = aPt + viewportRect.TopLeft() - GetPosition();
   viewportRect.MoveTo(viewportOffset);
 
   nsRect clipRect;

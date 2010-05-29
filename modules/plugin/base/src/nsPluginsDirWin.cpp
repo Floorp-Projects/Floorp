@@ -158,6 +158,51 @@ static void FreeStringArray(PRUint32 variants, char ** array)
   PR_Free(array);
 }
 
+PRBool CanLoadPlugin(const char* binaryPath)
+{
+#if defined(_M_IX86) || defined(_M_X64) || defined(_M_IA64)
+  PRBool canLoad = PR_FALSE;
+
+  int len = MultiByteToWideChar(CP_UTF8, 0, binaryPath, -1, NULL, 0);
+  WCHAR *wBinaryPath = new WCHAR[len];
+  MultiByteToWideChar(CP_UTF8, 0, binaryPath, -1, wBinaryPath, len);
+  HANDLE file = CreateFileW(wBinaryPath, GENERIC_READ,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
+                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  delete[] wBinaryPath;
+  if (file != INVALID_HANDLE_VALUE) {
+    HANDLE map = CreateFileMappingW(file, NULL, PAGE_READONLY, 0,
+                                    GetFileSize(file, NULL), NULL);
+    if (map != NULL) {
+      LPVOID mapView = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0);
+      if (mapView != NULL) {
+        if (((IMAGE_DOS_HEADER*)mapView)->e_magic == IMAGE_DOS_SIGNATURE) {
+          long peImageHeaderStart = (((IMAGE_DOS_HEADER*)mapView)->e_lfanew);
+          if (peImageHeaderStart != 0L) {
+            DWORD arch = (((IMAGE_NT_HEADERS*)((LPBYTE)mapView + peImageHeaderStart))->FileHeader.Machine);
+#ifdef _M_IX86
+            canLoad = (arch == IMAGE_FILE_MACHINE_I386);
+#elif defined(_M_X64)
+            canLoad = (arch == IMAGE_FILE_MACHINE_AMD64);
+#elif defined(_M_IA64)
+            canLoad = (arch == IMAGE_FILE_MACHINE_IA64);
+#endif
+          }
+        }
+        UnmapViewOfFile(mapView);
+      }
+      CloseHandle(map);
+    }
+    CloseHandle(file);
+  }
+
+  return canLoad;
+#else
+  // Assume correct binaries for unhandled cases.
+  return PR_TRUE;
+#endif
+}
+
 /* nsPluginsDir implementation */
 
 // The file name must be in the form "np*.dll"
@@ -188,7 +233,9 @@ PRBool nsPluginsDir::IsPluginFile(nsIFile* file)
       if (!PL_strncasecmp(filename, "npoji", 5) ||
           !PL_strncasecmp(filename, "npjava", 6))
         return PR_FALSE;
-      return PR_TRUE;
+
+      // Check this last since it involves opening the file.
+      return CanLoadPlugin(cPath);
     }
   }
 

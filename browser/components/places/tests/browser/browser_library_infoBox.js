@@ -152,7 +152,6 @@ gTests.push({
 });
 
 function checkInfoBoxSelected(PO) {
-  PO._places.focus();
   is(getAndCheckElmtById("detailsDeck").selectedIndex, 1,
      "Selected element in detailsDeck is infoBox.");
 }
@@ -226,7 +225,10 @@ function windowObserver(aSubject, aTopic, aData) {
   gLibrary = aSubject.QueryInterface(Ci.nsIDOMWindow);
   gLibrary.addEventListener("load", function onLoad(event) {
     gLibrary.removeEventListener("load", onLoad, false);
-    executeSoon(nextTest);
+    executeSoon(function() {
+      gLibrary.PlacesOrganizer._places.focus();
+      waitForFocus(nextTest, gLibrary);
+    });
   }, false);
 }
 

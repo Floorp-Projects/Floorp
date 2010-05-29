@@ -235,7 +235,7 @@ void
 nsContentSink::InitializeStatics()
 {
   nsContentUtils::AddBoolPrefVarCache("content.notify.ontimer",
-                                      &sNotifyOnTimer);
+                                      &sNotifyOnTimer, PR_TRUE);
   // -1 means never.
   nsContentUtils::AddIntPrefVarCache("content.notify.backoffcount",
                                      &sBackoffCount, -1);
@@ -291,8 +291,8 @@ nsContentSink::Init(nsIDocument* aDoc,
   if (mDocShell) {
     PRUint32 loadType = 0;
     mDocShell->GetLoadType(&loadType);
-    mChangeScrollPosWhenScrollingToRef =
-      ((loadType & nsIDocShell::LOAD_CMD_HISTORY) == 0);
+    mDocument->SetChangeScrollPosWhenScrollingToRef(
+      (loadType & nsIDocShell::LOAD_CMD_HISTORY) == 0);
   }
 
   // use this to avoid a circular reference sink->document->scriptloader->sink
@@ -323,7 +323,7 @@ nsContentSink::Init(nsIDocument* aDoc,
 }
 
 NS_IMETHODIMP
-nsContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+nsContentSink::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 PRBool aWasAlternate,
                                 nsresult aStatus)
 {
@@ -801,7 +801,7 @@ nsContentSink::ProcessStyleLink(nsIContent* aElement,
 
   nsCOMPtr<nsIURI> url;
   nsresult rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull,
-                          mDocument->GetBaseURI());
+                          mDocument->GetDocBaseURI());
   
   if (NS_FAILED(rv)) {
     // The URI is bad, move along, don't propagate the error (for now)
@@ -910,7 +910,7 @@ nsContentSink::PrefetchHref(const nsAString &aHref,
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aHref,
               charset.IsEmpty() ? nsnull : PromiseFlatCString(charset).get(),
-              mDocument->GetBaseURI());
+              mDocument->GetDocBaseURI());
     if (uri) {
       nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aSource);
       prefetchService->PrefetchURI(uri, mDocumentURI, domNode, aExplicit);
@@ -1235,54 +1235,7 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
 void
 nsContentSink::ScrollToRef()
 {
-  if (mRef.IsEmpty()) {
-    return;
-  }
-
-  if (mScrolledToRefAlready) {
-    return;
-  }
-
-  char* tmpstr = ToNewCString(mRef);
-  if (!tmpstr) {
-    return;
-  }
-
-  nsUnescape(tmpstr);
-  nsCAutoString unescapedRef;
-  unescapedRef.Assign(tmpstr);
-  nsMemory::Free(tmpstr);
-
-  nsresult rv = NS_ERROR_FAILURE;
-  // We assume that the bytes are in UTF-8, as it says in the spec:
-  // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
-  NS_ConvertUTF8toUTF16 ref(unescapedRef);
-
-  nsCOMPtr<nsIPresShell> shell = mDocument->GetPrimaryShell();
-  if (shell) {
-    // Check an empty string which might be caused by the UTF-8 conversion
-    if (!ref.IsEmpty()) {
-      // Note that GoToAnchor will handle flushing layout as needed.
-      rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
-    } else {
-      rv = NS_ERROR_FAILURE;
-    }
-
-    // If UTF-8 URI failed then try to assume the string as a
-    // document's charset.
-
-    if (NS_FAILED(rv)) {
-      const nsACString &docCharset = mDocument->GetDocumentCharacterSet();
-
-      rv = nsContentUtils::ConvertStringFromCharset(docCharset, unescapedRef, ref);
-
-      if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
-        rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
-    }
-    if (NS_SUCCEEDED(rv)) {
-      mScrolledToRefAlready = PR_TRUE;
-    }
-  }
+  mDocument->ScrollToRef();
 }
 
 void
@@ -1332,27 +1285,7 @@ nsContentSink::StartLayout(PRBool aIgnorePendingSheets)
   // If the document we are loading has a reference or it is a
   // frameset document, disable the scroll bars on the views.
 
-  if (mDocumentURI) {
-    nsCAutoString ref;
-
-    // Since all URI's that pass through here aren't URL's we can't
-    // rely on the nsIURI implementation for providing a way for
-    // finding the 'ref' part of the URI, we'll haveto revert to
-    // string routines for finding the data past '#'
-
-    mDocumentURI->GetSpec(ref);
-
-    nsReadingIterator<char> start, end;
-
-    ref.BeginReading(start);
-    ref.EndReading(end);
-
-    if (FindCharInReadable('#', start, end)) {
-      ++start; // Skip over the '#'
-
-      mRef = Substring(start, end);
-    }
-  }
+  mDocument->SetScrollToRef(mDocumentURI);
 }
 
 void
@@ -1369,7 +1302,9 @@ nsContentSink::NotifyAppend(nsIContent* aContainer, PRUint32 aStartIndex)
   {
     // Scope so we call EndUpdate before we decrease mInNotification
     MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_CONTENT_MODEL, !mBeganUpdate);
-    nsNodeUtils::ContentAppended(aContainer, aStartIndex);
+    nsNodeUtils::ContentAppended(aContainer,
+                                 aContainer->GetChildAt(aStartIndex),
+                                 aStartIndex);
     mLastNotificationTime = PR_Now();
   }
 
@@ -1737,7 +1672,7 @@ nsContentSink::WillBuildModelImpl()
     mBeginLoadTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
 
-  mScrolledToRefAlready = PR_FALSE;
+  mDocument->ResetScrolledToRefAlready();
 
   if (mProcessLinkHeaderEvent.get()) {
     mProcessLinkHeaderEvent.Revoke();

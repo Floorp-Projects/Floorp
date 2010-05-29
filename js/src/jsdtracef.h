@@ -42,126 +42,139 @@
 #ifndef _JSDTRACEF_H
 #define _JSDTRACEF_H
 
-JS_BEGIN_EXTERN_C
-
-extern void
-jsdtrace_function_entry(JSContext *cx, JSStackFrame *fp, const JSFunction *fun);
-
-extern void
-jsdtrace_function_info(JSContext *cx, JSStackFrame *fp, JSStackFrame *dfp,
-                       const JSFunction *fun);
-
-extern void
-jsdtrace_function_args(JSContext *cx, JSStackFrame *fp, const JSFunction *fun,
-                       jsuint argc, jsval *argv);
-
-extern void
-jsdtrace_function_rval(JSContext *cx, JSStackFrame *fp, const JSFunction *fun,
-                       jsval rval);
-
-extern void
-jsdtrace_function_return(JSContext *cx, JSStackFrame *fp, const JSFunction *fun);
-
-extern void
-jsdtrace_object_create_start(JSStackFrame *fp, const JSClass *clasp);
-
-extern void
-jsdtrace_object_create_done(JSStackFrame *fp, const JSClass *clasp);
-
-extern void
-jsdtrace_object_create(JSContext *cx, const JSClass *clasp, const JSObject *obj);
-
-extern void
-jsdtrace_object_finalize(const JSObject *obj);
-
-extern void
-jsdtrace_execute_start(const JSScript *script);
-
-extern void
-jsdtrace_execute_done(const JSScript *script);
-
-JS_END_EXTERN_C
-
 namespace js {
 
 class DTrace {
+    static void enterJSFunImpl(JSContext *cx, JSStackFrame *fp, const JSFunction *fun);
+    static void handleFunctionInfo(JSContext *cx, JSStackFrame *fp, JSStackFrame *dfp,
+                                   JSFunction *fun);
+    static void handleFunctionArgs(JSContext *cx, JSStackFrame *fp, const JSFunction *fun,
+                                   jsuint argc, jsval *argv);
+    static void handleFunctionRval(JSContext *cx, JSStackFrame *fp, JSFunction *fun, jsval rval);
+    static void handleFunctionReturn(JSContext *cx, JSStackFrame *fp, JSFunction *fun);
+    static void finalizeObjectImpl(JSObject *obj);
   public:
     /*
      * If |lval| is provided to the enter/exit methods, it is tested to see if
      * it is a function as a predicate to the dtrace event emission.
      */
-    static void enterJSFun(JSContext *cx, JSStackFrame *fp, const JSFunction *fun,
+    static void enterJSFun(JSContext *cx, JSStackFrame *fp, JSFunction *fun,
                            JSStackFrame *dfp, jsuint argc, jsval *argv, jsval *lval = NULL);
-    static void exitJSFun(JSContext *cx, JSStackFrame *fp, const JSFunction *fun,
-                          jsval rval, jsval *lval = NULL);
+    static void exitJSFun(JSContext *cx, JSStackFrame *fp, JSFunction *fun, jsval rval,
+                          jsval *lval = NULL);
 
-    static void finalizeObject(const JSObject *obj);
+    static void finalizeObject(JSObject *obj);
 
     class ExecutionScope {
         const JSScript *script;
         void startExecution();
         void endExecution();
       public:
-        explicit ExecutionScope(const JSScript *script) : script(script) { startExecution(); }
-        ~ExecutionScope() { endExecution(); }
+        explicit ExecutionScope(JSScript *script);
+        ~ExecutionScope();
+    };
+
+    class ObjectCreationScope {
+        JSContext       * const cx;
+        JSStackFrame    * const fp;
+        JSClass         * const clasp;
+        void handleCreationStart();
+        void handleCreationImpl(JSObject *obj);
+        void handleCreationEnd();
+      public:
+        ObjectCreationScope(JSContext *cx, JSStackFrame *fp, JSClass *clasp);
+        void handleCreation(JSObject *obj);
+        ~ObjectCreationScope();
     };
 
 };
 
 inline void
-DTrace::enterJSFun(JSContext *cx, JSStackFrame *fp, const JSFunction *fun,
-                   JSStackFrame *dfp, jsuint argc, jsval *argv, jsval *lval)
+DTrace::enterJSFun(JSContext *cx, JSStackFrame *fp, JSFunction *fun, JSStackFrame *dfp,
+                   jsuint argc, jsval *argv, jsval *lval)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (!lval || VALUE_IS_FUNCTION(cx, *lval)) {
         if (JAVASCRIPT_FUNCTION_ENTRY_ENABLED())
-            jsdtrace_function_entry(cx, fp, fun);
+            enterJSFunImpl(cx, fp, fun);
         if (JAVASCRIPT_FUNCTION_INFO_ENABLED())
-            jsdtrace_function_info(cx, fp, dfp, fun);
+            handleFunctionInfo(cx, fp, dfp, fun);
         if (JAVASCRIPT_FUNCTION_ARGS_ENABLED())
-            jsdtrace_function_args(cx, fp, fun, argc, argv);
+            handleFunctionArgs(cx, fp, fun, argc, argv);
     }
 #endif
 }
 
 inline void
-DTrace::exitJSFun(JSContext *cx, JSStackFrame *fp, const JSFunction *fun,
-                  jsval rval, jsval *lval)
+DTrace::exitJSFun(JSContext *cx, JSStackFrame *fp, JSFunction *fun, jsval rval, jsval *lval)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (!lval || VALUE_IS_FUNCTION(cx, *lval)) {
         if (JAVASCRIPT_FUNCTION_RVAL_ENABLED())
-            jsdtrace_function_rval(cx, fp, fun, rval);
+            handleFunctionRval(cx, fp, fun, rval);
         if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
-            jsdtrace_function_return(cx, fp, fun);
+            handleFunctionReturn(cx, fp, fun);
     }
 #endif
 }
 
 inline void
-DTrace::finalizeObject(const JSObject *obj)
+DTrace::finalizeObject(JSObject *obj)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED())
-        jsdtrace_object_finalize(obj);
+        finalizeObjectImpl(obj);
 #endif
 }
 
-inline void
-DTrace::ExecutionScope::startExecution()
+/* Execution scope. */
+
+inline
+DTrace::ExecutionScope::ExecutionScope(JSScript *script)
+  : script(script)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_EXECUTE_START_ENABLED())
-        jsdtrace_execute_start(script);
+        startExecution();
+#endif
+}
+
+inline
+DTrace::ExecutionScope::~ExecutionScope()
+{
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
+        endExecution();
+#endif
+}
+
+/* Object creation scope. */
+
+inline
+DTrace::ObjectCreationScope::ObjectCreationScope(JSContext *cx, JSStackFrame *fp, JSClass *clasp)
+  : cx(cx), fp(fp), clasp(clasp)
+{
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_OBJECT_CREATE_START_ENABLED())
+        handleCreationStart();
 #endif
 }
 
 inline void
-DTrace::ExecutionScope::endExecution()
+DTrace::ObjectCreationScope::handleCreation(JSObject *obj)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_EXECUTE_DONE_ENABLED())
-        jsdtrace_execute_done(script);
+    if (JAVASCRIPT_OBJECT_CREATE_ENABLED())
+        handleCreationImpl(obj);
+#endif
+}
+
+inline
+DTrace::ObjectCreationScope::~ObjectCreationScope()
+{
+#ifdef INCLUDE_MOZILLA_DTRACE
+    if (JAVASCRIPT_OBJECT_CREATE_DONE_ENABLED())
+        handleCreationEnd();
 #endif
 }
 

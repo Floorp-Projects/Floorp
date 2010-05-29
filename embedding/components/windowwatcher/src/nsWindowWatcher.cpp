@@ -1387,7 +1387,7 @@ nsWindowWatcher::URIfromURL(const char *aURL,
       nsCOMPtr<nsIDocument> doc;
       doc = do_QueryInterface(domDoc);
       if (doc) {
-        baseURI = doc->GetBaseURI();
+        baseURI = doc->GetDocBaseURI();
       }
     }
   }
@@ -1498,8 +1498,6 @@ PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
                                nsIWebBrowserChrome::CHROME_TOOLBAR);
   NS_CALCULATE_CHROME_FLAG_FOR("location",
                                nsIWebBrowserChrome::CHROME_LOCATIONBAR);
-  NS_CALCULATE_CHROME_FLAG_FOR("directories",
-                               nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
   NS_CALCULATE_CHROME_FLAG_FOR("personalbar",
                                nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR);
   NS_CALCULATE_CHROME_FLAG_FOR("status",

@@ -1,0 +1,17 @@
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+
+<bindings xmlns="http://www.mozilla.org/xbl"><binding id="foo"><content><optgroup><span><children xmlns="http://www.mozilla.org/xbl"/></span></optgroup></content></binding></bindings>
+
+<script>
+<![CDATA[
+
+function boom() { document.getElementById("a").appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "span")); }
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script></head>
+
+<frameset style="-moz-binding: url(&quot;#foo&quot;);"><frame id="a"></frame></frameset>
+
+</html>

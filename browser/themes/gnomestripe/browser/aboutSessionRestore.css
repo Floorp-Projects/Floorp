@@ -67,6 +67,15 @@ treechildren::-moz-tree-image(partial) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif");
 }
 
+/* undo odd row highlighting from tree.css */
+treechildren::-moz-tree-row(odd) {
+  background-color: transparent;
+}
+treechildren::-moz-tree-row(odd, selected, focus) {
+  background-color: Highlight;
+}
+
+/* highlight "windows" instead */
 treechildren::-moz-tree-row(alternate) {
   background-color: -moz-oddtreerow;
 }

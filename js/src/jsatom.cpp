@@ -147,7 +147,6 @@ const char *const js_common_atom_names[] = {
     js_name_str,                /* nameAtom                     */
     js_next_str,                /* nextAtom                     */
     js_noSuchMethod_str,        /* noSuchMethodAtom             */
-    js_parent_str,              /* parentAtom                   */
     js_proto_str,               /* protoAtom                    */
     js_set_str,                 /* setAtom                      */
     js_stack_str,               /* stackAtom                    */
@@ -183,6 +182,20 @@ const char *const js_common_atom_names[] = {
     js_ExecutionContext_str,    /* ExecutionContextAtom         */
     js_current_str,             /* currentAtom                  */
 #endif
+
+    "Proxy",                    /* ProxyAtom                    */
+
+    "getOwnPropertyDescriptor", /* getOwnPropertyDescriptorAtom */
+    "getPropertyDescriptor",    /* getPropertyDescriptorAtom    */
+    "defineProperty",           /* definePropertyAtom           */
+    "delete",                   /* deleteAtom                   */
+    "getOwnPropertyNames",      /* getOwnPropertyNames          */
+    "enumerate",                /* enumerateAtom                */
+    "fix",
+
+    "has",                      /* hasAtom                      */
+    "hasOwn",                   /* hasOwnAtom                   */
+    "enumerateOwn"              /* enumerateOwnAtom             */
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==
@@ -220,7 +233,6 @@ const char js_name_str[]            = "name";
 const char js_next_str[]            = "next";
 const char js_noSuchMethod_str[]    = "__noSuchMethod__";
 const char js_object_str[]          = "object";
-const char js_parent_str[]          = "__parent__";
 const char js_proto_str[]           = "__proto__";
 const char js_setter_str[]          = "setter";
 const char js_set_str[]             = "set";

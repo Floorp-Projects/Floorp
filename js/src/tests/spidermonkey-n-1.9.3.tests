@@ -11,7 +11,7 @@ js1_3/regress/function-001-n.js
 js1_5/Regress/regress-119719.js
 #
 # Spidermonkey now defaults lineNumber and fileName
-# to the location and file where the exception occured.
+# to the location and file where the exception occurred.
 # exclude original test which assumes the defaults are
 # 0 and ''
 #

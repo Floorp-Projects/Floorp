@@ -53,20 +53,12 @@ FORCE_STATIC_LIB = 1
 
 DEFINES += -DXPCOM_GLUE
 
-ifdef MOZ_ENABLE_PHOTON
-	CPPSRCS		+= PhRemoteClient.cpp
-else
-	CPPSRCS		+= XRemoteClient.cpp
-endif
+CPPSRCS		+= XRemoteClient.cpp
 
 EXTRA_DSO_LDOPTS = \
 		$(XLIBS) $(XLDFLAGS)  \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
-
-ifdef MOZ_ENABLE_PHOTON
-	EXTRA_DSO_LDOPTS += -lph
-endif
 
 PROGRAM         = mozilla-xremote-client$(BIN_SUFFIX)
 
@@ -78,23 +70,11 @@ LIBS            = \
 		$(NSPR_LIBS) \
 		$(XLDFLAGS) $(XLIBS)
 
-ifdef MOZ_ENABLE_PHOTON
-	LIBS += -lph
-ifdef MOZ_DEBUG
-	LIBS += -lxpcom
-endif
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH), OpenVMS)
 DEFINES		+= -DGENERIC_MOTIF_REDEFINES
 endif
 
-ifndef MOZ_ENABLE_PHOTON
 XRemoteClient_standalone.$(OBJ_SUFFIX): XRemoteClient.cpp
 	$(CXX) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $<
-else
-XRemoteClient_standalone.$(OBJ_SUFFIX): PhRemoteClient.cpp
-	$(CXX) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $<
-endif

@@ -39,6 +39,7 @@
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
+#include "nsPLDOMEvent.h"
 
 
 class nsHTMLMetaElement : public nsGenericHTMLElement,
@@ -62,6 +63,13 @@ public:
 
   // nsIDOMHTMLMetaElement
   NS_DECL_NSIDOMHTMLMETAELEMENT
+
+  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers);
+  virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
+                              PRBool aNullParent = PR_TRUE);
+  void CreateAndDispatchEvent(nsIDocument* aDoc, const nsAString& aEventName);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
 };
@@ -101,3 +109,38 @@ NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Content, content)
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, HttpEquiv, httpEquiv)
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLMetaElement, Scheme, scheme)
+
+nsresult
+nsHTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
+                              nsIContent* aBindingParent,
+                              PRBool aCompileEventHandlers)
+{
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
+                                                 aBindingParent,
+                                                 aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+  CreateAndDispatchEvent(aDocument, NS_LITERAL_STRING("DOMMetaAdded"));
+  return rv;
+}
+
+void
+nsHTMLMetaElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
+{
+  nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
+  CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMMetaRemoved"));
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+}
+
+void
+nsHTMLMetaElement::CreateAndDispatchEvent(nsIDocument* aDoc,
+                                          const nsAString& aEventName)
+{
+  if (!aDoc)
+    return;
+
+  nsRefPtr<nsPLDOMEvent> event = new nsPLDOMEvent(this, aEventName, PR_TRUE,
+                                                  PR_TRUE);
+  if (event) {
+    event->PostDOMEvent();
+  }
+}

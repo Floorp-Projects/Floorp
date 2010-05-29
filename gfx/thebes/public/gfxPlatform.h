@@ -64,6 +64,7 @@ class gfxPlatformFontList;
 class gfxTextRun;
 class nsIURI;
 class nsIAtom;
+class nsIPrefBranch;
 
 // pref lang id's for font prefs
 // !!! needs to match the list of pref font.default.xx entries listed in all.js !!!
@@ -119,6 +120,8 @@ enum eCMSMode {
 
 // when searching through pref langs, max number of pref langs
 const PRUint32 kMaxLenPrefLangList = 32;
+
+#define UNINITIALIZED_VALUE  (-1)
 
 class THEBES_API gfxPlatform {
 public:
@@ -329,9 +332,13 @@ public:
         return sDPI;
     }
 
+    virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
+
 protected:
-    gfxPlatform() { }
+    gfxPlatform();
     virtual ~gfxPlatform();
+
+    static PRBool GetBoolPref(const char *aPref, PRBool aDefault);
 
     void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], PRUint32 &aLen, 
                             eFontPrefLang aCharLang, eFontPrefLang aPageLang);
@@ -341,6 +348,8 @@ protected:
      */
     virtual void InitDisplayCaps();
     static PRInt32 sDPI;
+
+    PRBool  mAllowDownloadableFonts;
 
 private:
     virtual qcms_profile* GetPlatformCMSOutputProfile();

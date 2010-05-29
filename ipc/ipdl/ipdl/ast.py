@@ -42,8 +42,8 @@ class Visitor:
             cxxInc.accept(self)
         for protoInc in tu.protocolIncludes:
             protoInc.accept(self)
-        for union in tu.unions:
-            union.accept(self)
+        for su in tu.structsAndUnions:
+            su.accept(self)
         for using in tu.using:
             using.accept(self)
         tu.protocol.accept(self)
@@ -56,6 +56,13 @@ class Visitor:
         # and pass-specific handling
         pass
 
+    def visitStructDecl(self, struct):
+        for f in struct.fields:
+            f.accept(self)
+
+    def visitStructField(self, field):
+        field.type.accept(self)
+
     def visitUnionDecl(self, union):
         for t in union.components:
             t.accept(self)
@@ -66,6 +73,10 @@ class Visitor:
     def visitProtocol(self, p):
         for namespace in p.namespaces:
             namespace.accept(self)
+        for spawns in p.spawnsStmts:
+            spawns.accept(self)
+        for bridges in p.bridgesStmts:
+            bridges.accept(self)
         for mgr in p.managers:
             mgr.accept(self)
         for managed in p.managesStmts:
@@ -76,6 +87,12 @@ class Visitor:
             transitionStmt.accept(self)
 
     def visitNamespace(self, ns):
+        pass
+
+    def visitSpawnsStmt(self, spawns):
+        pass
+
+    def visitBridgesStmt(self, bridges):
         pass
 
     def visitManager(self, mgr):
@@ -161,12 +178,13 @@ class TranslationUnit(Node):
         self.cxxIncludes = [ ]
         self.protocolIncludes = [ ]
         self.using = [ ]
-        self.unions = [ ]
+        self.structsAndUnions = [ ]
         self.protocol = None
 
     def addCxxInclude(self, cxxInclude): self.cxxIncludes.append(cxxInclude)
     def addProtocolInclude(self, pInc): self.protocolIncludes.append(pInc)
-    def addUnionDecl(self, union): self.unions.append(union)
+    def addStructDecl(self, struct): self.structsAndUnions.append(struct)
+    def addUnionDecl(self, union): self.structsAndUnions.append(union)
     def addUsingStmt(self, using): self.using.append(using)
 
     def setProtocol(self, protocol): self.protocol = protocol
@@ -249,25 +267,42 @@ class Protocol(NamespacedNode):
     def __init__(self, loc):
         NamespacedNode.__init__(self, loc)
         self.sendSemantics = ASYNC
+        self.spawnsStmts = [ ]
+        self.bridgesStmts = [ ]
         self.managers = [ ]
         self.managesStmts = [ ]
         self.messageDecls = [ ]
         self.transitionStmts = [ ]
         self.startStates = [ ]
 
-    def addManagesStmts(self, managesStmts):
-        self.managesStmts += managesStmts
+class StructField(Node):
+    def __init__(self, loc, type, name):
+        Node.__init__(self, loc)
+        self.type = type
+        self.name = name
 
-    def addMessageDecls(self, messageDecls):
-        self.messageDecls += messageDecls
-
-    def addTransitionStmts(self, transStmts):
-        self.transitionStmts += transStmts
+class StructDecl(NamespacedNode):
+    def __init__(self, loc, name, fields):
+        NamespacedNode.__init__(self, loc, name)
+        self.fields = fields
 
 class UnionDecl(NamespacedNode):
     def __init__(self, loc, name, components):
         NamespacedNode.__init__(self, loc, name)
         self.components = components
+
+class SpawnsStmt(Node):
+    def __init__(self, loc, side, proto, spawnedAs):
+        Node.__init__(self, loc)
+        self.side = side
+        self.proto = proto
+        self.spawnedAs = spawnedAs
+
+class BridgesStmt(Node):
+    def __init__(self, loc, parentSide, childSide):
+        Node.__init__(self, loc)
+        self.parentSide = parentSide
+        self.childSide = childSide
 
 class Manager(Node):
     def __init__(self, loc, managerName):

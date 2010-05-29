@@ -35,11 +35,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "domstubs.idl"
-#include "nsIDOM3Node.idl"
 #include "nsIDOM3TypeInfo.idl"
 
-[scriptable, uuid(a2216ddc-1bcd-4ec2-a292-371e09a6c377)]
-interface nsIDOM3Attr : nsIDOM3Node
+[scriptable, uuid(274ef301-065c-450d-a75b-e7673d257293)]
+interface nsIDOM3Attr : nsISupports
 {
     // Introduced in DOM Level 3:
     readonly attribute nsIDOM3TypeInfo        schemaTypeInfo;

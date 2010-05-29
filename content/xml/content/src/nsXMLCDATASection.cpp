@@ -43,7 +43,7 @@
 #include "nsContentUtils.h"
 
 
-class nsXMLCDATASection : public nsGenericDOMDataNode,
+class nsXMLCDATASection : public nsGenericTextNode,
                           public nsIDOMCDATASection
 {
 public:
@@ -97,7 +97,7 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult,
 }
 
 nsXMLCDATASection::nsXMLCDATASection(nsINodeInfo *aNodeInfo)
-  : nsGenericDOMDataNode(aNodeInfo)
+  : nsGenericTextNode(aNodeInfo)
 {
 }
 

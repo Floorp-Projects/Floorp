@@ -1648,7 +1648,7 @@ PRBool nsCellMap::CellsSpanOut(nsTArray<nsTableRowFrame*>& aRows) const
       if (cellFrame) {
         PRBool zeroSpan;
         PRInt32 rowSpan = GetRowSpanForNewCell(cellFrame, rowX, zeroSpan);
-        if (rowX + rowSpan > numNewRows) {
+        if (zeroSpan || rowX + rowSpan > numNewRows) {
           return PR_TRUE;
         }
       }

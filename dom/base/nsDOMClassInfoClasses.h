@@ -468,6 +468,7 @@ DOMCI_CLASS(PopStateEvent)
 DOMCI_CLASS(EventListenerInfo)
 
 DOMCI_CLASS(TransitionEvent)
+DOMCI_CLASS(ContentFrameMessageManager)
 
 DOMCI_CLASS(FormData)
 
