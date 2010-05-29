@@ -171,6 +171,9 @@ HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
   mListener = 0;
   mListenerContext = 0;
 
+  if (mLoadGroup)
+    mLoadGroup->RemoveRequest(this, nsnull, statusCode);
+
   // Corresponding AddRef in AsyncOpen().
   this->Release();
   
