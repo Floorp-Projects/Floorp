@@ -117,6 +117,8 @@
 #include "prlog.h"
 #include "prthread.h"
 
+#include "mozilla/FunctionTimer.h"
+
 const size_t gStackSize = 8192;
 
 #ifdef PR_LOGGING
@@ -1480,6 +1482,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
   NS_INTERFACE_MAP_ENTRY(nsIScriptContext)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptContextPrincipal)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptNotify)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptContext)
 NS_INTERFACE_MAP_END
@@ -1507,6 +1510,9 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                      void* aRetValue,
                                      PRBool* aIsUndefined)
 {
+  NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
+                           __LINE__, aURL, aLineNo);
+
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   if (!mScriptsEnabled) {
@@ -1668,6 +1674,13 @@ JSValueToAString(JSContext *cx, jsval val, nsAString *result,
   return NS_OK;
 }
 
+nsIScriptObjectPrincipal*
+nsJSContext::GetObjectPrincipal()
+{
+  nsCOMPtr<nsIScriptObjectPrincipal> prin = do_QueryInterface(GetGlobalObject());
+  return prin;
+}
+
 nsresult
 nsJSContext::EvaluateString(const nsAString& aScript,
                             void *aScopeObject,
@@ -1678,6 +1691,9 @@ nsJSContext::EvaluateString(const nsAString& aScript,
                             nsAString *aRetValue,
                             PRBool* aIsUndefined)
 {
+  NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
+                           __LINE__, aURL, aLineNo);
+
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   if (!mScriptsEnabled) {
@@ -2003,6 +2019,9 @@ nsJSContext::CompileEventHandler(nsIAtom *aName,
                                  PRUint32 aVersion,
                                  nsScriptObjectHolder &aHandler)
 {
+  NS_TIME_FUNCTION_MIN_FMT(1.0, "%s (line %d) (url: %s, line: %d)", MOZ_FUNCTION_NAME,
+                           __LINE__, aURL, aLineNo);
+
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   NS_PRECONDITION(AtomIsEventHandlerName(aName), "Bad event name");
@@ -2066,6 +2085,9 @@ nsJSContext::CompileFunction(void* aTarget,
                              PRBool aShared,
                              void** aFunctionObject)
 {
+  NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s, url: %s, line: %d)", MOZ_FUNCTION_NAME,
+                       __LINE__, aName.BeginReading(), aURL, aLineNo);
+
   NS_ENSURE_TRUE(mIsInitialized, NS_ERROR_NOT_INITIALIZED);
 
   // Don't compile if aVersion is unknown.  Since the caller is responsible for
@@ -2122,6 +2144,9 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
   if (!mScriptsEnabled) {
     return NS_OK;
   }
+
+  NS_TIME_FUNCTION_FMT(1.0, "%s (line %d) (function: %s)", MOZ_FUNCTION_NAME,
+                       __LINE__, JS_GetFunctionName(static_cast<JSFunction *>(JS_GetPrivate(mContext, static_cast<JSObject *>(aHandler)))));
 
   JSObject* target = nsnull;
   nsresult rv = JSObjectFromInterface(aTarget, aScope, &target);
@@ -2353,6 +2378,8 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
 {
     JSObject *result = nsnull;
     nsresult rv;
+
+    NS_TIME_FUNCTION_MIN(1.0);
 
     NS_TIMELINE_MARK_FUNCTION("js script deserialize");
 
@@ -3539,6 +3566,8 @@ nsJSContext::ScriptExecuted()
 void
 nsJSContext::CC()
 {
+  NS_TIME_FUNCTION_MIN(1.0);
+
   ++sCCollectCount;
 #ifdef DEBUG_smaug
   printf("Will run cycle collector (%i), %lldms since previous.\n",

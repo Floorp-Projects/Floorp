@@ -161,7 +161,7 @@ interface imgIContainer : nsISupports
   /**
    * Draw the current frame on to the context specified.
    *
-   * @param aContext The Thebex context to draw the image to.
+   * @param aContext The Thebes context to draw the image to.
    * @param aFilter The filter to be used if we're scaling the image.
    * @param aUserSpaceToImageSpace The transformation from user space (e.g.,
    *                               appunits) to image space.

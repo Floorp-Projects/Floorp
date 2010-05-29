@@ -972,7 +972,9 @@ nsXBLBinding::ExecuteAttachedHandler()
   if (mNextBinding)
     mNextBinding->ExecuteAttachedHandler();
 
-  if (AllowScripts())
+  // Executing mNextBindings constructor might have caused us to loose our
+  // bound element
+  if (mBoundElement && AllowScripts())
     mPrototypeBinding->BindingAttached(mBoundElement);
 }
 
@@ -1077,8 +1079,15 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       if (mPrototypeBinding->HasImplementation()) { 
         nsIScriptGlobalObject *global = aOldDocument->GetScopeObject();
         if (global) {
+          JSObject *scope = global->GetGlobalJSObject();
+          // scope might be null if we've cycle-collected the global
+          // object, since the Unlink phase of cycle collection happens
+          // after JS GC finalization.  But in that case, we don't care
+          // about fixing the prototype chain, since everything's going
+          // away immediately.
+
           nsCOMPtr<nsIScriptContext> context = global->GetContext();
-          if (context) {
+          if (context && scope) {
             JSContext *cx = (JSContext *)context->GetNativeContext();
  
             nsCxPusher pusher;
@@ -1087,8 +1096,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
             nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
             jsval v;
             nsresult rv =
-              nsContentUtils::WrapNative(cx, global->GetGlobalJSObject(),
-                                         mBoundElement, &v,
+              nsContentUtils::WrapNative(cx, scope, mBoundElement, &v,
                                          getter_AddRefs(wrapper));
             if (NS_FAILED(rv))
               return;

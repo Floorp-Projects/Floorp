@@ -680,9 +680,9 @@ def writeResultConv(f, type, jsvalPtr, jsvalRef):
                     % jsvalPtr)
             return
         else:
-            f.write("    return xpc_qsXPCOMObjectToJsval(lccx, result, "
-                    "xpc_qsGetWrapperCache(result), &NS_GET_IID(%s), "
-                    "&interfaces[k_%s], %s);\n"
+            f.write("    return xpc_qsXPCOMObjectToJsval(lccx, "
+                    "ToSupports(result), xpc_qsGetWrapperCache(result), "
+                    "&NS_GET_IID(%s), &interfaces[k_%s], %s);\n"
                     % (type.name, type.name, jsvalPtr))
             return
 
@@ -742,6 +742,16 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
     if customMethodCall is None:
         customMethodCall = customMethodCalls.get(member.iface.name + '_', None)
         if customMethodCall is not None:
+            if isMethod:
+                code = customMethodCall.get('code', None)
+            elif isGetter:
+                code = customMethodCall.get('getter_code', None)
+            else:
+                code = customMethodCall.get('setter_code', None)
+        else:
+            code = None
+
+        if code is not None:
             templateName = member.iface.name
             if isGetter:
                 templateName += '_Get'
@@ -775,16 +785,12 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                 return
             customMethodCall[templateGenerated] = True
 
-            if isMethod:
-                code = customMethodCall['code']
-            elif isGetter:
-                code = customMethodCall['getter_code']
-            else:
-                code = customMethodCall['setter_code']
             stubName = templateName
+        else:
+            callTemplate = ""
     else:
         callTemplate = ""
-        code = customMethodCall['code']
+        code = customMethodCall.get('code', None)
 
     # Function prolog.
 
@@ -888,19 +894,21 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
                                            nullBehavior=member.null,
                                            undefinedBehavior=member.undefined)
 
-    canFail = customMethodCall is None or customMethodCall.get('canFail', False)
+    canFail = customMethodCall is None or customMethodCall.get('canFail', True)
     if canFail and not rvdeclared:
         f.write("    nsresult rv;\n")
         rvdeclared = True
 
-    if customMethodCall is not None:
+    if code is not None:
         f.write("%s\n" % code)
 
-    if customMethodCall is None or (isGetter and callTemplate is ""):
-        if customMethodCall is not None:
+    if code is None or (isGetter and callTemplate is ""):
+        debugGetter = code is not None
+        if debugGetter:
             f.write("#ifdef DEBUG\n")
             f.write("    nsresult debug_rv;\n")
-            f.write("    nsCOMPtr<%s> debug_self = do_QueryInterface(self);\n"
+            f.write("    nsCOMPtr<%s> debug_self;\n"
+                    "    CallQueryInterface(self, getter_AddRefs(debug_self));\n"
                     % member.iface.name);
             prefix = 'debug_'
         else:
@@ -930,10 +938,12 @@ def writeQuickStub(f, customMethodCalls, member, stubName, isSetter=False):
             else:
                 args = "arg0"
 
-        f.write("    %s = %s->%s(%s);\n"
-                % (nsresultname, selfname, comName, args))
+        f.write("    ")
+        if canFail or debugGetter:
+            f.write("%s = " % nsresultname)
+        f.write("%s->%s(%s);\n" % (selfname, comName, args))
 
-        if customMethodCall is not None:
+        if debugGetter:
             checkSuccess = "NS_SUCCEEDED(debug_rv)"
             if canFail:
                 checkSuccess += " == NS_SUCCEEDED(rv)"
@@ -993,6 +1003,8 @@ traceReturnTypeMap = {
         ["jsdouble ", "DOUBLE", "0"],
     'double':
         ["jsdouble ", "DOUBLE", "0"],
+    'octet':
+        ["uint32 ", "UINT32", "0"]
     }
 
 # This list extends the above list, but includes types that
@@ -1191,10 +1203,10 @@ def writeTraceableResultConv(f, type):
             f.write("    JSBool ok = xpc_qsVariantToJsval(lccx, result, "
                     "&vp.array[0]);\n")
         else:
-            f.write("    JSBool ok = xpc_qsXPCOMObjectToJsval(lccx, result, "
-                    "xpc_qsGetWrapperCache(result), &NS_GET_IID(%s), "
-                    "&interfaces[k_%s], &vp.array[0]);"
-                    "\n" % (type.name, type.name))
+            f.write("    JSBool ok = xpc_qsXPCOMObjectToJsval(lccx, "
+                    "ToSupports(result), xpc_qsGetWrapperCache(result), "
+                    "&NS_GET_IID(%s), &interfaces[k_%s], &vp.array[0]);\n"
+                    % (type.name, type.name))
         f.write("    if (!ok) {\n");
         writeFailure(f, getTraceInfoDefaultReturn(type), 2)
         f.write("    return vp.array[0];\n")
@@ -1215,6 +1227,12 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
     haveCcx = memberNeedsCcx(member)
 
     customMethodCall = customMethodCalls.get(stubName, None)
+
+    if customMethodCall is None:
+        customMethodCall = customMethodCalls.get(member.iface.name + '_', None)
+        if customMethodCall is not None:
+            # We don't support traceable templated quickstubs yet
+            assert not 'code' in customMethodCall
 
     if customMethodCall is not None and customMethodCall.get('skipgen', False):
         return
@@ -1275,12 +1293,14 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
                                                       rvdeclared)
         argNames.append(argName)
 
-    if customMethodCall is not None:
+    canFail = customMethodCall is None or customMethodCall.get('canFail', True)
+    if canFail and not rvdeclared:
+        f.write("    nsresult rv;\n")
+        rvdeclared = True
+
+    if customMethodCall is not None and 'code' in customMethodCall:
         f.write("%s\n" % customMethodCall['code'])
     else:
-        if not rvdeclared:
-            f.write("    nsresult rv;\n")
-            rvdeclared = True
         prefix = ''
 
         resultname = prefix + 'result'
@@ -1296,9 +1316,12 @@ def writeTraceableQuickStub(f, customMethodCalls, member, stubName):
             argNames.append(outParamForm(resultname, member.realtype))
         args = ', '.join(argNames)
 
-        f.write("    %s = %s->%s(%s);\n"
-                % (nsresultname, selfname, comName, args))
+        f.write("    ")
+        if canFail:
+            f.write("%s = " % nsresultname)
+        f.write("%s->%s(%s);\n" % (selfname, comName, args))
 
+    if canFail:
         # Check for errors.
         f.write("    if (NS_FAILED(rv)) {\n")
         if haveCcx:

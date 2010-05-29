@@ -55,7 +55,7 @@ class RecursiveSlotMap : public SlotMap
     {
         /* Check if the return value should be promoted. */
         if (slots[downPostSlots].lastCheck == TypeCheck_Demote)
-            rval_ins = mRecorder.lir->ins1(LIR_i2f, rval_ins);
+            rval_ins = mRecorder.lir->ins1(LIR_i2d, rval_ins);
         /* Adjust any global variables. */
         for (unsigned i = downPostSlots + 1; i < slots.length(); i++)
             adjustType(slots[i]);
@@ -111,10 +111,10 @@ class UpRecursiveSlotMap : public RecursiveSlotMap
          */
         lir->insStore(rval_ins, lirbuf->sp, -mRecorder.tree->nativeStackBase, ACC_STACK);
 
-        lirbuf->sp = lir->ins2(LIR_piadd, lirbuf->sp,
+        lirbuf->sp = lir->ins2(LIR_addp, lirbuf->sp,
                                lir->insImmWord(-int(downPostSlots) * sizeof(double)));
         lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACC_OTHER);
-        lirbuf->rp = lir->ins2(LIR_piadd, lirbuf->rp,
+        lirbuf->rp = lir->ins2(LIR_addp, lirbuf->rp,
                                lir->insImmWord(-int(sizeof(FrameInfo*))));
         lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACC_OTHER);
     }
@@ -163,8 +163,8 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
         exitTypeMap[i] = typeMap[i];
 
     /* Add the return type. */
-    JS_ASSERT_IF(*cx->fp->regs->pc != JSOP_RETURN, *cx->fp->regs->pc == JSOP_STOP);
-    if (*cx->fp->regs->pc == JSOP_RETURN)
+    JS_ASSERT_IF(*cx->regs->pc != JSOP_RETURN, *cx->regs->pc == JSOP_STOP);
+    if (*cx->regs->pc == JSOP_RETURN)
         exitTypeMap[downPostSlots] = determineSlotType(&stackval(-1));
     else
         exitTypeMap[downPostSlots] = TT_VOID;
@@ -198,12 +198,21 @@ TraceRecorder::downSnapshot(FrameInfo* downFrame)
     return exit;
 }
 
+static JS_REQUIRES_STACK jsval *
+DownFrameSP(JSContext *cx)
+{
+    FrameRegsIter i(cx);
+    ++i;
+    JS_ASSERT(i.fp() == cx->fp->down);
+    return i.sp();
+}
+
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::upRecursion()
 {
-    JS_ASSERT((JSOp)*cx->fp->down->regs->pc == JSOP_CALL);
+    JS_ASSERT((JSOp)*cx->fp->down->savedPC == JSOP_CALL);
     JS_ASSERT(js_CodeSpec[js_GetOpcode(cx, cx->fp->down->script,
-              cx->fp->down->regs->pc)].length == JSOP_CALL_LENGTH);
+              cx->fp->down->savedPC)].length == JSOP_CALL_LENGTH);
 
     JS_ASSERT(callDepth == 0);
 
@@ -215,10 +224,10 @@ TraceRecorder::upRecursion()
     if (anchor && (anchor->exitType == RECURSIVE_EMPTY_RP_EXIT ||
         anchor->exitType == RECURSIVE_SLURP_MISMATCH_EXIT ||
         anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)) {
-        return slurpDownFrames(cx->fp->down->regs->pc);
+        return slurpDownFrames(cx->fp->down->savedPC);
     }
 
-    jsbytecode* return_pc = cx->fp->down->regs->pc;
+    jsbytecode* return_pc = cx->fp->down->savedPC;
     jsbytecode* recursive_pc = return_pc + JSOP_CALL_LENGTH;
 
     /*
@@ -245,7 +254,7 @@ TraceRecorder::upRecursion()
      * Need to compute this from the down frame, since the stack could have
      * moved on this one.
      */
-    fi->spdist = cx->fp->down->regs->sp - cx->fp->down->slots;
+    fi->spdist = DownFrameSP(cx) - cx->fp->down->slots();
     JS_ASSERT(cx->fp->argc == cx->fp->down->argc);
     fi->set_argc(uint16(cx->fp->argc), false);
     fi->callerHeight = downPostSlots;
@@ -286,8 +295,8 @@ TraceRecorder::upRecursion()
 
         /* Guard that rp >= sr + 1 */
         guard(true,
-              lir->ins2(LIR_pge, lirbuf->rp,
-                        lir->ins2(LIR_piadd,
+              lir->ins2(LIR_gep, lirbuf->rp,
+                        lir->ins2(LIR_addp,
                                   lir->insLoad(LIR_ldp, lirbuf->state,
                                                offsetof(TracerState, sor), ACC_OTHER),
                                   INS_CONSTWORD(sizeof(FrameInfo*)))),
@@ -299,7 +308,7 @@ TraceRecorder::upRecursion()
     /* Guard that the FrameInfo above is the same FrameInfo pointer. */
     VMSideExit* exit = snapshot(RECURSIVE_MISMATCH_EXIT);
     LIns* prev_rp = lir->insLoad(LIR_ldp, lirbuf->rp, -int32_t(sizeof(FrameInfo*)), ACC_RSTACK);
-    guard(true, lir->ins2(LIR_peq, prev_rp, INS_CONSTPTR(fi)), exit);
+    guard(true, lir->ins2(LIR_eqp, prev_rp, INS_CONSTPTR(fi)), exit);
 
     /*
      * Now it's time to try and close the loop. Get a special exit that points
@@ -308,7 +317,7 @@ TraceRecorder::upRecursion()
     exit = downSnapshot(fi);
 
     LIns* rval_ins;
-    if (*cx->fp->regs->pc == JSOP_RETURN) {
+    if (*cx->regs->pc == JSOP_RETURN) {
         JS_ASSERT(!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT);
         rval_ins = get(&stackval(-1));
         JS_ASSERT(rval_ins);
@@ -318,7 +327,7 @@ TraceRecorder::upRecursion()
 
     TraceType returnType = exit->stackTypeMap()[downPostSlots];
     if (returnType == TT_INT32) {
-        JS_ASSERT(*cx->fp->regs->pc == JSOP_RETURN);
+        JS_ASSERT(*cx->regs->pc == JSOP_RETURN);
         JS_ASSERT(determineSlotType(&stackval(-1)) == TT_INT32);
         JS_ASSERT(isPromoteInt(rval_ins));
         rval_ins = demote(lir, rval_ins);
@@ -327,7 +336,7 @@ TraceRecorder::upRecursion()
     UpRecursiveSlotMap slotMap(*this, downPostSlots, rval_ins);
     for (unsigned i = 0; i < downPostSlots; i++)
         slotMap.addSlot(exit->stackType(i));
-    if (*cx->fp->regs->pc == JSOP_RETURN)
+    if (*cx->regs->pc == JSOP_RETURN)
         slotMap.addSlot(&stackval(-1));
     else
         slotMap.addSlot(TT_VOID);
@@ -386,7 +395,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     unsigned frameDepth;
     unsigned downPostSlots;
 
-    JSStackFrame* fp = cx->fp;
+    FrameRegsIter i(cx);
     LIns* fp_ins =
         addName(lir->insLoad(LIR_ldp, cx_ins, offsetof(JSContext, fp), ACC_OTHER), "fp");
 
@@ -399,7 +408,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
         fp_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, down), ACC_OTHER),
                          "downFp");
-        fp = fp->down;
+        ++i;
 
         argv_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, argv), ACC_OTHER),
                            "argv");
@@ -419,7 +428,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
              * end-of-recursion and recursion-returns-to-different-pc.
              */
             guard(true,
-                  lir->ins2(LIR_peq,
+                  lir->ins2(LIR_eqp,
                             addName(lir->insLoad(LIR_ldp, fp_ins,
                                                  offsetof(JSStackFrame, script), ACC_OTHER),
                                     "script"),
@@ -427,21 +436,19 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
                   RECURSIVE_LOOP_EXIT);
         }
 
-        /* fp->down->regs->pc should be == pc. */
+        /* fp->down->savedPC should be == pc. */
         guard(true,
-              lir->ins2(LIR_peq,
-                        lir->insLoad(LIR_ldp,
-                                     addName(lir->insLoad(LIR_ldp, fp_ins,
-                                                          offsetof(JSStackFrame, regs), ACC_OTHER),
-                                             "regs"),
-                                     offsetof(JSFrameRegs, pc), ACC_OTHER),
+              lir->ins2(LIR_eqp,
+                        addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, savedPC),  
+                                             ACC_OTHER),
+                                "savedPC"),
                         INS_CONSTPTR(return_pc)),
               RECURSIVE_SLURP_MISMATCH_EXIT);
 
         /* fp->down->argc should be == argc. */
         guard(true,
-              lir->ins2(LIR_eq,
-                        addName(lir->insLoad(LIR_ld, fp_ins, offsetof(JSStackFrame, argc),
+              lir->ins2(LIR_eqi,
+                        addName(lir->insLoad(LIR_ldi, fp_ins, offsetof(JSStackFrame, argc),
                                              ACC_OTHER),
                                 "argc"),
                         INS_CONST(cx->fp->argc)),
@@ -489,13 +496,13 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
      * thrown away.
      */
     TraceType* typeMap = exit->stackTypeMap();
-    jsbytecode* oldpc = cx->fp->regs->pc;
-    cx->fp->regs->pc = exit->pc;
+    jsbytecode* oldpc = cx->regs->pc;
+    cx->regs->pc = exit->pc;
     captureStackTypes(frameDepth, typeMap);
-    cx->fp->regs->pc = oldpc;
+    cx->regs->pc = oldpc;
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
-        JS_ASSERT_IF(*cx->fp->regs->pc != JSOP_RETURN, *cx->fp->regs->pc == JSOP_STOP);
-        if (*cx->fp->regs->pc == JSOP_RETURN)
+        JS_ASSERT_IF(*cx->regs->pc != JSOP_RETURN, *cx->regs->pc == JSOP_STOP);
+        if (*cx->regs->pc == JSOP_RETURN)
             typeMap[downPostSlots] = determineSlotType(&stackval(-1));
         else
             typeMap[downPostSlots] = TT_VOID;
@@ -522,10 +529,10 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
 
     if (!anchor || anchor->exitType != RECURSIVE_SLURP_FAIL_EXIT) {
         /*
-         * It is safe to read cx->fp->regs->pc here because the frame hasn't
+         * It is safe to read cx->regs->pc here because the frame hasn't
          * been popped yet. We're guaranteed to have a return or stop.
          */
-        JSOp op = JSOp(*cx->fp->regs->pc);
+        JSOp op = JSOp(*cx->regs->pc);
         JS_ASSERT(op == JSOP_RETURN || op == JSOP_STOP);
 
         if (op == JSOP_RETURN) {
@@ -550,10 +557,10 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
           case TT_SPECIAL:
           case TT_VOID:
           case TT_INT32:
-            rval_ins = lir->insLoad(LIR_ld, lirbuf->sp, offset, ACC_STACK);
+            rval_ins = lir->insLoad(LIR_ldi, lirbuf->sp, offset, ACC_STACK);
             break;
           case TT_DOUBLE:
-            rval_ins = lir->insLoad(LIR_ldf, lirbuf->sp, offset, ACC_STACK);
+            rval_ins = lir->insLoad(LIR_ldd, lirbuf->sp, offset, ACC_STACK);
             break;
           case TT_FUNCTION:
           case TT_OBJECT:
@@ -574,6 +581,8 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     info.typeMap = typeMap;
     info.slurpFailSlot = (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT) ?
                          anchor->slurpFailSlot : 0;
+
+    JSStackFrame *const fp = i.fp();
 
     /* callee */
     slurpSlot(lir->insLoad(LIR_ldp, argv_ins, -2 * ptrdiff_t(sizeof(jsval)), ACC_OTHER),
@@ -599,21 +608,21 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
               &fp->scopeChainVal,
               &info);
     /* vars */
-    LIns* slots_ins = addName(lir->insLoad(LIR_ldp, fp_ins, offsetof(JSStackFrame, slots),
-                                           ACC_OTHER),
+    LIns* slots_ins = addName(lir->ins2(LIR_addp, fp_ins, INS_CONSTWORD(sizeof(JSStackFrame))),
                               "slots");
     for (unsigned i = 0; i < fp->script->nfixed; i++)
         slurpSlot(lir->insLoad(LIR_ldp, slots_ins, i * sizeof(jsval), ACC_OTHER),
-                  &fp->slots[i],
+                  &fp->slots()[i],
                   &info);
     /* stack vals */
     unsigned nfixed = fp->script->nfixed;
     jsval* stack = StackBase(fp);
-    LIns* stack_ins = addName(lir->ins2(LIR_piadd,
+    LIns* stack_ins = addName(lir->ins2(LIR_addp,
                                         slots_ins,
                                         INS_CONSTWORD(nfixed * sizeof(jsval))),
                               "stackBase");
-    size_t limit = size_t(fp->regs->sp - StackBase(fp));
+
+    size_t limit = size_t(i.sp() - StackBase(fp));
     if (anchor && anchor->exitType == RECURSIVE_SLURP_FAIL_EXIT)
         limit--;
     else
@@ -635,7 +644,7 @@ TraceRecorder::slurpDownFrames(jsbytecode* return_pc)
     RecursiveSlotMap slotMap(*this, downPostSlots, rval_ins);
     for (unsigned i = 0; i < downPostSlots; i++)
         slotMap.addSlot(typeMap[i]);
-    if (*cx->fp->regs->pc == JSOP_RETURN)
+    if (*cx->regs->pc == JSOP_RETURN)
         slotMap.addSlot(&stackval(-1), typeMap[downPostSlots]);
     else
         slotMap.addSlot(TT_VOID);
@@ -684,12 +693,13 @@ TraceRecorder::downRecursion()
     JS_ASSERT(tree->maxNativeStackSlots >= tree->nativeStackBase / sizeof(double));
     int guardSlots = slots + tree->maxNativeStackSlots -
                      tree->nativeStackBase / sizeof(double);
-    LIns* sp_top = lir->ins2(LIR_piadd, lirbuf->sp, lir->insImmWord(guardSlots * sizeof(double)));
-    guard(true, lir->ins2(LIR_plt, sp_top, eos_ins), OOM_EXIT);
+    LIns* sp_top = lir->ins2(LIR_addp, lirbuf->sp, lir->insImmWord(guardSlots * sizeof(double)));
+    guard(true, lir->ins2(LIR_ltp, sp_top, eos_ins), OOM_EXIT);
 
     /* Guard that there is enough call stack space. */
-    LIns* rp_top = lir->ins2(LIR_piadd, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
-    guard(true, lir->ins2(LIR_plt, rp_top, eor_ins), OOM_EXIT);
+    LIns* rp_top = lir->ins2(LIR_addp, lirbuf->rp,
+                             lir->insImmWord((tree->maxCallDepth + 1) * sizeof(FrameInfo*)));
+    guard(true, lir->ins2(LIR_ltp, rp_top, eor_ins), OOM_EXIT);
 
     /*
      * For every slot in the new frame that is not in the tracker, create a load
@@ -702,9 +712,9 @@ TraceRecorder::downRecursion()
     VisitStackSlots(visitor, cx, callDepth);
 
     /* Add space for a new JIT frame. */
-    lirbuf->sp = lir->ins2(LIR_piadd, lirbuf->sp, lir->insImmWord(slots * sizeof(double)));
+    lirbuf->sp = lir->ins2(LIR_addp, lirbuf->sp, lir->insImmWord(slots * sizeof(double)));
     lir->insStore(lirbuf->sp, lirbuf->state, offsetof(TracerState, sp), ACC_OTHER);
-    lirbuf->rp = lir->ins2(LIR_piadd, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
+    lirbuf->rp = lir->ins2(LIR_addp, lirbuf->rp, lir->insImmWord(sizeof(FrameInfo*)));
     lir->insStore(lirbuf->rp, lirbuf->state, offsetof(TracerState, rp), ACC_OTHER);
     --callDepth;
     clearCurrentFrameSlotsFromTracker(nativeFrameTracker);
@@ -734,19 +744,19 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpInt32Slot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
-          lir->ins2(LIR_or,
-                    lir->ins2(LIR_peq,
-                              lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+          lir->ins2(LIR_ori,
+                    lir->ins2(LIR_eqp,
+                              lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                               INS_CONSTWORD(JSVAL_DOUBLE)),
-                    lir->ins2(LIR_peq,
-                              lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(1)),
+                    lir->ins2(LIR_eqp,
+                              lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(1)),
                               INS_CONSTWORD(1))),
           exit);
     LIns* space = lir->insAlloc(sizeof(int32));
     LIns* args[] = { space, val_ins };
     LIns* result = lir->insCall(&js_TryUnboxInt32_ci, args);
     guard(false, lir->insEqI_0(result), exit);
-    LIns* int32_ins = lir->insLoad(LIR_ld, space, 0, ACC_OTHER);
+    LIns* int32_ins = lir->insLoad(LIR_ldi, space, 0, ACC_OTHER);
     return int32_ins;
 }
 
@@ -754,12 +764,12 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpDoubleSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
-          lir->ins2(LIR_or,
-                    lir->ins2(LIR_peq,
-                              lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+          lir->ins2(LIR_ori,
+                    lir->ins2(LIR_eqp,
+                              lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                               INS_CONSTWORD(JSVAL_DOUBLE)),
-                    lir->ins2(LIR_peq,
-                              lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(1)),
+                    lir->ins2(LIR_eqp,
+                              lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(1)),
                               INS_CONSTWORD(1))),
           exit);
     LIns* args[] = { val_ins };
@@ -771,11 +781,11 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpSpecialSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
-          lir->ins2(LIR_peq,
-                    lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+          lir->ins2(LIR_eqp,
+                    lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                     INS_CONSTWORD(JSVAL_SPECIAL)),
           exit);
-    LIns* bool_ins = lir->ins2(LIR_pirsh, val_ins, INS_CONST(JSVAL_TAGBITS));
+    LIns* bool_ins = lir->ins2(LIR_rshp, val_ins, INS_CONST(JSVAL_TAGBITS));
     bool_ins = p2i(bool_ins);
     return bool_ins;
 }
@@ -783,7 +793,7 @@ TraceRecorder::slurpSpecialSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpVoidSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
-    guard(true, lir->ins2(LIR_peq, val_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
+    guard(true, lir->ins2(LIR_eqp, val_ins, INS_CONSTWORD(JSVAL_VOID)), exit);
     return INS_VOID();
 }
 
@@ -791,11 +801,11 @@ JS_REQUIRES_STACK LIns*
 TraceRecorder::slurpStringSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 {
     guard(true,
-          lir->ins2(LIR_peq,
-                    lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
+          lir->ins2(LIR_eqp,
+                    lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK)),
                     INS_CONSTWORD(JSVAL_STRING)),
           exit);
-    LIns* str_ins = lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(~JSVAL_TAGMASK));
+    LIns* str_ins = lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(~JSVAL_TAGMASK));
     return str_ins;
 }
 
@@ -814,13 +824,13 @@ TraceRecorder::slurpObjectSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 
     /* Must be an object */
     guard(true,
-          lir->insEqP_0(lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK))),
+          lir->insEqP_0(lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK))),
           exit);
 
     /* Must NOT have a function class */
     guard(false,
-          lir->ins2(LIR_peq,
-                    lir->ins2(LIR_piand,
+          lir->ins2(LIR_eqp,
+                    lir->ins2(LIR_andp,
                               lir->insLoad(LIR_ldp, val_ins, offsetof(JSObject, classword),
                                            ACC_OTHER),
                               INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS)),
@@ -837,13 +847,13 @@ TraceRecorder::slurpFunctionSlot(LIns* val_ins, jsval* vp, VMSideExit* exit)
 
     /* Must be an object */
     guard(true,
-          lir->insEqP_0(lir->ins2(LIR_piand, val_ins, INS_CONSTWORD(JSVAL_TAGMASK))),
+          lir->insEqP_0(lir->ins2(LIR_andp, val_ins, INS_CONSTWORD(JSVAL_TAGMASK))),
           exit);
 
     /* Must have a function class */
     guard(true,
-          lir->ins2(LIR_peq,
-                    lir->ins2(LIR_piand,
+          lir->ins2(LIR_eqp,
+                    lir->ins2(LIR_andp,
                               lir->insLoad(LIR_ldp, val_ins, offsetof(JSObject, classword),
                                            ACC_OTHER),
                               INS_CONSTWORD(~JSSLOT_CLASS_MASK_BITS)),

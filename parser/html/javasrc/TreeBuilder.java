@@ -3074,306 +3074,478 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     public final void endTag(ElementName elementName) throws SAXException {
         needToDropLF = false;
         int eltPos;
-        endtagloop: for (;;) {
-            int group = elementName.group;
-            @Local String name = elementName.name;
-            switch (mode) {
-                case IN_ROW:
-                    switch (group) {
-                        case TR:
-                            eltPos = findLastOrRoot(TreeBuilder.TR);
-                            if (eltPos == 0) {
-                                assert fragment;
-                                err("No table row to close.");
-                                break endtagloop;
-                            }
-                            clearStackBackTo(eltPos);
-                            pop();
-                            mode = IN_TABLE_BODY;
-                            break endtagloop;
-                        case TABLE:
-                            eltPos = findLastOrRoot(TreeBuilder.TR);
-                            if (eltPos == 0) {
-                                assert fragment;
-                                err("No table row to close.");
-                                break endtagloop;
-                            }
-                            clearStackBackTo(eltPos);
-                            pop();
-                            mode = IN_TABLE_BODY;
-                            continue;
-                        case TBODY_OR_THEAD_OR_TFOOT:
-                            if (findLastInTableScope(name) == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                err("Stray end tag \u201C" + name + "\u201D.");
-                                break endtagloop;
-                            }
-                            eltPos = findLastOrRoot(TreeBuilder.TR);
-                            if (eltPos == 0) {
-                                assert fragment;
-                                err("No table row to close.");
-                                break endtagloop;
-                            }
-                            clearStackBackTo(eltPos);
-                            pop();
-                            mode = IN_TABLE_BODY;
-                            continue;
-                        case BODY:
-                        case CAPTION:
-                        case COL:
-                        case COLGROUP:
-                        case HTML:
-                        case TD_OR_TH:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                        default:
-                            // fall through to IN_TABLE
+        int eltPosForeign;
+        int group = elementName.group;
+        @Local String name = elementName.name;
+        assert !inForeign || currentPtr >= 0: "In foreign without a root element?";
+        if (inForeign && stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
+            /*
+             * This is the initialization step of handling end tags while in
+             * foreign content and the current node is not an HTML node.
+             * 
+             * inforeignloop is used as the loop in order to be able to use the
+             * big switch below as part of the loop.
+             * 
+             * All other cases just return at the end of inforeignloop.
+             * 
+             * This initialization step can itself be outside endtagloop,
+             * because an end tag token never gets reprocessed in the
+             * "in foreign" mode if the mode wasn't "in foreign" to begin with.
+             */
+            eltPosForeign = currentPtr;
+            StackNode<T> node = stack[currentPtr];
+            if (errorHandler != null && node.name != name) {
+                errNoCheck("End tag \u201C"
+                        + name
+                        + "\u201D did not match the name of the current open element (\u201C"
+                        + node.popName + "\u201D).");
+            }
+        } else {
+            /*
+             * Marker for not wanting to continue inforeignloop.
+             */
+            eltPosForeign = -1;
+        }
+        inforeignloop: for (;;) {
+            if (eltPosForeign != -1) {
+                /*
+                 * Handling an end tag where initially the tree builder was in
+                 * the "in foreign" mode and the current node was not an HTML
+                 * node.
+                 */
+                if (currentPtr >= eltPosForeign && stack[eltPosForeign].name == name) {
+                    while (currentPtr >= eltPosForeign) {
+                        pop();
                     }
-                case IN_TABLE_BODY:
-                    switch (group) {
-                        case TBODY_OR_THEAD_OR_TFOOT:
-                            eltPos = findLastOrRoot(name);
-                            if (eltPos == 0) {
-                                err("Stray end tag \u201C" + name + "\u201D.");
-                                break endtagloop;
-                            }
-                            clearStackBackTo(eltPos);
-                            pop();
-                            mode = IN_TABLE;
-                            break endtagloop;
-                        case TABLE:
-                            eltPos = findLastInTableScopeOrRootTbodyTheadTfoot();
-                            if (eltPos == 0) {
-                                assert fragment;
-                                err("Stray end tag \u201Ctable\u201D.");
-                                break endtagloop;
-                            }
-                            clearStackBackTo(eltPos);
-                            pop();
-                            mode = IN_TABLE;
-                            continue;
-                        case BODY:
-                        case CAPTION:
-                        case COL:
-                        case COLGROUP:
-                        case HTML:
-                        case TD_OR_TH:
-                        case TR:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                        default:
-                            // fall through to IN_TABLE
-                    }
-                case IN_TABLE:
-                    switch (group) {
-                        case TABLE:
-                            eltPos = findLast("table");
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                assert fragment;
-                                err("Stray end tag \u201Ctable\u201D.");
-                                break endtagloop;
-                            }
-                            while (currentPtr >= eltPos) {
-                                pop();
-                            }
-                            resetTheInsertionMode();
-                            break endtagloop;
-                        case BODY:
-                        case CAPTION:
-                        case COL:
-                        case COLGROUP:
-                        case HTML:
-                        case TBODY_OR_THEAD_OR_TFOOT:
-                        case TD_OR_TH:
-                        case TR:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                        default:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            // fall through to IN_BODY
-                    }
-                case IN_CAPTION:
-                    switch (group) {
-                        case CAPTION:
-                            eltPos = findLastInTableScope("caption");
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                break endtagloop;
-                            }
-                            generateImpliedEndTags();
-                            if (errorHandler != null && currentPtr != eltPos) {
-                                errNoCheck("Unclosed elements on stack.");
-                            }
-                            while (currentPtr >= eltPos) {
-                                pop();
-                            }
-                            clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-                            mode = IN_TABLE;
-                            break endtagloop;
-                        case TABLE:
-                            err("\u201Ctable\u201D closed but \u201Ccaption\u201D was still open.");
-                            eltPos = findLastInTableScope("caption");
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                break endtagloop;
-                            }
-                            generateImpliedEndTags();
-                            if (errorHandler != null && currentPtr != eltPos) {
-                                errNoCheck("Unclosed elements on stack.");
-                            }
-                            while (currentPtr >= eltPos) {
-                                pop();
-                            }
-                            clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-                            mode = IN_TABLE;
-                            continue;
-                        case BODY:
-                        case COL:
-                        case COLGROUP:
-                        case HTML:
-                        case TBODY_OR_THEAD_OR_TFOOT:
-                        case TD_OR_TH:
-                        case TR:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                        default:
-                            // fall through to IN_BODY
-                    }
-                case IN_CELL:
-                    switch (group) {
-                        case TD_OR_TH:
-                            eltPos = findLastInTableScope(name);
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                err("Stray end tag \u201C" + name + "\u201D.");
-                                break endtagloop;
-                            }
-                            generateImpliedEndTags();
-                            if (errorHandler != null && !isCurrent(name)) {
-                                errNoCheck("Unclosed elements.");
-                            }
-                            while (currentPtr >= eltPos) {
-                                pop();
-                            }
-                            clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-                            mode = IN_ROW;
-                            break endtagloop;
-                        case TABLE:
-                        case TBODY_OR_THEAD_OR_TFOOT:
-                        case TR:
-                            if (findLastInTableScope(name) == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                err("Stray end tag \u201C" + name + "\u201D.");
-                                break endtagloop;
-                            }
-                            closeTheCell(findLastInTableScopeTdTh());
-                            continue;
-                        case BODY:
-                        case CAPTION:
-                        case COL:
-                        case COLGROUP:
-                        case HTML:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                        default:
-                            // fall through to IN_BODY
-                    }
-                case FRAMESET_OK:
-                case IN_BODY:
-                    switch (group) {
-                        case BODY:
-                            if (!isSecondOnStackBody()) {
-                                assert fragment;
-                                err("Stray end tag \u201Cbody\u201D.");
-                                break endtagloop;
-                            }
-                            assert currentPtr >= 1;
-                            if (errorHandler != null) {
-                                uncloseloop1: for (int i = 2; i <= currentPtr; i++) {
-                                    switch (stack[i].group) {
-                                        case DD_OR_DT:
-                                        case LI:
-                                        case OPTGROUP:
-                                        case OPTION: // is this possible?
-                                        case P:
-                                        case RT_OR_RP:
-                                        case TD_OR_TH:
-                                        case TBODY_OR_THEAD_OR_TFOOT:
-                                            break;
-                                        default:
-                                            err("End tag for \u201Cbody\u201D seen but there were unclosed elements.");
-                                            break uncloseloop1;
-                                    }
+                    return;
+                }
+                if (--eltPosForeign > currentPtr) {
+                    continue inforeignloop;
+                }
+                if (eltPosForeign == -1) {
+                    return;
+                }
+                if (stack[eltPosForeign].ns != "http://www.w3.org/1999/xhtml") {
+                    continue inforeignloop;
+                }
+                /*
+                 * Else go through the big switch and re-check after it.
+                 */
+            }
+            endtagloop: for (;;) {
+                switch (mode) {
+                    case IN_ROW:
+                        switch (group) {
+                            case TR:
+                                eltPos = findLastOrRoot(TreeBuilder.TR);
+                                if (eltPos == 0) {
+                                    assert fragment;
+                                    err("No table row to close.");
+                                    break endtagloop;
                                 }
-                            }
-                            mode = AFTER_BODY;
-                            break endtagloop;
-                        case HTML:
-                            if (!isSecondOnStackBody()) {
-                                assert fragment;
-                                err("Stray end tag \u201Chtml\u201D.");
+                                clearStackBackTo(eltPos);
+                                pop();
+                                mode = IN_TABLE_BODY;
                                 break endtagloop;
-                            }
-                            if (errorHandler != null) {
-                                uncloseloop2: for (int i = 0; i <= currentPtr; i++) {
-                                    switch (stack[i].group) {
-                                        case DD_OR_DT:
-                                        case LI:
-                                        case P:
-                                        case TBODY_OR_THEAD_OR_TFOOT:
-                                        case TD_OR_TH:
-                                        case BODY:
-                                        case HTML:
-                                            break;
-                                        default:
-                                            err("End tag for \u201Chtml\u201D seen but there were unclosed elements.");
-                                            break uncloseloop2;
-                                    }
+                            case TABLE:
+                                eltPos = findLastOrRoot(TreeBuilder.TR);
+                                if (eltPos == 0) {
+                                    assert fragment;
+                                    err("No table row to close.");
+                                    break endtagloop;
                                 }
-                            }
-                            mode = AFTER_BODY;
-                            continue;
-                        case DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
-                        case UL_OR_OL_OR_DL:
-                        case PRE_OR_LISTING:
-                        case FIELDSET:
-                        case BUTTON:
-                        case ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION:
-                            eltPos = findLastInScope(name);
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                clearStackBackTo(eltPos);
+                                pop();
+                                mode = IN_TABLE_BODY;
+                                continue;
+                            case TBODY_OR_THEAD_OR_TFOOT:
+                                if (findLastInTableScope(name) == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("Stray end tag \u201C" + name
+                                            + "\u201D.");
+                                    break endtagloop;
+                                }
+                                eltPos = findLastOrRoot(TreeBuilder.TR);
+                                if (eltPos == 0) {
+                                    assert fragment;
+                                    err("No table row to close.");
+                                    break endtagloop;
+                                }
+                                clearStackBackTo(eltPos);
+                                pop();
+                                mode = IN_TABLE_BODY;
+                                continue;
+                            case BODY:
+                            case CAPTION:
+                            case COL:
+                            case COLGROUP:
+                            case HTML:
+                            case TD_OR_TH:
                                 err("Stray end tag \u201C" + name + "\u201D.");
-                            } else {
-                                generateImpliedEndTags();
-                                if (errorHandler != null && !isCurrent(name)) {
-                                    errNoCheck("End tag \u201C"
-                                               + name
-                                               + "\u201D seen but there were unclosed elements.");
+                                break endtagloop;
+                            default:
+                                // fall through to IN_TABLE
+                        }
+                    case IN_TABLE_BODY:
+                        switch (group) {
+                            case TBODY_OR_THEAD_OR_TFOOT:
+                                eltPos = findLastOrRoot(name);
+                                if (eltPos == 0) {
+                                    err("Stray end tag \u201C" + name
+                                            + "\u201D.");
+                                    break endtagloop;
+                                }
+                                clearStackBackTo(eltPos);
+                                pop();
+                                mode = IN_TABLE;
+                                break endtagloop;
+                            case TABLE:
+                                eltPos = findLastInTableScopeOrRootTbodyTheadTfoot();
+                                if (eltPos == 0) {
+                                    assert fragment;
+                                    err("Stray end tag \u201Ctable\u201D.");
+                                    break endtagloop;
+                                }
+                                clearStackBackTo(eltPos);
+                                pop();
+                                mode = IN_TABLE;
+                                continue;
+                            case BODY:
+                            case CAPTION:
+                            case COL:
+                            case COLGROUP:
+                            case HTML:
+                            case TD_OR_TH:
+                            case TR:
+                                err("Stray end tag \u201C" + name + "\u201D.");
+                                break endtagloop;
+                            default:
+                                // fall through to IN_TABLE
+                        }
+                    case IN_TABLE:
+                        switch (group) {
+                            case TABLE:
+                                eltPos = findLast("table");
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    assert fragment;
+                                    err("Stray end tag \u201Ctable\u201D.");
+                                    break endtagloop;
                                 }
                                 while (currentPtr >= eltPos) {
                                     pop();
                                 }
-                            }
-                            break endtagloop;
-                        case FORM:
-                            if (formPointer == null) {
+                                resetTheInsertionMode();
+                                break endtagloop;
+                            case BODY:
+                            case CAPTION:
+                            case COL:
+                            case COLGROUP:
+                            case HTML:
+                            case TBODY_OR_THEAD_OR_TFOOT:
+                            case TD_OR_TH:
+                            case TR:
                                 err("Stray end tag \u201C" + name + "\u201D.");
                                 break endtagloop;
-                            }
-                            Portability.releaseElement(formPointer);
-                            formPointer = null;
-                            eltPos = findLastInScope(name);
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                            default:
+                                err("Stray end tag \u201C" + name + "\u201D.");
+                                // fall through to IN_BODY
+                        }
+                    case IN_CAPTION:
+                        switch (group) {
+                            case CAPTION:
+                                eltPos = findLastInTableScope("caption");
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    break endtagloop;
+                                }
+                                generateImpliedEndTags();
+                                if (errorHandler != null
+                                        && currentPtr != eltPos) {
+                                    errNoCheck("Unclosed elements on stack.");
+                                }
+                                while (currentPtr >= eltPos) {
+                                    pop();
+                                }
+                                clearTheListOfActiveFormattingElementsUpToTheLastMarker();
+                                mode = IN_TABLE;
+                                break endtagloop;
+                            case TABLE:
+                                err("\u201Ctable\u201D closed but \u201Ccaption\u201D was still open.");
+                                eltPos = findLastInTableScope("caption");
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    break endtagloop;
+                                }
+                                generateImpliedEndTags();
+                                if (errorHandler != null
+                                        && currentPtr != eltPos) {
+                                    errNoCheck("Unclosed elements on stack.");
+                                }
+                                while (currentPtr >= eltPos) {
+                                    pop();
+                                }
+                                clearTheListOfActiveFormattingElementsUpToTheLastMarker();
+                                mode = IN_TABLE;
+                                continue;
+                            case BODY:
+                            case COL:
+                            case COLGROUP:
+                            case HTML:
+                            case TBODY_OR_THEAD_OR_TFOOT:
+                            case TD_OR_TH:
+                            case TR:
                                 err("Stray end tag \u201C" + name + "\u201D.");
                                 break endtagloop;
-                            }
-                            generateImpliedEndTags();
-                            if (errorHandler != null && !isCurrent(name)) {
-                                errNoCheck("End tag \u201C"
-                                        + name
-                                        + "\u201D seen but there were unclosed elements.");
-                            }
-                            removeFromStack(eltPos);
-                            break endtagloop;
-                        case P:
-                            eltPos = findLastInScope("p");
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                err("No \u201Cp\u201D element in scope but a \u201Cp\u201D end tag seen.");
-                                // XXX inline this case
+                            default:
+                                // fall through to IN_BODY
+                        }
+                    case IN_CELL:
+                        switch (group) {
+                            case TD_OR_TH:
+                                eltPos = findLastInTableScope(name);
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("Stray end tag \u201C" + name
+                                            + "\u201D.");
+                                    break endtagloop;
+                                }
+                                generateImpliedEndTags();
+                                if (errorHandler != null && !isCurrent(name)) {
+                                    errNoCheck("Unclosed elements.");
+                                }
+                                while (currentPtr >= eltPos) {
+                                    pop();
+                                }
+                                clearTheListOfActiveFormattingElementsUpToTheLastMarker();
+                                mode = IN_ROW;
+                                break endtagloop;
+                            case TABLE:
+                            case TBODY_OR_THEAD_OR_TFOOT:
+                            case TR:
+                                if (findLastInTableScope(name) == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("Stray end tag \u201C" + name
+                                            + "\u201D.");
+                                    break endtagloop;
+                                }
+                                closeTheCell(findLastInTableScopeTdTh());
+                                continue;
+                            case BODY:
+                            case CAPTION:
+                            case COL:
+                            case COLGROUP:
+                            case HTML:
+                                err("Stray end tag \u201C" + name + "\u201D.");
+                                break endtagloop;
+                            default:
+                                // fall through to IN_BODY
+                        }
+                    case FRAMESET_OK:
+                    case IN_BODY:
+                        switch (group) {
+                            case BODY:
+                                if (!isSecondOnStackBody()) {
+                                    assert fragment;
+                                    err("Stray end tag \u201Cbody\u201D.");
+                                    break endtagloop;
+                                }
+                                assert currentPtr >= 1;
+                                if (errorHandler != null) {
+                                    uncloseloop1: for (int i = 2; i <= currentPtr; i++) {
+                                        switch (stack[i].group) {
+                                            case DD_OR_DT:
+                                            case LI:
+                                            case OPTGROUP:
+                                            case OPTION: // is this possible?
+                                            case P:
+                                            case RT_OR_RP:
+                                            case TD_OR_TH:
+                                            case TBODY_OR_THEAD_OR_TFOOT:
+                                                break;
+                                            default:
+                                                err("End tag for \u201Cbody\u201D seen but there were unclosed elements.");
+                                                break uncloseloop1;
+                                        }
+                                    }
+                                }
+                                mode = AFTER_BODY;
+                                break endtagloop;
+                            case HTML:
+                                if (!isSecondOnStackBody()) {
+                                    assert fragment;
+                                    err("Stray end tag \u201Chtml\u201D.");
+                                    break endtagloop;
+                                }
+                                if (errorHandler != null) {
+                                    uncloseloop2: for (int i = 0; i <= currentPtr; i++) {
+                                        switch (stack[i].group) {
+                                            case DD_OR_DT:
+                                            case LI:
+                                            case P:
+                                            case TBODY_OR_THEAD_OR_TFOOT:
+                                            case TD_OR_TH:
+                                            case BODY:
+                                            case HTML:
+                                                break;
+                                            default:
+                                                err("End tag for \u201Chtml\u201D seen but there were unclosed elements.");
+                                                break uncloseloop2;
+                                        }
+                                    }
+                                }
+                                mode = AFTER_BODY;
+                                continue;
+                            case DIV_OR_BLOCKQUOTE_OR_CENTER_OR_MENU:
+                            case UL_OR_OL_OR_DL:
+                            case PRE_OR_LISTING:
+                            case FIELDSET:
+                            case BUTTON:
+                            case ADDRESS_OR_DIR_OR_ARTICLE_OR_ASIDE_OR_DATAGRID_OR_DETAILS_OR_HGROUP_OR_FIGURE_OR_FOOTER_OR_HEADER_OR_NAV_OR_SECTION:
+                                eltPos = findLastInScope(name);
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("Stray end tag \u201C" + name
+                                            + "\u201D.");
+                                } else {
+                                    generateImpliedEndTags();
+                                    if (errorHandler != null
+                                            && !isCurrent(name)) {
+                                        errNoCheck("End tag \u201C"
+                                                + name
+                                                + "\u201D seen but there were unclosed elements.");
+                                    }
+                                    while (currentPtr >= eltPos) {
+                                        pop();
+                                    }
+                                }
+                                break endtagloop;
+                            case FORM:
+                                if (formPointer == null) {
+                                    err("Stray end tag \u201C" + name
+                                            + "\u201D.");
+                                    break endtagloop;
+                                }
+                                Portability.releaseElement(formPointer);
+                                formPointer = null;
+                                eltPos = findLastInScope(name);
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("Stray end tag \u201C" + name
+                                            + "\u201D.");
+                                    break endtagloop;
+                                }
+                                generateImpliedEndTags();
+                                if (errorHandler != null && !isCurrent(name)) {
+                                    errNoCheck("End tag \u201C"
+                                            + name
+                                            + "\u201D seen but there were unclosed elements.");
+                                }
+                                removeFromStack(eltPos);
+                                break endtagloop;
+                            case P:
+                                eltPos = findLastInScope("p");
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("No \u201Cp\u201D element in scope but a \u201Cp\u201D end tag seen.");
+                                    // XXX inline this case
+                                    if (inForeign) {
+                                        err("HTML start tag \u201C"
+                                                + name
+                                                + "\u201D in a foreign namespace context.");
+                                        while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
+                                            pop();
+                                        }
+                                        inForeign = false;
+                                    }
+                                    appendVoidElementToCurrentMayFoster(
+                                            "http://www.w3.org/1999/xhtml",
+                                            elementName,
+                                            HtmlAttributes.EMPTY_ATTRIBUTES);
+                                    break endtagloop;
+                                }
+                                generateImpliedEndTagsExceptFor("p");
+                                assert eltPos != TreeBuilder.NOT_FOUND_ON_STACK;
+                                if (errorHandler != null
+                                        && eltPos != currentPtr) {
+                                    errNoCheck("End tag for \u201Cp\u201D seen, but there were unclosed elements.");
+                                }
+                                while (currentPtr >= eltPos) {
+                                    pop();
+                                }
+                                break endtagloop;
+                            case LI:
+                                eltPos = findLastInListScope(name);
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("No \u201Cli\u201D element in list scope but a \u201Cli\u201D end tag seen.");
+                                } else {
+                                    generateImpliedEndTagsExceptFor(name);
+                                    if (errorHandler != null
+                                            && eltPos != currentPtr) {
+                                        errNoCheck("End tag for \u201Cli\u201D seen, but there were unclosed elements.");
+                                    }
+                                    while (currentPtr >= eltPos) {
+                                        pop();
+                                    }
+                                }
+                                break endtagloop;
+                            case DD_OR_DT:
+                                eltPos = findLastInScope(name);
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("No \u201C"
+                                            + name
+                                            + "\u201D element in scope but a \u201C"
+                                            + name + "\u201D end tag seen.");
+                                } else {
+                                    generateImpliedEndTagsExceptFor(name);
+                                    if (errorHandler != null
+                                            && eltPos != currentPtr) {
+                                        errNoCheck("End tag for \u201C"
+                                                + name
+                                                + "\u201D seen, but there were unclosed elements.");
+                                    }
+                                    while (currentPtr >= eltPos) {
+                                        pop();
+                                    }
+                                }
+                                break endtagloop;
+                            case H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6:
+                                eltPos = findLastInScopeHn();
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("Stray end tag \u201C" + name
+                                            + "\u201D.");
+                                } else {
+                                    generateImpliedEndTags();
+                                    if (errorHandler != null
+                                            && !isCurrent(name)) {
+                                        errNoCheck("End tag \u201C"
+                                                + name
+                                                + "\u201D seen but there were unclosed elements.");
+                                    }
+                                    while (currentPtr >= eltPos) {
+                                        pop();
+                                    }
+                                }
+                                break endtagloop;
+                            case A:
+                            case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
+                            case FONT:
+                            case NOBR:
+                                adoptionAgencyEndTag(name);
+                                break endtagloop;
+                            case OBJECT:
+                            case MARQUEE_OR_APPLET:
+                                eltPos = findLastInScope(name);
+                                if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    err("Stray end tag \u201C" + name
+                                            + "\u201D.");
+                                } else {
+                                    generateImpliedEndTags();
+                                    if (errorHandler != null
+                                            && !isCurrent(name)) {
+                                        errNoCheck("End tag \u201C"
+                                                + name
+                                                + "\u201D seen but there were unclosed elements.");
+                                    }
+                                    while (currentPtr >= eltPos) {
+                                        pop();
+                                    }
+                                    clearTheListOfActiveFormattingElementsUpToTheLastMarker();
+                                }
+                                break endtagloop;
+                            case BR:
+                                err("End tag \u201Cbr\u201D.");
                                 if (inForeign) {
                                     err("HTML start tag \u201C"
                                             + name
@@ -3383,431 +3555,339 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                     }
                                     inForeign = false;
                                 }
+                                reconstructTheActiveFormattingElements();
                                 appendVoidElementToCurrentMayFoster(
                                         "http://www.w3.org/1999/xhtml",
                                         elementName,
                                         HtmlAttributes.EMPTY_ATTRIBUTES);
                                 break endtagloop;
-                            }
-                            generateImpliedEndTagsExceptFor("p");
-                            assert eltPos != TreeBuilder.NOT_FOUND_ON_STACK;
-                            if (errorHandler != null && eltPos != currentPtr) {
-                                errNoCheck("End tag for \u201Cp\u201D seen, but there were unclosed elements.");
-                            }
-                            while (currentPtr >= eltPos) {
-                                pop();
-                            }
-                            break endtagloop;
-                        case LI:
-                            eltPos = findLastInListScope(name);
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                err("No \u201Cli\u201D element in list scope but a \u201Cli\u201D end tag seen.");
-                            } else {
-                                generateImpliedEndTagsExceptFor(name);
-                                if (errorHandler != null && eltPos != currentPtr) {
-                                    errNoCheck("End tag for \u201Cli\u201D seen, but there were unclosed elements.");
-                                }
-                                while (currentPtr >= eltPos) {
-                                    pop();
-                                }
-                            }
-                            break endtagloop;
-                        case DD_OR_DT:
-                            eltPos = findLastInScope(name);
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                err("No \u201C"
-                                        + name
-                                        + "\u201D element in scope but a \u201C"
-                                        + name + "\u201D end tag seen.");
-                            } else {
-                                generateImpliedEndTagsExceptFor(name);
-                                if (errorHandler != null && eltPos != currentPtr) {
-                                    errNoCheck("End tag for \u201C"
-                                               + name
-                                               + "\u201D seen, but there were unclosed elements.");
-                                }
-                                while (currentPtr >= eltPos) {
-                                    pop();
-                                }
-                            }
-                            break endtagloop;
-                        case H1_OR_H2_OR_H3_OR_H4_OR_H5_OR_H6:
-                            eltPos = findLastInScopeHn();
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                            case AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR:
+                            case PARAM_OR_SOURCE:
+                            case EMBED_OR_IMG:
+                            case IMAGE:
+                            case INPUT:
+                            case KEYGEN: // XXX??
+                            case HR:
+                            case ISINDEX:
+                            case IFRAME:
+                            case NOEMBED: // XXX???
+                            case NOFRAMES: // XXX??
+                            case SELECT:
+                            case TABLE:
+                            case TEXTAREA: // XXX??
                                 err("Stray end tag \u201C" + name + "\u201D.");
-                            } else {
-                                generateImpliedEndTags();
-                                if (errorHandler != null && !isCurrent(name)) {
-                                    errNoCheck("End tag \u201C"
-                                               + name
-                                               + "\u201D seen but there were unclosed elements.");
-                                }
-                                while (currentPtr >= eltPos) {
-                                    pop();
-                                }
-                            }
-                            break endtagloop;
-                        case A:
-                        case B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U:
-                        case FONT:
-                        case NOBR:
-                            adoptionAgencyEndTag(name);
-                            break endtagloop;
-                        case OBJECT:
-                        case MARQUEE_OR_APPLET:
-                            eltPos = findLastInScope(name);
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                err("Stray end tag \u201C" + name + "\u201D.");
-                            } else {
-                                generateImpliedEndTags();
-                                if (errorHandler != null && !isCurrent(name)) {
-                                    errNoCheck("End tag \u201C"
-                                               + name
-                                               + "\u201D seen but there were unclosed elements.");
-                                }
-                                while (currentPtr >= eltPos) {
-                                    pop();
-                                }
-                                clearTheListOfActiveFormattingElementsUpToTheLastMarker();
-                            }
-                            break endtagloop;
-                        case BR:
-                            err("End tag \u201Cbr\u201D.");
-                            if (inForeign) {
-                                err("HTML start tag \u201C"
-                                    + name
-                                    + "\u201D in a foreign namespace context.");
-                                while (stack[currentPtr].ns != "http://www.w3.org/1999/xhtml") {
-                                    pop();
-                                }
-                                inForeign = false;
-                            }
-                            reconstructTheActiveFormattingElements();
-                            appendVoidElementToCurrentMayFoster(
-                                    "http://www.w3.org/1999/xhtml",
-                                    elementName,
-                                    HtmlAttributes.EMPTY_ATTRIBUTES);
-                            break endtagloop;
-                        case AREA_OR_BASEFONT_OR_BGSOUND_OR_SPACER_OR_WBR:
-                        case PARAM_OR_SOURCE:
-                        case EMBED_OR_IMG:
-                        case IMAGE:
-                        case INPUT:
-                        case KEYGEN: // XXX??
-                        case HR:
-                        case ISINDEX:
-                        case IFRAME:
-                        case NOEMBED: // XXX???
-                        case NOFRAMES: // XXX??
-                        case SELECT:
-                        case TABLE:
-                        case TEXTAREA: // XXX??
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                        case NOSCRIPT:
-                            if (scriptingEnabled) {
-                                err("Stray end tag \u201Cnoscript\u201D.");
                                 break endtagloop;
-                            } else {
-                                // fall through
-                            }
-                        default:
-                            if (isCurrent(name)) {
-                                pop();
-                                break endtagloop;
-                            }
+                            case NOSCRIPT:
+                                if (scriptingEnabled) {
+                                    err("Stray end tag \u201Cnoscript\u201D.");
+                                    break endtagloop;
+                                } else {
+                                    // fall through
+                                }
+                            default:
+                                if (isCurrent(name)) {
+                                    pop();
+                                    break endtagloop;
+                                }
 
-                            eltPos = currentPtr;
-                            for (;;) {
-                                StackNode<T> node = stack[eltPos];
-                                if (node.name == name) {
-                                    generateImpliedEndTags();
-                                    if (errorHandler != null && !isCurrent(name)) {
-                                        errNoCheck("End tag \u201C"
-                                                   + name
-                                                   + "\u201D seen but there were unclosed elements.");
+                                eltPos = currentPtr;
+                                for (;;) {
+                                    StackNode<T> node = stack[eltPos];
+                                    if (node.name == name) {
+                                        generateImpliedEndTags();
+                                        if (errorHandler != null
+                                                && !isCurrent(name)) {
+                                            errNoCheck("End tag \u201C"
+                                                    + name
+                                                    + "\u201D seen but there were unclosed elements.");
+                                        }
+                                        while (currentPtr >= eltPos) {
+                                            pop();
+                                        }
+                                        break endtagloop;
+                                    } else if (node.scoping || node.special) {
+                                        err("Stray end tag \u201C" + name
+                                                + "\u201D.");
+                                        break endtagloop;
+                                    }
+                                    eltPos--;
+                                }
+                        }
+                    case IN_COLUMN_GROUP:
+                        switch (group) {
+                            case COLGROUP:
+                                if (currentPtr == 0) {
+                                    assert fragment;
+                                    err("Garbage in \u201Ccolgroup\u201D fragment.");
+                                    break endtagloop;
+                                }
+                                pop();
+                                mode = IN_TABLE;
+                                break endtagloop;
+                            case COL:
+                                err("Stray end tag \u201Ccol\u201D.");
+                                break endtagloop;
+                            default:
+                                if (currentPtr == 0) {
+                                    assert fragment;
+                                    err("Garbage in \u201Ccolgroup\u201D fragment.");
+                                    break endtagloop;
+                                }
+                                pop();
+                                mode = IN_TABLE;
+                                continue;
+                        }
+                    case IN_SELECT_IN_TABLE:
+                        switch (group) {
+                            case CAPTION:
+                            case TABLE:
+                            case TBODY_OR_THEAD_OR_TFOOT:
+                            case TR:
+                            case TD_OR_TH:
+                                err("\u201C"
+                                        + name
+                                        + "\u201D end tag with \u201Cselect\u201D open.");
+                                if (findLastInTableScope(name) != TreeBuilder.NOT_FOUND_ON_STACK) {
+                                    eltPos = findLastInTableScope("select");
+                                    if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
+                                        assert fragment;
+                                        break endtagloop; // http://www.w3.org/Bugs/Public/show_bug.cgi?id=8375
                                     }
                                     while (currentPtr >= eltPos) {
                                         pop();
                                     }
-                                    break endtagloop;
-                                } else if (node.scoping || node.special) {
-                                    err("Stray end tag \u201C" + name
-                                            + "\u201D.");
+                                    resetTheInsertionMode();
+                                    continue;
+                                } else {
                                     break endtagloop;
                                 }
-                                eltPos--;
-                            }
-                    }
-                case IN_COLUMN_GROUP:
-                    switch (group) {
-                        case COLGROUP:
-                            if (currentPtr == 0) {
-                                assert fragment;
-                                err("Garbage in \u201Ccolgroup\u201D fragment.");
+                            default:
+                                // fall through to IN_SELECT
+                        }
+                    case IN_SELECT:
+                        switch (group) {
+                            case OPTION:
+                                if (isCurrent("option")) {
+                                    pop();
+                                    break endtagloop;
+                                } else {
+                                    err("Stray end tag \u201Coption\u201D");
+                                    break endtagloop;
+                                }
+                            case OPTGROUP:
+                                if (isCurrent("option")
+                                        && "optgroup" == stack[currentPtr - 1].name) {
+                                    pop();
+                                }
+                                if (isCurrent("optgroup")) {
+                                    pop();
+                                } else {
+                                    err("Stray end tag \u201Coptgroup\u201D");
+                                }
                                 break endtagloop;
-                            }
-                            pop();
-                            mode = IN_TABLE;
-                            break endtagloop;
-                        case COL:
-                            err("Stray end tag \u201Ccol\u201D.");
-                            break endtagloop;
-                        default:
-                            if (currentPtr == 0) {
-                                assert fragment;
-                                err("Garbage in \u201Ccolgroup\u201D fragment.");
-                                break endtagloop;
-                            }
-                            pop();
-                            mode = IN_TABLE;
-                            continue;
-                    }
-                case IN_SELECT_IN_TABLE:
-                    switch (group) {
-                        case CAPTION:
-                        case TABLE:
-                        case TBODY_OR_THEAD_OR_TFOOT:
-                        case TR:
-                        case TD_OR_TH:
-                            err("\u201C"
-                                    + name
-                                    + "\u201D end tag with \u201Cselect\u201D open.");
-                            if (findLastInTableScope(name) != TreeBuilder.NOT_FOUND_ON_STACK) {
+                            case SELECT:
                                 eltPos = findLastInTableScope("select");
                                 if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
                                     assert fragment;
-                                    break endtagloop; // http://www.w3.org/Bugs/Public/show_bug.cgi?id=8375
+                                    err("Stray end tag \u201Cselect\u201D");
+                                    break endtagloop;
                                 }
                                 while (currentPtr >= eltPos) {
                                     pop();
                                 }
                                 resetTheInsertionMode();
+                                break endtagloop;
+                            default:
+                                err("Stray end tag \u201C" + name + "\u201D");
+                                break endtagloop;
+                        }
+                    case AFTER_BODY:
+                        switch (group) {
+                            case HTML:
+                                if (fragment) {
+                                    err("Stray end tag \u201Chtml\u201D");
+                                    break endtagloop;
+                                } else {
+                                    mode = AFTER_AFTER_BODY;
+                                    break endtagloop;
+                                }
+                            default:
+                                err("Saw an end tag after \u201Cbody\u201D had been closed.");
+                                mode = framesetOk ? FRAMESET_OK : IN_BODY;
                                 continue;
-                            } else {
-                                break endtagloop;
-                            }
-                        default:
-                            // fall through to IN_SELECT
-                    }
-                case IN_SELECT:
-                    switch (group) {
-                        case OPTION:
-                            if (isCurrent("option")) {
+                        }
+                    case IN_FRAMESET:
+                        switch (group) {
+                            case FRAMESET:
+                                if (currentPtr == 0) {
+                                    assert fragment;
+                                    err("Stray end tag \u201Cframeset\u201D");
+                                    break endtagloop;
+                                }
                                 pop();
+                                if ((!fragment) && !isCurrent("frameset")) {
+                                    mode = AFTER_FRAMESET;
+                                }
                                 break endtagloop;
-                            } else {
-                                err("Stray end tag \u201Coption\u201D");
+                            default:
+                                err("Stray end tag \u201C" + name + "\u201D");
                                 break endtagloop;
-                            }
-                        case OPTGROUP:
-                            if (isCurrent("option")
-                                    && "optgroup" == stack[currentPtr - 1].name) {
+                        }
+                    case AFTER_FRAMESET:
+                        switch (group) {
+                            case HTML:
+                                mode = AFTER_AFTER_FRAMESET;
+                                break endtagloop;
+                            default:
+                                err("Stray end tag \u201C" + name + "\u201D");
+                                break endtagloop;
+                        }
+                    case INITIAL:
+                        /*
+                         * Parse error.
+                         */
+                        // [NOCPP[
+                        switch (doctypeExpectation) {
+                            case AUTO:
+                                err("End tag seen without seeing a doctype first. Expected e.g. \u201C<!DOCTYPE html>\u201D.");
+                                break;
+                            case HTML:
+                                err("End tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE html>\u201D.");
+                                break;
+                            case HTML401_STRICT:
+                                err("End tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\u201D.");
+                                break;
+                            case HTML401_TRANSITIONAL:
+                                err("End tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\u201D.");
+                                break;
+                            case NO_DOCTYPE_ERRORS:
+                        }
+                        // ]NOCPP]
+                        /*
+                         * 
+                         * Set the document to quirks mode.
+                         */
+                        documentModeInternal(DocumentMode.QUIRKS_MODE, null,
+                                null, false);
+                        /*
+                         * Then, switch to the root element mode of the tree
+                         * construction stage
+                         */
+                        mode = BEFORE_HTML;
+                        /*
+                         * and reprocess the current token.
+                         */
+                        continue;
+                    case BEFORE_HTML:
+                        switch (group) {
+                            case HEAD:
+                            case BR:
+                            case HTML:
+                            case BODY:
+                                /*
+                                 * Create an HTMLElement node with the tag name
+                                 * html, in the HTML namespace. Append it to the
+                                 * Document object.
+                                 */
+                                appendHtmlElementToDocumentAndPush();
+                                /* Switch to the main mode */
+                                mode = BEFORE_HEAD;
+                                /*
+                                 * reprocess the current token.
+                                 */
+                                continue;
+                            default:
+                                err("Stray end tag \u201C" + name + "\u201D.");
+                                break endtagloop;
+                        }
+                    case BEFORE_HEAD:
+                        switch (group) {
+                            case HEAD:
+                            case BR:
+                            case HTML:
+                            case BODY:
+                                appendToCurrentNodeAndPushHeadElement(HtmlAttributes.EMPTY_ATTRIBUTES);
+                                mode = IN_HEAD;
+                                continue;
+                            default:
+                                err("Stray end tag \u201C" + name + "\u201D.");
+                                break endtagloop;
+                        }
+                    case IN_HEAD:
+                        switch (group) {
+                            case HEAD:
                                 pop();
-                            }
-                            if (isCurrent("optgroup")) {
+                                mode = AFTER_HEAD;
+                                break endtagloop;
+                            case BR:
+                            case HTML:
+                            case BODY:
                                 pop();
-                            } else {
-                                err("Stray end tag \u201Coptgroup\u201D");
-                            }
-                            break endtagloop;
-                        case SELECT:
-                            eltPos = findLastInTableScope("select");
-                            if (eltPos == TreeBuilder.NOT_FOUND_ON_STACK) {
-                                assert fragment;
-                                err("Stray end tag \u201Cselect\u201D");
+                                mode = AFTER_HEAD;
+                                continue;
+                            default:
+                                err("Stray end tag \u201C" + name + "\u201D.");
                                 break endtagloop;
-                            }
-                            while (currentPtr >= eltPos) {
+                        }
+                    case IN_HEAD_NOSCRIPT:
+                        switch (group) {
+                            case NOSCRIPT:
                                 pop();
-                            }
-                            resetTheInsertionMode();
-                            break endtagloop;
-                        default:
-                            err("Stray end tag \u201C" + name + "\u201D");
-                            break endtagloop;
-                    }
-                case AFTER_BODY:
-                    switch (group) {
-                        case HTML:
-                            if (fragment) {
-                                err("Stray end tag \u201Chtml\u201D");
+                                mode = IN_HEAD;
                                 break endtagloop;
-                            } else {
-                                mode = AFTER_AFTER_BODY;
+                            case BR:
+                                err("Stray end tag \u201C" + name + "\u201D.");
+                                pop();
+                                mode = IN_HEAD;
+                                continue;
+                            default:
+                                err("Stray end tag \u201C" + name + "\u201D.");
                                 break endtagloop;
-                            }
-                        default:
-                            err("Saw an end tag after \u201Cbody\u201D had been closed.");
-                            mode = framesetOk ? FRAMESET_OK : IN_BODY;
-                            continue;
-                    }
-                case IN_FRAMESET:
-                    switch (group) {
-                        case FRAMESET:
-                            if (currentPtr == 0) {
-                                assert fragment;
-                                err("Stray end tag \u201Cframeset\u201D");
+                        }
+                    case AFTER_HEAD:
+                        switch (group) {
+                            case HTML:
+                            case BODY:
+                            case BR:
+                                appendToCurrentNodeAndPushBodyElement();
+                                mode = FRAMESET_OK;
+                                continue;
+                            default:
+                                err("Stray end tag \u201C" + name + "\u201D.");
                                 break endtagloop;
-                            }
-                            pop();
-                            if ((!fragment) && !isCurrent("frameset")) {
-                                mode = AFTER_FRAMESET;
-                            }
-                            break endtagloop;
-                        default:
-                            err("Stray end tag \u201C" + name + "\u201D");
-                            break endtagloop;
-                    }
-                case AFTER_FRAMESET:
-                    switch (group) {
-                        case HTML:
-                            mode = AFTER_AFTER_FRAMESET;
-                            break endtagloop;
-                        default:
-                            err("Stray end tag \u201C" + name + "\u201D");
-                            break endtagloop;
-                    }
-                case INITIAL:
-                    /*
-                     * Parse error.
-                     */
-                    // [NOCPP[
-                    switch (doctypeExpectation) {
-                        case AUTO:
-                            err("End tag seen without seeing a doctype first. Expected e.g. \u201C<!DOCTYPE html>\u201D.");
-                            break;
-                        case HTML:
-                            err("End tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE html>\u201D.");
-                            break;
-                        case HTML401_STRICT:
-                            err("End tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\u201D.");
-                            break;
-                        case HTML401_TRANSITIONAL:
-                            err("End tag seen without seeing a doctype first. Expected \u201C<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\">\u201D.");
-                            break;
-                        case NO_DOCTYPE_ERRORS:
-                    }
-                    // ]NOCPP]
-                    /*
-                     * 
-                     * Set the document to quirks mode.
-                     */
-                    documentModeInternal(DocumentMode.QUIRKS_MODE, null, null,
-                            false);
-                    /*
-                     * Then, switch to the root element mode of the tree
-                     * construction stage
-                     */
-                    mode = BEFORE_HTML;
-                    /*
-                     * and reprocess the current token.
-                     */
-                    continue;
-                case BEFORE_HTML:
-                    switch (group) {
-                        case HEAD:
-                        case BR:
-                        case HTML:
-                        case BODY:
-                            /*
-                             * Create an HTMLElement node with the tag name html, in the
-                             * HTML namespace. Append it to the Document object.
-                             */
-                            appendHtmlElementToDocumentAndPush();
-                            /* Switch to the main mode */
-                            mode = BEFORE_HEAD;
-                            /*
-                             * reprocess the current token.
-                             */
-                            continue;
-                        default:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                    }
-                case BEFORE_HEAD:
-                    switch (group) {
-                        case HEAD:
-                        case BR:
-                        case HTML:
-                        case BODY:
-                            appendToCurrentNodeAndPushHeadElement(HtmlAttributes.EMPTY_ATTRIBUTES);
-                            mode = IN_HEAD;
-                            continue;
-                        default:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                    }
-                case IN_HEAD:
-                    switch (group) {
-                        case HEAD:
-                            pop();
-                            mode = AFTER_HEAD;
-                            break endtagloop;
-                        case BR:
-                        case HTML:
-                        case BODY:
-                            pop();
-                            mode = AFTER_HEAD;
-                            continue;
-                        default:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                    }
-                case IN_HEAD_NOSCRIPT:
-                    switch (group) {
-                        case NOSCRIPT:
-                            pop();
-                            mode = IN_HEAD;
-                            break endtagloop;
-                        case BR:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            pop();
-                            mode = IN_HEAD;
-                            continue;
-                        default:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                    }
-                case AFTER_HEAD:
-                    switch (group) {
-                        case HTML:
-                        case BODY:
-                        case BR:
-                            appendToCurrentNodeAndPushBodyElement();
-                            mode = FRAMESET_OK;
-                            continue;
-                        default:
-                            err("Stray end tag \u201C" + name + "\u201D.");
-                            break endtagloop;
-                    }
-                case AFTER_AFTER_BODY:
-                    err("Stray \u201C" + name + "\u201D end tag.");
-                    mode = framesetOk ? FRAMESET_OK : IN_BODY;
-                    continue;
-                case AFTER_AFTER_FRAMESET:
-                    err("Stray \u201C" + name + "\u201D end tag.");
-                    mode = IN_FRAMESET;
-                    continue;
-                case TEXT:
-                    // XXX need to manage insertion point here
-                    pop();
-                    if (originalMode == AFTER_HEAD) {
-                        silentPop();
-                    }
-                    mode = originalMode;
-                    break endtagloop;
+                        }
+                    case AFTER_AFTER_BODY:
+                        err("Stray \u201C" + name + "\u201D end tag.");
+                        mode = framesetOk ? FRAMESET_OK : IN_BODY;
+                        continue;
+                    case AFTER_AFTER_FRAMESET:
+                        err("Stray \u201C" + name + "\u201D end tag.");
+                        mode = IN_FRAMESET;
+                        continue;
+                    case TEXT:
+                        // XXX need to manage insertion point here
+                        pop();
+                        if (originalMode == AFTER_HEAD) {
+                            silentPop();
+                        }
+                        mode = originalMode;
+                        break endtagloop;
+                }
+            } // endtagloop
+            if (inForeign && !hasForeignInScope()) {
+                /*
+                 * If, after doing so, the insertion mode is still "in foreign
+                 * content", but there is no element in scope that has a
+                 * namespace other than the HTML namespace, switch the insertion
+                 * mode to the secondary insertion mode.
+                 */
+                inForeign = false;
             }
-        }
-        if (inForeign && !hasForeignInScope()) {
-            /*
-             * If, after doing so, the insertion mode is still "in foreign
-             * content", but there is no element in scope that has a namespace
-             * other than the HTML namespace, switch the insertion mode to the
-             * secondary insertion mode.
-             */
-            inForeign = false;
-        }
+            if (eltPosForeign != -1) {
+                continue inforeignloop;
+            }
+            return;
+        } // inforeignloop
     }
 
     private int findLastInTableScopeOrRootTbodyTheadTfoot() {

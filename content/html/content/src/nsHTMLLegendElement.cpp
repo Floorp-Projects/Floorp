@@ -72,7 +72,7 @@ public:
   NS_DECL_NSIDOMHTMLLEGENDELEMENT
 
   // nsIFormControl
-  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_LEGEND; }
+  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_LEGEND; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -106,6 +106,13 @@ public:
                              PRBool aNotify);
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+
+protected:
+  /**
+   * Get the fieldset content element that contains this legend.
+   * Returns null if there is no fieldset containing this legend.
+   */
+  nsIContent* GetFieldSet();
 };
 
 
@@ -145,7 +152,11 @@ NS_IMPL_ELEMENT_CLONE(nsHTMLLegendElement)
 NS_IMETHODIMP
 nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-  return nsGenericHTMLFormElement::GetForm(aForm);
+  *aForm = nsnull;
+
+  nsCOMPtr<nsIFormControl> fieldsetControl = do_QueryInterface(GetFieldSet());
+
+  return fieldsetControl ? fieldsetControl->GetForm(aForm) : NS_OK;
 }
 
 
@@ -161,6 +172,18 @@ static const nsAttrValue::EnumTable kAlignTable[] = {
   { "top", NS_STYLE_VERTICAL_ALIGN_TOP },
   { 0 }
 };
+
+nsIContent*
+nsHTMLLegendElement::GetFieldSet()
+{
+  nsIContent* parent = GetParent();
+
+  if (parent && parent->IsHTML() && parent->Tag() == nsGkAtoms::fieldset) {
+    return parent;
+  }
+
+  return nsnull;
+}
 
 PRBool
 nsHTMLLegendElement::ParseAttribute(PRInt32 aNamespaceID,

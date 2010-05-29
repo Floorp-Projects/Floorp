@@ -53,6 +53,8 @@
 #include "jsvector.h"
 #include "jsworkers.h"
 
+extern size_t gMaxStackSize;
+
 /*
  * JavaScript shell workers.
  *
@@ -1078,7 +1080,7 @@ Worker::processOneEvent()
     }
 
     JS_SetContextThread(context);
-    JS_SetThreadStackLimit(context, 0);
+    JS_SetNativeStackQuota(context, gMaxStackSize);
 
     Event::Result result;
     {

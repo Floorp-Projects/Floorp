@@ -328,3 +328,5 @@ MSG_DEF(JSMSG_TYPED_ARRAY_NEGATIVE_ARG, 245, 1, JSEXN_ERR, "argument {0} must be
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_ARGS,   246, 0, JSEXN_ERR, "invalid arguments")
 MSG_DEF(JSMSG_CSP_BLOCKED_FUNCTION,   247, 0, JSEXN_ERR, "call to Function() blocked by CSP")
 MSG_DEF(JSMSG_BAD_GET_SET_FIELD,      248, 1, JSEXN_TYPEERR, "property descriptor's {0} field is neither undefined nor a function")
+MSG_DEF(JSMSG_BAD_PROXY_FIX,          249, 0, JSEXN_TYPEERR, "proxy was fixed while executing the handler")
+MSG_DEF(JSMSG_INVALID_EVAL_SCOPE_ARG, 250, 0, JSEXN_EVALERR, "invalid eval scope argument")

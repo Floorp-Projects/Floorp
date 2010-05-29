@@ -65,9 +65,6 @@
 #include "prprf.h"         // For PR_snprintf()
 
 #if ALERT_MISSING_FONTS
-#include "nsIDOMWindow.h"
-#include "nsINonBlockingAlertService.h"
-#include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
 #endif
 #include "nsDisplayList.h"
@@ -154,7 +151,8 @@ CheckFontExistence(nsPresContext* aPresContext, const nsString& aFontName)
 static void
 AlertMissingFonts(nsString& aMissingFonts)
 {
-  nsCOMPtr<nsIStringBundleService> sbs(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  nsCOMPtr<nsIStringBundleService> sbs =
+    mozilla::services::GetStringBundleService();
   if (!sbs)
     return;
 
@@ -169,19 +167,8 @@ AlertMissingFonts(nsString& aMissingFonts)
   sb->FormatStringFromName(NS_LITERAL_STRING("mathfont_missing_dialog_message").get(),
                            strings, 1, getter_Copies(message));
 
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-  if (!wwatch)
-    return;
-
-  nsCOMPtr<nsIDOMWindow> parent;
-  wwatch->GetActiveWindow(getter_AddRefs(parent));
-  nsresult rv;
-  nsCOMPtr<nsINonBlockingAlertService> prompter =
-    do_GetService("@mozilla.org/embedcomp/nbalert-service;1", &rv);
-
-  if (prompter && parent) {
-    prompter->ShowNonBlockingAlert(parent, title.get(), message.get());
-  }
+  // XXX Bug 309090 - could show a notification bar here. Bug 563114 removed
+  // the nsINonBlockingAlertService interface that was previously used here.
 }
 #endif
 
@@ -411,7 +398,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
         font = value[i] - '0';
         ++i;
         if (font >= mFontName.Length()) {
-          NS_ERROR("Non-existant font referenced in glyph table");
+          NS_ERROR("Nonexistent font referenced in glyph table");
           return kNullGlyph;
         }
         // The char cannot be handled if this font is not installed

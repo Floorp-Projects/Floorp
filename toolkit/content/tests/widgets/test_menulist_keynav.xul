@@ -82,9 +82,16 @@ function differentPressed()
   // now make sure that using a key scrolls the menu correctly
   gShowPopup = true;
 
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < 65; i++) {
     list.appendItem("Item" + i, "item" + i);
   }
+  list.open = true;
+  is(list.getBoundingClientRect().width, list.firstChild.getBoundingClientRect().width,
+     "menu and popup width match");
+  ok(list.getBoundingClientRect().width > list.getItemAtIndex(0).getBoundingClientRect().width + 2,
+     "menuitem width accounts for scrollbar");
+  list.open = false;
+
   list.menupopup.maxHeight = 100;
   list.open = true;
 

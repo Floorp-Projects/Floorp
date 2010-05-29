@@ -948,6 +948,10 @@ protected:
     // the AA setting requested for this font - may affect glyph bounds
     AntialiasOption            mAntialiasOption;
 
+    // a copy of the font without antialiasing, if needed for separate
+    // measurement by mathml code
+    nsAutoPtr<gfxFont>         mNonAAFont;
+
     nsAutoPtr<gfxFontShaper>   mShaper;
 
     // some fonts have bad metrics, this method sanitize them.

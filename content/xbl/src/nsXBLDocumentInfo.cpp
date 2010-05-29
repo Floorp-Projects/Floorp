@@ -54,6 +54,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
+#include "mozilla/Services.h"
  
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -506,7 +507,8 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
   nsIURI* uri = aDocument->GetDocumentURI();
   if (IsChromeURI(uri)) {
     // Cache whether or not this chrome XBL can execute scripts.
-    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
+    nsCOMPtr<nsIXULChromeRegistry> reg =
+      mozilla::services::GetXULChromeRegistryService();
     if (reg) {
       PRBool allow = PR_TRUE;
       reg->AllowScriptsForPackage(uri, &allow);

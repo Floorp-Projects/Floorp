@@ -45,6 +45,7 @@
 #include "XPCWrapper.h"
 #include "nsDOMJSUtils.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsNullPrincipal.h"
 
 /***************************************************************************/
 
@@ -122,11 +123,10 @@ XPCJSContextStack::Pop(JSContext * *_retval)
 static nsIPrincipal*
 GetPrincipalFromCx(JSContext *cx)
 {
-    nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
-    if(scriptContext)
+    nsIScriptContextPrincipal* scp = GetScriptContextPrincipalFromJSContext(cx);
+    if(scp)
     {
-        nsCOMPtr<nsIScriptObjectPrincipal> globalData =
-            do_QueryInterface(scriptContext->GetGlobalObject());
+        nsIScriptObjectPrincipal* globalData = scp->GetObjectPrincipal();
         if(globalData)
             return globalData->GetPrincipal();
     }
@@ -226,12 +226,13 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
 #ifndef XPCONNECT_STANDALONE
         // Start by getting the principal holder and principal for this
         // context.  If we can't manage that, don't bother with the rest.
-        nsCOMPtr<nsIPrincipal> principal =
-            do_CreateInstance("@mozilla.org/nullprincipal;1");
+        nsRefPtr<nsNullPrincipal> principal = new nsNullPrincipal();
         nsCOMPtr<nsIScriptObjectPrincipal> sop;
         if(principal)
         {
-            sop = new PrincipalHolder(principal);
+            nsresult rv = principal->Init();
+            if(NS_SUCCEEDED(rv))
+              sop = new PrincipalHolder(principal);
         }
         if(!sop)
         {
@@ -282,7 +283,7 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
                 }
 
             }
-            if(!glob && mSafeJSContext)
+            if(mSafeJSContext && !glob)
             {
                 // Destroy the context outside the scope of JSAutoRequest that
                 // uses the context in its destructor.
@@ -326,27 +327,6 @@ XPCPerThreadData* XPCPerThreadData::gThreads        = nsnull;
 XPCPerThreadData *XPCPerThreadData::sMainThreadData = nsnull;
 void *            XPCPerThreadData::sMainJSThread   = nsnull;
 
-static jsuword
-GetThreadStackLimit()
-{
-    int stackDummy;
-    jsuword stackLimit, currentStackAddr = (jsuword)&stackDummy;
-
-    const jsuword kStackSize = 0x80000;   // 512k
-
-#if JS_STACK_GROWTH_DIRECTION < 0
-    stackLimit = (currentStackAddr > kStackSize)
-                 ? currentStackAddr - kStackSize
-                 : 0;
-#else
-    stackLimit = (currentStackAddr + kStackSize > currentStackAddr)
-                 ? currentStackAddr + kStackSize
-                 : (jsuword) -1;
-#endif
-
-  return stackLimit;
-}
-
 XPCPerThreadData::XPCPerThreadData()
     :   mJSContextStack(new XPCJSContextStack()),
         mNextThread(nsnull),
@@ -356,8 +336,7 @@ XPCPerThreadData::XPCPerThreadData()
         mExceptionManager(nsnull),
         mException(nsnull),
         mExceptionManagerNotAvailable(JS_FALSE),
-        mAutoRoots(nsnull),
-        mStackLimit(GetThreadStackLimit())
+        mAutoRoots(nsnull)
 #ifdef XPC_CHECK_WRAPPER_THREADSAFETY
       , mWrappedNativeThreadsafetyReportDepth(0)
 #endif

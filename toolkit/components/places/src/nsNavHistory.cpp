@@ -79,6 +79,8 @@
 #include "Helpers.h"
 #include "History.h"
 
+#include "mozilla/FunctionTimer.h"
+
 #ifdef MOZ_XUL
 #include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompletePopup.h"
@@ -418,6 +420,8 @@ nsNavHistory::~nsNavHistory()
 nsresult
 nsNavHistory::Init()
 {
+  NS_TIME_FUNCTION;
+
   nsCOMPtr<nsIPrefService> prefService =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
   nsCOMPtr<nsIPrefBranch> placesBranch;
@@ -687,7 +691,9 @@ nsNavHistory::InitDB()
     cachePercentage = 50;
   if (cachePercentage < 0)
     cachePercentage = 0;
-  PRInt64 cacheSize = PR_GetPhysicalMemorySize() * cachePercentage / 100;
+
+  static PRInt64 physMem = PR_GetPhysicalMemorySize();
+  PRInt64 cacheSize = physMem * cachePercentage / 100;
 
   // Compute number of cached pages, this will be our cache size.
   PRInt64 cachePages = cacheSize / pageSize;
@@ -937,7 +943,7 @@ mozStorageFunctionGetUnreversedHost::OnFunctionCall(
     ReverseString(src, dest);
     result->SetAsAString(dest);
   } else {
-    result->SetAsAString(NS_LITERAL_STRING(""));
+    result->SetAsAString(EmptyString());
   }
   NS_ADDREF(*_retval = result);
   return NS_OK;
@@ -7329,7 +7335,7 @@ nsNavHistory::AddPageWithVisits(nsIURI *aURI,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NS_ASSERTION(placeId != 0, "Cannot add a visit to a not existant page");
+  NS_ASSERTION(placeId != 0, "Cannot add a visit to a nonexistent page");
 
   if (aFirstVisitDate != -1) {
     // Add the first visit
@@ -8085,7 +8091,7 @@ nsNavHistory::GetBundle()
 {
   if (!mBundle) {
     nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+      mozilla::services::GetStringBundleService();
     NS_ENSURE_TRUE(bundleService, nsnull);
     nsresult rv = bundleService->CreateBundle(
         "chrome://places/locale/places.properties",
@@ -8100,7 +8106,7 @@ nsNavHistory::GetDateFormatBundle()
 {
   if (!mDateFormatBundle) {
     nsCOMPtr<nsIStringBundleService> bundleService =
-      do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+      mozilla::services::GetStringBundleService();
     NS_ENSURE_TRUE(bundleService, nsnull);
     nsresult rv = bundleService->CreateBundle(
         "chrome://global/locale/dateFormat.properties",

@@ -119,12 +119,17 @@ _BROWSER_FILES = \
                  browser_bug537474.js \
                  browser_bug550565.js \
                  browser_bug555224.js \
+                 browser_bug556061.js \
+                 browser_bug563588.js \
                  browser_contextSearchTabPosition.js \
                  browser_ctrlTab.js \
                  browser_discovery.js \
                  browser_drag.js \
                  browser_gestureSupport.js \
                  browser_getshortcutoruri.js \
+                 browser_inspector_initialization.js \
+                 browser_inspector_treeSelection.js \
+                 browser_inspector_highlighter.js \
                  browser_overflowScroll.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \

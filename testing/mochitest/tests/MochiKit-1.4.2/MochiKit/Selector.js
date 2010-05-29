@@ -317,19 +317,19 @@ MochiKit.Selector.Selector.prototype = {
             scope = (scope || MochiKit.DOM.currentDocument()).getElementsByTagName(this.params.tagName || '*');
         } else if (axis == ">") {
             if (!scope) {
-                throw "> combinator not allowed without preceeding expression";
+                throw "> combinator not allowed without preceding expression";
             }
             scope = MochiKit.Base.filter(function (node) {
                 return node.nodeType == 1;
             }, scope.childNodes);
         } else if (axis == "+") {
             if (!scope) {
-                throw "+ combinator not allowed without preceeding expression";
+                throw "+ combinator not allowed without preceding expression";
             }
             scope = nextSiblingElement(scope) && [nextSiblingElement(scope)];
         } else if (axis == "~") {
             if (!scope) {
-                throw "~ combinator not allowed without preceeding expression";
+                throw "~ combinator not allowed without preceding expression";
             }
             var newscope = [];
             while (nextSiblingElement(scope)) {

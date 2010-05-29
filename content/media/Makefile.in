@@ -50,6 +50,8 @@ EXPORTS = \
   nsMediaStream.h \
   nsMediaCache.h \
   nsBuiltinDecoder.h \
+  nsBuiltinDecoderStateMachine.h \
+  nsBuiltinDecoderReader.h \
   VideoUtils.h \
   $(NULL)
 
@@ -58,6 +60,8 @@ CPPSRCS = \
   nsMediaCache.cpp \
   nsMediaStream.cpp \
   nsBuiltinDecoder.cpp \
+  nsBuiltinDecoderStateMachine.cpp \
+  nsBuiltinDecoderReader.cpp \
   $(NULL)
 
 ifdef MOZ_SYDNEYAUDIO

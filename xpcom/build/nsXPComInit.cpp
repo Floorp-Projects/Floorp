@@ -143,6 +143,7 @@ NS_DECL_CLASSINFO(nsStringInputStream)
 
 #include <locale.h>
 #include "mozilla/Services.h"
+#include "mozilla/FunctionTimer.h"
 
 #ifdef MOZ_IPC
 #include "base/at_exit.h"
@@ -475,6 +476,8 @@ NS_InitXPCOM3(nsIServiceManager* *result,
                               nsStaticModuleInfo const *staticComponents,
                               PRUint32 componentCount)
 {
+    NS_TIME_FUNCTION;
+
     nsresult rv = NS_OK;
 
 #ifdef MOZ_ENABLE_LIBXUL
@@ -487,9 +490,13 @@ NS_InitXPCOM3(nsIServiceManager* *result,
      // We are not shutting down
     gXPCOMShuttingDown = PR_FALSE;
 
+    NS_TIME_FUNCTION_MARK("Next: log init");
+
     NS_LogInit();
 
 #ifdef MOZ_IPC
+    NS_TIME_FUNCTION_MARK("Next: IPC init");
+
     // Set up chromium libs
     NS_ASSERTION(!sExitManager && !sMessageLoop, "Bad logic!");
 
@@ -517,15 +524,21 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     }
 #endif
 
+    NS_TIME_FUNCTION_MARK("Next: thread manager init");
+
     // Establish the main thread here.
     rv = nsThreadManager::get()->Init();
     if (NS_FAILED(rv)) return rv;
+
+    NS_TIME_FUNCTION_MARK("Next: timer startup");
 
     // Set up the timer globals/timer thread
     rv = nsTimerImpl::Startup();
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifndef WINCE
+    NS_TIME_FUNCTION_MARK("Next: setlocale");
+
     // If the locale hasn't already been setup by our embedder,
     // get us out of the "C" locale and into the system 
     if (strcmp(setlocale(LC_ALL, NULL), "C") == 0)
@@ -533,8 +546,12 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 #endif
 
 #if defined(XP_UNIX) || defined(XP_OS2)
+    NS_TIME_FUNCTION_MARK("Next: startup native charset utils");
+
     NS_StartupNativeCharsetUtils();
 #endif
+    NS_TIME_FUNCTION_MARK("Next: startup local file");
+
     NS_StartupLocalFile();
 
     StartupSpecialSystemDirectory();
@@ -573,6 +590,8 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 
 #ifdef MOZ_IPC
     if ((sCommandLineWasInitialized = !CommandLine::IsInitialized())) {
+        NS_TIME_FUNCTION_MARK("Next: IPC command line init");
+
 #ifdef OS_WIN
         CommandLine::Init(0, nsnull);
 #else
@@ -596,6 +615,8 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 #endif
 
     NS_ASSERTION(nsComponentManagerImpl::gComponentManager == NULL, "CompMgr not null at init");
+
+    NS_TIME_FUNCTION_MARK("Next: component manager init");
 
     // Create the Component/Service Manager
     nsComponentManagerImpl *compMgr = new nsComponentManagerImpl();
@@ -627,6 +648,8 @@ NS_InitXPCOM3(nsIServiceManager* *result,
     rv = compMgr->RegisterService(kComponentManagerCID, static_cast<nsIComponentManager*>(compMgr));
     if (NS_FAILED(rv)) return rv;
 
+    NS_TIME_FUNCTION_MARK("Next: cycle collector startup");
+
     rv = nsCycleCollector_startup();
     if (NS_FAILED(rv)) return rv;
 
@@ -635,6 +658,8 @@ NS_InitXPCOM3(nsIServiceManager* *result,
 
     // Category Manager
     {
+      NS_TIME_FUNCTION_MARK("Next: category manager factory init");
+
       nsCOMPtr<nsIFactory> categoryManagerFactory;
       if ( NS_FAILED(rv = NS_CategoryManagerGetFactory(getter_AddRefs(categoryManagerFactory))) )
         return rv;
@@ -669,23 +694,33 @@ NS_InitXPCOM3(nsIServiceManager* *result,
                           nsSimpleUnicharStreamFactory::GetInstance());
     }
 
+    NS_TIME_FUNCTION_MARK("Next: interface info manager init");
+
     // Pay the cost at startup time of starting this singleton.
     nsIInterfaceInfoManager* iim =
         xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
 
+    NS_TIME_FUNCTION_MARK("Next: try to load compreg.dat");
+
     // "Re-register the world" if compreg.dat doesn't exist
     rv = nsComponentManagerImpl::gComponentManager->ReadPersistentRegistry();
     if (NS_FAILED(rv)) {
+        NS_TIME_FUNCTION_MARK("Next: try to register all components (compreg.dat not found)");
+
         // If the component registry is out of date, malformed, or incomplete,
         // autoregister the default component directories.
         (void) iim->AutoRegisterInterfaces();
         nsComponentManagerImpl::gComponentManager->AutoRegister(nsnull);
     }
 
+    NS_TIME_FUNCTION_MARK("Next: register category providers");
+
     // After autoreg, but before we actually instantiate any components,
     // add any services listed in the "xpcom-directory-providers" category
     // to the directory service.
     nsDirectoryService::gService->RegisterCategoryProviders();
+
+    NS_TIME_FUNCTION_MARK("Next: create services from category");
 
     // Notify observers of xpcom autoregistration start
     NS_CreateServicesFromCategory(NS_XPCOM_STARTUP_CATEGORY, 

@@ -48,6 +48,36 @@
 
       testAccessibleTree("radiogroup", accTree);
 
+      // toolbar
+      accTree = {
+        role: ROLE_TOOLBAR,
+        name: "My toolbar",
+        children: [
+          {
+            role: ROLE_PUSHBUTTON,
+            name: "hello",
+            children: [ ]
+          }
+        ]
+      };
+
+      testAccessibleTree("toolbar", accTree);
+
+      // toolbar
+      accTree = {
+        role: ROLE_TOOLBAR,
+        name: "My second toolbar",
+        children: [
+          {
+            role: ROLE_PUSHBUTTON,
+            name: "hello",
+            children: [ ]
+          }
+        ]
+      };
+
+      testAccessibleTree("toolbar2", accTree);
+
       SimpleTest.finish()
     }
 
@@ -76,6 +106,12 @@
         <radio label="radio1"/>
         <radio label="radio2"/>
       </radiogroup>
+      <toolbar id="toolbar" toolbarname="My toolbar">
+        <toolbarbutton id="button1" label="hello"/>
+      </toolbar>
+      <toolbar id="toolbar2" toolbarname="2nd" aria-label="My second toolbar">
+        <toolbarbutton id="button2" label="hello"/>
+      </toolbar>
     </vbox>
   </hbox>
 

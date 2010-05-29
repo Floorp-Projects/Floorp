@@ -253,7 +253,7 @@ private:
   PRInt64 TimeToBytes(float aTime) const
   {
     NS_ABORT_IF_FALSE(mMetadataValid, "Requires valid metadata");
-    NS_ABORT_IF_FALSE(aTime >= 0.0, "Must be >= 0");
+    NS_ABORT_IF_FALSE(aTime >= 0.0f, "Must be >= 0");
     return RoundDownToSample(PRInt64(aTime * mSampleRate * mSampleSize));
   }
 
@@ -380,7 +380,7 @@ nsWaveStateMachine::nsWaveStateMachine(nsWaveDecoder* aDecoder,
     mNextState(STATE_PAUSED),
     mPlaybackPosition(0),
     mInitialVolume(aInitialVolume),
-    mSeekTime(0.0),
+    mSeekTime(0.0f),
     mMetadataValid(PR_FALSE),
     mPositionChangeQueued(PR_FALSE),
     mPaused(mNextState == STATE_PAUSED)
@@ -443,8 +443,8 @@ nsWaveStateMachine::Seek(float aTime)
 {
   nsAutoMonitor monitor(mMonitor);
   mSeekTime = aTime;
-  if (mSeekTime < 0.0) {
-    mSeekTime = 0.0;
+  if (mSeekTime < 0.0f) {
+    mSeekTime = 0.0f;
   }
   if (mState == STATE_LOADING_METADATA) {
     mNextState = STATE_SEEKING;
@@ -585,7 +585,7 @@ nsWaveStateMachine::Run()
           targetTime = sleepTime;
         }
 
-        PRInt64 len = TimeToBytes(targetTime.ToSeconds());
+        PRInt64 len = TimeToBytes(float(targetTime.ToSeconds()));
 
         PRInt64 leftToPlay =
           GetDataLength() - (mPlaybackPosition - mWavePCMOffset);
@@ -604,8 +604,9 @@ nsWaveStateMachine::Run()
             !mStream->IsSuspendedByCache()) {
           mBufferingStart = now;
           mBufferingEndOffset = mPlaybackPosition +
-            TimeToBytes(mBufferingWait.ToSeconds());
-          mBufferingEndOffset = PR_MAX(mPlaybackPosition + len, mBufferingEndOffset);
+            TimeToBytes(float(mBufferingWait.ToSeconds()));
+          mBufferingEndOffset = PR_MAX(mPlaybackPosition + len,
+                                       mBufferingEndOffset);
           mNextState = mState;
           ChangeState(STATE_BUFFERING);
 
@@ -645,7 +646,7 @@ nsWaveStateMachine::Run()
 
           PRUint32 sampleSize = mSampleFormat == nsAudioStream::FORMAT_U8 ? 1 : 2;
           NS_ABORT_IF_FALSE(got % sampleSize == 0, "Must write complete samples");
-          PRUint32 lengthInSamples = got / sampleSize;
+          PRUint32 lengthInSamples = PRUint32(got / sampleSize);
 
           monitor.Exit();
           mAudioStream->Write(buf.get(), lengthInSamples, PR_FALSE);
@@ -681,7 +682,8 @@ nsWaveStateMachine::Run()
 
         // Calculate relative offset within PCM data.
         PRInt64 position = RoundDownToSample(TimeToBytes(seekTime));
-        NS_ABORT_IF_FALSE(position >= 0 && position <= GetDataLength(), "Invalid seek position");
+        NS_ABORT_IF_FALSE(position >= 0 && position <= GetDataLength(),
+                          "Invalid seek position");
         // Convert to absolute offset within stream.
         position += mWavePCMOffset;
 
@@ -947,7 +949,7 @@ nsWaveStateMachine::ReadAll(char* aBuf, PRInt64 aSize, PRInt64* aBytesRead = nsn
   }
   do {
     PRUint32 read = 0;
-    if (NS_FAILED(mStream->Read(aBuf + got, aSize - got, &read))) {
+    if (NS_FAILED(mStream->Read(aBuf + got, PRUint32(aSize - got), &read))) {
       NS_WARNING("Stream read failed");
       return PR_FALSE;
     }
@@ -1178,8 +1180,8 @@ nsWaveStateMachine::FirePositionChanged(PRBool aCoalesce)
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsWaveDecoder, nsIObserver)
 
 nsWaveDecoder::nsWaveDecoder()
-  : mInitialVolume(1.0),
-    mCurrentTime(0.0),
+  : mInitialVolume(1.0f),
+    mCurrentTime(0.0f),
     mEndedDuration(std::numeric_limits<float>::quiet_NaN()),
     mEnded(PR_FALSE),
     mSeekable(PR_TRUE),

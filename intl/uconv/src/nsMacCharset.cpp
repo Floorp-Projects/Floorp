@@ -38,7 +38,7 @@
 #include <Carbon/Carbon.h>
 #include "nsIPlatformCharset.h"
 #include "pratom.h"
-#include "nsGREResProperties.h"
+#include "nsUConvPropertySearch.h"
 #include "nsUConvDll.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -48,36 +48,17 @@
 #include "nsPlatformCharset.h"
 #include "nsEncoderDecoderUtils.h"
 
-static nsGREResProperties *gInfo = nsnull;
-static PRInt32 gCnt = 0;
+static const char* kMacCharsets[][3] = {
+#include "maccharset.properties.h"
+};
 
 NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
 nsPlatformCharset::nsPlatformCharset()
 {
-  PR_AtomicIncrement(&gCnt);
 }
 nsPlatformCharset::~nsPlatformCharset()
 {
-  PR_AtomicDecrement(&gCnt);
-  if((0 == gCnt) && (nsnull != gInfo)) {
-  	delete gInfo;
-  	gInfo = nsnull;
-  }
-}
-
-nsresult nsPlatformCharset::InitInfo()
-{  
-  // load the .property file if necessary
-  if (gInfo == nsnull) {
-    nsGREResProperties *info =
-        new nsGREResProperties(NS_LITERAL_CSTRING("maccharset.properties"));
-    NS_ASSERTION(info , "cannot open properties file");
-    NS_ENSURE_TRUE(info, NS_ERROR_FAILURE);
-    gInfo = info;
-  }
-
-  return NS_OK;
 }
 
 nsresult nsPlatformCharset::MapToCharset(short script, short region, nsACString& outCharset)
@@ -93,26 +74,19 @@ nsresult nsPlatformCharset::MapToCharset(short script, short region, nsACString&
       return NS_OK;
   }
 
-  // ensure the .property file is loaded
-  nsresult rv = InitInfo();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // try mapping from region then from script
-  nsAutoString key(NS_LITERAL_STRING("region."));
+  nsCAutoString key("region.");
   key.AppendInt(region, 10);
 
-  nsAutoString uCharset;
-  rv = gInfo->Get(key, uCharset);
-  if (NS_SUCCEEDED(rv))
-    LossyCopyUTF16toASCII(uCharset, outCharset);
-  else {
+  nsresult rv = nsUConvPropertySearch::SearchPropertyValue(kMacCharsets,
+      NS_ARRAY_LENGTH(kMacCharsets), key, outCharset);
+  if (NS_FAILED(rv)) {
     key.AssignLiteral("script.");
     key.AppendInt(script, 10);
-    rv = gInfo->Get(key, uCharset);
+    rv = nsUConvPropertySearch::SearchPropertyValue(kMacCharsets,
+        NS_ARRAY_LENGTH(kMacCharsets), key, outCharset);
     // not found in the .property file, assign x-mac-roman
-    if (NS_SUCCEEDED(rv))
-      LossyCopyUTF16toASCII(uCharset, outCharset);
-    else {
+    if (NS_FAILED(rv)) {
       outCharset.AssignLiteral("x-mac-roman");
     }
   }

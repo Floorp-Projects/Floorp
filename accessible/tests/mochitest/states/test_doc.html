@@ -22,6 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=509696
   <script type="application/javascript">
     function doTest()
     {
+      // Bug 566542: root accesible should expose active state when focused.
+      testStates(getRootAccessible(), 0, EXT_STATE_ACTIVE);
+
       // Bug 509696
       testStates(document, STATE_READONLY); // role=""
       todo(false, "enable commented tests when we support body role changes");
@@ -71,6 +74,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=509696
    <a target="_blank"
      title="Role attribute on body with empty string causes DocAccessible not to have read-only state."
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=509696">Mozilla Bug 509696</a>
+  <a target="_blank"
+     title="Frame for firefox does not implement the state "active" when firefox is the active frame"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=566542">Mozilla Bug 566542</a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">

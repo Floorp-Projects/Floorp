@@ -168,11 +168,14 @@ PlacesTreeView.prototype = {
     if (aNode == this._rootNode)
       throw "The root node is never visible";
 
-    let parent = aNode.parent;
-    if (!parent || !parent.containerOpen)
-      throw "Invisible node passed to _getRowForNode";
+    let ancestors = PlacesUtils.nodeAncestors(aNode);
+    for (let ancestor in ancestors) {
+      if (!ancestor.containerOpen)
+        throw "Invisible node passed to _getRowForNode";
+    }
 
     // Non-plain containers are initially built with their contents.
+    let parent = aNode.parent;
     let parentIsPlain = this._isPlainContainer(parent);
     if (!parentIsPlain) {
       if (parent == this._rootNode)
@@ -384,7 +387,7 @@ PlacesTreeView.prototype = {
         nodesInfo.push({
           node: this._rows[i],
           oldRow: i,
-          wasVisbile: i >= firstVisibleRow && i <= lastVisibleRow
+          wasVisible: i >= firstVisibleRow && i <= lastVisibleRow
         });
       }
     }
@@ -712,7 +715,7 @@ PlacesTreeView.prototype = {
       return;
 
     // Restore selection.
-    let rowToSelect = Math.min(oldRow,  this._rows.length - 1);
+    let rowToSelect = Math.min(oldRow, this._rows.length - 1);
     this.selection.rangedSelect(rowToSelect, rowToSelect, true);
   },
 

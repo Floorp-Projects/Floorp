@@ -91,7 +91,7 @@
 #include "nsIPrivateBrowsingService.h"
 #include "nsNetCID.h"
 #include "mozilla/Services.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
 
@@ -475,7 +475,7 @@ RuleHash::~RuleHash()
         PRUint32 lineNumber = value->mRule->GetLineNumber();
         nsCOMPtr<nsIStyleSheet> sheet;
         value->mRule->GetStyleSheet(*getter_AddRefs(sheet));
-        nsCOMPtr<nsICSSStyleSheet> cssSheet = do_QueryInterface(sheet);
+        nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(sheet);
         value->mSelector->ToString(selectorText, cssSheet);
 
         printf("    line %d, %s\n",
@@ -839,21 +839,23 @@ static nsPrivateBrowsingObserver *gPrivateBrowsingObserver = nsnull;
 // CSS Style rule processor implementation
 //
 
-nsCSSRuleProcessor::nsCSSRuleProcessor(const nsCOMArray<nsICSSStyleSheet>& aSheets,
+nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
                                        PRUint8 aSheetType)
   : mSheets(aSheets)
   , mRuleCascades(nsnull)
   , mLastPresContext(nsnull)
   , mSheetType(aSheetType)
 {
-  for (PRInt32 i = mSheets.Count() - 1; i >= 0; --i)
+  for (sheet_array_type::size_type i = mSheets.Length(); i-- != 0; ) {
     mSheets[i]->AddRuleProcessor(this);
+  }
 }
 
 nsCSSRuleProcessor::~nsCSSRuleProcessor()
 {
-  for (PRInt32 i = mSheets.Count() - 1; i >= 0; --i)
+  for (sheet_array_type::size_type i = mSheets.Length(); i-- != 0; ) {
     mSheets[i]->DropRuleProcessor(this);
+  }
   mSheets.Clear();
   ClearRuleCascades();
 }
@@ -1442,7 +1444,7 @@ nthChildGenericMatches(RuleProcessorData& data,
     if (isFromEnd)
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
     else
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
   const PRInt32 index = data.GetNthIndex(isOfType, isFromEnd, PR_FALSE);
@@ -1479,7 +1481,7 @@ edgeOfTypeMatches(RuleProcessorData& data, TreeMatchContext& aTreeMatchContext,
     if (checkLast)
       parent->SetFlags(NODE_HAS_SLOW_SELECTOR);
     else
-      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+      parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
   }
 
   return (!checkFirst ||
@@ -1652,6 +1654,11 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           PRInt32 index = -1;
 
           if (aTreeMatchContext.mForStyling)
+            // FIXME:  This isn't sufficient to handle:
+            //   :-moz-empty-except-children-with-localname() + E
+            //   :-moz-empty-except-children-with-localname() ~ E
+            // because we don't know to restyle the grandparent of the
+            // inserted/removed element (as in bug 534804 for :empty).
             element->SetFlags(NODE_HAS_SLOW_SELECTOR);
           do {
             child = element->GetChildAt(++index);
@@ -2117,7 +2124,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
         nsIContent* parent = prevdata->mParentContent;
         if (parent) {
           if (aTreeMatchContext.mForStyling)
-            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_NOAPPEND);
+            parent->SetFlags(NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS);
 
           PRInt32 index = parent->IndexOf(prevdata->mElement);
           while (0 <= --index) {
@@ -2819,24 +2826,19 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
 }
 
 /* static */ PRBool
-nsCSSRuleProcessor::CascadeSheetEnumFunc(nsICSSStyleSheet* aSheet, void* aData)
+nsCSSRuleProcessor::CascadeSheet(nsCSSStyleSheet* aSheet, CascadeEnumData* aData)
 {
-  nsCSSStyleSheet*  sheet = static_cast<nsCSSStyleSheet*>(aSheet);
-  CascadeEnumData* data = static_cast<CascadeEnumData*>(aData);
-  PRBool bSheetApplicable = PR_TRUE;
-  sheet->GetApplicable(bSheetApplicable);
-
-  if (bSheetApplicable &&
-      sheet->UseForPresentation(data->mPresContext, data->mCacheKey) &&
-      sheet->mInner) {
-    nsCSSStyleSheet* child = sheet->mInner->mFirstChild;
+  if (aSheet->IsApplicable() &&
+      aSheet->UseForPresentation(aData->mPresContext, aData->mCacheKey) &&
+      aSheet->mInner) {
+    nsCSSStyleSheet* child = aSheet->mInner->mFirstChild;
     while (child) {
-      CascadeSheetEnumFunc(child, data);
+      CascadeSheet(child, aData);
       child = child->mNext;
     }
 
-    if (!sheet->mInner->mOrderedRules.EnumerateForwards(CascadeRuleEnumFunc,
-                                                        data))
+    if (!aSheet->mInner->mOrderedRules.EnumerateForwards(CascadeRuleEnumFunc,
+                                                         aData))
       return PR_FALSE;
   }
   return PR_TRUE;
@@ -2913,7 +2915,7 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
     }
   }
 
-  if (mSheets.Count() != 0) {
+  if (mSheets.Length() != 0) {
     nsAutoPtr<RuleCascadeData> newCascade(
       new RuleCascadeData(aPresContext->Medium(),
                           eCompatibility_NavQuirks == aPresContext->CompatibilityMode()));
@@ -2924,8 +2926,11 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
                            mSheetType);
       if (!data.mRulesByWeight.ops)
         return; /* out of memory */
-      if (!mSheets.EnumerateForwards(CascadeSheetEnumFunc, &data))
-        return; /* out of memory */
+
+      for (PRUint32 i = 0; i < mSheets.Length(); ++i) {
+        if (!CascadeSheet(mSheets.ElementAt(i), &data))
+          return; /* out of memory */
+      }
 
       // Sort the hash table of per-weight linked lists by weight.
       PRUint32 weightCount = data.mRulesByWeight.entryCount;

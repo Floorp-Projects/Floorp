@@ -90,17 +90,17 @@ public:
     NS_ERROR("Should never be called");
   }
 
-  nsIContent* GetFirstContent();
+  mozilla::dom::Element* GetFirstElement();
   void AppendAll(nsCOMArray<nsIContent>* aElements);
   /**
-   * @return true if aContent was added, false if we failed due to OOM
+   * @return true if aElement was added, false if we failed due to OOM
    */
-  PRBool AddContent(nsIContent* aContent);
+  PRBool AddElement(mozilla::dom::Element* aElement);
   /**
-   * @return true if aContent was removed and it was the last content for
+   * @return true if aElement was removed and it was the last content for
    * this ref, so this entry should be removed from the map
    */
-  PRBool RemoveContent(nsIContent* aContent);
+  PRBool RemoveElement(mozilla::dom::Element* aElement);
 
 private:
   nsSmallVoidArray mRefContentList;
@@ -165,9 +165,13 @@ public:
     // nsIDOMNode interface overrides
     NS_IMETHOD CloneNode(PRBool deep, nsIDOMNode **_retval);
 
-    // nsIDOMDocument interface overrides
-    NS_IMETHOD GetElementById(const nsAString & elementId,
-                              nsIDOMElement **_retval); 
+    // nsDocument interface overrides
+    NS_IMETHOD GetElementById(const nsAString& aId, nsIDOMElement** aReturn)
+    {
+        return nsDocument::GetElementById(aId, aReturn);
+    }
+    virtual mozilla::dom::Element* GetElementById(const nsAString & elementId,
+                                                  nsresult *aResult);
 
     // nsIDOMXULDocument interface
     NS_DECL_NSIDOMXULDOCUMENT
@@ -176,7 +180,7 @@ public:
     NS_IMETHOD GetContentType(nsAString& aContentType);
 
     // nsICSSLoaderObserver
-    NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet* aSheet,
+    NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                 PRBool aWasAlternate,
                                 nsresult aStatus);
 
@@ -207,9 +211,9 @@ protected:
     nsresult StartLayout(void);
 
     nsresult
-    AddElementToRefMap(nsIContent* aElement);
+    AddElementToRefMap(mozilla::dom::Element* aElement);
     void
-    RemoveElementFromRefMap(nsIContent* aElement);
+    RemoveElementFromRefMap(mozilla::dom::Element* aElement);
 
     nsresult GetViewportSize(PRInt32* aWidth, PRInt32* aHeight);
 
@@ -304,7 +308,7 @@ protected:
      * An array of style sheets, that will be added (preserving order) to the
      * document after all of them are loaded (in DoneWalking).
      */
-    nsCOMArray<nsICSSStyleSheet> mOverlaySheets;
+    nsTArray<nsRefPtr<nsCSSStyleSheet> > mOverlaySheets;
 
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 

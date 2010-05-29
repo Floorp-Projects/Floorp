@@ -904,7 +904,8 @@
               this._tabAttrModified(this.mCurrentTab);
 
               // Change focus to the new browser unless the findbar is focused.
-              if (gFindBar.hidden ||
+              if (!gFindBarInitialized ||
+                  gFindBar.hidden ||
                   gFindBar.getElement("findbar-textbox").getAttribute("focused") != "true") {
 
                 var fm = Components.classes["@mozilla.org/focus-manager;1"].
@@ -2151,17 +2152,6 @@
                 onget="return this.mCurrentBrowser.securityUI;"
                 readonly="true"/>
 
-      <method name="dragDropSecurityCheck">
-        <parameter name="aEvent"/>
-        <parameter name="aDragSession"/>
-        <parameter name="aUri"/>
-        <body>
-          <![CDATA[
-            nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, aUri);
-          ]]>
-        </body>
-      </method>
-
       <method name="_handleKeyEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -2170,65 +2160,33 @@
             return;
           }
 
-          if ('altKey' in aEvent && aEvent.altKey)
+          if (aEvent.altKey)
             return;
+
 #ifdef XP_MACOSX
-          if ('metaKey' in aEvent && aEvent.metaKey) {
-            var offset = 1;
-            switch (aEvent.charCode) {
-              case '}'.charCodeAt(0):
+          if (!aEvent.metaKey)
+            return;
+
+          var offset = 1;
+          switch (aEvent.charCode) {
+            case '}'.charCodeAt(0):
+              offset = -1;
+            case '{'.charCodeAt(0):
+              if (window.getComputedStyle(this, null).direction == "ltr")
                 offset *= -1;
-              case '{'.charCodeAt(0):
-                if (window.getComputedStyle(this, null).direction == "ltr")
-                  offset *= -1;
-
-                this.tabContainer.advanceSelectedTab(offset, true);
-                aEvent.stopPropagation();
-                aEvent.preventDefault();
-                return;
-            }
-            if ('shiftKey' in aEvent && aEvent.shiftKey)
-              return;
-#else
-          if (('ctrlKey' in aEvent && aEvent.ctrlKey) &&
-              !('shiftKey' in aEvent && aEvent.shiftKey) &&
-              !('metaKey' in aEvent && aEvent.metaKey)) {
-            if (aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
-                this.mTabBox.handleCtrlPageUpDown) {
-              this.removeCurrentTab();
-
+              this.tabContainer.advanceSelectedTab(offset, true);
               aEvent.stopPropagation();
               aEvent.preventDefault();
-              return;
-            }
-#endif
-            if (aEvent.target == this) {
-              switch (aEvent.keyCode) {
-                case KeyEvent.DOM_VK_UP:
-                  this.moveTabBackward();
-                  break;
-                case KeyEvent.DOM_VK_DOWN:
-                  this.moveTabForward();
-                  break;
-                case KeyEvent.DOM_VK_RIGHT:
-                case KeyEvent.DOM_VK_LEFT:
-                  this.moveTabOver(aEvent);
-                  break;
-                case KeyEvent.DOM_VK_HOME:
-                  this.moveTabToStart();
-                  break;
-                case KeyEvent.DOM_VK_END:
-                  this.moveTabToEnd();
-                  break;
-                default:
-                  // Stop the keypress event for the above keyboard
-                  // shortcuts only.
-                  return;
-              }
-              aEvent.stopPropagation();
-              aEvent.preventDefault();
-            }
           }
+#else
+          if (aEvent.ctrlKey && !aEvent.shiftKey && !aEvent.metaKey &&
+              aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
+              this.mTabBox.handleCtrlPageUpDown) {
+            this.removeCurrentTab();
+            aEvent.stopPropagation();
+            aEvent.preventDefault();
+          }
+#endif
         ]]></body>
       </method>
 
@@ -2455,6 +2413,7 @@
         <children/>
         <xul:toolbarbutton class="tabs-newtab-button"
                            command="cmd_newNavigatorTab"
+                           onclick="checkForMiddleClick(this, event);"
                            tooltiptext="&newTabButton.tooltip;"/>
       </xul:arrowscrollbox>
     </content>
@@ -2542,10 +2501,6 @@
       <field name="_dragOverDelay">350</field>
       <field name="_dragTime">0</field>
 
-      <field name="_supportedLinkDropTypes"><![CDATA[
-        ["text/x-moz-url", "text/uri-list", "text/plain", "application/x-moz-file"]
-      ]]></field>
-
       <field name="_container" readonly="true"><![CDATA[
         this.parentNode && this.parentNode.localName == "toolbar" ? this.parentNode : this;
       ]]></field>
@@ -2623,7 +2578,7 @@
             // of the tabstrip, we need to ensure that we stay
             // completely scrolled to the right side
             var tabStrip = this.mTabstrip;
-            if (tabStrip.scrollPosition + tabStrip.scrollClientSize >=
+            if (tabStrip.scrollPosition + tabStrip.scrollClientSize >
                 tabStrip.scrollSize)
               tabStrip.scrollByPixels(-1);
           } catch (e) {}
@@ -2739,11 +2694,9 @@
             }
           }
 
-          for (let i = 0; i < this._supportedLinkDropTypes.length; i++) {
-            if (types.contains(this._supportedLinkDropTypes[i])) {
-              // Here we need to to do this manually
-              return dt.effectAllowed = dt.dropEffect = "link";
-            }
+          if (browserDragAndDrop.canDropLink(event)) {
+            // Here we need to do this manually
+            return dt.effectAllowed = dt.dropEffect = "link";
           }
           return dt.effectAllowed = "none";
         ]]></body>
@@ -2789,6 +2742,41 @@
           this.tabbrowser.removeTab(event.target);
 
         event.stopPropagation();
+      ]]></handler>
+
+      <handler event="keypress"><![CDATA[
+        if (event.altKey || event.shiftKey ||
+#ifdef XP_MACOSX
+            !event.metaKey)
+#else
+            !event.ctrlKey || event.metaKey)
+#endif
+          return;
+
+        switch (event.keyCode) {
+          case KeyEvent.DOM_VK_UP:
+            this.tabbrowser.moveTabBackward();
+            break;
+          case KeyEvent.DOM_VK_DOWN:
+            this.tabbrowser.moveTabForward();
+            break;
+          case KeyEvent.DOM_VK_RIGHT:
+          case KeyEvent.DOM_VK_LEFT:
+            this.tabbrowser.moveTabOver(event);
+            break;
+          case KeyEvent.DOM_VK_HOME:
+            this.tabbrowser.moveTabToStart();
+            break;
+          case KeyEvent.DOM_VK_END:
+            this.tabbrowser.moveTabToEnd();
+            break;
+          default:
+            // Stop the keypress event for the above keyboard
+            // shortcuts only.
+            return;
+        }
+        event.stopPropagation();
+        event.preventDefault();
       ]]></handler>
 
       <handler event="dragstart"><![CDATA[
@@ -2956,33 +2944,13 @@
           // it triggers will correctly update our URL bar.
           this.tabbrowser.selectedTab = newTab;
         } else {
-          let url;
-          for (let i = 0; i < this._supportedLinkDropTypes.length; i++) {
-            let dataType = this._supportedLinkDropTypes[i];
-            // uri-list: for now, support dropping of the first URL
-            // only
-            let isURLList = dataType == "text/uri-list";
-            let urlData = isURLList ?
-                          dt.mozGetDataAt("URL", 0) : dt.mozGetDataAt(dataType, 0);
-            if (urlData) {
-              url = transferUtils.retrieveURLFromData(urlData, isURLList ? "text/plain" : dataType);
-              break;
-            }
-          }
-          NS_ASSERT(url, "In the drop event, at least one mime-type should match our supported types");
+          let url = browserDragAndDrop.drop(event, { });
 
           // valid urls don't contain spaces ' '; if we have a space it isn't a valid url.
           // Also disallow dropping javascript: or data: urls--bail out
           if (!url || !url.length || url.indexOf(" ", 0) != -1 ||
               /^\s*(javascript|data):/.test(url))
             return;
-
-          // XXXmano: temporary fix until dragDropSecurityCheck make the
-          // drag-session an optional paramter
-          let dragService = Cc["@mozilla.org/widget/dragservice;1"].
-                            getService(Ci.nsIDragService);
-          let dragSession = dragService.getCurrentSession();
-          nsDragAndDrop.dragDropSecurityCheck(event, dragSession, url);
 
           let bgLoad = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
 

@@ -1,3 +1,4 @@
+// vim:set ts=4 sts=4 sw=4 et cin:
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -35,212 +36,84 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "base/basictypes.h"
 #include "gfxSharedImageSurface.h"
-#include <stdio.h>
+#include "cairo.h"
 
-#ifdef MOZ_X11
-#ifdef HAVE_XSHM
+#define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
 
-gfxSharedImageSurface::gfxSharedImageSurface()
- : mDepth(0),
-   mShmId(0),
-   mOwnsData(true),
-   mData(NULL),
-   mStride(0),
-   mXShmImage(NULL)
+using mozilla::ipc::SharedMemory;
+
+cairo_user_data_key_t gfxSharedImageSurface::SHM_KEY;
+
+typedef struct _SharedImageInfo
 {
-    memset(&mShmInfo, 0, sizeof(XShmSegmentInfo));
+    PRInt32 width;
+    PRInt32 height;
+    PRInt32 format;
+} SharedImageInfo;
+
+static SharedImageInfo*
+GetShmInfoPtr(const mozilla::ipc::Shmem &aShmem)
+{
+    return reinterpret_cast<SharedImageInfo*>
+        (aShmem.get<char>() + aShmem.Size<char>() - sizeof(SharedImageInfo));
+}
+
+size_t
+gfxSharedImageSurface::GetAlignedSize()
+{
+   return MOZ_ALIGN_WORD(sizeof(SharedImageInfo) + mSize.height * mStride);
+}
+
+bool
+gfxSharedImageSurface::InitSurface(PRBool aUpdateShmemInfo)
+{
+    if (!CheckSurfaceSize(mSize))
+        return false;
+
+    cairo_surface_t *surface =
+        cairo_image_surface_create_for_data(mShmem.get<unsigned char>(),
+                                            (cairo_format_t)mFormat,
+                                            mSize.width,
+                                            mSize.height,
+                                            mStride);
+
+    if (!surface)
+        return false;
+
+    cairo_surface_set_user_data(surface,
+                                &gfxSharedImageSurface::SHM_KEY,
+                                this, NULL);
+
+    if (aUpdateShmemInfo) {
+        SharedImageInfo *shmInfo = GetShmInfoPtr(mShmem);
+        shmInfo->width = mSize.width;
+        shmInfo->height = mSize.height;
+        shmInfo->format = mFormat;
+    }
+
+    InitFromSurface(surface);
+    return true;
 }
 
 gfxSharedImageSurface::~gfxSharedImageSurface()
 {
-    // Finish all pending XServer operations
-    if (mDisp) {
-        XSync(mDisp, False);
-        if (mShmInfo.shmaddr)
-            XShmDetach(mDisp, &mShmInfo);
-        mShmInfo.shmaddr = nsnull;
-    }
-
-    if (mData)
-        shmdt(mData);
-
-    if (mXShmImage)
-        XDestroyImage(mXShmImage);
 }
 
-already_AddRefed<gfxASurface>
-gfxSharedImageSurface::getASurface(void)
+gfxSharedImageSurface::gfxSharedImageSurface()
 {
-    NS_ENSURE_TRUE(mData, NULL);
-
-    gfxASurface::gfxImageFormat imageFormat = gfxASurface::ImageFormatRGB24;
-    if (mDepth == 32)
-        imageFormat = gfxASurface::ImageFormatARGB32;
-
-    gfxASurface* result = new gfxImageSurface(mData, mSize, mStride, imageFormat);
-    NS_IF_ADDREF(result);
-    return result;
 }
 
-#ifdef MOZ_WIDGET_QT
-static unsigned int
-getSystemDepth()
+gfxSharedImageSurface::gfxSharedImageSurface(const mozilla::ipc::Shmem &aShmem)
 {
-    return QX11Info::appDepth();
-}
-
-static Display*
-getSystemDisplay()
-{
-    return QX11Info::display();
-}
-#endif
-#ifdef MOZ_WIDGET_GTK2
-static unsigned int
-getSystemDepth()
-{
-    return gdk_visual_get_system()->depth;
-}
-
-static Display*
-getSystemDisplay()
-{
-    return GDK_DISPLAY();
-}
-#endif
-
-
-
-bool
-gfxSharedImageSurface::Init(const gfxIntSize& aSize,
-                            gfxImageFormat aFormat,
-                            int aDepth,
-                            int aShmId)
-{
-    mSize = aSize;
-
-    if (aFormat != ImageFormatUnknown) {
-        mFormat = aFormat;
-        if (!ComputeDepth())
-            return false;
-    } else if (aDepth) {
-        mDepth = aDepth;
-        if (!ComputeFormat())
-            NS_WARNING("Will work with system depth");
-    } else {
-        mDepth = getSystemDepth();
-        if (!ComputeFormat())
-            NS_WARNING("Will work with system depth");
-    }
-
-    mDisp = getSystemDisplay();
-    if (!mDisp)
-        return false;
-
-    return CreateInternal(aShmId);
-}
-
-bool
-gfxSharedImageSurface::CreateInternal(int aShmid)
-{
-    memset(&mShmInfo, 0, sizeof(mShmInfo));
-
+    mShmem = aShmem;
+    SharedImageInfo *shmInfo = GetShmInfoPtr(aShmem);
+    mSize.width = shmInfo->width;
+    mSize.height = shmInfo->height;
+    mFormat = (gfxImageFormat)shmInfo->format;
     mStride = ComputeStride();
 
-    if (aShmid != -1) {
-        mShmId = aShmid;
-        mOwnsData = false;
-    } else
-        mShmId = shmget(IPC_PRIVATE, GetDataSize(), IPC_CREAT | 0600);
-
-    if (mShmId == -1)
-        return false;
-
-    void *data = shmat(mShmId, 0, 0);
-    shmctl(mShmId, IPC_RMID, 0);
-    if (data == (void *)-1)
-        return false;
-    mData = (unsigned char *)data;
-
-    mXShmImage = XShmCreateImage(mDisp, NULL,
-                                 mDepth, ZPixmap,
-                                 NULL, &mShmInfo,
-                                 mSize.width,
-                                 mSize.height);
-    if (!mXShmImage)
-        return false;
-    mShmInfo.shmid = mShmId;
-
-    if (mStride != mXShmImage->bytes_per_line) {
-        NS_WARNING("XStride and gfxSharedImageSurface calculated stride does not match");
-        return false;
-    }
-
-    mShmInfo.shmaddr = mXShmImage->data = (char*)data;
-    mShmInfo.readOnly = False;
-    if (!XShmAttach(mDisp, &mShmInfo))
-        return false;
-
-    return true;
+    if (!InitSurface(PR_FALSE))
+        NS_RUNTIMEABORT("Shared memory is bad");
 }
-
-bool
-gfxSharedImageSurface::ComputeFormat()
-{
-    if (mDepth == 32)
-        mFormat = ImageFormatARGB32;
-    if (mDepth == 24)
-        mFormat = ImageFormatRGB24;
-    else {
-        NS_WARNING("Unknown depth specified to gfxSharedImageSurface!");
-        mFormat = ImageFormatUnknown;
-        return false;
-    }
-
-    return true;
-}
-
-bool
-gfxSharedImageSurface::ComputeDepth()
-{
-    mDepth = 0;
-    if (mFormat == ImageFormatARGB32)
-        mDepth = 32;
-    else if (mFormat == ImageFormatRGB24)
-        mDepth = 24;
-    else {
-        NS_WARNING("Unknown format specified to gfxSharedImageSurface!");
-        return false;
-    }
-
-    return true;
-}
-
-long
-gfxSharedImageSurface::ComputeStride() const
-{
-    long stride;
-
-    if (mDepth == 16)
-        stride = mSize.width * 2;
-    else if (mFormat == ImageFormatARGB32)
-        stride = mSize.width * 4;
-    else if (mFormat == ImageFormatRGB24)
-        stride = mSize.width * 4;
-    else if (mFormat == ImageFormatA8)
-        stride = mSize.width;
-    else if (mFormat == ImageFormatA1) {
-        stride = (mSize.width + 7) / 8;
-    } else {
-        NS_WARNING("Unknown format specified to gfxImageSurface!");
-        stride = mSize.width * 4;
-    }
-
-    stride = ((stride + 3) / 4) * 4;
-
-    return stride;
-}
-
-#endif /* HAVE_XSHM */
-#endif /* MOZ_X11 */

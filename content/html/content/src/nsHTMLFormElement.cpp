@@ -185,8 +185,10 @@ ShouldBeInElements(nsIFormControl* aFormControl)
   case NS_FORM_INPUT_RESET :
   case NS_FORM_INPUT_PASSWORD :
   case NS_FORM_INPUT_RADIO :
+  case NS_FORM_INPUT_SEARCH :
   case NS_FORM_INPUT_SUBMIT :
   case NS_FORM_INPUT_TEXT :
+  case NS_FORM_INPUT_TEL :
   case NS_FORM_SELECT :
   case NS_FORM_TEXTAREA :
   case NS_FORM_FIELDSET :
@@ -1470,9 +1472,8 @@ nsHTMLFormElement::HasSingleTextControl() const
   PRUint32 numTextControlsFound = 0;
   PRUint32 length = mControls->mElements.Length();
   for (PRUint32 i = 0; i < length && numTextControlsFound < 2; ++i) {
-    PRInt32 type = mControls->mElements[i]->GetType();
-    if (type == NS_FORM_INPUT_TEXT || type == NS_FORM_INPUT_PASSWORD) {
-        numTextControlsFound++;
+    if (mControls->mElements[i]->IsSingleLineTextControl(PR_FALSE)) {
+      numTextControlsFound++;
     }
   }
   return numTextControlsFound == 1;

@@ -846,13 +846,12 @@ nsDownloadManager::Init()
   if (!mObserverService)
     return NS_ERROR_FAILURE;
 
-  nsresult rv;
-
   nsCOMPtr<nsIStringBundleService> bundleService =
-    do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+    mozilla::services::GetStringBundleService();
+  if (!bundleService)
+    return NS_ERROR_FAILURE;
 
-  rv = InitDB();
+  nsresult rv = InitDB();
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE,

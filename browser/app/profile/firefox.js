@@ -52,30 +52,12 @@ pref("general.startup.browser", true);
 
 pref("browser.chromeURL","chrome://browser/content/");
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul");
-pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
-pref("xpinstall.dialog.progress.skin", "chrome://mozapps/content/extensions/extensions.xul");
-pref("xpinstall.dialog.progress.chrome", "chrome://mozapps/content/extensions/extensions.xul");
-pref("xpinstall.dialog.progress.type.skin", "Extension:Manager");
-pref("xpinstall.dialog.progress.type.chrome", "Extension:Manager");
 
-// Developers can set this to |true| if they are constantly changing files in their 
-// extensions directory so that the extension system does not constantly think that
-// their extensions are being updated and thus reregistered every time the app is
-// started.
-pref("extensions.ignoreMTimeChanges", false);
 // Enables some extra Extension System Logging (can reduce performance)
 pref("extensions.logging.enabled", false);
-// Hides the install button in the add-ons mgr
-pref("extensions.hideInstallButton", true);
 
-// Preferences for the Get Add-ons pane
-pref("extensions.getAddons.showPane", true);
-pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/%APP%");
-pref("extensions.getAddons.maxResults", 5);
-pref("extensions.getAddons.recommended.browseURL", "https://addons.mozilla.org/%LOCALE%/%APP%/recommended");
-pref("extensions.getAddons.recommended.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/list/featured/all/10/%OS%/%VERSION%");
-pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/%APP%/search?q=%TERMS%");
-pref("extensions.getAddons.search.url", "https://services.addons.mozilla.org/%LOCALE%/%APP%/api/%API_VERSION%/search/%TERMS%/all/10/%OS%/%VERSION%");
+// Preferences for AMO integration
+pref("extensions.webservice.discoverURL", "https://services.addons.mozilla.org/%LOCALE%/%APP%/discovery/%VERSION%/%OS%");
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);
@@ -199,7 +181,7 @@ pref("browser.shell.checkDefaultBrowser", true);
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last visited page, 3 = resume previous browser session
 // The behavior of option 3 is detailed at: http://wiki.mozilla.org/Session_Restore
 pref("browser.startup.page",                1);
-pref("browser.startup.homepage",            "resource:/browserconfig.properties");
+pref("browser.startup.homepage",            "chrome://branding/locale/browserconfig.properties");
 
 pref("browser.enable_automatic_image_resizing", true);
 pref("browser.chrome.site_icons", true);
@@ -440,8 +422,6 @@ pref("privacy.sanitize.migrateFx3Prefs",    false);
 
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
 
-pref("network.cookie.cookieBehavior", 0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
-
 // l12n and i18n
 pref("intl.accept_languages", "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.static", "chrome://global/locale/intl.properties");
@@ -553,9 +533,6 @@ pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.linksonly", false);
 pref("accessibility.typeaheadfind.flashBar", 1);
-
-// Disable the default plugin for firefox
-pref("plugin.default_plugin_disabled", true);
 
 // plugin finder service url
 pref("pfs.datasource.url", "https://pfs.mozilla.org/plugins/PluginFinderService.php?mimetype=%PLUGIN_MIMETYPE%&appID=%APP_ID%&appVersion=%APP_VERSION%&clientOS=%CLIENT_OS%&chromeLocale=%CHROME_LOCALE%&appRelease=%APP_RELEASE%");
@@ -931,5 +908,6 @@ pref("browser.taskbar.lists.frequent.enabled", true);
 pref("browser.taskbar.lists.recent.enabled", false);
 pref("browser.taskbar.lists.maxListItemCount", 7);
 pref("browser.taskbar.lists.tasks.enabled", true);
+pref("browser.taskbar.lists.refreshInSeconds", 30);
 #endif
 #endif

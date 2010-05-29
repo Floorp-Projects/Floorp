@@ -1,0 +1,33 @@
+<html>
+<head>
+  <title>NPAPI Cookie Tests</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <link rel="stylesheet" type="text/css" 
+        href="/tests/SimpleTest/test.css" />
+</head>
+
+<body onload="runTests()">
+  <p id="display"></p>
+
+  <embed id="plugin1" type="application/x-test" width="400" height="400"></embed>
+  <script class="testbody" type="application/javascript">
+    SimpleTest.waitForExplicitFinish();
+    function runTests() {
+      var pluginElement = document.getElementById("plugin1");
+      var c = 0;
+      var foundSetColor = false;
+      for (var n in pluginElement) {
+        ++c;
+        ok(n in pluginElement, "Enumerated property which doesn't exist?");
+        if (n == 'setColor')
+          foundSetColor = true;
+      }
+      ok(c > 0, "Should have enumerated some properties");
+      ok(foundSetColor, "Should have enumerated .setColor");
+      SimpleTest.finish();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/browser.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL tabbrowser relation tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/common.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/role.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/a11y/accessible/relations.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    const Ci = Components.interfaces;
+
+    // Hack to make xul:tabbrowser work.
+    var handleDroppedLink  = null;
+    Components.utils.import("resource://gre/modules/Services.jsm");
+    var XULBrowserWindow = {
+      isBusy: false,
+      setOverLink: function (link, b) {
+      }
+    };
+    var gFindBar = {
+      hidden: true
+    };
+
+    function doTest()
+    {
+      var tabBrowser = document.getElementById("tabbrowser");
+
+      var progressListener =
+      {
+        onStateChange: function onStateChange(aWebProgress,
+                                              aRequest,
+                                              aStateFlags,
+                                              aStatus)
+       {
+        if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP)
+          testRelations();
+       }
+      };
+
+      tabBrowser.addProgressListener(progressListener,
+                                     Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+
+      tabBrowser.loadTabs(["about:", "about:mozilla"], false, true);
+    }
+
+    function testRelations()
+    {
+      //////////////////////////////////////////////////////////////////////////
+      // 'labelled by'/'label for' relations for xul:tab and xul:tabpanel
+
+      var tabs = getNode("tabbrowser").tabContainer.childNodes;
+      var panels = getNode("tabbrowser").mTabBox.tabpanels.childNodes;
+
+      testRelation(panels[0], RELATION_LABELLED_BY, tabs[0]);
+      testRelation(tabs[0], RELATION_LABEL_FOR, panels[0]);
+      testRelation(panels[1], RELATION_LABELLED_BY, tabs[1]);
+      testRelation(tabs[1], RELATION_LABEL_FOR, panels[1]);
+
+      SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <vbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=552944"
+         title="No relationship between tabs and associated property page in new tabbrowser construct">
+        Mozilla Bug 552944
+      </a><br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <!-- Hack to make xul:tabbrowser work -->
+    <menubar>
+      <menu label="menu">
+        <menupopup>
+          <menuitem label="close window hook" id="menu_closeWindow"/>
+          <menuitem label="close hook" id="menu_close"/>
+        </menupopup>
+      </menu>
+    </menubar>
+
+    <tabs id="tabbrowser-tabs" class="tabbrowser-tabs"
+          tabbrowser="tabbrowser"
+          setfocus="false">
+      <tab class="tabbrowser-tab" selected="true"/>
+    </tabs>
+    <tabbrowser id="tabbrowser"
+                type="content-primary"
+                tabcontainer="tabbrowser-tabs"
+                flex="1"/>
+  </vbox>
+
+</window>
+

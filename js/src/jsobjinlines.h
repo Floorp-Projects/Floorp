@@ -46,10 +46,9 @@
 #include "jsiter.h"
 #include "jsobj.h"
 #include "jsscope.h"
+#include "jsxml.h"
 
-#ifdef INCLUDE_MOZILLA_DTRACE
 #include "jsdtracef.h"
-#endif
 
 #include "jsscopeinlines.h"
 
@@ -110,18 +109,26 @@ JSObject::setPrimitiveThis(jsval pthis)
     fslots[JSSLOT_PRIMITIVE_THIS] = pthis;
 }
 
-inline void JSObject::staticAssertArrayLengthIsInPrivateSlot()
+inline void
+JSObject::staticAssertArrayLengthIsInPrivateSlot()
 {
     JS_STATIC_ASSERT(JSSLOT_ARRAY_LENGTH == JSSLOT_PRIVATE);
 }
 
-inline bool JSObject::isDenseArrayMinLenCapOk() const
+inline bool
+JSObject::isDenseArrayMinLenCapOk(bool strictAboutLength) const
 {
     JS_ASSERT(isDenseArray());
     uint32 length = uncheckedGetArrayLength();
     uint32 capacity = uncheckedGetDenseArrayCapacity();
     uint32 minLenCap = uint32(fslots[JSSLOT_DENSE_ARRAY_MINLENCAP]);
-    return minLenCap == JS_MIN(length, capacity);
+
+    // This function can be called while the LENGTH and MINLENCAP slots are
+    // still set to JSVAL_VOID and there are no dslots (ie. the capacity is
+    // zero).  If 'strictAboutLength' is false we allow this.
+    return minLenCap == JS_MIN(length, capacity) ||
+           (!strictAboutLength && minLenCap == uint32(JSVAL_VOID) &&
+            length == uint32(JSVAL_VOID) && capacity == 0);
 }
 
 inline uint32
@@ -192,7 +199,7 @@ inline uint32
 JSObject::getDenseArrayCapacity() const
 {
     JS_ASSERT(isDenseArray());
-    JS_ASSERT(isDenseArrayMinLenCapOk());
+    JS_ASSERT(isDenseArrayMinLenCapOk(/* strictAboutLength = */false));
     return uncheckedGetDenseArrayCapacity();
 }
 
@@ -212,6 +219,14 @@ JSObject::getDenseArrayElement(uint32 i) const
     JS_ASSERT(isDenseArray());
     JS_ASSERT(i < getDenseArrayCapacity());
     return dslots[i];
+}
+
+inline jsval *
+JSObject::addressOfDenseArrayElement(uint32 i)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(i < getDenseArrayCapacity());
+    return &dslots[i];
 }
 
 inline void
@@ -378,6 +393,74 @@ JSObject::zeroRegExpLastIndex()
     fslots[JSSLOT_REGEXP_LAST_INDEX] = JSVAL_ZERO;
 }
 
+inline NativeIterator *
+JSObject::getNativeIterator() const
+{
+    return (NativeIterator *) getPrivate();
+}
+
+inline void
+JSObject::setNativeIterator(NativeIterator *ni)
+{
+    setPrivate(ni);
+}
+
+inline jsval
+JSObject::getNamePrefix() const
+{
+    JS_ASSERT(isNamespace() || isQName());
+    return fslots[JSSLOT_NAME_PREFIX];
+}
+
+inline void
+JSObject::setNamePrefix(jsval prefix)
+{
+    JS_ASSERT(isNamespace() || isQName());
+    fslots[JSSLOT_NAME_PREFIX] = prefix;
+}
+
+inline jsval
+JSObject::getNameURI() const
+{
+    JS_ASSERT(isNamespace() || isQName());
+    return fslots[JSSLOT_NAME_URI];
+}
+
+inline void
+JSObject::setNameURI(jsval uri)
+{
+    JS_ASSERT(isNamespace() || isQName());
+    fslots[JSSLOT_NAME_URI] = uri;
+}
+
+inline jsval
+JSObject::getNamespaceDeclared() const
+{
+    JS_ASSERT(isNamespace());
+    return fslots[JSSLOT_NAMESPACE_DECLARED];
+}
+
+inline void
+JSObject::setNamespaceDeclared(jsval decl)
+{
+    JS_ASSERT(isNamespace());
+    fslots[JSSLOT_NAMESPACE_DECLARED] = decl;
+}
+
+inline jsval
+JSObject::getQNameLocalName() const
+{
+    JS_ASSERT(isQName());
+    return fslots[JSSLOT_QNAME_LOCAL_NAME];
+}
+
+inline void
+JSObject::setQNameLocalName(jsval name)
+{
+    JS_ASSERT(isQName());
+    fslots[JSSLOT_QNAME_LOCAL_NAME] = name;
+}
+
 inline void
 JSObject::initSharingEmptyScope(JSClass *clasp, JSObject *proto, JSObject *parent,
                                 jsval privateSlotValue)
@@ -417,6 +500,21 @@ JSObject::unbrand(JSContext *cx)
     return true;
 }
 
+inline bool
+JSObject::isCallable()
+{
+    if (isNative())
+        return isFunction() || getClass()->call;
+
+    return !!map->ops->call;
+}
+
+static inline bool
+js_IsCallable(jsval v)
+{
+    return !JSVAL_IS_PRIMITIVE(v) && JSVAL_TO_OBJECT(v)->isCallable();
+}
+
 namespace js {
 
 typedef Vector<PropertyDescriptor, 1> PropertyDescriptorArray;
@@ -443,6 +541,19 @@ class AutoDescriptorArray : private AutoGCRooter
 
   private:
     PropertyDescriptorArray descriptors;
+};
+
+class AutoDescriptor : private AutoGCRooter, public JSPropertyDescriptor
+{
+  public:
+    AutoDescriptor(JSContext *cx) : AutoGCRooter(cx, DESCRIPTOR) {
+        obj = NULL;
+        attrs = 0;
+        getter = setter = (JSPropertyOp) NULL;
+        value = JSVAL_VOID;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
 };
 
 static inline bool
@@ -477,7 +588,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, JSClass *clasp, JSObject* proto
         /* Let JSScope::create set freeslot so as to reserve slots. */
         JS_ASSERT(scope->freeslot >= JSSLOT_PRIVATE);
         if (scope->freeslot > JS_INITIAL_NSLOTS &&
-            !js_AllocSlots(cx, obj, scope->freeslot)) {
+            !obj->allocSlots(cx, scope->freeslot)) {
             scope->destroy(cx);
             goto bad;
         }
@@ -496,14 +607,7 @@ static inline JSObject *
 NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
                         JSObject *parent, size_t objectSize = 0)
 {
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_CREATE_START_ENABLED())
-        jsdtrace_object_create_start(cx->fp, clasp);
-#endif
-
-    /* Assert that the class is a proper class. */
-    JS_ASSERT_IF(clasp->flags & JSCLASS_IS_EXTENDED,
-                 ((JSExtendedClass *)clasp)->equality);
+    DTrace::ObjectCreationScope objectCreationScope(cx, cx->fp, clasp);
 
     /* Always call the class's getObjectOps hook if it has one. */
     JSObjectOps *ops = clasp->getObjectOps
@@ -526,9 +630,7 @@ NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
 #endif
     } else {
         JS_ASSERT(!objectSize || objectSize == sizeof(JSObject));
-        obj = (clasp == &js_IteratorClass)
-            ? js_NewGCIter(cx)
-            : js_NewGCObject(cx);
+        obj = js_NewGCObject(cx);
     }
     if (!obj)
         goto out;
@@ -565,12 +667,7 @@ NewObjectWithGivenProto(JSContext *cx, JSClass *clasp, JSObject *proto,
     }
 
 out:
-#ifdef INCLUDE_MOZILLA_DTRACE
-    if (JAVASCRIPT_OBJECT_CREATE_ENABLED())
-        jsdtrace_object_create(cx, clasp, obj);
-    if (JAVASCRIPT_OBJECT_CREATE_DONE_ENABLED())
-        jsdtrace_object_create_done(cx->fp, clasp);
-#endif
+    objectCreationScope.handleCreation(obj);
     return obj;
 }
 

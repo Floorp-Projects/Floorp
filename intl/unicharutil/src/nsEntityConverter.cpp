@@ -45,6 +45,7 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
+#include "mozilla/Services.h"
 
 //
 // implementation methods
@@ -64,14 +65,14 @@ NS_IMETHODIMP
 nsEntityConverter::LoadVersionPropertyFile()
 {
     NS_NAMED_LITERAL_CSTRING(url, "resource://gre/res/entityTables/htmlEntityVersions.properties");
-	nsresult rv;
-    nsCOMPtr<nsIStringBundleService> bundleService =
-        do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
 
-    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        mozilla::services::GetStringBundleService();
+    if (!bundleService)
+        return NS_ERROR_FAILURE;
     
     nsCOMPtr<nsIStringBundle> entities;
-    rv = bundleService->CreateBundle(url.get(), getter_AddRefs(entities));
+    nsresult rv = bundleService->CreateBundle(url.get(), getter_AddRefs(entities));
     if (NS_FAILED(rv)) return rv;
     
     PRInt32	result;

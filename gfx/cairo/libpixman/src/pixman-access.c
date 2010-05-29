@@ -2445,9 +2445,12 @@ store_scanline_x4a4 (bits_image_t *  image,
     do									\
     {									\
 	int bo = 4 * (o);						\
-	STORE_8 (img, l, bo, (bo & 4 ?					\
-			      (FETCH_8 (img, l, bo) & 0xf0) | (v) :	\
-			      (FETCH_8 (img, l, bo) & 0x0f) | ((v) << 4))); \
+	int v4 = (v) & 0x0f;						\
+									\
+	STORE_8 (img, l, bo, (						\
+		     bo & 4 ?						\
+		     (FETCH_8 (img, l, bo) & 0xf0) | (v4) :		\
+		     (FETCH_8 (img, l, bo) & 0x0f) | (v4 << 4)));	\
     } while (0)
 #else
 
@@ -2455,9 +2458,12 @@ store_scanline_x4a4 (bits_image_t *  image,
     do									\
     {									\
 	int bo = 4 * (o);						\
-	STORE_8 (img, l, bo, (bo & 4 ?					\
-			      (FETCH_8 (img, l, bo) & 0x0f) | ((v) << 4) : \
-			      (FETCH_8 (img, l, bo) & 0xf0) | (v)));	\
+	int v4 = (v) & 0x0f;						\
+									\
+	STORE_8 (img, l, bo, (						\
+		     bo & 4 ?						\
+		     (FETCH_8 (img, l, bo) & 0x0f) | (v4 << 4) :	\
+		     (FETCH_8 (img, l, bo) & 0xf0) | (v4)));		\
     } while (0)
 #endif
 
@@ -2484,11 +2490,11 @@ store_scanline_r1g2b1 (bits_image_t *  image,
 {
     uint32_t *bits = image->bits + image->rowstride * y;
     int i;
-    
+
     for (i = 0; i < width; ++i)
     {
 	uint32_t pixel;
-	
+
 	SPLIT (values[i]);
 	pixel = (((r >> 4) & 0x8) |
 	         ((g >> 5) & 0x6) |
