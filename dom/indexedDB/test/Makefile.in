@@ -62,6 +62,7 @@ _TEST_FILES = \
   test_readonly_transactions.html \
   test_remove_objectStore.html \
   test_setVersion.html \
+  test_writer_starvation.html \
   $(NULL)
 
 libs:: $(_TEST_FILES)

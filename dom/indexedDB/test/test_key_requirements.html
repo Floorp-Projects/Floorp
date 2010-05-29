@@ -53,6 +53,15 @@
 
       is(event.result, key2, "modify gave the same key back");
 
+      key2 = 100;
+
+      request = objectStore.add({}, key2);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is(event.result, key2, "modify gave the same key back");
+
       try {
         objectStore.addOrModify({});
         ok(false, "addOrModify with no key should throw!");
