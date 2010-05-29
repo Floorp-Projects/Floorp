@@ -8,6 +8,7 @@ const SHA512_HASH = "1d2307e309587ddd04299423b34762639ce6af3ee17cfdaa8fdd4e6" +
                     "8b4222e3417a2fa2d0";
 const SERVICE_URL = URL_HOST + URL_PATH + "empty.mar";
 
+const SLOW_MAR_DOWNLOAD_INTERVAL = 100;
 
 function handleRequest(request, response) {
   var params = { };
@@ -40,7 +41,7 @@ function handleRequest(request, response) {
     timer.initWithCallback(function() {
       response.write(contents);
       response.finish();
-    }, 2000, AUS_Ci.nsITimer.TYPE_ONE_SHOT);
+    }, SLOW_MAR_DOWNLOAD_INTERVAL, AUS_Ci.nsITimer.TYPE_ONE_SHOT);
     return;
   }
 

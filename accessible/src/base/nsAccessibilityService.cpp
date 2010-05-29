@@ -110,6 +110,8 @@
 #include "nsXFormsWidgetsAccessible.h"
 #endif
 
+#include "mozilla/FunctionTimer.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +121,8 @@ PRBool nsAccessibilityService::gIsShutdown = PR_TRUE;
 
 nsAccessibilityService::nsAccessibilityService()
 {
+  NS_TIME_FUNCTION;
+
   // Add observers.
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
@@ -264,8 +268,7 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent *aTarget)
 
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(aTarget));
 
-  nsCOMPtr<nsIAccessible> targetAcc;
-  GetAccessibleFor(targetNode, getter_AddRefs(targetAcc));
+  nsAccessible *targetAcc = GetAccessible(targetNode);
 
   // Getting the targetAcc above will have ensured accessible doc creation.
   // XXX Bug 561683
@@ -277,10 +280,8 @@ nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent *aTarget)
   // If the jump target is not accessible then fire an event for nearest
   // accessible in parent chain.
   if (!targetAcc) {
-        accessibleDoc->GetAccessibleInParentChain(targetNode, PR_TRUE,
-                                                  getter_AddRefs(targetAcc));
-        nsCOMPtr<nsIAccessNode> accNode = do_QueryInterface(targetAcc);
-        accNode->GetDOMNode(getter_AddRefs(targetNode));
+    targetAcc = GetContainerAccessible(targetNode, PR_TRUE);
+    targetNode = targetAcc->GetDOMNode();
   }
 
   NS_ASSERTION(targetNode,
@@ -987,8 +988,7 @@ nsAccessibilityService::GetCachedAccessNode(nsIDOMNode *aNode,
   if (!accessibleDoc)
     return nsnull;
 
-  nsRefPtr<nsDocAccessible> docAccessible =
-    nsAccUtils::QueryObject<nsDocAccessible>(accessibleDoc);
+  nsRefPtr<nsDocAccessible> docAccessible = do_QueryObject(accessibleDoc);
   return docAccessible->GetCachedAccessNode(static_cast<void*>(aNode));
 }
 
@@ -1173,32 +1173,8 @@ nsAccessibilityService::GetAccessibleFor(nsIDOMNode *aNode,
                                          nsIAccessible **aAccessible)
 {
   NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nsnull;
 
-  NS_ENSURE_ARG(aNode);
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  nsCOMPtr<nsIDocument> doc;
-  if (content) {
-    doc = content->GetDocument();
-  }
-  else {// Could be document node
-    doc = do_QueryInterface(aNode);
-  }
-  if (!doc)
-    return NS_ERROR_FAILURE;
-
-  // We use presentation shell #0 because we assume that is presentation of
-  // given node window.
-  nsIPresShell *presShell = doc->GetPrimaryShell();
-
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-  nsRefPtr<nsAccessible> accessible =
-    GetAccessible(aNode, presShell, weakShell);
-
-  if (accessible)
-    CallQueryInterface(accessible.get(), aAccessible);
-  
+  NS_IF_ADDREF(*aAccessible = GetAccessible(aNode));
   return NS_OK;
 }
 
@@ -1221,31 +1197,39 @@ nsAccessibilityService::GetAttachedAccessibleFor(nsIDOMNode *aNode,
   return GetAccessibleFor(aNode, aAccessible);
 }
 
-NS_IMETHODIMP
+nsAccessible*
 nsAccessibilityService::GetAccessibleInShell(nsIDOMNode *aNode, 
-                                             nsIPresShell *aPresShell,
-                                             nsIAccessible **aAccessible) 
+                                             nsIPresShell *aPresShell) 
 {
-  NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nsnull;
-
-  NS_ENSURE_ARG(aNode);
-  NS_ENSURE_ARG(aPresShell);
+  if (!aNode || !aPresShell)
+    return nsnull;
 
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aPresShell));
   nsRefPtr<nsAccessible> accessible =
     GetAccessible(aNode, aPresShell, weakShell);
-
-  if (accessible)
-    CallQueryInterface(accessible.get(), aAccessible);
-  
-  return NS_OK;
+  return accessible;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibilityService public
 
-already_AddRefed<nsAccessible>
+nsAccessible *
+nsAccessibilityService::GetAccessible(nsIDOMNode *aNode)
+{
+  if (!aNode)
+    return nsnull;
+
+  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
+  if (!presShell)
+    return nsnull;
+
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+  nsRefPtr<nsAccessible> accessible = GetAccessible(aNode, presShell,
+                                                    weakShell);
+  return accessible;
+}
+
+nsAccessible *
 nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode, 
                                                  nsIWeakReference *aWeakShell) 
 {
@@ -1253,7 +1237,55 @@ nsAccessibilityService::GetAccessibleInWeakShell(nsIDOMNode *aNode,
     return nsnull;
 
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(aWeakShell));
-  return GetAccessible(aNode, presShell, aWeakShell);
+  nsRefPtr<nsAccessible> accessible = GetAccessible(aNode, presShell,
+                                                    aWeakShell);
+  return accessible;
+}
+
+nsAccessible *
+nsAccessibilityService::GetContainerAccessible(nsIDOMNode *aNode,
+                                               PRBool aCanCreate)
+{
+  if (!aNode)
+    return nsnull;
+
+  nsCOMPtr<nsINode> currNode(do_QueryInterface(aNode));
+  nsIDocument *document = currNode->GetCurrentDoc();
+  if (!document)
+    return nsnull;
+
+  nsIPresShell *presShell = document->GetPrimaryShell();
+  if (!presShell)
+    return nsnull;
+
+  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
+
+  nsAccessible *accessible = nsnull;
+  while (!accessible && (currNode = currNode->GetNodeParent())) {
+    nsCOMPtr<nsIDOMNode> currDOMNode(do_QueryInterface(currNode));
+
+    nsCOMPtr<nsIDOMNode> relevantDOMNode;
+    GetAccService()->GetRelevantContentNodeFor(currDOMNode,
+                                               getter_AddRefs(relevantDOMNode));
+    if (relevantDOMNode) {
+      currNode = do_QueryInterface(relevantDOMNode);
+      currDOMNode.swap(relevantDOMNode);
+    }
+
+    if (aCanCreate) {
+      accessible =
+        GetAccService()->GetAccessibleInWeakShell(currDOMNode, weakShell);
+
+    } else {
+      // Only return cached accessible, don't create anything.
+      nsRefPtr<nsAccessible> cachedAcc =
+        do_QueryObject(GetCachedAccessNode(currDOMNode, weakShell));
+
+      accessible = cachedAcc;
+    }
+  }
+
+  return accessible;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1346,8 +1378,7 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     // XXX: the cache might contain the access node for the DOM node that is not
     // accessible because of wrong cache update. In this case try to create new
     // accessible.
-    nsRefPtr<nsAccessible> cachedAccessible =
-      nsAccUtils::QueryObject<nsAccessible>(cachedAccessNode);
+    nsRefPtr<nsAccessible> cachedAccessible = do_QueryObject(cachedAccessNode);
 
     if (cachedAccessible)
       return cachedAccessible.forget();
@@ -1431,7 +1462,7 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       nsCOMPtr<nsIAccessible> newAccessible;
       weakFrame.GetFrame()->GetAccessible(getter_AddRefs(newAccessible));
       if (newAccessible) {
-        newAcc = nsAccUtils::QueryObject<nsAccessible>(newAccessible);
+        newAcc = do_QueryObject(newAccessible);
         if (InitAccessible(newAcc, nsnull))
           return newAcc.forget();
         return nsnull;
@@ -1498,7 +1529,7 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
 
         if (tableFrame->GetType() == nsAccessibilityAtoms::tableOuterFrame) {
           nsCOMPtr<nsIDOMNode> tableNode(do_QueryInterface(tableContent));
-          nsRefPtr<nsAccessible> tableAccessible =
+          nsAccessible *tableAccessible =
             GetAccessibleInWeakShell(tableNode, aWeakShell);
 
           if (tableAccessible) {
@@ -1599,7 +1630,7 @@ nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
         // Try using frame to do it.
         nsCOMPtr<nsIAccessible> newAccessible;
         f->GetAccessible(getter_AddRefs(newAccessible));
-        newAcc = nsAccUtils::QueryObject<nsAccessible>(newAccessible);
+        newAcc = do_QueryObject(newAccessible);
       }
     }
   }
@@ -1768,14 +1799,14 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame *aImageFrame,
   nsCOMPtr<nsIDOMNode> imageNode(do_QueryInterface(aImageFrame->GetContent()));
   nsAccessNode *cachedImgAcc = GetCachedAccessNode(imageNode, aWeakShell);
   if (cachedImgAcc)
-    imageAcc = nsAccUtils::QueryObject<nsAccessible>(cachedImgAcc);
+    imageAcc = do_QueryObject(cachedImgAcc);
 
   if (!imageAcc) {
     nsCOMPtr<nsIAccessible> imageAccessible;
     CreateHTMLImageAccessible(aImageFrame,
                               getter_AddRefs(imageAccessible));
 
-    imageAcc = nsAccUtils::QueryObject<nsAccessible>(imageAccessible);
+    imageAcc = do_QueryObject(imageAccessible);
     if (!InitAccessible(imageAcc, nsnull))
       return nsnull;
   }
@@ -1788,8 +1819,7 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame *aImageFrame,
   if (!cachedAreaAcc)
     return nsnull;
 
-  nsRefPtr<nsAccessible> areaAcc =
-    nsAccUtils::QueryObject<nsAccessible>(cachedAreaAcc);
+  nsRefPtr<nsAccessible> areaAcc = do_QueryObject(cachedAreaAcc);
   return areaAcc.forget();
 }
 
@@ -1927,11 +1957,11 @@ nsAccessibilityService::CreateAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULTab:
       accessible = new nsXULTabAccessible(aNode, aWeakShell);
       break;
-    case nsIAccessibleProvider::XULTabBox:
-      accessible = new nsXULTabBoxAccessible(aNode, aWeakShell);
-      break;
     case nsIAccessibleProvider::XULTabs:
       accessible = new nsXULTabsAccessible(aNode, aWeakShell);
+      break;
+    case nsIAccessibleProvider::XULTabpanels:
+      accessible = new nsXULTabpanelsAccessible(aNode, aWeakShell);
       break;
     case nsIAccessibleProvider::XULText:
       accessible = new nsXULTextAccessible(aNode, aWeakShell);
@@ -1974,7 +2004,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XFormsLabel:
       accessible = new nsXFormsLabelAccessible(aNode, aWeakShell);
       break;
-    case nsIAccessibleProvider::XFormsOuput:
+    case nsIAccessibleProvider::XFormsOutput:
       accessible = new nsXFormsOutputAccessible(aNode, aWeakShell);
       break;
     case nsIAccessibleProvider::XFormsTrigger:

@@ -108,10 +108,6 @@ public:
     *                      if >=0 and aNode is not text, this represents a child node offset
     * @param aResultOffset - the character offset into the current
     *                        nsHyperTextAccessible
-    * @param aFinalAccessible [optional] - returns the accessible child which
-    *                                      contained the offset, if it is within
-    *                                      the current nsHyperTextAccessible,
-    *                                      otherwise it is set to nsnull.
     * @param aIsEndOffset - if PR_TRUE, then then this offset is not inclusive. The character
     *                       indicated by the offset returned is at [offset - 1]. This means
     *                       if the passed-in offset is really in a descendant, then the offset returned
@@ -119,11 +115,15 @@ public:
     *                       If PR_FALSE, then the offset is inclusive. The character indicated
     *                       by the offset returned is at [offset]. If the passed-in offset in inside a
     *                       descendant, then the returned offset will be on the relevant embedded object char.
+    *
+    * @return               the accessible child which contained the offset, if
+    *                       it is within the current nsHyperTextAccessible,
+    *                       otherwise nsnull
     */
-  nsresult DOMPointToHypertextOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset,
-                                     PRInt32 *aHypertextOffset,
-                                     nsIAccessible **aFinalAccessible = nsnull,
-                                     PRBool aIsEndOffset = PR_FALSE);
+  nsAccessible *DOMPointToHypertextOffset(nsIDOMNode *aNode,
+                                          PRInt32 aNodeOffset,
+                                          PRInt32 *aHypertextOffset,
+                                          PRBool aIsEndOffset = PR_FALSE);
 
   /**
    * Turn a hypertext offsets into DOM point.
@@ -219,8 +219,8 @@ protected:
                           nsAString *aText = nsnull,
                           nsIFrame **aEndFrame = nsnull,
                           nsIntRect *aBoundsRect = nsnull,
-                          nsIAccessible **aStartAcc = nsnull,
-                          nsIAccessible **aEndAcc = nsnull);
+                          nsAccessible **aStartAcc = nsnull,
+                          nsAccessible **aEndAcc = nsnull);
 
   nsIntRect GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset, PRUint32 aEndRenderedOffset);
 
@@ -251,6 +251,18 @@ protected:
    * @return 1-based index for the line number with the caret
    */
   PRInt32 GetCaretLineNumber();
+
+  /**
+   * Return an accessible at the given hypertext offset.
+   *
+   * @param  aOffset       [out] the given hypertext offset
+   * @param  aAccIdx       [out] child index of returned accessible
+   * @param  aStartOffset  [out] start hypertext offset of returned accessible
+   * @param  aEndOffset    [out] end hypertext offset of returned accessible
+   */
+  nsAccessible *GetAccessibleAtOffset(PRInt32 aOffset, PRInt32 *aAccIdx,
+                                      PRInt32 *aStartOffset,
+                                      PRInt32 *aEndOffset);
 
   // Helpers
   nsresult GetDOMPointByFrameOffset(nsIFrame *aFrame, PRInt32 aOffset,

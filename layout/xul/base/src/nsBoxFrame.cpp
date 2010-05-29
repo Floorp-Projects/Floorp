@@ -2150,7 +2150,7 @@ void nsDisplayXULEventRedirector::HitTest(nsDisplayListBuilder* aBuilder,
   nsTArray<nsIFrame*> outFrames;
   mList.HitTest(aBuilder, aRect, aState, &outFrames);
 
-  PRUint32 originalLength = aOutFrames->Length();
+  PRBool topMostAdded = PR_FALSE;
   PRUint32 localLength = outFrames.Length();
 
   for (PRUint32 i = 0; i < localLength; i++) {
@@ -2162,12 +2162,20 @@ void nsDisplayXULEventRedirector::HitTest(nsDisplayListBuilder* aBuilder,
                                nsGkAtoms::_true, eCaseMatters)) {
         // Events are allowed on 'frame', so let it go.
         aOutFrames->AppendElement(outFrames.ElementAt(i));
+        topMostAdded = PR_TRUE;
       }
     }
 
+    // If there was no hit on the topmost frame or its ancestors,
+    // add the target frame itself as the first candidate (see bug 562554).
+    if (!topMostAdded) {
+      topMostAdded = PR_TRUE;
+      aOutFrames->AppendElement(mTargetFrame);
+    }
+
   }
-  // If no hits were found, treat it as a hit on the target frame itself
-  if (aOutFrames->Length() == originalLength) {
+  // If no hits were found, treat it as a hit on the target frame itself.
+  if (localLength == 0) {
     aOutFrames->AppendElement(mTargetFrame);
   }
 }

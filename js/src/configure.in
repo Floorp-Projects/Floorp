@@ -250,8 +250,8 @@ if test "$target" = "arm-android-eabi" ; then
     STRIP="$android_toolchain"/bin/arm-eabi-strip
 
     CPPFLAGS="-I$android_platform/usr/include $CPPFLAGS"
-    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CFLAGS"
-    CXXFLAGS="-mandroid -std=gnu++0x -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions -march=armv5te -mthumb-interwork $CXXFLAGS"
+    CFLAGS="-mandroid -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CFLAGS"
+    CXXFLAGS="-mandroid -std=gnu++0x -I$android_platform/usr/include -msoft-float -fno-short-enums -fno-exceptions $CXXFLAGS"
     LDFLAGS="-mandroid -L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
 
     dnl prevent cross compile section from using these flags as host flags
@@ -267,6 +267,12 @@ if test "$target" = "arm-android-eabi" ; then
     if test -z "$HOST_LDFLAGS" ; then
         HOST_LDFLAGS=" "
     fi
+
+    # save these for libffi's subconfigure,
+    # which doesn't know how to figure this stuff out on its own
+    ANDROID_CFLAGS="$CFLAGS"
+    ANDROID_CPPFLAGS="$CPPFLAGS"
+    ANDROID_LDFLAGS="$LDFLAGS"
 
     AC_DEFINE(ANDROID)
     AC_DEFINE(FORCE_LITTLE_ENDIAN)
@@ -991,6 +997,8 @@ _PLATFORM_DEFAULT_TOOLKIT=cairo-gtk2
 
 MOZ_ENABLE_POSTSCRIPT=1 
 
+MOZ_THUMB2=
+
 if test -n "$CROSS_COMPILE"; then
     OS_TARGET="${target_os}"
     OS_ARCH=`echo $target_os | sed -e 's|/|_|g'`
@@ -1329,12 +1337,8 @@ if test "$GNU_CC"; then
     _PEDANTIC=1
 
     if test -z "$INTEL_CC"; then
-      _IGNORE_LONG_LONG_WARNINGS=1
       _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -W"
-    else
-      _IGNORE_LONG_LONG_WARNINGS=
     fi
-
 
     _DEFINES_CFLAGS='-include $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
@@ -1703,7 +1707,6 @@ case "$target" in
 *-bsdi*)
     dnl -pedantic doesn't play well with BSDI's _very_ modified gcc (shlicc2)
     _PEDANTIC=
-    _IGNORE_LONG_LONG_WARNINGS=
     case $OS_RELEASE in
 	4.*|5.*)
             STRIP="$STRIP -d"
@@ -2055,6 +2058,7 @@ ia64*-hpux*)
         XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxpcom'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
+        GCC_VERSION=`$CC -v 2>&1 | awk '/^gcc version/ { print $3 }'`
     else
         TARGET_COMPILER_ABI=msvc
         HOST_CC='$(CC)'
@@ -2084,6 +2088,7 @@ ia64*-hpux*)
         _DEFINES_CXXFLAGS='-FI $(DEPTH)/js-confdefs.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
+        CXXFLAGS="$CXXFLAGS -wd4800" # disable warning "forcing value to bool"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
         MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
@@ -4043,6 +4048,32 @@ dnl ========================================================
 MOZ_ARG_HEADER(Components and Features)
 
 dnl ========================================================
+
+dnl ========================================================
+dnl = Enable building the Thumb2 instruction set
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(thumb2,
+ [  --enable-thumb2              Enable Thumb2 instruction set],
+    MOZ_THUMB2=1,)
+
+if test -n "$MOZ_THUMB2"; then
+  case "$target_cpu" in
+    arm*)
+      if test "$GNU_CC"; then
+        CFLAGS="$CFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        CXXFLAGS="$CXXFLAGS -march=armv7-a -mthumb -Wa, -march=armv7-a -Wa, -mthumb"
+        ASFLAGS="$ASFLAGS -march=armv7-a -mthumb"
+      else
+        AC_MSG_ERROR([--enable-thumb2 is not supported for non-GNU toolchains])
+      fi
+    ;;
+    *)
+      AC_MSG_ERROR([--enable-thumb2 is not supported for non-ARM CPU architectures])
+    ;;
+  esac
+fi
+
+dnl ========================================================
 dnl = Localization
 dnl ========================================================
 MOZ_ARG_ENABLE_STRING(ui-locale,
@@ -4290,29 +4321,33 @@ if test "$MOZ_MEMORY"; then
   dnl The generic feature tests that determine how to compute ncpus are long and
   dnl complicated.  Therefore, simply define special cpp variables for the
   dnl platforms we have special knowledge of.
-  case "${target_os}" in
-  darwin*)
+  case "${target}" in
+  *-darwin*)
     AC_DEFINE(MOZ_MEMORY_DARWIN)
     ;;
-  *freebsd*)
+  *-*freebsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  *linux*)
+  *-*linux*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
     ;;
-  netbsd*)
+  *-netbsd*)
     AC_DEFINE(MOZ_MEMORY_BSD)
     ;;
-  solaris*)
+  *-solaris*)
     AC_DEFINE(MOZ_MEMORY_SOLARIS)
     ;;
-  msvc*|mks*|cygwin*|mingw*)
+  *-msvc*|*-mks*|*-cygwin*|*-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     # the interesting bits will get passed down in MOZ_MEMORY_LDFLAGS
     ;;
-  *wince|*winmo)
+  *-*wince|*-*winmo)
     AC_DEFINE(MOZ_MEMORY_WINCE)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
+    ;;
+  *-android*)
+    AC_DEFINE(MOZ_MEMORY_LINUX)
+    AC_DEFINE(MOZ_MEMORY_ANDROID)
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
@@ -4332,8 +4367,8 @@ MOZ_ARG_ENABLE_BOOL(wrap-malloc,
 
 if test -n "$_WRAP_MALLOC"; then
     if test "$GNU_CC"; then
-    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc"
-    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) -o $@'
+    WRAP_MALLOC_CFLAGS="${LDFLAGS} -Wl,--wrap -Wl,malloc -Wl,--wrap -Wl,calloc -Wl,--wrap -Wl,valloc -Wl,--wrap -Wl,free -Wl,--wrap -Wl,realloc -Wl,--wrap -Wl,memalign -Wl,--wrap -Wl,__builtin_new -Wl,--wrap -Wl,__builtin_vec_new -Wl,--wrap -Wl,__builtin_delete -Wl,--wrap -Wl,__builtin_vec_delete -Wl,--wrap -Wl,PR_Free -Wl,--wrap -Wl,PR_Malloc -Wl,--wrap -Wl,PR_Calloc -Wl,--wrap -Wl,PR_Realloc -Wl,--wrap -Wl,strdup -Wl,--wrap -Wl,strndup"
+    MKSHLIB='$(CXX) $(DSO_LDOPTS) $(WRAP_MALLOC_CFLAGS) $(WRAP_MALLOC_LIB) -o $@'
     fi
 fi
 
@@ -4600,25 +4635,6 @@ else
     AC_MSG_RESULT([no])
 fi
 
-dnl pass -Wno-long-long to the compiler
-MOZ_ARG_ENABLE_BOOL(long-long-warning,
-[  --enable-long-long-warning 
-                          Warn about use of non-ANSI long long type],
-    _IGNORE_LONG_LONG_WARNINGS=,
-    _IGNORE_LONG_LONG_WARNINGS=1)
-
-if test "$_IGNORE_LONG_LONG_WARNINGS"; then
-     _SAVE_CFLAGS="$CFLAGS"
-     CFLAGS="$CFLAGS ${_COMPILER_PREFIX}-Wno-long-long"
-     AC_MSG_CHECKING([whether compiler supports -Wno-long-long])
-     AC_TRY_COMPILE([], [return(0);], 
-	[ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-Wno-long-long"
-	  result="yes" ], result="no")
-     AC_MSG_RESULT([$result])
-     CFLAGS="$_SAVE_CFLAGS"
-fi
-
 dnl ========================================================
 dnl Profile guided optimization
 dnl ========================================================
@@ -4636,7 +4652,7 @@ MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
 AC_SUBST(MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE)
 
 _SAVE_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fprofile-generate"
+CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
 
 AC_MSG_CHECKING([whether C compiler supports -fprofile-generate])
 AC_TRY_COMPILE([], [return 0;],
@@ -4646,7 +4662,7 @@ AC_MSG_RESULT([$result])
 
 if test $result = "yes"; then
   PROFILE_GEN_LDFLAGS="-fprofile-generate"
-  PROFILE_USE_CFLAGS="-fprofile-use"
+  PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freorder-blocks-and-partition"
   PROFILE_USE_LDFLAGS="-fprofile-use"
 else
   CFLAGS="$_SAVE_CFLAGS -fprofile-arcs"
@@ -4695,7 +4711,7 @@ MOZ_ARG_DISABLE_BOOL(pedantic,
 _PEDANTIC= )
 if test "$_PEDANTIC"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
-    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+    CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
     AC_MSG_CHECKING([whether C++ compiler has -pedantic long long bug])
     AC_TRY_COMPILE([$configure_static_assert_macros],
                    [CONFIGURE_STATIC_ASSERT(sizeof(long long) == 8)],
@@ -4705,8 +4721,8 @@ if test "$_PEDANTIC"; then
 
     case "$result" in
     no)
-        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic"
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
+        _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
+        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic ${_COMPILER_PREFIX}-Wno-long-long"
         ;;
     yes)
         AC_MSG_ERROR([Your compiler appears to have a known bug where long long is miscompiled when using -pedantic.  Reconfigure using --disable-pedantic. ])
@@ -5016,7 +5032,6 @@ AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
-AC_SUBST(MOZ_XPCTOOLS)
 AC_SUBST(MOZ_JSLOADER)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(LIBICONV)
@@ -5190,6 +5205,7 @@ dnl ========================================================
 if test "$OS_ARCH" = "BeOS"; then
   AC_DEFINE(XP_BEOS)
 elif test "$OS_ARCH" = "Darwin"; then
+  AC_DEFINE(XP_MACOSX)
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
 elif test "$OS_ARCH" = "OpenVMS"; then
@@ -5379,6 +5395,15 @@ if test "$JS_HAS_CTYPES"; then
     *-mingw*)
       ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\" CC=\"$CC\""
       ;;
+    *-android*)
+      CFLAGS="$ANDROID_CFLAGS"
+      CPPFLAGS="$ANDROID_CPPFLAGS"
+      LDFLAGS="$ANDROID_LDFLAGS"
+
+      export CC CPP LD CPPFLAGS CFLAGS LDFLAGS
+
+      ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\""
+      ;;
     *)
       ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\" CC=\"$CC\""
       ;;
@@ -5404,6 +5429,9 @@ if test "$JS_HAS_CTYPES"; then
   fi
   if test "$OS_ARCH" = "OS2"; then
     ac_configure_args="$ac_configure_args CFLAGS=-Zomf AR=emxomfar"
+  fi
+  if test -n "$MOZ_THUMB2"; then
+    ac_configure_args="$ac_configure_args --enable-thumb2"
   fi
 
   # Use a separate cache file for libffi, since it does things differently

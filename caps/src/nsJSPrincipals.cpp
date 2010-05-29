@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "xpcprivate.h"
 #include "nsString.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
@@ -170,8 +171,7 @@ nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
 nsresult
 nsJSPrincipals::Startup()
 {
-    static const char rtsvc_id[] = "@mozilla.org/js/xpc/RuntimeService;1";
-    nsCOMPtr<nsIJSRuntimeService> rtsvc(do_GetService(rtsvc_id));
+    nsCOMPtr<nsIJSRuntimeService> rtsvc = nsXPConnect::GetXPConnect();
     if (!rtsvc)
         return NS_ERROR_FAILURE;
 

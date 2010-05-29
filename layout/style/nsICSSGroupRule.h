@@ -50,9 +50,9 @@ class nsIAtom;
 class nsPresContext;
 class nsMediaQueryResultCacheKey;
 
-// IID for the nsICSSGroupRule interface {67b8492e-6d8d-43a5-8037-71eb269f24fe}
+// IID for the nsICSSGroupRule interface {d0f07b17-e9c7-4a54-aaa4-622425b38d27}
 #define NS_ICSS_GROUP_RULE_IID     \
-{0x67b8492e, 0x6d8d, 0x43a5, {0x80, 0x37, 0x71, 0xeb, 0x26, 0x9f, 0x24, 0xfe}}
+{0xd0f07b17, 0xe9c7, 0x4a54, {0xaa, 0xa4, 0x62, 0x24, 0x25, 0xb3, 0x8d, 0x27}}
 
 class nsICSSGroupRule : public nsICSSRule {
 public:

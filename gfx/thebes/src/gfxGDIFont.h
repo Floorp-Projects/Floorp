@@ -58,7 +58,7 @@ public:
 
     HFONT GetHFONT() const { return mFont; }
 
-    float GetAdjustedSize() const { return mAdjustedSize; }
+    gfxFloat GetAdjustedSize() const { return mAdjustedSize; }
 
     cairo_font_face_t   *CairoFontFace() { return mFontFace; }
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
@@ -81,23 +81,20 @@ public:
                              PRUint32 aRunLength);
 
 protected:
-    void InitMetrics();
-    void FillLogFont(gfxFloat aSize);
+    void Initialize(); // creates metrics and Cairo fonts
 
-    float GetCharWidth(PRUnichar aUniChar, PRUint32 *aGlyphID);
-    float GetCharHeight(PRUnichar aUniChar);
+    void FillLogFont(LOGFONTW& aLogFont, gfxFloat aSize);
 
-    PRBool                mNeedsBold;
+    gfxFloat              mAdjustedSize;
 
-    LOGFONTW              mLogFont;
     HFONT                 mFont;
-
     cairo_font_face_t    *mFontFace;
     cairo_scaled_font_t  *mScaledFont;
 
-    Metrics               mMetrics;
+    Metrics              *mMetrics;
     PRUint32              mSpaceGlyph;
-    float                 mAdjustedSize;
+
+    PRBool                mNeedsBold;
 };
 
 #endif /* GFX_GDIFONT_H */

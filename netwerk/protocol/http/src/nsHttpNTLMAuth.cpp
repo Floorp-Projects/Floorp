@@ -211,7 +211,7 @@ CanUseDefaultCredentials(nsIHttpChannel *channel, PRBool isProxyAuth)
 }
 
 // Dummy class for session state object.  This class doesn't hold any data.
-// Instead we use its existance as a flag.  See ChallengeReceived.
+// Instead we use its existence as a flag.  See ChallengeReceived.
 class nsNTLMSessionState : public nsISupports
 {
 public:

@@ -408,6 +408,9 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
 static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
                       MDRawAssertionInfo* assertion)
 {
+  if (!exinfo)
+    return true;
+
   PEXCEPTION_RECORD e = (PEXCEPTION_RECORD)exinfo->ExceptionRecord;
   switch (e->ExceptionCode) {
     case STATUS_FLOAT_DENORMAL_OPERAND:

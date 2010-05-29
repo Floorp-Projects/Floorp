@@ -40,6 +40,9 @@
 /**
  * This is the enum used by nsIDocument::FlushPendingNotifications to
  * decide what to flush.
+ *
+ * Please note that if you change these values, you should sync it with the
+ * flushTypeNames array inside PresShell::FlushPendingNotifications.
  */
 enum mozFlushType {
   Flush_Content          = 1, /* flush the content model construction */

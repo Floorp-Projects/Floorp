@@ -75,7 +75,7 @@ public:
   NS_IMETHOD StartInvokingDragSession(IDataObject * aDataObj,
                                       PRUint32 aActionType);
 
-  // A drop occured within the application vs. outside of it.
+  // A drop occurred within the application vs. outside of it.
   void SetDroppedLocal();
 
 protected:

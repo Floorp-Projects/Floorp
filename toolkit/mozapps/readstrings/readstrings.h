@@ -62,6 +62,10 @@ int ReadStrings(const NS_tchar *path, StringTable *results);
 /**
  * This function reads in localized strings corresponding to the keys from a given .ini
  */
-int ReadStrings(const NS_tchar *path, const char *keyList, int numStrings, char results[][MAX_TEXT_LEN]);
+int ReadStrings(const NS_tchar *path,
+                const char *keyList,
+                int numStrings,
+                char results[][MAX_TEXT_LEN],
+                const char *section = NULL);
 
 #endif  // READSTRINGS_H__

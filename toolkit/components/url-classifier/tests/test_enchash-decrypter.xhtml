@@ -18,11 +18,17 @@ mochitest framework.
 <script class="testbody" type="text/javascript">
 <![CDATA[
 
+function getParent(obj) {
+  return window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+               .getInterface(Components.interfaces.nsIDOMWindowUtils)
+               .getParent(obj);
+}
+
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var table = Cc["@mozilla.org/url-classifier/table;1?type=url"].createInstance();
-var componentScope = table.wrappedJSObject.__parent__;
+var componentScope = getParent(table.wrappedJSObject);
 ok(!!componentScope, "unable to get wrapped js object");
 
 ////// Test PROT_EnchashDecrypter methods //////

@@ -210,7 +210,7 @@ public:
   /*
    * Get the parent element of an nsIContent
    */
-  static nsIContent *GetParentElement(nsIContent *aContent);
+  static mozilla::dom::Element *GetParentElement(nsIContent *aContent);
 
   /*
    * Get a font-size (em) of an nsIContent

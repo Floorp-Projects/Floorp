@@ -79,7 +79,7 @@
 
 #include "nsIFrame.h"  // Needed by IME code
 
-#include "nsICSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 
 #include "nsIContent.h"
 #include "nsServiceManagerUtils.h"
@@ -110,6 +110,9 @@
 #include "nsIParserService.h"
 
 #include "nsITransferable.h"
+#include "nsComputedDOMStyle.h"
+
+#include "mozilla/FunctionTimer.h"
 
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
@@ -455,14 +458,16 @@ nsEditor::SetFlags(PRUint32 aFlags)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Might be changing editable state, so, we need to reset current IME state
-  // if we're focused.
+  // if we're focused and the flag change causes IME state change.
   if (HasFocus()) {
     // Use "enable" for the default value because if IME is disabled
     // unexpectedly, it makes serious a11y problem.
     PRUint32 newState = nsIContent::IME_STATUS_ENABLE;
     rv = GetPreferredIMEState(&newState);
     if (NS_SUCCEEDED(rv)) {
-      nsIMEStateManager::ChangeIMEStateTo(newState);
+      // NOTE: When the enabled state isn't going to be modified, this method
+      // is going to do nothing.
+      nsIMEStateManager::UpdateIMEState(newState);
     }
   }
 
@@ -1273,6 +1278,8 @@ NS_IMETHODIMP nsEditor::GetInlineSpellChecker(PRBool autoCreate,
 
 NS_IMETHODIMP nsEditor::SyncRealTimeSpell()
 {
+  NS_TIME_FUNCTION;
+
   PRBool enable = GetDesiredSpellCheckState();
 
   nsCOMPtr<nsIInlineSpellChecker> spellChecker;
@@ -2083,14 +2090,15 @@ nsEditor::GetComposing(PRBool* aResult)
 
 void
 nsEditor::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
-                          PRInt32 aNewIndexInContainer)
+                          nsIContent* aFirstNewContent,
+                          PRInt32 /* unused */)
 {
-  ContentInserted(aDocument, aContainer, nsnull, aNewIndexInContainer);
+  ContentInserted(aDocument, aContainer, nsnull, 0);
 }
 
 void
 nsEditor::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
-                          nsIContent* aChild, PRInt32 aIndexInContainer)
+                          nsIContent* aChild, PRInt32 /* unused */)
 {
   // XXX If we need aChild then nsEditor::ContentAppended should start passing
   //     in the child.
@@ -2833,6 +2841,10 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
           }        
         }
         // handle selection
+        nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+        if (ps)
+          ps->FlushPendingNotifications(Flush_Frames);
+
         if (GetShouldTxnSetSelection())
         {
           // editor wants us to set selection at split point
@@ -3962,11 +3974,15 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
   
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  
-  nsIFrame *frame = content->GetPrimaryFrame();
 
-  NS_ASSERTION(frame, "no frame, see bug #188946");
-  if (!frame)
+  nsRefPtr<nsStyleContext> elementStyle;
+  if (content->IsElement()) {
+    elementStyle = nsComputedDOMStyle::GetStyleContextForElement(content->AsElement(),
+                                                                 nsnull,
+                                                                 ps);
+  }
+
+  if (!elementStyle)
   {
     // Consider nodes without a style context to be NOT preformatted:
     // For instance, this is true of JS tags inside the body (which show
@@ -3975,7 +3991,7 @@ nsEditor::IsPreformatted(nsIDOMNode *aNode, PRBool *aResult)
     return NS_OK;
   }
 
-  const nsStyleText* styleText = frame->GetStyleText();
+  const nsStyleText* styleText = elementStyle->GetStyleText();
 
   *aResult = styleText->WhiteSpaceIsSignificant();
   return NS_OK;
@@ -4600,7 +4616,7 @@ nsEditor::CreateTxnForIMEText(const nsAString& aStringToInsert,
 
 
 NS_IMETHODIMP 
-nsEditor::CreateTxnForAddStyleSheet(nsICSSStyleSheet* aSheet, AddStyleSheetTxn* *aTxn)
+nsEditor::CreateTxnForAddStyleSheet(nsCSSStyleSheet* aSheet, AddStyleSheetTxn* *aTxn)
 {
   *aTxn = new AddStyleSheetTxn();
   if (! *aTxn)
@@ -4613,7 +4629,7 @@ nsEditor::CreateTxnForAddStyleSheet(nsICSSStyleSheet* aSheet, AddStyleSheetTxn* 
 
 
 NS_IMETHODIMP 
-nsEditor::CreateTxnForRemoveStyleSheet(nsICSSStyleSheet* aSheet, RemoveStyleSheetTxn* *aTxn)
+nsEditor::CreateTxnForRemoveStyleSheet(nsCSSStyleSheet* aSheet, RemoveStyleSheetTxn* *aTxn)
 {
   *aTxn = new RemoveStyleSheetTxn();
   if (! *aTxn)

@@ -83,6 +83,7 @@
 #include "nsAuthInformationHolder.h"
 #include "nsICacheService.h"
 #include "nsDNSPrefetch.h"
+#include "nsChannelClassifier.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -923,6 +924,7 @@ nsHttpChannel::ProcessFailedSSLConnect(PRUint32 httpStatus)
     LOG(("Cancelling failed SSL proxy connection [this=%p httpStatus=%u]\n",
          this, httpStatus)); 
     Cancel(rv);
+    CallOnStartRequest();
     return rv;
 }
 
@@ -4495,6 +4497,20 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
         CloseCacheEntry(PR_TRUE);
         AsyncAbort(rv);
     }
+
+    if (mLoadFlags & LOAD_CLASSIFY_URI) {
+        nsRefPtr<nsChannelClassifier> classifier = new nsChannelClassifier();
+        if (!classifier) {
+            Cancel(NS_ERROR_OUT_OF_MEMORY);
+            return NS_OK;
+        }
+
+        rv = classifier->Start(this);
+        if (NS_FAILED(rv)) {
+            Cancel(rv);
+        }
+    }
+
     return NS_OK;
 }
 //-----------------------------------------------------------------------------

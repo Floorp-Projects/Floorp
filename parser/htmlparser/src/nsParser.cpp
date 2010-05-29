@@ -71,7 +71,6 @@
 #include "nsDataHashtable.h"
 #include "nsIThreadPool.h"
 #include "nsXPCOMCIDInternal.h"
-#include "nsICSSStyleSheet.h"
 #include "nsMimeTypes.h"
 
 #ifdef MOZ_VIEW_SOURCE
@@ -339,7 +338,7 @@ nsPreloadURIs::PreloadURIs(const nsAutoTArray<nsSpeculativeScriptThread::Prefetc
   // parsing off the main thread, this is hard to emulate. For now, just load
   // the URIs using the document's base URI at the potential cost of being
   // wrong and having to re-load a given relative URI later.
-  nsIURI *base = doc->GetBaseURI();
+  nsIURI *base = doc->GetDocBaseURI();
   const nsCString &charset = doc->GetDocumentCharacterSet();
   nsSpeculativeScriptThread::PreloadedType &alreadyPreloaded =
     aScriptThread->GetPreloadedURIs();

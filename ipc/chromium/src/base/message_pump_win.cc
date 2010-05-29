@@ -97,6 +97,10 @@ void MessagePumpForUI::ScheduleWork() {
 
   // Make sure the MessagePump does some work for us.
   PostMessage(message_hwnd_, kMsgHaveWork, reinterpret_cast<WPARAM>(this), 0);
+
+  // In order to wake up any cross-process COM calls which may currently be
+  // pending on the main thread, we also have to post a UI message.
+  PostMessage(message_hwnd_, WM_NULL, NULL, 0);
 }
 
 void MessagePumpForUI::ScheduleDelayedWork(const Time& delayed_work_time) {
@@ -377,6 +381,10 @@ bool MessagePumpForUI::ProcessPumpReplacementMessage() {
 
   MSG msg;
   bool have_message = (0 != PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
+
+  if (have_message && msg.message == WM_NULL)
+    have_message = (0 != PeekMessage(&msg, NULL, 0, 0, PM_REMOVE));
+
   DCHECK(!have_message || kMsgHaveWork != msg.message ||
          msg.hwnd != message_hwnd_);
 

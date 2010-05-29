@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIURI.idl"
+#include "nsIURL.idl"
 
   /**
    * nsIIconURI
@@ -47,19 +47,15 @@
    *
    * What *is* a moz-icon URI you ask?  Well, it has the following syntax:
    *
-   * moz-icon://[<file-uri> | <file-with-extension> | <stock-image>]? ['?'[<parameter-value-pairs>]]
+   * moz-icon:[<valid-url> | //<file-with-extension> | //stock/<stock-icon>]? ['?'[<parameter-value-pairs>]]
    *
-   * <file-uri> is a legal file: URI spec.  You only need to specify a file: URI inside the icon
-   * if the file you want the icon for actually exists.
+   * <valid-url> is a valid URL spec.
    *
    * <file-with-extension> is any filename with an extension, e.g. "dummy.html".
-   * If the file you want an icon for isn't known to exist, you can omit the file URI, and just
-   * place a dummy file name with the extension or content type you want: moz-icon://dummy.html.
+   * If the file you want an icon for isn't known to exist, you can use this instead of a URL and just
+   * place a dummy file name with the extension or content type you want.
    *
-   * <stock-image> is of the format:   stock/<icon-name>
-   *
-   * <icon-name> is a valid icon name, such as 'ok', 'cancel', 'yes', 'no'.
-   * XXXcaa Should these considered platform dependent or can we share and document them?
+   * <stock-icon> is the name of a platform-dependant stock icon.
    *
    * Legal parameter value pairs are listed below:
    *
@@ -77,7 +73,7 @@
    *   Description: The mime type we want an icon for. This is ignored by stock images.
    */
 
-[scriptable, uuid(1FB33F44-F522-4880-A225-4B75D09B04C6)]
+[scriptable, uuid(E2D046D2-3729-440D-B0DB-F8D817BC2571)]
 interface nsIMozIconURI : nsIURI 
 {
   /**
@@ -85,7 +81,7 @@ interface nsIMozIconURI : nsIURI
    *
    * the file URL contained within this moz-icon url, or null.
    */
-  attribute nsIURI iconFile;
+  attribute nsIURL iconURL;
 
   /**
    * imageSize

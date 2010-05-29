@@ -94,6 +94,8 @@
 #include <os2.h>
 #endif
 
+#include "mozilla/FunctionTimer.h"
+
 #ifdef DEBUG
 // defined by the socket transport service while active
 extern PRThread *gSocketThread;
@@ -211,6 +213,8 @@ nsHttpHandler::~nsHttpHandler()
 nsresult
 nsHttpHandler::Init()
 {
+    NS_TIME_FUNCTION;
+
     nsresult rv;
 
     LOG(("nsHttpHandler::Init\n"));
@@ -307,6 +311,8 @@ nsHttpHandler::Init()
 nsresult
 nsHttpHandler::InitConnectionMgr()
 {
+    NS_TIME_FUNCTION;
+
     nsresult rv;
 
     if (!mConnMgr) {
@@ -673,8 +679,8 @@ nsHttpHandler::InitUserAgentComponents()
 
       // Gather platform.
     mPlatform.AssignLiteral(
-#if defined(MOZ_WIDGET_PHOTON)
-    "Photon"
+#if defined(ANDROID)
+    "Android"
 #elif defined(XP_OS2)
     "OS/2"
 #elif defined(XP_WIN)
@@ -717,7 +723,7 @@ nsHttpHandler::InitUserAgentComponents()
 #else
         BOOL isWow64 = FALSE;
         IsWow64ProcessP fnIsWow64Process = (IsWow64ProcessP)
-          GetProcAddress(GetModuleHandle("kernel32"), "IsWow64Process");
+          GetProcAddress(GetModuleHandleW(L"kernel32"), "IsWow64Process");
         if (fnIsWow64Process &&
             !fnIsWow64Process(GetCurrentProcess(), &isWow64)) {
             isWow64 = FALSE;

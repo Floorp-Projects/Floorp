@@ -48,14 +48,14 @@ _OTHER_FILES = \
   $(NULL)
 
 _CHROME_FILES = \
-  test_0011_check_billboard_noLicense_noAddons.xul \
-  test_0012_check_billboard_noAddons.xul \
-  test_0021_check_noBillboard_noLicense_noAddons.xul \
-  test_0022_check_noBillboard_noAddons.xul \
-  test_0031_available_billboard_noLicense_noAddons.xul \
-  test_0032_available_billboard_noAddons.xul \
-  test_0041_available_noBillboard_noLicense_noAddons.xul \
-  test_0042_available_noBillboard_noAddons.xul \
+  test_0011_check_basic.xul \
+  test_0012_check_basic_license.xul \
+  test_0021_check_billboard.xul \
+  test_0022_check_billboard_license.xul \
+  test_0031_available_basic.xul \
+  test_0032_available_basic_license.xul \
+  test_0041_available_billboard.xul \
+  test_0042_available_billboard_license.xul \
   test_0051_check_error_xml_malformed.xul \
   test_0052_check_no_updates.xul \
   test_0053_check_billboard_license_noAttr.xul \
@@ -66,8 +66,8 @@ _CHROME_FILES = \
   test_0084_error_patchApplyFailure_verify_failed.xul \
   test_0091_installed.xul \
   test_0092_finishedBackground.xul \
-  test_0111_neverButton_billboard.xul \
-  test_0112_neverButton_noBillboard.xul \
+  test_0111_neverButton_basic.xul \
+  test_0112_neverButton_billboard.xul \
   test_9999_cleanup.xul \
   $(NULL)
 

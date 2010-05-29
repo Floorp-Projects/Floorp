@@ -36,24 +36,18 @@
       testAccessibleTree("radio", accTree);
 
       // input@type="button" and input@type="submit"
-      accTree = {
-        role: ROLE_PUSHBUTTON,
-        children: [ ]
-      };
-
-      testAccessibleTree("btn1", accTree);
-      testAccessibleTree("submit", accTree);
-
       // button
       accTree = {
         role: ROLE_PUSHBUTTON,
         children: [
           {
-            role: ROLE_TEXT_LEAF
+            role: ROLE_TEXT_LEAF // XXX Bug 567203
           }
         ]
       };
 
+      testAccessibleTree("btn1", accTree);
+      testAccessibleTree("submit", accTree);
       testAccessibleTree("btn2", accTree);
 
       // input@type="image"

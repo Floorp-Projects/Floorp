@@ -45,7 +45,15 @@
 #include "plstr.h"
 #include <stdlib.h>
 
-#define DEFAULT_IMAGE_SIZE          16
+#define DEFAULT_IMAGE_SIZE 16
+
+#if defined(MAX_PATH)
+#define SANE_FILE_NAME_LEN MAX_PATH
+#elif defined(PATH_MAX)
+#define SANE_FILE_NAME_LEN PATH_MAX
+#else
+#define SANE_FILE_NAME_LEN 1024
+#endif
 
 // helper function for parsing out attributes like size, and contentType
 // from the icon url.
@@ -82,9 +90,8 @@ nsMozIconURI::~nsMozIconURI()
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsMozIconURI, nsIMozIconURI, nsIURI)
 
-#define NS_MOZICON_SCHEME           "moz-icon:"
-#define NS_MOZ_ICON_DELIMITER        '?'
-
+#define MOZICON_SCHEME "moz-icon:"
+#define MOZICON_SCHEME_LEN (sizeof(MOZICON_SCHEME) - 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsURI methods:
@@ -92,12 +99,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsMozIconURI, nsIMozIconURI, nsIURI)
 NS_IMETHODIMP
 nsMozIconURI::GetSpec(nsACString &aSpec)
 {
-  aSpec = NS_MOZICON_SCHEME;
+  aSpec = MOZICON_SCHEME;
 
-  if (mFileIcon)
+  if (mIconURL)
   {
     nsCAutoString fileIconSpec;
-    nsresult rv = mFileIcon->GetSpec(fileIconSpec);
+    nsresult rv = mIconURL->GetSpec(fileIconSpec);
     NS_ENSURE_SUCCESS(rv, rv);
     aSpec += fileIconSpec;
   }
@@ -109,7 +116,7 @@ nsMozIconURI::GetSpec(nsACString &aSpec)
   else
   {
     aSpec += "//";
-    aSpec += mDummyFilePath;
+    aSpec += mFileName;
   }
 
   aSpec += "?size=";
@@ -172,113 +179,109 @@ void extractAttributeValue(const char * searchString, const char * attributeName
 NS_IMETHODIMP
 nsMozIconURI::SetSpec(const nsACString &aSpec)
 {
-  nsresult rv;
-  nsCOMPtr<nsIIOService> ioService (do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  // Reset everything to default values.
+  mIconURL = nsnull;
+  mSize = DEFAULT_IMAGE_SIZE;
+  mContentType.Truncate();
+  mFileName.Truncate();
+  mStockIcon.Truncate();
+  mIconSize = -1;
+  mIconState = -1;
 
-  nsCAutoString scheme;
-  rv = ioService->ExtractScheme(aSpec, scheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (strcmp("moz-icon", scheme.get()) != 0) 
+  nsCAutoString iconSpec(aSpec);
+  if (!Substring(iconSpec, 0, MOZICON_SCHEME_LEN).EqualsLiteral(MOZICON_SCHEME))
     return NS_ERROR_MALFORMED_URI;
 
-  nsCAutoString sizeString;
-  nsCAutoString stateString;
-  nsCAutoString mozIconPath(aSpec);
-
-  // guaranteed to exist!
-  const char *path = strchr(mozIconPath.get(), ':') + 1;
-  const char *question = strchr(mozIconPath.get(), NS_MOZ_ICON_DELIMITER);
-
-  if (!question) // no size or content type specified
+  PRInt32 questionMarkPos = iconSpec.Find("?");
+  if (questionMarkPos != -1 && static_cast<PRInt32>(iconSpec.Length()) > (questionMarkPos + 1))
   {
-    mDummyFilePath.Assign(path);
-  }
-  else
-  {
-    mDummyFilePath.Assign(Substring(path, question));
+    extractAttributeValue(iconSpec.get(), "contentType=", mContentType);
 
-    // fill in any size and content type values...
-    extractAttributeValue(question, "size=", sizeString);
-    extractAttributeValue(question, "state=", stateString);
-    extractAttributeValue(question, "contentType=", mContentType);
-  }
-
-  if (!sizeString.IsEmpty())
-  {
-    const char *sizeStr = sizeString.get();
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kSizeStrings); i++)
-    {
-      if (PL_strcasecmp(sizeStr, kSizeStrings[i]) == 0)
+    nsCAutoString sizeString;
+    extractAttributeValue(iconSpec.get(), "size=", sizeString);
+    if (!sizeString.IsEmpty())
+    {      
+      const char *sizeStr = sizeString.get();
+      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kSizeStrings); i++)
       {
-        mIconSize = i;
-        break;
-      }
-    }
-  }
-
-  if (!stateString.IsEmpty())
-  {
-    const char *stateStr = stateString.get();
-    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kStateStrings); i++)
-    {
-      if (PL_strcasecmp(stateStr, kStateStrings[i]) == 0)
-      {
-        mIconState = i;
-        break;
-      }
-    }
-  }
-
-  // Okay now we have a bit of a hack here...filePath can have three forms:
-  // (1) file://<some valid platform specific file url>
-  // (2) //<some dummy file with an extension>
-  // (3) stock/<icon-identifier>
-  // We need to determine which case we are and behave accordingly...
-  if (mDummyFilePath.Length() > 2)
-  {
-    if (!strncmp("//stock/", mDummyFilePath.get(), 8))
-    {
-      // we have a stock icon
-      mStockIcon = Substring(mDummyFilePath, 8);
-    }
-    else
-    {
-      if (!strncmp("//", mDummyFilePath.get(), 2))// must not have a url here..
-      {
-        // in this case the string looks like //somefile.html or // somefile.extension. So throw away the "//" part
-        // and remember the rest in mDummyFilePath
-        mDummyFilePath.Cut(0, 2); // cut the first 2 bytes....
-      }
-      if (!strncmp("file://", mDummyFilePath.get(), 7))
-      { 
-        // we have a file url, let the IOService normalize it
-        nsCOMPtr<nsIURI> tmpURI;
-        rv = ioService->NewURI(mDummyFilePath, nsnull, nsnull, getter_AddRefs(tmpURI));
-        if (NS_SUCCEEDED(rv) && tmpURI)
+        if (PL_strcasecmp(sizeStr, kSizeStrings[i]) == 0)
         {
-          mFileIcon = tmpURI;
+          mIconSize = i;
+          break;
         }
       }
-      if (!sizeString.IsEmpty())
+
+      PRInt32 sizeValue = atoi(sizeString.get());
+      if (sizeValue)
+        mSize = sizeValue;
+    }
+
+    nsCAutoString stateString;
+    extractAttributeValue(iconSpec.get(), "state=", stateString);
+    if (!stateString.IsEmpty())
+    {
+      const char *stateStr = stateString.get();
+      for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(kStateStrings); i++)
       {
-        PRInt32 sizeValue = atoi(sizeString.get());
-        // if the size value we got back is > 0 then use it
-        if (sizeValue)
-          mSize = sizeValue;
+        if (PL_strcasecmp(stateStr, kStateStrings[i]) == 0)
+        {
+          mIconState = i;
+          break;
+        }
       }
     }
   }
-  else
-    rv = NS_ERROR_MALFORMED_URI; // they didn't include a file path...
+
+  PRInt32 pathLength = iconSpec.Length() - MOZICON_SCHEME_LEN;
+  if (questionMarkPos != -1)
+    pathLength = questionMarkPos - MOZICON_SCHEME_LEN;
+  if (pathLength < 3)
+    return NS_ERROR_MALFORMED_URI;
+
+  nsCAutoString iconPath(Substring(iconSpec, MOZICON_SCHEME_LEN, pathLength));
+
+  // Icon URI path can have three forms:
+  // (1) //stock/<icon-identifier>
+  // (2) //<some dummy file with an extension>
+  // (3) a valid URL
+
+  if (!strncmp("//stock/", iconPath.get(), 8))
+  {
+    mStockIcon.Assign(Substring(iconPath, 8));
+    return NS_OK;
+  }
+
+  if (!strncmp("//", iconPath.get(), 2))
+  {
+    // Sanity check this supposed dummy file name.
+    if (iconPath.Length() > SANE_FILE_NAME_LEN)
+      return NS_ERROR_MALFORMED_URI;
+    mFileName.Assign(Substring(iconPath, 2));
+    return NS_OK;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = ioService->NewURI(iconPath, nsnull, nsnull, getter_AddRefs(uri));
+  if (NS_SUCCEEDED(rv) && uri)
+  {
+    nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &rv));
+    if (NS_SUCCEEDED(rv) && url)
+    {
+      mIconURL = url;
+    }
+  }
+
   return rv;
 }
 
 NS_IMETHODIMP
 nsMozIconURI::GetPrePath(nsACString &prePath)
 {
-  prePath = NS_MOZICON_SCHEME;
+  prePath = MOZICON_SCHEME;
   return NS_OK;
 }
 
@@ -412,11 +415,15 @@ nsMozIconURI::SchemeIs(const char *i_Scheme, PRBool *o_Equals)
 NS_IMETHODIMP
 nsMozIconURI::Clone(nsIURI **result)
 {
-  nsCOMPtr<nsIURI> newFileIcon;
-  if (mFileIcon)
+  nsCOMPtr<nsIURL> newIconURL;
+  if (mIconURL)
   {
-    nsresult rv = mFileIcon->Clone(getter_AddRefs(newFileIcon));
-    if (NS_FAILED(rv)) 
+    nsCOMPtr<nsIURI> newURI;
+    nsresult rv = mIconURL->Clone(getter_AddRefs(newURI));
+    if (NS_FAILED(rv))
+      return rv;
+    newIconURL = do_QueryInterface(newURI, &rv);
+    if (NS_FAILED(rv))
       return rv;
   }
 
@@ -424,10 +431,10 @@ nsMozIconURI::Clone(nsIURI **result)
   if (!uri)
     return NS_ERROR_OUT_OF_MEMORY;
  
-  newFileIcon.swap(uri->mFileIcon);
+  newIconURL.swap(uri->mIconURL);
   uri->mSize = mSize;
   uri->mContentType = mContentType;
-  uri->mDummyFilePath = mDummyFilePath;
+  uri->mFileName = mFileName;
   uri->mStockIcon = mStockIcon;
   uri->mIconSize = mIconSize;
   uri->mIconState = mIconState;
@@ -465,15 +472,15 @@ nsMozIconURI::GetOriginCharset(nsACString &result)
 // nsIIconUri methods:
 
 NS_IMETHODIMP
-nsMozIconURI::GetIconFile(nsIURI* * aFileUrl)
+nsMozIconURI::GetIconURL(nsIURL* * aFileUrl)
 {
-  *aFileUrl = mFileIcon;
+  *aFileUrl = mIconURL;
   NS_IF_ADDREF(*aFileUrl);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMozIconURI::SetIconFile(nsIURI* aFileUrl)
+nsMozIconURI::SetIconURL(nsIURL* aFileUrl)
 {
   // this isn't called anywhere, needs to go through SetSpec parsing
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -494,7 +501,7 @@ nsMozIconURI::SetImageSize(PRUint32 aImageSize)  // measured by # of pixels in a
 }
 
 NS_IMETHODIMP
-nsMozIconURI::GetContentType(nsACString &aContentType)  
+nsMozIconURI::GetContentType(nsACString &aContentType)
 {
   aContentType = mContentType;
   return NS_OK;
@@ -510,41 +517,33 @@ nsMozIconURI::SetContentType(const nsACString &aContentType)
 NS_IMETHODIMP
 nsMozIconURI::GetFileExtension(nsACString &aFileExtension)  
 {
-  nsCAutoString fileExtension;
-  nsresult rv = NS_OK;
-
-  // First, try to get the extension from mFileIcon if we have one
-  if (mFileIcon)
+  // First, try to get the extension from mIconURL if we have one
+  if (mIconURL)
   {
     nsCAutoString fileExt;
-    nsCOMPtr<nsIURL> url (do_QueryInterface(mFileIcon, &rv));
-    if (NS_SUCCEEDED(rv) && url)
+    if (NS_SUCCEEDED(mIconURL->GetFileExtension(fileExt)))
     {
-      rv = url->GetFileExtension(fileExt);
-      if (NS_SUCCEEDED(rv))
+      if (!fileExt.IsEmpty())
       {
         // unfortunately, this code doesn't give us the required '.' in front of the extension
         // so we have to do it ourselves..
         aFileExtension.Assign('.');
         aFileExtension.Append(fileExt);
-        return NS_OK;
       }
     }
-    
-    mFileIcon->GetSpec(fileExt);
-    fileExtension = fileExt;
+    return NS_OK;
   }
-  else
+
+  if (!mFileName.IsEmpty())
   {
-    fileExtension = mDummyFilePath;
+    // truncate the extension out of the file path...
+    const char * chFileName = mFileName.get(); // get the underlying buffer
+    const char * fileExt = strrchr(chFileName, '.');
+    if (!fileExt)
+      return NS_OK;
+    aFileExtension = fileExt;
   }
 
-  // truncate the extension out of the file path...
-  const char * chFileName = fileExtension.get(); // get the underlying buffer
-  const char * fileExt = strrchr(chFileName, '.');
-  if (!fileExt) return NS_ERROR_FAILURE; // no file extension to work from.
-
-  aFileExtension = fileExt;
   return NS_OK;
 }
 

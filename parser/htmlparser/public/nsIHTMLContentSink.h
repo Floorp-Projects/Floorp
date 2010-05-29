@@ -59,7 +59,7 @@
  * IMPORTANT: The parser may Open each container more than
  * once! This is due to the irregular nature of HTML files.
  * For example, it is possible to encounter plain text at
- * the start of an HTML document (that preceeds the HTML tag).
+ * the start of an HTML document (that precedes the HTML tag).
  * Such text is treated as if it were part of the body.
  * In such cases, the parser will Open the body, pass the text-
  * node in and then Close the body. The body will likely be

@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIMemoryReporter.h"
+#include "nsMemory.h"
+
 #include "gfxASurface.h"
 
 #include "gfxImageSurface.h"
@@ -396,5 +399,106 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
         case ImageFormatUnknown:
         default:
             return CONTENT_COLOR;
+    }
+}
+
+/** Memory reporting **/
+
+static const char *sSurfaceNamesForSurfaceType[] = {
+    "gfx/surface/image",
+    "gfx/surface/pdf",
+    "gfx/surface/ps",
+    "gfx/surface/xlib",
+    "gfx/surface/xcb",
+    "gfx/surface/glitz",
+    "gfx/surface/quartz",
+    "gfx/surface/win32",
+    "gfx/surface/beos",
+    "gfx/surface/directfb",
+    "gfx/surface/svg",
+    "gfx/surface/os2",
+    "gfx/surface/win32printing",
+    "gfx/surface/quartzimage",
+    "gfx/surface/script",
+    "gfx/surface/qpainter",
+    "gfx/surface/ddraw"
+};
+
+PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceNamesForSurfaceType) == gfxASurface::SurfaceTypeMax);
+
+static const char *
+SurfaceMemoryReporterPathForType(gfxASurface::gfxSurfaceType aType)
+{
+    if (aType < 0 ||
+        aType >= gfxASurface::SurfaceTypeMax)
+        return "gfx/surface/unknown";
+
+    return sSurfaceNamesForSurfaceType[aType];
+}
+
+/* Surface size memory reporting */
+static nsIMemoryReporter *gSurfaceMemoryReporters[gfxASurface::SurfaceTypeMax] = { 0 };
+static PRInt64 gSurfaceMemoryUsed[gfxASurface::SurfaceTypeMax] = { 0 };
+
+class SurfaceMemoryReporter :
+    public nsIMemoryReporter
+{
+public:
+    SurfaceMemoryReporter(gfxASurface::gfxSurfaceType aType)
+        : mType(aType)
+    { }
+
+    NS_DECL_ISUPPORTS
+
+    NS_IMETHOD GetPath(char **memoryPath) {
+        *memoryPath = strdup(SurfaceMemoryReporterPathForType(mType));
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetDescription(char **desc) {
+        *desc = strdup("Memory used by gfx surface of given type.");
+        return NS_OK;
+    }
+
+    NS_IMETHOD GetMemoryUsed(PRInt64 *memoryUsed) {
+        *memoryUsed = gSurfaceMemoryUsed[mType];
+        return NS_OK;
+    }
+
+    gfxASurface::gfxSurfaceType mType;
+};
+
+NS_IMPL_ISUPPORTS1(SurfaceMemoryReporter, nsIMemoryReporter)
+
+void
+gfxASurface::RecordMemoryUsedForSurfaceType(gfxASurface::gfxSurfaceType aType,
+                                            PRInt32 aBytes)
+{
+    if (aType < 0 || aType >= SurfaceTypeMax) {
+        NS_WARNING("Invalid type to RecordMemoryUsedForSurfaceType!");
+        return;
+    }
+
+    if (gSurfaceMemoryReporters[aType] == 0) {
+        gSurfaceMemoryReporters[aType] = new SurfaceMemoryReporter(aType);
+        NS_RegisterMemoryReporter(gSurfaceMemoryReporters[aType]);
+    }
+
+    gSurfaceMemoryUsed[aType] += aBytes;
+}
+
+void
+gfxASurface::RecordMemoryUsed(PRInt32 aBytes)
+{
+    RecordMemoryUsedForSurfaceType(GetType(), aBytes);
+    mBytesRecorded += aBytes;
+}
+
+void
+gfxASurface::RecordMemoryFreed()
+{
+    if (mBytesRecorded) {
+        RecordMemoryUsedForSurfaceType(GetType(), -mBytesRecorded);
+        mBytesRecorded = 0;
     }
 }

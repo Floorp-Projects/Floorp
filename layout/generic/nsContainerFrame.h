@@ -593,9 +593,9 @@ private:
      to increment this walker to the next overflow container. */
   nsIFrame* mSentry;
   /* Parent of all frames in mOverflowContList. If our mOverflowContList
-     is an excessOverflowContainersProperty, then this our frame (the frame
-     that was passed in to our constructor). Otherwise this is that frame's
-     next-in-flow, and our mOverflowContList is mParent's
+     is an excessOverflowContainersProperty, or null, then this is our frame
+     (the frame that was passed in to our constructor). Otherwise this is
+     that frame's next-in-flow, and our mOverflowContList is mParent's
      overflowContainersProperty */
   nsContainerFrame* mParent;
   /* Tells SetUpListWalker whether or not to walk us past any continuations

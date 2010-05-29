@@ -150,9 +150,20 @@ nsHTMLFontElement::ParseAttribute(PRInt32 aNamespaceID,
       nsAutoString tmp(aValue);
       tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
       PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
-      if ((ch == '+' || ch == '-') &&
-          aResult.ParseEnumValue(aValue, kRelFontSizeTable, PR_FALSE)) {
-        return PR_TRUE;
+      if ((ch == '+' || ch == '-')) {
+          if (aResult.ParseEnumValue(aValue, kRelFontSizeTable, PR_FALSE))
+              return PR_TRUE;
+
+          // truncate after digit, then parse it again.
+          PRUint32 i;
+          for (i = 1; i < tmp.Length(); i++) {
+              ch = tmp.CharAt(i);
+              if (!nsCRT::IsAsciiDigit(ch)) {
+                  tmp.Truncate(i);
+                  break;
+              }
+          }
+          return aResult.ParseEnumValue(tmp, kRelFontSizeTable, PR_FALSE);
       }
 
       return aResult.ParseIntValue(aValue);

@@ -180,7 +180,7 @@ nsMIMEHeaderParamImpl::GetParameterInternal(const char *aHeaderValue,
     ;
 
   // Some broken http servers just specify parameters
-  // like 'filename' without sepcifying disposition
+  // like 'filename' without specifying disposition
   // method. Rewind to the first non-white-space
   // character.
   
@@ -395,6 +395,8 @@ nsMIMEHeaderParamImpl::DecodeRFC2047Header(const char* aHeaderVal,
 
   if (aEatContinuations) {
     nsCAutoString temp(aResult);
+    temp.ReplaceSubstring("\n\t", " ");
+    temp.ReplaceSubstring("\r\t", " ");
     temp.StripChars("\r\n");
     aResult = temp;
   }

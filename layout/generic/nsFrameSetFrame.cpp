@@ -355,9 +355,15 @@ nsHTMLFramesetFrame::Init(nsIContent*      aContent,
 
   for (PRUint32 childX = 0; childX < numChildren; childX++) {
     if (mChildCount == numCells) { // we have more <frame> or <frameset> than cells
+      // Clear the lazy bits in the remaining children.
+      for (PRUint32 i = childX; i < numChildren; i++) {
+        mContent->GetChildAt(i)->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES |
+                                            NODE_NEEDS_FRAME);
+      }
       break;
     }
     nsIContent *child = mContent->GetChildAt(childX);
+    child->UnsetFlags(NODE_DESCENDANTS_NEED_FRAMES | NODE_NEEDS_FRAME);
 
     // IMPORTANT: This must match the conditions in
     // nsCSSFrameConstructor::ContentAppended/Inserted/Removed    

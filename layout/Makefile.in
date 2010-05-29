@@ -85,6 +85,10 @@ PARALLEL_DIRS += \
 
 TOOL_DIRS      += tools/reftest reftests/fonts reftests/fonts/mplus
 DIRS           += tools/pageloader
+
+ifdef MOZ_DEBUG
+DIRS            += tools/layout-debug
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk

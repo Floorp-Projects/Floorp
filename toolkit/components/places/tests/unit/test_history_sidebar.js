@@ -85,7 +85,7 @@ function add_normalized_visit(aURI, aTime, aDayOffset) {
 function days_for_x_months_ago(aNowObj, aMonths) {
   var oldTime = new Date();
   // Set day before month, otherwise we could try to calculate 30 February, or
-  // other not existant days.
+  // other nonexistent days.
   oldTime.setDate(1);
   oldTime.setMonth(aNowObj.getMonth() - aMonths);
   oldTime.setHours(0);

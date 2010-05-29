@@ -69,7 +69,7 @@ class nsTextAttrsMgr
 public:
   /**
    * Constructor. If instance of the class is intended to expose default text
-   * attributes then 'aIncludeDefAttrs' and 'oOffsetNode' argument must be
+   * attributes then 'aIncludeDefAttrs' and 'aOffsetNode' argument must be
    * skiped.
    *
    * @param aHyperTextAcc    hyper text accessible text attributes are
@@ -82,9 +82,9 @@ public:
    *                         inside hyper text accessible
    */
   nsTextAttrsMgr(nsHyperTextAccessible *aHyperTextAcc,
-                 nsIDOMNode *aHyperTextNode,
                  PRBool aIncludeDefAttrs = PR_TRUE,
-                 nsIDOMNode *oOffsetNode = nsnull);
+                 nsAccessible *aOffsetAcc = nsnull,
+                 PRInt32 aOffsetAccIdx = -1);
 
   /*
    * Return text attributes and hyper text offsets where these attributes are
@@ -115,41 +115,13 @@ protected:
    nsresult GetRange(const nsTPtrArray<nsITextAttr>& aTextAttrArray,
                      PRInt32 *aStartHTOffset, PRInt32 *aEndHTOffset);
 
-  /*
-   * Find new end offset for text attributes navigating through the tree. New
-   * end offset may be smaller if one of text attributes changes its value
-   * before the given end offset.
-   *
-   * @param  aTextAttrArray  [in] text attributes array
-   * @param  aCurrNode       [in] the first node of the tree
-   * @param  aHTOffset       [in, out] the end offset
-   * @return                 true if the end offset has been changed
-   */
-   PRBool FindEndOffsetInSubtree(const nsTPtrArray<nsITextAttr>& aTextAttrArray,
-                                 nsIDOMNode *aCurrNode, PRInt32 *aHTOffset);
-
-  /*
-   * Find the start offset for text attributes navigating through the tree. New
-   * start offset may be bigger if one of text attributes changes its value
-   * after the given start offset.
-   *
-   * @param  aTextAttrArray  [in] text attributes array
-   * @param  aCurrNode       [in] the node navigating through thee thee is
-   *                         started from
-   * @param  aPrevNode       [in] the previous node placed before the start node
-   * @param  aHTOffset       [in, out] the start offset
-   * @return                 true if the start offset has been changed
-   */
-   PRBool FindStartOffsetInSubtree(const nsTPtrArray<nsITextAttr>& aTextAttrArray,
-                                   nsIDOMNode *aCurrNode, nsIDOMNode *aPrevNode,
-                                   PRInt32 *aHTOffset);
-
 private:
   nsRefPtr<nsHyperTextAccessible> mHyperTextAcc;
-  nsCOMPtr<nsIDOMNode> mHyperTextNode;
 
   PRBool mIncludeDefAttrs;
-  nsCOMPtr<nsIDOMNode> mOffsetNode;
+
+  nsRefPtr<nsAccessible> mOffsetAcc;
+  PRInt32 mOffsetAccIdx;
 };
 
 

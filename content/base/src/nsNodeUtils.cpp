@@ -39,7 +39,7 @@
 #include "nsContentUtils.h"
 #include "nsINode.h"
 #include "nsIContent.h"
-#include "Element.h"
+#include "mozilla/dom/Element.h"
 #include "nsIMutationObserver.h"
 #include "nsIDocument.h"
 #include "nsIDOMUserDataHandler.h"
@@ -131,12 +131,14 @@ nsNodeUtils::AttributeChanged(nsIContent* aContent,
 
 void
 nsNodeUtils::ContentAppended(nsIContent* aContainer,
+                             nsIContent* aFirstNewContent,
                              PRInt32 aNewIndexInContainer)
 {
   nsIDocument* doc = aContainer->GetOwnerDoc();
 
   IMPL_MUTATION_NOTIFICATION(ContentAppended, aContainer,
-                             (doc, aContainer, aNewIndexInContainer));
+                             (doc, aContainer, aFirstNewContent,
+                              aNewIndexInContainer));
 }
 
 void
@@ -267,92 +269,28 @@ nsNodeUtils::LastRelease(nsINode* aNode)
 
   if (aNode->IsElement()) {
     nsIDocument* ownerDoc = aNode->GetOwnerDoc();
+    Element* elem = aNode->AsElement();
     if (ownerDoc) {
-      ownerDoc->ClearBoxObjectFor(aNode->AsElement());
+      ownerDoc->ClearBoxObjectFor(elem);
+    }
+    
+    NS_ASSERTION(aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) ||
+                 !ownerDoc ||
+                 !ownerDoc->BindingManager() ||
+                 !ownerDoc->BindingManager()->GetBinding(elem),
+                 "Non-forced node has binding on destruction");
+
+    // if NODE_FORCE_XBL_BINDINGS is set, the node might still have a binding
+    // attached
+    if (aNode->HasFlag(NODE_FORCE_XBL_BINDINGS) &&
+        ownerDoc && ownerDoc->BindingManager()) {
+      ownerDoc->BindingManager()->ChangeDocumentFor(elem, ownerDoc, nsnull);
     }
   }
 
   nsContentUtils::ReleaseWrapper(aNode, aNode);
 
   delete aNode;
-}
-
-static nsresult
-SetUserDataProperty(PRUint16 aCategory, nsINode *aNode, nsIAtom *aKey,
-                    nsISupports* aValue, void** aOldValue)
-{
-  nsresult rv = aNode->SetProperty(aCategory, aKey, aValue,
-                                   nsPropertyTable::SupportsDtorFunc, PR_TRUE,
-                                   aOldValue);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Property table owns it now.
-  NS_ADDREF(aValue);
-
-  return NS_OK;
-}
-
-/* static */
-nsresult
-nsNodeUtils::SetUserData(nsINode *aNode, const nsAString &aKey,
-                         nsIVariant *aData, nsIDOMUserDataHandler *aHandler,
-                         nsIVariant **aResult)
-{
-  *aResult = nsnull;
-
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult rv;
-  void *data;
-  if (aData) {
-    rv = SetUserDataProperty(DOM_USER_DATA, aNode, key, aData, &data);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  else {
-    data = aNode->UnsetProperty(DOM_USER_DATA, key);
-  }
-
-  // Take over ownership of the old data from the property table.
-  nsCOMPtr<nsIVariant> oldData = dont_AddRef(static_cast<nsIVariant*>(data));
-
-  if (aData && aHandler) {
-    nsCOMPtr<nsIDOMUserDataHandler> oldHandler;
-    rv = SetUserDataProperty(DOM_USER_DATA_HANDLER, aNode, key, aHandler,
-                             getter_AddRefs(oldHandler));
-    if (NS_FAILED(rv)) {
-      // We failed to set the handler, remove the data.
-      aNode->DeleteProperty(DOM_USER_DATA, key);
-
-      return rv;
-    }
-  }
-  else {
-    aNode->DeleteProperty(DOM_USER_DATA_HANDLER, key);
-  }
-
-  oldData.swap(*aResult);
-
-  return NS_OK;
-}
-
-/* static */
-nsresult
-nsNodeUtils::GetUserData(nsINode *aNode, const nsAString &aKey,
-                         nsIVariant **aResult)
-{
-  nsCOMPtr<nsIAtom> key = do_GetAtom(aKey);
-  if (!key) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aResult = static_cast<nsIVariant*>
-                        (aNode->GetProperty(DOM_USER_DATA, key));
-  NS_IF_ADDREF(*aResult);
-
-  return NS_OK;
 }
 
 struct NS_STACK_CLASS nsHandlerData

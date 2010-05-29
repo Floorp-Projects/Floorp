@@ -227,7 +227,7 @@ class nsCParserNode :  public nsIParserNode {
 
     /**
      * This getter retrieves the line number from the input source where
-     * the token occured. Lines are interpreted as occuring between \n characters.
+     * the token occurred. Lines are interpreted as occurring between \n characters.
      * @update	gess7/24/98
      * @return  int containing the line number the token was found on
      */

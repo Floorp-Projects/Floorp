@@ -402,12 +402,8 @@ namespace nanojit
             NIns*       pedanticTop;
         #endif
 
-
-            // Instruction lookahead in gen().  lookahead[0] is the current
-            // instruction.  Nb: lookahead[1..N_LOOKAHEAD] may include dead
-            // instructions, but we won't know that they're dead yet.
-            static const int N_LOOKAHEAD = 3;
-            LInsp       lookahead[N_LOOKAHEAD];
+            // Holds the current instruction during gen().
+            LInsp       currIns;
 
             AR          _activation;
             RegAlloc    _allocator;
@@ -435,8 +431,8 @@ namespace nanojit
 #ifdef NANOJIT_64BIT
             void        asm_immq(LInsp ins);
 #endif
-            void        asm_immf(LInsp ins);
-            void        asm_fcond(LInsp ins);
+            void        asm_immd(LInsp ins);
+            void        asm_condd(LInsp ins);
             void        asm_cond(LInsp ins);
             void        asm_arith(LInsp ins);
             void        asm_neg_not(LInsp ins);
@@ -451,9 +447,9 @@ namespace nanojit
 #endif
             void        asm_fneg(LInsp ins);
             void        asm_fop(LInsp ins);
-            void        asm_i2f(LInsp ins);
-            void        asm_u2f(LInsp ins);
-            void        asm_f2i(LInsp ins);
+            void        asm_i2d(LInsp ins);
+            void        asm_ui2d(LInsp ins);
+            void        asm_d2i(LInsp ins);
 #ifdef NANOJIT_64BIT
             void        asm_q2i(LInsp ins);
             void        asm_promote(LIns *ins);

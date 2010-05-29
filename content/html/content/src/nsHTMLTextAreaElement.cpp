@@ -49,7 +49,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIFormControl.h"
 #include "nsIForm.h"
-#include "nsIFormSubmission.h"
+#include "nsFormSubmission.h"
 #include "nsIDOMEventTarget.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
@@ -118,7 +118,7 @@ public:
   NS_IMETHOD SetUserInput(const nsAString& aInput);
 
   // nsIFormControl
-  NS_IMETHOD_(PRInt32) GetType() const { return NS_FORM_TEXTAREA; }
+  NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_TEXTAREA; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
@@ -158,20 +158,10 @@ public:
                                  const nsAString* aValue, PRBool aNotify);
 
   // nsIMutationObserver
-  virtual void CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent* aContent,
-                                    CharacterDataChangeInfo* aInfo);
-  virtual void ContentAppended(nsIDocument* aDocument,
-                                nsIContent* aContainer,
-                               PRInt32 aNewIndexInContainer);
-  virtual void ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               PRInt32 aIndexInContainer);
-  virtual void ContentRemoved(nsIDocument* aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              PRInt32 aIndexInContainer);
+  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
+  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   virtual void UpdateEditableState()
   {
@@ -209,6 +199,11 @@ protected:
                             nsITextControlFrame* aFrame,
                             PRBool aUserInput);
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
+
+  virtual PRBool AcceptAutofocus() const
+  {
+    return PR_TRUE;
+  }
 
   /**
    * Common method to call from the various mutation observer methods.
@@ -372,6 +367,7 @@ nsHTMLTextAreaElement::IsHTMLFocusable(PRBool *aIsFocusable, PRInt32 *aTabIndex)
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey)
+NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Autofocus, autofocus)
 NS_IMPL_INT_ATTR(nsHTMLTextAreaElement, Cols, cols)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled)
 NS_IMPL_NON_NEGATIVE_INT_ATTR(nsHTMLTextAreaElement, MaxLength, maxlength)
@@ -940,7 +936,8 @@ nsHTMLTextAreaElement::CharacterDataChanged(nsIDocument* aDocument,
 void
 nsHTMLTextAreaElement::ContentAppended(nsIDocument* aDocument,
                                        nsIContent* aContainer,
-                                       PRInt32 aNewIndexInContainer)
+                                       nsIContent* aFirstNewContent,
+                                       PRInt32 /* unused */)
 {
   ContentChanged(aContainer);
 }
@@ -949,7 +946,7 @@ void
 nsHTMLTextAreaElement::ContentInserted(nsIDocument* aDocument,
                                        nsIContent* aContainer,
                                        nsIContent* aChild,
-                                       PRInt32 aIndexInContainer)
+                                       PRInt32 /* unused */)
 {
   ContentChanged(aChild);
 }

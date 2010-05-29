@@ -30,3 +30,9 @@ news://localhost:119/#username
 *\=password=\
 ~dGVzdG5ld3M=
 .
+mailbox://bugzilla%4,0mail.com@localhost
+\=username=\
+~
+*\=password=\
+~bmV3c3Rlc3Q=
+.

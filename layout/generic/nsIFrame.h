@@ -2171,7 +2171,6 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(BaseLevelProperty, nsnull)
   NS_DECLARE_FRAME_PROPERTY(EmbeddingLevelProperty, nsnull)
-  NS_DECLARE_FRAME_PROPERTY(CharTypeProperty, nsnull)
 
 #define NS_GET_BASE_LEVEL(frame) \
 NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::BaseLevelProperty()))

@@ -43,6 +43,7 @@ relativesrcdir  = xpinstall/tests
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
+ifeq (browser,$(MOZ_BUILD_APP))
 _BROWSER_FILES = harness.js \
                  browser_unsigned_url.js \
                  browser_unsigned_trigger.js \
@@ -104,3 +105,4 @@ _BROWSER_FILES = harness.js \
 
 libs::	$(_BROWSER_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
+endif

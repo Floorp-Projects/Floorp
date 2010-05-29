@@ -280,6 +280,7 @@
 #include "nsIDOMHTMLIsIndexElement.h"
 #include "nsIDOMHTMLLIElement.h"
 #include "nsIDOMHTMLLabelElement.h"
+#include "nsIDOMNSHTMLLabelElement.h"
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLMapElement.h"
@@ -469,7 +470,8 @@
 #include "nsIDOMNSMouseEvent.h"
 
 #include "nsIEventListenerService.h"
-#include "Element.h"
+#include "nsIFrameMessageManager.h"
+#include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;
 
@@ -557,6 +559,7 @@ static const char kDOMStringBundleURL[] =
 DOMCI_DATA(Crypto, void)
 DOMCI_DATA(CRMFObject, void)
 DOMCI_DATA(SmartCardEvent, void)
+DOMCI_DATA(ContentFrameMessageManager, void)
 
 DOMCI_DATA(DOMPrototype, void)
 DOMCI_DATA(DOMConstructor, void)
@@ -1390,6 +1393,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TransitionEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(ContentFrameMessageManager, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(FormData, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1469,7 +1474,6 @@ jsval nsDOMClassInfo::sLocationbar_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sPersonalbar_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sStatusbar_id       = JSVAL_VOID;
 jsval nsDOMClassInfo::sDialogArguments_id = JSVAL_VOID;
-jsval nsDOMClassInfo::sDirectories_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sControllers_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sLength_id          = JSVAL_VOID;
 jsval nsDOMClassInfo::sInnerHeight_id     = JSVAL_VOID;
@@ -1565,8 +1569,8 @@ FindObjectClass(JSObject* aGlobalObject)
 static void
 PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
 {
-  nsCOMPtr<nsIStringBundleService>
-    stringService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  nsCOMPtr<nsIStringBundleService> stringService =
+    mozilla::services::GetStringBundleService();
   if (!stringService) {
     return;
   }
@@ -1671,7 +1675,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sPersonalbar_id,     cx, "personalbar");
   SET_JSVAL_TO_STRING(sStatusbar_id,       cx, "statusbar");
   SET_JSVAL_TO_STRING(sDialogArguments_id, cx, "dialogArguments");
-  SET_JSVAL_TO_STRING(sDirectories_id,     cx, "directories");
   SET_JSVAL_TO_STRING(sControllers_id,     cx, "controllers");
   SET_JSVAL_TO_STRING(sLength_id,          cx, "length");
   SET_JSVAL_TO_STRING(sInnerHeight_id,     cx, "innerHeight");
@@ -1794,7 +1797,7 @@ nsDOMClassInfo::ThrowJSException(JSContext *cx, nsresult aResult)
   // XXX This probably wants to be localized, but that can fail in ways that
   // are hard to report correctly.
   JSString *str =
-    JS_NewStringCopyZ(cx, "An error occured throwing an exception");
+    JS_NewStringCopyZ(cx, "An error occurred throwing an exception");
   if (!str) {
     // JS_NewStringCopyZ reported the error for us.
     return NS_OK; 
@@ -2499,6 +2502,7 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(HTMLLabelElement, nsIDOMHTMLLabelElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLLabelElement)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSHTMLLabelElement)
     DOM_CLASSINFO_GENERIC_HTML_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -3858,6 +3862,13 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentFrameMessageManager, nsIContentFrameMessageManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
+    DOM_CLASSINFO_MAP_ENTRY(nsIFrameMessageManager)
+    DOM_CLASSINFO_MAP_ENTRY(nsIContentFrameMessageManager)
+  DOM_CLASSINFO_MAP_END
+
   DOM_CLASSINFO_MAP_BEGIN(FormData, nsIDOMFormData)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMFormData)
   DOM_CLASSINFO_MAP_END
@@ -4605,7 +4616,6 @@ nsDOMClassInfo::ShutDown()
   sPersonalbar_id     = JSVAL_VOID;
   sStatusbar_id       = JSVAL_VOID;
   sDialogArguments_id = JSVAL_VOID;
-  sDirectories_id     = JSVAL_VOID;
   sControllers_id     = JSVAL_VOID;
   sLength_id          = JSVAL_VOID;
   sInnerHeight_id     = JSVAL_VOID;
@@ -5199,6 +5209,10 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     JSObject *innerObj;
     if (innerWin && (innerObj = innerWin->GetGlobalJSObject())) {
+      if (sResolving) {
+        return NS_OK;
+      }
+
 #ifdef DEBUG_SH_FORWARDING
       printf(" --- Forwarding add to inner window %p\n", (void *)innerWin);
 #endif
@@ -6325,6 +6339,9 @@ ContentWindowGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return ::JS_GetProperty(cx, obj, "content", rval);
 }
 
+PRBool
+nsWindowSH::sResolving = PR_FALSE;
+
 NS_IMETHODIMP
 nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                        JSObject *obj, jsval id, PRUint32 flags,
@@ -6394,18 +6411,44 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 #endif
 
       jsid interned_id;
-      JSObject *pobj = NULL;
-      jsval val;
+      JSPropertyDescriptor desc;
 
-      *_retval = (::JS_ValueToId(cx, id, &interned_id) &&
-                  ::JS_LookupPropertyWithFlagsById(cx, innerObj, interned_id,
-                                                   flags, &pobj, &val));
+      *_retval = (JS_ValueToId(cx, id, &interned_id) &&
+                  JS_GetPropertyDescriptorById(cx, innerObj, interned_id,
+                                               flags, &desc));
 
-      if (*_retval && pobj) {
+      if (*_retval && desc.obj) {
 #ifdef DEBUG_SH_FORWARDING
         printf(" --- Resolve on inner window found property.\n");
 #endif
-        *objp = pobj;
+
+        // The JS engine assumes that the object that we return in objp is on
+        // our prototype chain. As a result, for an assignment, it wants to
+        // shadow the property by defining one on our object (unless the
+        // property has a setter). This confuses our code and, for fast
+        // expandos, we end up overriding the fast expando with a slow one. So
+        // detect when we're about to get a new property from the JS engine
+        // that would shadow a fast expando and define it ourselves, sending
+        // ourselves a signal via sResolving that we are doing this. Note that
+        // we only care about fast expandos on the innerObj itself, things
+        // found further up the prototype chain need to fend for themselves.
+        if ((flags & JSRESOLVE_ASSIGNING) &&
+            !(desc.attrs & (JSPROP_GETTER | JSPROP_SETTER)) &&
+            desc.obj == innerObj) {
+          PRBool oldResolving = sResolving;
+          sResolving = PR_TRUE;
+
+          *_retval = JS_DefinePropertyById(cx, obj, interned_id, JSVAL_VOID,
+                                           nsnull, nsnull,
+                                           desc.attrs & JSPROP_ENUMERATE);
+
+          sResolving = oldResolving;
+          if (!*_retval) {
+            return NS_OK;
+          }
+        }
+
+        *objp = desc.obj;
       }
 
       return NS_OK;
@@ -6426,7 +6469,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // child frame. Define a property for this index.
 
         *_retval = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID,
-                                      nsnull, nsnull, 0);
+                                      nsnull, nsnull, JSPROP_SHARED);
 
         if (*_retval) {
           *objp = obj;
@@ -6649,6 +6692,14 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // window.location (i.e. no checking flags & JSRESOLVE_ASSIGNING
     // here) since we must define window.location to prevent the
     // getter from being overriden (for security reasons).
+
+    // Note: Because we explicitly don't forward to the inner window
+    // above, we have to ensure here that our window has a current
+    // inner window so that the location object we return will work.
+
+    if (win->IsOuterWindow()) {
+      win->EnsureInnerWindow();
+    }
 
     nsCOMPtr<nsIDOMLocation> location;
     rv = win->GetLocation(getter_AddRefs(location));

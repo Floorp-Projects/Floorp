@@ -58,7 +58,7 @@ import sys
 import os
 import re
 import shutil
-from subprocess import call, STDOUT
+from subprocess import call, Popen, PIPE, STDOUT
 from optparse import OptionParser
 
 # Utility classes
@@ -259,6 +259,10 @@ class SVNFileInfo(VCSFileInfo):
         print >> sys.stderr, "Failed to get SVN Filename for %s" % self.file
         return self.file
 
+def read_output(*args):
+    (stdout, _) = Popen(args=args, stdout=PIPE).communicate()
+    return stdout.rstrip()
+
 class HGRepoInfo:
     # HG info is per-repo, so cache it in a static
     # member var
@@ -273,12 +277,10 @@ class HGFileInfo(VCSFileInfo):
         VCSFileInfo.__init__(self, file)
         # we should only have to collect this info once per-repo
         if not srcdir in HGRepoInfo.repos:
-            rev = os.popen('hg identify -i "%s"' % srcdir, "r").readlines()[0].rstrip()
-            # could have a + if there are uncommitted local changes
-            if rev.endswith('+'):
-                rev = rev[:-1]
-
-            path = os.popen('hg -R "%s" showconfig paths.default' % srcdir, "r").readlines()[0].rstrip()
+            rev = read_output('hg', '-R', srcdir,
+                              'parent', '--template={node|short}')
+            path = read_output('hg', '-R', srcdir,
+                               'showconfig', 'paths.default')
             if path == '':
                 hg_root = os.environ.get("SRCSRV_ROOT")
                 if hg_root:
@@ -646,18 +648,20 @@ class Dumper_Linux(Dumper):
         # .gnu_debuglink section to the object, so the debugger can
         # actually load our debug info later.
         file_dbg = file + ".dbg"
-        os.system("objcopy --only-keep-debug %s %s" % (file, file_dbg))
-        os.system("objcopy --add-gnu-debuglink=%s %s" % (file_dbg, file))
-        
-        rel_path = os.path.join(debug_file,
-                                guid,
-                                debug_file + ".dbg")
-        full_path = os.path.normpath(os.path.join(self.symbol_path,
-                                                  rel_path))
-        shutil.move(file_dbg, full_path)
-        # gzip the shipped debug files
-        os.system("gzip %s" % full_path)
-        print rel_path + ".gz"
+        if call(['objcopy', '--only-keep-debug', file, file_dbg]) == 0 and \
+           call(['objcopy', '--add-gnu-debuglink=%s' % file_dbg, file]) == 0:
+            rel_path = os.path.join(debug_file,
+                                    guid,
+                                    debug_file + ".dbg")
+            full_path = os.path.normpath(os.path.join(self.symbol_path,
+                                                      rel_path))
+            shutil.move(file_dbg, full_path)
+            # gzip the shipped debug files
+            os.system("gzip %s" % full_path)
+            print rel_path + ".gz"
+        else:
+            if os.path.isfile(file_dbg):
+                os.unlink(file_dbg)
 
 class Dumper_Solaris(Dumper):
     def RunFileCommand(self, file):
