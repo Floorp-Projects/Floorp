@@ -103,6 +103,11 @@ public:
 
   void CloseConnection();
 
+  bool TransactionIsOpen() {
+    return mReadyState == nsIIDBTransaction::INITIAL ||
+           mReadyState == nsIIDBTransaction::LOADING;
+  }
+
 private:
   IDBTransactionRequest();
   ~IDBTransactionRequest();

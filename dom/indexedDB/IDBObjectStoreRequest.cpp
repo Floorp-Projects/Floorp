@@ -384,6 +384,8 @@ IDBObjectStoreRequest::GetName(nsAString& aName)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
   aName.Assign(mName);
   return NS_OK;
 }
@@ -393,6 +395,8 @@ IDBObjectStoreRequest::GetKeyPath(nsAString& aKeyPath)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
   aKeyPath.Assign(mKeyPath);
   return NS_OK;
 }
@@ -401,6 +405,8 @@ NS_IMETHODIMP
 IDBObjectStoreRequest::GetIndexNames(nsIDOMDOMStringList** aIndexNames)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
 #if 0
@@ -418,6 +424,8 @@ IDBObjectStoreRequest::Get(nsIVariant* aKey,
                            nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
 
   Key key;
   nsresult rv = GetKeyFromVariant(aKey, key);
@@ -446,6 +454,9 @@ IDBObjectStoreRequest::GetAll(nsIIDBKeyRange* aKeyRange,
                               nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -456,6 +467,8 @@ IDBObjectStoreRequest::Add(nsIVariant* /* aValue */,
                            nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
 
   if (mMode != nsIIDBTransaction::READ_WRITE) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
@@ -493,6 +506,8 @@ IDBObjectStoreRequest::Modify(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
   if (mMode != nsIIDBTransaction::READ_WRITE) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -529,6 +544,8 @@ IDBObjectStoreRequest::AddOrModify(nsIVariant* /* aValue */,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
   if (mMode != nsIIDBTransaction::READ_WRITE) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -564,6 +581,8 @@ IDBObjectStoreRequest::Remove(nsIVariant* aKey,
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
   if (mMode != nsIIDBTransaction::READ_WRITE) {
     return NS_ERROR_OBJECT_IS_IMMUTABLE;
   }
@@ -598,6 +617,10 @@ IDBObjectStoreRequest::OpenCursor(nsIIDBKeyRange* aRange,
                                   nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
+  NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -608,6 +631,9 @@ IDBObjectStoreRequest::CreateIndex(const nsAString& aName,
                                    nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -617,6 +643,9 @@ IDBObjectStoreRequest::Index(const nsAString& aName,
                              nsIIDBIndexRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -626,6 +655,9 @@ IDBObjectStoreRequest::RemoveIndex(const nsAString& aName,
                                    nsIIDBRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(mTransaction->TransactionIsOpen());
+
   NS_NOTYETIMPLEMENTED("Implement me!");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -638,12 +670,17 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   nsresult rv;
 
   bool mayOverwrite = mOverwrite;
+  bool unsetKey = mKey.IsUnset();
 
-  if (mKey.IsUnset()) {
+  if (unsetKey) {
     NS_ASSERTION(mAutoIncrement, "Must have a key for non-autoIncrement!");
 
     // Will need to add first and then set the key later.
     mayOverwrite = false;
+  }
+
+  if (mAutoIncrement && !unsetKey) {
+    mayOverwrite = true;
   }
 
   nsCOMPtr<mozIStorageStatement> stmt =
@@ -678,8 +715,6 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   }
 
   if (mAutoIncrement && mCreate && !mOverwrite) {
-    bool unsetKey = mKey.IsUnset();
-
 #ifdef DEBUG
     PRInt64 oldKey = unsetKey ? 0 : mKey.IntValue();
 #endif

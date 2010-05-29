@@ -441,6 +441,9 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetDb(nsIIDBDatabase** aDB)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   NS_ADDREF(*aDB = mDatabase);
   return NS_OK;
 }
@@ -449,6 +452,9 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetReadyState(PRUint16* aReadyState)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   *aReadyState = mReadyState;
   return NS_OK;
 }
@@ -457,6 +463,9 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetMode(PRUint16* aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   *aMode = mMode;
   return NS_OK;
 }
@@ -465,6 +474,8 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetObjectStoreNames(nsIDOMDOMStringList** aObjectStores)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
 
   nsRefPtr<nsDOMStringList> list(new nsDOMStringList());
   PRUint32 count = mObjectStoreNames.Length();
@@ -480,6 +491,8 @@ IDBTransactionRequest::ObjectStore(const nsAString& aName,
                                    nsIIDBObjectStoreRequest** _retval)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
 
   ObjectStoreInfo* info = nsnull;
 
@@ -512,6 +525,8 @@ IDBTransactionRequest::Abort()
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_WARNING("Abort doesn't actually do anything yet! Fix me now!");
 
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   nsCOMPtr<nsIRunnable> runnable =
     IDBEvent::CreateGenericEventRunnable(NS_LITERAL_STRING(ABORT_EVT_STR),
                                          this);
@@ -527,6 +542,9 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetOncomplete(nsIDOMEventListener** aOncomplete)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   return GetInnerEventListener(mOnCompleteListener, aOncomplete);
 }
 
@@ -534,6 +552,9 @@ NS_IMETHODIMP
 IDBTransactionRequest::SetOncomplete(nsIDOMEventListener* aOncomplete)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   return RemoveAddEventListener(NS_LITERAL_STRING(COMPLETE_EVT_STR),
                                 mOnCompleteListener, aOncomplete);
 }
@@ -542,6 +563,9 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetOnabort(nsIDOMEventListener** aOnabort)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   return GetInnerEventListener(mOnAbortListener, aOnabort);
 }
 
@@ -549,6 +573,9 @@ NS_IMETHODIMP
 IDBTransactionRequest::SetOnabort(nsIDOMEventListener* aOnabort)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   return RemoveAddEventListener(NS_LITERAL_STRING(ABORT_EVT_STR),
                                 mOnAbortListener, aOnabort);
 }
@@ -557,6 +584,9 @@ NS_IMETHODIMP
 IDBTransactionRequest::GetOntimeout(nsIDOMEventListener** aOntimeout)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   return GetInnerEventListener(mOnTimeoutListener, aOntimeout);
 }
 
@@ -564,6 +594,9 @@ NS_IMETHODIMP
 IDBTransactionRequest::SetOntimeout(nsIDOMEventListener* aOntimeout)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ENSURE_STATE(TransactionIsOpen());
+
   return RemoveAddEventListener(NS_LITERAL_STRING(TIMEOUT_EVT_STR),
                                 mOnTimeoutListener, aOntimeout);
 }

@@ -67,10 +67,11 @@ bool gShutdown = false;
 
 struct TransactionObjectStoreInfo
 {
-  TransactionObjectStoreInfo() : writing(false) { }
+  TransactionObjectStoreInfo() : writing(false), writerWaiting(false) { }
 
   nsString objectStoreName;
   bool writing;
+  bool writerWaiting;
 };
 
 } // anonymous namespace
@@ -311,7 +312,7 @@ TransactionThreadPool::TransactionCanRun(IDBTransactionRequest* aTransaction,
   for (PRUint32 transactionIndex = 0;
        transactionIndex < transactionCount;
        transactionIndex++) {
-    const TransactionInfo& transactionInfo =
+    TransactionInfo& transactionInfo =
       transactionsInProgress->ElementAt(transactionIndex);
 
     if (transactionInfo.transaction == aTransaction) {
@@ -321,14 +322,14 @@ TransactionThreadPool::TransactionCanRun(IDBTransactionRequest* aTransaction,
     }
 
     // Not our transaction, see if the objectStores overlap.
-    const nsTArray<TransactionObjectStoreInfo>& objectStoreInfoArray =
+    nsTArray<TransactionObjectStoreInfo>& objectStoreInfoArray =
       transactionInfo.objectStoreInfo;
 
     PRUint32 objectStoreCount = objectStoreInfoArray.Length();
     for (PRUint32 objectStoreIndex = 0;
          objectStoreIndex < objectStoreCount;
          objectStoreIndex++) {
-      const TransactionObjectStoreInfo& objectStoreInfo =
+      TransactionObjectStoreInfo& objectStoreInfo =
         objectStoreInfoArray[objectStoreIndex];
 
       if (objectStoreNames.Contains(objectStoreInfo.objectStoreName)) {
@@ -336,12 +337,13 @@ TransactionThreadPool::TransactionCanRun(IDBTransactionRequest* aTransaction,
         switch (mode) {
           case nsIIDBTransaction::READ_WRITE: {
             // Someone else is reading or writing to this table, we can't
-            // run now.
+            // run now. Mark that we're waiting for it though.
+            objectStoreInfo.writerWaiting = true;
             return false;
           }
 
           case nsIIDBTransaction::READ_ONLY: {
-            if (objectStoreInfo.writing) {
+            if (objectStoreInfo.writing || objectStoreInfo.writerWaiting) {
               // Someone else is writing to this table, we can't run now.
               return false;
             }

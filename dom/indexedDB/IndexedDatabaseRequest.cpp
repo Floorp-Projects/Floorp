@@ -151,9 +151,10 @@ CreateTables(mozIStorageConnection* aDBConn)
   // Table `ai_object_data`
   rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE ai_object_data ("
-      "id INTEGER PRIMARY KEY, "
+      "id INTEGER, "
       "object_store_id INTEGER NOT NULL, "
       "data TEXT NOT NULL, "
+      "PRIMARY KEY (id), "
       "FOREIGN KEY (object_store_id) REFERENCES object_store(id) ON DELETE "
         "CASCADE"
     ");"
