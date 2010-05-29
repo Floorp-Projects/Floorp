@@ -86,7 +86,7 @@ ContainerLayerD3D9::InsertAfter(Layer* aChild, Layer* aAfter)
     NS_ADDREF(aChild);
     return;
   }
-  for (Layer *child = GetFirstChild(); 
+  for (Layer *child = GetFirstChild();
        child; child = child->GetNextSibling()) {
     if (aAfter == child) {
       Layer *oldNextSibling = child->GetNextSibling();
@@ -116,7 +116,7 @@ ContainerLayerD3D9::RemoveChild(Layer *aChild)
     return;
   }
   Layer *lastChild = nsnull;
-  for (Layer *child = GetFirstChild(); child; 
+  for (Layer *child = GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (child == aChild) {
       // We're sure this is not our first child. So lastChild != NULL.
@@ -170,8 +170,8 @@ ContainerLayerD3D9::RenderLayer()
   if (useIntermediate) {
     device()->GetRenderTarget(0, getter_AddRefs(previousRenderTarget));
     device()->CreateTexture(mVisibleRect.width, mVisibleRect.height, 1,
-			    D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
-			    D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
+                            D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
+                            D3DPOOL_DEFAULT, getter_AddRefs(renderTexture),
                             NULL);
     nsRefPtr<IDirect3DSurface9> renderSurface;
     renderTexture->GetSurfaceLevel(0, getter_AddRefs(renderSurface));
@@ -183,7 +183,7 @@ ContainerLayerD3D9::RenderLayer()
 
     float viewMatrix[4][4];
     /*
-     * Matrix to transform to viewport space ( <-1.0, 1.0> topleft, 
+     * Matrix to transform to viewport space ( <-1.0, 1.0> topleft,
      * <1.0, -1.0> bottomright)
      */
     memset(&viewMatrix, 0, sizeof(viewMatrix));
@@ -193,7 +193,7 @@ ContainerLayerD3D9::RenderLayer()
     viewMatrix[3][0] = -1.0f;
     viewMatrix[3][1] = 1.0f;
     viewMatrix[3][3] = 1.0f;
-    
+
     device()->GetVertexShaderConstantF(8, &oldViewMatrix[0][0], 4);
     device()->SetVertexShaderConstantF(8, &viewMatrix[0][0], 4);
   }
@@ -252,7 +252,7 @@ ContainerLayerD3D9::RenderLayer()
      * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
      * and size. To get pixel perfect mapping we offset the quad half a pixel
      * to the top-left.
-     * 
+     *
      * See: http://msdn.microsoft.com/en-us/library/bb219690%28VS.85%29.aspx
      */
     memset(&quadTransform, 0, sizeof(quadTransform));

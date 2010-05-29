@@ -64,8 +64,8 @@ ThebesLayerD3D9::SetVisibleRegion(const nsIntRegion &aRegion)
   mVisibleRect = aRegion.GetBounds();
 
   device()->CreateTexture(mVisibleRect.width, mVisibleRect.height, 1,
-			  D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
-			  D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
+                          D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
+                          D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
 
   mInvalidatedRect = mVisibleRect;
 }
@@ -97,8 +97,8 @@ ThebesLayerD3D9::RenderLayer()
 {
   if (!mTexture) {
     device()->CreateTexture(mVisibleRect.width, mVisibleRect.height, 1,
-			      D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
-			      D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
+                            D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8,
+                            D3DPOOL_DEFAULT, getter_AddRefs(mTexture), NULL);
     mInvalidatedRect = mVisibleRect;
   }
   if (!mInvalidatedRect.IsEmpty()) {
@@ -118,11 +118,11 @@ ThebesLayerD3D9::RenderLayer()
     context->Translate(gfxPoint(-mInvalidatedRect.x, -mInvalidatedRect.y));
     LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
     cbInfo.Callback(this, context, region, cbInfo.CallbackData);
-    
+
     nsRefPtr<IDirect3DTexture9> tmpTexture;
     device()->CreateTexture(mInvalidatedRect.width, mInvalidatedRect.height, 1,
-			    0, D3DFMT_A8R8G8B8,
-			    D3DPOOL_SYSTEMMEM, getter_AddRefs(tmpTexture), NULL);
+                            0, D3DFMT_A8R8G8B8,
+                            D3DPOOL_SYSTEMMEM, getter_AddRefs(tmpTexture), NULL);
 
     D3DLOCKED_RECT r;
     tmpTexture->LockRect(0, &r, NULL, 0);
@@ -145,22 +145,22 @@ ThebesLayerD3D9::RenderLayer()
 
     nsRefPtr<IDirect3DSurface9> srcSurface;
     nsRefPtr<IDirect3DSurface9> dstSurface;
-    
+
     mTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
     tmpTexture->GetSurfaceLevel(0, getter_AddRefs(srcSurface));
-    
+
     POINT point;
     point.x = mInvalidatedRect.x - mVisibleRect.x;
     point.y = mInvalidatedRect.y - mVisibleRect.y;
     device()->UpdateSurface(srcSurface, NULL, dstSurface, &point);
   }
-  
+
   float quadTransform[4][4];
   /*
    * Matrix to transform the <0.0,0.0>, <1.0,1.0> quad to the correct position
    * and size. To get pixel perfect mapping we offset the quad half a pixel
    * to the top-left.
-   * 
+   *
    * See: http://msdn.microsoft.com/en-us/library/bb219690%28VS.85%29.aspx
    */
   memset(&quadTransform, 0, sizeof(quadTransform));

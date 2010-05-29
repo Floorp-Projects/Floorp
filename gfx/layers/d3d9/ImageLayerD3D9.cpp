@@ -270,7 +270,7 @@ PlanarYCbCrImageD3D9::SetData(const PlanarYCbCrImage::Data &aData)
   mData.mCbCrSize.height = aData.mPicSize.height >> height_shift;
   mData.mYSize = aData.mPicSize;
   mData.mYStride = mData.mYSize.width;
-  
+
   mBuffer = new PRUint8[mData.mCbCrStride * mData.mCbCrSize.height * 2 +
                         mData.mYStride * mData.mYSize.height];
   mData.mYChannel = mBuffer;
@@ -390,7 +390,7 @@ PlanarYCbCrImageD3D9::GetAsSurface()
 {
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(mSize, gfxASurface::ImageFormatRGB24);
- 
+
   // Convert from YCbCr to RGB now
   gfx::ConvertYCbCrToRGB32(mData.mYChannel,
                            mData.mCbChannel,
@@ -403,7 +403,7 @@ PlanarYCbCrImageD3D9::GetAsSurface()
                            mData.mYStride,
                            mData.mCbCrStride,
                            imageSurface->Stride(),
-                           gfx::YV12); 
+                           gfx::YV12);
 
   return imageSurface.forget().get();
 }

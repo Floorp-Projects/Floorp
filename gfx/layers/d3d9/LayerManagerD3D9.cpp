@@ -163,7 +163,7 @@ LayerManagerD3D9::Initialize()
   if (FAILED(hr)) {
     return PR_FALSE;
   }
-  
+
   vertices[0].x = vertices[0].y = 0;
   vertices[1].x = 1; vertices[1].y = 0;
   vertices[2].x = 0; vertices[2].y = 1;
@@ -181,12 +181,12 @@ LayerManagerD3D9::Initialize()
       D3DDECLUSAGE_POSITION, 0 },
     D3DDECL_END()
   };
-  
+
   mDevice->CreateVertexDeclaration(elements, getter_AddRefs(mVD));
 
   SetupRenderState();
 
-  nsCOMPtr<nsIConsoleService> 
+  nsCOMPtr<nsIConsoleService>
     console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
 
   D3DADAPTER_IDENTIFIER9 identifier;
@@ -328,7 +328,7 @@ LayerManagerD3D9::Render()
   mDevice->Clear(0, NULL, D3DCLEAR_TARGET, 0xffffffff, 0, 0);
 
   mDevice->BeginScene();
-  
+
   if (mRootLayer) {
     const nsIntRect *clipRect = mRootLayer->GetLayer()->GetClipRect();
     RECT r;
@@ -374,7 +374,7 @@ LayerManagerD3D9::SetupPipeline()
 
   float viewMatrix[4][4];
   /*
-   * Matrix to transform to viewport space ( <-1.0, 1.0> topleft, 
+   * Matrix to transform to viewport space ( <-1.0, 1.0> topleft,
    * <1.0, -1.0> bottomright)
    */
   memset(&viewMatrix, 0, sizeof(viewMatrix));
@@ -384,7 +384,7 @@ LayerManagerD3D9::SetupPipeline()
   viewMatrix[3][0] = -1.0f;
   viewMatrix[3][1] = 1.0f;
   viewMatrix[3][3] = 1.0f;
-  
+
   HRESULT hr = mDevice->SetVertexShaderConstantF(8, &viewMatrix[0][0], 4);
 
   if (FAILED(hr)) {
@@ -397,7 +397,7 @@ LayerManagerD3D9::SetupBackBuffer()
 {
   nsRefPtr<IDirect3DSurface9> backBuffer;
   mDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO,
-			 getter_AddRefs(backBuffer));
+                         getter_AddRefs(backBuffer));
 
   D3DSURFACE_DESC desc;
   nsIntRect rect;

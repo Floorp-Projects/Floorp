@@ -46,7 +46,7 @@
 namespace mozilla {
 namespace layers {
 
-class ThebesLayerD3D9 : public ThebesLayer, 
+class ThebesLayerD3D9 : public ThebesLayer,
                         public LayerD3D9
 {
 public:
@@ -71,7 +71,7 @@ public:
   const nsIntRect &GetInvalidatedRect();
 
 private:
-  /* 
+  /*
    * Visible rectangle, this is used to know the size and position of the quad
    * when doing the rendering of this layer.
    */
