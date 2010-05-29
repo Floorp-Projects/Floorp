@@ -13945,9 +13945,12 @@ TraceRecorder::record_JSOP_BINDNAME()
     // Find the target object.
     JSAtom *atom = atoms[GET_INDEX(cx->regs->pc)];
     jsid id = ATOM_TO_JSID(atom);
+    JSContext *localCx = cx;
     JSObject *obj2 = js_FindIdentifierBase(cx, fp->scopeChain, id);
     if (!obj2)
         RETURN_ERROR_A("error in js_FindIdentifierBase");
+    if (!TRACE_RECORDER(localCx))
+        return ARECORD_ABORTED;
     if (obj2 != globalObj && obj2->getClass() != &js_CallClass)
         RETURN_STOP_A("BINDNAME on non-global, non-call object");
 
