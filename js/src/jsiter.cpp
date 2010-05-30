@@ -363,10 +363,16 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, jsval *vp)
     /* Otherwise call it and return that object. */
     LeaveTrace(cx);
     jsval arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
-    if (!js_InternalInvoke(cx, obj, *vp, JSINVOKE_ITERATOR, 1, &arg, vp))
+    if (!js_InternalCall(cx, obj, *vp, 1, &arg, vp))
         return false;
     if (JSVAL_IS_PRIMITIVE(*vp)) {
-        js_ReportValueError(cx, JSMSG_BAD_ITERATOR_RETURN, JSDVG_SEARCH_STACK, *vp, NULL);
+        /*
+         * We are always coming from js_ValueToIterator, and we are no longer on
+         * trace, so the object we are iterating over is on top of the stack (-1).
+         */
+        js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
+                             -1, OBJECT_TO_JSVAL(obj), NULL,
+                             js_AtomToPrintableString(cx, atom));
         return false;
     }
     return true;

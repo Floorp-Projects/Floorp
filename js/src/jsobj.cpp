@@ -5632,7 +5632,7 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return ok;
         }
 #endif
-        js_ReportIsNotFunction(cx, &argv[-2], js_GetTopStackFrame(cx)->flags & JSFRAME_ITERATOR);
+        js_ReportIsNotFunction(cx, &argv[-2], js_GetTopStackFrame(cx)->flags);
         return JS_FALSE;
     }
     return clasp->call(cx, obj, argc, argv, rval);
@@ -6647,8 +6647,6 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
             fprintf(stderr, " eval");
         if (fp->flags & JSFRAME_YIELDING)
             fprintf(stderr, " yielding");
-        if (fp->flags & JSFRAME_ITERATOR)
-            fprintf(stderr, " iterator");
         if (fp->flags & JSFRAME_GENERATOR)
             fprintf(stderr, " generator");
         if (fp->flags & JSFRAME_OVERRIDE_ARGS)
