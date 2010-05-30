@@ -73,8 +73,8 @@ load 379917-1.xhtml
 load 380012-1.html
 load 381152-1.html
 load 381786-1.html
-asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",1-2) load 382129-1.xhtml
-asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",1) load 382131-1.html
+asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",1-2) load 382129-1.xhtml # Bug 540078
+asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",1) load 382131-1.html # Bug 540078
 load 382199-1.html
 load 382208-1.xhtml
 load 382262-1.html

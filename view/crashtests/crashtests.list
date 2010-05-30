@@ -2,7 +2,7 @@ load 38589-1.xul
 load 64049-1.html
 load 281743-1.html
 load 323497-1.html
-asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",2) load 382756-1.xul
-asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",2) load 387745-1.svg
+asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",2) load 382756-1.xul # Bug 540078
+asserts-if(MOZ_WIDGET_TOOLKIT=="gtk2",0-2) load 387745-1.svg # Bug 540078
 load 429315-1.html
 load 507563-1.html
