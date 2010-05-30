@@ -87,19 +87,17 @@ mjit::Compiler::jsop_bitop(JSOp op)
         RegisterID reg = frame.tempRegForType(rhs);
         Jump rhsFail = masm.branch32(Assembler::NotEqual, reg, Imm32(JSVAL_MASK32_INT32));
         stubcc.linkExit(rhsFail);
-        if (lhs->isTypeKnown())
-            stubcc.leave();
         frame.freeReg(reg);
-        //rhs->setTypeTag(JSVAL_MASK32_INT32);
+        frame.learnType(rhs, JSVAL_MASK32_INT32);
     }
     if (!lhs->isTypeKnown()) {
         RegisterID reg = frame.tempRegForType(lhs);
         Jump lhsFail = masm.branch32(Assembler::NotEqual, reg, Imm32(JSVAL_MASK32_INT32));
         stubcc.linkExit(lhsFail);
-        stubcc.leave();
         frame.freeReg(reg);
     }
 
+    stubcc.leave();
     stubcc.call(stubs::BitAnd);
 
     frame.pop();
