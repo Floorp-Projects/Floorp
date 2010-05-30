@@ -40,6 +40,7 @@
 #include "methodjit/MethodJIT.h"
 #include "methodjit/Compiler.h"
 #include "methodjit/StubCalls.h"
+#include "methodjit/FrameState-inl.h"
 
 #include "jsautooplen.h"
 
