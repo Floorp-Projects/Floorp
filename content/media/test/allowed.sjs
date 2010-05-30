@@ -1,20 +1,16 @@
-// Return seek.ogv file content for the first request with a given key.
-// All subsequent requests return a redirect to a different-origin resource.
+var types = {
+  ogg: "video/ogg",
+  ogv: "video/ogg",
+  oga: "audio/ogg",
+  webm: "video/webm",
+  wav: "audio/x-wav"
+};
+
+// Return file with name as per the query string with access control
+// allow headers.
 function handleRequest(request, response)
 {
-  var key = (request.queryString.match(/^key=(.*)&/))[1];
-  var resource = (request.queryString.match(/res=(.*)$/))[1];
-
-  if (getState(key) == "redirect") {
-    var origin = request.host == "mochi.test" ? "example.org" : "mochi.test:8888";
-    response.setStatusLine(request.httpVersion, 303, "See Other");
-    response.setHeader("Location", "http://" + origin + "/tests/content/media/test/" + resource);
-    response.setHeader("Content-Type", "text/html");
-    return;
-  }
-
-  setState(key, "redirect");
-
+  var resource = request.queryString;
   var file = Components.classes["@mozilla.org/file/directory_service;1"].
                         getService(Components.interfaces.nsIProperties).
                         get("CurWorkD", Components.interfaces.nsILocalFile);
@@ -34,7 +30,9 @@ function handleRequest(request, response)
   response.setStatusLine(request.httpVersion, 206, "Partial Content");
   response.setHeader("Content-Range", "bytes 0-" + (bytes.length - 1) + "/" + bytes.length);
   response.setHeader("Content-Length", ""+bytes.length, false);
-  response.setHeader("Content-Type", "video/ogg", false);
+  var ext = resource.substring(resource.lastIndexOf(".")+1);
+  response.setHeader("Content-Type", types[ext], false);
+  response.setHeader("Access-Control-Allow-Origin", "*");
   response.write(bytes, bytes.length);
   bis.close();
 }

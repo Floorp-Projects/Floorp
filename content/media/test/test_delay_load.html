@@ -8,11 +8,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
   <script>
   
   var gRegisteredElements = [];
   var gLog = false;
-  var gTestWindow;
+  var testWindows = [];
 
   function log(msg) {
     if (gLog) {
@@ -30,18 +31,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
 
     for (var i = 0; i < gRegisteredElements.length; ++i) {
       var v = gRegisteredElements[i];
-      ok(v.readyState >= v.HAVE_CURRENT_DATA, "Video " + v.id + " is not ready before onload fired");
+      ok(v.readyState >= v.HAVE_CURRENT_DATA,
+         v._name + ":" + v.id + " is not ready before onload fired (" + v.readyState + ")");
     }
 
     netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    gTestWindow.close();
+    for (i=0; i<testWindows.length; ++i) {
+      testWindows[i].close();
+    }
 
     SimpleTest.finish();
   }
   
   addLoadEvent(loaded);
   
-  SimpleTest.waitForExplicitFinish();
+
   </script>
 </head>
 <body>
@@ -52,61 +56,71 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
 </div>
 
 
-<video src="320x240.ogv" id="v0"></video>
-
-
 <div id="log" style="font-size: small;"></div>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 479711 **/
 
-register(document.getElementById('v0'));
-
-function createVideo(id) {
+function createVideo(name, type, id) {
   var v = document.createElement("video");
-  v.id = id;
-  if (gLog) {
-    var gEventTypes = [ 'loadstart', 'progress', 'suspend', 'abort', 'error', 'emptied', 'stalled', 'play', 'pause', 'loadedmetadata', 'loadeddata', 'waiting', 'playing', 'canplay', 'canplaythrough', 'seeking', 'seeked', 'timeupdate', 'ended', 'ratechange', 'durationchange', 'volumechange' ];
-    function listener(evt) {
-      log('event ' + evt.target.id + " " + evt.type);
-    }
-
-    for (var i=0; i<gEventTypes.length; i++) {
-      var t = gEventTypes[i];
-      v.addEventListener(t, listener, false);
-    }
+  if (!v.canPlayType(type)) {
+    return null;
   }
-  v.src = "http://mochi.test:8888/tests/content/media/test/320x240.ogv";
+  v.src = name;
+  v._name = name;
+  v.id = id;
   register(v);
   return v;
 }
 
-// Load, add, then remove.
-var v1 = createVideo("v1");
-v1.load();
-document.body.appendChild(v1);
-v1.parentNode.removeChild(v1);
+for (var i=0; i<gSmallTests.length; ++i) {
+  var test = gSmallTests[i];
 
-// Load and add.
-var v2 = createVideo("v2");
-v2.load();
-document.body.appendChild(v2);
+  // Straightforward add, causing a load.
+  var v1 = createVideo(test.name, test.type, "1");
+  if (v1 == null) {
+    continue;
+  }
+  document.body.appendChild(v1);
 
-// Load outside of doc.
-var v3 = createVideo("v3");
-v3.load();
+  // Load, add, then remove.
+  var v1 = createVideo(test.name, test.type, "1");
+  if (!v1) {
+    continue;
+  }
+  v1.load();
+  document.body.appendChild(v1);
+  v1.parentNode.removeChild(v1);
 
-// Load and move to another document.
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var v4 = createVideo("v4");
-v4.load(); // load started while in this document, this doc's load will block until
-            // the video's finished loading (in the other document).
-// Opening a new window to do this is a bit annoying, but if we use an iframe here,
-// delaying of the iframe's load event might interfere with the firing of our load event
-// in some confusing way. So it's simpler just to open another window.
-gTestWindow = window.open("", "testWindow", "width=400,height=400");
-gTestWindow.document.body.appendChild(v4);
+  // Load and add.
+  var v2 = createVideo(test.name, test.type, "2");
+  v2.load();
+  document.body.appendChild(v2);
+
+  // Load outside of doc.
+  var v3 = createVideo(test.name, test.type, "3");
+  v3.load();
+
+  // Load and move to another document.
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var v4 = createVideo(test.name, test.type, "4");
+  v4.load(); // load started while in this document, this doc's load will block until
+              // the video's finished loading (in the other document).
+  // Opening a new window to do this is a bit annoying, but if we use an iframe here,
+  // delaying of the iframe's load event might interfere with the firing of our load event
+  // in some confusing way. So it's simpler just to open another window.
+  var w = window.open("", "testWindow"+i, "width=400,height=400");
+  w.document.body.appendChild(v4);
+  testWindows.push(w);
+
+}
+
+if (gRegisteredElements.length > 0) {
+  SimpleTest.waitForExplicitFinish();
+} else {
+  todo(false, "No types supported");
+}
 
 </script>
 </pre>
