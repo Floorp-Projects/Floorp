@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: progress events</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script src="use_large_cache.js"></script>
+<script class="testbody" type="text/javascript">
+
+var videos = [];
+
+function do_progress(e) {
+  var v = e.target;
+  ok(!v._finished, "Check no progress events after completed for " + v._name);
+  ok(e.lengthComputable, "Check progress lengthComputable for " + v._name);
+  ok(e.loaded >= v._last_progress_total, "Check progress increasing: " + e.loaded + " for " + v._name);
+  v._last_progress_total = e.loaded;
+  ok(e.loaded <= e.total, "Check progress in bounds: " + e.loaded + " for " + v._name);
+  is(e.total, v._size, "Check progress total for " + v._name);
+}
+
+function do_ended(e) {
+  var v = e.target;
+  ok(!v._finished, "Only one ended event for " + v._name);
+  v._finished = true;
+  if (AllFinished(videos))
+    SimpleTest.finish();
+}
+
+for (var i=0; i<gProgressTests.length; ++i) {
+  var test = gProgressTests[i];
+  var type = /^video/.test(test.type) ? "video" : "audio";
+  var v = document.createElement(type);
+  if (!v.canPlayType(test.type))
+    continue;
+  v.src = test.name;
+  v.autoplay = true;
+  v._name = test.name;
+  v._size = test.size;
+  v._finished = false;
+  v._last_progress_total = 0;
+  v.addEventListener("ended", do_ended, false);
+  v.addEventListener("progress", do_progress, false);
+  document.body.appendChild(v);
+  videos.push(v);
+}
+
+if (videos.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+
+</script>
+</pre>
+</body>
+</html>

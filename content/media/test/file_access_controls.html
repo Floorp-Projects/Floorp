@@ -1,70 +1,73 @@
 <html>
 <head>
+  <script type="text/javascript" src="manifest.js"></script>
 </head>
 <body onload="setTimeout(load, 0);" onunload="done()">
 <script>
 
 // Page URL: http://example.org/tests/content/media/test/file_access_controls.html
 
+var gResource = getPlayableVideo(gSmallTests).name;
+
 var gTests = [
   {
     // Test 0
-    url: "redirect.sjs?http://example.com/tests/content/media/test/320x240.ogv",
+    url: "redirect.sjs?domain=example.com&file="+ gResource,
     result: "error",
     description: "Won't load when redirected to different domain",
   },{
     // Test 1
-    url: "redirect.sjs?http://example.com/tests/content/media/test/320x240.allow-origin.ogv",
+    url: "redirect.sjs?domain=example.com&allowed&file=" + gResource,
     result: "loadeddata",
     description: "Can load when redirected to different domain with allow-origin",
   },{
     // Test 2
-    url: "redirect.sjs?http://test1.example.org/tests/content/media/test/320x240.ogv",
+    url: "redirect.sjs?domain=test1.example.org&file=" + gResource,
     result: "error",
     description: "Won't load when redirected to subdomain",
   },{
     // Test 3
-    url: "redirect.sjs?http://test1.example.org/tests/content/media/test/320x240.allow-origin.ogv",
+    url: "redirect.sjs?domain=test1.example.org&allowed&file=" + gResource,
     result: "loadeddata",
     description: "Can load when redirected to subdomain with allow-origin",
   },{
     // Test 4
-    url: "redirect.sjs?http://example.org/tests/content/media/test/320x240.ogv",
+    url: "redirect.sjs?domain=example.org&file=" + gResource,
     result: "loadeddata",
     description: "Can load when redirected to same domain",
   },{
     // Test 5
-    url: "http://example.org/tests/content/media/test/320x240.ogv",
+    url: "http://example.org/tests/content/media/test/" + gResource,
     result: "loadeddata",
     description: "Can load from same domain"
   },{
     // Test 6
-    url: "http://example.org:8000/tests/content/media/test/320x240.ogv",
+    url: "http://example.org:8000/tests/content/media/test/" + gResource,
     result: "error",
     description: "Won't load from different port on same domain"
   },{
     // Test 7
-    url: "http://example.org:8000/tests/content/media/test/320x240.allow-origin.ogv",
+    url: "http://example.org:8000/tests/content/media/test/allowed.sjs?" + gResource,
     result: "loadeddata",
     description: "Can load from different port on same domain with allow-origin",
   },{
     // Test 8
-    url: "http://example.com/tests/content/media/test/320x240.ogv",
+    url: "http://example.com/tests/content/media/test/" + gResource,
     result: "error",
     description: "Won't load cross domain",
   },{
     // Test 9
-    url: "http://example.com/tests/content/media/test/320x240.allow-origin.ogv",
+    url: "http://example.com/tests/content/media/test/allowed.sjs?" + gResource,
     result: "loadeddata",
     description: "Can load cross domain with allow-origin",
   },{
     // Test 10
-    url: "http://test1.example.org/tests/content/media/test/320x240.allow-origin.ogv",
+    url: "http://test1.example.org/tests/content/media/test/allowed.sjs?" + gResource,
     result: "loadeddata",
     description: "Can load from subdomain with allow-origin",
   },{
     // Test 11
-    url: "http://test1.example.org/tests/content/media/test/320x240.ogv",
+    url: "http://test1.example.org/tests/content/media/test/" + gResource,
     result: "error",
     description: "Won't load from subdomain",
   }

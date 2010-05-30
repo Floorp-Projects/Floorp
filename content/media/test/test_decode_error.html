@@ -54,7 +54,11 @@ gDecodeErrorTests.forEach(function (test, index) {
   v1.load();
 });
 
-SimpleTest.waitForExplicitFinish();
+if (testsWaiting > 0) {
+  SimpleTest.waitForExplicitFinish();
+} else {
+  todo(false, "No types supported");
+}
 </script>
 </pre>
 </body>

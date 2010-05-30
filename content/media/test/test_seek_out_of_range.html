@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seeking off the end of a file</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var videos = [];
+
+// Test if the ended event works correctly.
+
+function startTest(e) {
+  var v = e.target;
+  checkMetadata(v._name, v, v._test);
+  is(v._loadedMetadata, false, "Should only receive one loadedmetadata event for " + v._name);
+  v._loadedMetadata = true;
+  v.currentTime = 3.0 * v.duration;
+}
+
+function playbackEnded(e) {
+  var v = e.target;
+  // We should have dispatched an ended event when we seeked to the end of
+  // media, but we want the ended event which dispatches once playback has
+  // completed after the seek to the beginning.
+  if (!v._played)
+    return;
+  ok(v.ended, "Checking ended set after seeking to EOF and playing for " + v._name);
+  ok(!v._finished, "Should only hit the end once for " + v._name);
+  v._finished = true;
+  if (AllFinished(videos))
+    SimpleTest.finish();
+}
+
+function endSeek(e) {
+  var v = e.target;
+  if (v._seeked)
+    return;
+  v._seeked = true;
+  ok(Math.abs(v.duration - v.currentTime) < 0.1,
+     "Should be at end of media for " + v._name + " t=" + v.currentTime + " d=" + v.duration);
+  v.play();
+}
+
+function playing(e) {
+  e.target._played = true;
+}
+
+for (var i=0; i<gSmallTests.length; ++i) {
+  var test = gSmallTests[i];
+  var type = /^video/.test(test.type) ? "video" : "audio";
+  var v = document.createElement(type);
+  if (!v.canPlayType(test.type))
+    continue;
+  v.src = test.name;
+  v._name = test.name;
+  v._finished = false;
+  v._test = test;
+  v._loadedMetadata = false;
+  v._seeked = false;
+  v._played = false;
+  v.addEventListener("loadedmetadata", startTest, false);
+  v.addEventListener("playing", playing, false);
+  v.addEventListener("seeked", endSeek, false);
+  v.addEventListener("ended", playbackEnded, false);
+  document.body.appendChild(v);
+  videos.push(v);
+}
+
+if (videos.length == 0) {
+  todo(false, "No types supported");
+} else {
+  SimpleTest.waitForExplicitFinish();
+}
+
+</script>
+</pre>
+</body>
+</html>
