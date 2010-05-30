@@ -611,3 +611,16 @@ stubs::Name(VMFrame &f, uint32 index)
     f.regs.sp[-1] = rval;
 }
 
+void JS_FASTCALL
+mjit::stubs::BitAnd(VMFrame &f)
+{
+    int32_t i, j;
+
+    if (!ValueToECMAInt32(f.cx, f.regs.sp[-2], &i) ||
+        !ValueToECMAInt32(f.cx, f.regs.sp[-1], &j)) {
+        THROW();
+    }
+    i = i & j;
+    f.regs.sp[-2].setInt32(i);
+}
+

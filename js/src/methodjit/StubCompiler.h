@@ -44,6 +44,7 @@
 #include "jscntxt.h"
 #include "jstl.h"
 #include "MethodJIT.h"
+#include "methodjit/FrameState.h"
 #include "methodjit/nunbox/Assembler.h"
 #include "CodeGenIncludes.h"
 
@@ -72,7 +73,10 @@ class StubCompiler
     FrameState &frame;
     JSScript *script;
     Assembler masm;
-    RegSnapshot snapshot;
+    uint32 generation;
+    uint32 lastGeneration;
+    bool hasJump;
+    Jump lastJump;
 
     /* :TODO: oom check */
     Vector<CrossPatch, 64, SystemAllocPolicy> exits;
@@ -80,6 +84,8 @@ class StubCompiler
 
   public:
     StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);
+
+    bool init(uint32 nargs);
 
     size_t size() {
         return masm.size();
@@ -95,16 +101,13 @@ class StubCompiler
     }
 
     STUB_CALL_TYPE(JSObjStub);
+    STUB_CALL_TYPE(VoidStub);
 
 #undef STUB_CALL_TYPE
 
-    /* Patches a jump target into the slow path. */
+    /* Exits from the fast path into the slow path. */
     void linkExit(Jump j);
 
-    /*
-     * Emits code into the slow-path stream that sync all outstanding state
-     * to memory.
-     */
     void leave();
 
     /*
