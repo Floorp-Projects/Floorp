@@ -70,8 +70,8 @@ StubCompiler::linkExit(Jump j)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW MERGE CODE ---- \n");
     if (lastGeneration == generation) {
-        Jump j = masm.jump();
-        jumpList.append(j);
+        Jump j2 = masm.jump();
+        jumpList.append(j2);
     }
     frame.sync(masm);
     lastGeneration = generation;
@@ -92,12 +92,10 @@ StubCompiler::rejoin(uint32 invalidationDepth)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW RESTORE CODE ---- \n");
 
-#if 0
-    frame.merge(masm, snapshot, invalidationDepth);
+    frame.merge(masm, invalidationDepth);
 
     Jump j = masm.jump();
     joins.append(CrossPatch(j, cc.getLabel()));
-#endif
 
     JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
 }
