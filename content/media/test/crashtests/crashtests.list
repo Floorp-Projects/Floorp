@@ -1,9 +1,8 @@
-asserts(0-1) load 459439-1.html # bug 564603
-asserts(0-1) load 466607-1.html # bug 564603
-asserts(0-1) load 466945-1.html # bug 564603
+load 459439-1.html
+load 466607-1.html
+load 466945-1.html
 load 468763-1.html
 load 474744-1.html
-asserts(0-1) load 493915-1.html # bug 564603
+load 493915-1.html
 load 495794-1.html
 load 492286-1.xhtml
-
