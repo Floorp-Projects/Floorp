@@ -2163,6 +2163,23 @@
           if (aEvent.altKey)
             return;
 
+          // We need to take care of FAYT-watching as long as the findbar
+          // isn't initialized.  The checks on aEvent are copied from
+          // _shouldFastFind (see findbar.xml).
+          if (!gFindBarInitialized &&
+              !(aEvent.ctrlKey || aEvent.metaKey) &&
+              !aEvent.getPreventDefault()) {
+            let charCode = aEvent.charCode;
+            if (charCode) {
+              let char = String.fromCharCode(charCode);
+              if (char == "'" || char == "/" ||
+                  Services.prefs.getBoolPref("accessibility.typeaheadfind")) {
+                gFindBar._onBrowserKeypress(aEvent);
+                return;
+              }
+            }
+          }
+
 #ifdef XP_MACOSX
           if (!aEvent.metaKey)
             return;
