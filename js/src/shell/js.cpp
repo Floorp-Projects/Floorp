@@ -4611,20 +4611,18 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                JSObject **objp)
 {
 #ifdef LAZY_STANDARD_CLASSES
-    if ((flags & JSRESOLVE_ASSIGNING) == 0) {
-        JSBool resolved;
+    JSBool resolved;
 
-        if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
-            return JS_FALSE;
-        if (resolved) {
-            *objp = obj;
-            return JS_TRUE;
-        }
+    if (!JS_ResolveStandardClass(cx, obj, id, &resolved))
+        return JS_FALSE;
+    if (resolved) {
+        *objp = obj;
+        return JS_TRUE;
     }
 #endif
 
 #if defined(SHELL_HACK) && defined(DEBUG) && defined(XP_UNIX)
-    if ((flags & (JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING)) == 0) {
+    if (!(flags & JSRESOLVE_QUALIFIED)) {
         /*
          * Do this expensive hack only for unoptimized Unix builds, which are
          * not used for benchmarking.
