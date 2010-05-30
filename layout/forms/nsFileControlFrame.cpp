@@ -91,6 +91,7 @@
 #include "nsIContentPrefService.h"
 #include "nsIContentURIGrouper.h"
 #include "mozilla/Services.h"
+#include "nsDirectoryServiceDefs.h"
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
@@ -415,9 +416,15 @@ nsFileControlFrame::MouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
   } else {
     // Attempt to retrieve the last used directory from the content pref service
     nsCOMPtr<nsILocalFile> localFile;
-    if (NS_SUCCEEDED(gUploadLastDir->FetchLastUsedDirectory(
-                     doc->GetDocumentURI(), getter_AddRefs(localFile))))
-      filePicker->SetDisplayDirectory(localFile);
+    gUploadLastDir->FetchLastUsedDirectory(doc->GetDocumentURI(),
+                                           getter_AddRefs(localFile));
+    if (!localFile) {
+      // Default to "home" directory for each platform
+      nsCOMPtr<nsIFile> homeDir;
+      NS_GetSpecialDirectory(NS_OS_HOME_DIR, getter_AddRefs(homeDir));
+      localFile = do_QueryInterface(homeDir);
+    }
+    filePicker->SetDisplayDirectory(localFile);
   }
 
   // Tell our textframe to remember the currently focused value
