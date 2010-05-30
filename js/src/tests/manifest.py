@@ -127,6 +127,10 @@ def parse(filename, xul_tester, reldir = ''):
                     if xul_tester.test(cond):
                         expect = False
                     pos += 1
+                elif parts[pos].startswith('asserts-if'):
+                    # This directive means we may flunk some number of
+                    # NS_ASSERTIONs in the browser. For the shell, ignore it.
+                    pos += 1
                 elif parts[pos].startswith('skip-if'):
                     cond = parts[pos][len('skip-if('):-1]
                     if xul_tester.test(cond):
