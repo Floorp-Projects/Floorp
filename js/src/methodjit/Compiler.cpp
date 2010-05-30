@@ -41,6 +41,7 @@
 #include "Compiler.h"
 #include "StubCalls.h"
 #include "assembler/jit/ExecutableAllocator.h"
+#include "FrameState-inl.h"
 
 #include "jsautooplen.h"
 
@@ -360,7 +361,9 @@ mjit::Compiler::generateMethod()
      *  END COMPILER OPS  *
      **********************/ 
 
+#ifdef DEBUG
         frame.assertValidRegisterState();
+#endif
     }
 
   done:

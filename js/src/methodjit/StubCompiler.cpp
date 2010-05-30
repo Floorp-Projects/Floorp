@@ -41,6 +41,7 @@
 #include "StubCompiler.h"
 #include "Compiler.h"
 #include "assembler/assembler/LinkBuffer.h"
+#include "FrameState-inl.h"
 
 using namespace js;
 using namespace mjit;
