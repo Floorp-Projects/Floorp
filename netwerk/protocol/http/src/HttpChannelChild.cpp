@@ -88,8 +88,6 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelInternal)
   NS_INTERFACE_MAP_ENTRY(nsICachingChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
-  NS_INTERFACE_MAP_ENTRY(nsIUploadChannel2)
   NS_INTERFACE_MAP_ENTRY(nsIEncodedChannel)
   NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
   NS_INTERFACE_MAP_ENTRY(nsISupportsPriority)
@@ -281,7 +279,35 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   if (NS_FAILED(rv))
     return rv;
 
+  // Prepare uploadStream for POST data
+  nsCAutoString uploadStreamData;
+  PRInt32 uploadStreamInfo;
+
+  if (mUploadStream) {
+    // Read entire POST stream into string:
+    // This is a temporary measure until bug 564553 is implemented:  we're doing
+    // a blocking read of a potentially arbitrarily large stream, so this isn't
+    // performant/safe for large file uploads.
+    PRUint32 bytes;
+    mUploadStream->Available(&bytes);
+    if (bytes > 0) {
+      rv = NS_ReadInputStreamToString(mUploadStream, uploadStreamData, bytes);
+      if (!NS_SUCCEEDED(rv))
+        return rv;
+    }
+
+    uploadStreamInfo = mUploadStreamHasHeaders ? 
+      eUploadStream_hasHeaders : eUploadStream_hasNoHeaders;
+  } else {
+    uploadStreamInfo = eUploadStream_null;
+  }
+
   // FIXME bug 562587: need to dupe nsHttpChannel::AsyncOpen cookies logic 
+
+  //
+  // NOTE: From now on we must return NS_OK; all errors must be handled via
+  // OnStart/OnStopRequest
+  //
 
   // notify "http-on-modify-request" observers
   gHttpHandler->OnModifyRequest(this);
@@ -317,8 +343,9 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   gNeckoChild->SendPHttpChannelConstructor(this);
 
   SendAsyncOpen(IPC::URI(mURI), IPC::URI(mOriginalURI), IPC::URI(mDocumentURI),
-                IPC::URI(mReferrer), mLoadFlags, mRequestHeaders,
-                mRequestHead.Method(), mPriority, mRedirectionLimit,
+                IPC::URI(mReferrer), mLoadFlags, mRequestHeaders, 
+                mRequestHead.Method(), uploadStreamData, 
+                uploadStreamInfo, mPriority, mRedirectionLimit, 
                 mAllowPipelining, mForceAllowThirdPartyCookie);
 
   // The socket transport layer in the chrome process now has a logical ref to
@@ -452,41 +479,6 @@ HttpChannelChild::IsFromCache(PRBool *value)
   // FIXME: stub for bug 537164
   *value = false;
   return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// HttpChannelChild::nsIUploadChannel
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelChild::SetUploadStream(nsIInputStream *aStream, 
-                                  const nsACString& aContentType, 
-                                  PRInt32 aContentLength)
-{
-  DROP_DEAD();
-}
-
-NS_IMETHODIMP
-HttpChannelChild::GetUploadStream(nsIInputStream **stream)
-{
-  // FIXME: stub for bug 536273
-  NS_ENSURE_ARG_POINTER(stream);
-  *stream = 0;
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// HttpChannelChild::nsIUploadChannel2
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-HttpChannelChild::ExplicitSetUploadStream(nsIInputStream *aStream, 
-                                          const nsACString& aContentType, 
-                                          PRInt64 aContentLength, 
-                                          const nsACString& aMethod, 
-                                          PRBool aStreamHasHeaders)
-{
-  DROP_DEAD();
 }
 
 //-----------------------------------------------------------------------------

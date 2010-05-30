@@ -50,6 +50,8 @@
 #include "nsHttpConnectionInfo.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
+#include "nsIUploadChannel.h"
+#include "nsIUploadChannel2.h"
 #include "nsIProgressEventSink.h"
 #include "nsIURI.h"
 #include "nsISupportsPriority.h"
@@ -75,6 +77,10 @@
 namespace mozilla {
 namespace net {
 
+typedef enum { eUploadStream_null = -1,
+               eUploadStream_hasNoHeaders = 0,
+               eUploadStream_hasHeaders = 1 } UploadStreamInfoType;
+
 /*
  * This class is a partial implementation of nsIHttpChannel.  It contains code
  * shared by nsHttpChannel and HttpChannelChild. 
@@ -85,10 +91,14 @@ namespace net {
 class HttpBaseChannel : public nsHashPropertyBag
                       , public nsIHttpChannel
                       , public nsIHttpChannelInternal
+                      , public nsIUploadChannel
+                      , public nsIUploadChannel2
                       , public nsISupportsPriority
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIUPLOADCHANNEL
+  NS_DECL_NSIUPLOADCHANNEL2
 
   HttpBaseChannel();
   virtual ~HttpBaseChannel();
@@ -178,6 +188,7 @@ protected:
   nsCOMPtr<nsIURI>                  mReferrer;
 
   nsHttpRequestHead                 mRequestHead;
+  nsCOMPtr<nsIInputStream>          mUploadStream;
   nsAutoPtr<nsHttpResponseHead>     mResponseHead;
   nsRefPtr<nsHttpConnectionInfo>    mConnectionInfo;
 
@@ -196,6 +207,7 @@ protected:
   PRUint8                           mResponseHeadersModified    : 1;
   PRUint8                           mAllowPipelining            : 1;
   PRUint8                           mForceAllowThirdPartyCookie : 1;
+  PRUint32                          mUploadStreamHasHeaders     : 1;
 };
 
 

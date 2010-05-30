@@ -69,6 +69,8 @@ parent:
             PRUint32            loadFlags,
             RequestHeaderTuples requestHeaders,
             nsHttpAtom          requestMethod,
+            nsCString           uploadStreamData,
+            PRInt32             uploadStreamInfo,
             PRUint16            priority,
             PRUint8             redirectionLimit,
             PRBool              allowPipelining,

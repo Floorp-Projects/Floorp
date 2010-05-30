@@ -23,6 +23,8 @@
  *
  * Contributor(s):
  *   Daniel Witte <dwitte@mozilla.com>
+ *   Frederic Plourde <bugzillaFred@gmail.com>
+ *   Jason Duell <jduell.mcbugs@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -58,6 +60,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mResponseHeadersModified(PR_FALSE)
   , mAllowPipelining(PR_TRUE)
   , mForceAllowThirdPartyCookie(PR_FALSE)
+  , mUploadStreamHasHeaders(PR_FALSE)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
 
@@ -141,12 +144,14 @@ HttpBaseChannel::Init(nsIURI *aURI,
 // HttpBaseChannel::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS_INHERITED5(HttpBaseChannel,
+NS_IMPL_ISUPPORTS_INHERITED7(HttpBaseChannel,
                              nsHashPropertyBag, 
                              nsIRequest,
                              nsIChannel,
                              nsIHttpChannel,
                              nsIHttpChannelInternal,
+                             nsIUploadChannel,
+                             nsIUploadChannel2,
                              nsISupportsPriority)
 
 //-----------------------------------------------------------------------------
@@ -366,6 +371,105 @@ HttpBaseChannel::Open(nsIInputStream **aResult)
 {
   NS_ENSURE_TRUE(!mWasOpened, NS_ERROR_IN_PROGRESS);
   return NS_ImplementChannelOpen(this, aResult);
+}
+
+//-----------------------------------------------------------------------------
+// HttpBaseChannel::nsIUploadChannel
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpBaseChannel::GetUploadStream(nsIInputStream **stream)
+{
+  NS_ENSURE_ARG_POINTER(stream);
+  *stream = mUploadStream;
+  NS_IF_ADDREF(*stream);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetUploadStream(nsIInputStream *stream,
+                               const nsACString &contentType,
+                               PRInt32 contentLength)
+{
+  // NOTE: for backwards compatibility and for compatibility with old style
+  // plugins, |stream| may include headers, specifically Content-Type and
+  // Content-Length headers.  in this case, |contentType| and |contentLength|
+  // would be unspecified.  this is traditionally the case of a POST request,
+  // and so we select POST as the request method if contentType and
+  // contentLength are unspecified.
+
+  if (stream) {
+    if (contentType.IsEmpty()) {
+      mUploadStreamHasHeaders = PR_TRUE;
+      mRequestHead.SetMethod(nsHttp::Post); // POST request
+    } else {
+      if (contentLength < 0) {
+        // Not really kosher to assume Available == total length of
+        // stream, but apparently works for the streams we see here.
+        stream->Available((PRUint32 *) &contentLength);
+        if (contentLength < 0) {
+          NS_ERROR("unable to determine content length");
+          return NS_ERROR_FAILURE;
+        }
+      }
+      // SetRequestHeader propagates headers to chrome if HttpChannelChild 
+      nsCAutoString contentLengthStr;
+      contentLengthStr.AppendInt(PRInt64(contentLength));
+      SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"), contentLengthStr, 
+                       PR_FALSE);
+      SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), contentType, 
+                       PR_FALSE);
+      mUploadStreamHasHeaders = PR_FALSE;
+      mRequestHead.SetMethod(nsHttp::Put); // PUT request
+    }
+  } else {
+    mUploadStreamHasHeaders = PR_FALSE;
+    mRequestHead.SetMethod(nsHttp::Get); // revert to GET request
+  }
+  mUploadStream = stream;
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// HttpBaseChannel::nsIUploadChannel2
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
+                                       const nsACString &aContentType,
+                                       PRInt64 aContentLength,
+                                       const nsACString &aMethod,
+                                       PRBool aStreamHasHeaders)
+{
+  // Ensure stream is set and method is valid 
+  NS_ENSURE_TRUE(aStream, NS_ERROR_FAILURE);
+
+  if (aContentLength < 0 && !aStreamHasHeaders) {
+    PRUint32 streamLength;
+    aStream->Available(&streamLength);
+    aContentLength = streamLength;
+    if (aContentLength < 0) {
+      NS_ERROR("unable to determine content length");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  nsresult rv = SetRequestMethod(aMethod);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aStreamHasHeaders) {
+    // SetRequestHeader propagates headers to chrome if HttpChannelChild 
+    nsCAutoString contentLengthStr;
+    contentLengthStr.AppendInt(aContentLength);
+    SetRequestHeader(NS_LITERAL_CSTRING("Content-Length"), contentLengthStr, 
+                     PR_FALSE);
+    SetRequestHeader(NS_LITERAL_CSTRING("Content-Type"), aContentType, 
+                     PR_FALSE);
+  }
+
+  mUploadStreamHasHeaders = aStreamHasHeaders;
+  mUploadStream = aStream;
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
