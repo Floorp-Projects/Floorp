@@ -98,6 +98,20 @@ class BaseAssembler : public JSC::MacroAssembler
 #endif
 
     /*
+     * Finds and returns the address of a known object and slot.
+     */
+    Address objSlotRef(JSObject *obj, RegisterID reg, uint32 slot) {
+        if (slot < JS_INITIAL_NSLOTS) {
+            void *vp = &obj->getSlotRef(slot);
+            move(ImmPtr(vp), reg);
+            return Address(reg, 0);
+        }
+        move(ImmPtr(&obj->dslots), reg);
+        loadPtr(reg, reg);
+        return Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value));
+    }
+
+    /*
      * Prepares for a stub call.
      */
     void * getCallTarget(void *fun) {

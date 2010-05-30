@@ -120,6 +120,9 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         return;
     }
 
+    /* Cannot clobber the address's register. */
+    JS_ASSERT(!freeRegs.hasReg(address.base));
+
     if (fe->data.inRegister()) {
         masm.storeData32(fe->data.reg(), addressOf(fe));
     } else {
