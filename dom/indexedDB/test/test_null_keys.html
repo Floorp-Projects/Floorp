@@ -35,12 +35,19 @@
       request.onsuccess = grabEventAndContinueHandler;
       event = yield;
 
-      is(event.result, null, "Correct key");
+      ok(event.result != null, "Valid key");
+
+      let key1 = event.result;
+      alert(key1);
 
       request = objectStore.add({}, null);
-      request.onerror = grabEventAndContinueHandler;
-      request.onsuccess = unexpectedSuccessHandler;
-      yield;
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      ok(event.result != null, "Valid key");
+
+      ok(key1 != event.result, "Different unique keys");
 
       finishTest();
       yield;

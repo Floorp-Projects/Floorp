@@ -48,8 +48,10 @@
 
 #include "nsIIDBDatabaseException.h"
 #include "nsIJSContextStack.h"
+#include "nsIUUIDGenerator.h"
 
 #include "nsDOMClassInfo.h"
+#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Storage.h"
 
@@ -668,6 +670,22 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_PRECONDITION(aConnection, "Passed a null connection!");
 
   nsresult rv;
+  if (mKey.IsNull()) {
+    NS_WARNING("Using a UUID for null keys, probably can do something faster!");
+
+    nsCOMPtr<nsIUUIDGenerator> uuidGen =
+      do_GetService("@mozilla.org/uuid-generator;1", &rv);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    nsID id;
+    rv = uuidGen->GenerateUUIDInPlace(&id);
+    NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
+
+    char idString[NSID_LENGTH] = { 0 };
+    id.ToProvidedString(idString);
+
+    mKey = NS_ConvertASCIItoUTF16(idString);
+  }
 
   bool mayOverwrite = mOverwrite;
   bool unsetKey = mKey.IsUnset();
@@ -699,9 +717,7 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   if (!mAutoIncrement || mayOverwrite) {
     NS_ASSERTION(!mKey.IsUnset(), "This shouldn't happen!");
 
-    rv = mKey.IsNull() ?
-         stmt->BindNullByName(keyValue) :
-         mKey.IsInt() ?
+    rv = mKey.IsInt() ?
             stmt->BindInt64ByName(keyValue, mKey.IntValue()) :
             stmt->BindStringByName(keyValue, mKey.StringValue());
     NS_ENSURE_SUCCESS(rv, nsIIDBDatabaseException::UNKNOWN_ERR);
@@ -768,12 +784,9 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 PRUint16
 AddHelper::GetSuccessResult(nsIWritableVariant* aResult)
 {
-  NS_ASSERTION(!mKey.IsUnset(), "Badness!");
+  NS_ASSERTION(!mKey.IsUnset() && !mKey.IsNull(), "Badness!");
 
-  if (mKey.IsNull()) {
-    aResult->SetAsVoid();
-  }
-  else if (mKey.IsString()) {
+  if (mKey.IsString()) {
     aResult->SetAsAString(mKey.StringValue());
   }
   else {
