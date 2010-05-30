@@ -55,6 +55,14 @@ namespace mjit {
  * be requested in constant time. For each slot there is a FrameEntry *. If
  * this is non-NULL, it contains valid information and can be returned.
  *
+ * The register allocator keeps track of registers as being in one of two
+ * states. These are:
+ *
+ * 1) Unowned. Some code in the compiler is working on a register.
+ * 2) Owned. The FrameState owns the register, and may spill it at any time.
+ *
+ * ------------------ Implementation Details ------------------
+ * 
  * Observations:
  *
  * 1) We totally blow away known information quite often; branches, merge points.
@@ -169,6 +177,25 @@ class FrameState
     inline RegisterID tempRegForType(FrameEntry *fe);
 
     /*
+     * Allocates a data register for a FrameEntry's type.
+     */
+    inline RegisterID tempRegForData(FrameEntry *fe);
+
+    /*
+     * Allocates a register for a FrameEntry's data, such that the compiler
+     * can modify it in-place. If the slot already has a temporary register,
+     * it is cleared, and thus the entry is invalidated!
+     */
+    inline RegisterID ownRegForData(FrameEntry *fe);
+
+    /*
+     * Payloads don't always have to be in registers, sometimes the compiler
+     * can use addresses and avoid spilling. If this FrameEntry has a synced
+     * address and no register, this returns true.
+     */
+    inline bool shouldAvoidDataRemat(FrameEntry *fe);
+
+    /*
      * Frees a temporary register. If this register is being tracked, then it
      * is not spilled; the backing data becomes invalidated!
      */
@@ -191,6 +218,11 @@ class FrameState
      * how hard the register allocator should try to keep the FE in registers.
      */
     void storeTo(FrameEntry *fe, Address address, bool popHint);
+
+    /*
+     * Restores state from a slow path.
+     */
+    void merge(Assembler &masm, uint32 ivD) const;
 
     /*
      * Writes unsynced stores to an arbitrary buffer.
@@ -231,6 +263,8 @@ class FrameState
     void assertValidRegisterState() const;
 #endif
 
+    Address addressOf(const FrameEntry *fe) const;
+
   private:
     inline RegisterID alloc();
     inline RegisterID alloc(FrameEntry *fe, RematInfo::RematType type, bool weak);
@@ -240,12 +274,6 @@ class FrameState
     inline FrameEntry *addToTracker(uint32 index);
     inline void syncType(const FrameEntry *fe, Assembler &masm) const;
     inline void syncData(const FrameEntry *fe, Assembler &masm) const;
-
-    Address addressOf(const FrameEntry *fe) const {
-        uint32 index = (fe - entries);
-        JS_ASSERT(index >= nargs);
-        return Address(Assembler::FpReg, sizeof(JSStackFrame) + sizeof(Value) * index);
-    }
 
     uint32 indexOf(int32 depth) {
         return uint32((sp + depth) - base);

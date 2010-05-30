@@ -100,7 +100,56 @@ mjit::Compiler::jsop_bitop(JSOp op)
     stubcc.leave();
     stubcc.call(stubs::BitAnd);
 
+    if (lhs->isConstant() && rhs->isConstant()) {
+        int32 L = lhs->getValue().asInt32();
+        int32 R = rhs->getValue().asInt32();
+
+        frame.popn(2);
+        switch (op) {
+          case JSOP_BITAND:
+            frame.push(Value(Int32Tag(L & R)));
+            return;
+
+          default:
+            JS_NOT_REACHED("say wat");
+        }
+    }
+
+    RegisterID reg;
+
+    switch (op) {
+      case JSOP_BITAND:
+      {
+        /* Commutative, and we're guaranteed both are ints. */
+        if (lhs->isConstant()) {
+            JS_ASSERT(!rhs->isConstant());
+            FrameEntry *temp = rhs;
+            rhs = lhs;
+            lhs = temp;
+        }
+
+        reg = frame.ownRegForData(lhs);
+        if (rhs->isConstant()) {
+            masm.and32(Imm32(rhs->getValue().asInt32()), reg);
+        } else if (frame.shouldAvoidDataRemat(rhs)) {
+            masm.and32(masm.payloadOf(frame.addressOf(rhs)), reg);
+        } else {
+            RegisterID rhsReg = frame.tempRegForData(rhs);
+            masm.and32(rhsReg, reg);
+        }
+
+        break;
+      }
+
+      default:
+        JS_NOT_REACHED("NYI");
+        return;
+    }
+
     frame.pop();
     frame.pop();
+    frame.pushTypedPayload(JSVAL_MASK32_INT32, reg);
+
+    stubcc.rejoin(2);
 }
 
