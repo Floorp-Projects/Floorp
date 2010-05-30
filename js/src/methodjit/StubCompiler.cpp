@@ -73,9 +73,9 @@ StubCompiler::linkExit(Jump j)
         Jump j2 = masm.jump();
         jumpList.append(j2);
     }
+    exits.append(CrossPatch(j, masm.label()));
     frame.sync(masm);
     lastGeneration = generation;
-    exits.append(CrossPatch(j, masm.label()));
     JaegerSpew(JSpew_Insns, " ---- END SLOW MERGE CODE ---- \n");
 }
 
