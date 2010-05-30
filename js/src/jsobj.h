@@ -60,11 +60,11 @@ namespace js { class AutoDescriptorArray; }
  * structure.
  */
 struct PropertyDescriptor {
-  friend class js::AutoDescriptorArray;
+    friend class js::AutoDescriptorArray;
 
     PropertyDescriptor();
-  public:
 
+  public:
     /* 8.10.5 ToPropertyDescriptor(Obj) */
     bool initialize(JSContext* cx, jsid id, jsval v);
 
@@ -470,6 +470,7 @@ struct JSObject {
      * Arguments-specific getters and setters.
      */
 
+  private:
     /*
      * Reserved slot structure for Arguments objects:
      *
@@ -483,7 +484,6 @@ struct JSObject {
      * Argument index i is stored in dslots[i], accessible via
      * {get,set}ArgsElement().
      */
-  private:
     static const uint32 JSSLOT_ARGS_LENGTH = JSSLOT_PRIVATE + 1;
     static const uint32 JSSLOT_ARGS_CALLEE = JSSLOT_PRIVATE + 2;
 
