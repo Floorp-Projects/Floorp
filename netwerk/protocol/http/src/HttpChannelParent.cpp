@@ -94,6 +94,8 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
                                  const PRUint32&            loadFlags,
                                  const RequestHeaderTuples& requestHeaders,
                                  const nsHttpAtom&          requestMethod,
+                                 const nsCString&           uploadStreamData,
+                                 const PRInt32&             uploadStreamInfo,
                                  const PRUint16&            priority,
                                  const PRUint8&             redirectionLimit,
                                  const PRBool&              allowPipelining,
@@ -113,11 +115,11 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
   if (NS_FAILED(rv))
-    return false;       // TODO: send fail msg to child, return true
+    return false;       // TODO: cancel request (bug 536317), return true
 
   rv = NS_NewChannel(getter_AddRefs(mChannel), uri, ios, nsnull, nsnull, loadFlags);
   if (NS_FAILED(rv))
-    return false;       // TODO: send fail msg to child, return true
+    return false;       // TODO: cancel request (bug 536317), return true
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
   httpChan->SetRemoteChannel();
@@ -139,6 +141,19 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
   httpChan->SetNotificationCallbacks(this);
 
   httpChan->SetRequestMethod(nsDependentCString(requestMethod.get()));
+
+  if (uploadStreamInfo != eUploadStream_null) {
+    nsCOMPtr<nsIInputStream> stream;
+    rv = NS_NewPostDataStream(getter_AddRefs(stream), false, uploadStreamData, 0);
+    if (!NS_SUCCEEDED(rv)) {
+      return false;   // TODO: cancel request (bug 536317), return true
+    }
+    httpChan->InternalSetUploadStream(stream);
+    // We're casting uploadStreamInfo into PRBool here on purpose because
+    // we know possible values are either 0 or 1. See uploadStreamInfoType.
+    httpChan->SetUploadStreamHasHeaders((PRBool) uploadStreamInfo);
+  }
+
   if (priority != nsISupportsPriority::PRIORITY_NORMAL)
     httpChan->SetPriority(priority);
   httpChan->SetRedirectionLimit(redirectionLimit);
@@ -147,7 +162,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   rv = httpChan->AsyncOpen(this, nsnull);
   if (NS_FAILED(rv))
-    return false;       // TODO: send fail msg to child, return true
+    return false;       // TODO: cancel request (bug 536317), return true
 
   return true;
 }

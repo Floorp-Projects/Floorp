@@ -100,7 +100,6 @@ nsHttpChannel::nsHttpChannel()
     , mCachedContentIsPartial(PR_FALSE)
     , mCanceled(PR_FALSE)
     , mTransactionReplaced(PR_FALSE)
-    , mUploadStreamHasHeaders(PR_FALSE)
     , mAuthRetryPending(PR_FALSE)
     , mProxyAuth(PR_FALSE)
     , mTriedProxyAuth(PR_FALSE)
@@ -4198,97 +4197,6 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
     mFallbackChannel = PR_TRUE;
     mFallbackKey = aFallbackKey;
 
-    return NS_OK;
-}
- 
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsIUploadChannel
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::GetUploadStream(nsIInputStream **stream)
-{
-    NS_ENSURE_ARG_POINTER(stream);
-    *stream = mUploadStream;
-    NS_IF_ADDREF(*stream);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::SetUploadStream(nsIInputStream *stream,
-                               const nsACString &contentType,
-                               PRInt32 contentLength)
-{
-    // NOTE: for backwards compatibility and for compatibility with old style
-    // plugins, |stream| may include headers, specifically Content-Type and
-    // Content-Length headers.  in this case, |contentType| and |contentLength|
-    // would be unspecified.  this is traditionally the case of a POST request,
-    // and so we select POST as the request method if contentType and
-    // contentLength are unspecified.
-    
-    if (stream) {
-        if (!contentType.IsEmpty()) {
-            if (contentLength < 0) {
-                stream->Available((PRUint32 *) &contentLength);
-                if (contentLength < 0) {
-                    NS_ERROR("unable to determine content length");
-                    return NS_ERROR_FAILURE;
-                }
-            }
-            mRequestHead.SetHeader(nsHttp::Content_Length,
-                                   nsPrintfCString("%d", contentLength));
-            mRequestHead.SetHeader(nsHttp::Content_Type, contentType);
-            mUploadStreamHasHeaders = PR_FALSE;
-            mRequestHead.SetMethod(nsHttp::Put); // PUT request
-        }
-        else {
-            mUploadStreamHasHeaders = PR_TRUE;
-            mRequestHead.SetMethod(nsHttp::Post); // POST request
-        }
-    }
-    else {
-        mUploadStreamHasHeaders = PR_FALSE;
-        mRequestHead.SetMethod(nsHttp::Get); // revert to GET request
-    }
-    mUploadStream = stream;
-    return NS_OK;
-}
-
-//-----------------------------------------------------------------------------
-// nsHttpChannel::nsIUploadChannel2
-//-----------------------------------------------------------------------------
-
-NS_IMETHODIMP
-nsHttpChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
-                                       const nsACString &aContentType,
-                                       PRInt64 aContentLength,
-                                       const nsACString &aMethod,
-                                       PRBool aStreamHasHeaders)
-{
-    // Ensure stream is set and method is valid 
-    NS_ENSURE_TRUE(aStream, NS_ERROR_FAILURE);
-
-    if (aContentLength < 0 && !aStreamHasHeaders) {
-        PRUint32 streamLength;
-        aStream->Available(&streamLength);
-        aContentLength = streamLength;
-        if (aContentLength < 0) {
-            NS_ERROR("unable to determine content length");
-            return NS_ERROR_FAILURE;
-        }
-    }
-
-    nsresult rv = SetRequestMethod(aMethod);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!aStreamHasHeaders) {
-        mRequestHead.SetHeader(nsHttp::Content_Length,
-                               nsPrintfCString("%lld", aContentLength));
-        mRequestHead.SetHeader(nsHttp::Content_Type, aContentType);
-    }
-
-    mUploadStreamHasHeaders = aStreamHasHeaders;
-    mUploadStream = aStream;
     return NS_OK;
 }
 
