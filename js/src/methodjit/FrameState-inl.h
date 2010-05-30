@@ -185,11 +185,11 @@ FrameState::push(Address address)
     fe->resetUnsynced();
 
     RegisterID reg = alloc(fe, RematInfo::DATA, true);
-    masm.loadData32(addressOf(fe), reg);
+    masm.loadData32(address, reg);
     fe->data.setRegister(reg);
     
     reg = alloc(fe, RematInfo::TYPE, true);
-    masm.loadTypeTag(addressOf(fe), reg);
+    masm.loadTypeTag(address, reg);
     fe->type.setRegister(reg);
 }
 
@@ -197,7 +197,6 @@ inline void
 FrameState::pushTypedPayload(uint32 tag, RegisterID payload)
 {
     JS_ASSERT(!freeRegs.hasReg(payload));
-    JS_ASSERT(!regstate[payload].fe);
 
     FrameEntry *fe = rawPush();
 
@@ -220,6 +219,49 @@ FrameState::tempRegForType(FrameEntry *fe)
     RegisterID reg = alloc(fe, RematInfo::TYPE, true);
     masm.loadTypeTag(addressOf(fe), reg);
     return reg;
+}
+
+inline JSC::MacroAssembler::RegisterID
+FrameState::tempRegForData(FrameEntry *fe)
+{
+    JS_ASSERT(!fe->data.isConstant());
+
+    if (fe->data.inRegister())
+        return fe->data.reg();
+
+    /* :XXX: X64 */
+
+    RegisterID reg = alloc(fe, RematInfo::DATA, true);
+    masm.loadData32(addressOf(fe), reg);
+    return reg;
+}
+
+inline JSC::MacroAssembler::RegisterID
+FrameState::ownRegForData(FrameEntry *fe)
+{
+    JS_ASSERT(!fe->data.isConstant());
+
+    if (fe->data.inRegister()) {
+        /* Remove ownership of this register. */
+        RegisterID reg = fe->data.reg();
+        JS_ASSERT(regstate[reg].fe == fe);
+        JS_ASSERT(regstate[reg].type == RematInfo::DATA);
+        regstate[reg].fe = NULL;
+        fe->data.invalidate();
+        return reg;
+    }
+
+    /* :XXX: X64 */
+
+    RegisterID reg = alloc(fe, RematInfo::DATA, true);
+    masm.loadData32(addressOf(fe), reg);
+    return reg;
+}
+
+inline bool
+FrameState::shouldAvoidDataRemat(FrameEntry *fe)
+{
+    return fe->data.inMemory();
 }
 
 inline void
@@ -256,6 +298,14 @@ inline void
 FrameState::learnType(FrameEntry *fe, uint32 tag)
 {
     fe->setTypeTag(tag);
+}
+
+inline JSC::MacroAssembler::Address
+FrameState::addressOf(const FrameEntry *fe) const
+{
+    uint32 index = (fe - entries);
+    JS_ASSERT(index >= nargs);
+    return Address(Assembler::FpReg, sizeof(JSStackFrame) + sizeof(Value) * index);
 }
 
 } /* namspace mjit */

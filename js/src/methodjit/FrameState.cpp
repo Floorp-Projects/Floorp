@@ -232,3 +232,20 @@ FrameState::syncAndKill(uint32 mask)
     }
 }
 
+void
+FrameState::merge(Assembler &masm, uint32 iVD) const
+{
+    for (uint32 i = 0; i < tracker.nentries; i++) {
+        uint32 index = tracker[i];
+
+        if (index >= tos())
+            continue;
+
+        FrameEntry *fe = &entries[index];
+        if (fe->data.inRegister())
+            masm.loadData32(addressOf(fe), fe->data.reg());
+        if (fe->type.inRegister())
+            masm.loadTypeTag(addressOf(fe), fe->type.reg());
+    }
+}
+
