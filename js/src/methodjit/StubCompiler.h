@@ -75,12 +75,11 @@ class StubCompiler
     Assembler masm;
     uint32 generation;
     uint32 lastGeneration;
-    bool hasJump;
-    Jump lastJump;
 
     /* :TODO: oom check */
     Vector<CrossPatch, 64, SystemAllocPolicy> exits;
     Vector<CrossPatch, 64, SystemAllocPolicy> joins;
+    Vector<Jump, 8, SystemAllocPolicy> jumpList;
 
   public:
     StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script);

@@ -47,8 +47,8 @@ using namespace js;
 using namespace mjit;
 
 StubCompiler::StubCompiler(JSContext *cx, mjit::Compiler &cc, FrameState &frame, JSScript *script)
-  : cx(cx), cc(cc), frame(frame), script(script), generation(1), lastGeneration(0), hasJump(false),
-    exits(SystemAllocPolicy()), joins(SystemAllocPolicy())
+  : cx(cx), cc(cc), frame(frame), script(script), generation(1), lastGeneration(0),
+    exits(SystemAllocPolicy()), joins(SystemAllocPolicy()), jumpList(SystemAllocPolicy())
 {
 }
 
@@ -59,54 +59,32 @@ StubCompiler::init(uint32 nargs)
 }
 
 /*
- * So, the tough thing about stub calls is that multiple exits from the fast
- * want to have one rejoin point. Roughly like this:
- *
- *  FAST                           | SLOW                           |
- *  -------------------------------+--------------------------------|
- *  pop value               .--->  | sink value                     |
- *  test type --------------' .->  | sink value                     |                                
- *  pop value                 |    | sink everything else           |  
- *  test type ----------------'    | do slow stuff                  |
- *  do fast stuff                  | restore  --.
- *  next opcode  <------------------------------'
- *
- * While testing for fast paths, the FrameState can change in a few ways:
- *  1) Anything might be spilled or moved to a new register.
- *     For example, local variable X might have register EAX for exit #1,
- *     and be spilled to the stack for exit #2. The common call point
- *     won't include a spill for EAX, so #1 must know to do this.
- *
- *  2) Operating on stack slots can add information.
- *
- * We solve problem #1 by looking for deltas in between snapshots, and
- * appending changes to the previous exit path. We should only ever encounter
- * a change for a given register once, since that slot will have become
- * sunk on the fast-path.
+ * The "slow path" generation is interleaved with the main compilation phase,
+ * though it is generated into a separate buffer. The fast path can "exit"
+ * into the slow path, and the slow path rejoins into the fast path. The slow
+ * path is kept in a separate buffer, but appended to the main one, for ideal
+ * icache locality.
  */
-
 void
 StubCompiler::linkExit(Jump j)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW MERGE CODE ---- \n");
-#if 0
     if (lastGeneration == generation) {
-        if (hasJump)
-            lastJump.linkTo(masm.label(), &masm);
-        frame.deltize(masm, snapshot);
-        lastJump = masm.jump();
-        hasJump = true;
+        Jump j = masm.jump();
+        jumpList.append(j);
     }
-    frame.snapshot(snapshot);
+    frame.sync(masm);
     lastGeneration = generation;
     exits.append(CrossPatch(j, masm.label()));
-#endif
     JaegerSpew(JSpew_Insns, " ---- END SLOW MERGE CODE ---- \n");
 }
 
 void
 StubCompiler::leave()
 {
+    for (size_t i = 0; i < jumpList.length(); i++)
+        jumpList[i].linkTo(masm.label(), &masm);
+    jumpList.clear();
 }
 
 void
@@ -132,7 +110,6 @@ JSC::MacroAssembler::Call
 StubCompiler::stubCall(void *ptr)
 {
     generation++;
-    hasJump = false;
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
     Call cl = masm.stubCall(ptr, cc.getPC(), frame.stackDepth() + script->nfixed);
     JaegerSpew(JSpew_Insns, " ---- END SLOW CALL CODE ---- \n");

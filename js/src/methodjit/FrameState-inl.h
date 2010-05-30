@@ -115,13 +115,20 @@ FrameState::pop()
 inline void
 FrameState::freeReg(RegisterID reg)
 {
-    JS_ASSERT(!regstate[reg].fe);
     forgetReg(reg);
 }
 
 inline void
 FrameState::forgetReg(RegisterID reg)
 {
+#ifdef DEBUG
+    if (regstate[reg].fe) {
+        if (regstate[reg].type == RematInfo::TYPE)
+            regstate[reg].fe->type.invalidate();
+        else
+            regstate[reg].fe->data.invalidate();
+    }
+#endif
     freeRegs.putReg(reg);
 }
 
@@ -243,6 +250,12 @@ FrameState::syncData(const FrameEntry *fe, Assembler &masm) const
     } else {
         masm.storeData32(fe->data.reg(), addressOf(fe));
     }
+}
+
+inline void
+FrameState::learnType(FrameEntry *fe, uint32 tag)
+{
+    fe->setTypeTag(tag);
 }
 
 } /* namspace mjit */
