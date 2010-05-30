@@ -161,51 +161,36 @@ struct Registers {
         freeMask = AvailRegs;
     }
 
-    bool anyRegsFree() {
-        return !!freeMask;
+    bool empty() {
+        return !freeMask;
     }
 
-    bool anyRegsFree(uint32 mask) {
-        return !!(freeMask & mask);
+    bool empty(uint32 mask) {
+        return !(freeMask & mask);
     }
 
-    RegisterID allocReg() {
-        JS_ASSERT(anyRegsFree());
+    RegisterID takeAnyReg() {
+        JS_ASSERT(!empty());
         RegisterID reg = (RegisterID)(31 - js_bitscan_clz32(freeMask));
-        allocSpecific(reg);
+        takeReg(reg);
         return reg;
     }
 
-    bool isRegFree(RegisterID reg) {
+    bool hasReg(RegisterID reg) const {
         return !!(freeMask & (1 << reg));
     }
 
-    void freeReg(RegisterID reg) {
-        JS_ASSERT(!isRegFree(reg));
+    void putRegUnchecked(RegisterID reg) {
         freeMask |= (1 << reg);
     }
 
-    RegisterID allocFromMask(uint32 mask) {
-        mask &= freeMask;
-        JS_ASSERT(mask);
-        RegisterID reg = (RegisterID)(31 - js_bitscan_clz32(freeMask));
-        allocSpecific(reg);
-        return reg;
+    void putReg(RegisterID reg) {
+        JS_ASSERT(!hasReg(reg));
+        putRegUnchecked(reg);
     }
 
-    // Allocate a register from a given set if one is free. Return
-    // true iff a register was allocated.
-    bool tryAllocReg(uint32 mask, RegisterID &reg) {
-        if (anyRegsFree(mask)) {
-            reg = allocFromMask(mask);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    void allocSpecific(RegisterID reg) {
-        JS_ASSERT(isRegFree(reg));
+    void takeReg(RegisterID reg) {
+        JS_ASSERT(hasReg(reg));
         freeMask &= ~(1 << reg);
     }
 

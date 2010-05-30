@@ -22,7 +22,6 @@
  *
  * Contributor(s):
  *   David Anderson <danderson@mozilla.com>
- *   David Mandelin <dmandelin@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,37 +36,102 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#if !defined jsjaeger_codegen_h__ && defined JS_METHODJIT
-#define jsjaeger_codegen_h__
 
-#include "jscntxt.h"
-#include "jstl.h"
-#include "methodjit/MethodJIT.h"
-#include "methodjit/nunbox/FrameState.h"
-#include "methodjit/nunbox/Assembler.h"
+#if !defined jsjaeger_valueinfo_h__ && defined JS_METHODJIT
+#define jsjaeger_valueinfo_h__
+
+#include "jsapi.h"
+#include "methodjit/MachineRegs.h"
+#include "methodjit/RematInfo.h"
+#include "assembler/assembler/MacroAssembler.h"
 
 namespace js {
 namespace mjit {
 
-class CodeGenerator
+class FrameEntry
 {
-    typedef JSC::MacroAssembler::Address Address;
-    typedef JSC::MacroAssembler::Imm32 Imm32;
-    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
-
-    Assembler      &masm;
-    FrameState     &frame;
+    friend class FrameState;
 
   public:
-    CodeGenerator(Assembler &masm, FrameState &frame);
+    bool isConstant() const {
+        return data.isConstant();
+    }
 
-    void storeValue(FrameEntry *vi, Address address, bool popped);
-    void storeJsval(const Value &v, Address address);
-    void pushValueOntoFrame(Address address);
+    const jsval_layout &getConstant() const {
+        JS_ASSERT(isConstant());
+        return v_;
+    }
+
+    const Value &getValue() const {
+        JS_ASSERT(isConstant());
+        return Valueify(v_.asBits);
+    }
+
+    bool isTypeKnown() const {
+        return type.isConstant();
+    }
+
+    uint32 getTypeTag() const {
+        return v_.s.mask32;
+    }
+
+    uint32 getPayload32() const {
+        //JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
+        return v_.s.payload.u32;
+    }
+
+  private:
+    uint32 copyOf() {
+        JS_ASSERT(type.isCopy() || data.isCopy());
+        return index_;
+    }
+
+    void setTypeTag(uint32 u32) {
+        type.setConstant();
+        v_.s.mask32 = u32;
+    }
+
+    /*
+     * Marks the FE as unsynced & invalid.
+     */
+    void resetUnsynced() {
+        type.unsync();
+        data.unsync();
+#ifdef DEBUG
+        type.invalidate();
+        data.invalidate();
+#endif
+        copies = 0;
+    }
+
+    /*
+     * Marks the FE as synced & in memory.
+     */
+    void resetSynced() {
+        type.setMemory();
+        data.setMemory();
+        copies = 0;
+    }
+
+    /*
+     * Marks the FE as having a constant.
+     */
+    void setConstant(const jsval &v) {
+        type.setConstant();
+        data.setConstant();
+        v_.asBits = v;
+    }
+
+  private:
+    RematInfo  type;
+    RematInfo  data;
+    jsval_layout v_;
+    uint32     index_;
+    uint32     copies;
 };
 
-} /* namespace js */
 } /* namespace mjit */
+} /* namespace js */
 
-#endif
+#endif /* jsjaeger_valueinfo_h__ */
+

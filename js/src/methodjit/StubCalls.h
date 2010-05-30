@@ -48,9 +48,12 @@ namespace mjit {
 namespace stubs {
 
 void * JS_FASTCALL Return(VMFrame &f);
+
 JSObject * JS_FASTCALL BindName(VMFrame &f);
 void JS_FASTCALL SetName(VMFrame &f, uint32 index);
 void JS_FASTCALL Name(VMFrame &f, uint32 index);
+
+void JS_FASTCALL BitAnd(VMFrame &f);
 
 }}} /* namespace stubs,mjit,js */
 

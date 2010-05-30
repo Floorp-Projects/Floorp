@@ -48,9 +48,21 @@
 struct RematInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
 
+    enum SyncState {
+        SYNCED,
+        UNSYNCED
+    };
+
+    enum RematType {
+        TYPE,
+        DATA
+    };
+
     /* Physical location. */
     enum PhysLoc {
-        /* Backing bits are in memory. */
+        /*
+         * Backing bits are in memory. No fast remat.
+         */
         PhysLoc_Memory = 0,
 
         /* Backed by another entry in the stack. */
@@ -61,40 +73,58 @@ struct RematInfo {
 
         /* Backing bits are in a register. */
         PhysLoc_Register
+
+#ifdef DEBUG
+        /* Backing bits are invalid/unknown. */
+        , PhysLoc_Invalid
+#endif
     };
 
     void setRegister(RegisterID reg) {
         reg_ = reg;
         location_ = PhysLoc_Register;
-        synced_ = false;
+    }
+
+    RegisterID reg() const {
+        JS_ASSERT(inRegister());
+        return reg_;
     }
 
     void setMemory() {
-        synced_ = true;
         location_ = PhysLoc_Memory;
+        sync_ = SYNCED;
     }
 
-    void setSynced() { synced_ = true; }
+    void invalidate() {
+#ifdef DEBUG
+        location_ = PhysLoc_Invalid;
+#endif
+    }
+
     void setConstant() { location_ = PhysLoc_Constant; }
 
-    bool isCopy() { return location_ == PhysLoc_Copy; }
-    bool isConstant() { return location_ == PhysLoc_Constant; }
-    bool inRegister() { return location_ == PhysLoc_Register; }
-    bool inMemory() { return location_ == PhysLoc_Memory; }
-    RegisterID reg() { return reg_; }
+    bool isCopy() const { return location_ == PhysLoc_Copy; }
+    bool isConstant() const { return location_ == PhysLoc_Constant; }
+    bool inRegister() const { return location_ == PhysLoc_Register; }
+    bool inMemory() const { return location_ == PhysLoc_Memory; }
+    bool synced() const { return sync_ == SYNCED; }
+    void sync() {
+        JS_ASSERT(!synced());
+        sync_ = SYNCED;
+    }
+    void unsync() {
+        sync_ = UNSYNCED;
+    }
 
-    void unsync() { synced_ = false; }
-    bool synced() { return synced_; }
-    bool needsSync() { return !inMemory() && !synced(); }
-
+  private:
     /* Set if location is PhysLoc_Register. */
     RegisterID reg_;
 
     /* Remat source. */
-    PhysLoc    location_;
+    PhysLoc location_;
 
-    /* Whether or not the value has been synced to memory. */
-    bool       synced_;
+    /* Sync state. */
+    SyncState sync_;
 };
 
 #endif
