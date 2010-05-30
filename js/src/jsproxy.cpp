@@ -501,6 +501,18 @@ JSScriptedProxyHandler::~JSScriptedProxyHandler()
 {
 }
 
+static bool
+ReturnedValueMustNotBePrimitive(JSContext *cx, JSObject *proxy, JSAtom *atom, jsval v)
+{
+    if (JSVAL_IS_PRIMITIVE(v)) {
+        js_ReportValueError2(cx, JSMSG_BAD_TRAP_RETURN_VALUE,
+                             JSDVG_SEARCH_STACK, OBJECT_TO_JSVAL(proxy), NULL,
+                             js_AtomToPrintableString(cx, atom));
+        return false;
+    }
+    return true;
+}
+
 bool
 JSScriptedProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy, jsid id,
                                               JSPropertyDescriptor *desc)
@@ -509,6 +521,7 @@ JSScriptedProxyHandler::getPropertyDescriptor(JSContext *cx, JSObject *proxy, js
     AutoValueRooter tvr(cx);
     return FundamentalTrap(cx, handler, ATOM(getPropertyDescriptor), tvr.addr()) &&
            TryHandlerTrap(cx, proxy, Trap1(cx, handler, tvr.value(), id, tvr.addr())) &&
+           ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), tvr.value()) &&
            ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
 }
 
@@ -520,6 +533,7 @@ JSScriptedProxyHandler::getOwnPropertyDescriptor(JSContext *cx, JSObject *proxy,
     AutoValueRooter tvr(cx);
     return FundamentalTrap(cx, handler, ATOM(getOwnPropertyDescriptor), tvr.addr()) &&
            TryHandlerTrap(cx, proxy, Trap1(cx, handler, tvr.value(), id, tvr.addr())) &&
+           ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(getPropertyDescriptor), tvr.value()) &&
            ParsePropertyDescriptorObject(cx, proxy, id, tvr.value(), desc);
 }
 
@@ -647,16 +661,6 @@ JSScriptedProxyHandler::enumerateOwn(JSContext *cx, JSObject *proxy, JSIdArray *
 }
 
 bool
-ReportErrorIfPrimitive(JSContext *cx, jsval *vp)
-{
-    if (JSVAL_IS_PRIMITIVE(*vp)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
-        return false;
-    }
-    return true;
-}
-
-bool
 JSScriptedProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, jsval *vp)
 {
     JSObject *handler = JSVAL_TO_OBJECT(proxy->getProxyHandler());
@@ -666,7 +670,7 @@ JSScriptedProxyHandler::iterate(JSContext *cx, JSObject *proxy, uintN flags, jsv
     if (!js_IsCallable(tvr.value()))
         return JSProxyHandler::iterate(cx, proxy, flags, vp);
     return TryHandlerTrap(cx, proxy, Trap(cx, handler, tvr.value(), 0, NULL, vp)) &&
-           ReportErrorIfPrimitive(cx, vp);
+           ReturnedValueMustNotBePrimitive(cx, proxy, ATOM(iterate), *vp);
 }
 
 const void *
