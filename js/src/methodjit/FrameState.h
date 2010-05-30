@@ -193,6 +193,11 @@ class FrameState
     void storeTo(FrameEntry *fe, Address address, bool popHint);
 
     /*
+     * Writes unsynced stores to an arbitrary buffer.
+     */
+    void sync(Assembler &masm) const;
+
+    /*
      * Syncs all outstanding stores to memory and possibly kills regs in the
      * process.
      */
@@ -210,6 +215,11 @@ class FrameState
      * branching opcodes.
      */
     void forgetEverything();
+
+    /*
+     * Mark an existing slot with a type.
+     */
+    inline void learnType(FrameEntry *fe, uint32 tag);
 
     /*
      * Returns the current stack depth of the frame.

@@ -178,6 +178,26 @@ FrameState::assertValidRegisterState() const
 #endif
 
 void
+FrameState::sync(Assembler &masm) const
+{
+    for (uint32 i = 0; i < tracker.nentries; i++) {
+        uint32 index = tracker[i];
+
+        if (index >= tos())
+            continue;
+
+        FrameEntry *fe = &entries[index];
+        if (!fe->data.synced()) {
+            syncData(fe, masm);
+            if (fe->isConstant())
+                continue;
+        }
+        if (!fe->type.synced())
+            syncType(fe, masm);
+    }
+}
+
+void
 FrameState::syncAndKill(uint32 mask)
 {
     Registers kill(mask);
