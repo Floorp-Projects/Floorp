@@ -63,7 +63,7 @@ NotCheckedSSE2;
 
 mjit::Compiler::Compiler(JSContext *cx, JSScript *script, JSFunction *fun, JSObject *scopeChain)
   : cx(cx), script(script), scopeChain(scopeChain), globalObj(scopeChain->getGlobal()), fun(fun),
-    analysis(cx, script), jumpMap(NULL), frame(cx, script, masm), cg(masm, frame),
+    analysis(cx, script), jumpMap(NULL), frame(cx, script, masm),
     branchPatches(ContextAllocPolicy(cx)), stubcc(cx, *this, frame, script)
 {
 }
@@ -92,7 +92,7 @@ mjit::Compiler::Compile()
     }
 
     uint32 nargs = fun ? fun->nargs : 0;
-    if (!frame.init(nargs))
+    if (!frame.init(nargs) || !stubcc.init(nargs))
         return Compile_Abort;
 
     jumpMap = (Label *)cx->malloc(sizeof(Label) * script->length);
@@ -126,7 +126,7 @@ mjit::Compiler::Compile()
 #endif
 
     JaegerSpew(JSpew_Scripts, "successfully compiled (code \"%p\") (size \"%ld\")\n",
-               (void*)script->ncode, masm.size() + stubcc.size()); //cr.m_size);
+               (void*)script->ncode, masm.size() + stubcc.size());
 
     return Compile_Okay;
 }
@@ -232,8 +232,7 @@ mjit::Compiler::generateMethod()
         OpcodeStatus &opinfo = analysis[PC];
         if (opinfo.nincoming) {
             opinfo.safePoint = true;
-            frame.flush();
-            frame.forceStackDepth(opinfo.stackDepth);
+            frame.forgetEverything(opinfo.stackDepth);
             jumpMap[uint32(PC - script->code)] = masm.label();
         }
 
@@ -249,7 +248,7 @@ mjit::Compiler::generateMethod()
 
 #ifdef DEBUG
         if (IsJaegerSpewChannelActive(JSpew_JSOps)) {
-            JaegerSpew(JSpew_JSOps, "    %2d ", 0); //cg.getStackDepth());
+            JaegerSpew(JSpew_JSOps, "    %2d ", frame.stackDepth());
             js_Disassemble1(cx, script, PC, PC - script->code,
                             JS_TRUE, stdout);
         }
@@ -264,20 +263,22 @@ mjit::Compiler::generateMethod()
         switch (op) {
           BEGIN_CASE(JSOP_GOTO)
           {
-            frame.flush();
+            /* :XXX: this isn't really necessary if we follow the branch. */
+            frame.forgetEverything();
             Jump j = masm.jump();
             jumpInScript(j, PC + GET_JUMP_OFFSET(PC));
           }
           END_CASE(JSOP_GOTO)
 
-          BEGIN_CASE(JSOP_TRACE)
-          END_CASE(JSOP_TRACE)
+          BEGIN_CASE(JSOP_BITAND)
+            jsop_bitop(op);
+          END_CASE(JSOP_BITAND)
 
           BEGIN_CASE(JSOP_NAME)
             prepareStubCall();
             masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
             stubCall(stubs::Name, Uses(0), Defs(1));
-            frame.push();
+            frame.pushSynced();
           END_CASE(JSOP_NAME)
 
           BEGIN_CASE(JSOP_DOUBLE)
@@ -290,11 +291,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_DOUBLE)
 
           BEGIN_CASE(JSOP_ZERO)
-            frame.push(JSVAL_ZERO);
+            frame.push(Valueify(JSVAL_ZERO));
           END_CASE(JSOP_ZERO)
 
           BEGIN_CASE(JSOP_ONE)
-            frame.push(JSVAL_ONE);
+            frame.push(Valueify(JSVAL_ONE));
           END_CASE(JSOP_ONE)
 
           BEGIN_CASE(JSOP_POP)
@@ -322,9 +323,8 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_STOP)
             /* Safe point! */
-            cg.storeJsval(Value(UndefinedTag()),
-                          Address(Assembler::FpReg,
-                                  offsetof(JSStackFrame, rval)));
+            masm.storeValue(Value(UndefinedTag()),
+                            Address(Assembler::FpReg, offsetof(JSStackFrame, rval)));
             emitReturn();
             goto done;
           END_CASE(JSOP_STOP)
@@ -336,6 +336,9 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_INT32)
             frame.push(Value(Int32Tag(GET_INT32(PC))));
           END_CASE(JSOP_INT32)
+
+          BEGIN_CASE(JSOP_TRACE)
+          END_CASE(JSOP_TRACE)
 
           BEGIN_CASE(JSOP_GETGLOBAL)
             jsop_getglobal(GET_SLOTNO(PC));
@@ -419,11 +422,11 @@ mjit::Compiler::jsop_setglobal(uint32 index)
     if (slot < JS_INITIAL_NSLOTS) {
         void *vp = &globalObj->getSlotRef(slot);
         masm.move(ImmPtr(vp), reg);
-        cg.storeValue(fe, Address(reg, 0), popped);
+        frame.storeTo(fe, Address(reg, 0), popped);
     } else {
         masm.move(ImmPtr(&globalObj->dslots), reg);
         masm.loadPtr(reg, reg);
-        cg.storeValue(fe, Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value)), popped);
+        frame.storeTo(fe, Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value)), popped);
     }
     frame.freeReg(reg);
 }
@@ -438,11 +441,11 @@ mjit::Compiler::jsop_getglobal(uint32 index)
     if (slot < JS_INITIAL_NSLOTS) {
         void *vp = &globalObj->getSlotRef(slot);
         masm.move(ImmPtr(vp), reg);
-        cg.pushValueOntoFrame(Address(reg, 0));
+        frame.push(Address(reg, 0));
     } else {
         masm.move(ImmPtr(&globalObj->dslots), reg);
         masm.loadPtr(reg, reg);
-        cg.pushValueOntoFrame(Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value)));
+        frame.push(Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value)));
     }
     frame.freeReg(reg);
 }
@@ -460,16 +463,14 @@ void
 mjit::Compiler::prepareStubCall()
 {
     JaegerSpew(JSpew_Insns, " ---- STUB CALL, SYNCING FRAME ---- \n");
-    frame.sync();
-    JaegerSpew(JSpew_Insns, " ---- KILLING TEMP REGS ---- \n");
-    frame.killSyncedRegs(Registers::TempRegs);
+    frame.syncAndKill(Registers::TempRegs);
     JaegerSpew(JSpew_Insns, " ---- FRAME SYNCING DONE ---- \n");
 }
 
 JSC::MacroAssembler::Call
 mjit::Compiler::stubCall(void *ptr, Uses uses, Defs defs)
 {
-    frame.forget(uses.nuses);
+    //frame.forget(uses.nuses);
     JaegerSpew(JSpew_Insns, " ---- CALLING STUB ---- \n");
     Call cl = masm.stubCall(ptr, PC, frame.stackDepth() + script->nfixed);
     JaegerSpew(JSpew_Insns, " ---- END STUB CALL ---- \n");

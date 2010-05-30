@@ -93,7 +93,6 @@ class Compiler
     jsbytecode *PC;
     Assembler masm;
     FrameState frame;
-    CodeGenerator cg;
     js::Vector<BranchPatch, 64> branchPatches;
     StubCompiler stubcc;
 
@@ -128,6 +127,9 @@ class Compiler
     void jsop_getglobal(uint32 index);
     void emitReturn();
 
+    /* Fast opcodes. */
+    void jsop_bitop(JSOp op);
+
 #define STUB_CALL_TYPE(type)                                            \
     Call stubCall(type stub, Uses uses, Defs defs) {                    \
         return stubCall(JS_FUNC_TO_DATA_PTR(void *, stub), uses, defs); \
@@ -135,6 +137,7 @@ class Compiler
 
     STUB_CALL_TYPE(JSObjStub);
     STUB_CALL_TYPE(VoidStubUInt32);
+    STUB_CALL_TYPE(VoidStub);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall();

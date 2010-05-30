@@ -302,7 +302,6 @@ CPPSRCS += 	Assertions.cpp \
 		Logging.cpp \
 		StubCalls.cpp \
 		Compiler.cpp \
-		CodeGenerator.cpp \
 		FrameState.cpp \
 		FastOps.cpp \
 		StubCompiler.cpp \
