@@ -54,7 +54,6 @@
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIEncodedChannel.h"
-#include "nsIUploadChannel.h"
 #include "nsIUploadChannel2.h"
 #include "nsIResumableChannel.h"
 #include "nsIProxiedChannel.h"
@@ -76,8 +75,6 @@ enum HttpChannelChildState {
 class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
                        , public nsICachingChannel
-                       , public nsIUploadChannel
-                       , public nsIUploadChannel2
                        , public nsIEncodedChannel
                        , public nsIResumableChannel
                        , public nsIProxiedChannel
@@ -87,8 +84,6 @@ class HttpChannelChild : public PHttpChannelChild
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICACHINGCHANNEL
-  NS_DECL_NSIUPLOADCHANNEL
-  NS_DECL_NSIUPLOADCHANNEL2
   NS_DECL_NSIENCODEDCHANNEL
   NS_DECL_NSIRESUMABLECHANNEL
   NS_DECL_NSIPROXIEDCHANNEL

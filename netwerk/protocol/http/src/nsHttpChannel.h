@@ -56,8 +56,6 @@
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheChannel.h"
 #include "nsIEncodedChannel.h"
-#include "nsIUploadChannel.h"
-#include "nsIUploadChannel2.h"
 #include "nsIStringEnumerator.h"
 #include "nsIPrompt.h"
 #include "nsIResumableChannel.h"
@@ -79,8 +77,6 @@ using namespace mozilla::net;
 class nsHttpChannel : public HttpBaseChannel
                     , public nsIStreamListener
                     , public nsICachingChannel
-                    , public nsIUploadChannel
-                    , public nsIUploadChannel2
                     , public nsICacheListener
                     , public nsIEncodedChannel
                     , public nsITransportEventSink
@@ -96,8 +92,6 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSICACHINGCHANNEL
-    NS_DECL_NSIUPLOADCHANNEL
-    NS_DECL_NSIUPLOADCHANNEL2
     NS_DECL_NSICACHELISTENER
     NS_DECL_NSIENCODEDCHANNEL
     NS_DECL_NSITRANSPORTEVENTSINK
@@ -130,6 +124,10 @@ public: /* internal necko use only */
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
     nsHttpResponseHead * GetResponseHead() const { return mResponseHead; }
     void SetRemoteChannel() { mRemoteChannel = 1; }
+    void InternalSetUploadStream(nsIInputStream *uploadStream) 
+      { mUploadStream = uploadStream; }
+    void SetUploadStreamHasHeaders(PRBool hasHeaders) 
+      { mUploadStreamHasHeaders = hasHeaders; }
 
     nsresult SetReferrerInternal(nsIURI *referrer) {
         nsCAutoString spec;
@@ -246,7 +244,6 @@ private:
     nsresult ContinueOnAuthAvailable(const nsCSubstring& creds);
 
 private:
-    nsCOMPtr<nsIInputStream>          mUploadStream;
     nsCOMPtr<nsISupports>             mSecurityInfo;
     nsCOMPtr<nsICancelable>           mProxyRequest;
 
@@ -318,7 +315,6 @@ private:
     PRUint32                          mCachedContentIsPartial   : 1;
     PRUint32                          mCanceled                 : 1;
     PRUint32                          mTransactionReplaced      : 1;
-    PRUint32                          mUploadStreamHasHeaders   : 1;
     PRUint32                          mAuthRetryPending         : 1;
     // True when we need to authenticate to proxy, i.e. when we get 407
     // response. Used in OnAuthAvailable and OnAuthCancelled callbacks.

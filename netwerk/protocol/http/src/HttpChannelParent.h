@@ -75,6 +75,8 @@ protected:
                              const PRUint32&            loadFlags,
                              const RequestHeaderTuples& requestHeaders,
                              const nsHttpAtom&          requestMethod,
+                             const nsCString&           uploadStreamData,
+                             const PRInt32&             uploadStreamInfo,
                              const PRUint16&            priority,
                              const PRUint8&             redirectionLimit,
                              const PRBool&              allowPipelining,
