@@ -184,10 +184,19 @@ FrameState::push(Address address)
     /* :XXX: X64 */
     fe->resetUnsynced();
 
+    /* Prevent us from clobbering this reg. */
+    bool free = freeRegs.hasReg(address.base);
+    if (free)
+        freeRegs.takeReg(address.base);
+
     RegisterID reg = alloc(fe, RematInfo::DATA, true);
     masm.loadData32(address, reg);
     fe->data.setRegister(reg);
-    
+
+    /* Now it's safe to grab this register again. */
+    if (free)
+        freeRegs.putReg(address.base);
+
     reg = alloc(fe, RematInfo::TYPE, true);
     masm.loadTypeTag(address, reg);
     fe->type.setRegister(reg);

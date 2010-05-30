@@ -422,15 +422,8 @@ mjit::Compiler::jsop_setglobal(uint32 index)
     bool popped = PC[JSOP_SETGLOBAL_LENGTH] == JSOP_POP;
 
     RegisterID reg = frame.allocReg();
-    if (slot < JS_INITIAL_NSLOTS) {
-        void *vp = &globalObj->getSlotRef(slot);
-        masm.move(ImmPtr(vp), reg);
-        frame.storeTo(fe, Address(reg, 0), popped);
-    } else {
-        masm.move(ImmPtr(&globalObj->dslots), reg);
-        masm.loadPtr(reg, reg);
-        frame.storeTo(fe, Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value)), popped);
-    }
+    Address address = masm.objSlotRef(globalObj, reg, slot);
+    frame.storeTo(fe, address, popped);
     frame.freeReg(reg);
 }
 
@@ -441,16 +434,9 @@ mjit::Compiler::jsop_getglobal(uint32 index)
     uint32 slot = script->getGlobalSlot(index);
 
     RegisterID reg = frame.allocReg();
-    if (slot < JS_INITIAL_NSLOTS) {
-        void *vp = &globalObj->getSlotRef(slot);
-        masm.move(ImmPtr(vp), reg);
-        frame.push(Address(reg, 0));
-    } else {
-        masm.move(ImmPtr(&globalObj->dslots), reg);
-        masm.loadPtr(reg, reg);
-        frame.push(Address(reg, (slot - JS_INITIAL_NSLOTS) * sizeof(Value)));
-    }
+    Address address = masm.objSlotRef(globalObj, reg, slot);
     frame.freeReg(reg);
+    frame.push(address);
 }
 
 void
