@@ -3977,28 +3977,26 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
   return NS_OK;
 }
 
+static bool
+IsAncestorOf(nsIContent* aPossibleAncestor, nsIContent* aPossibleDescendant)
+{
+  for (; aPossibleDescendant; aPossibleDescendant = aPossibleDescendant->GetParent()) {
+    if (aPossibleAncestor == aPossibleDescendant)
+      return true;
+  }
+  return false;
+}
+
 NS_IMETHODIMP
 nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
 {
   aState = aContent->IntrinsicState();
 
-  // Hierchical active:  Check the ancestor chain of mActiveContent to see
-  // if we are on it.
-  for (nsIContent* activeContent = mActiveContent; activeContent;
-       activeContent = activeContent->GetParent()) {
-    if (aContent == activeContent) {
-      aState |= NS_EVENT_STATE_ACTIVE;
-      break;
-    }
+  if (IsAncestorOf(aContent, mActiveContent)) {
+    aState |= NS_EVENT_STATE_ACTIVE;
   }
-  // Hierchical hover:  Check the ancestor chain of mHoverContent to see
-  // if we are on it.
-  for (nsIContent* hoverContent = mHoverContent; hoverContent;
-       hoverContent = hoverContent->GetParent()) {
-    if (aContent == hoverContent) {
-      aState |= NS_EVENT_STATE_HOVER;
-      break;
-    }
+  if (IsAncestorOf(aContent, mHoverContent)) {
+    aState |= NS_EVENT_STATE_HOVER;
   }
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
@@ -4065,6 +4063,16 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
     }
   }
   return nsnull;
+}
+
+static void
+NotifyAncestors(nsIDocument* aDocument, nsIContent* aStartNode,
+                nsIContent* aStopBefore, PRInt32 aState)
+{
+  while (aStartNode && aStartNode != aStopBefore) {
+    aDocument->ContentStatesChanged(aStartNode, nsnull, aState);
+    aStartNode = aStartNode->GetParent();
+  }
 }
 
 PRBool
@@ -4213,27 +4221,10 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     if (doc1) {
       doc1->BeginUpdate(UPDATE_CONTENT_STATE);
 
-      // Notify all content from newActive to the commonActiveAncestor
-      while (newActive && newActive != commonActiveAncestor) {
-        doc1->ContentStatesChanged(newActive, nsnull, NS_EVENT_STATE_ACTIVE);
-        newActive = newActive->GetParent();
-      }
-      // Notify all content from oldActive to the commonActiveAncestor
-      while (oldActive && oldActive != commonActiveAncestor) {
-        doc1->ContentStatesChanged(oldActive, nsnull, NS_EVENT_STATE_ACTIVE);
-        oldActive = oldActive->GetParent();
-      }
-
-      // Notify all content from newHover to the commonHoverAncestor
-      while (newHover && newHover != commonHoverAncestor) {
-        doc1->ContentStatesChanged(newHover, nsnull, NS_EVENT_STATE_HOVER);
-        newHover = newHover->GetParent();
-      }
-      // Notify all content from oldHover to the commonHoverAncestor
-      while (oldHover && oldHover != commonHoverAncestor) {
-        doc1->ContentStatesChanged(oldHover, nsnull, NS_EVENT_STATE_HOVER);
-        oldHover = oldHover->GetParent();
-      }
+      NotifyAncestors(doc1, newActive, commonActiveAncestor, NS_EVENT_STATE_ACTIVE);
+      NotifyAncestors(doc1, oldActive, commonActiveAncestor, NS_EVENT_STATE_ACTIVE);
+      NotifyAncestors(doc1, newHover, commonHoverAncestor, NS_EVENT_STATE_HOVER);
+      NotifyAncestors(doc1, oldHover, commonHoverAncestor, NS_EVENT_STATE_HOVER);
 
       if (notifyContent[0]) {
         doc1->ContentStatesChanged(notifyContent[0], notifyContent[1],
