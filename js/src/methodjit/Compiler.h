@@ -121,11 +121,15 @@ class Compiler
     void jumpInScript(Jump j, jsbytecode *pc);
     JSC::ExecutablePool *getExecPool(size_t size);
 
+    /* Emitting helpers. */
+    void restoreFrameRegs();
+
     /* Opcode handlers. */
     void jsop_bindname(uint32 index);
     void jsop_setglobal(uint32 index);
     void jsop_getglobal(uint32 index);
     void emitReturn();
+    void dispatchCall(VoidPtrStubUInt32 stub);
 
     /* Fast opcodes. */
     void jsop_bitop(JSOp op);
@@ -139,6 +143,7 @@ class Compiler
     STUB_CALL_TYPE(JSObjStub);
     STUB_CALL_TYPE(VoidStubUInt32);
     STUB_CALL_TYPE(VoidStub);
+    STUB_CALL_TYPE(VoidPtrStubUInt32);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall();

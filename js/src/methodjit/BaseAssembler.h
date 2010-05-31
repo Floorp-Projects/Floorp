@@ -154,6 +154,7 @@ class BaseAssembler : public JSC::MacroAssembler
     }
 
     STUB_CALL_TYPE(JSObjStub);
+    STUB_CALL_TYPE(VoidPtrStubUInt32);
 
 #undef STUB_CALL_TYPE
 
@@ -196,6 +197,10 @@ class BaseAssembler : public JSC::MacroAssembler
 
         callPatches.append(CallPatch(differenceBetween(startLabel, cl), fun));
         return cl;
+    }
+
+    Call call(RegisterID reg) {
+        return MacroAssembler::call(reg);
     }
 
     void finalize(uint8 *ncode) {
