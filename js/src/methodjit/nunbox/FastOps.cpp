@@ -209,6 +209,20 @@ mjit::Compiler::jsop_globalinc(JSOp op, uint32 index)
 void
 mjit::Compiler::jsop_relational(JSOp op, jsbytecode *target, JSOp fused)
 {
-    JS_NOT_REACHED("NYI");
+    FrameEntry *rhs = frame.peek(-1);
+    FrameEntry *lhs = frame.peek(-2);
+
+    /* Test the types. */
+    if (!rhs->isTypeKnown()) {
+        RegisterID reg = frame.tempRegForType(rhs);
+        Jump rhsFail = masm.testInt32(Assembler::NotEqual, reg);
+        stubcc.linkExit(rhsFail);
+        frame.learnType(rhs, JSVAL_MASK32_INT32);
+    }
+    if (!lhs->isTypeKnown()) {
+        RegisterID reg = frame.tempRegForType(lhs);
+        Jump lhsFail = masm.testInt32(Assembler::NotEqual, reg);
+        stubcc.linkExit(lhsFail);
+    }
 }
 

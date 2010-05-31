@@ -61,6 +61,11 @@ void JS_FASTCALL VpDec(VMFrame &f, Value *vp);
 void JS_FASTCALL DecVp(VMFrame &f, Value *vp);
 void JS_FASTCALL IncVp(VMFrame &f, Value *vp);
 
+JSBool JS_FASTCALL LessThan(VMFrame &f);
+JSBool JS_FASTCALL LessEqual(VMFrame &f);
+JSBool JS_FASTCALL GreaterThan(VMFrame &f);
+JSBool JS_FASTCALL GreaterEqual(VMFrame &f);
+
 void JS_FASTCALL BitAnd(VMFrame &f);
 
 }}} /* namespace stubs,mjit,js */

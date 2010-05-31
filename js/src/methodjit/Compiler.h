@@ -147,6 +147,7 @@ class Compiler
     STUB_CALL_TYPE(VoidStub);
     STUB_CALL_TYPE(VoidPtrStubUInt32);
     STUB_CALL_TYPE(VoidPtrStub);
+    STUB_CALL_TYPE(BoolStub);
 
 #undef STUB_CALL_TYPE
     void prepareStubCall();

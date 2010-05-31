@@ -87,6 +87,34 @@ FrameState::init(uint32 nargs)
     return true;
 }
 
+void
+FrameState::takeReg(RegisterID reg)
+{
+    if (freeRegs.hasReg(reg)) {
+        freeRegs.takeReg(reg);
+        return;
+    }
+
+    evictReg(reg);
+    regstate[reg].fe = NULL;
+}
+
+void
+FrameState::evictReg(RegisterID reg)
+{
+    FrameEntry *fe = regstate[reg].fe;
+
+    if (regstate[reg].type == RematInfo::TYPE) {
+        syncType(fe, masm);
+        fe->type.sync();
+        fe->type.setMemory();
+    } else {
+        syncData(fe, masm);
+        fe->data.sync();
+        fe->data.setMemory();
+    }
+}
+
 JSC::MacroAssembler::RegisterID
 FrameState::evictSomething()
 {
@@ -125,18 +153,7 @@ FrameState::evictSomething()
 
     JS_ASSERT(fallbackSet);
 
-    FrameEntry *fe = regstate[fallback].fe;
-
-    if (regstate[fallback].type == RematInfo::TYPE) {
-        syncType(fe, masm);
-        fe->type.sync();
-        fe->type.setMemory();
-    } else {
-        syncData(fe, masm);
-        fe->data.sync();
-        fe->data.setMemory();
-    }
-
+    evictReg(fallback);
     return fallback;
 }
 

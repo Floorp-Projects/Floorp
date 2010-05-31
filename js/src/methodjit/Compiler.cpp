@@ -296,38 +296,79 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GT)
           BEGIN_CASE(JSOP_GE)
           {
-            /* These advance the PC automatically. */
-            JSOp fused = JSOp(PC[JSOP_GE_LENGTH]);
-            if (fused != JSOP_IFEQ && fused != JSOP_IFNE)
+            /* Detect fusions. */
+            jsbytecode *next = &PC[JSOP_GE_LENGTH];
+            JSOp fused = JSOp(*next);
+            if ((fused != JSOP_IFEQ && fused != JSOP_IFNE) || analysis[next].nincoming)
                 fused = JSOP_NOP;
-            jsbytecode *target = &PC[JSOP_GE_LENGTH] + GET_JUMP_OFFSET(&PC[JSOP_GE_LENGTH]);
+
+            /* Get jump target, if any. */
+            jsbytecode *target = NULL;
+            if (fused != JSOP_NOP)
+                target = next + GET_JUMP_OFFSET(next);
 
             FrameEntry *rhs = frame.peek(-1);
             FrameEntry *lhs = frame.peek(-2);
 
             /* Check for easy cases that the parser does not constant fold. */
-            if (lhs->isConstant() && rhs->isConstant() &&
-                lhs->getValue().isPrimitive() && rhs->getValue().isPrimitive())
-            {
+            if (lhs->isConstant() && rhs->isConstant()) {
                 /* Primitives can be trivially constant folded. */
                 const Value &lv = lhs->getValue();
                 const Value &rv = rhs->getValue();
 
-                bool result = compareTwoValues(cx, op, lv, rv);
+                if (lv.isPrimitive() && rv.isPrimitive()) {
+                    bool result = compareTwoValues(cx, op, lv, rv);
 
-                frame.pop();
-                frame.pop();
+                    frame.pop();
+                    frame.pop();
 
-                if (fused == JSOP_NOP) {
-                    frame.push(Value(BooleanTag(result)));
+                    if (!target) {
+                        frame.push(Value(BooleanTag(result)));
+                    } else {
+                        if (fused == JSOP_IFEQ)
+                            result = !result;
+
+                        /* Branch is never taken, don't bother doing anything. */
+                        if (result) {
+                            frame.forgetEverything();
+                            Jump j = masm.jump();
+                            jumpInScript(j, target);
+                        }
+                    }
                 } else {
-                    if (fused == JSOP_IFEQ)
-                        result = !result;
+                    prepareStubCall();
+                    BoolStub stub = NULL;
+                    switch (op) {
+                      case JSOP_LT:
+                        stub = stubs::LessThan;
+                        break;
+                      case JSOP_LE:
+                        stub = stubs::LessEqual;
+                        break;
+                      case JSOP_GT:
+                        stub = stubs::GreaterThan;
+                        break;
+                      case JSOP_GE:
+                        stub = stubs::GreaterEqual;
+                        break;
+                      default:
+                        JS_NOT_REACHED("WAT");
+                        break;
+                    }
+                    stubCall(stub, Uses(2), Defs(0));
+                    frame.pop();
+                    frame.pop();
 
-                    /* Branch is never taken, don't bother doing anything. */
-                    if (result) {
+                    if (!target) {
+                        frame.takeReg(Registers::ReturnReg);
+                        frame.pushTypedPayload(JSVAL_MASK32_BOOLEAN, Registers::ReturnReg);
+                    } else {
                         frame.forgetEverything();
-                        Jump j = masm.jump();
+                        Assembler::Condition cond = (fused == JSOP_IFEQ)
+                                                    ? Assembler::Zero
+                                                    : Assembler::NonZero;
+                        Jump j = masm.branchTest32(cond, Registers::ReturnReg,
+                                                   Registers::ReturnReg);
                         jumpInScript(j, target);
                     }
                 }
