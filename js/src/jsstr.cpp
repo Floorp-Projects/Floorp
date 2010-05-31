@@ -633,7 +633,7 @@ Class js_StringClass = {
 static JSString *
 NormalizeThis(JSContext *cx, Value *vp)
 {
-    if (vp[1].isNull() || !ComputeThisFromVpInPlace(cx, vp) || vp[1].isNull())
+    if (vp[1].isNull() && (!ComputeThisFromVpInPlace(cx, vp) || vp[1].isNull()))
         return NULL;
 
     /*
@@ -2640,7 +2640,11 @@ static const jschar UnitStringData[] = {
 #pragma pack(push, 8)
 #endif
 
+#ifndef _M_X64
 JSString JSString::unitStringTable[]
+#else
+JSString JSString::staticUnitStringTable[]
+#endif
 #ifdef __GNUC__
 __attribute__ ((aligned (8)))
 #endif
@@ -2678,6 +2682,11 @@ __attribute__ ((aligned (8)))
     U(0xf0), U(0xf1), U(0xf2), U(0xf3), U(0xf4), U(0xf5), U(0xf6), U(0xf7),
     U(0xf8), U(0xf9), U(0xfa), U(0xfb), U(0xfc), U(0xfd), U(0xfe), U(0xff)
 };
+
+#ifdef _M_X64
+JSString *JSString::unitStringTable = staticUnitStringTable;
+size_t JSString::unitStringTableSize = sizeof(staticUnitStringTable);
+#endif
 
 #ifdef __SUNPRO_CC
 #pragma pack(0)
@@ -2749,7 +2758,11 @@ static const jschar Hundreds[] = {
 #pragma pack(push, 8)
 #endif
 
+#ifndef _M_X64
 JSString JSString::intStringTable[]
+#else
+JSString JSString::staticIntStringTable[]
+#endif
 #ifdef __GNUC__
 __attribute__ ((aligned (8)))
 #endif
@@ -2787,6 +2800,11 @@ __attribute__ ((aligned (8)))
     L3(0xf0), L3(0xf1), L3(0xf2), L3(0xf3), L3(0xf4), L3(0xf5), L3(0xf6), L3(0xf7),
     L3(0xf8), L3(0xf9), L3(0xfa), L3(0xfb), L3(0xfc), L3(0xfd), L3(0xfe), L3(0xff)
 };
+
+#ifdef _M_X64
+JSString *JSString::intStringTable = staticIntStringTable;
+size_t JSString::intStringTableSize = sizeof(staticIntStringTable);
+#endif
 
 #ifdef __SUNPRO_CC
 #pragma pack(0)

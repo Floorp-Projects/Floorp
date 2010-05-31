@@ -911,6 +911,11 @@ struct JSGCLockHashEntry : public JSDHashEntryHdr
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
+#if defined(XP_WIN) && defined(_M_X64)
+    if (!InitNtAllocAPIs())
+        return JS_FALSE;
+#endif
+    
     InitGCArenaLists(rt);
     if (!rt->gcRootsHash.init(GC_ROOTS_SIZE))
         return false;
