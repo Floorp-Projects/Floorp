@@ -45,6 +45,14 @@
 namespace js {
 namespace mjit {
 
+class ImmTag : public JSC::MacroAssembler::Imm32
+{
+  public:
+    ImmTag(JSValueMask32 mask)
+      : Imm32(int32(mask))
+    { }
+};
+
 class Assembler : public BaseAssembler
 {
     static const uint32 PAYLOAD_OFFSET = 0;
@@ -63,7 +71,7 @@ class Assembler : public BaseAssembler
         load32(Address(address.base, address.offset + TAG_OFFSET), reg);
     }
 
-    void storeTypeTag(Imm32 imm, Address address) {
+    void storeTypeTag(ImmTag imm, Address address) {
         store32(imm, Address(address.base, address.offset + TAG_OFFSET));
     }
 
@@ -87,17 +95,17 @@ class Assembler : public BaseAssembler
         jsval_layout jv;
         jv.asBits = Jsvalify(v);
 
-        store32(Imm32(jv.s.mask32), tagOf(address));
+        store32(ImmTag(jv.s.mask32), tagOf(address));
         if (!v.isUndefined())
             store32(Imm32(jv.s.payload.u32), payloadOf(address));
     }
 
     Jump testInt32(Assembler::Condition cond, RegisterID reg) {
-        return branch32(cond, reg, Imm32(JSVAL_MASK32_INT32));
+        return branch32(cond, reg, ImmTag(JSVAL_MASK32_INT32));
     }
 
     Jump testInt32(Assembler::Condition cond, Address address) {
-        return branch32(cond, tagOf(address), Imm32(JSVAL_MASK32_INT32));
+        return branch32(cond, tagOf(address), ImmTag(JSVAL_MASK32_INT32));
     }
 };
 
