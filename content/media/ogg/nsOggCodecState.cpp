@@ -148,7 +148,6 @@ nsTheoraState::nsTheoraState(ogg_page* aBosPage) :
   mSetup(0),
   mCtx(0),
   mFrameDuration(0),
-  mFrameRate(0),
   mPixelAspectRatio(0)
 {
   MOZ_COUNT_CTOR(nsTheoraState);
@@ -174,9 +173,6 @@ PRBool nsTheoraState::Init() {
 
   PRInt64 n = mInfo.fps_numerator;
   PRInt64 d = mInfo.fps_denominator;
-
-  mFrameRate = (n == 0 || d == 0) ?
-    0.0f : static_cast<float>(n) / static_cast<float>(d);
 
   PRInt64 f;
   if (!MulOverflow(1000, d, f)) {
