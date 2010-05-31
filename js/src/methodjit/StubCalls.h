@@ -54,6 +54,7 @@ JSObject * JS_FASTCALL BindName(VMFrame &f);
 void JS_FASTCALL SetName(VMFrame &f, uint32 index);
 void JS_FASTCALL Name(VMFrame &f, uint32 index);
 void JS_FASTCALL CallName(VMFrame &f, uint32 index);
+void JS_FASTCALL DefFun(VMFrame &f, uint32 index);
 
 void JS_FASTCALL VpInc(VMFrame &f, Value *vp);
 void JS_FASTCALL VpDec(VMFrame &f, Value *vp);
