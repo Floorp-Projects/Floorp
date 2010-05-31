@@ -901,3 +901,165 @@ stubs::Call(VMFrame &f, uint32 argc)
     return NULL;
 }
 
+void JS_FASTCALL
+stubs::DefFun(VMFrame &f, uint32 index)
+{
+    bool doSet;
+    JSObject *pobj, *obj2;
+    JSProperty *prop;
+    uint32 old;
+
+    JSContext *cx = f.cx;
+    JSStackFrame *fp = f.fp;
+    JSScript *script = fp->script;
+
+    /*
+     * A top-level function defined in Global or Eval code (see ECMA-262
+     * Ed. 3), or else a SpiderMonkey extension: a named function statement in
+     * a compound statement (not at the top statement level of global code, or
+     * at the top level of a function body).
+     */
+    JSFunction *fun = script->getFunction(index);
+    JSObject *obj = FUN_OBJECT(fun);
+
+    if (FUN_NULL_CLOSURE(fun)) {
+        /*
+         * Even a null closure needs a parent for principals finding.
+         * FIXME: bug 476950, although debugger users may also demand some kind
+         * of scope link for debugger-assisted eval-in-frame.
+         */
+        obj2 = fp->scopeChain;
+    } else {
+        JS_ASSERT(!FUN_FLAT_CLOSURE(fun));
+
+        /*
+         * Inline js_GetScopeChain a bit to optimize for the case of a
+         * top-level function.
+         */
+        if (!fp->blockChain) {
+            obj2 = fp->scopeChain;
+        } else {
+            obj2 = js_GetScopeChain(cx, fp);
+            if (!obj2)
+                THROW();
+        }
+    }
+
+    /*
+     * If static link is not current scope, clone fun's object to link to the
+     * current scope via parent. We do this to enable sharing of compiled
+     * functions among multiple equivalent scopes, amortizing the cost of
+     * compilation over a number of executions.  Examples include XUL scripts
+     * and event handlers shared among Firefox or other Mozilla app chrome
+     * windows, and user-defined JS functions precompiled and then shared among
+     * requests in server-side JS.
+     */
+    if (obj->getParent() != obj2) {
+        obj = CloneFunctionObject(cx, fun, obj2);
+        if (!obj)
+            THROW();
+    }
+
+    /*
+     * Protect obj from any GC hiding below JSObject::setProperty or
+     * JSObject::defineProperty.  All paths from here must flow through the
+     * fp->scopeChain code below the parent->defineProperty call.
+     */
+    MUST_FLOW_THROUGH("restore_scope");
+    fp->scopeChain = obj;
+
+    Value rval;
+    rval.setFunObj(*obj);
+
+    /*
+     * ECMA requires functions defined when entering Eval code to be
+     * impermanent.
+     */
+    uintN attrs;
+    attrs = (fp->flags & JSFRAME_EVAL)
+            ? JSPROP_ENUMERATE
+            : JSPROP_ENUMERATE | JSPROP_PERMANENT;
+
+    /*
+     * Load function flags that are also property attributes.  Getters and
+     * setters do not need a slot, their value is stored elsewhere in the
+     * property itself, not in obj slots.
+     */
+    PropertyOp getter, setter;
+    uintN flags;
+    
+    getter = setter = PropertyStub;
+    flags = JSFUN_GSFLAG2ATTR(fun->flags);
+    if (flags) {
+        /* Function cannot be both getter a setter. */
+        JS_ASSERT(flags == JSPROP_GETTER || flags == JSPROP_SETTER);
+        attrs |= flags | JSPROP_SHARED;
+        rval.setUndefined();
+        if (flags == JSPROP_GETTER)
+            getter = CastAsPropertyOp(obj);
+        else
+            setter = CastAsPropertyOp(obj);
+    }
+
+    jsid id;
+    JSBool ok;
+    JSObject *parent;
+
+    /*
+     * We define the function as a property of the variable object and not the
+     * current scope chain even for the case of function expression statements
+     * and functions defined by eval inside let or with blocks.
+     */
+    parent = fp->varobj(cx);
+    JS_ASSERT(parent);
+
+    /*
+     * Check for a const property of the same name -- or any kind of property
+     * if executing with the strict option.  We check here at runtime as well
+     * as at compile-time, to handle eval as well as multiple HTML script tags.
+     */
+    id = ATOM_TO_JSID(fun->atom);
+    prop = NULL;
+    ok = CheckRedeclaration(cx, parent, id, attrs, &pobj, &prop);
+    if (!ok)
+        goto restore_scope;
+
+    /*
+     * We deviate from 10.1.2 in ECMA 262 v3 and under eval use for function
+     * declarations JSObject::setProperty, not JSObject::defineProperty, to
+     * preserve the JSOP_PERMANENT attribute of existing properties and make
+     * sure that such properties cannot be deleted.
+     *
+     * We also use JSObject::setProperty for the existing properties of Call
+     * objects with matching attributes to preserve the native getters and
+     * setters that store the value of the property in the interpreter frame,
+     * see bug 467495.
+     */
+    doSet = (attrs == JSPROP_ENUMERATE);
+    JS_ASSERT_IF(doSet, fp->flags & JSFRAME_EVAL);
+    if (prop) {
+        if (parent == pobj &&
+            parent->getClass() == &js_CallClass &&
+            (old = ((JSScopeProperty *) prop)->attributes(),
+             !(old & (JSPROP_GETTER|JSPROP_SETTER)) &&
+             (old & (JSPROP_ENUMERATE|JSPROP_PERMANENT)) == attrs)) {
+            /*
+             * js_CheckRedeclaration must reject attempts to add a getter or
+             * setter to an existing property without a getter or setter.
+             */
+            JS_ASSERT(!(attrs & ~(JSPROP_ENUMERATE|JSPROP_PERMANENT)));
+            JS_ASSERT(!(old & JSPROP_READONLY));
+            doSet = JS_TRUE;
+        }
+        pobj->dropProperty(cx, prop);
+    }
+    ok = doSet
+         ? parent->setProperty(cx, id, &rval)
+         : parent->defineProperty(cx, id, rval, getter, setter, attrs);
+
+  restore_scope:
+    /* Restore fp->scopeChain now that obj is defined in fp->callobj. */
+    fp->scopeChain = obj2;
+    if (!ok)
+        THROW();
+}
