@@ -80,9 +80,11 @@ FrameState::allocReg()
 inline JSC::MacroAssembler::RegisterID
 FrameState::alloc()
 {
-    if (freeRegs.empty())
-        evictSomething();
-    RegisterID reg = freeRegs.takeAnyReg();
+    RegisterID reg;
+    if (!freeRegs.empty())
+        reg = freeRegs.takeAnyReg();
+    else
+        reg = evictSomething();
     regstate[reg].fe = NULL;
     return reg;
 }
@@ -90,9 +92,11 @@ FrameState::alloc()
 inline JSC::MacroAssembler::RegisterID
 FrameState::alloc(FrameEntry *fe, RematInfo::RematType type, bool weak)
 {
-    if (freeRegs.empty())
-        evictSomething();
-    RegisterID reg = freeRegs.takeAnyReg();
+    RegisterID reg;
+    if (!freeRegs.empty())
+        reg = freeRegs.takeAnyReg();
+    else
+        reg = evictSomething();
     regstate[reg] = RegisterState(fe, type, weak);
     return reg;
 }

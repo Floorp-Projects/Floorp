@@ -87,10 +87,57 @@ FrameState::init(uint32 nargs)
     return true;
 }
 
-void
+JSC::MacroAssembler::RegisterID
 FrameState::evictSomething()
 {
-    JS_NOT_REACHED("NYI");
+#ifdef DEBUG
+    bool fallbackSet = false;
+#endif
+    RegisterID fallback = Registers::ReturnReg;
+
+    for (uint32 i = 0; i < JSC::MacroAssembler::TotalRegisters; i++) {
+        RegisterID reg = RegisterID(i);
+
+        /* Register is not allocatable, don't bother.  */
+        if (!(Registers::maskReg(reg) & Registers::AvailRegs))
+            continue;
+
+        /* Register is not owned by the FrameState. */
+        FrameEntry *fe = regstate[i].fe;
+        if (!fe)
+            continue;
+
+        /* Try to find a candidate... that doesn't need spilling. */
+#ifdef DEBUG
+        fallbackSet = true;
+#endif
+        fallback = reg;
+
+        if (regstate[i].type == RematInfo::TYPE && fe->type.synced()) {
+            fe->type.setMemory();
+            return fallback;
+        }
+        if (regstate[i].type == RematInfo::DATA && fe->data.synced()) {
+            fe->data.setMemory();
+            return fallback;
+        }
+    }
+
+    JS_ASSERT(fallbackSet);
+
+    FrameEntry *fe = regstate[fallback].fe;
+
+    if (regstate[fallback].type == RematInfo::TYPE) {
+        syncType(fe, masm);
+        fe->type.sync();
+        fe->type.setMemory();
+    } else {
+        syncData(fe, masm);
+        fe->data.sync();
+        fe->data.setMemory();
+    }
+
+    return fallback;
 }
 
 void
