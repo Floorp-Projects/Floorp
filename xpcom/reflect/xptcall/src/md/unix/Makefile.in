@@ -39,6 +39,7 @@ DEPTH		= ../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+NO_PROFILE_GUIDED_OPTIMIZE = 1
 
 include $(DEPTH)/config/autoconf.mk
 
