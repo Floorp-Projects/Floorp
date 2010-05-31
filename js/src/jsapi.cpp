@@ -1068,10 +1068,6 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 {
     CHECK_REQUEST(cx);
     cx->globalObject = obj;
-
-#if JS_HAS_XML_SUPPORT
-    cx->xmlSettingFlags = 0;
-#endif
 }
 
 JS_BEGIN_EXTERN_C

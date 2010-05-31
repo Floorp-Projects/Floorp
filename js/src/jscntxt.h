@@ -1649,19 +1649,6 @@ struct JSContext
     /* JSRuntime contextList linkage. */
     JSCList             link;
 
-#if JS_HAS_XML_SUPPORT
-    /*
-     * Bit-set formed from binary exponentials of the XML_* tiny-ids defined
-     * for boolean settings in jsxml.c, plus an XSF_CACHE_VALID bit.  Together
-     * these act as a cache of the boolean XML.ignore* and XML.prettyPrinting
-     * property values associated with this context's global object.
-     */
-    uint8               xmlSettingFlags;
-    uint8               padding;
-#else
-    uint16              padding;
-#endif
-
     /*
      * Classic Algol "display" static link optimization.
      */
