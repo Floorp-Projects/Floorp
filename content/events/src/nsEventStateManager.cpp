@@ -3987,38 +3987,38 @@ IsAncestorOf(nsIContent* aPossibleAncestor, nsIContent* aPossibleDescendant)
   return false;
 }
 
-NS_IMETHODIMP
-nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
+PRInt32
+nsEventStateManager::GetContentState(nsIContent *aContent)
 {
-  aState = aContent->IntrinsicState();
+  PRInt32 state = aContent->IntrinsicState();
 
   if (IsAncestorOf(aContent, mActiveContent)) {
-    aState |= NS_EVENT_STATE_ACTIVE;
+    state |= NS_EVENT_STATE_ACTIVE;
   }
   if (IsAncestorOf(aContent, mHoverContent)) {
-    aState |= NS_EVENT_STATE_HOVER;
+    state |= NS_EVENT_STATE_HOVER;
   }
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nsnull;
   if (aContent == focusedContent) {
-    aState |= NS_EVENT_STATE_FOCUS;
+    state |= NS_EVENT_STATE_FOCUS;
 
     nsIDocument* doc = focusedContent->GetOwnerDoc();
     if (doc) {
       nsPIDOMWindow* window = doc->GetWindow();
       if (window && window->ShouldShowFocusRing()) {
-        aState |= NS_EVENT_STATE_FOCUSRING;
+        state |= NS_EVENT_STATE_FOCUSRING;
       }
     }
   }
   if (aContent == mDragOverContent) {
-    aState |= NS_EVENT_STATE_DRAGOVER;
+    state |= NS_EVENT_STATE_DRAGOVER;
   }
   if (aContent == mURLTargetContent) {
-    aState |= NS_EVENT_STATE_URLTARGET;
+    state |= NS_EVENT_STATE_URLTARGET;
   }
-  return NS_OK;
+  return state;
 }
 
 static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
