@@ -1989,8 +1989,6 @@ nsHtml5TreeBuilder::endTag(nsHtml5ElementName* elementName)
 
   if (inForeign && stack[currentPtr]->ns != kNameSpaceID_XHTML) {
     eltPosForeign = currentPtr;
-    nsHtml5StackNode* node = stack[currentPtr];
-
   } else {
     eltPosForeign = -1;
   }

@@ -3093,6 +3093,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
              * "in foreign" mode if the mode wasn't "in foreign" to begin with.
              */
             eltPosForeign = currentPtr;
+            // [NOCPP[
             StackNode<T> node = stack[currentPtr];
             if (errorHandler != null && node.name != name) {
                 errNoCheck("End tag \u201C"
@@ -3100,6 +3101,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         + "\u201D did not match the name of the current open element (\u201C"
                         + node.popName + "\u201D).");
             }
+            // ]NOCPP]
         } else {
             /*
              * Marker for not wanting to continue inforeignloop.
