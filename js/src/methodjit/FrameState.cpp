@@ -136,7 +136,7 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
     }
 
     if (fe->isTypeKnown()) {
-        masm.storeTypeTag(Imm32(fe->getTypeTag()), address);
+        masm.storeTypeTag(ImmTag(fe->getTypeTag()), address);
     } else if (fe->type.inRegister()) {
         masm.storeTypeTag(fe->type.reg(), address);
     } else {
