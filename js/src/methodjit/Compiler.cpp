@@ -262,6 +262,9 @@ mjit::Compiler::generateMethod()
      **********************/ 
 
         switch (op) {
+          BEGIN_CASE(JSOP_NOP)
+          END_CASE(JSOP_NOP)
+
           BEGIN_CASE(JSOP_GOTO)
           {
             /* :XXX: this isn't really necessary if we follow the branch. */
@@ -336,6 +339,12 @@ mjit::Compiler::generateMethod()
             stubCall(stubs::SetName, Uses(2), Defs(1));
             frame.pop();
           END_CASE(JSOP_SETNAME)
+
+          BEGIN_CASE(JSOP_DEFFUN)
+            JS_ASSERT(frame.stackDepth() == 0);
+            masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
+            stubCall(stubs::DefFun, Uses(0), Defs(0));
+          END_CASE(JSOP_DEFFUN)
 
           BEGIN_CASE(JSOP_UINT24)
             frame.push(Value(Int32Tag((int32_t) GET_UINT24(PC))));
