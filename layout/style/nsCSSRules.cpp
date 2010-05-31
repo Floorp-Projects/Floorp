@@ -634,12 +634,9 @@ NS_IMETHODIMP
 CSSImportRuleImpl::GetStyleSheet(nsIDOMCSSStyleSheet * *aStyleSheet)
 {
   NS_ENSURE_ARG_POINTER(aStyleSheet);
-  if (!mChildSheet) {
-    *aStyleSheet = nsnull;
-    return NS_OK;
-  }
 
-  return CallQueryInterface(mChildSheet, aStyleSheet);
+  NS_IF_ADDREF(*aStyleSheet = mChildSheet);
+  return NS_OK;
 }
 
 nsCSSGroupRule::nsCSSGroupRule()
