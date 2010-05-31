@@ -55,6 +55,10 @@ const size_t GC_CHUNK_SHIFT = 20;
 const size_t GC_CHUNK_SIZE = size_t(1) << GC_CHUNK_SHIFT;
 const size_t GC_CHUNK_MASK = GC_CHUNK_SIZE - 1;
 
+#if defined(XP_WIN) && defined(_M_X64)
+bool InitNtAllocAPIs();
+#endif
+
 void *
 AllocGCChunk();
 

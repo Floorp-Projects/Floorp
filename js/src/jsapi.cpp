@@ -539,6 +539,11 @@ JSRuntime::init(uint32 maxbytes)
     if (!js_InitGC(this, maxbytes) || !js_InitAtomState(this))
         return false;
 
+#ifdef _M_X64
+    if (!JSString::initStringTables())
+        return false;
+#endif
+
     deflatedStringCache = new js::DeflatedStringCache();
     if (!deflatedStringCache || !deflatedStringCache->init())
         return false;
@@ -2531,7 +2536,6 @@ JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 JS_PUBLIC_API(jsval)
 JSID_TO_JSVAL(jsid id)
 {
-    CHECK_REQUEST(cx);
     return Jsvalify(IdToValue(id));
 }
 
@@ -2594,7 +2598,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj)
 {
-    return obj->getClass();
+    return Jsvalify(obj->getClass());
 }
 #else
 JS_PUBLIC_API(JSClass *)
