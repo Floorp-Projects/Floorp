@@ -342,10 +342,7 @@ CSSCharsetRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
   NS_ENSURE_ARG_POINTER(aSheet);
 
-  if (mSheet) {
-    return CallQueryInterface(mSheet, aSheet);
-  }
-  *aSheet = nsnull;
+  NS_IF_ADDREF(*aSheet = mSheet);
   return NS_OK;
 }
 
@@ -599,10 +596,8 @@ NS_IMETHODIMP
 CSSImportRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
   NS_ENSURE_ARG_POINTER(aSheet);
-  if (mSheet) {
-    return CallQueryInterface(mSheet, aSheet);
-  }
-  *aSheet = nsnull;
+
+  NS_IF_ADDREF(*aSheet = mSheet);
   return NS_OK;
 }
 
@@ -830,10 +825,7 @@ nsCSSGroupRule::AppendRulesToCssText(nsAString& aCssText)
 nsresult
 nsCSSGroupRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
-  if (mSheet) {
-    return CallQueryInterface(mSheet, aSheet);
-  }
-  *aSheet = nsnull;
+  NS_IF_ADDREF(*aSheet = mSheet);
   return NS_OK;
 }
 
@@ -1467,10 +1459,7 @@ CSSNameSpaceRuleImpl::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 CSSNameSpaceRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
-  if (mSheet) {
-    return CallQueryInterface(mSheet, aSheet);
-  }
-  *aSheet = nsnull;
+  NS_IF_ADDREF(*aSheet = mSheet);
   return NS_OK;
 }
 
@@ -1905,10 +1894,7 @@ nsCSSFontFaceRule::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 nsCSSFontFaceRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 {
-  if (mSheet) {
-    return CallQueryInterface(mSheet, aSheet);
-  }
-  *aSheet = nsnull;
+  NS_IF_ADDREF(*aSheet = mSheet);
   return NS_OK;
 }
 
