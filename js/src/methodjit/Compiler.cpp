@@ -170,6 +170,12 @@ mjit::Compiler::generatePrologue()
     masm.storePtr(ARMRegisters::lr, FrameAddress(offsetof(VMFrame, scriptedReturn)));
 #endif
 
+    /*
+     * This saves us from having to load frame regs before every call, even if
+     * it's not always necessary.
+     */
+    restoreFrameRegs();
+
     return Compile_Okay;
 }
 
@@ -264,6 +270,16 @@ mjit::Compiler::generateMethod()
         switch (op) {
           BEGIN_CASE(JSOP_NOP)
           END_CASE(JSOP_NOP)
+
+          BEGIN_CASE(JSOP_RETURN)
+          {
+            /* Safe point! */
+            FrameEntry *fe = frame.peek(-1);
+            frame.storeTo(fe, Address(Assembler::FpReg, offsetof(JSStackFrame, rval)), true);
+            emitReturn();
+            frame.pop();
+          }
+          END_CASE(JSOP_RETURN)
 
           BEGIN_CASE(JSOP_GOTO)
           {
@@ -521,7 +537,6 @@ mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub)
      * Otherwise, pop the VMFrame's cached return address, then call
      * (which realigns it to SP).
      */
-    restoreFrameRegs();
     Jump j = masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg, Registers::ReturnReg);
 
 #ifndef JS_CPU_ARM
@@ -541,6 +556,7 @@ mjit::Compiler::dispatchCall(VoidPtrStubUInt32 stub)
 #endif
 
     j.linkTo(masm.label(), &masm);
+    restoreFrameRegs();
 }
 
 void
