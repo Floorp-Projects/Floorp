@@ -66,6 +66,7 @@ struct Registers {
     static const RegisterID ArgReg1 = JSC::ARMRegisters::r1;
 #endif
 
+    static const RegisterID StackPointer = JSC::MacroAssembler::stackPointerRegister;
 
     static inline uint32 maskReg(RegisterID reg) {
         return (1 << reg);
