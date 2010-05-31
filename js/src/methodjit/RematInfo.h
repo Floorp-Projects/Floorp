@@ -72,12 +72,10 @@ struct RematInfo {
         PhysLoc_Constant,
 
         /* Backing bits are in a register. */
-        PhysLoc_Register
+        PhysLoc_Register,
 
-#ifdef DEBUG
         /* Backing bits are invalid/unknown. */
-        , PhysLoc_Invalid
-#endif
+        PhysLoc_Invalid
     };
 
     void setRegister(RegisterID reg) {
@@ -96,9 +94,7 @@ struct RematInfo {
     }
 
     void invalidate() {
-#ifdef DEBUG
         location_ = PhysLoc_Invalid;
-#endif
     }
 
     void setConstant() { location_ = PhysLoc_Constant; }

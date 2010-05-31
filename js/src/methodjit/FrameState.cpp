@@ -124,11 +124,11 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
     JS_ASSERT(!freeRegs.hasReg(address.base));
 
     if (fe->data.inRegister()) {
-        masm.storeData32(fe->data.reg(), addressOf(fe));
+        masm.storeData32(fe->data.reg(), address);
     } else {
         RegisterID reg = popped ? alloc() : alloc(fe, RematInfo::DATA, true);
         masm.loadData32(addressOf(fe), reg);
-        masm.storeData32(reg, addressOf(fe));
+        masm.storeData32(reg, address);
         if (popped)
             freeReg(reg);
         else
@@ -136,13 +136,13 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
     }
 
     if (fe->isTypeKnown()) {
-        masm.storeTypeTag(Imm32(fe->getTypeTag()), addressOf(fe));
+        masm.storeTypeTag(Imm32(fe->getTypeTag()), address);
     } else if (fe->type.inRegister()) {
-        masm.storeTypeTag(fe->type.reg(), addressOf(fe));
+        masm.storeTypeTag(fe->type.reg(), address);
     } else {
         RegisterID reg = popped ? alloc() : alloc(fe, RematInfo::TYPE, true);
         masm.loadTypeTag(addressOf(fe), reg);
-        masm.storeTypeTag(reg, addressOf(fe));
+        masm.storeTypeTag(reg, address);
         if (popped)
             freeReg(reg);
         else
@@ -250,5 +250,59 @@ FrameState::merge(Assembler &masm, uint32 iVD) const
         if (fe->type.inRegister())
             masm.loadTypeTag(addressOf(fe), fe->type.reg());
     }
+}
+
+JSC::MacroAssembler::RegisterID
+FrameState::copyData(FrameEntry *fe)
+{
+    JS_ASSERT(!fe->data.isConstant());
+
+    if (fe->data.inRegister()) {
+        RegisterID reg = fe->data.reg();
+        if (freeRegs.empty()) {
+            if (!fe->data.synced())
+                syncData(fe, masm);
+            fe->data.setMemory();
+            regstate[reg].fe = NULL;
+        } else {
+            RegisterID newReg = alloc();
+            masm.move(reg, newReg);
+            reg = newReg;
+        }
+        return reg;
+    }
+
+    RegisterID reg = alloc();
+
+    if (!freeRegs.empty())
+        masm.move(tempRegForData(fe), reg);
+    else
+        masm.loadData32(addressOf(fe),reg);
+
+    return reg;
+}
+
+JSC::MacroAssembler::RegisterID
+FrameState::ownRegForData(FrameEntry *fe)
+{
+    JS_ASSERT(!fe->data.isConstant());
+
+    /* :XXX: X64 */
+
+    if (fe->data.inRegister()) {
+        RegisterID reg = fe->data.reg();
+        /* Remove ownership of this register. */
+        JS_ASSERT(regstate[reg].fe == fe);
+        JS_ASSERT(regstate[reg].type == RematInfo::DATA);
+        regstate[reg].fe = NULL;
+        fe->data.invalidate();
+        return reg;
+    }
+
+    JS_ASSERT(fe->data.inMemory());
+
+    RegisterID reg = alloc();
+    masm.loadData32(addressOf(fe), reg);
+    return reg;
 }
 

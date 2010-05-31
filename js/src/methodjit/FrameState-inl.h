@@ -115,7 +115,8 @@ FrameState::pop()
 inline void
 FrameState::freeReg(RegisterID reg)
 {
-    forgetReg(reg);
+    JS_ASSERT(regstate[reg].fe == NULL);
+    freeRegs.putReg(reg);
 }
 
 inline void
@@ -215,6 +216,25 @@ FrameState::pushTypedPayload(uint32 tag, RegisterID payload)
     regstate[payload] = RegisterState(fe, RematInfo::DATA, true);
 }
 
+inline void
+FrameState::pushUntypedPayload(uint32 tag, RegisterID payload)
+{
+    JS_ASSERT(!freeRegs.hasReg(payload));
+
+    FrameEntry *fe = rawPush();
+
+    /* The forceful type sync will assert otherwise. */
+#ifdef DEBUG
+    fe->type.unsync();
+#endif
+
+    masm.storeTypeTag(Imm32(tag), addressOf(fe));
+    fe->type.sync();
+    fe->data.unsync();
+    fe->data.setRegister(payload);
+    regstate[payload] = RegisterState(fe, RematInfo::DATA, true);
+}
+
 inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForType(FrameEntry *fe)
 {
@@ -245,26 +265,10 @@ FrameState::tempRegForData(FrameEntry *fe)
     return reg;
 }
 
-inline JSC::MacroAssembler::RegisterID
-FrameState::ownRegForData(FrameEntry *fe)
+inline bool
+FrameState::shouldAvoidTypeRemat(FrameEntry *fe)
 {
-    JS_ASSERT(!fe->data.isConstant());
-
-    if (fe->data.inRegister()) {
-        /* Remove ownership of this register. */
-        RegisterID reg = fe->data.reg();
-        JS_ASSERT(regstate[reg].fe == fe);
-        JS_ASSERT(regstate[reg].type == RematInfo::DATA);
-        regstate[reg].fe = NULL;
-        fe->data.invalidate();
-        return reg;
-    }
-
-    /* :XXX: X64 */
-
-    RegisterID reg = alloc(fe, RematInfo::DATA, true);
-    masm.loadData32(addressOf(fe), reg);
-    return reg;
+    return fe->type.inMemory();
 }
 
 inline bool
@@ -306,6 +310,7 @@ FrameState::syncData(const FrameEntry *fe, Assembler &masm) const
 inline void
 FrameState::learnType(FrameEntry *fe, uint32 tag)
 {
+    JS_ASSERT(!fe->type.inRegister());
     fe->setTypeTag(tag);
 }
 
@@ -315,6 +320,14 @@ FrameState::addressOf(const FrameEntry *fe) const
     uint32 index = (fe - entries);
     JS_ASSERT(index >= nargs);
     return Address(Assembler::FpReg, sizeof(JSStackFrame) + sizeof(Value) * index);
+}
+
+inline JSC::MacroAssembler::Jump
+FrameState::testInt32(Assembler::Condition cond, FrameEntry *fe)
+{
+    if (shouldAvoidTypeRemat(fe))
+        return masm.testInt32(cond, addressOf(fe));
+    return masm.testInt32(cond, tempRegForType(fe));
 }
 
 } /* namspace mjit */

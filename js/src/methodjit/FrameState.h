@@ -89,6 +89,7 @@ class FrameState
 {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     typedef JSC::MacroAssembler::Address Address;
+    typedef JSC::MacroAssembler::Jump Jump;
     typedef JSC::MacroAssembler::Imm32 Imm32;
 
     struct Tracker {
@@ -161,6 +162,13 @@ class FrameState
     inline void pushTypedPayload(uint32 tag, RegisterID payload);
 
     /*
+     * Pushes a known type and allocated payload onto the operation stack.
+     * This must be used when the type is known, but cannot be propagated
+     * because it is not known to be correct at a slow-path merge point.
+     */
+    inline void pushUntypedPayload(uint32 tag, RegisterID payload);
+
+    /*
      * Pops a value off the operation stack, freeing any of its resources.
      */
     inline void pop();
@@ -172,21 +180,42 @@ class FrameState
     inline void popn(uint32 n);
 
     /*
-     * Allocates a temporary register for a FrameEntry's type.
+     * Allocates a temporary register for a FrameEntry's type. The register
+     * can be spilled or clobbered by the frame. The compiler may only operate
+     * on it temporarily, and must take care not to clobber it.
      */
     inline RegisterID tempRegForType(FrameEntry *fe);
 
     /*
-     * Allocates a data register for a FrameEntry's type.
+     * Returns a register that is guaranteed to contain the frame entry's
+     * data payload. The compiler may not modify the contents of the register,
+     * though it may explicitly free it.
      */
     inline RegisterID tempRegForData(FrameEntry *fe);
 
     /*
      * Allocates a register for a FrameEntry's data, such that the compiler
-     * can modify it in-place. If the slot already has a temporary register,
-     * it is cleared, and thus the entry is invalidated!
+     * can modify it in-place.
+     *
+     * The caller guarantees the FrameEntry will not be observed again. This
+     * allows the compiler to avoid spilling. Only call this if the FE is
+     * going to be popped before stubcc joins/guards or the end of the current
+     * opcode.
      */
-    inline RegisterID ownRegForData(FrameEntry *fe);
+    RegisterID ownRegForData(FrameEntry *fe);
+
+    /*
+     * Allocates a register for a FrameEntry's data, such that the compiler
+     * can modify it in-place. The actual FE is not modified.
+     */
+    RegisterID copyData(FrameEntry *fe);
+
+    /*
+     * Types don't always have to be in registers, sometimes the compiler
+     * can use addresses and avoid spilling. If this FrameEntry has a synced
+     * address and no register, this returns true.
+     */
+    inline bool shouldAvoidTypeRemat(FrameEntry *fe);
 
     /*
      * Payloads don't always have to be in registers, sometimes the compiler
@@ -252,6 +281,12 @@ class FrameState
      * Mark an existing slot with a type.
      */
     inline void learnType(FrameEntry *fe, uint32 tag);
+
+    /*
+     * Helper function. Tests if a slot's type is an integer. Condition should
+     * be Equal or NotEqual.
+     */
+    inline Jump testInt32(Assembler::Condition cond, FrameEntry *fe);
 
     /*
      * Returns the current stack depth of the frame.
