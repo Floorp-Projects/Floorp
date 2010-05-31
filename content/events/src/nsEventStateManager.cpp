@@ -66,6 +66,7 @@
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMNSHTMLLabelElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -3977,25 +3978,48 @@ nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
   return NS_OK;
 }
 
+static already_AddRefed<nsIContent>
+GetLabelTarget(nsIContent* aLabel)
+{
+  nsCOMPtr<nsIDOMNSHTMLLabelElement> label = do_QueryInterface(aLabel);
+  if (!label)
+    return nsnull;
+
+  nsCOMPtr<nsIDOMHTMLElement> target;
+  label->GetControl(getter_AddRefs(target));
+  nsIContent* targetContent = nsnull;
+  if (target) {
+    CallQueryInterface(target, &targetContent);
+  }
+  return targetContent;
+}
+
 static bool
-IsAncestorOf(nsIContent* aPossibleAncestor, nsIContent* aPossibleDescendant)
+IsAncestorOf(nsIContent* aPossibleAncestor, nsIContent* aPossibleDescendant,
+             PRBool aFollowLabels)
 {
   for (; aPossibleDescendant; aPossibleDescendant = aPossibleDescendant->GetParent()) {
     if (aPossibleAncestor == aPossibleDescendant)
       return true;
+
+    if (aFollowLabels) {
+      nsCOMPtr<nsIContent> labelTarget = GetLabelTarget(aPossibleDescendant);
+      if (labelTarget == aPossibleAncestor)
+        return true;
+    }
   }
   return false;
 }
 
 PRInt32
-nsEventStateManager::GetContentState(nsIContent *aContent)
+nsEventStateManager::GetContentState(nsIContent *aContent, PRBool aFollowLabels)
 {
   PRInt32 state = aContent->IntrinsicState();
 
-  if (IsAncestorOf(aContent, mActiveContent)) {
+  if (IsAncestorOf(aContent, mActiveContent, aFollowLabels)) {
     state |= NS_EVENT_STATE_ACTIVE;
   }
-  if (IsAncestorOf(aContent, mHoverContent)) {
+  if (IsAncestorOf(aContent, mHoverContent, aFollowLabels)) {
     state |= NS_EVENT_STATE_HOVER;
   }
 
@@ -4071,6 +4095,10 @@ NotifyAncestors(nsIDocument* aDocument, nsIContent* aStartNode,
 {
   while (aStartNode && aStartNode != aStopBefore) {
     aDocument->ContentStatesChanged(aStartNode, nsnull, aState);
+    nsCOMPtr<nsIContent> labelTarget = GetLabelTarget(aStartNode);
+    if (labelTarget) {
+      aDocument->ContentStatesChanged(labelTarget, nsnull, aState);
+    }
     aStartNode = aStartNode->GetParent();
   }
 }
@@ -4281,14 +4309,14 @@ nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent
       nsContentUtils::ContentIsDescendantOf(mHoverContent, aContent)) {
     // Since hover is hierarchical, set the current hover to the
     // content's parent node.
-    mHoverContent = aContent->GetParent();
+    SetContentState(aContent->GetParent(), NS_EVENT_STATE_HOVER);
   }
 
   if (mActiveContent &&
       nsContentUtils::ContentIsDescendantOf(mActiveContent, aContent)) {
     // Active is hierarchical, so set the current active to the
     // content's parent node.
-    mActiveContent = aContent->GetParent();
+    SetContentState(aContent->GetParent(), NS_EVENT_STATE_ACTIVE);
   }
 
   if (mDragOverContent &&
