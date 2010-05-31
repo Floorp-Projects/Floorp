@@ -288,12 +288,14 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_CALL)
           {
+            JaegerSpew(JSpew_Insns, " --- SCRIPTED CALL --- \n");
+            frame.forgetEverything();
             uint32 argc = GET_ARGC(PC);
-            prepareStubCall();
             masm.move(Imm32(argc), Registers::ArgReg1);
             dispatchCall(stubs::Call);
             frame.popn(argc + 2);
             frame.pushSynced();
+            JaegerSpew(JSpew_Insns, " --- END SCRIPTED CALL --- \n");
           }
           END_CASE(JSOP_CALL)
 
