@@ -117,6 +117,8 @@ class FrameEntry
      * Marks the FE as having a constant.
      */
     void setConstant(const jsval &v) {
+        type.unsync();
+        data.unsync();
         type.setConstant();
         data.setConstant();
         v_.asBits = v;
